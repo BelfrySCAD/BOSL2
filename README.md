@@ -9,6 +9,7 @@ The library files are as follows:
   - ```transforms.scad```: The most commonly used transformations, manipulations, and shortcuts are in this file.
   - ```shapes.scad```: Common useful shapes and structured objects.
   - ```masks.scad```: Shapes that are useful for masking with ```difference()``` and ```intersect()```.
+  - ```math.scad```: Useful helper functions and constants.
   - ```paths.scad```: Functions and modules to work with arbitrary 3D paths.
   - ```bezier.scad```: Functions and modules to work with bezier curves.
   - ```involute_gears.scad```: Modules and functions to make involute gears and racks.
@@ -19,7 +20,6 @@ The library files are as follows:
   - ```nema_steppers.scad```: Modules to make mounting holes for NEMA motors.
   - ```linear_bearings.scad```: Modules to make mounts for LMxUU style linear bearings.
   - ```wiring.scad```: Modules to render routed bundles of wires.
-  - ```math.scad```: Useful helper functions and constants.
   - ```quaternions.scad```: Functions to work with quaternion rotations.
 
 ## transforms.scad
@@ -36,8 +36,9 @@ The most commonly useful of the library files is ```transforms.scad```.  It prov
 The ```shapes.scad``` library file provides useful compound shapes, such as:
   - ```upcube()``` a ridiculously useful version of ```cube()``` that is centered on top of the XY plane.
   - Filleted (rounded) and Chamferred (bevelled) cubes and cylinders.
-  - ```pyramid()```, ```prism()```, and ```trapezoid()```
-  - ```right_triangle()```
+  - ```pyramid()``` and ```prism()```
+  - The incredibly useful ```trapezoid()``` for non-parallelogram cubes.
+  - ```right_triangle()``` for the obvious shape.
   - ```teardrop()``` and ```onion()``` for making more 3D printable holes.
   - ```tube()``` and ```torus()``` for donut shapes.
   - ```slot()``` and ```arced_slot()``` for making things like screw slots.
