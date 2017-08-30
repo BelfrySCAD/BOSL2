@@ -156,63 +156,63 @@ module zflip() mirror([0,0,1]) children();
 
 
 // Skews children on the X-Y plane, keeping constant in Z.
-//   xang = skew angle towards the X direction.
-//   yang = skew angle towards the Y direction.
+//   xa = skew angle towards the X direction.
+//   ya = skew angle towards the Y direction.
 // Examples:
-//   skew_xy(xang=15) cube(size=10);
-//   skew_xy(xang=15, yang=30) cube(size=10);
-module skew_xy(xang=0, yang=0)
+//   skew_xy(xa=15) cube(size=10);
+//   skew_xy(xa=15, ya=30) cube(size=10);
+module skew_xy(xa=0, ya=0)
 {
 	multmatrix(m = [
-		[1,         0,  tan(xang),        0],
-		[0,         1,  tan(yang),        0],
-		[0,         0,          1,        0],
-		[0,         0,          0,        1]
+		[1,       0,  tan(xa),        0],
+		[0,       1,  tan(ya),        0],
+		[0,       0,        1,        0],
+		[0,       0,        0,        1]
 	]) {
 		children();
 	}
 }
-module zskew(xa=0,ya=0) skew_xy(xang=xa,yang=ya) children();
+module zskew(xa=0,ya=0) skew_xy(xa=xa,ya=ya) children();
 
 
 // Skews children on the Y-Z plane, keeping constant in X.
-//   yang = skew angle towards the Y direction.
-//   zang = skew angle towards the Z direction.
+//   ya = skew angle towards the Y direction.
+//   za = skew angle towards the Z direction.
 // Examples:
-//   skew_yz(yang=15) cube(size=10);
-//   skew_yz(yang=15, zang=30) cube(size=10);
-module skew_yz(yang=0, zang=0)
+//   skew_yz(ya=15) cube(size=10);
+//   skew_yz(ya=15, za=30) cube(size=10);
+module skew_yz(ya=0, za=0)
 {
 	multmatrix(m = [
-		[1,         0,          0,        0],
-		[tan(yang), 1,          0,        0],
-		[tan(zang), 0,          1,        0],
-		[0,         0,          0,        1]
+		[1,       0,        0,        0],
+		[tan(ya), 1,        0,        0],
+		[tan(za), 0,        1,        0],
+		[0,       0,        0,        1]
 	]) {
 		children();
 	}
 }
-module xskew(ya=0,za=0) skew_yz(yang=ya,zang=za) children();
+module xskew(ya=0,za=0) skew_yz(ya=ya,za=za) children();
 
 
 // Skews children on the X-Z plane, keeping constant in Y.
-//   xang = skew angle towards the X direction.
-//   zang = skew angle towards the Z direction.
+//   xa = skew angle towards the X direction.
+//   za = skew angle towards the Z direction.
 // Examples:
-//   skew_xz(xang=15) cube(size=10);
-//   skew_xz(xang=15, zang=30) cube(size=10);
-module skew_xz(xang=0, zang=0)
+//   skew_xz(xa=15) cube(size=10);
+//   skew_xz(xa=15, za=30) cube(size=10);
+module skew_xz(xa=0, za=0)
 {
 	multmatrix(m = [
-		[1, tan(xang),          0,        0],
-		[0,         1,          0,        0],
-		[0, tan(zang),          1,        0],
-		[0,         0,          0,        1]
+		[1, tan(xa),        0,        0],
+		[0,       1,        0,        0],
+		[0, tan(za),        1,        0],
+		[0,       0,        0,        1]
 	]) {
 		children();
 	}
 }
-module yskew(xa=0,za=0) skew_xz(xang=xa,zang=za) children();
+module yskew(xa=0,za=0) skew_xz(xa=xa,za=za) children();
 
 
 
@@ -350,13 +350,13 @@ module zrot_copies(rots=[0], offset=0, count=undef)
 
 
 // Makes copies of the given children at each of the given offsets.
-//   offsets = array of XYZ offset vectors. Default [[0,0,0]]
+//   a = array of XYZ offset vectors. Default [[0,0,0]]
 // Example:
 //   translate_copies([[-5,-5,0], [5,-5,0], [0,-5,7], [0,5,0]])
 //     sphere(r=3,center=true);
-module translate_copies(offsets=[[0,0,0]])
+module translate_copies(a=[[0,0,0]])
 {
-	for (off = offsets) translate(off) children();
+	for (off = a) translate(off) children();
 }
 module place_copies(a=[[0,0,0]]) {translate_copies(a) children();}
 
