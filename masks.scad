@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 include <transforms.scad>
+include <math.scad>
 
 
 module angle_half_pie_mask(
@@ -202,6 +203,9 @@ module fillet_mask(h=1.0, r=1.0, center=true)
 		);
 	}
 }
+module fillet_mask_z(l=1.0, r=1.0) fillet_mask(h=l, r=r, center=true);
+module fillet_mask_y(l=1.0, r=1.0) xrot(90) fillet_mask(h=l, r=r, center=true);
+module fillet_mask_x(l=1.0, r=1.0) yrot(90) fillet_mask(h=l, r=r, center=true);
 
 
 // Creates a vertical mask that can be used to fillet the edge where two
@@ -213,8 +217,9 @@ module fillet_mask(h=1.0, r=1.0, center=true)
 //   ang = angle that the planes meet at.
 //   center = If true, vertically center mask.
 // Example:
-//   fillet_planes_joint_mask(h=50.0, r=10.0, ang=120, $fn=32);
-module fillet_planes_joint_mask(h=1.0, r=1.0, ang=90, center=true)
+//   fillet_angled_edge_mask(h=50.0, r=10.0, ang=120, $fn=32);
+//   fillet_angled_edge_mask(h=50.0, r=10.0, ang=30, $fn=32);
+module fillet_angled_edge_mask(h=1.0, r=1.0, ang=90, center=true)
 {
 	sweep = 180-ang;
 	n = ceil(segs(r)*sweep/360);
@@ -240,8 +245,8 @@ module fillet_planes_joint_mask(h=1.0, r=1.0, ang=90, center=true)
 //   fillet = radius of the fillet.
 //   ang = angle between planes that you need to fillet the corner of.
 // Example:
-//   fillet_edge_joint_mask(fillet=100, ang=90);
-module fillet_edge_joint_mask(fillet=1.0, ang=90)
+//   fillet_angled_corner_mask(fillet=100, ang=90);
+module fillet_angled_corner_mask(fillet=1.0, ang=90)
 {
 	dy = fillet * tan(ang/2);
 	th = max(dy, fillet*2);
@@ -280,9 +285,9 @@ module fillet_edge_joint_mask(fillet=1.0, ang=90)
 //     translate([0, 5, 8]) yrot(90) fillet_mask(h=7, r=3);
 //     translate([3, 0, 8]) xrot(90) fillet_mask(h=11, r=3);
 //     translate([3, 5, 0]) fillet_mask(h=17, r=3);
-//     translate([3, 5, 8]) corner_fillet_mask(r=3);
+//     translate([3, 5, 8]) fillet_corner_mask(r=3);
 //   }
-module corner_fillet_mask(r=1.0)
+module fillet_corner_mask(r=1.0)
 {
 	difference() {
 		cube(size=r*2, center=true);
@@ -291,7 +296,7 @@ module corner_fillet_mask(r=1.0)
 		}
 	}
 }
-//!corner_fillet_mask(r=10.0);
+//!fillet_corner_mask(r=10.0);
 
 
 // Create a mask that can be used to round the end of a cylinder.

@@ -351,6 +351,32 @@ module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false)
 }
 
 
+// Makes a teardrop shape in the XZ plane. Useful for 3D printable holes.
+//   r = radius of circular part of teardrop.  (Default: 1)
+//   h = thickness of teardrop. (Default: 1)
+// Example:
+//   teardrop(r=3, h=2, ang=30);
+module teardrop(r=1, h=1, ang=45, $fn=undef)
+{
+	$fn = ($fn==undef)?max(12,floor(180/asin(1/r)/2)*2):$fn;
+	xrot(90) union() {
+		translate([0, r*sin(ang), 0]) {
+			scale([1, 1/tan(ang), 1]) {
+				difference() {
+					zrot(45) {
+						cube(size=[2*r*cos(ang)/sqrt(2), 2*r*cos(ang)/sqrt(2), h], center=true);
+					}
+					translate([0, -r/2, 0]) {
+						cube(size=[2*r, r, h+1], center=true);
+					}
+				}
+			}
+		}
+		cylinder(h=h, r=r, center=true);
+	}
+}
+
+
 // Created a sphere with a conical hat, to make a 3D teardrop.
 //   r = radius of spherical portion of the bottom. (Default: 1)
 //   d = diameter of spherical portion of bottom. (Use instead of r)
@@ -491,32 +517,6 @@ module arced_slot(
 		zrot(da) {
 			translate([r, 0, 0]) cylinder(h=h, r1=sr1, r2=sr2, center=true);
 		}
-	}
-}
-
-
-// Makes a teardrop shape in the XZ plane. Useful for 3D printable holes.
-//   r = radius of circular part of teardrop.  (Default: 1)
-//   h = thickness of teardrop. (Default: 1)
-// Example:
-//   teardrop(r=3, h=2, ang=30);
-module teardrop(r=1, h=1, ang=45, $fn=undef)
-{
-	$fn = ($fn==undef)?max(12,floor(180/asin(1/r)/2)*2):$fn;
-	xrot(90) union() {
-		translate([0, r*sin(ang), 0]) {
-			scale([1, 1/tan(ang), 1]) {
-				difference() {
-					zrot(45) {
-						cube(size=[2*r*cos(ang)/sqrt(2), 2*r*cos(ang)/sqrt(2), h], center=true);
-					}
-					translate([0, -r/2, 0]) {
-						cube(size=[2*r, r, h+1], center=true);
-					}
-				}
-			}
-		}
-		cylinder(h=h, r=r, center=true);
 	}
 }
 
