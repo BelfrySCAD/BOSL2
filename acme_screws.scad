@@ -102,17 +102,18 @@ module acme_threaded_nut(
 	h=10,
 	pitch=3.175,
 	thread_depth=1,
+	thread_angle=14.5,
 	slop=printer_slop
 ) {
 	difference() {
 		cylinder(r=od/2/cos(30), h=h, center=true, $fn=6);
 		zspread(slop, n=slop>0?2:1) {
-			acme_threaded_rod(d=id+2*slop, l=h+1, pitch=pitch, thread_depth=thread_depth);
+			acme_threaded_rod(d=id+2*slop, l=h+1, pitch=pitch, thread_depth=thread_depth, thread_angle=thread_angle);
 		}
 	}
 }
 
-!acme_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, thread_depth=1, slop=printer_slop);
+//!acme_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, thread_depth=1, slop=printer_slop);
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
