@@ -159,11 +159,11 @@ module joiner_clear(h=40, w=10, a=30, clearance=0)
 
 
 
-module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, screwsize=undef, guides=true)
+module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, screwsize=undef, guides=true, slop=printer_slop)
 {
 	yrot_copies([0,180]) {
 		translate([spacing/2, 0, 0]) {
-			joiner(h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
+			joiner(h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides, slop=slop);
 		}
 	}
 }
@@ -183,11 +183,11 @@ module joiner_pair_clear(spacing=100, h=40, w=10, a=30, clearance=0)
 
 
 
-module joiner_quad(xspacing=100, yspacing=50, h=40, w=10, l=10, a=30, screwsize=undef, guides=true)
+module joiner_quad(xspacing=100, yspacing=50, h=40, w=10, l=10, a=30, screwsize=undef, guides=true, slop=printer_slop)
 {
 	zrot_copies([0,180]) {
 		translate([0, yspacing/2, 0]) {
-			joiner_pair(spacing=xspacing, h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
+			joiner_pair(spacing=xspacing, h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides, slop=slop);
 		}
 	}
 }
