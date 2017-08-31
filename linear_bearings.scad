@@ -121,7 +121,7 @@ module lmXuu_housing(size=8,tab=7,gap=5,wall=3,tabwall=5,screwsize=3)
 	l = get_lmXuu_bearing_length(size);
 	linear_bearing_housing(d=d,l=l,tab=tab,gap=gap,wall=wall,tabwall=tabwall,screwsize=screwsize);
 }
-lmXuu_housing(size=8);
+//lmXuu_housing(size=8);
 //lmXuu_housing(size=10);
 
 

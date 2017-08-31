@@ -42,6 +42,8 @@ function bez_B2(curve,u) = curve[2]*(3*pow(u,2)*(1-u));
 function bez_B3(curve,u) = curve[3]*pow(u,3);
 function bez_point(curve,u) = bez_B0(curve,u) + bez_B1(curve,u) + bez_B2(curve,u) + bez_B3(curve,u);
 
+
+// Takes an array of bezier points and converts it into a 3D polyline.
 function bezier_polyline(bezier, splinesteps=16) = concat(
 	[
 		for (

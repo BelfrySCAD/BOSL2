@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 include <transforms.scad>
+include <math.scad>
+include <masks.scad>
 
 
 // For when you MUST pass a child to a module, but you want it to be nothing.
@@ -46,6 +48,8 @@ module upcube(size=[1,1,1]) {up(size[2]/2) cube(size, center=true);}
 // Makes a cube with chamfered edges.
 //   size = size of cube [X,Y,Z].  (Default: [1,1,1])
 //   chamfer = chamfer inset along axis.  (Default: 0.25)
+//   chamfaxes = Array [X, Y, Z] of boolean values to specify which axis edges should be chamfered.
+//   chamfcorners = boolean to specify if corners should be flat chamferred.
 // Example:
 //   chamfcube(size=[10,30,50], chamfer=1, chamfaxes=[1,1,1], chamfcorners=true);
 module chamfcube(
@@ -117,6 +121,7 @@ module chamfcube(
 // Makes a cube with rounded (filletted) vertical edges.
 //   size = size of cube [X,Y,Z].  (Default: [1,1,1])
 //   r = radius of edge/corner rounding.  (Default: 0.25)
+//   center = if true, object will be centered.  If false, sits on top of XY plane.
 // Examples:
 //   rrect(size=[9,4,1], r=1, center=true);
 //   rrect(size=[5,7,3], r=1, $fn=24);
@@ -146,6 +151,7 @@ module rrect(size=[1,1,1], r=0.25, center=false)
 // Makes a cube with rounded (filletted) edges and corners.
 //   size = size of cube [X,Y,Z].  (Default: [1,1,1])
 //   r = radius of edge/corner rounding.  (Default: 0.25)
+//   center = if true, object will be centered.  If false, sits on top of XY plane.
 // Examples:
 //   rcube(size=[9,4,1], r=0.333, center=true, $fn=24);
 //   rcube(size=[5,7,3], r=1);
@@ -194,7 +200,8 @@ module chamferred_cylinder(h=1, r=1, d=undef, chamfer=0.25, chamfedge=undef, ang
 	chamf = (chamfedge == undef)? chamfer * sqrt(2) : chamfedge;
 	x = (chamfedge == undef)? chamfer : (chamfedge * sin(angle));
 	y = (chamfedge == undef)? chamfer*sin(90-angle)/sin(angle) : (chamfedge * sin(90-angle));
-	rad = d == undef? r : d / 2.0;
+	rad = (d == undef)? r : (d / 2.0);
+	echo(rad);
 	up(center? 0 : h/2) {
 		rotate_extrude(angle=360, convexity=2) {
 			polygon(
@@ -213,7 +220,7 @@ module chamferred_cylinder(h=1, r=1, d=undef, chamfer=0.25, chamfedge=undef, ang
 }
 
 module chamf_cyl(h=1, r=1, d=undef, chamfer=0.25, chamfedge=undef, angle=45, center=false, top=true, bottom=true)
-	chamferred_cylinder(h=h, r=d, d=d, chamfer=chamfer, chamfedge=chamfedge, angle=angle, center=center, top=top, bottom=bottom);
+	chamferred_cylinder(h=h, r=r, d=d, chamfer=chamfer, chamfedge=chamfedge, angle=angle, center=center, top=top, bottom=bottom);
 //!chamf_cyl(h=20, d=20, chamfedge=10, angle=30, center=true, $fn=36);
 
 
