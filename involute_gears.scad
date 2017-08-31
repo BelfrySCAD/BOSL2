@@ -109,10 +109,10 @@ function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                           
 //a rack, which is a straight line with teeth (the same as a segment from a giant gear with a huge number of teeth).
 //The "pitch circle" is a line along the X axis.
 module rack (
-	mm_per_tooth    = 3,    //this is the "circular pitch", the circumference of the pitch circle divided by the number of teeth
-	number_of_teeth = 11,   //total number of teeth along the rack
-	thickness       = 6,    //thickness of rack in mm (affects each tooth)
-	height          = 120,  //height of rack in mm, from tooth top to back of rack.
+	mm_per_tooth    = 5,    //this is the "circular pitch", the circumference of the pitch circle divided by the number of teeth
+	number_of_teeth = 20,   //total number of teeth along the rack
+	thickness       = 5,    //thickness of rack in mm (affects each tooth)
+	height          = 10,   //height of rack in mm, from tooth top to back of rack.
 	pressure_angle  = 28,   //Controls how straight or bulged the tooth sides are. In degrees.
 	backlash        = 0.0   //gap between two meshing teeth, in the direction along the circumference of the pitch circle
 ) {
@@ -141,13 +141,13 @@ module rack (
 //These 5 functions let the user find the derived dimensions of the gear.
 //A gear fits within a circle of radius outer_radius, and two gears should have
 //their centers separated by the sum of their pictch_radius.
-function circular_pitch  (mm_per_tooth=3) = mm_per_tooth;                     //tooth density expressed as "circular pitch" in millimeters
-function diametral_pitch (mm_per_tooth=3) = pi / mm_per_tooth;         //tooth density expressed as "diametral pitch" in teeth per millimeter
-function adendum         (mm_per_tooth=3) = module_value(mm_per_tooth);
-function dedendum        (mm_per_tooth=3) = 1.25 * module_value(mm_per_tooth);
-function module_value    (mm_per_tooth=3) = mm_per_tooth / pi;                //tooth density expressed as "module" or "modulus" in millimeters
-function pitch_radius    (mm_per_tooth=3,number_of_teeth=11) = mm_per_tooth * number_of_teeth / pi / 2;
-function outer_radius    (mm_per_tooth=3,number_of_teeth=11,clearance=0.1)    //The gear fits entirely within a cylinder of this radius.
+function circular_pitch  (mm_per_tooth=5) = mm_per_tooth;                     //tooth density expressed as "circular pitch" in millimeters
+function diametral_pitch (mm_per_tooth=5) = pi / mm_per_tooth;         //tooth density expressed as "diametral pitch" in teeth per millimeter
+function adendum         (mm_per_tooth=5) = module_value(mm_per_tooth);
+function dedendum        (mm_per_tooth=5) = 1.25 * module_value(mm_per_tooth);
+function module_value    (mm_per_tooth=5) = mm_per_tooth / pi;                //tooth density expressed as "module" or "modulus" in millimeters
+function pitch_radius    (mm_per_tooth=5,number_of_teeth=11) = mm_per_tooth * number_of_teeth / pi / 2;
+function outer_radius    (mm_per_tooth=5,number_of_teeth=11,clearance=0.1)    //The gear fits entirely within a cylinder of this radius.
 	= mm_per_tooth*(1+number_of_teeth/2)/pi  - clearance;              
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,6 +155,7 @@ function outer_radius    (mm_per_tooth=3,number_of_teeth=11,clearance=0.1)    //
 //Try it with OpenSCAD View/Animate command with 20 steps and 24 FPS.
 //The gears will continue to be rotated to mesh correctly if you change the number of teeth.
 
+/*
 n1 = 11; //red gear number of teeth
 n2 = 20; //green gear
 n3 = 5;  //blue gear
@@ -176,6 +177,8 @@ translate([ d13,  0, 0]) rotate([0,0,-($t-n3/4+n1/4+1/2)*360/n3]) color([0.75,0.
 translate([ d13,  0, 0]) rotate([0,0,-($t-n3/4+n1/4+1/2)*360/n3]) color([0.75,0.75,1.00]) gear(mm_per_tooth,n3,thickness,hole);
 translate([-d14,  0, 0]) rotate([0,0,-($t-n4/4-n1/4+1/2-floor(n4/4)-3)*360/n4]) color([1.00,0.75,0.50]) gear(mm_per_tooth,n4,thickness,hole,0,n4-3);
 translate([(-floor(n5/2)-floor(n1/2)+$t+n1/2-1/2)*9, -d1+0.0, 0]) rotate([0,0,0]) color([0.75,0.75,0.75]) rack(mm_per_tooth,n5,thickness,height);
+*/
+rack();
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
