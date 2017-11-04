@@ -151,9 +151,8 @@ module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, slop=printer
 
 module joiner_clear(h=40, w=10, a=30, clearance=0)
 {
-	grid_of(za=[-h/4,h/4]) {
-		half_joiner_clear(h=h/2.0, w=w, a=a, clearance=clearance);
-	}
+	up(h/4) half_joiner_clear(h=h/2.0-0.01, w=w, a=a, clearance=clearance);
+	down(h/4) half_joiner_clear(h=h/2.0-0.01, w=w, a=a, clearance=-0.01);
 }
 //joiner_clear();
 
