@@ -12,11 +12,11 @@ Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
 * Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
+	list of conditions and the following disclaimer.
 
 * Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
+	this list of conditions and the following disclaimer in the documentation
+	and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -33,40 +33,46 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 include <math.scad>
 include <paths.scad>
+include <transforms.scad>
 
 
-// Formulae to calculate points on a cubic bezier curve.
-function bez_B0(curve,u) = curve[0]*pow((1-u),3);
-function bez_B1(curve,u) = curve[1]*(3*u*pow((1-u),2));
-function bez_B2(curve,u) = curve[2]*(3*pow(u,2)*(1-u));
-function bez_B3(curve,u) = curve[3]*pow(u,3);
-function bez_point(curve,u) = bez_B0(curve,u) + bez_B1(curve,u) + bez_B2(curve,u) + bez_B3(curve,u);
+// Formulae to calculate points on an N-point bezier curve.
+function bez_point(curve,u)=
+	(len(curve) <= 1) ?
+		curve[0] :
+		bez_point(
+			[for(i=[0:len(curve)-2]) curve[i]*(1-u)+curve[i+1]*u],
+			u
+		);
 
 
 // Takes an array of bezier points and converts it into a 3D polyline.
-function bezier_polyline(bezier, splinesteps=16) = concat(
+function bezier_polyline(bezier, splinesteps=16, N=3) = concat(
 	[
 		for (
-			b = [0 : 3 : len(bezier)-4],
+			b = [0 : N : len(bezier)-N-1],
 			l = [0 : splinesteps-1]
 		) let (
-			crv = [bezier[b+0], bezier[b+1], bezier[b+2], bezier[b+3]],
+			crv = [for (i=[0 : N]) bezier[b+i]],
 			u = l / splinesteps
 		) bez_point(crv, u)
 	],
-	[bez_point([bezier[len(bezier)-4], bezier[len(bezier)-3], bezier[len(bezier)-2], bezier[len(bezier)-1]], 1.0)]
+	[bez_point([for (i=[-(N+1) : -1]) bezier[len(bezier)+i]], 1.0)]
 );
 
 
 // Takes a closed 2D bezier path, and creates a 2D polygon from it.
-module bezier_polygon(bezier, splinesteps=16) {
-	polypoints=bezier_polyline(bezier, splinesteps);
+//   bezier = array of 2D bezier path points
+//   splinesteps = number of straight lines to split each bezier segment into
+//   N = number of points in each bezier segment.  Cubic = 3
+module bezier_polygon(bezier, splinesteps=16, N=3) {
+	polypoints=bezier_polyline(bezier, splinesteps, N);
 	polygon(points=slice(polypoints, 0, -1));
 }
 
 
 // Generate bezier curve to fillet 2 line segments between 3 points.
-// Returns two path points with surrounding cubic bezier control points.
+// Returns two path points with surrounding cubic (N=3) bezier control points.
 function fillet3pts(p0, p1, p2, r) = let(
 		v0 = normalize(p0-p1),
 		v1 = normalize(p2-p1),
@@ -82,7 +88,7 @@ function fillet3pts(p0, p1, p2, r) = let(
 	) [tp0, tp0, cp0, cp1, tp1, tp1];
 
 
-// Takes a 3D polyline path and fillets it into a 3d cubic bezier path.
+// Takes a 3D polyline path and fillets it into a 3d cubic (N=3) bezier path.
 function fillet_path(pts, fillet) = concat(
 	[pts[0], pts[0]],
 	(len(pts) < 3)? [] : [
@@ -98,6 +104,7 @@ function fillet_path(pts, fillet) = concat(
 // Takes a closed 2D bezier and rotates it around the X axis, forming a solid.
 //   bezier = array of points for the bezier path to rotate.
 //   splinesteps = number of segments to divide each bezier segment into.
+//   N = number of points in each bezier segment.  Cubic = 3
 // Example:
 //   path = [
 //     [  0, 10], [ 50,  0], [ 50, 40],
@@ -107,36 +114,37 @@ function fillet_path(pts, fillet) = concat(
 //     [  0, 10]
 //   ];
 //   revolve_bezier(path, splinesteps=32, $fn=180);
-module revolve_bezier(bezier, splinesteps=16) {
+module revolve_bezier(bezier, splinesteps=16, N=3) {
 	yrot(90) rotate_extrude(convexity=10) {
-		xrot(180) zrot(-90) bezier_polygon(bezier, splinesteps);
+		xrot(180) zrot(-90) bezier_polygon(bezier, splinesteps, N);
 	}
 }
 
 
-// Takes a bezier path and closes it to the X axis.
-function bezier_close_to_axis(bezier) =
-	let(bezend = len(bezier)-1)
-		concat(
-			[ [bezier[0][0], 0], [bezier[0][0], 0], bezier[0] ],
-			bezier,
-			[ bezier[bezend], [bezier[bezend][0], 0], [bezier[bezend][0], 0] ]
-		);
+// Takes a 2D bezier path and closes it to the X axis.
+function bezier_close_to_axis(bezier, N=3) =
+	let(
+		bezend = len(bezier)-1
+	) concat(
+		[for (i=[0:N-1]) lerp([bezier[0][0], 0], bezier[0], i/N)],
+		bezier,
+		[for (i=[1:N]) lerp(bezier[bezend], [bezier[bezend][0], 0], i/N)],
+		[for (i=[1:N]) lerp([bezier[bezend][0], 0], [bezier[0][0], 0], i/N)]
+	);
 
 
 // Takes a bezier curve and closes it with a matching path that is
 // lowered by a given amount towards the X axis.
-function bezier_offset(inset, bezier) =
-	let(backbez = reverse([ for (pt = bezier) [pt[0], pt[1]-inset] ]))
-		concat(
-			bezier,
-			[bezier[len(bezier)-1]],
-			[backbez[0]],
-			backbez,
-			[backbez[len(backbez)-1]],
-			[bezier[0]],
-			[bezier[0]]
-		);
+function bezier_offset(inset, bezier, N=3) =
+	let(
+		backbez = reverse([ for (pt = bezier) [pt[0], pt[1]-inset] ]),
+		bezend = len(bezier)-1
+	) concat(
+		bezier,
+		[for (i=[1:N-1]) lerp(bezier[bezend], backbez[0], i/N)],
+		backbez,
+		[for (i=[1:N]) lerp(backbez[bezend], bezier[0], i/N)]
+	);
 
 
 // Takes a 2D bezier and rotates it around the X axis, forming a solid.
@@ -145,8 +153,8 @@ function bezier_offset(inset, bezier) =
 // Example:
 //   path = [ [0, 10], [33, 10], [66, 40], [100, 40] ];
 //   revolve_bezier_solid_to_axis(path, splinesteps=32, $fn=72);
-module revolve_bezier_solid_to_axis(bezier, splinesteps=16) {
-	revolve_bezier(bezier=bezier_close_to_axis(bezier), splinesteps=splinesteps);
+module revolve_bezier_solid_to_axis(bezier, splinesteps=16, N=3) {
+	revolve_bezier(bezier=bezier_close_to_axis(bezier), splinesteps=splinesteps, N=N);
 }
 
 
@@ -157,8 +165,8 @@ module revolve_bezier_solid_to_axis(bezier, splinesteps=16) {
 // Example:
 //   path = [ [0, 10], [33, 10], [66, 40], [100, 40] ];
 //   revolve_bezier_offset_shell(path, offset=1, splinesteps=32, $fn=72);
-module revolve_bezier_offset_shell(bezier, offset=1, splinesteps=16) {
-	revolve_bezier(bezier=bezier_offset(offset, bezier), splinesteps=splinesteps);
+module revolve_bezier_offset_shell(bezier, offset=1, splinesteps=16, N=3) {
+	revolve_bezier(bezier=bezier_offset(offset, bezier), splinesteps=splinesteps, N=N);
 }
 
 
@@ -169,8 +177,8 @@ module revolve_bezier_offset_shell(bezier, offset=1, splinesteps=16) {
 //   path = [ [0, 0, 0], [33, 33, 33], [66, -33, -33], [100, 0, 0] ];
 //   extrude_2d_shapes_along_bezier(path, splinesteps=32)
 //     circle(r=10, center=true);
-module extrude_2d_shapes_along_bezier(bezier, splinesteps=16) {
-	pointslist = slice(bezier_polyline(bezier, splinesteps), 0, -1);
+module extrude_2d_shapes_along_bezier(bezier, splinesteps=16, N=3) {
+	pointslist = slice(bezier_polyline(bezier, splinesteps, N), 0, -1);
 	ptcount = len(pointslist);
 	for (i = [0 : ptcount-2]) {
 		pt1 = pointslist[i];
@@ -218,13 +226,15 @@ module extrude_2d_shapes_along_bezier(bezier, splinesteps=16) {
 //   path = Array of points of a bezier path, to extrude along.
 //   pathsteps = number of steps to divide each path segment into.
 //   bezsteps = number of steps to divide each bezier segment into.
+//   bezN = number of points in each extruded bezier segment.  Cubic = 3
+//   pathN = number of points in each path bezier segment.  Cubic = 3
 // Example:
 //   bez = [ [-15, 0], [25, -15], [-5, 10], [0, 10], [5, 10], [10, 5], [15, 0], [10, -5], [5, -10], [0, -10], [-5, -10], [-10, -5], [-15, 0] ];
 //   path = [ [0, 0, 0], [33, 33, 33], [66, -33, -33], [100, 0, 0] ];
 //   extrude_bezier_along_bezier(bez, path, pathsteps=64, bezsteps=32);
-module extrude_bezier_along_bezier(bezier, path, pathsteps=16, bezsteps=16) {
-	bez_points = simplify2d_path(bezier_polyline(bezier, bezsteps));
-	path_points = simplify3d_path(path3d(bezier_polyline(path, pathsteps)));
+module extrude_bezier_along_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, pathN=3) {
+	bez_points = simplify2d_path(bezier_polyline(bezier, bezsteps, bezN));
+	path_points = simplify3d_path(path3d(bezier_polyline(path, pathsteps, pathN)));
 	extrude_2dpath_along_3dpath(bez_points, path_points);
 }
 

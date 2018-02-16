@@ -51,6 +51,10 @@ function quantup(x,y) = ceil(x/y)*y;
 function segs(r) = $fn>0?($fn>3?$fn:3):(ceil(max(min(360.0/$fa,abs(r)*2*Cpi()/$fs),5)));
 
 
+// Interpolate between two values or vectors.  0.0 <= u <= 1.0
+function lerp(a,b,u) = (b-a)*u + a;
+
+
 // Calculate hypotenuse length of 2D triangle.
 function hypot(x,y) = sqrt(x*x+y*y);
 
