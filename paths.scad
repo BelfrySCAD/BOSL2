@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 include <math.scad>
 include <quaternions.scad>
+include <triangulation.scad>
 
 
 // Creates a 2D polygon circle, modulated by one or more superimposed
@@ -154,7 +155,8 @@ module extrude_2dpath_along_spiral(polyline, h, r, twist=360) {
 		[[for (b = [pline_count-1:-1:0]) b+(steps)*pline_count]]
 	);
 
-	polyhedron(points=poly_points, faces=poly_faces, convexity=10);
+	tri_faces = triangulate_faces(poly_points, poly_faces);
+	polyhedron(points=poly_points, faces=tri_faces, convexity=10);
 }
 
 
@@ -215,7 +217,8 @@ module extrude_2dpath_along_3dpath(polyline, path, convexity=10) {
 		[[for (b = [pline_count-1:-1:0]) b+(path_count-1)*pline_count]]
 	);
 
-	polyhedron(points=poly_points, faces=poly_faces, convexity=convexity);
+	tri_faces = triangulate_faces(poly_points, poly_faces);
+	polyhedron(points=poly_points, faces=tri_faces, convexity=convexity);
 }
 
 

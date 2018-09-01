@@ -71,6 +71,30 @@ function cdr(list) = len(list)>1?[for (i=[1:len(list)-1]) list[i]]:[];
 function reverse(list) = [ for (i = [len(list)-1 : -1 : 0]) list[i] ];
 
 
+// Returns a slice of the given array, wrapping around past the beginning, if end < start
+function wrap_range(list, start, end) =
+	(end<start)?
+		concat(
+			[for (i=[start:len(list)-1]) list[i]],
+			[for (i=[0:end]) list[i]]
+		)
+	:
+		[for (i=[start:end]) list[i]]
+;
+
+
+// Takes an array of arrays and flattens it by one level.
+// flatten([[1,2,3], [4,5,[6,7,8]]]) returns [1,2,3,4,5,[6,7,8]]
+function flatten(l) = [ for (a = l) for (b = a) b ];
+
+
+// Returns the sum of all entries in the given array.
+// If passed an array of vectors, returns a vector of sums of each part.
+// sum([1,2,3]) returns 6.
+// sum([[1,2,3], [3,4,5], [5,6,7]]) returns [9, 12, 15]
+function sum(v, i=0) = i<len(v)-1 ? v[i] + sum(v, i+1) : v[i];
+
+
 // Returns the sum of the square of each element of a vector.
 function sum_of_squares(v,n=0) = (n>=len(v))? 0 : ((v[n]*v[n]) + sum_of_squares(v,n+1));
 

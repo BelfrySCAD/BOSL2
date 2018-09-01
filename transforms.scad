@@ -448,7 +448,7 @@ module xspread(spacing=1,n=2) for (i=[0:n-1]) right((i-(n-1)/2.0)*spacing) child
 //   yspread(25,3) sphere(1)
 //   yspread(25, n=3) sphere(1)
 //   yspread(spacing=20, n=4) sphere(1)
-module yspread(spacing=1,n=2) for (i=[0:n-1]) back((i-(n-1)/2.0)*spacing) children();
+module yspread(spacing=1,n=2) for (i=[0:n-1]) back((i-(n-1)/2)*spacing) children();
 
 
 // Spreads out n copies of the given children along the Z axis.
