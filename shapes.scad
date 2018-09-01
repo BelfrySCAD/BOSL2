@@ -37,7 +37,7 @@ include <masks.scad>
 
 
 // For when you MUST pass a child to a module, but you want it to be nothing.
-module nil() difference() {cube(0.1, center=true); cube(0.2, center=true);}
+module nil() union() {}
 
 
 // Makes a cube that is centered in X and Y axes, and has its bottom aligned with Z=0.
@@ -124,7 +124,8 @@ module chamfcube(
 }
 
 
-// Makes a cube with rounded (filletted) vertical edges.
+// Makes a cube with rounded (filletted) vertical edges. The r size will be
+// limited to a maximum of half the length of the shortest XY side.
 //   size = size of cube [X,Y,Z].  (Default: [1,1,1])
 //   r = radius of edge/corner rounding.  (Default: 0.25)
 //   center = if true, object will be centered.  If false, sits on top of XY plane.
@@ -136,25 +137,19 @@ module rrect(size=[1,1,1], r=0.25, center=false)
 	w = size[0];
 	l = size[1];
 	h = size[2];
+	rr = min(r, min(w/2-0.01, l/2-0.01));
 	up(center? 0 : h/2) {
 		linear_extrude(height=h, convexity=2, center=true) {
-			left(w/2-r) {
-				back(l/2-r) circle(r=r, center=true);
-				fwd(l/2-r) circle(r=r, center=true);
+			offset(r=rr) {
+				square([w-2*rr, l-2*rr], center=true);
 			}
-			right(w/2-r) {
-				back(l/2-r) circle(r=r, center=true);
-				fwd(l/2-r) circle(r=r, center=true);
-			}
-			square(size=[w, l-r*2], center=true);
-			square(size=[w-r*2, l], center=true);
 		}
 	}
 }
 
 
-
-// Makes a cube with rounded (filletted) edges and corners.
+// Makes a cube with rounded (filletted) edges and corners.  The r size will be
+// limited to a maximum of half the length of the shortest side.
 //   size = size of cube [X,Y,Z].  (Default: [1,1,1])
 //   r = radius of edge/corner rounding.  (Default: 0.25)
 //   center = if true, object will be centered.  If false, sits on top of XY plane.
@@ -163,33 +158,17 @@ module rrect(size=[1,1,1], r=0.25, center=false)
 //   rcube(size=[5,7,3], r=1);
 module rcube(size=[1,1,1], r=0.25, center=false)
 {
-	$fn = ($fn==undef)?max(18,floor(180/asin(1/r)/2)*2):$fn;
-	xoff=abs(size[0])/2-r;
-	yoff=abs(size[1])/2-r;
-	zoff=abs(size[2])/2-r;
-	offset = center?[0,0,0]:size/2;
-	translate(offset) {
-		union() {
-			grid_of([-xoff,xoff],[-yoff,yoff],[-zoff,zoff])
-				sphere(r=r,center=true,$fn=$fn);
-			grid_of(xa=[-xoff,xoff],ya=[-yoff,yoff])
-				cylinder(r=r,h=zoff*2,center=true,$fn=$fn);
-			grid_of(xa=[-xoff,xoff],za=[-zoff,zoff])
-				rotate([90,0,0])
-					cylinder(r=r,h=yoff*2,center=true,$fn=$fn);
-			grid_of(ya=[-yoff,yoff],za=[-zoff,zoff])
-				rotate([90,0,0])
-				rotate([0,90,0])
-					cylinder(r=r,h=xoff*2,center=true,$fn=$fn);
-			cube(size=[xoff*2,yoff*2,size[2]], center=true);
-			cube(size=[xoff*2,size[1],zoff*2], center=true);
-			cube(size=[size[0],yoff*2,zoff*2], center=true);
+	rr = min(r, min(min(size[0]/2-0.01, size[1]/2-0.01), size[2]/2-0.01));
+	translate(center? [0,0,0] : size/2) {
+		minkowski() {
+			cube([size[0]-2*rr, size[1]-2*rr, size[2]-2*rr], center=true);
+			sphere(rr, $fn=quantup(segs(rr), 4));
 		}
 	}
 }
 
 
-// Creates a cylinder with chamferred edges.
+// Creates a cylinder with chamferred (bevelled) edges.
 //   h = height of cylinder. (Default: 1.0)
 //   r = radius of cylinder. (Default: 1.0)
 //   d = diameter of cylinder. (use instead of r)
@@ -241,14 +220,19 @@ module chamf_cyl(h=1, r=1, d=undef, chamfer=0.25, chamfedge=undef, angle=45, cen
 module rcylinder(h=1, r=1, d=undef, fillet=0.25, center=false)
 {
 	d = (d == undef)? r * 2.0 : d;
+	dh = d - 2*fillet;
+	hh = h - 2*fillet;
 	up(center? 0 : h/2) {
 		rotate_extrude(angle=360, convexity=2) {
-			left(d/2-fillet) {
-				back(h/2-fillet) circle(r=fillet, center=true);
-				fwd(h/2-fillet) circle(r=fillet, center=true);
+			hull() {
+				left(d/2-fillet) {
+					yspread(h-2*fillet) {
+						circle(r=fillet, $fn=quantup(segs(fillet), 4));
+					}
+				}
+				left(d/2/2) square(size=[d/2, h-fillet*2], center=true);
+				left((d/2-fillet)/2) square(size=[d/2-fillet, h], center=true);
 			}
-			left(d/2/2) square(size=[d/2, h-fillet*2], center=true);
-			left((d/2-fillet)/2) square(size=[d/2-fillet, h], center=true);
 		}
 	}
 }
@@ -373,28 +357,50 @@ module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false)
 }
 
 
-// Makes a teardrop shape in the XZ plane. Useful for 3D printable holes.
+// Makes a 2D teardrop shape. Useful for 3D printable holes.
 //   r = radius of circular part of teardrop.  (Default: 1)
-//   h = thickness of teardrop. (Default: 1)
+//   d = diameter of spherical portion of bottom. (Use instead of r)
+//   ang = angle of hat walls from the Y axis.  (Default: 45 degrees)
+//   cap_h = if given, height above center where the shape will be truncated.
 // Example:
-//   teardrop(r=3, h=2, ang=30);
-module teardrop(r=1, h=1, ang=45, $fn=undef)
+//   teardrop2d(r=30, ang=30);
+module teardrop2d(r=1, d=undef, ang=45, cap_h=undef)
 {
-	$fn = ($fn==undef)?max(12,floor(180/asin(1/r)/2)*2):$fn;
-	xrot(90) union() {
-		translate([0, r*sin(ang), 0]) {
-			scale([1, 1/tan(ang), 1]) {
-				difference() {
-					zrot(45) {
-						cube(size=[2*r*cos(ang)/sqrt(2), 2*r*cos(ang)/sqrt(2), h], center=true);
-					}
-					translate([0, -r/2, 0]) {
-						cube(size=[2*r, r, h+1], center=true);
+	r = (d!=undef)? (d/2.0) : r;
+	difference() {
+		hull() {
+			back(r*sin(ang)) {
+				yscale(1/tan(ang)) {
+					difference() {
+						zrot(45) square([2*r*cos(ang)/sqrt(2), 2*r*cos(ang)/sqrt(2)], center=true);
+						fwd(r/2) square([2*r, r], center=true);
 					}
 				}
 			}
+			zrot(90) circle(r=r, center=true);
 		}
-		cylinder(h=h, r=r, center=true);
+		if (cap_h != undef) {
+			back(r*3/2+cap_h) square([r*3, r*3], center=true);
+		}
+	}
+}
+
+
+// Makes a teardrop shape in the XZ plane. Useful for 3D printable holes.
+//   r = radius of circular part of teardrop.  (Default: 1)
+//   d = diameter of spherical portion of bottom. (Use instead of r)
+//   h = thickness of teardrop. (Default: 1)
+//   ang = angle of hat walls from the Z axis.  (Default: 45 degrees)
+//   cap_h = if given, height above center where the shape will be truncated.
+// Example:
+//   teardrop(r=30, h=10, ang=30);
+module teardrop(r=1, d=undef, h=1, ang=45, cap_h=undef)
+{
+	r = (d!=undef)? (d/2.0) : r;
+	xrot(90) {
+		linear_extrude(height=h, center=true, steps=2) {
+			teardrop2d(r=r, ang=ang, cap_h=cap_h);
+		}
 	}
 }
 
@@ -408,25 +414,11 @@ module teardrop(r=1, h=1, ang=45, $fn=undef)
 //   onion(h=15, r=10, maxang=30);
 module onion(h=1, r=1, d=undef, maxang=45)
 {
-	rr = (d!=undef)? (d/2.0) : r;
-	xx = rr*cos(maxang);
-	yy = rr*sin(maxang);
-	tipy = xx*sin(90-maxang)/sin(maxang) + yy;
-	rotate_extrude(angle=360, convexity=4) {
+	r = (d!=undef)? (d/2.0) : r;
+	rotate_extrude(angle=360, convexity=2) {
 		difference() {
-			union() {
-				circle(r=rr, center=true);
-				polygon(
-					points=[
-						[0, 0],
-						[0, tipy],
-						[xx, yy],
-						[rr, 0]
-					]
-				);
-			}
-			back(tipy/2+h) square(size=[rr*2, tipy], center=true);
-			left(rr) square(size=rr*2, center=true);
+			teardrop2d(r=r, ang=maxang, cap_h=h);
+			right(r+h/2) square(size=r*2+h, center=true);
 		}
 	}
 }
@@ -442,13 +434,15 @@ module onion(h=1, r=1, d=undef, maxang=45)
 //   tube(h=3, r=4, wall=1, center=true);
 //   tube(h=6, r=4, wall=2, $fn=6);
 //   tube(h=3, r1=5, r2=7, wall=2, center=true);
-module tube(h=1, r=1, r1=undef, r2=undef, wall=0.5, center=false)
+module tube(h=1, r=1, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, wall=0.1, center=false)
 {
-	r1 = (r1==undef)? r : r1;
-	r2 = (r2==undef)? r : r2;
-	difference() {
-		cylinder(h=h, r1=r1, r2=r2, center=center);
-		down(0.25) cylinder(h=h+1, r1=r1-wall, r2=r2-wall, center=center);
+	r1 = (d1!=undef)? d1/2 : (d!=undef)? d/2 : (r1!=undef)? r1 : r;
+	r2 = (d2!=undef)? d2/2 : (d!=undef)? d/2 : (r2!=undef)? r2 : r;
+	up(center? 0 : h/2) {
+		difference() {
+			cylinder(h=h, r1=r1, r2=r2, center=true);
+			cylinder(h=h+0.05, r1=r1-wall, r2=r2-wall, center=true);
+		}
 	}
 }
 
@@ -484,20 +478,10 @@ module slot(
 	r  = (r  != undef)? r  : (d/2);
 	r1 = (r1 != undef)? r1 : ((d1 != undef)? (d1/2) : r);
 	r2 = (r2 != undef)? r2 : ((d2 != undef)? (d2/2) : r);
-	delta = p2 - p1;
-	theta = atan2(delta[1], delta[0]);
-	xydist = sqrt(pow(delta[0],2) + pow(delta[1],2));
-	phi = atan2(delta[2], xydist);
-	dist = sqrt(pow(delta[2],2) + xydist*xydist);
 	$fn = quantup(segs(max(r1,r2)),4);
-	translate(p1) {
-		zrot(theta) {
-			yrot(phi) {
-				cylinder(h=h, r1=r1, r2=r2, center=true);
-				right(dist/2) trapezoid([dist, r1*2], [dist, r2*2], h=h, center=true);
-				right(dist) cylinder(h=h, r1=r1, r2=r2, center=true);
-			}
-		}
+	hull() {
+		translate(p1) cylinder(h=h, r1=r1, r2=r2, center=true);
+		translate(p2) cylinder(h=h, r1=r1, r2=r2, center=true);
 	}
 }
 
@@ -733,7 +717,7 @@ module braced_thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2)
 //   ang = maximum overhang angle of diagonal brace.
 //   strut = the width of the diagonal brace.
 //   wall = the thickness of the thinned portion of the wall.
-//   diagonly = boolean, which denotes only the diagonal brace should be thick.
+//   diagonly = boolean, which denotes only the diagonal side (hypotenuse) should be thick.
 // Example:
 //   thinning_triangle(h=50, l=100, thick=4, ang=30, strut=5, wall=2, diagonly=true);
 module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly=false)
@@ -782,7 +766,8 @@ module thinning_brace(h=50, l=100, thick=5, ang=30, strut=5, wall=3)
 }
 
 
-// Makes an open rectangular strut with X-shaped cross-bracing, designed with 3D printing in mind.
+// Makes an open rectangular strut with X-shaped cross-bracing, designed to reduce the
+// need for support material in 3D printing.
 //   h = Z size of strut.
 //   w = X size of strut.
 //   l = Y size of strut.
@@ -838,7 +823,8 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 //!sparse_strut3d(h=40, w=40, l=120, thick=3, strut=3);
 
 
-// Makes an open rectangular strut with X-shaped cross-bracing, designed with 3D printing in mind.
+// Makes an open rectangular strut with X-shaped cross-bracing, designed to reduce
+// the need for support material in 3D printing.
 //   h = height of strut wall.
 //   l = length of strut wall.
 //   thick = thickness of strut wall.
@@ -889,36 +875,26 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge = 20)
 //   strut = the width of the cross-braces.
 //   wall = thickness of corrugations.
 // Example:
-//   corrugated_wall(h=50, l=100, thick=4, strut=5, wall=2);
+   corrugated_wall(h=50, l=100, thick=4, strut=5, wall=2, $fn=12);
 module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2)
 {
-	innerlen = l - strut*2;
-	inner_height = h - wall*2;
-	spacing = thick*sqrt(3);
-	corr_count = floor(innerlen/spacing/2)*2;
-
-	yspread(l-strut) {
-		cube(size=[thick, strut, h], center=true);
-	}
-	zspread(h-wall) {
-		cube(size=[thick, l, wall], center=true);
+	amplitude = (thick - wall) / 2;
+	period = min(15, thick * 2);
+	steps = quantup(segs(thick/2),4);
+	step = period/steps;
+	il = l - 2*strut + 2*step;
+	linear_extrude(height=h-2*strut+0.1, steps=2, convexity=ceil(2*il/period), center=true) {
+		polygon(
+			points=concat(
+				[for (y=[-il/2:step:il/2]) [amplitude*sin(y/period*360)-wall/2, y] ],
+				[for (y=[il/2:-step:-il/2]) [amplitude*sin(y/period*360)+wall/2, y] ]
+			)
+		);
 	}
 
 	difference() {
-		for (ypos = [-innerlen/2:spacing:innerlen/2]) {
-			translate([0, ypos, 0]) {
-				translate([0, spacing/4, 0])
-					zrot(-45) cube(size=[wall, thick*sqrt(2), inner_height], center=true);
-				translate([0, spacing*3/4, 0])
-					zrot(45) cube(size=[wall, thick*sqrt(2), inner_height], center=true);
-			}
-		}
-		xspread(2*thick) {
-			cube(size=[thick, l, h], center=true);
-		}
-		yspread(2*l) {
-			cube(size=[thick*2, l, h], center=true);
-		}
+		cube([thick, l, h], center=true);
+		cube([thick+0.5, l-2*strut, h-2*strut], center=true);
 	}
 }
 
