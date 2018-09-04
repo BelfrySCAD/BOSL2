@@ -357,7 +357,7 @@ module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false)
 }
 
 
-// Makes a 2D teardrop shape. Useful for 3D printable holes.
+// Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.
 //   r = radius of circular part of teardrop.  (Default: 1)
 //   d = diameter of spherical portion of bottom. (Use instead of r)
 //   ang = angle of hat walls from the Y axis.  (Default: 45 degrees)
@@ -447,16 +447,30 @@ module tube(h=1, r=1, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, wall=0.1,
 }
 
 
-// Creates a torus with a given outer radius and inner radius.
-//   or = outer radius of the torus.
-//   ir = inside radius of the torus.
+// Creates a torus shape.
+//   r  = major radius of torus ring. (use with of 'r2', or 'd2')
+//   r2 = minor radius of torus ring. (use with of 'r', or 'd')
+//   d  = major diameter of torus ring. (use with of 'r2', or 'd2')
+//   d2 = minor diameter of torus ring. (use with of 'r', or 'd')
+//   or = outer radius of the torus. (use with 'ir', or 'id')
+//   ir = inside radius of the torus. (use with 'or', or 'od')
+//   od = outer diameter of the torus. (use with 'ir' or 'id')
+//   id = inside diameter of the torus. (use with 'or' or 'od')
 // Example:
+//   torus(r=30, r2=5);
+//   torus(d=50, r2=5);
+//   torus(d=60, d2=15);
+//   torus(od=60, ir=15);
 //   torus(or=30, ir=20, $fa=1, $fs=1);
-module torus(or=1, ir=0.5)
+module torus(or=1, ir=0.5, od=undef, id=undef, r=undef, r2=undef, d=undef, d2=undef)
 {
-	rotate_extrude(convexity = 4)
-		translate([(or-ir)/2+ir, 0, 0])
-			circle(r = (or-ir)/2);
+	ir = id!=undef? id/2 : ir;
+	or = od!=undef? od/2 : or;
+	r = d!=undef? d/2 : r!=undef? r : (ir+or)/2;
+	r2 = d2!=undef? d2/2 : r2!=undef? r2 : (or-ir)/2;
+	rotate_extrude(convexity = 4) {
+		right(r) circle(r2);
+	}
 }
 
 
