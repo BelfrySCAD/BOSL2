@@ -875,7 +875,7 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge = 20)
 //   strut = the width of the cross-braces.
 //   wall = thickness of corrugations.
 // Example:
-   corrugated_wall(h=50, l=100, thick=4, strut=5, wall=2, $fn=12);
+//   corrugated_wall(h=50, l=100, thick=4, strut=5, wall=2, $fn=12);
 module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2)
 {
 	amplitude = (thick - wall) / 2;
