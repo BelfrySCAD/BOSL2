@@ -63,8 +63,8 @@ function bezier_polyline(bezier, splinesteps=16, N=3) = concat(
 
 // Takes a closed 2D bezier path, and creates a 2D polygon from it.
 //   bezier = array of 2D bezier path points
-//   splinesteps = number of straight lines to split each bezier segment into
-//   N = number of points in each bezier segment.  Cubic = 3
+//   splinesteps = number of straight lines to split each bezier segment into. default=16
+//   N = number of points in each bezier segment.  default=3 (cubic)
 module bezier_polygon(bezier, splinesteps=16, N=3) {
 	polypoints=bezier_polyline(bezier, splinesteps, N);
 	polygon(points=slice(polypoints, 0, -1));
@@ -102,9 +102,11 @@ function fillet_path(pts, fillet) = concat(
 
 
 // Takes a closed 2D bezier and rotates it around the X axis, forming a solid.
-//   bezier = array of points for the bezier path to rotate.
-//   splinesteps = number of segments to divide each bezier segment into.
-//   N = number of points in each bezier segment.  Cubic = 3
+//   bezier = array of 2D points for the bezier path to rotate.
+//   splinesteps = number of segments to divide each bezier segment into. default=16
+//   N = number of points in each bezier segment.  default=3 (cubic)
+//   convexity = max number of walls a line could pass through, for preview.  default=10
+//   angle = degrees of sweep to make.  default=360
 // Example:
 //   path = [
 //     [  0, 10], [ 50,  0], [ 50, 40],
@@ -114,10 +116,13 @@ function fillet_path(pts, fillet) = concat(
 //     [  0, 10]
 //   ];
 //   revolve_bezier(path, splinesteps=32, $fn=180);
-module revolve_bezier(bezier, splinesteps=16, N=3) {
-	yrot(90) rotate_extrude(convexity=10) {
+module revolve_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360) {
+	yrot(90) rotate_extrude(convexity=convexity, angle=angle) {
 		xrot(180) zrot(-90) bezier_polygon(bezier, splinesteps, N);
 	}
+}
+module rotate_extrude_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360) {
+	revolve_bezier(bezier, splinesteps=splinesteps, N=N, convexity=convexity, angle=angle);
 }
 
 
@@ -149,30 +154,36 @@ function bezier_offset(inset, bezier, N=3) =
 
 // Takes a 2D bezier and rotates it around the X axis, forming a solid.
 //   bezier = array of points for the bezier path to rotate.
-//   splinesteps = number of segments to divide each bezier segment into.
+//   splinesteps = number of segments to divide each bezier segment into. default=16
+//   N = number of points in each bezier segment.  default=3 (cubic)
+//   convexity = max number of walls a line could pass through, for preview.  default=10
+//   angle = degrees of sweep to make.  default=360
 // Example:
 //   path = [ [0, 10], [33, 10], [66, 40], [100, 40] ];
 //   revolve_bezier_solid_to_axis(path, splinesteps=32, $fn=72);
-module revolve_bezier_solid_to_axis(bezier, splinesteps=16, N=3) {
-	revolve_bezier(bezier=bezier_close_to_axis(bezier), splinesteps=splinesteps, N=N);
+module revolve_bezier_solid_to_axis(bezier, splinesteps=16, N=3, convexity=10, angle=360) {
+	revolve_bezier(bezier=bezier_close_to_axis(bezier), splinesteps=splinesteps, N=N, convexity=convexity, angle=angle);
 }
 
 
 // Takes a 2D bezier and rotates it around the X axis, into a hollow shell.
 //   bezier = array of points for the bezier path to rotate.
 //   offset = the thickness of the created shell.
-//   splinesteps = number of segments to divide each bezier segment into.
+//   splinesteps = number of segments to divide each bezier segment into. default=16
+//   N = number of points in each bezier segment.  default=3 (cubic)
+//   convexity = max number of walls a line could pass through, for preview.  default=10
+//   angle = degrees of sweep to make.  default=360
 // Example:
 //   path = [ [0, 10], [33, 10], [66, 40], [100, 40] ];
 //   revolve_bezier_offset_shell(path, offset=1, splinesteps=32, $fn=72);
-module revolve_bezier_offset_shell(bezier, offset=1, splinesteps=16, N=3) {
+module revolve_bezier_offset_shell(bezier, offset=1, splinesteps=16, N=3, convexity=10, angle=360) {
 	revolve_bezier(bezier=bezier_offset(offset, bezier), splinesteps=splinesteps, N=N);
 }
 
 
 // Extrudes 2D children along a bezier path.
 //   bezier = array of points for the bezier path to extrude along.
-//   splinesteps = number of segments to divide each bezier segment into.
+//   splinesteps = number of segments to divide each bezier segment into. default=16
 // Example:
 //   path = [ [0, 0, 0], [33, 33, 33], [66, -33, -33], [100, 0, 0] ];
 //   extrude_2d_shapes_along_bezier(path, splinesteps=32)
@@ -222,12 +233,12 @@ module extrude_2d_shapes_along_bezier(bezier, splinesteps=16, N=3) {
 
 // Takes a closed 2D bezier path, centered on the XY plane, and
 // extrudes it perpendicularly along a 3D bezier path, forming a solid.
-//   bezier = Array of points of a bezier path, to be extruded.
-//   path = Array of points of a bezier path, to extrude along.
+//   bezier = Array of 2D points of a bezier path, to be extruded.
+//   path = Array of 3D points of a bezier path, to extrude along.
 //   pathsteps = number of steps to divide each path segment into.
 //   bezsteps = number of steps to divide each bezier segment into.
-//   bezN = number of points in each extruded bezier segment.  Cubic = 3
-//   pathN = number of points in each path bezier segment.  Cubic = 3
+//   bezN = number of points in each extruded bezier segment.  default=3 (cubic)
+//   pathN = number of points in each path bezier segment.  default=3 (cubic)
 // Example:
 //   bez = [ [-15, 0], [25, -15], [-5, 10], [0, 10], [5, 10], [10, 5], [15, 0], [10, -5], [5, -10], [0, -10], [-5, -10], [-10, -5], [-15, 0] ];
 //   path = [ [0, 0, 0], [33, 33, 33], [66, -33, -33], [100, 0, 0] ];
@@ -236,6 +247,27 @@ module extrude_bezier_along_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN
 	bez_points = simplify2d_path(bezier_polyline(bezier, bezsteps, bezN));
 	path_points = simplify3d_path(path3d(bezier_polyline(path, pathsteps, pathN)));
 	extrude_2dpath_along_3dpath(bez_points, path_points);
+}
+
+
+
+// Takes a closed 2D bezier path, centered on the XY plane, and
+// extrudes it linearly upwards, forming a solid.
+//   bezier = Array of 2D points of a bezier path, to be extruded.
+//   splinesteps = number of steps to divide each bezier segment into. default=16
+//   N = number of points in each extruded bezier segment.  default = 3 (cubic)
+//   center = if true, the extruded solid is centered vertically at z=0.
+//   convexity = max number of walls a line could pass through, for preview.  default=10
+//   twist = degrees to twist over length of extrusion.  default=0
+//   scale = relative size of top of extrusion to the bottom.  default=1.0
+//   slices = number of vertical slices to use for twisted extrusion.  default=20
+// Example:
+//   bez = [ [-15, 0], [25, -15], [-5, 10], [0, 10], [5, 10], [10, 5], [15, 0], [10, -5], [5, -10], [0, -10], [-5, -10], [-10, -5], [-15, 0] ];
+//   linear_extrude_bezier(bez, splinesteps=32, );
+module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=true, convexity=10, twist=0, slices=20, scale=1.0) {
+	linear_extrude(height=height, center=center, convexity=convexity, twist=twist, slices=slices, scale=scale) {
+		bezier_polygon(bezier, splinesteps=splinesteps, N=N);
+	}
 }
 
 
