@@ -158,11 +158,17 @@ module rrect(size=[1,1,1], r=0.25, center=false)
 //   rcube(size=[5,7,3], r=1);
 module rcube(size=[1,1,1], r=0.25, center=false)
 {
-	rr = min(r, min(min(size[0]/2-0.01, size[1]/2-0.01), size[2]/2-0.01));
+	dd = min(2*r, min(size));
+	$fn=quantup(segs(dd/2), 4);
 	translate(center? [0,0,0] : size/2) {
 		minkowski() {
-			cube([size[0]-2*rr, size[1]-2*rr, size[2]-2*rr], center=true);
-			sphere(rr, $fn=quantup(segs(rr), 4));
+			cube([max(0.01,size[0]-dd), max(0.01,size[1]-dd), max(0.01,size[2]-dd)], center=true);
+			rotate_extrude() {
+				difference() {
+					circle(dd/2);
+					left(dd/2) square(dd, center=true);
+				}
+			}
 		}
 	}
 }
