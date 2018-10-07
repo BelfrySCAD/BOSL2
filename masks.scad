@@ -107,7 +107,9 @@ module chamfer_mask_z(l=1.0, chamfer=1.0) {
 //   chamfer = size of chamfer
 // Example:
 //   chamfer_mask_y(l=10.0, chamfer=2.0);
-module chamfer_mask_y(l=1.0, chamfer=1.0) {xrot(90) chamfer_mask(h=l, r=chamfer);}
+module chamfer_mask_y(l=1.0, chamfer=1.0) {
+	xrot(90) chamfer_mask_z(l=l, chamfer=chamfer);
+}
 
 
 // Creates a shape that can be used to chamfer a 90 degree edge along the X axis.
@@ -117,7 +119,9 @@ module chamfer_mask_y(l=1.0, chamfer=1.0) {xrot(90) chamfer_mask(h=l, r=chamfer)
 //   chamfer = size of chamfer
 // Example:
 //   chamfer_mask_x(l=10.0, chamfer=2.0);
-module chamfer_mask_x(l=1.0, chamfer=1.0) {yrot(90) chamfer_mask(h=l, r=chamfer);}
+module chamfer_mask_x(l=1.0, chamfer=1.0) {
+	yrot(90) chamfer_mask_z(l=l, chamfer=chamfer);
+}
 
 
 // Chamfers the edges of a cuboid region containing the given children.
