@@ -245,20 +245,46 @@ module chain_hull() {
 //////////////////////////////////////////////////////////////////////
 
 
-// Makes a copy of the children, mirrored across the given axes.
+// Makes a copy of the children, mirrored across the given plane.
 //   v = The normal vector of the plane to mirror across.
+//   offset = distance to offset away from the plane.
 // Example:
 //   mirror_copy([1,-1,0]) yrot(30) cylinder(h=10, r=1, center=true);
-module mirror_copy(v=[0,0,1])
+//   mirror_copy([1,1,1], offset=17.32) cylinder(h=10, r=1, center=false);
+module mirror_copy(v=[0,0,1], offset=0)
 {
+	l = sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+	nv = v/l;
+	off = nv*offset;
 	union() {
-		children();
-		mirror(v) children();
+		translate(off) children();
+		mirror(nv) translate(off) children();
 	}
 }
-module xflip_copy() {children(); mirror([1,0,0]) children();}
-module yflip_copy() {children(); mirror([0,1,0]) children();}
-module zflip_copy() {children(); mirror([0,0,1]) children();}
+
+
+// Makes a copy of the children, mirrored across the X axis.
+//   offset = distance to offset children away from the X axis.
+// Example:
+//   xflip_copy() yrot(30) cylinder(h=10, r=1, center=true);
+//   xflip_copy(offset=10) yrot(30) cylinder(h=10, r=1, center=false);
+module xflip_copy(offset=0) {right(offset) children(); mirror([1,0,0]) right(offset) children();}
+
+
+// Makes a copy of the children, mirrored across the Y axis.
+//   offset = distance to offset children away from the Y axis.
+// Example:
+//   yflip_copy() yrot(30) cylinder(h=10, r=1, center=true);
+//   yflip_copy(offset=10) yrot(30) cylinder(h=10, r=1, center=false);
+module yflip_copy(offset=0) {back(offset) children(); mirror([0,1,0]) back(offset) children();}
+
+
+// Makes a copy of the children, mirrored across the Z axis.
+//   offset = distance to offset children away from the Z axis.
+// Example:
+//   zflip_copy() yrot(30) cylinder(h=10, r=1, center=true);
+//   zflip_copy(offset=10) yrot(30) cylinder(h=10, r=1, center=false);
+module zflip_copy(offset=0) {up(offset) children(); mirror([0,0,1]) up(offset) children();}
 
 
 // Given a number of euller angles, rotates copies of the given children to each of those angles.
