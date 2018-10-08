@@ -450,9 +450,43 @@ module arc_of(
 }
 
 
-module xring(n=2,r=0,rot=true) {if (n>0) for (i=[0:n-1]) {a=i*360/n; xrot(a) back(r) xrot(rot?0:-a) children();}}
-module yring(n=2,r=0,rot=true) {if (n>0) for (i=[0:n-1]) {a=i*360/n; yrot(a) right(r) yrot(rot?0:-a) children();}}
-module zring(n=2,r=0,rot=true) {if (n>0) for (i=[0:n-1]) {a=i*360/n; zrot(a) right(r) zrot(rot?0:-a) children();}}
+// Evenly distributes n duplicate children around a circle on the YZ plane, around the
+// X axis.  First moves children away from the X axis by r distance, in direction sa.
+// Then copies them around the axis of rotation, for a total of n copies.  If rot is
+// true, each copy is rotated in place to orient to the center of rotation.
+//   n = number of copies of children to distribute around the circle. (Default: 2)
+//   r = radius of ring to distribute children around. (Default: 0)
+//   sa = start angle for first (unrotated) copy.  (Default: 0)
+//   rot = if true, rotate each copy of children with respect to the center of the ring.
+// Example:
+//   xring(n=3, r=10, sa=270) yspread(10) yrot(120) cylinder(h=10, d=1, center=false);
+module xring(n=2,r=0,sa=0,rot=true) {if (n>0) for (i=[0:n-1]) {a=i*360/n; xrot(a+sa) back(r) xrot((rot?0:-a)-sa) children();}}
+
+
+// Evenly distributes n duplicate children around a circle on the XZ plane, around the
+// Y axis.  First moves children away from the Y axis by r distance, in direction sa.
+// Then copies them around the axis of rotation, for a total of n copies.  If rot is
+// true, each copy is rotated in place to orient to the center of rotation.
+//   n = number of copies of children to distribute around the circle. (Default: 2)
+//   r = radius of ring to distribute children around. (Default: 0)
+//   sa = start angle for first (unrotated) copy.  (Default: 0)
+//   rot = if true, rotate each copy of children with respect to the center of the ring.
+// Example:
+//   yring(n=3, r=10, sa=270) xspread(10) xrot(-120) cylinder(h=10, d=1, center=false);
+module yring(n=2,r=0,sa=0,rot=true) {if (n>0) for (i=[0:n-1]) {a=i*360/n; yrot(a-sa) right(r) yrot((rot?0:-a)+sa) children();}}
+
+
+// Evenly distributes n duplicate children around a circle on the XY plane, around the
+// Z axis.  First moves children away from the Z axis by r distance, in direction sa.
+// Then copies them around the axis of rotation, for a total of n copies.  If rot is
+// true, each copy is rotated in place to orient to the center of rotation.
+//   n = number of copies of children to distribute around the circle. (Default: 2)
+//   r = radius of ring to distribute children around. (Default: 0)
+//   sa = start angle for first (unrotated) copy.  (Default: 0)
+//   rot = if true, rotate each copy of children with respect to the center of the ring.
+// Example:
+//   zring(n=3, r=10, sa=90) xspread(10) xrot(30) cylinder(h=10, d=1, center=false);
+module zring(n=2,r=0,sa=0,rot=true) {if (n>0) for (i=[0:n-1]) {a=i*360/n; zrot(a+sa) right(r) zrot((rot?0:-a)-sa) children();}}
 
 
 // Spreads out n copies of the given children along the X axis.
