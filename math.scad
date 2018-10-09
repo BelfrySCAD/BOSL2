@@ -207,7 +207,8 @@ function normalize(v) = v/norm(v);
 function vector2d_angle(v1,v2) = atan2(v1[1],v1[0]) - atan2(v2[1],v2[0]);
 
 // Returns angle in degrees between two 3D vectors.
-function vector3d_angle(v1,v2) = acos((v1*v2)/(norm(v1)*norm(v2)));
+// NOTE: min and max are to correct for crazy FP rounding errors that exceed acos()'s domain.
+function vector3d_angle(v1,v2) = acos(max(-1,min(1,(v1*v2)/(norm(v1)*norm(v2)))));
 
 // Returns a slice of an array.  An index of 0 is the array start, -1 is array end
 function slice(arr,st,end) = let(
