@@ -56,8 +56,6 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-pi = 3.141592653589793236;
-
 
 //An involute spur gear, with reasonable defaults for all the parameters.
 //Normally, you should just choose the first 4 parameters, and let the rest be default values.
@@ -74,12 +72,12 @@ module gear (
 	clearance       = 0.0,  //gap between top of a tooth on one gear and bottom of valley on a meshing gear (in millimeters)
 	backlash        = 0.0   //gap between two meshing teeth, in the direction along the circumference of the pitch circle
 ) {
-	p  = mm_per_tooth * number_of_teeth / pi / 2; //radius of pitch circle
-	c  = p + mm_per_tooth / pi - clearance;       //radius of outer circle
+	p  = mm_per_tooth * number_of_teeth / PI / 2; //radius of pitch circle
+	c  = p + mm_per_tooth / PI - clearance;       //radius of outer circle
 	b  = p*cos(pressure_angle);                   //radius of base circle
 	r  = p-(c-p)-clearance;                       //radius of root circle
 	t  = mm_per_tooth/2-backlash/2;               //tooth thickness at pitch circle
-	k  = -iang(b, p) - t/2/p/pi*180;              //angle to where involute meets base circle on each side of tooth
+	k  = -iang(b, p) - t/2/p/PI*180;              //angle to where involute meets base circle on each side of tooth
 	difference() {
 		linear_extrude(height = thickness, center = true, convexity = 10, twist = twist, slices = ceil(abs(twist)/5)+1)
 			for (i = [0:number_of_teeth-teeth_to_hide-1] )
@@ -102,7 +100,7 @@ module gear (
 };	
 //these 4 functions are used by gear
 function polar(r,theta)   = r*[sin(theta), cos(theta)];                            //convert polar to cartesian coordinates
-function iang(r1,r2)      = sqrt((r2/r1)*(r2/r1) - 1)/pi*180 - acos(r1/r2); //unwind a string this many degrees to go from radius r1 to radius r2
+function iang(r1,r2)      = sqrt((r2/r1)*(r2/r1) - 1)/PI*180 - acos(r1/r2); //unwind a string this many degrees to go from radius r1 to radius r2
 function q7(f,r,b,r2,t,s) = q6(b,s,t,(1-f)*max(b,r)+f*r2);                         //radius a fraction f up the curved side of the tooth 
 function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                              //point at radius d on the involute curve
 
@@ -142,13 +140,13 @@ module rack (
 //A gear fits within a circle of radius outer_radius, and two gears should have
 //their centers separated by the sum of their pictch_radius.
 function circular_pitch  (mm_per_tooth=5) = mm_per_tooth;                     //tooth density expressed as "circular pitch" in millimeters
-function diametral_pitch (mm_per_tooth=5) = pi / mm_per_tooth;         //tooth density expressed as "diametral pitch" in teeth per millimeter
+function diametral_pitch (mm_per_tooth=5) = PI / mm_per_tooth;         //tooth density expressed as "diametral pitch" in teeth per millimeter
 function adendum         (mm_per_tooth=5) = module_value(mm_per_tooth);
 function dedendum        (mm_per_tooth=5) = 1.25 * module_value(mm_per_tooth);
-function module_value    (mm_per_tooth=5) = mm_per_tooth / pi;                //tooth density expressed as "module" or "modulus" in millimeters
-function pitch_radius    (mm_per_tooth=5,number_of_teeth=11) = mm_per_tooth * number_of_teeth / pi / 2;
+function module_value    (mm_per_tooth=5) = mm_per_tooth / PI;                //tooth density expressed as "module" or "modulus" in millimeters
+function pitch_radius    (mm_per_tooth=5,number_of_teeth=11) = mm_per_tooth * number_of_teeth / PI / 2;
 function outer_radius    (mm_per_tooth=5,number_of_teeth=11,clearance=0.1)    //The gear fits entirely within a cylinder of this radius.
-	= mm_per_tooth*(1+number_of_teeth/2)/pi  - clearance;              
+	= mm_per_tooth*(1+number_of_teeth/2)/PI  - clearance;              
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 //example gear train.  

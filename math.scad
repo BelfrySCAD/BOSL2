@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-function Cpi() = 3.141592653589793236;
+function Cpi() = PI;  // Deprecated!  Use the variable PI instead.
 
 
 // Quantize a value x to an integer multiple of y, rounding to the nearest multiple.
@@ -48,7 +48,7 @@ function quantup(x,y) = ceil(x/y)*y;
 
 // Calculate OpenSCAD standard number of segments in a circle based on $fn, $fa, and $fs.
 //   r = radius of circle to get the number of segments for.
-function segs(r) = $fn>0?($fn>3?$fn:3):(ceil(max(min(360.0/$fa,abs(r)*2*Cpi()/$fs),5)));
+function segs(r) = $fn>0?($fn>3?$fn:3):(ceil(max(min(360.0/$fa,abs(r)*2*PI/$fs),5)));
 
 
 // Interpolate between two values or vectors.  0.0 <= u <= 1.0
