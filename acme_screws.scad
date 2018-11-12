@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////
-// Trapezoidal-threaded (ACME) Screw Rods and Nuts
+// ACME Trapezoidal-threaded Screw Rods and Nuts
 //////////////////////////////////////////////////////////////////////
 
 /*
@@ -30,90 +30,55 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-include <transforms.scad>
-include <math.scad>
+include <threading.scad>
 
 
-// Constructs an acme threaded screw rod.  This method makes much
-//  smoother threads than the naive linear_extrude method.
-module acme_threaded_rod(
-	d=10.5,
-	l=100,
-	pitch=3.175,
-	thread_depth=1,
-	thread_angle=14.5
-) {
-	astep = 360/segs(d/2);
-	asteps = ceil(360/astep);
-	threads = ceil(l/pitch)+2;
-	pa_delta = min(pitch/4.1,(thread_depth+0.05)*tan(thread_angle)/2);
-	poly_points = [
-		for (
-			thread = [0 : threads-1],
-			astep = [0 : asteps-1],
-			i = [0 : 3]
-		) let (
-			r = max(0, d/2 - ((i==1||i==2)? 0 : (thread_depth+0.05))),
-			a = astep / asteps,
-			rx = r * cos(360 * a),
-			ry = r * sin(360 * a),
-			tz = (thread + a - threads/2 + (i<2? -0.25 : 0.25)) * pitch + (i%2==0? -pa_delta : pa_delta)
-		) [rx, ry, tz]
-	];
-	point_count = len(poly_points);
-	poly_faces = concat(
-		[
-			for (
-				thread = [0 : threads-1],
-				astep = [0 : asteps-1],
-				j = [0 : 3],
-				i = [0 : 1]
-			) let(
-				p0 = (thread*asteps + astep)*4 + j,
-				p1 = p0 + 4,
-				p2 = (thread*asteps + astep)*4 + ((j+1)%4),
-				p3 = p2 + 4,
-				tri = (i==0? [p0, p3, p1] : [p0, p2, p3])
-			)
-			if (p0 < point_count-4) tri
-		],
-		[
-			[0, 3, 2],
-			[0, 2, 1],
-			[point_count-4, point_count-3, point_count-2],
-			[point_count-4, point_count-2, point_count-1]
-		]
+
+// Constructs an ACME trapezoidal threaded screw rod.  This method makes
+// much smoother threads than the naive linear_extrude method.
+//   d = Outer diameter of threaded rod.
+//   l = length of threaded rod.
+//   pitch = Length between threads.
+//   thread_depth = Depth of the threads.  Default = pitch/2
+//   thread_angle = The pressure angle profile angle of the threads.  Default = 14.5 degrees
+//   starts = The number of lead starts.  Default = 1
+//   left_handed = if true, create left-handed threads.  Default = false
+// Examples:
+//   acme_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, $fn=32);
+module acme_threaded_rod(d=10, l=100, pitch=2, thread_angle=14.5, thread_depth=undef, starts=1, left_handed=false) {
+	trapezoidal_threaded_rod(
+		d=d, l=l, pitch=pitch,
+		thread_angle=thread_angle,
+		thread_depth=thread_depth,
+		starts=starts,
+		left_handed=left_handed
 	);
-	intersection() {
-		union() {
-			polyhedron(points=poly_points, faces=poly_faces, convexity=10);
-			cylinder(h=(threads+0.5)*pitch, d=d-2*thread_depth, center=true, $fn=asteps);
-		}
-		cube([d+1, d+1, l], center=true);
-	}
-}
-//!acme_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, thread_depth=1.3, thread_angle=29, $fn=32);
-//!acme_threaded_rod(d=60, l=16, pitch=8, thread_depth=3, thread_angle=45, $fa=2, $fs=2);
-
-
-module acme_threaded_nut(
-	od=17.4,
-	id=10.5,
-	h=10,
-	pitch=3.175,
-	thread_depth=1,
-	thread_angle=14.5,
-	slop=printer_slop
-) {
-	difference() {
-		cylinder(r=od/2/cos(30), h=h, center=true, $fn=6);
-		zspread(slop, n=slop>0?2:1) {
-			acme_threaded_rod(d=id+2*slop, l=h+1, pitch=pitch, thread_depth=thread_depth, thread_angle=thread_angle);
-		}
-	}
 }
 
-//!acme_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, thread_depth=1, slop=printer_slop);
+
+
+// Constructs a hex nut for an ACME threaded screw rod.  This method makes
+// much smoother threads than the naive linear_extrude method.
+//   od = diameter of the nut.
+//   id = diameter of threaded rod to screw onto.
+//   h = height/thickness of nut.
+//   pitch = Length between threads.
+//   thread_depth = Depth of the threads.  Default=pitch/2
+//   thread_angle = The pressure angle profile angle of the threads.  Default = 14.5 degree ACME profile.
+//   left_handed = if true, create left-handed threads.  Default = false
+//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
+// Examples:
+//   acme_threaded_nut(od=16, id=3/8*25.4, h=8, pitch=1/8*25.4, slop=0.2);
+module acme_threaded_nut(od, id, h, pitch, thread_angle=14.5, thread_depth=undef, left_handed=false, slop=0.2) {
+	trapezoidal_threaded_nut(
+		od=od, id=id, h=h, pitch=pitch,
+		thread_depth=thread_depth,
+		thread_angle=thread_angle,
+		left_handed=left_handed,
+		slop=slop
+	);
+}
+
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
