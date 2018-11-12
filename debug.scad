@@ -107,5 +107,12 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 
 
 
+module debug_polyhedron(points, faces, convexity=10, txtsize=1, disabled=false) {
+	debug_faces(vertices=points, faces=faces, size=txtsize, disabled=disabled) {
+		polyhedron(points=points, faces=faces, convexity=convexity);
+	}
+}
+
+
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
