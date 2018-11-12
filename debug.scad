@@ -34,6 +34,12 @@ include <transforms.scad>
 include <math.scad>
 
 
+// Draws all the vertices in an array, at their 3D position, numbered by their
+// position in the vertex array.  Also draws any children of this module with
+// transparency.
+//   vertices = Array of point vertices.
+//   size     = The size of the text used to label the vertexes.
+//   disabled = If true, don't draw numbers, and draw children without transparency.  Default = false.
 module debug_vertices(vertices, size=1, disabled=false) {
 	if (!disabled) {
 		echo(vertices=vertices);
@@ -62,6 +68,14 @@ module debug_vertices(vertices, size=1, disabled=false) {
 
 
 
+// Draws all the vertices at their 3D position, numbered in blue by their
+// position in the vertex array.  Each face will have their face number drawn
+// in red, aligned with the center of face.  All children of this module are drawn
+// with transparency.
+//   vertices = Array of point vertices.
+//   faces    = Array of faces by vertex numbers.
+//   size     = The size of the text used to label the faces and vertexes.
+//   disabled = If true, don't draw numbers, and draw children without transparency.  Default = false.
 module debug_faces(vertices, faces, size=1, disabled=false) {
 	if (!disabled) {
 		vlen = len(vertices);
@@ -107,6 +121,20 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 
 
 
+// A drop-in module to replace `polyhedron()` and help debug vertices and faces.
+// Draws all the vertices at their 3D position, numbered in blue by their
+// position in the vertex array.  Each face will have their face number drawn
+// in red, aligned with the center of face.  All given faces are drawn with
+// transparency. All children of this module are drawn with transparency.
+// Works best with Thrown-Together preview mode, to see reversed faces.
+//   vertices = Array of point vertices.
+//   faces = Array of faces by vertex numbers.
+//   txtsize = The size of the text used to label the faces and vertexes.
+//   disabled = If true, act exactly like `polyhedron()`.  Default = false.
+// Example:
+//   pts = [[-5,0,-5], [5,0,-5], [0,-5,5], [0,5,5]];
+//   fcs = [[0,2,1], [1,2,3], [1,3,0], [0,2,3]];  // Last face reversed
+//   debug_polyhedron(points=pts, faces=fcs, txtsize=1);
 module debug_polyhedron(points, faces, convexity=10, txtsize=1, disabled=false) {
 	debug_faces(vertices=points, faces=faces, size=txtsize, disabled=disabled) {
 		polyhedron(points=points, faces=faces, convexity=convexity);
