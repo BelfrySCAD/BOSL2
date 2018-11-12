@@ -40,7 +40,7 @@ function _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, p
 
 // Constructs a generic trapezoidal threaded screw rod.  This method makes
 // much smoother threads than the naive linear_extrude method.
-// For trapezoidal metric threads, use thread_angle=15 and thread_depth=pitch/2.
+// For metric trapezoidal threads, use thread_angle=15 and thread_depth=pitch/2.
 // For ACME threads, use thread_angle=14.5 and thread_depth=pitch/2.
 // For square threads, use thread_angle=0 and thread_depth=pitch/2.
 // For normal screw threads, use thread_angle=30 and thread_depth=pitch*3*sqrt(3)/8.
@@ -64,7 +64,7 @@ module trapezoidal_threaded_rod(
 	d=10,
 	l=100,
 	pitch=2,
-	thread_angle=14.5,
+	thread_angle=15,
 	thread_depth=undef,
 	left_handed=false,
 	starts=1
@@ -211,7 +211,7 @@ module trapezoidal_threaded_rod(
 // much smoother threads than the naive linear_extrude method.
 // For metric screw threads, use thread_angle=30 and leave out thread_depth argument.
 // For SAE screw threads, use thread_angle=30 and leave out thread_depth argument.
-// For trapezoidal metric threads, use thread_angle=15 and thread_depth=pitch/2.
+// For metric trapezoidal threads, use thread_angle=15 and thread_depth=pitch/2.
 // For ACME threads, use thread_angle=14.5 and thread_depth=pitch/2.
 // For square threads, use thread_angle=0 and thread_depth=pitch/2.
 //   od = diameter of the nut.
@@ -228,11 +228,11 @@ module trapezoidal_threaded_rod(
 //   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, slop=0.2, left_handed=true);
 module trapezoidal_threaded_nut(
 	od=17.4,
-	id=10.5,
+	id=10,
 	h=10,
-	pitch=3.175,
+	pitch=2,
 	thread_depth=undef,
-	thread_angle=30,
+	thread_angle=15,
 	left_handed=false,
 	starts=1,
 	slop=0.2
@@ -285,22 +285,23 @@ module threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left_handed=false, slop
 
 
 
-// Constructs a trapezoidal metric threaded screw rod.  This method makes much
+// Constructs a metric trapezoidal threaded screw rod.  This method makes much
 // smoother threads than the naive linear_extrude method.
 //   d = Outer diameter of threaded rod.
 //   l = length of threaded rod.
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
+//   starts = The number of lead starts.  Default = 1
 // Examples:
 //   metric_trapezoidal_threaded_rod(d=16, l=40, pitch=2);
 //   metric_trapezoidal_threaded_rod(d=10, l=40, pitch=2, left_handed=true, $fn=32);
-module metric_trapezoidal_threaded_rod(d=10, l=100, pitch=2, left_handed=false) {
-	trapezoidal_threaded_rod(d=d, l=l, pitch=pitch, thread_angle=15, left_handed=left_handed);
+module metric_trapezoidal_threaded_rod(d=10, l=100, pitch=2, left_handed=false, starts=1) {
+	trapezoidal_threaded_rod(d=d, l=l, pitch=pitch, thread_angle=15, left_handed=left_handed, starts=starts);
 }
 
 
 
-// Constructs a hex nut for a trapezoidal metric threaded screw rod.  This method
+// Constructs a hex nut for a metric trapezoidal threaded screw rod.  This method
 // makes much smoother threads than the naive linear_extrude method.
 //   od = diameter of the nut.
 //   id = diameter of threaded rod to screw onto.
@@ -329,7 +330,13 @@ module metric_trapezoidal_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left
 // Examples:
 //   acme_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, $fn=32);
 module acme_threaded_rod(d=10, l=100, pitch=2, thread_angle=14.5, thread_depth=undef, starts=1, left_handed=false) {
-	trapezoidal_threaded_rod(d=d, l=l, pitch=pitch, thread_angle=thread_angle, thread_depth=thread_depth, starts=starts, left_handed=left_handed);
+	trapezoidal_threaded_rod(
+		d=d, l=l, pitch=pitch,
+		thread_angle=thread_angle,
+		thread_depth=thread_depth,
+		starts=starts,
+		left_handed=left_handed
+	);
 }
 
 
@@ -347,7 +354,13 @@ module acme_threaded_rod(d=10, l=100, pitch=2, thread_angle=14.5, thread_depth=u
 // Examples:
 //   acme_threaded_nut(od=16, id=3/8*25.4, h=8, pitch=1/8*25.4, slop=0.2);
 module acme_threaded_nut(od, id, h, pitch, thread_angle=14.5, thread_depth=undef, left_handed=false, slop=0.2) {
-	trapezoidal_threaded_nut(od=od, id=id, h=h, pitch=pitch, thread_depth=thread_depth, thread_angle=thread_angle, left_handed=left_handed, slop=slop);
+	trapezoidal_threaded_nut(
+		od=od, id=id, h=h, pitch=pitch,
+		thread_depth=thread_depth,
+		thread_angle=thread_angle,
+		left_handed=left_handed,
+		slop=slop
+	);
 }
 
 
@@ -358,10 +371,11 @@ module acme_threaded_nut(od, id, h, pitch, thread_angle=14.5, thread_depth=undef
 //   l = length of threaded rod.
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
+//   starts = The number of lead starts.  Default = 1
 // Examples:
 //   square_threaded_rod(d=16, l=40, pitch=2, thread_angle=30);
-module square_threaded_rod(d=10, l=100, pitch=2, left_handed=false) {
-	trapezoidal_threaded_rod(d=d, l=l, pitch=pitch, thread_angle=0, left_handed=left_handed);
+module square_threaded_rod(d=10, l=100, pitch=2, left_handed=false, starts=1) {
+	trapezoidal_threaded_rod(d=d, l=l, pitch=pitch, thread_angle=0, left_handed=left_handed, starts=starts);
 }
 
 
@@ -373,11 +387,18 @@ module square_threaded_rod(d=10, l=100, pitch=2, left_handed=false) {
 //   h = height/thickness of nut.
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
+//   starts = The number of lead starts.  Default = 1
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 // Examples:
 //   square_threaded_nut(od=16, id=8, h=8, pitch=2, slop=0.2);
-module square_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left_handed=false, slop=0.2) {
-	trapezoidal_threaded_nut(od=od, id=id, h=h, pitch=pitch, thread_angle=0, left_handed=left_handed, slop=slop);
+module square_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left_handed=false, starts=1, slop=0.2) {
+	trapezoidal_threaded_nut(
+		od=od, id=id, h=h, pitch=pitch,
+		thread_angle=0,
+		left_handed=left_handed,
+		starts=starts,
+		slop=slop
+	);
 }
 
 
