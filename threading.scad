@@ -59,7 +59,7 @@ function _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, p
 //   trapezoidal_threaded_rod(d=16, l=40, pitch=2, thread_angle=30);
 //   trapezoidal_threaded_rod(d=10, l=40, pitch=3, thread_angle=15, left_handed=true, starts=3, $fn=36);
 //   trapezoidal_threaded_rod(d=50, l=50, pitch=8, thread_angle=30, starts=4, $fa=2, $fs=2);
-//   trapezoidal_threaded_rod(d=25, l=68, pitch=10, thread_depth=8/3, thread_angle=50, starts=2, $fa=2, $fs=2);
+//   trapezoidal_threaded_rod(d=25, l=100, pitch=10, thread_depth=8/3, thread_angle=50, starts=4, center=false, $fa=2, $fs=2);
 module trapezoidal_threaded_rod(
 	d=10,
 	l=100,
@@ -67,6 +67,7 @@ module trapezoidal_threaded_rod(
 	thread_angle=15,
 	thread_depth=undef,
 	left_handed=false,
+	center=true,
 	starts=1
 ) {
 	astep = 360 / quantup(segs(d/2), starts);
@@ -200,9 +201,11 @@ module trapezoidal_threaded_rod(
 			) otri
 		]
 	);
-	intersection() {
-		polyhedron(points=poly_points, faces=poly_faces, convexity=threads*starts*2);
-		cube([d+1, d+1, l], center=true);
+	up(center? 0 : l/2) {
+		intersection() {
+			polyhedron(points=poly_points, faces=poly_faces, convexity=threads*starts*2);
+			cube([d+1, d+1, l], center=true);
+		}
 	}
 }
 
