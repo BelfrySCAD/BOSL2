@@ -231,13 +231,13 @@ module rcylinder(h=1, r=1, d=undef, fillet=0.25, center=false)
 	up(center? 0 : h/2) {
 		rotate_extrude(angle=360, convexity=2) {
 			hull() {
-				left(d/2-fillet) {
+				right(d/2-fillet) {
 					yspread(h-2*fillet) {
 						circle(r=fillet, $fn=quantup(segs(fillet), 4));
 					}
 				}
-				left(d/2/2) square(size=[d/2, h-fillet*2], center=true);
-				left((d/2-fillet)/2) square(size=[d/2-fillet, h], center=true);
+				right(d/2/2) square(size=[d/2, h-fillet*2], center=true);
+				right((d/2-fillet)/2) square(size=[d/2-fillet, h], center=true);
 			}
 		}
 	}
