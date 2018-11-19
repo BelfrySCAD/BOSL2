@@ -522,6 +522,39 @@ module yspread(spacing=1,n=2) for (i=[0:n-1]) back((i-(n-1)/2)*spacing) children
 module zspread(spacing=1,n=2) for (i=[0:n-1]) up((i-(n-1)/2.0)*spacing) children();
 
 
+// Spreads out the given children along the X axis.
+//   spacing = spacing between each child. (Default: 10.0)
+// Examples:
+//   xdistribute(30) {
+//       sphere(10);
+//       cube([10,20,30], center=true);
+//       cylinder(h=20, d=10, center=true);
+//   }
+module xdistribute(spacing=10) for (i=[0:$children-1]) right((i-($children-1)/2.0)*spacing) children(i);
+
+
+// Spreads out the given children along the Y axis.
+//   spacing = spacing between each child. (Default: 10.0)
+// Examples:
+//   ydistribute(30) {
+//       sphere(10);
+//       cube([10,20,30], center=true);
+//       cylinder(h=20, d=10, center=true);
+//   }
+module ydistribute(spacing=10) for (i=[0:$children-1]) back((i-($children-1)/2.0)*spacing) children(i);
+
+
+// Spreads out the given children along the Z axis.
+//   spacing = spacing between each child. (Default: 10.0)
+// Examples:
+//   zdistribute(30) {
+//       sphere(10);
+//       cube([10,20,30], center=true);
+//       cylinder(h=20, d=10, center=true);
+//   }
+module zdistribute(spacing=10) for (i=[0:$children-1]) up((i-($children-1)/2.0)*spacing) children(i);
+
+
 // Makes a 3D grid of duplicate children.
 //   xa = array or range of X-axis values to offset by. (Default: [0])
 //   ya = array or range of Y-axis values to offset by. (Default: [0])
