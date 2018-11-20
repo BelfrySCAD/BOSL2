@@ -371,8 +371,9 @@ module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false)
 //   d = diameter of spherical portion of bottom. (Use instead of r)
 //   ang = angle of hat walls from the Y axis.  (Default: 45 degrees)
 //   cap_h = if given, height above center where the shape will be truncated.
-// Example:
+// Examples:
 //   teardrop2d(r=30, ang=30);
+//   teardrop2d(r=35, ang=45, cap_h=40);
 module teardrop2d(r=1, d=undef, ang=45, cap_h=undef)
 {
 	r = (d!=undef)? (d/2.0) : r;
