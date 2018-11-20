@@ -487,6 +487,7 @@ module torus(or=1, ir=0.5, od=undef, id=undef, r=undef, r2=undef, d=undef, d2=un
 // Makes a linear slot with rounded ends, appropriate for bolts to slide along.
 //   p1 = center of starting circle of slot.  (Default: [0,0,0])
 //   p2 = center of ending circle of slot.  (Default: [1,0,0])
+//   l = length of slot along the X axis.  Use instead of p1 and p2.
 //   h = height of slot shape. (default: 1.0)
 //   r = radius of slot circle. (default: 0.5)
 //   r1 = bottom radius of slot cone. (use instead of r)
@@ -494,18 +495,27 @@ module torus(or=1, ir=0.5, od=undef, id=undef, r=undef, r2=undef, d=undef, d2=un
 //   d = diameter of slot circle. (default: 1.0)
 //   d1 = bottom diameter of slot cone. (use instead of d)
 //   d2 = top diameter of slot cone. (use instead of d)
+//   center = If true (default) centers vertically.  Else, drops flush with XY plane.
+// Examples:
+//   slot(l=50, h=5, d1=8, d2=10, center=false);
+//   slot([0,0,0], [50,50,0], h=5, d=10);
 module slot(
 	p1=[0,0,0], p2=[1,0,0], h=1.0,
+	l=undef, center=true,
 	r=undef, r1=undef, r2=undef,
 	d=1.0, d1=undef, d2=undef
 ) {
 	r  = (r  != undef)? r  : (d/2);
 	r1 = (r1 != undef)? r1 : ((d1 != undef)? (d1/2) : r);
 	r2 = (r2 != undef)? r2 : ((d2 != undef)? (d2/2) : r);
+	pt1 = l==undef? p1 : [-l/2, 0, 0];
+	pt2 = l==undef? p2 : [ l/2, 0, 0];
 	$fn = quantup(segs(max(r1,r2)),4);
-	hull() {
-		translate(p1) cylinder(h=h, r1=r1, r2=r2, center=true);
-		translate(p2) cylinder(h=h, r1=r1, r2=r2, center=true);
+	down(center? 0 : h/2) {
+		hull() {
+			translate(pt1) cylinder(h=h, r1=r1, r2=r2, center=true);
+			translate(pt2) cylinder(h=h, r1=r1, r2=r2, center=true);
+		}
 	}
 }
 
