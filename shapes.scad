@@ -163,6 +163,9 @@ module rcube(size=[1,1,1], r=0.25, center=false)
 	translate(center? [0,0,0] : size/2) {
 		minkowski() {
 			cube([max(0.01,size[0]-dd), max(0.01,size[1]-dd), max(0.01,size[2]-dd)], center=true);
+
+			// Synthesize a sphere with vertices at the axis extremes.
+			// This makes the result of the minkowski have the proper dimensions.
 			rotate_extrude() {
 				difference() {
 					circle(dd/2);
@@ -424,7 +427,7 @@ module onion(h=1, r=1, d=undef, maxang=45)
 	rotate_extrude(angle=360, convexity=2) {
 		difference() {
 			teardrop2d(r=r, ang=maxang, cap_h=h);
-			right(r+h/2) square(size=r*2+h, center=true);
+			left(r+h/2) square(size=r*2+h, center=true);
 		}
 	}
 }
