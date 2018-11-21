@@ -751,31 +751,34 @@ module braced_thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2)
 //   strut = the width of the diagonal brace.
 //   wall = the thickness of the thinned portion of the wall.
 //   diagonly = boolean, which denotes only the diagonal side (hypotenuse) should be thick.
+//   center = if true (default) centers triangle at the origin.
 // Example:
 //   thinning_triangle(h=50, l=100, thick=4, ang=30, strut=5, wall=2, diagonly=true);
-module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly=false)
+module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly=false, center=true)
 {
 	dang = atan(h/l);
 	dlen = h/sin(dang);
-	difference() {
-		union() {
-			if (!diagonly) {
-				translate([0, 0, -h/2])
-					narrowing_strut(w=thick, l=l, wall=strut, ang=ang);
-				translate([0, -l/2, 0])
-					xrot(-90) narrowing_strut(w=thick, l=h-0.1, wall=strut, ang=ang);
-			}
-			intersection() {
-				cube(size=[thick, l, h], center=true);
-				xrot(-dang) yrot(180) {
-					narrowing_strut(w=thick, l=dlen*1.2, wall=strut, ang=ang);
+	translate(center? [0, 0, 0] : [0, l/2, h/2]) {
+		difference() {
+			union() {
+				if (!diagonly) {
+					translate([0, 0, -h/2])
+						narrowing_strut(w=thick, l=l, wall=strut, ang=ang);
+					translate([0, -l/2, 0])
+						xrot(-90) narrowing_strut(w=thick, l=h-0.1, wall=strut, ang=ang);
 				}
+				intersection() {
+					cube(size=[thick, l, h], center=true);
+					xrot(-dang) yrot(180) {
+						narrowing_strut(w=thick, l=dlen*1.2, wall=strut, ang=ang);
+					}
+				}
+				cube(size=[wall, l-0.1, h-0.1], center=true);
 			}
-			cube(size=[wall, l-0.1, h-0.1], center=true);
-		}
-		xrot(-dang) {
-			translate([0, 0, h/2]) {
-				cube(size=[thick+0.1, l*2, h], center=true);
+			xrot(-dang) {
+				translate([0, 0, h/2]) {
+					cube(size=[thick+0.1, l*2, h], center=true);
+				}
 			}
 		}
 	}
@@ -793,9 +796,9 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 //   wall = the thickness of the thinned portion of the wall.
 // Example:
 //   thinning_brace(h=50, l=100, thick=4, ang=30, strut=5, wall=2);
-module thinning_brace(h=50, l=100, thick=5, ang=30, strut=5, wall=3)
+module thinning_brace(h=50, l=100, thick=5, ang=30, strut=5, wall=3, center=true)
 {
-	thinning_triangle(h=h, l=l, thick=thick, ang=ang, strut=strut, wall=wall, diagonly=true);
+	thinning_triangle(h=h, l=l, thick=thick, ang=ang, strut=strut, wall=wall, diagonly=true, center=center);
 }
 
 
