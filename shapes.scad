@@ -844,7 +844,16 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 						zflip_copy(offset=-(zstep-strut)/2) {
 							xflip_copy() {
 								zrot(cross_ang) {
-									down(strut/2) cube([strut, cross_len, strut], center=true);
+									down(strut/2) {
+										cube([strut, cross_len, strut], center=true);
+									}
+									if (zreps>1) {
+										back(cross_len/2) {
+											zrot(-cross_ang) {
+												down(strut) upcube([strut, strut, zstep+strut], center=true);
+											}
+										}
+									}
 									for (soff = [0 : supp_reps-1] ) {
 										yflip_copy() {
 											back(soff*supp_step) {
