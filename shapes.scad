@@ -195,7 +195,6 @@ module chamferred_cylinder(h=1, r=1, d=undef, chamfer=0.25, chamfedge=undef, ang
 	x = (chamfedge == undef)? chamfer : (chamfedge * sin(angle));
 	y = (chamfedge == undef)? chamfer*sin(90-angle)/sin(angle) : (chamfedge * sin(90-angle));
 	rad = (d == undef)? r : (d / 2.0);
-	echo(rad);
 	up(center? 0 : h/2) {
 		rotate_extrude(angle=360, convexity=2) {
 			polygon(
@@ -810,7 +809,8 @@ module thinning_brace(h=50, l=100, thick=5, ang=30, strut=5, wall=3)
 //   max_bridge = maximum bridging distance between cross-braces.
 //   strut = the width of the cross-braces.
 // Example:
-//   sparse_strut3d(h=40, w=40, l=120, thick=4, maxang=30, strut=5, max_bridge=20);
+//   sparse_strut3d(h=100, w=33, l=33, thick=3, strut=3, maxang=30, max_bridge=20);
+//   sparse_strut3d(h=40, w=40, l=120, thick=3, maxang=30, strut=3, max_bridge=20);
 module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge = 20)
 {
 
@@ -820,41 +820,49 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 
 	xreps = ceil(xoff/yoff);
 	yreps = ceil(yoff/xoff);
+	zreps = ceil(zoff/min(xoff, yoff));
 
 	xstep = xoff / xreps;
 	ystep = yoff / yreps;
+	zstep = zoff / zreps;
 
 	cross_ang = atan2(xstep, ystep);
 	cross_len = hypot(xstep, ystep);
 
+	supp_ang = min(maxang, min(atan2(max_bridge, zstep), atan2(cross_len/2, zstep)));
+	supp_reps = floor(cross_len/2/(zstep*sin(supp_ang)));
+	supp_step = cross_len/2/supp_reps;
+
 	union() {
-		if(xreps>1) {
-			yspread(yoff) {
-				xspread(xstep, n=xreps-1) {
-					cube(size=[thick, thick, h], center=true);
-				}
-			}
-		}
-		if(yreps>1) {
-			xspread(xoff) {
-				yspread(ystep, n=yreps-1) {
-					cube(size=[thick, thick, h], center=true);
-				}
-			}
-		}
-		xspread(xoff) sparse_strut(h=h, l=l, thick=thick, maxang=maxang, strut=strut, max_bridge=max_bridge);
+		ybridge = (l - (yreps+1) * strut) / yreps;
+		xspread(xoff) sparse_strut(h=h, l=l, thick=thick, maxang=maxang, strut=strut, max_bridge=ybridge/ceil(ybridge/max_bridge));
 		yspread(yoff) zrot(90) sparse_strut(h=h, l=w, thick=thick, maxang=maxang, strut=strut, max_bridge=max_bridge);
-		for(xs = [0:xreps-1]) {
-			for(ys = [0:yreps-1]) {
-				translate([(xs+0.5)*xstep-xoff/2, (ys+0.5)*ystep-yoff/2, 0]) {
-					zrot( cross_ang) sparse_strut(h=h, l=cross_len, thick=thick, maxang=maxang, strut=strut, max_bridge=max_bridge);
-					zrot(-cross_ang) sparse_strut(h=h, l=cross_len, thick=thick, maxang=maxang, strut=strut, max_bridge=max_bridge);
+		for(zs = [0:zreps-1]) {
+			for(xs = [0:xreps-1]) {
+				for(ys = [0:yreps-1]) {
+					translate([(xs+0.5)*xstep-xoff/2, (ys+0.5)*ystep-yoff/2, (zs+0.5)*zstep-zoff/2]) {
+						zflip_copy(offset=-(zstep-strut)/2) {
+							xflip_copy() {
+								zrot(cross_ang) {
+									down(strut/2) cube([strut, cross_len, strut], center=true);
+									for (soff = [0 : supp_reps-1] ) {
+										yflip_copy() {
+											back(soff*supp_step) {
+												skew_xy(ya=supp_ang) {
+													upcube([strut, strut, zstep]);
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
 				}
 			}
 		}
 	}
 }
-//!sparse_strut3d(h=40, w=40, l=120, thick=3, strut=3);
 
 
 // Makes an open rectangular strut with X-shaped cross-bracing, designed to reduce
