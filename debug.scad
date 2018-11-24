@@ -34,6 +34,45 @@ include <transforms.scad>
 include <math.scad>
 
 
+module trace_polyline(pline, N=1, showpts=false, size=1, color="yellow") {
+	if (showpts) {
+		for (i = [0:len(pline)-1]) {
+			translate(pline[i]) {
+				if (i%N == 0) {
+					color("blue") sphere(d=size*2.5, $fn=8);
+				} else {
+					color("red") {
+						cylinder(d=size/2, h=size*3, center=true, $fn=8);
+						xrot(90) cylinder(d=size/2, h=size*3, center=true, $fn=8);
+						yrot(90) cylinder(d=size/2, h=size*3, center=true, $fn=8);
+					}
+				}
+			}
+		}
+	}
+	for (i = [0:len(pline)-2]) {
+		delta = pline[i+1] - pline[i];
+		dist2d = norm([delta[0], delta[1], 0]);
+		dist3d = norm(delta);
+		theta = atan2(delta[1], delta[0]);
+		phi = atan2(delta[2], dist2d);
+		translate(pline[i]) {
+			rotate([0, -phi, theta]) {
+				yrot(90) {
+					color(color) cylinder(d=size, h=dist3d, center=false, $fn=4);
+				}
+			}
+		}
+	}
+}
+
+
+module trace_bez(bez, N=3, size=1) {
+	trace_polyline(bez, N=N, showpts=true, size=size/2, color="green");
+	trace_polyline(bezier_polyline(bez, N=N), size=size);
+}
+
+
 // Draws all the vertices in an array, at their 3D position, numbered by their
 // position in the vertex array.  Also draws any children of this module with
 // transparency.
