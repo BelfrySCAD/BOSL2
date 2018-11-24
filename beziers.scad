@@ -45,7 +45,6 @@ function bez_point(curve,u)=
 			u
 		);
 
-
 // Takes an array of bezier points and converts it into a 3D polyline.
 function bezier_polyline(bezier, splinesteps=16, N=3) = concat(
 	[
@@ -121,9 +120,30 @@ module revolve_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360) {
 		xrot(180) zrot(-90) bezier_polygon(bezier, splinesteps, N);
 	}
 }
+
+
+// Takes a closed 2D bezier and rotates it around the Z axis, forming a solid.
+// Behaves like rotate_extrude(), except for beziers instead of shapes.
+//   bezier = array of 2D points for the bezier path to rotate.
+//   splinesteps = number of segments to divide each bezier segment into. default=16
+//   N = number of points in each bezier segment.  default=3 (cubic)
+//   convexity = max number of walls a line could pass through, for preview.  default=10
+//   angle = degrees of sweep to make.  default=360
+// Example:
+//   path = [
+//     [  0, 10], [ 50,  0], [ 50, 40],
+//     [ 95, 40], [100, 40], [100, 45],
+//     [ 95, 45], [ 66, 45], [  0, 20],
+//     [  0, 12], [  0, 12], [  0, 10],
+//     [  0, 10]
+//   ];
+//   rotate_extrude_bezier(path, splinesteps=32, $fn=180);
 module rotate_extrude_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360) {
-	revolve_bezier(bezier, splinesteps=splinesteps, N=N, convexity=convexity, angle=angle);
+	rotate_extrude(convexity=convexity, angle=angle) {
+		bezier_polygon(bezier, splinesteps, N);
+	}
 }
+
 
 
 // Takes a 2D bezier path and closes it to the X axis.
@@ -186,48 +206,10 @@ module revolve_bezier_offset_shell(bezier, offset=1, splinesteps=16, N=3, convex
 //   splinesteps = number of segments to divide each bezier segment into. default=16
 // Example:
 //   path = [ [0, 0, 0], [33, 33, 33], [66, -33, -33], [100, 0, 0] ];
-//   extrude_2d_shapes_along_bezier(path, splinesteps=32)
-//     circle(r=10, center=true);
-module extrude_2d_shapes_along_bezier(bezier, splinesteps=16, N=3) {
-	pointslist = slice(bezier_polyline(bezier, splinesteps, N), 0, -1);
-	ptcount = len(pointslist);
-	for (i = [0 : ptcount-2]) {
-		pt1 = pointslist[i];
-		pt2 = pointslist[i+1];
-		pt0 = i==0? pt1 : pointslist[i-1];
-		pt3 = (i>=ptcount-2)? pt2 : pointslist[i+2];
-		dist = distance(pt1,pt2);
-		v1 = pt2-pt1;
-		v0 = (i==0)? v1 : (pt1-pt0);
-		v2 = (i==ptcount-2)? v1 : (pt3-pt2);
-		az1 = atan2(v1[1], v1[0]);
-		alt1 = (len(pt1)<3)? 0 : atan2(v1[2], hypot(v1[1], v1[0]));
-		az0 = atan2(v0[1], v0[0]);
-		alt0 = (len(pt0)<3)? 0 : atan2(v0[2], hypot(v0[1], v0[0]));
-		az2 = atan2(v2[1], v2[0]);
-		alt2 = (len(pt2)<3)? 0 : atan2(v2[2], hypot(v2[1], v2[0]));
-		translate(pt1) {
-			difference() {
-				rotate([0, 90-alt1, az1]) {
-					translate([0, 0, -1]) {
-						linear_extrude(height=dist*3, convexity=10) {
-							children();
-						}
-					}
-				}
-				rotate([0, 90-(alt0+alt1)/2, (az0+az1)/2]) {
-					translate([0, 0, -dist-0.05]) {
-						cube(size=[99,99,dist*2], center=true);
-					}
-				}
-				rotate([0, 90-(alt1+alt2)/2, (az1+az2)/2]) {
-					translate([0, 0, dist+dist]) {
-						cube(size=[99,99,dist*2], center=true);
-					}
-				}
-			}
-		}
-	}
+//   extrude_2d_shapes_along_bezier(path) circle(r=10, center=true);
+module extrude_2d_shapes_along_bezier(bezier, splinesteps=16, N=3, convexity=10, clipsize=1000) {
+	path = slice(bezier_polyline(bezier, splinesteps, N), 0, -1);
+	extrude_2d_shapes_along_3dpath(path, convexity=convexity, clipsize=clipsize) children();
 }
 
 
@@ -240,7 +222,13 @@ module extrude_2d_shapes_along_bezier(bezier, splinesteps=16, N=3) {
 //   bezN = number of points in each extruded bezier segment.  default=3 (cubic)
 //   pathN = number of points in each path bezier segment.  default=3 (cubic)
 // Example:
-//   bez = [ [-15, 0], [25, -15], [-5, 10], [0, 10], [5, 10], [10, 5], [15, 0], [10, -5], [5, -10], [0, -10], [-5, -10], [-10, -5], [-15, 0] ];
+//   bez = [
+//       [-10,   0],  [-15,  -5],
+//       [ -5, -10],  [  0, -10],  [ 5, -10],
+//       [ 10,  -5],  [ 15,   0],  [10,   5],
+//       [  5,  10],  [  0,  10],  [-5,  10],
+//       [ 25, -15],  [-10,   0]
+//   ];
 //   path = [ [0, 0, 0], [33, 33, 33], [66, -33, -33], [100, 0, 0] ];
 //   extrude_bezier_along_bezier(bez, path, pathsteps=64, bezsteps=32);
 module extrude_bezier_along_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, pathN=3) {
@@ -262,7 +250,13 @@ module extrude_bezier_along_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN
 //   scale = relative size of top of extrusion to the bottom.  default=1.0
 //   slices = number of vertical slices to use for twisted extrusion.  default=20
 // Example:
-//   bez = [ [-15, 0], [25, -15], [-5, 10], [0, 10], [5, 10], [10, 5], [15, 0], [10, -5], [5, -10], [0, -10], [-5, -10], [-10, -5], [-15, 0] ];
+//   bez = [
+//       [-10,   0],  [-15,  -5],
+//       [ -5, -10],  [  0, -10],  [ 5, -10],
+//       [ 10,  -5],  [ 15,   0],  [10,   5],
+//       [  5,  10],  [  0,  10],  [-5,  10],
+//       [ 25, -15],  [-10,   0]
+//   ];
 //   linear_extrude_bezier(bez, splinesteps=32, );
 module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=true, convexity=10, twist=0, slices=20, scale=1.0) {
 	linear_extrude(height=height, center=center, convexity=convexity, twist=twist, slices=slices, scale=scale) {

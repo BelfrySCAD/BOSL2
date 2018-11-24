@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+include <transforms.scad>
 include <math.scad>
 include <quaternions.scad>
 include <triangulation.scad>
@@ -221,6 +222,57 @@ module extrude_2dpath_along_3dpath(polyline, path, convexity=10) {
 	polyhedron(points=poly_points, faces=tri_faces, convexity=convexity);
 }
 
+
+
+// Extrudes 2D children along a 3D polyline path.
+//   path = array of points for the bezier path to extrude along.
+//   convexity = maximum number of walls a ran can pass through.
+//   clipsize = increase if artifacts are left.  Default: 1000
+// Example:
+//   path = [ [0, 0, 0], [33, 33, 33], [66, 33, 40], [100, 0, 0] ];
+//   extrude_2d_shapes_along_3dpath(path) circle(r=10, center=true);
+module extrude_2d_shapes_along_3dpath(path, convexity=10, clipsize=1000) {
+	ptcount = len(path);
+	for (i = [0 : ptcount-2]) {
+		pt1 = path[i];
+		pt2 = path[i+1];
+		pt0 = i==0? pt1 : path[i-1];
+		pt3 = (i>=ptcount-2)? pt2 : path[i+2];
+		dist = distance(pt1,pt2);
+		v1 = pt2-pt1;
+		v0 = (i==0)? v1 : (pt1-pt0);
+		v2 = (i==ptcount-2)? v1 : (pt3-pt2);
+		az1 = atan2(v1[1], v1[0]);
+		alt1 = (len(pt1)<3)? 0 : atan2(v1[2], hypot(v1[1], v1[0]));
+		az0 = atan2(v0[1], v0[0]);
+		alt0 = (len(pt0)<3)? 0 : atan2(v0[2], hypot(v0[1], v0[0]));
+		az2 = atan2(v2[1], v2[0]);
+		alt2 = (len(pt2)<3)? 0 : atan2(v2[2], hypot(v2[1], v2[0]));
+		translate(pt1) {
+			difference() {
+				rotate([0, 90-alt1, az1]) {
+					down(dist) {
+						linear_extrude(height=dist*3, convexity=10) {
+							children();
+						}
+					}
+				}
+				rotate([0, 90-(alt0+alt1)/2, (az0+az1)/2]) {
+					down(dist+0.05) {
+						cube(size=[clipsize,clipsize,dist*2], center=true);
+					}
+				}
+				translate(v1) {
+					rotate([0, 90-(alt1+alt2)/2, (az1+az2)/2]) {
+						up(dist) {
+							cube(size=[clipsize,clipsize,dist*2], center=true);
+						}
+					}
+				}
+			}
+		}
+	}
+}
 
 
 
