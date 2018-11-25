@@ -52,7 +52,7 @@ function segs(r) = $fn>0?($fn>3?$fn:3):(ceil(max(min(360.0/$fa,abs(r)*2*PI/$fs),
 
 
 // Interpolate between two values or vectors.  0.0 <= u <= 1.0
-function lerp(a,b,u) = (b-a)*u + a;
+function lerp(a,b,u) = (1-u)*a + u*b;
 
 
 // Calculate hypotenuse length of 2D triangle.
