@@ -177,7 +177,9 @@ function matrix4_zrot(ang) = mat3_to_mat4(matrix3_zrot(ang));
 //   u = axis vector to rotate around.
 //   ang = number of degrees to rotate.
 function matrix3_rot_by_axis(u, ang) = let(
-	c = cos(ang), c2 = 1-c, s = sin(ang)
+	u = normalize(u),
+	c = cos(ang),
+	c2 = 1-c, s = sin(ang)
 ) [
 	[u[0]*u[0]*c2+c,      u[0]*u[1]*c2-u[2]*s, u[0]*u[2]*c2+u[1]*s],
 	[u[1]*u[0]*c2+u[2]*s, u[1]*u[1]*c2+c,      u[1]*u[2]*c2-u[0]*s],
@@ -191,6 +193,32 @@ function matrix3_rot_by_axis(u, ang) = let(
 function matrix4_rot_by_axis(u, ang) = mat3_to_mat4(matrix3_rot_by_axis(u, ang));
 
 
+// moves each point in an array by a given amount.
+function translate_points(pts, v=[0,0,0]) = [for (pt = pts) pt+v];
+
+
+// Scales each point in an array by a given amount, around a given centerpoint.
+function scale_points(pts, v=[0,0,0], cp=[0,0,0]) = [for (pt = pts) [for (i = [0:len(pt)-1]) (pt[i]-cp[i])*v[i]+cp[i]]];
+
+
+// Rotates each 2D point in an array by a given amount, around a given centerpoint.
+function rotate_points2d(pts, ang, cp=[0,0]) = let(
+		m = matrix3_zrot(ang)
+	) [for (pt = pts) m*point3d(pt-cp)+cp];
+
+
+// Rotates each 3D point in an array by a given amount, around a given centerpoint.
+function rotate_points3d(pts, v=[0,0,0], cp=[0,0,0]) = let(
+		m = matrix4_zrot(v[2]) * matrix4_yrot(v[1]) * matrix4_xrot(v[0])
+	) [for (pt = pts) m*concat(point3d(pt)-cp, 0)+cp];
+
+
+// Rotates each 3D point in an array by a given amount, around a given centerpoint and axis.
+function rotate_points3d_around_axis(pts, ang, u=[0,0,0], cp=[0,0,0]) = let(
+		m = matrix4_rot_by_axis(u, ang)
+	) [for (pt = pts) m*concat(point3d(pt)-cp, 0)+cp];
+
+
 // Gives the sum of a series of sines, at a given angle.
 //   a = angle to get the value for.
 //   sines = array of [amplitude, frequency] pairs, where the frequency is the
@@ -200,6 +228,12 @@ function sum_of_sines(a,sines) = len(sines)==0? 0 :
 	sum_of_sines(a,[sines[0]])+sum_of_sines(a,cdr(sines));
 
 
+// Constrains value to a range of values between minval and maxval, inclusive.
+//   v = value to constrain.
+//   minval = minimum value to return, if out of range.
+//   maxval = maximum value to return, if out of range.
+function constrain(v, minval, maxval) = min(maxval, max(minval, v));
+
 // Returns unit length normalized version of vector v.
 function normalize(v) = v/norm(v);
 
@@ -207,8 +241,8 @@ function normalize(v) = v/norm(v);
 function vector2d_angle(v1,v2) = atan2(v1[1],v1[0]) - atan2(v2[1],v2[0]);
 
 // Returns angle in degrees between two 3D vectors.
-// NOTE: min and max are to correct for crazy FP rounding errors that exceed acos()'s domain.
-function vector3d_angle(v1,v2) = acos(max(-1,min(1,(v1*v2)/(norm(v1)*norm(v2)))));
+// NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
+function vector3d_angle(v1,v2) = acos(constrain((v1*v2)/(norm(v1)*norm(v2)), -1, 1));
 
 // Returns a slice of an array.  An index of 0 is the array start, -1 is array end
 function slice(arr,st,end) = let(
