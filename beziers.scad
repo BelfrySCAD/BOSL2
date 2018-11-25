@@ -87,7 +87,7 @@ function fillet3pts(p0, p1, p2, r) = let(
 	) [tp0, tp0, cp0, cp1, tp1, tp1];
 
 
-// Takes a 3D polyline path and fillets it into a 3d cubic (N=3) bezier path.
+// Takes a 3D polyline path and fillets the corners, returning a 3d cubic (N=3) bezier path.
 function fillet_path(pts, fillet) = concat(
 	[pts[0], pts[0]],
 	(len(pts) < 3)? [] : [
@@ -230,7 +230,7 @@ module extrude_2d_shapes_along_bezier(bezier, splinesteps=16, N=3, convexity=10,
 //       [ 25, -15],  [-10,   0]
 //   ];
 //   path = [ [0, 0, 0], [33, 33, 33], [66, -33, -33], [100, 0, 0] ];
-//   extrude_bezier_along_bezier(bez, path, pathsteps=64, bezsteps=32);
+//   extrude_bezier_along_bezier(bez, path, pathsteps=32, bezsteps=16);
 module extrude_bezier_along_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, pathN=3) {
 	bez_points = simplify2d_path(bezier_polyline(bezier, bezsteps, bezN));
 	path_points = simplify3d_path(path3d(bezier_polyline(path, pathsteps, pathN)));
@@ -257,7 +257,7 @@ module extrude_bezier_along_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN
 //       [  5,  10],  [  0,  10],  [-5,  10],
 //       [ 25, -15],  [-10,   0]
 //   ];
-//   linear_extrude_bezier(bez, splinesteps=32, );
+//   linear_extrude_bezier(bez, height=20, splinesteps=32);
 module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=true, convexity=10, twist=0, slices=20, scale=1.0) {
 	linear_extrude(height=height, center=center, convexity=convexity, twist=twist, slices=slices, scale=scale) {
 		bezier_polygon(bezier, splinesteps=splinesteps, N=N);
