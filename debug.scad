@@ -124,12 +124,12 @@ module debug_vertices(vertices, size=1, disabled=false) {
 			for (i = [0:len(vertices)-1]) {
 				v = vertices[i];
 				translate(v) {
-					zrot(atan2(v[1],v[0])+90) xrot(90) {
+					up(size/8) zrot($vpr[2]) xrot(90) {
 						linear_extrude(height=size/10, center=true, convexity=10) {
-							text(text=str(i), size=size, halign="center", valign="bottom");
+							text(text=str(i), size=size, halign="center");
 						}
 					}
-					sphere(0.02);
+					sphere(size/10);
 				}
 			}
 		}
@@ -220,9 +220,9 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 //   txtsize = The size of the text used to label the faces and vertices.
 //   disabled = If true, act exactly like `polyhedron()`.  Default = false.
 // Example:
-//   pts = [[-5,0,-5], [5,0,-5], [0,-5,5], [0,5,5]];
-//   fcs = [[0,2,1], [1,2,3], [1,3,0], [0,2,3]];  // Last face reversed
-//   debug_polyhedron(points=pts, faces=fcs, txtsize=1);
+   pts = [[-5,0,-5], [5,0,-5], [0,-5,5], [0,5,5]];
+   fcs = [[0,2,1], [1,2,3], [1,3,0], [0,2,3]];  // Last face reversed
+   debug_polyhedron(points=pts, faces=fcs, txtsize=1);
 module debug_polyhedron(points, faces, convexity=10, txtsize=1, disabled=false) {
 	debug_faces(vertices=points, faces=faces, size=txtsize, disabled=disabled) {
 		polyhedron(points=points, faces=faces, convexity=convexity);
