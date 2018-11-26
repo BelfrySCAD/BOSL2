@@ -85,6 +85,8 @@ function get_lmXuu_bearing_length(size) = lookup(size, [
 //   wall = Wall thickness of clamp housing. (Default: 3)
 //   gap = Gap in clamp. (Default: 5)
 //   screwsize = Size of screw to use to tighten clamp. (Default: 3)
+// Example:
+//   linear_bearing_housing(d=19, l=29, wall=2, tab=6, screwsize=2.5);
 module linear_bearing_housing(d=15,l=24,tab=7,gap=5,wall=3,tabwall=5,screwsize=3)
 {
 	od = d+2*wall;
