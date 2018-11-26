@@ -190,7 +190,7 @@ function points_along_path3d(
 //   path = Array of points of a polyline path, to extrude along.
 //   convexity = max number of surfaces any single ray could pass through.
 // Example:
-//   shape = [ [-15, 0], [0, 0], [-5, 10], [0, 10], [5, 10], [10, 5], [15, 0], [10, -5], [5, -10], [0, -10], [-5, -10], [-10, -5], [-15, 0] ];
+//   shape = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   path = [ [0, 0, 0], [100, 33, 33], [200, -33, -33], [300, 0, 0] ];
 //   extrude_2dpath_along_3dpath(shape, path);
 module extrude_2dpath_along_3dpath(polyline, path, convexity=10) {
