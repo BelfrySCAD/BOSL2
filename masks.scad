@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 include <transforms.scad>
+include <shapes.scad>
 include <math.scad>
 
 
@@ -134,8 +135,8 @@ module chamfer_mask_x(l=1.0, chamfer=1.0) {
 //               [X+Y+, X-Y+, X-Y-, X+Y-]
 //           ]
 // Example:
-//   chamfer(chamfer=2, size=[10,40,90], edges=[[0,0,0,0], [1,1,0,0], [0,0,0,0]]) {
-//     cube(size=[10,40,90], center=true);
+//   chamfer(chamfer=2, size=[10,40,30], edges=[[0,0,0,1], [1,1,0,0], [0,0,0,0]]) {
+//     cube(size=[10,40,30], center=true);
 //   }
 module chamfer(chamfer=1, size=[1,1,1], edges=[[0,0,0,0], [1,1,0,0], [0,0,0,0]])
 {
@@ -191,7 +192,7 @@ module chamfer(chamfer=1, size=[1,1,1], edges=[[0,0,0,0], [1,1,0,0], [0,0,0,0]])
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       up(50) fillet_mask(h=100.1, r=10.0);
+//       up(50) fillet_mask(h=100.1, r=25.0);
 //   }
 module fillet_mask(h=1.0, r=1.0, center=true)
 {
@@ -221,8 +222,10 @@ module fillet_mask_x(l=1.0, r=1.0) yrot(90) fillet_mask(h=l, r=r, center=true);
 //   ang = angle that the planes meet at.
 //   center = If true, vertically center mask.
 // Example:
-//   fillet_angled_edge_mask(h=50.0, r=10.0, ang=120, $fn=32);
-//   fillet_angled_edge_mask(h=50.0, r=10.0, ang=30, $fn=32);
+//   difference() {
+//       angle_pie_mask(ang=70, h=50, d=100);
+//       fillet_angled_edge_mask(h=51, r=20.0, ang=70, $fn=32);
+//   }
 module fillet_angled_edge_mask(h=1.0, r=1.0, ang=90, center=true)
 {
 	sweep = 180-ang;
@@ -249,27 +252,28 @@ module fillet_angled_edge_mask(h=1.0, r=1.0, ang=90, center=true)
 //   fillet = radius of the fillet.
 //   ang = angle between planes that you need to fillet the corner of.
 // Example:
-//   fillet_angled_corner_mask(fillet=100, ang=90);
+//   ang=60;
+//   difference() {
+//       angle_pie_mask(ang=ang, h=50, r=200);
+//       up(50/2) {
+//           fillet_angled_corner_mask(fillet=20, ang=ang);
+//           zrot_copies([0, ang]) right(200/2) fillet_mask_x(l=200, r=20);
+//       }
+//       fillet_angled_edge_mask(h=51, r=20, ang=ang);
+//   }
 module fillet_angled_corner_mask(fillet=1.0, ang=90)
 {
-	dy = fillet * tan(ang/2);
-	th = max(dy, fillet*2);
+	dx = fillet / tan(ang/2);
+	fn = quantup(segs(fillet), 4);
 	difference() {
-		down(dy) {
-			up(th/2) {
-				forward(fillet) {
-					cube(size=[fillet*2, fillet*4, th], center=true);
-				}
-			}
-		}
-		down(dy) {
-			forward(fillet) {
-				grid_of(count=2, spacing=fillet*2) {
-					sphere(r=fillet);
-				}
-				xrot(ang) {
-					up(fillet*2) {
-						cube(size=[fillet*8, fillet*8, fillet*4], center=true);
+		down(fillet) cylinder(r=dx/cos(ang/2)+1, h=fillet+1, center=false);
+		yflip_copy() {
+			translate([dx, fillet, -fillet]) {
+				hull() {
+					sphere(r=fillet, $fn=fn);
+					down(fillet*3) sphere(r=fillet, $fn=fn);
+					zrot_copies([0,ang]) {
+						right(fillet*3) sphere(r=fillet, $fn=fn);
 					}
 				}
 			}
@@ -315,8 +319,7 @@ module fillet_corner_mask(r=1.0)
 //   $fa=2; $fs=2;
 //   difference() {
 //     cylinder(r=50, h=100, center=true);
-//     translate([0, 0, 50])
-//       fillet_cylinder_mask(r=50, fillet=10, xtilt=30, ytilt=30);
+//     up(50) !fillet_cylinder_mask(r=50, fillet=10, xtilt=30);
 //   }
 module fillet_cylinder_mask(r=1.0, fillet=0.25, xtilt=0, ytilt=0)
 {
@@ -324,8 +327,8 @@ module fillet_cylinder_mask(r=1.0, fillet=0.25, xtilt=0, ytilt=0)
 	dhy = 2*r*sin(ytilt);
 	dh = hypot(dhy, dhx);
 	down(dh/2) {
-		skew_xz(zang=xtilt) {
-			skew_yz(zang=ytilt) {
+		skew_xz(za=xtilt) {
+			skew_yz(za=ytilt) {
 				down(fillet) {
 					difference() {
 						up((dh+2*fillet)/2) {
