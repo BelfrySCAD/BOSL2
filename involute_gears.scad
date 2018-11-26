@@ -57,10 +57,21 @@
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 
-//An involute spur gear, with reasonable defaults for all the parameters.
-//Normally, you should just choose the first 4 parameters, and let the rest be default values.
-//Meshing gears must match in mm_per_tooth, pressure_angle, and twist,
-//and be separated by the sum of their pitch radii, which can be found with pitch_radius().
+// Creates an involute spur gear, with reasonable defaults for all the parameters.
+// Normally, you should just choose the first 4 parameters, and let the rest be default values.
+// Meshing gears must match in mm_per_tooth, pressure_angle, and twist,
+// and be separated by the sum of their pitch radii, which can be found with pitch_radius().
+//   mm_per_tooth  = This is the "circular pitch", the circumference of the pitch circle divided by the number of teeth
+//   number_of_teeth = Total number of teeth along the rack
+//   thickness = Thickness of rack in mm (affects each tooth)
+//   hole_diameter = Diameter of centeral shaft hole.
+//   twist = Teeth rotate this many degrees from bottom of gear to top.  360 makes the gear a screw with each thread going around once
+//   teeth_to_hide = Number of teeth to delete to make this only a fraction of a circle
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
+//   clearance = Gap between top of a tooth on one gear and bottom of valley on a meshing gear (in millimeters)
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
+// Example:
+//   gear(mm_per_tooth=5, number_of_teeth=20, thickness=5, hole_diameter=5);
 module gear (
 	mm_per_tooth    = 3,    //this is the "circular pitch", the circumference of the pitch circle divided by the number of teeth
 	number_of_teeth = 11,   //total number of teeth around the entire perimeter
@@ -104,8 +115,17 @@ function iang(r1,r2)      = sqrt((r2/r1)*(r2/r1) - 1)/PI*180 - acos(r1/r2); //un
 function q7(f,r,b,r2,t,s) = q6(b,s,t,(1-f)*max(b,r)+f*r2);                         //radius a fraction f up the curved side of the tooth 
 function q6(b,s,t,d)      = polar(d,s*(iang(b,d)+t));                              //point at radius d on the involute curve
 
-//a rack, which is a straight line with teeth (the same as a segment from a giant gear with a huge number of teeth).
-//The "pitch circle" is a line along the X axis.
+// Creates a rack, which is a straight line with teeth.
+// The same as a segment of teeth from an infinite diameter gear.
+// The "pitch circle" is a line along the X axis.
+//   mm_per_tooth  = This is the "circular pitch", the circumference of the pitch circle divided by the number of teeth
+//   number_of_teeth = Total number of teeth along the rack
+//   thickness = Thickness of rack in mm (affects each tooth)
+//   height = Height of rack in mm, from tooth top to back of rack.
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
+// Example:
+//   rack(mm_per_tooth=5, number_of_teeth=30, thickness=5, height=5, pressure_angle=20);
 module rack (
 	mm_per_tooth    = 5,    //this is the "circular pitch", the circumference of the pitch circle divided by the number of teeth
 	number_of_teeth = 20,   //total number of teeth along the rack
@@ -176,7 +196,6 @@ translate([ d13,  0, 0]) rotate([0,0,-($t-n3/4+n1/4+1/2)*360/n3]) color([0.75,0.
 translate([-d14,  0, 0]) rotate([0,0,-($t-n4/4-n1/4+1/2-floor(n4/4)-3)*360/n4]) color([1.00,0.75,0.50]) gear(mm_per_tooth,n4,thickness,hole,0,n4-3);
 translate([(-floor(n5/2)-floor(n1/2)+$t+n1/2-1/2)*9, -d1+0.0, 0]) rotate([0,0,0]) color([0.75,0.75,0.75]) rack(mm_per_tooth,n5,thickness,height);
 */
-rack();
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
