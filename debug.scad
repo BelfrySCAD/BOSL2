@@ -32,8 +32,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 include <transforms.scad>
 include <math.scad>
+include <beziers.scad>
 
 
+// Renders lines between each point of a polyline path.
+// Can also optionally show the individual vertex points.
+//   pline = the array of points in the polyline.
+//   showpts = If true, draw vertices and control points.
+//   N = Mark the first and every Nth vertex after in a different color and shape.
+//   size = diameter of the lines drawn.
+//   color = Color to draw the lines (but not vertices) in.
+// Example:
+//   bez = [
+//       [-10, 0, 0], [-15, -5, 9], [0, -3, 5], [5, -10, 0],
+//       [15, 0, -5], [5, 12, -8], [0, 10, -5]
+//   ];
+//   trace_polyline(bez, N=1, showpts=true, size=0.5, color="lightgreen");
 module trace_polyline(pline, N=1, showpts=false, size=1, color="yellow") {
 	if (showpts) {
 		for (i = [0:len(pline)-1]) {
@@ -67,7 +81,20 @@ module trace_polyline(pline, N=1, showpts=false, size=1, color="yellow") {
 }
 
 
-module trace_bez(bez, N=3, size=1) {
+// Renders lines between each point of a polyline path.
+// Can also optionally show the individual vertex points.
+//   bez = the array of points in the bezier.
+//   N = Mark the first and every Nth vertex after in a different color and shape.
+//   size = diameter of the lines drawn.
+// Example:
+//   bez = [
+//       [-10,   0],  [-15,  -5],
+//       [ -5, -10],  [  0, -10],  [ 5, -10],
+//       [ 14,  -5],  [ 15,   0],  [16,   5],
+//       [  5,  10],  [  0,  10]
+//   ];
+//   trace_bezier(bez, N=3, size=0.5);
+module trace_bezier(bez, N=3, size=1) {
 	trace_polyline(bez, N=N, showpts=true, size=size/2, color="green");
 	trace_polyline(bezier_polyline(bez, N=N), size=size);
 }
@@ -77,8 +104,19 @@ module trace_bez(bez, N=3, size=1) {
 // position in the vertex array.  Also draws any children of this module with
 // transparency.
 //   vertices = Array of point vertices.
-//   size     = The size of the text used to label the vertexes.
+//   size     = The size of the text used to label the vertices.
 //   disabled = If true, don't draw numbers, and draw children without transparency.  Default = false.
+// Example:
+//   verts = [
+//       [-10, 0, -10], [10, 0, -10],
+//       [0, -10, 10], [0, 10, 10]
+//   ];
+//   faces = [
+//       [0,2,1], [1,2,3], [0,3,2], [1,3,0]
+//   ];
+//   debug_vertices(vertices=verts, size=2) {
+//       polyhedron(points=verts, faces=faces);
+//   }
 module debug_vertices(vertices, size=1, disabled=false) {
 	if (!disabled) {
 		echo(vertices=vertices);
@@ -113,8 +151,19 @@ module debug_vertices(vertices, size=1, disabled=false) {
 // with transparency.
 //   vertices = Array of point vertices.
 //   faces    = Array of faces by vertex numbers.
-//   size     = The size of the text used to label the faces and vertexes.
+//   size     = The size of the text used to label the faces and vertices.
 //   disabled = If true, don't draw numbers, and draw children without transparency.  Default = false.
+// Example:
+//   verts = [
+//       [-10, 0, -10], [10, 0, -10],
+//       [0, -10, 10], [0, 10, 10]
+//   ];
+//   faces = [
+//       [0,2,1], [1,2,3], [0,3,2], [1,3,0]
+//   ];
+//   debug_faces(vertices=verts, faces=faces, size=2) {
+//       polyhedron(points=verts, faces=faces);
+//   }
 module debug_faces(vertices, faces, size=1, disabled=false) {
 	if (!disabled) {
 		vlen = len(vertices);
@@ -168,7 +217,7 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 // Works best with Thrown-Together preview mode, to see reversed faces.
 //   vertices = Array of point vertices.
 //   faces = Array of faces by vertex numbers.
-//   txtsize = The size of the text used to label the faces and vertexes.
+//   txtsize = The size of the text used to label the faces and vertices.
 //   disabled = If true, act exactly like `polyhedron()`.  Default = false.
 // Example:
 //   pts = [[-5,0,-5], [5,0,-5], [0,-5,5], [0,5,5]];
