@@ -33,6 +33,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 use <transforms.scad>
 
 
+// Creates a slider to match a rail.
+//   l = length (long axis) of slider.
+//   w = width of slider.
+//   h = height of slider.
+//   base = height of slider base.
+//   wall = width of wall behind each side of the slider.
+//   ang = overhang angle for slider, to facilitate supportless printig.
+//   slop = printer-specific slop value to make parts fit exactly.
+// Example:
+//   slider(l=30, base=10, wall=4, slop=0.2);
 module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=printer_slop)
 {
 	full_width = w + 2*wall;
@@ -91,10 +101,17 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=printer_slop)
 		}
 	}
 }
-//slider(l=30, base=10, wall=4, slop=0.2);
 
 
 
+// Creates a slider to match a rail.
+//   l = length (long axis) of slider.
+//   w = width of slider.
+//   h = height of slider.
+//   chamfer = size of chamfer at end of rail.
+//   ang = overhang angle for slider, to facilitate supportless printig.
+// Example:
+//   rail(l=100, w=10, h=10);
 module rail(l=30, w=10, h=10, chamfer=1.0, ang=30)
 {
 	attack_ang = 30;
