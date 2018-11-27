@@ -36,7 +36,7 @@ use <shapes.scad>
 
 
 // Creates a model of a phillips driver bit of a given named size.
-//   size = The size of the bit.  "#00", "#0", "#1", "#2", or "#3"
+//   size = The size of the bit.  "#1", "#2", or "#3"
 //   shaft = The diameter of the drive bit's shaft.
 //   l = The length of the drive bit.
 // Example:
