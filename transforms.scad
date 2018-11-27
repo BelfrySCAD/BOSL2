@@ -46,7 +46,7 @@ printer_slop = 0.20;  // mm
 // Example:
 //   move([10,20,30]) sphere(r=1);
 //   move(y=10) sphere(r=1);
-//   move(x=10, z=20) sphere(r=1);
+//   move(x=5, z=10) sphere(r=1);
 module move(a=[0,0,0], x=0, y=0, z=0) {
 	translate(a) translate([x,y,z]) children();
 }
@@ -144,14 +144,20 @@ module zscale(z) {scale([1,1,z]) children();}
 
 
 // Mirrors the children along the X axis, kind of like xscale(-1)
+// Example:
+//   xflip() rotate([-30,30]) cylinder(d=10, h=40, center=false);
 module xflip() mirror([1,0,0]) children();
 
 
 // Mirrors the children along the Y axis, kind of like yscale(-1)
+// Example:
+//   yflip() rotate([-30,30]) cylinder(d=10, h=40, center=false);
 module yflip() mirror([0,1,0]) children();
 
 
 // Mirrors the children along the Z axis, kind of like zscale(-1)
+// Example:
+//   zflip() rotate([-30,30]) cylinder(d=10, h=40, center=false);
 module zflip() mirror([0,0,1]) children();
 
 
@@ -160,7 +166,7 @@ module zflip() mirror([0,0,1]) children();
 //   ya = skew angle towards the Y direction.
 // Examples:
 //   skew_xy(xa=15) cube(size=10);
-//   skew_xy(xa=15, ya=30) cube(size=10);
+//   skew_xy(xa=30, ya=15) cube(size=10);
 module skew_xy(xa=0, ya=0)
 {
 	multmatrix(m = [
@@ -180,7 +186,7 @@ module zskew(xa=0,ya=0) skew_xy(xa=xa,ya=ya) children();
 //   za = skew angle towards the Z direction.
 // Examples:
 //   skew_yz(ya=15) cube(size=10);
-//   skew_yz(ya=15, za=30) cube(size=10);
+//   skew_yz(ya=30, za=15) cube(size=10);
 module skew_yz(ya=0, za=0)
 {
 	multmatrix(m = [
@@ -200,7 +206,7 @@ module xskew(ya=0,za=0) skew_yz(ya=ya,za=za) children();
 //   za = skew angle towards the Z direction.
 // Examples:
 //   skew_xz(xa=15) cube(size=10);
-//   skew_xz(xa=15, za=30) cube(size=10);
+//   skew_xz(xa=-15, za=15) cube(size=10);
 module skew_xz(xa=0, za=0)
 {
 	multmatrix(m = [
@@ -223,6 +229,13 @@ module yskew(xa=0,za=0) skew_xz(xa=xa,za=za) children();
 
 // Performs hull operations between consecutive pairs of children,
 // then unions all of the hull results.
+// Example:
+//   chain_hull() {
+//       cube(5, center=true);
+//       translate([50, 0, 0]) sphere(d=15);
+//       translate([100, 50, 0]) cylinder(d=10, h=20);
+//       translate([100, 100, 0]) cube([10,20,20], center=false);
+//   }
 module chain_hull() {
 	union() {
 		if ($children == 1) {
@@ -251,6 +264,7 @@ module chain_hull() {
 // Example:
 //   mirror_copy([1,-1,0]) yrot(30) cylinder(h=10, r=1, center=true);
 //   mirror_copy([1,1,1], offset=17.32) cylinder(h=10, r=1, center=false);
+//   mirror_copy([1,-1,0]) yrot(30) cylinder(h=10, r=1, center=false);
 module mirror_copy(v=[0,0,1], offset=0)
 {
 	l = sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
@@ -266,7 +280,7 @@ module mirror_copy(v=[0,0,1], offset=0)
 // Makes a copy of the children, mirrored across the X axis.
 //   offset = distance to offset children away from the X axis.
 // Example:
-//   xflip_copy() yrot(30) cylinder(h=10, r=1, center=true);
+//   xflip_copy() yrot(30) cylinder(h=10, r=1, center=false);
 //   xflip_copy(offset=10) yrot(30) cylinder(h=10, r=1, center=false);
 module xflip_copy(offset=0) {right(offset) children(); mirror([1,0,0]) right(offset) children();}
 
@@ -274,22 +288,22 @@ module xflip_copy(offset=0) {right(offset) children(); mirror([1,0,0]) right(off
 // Makes a copy of the children, mirrored across the Y axis.
 //   offset = distance to offset children away from the Y axis.
 // Example:
-//   yflip_copy() yrot(30) cylinder(h=10, r=1, center=true);
-//   yflip_copy(offset=10) yrot(30) cylinder(h=10, r=1, center=false);
+//   yflip_copy() xrot(30) cylinder(h=10, r=1, center=false);
+//   yflip_copy(offset=10) xrot(30) cylinder(h=10, r=1, center=false);
 module yflip_copy(offset=0) {back(offset) children(); mirror([0,1,0]) back(offset) children();}
 
 
 // Makes a copy of the children, mirrored across the Z axis.
 //   offset = distance to offset children away from the Z axis.
 // Example:
-//   zflip_copy() yrot(30) cylinder(h=10, r=1, center=true);
+//   zflip_copy() yrot(30) cylinder(h=10, r=1, center=false);
 //   zflip_copy(offset=10) yrot(30) cylinder(h=10, r=1, center=false);
 module zflip_copy(offset=0) {up(offset) children(); mirror([0,0,1]) up(offset) children();}
 
 
 // Given a number of euller angles, rotates copies of the given children to each of those angles.
 // Example:
-//   rot_copies(rots=[[0,0,0],[45,0,0],[0,45,120],[90,-45,270]])
+//   rot_copies(rots=[[45,0,0],[0,45,120],[90,-45,270]])
 //     translate([6,0,0]) cube(size=[9,1,4], center=true);
 module rot_copies(rots=[[0,0,0]])
 {
@@ -302,7 +316,7 @@ module rot_copies(rots=[[0,0,0]])
 //   count = Optional number of evenly distributed copies, rotated around a circle.
 //   offset = Angle offset in degrees, for use with count.
 // Example:
-//   xrot_copies(rots=[0,15,30,60,120,240]) translate([0,6,0]) cube(size=[4,9,1], center=true);
+//   xrot_copies(rots=[15,30,60,120,240]) translate([0,6,0]) cube(size=[4,9,1], center=true);
 //   xrot_copies(count=6, offset=15) translate([0,6,0]) cube(size=[4,9,1], center=true);
 module xrot_copies(rots=[0], offset=0, count=undef)
 {
@@ -328,7 +342,7 @@ module xrot_copies(rots=[0], offset=0, count=undef)
 //   count = Optional number of evenly distributed copies, rotated around a circle.
 //   offset = Angle offset in degrees, for use with count.
 // Example:
-//   yrot_copies(rots=[0,15,30,60,120,240]) translate([6,0,0]) cube(size=[9,4,1], center=true);
+//   yrot_copies(rots=[15,30,60,120,240]) translate([6,0,0]) cube(size=[9,4,1], center=true);
 //   yrot_copies(count=6, offset=15) translate([6,0,0]) cube(size=[9,4,1], center=true);
 module yrot_copies(rots=[0], offset=0, count=undef)
 {
@@ -354,7 +368,7 @@ module yrot_copies(rots=[0], offset=0, count=undef)
 //   count = Optional number of evenly distributed copies, rotated around a circle.
 //   offset = Angle offset in degrees for first copy.
 // Example:
-//   zrot_copies(rots=[0,15,30,60,120,240]) translate([6,0,0]) cube(size=[9,1,4], center=true);
+//   zrot_copies(rots=[15,30,60,120,240]) translate([6,0,0]) cube(size=[9,1,4], center=true);
 //   zrot_copies(count=6, offset=15) translate([6,0,0]) cube(size=[9,1,4], center=true);
 module zrot_copies(rots=[0], offset=0, count=undef)
 {
@@ -393,7 +407,6 @@ module place_copies(a=[[0,0,0]]) {translate_copies(a) children();}
 //   n = number of copies to distribute along the line. (Default: 2)
 // Examples:
 //   line_of(p1=[0,0,0], p2=[-10,15,20], n=5) cube(size=[3,1,1],center=true);
-//
 module line_of(p1=[0,0,0], p2=[10,0,0], n=2)
 {
 	delta = (p2 - p1) / (n-1);
@@ -422,7 +435,6 @@ module spread(p1,p2,n=3) {line_of(p1,p2,n) children();}
 //     cube(size=[3,1,1],center=true);
 //   arc_of(r=10,n=5,rot=true,sa=30.0,ea=150.0)
 //     cube(size=[3,1,1],center=true);
-//
 module arc_of(
 		n=6,
 		r=1, rx=undef, ry=undef,
@@ -494,9 +506,9 @@ module zring(n=2,r=0,sa=0,rot=true) {if (n>0) for (i=[0:n-1]) {a=i*360/n; zrot(a
 //   n = Number of copies to spread out. (Default: 2)
 // Examples:
 //   xspread(25) sphere(1);
-//   xspread(25,3) sphere(1)
-//   xspread(25, n=3) sphere(1)
-//   xspread(spacing=20, n=4) sphere(1)
+//   xspread(25,3) sphere(1);
+//   xspread(25, n=3) sphere(1);
+//   xspread(spacing=20, n=4) sphere(1);
 module xspread(spacing=1,n=2) for (i=[0:n-1]) right((i-(n-1)/2.0)*spacing) children();
 
 
@@ -505,9 +517,9 @@ module xspread(spacing=1,n=2) for (i=[0:n-1]) right((i-(n-1)/2.0)*spacing) child
 //   n = Number of copies to spread out. (Default: 2)
 // Examples:
 //   yspread(25) sphere(1);
-//   yspread(25,3) sphere(1)
-//   yspread(25, n=3) sphere(1)
-//   yspread(spacing=20, n=4) sphere(1)
+//   yspread(25,3) sphere(1);
+//   yspread(25, n=3) sphere(1);
+//   yspread(spacing=20, n=4) sphere(1);
 module yspread(spacing=1,n=2) for (i=[0:n-1]) back((i-(n-1)/2)*spacing) children();
 
 
@@ -516,19 +528,19 @@ module yspread(spacing=1,n=2) for (i=[0:n-1]) back((i-(n-1)/2)*spacing) children
 //   n = Number of copies to spread out. (Default: 2)
 // Examples:
 //   zspread(25) sphere(1);
-//   zspread(25,3) sphere(1)
-//   zspread(25, n=3) sphere(1)
-//   zspread(spacing=20, n=4) sphere(1)
+//   zspread(25,3) sphere(1);
+//   zspread(25, n=3) sphere(1);
+//   zspread(spacing=20, n=4) sphere(1);
 module zspread(spacing=1,n=2) for (i=[0:n-1]) up((i-(n-1)/2.0)*spacing) children();
 
 
 // Spreads out the given children along the X axis.
 //   spacing = spacing between each child. (Default: 10.0)
 // Examples:
-//   xdistribute(30) {
-//       sphere(10);
-//       cube([10,20,30], center=true);
-//       cylinder(h=20, d=10, center=true);
+//   xdistribute(15) {
+//       sphere(1);
+//       cube([1,2,3], center=true);
+//       cylinder(d=2, h=5);
 //   }
 module xdistribute(spacing=10) for (i=[0:$children-1]) right((i-($children-1)/2.0)*spacing) children(i);
 
@@ -536,10 +548,10 @@ module xdistribute(spacing=10) for (i=[0:$children-1]) right((i-($children-1)/2.
 // Spreads out the given children along the Y axis.
 //   spacing = spacing between each child. (Default: 10.0)
 // Examples:
-//   ydistribute(30) {
-//       sphere(10);
-//       cube([10,20,30], center=true);
-//       cylinder(h=20, d=10, center=true);
+//   ydistribute(15) {
+//       sphere(1);
+//       cube([1,2,3], center=true);
+//       cylinder(d=2, h=5);
 //   }
 module ydistribute(spacing=10) for (i=[0:$children-1]) back((i-($children-1)/2.0)*spacing) children(i);
 
@@ -547,10 +559,10 @@ module ydistribute(spacing=10) for (i=[0:$children-1]) back((i-($children-1)/2.0
 // Spreads out the given children along the Z axis.
 //   spacing = spacing between each child. (Default: 10.0)
 // Examples:
-//   zdistribute(30) {
-//       sphere(10);
-//       cube([10,20,30], center=true);
-//       cylinder(h=20, d=10, center=true);
+//   zdistribute(15) {
+//       sphere(1);
+//       cube([1,2,3], center=true);
+//       cylinder(d=2, h=5);
 //   }
 module zdistribute(spacing=10) for (i=[0:$children-1]) up((i-($children-1)/2.0)*spacing) children(i);
 
