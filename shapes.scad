@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 include <transforms.scad>
 include <math.scad>
-include <masks.scad>
 
 
 // For when you MUST pass a child to a module, but you want it to be nothing.
@@ -547,15 +546,26 @@ module arced_slot(
 	sr1 = (sr1 != undef)? sr1 : ((sd1 != undef)? (sd1/2) : sr);
 	sr2 = (sr2 != undef)? sr2 : ((sd2 != undef)? (sd2/2) : sr);
 	da = ea - sa;
+	steps = segs(r+max(sr1,sr2));
 	zrot(sa) {
-		translate([r, 0, 0]) cylinder(h=h, r1=sr1, r2=sr2, center=true);
+		right(r) cylinder(h=h, r1=sr1, r2=sr2, center=true);
 		difference() {
-			angle_pie_mask(h=h, r1=(r+sr1), r2=(r+sr2), ang=da);
-			cylinder(h=h+0.05, r1=(r-sr1), r2=(r-sr2), center=true);
+			linear_extrude(height=h, scale=(r+sr2)/(r+sr1), center=true, convexity=4) {
+				polygon(
+					points=concat(
+						[[0,0]],
+						[
+							for (i = [0:steps]) [
+								(r+sr1)*cos(da*i/steps),
+								(r+sr1)*sin(da*i/steps)
+							]
+						]
+					)
+				);
+			}
+			cylinder(h=h+0.01, r1=(r-sr1), r2=(r-sr2), center=true);
 		}
-		zrot(da) {
-			translate([r, 0, 0]) cylinder(h=h, r1=sr1, r2=sr2, center=true);
-		}
+		zrot(da) right(r) cylinder(h=h, r1=sr1, r2=sr2, center=true);
 	}
 }
 
@@ -814,6 +824,7 @@ module thinning_brace(h=50, l=100, thick=5, ang=30, strut=5, wall=3, center=true
 // Example:
 //   sparse_strut3d(h=100, w=33, l=33, thick=3, strut=3, maxang=30, max_bridge=20);
 //   sparse_strut3d(h=40, w=40, l=120, thick=3, maxang=30, strut=3, max_bridge=20);
+//   sparse_strut3d(h=30, w=30, l=180, thick=2.5, strut=2.5, maxang=30, max_bridge=20);
 module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge = 20)
 {
 
