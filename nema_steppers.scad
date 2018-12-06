@@ -100,10 +100,11 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20)
 				rrect(size=[motor_width, motor_width, h], r=2, center=true);
 			}
 		}
-		xspread(screw_spacing)
-			yspread(screw_spacing)
-				down(screw_depth/2-0.05)
-					cylinder(r=screw_size/2, h=screw_depth, center=true, $fn=max(12,segs(screw_size/2)));
+		color("silver")
+			xspread(screw_spacing)
+				yspread(screw_spacing)
+					down(screw_depth/2-0.05)
+						cylinder(r=screw_size/2, h=screw_depth, center=true, $fn=max(12,segs(screw_size/2)));
 	}
 	color([0.4, 0.4, 0.4])
 		translate([0, 0, plinth_height/2])
@@ -132,10 +133,11 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24)
 				rrect(size=[motor_width, motor_width, h], r=2, center=true);
 			}
 		}
-		xspread(screw_spacing)
-			yspread(screw_spacing)
-				down(screw_depth/2-0.05)
-					cylinder(r=screw_size/2, h=screw_depth, center=true, $fn=max(12,segs(screw_size/2)));
+		color("silver")
+			xspread(screw_spacing)
+				yspread(screw_spacing)
+					down(screw_depth/2-0.05)
+						cylinder(r=screw_size/2, h=screw_depth, center=true, $fn=max(12,segs(screw_size/2)));
 	}
 	color([0.4, 0.4, 0.4])
 		translate([0, 0, plinth_height/2])
@@ -164,10 +166,11 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20)
 				rrect(size=[motor_width, motor_width, h], r=2, center=true);
 			}
 		}
-		xspread(screw_spacing)
-			yspread(screw_spacing)
-				down(screw_depth/2-0.05)
-					cylinder(r=screw_size/2, h=screw_depth, center=true, $fn=max(12,segs(screw_size/2)));
+		color("silver")
+			xspread(screw_spacing)
+				yspread(screw_spacing)
+					down(screw_depth/2-0.05)
+						cylinder(r=screw_size/2, h=screw_depth, center=true, $fn=max(12,segs(screw_size/2)));
 	}
 	color([0.4, 0.4, 0.4])
 		up(plinth_height/2)
