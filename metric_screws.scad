@@ -387,7 +387,7 @@ module screw(
 //   headtype = One of "hex", "pan", "button", "round", "countersunk", "oval", "socket".  Default: "socket"
 //   l = length of screw, except for the head.
 //   shank = Length of unthreaded portion of the shaft.
-//   pitch = If given, render threads of the given pitch.  Overrides coarse argument.
+//   pitch = If given, render threads of the given pitch.  If 0, then no threads.  Overrides coarse argument.
 //   details = If true model should be rendered with extra details.  (Default: false)
 //   coarse = If true, make coarse threads instead of fine threads.  Default = true
 //   flange = radius of flange beyond the head.  Default = 0 (no flange)
@@ -483,7 +483,15 @@ module metric_bolt(
 				// Threads
 				down(l) {
 					difference() {
-						up(tlen/2+0.05) threaded_rod(d=size, l=tlen+0.05, pitch=P, $fn=sides);
+						up(tlen/2+0.05) {
+							if (tlen > 0) {
+								if (P > 0) {
+									threaded_rod(d=size, l=tlen+0.05, pitch=P, $fn=sides);
+								} else {
+									cylinder(d=size, h=tlen+0.05, $fn=sides, center=true);
+								}
+							}
+						}
 
 						// Bevel bottom end of threads
 						if (details) {
