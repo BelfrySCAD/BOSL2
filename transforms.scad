@@ -107,22 +107,47 @@ module down(z=0) { translate([0,0,-z]) children(); }
 module up(z=0) { translate([0,0,z]) children(); }
 
 
-// Rotates children around the Z axis by the given number of degrees.
+// Rotates children around the X axis by the given number of degrees.
+//   a = angle to rotate by in degrees.
+//   cp = centerpoint to rotate around. Default: [0,0,0]
 // Example:
 //   xrot(90) cylinder(h=10, r=2, center=true);
-module xrot(a=0) { rotate([a, 0, 0]) children(); }
+module xrot(a=0, cp=undef) {
+	if (cp == undef) {
+		rotate([a, 0, 0]) children();
+	} else {
+		translate(cp) rotate([a, 0, 0]) translate(-cp) children();
+	}
+}
 
 
 // Rotates children around the Y axis by the given number of degrees.
+//   a = angle to rotate by in degrees.
+//   cp = centerpoint to rotate around. Default: [0,0,0]
 // Example:
 //   yrot(90) cylinder(h=10, r=2, center=true);
-module yrot(a=0) { rotate([0, a, 0]) children(); }
+module yrot(a=0, cp=undef) {
+	if (cp == undef) {
+		rotate([0, a, 0]) children();
+	} else {
+		translate(cp) rotate([0, a, 0]) translate(-cp) children();
+	}
+}
 
 
 // Rotates children around the Z axis by the given number of degrees.
+//   a = angle to rotate by in degrees.
+//   cp = centerpoint to rotate around. Default: [0,0,0]
 // Example:
 //   zrot(90) cube(size=[9,1,4], center=true);
-module zrot(a=0) { rotate([0, 0, a]) children(); }
+module zrot(a=0, cp=undef) {
+	if (cp == undef) {
+		rotate([0, 0, a]) children();
+	} else {
+		translate(cp) rotate([0, 0, a]) translate(-cp) children();
+	}
+}
+
 
 
 // Scales children by the given factor in the X axis.
