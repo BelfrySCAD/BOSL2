@@ -482,6 +482,34 @@ module torus(or=1, ir=0.5, od=undef, id=undef, r=undef, r2=undef, d=undef, d2=un
 }
 
 
+// Creates a pie slice shape.
+//   ang = pie slice angle in degrees.
+//   h = height of pie slice.
+//   r = radius of pie slice.
+//   r1 = bottom radius of pie slice.
+//   r2 = top radius of pie slice.
+//   d = diameter of pie slice.
+//   d1 = bottom diameter of pie slice.
+//   d2 = top diameter of pie slice.
+//   center = if true, centers pie slice vertically. Default: false
+// Example:
+//   pie_slice(ang=45, h=30, r1=100, r2=80);
+module pie_slice(ang=30, h=1, r=10, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, center=false)
+{
+	r1 = r1!=undef? r1 : (d1!=undef? d1/2 : (d!=undef? d/2 : r));
+	r2 = r2!=undef? r2 : (d2!=undef? d2/2 : (d!=undef? d/2 : r));
+	steps = ceil(segs(max(r1,r2))*ang/360);
+	step = ang/steps;
+	pts = concat(
+		[[0,0]],
+		[for (i=[0:steps]) let(a = i*step) [r1*cos(a), r1*sin(a)]]
+	);
+	linear_extrude(height=h, scale=r2/r1, center=center, convexity=2) {
+		polygon(pts);
+	}
+}
+
+
 // Makes a linear slot with rounded ends, appropriate for bolts to slide along.
 //   p1 = center of starting circle of slot.  (Default: [0,0,0])
 //   p2 = center of ending circle of slot.  (Default: [1,0,0])
@@ -720,7 +748,7 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2)
 				[ 2, 15, 14],
 				[ 3, 12, 15],
 			],
-			convexity=2
+			convexity=6
 		);
 	}
 }
