@@ -183,6 +183,48 @@ module chamfer(chamfer=1, size=[1,1,1], edges=[[0,0,0,0], [1,1,0,0], [0,0,0,0]])
 }
 
 
+// Create a mask that can be used to bevel/chamfer the edge of a circular hole.
+// Difference it from the hole to be chamferred.  The center of the mask object
+// should align exactly with the center of the end of the hole to be chamferred.
+//   r = radius of hole to chamfer.
+//   d = Diameter of hole to chamfer. Use instead of r.
+//   chamfer = size of the edge chamferred. (Default: 0.25)
+// Example:
+//   $fa=2; $fs=2;
+//   difference() {
+//       cube([150,150,100], center=true);
+//       cylinder(r=50, h=100.1, center=true);
+//       up(50) chamfer_hole_mask(r=50, chamfer=10);
+//   }
+module chamfer_hole_mask(r=1.0, d=undef, chamfer=0.25)
+{
+	r = d==undef? r : d/2;
+	down(chamfer) cylinder(r1=r, r2=r+chamfer, h=chamfer+0.01, center=false);
+}
+
+
+// Create a mask that can be used to bevel/chamfer the end of a cylinder.
+// Difference it from the cylinder to be chamferred.  The center of the mask object
+// should align exactly with the center of the end of the cylinder to be chamferred.
+//   r = radius of hole to chamfer.
+//   d = Diameter of hole to chamfer. Use instead of r.
+//   chamfer = size of the edge chamferred. (Default: 0.25)
+// Example:
+//   $fa=2; $fs=2;
+//   difference() {
+//       cylinder(r=50, h=100, center=true);
+//       up(50) chamfer_cylinder_mask(r=50, chamfer=10);
+//   }
+module chamfer_cylinder_mask(r=1.0, d=undef, chamfer=0.25)
+{
+	r = d==undef? r : d/2;
+	difference() {
+		cube([2*r+1, 2*r+1, 2*chamfer], center=true);
+		down(chamfer+0.01) cylinder(r1=r, r2=r-chamfer, h=chamfer, center=false);
+	}
+}
+
+
 // Creates a shape that can be used to fillet a vertical 90 degree edge.
 // Difference it from the object to be filletted.  The center of the mask
 // object should align exactly with the edge to be filletted.
@@ -362,8 +404,8 @@ module fillet_cylinder_mask(r=1.0, fillet=0.25, xtilt=0, ytilt=0)
 //   }
 module fillet_hole_mask(r=1.0, fillet=0.25, xtilt=0, ytilt=0)
 {
-	skew_xz(zang=xtilt) {
-		skew_yz(zang=ytilt) {
+	skew_xz(za=xtilt) {
+		skew_yz(za=ytilt) {
 			difference() {
 				cylinder(r=r+fillet, h=2*fillet, center=true);
 				down(fillet) torus(ir=r, or=r+2*fillet);
