@@ -107,6 +107,23 @@ module down(z=0) { translate([0,0,-z]) children(); }
 module up(z=0) { translate([0,0,z]) children(); }
 
 
+// Rotates children around an arbitrary axis by the given number of degrees.
+// Can be used as a drop-in replacement for `rotate()`, with extra features.
+//   a = Scalar angle or vector of Euller angles to rotate by, in degrees.
+//   v = vector for the axis of rotation.  Default: [0,0,1]
+//   cp = centerpoint to rotate around. Default: [0,0,0]
+// Example:
+//   rot([30,60,0], cp=[0,0,9]) cube([2,4,9]);
+//   rot(30, v=[1,1,0], cp=[0,0,9]) cube([2,4,9]);
+module rot(a=0, v=undef, cp=undef) {
+	if (cp == undef) {
+		rotate(a=a, v=v) children();
+	} else {
+		translate(cp) rotate(a=a, v=v) translate(-cp) children();
+	}
+}
+
+
 // Rotates children around the X axis by the given number of degrees.
 //   a = angle to rotate by in degrees.
 //   cp = centerpoint to rotate around. Default: [0,0,0]
