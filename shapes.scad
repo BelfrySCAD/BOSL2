@@ -39,6 +39,25 @@ include <math.scad>
 module nil() union() {}
 
 
+// Makes a cube that is offset along the given vector by half the cube's size.
+// For example, if v=[-1,1,0], the cube's front right edge will be centered at the origin.
+//   size = size of cube.
+//   v = vector to offset along.
+// Example:
+//   offsetcube([3,4,5], [-1,1,0]);
+module offsetcube(size=[1,1,1], v=[0,0,0]) {
+	lx=len(size)==undef? size : size[0];
+	ly=len(size)==undef? size : size[1];
+	lz=len(size)==undef? size : size[2];
+	ax=len(v)==undef? v : v[0];
+	ay=len(v)==undef? v : v[1];
+	az=len(v)==undef? v : v[2];
+	translate([lx*ax/2, ly*ay/2, lz*az/2]) {
+		cube(size, center=true);
+	}
+}
+
+
 // Makes a cube that has its right face centered at the origin.
 module leftcube(size=[1,1,1]) {l=len(size)==undef? size : size[0]; left(l/2) cube(size, center=true);}
 
