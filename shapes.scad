@@ -39,9 +39,28 @@ include <math.scad>
 module nil() union() {}
 
 
-// Makes a cube that is centered in X and Y axes, and has its bottom aligned with Z=0.
-module upcube(size=[1,1,1]) {up(size[2]/2) cube(size, center=true);}
+// Makes a cube that has its right face centered at the origin.
+module leftcube(size=[1,1,1]) {l=len(size)==undef? size : size[0]; left(l/2) cube(size, center=true);}
 
+
+// Makes a cube that has its left face centered at the origin.
+module rightcube(size=[1,1,1]) {l=len(size)==undef? size : size[0]; right(l/2) cube(size, center=true);}
+
+
+// Makes a cube that has its front face centered at the origin.
+module backcube(size=[1,1,1]) {l=len(size)==undef? size : size[1]; back(l/2) cube(size, center=true);}
+
+
+// Makes a cube that has its back face centered at the origin.
+module fwdcube(size=[1,1,1]) {l=len(size)==undef? size : size[1]; fwd(l/2) cube(size, center=true);}
+
+
+// Makes a cube that has its bottom face centered at the origin.
+module upcube(size=[1,1,1]) {l=len(size)==undef? size : size[2]; up(l/2) cube(size, center=true);}
+
+
+// Makes a cube that has its top face centered at the origin.
+module dncube(size=[1,1,1]) {l=len(size)==undef? size : size[2]; down(l/2) cube(size, center=true);}
 
 
 // Makes a cube with chamfered edges.
