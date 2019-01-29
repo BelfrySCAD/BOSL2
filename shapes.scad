@@ -79,7 +79,7 @@ module upcube(size=[1,1,1]) {l=len(size)==undef? size : size[2]; up(l/2) cube(si
 
 
 // Makes a cube that has its top face centered at the origin.
-module dncube(size=[1,1,1]) {l=len(size)==undef? size : size[2]; down(l/2) cube(size, center=true);}
+module downcube(size=[1,1,1]) {l=len(size)==undef? size : size[2]; down(l/2) cube(size, center=true);}
 
 
 // Makes a cube with chamfered edges.
