@@ -214,6 +214,27 @@ module rcube(size=[1,1,1], r=0.25, center=false)
 }
 
 
+// Creates a cylinder with its top face centered at the origin.
+//   h = height of cylinder. (Default: 1.0)
+//   r = radius of cylinder. (Default: 1.0)
+//   r1 = optional bottom radius of cylinder. (Default: 1.0)
+//   r2 = optional top radius of cylinder. (Default: 1.0)
+//   d = optional diameter of cylinder. (use instead of r)
+// Example:
+//   downcyl(r=10, h=50);
+//   downcyl(r1=15, r2=5, h=45);
+//   downcyl(d=15, h=40);
+module downcyl(d=1, h=1, d1=undef, d2=undef, r=undef, r1=undef, r2=undef)
+{
+	r1 = d1!=undef? d1/2 : (r1!=undef? r1 : (r!=undef? r : d/2));
+	r2 = d2!=undef? d2/2 : (r2!=undef? r2 : (r!=undef? r : d/2));
+	down(h/2) {
+		cylinder(r1=r1, r2=r2, h=h, center=true);
+	}
+}
+
+
+
 // Creates a cylinder with chamferred (bevelled) edges.
 //   h = height of cylinder. (Default: 1.0)
 //   r = radius of cylinder. (Default: 1.0)
@@ -261,25 +282,35 @@ module chamf_cyl(h=1, r=1, d=undef, chamfer=0.25, chamfedge=undef, angle=45, cen
 //   fillet = radius of the edge filleting. (Default: 0.25)
 //   center = boolean.  If true, cylinder is centered. (Default: false)
 // Example:
-//   rcylinder(h=50, r=20, fillet=5, center=true, $fa=1, $fs=1);
-module rcylinder(h=1, r=1, d=undef, fillet=0.25, center=false)
+//   rcylinder(h=50, r1=20, r2=30, fillet=5, center=true);
+//   rcylinder(h=50, r=20, fillet=5, center=true);
+module rcylinder(h=1, r=1, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, fillet=0.25, center=false)
 {
-	d = (d == undef)? r * 2.0 : d;
-	dh = d - 2*fillet;
-	hh = h - 2*fillet;
+	r1 = d1!=undef? d1/2 : (r1!=undef? r1 : (d!=undef? d/2 : r));
+	r2 = d2!=undef? d2/2 : (r2!=undef? r2 : (d!=undef? d/2 : r));
+	u = fillet/h;
+	rr1 = (r1+(r2-r1)*u);
+	rr2 = (r1+(r2-r1)*(1-u));
+	yy = h/2 - fillet;
 	up(center? 0 : h/2) {
 		rotate_extrude(angle=360, convexity=2) {
 			difference() {
 				hull() {
-					right(d/2-fillet) {
-						yspread(h-2*fillet) {
-							circle(r=fillet, $fn=quantup(segs(fillet), 4));
+					right(rr1-fillet) {
+						difference() {
+							fwd(yy) circle(r=fillet, $fn=quantup(segs(fillet), 4));
+							back(fillet) square(2*fillet, center=true);
 						}
 					}
-					right(d/2/2) square(size=[d/2, h-fillet*2], center=true);
-					right((d/2-fillet)/2) square(size=[d/2-fillet, h], center=true);
+					right(rr2-fillet) {
+						difference() {
+							back(yy) circle(r=fillet, $fn=quantup(segs(fillet), 4));
+							fwd(fillet) square(2*fillet, center=true);
+						}
+					}
+					right(0.01/2) square([0.01, h], center=true);
 				}
-				left(d/2) square([d, h+1], center=true);
+				left(max(rr1,rr2)/2) square([max(rr1, rr2), h+1], center=true);
 			}
 		}
 	}
