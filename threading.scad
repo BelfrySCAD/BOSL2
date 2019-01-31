@@ -50,6 +50,7 @@ function _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, p
 //   thread_depth = Depth of the threads.  Default=pitch/2
 //   thread_angle = The pressure angle profile angle of the threads.  Default = 14.5 degree ACME profile.
 //   left_handed = If true, create left-handed threads.  Default = false
+//   bevel = if true, bevel the thread ends.  Default: true
 //   starts = The number of lead starts.  Default = 1
 // Examples:
 //   trapezoidal_threaded_rod(d=10, l=100, pitch=2, thread_angle=15, $fn=32);
@@ -58,8 +59,9 @@ function _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, p
 //   trapezoidal_threaded_rod(d=60, l=16, pitch=8, thread_depth=3, thread_angle=45, left_handed=true, starts=4, $fa=2, $fs=2);
 //   trapezoidal_threaded_rod(d=16, l=40, pitch=2, thread_angle=30);
 //   trapezoidal_threaded_rod(d=10, l=40, pitch=3, thread_angle=15, left_handed=true, starts=3, $fn=36);
-//   trapezoidal_threaded_rod(d=50, l=50, pitch=8, thread_angle=30, starts=4, $fa=2, $fs=2);
 //   trapezoidal_threaded_rod(d=25, l=100, pitch=10, thread_depth=8/3, thread_angle=50, starts=4, center=false, $fa=2, $fs=2);
+//   trapezoidal_threaded_rod(d=50, l=75, pitch=8, thread_angle=30, starts=3);
+//   trapezoidal_threaded_rod(l=25, d=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1);
 module trapezoidal_threaded_rod(
 	d=10,
 	l=100,
@@ -67,6 +69,7 @@ module trapezoidal_threaded_rod(
 	thread_angle=15,
 	thread_depth=undef,
 	left_handed=false,
+	bevel=false,
 	center=true,
 	starts=1
 ) {
@@ -202,9 +205,19 @@ module trapezoidal_threaded_rod(
 		]
 	);
 	up(center? 0 : l/2) {
-		intersection() {
+		difference() {
 			polyhedron(points=poly_points, faces=poly_faces, convexity=threads*starts*2);
-			cube([d+1, d+1, l], center=true);
+			zspread(1.5*l) cube([d+1, d+1, l/2], center=true);
+			if (bevel) {
+				zflip_copy() {
+					down(l/2+0.01) {
+						difference() {
+							up(depth/2-0.01) cube([d*2, d*2, depth+0.01], center=true);
+							cylinder(r1=d/2-depth, r2=d/2, h=depth+0.01, center=false);
+						}
+					}
+				}
+			}
 		}
 	}
 }
@@ -226,9 +239,11 @@ module trapezoidal_threaded_rod(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
+//   bevel = if true, bevel the thread ends.  Default: true
 // Examples:
 //   trapezoidal_threaded_nut(od=16, id=8, h=8, pitch=2, slop=0.2);
 //   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, slop=0.2, left_handed=true);
+//   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1);
 module trapezoidal_threaded_nut(
 	od=17.4,
 	id=10,
@@ -238,20 +253,29 @@ module trapezoidal_threaded_nut(
 	thread_angle=15,
 	left_handed=false,
 	starts=1,
+	bevel=true,
 	slop=0.2
 ) {
+	depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
 	difference() {
 		cylinder(r=od/2/cos(30), h=h, center=true, $fn=6);
 		zspread(slop, n=slop>0?2:1) {
 			trapezoidal_threaded_rod(
 				d=id+2*slop,
-				l=h+0.1,
+				l=h+1,
 				pitch=pitch,
-				thread_depth=thread_depth,
+				thread_depth=depth,
 				thread_angle=thread_angle,
 				left_handed=left_handed,
 				starts=starts
 			);
+		}
+		if (bevel) {
+			zflip_copy() {
+				down(h/2+0.01) {
+					cylinder(r1=id/2+slop, r2=id/2+slop-depth, h=depth, center=false);
+				}
+			}
 		}
 	}
 }
@@ -264,10 +288,17 @@ module trapezoidal_threaded_nut(
 //   l = length of threaded rod.
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
+//   bevel = if true, bevel the thread ends.  Default: false
 // Examples:
-//   threaded_rod(d=16, l=40, pitch=2, thread_angle=30);
-module threaded_rod(d=10, l=100, pitch=2, left_handed=false) {
-	trapezoidal_threaded_rod(d=d, l=l, pitch=pitch, thread_depth=pitch*3*sqrt(3)/8, thread_angle=30, left_handed=left_handed);
+//   threaded_rod(d=10, l=30, pitch=1.25, left_handed=true, $fa=1, $fs=1);
+module threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false) {
+	trapezoidal_threaded_rod(
+		d=d, l=l, pitch=pitch,
+		thread_depth=pitch*3*sqrt(3)/8,
+		thread_angle=30,
+		left_handed=left_handed,
+		bevel=bevel
+	);
 }
 
 
@@ -279,11 +310,12 @@ module threaded_rod(d=10, l=100, pitch=2, left_handed=false) {
 //   h = height/thickness of nut.
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
+//   bevel = if true, bevel the thread ends.  Default: false
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 // Examples:
-//   threaded_nut(od=16, id=8, h=8, pitch=2, slop=0.2);
-module threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left_handed=false, slop=0.2) {
-	trapezoidal_threaded_nut(od=od, id=id, h=h, pitch=pitch, thread_angle=30, thread_depth=pitch*3*sqrt(3)/8, left_handed=left_handed, slop=slop);
+//   threaded_nut(od=16, id=8, l=8, pitch=1.25, left_handed=true, slop=0.2, $fa=1, $fs=1);
+module threaded_nut(od=16, id=10, h=10, pitch=2, left_handed=false, bevel=false, slop=0.2) {
+	trapezoidal_threaded_nut(od=od, id=id, h=h, pitch=pitch, thread_angle=30, thread_depth=pitch*3*sqrt(3)/8, left_handed=left_handed, bevel=bevel, slop=slop);
 }
 
 
@@ -294,12 +326,12 @@ module threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left_handed=false, slop
 //   l = length of threaded rod.
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
+//   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 // Examples:
-//   metric_trapezoidal_threaded_rod(d=16, l=40, pitch=2);
-//   metric_trapezoidal_threaded_rod(d=10, l=40, pitch=2, left_handed=true, $fn=32);
-module metric_trapezoidal_threaded_rod(d=10, l=100, pitch=2, left_handed=false, starts=1) {
-	trapezoidal_threaded_rod(d=d, l=l, pitch=pitch, thread_angle=15, left_handed=left_handed, starts=starts);
+//   metric_trapezoidal_threaded_rod(d=10, l=30, pitch=2, left_handed=true, $fa=1, $fs=1);
+module metric_trapezoidal_threaded_rod(d=10, l=100, pitch=2, left_handed=false, starts=1, bevel=false) {
+	trapezoidal_threaded_rod(d=d, l=l, pitch=pitch, thread_angle=15, left_handed=left_handed, starts=starts, bevel=bevel);
 }
 
 
@@ -311,12 +343,13 @@ module metric_trapezoidal_threaded_rod(d=10, l=100, pitch=2, left_handed=false, 
 //   h = height/thickness of nut.
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
+//   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 // Examples:
-//   metric_trapezoidal_threaded_nut(od=16, id=8, h=8, pitch=2, slop=0.2);
-module metric_trapezoidal_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left_handed=false, starts=1, slop=0.2) {
-	trapezoidal_threaded_nut(od=od, id=id, h=h, pitch=pitch, thread_angle=15, left_handed=left_handed, starts=starts, slop=slop);
+//   metric_trapezoidal_threaded_nut(od=16, d=10, h=10, pitch=2, left_handed=true, bevel=true, $fa=1, $fs=1);
+module metric_trapezoidal_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left_handed=false, starts=1, bevel=false, slop=0.2) {
+	trapezoidal_threaded_nut(od=od, id=id, h=h, pitch=pitch, thread_angle=15, left_handed=left_handed, starts=starts, bevel=bevel, slop=slop);
 }
 
 
@@ -330,15 +363,18 @@ module metric_trapezoidal_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left
 //   thread_angle = The pressure angle profile angle of the threads.  Default = 14.5 degrees
 //   starts = The number of lead starts.  Default = 1
 //   left_handed = if true, create left-handed threads.  Default = false
+//   bevel = if true, bevel the thread ends.  Default: false
 // Examples:
 //   acme_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, $fn=32);
-module acme_threaded_rod(d=10, l=100, pitch=2, thread_angle=14.5, thread_depth=undef, starts=1, left_handed=false) {
+//   acme_threaded_rod(d=10, l=40, pitch=2, starts=3, $fa=1, $fs=1);
+module acme_threaded_rod(d=10, l=100, pitch=2, thread_angle=14.5, thread_depth=undef, starts=1, left_handed=false, bevel=false) {
 	trapezoidal_threaded_rod(
 		d=d, l=l, pitch=pitch,
 		thread_angle=thread_angle,
 		thread_depth=thread_depth,
 		starts=starts,
-		left_handed=left_handed
+		left_handed=left_handed,
+		bevel=bevel
 	);
 }
 
@@ -353,15 +389,19 @@ module acme_threaded_rod(d=10, l=100, pitch=2, thread_angle=14.5, thread_depth=u
 //   thread_depth = Depth of the threads.  Default=pitch/2
 //   thread_angle = The pressure angle profile angle of the threads.  Default = 14.5 degree ACME profile.
 //   left_handed = if true, create left-handed threads.  Default = false
+//   bevel = if true, bevel the thread ends.  Default: false
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 // Examples:
 //   acme_threaded_nut(od=16, id=3/8*25.4, h=8, pitch=1/8*25.4, slop=0.2);
-module acme_threaded_nut(od, id, h, pitch, thread_angle=14.5, thread_depth=undef, left_handed=false, slop=0.2) {
+//   acme_threaded_nut(od=16, id=10, h=10, pitch=2, starts=3, slop=0.2, $fa=1, $fs=1);
+module acme_threaded_nut(od, id, h, pitch, thread_angle=14.5, thread_depth=undef, starts=1, left_handed=false, bevel=false, slop=0.2) {
 	trapezoidal_threaded_nut(
 		od=od, id=id, h=h, pitch=pitch,
 		thread_depth=thread_depth,
 		thread_angle=thread_angle,
 		left_handed=left_handed,
+		bevel=bevel,
+		starts=starts,
 		slop=slop
 	);
 }
@@ -374,11 +414,12 @@ module acme_threaded_nut(od, id, h, pitch, thread_angle=14.5, thread_depth=undef
 //   l = length of threaded rod.
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
+//   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 // Examples:
-//   square_threaded_rod(d=16, l=40, pitch=2, thread_angle=30);
-module square_threaded_rod(d=10, l=100, pitch=2, left_handed=false, starts=1) {
-	trapezoidal_threaded_rod(d=d, l=l, pitch=pitch, thread_angle=0, left_handed=left_handed, starts=starts);
+//   square_threaded_rod(d=10, l=30, pitch=2, starts=2, $fn=32);
+module square_threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false, starts=1) {
+	trapezoidal_threaded_rod(d=d, l=l, pitch=pitch, thread_angle=0, left_handed=left_handed, bevel=bevel, starts=starts);
 }
 
 
@@ -390,15 +431,17 @@ module square_threaded_rod(d=10, l=100, pitch=2, left_handed=false, starts=1) {
 //   h = height/thickness of nut.
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
+//   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 // Examples:
-//   square_threaded_nut(od=16, id=8, h=8, pitch=2, slop=0.2);
-module square_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left_handed=false, starts=1, slop=0.2) {
+//   square_threaded_nut(od=16, id=10, h=10, pitch=2, starts=2, slop=0.15, $fn=32);
+module square_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left_handed=false, bevel=false, starts=1, slop=0.2) {
 	trapezoidal_threaded_nut(
 		od=od, id=id, h=h, pitch=pitch,
 		thread_angle=0,
 		left_handed=left_handed,
+		bevel=bevel,
 		starts=starts,
 		slop=slop
 	);
