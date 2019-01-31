@@ -346,7 +346,7 @@ module pyramid(n=4, h=1, l=1, r=undef, d=undef, circum=false)
 //   d = diameter of the prism. (optional)
 //   circum = prism circumscribes the circle of the given radius or diam.
 // Example:
-//   prism(n=6, h=3, d=4, circum=true);
+//   prism(n=8, h=3, d=4, circum=true);
 module prism(n=3, h=1, l=1, r=undef, d=undef, circum=false, center=false)
 {
 	cm = circum? 1/cos(180/n) : 1.0;

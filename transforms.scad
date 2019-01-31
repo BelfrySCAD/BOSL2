@@ -514,6 +514,7 @@ module arc_of(
 //   rot = if true, rotate each copy of children with respect to the center of the ring.
 // Example:
 //   xring(n=3, r=10, sa=270) yspread(10) yrot(120) cylinder(h=10, d=1, center=false);
+//   xring(n=6, r=20) cylinder(d1=6, d2=0.01, h=6, center=true);
 module xring(n=2,r=0,sa=0,rot=true) {if (n>0) for (i=[0:n-1]) {a=i*360/n; xrot(a+sa) back(r) xrot((rot?0:-a)-sa) children();}}
 
 
@@ -527,6 +528,7 @@ module xring(n=2,r=0,sa=0,rot=true) {if (n>0) for (i=[0:n-1]) {a=i*360/n; xrot(a
 //   rot = if true, rotate each copy of children with respect to the center of the ring.
 // Example:
 //   yring(n=3, r=10, sa=270) xspread(10) xrot(-120) cylinder(h=10, d=1, center=false);
+//   yring(n=6, r=20) cylinder(d1=6, d2=0.01, h=6, center=true);
 module yring(n=2,r=0,sa=0,rot=true) {if (n>0) for (i=[0:n-1]) {a=i*360/n; yrot(a-sa) right(r) yrot((rot?0:-a)+sa) children();}}
 
 
@@ -540,6 +542,7 @@ module yring(n=2,r=0,sa=0,rot=true) {if (n>0) for (i=[0:n-1]) {a=i*360/n; yrot(a
 //   rot = if true, rotate each copy of children with respect to the center of the ring.
 // Example:
 //   zring(n=3, r=10, sa=90) xspread(10) xrot(30) cylinder(h=10, d=1, center=false);
+//   zring(n=6, r=20) xrot(-90) cylinder(d1=6, d2=0.01, h=6, center=true);
 module zring(n=2,r=0,sa=0,rot=true) {if (n>0) for (i=[0:n-1]) {a=i*360/n; zrot(a+sa) right(r) zrot((rot?0:-a)-sa) children();}}
 
 
