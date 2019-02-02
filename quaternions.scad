@@ -31,6 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+use <math.scad>
+
+
 // Quaternions are stored internally as a 4-value vector:
 //  [X, Y, Z, W]  =  W + Xi + Yj + Zk
 function _Quat(a,s,w) = [a[0]*s, a[1]*s, a[2]*s, w];
@@ -58,6 +61,17 @@ function Q_Conj(q) = [-q[0], -q[1], -q[2], q[3]];
 function Q_Norm(q) = sqrt(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
 function Q_Normalize(q) = q/Q_Norm(q);
 function Q_Dist(q1, q2) = Q_Norm(Q_Sub(q1-q2));
+
+
+// Returns a spherical interpolation between two quaternions.
+function Q_Slerp(q1, q2, t) = let(
+		dot = Q_Dot(q1, q2),
+		qq2 = dot<0? Q_Neg(q2) : q2,
+		dott = dot<0? -dot : dot,
+		theta = t * acos(constrain(dott,-1,1))
+	) (dott>0.9995)?
+		Q_Normalize(Q_Add(q1, Q_Mul_S(Q_Sub(qq2,q1), t))) :
+		Q_Add(Q_Mul_S(q1,cos(theta)), Q_Mul_S(Q_Normalize(Q_Sub(qq2, Q_Mul_S(q1, dott))), sin(theta)));
 
 
 // Returns the 3x3 rotation matrix for the given normalized quaternion q.
