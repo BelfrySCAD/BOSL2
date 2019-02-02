@@ -230,45 +230,43 @@ module extrude_2dpath_along_3dpath(polyline, path, convexity=10) {
 //   clipsize = increase if artifacts are left.  Default: 1000
 // Example:
 //   path = [ [0, 0, 0], [33, 33, 33], [66, 33, 40], [100, 0, 0] ];
-//   extrude_2d_shapes_along_3dpath(path) circle(r=10, center=true);
-module extrude_2d_shapes_along_3dpath(path, convexity=10, clipsize=1000) {
+//   extrude_2d_shapes_along_3dpath(path) circle(r=10, center=true, $fn=5);
+module extrude_2d_shapes_along_3dpath(path, convexity=10, clipsize=100) {
+	function polyquats(path, q=Q_Ident(), v=[0,0,1], i=0) = let(
+			v2 = path[i+1] - path[i],
+			ang = vector3d_angle(v,v2),
+			axis = ang>0.001? normalize(cross(v,v2)) : [0,0,1],
+			newq = Q_Mul(Quat(axis, ang), q),
+			dist = norm(v2)
+		) i < (len(path)-2)?
+			concat([[dist, newq, ang]], polyquats(path, newq, v2, i+1)) :
+			[[dist, newq, ang]];
+
+	epsilon = 0.0001;  // Make segments ever so slightly too long so they overlap.
 	ptcount = len(path);
+	pquats = polyquats(path);
 	for (i = [0 : ptcount-2]) {
 		pt1 = path[i];
 		pt2 = path[i+1];
-		pt0 = i==0? pt1 : path[i-1];
-		pt3 = (i>=ptcount-2)? pt2 : path[i+2];
-		dist = distance(pt1,pt2);
-		v1 = pt2-pt1;
-		v0 = (i==0)? v1 : (pt1-pt0);
-		v2 = (i==ptcount-2)? v1 : (pt3-pt2);
-		az1 = atan2(v1[1], v1[0]);
-		alt1 = (len(pt1)<3)? 0 : atan2(v1[2], hypot(v1[1], v1[0]));
-		az0 = atan2(v0[1], v0[0]);
-		alt0 = (len(pt0)<3)? 0 : atan2(v0[2], hypot(v0[1], v0[0]));
-		az2 = atan2(v2[1], v2[0]);
-		alt2 = (len(pt2)<3)? 0 : atan2(v2[2], hypot(v2[1], v2[0]));
-		translate(pt1) {
-			difference() {
-				rotate([0, 90-alt1, az1]) {
-					down(dist) {
-						linear_extrude(height=dist*3, convexity=10) {
+		dist = pquats[i][0];
+		q = pquats[i][1];
+		difference() {
+			translate(pt1) {
+				Qrot(q) {
+					down(clipsize/2/2) {
+						linear_extrude(height=dist+clipsize/2, convexity=convexity) {
 							children();
 						}
 					}
 				}
-				rotate([0, 90-(alt0+alt1)/2, (az0+az1)/2]) {
-					down(dist+0.05) {
-						cube(size=[clipsize,clipsize,dist*2], center=true);
-					}
-				}
-				translate(v1) {
-					rotate([0, 90-(alt1+alt2)/2, (az1+az2)/2]) {
-						up(dist) {
-							cube(size=[clipsize,clipsize,dist*2], center=true);
-						}
-					}
-				}
+			}
+			translate(pt1) {
+				hq = (i > 0)? Q_Slerp(q, pquats[i-1][1], 0.5) : q;
+				Qrot(hq) down(clipsize/2+epsilon) cube(clipsize, center=true);
+			}
+			translate(pt2) {
+				hq = (i < ptcount-2)? Q_Slerp(q, pquats[i+1][1], 0.5) : q;
+				Qrot(hq) up(clipsize/2+epsilon) cube(clipsize, center=true);
 			}
 		}
 	}
