@@ -55,6 +55,37 @@ module modulated_circle(r=40, sines=[10])
 }
 
 
+// Extrudes a 2D shape between the points pt1 and pt2.
+// Takes as children a set of 2D shapes to extrude.
+//   pt1 = starting point of extrusion.
+//   pt2 = ending point of extrusion.
+//   convexity = max number of times a line could intersect a wall of the 2D shape being extruded.
+//   twist = number of degrees to twist the 2D shape over the entire extrusion length.
+//   scale = scale multiplier for end of extrusion compared the start.
+//   slices = Number of slices along the extrusion to break the extrusion into.  Useful for refining `twist` extrusions.
+// Example:
+//   extrude_from_to([0,0,0], [10,20,30], convexity=4, twist=360, scale=3.0, slices=40) {
+//       xspread(3) circle(3, $fn=32);
+//   }
+module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slices=undef) {
+	delta = pt2 - pt1;
+	dist2d = norm([delta[0], delta[1], 0]);
+	dist3d = norm(delta);
+	theta = atan2(delta[1], delta[0]);
+	phi = atan2(delta[2], dist2d);
+	translate(pt1) {
+		rotate([0, -phi, theta]) {
+			yrot(90) {
+				linear_extrude(height=dist3d, convexity=convexity, center=false, slices=slices, twist=twist, scale=scale) {
+					children();
+				}
+			}
+		}
+	}
+}
+
+
+
 // Similar to linear_extrude(), except the result is a hollow shell.
 //   wall = thickness of shell wall.
 //   height = height of extrusion.
