@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 include <transforms.scad>
 include <math.scad>
+include <paths.scad>
 include <beziers.scad>
 
 
@@ -47,7 +48,7 @@ include <beziers.scad>
 //       [-10, 0, 0], [-15, -5, 9], [0, -3, 5], [5, -10, 0],
 //       [15, 0, -5], [5, 12, -8], [0, 10, -5]
 //   ];
-//   trace_polyline(bez, N=1, showpts=true, size=0.5, color="lightgreen");
+//   trace_polyline(bez, N=3, showpts=true, size=0.5, color="lightgreen");
 module trace_polyline(pline, N=1, showpts=false, size=1, color="yellow") {
 	if (showpts) {
 		for (i = [0:len(pline)-1]) {
@@ -65,17 +66,8 @@ module trace_polyline(pline, N=1, showpts=false, size=1, color="yellow") {
 		}
 	}
 	for (i = [0:len(pline)-2]) {
-		delta = pline[i+1] - pline[i];
-		dist2d = norm([delta[0], delta[1], 0]);
-		dist3d = norm(delta);
-		theta = atan2(delta[1], delta[0]);
-		phi = atan2(delta[2], dist2d);
-		translate(pline[i]) {
-			rotate([0, -phi, theta]) {
-				yrot(90) {
-					color(color) cylinder(d=size, h=dist3d, center=false, $fn=4);
-				}
-			}
+		if (N!=3 || (i%N) != 1) {
+			color(color) extrude_from_to(pline[i], pline[i+1]) circle(d=size/2);
 		}
 	}
 }
@@ -220,9 +212,9 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 //   txtsize = The size of the text used to label the faces and vertices.
 //   disabled = If true, act exactly like `polyhedron()`.  Default = false.
 // Example:
-   pts = [[-5,0,-5], [5,0,-5], [0,-5,5], [0,5,5]];
-   fcs = [[0,2,1], [1,2,3], [1,3,0], [0,2,3]];  // Last face reversed
-   debug_polyhedron(points=pts, faces=fcs, txtsize=1);
+//   pts = [[-5,0,-5], [5,0,-5], [0,-5,5], [0,5,5]];
+//   fcs = [[0,2,1], [1,2,3], [1,3,0], [0,2,3]];  // Last face reversed
+//   debug_polyhedron(points=pts, faces=fcs, txtsize=1);
 module debug_polyhedron(points, faces, convexity=10, txtsize=1, disabled=false) {
 	debug_faces(vertices=points, faces=faces, size=txtsize, disabled=disabled) {
 		polyhedron(points=points, faces=faces, convexity=convexity);
