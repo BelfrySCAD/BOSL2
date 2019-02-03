@@ -206,7 +206,7 @@ module revolve_bezier_offset_shell(bezier, offset=1, splinesteps=16, N=3, convex
 //   splinesteps = number of segments to divide each bezier segment into. default=16
 // Example:
 //   path = [ [0, 0, 0], [33, 33, 33], [66, -33, -33], [100, 0, 0] ];
-//   extrude_2d_shapes_along_bezier(path) circle(r=10, center=true);
+//   extrude_2d_shapes_along_bezier(path) difference(){circle(r=10); left(10/2) circle(r=8);}
 module extrude_2d_shapes_along_bezier(bezier, splinesteps=16, N=3, convexity=10, clipsize=1000) {
 	path = slice(bezier_polyline(bezier, splinesteps, N), 0, -1);
 	extrude_2d_shapes_along_3dpath(path, convexity=convexity, clipsize=clipsize) children();
