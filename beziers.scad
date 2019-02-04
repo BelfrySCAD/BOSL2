@@ -258,7 +258,7 @@ module extrude_bezier_along_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN
 //       [ 25, -15],  [-10,   0]
 //   ];
 //   linear_extrude_bezier(bez, height=20, splinesteps=32);
-module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=true, convexity=10, twist=0, slices=20, scale=1.0) {
+module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=true, convexity=undef, twist=undef, slices=undef, scale=undef) {
 	linear_extrude(height=height, center=center, convexity=convexity, twist=twist, slices=slices, scale=scale) {
 		bezier_polygon(bezier, splinesteps=splinesteps, N=N);
 	}
