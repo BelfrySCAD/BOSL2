@@ -484,11 +484,9 @@ module arc_of(
 		sa=0.0, ea=360.0,
 		rot=false
 ) {
-	r = (d == undef)?r:(d/2.0);
-	rx = (dx == undef)?rx:(dx/2.0);
-	ry = (dy == undef)?rx:(dy/2.0);
-	rx = (rx == undef)?r:rx;
-	ry = (ry == undef)?r:ry;
+	r = (d != undef)? d/2 : r;
+	rx = (dx != undef)? dx/2 : ((rx != undef)? rx : r);
+	ry = (dy != undef)? dy/2 : ((ry != undef)? ry : r);
 	sa = ((sa % 360.0) + 360.0) % 360.0; // make 0 < ang < 360
 	ea = ((ea % 360.0) + 360.0) % 360.0; // make 0 < ang < 360
 	n = (abs(ea-sa)<0.01)?(n+1):n;
