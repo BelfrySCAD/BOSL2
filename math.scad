@@ -73,13 +73,18 @@ function reverse(list) = [ for (i = [len(list)-1 : -1 : 0]) list[i] ];
 
 // Returns a slice of the given array, wrapping around past the beginning, if end < start
 function wrap_range(list, start, end) =
-	(end<start)?
+	let(
+		l = len(list),
+		st = start<0? (start%l)+l : (start%l),
+		en = end<0? (end%l)+l : (end%l)
+	)
+	(en<st)?
 		concat(
-			[for (i=[start:len(list)-1]) list[i]],
-			[for (i=[0:end]) list[i]]
+			[for (i=[st:l-1]) list[i]],
+			[for (i=[0:en]) list[i]]
 		)
 	:
-		[for (i=[start:end]) list[i]]
+		[for (i=[st:en]) list[i]]
 ;
 
 
