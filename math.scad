@@ -249,12 +249,131 @@ function vector2d_angle(v1,v2) = atan2(v1[1],v1[0]) - atan2(v2[1],v2[0]);
 // NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
 function vector3d_angle(v1,v2) = acos(constrain((v1*v2)/(norm(v1)*norm(v2)), -1, 1));
 
+
+// Convert polar coordinates to cartesian coordinates.
+// Returns [X,Y] cartesian coordinates.
+//   r = distance from the origin.
+//   theta = angle in degrees, counter-clockwise of X+.
+// Examples:
+//   xy = polar_to_xy(20,30);
+//   xy = polar_to_xy([40,60]);
+function polar_to_xy(r,theta=undef) = let(
+		rad = theta==undef? r[0] : r,
+		t = theta==undef? r[1] : theta
+	) rad*[cos(t), sin(t)];
+
+
+// Convert cartesian coordinates to polar coordinates.
+// Returns [radius, theta] where theta is the angle counter-clockwise of X+.
+//   x = X coordinate.
+//   y = Y coordinate.
+// Examples:
+//   plr = xy_to_polar(20,30);
+//   plr = xy_to_polar([40,60]);
+function xy_to_polar(x,y=undef) = let(
+		xx = y==undef? x[0] : x,
+		yy = y==undef? x[1] : y
+	) [norm([xx,yy]), atan2(yy,xx)];
+
+
+// Convert cylindrical coordinates to cartesian coordinates.
+// Returns [X,Y,Z] cartesian coordinates.
+//   r = distance from the Z axis.
+//   theta = angle in degrees, counter-clockwise of X+ on the XY plane.
+//   z = Height above XY plane.
+// Examples:
+//   xyz = cylindrical_to_xyz(20,30,40);
+//   xyz = cylindrical_to_xyz([40,60,50]);
+function cylindrical_to_xyz(r,theta=undef,z=undef) = let(
+		rad = theta==undef? r[0] : r,
+		t = theta==undef? r[1] : theta,
+		zed = theta==undef? r[2] : z
+	) [rad*cos(t), rad*sin(t), zed];
+
+
+// Convert cartesian coordinates to cylindrical coordinates.
+// Returns [radius,theta,Z]. Theta is the angle counter-clockwise
+// of X+ on the XY plane.  Z is height above the XY plane.
+//   x = X coordinate.
+//   y = Y coordinate.
+//   z = Z coordinate.
+// Examples:
+//   cyl = xyz_to_cylindrical(20,30,40);
+//   cyl = xyz_to_cylindrical([40,50,70]);
+function xyz_to_cylindrical(x,y=undef,z=undef) = let(
+		xx = y==undef? x[0] : x,
+		yy = y==undef? x[1] : y,
+		zz = y==undef? x[2] : z
+	) [norm([xx,yy]), atan2(yy,xx), zz];
+
+
+// Convert spherical coordinates to cartesian coordinates.
+// Returns [X,Y,Z] cartesian coordinates.
+//   r = distance from origin.
+//   theta = angle in degrees, counter-clockwise of X+ on the XY plane.
+//   phi = angle in degrees from the vertical Z+ axis.
+// Examples:
+//   xyz = spherical_to_xyz(20,30,40);
+//   xyz = spherical_to_xyz([40,60,50]);
+function spherical_to_xyz(r,theta=undef,phi=undef) = let(
+		rad = theta==undef? r[0] : r,
+		t = theta==undef? r[1] : theta,
+		p = theta==undef? r[2] : phi
+	) rad*[sin(p)*cos(t), sin(p)*sin(t), cos(p)];
+
+
+// Convert cartesian coordinates to spherical coordinates.
+// Returns [r,theta,phi], where phi is the angle from the Z+ pole,
+// and theta is degrees counter-clockwise of X+ on the XY plane.
+//   x = X coordinate.
+//   y = Y coordinate.
+//   z = Z coordinate.
+// Examples:
+//   sph = xyz_to_spherical(20,30,40);
+//   sph = xyz_to_spherical([40,50,70]);
+function xyz_to_spherical(x,y=undef,z=undef) = let(
+		xx = y==undef? x[0] : x,
+		yy = y==undef? x[1] : y,
+		zz = y==undef? x[2] : z
+	) [norm([xx,yy,zz]), atan2(yy,xx), atan2(norm([xx,yy]),zz)];
+
+
+// Convert altitude/azimuth/range coordinates to cartesian coordinates.
+// Returns [X,Y,Z] cartesian coordinates.
+//   alt = altitude angle in degrees above the XY plane.
+//   az = azimuth angle in degrees clockwise of Y+ on the XY plane.
+//   r = distance from origin.
+// Examples:
+//   xyz = altaz_to_xyz(20,30,40);
+//   xyz = altaz_to_xyz([40,60,50]);
+function altaz_to_xyz(alt,az=undef,r=undef) = let(
+		p = az==undef? alt[0] : alt,
+		t = 90 - (az==undef? alt[1] : az),
+		rad = az==undef? alt[2] : r
+	) rad*[cos(p)*cos(t), cos(p)*sin(t), sin(p)];
+
+// Convert cartesian coordinates to altitude/azimuth/range coordinates.
+// Returns [altitude,azimuth,range], where altitude is angle above the
+// XY plane, azimuth is degrees clockwise of Y+ on the XY plane, and
+// range is the distance from the origin.
+//   x = X coordinate.
+//   y = Y coordinate.
+//   z = Z coordinate.
+// Examples:
+//   aa = xyz_to_altaz(20,30,40);
+//   aa = xyz_to_altaz([40,50,70]);
+function xyz_to_altaz(x,y=undef,z=undef) = let(
+		xx = y==undef? x[0] : x,
+		yy = y==undef? x[1] : y,
+		zz = y==undef? x[2] : z
+	) [atan2(zz,norm([xx,yy])), atan2(xx,yy), norm([xx,yy,zz])];
+
+
 // Returns a slice of an array.  An index of 0 is the array start, -1 is array end
 function slice(arr,st,end) = let(
 		s=st<0?(len(arr)+st):st,
 		e=end<0?(len(arr)+end+1):end
 	) [for (i=[s:e-1]) if (e>s) arr[i]];
-
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
