@@ -75,10 +75,6 @@ function hex_offsets(wires, wirediam, lev=0, arr=[]) =
 // Usage:
 //   wiring([[50,0,-50], [50,50,-50], [0,50,-50], [0,0,-50], [0,0,0]], fillet=10, wires=13);
 module wiring(path, wires, wirediam=2, fillet=10, wirenum=0, bezsteps=12) {
-	vect = path[1]-path[0];
-	theta = atan2(vect[1], vect[0]);
-	xydist = hypot(vect[1], vect[0]);
-	phi = atan2(vect[2],xydist);
 	colors = [
 		[0.2, 0.2, 0.2], [1.0, 0.2, 0.2], [0.0, 0.8, 0.0], [1.0, 1.0, 0.2],
 		[0.3, 0.3, 1.0], [1.0, 1.0, 1.0], [0.7, 0.5, 0.0], [0.5, 0.5, 0.5],
