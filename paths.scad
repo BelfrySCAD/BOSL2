@@ -68,17 +68,11 @@ module modulated_circle(r=40, sines=[10])
 //       xspread(3) circle(3, $fn=32);
 //   }
 module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slices=undef) {
-	delta = pt2 - pt1;
-	dist2d = norm([delta[0], delta[1], 0]);
-	dist3d = norm(delta);
-	theta = atan2(delta[1], delta[0]);
-	phi = atan2(delta[2], dist2d);
+	rtp = xyz_to_spherical(pt2-pt1);
 	translate(pt1) {
-		rotate([0, -phi, theta]) {
-			yrot(90) {
-				linear_extrude(height=dist3d, convexity=convexity, center=false, slices=slices, twist=twist, scale=scale) {
-					children();
-				}
+		rotate([0, rtp[2], rtp[1]]) {
+			linear_extrude(height=rtp[0], convexity=convexity, center=false, slices=slices, twist=twist, scale=scale) {
+				children();
 			}
 		}
 	}
