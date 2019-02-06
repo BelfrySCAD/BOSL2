@@ -37,7 +37,20 @@ use <math.scad>
 // Quaternions are stored internally as a 4-value vector:
 //  [X, Y, Z, W]  =  W + Xi + Yj + Zk
 function _Quat(a,s,w) = [a[0]*s, a[1]*s, a[2]*s, w];
-function Quat(ax, ang) = _Quat(ax/norm(ax), sin(ang/2), cos(ang/2));
+function Quat(ax=[0,0,1], ang=0) = _Quat(ax/norm(ax), sin(ang/2), cos(ang/2));
+
+function QuatX(a=0) = Quat([1,0,0],a);
+function QuatY(a=0) = Quat([0,1,0],a);
+function QuatZ(a=0) = Quat([0,0,1],a);
+
+// Creates a quaternion from standard [X,Y,Z] euller rotation angles in degrees.
+function QuatEuller(a=[0,0,0]) =
+	let(
+		qx = QuatX(a[0]),
+		qy = QuatY(a[1]),
+		qz = QuatZ(a[2])
+	)
+	Q_Mul(qz, Q_Mul(qy, qx));
 
 function Q_Ident() = [0, 0, 0, 1];
 
@@ -91,7 +104,15 @@ function Q_Matrix4(q) = [
 ];
 
 
-// Returns the vector v after rotating it by the quaternion q.
+// Returns the quaternion's axis of rotation as a vector.
+function Q_Axis(q) = let(d = sqrt(1-(q[3]*q[3]))) (d==0)? [0,0,1] : [q[0]/d, q[1]/d, q[2]/d];
+
+
+// Returns the quaternion's angle of rotation in degrees.
+function Q_Angle(q) = 2 * acos(q[3]);
+
+
+// Returns the vector `v` after rotating it by the quaternion `q`.
 function Q_Rot_Vector(v,q) = Q_Mul(Q_Mul(q,concat(v,0)),Q_Conj(q));
 
 
