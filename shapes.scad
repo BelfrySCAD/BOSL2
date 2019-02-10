@@ -217,19 +217,86 @@ module rcube(size=[1,1,1], r=0.25, center=false)
 // Creates a cylinder with its top face centered at the origin.
 //   h = height of cylinder. (Default: 1.0)
 //   r = radius of cylinder. (Default: 1.0)
-//   r1 = optional bottom radius of cylinder. (Default: 1.0)
-//   r2 = optional top radius of cylinder. (Default: 1.0)
+//   r1 = optional bottom radius of cylinder.
+//   r2 = optional top radius of cylinder.
 //   d = optional diameter of cylinder. (use instead of r)
+//   d1 = optional bottom diameter of cylinder.
+//   d2 = optional top diameter of cylinder.
 // Example:
 //   downcyl(r=10, h=50);
 //   downcyl(r1=15, r2=5, h=45);
 //   downcyl(d=15, h=40);
-module downcyl(d=1, h=1, d1=undef, d2=undef, r=undef, r1=undef, r2=undef)
+module downcyl(r=undef, h=1, d=undef, d1=undef, d2=undef, r1=undef, r2=undef)
 {
-	r1 = d1!=undef? d1/2 : (r1!=undef? r1 : (r!=undef? r : d/2));
-	r2 = d2!=undef? d2/2 : (r2!=undef? r2 : (r!=undef? r : d/2));
 	down(h/2) {
-		cylinder(r1=r1, r2=r2, h=h, center=true);
+		cylinder(r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, h=h, center=true);
+	}
+}
+
+
+
+// Creates a cylinder oriented along the X axis.
+// Use like the built-in cylinder(), except use `l` instead of `h`.
+//   l = length of cylinder. (Default: 1.0)
+//   r = radius of cylinder.
+//   r1 = optional radius of left (X-) end of cylinder.
+//   r2 = optional radius of right (X+) end of cylinder.
+//   d = optional diameter of cylinder. (use instead of r)
+//   d1 = optional diameter of left (X-) end of cylinder.
+//   d2 = optional diameter of right (X+) end of cylinder.
+//   align = 0 for centered, +1 for left, -1 for right.
+// Examples:
+//   xcyl(d1=5, d2=15, l=20, align=-1);
+//   xcyl(d=10, l=25);
+module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, align=0)
+{
+	right(align*l/2) {
+		yrot(90) cylinder(h=l, r=r, d=d, r1=r1, r2=r2, d1=d1, d2=d2, center=true);
+	}
+}
+
+
+
+// Creates a cylinder oriented along the Y axis.
+// Use like the built-in cylinder(), except use `l` instead of `h`.
+//   l = length of cylinder. (Default: 1.0)
+//   r = radius of cylinder.
+//   r1 = optional radius of front (Y-) end of cylinder.
+//   r2 = optional radius of back (Y+) end of cylinder.
+//   d = optional diameter of cylinder. (use instead of r)
+//   d1 = optional diameter of front (Y-) end of cylinder.
+//   d2 = optional diameter of back (Y+) end of cylinder.
+//   align = 0 for centered, +1 for back, -1 for forward.
+// Examples:
+//   ycyl(d1=5, d2=15, l=20, align=-1);
+//   ycyl(d=10, l=25);
+module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, align=0)
+{
+	back(align*l/2) {
+		xrot(-90) cylinder(h=l, r=r, d=d, r1=r1, r2=r2, d1=d1, d2=d2, center=true);
+	}
+}
+
+
+
+// Creates a cylinder oriented along the Z axis.  Use like the built-in
+// cylinder(), except use `l` instead of `h`.  This module exists
+// mostly for symmetry with xcyl() and ycyl().
+//   l = length of cylinder. (Default: 1.0)
+//   r = radius of cylinder.
+//   r1 = optional radius of bottom (Z-) end of cylinder.
+//   r2 = optional radius of top (Z+) end of cylinder.
+//   d = optional diameter of cylinder. (use instead of r)
+//   d1 = optional diameter of bottom (Z-) end of cylinder.
+//   d2 = optional diameter of top (Z+) end of cylinder.
+//   align = 0 for centered, +1 for top, -1 for bottom.
+// Examples:
+//   zcyl(d1=5, d2=15, l=20, align=-1);
+//   zcyl(d=10, l=25);
+module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, align=0)
+{
+	up(align*l/2) {
+		cylinder(h=l, r=r, d=d, r1=r1, r2=r2, d1=d1, d2=d2, center=true);
 	}
 }
 
