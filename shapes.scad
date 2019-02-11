@@ -503,6 +503,47 @@ module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false)
 }
 
 
+// Creates a trapezoidal prism with rounded vertical edges.
+//   size1 = [width, length] of the bottom of the prism.
+//   size2 = [width, length] of the top of the prism.
+//   h = Height of the prism.
+//   r = radius of vertical edge fillets.
+//   r1 = radius of vertical edge fillets at bottom.
+//   r2 = radius of vertical edge fillets at top.
+//   center = vertically center the prism.
+// Example:
+//   rtrapezoid(size1=[40,40], size2=[0,0], h=40, r=5, center=false);
+//   rtrapezoid(size1=[40,60], size2=[40,60], h=40, r1=0, r2=10, center=true);
+//   rtrapezoid(size1=[20,60], size2=[40,30], h=40, r1=5, r2=10, center=false);
+module rtrapezoid(size1, size2, h, r=undef, r1=undef, r2=undef, center=true)
+{
+	eps = 0.001;
+	maxrad1 = min(size1[0]/2, size1[1]/2);
+	maxrad2 = min(size2[0]/2, size2[1]/2);
+	rr1 = min(maxrad1, (r1!=undef)? r1 : r);
+	rr2 = min(maxrad2, (r2!=undef)? r2 : r);
+	down(center? h/2 : 0) {
+		hull() {
+			linear_extrude(height=eps, center=false, convexity=2) {
+				offset(r=rr1) {
+					square([max(eps, size1[0]-2*rr1), max(eps, size1[1]-2*rr1)], center=true);
+				}
+			}
+			up(h-0.01) {
+				linear_extrude(height=eps, center=false, convexity=2) {
+					offset(r=rr2) {
+						square([max(eps, size2[0]-2*rr2), max(eps, size2[1]-2*rr2)], center=true);
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
+
+module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false)
 // Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.
 //   r = radius of circular part of teardrop.  (Default: 1)
 //   d = diameter of spherical portion of bottom. (Use instead of r)
