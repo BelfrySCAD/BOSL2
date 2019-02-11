@@ -513,8 +513,8 @@ module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false)
 //   center = vertically center the prism.
 // Example:
 //   rtrapezoid(size1=[40,40], size2=[0,0], h=40, r=5, center=false);
-//   rtrapezoid(size1=[40,60], size2=[40,60], h=40, r1=0, r2=10, center=true);
 //   rtrapezoid(size1=[20,60], size2=[40,30], h=40, r1=5, r2=10, center=false);
+//   rtrapezoid(size1=[40,60], size2=[35,55], h=40, r1=0, r2=10, center=true);
 module rtrapezoid(size1, size2, h, r=undef, r1=undef, r2=undef, center=true)
 {
 	eps = 0.001;
