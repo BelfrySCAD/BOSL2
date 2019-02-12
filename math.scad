@@ -116,6 +116,10 @@ function path3d(points) = [for (point = points) point3d(point)];
 function distance(p1, p2) = let(d = point3d(p2) - point3d(p1)) hypot3(d[0], d[1], d[2]);
 
 
+// Multiplies corresponding elements in two vectors.
+function vmul(v1, v2) = [for (i = [0:len(v1)-1]) v1[i]*v2[i]];
+
+
 // Create an identity matrix, for a given number of axes.
 function ident(n) = [for (i = [0:n-1]) [for (j = [0:n-1]) (i==j)?1:0]];
 
