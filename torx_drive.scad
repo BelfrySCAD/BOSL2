@@ -35,6 +35,8 @@ use <transforms.scad>
 use <math.scad>
 
 
+// Typical outer diameter of Torx profile.
+//   size = Torx size.
 function torx_outer_diam(size) = lookup(size, [
 	[  6,  1.75],
 	[  8,  2.40],
@@ -55,6 +57,8 @@ function torx_outer_diam(size) = lookup(size, [
 ]);
  
 
+// Typical inner diameter of Torx profile.
+//   size = Torx size.
 function torx_inner_diam(size) = lookup(size, [
 	[  6,  1.27],
 	[  8,  1.75],
@@ -75,6 +79,8 @@ function torx_inner_diam(size) = lookup(size, [
 ]);
  
 
+// Typical drive depth.
+//   size = Torx size.
 function torx_depth(size) = lookup(size, [
 	[  6,  1.82],
 	[  8,  3.05],
@@ -95,6 +101,8 @@ function torx_depth(size) = lookup(size, [
 ]);
  
 
+// Minor rounding radius of Torx profile.
+//   size = Torx size.
 function torx_tip_radius(size) = lookup(size, [
 	[  6, 0.132],
 	[  8, 0.190],
@@ -115,6 +123,8 @@ function torx_tip_radius(size) = lookup(size, [
 ]);
 
 
+// Major rounding radius of Torx profile.
+//   size = Torx size.
 function torx_rounding_radius(size) = lookup(size, [
 	[  6, 0.383],
 	[  8, 0.510],
@@ -135,6 +145,10 @@ function torx_rounding_radius(size) = lookup(size, [
 ]);
 
 
+// Creates a torx bit 2D profile.
+//   size = Torx size.
+// Examples:
+//   torx_drive2d(size=30, $fa=1, $fs=1);
 module torx_drive2d(size) {
 	od = torx_outer_diam(size);
 	id = torx_inner_diam(size);
@@ -167,6 +181,12 @@ module torx_drive2d(size) {
 
 
 
+// Creates a torx bit tip.
+//   size = Torx size.
+//   l = Length of bit.
+//   center = If true, centers bit vertically.
+// Examples:
+//   torx_drive(size=30, l=10, $fa=1, $fs=1);
 module torx_drive(size, l=5, center=undef) {
 	linear_extrude(height=l, convexity=4, center=center) {
 		torx_drive2d(size);
