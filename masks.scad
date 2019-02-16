@@ -126,16 +126,17 @@ module chamfer_mask_x(l=1.0, chamfer=1.0) {
 
 
 // Chamfers the edges of a cuboid region containing the given children.
-//   chamfer = inset of the chamfer from the edge. (Default: 1)
+//   chamfer = Inset of the chamfer from the edge. (Default: 1)
 //   size = The size of the rectangular cuboid we want to chamfer.
-//   edges = which edges do we want to chamfer.
+//   edges = Which edges do we want to chamfer.  Recommend to use EDGE constants from constants.scad.
 //           [
 //               [Y+Z+, Y-Z+, Y-Z-, Y+Z-],
 //               [X+Z+, X-Z+, X-Z-, X+Z-],
 //               [X+Y+, X-Y+, X-Y-, X+Y-]
 //           ]
 // Example:
-//   chamfer(chamfer=2, size=[10,40,30], edges=[[0,0,0,1], [1,1,0,0], [0,0,0,0]]) {
+//   include <BOSL/constants.scad>
+//   chamfer(chamfer=2, size=[10,40,30], edges=EDGE_BOT_BK + EDGE_TOP_RT + EDGE_TOP_LF) {
 //     cube(size=[10,40,30], center=true);
 //   }
 module chamfer(chamfer=1, size=[1,1,1], edges=[[0,0,0,0], [1,1,0,0], [0,0,0,0]])
@@ -152,31 +153,31 @@ module chamfer(chamfer=1, size=[1,1,1], edges=[[0,0,0,0], [1,1,0,0], [0,0,0,0]])
 			children();
 		}
 		union() {
-			if (edges[0][0] != 0)
+			if (edges[0][0] > 0)
 				up(z/2) back(y/2) chamfer_mask_x(l=lx, chamfer=chamfer);
-			if (edges[0][1] != 0)
+			if (edges[0][1] > 0)
 				up(z/2) fwd(y/2) chamfer_mask_x(l=lx, chamfer=chamfer);
-			if (edges[0][2] != 0)
+			if (edges[0][2] > 0)
 				down(z/2) back(y/2) chamfer_mask_x(l=lx, chamfer=chamfer);
-			if (edges[0][3] != 0)
+			if (edges[0][3] > 0)
 				down(z/2) fwd(y/2) chamfer_mask_x(l=lx, chamfer=chamfer);
 
-			if (edges[1][0] != 0)
+			if (edges[1][0] > 0)
 				up(z/2) right(x/2) chamfer_mask_y(l=ly, chamfer=chamfer);
-			if (edges[1][1] != 0)
+			if (edges[1][1] > 0)
 				up(z/2) left(x/2) chamfer_mask_y(l=ly, chamfer=chamfer);
-			if (edges[1][2] != 0)
+			if (edges[1][2] > 0)
 				down(z/2) right(x/2) chamfer_mask_y(l=ly, chamfer=chamfer);
-			if (edges[1][3] != 0)
+			if (edges[1][3] > 0)
 				down(z/2) left(x/2) chamfer_mask_y(l=ly, chamfer=chamfer);
 
-			if (edges[2][0] != 0)
+			if (edges[2][0] > 0)
 				back(y/2) right(x/2) chamfer_mask_z(l=lz, chamfer=chamfer);
-			if (edges[2][1] != 0)
+			if (edges[2][1] > 0)
 				back(y/2) left(x/2) chamfer_mask_z(l=lz, chamfer=chamfer);
-			if (edges[2][2] != 0)
+			if (edges[2][2] > 0)
 				fwd(y/2) right(x/2) chamfer_mask_z(l=lz, chamfer=chamfer);
-			if (edges[2][3] != 0)
+			if (edges[2][3] > 0)
 				fwd(y/2) left(x/2) chamfer_mask_z(l=lz, chamfer=chamfer);
 		}
 	}
