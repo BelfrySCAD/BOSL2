@@ -256,6 +256,93 @@ module fillet_mask_y(l=1.0, r=1.0) xrot(90) fillet_mask(h=l, r=r, center=true);
 module fillet_mask_x(l=1.0, r=1.0) yrot(90) fillet_mask(h=l, r=r, center=true);
 
 
+// Fillets the edges of a cuboid region containing the given children.
+//   fillet = Radius of the fillet. (Default: 1)
+//   size = The size of the rectangular cuboid we want to chamfer.
+//   edges = Which edges do we want to chamfer.  Recommend to use EDGE constants from constants.scad.
+//           [
+//               [Y+Z+, Y-Z+, Y-Z-, Y+Z-],
+//               [X+Z+, X-Z+, X-Z-, X+Z-],
+//               [X+Y+, X-Y+, X-Y-, X+Y-]
+//           ]
+// Example:
+//   include <BOSL/constants.scad>
+//   fillet(fillet=10, size=[50,100,150], edges=EDGES_TOP + EDGES_RIGHT - EDGE_BOT_RT, $fn=24) {
+//     cube(size=[50,100,150], center=true);
+//   }
+module fillet(fillet=1, size=[1,1,1], edges=[[0,0,0,0], [1,1,0,0], [0,0,0,0]])
+{
+	eps = 0.1;
+	x = size[0];
+	y = size[1];
+	z = size[2];
+	lx = x + eps;
+	ly = y + eps;
+	lz = z + eps;
+	rx = x - 2*fillet;
+	ry = y - 2*fillet;
+	rz = z - 2*fillet;
+	offsets = [
+		[[0, 1, 1], [ 0,-1, 1], [ 0,-1,-1], [0, 1,-1]],
+		[[1, 0, 1], [-1, 0, 1], [-1, 0,-1], [1, 0,-1]],
+		[[1, 1, 0], [-1, 1, 0], [-1,-1, 0], [1,-1, 0]]
+	];
+	corners = [
+		edges[0][2] + edges[1][2] + edges[2][2],
+		edges[0][2] + edges[1][3] + edges[2][3],
+		edges[0][3] + edges[1][2] + edges[2][1],
+		edges[0][3] + edges[1][3] + edges[2][0],
+		edges[0][1] + edges[1][1] + edges[2][2],
+		edges[0][1] + edges[1][0] + edges[2][3],
+		edges[0][0] + edges[1][1] + edges[2][1],
+		edges[0][0] + edges[1][0] + edges[2][0]
+	];
+	majrots = [[0,90,0], [90,0,0], [0,0,0]];
+	sides = quantup(segs(fillet),4);
+	sc = 1/cos(180/sides);
+	$fn = sides;
+	difference() {
+		children();
+		for (axis=[0:2], i=[0:3]) {
+			if (edges[axis][i]>0) {
+				difference() {
+					translate(vmul(offsets[axis][i], [lx,ly,lz]/2))  {
+						rotate(majrots[axis]) {
+							cube([fillet*2, fillet*2, size[axis]+eps], center=true);
+						}
+					}
+					translate(vmul(offsets[axis][i], [rx,ry,rz]/2))  {
+						rotate(majrots[axis]) {
+							zrot(180/sides) cylinder(h=size[axis]+eps*2, r=fillet*sc, center=true);
+						}
+					}
+				}
+			}
+		}
+		for (za=[0,1], ya=[0,1], xa=[0,1]) {
+			idx = xa + 2*ya + 4*za;
+			if (corners[idx] > 2) {
+				difference() {
+					translate([(xa-0.5)*lx, (ya-0.5)*ly, (za-0.5)*lz]) {
+						cube(fillet*2, center=true);
+					}
+					translate([(xa-0.5)*rx, (ya-0.5)*ry, (za-0.5)*rz]) {
+						zrot(180/sides) {
+							rotate_extrude(convexity=2) {
+								difference() {
+									zrot(180/sides) circle(r=fillet*sc*sc);
+									left(fillet*2) square(fillet*2*2, center=true);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
 // Creates a vertical mask that can be used to fillet the edge where two
 // face meet, at any arbitrary angle.  Difference it from the object to
 // be filletted.  The center of the mask should align exactly with the
