@@ -35,6 +35,7 @@ use <transforms.scad>
 use <shapes.scad>
 use <threading.scad>
 use <phillips_drive.scad>
+use <torx_drive.scad>
 use <math.scad>
 
 
@@ -392,11 +393,13 @@ module screw(
 //   coarse = If true, make coarse threads instead of fine threads.  Default = true
 //   flange = radius of flange beyond the head.  Default = 0 (no flange)
 //   phillips = If given, the size of the phillips drive hole to add.  (ie: "#1", "#2", or "#3")
+//   torx = If given, the size of the torx drive hole to add.  (ie: 10, 20, 30, etc.)
 // Examples:
 //   metric_bolt(headtype="pan", size=10, l=15, details=true, phillips="#2");
 //   metric_bolt(headtype="countersunk", size=10, l=15, details=true, phillips="#2");
 //   metric_bolt(headtype="socket", size=10, l=15, flange=4, coarse=false, shank=5, details=true);
 //   metric_bolt(headtype="hex", size=10, l=15, flange=4, coarse=false, shank=5, details=true, phillips="#2");
+//   metric_bolt(headtype="hex", size=10, l=15, flange=4, coarse=false, shank=5, details=true, torx=50);
 module metric_bolt(
 	headtype="socket",
 	size=3,
@@ -406,6 +409,7 @@ module metric_bolt(
 	details=false,
 	coarse=true,
 	phillips=undef,
+	torx=undef,
 	flange=0
 ) {
 	D = headtype != "hex"?
@@ -509,6 +513,11 @@ module metric_bolt(
 				down(headtype != "hex"? H/6 : 0) {
 					phillips_drive(size=phillips, shaft=D);
 				}
+			}
+
+			// Torx drive hole
+			if (headtype != "socket" && torx != undef) {
+				up(1) torx_drive(size=torx, l=H+0.1, center=false);
 			}
 		}
 	}
