@@ -4,61 +4,76 @@ The Belfry OpenScad Library - A library of tools, shapes, and helpers to make Op
 This library is a set of useful tools, shapes and manipulators that I developed while working on various
 projects, including large ones like the Snappy-Reprap printed 3D printer.
 
-# Overview
+
+## Terminology
+For purposes of the BOSL library, the following terms apply:
+- **Left**: Towards X-
+- **Right**: Towards X+
+- **Front**/**Forward**: Towards Y-
+- **Back**/**Behind**: Towards Y+
+- **Bottom**/**Down**/**Below**: Towards Z-
+- **Top**/**Up**/**Above**: Towards Z+
+
+
+## Examples
+A lot of the features of this library are to allow shorter, easier-to-read, intent-based coding.  For example:
+
+`BOSL/transforms.scad` Examples      | Raw OpenSCAD Equivalent
+------------------------------------ | -------------------------------
+`up(5) ...`                          | `translate([0,0,5]) ...`
+`yrot(45) ...`                       | `rotate([0,45,0]) ...`
+`xrot(30, cp=[0, 10, 20]) ...`       | `translate([0,10,20]) rotate([30,0,0]) translate([0,-10,-20]) ...`
+`xspread(20, n=3) ...`               | `for (dx=[-20,0,20]) translate([dx,0,0]) ...`
+`zring(n=6, r=20) ...`               | `for (zr=[0:5]) rotate([0,0,zr*60]) translate([20,0,0]) ...`
+`zflip_copy() shape();`              | `shape(); mirror([0,0,1]) shape();`
+`skew_xy(xa=30,ya=45) ...`           | `multmatrix([[1, 0, tan(30), 0], [0, 1, tan(45), 0], [0, 0, 1, 0], [0, 0, 0, 1]]) ...`
+`top_half(100) shape();`             | `difference() {shape(); translate([0,0,-50]) cube(100, center=true);}`
+
+`BOSL/shapes.scad` Examples          | Raw OpenSCAD Equivalent
+------------------------------------ | -------------------------------
+`upcube([10,20,30]);`                | `translate([0,0,15]) cube([10,20,30], center=true);`
+`rcube([20,20,30], r=5, $fn=32);`    | `minkowski() {cube([10,10,20], center=true); sphere(r=5, $fn=32);}`
+`chamfcube([20,20,30], chamfer=5);`  | `hull() {cube([10,10,30], center=true); cube([10,20,20], center=true); cube([20,10,20], center=true); cube([15,15,25], center=true);}`
+`trapezoid([30,40], [20,30], h=10);` | `hull() {translate([0,0,0.005]) cube([30,40,0.01], center=true); translate([0,0,9.995]) cube([20,30,0.01], center=true);}`
+`xcyl(l=20, d=4);`                   | `rotate([0,90,0]) cylinder(h=20, d=4, center=true);`
+`rcylinder(h=100, d=40, fillet=5);`  | `translate([0,0,50]) minkowski() {cylinder(h=90, d=30, center=true); sphere(r=5);}`
+`torus(r=30, r2=5);`                 | `rotate_extrude(convexity=4) translate([30,0,0]) circle(r=5);`
+
+`BOSL/masks.scad` Examples           | Raw Openscad Equivalent
+------------------------------------ | -------------------------------
+`chamfer_mask_z(l=20, chamfer=5);`   | `rotate(45) cube([5*sqrt(2), 5*sqrt(2), 20], center=true);`
+`fillet_mask_z(l=20, fillet=5);`     | `difference() {cube([10,10,20], center=true); for(dx=[-5,5],dy=[-5,5]) translate([dx,dy,0]) cylinder(h=20.1, r=5, center=true);}`
+`fillet_hole_mask(r=30, fillet=5);`  | `difference() {cube([70,70,10], center=true); translate([0,0,-5]) rotate_extrude(convexity=4) translate([30,0,0]) circle(r=5);}`
+
+
+## The Library Files
 The library files are as follows:
-  - `transforms.scad`: The most commonly used transformations, manipulations, and shortcuts are in this file.
-  - `shapes.scad`: Common useful shapes and structured objects.
-  - `masks.scad`: Shapes that are useful for masking with `difference()` and `intersect()`.
-  - `math.scad`: Useful helper functions and constants.
-  - `paths.scad`: Functions and modules to work with arbitrary 3D paths.
-  - `bezier.scad`: Functions and modules to work with bezier curves.
-  - `involute_gears.scad`: Modules and functions to make involute gears and racks.
-  - `metric_screws.scad`: Functions and modules to make holes for metric screws and nuts.
-  - `joiners.scad`: Modules to make joiner shapes for connecting separately printed objects.
-  - `sliders.scad`: Modules for creating simple sliders and rails.
-  - `acme_screws.scad`: Modules to make trapezoidal (ACME) threaded rods and nuts.
-  - `nema_steppers.scad`: Modules to make mounting holes for NEMA motors.
-  - `linear_bearings.scad`: Modules to make mounts for LMxUU style linear bearings.
-  - `wiring.scad`: Modules to render routed bundles of wires.
-  - `quaternions.scad`: Functions to work with quaternion rotations.
 
-## transforms.scad
-The most commonly useful of the library files is `transforms.scad`.  It provides features such as:
-  - `up()`, `down()`, `left()`, `right()`, `fwd()`, `back()` as more readable alternatives to `translate()`.
-  - `xrot()`, `yrot()`, `zrot()` as single-axis alternatives to `rotate`.
-  - `xspread()`, `yspread()`, and `zspread()` to evenly space copies of an item along an axis.
-  - `xring()`, `yring()`, `zring()` to evenly space copies of an item around a circle.
-  - `skewxy()` that let you skew objects without using a `multmatrix()`.
-  - Easy mirroring with `xflip()`, `xflip_copy()`, etc.
-  - Slice items in half with `top_half()`, `left_half()`, `back_half()`, etc.
+### Commonly Used
+  - [`transforms.scad`](wiki/transforms.scad): The most commonly used transformations, manipulations, and shortcuts are in this file.
+  - [`shapes.scad`](wiki/shapes.scad): Common useful shapes and structured objects.
+  - [`masks.scad`](wiki/masks.scad): Shapes that are useful for masking with `difference()` and `intersect()`.
+  - [`threading.scad`](wiki/threading.scad): Modules to make triangular and trapezoidal threaded rods and nuts.
+  - [`paths.scad`](wiki/paths.scad): Functions and modules to work with arbitrary 3D paths.
+  - [`beziers.scad`](wiki/beziers.scad): Functions and modules to work with bezier curves.
 
-## shapes.scad
-The `shapes.scad` library file provides useful compound shapes, such as:
-  - `upcube()` a ridiculously useful version of `cube()` that is centered on top of the XY plane.
-  - Filleted (rounded) and Chamferred (bevelled) cubes and cylinders.
-  - `pyramid()` and `prism()`
-  - The incredibly useful `trapezoid()` for non-parallelogram cubes.
-  - `right_triangle()` for the obvious shape.
-  - `teardrop()` and `onion()` for making more 3D printable holes.
-  - `tube()` and `torus()` for donut shapes.
-  - `slot()` and `arced_slot()` for making things like screw slots.
-  - `thinning_wall()` makes a vertical wall which thins in the middle, to reduce print volume.
-  - `thinning_triangle()` makes a right triangle which thins in the middle, to reduce print volume.
-  - `sparse_strut()` makes a cross-braced open strut wall, optimized for support-less 3D printing.
-  - `corrugated_wall()` makes a corrugated wall to reduce print volume while keeping strength.
+### Standard Parts
+  - [`involute_gears.scad`](wiki/involute_gears.scad): Modules and functions to make involute gears and racks.
+  - [`joiners.scad`](wiki/joiners.scad): Modules to make joiner shapes for connecting separately printed objects.
+  - [`sliders.scad`](wiki/sliders.scad): Modules for creating simple sliders and rails.
+  - [`metric_screws.scad`](wiki/metric_screws.scad): Functions and modules to make metric screws, nuts, and screwholes.
+  - [`linear_bearings.scad`](wiki/linear_bearings.scad): Modules to make mounts for LMxUU style linear bearings.
+  - [`nema_steppers.scad`](wiki/nema_steppers.scad): Modules to make mounting holes for NEMA motors.
+  - [`phillips_drive.scad`](wiki/phillips_drive.scad): Modules to create Phillips screwdriver tips.
+  - [`torx_drive.scad`](wiki/torx_drive.scad): Functions and Modules to create Torx bit drive holes.
+  - [`wiring.scad`](wiki/wiring.scad): Modules to render routed bundles of wires.
 
-## masks.scad
-The `masks.scad` library file provides mask shapes like:
-  - `angle_pie_mask()` to mask a pie-slice shape.
-  - `chamfer_mask_x()`, `chamfer_mask_y()`, and `chamfer_mask_z()` to chamfer (bevel) an axis aligned 90 degree edge.
-  - `fillet_mask_x()`, `fillet_mask_y()`, and `fillet_mask_z()` to fillet (round) an axis aligned 90 degree edge.
-  - `fillet_corner_mask()` to fillet a 90 degree corner.
-  - `fillet_angled_edge_mask()` to fillet an acute or obtuse vertical edge.
-  - `fillet_angled_corner_mask()` to fillet the corner of two acute or obtuse planes.
-  - `fillet_cylinder_mask()` to fillet the end of a cylinder.
-  - `fillet_hole_mask()` to fillet the edge of a cylindrical hole.
+### Miscellaneous
+  - [`math.scad`](wiki/math.scad): Useful helper functions.
+  - [`constants.scad`](wiki/constants.scad): Useful constants for vectors, edges, etc.
+  - [`quaternions.scad`](wiki/quaternions.scad): Functions to work with quaternion rotations.
+  - [`debug.scad`](wiki/debug.scad): Modules to help debug creation of beziers, `polygons()`s and `polyhedron()`s
 
 ## Documentation
 The full library docs can be found at https://github.com/revarbat/BOSL/wiki
-
 
