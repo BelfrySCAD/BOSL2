@@ -95,7 +95,10 @@ module angle_pie_mask(
 //   l = Height of mask
 //   chamfer = size of chamfer
 // Example:
-//   chamfer_mask_z(l=10.0, chamfer=2.0);
+//   difference() {
+//       down(5) cube(10);
+//       chamfer_mask_z(l=10.1, chamfer=2.0);
+//   }
 module chamfer_mask_z(l=1.0, chamfer=1.0) {
 	zrot(45) cube(size=[chamfer*sqrt(2.0), chamfer*sqrt(2.0), l], center=true);
 }
@@ -107,7 +110,10 @@ module chamfer_mask_z(l=1.0, chamfer=1.0) {
 //   l = Height of mask
 //   chamfer = size of chamfer
 // Example:
-//   chamfer_mask_y(l=10.0, chamfer=2.0);
+//   difference() {
+//       fwd(5) cube(10);
+//       chamfer_mask_y(l=10.1, chamfer=2.0);
+//   }
 module chamfer_mask_y(l=1.0, chamfer=1.0) {
 	xrot(90) chamfer_mask_z(l=l, chamfer=chamfer);
 }
@@ -119,7 +125,10 @@ module chamfer_mask_y(l=1.0, chamfer=1.0) {
 //   l = Height of mask
 //   chamfer = size of chamfer
 // Example:
-//   chamfer_mask_x(l=10.0, chamfer=2.0);
+//   difference() {
+//       left(5) cube(10);
+//       chamfer_mask_x(l=10.1, chamfer=2.0);
+//   }
 module chamfer_mask_x(l=1.0, chamfer=1.0) {
 	yrot(90) chamfer_mask_z(l=l, chamfer=chamfer);
 }
