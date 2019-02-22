@@ -18,7 +18,7 @@ For purposes of the BOSL library, the following terms apply:
 ## Examples
 A lot of the features of this library are to allow shorter, easier-to-read, intent-based coding.  For example:
 
-`BOSL/transforms.scad` Examples | Raw OpenSCAD Equivalent
+[`BOSL/transforms.scad`](https://github.com/revarbat/BOSL/wiki/transforms.scad) Examples | Raw OpenSCAD Equivalent
 ------------------------------- | -------------------------------
 `up(5)`                         | `translate([0,0,5])`
 `xrot(30,cp=[0,10,20])`         | `translate([0,10,20]) rotate([30,0,0]) translate([0,-10,-20])`
@@ -26,7 +26,7 @@ A lot of the features of this library are to allow shorter, easier-to-read, inte
 `zring(n=6,r=20)`               | `for (zr=[0:5]) rotate([0,0,zr*60]) translate([20,0,0])`
 `skew_xy(xa=30,ya=45)`          | `multmatrix([[1,0,tan(30),0],[0,1,tan(45),0],[0,0,1,0],[0,0,0,1]])`
 
-`BOSL/shapes.scad` Examples        | Raw OpenSCAD Equivalent
+[`BOSL/shapes.scad`](https://github.com/revarbat/BOSL/wiki/shapes.scad) Examples | Raw OpenSCAD Equivalent
 ---------------------------------- | -------------------------------
 `upcube([10,20,30]);`              | `translate([0,0,15]) cube([10,20,30], center=true);`
 `rcube([20,20,30],r=5,$fn=32);`    | `minkowski() {cube([10,10,20], center=true); sphere(r=5, $fn=32);}`
@@ -34,7 +34,7 @@ A lot of the features of this library are to allow shorter, easier-to-read, inte
 `xcyl(l=20,d=4);`                  | `rotate([0,90,0]) cylinder(h=20, d=4, center=true);`
 `rcylinder(h=100,d=40,fillet=5);`  | `translate([0,0,50]) minkowski() {cylinder(h=90, d=30, center=true); sphere(r=5);}`
 
-`BOSL/masks.scad` Examples          | Raw Openscad Equivalent
+[`BOSL/masks.scad`](https://github.com/revarbat/BOSL/wiki/masks.scad) Examples | Raw Openscad Equivalent
 ----------------------------------- | -------------------------------
 `chamfer_mask_z(l=20,chamfer=5);`   | `rotate(45) cube([5*sqrt(2), 5*sqrt(2), 20], center=true);`
 `fillet_mask_z(l=20,fillet=5);`     | `difference() {cube([10,10,20], center=true); for(dx=[-5,5],dy=[-5,5]) translate([dx,dy,0]) cylinder(h=20.1, r=5, center=true);}`
