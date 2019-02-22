@@ -18,26 +18,21 @@ For purposes of the BOSL library, the following terms apply:
 ## Examples
 A lot of the features of this library are to allow shorter, easier-to-read, intent-based coding.  For example:
 
-`BOSL/transforms.scad` Examples      | Raw OpenSCAD Equivalent
------------------------------------- | -------------------------------
-`up(5) ...`                          | `translate([0,0,5]) ...`
-`yrot(45) ...`                       | `rotate([0,45,0]) ...`
-`xrot(30, cp=[0, 10, 20]) ...`       | `translate([0,10,20]) rotate([30,0,0]) translate([0,-10,-20]) ...`
-`xspread(20, n=3) ...`               | `for (dx=[-20,0,20]) translate([dx,0,0]) ...`
-`zring(n=6, r=20) ...`               | `for (zr=[0:5]) rotate([0,0,zr*60]) translate([20,0,0]) ...`
-`zflip_copy() shape();`              | `shape(); mirror([0,0,1]) shape();`
-`skew_xy(xa=30,ya=45) ...`           | `multmatrix([[1, 0, tan(30), 0], [0, 1, tan(45), 0], [0, 0, 1, 0], [0, 0, 0, 1]]) ...`
-`top_half(100) shape();`             | `difference() {shape(); translate([0,0,-50]) cube(100, center=true);}`
+`BOSL/transforms.scad` Examples  | Raw OpenSCAD Equivalent
+-------------------------------- | -------------------------------
+`up(5)`                          | `translate([0,0,5])`
+`xrot(30, cp=[0, 10, 20])`       | `translate([0,10,20]) rotate([30,0,0]) translate([0,-10,-20])`
+`xspread(20, n=3)`               | `for (dx=[-20,0,20]) translate([dx,0,0])`
+`zring(n=6, r=20)`               | `for (zr=[0:5]) rotate([0,0,zr*60]) translate([20,0,0])`
+`skew_xy(xa=30,ya=45)`           | `multmatrix([[1, 0, tan(30), 0], [0, 1, tan(45), 0], [0, 0, 1, 0], [0, 0, 0, 1]])`
 
 `BOSL/shapes.scad` Examples          | Raw OpenSCAD Equivalent
 ------------------------------------ | -------------------------------
 `upcube([10,20,30]);`                | `translate([0,0,15]) cube([10,20,30], center=true);`
 `rcube([20,20,30], r=5, $fn=32);`    | `minkowski() {cube([10,10,20], center=true); sphere(r=5, $fn=32);}`
-`chamfcube([20,20,30], chamfer=5);`  | `hull() {cube([10,10,30], center=true); cube([10,20,20], center=true); cube([20,10,20], center=true); cube([15,15,25], center=true);}`
 `trapezoid([30,40], [20,30], h=10);` | `hull() {translate([0,0,0.005]) cube([30,40,0.01], center=true); translate([0,0,9.995]) cube([20,30,0.01], center=true);}`
 `xcyl(l=20, d=4);`                   | `rotate([0,90,0]) cylinder(h=20, d=4, center=true);`
 `rcylinder(h=100, d=40, fillet=5);`  | `translate([0,0,50]) minkowski() {cylinder(h=90, d=30, center=true); sphere(r=5);}`
-`torus(r=30, r2=5);`                 | `rotate_extrude(convexity=4) translate([30,0,0]) circle(r=5);`
 
 `BOSL/masks.scad` Examples           | Raw Openscad Equivalent
 ------------------------------------ | -------------------------------
@@ -50,29 +45,29 @@ A lot of the features of this library are to allow shorter, easier-to-read, inte
 The library files are as follows:
 
 ### Commonly Used
-  - [`transforms.scad`](wiki/transforms.scad): The most commonly used transformations, manipulations, and shortcuts are in this file.
-  - [`shapes.scad`](wiki/shapes.scad): Common useful shapes and structured objects.
-  - [`masks.scad`](wiki/masks.scad): Shapes that are useful for masking with `difference()` and `intersect()`.
-  - [`threading.scad`](wiki/threading.scad): Modules to make triangular and trapezoidal threaded rods and nuts.
-  - [`paths.scad`](wiki/paths.scad): Functions and modules to work with arbitrary 3D paths.
-  - [`beziers.scad`](wiki/beziers.scad): Functions and modules to work with bezier curves.
+  - [`transforms.scad`](https://github.com/revarbat/BOSL/wiki/transforms.scad): The most commonly used transformations, manipulations, and shortcuts are in this file.
+  - [`shapes.scad`](https://github.com/revarbat/BOSL/wiki/shapes.scad): Common useful shapes and structured objects.
+  - [`masks.scad`](https://github.com/revarbat/BOSL/wiki/masks.scad): Shapes that are useful for masking with `difference()` and `intersect()`.
+  - [`threading.scad`](https://github.com/revarbat/BOSL/wiki/threading.scad): Modules to make triangular and trapezoidal threaded rods and nuts.
+  - [`paths.scad`](https://github.com/revarbat/BOSL/wiki/paths.scad): Functions and modules to work with arbitrary 3D paths.
+  - [`beziers.scad`](https://github.com/revarbat/BOSL/wiki/beziers.scad): Functions and modules to work with bezier curves.
 
 ### Standard Parts
-  - [`involute_gears.scad`](wiki/involute_gears.scad): Modules and functions to make involute gears and racks.
-  - [`joiners.scad`](wiki/joiners.scad): Modules to make joiner shapes for connecting separately printed objects.
-  - [`sliders.scad`](wiki/sliders.scad): Modules for creating simple sliders and rails.
-  - [`metric_screws.scad`](wiki/metric_screws.scad): Functions and modules to make metric screws, nuts, and screwholes.
-  - [`linear_bearings.scad`](wiki/linear_bearings.scad): Modules to make mounts for LMxUU style linear bearings.
-  - [`nema_steppers.scad`](wiki/nema_steppers.scad): Modules to make mounting holes for NEMA motors.
-  - [`phillips_drive.scad`](wiki/phillips_drive.scad): Modules to create Phillips screwdriver tips.
-  - [`torx_drive.scad`](wiki/torx_drive.scad): Functions and Modules to create Torx bit drive holes.
-  - [`wiring.scad`](wiki/wiring.scad): Modules to render routed bundles of wires.
+  - [`involute_gears.scad`](https://github.com/revarbat/BOSL/wiki/involute_gears.scad): Modules and functions to make involute gears and racks.
+  - [`joiners.scad`](https://github.com/revarbat/BOSL/wiki/joiners.scad): Modules to make joiner shapes for connecting separately printed objects.
+  - [`sliders.scad`](https://github.com/revarbat/BOSL/wiki/sliders.scad): Modules for creating simple sliders and rails.
+  - [`metric_screws.scad`](https://github.com/revarbat/BOSL/wiki/metric_screws.scad): Functions and modules to make metric screws, nuts, and screwholes.
+  - [`linear_bearings.scad`](https://github.com/revarbat/BOSL/wiki/linear_bearings.scad): Modules to make mounts for LMxUU style linear bearings.
+  - [`nema_steppers.scad`](https://github.com/revarbat/BOSL/wiki/nema_steppers.scad): Modules to make mounting holes for NEMA motors.
+  - [`phillips_drive.scad`](https://github.com/revarbat/BOSL/wiki/phillips_drive.scad): Modules to create Phillips screwdriver tips.
+  - [`torx_drive.scad`](https://github.com/revarbat/BOSL/wiki/torx_drive.scad): Functions and Modules to create Torx bit drive holes.
+  - [`wiring.scad`](https://github.com/revarbat/BOSL/wiki/wiring.scad): Modules to render routed bundles of wires.
 
 ### Miscellaneous
-  - [`math.scad`](wiki/math.scad): Useful helper functions.
-  - [`constants.scad`](wiki/constants.scad): Useful constants for vectors, edges, etc.
-  - [`quaternions.scad`](wiki/quaternions.scad): Functions to work with quaternion rotations.
-  - [`debug.scad`](wiki/debug.scad): Modules to help debug creation of beziers, `polygons()`s and `polyhedron()`s
+  - [`math.scad`](https://github.com/revarbat/BOSL/wiki/math.scad): Useful helper functions.
+  - [`constants.scad`](https://github.com/revarbat/BOSL/wiki/constants.scad): Useful constants for vectors, edges, etc.
+  - [`quaternions.scad`](https://github.com/revarbat/BOSL/wiki/quaternions.scad): Functions to work with quaternion rotations.
+  - [`debug.scad`](https://github.com/revarbat/BOSL/wiki/debug.scad): Modules to help debug creation of beziers, `polygons()`s and `polyhedron()`s
 
 ## Documentation
 The full library docs can be found at https://github.com/revarbat/BOSL/wiki
