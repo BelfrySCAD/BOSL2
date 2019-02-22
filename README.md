@@ -21,7 +21,7 @@ A lot of the features of this library are to allow shorter, easier-to-read, inte
 `BOSL/transforms.scad` Examples | Raw OpenSCAD Equivalent
 ------------------------------- | -------------------------------
 `up(5)`                         | `translate([0,0,5])`
-`xrot(30,cp=[0, 10, 20])`       | `translate([0,10,20]) rotate([30,0,0]) translate([0,-10,-20])`
+`xrot(30,cp=[0,10,20])`         | `translate([0,10,20]) rotate([30,0,0]) translate([0,-10,-20])`
 `xspread(20,n=3)`               | `for (dx=[-20,0,20]) translate([dx,0,0])`
 `zring(n=6,r=20)`               | `for (zr=[0:5]) rotate([0,0,zr*60]) translate([20,0,0])`
 `skew_xy(xa=30,ya=45)`          | `multmatrix([[1, 0, tan(30), 0], [0, 1, tan(45), 0], [0, 0, 1, 0], [0, 0, 0, 1]])`
