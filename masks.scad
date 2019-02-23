@@ -193,26 +193,6 @@ module chamfer(chamfer=1, size=[1,1,1], edges=[[0,0,0,0], [1,1,0,0], [0,0,0,0]])
 }
 
 
-// Create a mask that can be used to bevel/chamfer the edge of a circular hole.
-// Difference it from the hole to be chamferred.  The center of the mask object
-// should align exactly with the center of the end of the hole to be chamferred.
-//   r = radius of hole to chamfer.
-//   d = Diameter of hole to chamfer. Use instead of r.
-//   chamfer = size of the edge chamferred. (Default: 0.25)
-// Example:
-//   $fa=2; $fs=2;
-//   difference() {
-//       cube([150,150,100], center=true);
-//       cylinder(r=50, h=100.1, center=true);
-//       up(50) chamfer_hole_mask(r=50, chamfer=10);
-//   }
-module chamfer_hole_mask(r=1.0, d=undef, chamfer=0.25)
-{
-	r = d==undef? r : d/2;
-	down(chamfer) cylinder(r1=r, r2=r+chamfer, h=chamfer+0.01, center=false);
-}
-
-
 // Create a mask that can be used to bevel/chamfer the end of a cylinder.
 // Difference it from the cylinder to be chamferred.  The center of the mask object
 // should align exactly with the center of the end of the cylinder to be chamferred.
