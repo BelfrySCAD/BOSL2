@@ -616,19 +616,33 @@ module onion(h=1, r=1, d=undef, maxang=45)
 //   r = Outer radius of tube.  (Default: 1)
 //   r1 = Outer radius of bottom of tube.  (Default: value of r)
 //   r2 = Outer radius of top of tube.  (Default: value of r)
+//   d = Outer diameter of tube.
+//   d1 = Outer diameter of bottom of tube.
+//   d2 = Outer diameter of top of tube.
 //   wall = horizontal thickness of tube wall. (Default 0.5)
+//   ir = Inner radius of tube.
+//   ir1 = Inner radius of bottom of tube.  (Default: value of r)
+//   ir2 = Inner radius of top of tube.  (Default: value of r)
+//   id = Inner diameter of tube.
+//   id1 = Inner diameter of bottom of tube.
+//   id2 = Inner diameter of top of tube.
 // Example:
 //   tube(h=3, r=4, wall=1, center=true);
 //   tube(h=6, r=4, wall=2, $fn=6);
 //   tube(h=3, r1=5, r2=7, wall=2, center=true);
-module tube(h=1, r=1, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, wall=0.1, center=false)
+//   tube(h=30, r1=50, r2=70, ir1=50, ir2=50, center=true);
+module tube(h=1, r=1, wall=0.1, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, ir=undef, id=undef, ir1=undef, ir2=undef, id1=undef, id2=undef, center=false)
 {
 	r1 = (d1!=undef)? d1/2 : (d!=undef)? d/2 : (r1!=undef)? r1 : r;
 	r2 = (d2!=undef)? d2/2 : (d!=undef)? d/2 : (r2!=undef)? r2 : r;
+	ir1 = (id1!=undef)? id1/2 : (ir1!=undef)? ir1 : (id!=undef)? id/2 : (ir!=undef)?ir : r1-wall;
+	ir2 = (id2!=undef)? id2/2 : (ir2!=undef)? ir2 : (id!=undef)? id/2 : (ir!=undef)?ir : r2-wall;
+	if (ir1 > r1) echo("WARNING: r1 is smaller than ir1.");
+	if (ir2 > r2) echo("WARNING: r2 is smaller than ir2.");
 	up(center? 0 : h/2) {
 		difference() {
 			cylinder(h=h, r1=r1, r2=r2, center=true);
-			cylinder(h=h+0.05, r1=r1-wall, r2=r2-wall, center=true);
+			cylinder(h=h+0.05, r1=ir1, r2=ir2, center=true);
 		}
 	}
 }
