@@ -30,7 +30,7 @@ A lot of the features of this library are to allow shorter, easier-to-read, inte
 ---------------------------------- | -------------------------------
 `upcube([10,20,30]);`              | `translate([0,0,15]) cube([10,20,30], center=true);`
 `rcube([20,20,30],r=5,$fn=32);`    | `minkowski() {cube([10,10,20], center=true); sphere(r=5, $fn=32);}`
-`trapezoid([30,40],[20,30],h=10);` | `hull() {translate([0,0,0.005]) cube([30,40,0.01], center=true); translate([0,0,9.995]) cube([20,30,0.01],center=true);}`
+`prismoid([30,40],[20,30],h=10);`  | `hull() {translate([0,0,0.005]) cube([30,40,0.01], center=true); translate([0,0,9.995]) cube([20,30,0.01],center=true);}`
 `xcyl(l=20,d=4);`                  | `rotate([0,90,0]) cylinder(h=20, d=4, center=true);`
 `rcylinder(h=100,d=40,fillet=5);`  | `translate([0,0,50]) minkowski() {cylinder(h=90, d=30, center=true); sphere(r=5);}`
 
