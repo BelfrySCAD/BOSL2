@@ -479,7 +479,7 @@ module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false) {
 }
 
 
-// Creates a rectangular truncated pyramid/prismoid/frustum shape.
+// Creates a rectangular prismoid/frustum shape.
 //   size1 = [width, length] of the bottom of the prism.
 //   size2 = [width, length] of the top of the prism.
 //   h = Height of the prism.
@@ -523,7 +523,7 @@ module prismoid(size1=[1,1], size2=[1,1], h=1, center=false)
 }
 
 
-// Creates a rectangular truncated pyramid/prismoid/frustum shape
+// Creates a rectangular prismoid/frustum shape
 // with rounded vertical edges.
 //   size1 = [width, length] of the bottom of the prism.
 //   size2 = [width, length] of the top of the prism.
