@@ -543,7 +543,6 @@ module rtrapezoid(size1, size2, h, r=undef, r1=undef, r2=undef, center=true)
 
 
 
-module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false)
 // Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.
 //   r = radius of circular part of teardrop.  (Default: 1)
 //   d = diameter of spherical portion of bottom. (Use instead of r)
