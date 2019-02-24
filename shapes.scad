@@ -58,6 +58,19 @@ module offsetcube(size=[1,1,1], v=[0,0,0]) {
 }
 
 
+// Creates a cube between two points.
+//   p1 = Coordinate point of one cube corner.
+//   p2 = Coordinate point of opposite cube corner.
+// Example:
+//   cube2pt([10,20,30], [40,-10,10]);
+module cube2pt(p1,p2) {
+	translate([min(p1[0],p2[0]), min(p1[1],p2[1]), min(p1[2],p2[2])]) {
+		cube([abs(p2[0]-p1[0]), abs(p2[1]-p1[1]), abs(p2[2]-p1[2])], center=false);
+	}
+}
+
+
+
 // Makes a cube that has its right face centered at the origin.
 module leftcube(size=[1,1,1]) {l=len(size)==undef? size : size[0]; left(l/2) cube(size, center=true);}
 
@@ -613,7 +626,7 @@ module onion(h=1, r=1, d=undef, maxang=45)
 
 // Makes a hollow tube with the given outer size and wall thickness.
 //   h = height of tube. (Default: 1)
-//   r = Outer radius of tube.  (Default: 1)
+//   r = Outer radius of tube.
 //   r1 = Outer radius of bottom of tube.  (Default: value of r)
 //   r2 = Outer radius of top of tube.  (Default: value of r)
 //   d = Outer diameter of tube.
@@ -621,8 +634,8 @@ module onion(h=1, r=1, d=undef, maxang=45)
 //   d2 = Outer diameter of top of tube.
 //   wall = horizontal thickness of tube wall. (Default 0.5)
 //   ir = Inner radius of tube.
-//   ir1 = Inner radius of bottom of tube.  (Default: value of r)
-//   ir2 = Inner radius of top of tube.  (Default: value of r)
+//   ir1 = Inner radius of bottom of tube.
+//   ir2 = Inner radius of top of tube.
 //   id = Inner diameter of tube.
 //   id1 = Inner diameter of bottom of tube.
 //   id2 = Inner diameter of top of tube.
@@ -631,12 +644,13 @@ module onion(h=1, r=1, d=undef, maxang=45)
 //   tube(h=6, r=4, wall=2, $fn=6);
 //   tube(h=3, r1=5, r2=7, wall=2, center=true);
 //   tube(h=30, r1=50, r2=70, ir1=50, ir2=50, center=true);
-module tube(h=1, r=1, wall=0.1, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, ir=undef, id=undef, ir1=undef, ir2=undef, id1=undef, id2=undef, center=false)
+//   tube(h=30, wall=5, r1=40, r2=50, center=false);
+module tube(h=1, wall=undef, r=undef, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, ir=undef, id=undef, ir1=undef, ir2=undef, id1=undef, id2=undef, center=false)
 {
-	r1 = (d1!=undef)? d1/2 : (d!=undef)? d/2 : (r1!=undef)? r1 : r;
-	r2 = (d2!=undef)? d2/2 : (d!=undef)? d/2 : (r2!=undef)? r2 : r;
-	ir1 = (id1!=undef)? id1/2 : (ir1!=undef)? ir1 : (id!=undef)? id/2 : (ir!=undef)?ir : r1-wall;
-	ir2 = (id2!=undef)? id2/2 : (ir2!=undef)? ir2 : (id!=undef)? id/2 : (ir!=undef)?ir : r2-wall;
+	r1 = first_defined([d1/2, d/2, id1/2+wall, id/2+wall, r1, r, ir1+wall, ir+wall]);
+	r2 = first_defined([d2/2, d/2, id2/2+wall, id/2+wall, r2, r, ir2+wall, ir+wall]);
+	ir1 = first_defined([id1/2, id/2, d1/2-wall, d/2-wall, ir1, ir, r1-wall, r-wall]);
+	ir2 = first_defined([id2/2, id/2, d2/2-wall, d/2-wall, ir2, ir, r2-wall, r-wall]);
 	if (ir1 > r1) echo("WARNING: r1 is smaller than ir1.");
 	if (ir2 > r2) echo("WARNING: r2 is smaller than ir2.");
 	up(center? 0 : h/2) {

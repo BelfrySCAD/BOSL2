@@ -380,4 +380,8 @@ function slice(arr,st,end) = let(
 	) [for (i=[s:e-1]) if (e>s) arr[i]];
 
 
+function first_defined(v) = [for (x = v) if (x!=undef) x][0];
+
+
+
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
