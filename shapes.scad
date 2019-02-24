@@ -472,15 +472,22 @@ module right_triangle(size=[1, 1, 1], center=false)
 }
 
 
-// Creates a trapezoidal prism.
+// Deprecated.  Renamed to prismoid.
+module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false) {
+	echo("DEPRECATED: trapezoid() has been renamed to prismoid().");
+	prismoid(size=size, size2=size2, h=h, center=center);
+}
+
+
+// Creates a rectangular truncated pyramid/prismoid/frustum shape.
 //   size1 = [width, length] of the bottom of the prism.
 //   size2 = [width, length] of the top of the prism.
 //   h = Height of the prism.
 //   center = vertically center the prism.
 // Example:
-//   trapezoid(size1=[1,4], size2=[4,1], h=4, center=false);
-//   trapezoid(size1=[2,6], size2=[4,0], h=4, center=false);
-module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false)
+//   prismoid(size1=[1,4], size2=[4,1], h=4, center=false);
+//   prismoid(size1=[2,6], size2=[4,0], h=4, center=false);
+module prismoid(size1=[1,1], size2=[1,1], h=1, center=false)
 {
 	s1 = [max(size1[0], 0.001), max(size1[1], 0.001)];
 	s2 = [max(size2[0], 0.001), max(size2[1], 0.001)];
@@ -516,7 +523,8 @@ module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false)
 }
 
 
-// Creates a trapezoidal prism with rounded vertical edges.
+// Creates a rectangular truncated pyramid/prismoid/frustum shape
+// with rounded vertical edges.
 //   size1 = [width, length] of the bottom of the prism.
 //   size2 = [width, length] of the top of the prism.
 //   h = Height of the prism.
@@ -525,10 +533,10 @@ module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false)
 //   r2 = radius of vertical edge fillets at top.
 //   center = vertically center the prism.
 // Example:
-//   rtrapezoid(size1=[40,40], size2=[0,0], h=40, r=5, center=false);
-//   rtrapezoid(size1=[20,60], size2=[40,30], h=40, r1=5, r2=10, center=false);
-//   rtrapezoid(size1=[40,60], size2=[35,55], h=40, r1=0, r2=10, center=true);
-module rtrapezoid(size1, size2, h, r=undef, r1=undef, r2=undef, center=true)
+//   rounded_prismoid(size1=[40,40], size2=[0,0], h=40, r=5, center=false);
+//   rounded_prismoid(size1=[20,60], size2=[40,30], h=40, r1=5, r2=10, center=false);
+//   rounded_prismoid(size1=[40,60], size2=[35,55], h=40, r1=0, r2=10, center=true);
+module rounded_prismoid(size1, size2, h, r=undef, r1=undef, r2=undef, center=true)
 {
 	eps = 0.001;
 	maxrad1 = min(size1[0]/2, size1[1]/2);
