@@ -472,6 +472,34 @@ module right_triangle(size=[1, 1, 1], center=false)
 }
 
 
+// Creates a shape that can be unioned into a concave joint between two faces, to fillet them.
+// Center this part along the edge to be chamferred and union it in.
+//   l = length of edge to fillet.
+//   r = radius of fillet.
+//   ang = angle between faces to fillet.
+//   overlap = overlap size for unioning with faces.
+// Example:
+//   union() {
+//   	translate([0,-2,-4]) upcube([20, 4, 24]);
+//   	translate([0,10,-4]) upcube([20, 20, 4]);
+//   	color("green") interior_fillet(l=20, r=10);
+//   }
+module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01) {
+	dy = r/tan(ang/2);
+	difference() {
+		translate([0,-overlap/tan(ang/2),-overlap]) {
+			if (ang == 90) {
+				translate([0,r/2,r/2]) cube([l,r,r], center=true);
+			} else {
+				rotate([90,0,90]) pie_slice(ang=ang, r=dy+overlap, h=l, center=true);
+			}
+		}
+		translate([0,dy,r]) xcyl(l=l+0.1, r=r);
+	}
+}
+
+
+
 // Deprecated.  Renamed to prismoid.
 module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false) {
 	echo("DEPRECATED: trapezoid() has been renamed to prismoid().");
