@@ -38,6 +38,13 @@ V_FWD   = [ 0, -1,  0];
 V_BACK  = [ 0,  1,  0];
 V_DOWN  = [ 0,  0, -1];
 V_UP    = [ 0,  0,  1];
+V_ZERO  = [ 0,  0,  0];
+
+
+// Orientations for cyl(), etc.  Euller angles for rotating a vertical shape into the given orientations.
+ORIENT_X = [  0,90, 0];
+ORIENT_Y = [-90, 0, 0];
+ORIENT_Z = [  0, 0, 0];
 
 
 // Constants for defining edges for chamfer(), etc.
@@ -85,6 +92,45 @@ EDGES_TOP    = [[1,1,0,0], [1,1,0,0], [0,0,0,0]];
 
 EDGES_NONE = [[0,0,0,0], [0,0,0,0], [0,0,0,0]];
 EDGES_ALL  = [[1,1,1,1], [1,1,1,1], [1,1,1,1]];
+
+
+EDGE_OFFSETS = [
+	[[0, 1, 1], [ 0,-1, 1], [ 0,-1,-1], [0, 1,-1]],
+	[[1, 0, 1], [-1, 0, 1], [-1, 0,-1], [1, 0,-1]],
+	[[1, 1, 0], [-1, 1, 0], [-1,-1, 0], [1,-1, 0]]
+];
+
+
+function corner_edge_count(edges, v) =
+	(v[2]<=0)? (
+		(v[1]<=0)? (
+			(v[0]<=0)? (
+				edges[0][2] + edges[1][2] + edges[2][2]
+			) : (
+				edges[0][2] + edges[1][3] + edges[2][3]
+			)
+		) : (
+			(v[0]<=0)? (
+				edges[0][3] + edges[1][2] + edges[2][1]
+			) : (
+				edges[0][3] + edges[1][3] + edges[2][0]
+			)
+		)
+	) : (
+		(v[1]<=0)? (
+			(v[0]<=0)? (
+				edges[0][1] + edges[1][1] + edges[2][2]
+			) : (
+				edges[0][1] + edges[1][0] + edges[2][3]
+			)
+		) : (
+			(v[0]<=0)? (
+				edges[0][0] + edges[1][1] + edges[2][1]
+			) : (
+				edges[0][0] + edges[1][0] + edges[2][0]
+			)
+		)
+	);
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
