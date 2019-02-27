@@ -31,31 +31,154 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-include <transforms.scad>
-include <math.scad>
+use <transforms.scad>
+use <math.scad>
+include <constants.scad>
 
 
 // For when you MUST pass a child to a module, but you want it to be nothing.
 module nil() union() {}
 
 
-// Makes a cube that is offset along the given vector by half the cube's size.
-// For example, if v=[-1,1,0], the cube's front right edge will be centered at the origin.
-//   size = size of cube.
-//   v = vector to offset along.
-// Example:
-//   offsetcube([3,4,5], [-1,1,0]);
-module offsetcube(size=[1,1,1], v=[0,0,0]) {
-	lx=len(size)==undef? size : size[0];
-	ly=len(size)==undef? size : size[1];
-	lz=len(size)==undef? size : size[2];
-	ax=len(v)==undef? v : v[0];
-	ay=len(v)==undef? v : v[1];
-	az=len(v)==undef? v : v[2];
-	translate([lx*ax/2, ly*ay/2, lz*az/2]) {
-		cube(size, center=true);
+// Creates a cube or cuboid object.
+//   size = The size of the cube.
+//   align = The side of the origin to align to.  Use V_ constants from constants.scad.
+//   chamfer = Size of chamfer, inset from sides.  Default: No chamferring.
+//   fillet = Radius of fillet for edge rounding.  Default: No filleting.
+//   edges = Edges to chamfer/fillet.  Use EDGE constants from constants.scad. Default: EDGES_ALL
+//   trimcorners = If true, rounds or chamfers corners where three chamferred/filleted edges meet.  Default: true
+// Examples:
+//   cuboid(40);
+//   cuboid(40, align=V_UP+V_BACK);
+//   cuboid([20,40,60]);
+//   cuboid([30,40,60], chamfer=5);
+//   cuboid([30,40,60], fillet=10);
+//   cuboid([30,40,60], chamfer=5, edges=EDGE_TOP_FR+EDGE_TOP_RT+EDGE_FR_RT, $fn=24);
+//   cuboid([30,40,60], fillet=5, edges=EDGE_TOP_FR+EDGE_TOP_RT+EDGE_FR_RT, $fn=24);
+module cuboid(
+	size=[1,1,1],
+	align=[0,0,0],
+	chamfer=undef,
+	fillet=undef,
+	edges=EDGES_ALL,
+	trimcorners=true
+) {
+	size = scalar_vec(size);
+	majrots = [[0,90,0], [90,0,0], [0,0,0]];
+	if (chamfer != undef) {
+		if (version_num()>20190000) {
+			assert(chamfer <= min(size)/2, "chamfer must be smaller than half the cube width, length, or height.");
+		} else {
+			if(chamfer > min(size)/2) {
+				echo("WARNING: chamfer must be smaller than half the cube width, length, or height.");
+			}
+		}
+	}
+	if (fillet != undef) {
+		if (version_num()>20190000) {
+			assert(fillet <= min(size)/2, "fillet must be smaller than half the cube width, length, or height.");
+		} else {
+			if(fillet > min(size)/2) {
+				echo("WARNING: fillet must be smaller than half the cube width, length, or height.");
+			}
+		}
+	}
+	translate(vmul(size/2, align)) {
+		if (chamfer != undef) {
+			isize = [for (v = size) max(0.001, v-2*chamfer)];
+			if (edges == EDGES_ALL && trimcorners) {
+				hull() {
+					cube([size[0], isize[1], isize[2]], center=true);
+					cube([isize[0], size[1], isize[2]], center=true);
+					cube([isize[0], isize[1], size[2]], center=true);
+				}
+			} else {
+				difference() {
+					cube(size, center=true);
+
+					// Chamfer edges
+					for (i = [0:3], axis=[0:2]) {
+						if (edges[axis][i]>0) {
+							translate(vmul(EDGE_OFFSETS[axis][i], size/2)) {
+								rotate(majrots[axis]) {
+									zrot(45) cube([chamfer*sqrt(2), chamfer*sqrt(2), size[axis]+0.01], center=true);
+								}
+							}
+						}
+					}
+
+					// Chamfer triple-edge corners.
+					if (trimcorners) {
+						for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
+							if (corner_edge_count(edges, [xa,ya,za]) > 2) {
+								translate(vmul([xa,ya,za]/2, size-[1,1,1]*chamfer*4/3)) {
+									rotate_from_to(V_UP, [xa,ya,za]) {
+										upcube(chamfer*3);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		} else if (fillet != undef) {
+			sides = quantup(segs(fillet),4);
+			sc = 1/cos(180/sides);
+			isize = [for (v = size) max(0.001, v-2*fillet)];
+			if (edges == EDGES_ALL) {
+				minkowski() {
+					cube(isize, center=true);
+					if (trimcorners) {
+						sphere(r=fillet*sc, $fn=sides);
+					} else {
+						intersection() {
+							zrot(180/sides) cylinder(r=fillet*sc, h=fillet*2, center=true, $fn=sides);
+							rotate([90,0,0]) zrot(180/sides) cylinder(r=fillet*sc, h=fillet*2, center=true, $fn=sides);
+							rotate([0,90,0]) zrot(180/sides) cylinder(r=fillet*sc, h=fillet*2, center=true, $fn=sides);
+						}
+					}
+				}
+			} else {
+				difference() {
+					cube(size, center=true);
+
+					// Round edges.
+					for (i = [0:3], axis=[0:2]) {
+						if (edges[axis][i]>0) {
+							difference() {
+								translate(vmul(EDGE_OFFSETS[axis][i], size/2)) {
+									rotate(majrots[axis]) cube([fillet*2, fillet*2, size[axis]+0.1], center=true);
+								}
+								translate(vmul(EDGE_OFFSETS[axis][i], size/2 - [1,1,1]*fillet)) {
+									rotate(majrots[axis]) zrot(180/sides) cylinder(h=size[axis]+0.2, r=fillet*sc, center=true, $fn=sides);
+								}
+							}
+						}
+					}
+
+					// Round triple-edge corners.
+					if (trimcorners) {
+						for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
+							if (corner_edge_count(edges, [xa,ya,za]) > 2) {
+								difference() {
+									translate(vmul([xa,ya,za], size/2)) {
+										cube(fillet*2, center=true);
+									}
+									translate(vmul([xa,ya,za], size/2-[1,1,1]*fillet)) {
+										zrot(180/sides) sphere(r=fillet*sc*sc, $fn=sides);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		} else {
+			cube(size=size, center=true);
+		}
 	}
 }
+
 
 
 // Creates a cube between two points.
@@ -70,29 +193,53 @@ module cube2pt(p1,p2) {
 }
 
 
+// Creates a cube that spans the X, Y, and Z ranges given.
+//   xspan = [min, max] X axis range.
+//   yspan = [min, max] Y axis range.
+//   zspan = [min, max] Z axis range.
+// Example:
+//   span_cube([10,40], [-10, 20], [10,30]);
+module span_cube(xspan, yspan, zspan) {
+	cube2pt([xspan[0], yspan[0], zspan[0]], [xspan[1], yspan[1], zspan[1]]);
+}
+
+
+
+
+// Makes a cube that is offset along the given vector by half the cube's size.
+// For example, if v=[-1,1,0], the cube's front right edge will be centered at the origin.
+//   size = size of cube.
+//   v = vector to offset along.
+// Example:
+//   offsetcube([3,4,5], [-1,1,0]);
+module offsetcube(size=[1,1,1], v=[0,0,0]) {
+	echo("DEPRECATED: You should use cuboid() instead of offsetcube()");
+	cuboid(size=size, align=v);
+}
+
 
 // Makes a cube that has its right face centered at the origin.
-module leftcube(size=[1,1,1]) {l=len(size)==undef? size : size[0]; left(l/2) cube(size, center=true);}
+module leftcube(size=[1,1,1]) cuboid(size=size, align=V_LEFT);
 
 
 // Makes a cube that has its left face centered at the origin.
-module rightcube(size=[1,1,1]) {l=len(size)==undef? size : size[0]; right(l/2) cube(size, center=true);}
-
-
-// Makes a cube that has its front face centered at the origin.
-module backcube(size=[1,1,1]) {l=len(size)==undef? size : size[1]; back(l/2) cube(size, center=true);}
+module rightcube(size=[1,1,1]) cuboid(size=size, align=V_RIGHT);
 
 
 // Makes a cube that has its back face centered at the origin.
-module fwdcube(size=[1,1,1]) {l=len(size)==undef? size : size[1]; fwd(l/2) cube(size, center=true);}
+module fwdcube(size=[1,1,1]) cuboid(size=size, align=V_FWD);
 
 
-// Makes a cube that has its bottom face centered at the origin.
-module upcube(size=[1,1,1]) {l=len(size)==undef? size : size[2]; up(l/2) cube(size, center=true);}
+// Makes a cube that has its front face centered at the origin.
+module backcube(size=[1,1,1]) cuboid(size=size, align=V_BACK);
 
 
 // Makes a cube that has its top face centered at the origin.
-module downcube(size=[1,1,1]) {l=len(size)==undef? size : size[2]; down(l/2) cube(size, center=true);}
+module downcube(size=[1,1,1]) cuboid(size=size, align=V_DOWN);
+
+
+// Makes a cube that has its bottom face centered at the origin.
+module upcube(size=[1,1,1]) cuboid(size=size, align=V_UP);
 
 
 // Makes a cube with chamfered edges.
@@ -102,75 +249,18 @@ module downcube(size=[1,1,1]) {l=len(size)==undef? size : size[2]; down(l/2) cub
 //   chamfcorners = boolean to specify if corners should be flat chamferred.
 // Example:
 //   chamfcube(size=[10,30,50], chamfer=1, chamfaxes=[1,1,1], chamfcorners=true);
-module chamfcube(
-	size=[1,1,1],
-	chamfer=0.25,
-	chamfaxes=[1,1,1],
-	chamfcorners=false
-) {
-	ch_width = sqrt(2)*chamfer;
-	ch_offset = 1;
-	difference() {
-		cube(size=size, center=true);
-		for (xs = [-1,1]) {
-			for (ys = [-1,1]) {
-				if (chamfaxes[0] == 1) {
-					translate([0,xs*size[1]/2,ys*size[2]/2]) {
-						rotate(a=[45,0,0]) cube(size=[size[0]+0.1,ch_width,ch_width], center=true);
-					}
-				}
-				if (chamfaxes[1] == 1) {
-					translate([xs*size[0]/2,0,ys*size[2]/2]) {
-						rotate(a=[0,45,0]) cube(size=[ch_width,size[1]+0.1,ch_width], center=true);
-					}
-				}
-				if (chamfaxes[2] == 1) {
-					translate([xs*size[0]/2,ys*size[1]/2],0) {
-						rotate(a=[0,0,45]) cube(size=[ch_width,ch_width,size[2]+0.1], center=true);
-					}
-				}
-				if (chamfcorners) {
-					for (zs = [-1,1]) {
-						translate([xs*size[0]/2,ys*size[1]/2,zs*size[2]/2]) {
-							scale([chamfer,chamfer,chamfer]) {
-								polyhedron(
-									points=[
-										[0,-1,-1], [0,-1,1], [0,1,1], [0,1,-1],
-										[-1,0,-1], [-1,0,1], [1,0,1], [1,0,-1],
-										[-1,-1,0], [-1,1,0], [1,1,0], [1,-1,0]
-									],
-									faces=[
-										[ 8,  4,  9],
-										[ 8,  9,  5],
-										[ 9,  3, 10],
-										[ 9, 10,  2],
-										[10,  7, 11],
-										[10, 11,  6],
-										[11,  0,  8],
-										[11,  8,  1],
-										[ 0,  7,  3],
-										[ 0,  3,  4],
-										[ 1,  5,  2],
-										[ 1,  2,  6],
-
-										[ 1,  8,  5],
-										[ 5,  9,  2],
-										[ 2, 10,  6],
-										[ 6, 11,  1],
-
-										[ 0,  4,  8],
-										[ 4,  3,  9],
-										[ 3,  7, 10],
-										[ 7,  0, 11],
-									]
-								);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+module chamfcube(size=[1,1,1], chamfer=0.25, chamfaxes=[1,1,1], chamfcorners=false) {
+	echo("DEPRECATED: Use cuboid() instead of chamfcube()");
+	cuboid(
+		size=size,
+		chamfer=chamfer,
+		trimcorners=chamfcorners,
+		edges = (
+			(chamfaxes[0]? EDGES_X_ALL : EDGES_NONE) +
+			(chamfaxes[1]? EDGES_Y_ALL : EDGES_NONE) +
+			(chamfaxes[2]? EDGES_Z_ALL : EDGES_NONE)
+		)
+	);
 }
 
 
@@ -182,19 +272,9 @@ module chamfcube(
 // Examples:
 //   rrect(size=[9,4,1], r=1, center=true);
 //   rrect(size=[5,7,3], r=1, $fn=24);
-module rrect(size=[1,1,1], r=0.25, center=false)
-{
-	w = size[0];
-	l = size[1];
-	h = size[2];
-	rr = min(r, min(w/2-0.01, l/2-0.01));
-	up(center? 0 : h/2) {
-		linear_extrude(height=h, convexity=2, center=true) {
-			offset(r=rr) {
-				square([w-2*rr, l-2*rr], center=true);
-			}
-		}
-	}
+module rrect(size=[1,1,1], r=0.25, center=false) {
+	echo("DEPRECATED: Use cuboid() instead of rrect()");
+	cuboid(size=size, filler=r, edges=EDGES_Z_ALL, align=center? V_ZERO : V_UP);
 }
 
 
@@ -206,25 +286,143 @@ module rrect(size=[1,1,1], r=0.25, center=false)
 // Examples:
 //   rcube(size=[9,4,1], r=0.333, center=true, $fn=24);
 //   rcube(size=[5,7,3], r=1);
-module rcube(size=[1,1,1], r=0.25, center=false)
-{
-	dd = min(2*r, min(size));
-	$fn=quantup(segs(dd/2), 4);
-	translate(center? [0,0,0] : size/2) {
-		minkowski() {
-			cube([max(0.01,size[0]-dd), max(0.01,size[1]-dd), max(0.01,size[2]-dd)], center=true);
+module rcube(size=[1,1,1], r=0.25, center=false) {
+	echo("DEPRECATED: Use cuboid() instead of rcube()");
+	cuboid(size=size, fillet=r, align=center? V_ZERO : V_UP);
+}
 
-			// Synthesize a sphere with vertices at the axis extremes.
-			// This makes the result of the minkowski have the proper dimensions.
-			rotate_extrude() {
-				difference() {
-					circle(dd/2);
-					left(dd/2) square(dd, center=true);
+
+
+// Creates cylinders in various alignments and orientations,
+// with optional fillets and chamfers.
+//   l = Length of cylinder along axis.
+//   r = Radius of cylinder.
+//   r1 = Radius of the negative (X-, Y-, Z-) end of cylinder.
+//   r2 = Radius of the positive (X+, Y+, Z+) end of cylinder.
+//   d = Diameter of cylinder.
+//   d1 = Diameter of the negative (X-, Y-, Z-) end of cylinder.
+//   d2 = Diameter of the positive (X+, Y+, Z+) end of cylinder.
+//   chamfer = The size of the chamfers on the ends of the cylinder, inset from end.  Default: none.
+//   chamfer1 = The size of the chamfer on the axis-negative end of the cylinder, inset from end.  Default: none.
+//   chamfer2 = The size of the chamfer on the axis-positive end of the cylinder, inset from end.  Default: none.
+//   fillet = The radius of the fillets on the ends of the cylinder.  Default: none.
+//   fillet1 = The radius of the fillet on the axis-negative end of the cylinder.
+//   fillet2 = The radius of the fillet on the axis-positive end of the cylinder.
+//   circum = If true, cylinder should circumscribe the circle of the given size.  Otherwise inscribes.  Default: false
+//   realign = If true, rotate the cylinder by half the angle of one face.
+//   orient = Orientation of the cylinder.  Use the ORIENT_ constants from constants.h.  Default: vertical.
+//   align = Alignment of the cylinder.  Use the V_ constants from constants.h.  Default: centered.
+// Examples:
+//   cyl(l=100, r=25);
+//   cyl(l=100, d=50, align=V_UP);
+//   cyl(l=100, r=20, circum=true, realign=true);
+//   cyl(l=40, d=50, orient=ORIENT_X, align=V_LEFT, chamfer=10);
+//   cyl(l=100, d1=30, d2=75, orient=ORIENT_Y, fillet=10);
+//   cyl(l=30, d2=100, d1=100, fillet1=10, fillet2=5, align=V_UP);
+module cyl(
+	l=1,
+	r=undef, r1=undef, r2=undef,
+	d=undef, d1=undef, d2=undef,
+	chamfer=undef, chamfer1=undef, chamfer2=undef,
+	chamfang=undef, chamfang1=undef, chamfang2=undef,
+	fillet=undef, fillet1=undef, fillet2=undef,
+	circum=false, realign=false,
+	orient=ORIENT_Z, align=V_ZERO
+) {
+	r1 = get_radius(r1, r, d1, d, 1);
+	r2 = get_radius(r2, r, d2, d, 1);
+	sides = segs(max(r1,r2));
+	sc = circum? 1/cos(180/sides) : 1;
+	orient_and_align([r1*2,r1*2,l], orient, align) {
+		zrot(realign? 180/sides : 0) {
+			if (chamfer!=undef || chamfer1!=undef || chamfer2!=undef) {
+				cham1 = (chamfer1!=undef)? chamfer1 : (chamfer2!=undef)? 0 : chamfer;
+				cham2 = (chamfer2!=undef)? chamfer2 : (chamfer1!=undef)? 0 : chamfer;
+				if (version_num()>20190000) {
+					assert(cham1 <= r1, "Chamfer is smaller than the radius of the cylinder.");
+					assert(cham1 <= r2, "Chamfer is smaller than the radius of the cylinder.");
+					assert(cham1 <= l/2, "Chamfer is smaller than half the length of the cylinder.");
+					assert(cham2 <= r1, "Chamfer is smaller than the radius of the cylinder.");
+					assert(cham2 <= r2, "Chamfer is smaller than the radius of the cylinder.");
+					assert(cham2 <= l/2, "Chamfer is smaller than half the length of the cylinder.");
 				}
+				chang1 = (chamfang1!=undef)? chamfang1 : (chamfang!=undef)? chamfang : undef;
+				chang2 = (chamfang2!=undef)? chamfang2 : (chamfang!=undef)? chamfang : undef;
+				vang = atan2(l, r1-r2)/2;
+				hang1 = (chang1!=undef)? chang1 : 90-vang;
+				hang2 = (chang2!=undef)? chang2 : vang;
+				rr1 = sc * (r1 + (r2-r1)*cham1/l);
+				rr2 = sc * (r2 + (r1-r2)*cham2/l);
+				rr0 = rr1 - cham1 / tan(hang1);
+				rr4 = rr2 - cham2 / tan(hang2);
+				union() {
+					if (cham2>0) {
+						up(l/2-cham2) cylinder(h=cham2, r1=rr2, r2=max(0.001, rr4), center=false, $fn=sides);
+					}
+					up((cham1-cham2)/2) cylinder(h=max(0,l-cham1-cham2)+0.001, r1=rr1, r2=rr2, center=true, $fn=sides);
+					if (cham1>0) {
+						down(l/2-cham1) zflip() cylinder(h=cham1, r1=rr1, r2=max(0.001, rr0), center=false, $fn=sides);
+					}
+				}
+
+			} else if (fillet!=undef || fillet1!=undef || fillet2!=undef) {
+				fil1 = (fillet1!=undef)? fillet1 : (fillet2!=undef)? 0 : fillet;
+				fil2 = (fillet2!=undef)? fillet2 : (fillet1!=undef)? 0 : fillet;
+				if (version_num()>20190000) {
+					assert(fil1 <= r1, "Fillet is smaller than the radius of the cylinder.");
+					assert(fil1 <= r2, "Fillet is smaller than the radius of the cylinder.");
+					assert(fil1 <= l/2, "Fillet is smaller than half the length of the cylinder.");
+					assert(fil2 <= r1, "Fillet is smaller than the radius of the cylinder.");
+					assert(fil2 <= r2, "Fillet is smaller than the radius of the cylinder.");
+					assert(fil2 <= l/2, "Fillet is smaller than half the length of the cylinder.");
+				}
+				rr1 = sc * (r1+(r2-r1)*(fil1/l));
+				rr2 = sc * (r2+(r1-r2)*(fil2/l));
+				if (fil1==fil2) {
+					if (r1==r2 && fil1 == r1) {
+						hull() {
+							zspread(l-2*fil1) {
+								sphere(r=fil1*sc, $fn=sides);
+							}
+						}
+					} else {
+						minkowski() {
+							cylinder(h=max(0.001,l-fil1-fil2), r1=max(0.001,rr1-fil1), r2=max(0.001,rr2-fil2), center=true, $fn=sides);
+							sphere(r=fil1*sc, $fn=sides);
+						}
+					}
+				} else {
+					fsegs1 = quantup(segs(fil1),4);
+					fsegs2 = quantup(segs(fil2),4);
+					rotate_extrude(convexity=2) {
+						difference() {
+							hull() {
+								right(rr1-fil1) {
+									difference() {
+										fwd(l/2-fil1) circle(r=max(0.001,fil1), $fn=fsegs1);
+										if (fil1>0) back(fil1) square(2*fil1, center=true);
+									}
+								}
+								right(rr2-fil2) {
+									difference() {
+										back(l/2-fil2) circle(r=max(0.001,fil2), $fn=fsegs2);
+										if (fil2>0) fwd(fil2) square(2*fil2, center=true);
+									}
+								}
+								right(0.01/2) square([0.01, l], center=true);
+							}
+							left(max(rr1,rr2)/2) square([max(rr1, rr2), l+1], center=true);
+						}
+					}
+				}
+
+			} else {
+				cylinder(h=l, r1=r1*sc, r2=r2*sc, center=true, $fn=sides);
 			}
 		}
 	}
 }
+
 
 
 // Creates a cylinder with its top face centered at the origin.
@@ -327,32 +525,17 @@ module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, a
 // Example:
 //   chamferred_cylinder(h=50, r=20, chamfer=5, angle=45, bottom=false, center=true);
 //   chamferred_cylinder(h=50, r=20, chamfedge=10, angle=30, center=true);
-module chamferred_cylinder(h=1, r=1, d=undef, chamfer=0.25, chamfedge=undef, angle=45, center=false, top=true, bottom=true)
+module chamferred_cylinder(h=1, r=undef, d=undef, chamfer=0.25, chamfedge=undef, angle=45, center=false, top=true, bottom=true)
 {
-	chamf = (chamfedge == undef)? chamfer * sqrt(2) : chamfedge;
-	x = (chamfedge == undef)? chamfer : (chamfedge * sin(angle));
-	y = (chamfedge == undef)? chamfer*sin(90-angle)/sin(angle) : (chamfedge * sin(90-angle));
-	rad = (d == undef)? r : (d / 2.0);
-	up(center? 0 : h/2) {
-		rotate_extrude(angle=360, convexity=2) {
-			polygon(
-				points=[
-					[0, h/2],
-					[rad-x*(top?1:0), h/2],
-					[rad, h/2-y*(top?1:0)],
-					[rad, -h/2+y*(bottom?1:0)],
-					[rad-x*(bottom?1:0), -h/2],
-					[0, -h/2],
-					[0, h/2],
-				]
-			);
-		}
-	}
+	echo("DEPRECATED: You should use cyl() instead of chamf_cyl() or chamferred_cylinder().");
+	r = get_radius(r=r, d=d, dflt=1);
+	chamf = (chamfedge == undef)? chamfer : chamfedge * cos(angle);
+	cyl(l=h, r=r, chamfer1=bottom? chamf : 0, chamfer2=top? chamf : 0, chamfang=angle, align=center? V_ZERO : V_UP);
 }
 
-module chamf_cyl(h=1, r=1, d=undef, chamfer=0.25, chamfedge=undef, angle=45, center=false, top=true, bottom=true)
+module chamf_cyl(h=1, r=undef, d=undef, chamfer=0.25, chamfedge=undef, angle=45, center=false, top=true, bottom=true)
 	chamferred_cylinder(h=h, r=r, d=d, chamfer=chamfer, chamfedge=chamfedge, angle=angle, center=center, top=top, bottom=bottom);
-//!chamf_cyl(h=20, d=20, chamfedge=10, angle=30, center=true, $fn=36);
+//!chamf_cyl(h=20, d=20, chamfedge=10, angle=60, center=true, $fn=36);
 
 
 // Creates a cylinder with filletted (rounded) ends.
@@ -364,40 +547,17 @@ module chamf_cyl(h=1, r=1, d=undef, chamfer=0.25, chamfedge=undef, angle=45, cen
 // Example:
 //   rcylinder(h=50, r1=20, r2=30, fillet=5, center=true);
 //   rcylinder(h=50, r=20, fillet=5, center=true);
-module rcylinder(h=1, r=1, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, fillet=0.25, center=false)
-{
-	r1 = d1!=undef? d1/2 : (r1!=undef? r1 : (d!=undef? d/2 : r));
-	r2 = d2!=undef? d2/2 : (r2!=undef? r2 : (d!=undef? d/2 : r));
-	u = fillet/h;
-	rr1 = (r1+(r2-r1)*u);
-	rr2 = (r1+(r2-r1)*(1-u));
-	yy = h/2 - fillet;
-	up(center? 0 : h/2) {
-		rotate_extrude(angle=360, convexity=2) {
-			difference() {
-				hull() {
-					right(rr1-fillet) {
-						difference() {
-							fwd(yy) circle(r=fillet, $fn=quantup(segs(fillet), 4));
-							back(fillet) square(2*fillet, center=true);
-						}
-					}
-					right(rr2-fillet) {
-						difference() {
-							back(yy) circle(r=fillet, $fn=quantup(segs(fillet), 4));
-							fwd(fillet) square(2*fillet, center=true);
-						}
-					}
-					right(0.01/2) square([0.01, h], center=true);
-				}
-				left(max(rr1,rr2)/2) square([max(rr1, rr2), h+1], center=true);
-			}
-		}
-	}
+module rcylinder(h=1, r=1, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, fillet=0.25, center=false) {
+	echo("DEPRECATED: use cyl() instead of rcylinder()");
+	cyl(l=h, r=r, d=d, r1=r1, r2=r2, d1=d1, d2=d2, fillet=fillet, orient=V_UP, align=center? V_ZERO : V_UP);
 }
 
-module filleted_cylinder(h=1, r=1, d=undef, fillet=0.25, center=false)
-	rcylinder(h=h, r=r, d=d, fillet=fillet, center=center);
+
+
+module filleted_cylinder(h=1, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, fillet=0.25, center=false) {
+	echo("DEPRECATED: use cyl() instead of filleted_cylinder()");
+	cyl(l=h, r=r, d=d, r1=r1, r2=r2, d1=d1, d2=d2, fillet=fillet, orient=ORIENT_Z, align=center? V_ZERO : V_UP);
+}
 
 
 
@@ -412,9 +572,9 @@ module filleted_cylinder(h=1, r=1, d=undef, fillet=0.25, center=false)
 //   pyramid(h=3, d=4, n=6, circum=true);
 module pyramid(n=4, h=1, l=1, r=undef, d=undef, circum=false)
 {
-	cm = circum? 1/cos(180/n) : 1.0;
-	radius = (r!=undef)? r*cm : ((d!=undef)? d*cm/2 : (l/(2*sin(180/n))));
-	zrot(180/n) cylinder(r1=radius, r2=0, h=h, $fn=n, center=false);
+	echo("DEPRECATED: use cyl() instead of pyramid()");
+	radius = get_radius(r=r, d=d, dflt=l/2/sin(180/n));
+	cyl(r1=radius, r2=0, l=h, circum=circum, $fn=n, realign=true, align=V_UP);
 }
 
 
@@ -429,9 +589,9 @@ module pyramid(n=4, h=1, l=1, r=undef, d=undef, circum=false)
 //   prism(n=8, h=3, d=4, circum=true);
 module prism(n=3, h=1, l=1, r=undef, d=undef, circum=false, center=false)
 {
-	cm = circum? 1/cos(180/n) : 1.0;
-	radius = (r!=undef)? r*cm : ((d!=undef)? d*cm/2 : (l/(2*sin(180/n))));
-	zrot(180/n) cylinder(r=radius, h=h, center=center, $fn=n);
+	echo("DEPRECATED: use cyl() instead of prism()");
+	radius = get_radius(r=r, d=d, dflt=l/2/sin(180/n));
+	cyl(r=radius, l=h, circum=circum, $fn=n, realign=true, align=center? V_ZERO : V_UP);
 }
 
 
@@ -503,23 +663,32 @@ module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01) {
 // Deprecated.  Renamed to prismoid.
 module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false) {
 	echo("DEPRECATED: trapezoid() has been renamed to prismoid().");
-	prismoid(size=size, size2=size2, h=h, center=center);
+	prismoid(size=size, size2=size2, h=h, align=center? V_ZERO : V_UP);
 }
 
 
-// Creates a rectangular prismoid/frustum shape.
-//   size1 = [width, length] of the bottom of the prism.
-//   size2 = [width, length] of the top of the prism.
+// Creates a rectangular prismoid shape.
+//   size1 = [width, length] of the axis-negative end of the prism.
+//   size2 = [width, length] of the axis-positive end of the prism.
 //   h = Height of the prism.
-//   center = vertically center the prism.
+//   orient = Orientation of the prismoid.  Use the ORIENT_ constants from constants.h.  Default: ORIENT_Z.
+//   align = Alignment of the prismoid by the axis-negative (size1) end.  Use the V_ constants from constants.h.  Default: V_UP.
+//   center = vertically center the prism.  DEPRECATED ARGUMENT.  Use align instead.
 // Example:
-//   prismoid(size1=[1,4], size2=[4,1], h=4, center=false);
 //   prismoid(size1=[2,6], size2=[4,0], h=4, center=false);
-module prismoid(size1=[1,1], size2=[1,1], h=1, center=false)
+//   prismoid(size1=[1,4], size2=[4,1], h=4, orient=ORIENT_X, align=V_UP+V_RIGHT+V_FWD);
+//   prismoid(size1=[1,4], size2=[4,1], h=4);
+module prismoid(
+	size1=[1,1], size2=[1,1], h=1,
+	align=V_UP, orient=ORIENT_Z, center=undef)
 {
+	if (center != undef) {
+		echo("DEPRECATED ARGUMENT: in prismoid, use align instead of center");
+	}
+	algn = (center == undef)? align : (center? V_ZERO : V_UP);
 	s1 = [max(size1[0], 0.001), max(size1[1], 0.001)];
 	s2 = [max(size2[0], 0.001), max(size2[1], 0.001)];
-	up(center? 0 : h/2) {
+	orient_and_align([s1[0], s1[1], h], orient, algn) {
 		polyhedron(
 			points=[
 				[+s2[0]/2, +s2[1]/2, +h/2],
@@ -551,7 +720,7 @@ module prismoid(size1=[1,1], size2=[1,1], h=1, center=false)
 }
 
 
-// Creates a rectangular prismoid/frustum shape
+// Creates a rectangular prismoid shape
 // with rounded vertical edges.
 //   size1 = [width, length] of the bottom of the prism.
 //   size2 = [width, length] of the top of the prism.
@@ -559,19 +728,24 @@ module prismoid(size1=[1,1], size2=[1,1], h=1, center=false)
 //   r = radius of vertical edge fillets.
 //   r1 = radius of vertical edge fillets at bottom.
 //   r2 = radius of vertical edge fillets at top.
-//   center = vertically center the prism.
+//   orient = Orientation of the prismoid.  Use the ORIENT_ constants from constants.h.  Default: ORIENT_Z.
+//   align = Alignment of the prismoid by the axis-negative (size1) end.  Use the V_ constants from constants.h.  Default: V_UP.
+//   center = vertically center the prism.  DEPRECATED ARGUMENT.  Use align instead.
 // Example:
 //   rounded_prismoid(size1=[40,40], size2=[0,0], h=40, r=5, center=false);
 //   rounded_prismoid(size1=[20,60], size2=[40,30], h=40, r1=5, r2=10, center=false);
 //   rounded_prismoid(size1=[40,60], size2=[35,55], h=40, r1=0, r2=10, center=true);
-module rounded_prismoid(size1, size2, h, r=undef, r1=undef, r2=undef, center=true)
-{
+module rounded_prismoid(
+	size1, size2, h,
+	r=undef, r1=undef, r2=undef,
+	align=V_UP, orient=ORIENT_Z, center=undef
+) {
 	eps = 0.001;
 	maxrad1 = min(size1[0]/2, size1[1]/2);
 	maxrad2 = min(size2[0]/2, size2[1]/2);
 	rr1 = min(maxrad1, (r1!=undef)? r1 : r);
 	rr2 = min(maxrad2, (r2!=undef)? r2 : r);
-	down(center? h/2 : 0) {
+	orient_and_align([size1[0], size1[1], h], orient, align) {
 		hull() {
 			linear_extrude(height=eps, center=false, convexity=2) {
 				offset(r=rr1) {
@@ -602,7 +776,7 @@ module rounded_prismoid(size1, size2, h, r=undef, r1=undef, r2=undef, center=tru
 //   teardrop2d(r=35, ang=45, cap_h=40);
 module teardrop2d(r=1, d=undef, ang=45, cap_h=undef)
 {
-	r = (d!=undef)? (d/2.0) : r;
+	r = get_radius(r=r, d=d, dflt=1);
 	difference() {
 		hull() {
 			back(r*sin(ang)) {
@@ -630,9 +804,9 @@ module teardrop2d(r=1, d=undef, ang=45, cap_h=undef)
 //   cap_h = if given, height above center where the shape will be truncated.
 // Example:
 //   teardrop(r=30, h=10, ang=30);
-module teardrop(r=1, d=undef, h=1, ang=45, cap_h=undef)
+module teardrop(r=undef, d=undef, h=1, ang=45, cap_h=undef)
 {
-	r = (d!=undef)? (d/2.0) : r;
+	r = get_radius(r=r, d=d, dflt=1);
 	xrot(90) {
 		linear_extrude(height=h, center=true, steps=2) {
 			teardrop2d(r=r, ang=ang, cap_h=cap_h);
@@ -675,21 +849,35 @@ module onion(h=1, r=1, d=undef, maxang=45)
 //   id = Inner diameter of tube.
 //   id1 = Inner diameter of bottom of tube.
 //   id2 = Inner diameter of top of tube.
+//   orient = Orientation of the tube.  Use the ORIENT_ constants from constants.h.  Default: vertical.
+//   align = Alignment of the tube.  Use the V_ constants from constants.h.  Default: centered.
 // Example:
 //   tube(h=3, r=4, wall=1, center=true);
 //   tube(h=6, r=4, wall=2, $fn=6);
 //   tube(h=3, r1=5, r2=7, wall=2, center=true);
 //   tube(h=30, r1=50, r2=70, ir1=50, ir2=50, center=true);
 //   tube(h=30, wall=5, r1=40, r2=50, center=false);
-module tube(h=1, wall=undef, r=undef, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, ir=undef, id=undef, ir1=undef, ir2=undef, id1=undef, id2=undef, center=false)
-{
-	r1 = first_defined([d1/2, d/2, id1/2+wall, id/2+wall, r1, r, ir1+wall, ir+wall]);
-	r2 = first_defined([d2/2, d/2, id2/2+wall, id/2+wall, r2, r, ir2+wall, ir+wall]);
-	ir1 = first_defined([id1/2, id/2, d1/2-wall, d/2-wall, ir1, ir, r1-wall, r-wall]);
-	ir2 = first_defined([id2/2, id/2, d2/2-wall, d/2-wall, ir2, ir, r2-wall, r-wall]);
-	if (ir1 > r1) echo("WARNING: r1 is smaller than ir1.");
-	if (ir2 > r2) echo("WARNING: r2 is smaller than ir2.");
-	up(center? 0 : h/2) {
+module tube(
+	h=1, wall=undef,
+	r=undef, r1=undef, r2=undef,
+	d=undef, d1=undef, d2=undef,
+	ir=undef, id=undef, ir1=undef,
+	ir2=undef, id1=undef, id2=undef,
+	center=undef, orient=ORIENT_Z, align=V_UP
+) {
+	r1 = first_defined([r1, d1/2, r, d/2, ir1+wall, id1/2+wall, ir+wall, id/2+wall]);
+	r2 = first_defined([r2, d2/2, r, d/2, ir2+wall, id2/2+wall, ir+wall, id/2+wall]);
+	ir1 = first_defined([ir1, id1/2, ir, id/2, r1-wall, d1/2-wall, r-wall, d/2-wall]);
+	ir2 = first_defined([ir2, id2/2, ir, id/2, r2-wall, d2/2-wall, r-wall, d/2-wall]);
+	if (version_num()>20190000) {
+		assert(ir1 <= r1, "Inner radius is larger than outer radius.");
+		assert(ir2 <= r2, "Inner radius is larger than outer radius.");
+	} else {
+		if (ir1 > r1) echo("WARNING: r1 is smaller than ir1.");
+		if (ir2 > r2) echo("WARNING: r2 is smaller than ir2.");
+	}
+	algn = (center == undef)? align : (center? V_ZERO : V_UP);
+	orient_and_align([r1*2,r1*2,h], orient, algn) {
 		difference() {
 			cylinder(h=h, r1=r1, r2=r2, center=true);
 			cylinder(h=h+0.05, r1=ir1, r2=ir2, center=true);
@@ -713,14 +901,18 @@ module tube(h=1, wall=undef, r=undef, r1=undef, r2=undef, d=undef, d1=undef, d2=
 //   torus(d=60, d2=15);
 //   torus(od=60, ir=15);
 //   torus(or=30, ir=20, $fa=1, $fs=1);
-module torus(or=1, ir=0.5, od=undef, id=undef, r=undef, r2=undef, d=undef, d2=undef)
-{
-	ir = id!=undef? id/2 : ir;
-	or = od!=undef? od/2 : or;
-	r = d!=undef? d/2 : r!=undef? r : (ir+or)/2;
-	r2 = d2!=undef? d2/2 : r2!=undef? r2 : (or-ir)/2;
+module torus(
+	r=undef,  d=undef,
+	r2=undef, d2=undef,
+	or=undef, od=undef,
+	ir=undef, id=undef
+) {
+	orr = get_radius(r=or, d=od, dflt=1.0);
+	irr = get_radius(r=ir, d=id, dflt=0.5);
+	majrad = get_radius(r=r, d=d, dflt=(orr+irr)/2);
+	minrad = get_radius(r=r2, d=d2, dflt=(orr-irr)/2);
 	rotate_extrude(convexity = 4) {
-		right(r) circle(r2);
+		right(majrad) circle(minrad);
 	}
 }
 
@@ -739,8 +931,8 @@ module torus(or=1, ir=0.5, od=undef, id=undef, r=undef, r2=undef, d=undef, d2=un
 //   pie_slice(ang=45, h=30, r1=100, r2=80);
 module pie_slice(ang=30, h=1, r=10, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, center=false)
 {
-	r1 = r1!=undef? r1 : (d1!=undef? d1/2 : (d!=undef? d/2 : r));
-	r2 = r2!=undef? r2 : (d2!=undef? d2/2 : (d!=undef? d/2 : r));
+	r1 = get_radius(r1, r, d1, d, 10);
+	r2 = get_radius(r2, r, d2, d, 10);
 	steps = ceil(segs(max(r1,r2))*ang/360);
 	step = ang/steps;
 	pts = concat(
