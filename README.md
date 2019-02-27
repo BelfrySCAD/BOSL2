@@ -14,6 +14,14 @@ For purposes of the BOSL library, the following terms apply:
 - **Bottom**/**Down**/**Below**: Towards Z-
 - **Top**/**Up**/**Above**: Towards Z+
 
+- **Axis-Positive**: Towards the negative end of the axis the object is oriented on.  IE: X-, Y-, or Z-.
+- **Axis-Negative**: Towards the negative end of the axis the object is oriented on.  IE: X-, Y-, or Z-.
+
+- **Fillet**: A rounding of an interior or exterior edge.
+- **Chamfer**: A bevelling of an interior or exterior edge.
+- **Orientation**: The axis a part should be oriented to.
+- **Alignment**: The side of the origin that the part should be on.  Given as a vector.
+
 
 ## Examples
 A lot of the features of this library are to allow shorter, easier-to-read, intent-based coding.  For example:
