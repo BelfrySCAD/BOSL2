@@ -31,9 +31,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-include <transforms.scad>
-include <shapes.scad>
-include <math.scad>
+use <transforms.scad>
+use <shapes.scad>
+use <math.scad>
+include <constants.scad>
 
 
 module angle_half_pie_mask(
@@ -301,55 +302,42 @@ module fillet(fillet=1, size=[1,1,1], edges=[[0,0,0,0], [1,1,0,0], [0,0,0,0]])
 	rx = x - 2*fillet;
 	ry = y - 2*fillet;
 	rz = z - 2*fillet;
-	offsets = [
-		[[0, 1, 1], [ 0,-1, 1], [ 0,-1,-1], [0, 1,-1]],
-		[[1, 0, 1], [-1, 0, 1], [-1, 0,-1], [1, 0,-1]],
-		[[1, 1, 0], [-1, 1, 0], [-1,-1, 0], [1,-1, 0]]
-	];
-	corners = [
-		edges[0][2] + edges[1][2] + edges[2][2],
-		edges[0][2] + edges[1][3] + edges[2][3],
-		edges[0][3] + edges[1][2] + edges[2][1],
-		edges[0][3] + edges[1][3] + edges[2][0],
-		edges[0][1] + edges[1][1] + edges[2][2],
-		edges[0][1] + edges[1][0] + edges[2][3],
-		edges[0][0] + edges[1][1] + edges[2][1],
-		edges[0][0] + edges[1][0] + edges[2][0]
-	];
 	majrots = [[0,90,0], [90,0,0], [0,0,0]];
 	sides = quantup(segs(fillet),4);
 	sc = 1/cos(180/sides);
-	$fn = sides;
 	difference() {
 		children();
+
+		// Round edges.
 		for (axis=[0:2], i=[0:3]) {
 			if (edges[axis][i]>0) {
 				difference() {
-					translate(vmul(offsets[axis][i], [lx,ly,lz]/2))  {
+					translate(vmul(EDGE_OFFSETS[axis][i], [lx,ly,lz]/2))  {
 						rotate(majrots[axis]) {
 							cube([fillet*2, fillet*2, size[axis]+eps], center=true);
 						}
 					}
-					translate(vmul(offsets[axis][i], [rx,ry,rz]/2))  {
+					translate(vmul(EDGE_OFFSETS[axis][i], [rx,ry,rz]/2))  {
 						rotate(majrots[axis]) {
-							zrot(180/sides) cylinder(h=size[axis]+eps*2, r=fillet*sc, center=true);
+							zrot(180/sides) cylinder(h=size[axis]+eps*2, r=fillet*sc, center=true, $fn=sides);
 						}
 					}
 				}
 			}
 		}
-		for (za=[0,1], ya=[0,1], xa=[0,1]) {
-			idx = xa + 2*ya + 4*za;
-			if (corners[idx] > 2) {
+
+		// Round corners.
+		for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
+			if (corner_edge_count(edges, [xa,ya,za]) > 2) {
 				difference() {
-					translate([(xa-0.5)*lx, (ya-0.5)*ly, (za-0.5)*lz]) {
+					translate(vmul([xa,ya,za]/2, [lx,ly,lz])) {
 						cube(fillet*2, center=true);
 					}
-					translate([(xa-0.5)*rx, (ya-0.5)*ry, (za-0.5)*rz]) {
+					translate(vmul([xa,ya,za]/2, [rx,ry,rz])) {
 						zrot(180/sides) {
 							rotate_extrude(convexity=2) {
 								difference() {
-									zrot(180/sides) circle(r=fillet*sc*sc);
+									zrot(180/sides) circle(r=fillet*sc*sc, $fn=sides);
 									left(fillet*2) square(fillet*2*2, center=true);
 								}
 							}
