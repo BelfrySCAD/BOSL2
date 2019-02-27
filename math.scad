@@ -380,7 +380,25 @@ function slice(arr,st,end) = let(
 	) [for (i=[s:e-1]) if (e>s) arr[i]];
 
 
+function default(v,dflt) = v==undef? dflt : v;
+
+
+function get_radius(r1=undef, r=undef, d1=undef, d=undef, dflt=undef) = (
+	(r1!=undef)? r1 :
+	(d1!=undef)? d1/2 :
+	(r!=undef)? r :
+	(d!=undef)? d/2 :
+	dflt
+);
+
+
+// Returns the first item in the list that is not undef.
 function first_defined(v) = [for (x = v) if (x!=undef) x][0];
+
+
+
+// If given a vector, returns the vector.  If given a scalar, returns [scalar, scalar, scalar]
+function scalar_vec(v) = v[0]==undef? [v,v,v] : v;
 
 
 
