@@ -31,6 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+include <math.scad>
+include <constants.scad>
+
 printer_slop = 0.20;  // mm
 
 
@@ -116,10 +119,33 @@ module up(z=0) { translate([0,0,z]) children(); }
 //   rot([30,60,0], cp=[0,0,9]) cube([2,4,9]);
 //   rot(30, v=[1,1,0], cp=[0,0,9]) cube([2,4,9]);
 module rot(a=0, v=undef, cp=undef) {
-	if (cp == undef) {
+	if (a == 0) {
+		children();  // May be slightly faster?
+	} else if (cp == undef) {
 		rotate(a=a, v=v) children();
 	} else {
 		translate(cp) rotate(a=a, v=v) translate(-cp) children();
+	}
+}
+
+
+// Rotates children from a starting vector to a target vector.
+//   v1 = Starting vector.
+//   v2 = Target vector.
+//   a = Angle to rotate around v1, before rotating to v2.  Default: 0
+// Example:
+//   rotate_from_to(V_UP, V_RIGHT+V_DOWN) {
+//       cylinder(h=10, d=1, center=false);
+//   }
+module rotate_from_to(v1,v2,a=0) {
+    if (v1 == v2 && a == 0) {
+		children();  // May be slightly faster?
+	} else {
+		axis = normalize(cross(v1,v2));
+		ang = vector3d_angle(v1,v2);
+		rotate(a=ang, v=axis) {
+			rotate(a=a, v=v1) children();
+		}
 	}
 }
 
@@ -130,7 +156,9 @@ module rot(a=0, v=undef, cp=undef) {
 // Example:
 //   xrot(90) cylinder(h=10, r=2, center=true);
 module xrot(a=0, cp=undef) {
-	if (cp == undef) {
+	if (a==0) {
+		children();  // May be slightly faster?
+	} else if (cp == undef) {
 		rotate([a, 0, 0]) children();
 	} else {
 		translate(cp) rotate([a, 0, 0]) translate(-cp) children();
@@ -144,7 +172,9 @@ module xrot(a=0, cp=undef) {
 // Example:
 //   yrot(90) cylinder(h=10, r=2, center=true);
 module yrot(a=0, cp=undef) {
-	if (cp == undef) {
+	if (a==0) {
+		children();  // May be slightly faster?
+	} else if (cp == undef) {
 		rotate([0, a, 0]) children();
 	} else {
 		translate(cp) rotate([0, a, 0]) translate(-cp) children();
@@ -158,10 +188,42 @@ module yrot(a=0, cp=undef) {
 // Example:
 //   zrot(90) cube(size=[9,1,4], center=true);
 module zrot(a=0, cp=undef) {
-	if (cp == undef) {
-		rotate([0, 0, a]) children();
+	if (a==0) {
+		children();  // May be slightly faster?
+	} else if (cp == undef) {
+		rotate(a) children();
 	} else {
-		translate(cp) rotate([0, 0, a]) translate(-cp) children();
+		translate(cp) rotate(a) translate(-cp) children();
+	}
+}
+
+
+
+// Takes a vertically oriented shape, and re-orients and aligns it.
+//   size = The size of the part.
+//   orient = The axis to align to.  Use ORIENT_ constants from constants.scad
+//   align = The side of the origin the part should be aligned with.
+module orient_and_align(size, orient=ORIENT_Z, align=V_ZERO) {
+	if (align == V_ZERO) {
+		// Shortcut past translate() if not needed.
+		if (orient == ORIENT_Z) {
+			children();  // Shortcut past rotation() if not needed.
+		} else {
+			rotate(orient) children();
+		}
+	} else {
+		offset = (
+			(orient==ORIENT_X)? [size[2], size[1], size[0]] :
+			(orient==ORIENT_Y)? [size[0], size[2], size[1]] :
+			size
+		);
+		translate(vmul(offset/2,align)) {
+			if (orient == ORIENT_Z) {
+				children();  // Shortcut past rotation() if not needed.
+			} else {
+				rotate(orient) children();
+			}
+		}
 	}
 }
 
@@ -320,7 +382,7 @@ module mirror_copy(v=[0,0,1], offset=0)
 
 
 // Makes a copy of the children, mirrored across the X axis.
-//   offset = distance to offset children away from the X axis.
+//   offset = distance to offset children along the X axis, away from the origin.
 // Example:
 //   xflip_copy() yrot(30) cylinder(h=10, r=1, center=false);
 //   xflip_copy(offset=10) yrot(30) cylinder(h=10, r=1, center=false);
@@ -328,7 +390,7 @@ module xflip_copy(offset=0) {right(offset) children(); mirror([1,0,0]) right(off
 
 
 // Makes a copy of the children, mirrored across the Y axis.
-//   offset = distance to offset children away from the Y axis.
+//   offset = distance to offset children along the Y axis, away from the origin.
 // Example:
 //   yflip_copy() xrot(30) cylinder(h=10, r=1, center=false);
 //   yflip_copy(offset=10) xrot(30) cylinder(h=10, r=1, center=false);
@@ -336,7 +398,7 @@ module yflip_copy(offset=0) {back(offset) children(); mirror([0,1,0]) back(offse
 
 
 // Makes a copy of the children, mirrored across the Z axis.
-//   offset = distance to offset children away from the Z axis.
+//   offset = distance to offset children along the Z axis, away from the origin.
 // Example:
 //   zflip_copy() yrot(30) cylinder(h=10, r=1, center=false);
 //   zflip_copy(offset=10) yrot(30) cylinder(h=10, r=1, center=false);
