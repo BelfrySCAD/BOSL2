@@ -42,9 +42,12 @@ V_ZERO  = [ 0,  0,  0];
 
 
 // Orientations for cyl(), etc.  Euller angles for rotating a vertical shape into the given orientations.
-ORIENT_X = [  0,90, 0];
-ORIENT_Y = [-90, 0, 0];
-ORIENT_Z = [  0, 0, 0];
+ORIENT_X    = [  0, 90,  0];
+ORIENT_Y    = [-90,  0,  0];
+ORIENT_Z    = [  0,  0,  0];
+ORIENT_XNEG = [  0,-90,  0];
+ORIENT_YNEG = [ 90,  0,  0];
+ORIENT_ZNEG = [  0,180,  0];
 
 
 // Constants for defining edges for chamfer(), etc.
