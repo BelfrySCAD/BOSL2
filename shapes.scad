@@ -302,9 +302,13 @@ module rcube(size=[1,1,1], r=0.25, center=false) {
 //   d = Diameter of cylinder.
 //   d1 = Diameter of the negative (X-, Y-, Z-) end of cylinder.
 //   d2 = Diameter of the positive (X+, Y+, Z+) end of cylinder.
-//   chamfer = The size of the chamfers on the ends of the cylinder, inset from end.  Default: none.
-//   chamfer1 = The size of the chamfer on the axis-negative end of the cylinder, inset from end.  Default: none.
-//   chamfer2 = The size of the chamfer on the axis-positive end of the cylinder, inset from end.  Default: none.
+//   chamfer = The size of the chamfers on the ends of the cylinder.  Default: none.
+//   chamfer1 = The size of the chamfer on the axis-negative end of the cylinder.  Default: none.
+//   chamfer2 = The size of the chamfer on the axis-positive end of the cylinder.  Default: none.
+//   chamfang = The angle in degrees of the chamfers on the ends of the cylinder.
+//   chamfang1 = The angle in degrees of the chamfer on the axis-negative end of the cylinder.
+//   chamfang2 = The angle in degrees of the chamfer on the axis-positive end of the cylinder.
+//   from_end = If true, chamfer is measured from the end of the cylinder, instead of inset from the edge.  Default: false.
 //   fillet = The radius of the fillets on the ends of the cylinder.  Default: none.
 //   fillet1 = The radius of the fillet on the axis-negative end of the cylinder.
 //   fillet2 = The radius of the fillet on the axis-positive end of the cylinder.
@@ -316,8 +320,8 @@ module rcube(size=[1,1,1], r=0.25, center=false) {
 //   cyl(l=100, r=25);
 //   cyl(l=100, d=50, align=V_UP);
 //   cyl(l=100, r=20, circum=true, realign=true);
-//   cyl(l=40, d=50, orient=ORIENT_X, align=V_LEFT, chamfer=10);
-//   cyl(l=100, d1=30, d2=75, orient=ORIENT_Y, fillet=10);
+//   cyl(l=40, d=50, chamfer=10, orient=ORIENT_X, align=V_LEFT);
+//   cyl(l=100, d1=30, d2=75, fillet=10, orient=ORIENT_Y);
 //   cyl(l=30, d2=100, d1=100, fillet1=10, fillet2=5, align=V_UP);
 module cyl(
 	l=1,
@@ -326,7 +330,7 @@ module cyl(
 	chamfer=undef, chamfer1=undef, chamfer2=undef,
 	chamfang=undef, chamfang1=undef, chamfang2=undef,
 	fillet=undef, fillet1=undef, fillet2=undef,
-	circum=false, realign=false,
+	circum=false, realign=false, from_end=false,
 	orient=ORIENT_Z, align=V_ZERO
 ) {
 	r1 = get_radius(r1, r, d1, d, 1);
@@ -336,8 +340,11 @@ module cyl(
 	orient_and_align([r1*2,r1*2,l], orient, align) {
 		zrot(realign? 180/sides : 0) {
 			if (chamfer!=undef || chamfer1!=undef || chamfer2!=undef) {
-				cham1 = (chamfer1!=undef)? chamfer1 : (chamfer2!=undef)? 0 : chamfer;
-				cham2 = (chamfer2!=undef)? chamfer2 : (chamfer1!=undef)? 0 : chamfer;
+				vang = atan2(l, r1-r2)/2;
+				chang1 = 90-first_defined([chamfang1, chamfang, vang]);
+				chang2 = 90-first_defined([chamfang2, chamfang, 90-vang]);
+				cham1 = first_defined([chamfer1, chamfer, 0]) * (from_end? 1 : tan(chang1));
+				cham2 = first_defined([chamfer2, chamfer, 0]) * (from_end? 1 : tan(chang2));
 				if (version_num()>20190000) {
 					assert(cham1 <= r1, "Chamfer is smaller than the radius of the cylinder.");
 					assert(cham1 <= r2, "Chamfer is smaller than the radius of the cylinder.");
@@ -346,15 +353,10 @@ module cyl(
 					assert(cham2 <= r2, "Chamfer is smaller than the radius of the cylinder.");
 					assert(cham2 <= l/2, "Chamfer is smaller than half the length of the cylinder.");
 				}
-				chang1 = (chamfang1!=undef)? chamfang1 : (chamfang!=undef)? chamfang : undef;
-				chang2 = (chamfang2!=undef)? chamfang2 : (chamfang!=undef)? chamfang : undef;
-				vang = atan2(l, r1-r2)/2;
-				hang1 = (chang1!=undef)? chang1 : 90-vang;
-				hang2 = (chang2!=undef)? chang2 : vang;
 				rr1 = sc * (r1 + (r2-r1)*cham1/l);
 				rr2 = sc * (r2 + (r1-r2)*cham2/l);
-				rr0 = rr1 - cham1 / tan(hang1);
-				rr4 = rr2 - cham2 / tan(hang2);
+				rr0 = rr1 - cham1 / tan(chang1);
+				rr4 = rr2 - cham2 / tan(chang2);
 				union() {
 					if (cham2>0) {
 						up(l/2-cham2) cylinder(h=cham2, r1=rr2, r2=max(0.001, rr4), center=false, $fn=sides);
