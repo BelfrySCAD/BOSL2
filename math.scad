@@ -396,6 +396,9 @@ function get_radius(r1=undef, r=undef, d1=undef, d=undef, dflt=undef) = (
 function first_defined(v) = [for (x = v) if (x!=undef) x][0];
 
 
+// Returns true if any item in the given array is not undef.
+function any_defined(v) = len([for (x = v) if (x!=undef) x])>0;
+
 
 // If given a vector, returns the vector.  If given a scalar, returns [scalar, scalar, scalar]
 function scalar_vec(v) = v[0]==undef? [v,v,v] : v;

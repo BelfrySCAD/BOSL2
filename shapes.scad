@@ -318,11 +318,11 @@ module rcube(size=[1,1,1], r=0.25, center=false) {
 //   align = Alignment of the cylinder.  Use the V_ constants from constants.h.  Default: centered.
 // Examples:
 //   cyl(l=100, r=25);
-//   cyl(l=100, d=50, align=V_UP);
-//   cyl(l=100, r=20, circum=true, realign=true);
-//   cyl(l=40, d=50, chamfer=10, orient=ORIENT_X, align=V_LEFT);
-//   cyl(l=100, d1=30, d2=75, fillet=10, orient=ORIENT_Y);
-//   cyl(l=30, d2=100, d1=100, fillet1=10, fillet2=5, align=V_UP);
+//   cyl(l=100, r=25, orient=ORIENT_Y);
+//   cyl(l=100, d1=50, d2=20);
+//   cyl(l=100, r=25, chamfer=10);
+//   cyl(l=100, r=25, fillet=10);
+//   cyl(l=100, d1=50, d2=30, chamfer1=10, fillet2=8, from_end=true);
 module cyl(
 	l=1,
 	r=undef, r1=undef, r2=undef,
@@ -339,87 +339,116 @@ module cyl(
 	sc = circum? 1/cos(180/sides) : 1;
 	orient_and_align([r1*2,r1*2,l], orient, align) {
 		zrot(realign? 180/sides : 0) {
-			if (chamfer!=undef || chamfer1!=undef || chamfer2!=undef) {
+			if (!any_defined([chamfer, chamfer1, chamfer2, fillet, fillet1, fillet2])) {
+				cylinder(h=l, r1=r1*sc, r2=r2*sc, center=true, $fn=sides);
+			} else {
 				vang = atan2(l, r1-r2)/2;
 				chang1 = 90-first_defined([chamfang1, chamfang, vang]);
 				chang2 = 90-first_defined([chamfang2, chamfang, 90-vang]);
-				cham1 = first_defined([chamfer1, chamfer, 0]) * (from_end? 1 : tan(chang1));
-				cham2 = first_defined([chamfer2, chamfer, 0]) * (from_end? 1 : tan(chang2));
+				cham1 = first_defined([chamfer1, chamfer]) * (from_end? 1 : tan(chang1));
+				cham2 = first_defined([chamfer2, chamfer]) * (from_end? 1 : tan(chang2));
+				fil1 = first_defined([fillet1, fillet]);
+				fil2 = first_defined([fillet2, fillet]);
 				if (version_num()>20190000) {
-					assert(cham1 <= r1, "Chamfer is smaller than the radius of the cylinder.");
-					assert(cham1 <= r2, "Chamfer is smaller than the radius of the cylinder.");
-					assert(cham1 <= l/2, "Chamfer is smaller than half the length of the cylinder.");
-					assert(cham2 <= r1, "Chamfer is smaller than the radius of the cylinder.");
-					assert(cham2 <= r2, "Chamfer is smaller than the radius of the cylinder.");
-					assert(cham2 <= l/2, "Chamfer is smaller than half the length of the cylinder.");
-				}
-				rr1 = sc * (r1 + (r2-r1)*cham1/l);
-				rr2 = sc * (r2 + (r1-r2)*cham2/l);
-				rr0 = rr1 - cham1 / tan(chang1);
-				rr4 = rr2 - cham2 / tan(chang2);
-				union() {
-					if (cham2>0) {
-						up(l/2-cham2) cylinder(h=cham2, r1=rr2, r2=max(0.001, rr4), center=false, $fn=sides);
+					if (cham1 != undef) {
+						assert(cham1 <= r1, "chamfer1 is larger than the r1 radius of the cylinder.");
+						assert(cham1 <= l/2, "chamfer1 is larger than half the length of the cylinder.");
 					}
-					up((cham1-cham2)/2) cylinder(h=max(0,l-cham1-cham2)+0.001, r1=rr1, r2=rr2, center=true, $fn=sides);
-					if (cham1>0) {
-						down(l/2-cham1) zflip() cylinder(h=cham1, r1=rr1, r2=max(0.001, rr0), center=false, $fn=sides);
+					if (cham2 != undef) {
+						assert(cham2 <= r2, "chamfer2 is larger than the r2 radius of the cylinder.");
+						assert(cham2 <= l/2, "chamfer2 is larger than half the length of the cylinder.");
+					}
+					if (fil1 != undef) {
+						assert(fil1 <= r1, "fillet1 is larger than the r1 radius of the cylinder.");
+						assert(fil1 <= l/2, "fillet1 is larger than half the length of the cylinder.");
+					}
+					if (fil2 != undef) {
+						assert(fil2 <= r2, "fillet2 is larger than the r1 radius of the cylinder.");
+						assert(fil2 <= l/2, "fillet2 is larger than half the length of the cylinder.");
 					}
 				}
 
-			} else if (fillet!=undef || fillet1!=undef || fillet2!=undef) {
-				fil1 = (fillet1!=undef)? fillet1 : (fillet2!=undef)? 0 : fillet;
-				fil2 = (fillet2!=undef)? fillet2 : (fillet1!=undef)? 0 : fillet;
-				if (version_num()>20190000) {
-					assert(fil1 <= r1, "Fillet is smaller than the radius of the cylinder.");
-					assert(fil1 <= r2, "Fillet is smaller than the radius of the cylinder.");
-					assert(fil1 <= l/2, "Fillet is smaller than half the length of the cylinder.");
-					assert(fil2 <= r1, "Fillet is smaller than the radius of the cylinder.");
-					assert(fil2 <= r2, "Fillet is smaller than the radius of the cylinder.");
-					assert(fil2 <= l/2, "Fillet is smaller than half the length of the cylinder.");
-				}
-				rr1 = sc * (r1+(r2-r1)*(fil1/l));
-				rr2 = sc * (r2+(r1-r2)*(fil2/l));
-				if (fil1==fil2) {
-					if (r1==r2 && fil1 == r1) {
-						hull() {
-							zspread(l-2*fil1) {
-								sphere(r=fil1*sc, $fn=sides);
-							}
-						}
-					} else {
-						minkowski() {
-							cylinder(h=max(0.001,l-fil1-fil2), r1=max(0.001,rr1-fil1), r2=max(0.001,rr2-fil2), center=true, $fn=sides);
-							sphere(r=fil1*sc, $fn=sides);
-						}
-					}
-				} else {
-					fsegs1 = quantup(segs(fil1),4);
-					fsegs2 = quantup(segs(fil2),4);
-					rotate_extrude(convexity=2) {
+				dy1 = first_defined([cham1, fil1, 0]);
+				dy2 = first_defined([cham2, fil2, 0]);
+				maxd = max(r1,r2,l);
+
+				rotate_extrude(convexity=2) {
+					hull() {
 						difference() {
-							hull() {
-								right(rr1-fil1) {
-									difference() {
-										fwd(l/2-fil1) circle(r=max(0.001,fil1), $fn=fsegs1);
-										if (fil1>0) back(fil1) square(2*fil1, center=true);
+							union() {
+								difference() {
+									back(l/2) {
+										if (cham2!=undef && cham2>0) {
+											rr2 = sc * (r2 + (r1-r2)*dy2/l);
+											chlen2 = min(rr2, cham2/sin(chang2));
+											translate([rr2,-cham2]) {
+												rotate(-chang2) {
+													translate([-chlen2,-chlen2]) {
+														square(chlen2, center=false);
+													}
+												}
+											}
+										} else if (fil2!=undef && fil2>0) {
+											translate([r2-fil2*tan(vang),-fil2]) {
+												circle(r=fil2);
+											}
+										} else {
+											translate([r2-0.005,-0.005]) {
+												square(0.01, center=true);
+											}
+										}
 									}
+
+									// Make sure the corner fiddly bits never cross the X axis.
+									fwd(maxd) square(maxd, center=false);
 								}
-								right(rr2-fil2) {
-									difference() {
-										back(l/2-fil2) circle(r=max(0.001,fil2), $fn=fsegs2);
-										if (fil2>0) fwd(fil2) square(2*fil2, center=true);
+								difference() {
+									fwd(l/2) {
+										if (cham1!=undef && cham1>0) {
+											rr1 = sc * (r1 + (r2-r1)*dy1/l);
+											chlen1 = min(rr1, cham1/sin(chang1));
+											echo(vang=vang,chang1=chang2, chang2=chang2);
+											translate([rr1,cham1]) {
+												rotate(chang1) {
+													left(chlen1) {
+														square(chlen1, center=false);
+													}
+												}
+											}
+										} else if (fil1!=undef && fil1>0) {
+											right(r1) {
+												translate([-fil1/tan(vang),fil1]) {
+													fsegs1 = quantup(segs(fil1),4);
+													circle(r=fil1,$fn=fsegs1);
+												}
+											}
+										} else {
+											right(r1-0.01) {
+												square(0.01, center=false);
+											}
+										}
 									}
+
+									// Make sure the corner fiddly bits never cross the X axis.
+									square(maxd, center=false);
 								}
+
+								// Force the hull to extend to the axis
 								right(0.01/2) square([0.01, l], center=true);
 							}
-							left(max(rr1,rr2)/2) square([max(rr1, rr2), l+1], center=true);
+
+							// Clear anything left of the Y axis.
+							left(maxd/2) square(maxd, center=true);
+
+							// Clear anything right of face
+							right((r1+r2)/2) {
+								rotate(90-vang*2) {
+									fwd(maxd/2) square(maxd, center=false);
+								}
+							}
 						}
 					}
 				}
-
-			} else {
-				cylinder(h=l, r1=r1*sc, r2=r2*sc, center=true, $fn=sides);
 			}
 		}
 	}
