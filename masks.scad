@@ -90,18 +90,36 @@ module angle_pie_mask(
 }
 
 
+// Creates a shape that can be used to chamfer a 90 degree edge.
+// Difference it from the object to be chamfered.  The center of
+// the mask object should align exactly with the edge to be chamfered.
+//   l = Height of mask
+//   chamfer = Size of chamfer
+//   orient = Orientation of the cylinder.  Use the ORIENT_ constants from constants.h.  Default: vertical.
+//   align = Alignment of the cylinder.  Use the V_ constants from constants.h.  Default: centered.
+// Example:
+//   difference() {
+//       cube(50);
+//       #chamfer_mask(l=50.1, chamfer=10.0, orient=ORIENT_X, align=V_RIGHT);
+//   }
+module chamfer_mask(l=1.0, chamfer=1.0, orient=ORIENT_Z, align=V_ZERO) {
+	cyl(d=chamfer*2, l=l, align=align, orient=orient, $fn=4);
+}
+
+
 // Creates a shape that can be used to chamfer a 90 degree edge along the Z axis.
 // Difference it from the object to be chamfered.  The center of the mask
 // object should align exactly with the edge to be chamfered.
 //   l = Height of mask
 //   chamfer = size of chamfer
+//   align = Alignment of the cylinder.  Use the V_ constants from constants.h.  Default: centered.
 // Example:
 //   difference() {
 //       down(5) cube(10);
 //       chamfer_mask_z(l=10.1, chamfer=2.0);
 //   }
-module chamfer_mask_z(l=1.0, chamfer=1.0) {
-	zrot(45) cube(size=[chamfer*sqrt(2.0), chamfer*sqrt(2.0), l], center=true);
+module chamfer_mask_z(l=1.0, chamfer=1.0, align=V_ZERO) {
+	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_Z, align=align);
 }
 
 
@@ -110,13 +128,14 @@ module chamfer_mask_z(l=1.0, chamfer=1.0) {
 // object should align exactly with the edge to be chamfered.
 //   l = Height of mask
 //   chamfer = size of chamfer
+//   align = Alignment of the cylinder.  Use the V_ constants from constants.h.  Default: centered.
 // Example:
 //   difference() {
 //       fwd(5) cube(10);
 //       chamfer_mask_y(l=10.1, chamfer=2.0);
 //   }
-module chamfer_mask_y(l=1.0, chamfer=1.0) {
-	xrot(90) chamfer_mask_z(l=l, chamfer=chamfer);
+module chamfer_mask_y(l=1.0, chamfer=1.0, align=V_ZERO) {
+	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_Y, align=align);
 }
 
 
@@ -125,13 +144,14 @@ module chamfer_mask_y(l=1.0, chamfer=1.0) {
 // object should align exactly with the edge to be chamfered.
 //   l = Height of mask
 //   chamfer = size of chamfer
+//   align = Alignment of the cylinder.  Use the V_ constants from constants.h.  Default: centered.
 // Example:
 //   difference() {
 //       left(5) cube(10);
 //       chamfer_mask_x(l=10.1, chamfer=2.0);
 //   }
-module chamfer_mask_x(l=1.0, chamfer=1.0) {
-	yrot(90) chamfer_mask_z(l=l, chamfer=chamfer);
+module chamfer_mask_x(l=1.0, chamfer=1.0, align=V_ZERO) {
+	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_X, align=align);
 }
 
 
@@ -194,28 +214,112 @@ module chamfer(chamfer=1, size=[1,1,1], edges=[[0,0,0,0], [1,1,0,0], [0,0,0,0]])
 }
 
 
-// Create a mask that can be used to bevel/chamfer the end of a cylinder.
-// Difference it from the cylinder to be chamferred.  The center of the mask object
-// should align exactly with the center of the end of the cylinder to be chamferred.
+// Create a mask that can be used to bevel/chamfer the end of a cylindrical region.
+// Difference it from the end of the region to be chamferred.  The center of the mask
+// object should align exactly with the center of the end of the cylindrical region
+// to be chamferred.
 //   r = Radius of cylinder to chamfer.
 //   d = Diameter of cylinder to chamfer. Use instead of r.
 //   chamfer = Size of the edge chamferred, inset from edge. (Default: 0.25)
 //   ang = Angle of chamfer in degrees from vertical.  (Default: 45)
 //   from_end = If true, chamfer size is measured from end of cylinder.  If false, chamfer is measured outset from the radius of the cylinder.  (Default: false)
+//   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: ORIENT_Z.
 // Example:
 //   $fa=2; $fs=2;
 //   difference() {
 //       cylinder(r=50, h=100, center=true);
-//       up(50) chamfer_cylinder_mask(r=50, chamfer=10);
+//       up(50) !chamfer_cylinder_mask(r=50, chamfer=10);
 //   }
-module chamfer_cylinder_mask(r=1.0, d=undef, chamfer=0.25, ang=45, from_end=false)
+module chamfer_cylinder_mask(r=1.0, d=undef, chamfer=0.25, ang=45, from_end=false, orient=ORIENT_Z)
 {
-	h = chamfer * (from_end? 1 : tan(90-ang));
-	r = d==undef? r : d/2;
-	r2 = r - chamfer * (from_end? tan(ang) : 1);
-	difference() {
-		cube([2*r+1, 2*r+1, 2*h], center=true);
-		down(h+0.01) cylinder(r1=r, r2=r2, h=h+0.01, center=false);
+	r = get_radius(r=r, d=d, dflt=1);
+	rot(orient) cylinder_mask(l=chamfer*3, r=r, chamfer2=chamfer, chamfang2=ang, from_end=from_end, ends_only=true, align=V_DOWN);
+}
+
+
+// If passed children, bevels/chamfers and/or rounds/fillets the ends of the
+// cylindrical/conical region specified.  If passed no children, creates
+// a mask to bevel/chamfer and/or fillet the ends of the cylindrical
+// region specified.  Difference the mask from the region.  The center
+// of the mask object should align exactly with the center of the
+// cylindrical region to be chamferred.
+//   l = Length of the cylindrical/conical region.
+//   r = Radius of cylindrical region to chamfer.
+//   r1 = Radius of axis-negative end of the region to chamfer.
+//   r2 = Radius of axis-positive end of the region to chamfer.
+//   d = Diameter of cylindrical region to chamfer.
+//   d1 = Diameter of axis-negative end of the region to chamfer.
+//   d1 = Diameter of axis-positive end of the region to chamfer.
+//   chamfer = Size of the chamfers/bevels. (Default: 0.25)
+//   chamfer1 = Size of the chamfers/bevels for the axis-negative end of the region.
+//   chamfer2 = Size of the chamfers/bevels for the axis-positive end of the region.
+//   chamfang = Angle of chamfers/bevels in degrees from the length axis of the region.  (Default: 45)
+//   chamfang1 = Angle of chamfer/bevel of the axis-negative end of the region, in degrees from the length axis.
+//   chamfang2 = Angle of chamfer/bevel of the axis-positive end of the region, in degrees from the length axis.
+//   fillet = The radius of the fillets on the ends of the region.  Default: none.
+//   fillet1 = The radius of the fillet on the axis-negative end of the region.
+//   fillet2 = The radius of the fillet on the axis-positive end of the region.
+//   circum = If true, region will circumscribe the circle of the given radius/diameter.
+//   from_end = If true, chamfer/bevel size is measured from end of region.  If false, chamfer/bevel is measured outset from the radius of the region.  (Default: false)
+//   overage = The extra thickness of the mask.  Default: `10`.
+//   ends_only = If true, only mask the ends and not around the middle of the cylinder.
+//   orient = Orientation.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the region.  Use the `V_` constants from `constants.scad`.  Default: `V_ZERO`.
+// Example:
+//   $fa=2; $fs=2;
+//   difference() {
+//       cylinder(h=100, r1=60, r2=30, center=true);
+//       cylinder_mask(l=100, r1=60, r2=30, chamfer=10, from_end=true);
+//   }
+//   cylinder_mask(l=100, r=50, chamfer1=10, fillet2=10) {
+//       cube([100,50,100], center=true);
+//   }
+module cylinder_mask(
+	l,
+	r=undef, r1=undef, r2=undef,
+	d=undef, d1=undef, d2=undef,
+	chamfer=undef, chamfer1=undef, chamfer2=undef,
+	chamfang=undef, chamfang1=undef, chamfang2=undef,
+	fillet=undef, fillet1=undef, fillet2=undef,
+	circum=false, from_end=false,
+	overage=10, ends_only=false,
+	orient=ORIENT_Z, align=V_ZERO
+) {
+	r1 = get_radius(r=r, d=d, r1=r1, d1=d1, dflt=1);
+	r2 = get_radius(r=r, d=d, r1=r2, d1=d2, dflt=1);
+	sides = segs(max(r1,r2));
+	sc = circum? 1/cos(180/sides) : 1;
+	vang = atan2(l, r1-r2)/2;
+	ang1 = first_defined([chamfang1, chamfang, vang]);
+	ang2 = first_defined([chamfang2, chamfang, 90-vang]);
+	cham1 = first_defined([chamfer1, chamfer, 0]);
+	cham2 = first_defined([chamfer2, chamfer, 0]);
+	fil1 = first_defined([fillet1, fillet, 0]);
+	fil2 = first_defined([fillet2, fillet, 0]);
+	maxd = max(r1,r2);
+	if ($children > 0) {
+		difference() {
+			children();
+			cylinder_mask(l=l, r1=sc*r1, r2=sc*r2, chamfer1=cham1, chamfer2=cham2, chamfang1=ang1, chamfang2=ang2, fillet1=fil1, fillet2=fil2, orient=orient, from_end=from_end);
+		}
+	} else {
+		orient_and_align([2*r1, 2*r1, l], orient, align) {
+			difference() {
+				union() {
+					chlen1 = cham1 / (from_end? 1 : tan(ang1));
+					chlen2 = cham2 / (from_end? 1 : tan(ang2));
+					if (!ends_only) {
+						cylinder(r=maxd+overage, h=l+2*overage, center=true);
+					} else {
+						if (cham2>0) up(l/2-chlen2) cylinder(r=maxd+overage, h=chlen2+overage, center=false);
+						if (cham1>0) down(l/2+overage) cylinder(r=maxd+overage, h=chlen1+overage, center=false);
+						if (fil2>0) up(l/2-fil2) cylinder(r=maxd+overage, h=fil2+overage, center=false);
+						if (fil1>0) down(l/2+overage) cylinder(r=maxd+overage, h=fil1+overage, center=false);
+					}
+				}
+				cyl(r1=sc*r1, r2=sc*r2, l=l, chamfer1=cham1, chamfer2=cham2, chamfang1=ang1, chamfang2=ang2, from_end=from_end, fillet1=fil1, fillet2=fil2);
+			}
+		}
 	}
 }
 
@@ -456,26 +560,13 @@ module fillet_corner_mask(r=1.0)
 //   $fa=2; $fs=2;
 //   difference() {
 //     cylinder(r=50, h=100, center=true);
-//     up(50) !fillet_cylinder_mask(r=50, fillet=10, xtilt=30);
+//     up(50) fillet_cylinder_mask(r=50, fillet=10, xtilt=30);
 //   }
 module fillet_cylinder_mask(r=1.0, fillet=0.25, xtilt=0, ytilt=0)
 {
-	dhx = 2*r*sin(xtilt);
-	dhy = 2*r*sin(ytilt);
-	dh = hypot(dhy, dhx);
-	down(dh/2) {
-		skew_xz(za=xtilt) {
-			skew_yz(za=ytilt) {
-				down(fillet) {
-					difference() {
-						up((dh+2*fillet)/2) {
-							cube(size=[r*2+10, r*2+10, dh+2*fillet], center=true);
-						}
-						torus(or=r, ir=r-2*fillet);
-						cylinder(r=r-fillet, h=2*fillet, center=true);
-					}
-				}
-			}
+	skew_xz(za=xtilt) {
+		skew_yz(za=ytilt) {
+			cylinder_mask(l=fillet*3, r=r, fillet2=fillet, ends_only=true, align=V_DOWN);
 		}
 	}
 }
