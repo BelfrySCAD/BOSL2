@@ -244,7 +244,7 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, orient=ORIENT_Z, align=V_UP)
 {
 	orient_and_align([0,0,height], orient, align, center) {
-		linear_extrude(height=height, twist=twist, slices=slices) {
+		linear_extrude(height=height, twist=twist, slices=slices, center=true) {
 			difference() {
 				children();
 				offset(r=-wall) {
