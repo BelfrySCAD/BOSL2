@@ -14,13 +14,17 @@ For purposes of the BOSL library, the following terms apply:
 - **Bottom**/**Down**/**Below**: Towards Z-
 - **Top**/**Up**/**Above**: Towards Z+
 
-- **Axis-Positive**: Towards the negative end of the axis the object is oriented on.  IE: X-, Y-, or Z-.
+- **Axis-Positive**: Towards the positive end of the axis the object is oriented on.  IE: X+, Y+, or Z+.
 - **Axis-Negative**: Towards the negative end of the axis the object is oriented on.  IE: X-, Y-, or Z-.
 
-- **Fillet**: A rounding of an interior or exterior edge.
-- **Chamfer**: A bevelling of an interior or exterior edge.
-- **Orientation**: The axis a part should be oriented to.
-- **Alignment**: The side of the origin that the part should be on.  Given as a vector.
+## Common Arguments:
+
+Args    | What it is
+------- | ----------------------------------------
+fillet  | Radius of rounding for interior or exterior edges.
+chamfer | Size of chamfers/bevels for interior or exterior edges.
+orient  | Axis a part should be oriented along.  Given as an XYZ triplet of rotation angles.  It is recommended that you use the `ORIENT_` constants from `constants.scad`.  Default is usually `ORIENT_Z` for vertical orientation.
+align   | Side of the origin that the part should be on.  Given as a vector away from the origin.  It is recommended that you use the `V_` constants from `constants.scad`.  Default is usually `V_ZERO` for centered.
 
 
 ## Examples

@@ -1,5 +1,11 @@
 //////////////////////////////////////////////////////////////////////
-// Torx driver bits
+// LibFile: torx_drive.scad
+//   Torx driver bits
+//   To use, add these lines to the top of your file:
+//   ```
+//   include <BOSL/constants.scad>
+//   use <BOSL/torx_drive.scad>
+//   ```
 //////////////////////////////////////////////////////////////////////
 
 /*
@@ -33,9 +39,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use <transforms.scad>
 use <math.scad>
+include <constants.scad>
+include <compat.scad>
 
 
-// Typical outer diameter of Torx profile.
+// Section: Functions
+
+
+// Function: torx_outer_diam()
+// Description: Get the typical outer diameter of Torx profile.
+// Arguments:
 //   size = Torx size.
 function torx_outer_diam(size) = lookup(size, [
 	[  6,  1.75],
@@ -57,7 +70,9 @@ function torx_outer_diam(size) = lookup(size, [
 ]);
  
 
-// Typical inner diameter of Torx profile.
+// Function: torx_inner_diam()
+// Description: Get typical inner diameter of Torx profile.
+// Arguments:
 //   size = Torx size.
 function torx_inner_diam(size) = lookup(size, [
 	[  6,  1.27],
@@ -79,7 +94,9 @@ function torx_inner_diam(size) = lookup(size, [
 ]);
  
 
-// Typical drive depth.
+// Function: torx_depth()
+// Description: Gets typical drive hole depth.
+// Arguments:
 //   size = Torx size.
 function torx_depth(size) = lookup(size, [
 	[  6,  1.82],
@@ -101,7 +118,9 @@ function torx_depth(size) = lookup(size, [
 ]);
  
 
-// Minor rounding radius of Torx profile.
+// Function: torx_tip_radius()
+// Description: Gets minor rounding radius of Torx profile.
+// Arguments:
 //   size = Torx size.
 function torx_tip_radius(size) = lookup(size, [
 	[  6, 0.132],
@@ -123,7 +142,9 @@ function torx_tip_radius(size) = lookup(size, [
 ]);
 
 
-// Major rounding radius of Torx profile.
+// Function: torx_rounding_radius()
+// Description: Gets major rounding radius of Torx profile.
+// Arguments:
 //   size = Torx size.
 function torx_rounding_radius(size) = lookup(size, [
 	[  6, 0.383],
@@ -145,9 +166,14 @@ function torx_rounding_radius(size) = lookup(size, [
 ]);
 
 
-// Creates a torx bit 2D profile.
+// Section: Modules
+
+
+// Module: torx_drive2d()
+// Description: Creates a torx bit 2D profile.
+// Arguments:
 //   size = Torx size.
-// Examples:
+// Example(2D):
 //   torx_drive2d(size=30, $fa=1, $fs=1);
 module torx_drive2d(size) {
 	od = torx_outer_diam(size);
@@ -181,15 +207,20 @@ module torx_drive2d(size) {
 
 
 
-// Creates a torx bit tip.
+// Module: torx_drive()
+// Description: Creates a torx bit tip.
+// Arguments:
 //   size = Torx size.
 //   l = Length of bit.
 //   center = If true, centers bit vertically.
 // Examples:
 //   torx_drive(size=30, l=10, $fa=1, $fs=1);
-module torx_drive(size, l=5, center=undef) {
-	linear_extrude(height=l, convexity=4, center=center) {
-		torx_drive2d(size);
+module torx_drive(size, l=5, center=undef, orient=ORIENT_Z, align=V_UP) {
+	od = torx_outer_diam(size);
+	orient_and_align([od, od, l], orient, align, center) {
+		linear_extrude(height=l, convexity=4, center=true) {
+			torx_drive2d(size);
+		}
 	}
 }
 

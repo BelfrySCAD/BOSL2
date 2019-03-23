@@ -1,5 +1,11 @@
 //////////////////////////////////////////////////////////////////////
-// Masks and models for NEMA stepper motors.
+// LibFile: nema_steppers.scad
+//   Masks and models for NEMA stepper motors.
+//   To use, add these lines to the top of your file:
+//   ```
+//   include <BOSL/constants.scad>
+//   use <BOSL/nema_steppers.scad>
+//   ```
 //////////////////////////////////////////////////////////////////////
 
 /*
@@ -30,11 +36,20 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-include <transforms.scad>
-include <shapes.scad>
-include <math.scad>
+include <constants.scad>
+use <transforms.scad>
+use <shapes.scad>
+use <math.scad>
+use <compat.scad>
 
 
+// Section: Functions
+
+
+// Function: nema_motor_width()
+// Description: Gets width of NEMA motor of given standard size.
+// Arguments:
+//   size = The standard NEMA motor size.
 function nema_motor_width(size) = lookup(size, [
 		[11.0, 28.2],
 		[14.0, 35.2],
@@ -43,6 +58,11 @@ function nema_motor_width(size) = lookup(size, [
 		[34.0, 86.0],
 	]);
 
+
+// Function: nema_motor_plinth_height()
+// Description: Gets plinth height of NEMA motor of given standard size.
+// Arguments:
+//   size = The standard NEMA motor size.
 function nema_motor_plinth_height(size) = lookup(size, [
 		[11.0, 1.5],
 		[14.0, 2.0],
@@ -51,6 +71,11 @@ function nema_motor_plinth_height(size) = lookup(size, [
 		[34.0, 2.03],
 	]);
 
+
+// Function: nema_motor_plinth_diam()
+// Description: Gets plinth diameter of NEMA motor of given standard size.
+// Arguments:
+//   size = The standard NEMA motor size.
 function nema_motor_plinth_diam(size) = lookup(size, [
 		[11.0, 22.0],
 		[14.0, 22.0],
@@ -59,6 +84,11 @@ function nema_motor_plinth_diam(size) = lookup(size, [
 		[34.0, 73.0],
 	]);
 
+
+// Function: nema_motor_screw_spacing()
+// Description: Gets screw spacing of NEMA motor of given standard size.
+// Arguments:
+//   size = The standard NEMA motor size.
 function nema_motor_screw_spacing(size) = lookup(size, [
 		[11.0, 23.11],
 		[14.0, 26.0],
@@ -67,6 +97,11 @@ function nema_motor_screw_spacing(size) = lookup(size, [
 		[34.0, 69.6],
 	]);
 
+
+// Function: nema_motor_screw_size()
+// Description: Gets mount screw size of NEMA motor of given standard size.
+// Arguments:
+//   size = The standard NEMA motor size.
 function nema_motor_screw_size(size) = lookup(size, [
 		[11.0, 2.6],
 		[14.0, 3.0],
@@ -75,6 +110,11 @@ function nema_motor_screw_size(size) = lookup(size, [
 		[34.0, 5.5],
 	]);
 
+
+// Function: nema_motor_screw_depth()
+// Description: Gets mount screwhole depth of NEMA motor of given standard size.
+// Arguments:
+//   size = The standard NEMA motor size.
 function nema_motor_screw_depth(size) = lookup(size, [
 		[11.0, 3.0],
 		[14.0, 4.5],
@@ -84,7 +124,20 @@ function nema_motor_screw_depth(size) = lookup(size, [
 	]);
 
 
-module nema11_stepper(h=24, shaft=5, shaft_len=20)
+// Section: Motor Models
+
+
+// Module: nema11_stepper()
+// Description: Creates a model of a NEMA 11 stepper motor.
+// Arguments:
+//   h = Length of motor body.  Default: 24mm
+//   shaft = Shaft diameter. Default: 5mm
+//   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 20mm
+//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_DOWN`.
+// Example:
+//   nema11_stepper();
+module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, align=V_DOWN)
 {
 	size = 11;
 	motor_width = nema_motor_width(size);
@@ -94,30 +147,39 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20)
 	screw_size = nema_motor_screw_size(size);
 	screw_depth = nema_motor_screw_depth(size);
 
-	difference() {
-		color([0.4, 0.4, 0.4]) {
-			translate([0, 0, -h/2]) {
-				rrect(size=[motor_width, motor_width, h], r=2, center=true);
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=V_DOWN) {
+		difference() {
+			color([0.4, 0.4, 0.4]) 
+				cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=V_DOWN);
+			color("silver")
+				xspread(screw_spacing)
+					yspread(screw_spacing)
+						cyl(r=screw_size/2, h=screw_depth*2, $fn=max(12,segs(screw_size/2)));
+		}
+		color([0.6, 0.6, 0.6]) {
+			difference() {
+				cylinder(h=plinth_height, d=plinth_diam);
+				cyl(h=plinth_height*3, d=shaft+0.75);
 			}
 		}
 		color("silver")
-			xspread(screw_spacing)
-				yspread(screw_spacing)
-					down(screw_depth/2-0.05)
-						cylinder(r=screw_size/2, h=screw_depth, center=true, $fn=max(12,segs(screw_size/2)));
+			cylinder(h=shaft_len, d=shaft, $fn=max(12,segs(shaft/2)));
 	}
-	color([0.4, 0.4, 0.4])
-		translate([0, 0, plinth_height/2])
-			cylinder(h=plinth_height, r=plinth_diam/2, center=true);
-	color("silver")
-		translate([0, 0, shaft_len/2])
-			cylinder(h=shaft_len, r=shaft/2, center=true, $fn=max(12,segs(shaft/2)));
 }
-//!nema11_stepper();
 
 
 
-module nema14_stepper(h=24, shaft=5, shaft_len=24)
+// Module: nema14_stepper()
+// Description: Creates a model of a NEMA 14 stepper motor.
+// Arguments:
+//   h = Length of motor body.  Default: 24mm
+//   shaft = Shaft diameter. Default: 5mm
+//   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 24mm
+//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_DOWN`.
+// Example:
+//   nema14_stepper();
+module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, align=V_DOWN)
 {
 	size = 14;
 	motor_width = nema_motor_width(size);
@@ -127,30 +189,39 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24)
 	screw_size = nema_motor_screw_size(size);
 	screw_depth = nema_motor_screw_depth(size);
 
-	difference() {
-		color([0.4, 0.4, 0.4]) {
-			translate([0, 0, -h/2]) {
-				rrect(size=[motor_width, motor_width, h], r=2, center=true);
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=V_DOWN) {
+		difference() {
+			color([0.4, 0.4, 0.4])
+				cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=V_DOWN);
+			color("silver")
+				xspread(screw_spacing)
+					yspread(screw_spacing)
+						cyl(d=screw_size, h=screw_depth*2, $fn=max(12,segs(screw_size/2)));
+		}
+		color([0.6, 0.6, 0.6]) {
+			difference() {
+				cylinder(h=plinth_height, d=plinth_diam);
+				cyl(h=plinth_height*3, d=shaft+0.75);
 			}
 		}
 		color("silver")
-			xspread(screw_spacing)
-				yspread(screw_spacing)
-					down(screw_depth/2-0.05)
-						cylinder(r=screw_size/2, h=screw_depth, center=true, $fn=max(12,segs(screw_size/2)));
+			cyl(h=shaft_len, d=shaft, align=V_UP, $fn=max(12,segs(shaft/2)));
 	}
-	color([0.4, 0.4, 0.4])
-		translate([0, 0, plinth_height/2])
-			cylinder(h=plinth_height, r=plinth_diam/2, center=true);
-	color("silver")
-		translate([0, 0, shaft_len/2])
-			cylinder(h=shaft_len, r=shaft/2, center=true, $fn=max(12,segs(shaft/2)));
 }
-//!nema14_stepper();
 
 
 
-module nema17_stepper(h=34, shaft=5, shaft_len=20)
+// Module: nema17_stepper()
+// Description: Creates a model of a NEMA 17 stepper motor.
+// Arguments:
+//   h = Length of motor body.  Default: 34mm
+//   shaft = Shaft diameter. Default: 5mm
+//   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 20mm
+//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_DOWN`.
+// Example:
+//   nema17_stepper();
+module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, align=V_DOWN)
 {
 	size = 17;
 	motor_width = nema_motor_width(size);
@@ -160,49 +231,57 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20)
 	screw_size = nema_motor_screw_size(size);
 	screw_depth = nema_motor_screw_depth(size);
 
-	difference() {
-		color([0.4, 0.4, 0.4]) {
-			down(h/2) {
-				rrect(size=[motor_width, motor_width, h], r=2, center=true);
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=V_DOWN) {
+		difference() {
+			color([0.4, 0.4, 0.4])
+				cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=V_DOWN);
+			color("silver")
+				xspread(screw_spacing)
+					yspread(screw_spacing)
+						cyl(d=screw_size, h=screw_depth*2, $fn=max(12,segs(screw_size/2)));
+		}
+		color([0.6, 0.6, 0.6]) {
+			difference() {
+				cylinder(h=plinth_height, d=plinth_diam);
+				cyl(h=plinth_height*3, d=shaft+0.75);
 			}
 		}
-		color("silver")
-			xspread(screw_spacing)
-				yspread(screw_spacing)
-					down(screw_depth/2-0.05)
-						cylinder(r=screw_size/2, h=screw_depth, center=true, $fn=max(12,segs(screw_size/2)));
-	}
-	color([0.4, 0.4, 0.4])
-		up(plinth_height/2)
-			cylinder(h=plinth_height, r=plinth_diam/2, center=true);
-	color([0.9, 0.9, 0.9]) {
-		down(h-motor_width/12) {
-			fwd(motor_width/2+motor_width/24/2-0.1) {
-				difference() {
-					cube(size=[motor_width/8, motor_width/24, motor_width/8], center=true);
-					xrot(90) {
-						cylinder(d=motor_width/8-2, h=motor_width/6, center=true, $fn=12);
+		color([0.9, 0.9, 0.9]) {
+			down(h-motor_width/12) {
+				fwd(motor_width/2+motor_width/24/2-0.1) {
+					difference() {
+						cube(size=[motor_width/8, motor_width/24, motor_width/8], center=true);
+						cyl(d=motor_width/8-2, h=motor_width/6, orient=ORIENT_Y, $fn=12);
+					}
+				}
+			}
+		}
+		color("silver") {
+			difference() {
+				cylinder(h=shaft_len, d=shaft, $fn=max(12,segs(shaft/2)));
+				up(shaft_len/2+1) {
+					right(shaft-0.75) {
+						cube([shaft, shaft, shaft_len], center=true);
 					}
 				}
 			}
 		}
 	}
-	color("silver") {
-		difference() {
-			cylinder(h=shaft_len, r=shaft/2, $fn=max(12,segs(shaft/2)));
-			up(shaft_len/2+1) {
-				right(shaft_len/2+shaft/2-0.5) {
-					cube(shaft_len, center=true);
-				}
-			}
-		}
-	}
 }
-//!nema17_stepper();
 
 
 
-module nema23_stepper(h=50, shaft=6.35, shaft_len=25)
+// Module: nema23_stepper()
+// Description: Creates a model of a NEMA 23 stepper motor.
+// Arguments:
+//   h = Length of motor body.  Default: 50mm
+//   shaft = Shaft diameter. Default: 6.35mm
+//   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 25mm
+//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_DOWN`.
+// Example:
+//   nema23_stepper();
+module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, align=V_DOWN)
 {
 	size = 23;
 	motor_width = nema_motor_width(size);
@@ -213,37 +292,41 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25)
 	screw_depth = nema_motor_screw_depth(size);
 
 	screw_inset = motor_width - screw_spacing + 1;
-	difference() {
-		union() {
-			color([0.4, 0.4, 0.4]) {
-				translate([0, 0, -h/2]) {
-					rrect(size=[motor_width, motor_width, h], r=2, center=true);
-				}
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=V_DOWN) {
+		difference() {
+			union() {
+				color([0.4, 0.4, 0.4])
+					cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=V_DOWN);
+				color([0.4, 0.4, 0.4])
+					cylinder(h=plinth_height, d=plinth_diam);
+				color("silver")
+					cylinder(h=shaft_len, d=shaft, $fn=max(12,segs(shaft/2)));
 			}
-			color([0.4, 0.4, 0.4])
-				translate([0, 0, plinth_height/2])
-					cylinder(h=plinth_height, r=plinth_diam/2, center=true);
-			color("silver")
-				translate([0, 0, shaft_len/2])
-					cylinder(h=shaft_len, r=shaft/2, center=true, $fn=max(12,segs(shaft/2)));
-		}
-		color([0.4, 0.4, 0.4]) {
-			xspread(screw_spacing) {
-				yspread(screw_spacing) {
-					down(screw_depth/2)
-						cylinder(r=screw_size/2, h=screw_depth+2, center=true, $fn=max(12,segs(screw_size/2)));
-					down(screw_depth+h/2)
-						cube(size=[screw_inset, screw_inset, h], center=true);
+			color([0.4, 0.4, 0.4]) {
+				xspread(screw_spacing) {
+					yspread(screw_spacing) {
+						cyl(d=screw_size, h=screw_depth*3, $fn=max(12,segs(screw_size/2)));
+						down(screw_depth) cuboid([screw_inset, screw_inset, h], align=V_DOWN);
+					}
 				}
 			}
 		}
 	}
 }
-//!nema23_stepper();
 
 
 
-module nema34_stepper(h=75, shaft=12.7, shaft_len=32)
+// Module: nema34_stepper()
+// Description: Creates a model of a NEMA 34 stepper motor.
+// Arguments:
+//   h = Length of motor body.  Default: 75mm
+//   shaft = Shaft diameter. Default: 12.7mm
+//   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 32mm
+//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_DOWN`.
+// Example:
+//   nema34_stepper();
+module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, align=V_DOWN)
 {
 	size = 34;
 	motor_width = nema_motor_width(size);
@@ -254,67 +337,195 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32)
 	screw_depth = nema_motor_screw_depth(size);
 
 	screw_inset = motor_width - screw_spacing + 1;
-	difference() {
-		union() {
-			color([0.4, 0.4, 0.4]) {
-				translate([0, 0, -h/2]) {
-					rrect(size=[motor_width, motor_width, h], r=2, center=true);
-				}
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=V_DOWN) {
+		difference() {
+			union() {
+				color([0.4, 0.4, 0.4])
+					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=V_DOWN);
+				color([0.4, 0.4, 0.4])
+					cylinder(h=plinth_height, d=plinth_diam);
+				color("silver")
+					cylinder(h=shaft_len, d=shaft, $fn=max(24,segs(shaft/2)));
 			}
-			color([0.4, 0.4, 0.4])
-				translate([0, 0, plinth_height/2])
-					cylinder(h=plinth_height, r=plinth_diam/2, center=true);
-			color("silver")
-				translate([0, 0, shaft_len/2])
-					cylinder(h=shaft_len, r=shaft/2, center=true, $fn=max(24,segs(shaft/2)));
-		}
-		color([0.4, 0.4, 0.4]) {
-			xspread(screw_spacing) {
-				yspread(screw_spacing) {
-					down(screw_depth/2)
-						cylinder(r=screw_size/2, h=screw_depth+2, center=true, $fn=max(12,segs(screw_size/2)));
-					down(screw_depth+h/2)
-						cube(size=[screw_inset, screw_inset, h], center=true);
+			color([0.4, 0.4, 0.4]) {
+				xspread(screw_spacing) {
+					yspread(screw_spacing) {
+						cylinder(d=screw_size, h=screw_depth*3, center=true, $fn=max(12,segs(screw_size/2)));
+						down(screw_depth) downcube([screw_inset, screw_inset, h]);
+					}
 				}
 			}
 		}
 	}
 }
-//!nema34_stepper();
 
 
 
-module nema17_mount_holes(depth=5, l=5, slop=printer_slop)
+// Section: Masking Modules
+
+
+
+// Module: nema_mount_holes()
+// Description: Creates a mask to use when making standard NEMA stepper motor mounts.
+// Arguments:
+//   size = The standard NEMA motor size to make a mount for.
+//   depth = The thickness of the mounting hole mask.  Default: 5
+//   l = The length of the slots, for making an adjustable motor mount.  Default: 5
+//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
+//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+// Example:
+//   nema_mount_holes(size=14, depth=5, l=5);
+// Example:
+//   nema_mount_holes(size=17, depth=5, l=5);
+// Example:
+//   nema_mount_holes(size=17, depth=5, l=0);
+module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
 {
-	size = 17;
+	motor_width = nema_motor_width(size);
 	plinth_diam = nema_motor_plinth_diam(size)+slop;
 	screw_spacing = nema_motor_screw_spacing(size);
 	screw_size = nema_motor_screw_size(size)+slop;
 
-	union() {
-		xspread(screw_spacing) {
-			yspread(screw_spacing) {
-				if (l>0) {
-					union() {
-						yspread(l) cylinder(h=depth, d=screw_size, center=true, $fn=max(8,segs(screw_size/2)));
-						cube([screw_size, l, depth], center=true);
+	orient_and_align([motor_width, motor_width, l], orient, align) {
+		union() {
+			xspread(screw_spacing) {
+				yspread(screw_spacing) {
+					if (l>0) {
+						union() {
+							yspread(l) cyl(h=depth, d=screw_size, $fn=max(8,segs(screw_size/2)));
+							cube([screw_size, l, depth], center=true);
+						}
+					} else {
+						cyl(h=depth, d=screw_size, $fn=max(8,segs(screw_size/2)));
 					}
-				} else {
-					cylinder(h=depth, d=screw_size, center=true, $fn=max(8,segs(screw_size/2)));
 				}
 			}
 		}
-	}
-	if (l>0) {
-		union () {
-			yspread(l) cylinder(h=depth, d=plinth_diam, center=true);
-			cube([plinth_diam, l, depth], center=true);
+		if (l>0) {
+			union () {
+				yspread(l) cyl(h=depth, d=plinth_diam);
+				cube([plinth_diam, l, depth], center=true);
+			}
+		} else {
+			cyl(h=depth, d=plinth_diam);
 		}
-	} else {
-		cylinder(h=depth, d=plinth_diam, center=true);
 	}
 }
-//!nema17_mount_holes(depth=5, l=5);
+
+
+
+// Module: nema11_mount_holes()
+// Description: Creates a mask to use when making NEMA 11 stepper motor mounts.
+// Arguments:
+//   depth = The thickness of the mounting hole mask.  Default: 5
+//   l = The length of the slots, for making an adjustable motor mount.  Default: 5
+//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
+//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+// Example:
+//   nema11_mount_holes(depth=5, l=5);
+// Example:
+//   nema11_mount_holes(depth=5, l=0);
+module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
+{
+	nema_mount_holes(size=11, depth=depth, l=l, slop=slop, orient=orient, align=align);
+}
+
+
+
+// Module: nema14_mount_holes()
+// Description: Creates a mask to use when making NEMA 14 stepper motor mounts.
+// Arguments:
+//   depth = The thickness of the mounting hole mask.  Default: 5
+//   l = The length of the slots, for making an adjustable motor mount.  Default: 5
+//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
+//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+// Example:
+//   nema14_mount_holes(depth=5, l=5);
+// Example:
+//   nema14_mount_holes(depth=5, l=0);
+module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
+{
+	nema_mount_holes(size=14, depth=depth, l=l, slop=slop, orient=orient, align=align);
+}
+
+
+
+// Module: nema17_mount_holes()
+// Description: Creates a mask to use when making NEMA 17 stepper motor mounts.
+// Arguments:
+//   depth = The thickness of the mounting hole mask.  Default: 5
+//   l = The length of the slots, for making an adjustable motor mount.  Default: 5
+//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
+//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+// Example:
+//   nema17_mount_holes(depth=5, l=5);
+// Example:
+//   nema17_mount_holes(depth=5, l=0);
+module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
+{
+	nema_mount_holes(size=17, depth=depth, l=l, slop=slop, orient=orient, align=align);
+}
+
+
+
+// Module: nema23_mount_holes()
+// Description: Creates a mask to use when making NEMA 23 stepper motor mounts.
+// Arguments:
+//   depth = The thickness of the mounting hole mask.  Default: 5
+//   l = The length of the slots, for making an adjustable motor mount.  Default: 5
+//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
+//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+// Example:
+//   nema23_mount_holes(depth=5, l=5);
+// Example:
+//   nema23_mount_holes(depth=5, l=0);
+module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
+{
+	nema_mount_holes(size=23, depth=depth, l=l, slop=slop, orient=orient, align=align);
+}
+
+
+
+// Module: nema34_mount_holes()
+// Description: Creates a mask to use when making NEMA 34 stepper motor mounts.
+// Arguments:
+//   depth = The thickness of the mounting hole mask.  Default: 5
+//   l = The length of the slots, for making an adjustable motor mount.  Default: 5
+//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
+//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+// Example:
+//   nema34_mount_holes(depth=5, l=5);
+// Example:
+//   nema34_mount_holes(depth=5, l=0);
+module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
+{
+	nema_mount_holes(size=34, depth=depth, l=l, slop=slop, orient=orient, align=align);
+}
+
+
+
+// Module: nema34_mount_holes()
+// Description: Creates a mask to use when making NEMA 34 stepper motor mounts.
+// Arguments:
+//   depth = The thickness of the mounting hole mask.  Default: 5
+//   l = The length of the slots, for making an adjustable motor mount.  Default: 5
+//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
+//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+// Example:
+//   nema34_mount_holes(depth=5, l=5);
+// Example:
+//   nema34_mount_holes(depth=5, l=0);
+module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
+{
+	nema_mount_holes(size=34, depth=depth, l=l, slop=slop, orient=orient, align=align);
+}
 
 
 

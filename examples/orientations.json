@@ -1,0 +1,11 @@
+{
+    "parameterSets": {
+        "design default values": {
+            "axiscolors": "[\"red\", \"forestgreen\", \"dodgerblue\"]",
+            "axisdiam": "0.5",
+            "axislbllen": "15",
+            "axislen": "9"
+        }
+    },
+    "fileFormatVersion": "1"
+}

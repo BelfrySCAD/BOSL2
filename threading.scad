@@ -1,5 +1,11 @@
 //////////////////////////////////////////////////////////////////////
-// Trapezoidal-threaded (ACME) Screw Rods and Nuts
+// LibFile: threading.scad
+//   Triangular and Trapezoidal-Threaded Screw Rods and Nuts.
+//   To use, add the following lines to the beginning of your file:
+//   ```
+//   include <BOSL/constants.scad>
+//   use <BOSL/threading.scad>
+//   ```
 //////////////////////////////////////////////////////////////////////
 
 /*
@@ -30,20 +36,27 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-include <transforms.scad>
-include <math.scad>
+include <constants.scad>
+use <transforms.scad>
+use <masks.scad>
+use <math.scad>
 
 
 function _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, parts) =
 	astep + asteps * (thread + threads * (part + parts * start));
 
 
-// Constructs a generic trapezoidal threaded screw rod.  This method makes
-// much smoother threads than the naive linear_extrude method.
-// For metric trapezoidal threads, use thread_angle=15 and thread_depth=pitch/2.
-// For ACME threads, use thread_angle=14.5 and thread_depth=pitch/2.
-// For square threads, use thread_angle=0 and thread_depth=pitch/2.
-// For normal screw threads, use thread_angle=30 and thread_depth=pitch*3*sqrt(3)/8.
+// Section: Generic Trapezoidal Threading
+
+// Module: trapezoidal_threaded_rod()
+// Description:
+//   Constructs a generic trapezoidal threaded screw rod.  This method makes
+//   much smoother threads than the naive linear_extrude method.
+//   For metric trapezoidal threads, use thread_angle=15 and thread_depth=pitch/2.
+//   For ACME threads, use thread_angle=14.5 and thread_depth=pitch/2.
+//   For square threads, use thread_angle=0 and thread_depth=pitch/2.
+//   For normal screw threads, use thread_angle=30 and thread_depth=pitch*3*sqrt(3)/8.
+// Arguments:
 //   d = Outer diameter of threaded rod.
 //   l = Length of threaded rod.
 //   pitch = Length between threads.
@@ -52,6 +65,9 @@ function _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, p
 //   left_handed = If true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: true
 //   starts = The number of lead starts.  Default = 1
+//   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the rod.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=ALIGN_POS`.
 // Examples:
 //   trapezoidal_threaded_rod(d=10, l=100, pitch=2, thread_angle=15, $fn=32);
 //   trapezoidal_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, thread_angle=29, $fn=32);
@@ -60,8 +76,8 @@ function _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, p
 //   trapezoidal_threaded_rod(d=16, l=40, pitch=2, thread_angle=30);
 //   trapezoidal_threaded_rod(d=10, l=40, pitch=3, thread_angle=15, left_handed=true, starts=3, $fn=36);
 //   trapezoidal_threaded_rod(d=25, l=100, pitch=10, thread_depth=8/3, thread_angle=50, starts=4, center=false, $fa=2, $fs=2);
-//   trapezoidal_threaded_rod(d=50, l=75, pitch=8, thread_angle=30, starts=3);
-//   trapezoidal_threaded_rod(l=25, d=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1);
+//   trapezoidal_threaded_rod(d=50, l=75, pitch=8, thread_angle=30, starts=3, bevel=true);
+//   trapezoidal_threaded_rod(l=25, d=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1, orient=ORIENT_X, align=ALIGN_POS);
 module trapezoidal_threaded_rod(
 	d=10,
 	l=100,
@@ -70,8 +86,10 @@ module trapezoidal_threaded_rod(
 	thread_depth=undef,
 	left_handed=false,
 	bevel=false,
-	center=true,
-	starts=1
+	starts=1,
+	orient=ORIENT_Z,
+	align=V_CENTER,
+	center=undef
 ) {
 	astep = 360 / quantup(segs(d/2), starts);
 	asteps = ceil(360/astep);
@@ -204,32 +222,26 @@ module trapezoidal_threaded_rod(
 			) otri
 		]
 	);
-	up(center? 0 : l/2) {
+	orient_and_align([d,d,l], orient, align, center) {
 		difference() {
 			polyhedron(points=poly_points, faces=poly_faces, convexity=threads*starts*2);
-			zspread(1.5*l) cube([d+1, d+1, l/2], center=true);
-			if (bevel) {
-				zflip_copy() {
-					down(l/2+0.01) {
-						difference() {
-							up(depth/2-0.01) cube([d*2, d*2, depth+0.01], center=true);
-							cylinder(r1=d/2-depth, r2=d/2, h=depth+0.01, center=false);
-						}
-					}
-				}
-			}
+			zspread(l+4*pitch*starts) cube([d+1, d+1, 4*pitch*starts], center=true);
+			if (bevel) cylinder_mask(d=d, l=l+0.01, chamfer=depth);
 		}
 	}
 }
 
 
-// Constructs a hex nut for a threaded screw rod.  This method makes
-// much smoother threads than the naive linear_extrude method.
-// For metric screw threads, use thread_angle=30 and leave out thread_depth argument.
-// For SAE screw threads, use thread_angle=30 and leave out thread_depth argument.
-// For metric trapezoidal threads, use thread_angle=15 and thread_depth=pitch/2.
-// For ACME threads, use thread_angle=14.5 and thread_depth=pitch/2.
-// For square threads, use thread_angle=0 and thread_depth=pitch/2.
+// Module: trapezoidal_threaded_nut()
+// Description:
+//   Constructs a hex nut for a threaded screw rod.  This method makes
+//   much smoother threads than the naive linear_extrude method.
+//   For metric screw threads, use thread_angle=30 and leave out thread_depth argument.
+//   For SAE screw threads, use thread_angle=30 and leave out thread_depth argument.
+//   For metric trapezoidal threads, use thread_angle=15 and thread_depth=pitch/2.
+//   For ACME threads, use thread_angle=14.5 and thread_depth=pitch/2.
+//   For square threads, use thread_angle=0 and thread_depth=pitch/2.
+// Arguments:
 //   od = diameter of the nut.
 //   id = diameter of threaded rod to screw onto.
 //   h = height/thickness of nut.
@@ -240,8 +252,10 @@ module trapezoidal_threaded_rod(
 //   starts = The number of lead starts.  Default = 1
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   bevel = if true, bevel the thread ends.  Default: true
+//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the nut.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
 // Examples:
-//   trapezoidal_threaded_nut(od=16, id=8, h=8, pitch=2, slop=0.2);
+//   trapezoidal_threaded_nut(od=16, id=8, h=8, pitch=2, slop=0.2, align=V_UP);
 //   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, slop=0.2, left_handed=true);
 //   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1);
 module trapezoidal_threaded_nut(
@@ -254,26 +268,30 @@ module trapezoidal_threaded_nut(
 	left_handed=false,
 	starts=1,
 	bevel=true,
-	slop=0.2
+	slop=PRINTER_SLOP,
+	orient=ORIENT_Z,
+	align=V_CENTER
 ) {
 	depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
-	difference() {
-		cylinder(r=od/2/cos(30), h=h, center=true, $fn=6);
-		zspread(slop, n=slop>0?2:1) {
-			trapezoidal_threaded_rod(
-				d=id+2*slop,
-				l=h+1,
-				pitch=pitch,
-				thread_depth=depth,
-				thread_angle=thread_angle,
-				left_handed=left_handed,
-				starts=starts
-			);
-		}
-		if (bevel) {
-			zflip_copy() {
-				down(h/2+0.01) {
-					cylinder(r1=id/2+slop, r2=id/2+slop-depth, h=depth, center=false);
+	orient_and_align([od/cos(30),od,h], orient, align) {
+		difference() {
+			cylinder(d=od/cos(30), h=h, center=true, $fn=6);
+			zspread(slop, n=slop>0?2:1) {
+				trapezoidal_threaded_rod(
+					d=id+2*slop,
+					l=h+1,
+					pitch=pitch,
+					thread_depth=depth,
+					thread_angle=thread_angle,
+					left_handed=left_handed,
+					starts=starts
+				);
+			}
+			if (bevel) {
+				zflip_copy() {
+					down(h/2+0.01) {
+						cylinder(r1=id/2+slop, r2=id/2+slop-depth, h=depth, center=false);
+					}
 				}
 			}
 		}
@@ -281,30 +299,41 @@ module trapezoidal_threaded_nut(
 }
 
 
+// Section: Triangular Threading
 
-// Constructs a standard metric or UTS threaded screw rod.  This method
-// makes much smoother threads than the naive linear_extrude method.
+// Module: threaded_rod()
+// Description:
+//   Constructs a standard metric or UTS threaded screw rod.  This method
+//   makes much smoother threads than the naive linear_extrude method.
+// Arguments:
 //   d = Outer diameter of threaded rod.
 //   l = length of threaded rod.
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
+//   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the rod.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
 // Examples:
 //   threaded_rod(d=10, l=30, pitch=1.25, left_handed=true, $fa=1, $fs=1);
-module threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false) {
+module threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false, orient=ORIENT_Z, align=V_CENTER) {
 	trapezoidal_threaded_rod(
 		d=d, l=l, pitch=pitch,
 		thread_depth=pitch*3*sqrt(3)/8,
 		thread_angle=30,
 		left_handed=left_handed,
-		bevel=bevel
+		bevel=bevel,
+		orient=orient,
+		align=align
 	);
 }
 
 
 
-// Constructs a hex nut for a metric or UTS threaded screw rod.  This method
-// makes much smoother threads than the naive linear_extrude method.
+// Module: threaded_nut()
+// Description:
+//   Constructs a hex nut for a metric or UTS threaded screw rod.  This method
+//   makes much smoother threads than the naive linear_extrude method.
+// Arguments:
 //   od = diameter of the nut.
 //   id = diameter of threaded rod to screw onto.
 //   h = height/thickness of nut.
@@ -312,32 +341,71 @@ module threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false) {
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
+//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the nut.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
 // Examples:
-//   threaded_nut(od=16, id=8, l=8, pitch=1.25, left_handed=true, slop=0.2, $fa=1, $fs=1);
-module threaded_nut(od=16, id=10, h=10, pitch=2, left_handed=false, bevel=false, slop=0.2) {
-	trapezoidal_threaded_nut(od=od, id=id, h=h, pitch=pitch, thread_angle=30, thread_depth=pitch*3*sqrt(3)/8, left_handed=left_handed, bevel=bevel, slop=slop);
+//   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, slop=0.2, $fa=1, $fs=1);
+module threaded_nut(
+	od=16, id=10, h=10,
+	pitch=2, left_handed=false,
+	bevel=false, slop=0.2,
+	orient=ORIENT_Z, align=V_CENTER
+) {
+	trapezoidal_threaded_nut(
+		od=od, id=id, h=h,
+		pitch=pitch, thread_angle=30,
+		thread_depth=pitch*3*sqrt(3)/8,
+		left_handed=left_handed,
+		bevel=bevel, slop=slop,
+		orient=orient, align=align
+	);
 }
 
 
+// Section: Metric Trapezoidal Threading
 
-// Constructs a metric trapezoidal threaded screw rod.  This method makes much
-// smoother threads than the naive linear_extrude method.
+// Module: metric_trapezoidal_threaded_rod()
+// Description:
+//   Constructs a metric trapezoidal threaded screw rod.  This method makes much
+//   smoother threads than the naive linear_extrude method.
+// Arguments:
 //   d = Outer diameter of threaded rod.
 //   l = length of threaded rod.
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
+//   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the rod.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
 // Examples:
 //   metric_trapezoidal_threaded_rod(d=10, l=30, pitch=2, left_handed=true, $fa=1, $fs=1);
-module metric_trapezoidal_threaded_rod(d=10, l=100, pitch=2, left_handed=false, starts=1, bevel=false) {
-	trapezoidal_threaded_rod(d=d, l=l, pitch=pitch, thread_angle=15, left_handed=left_handed, starts=starts, bevel=bevel);
+module metric_trapezoidal_threaded_rod(
+	d=10, l=100, pitch=2,
+	left_handed=false,
+	starts=1,
+	bevel=false,
+	orient=ORIENT_Z,
+	align=V_CENTER
+) {
+	trapezoidal_threaded_rod(
+		d=d, l=l,
+		pitch=pitch,
+		thread_angle=15,
+		left_handed=left_handed,
+		starts=starts,
+		bevel=bevel,
+		orient=orient,
+		align=align
+	);
 }
 
 
 
-// Constructs a hex nut for a metric trapezoidal threaded screw rod.  This method
-// makes much smoother threads than the naive linear_extrude method.
+// Module: metric_trapezoidal_threaded_nut()
+// Description:
+//   Constructs a hex nut for a metric trapezoidal threaded screw rod.  This method
+//   makes much smoother threads than the naive linear_extrude method.
+// Arguments:
 //   od = diameter of the nut.
 //   id = diameter of threaded rod to screw onto.
 //   h = height/thickness of nut.
@@ -346,16 +414,40 @@ module metric_trapezoidal_threaded_rod(d=10, l=100, pitch=2, left_handed=false, 
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
+//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the nut.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
 // Examples:
-//   metric_trapezoidal_threaded_nut(od=16, d=10, h=10, pitch=2, left_handed=true, bevel=true, $fa=1, $fs=1);
-module metric_trapezoidal_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left_handed=false, starts=1, bevel=false, slop=0.2) {
-	trapezoidal_threaded_nut(od=od, id=id, h=h, pitch=pitch, thread_angle=15, left_handed=left_handed, starts=starts, bevel=bevel, slop=slop);
+//   metric_trapezoidal_threaded_nut(od=16, id=10, h=10, pitch=2, left_handed=true, bevel=true, $fa=1, $fs=1);
+module metric_trapezoidal_threaded_nut(
+	od=17.4, id=10.5, h=10,
+	pitch=3.175,
+	starts=1,
+	left_handed=false,
+	bevel=false,
+	slop=PRINTER_SLOP,
+	orient=ORIENT_Z,
+	align=V_CENTER
+) {
+	trapezoidal_threaded_nut(
+		od=od, id=id, h=h,
+		pitch=pitch, thread_angle=15,
+		left_handed=left_handed,
+		starts=starts,
+		bevel=bevel,
+		slop=slop,
+		orient=orient,
+		align=align
+	);
 }
 
 
+// Section: ACME Trapezoidal Threading
 
-// Constructs an ACME trapezoidal threaded screw rod.  This method makes
-// much smoother threads than the naive linear_extrude method.
+// Module: acme_threaded_rod()
+// Description:
+//   Constructs an ACME trapezoidal threaded screw rod.  This method makes
+//   much smoother threads than the naive linear_extrude method.
+// Arguments:
 //   d = Outer diameter of threaded rod.
 //   l = length of threaded rod.
 //   pitch = Length between threads.
@@ -364,24 +456,40 @@ module metric_trapezoidal_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left
 //   starts = The number of lead starts.  Default = 1
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
+//   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the rod.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
 // Examples:
 //   acme_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, $fn=32);
 //   acme_threaded_rod(d=10, l=40, pitch=2, starts=3, $fa=1, $fs=1);
-module acme_threaded_rod(d=10, l=100, pitch=2, thread_angle=14.5, thread_depth=undef, starts=1, left_handed=false, bevel=false) {
+module acme_threaded_rod(
+	d=10, l=100, pitch=2,
+	thread_angle=14.5,
+	thread_depth=undef,
+	starts=1,
+	left_handed=false,
+	bevel=false,
+	orient=ORIENT_Z,
+	align=V_CENTER
+) {
 	trapezoidal_threaded_rod(
 		d=d, l=l, pitch=pitch,
 		thread_angle=thread_angle,
 		thread_depth=thread_depth,
 		starts=starts,
 		left_handed=left_handed,
-		bevel=bevel
+		bevel=bevel,
+		orient=orient,
+		align=align
 	);
 }
 
 
 
-// Constructs a hex nut for an ACME threaded screw rod.  This method makes
-// much smoother threads than the naive linear_extrude method.
+// Module: acme_threaded_nut()
+// Description:
+//   Constructs a hex nut for an ACME threaded screw rod.  This method makes
+//   much smoother threads than the naive linear_extrude method.
+// Arguments:
 //   od = diameter of the nut.
 //   id = diameter of threaded rod to screw onto.
 //   h = height/thickness of nut.
@@ -391,10 +499,22 @@ module acme_threaded_rod(d=10, l=100, pitch=2, thread_angle=14.5, thread_depth=u
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
+//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the nut.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
 // Examples:
 //   acme_threaded_nut(od=16, id=3/8*25.4, h=8, pitch=1/8*25.4, slop=0.2);
 //   acme_threaded_nut(od=16, id=10, h=10, pitch=2, starts=3, slop=0.2, $fa=1, $fs=1);
-module acme_threaded_nut(od, id, h, pitch, thread_angle=14.5, thread_depth=undef, starts=1, left_handed=false, bevel=false, slop=0.2) {
+module acme_threaded_nut(
+	od, id, h, pitch,
+	thread_angle=14.5,
+	thread_depth=undef,
+	starts=1,
+	left_handed=false,
+	bevel=false,
+	slop=PRINTER_SLOP,
+	orient=ORIENT_Z,
+	align=V_CENTER
+) {
 	trapezoidal_threaded_nut(
 		od=od, id=id, h=h, pitch=pitch,
 		thread_depth=thread_depth,
@@ -402,30 +522,56 @@ module acme_threaded_nut(od, id, h, pitch, thread_angle=14.5, thread_depth=undef
 		left_handed=left_handed,
 		bevel=bevel,
 		starts=starts,
-		slop=slop
+		slop=slop,
+		orient=orient,
+		align=align
 	);
 }
 
 
+// Section: Square Threading
 
-// Constructs a square profile threaded screw rod.  This method makes
-// much smoother threads than the naive linear_extrude method.
+// Module: square_threaded_rod()
+// Description:
+//   Constructs a square profile threaded screw rod.  This method makes
+//   much smoother threads than the naive linear_extrude method.
+// Arguments:
 //   d = Outer diameter of threaded rod.
 //   l = length of threaded rod.
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
+//   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the rod.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
 // Examples:
 //   square_threaded_rod(d=10, l=30, pitch=2, starts=2, $fn=32);
-module square_threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false, starts=1) {
-	trapezoidal_threaded_rod(d=d, l=l, pitch=pitch, thread_angle=0, left_handed=left_handed, bevel=bevel, starts=starts);
+module square_threaded_rod(
+	d=10, l=100, pitch=2,
+	left_handed=false,
+	bevel=false,
+	starts=1,
+	orient=ORIENT_Z,
+	align=V_CENTER
+) {
+	trapezoidal_threaded_rod(
+		d=d, l=l, pitch=pitch,
+		thread_angle=0,
+		left_handed=left_handed,
+		bevel=bevel,
+		starts=starts,
+		orient=orient,
+		align=align
+	);
 }
 
 
 
-// Constructs a hex nut for a square profile threaded screw rod.  This method
-// makes much smoother threads than the naive linear_extrude method.
+// Module: square_threaded_nut()
+// Description:
+//   Constructs a hex nut for a square profile threaded screw rod.  This method
+//   makes much smoother threads than the naive linear_extrude method.
+// Arguments:
 //   od = diameter of the nut.
 //   id = diameter of threaded rod to screw onto.
 //   h = height/thickness of nut.
@@ -434,16 +580,29 @@ module square_threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false,
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
+//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the nut.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
 // Examples:
 //   square_threaded_nut(od=16, id=10, h=10, pitch=2, starts=2, slop=0.15, $fn=32);
-module square_threaded_nut(od=17.4, id=10.5, h=10, pitch=3.175, left_handed=false, bevel=false, starts=1, slop=0.2) {
+module square_threaded_nut(
+	od=17.4, id=10.5, h=10,
+	pitch=3.175,
+	left_handed=false,
+	bevel=false,
+	starts=1,
+	slop=PRINTER_SLOP,
+	orient=ORIENT_Z,
+	align=V_CENTER
+) {
 	trapezoidal_threaded_nut(
 		od=od, id=id, h=h, pitch=pitch,
 		thread_angle=0,
 		left_handed=left_handed,
 		bevel=bevel,
 		starts=starts,
-		slop=slop
+		slop=slop,
+		orient=orient,
+		align=align
 	);
 }
 

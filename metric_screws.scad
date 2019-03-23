@@ -1,5 +1,11 @@
 //////////////////////////////////////////////////////////////////////
-// Screws, Bolts, and Nuts.
+// LibFile: metric_screws.scad
+//   Screws, Bolts, and Nuts.
+//   To use, include the following lines at the top of your file:
+//   ```
+//   include <BOSL/constants.scad>
+//   use <BOSL/metric_screws.scad>
+//   ```
 //////////////////////////////////////////////////////////////////////
 
 /*
@@ -31,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+include <constants.scad>
 use <transforms.scad>
 use <shapes.scad>
 use <threading.scad>
@@ -39,6 +46,11 @@ use <torx_drive.scad>
 use <math.scad>
 
 
+// Section: Functions
+
+
+// Function: get_metric_bolt_head_size()
+// Description: Returns the diameter of a typical metric bolt's head, based on the bolt `size`.
 function get_metric_bolt_head_size(size) = lookup(size, [
 		[ 3.0,  5.5],
 		[ 4.0,  7.0],
@@ -62,6 +74,8 @@ function get_metric_bolt_head_size(size) = lookup(size, [
 	]);
 
 
+// Function: get_metric_bolt_head_height()
+// Description: Returns the height of a typical metric bolt's head, based on the bolt `size`.
 function get_metric_bolt_head_height(size) = lookup(size, [
 		[ 1.6,  1.23],
 		[ 2.0,  1.53],
@@ -86,6 +100,8 @@ function get_metric_bolt_head_height(size) = lookup(size, [
 	]);
 
 
+// Function: get_metric_socket_cap_diam()
+// Description: Returns the diameter of a typical metric socket cap bolt's head, based on the bolt `size`.
 function get_metric_socket_cap_diam(size) = lookup(size, [
 		[ 1.6,  3.0],
 		[ 2.0,  3.8],
@@ -114,6 +130,8 @@ function get_metric_socket_cap_diam(size) = lookup(size, [
 	]);
 
 
+// Function: get_metric_socket_cap_height()
+// Description: Returns the height of a typical metric socket cap bolt's head, based on the bolt `size`.
 function get_metric_socket_cap_height(size) = lookup(size, [
 		[ 1.6,  1.7],
 		[ 2.0,  2.0],
@@ -142,6 +160,8 @@ function get_metric_socket_cap_height(size) = lookup(size, [
 	]);
 
 
+// Function: get_metric_socket_cap_socket_size()
+// Description: Returns the diameter of a typical metric socket cap bolt's hex drive socket, based on the bolt `size`.
 function get_metric_socket_cap_socket_size(size) = lookup(size, [
 		[ 1.6,  1.5],
 		[ 2.0,  1.5],
@@ -170,6 +190,8 @@ function get_metric_socket_cap_socket_size(size) = lookup(size, [
 	]);
 
 
+// Function: get_metric_socket_cap_socket_depth()
+// Description: Returns the depth of a typical metric socket cap bolt's hex drive socket, based on the bolt `size`.
 function get_metric_socket_cap_socket_depth(size) = lookup(size, [
 		[ 1.6,  0.7],
 		[ 2.0,  1.0],
@@ -198,6 +220,8 @@ function get_metric_socket_cap_socket_depth(size) = lookup(size, [
 	]);
 
 
+// Function: get_metric_iso_coarse_thread_pitch()
+// Description: Returns the ISO metric standard coarse threading pitch for a given bolt `size`.
 function get_metric_iso_coarse_thread_pitch(size) = lookup(size, [
 		[ 1.6, 0.35],
 		[ 2.0, 0.40],
@@ -229,6 +253,8 @@ function get_metric_iso_coarse_thread_pitch(size) = lookup(size, [
 	]);
 
 
+// Function: get_metric_iso_fine_thread_pitch()
+// Description: Returns the ISO metric standard fine threading pitch for a given bolt `size`.
 function get_metric_iso_fine_thread_pitch(size) = lookup(size, [
 		[ 1.6, 0.35],
 		[ 2.0, 0.40],
@@ -260,6 +286,8 @@ function get_metric_iso_fine_thread_pitch(size) = lookup(size, [
 	]);
 
 
+// Function: get_metric_iso_superfine_thread_pitch()
+// Description: Returns the ISO metric standard superfine threading pitch for a given bolt `size`.
 function get_metric_iso_superfine_thread_pitch(size) = lookup(size, [
 		[ 1.6, 0.35],
 		[ 2.0, 0.40],
@@ -291,6 +319,8 @@ function get_metric_iso_superfine_thread_pitch(size) = lookup(size, [
 	]);
 
 
+// Function: get_metric_jis_thread_pitch()
+// Description: Returns the JIS metric standard threading pitch for a given bolt `size`.
 function get_metric_jis_thread_pitch(size) = lookup(size, [
 		[ 2.0, 0.40],
 		[ 2.5, 0.45],
@@ -309,6 +339,8 @@ function get_metric_jis_thread_pitch(size) = lookup(size, [
 	]);
 
 
+// Function: get_metric_nut_size()
+// Description: Returns the typical metric nut flat-to-flat diameter for a given bolt `size`.
 function get_metric_nut_size(size) = lookup(size, [
 		[ 2.0,  4.0],
 		[ 2.5,  5.0],
@@ -327,6 +359,8 @@ function get_metric_nut_size(size) = lookup(size, [
 	]);
 
 
+// Function: get_metric_nut_thickness()
+// Description: Returns the typical metric nut thickness for a given bolt `size`.
 function get_metric_nut_thickness(size) = lookup(size, [
 		[ 1.6,  1.3],
 		[ 2.0,  1.6],
@@ -353,53 +387,105 @@ function get_metric_nut_thickness(size) = lookup(size, [
 	]);
 
 
-// Makes a very simple screw model, useful for making screwholes.
+
+// Section: Modules
+
+
+// Module: screw()
+// Description:
+//   Makes a very simple screw model, useful for making screwholes.
+// Usage:
+//   screw(screwsize, screwlen, headsize, headlen, [countersunk], [orient], [align])
+// Arguments:
 //   screwsize = diameter of threaded part of screw.
 //   screwlen = length of threaded part of screw.
 //   headsize = diameter of the screw head.
 //   headlen = length of the screw head.
 //   countersunk = If true, center from cap's top instead of it's bottom.
-// Example:
+//   orient = Orientation of the screw.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the screw.  Use the `V_` constants from `constants.scad` or `"sunken"`, or `"base"`.  Default: `"base"`.
+// Examples:
 //   screw(screwsize=3,screwlen=10,headsize=6,headlen=3,countersunk=true);
+//   screw(screwsize=3,screwlen=10,headsize=6,headlen=3, align="base");
 module screw(
 	screwsize=3,
 	screwlen=10,
 	headsize=6,
 	headlen=3,
 	pitch=undef,
-	countersunk=false
+	countersunk=false,
+	orient=ORIENT_Z,
+	align="base"
 ) {
 	sides = max(12, segs(screwsize/2));
-	down(countersunk? headlen-0.01 : 0) {
-		down(screwlen/2) {
-			if (pitch == undef) {
-				cylinder(r=screwsize/2, h=screwlen+0.05, center=true, $fn=sides);
-			} else {
-				threaded_rod(d=screwsize, l=screwlen+0.05, pitch=pitch, $fn=sides);
+	algn = countersunk? ALIGN_NEG : align;
+	alignments = [
+		["base",   [0,0,-headlen/2+screwlen/2]],
+		["sunken", [0,0,(headlen+screwlen)/2-0.01]]
+	];
+	orient_and_align([headsize, headsize, headlen+screwlen], orient, algn, alignments=alignments) {
+		down(headlen/2-screwlen/2) {
+			down(screwlen/2) {
+				if (pitch == undef) {
+					cylinder(r=screwsize/2, h=screwlen+0.05, center=true, $fn=sides);
+				} else {
+					threaded_rod(d=screwsize, l=screwlen+0.05, pitch=pitch, $fn=sides);
+				}
 			}
+			up(headlen/2) cylinder(r=headsize/2, h=headlen, center=true, $fn=sides*2);
 		}
-		up(headlen/2) cylinder(r=headsize/2, h=headlen, center=true, $fn=sides*2);
 	}
 }
 
 
-// Makes a standard metric screw model.
-//   size = diameter of threaded part of screw.
-//   headtype = One of "hex", "pan", "button", "round", "countersunk", "oval", "socket".  Default: "socket"
-//   l = length of screw, except for the head.
+// Module: metric_bolt()
+// Description:
+//   Makes a standard metric screw model.
+// Arguments:
+//   size = Diameter of threaded part of screw.
+//   headtype = One of `"hex"`, `"pan"`, `"button"`, `"round"`, `"countersunk"`, `"oval"`, `"socket`".  Default: `"socket"`
+//   l = Length of screw, except for the head.
 //   shank = Length of unthreaded portion of the shaft.
 //   pitch = If given, render threads of the given pitch.  If 0, then no threads.  Overrides coarse argument.
 //   details = If true model should be rendered with extra details.  (Default: false)
 //   coarse = If true, make coarse threads instead of fine threads.  Default = true
-//   flange = radius of flange beyond the head.  Default = 0 (no flange)
+//   flange = Radius of flange beyond the head.  Default = 0 (no flange)
 //   phillips = If given, the size of the phillips drive hole to add.  (ie: "#1", "#2", or "#3")
 //   torx = If given, the size of the torx drive hole to add.  (ie: 10, 20, 30, etc.)
-// Examples:
-//   metric_bolt(headtype="pan", size=10, l=15, details=true, phillips="#2");
-//   metric_bolt(headtype="countersunk", size=10, l=15, details=true, phillips="#2");
-//   metric_bolt(headtype="socket", size=10, l=15, flange=4, coarse=false, shank=5, details=true);
-//   metric_bolt(headtype="hex", size=10, l=15, flange=4, coarse=false, shank=5, details=true, phillips="#2");
-//   metric_bolt(headtype="hex", size=10, l=15, flange=4, coarse=false, shank=5, details=true, torx=50);
+//   orient = Orientation of the bolt.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the bolt.  Use the `V_` constants from `constants.scad` or `"sunken"`, `"base"`, or `"shank"`.  Default: `"base"`.
+// Example: Bolt Head Types
+//   ydistribute(40) {
+//       xdistribute(30) {
+//           // Front Row, Left to Right
+//           metric_bolt(headtype="pan", size=10, l=15, details=true, phillips="#2");
+//           metric_bolt(headtype="button", size=10, l=15, details=true, phillips="#2");
+//           metric_bolt(headtype="round", size=10, l=15, details=true, phillips="#2");
+//       }
+//       xdistribute(30) {
+//           // Back Row, Left to Right
+//           metric_bolt(headtype="socket", size=10, l=15, details=true);
+//           metric_bolt(headtype="hex", size=10, l=15, details=true, phillips="#2");
+//           metric_bolt(headtype="countersunk", size=10, l=15, details=true, phillips="#2");
+//           metric_bolt(headtype="oval", size=10, l=15, details=true, phillips="#2");
+//       }
+//   }
+// Example: Details
+//   metric_bolt(size=10, l=15, details=true, $fn=32);
+// Example: No Details Except Threads
+//   metric_bolt(size=10, l=15);
+// Example: No Details, No Threads
+//   metric_bolt(size=10, l=15, pitch=0);
+// Example: Fine Threads
+//   metric_bolt(size=10, l=15, coarse=false);
+// Example: Flange
+//   metric_bolt(size=10, l=15, flange=5);
+// Example: Shank
+//   metric_bolt(size=10, l=25, shank=10);
+// Example: Hex Head with Phillips
+//   metric_bolt(headtype="hex", size=10, l=15, phillips="#2");
+// Example: Hex Head with Torx
+//   metric_bolt(headtype="hex", size=10, l=15, torx=50);
 module metric_bolt(
 	headtype="socket",
 	size=3,
@@ -410,7 +496,9 @@ module metric_bolt(
 	coarse=true,
 	phillips=undef,
 	torx=undef,
-	flange=0
+	flange=0,
+	orient=ORIENT_Z,
+	align="base"
 ) {
 	D = headtype != "hex"?
 		get_metric_socket_cap_diam(size) :
@@ -427,122 +515,157 @@ module metric_bolt(
 	bevtop = (tcirc-D)/2;
 	bevbot = P/2;
 
+	//algn = (headtype == "countersunk" || headtype == "oval")? (D-size)/2 : 0;
+	headlen = (
+		(headtype == "pan" || headtype == "round" || headtype == "button")? H*0.75 :
+		(headtype == "countersunk")? (D-size)/2 :
+		(headtype == "oval")? ((D-size)/2 + D/2/3) :
+		H
+	);
+	base = l/2 - headlen/2;
+	sunklen = (
+		(headtype == "oval")? (D-size)/2 :
+		headlen-0.001
+	);
+
+	alignments = [
+		["sunken", [0,0,base+sunklen]],
+		["base",   [0,0,base]],
+		["shank",  [0,0,base-shank]]
+	];
+
 	color("silver")
-	down(headtype == "countersunk" || headtype == "oval"? (D-size)/2 : 0) {
-		difference() {
-			union() {
-				// Head
-				if (headtype == "hex") {
-					difference() {
-						cylinder(d=tcirc, h=H, center=false, $fn=6);
+	orient_and_align([D+flange, D+flange, headlen+l], orient, align, alignments=alignments) {
+		up(base) {
+			difference() {
+				union() {
+					// Head
+					if (headtype == "hex") {
+						difference() {
+							cylinder(d=tcirc, h=H, center=false, $fn=6);
 
-						// Bevel hex nut top
-						if (details) {
-							up(H-bevtop) {
+							// Bevel hex nut top
+							if (details) {
+								up(H-bevtop) {
+									difference() {
+										upcube([tcirc+1, tcirc+1, bevtop+0.5]);
+										down(0.01) cylinder(d1=tcirc, d2=tcirc-bevtop*2, h=bevtop+0.02, center=false);
+									}
+								}
+							}
+						}
+					} else if (headtype == "socket") {
+						sockw = get_metric_socket_cap_socket_size(size);
+						sockd = get_metric_socket_cap_socket_depth(size);
+						difference() {
+							cylinder(d=D, h=H, center=false);
+							up(H-sockd) cylinder(h=sockd+0.1, d=sockw/cos(30), center=false, $fn=6);
+							if (details) {
+								kcnt = 36;
+								zring(n=kcnt, r=D/2) up(H/3) upcube([PI*D/kcnt/2, PI*D/kcnt/2, H]);
+							}
+						}
+					} else if (headtype == "pan") {
+						cyl(l=H*0.75, d=D, fillet2=H*0.75/2, align=V_UP);
+					} else if (headtype == "round") {
+						top_half() zscale(H*0.75/D*2) sphere(d=D);
+					} else if (headtype == "button") {
+						up(H*0.75/3) top_half() zscale(H*0.75*2/3/D*2) sphere(d=D);
+						cylinder(d=D, h=H*0.75/3+0.01, center=false);
+					} else if (headtype == "countersunk") {
+						cylinder(h=(D-size)/2, d1=size, d2=D, center=false);
+					} else if (headtype == "oval") {
+						up((D-size)/2) top_half() zscale(0.333) sphere(d=D);
+						cylinder(h=(D-size)/2, d1=size, d2=D, center=false);
+					}
+
+					// Flange
+					if (flange>0) {
+						up(headtype == "countersunk" || headtype == "oval"? (D-size)/2 : 0) {
+							cylinder(d=D+flange, h=H/8, center=false);
+							up(H/8) cylinder(d1=D+flange, d2=D, h=H/8, center=false);
+						}
+					}
+
+					// Unthreaded Shank
+					if (tlen < l) {
+						down(l-tlen) cylinder(d=size, h=l-tlen+0.05, center=false, $fn=sides);
+					}
+
+					// Threads
+					down(l) {
+						difference() {
+							up(tlen/2+0.05) {
+								if (tlen > 0) {
+									if (P > 0) {
+										threaded_rod(d=size, l=tlen+0.05, pitch=P, $fn=sides);
+									} else {
+										cylinder(d=size, h=tlen+0.05, $fn=sides, center=true);
+									}
+								}
+							}
+
+							// Bevel bottom end of threads
+							if (details) {
 								difference() {
-									upcube([tcirc+1, tcirc+1, bevtop+0.5]);
-									down(0.01) cylinder(d1=tcirc, d2=tcirc-bevtop*2, h=bevtop+0.02, center=false);
+									down(0.5) upcube([size+1, size+1, bevbot+0.5]);
+									cylinder(d1=size-bevbot*2, d2=size, h=bevbot+0.01, center=false);
 								}
 							}
 						}
 					}
-				} else if (headtype == "socket") {
-					sockw = get_metric_socket_cap_socket_size(size);
-					sockd = get_metric_socket_cap_socket_depth(size);
-					difference() {
-						cylinder(d=D, h=H, center=false);
-						up(H-sockd) cylinder(h=sockd+0.1, d=sockw/cos(30), center=false, $fn=6);
-						if (details) {
-							kcnt = 36;
-							zring(n=kcnt, r=D/2) up(H/3) upcube([PI*D/kcnt/2, PI*D/kcnt/2, H]);
-						}
-					}
-				} else if (headtype == "pan") {
-					top_half() rcylinder(h=H*0.75*2, d=D, fillet=H/2, center=true);
-				} else if (headtype == "round") {
-					top_half() zscale(H*0.75/D*2) sphere(d=D);
-				} else if (headtype == "button") {
-					up(H*0.75/3) top_half() zscale(H*0.75*2/3/D*2) sphere(d=D);
-					cylinder(d=D, h=H*0.75/3+0.01, center=false);
-				} else if (headtype == "countersunk") {
-					cylinder(h=(D-size)/2, d1=size, d2=D, center=false);
-				} else if (headtype == "oval") {
-					up((D-size)/2) top_half() zscale(0.333) sphere(d=D);
-					cylinder(h=(D-size)/2, d1=size, d2=D, center=false);
 				}
 
-				// Flange
-				if (flange>0) {
-					up(headtype == "countersunk" || headtype == "oval"? (D-size)/2 : 0) {
-						cylinder(d=D+flange, h=H/8, center=false);
-						up(H/8) cylinder(d1=D+flange, d2=D, h=H/8, center=false);
+				// Phillips drive hole
+				if (headtype != "socket" && phillips != undef) {
+					down(headtype != "hex"? H/6 : 0) {
+						phillips_drive(size=phillips, shaft=D);
 					}
 				}
 
-				// Unthreaded Shank
-				if (tlen < l) {
-					down(l-tlen) cylinder(d=size, h=l-tlen+0.05, center=false, $fn=sides);
+				// Torx drive hole
+				if (headtype != "socket" && torx != undef) {
+					up(1) torx_drive(size=torx, l=H+0.1, center=false);
 				}
-
-				// Threads
-				down(l) {
-					difference() {
-						up(tlen/2+0.05) {
-							if (tlen > 0) {
-								if (P > 0) {
-									threaded_rod(d=size, l=tlen+0.05, pitch=P, $fn=sides);
-								} else {
-									cylinder(d=size, h=tlen+0.05, $fn=sides, center=true);
-								}
-							}
-						}
-
-						// Bevel bottom end of threads
-						if (details) {
-							difference() {
-								down(0.5) upcube([size+1, size+1, bevbot+0.5]);
-								cylinder(d1=size-bevbot*2, d2=size, h=bevbot+0.01, center=false);
-							}
-						}
-					}
-				}
-			}
-
-			// Phillips drive hole
-			if (headtype != "socket" && phillips != undef) {
-				down(headtype != "hex"? H/6 : 0) {
-					phillips_drive(size=phillips, shaft=D);
-				}
-			}
-
-			// Torx drive hole
-			if (headtype != "socket" && torx != undef) {
-				up(1) torx_drive(size=torx, l=H+0.1, center=false);
 			}
 		}
 	}
 }
 
 
-// Makes a model of a standard nut for a standard metric screw.
+// Module: metric_nut()
+// Description:
+//   Makes a model of a standard nut for a standard metric screw.
+// Arguments:
 //   size = standard metric screw size in mm. (Default: 3)
 //   hole = include the hole in the nut.  (Default: true)
 //   pitch = pitch of threads in the hole.  No threads if not given.
 //   flange = radius of flange beyond the head.  Default = 0 (no flange)
 //   details = true if model should be rendered with extra details.  (Default: false)
-//   center = If true, center the nut at the origin, otherwise on top of the XY plane.  Default = false.
-// Example:
-//   metric_nut(size=6, hole=false);
-//   metric_nut(size=8, hole=true);
-//   metric_nut(size=6, hole=true, pitch=1, details=true, center=true);
-//   metric_nut(size=8, hole=true, pitch=1, details=true, flange=3, center=true);
+//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the nut.  Use the `V_` constants from `constants.scad`.  Default: `V_UP`.
+//   center = If true, centers the nut at the origin.  If false, sits on top of XY plane.  Overrides `align` if given.
+// Example: No details, No Hole.  Useful for a mask.
+//   metric_nut(size=10, hole=false);
+// Example:  Hole, with No Threads
+//   metric_nut(size=10, hole=true);
+// Example:  Threads
+//   metric_nut(size=10, hole=true, pitch=1.5);
+// Example:  Details
+//   metric_nut(size=10, hole=true, pitch=1.5, details=true);
+// Example:  Centered
+//   metric_nut(size=10, hole=true, pitch=1.5, details=true, center=true);
+// Example:  Flange
+//   metric_nut(size=10, hole=true, pitch=1.5, flange=3, details=true);
 module metric_nut(
 	size=3,
 	hole=true,
 	pitch=undef,
 	details=false,
 	flange=0,
-	center=false
+	center=undef,
+	orient=ORIENT_Z,
+	align=V_UP
 ) {
 	H = get_metric_nut_thickness(size);
 	D = get_metric_nut_size(size);
@@ -550,9 +673,9 @@ module metric_nut(
 	nutfn = max(12, segs(D/2));
 	dcirc = D/cos(30);
 	bevtop = (dcirc - D)/2;
-	offset = (center == true)? 0 : H/2;
+
 	color("silver")
-	up(offset) {
+	orient_and_align([dcirc+flange, dcirc+flange, H], orient, align, center) {
 		difference() {
 			union() {
 				difference() {

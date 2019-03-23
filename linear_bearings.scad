@@ -1,5 +1,11 @@
 //////////////////////////////////////////////////////////////////////
-// Linear Bearings.
+// LibFile: linear_bearings.scad
+//   Linear Bearing clips/holders.
+//   To use, add these lines to the top of your file:
+//   ```
+//   include <BOSL/constants.scad>
+//   use <BOSL/linear_bearings.scad>
+//   ```
 //////////////////////////////////////////////////////////////////////
 
 /*
@@ -35,6 +41,13 @@ include <shapes.scad>
 include <metric_screws.scad>
 
 
+// Section: Functions
+
+
+// Function: get_lmXuu_bearing_diam()
+// Description: Get outside diameter, in mm, of a standard lmXuu bearing.
+// Arguments:
+//   size = Inner size of lmXuu bearing, in mm.
 function get_lmXuu_bearing_diam(size) = lookup(size, [
 		[  4.0,   8.0],
 		[  5.0,  10.0],
@@ -56,6 +69,10 @@ function get_lmXuu_bearing_diam(size) = lookup(size, [
 	]);
 
 
+// Function: get_lmXuu_bearing_length()
+// Description: Get length, in mm, of a standard lmXuu bearing.
+// Arguments:
+//   size = Inner size of lmXuu bearing, in mm.
 function get_lmXuu_bearing_length(size) = lookup(size, [
 		[  4.0,  12.0],
 		[  5.0,  15.0],
@@ -77,7 +94,10 @@ function get_lmXuu_bearing_length(size) = lookup(size, [
 	]);
 
 
-// Creates a model of a clamp to hold a given linear bearing cartridge.
+// Module: linear_bearing_housing()
+// Description:
+//   Creates a model of a clamp to hold a generic linear bearing cartridge.
+// Arguments:
 //   d = Diameter of linear bearing. (Default: 15)
 //   l = Length of linear bearing. (Default: 24)
 //   tab = Clamp tab height. (Default: 7)
@@ -85,46 +105,56 @@ function get_lmXuu_bearing_length(size) = lookup(size, [
 //   wall = Wall thickness of clamp housing. (Default: 3)
 //   gap = Gap in clamp. (Default: 5)
 //   screwsize = Size of screw to use to tighten clamp. (Default: 3)
+//   orient = Orientation of the housing.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
+//   align = Alignment of the housing by the axis-negative (size1) end.  Use the `V_` constants from `constants.scad`.  Default: `V_UP`
 // Example:
 //   linear_bearing_housing(d=19, l=29, wall=2, tab=6, screwsize=2.5);
-module linear_bearing_housing(d=15,l=24,tab=7,gap=5,wall=3,tabwall=5,screwsize=3)
+module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, orient=ORIENT_X, align=V_UP)
 {
 	od = d+2*wall;
 	ogap = gap+2*tabwall;
 	tabh = tab/2+od/2*sqrt(2)-ogap/2;
-	translate([0,0,od/2]) difference() {
-		union() {
-			rotate([0,0,90])
-				teardrop(r=od/2,h=l);
-			translate([0,0,tabh])
-				cube(size=[l,ogap,tab+0.05], center=true);
-			translate([0,0,-od/4])
-				cube(size=[l,od,od/2], center=true);
-		}
-		rotate([0,0,90])
-			teardrop(r=d/2,h=l+0.05);
-		translate([0,0,(d*sqrt(2)+tab)/2])
-			cube(size=[l+0.05,gap,d+tab], center=true);
-		translate([0,0,tabh]) {
-			translate([0,-ogap/2+2-0.05,0])
-				rotate([90,0,0])
-					screw(screwsize=screwsize*1.06, screwlen=ogap, headsize=screwsize*2, headlen=10);
-			translate([0,ogap/2+0.05,0])
-				rotate([90,0,0])
-					metric_nut(size=screwsize,hole=false);
+	orient_and_align([l, od, od], orient, align, orig_orient=ORIENT_X) {
+		difference() {
+			union() {
+				zrot(90) teardrop(r=od/2,h=l);
+				up(tabh) cube(size=[l,ogap,tab+0.05], center=true);
+				down(od/4) cube(size=[l,od,od/2], center=true);
+			}
+			zrot(90) teardrop(r=d/2,h=l+0.05);
+			up((d*sqrt(2)+tab)/2)
+				cube(size=[l+0.05,gap,d+tab], center=true);
+			up(tabh) {
+				fwd(ogap/2-2+0.01)
+					xrot(90) screw(screwsize=screwsize*1.06, screwlen=ogap, headsize=screwsize*2, headlen=10);
+				back(ogap/2+0.01)
+					xrot(90) metric_nut(size=screwsize, hole=false);
+			}
 		}
 	}
 }
 
 
-module lmXuu_housing(size=8,tab=7,gap=5,wall=3,tabwall=5,screwsize=3)
+// Module: lmXuu_housing()
+// Description:
+//   Creates a model of a clamp to hold a standard sized lmXuu linear bearing cartridge.
+// Arguments:
+//   size = Standard lmXuu inner size.
+//   tab = Clamp tab height.  Default: 7
+//   tabwall = Clamp Tab thickness.  Default: 5
+//   wall = Wall thickness of clamp housing.  Default: 3
+//   gap = Gap in clamp.  Default: 5
+//   screwsize = Size of screw to use to tighten clamp.  Default: 3
+//   orient = Orientation of the housing.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
+//   align = Alignment of the housing by the axis-negative (size1) end.  Use the `V_` constants from `constants.scad`.  Default: `V_UP`
+// Example:
+//   lmXuu_housing(size=10, wall=2, tab=6, screwsize=2.5);
+module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, orient=ORIENT_X, align=V_UP)
 {
 	d = get_lmXuu_bearing_diam(size);
 	l = get_lmXuu_bearing_length(size);
-	linear_bearing_housing(d=d,l=l,tab=tab,gap=gap,wall=wall,tabwall=tabwall,screwsize=screwsize);
+	linear_bearing_housing(d=d,l=l,tab=tab,gap=gap,wall=wall,tabwall=tabwall,screwsize=screwsize, orient=orient, align=align);
 }
-//lmXuu_housing(size=8);
-//lmXuu_housing(size=10);
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
