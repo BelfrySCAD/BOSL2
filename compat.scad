@@ -52,27 +52,27 @@ function default(v,dflt=undef) = v==undef? dflt : v;
 
 // Function: is_def()
 // Description: Returns true if given value is not `undef`.
-function is_def(v) = (version_num()>20190000)? !is_undef(v) : (v != undef);
+function is_def(v) = (version_num()>=20190303)? !is_undef(v) : (v != undef);
 
 
 // Function: is_str()
 // Description: Given a value, returns true if it is a string.
-function is_str(v) = (version_num()>20190000)? is_string(v) : (is_def(v) && is_def(len(v)) && (len(str(v,v)) == len(v)*2));
+function is_str(v) = (version_num()>=20190303)? is_string(v) : (is_def(v) && is_def(len(v)) && (len(str(v,v)) == len(v)*2));
 
 
 // Function: is_boolean()
 // Description: Given a value, returns true if it is a boolean.
-function is_boolean(v) = (version_num()>20190000)? is_bool(v) : (!is_str(v) && (str(v) == "true" || str(v) == "false"));
+function is_boolean(v) = (version_num()>=20190303)? is_bool(v) : (!is_str(v) && (str(v) == "true" || str(v) == "false"));
 
 
 // Function: is_scalar()
 // Description: Given a value, returns true if it is a scalar number.
-function is_scalar(v) = (version_num()>20190000)? is_num(v) : (!is_boolean(v) && is_def(v+0));
+function is_scalar(v) = (version_num()>=20190303)? is_num(v) : (!is_boolean(v) && is_def(v+0));
 
 
 // Function: is_array()
 // Description: Given a value, returns true if it is an array/list/vector.
-function is_array(v) = (version_num()>20190000)? is_list(v) : (!is_str(v) && is_def(len(v)));
+function is_array(v) = (version_num()>=20190303)? is_list(v) : (!is_str(v) && is_def(len(v)));
 
 
 // Function: get_radius()
@@ -156,7 +156,7 @@ module assert_in_list(argname, val, l, idx=undef) {
 	if (!succ) {
 		msg = str(
 			"In argument '", argname, "', ",
-			(is_string(val)? str("\"", val, "\"") : val),
+			(is_str(val)? str("\"", val, "\"") : val),
 			" must be one of ",
 			(is_def(idx)? [for (v=l) v[idx]] : l)
 		);
@@ -174,7 +174,7 @@ module assert_in_list(argname, val, l, idx=undef) {
 //   succ = If this is `false`, trigger the assertion.
 //   msg = The message to emit if `succ` is `false`.
 module assertion(succ, msg) {
-	if (version_num() > 20190000) {
+	if (version_num() >= 20190303) {
 		// assert() will echo the variable name, and `succ` looks confusing there.  So we store it in FAILED.
 		FAILED = succ;
 		assert(FAILED, msg);
