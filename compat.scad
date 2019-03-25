@@ -138,6 +138,11 @@ function scalar_vec3(v, dflt=undef) =
 
 
 
+// Function: f_echo()
+// Description: If possible, echo a message from a function.
+function f_echo(msg) = (version_num() >= 20190303)? echo(msg) : 0;
+
+
 // Section: Modules
 
 
@@ -164,6 +169,17 @@ module assert_in_list(argname, val, l, idx=undef) {
 	}
 }
 
+function assert_in_list(argname, val, l, idx=undef) =
+	let(succ = search([val], l, num_returns_per_match=1, index_col_num=idx) != [[]])
+	succ? 0 : let(
+		msg = str(
+			"In argument '", argname, "', ",
+			(is_str(val)? str("\"", val, "\"") : val),
+			" must be one of ",
+			(is_def(idx)? [for (v=l) v[idx]] : l)
+		)
+	) assertion(succ, msg);
+
 
 // Module: assertion()
 // Usage:
@@ -183,6 +199,11 @@ module assertion(succ, msg) {
 	}
 }
 
+function assertion(succ, msg) =
+	(version_num() >= 20190303)?
+		let(FAILED=succ) assert(FAILED, msg) :
+		(!succ)? echo_error(msg) : 0;
+
 
 // Module: echo_error()
 // Usage:
@@ -195,6 +216,9 @@ module echo_error(msg, pfx="ERROR") {
 	echo(str("<p style=\"background-color: #a00\"><b>", pfx, ":</b> ", msg, "</p>"));
 }
 
+function echo_error(msg, pfx="ERROR") =
+	f_echo(str("<p style=\"background-color: #a00\"><b>", pfx, ":</b> ", msg, "</p>"));
+
 
 // Module: echo_warning()
 // Usage:
@@ -206,6 +230,9 @@ module echo_error(msg, pfx="ERROR") {
 module echo_warning(msg, pfx="WARNING") {
 	echo(str("<p style=\"background-color: #ee0\"><b>", pfx, ":</b> ", msg, "</p>"));
 }
+
+function echo_warning(msg, pfx="WARNING") =
+	f_echo(str("<p style=\"background-color: #ee0\"><b>", pfx, ":</b> ", msg, "</p>"));
 
 
 // Module: deprecate()
@@ -226,6 +253,16 @@ module deprecate(name, suggest=undef) {
 	);
 }
 
+function deprecate(name, suggest=undef) =
+	echo_warning(pfx="DEPRECATED",
+		str(
+			"`<code>", name, "</code>` is deprecated and should not be used.",
+			!is_def(suggest)? "" : str(
+				"  You should use `<code>", suggest, "</code>` instead."
+			)
+		)
+	);
+
 
 // Module: deprecate_argument()
 // Usage:
@@ -236,17 +273,25 @@ module deprecate(name, suggest=undef) {
 //   arg = The name of the deprecated argument.
 //   suggest = If given, the argument to recommend using instead.
 module deprecate_argument(name, arg, suggest=undef) {
-	echo(str(
-		"<p style=\"background-color: #ee0\">",
-		"<b>DEPRECATED ARGUMENT:</b> In `<code>", name, "</code>`, ",
+	echo_warning(pfx="DEPRECATED ARG", str(
+		"In `<code>", name, "</code>`, ",
 		"the argument `<code>", arg, "</code>` ",
 		"is deprecated and should not be used.",
 		!is_def(suggest)? "" : str(
 			"  You should use `<code>", suggest, "</code>` instead."
-		),
-		"</p>"
+		)
 	));
 }
+
+function deprecate_argument(name, arg, suggest=undef) =
+	echo_warning(pfx="DEPRECATED ARG", str(
+		"In `<code>", name, "</code>`, ",
+		"the argument `<code>", arg, "</code>` ",
+		"is deprecated and should not be used.",
+		!is_def(suggest)? "" : str(
+			"  You should use `<code>", suggest, "</code>` instead."
+		)
+	));
 
 
 
