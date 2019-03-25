@@ -85,7 +85,7 @@ function simplify3d_path(path, eps=1e-6) = concat(
 		) let (
 			v1 = path[i] - path[i-1],
 			v2 = path[i+1] - path[i-1]
-		) if (vector3d_angle(v1,v2) > eps) path[i]
+		) if (vector_angle(v1,v2) > eps) path[i]
 	],
 	[path[len(path)-1]]
 );
@@ -165,7 +165,7 @@ function points_along_path3d(
 	v2 = (n == end)? normalize(path[n]-path[n-1]) : normalize(path[n+1]-path[n]),
 	crs = cross(v1, v2),
 	axis = norm(crs) <= 0.001? [0, 0, 1] : crs,
-	ang = vector3d_angle(v1, v2),
+	ang = vector_angle(v1, v2),
 	hang = ang * (n==0? 1.0 : 0.5),
 	hrot = Quat(axis, hang),
 	arot = Quat(axis, ang),
@@ -376,7 +376,7 @@ module extrude_2dpath_along_3dpath(polyline, path, ang=0, convexity=10) {
 module extrude_2d_shapes_along_3dpath(path, convexity=10, clipsize=100) {
 	function polyquats(path, q=Q_Ident(), v=[0,0,1], i=0) = let(
 			v2 = path[i+1] - path[i],
-			ang = vector3d_angle(v,v2),
+			ang = vector_angle(v,v2),
 			axis = ang>0.001? normalize(cross(v,v2)) : [0,0,1],
 			newq = Q_Mul(Quat(axis, ang), q),
 			dist = norm(v2)

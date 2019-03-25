@@ -289,7 +289,7 @@ module rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false)
 				V_RIGHT
 			);
 			axis = normalize(cross(vv1, vv3));
-			ang = vector3d_angle(vv1, vv2);
+			ang = vector_angle(vv1, vv2);
 			if (reverse) {
 				rotate(a=-ang, v=axis) rotate(a=-a, v=vv1) children();
 			} else {

@@ -568,6 +568,7 @@ function normalize(v) = v/norm(v);
 
 
 // Function: vector2d_angle()
+// Status: DEPRECATED, use `vector_angle()` instead.
 // Usage:
 //   vector2d_angle(v1,v2);
 // Description:
@@ -575,9 +576,11 @@ function normalize(v) = v/norm(v);
 // Arguments:
 //   v1 = First 2D vector.
 //   v2 = Second 2D vector.
-function vector2d_angle(v1,v2) = atan2(v1[1],v1[0]) - atan2(v2[1],v2[0]);
+function vector2d_angle(v1,v2) = vector_angle(v1,v2);
+
 
 // Function: vector3d_angle()
+// Status: DEPRECATED, use `vector_angle()` instead.
 // Usage:
 //   vector3d_angle(v1,v2);
 // Description:
@@ -585,8 +588,19 @@ function vector2d_angle(v1,v2) = atan2(v1[1],v1[0]) - atan2(v2[1],v2[0]);
 // Arguments:
 //   v1 = First 3D vector.
 //   v2 = Second 3D vector.
+function vector3d_angle(v1,v2) = vector_angle(v1,v2);
+
+
+// Function: vector_angle()
+// Usage:
+//   vector_angle(v1,v2);
+// Description:
+//   Returns angle in degrees between two vectors of similar dimensions.
+// Arguments:
+//   v1 = First vector.
+//   v2 = Second vector.
 // NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
-function vector3d_angle(v1,v2) = acos(constrain((v1*v2)/(norm(v1)*norm(v2)), -1, 1));
+function vector_angle(v1,v2) = acos(constrain((v1*v2)/(norm(v1)*norm(v2)), -1, 1));
 
 
 // Section: Coordinates Manipulation

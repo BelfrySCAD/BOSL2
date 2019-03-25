@@ -123,7 +123,7 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 					nrm0 = normalize(cross(dv0, dv1));
 					nrm1 = [0, 0, 1];
 					axis = normalize(cross(nrm0, nrm1));
-					ang = vector3d_angle(nrm0,  nrm1);
+					ang = vector_angle(nrm0,  nrm1);
 					theta = atan2(nrm0[1], nrm0[0]);
 					translate(c) {
 						rotate(a=180-ang, v=axis) {

@@ -154,7 +154,7 @@ function fillet3pts(p0, p1, p2, r, maxerr=0.1, w=0.5, dw=0.25) = let(
 		v0 = normalize(p0-p1),
 		v1 = normalize(p2-p1),
 		midv = normalize((v0+v1)/2),
-		a = vector3d_angle(v0,v1),
+		a = vector_angle(v0,v1),
 		tanr = min(r/tan(a/2), norm(p0-p1)*0.99, norm(p2-p1)*0.99),
 		tp0 = p1+v0*tanr,
 		tp1 = p1+v1*tanr,
