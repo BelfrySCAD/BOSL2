@@ -254,25 +254,53 @@ function cdr(list) = len(list)<=1? [] : [for (i=[1:len(list)-1]) list[i]];
 
 
 // Function: any()
-// Description: Returns true if any item in list `l` evaluates as true.
+// Description:
+//   Returns true if any item in list `l` evaluates as true.
+//   If `l` is a lists of lists, `any()` is applied recursively to each sublist.
 // Arguments:
 //   l = The list to test for true items.
 // Example:
 //   any([0,false,undef]);  // Returns false.
 //   any([1,false,undef]);  // Returns true.
 //   any([1,5,true]);       // Returns true.
-function any(l) = sum([for (x=l) x?1:0]) > 0;
+//   any([[0,0], [0,0]]);   // Returns false.
+//   any([[0,0], [1,0]]);   // Returns true.
+function any(l, s=0, e=-1) =
+	let(
+		e = e<0? e+len(l) : e,
+		m = ceil((s+e)/2)
+	)
+	(e==s)? (
+		is_array(l[s])? any(l[s]) : (l[s]? true : false)
+	) : (
+		any(l,s,m-1)? true : any(l,m,e)
+	);
 
 
 // Function: all()
-// Description: Returns true if all items in list `l` evaluate as true.
+// Description:
+//   Returns true if all items in list `l` evaluate as true.
+//   If `l` is a lists of lists, `all()` is applied recursively to each sublist.
 // Arguments:
 //   l = The list to test for true items.
 // Example:
 //   all([0,false,undef]);  // Returns false.
 //   all([1,false,undef]);  // Returns false.
 //   all([1,5,true]);       // Returns true.
-function all(l) = sum([for (x=l) x?1:0]) == len(l);
+//   all([[0,0], [0,0]]);   // Returns false.
+//   all([[0,0], [1,0]]);   // Returns false.
+//   all([[1,1], [1,1]]);   // Returns true.
+function all(l, s=0, e=-1) =
+	let(
+		e = e<0? e+len(l) : e,
+		m = ceil((s+e)/2)
+	)
+	(e==s)? (
+		is_array(l[s])? all(l[s]) : (l[s]? true : false)
+	) : (
+		(!all(l,s,m-1))? false : all(l,m,e)
+	);
+
 
 
 // Function: in_list()
