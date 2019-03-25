@@ -309,6 +309,7 @@ function slice(arr,st,end) = let(
 
 
 // Function: wrap_range()
+// Status: DEPRECATED, use `select()` instead.
 // Description:
 //   Returns a portion of a list, wrapping around past the beginning, if end<start. 
 //   The first item is index 0. Negative indexes are counted back from the end.
@@ -321,18 +322,34 @@ function slice(arr,st,end) = let(
 //   list = The list to get the portion of.
 //   start = The index of the first item.
 //   end = The index of the last item.
+function wrap_range(list, start, end=undef) = select(list,start,end);
+
+
+// Function: select()
+// Description:
+//   Returns a portion of a list, wrapping around past the beginning, if end<start. 
+//   The first item is index 0. Negative indexes are counted back from the end.
+//   The last item is -1.  If only the `start` index is given, returns just the value
+//   at that position.
+// Usage:
+//   select(list,start)
+//   select(list,start,end)
+// Arguments:
+//   list = The list to get the portion of.
+//   start = The index of the first item.
+//   end = The index of the last item.
 // Example:
 //   l = [3,4,5,6,7,8,9];
-//   wrap_range(l, 5, 6);   // Returns [8,9]
-//   wrap_range(l, 5, 8);   // Returns [8,9,3,4]
-//   wrap_range(l, 5, 2);   // Returns [8,9,3,4,5]
-//   wrap_range(l, -3, -1); // Returns [7,8,9]
-//   wrap_range(l, 3, 3);   // Returns [6]
-//   wrap_range(l, 4);      // Returns 7
-//   wrap_range(l, -2);     // Returns 8
-//   wrap_range(l, [1:3]);  // Returns [4,5,6]
-//   wrap_range(l, [1,3]);  // Returns [4,6]
-function wrap_range(list, start, end=undef) =
+//   select(l, 5, 6);   // Returns [8,9]
+//   select(l, 5, 8);   // Returns [8,9,3,4]
+//   select(l, 5, 2);   // Returns [8,9,3,4,5]
+//   select(l, -3, -1); // Returns [7,8,9]
+//   select(l, 3, 3);   // Returns [6]
+//   select(l, 4);      // Returns 7
+//   select(l, -2);     // Returns 8
+//   select(l, [1:3]);  // Returns [4,5,6]
+//   select(l, [1,3]);  // Returns [4,6]
+function select(list, start, end=undef) =
 	let(l = len(list))
 	!is_def(end)? (
 		is_scalar(start)?
@@ -370,24 +387,90 @@ function array_subindex(v, idx) = [
 ];
 
 
+// Function: array_shortest()
+// Description:
+//   Returns the length of the shortest list in a list of list.
+// Arguments:
+//   vecs = A list of lists.
+function array_shortest(vecs) = min([for (v = vecs) len(v)]);
+
+
+// Function: array_longest()
+// Description:
+//   Returns the length of the longest list in a list of list.
+// Arguments:
+//   vecs = A list of lists.
+function array_longest(vecs) = max([for (v = vecs) len(v)]);
+
+
+// Function: array_pad()
+// Description:
+//   If the list `v` is shorter than `minlen` length, pad it to length with the value given in `fill`.
+// Arguments:
+//   v = A list.
+//   minlen = The minimum length to pad the list to.
+//   fill = The value to pad the list with.
+function array_pad(v, minlen, fill=undef) = let(l=len(v)) [for (i=[0:max(l,minlen)-1]) i<l? v[i] : fill];
+
+
+// Function: array_trim()
+// Description:
+//   If the list `v` is longer than `maxlen` length, truncates it to be `maxlen` items long.
+// Arguments:
+//   v = A list.
+//   minlen = The minimum length to pad the list to.
+function array_trim(v, maxlen) = maxlen<1? [] : [for (i=[0:min(len(v),maxlen)-1]) v[i]];
+
+
+// Function: array_fit()
+// Description:
+//   If the list `v` is longer than `length` items long, truncates it to be exactly `length` items long.
+//   If the list `v` is shorter than `length` items long, pad it to length with the value given in `fill`.
+// Arguments:
+//   v = A list.
+//   minlen = The minimum length to pad the list to.
+//   fill = The value to pad the list with.
+function array_fit(v, length, fill) = let(l=len(v)) (l==length)? v : (l>length)? array_trim(v,length) : array_pad(v,length,fill);
+
+
 // Function: array_zip()
+// Usage:
+//   array_zip(v1, v2, v3, [fit], [fill]);
+//   array_zip(vecs, [fit], [fill]);
 // Description:
 //   Zips together corresponding items from two or more lists.
-//   Returns a list of grouped values.
+//   Returns a list of lists, where each sublist contains corresponding
+//   items from each of the imput lists.  `[[A1, B1, C1], [A2, B2, C2], ...]`
 // Arguments:
 //   vecs = A list of two or more lists to zipper together.
-//   dflt = The default value to fill in with if one or more lists if short.
+//   fit = If `fit=="short"`, the zips together up to the length of the shortest list in vecs.  If `fit=="long"`, then pads all lists to the length of the longest, using the value in `fill`.  If `fit==false`, then requires all lists to be the same length.  Default: false.
+//   fill = The default value to fill in with if one or more lists if short.  Default: undef
 // Example:
 //   v1 = [1,2,3,4];
 //   v2 = [5,6,7];
 //   v3 = [8,9,10,11];
-//   array_zip([v1,v2]);      // returns [[1,5], [2,6], [3,7], [4,undef]]
-//   array_zip([v1,v2], 20);  // returns [[1,5], [2,6], [3,7], [4,20]]
-//   array_zip([v1,v2,v3]);   // returns [[1,5,8], [2,6,9], [3,7,10], [4,undef,11]]
-function array_zip(vecs, dflt=undef) = [
-	for (i = [0:max([for (v=vecs) len(v)])-1])
-		[for (v = vecs) default(v[i], dflt)]
-];
+//   array_zip(v1,v3);                       // returns [[1,8], [2,9], [3,10], [4,11]]
+//   array_zip([v1,v3]);                     // returns [[1,8], [2,9], [3,10], [4,11]]
+//   array_zip([v1,v2], fit="short");        // returns [[1,5], [2,6], [3,7]]
+//   array_zip([v1,v2], fit="long");         // returns [[1,5], [2,6], [3,7], [4,undef]]
+//   array_zip([v1,v2], fit="long, fill=0);  // returns [[1,5], [2,6], [3,7], [4,0]]
+//   array_zip([v1,v2,v3], fit="long");      // returns [[1,5,8], [2,6,9], [3,7,10], [4,undef,11]]
+// Example:
+//   v1 = [[1,2,3], [4,5,6], [7,8,9]];
+//   v2 = [[20,19,18], [17,16,15], [14,13,12]];
+//   array_zip(v1,v2);    // Returns [[1,2,3,20,19,18], [4,5,6,17,16,15], [7,8,9,14,13,12]]
+function array_zip(vecs, v2, v3, fit=false, fill=undef) =
+	(v3!=undef)? array_zip([vecs,v2,v3], fit=fit, fill=fill) :
+	(v2!=undef)? array_zip([vecs,v2], fit=fit, fill=fill) :
+	let(
+		dummy1 = assert_in_list("fit", fit, [false, "short", "long"]),
+		minlen = array_shortest(vecs),
+		maxlen = array_longest(vecs),
+		dummy2 = (fit==false)? assertion(minlen==maxlen, "Input vectors must have the same length") : 0
+	) (fit == "long")?
+		[for(i=[0:maxlen-1]) [for(v=vecs) for (x=(i<len(v)? v[i] : fill)) x] ] :
+		[for(i=[0:minlen-1]) [for(v=vecs) for (x=v[i]) x] ];
+
 
 
 // Function: array_group()
@@ -1089,9 +1172,9 @@ function _point_above_below_segment(point, edge) =
 //   path = The list of 2D path points forming the perimeter of the polygon.
 function point_in_polygon(point, path) =
 	// Does the point lie on any edges?  If so return 0. 
-	sum([for(i=[0:len(path)-1]) point_on_segment(point, wrap_range(path, i, i+1))?1:0])>0 ? 0 : 
+	sum([for(i=[0:len(path)-1]) point_on_segment(point, select(path, i, i+1))?1:0])>0 ? 0 : 
 	// Otherwise compute winding number and return 1 for interior, -1 for exterior
-	sum([for(i=[0:len(path)-1]) _point_above_below_segment(point, wrap_range(path, i, i+1))]) != 0 ? 1 : -1;
+	sum([for(i=[0:len(path)-1]) _point_above_below_segment(point, select(path, i, i+1))]) != 0 ? 1 : -1;
 
 
 // Function: pointlist_bounds()

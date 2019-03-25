@@ -135,7 +135,7 @@ function normalize_vertex_perimeter(v) =
 //   vertex = The index into `facelist`, of the vertex to test.
 function is_only_noncolinear_vertex(points, facelist, vertex) =
 	let(
-		face=wrap_range(facelist, vertex+1, vertex-1),
+		face=select(facelist, vertex+1, vertex-1),
 		count=len(face)
 	)
 	0==sum(
@@ -184,19 +184,19 @@ function triangulate_face(points, face) =
 			is_only_noncolinear_vertex(points, face, cv)?
 				// In the point&line degeneracy clip to somewhere in the middle of the line.
 				flatten([
-					triangulate_face(points, wrap_range(face, cv, (cv+2)%count)),
-					triangulate_face(points, wrap_range(face, (cv+2)%count, cv))
+					triangulate_face(points, select(face, cv, (cv+2)%count)),
+					triangulate_face(points, select(face, (cv+2)%count, cv))
 				])
 			:
 				// Otherwise the ear is safe to clip.
 				flatten([
-					[wrap_range(face, pv, nv)],
-					triangulate_face(points, wrap_range(face, nv, pv))
+					[select(face, pv, nv)],
+					triangulate_face(points, select(face, nv, pv))
 				])
 		: // If there is a point inside the ear, make a diagonal and clip along that.
 			flatten([
-				triangulate_face(points, wrap_range(face, cv, diagonal_point)),
-				triangulate_face(points, wrap_range(face, diagonal_point, cv))
+				triangulate_face(points, select(face, cv, diagonal_point)),
+				triangulate_face(points, select(face, diagonal_point, cv))
 			])
 ;
 
