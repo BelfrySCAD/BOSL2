@@ -659,7 +659,8 @@ module line_of(p1=[0,0,0], p2=[10,0,0], n=2)
 // Module: spread()
 //
 // Description:
-//   Evenly distributes `n` copies of the children along a line.
+//   Evenly distributes `n` copies of all children along a line.
+//   Copies every child at each position.
 //
 // Usage:
 //   spread(l, [n], [p1]) ...
@@ -686,6 +687,11 @@ module line_of(p1=[0,0,0], p2=[10,0,0], n=2)
 //   spread(l=[15,30], n=6) cube(size=[3,2,1],center=true);
 //   spread(l=40, spacing=10) cube(size=[3,2,1],center=true);
 //   spread(spacing=[5,5,0], n=5) cube(size=[3,2,1],center=true);
+// Example:
+//   spread(l=30, n=4) {
+//       cube(size=[1,3,1],center=true);
+//       cube(size=[3,1,1],center=true);
+//   }
 module spread(p1=undef, p2=undef, spacing=undef, l=undef, n=undef)
 {
 	ll = (
@@ -739,6 +745,11 @@ module spread(p1=undef, p2=undef, spacing=undef, l=undef, n=undef)
 //   xspread(20, n=3) sphere(3);
 //   xspread(spacing=15, l=50) sphere(3);
 //   xspread(n=5, l=40, p1=[0,0]) sphere(3);
+// Example:
+//   xspread(30, n=4) {
+//       cube(size=[1,3,1],center=true);
+//       cube(size=[3,1,1],center=true);
+//   }
 module xspread(spacing=undef, n=undef, l=undef, p1=undef)
 {
 	spread(l=l*V_RIGHT, spacing=spacing*V_RIGHT, n=n, p1=p1) children();
@@ -769,6 +780,11 @@ module xspread(spacing=undef, n=undef, l=undef, p1=undef)
 //   yspread(20, n=3) sphere(3);
 //   yspread(spacing=15, l=50) sphere(3);
 //   yspread(n=5, l=40, p1=[0,0]) sphere(3);
+// Example:
+//   yspread(30, n=4) {
+//       cube(size=[1,3,1],center=true);
+//       cube(size=[3,1,1],center=true);
+//   }
 module yspread(spacing=undef, n=undef, l=undef, p1=undef)
 {
 	spread(l=l*V_BACK, spacing=spacing*V_BACK, n=n, p1=p1) children();
@@ -799,6 +815,11 @@ module yspread(spacing=undef, n=undef, l=undef, p1=undef)
 //   zspread(20, n=3) sphere(3);
 //   zspread(spacing=15, l=50) sphere(3);
 //   zspread(n=5, l=40, p1=[0,0]) sphere(3);
+// Example:
+//   zspread(30, n=4) {
+//       cube(size=[1,3,1],center=true);
+//       cube(size=[3,1,1],center=true);
+//   }
 module zspread(spacing=undef, n=undef, l=undef, p1=undef)
 {
 	spread(l=l*V_UP, spacing=spacing*V_UP, n=n, p1=p1) children();
@@ -810,6 +831,7 @@ module zspread(spacing=undef, n=undef, l=undef, p1=undef)
 //
 // Description:
 //   Spreads out each individual child along the direction `dir`.
+//   Every child is placed at a different position, in order.
 //   This is useful for laying out groups of disparate objects
 //   where you only really care about the spacing between them.
 //
@@ -854,6 +876,7 @@ module distribute(spacing=undef, sizes=undef, dir=V_RIGHT, l=undef)
 //
 // Description:
 //   Spreads out each individual child along the X axis.
+//   Every child is placed at a different position, in order.
 //   This is useful for laying out groups of disparate objects
 //   where you only really care about the spacing between them.
 //
@@ -898,6 +921,7 @@ module xdistribute(spacing=10, sizes=undef, l=undef)
 //
 // Description:
 //   Spreads out each individual child along the Y axis.
+//   Every child is placed at a different position, in order.
 //   This is useful for laying out groups of disparate objects
 //   where you only really care about the spacing between them.
 //
@@ -942,6 +966,7 @@ module ydistribute(spacing=10, sizes=undef, l=undef)
 //
 // Description:
 //   Spreads out each individual child along the Z axis.
+//   Every child is placed at a different position, in order.
 //   This is useful for laying out groups of disparate objects
 //   where you only really care about the spacing between them.
 //
@@ -1002,7 +1027,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   rows = How many rows of copies to make.  If staggered, count both staggered and unstaggered rows.
 //   stagger = If true, make a staggered (hexagonal) grid.  If false, make square grid.  If "alt", makes alternate staggered pattern.  Default: false
 //   scale = [X,Y] scaling factors to reshape grid.
-//   in_poly = If given a list of polygon points, only creates copies whose center would be inside the polygon.
+//   in_poly = If given a list of polygon points, only creates copies whose center would be inside the polygon.  Polygon can be concave and/or self crossing.
 //   orient = Orientation axis for the grid.  Orientation is NOT applied to individual children.
 //   align = Alignment of the grid.  Alignment is NOT applies to individual children.
 //
