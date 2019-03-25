@@ -688,7 +688,7 @@ module line_of(p1=[0,0,0], p2=[10,0,0], n=2)
 //   spread(l=40, spacing=10) cube(size=[3,2,1],center=true);
 //   spread(spacing=[5,5,0], n=5) cube(size=[3,2,1],center=true);
 // Example:
-//   spread(l=30, n=4) {
+//   spread(l=20, n=3) {
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
@@ -746,7 +746,7 @@ module spread(p1=undef, p2=undef, spacing=undef, l=undef, n=undef)
 //   xspread(spacing=15, l=50) sphere(3);
 //   xspread(n=5, l=40, p1=[0,0]) sphere(3);
 // Example:
-//   xspread(30, n=4) {
+//   xspread(10, n=3) {
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
@@ -781,7 +781,7 @@ module xspread(spacing=undef, n=undef, l=undef, p1=undef)
 //   yspread(spacing=15, l=50) sphere(3);
 //   yspread(n=5, l=40, p1=[0,0]) sphere(3);
 // Example:
-//   yspread(30, n=4) {
+//   yspread(10, n=3) {
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
@@ -816,7 +816,7 @@ module yspread(spacing=undef, n=undef, l=undef, p1=undef)
 //   zspread(spacing=15, l=50) sphere(3);
 //   zspread(n=5, l=40, p1=[0,0]) sphere(3);
 // Example:
-//   zspread(30, n=4) {
+//   zspread(10, n=3) {
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
