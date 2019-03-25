@@ -163,32 +163,32 @@ function distance(p1, p2) = norm(point3d(p2)-point3d(p1));
 
 
 // Function: sinh()
-// Description: Takes a radians value `x`, and returns the hyperbolic sine of it.
+// Description: Takes a value `x`, and returns the hyperbolic sine of it.
 function sinh(x) = (exp(x)-exp(-x))/2;
 
 
 // Function: cosh()
-// Description: Takes a radians value `x`, and returns the hyperbolic cosine of it.
+// Description: Takes a value `x`, and returns the hyperbolic cosine of it.
 function cosh(x) = (exp(x)+exp(-x))/2;
 
 
 // Function: tanh()
-// Description: Takes a radians value `x`, and returns the hyperbolic tangent of it.
+// Description: Takes a value `x`, and returns the hyperbolic tangent of it.
 function tanh(x) = sinh(x)/cosh(x);
 
 
 // Function: asinh()
-// Description: Takes a value `x`, and returns the inverse hyperbolic sine of it in radians.
+// Description: Takes a value `x`, and returns the inverse hyperbolic sine of it.
 function asinh(x) = ln(x+sqrt(x*x+1));
 
 
 // Function: acosh()
-// Description: Takes a value `x`, and returns the inverse hyperbolic cosine of it in radians.
+// Description: Takes a value `x`, and returns the inverse hyperbolic cosine of it.
 function acosh(x) = ln(x+sqrt(x*x-1));
 
 
 // Function: atanh()
-// Description: Takes a value `x`, and returns the inverse hyperbolic tangent of it in radians.
+// Description: Takes a value `x`, and returns the inverse hyperbolic tangent of it.
 function atanh(x) = ln((1+x)/(1-x))/2;
 
 
