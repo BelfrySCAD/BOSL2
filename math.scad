@@ -468,7 +468,7 @@ function array_fit(v, length, fill) = let(l=len(v)) (l==length)? v : (l>length)?
 // Description:
 //   Zips together corresponding items from two or more lists.
 //   Returns a list of lists, where each sublist contains corresponding
-//   items from each of the imput lists.  `[[A1, B1, C1], [A2, B2, C2], ...]`
+//   items from each of the input lists.  `[[A1, B1, C1], [A2, B2, C2], ...]`
 // Arguments:
 //   vecs = A list of two or more lists to zipper together.
 //   fit = If `fit=="short"`, the zips together up to the length of the shortest list in vecs.  If `fit=="long"`, then pads all lists to the length of the longest, using the value in `fill`.  If `fit==false`, then requires all lists to be the same length.  Default: false.
@@ -518,7 +518,7 @@ function array_group(v, cnt=2, dflt=0) = [for (i = [0:cnt:len(v)-1]) [for (j = [
 
 
 // Function: flatten()
-// Description: Takes a list of list and flattens it by one level.
+// Description: Takes a list of lists and flattens it by one level.
 // Arguments:
 //   l = List to flatten.
 // Example:
