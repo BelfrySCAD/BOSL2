@@ -182,8 +182,8 @@ ALIGN_NEG = -1;
 //           idx = axis + 3*neg + 6*ang/90;
 //           rotate(orientations[idx]) {
 //               up(10) {
-//                   back(4) color("black") text3d(text=str(ang), size=4);
-//                   fwd(4) color(axiscolors[axis]) text3d(text=str(["X","Y","Z"][axis], ["+","NEG"][neg]), size=4);
+//                   fwd(4) color("black") text3d(text=str(ang), size=4);
+//                   back(4) color(axiscolors[axis]) text3d(text=str(["X","Y","Z"][axis], ["+","NEG"][neg]), size=4);
 //               }
 //           }
 //       }
@@ -195,6 +195,7 @@ ALIGN_NEG = -1;
 //   rotation angles for rotating a vertical shape into the given orientations.
 // Figure(Spin): Standard Orientations
 //   orient_cube(0);
+
 ORIENT_X        = [ 90,   0,  90];  // Orient along the X axis.
 ORIENT_Y        = [ 90,   0, 180];  // Orient along the Y axis.
 ORIENT_Z        = [  0,   0,   0];  // Orient along the Z axis.
@@ -202,11 +203,13 @@ ORIENT_XNEG     = [ 90,   0, -90];  // Orient reversed along the X axis.
 ORIENT_YNEG     = [ 90,   0,   0];  // Orient reversed along the Y axis.
 ORIENT_ZNEG     = [  0, 180,   0];  // Orient reversed along the Z axis.
 
+
 // Section: Orientations Rotated 90º
 //   Orientations for `cyl()`, `prismoid()`, etc.  They take the form of standard [X,Y,Z]
 //   rotation angles for rotating a vertical shape into the given orientations.
 // Figure(Spin): Orientations Rotated 90º
 //   orient_cube(90);
+
 ORIENT_X_90     = [ 90, -90,  90];  // Orient along the X axis, then rotate 90 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
 ORIENT_Y_90     = [ 90, -90, 180];  // Orient along the Y axis, then rotate 90 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
 ORIENT_Z_90     = [  0,   0,  90];  // Orient along the Z axis, then rotate 90 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
@@ -214,11 +217,13 @@ ORIENT_XNEG_90  = [  0, -90,   0];  // Orient reversed along the X axis, then ro
 ORIENT_YNEG_90  = [ 90, -90,   0];  // Orient reversed along the Y axis, then rotate 90 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
 ORIENT_ZNEG_90  = [  0, 180, -90];  // Orient reversed along the Z axis, then rotate 90 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
 
+
 // Section: Orientations Rotated 180º
 //   Orientations for `cyl()`, `prismoid()`, etc.  They take the form of standard [X,Y,Z]
 //   rotation angles for rotating a vertical shape into the given orientations.
 // Figure(Spin): Orientations Rotated 180º
 //   orient_cube(180);
+
 ORIENT_X_180    = [-90,   0, -90];  // Orient along the X axis, then rotate 180 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
 ORIENT_Y_180    = [-90,   0,   0];  // Orient along the Y axis, then rotate 180 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
 ORIENT_Z_180    = [  0,   0, 180];  // Orient along the Z axis, then rotate 180 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
@@ -226,11 +231,13 @@ ORIENT_XNEG_180 = [-90,   0,  90];  // Orient reversed along the X axis, then ro
 ORIENT_YNEG_180 = [-90,   0, 180];  // Orient reversed along the Y axis, then rotate 180 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
 ORIENT_ZNEG_180 = [  0, 180, 180];  // Orient reversed along the Z axis, then rotate 180 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
 
+
 // Section: Orientations Rotated 270º
 //   Orientations for `cyl()`, `prismoid()`, etc.  They take the form of standard [X,Y,Z]
 //   rotation angles for rotating a vertical shape into the given orientations.
 // Figure(Spin): Orientations Rotated 270º
 //   orient_cube(270);
+
 ORIENT_X_270    = [ 90,  90,  90];  // Orient along the X axis, then rotate 270 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
 ORIENT_Y_270    = [ 90,  90, 180];  // Orient along the Y axis, then rotate 270 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
 ORIENT_Z_270    = [  0,   0, -90];  // Orient along the Z axis, then rotate 270 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
