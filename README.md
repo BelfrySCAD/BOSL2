@@ -41,10 +41,10 @@ A lot of the features of this library are to allow shorter, easier-to-read, inte
 [`BOSL/shapes.scad`](https://github.com/revarbat/BOSL/wiki/shapes.scad) Examples | Raw OpenSCAD Equivalent
 ---------------------------------- | -------------------------------
 `upcube([10,20,30]);`              | `translate([0,0,15]) cube([10,20,30], center=true);`
-`rcube([20,20,30],r=5,$fn=32);`    | `minkowski() {cube([10,10,20], center=true); sphere(r=5, $fn=32);}`
+`cuboid([20,20,30], fillet=5, edges=EDGES_Z_ALL);` | `minkowski() {cube([10,10,20], center=true); sphere(r=5, $fn=32);}`
 `prismoid([30,40],[20,30],h=10);`  | `hull() {translate([0,0,0.005]) cube([30,40,0.01], center=true); translate([0,0,9.995]) cube([20,30,0.01],center=true);}`
 `xcyl(l=20,d=4);`                  | `rotate([0,90,0]) cylinder(h=20, d=4, center=true);`
-`rcylinder(h=100,d=40,fillet=5);`  | `translate([0,0,50]) minkowski() {cylinder(h=90, d=30, center=true); sphere(r=5);}`
+`cyl(l=100, d=40, fillet=5);`      | `translate([0,0,50]) minkowski() {cylinder(h=90, d=30, center=true); sphere(r=5);}`
 
 [`BOSL/masks.scad`](https://github.com/revarbat/BOSL/wiki/masks.scad) Examples | Raw Openscad Equivalent
 ----------------------------------- | -------------------------------

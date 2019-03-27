@@ -19,7 +19,11 @@ def get_header_link(name):
 
 
 def toc_entry(name, indent, count=None):
-    ref = get_header_link(name)
+    lname = "{0}{1}".format(
+        ("%d. " % count) if count else "",
+        name
+    )
+    ref = get_header_link(lname)
     if name.endswith( (")", "}", "]") ):
         name = "`" + name.replace("\\", "") + "`"
     return "{0}{1} [{2}](#{3})".format(
@@ -87,6 +91,7 @@ class ImageProcessing(object):
     def gen_example_image(self, libfile, imgfile, code, extype):
         OPENSCAD = "/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD"
         CONVERT = "/usr/local/bin/convert"
+        COMPARE = "/usr/local/bin/compare"
 
         if extype == "NORENDER":
             return
@@ -177,9 +182,10 @@ class ImageProcessing(object):
 
         if not self.keep_scripts:
             os.unlink(scriptfile)
-        outimgfile = self.imgroot + imgfile
+        targimgfile = self.imgroot + imgfile
+        newimgfile = self.imgroot + "_new_" + imgfile
         if len(tmpimgs) == 1:
-            cnvcmd = [CONVERT, tmpimgfile, "-resize", imgsizes[1], outimgfile]
+            cnvcmd = [CONVERT, tmpimgfile, "-resize", imgsizes[1], newimgfile]
             print(" ".join(cnvcmd))
             res = subprocess.call(cnvcmd)
             if res != 0:
@@ -198,13 +204,36 @@ class ImageProcessing(object):
                 "+map"
             ]
             cnvcmd.extend(tmpimgs)
-            cnvcmd.append(outimgfile)
+            cnvcmd.append(newimgfile)
             print(" ".join(cnvcmd))
             res = subprocess.call(cnvcmd)
             if res != 0:
                 sys.exit(res)
             for tmpimg in tmpimgs:
                 os.unlink(tmpimg)
+
+        # Time to compare image.
+        if not os.path.isfile(targimgfile):
+            print("NEW IMAGE installed.")
+            os.rename(newimgfile, targimgfile)
+        else:
+            if targimgfile.endswith(".gif"):
+                cmpcmd = ["cmp", newimgfile, targimgfile]
+                print(" ".join(cmpcmd))
+                res = subprocess.call(cmpcmd)
+                issame = res == 0
+            else:
+                cmpcmd = [COMPARE, "-metric", "MAE", newimgfile, targimgfile, "null:"]
+                print(" ".join(cmpcmd))
+                p = subprocess.Popen(cmpcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
+                issame = p.stdout.read().strip() == "0 (0)"
+            if issame:
+                print("Image unchanged.")
+                os.unlink(newimgfile)
+            else:
+                print("Image UPDATED.")
+                os.unlink(targimgfile)
+                os.rename(newimgfile, targimgfile)
 
 
 imgprc = ImageProcessing()
