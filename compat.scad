@@ -52,27 +52,27 @@ function default(v,dflt=undef) = v==undef? dflt : v;
 
 // Function: is_def()
 // Description: Returns true if given value is not `undef`.
-function is_def(v) = (version_num()>=20190303)? !is_undef(v) : (v != undef);
+function is_def(v) = (version_num() >= 20190100)? !is_undef(v) : (v != undef);
 
 
 // Function: is_str()
 // Description: Given a value, returns true if it is a string.
-function is_str(v) = (version_num()>=20190303)? is_string(v) : (is_def(v) && is_def(len(v)) && (len(str(v,v)) == len(v)*2));
+function is_str(v) = (version_num() >= 20190100)? is_string(v) : (is_def(v) && is_def(len(v)) && (len(str(v,v)) == len(v)*2));
 
 
 // Function: is_boolean()
 // Description: Given a value, returns true if it is a boolean.
-function is_boolean(v) = (version_num()>=20190303)? is_bool(v) : (!is_str(v) && (str(v) == "true" || str(v) == "false"));
+function is_boolean(v) = (version_num() >= 20190100)? is_bool(v) : (!is_str(v) && (str(v) == "true" || str(v) == "false"));
 
 
 // Function: is_scalar()
 // Description: Given a value, returns true if it is a scalar number.
-function is_scalar(v) = (version_num()>=20190303)? is_num(v) : (!is_boolean(v) && is_def(v+0));
+function is_scalar(v) = (version_num() >= 20190100)? is_num(v) : (!is_boolean(v) && is_def(v+0));
 
 
 // Function: is_array()
 // Description: Given a value, returns true if it is an array/list/vector.
-function is_array(v) = (version_num()>=20190303)? is_list(v) : (!is_str(v) && is_def(len(v)));
+function is_array(v) = (version_num() >= 20190100)? is_list(v) : (!is_str(v) && is_def(len(v)));
 
 
 // Function: get_radius()
@@ -140,7 +140,7 @@ function scalar_vec3(v, dflt=undef) =
 
 // Function: f_echo()
 // Description: If possible, echo a message from a function.
-function f_echo(msg) = (version_num() >= 20190303)? echo(msg) : 0;
+function f_echo(msg) = (version_num() >= 20190100)? echo(msg) : 0;
 
 
 // Section: Modules
@@ -151,6 +151,7 @@ function f_echo(msg) = (version_num() >= 20190303)? echo(msg) : 0;
 //   assert_in_list(argname, val, l, [idx]);
 // Description:
 //   Emulates the newer OpenSCAD `assert()` with an `in_list()` test.
+//   You can also use this as a function call from a function.
 // Arguments:
 //   argname = The name of the argument value being tested.
 //   val = The value to test if it exists in the list.
@@ -185,12 +186,14 @@ function assert_in_list(argname, val, l, idx=undef) =
 // Usage:
 //   assertion(succ, msg);
 // Description:
-//   Backwards compatible assert() semi-replacement.  If `succ` is false, then print an error with `msg`.
+//   Backwards compatible assert() semi-replacement.
+//   If `succ` is false, then print an error with `msg`.
+//   You can also use this as a function call from a function.
 // Arguments:
 //   succ = If this is `false`, trigger the assertion.
 //   msg = The message to emit if `succ` is `false`.
 module assertion(succ, msg) {
-	if (version_num() >= 20190303) {
+	if (version_num() >= 20190100) {
 		// assert() will echo the variable name, and `succ` looks confusing there.  So we store it in FAILED.
 		FAILED = succ;
 		assert(FAILED, msg);
@@ -200,45 +203,49 @@ module assertion(succ, msg) {
 }
 
 function assertion(succ, msg) =
-	(version_num() >= 20190303)?
-		let(FAILED=succ) assert(FAILED, msg) :
-		(!succ)? echo_error(msg) : 0;
+	(version_num() >= 20190100)? let(FAILED=succ) assert(FAILED, msg) : 0;
 
 
 // Module: echo_error()
 // Usage:
 //   echo_error(msg, [pfx]);
-// Description: Emulates printing of an error message.  The text will be shaded red.
+// Description:
+//   Emulates printing of an error message.  The text will be shaded red.
+//   You can also use this as a function call from a function.
 // Arguments:
 //   msg = The message to print.
 //   pfx = The prefix to print before `msg`.  Default: `ERROR`
 module echo_error(msg, pfx="ERROR") {
-	echo(str("<p style=\"background-color: #a00\"><b>", pfx, ":</b> ", msg, "</p>"));
+	echo(str("<p style=\"background-color: #ffb0b0\"><b>", pfx, ":</b> ", msg, "</p>"));
 }
 
 function echo_error(msg, pfx="ERROR") =
-	f_echo(str("<p style=\"background-color: #a00\"><b>", pfx, ":</b> ", msg, "</p>"));
+	f_echo(str("<p style=\"background-color: #ffb0b0\"><b>", pfx, ":</b> ", msg, "</p>"));
 
 
 // Module: echo_warning()
 // Usage:
 //   echo_warning(msg, [pfx]);
-// Description: Emulates printing of a warning message.  The text will be shaded yellow.
+// Description:
+//   Emulates printing of a warning message.  The text will be shaded yellow.
+//   You can also use this as a function call from a function.
 // Arguments:
 //   msg = The message to print.
 //   pfx = The prefix to print before `msg`.  Default: `WARNING`
 module echo_warning(msg, pfx="WARNING") {
-	echo(str("<p style=\"background-color: #ee0\"><b>", pfx, ":</b> ", msg, "</p>"));
+	echo(str("<p style=\"background-color: #ffffb0\"><b>", pfx, ":</b> ", msg, "</p>"));
 }
 
 function echo_warning(msg, pfx="WARNING") =
-	f_echo(str("<p style=\"background-color: #ee0\"><b>", pfx, ":</b> ", msg, "</p>"));
+	f_echo(str("<p style=\"background-color: #ffffb0\"><b>", pfx, ":</b> ", msg, "</p>"));
 
 
 // Module: deprecate()
 // Usage:
 //   deprecate(name, [suggest]);
-// Description: Show module deprecation warnings.
+// Description:
+//   Show module deprecation warnings.
+//   You can also use this as a function call from a function.
 // Arguments:
 //   name = The name of the module that is deprecated.
 //   suggest = If given, the module to recommend using instead.
@@ -267,9 +274,11 @@ function deprecate(name, suggest=undef) =
 // Module: deprecate_argument()
 // Usage:
 //   deprecate(name, arg, [suggest]);
-// Description: Show module argument deprecation warnings.
+// Description:
+//   Show argument deprecation warnings.
+//   You can also use this as a function call from a function.
 // Arguments:
-//   name = The name of the module the deprecated argument is used in.
+//   name = The name of the module/function the deprecated argument is used in.
 //   arg = The name of the deprecated argument.
 //   suggest = If given, the argument to recommend using instead.
 module deprecate_argument(name, arg, suggest=undef) {
