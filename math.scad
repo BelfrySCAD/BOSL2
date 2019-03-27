@@ -316,6 +316,7 @@ function all(l, s=0, e=-1) =
 function in_list(x,l,idx=undef) = search([x], l, num_returns_per_match=1, index_col_num=idx) != [[]];
 
 
+
 // Function: slice()
 // Description:
 //   Returns a slice of a list.  The first item is index 0.
@@ -334,6 +335,7 @@ function slice(arr,st,end) = let(
 		s=st<0?(len(arr)+st):st,
 		e=end<0?(len(arr)+end+1):end
 	) (s==e)? [] : [for (i=[s:e-1]) if (e>s) arr[i]];
+
 
 
 // Function: wrap_range()
@@ -524,6 +526,50 @@ function array_group(v, cnt=2, dflt=0) = [for (i = [0:cnt:len(v)-1]) [for (j = [
 // Example:
 //   flatten([[1,2,3], [4,5,[6,7,8]]]) returns [1,2,3,4,5,[6,7,8]]
 function flatten(l) = [for (a = l) for (b = a) b];
+
+
+// Internal.  Not exposed.
+function _array_dim_recurse(v) =
+    !is_list(v[0])?  (
+		sum( [for(entry=v) is_list(entry) ? 1 : 0]) == 0 ? [] : [undef]
+	) : let(
+		firstlen = len(v[0]),
+		first = sum( [for(entry = v) len(entry) == firstlen  ? 0 : 1]   ) == 0 ? firstlen : undef,
+		leveldown = flatten(v)
+	) is_list(leveldown[0])? (
+		concat([first],_array_dim_recurse(leveldown))
+	) : [first];
+
+// Function: array_dim()
+// Usage:
+//   array_dim(v, [depth])
+// Description:
+//   Returns the size of a multi-dimensional array.  Returns a list of
+//   dimension lengths.  The length of `v` is the dimension `0`.  The
+//   length of the items in `v` is dimension `1`.  The length of the
+//   items in the items in `v` is dimension `2`, etc.  For each dimension,
+//   if the length of items at that depth is inconsistent, `undef` will
+//   be returned.  If no items of that dimension depth exist, `0` is
+//   returned.  Otherwise, the consistent length of items in that
+//   dimensional depth is returned.
+// Arguments:
+//   v = Array to get dimensions of.
+//   depth = Dimension to get size of.  If not given, returns a list of dimension lengths.
+// Examples:
+//   array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]]);     // Returns [2,2,3]
+//   array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 0);  // Returns 2
+//   array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 2);  // Returns 3
+//   array_dim([[[1,2,3],[4,5,6]],[[7,8,9]]]);                // Returns [2,undef,3]
+function array_dim(v, depth=undef) =
+	(depth == undef)? (
+		concat([len(v)], _array_dim_recurse(v))
+	) : (depth == 0)? (
+		len(v)
+	) : (
+		let(dimlist = _array_dim_recurse(v))
+		(depth > len(dimlist))? 0 : dimlist[depth-1]
+	);
+
 
 
 // Section: Vector Manipulation
