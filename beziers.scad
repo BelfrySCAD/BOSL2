@@ -64,7 +64,7 @@ use <transforms.scad>
 //   **Spline Steps**: The number of straight-line segments to split a bezier segment into, to approximate the bezier curve.  The more spline steps, the closer the approximation will be to the curve, but the slower it will be to generate.  Usually defaults to 16.
 
 
-// Section: Functions
+// Section: Bezier Segment Functions
 
 // Function: bez_point()
 // Usage:
@@ -96,36 +96,68 @@ function bez_point(curve,u)=
 		);
 
 
-// Function: bezier_polyline()
+
+// Function: bezier_segment_closest_point()
 // Usage:
-//   bezier_polyline(bezier, [splinesteps], [N])
+//   bezier_segment_closest_point(bezier,pt)
 // Description:
-//   Takes a bezier path and converts it into a polyline.
+//   Finds the closest part of the given bezier segment to point `pt`.
+//   The degree of the curve, N, is one less than the number of points in `curve`.
+//   Returns `u` for the shortest position on the bezier segment to the given point `pt`.
 // Arguments:
-//   bezier = A bezier path to approximate.
-//   splinesteps = Number of straight lines to split each bezier segment into. default=16
-//   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+//   curve = The list of endpoints and control points for this bezier segment.
+//   pt = The point to find the closest curve point to.
+//   max_err = The maximum allowed error when approximating the closest approach.
 // Example(2D):
-//   bez = [
-//       [0,0], [-5,30],
-//       [20,60], [50,50], [110,30],
-//       [60,25], [70,0], [80,-25],
-//       [80,-50], [50,-50]
-//   ];
-//   trace_polyline(bez, size=1, N=3, showpts=true);
-//   trace_polyline(bezier_polyline(bez, N=3), size=3);
-function bezier_polyline(bezier, splinesteps=16, N=3) = concat(
-	[
-		for (
-			b = [0 : N : len(bezier)-N-1],
-			l = [0 : splinesteps-1]
-		) let (
-			crv = [for (i=[0 : N]) bezier[b+i]],
-			u = l / splinesteps
-		) bez_point(crv, u)
-	],
-	[bez_point([for (i=[-(N+1) : -1]) bezier[len(bezier)+i]], 1.0)]
-);
+//   pt = [40,15];
+//   bez = [[0,0], [20,40], [60,-25], [80,0]];
+//   u = bezier_segment_closest_point(bez, pt);
+//   trace_bezier(bez, N=len(bez)-1);
+//   color("red") translate(pt) sphere(r=1);
+//   color("blue") translate(bez_point(bez,u)) sphere(r=1);
+function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1, step_u=undef, min_dist=undef, min_u=undef) = 
+	let(
+		step = step_u == undef? (end_u-u)/(len(curve)*2) : step_u,
+		t_u = min(u, end_u),
+		dist = norm(bez_point(curve, t_u)-pt),
+		md = (min_dist==undef || dist<min_dist)? dist : min_dist,
+		mu = (min_dist==undef || dist<min_dist)? t_u : min_u
+	)
+	(u>(end_u-step/2))? (
+		(step<max_err)? mu : bezier_segment_closest_point(curve, pt, max_err, max(0, mu-step/2), min(1, mu+step/2), step/2)
+	) : (
+		bezier_segment_closest_point(curve, pt, max_err, u+step, end_u, step, md, mu)
+	);
+
+
+
+// Function: bezier_segment_length()
+// Usage:
+//   bezier_segment_length(curve, [start_u], [end_u], [max_deflect]);
+// Description:
+//   Approximates the length of the bezier segment between start_u and end_u.
+// Arguments:
+//   curve = The list of endpoints and control points for this bezier segment.
+//   start_u = The proportion of the way along the curve to start measuring from.  Between 0 and 1.
+//   end_u = The proportion of the way along the curve to end measuring at.  Between 0 and 1.  Greater than start_u.
+//   max_deflect = The largest amount of deflection from the true curve to allow for approximation.
+// Example:
+//   bez = [[0,0], [5,35], [60,-25], [80,0]];
+//   echo(bezier_segment_length(bez));
+function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
+	let(
+		mid_u=lerp(start_u, end_u, 0.5),
+		sp = bez_point(curve,start_u),
+		bez_mp = bez_point(curve,mid_u),
+		ep = bez_point(curve,end_u),
+		lin_mp = lerp(sp,ep,0.5),
+		defl = norm(bez_mp-lin_mp)
+	)
+	((end_u-start_u) >= 0.125 || defl > max_deflect)? (
+		bezier_segment_length(curve, start_u, mid_u, max_deflect) +
+		bezier_segment_length(curve, mid_u, end_u, max_deflect)
+	) : norm(ep-sp);
+
 
 
 // Function: fillet3pts()
@@ -169,6 +201,110 @@ function fillet3pts(p0, p1, p2, r, maxerr=0.1, w=0.5, dw=0.25) = let(
 		fillet3pts(p0, p1, p2, r, maxerr=maxerr, w=w-dw, dw=dw/2);
 
 
+
+// Section: Bezier Path Functions
+
+
+// Function: bezier_path_point()
+// Usage:
+//   bezier_path_point(path, seg, u, [N])
+// Description: Returns the coordinates of bezier path segment `seg` at position `u`.
+// Arguments:
+//   path = A bezier path to approximate.
+//   seg = Segment number along the path.  Each segment is N points long.
+//   u = The proportion of the way along the segment to find the point of.  0<=`u`<=1
+//   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+function bezier_path_point(path, seg, u, N=3) = bez_point(select(path,seg*N,(seg+1)*N), u);
+
+
+
+// Function: bezier_path_closest_point()
+// Usage:
+//   bezier_path_closest_point(bezier,pt)
+// Description:
+//   Finds the closest part of the given bezier path to point `pt`.
+//   Returns [segnum, u] for the closest position on the bezier path to the given point `pt`.
+// Arguments:
+//   path = A bezier path to approximate.
+//   pt = The point to find the closest curve point to.
+//   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+//   max_err = The maximum allowed error when approximating the closest approach.
+// Example(2D):
+//   pt = [100,0];
+//   bez = [[0,0], [20,40], [60,-25], [80,0], [100,25], [140,25], [160,0]];
+//   pos = bezier_path_closest_point(bez, pt);
+//   xy = bezier_path_point(bez,pos[0],pos[1]);
+//   echo(pos=pos);
+//   trace_bezier(bez, N=3);
+//   color("red") translate(pt) sphere(r=1);
+//   color("blue") translate(xy) sphere(r=1);
+function bezier_path_closest_point(path, pt, N=3, max_err=0.01, seg=0, min_seg=undef, min_u=undef, min_dist=undef) =
+	let(curve = select(path,seg*N,(seg+1)*N))
+	(seg*N+1 >= len(path))? (
+		let(curve = select(path, min_seg*N, (min_seg+1)*N))
+		[min_seg, bezier_segment_closest_point(curve, pt, max_err=max_err)]
+	) : (
+		let(
+			curve = select(path,seg*N,(seg+1)*N),
+			u = bezier_segment_closest_point(curve, pt, max_err=0.05),
+			dist = norm(bez_point(curve, u)-pt),
+			mseg = (min_dist==undef || dist<min_dist)? seg : min_seg,
+			mdist = (min_dist==undef || dist<min_dist)? dist : min_dist,
+			mu = (min_dist==undef || dist<min_dist)? u : min_u
+		)
+		bezier_path_closest_point(path, pt, N, max_err, seg+1, mseg, mu, mdist)
+	);
+
+
+
+// Function: bezier_path_length()
+// Usage:
+//   bezier_path_length(path, [N], [max_deflect]);
+// Description:
+//   Approximates the length of the bezier path.
+// Arguments:
+//   path = A bezier path to approximate.
+//   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+//   max_deflect = The largest amount of deflection from the true curve to allow for approximation.
+function bezier_path_length(path, N=3, max_deflect=0.001) =
+	sum([
+		for (seg=[0:(len(path)-1)/N-1]) (
+			bezier_segment_length(
+				select(path, seg*N, (seg+1)*N),
+				max_deflect=max_deflect
+			)
+		)
+	]);
+
+
+
+// Function: bezier_polyline()
+// Usage:
+//   bezier_polyline(bezier, [splinesteps], [N])
+// Description:
+//   Takes a bezier path and converts it into a polyline.
+// Arguments:
+//   bezier = A bezier path to approximate.
+//   splinesteps = Number of straight lines to split each bezier segment into. default=16
+//   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+// Example(2D):
+//   bez = [
+//       [0,0], [-5,30],
+//       [20,60], [50,50], [110,30],
+//       [60,25], [70,0], [80,-25],
+//       [80,-50], [50,-50]
+//   ];
+//   trace_polyline(bez, size=1, N=3, showpts=true);
+//   trace_polyline(bezier_polyline(bez, N=3), size=3);
+function bezier_polyline(bezier, splinesteps=16, N=3) = let(
+		segs = (len(bezier)-1)/N
+	) concat(
+		[for (seg = [0:segs-1], i = [0:splinesteps-1]) bezier_path_point(bezier, seg, i/splinesteps, N=N)],
+		[bezier_path_point(bezier, segs-1, 1, N=N)]
+	);
+
+
+
 // Function: fillet_path()
 // Usage:
 //   fillet_path(pts, fillet, [maxerr]);
@@ -198,44 +334,62 @@ function fillet_path(pts, fillet, maxerr=0.1) = concat(
 
 // Function: bezier_close_to_axis()
 // Usage:
-//   bezier_close_to_axis(bezier, [N]);
+//   bezier_close_to_axis(bezier, [N], [axis]);
 // Description:
-//   Takes a 2D bezier path and closes it to the X axis.
+//   Takes a 2D bezier path and closes it to the specified axis.
 // Arguments:
-//   bezier = The 2D bezier path to close to the X axis.
+//   bezier = The 2D bezier path to close to the axis.
 //   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+//   axis = The axis to close to, "X", or "Y".  Default: "X"
 // Example(2D):
 //   bez = [[50,30], [40,10], [10,50], [0,30], [-10, 10], [-30,10], [-50,20]];
 //   closed = bezier_close_to_axis(bez);
 //   trace_bezier(closed, size=1);
-function bezier_close_to_axis(bezier, N=3) =
+// Example(2D):
+//   bez = [[30,50], [10,40], [50,10], [30,0], [10, -10], [10,-30], [20,-50]];
+//   closed = bezier_close_to_axis(bez, axis="Y");
+//   trace_bezier(closed, size=1);
+function bezier_close_to_axis(bezier, N=3, axis="X") =
 	let(
-		bezend = len(bezier)-1
-	) concat(
-		[for (i=[0:N-1]) lerp([bezier[0][0], 0], bezier[0], i/N)],
+		bezend = len(bezier)-1,
+		sp = bezier[0],
+		ep = bezier[bezend]
+	) (axis=="X")? concat(
+		[for (i=[0:N-1]) lerp([sp.x,0], sp, i/N)],
 		bezier,
-		[for (i=[1:N]) lerp(bezier[bezend], [bezier[bezend][0], 0], i/N)],
-		[for (i=[1:N]) lerp([bezier[bezend][0], 0], [bezier[0][0], 0], i/N)]
+		[for (i=[1:N]) lerp(ep, [ep.x,0], i/N)],
+		[for (i=[1:N]) lerp([ep.x,0], [sp.x,0], i/N)]
+	) : (axis=="Y")? concat(
+		[for (i=[0:N-1]) lerp([0,sp.y], sp, i/N)],
+		bezier,
+		[for (i=[1:N]) lerp(ep, [0,ep.y], i/N)],
+		[for (i=[1:N]) lerp([0,ep.y], [0,sp.y], i/N)]
+	) : (
+		assert_in_list("axis", axis, ["X","Y"])
 	);
 
 
 // Function: bezier_offset()
 // Usage:
-//   bezier_offset(inset, bezier, [N]);
+//   bezier_offset(inset, bezier, [N], [axis]);
 // Description:
-//   Takes a 2D bezier path and closes it with a matching path that is
-//   lowered by a given amount towards the X axis.
+//   Takes a 2D bezier path and closes it with a matching reversed path that is closer to the given axis by distance `inset`.
 // Arguments:
 //   inset = Amount to lower second path by.
-//   bezier = The 2D bezier path to close to the X axis.
+//   bezier = The 2D bezier path.
 //   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+//   axis = The axis to offset towards, "X", or "Y".  Default: "X"
 // Example(2D):
 //   bez = [[50,30], [40,10], [10,50], [0,30], [-10, 10], [-30,10], [-50,20]];
 //   closed = bezier_offset(5, bez);
 //   trace_bezier(closed, size=1);
-function bezier_offset(inset, bezier, N=3) =
+// Example(2D):
+//   bez = [[30,50], [10,40], [50,10], [30,0], [10, -10], [10,-30], [20,-50]];
+//   closed = bezier_offset(5, bez, axis="Y");
+//   trace_bezier(closed, size=1);
+function bezier_offset(inset, bezier, N=3, axis="X") =
 	let(
-		backbez = reverse([ for (pt = bezier) [pt[0], pt[1]-inset] ]),
+		backbez = reverse([ for (pt = bezier) pt-(axis=="X"? [0,inset] : [inset,0]) ]),
 		bezend = len(bezier)-1
 	) concat(
 		bezier,
@@ -243,6 +397,7 @@ function bezier_offset(inset, bezier, N=3) =
 		backbez,
 		[for (i=[1:N]) lerp(backbez[bezend], bezier[0], i/N)]
 	);
+
 
 
 // Section: Modules
