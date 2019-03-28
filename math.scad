@@ -578,9 +578,9 @@ function compare_vals(a, b, n=0) =
 
 
 
-// Function: quicksort()
+// Function: array_sort()
 // Usage:
-//   quicksort(arr, [idx])
+//   array_sort(arr, [idx])
 // Description:
 //   Sorts the given list using `compare_vals()`.
 // Arguments:
@@ -588,8 +588,8 @@ function compare_vals(a, b, n=0) =
 //   idx = If given, the index, range, or list of indices of sublist items to compare.
 // Example:
 //   l = [45,2,16,37,8,3,9,23,89,12,34];
-//   sorted = quicksort(l);  // Returns [2,3,8,9,12,16,23,34,37,45,89]
-function quicksort(arr, idx=undef) =
+//   sorted = array_sort(l);  // Returns [2,3,8,9,12,16,23,34,37,45,89]
+function array_sort(arr, idx=undef) =
 	(len(arr)<=1) ? arr :
 	let(
 		pivot = arr[floor(len(arr)/2)],
@@ -603,7 +603,25 @@ function quicksort(arr, idx=undef) =
 		equal   = [ for (i = [0:len(arr)-1]) if (compare[i] ==0) arr[i] ],
 		greater = [ for (i = [0:len(arr)-1]) if (compare[i] > 0) arr[i] ]
 	)
-	concat(quicksort(lesser,idx), equal, quicksort(greater,idx));
+	concat(array_sort(lesser,idx), equal, array_sort(greater,idx));
+
+
+
+// Function: array_unique()
+// Usage:
+//   array_unique(arr);
+// Description:
+//   Returns a sorted list with all repeated items removed.
+// Arguments:
+//   arr = The list to uniquify.
+function array_unique(arr) =
+	len(arr)<=1? arr : let(
+		sorted = array_sort(arr)
+	) [
+		for (i=[0:len(sorted)-1])
+			if (i==0 || (sorted[i] != sorted[i-1]))
+				sorted[i]
+	];
 
 
 
