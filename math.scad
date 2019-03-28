@@ -35,7 +35,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
 include <compat.scad>
+
 
 // Function: Cpi()
 // Status: DEPRECATED, use `PI` instead.
@@ -526,6 +528,83 @@ function array_group(v, cnt=2, dflt=0) = [for (i = [0:cnt:len(v)-1]) [for (j = [
 // Example:
 //   flatten([[1,2,3], [4,5,[6,7,8]]]) returns [1,2,3,4,5,[6,7,8]]
 function flatten(l) = [for (a = l) for (b = a) b];
+
+
+// Function: compare_lists()
+// Usage:
+//   compare_lists(a, b)
+// Description:
+//   Compare contents of two lists.
+//   Returns <0 if `a`<`b`.
+//   Returns >0 if `a`>`b`.
+//   Returns 0 if `a`==`b`.
+// Arguments:
+//   a = First list to compare.
+//   b = Second list to compare.
+function compare_lists(a, b, n=0) =
+	let (la = len(a), lb = len(b))
+	(la<=n && lb<=n)? 0 :
+	(la<=n)? -1 :
+	(lb<=n)? 1 :
+	let (cmp = compare_vals(a[n], b[n]))
+	(cmp != 0)? cmp :
+	compare_lists(a, b, n+1);
+
+
+// Function: compare_vals()
+// Usage:
+//   compare_vals(a, b);
+// Description:
+//   Compares two values.  If types don't match, then
+//   undef < boolean < scalar < string < list
+//   Lists are compared recursively.
+// Arguments:
+//   a = First value to compare.
+//   b = Second value to compare.
+function compare_vals(a, b, n=0) =
+	(a == undef && b == undef)? 0 :
+	(a == undef)? -1 :
+	(b == undef)? 1 :
+	(is_boolean(a) && is_boolean(b))? ((a?1:0)-(b?1:0)) :
+	is_boolean(a)? -1 :
+	is_boolean(b)? 1 :
+	(is_scalar(a) && is_scalar(b))? (a-b) :
+	is_scalar(a)? -1 :
+	is_scalar(b)? 1 :
+	(is_str(a) && is_str(b))? ((a<b)? -1 : ((a>b)? 1 : 0)) :
+	is_str(a)? -1 :
+	is_str(b)? 1 :
+	compare_lists(a,b);
+
+
+
+// Function: quicksort()
+// Usage:
+//   quicksort(arr, [idx])
+// Description:
+//   Sorts the given list using `compare_vals()`.
+// Arguments:
+//   arr = The list to sort.
+//   idx = If given, the index, range, or list of indices of sublist items to compare.
+// Example:
+//   l = [45,2,16,37,8,3,9,23,89,12,34];
+//   sorted = quicksort(l);  // Returns [2,3,8,9,12,16,23,34,37,45,89]
+function quicksort(arr, idx=undef) =
+	(len(arr)<=1) ? arr :
+	let(
+		pivot = arr[floor(len(arr)/2)],
+		pivotval = idx==undef? pivot : [for (i=idx) pivot[i]],
+		compare = [
+			for (entry = arr) let(
+				val = idx==undef? entry : [for (i=idx) entry[i]]
+			) compare_vals(val, pivotval)
+		],
+		lesser  = [ for (i = [0:len(arr)-1]) if (compare[i] < 0) arr[i] ],
+		equal   = [ for (i = [0:len(arr)-1]) if (compare[i] ==0) arr[i] ],
+		greater = [ for (i = [0:len(arr)-1]) if (compare[i] > 0) arr[i] ]
+	)
+	concat(quicksort(lesser,idx), equal, quicksort(greater,idx));
+
 
 
 // Internal.  Not exposed.
