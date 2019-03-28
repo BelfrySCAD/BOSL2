@@ -61,10 +61,14 @@ use <transforms.scad>
 //       `[endpt1, cp1, cp2, endpt2, cp3, cp4, endpt3]`
 //   **NOTE**: A bezier path is *NOT* a polyline.  It is only the points and controls used to define the curve.
 //   
+//   **Bezier Patch**: A surface defining grid of (N+1) by (N+1) bezier points.  If a Bezier Segment defines a curved line, a Bezier Patch defines a curved surface.
+//   
+//   **Bezier Surface**: A surface defined by a list of one or more bezier patches.
+//   
 //   **Spline Steps**: The number of straight-line segments to split a bezier segment into, to approximate the bezier curve.  The more spline steps, the closer the approximation will be to the curve, but the slower it will be to generate.  Usually defaults to 16.
 
 
-// Section: Bezier Segment Functions
+// Section: Segment Functions
 
 // Function: bez_point()
 // Usage:
@@ -94,7 +98,6 @@ function bez_point(curve,u)=
 			[for(i=[0:len(curve)-2]) curve[i]*(1-u)+curve[i+1]*u],
 			u
 		);
-
 
 
 // Function: bezier_segment_closest_point()
@@ -202,7 +205,104 @@ function fillet3pts(p0, p1, p2, r, maxerr=0.1, w=0.5, dw=0.25) = let(
 
 
 
-// Section: Bezier Path Functions
+// Section: Patch Functions
+
+
+// Function: bezier_patch_point()
+// Usage:
+//   bezier_patch_point(patch, u, v)
+// Description:
+//   Given a square 2-dimensional array of (N+1) by (N+1) points size,
+//   that represents a Bezier Patch of degree N, returns a point on that
+//   surface, at positions `u`, and `v`.  A cubic bezier patch will be 4x4
+//   points in size.  If given a non-square array, each direction will have
+//   its own degree.
+// Arguments:
+//   patch = The 2D array of endpoints and control points for this bezier patch.
+//   u = The proportion of the way along the first dimension of the patch to find the point of.  0<=`u`<=1
+//   v = The proportion of the way along the second dimension of the patch to find the point of.  0<=`v`<=1
+function bezier_patch_point(patch, u, v) = bez_point([for (bez = patch) bez_point(bez, u)], v);
+
+
+// Internal, not exposed.
+function _vertex_list_merge(v1, v2) = concat(v1, [for (v=v2) if (!in_list(v,v1)) v]);
+function _vertex_list_face(v, face) = [for (pt = face) search([pt], v, num_returns_per_match=1)[0]];
+
+
+// Function: bezier_patch_vertices_and_faces()
+// Usage:
+//   bezier_patch_vertices_and_faces(patch, [splinesteps], [vertices], [faces]);
+// Description:
+//   Calculate vertices and faces for forming a partial polyhedron from the given bezier patch.
+//   Returns a list containing two elements.  The first is the list of unique vertices.
+//   The second is the list of faces, where each face is a list of indices into the
+//   list of vertices.  You can chain calls to this, to add more vertices and faces
+//   for multiple bezier patches, to stitch them together into a complete polyhedron.
+// Arguments:
+//   patch = The 2D array of endpoints and control points for this bezier patch.
+//   splinesteps = Number of steps to divide each bezier segment into.  Default: 16
+//   vertices = Vertex list to add new points to.  Default: []
+//   faces = Face list to add new faces to.  Default: []
+function bezier_patch_vertices_and_faces(patch, splinesteps=16, vertices=[], faces=[]) =
+	let(
+		pts = [for (v=[0:splinesteps], u=[0:splinesteps]) bezier_patch_point(patch, u/splinesteps, v/splinesteps)],
+		new_vertices = _vertex_list_merge(vertices, pts),
+		new_faces = [
+			for (
+				v=[0:splinesteps-1],
+				u=[0:splinesteps-1],
+				i=[0,1]
+			) let (
+				v1 = u+v*(splinesteps+1),
+				v2 = v1 + 1,
+				v3 = v1 + splinesteps + 1,
+				v4 = v3 + 1,
+				face = i? [v1,v3,v2] : [v2,v3,v4],
+				facepts = [for (idx = face) pts[idx]]
+			)  _vertex_list_face(new_vertices, facepts)
+		]
+	) [new_vertices, concat(faces, new_faces)];
+
+
+
+// Function: bezier_surface_vertices_and_faces()
+// Usage:
+//   bezier_surface_vertices_and_faces(patches, [splinesteps], [vertices], [faces]);
+// Description:
+//   Calculate vertices and faces for forming a (possibly partial) polyhedron from the given bezier patches.
+//   Returns a list containing two elements.  The first is the list of unique vertices.
+//   The second is the list of faces, where each face is a list of indices into the
+//   list of vertices.  You can chain calls to this, to add more vertices and faces
+//   for multiple bezier patches, to stitch them together into a complete polyhedron.
+// Arguments:
+//   patches = A list of bezier patches.
+//   splinesteps = Number of steps to divide each bezier segment into.  Default: 16
+//   vertices = Vertex list to add new points to.  Default: []
+//   faces = Face list to add new faces to.  Default: []
+// Example(3D):
+//   patch1 = [
+//   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
+//   	[[ 0,40,0], [ 0,  0,100], [100,  0, 20], [100, 40,0]],
+//   	[[ 0,60,0], [ 0,100,100], [100,100, 20], [100, 60,0]],
+//   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//   ];
+//   patch2 = [
+//   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
+//   	[[ 0,40,0], [ 0,  0,-50], [100,  0,-50], [100, 40,0]],
+//   	[[ 0,60,0], [ 0,100,-50], [100,100,-50], [100, 60,0]],
+//   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//   ];
+//   vnf = bezier_surface_vertices_and_faces([patch1, patch2], splinesteps=16);
+//   polyhedron(points=vnf[0], faces=vnf[1]);
+function bezier_surface_vertices_and_faces(patches, splinesteps=16, i=0, vertices=[], faces=[]) =
+	let(
+		vnf = bezier_patch_vertices_and_faces(patches[i], splinesteps=splinesteps, vertices=vertices, faces=faces)
+	) i >= len(patches)? vnf :
+	bezier_surface_vertices_and_faces(patches, splinesteps=splinesteps, i=i+1, vertices=vnf[0], faces=vnf[1]);
+
+
+
+// Section: Path Functions
 
 
 // Function: bezier_path_point()
@@ -650,6 +750,82 @@ module trace_bezier(bez, N=3, size=1) {
 	trace_polyline(bez, N=N, showpts=true, size=size/2, color="green");
 	trace_polyline(bezier_polyline(bez, N=N), size=size, color="cyan");
 }
+
+
+
+// Section: Bezier Surface Modules
+
+
+// Module: bezier_polyhedron()
+// Useage:
+//   bezier_polyhedron(patches)
+// Description:
+//   Takes a list of two or more bezier patches and attempts to make a complete polyhedron from them.
+// Arguments:
+//   patches = A list of bezier patches.
+//   splinesteps = Number of steps to divide each bezier segment into. Default: 16
+// Example:
+//   patch1 = [
+//   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
+//   	[[ 0,40,0], [ 0,  0, 20], [100,  0, 20], [100, 40,0]],
+//   	[[ 0,60,0], [ 0,100, 20], [100,100,100], [100, 60,0]],
+//   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//   ];
+//   patch2 = [
+//   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
+//   	[[ 0,40,0], [ 0,  0,-50], [100,  0,-50], [100, 40,0]],
+//   	[[ 0,60,0], [ 0,100,-50], [100,100,-50], [100, 60,0]],
+//   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//   ];
+//   bezier_polyhedron([patch1, patch2], splinesteps=8);
+module bezier_polyhedron(patches, splinesteps=16)
+{
+	sfc = bezier_surface_vertices_and_faces(patches, splinesteps=splinesteps);
+	polyhedron(points=sfc[0], faces=sfc[1]);
+}
+
+
+
+// Module: trace_bezier_patches()
+// Usage:
+//   trace_bezier_patches(patches, [size], [showcps], [splinesteps]);
+// Description:
+//   Shows the surface, and optionally, control points of a list of bezier patches.
+// Arguments:
+//   patches = A list of bezier patches.
+//   splinesteps = Number of steps to divide each bezier segment into. default=16
+//   showcps = If true, show the controlpoints as well as the surface.
+//   size = Size to show control points and lines.
+// Example:
+//   patch1 = [
+//   	[[15,15,0], [33,  0,  0], [ 67,  0,  0], [ 85, 15,0]],
+//   	[[ 0,33,0], [33, 33, 50], [ 67, 33, 50], [100, 33,0]],
+//   	[[ 0,67,0], [33, 67, 50], [ 67, 67, 50], [100, 67,0]],
+//   	[[15,85,0], [33,100,  0], [ 67,100,  0], [ 85, 85,0]],
+//   ];
+//   patch2 = [
+//   	[[15,15,0], [33,  0,  0], [ 67,  0,  0], [ 85, 15,0]],
+//   	[[ 0,33,0], [33, 33,-50], [ 67, 33,-50], [100, 33,0]],
+//   	[[ 0,67,0], [33, 67,-50], [ 67, 67,-50], [100, 67,0]],
+//   	[[15,85,0], [33,100,  0], [ 67,100,  0], [ 85, 85,0]],
+//   ];
+//   trace_bezier_patches([patch1, patch2], splinesteps=8, showcps=true);
+module trace_bezier_patches(patches, size=1, showcps=false, splinesteps=16)
+{
+	for (patch = patches) {
+		if (showcps) {
+			place_copies(flatten(patch)) color("red") sphere(d=size*2);
+			for (i=[0:len(patch)-1], j=[0:len(patch[i])-1]) {
+				if (i<len(patch)-1) extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
+				if (j<len(patch[i])-1) extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
+			}
+			vnf = bezier_patch_vertices_and_faces(patch, splinesteps=splinesteps);
+			place_copies(vnf[0]) color("blue") sphere(d=size);
+		}
+	}
+	bezier_polyhedron(patches, splinesteps=splinesteps);
+}
+
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
