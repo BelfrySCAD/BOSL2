@@ -57,7 +57,7 @@ function is_def(v) = (version_num() > 20190100)? !is_undef(v) : (v != undef);
 
 // Function: is_str()
 // Description: Given a value, returns true if it is a string.
-function is_str(v) = (version_num() > 20190100)? is_string(v) : (is_def(v) && is_def(len(v)) && (len(str(v,v)) == len(v)*2));
+function is_str(v) = (version_num() > 20190100)? is_string(v) : (v=="" || (is_def(v) && is_def(v[0]) && (len(str(v,v)) == len(v)*2)));
 
 
 // Function: is_boolean()
@@ -72,7 +72,7 @@ function is_scalar(v) = (version_num() > 20190100)? is_num(v) : (!is_boolean(v) 
 
 // Function: is_array()
 // Description: Given a value, returns true if it is an array/list/vector.
-function is_array(v) = (version_num() > 20190100)? is_list(v) : (!is_str(v) && is_def(len(v)));
+function is_array(v) = (version_num() > 20190100)? is_list(v) : (v==[] || (is_def(v[0]) && !is_str(v) ));
 
 
 // Function: get_radius()
