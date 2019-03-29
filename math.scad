@@ -496,38 +496,33 @@ function array_subindex(v, idx) = [
 
 // Function: list_range()
 // Usage:
-//   list_range(a, [step])
-//   list_range(a, b, [step])
-// Description:
-//   If given both `a` and `b`, returns a list containing incrementing valies from `a` to `b`, inclusive, stepping by `step`, if given.
-// Arguments:
-//   a = If `b` is given, `a` is the starting value.  If `b` is not given, `a` is the count of values to return.
-//   b = Max value to increment to.
-//   step = Amount to step value for each increment.
-// Example:
-//   list_range(10);      // Returns [0,1,2,3,4,5,6,7,8,9]
-//   list_range(3,10);    // Returns [3,4,5,6,7,8,9,10]
-//   list_range(3,10,2);  // Returns [3,5,7,9]
-//   list_range(4,10,2);  // Returns [4,6,8,10]
-//   list_range(10,step=2);  // Returns [0,2,4,6,8,10,12,14,16,18]
-function list_range(a, b=undef, step=1) =
-	let(
-		range = (b==undef)? [0:step:step*a-1] : [a:step:b]
-	) [for (n=range) n];
-
-
-// Function: list_range()
-// Usage:
-//   list_range(n, [s], [step])
+//   list_range(n, [s], [e], [step])
 //   list_range(e, [step])
 //   list_range(s, e, [step])
 // Description:
-//   Returns a list, counting up from `s`, by `step` increments,
-//   until either `n` values are in the list, or until before the
-//   value would exceed `e`.
+//   Returns a list, counting up from starting value `s`, by `step` increments,
+//   until either `n` values are in the list, or it reaches the end value `e`.
+// Arguments:
+//   n = Desired number of values in returned list, if given.
+//   s = Starting value.  Default: 0
+//   e = Ending value to stop at, if given.
+//   step = Amount to increment each value.  Default: 1
+// Example:
+//   list_range(4);                  // Returns [0,1,2,3]
+//   list_range(n=4, step=2);        // Returns [0,2,4,6]
+//   list_range(n=4, s=3, step=3);   // Returns [3,6,9,12]
+//   list_range(n=4, s=3, e=9, step=3);  // Returns [3,6,9]
+//   list_range(e=3);                // Returns [0,1,2,3]
+//   list_range(e=6, step=2);        // Returns [0,2,4,6]
+//   list_range(s=3, e=5);           // Returns [3,4,5]
+//   list_range(s=3, e=8, step=2);   // Returns [3,5,7]
+//   list_range(s=4, e=8, step=2);   // Returns [4,6,8]
+//   list_range(n=4, s=[3,4], step=[2,3]);  // Returns [[3,4], [5,7], [7,10], [9,13]]
 function list_range(n=undef, s=0, e=undef, step=1) =
-	let(dummy=assertion(is_def(n)||is_def(e), "Must specify one of `n` or `e`."))
-	(n!=undef)? [for (i=[s:step:n*step-1+s]) i] : [for (i=[s:step:e]) i]
+	(n!=undef && e!=undef)? [for (i=[0:n-1]) let(v=s+step*i) if (v<=e) v] :
+	(n!=undef)? [for (i=[0:n-1]) let(v=s+step*i) v] :
+	(e!=undef)? [for (v=[s:step:e]) v] :
+	assertion(false, "Must supply one of `n` or `e`.");
 
 
 // Function: array_shortest()
