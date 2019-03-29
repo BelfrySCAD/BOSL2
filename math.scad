@@ -245,14 +245,53 @@ function sum_of_sines(a, sines) =
 function mean(v) = sum(v)/len(v);
 
 
-// Section: List/Array Operations
+// Section: Comparisons and Logic
 
-// Function: cdr()
-// Status: DEPRECATED, use `slice(list,1,-1)` instead.
-// Description: Returns all but the first item of a given array.
+// Function: compare_vals()
+// Usage:
+//   compare_vals(a, b);
+// Description:
+//   Compares two values.  If types don't match, then
+//   undef < boolean < scalar < string < list
+//   Lists are compared recursively.
 // Arguments:
-//   list = The list to get the tail of.
-function cdr(list) = len(list)<=1? [] : [for (i=[1:len(list)-1]) list[i]];
+//   a = First value to compare.
+//   b = Second value to compare.
+function compare_vals(a, b, n=0) =
+	(a == undef && b == undef)? 0 :
+	(a == undef)? -1 :
+	(b == undef)? 1 :
+	(is_boolean(a) && is_boolean(b))? ((a?1:0)-(b?1:0)) :
+	is_boolean(a)? -1 :
+	is_boolean(b)? 1 :
+	(is_scalar(a) && is_scalar(b))? (a-b) :
+	is_scalar(a)? -1 :
+	is_scalar(b)? 1 :
+	(is_str(a) && is_str(b))? ((a<b)? -1 : ((a>b)? 1 : 0)) :
+	is_str(a)? -1 :
+	is_str(b)? 1 :
+	compare_lists(a,b);
+
+
+// Function: compare_lists()
+// Usage:
+//   compare_lists(a, b)
+// Description:
+//   Compare contents of two lists.
+//   Returns <0 if `a`<`b`.
+//   Returns >0 if `a`>`b`.
+//   Returns 0 if `a`==`b`.
+// Arguments:
+//   a = First list to compare.
+//   b = Second list to compare.
+function compare_lists(a, b, n=0) =
+	let (la = len(a), lb = len(b))
+	(la<=n && lb<=n)? 0 :
+	(la<=n)? -1 :
+	(lb<=n)? 1 :
+	let (cmp = compare_vals(a[n], b[n]))
+	(cmp != 0)? cmp :
+	compare_lists(a, b, n+1);
 
 
 // Function: any()
@@ -267,15 +306,13 @@ function cdr(list) = len(list)<=1? [] : [for (i=[1:len(list)-1]) list[i]];
 //   any([1,5,true]);       // Returns true.
 //   any([[0,0], [0,0]]);   // Returns false.
 //   any([[0,0], [1,0]]);   // Returns true.
-function any(l, s=0, e=-1) =
-	let(
-		e = e<0? e+len(l) : e,
-		m = ceil((s+e)/2)
-	)
-	(e==s)? (
-		is_array(l[s])? any(l[s]) : (l[s]? true : false)
-	) : (
-		any(l,s,m-1)? true : any(l,m,e)
+function any(l, i=0, succ=false) =
+	(i>=len(l) || succ)? succ :
+	any(
+		l, i=i+1, succ=(
+			is_array(l[i])? any(l[i]) :
+			!(!l[i])
+		)
 	);
 
 
@@ -292,17 +329,55 @@ function any(l, s=0, e=-1) =
 //   all([[0,0], [0,0]]);   // Returns false.
 //   all([[0,0], [1,0]]);   // Returns false.
 //   all([[1,1], [1,1]]);   // Returns true.
-function all(l, s=0, e=-1) =
-	let(
-		e = e<0? e+len(l) : e,
-		m = ceil((s+e)/2)
-	)
-	(e==s)? (
-		is_array(l[s])? all(l[s]) : (l[s]? true : false)
-	) : (
-		(!all(l,s,m-1))? false : all(l,m,e)
+function all(l, i=0, fail=false) =
+	(i>=len(l) || fail)? (!fail) :
+	all(
+		l, i=i+1, fail=(
+			is_array(l[i])? !all(l[i]) :
+			!l[i]
+		)
 	);
 
+
+// Function: count_true()
+// Usage:
+//   count_true(l)
+// Description:
+//   Returns the number of items in `l` that evaluate as true.
+//   If `l` is a lists of lists, this is applied recursively to each
+//   sublist.  Returns the total count of items that evaluate as true
+//   in all recursive sublists.
+// Arguments:
+//   l = The list to test for true items.
+//   nmax = If given, stop counting if `nmax` items evaluate as true.
+// Example:
+//   count_true([0,false,undef]);  // Returns 0.
+//   count_true([1,false,undef]);  // Returns 1.
+//   count_true([1,5,false]);      // Returns 2.
+//   count_true([1,5,true]);       // Returns 3.
+//   count_true([[0,0], [0,0]]);   // Returns 0.
+//   count_true([[0,0], [1,0]]);   // Returns 1.
+//   count_true([[1,1], [1,1]]);   // Returns 4.
+//   count_true([[1,1], [1,1]], nmax=3);  // Returns 3.
+function count_true(l, nmax=undef, i=0, cnt=0) =
+	(i>=len(l) || (nmax!=undef && cnt>=nmax))? cnt :
+	count_true(
+		l=l, nmax=nmax, i=i+1, cnt=cnt+(
+			is_array(l[i])? count_true(l[i], nmax=nmax-cnt) :
+			(l[i]? 1 : 0)
+		)
+	);
+
+
+
+// Section: List/Array Operations
+
+// Function: cdr()
+// Status: DEPRECATED, use `slice(list,1,-1)` instead.
+// Description: Returns all but the first item of a given array.
+// Arguments:
+//   list = The list to get the tail of.
+function cdr(list) = len(list)<=1? [] : [for (i=[1:len(list)-1]) list[i]];
 
 
 // Function: in_list()
@@ -530,57 +605,9 @@ function array_group(v, cnt=2, dflt=0) = [for (i = [0:cnt:len(v)-1]) [for (j = [
 function flatten(l) = [for (a = l) for (b = a) b];
 
 
-// Function: compare_lists()
+// Function: sort()
 // Usage:
-//   compare_lists(a, b)
-// Description:
-//   Compare contents of two lists.
-//   Returns <0 if `a`<`b`.
-//   Returns >0 if `a`>`b`.
-//   Returns 0 if `a`==`b`.
-// Arguments:
-//   a = First list to compare.
-//   b = Second list to compare.
-function compare_lists(a, b, n=0) =
-	let (la = len(a), lb = len(b))
-	(la<=n && lb<=n)? 0 :
-	(la<=n)? -1 :
-	(lb<=n)? 1 :
-	let (cmp = compare_vals(a[n], b[n]))
-	(cmp != 0)? cmp :
-	compare_lists(a, b, n+1);
-
-
-// Function: compare_vals()
-// Usage:
-//   compare_vals(a, b);
-// Description:
-//   Compares two values.  If types don't match, then
-//   undef < boolean < scalar < string < list
-//   Lists are compared recursively.
-// Arguments:
-//   a = First value to compare.
-//   b = Second value to compare.
-function compare_vals(a, b, n=0) =
-	(a == undef && b == undef)? 0 :
-	(a == undef)? -1 :
-	(b == undef)? 1 :
-	(is_boolean(a) && is_boolean(b))? ((a?1:0)-(b?1:0)) :
-	is_boolean(a)? -1 :
-	is_boolean(b)? 1 :
-	(is_scalar(a) && is_scalar(b))? (a-b) :
-	is_scalar(a)? -1 :
-	is_scalar(b)? 1 :
-	(is_str(a) && is_str(b))? ((a<b)? -1 : ((a>b)? 1 : 0)) :
-	is_str(a)? -1 :
-	is_str(b)? 1 :
-	compare_lists(a,b);
-
-
-
-// Function: array_sort()
-// Usage:
-//   array_sort(arr, [idx])
+//   sort(arr, [idx])
 // Description:
 //   Sorts the given list using `compare_vals()`.
 // Arguments:
@@ -588,8 +615,8 @@ function compare_vals(a, b, n=0) =
 //   idx = If given, the index, range, or list of indices of sublist items to compare.
 // Example:
 //   l = [45,2,16,37,8,3,9,23,89,12,34];
-//   sorted = array_sort(l);  // Returns [2,3,8,9,12,16,23,34,37,45,89]
-function array_sort(arr, idx=undef) =
+//   sorted = sort(l);  // Returns [2,3,8,9,12,16,23,34,37,45,89]
+function sort(arr, idx=undef) =
 	(len(arr)<=1) ? arr :
 	let(
 		pivot = arr[floor(len(arr)/2)],
@@ -603,20 +630,20 @@ function array_sort(arr, idx=undef) =
 		equal   = [ for (i = [0:len(arr)-1]) if (compare[i] ==0) arr[i] ],
 		greater = [ for (i = [0:len(arr)-1]) if (compare[i] > 0) arr[i] ]
 	)
-	concat(array_sort(lesser,idx), equal, array_sort(greater,idx));
+	concat(sort(lesser,idx), equal, sort(greater,idx));
 
 
 
-// Function: array_unique()
+// Function: unique()
 // Usage:
-//   array_unique(arr);
+//   unique(arr);
 // Description:
 //   Returns a sorted list with all repeated items removed.
 // Arguments:
 //   arr = The list to uniquify.
-function array_unique(arr) =
+function unique(arr) =
 	len(arr)<=1? arr : let(
-		sorted = array_sort(arr)
+		sorted = sort(arr)
 	) [
 		for (i=[0:len(sorted)-1])
 			if (i==0 || (sorted[i] != sorted[i-1]))
