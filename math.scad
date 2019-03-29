@@ -494,9 +494,45 @@ function array_subindex(v, idx) = [
 ];
 
 
+// Function: list_range()
+// Usage:
+//   list_range(a, [step])
+//   list_range(a, b, [step])
+// Description:
+//   If given both `a` and `b`, returns a list containing incrementing valies from `a` to `b`, inclusive, stepping by `step`, if given.
+// Arguments:
+//   a = If `b` is given, `a` is the starting value.  If `b` is not given, `a` is the count of values to return.
+//   b = Max value to increment to.
+//   step = Amount to step value for each increment.
+// Example:
+//   list_range(10);      // Returns [0,1,2,3,4,5,6,7,8,9]
+//   list_range(3,10);    // Returns [3,4,5,6,7,8,9,10]
+//   list_range(3,10,2);  // Returns [3,5,7,9]
+//   list_range(4,10,2);  // Returns [4,6,8,10]
+//   list_range(10,step=2);  // Returns [0,2,4,6,8,10,12,14,16,18]
+function list_range(a, b=undef, step=1) =
+	let(
+		range = (b==undef)? [0:step:step*a-1] : [a:step:b]
+	) [for (n=range) n];
+
+
+// Function: list_range()
+// Usage:
+//   list_range(n, [s], [step])
+//   list_range(e, [step])
+//   list_range(s, e, [step])
+// Description:
+//   Returns a list, counting up from `s`, by `step` increments,
+//   until either `n` values are in the list, or until before the
+//   value would exceed `e`.
+function list_range(n=undef, s=0, e=undef, step=1) =
+	let(dummy=assertion(is_def(n)||is_def(e), "Must specify one of `n` or `e`."))
+	(n!=undef)? [for (i=[s:step:n*step-1+s]) i] : [for (i=[s:step:e]) i]
+
+
 // Function: array_shortest()
 // Description:
-//   Returns the length of the shortest list in a list of list.
+//   Returns the length of the shortest sublist in a list of lists.
 // Arguments:
 //   vecs = A list of lists.
 function array_shortest(vecs) = min([for (v = vecs) len(v)]);
@@ -504,7 +540,7 @@ function array_shortest(vecs) = min([for (v = vecs) len(v)]);
 
 // Function: array_longest()
 // Description:
-//   Returns the length of the longest list in a list of list.
+//   Returns the length of the longest sublist in a list of lists.
 // Arguments:
 //   vecs = A list of lists.
 function array_longest(vecs) = max([for (v = vecs) len(v)]);
@@ -663,6 +699,7 @@ function _array_dim_recurse(v) =
 	) is_list(leveldown[0])? (
 		concat([first],_array_dim_recurse(leveldown))
 	) : [first];
+
 
 // Function: array_dim()
 // Usage:
