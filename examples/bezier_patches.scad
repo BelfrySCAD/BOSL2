@@ -99,11 +99,10 @@ module CR_cube(size=[100,100,100], r=10, splinesteps=8, cheat=false)
 	// Generating all the patches above took about 0.05 secs.
 
 	if (cheat) {
-		// Generating the points for the corners takes 5 seconds on my weak-sauce laptop.
-		// Hulling it takes less than a second.
+		// Hulling just the corners takes less than a second.
 		hull() bezier_polyhedron(tris=corners, splinesteps=splinesteps);
 	} else {
-		// Generating the polyhedron fully from bezier patches takes 12 seconds on my laptop.
+		// Generating the polyhedron fully from bezier patches takes 3 seconds on my laptop.
 		bezier_polyhedron(patches=concat(edges, faces), tris=corners, splinesteps=splinesteps);
 	}
 }
