@@ -380,6 +380,28 @@ function count_true(l, nmax=undef, i=0, cnt=0) =
 function cdr(list) = len(list)<=1? [] : [for (i=[1:len(list)-1]) list[i]];
 
 
+
+// Function: replist()
+// Usage:
+//   replist(val, n)
+// Description:
+//   Generates a list or array of `n` copies of the given `list`.
+//   If the count `n` is given as a list of counts, then this creates a
+//   multi-dimensional array, filled with `val`.
+// Arguments:
+//   val = The value to repeat to make the list or array.
+//   n = The number of copies to make of `val`.
+// Example:
+//   replist(1, 4);        // Returns [1,1,1,1]
+//   replist(8, [2,3]);    // Returns [[8,8,8], [8,8,8]]
+//   replist(0, [2,2,3]);  // Returns [[[0,0,0],[0,0,0]], [[0,0,0],[0,0,0]]]
+//   replist([1,2,3],3);   // Returns [[1,2,3], [1,2,3], [1,2,3]]
+function replist(val, n, i=0) =
+	is_scalar(n)? [for(j=[1:n]) val] :
+	(i>=len(n))? val :
+	[for (j=[1:n[i]]) replist(val, n, i+1)];
+
+
 // Function: in_list()
 // Description: Returns true if value `x` is in list `l`.
 // Arguments:
