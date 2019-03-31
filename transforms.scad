@@ -1837,7 +1837,7 @@ module zflip_copy(offset=0, cp=[0,0,0])
 //
 // Arguments:
 //   v = Normal of plane to slice at.  Keeps everything on the side the normal points to.  Default: [0,0,1] (V_UP)
-//   cp = A point that is on the cut plane.  This can be used to shift where it slices the object at.  Default: [0,0,0]
+//   cp = If given as a scalar, moves the cut plane along the normal by the given amount.  If given as a point, specifies a point on the cut plane.  This can be used to shift where it slices the object at.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
 //
 // Examples:
@@ -1845,6 +1845,7 @@ module zflip_copy(offset=0, cp=[0,0,0])
 //   half_of(V_DOWN+V_LEFT, s=200) sphere(d=150);
 module half_of(v=V_UP, cp=[0,0,0], s=100)
 {
+	cp = is_scalar(cp)? cp*v : cp;
 	if (cp != [0,0,0]) {
 		translate(cp) half_of(v=v, s=s) translate(-cp) children();
 	} else {
@@ -1867,13 +1868,22 @@ module half_of(v=V_UP, cp=[0,0,0], s=100)
 //   Slices an object at a horizontal X-Y cut plane, and masks away everything that is below it.
 //
 // Arguments:
-//   cp = A point that is on the cut plane.  This can be used to shift where it slices the object at.  Default: [0,0,0]
+//   cp = If given as a scalar, moves the cut plane up by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
 //
 // Examples(Spin):
 //   top_half() sphere(r=20);
-//   top_half(cp=[0,0,-5]) sphere(r=20);
-module top_half(s=100, cp=[0,0,0]) translate(cp) difference() {translate(-cp) children();  down(s/2) cube(s, center=true);}
+//   top_half(cp=5) sphere(r=20);
+//   top_half(cp=[0,0,-8]) sphere(r=20);
+module top_half(s=100, cp=[0,0,0])
+{
+	dir = V_UP;
+	cp = is_scalar(cp)? cp*dir : cp;
+	translate(cp) difference() {
+		translate(-cp) children();
+		translate(-dir*s/2) cube(s, center=true);
+	}
+}
 
 
 
@@ -1886,13 +1896,21 @@ module top_half(s=100, cp=[0,0,0]) translate(cp) difference() {translate(-cp) ch
 //   Slices an object at a horizontal X-Y cut plane, and masks away everything that is above it.
 //
 // Arguments:
-//   cp = A point that is on the cut plane.  This can be used to shift where it slices the object at.  Default: [0,0,0]
+//   cp = If given as a scalar, moves the cut plane down by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
 //
 // Examples:
 //   bottom_half() sphere(r=20);
 //   bottom_half(cp=[0,0,10]) sphere(r=20);
-module bottom_half(s=100, cp=[0,0,0]) translate(cp) difference() {translate(-cp) children();    up(s/2) cube(s, center=true);}
+module bottom_half(s=100, cp=[0,0,0])
+{
+	dir = V_DOWN;
+	cp = is_scalar(cp)? cp*dir : cp;
+	translate(cp) difference() {
+		translate(-cp) children();
+		translate(-dir*s/2) cube(s, center=true);
+	}
+}
 
 
 
@@ -1905,13 +1923,21 @@ module bottom_half(s=100, cp=[0,0,0]) translate(cp) difference() {translate(-cp)
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is right of it.
 //
 // Arguments:
-//   cp = A point that is on the cut plane.  This can be used to shift where it slices the object at.  Default: [0,0,0]
+//   cp = If given as a scalar, moves the cut plane left by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
 //
 // Examples:
 //   left_half() sphere(r=20);
 //   left_half(cp=[8,0,0]) sphere(r=20);
-module left_half(s=100, cp=[0,0,0]) translate(cp) difference() {translate(-cp) children(); right(s/2) cube(s, center=true);}
+module left_half(s=100, cp=[0,0,0])
+{
+	dir = V_LEFT;
+	cp = is_scalar(cp)? cp*dir : cp;
+	translate(cp) difference() {
+		translate(-cp) children();
+		translate(-dir*s/2) cube(s, center=true);
+	}
+}
 
 
 
@@ -1924,13 +1950,22 @@ module left_half(s=100, cp=[0,0,0]) translate(cp) difference() {translate(-cp) c
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is left of it.
 //
 // Arguments:
-//   cp = A point that is on the cut plane.  This can be used to shift where it slices the object at.  Default: [0,0,0]
+//   cp = If given as a scalar, moves the cut plane right by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
 //
 // Examples(FlatSpin):
 //   right_half() sphere(r=20);
+//   right_half(cp=-5) sphere(r=20);
 //   right_half(cp=[-5,0,0]) sphere(r=20);
-module right_half(s=100, cp=[0,0,0]) translate(cp) difference() {translate(-cp) children();  left(s/2) cube(s, center=true);}
+module right_half(s=100, cp=[0,0,0])
+{
+	dir = V_RIGHT;
+	cp = is_scalar(cp)? cp*dir : cp;
+	translate(cp) difference() {
+		translate(-cp) children();
+		translate(-dir*s/2) cube(s, center=true);
+	}
+}
 
 
 
@@ -1943,13 +1978,22 @@ module right_half(s=100, cp=[0,0,0]) translate(cp) difference() {translate(-cp) 
 //   Slices an object at a vertical X-Z cut plane, and masks away everything that is behind it.
 //
 // Arguments:
-//   cp = A point that is on the cut plane.  This can be used to shift where it slices the object at.  Default: [0,0,0]
+//   cp = If given as a scalar, moves the cut plane forward by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
 //
 // Examples(FlatSpin):
 //   front_half() sphere(r=20);
+//   front_half(cp=5) sphere(r=20);
 //   front_half(cp=[0,5,0]) sphere(r=20);
-module front_half(s=100, cp=[0,0,0]) translate(cp) difference() {translate(-cp) children();  back(s/2) cube(s, center=true);}
+module front_half(s=100, cp=[0,0,0])
+{
+	dir = V_FWD;
+	cp = is_scalar(cp)? cp*dir : cp;
+	translate(cp) difference() {
+		translate(-cp) children();
+		translate(-dir*s/2) cube(s, center=true);
+	}
+}
 
 
 
@@ -1962,13 +2006,22 @@ module front_half(s=100, cp=[0,0,0]) translate(cp) difference() {translate(-cp) 
 //   Slices an object at a vertical X-Z cut plane, and masks away everything that is in front of it.
 //
 // Arguments:
-//   cp = A point that is on the cut plane.  This can be used to shift where it slices the object at.  Default: [0,0,0]
+//   cp = If given as a scalar, moves the cut plane back by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
 //
 // Examples:
 //   back_half() sphere(r=20);
+//   back_half(cp=8) sphere(r=20);
 //   back_half(cp=[0,-10,0]) sphere(r=20);
-module back_half(s=100, cp=[0,0,0]) translate(cp) difference() {translate(-cp) children();   fwd(s/2) cube(s, center=true);}
+module back_half(s=100, cp=[0,0,0])
+{
+	dir = V_BACK;
+	cp = is_scalar(cp)? cp*dir : cp;
+	translate(cp) difference() {
+		translate(-cp) children();
+		translate(-dir*s/2) cube(s, center=true);
+	}
+}
 
 
 
