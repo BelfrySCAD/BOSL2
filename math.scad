@@ -1090,8 +1090,8 @@ function ident(n) = [for (i = [0:n-1]) [for (j = [0:n-1]) (i==j)?1:0]];
 
 
 // Create an identity matrix, for 3 axes.
-ident3 = ident(3);
-ident4 = ident(4);
+//ident3 = ident(3);
+//ident4 = ident(4);
 
 
 // Function: mat3_to_mat4()
