@@ -1454,12 +1454,13 @@ module zrot_copies(rots=[], cp=[0,0,0], n=undef, count=undef, sa=0, offset=0, r=
 //   starting angle `sa`.
 //
 // Usage:
-//   xring(r, n, [sa], [cp], [rot]) ...
+//   xring(n, r, [sa], [cp], [rot]) ...
 //
 // Arguments:
-//   n = number of copies of children to distribute around the circle. (Default: 2)
-//   r = radius of ring to distribute children around. (Default: 0)
-//   sa = start angle for first (unrotated) copy.  (Default: 0)
+//   n = Number of copies of children to distribute around the circle. (Default: 2)
+//   r = Radius of ring to distribute children around. (Default: 0)
+//   sa = Start angle for first (unrotated) copy.  (Default: 0)
+//   cp = Centerpoint of ring.  Default: [0,0,0]
 //   rot = If true, rotate each copy to keep the same side towards the center of the ring.  Default: true.
 //
 // Side Effects:
@@ -1472,7 +1473,7 @@ module zrot_copies(rots=[], cp=[0,0,0], n=undef, count=undef, sa=0, offset=0, r=
 //   xring(n=6, r=20, rot=false) cylinder(h=20, r1=6, r2=0, center=true);
 module xring(n=2, r=0, sa=0, cp=[0,0,0], rot=true)
 {
-	xrot_copies(count=n, sa=sa, r=r, cp=cp, subrot=rot) children();
+	xrot_copies(count=n, r=r, sa=sa, cp=cp, subrot=rot) children();
 }
 
 
@@ -1485,12 +1486,13 @@ module xring(n=2, r=0, sa=0, cp=[0,0,0], rot=true)
 //   starting angle `sa`.
 //
 // Usage:
-//   yring(r, n, [sa], [cp], [rot]) ...
+//   yring(n, r, [sa], [cp], [rot]) ...
 //
 // Arguments:
-//   n = number of copies of children to distribute around the circle. (Default: 2)
-//   r = radius of ring to distribute children around. (Default: 0)
-//   sa = start angle for first (unrotated) copy.  (Default: 0)
+//   n = Number of copies of children to distribute around the circle. (Default: 2)
+//   r = Radius of ring to distribute children around. (Default: 0)
+//   sa = Start angle for first (unrotated) copy.  (Default: 0)
+//   cp = Centerpoint of ring.  Default: [0,0,0]
 //   rot = If true, rotate each copy to keep the same side towards the center of the ring.  Default: true.
 //
 // Side Effects:
@@ -1503,7 +1505,7 @@ module xring(n=2, r=0, sa=0, cp=[0,0,0], rot=true)
 //   yring(n=6, r=20, rot=false) cylinder(h=20, r1=6, r2=0, center=true);
 module yring(n=2, r=0, sa=0, cp=[0,0,0], rot=true)
 {
-	yrot_copies(count=n, sa=sa, r=r, cp=cp, subrot=rot) children();
+	yrot_copies(count=n, r=r, sa=sa, cp=cp, subrot=rot) children();
 }
 
 
@@ -1522,7 +1524,7 @@ module yring(n=2, r=0, sa=0, cp=[0,0,0], rot=true)
 //   n = Number of copies of children to distribute around the circle. (Default: 2)
 //   r = Radius of ring to distribute children around. (Default: 0)
 //   sa = Start angle for first (unrotated) copy.  (Default: 0)
-//   cp = Centerpoint of the ring.
+//   cp = Centerpoint of ring.  Default: [0,0,0]
 //   rot = If true, rotate each copy to keep the same side towards the center of the ring.  Default: true.
 //
 // Side Effects:
@@ -1535,7 +1537,7 @@ module yring(n=2, r=0, sa=0, cp=[0,0,0], rot=true)
 //   zring(n=6, r=20, rot=false) yrot(90) cylinder(h=20, r1=6, r2=0, center=true);
 module zring(n=2, r=0, sa=0, cp=[0,0,0], rot=true)
 {
-	zrot_copies(count=n, sa=sa, r=r, cp=cp, subrot=rot) children();
+	zrot_copies(count=n, r=r, sa=sa, cp=cp, subrot=rot) children();
 }
 
 
