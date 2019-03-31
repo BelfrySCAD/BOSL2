@@ -96,7 +96,7 @@ function constrain(v, minval, maxval) = min(maxval, max(minval, v));
 // Arguments:
 //   x = The value to constrain.
 //   m = Modulo value.
-function posmod(x,m) = (x % m + m) % m;
+function posmod(x,m) = (x%m) + (x<0)? m : 0;
 
 
 // Function: modrange()
@@ -119,7 +119,7 @@ function modrange(x, y, m, step=1) =
 		a = posmod(x, m),
 		b = posmod(y, m),
 		c = step>0? (a>b? b+m : b) : (a<b? b-m : b)
-	) [for (i=[a:step:c]) posmod(i,m)];
+	) [for (i=[a:step:c]) (i%m+m)%m];
 
 
 // Function: segs()
@@ -459,12 +459,12 @@ function wrap_range(list, start, end=undef) = select(list,start,end);
 function select(list, start, end=undef) =
 	let(l=len(list))
 	(list==[])? [] :
-	!is_def(end)? (
+	end==undef? (
 		is_scalar(start)?
-			let(s=posmod(start,l)) list[s] :
-			[for (i=start) list[posmod(i, l)]]
+			let(s=(start%l+l)%l) list[s] :
+			[for (i=start) list[(i%l+l)%l]]
 	) : (
-		let(s=posmod(start,l), e=posmod(end,l))
+		let(s=(start%l+l)%l, e=(end%l+l)%l)
 		(s<=e)?
 			[for (i = [s:e]) list[i]] :
 			concat([for (i = [s:l-1]) list[i]], [for (i = [0:e]) list[i]])
