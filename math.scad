@@ -457,12 +457,19 @@ function wrap_range(list, start, end=undef) = select(list,start,end);
 //   select(l, [1:3]);  // Returns [4,5,6]
 //   select(l, [1,3]);  // Returns [4,6]
 function select(list, start, end=undef) =
-	let(l = len(list))
+	let(l=len(list))
+	(list==[])? [] :
 	!is_def(end)? (
 		is_scalar(start)?
-			list[posmod(start, l)] :
+			let(s=posmod(start,l)) list[s] :
 			[for (i=start) list[posmod(i, l)]]
-	) : [for (i = modrange(start, end, l)) list[i]];
+	) : (
+		let(s=posmod(start,l), e=posmod(end,l))
+		(s<=e)?
+			[for (i = [s:e]) list[i]] :
+			concat([for (i = [s:l-1]) list[i]], [for (i = [0:e]) list[i]])
+	);
+
 
 
 // Function: reverse()

@@ -108,7 +108,7 @@ module CR_cube(size=[100,100,100], r=10, splinesteps=8, cheat=false)
 }
 
 
-CR_cube(size=[100,100,100], r=20, splinesteps=2, cheat=false);
+CR_cube(size=[100,100,100], r=20, splinesteps=9, cheat=false);
 cube(1);
 
 
