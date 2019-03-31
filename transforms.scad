@@ -534,12 +534,15 @@ module zflip(cp=[0,0,0]) translate(cp) mirror([0,0,1]) translate(-cp) children()
 // Arguments:
 //   xa = skew angle towards the X direction.
 //   ya = skew angle towards the Y direction.
+//   planar = If true, this becomes a 2D operation.
 //
 // Example(FlatSpin):
 //   #cube(size=10);
 //   skew_xy(xa=30, ya=15) cube(size=10);
-module skew_xy(xa=0, ya=0) multmatrix(m = matrix4_skew_xy(xa, ya)) children();
-module zskew(xa=0, ya=0) multmatrix(m = matrix4_skew_xy(xa, ya)) children();
+// Example(2D):
+//   skew_xy(xa=15,ya=30,planar=true) square(30);
+module skew_xy(xa=0, ya=0, planar=false) multmatrix(m = planar? matrix3_skew(xa, ya) : matrix4_skew_xy(xa, ya)) children();
+module zskew(xa=0, ya=0, planar=false) multmatrix(m = planar? matrix3_skew(xa, ya) : matrix4_skew_xy(xa, ya)) children();
 
 
 // Module: skew_yz() / skew_x()
@@ -1839,15 +1842,27 @@ module zflip_copy(offset=0, cp=[0,0,0])
 //   v = Normal of plane to slice at.  Keeps everything on the side the normal points to.  Default: [0,0,1] (V_UP)
 //   cp = If given as a scalar, moves the cut plane along the normal by the given amount.  If given as a point, specifies a point on the cut plane.  This can be used to shift where it slices the object at.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   planar = If true, this becomes a 2D operation.  When planar, a `v` of `V_UP` or `V_DOWN` becomes equivalent of `V_BACK` and `V_FWD` respectively.
 //
 // Examples:
 //   half_of(V_DOWN+V_BACK, cp=[0,-10,0]) cylinder(h=40, r1=10, r2=0, center=false);
 //   half_of(V_DOWN+V_LEFT, s=200) sphere(d=150);
-module half_of(v=V_UP, cp=[0,0,0], s=100)
+// Example(2D):
+//   half_of([1,1], planar=true) circle(d=50);
+module half_of(v=V_UP, cp=[0,0,0], s=100, planar=false)
 {
-	cp = is_scalar(cp)? cp*v : cp;
+	cp = is_scalar(cp)? cp*normalize(v) : cp;
 	if (cp != [0,0,0]) {
-		translate(cp) half_of(v=v, s=s) translate(-cp) children();
+		translate(cp) half_of(v=v, s=s, planar=planar) translate(-cp) children();
+	} else if (planar) {
+		v = (v==V_UP)? V_BACK : (v==V_DOWN)? V_FWD : v;
+		ang = atan2(v.y, v.x);
+		difference() {
+			children();
+			rotate(ang+90) {
+				back(s/2) square(s, center=true);
+			}
+		}
 	} else {
 		difference() {
 			children();
@@ -1870,18 +1885,27 @@ module half_of(v=V_UP, cp=[0,0,0], s=100)
 // Arguments:
 //   cp = If given as a scalar, moves the cut plane up by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   planar = If true, this becomes equivalent to a planar `back_half()`.
 //
 // Examples(Spin):
 //   top_half() sphere(r=20);
 //   top_half(cp=5) sphere(r=20);
 //   top_half(cp=[0,0,-8]) sphere(r=20);
-module top_half(s=100, cp=[0,0,0])
+// Example(2D):
+//   top_half(planar=true) circle(r=20);
+module top_half(s=100, cp=[0,0,0], planar=false)
 {
-	dir = V_UP;
+	dir = planar? V_BACK : V_UP;
 	cp = is_scalar(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
-		translate(-dir*s/2) cube(s, center=true);
+		translate(-dir*s/2) {
+			if (planar) {
+				square(s, center=true);
+			} else {
+				cube(s, center=true);
+			}
+		}
 	}
 }
 
@@ -1898,17 +1922,27 @@ module top_half(s=100, cp=[0,0,0])
 // Arguments:
 //   cp = If given as a scalar, moves the cut plane down by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   planar = If true, this becomes equivalent to a planar `front_half()`.
 //
 // Examples:
 //   bottom_half() sphere(r=20);
+//   bottom_half(cp=-10) sphere(r=20);
 //   bottom_half(cp=[0,0,10]) sphere(r=20);
-module bottom_half(s=100, cp=[0,0,0])
+// Example(2D):
+//   bottom_half(planar=true) circle(r=20);
+module bottom_half(s=100, cp=[0,0,0], planar=false)
 {
-	dir = V_DOWN;
+	dir = planar? V_FWD : V_DOWN;
 	cp = is_scalar(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
-		translate(-dir*s/2) cube(s, center=true);
+		translate(-dir*s/2) {
+			if (planar) {
+				square(s, center=true);
+			} else {
+				cube(s, center=true);
+			}
+		}
 	}
 }
 
@@ -1925,17 +1959,27 @@ module bottom_half(s=100, cp=[0,0,0])
 // Arguments:
 //   cp = If given as a scalar, moves the cut plane left by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   planar = If true, this becomes a 2D operation.
 //
 // Examples:
 //   left_half() sphere(r=20);
+//   left_half(cp=-8) sphere(r=20);
 //   left_half(cp=[8,0,0]) sphere(r=20);
-module left_half(s=100, cp=[0,0,0])
+// Example(2D):
+//   left_half(planar=true) circle(r=20);
+module left_half(s=100, cp=[0,0,0], planar=false)
 {
 	dir = V_LEFT;
 	cp = is_scalar(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
-		translate(-dir*s/2) cube(s, center=true);
+		translate(-dir*s/2) {
+			if (planar) {
+				square(s, center=true);
+			} else {
+				cube(s, center=true);
+			}
+		}
 	}
 }
 
@@ -1952,18 +1996,27 @@ module left_half(s=100, cp=[0,0,0])
 // Arguments:
 //   cp = If given as a scalar, moves the cut plane right by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   planar = If true, this becomes a 2D operation.
 //
 // Examples(FlatSpin):
 //   right_half() sphere(r=20);
 //   right_half(cp=-5) sphere(r=20);
 //   right_half(cp=[-5,0,0]) sphere(r=20);
-module right_half(s=100, cp=[0,0,0])
+// Example(2D):
+//   right_half(planar=true) circle(r=20);
+module right_half(s=100, cp=[0,0,0], planar=false)
 {
 	dir = V_RIGHT;
 	cp = is_scalar(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
-		translate(-dir*s/2) cube(s, center=true);
+		translate(-dir*s/2) {
+			if (planar) {
+				square(s, center=true);
+			} else {
+				cube(s, center=true);
+			}
+		}
 	}
 }
 
@@ -1980,18 +2033,27 @@ module right_half(s=100, cp=[0,0,0])
 // Arguments:
 //   cp = If given as a scalar, moves the cut plane forward by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   planar = If true, this becomes a 2D operation.
 //
 // Examples(FlatSpin):
 //   front_half() sphere(r=20);
 //   front_half(cp=5) sphere(r=20);
 //   front_half(cp=[0,5,0]) sphere(r=20);
-module front_half(s=100, cp=[0,0,0])
+// Example(2D):
+//   front_half(planar=true) circle(r=20);
+module front_half(s=100, cp=[0,0,0], planar=false)
 {
 	dir = V_FWD;
 	cp = is_scalar(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
-		translate(-dir*s/2) cube(s, center=true);
+		translate(-dir*s/2) {
+			if (planar) {
+				square(s, center=true);
+			} else {
+				cube(s, center=true);
+			}
+		}
 	}
 }
 
@@ -2008,18 +2070,27 @@ module front_half(s=100, cp=[0,0,0])
 // Arguments:
 //   cp = If given as a scalar, moves the cut plane back by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   planar = If true, this becomes a 2D operation.
 //
 // Examples:
 //   back_half() sphere(r=20);
 //   back_half(cp=8) sphere(r=20);
 //   back_half(cp=[0,-10,0]) sphere(r=20);
-module back_half(s=100, cp=[0,0,0])
+// Example(2D):
+//   back_half(planar=true) circle(r=20);
+module back_half(s=100, cp=[0,0,0], planar=false)
 {
 	dir = V_BACK;
 	cp = is_scalar(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
-		translate(-dir*s/2) cube(s, center=true);
+		translate(-dir*s/2) {
+			if (planar) {
+				square(s, center=true);
+			} else {
+				cube(s, center=true);
+			}
+		}
 	}
 }
 
