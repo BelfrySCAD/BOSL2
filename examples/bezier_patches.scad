@@ -12,11 +12,11 @@ function CR_corner(size, orient=[0,0,0], trans=[0,0,0]) =
 		// rounding, but it's a first approximation proof of concept.
 		// Currently this is a degree 4 triangular patch.
 		patch = [
-			[[1,1,0], [1,r,0], [1,0,0], [1,0,r], [1,0,1]],
-			[[r,1,0], [k,k,0], [k,0,k], [r,0,1]],
-			[[0,1,0], [0,k,k], [0,0,1]],
-			[[0,1,r], [0,r,1]],
-			[[0,1,1]]
+			[[0,1,1], [0,r,1], [0,0,1], [r,0,1], [1,0,1]],
+			[[0,1,r], [0,k,k], [k,0,k], [1,0,r]],
+			[[0,1,0], [k,k,0], [1,0,0]],
+			[[r,1,0], [1,r,0]],
+			[[1,1,0]]
 		]
 	) [for (row=patch)
 		translate_points(v=trans,
@@ -108,7 +108,7 @@ module CR_cube(size=[100,100,100], r=10, splinesteps=8, cheat=false)
 }
 
 
-CR_cube(size=[100,100,100], r=20, splinesteps=16, cheat=false);
+CR_cube(size=[100,100,100], r=20, splinesteps=2, cheat=false);
 cube(1);
 
 
