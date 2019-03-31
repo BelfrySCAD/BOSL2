@@ -35,7 +35,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
 include <compat.scad>
+
 
 // Function: Cpi()
 // Status: DEPRECATED, use `PI` instead.
@@ -94,7 +96,7 @@ function constrain(v, minval, maxval) = min(maxval, max(minval, v));
 // Arguments:
 //   x = The value to constrain.
 //   m = Modulo value.
-function posmod(x,m) = (x % m + m) % m;
+function posmod(x,m) = (x%m) + (x<0)? m : 0;
 
 
 // Function: modrange()
@@ -117,7 +119,7 @@ function modrange(x, y, m, step=1) =
 		a = posmod(x, m),
 		b = posmod(y, m),
 		c = step>0? (a>b? b+m : b) : (a<b? b-m : b)
-	) [for (i=[a:step:c]) posmod(i,m)];
+	) [for (i=[a:step:c]) (i%m+m)%m];
 
 
 // Function: segs()
@@ -243,14 +245,53 @@ function sum_of_sines(a, sines) =
 function mean(v) = sum(v)/len(v);
 
 
-// Section: List/Array Operations
+// Section: Comparisons and Logic
 
-// Function: cdr()
-// Status: DEPRECATED, use `slice(list,1,-1)` instead.
-// Description: Returns all but the first item of a given array.
+// Function: compare_vals()
+// Usage:
+//   compare_vals(a, b);
+// Description:
+//   Compares two values.  If types don't match, then
+//   undef < boolean < scalar < string < list
+//   Lists are compared recursively.
 // Arguments:
-//   list = The list to get the tail of.
-function cdr(list) = len(list)<=1? [] : [for (i=[1:len(list)-1]) list[i]];
+//   a = First value to compare.
+//   b = Second value to compare.
+function compare_vals(a, b, n=0) =
+	(a == undef && b == undef)? 0 :
+	(a == undef)? -1 :
+	(b == undef)? 1 :
+	(is_boolean(a) && is_boolean(b))? ((a?1:0)-(b?1:0)) :
+	is_boolean(a)? -1 :
+	is_boolean(b)? 1 :
+	(is_scalar(a) && is_scalar(b))? (a-b) :
+	is_scalar(a)? -1 :
+	is_scalar(b)? 1 :
+	(is_str(a) && is_str(b))? ((a<b)? -1 : ((a>b)? 1 : 0)) :
+	is_str(a)? -1 :
+	is_str(b)? 1 :
+	compare_lists(a,b);
+
+
+// Function: compare_lists()
+// Usage:
+//   compare_lists(a, b)
+// Description:
+//   Compare contents of two lists.
+//   Returns <0 if `a`<`b`.
+//   Returns >0 if `a`>`b`.
+//   Returns 0 if `a`==`b`.
+// Arguments:
+//   a = First list to compare.
+//   b = Second list to compare.
+function compare_lists(a, b, n=0) =
+	let (la = len(a), lb = len(b))
+	(la<=n && lb<=n)? 0 :
+	(la<=n)? -1 :
+	(lb<=n)? 1 :
+	let (cmp = compare_vals(a[n], b[n]))
+	(cmp != 0)? cmp :
+	compare_lists(a, b, n+1);
 
 
 // Function: any()
@@ -265,15 +306,13 @@ function cdr(list) = len(list)<=1? [] : [for (i=[1:len(list)-1]) list[i]];
 //   any([1,5,true]);       // Returns true.
 //   any([[0,0], [0,0]]);   // Returns false.
 //   any([[0,0], [1,0]]);   // Returns true.
-function any(l, s=0, e=-1) =
-	let(
-		e = e<0? e+len(l) : e,
-		m = ceil((s+e)/2)
-	)
-	(e==s)? (
-		is_array(l[s])? any(l[s]) : (l[s]? true : false)
-	) : (
-		any(l,s,m-1)? true : any(l,m,e)
+function any(l, i=0, succ=false) =
+	(i>=len(l) || succ)? succ :
+	any(
+		l, i=i+1, succ=(
+			is_array(l[i])? any(l[i]) :
+			!(!l[i])
+		)
 	);
 
 
@@ -290,17 +329,77 @@ function any(l, s=0, e=-1) =
 //   all([[0,0], [0,0]]);   // Returns false.
 //   all([[0,0], [1,0]]);   // Returns false.
 //   all([[1,1], [1,1]]);   // Returns true.
-function all(l, s=0, e=-1) =
-	let(
-		e = e<0? e+len(l) : e,
-		m = ceil((s+e)/2)
-	)
-	(e==s)? (
-		is_array(l[s])? all(l[s]) : (l[s]? true : false)
-	) : (
-		(!all(l,s,m-1))? false : all(l,m,e)
+function all(l, i=0, fail=false) =
+	(i>=len(l) || fail)? (!fail) :
+	all(
+		l, i=i+1, fail=(
+			is_array(l[i])? !all(l[i]) :
+			!l[i]
+		)
 	);
 
+
+// Function: count_true()
+// Usage:
+//   count_true(l)
+// Description:
+//   Returns the number of items in `l` that evaluate as true.
+//   If `l` is a lists of lists, this is applied recursively to each
+//   sublist.  Returns the total count of items that evaluate as true
+//   in all recursive sublists.
+// Arguments:
+//   l = The list to test for true items.
+//   nmax = If given, stop counting if `nmax` items evaluate as true.
+// Example:
+//   count_true([0,false,undef]);  // Returns 0.
+//   count_true([1,false,undef]);  // Returns 1.
+//   count_true([1,5,false]);      // Returns 2.
+//   count_true([1,5,true]);       // Returns 3.
+//   count_true([[0,0], [0,0]]);   // Returns 0.
+//   count_true([[0,0], [1,0]]);   // Returns 1.
+//   count_true([[1,1], [1,1]]);   // Returns 4.
+//   count_true([[1,1], [1,1]], nmax=3);  // Returns 3.
+function count_true(l, nmax=undef, i=0, cnt=0) =
+	(i>=len(l) || (nmax!=undef && cnt>=nmax))? cnt :
+	count_true(
+		l=l, nmax=nmax, i=i+1, cnt=cnt+(
+			is_array(l[i])? count_true(l[i], nmax=nmax-cnt) :
+			(l[i]? 1 : 0)
+		)
+	);
+
+
+
+// Section: List/Array Operations
+
+// Function: cdr()
+// Status: DEPRECATED, use `slice(list,1,-1)` instead.
+// Description: Returns all but the first item of a given array.
+// Arguments:
+//   list = The list to get the tail of.
+function cdr(list) = len(list)<=1? [] : [for (i=[1:len(list)-1]) list[i]];
+
+
+
+// Function: replist()
+// Usage:
+//   replist(val, n)
+// Description:
+//   Generates a list or array of `n` copies of the given `list`.
+//   If the count `n` is given as a list of counts, then this creates a
+//   multi-dimensional array, filled with `val`.
+// Arguments:
+//   val = The value to repeat to make the list or array.
+//   n = The number of copies to make of `val`.
+// Example:
+//   replist(1, 4);        // Returns [1,1,1,1]
+//   replist(8, [2,3]);    // Returns [[8,8,8], [8,8,8]]
+//   replist(0, [2,2,3]);  // Returns [[[0,0,0],[0,0,0]], [[0,0,0],[0,0,0]]]
+//   replist([1,2,3],3);   // Returns [[1,2,3], [1,2,3], [1,2,3]]
+function replist(val, n, i=0) =
+	is_scalar(n)? [for(j=[1:n]) val] :
+	(i>=len(n))? val :
+	[for (j=[1:n[i]]) replist(val, n, i+1)];
 
 
 // Function: in_list()
@@ -314,6 +413,7 @@ function all(l, s=0, e=-1) =
 //   in_list("bee", ["foo", "bar", "baz"]);  // Returns false.
 //   in_list("bar", [[2,"foo"], [4,"bar"], [3,"baz"]], idx=1);  // Returns true.
 function in_list(x,l,idx=undef) = search([x], l, num_returns_per_match=1, index_col_num=idx) != [[]];
+
 
 
 // Function: slice()
@@ -334,6 +434,7 @@ function slice(arr,st,end) = let(
 		s=st<0?(len(arr)+st):st,
 		e=end<0?(len(arr)+end+1):end
 	) (s==e)? [] : [for (i=[s:e-1]) if (e>s) arr[i]];
+
 
 
 // Function: wrap_range()
@@ -378,12 +479,19 @@ function wrap_range(list, start, end=undef) = select(list,start,end);
 //   select(l, [1:3]);  // Returns [4,5,6]
 //   select(l, [1,3]);  // Returns [4,6]
 function select(list, start, end=undef) =
-	let(l = len(list))
-	!is_def(end)? (
+	let(l=len(list))
+	(list==[])? [] :
+	end==undef? (
 		is_scalar(start)?
-			list[posmod(start, l)] :
-			[for (i=start) list[posmod(i, l)]]
-	) : [for (i = modrange(start, end, l)) list[i]];
+			let(s=(start%l+l)%l) list[s] :
+			[for (i=start) list[(i%l+l)%l]]
+	) : (
+		let(s=(start%l+l)%l, e=(end%l+l)%l)
+		(s<=e)?
+			[for (i = [s:e]) list[i]] :
+			concat([for (i = [s:l-1]) list[i]], [for (i = [0:e]) list[i]])
+	);
+
 
 
 // Function: reverse()
@@ -415,9 +523,40 @@ function array_subindex(v, idx) = [
 ];
 
 
+// Function: list_range()
+// Usage:
+//   list_range(n, [s], [e], [step])
+//   list_range(e, [step])
+//   list_range(s, e, [step])
+// Description:
+//   Returns a list, counting up from starting value `s`, by `step` increments,
+//   until either `n` values are in the list, or it reaches the end value `e`.
+// Arguments:
+//   n = Desired number of values in returned list, if given.
+//   s = Starting value.  Default: 0
+//   e = Ending value to stop at, if given.
+//   step = Amount to increment each value.  Default: 1
+// Example:
+//   list_range(4);                  // Returns [0,1,2,3]
+//   list_range(n=4, step=2);        // Returns [0,2,4,6]
+//   list_range(n=4, s=3, step=3);   // Returns [3,6,9,12]
+//   list_range(n=4, s=3, e=9, step=3);  // Returns [3,6,9]
+//   list_range(e=3);                // Returns [0,1,2,3]
+//   list_range(e=6, step=2);        // Returns [0,2,4,6]
+//   list_range(s=3, e=5);           // Returns [3,4,5]
+//   list_range(s=3, e=8, step=2);   // Returns [3,5,7]
+//   list_range(s=4, e=8, step=2);   // Returns [4,6,8]
+//   list_range(n=4, s=[3,4], step=[2,3]);  // Returns [[3,4], [5,7], [7,10], [9,13]]
+function list_range(n=undef, s=0, e=undef, step=1) =
+	(n!=undef && e!=undef)? [for (i=[0:n-1]) let(v=s+step*i) if (v<=e) v] :
+	(n!=undef)? [for (i=[0:n-1]) let(v=s+step*i) v] :
+	(e!=undef)? [for (v=[s:step:e]) v] :
+	assertion(false, "Must supply one of `n` or `e`.");
+
+
 // Function: array_shortest()
 // Description:
-//   Returns the length of the shortest list in a list of list.
+//   Returns the length of the shortest sublist in a list of lists.
 // Arguments:
 //   vecs = A list of lists.
 function array_shortest(vecs) = min([for (v = vecs) len(v)]);
@@ -425,7 +564,7 @@ function array_shortest(vecs) = min([for (v = vecs) len(v)]);
 
 // Function: array_longest()
 // Description:
-//   Returns the length of the longest list in a list of list.
+//   Returns the length of the longest sublist in a list of lists.
 // Arguments:
 //   vecs = A list of lists.
 function array_longest(vecs) = max([for (v = vecs) len(v)]);
@@ -524,6 +663,98 @@ function array_group(v, cnt=2, dflt=0) = [for (i = [0:cnt:len(v)-1]) [for (j = [
 // Example:
 //   flatten([[1,2,3], [4,5,[6,7,8]]]) returns [1,2,3,4,5,[6,7,8]]
 function flatten(l) = [for (a = l) for (b = a) b];
+
+
+// Function: sort()
+// Usage:
+//   sort(arr, [idx])
+// Description:
+//   Sorts the given list using `compare_vals()`.
+// Arguments:
+//   arr = The list to sort.
+//   idx = If given, the index, range, or list of indices of sublist items to compare.
+// Example:
+//   l = [45,2,16,37,8,3,9,23,89,12,34];
+//   sorted = sort(l);  // Returns [2,3,8,9,12,16,23,34,37,45,89]
+function sort(arr, idx=undef) =
+	(len(arr)<=1) ? arr :
+	let(
+		pivot = arr[floor(len(arr)/2)],
+		pivotval = idx==undef? pivot : [for (i=idx) pivot[i]],
+		compare = [
+			for (entry = arr) let(
+				val = idx==undef? entry : [for (i=idx) entry[i]]
+			) compare_vals(val, pivotval)
+		],
+		lesser  = [ for (i = [0:len(arr)-1]) if (compare[i] < 0) arr[i] ],
+		equal   = [ for (i = [0:len(arr)-1]) if (compare[i] ==0) arr[i] ],
+		greater = [ for (i = [0:len(arr)-1]) if (compare[i] > 0) arr[i] ]
+	)
+	concat(sort(lesser,idx), equal, sort(greater,idx));
+
+
+
+// Function: unique()
+// Usage:
+//   unique(arr);
+// Description:
+//   Returns a sorted list with all repeated items removed.
+// Arguments:
+//   arr = The list to uniquify.
+function unique(arr) =
+	len(arr)<=1? arr : let(
+		sorted = sort(arr)
+	) [
+		for (i=[0:len(sorted)-1])
+			if (i==0 || (sorted[i] != sorted[i-1]))
+				sorted[i]
+	];
+
+
+
+// Internal.  Not exposed.
+function _array_dim_recurse(v) =
+    !is_list(v[0])?  (
+		sum( [for(entry=v) is_list(entry) ? 1 : 0]) == 0 ? [] : [undef]
+	) : let(
+		firstlen = len(v[0]),
+		first = sum( [for(entry = v) len(entry) == firstlen  ? 0 : 1]   ) == 0 ? firstlen : undef,
+		leveldown = flatten(v)
+	) is_list(leveldown[0])? (
+		concat([first],_array_dim_recurse(leveldown))
+	) : [first];
+
+
+// Function: array_dim()
+// Usage:
+//   array_dim(v, [depth])
+// Description:
+//   Returns the size of a multi-dimensional array.  Returns a list of
+//   dimension lengths.  The length of `v` is the dimension `0`.  The
+//   length of the items in `v` is dimension `1`.  The length of the
+//   items in the items in `v` is dimension `2`, etc.  For each dimension,
+//   if the length of items at that depth is inconsistent, `undef` will
+//   be returned.  If no items of that dimension depth exist, `0` is
+//   returned.  Otherwise, the consistent length of items in that
+//   dimensional depth is returned.
+// Arguments:
+//   v = Array to get dimensions of.
+//   depth = Dimension to get size of.  If not given, returns a list of dimension lengths.
+// Examples:
+//   array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]]);     // Returns [2,2,3]
+//   array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 0);  // Returns 2
+//   array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 2);  // Returns 3
+//   array_dim([[[1,2,3],[4,5,6]],[[7,8,9]]]);                // Returns [2,undef,3]
+function array_dim(v, depth=undef) =
+	(depth == undef)? (
+		concat([len(v)], _array_dim_recurse(v))
+	) : (depth == 0)? (
+		len(v)
+	) : (
+		let(dimlist = _array_dim_recurse(v))
+		(depth > len(dimlist))? 0 : dimlist[depth-1]
+	);
+
 
 
 // Section: Vector Manipulation
@@ -881,8 +1112,8 @@ function ident(n) = [for (i = [0:n-1]) [for (j = [0:n-1]) (i==j)?1:0]];
 
 
 // Create an identity matrix, for 3 axes.
-ident3 = ident(3);
-ident4 = ident(4);
+//ident3 = ident(3);
+//ident4 = ident(4);
 
 
 // Function: mat3_to_mat4()

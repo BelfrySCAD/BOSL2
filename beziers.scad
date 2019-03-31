@@ -61,10 +61,14 @@ use <transforms.scad>
 //       `[endpt1, cp1, cp2, endpt2, cp3, cp4, endpt3]`
 //   **NOTE**: A bezier path is *NOT* a polyline.  It is only the points and controls used to define the curve.
 //   
+//   **Bezier Patch**: A surface defining grid of (N+1) by (N+1) bezier points.  If a Bezier Segment defines a curved line, a Bezier Patch defines a curved surface.
+//   
+//   **Bezier Surface**: A surface defined by a list of one or more bezier patches.
+//   
 //   **Spline Steps**: The number of straight-line segments to split a bezier segment into, to approximate the bezier curve.  The more spline steps, the closer the approximation will be to the curve, but the slower it will be to generate.  Usually defaults to 16.
 
 
-// Section: Functions
+// Section: Segment Functions
 
 // Function: bez_point()
 // Usage:
@@ -96,36 +100,67 @@ function bez_point(curve,u)=
 		);
 
 
-// Function: bezier_polyline()
+// Function: bezier_segment_closest_point()
 // Usage:
-//   bezier_polyline(bezier, [splinesteps], [N])
+//   bezier_segment_closest_point(bezier,pt)
 // Description:
-//   Takes a bezier path and converts it into a polyline.
+//   Finds the closest part of the given bezier segment to point `pt`.
+//   The degree of the curve, N, is one less than the number of points in `curve`.
+//   Returns `u` for the shortest position on the bezier segment to the given point `pt`.
 // Arguments:
-//   bezier = A bezier path to approximate.
-//   splinesteps = Number of straight lines to split each bezier segment into. default=16
-//   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+//   curve = The list of endpoints and control points for this bezier segment.
+//   pt = The point to find the closest curve point to.
+//   max_err = The maximum allowed error when approximating the closest approach.
 // Example(2D):
-//   bez = [
-//       [0,0], [-5,30],
-//       [20,60], [50,50], [110,30],
-//       [60,25], [70,0], [80,-25],
-//       [80,-50], [50,-50]
-//   ];
-//   trace_polyline(bez, size=1, N=3, showpts=true);
-//   trace_polyline(bezier_polyline(bez, N=3), size=3);
-function bezier_polyline(bezier, splinesteps=16, N=3) = concat(
-	[
-		for (
-			b = [0 : N : len(bezier)-N-1],
-			l = [0 : splinesteps-1]
-		) let (
-			crv = [for (i=[0 : N]) bezier[b+i]],
-			u = l / splinesteps
-		) bez_point(crv, u)
-	],
-	[bez_point([for (i=[-(N+1) : -1]) bezier[len(bezier)+i]], 1.0)]
-);
+//   pt = [40,15];
+//   bez = [[0,0], [20,40], [60,-25], [80,0]];
+//   u = bezier_segment_closest_point(bez, pt);
+//   trace_bezier(bez, N=len(bez)-1);
+//   color("red") translate(pt) sphere(r=1);
+//   color("blue") translate(bez_point(bez,u)) sphere(r=1);
+function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1, step_u=undef, min_dist=undef, min_u=undef) = 
+	let(
+		step = step_u == undef? (end_u-u)/(len(curve)*2) : step_u,
+		t_u = min(u, end_u),
+		dist = norm(bez_point(curve, t_u)-pt),
+		md = (min_dist==undef || dist<min_dist)? dist : min_dist,
+		mu = (min_dist==undef || dist<min_dist)? t_u : min_u
+	)
+	(u>(end_u-step/2))? (
+		(step<max_err)? mu : bezier_segment_closest_point(curve, pt, max_err, max(0, mu-step/2), min(1, mu+step/2), step/2)
+	) : (
+		bezier_segment_closest_point(curve, pt, max_err, u+step, end_u, step, md, mu)
+	);
+
+
+
+// Function: bezier_segment_length()
+// Usage:
+//   bezier_segment_length(curve, [start_u], [end_u], [max_deflect]);
+// Description:
+//   Approximates the length of the bezier segment between start_u and end_u.
+// Arguments:
+//   curve = The list of endpoints and control points for this bezier segment.
+//   start_u = The proportion of the way along the curve to start measuring from.  Between 0 and 1.
+//   end_u = The proportion of the way along the curve to end measuring at.  Between 0 and 1.  Greater than start_u.
+//   max_deflect = The largest amount of deflection from the true curve to allow for approximation.
+// Example:
+//   bez = [[0,0], [5,35], [60,-25], [80,0]];
+//   echo(bezier_segment_length(bez));
+function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
+	let(
+		mid_u=lerp(start_u, end_u, 0.5),
+		sp = bez_point(curve,start_u),
+		bez_mp = bez_point(curve,mid_u),
+		ep = bez_point(curve,end_u),
+		lin_mp = lerp(sp,ep,0.5),
+		defl = norm(bez_mp-lin_mp)
+	)
+	((end_u-start_u) >= 0.125 || defl > max_deflect)? (
+		bezier_segment_length(curve, start_u, mid_u, max_deflect) +
+		bezier_segment_length(curve, mid_u, end_u, max_deflect)
+	) : norm(ep-sp);
+
 
 
 // Function: fillet3pts()
@@ -169,6 +204,400 @@ function fillet3pts(p0, p1, p2, r, maxerr=0.1, w=0.5, dw=0.25) = let(
 		fillet3pts(p0, p1, p2, r, maxerr=maxerr, w=w-dw, dw=dw/2);
 
 
+
+// Section: Patch Functions
+
+
+// Function: bezier_patch_point()
+// Usage:
+//   bezier_patch_point(patch, u, v)
+// Description:
+//   Given a square 2-dimensional array of (N+1) by (N+1) points size,
+//   that represents a Bezier Patch of degree N, returns a point on that
+//   surface, at positions `u`, and `v`.  A cubic bezier patch will be 4x4
+//   points in size.  If given a non-square array, each direction will have
+//   its own degree.
+// Arguments:
+//   patch = The 2D array of endpoints and control points for this bezier patch.
+//   u = The proportion of the way along the first dimension of the patch to find the point of.  0<=`u`<=1
+//   v = The proportion of the way along the second dimension of the patch to find the point of.  0<=`v`<=1
+function bezier_patch_point(patch, u, v) = bez_point([for (bez = patch) bez_point(bez, u)], v);
+
+
+// Function: bezier_triangle_point()
+// Usage:
+//   bezier_triangle_point(tri, u, v)
+// Description:
+//   Given a triangular 2-dimensional array of N+1 by (for the first row) N+1 points,
+//   that represents a Bezier triangular patch of degree N, returns a point on
+//   that surface, at positions `u`, and `v`.  A cubic bezier triangular patch
+//   will have a list of 4 points in the first row, 3 in the second, 2 in the
+//   third, and 1 in the last row.
+// Arguments:
+//   tri = Triangular bezier patch to get point on.
+//   u = The proportion of the way along the first dimension of the triangular patch to find the point of.  0<=`u`<=1
+//   v = The proportion of the way along the second dimension of the triangular patch to find the point of.  0<=`v`<=(1-`u`)
+function bezier_triangle_point(tri, u, v) =
+	len(tri) == 1 ? tri[0][0] :
+	let(
+		n = len(tri)-1,
+		Pu = [for(i=[0:n-1]) [for (j=[1:len(tri[i])-1]) tri[i][j]]],
+		Pv = [for(i=[0:n-1]) [for (j=[0:len(tri[i])-2]) tri[i][j]]],
+		Pw = [for(i=[1:len(tri)-1]) tri[i]]
+	)
+	bezier_triangle_point(u*Pu + v*Pv + (1-u-v)*Pw, u, v);
+
+
+
+// Internal, not exposed.
+function _vertex_list_merge(v1, v2) = concat(v1, [for (v=v2) if (!in_list(v,v1)) v]);
+function _vertex_list_face(v, face) = [for (pt = face) search([pt], v, num_returns_per_match=1)[0]];
+
+
+// Function: bezier_patch()
+// Usage:
+//   bezier_patch(patch, [splinesteps], [vertices], [faces]);
+// Description:
+//   Calculate vertices and faces for forming a partial polyhedron
+//   from the given bezier rectangular patch.  Returns a list containing
+//   two elements.  The first is the list of unique vertices.  The
+//   second is the list of faces, where each face is a list of indices
+//   into the list of vertices.  You can chain calls to this, to add
+//   more vertices and faces for multiple bezier patches, to stitch
+//   them together into a complete polyhedron.
+// Arguments:
+//   patch = The rectangular array of endpoints and control points for this bezier patch.
+//   splinesteps = Number of steps to divide each bezier segment into.  Default: 16
+//   vertices = Vertex list to add new points to.  Default: []
+//   faces = Face list to add new faces to.  Default: []
+function bezier_patch(patch, splinesteps=16, vertices=[], faces=[]) =
+	let(
+		base = len(vertices),
+		pts = [for (v=[0:splinesteps], u=[0:splinesteps]) bezier_patch_point(patch, u/splinesteps, v/splinesteps)],
+		new_vertices = concat(vertices, pts),
+		new_faces = [
+			for (
+				v=[0:splinesteps-1],
+				u=[0:splinesteps-1],
+				i=[0,1]
+			) let (
+				v1 = u+v*(splinesteps+1) + base,
+				v2 = v1 + 1,
+				v3 = v1 + splinesteps + 1,
+				v4 = v3 + 1,
+				face = i? [v1,v3,v2] : [v2,v3,v4]
+			) face
+		]
+	) [new_vertices, concat(faces, new_faces)];
+
+
+function _tri_count(n) = (n*(1+n))/2;
+
+
+// Function: bezier_triangle()
+// Usage:
+//   bezier_triangle(tri, [splinesteps], [vertices], [faces]);
+// Description:
+//   Calculate vertices and faces for forming a partial polyhedron
+//   from the given bezier triangular patch.  Returns a list containing
+//   two elements.  The first is the list of unique vertices.  The
+//   second is the list of faces, where each face is a list of indices
+//   into the list of vertices.  You can chain calls to this, to add
+//   more vertices and faces for multiple bezier patches, to stitch
+//   them together into a complete polyhedron.
+// Arguments:
+//   tri = The triangular array of endpoints and control points for this bezier patch.
+//   splinesteps = Number of steps to divide each bezier segment into.  Default: 16
+//   vertices = Vertex list to add new points to.  Default: []
+//   faces = Face list to add new faces to.  Default: []
+// Example(3D):
+//   tri = [
+//       [[-50,-33,0], [-25,16,-50], [0,66,0]],
+//       [[0,-33,-50], [25,16,-50]],
+//       [[50,-33,0]]
+//   ];
+//   vnf = bezier_triangle(tri, splinesteps=16);
+//   polyhedron(points=vnf[0], faces=vnf[1]);
+function bezier_triangle(tri, splinesteps=16, vertices=[], faces=[]) =
+	let(
+		base = len(vertices),
+		pts = [
+			for (
+				u=[0:splinesteps],
+				v=[0:splinesteps-u]
+			) bezier_triangle_point(tri, u/splinesteps, v/splinesteps)
+		],
+		new_vertices = concat(vertices, pts),
+		patchlen = len(tri),
+		tricnt = _tri_count(splinesteps+1),
+		new_faces = [
+			for (
+				u=[0:splinesteps-1],
+				v=[0:splinesteps-u-1]
+			) let (
+				v1 = v + (tricnt - _tri_count(splinesteps+1-u)) + base,
+				v2 = v1 + 1,
+				v3 = v + (tricnt - _tri_count(splinesteps-u)) + base,
+				v4 = v3 + 1,
+				allfaces = concat(
+					[[v1,v2,v3]],
+					((u<splinesteps-1 && v<splinesteps-u-1)? [[v2,v4,v3]] : [])
+				)
+			)  for (face=allfaces) face
+		]
+	) [new_vertices, concat(faces, new_faces)];
+
+
+
+// Function: bezier_patch_flat()
+// Usage:
+//   bezier_patch_flat(size, [N], [orient], [trans]);
+// Description:
+//   Returns a flat rectangular bezier patch of degree `N`, centered on the XY plane.
+// Arguments:
+//   size = 2D XY size of the patch.
+//   N = Degree of the patch to generate.  Since this is flat, a degree of 1 should usually be sufficient.
+//   orient = The orientation to rotate the edge patch into.  Use the `ORIENT` constants in `BOSL/constants.scad`.
+//   trans = Amount to translate patch, after rotating to `orient`.
+function bezier_patch_flat(size=[100,100], N=4, orient=ORIENT_Z, trans=[0,0,0]) =
+	let(
+		patch = [for (x=[0:N]) [for (y=[0:N]) vmul(point3d(size),[x/N-0.5, 0.5-y/N, 0])]]
+	) [for (row=patch)
+		translate_points(v=trans,
+			rotate_points3d(v=orient,row)
+		)
+	];
+
+
+
+// Function: patch_reverse()
+// Usage:
+//   patch_reverse(patch)
+// Description:
+//   Reverses the patch, so that the faces generated from it are flipped back to front.
+// Arguments:
+//   patch = The patch to reverse.
+function patch_reverse(patch) = [for (row=patch) reverse(row)];
+
+
+
+// Function: patch_translate()
+// Usage:
+//   patch_translate(patch, v)
+// Description: Translates all coordinates in a rectangular or triangular patch by a given amount.
+// Arguments:
+//   patch = The patch to translate.
+//   v = Vector to translate by.
+function patch_translate(patch, v=[0,0,0]) = [for(row=patch) translate_points(row, v)];
+
+
+// Function: patch_scale()
+// Usage:
+//   patch_scale(patch, v, [cp])
+// Description: Scales all coordinates in a rectangular or triangular patch by a given amount.
+// Arguments:
+//   patch = The patch to scale.
+//   v = [X,Y,Z] scaling factors.
+//   cp = Centerpoint to scale around.
+function patch_scale(patch, v=[1,1,1], cp=[0,0,0]) = [for(row=patch) scale_points(row, v, cp)];
+
+
+// Function: patch_rotate()
+// Usage:
+//   patch_rotate(patch, a, [cp])
+//   patch_rotate(patch, a, v, [cp])
+// Description: Rotates all coordinates in a rectangular or triangular patch by a given amount.
+// Arguments:
+//   patch = The patch to rotate.
+//   a = Rotation angle(s) in degrees.
+//   v = Vector axis to rotate round.
+//   cp = Centerpoint to rotate around.
+function patch_rotate(patch, a=undef, v=undef, cp=[0,0,0]) =
+	v==undef?
+		[for(row=patch) rotate_points3d(row, a, cp)] :
+		[for(row=patch) rotate_points3d_around_axis(row, a, v, cp)];
+
+
+// Function: patches_translate()
+// Usage:
+//   patches_translate(patch, v, [cp])
+// Description: Translates all coordinates in each of a list of rectangular or triangular patches.
+// Arguments:
+//   patches = List of patches to translate.
+//   v = Vector to translate by.
+function patches_translate(patches, v=[0,0,0]) = [for (patch=patches) patch_translate(patch,v)];
+
+
+// Function: patches_scale()
+// Usage:
+//   patches_scale(patch, v, [cp])
+// Description: Scales all coordinates in each of a list of rectangular or triangular patches.
+// Arguments:
+//   patches = List of patches to scale.
+//   v = [X,Y,Z] scaling factors.
+//   cp = Centerpoint to scale around.
+function patches_scale(patches, v=[1,1,1], cp=[0,0,0]) = [for (patch=patches) patch_scale(patch,v,cp)];
+
+
+// Function: patches_rotate()
+// Usage:
+//   patches_rotate(patch, a, [cp])
+//   patches_rotate(patch, a, v, [cp])
+// Description: Rotates all coordinates in each of a list of rectangular or triangular patches.
+// Arguments:
+//   patches = List of patches to rotate.
+//   a = Rotation angle(s) in degrees.
+//   v = Vector axis to rotate round.
+//   cp = Centerpoint to rotate around.
+function patches_rotate(patches, a=undef, v=undef, cp=[0,0,0]) = [for (patch=patches) patch_rotate(patch, a=a, v=v, cp=cp)];
+
+
+// Function: bezier_surface_vertices_and_faces()
+// Usage:
+//   bezier_surface_vertices_and_faces(patches, [splinesteps], [vertices], [faces]);
+// Description:
+//   Calculate vertices and faces for forming a (possibly partial)
+//   polyhedron from the given rectangular and triangular bezier
+//   patches.  Returns a list containing two elements.  The first is
+//   the list of unique vertices.  The second is the list of faces,
+//   where each face is a list of indices into the list of vertices.
+//   You can chain calls to this, to add more vertices and faces for
+//   multiple bezier patches, to stitch them together into a complete
+//   polyhedron.
+// Arguments:
+//   patches = A list of rectangular bezier patches.
+//   tris = A list of triangular bezier patches.
+//   splinesteps = Number of steps to divide each bezier segment into.  Default: 16
+//   vertices = Vertex list to add new points to.  Default: []
+//   faces = Face list to add new faces to.  Default: []
+// Example(3D):
+//   patch1 = [
+//   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
+//   	[[ 0,40,0], [ 0,  0,100], [100,  0, 20], [100, 40,0]],
+//   	[[ 0,60,0], [ 0,100,100], [100,100, 20], [100, 60,0]],
+//   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//   ];
+//   patch2 = [
+//   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
+//   	[[ 0,40,0], [ 0,  0,-50], [100,  0,-50], [100, 40,0]],
+//   	[[ 0,60,0], [ 0,100,-50], [100,100,-50], [100, 60,0]],
+//   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//   ];
+//   vnf = bezier_surface_vertices_and_faces(patches=[patch1, patch2], splinesteps=16);
+//   polyhedron(points=vnf[0], faces=vnf[1]);
+function bezier_surface_vertices_and_faces(patches=[], tris=[], splinesteps=16, i=0, vertices=[], faces=[]) =
+	let(
+		vnf = (i >= len(patches))? [vertices, faces] :
+			bezier_patch(patches[i], splinesteps=splinesteps, vertices=vertices, faces=faces),
+		vnf2 = (i >= len(tris))? vnf :
+			bezier_triangle(tris[i], splinesteps=splinesteps, vertices=vnf[0], faces=vnf[1])
+	) (i >= len(patches) && i >= len(tris))? vnf2 :
+	bezier_surface_vertices_and_faces(patches=patches, tris=tris, splinesteps=splinesteps, i=i+1, vertices=vnf2[0], faces=vnf2[1]);
+
+
+
+// Section: Path Functions
+
+
+// Function: bezier_path_point()
+// Usage:
+//   bezier_path_point(path, seg, u, [N])
+// Description: Returns the coordinates of bezier path segment `seg` at position `u`.
+// Arguments:
+//   path = A bezier path to approximate.
+//   seg = Segment number along the path.  Each segment is N points long.
+//   u = The proportion of the way along the segment to find the point of.  0<=`u`<=1
+//   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+function bezier_path_point(path, seg, u, N=3) = bez_point(select(path,seg*N,(seg+1)*N), u);
+
+
+
+// Function: bezier_path_closest_point()
+// Usage:
+//   bezier_path_closest_point(bezier,pt)
+// Description:
+//   Finds the closest part of the given bezier path to point `pt`.
+//   Returns [segnum, u] for the closest position on the bezier path to the given point `pt`.
+// Arguments:
+//   path = A bezier path to approximate.
+//   pt = The point to find the closest curve point to.
+//   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+//   max_err = The maximum allowed error when approximating the closest approach.
+// Example(2D):
+//   pt = [100,0];
+//   bez = [[0,0], [20,40], [60,-25], [80,0], [100,25], [140,25], [160,0]];
+//   pos = bezier_path_closest_point(bez, pt);
+//   xy = bezier_path_point(bez,pos[0],pos[1]);
+//   trace_bezier(bez, N=3);
+//   color("red") translate(pt) sphere(r=1);
+//   color("blue") translate(xy) sphere(r=1);
+function bezier_path_closest_point(path, pt, N=3, max_err=0.01, seg=0, min_seg=undef, min_u=undef, min_dist=undef) =
+	let(curve = select(path,seg*N,(seg+1)*N))
+	(seg*N+1 >= len(path))? (
+		let(curve = select(path, min_seg*N, (min_seg+1)*N))
+		[min_seg, bezier_segment_closest_point(curve, pt, max_err=max_err)]
+	) : (
+		let(
+			curve = select(path,seg*N,(seg+1)*N),
+			u = bezier_segment_closest_point(curve, pt, max_err=0.05),
+			dist = norm(bez_point(curve, u)-pt),
+			mseg = (min_dist==undef || dist<min_dist)? seg : min_seg,
+			mdist = (min_dist==undef || dist<min_dist)? dist : min_dist,
+			mu = (min_dist==undef || dist<min_dist)? u : min_u
+		)
+		bezier_path_closest_point(path, pt, N, max_err, seg+1, mseg, mu, mdist)
+	);
+
+
+
+// Function: bezier_path_length()
+// Usage:
+//   bezier_path_length(path, [N], [max_deflect]);
+// Description:
+//   Approximates the length of the bezier path.
+// Arguments:
+//   path = A bezier path to approximate.
+//   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+//   max_deflect = The largest amount of deflection from the true curve to allow for approximation.
+function bezier_path_length(path, N=3, max_deflect=0.001) =
+	sum([
+		for (seg=[0:(len(path)-1)/N-1]) (
+			bezier_segment_length(
+				select(path, seg*N, (seg+1)*N),
+				max_deflect=max_deflect
+			)
+		)
+	]);
+
+
+
+// Function: bezier_polyline()
+// Usage:
+//   bezier_polyline(bezier, [splinesteps], [N])
+// Description:
+//   Takes a bezier path and converts it into a polyline.
+// Arguments:
+//   bezier = A bezier path to approximate.
+//   splinesteps = Number of straight lines to split each bezier segment into. default=16
+//   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+// Example(2D):
+//   bez = [
+//       [0,0], [-5,30],
+//       [20,60], [50,50], [110,30],
+//       [60,25], [70,0], [80,-25],
+//       [80,-50], [50,-50]
+//   ];
+//   trace_polyline(bez, size=1, N=3, showpts=true);
+//   trace_polyline(bezier_polyline(bez, N=3), size=3);
+function bezier_polyline(bezier, splinesteps=16, N=3) = let(
+		segs = (len(bezier)-1)/N
+	) concat(
+		[for (seg = [0:segs-1], i = [0:splinesteps-1]) bezier_path_point(bezier, seg, i/splinesteps, N=N)],
+		[bezier_path_point(bezier, segs-1, 1, N=N)]
+	);
+
+
+
 // Function: fillet_path()
 // Usage:
 //   fillet_path(pts, fillet, [maxerr]);
@@ -198,44 +627,62 @@ function fillet_path(pts, fillet, maxerr=0.1) = concat(
 
 // Function: bezier_close_to_axis()
 // Usage:
-//   bezier_close_to_axis(bezier, [N]);
+//   bezier_close_to_axis(bezier, [N], [axis]);
 // Description:
-//   Takes a 2D bezier path and closes it to the X axis.
+//   Takes a 2D bezier path and closes it to the specified axis.
 // Arguments:
-//   bezier = The 2D bezier path to close to the X axis.
+//   bezier = The 2D bezier path to close to the axis.
 //   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+//   axis = The axis to close to, "X", or "Y".  Default: "X"
 // Example(2D):
 //   bez = [[50,30], [40,10], [10,50], [0,30], [-10, 10], [-30,10], [-50,20]];
 //   closed = bezier_close_to_axis(bez);
 //   trace_bezier(closed, size=1);
-function bezier_close_to_axis(bezier, N=3) =
+// Example(2D):
+//   bez = [[30,50], [10,40], [50,10], [30,0], [10, -10], [10,-30], [20,-50]];
+//   closed = bezier_close_to_axis(bez, axis="Y");
+//   trace_bezier(closed, size=1);
+function bezier_close_to_axis(bezier, N=3, axis="X") =
 	let(
-		bezend = len(bezier)-1
-	) concat(
-		[for (i=[0:N-1]) lerp([bezier[0][0], 0], bezier[0], i/N)],
+		bezend = len(bezier)-1,
+		sp = bezier[0],
+		ep = bezier[bezend]
+	) (axis=="X")? concat(
+		[for (i=[0:N-1]) lerp([sp.x,0], sp, i/N)],
 		bezier,
-		[for (i=[1:N]) lerp(bezier[bezend], [bezier[bezend][0], 0], i/N)],
-		[for (i=[1:N]) lerp([bezier[bezend][0], 0], [bezier[0][0], 0], i/N)]
+		[for (i=[1:N]) lerp(ep, [ep.x,0], i/N)],
+		[for (i=[1:N]) lerp([ep.x,0], [sp.x,0], i/N)]
+	) : (axis=="Y")? concat(
+		[for (i=[0:N-1]) lerp([0,sp.y], sp, i/N)],
+		bezier,
+		[for (i=[1:N]) lerp(ep, [0,ep.y], i/N)],
+		[for (i=[1:N]) lerp([0,ep.y], [0,sp.y], i/N)]
+	) : (
+		assert_in_list("axis", axis, ["X","Y"])
 	);
 
 
 // Function: bezier_offset()
 // Usage:
-//   bezier_offset(inset, bezier, [N]);
+//   bezier_offset(inset, bezier, [N], [axis]);
 // Description:
-//   Takes a 2D bezier path and closes it with a matching path that is
-//   lowered by a given amount towards the X axis.
+//   Takes a 2D bezier path and closes it with a matching reversed path that is closer to the given axis by distance `inset`.
 // Arguments:
 //   inset = Amount to lower second path by.
-//   bezier = The 2D bezier path to close to the X axis.
+//   bezier = The 2D bezier path.
 //   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+//   axis = The axis to offset towards, "X", or "Y".  Default: "X"
 // Example(2D):
 //   bez = [[50,30], [40,10], [10,50], [0,30], [-10, 10], [-30,10], [-50,20]];
 //   closed = bezier_offset(5, bez);
 //   trace_bezier(closed, size=1);
-function bezier_offset(inset, bezier, N=3) =
+// Example(2D):
+//   bez = [[30,50], [10,40], [50,10], [30,0], [10, -10], [10,-30], [20,-50]];
+//   closed = bezier_offset(5, bez, axis="Y");
+//   trace_bezier(closed, size=1);
+function bezier_offset(inset, bezier, N=3, axis="X") =
 	let(
-		backbez = reverse([ for (pt = bezier) [pt[0], pt[1]-inset] ]),
+		backbez = reverse([ for (pt = bezier) pt-(axis=="X"? [0,inset] : [inset,0]) ]),
 		bezend = len(bezier)-1
 	) concat(
 		bezier,
@@ -243,6 +690,7 @@ function bezier_offset(inset, bezier, N=3) =
 		backbez,
 		[for (i=[1:N]) lerp(backbez[bezend], bezier[0], i/N)]
 	);
+
 
 
 // Section: Modules
@@ -495,6 +943,100 @@ module trace_bezier(bez, N=3, size=1) {
 	trace_polyline(bez, N=N, showpts=true, size=size/2, color="green");
 	trace_polyline(bezier_polyline(bez, N=N), size=size, color="cyan");
 }
+
+
+
+// Section: Bezier Surface Modules
+
+
+// Module: bezier_polyhedron()
+// Useage:
+//   bezier_polyhedron(patches)
+// Description:
+//   Takes a list of two or more bezier patches and attempts to make a complete polyhedron from them.
+// Arguments:
+//   patches = A list of rectangular bezier patches.
+//   tris = A list of triangular bezier patches.
+//   vertices = Vertex list for additional non-bezier faces.  Default: []
+//   faces = Additional non-bezier faces.  Default: []
+//   splinesteps = Number of steps to divide each bezier segment into. Default: 16
+// Example:
+//   patch1 = [
+//   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
+//   	[[ 0,40,0], [ 0,  0, 20], [100,  0, 20], [100, 40,0]],
+//   	[[ 0,60,0], [ 0,100, 20], [100,100,100], [100, 60,0]],
+//   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//   ];
+//   patch2 = [
+//   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
+//   	[[ 0,40,0], [ 0,  0,-50], [100,  0,-50], [100, 40,0]],
+//   	[[ 0,60,0], [ 0,100,-50], [100,100,-50], [100, 60,0]],
+//   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//   ];
+//   bezier_polyhedron([patch1, patch2], splinesteps=8);
+module bezier_polyhedron(patches=[], tris=[], splinesteps=16, vertices=[], faces=[])
+{
+	sfc = bezier_surface_vertices_and_faces(patches=patches, tris=tris, splinesteps=splinesteps, vertices=vertices, faces=faces);
+	polyhedron(points=sfc[0], faces=sfc[1]);
+}
+
+
+
+// Module: trace_bezier_patches()
+// Usage:
+//   trace_bezier_patches(patches, [size], [showcps], [splinesteps]);
+//   trace_bezier_patches(tris, [size], [showcps], [splinesteps]);
+//   trace_bezier_patches(patches, tris, [size], [showcps], [splinesteps]);
+// Description:
+//   Shows the surface, and optionally, control points of a list of bezier patches.
+// Arguments:
+//   patches = A list of rectangular bezier patches.
+//   tris = A list of triangular bezier patches.
+//   splinesteps = Number of steps to divide each bezier segment into. default=16
+//   showcps = If true, show the controlpoints as well as the surface.
+//   size = Size to show control points and lines.
+// Example:
+//   patch1 = [
+//   	[[15,15,0], [33,  0,  0], [ 67,  0,  0], [ 85, 15,0]],
+//   	[[ 0,33,0], [33, 33, 50], [ 67, 33, 50], [100, 33,0]],
+//   	[[ 0,67,0], [33, 67, 50], [ 67, 67, 50], [100, 67,0]],
+//   	[[15,85,0], [33,100,  0], [ 67,100,  0], [ 85, 85,0]],
+//   ];
+//   patch2 = [
+//   	[[15,15,0], [33,  0,  0], [ 67,  0,  0], [ 85, 15,0]],
+//   	[[ 0,33,0], [33, 33,-50], [ 67, 33,-50], [100, 33,0]],
+//   	[[ 0,67,0], [33, 67,-50], [ 67, 67,-50], [100, 67,0]],
+//   	[[15,85,0], [33,100,  0], [ 67,100,  0], [ 85, 85,0]],
+//   ];
+//   trace_bezier_patches(patches=[patch1, patch2], splinesteps=8, showcps=true);
+module trace_bezier_patches(patches=[], tris=[], size=1, showcps=false, splinesteps=16)
+{
+	if (showcps) {
+		for (patch = patches) {
+			place_copies(flatten(patch)) color("red") sphere(d=size*2);
+			color("cyan")
+			for (i=[0:len(patch)-1], j=[0:len(patch[i])-1]) {
+				if (i<len(patch)-1) extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
+				if (j<len(patch[i])-1) extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
+			}
+			vnf = bezier_patch(patch, splinesteps=splinesteps);
+			color("blue") place_copies(vnf[0]) sphere(d=size);
+		}
+		for (patch = tris) {
+			place_copies(flatten(patch)) color("red") sphere(d=size*2);
+			color("cyan")
+			for (i=[0:len(patch)-2], j=[0:len(patch[i])-2]) {
+				extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
+				extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
+				extrude_from_to(patch[i+1][j], patch[i][j+1]) circle(d=size);
+			}
+			vnf = bezier_triangle(patch, splinesteps=splinesteps);
+			color("blue") place_copies(vnf[0]) sphere(d=size);
+		}
+	}
+	bezier_polyhedron(patches=patches, tris=tris, splinesteps=splinesteps);
+}
+
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

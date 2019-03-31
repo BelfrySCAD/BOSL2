@@ -91,6 +91,21 @@ function simplify3d_path(path, eps=1e-6) = concat(
 );
 
 
+// Function: path_length()
+// Usage:
+//   path3d_length(path)
+// Description:
+//   Returns the length of the path.
+// Arguments:
+//   path = The list of points of the path to measure.
+// Example:
+//   path = [[0,0], [5,35], [60,-25], [80,0]];
+//   echo(path_length(path));
+function path_length(path) =
+	len(path)<2? 0 :
+	sum([for (i = [0:len(path)-2]) norm(path[i+1]-path[i])]);
+
+
 // Function: path2d_regular_ngon()
 // Description:
 //   Returns a 2D open counter-clockwise path of the vertices of a regular polygon of `n` sides.
