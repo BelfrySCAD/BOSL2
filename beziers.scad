@@ -226,7 +226,7 @@ function bezier_patch_point(patch, u, v) = bez_point([for (bez = patch) bez_poin
 
 // Function: bezier_triangle_point()
 // Usage:
-//   bezier_triangle_point(patch, u, v)
+//   bezier_triangle_point(tri, u, v)
 // Description:
 //   Given a triangular 2-dimensional array of N+1 by (for the first row) N+1 points,
 //   that represents a Bezier triangular patch of degree N, returns a point on
@@ -234,16 +234,16 @@ function bezier_patch_point(patch, u, v) = bez_point([for (bez = patch) bez_poin
 //   will have a list of 4 points in the first row, 3 in the second, 2 in the
 //   third, and 1 in the last row.
 // Arguments:
-//   patch = Triangular bezier patch to get point on.
+//   tri = Triangular bezier patch to get point on.
 //   u = The proportion of the way along the first dimension of the triangular patch to find the point of.  0<=`u`<=1
 //   v = The proportion of the way along the second dimension of the triangular patch to find the point of.  0<=`v`<=(1-`u`)
-function bezier_triangle_point(patch, u, v) =
-	len(patch) == 1 ? patch[0][0] :
+function bezier_triangle_point(tri, u, v) =
+	len(tri) == 1 ? tri[0][0] :
 	let(
-		n = len(patch)-1,
-		Pu = [for(i=[0:n-1]) [for (j=[1:len(patch[i])-1]) patch[i][j]]],
-		Pv = [for(i=[0:n-1]) [for (j=[0:len(patch[i])-2]) patch[i][j]]],
-		Pw = [for(i=[1:len(patch)-1]) patch[i]]
+		n = len(tri)-1,
+		Pu = [for(i=[0:n-1]) [for (j=[1:len(tri[i])-1]) tri[i][j]]],
+		Pv = [for(i=[0:n-1]) [for (j=[0:len(tri[i])-2]) tri[i][j]]],
+		Pw = [for(i=[1:len(tri)-1]) tri[i]]
 	)
 	bezier_triangle_point(u*Pu + v*Pv + (1-u-v)*Pw, u, v);
 
@@ -296,7 +296,7 @@ function _tri_count(n) = (n*(1+n))/2;
 
 // Function: bezier_triangle()
 // Usage:
-//   bezier_triangle(patch, [splinesteps], [vertices], [faces]);
+//   bezier_triangle(tri, [splinesteps], [vertices], [faces]);
 // Description:
 //   Calculate vertices and faces for forming a partial polyhedron
 //   from the given bezier triangular patch.  Returns a list containing
@@ -306,7 +306,7 @@ function _tri_count(n) = (n*(1+n))/2;
 //   more vertices and faces for multiple bezier patches, to stitch
 //   them together into a complete polyhedron.
 // Arguments:
-//   patch = The triangular array of endpoints and control points for this bezier patch.
+//   tri = The triangular array of endpoints and control points for this bezier patch.
 //   splinesteps = Number of steps to divide each bezier segment into.  Default: 16
 //   vertices = Vertex list to add new points to.  Default: []
 //   faces = Face list to add new faces to.  Default: []
@@ -318,17 +318,17 @@ function _tri_count(n) = (n*(1+n))/2;
 //   ];
 //   vnf = bezier_triangle(tri, splinesteps=16);
 //   polyhedron(points=vnf[0], faces=vnf[1]);
-function bezier_triangle(patch, splinesteps=16, vertices=[], faces=[]) =
+function bezier_triangle(tri, splinesteps=16, vertices=[], faces=[]) =
 	let(
 		base = len(vertices),
 		pts = [
 			for (
 				u=[0:splinesteps],
 				v=[0:splinesteps-u]
-			) bezier_triangle_point(patch, u/splinesteps, v/splinesteps)
+			) bezier_triangle_point(tri, u/splinesteps, v/splinesteps)
 		],
 		new_vertices = concat(vertices, pts),
-		patchlen = len(patch),
+		patchlen = len(tri),
 		tricnt = _tri_count(splinesteps+1),
 		new_faces = [
 			for (
@@ -367,6 +367,17 @@ function bezier_patch_flat(size=[100,100], N=4, orient=ORIENT_Z, trans=[0,0,0]) 
 			rotate_points3d(v=orient,row)
 		)
 	];
+
+
+
+// Function: patch_reverse()
+// Usage:
+//   patch_reverse(patch)
+// Description:
+//   Reverses the patch, so that the faces generated from it are flipped back to front.
+// Arguments:
+//   patch = The patch to reverse.
+function patch_reverse(patch) = [for (row=patch) reverse(row)];
 
 
 
