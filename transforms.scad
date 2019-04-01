@@ -276,25 +276,15 @@ module rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false)
 	if (is_def(cp)) {
 		translate(cp) rot(a=a, v=v, from=from, to=to, reverse=reverse) translate(-cp) children();
 	} else if (is_def(from)) {
-		eps = 0.00001;
 		assertion(is_def(to), "`from` and `to` should be used together.");
-		vv1 = normalize(from);
-		vv2 = normalize(to);
-		if (norm(vv2-vv1) < eps && a == 0) {
+		axis = vector_axis(from, to);
+		ang = vector_angle(from, to);
+		if (ang < 0.0001 && a == 0) {
 			children();  // May be slightly faster?
+		} else if (reverse) {
+			rotate(a=-ang, v=axis) rotate(a=-a, v=from) children();
 		} else {
-			vv3 = (
-				(norm(vv1+vv2) > eps)? vv2 :
-				(norm(vabs(vv2)-V_UP) > eps)? V_UP :
-				V_RIGHT
-			);
-			axis = normalize(cross(vv1, vv3));
-			ang = vector_angle(vv1, vv2);
-			if (reverse) {
-				rotate(a=-ang, v=axis) rotate(a=-a, v=vv1) children();
-			} else {
-				rotate(a=ang, v=axis) rotate(a=a, v=vv1) children();
-			}
+			rotate(a=ang, v=axis) rotate(a=a, v=from) children();
 		}
 	} else if (a == 0) {
 		children();  // May be slightly faster?

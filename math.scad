@@ -834,6 +834,25 @@ function vector3d_angle(v1,v2) = vector_angle(v1,v2);
 function vector_angle(v1,v2) = acos(constrain((v1*v2)/(norm(v1)*norm(v2)), -1, 1));
 
 
+// Function: vector_axis()
+// Usage:
+//   vector_xis(v1,v2);
+// Description:
+//   Returns the vector perpendicular to both of the given vectors.
+// Arguments:
+//   v1 = First vector.
+//   v2 = Second vector.
+function vector_axis(v1,v2) =
+	let(
+		eps = 0.00001,
+		vv1 = normalize(point3d(v1)),
+		vv2 = normalize(point3d(v2)),
+		vv3 = norm(v1+v2)>eps? vv2 :
+			norm(vabs(vv2)-V_UP)>eps? V_UP :
+			V_RIGHT
+	) normalize(cross(vv1,vv3));
+
+
 // Section: Coordinates Manipulation
 
 // Function: point2d()
@@ -910,21 +929,45 @@ function rotate_points2d(pts, ang, cp=[0,0]) = let(
 // Function: rotate_points3d()
 // Usage:
 //   rotate_points3d(pts, v, [cp], [reverse]);
+//   rotate_points3d(pts, v, axis, [cp], [reverse]);
+//   rotate_points3d(pts, from, to, v, [cp], [reverse]);
 // Description:
 //   Rotates each 3D point in an array by a given amount, around a given centerpoint.
 // Arguments:
-//   pts = List of 3D points to rotate.
-//   v = Vector of rotation angles for each axis, [X,Y,Z]
-//   cp = 3D Centerpoint to rotate around.
+//   pts = List of points to rotate.
+//   v = Rotation angle(s) in degrees.
+//   axis = If given, axis vector to rotate around.
+//   cp = Centerpoint to rotate around.
+//   from = If given, the vector to rotate something from.  Used with `to`.
+//   to = If given, the vector to rotate something to.  Used with `from`.
 //   reverse = If true, performs an exactly reversed rotation.
-function rotate_points3d(pts, v=[0,0,0], cp=[0,0,0], reverse=false) = let(
-		m = reverse?
-			matrix4_xrot(-v[0]) * matrix4_yrot(-v[1]) * matrix4_zrot(-v[2]) :
-			matrix4_zrot(v[2]) * matrix4_yrot(v[1]) * matrix4_xrot(v[0])
-	) [for (pt = pts) m*concat(point3d(pt)-cp, 0)+cp];
+function rotate_points3d(pts, v=[0,0,0], cp=[0,0,0], axis=undef, from=undef, to=undef, reverse=false) =
+	let(
+		dummy = assertion(is_def(from)==is_def(to), "`from` and `to` must be given together."),
+		mrot = reverse? (
+			is_def(from)? let (
+				ang = vector_angle(from, to),
+				axis = vector_axis(from, to)
+			) matrix4_rot_by_axis(from, -v) * matrix4_rot_by_axis(axis, -ang) :
+			is_def(axis)? matrix4_rot_by_axis(axis, -v) :
+			is_scalar(v)? matrix4_zrot(-v) :
+			matrix4_xrot(-v.x) * matrix4_yrot(-v.y) * matrix4_zrot(-v.z)
+		) : (
+			is_def(from)? let (
+				ang = vector_angle(from, to),
+				axis = vector_axis(from, to)
+			) matrix4_rot_by_axis(axis, ang) * matrix4_rot_by_axis(from, v) :
+			is_def(axis)? matrix4_rot_by_axis(axis, v) :
+			is_scalar(v)? matrix4_zrot(v) :
+			matrix4_zrot(v.z) * matrix4_yrot(v.y) * matrix4_xrot(v.x)
+		),
+		m = matrix4_translate(cp) * mrot * matrix4_translate(-cp)
+	) [for (pt = pts) point3d(m*concat(point3d(pt),[1]))];
+
 
 
 // Function: rotate_points3d_around_axis()
+// Status: DEPRECATED, use `rotate_points3d(pts, v=ang, axis=u, cp=cp)` instead.
 // Usage:
 //   rotate_points3d_around_axis(pts, ang, u, [cp])
 // Description:
@@ -1196,7 +1239,7 @@ function matrix3_zrot(ang) = [
 //   Returns the 4x4 matrix to perform a rotation of a 3D vector around the X axis.
 // Arguments:
 //   ang = number of degrees to rotate.
-function matrix4_xrot(ang) = [
+function matrix4_xrot(ang) = assert(ang!=undef) [
 	[1,        0,         0,   0],
 	[0, cos(ang), -sin(ang),   0],
 	[0, sin(ang),  cos(ang),   0],
@@ -1209,7 +1252,7 @@ function matrix4_xrot(ang) = [
 //   Returns the 4x4 matrix to perform a rotation of a 3D vector around the Y axis.
 // Arguments:
 //   ang = Number of degrees to rotate.
-function matrix4_yrot(ang) = [
+function matrix4_yrot(ang) = assert(ang!=undef) [
 	[ cos(ang), 0, sin(ang),   0],
 	[        0, 1,        0,   0],
 	[-sin(ang), 0, cos(ang),   0],
@@ -1224,7 +1267,7 @@ function matrix4_yrot(ang) = [
 //   Returns the 4x4 matrix to perform a rotation of a 3D vector around the Z axis.
 // Arguments:
 //   ang = number of degrees to rotate.
-function matrix4_zrot(ang) = [
+function matrix4_zrot(ang) = assert(ang!=undef) [
 	[cos(ang), -sin(ang), 0, 0],
 	[sin(ang),  cos(ang), 0, 0],
 	[       0,         0, 1, 0],
