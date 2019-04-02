@@ -941,25 +941,38 @@ function rotate_points2d(pts, ang, cp=[0,0]) = let(
 //   from = If given, the vector to rotate something from.  Used with `to`.
 //   to = If given, the vector to rotate something to.  Used with `from`.
 //   reverse = If true, performs an exactly reversed rotation.
-function rotate_points3d(pts, v=[0,0,0], cp=[0,0,0], axis=undef, from=undef, to=undef, reverse=false) =
+function rotate_points3d(pts, v=0, cp=[0,0,0], axis=undef, from=undef, to=undef, reverse=false) =
 	let(
 		dummy = assertion(is_def(from)==is_def(to), "`from` and `to` must be given together."),
 		mrot = reverse? (
-			is_def(from)? let (
-				ang = vector_angle(from, to),
-				axis = vector_axis(from, to)
-			) matrix4_rot_by_axis(from, -v) * matrix4_rot_by_axis(axis, -ang) :
-			is_def(axis)? matrix4_rot_by_axis(axis, -v) :
-			is_scalar(v)? matrix4_zrot(-v) :
-			matrix4_xrot(-v.x) * matrix4_yrot(-v.y) * matrix4_zrot(-v.z)
+			is_def(from)? (
+				let (
+					ang = vector_angle(from, to),
+					axis = vector_axis(from, to)
+				)
+				matrix4_rot_by_axis(from, -v) * matrix4_rot_by_axis(axis, -ang)
+			) : is_def(axis)? (
+				matrix4_rot_by_axis(axis, -v)
+			) : is_scalar(v)? (
+				matrix4_zrot(-v)
+			) : (
+				matrix4_xrot(-v.x) * matrix4_yrot(-v.y) * matrix4_zrot(-v.z)
+			)
 		) : (
-			is_def(from)? let (
-				ang = vector_angle(from, to),
-				axis = vector_axis(from, to)
-			) matrix4_rot_by_axis(axis, ang) * matrix4_rot_by_axis(from, v) :
-			is_def(axis)? matrix4_rot_by_axis(axis, v) :
-			is_scalar(v)? matrix4_zrot(v) :
-			matrix4_zrot(v.z) * matrix4_yrot(v.y) * matrix4_xrot(v.x)
+			is_def(from)? (
+				let (
+					ang = vector_angle(from, to),
+					axis = vector_axis(from, to)
+				)
+				echo(axis=axis, ang=ang, v=v)
+				matrix4_rot_by_axis(axis, ang) * matrix4_rot_by_axis(from, v)
+			) : is_def(axis)? (
+				matrix4_rot_by_axis(axis, v)
+			) : is_scalar(v)? (
+				matrix4_zrot(v)
+			) : (
+				matrix4_zrot(v.z) * matrix4_yrot(v.y) * matrix4_xrot(v.x)
+			)
 		),
 		m = matrix4_translate(cp) * mrot * matrix4_translate(-cp)
 	) [for (pt = pts) point3d(m*concat(point3d(pt),[1]))];
@@ -1286,7 +1299,8 @@ function matrix4_zrot(ang) = assert(ang!=undef) [
 function matrix4_rot_by_axis(u, ang) = let(
 	u = normalize(u),
 	c = cos(ang),
-	c2 = 1-c, s = sin(ang)
+	c2 = 1-c,
+	s = sin(ang)
 ) [
 	[u[0]*u[0]*c2+c     , u[0]*u[1]*c2-u[2]*s, u[0]*u[2]*c2+u[1]*s, 0],
 	[u[1]*u[0]*c2+u[2]*s, u[1]*u[1]*c2+c     , u[1]*u[2]*c2-u[0]*s, 0],
