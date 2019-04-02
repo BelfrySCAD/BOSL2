@@ -245,6 +245,9 @@ function sum_of_sines(a, sines) =
 function mean(v) = sum(v)/len(v);
 
 
+// Section: Comparisons and Logic
+
+
 // Function: compare_vals()
 // Usage:
 //   compare_vals(a, b);
