@@ -245,32 +245,24 @@ function sum_of_sines(a, sines) =
 function mean(v) = sum(v)/len(v);
 
 
-// Section: Comparisons and Logic
-
 // Function: compare_vals()
 // Usage:
 //   compare_vals(a, b);
 // Description:
-//   Compares two values.  If types don't match, then
-//   undef < boolean < scalar < string < list
-//   Lists are compared recursively.
+//   Compares two values.  Lists are compared recursively.
 // Arguments:
 //   a = First value to compare.
 //   b = Second value to compare.
 function compare_vals(a, b, n=0) =
-	(a == undef && b == undef)? 0 :
-	(a == undef)? -1 :
-	(b == undef)? 1 :
-	(is_boolean(a) && is_boolean(b))? ((a?1:0)-(b?1:0)) :
-	is_boolean(a)? -1 :
-	is_boolean(b)? 1 :
-	(is_scalar(a) && is_scalar(b))? (a-b) :
-	is_scalar(a)? -1 :
-	is_scalar(b)? 1 :
-	(is_str(a) && is_str(b))? ((a<b)? -1 : ((a>b)? 1 : 0)) :
-	is_str(a)? -1 :
-	is_str(b)? 1 :
-	compare_lists(a,b);
+	(a==b)? 0 :
+	(a==undef)? -1 :
+	(b==undef)? 1 :
+	((a==[] || a=="" || a[0]!=undef) && (b==[] || b=="" || b[0]!=undef))? (
+		let (cmp = compare_vals(a[n], b[n]))
+		(cmp==0)? compare_vals(a,b,n+1) :
+		cmp
+	) : (a<b)? -1 :
+	(a>b)? 1 : 0;
 
 
 // Function: compare_lists()
