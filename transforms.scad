@@ -717,17 +717,17 @@ module spread(p1=undef, p2=undef, spacing=undef, l=undef, n=undef)
 // Module: xspread()
 //
 // Description:
-//   Spreads out `n` copies of the children along the X axis.
+//   Spreads out `n` copies of the children along a line on the X axis.
 //
 // Usage:
-//   xspread(spacing, [n], [p1]) ...
-//   xspread(l, [n], [p1]) ...
+//   xspread(spacing, [n], [sp]) ...
+//   xspread(l, [n], [sp]) ...
 //
 // Arguments:
 //   spacing = spacing between copies. (Default: 1.0)
 //   n = Number of copies to spread out. (Default: 2)
 //   l = Length to spread copies over.
-//   p1 = Starting point of line if given.  If not, line is centered at origin.
+//   sp = If given, copies will be spread on a line to the right of starting position `sp`.  If not given, copies will be spread along a line that is centered at [0,0,0].
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -737,32 +737,32 @@ module spread(p1=undef, p2=undef, spacing=undef, l=undef, n=undef)
 //   xspread(20) sphere(3);
 //   xspread(20, n=3) sphere(3);
 //   xspread(spacing=15, l=50) sphere(3);
-//   xspread(n=5, l=40, p1=[0,0]) sphere(3);
+//   xspread(n=4, l=30, sp=[0,10,0]) sphere(3);
 // Example:
 //   xspread(10, n=3) {
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
-module xspread(spacing=undef, n=undef, l=undef, p1=undef)
+module xspread(spacing=undef, n=undef, l=undef, sp=undef)
 {
-	spread(l=l*V_RIGHT, spacing=spacing*V_RIGHT, n=n, p1=p1) children();
+	spread(l=l*V_RIGHT, spacing=spacing*V_RIGHT, n=n, p1=sp) children();
 }
 
 
 // Module: yspread()
 //
 // Description:
-//   Spreads out `n` copies of the children along the Y axis.
+//   Spreads out `n` copies of the children along a line on the Y axis.
 //
 // Usage:
-//   yspread(spacing, [n], [p1]) ...
-//   yspread(l, [n], [p1]) ...
+//   yspread(spacing, [n], [sp]) ...
+//   yspread(l, [n], [sp]) ...
 //
 // Arguments:
 //   spacing = spacing between copies. (Default: 1.0)
 //   n = Number of copies to spread out. (Default: 2)
 //   l = Length to spread copies over.
-//   p1 = Starting point of line if given.  If not, line is centered at origin.
+//   sp = If given, copies will be spread on a line back from starting position `sp`.  If not given, copies will be spread along a line that is centered at [0,0,0].
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -772,32 +772,32 @@ module xspread(spacing=undef, n=undef, l=undef, p1=undef)
 //   yspread(20) sphere(3);
 //   yspread(20, n=3) sphere(3);
 //   yspread(spacing=15, l=50) sphere(3);
-//   yspread(n=5, l=40, p1=[0,0]) sphere(3);
+//   yspread(n=4, l=30, sp=[10,0,0]) sphere(3);
 // Example:
 //   yspread(10, n=3) {
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
-module yspread(spacing=undef, n=undef, l=undef, p1=undef)
+module yspread(spacing=undef, n=undef, l=undef, sp=undef)
 {
-	spread(l=l*V_BACK, spacing=spacing*V_BACK, n=n, p1=p1) children();
+	spread(l=l*V_BACK, spacing=spacing*V_BACK, n=n, p1=sp) children();
 }
 
 
 // Module: zspread()
 //
 // Description:
-//   Spreads out `n` copies of the children along the Z axis.
+//   Spreads out `n` copies of the children along a line on the Z axis.
 //
 // Usage:
-//   zspread(spacing, [n], [p1]) ...
-//   zspread(l, [n], [p1]) ...
+//   zspread(spacing, [n], [sp]) ...
+//   zspread(l, [n], [sp]) ...
 //
 // Arguments:
 //   spacing = spacing between copies. (Default: 1.0)
 //   n = Number of copies to spread out. (Default: 2)
 //   l = Length to spread copies over.
-//   p1 = Starting point of line if given.  If not, line is centered at origin.
+//   sp = If given, copies will be spread on a line up from starting position `sp`.  If not given, copies will be spread along a line that is centered at [0,0,0].
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -807,15 +807,15 @@ module yspread(spacing=undef, n=undef, l=undef, p1=undef)
 //   zspread(20) sphere(3);
 //   zspread(20, n=3) sphere(3);
 //   zspread(spacing=15, l=50) sphere(3);
-//   zspread(n=5, l=40, p1=[0,0]) sphere(3);
+//   zspread(n=4, l=30, sp=[10,0,0]) sphere(3);
 // Example:
 //   zspread(10, n=3) {
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
-module zspread(spacing=undef, n=undef, l=undef, p1=undef)
+module zspread(spacing=undef, n=undef, l=undef, sp=undef)
 {
-	spread(l=l*V_UP, spacing=spacing*V_UP, n=n, p1=p1) children();
+	spread(l=l*V_UP, spacing=spacing*V_UP, n=n, p1=sp) children();
 }
 
 
