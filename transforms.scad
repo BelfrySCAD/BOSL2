@@ -2185,6 +2185,80 @@ module extrude_arc(arc=90, sa=0, r=undef, d=undef, orient=ORIENT_Z, align=V_CENT
 
 
 //////////////////////////////////////////////////////////////////////
+// Section: 2D Mutators
+//////////////////////////////////////////////////////////////////////
+
+
+// Module: round2d()
+// Usage:
+//   round2d(r) ...
+//   round2d(or) ...
+//   round2d(ir) ...
+//   round2d(or, ir) ...
+// Description:
+//   Rounds an arbitrary 2d objects.  Giving `r` rounds all concave and
+//   convex corners.  Giving just `ir` rounds just concave corners.
+//   Giving just `or` rounds convex corners.  Giving both `ir` and `or`
+//   can let you round to different radii for concave and convex corners.
+//   The 2d object must not have any parts narrower than twice the `or`
+//   radius.  Such parts will disappear.
+// Arguments:
+//   r = Radius to round all concave and convex corners to.
+//   or = Radius to round only outside (convex) corners to.  Use instead of `r`.
+//   ir = Radius to round/fillet only inside (concave) corners to.  Use instead of `r`.
+// Examples(2D):
+//   round2d(r=10) {square([40,100], center=true); square([100,40], center=true);}
+//   round2d(or=10) {square([40,100], center=true); square([100,40], center=true);}
+//   round2d(ir=10) {square([40,100], center=true); square([100,40], center=true);}
+//   round2d(or=16,ir=8) {square([40,100], center=true); square([100,40], center=true);}
+module round2d(r, or, ir)
+{
+	or = get_radius(r1=or, r=r, dflt=0);
+	ir = get_radius(r1=ir, r=r, dflt=0);
+	offset(or) offset(-ir-or) offset(delta=ir) children();
+}
+
+
+// Module: shell2d()
+// Usage:
+//   shell2d(thickness, [or], [ir], [fill], [round])
+// Description:
+//   Creates a hollow shell from 2d children, with optional rounding.
+// Arguments:
+//   thickness = Thickness of the shell.  Positive to expand outward, negative to shrink inward, or a two-element list to do both.
+//   or = Radius to round convex corners/pointy bits on the outside of the shell.
+//   ir = Radius to round/fillet concave corners on the outside of the shell.
+//   round = Radius to round convex corners/pointy bits on the inside of the shell.
+//   fill = Radius to round/fillet concave corners on the inside of the shell.
+// Examples(2D):
+//   shell2d(10) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(-10) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d([-10,10]) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(10,or=10) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(10,ir=10) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(10,round=10) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(10,fill=10) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(8,or=16,ir=8,round=16,fill=8) {square([40,100], center=true); square([100,40], center=true);}
+module shell2d(thickness, or=0, ir=0, fill=0, round=0)
+{
+	thickness = is_scalar(thickness)? (
+		thickness<0? [thickness,0] : [0,thickness]
+	) : (thickness[0]>thickness[1])? (
+		[thickness[1],thickness[0]]
+	) : thickness;
+	difference() {
+		round2d(or=or,ir=ir)
+			offset(delta=thickness[1])
+				children();
+		round2d(or=fill,ir=round)
+			offset(delta=thickness[0])
+				children();
+	}
+}
+
+
+
+//////////////////////////////////////////////////////////////////////
 // Section: Miscellaneous
 //////////////////////////////////////////////////////////////////////
 
