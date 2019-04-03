@@ -253,17 +253,20 @@ function mean(v) = sum(v)/len(v);
 //   compare_vals(a, b);
 // Description:
 //   Compares two values.  Lists are compared recursively.
+//   Results are undefined if the two values are not of similar types.
 // Arguments:
 //   a = First value to compare.
 //   b = Second value to compare.
-function compare_vals(a, b, n=0) =
+function compare_vals(a, b) =
 	(a==b)? 0 :
 	(a==undef)? -1 :
 	(b==undef)? 1 :
 	((a==[] || a=="" || a[0]!=undef) && (b==[] || b=="" || b[0]!=undef))? (
-		let (cmp = compare_vals(a[n], b[n]))
-		(cmp==0)? compare_vals(a,b,n+1) :
-		cmp
+		(len(a)==1 && len(b)==1)? (
+			(a[0]<b[0])? -1 :
+			(a[0]>b[0])? 1 : 0
+		) :
+		compare_lists(a, b)
 	) : (a<b)? -1 :
 	(a>b)? 1 : 0;
 
@@ -274,18 +277,21 @@ function compare_vals(a, b, n=0) =
 // Description:
 //   Compare contents of two lists.
 //   Returns <0 if `a`<`b`.
-//   Returns >0 if `a`>`b`.
 //   Returns 0 if `a`==`b`.
+//   Returns >0 if `a`>`b`.
+//   Results are undefined if elements are not of similar types.
 // Arguments:
 //   a = First list to compare.
 //   b = Second list to compare.
 function compare_lists(a, b, n=0) =
-	let (la = len(a), lb = len(b))
-	(la<=n && lb<=n)? 0 :
-	(la<=n)? -1 :
-	(lb<=n)? 1 :
-	let (cmp = compare_vals(a[n], b[n]))
-	(cmp != 0)? cmp :
+	let(
+		// This curious construction enables tail recursion optimization.
+		cmp = (a==b)? 0 :
+			(len(a)<=n)? -1 :
+			(len(b)<=n)? 1 :
+			compare_vals(a[n], b[n])
+	)
+	(cmp != 0 || a==b)? cmp :
 	compare_lists(a, b, n+1);
 
 
@@ -664,7 +670,7 @@ function flatten(l) = [for (a = l) for (b = a) b];
 // Usage:
 //   sort(arr, [idx])
 // Description:
-//   Sorts the given list using `compare_vals()`.
+//   Sorts the given list using `compare_vals()`.  Results are undefined if list elements are not of similar type.
 // Arguments:
 //   arr = The list to sort.
 //   idx = If given, the index, range, or list of indices of sublist items to compare.
