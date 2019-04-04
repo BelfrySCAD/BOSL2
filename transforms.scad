@@ -2142,7 +2142,7 @@ module chain_hull()
 //   caps = If true, spin the 2D shapes to make rounded caps the ends of the arc.
 //   convexity = Max number of times a ray passes through the 2D shape's walls.
 //
-// Example:
+// Example(Med):
 //   pts=[[-5/2, -5], [-5/2, 0], [-5/2-3, 5], [5/2+3, 5], [5/2, 0], [5/2, -5]];
 //   #polygon(points=pts);
 //   extrude_arc(arc=270, sa=45, r=40, caps=true, convexity=4, $fa=2, $fs=2) {
