@@ -96,7 +96,7 @@ function constrain(v, minval, maxval) = min(maxval, max(minval, v));
 // Arguments:
 //   x = The value to constrain.
 //   m = Modulo value.
-function posmod(x,m) = (x%m) + (x<0)? m : 0;
+function posmod(x,m) = (x%m+m)%m;
 
 
 // Function: modrange()
@@ -240,8 +240,8 @@ function sum_of_sines(a, sines) =
 // Arguments:
 //   v = The list of values to get the mean of.
 // Example:
-//   mean([2,3,4]);  // returns 4.5.
-//   mean([[1,2,3], [3,4,5], [5,6,7]]);  // returns [4.5, 6, 7.5]
+//   mean([2,3,4]);  // returns 3.
+//   mean([[1,2,3], [3,4,5], [5,6,7]]);  // returns [3, 4, 5]
 function mean(v) = sum(v)/len(v);
 
 
@@ -636,8 +636,8 @@ function array_zip(vecs, v2, v3, fit=false, fill=undef) =
 		maxlen = array_longest(vecs),
 		dummy2 = (fit==false)? assertion(minlen==maxlen, "Input vectors must have the same length") : 0
 	) (fit == "long")?
-		[for(i=[0:maxlen-1]) [for(v=vecs) for (x=(i<len(v)? v[i] : fill)) x] ] :
-		[for(i=[0:minlen-1]) [for(v=vecs) for (x=v[i]) x] ];
+		[for(i=[0:maxlen-1]) [for(v=vecs) for(x=(i<len(v)? v[i] : (fill==undef)? [fill] : fill)) x] ] :
+		[for(i=[0:minlen-1]) [for(v=vecs) for(x=v[i]) x] ];
 
 
 
