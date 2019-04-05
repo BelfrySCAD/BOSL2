@@ -103,3 +103,7 @@ ENV/
 # Mac stuff
 .DS_Store
 
+# Vim temp files
+.*.swp
+
+

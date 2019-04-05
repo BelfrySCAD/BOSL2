@@ -1,3 +1,4 @@
+include <BOSL/constants.scad>
 include <BOSL/math.scad>
 
 eps = 1e-9;
@@ -407,6 +408,14 @@ module test_array_fit() {
 test_array_fit();
 
 
+module test_enumerate() {
+	assert(enumerate(["a","b","c"]) == [[0,"a"], [1,"b"], [2,"c"]]);
+	assert(enumerate([[88,"a"],[76,"b"],[21,"c"]], idx=1) == [[0,"a"], [1,"b"], [2,"c"]]);
+	assert(enumerate([["cat","a",12],["dog","b",10],["log","c",14]], idx=[1:2]) == [[0,"a",12], [1,"b",10], [2,"c",14]]);
+}
+test_enumerate();
+
+
 module test_array_zip() {
 	v1 = [1,2,3,4];
 	v2 = [5,6,7];
@@ -441,6 +450,22 @@ module test_sort() {
 	assert(sort(["cat", "oat", "sat", "bat", "vat", "rat", "pat", "mat", "fat", "hat", "eat"])== ["bat", "cat", "eat", "fat", "hat", "mat", "oat", "pat", "rat", "sat", "vat"]);
 }
 test_sort();
+
+
+module test_sortidx() {
+	lst1 = ["d","b","e","c"];
+	assert(sortidx(lst1) == [1,3,0,2]);
+	lst2 = [
+		["foo", 88, [0,0,1], false],
+		["bar", 90, [0,1,0], true],
+		["baz", 89, [1,0,0], false],
+		["qux", 23, [1,1,1], true]
+	];
+	assert(sortidx(lst2, idx=1) == [3,0,2,1]);
+	assert(sortidx(lst2, idx=0) == [1,2,0,3]);
+	assert(sortidx(lst2, idx=[1,3]) == [3,0,2,1]);
+}
+test_sortidx();
 
 
 module test_unique() {
@@ -521,6 +546,81 @@ module test_vector_axis() {
 	assert(norm(vector_axis([10,0,10],[0,-10,0]) - [sin(45),0,-sin(45)]) < eps);
 }
 test_vector_axis();
+
+
+module test_point2d() {
+	assert(point2d([1,2,3])==[1,2]);
+	assert(point2d([2,3])==[2,3]);
+	assert(point2d([1])==[1,0]);
+}
+test_point2d();
+
+
+module test_path2d() {
+	assert(path2d([[1], [1,2], [1,2,3], [1,2,3,4], [1,2,3,4,5]])==[[1,0],[1,2],[1,2],[1,2],[1,2]]);
+}
+test_path2d();
+
+
+module test_point3d() {
+	assert(point3d([1,2,3,4,5])==[1,2,3]);
+	assert(point3d([1,2,3,4])==[1,2,3]);
+	assert(point3d([1,2,3])==[1,2,3]);
+	assert(point3d([2,3])==[2,3,0]);
+	assert(point3d([1])==[1,0,0]);
+}
+test_point3d();
+
+
+module test_path3d() {
+	assert(path3d([[1], [1,2], [1,2,3], [1,2,3,4], [1,2,3,4,5]])==[[1,0,0],[1,2,0],[1,2,3],[1,2,3],[1,2,3]]);
+}
+test_path3d();
+
+
+module test_translate_points() {
+	pts = [[0,0,1], [0,1,0], [1,0,0], [0,0,-1], [0,-1,0], [-1,0,0]];
+	assert(translate_points(pts, v=[1,2,3]) == [[1,2,4], [1,3,3], [2,2,3], [1,2,2], [1,1,3], [0,2,3]]);
+	assert(translate_points(pts, v=[-1,-2,-3]) == [[-1,-2,-2], [-1,-1,-3], [0,-2,-3], [-1,-2,-4], [-1,-3,-3], [-2,-2,-3]]);
+}
+test_translate_points();
+
+
+module test_scale_points() {
+	pts = [[0,0,1], [0,1,0], [1,0,0], [0,0,-1], [0,-1,0], [-1,0,0]];
+	assert(scale_points(pts, v=[2,3,4]) == [[0,0,4], [0,3,0], [2,0,0], [0,0,-4], [0,-3,0], [-2,0,0]]);
+	assert(scale_points(pts, v=[-2,-3,-4]) == [[0,0,-4], [0,-3,0], [-2,0,0], [0,0,4], [0,3,0], [2,0,0]]);
+	assert(scale_points(pts, v=[1,1,1]) == [[0,0,1], [0,1,0], [1,0,0], [0,0,-1], [0,-1,0], [-1,0,0]]);
+	assert(scale_points(pts, v=[-1,-1,-1]) == [[0,0,-1], [0,-1,0], [-1,0,0], [0,0,1], [0,1,0], [1,0,0]]);
+}
+test_scale_points();
+
+
+module test_rotate_points2d() {
+	pts = [[0,1], [1,0], [0,-1], [-1,0]];
+	s = sin(45);
+	assert(rotate_points2d(pts,45) == [[-s,s],[s,s],[s,-s],[-s,-s]]);
+	assert(rotate_points2d(pts,90) == [[-1,0],[0,1],[1,0],[0,-1]]);
+	assert(rotate_points2d(pts,90,cp=[1,0]) == [[0,-1],[1,0],[2,-1],[1,-2]]);
+}
+test_rotate_points2d();
+
+
+module test_rotate_points3d() {
+	pts = [[0,0,1], [0,1,0], [1,0,0], [0,0,-1], [0,-1,0], [-1,0,0]];
+	assert(rotate_points3d(pts, [90,0,0]) == [[0,-1,0], [0,0,1], [1,0,0], [0,1,0], [0,0,-1], [-1,0,0]]);
+	assert(rotate_points3d(pts, [0,90,0]) == [[1,0,0], [0,1,0], [0,0,-1], [-1,0,0], [0,-1,0], [0,0,1]]);
+	assert(rotate_points3d(pts, [0,0,90]) == [[0,0,1], [-1,0,0], [0,1,0], [0,0,-1], [1,0,0], [0,-1,0]]);
+	assert(rotate_points3d(pts, [0,0,90],cp=[2,0,0]) == [[2,-2,1], [1,-2,0], [2,-1,0], [2,-2,-1], [3,-2,0], [2,-3,0]]);
+	assert(rotate_points3d(pts, 90, axis=V_UP) == [[0,0,1], [-1,0,0], [0,1,0], [0,0,-1], [1,0,0], [0,-1,0]]);
+	assert(rotate_points3d(pts, 90, axis=V_DOWN) == [[0,0,1], [1,0,0], [0,-1,0], [0,0,-1], [-1,0,0], [0,1,0]]);
+	assert(rotate_points3d(pts, 90, axis=V_RIGHT)  == [[0,-1,0], [0,0,1], [1,0,0], [0,1,0], [0,0,-1], [-1,0,0]]);
+	assert(rotate_points3d(pts, from=V_UP, to=V_BACK) == [[0,1,0], [0,0,-1], [1,0,0], [0,-1,0], [0,0,1], [-1,0,0]]);
+	assert(rotate_points3d(pts, 90, from=V_UP, to=V_BACK), [[0,1,0], [-1,0,0], [0,0,-1], [0,-1,0], [1,0,0], [0,0,1]]);
+}
+test_rotate_points3d();
+
+
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
