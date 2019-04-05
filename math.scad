@@ -110,10 +110,10 @@ function posmod(x,m) = (x%m+m)%m;
 //   m = Modulo value.
 //   step = Step by this amount.
 // Examples:
-//   echo(modrange(90,270,360, step=45));  // Outputs [90,135,180,225,270]
-//   echo(modrange(270,90,360, step=45));  // Outputs [270,315,0,45,90]
-//   echo(modrange(90,270,360, step=-45));  // Outputs [90,45,0,315,270]
-//   echo(modrange(270,90,360, step=-45));  // Outputs [270,225,180,135,90]
+//   modrange(90,270,360, step=45);   // Outputs [90,135,180,225,270]
+//   modrange(270,90,360, step=45);   // Outputs [270,315,0,45,90]
+//   modrange(90,270,360, step=-45);  // Outputs [90,45,0,315,270]
+//   modrange(270,90,360, step=-45);  // Outputs [270,225,180,135,90]
 function modrange(x, y, m, step=1) =
 	let(
 		a = posmod(x, m),
@@ -373,13 +373,13 @@ function count_true(l, nmax=undef, i=0, cnt=0) =
 
 // Section: List/Array Operations
 
+
 // Function: cdr()
 // Status: DEPRECATED, use `slice(list,1,-1)` instead.
 // Description: Returns all but the first item of a given array.
 // Arguments:
 //   list = The list to get the tail of.
 function cdr(list) = len(list)<=1? [] : [for (i=[1:len(list)-1]) list[i]];
-
 
 
 // Function: replist()
@@ -416,7 +416,6 @@ function replist(val, n, i=0) =
 function in_list(x,l,idx=undef) = search([x], l, num_returns_per_match=1, index_col_num=idx) != [[]];
 
 
-
 // Function: slice()
 // Description:
 //   Returns a slice of a list.  The first item is index 0.
@@ -435,7 +434,6 @@ function slice(arr,st,end) = let(
 		s=st<0?(len(arr)+st):st,
 		e=end<0?(len(arr)+end+1):end
 	) (s==e)? [] : [for (i=[s:e-1]) if (e>s) arr[i]];
-
 
 
 // Function: wrap_range()
@@ -492,7 +490,6 @@ function select(list, start, end=undef) =
 			[for (i = [s:e]) list[i]] :
 			concat([for (i = [s:l-1]) list[i]], [for (i = [0:e]) list[i]])
 	);
-
 
 
 // Function: reverse()
@@ -601,6 +598,24 @@ function array_trim(v, maxlen) = maxlen<1? [] : [for (i=[0:min(len(v),maxlen)-1]
 function array_fit(v, length, fill) = let(l=len(v)) (l==length)? v : (l>length)? array_trim(v,length) : array_pad(v,length,fill);
 
 
+// Function: enumerate()
+// Description:
+//   Returns a list, with each item of the given list `l` numbered in a sublist.
+//   Something like: `[[0,l[0]], [1,l[1]], [2,l[2]], ...]`
+// Arguments:
+//   l = List to enumerate.
+//   idx = If given, enumerates just the given subindex items of `l`.
+// Example:
+//   enumerate(["a","b","c"]);  // Returns: [[0,"a"], [1,"b"], [2,"c"]]
+//   enumerate([[88,"a"],[76,"b"],[21,"c"]], idx=1);  // Returns: [[0,"a"], [1,"b"], [2,"c"]]
+//   enumerate([["cat","a",12],["dog","b",10],["log","c",14]], idx=[1:2]);  // Returns: [[0,"a",12], [1,"b",10], [2,"c",14]]
+function enumerate(l,idx=undef) =
+	(l==[])? [] :
+	(idx==undef)?
+		[for (i=[0:len(l)-1]) [i,l[i]]] :
+		[for (i=[0:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
+
+
 // Function: array_zip()
 // Usage:
 //   array_zip(v1, v2, v3, [fit], [fill]);
@@ -693,6 +708,37 @@ function sort(arr, idx=undef) =
 	)
 	concat(sort(lesser,idx), equal, sort(greater,idx));
 
+
+// Function: sortidx()
+// Description:
+//   Given a list, calculates the sort order of the list, and returns
+//   a list of indexes into the original list in that sorted order.
+//   If you iterate the returned list in order, and use the list items
+//   to index into the original list, you will be iterating the original
+//   values in sorted order.
+// Example:
+//   lst = ["d","b","e","c"];
+//   idxs = sortidx(lst);  // Returns: [1,3,0,2]
+//   ordered = [for (i=idxs) lst[i]];  // Returns: ["b", "c", "d", "e"]
+// Example:
+//   lst = [
+//   	["foo", 88, [0,0,1], false],
+//   	["bar", 90, [0,1,0], true],
+//   	["baz", 89, [1,0,0], false],
+//   	["qux", 23, [1,1,1], true]
+//   ];
+//   idxs1 = sortidx(lst, idx=1); // Returns: [3,0,2,1]
+//   idxs2 = sortidx(lst, idx=0); // Returns: [1,2,0,3]
+//   idxs3 = sortidx(lst, idx=[1,3]); // Returns: [3,0,2,1]
+function sortidx(l, idx=undef) =
+	let(ll=enumerate(l,idx=idx))
+	array_subindex(
+		sort(ll, idx=(
+			idx==undef? 1 :
+			(ll==[])? 1 :
+			[1:len(ll[0])-1]
+		)),
+	0);
 
 
 // Function: unique()
@@ -965,7 +1011,6 @@ function rotate_points3d(pts, v=0, cp=[0,0,0], axis=undef, from=undef, to=undef,
 					ang = vector_angle(from, to),
 					axis = vector_axis(from, to)
 				)
-				echo(axis=axis, ang=ang, v=v)
 				matrix4_rot_by_axis(axis, ang) * matrix4_rot_by_axis(from, v)
 			) : is_def(axis)? (
 				matrix4_rot_by_axis(axis, v)
