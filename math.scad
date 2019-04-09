@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+include <constants.scad>
 include <compat.scad>
 
 
@@ -127,7 +128,9 @@ function modrange(x, y, m, step=1) =
 //   Calculate the standard number of sides OpenSCAD would give a circle based on `$fn`, `$fa`, and `$fs`.
 // Arguments:
 //   r = Radius of circle to get the number of segments for.
-function segs(r) = $fn>0?($fn>3?$fn:3):(ceil(max(min(360.0/$fa,abs(r)*2*PI/$fs),5)));
+function segs(r) =
+	$fn>0? ($fn>3? $fn : 3) :
+	ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs)));
 
 
 // Function: lerp()
@@ -891,13 +894,13 @@ function vector_angle(v1,v2) = acos(constrain((v1*v2)/(norm(v1)*norm(v2)), -1, 1
 //   v2 = Second vector.
 function vector_axis(v1,v2) =
 	let(
-		eps = 0.00001,
-		vv1 = normalize(point3d(v1)),
-		vv2 = normalize(point3d(v2)),
-		vv3 = norm(v1+v2)>eps? vv2 :
-			norm(vabs(vv2)-V_UP)>eps? V_UP :
+		eps = 1e-6,
+		v1 = point3d(v1/norm(v1)),
+		v2 = point3d(v2/norm(v2)),
+		v3 = (norm(v1-v2) > eps && norm(v1+v2) > eps)? v2 :
+			(norm(vabs(v2)-V_UP) > eps)? V_UP :
 			V_RIGHT
-	) normalize(cross(vv1,vv3));
+	) normalize(cross(v1,v3));
 
 
 // Section: Coordinates Manipulation
@@ -994,6 +997,8 @@ function rotate_points3d(pts, v=0, cp=[0,0,0], axis=undef, from=undef, to=undef,
 		mrot = reverse? (
 			is_def(from)? (
 				let (
+					from = from / norm(from),
+					to = to / norm(from),
 					ang = vector_angle(from, to),
 					axis = vector_axis(from, to)
 				)
@@ -1008,6 +1013,8 @@ function rotate_points3d(pts, v=0, cp=[0,0,0], axis=undef, from=undef, to=undef,
 		) : (
 			is_def(from)? (
 				let (
+					from = from / norm(from),
+					to = to / norm(from),
 					ang = vector_angle(from, to),
 					axis = vector_axis(from, to)
 				)
@@ -1316,7 +1323,7 @@ function matrix3_zrot(ang) = [
 //   Returns the 4x4 matrix to perform a rotation of a 3D vector around the X axis.
 // Arguments:
 //   ang = number of degrees to rotate.
-function matrix4_xrot(ang) = assert(ang!=undef) [
+function matrix4_xrot(ang) = [
 	[1,        0,         0,   0],
 	[0, cos(ang), -sin(ang),   0],
 	[0, sin(ang),  cos(ang),   0],
@@ -1329,7 +1336,7 @@ function matrix4_xrot(ang) = assert(ang!=undef) [
 //   Returns the 4x4 matrix to perform a rotation of a 3D vector around the Y axis.
 // Arguments:
 //   ang = Number of degrees to rotate.
-function matrix4_yrot(ang) = assert(ang!=undef) [
+function matrix4_yrot(ang) = [
 	[ cos(ang), 0, sin(ang),   0],
 	[        0, 1,        0,   0],
 	[-sin(ang), 0, cos(ang),   0],
@@ -1344,7 +1351,7 @@ function matrix4_yrot(ang) = assert(ang!=undef) [
 //   Returns the 4x4 matrix to perform a rotation of a 3D vector around the Z axis.
 // Arguments:
 //   ang = number of degrees to rotate.
-function matrix4_zrot(ang) = assert(ang!=undef) [
+function matrix4_zrot(ang) = [
 	[cos(ang), -sin(ang), 0, 0],
 	[sin(ang),  cos(ang), 0, 0],
 	[       0,         0, 1, 0],
