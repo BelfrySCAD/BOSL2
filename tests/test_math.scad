@@ -617,6 +617,8 @@ module test_rotate_points3d() {
 	assert(rotate_points3d(pts, 90, axis=V_RIGHT)  == [[0,-1,0], [0,0,1], [1,0,0], [0,1,0], [0,0,-1], [-1,0,0]]);
 	assert(rotate_points3d(pts, from=V_UP, to=V_BACK) == [[0,1,0], [0,0,-1], [1,0,0], [0,-1,0], [0,0,1], [-1,0,0]]);
 	assert(rotate_points3d(pts, 90, from=V_UP, to=V_BACK), [[0,1,0], [-1,0,0], [0,0,-1], [0,-1,0], [1,0,0], [0,0,1]]);
+	assert(rotate_points3d(pts, from=V_UP, to=V_UP*2) == [[0,0,1], [0,1,0], [1,0,0], [0,0,-1], [0,-1,0], [-1,0,0]]);
+	assert(rotate_points3d(pts, from=V_UP, to=V_DOWN*2) == [[0,0,-1], [0,1,0], [-1,0,0], [0,0,1], [0,-1,0], [1,0,0]]);
 }
 test_rotate_points3d();
 
