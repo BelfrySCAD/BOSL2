@@ -265,10 +265,6 @@ function compare_vals(a, b) =
 	(a==undef)? -1 :
 	(b==undef)? 1 :
 	((a==[] || a=="" || a[0]!=undef) && (b==[] || b=="" || b[0]!=undef))? (
-		(len(a)==1 && len(b)==1)? (
-			(a[0]<b[0])? -1 :
-			(a[0]>b[0])? 1 : 0
-		) :
 		compare_lists(a, b)
 	) : (a<b)? -1 :
 	(a>b)? 1 : 0;
@@ -292,7 +288,9 @@ function compare_lists(a, b, n=0) =
 		cmp = (a==b)? 0 :
 			(len(a)<=n)? -1 :
 			(len(b)<=n)? 1 :
-			compare_vals(a[n], b[n])
+			(a==a[n] || b==b[n])? (
+				a<b? -1 : a>b? 1 : 0
+			) : compare_vals(a[n], b[n])
 	)
 	(cmp != 0 || a==b)? cmp :
 	compare_lists(a, b, n+1);
@@ -702,8 +700,9 @@ function sort(arr, idx=undef) =
 		pivotval = idx==undef? pivot : [for (i=idx) pivot[i]],
 		compare = [
 			for (entry = arr) let(
-				val = idx==undef? entry : [for (i=idx) entry[i]]
-			) compare_vals(val, pivotval)
+				val = idx==undef? entry : [for (i=idx) entry[i]],
+				cmp = compare_vals(val, pivotval)
+			) cmp
 		],
 		lesser  = [ for (i = [0:len(arr)-1]) if (compare[i] < 0) arr[i] ],
 		equal   = [ for (i = [0:len(arr)-1]) if (compare[i] ==0) arr[i] ],
@@ -734,14 +733,12 @@ function sort(arr, idx=undef) =
 //   idxs2 = sortidx(lst, idx=0); // Returns: [1,2,0,3]
 //   idxs3 = sortidx(lst, idx=[1,3]); // Returns: [3,0,2,1]
 function sortidx(l, idx=undef) =
-	let(ll=enumerate(l,idx=idx))
-	array_subindex(
-		sort(ll, idx=(
-			idx==undef? 1 :
-			(ll==[])? 1 :
-			[1:len(ll[0])-1]
-		)),
-	0);
+	(l==[])? [] :
+	let(
+		ll=enumerate(l,idx=idx),
+		sidx = [1:len(ll[0])-1]
+	)
+	array_subindex(sort(ll, idx=sidx), 0);
 
 
 // Function: unique()

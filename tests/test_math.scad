@@ -225,6 +225,7 @@ module test_compare_vals() {
 	assert(compare_vals([2,3,4,5], [2,3,4,5]) == 0);
 	assert(compare_vals([2,3,4,5], [2,3,4]) == 1);
 	assert(compare_vals([2,3,4,5], [2,3,5,5]) == -1);
+	assert(compare_vals([[2,3,4,5]], [[2,3,5,5]]) == -1);
 
 	assert(compare_vals([[2,3,4],[3,4,5]], [[2,3,4], [3,4,5]]) == 0);
 	assert(compare_vals([[2,3,4],[3,4,5]], [[2,3,4,5], [3,4,5]]) == -1);
@@ -250,6 +251,9 @@ module test_compare_lists() {
 	assert(compare_lists([[2,3,4],[3,4,5,6]], [[2,3,4], [3,4,5]]) == 1);
 	assert(compare_lists([[2,3,4],[3,5,5]], [[2,3,4], [3,4,5]]) == 1);
 	assert(compare_lists([[2,3,4],[3,4,5]], [[2,3,4], [3,5,5]]) == -1);
+
+	assert(compare_lists("cat", "bat") == 1);
+	assert(compare_lists(["cat"], ["bat"]) == 1);
 }
 test_compare_lists();
 
@@ -447,7 +451,8 @@ test_flatten();
 
 module test_sort() {
 	assert(sort([7,3,9,4,3,1,8]) == [1,3,3,4,7,8,9]);
-	assert(sort(["cat", "oat", "sat", "bat", "vat", "rat", "pat", "mat", "fat", "hat", "eat"])== ["bat", "cat", "eat", "fat", "hat", "mat", "oat", "pat", "rat", "sat", "vat"]);
+	assert(sort(["cat", "oat", "sat", "bat", "vat", "rat", "pat", "mat", "fat", "hat", "eat"]) == ["bat", "cat", "eat", "fat", "hat", "mat", "oat", "pat", "rat", "sat", "vat"]);
+	assert(sort(enumerate([[2,3,4],[1,2,3],[2,4,3]]),idx=1)==[[1,[1,2,3]], [0,[2,3,4]], [2,[2,4,3]]]);
 }
 test_sort();
 
@@ -464,6 +469,8 @@ module test_sortidx() {
 	assert(sortidx(lst2, idx=1) == [3,0,2,1]);
 	assert(sortidx(lst2, idx=0) == [1,2,0,3]);
 	assert(sortidx(lst2, idx=[1,3]) == [3,0,2,1]);
+	lst3 = [[-4, 0, 0], [0, 0, -4], [0, -4, 0], [-4, 0, 0], [0, -4, 0], [0, 0, 4], [0, 0, -4], [0, 4, 0], [4, 0, 0], [0, 0, 4], [0, 4, 0], [4, 0, 0]];
+	assert(sortidx(lst3)==[0,3,2,4,1,6,5,9,7,10,8,11]);
 }
 test_sortidx();
 
