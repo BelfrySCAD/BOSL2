@@ -123,6 +123,29 @@ function modrange(x, y, m, step=1) =
 	) [for (i=[a:step:c]) (i%m+m)%m];
 
 
+// Function: gaussian_rand()
+// Usage:
+//   gaussian_rand(mean, stddev)
+// Description:
+//   Returns a random number with a gaussian/normal distribution.
+// Arguments:
+//   mean = The average random number returned.
+//   stddev = The standard deviation of the numbers to be returned.
+function gaussian_rand(mean, stddev) = let(s=rands(0,1,2)) mean + stddev*sqrt(-2*ln(s.x))*cos(360*s.y);
+
+
+// Function: log_rand()
+// Usage:
+//   log_rand(minval, maxval, factor);
+// Description:
+//   Returns a single random number, with a logarithmic distribution.
+// Arguments:
+//   minval = Minimum value to return.
+//   maxval = Maximum value to return.  `minval` <= X < `maxval`.
+//   factor = Log factor to use.  Values of X are returned `factor` times more often than X+1.
+function log_rand(minval, maxval, factor) = -ln(1-rands(1-1/pow(factor,minval), 1-1/pow(factor,maxval), 1)[0])/ln(factor);
+
+
 // Function: segs()
 // Description:
 //   Calculate the standard number of sides OpenSCAD would give a circle based on `$fn`, `$fa`, and `$fs`.
