@@ -40,6 +40,12 @@ include <constants.scad>
 include <compat.scad>
 
 
+// Section: Math Constants
+
+PHI = (1+sqrt(5))/2;  // The golden ratio phi.
+
+
+
 // Function: Cpi()
 // Status: DEPRECATED, use `PI` instead.
 // Description:
