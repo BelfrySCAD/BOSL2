@@ -8,7 +8,7 @@ Documentation and example images are generated automatically from source code co
 - `// Function: NAME`
 - `// Constant: NAME`
 
-##LibFile:
+## LibFile:
 
 LibFile blocks can be followed by multiple lines that can be added as markdown text after the header. Indentation is important, as it denotes the end of block.
 
@@ -23,7 +23,7 @@ LibFile blocks can be followed by multiple lines that can be added as markdown t
 //   The end of the block is denoted by a line without a comment.
 ```
 
-##Section:
+## Section:
 
 Section blocks can be followed by multiple lines that can be added as markdown text after the header. Indentation is important, as it denotes the end of block.
 
@@ -47,7 +47,7 @@ Sections can also include Figures; images generated from code that is not shown 
 //   cube([100,10,30], center=true);
 ```
 
-##CommonCode:
+## CommonCode:
 
 CommonCode blocks can be used to denote code that can be shared between all of the Figure and Example blocks in the file, without being shown itself.  Indentation is important.  Less than three spaces indent denotes the end of the block
 
@@ -60,7 +60,7 @@ CommonCode blocks can be used to denote code that can be shared between all of t
 //   }
 ```
 
-##Module:/Function:/Constant:
+## Module:/Function:/Constant:
 
 Module, Function, and Constant docs blocks all have a similar specific format.  Most sub-blocks are optional, except the Module/Function/Constant line, and the Description block.
 
