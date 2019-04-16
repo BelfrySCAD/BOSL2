@@ -55,18 +55,7 @@ use <triangulation.scad>
 // Arguments:
 //   path = A list of 2D path points.
 //   eps = Largest angle delta between segments to count as colinear.  Default: 1e-6
-function simplify2d_path(path, eps=1e-6) = concat(
-	[path[0]],
-	[
-		for (
-			i = [1:len(path)-2]
-		) let (
-			v1 = path[i] - path[i-1],
-			v2 = path[i+1] - path[i-1]
-		) if (abs(cross(v1,v2)) > eps) path[i]
-	],
-	[path[len(path)-1]]
-);
+function simplify2d_path(path, eps=1e-6) = simplify_path(path, eps=eps);
 
 
 // Function: simplify3d_path()
@@ -77,18 +66,7 @@ function simplify2d_path(path, eps=1e-6) = concat(
 // Arguments:
 //   path = A list of 3D path points.
 //   eps = Largest angle delta between segments to count as colinear.  Default: 1e-6
-function simplify3d_path(path, eps=1e-6) = concat(
-	[path[0]],
-	[
-		for (
-			i = [1:len(path)-2]
-		) let (
-			v1 = path[i] - path[i-1],
-			v2 = path[i+1] - path[i-1]
-		) if (vector_angle(v1,v2) > eps) path[i]
-	],
-	[path[len(path)-1]]
-);
+function simplify3d_path(path, eps=1e-6) = simplify_path(path, eps=eps);
 
 
 // Function: path_length()
@@ -119,7 +97,8 @@ function path_length(path) =
 //   scale = [X,Y] scaling factors for each axis.  Default: `[1,1]`
 // Example(2D):
 //   trace_polyline(path2d_regular_ngon(n=12, r=50), N=1, showpts=true);
-function path2d_regular_ngon(n=6, r=undef, d=undef, cp=[0,0], scale=[1,1]) = let(
+function path2d_regular_ngon(n=6, r=undef, d=undef, cp=[0,0], scale=[1,1]) =
+	let(
 		rr=get_radius(r=r, d=d, dflt=100)
 	) [
 		for (i=[0:n-1])

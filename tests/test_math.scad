@@ -630,6 +630,21 @@ module test_rotate_points3d() {
 test_rotate_points3d();
 
 
+module test_simplify_path()
+{
+	path = [[-20,10],[-10,0],[-5,0],[0,0],[5,0],[10,0], [10,10]];
+	assert(simplify_path(path) == [[-20,10],[-10,0],[10,0], [10,10]]);
+}
+test_simplify_path();
+
+
+module test_simplify_path_indexed()
+{
+	points = [[-20,10],[-10,0],[-5,0],[0,0],[5,0],[10,0], [10,10]];
+	path = list_range(len(points));
+	assert(simplify_path_indexed(points, path) == [0,1,5,6]);
+}
+test_simplify_path_indexed();
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
