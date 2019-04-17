@@ -96,26 +96,25 @@ module cuboid(
 	if (is_def(p1)) {
 		if (is_def(p2)) {
 			translate([for (v=array_zip([p1,p2],0)) min(v)]) {
-				cuboid(size=vabs(p2-p1), chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, align=V_ALLPOS);
+				cuboid(size=vabs(p2-p1), chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, align=V_ALLPOS) children();
 			}
 		} else {
 			translate(p1) {
-				cuboid(size=size, chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, align=V_ALLPOS);
+				cuboid(size=size, chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, align=V_ALLPOS) children();
 			}
 		}
 	} else {
-		majrots = [[0,90,0], [90,0,0], [0,0,0]];
 		if (chamfer != undef) assertion(chamfer <= min(size)/2, "chamfer must be smaller than half the cube width, length, or height.");
 		if (fillet != undef)  assertion(fillet <= min(size)/2, "fillet must be smaller than half the cube width, length, or height.");
-		algn = (!is_def(center))? (is_scalar(align)? align*V_UP : align) : (center==true)? V_CENTER : V_ALLPOS;
-		translate(vmul(size/2, algn)) {
+		majrots = [[0,90,0], [90,0,0], [0,0,0]];
+		orient_and_align(size, ORIENT_Z, align, center=center, noncentered=V_ALLPOS, chain=true) {
 			if (chamfer != undef) {
 				isize = [for (v = size) max(0.001, v-2*chamfer)];
 				if (edges == EDGES_ALL && trimcorners) {
 					hull() {
-						cube([size[0], isize[1], isize[2]], center=true);
-						cube([isize[0], size[1], isize[2]], center=true);
-						cube([isize[0], isize[1], size[2]], center=true);
+						cube([size.x, isize.y, isize.z], center=true);
+						cube([isize.x, size.y, isize.z], center=true);
+						cube([isize.x, isize.y, size.z], center=true);
 					}
 				} else {
 					difference() {
@@ -201,6 +200,7 @@ module cuboid(
 			} else {
 				cube(size=size, center=true);
 			}
+			children();
 		}
 	}
 }
@@ -221,7 +221,7 @@ module cuboid(
 //   p2 = Coordinate point of opposite cube corner.
 module cube2pt(p1,p2) {
 	deprecate("cube2pt()", "cuboid(p1,p2)");
-	cuboid(p1=p1, p2=p2);
+	cuboid(p1=p1, p2=p2) children();
 }
 
 
@@ -240,7 +240,7 @@ module cube2pt(p1,p2) {
 //   span_cube([0,15], [5,10], [0, 10]);
 module span_cube(xspan, yspan, zspan) {
 	span = [xspan, yspan, zspan];
-	cuboid(p1=array_subindex(span,0), p2=array_subindex(span,1));
+	cuboid(p1=array_subindex(span,0), p2=array_subindex(span,1)) children();
 }
 
 
@@ -257,7 +257,7 @@ module span_cube(xspan, yspan, zspan) {
 //   v = vector to offset along.
 module offsetcube(size=[1,1,1], v=[0,0,0]) {
 	deprecate("offsetcube()", "cuboid()");
-	cuboid(size=size, align=v);
+	cuboid(size=size, align=v) children();
 }
 
 
@@ -379,7 +379,7 @@ module chamfcube(size=[1,1,1], chamfer=0.25, chamfaxes=[1,1,1], chamfcorners=fal
 			(chamfaxes[1]? EDGES_Y_ALL : EDGES_NONE) +
 			(chamfaxes[2]? EDGES_Z_ALL : EDGES_NONE)
 		)
-	);
+	) children();
 }
 
 
@@ -396,7 +396,7 @@ module chamfcube(size=[1,1,1], chamfer=0.25, chamfaxes=[1,1,1], chamfcorners=fal
 //   center = If true, object will be centered.  If false, sits on top of XY plane.
 module rrect(size=[1,1,1], r=0.25, center=false) {
 	deprecate("rrect()", "cuboid()");
-	cuboid(size=size, fillet=r, edges=EDGES_Z_ALL, align=center? V_CENTER : V_UP);
+	cuboid(size=size, fillet=r, edges=EDGES_Z_ALL, align=center? V_CENTER : V_UP) children();
 }
 
 
@@ -413,7 +413,7 @@ module rrect(size=[1,1,1], r=0.25, center=false) {
 //   center = If true, object will be centered.  If false, sits on top of XY plane.
 module rcube(size=[1,1,1], r=0.25, center=false) {
 	deprecate("rcube()", "cuboid()");
-	cuboid(size=size, fillet=r, align=center? V_CENTER : V_UP);
+	cuboid(size=size, fillet=r, align=center? V_CENTER : V_UP) children();
 }
 
 
@@ -459,20 +459,20 @@ module prismoid(
 	orient=ORIENT_Z, align=ALIGN_POS, center=undef
 ) {
 	eps = 0.001;
-	s1 = [max(size1[0], eps), max(size1[1], eps)];
-	s2 = [max(size2[0], eps), max(size2[1], eps)];
-	shiftby = point3d(shift);
-	orient_and_align([s1[0], s1[1], h], orient, align, center, noncentered=ALIGN_POS) {
+	shiftby = point3d(point2d(shift));
+	s1 = [max(size1.x, eps), max(size1.y, eps)];
+	s2 = [max(size2.x, eps), max(size2.y, eps)];
+	orient_and_align([s1.x,s1.y,h], orient, align, center, size2=s2, shift=shift, noncentered=ALIGN_POS, chain=true) {
 		polyhedron(
 			points=[
-				[+s2[0]/2, +s2[1]/2, +h/2] + shiftby,
-				[+s2[0]/2, -s2[1]/2, +h/2] + shiftby,
-				[-s2[0]/2, -s2[1]/2, +h/2] + shiftby,
-				[-s2[0]/2, +s2[1]/2, +h/2] + shiftby,
-				[+s1[0]/2, +s1[1]/2, -h/2],
-				[+s1[0]/2, -s1[1]/2, -h/2],
-				[-s1[0]/2, -s1[1]/2, -h/2],
-				[-s1[0]/2, +s1[1]/2, -h/2],
+				[+s2.x/2, +s2.y/2, +h/2] + shiftby,
+				[+s2.x/2, -s2.y/2, +h/2] + shiftby,
+				[-s2.x/2, -s2.y/2, +h/2] + shiftby,
+				[-s2.x/2, +s2.y/2, +h/2] + shiftby,
+				[+s1.x/2, +s1.y/2, -h/2],
+				[+s1.x/2, -s1.y/2, -h/2],
+				[-s1.x/2, -s1.y/2, -h/2],
+				[-s1.x/2, +s1.y/2, -h/2],
 			],
 			faces=[
 				[0, 1, 2],
@@ -490,6 +490,7 @@ module prismoid(
 			],
 			convexity=2
 		);
+		children();
 	}
 }
 
@@ -513,7 +514,7 @@ module prismoid(
 //   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=V_UP`.
 module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false) {
 	deprecate("trapezoid()", "prismoid()");
-	prismoid(size=size, size2=size2, h=h, center=center);
+	prismoid(size=size, size2=size2, h=h, center=center) children();
 }
 
 
@@ -548,29 +549,31 @@ module rounded_prismoid(
 	align=V_UP, orient=ORIENT_Z, center=undef
 ) {
 	eps = 0.001;
-	maxrad1 = min(size1[0]/2, size1[1]/2);
-	maxrad2 = min(size2[0]/2, size2[1]/2);
+	maxrad1 = min(size1.x/2, size1.y/2);
+	maxrad2 = min(size2.x/2, size2.y/2);
 	rr1 = min(maxrad1, (r1!=undef)? r1 : r);
 	rr2 = min(maxrad2, (r2!=undef)? r2 : r);
 	shiftby = point3d(shift);
-	orient_and_align([size1.x, size1.y, h], orient, align, center, noncentered=ALIGN_POS) {
-		down(h/2)
-		hull() {
-			linear_extrude(height=eps, center=false, convexity=2) {
-				offset(r=rr1) {
-					square([max(eps, size1[0]-2*rr1), max(eps, size1[1]-2*rr1)], center=true);
+	orient_and_align([size1.x, size1.y, h], orient, align, center, size2=size2, shift=shift, noncentered=ALIGN_POS, chain=true) {
+		down(h/2) {
+			hull() {
+				linear_extrude(height=eps, center=false, convexity=2) {
+					offset(r=rr1) {
+						square([max(eps, size1[0]-2*rr1), max(eps, size1[1]-2*rr1)], center=true);
+					}
 				}
-			}
-			up(h-0.01) {
-				translate(shiftby) {
-					linear_extrude(height=eps, center=false, convexity=2) {
-						offset(r=rr2) {
-							square([max(eps, size2[0]-2*rr2), max(eps, size2[1]-2*rr2)], center=true);
+				up(h-0.01) {
+					translate(shiftby) {
+						linear_extrude(height=eps, center=false, convexity=2) {
+							offset(r=rr2) {
+								square([max(eps, size2[0]-2*rr2), max(eps, size2[1]-2*rr2)], center=true);
+							}
 						}
 					}
 				}
 			}
 		}
+		children();
 	}
 }
 
@@ -596,7 +599,7 @@ module pyramid(n=4, h=1, l=1, r=undef, d=undef, circum=false)
 {
 	deprecate("pyramid()", "cyl()");
 	radius = get_radius(r=r, d=d, dflt=l/2/sin(180/n));
-	cyl(r1=radius, r2=0, l=h, circum=circum, $fn=n, realign=true, align=ALIGN_POS);
+	cyl(r1=radius, r2=0, l=h, circum=circum, $fn=n, realign=true, align=ALIGN_POS) children();
 }
 
 
@@ -620,7 +623,7 @@ module prism(n=3, h=1, l=1, r=undef, d=undef, circum=false, center=false)
 {
 	deprecate("prism()", "cyl()");
 	radius = get_radius(r=r, d=d, dflt=l/2/sin(180/n));
-	cyl(r=radius, l=h, circum=circum, $fn=n, realign=true, center=center);
+	cyl(r=radius, l=h, circum=circum, $fn=n, realign=true, center=center) children();
 }
 
 
@@ -644,36 +647,37 @@ module prism(n=3, h=1, l=1, r=undef, d=undef, circum=false, center=false)
 //   right_triangle([60, 10, 40]);
 module right_triangle(size=[1, 1, 1], orient=ORIENT_Y, align=V_ALLPOS, center=undef)
 {
-	siz = scalar_vec3(size);
-	orient_and_align(siz, align=align, center=center) {
+	size = scalar_vec3(size);
+	orient_and_align(size, align=align, center=center, chain=true) {
 		if (orient == ORIENT_X) {
-			ang = atan2(siz[1], siz[2]);
-			masksize = [siz[0], siz[1], norm([siz[1],siz[2]])] + [1,1,1];
+			ang = atan2(size.y, size.z);
+			masksize = [size.x, size.y, norm([size.y,size.z])] + [1,1,1];
 			xrot(ang) {
 				difference() {
-					xrot(-ang) cube(siz, center=true);
-					back(masksize[1]/2) cube(masksize, center=true);
+					xrot(-ang) cube(size, center=true);
+					back(masksize.y/2) cube(masksize, center=true);
 				}
 			}
 		} else if (orient == ORIENT_Y) {
-			ang = atan2(siz[0], siz[2]);
-			masksize = [siz[0], siz[1], norm([siz[0],siz[2]])] + [1,1,1];
+			ang = atan2(size.x, size.z);
+			masksize = [size.x, size.y, norm([size.x,size.z])] + [1,1,1];
 			yrot(-ang) {
 				difference() {
-					yrot(ang) cube(siz, center=true);
-					right(masksize[0]/2) cube(masksize, center=true);
+					yrot(ang) cube(size, center=true);
+					right(masksize.x/2) cube(masksize, center=true);
 				}
 			}
 		} else if (orient == ORIENT_Z) {
-			ang = atan2(siz[0], siz[1]);
-			masksize = [norm([siz[0],siz[1]]), siz[1], siz[2]] + [1,1,1];
+			ang = atan2(size.x, size.y);
+			masksize = [norm([size.x,size.y]), size.y, size.z] + [1,1,1];
 			zrot(-ang) {
 				difference() {
-					zrot(ang) cube(siz, center=true);
-					back(masksize[1]/2) cube(masksize, center=true);
+					zrot(ang) cube(size, center=true);
+					back(masksize.y/2) cube(masksize, center=true);
 				}
 			}
 		}
+		children();
 	}
 }
 
@@ -778,9 +782,12 @@ module cyl(
 	r1 = get_radius(r1, r, d1, d, 1);
 	r2 = get_radius(r2, r, d2, d, 1);
 	l = first_defined([l, h, 1]);
+	size1 = [r1*2,r1*2,l];
+	size2 = [r2*2,r2*2,l];
 	sides = segs(max(r1,r2));
 	sc = circum? 1/cos(180/sides) : 1;
-	orient_and_align([r1*2,r1*2,l], orient, align, center=center) {
+	phi = atan2(l, r1-r2);
+	orient_and_align(size1, orient, align, center=center, size2=size2, chain=true) {
 		zrot(realign? 180/sides : 0) {
 			if (!any_defined([chamfer, chamfer1, chamfer2, fillet, fillet1, fillet2])) {
 				cylinder(h=l, r1=r1*sc, r2=r2*sc, center=true, $fn=sides);
@@ -901,6 +908,7 @@ module cyl(
 				}
 			}
 		}
+		children();
 	}
 }
 
@@ -930,10 +938,8 @@ module cyl(
 //   downcyl(r1=10, r2=20, h=40);
 module downcyl(r=undef, h=undef, l=undef, d=undef, d1=undef, d2=undef, r1=undef, r2=undef)
 {
-	h = first_defined([l, h, 1]);
-	down(h/2) {
-		cylinder(r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, h=h, center=true);
-	}
+	l = first_defined([l, h, 1]);
+	cyl(r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, l=l, align=V_DOWN) children();
 }
 
 
@@ -971,7 +977,7 @@ module downcyl(r=undef, h=undef, l=undef, d=undef, d1=undef, d2=undef, r1=undef,
 //   }
 module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, align=V_CENTER, center=undef)
 {
-	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=ORIENT_X, align=align, center=center);
+	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=ORIENT_X, align=align, center=center) children();
 }
 
 
@@ -1009,7 +1015,7 @@ module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   }
 module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, align=V_CENTER, center=undef)
 {
-	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=ORIENT_Y, align=align, center=center);
+	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=ORIENT_Y, align=align, center=center) children();
 }
 
 
@@ -1047,7 +1053,7 @@ module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   }
 module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, align=V_CENTER, center=undef)
 {
-	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=ORIENT_Z, align=align, center=center);
+	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=ORIENT_Z, align=align, center=center) children();
 }
 
 
@@ -1075,7 +1081,7 @@ module chamferred_cylinder(h=1, r=undef, d=undef, chamfer=0.25, chamfedge=undef,
 	deprecate("chamf_cyl()` and `chamferred_cylinder()", "cyl()");
 	r = get_radius(r=r, d=d, dflt=1);
 	chamf = (chamfedge == undef)? chamfer : chamfedge * cos(angle);
-	cyl(l=h, r=r, chamfer1=bottom? chamf : 0, chamfer2=top? chamf : 0, chamfang=angle, center=center);
+	cyl(l=h, r=r, chamfer1=bottom? chamf : 0, chamfer2=top? chamf : 0, chamfang=angle, center=center) children();
 }
 
 
@@ -1099,7 +1105,7 @@ module chamferred_cylinder(h=1, r=undef, d=undef, chamfer=0.25, chamfedge=undef,
 //   bottom = boolean.  If true, chamfer the bottom edges. (Default: True)
 //   center = boolean.  If true, cylinder is centered. (Default: false)
 module chamf_cyl(h=1, r=undef, d=undef, chamfer=0.25, chamfedge=undef, angle=45, center=false, top=true, bottom=true)
-	chamferred_cylinder(h=h, r=r, d=d, chamfer=chamfer, chamfedge=chamfedge, angle=angle, center=center, top=top, bottom=bottom);
+	chamferred_cylinder(h=h, r=r, d=d, chamfer=chamfer, chamfedge=chamfedge, angle=angle, center=center, top=top, bottom=bottom) children();
 
 
 // Module: filleted_cylinder()
@@ -1119,7 +1125,7 @@ module chamf_cyl(h=1, r=undef, d=undef, chamfer=0.25, chamfedge=undef, angle=45,
 //   center = boolean.  If true, cylinder is centered. (Default: false)
 module filleted_cylinder(h=1, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, fillet=0.25, center=false) {
 	deprecate("filleted_cylinder()", "cyl()");
-	cyl(l=h, r=r, d=d, r1=r1, r2=r2, d1=d1, d2=d2, fillet=fillet, orient=ORIENT_Z, center=center);
+	cyl(l=h, r=r, d=d, r1=r1, r2=r2, d1=d1, d2=d2, fillet=fillet, orient=ORIENT_Z, center=center) children();
 }
 
 
@@ -1142,7 +1148,7 @@ module filleted_cylinder(h=1, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2
 //   center = boolean.  If true, cylinder is centered. (Default: false)
 module rcylinder(h=1, r=1, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, fillet=0.25, center=false) {
 	deprecate("rcylinder()", "cyl(..., fillet)");
-	cyl(l=h, r=r, d=d, r1=r1, r2=r2, d1=d1, d2=d2, fillet=fillet, orient=ORIENT_Z, center=center);
+	cyl(l=h, r=r, d=d, r1=r1, r2=r2, d1=d1, d2=d2, fillet=fillet, orient=ORIENT_Z, center=center) children();
 }
 
 
@@ -1208,13 +1214,16 @@ module tube(
 	assertion(ir1 <= r1, "Inner radius is larger than outer radius.");
 	assertion(ir2 <= r2, "Inner radius is larger than outer radius.");
 	sides = segs(max(r1,r2));
-	orient_and_align([r1*2,r1*2,h], orient, align, center=center) {
+	size = [r1*2,r1*2,h];
+	size2 = [r2*2,r2*2,h];
+	orient_and_align(size, orient, align, center=center, size2=size2, chain=true) {
 		zrot(realign? 180/sides : 0) {
 			difference() {
-				cylinder(h=h, r1=r1, r2=r2, center=true, $fn=sides);
-				cylinder(h=h+0.05, r1=ir1, r2=ir2, center=true);
+				cyl(h=h, r1=r1, r2=r2, $fn=sides) children();
+				cyl(h=h+0.05, r1=ir1, r2=ir2);
 			}
 		}
+		children();
 	}
 }
 
@@ -1257,16 +1266,46 @@ module torus(
 	irr = get_radius(r=ir, d=id, dflt=0.5);
 	majrad = get_radius(r=r, d=d, dflt=(orr+irr)/2);
 	minrad = get_radius(r=r2, d=d2, dflt=(orr-irr)/2);
-	orient_and_align([(majrad+minrad)*2, (majrad+minrad)*2, minrad*2], orient, align, center=center) {
+	size = [(majrad+minrad)*2, (majrad+minrad)*2, minrad*2];
+	orient_and_align(size, orient, align, center=center, chain=true) {
 		rotate_extrude(convexity=4) {
 			right(majrad) circle(minrad);
 		}
+		children();
 	}
 }
 
 
 
 // Section: Spheroids
+
+
+// Module: spheroid()
+// Description:
+//   An version of `sphere()` with connector points, orientation, and alignment.
+// Usage:
+//   spheroid(r|d, [circum])
+// Arguments:
+//   r = Radius of the sphere.
+//   d = Diameter of the sphere.
+//   circum = If true, circumscribes the perfect sphere of the given radius/diameter.
+//   orient = Orientation of the sphere, if you don't like where the vertices lay.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the sphere.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+// Example:
+//   spheroid(d=100, circum=true, $fn=10);
+module spheroid(r=undef, d=undef, circum=false, orient=V_UP, align=V_CENTER)
+{
+	r = get_radius(r=r, d=d, dflt=1);
+	hsides = segs(r);
+	vsides = ceil(hsides/2);
+	rr = circum? (r / cos(90/vsides) / cos(180/hsides)) : r;
+	size = [2*rr, 2*rr, 2*rr];
+	orient_and_align(size, orient, align, chain=true) {
+		sphere(r=rr);
+		children();
+	}
+}
+
 
 
 // Module: staggered_sphere()
@@ -1281,16 +1320,18 @@ module torus(
 //   r = Radius of the sphere.
 //   d = Diameter of the sphere.
 //   circum = If true, circumscribes the perfect sphere of the given size.
+//   orient = Orientation of the sphere, if you don't like where the vertices lay.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the sphere.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
 //
 // Example:
 //   staggered_sphere(d=100, circum=true, $fn=10);
-module staggered_sphere(r=undef, d=undef, circum=false, align=V_CENTER) {
+module staggered_sphere(r=undef, d=undef, circum=false, orient=V_UP, align=V_CENTER) {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
 	vsides = max(3, ceil(sides/2))+1;
 	step = 360/sides;
 	vstep = 180/(vsides-1);
-	rr = circum? r/cos(180/sides)/cos(180/sides) : r;
+	rr = circum? (r / cos(180/sides) / cos(90/vsides)) : r;
 	pts = concat(
 		[[0,0,rr]],
 		[
@@ -1320,7 +1361,11 @@ module staggered_sphere(r=undef, d=undef, circum=false, align=V_CENTER) {
 			) each [[v1,v4,v3], [v1,v2,v4]]
 		]
 	);
-	polyhedron(points=pts, faces=faces);
+	size = [2*rr, 2*rr, 2*rr];
+	orient_and_align(size, orient, align, chain=true) {
+		polyhedron(points=pts, faces=faces);
+		children();
+	}
 }
 
 
@@ -1394,10 +1439,12 @@ module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, orient=
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	l = first_defined([l, h, 1]);
-	orient_and_align([r*2,r*2,l], orient, align) {
+	size = [r*2,r*2,l];
+	orient_and_align(size, orient, align, chain=true) {
 		linear_extrude(height=l, center=true, slices=2) {
 			teardrop2d(r=r, ang=ang, cap_h=cap_h);
 		}
+		children();
 	}
 }
 
@@ -1429,13 +1476,15 @@ module onion(cap_h=undef, r=undef, d=undef, maxang=45, h=undef, orient=ORIENT_Z,
 	r = get_radius(r=r, d=d, dflt=1);
 	h = first_defined([cap_h, h]);
 	maxd = 3*r/tan(maxang);
-	orient_and_align([r*2,r*2,r*2], orient, align) {
+	size = [r*2,r*2,r*2];
+	orient_and_align(size, orient, align, chain=true) {
 		rotate_extrude(convexity=2) {
 			difference() {
 				teardrop2d(r=r, ang=maxang, cap_h=h);
 				left(r) square(size=[2*r,maxd], center=true);
 			}
 		}
+		children();
 	}
 }
 
@@ -1464,7 +1513,8 @@ module onion(cap_h=undef, r=undef, d=undef, maxang=45, h=undef, orient=ORIENT_Z,
 module narrowing_strut(w=10, l=100, wall=5, ang=30, orient=ORIENT_Y, align=V_UP)
 {
 	h = wall + w/2/tan(ang);
-	orient_and_align([w, h, l], orient, align, orig_orient=ORIENT_Z) {
+	size = [w, h, l];
+	orient_and_align(size, orient, align, chain=true) {
 		fwd(h/2) {
 			linear_extrude(height=l, center=true, slices=2) {
 				back(wall/2) square([w, wall], center=true);
@@ -1478,6 +1528,7 @@ module narrowing_strut(w=10, l=100, wall=5, ang=30, orient=ORIENT_Y, align=V_UP)
 				}
 			}
 		}
+		children();
 	}
 }
 
@@ -1505,7 +1556,7 @@ module narrowing_strut(w=10, l=100, wall=5, ang=30, orient=ORIENT_Y, align=V_UP)
 //   thinning_wall(h=50, l=80, thick=4);
 // Example: Trapezoidal
 //   thinning_wall(h=50, l=[80,50], thick=4);
-module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orient=ORIENT_X, align=V_CENTER)
+module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orient=ORIENT_Z, align=V_CENTER)
 {
 	l1 = (l[0] == undef)? l : l[0];
 	l2 = (l[1] == undef)? l : l[1];
@@ -1528,7 +1579,8 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orient=ORIEN
 	y1 = thick/2;
 	y2 = y1 - min(z2-z3, x2-x3) * sin(ang);
 
-	orient_and_align([l1, thick, h], orient, align, orig_orient=ORIENT_X) {
+	size = [l1, thick, h];
+	orient_and_align(size, orient, align, size2=[l2,thick], chain=true) {
 		polyhedron(
 			points=[
 				[-x4, -y1, -z1],
@@ -1620,6 +1672,7 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orient=ORIEN
 			],
 			convexity=6
 		);
+		children();
 	}
 }
 
@@ -1649,23 +1702,27 @@ module braced_thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orien
 {
 	dang = atan((h-2*strut)/(l-2*strut));
 	dlen = (h-2*strut)/sin(dang);
-	orient_and_align([thick, l, h], orient, align, orig_orient=ORIENT_Y) {
-		xrot_copies([0, 180]) {
-			down(h/2) narrowing_strut(w=thick, l=l, wall=strut, ang=ang);
-			fwd(l/2) xrot(-90) narrowing_strut(w=thick, l=h-0.1, wall=strut, ang=ang);
-			intersection() {
-				cube(size=[thick, l, h], center=true);
-				xrot_copies([-dang,dang]) {
-					zspread(strut/2) {
-						scale([1,1,1.5]) yrot(45) {
-							cube(size=[thick/sqrt(2), dlen, thick/sqrt(2)], center=true);
+	size = [l, thick, h];
+	orient_and_align(size, orient, align, orig_orient=ORIENT_Y, chain=true) {
+		union() {
+			xrot_copies([0, 180]) {
+				down(h/2) narrowing_strut(w=thick, l=l, wall=strut, ang=ang);
+				fwd(l/2) xrot(-90) narrowing_strut(w=thick, l=h-0.1, wall=strut, ang=ang);
+				intersection() {
+					cube(size=[thick, l, h], center=true);
+					xrot_copies([-dang,dang]) {
+						zspread(strut/2) {
+							scale([1,1,1.5]) yrot(45) {
+								cube(size=[thick/sqrt(2), dlen, thick/sqrt(2)], center=true);
+							}
 						}
+						cube(size=[thick, dlen, strut/2], center=true);
 					}
-					cube(size=[thick, dlen, strut/2], center=true);
 				}
 			}
+			cube(size=[wall, l-0.1, h-0.1], center=true);
 		}
-		cube(size=[wall, l-0.1, h-0.1], center=true);
+		children();
 	}
 }
 
@@ -1702,7 +1759,8 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 {
 	dang = atan(h/l);
 	dlen = h/sin(dang);
-	orient_and_align([thick, l, h], orient, align, center=center, noncentered=V_UP+V_BACK, orig_orient=ORIENT_Y) {
+	size = [thick, l, h];
+	orient_and_align(size, orient, align, center=center, noncentered=V_UP+V_BACK, orig_orient=ORIENT_Y, chain=true) {
 		difference() {
 			union() {
 				if (!diagonly) {
@@ -1725,6 +1783,7 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 				}
 			}
 		}
+		children();
 	}
 }
 
@@ -1750,7 +1809,7 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 module thinning_brace(h=50, l=100, thick=5, ang=30, strut=5, wall=3, center=true)
 {
 	deprecate("thinning_brace()", "thinning_triangle(..., diagonly=true)");
-	thinning_triangle(h=h, l=l, thick=thick, ang=ang, strut=strut, wall=wall, diagonly=true, center=center);
+	thinning_triangle(h=h, l=l, thick=thick, ang=ang, strut=strut, wall=wall, diagonly=true, center=center) children();
 }
 
 
@@ -1801,17 +1860,21 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, ori
 	ang = atan(ystep/zstep);
 	len = zstep / cos(ang);
 
-	orient_and_align([thick, l, h], orient, align, orig_orient=ORIENT_Y) {
-		zspread(zoff*2)
-			cube(size=[thick, l, strut], center=true);
-		yspread(yoff*2)
-			cube(size=[thick, strut, h], center=true);
-		yspread(ystep, n=yreps) {
-			zspread(zstep, n=zreps) {
-				xrot( ang) cube(size=[thick, strut, len], center=true);
-				xrot(-ang) cube(size=[thick, strut, len], center=true);
+	size = [thick, l, h];
+	orient_and_align(size, orient, align, orig_orient=ORIENT_Y, chain=true) {
+		union() {
+			zspread(zoff*2)
+				cube(size=[thick, l, strut], center=true);
+			yspread(yoff*2)
+				cube(size=[thick, strut, h], center=true);
+			yspread(ystep, n=yreps) {
+				zspread(zstep, n=zreps) {
+					xrot( ang) cube(size=[thick, strut, len], center=true);
+					xrot(-ang) cube(size=[thick, strut, len], center=true);
+				}
 			}
 		}
+		children();
 	}
 }
 
@@ -1866,7 +1929,8 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 	supp_reps = floor(cross_len/2/(zstep*sin(supp_ang)));
 	supp_step = cross_len/2/supp_reps;
 
-	orient_and_align([w, l, h], orient, align, orig_orient=ORIENT_Y) {
+	size = [w, l, h];
+	orient_and_align(size, orient, align, orig_orient=ORIENT_Y, chain=true) {
 		intersection() {
 			union() {
 				ybridge = (l - (yreps+1) * strut) / yreps;
@@ -1908,6 +1972,7 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 			}
 			cube([w,l,h], center=true);
 		}
+		children();
 	}
 }
 
@@ -1943,20 +2008,23 @@ module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2, orient=ORIENT_Y, a
 	steps = quantup(segs(thick/2),4);
 	step = period/steps;
 	il = l - 2*strut + 2*step;
-	orient_and_align([thick, l, h], orient, align, orig_orient=ORIENT_Y) {
-		linear_extrude(height=h-2*strut+0.1, slices=2, convexity=ceil(2*il/period), center=true) {
-			polygon(
-				points=concat(
-					[for (y=[-il/2:step:il/2]) [amplitude*sin(y/period*360)-wall/2, y] ],
-					[for (y=[il/2:-step:-il/2]) [amplitude*sin(y/period*360)+wall/2, y] ]
-				)
-			);
+	size = [thick, l, h];
+	orient_and_align(size, orient, align, orig_orient=ORIENT_Y, chain=true) {
+		union() {
+			linear_extrude(height=h-2*strut+0.1, slices=2, convexity=ceil(2*il/period), center=true) {
+				polygon(
+					points=concat(
+						[for (y=[-il/2:step:il/2]) [amplitude*sin(y/period*360)-wall/2, y] ],
+						[for (y=[il/2:-step:-il/2]) [amplitude*sin(y/period*360)+wall/2, y] ]
+					)
+				);
+			}
+			difference() {
+				cube([thick, l, h], center=true);
+				cube([thick+0.5, l-2*strut, h-2*strut], center=true);
+			}
 		}
-
-		difference() {
-			cube([thick, l, h], center=true);
-			cube([thick+0.5, l-2*strut, h-2*strut], center=true);
-		}
+		children();
 	}
 }
 
@@ -2016,7 +2084,8 @@ module pie_slice(
 	r1 = get_radius(r1, r, d1, d, 10);
 	r2 = get_radius(r2, r, d2, d, 10);
 	maxd = max(r1,r2)+0.1;
-	orient_and_align([2*r1, 2*r1, l], orient, align, center=center) {
+	size = [2*r1, 2*r1, l];
+	orient_and_align(size, orient, align, center=center, chain=true) {
 		difference() {
 			cylinder(r1=r1, r2=r2, h=l, center=true);
 			if (ang<180) rotate(ang) back(maxd/2) cube([2*maxd, maxd, l+0.1], center=true);
@@ -2025,6 +2094,7 @@ module pie_slice(
 				if (ang>180) rotate(ang-180) back(maxd/2) cube([2*maxd, maxd, l+0.1], center=true);
 			}
 		}
+		children();
 	}
 }
 
@@ -2057,7 +2127,8 @@ module pie_slice(
 //   interior_fillet(l=40, r=10, orient=ORIENT_Y_90);
 module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01, orient=ORIENT_X, align=V_CENTER) {
 	dy = r/tan(ang/2);
-	orient_and_align([l,r,r], orient, align, orig_orient=ORIENT_X) {
+	size = [l,r,r];
+	orient_and_align(size, orient, align, orig_orient=ORIENT_X, chain=true) {
 		difference() {
 			translate([0,-overlap/tan(ang/2),-overlap]) {
 				if (ang == 90) {
@@ -2068,6 +2139,7 @@ module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01, orient=ORIENT_X, alig
 			}
 			translate([0,dy,r]) xcyl(l=l+0.1, r=r);
 		}
+		children();
 	}
 }
 
@@ -2108,6 +2180,8 @@ module slot(
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=5);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=5);
 	sides = quantup(segs(max(r1, r2)), 4);
+	// TODO: implement orient and align.
+	// TODO: implement connectors.
 	hull() spread(p1=p1, p2=p2, l=l, n=2) cyl(l=h, r1=r1, r2=r2, center=true, $fn=sides);
 }
 
@@ -2156,7 +2230,8 @@ module arced_slot(
 	sr2 = get_radius(sr2, sr, sd2, sd, 2);
 	fn_minor = first_defined([$fn2, $fn]);
 	da = ea - sa;
-	orient_and_align([r+sr1, r+sr1, h], orient, align) {
+	size = [r+sr1, r+sr1, h];
+	orient_and_align(size, orient, align, chain=true) {
 		translate(cp) {
 			zrot(sa) {
 				difference() {
@@ -2167,6 +2242,7 @@ module arced_slot(
 				zrot(da) right(r) cylinder(h=h, r1=sr1, r2=sr2, center=true, $fn=fn_minor);
 			}
 		}
+		children();
 	}
 }
 

@@ -1,0 +1,153 @@
+//////////////////////////////////////////////////////////////////////
+// LibFile: primitives.scad
+//   The basic built-in shapes, reworked to integrate better with
+//   other BOSL library shapes and utilities.
+//   To use, add the following lines to the beginning of your file:
+//   ```
+//   include <BOSL/constants.scad>
+//   use <BOSL/primitives.scad>
+//   ```
+//////////////////////////////////////////////////////////////////////
+
+/*
+BSD 2-Clause License
+
+Copyright (c) 2017, Revar Desmera
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+
+include <constants.scad>
+include <compat.scad>
+use <transforms.scad>
+use <math.scad>
+
+
+// Section: Primitive Shapes
+
+
+// Module: cube()
+//
+// Description:
+//   Creates a cube object, with support for alignment and attachments.
+//   This is a drop-in replacement for the built-in `cube()` module.
+//
+// Arguments:
+//   size = The size of the cube.
+//   align = The side of the origin to align to.  Use `V_` constants from `constants.scad`.  Default: `V_CENTER`
+//   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=V_UP+V_BACK+V_RIGHT`.
+//
+// Example: Simple regular cube.
+//   cube(40);
+// Example: Rectangular cube, with given X, Y, and Z sizes.
+//   cuboid([20,40,50]);
+module cube(size, center=undef, align=V_ALLPOS)
+{
+	size = scalar_vec3(size);
+	orient_and_align(size, ORIENT_Z, align, center, noncentered=V_ALLPOS, chain=true) {
+		linear_extrude(height=size.z, convexity=2, center=true) {
+			square([size.x, size.y], center=true);
+		}
+		children();
+	}
+}
+
+
+// Module: cylinder()
+// Usage:
+//   cylinder(h, r|d, [center], [orient], [align]);
+//   cylinder(h, r1/d1, r2/d2, [center], [orient], [align]);
+// Description:
+//   Creates a cylinder object, with support for alignment and attachments.
+//   This is a drop-in replacement for the built-in `cylinder()` module.
+// Arguments:
+//   l / h = The height of the cylinder.
+//   r = The radius of the cylinder.
+//   r1 = The bottom radius of the cylinder.  (Before orientation.)
+//   r2 = The top radius of the cylinder.  (Before orientation.)
+//   d = The diameter of the cylinder.
+//   d1 = The bottom diameter of the cylinder.  (Before orientation.)
+//   d2 = The top diameter of the cylinder.  (Before orientation.)
+//   orient = Orientation of the cylinder.  Use the `ORIENT_` constants from `constants.scad`.  Default: vertical.
+//   align = The side of the origin to align to.  Use `V_` constants from `constants.scad`.  Default: `V_CENTER`
+//   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=V_UP+V_BACK+V_RIGHT`.
+// Example: By Radius
+//   xdistribute(30) {
+//       cylinder(h=40, r=10);
+//       cylinder(h=40, r1=10, r2=5);
+//   }
+// Example: By Diameter
+//   xdistribute(30) {
+//       cylinder(h=40, d=25);
+//       cylinder(h=40, d1=25, d2=10);
+//   }
+module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, l=undef, center=undef, orient=ORIENT_Z, align=ALIGN_POS)
+{
+	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
+	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
+	l = first_defined([h, l]);
+	sides = segs(max(r1,r2));
+	size = [r1*2, r1*2, l];
+	orient_and_align(size, orient, align, center, size2=[r2*2,r2*2], noncentered=ALIGN_POS, chain=true) {
+		linear_extrude(height=l, scale=r2/r1, convexity=2, center=true) {
+			circle(r=r1, $fn=sides);
+		}
+		children();
+	}
+}
+
+
+
+// Module: sphere()
+// Usage:
+//   sphere(r|d, [orient], [align])
+// Description:
+//   Creates a sphere object, with support for alignment and attachments.
+//   This is a drop-in replacement for the built-in `sphere()` module.
+// Arguments:
+//   r = Radius of the sphere.
+//   d = Diameter of the sphere.
+//   orient = Orientation of the sphere, if you don't like where the vertices lay.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   align = Alignment of the sphere.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+// Example:
+//   staggered_sphere(d=100);
+module sphere(r=undef, d=undef, orient=ORIENT_Z, align=V_CENTER)
+{
+	r = get_radius(r=r, d=d, dflt=1);
+	sides = segs(r);
+	size = [r*2, r*2, r*2];
+	orient_and_align(size, orient, align, chain=true) {
+		rotate_extrude(convexity=2) {
+			difference() {
+				circle(r=r, $fn=sides);
+				left(r+0.1) square(r*2+0.2, center=true);
+			}
+		}
+		children();
+	}
+}
+
+
+
+// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

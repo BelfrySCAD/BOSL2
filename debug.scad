@@ -175,4 +175,76 @@ module debug_polyhedron(points, faces, convexity=10, txtsize=1, disabled=false) 
 
 
 
+// Function: all_conns()
+// Description:
+//   Return the names for all standard connectors for a region.
+// Arguments:
+//   type = The type of region to show connectors for.  "cube", "cylinder", "sphere"
+function all_conns(type="cube") =
+	assert(in_list(type,["cube", "cylinder", "sphere"]))
+	let (
+		zs = ["top", "bottom"],
+		ys = ["front", "back"],
+		xs = ["left", "right"]
+	) concat(
+		["center"],
+		[for (a=concat(xs,ys,zs)) a],
+		in_list(type,["cube","cylinder"])? [for (a=zs, b=ys) str(a,"-",b)] : [],
+		in_list(type,["cube","cylinder"])? [for (a=zs, b=xs) str(a,"-",b)] : [],
+		in_list(type,["cube"])? [for (a=ys, b=xs) str(a,"-",b)] : [],
+		in_list(type,["cube"])? [for (a=zs, b=ys, c=xs) str(a,"-",b,"-",c)] : []
+	);
+
+
+
+// Module: connector_arrow()
+// Usage:
+//   connector_arrow([s], [color], [flag]);
+// Description:
+//   Show a connector orientation arrow.
+// Arguments:
+//   s = Length of the arrows.
+//   color = Color of the arrow.
+//   flag = If true, draw the orientation flag on the arrowhead.
+module connector_arrow(s=10, color=[0.333,0.333,1], flag=true) {
+	$fn=12;
+	recolor("gray") spheroid(d=s/6)
+	recolor(color) cyl(h=s*2/3, d=s/15, align=V_UP)
+	attach("top") cyl(h=s/3, d1=s/5, d2=0, align=V_UP) {
+		if(flag) {
+			attach("bottom") recolor([1,0.5,0.5]) cuboid([s/50, s/6, s/4], align="front-top");
+		}
+	}
+}
+
+
+
+// Module: show_connectors()
+// Description:
+//   Show all standard connectors for a given region.
+// Arguments:
+//   type = The type of region to show connectors for.  "cube", "cylinder", "sphere"
+module show_connectors(type="cube") {
+	for (conn=all_conns(type)) {
+		attach(conn) connector_arrow();
+	}
+	children();
+}
+
+
+
+// Module: frameref()
+// Description:
+//   Displays X,Y,Z axis arrows in red, green, and blue respectively.
+// Arguments:
+//   s = Length of the arrows.
+module frameref(s=15) {
+	sphere(0.001) {
+		attach("right") connector_arrow(s=s, color="red", flag=false);
+		attach("back") connector_arrow(s=s, color="green", flag=false);
+		attach("top") connector_arrow(s=s, color="blue", flag=false);
+	}
+}
+
+
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

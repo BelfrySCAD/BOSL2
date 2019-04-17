@@ -1439,27 +1439,22 @@ module zrot_copies(rots=[], cp=[0,0,0], n=undef, count=undef, sa=0, offset=0, r=
 
 
 // Module: xring()
-// 
 // Description:
 //   Distributes `n` copies of the given children on a circle of radius `r`
 //   around the X axis.  If `rot` is true, each copy is rotated in place to keep
 //   the same side towards the center.  The first, unrotated copy will be at the
 //   starting angle `sa`.
-//
 // Usage:
 //   xring(n, r, [sa], [cp], [rot]) ...
-//
 // Arguments:
 //   n = Number of copies of children to distribute around the circle. (Default: 2)
 //   r = Radius of ring to distribute children around. (Default: 0)
 //   sa = Start angle for first (unrotated) copy.  (Default: 0)
 //   cp = Centerpoint of ring.  Default: [0,0,0]
 //   rot = If true, rotate each copy to keep the same side towards the center of the ring.  Default: true.
-//
 // Side Effects:
 //   `$ang` is set to the rotation angle of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index value of each child copy.
-//
 // Examples:
 //   xring(n=6, r=10) xrot(-90) cylinder(h=20, r1=5, r2=0);
 //   xring(n=6, r=10, sa=45) xrot(-90) cylinder(h=20, r1=5, r2=0);
@@ -1643,7 +1638,7 @@ module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=tr
 	theta_phis = [for (x=[0:n-1]) [180*(1+sqrt(5))*(x+0.5)%360, acos(1-2*(x+0.5)/cnt)]];
 
 	for ($idx = [0:len(theta_phis)-1]) {
-	    tp = theta_phis[$idx];
+		tp = theta_phis[$idx];
 		xyz = spherical_to_xyz(r, tp[0], tp[1]);
 		$pos = vmul(xyz,scale);
 		$theta = tp[0];
@@ -2274,17 +2269,28 @@ module shell2d(thickness, or=0, ir=0, fill=0, round=0)
 //   Named alignments, as well as `ALIGN_NEG`/`ALIGN_POS` are aligned pre-rotation.
 //
 // Usage:
-//   orient_and_align(size, [orient], [align], [center], [noncentered], [orig_orient], [orig_align], [alignments]) ...
+//   orient_and_align(size, [orient], [align], [center], [noncentered], [orig_orient], [orig_align], [alignments], [chain]) ...
 //
 // Arguments:
-//   size = The size of the part.
-//   orient = The axis to align to.  Use ORIENT_ constants from constants.scad
+//   size = The [X,Y,Z] size of the part.
+//   size2 = The [X,Y] size of the top of the part.
+//   shift = The [X,Y] offset of the top of the part, compared to the bottom of the part.
+//   orient = The axis to align to.  Use `ORIENT_` constants from `constants.scad`.
 //   align = The side of the origin the part should be aligned with.
 //   center = If given, overrides `align`.  If true, centers vertically.  If false, `align` will be set to the value in `noncentered`.
 //   noncentered = The value to set `align` to if `center` == `false`.  Default: `V_UP`.
 //   orig_orient = The original orientation of the part.  Default: `ORIENT_Z`.
 //   orig_align = The original alignment of the part.  Default: `V_CENTER`.
-//   alignments = A list of `["name", [X,Y,Z]]` alignment-label/offset pairs.
+//   alignments = A list of extra, non-standard connectors that can be aligned to.
+//   chain = If true, allow attachable children.
+//
+// Side Effects:
+//   `$parent_size` is set to the parent object's cubical region size.
+//   `$parent_size2` is set to the parent object's top [X,Y] size.
+//   `$parent_shift` is set to the parent object's `shift` value, if any.
+//   `$parent_orient` is set to the parent object's `orient` value.
+//   `$parent_align` is set to the parent object's `align` value.
+//   `$parent_conns` is set to the parent object's list of non-standard extra connectors.
 //
 // Example:
 //   #cylinder(d=5, h=10);
@@ -2293,55 +2299,321 @@ module orient_and_align(
 	size=undef, orient=ORIENT_Z, align=V_CENTER,
 	center=undef, noncentered=ALIGN_POS,
 	orig_orient=ORIENT_Z, orig_align=V_CENTER,
-	alignments=[]
+	size2=undef, shift=[0,0],
+	alignments=[], chain=false
 ) {
-	algn = is_def(center)? (center? V_CENTER : noncentered) : align;
-    if (orig_align != V_CENTER) {
-		orient_and_align(size=size, orient=orient, align=algn) {
-			translate(vmul(size/2, -orig_align)) children();
-		}
-    } else if (orig_orient != ORIENT_Z) {
-		rotsize = (
-			(orig_orient==ORIENT_X)? [size[1], size[2], size[0]] :
-			(orig_orient==ORIENT_Y)? [size[0], size[2], size[1]] :
-			vabs(rotate_points3d([size], orig_orient, reverse=true)[0])
-		);
-		orient_and_align(size=rotsize, orient=orient, align=algn) {
-			rot(orig_orient,reverse=true) children();
-		}
-	} else if (is_scalar(algn)) {
-		// If align is a number and not a vector, then translate PRE-rotation.
-		orient_and_align(size=size, orient=orient) {
-			translate(vmul(size/2, algn*V_UP)) children();
-		}
-	} else if (is_str(algn)) {
-		// If align is a string, look for an alignments label that matches.
-		found = search([algn], alignments, num_returns_per_match=1);
-		if (found != [[]]) {
-			orient_and_align(size=size, orient=orient) {
-				idx = found[0];
-				delta = alignments[idx][1];
-				translate(-delta) children();
-			}
+	size2 = point2d(default(size2, size));
+	shift = point2d(shift);
+	align = is_def(center)? (center? V_CENTER : noncentered) : align;
+	m = matrix4_mult(concat(
+		(orig_align==V_CENTER)? [] : [
+			// If original alignment is not centered, center it.
+			matrix4_translate(vmul(size/2, -orig_align))
+		],
+		(orig_orient==ORIENT_Z)? [] : [
+			// If original orientation is not upright, rotate it upright.
+			matrix4_zrot(-orig_orient.z),
+			matrix4_yrot(-orig_orient.y),
+			matrix4_xrot(-orig_orient.x)
+		],
+		($attach_to!=undef)? (
+			let(
+				conn = find_connector($attach_to, size.z, size, size2=size2, shift=shift),
+				ang = vector_angle(conn[2],V_DOWN),
+				axis = vector_axis(conn[2],V_DOWN),
+				ang2 = (conn[2]==V_UP || conn[2]==V_DOWN)? 0 : 180-conn[3],
+				axis2 = rotate_points3d([axis],[0,0,ang2])[0]
+			) [
+				matrix4_translate(-conn[1]),
+				matrix4_zrot(ang2),
+				matrix4_rot_by_axis(axis2, ang)
+			]
+		) : concat(
+			(!is_scalar(align) && !is_str(align))? [] : [
+				let(conn = find_connector(align, size.z, size, size2=size2, shift=shift, extra_conns=alignments))
+				matrix4_translate(-conn[1])
+			],
+			(orient==ORIENT_Z)? [] : [
+				matrix4_xrot(orient.x),
+				matrix4_yrot(orient.y),
+				matrix4_zrot(orient.z)
+			],
+			(!is_array(align) || align==[0,0,0])? [] : [
+				let(conn = find_connector(align, size.z, size, size2=size2, shift=shift))
+				matrix4_translate(conn[1])
+			]
+		)
+	));
+	$attach_to = undef;
+	$parent_size   = size;
+	$parent_size2  = size2;
+	$parent_shift  = shift;
+	$parent_orient = orient;
+	$parent_align  = align;
+	$parent_conns  = alignments;
+	tags = _str_char_split($tags, " ");
+	s_tags = $tags_shown;
+	h_tags = $tags_hidden;
+	shown  = !s_tags || any([for (tag=tags) in_list(tag, s_tags)]);
+	hidden = any([for (tag=tags) in_list(tag, h_tags)]);
+	echo(tags=tags, shown=shown, hidden=hidden, view=shown&&!hidden);
+	multmatrix(m) {
+		if ($children>1 && chain) {
+			if(shown && !hidden) color($color) for (i=[0:$children-2]) children(i);
+			children($children-1);
 		} else {
-			assertion(1==0, str("Alignment label '", algn, "' is not known.", (alignments? str("  Try one of ", [for (v=alignments) v[0]], ".") : "")));
+			if(shown && !hidden) color($color) children();
 		}
-	} else if (orient != ORIENT_Z) {
-		rotsize = (
-			(orient==ORIENT_X)? [size[2], size[0], size[1]] :
-			(orient==ORIENT_Y)? [size[0], size[2], size[1]] :
-			vabs(rotate_points3d([size], orient)[0])
-		);
-		orient_and_align(size=rotsize, align=algn) {
-			rotate(orient) children();
-		}
-	} else if (is_def(algn) && algn != [0,0,0]) {
-		translate(vmul(size/2, algn)) children();
-	} else {
-		children();
 	}
 }
 
+
+
+// Internal.  Not exposed.
+function _str_char_split(s,delim,n=0,acc=[],word="") =
+	(n>=len(s))? concat(acc, [word]) :
+	(s[n]==delim)?
+		_str_char_split(s,delim,n+1,concat(acc,[word]),"") :
+		_str_char_split(s,delim,n+1,acc,str(word,s[n]));
+
+
+
+// Function: connector()
+// Usage:
+//   connector(name, pos, dir, [rot])
+// Description:
+//   Creates a connector data structure.
+// Arguments:
+//   name = The string name of the connector.  Lowercase.  Words separated by single dashes.  No spaces.
+//   pos = The [X,Y,Z] position of the connector.
+//   dir = A vector pointing in the direction parts should project from the connector position.
+//   rot = If needed, the angle to rotate the part around the direction vector.
+function connector(name, pos=[0,0,0], dir=V_UP, rot=0) = [name, pos, dir, rot];
+
+
+
+// Function: find_connector()
+// Usage:
+//   find_connector(align, h, size, [size2], [shift], [edges], [corners]);
+// Description:
+//   Generates a list of typical connectors for a cubical region of the given size.
+// Arguments:
+//   align = Named alignment/connector string.
+//   h = Height of the region.
+//   size = The [X,Y] size of the bottom of the cubical region.
+//   size2 = The [X,Y] size of the top of the cubical region.
+//   shift = The [X,Y] amount to shift the center of the top with respect to the center of the bottom.
+//   extra_conns = A list of extra named connectors.
+function find_connector(align, h, size, size2=undef, shift=[0,0], extra_conns=[]) =
+	let(
+		eps = 1e-9,
+		shift = point3d(shift),
+		size = point3d(point2d(size)),
+		size2 = (size2!=undef)? point3d(point2d(size2)) : size,
+		found = !is_str(align)? [] : search([align], extra_conns, num_returns_per_match=1)[0]
+	) (found!=[])? extra_conns[found] : let(
+		words = is_scalar(align)? (
+			align==ALIGN_NEG? ["top"] :
+			align==ALIGN_POS? ["bottom"] :
+			["center"]
+		) : is_array(align)? align : _str_char_split(align,"-"),
+		ovec = is_array(align)? align :
+			sum([
+				for (word = words) 
+					word=="left"? V_LEFT :
+					word=="right"? V_RIGHT :
+					word=="front"? V_FWD :
+					word=="back"? V_BACK :
+					word=="top"? V_UP :
+					word=="bottom"? V_DOWN :
+					word=="center"? V_ZERO :
+					assertion(false,
+						str(
+							"Alignment label '", align, "' is not known.",
+							(!extra_conns? "" : str(
+								"  Try one of ", [for (v=extra_conns) v[0]], " or the standard alignments."
+							))
+						)
+					)
+			]),
+		top = [-size2/2+shift, shift, size2/2+shift],
+		bot = [-size/2, V_ZERO, size/2],
+		toppt = [top[ovec.x+1].x, top[ovec.y+1].y,  h/2],
+		botpt = [bot[ovec.x+1].x, bot[ovec.y+1].y, -h/2],
+		pos = lerp(botpt, toppt, (ovec.z+1)/2),
+		oang = (
+			ovec == V_UP? 0 :
+			ovec == V_DOWN? 0 :
+			(norm([ovec.x,ovec.y]) < eps)? 0 : atan2(ovec.y, ovec.x)+90
+		),
+		vec = (
+			abs(ovec.z) > eps? ovec :
+			rotate_points3d([ovec], from=V_UP, to=toppt-botpt)[0]
+		)
+	) [align, pos, vec, oang];
+
+
+
+// Module: attach()
+// Usage:
+//   attach(name, [overlap], [norot]) ...
+//   attach(name, to, [overlap]) ...
+// Description:
+//   Attaches children to a parent object at an attachment point and orientation.
+// Arguments:
+//   name = The name of the parent attachment point to attach to.
+//   to = The name of the child attachment point.
+//   overlap = Amount to sink child into the parent.
+//   norot = If true, don't rotate children when aligning to the attachment point.
+// Example:
+//   spheroid(d=20) {
+//       attach("top")   down(1.5) cyl(l=11.5, d1=10, d2=5, align="bottom");
+//       attach("right", "bottom") down(1.5) cyl(l=11.5, d1=10, d2=5);
+//       attach("front") down(1.5) cyl(l=11.5, d1=10, d2=5, align="bottom");
+//   }
+module attach(name, to=undef, overlap=undef, norot=false)
+{
+	assertion($parent_size != undef, "No object to attach to!");
+	overlap = (overlap!=undef)? overlap : $overlap;
+	conn = find_connector(name, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, extra_conns=$parent_conns);
+	pos = conn[1];
+	vec = conn[2];
+	ang = conn[3];
+	$attach_to = to;
+	$attach_conn = conn;
+	if (norot || (norm(vec-V_UP)<1e-9 && ang==0)) {
+		translate(pos) translate([0,0,-overlap]) children();
+	} else {
+		translate(pos) rot(ang,from=V_UP,to=vec) translate([0,0,-overlap]) children();
+	}
+}
+
+
+// Module: tags()
+// Usage:
+//   tags(tags) ...
+// Description:
+//   Marks all children with the given tags.
+// Arguments:
+//   tags = String containing space delimited set of tags to apply.
+module tags(tags)
+{
+	$tags = tags;
+	children();
+}
+
+
+// Module: recolor()
+// Usage:
+//   recolor(c) ...
+// Description:
+//   Sets the color for children that can use the $color special variable.
+// Example:
+//   recolor("red") cyl(l=20, d=10);
+module recolor(c)
+{
+	$color = c;
+	children();
+}
+
+
+// Module: hide()
+// Usage:
+//   hide(tags) ...
+// Description: Hides all children with the given tags.
+module hide(tags="")
+{
+	$tags_hidden = tags==""? [] : _str_char_split(tags, " ");
+	children();
+}
+
+
+// Module: show()
+// Usage:
+//   show(tags) ...
+// Description: Shows only children with the given tags.
+module show(tags="")
+{
+	$tags_shown = tags==""? [] : _str_char_split(tags, " ");
+	children();
+}
+
+
+// Module: diff()
+// Usage:
+//   diff(neg, [keep]) ...
+//   diff(neg, pos, [keep]) ...
+// Description:
+//   If `neg` is given, takes the union of all children with tags
+//   that are in `neg`, and differences them from the union of all
+//   children with tags in `pos`.  If `pos` is not given, then all
+//   items in `neg` are differenced from all items not in `neg`.  If
+//   `keep` is given, all children with tags in `keep` are then unioned
+//   with the result.  If `keep` is not given, all children without
+//   tags in `pos` or `neg` are then unioned with the result.
+// Arguments:
+//   neg = String containing space delimited set of tag names of children to difference away.
+//   pos = String containing space delimited set of tag names of children to be differenced away from.
+//   keep = String containing space delimited set of tag names of children to keep whole.
+module diff(neg, pos=undef, keep=undef)
+{
+	difference() {
+		if (pos != undef) {
+			show(pos) children();
+		} else {
+			if (keep == undef) {
+				hide(neg) children();
+			} else {
+				hide(str(neg," ",keep)) children();
+			}
+		}
+		show(neg) children();
+	}
+	if (keep!=undef) {
+		show(keep) children();
+	} else if (pos!=undef) {
+		hide(str(pos," ",neg)) children();
+	}
+}
+
+
+// Module: intersect()
+// Usage:
+//   intersect(a, [keep]) ...
+//   intersect(a, b, [keep]) ...
+// Description:
+//   If `a` is given, takes the union of all children with tags that
+//   are in `a`, and intersection()s them with the union of all
+//   children with tags in `b`.  If `b` is not given, then the union
+//   of all items with tags in `a` are intersection()ed with the union
+//   of all items without tags in `a`.  If `keep` is given, then the
+//   result is unioned with all the children with tags in `keep`.  If
+//   `keep` is not given, all children without tags in `a` or `b` are
+//   unioned with the result.
+// Arguments:
+//   a = String containing space delimited set of tag names of children.
+//   b = String containing space delimited set of tag names of children.
+//   keep = String containing space delimited set of tag names of children to keep whole.
+module intersect(a, b=undef, keep=undef)
+{
+	intersection() {
+		if (b != undef) {
+			show(b) children();
+		} else {
+			if (keep == undef) {
+				hide(a) children();
+			} else {
+				hide(str(a," ",keep)) children();
+			}
+		}
+		show(a) children();
+	}
+	if (keep!=undef) {
+		show(keep) children();
+	} else if (b!=undef) {
+		hide(str(a," ",b)) children();
+	}
+}
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

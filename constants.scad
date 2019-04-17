@@ -342,5 +342,20 @@ function corner_edge_count(edges, v) =
 	);
 
 
+// Default values for attachment code.
+$color = undef;
+$overlap = 0.01;
+$attach_to = undef;
+$attach_conn = ["center", V_ZERO, V_UP, 0];
+$parent_size = undef;
+$parent_size2 = undef;
+$parent_shift = [0,0];
+$parent_orient = ORIENT_Z;
+$parent_align = "center";
+$parent_conns = [];
+$tags_shown = [];
+$tags_hidden = [];
+$tags = "";
+
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
