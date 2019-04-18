@@ -349,18 +349,28 @@ module chamfer_cylinder_mask(r=1.0, d=undef, chamfer=0.25, ang=45, from_end=fals
 //   chamfer = Size of the chamfer. (Default: 0.25)
 //   ang = Angle of chamfer in degrees from vertical.  (Default: 45)
 //   from_end = If true, chamfer size is measured from end of hole.  If false, chamfer is measured outset from the radius of the hole.  (Default: false)
+//   overage = The extra thickness of the mask.  Default: `0.1`.
 // Example:
 //   difference() {
 //       cube(100, center=true);
 //       cylinder(d=50, h=100.1, center=true);
 //       up(50) #chamfer_hole_mask(d=50, chamfer=10);
 //   }
-module chamfer_hole_mask(r=1.0, d=undef, chamfer=0.25, ang=45, from_end=false)
+// Example:
+//   chamfer_hole_mask(d=100, chamfer=25, ang=30, overage=10);
+module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false, overage=0.1)
 {
+	r = get_radius(r=r, d=d, dflt=1);
 	h = chamfer * (from_end? 1 : tan(90-ang));
-	r = d==undef? r : d/2;
 	r2 = r + chamfer * (from_end? tan(ang) : 1);
-	down(h-0.01) cylinder(r1=r, r2=r2, h=h, center=false);
+	$fn = segs(r);
+	difference() {
+		union() {
+			cylinder(r=r2, h=overage, center=false);
+			down(h) cylinder(r1=r, r2=r2, h=h, center=false);
+		}
+		cylinder(r=r-overage, h=h*2.1+overage, center=true);
+	}
 }
 
 
@@ -656,19 +666,24 @@ module fillet_cylinder_mask(r=1.0, fillet=0.25, xtilt=0, ytilt=0)
 //   fillet = radius of the edge filleting. (Default: 0.25)
 //   xtilt = angle of tilt of end of cylinder in the X direction. (Default: 0)
 //   ytilt = angle of tilt of end of cylinder in the Y direction. (Default: 0)
+//   overage = The extra thickness of the mask.  Default: `0.1`.
 // Example:
 //   difference() {
 //     cube([150,150,100], center=true);
 //     cylinder(r=50, h=100.1, center=true);
-//     up(50) #fillet_hole_mask(r=50, fillet=10, xtilt=0, ytilt=0);
+//     up(50) #fillet_hole_mask(r=50, fillet=10);
 //   }
-module fillet_hole_mask(r=1.0, fillet=0.25, xtilt=0, ytilt=0)
+// Example:
+//   fillet_hole_mask(r=40, fillet=20, $fa=2, $fs=2);
+module fillet_hole_mask(r=1.0, fillet=0.25, overage=0.1, xtilt=0, ytilt=0)
 {
 	skew_xz(za=xtilt) {
 		skew_yz(za=ytilt) {
-			difference() {
-				cylinder(r=r+fillet, h=2*fillet, center=true);
-				down(fillet) torus(ir=r, or=r+2*fillet);
+			rotate_extrude(convexity=4) {
+				difference() {
+					right(r-overage) fwd(fillet) square(fillet+overage, center=false);
+					right(r+fillet) fwd(fillet) circle(r=fillet);
+				}
 			}
 		}
 	}
