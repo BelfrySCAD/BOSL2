@@ -655,17 +655,18 @@ module fillet_cylinder_mask(r=1.0, fillet=0.25, xtilt=0, ytilt=0)
 
 // Module: fillet_hole_mask()
 // Usage:
-//   fillet_hole_mask(r, fillet, [xtilt], [ytilt]);
+//   fillet_hole_mask(r|d, fillet, [xtilt], [ytilt]);
 // Description:
 //   Create a mask that can be used to round the edge of a circular hole.
 //   Difference it from the hole to be filletted.  The center of the
 //   mask object should align exactly with the center of the end of the
 //   hole to be filletted.
 // Arguments:
-//   r = radius of hole to fillet. (Default: 1.0)
-//   fillet = radius of the edge filleting. (Default: 0.25)
-//   xtilt = angle of tilt of end of cylinder in the X direction. (Default: 0)
-//   ytilt = angle of tilt of end of cylinder in the Y direction. (Default: 0)
+//   r = Radius of hole to fillet.
+//   d = Diameter of hole to fillet.
+//   fillet = Radius of the filleting. (Default: 0.25)
+//   xtilt = Angle of tilt of end of cylinder in the X direction. (Default: 0)
+//   ytilt = Angle of tilt of end of cylinder in the Y direction. (Default: 0)
 //   overage = The extra thickness of the mask.  Default: `0.1`.
 // Example:
 //   difference() {
@@ -675,8 +676,9 @@ module fillet_cylinder_mask(r=1.0, fillet=0.25, xtilt=0, ytilt=0)
 //   }
 // Example:
 //   fillet_hole_mask(r=40, fillet=20, $fa=2, $fs=2);
-module fillet_hole_mask(r=1.0, fillet=0.25, overage=0.1, xtilt=0, ytilt=0)
+module fillet_hole_mask(r=undef, d=undef, fillet=0.25, overage=0.1, xtilt=0, ytilt=0)
 {
+	r = get_radius(r=r, d=d, dflt=1);
 	skew_xz(za=xtilt) {
 		skew_yz(za=ytilt) {
 			rotate_extrude(convexity=4) {
