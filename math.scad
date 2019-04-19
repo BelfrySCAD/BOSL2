@@ -974,20 +974,20 @@ function rotate_points2d(pts, ang, cp=[0,0]) = let(
 
 // Function: rotate_points3d()
 // Usage:
-//   rotate_points3d(pts, v, [cp], [reverse]);
-//   rotate_points3d(pts, v, axis, [cp], [reverse]);
-//   rotate_points3d(pts, from, to, v, [cp], [reverse]);
+//   rotate_points3d(pts, a, [cp], [reverse]);
+//   rotate_points3d(pts, a, v, [cp], [reverse]);
+//   rotate_points3d(pts, from, to, [a], [cp], [reverse]);
 // Description:
 //   Rotates each 3D point in an array by a given amount, around a given centerpoint.
 // Arguments:
 //   pts = List of points to rotate.
-//   v = Rotation angle(s) in degrees.
-//   axis = If given, axis vector to rotate around.
+//   a = Rotation angle(s) in degrees.
+//   v = If given, axis vector to rotate around.
 //   cp = Centerpoint to rotate around.
 //   from = If given, the vector to rotate something from.  Used with `to`.
 //   to = If given, the vector to rotate something to.  Used with `from`.
 //   reverse = If true, performs an exactly reversed rotation.
-function rotate_points3d(pts, v=0, cp=[0,0,0], axis=undef, from=undef, to=undef, reverse=false) =
+function rotate_points3d(pts, a=0, v=undef, cp=[0,0,0], from=undef, to=undef, reverse=false) =
 	let(
 		dummy = assertion(is_def(from)==is_def(to), "`from` and `to` must be given together."),
 		mrot = reverse? (
@@ -996,15 +996,15 @@ function rotate_points3d(pts, v=0, cp=[0,0,0], axis=undef, from=undef, to=undef,
 					from = from / norm(from),
 					to = to / norm(from),
 					ang = vector_angle(from, to),
-					axis = vector_axis(from, to)
+					v = vector_axis(from, to)
 				)
-				matrix4_rot_by_axis(from, -v) * matrix4_rot_by_axis(axis, -ang)
-			) : is_def(axis)? (
-				matrix4_rot_by_axis(axis, -v)
-			) : is_scalar(v)? (
-				matrix4_zrot(-v)
+				matrix4_rot_by_axis(from, -a) * matrix4_rot_by_axis(v, -ang)
+			) : is_def(v)? (
+				matrix4_rot_by_axis(v, -a)
+			) : is_scalar(a)? (
+				matrix4_zrot(-a)
 			) : (
-				matrix4_xrot(-v.x) * matrix4_yrot(-v.y) * matrix4_zrot(-v.z)
+				matrix4_xrot(-a.x) * matrix4_yrot(-a.y) * matrix4_zrot(-a.z)
 			)
 		) : (
 			is_def(from)? (
@@ -1012,15 +1012,15 @@ function rotate_points3d(pts, v=0, cp=[0,0,0], axis=undef, from=undef, to=undef,
 					from = from / norm(from),
 					to = to / norm(from),
 					ang = vector_angle(from, to),
-					axis = vector_axis(from, to)
+					v = vector_axis(from, to)
 				)
-				matrix4_rot_by_axis(axis, ang) * matrix4_rot_by_axis(from, v)
-			) : is_def(axis)? (
-				matrix4_rot_by_axis(axis, v)
-			) : is_scalar(v)? (
-				matrix4_zrot(v)
+				matrix4_rot_by_axis(v, ang) * matrix4_rot_by_axis(from, a)
+			) : is_def(v)? (
+				matrix4_rot_by_axis(v, a)
+			) : is_scalar(a)? (
+				matrix4_zrot(a)
 			) : (
-				matrix4_zrot(v.z) * matrix4_yrot(v.y) * matrix4_xrot(v.x)
+				matrix4_zrot(a.z) * matrix4_yrot(a.y) * matrix4_xrot(a.x)
 			)
 		),
 		m = matrix4_translate(cp) * mrot * matrix4_translate(-cp)
