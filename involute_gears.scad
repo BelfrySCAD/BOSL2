@@ -19,14 +19,11 @@
 //   
 //   To use, add the following line to the beginning of your file:
 //   ```
-//   include <BOSL2/constants.scad>
-//   use <BOSL2/involute_gears.scad>
+//   include <BOSL2/std.scad>
+//   include <BOSL2/involute_gears.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-
-use <transforms.scad>
-include <constants.scad>
 
 
 // Section: Terminology

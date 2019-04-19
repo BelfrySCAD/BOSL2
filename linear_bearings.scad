@@ -3,8 +3,9 @@
 //   Linear Bearing clips/holders.
 //   To use, add these lines to the top of your file:
 //   ```
-//   include <BOSL2/constants.scad>
-//   use <BOSL2/linear_bearings.scad>
+//   include <BOSL2/std.scad>
+//   include <BOSL2/metric_screws.scad>
+//   include <BOSL2/linear_bearings.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 
@@ -35,10 +36,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-
-include <shapes.scad>
-include <metric_screws.scad>
 
 
 // Section: Functions

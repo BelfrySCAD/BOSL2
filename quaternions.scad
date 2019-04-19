@@ -3,7 +3,8 @@
 //   Support for Quaternions.
 //   To use, add the following line to the beginning of your file:
 //   ```
-//   use <BOSL2/quaternions.scad>
+//   include <BOSL2/std.scad>
+//   include <BOSL2/quaternions.scad>
 //   ```
 ///////////////////////////////////////////
 
@@ -35,8 +36,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-use <math.scad>
 
 
 // Section: Quaternions

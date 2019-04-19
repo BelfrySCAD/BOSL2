@@ -3,8 +3,8 @@
 //   Triangular and Trapezoidal-Threaded Screw Rods and Nuts.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   include <BOSL2/constants.scad>
-//   use <BOSL2/threading.scad>
+//   include <BOSL2/std.scad>
+//   include <BOSL2/threading.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 
@@ -36,10 +36,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-include <constants.scad>
-use <transforms.scad>
-use <masks.scad>
-use <math.scad>
 
 
 function _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, parts) =

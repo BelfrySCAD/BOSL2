@@ -3,7 +3,7 @@
 //   Useful Constants.
 //   To use this, add the following line to the top of your file.
 //   ```
-//   include <BOSL2/constants.scad>
+//   include <BOSL2/std.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

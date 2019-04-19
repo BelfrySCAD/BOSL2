@@ -3,8 +3,7 @@
 //   This is the file that the most commonly used transformations, distributors, and mutator are in.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   include <BOSL2/constants.scad>
-//   use <BOSL2/transforms.scad>
+//   include <BOSL2/std.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 
@@ -35,11 +34,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-
-use <math.scad>
-include <compat.scad>
-include <constants.scad>
 
 
 

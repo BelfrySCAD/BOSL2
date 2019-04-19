@@ -3,8 +3,8 @@
 //   Phillips driver bits
 //   To use, add these lines to the top of your file:
 //   ```
-//   include <BOSL2/constants.scad>
-//   use <BOSL2/phillips_drive.scad>
+//   include <BOSL2/std.scad>
+//   include <BOSL2/phillips_drive.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 
@@ -35,12 +35,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-
-use <transforms.scad>
-use <shapes.scad>
-include <constants.scad>
-include <compat.scad>
 
 
 // Section: Modules

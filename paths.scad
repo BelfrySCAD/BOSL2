@@ -3,8 +3,10 @@
 //   Polylines, polygons and paths.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   include <BOSL2/constants.scad>
-//   use <BOSL2/paths.scad>
+//   include <BOSL2/std.scad>
+//   include <BOSL2/quaternions.scad>
+//   include <BOSL2/triangulation.scad>
+//   include <BOSL2/paths.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 
@@ -36,12 +38,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-include <constants.scad>
-use <transforms.scad>
-use <math.scad>
-use <quaternions.scad>
-use <triangulation.scad>
 
 
 // Section: Functions

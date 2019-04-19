@@ -1,5 +1,10 @@
 //////////////////////////////////////////////////////////////////////
-// ACME Trapezoidal-threaded Screw Rods and Nuts
+// LibFile: std.scad
+//   File that includes the standard BOSL include files.
+//   To use, add the following lines to the beginning of your file:
+//   ```
+//   include <BOSL2/std.scad>
+//   ```
 //////////////////////////////////////////////////////////////////////
 
 /*
@@ -30,8 +35,15 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-include <threading.scad>
 
+include <BOSL2/constants.scad>
+include <BOSL2/compat.scad>
+include <BOSL2/math.scad>
+include <BOSL2/transforms.scad>
+include <BOSL2/shapes.scad>
+include <BOSL2/masks.scad>
+include <BOSL2/primitives.scad>
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+

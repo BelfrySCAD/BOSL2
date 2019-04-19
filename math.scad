@@ -3,7 +3,7 @@
 //   Math helper functions.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   use <BOSL2/math.scad>
+//   use <BOSL2/std.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 
@@ -35,9 +35,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-include <constants.scad>
-include <compat.scad>
 
 
 // Section: Math Constants

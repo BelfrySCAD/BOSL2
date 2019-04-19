@@ -3,8 +3,8 @@
 //   Snap-together joiners.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   include <BOSL2/constants.scad>
-//   use <BOSL2/joiners.scad>
+//   include <BOSL2/std.scad>
+//   include <BOSL2/joiners.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 
@@ -36,11 +36,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-use <transforms.scad>
-use <shapes.scad>
-include <compat.scad>
-include <constants.scad>
 
 
 // Section: Half Joiners

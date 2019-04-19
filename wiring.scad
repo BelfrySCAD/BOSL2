@@ -3,7 +3,10 @@
 //   Rendering for wiring bundles
 //   To use, include the following line at the top of your file:
 //   ```
-//   use <BOSL2/wiring.scad>
+//   include <BOSL2/std.scad>
+//   include <BOSL2/paths.scad>
+//   include <BOSL2/beziers.scad>
+//   include <BOSL2/wiring.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 
@@ -35,10 +38,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-include <math.scad>
-include <paths.scad>
-include <beziers.scad>
 
 
 // Section: Functions
