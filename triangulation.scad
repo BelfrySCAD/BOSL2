@@ -3,7 +3,7 @@
 //   Functions to triangulate polyhedron faces.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   use <BOSL/triangulation.scad>
+//   use <BOSL2/triangulation.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

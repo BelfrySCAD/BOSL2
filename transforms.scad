@@ -3,8 +3,8 @@
 //   This is the file that the most commonly used transformations, distributors, and mutator are in.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   include <BOSL/constants.scad>
-//   use <BOSL/transforms.scad>
+//   include <BOSL2/constants.scad>
+//   use <BOSL2/transforms.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

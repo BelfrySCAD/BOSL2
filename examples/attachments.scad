@@ -1,8 +1,8 @@
-include <BOSL/constants.scad>
-include <BOSL/transforms.scad>
-include <BOSL/primitives.scad>
-include <BOSL/shapes.scad>
-include <BOSL/debug.scad>
+include <BOSL2/constants.scad>
+include <BOSL2/transforms.scad>
+include <BOSL2/primitives.scad>
+include <BOSL2/shapes.scad>
+include <BOSL2/debug.scad>
 
 cuboid([60,40,40], fillet=5, edges=EDGES_Z_ALL, align="bottom") {
 	attach("top") rounded_prismoid([60,40],[20,20], h=50, r1=5, r2=10) {

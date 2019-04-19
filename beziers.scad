@@ -3,8 +3,8 @@
 //   Bezier functions and modules.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   include <BOSL/constants.scad>
-//   use <BOSL/beziers.scad>
+//   include <BOSL2/constants.scad>
+//   use <BOSL2/beziers.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 
@@ -830,7 +830,7 @@ function bezier_triangle(tri, splinesteps=16, vertices=[], faces=[]) =
 // Arguments:
 //   size = 2D XY size of the patch.
 //   N = Degree of the patch to generate.  Since this is flat, a degree of 1 should usually be sufficient.
-//   orient = The orientation to rotate the edge patch into.  Use the `ORIENT` constants in `BOSL/constants.scad`.
+//   orient = The orientation to rotate the edge patch into.  Use the `ORIENT` constants in `constants.scad`.
 //   trans = Amount to translate patch, after rotating to `orient`.
 // Example(3D):
 //   patch = bezier_patch_flat(size=[100,100], N=3);

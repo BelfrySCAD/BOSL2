@@ -3,7 +3,7 @@
 //   Rendering for wiring bundles
 //   To use, include the following line at the top of your file:
 //   ```
-//   use <BOSL/wiring.scad>
+//   use <BOSL2/wiring.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

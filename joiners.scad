@@ -3,8 +3,8 @@
 //   Snap-together joiners.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   include <BOSL/constants.scad>
-//   use <BOSL/joiners.scad>
+//   include <BOSL2/constants.scad>
+//   use <BOSL2/joiners.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

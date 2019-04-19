@@ -3,8 +3,8 @@
 //   Masks and models for NEMA stepper motors.
 //   To use, add these lines to the top of your file:
 //   ```
-//   include <BOSL/constants.scad>
-//   use <BOSL/nema_steppers.scad>
+//   include <BOSL2/constants.scad>
+//   use <BOSL2/nema_steppers.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

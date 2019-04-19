@@ -3,8 +3,8 @@
 //   Triangular and Trapezoidal-Threaded Screw Rods and Nuts.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   include <BOSL/constants.scad>
-//   use <BOSL/threading.scad>
+//   include <BOSL2/constants.scad>
+//   use <BOSL2/threading.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

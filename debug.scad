@@ -3,8 +3,8 @@
 //   Helpers to make debugging OpenScad code easier.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   include <BOSL/constants.scad>
-//   use <BOSL/debug.scad>
+//   include <BOSL2/constants.scad>
+//   use <BOSL2/debug.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

@@ -19,8 +19,8 @@
 //   
 //   To use, add the following line to the beginning of your file:
 //   ```
-//   include <BOSL/constants.scad>
-//   use <BOSL/involute_gears.scad>
+//   include <BOSL2/constants.scad>
+//   use <BOSL2/involute_gears.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////////////////////////////
 

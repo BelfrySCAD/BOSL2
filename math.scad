@@ -3,7 +3,7 @@
 //   Math helper functions.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   use <BOSL/math.scad>
+//   use <BOSL2/math.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

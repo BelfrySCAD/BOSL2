@@ -1,7 +1,7 @@
-include <BOSL/constants.scad>
-include <BOSL/transforms.scad>
-include <BOSL/primitives.scad>
-include <BOSL/beziers.scad>
+include <BOSL2/constants.scad>
+include <BOSL2/transforms.scad>
+include <BOSL2/primitives.scad>
+include <BOSL2/beziers.scad>
 
 module leaf(s) {
 	path = [

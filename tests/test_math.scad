@@ -1,7 +1,6 @@
-include <BOSL/constants.scad>
-include <BOSL/math.scad>
+include <BOSL2/constants.scad>
+include <BOSL2/math.scad>
 
-eps = 1e-9;
 
 // Simple Calculations
 
@@ -112,61 +111,61 @@ test_hypot();
 
 
 module test_sinh() {
-	assert(abs(sinh(-2)+3.6268604078) < eps);
-	assert(abs(sinh(-1)+1.1752011936) < eps);
-	assert(abs(sinh(0)) < eps);
-	assert(abs(sinh(1)-1.1752011936) < eps);
-	assert(abs(sinh(2)-3.6268604078) < eps);
+	assert(abs(sinh(-2)+3.6268604078) < EPSILON);
+	assert(abs(sinh(-1)+1.1752011936) < EPSILON);
+	assert(abs(sinh(0)) < EPSILON);
+	assert(abs(sinh(1)-1.1752011936) < EPSILON);
+	assert(abs(sinh(2)-3.6268604078) < EPSILON);
 }
 test_sinh();
 
 
 module test_cosh() {
-	assert(abs(cosh(-2)-3.7621956911) < eps);
-	assert(abs(cosh(-1)-1.5430806348) < eps);
-	assert(abs(cosh(0)-1) < eps);
-	assert(abs(cosh(1)-1.5430806348) < eps);
-	assert(abs(cosh(2)-3.7621956911) < eps);
+	assert(abs(cosh(-2)-3.7621956911) < EPSILON);
+	assert(abs(cosh(-1)-1.5430806348) < EPSILON);
+	assert(abs(cosh(0)-1) < EPSILON);
+	assert(abs(cosh(1)-1.5430806348) < EPSILON);
+	assert(abs(cosh(2)-3.7621956911) < EPSILON);
 }
 test_cosh();
 
 
 module test_tanh() {
-	assert(abs(tanh(-2)+0.9640275801) < eps);
-	assert(abs(tanh(-1)+0.761594156) < eps);
-	assert(abs(tanh(0)) < eps);
-	assert(abs(tanh(1)-0.761594156) < eps);
-	assert(abs(tanh(2)-0.9640275801) < eps);
+	assert(abs(tanh(-2)+0.9640275801) < EPSILON);
+	assert(abs(tanh(-1)+0.761594156) < EPSILON);
+	assert(abs(tanh(0)) < EPSILON);
+	assert(abs(tanh(1)-0.761594156) < EPSILON);
+	assert(abs(tanh(2)-0.9640275801) < EPSILON);
 }
 test_tanh();
 
 
 module test_asinh() {
-	assert(abs(asinh(sinh(-2))+2) < eps);
-	assert(abs(asinh(sinh(-1))+1) < eps);
-	assert(abs(asinh(sinh(0))) < eps);
-	assert(abs(asinh(sinh(1))-1) < eps);
-	assert(abs(asinh(sinh(2))-2) < eps);
+	assert(abs(asinh(sinh(-2))+2) < EPSILON);
+	assert(abs(asinh(sinh(-1))+1) < EPSILON);
+	assert(abs(asinh(sinh(0))) < EPSILON);
+	assert(abs(asinh(sinh(1))-1) < EPSILON);
+	assert(abs(asinh(sinh(2))-2) < EPSILON);
 }
 test_asinh();
 
 
 module test_acosh() {
-	assert(abs(acosh(cosh(-2))-2) < eps);
-	assert(abs(acosh(cosh(-1))-1) < eps);
-	assert(abs(acosh(cosh(0))) < eps);
-	assert(abs(acosh(cosh(1))-1) < eps);
-	assert(abs(acosh(cosh(2))-2) < eps);
+	assert(abs(acosh(cosh(-2))-2) < EPSILON);
+	assert(abs(acosh(cosh(-1))-1) < EPSILON);
+	assert(abs(acosh(cosh(0))) < EPSILON);
+	assert(abs(acosh(cosh(1))-1) < EPSILON);
+	assert(abs(acosh(cosh(2))-2) < EPSILON);
 }
 test_acosh();
 
 
 module test_atanh() {
-	assert(abs(atanh(tanh(-2))+2) < eps);
-	assert(abs(atanh(tanh(-1))+1) < eps);
-	assert(abs(atanh(tanh(0))) < eps);
-	assert(abs(atanh(tanh(1))-1) < eps);
-	assert(abs(atanh(tanh(2))-2) < eps);
+	assert(abs(atanh(tanh(-2))+2) < EPSILON);
+	assert(abs(atanh(tanh(-1))+1) < EPSILON);
+	assert(abs(atanh(tanh(0))) < EPSILON);
+	assert(abs(atanh(tanh(1))-1) < EPSILON);
+	assert(abs(atanh(tanh(2))-2) < EPSILON);
 }
 test_atanh();
 
@@ -519,11 +518,11 @@ module test_normalize() {
 	assert(normalize([10,0,0]) == [1,0,0]);
 	assert(normalize([0,10,0]) == [0,1,0]);
 	assert(normalize([0,0,10]) == [0,0,1]);
-	assert(abs(norm(normalize([10,10,10]))-1) < eps);
-	assert(abs(norm(normalize([-10,-10,-10]))-1) < eps);
-	assert(abs(norm(normalize([-10,0,0]))-1) < eps);
-	assert(abs(norm(normalize([0,-10,0]))-1) < eps);
-	assert(abs(norm(normalize([0,0,-10]))-1) < eps);
+	assert(abs(norm(normalize([10,10,10]))-1) < EPSILON);
+	assert(abs(norm(normalize([-10,-10,-10]))-1) < EPSILON);
+	assert(abs(norm(normalize([-10,0,0]))-1) < EPSILON);
+	assert(abs(norm(normalize([0,-10,0]))-1) < EPSILON);
+	assert(abs(norm(normalize([0,0,-10]))-1) < EPSILON);
 }
 test_normalize();
 
@@ -539,18 +538,18 @@ module test_vector_angle() {
 			assert(vector_angle(a,b)==90);
 		}
 	}
-	assert(abs(vector_angle([10,10,0],[10,0,0])-45) < eps);
+	assert(abs(vector_angle([10,10,0],[10,0,0])-45) < EPSILON);
 }
 test_vector_angle();
 
 
 module test_vector_axis() {
-	assert(norm(vector_axis([10,0,0],[10,10,0]) - [0,0,1]) < eps);
-	assert(norm(vector_axis([10,0,0],[0,10,0]) - [0,0,1]) < eps);
-	assert(norm(vector_axis([0,10,0],[10,0,0]) - [0,0,-1]) < eps);
-	assert(norm(vector_axis([0,0,10],[10,0,0]) - [0,1,0]) < eps);
-	assert(norm(vector_axis([10,0,0],[0,0,10]) - [0,-1,0]) < eps);
-	assert(norm(vector_axis([10,0,10],[0,-10,0]) - [sin(45),0,-sin(45)]) < eps);
+	assert(norm(vector_axis([10,0,0],[10,10,0]) - [0,0,1]) < EPSILON);
+	assert(norm(vector_axis([10,0,0],[0,10,0]) - [0,0,1]) < EPSILON);
+	assert(norm(vector_axis([0,10,0],[10,0,0]) - [0,0,-1]) < EPSILON);
+	assert(norm(vector_axis([0,0,10],[10,0,0]) - [0,1,0]) < EPSILON);
+	assert(norm(vector_axis([10,0,0],[0,0,10]) - [0,-1,0]) < EPSILON);
+	assert(norm(vector_axis([10,0,10],[0,-10,0]) - [sin(45),0,-sin(45)]) < EPSILON);
 }
 test_vector_axis();
 

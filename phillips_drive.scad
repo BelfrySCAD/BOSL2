@@ -3,8 +3,8 @@
 //   Phillips driver bits
 //   To use, add these lines to the top of your file:
 //   ```
-//   include <BOSL/constants.scad>
-//   use <BOSL/phillips_drive.scad>
+//   include <BOSL2/constants.scad>
+//   use <BOSL2/phillips_drive.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

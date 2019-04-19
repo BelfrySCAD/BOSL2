@@ -3,8 +3,8 @@
 //   Simple V-groove based sliders and rails.
 //   To use, add these lines to the beginning of your file:
 //   ```
-//   include <BOSL/constants.scad>
-//   use <BOSL/sliders.scad>
+//   include <BOSL2/constants.scad>
+//   use <BOSL2/sliders.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

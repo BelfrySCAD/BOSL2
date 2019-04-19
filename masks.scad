@@ -3,8 +3,8 @@
 //   Masking shapes.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   include <BOSL/constants.scad>
-//   use <BOSL/masks.scad>
+//   include <BOSL2/constants.scad>
+//   use <BOSL2/masks.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

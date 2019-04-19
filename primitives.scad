@@ -1,11 +1,11 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: primitives.scad
 //   The basic built-in shapes, reworked to integrate better with
-//   other BOSL library shapes and utilities.
+//   other BOSL2 library shapes and utilities.
 //   To use, add the following lines to the beginning of your file:
 //   ```
-//   include <BOSL/constants.scad>
-//   use <BOSL/primitives.scad>
+//   include <BOSL2/constants.scad>
+//   use <BOSL2/primitives.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

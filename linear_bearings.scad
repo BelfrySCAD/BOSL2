@@ -3,8 +3,8 @@
 //   Linear Bearing clips/holders.
 //   To use, add these lines to the top of your file:
 //   ```
-//   include <BOSL/constants.scad>
-//   use <BOSL/linear_bearings.scad>
+//   include <BOSL2/constants.scad>
+//   use <BOSL2/linear_bearings.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

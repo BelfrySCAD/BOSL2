@@ -101,9 +101,9 @@ class ImageProcessing(object):
         stdlibs = ["constants.scad", "math.scad", "transforms.scad", "shapes.scad", "debug.scad"]
         script = ""
         for lib in stdlibs:
-            script += "include <BOSL/%s>\n" % lib
+            script += "include <BOSL2/%s>\n" % lib
         if libfile not in stdlibs:
-            script += "include <BOSL/%s>\n" % libfile
+            script += "include <BOSL2/%s>\n" % libfile
         for line in self.commoncode:
             script += line+"\n"
         for line in code:

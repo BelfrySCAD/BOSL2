@@ -3,10 +3,10 @@
 PREVIEW_LIBS="constants compat transforms shapes masks paths beziers math metric_screws threading involute_gears sliders joiners linear_bearings nema_steppers wiring triangulation quaternions phillips_drive torx_drive debug"
 
 dir="$(basename $PWD)"
-if [ "$dir" = "BOSL" ]; then
-    cd BOSL.wiki
-elif [ "$dir" != "BOSL.wiki" ]; then
-    echo "Must run this script from the BOSL or BOSL/BOSL.wiki directories."
+if [ "$dir" = "BOSL2" ]; then
+    cd BOSL2.wiki
+elif [ "$dir" != "BOSL2.wiki" ]; then
+    echo "Must run this script from the BOSL2 or BOSL2/BOSL2.wiki directories."
     exit 1
 fi
 

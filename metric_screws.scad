@@ -3,8 +3,8 @@
 //   Screws, Bolts, and Nuts.
 //   To use, include the following lines at the top of your file:
 //   ```
-//   include <BOSL/constants.scad>
-//   use <BOSL/metric_screws.scad>
+//   include <BOSL2/constants.scad>
+//   use <BOSL2/metric_screws.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 
