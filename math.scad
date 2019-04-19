@@ -897,8 +897,8 @@ function vector_axis(v1,v2) =
 		v1 = point3d(v1/norm(v1)),
 		v2 = point3d(v2/norm(v2)),
 		v3 = (norm(v1-v2) > eps && norm(v1+v2) > eps)? v2 :
-			(norm(vabs(v2)-V_UP) > eps)? V_UP :
-			V_RIGHT
+			(norm(vabs(v2)-UP) > eps)? UP :
+			RIGHT
 	) normalize(cross(v1,v3));
 
 

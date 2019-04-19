@@ -66,8 +66,8 @@ function _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, p
 //   bevel = if true, bevel the thread ends.  Default: true
 //   starts = The number of lead starts.  Default = 1
 //   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the rod.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
-//   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=ALIGN_POS`.
+//   align = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=UP`.
 // Examples:
 //   trapezoidal_threaded_rod(d=10, l=100, pitch=2, thread_angle=15, $fn=32);
 //   trapezoidal_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, thread_angle=29, $fn=32);
@@ -77,7 +77,7 @@ function _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, p
 //   trapezoidal_threaded_rod(d=10, l=40, pitch=3, thread_angle=15, left_handed=true, starts=3, $fn=36);
 //   trapezoidal_threaded_rod(d=25, l=100, pitch=10, thread_depth=8/3, thread_angle=50, starts=4, center=false, $fa=2, $fs=2);
 //   trapezoidal_threaded_rod(d=50, l=75, pitch=8, thread_angle=30, starts=3, bevel=true);
-//   trapezoidal_threaded_rod(l=25, d=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1, orient=ORIENT_X, align=ALIGN_POS);
+//   trapezoidal_threaded_rod(l=25, d=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1, orient=ORIENT_X, align=UP);
 module trapezoidal_threaded_rod(
 	d=10,
 	l=100,
@@ -88,7 +88,7 @@ module trapezoidal_threaded_rod(
 	bevel=false,
 	starts=1,
 	orient=ORIENT_Z,
-	align=V_CENTER,
+	align=CENTER,
 	center=undef
 ) {
 	astep = 360 / quantup(segs(d/2), starts);
@@ -253,9 +253,9 @@ module trapezoidal_threaded_rod(
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   bevel = if true, bevel the thread ends.  Default: true
 //   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the nut.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
-//   trapezoidal_threaded_nut(od=16, id=8, h=8, pitch=2, slop=0.2, align=V_UP);
+//   trapezoidal_threaded_nut(od=16, id=8, h=8, pitch=2, slop=0.2, align=UP);
 //   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, slop=0.2, left_handed=true);
 //   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1);
 module trapezoidal_threaded_nut(
@@ -270,7 +270,7 @@ module trapezoidal_threaded_nut(
 	bevel=true,
 	slop=PRINTER_SLOP,
 	orient=ORIENT_Z,
-	align=V_CENTER
+	align=CENTER
 ) {
 	depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
 	orient_and_align([od/cos(30),od,h], orient, align) {
@@ -312,10 +312,10 @@ module trapezoidal_threaded_nut(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the rod.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   threaded_rod(d=10, l=30, pitch=1.25, left_handed=true, $fa=1, $fs=1);
-module threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false, orient=ORIENT_Z, align=V_CENTER) {
+module threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false, orient=ORIENT_Z, align=CENTER) {
 	trapezoidal_threaded_rod(
 		d=d, l=l, pitch=pitch,
 		thread_depth=pitch*3*sqrt(3)/8,
@@ -342,14 +342,14 @@ module threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false, orient
 //   bevel = if true, bevel the thread ends.  Default: false
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the nut.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, slop=0.2, $fa=1, $fs=1);
 module threaded_nut(
 	od=16, id=10, h=10,
 	pitch=2, left_handed=false,
 	bevel=false, slop=0.2,
-	orient=ORIENT_Z, align=V_CENTER
+	orient=ORIENT_Z, align=CENTER
 ) {
 	trapezoidal_threaded_nut(
 		od=od, id=id, h=h,
@@ -376,7 +376,7 @@ module threaded_nut(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 //   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the rod.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   metric_trapezoidal_threaded_rod(d=10, l=30, pitch=2, left_handed=true, $fa=1, $fs=1);
 module metric_trapezoidal_threaded_rod(
@@ -385,7 +385,7 @@ module metric_trapezoidal_threaded_rod(
 	starts=1,
 	bevel=false,
 	orient=ORIENT_Z,
-	align=V_CENTER
+	align=CENTER
 ) {
 	trapezoidal_threaded_rod(
 		d=d, l=l,
@@ -415,7 +415,7 @@ module metric_trapezoidal_threaded_rod(
 //   starts = The number of lead starts.  Default = 1
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the nut.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   metric_trapezoidal_threaded_nut(od=16, id=10, h=10, pitch=2, left_handed=true, bevel=true, $fa=1, $fs=1);
 module metric_trapezoidal_threaded_nut(
@@ -426,7 +426,7 @@ module metric_trapezoidal_threaded_nut(
 	bevel=false,
 	slop=PRINTER_SLOP,
 	orient=ORIENT_Z,
-	align=V_CENTER
+	align=CENTER
 ) {
 	trapezoidal_threaded_nut(
 		od=od, id=id, h=h,
@@ -457,7 +457,7 @@ module metric_trapezoidal_threaded_nut(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the rod.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   acme_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, $fn=32);
 //   acme_threaded_rod(d=10, l=40, pitch=2, starts=3, $fa=1, $fs=1);
@@ -469,7 +469,7 @@ module acme_threaded_rod(
 	left_handed=false,
 	bevel=false,
 	orient=ORIENT_Z,
-	align=V_CENTER
+	align=CENTER
 ) {
 	trapezoidal_threaded_rod(
 		d=d, l=l, pitch=pitch,
@@ -500,7 +500,7 @@ module acme_threaded_rod(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the nut.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   acme_threaded_nut(od=16, id=3/8*25.4, h=8, pitch=1/8*25.4, slop=0.2);
 //   acme_threaded_nut(od=16, id=10, h=10, pitch=2, starts=3, slop=0.2, $fa=1, $fs=1);
@@ -513,7 +513,7 @@ module acme_threaded_nut(
 	bevel=false,
 	slop=PRINTER_SLOP,
 	orient=ORIENT_Z,
-	align=V_CENTER
+	align=CENTER
 ) {
 	trapezoidal_threaded_nut(
 		od=od, id=id, h=h, pitch=pitch,
@@ -543,7 +543,7 @@ module acme_threaded_nut(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 //   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the rod.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   square_threaded_rod(d=10, l=30, pitch=2, starts=2, $fn=32);
 module square_threaded_rod(
@@ -552,7 +552,7 @@ module square_threaded_rod(
 	bevel=false,
 	starts=1,
 	orient=ORIENT_Z,
-	align=V_CENTER
+	align=CENTER
 ) {
 	trapezoidal_threaded_rod(
 		d=d, l=l, pitch=pitch,
@@ -581,7 +581,7 @@ module square_threaded_rod(
 //   starts = The number of lead starts.  Default = 1
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the nut.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   square_threaded_nut(od=16, id=10, h=10, pitch=2, starts=2, slop=0.15, $fn=32);
 module square_threaded_nut(
@@ -592,7 +592,7 @@ module square_threaded_nut(
 	starts=1,
 	slop=PRINTER_SLOP,
 	orient=ORIENT_Z,
-	align=V_CENTER
+	align=CENTER
 ) {
 	trapezoidal_threaded_nut(
 		od=od, id=id, h=h, pitch=pitch,

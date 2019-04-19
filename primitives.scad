@@ -55,17 +55,17 @@ use <math.scad>
 //
 // Arguments:
 //   size = The size of the cube.
-//   align = The side of the origin to align to.  Use `V_` constants from `constants.scad`.  Default: `V_CENTER`
-//   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=V_UP+V_BACK+V_RIGHT`.
+//   align = The side of the origin to align to.  Use constants from `constants.scad`.  Default: `CENTER`
+//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=UP+BACK+RIGHT`.
 //
 // Example: Simple regular cube.
 //   cube(40);
 // Example: Rectangular cube, with given X, Y, and Z sizes.
 //   cuboid([20,40,50]);
-module cube(size, center=undef, align=V_ALLPOS)
+module cube(size, center=undef, align=ALLPOS)
 {
 	size = scalar_vec3(size);
-	orient_and_align(size, ORIENT_Z, align, center, noncentered=V_ALLPOS, chain=true) {
+	orient_and_align(size, ORIENT_Z, align, center, noncentered=ALLPOS, chain=true) {
 		linear_extrude(height=size.z, convexity=2, center=true) {
 			square([size.x, size.y], center=true);
 		}
@@ -90,8 +90,8 @@ module cube(size, center=undef, align=V_ALLPOS)
 //   d1 = The bottom diameter of the cylinder.  (Before orientation.)
 //   d2 = The top diameter of the cylinder.  (Before orientation.)
 //   orient = Orientation of the cylinder.  Use the `ORIENT_` constants from `constants.scad`.  Default: vertical.
-//   align = The side of the origin to align to.  Use `V_` constants from `constants.scad`.  Default: `V_CENTER`
-//   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=V_UP+V_BACK+V_RIGHT`.
+//   align = The side of the origin to align to.  Use constants from `constants.scad`.  Default: `UP`
+//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=UP+BACK+RIGHT`.
 // Example: By Radius
 //   xdistribute(30) {
 //       cylinder(h=40, r=10);
@@ -102,14 +102,14 @@ module cube(size, center=undef, align=V_ALLPOS)
 //       cylinder(h=40, d=25);
 //       cylinder(h=40, d1=25, d2=10);
 //   }
-module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, l=undef, center=undef, orient=ORIENT_Z, align=ALIGN_POS)
+module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, l=undef, center=undef, orient=ORIENT_Z, align=UP)
 {
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
 	l = first_defined([h, l]);
 	sides = segs(max(r1,r2));
 	size = [r1*2, r1*2, l];
-	orient_and_align(size, orient, align, center, size2=[r2*2,r2*2], noncentered=ALIGN_POS, chain=true) {
+	orient_and_align(size, orient, align, center, size2=[r2*2,r2*2], noncentered=UP, chain=true) {
 		linear_extrude(height=l, scale=r2/r1, convexity=2, center=true) {
 			circle(r=r1, $fn=sides);
 		}
@@ -129,10 +129,10 @@ module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=unde
 //   r = Radius of the sphere.
 //   d = Diameter of the sphere.
 //   orient = Orientation of the sphere, if you don't like where the vertices lay.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the sphere.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the sphere.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   staggered_sphere(d=100);
-module sphere(r=undef, d=undef, orient=ORIENT_Z, align=V_CENTER)
+module sphere(r=undef, d=undef, orient=ORIENT_Z, align=CENTER)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);

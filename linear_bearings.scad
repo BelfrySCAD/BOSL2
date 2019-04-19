@@ -106,10 +106,10 @@ function get_lmXuu_bearing_length(size) = lookup(size, [
 //   gap = Gap in clamp. (Default: 5)
 //   screwsize = Size of screw to use to tighten clamp. (Default: 3)
 //   orient = Orientation of the housing.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   align = Alignment of the housing by the axis-negative (size1) end.  Use the `V_` constants from `constants.scad`.  Default: `V_UP`
+//   align = Alignment of the housing by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `UP`
 // Example:
 //   linear_bearing_housing(d=19, l=29, wall=2, tab=6, screwsize=2.5);
-module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, orient=ORIENT_X, align=V_UP)
+module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, orient=ORIENT_X, align=UP)
 {
 	od = d+2*wall;
 	ogap = gap+2*tabwall;
@@ -146,10 +146,10 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 //   gap = Gap in clamp.  Default: 5
 //   screwsize = Size of screw to use to tighten clamp.  Default: 3
 //   orient = Orientation of the housing.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   align = Alignment of the housing by the axis-negative (size1) end.  Use the `V_` constants from `constants.scad`.  Default: `V_UP`
+//   align = Alignment of the housing by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `UP`
 // Example:
 //   lmXuu_housing(size=10, wall=2, tab=6, screwsize=2.5);
-module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, orient=ORIENT_X, align=V_UP)
+module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, orient=ORIENT_X, align=UP)
 {
 	d = get_lmXuu_bearing_diam(size);
 	l = get_lmXuu_bearing_length(size);

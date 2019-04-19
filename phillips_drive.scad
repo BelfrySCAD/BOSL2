@@ -58,7 +58,7 @@ include <compat.scad>
 //      phillips_drive(size="#2", shaft=6, l=20);
 //      phillips_drive(size="#3", shaft=6, l=20);
 //   }
-module phillips_drive(size="#2", shaft=6, l=20, orient=ORIENT_Z, align=V_UP) {
+module phillips_drive(size="#2", shaft=6, l=20, orient=ORIENT_Z, align=UP) {
 	// These are my best guess reverse-engineered measurements of
 	// the tip diameters of various phillips screwdriver sizes.
 	ang = 11;

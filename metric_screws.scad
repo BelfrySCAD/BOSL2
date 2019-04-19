@@ -403,7 +403,7 @@ function get_metric_nut_thickness(size) = lookup(size, [
 //   headlen = length of the screw head.
 //   countersunk = If true, center from cap's top instead of it's bottom.
 //   orient = Orientation of the screw.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the screw.  Use the `V_` constants from `constants.scad` or `"sunken"`, or `"base"`.  Default: `"base"`.
+//   align = Alignment of the screw.  Use the constants from `constants.scad` or `"sunken"`, or `"base"`.  Default: `"base"`.
 // Examples:
 //   screw(screwsize=3,screwlen=10,headsize=6,headlen=3,countersunk=true);
 //   screw(screwsize=3,screwlen=10,headsize=6,headlen=3, align="base");
@@ -418,7 +418,7 @@ module screw(
 	align="base"
 ) {
 	sides = max(12, segs(screwsize/2));
-	algn = countersunk? ALIGN_NEG : align;
+	algn = countersunk? DOWN : align;
 	alignments = [
 		["base",   [0,0,-headlen/2+screwlen/2]],
 		["sunken", [0,0,(headlen+screwlen)/2-0.01]]
@@ -453,7 +453,7 @@ module screw(
 //   phillips = If given, the size of the phillips drive hole to add.  (ie: "#1", "#2", or "#3")
 //   torx = If given, the size of the torx drive hole to add.  (ie: 10, 20, 30, etc.)
 //   orient = Orientation of the bolt.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the bolt.  Use the `V_` constants from `constants.scad` or `"sunken"`, `"base"`, or `"shank"`.  Default: `"base"`.
+//   align = Alignment of the bolt.  Use the constants from `constants.scad` or `"sunken"`, `"base"`, or `"shank"`.  Default: `"base"`.
 // Example: Bolt Head Types
 //   ydistribute(40) {
 //       xdistribute(30) {
@@ -566,7 +566,7 @@ module metric_bolt(
 							}
 						}
 					} else if (headtype == "pan") {
-						cyl(l=H*0.75, d=D, fillet2=H*0.75/2, align=V_UP);
+						cyl(l=H*0.75, d=D, fillet2=H*0.75/2, align=UP);
 					} else if (headtype == "round") {
 						top_half() zscale(H*0.75/D*2) sphere(d=D);
 					} else if (headtype == "button") {
@@ -643,7 +643,7 @@ module metric_bolt(
 //   flange = radius of flange beyond the head.  Default = 0 (no flange)
 //   details = true if model should be rendered with extra details.  (Default: false)
 //   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the nut.  Use the `V_` constants from `constants.scad`.  Default: `V_UP`.
+//   align = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `UP`.
 //   center = If true, centers the nut at the origin.  If false, sits on top of XY plane.  Overrides `align` if given.
 // Example: No details, No Hole.  Useful for a mask.
 //   metric_nut(size=10, hole=false);
@@ -665,7 +665,7 @@ module metric_nut(
 	flange=0,
 	center=undef,
 	orient=ORIENT_Z,
-	align=V_UP
+	align=UP
 ) {
 	H = get_metric_nut_thickness(size);
 	D = get_metric_nut_size(size);

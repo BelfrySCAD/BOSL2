@@ -59,10 +59,10 @@ include <constants.scad>
 //   ang = Overhang angle for slider, to facilitate supportless printig.
 //   slop = Printer-specific slop value to make parts fit exactly.
 //   orient = Orientation of the slider.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the slider.  Use the `V_` constants from `constants.scad`.  Default: `V_UP`.
+//   align = Alignment of the slider.  Use the constants from `constants.scad`.  Default: `UP`.
 // Example:
 //   slider(l=30, base=10, wall=4, slop=0.2, orient=ORIENT_Y);
-module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orient=ORIENT_Y, align=V_UP)
+module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orient=ORIENT_Y, align=UP)
 {
 	full_width = w + 2*wall;
 	full_height = h + base;
@@ -70,18 +70,18 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orie
 	orient_and_align([full_width, l, h+2*base], orient, align, orig_orient=ORIENT_Y) {
 		down(base+h/2) {
 			// Base
-			cuboid([full_width, l, base-slop], chamfer=2, edges=EDGE_TOP_FR+EDGE_TOP_BK+EDGES_Z_ALL, align=V_UP);
+			cuboid([full_width, l, base-slop], chamfer=2, edges=EDGE_TOP_FR+EDGE_TOP_BK+EDGES_Z_ALL, align=UP);
 
 			// Wall
 			xflip_copy(offset=w/2+slop) {
-				cuboid([wall, l, full_height], chamfer=2, edges=EDGE_TOP_RT+EDGE_FR_RT+EDGE_BK_RT, align=V_UP+V_RIGHT);
+				cuboid([wall, l, full_height], chamfer=2, edges=EDGE_TOP_RT+EDGE_FR_RT+EDGE_BK_RT, align=UP+RIGHT);
 			}
 
 			// Sliders
 			up(base+h/2) {
 				xflip_copy(offset=w/2+slop+0.02) {
 					bev_h = h/2*tan(ang);
-					prismoid([l, h], [l-w, 0], h=bev_h+0.01, orient=ORIENT_XNEG, align=V_LEFT);
+					prismoid([l, h], [l-w, 0], h=bev_h+0.01, orient=ORIENT_XNEG, align=LEFT);
 				}
 			}
 		}
@@ -102,10 +102,10 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orie
 //   chamfer = Size of chamfer at end of rail.
 //   ang = Overhang angle for slider, to facilitate supportless printig.
 //   orient = Orientation of the rail.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the rail.  Use the `V_` constants from `constants.scad`.  Default: `V_UP`.
+//   align = Alignment of the rail.  Use the constants from `constants.scad`.  Default: `UP`.
 // Example:
 //   rail(l=100, w=10, h=10);
-module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, orient=ORIENT_Y, align=V_UP)
+module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, orient=ORIENT_Y, align=UP)
 {
 	attack_ang = 30;
 	attack_len = 2;

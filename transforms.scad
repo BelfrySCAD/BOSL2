@@ -254,7 +254,7 @@ module up(z=0) translate([0,0,z]) children();
 //
 // Arguments:
 //   a = Scalar angle or vector of XYZ rotation angles to rotate by, in degrees.
-//   v = vector for the axis of rotation.  Default: [0,0,1] or V_UP
+//   v = vector for the axis of rotation.  Default: [0,0,1] or UP
 //   cp = centerpoint to rotate around. Default: [0,0,0]
 //   from = Starting vector for vector-based rotations.
 //   to = Target vector for vector-based rotations.
@@ -270,7 +270,7 @@ module up(z=0) translate([0,0,z]) children();
 //
 // Example:
 //   #cube([2,4,9]);
-//   rot(from=V_UP, to=V_LEFT+V_BACK) cube([2,4,9]);
+//   rot(from=UP, to=LEFT+BACK) cube([2,4,9]);
 module rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false)
 {
 	if (is_def(cp)) {
@@ -700,7 +700,7 @@ module spread(p1=undef, p2=undef, spacing=undef, l=undef, n=undef)
 //   }
 module xspread(spacing=undef, n=undef, l=undef, sp=undef)
 {
-	spread(l=l*V_RIGHT, spacing=spacing*V_RIGHT, n=n, p1=sp) children();
+	spread(l=l*RIGHT, spacing=spacing*RIGHT, n=n, p1=sp) children();
 }
 
 
@@ -735,7 +735,7 @@ module xspread(spacing=undef, n=undef, l=undef, sp=undef)
 //   }
 module yspread(spacing=undef, n=undef, l=undef, sp=undef)
 {
-	spread(l=l*V_BACK, spacing=spacing*V_BACK, n=n, p1=sp) children();
+	spread(l=l*BACK, spacing=spacing*BACK, n=n, p1=sp) children();
 }
 
 
@@ -770,7 +770,7 @@ module yspread(spacing=undef, n=undef, l=undef, sp=undef)
 //   }
 module zspread(spacing=undef, n=undef, l=undef, sp=undef)
 {
-	spread(l=l*V_UP, spacing=spacing*V_UP, n=n, p1=sp) children();
+	spread(l=l*UP, spacing=spacing*UP, n=n, p1=sp) children();
 }
 
 
@@ -798,12 +798,12 @@ module zspread(spacing=undef, n=undef, l=undef, sp=undef)
 //   `$idx` is set to the index number of each child being copied.
 //
 // Example:
-//   distribute(sizes=[100, 30, 50], dir=V_UP) {
+//   distribute(sizes=[100, 30, 50], dir=UP) {
 //       sphere(r=50);
 //       cube([10,20,30], center=true);
 //       cylinder(d=30, h=50, center=true);
 //   }
-module distribute(spacing=undef, sizes=undef, dir=V_RIGHT, l=undef)
+module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
 {
 	gaps = ($children < 2)? [0] :
 		is_def(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
@@ -849,7 +849,7 @@ module distribute(spacing=undef, sizes=undef, dir=V_RIGHT, l=undef)
 //   }
 module xdistribute(spacing=10, sizes=undef, l=undef)
 {
-	dir = V_RIGHT;
+	dir = RIGHT;
 	gaps = ($children < 2)? [0] :
 		is_def(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
 		[for (i=[0:$children-2]) 0];
@@ -894,7 +894,7 @@ module xdistribute(spacing=10, sizes=undef, l=undef)
 //   }
 module ydistribute(spacing=10, sizes=undef, l=undef)
 {
-	dir = V_BACK;
+	dir = BACK;
 	gaps = ($children < 2)? [0] :
 		is_def(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
 		[for (i=[0:$children-2]) 0];
@@ -939,7 +939,7 @@ module ydistribute(spacing=10, sizes=undef, l=undef)
 //   }
 module zdistribute(spacing=10, sizes=undef, l=undef)
 {
-	dir = V_UP;
+	dir = UP;
 	gaps = ($children < 2)? [0] :
 		is_def(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
 		[for (i=[0:$children-2]) 0];
@@ -1003,12 +1003,12 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   grid2d(spacing=10, stagger=true, in_poly=hexregion) {
 //       // Note: You must use for(var=[val]) or let(var=val)
 //       // to set vars from $pos or other special vars in this scope.
-//       let (ref_v = (normalize([0,0,50]-point3d($pos)) + V_UP)/2)
+//       let (ref_v = (normalize([0,0,50]-point3d($pos)) + UP)/2)
 //           half_of(v=-ref_v, cp=[0,0,5])
 //               zrot(180/6)
 //                   cylinder(h=20, d=10/cos(180/6)+0.01, $fn=6);
 //   }
-module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, scale=[1,1,1], in_poly=undef, orient=ORIENT_Z, align=V_CENTER)
+module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, scale=[1,1,1], in_poly=undef, orient=ORIENT_Z, align=CENTER)
 {
 	assert_in_list("stagger", stagger, [false, true, "alt"]);
 	scl = vmul(scalar_vec3(scale, 1), (stagger!=false? [0.5, sin(60), 0] : [1,1,0]));
@@ -1161,27 +1161,27 @@ module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
 //   rot_copies([[45,0,0],[0,45,90],[90,-45,270]]) cylinder(h=20, r1=5, r2=0);
 //
 // Example:
-//   rot_copies([45, 90, 135], v=V_DOWN+V_BACK)
+//   rot_copies([45, 90, 135], v=DOWN+BACK)
 //       yrot(90) cylinder(h=20, r1=5, r2=0);
 //   color("red",0.333) yrot(90) cylinder(h=20, r1=5, r2=0);
 //
 // Example:
-//   rot_copies(n=6, v=V_DOWN+V_BACK)
+//   rot_copies(n=6, v=DOWN+BACK)
 //       yrot(90) cylinder(h=20, r1=5, r2=0);
 //   color("red",0.333) yrot(90) cylinder(h=20, r1=5, r2=0);
 //
 // Example:
-//   rot_copies(n=6, v=V_DOWN+V_BACK, delta=[10,0,0])
+//   rot_copies(n=6, v=DOWN+BACK, delta=[10,0,0])
 //       yrot(90) cylinder(h=20, r1=5, r2=0);
 //   color("red",0.333) yrot(90) cylinder(h=20, r1=5, r2=0);
 //
 // Example:
-//   rot_copies(n=6, v=V_UP+V_FWD, delta=[10,0,0], sa=45)
+//   rot_copies(n=6, v=UP+FWD, delta=[10,0,0], sa=45)
 //       yrot(90) cylinder(h=20, r1=5, r2=0);
 //   color("red",0.333) yrot(90) cylinder(h=20, r1=5, r2=0);
 //
 // Example:
-//   rot_copies(n=6, v=V_DOWN+V_BACK, delta=[20,0,0], subrot=false)
+//   rot_copies(n=6, v=DOWN+BACK, delta=[20,0,0], subrot=false)
 //       yrot(90) cylinder(h=20, r1=5, r2=0);
 //   color("red",0.333) yrot(90) cylinder(h=20, r1=5, r2=0);
 module rot_copies(rots=[], v=undef, cp=[0,0,0], count=undef, n=undef, sa=0, offset=0, delta=[0,0,0], subrot=true)
@@ -1254,7 +1254,7 @@ module xrot_copies(rots=[], cp=[0,0,0], n=undef, count=undef, sa=0, offset=0, r=
 {
 	cnt = first_defined([count, n]);
 	sang = sa + offset;
-	rot_copies(rots=rots, v=V_RIGHT, cp=cp, n=cnt, sa=sang, delta=[0, r, 0], subrot=subrot) children();
+	rot_copies(rots=rots, v=RIGHT, cp=cp, n=cnt, sa=sang, delta=[0, r, 0], subrot=subrot) children();
 }
 
 
@@ -1307,7 +1307,7 @@ module yrot_copies(rots=[], cp=[0,0,0], n=undef, count=undef, sa=0, offset=0, r=
 {
 	cnt = first_defined([count, n]);
 	sang = sa + offset;
-	rot_copies(rots=rots, v=V_BACK, cp=cp, n=cnt, sa=sang, delta=[-r, 0, 0], subrot=subrot) children();
+	rot_copies(rots=rots, v=BACK, cp=cp, n=cnt, sa=sang, delta=[-r, 0, 0], subrot=subrot) children();
 }
 
 
@@ -1360,7 +1360,7 @@ module zrot_copies(rots=[], cp=[0,0,0], n=undef, count=undef, sa=0, offset=0, r=
 {
 	cnt = first_defined([count, n]);
 	sang = sa + offset;
-	rot_copies(rots=rots, v=V_UP, cp=cp, n=cnt, sa=sang, delta=[r, 0, 0], subrot=subrot) children();
+	rot_copies(rots=rots, v=UP, cp=cp, n=cnt, sa=sang, delta=[r, 0, 0], subrot=subrot) children();
 }
 
 
@@ -1572,7 +1572,7 @@ module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=tr
 		$rad = r;
 		translate($pos) {
 			if (perp) {
-				rot(from=V_UP, to=xyz) children();
+				rot(from=UP, to=xyz) children();
 			} else {
 				children();
 			}
@@ -1613,8 +1613,8 @@ module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=tr
 //   color("blue",0.25) zrot(45) cube([0.01,15,15], center=true);
 //
 // Example:
-//   mirror_copy(V_UP+V_BACK, cp=[0,-5,-5]) rot(from=V_UP, to=V_BACK+V_UP) cylinder(d1=10, d2=0, h=20);
-//   color("blue",0.25) translate([0,-5,-5]) rot(from=V_UP, to=V_BACK+V_UP) cube([15,15,0.01], center=true);
+//   mirror_copy(UP+BACK, cp=[0,-5,-5]) rot(from=UP, to=BACK+UP) cylinder(d1=10, d2=0, h=20);
+//   color("blue",0.25) translate([0,-5,-5]) rot(from=UP, to=BACK+UP) cube([15,15,0.01], center=true);
 module mirror_copy(v=[0,0,1], offset=0, cp=[0,0,0])
 {
 	nv = v/norm(v);
@@ -1750,23 +1750,23 @@ module zflip_copy(offset=0, cp=[0,0,0])
 //   Slices an object at a cut plane, and masks away everything that is on one side.
 //
 // Arguments:
-//   v = Normal of plane to slice at.  Keeps everything on the side the normal points to.  Default: [0,0,1] (V_UP)
+//   v = Normal of plane to slice at.  Keeps everything on the side the normal points to.  Default: [0,0,1] (UP)
 //   cp = If given as a scalar, moves the cut plane along the normal by the given amount.  If given as a point, specifies a point on the cut plane.  This can be used to shift where it slices the object at.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
-//   planar = If true, this becomes a 2D operation.  When planar, a `v` of `V_UP` or `V_DOWN` becomes equivalent of `V_BACK` and `V_FWD` respectively.
+//   planar = If true, this becomes a 2D operation.  When planar, a `v` of `UP` or `DOWN` becomes equivalent of `BACK` and `FWD` respectively.
 //
 // Examples:
-//   half_of(V_DOWN+V_BACK, cp=[0,-10,0]) cylinder(h=40, r1=10, r2=0, center=false);
-//   half_of(V_DOWN+V_LEFT, s=200) sphere(d=150);
+//   half_of(DOWN+BACK, cp=[0,-10,0]) cylinder(h=40, r1=10, r2=0, center=false);
+//   half_of(DOWN+LEFT, s=200) sphere(d=150);
 // Example(2D):
 //   half_of([1,1], planar=true) circle(d=50);
-module half_of(v=V_UP, cp=[0,0,0], s=100, planar=false)
+module half_of(v=UP, cp=[0,0,0], s=100, planar=false)
 {
 	cp = is_scalar(cp)? cp*normalize(v) : cp;
 	if (cp != [0,0,0]) {
 		translate(cp) half_of(v=v, s=s, planar=planar) translate(-cp) children();
 	} else if (planar) {
-		v = (v==V_UP)? V_BACK : (v==V_DOWN)? V_FWD : v;
+		v = (v==UP)? BACK : (v==DOWN)? FWD : v;
 		ang = atan2(v.y, v.x);
 		difference() {
 			children();
@@ -1777,7 +1777,7 @@ module half_of(v=V_UP, cp=[0,0,0], s=100, planar=false)
 	} else {
 		difference() {
 			children();
-			rot(from=V_UP, to=-v) {
+			rot(from=UP, to=-v) {
 				up(s/2) cube(s, center=true);
 			}
 		}
@@ -1806,7 +1806,7 @@ module half_of(v=V_UP, cp=[0,0,0], s=100, planar=false)
 //   top_half(planar=true) circle(r=20);
 module top_half(s=100, cp=[0,0,0], planar=false)
 {
-	dir = planar? V_BACK : V_UP;
+	dir = planar? BACK : UP;
 	cp = is_scalar(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
@@ -1843,7 +1843,7 @@ module top_half(s=100, cp=[0,0,0], planar=false)
 //   bottom_half(planar=true) circle(r=20);
 module bottom_half(s=100, cp=[0,0,0], planar=false)
 {
-	dir = planar? V_FWD : V_DOWN;
+	dir = planar? FWD : DOWN;
 	cp = is_scalar(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
@@ -1880,7 +1880,7 @@ module bottom_half(s=100, cp=[0,0,0], planar=false)
 //   left_half(planar=true) circle(r=20);
 module left_half(s=100, cp=[0,0,0], planar=false)
 {
-	dir = V_LEFT;
+	dir = LEFT;
 	cp = is_scalar(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
@@ -1917,7 +1917,7 @@ module left_half(s=100, cp=[0,0,0], planar=false)
 //   right_half(planar=true) circle(r=20);
 module right_half(s=100, cp=[0,0,0], planar=false)
 {
-	dir = V_RIGHT;
+	dir = RIGHT;
 	cp = is_scalar(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
@@ -1954,7 +1954,7 @@ module right_half(s=100, cp=[0,0,0], planar=false)
 //   front_half(planar=true) circle(r=20);
 module front_half(s=100, cp=[0,0,0], planar=false)
 {
-	dir = V_FWD;
+	dir = FWD;
 	cp = is_scalar(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
@@ -1991,7 +1991,7 @@ module front_half(s=100, cp=[0,0,0], planar=false)
 //   back_half(planar=true) circle(r=20);
 module back_half(s=100, cp=[0,0,0], planar=false)
 {
-	dir = V_BACK;
+	dir = BACK;
 	cp = is_scalar(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
@@ -2058,7 +2058,7 @@ module chain_hull()
 //   r = Radius of arc.
 //   d = Diameter of arc.
 //   orient = The axis to align to.  Use `ORIENT_` constants from `constants.scad`
-//   align = The side of the origin the part should be aligned with.  Use `V_` constants from `constants.scad`
+//   align = The side of the origin the part should be aligned with.  Use `` constants from `constants.scad`
 //   masksize = size of mask used to clear unused part of circle arc.  should be larger than height or width of 2D shapes to extrude.
 //   caps = If true, spin the 2D shapes to make rounded caps the ends of the arc.
 //   convexity = Max number of times a ray passes through the 2D shape's walls.
@@ -2069,7 +2069,7 @@ module chain_hull()
 //   extrude_arc(arc=270, sa=45, r=40, caps=true, convexity=4, $fa=2, $fs=2) {
 //       polygon(points=pts);
 //   }
-module extrude_arc(arc=90, sa=0, r=undef, d=undef, orient=ORIENT_Z, align=V_CENTER, masksize=100, caps=false, convexity=4)
+module extrude_arc(arc=90, sa=0, r=undef, d=undef, orient=ORIENT_Z, align=CENTER, masksize=100, caps=false, convexity=4)
 {
 	eps = 0.001;
 	r = get_radius(r=r, d=d, dflt=100);
@@ -2192,7 +2192,7 @@ module shell2d(thickness, or=0, ir=0, fill=0, round=0)
 //   orientations and alignments without extra translate()s and rotate()s.
 //   Children should be vertically (Z-axis) oriented, and centered.
 //   Non-extremity alignment points should be named via the `alignments` arg.
-//   Named alignments, as well as `ALIGN_NEG`/`ALIGN_POS` are aligned pre-rotation.
+//   Named alignments are aligned pre-rotation.
 //
 // Usage:
 //   orient_and_align(size, [orient], [align], [center], [noncentered], [orig_orient], [orig_align], [alignments], [chain]) ...
@@ -2204,9 +2204,9 @@ module shell2d(thickness, or=0, ir=0, fill=0, round=0)
 //   orient = The axis to align to.  Use `ORIENT_` constants from `constants.scad`.
 //   align = The side of the origin the part should be aligned with.
 //   center = If given, overrides `align`.  If true, centers vertically.  If false, `align` will be set to the value in `noncentered`.
-//   noncentered = The value to set `align` to if `center` == `false`.  Default: `V_UP`.
+//   noncentered = The value to set `align` to if `center` == `false`.  Default: `UP`.
 //   orig_orient = The original orientation of the part.  Default: `ORIENT_Z`.
-//   orig_align = The original alignment of the part.  Default: `V_CENTER`.
+//   orig_align = The original alignment of the part.  Default: `CENTER`.
 //   alignments = A list of extra, non-standard connectors that can be aligned to.
 //   chain = If true, allow attachable children.
 //
@@ -2220,19 +2220,19 @@ module shell2d(thickness, or=0, ir=0, fill=0, round=0)
 //
 // Example:
 //   #cylinder(d=5, h=10);
-//   orient_and_align([5,5,10], orient=ORIENT_Y, align=V_BACK, orig_align=V_UP) cylinder(d=5, h=10);
+//   orient_and_align([5,5,10], orient=ORIENT_Y, align=BACK, orig_align=UP) cylinder(d=5, h=10);
 module orient_and_align(
-	size=undef, orient=ORIENT_Z, align=V_CENTER,
-	center=undef, noncentered=ALIGN_POS,
-	orig_orient=ORIENT_Z, orig_align=V_CENTER,
+	size=undef, orient=ORIENT_Z, align=CENTER,
+	center=undef, noncentered=TOP,
+	orig_orient=ORIENT_Z, orig_align=CENTER,
 	size2=undef, shift=[0,0],
 	alignments=[], chain=false
 ) {
 	size2 = point2d(default(size2, size));
 	shift = point2d(shift);
-	align = is_def(center)? (center? V_CENTER : noncentered) : align;
+	align = is_def(center)? (center? CENTER : noncentered) : align;
 	m = matrix4_mult(concat(
-		(orig_align==V_CENTER)? [] : [
+		(orig_align==CENTER)? [] : [
 			// If original alignment is not centered, center it.
 			matrix4_translate(vmul(size/2, -orig_align))
 		],
@@ -2245,9 +2245,9 @@ module orient_and_align(
 		($attach_to!=undef)? (
 			let(
 				conn = find_connector($attach_to, size.z, size, size2=size2, shift=shift),
-				ang = vector_angle(conn[2],V_DOWN),
-				axis = vector_axis(conn[2],V_DOWN),
-				ang2 = (conn[2]==V_UP || conn[2]==V_DOWN)? 0 : 180-conn[3],
+				ang = vector_angle(conn[2], DOWN),
+				axis = vector_axis(conn[2], DOWN),
+				ang2 = (conn[2]==UP || conn[2]==DOWN)? 0 : 180-conn[3],
 				axis2 = rotate_points3d([axis],[0,0,ang2])[0]
 			) [
 				matrix4_translate(-conn[1]),
@@ -2255,7 +2255,7 @@ module orient_and_align(
 				matrix4_rot_by_axis(axis2, ang)
 			]
 		) : concat(
-			(!is_scalar(align) && !is_str(align))? [] : [
+			(align==CENTER)? [] : [
 				let(conn = find_connector(align, size.z, size, size2=size2, shift=shift, extra_conns=alignments))
 				matrix4_translate(-conn[1])
 			],
@@ -2263,10 +2263,6 @@ module orient_and_align(
 				matrix4_xrot(orient.x),
 				matrix4_yrot(orient.y),
 				matrix4_zrot(orient.z)
-			],
-			(!is_array(align) || align==[0,0,0])? [] : [
-				let(conn = find_connector(align, size.z, size, size2=size2, shift=shift))
-				matrix4_translate(conn[1])
 			]
 		)
 	));
@@ -2295,15 +2291,6 @@ module orient_and_align(
 
 
 
-// Internal.  Not exposed.
-function _str_char_split(s,delim,n=0,acc=[],word="") =
-	(n>=len(s))? concat(acc, [word]) :
-	(s[n]==delim)?
-		_str_char_split(s,delim,n+1,concat(acc,[word]),"") :
-		_str_char_split(s,delim,n+1,acc,str(word,s[n]));
-
-
-
 // Function: connector()
 // Usage:
 //   connector(name, pos, dir, [rot])
@@ -2314,7 +2301,7 @@ function _str_char_split(s,delim,n=0,acc=[],word="") =
 //   pos = The [X,Y,Z] position of the connector.
 //   dir = A vector pointing in the direction parts should project from the connector position.
 //   rot = If needed, the angle to rotate the part around the direction vector.
-function connector(name, pos=[0,0,0], dir=V_UP, rot=0) = [name, pos, dir, rot];
+function connector(name, pos=[0,0,0], dir=UP, rot=0) = [name, pos, dir, rot];
 
 
 
@@ -2332,49 +2319,25 @@ function connector(name, pos=[0,0,0], dir=V_UP, rot=0) = [name, pos, dir, rot];
 //   extra_conns = A list of extra named connectors.
 function find_connector(align, h, size, size2=undef, shift=[0,0], extra_conns=[]) =
 	let(
-		eps = 1e-9,
 		shift = point3d(shift),
 		size = point3d(point2d(size)),
 		size2 = (size2!=undef)? point3d(point2d(size2)) : size,
 		found = !is_str(align)? [] : search([align], extra_conns, num_returns_per_match=1)[0]
 	) (found!=[])? extra_conns[found] : let(
-		words = is_scalar(align)? (
-			align==ALIGN_NEG? ["top"] :
-			align==ALIGN_POS? ["bottom"] :
-			["center"]
-		) : is_array(align)? align : _str_char_split(align,"-"),
-		ovec = is_array(align)? align :
-			sum([
-				for (word = words) 
-					word=="left"? V_LEFT :
-					word=="right"? V_RIGHT :
-					word=="front"? V_FWD :
-					word=="back"? V_BACK :
-					word=="top"? V_UP :
-					word=="bottom"? V_DOWN :
-					word=="center"? V_ZERO :
-					assertion(false,
-						str(
-							"Alignment label '", align, "' is not known.",
-							(!extra_conns? "" : str(
-								"  Try one of ", [for (v=extra_conns) v[0]], " or the standard alignments."
-							))
-						)
-					)
-			]),
 		top = [-size2/2+shift, shift, size2/2+shift],
-		bot = [-size/2, V_ZERO, size/2],
-		toppt = [top[ovec.x+1].x, top[ovec.y+1].y,  h/2],
-		botpt = [bot[ovec.x+1].x, bot[ovec.y+1].y, -h/2],
-		pos = lerp(botpt, toppt, (ovec.z+1)/2),
+		bot = [-size/2, CENTER, size/2],
+		toppt = [top[align.x+1].x, top[align.y+1].y,  h/2],
+		botpt = [bot[align.x+1].x, bot[align.y+1].y, -h/2],
+		pos = lerp(botpt, toppt, (align.z+1)/2),
 		oang = (
-			ovec == V_UP? 0 :
-			ovec == V_DOWN? 0 :
-			(norm([ovec.x,ovec.y]) < eps)? 0 : atan2(ovec.y, ovec.x)+90
+			align == UP? 0 :
+			align == DOWN? 0 :
+			(norm([align.x,align.y]) < EPSILON)? 0 :
+			atan2(align.y, align.x)+90
 		),
 		vec = (
-			abs(ovec.z) > eps? ovec :
-			rotate_points3d([ovec], from=V_UP, to=toppt-botpt)[0]
+			abs(align.z) > EPSILON? align :
+			rotate_points3d([align], from=UP, to=toppt-botpt)[0]
 		)
 	) [align, pos, vec, oang];
 
@@ -2393,9 +2356,9 @@ function find_connector(align, h, size, size2=undef, shift=[0,0], extra_conns=[]
 //   norot = If true, don't rotate children when aligning to the attachment point.
 // Example:
 //   spheroid(d=20) {
-//       attach("top")   down(1.5) cyl(l=11.5, d1=10, d2=5, align="bottom");
-//       attach("right", "bottom") down(1.5) cyl(l=11.5, d1=10, d2=5);
-//       attach("front") down(1.5) cyl(l=11.5, d1=10, d2=5, align="bottom");
+//       attach(TOP)   down(1.5) cyl(l=11.5, d1=10, d2=5, align=BOTTOM);
+//       attach(RIGHT, BOTTOM) down(1.5) cyl(l=11.5, d1=10, d2=5);
+//       attach(FRONT) down(1.5) cyl(l=11.5, d1=10, d2=5, align=BOTTOM);
 //   }
 module attach(name, to=undef, overlap=undef, norot=false)
 {
@@ -2407,10 +2370,10 @@ module attach(name, to=undef, overlap=undef, norot=false)
 	ang = conn[3];
 	$attach_to = to;
 	$attach_conn = conn;
-	if (norot || (norm(vec-V_UP)<1e-9 && ang==0)) {
+	if (norot || (norm(vec-UP)<1e-9 && ang==0)) {
 		translate(pos) translate([0,0,-overlap]) children();
 	} else {
-		translate(pos) rot(ang,from=V_UP,to=vec) translate([0,0,-overlap]) children();
+		translate(pos) rot(ang,from=UP,to=vec) translate([0,0,-overlap]) children();
 	}
 }
 

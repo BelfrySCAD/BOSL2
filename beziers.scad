@@ -446,7 +446,7 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 //   slices = Number of vertical slices to use for twisted extrusion.  default=20
 //   center = If true, the extruded solid is centered vertically at z=0.
 //   orient = Orientation of the extrusion.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the extrusion.  Use the `V_` constants from `constants.scad`.  Default: `ALIGN_POS`.
+//   align = Alignment of the extrusion.  Use the constants from `constants.scad`.  Default: `UP`.
 // Example:
 //   bez = [
 //       [-10,   0],  [-15,  -5],
@@ -456,7 +456,7 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 //       [ 25, -15],  [-10,   0]
 //   ];
 //   linear_extrude_bezier(bez, height=20, splinesteps=32);
-module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=undef, convexity=undef, twist=undef, slices=undef, scale=undef, orient=ORIENT_Z, align=ALIGN_POS) {
+module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=undef, convexity=undef, twist=undef, slices=undef, scale=undef, orient=ORIENT_Z, align=UP) {
 	maxx = max([for (pt = bezier) abs(pt[0])]);
 	maxy = max([for (pt = bezier) abs(pt[1])]);
 	orient_and_align([maxx*2,maxy*2,height], orient, align) {
@@ -479,7 +479,7 @@ module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=und
 //   convexity = max number of walls a line could pass through, for preview.  default=10
 //   angle = Degrees of sweep to make.  Default: 360
 //   orient = Orientation of the extrusion.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   align = Alignment of the extrusion.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the extrusion.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example(FlatSpin):
 //   path = [
 //     [  0, 10], [ 50,  0], [ 50, 40],
@@ -489,7 +489,7 @@ module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=und
 //     [  0, 10]
 //   ];
 //   revolve_bezier(path, splinesteps=32, $fn=180);
-module revolve_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, orient=ORIENT_X, align=V_CENTER)
+module revolve_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, orient=ORIENT_X, align=CENTER)
 {
 	maxx = max([for (pt = bezier) abs(pt[0])]);
 	maxy = max([for (pt = bezier) abs(pt[1])]);
@@ -515,7 +515,7 @@ module revolve_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, orie
 //   convexity = max number of walls a line could pass through, for preview.  default=10
 //   angle = Degrees of sweep to make.  Default: 360
 //   orient = Orientation of the extrusion.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the extrusion.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the extrusion.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example(Spin):
 //   path = [
 //     [  0, 10], [ 50,  0], [ 50, 40],
@@ -525,7 +525,7 @@ module revolve_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, orie
 //     [  0, 10]
 //   ];
 //   rotate_extrude_bezier(path, splinesteps=32, $fn=180);
-module rotate_extrude_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, orient=ORIENT_Z, align=V_CENTER)
+module rotate_extrude_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, orient=ORIENT_Z, align=CENTER)
 {
 	maxx = max([for (pt = bezier) abs(pt[0])]);
 	maxy = max([for (pt = bezier) abs(pt[1])]);
@@ -550,11 +550,11 @@ module rotate_extrude_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=36
 //   convexity = max number of walls a line could pass through, for preview.  default=10
 //   angle = Degrees of sweep to make.  Default: 360
 //   orient = Orientation of the extrusion.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   align = Alignment of the extrusion.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the extrusion.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example(FlatSpin):
 //   path = [ [0, 10], [33, 10], [66, 40], [100, 40] ];
 //   revolve_bezier_solid_to_axis(path, splinesteps=32, $fn=72);
-module revolve_bezier_solid_to_axis(bezier, splinesteps=16, N=3, convexity=10, angle=360, orient=ORIENT_X, align=V_CENTER) {
+module revolve_bezier_solid_to_axis(bezier, splinesteps=16, N=3, convexity=10, angle=360, orient=ORIENT_X, align=CENTER) {
 	revolve_bezier(bezier=bezier_close_to_axis(bezier), splinesteps=splinesteps, N=N, convexity=convexity, angle=angle, orient=orient, align=align);
 }
 
@@ -572,11 +572,11 @@ module revolve_bezier_solid_to_axis(bezier, splinesteps=16, N=3, convexity=10, a
 //   convexity = max number of walls a line could pass through, for preview.  default=10
 //   angle = degrees of sweep to make.  Default: 360
 //   orient = Orientation of the extrusion.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   align = Alignment of the extrusion.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the extrusion.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example(FlatSpin):
 //   path = [ [0, 10], [33, 10], [66, 40], [100, 40] ];
 //   revolve_bezier_offset_shell(path, offset=1, splinesteps=32, $fn=72);
-module revolve_bezier_offset_shell(bezier, offset=1, splinesteps=16, N=3, convexity=10, angle=360, orient=ORIENT_X, align=V_CENTER) {
+module revolve_bezier_offset_shell(bezier, offset=1, splinesteps=16, N=3, convexity=10, angle=360, orient=ORIENT_X, align=CENTER) {
 	revolve_bezier(bezier=bezier_offset(offset, bezier), splinesteps=splinesteps, N=N, orient=orient, align=align);
 }
 

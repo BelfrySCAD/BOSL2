@@ -289,7 +289,7 @@ module gear2d(
 //   scale = Scale of top of gear compared to bottom.  Useful for making crown gears.
 //   interior = If true, create a mask for difference()ing from something else.
 //   orient = Orientation of the gear.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the gear.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the gear.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example: Spur Gear
 //   gear(mm_per_tooth=5, number_of_teeth=20, thickness=8, hole_diameter=5);
 // Example: Beveled Gear
@@ -308,7 +308,7 @@ module gear(
 	slices          = undef, //Number of slices to divide gear into.  Useful for refining gears with `twist`.
 	interior        = false,
 	orient          = ORIENT_Z,
-	align           = V_CENTER
+	align           = CENTER
 ) {
 	p = pitch_radius(mm_per_tooth, number_of_teeth);
 	c = outer_radius(mm_per_tooth, number_of_teeth, clearance, interior);
@@ -358,7 +358,7 @@ module gear(
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   orient = Orientation of the rack.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   align = Alignment of the rack.  Use the `V_` constants from `constants.scad`.  Default: `V_RIGHT`.
+//   align = Alignment of the rack.  Use the constants from `constants.scad`.  Default: `RIGHT`.
 // Example:
 //   rack(mm_per_tooth=5, number_of_teeth=10, thickness=5, height=5, pressure_angle=20);
 module rack(
@@ -370,7 +370,7 @@ module rack(
 	backlash        = 0.0,  //gap between two meshing teeth, in the direction along the circumference of the pitch circle
 	clearance       = undef,
 	orient          = ORIENT_X,
-	align           = V_RIGHT
+	align           = RIGHT
 ) {
 	a = adendum(mm_per_tooth);
 	d = dedendum(mm_per_tooth, clearance);

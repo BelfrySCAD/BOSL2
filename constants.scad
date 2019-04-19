@@ -45,115 +45,76 @@ PRINTER_SLOP = 0.20;  // The printer specific amount of slop in mm to print with
 // Section: Directional Vectors
 //   Vectors useful for `rotate()`, `mirror()`, and `align` arguments for `cuboid()`, `cyl()`, etc.
 
-// Constant: V_LEFT
+// Constant: LEFT
 // Description: Vector pointing left.  [-1,0,0]
 // Example(3D): Usage with `align`
-//   cuboid(20, align=V_LEFT);
-V_LEFT  = [-1,  0,  0];
+//   cuboid(20, align=LEFT);
+LEFT  = [-1,  0,  0];
 
-// Constant: V_RIGHT
+// Constant: RIGHT
 // Description: Vector pointing right.  [1,0,0]
 // Example(3D): Usage with `align`
-//   cuboid(20, align=V_RIGHT);
-V_RIGHT = [ 1,  0,  0];
+//   cuboid(20, align=RIGHT);
+RIGHT = [ 1,  0,  0];
 
-// Constant: V_FWD
+// Constant: FWD
 // Description: Vector pointing forward.  [0,-1,0]
 // Example(3D): Usage with `align`
-//   cuboid(20, align=V_FWD);
-V_FWD   = [ 0, -1,  0];
+//   cuboid(20, align=FWD);
+FWD   = [ 0, -1,  0];
 
-// Constant: V_BACK
+// Constant: BACK
 // Description: Vector pointing back.  [0,1,0]
 // Example(3D): Usage with `align`
-//   cuboid(20, align=V_BACK);
-V_BACK  = [ 0,  1,  0];
+//   cuboid(20, align=BACK);
+BACK  = [ 0,  1,  0];
 
-// Constant: V_DOWN
+// Constant: DOWN
 // Description: Vector pointing down.  [0,0,-1]
 // Example(3D): Usage with `align`
-//   cuboid(20, align=V_DOWN);
-V_DOWN  = [ 0,  0, -1];
+//   cuboid(20, align=DOWN);
+DOWN  = [ 0,  0, -1];
 
-// Constant: V_UP
+// Constant: UP
 // Description: Vector pointing up.  [0,0,1]
 // Example(3D): Usage with `align`
-//   cuboid(20, align=V_UP);
-V_UP    = [ 0,  0,  1];
+//   cuboid(20, align=UP);
+UP    = [ 0,  0,  1];
 
-// Constant: V_ALLPOS
+// Constant: ALLPOS
 // Description: Vector pointing right, back, and up.  [1,1,1]
 // Example(3D): Usage with `align`
-//     cuboid(20, align=V_ALLPOS);
-V_ALLPOS = [ 1,  1,  1];  // Vector pointing X+,Y+,Z+.
+//     cuboid(20, align=ALLPOS);
+ALLPOS = [ 1,  1,  1];  // Vector pointing X+,Y+,Z+.
 
-// Constant: V_ALLNEG
+// Constant: ALLNEG
 // Description: Vector pointing left, forwards, and down.  [-1,-1,-1]
 // Example(3D): Usage with `align`
-//     cuboid(20, align=V_ALLNEG);
-V_ALLNEG = [-1, -1, -1];  // Vector pointing X-,Y-,Z-.
+//     cuboid(20, align=ALLNEG);
+ALLNEG = [-1, -1, -1];  // Vector pointing X-,Y-,Z-.
 
-// Constant: V_ZERO
+// Constant: CENTER
 // Description: Zero vector.  Centered.  [0,0,0]
 // Example(3D): Usage with `align`
-//     cuboid(20, align=V_ZERO);
-V_ZERO   = [ 0,  0,  0];  // Centered zero vector.
+//     cuboid(20, align=CENTER);
+CENTER = [ 0,  0,  0];  // Centered zero vector.
 
 
 // Section: Vector Aliases
 //   Useful aliases for use with `align`.
 
-V_CENTER = V_ZERO;  // Centered, alias to `V_ZERO`.
-V_ABOVE  = V_UP;    // Vector pointing up, alias to `V_UP`.
-V_BELOW  = V_DOWN;  // Vector pointing down, alias to `V_DOWN`.
-V_BEFORE = V_FWD;   // Vector pointing forward, alias to `V_FWD`.
-V_BEHIND = V_BACK;  // Vector pointing back, alias to `V_BACK`.
+ABOVE  = UP;    // Vector pointing up, alias to `UP`.
+BELOW  = DOWN;  // Vector pointing down, alias to `DOWN`.
+BEFORE = FWD;   // Vector pointing forward, alias to `FWD`.
+BEHIND = BACK;  // Vector pointing back, alias to `BACK`.
 
-V_TOP    = V_UP;    // Vector pointing up, alias to `V_UP`.
-V_BOTTOM = V_DOWN;  // Vector pointing down, alias to `V_DOWN`.
-V_FRONT  = V_FWD;   // Vector pointing forward, alias to `V_FWD`.
-V_REAR   = V_BACK;  // Vector pointing back, alias to `V_BACK`.
+TOP    = UP;    // Vector pointing up, alias to `UP`.
+BOTTOM = DOWN;  // Vector pointing down, alias to `DOWN`.
+FRONT  = FWD;   // Vector pointing forward, alias to `FWD`.
+REAR   = BACK;  // Vector pointing back, alias to `BACK`.
 
+FORWARD = FWD;   // Vector pointing forward, alias to `FWD`.
 
-
-// Section: Pre-Orientation Alignments
-//   Constants for pre-orientation alignments.
-
-
-// Constant: ALIGN_POS
-// Description: Align the axis-positive end to the origin.
-// Example(3D): orient=ORIENT_X
-//     cyl(d1=10, d2=5, h=20, orient=ORIENT_X, align=ALIGN_POS);
-// Example(3D): orient=ORIENT_Y
-//     cyl(d1=10, d2=5, h=20, orient=ORIENT_Y, align=ALIGN_POS);
-// Example(3D): orient=ORIENT_Z
-//     cyl(d1=10, d2=5, h=20, orient=ORIENT_Z, align=ALIGN_POS);
-// Example(3D): orient=ORIENT_XNEG
-//     cyl(d1=10, d2=5, h=20, orient=ORIENT_XNEG, align=ALIGN_POS);
-// Example(3D): orient=ORIENT_YNEG
-//     cyl(d1=10, d2=5, h=20, orient=ORIENT_YNEG, align=ALIGN_POS);
-// Example(3D): orient=ORIENT_ZNEG
-//     cyl(d1=10, d2=5, h=20, orient=ORIENT_ZNEG, align=ALIGN_POS);
-ALIGN_POS = 1;
-
-
-ALIGN_CENTER =  0;  // Align centered.
-
-// Constant: ALIGN_NEG
-// Description: Align the axis-negative end to the origin.
-// Example(3D): orient=ORIENT_X
-//     cyl(d1=10, d2=5, h=20, orient=ORIENT_X, align=ALIGN_NEG);
-// Example(3D): orient=ORIENT_Y
-//     cyl(d1=10, d2=5, h=20, orient=ORIENT_Y, align=ALIGN_NEG);
-// Example(3D): orient=ORIENT_Z
-//     cyl(d1=10, d2=5, h=20, orient=ORIENT_Z, align=ALIGN_NEG);
-// Example(3D): orient=ORIENT_XNEG
-//     cyl(d1=10, d2=5, h=20, orient=ORIENT_XNEG, align=ALIGN_NEG);
-// Example(3D): orient=ORIENT_YNEG
-//     cyl(d1=10, d2=5, h=20, orient=ORIENT_YNEG, align=ALIGN_NEG);
-// Example(3D): orient=ORIENT_ZNEG
-//     cyl(d1=10, d2=5, h=20, orient=ORIENT_ZNEG, align=ALIGN_NEG);
-ALIGN_NEG = -1;
 
 
 // CommonCode:
@@ -346,7 +307,7 @@ function corner_edge_count(edges, v) =
 $color = undef;
 $overlap = 0.01;
 $attach_to = undef;
-$attach_conn = ["center", V_ZERO, V_UP, 0];
+$attach_conn = ["center", CENTER, UP, 0];
 $parent_size = undef;
 $parent_size2 = undef;
 $parent_shift = [0,0];

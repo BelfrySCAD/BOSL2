@@ -134,10 +134,10 @@ function nema_motor_screw_depth(size) = lookup(size, [
 //   shaft = Shaft diameter. Default: 5mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 20mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_DOWN`.
+//   align = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
 // Example:
 //   nema11_stepper();
-module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, align=V_DOWN)
+module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, align=DOWN)
 {
 	size = 11;
 	motor_width = nema_motor_width(size);
@@ -147,10 +147,10 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, align=V_DOWN
 	screw_size = nema_motor_screw_size(size);
 	screw_depth = nema_motor_screw_depth(size);
 
-	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=V_DOWN) {
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN) {
 		difference() {
 			color([0.4, 0.4, 0.4]) 
-				cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=V_DOWN);
+				cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=DOWN);
 			color("silver")
 				xspread(screw_spacing)
 					yspread(screw_spacing)
@@ -176,10 +176,10 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, align=V_DOWN
 //   shaft = Shaft diameter. Default: 5mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 24mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_DOWN`.
+//   align = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
 // Example:
 //   nema14_stepper();
-module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, align=V_DOWN)
+module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, align=DOWN)
 {
 	size = 14;
 	motor_width = nema_motor_width(size);
@@ -189,10 +189,10 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, align=V_DOWN
 	screw_size = nema_motor_screw_size(size);
 	screw_depth = nema_motor_screw_depth(size);
 
-	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=V_DOWN) {
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN) {
 		difference() {
 			color([0.4, 0.4, 0.4])
-				cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=V_DOWN);
+				cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=DOWN);
 			color("silver")
 				xspread(screw_spacing)
 					yspread(screw_spacing)
@@ -205,7 +205,7 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, align=V_DOWN
 			}
 		}
 		color("silver")
-			cyl(h=shaft_len, d=shaft, align=V_UP, $fn=max(12,segs(shaft/2)));
+			cyl(h=shaft_len, d=shaft, align=UP, $fn=max(12,segs(shaft/2)));
 	}
 }
 
@@ -218,10 +218,10 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, align=V_DOWN
 //   shaft = Shaft diameter. Default: 5mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 20mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_DOWN`.
+//   align = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
 // Example:
 //   nema17_stepper();
-module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, align=V_DOWN)
+module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, align=DOWN)
 {
 	size = 17;
 	motor_width = nema_motor_width(size);
@@ -231,10 +231,10 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, align=V_DOWN
 	screw_size = nema_motor_screw_size(size);
 	screw_depth = nema_motor_screw_depth(size);
 
-	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=V_DOWN) {
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN) {
 		difference() {
 			color([0.4, 0.4, 0.4])
-				cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=V_DOWN);
+				cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=DOWN);
 			color("silver")
 				xspread(screw_spacing)
 					yspread(screw_spacing)
@@ -278,10 +278,10 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, align=V_DOWN
 //   shaft = Shaft diameter. Default: 6.35mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 25mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_DOWN`.
+//   align = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
 // Example:
 //   nema23_stepper();
-module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, align=V_DOWN)
+module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, align=DOWN)
 {
 	size = 23;
 	motor_width = nema_motor_width(size);
@@ -292,11 +292,11 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, align=V_D
 	screw_depth = nema_motor_screw_depth(size);
 
 	screw_inset = motor_width - screw_spacing + 1;
-	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=V_DOWN) {
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN) {
 		difference() {
 			union() {
 				color([0.4, 0.4, 0.4])
-					cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=V_DOWN);
+					cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=DOWN);
 				color([0.4, 0.4, 0.4])
 					cylinder(h=plinth_height, d=plinth_diam);
 				color("silver")
@@ -306,7 +306,7 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, align=V_D
 				xspread(screw_spacing) {
 					yspread(screw_spacing) {
 						cyl(d=screw_size, h=screw_depth*3, $fn=max(12,segs(screw_size/2)));
-						down(screw_depth) cuboid([screw_inset, screw_inset, h], align=V_DOWN);
+						down(screw_depth) cuboid([screw_inset, screw_inset, h], align=DOWN);
 					}
 				}
 			}
@@ -323,10 +323,10 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, align=V_D
 //   shaft = Shaft diameter. Default: 12.7mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 32mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_DOWN`.
+//   align = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
 // Example:
 //   nema34_stepper();
-module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, align=V_DOWN)
+module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, align=DOWN)
 {
 	size = 34;
 	motor_width = nema_motor_width(size);
@@ -337,11 +337,11 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, align=V_D
 	screw_depth = nema_motor_screw_depth(size);
 
 	screw_inset = motor_width - screw_spacing + 1;
-	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=V_DOWN) {
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN) {
 		difference() {
 			union() {
 				color([0.4, 0.4, 0.4])
-					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=V_DOWN);
+					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=DOWN);
 				color([0.4, 0.4, 0.4])
 					cylinder(h=plinth_height, d=plinth_diam);
 				color("silver")
@@ -373,14 +373,14 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, align=V_D
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   nema_mount_holes(size=14, depth=5, l=5);
 // Example:
 //   nema_mount_holes(size=17, depth=5, l=5);
 // Example:
 //   nema_mount_holes(size=17, depth=5, l=0);
-module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
+module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=CENTER)
 {
 	motor_width = nema_motor_width(size);
 	plinth_diam = nema_motor_plinth_diam(size)+slop;
@@ -422,12 +422,12 @@ module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   nema11_mount_holes(depth=5, l=5);
 // Example:
 //   nema11_mount_holes(depth=5, l=0);
-module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
+module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=CENTER)
 {
 	nema_mount_holes(size=11, depth=depth, l=l, slop=slop, orient=orient, align=align);
 }
@@ -441,12 +441,12 @@ module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, alig
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   nema14_mount_holes(depth=5, l=5);
 // Example:
 //   nema14_mount_holes(depth=5, l=0);
-module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
+module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=CENTER)
 {
 	nema_mount_holes(size=14, depth=depth, l=l, slop=slop, orient=orient, align=align);
 }
@@ -460,12 +460,12 @@ module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, alig
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   nema17_mount_holes(depth=5, l=5);
 // Example:
 //   nema17_mount_holes(depth=5, l=0);
-module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
+module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=CENTER)
 {
 	nema_mount_holes(size=17, depth=depth, l=l, slop=slop, orient=orient, align=align);
 }
@@ -479,12 +479,12 @@ module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, alig
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   nema23_mount_holes(depth=5, l=5);
 // Example:
 //   nema23_mount_holes(depth=5, l=0);
-module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
+module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=CENTER)
 {
 	nema_mount_holes(size=23, depth=depth, l=l, slop=slop, orient=orient, align=align);
 }
@@ -498,12 +498,12 @@ module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, alig
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   nema34_mount_holes(depth=5, l=5);
 // Example:
 //   nema34_mount_holes(depth=5, l=0);
-module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
+module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=CENTER)
 {
 	nema_mount_holes(size=34, depth=depth, l=l, slop=slop, orient=orient, align=align);
 }
@@ -517,12 +517,12 @@ module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, alig
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the stepper.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   nema34_mount_holes(depth=5, l=5);
 // Example:
 //   nema34_mount_holes(depth=5, l=0);
-module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=V_CENTER)
+module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=CENTER)
 {
 	nema_mount_holes(size=34, depth=depth, l=l, slop=slop, orient=orient, align=align);
 }

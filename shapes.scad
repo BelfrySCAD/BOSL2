@@ -57,10 +57,10 @@ include <constants.scad>
 //   fillet = Radius of fillet for edge rounding.  Default: No filleting.
 //   edges = Edges to chamfer/fillet.  Use `EDGE` constants from constants.scad. Default: `EDGES_ALL`
 //   trimcorners = If true, rounds or chamfers corners where three chamferred/filleted edges meet.  Default: `true`
-//   p1 = Align the cuboid's corner at `p1`, if given.  Forces `align=V_UP+V_BACK+V_RIGHT`.
+//   p1 = Align the cuboid's corner at `p1`, if given.  Forces `align=UP+BACK+RIGHT`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
-//   align = The side of the origin to align to.  Use `V_` constants from `constants.scad`.  Default: `V_CENTER`
-//   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=V_UP+V_BACK+V_RIGHT`.
+//   align = The side of the origin to align to.  Use constants from `constants.scad`.  Default: `CENTER`
+//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=UP+BACK+RIGHT`.
 //
 // Example: Simple regular cube.
 //   cuboid(40);
@@ -96,18 +96,18 @@ module cuboid(
 	if (is_def(p1)) {
 		if (is_def(p2)) {
 			translate([for (v=array_zip([p1,p2],0)) min(v)]) {
-				cuboid(size=vabs(p2-p1), chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, align=V_ALLPOS) children();
+				cuboid(size=vabs(p2-p1), chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, align=ALLPOS) children();
 			}
 		} else {
 			translate(p1) {
-				cuboid(size=size, chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, align=V_ALLPOS) children();
+				cuboid(size=size, chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, align=ALLPOS) children();
 			}
 		}
 	} else {
 		if (chamfer != undef) assertion(chamfer <= min(size)/2, "chamfer must be smaller than half the cube width, length, or height.");
 		if (fillet != undef)  assertion(fillet <= min(size)/2, "fillet must be smaller than half the cube width, length, or height.");
 		majrots = [[0,90,0], [90,0,0], [0,0,0]];
-		orient_and_align(size, ORIENT_Z, align, center=center, noncentered=V_ALLPOS, chain=true) {
+		orient_and_align(size, ORIENT_Z, align, center=center, noncentered=ALLPOS, chain=true) {
 			if (chamfer != undef) {
 				isize = [for (v = size) max(0.001, v-2*chamfer)];
 				if (edges == EDGES_ALL && trimcorners) {
@@ -136,7 +136,7 @@ module cuboid(
 							for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
 								if (corner_edge_count(edges, [xa,ya,za]) > 2) {
 									translate(vmul([xa,ya,za]/2, size-[1,1,1]*chamfer*4/3)) {
-										rot(from=V_UP, to=[xa,ya,za]) {
+										rot(from=UP, to=[xa,ya,za]) {
 											upcube(chamfer*3);
 										}
 									}
@@ -320,8 +320,8 @@ module upcube(size=[1,1,1]) {siz = scalar_vec3(size); up(siz[2]/2) cube(size=siz
 //   h = Height of the prism.
 //   shift = [x, y] amount to shift the center of the top with respect to the center of the bottom.
 //   orient = Orientation of the prismoid.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the prismoid by the axis-negative (size1) end.  Use the `V_` constants from `constants.scad`.  Default: `ALIGN_POS`.
-//   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=ALIGN_POS`.
+//   align = Alignment of the prismoid by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `UP`.
+//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=UP`.
 //
 // Example: Rectangular Pyramid
 //   prismoid(size1=[40,40], size2=[0,0], h=20);
@@ -341,13 +341,13 @@ module upcube(size=[1,1,1]) {siz = scalar_vec3(size); up(siz[2]/2) cube(size=siz
 //   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]);
 module prismoid(
 	size1=[1,1], size2=[1,1], h=1, shift=[0,0],
-	orient=ORIENT_Z, align=ALIGN_POS, center=undef
+	orient=ORIENT_Z, align=UP, center=undef
 ) {
 	eps = 0.001;
 	shiftby = point3d(point2d(shift));
 	s1 = [max(size1.x, eps), max(size1.y, eps)];
 	s2 = [max(size2.x, eps), max(size2.y, eps)];
-	orient_and_align([s1.x,s1.y,h], orient, align, center, size2=s2, shift=shift, noncentered=ALIGN_POS, chain=true) {
+	orient_and_align([s1.x,s1.y,h], orient, align, center, size2=s2, shift=shift, noncentered=UP, chain=true) {
 		polyhedron(
 			points=[
 				[+s2.x/2, +s2.y/2, +h/2] + shiftby,
@@ -394,7 +394,7 @@ module prismoid(
 //   r2 = radius of vertical edge fillets at top.
 //   shift = [x, y] amount to shift the center of the top with respect to the center of the bottom.
 //   orient = Orientation of the prismoid.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the prismoid by the axis-negative (`size1`) end.  Use the `V_` constants from `constants.scad`.  Default: `V_UP`.
+//   align = Alignment of the prismoid by the axis-negative (`size1`) end.  Use the constants from `constants.scad`.  Default: `UP`.
 //   center = vertically center the prism.  Overrides `align`.
 //
 // Example: Rounded Pyramid
@@ -408,7 +408,7 @@ module prismoid(
 module rounded_prismoid(
 	size1, size2, h, shift=[0,0],
 	r=undef, r1=undef, r2=undef,
-	align=V_UP, orient=ORIENT_Z, center=undef
+	align=UP, orient=ORIENT_Z, center=undef
 ) {
 	eps = 0.001;
 	maxrad1 = min(size1.x/2, size1.y/2);
@@ -416,7 +416,7 @@ module rounded_prismoid(
 	rr1 = min(maxrad1, (r1!=undef)? r1 : r);
 	rr2 = min(maxrad2, (r2!=undef)? r2 : r);
 	shiftby = point3d(shift);
-	orient_and_align([size1.x, size1.y, h], orient, align, center, size2=size2, shift=shift, noncentered=ALIGN_POS, chain=true) {
+	orient_and_align([size1.x, size1.y, h], orient, align, center, size2=size2, shift=shift, noncentered=UP, chain=true) {
 		down(h/2) {
 			hull() {
 				linear_extrude(height=eps, center=false, convexity=2) {
@@ -452,14 +452,14 @@ module rounded_prismoid(
 // Arguments:
 //   size = [width, thickness, height]
 //   orient = The axis to place the hypotenuse along.  Only accepts `ORIENT_X`, `ORIENT_Y`, or `ORIENT_Z` from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = The side of the origin to align to.  Use `V_` constants from `constants.scad`.  Default: `V_UP+V_BACK+V_RIGHT`.
-//   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=V_UP+V_BACK+V_RIGHT`.
+//   align = The side of the origin to align to.  Use constants from `constants.scad`.  Default: `UP+BACK+RIGHT`.
+//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=UP+BACK+RIGHT`.
 //
 // Example: Centered
 //   right_triangle([60, 10, 40], center=true);
 // Example: *Non*-Centered
 //   right_triangle([60, 10, 40]);
-module right_triangle(size=[1, 1, 1], orient=ORIENT_Y, align=V_ALLPOS, center=undef)
+module right_triangle(size=[1, 1, 1], orient=ORIENT_Y, align=ALLPOS, center=undef)
 {
 	size = scalar_vec3(size);
 	orient_and_align(size, align=align, center=center, chain=true) {
@@ -547,8 +547,8 @@ module right_triangle(size=[1, 1, 1], orient=ORIENT_Y, align=V_ALLPOS, center=un
 //   fillet2 = The radius of the fillet on the axis-positive end of the cylinder.
 //   realign = If true, rotate the cylinder by half the angle of one face.
 //   orient = Orientation of the cylinder.  Use the `ORIENT_` constants from `constants.scad`.  Default: vertical.
-//   align = Alignment of the cylinder.  Use the `V_` constants from `constants.scad`.  Default: centered.
-//   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=ALIGN_POS`.
+//   align = Alignment of the cylinder.  Use the constants from `constants.scad`.  Default: centered.
+//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=UP`.
 //
 // Example: By Radius
 //   xdistribute(30) {
@@ -591,7 +591,7 @@ module cyl(
 	chamfang=undef, chamfang1=undef, chamfang2=undef,
 	fillet=undef, fillet1=undef, fillet2=undef,
 	circum=false, realign=false, from_end=false,
-	orient=ORIENT_Z, align=V_CENTER, center=undef
+	orient=ORIENT_Z, align=CENTER, center=undef
 ) {
 	r1 = get_radius(r1, r, d1, d, 1);
 	r2 = get_radius(r2, r, d2, d, 1);
@@ -753,7 +753,7 @@ module cyl(
 module downcyl(r=undef, h=undef, l=undef, d=undef, d1=undef, d2=undef, r1=undef, r2=undef)
 {
 	l = first_defined([l, h, 1]);
-	cyl(r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, l=l, align=V_DOWN) children();
+	cyl(r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, l=l, align=DOWN) children();
 }
 
 
@@ -775,8 +775,8 @@ module downcyl(r=undef, h=undef, l=undef, d=undef, d1=undef, d2=undef, r1=undef,
 //   d = Optional diameter of cylinder. (use instead of `r`)
 //   d1 = Optional diameter of left (X-) end of cylinder.
 //   d2 = Optional diameter of right (X+) end of cylinder.
-//   align = The side of the origin to align to.  Use `V_` constants from `constants.scad`. Default: `V_CENTER`
-//   center = If given, overrides `align`.  A `true` value sets `align=V_CENTER`, `false` sets `align=ALIGN_POS`.
+//   align = The side of the origin to align to.  Use constants from `constants.scad`. Default: `CENTER`
+//   center = If given, overrides `align`.  A `true` value sets `align=CENTER`, `false` sets `align=UP`.
 //
 // Example: By Radius
 //   ydistribute(50) {
@@ -789,7 +789,7 @@ module downcyl(r=undef, h=undef, l=undef, d=undef, d1=undef, d2=undef, r1=undef,
 //       xcyl(l=35, d=20);
 //       xcyl(l=35, d1=30, d2=10);
 //   }
-module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, align=V_CENTER, center=undef)
+module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, align=CENTER, center=undef)
 {
 	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=ORIENT_X, align=align, center=center) children();
 }
@@ -813,8 +813,8 @@ module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   d = Diameter of cylinder.
 //   d1 = Diameter of front (Y-) end of one.
 //   d2 = Diameter of back (Y+) end of one.
-//   align = The side of the origin to align to.  Use `V_` constants from `constants.scad`. Default: `V_CENTER`
-//   center = Overrides `align` if given.  If true, `align=V_CENTER`, if false, `align=ALIGN_POS`.
+//   align = The side of the origin to align to.  Use constants from `constants.scad`. Default: `CENTER`
+//   center = Overrides `align` if given.  If true, `align=CENTER`, if false, `align=UP`.
 //
 // Example: By Radius
 //   xdistribute(50) {
@@ -827,7 +827,7 @@ module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //       ycyl(l=35, d=20);
 //       ycyl(l=35, d1=30, d2=10);
 //   }
-module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, align=V_CENTER, center=undef)
+module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, align=CENTER, center=undef)
 {
 	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=ORIENT_Y, align=align, center=center) children();
 }
@@ -851,8 +851,8 @@ module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   d = Diameter of cylinder.
 //   d1 = Diameter of front (Y-) end of one.
 //   d2 = Diameter of back (Y+) end of one.
-//   align = The side of the origin to align to.  Use `V_` constants from `constants.scad`. Default: `V_CENTER`
-//   center = Overrides `align` if given.  If true, `align=V_CENTER`, if false, `align=ALIGN_POS`.
+//   align = The side of the origin to align to.  Use constants from `constants.scad`. Default: `CENTER`
+//   center = Overrides `align` if given.  If true, `align=CENTER`, if false, `align=UP`.
 //
 // Example: By Radius
 //   xdistribute(50) {
@@ -865,7 +865,7 @@ module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //       zcyl(l=35, d=20);
 //       zcyl(l=35, d1=30, d2=10);
 //   }
-module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, align=V_CENTER, center=undef)
+module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, align=CENTER, center=undef)
 {
 	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=ORIENT_Z, align=align, center=center) children();
 }
@@ -902,7 +902,7 @@ module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   id2 = Inner diameter of top of tube.
 //   realign = If true, rotate the tube by half the angle of one face.
 //   orient = Orientation of the tube.  Use the `ORIENT_` constants from `constants.scad`.  Default: vertical.
-//   align = Alignment of the tube.  Use the `V_` constants from `constants.scad`.  Default: centered.
+//   align = Alignment of the tube.  Use the constants from `constants.scad`.  Default: centered.
 //
 // Example: These all Produce the Same Tube
 //   tube(h=30, or=40, wall=5);
@@ -923,7 +923,7 @@ module tube(
 	od=undef, od1=undef, od2=undef,
 	ir=undef, id=undef, ir1=undef,
 	ir2=undef, id1=undef, id2=undef,
-	center=undef, orient=ORIENT_Z, align=ALIGN_POS,
+	center=undef, orient=ORIENT_Z, align=UP,
 	realign=false
 ) {
 	r1 = first_defined([or1, od1/2, r1, d1/2, or, od/2, r, d/2, ir1+wall, id1/2+wall, ir+wall, id/2+wall]);
@@ -966,7 +966,7 @@ module tube(
 //   od = outer diameter of the torus. (use with 'ir' or 'id')
 //   id = inside diameter of the torus. (use with 'or' or 'od')
 //   orient = Orientation of the torus.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the torus.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the torus.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //
 // Example:
 //   // These all produce the same torus.
@@ -979,7 +979,7 @@ module torus(
 	r2=undef, d2=undef,
 	or=undef, od=undef,
 	ir=undef, id=undef,
-	orient=ORIENT_Z, align=V_CENTER, center=undef
+	orient=ORIENT_Z, align=CENTER, center=undef
 ) {
 	orr = get_radius(r=or, d=od, dflt=1.0);
 	irr = get_radius(r=ir, d=id, dflt=0.5);
@@ -1009,10 +1009,10 @@ module torus(
 //   d = Diameter of the sphere.
 //   circum = If true, circumscribes the perfect sphere of the given radius/diameter.
 //   orient = Orientation of the sphere, if you don't like where the vertices lay.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the sphere.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the sphere.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   spheroid(d=100, circum=true, $fn=10);
-module spheroid(r=undef, d=undef, circum=false, orient=V_UP, align=V_CENTER)
+module spheroid(r=undef, d=undef, circum=false, orient=UP, align=CENTER)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	hsides = segs(r);
@@ -1040,11 +1040,11 @@ module spheroid(r=undef, d=undef, circum=false, orient=V_UP, align=V_CENTER)
 //   d = Diameter of the sphere.
 //   circum = If true, circumscribes the perfect sphere of the given size.
 //   orient = Orientation of the sphere, if you don't like where the vertices lay.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the sphere.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the sphere.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //
 // Example:
 //   staggered_sphere(d=100, circum=true, $fn=10);
-module staggered_sphere(r=undef, d=undef, circum=false, orient=V_UP, align=V_CENTER) {
+module staggered_sphere(r=undef, d=undef, circum=false, orient=UP, align=CENTER) {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
 	vsides = max(3, ceil(sides/2))+1;
@@ -1146,7 +1146,7 @@ module teardrop2d(r=1, d=undef, ang=45, cap_h=undef)
 //   ang = Angle of hat walls from the Z axis.  (Default: 45 degrees)
 //   cap_h = If given, height above center where the shape will be truncated.
 //   orient = Orientation of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //
 // Example: Typical Shape
 //   teardrop(r=30, h=10, ang=30);
@@ -1154,7 +1154,7 @@ module teardrop2d(r=1, d=undef, ang=45, cap_h=undef)
 //   teardrop(r=30, h=10, ang=30, cap_h=40);
 // Example: Close Crop
 //   teardrop(r=30, h=10, ang=30, cap_h=20);
-module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, orient=ORIENT_Y, align=V_CENTER)
+module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, orient=ORIENT_Y, align=CENTER)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	l = first_defined([l, h, 1]);
@@ -1182,7 +1182,7 @@ module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, orient=
 //   cap_h = height above sphere center to truncate teardrop shape.
 //   maxang = angle of cone on top from vertical.
 //   orient = Orientation of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //
 // Example: Typical Shape
 //   onion(r=30, maxang=30);
@@ -1190,7 +1190,7 @@ module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, orient=
 //   onion(r=30, maxang=30, cap_h=40);
 // Example: Close Crop
 //   onion(r=30, maxang=30, cap_h=20);
-module onion(cap_h=undef, r=undef, d=undef, maxang=45, h=undef, orient=ORIENT_Z, align=V_CENTER)
+module onion(cap_h=undef, r=undef, d=undef, maxang=45, h=undef, orient=ORIENT_Z, align=CENTER)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	h = first_defined([cap_h, h]);
@@ -1225,11 +1225,11 @@ module onion(cap_h=undef, r=undef, d=undef, maxang=45, h=undef, orient=ORIENT_Z,
 //   wall = height of rectangular portion of the strut.
 //   ang = angle that the trianglar side will converge at.
 //   orient = Orientation of the length axis of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //
 // Example:
 //   narrowing_strut(w=10, l=100, wall=5, ang=30);
-module narrowing_strut(w=10, l=100, wall=5, ang=30, orient=ORIENT_Y, align=V_UP)
+module narrowing_strut(w=10, l=100, wall=5, ang=30, orient=ORIENT_Y, align=UP)
 {
 	h = wall + w/2/tan(ang);
 	size = [w, h, l];
@@ -1269,13 +1269,13 @@ module narrowing_strut(w=10, l=100, wall=5, ang=30, orient=ORIENT_Y, align=V_UP)
 //   strut = the width of the diagonal brace.
 //   wall = the thickness of the thinned portion of the wall.
 //   orient = Orientation of the length axis of the wall.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   align = Alignment of the shape.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //
 // Example: Typical Shape
 //   thinning_wall(h=50, l=80, thick=4);
 // Example: Trapezoidal
 //   thinning_wall(h=50, l=[80,50], thick=4);
-module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orient=ORIENT_Z, align=V_CENTER)
+module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orient=ORIENT_Z, align=CENTER)
 {
 	l1 = (l[0] == undef)? l : l[0];
 	l2 = (l[1] == undef)? l : l[1];
@@ -1413,11 +1413,11 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orient=ORIEN
 //   strut = the width of the diagonal brace.
 //   wall = the thickness of the thinned portion of the wall.
 //   orient = Orientation of the length axis of the wall.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //
 // Example: Typical Shape
 //   braced_thinning_wall(h=50, l=100, thick=5);
-module braced_thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orient=ORIENT_Y, align=V_CENTER)
+module braced_thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orient=ORIENT_Y, align=CENTER)
 {
 	dang = atan((h-2*strut)/(l-2*strut));
 	dlen = (h-2*strut)/sin(dang);
@@ -1465,8 +1465,8 @@ module braced_thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orien
 //   wall = the thickness of the thinned portion of the wall.
 //   diagonly = boolean, which denotes only the diagonal side (hypotenuse) should be thick.
 //   orient = Orientation of the length axis of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
-//   center = If true, centers shape.  If false, overrides `align` with `V_UP+V_BACK`.
+//   align = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   center = If true, centers shape.  If false, overrides `align` with `UP+BACK`.
 //
 // Example: Centered
 //   thinning_triangle(h=50, l=80, thick=4, ang=30, strut=5, wall=2, center=true);
@@ -1474,12 +1474,12 @@ module braced_thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orien
 //   thinning_triangle(h=50, l=80, thick=4, ang=30, strut=5, wall=2, center=false);
 // Example: Diagonal Brace Only
 //   thinning_triangle(h=50, l=80, thick=4, ang=30, strut=5, wall=2, diagonly=true, center=false);
-module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly=false, center=undef, orient=ORIENT_Y, align=V_CENTER)
+module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly=false, center=undef, orient=ORIENT_Y, align=CENTER)
 {
 	dang = atan(h/l);
 	dlen = h/sin(dang);
 	size = [thick, l, h];
-	orient_and_align(size, orient, align, center=center, noncentered=V_UP+V_BACK, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_align(size, orient, align, center=center, noncentered=UP+BACK, orig_orient=ORIENT_Y, chain=true) {
 		difference() {
 			union() {
 				if (!diagonly) {
@@ -1524,7 +1524,7 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 //   max_bridge = maximum bridging distance between cross-braces.
 //   strut = the width of the cross-braces.
 //   orient = Orientation of the length axis of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //
 // Example: Typical Shape
 //   sparse_strut(h=40, l=100, thick=3);
@@ -1534,7 +1534,7 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 //   sparse_strut(h=40, l=100, thick=3, strut=2, maxang=45);
 // Example: Longer max_bridge
 //   sparse_strut(h=40, l=100, thick=3, strut=2, maxang=45, max_bridge=30);
-module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, orient=ORIENT_Y, align=V_CENTER)
+module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, orient=ORIENT_Y, align=CENTER)
 {
 	zoff = h/2 - strut/2;
 	yoff = l/2 - strut/2;
@@ -1591,7 +1591,7 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, ori
 //   max_bridge = maximum bridging distance between cross-braces.
 //   strut = the width of the cross-braces.
 //   orient = Orientation of the length axis of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //
 // Example: Typical Shape
 //   sparse_strut3d(h=30, w=30, l=100);
@@ -1601,7 +1601,7 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, ori
 //   sparse_strut3d(h=30, w=30, l=100, strut=2, maxang=50);
 // Example: Smaller max_bridge
 //   sparse_strut3d(h=30, w=30, l=100, strut=2, maxang=50, max_bridge=20);
-module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge=30, orient=ORIENT_Y, align=V_CENTER)
+module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge=30, orient=ORIENT_Y, align=CENTER)
 {
 
 	xoff = w - thick;
@@ -1687,7 +1687,7 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 //   strut = the width of the cross-braces.
 //   wall = thickness of corrugations.
 //   orient = Orientation of the length axis of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //
 // Example: Typical Shape
 //   corrugated_wall(h=50, l=100);
@@ -1695,7 +1695,7 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 //   corrugated_wall(h=50, l=100, strut=8);
 // Example: Thicker Wall
 //   corrugated_wall(h=50, l=100, strut=8, wall=3);
-module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2, orient=ORIENT_Y, align=V_CENTER)
+module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2, orient=ORIENT_Y, align=CENTER)
 {
 	amplitude = (thick - wall) / 2;
 	period = min(15, thick * 2);
@@ -1760,8 +1760,8 @@ module noop() children();
 //   d1 = bottom diameter of pie slice.
 //   d2 = top diameter of pie slice.
 //   orient = Orientation of the pie slice.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the pie slice.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
-//   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=ALIGN_POS`.
+//   align = Alignment of the pie slice.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=UP`.
 //
 // Example: Cylindrical Pie Slice
 //   pie_slice(ang=45, l=20, r=30);
@@ -1771,7 +1771,7 @@ module pie_slice(
 	ang=30, l=undef,
 	r=10, r1=undef, r2=undef,
 	d=undef, d1=undef, d2=undef,
-	orient=ORIENT_Z, align=ALIGN_POS,
+	orient=ORIENT_Z, align=UP,
 	center=undef, h=undef
 ) {
 	l = first_defined([l, h, 1]);
@@ -1808,7 +1808,7 @@ module pie_slice(
 //   ang = angle between faces to fillet.
 //   overlap = overlap size for unioning with faces.
 //   orient = Orientation of the fillet.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   align = Alignment of the fillet.  Use the `V_` or `ALIGN_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the fillet.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //
 // Example:
 //   union() {
@@ -1819,7 +1819,7 @@ module pie_slice(
 //
 // Example:
 //   interior_fillet(l=40, r=10, orient=ORIENT_Y_90);
-module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01, orient=ORIENT_X, align=V_CENTER) {
+module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01, orient=ORIENT_X, align=CENTER) {
 	dy = r/tan(ang/2);
 	size = [l,r,r];
 	orient_and_align(size, orient, align, orig_orient=ORIENT_X, chain=true) {
@@ -1903,7 +1903,7 @@ module slot(
 //   sa = starting angle. (Default: 0.0)
 //   ea = ending angle. (Default: 90.0)
 //   orient = Orientation of the arced slot.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the arced slot.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the arced slot.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //   center = If true, centers vertically.  If false, drops flush with XY plane.  Overrides `align`.
 //   $fn2 = The $fn value to use on the small round endcaps.  The major arcs are still based on $fn.  Default: $fn
 //
@@ -1916,7 +1916,7 @@ module arced_slot(
 	sr=undef, sr1=undef, sr2=undef,
 	sd=undef, sd1=undef, sd2=undef,
 	sa=0, ea=90, cp=[0,0,0],
-	orient=ORIENT_Z, align=V_CENTER,
+	orient=ORIENT_Z, align=CENTER,
 	$fn2 = undef
 ) {
 	r = get_radius(r=r, d=d, dflt=2);
@@ -1929,7 +1929,7 @@ module arced_slot(
 		translate(cp) {
 			zrot(sa) {
 				difference() {
-					pie_slice(ang=da, l=h, r1=r+sr1, r2=r+sr2, orient=ORIENT_Z, align=V_CENTER);
+					pie_slice(ang=da, l=h, r1=r+sr1, r2=r+sr2, orient=ORIENT_Z, align=CENTER);
 					cylinder(h=h+0.1, r1=r-sr1, r2=r-sr2, center=true);
 				}
 				right(r) cylinder(h=h, r1=sr1, r2=sr2, center=true, $fn=fn_minor);

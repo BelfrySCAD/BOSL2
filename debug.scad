@@ -183,16 +183,16 @@ module debug_polyhedron(points, faces, convexity=10, txtsize=1, disabled=false) 
 function all_conns(type="cube") =
 	assert(in_list(type,["cube", "cylinder", "sphere"]))
 	let (
-		zs = ["top", "bottom"],
-		ys = ["front", "back"],
-		xs = ["left", "right"]
+		zs = [TOP, BOTTOM],
+		ys = [FRONT, BACK],
+		xs = [LEFT, RIGHT]
 	) concat(
-		["center"],
+		[CENTER],
 		[for (a=concat(xs,ys,zs)) a],
-		in_list(type,["cube","cylinder"])? [for (a=zs, b=ys) str(a,"-",b)] : [],
-		in_list(type,["cube","cylinder"])? [for (a=zs, b=xs) str(a,"-",b)] : [],
-		in_list(type,["cube"])? [for (a=ys, b=xs) str(a,"-",b)] : [],
-		in_list(type,["cube"])? [for (a=zs, b=ys, c=xs) str(a,"-",b,"-",c)] : []
+		in_list(type,["cube","cylinder"])? [for (a=zs, b=ys) a+b] : [],
+		in_list(type,["cube","cylinder"])? [for (a=zs, b=xs) a+b] : [],
+		in_list(type,["cube"])? [for (a=ys, b=xs) a+b] : [],
+		in_list(type,["cube"])? [for (a=zs, b=ys, c=xs) a+b+c] : []
 	);
 
 
@@ -209,10 +209,10 @@ function all_conns(type="cube") =
 module connector_arrow(s=10, color=[0.333,0.333,1], flag=true) {
 	$fn=12;
 	recolor("gray") spheroid(d=s/6)
-	recolor(color) cyl(h=s*2/3, d=s/15, align=V_UP)
-	attach("top") cyl(h=s/3, d1=s/5, d2=0, align=V_UP) {
+	recolor(color) cyl(h=s*2/3, d=s/15, align=UP)
+	attach(TOP) cyl(h=s/3, d1=s/5, d2=0, align=UP) {
 		if(flag) {
-			attach("bottom") recolor([1,0.5,0.5]) cuboid([s/50, s/6, s/4], align="front-top");
+			attach(BOTTOM) recolor([1,0.5,0.5]) cuboid([s/50, s/6, s/4], align="front-top");
 		}
 	}
 }
@@ -240,9 +240,9 @@ module show_connectors(type="cube") {
 //   s = Length of the arrows.
 module frameref(s=15) {
 	sphere(0.001) {
-		attach("right") connector_arrow(s=s, color="red", flag=false);
-		attach("back") connector_arrow(s=s, color="green", flag=false);
-		attach("top") connector_arrow(s=s, color="blue", flag=false);
+		attach(RIGHT) connector_arrow(s=s, color="red", flag=false);
+		attach(BACK) connector_arrow(s=s, color="green", flag=false);
+		attach(TOP) connector_arrow(s=s, color="blue", flag=false);
 	}
 }
 

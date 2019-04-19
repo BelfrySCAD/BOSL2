@@ -62,7 +62,7 @@ include <constants.scad>
 //   d1 = Bottom diameter of cone that wedge is created from.  (optional)
 //   d2 = Upper diameter of cone that wedge is created from. (optional)
 //   orient = Orientation of the pie slice.  Use the ORIENT_ constants from constants.h.  Default: ORIENT_Z.
-//   align = Alignment of the pie slice.  Use the V_ constants from constants.h.  Default: V_CENTER.
+//   align = Alignment of the pie slice.  Use the constants from constants.h.  Default: CENTER.
 //   center = If true, centers vertically.  If false, lift up to sit on top of the XY plane.  Overrides `align`.
 // Example(FR):
 //   angle_pie_mask(ang=30, d=100, l=20);
@@ -70,14 +70,14 @@ module angle_pie_mask(
 	ang=45, l=undef,
 	r=undef, r1=undef, r2=undef,
 	d=undef, d1=undef, d2=undef,
-	orient=ORIENT_Z, align=V_CENTER,
+	orient=ORIENT_Z, align=CENTER,
 	h=undef, center=undef
 ) {
 	l = first_defined([l, h, 1]);
 	r1 = get_radius(r1, r, d1, d, 10);
 	r2 = get_radius(r2, r, d2, d, 10);
 	orient_and_align([2*r1, 2*r1, l], orient, align, center=center) {
-		pie_slice(ang=ang, l=l+0.1, r1=r1, r2=r2, align=V_CENTER);
+		pie_slice(ang=ang, l=l+0.1, r1=r1, r2=r2, align=CENTER);
 	}
 }
 
@@ -120,7 +120,7 @@ module angle_pie_mask(
 //   overage = The extra thickness of the mask.  Default: `10`.
 //   ends_only = If true, only mask the ends and not around the middle of the cylinder.
 //   orient = Orientation.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the region.  Use the `V_` constants from `constants.scad`.  Default: `V_CENTER`.
+//   align = Alignment of the region.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   difference() {
 //       cylinder(h=100, r1=60, r2=30, center=true);
@@ -139,7 +139,7 @@ module cylinder_mask(
 	fillet=undef, fillet1=undef, fillet2=undef,
 	circum=false, from_end=false,
 	overage=10, ends_only=false,
-	orient=ORIENT_Z, align=V_CENTER
+	orient=ORIENT_Z, align=CENTER
 ) {
 	r1 = get_radius(r=r, d=d, r1=r1, d1=d1, dflt=1);
 	r2 = get_radius(r=r, d=d, r1=r2, d1=d2, dflt=1);
@@ -195,14 +195,14 @@ module cylinder_mask(
 //   l = Length of mask.
 //   chamfer = Size of chamfer
 //   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: vertical.
-//   align = Alignment of the mask.  Use the `V_` constants from `constants.h`.  Default: centered.
+//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
 //   center = If true, centers vertically.  If false, lift up to sit on top of the XY plane.  Overrides `align`.
 // Example:
 //   difference() {
 //       cube(50);
-//       #chamfer_mask(l=50, chamfer=10, orient=ORIENT_X, align=V_RIGHT);
+//       #chamfer_mask(l=50, chamfer=10, orient=ORIENT_X, align=RIGHT);
 //   }
-module chamfer_mask(l=1, chamfer=1, orient=ORIENT_Z, align=V_CENTER, center=undef) {
+module chamfer_mask(l=1, chamfer=1, orient=ORIENT_Z, align=CENTER, center=undef) {
 	orient_and_align([chamfer, chamfer, l], orient, align, center=center) {
 		cylinder(d=chamfer*2, h=l+0.1, center=true, $fn=4);
 	}
@@ -219,13 +219,13 @@ module chamfer_mask(l=1, chamfer=1, orient=ORIENT_Z, align=V_CENTER, center=unde
 // Arguments:
 //   l = Height of mask
 //   chamfer = size of chamfer
-//   align = Alignment of the cylinder.  Use the V_ constants from constants.h.  Default: centered.
+//   align = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
 // Example:
 //   difference() {
 //       left(40) cube(80);
 //       #chamfer_mask_x(l=80, chamfer=20);
 //   }
-module chamfer_mask_x(l=1.0, chamfer=1.0, align=V_CENTER) {
+module chamfer_mask_x(l=1.0, chamfer=1.0, align=CENTER) {
 	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_X, align=align);
 }
 
@@ -240,13 +240,13 @@ module chamfer_mask_x(l=1.0, chamfer=1.0, align=V_CENTER) {
 // Arguments:
 //   l = Height of mask
 //   chamfer = size of chamfer
-//   align = Alignment of the cylinder.  Use the V_ constants from constants.h.  Default: centered.
+//   align = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
 // Example:
 //   difference() {
 //       fwd(40) cube(80);
 //       right(80) #chamfer_mask_y(l=80, chamfer=20);
 //   }
-module chamfer_mask_y(l=1.0, chamfer=1.0, align=V_CENTER) {
+module chamfer_mask_y(l=1.0, chamfer=1.0, align=CENTER) {
 	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_Y, align=align);
 }
 
@@ -261,13 +261,13 @@ module chamfer_mask_y(l=1.0, chamfer=1.0, align=V_CENTER) {
 // Arguments:
 //   l = Height of mask
 //   chamfer = size of chamfer
-//   align = Alignment of the cylinder.  Use the V_ constants from constants.h.  Default: centered.
+//   align = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
 // Example:
 //   difference() {
 //       down(40) cube(80);
 //       #chamfer_mask_z(l=80, chamfer=20);
 //   }
-module chamfer_mask_z(l=1.0, chamfer=1.0, align=V_CENTER) {
+module chamfer_mask_z(l=1.0, chamfer=1.0, align=CENTER) {
 	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_Z, align=align);
 }
 
@@ -332,7 +332,7 @@ module chamfer(chamfer=1, size=[1,1,1], edges=EDGES_ALL)
 module chamfer_cylinder_mask(r=1.0, d=undef, chamfer=0.25, ang=45, from_end=false, orient=ORIENT_Z)
 {
 	r = get_radius(r=r, d=d, dflt=1);
-	rot(orient) cylinder_mask(l=chamfer*3, r=r, chamfer2=chamfer, chamfang2=ang, from_end=from_end, ends_only=true, align=V_DOWN);
+	rot(orient) cylinder_mask(l=chamfer*3, r=r, chamfer2=chamfer, chamfang2=ang, from_end=from_end, ends_only=true, align=DOWN);
 }
 
 
@@ -388,14 +388,14 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 //   l = Length of mask.
 //   r = Radius of the fillet.
 //   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: vertical.
-//   align = Alignment of the mask.  Use the `V_` constants from `constants.h`.  Default: centered.
+//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
 //   center = If true, centers vertically.  If false, lift up to sit on top of the XY plane.  Overrides `align`.
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       #fillet_mask(l=100, r=25, orient=ORIENT_Z, align=V_UP);
+//       #fillet_mask(l=100, r=25, orient=ORIENT_Z, align=UP);
 //   }
-module fillet_mask(l=undef, r=1.0, orient=ORIENT_Z, align=V_CENTER, h=undef, center=undef)
+module fillet_mask(l=undef, r=1.0, orient=ORIENT_Z, align=CENTER, h=undef, center=undef)
 {
 	l = first_defined([l, h, 1]);
 	sides = quantup(segs(r),4);
@@ -421,14 +421,14 @@ module fillet_mask(l=undef, r=1.0, orient=ORIENT_Z, align=V_CENTER, h=undef, cen
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the fillet.
-//   align = Alignment of the mask.  Use the `V_` constants from `constants.h`.  Default: centered.
+//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
 //   center = If true, centers vertically.  If false, lift up to sit on top of the XY plane.  Overrides `align`.
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       #fillet_mask_x(l=100, r=25, align=V_RIGHT);
+//       #fillet_mask_x(l=100, r=25, align=RIGHT);
 //   }
-module fillet_mask_x(l=1.0, r=1.0, align=V_CENTER) fillet_mask(l=l, r=r, orient=ORIENT_X, align=align);
+module fillet_mask_x(l=1.0, r=1.0, align=CENTER) fillet_mask(l=l, r=r, orient=ORIENT_X, align=align);
 
 
 // Module: fillet_mask_y()
@@ -442,14 +442,14 @@ module fillet_mask_x(l=1.0, r=1.0, align=V_CENTER) fillet_mask(l=l, r=r, orient=
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the fillet.
-//   align = Alignment of the mask.  Use the `V_` constants from `constants.h`.  Default: centered.
+//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
 //   center = If true, centers vertically.  If false, lift up to sit on top of the XY plane.  Overrides `align`.
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       right(100) #fillet_mask_y(l=100, r=25, align=V_BACK);
+//       right(100) #fillet_mask_y(l=100, r=25, align=BACK);
 //   }
-module fillet_mask_y(l=1.0, r=1.0, align=V_CENTER) fillet_mask(l=l, r=r, orient=ORIENT_Y, align=align);
+module fillet_mask_y(l=1.0, r=1.0, align=CENTER) fillet_mask(l=l, r=r, orient=ORIENT_Y, align=align);
 
 
 // Module: fillet_mask_z()
@@ -463,14 +463,14 @@ module fillet_mask_y(l=1.0, r=1.0, align=V_CENTER) fillet_mask(l=l, r=r, orient=
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the fillet.
-//   align = Alignment of the mask.  Use the `V_` constants from `constants.h`.  Default: centered.
+//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
 //   center = If true, centers vertically.  If false, lift up to sit on top of the XY plane.  Overrides `align`.
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       #fillet_mask_z(l=100, r=25, align=V_UP);
+//       #fillet_mask_z(l=100, r=25, align=UP);
 //   }
-module fillet_mask_z(l=1.0, r=1.0, align=V_CENTER) fillet_mask(l=l, r=r, orient=ORIENT_Z, align=align);
+module fillet_mask_z(l=1.0, r=1.0, align=CENTER) fillet_mask(l=l, r=r, orient=ORIENT_Z, align=align);
 
 
 // Module: fillet()
@@ -646,7 +646,7 @@ module fillet_cylinder_mask(r=1.0, fillet=0.25, xtilt=0, ytilt=0)
 {
 	skew_xz(za=xtilt) {
 		skew_yz(za=ytilt) {
-			cylinder_mask(l=fillet*3, r=r, fillet2=fillet, overage=fillet+2*r*sin(max(xtilt,ytilt)), ends_only=true, align=V_DOWN);
+			cylinder_mask(l=fillet*3, r=r, fillet2=fillet, overage=fillet+2*r*sin(max(xtilt,ytilt)), ends_only=true, align=DOWN);
 		}
 	}
 }
