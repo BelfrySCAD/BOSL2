@@ -889,9 +889,7 @@ function patch_scale(patch, v=[1,1,1], cp=[0,0,0]) = [for(row=patch) scale_point
 //   v = Vector axis to rotate round.
 //   cp = Centerpoint to rotate around.
 function patch_rotate(patch, a=undef, v=undef, cp=[0,0,0]) =
-	v==undef?
-		[for(row=patch) rotate_points3d(row, a, cp)] :
-		[for(row=patch) rotate_points3d_around_axis(row, a, v, cp)];
+	[for(row=patch) rotate_points3d(row, v=a, axis=v, cp=cp)] :
 
 
 // Function: patches_translate()

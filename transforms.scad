@@ -604,51 +604,6 @@ module place_copies(a=[[0,0,0]])
 }
 
 
-// Module: translate_copies()
-// Status: DEPRECATED, use `place_copies()` instead.
-//
-// Description:
-//   Makes copies of the given children at each of the given offsets.
-//
-// Usage:
-//   translate_copies(a) ...
-//
-// Arguments:
-//   a = array of XYZ offset vectors. Default [[0,0,0]]
-//
-// Side Effects:
-//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
-module translate_copies(a=[[0,0,0]])
-{
-	deprecate("translate_copies()", "place_copies()");
-	place_copies(a) children();
-}
-
-
-// Module: line_of()
-// Status: DEPRECATED, use `spread(p1,p2)` instead
-//
-// Description:
-//   Evenly distributes n duplicate children along an XYZ line.
-//
-// Usage:
-//   line_of(p1, p2, [n]) ...
-//
-// Arguments:
-//   p1 = starting point of line.  (Default: [0,0,0])
-//   p2 = ending point of line.  (Default: [10,0,0])
-//   n = number of copies to distribute along the line. (Default: 2)
-//
-// Side Effects:
-//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
-module line_of(p1=[0,0,0], p2=[10,0,0], n=2)
-{
-	deprecate("line_of()", "spread()");
-	spread(p1=p1, p2=p2, n=n) children();
-}
-
-
-
 // Module: spread()
 //
 // Description:
@@ -1168,35 +1123,6 @@ module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
 			translate($pos) children();
 		}
 	}
-}
-
-
-
-// Module: grid_of()
-// Status: DEPRECATED, use `grid3d()` instead.
-//
-// Description:
-//   Makes a 3D grid of duplicate children.
-//
-// Usage:
-//   grid_of(n, spacing) ...
-//   grid_of(n=[Xn,Yn,Zn], spacing=[dX,dY,dZ]) ...
-//   grid_of([xa], [ya], [za]) ...
-//
-// Arguments:
-//   xa = array or range of X-axis values to offset by. (Default: [0])
-//   ya = array or range of Y-axis values to offset by. (Default: [0])
-//   za = array or range of Z-axis values to offset by. (Default: [0])
-//   n = Optional number of copies to have per axis.
-//   spacing = spacing of copies per axis. Use with `n`.
-//
-// Side Effect:
-//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
-//   `$idx` is set to the [Xidx,Yidx,Zidx] index values of each child copy, when using `count` and `n`.
-module grid_of(xa=[0], ya=[0], za=[0], count=undef, spacing=undef)
-{
-	deprecate("grid_of()", "grid3d()");
-	grid3d(xa=xa, ya=ya, za=za, n=count, spacing=spacing) children();
 }
 
 

@@ -47,14 +47,6 @@ PHI = (1+sqrt(5))/2;  // The golden ratio phi.
 EPSILON = 1e-9;  // A really small value useful in comparing FP numbers.  ie: abs(a-b)<EPSILON
 
 
-
-// Function: Cpi()
-// Status: DEPRECATED, use `PI` instead.
-// Description:
-//   Returns the value of pi.
-function Cpi() = PI;  // Deprecated!  Use the variable PI instead.
-
-
 // Section: Simple Calculations
 
 // Function: quant()
@@ -210,22 +202,6 @@ function lerp(a,b,u) = (1-u)*a + u*b;
 //   y = Length on the Y axis.
 //   z = Length on the Z axis.
 function hypot(x,y,z=0) = norm([x,y,z]);
-
-
-// Function: hypot3()
-// Status: DEPRECATED, use `norm([x,y,z])` instead.
-// Description: Calculate hypotenuse length of 3D triangle.
-// Arguments:
-//   x = Length on the X axis.
-//   y = Length on the Y axis.
-//   z = Length on the Z axis.
-function hypot3(x,y,z) = norm([x,y,z]);
-
-
-// Function: distance()
-// Status: DEPRECATED, use `norm(p2-p1)` instead.  It's shorter.
-// Description: Returns the distance between a pair of 2D or 3D points.
-function distance(p1, p2) = norm(point3d(p2)-point3d(p1));
 
 
 // Function: sinh()
@@ -436,14 +412,6 @@ function count_true(l, nmax=undef, i=0, cnt=0) =
 // Section: List/Array Operations
 
 
-// Function: cdr()
-// Status: DEPRECATED, use `slice(list,1,-1)` instead.
-// Description: Returns all but the first item of a given array.
-// Arguments:
-//   list = The list to get the tail of.
-function cdr(list) = len(list)<=1? [] : [for (i=[1:len(list)-1]) list[i]];
-
-
 // Function: replist()
 // Usage:
 //   replist(val, n)
@@ -496,23 +464,6 @@ function slice(arr,st,end) = let(
 		s=st<0?(len(arr)+st):st,
 		e=end<0?(len(arr)+end+1):end
 	) (s==e)? [] : [for (i=[s:e-1]) if (e>s) arr[i]];
-
-
-// Function: wrap_range()
-// Status: DEPRECATED, use `select()` instead.
-// Description:
-//   Returns a portion of a list, wrapping around past the beginning, if end<start. 
-//   The first item is index 0. Negative indexes are counted back from the end.
-//   The last item is -1.  If only the `start` index is given, returns just the value
-//   at that position.
-// Usage:
-//   wrap_range(list,start)
-//   wrap_range(list,start,end)
-// Arguments:
-//   list = The list to get the portion of.
-//   start = The index of the first item.
-//   end = The index of the last item.
-function wrap_range(list, start, end=undef) = select(list,start,end);
 
 
 // Function: select()
@@ -920,30 +871,6 @@ function vabs(v) = [for (x=v) abs(x)];
 function normalize(v) = v/norm(v);
 
 
-// Function: vector2d_angle()
-// Status: DEPRECATED, use `vector_angle()` instead.
-// Usage:
-//   vector2d_angle(v1,v2);
-// Description:
-//   Returns angle in degrees between two 2D vectors.
-// Arguments:
-//   v1 = First 2D vector.
-//   v2 = Second 2D vector.
-function vector2d_angle(v1,v2) = vector_angle(v1,v2);
-
-
-// Function: vector3d_angle()
-// Status: DEPRECATED, use `vector_angle()` instead.
-// Usage:
-//   vector3d_angle(v1,v2);
-// Description:
-//   Returns angle in degrees between two 3D vectors.
-// Arguments:
-//   v1 = First 3D vector.
-//   v2 = Second 3D vector.
-function vector3d_angle(v1,v2) = vector_angle(v1,v2);
-
-
 // Function: vector_angle()
 // Usage:
 //   vector_angle(v1,v2);
@@ -1102,22 +1029,6 @@ function rotate_points3d(pts, v=0, cp=[0,0,0], axis=undef, from=undef, to=undef,
 		m = matrix4_translate(cp) * mrot * matrix4_translate(-cp)
 	) [for (pt = pts) point3d(m*concat(point3d(pt),[1]))];
 
-
-
-// Function: rotate_points3d_around_axis()
-// Status: DEPRECATED, use `rotate_points3d(pts, v=ang, axis=u, cp=cp)` instead.
-// Usage:
-//   rotate_points3d_around_axis(pts, ang, u, [cp])
-// Description:
-//   Rotates each 3D point in an array by a given amount, around a given centerpoint and axis.
-// Arguments:
-//   pts = List of 3D points to rotate.
-//   ang = Angle to rotate by.
-//   u = Vector of the axis to rotate around.
-//   cp = 3D Centerpoint to rotate around.
-function rotate_points3d_around_axis(pts, ang, u=[0,0,0], cp=[0,0,0]) = let(
-		m = matrix4_rot_by_axis(u, ang)
-	) [for (pt = pts) m*concat(point3d(pt)-cp, 0)+cp];
 
 
 // Section: Coordinate Systems

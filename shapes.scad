@@ -207,60 +207,6 @@ module cuboid(
 
 
 
-// Module: cube2pt()
-// Status: DEPRECATED, use `cuboid(p1,p2)` instead.
-//
-// Usage:
-//   cube2pt(p1,p2)
-//
-// Description:
-//   Creates a cube between two points.
-//
-// Arguments:
-//   p1 = Coordinate point of one cube corner.
-//   p2 = Coordinate point of opposite cube corner.
-module cube2pt(p1,p2) {
-	deprecate("cube2pt()", "cuboid(p1,p2)");
-	cuboid(p1=p1, p2=p2) children();
-}
-
-
-
-// Module: span_cube()
-//
-// Description:
-//   Creates a cube that spans the X, Y, and Z ranges given.
-// 
-// Arguments:
-//   xspan = [min, max] X axis range.
-//   yspan = [min, max] Y axis range.
-//   zspan = [min, max] Z axis range.
-//
-// Example:
-//   span_cube([0,15], [5,10], [0, 10]);
-module span_cube(xspan, yspan, zspan) {
-	span = [xspan, yspan, zspan];
-	cuboid(p1=array_subindex(span,0), p2=array_subindex(span,1)) children();
-}
-
-
-
-// Module: offsetcube()
-// Status: DEPRECATED, use `cuboid(..., align)` instead.
-//
-// Description:
-//   Makes a cube that is offset along the given vector by half the cube's size.
-//   For example, if `v=[-1,1,0]`, the cube's front right edge will be centered at the origin.
-//
-// Arguments:
-//   size = size of cube.
-//   v = vector to offset along.
-module offsetcube(size=[1,1,1], v=[0,0,0]) {
-	deprecate("offsetcube()", "cuboid()");
-	cuboid(size=size, align=v) children();
-}
-
-
 // Module: leftcube()
 //
 // Description:
@@ -357,67 +303,6 @@ module downcube(size=[1,1,1]) {siz = scalar_vec3(size); down(siz[2]/2) cube(size
 module upcube(size=[1,1,1]) {siz = scalar_vec3(size); up(siz[2]/2) cube(size=size, center=true);}
 
 
-// Module: chamfcube()
-// Status: DEPRECATED, use `cuboid(..., chamfer, edges, trimcorners)` instead.
-//
-// Description:
-//   Makes a cube with chamfered edges.
-//
-// Arguments:
-//   size = Size of cube [X,Y,Z].  (Default: `[1,1,1]`)
-//   chamfer = Chamfer inset along axis.  (Default: `0.25`)
-//   chamfaxes = Array [X,Y,Z] of boolean values to specify which axis edges should be chamfered.
-//   chamfcorners = Boolean to specify if corners should be flat chamferred.
-module chamfcube(size=[1,1,1], chamfer=0.25, chamfaxes=[1,1,1], chamfcorners=false) {
-	deprecate("chamfcube()", "cuboid()");
-	cuboid(
-		size=size,
-		chamfer=chamfer,
-		trimcorners=chamfcorners,
-		edges = (
-			(chamfaxes[0]? EDGES_X_ALL : EDGES_NONE) +
-			(chamfaxes[1]? EDGES_Y_ALL : EDGES_NONE) +
-			(chamfaxes[2]? EDGES_Z_ALL : EDGES_NONE)
-		)
-	) children();
-}
-
-
-// Module: rrect()
-// Status: DEPRECATED, use `cuboid(..., fillet, edges)` instead.
-//
-// Description:
-//   Makes a cube with rounded (filletted) vertical edges. The `r` size will be
-//   limited to a maximum of half the length of the shortest XY side.
-//
-// Arguments:
-//   size = Size of cube [X,Y,Z].  (Default: `[1,1,1]`)
-//   r = Radius of edge/corner rounding.  (Default: `0.25`)
-//   center = If true, object will be centered.  If false, sits on top of XY plane.
-module rrect(size=[1,1,1], r=0.25, center=false) {
-	deprecate("rrect()", "cuboid()");
-	cuboid(size=size, fillet=r, edges=EDGES_Z_ALL, align=center? V_CENTER : V_UP) children();
-}
-
-
-// Module: rcube()
-// Status: DEPRECATED, use `cuboid(..., fillet)` instead.
-//
-// Description:
-//   Makes a cube with rounded (filletted) edges and corners.  The `r` size will be
-//   limited to a maximum of half the length of the shortest cube side.
-//
-// Arguments:
-//   size = Size of cube [X,Y,Z].  (Default: `[1,1,1]`)
-//   r = Radius of edge/corner rounding.  (Default: `0.25`)
-//   center = If true, object will be centered.  If false, sits on top of XY plane.
-module rcube(size=[1,1,1], r=0.25, center=false) {
-	deprecate("rcube()", "cuboid()");
-	cuboid(size=size, fillet=r, align=center? V_CENTER : V_UP) children();
-}
-
-
-
 // Section: Prismoids
 
 
@@ -495,29 +380,6 @@ module prismoid(
 }
 
 
-// Module: trapezoid()
-// Status: DEPRECATED, use `prismoid()` instead.
-//
-// Description:
-//   Creates a rectangular prismoid shape.
-//
-// Usage:
-//   trapezoid(size1, size2, h, [shift], [orient], [align|center]);
-//
-// Arguments:
-//   size1 = [width, length] of the axis-negative end of the prism.
-//   size2 = [width, length] of the axis-positive end of the prism.
-//   h = Height of the prism.
-//   shift = [x, y] amount to shift the center of the top with respect to the center of the bottom.
-//   orient = Orientation of the prismoid.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the prismoid by the axis-negative (size1) end.  Use the `V_` constants from `constants.scad`.  Default: `V_UP`
-//   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=V_UP`.
-module trapezoid(size1=[1,1], size2=[1,1], h=1, center=false) {
-	deprecate("trapezoid()", "prismoid()");
-	prismoid(size=size, size2=size2, h=h, center=center) children();
-}
-
-
 // Module: rounded_prismoid()
 //
 // Description:
@@ -577,54 +439,6 @@ module rounded_prismoid(
 	}
 }
 
-
-
-// Module: pyramid()
-// Status: DEPRECATED, use `cyl(, r2=0, $fn=N)` instead.
-//
-// Usage:
-//   pyramid(n, h, l|r|d, [circum]);
-//
-// Description:
-//   Creates a pyramidal prism with a given number of sides.
-//
-// Arguments:
-//   n = number of pyramid sides.
-//   h = height of the pyramid.
-//   l = length of one side of the pyramid. (optional)
-//   r = radius of the base of the pyramid. (optional)
-//   d = diameter of the base of the pyramid. (optional)
-//   circum = base circumscribes the circle of the given radius or diam.
-module pyramid(n=4, h=1, l=1, r=undef, d=undef, circum=false)
-{
-	deprecate("pyramid()", "cyl()");
-	radius = get_radius(r=r, d=d, dflt=l/2/sin(180/n));
-	cyl(r1=radius, r2=0, l=h, circum=circum, $fn=n, realign=true, align=ALIGN_POS) children();
-}
-
-
-// Module: prism()
-// Status: DEPRECATED, use `cyl(..., $fn=N)` instead.
-//
-// Usage:
-//   prism(n, h, l|r|d, [circum]);
-//
-// Description:
-//   Creates a vertical prism with a given number of sides.
-//
-// Arguments:
-//   n = number of sides.
-//   h = height of the prism.
-//   l = length of one side of the prism. (optional)
-//   r = radius of the prism. (optional)
-//   d = diameter of the prism. (optional)
-//   circum = prism circumscribes the circle of the given radius or diam.
-module prism(n=3, h=1, l=1, r=undef, d=undef, circum=false, center=false)
-{
-	deprecate("prism()", "cyl()");
-	radius = get_radius(r=r, d=d, dflt=l/2/sin(180/n));
-	cyl(r=radius, l=h, circum=circum, $fn=n, realign=true, center=center) children();
-}
 
 
 // Module: right_triangle()
@@ -1054,101 +868,6 @@ module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, align=V_CENTER, center=undef)
 {
 	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=ORIENT_Z, align=align, center=center) children();
-}
-
-
-
-// Module: chamferred_cylinder()
-// Status: DEPRECATED, use `cyl(..., chamfer)` instead.
-//
-// Usage:
-//   chamferred_cylinder(h, r|d, chamfer|chamfedge, [top], [bottom], [center])
-//
-// Description:
-//   Creates a cylinder with chamferred (bevelled) edges.
-//
-// Arguments:
-//   h = height of cylinder. (Default: 1.0)
-//   r = radius of cylinder. (Default: 1.0)
-//   d = diameter of cylinder. (use instead of r)
-//   chamfer = radial inset of the edge chamfer. (Default: 0.25)
-//   chamfedge = length of the chamfer edge. (Use instead of chamfer)
-//   top = boolean.  If true, chamfer the top edges. (Default: True)
-//   bottom = boolean.  If true, chamfer the bottom edges. (Default: True)
-//   center = boolean.  If true, cylinder is centered. (Default: false)
-module chamferred_cylinder(h=1, r=undef, d=undef, chamfer=0.25, chamfedge=undef, angle=45, center=false, top=true, bottom=true)
-{
-	deprecate("chamf_cyl()` and `chamferred_cylinder()", "cyl()");
-	r = get_radius(r=r, d=d, dflt=1);
-	chamf = (chamfedge == undef)? chamfer : chamfedge * cos(angle);
-	cyl(l=h, r=r, chamfer1=bottom? chamf : 0, chamfer2=top? chamf : 0, chamfang=angle, center=center) children();
-}
-
-
-
-// Module: chamf_cyl()
-// Status: DEPRECATED, use `cyl(..., chamfer)` instead.
-//
-// Usage:
-//   chamf_cyl(h, r|d, chamfer|chamfedge, [top], [bottom], [center])
-//
-// Description:
-//   Creates a cylinder with chamferred (bevelled) edges.  Basically a shortcut of `chamferred_cylinder()`
-//
-// Arguments:
-//   h = height of cylinder. (Default: 1.0)
-//   r = radius of cylinder. (Default: 1.0)
-//   d = diameter of cylinder. (use instead of r)
-//   chamfer = radial inset of the edge chamfer. (Default: 0.25)
-//   chamfedge = length of the chamfer edge. (Use instead of chamfer)
-//   top = boolean.  If true, chamfer the top edges. (Default: True)
-//   bottom = boolean.  If true, chamfer the bottom edges. (Default: True)
-//   center = boolean.  If true, cylinder is centered. (Default: false)
-module chamf_cyl(h=1, r=undef, d=undef, chamfer=0.25, chamfedge=undef, angle=45, center=false, top=true, bottom=true)
-	chamferred_cylinder(h=h, r=r, d=d, chamfer=chamfer, chamfedge=chamfedge, angle=angle, center=center, top=top, bottom=bottom) children();
-
-
-// Module: filleted_cylinder()
-// Status: DEPRECATED, use `cyl(..., fillet)` instead.
-//
-// Usage:
-//   filleted_cylinder(h, r|d, fillet, [center]);
-//
-// Description:
-//   Creates a cylinder with filletted (rounded) ends.
-//
-// Arguments:
-//   h = height of cylinder. (Default: 1.0)
-//   r = radius of cylinder. (Default: 1.0)
-//   d = diameter of cylinder. (Use instead of r)
-//   fillet = radius of the edge filleting. (Default: 0.25)
-//   center = boolean.  If true, cylinder is centered. (Default: false)
-module filleted_cylinder(h=1, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, fillet=0.25, center=false) {
-	deprecate("filleted_cylinder()", "cyl()");
-	cyl(l=h, r=r, d=d, r1=r1, r2=r2, d1=d1, d2=d2, fillet=fillet, orient=ORIENT_Z, center=center) children();
-}
-
-
-
-// Module: rcylinder()
-// Status: DEPRECATED, use `cyl(..., fillet)` instead.
-//
-// Usage:
-//   rcylinder(h, r|d, fillet, [center]);
-//
-// Description:
-//   Creates a cylinder with filletted (rounded) ends.
-//   Basically a shortcut for `filleted_cylinder()`.
-//
-// Arguments:
-//   h = height of cylinder. (Default: 1.0)
-//   r = radius of cylinder. (Default: 1.0)
-//   d = diameter of cylinder. (Use instead of r)
-//   fillet = radius of the edge filleting. (Default: 0.25)
-//   center = boolean.  If true, cylinder is centered. (Default: false)
-module rcylinder(h=1, r=1, r1=undef, r2=undef, d=undef, d1=undef, d2=undef, fillet=0.25, center=false) {
-	deprecate("rcylinder()", "cyl(..., fillet)");
-	cyl(l=h, r=r, d=d, r1=r1, r2=r2, d1=d1, d2=d2, fillet=fillet, orient=ORIENT_Z, center=center) children();
 }
 
 
@@ -1785,31 +1504,6 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 		}
 		children();
 	}
-}
-
-
-// Module: thinning_brace()
-// Status: DEPRECATED, use `thinning_triangle(..., diagonly=true)` instead.
-//
-// Description:
-//   Makes a triangular wall which thins to a smaller width in the center,
-//   with angled supports to prevent critical overhangs.  Basically an alias
-//   of thinning_triangle(), with diagonly=true.
-//
-// Usage:
-//   thinning_brace(h, l, thick, [ang], [strut], [wall], [center])
-//
-// Arguments:
-//   h = height of wall.
-//   l = length of wall.
-//   thick = thickness of wall.
-//   ang = maximum overhang angle of diagonal brace.
-//   strut = the width of the diagonal brace.
-//   wall = the thickness of the thinned portion of the wall.
-module thinning_brace(h=50, l=100, thick=5, ang=30, strut=5, wall=3, center=true)
-{
-	deprecate("thinning_brace()", "thinning_triangle(..., diagonly=true)");
-	thinning_triangle(h=h, l=l, thick=thick, ang=ang, strut=strut, wall=wall, diagonly=true, center=center) children();
 }
 
 
