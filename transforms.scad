@@ -10,7 +10,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2017, Revar Desmera
+Copyright (c) 2017-2019, Revar Desmera
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -267,10 +267,10 @@ module up(z=0) translate([0,0,z]) children();
 //   rot(from=UP, to=LEFT+BACK) cube([2,4,9]);
 module rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false)
 {
-	if (is_def(cp)) {
+	if (!is_undef(cp)) {
 		translate(cp) rot(a=a, v=v, from=from, to=to, reverse=reverse) translate(-cp) children();
-	} else if (is_def(from)) {
-		assertion(is_def(to), "`from` and `to` should be used together.");
+	} else if (!is_undef(from)) {
+		assert(!is_undef(to), "`from` and `to` should be used together.");
 		axis = vector_axis(from, to);
 		ang = vector_angle(from, to);
 		if (ang < 0.0001 && a == 0) {
@@ -283,9 +283,9 @@ module rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false)
 	} else if (a == 0) {
 		children();  // May be slightly faster?
 	} else if (reverse) {
-		if (is_def(v)) {
+		if (!is_undef(v)) {
 			rotate(a=-a, v=v) children();
-		} else if (is_scalar(a)) {
+		} else if (is_num(a)) {
 			rotate(-a) children();
 		} else {
 			rotate([-a[0],0,0]) rotate([0,-a[1],0]) rotate([0,0,-a[2]]) children();
@@ -315,7 +315,7 @@ module xrot(a=0, cp=undef)
 {
 	if (a==0) {
 		children();  // May be slightly faster?
-	} else if (is_def(cp)) {
+	} else if (!is_undef(cp)) {
 		translate(cp) rotate([a, 0, 0]) translate(-cp) children();
 	} else {
 		rotate([a, 0, 0]) children();
@@ -342,7 +342,7 @@ module yrot(a=0, cp=undef)
 {
 	if (a==0) {
 		children();  // May be slightly faster?
-	} else if (is_def(cp)) {
+	} else if (!is_undef(cp)) {
 		translate(cp) rotate([0, a, 0]) translate(-cp) children();
 	} else {
 		rotate([0, a, 0]) children();
@@ -369,7 +369,7 @@ module zrot(a=0, cp=undef)
 {
 	if (a==0) {
 		children();  // May be slightly faster?
-	} else if (is_def(cp)) {
+	} else if (!is_undef(cp)) {
 		translate(cp) rotate(a) translate(-cp) children();
 	} else {
 		rotate(a) children();
@@ -637,23 +637,23 @@ module place_copies(a=[[0,0,0]])
 module spread(p1=undef, p2=undef, spacing=undef, l=undef, n=undef)
 {
 	ll = (
-		is_def(l)? scalar_vec3(l, 0) :
-		(is_def(spacing) && is_def(n))? (n * scalar_vec3(spacing, 0)) :
-		(is_def(p1) && is_def(p2))? point3d(p2-p1) :
+		!is_undef(l)? scalar_vec3(l, 0) :
+		(!is_undef(spacing) && !is_undef(n))? (n * scalar_vec3(spacing, 0)) :
+		(!is_undef(p1) && !is_undef(p2))? point3d(p2-p1) :
 		undef
 	);
 	cnt = (
-		is_def(n)? n :
-		(is_def(spacing) && is_def(ll))? floor(norm(ll) / norm(scalar_vec3(spacing, 0)) + 1.000001) :
+		!is_undef(n)? n :
+		(!is_undef(spacing) && !is_undef(ll))? floor(norm(ll) / norm(scalar_vec3(spacing, 0)) + 1.000001) :
 		2
 	);
 	spc = (
-		!is_def(spacing)? (ll/(cnt-1)) :
-		is_scalar(spacing) && is_def(ll)? (ll/(cnt-1)) :
+		is_undef(spacing)? (ll/(cnt-1)) :
+		is_num(spacing) && !is_undef(ll)? (ll/(cnt-1)) :
 		scalar_vec3(spacing, 0)
 	);
-	assertion(is_def(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `spread()`.");
-	spos = is_def(p1)? point3d(p1) : -(cnt-1)/2 * spc;
+	assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `spread()`.");
+	spos = !is_undef(p1)? point3d(p1) : -(cnt-1)/2 * spc;
 	for (i=[0 : cnt-1]) {
 		pos = i * spc + spos;
 		$pos = pos;
@@ -800,9 +800,9 @@ module zspread(spacing=undef, n=undef, l=undef, sp=undef)
 module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
 {
 	gaps = ($children < 2)? [0] :
-		is_def(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+		!is_undef(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
 		[for (i=[0:$children-2]) 0];
-	spc = is_def(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
+	spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
 	gaps2 = [for (gap = gaps) gap+spc];
 	spos = dir * -sum(gaps2)/2;
 	for (i=[0:$children-1]) {
@@ -845,9 +845,9 @@ module xdistribute(spacing=10, sizes=undef, l=undef)
 {
 	dir = RIGHT;
 	gaps = ($children < 2)? [0] :
-		is_def(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+		!is_undef(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
 		[for (i=[0:$children-2]) 0];
-	spc = is_def(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
+	spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
 	gaps2 = [for (gap = gaps) gap+spc];
 	spos = dir * -sum(gaps2)/2;
 	for (i=[0:$children-1]) {
@@ -890,9 +890,9 @@ module ydistribute(spacing=10, sizes=undef, l=undef)
 {
 	dir = BACK;
 	gaps = ($children < 2)? [0] :
-		is_def(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+		!is_undef(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
 		[for (i=[0:$children-2]) 0];
-	spc = is_def(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
+	spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
 	gaps2 = [for (gap = gaps) gap+spc];
 	spos = dir * -sum(gaps2)/2;
 	for (i=[0:$children-1]) {
@@ -935,9 +935,9 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 {
 	dir = UP;
 	gaps = ($children < 2)? [0] :
-		is_def(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+		!is_undef(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
 		[for (i=[0:$children-2]) 0];
-	spc = is_def(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
+	spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
 	gaps2 = [for (gap = gaps) gap+spc];
 	spos = dir * -sum(gaps2)/2;
 	for (i=[0:$children-1]) {
@@ -1006,9 +1006,9 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 {
 	assert_in_list("stagger", stagger, [false, true, "alt"]);
 	scl = vmul(scalar_vec3(scale, 1), (stagger!=false? [0.5, sin(60), 0] : [1,1,0]));
-	if (is_def(size)) {
+	if (!is_undef(size)) {
 		siz = scalar_vec3(size);
-		if (is_def(spacing)) {
+		if (!is_undef(spacing)) {
 			spc = vmul(scalar_vec3(spacing), scl);
 			maxcols = ceil(siz[0]/spc[0]);
 			maxrows = ceil(siz[1]/spc[1]);
@@ -1018,11 +1018,11 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 			grid2d(spacing=spc, cols=cols, rows=rows, stagger=stagger, scale=scale, in_poly=in_poly, orient=orient, align=align) children();
 		}
 	} else {
-		spc = is_array(spacing)? spacing : vmul(scalar_vec3(spacing), scl);
-		bounds = is_def(in_poly)? pointlist_bounds(in_poly) : undef;
-		bnds = is_def(bounds)? [for (a=[0:1]) 2*max(vabs([ for (i=[0,1]) bounds[i][a] ]))+1 ] : undef;
-		mcols = is_def(cols)? cols : (is_def(spc) && is_def(bnds))? quantup(ceil(bnds[0]/spc[0])-1, 4)+1 : undef;
-		mrows = is_def(rows)? rows : (is_def(spc) && is_def(bnds))? quantup(ceil(bnds[1]/spc[1])-1, 4)+1 : undef;
+		spc = is_list(spacing)? spacing : vmul(scalar_vec3(spacing), scl);
+		bounds = !is_undef(in_poly)? pointlist_bounds(in_poly) : undef;
+		bnds = !is_undef(bounds)? [for (a=[0:1]) 2*max(vabs([ for (i=[0,1]) bounds[i][a] ]))+1 ] : undef;
+		mcols = !is_undef(cols)? cols : (!is_undef(spc) && !is_undef(bnds))? quantup(ceil(bnds[0]/spc[0])-1, 4)+1 : undef;
+		mrows = !is_undef(rows)? rows : (!is_undef(spc) && !is_undef(bnds))? quantup(ceil(bnds[1]/spc[1])-1, 4)+1 : undef;
 		siz = vmul(spc, [mcols-1, mrows-1, 0]);
 		staggermod = (stagger == "alt")? 1 : 0;
 		if (stagger == false) {
@@ -1030,7 +1030,7 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 				for (row = [0:mrows-1]) {
 					for (col = [0:mcols-1]) {
 						pos = [col*spc[0], row*spc[1]] - point2d(siz/2);
-						if (!is_def(in_poly) || point_in_polygon(pos, in_poly)>=0) {
+						if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
 							$col = col;
 							$row = row;
 							$pos = pos;
@@ -1050,7 +1050,7 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 						for (col = [0:rowcols-1]) {
 							rowdx = (row%2 != staggermod)? spc[0] : 0;
 							pos = [2*col*spc[0]+rowdx, row*spc[1]] - point2d(siz/2);
-							if (!is_def(in_poly) || point_in_polygon(pos, in_poly)>=0) {
+							if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
 								$col = col * 2 + ((row%2!=staggermod)? 1 : 0);
 								$row = row;
 								$pos = pos;
@@ -1101,7 +1101,7 @@ module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
 {
 	n = scalar_vec3(n, 1);
 	spacing = scalar_vec3(spacing, undef);
-	if (is_def(n) && is_def(spacing)) {
+	if (!is_undef(n) && !is_undef(spacing)) {
 		for (xi = [0:n.x-1]) {
 			for (yi = [0:n.y-1]) {
 				for (zi = [0:n.z-1]) {
@@ -1182,7 +1182,7 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], count=undef, n=undef, sa=0, offs
 {
 	cnt = first_defined([count, n]);
 	sang = sa + offset;
-	angs = is_def(cnt)? (cnt<=0? [] : [for (i=[0:cnt-1]) i/cnt*360+sang]) : rots;
+	angs = !is_undef(cnt)? (cnt<=0? [] : [for (i=[0:cnt-1]) i/cnt*360+sang]) : rots;
 	if (cp != [0,0,0]) {
 		translate(cp) rot_copies(rots=rots, v=v, n=cnt, sa=sang, delta=delta, subrot=subrot) children();
 	} else if (subrot) {
@@ -1756,7 +1756,7 @@ module zflip_copy(offset=0, cp=[0,0,0])
 //   half_of([1,1], planar=true) circle(d=50);
 module half_of(v=UP, cp=[0,0,0], s=100, planar=false)
 {
-	cp = is_scalar(cp)? cp*normalize(v) : cp;
+	cp = is_num(cp)? cp*normalize(v) : cp;
 	if (cp != [0,0,0]) {
 		translate(cp) half_of(v=v, s=s, planar=planar) translate(-cp) children();
 	} else if (planar) {
@@ -1801,7 +1801,7 @@ module half_of(v=UP, cp=[0,0,0], s=100, planar=false)
 module top_half(s=100, cp=[0,0,0], planar=false)
 {
 	dir = planar? BACK : UP;
-	cp = is_scalar(cp)? cp*dir : cp;
+	cp = is_num(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
 		translate(-dir*s/2) {
@@ -1838,7 +1838,7 @@ module top_half(s=100, cp=[0,0,0], planar=false)
 module bottom_half(s=100, cp=[0,0,0], planar=false)
 {
 	dir = planar? FWD : DOWN;
-	cp = is_scalar(cp)? cp*dir : cp;
+	cp = is_num(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
 		translate(-dir*s/2) {
@@ -1875,7 +1875,7 @@ module bottom_half(s=100, cp=[0,0,0], planar=false)
 module left_half(s=100, cp=[0,0,0], planar=false)
 {
 	dir = LEFT;
-	cp = is_scalar(cp)? cp*dir : cp;
+	cp = is_num(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
 		translate(-dir*s/2) {
@@ -1912,7 +1912,7 @@ module left_half(s=100, cp=[0,0,0], planar=false)
 module right_half(s=100, cp=[0,0,0], planar=false)
 {
 	dir = RIGHT;
-	cp = is_scalar(cp)? cp*dir : cp;
+	cp = is_num(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
 		translate(-dir*s/2) {
@@ -1949,7 +1949,7 @@ module right_half(s=100, cp=[0,0,0], planar=false)
 module front_half(s=100, cp=[0,0,0], planar=false)
 {
 	dir = FWD;
-	cp = is_scalar(cp)? cp*dir : cp;
+	cp = is_num(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
 		translate(-dir*s/2) {
@@ -1986,7 +1986,7 @@ module front_half(s=100, cp=[0,0,0], planar=false)
 module back_half(s=100, cp=[0,0,0], planar=false)
 {
 	dir = BACK;
-	cp = is_scalar(cp)? cp*dir : cp;
+	cp = is_num(cp)? cp*dir : cp;
 	translate(cp) difference() {
 		translate(-cp) children();
 		translate(-dir*s/2) {
@@ -2156,7 +2156,7 @@ module round2d(r, or, ir)
 //   shell2d(8,or=16,ir=8,round=16,fill=8) {square([40,100], center=true); square([100,40], center=true);}
 module shell2d(thickness, or=0, ir=0, fill=0, round=0)
 {
-	thickness = is_scalar(thickness)? (
+	thickness = is_num(thickness)? (
 		thickness<0? [thickness,0] : [0,thickness]
 	) : (thickness[0]>thickness[1])? (
 		[thickness[1],thickness[0]]
@@ -2224,7 +2224,7 @@ module orient_and_align(
 ) {
 	size2 = point2d(default(size2, size));
 	shift = point2d(shift);
-	align = is_def(center)? (center? CENTER : noncentered) : align;
+	align = !is_undef(center)? (center? CENTER : noncentered) : align;
 	m = matrix4_mult(concat(
 		(orig_align==CENTER)? [] : [
 			// If original alignment is not centered, center it.
@@ -2316,7 +2316,7 @@ function find_connector(align, h, size, size2=undef, shift=[0,0], extra_conns=[]
 		shift = point3d(shift),
 		size = point3d(point2d(size)),
 		size2 = (size2!=undef)? point3d(point2d(size2)) : size,
-		found = !is_str(align)? [] : search([align], extra_conns, num_returns_per_match=1)[0]
+		found = !is_string(align)? [] : search([align], extra_conns, num_returns_per_match=1)[0]
 	) (found!=[])? extra_conns[found] : let(
 		top = [-size2/2+shift, shift, size2/2+shift],
 		bot = [-size/2, CENTER, size/2],
@@ -2356,7 +2356,7 @@ function find_connector(align, h, size, size2=undef, shift=[0,0], extra_conns=[]
 //   }
 module attach(name, to=undef, overlap=undef, norot=false)
 {
-	assertion($parent_size != undef, "No object to attach to!");
+	assert($parent_size != undef, "No object to attach to!");
 	overlap = (overlap!=undef)? overlap : $overlap;
 	conn = find_connector(name, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, extra_conns=$parent_conns);
 	pos = conn[1];

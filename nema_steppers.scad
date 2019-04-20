@@ -11,7 +11,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2017, Revar Desmera
+Copyright (c) 2017-2019, Revar Desmera
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -142,23 +142,25 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, align=DOWN)
 	screw_size = nema_motor_screw_size(size);
 	screw_depth = nema_motor_screw_depth(size);
 
-	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN) {
-		difference() {
-			color([0.4, 0.4, 0.4]) 
-				cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=DOWN);
-			color("silver")
-				xspread(screw_spacing)
-					yspread(screw_spacing)
-						cyl(r=screw_size/2, h=screw_depth*2, $fn=max(12,segs(screw_size/2)));
-		}
-		color([0.6, 0.6, 0.6]) {
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN, chain=true) {
+		union() {
 			difference() {
-				cylinder(h=plinth_height, d=plinth_diam);
-				cyl(h=plinth_height*3, d=shaft+0.75);
+				color([0.4, 0.4, 0.4]) 
+					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=DOWN);
+				color("silver")
+					xspread(screw_spacing)
+						yspread(screw_spacing)
+							cyl(r=screw_size/2, h=screw_depth*2, $fn=max(12,segs(screw_size/2)));
 			}
+			color([0.6, 0.6, 0.6]) {
+				difference() {
+					cylinder(h=plinth_height, d=plinth_diam);
+					cyl(h=plinth_height*3, d=shaft+0.75);
+				}
+			}
+			color("silver") cylinder(h=shaft_len, d=shaft, $fn=max(12,segs(shaft/2)));
 		}
-		color("silver")
-			cylinder(h=shaft_len, d=shaft, $fn=max(12,segs(shaft/2)));
+		children();
 	}
 }
 
@@ -184,23 +186,25 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, align=DOWN)
 	screw_size = nema_motor_screw_size(size);
 	screw_depth = nema_motor_screw_depth(size);
 
-	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN) {
-		difference() {
-			color([0.4, 0.4, 0.4])
-				cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=DOWN);
-			color("silver")
-				xspread(screw_spacing)
-					yspread(screw_spacing)
-						cyl(d=screw_size, h=screw_depth*2, $fn=max(12,segs(screw_size/2)));
-		}
-		color([0.6, 0.6, 0.6]) {
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN, chain=true) {
+		union() {
 			difference() {
-				cylinder(h=plinth_height, d=plinth_diam);
-				cyl(h=plinth_height*3, d=shaft+0.75);
+				color([0.4, 0.4, 0.4])
+					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=DOWN);
+				color("silver")
+					xspread(screw_spacing)
+						yspread(screw_spacing)
+							cyl(d=screw_size, h=screw_depth*2, $fn=max(12,segs(screw_size/2)));
 			}
+			color([0.6, 0.6, 0.6]) {
+				difference() {
+					cylinder(h=plinth_height, d=plinth_diam);
+					cyl(h=plinth_height*3, d=shaft+0.75);
+				}
+			}
+			color("silver") cyl(h=shaft_len, d=shaft, align=UP, $fn=max(12,segs(shaft/2)));
 		}
-		color("silver")
-			cyl(h=shaft_len, d=shaft, align=UP, $fn=max(12,segs(shaft/2)));
+		children();
 	}
 }
 
@@ -226,41 +230,44 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, align=DOWN)
 	screw_size = nema_motor_screw_size(size);
 	screw_depth = nema_motor_screw_depth(size);
 
-	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN) {
-		difference() {
-			color([0.4, 0.4, 0.4])
-				cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=DOWN);
-			color("silver")
-				xspread(screw_spacing)
-					yspread(screw_spacing)
-						cyl(d=screw_size, h=screw_depth*2, $fn=max(12,segs(screw_size/2)));
-		}
-		color([0.6, 0.6, 0.6]) {
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN, chain=true) {
+		union() {
 			difference() {
-				cylinder(h=plinth_height, d=plinth_diam);
-				cyl(h=plinth_height*3, d=shaft+0.75);
+				color([0.4, 0.4, 0.4])
+					cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, align=DOWN);
+				color("silver")
+					xspread(screw_spacing)
+						yspread(screw_spacing)
+							cyl(d=screw_size, h=screw_depth*2, $fn=max(12,segs(screw_size/2)));
 			}
-		}
-		color([0.9, 0.9, 0.9]) {
-			down(h-motor_width/12) {
-				fwd(motor_width/2+motor_width/24/2-0.1) {
-					difference() {
-						cube(size=[motor_width/8, motor_width/24, motor_width/8], center=true);
-						cyl(d=motor_width/8-2, h=motor_width/6, orient=ORIENT_Y, $fn=12);
+			color([0.6, 0.6, 0.6]) {
+				difference() {
+					cylinder(h=plinth_height, d=plinth_diam);
+					cyl(h=plinth_height*3, d=shaft+0.75);
+				}
+			}
+			color([0.9, 0.9, 0.9]) {
+				down(h-motor_width/12) {
+					fwd(motor_width/2+motor_width/24/2-0.1) {
+						difference() {
+							cube(size=[motor_width/8, motor_width/24, motor_width/8], center=true);
+							cyl(d=motor_width/8-2, h=motor_width/6, orient=ORIENT_Y, $fn=12);
+						}
+					}
+				}
+			}
+			color("silver") {
+				difference() {
+					cylinder(h=shaft_len, d=shaft, $fn=max(12,segs(shaft/2)));
+					up(shaft_len/2+1) {
+						right(shaft-0.75) {
+							cube([shaft, shaft, shaft_len], center=true);
+						}
 					}
 				}
 			}
 		}
-		color("silver") {
-			difference() {
-				cylinder(h=shaft_len, d=shaft, $fn=max(12,segs(shaft/2)));
-				up(shaft_len/2+1) {
-					right(shaft-0.75) {
-						cube([shaft, shaft, shaft_len], center=true);
-					}
-				}
-			}
-		}
+		children();
 	}
 }
 
@@ -287,7 +294,7 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, align=DOW
 	screw_depth = nema_motor_screw_depth(size);
 
 	screw_inset = motor_width - screw_spacing + 1;
-	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN) {
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN, chain=true) {
 		difference() {
 			union() {
 				color([0.4, 0.4, 0.4])
@@ -306,6 +313,7 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, align=DOW
 				}
 			}
 		}
+		children();
 	}
 }
 
@@ -332,7 +340,7 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, align=DOW
 	screw_depth = nema_motor_screw_depth(size);
 
 	screw_inset = motor_width - screw_spacing + 1;
-	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN) {
+	orient_and_align([motor_width, motor_width, h], orient, align, orig_align=DOWN, chain=true) {
 		difference() {
 			union() {
 				color([0.4, 0.4, 0.4])
@@ -351,6 +359,7 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, align=DOW
 				}
 			}
 		}
+		children();
 	}
 }
 
@@ -382,7 +391,7 @@ module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_
 	screw_spacing = nema_motor_screw_spacing(size);
 	screw_size = nema_motor_screw_size(size)+slop;
 
-	orient_and_align([motor_width, motor_width, l], orient, align) {
+	orient_and_align([motor_width, motor_width, l], orient, align, chain=true) {
 		union() {
 			xspread(screw_spacing) {
 				yspread(screw_spacing) {
@@ -396,15 +405,16 @@ module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_
 					}
 				}
 			}
-		}
-		if (l>0) {
-			union () {
-				yspread(l) cyl(h=depth, d=plinth_diam);
-				cube([plinth_diam, l, depth], center=true);
+			if (l>0) {
+				union () {
+					yspread(l) cyl(h=depth, d=plinth_diam);
+					cube([plinth_diam, l, depth], center=true);
+				}
+			} else {
+				cyl(h=depth, d=plinth_diam);
 			}
-		} else {
-			cyl(h=depth, d=plinth_diam);
 		}
+		children();
 	}
 }
 
@@ -424,7 +434,7 @@ module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_
 //   nema11_mount_holes(depth=5, l=0);
 module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=CENTER)
 {
-	nema_mount_holes(size=11, depth=depth, l=l, slop=slop, orient=orient, align=align);
+	nema_mount_holes(size=11, depth=depth, l=l, slop=slop, orient=orient, align=align) children();
 }
 
 
@@ -443,7 +453,7 @@ module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, alig
 //   nema14_mount_holes(depth=5, l=0);
 module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=CENTER)
 {
-	nema_mount_holes(size=14, depth=depth, l=l, slop=slop, orient=orient, align=align);
+	nema_mount_holes(size=14, depth=depth, l=l, slop=slop, orient=orient, align=align) children();
 }
 
 
@@ -462,7 +472,7 @@ module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, alig
 //   nema17_mount_holes(depth=5, l=0);
 module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=CENTER)
 {
-	nema_mount_holes(size=17, depth=depth, l=l, slop=slop, orient=orient, align=align);
+	nema_mount_holes(size=17, depth=depth, l=l, slop=slop, orient=orient, align=align) children();
 }
 
 
@@ -481,7 +491,7 @@ module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, alig
 //   nema23_mount_holes(depth=5, l=0);
 module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=CENTER)
 {
-	nema_mount_holes(size=23, depth=depth, l=l, slop=slop, orient=orient, align=align);
+	nema_mount_holes(size=23, depth=depth, l=l, slop=slop, orient=orient, align=align) children();
 }
 
 
@@ -500,7 +510,7 @@ module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, alig
 //   nema34_mount_holes(depth=5, l=0);
 module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=CENTER)
 {
-	nema_mount_holes(size=34, depth=depth, l=l, slop=slop, orient=orient, align=align);
+	nema_mount_holes(size=34, depth=depth, l=l, slop=slop, orient=orient, align=align) children();
 }
 
 
@@ -519,7 +529,7 @@ module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, alig
 //   nema34_mount_holes(depth=5, l=0);
 module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, align=CENTER)
 {
-	nema_mount_holes(size=34, depth=depth, l=l, slop=slop, orient=orient, align=align);
+	nema_mount_holes(size=34, depth=depth, l=l, slop=slop, orient=orient, align=align) children();
 }
 
 

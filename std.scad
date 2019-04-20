@@ -10,7 +10,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2017, Revar Desmera
+Copyright (c) 2017-2019, Revar Desmera
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -39,10 +39,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 include <BOSL2/constants.scad>
 include <BOSL2/compat.scad>
 include <BOSL2/math.scad>
+include <BOSL2/arrays.scad>
+include <BOSL2/vector.scad>
+include <BOSL2/matrices.scad>
+include <BOSL2/coords.scad>
+include <BOSL2/geometry.scad>
 include <BOSL2/transforms.scad>
+include <BOSL2/primitives.scad>
 include <BOSL2/shapes.scad>
 include <BOSL2/masks.scad>
-include <BOSL2/primitives.scad>
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

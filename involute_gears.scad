@@ -311,7 +311,7 @@ module gear(
 	c = outer_radius(mm_per_tooth, number_of_teeth, clearance, interior);
 	r = root_radius(mm_per_tooth, number_of_teeth, clearance, interior);
 	p2 = p - (thickness*tan(bevelang));
-	orient_and_align([p, p, thickness], orient, align) {
+	orient_and_align([p, p, thickness], orient, align, chain=true) {
 		difference() {
 			linear_extrude(height=thickness, center=true, convexity=10, twist=twist, scale=p2/p, slices=slices) {
 				gear2d(
@@ -338,6 +338,7 @@ module gear(
 				}
 			}
 		}
+		children();
 	}
 }
 
@@ -373,7 +374,7 @@ module rack(
 	d = dedendum(mm_per_tooth, clearance);
 	xa = a * sin(pressure_angle);
 	xd = d * sin(pressure_angle);
-	orient_and_align([(number_of_teeth-1)*mm_per_tooth, height, thickness], orient, align, orig_orient=ORIENT_X) {
+	orient_and_align([(number_of_teeth-1)*mm_per_tooth, height, thickness], orient, align, orig_orient=ORIENT_X, chain=true) {
 		left((number_of_teeth-1)*mm_per_tooth/2) {
 			linear_extrude(height = thickness, center = true, convexity = 10) {
 				for (i = [0:number_of_teeth-1] ) {
@@ -394,6 +395,7 @@ module rack(
 				}
 			}
 		}
+		children();
 	}
 }
 

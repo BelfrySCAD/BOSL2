@@ -11,7 +11,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2017, Revar Desmera
+Copyright (c) 2017-2019, Revar Desmera
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -218,12 +218,13 @@ module trapezoidal_threaded_rod(
 			) otri
 		]
 	);
-	orient_and_align([d,d,l], orient, align, center) {
+	orient_and_align([d,d,l], orient, align, center, chain=true) {
 		difference() {
 			polyhedron(points=poly_points, faces=poly_faces, convexity=threads*starts*2);
 			zspread(l+4*pitch*starts) cube([d+1, d+1, 4*pitch*starts], center=true);
 			if (bevel) cylinder_mask(d=d, l=l+0.01, chamfer=depth);
 		}
+		children();
 	}
 }
 
@@ -269,7 +270,7 @@ module trapezoidal_threaded_nut(
 	align=CENTER
 ) {
 	depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
-	orient_and_align([od/cos(30),od,h], orient, align) {
+	orient_and_align([od/cos(30),od,h], orient, align, chain=true) {
 		difference() {
 			cylinder(d=od/cos(30), h=h, center=true, $fn=6);
 			zspread(slop, n=slop>0?2:1) {
@@ -291,6 +292,7 @@ module trapezoidal_threaded_nut(
 				}
 			}
 		}
+		children();
 	}
 }
 
@@ -320,7 +322,7 @@ module threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false, orient
 		bevel=bevel,
 		orient=orient,
 		align=align
-	);
+	) children();
 }
 
 
@@ -354,7 +356,7 @@ module threaded_nut(
 		left_handed=left_handed,
 		bevel=bevel, slop=slop,
 		orient=orient, align=align
-	);
+	) children();
 }
 
 
@@ -392,7 +394,7 @@ module metric_trapezoidal_threaded_rod(
 		bevel=bevel,
 		orient=orient,
 		align=align
-	);
+	) children();
 }
 
 
@@ -433,7 +435,7 @@ module metric_trapezoidal_threaded_nut(
 		slop=slop,
 		orient=orient,
 		align=align
-	);
+	) children();
 }
 
 
@@ -476,7 +478,7 @@ module acme_threaded_rod(
 		bevel=bevel,
 		orient=orient,
 		align=align
-	);
+	) children();
 }
 
 
@@ -521,7 +523,7 @@ module acme_threaded_nut(
 		slop=slop,
 		orient=orient,
 		align=align
-	);
+	) children();
 }
 
 
@@ -558,7 +560,7 @@ module square_threaded_rod(
 		starts=starts,
 		orient=orient,
 		align=align
-	);
+	) children();
 }
 
 
@@ -599,7 +601,7 @@ module square_threaded_nut(
 		slop=slop,
 		orient=orient,
 		align=align
-	);
+	) children();
 }
 
 

@@ -11,7 +11,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2017, Revar Desmera
+Copyright (c) 2017-2019, Revar Desmera
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -212,10 +212,11 @@ module torx_drive2d(size) {
 //   torx_drive(size=30, l=10, $fa=1, $fs=1);
 module torx_drive(size, l=5, center=undef, orient=ORIENT_Z, align=UP) {
 	od = torx_outer_diam(size);
-	orient_and_align([od, od, l], orient, align, center) {
+	orient_and_align([od, od, l], orient, align, center, chain=true) {
 		linear_extrude(height=l, convexity=4, center=true) {
 			torx_drive2d(size);
 		}
+		children();
 	}
 }
 

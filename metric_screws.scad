@@ -14,7 +14,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2017, Revar Desmera
+Copyright (c) 2017-2019, Revar Desmera
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -418,7 +418,7 @@ module screw(
 		["base",   [0,0,-headlen/2+screwlen/2]],
 		["sunken", [0,0,(headlen+screwlen)/2-0.01]]
 	];
-	orient_and_align([headsize, headsize, headlen+screwlen], orient, algn, alignments=alignments) {
+	orient_and_align([headsize, headsize, headlen+screwlen], orient, algn, alignments=alignments, chain=true) {
 		down(headlen/2-screwlen/2) {
 			down(screwlen/2) {
 				if (pitch == undef) {
@@ -429,6 +429,7 @@ module screw(
 			}
 			up(headlen/2) cylinder(r=headsize/2, h=headlen, center=true, $fn=sides*2);
 		}
+		children();
 	}
 }
 
@@ -530,7 +531,7 @@ module metric_bolt(
 	];
 
 	color("silver")
-	orient_and_align([D+flange, D+flange, headlen+l], orient, align, alignments=alignments) {
+	orient_and_align([D+flange, D+flange, headlen+l], orient, align, alignments=alignments, chain=true) {
 		up(base) {
 			difference() {
 				union() {
@@ -624,6 +625,7 @@ module metric_bolt(
 				}
 			}
 		}
+		children();
 	}
 }
 
@@ -670,7 +672,7 @@ module metric_nut(
 	bevtop = (dcirc - D)/2;
 
 	color("silver")
-	orient_and_align([dcirc+flange, dcirc+flange, H], orient, align, center) {
+	orient_and_align([dcirc+flange, dcirc+flange, H], orient, align, center, chain=true) {
 		difference() {
 			union() {
 				difference() {
@@ -707,6 +709,7 @@ module metric_nut(
 				}
 			}
 		}
+		children();
 	}
 }
 

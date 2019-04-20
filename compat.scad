@@ -11,7 +11,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2017, Revar Desmera
+Copyright (c) 2017-2019, Revar Desmera
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -47,32 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Arguments:
 //   v = Value to pass through if not `undef`.
 //   dflt = Value to return if `v` *is* `undef`.
-function default(v,dflt=undef) = v==undef? dflt : v;
-
-
-// Function: is_def()
-// Description: Returns true if given value is not `undef`.
-function is_def(v) = (version_num() > 20190100)? !is_undef(v) : (v != undef);
-
-
-// Function: is_str()
-// Description: Given a value, returns true if it is a string.
-function is_str(v) = (version_num() > 20190100)? is_string(v) : (v=="" || (is_def(v) && is_def(v[0]) && (len(str(v,v)) == len(v)*2)));
-
-
-// Function: is_boolean()
-// Description: Given a value, returns true if it is a boolean.
-function is_boolean(v) = (version_num() > 20190100)? is_bool(v) : (!is_str(v) && (str(v) == "true" || str(v) == "false"));
-
-
-// Function: is_scalar()
-// Description: Given a value, returns true if it is a scalar number.
-function is_scalar(v) = (version_num() > 20190100)? is_num(v) : (!is_boolean(v) && is_def(v+0));
-
-
-// Function: is_array()
-// Description: Given a value, returns true if it is an array/list/vector.
-function is_array(v) = (version_num() > 20190100)? is_list(v) : (v==[] || (is_def(v[0]) && !is_str(v) ));
+function default(v,dflt=undef) = is_undef(v)? dflt : v;
 
 
 // Function: get_radius()
@@ -88,23 +63,18 @@ function is_array(v) = (version_num() > 20190100)? is_list(v) : (v==[] || (is_de
 //   d = Most general diameter.
 //   dflt = Value to return if all other values given are `undef`.
 function get_radius(r1=undef, r=undef, d1=undef, d=undef, dflt=undef) = (
-	is_def(r1)? r1 :
-	is_def(d1)? d1/2 :
-	is_def(r)? r :
-	is_def(d)? d/2 :
+	!is_undef(r1)? r1 :
+	!is_undef(d1)? d1/2 :
+	!is_undef(r)? r :
+	!is_undef(d)? d/2 :
 	dflt
 );
 
 
-// Function: Len()
-// Description:
-//   Given an array, returns number of items in array.  Otherwise returns `undef`.
-function Len(v) = is_array(v)? len(v) : undef;
-
 
 // Function: remove_undefs()
 // Description: Removes all `undef`s from a list.
-function remove_undefs(v) = [for (x = v) if (is_def(x)) x];
+function remove_undefs(v) = [for (x = v) if (!is_undef(x)) x];
 
 
 // Function: first_defined()
@@ -132,15 +102,11 @@ function any_defined(v) = len(remove_undefs(v))>0;
 //   v = Value to return vector from.
 //   dflt = Default value to set empty vector parts from.
 function scalar_vec3(v, dflt=undef) =
-	!is_def(v)? undef :
-	is_array(v)? [for (i=[0:2]) default(v[i], default(dflt, 0))] :
-	is_def(dflt)? [v,dflt,dflt] : [v,v,v];
+	is_undef(v)? undef :
+	is_list(v)? [for (i=[0:2]) default(v[i], default(dflt, 0))] :
+	!is_undef(dflt)? [v,dflt,dflt] : [v,v,v];
 
 
-
-// Function: f_echo()
-// Description: If possible, echo a message from a function.
-function f_echo(msg) = (version_num() > 20190100)? echo(msg) : 0;
 
 
 // Section: Modules
@@ -162,9 +128,9 @@ module assert_in_list(argname, val, l, idx=undef) {
 	if (!succ) {
 		msg = str(
 			"In argument '", argname, "', ",
-			(is_str(val)? str("\"", val, "\"") : val),
+			(is_string(val)? str("\"", val, "\"") : val),
 			" must be one of ",
-			(is_def(idx)? [for (v=l) v[idx]] : l)
+			(!is_undef(idx)? [for (v=l) v[idx]] : l)
 		);
 		assertion(succ, msg);
 	}
@@ -175,9 +141,9 @@ function assert_in_list(argname, val, l, idx=undef) =
 	succ? 0 : let(
 		msg = str(
 			"In argument '", argname, "', ",
-			(is_str(val)? str("\"", val, "\"") : val),
+			(is_string(val)? str("\"", val, "\"") : val),
 			" must be one of ",
-			(is_def(idx)? [for (v=l) v[idx]] : l)
+			(!is_undef(idx)? [for (v=l) v[idx]] : l)
 		)
 	) assertion(succ, msg);
 
@@ -193,17 +159,13 @@ function assert_in_list(argname, val, l, idx=undef) =
 //   succ = If this is `false`, trigger the assertion.
 //   msg = The message to emit if `succ` is `false`.
 module assertion(succ, msg) {
-	if (version_num() > 20190100) {
-		// assert() will echo the variable name, and `succ` looks confusing there.  So we store it in FAILED.
-		FAILED = succ;
-		assert(FAILED, msg);
-	} else if (!succ) {
-		echo_error(msg);
-	}
+	// assert() will echo the variable name, and `succ` looks confusing there.  So we store it in FAILED.
+	FAILED = succ;
+	assert(FAILED, msg);
 }
 
 function assertion(succ, msg) =
-	(version_num() > 20190100)? let(FAILED=succ) assert(FAILED, msg) : 0;
+	let(FAILED=succ) assert(FAILED, msg);
 
 
 // Module: echo_error()
@@ -220,7 +182,7 @@ module echo_error(msg, pfx="ERROR") {
 }
 
 function echo_error(msg, pfx="ERROR") =
-	f_echo(str("<p style=\"background-color: #ffb0b0\"><b>", pfx, ":</b> ", msg, "</p>"));
+	echo(str("<p style=\"background-color: #ffb0b0\"><b>", pfx, ":</b> ", msg, "</p>"));
 
 
 // Module: echo_warning()
@@ -237,7 +199,7 @@ module echo_warning(msg, pfx="WARNING") {
 }
 
 function echo_warning(msg, pfx="WARNING") =
-	f_echo(str("<p style=\"background-color: #ffffb0\"><b>", pfx, ":</b> ", msg, "</p>"));
+	echo(str("<p style=\"background-color: #ffffb0\"><b>", pfx, ":</b> ", msg, "</p>"));
 
 
 // Module: deprecate()
@@ -253,7 +215,7 @@ module deprecate(name, suggest=undef) {
 	echo_warning(pfx="DEPRECATED",
 		str(
 			"`<code>", name, "</code>` is deprecated and should not be used.",
-			!is_def(suggest)? "" : str(
+			is_undef(suggest)? "" : str(
 				"  You should use `<code>", suggest, "</code>` instead."
 			)
 		)
@@ -264,7 +226,7 @@ function deprecate(name, suggest=undef) =
 	echo_warning(pfx="DEPRECATED",
 		str(
 			"`<code>", name, "</code>` is deprecated and should not be used.",
-			!is_def(suggest)? "" : str(
+			is_undef(suggest)? "" : str(
 				"  You should use `<code>", suggest, "</code>` instead."
 			)
 		)
@@ -286,7 +248,7 @@ module deprecate_argument(name, arg, suggest=undef) {
 		"In `<code>", name, "</code>`, ",
 		"the argument `<code>", arg, "</code>` ",
 		"is deprecated and should not be used.",
-		!is_def(suggest)? "" : str(
+		is_undef(suggest)? "" : str(
 			"  You should use `<code>", suggest, "</code>` instead."
 		)
 	));
@@ -297,7 +259,7 @@ function deprecate_argument(name, arg, suggest=undef) =
 		"In `<code>", name, "</code>`, ",
 		"the argument `<code>", arg, "</code>` ",
 		"is deprecated and should not be used.",
-		!is_def(suggest)? "" : str(
+		is_undef(suggest)? "" : str(
 			"  You should use `<code>", suggest, "</code>` instead."
 		)
 	));

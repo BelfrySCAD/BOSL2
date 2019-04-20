@@ -12,7 +12,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2017, Revar Desmera
+Copyright (c) 2017-2019, Revar Desmera
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -111,7 +111,7 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 	od = d+2*wall;
 	ogap = gap+2*tabwall;
 	tabh = tab/2+od/2*sqrt(2)-ogap/2;
-	orient_and_align([l, od, od], orient, align, orig_orient=ORIENT_X) {
+	orient_and_align([l, od, od], orient, align, orig_orient=ORIENT_X, chain=true) {
 		difference() {
 			union() {
 				zrot(90) teardrop(r=od/2,h=l);
@@ -128,6 +128,7 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 					xrot(90) metric_nut(size=screwsize, hole=false);
 			}
 		}
+		children();
 	}
 }
 
@@ -150,7 +151,7 @@ module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, orien
 {
 	d = get_lmXuu_bearing_diam(size);
 	l = get_lmXuu_bearing_length(size);
-	linear_bearing_housing(d=d,l=l,tab=tab,gap=gap,wall=wall,tabwall=tabwall,screwsize=screwsize, orient=orient, align=align);
+	linear_bearing_housing(d=d,l=l,tab=tab,gap=gap,wall=wall,tabwall=tabwall,screwsize=screwsize, orient=orient, align=align) children();
 }
 
 

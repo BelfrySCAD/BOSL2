@@ -11,7 +11,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2017, Revar Desmera
+Copyright (c) 2017-2019, Revar Desmera
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -61,7 +61,7 @@ module phillips_drive(size="#2", shaft=6, l=20, orient=ORIENT_Z, align=UP) {
 	r = radidx == []? 0 : rads[radidx][1];
 	h = (r/2)/tan(ang);
 	cr = r/2;
-	orient_and_align([shaft, shaft, l], orient, align) {
+	orient_and_align([shaft, shaft, l], orient, align, chain=true) {
 		down(l/2) {
 			difference() {
 				intersection() {
@@ -97,6 +97,7 @@ module phillips_drive(size="#2", shaft=6, l=20, orient=ORIENT_Z, align=UP) {
 				}
 			}
 		}
+		children();
 	}
 }
 

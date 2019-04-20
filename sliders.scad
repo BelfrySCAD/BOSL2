@@ -11,7 +11,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2017, Revar Desmera
+Copyright (c) 2017-2019, Revar Desmera
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -63,7 +63,7 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orie
 	full_width = w + 2*wall;
 	full_height = h + base;
 
-	orient_and_align([full_width, l, h+2*base], orient, align, orig_orient=ORIENT_Y) {
+	orient_and_align([full_width, l, h+2*base], orient, align, orig_orient=ORIENT_Y, chain=true) {
 		down(base+h/2) {
 			// Base
 			cuboid([full_width, l, base-slop], chamfer=2, edges=EDGE_TOP_FR+EDGE_TOP_BK+EDGES_Z_ALL, align=UP);
@@ -81,6 +81,7 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orie
 				}
 			}
 		}
+		children();
 	}
 }
 
@@ -127,7 +128,7 @@ module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, orient=ORIENT_Y, align=UP)
 	y1 = l/2;
 	y2 = y1 - attack_len * cos(attack_ang);
 
-	orient_and_align([w, l, h], orient, align, orig_orient=ORIENT_Y) {
+	orient_and_align([w, l, h], orient, align, orig_orient=ORIENT_Y, chain=true) {
 		polyhedron(
 			convexity=4,
 			points=[
@@ -222,6 +223,7 @@ module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, orient=ORIENT_Y, align=UP)
 				[13, 21, 6],
 			]
 		);
+		children();
 	}
 }
 

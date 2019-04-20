@@ -10,7 +10,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2017, Revar Desmera
+Copyright (c) 2017-2019, Revar Desmera
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -87,8 +87,8 @@ module cuboid(
 	center=undef
 ) {
 	size = scalar_vec3(size);
-	if (is_def(p1)) {
-		if (is_def(p2)) {
+	if (!is_undef(p1)) {
+		if (!is_undef(p2)) {
 			translate([for (v=array_zip([p1,p2],0)) min(v)]) {
 				cuboid(size=vabs(p2-p1), chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, align=ALLPOS) children();
 			}
@@ -98,8 +98,8 @@ module cuboid(
 			}
 		}
 	} else {
-		if (chamfer != undef) assertion(chamfer <= min(size)/2, "chamfer must be smaller than half the cube width, length, or height.");
-		if (fillet != undef)  assertion(fillet <= min(size)/2, "fillet must be smaller than half the cube width, length, or height.");
+		if (chamfer != undef) assert(chamfer <= min(size)/2, "chamfer must be smaller than half the cube width, length, or height.");
+		if (fillet != undef)  assert(fillet <= min(size)/2, "fillet must be smaller than half the cube width, length, or height.");
 		majrots = [[0,90,0], [90,0,0], [0,0,0]];
 		orient_and_align(size, ORIENT_Z, align, center=center, noncentered=ALLPOS, chain=true) {
 			if (chamfer != undef) {
@@ -608,30 +608,30 @@ module cyl(
 				fil1 = first_defined([fillet1, fillet]);
 				fil2 = first_defined([fillet2, fillet]);
 				if (chamfer != undef) {
-					assertion(chamfer <= r1,  "chamfer is larger than the r1 radius of the cylinder.");
-					assertion(chamfer <= r2,  "chamfer is larger than the r2 radius of the cylinder.");
-					assertion(chamfer <= l/2, "chamfer is larger than half the length of the cylinder.");
+					assert(chamfer <= r1,  "chamfer is larger than the r1 radius of the cylinder.");
+					assert(chamfer <= r2,  "chamfer is larger than the r2 radius of the cylinder.");
+					assert(chamfer <= l/2, "chamfer is larger than half the length of the cylinder.");
 				}
 				if (cham1 != undef) {
-					assertion(cham1 <= r1,  "chamfer1 is larger than the r1 radius of the cylinder.");
-					assertion(cham1 <= l/2, "chamfer1 is larger than half the length of the cylinder.");
+					assert(cham1 <= r1,  "chamfer1 is larger than the r1 radius of the cylinder.");
+					assert(cham1 <= l/2, "chamfer1 is larger than half the length of the cylinder.");
 				}
 				if (cham2 != undef) {
-					assertion(cham2 <= r2,  "chamfer2 is larger than the r2 radius of the cylinder.");
-					assertion(cham2 <= l/2, "chamfer2 is larger than half the length of the cylinder.");
+					assert(cham2 <= r2,  "chamfer2 is larger than the r2 radius of the cylinder.");
+					assert(cham2 <= l/2, "chamfer2 is larger than half the length of the cylinder.");
 				}
 				if (fillet != undef) {
-					assertion(fillet <= r1,  "fillet is larger than the r1 radius of the cylinder.");
-					assertion(fillet <= r2,  "fillet is larger than the r2 radius of the cylinder.");
-					assertion(fillet <= l/2, "fillet is larger than half the length of the cylinder.");
+					assert(fillet <= r1,  "fillet is larger than the r1 radius of the cylinder.");
+					assert(fillet <= r2,  "fillet is larger than the r2 radius of the cylinder.");
+					assert(fillet <= l/2, "fillet is larger than half the length of the cylinder.");
 				}
 				if (fil1 != undef) {
-					assertion(fil1 <= r1,  "fillet1 is larger than the r1 radius of the cylinder.");
-					assertion(fil1 <= l/2, "fillet1 is larger than half the length of the cylinder.");
+					assert(fil1 <= r1,  "fillet1 is larger than the r1 radius of the cylinder.");
+					assert(fil1 <= l/2, "fillet1 is larger than half the length of the cylinder.");
 				}
 				if (fil2 != undef) {
-					assertion(fil2 <= r2,  "fillet2 is larger than the r1 radius of the cylinder.");
-					assertion(fil2 <= l/2, "fillet2 is larger than half the length of the cylinder.");
+					assert(fil2 <= r2,  "fillet2 is larger than the r1 radius of the cylinder.");
+					assert(fil2 <= l/2, "fillet2 is larger than half the length of the cylinder.");
 				}
 
 				dy1 = first_defined([cham1, fil1, 0]);
@@ -924,8 +924,8 @@ module tube(
 	r2 = first_defined([or2, od2/2, r2, d2/2, or, od/2, r, d/2, ir2+wall, id2/2+wall, ir+wall, id/2+wall]);
 	ir1 = first_defined([ir1, id1/2, ir, id/2, r1-wall, d1/2-wall, r-wall, d/2-wall]);
 	ir2 = first_defined([ir2, id2/2, ir, id/2, r2-wall, d2/2-wall, r-wall, d/2-wall]);
-	assertion(ir1 <= r1, "Inner radius is larger than outer radius.");
-	assertion(ir2 <= r2, "Inner radius is larger than outer radius.");
+	assert(ir1 <= r1, "Inner radius is larger than outer radius.");
+	assert(ir2 <= r2, "Inner radius is larger than outer radius.");
 	sides = segs(max(r1,r2));
 	size = [r1*2,r1*2,h];
 	size2 = [r2*2,r2*2,h];
@@ -1113,7 +1113,7 @@ module teardrop2d(r=1, d=undef, ang=45, cap_h=undef)
 	cord = 2 * r * cos(ang);
 	cord_h = r * sin(ang);
 	tip_y = (cord/2)/tan(ang);
-	cap_h = min((is_def(cap_h)? cap_h : tip_y+cord_h), tip_y+cord_h);
+	cap_h = min((!is_undef(cap_h)? cap_h : tip_y+cord_h), tip_y+cord_h);
 	cap_w = cord * (1 - (cap_h - cord_h)/tip_y);
 	difference() {
 		hull() {

@@ -13,7 +13,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2017, Revar Desmera
+Copyright (c) 2017-2019, Revar Desmera
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -233,7 +233,7 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 //       circle(r=40, $fn=6);
 module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, orient=ORIENT_Z, align=UP)
 {
-	orient_and_align([0,0,height], orient, align, center) {
+	orient_and_align([0,0,height], orient, align, center, chain=true) {
 		linear_extrude(height=height, twist=twist, slices=slices, center=true) {
 			difference() {
 				children();
@@ -242,6 +242,7 @@ module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, o
 				}
 			}
 		}
+		children();
 	}
 }
 
@@ -300,8 +301,9 @@ module extrude_2dpath_along_spiral(polyline, h, r, twist=360, center=undef, orie
 	);
 
 	tri_faces = triangulate_faces(poly_points, poly_faces);
-	orient_and_align([r,r,h], orient, align, center) {
+	orient_and_align([r,r,h], orient, align, center, chain=true) {
 		polyhedron(points=poly_points, faces=tri_faces, convexity=10);
+		children();
 	}
 }
 
@@ -461,7 +463,7 @@ module trace_polyline(pline, N=1, showpts=false, size=1, color="yellow") {
 //   );
 module debug_polygon(points, paths=undef, convexity=2, size=1)
 {
-	pths = (!is_def(paths))? [for (i=[0:len(points)-1]) i] : is_scalar(paths[0])? [paths] : paths;
+	pths = is_undef(paths)? [for (i=[0:len(points)-1]) i] : is_num(paths[0])? [paths] : paths;
 	echo(points=points);
 	echo(paths=paths);
 	linear_extrude(height=0.01, convexity=convexity, center=true) {
