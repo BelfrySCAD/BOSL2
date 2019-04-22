@@ -18,10 +18,10 @@ module leaf(s) {
 module branches(minsize){
     if($parent_size2.x>minsize) {
 		attach(TOP)
-		zrot(gaussian_rand(90,10))
+		zrot(gaussian_rand(90,20))
 		zring(n=floor(log_rand(2,5,4)))
 		zrot(gaussian_rand(0,5))
-		yrot(gaussian_rand(30,5))
+		yrot(gaussian_rand(30,10))
 		let(
 			sc = gaussian_rand(0.7,0.05),
 			s1 = $parent_size.z*sc,
@@ -35,7 +35,7 @@ module branches(minsize){
 		leaf(gaussian_rand(100,5));
 	}
 }
-recolor("lightgray") cylinder(d1=300, d2=250, l=1500) branches(5);
+recolor("lightgray") cylinder(d1=300, d2=250, l=1500) branches(10);
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
