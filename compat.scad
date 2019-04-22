@@ -3,7 +3,7 @@
 //   Backwards Compatability library
 //   To use, include this line at the top of your file:
 //   ```
-//   use <compat.scad>
+//   use <BOSL2/std.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

@@ -54,9 +54,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Example: Simple regular cube.
 //   cube(40);
-// Example: Rectangular cube, with given X, Y, and Z sizes.
+// Example: Rectangular cube.
 //   cuboid([20,40,50]);
-module cube(size, center=undef, align=ALLPOS)
+// Example: Standard Connectors.
+//   cube(40, center=true) show_connectors();
+module cube(size, center=undef, align=ALLNEG)
 {
 	size = scalar_vec3(size);
 	orient_and_align(size, ORIENT_Z, align, center, noncentered=ALLPOS, chain=true) {
@@ -96,14 +98,19 @@ module cube(size, center=undef, align=ALLPOS)
 //       cylinder(h=40, d=25);
 //       cylinder(h=40, d1=25, d2=10);
 //   }
-module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, l=undef, center=undef, orient=ORIENT_Z, align=UP)
+// Example: Standard Connectors
+//   xdistribute(40) {
+//       cylinder(h=30, d=25) show_connectors();
+//       cylinder(h=30, d1=25, d2=10) show_connectors();
+//   }
+module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, l=undef, center=undef, orient=ORIENT_Z, align=BOTTOM)
 {
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
 	l = first_defined([h, l]);
 	sides = segs(max(r1,r2));
 	size = [r1*2, r1*2, l];
-	orient_and_align(size, orient, align, center, size2=[r2*2,r2*2], noncentered=UP, chain=true) {
+	orient_and_align(size, orient, align, center, size2=[r2*2,r2*2], noncentered=UP, geometry="cylinder", chain=true) {
 		linear_extrude(height=l, scale=r2/r1, convexity=2, center=true) {
 			circle(r=r1, $fn=sides);
 		}
@@ -124,14 +131,18 @@ module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=unde
 //   d = Diameter of the sphere.
 //   orient = Orientation of the sphere, if you don't like where the vertices lay.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   align = Alignment of the sphere.  Use the constants from `constants.scad`.  Default: `CENTER`.
-// Example:
-//   staggered_sphere(d=100);
+// Example: By Radius
+//   sphere(r=50);
+// Example: By Diameter
+//   sphere(d=100);
+// Example: Standard Connectors
+//   sphere(d=50) show_connectors();
 module sphere(r=undef, d=undef, orient=ORIENT_Z, align=CENTER)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
 	size = [r*2, r*2, r*2];
-	orient_and_align(size, orient, align, chain=true) {
+	orient_and_align(size, orient, align, geometry="sphere", chain=true) {
 		rotate_extrude(convexity=2) {
 			difference() {
 				circle(r=r, $fn=sides);

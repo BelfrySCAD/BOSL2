@@ -36,18 +36,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-include <BOSL2/constants.scad>
-include <BOSL2/compat.scad>
-include <BOSL2/math.scad>
-include <BOSL2/arrays.scad>
-include <BOSL2/vector.scad>
-include <BOSL2/matrices.scad>
-include <BOSL2/coords.scad>
-include <BOSL2/geometry.scad>
-include <BOSL2/transforms.scad>
-include <BOSL2/primitives.scad>
-include <BOSL2/shapes.scad>
-include <BOSL2/masks.scad>
+include <constants.scad>
+include <compat.scad>
+include <math.scad>
+include <arrays.scad>
+include <vectors.scad>
+include <matrices.scad>
+include <coords.scad>
+include <geometry.scad>
+include <attachments.scad>
+include <transforms.scad>
+include <primitives.scad>
+include <shapes.scad>
+include <masks.scad>
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

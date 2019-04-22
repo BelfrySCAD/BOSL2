@@ -4,8 +4,6 @@
 //   To use, add the following lines to the beginning of your file:
 //   ```
 //   include <BOSL2/std.scad>
-//   include <BOSL2/paths.scad>
-//   include <BOSL2/beziers.scad>
 //   include <BOSL2/debug.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
@@ -173,25 +171,16 @@ module debug_polyhedron(points, faces, convexity=10, txtsize=1, disabled=false) 
 
 
 
-// Function: all_conns()
+// Function: all_connectors()
 // Description:
-//   Return the names for all standard connectors for a region.
-// Arguments:
-//   type = The type of region to show connectors for.  "cube", "cylinder", "sphere"
-function all_conns(type="cube") =
-	assert(in_list(type,["cube", "cylinder", "sphere"]))
-	let (
-		zs = [TOP, BOTTOM],
-		ys = [FRONT, BACK],
-		xs = [LEFT, RIGHT]
-	) concat(
-		[CENTER],
-		[for (a=concat(xs,ys,zs)) a],
-		in_list(type,["cube","cylinder"])? [for (a=zs, b=ys) a+b] : [],
-		in_list(type,["cube","cylinder"])? [for (a=zs, b=xs) a+b] : [],
-		in_list(type,["cube"])? [for (a=ys, b=xs) a+b] : [],
-		in_list(type,["cube"])? [for (a=zs, b=ys, c=xs) a+b+c] : []
-	);
+//   Return the vectors for all standard connectors.
+function all_connectors() = [
+	for (
+		zv = [TOP, CENTER, BOTTOM],
+		yv = [FRONT, CENTER, BACK],
+		xv = [LEFT, CENTER, RIGHT]
+	) xv+yv+zv
+];
 
 
 
@@ -207,11 +196,12 @@ function all_conns(type="cube") =
 module connector_arrow(s=10, color=[0.333,0.333,1], flag=true) {
 	$fn=12;
 	recolor("gray") spheroid(d=s/6)
-	recolor(color) cyl(h=s*2/3, d=s/15, align=UP)
-	attach(TOP) cyl(h=s/3, d1=s/5, d2=0, align=UP) {
+	recolor(color) cyl(h=s, d=s/15, align=DOWN)
+	attach(TOP) cyl(h=s/3, d1=s/5, d2=0, align=DOWN) {
 		if(flag) {
-			attach(BOTTOM) recolor([1,0.5,0.5]) cuboid([s/50, s/6, s/4], align="front-top");
+			attach(BOTTOM) recolor([1,0.5,0.5]) cuboid([s/50, s/6, s/4], align=FRONT+TOP);
 		}
+		children();
 	}
 }
 
@@ -219,11 +209,9 @@ module connector_arrow(s=10, color=[0.333,0.333,1], flag=true) {
 
 // Module: show_connectors()
 // Description:
-//   Show all standard connectors for a given region.
-// Arguments:
-//   type = The type of region to show connectors for.  "cube", "cylinder", "sphere"
-module show_connectors(type="cube") {
-	for (conn=all_conns(type)) {
+//   Show all standard connectors for the parent object.
+module show_connectors() {
+	for (conn=all_connectors()) {
 		attach(conn) connector_arrow();
 	}
 	children();
@@ -231,16 +219,17 @@ module show_connectors(type="cube") {
 
 
 
-// Module: frameref()
+// Module: frame_ref()
 // Description:
 //   Displays X,Y,Z axis arrows in red, green, and blue respectively.
 // Arguments:
 //   s = Length of the arrows.
-module frameref(s=15) {
-	sphere(0.001) {
+module frame_ref(s=15) {
+	noop() {
 		attach(RIGHT) connector_arrow(s=s, color="red", flag=false);
 		attach(BACK) connector_arrow(s=s, color="green", flag=false);
 		attach(TOP) connector_arrow(s=s, color="blue", flag=false);
+		children();
 	}
 }
 

@@ -1,6 +1,4 @@
-use <BOSL2/transforms.scad>
-use <BOSL2/math.scad>
-include <BOSL2/constants.scad>
+include <BOSL2/std.scad>
 
 // Shows all the orientations on cubes in their correct rotations.
 

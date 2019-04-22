@@ -1,7 +1,4 @@
-include <BOSL2/constants.scad>
-include <BOSL2/transforms.scad>
-include <BOSL2/primitives.scad>
-include <BOSL2/shapes.scad>
+include <BOSL2/std.scad>
 
 
 diff("hole", "body pole")

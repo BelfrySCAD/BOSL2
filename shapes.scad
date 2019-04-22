@@ -76,6 +76,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //   cuboid([30,40,50], chamfer=5, edges=EDGE_TOP_FR+EDGE_TOP_RT+EDGE_FR_RT, $fn=24);
 // Example: Rectangular cube with only some edges rounded.
 //   cuboid([30,40,50], fillet=5, edges=EDGE_TOP_FR+EDGE_TOP_RT+EDGE_FR_RT, $fn=24);
+// Example: Standard Connectors
+//   cuboid(40, chamfer=5) show_connectors();
 module cuboid(
 	size=[1,1,1],
 	p1=undef, p2=undef,
@@ -90,11 +92,11 @@ module cuboid(
 	if (!is_undef(p1)) {
 		if (!is_undef(p2)) {
 			translate([for (v=array_zip([p1,p2],0)) min(v)]) {
-				cuboid(size=vabs(p2-p1), chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, align=ALLPOS) children();
+				cuboid(size=vabs(p2-p1), chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, align=ALLNEG) children();
 			}
 		} else {
 			translate(p1) {
-				cuboid(size=size, chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, align=ALLPOS) children();
+				cuboid(size=size, chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, align=ALLNEG) children();
 			}
 		}
 	} else {
@@ -333,15 +335,17 @@ module upcube(size=[1,1,1]) {siz = scalar_vec3(size); up(siz[2]/2) cube(size=siz
 //   prismoid(size1=[30,60], size2=[0,60], shift=[-15,0], h=30);
 // Example(FlatSpin): Shifting/Skewing
 //   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]);
+// Example(Spin): Standard Connectors
+//   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]) show_connectors();
 module prismoid(
 	size1=[1,1], size2=[1,1], h=1, shift=[0,0],
-	orient=ORIENT_Z, align=UP, center=undef
+	orient=ORIENT_Z, align=DOWN, center=undef
 ) {
 	eps = 0.001;
 	shiftby = point3d(point2d(shift));
 	s1 = [max(size1.x, eps), max(size1.y, eps)];
 	s2 = [max(size2.x, eps), max(size2.y, eps)];
-	orient_and_align([s1.x,s1.y,h], orient, align, center, size2=s2, shift=shift, noncentered=UP, chain=true) {
+	orient_and_align([s1.x,s1.y,h], orient, align, center, size2=s2, shift=shift, noncentered=DOWN, chain=true) {
 		polyhedron(
 			points=[
 				[+s2.x/2, +s2.y/2, +h/2] + shiftby,
@@ -399,10 +403,12 @@ module prismoid(
 //   rounded_prismoid(size1=[40,60], size2=[40,60], h=20, r1=3, r2=10, $fn=24);
 // Example(FlatSpin): Shifting/Skewing
 //   rounded_prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5], r=5);
+// Example(Spin): Standard Connectors
+//   rounded_prismoid(size1=[40,60], size2=[40,60], h=20, r1=3, r2=10, $fn=24) show_connectors();
 module rounded_prismoid(
 	size1, size2, h, shift=[0,0],
 	r=undef, r1=undef, r2=undef,
-	align=UP, orient=ORIENT_Z, center=undef
+	align=DOWN, orient=ORIENT_Z, center=undef
 ) {
 	eps = 0.001;
 	maxrad1 = min(size1.x/2, size1.y/2);
@@ -446,14 +452,16 @@ module rounded_prismoid(
 // Arguments:
 //   size = [width, thickness, height]
 //   orient = The axis to place the hypotenuse along.  Only accepts `ORIENT_X`, `ORIENT_Y`, or `ORIENT_Z` from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = The side of the origin to align to.  Use constants from `constants.scad`.  Default: `UP+BACK+RIGHT`.
-//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=UP+BACK+RIGHT`.
+//   align = The side of the origin to align to.  Use constants from `constants.scad`.  Default: `ALLNEG`.
+//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=ALLNEG`.
 //
 // Example: Centered
 //   right_triangle([60, 10, 40], center=true);
 // Example: *Non*-Centered
 //   right_triangle([60, 10, 40]);
-module right_triangle(size=[1, 1, 1], orient=ORIENT_Y, align=ALLPOS, center=undef)
+// Example: Standard Connectors
+//   right_triangle([60, 15, 40]) show_connectors();
+module right_triangle(size=[1, 1, 1], orient=ORIENT_Y, align=ALLNEG, center=undef)
 {
 	size = scalar_vec3(size);
 	orient_and_align(size, align=align, center=center, chain=true) {
@@ -542,7 +550,7 @@ module right_triangle(size=[1, 1, 1], orient=ORIENT_Y, align=ALLPOS, center=unde
 //   realign = If true, rotate the cylinder by half the angle of one face.
 //   orient = Orientation of the cylinder.  Use the `ORIENT_` constants from `constants.scad`.  Default: vertical.
 //   align = Alignment of the cylinder.  Use the constants from `constants.scad`.  Default: centered.
-//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=UP`.
+//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=DOWN`.
 //
 // Example: By Radius
 //   xdistribute(30) {
@@ -577,6 +585,13 @@ module right_triangle(size=[1, 1, 1], orient=ORIENT_Y, align=ALLPOS, center=unde
 //
 // Example: Putting it all together
 //   cyl(l=40, d1=25, d2=15, chamfer1=10, chamfang1=30, from_end=true, fillet2=5);
+//
+// Example: Standard Connectors
+//   xdistribute(40) {
+//       cyl(l=30, d=25) show_connectors();
+//       cyl(l=30, d1=25, d2=10) show_connectors();
+//   }
+//
 module cyl(
 	l=undef, h=undef,
 	r=undef, r1=undef, r2=undef,
@@ -595,7 +610,7 @@ module cyl(
 	sides = segs(max(r1,r2));
 	sc = circum? 1/cos(180/sides) : 1;
 	phi = atan2(l, r1-r2);
-	orient_and_align(size1, orient, align, center=center, size2=size2, chain=true) {
+	orient_and_align(size1, orient, align, center=center, size2=size2, geometry="cylinder", chain=true) {
 		zrot(realign? 180/sides : 0) {
 			if (!any_defined([chamfer, chamfer1, chamfer2, fillet, fillet1, fillet2])) {
 				cylinder(h=l, r1=r1*sc, r2=r2*sc, center=true, $fn=sides);
@@ -722,36 +737,6 @@ module cyl(
 
 
 
-// Module: downcyl()
-//
-// Description:
-//   Creates a cylinder aligned below the origin.
-//
-// Usage:
-//   downcyl(l|h, r|d);
-//   downcyl(l|h, r1|d1, r2|d2);
-//
-// Arguments:
-//   l / h = Length of cylinder. (Default: 1.0)
-//   r = Radius of cylinder.
-//   r1 = Bottom radius of cylinder.
-//   r2 = Top radius of cylinder.
-//   d = Diameter of cylinder. (use instead of r)
-//   d1 = Bottom diameter of cylinder.
-//   d2 = Top diameter of cylinder.
-//
-// Example: Cylinder
-//   downcyl(r=20, h=40);
-// Example: Cone
-//   downcyl(r1=10, r2=20, h=40);
-module downcyl(r=undef, h=undef, l=undef, d=undef, d1=undef, d2=undef, r1=undef, r2=undef)
-{
-	l = first_defined([l, h, 1]);
-	cyl(r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, l=l, align=DOWN) children();
-}
-
-
-
 // Module: xcyl()
 //
 // Description:
@@ -770,7 +755,7 @@ module downcyl(r=undef, h=undef, l=undef, d=undef, d1=undef, d2=undef, r1=undef,
 //   d1 = Optional diameter of left (X-) end of cylinder.
 //   d2 = Optional diameter of right (X+) end of cylinder.
 //   align = The side of the origin to align to.  Use constants from `constants.scad`. Default: `CENTER`
-//   center = If given, overrides `align`.  A `true` value sets `align=CENTER`, `false` sets `align=UP`.
+//   center = If given, overrides `align`.  A `true` value sets `align=CENTER`, `false` sets `align=BOTTOM`.
 //
 // Example: By Radius
 //   ydistribute(50) {
@@ -909,6 +894,8 @@ module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   tube(h=30, or1=40, or2=25, ir1=35, ir2=20);
 // Example: Circular Wedge
 //   tube(h=30, or1=40, or2=30, ir1=20, ir2=30);
+// Example: Standard Connectors
+//   tube(h=30, or=40, wall=5) show_connectors();
 module tube(
 	h=1, wall=undef,
 	r=undef, r1=undef, r2=undef,
@@ -929,7 +916,7 @@ module tube(
 	sides = segs(max(r1,r2));
 	size = [r1*2,r1*2,h];
 	size2 = [r2*2,r2*2,h];
-	orient_and_align(size, orient, align, center=center, size2=size2, chain=true) {
+	orient_and_align(size, orient, align, center=center, size2=size2, geometry="cylinder", chain=true) {
 		zrot(realign? 180/sides : 0) {
 			difference() {
 				cyl(h=h, r1=r1, r2=r2, $fn=sides) children();
@@ -968,6 +955,8 @@ module tube(
 //   torus(d=45, d2=15);
 //   torus(or=30, ir=15);
 //   torus(od=60, id=30);
+// Example: Standard Connectors
+//   torus(od=60, id=30) show_connectors();
 module torus(
 	r=undef,  d=undef,
 	r2=undef, d2=undef,
@@ -980,7 +969,7 @@ module torus(
 	majrad = get_radius(r=r, d=d, dflt=(orr+irr)/2);
 	minrad = get_radius(r=r2, d=d2, dflt=(orr-irr)/2);
 	size = [(majrad+minrad)*2, (majrad+minrad)*2, minrad*2];
-	orient_and_align(size, orient, align, center=center, chain=true) {
+	orient_and_align(size, orient, align, center=center, geometry="cylinder", chain=true) {
 		rotate_extrude(convexity=4) {
 			right(majrad) circle(minrad);
 		}
@@ -1004,8 +993,12 @@ module torus(
 //   circum = If true, circumscribes the perfect sphere of the given radius/diameter.
 //   orient = Orientation of the sphere, if you don't like where the vertices lay.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   align = Alignment of the sphere.  Use the constants from `constants.scad`.  Default: `CENTER`.
-// Example:
-//   spheroid(d=100, circum=true, $fn=10);
+// Example: By Radius
+//   spheroid(r=50, circum=true);
+// Example: By Diameter
+//   spheroid(d=100, circum=true);
+// Example: Standard Connectors
+//   spheroid(d=40, circum=true) show_connectors();
 module spheroid(r=undef, d=undef, circum=false, orient=UP, align=CENTER)
 {
 	r = get_radius(r=r, d=d, dflt=1);
@@ -1013,7 +1006,7 @@ module spheroid(r=undef, d=undef, circum=false, orient=UP, align=CENTER)
 	vsides = ceil(hsides/2);
 	rr = circum? (r / cos(90/vsides) / cos(180/hsides)) : r;
 	size = [2*rr, 2*rr, 2*rr];
-	orient_and_align(size, orient, align, chain=true) {
+	orient_and_align(size, orient, align, geometry="sphere", chain=true) {
 		sphere(r=rr);
 		children();
 	}
@@ -1036,8 +1029,12 @@ module spheroid(r=undef, d=undef, circum=false, orient=UP, align=CENTER)
 //   orient = Orientation of the sphere, if you don't like where the vertices lay.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   align = Alignment of the sphere.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //
-// Example:
-//   staggered_sphere(d=100, circum=true, $fn=10);
+// Example: By Radius
+//   staggered_sphere(r=50, circum=true);
+// Example: By Diameter
+//   staggered_sphere(d=100, circum=true);
+// Example: Standard Connectors
+//   staggered_sphere(d=40, circum=true) show_connectors();
 module staggered_sphere(r=undef, d=undef, circum=false, orient=UP, align=CENTER) {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
@@ -1075,7 +1072,7 @@ module staggered_sphere(r=undef, d=undef, circum=false, orient=UP, align=CENTER)
 		]
 	);
 	size = [2*rr, 2*rr, 2*rr];
-	orient_and_align(size, orient, align, chain=true) {
+	orient_and_align(size, orient, align, geometry="sphere", chain=true) {
 		polyhedron(points=pts, faces=faces);
 		children();
 	}
@@ -1153,7 +1150,7 @@ module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, orient=
 	r = get_radius(r=r, d=d, dflt=1);
 	l = first_defined([l, h, 1]);
 	size = [r*2,r*2,l];
-	orient_and_align(size, orient, align, chain=true) {
+	orient_and_align(size, orient, align, geometry="cylinder", chain=true) {
 		linear_extrude(height=l, center=true, slices=2) {
 			teardrop2d(r=r, ang=ang, cap_h=cap_h);
 		}
@@ -1184,13 +1181,18 @@ module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, orient=
 //   onion(r=30, maxang=30, cap_h=40);
 // Example: Close Crop
 //   onion(r=30, maxang=30, cap_h=20);
+// Example: Standard Connectors
+//   onion(r=30, maxang=30, cap_h=40) show_connectors();
 module onion(cap_h=undef, r=undef, d=undef, maxang=45, h=undef, orient=ORIENT_Z, align=CENTER)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	h = first_defined([cap_h, h]);
 	maxd = 3*r/tan(maxang);
 	size = [r*2,r*2,r*2];
-	orient_and_align(size, orient, align, chain=true) {
+	alignments = [
+		["cap", [0,0,h], UP, 0]
+	];
+	orient_and_align(size, orient, align, geometry="sphere", alignments=alignments, chain=true) {
 		rotate_extrude(convexity=2) {
 			difference() {
 				teardrop2d(r=r, ang=maxang, cap_h=h);
@@ -1724,7 +1726,7 @@ module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2, orient=ORIENT_Y, a
 //
 // Description:
 //   Useful when you MUST pass a child to a module, but you want it to be nothing.
-module nil() union() {}
+module nil() union(){}
 
 
 // Module: noop()
@@ -1732,7 +1734,7 @@ module nil() union() {}
 // Description:
 //   Passes through the children passed to it, with no action at all.
 //   Useful while debugging when you want to replace a command.
-module noop() children();
+module noop(orient=ORIENT_Z) orient_and_align([0,0,0], orient, CENTER, chain=true) {nil(); children();}
 
 
 // Module: pie_slice()
@@ -1773,7 +1775,7 @@ module pie_slice(
 	r2 = get_radius(r2, r, d2, d, 10);
 	maxd = max(r1,r2)+0.1;
 	size = [2*r1, 2*r1, l];
-	orient_and_align(size, orient, align, center=center, chain=true) {
+	orient_and_align(size, orient, align, center=center, geometry="cylinder", chain=true) {
 		difference() {
 			cylinder(r1=r1, r2=r2, h=l, center=true);
 			if (ang<180) rotate(ang) back(maxd/2) cube([2*maxd, maxd, l+0.1], center=true);
@@ -1919,7 +1921,7 @@ module arced_slot(
 	fn_minor = first_defined([$fn2, $fn]);
 	da = ea - sa;
 	size = [r+sr1, r+sr1, h];
-	orient_and_align(size, orient, align, chain=true) {
+	orient_and_align(size, orient, align, geometry="cylinder", chain=true) {
 		translate(cp) {
 			zrot(sa) {
 				difference() {

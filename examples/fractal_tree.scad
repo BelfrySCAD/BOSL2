@@ -1,6 +1,5 @@
-include <BOSL2/constants.scad>
-include <BOSL2/transforms.scad>
-include <BOSL2/primitives.scad>
+include <BOSL2/std.scad>
+include <BOSL2/paths.scad>
 include <BOSL2/beziers.scad>
 
 module leaf(s) {
@@ -18,7 +17,7 @@ module leaf(s) {
 
 module branches(minsize){
     if($parent_size2.x>minsize) {
-		attach("top")
+		attach(TOP)
 		zrot(gaussian_rand(90,10))
 		zring(n=floor(log_rand(2,5,4)))
 		zrot(gaussian_rand(0,5))
@@ -32,7 +31,7 @@ module branches(minsize){
 		branches(minsize);
 	} else {
 		recolor("springgreen")
-		attach("top") zrot(90)
+		attach(TOP) zrot(90)
 		leaf(gaussian_rand(100,5));
 	}
 }

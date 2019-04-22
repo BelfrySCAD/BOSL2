@@ -1,5 +1,4 @@
-include <BOSL2/constants.scad>
-include <BOSL2/shapes.scad>
+include <BOSL2/std.scad>
 include <BOSL2/debug.scad>
 
 
