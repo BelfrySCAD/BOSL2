@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Description:
 //   Creates a slider to match a V-groove rail.
 // Usage:
-//   slider(l, w, h, [base], [wall], [ang], [slop], [orient], [align])
+//   slider(l, w, h, [base], [wall], [ang], [slop], [orient], [anchor])
 // Arguments:
 //   l = Length (long axis) of slider.
 //   w = Width of slider.
@@ -55,29 +55,29 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //   ang = Overhang angle for slider, to facilitate supportless printig.
 //   slop = Printer-specific slop value to make parts fit exactly.
 //   orient = Orientation of the slider.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the slider.  Use the constants from `constants.scad`.  Default: `UP`.
+//   anchor = Alignment of the slider.  Use the constants from `constants.scad`.  Default: `UP`.
 // Example:
 //   slider(l=30, base=10, wall=4, slop=0.2, orient=ORIENT_Y);
-module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orient=ORIENT_Y, align=UP)
+module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orient=ORIENT_Y, anchor=UP)
 {
 	full_width = w + 2*wall;
 	full_height = h + base;
 
-	orient_and_align([full_width, l, h+2*base], orient, align, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([full_width, l, h+2*base], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		down(base+h/2) {
 			// Base
-			cuboid([full_width, l, base-slop], chamfer=2, edges=EDGE_TOP_FR+EDGE_TOP_BK+EDGES_Z_ALL, align=UP);
+			cuboid([full_width, l, base-slop], chamfer=2, edges=EDGE_TOP_FR+EDGE_TOP_BK+EDGES_Z_ALL, anchor=UP);
 
 			// Wall
 			xflip_copy(offset=w/2+slop) {
-				cuboid([wall, l, full_height], chamfer=2, edges=EDGE_TOP_RT+EDGE_FR_RT+EDGE_BK_RT, align=UP+RIGHT);
+				cuboid([wall, l, full_height], chamfer=2, edges=EDGE_TOP_RT+EDGE_FR_RT+EDGE_BK_RT, anchor=UP+RIGHT);
 			}
 
 			// Sliders
 			up(base+h/2) {
 				xflip_copy(offset=w/2+slop+0.02) {
 					bev_h = h/2*tan(ang);
-					prismoid([l, h], [l-w, 0], h=bev_h+0.01, orient=ORIENT_XNEG, align=LEFT);
+					prismoid([l, h], [l-w, 0], h=bev_h+0.01, orient=ORIENT_XNEG, anchor=LEFT);
 				}
 			}
 		}
@@ -91,7 +91,7 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orie
 // Description:
 //   Creates a V-groove rail.
 // Usage:
-//   rail(l, w, h, [chamfer], [ang], [orient], [align])
+//   rail(l, w, h, [chamfer], [ang], [orient], [anchor])
 // Arguments:
 //   l = Length (long axis) of slider.
 //   w = Width of slider.
@@ -99,10 +99,10 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orie
 //   chamfer = Size of chamfer at end of rail.
 //   ang = Overhang angle for slider, to facilitate supportless printig.
 //   orient = Orientation of the rail.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the rail.  Use the constants from `constants.scad`.  Default: `UP`.
+//   anchor = Alignment of the rail.  Use the constants from `constants.scad`.  Default: `UP`.
 // Example:
 //   rail(l=100, w=10, h=10);
-module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, orient=ORIENT_Y, align=UP)
+module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, orient=ORIENT_Y, anchor=UP)
 {
 	attack_ang = 30;
 	attack_len = 2;
@@ -128,7 +128,7 @@ module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, orient=ORIENT_Y, align=UP)
 	y1 = l/2;
 	y2 = y1 - attack_len * cos(attack_ang);
 
-	orient_and_align([w, l, h], orient, align, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w, l, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		polyhedron(
 			convexity=4,
 			points=[

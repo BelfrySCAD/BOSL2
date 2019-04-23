@@ -43,65 +43,65 @@ PRINTER_SLOP = 0.20;  // The printer specific amount of slop in mm to print with
 
 
 // Section: Directional Vectors
-//   Vectors useful for `rotate()`, `mirror()`, and `align` arguments for `cuboid()`, `cyl()`, etc.
+//   Vectors useful for `rotate()`, `mirror()`, and `anchor` arguments for `cuboid()`, `cyl()`, etc.
 
 // Constant: LEFT
 // Description: Vector pointing left.  [-1,0,0]
-// Example(3D): Usage with `align`
-//   cuboid(20, align=LEFT);
+// Example(3D): Usage with `anchor`
+//   cuboid(20, anchor=LEFT);
 LEFT  = [-1,  0,  0];
 
 // Constant: RIGHT
 // Description: Vector pointing right.  [1,0,0]
-// Example(3D): Usage with `align`
-//   cuboid(20, align=RIGHT);
+// Example(3D): Usage with `anchor`
+//   cuboid(20, anchor=RIGHT);
 RIGHT = [ 1,  0,  0];
 
 // Constant: FWD
 // Description: Vector pointing forward.  [0,-1,0]
-// Example(3D): Usage with `align`
-//   cuboid(20, align=FWD);
+// Example(3D): Usage with `anchor`
+//   cuboid(20, anchor=FWD);
 FWD   = [ 0, -1,  0];
 
 // Constant: BACK
 // Description: Vector pointing back.  [0,1,0]
-// Example(3D): Usage with `align`
-//   cuboid(20, align=BACK);
+// Example(3D): Usage with `anchor`
+//   cuboid(20, anchor=BACK);
 BACK  = [ 0,  1,  0];
 
 // Constant: DOWN
 // Description: Vector pointing down.  [0,0,-1]
-// Example(3D): Usage with `align`
-//   cuboid(20, align=DOWN);
+// Example(3D): Usage with `anchor`
+//   cuboid(20, anchor=DOWN);
 DOWN  = [ 0,  0, -1];
 
 // Constant: UP
 // Description: Vector pointing up.  [0,0,1]
-// Example(3D): Usage with `align`
-//   cuboid(20, align=UP);
+// Example(3D): Usage with `anchor`
+//   cuboid(20, anchor=UP);
 UP    = [ 0,  0,  1];
 
 // Constant: ALLPOS
 // Description: Vector pointing right, back, and up.  [1,1,1]
-// Example(3D): Usage with `align`
-//     cuboid(20, align=ALLPOS);
+// Example(3D): Usage with `anchor`
+//     cuboid(20, anchor=ALLPOS);
 ALLPOS = [ 1,  1,  1];  // Vector pointing X+,Y+,Z+.
 
 // Constant: ALLNEG
 // Description: Vector pointing left, forwards, and down.  [-1,-1,-1]
-// Example(3D): Usage with `align`
-//     cuboid(20, align=ALLNEG);
+// Example(3D): Usage with `anchor`
+//     cuboid(20, anchor=ALLNEG);
 ALLNEG = [-1, -1, -1];  // Vector pointing X-,Y-,Z-.
 
 // Constant: CENTER
 // Description: Zero vector.  Centered.  [0,0,0]
-// Example(3D): Usage with `align`
-//     cuboid(20, align=CENTER);
+// Example(3D): Usage with `anchor`
+//     cuboid(20, anchor=CENTER);
 CENTER = [ 0,  0,  0];  // Centered zero vector.
 
 
 // Section: Vector Aliases
-//   Useful aliases for use with `align`.
+//   Useful aliases for use with `anchor`.
 
 ABOVE  = UP;    // Vector pointing up, alias to `UP`.
 BELOW  = DOWN;  // Vector pointing down, alias to `DOWN`.
@@ -307,13 +307,13 @@ function corner_edge_count(edges, v) =
 $color = undef;
 $overlap = 0.01;
 $attach_to = undef;
-$attach_conn = ["center", CENTER, UP, 0];
+$attach_anchor = [CENTER, CENTER, UP, 0];
 $parent_size = undef;
 $parent_size2 = undef;
 $parent_shift = [0,0];
 $parent_orient = ORIENT_Z;
-$parent_align = "center";
-$parent_conns = [];
+$parent_anchor = CENTER;
+$parent_anchors = [];
 $tags_shown = [];
 $tags_hidden = [];
 $tags = "";

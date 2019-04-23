@@ -87,7 +87,10 @@ function normalize(v) = v/norm(v);
 //   v1 = First vector.
 //   v2 = Second vector.
 // NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
-function vector_angle(v1,v2) = acos(constrain((v1*v2)/(norm(v1)*norm(v2)), -1, 1));
+function vector_angle(v1,v2) =
+	assert(is_vector(v1))
+	assert(is_vector(v2))
+	acos(constrain((v1*v2)/(norm(v1)*norm(v2)), -1, 1));
 
 
 // Function: vector_axis()

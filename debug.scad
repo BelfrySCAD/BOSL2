@@ -171,10 +171,10 @@ module debug_polyhedron(points, faces, convexity=10, txtsize=1, disabled=false) 
 
 
 
-// Function: all_connectors()
+// Function: standard_anchors()
 // Description:
-//   Return the vectors for all standard connectors.
-function all_connectors() = [
+//   Return the vectors for all standard anchors.
+function standard_anchors() = [
 	for (
 		zv = [TOP, CENTER, BOTTOM],
 		yv = [FRONT, CENTER, BACK],
@@ -184,22 +184,22 @@ function all_connectors() = [
 
 
 
-// Module: connector_arrow()
+// Module: anchor_arrow()
 // Usage:
-//   connector_arrow([s], [color], [flag]);
+//   anchor_arrow([s], [color], [flag]);
 // Description:
-//   Show a connector orientation arrow.
+//   Show an anchor orientation arrow.
 // Arguments:
 //   s = Length of the arrows.
 //   color = Color of the arrow.
 //   flag = If true, draw the orientation flag on the arrowhead.
-module connector_arrow(s=10, color=[0.333,0.333,1], flag=true) {
+module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow") {
 	$fn=12;
 	recolor("gray") spheroid(d=s/6)
-	recolor(color) cyl(h=s, d=s/15, align=DOWN)
-	attach(TOP) cyl(h=s/3, d1=s/5, d2=0, align=DOWN) {
+	recolor(color) cyl(h=s*2/3, d=s/15, anchor=DOWN)
+	attach(TOP) cyl(h=s/3, d1=s/5, d2=0, anchor=DOWN) {
 		if(flag) {
-			attach(BOTTOM) recolor([1,0.5,0.5]) cuboid([s/50, s/6, s/4], align=FRONT+TOP);
+			attach(BOTTOM) recolor([1,0.5,0.5]) cuboid([s/50, s/6, s/4], anchor=FRONT+TOP);
 		}
 		children();
 	}
@@ -207,12 +207,45 @@ module connector_arrow(s=10, color=[0.333,0.333,1], flag=true) {
 
 
 
-// Module: show_connectors()
+// Module: transparent()
+// Usage:
+//   transparent() ...
 // Description:
-//   Show all standard connectors for the parent object.
-module show_connectors() {
-	for (conn=all_connectors()) {
-		attach(conn) connector_arrow();
+//   Makes the children transparent gray, while showing any
+//   anchor arrows that may exist.
+// Example:
+//   transparent() cube(50, center=true) show_anchors();
+module transparent(opacity=0.2) {
+	show("anchor-arrow") children() show_anchors();
+	hide("anchor-arrow") recolor([0,0,0,opacity]) children();
+}
+
+
+// Module: show_anchors()
+// Description:
+//   Show all standard anchors for the parent object.
+module show_anchors(s=10, std=true, custom=true) {
+	if (std) {
+		for (anchor=standard_anchors()) {
+			attach(anchor) anchor_arrow(s);
+		}
+	}
+	if (custom) {
+		for (anchor=$parent_anchors) {
+			attach(anchor[0]) {
+				anchor_arrow(s, color="cyan");
+				recolor("black")
+				noop($tags="anchor-arrow") {
+					xrot(90) {
+						up(s/10) {
+							linear_extrude(height=0.01, convexity=12, center=true) {
+								text(text=anchor[0], size=s/4, halign="center", valign="center");
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 	children();
 }
@@ -226,9 +259,9 @@ module show_connectors() {
 //   s = Length of the arrows.
 module frame_ref(s=15) {
 	noop() {
-		attach(RIGHT) connector_arrow(s=s, color="red", flag=false);
-		attach(BACK) connector_arrow(s=s, color="green", flag=false);
-		attach(TOP) connector_arrow(s=s, color="blue", flag=false);
+		attach(RIGHT) anchor_arrow(s=s, color="red", flag=false);
+		attach(BACK) anchor_arrow(s=s, color="green", flag=false);
+		attach(TOP) anchor_arrow(s=s, color="blue", flag=false);
 		children();
 	}
 }

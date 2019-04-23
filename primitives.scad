@@ -44,24 +44,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Module: cube()
 //
 // Description:
-//   Creates a cube object, with support for alignment and attachments.
+//   Creates a cube object, with support for anchoring and attachments.
 //   This is a drop-in replacement for the built-in `cube()` module.
 //
 // Arguments:
 //   size = The size of the cube.
-//   align = The side of the origin to align to.  Use constants from `constants.scad`.  Default: `CENTER`
-//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=UP+BACK+RIGHT`.
+//   anchor = The side of the origin to anchor to.  Use constants from `constants.scad`.  Default: `ALLNEG`
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=ALLNEG`.
 //
 // Example: Simple regular cube.
 //   cube(40);
 // Example: Rectangular cube.
 //   cuboid([20,40,50]);
 // Example: Standard Connectors.
-//   cube(40, center=true) show_connectors();
-module cube(size, center=undef, align=ALLNEG)
+//   cube(40, center=true) show_anchors();
+module cube(size, center=undef, anchor=ALLNEG)
 {
 	size = scalar_vec3(size);
-	orient_and_align(size, ORIENT_Z, align, center, noncentered=ALLPOS, chain=true) {
+	orient_and_anchor(size, ORIENT_Z, anchor, center, noncentered=ALLPOS, chain=true) {
 		linear_extrude(height=size.z, convexity=2, center=true) {
 			square([size.x, size.y], center=true);
 		}
@@ -72,10 +72,10 @@ module cube(size, center=undef, align=ALLNEG)
 
 // Module: cylinder()
 // Usage:
-//   cylinder(h, r|d, [center], [orient], [align]);
-//   cylinder(h, r1/d1, r2/d2, [center], [orient], [align]);
+//   cylinder(h, r|d, [center], [orient], [anchor]);
+//   cylinder(h, r1/d1, r2/d2, [center], [orient], [anchor]);
 // Description:
-//   Creates a cylinder object, with support for alignment and attachments.
+//   Creates a cylinder object, with support for anchoring and attachments.
 //   This is a drop-in replacement for the built-in `cylinder()` module.
 // Arguments:
 //   l / h = The height of the cylinder.
@@ -86,8 +86,8 @@ module cube(size, center=undef, align=ALLNEG)
 //   d1 = The bottom diameter of the cylinder.  (Before orientation.)
 //   d2 = The top diameter of the cylinder.  (Before orientation.)
 //   orient = Orientation of the cylinder.  Use the `ORIENT_` constants from `constants.scad`.  Default: vertical.
-//   align = The side of the origin to align to.  Use constants from `constants.scad`.  Default: `UP`
-//   center = If given, overrides `align`.  A true value sets `align=CENTER`, false sets `align=UP+BACK+RIGHT`.
+//   anchor = The side of the part to anchor to the origin.  Use constants from `constants.scad`.  Default: `UP`
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
 // Example: By Radius
 //   xdistribute(30) {
 //       cylinder(h=40, r=10);
@@ -100,17 +100,17 @@ module cube(size, center=undef, align=ALLNEG)
 //   }
 // Example: Standard Connectors
 //   xdistribute(40) {
-//       cylinder(h=30, d=25) show_connectors();
-//       cylinder(h=30, d1=25, d2=10) show_connectors();
+//       cylinder(h=30, d=25) show_anchors();
+//       cylinder(h=30, d1=25, d2=10) show_anchors();
 //   }
-module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, l=undef, center=undef, orient=ORIENT_Z, align=BOTTOM)
+module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, l=undef, center=undef, orient=ORIENT_Z, anchor=BOTTOM)
 {
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
 	l = first_defined([h, l]);
 	sides = segs(max(r1,r2));
 	size = [r1*2, r1*2, l];
-	orient_and_align(size, orient, align, center, size2=[r2*2,r2*2], noncentered=UP, geometry="cylinder", chain=true) {
+	orient_and_anchor(size, orient, anchor, center, size2=[r2*2,r2*2], noncentered=BOTTOM, geometry="cylinder", chain=true) {
 		linear_extrude(height=l, scale=r2/r1, convexity=2, center=true) {
 			circle(r=r1, $fn=sides);
 		}
@@ -122,27 +122,27 @@ module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=unde
 
 // Module: sphere()
 // Usage:
-//   sphere(r|d, [orient], [align])
+//   sphere(r|d, [orient], [anchor])
 // Description:
-//   Creates a sphere object, with support for alignment and attachments.
+//   Creates a sphere object, with support for anchoring and attachments.
 //   This is a drop-in replacement for the built-in `sphere()` module.
 // Arguments:
 //   r = Radius of the sphere.
 //   d = Diameter of the sphere.
 //   orient = Orientation of the sphere, if you don't like where the vertices lay.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the sphere.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Alignment of the sphere.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example: By Radius
 //   sphere(r=50);
 // Example: By Diameter
 //   sphere(d=100);
 // Example: Standard Connectors
-//   sphere(d=50) show_connectors();
-module sphere(r=undef, d=undef, orient=ORIENT_Z, align=CENTER)
+//   sphere(d=50) show_anchors();
+module sphere(r=undef, d=undef, orient=ORIENT_Z, anchor=CENTER)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
 	size = [r*2, r*2, r*2];
-	orient_and_align(size, orient, align, geometry="sphere", chain=true) {
+	orient_and_anchor(size, orient, anchor, geometry="sphere", chain=true) {
 		rotate_extrude(convexity=2) {
 			difference() {
 				circle(r=r, $fn=sides);

@@ -24,7 +24,7 @@ Args    | What it is
 fillet  | Radius of rounding for interior or exterior edges.
 chamfer | Size of chamfers/bevels for interior or exterior edges.
 orient  | Axis a part should be oriented along.  Given as an XYZ triplet of rotation angles.  It is recommended that you use the `ORIENT_` constants from `constants.scad`.  Default is usually `ORIENT_Z` for vertical orientation.
-align   | Side of the origin that the part should be on.  Given as a vector away from the origin.  It is recommended that you use the constants from `constants.scad`.  Default is usually `CENTER` for centered.
+anchor  | Side of the object that should be anchored to the origin. Given as a vector towards the side of the part to align with the origin.  It is recommended that you use the directional constants from `constants.scad`.  Default is usually `CENTER` for centered.
 
 
 ## Examples
@@ -58,11 +58,14 @@ The library files are as follows:
 
 ### Commonly Used
   - [`transforms.scad`](https://github.com/revarbat/BOSL2/wiki/transforms.scad): The most commonly used transformations, manipulations, and shortcuts are in this file.
+  - [`attachments.scad`](https://github.com/revarbat/BOSL2/wiki/attachments.scad): Modules and functions to enable attaching parts together.
+  - [`primitives.scad`](https://github.com/revarbat/BOSL2/wiki/primitives.scad): Enhanced replacements for `cube()`, `cylinder()`, and `sphere()`.
   - [`shapes.scad`](https://github.com/revarbat/BOSL2/wiki/shapes.scad): Common useful shapes and structured objects.
   - [`masks.scad`](https://github.com/revarbat/BOSL2/wiki/masks.scad): Shapes that are useful for masking with `difference()` and `intersect()`.
   - [`threading.scad`](https://github.com/revarbat/BOSL2/wiki/threading.scad): Modules to make triangular and trapezoidal threaded rods and nuts.
   - [`paths.scad`](https://github.com/revarbat/BOSL2/wiki/paths.scad): Functions and modules to work with arbitrary 3D paths.
   - [`beziers.scad`](https://github.com/revarbat/BOSL2/wiki/beziers.scad): Functions and modules to work with bezier curves.
+  - [`debug.scad`](https://github.com/revarbat/BOSL2/wiki/debug.scad): Modules to help debug beziers, `polygons()`s and `polyhedron()`s, etc.
 
 ### Standard Parts
   - [`involute_gears.scad`](https://github.com/revarbat/BOSL2/wiki/involute_gears.scad): Modules and functions to make involute gears and racks.
@@ -75,11 +78,16 @@ The library files are as follows:
   - [`torx_drive.scad`](https://github.com/revarbat/BOSL2/wiki/torx_drive.scad): Functions and Modules to create Torx bit drive holes.
   - [`wiring.scad`](https://github.com/revarbat/BOSL2/wiki/wiring.scad): Modules to render routed bundles of wires.
 
-### Miscellaneous
-  - [`math.scad`](https://github.com/revarbat/BOSL2/wiki/math.scad): Useful helper functions.
+### Various Math
   - [`constants.scad`](https://github.com/revarbat/BOSL2/wiki/constants.scad): Useful constants for vectors, edges, etc.
+  - [`math.scad`](https://github.com/revarbat/BOSL2/wiki/math.scad): Useful helper functions.
+  - [`arrays.scad`](https://github.com/revarbat/BOSL2/wiki/arrays.scad): List and Array helper functions.
+  - [`vectors.scad`](https://github.com/revarbat/BOSL2/wiki/vectors.scad): Vector math functions.
+  - [`matrices.scad`](https://github.com/revarbat/BOSL2/wiki/matrices.scad): Matrix math and affine transformation functions.
+  - [`coords.scad`](https://github.com/revarbat/BOSL2/wiki/coords.scad): Coordinate system conversions and point transformations.
   - [`quaternions.scad`](https://github.com/revarbat/BOSL2/wiki/quaternions.scad): Functions to work with quaternion rotations.
-  - [`debug.scad`](https://github.com/revarbat/BOSL2/wiki/debug.scad): Modules to help debug creation of beziers, `polygons()`s and `polyhedron()`s
+  - [`convex_hull.scad`](https://github.com/revarbat/BOSL2/wiki/convex_hull.scad): Functions to generate 2D and 3D hulls of points.
+  - [`triangulation.scad`](https://github.com/revarbat/BOSL2/wiki/triangulation.scad): Functions to triangulate `polyhedron()` faces.
 
 ## Documentation
 The full library docs can be found at https://github.com/revarbat/BOSL2/wiki

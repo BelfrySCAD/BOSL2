@@ -286,7 +286,7 @@ module gear2d(
 //   scale = Scale of top of gear compared to bottom.  Useful for making crown gears.
 //   interior = If true, create a mask for difference()ing from something else.
 //   orient = Orientation of the gear.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the gear.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Alignment of the gear.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example: Spur Gear
 //   gear(mm_per_tooth=5, number_of_teeth=20, thickness=8, hole_diameter=5);
 // Example: Beveled Gear
@@ -305,13 +305,13 @@ module gear(
 	slices          = undef, //Number of slices to divide gear into.  Useful for refining gears with `twist`.
 	interior        = false,
 	orient          = ORIENT_Z,
-	align           = CENTER
+	anchor          = CENTER
 ) {
 	p = pitch_radius(mm_per_tooth, number_of_teeth);
 	c = outer_radius(mm_per_tooth, number_of_teeth, clearance, interior);
 	r = root_radius(mm_per_tooth, number_of_teeth, clearance, interior);
 	p2 = p - (thickness*tan(bevelang));
-	orient_and_align([p, p, thickness], orient, align, chain=true) {
+	orient_and_anchor([p, p, thickness], orient, anchor, chain=true) {
 		difference() {
 			linear_extrude(height=thickness, center=true, convexity=10, twist=twist, scale=p2/p, slices=slices) {
 				gear2d(
@@ -356,7 +356,7 @@ module gear(
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   orient = Orientation of the rack.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   align = Alignment of the rack.  Use the constants from `constants.scad`.  Default: `RIGHT`.
+//   anchor = Alignment of the rack.  Use the constants from `constants.scad`.  Default: `RIGHT`.
 // Example:
 //   rack(mm_per_tooth=5, number_of_teeth=10, thickness=5, height=5, pressure_angle=20);
 module rack(
@@ -368,13 +368,13 @@ module rack(
 	backlash        = 0.0,  //gap between two meshing teeth, in the direction along the circumference of the pitch circle
 	clearance       = undef,
 	orient          = ORIENT_X,
-	align           = RIGHT
+	anchor          = RIGHT
 ) {
 	a = adendum(mm_per_tooth);
 	d = dedendum(mm_per_tooth, clearance);
 	xa = a * sin(pressure_angle);
 	xd = d * sin(pressure_angle);
-	orient_and_align([(number_of_teeth-1)*mm_per_tooth, height, thickness], orient, align, orig_orient=ORIENT_X, chain=true) {
+	orient_and_anchor([(number_of_teeth-1)*mm_per_tooth, height, thickness], orient, anchor, orig_orient=ORIENT_X, chain=true) {
 		left((number_of_teeth-1)*mm_per_tooth/2) {
 			linear_extrude(height = thickness, center = true, convexity = 10) {
 				for (i = [0:number_of_teeth-1] ) {

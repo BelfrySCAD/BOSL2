@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Description:
 //   Creates a mask to clear an area so that a half_joiner can be placed there.
 // Usage:
-//   half_joiner_clear(h, w, [a], [clearance], [overlap], [orient], [align])
+//   half_joiner_clear(h, w, [a], [clearance], [overlap], [orient], [anchor])
 // Arguments:
 //   h = Height of the joiner to clear space for.
 //   w = Width of the joiner to clear space for.
@@ -53,17 +53,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
 //   orient = Orientation of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   half_joiner_clear(orient=ORIENT_X);
-module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, orient=ORIENT_Y, align=CENTER)
+module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, orient=ORIENT_Y, anchor=CENTER)
 {
 	dmnd_height = h*1.0;
 	dmnd_width = dmnd_height*tan(a);
 	guide_size = w/3;
 	guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
 
-	orient_and_align([w, guide_width, h], orient, align, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w, guide_width, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		union() {
 			yspread(overlap, n=overlap>0? 2 : 1) {
 				difference() {
@@ -87,7 +87,7 @@ module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, orient=ORI
 
 // Module: half_joiner()
 // Usage:
-//   half_joiner(h, w, l, [a], [screwsize], [guides], [slop], [orient], [align])
+//   half_joiner(h, w, l, [a], [screwsize], [guides], [slop], [orient], [anchor])
 // Description:
 //   Creates a half_joiner object that can be attached to half_joiner2 object.
 // Arguments:
@@ -99,10 +99,10 @@ module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, orient=ORI
 //   guides = If true, create sliding alignment guides.
 //   slop = Printer specific slop value to make parts fit more closely.
 //   orient = Orientation of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   half_joiner(screwsize=3, orient=ORIENT_X);
-module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER_SLOP, orient=ORIENT_Y, align=CENTER)
+module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER_SLOP, orient=ORIENT_Y, anchor=CENTER)
 {
 	dmnd_height = h*1.0;
 	dmnd_width = dmnd_height*tan(a);
@@ -112,11 +112,11 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PR
 	if ($children > 0) {
 		difference() {
 			children();
-			half_joiner_clear(h=h, w=w, a=a, clearance=0.1, overlap=0.01, orient=orient, align=align);
+			half_joiner_clear(h=h, w=w, a=a, clearance=0.1, overlap=0.01, orient=orient, anchor=anchor);
 		}
 	}
 	render(convexity=12)
-	orient_and_align([w, 2*l, h], orient, align, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w, 2*l, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		difference() {
 			union() {
 				// Make base.
@@ -165,13 +165,13 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PR
 		children();
 	}
 }
-//half_joiner(screwsize=3, orient=ORIENT_Z, align=UP);
+//half_joiner(screwsize=3, orient=ORIENT_Z, anchor=UP);
 
 
 
 // Module: half_joiner2()
 // Usage:
-//   half_joiner2(h, w, l, [a], [screwsize], [guides], [orient], [align])
+//   half_joiner2(h, w, l, [a], [screwsize], [guides], [orient], [anchor])
 // Description:
 //   Creates a half_joiner2 object that can be attached to half_joiner object.
 // Arguments:
@@ -182,10 +182,10 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PR
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
 //   orient = Orientation of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   half_joiner2(screwsize=3, orient=ORIENT_X);
-module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, orient=ORIENT_Y, align=CENTER)
+module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, orient=ORIENT_Y, anchor=CENTER)
 {
 	dmnd_height = h*1.0;
 	dmnd_width = dmnd_height*tan(a);
@@ -195,12 +195,12 @@ module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, orient
 	if ($children > 0) {
 		difference() {
 			children();
-			half_joiner_clear(h=h, w=w, a=a, clearance=0.1, overlap=0.01, orient=orient, align=align);
+			half_joiner_clear(h=h, w=w, a=a, clearance=0.1, overlap=0.01, orient=orient, anchor=anchor);
 		}
 	}
 
 	render(convexity=12)
-	orient_and_align([w, 2*l, h], orient, align, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w, 2*l, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		difference() {
 			union () {
 				fwd(l/2) cube(size=[w, l, h], center=true);
@@ -228,7 +228,7 @@ module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, orient
 // Description:
 //   Creates a mask to clear an area so that a joiner can be placed there.
 // Usage:
-//   joiner_clear(h, w, [a], [clearance], [overlap], [orient], [align])
+//   joiner_clear(h, w, [a], [clearance], [overlap], [orient], [anchor])
 // Arguments:
 //   h = Height of the joiner to clear space for.
 //   w = Width of the joiner to clear space for.
@@ -236,17 +236,17 @@ module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, orient
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
 //   orient = Orientation of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   joiner_clear(orient=ORIENT_X);
-module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, orient=ORIENT_Y, align=CENTER)
+module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, orient=ORIENT_Y, anchor=CENTER)
 {
 	dmnd_height = h*0.5;
 	dmnd_width = dmnd_height*tan(a);
 	guide_size = w/3;
 	guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
 
-	orient_and_align([w, guide_width, h], orient, align, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w, guide_width, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		union() {
 			up(h/4) half_joiner_clear(h=h/2.0-0.01, w=w, a=a, overlap=overlap, clearance=clearance);
 			down(h/4) half_joiner_clear(h=h/2.0-0.01, w=w, a=a, overlap=overlap, clearance=-0.01);
@@ -259,7 +259,7 @@ module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, orient=ORIENT_Y
 
 // Module: joiner()
 // Usage:
-//   joiner(h, w, l, [a], [screwsize], [guides], [slop], [orient], [align])
+//   joiner(h, w, l, [a], [screwsize], [guides], [slop], [orient], [anchor])
 // Description:
 //   Creates a joiner object that can be attached to another joiner object.
 // Arguments:
@@ -271,19 +271,19 @@ module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, orient=ORIENT_Y
 //   guides = If true, create sliding alignment guides.
 //   slop = Printer specific slop value to make parts fit more closely.
 //   orient = Orientation of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   joiner(screwsize=3, orient=ORIENT_X);
-//   joiner(w=10, l=10, h=40, orient=ORIENT_X) cuboid([10, 10*2, 40], align=LEFT);
-module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER_SLOP, orient=ORIENT_Y, align=CENTER)
+//   joiner(w=10, l=10, h=40, orient=ORIENT_X) cuboid([10, 10*2, 40], anchor=LEFT);
+module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER_SLOP, orient=ORIENT_Y, anchor=CENTER)
 {
 	if ($children > 0) {
 		difference() {
 			children();
-			joiner_clear(h=h, w=w, a=a, clearance=0.1, orient=orient, align=align);
+			joiner_clear(h=h, w=w, a=a, clearance=0.1, orient=orient, anchor=anchor);
 		}
 	}
-	orient_and_align([w, 2*l, h], orient, align, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w, 2*l, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		union() {
 			up(h/4) half_joiner(h=h/2, w=w, l=l, a=a, screwsize=screwsize, guides=guides, slop=slop);
 			down(h/4) half_joiner2(h=h/2, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
@@ -301,7 +301,7 @@ module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER
 // Description:
 //   Creates a mask to clear an area so that a pair of joiners can be placed there.
 // Usage:
-//   joiner_pair_clear(spacing, [n], [h], [w], [a], [clearance], [overlap], [orient], [align])
+//   joiner_pair_clear(spacing, [n], [h], [w], [a], [clearance], [overlap], [orient], [anchor])
 // Arguments:
 //   spacing = Spacing between joiner centers.
 //   h = Height of the joiner to clear space for.
@@ -311,18 +311,18 @@ module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
 //   orient = Orientation of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   joiner_pair_clear(spacing=50, n=2);
 //   joiner_pair_clear(spacing=50, n=3);
-module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overlap=0.01, orient=ORIENT_Y, align=CENTER)
+module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overlap=0.01, orient=ORIENT_Y, anchor=CENTER)
 {
 	dmnd_height = h*0.5;
 	dmnd_width = dmnd_height*tan(a);
 	guide_size = w/3;
 	guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
 
-	orient_and_align([spacing+w, guide_width, h], orient, align, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([spacing+w, guide_width, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		xspread(spacing, n=n) {
 			joiner_clear(h=h, w=w, a=a, clearance=clearance, overlap=overlap);
 		}
@@ -334,7 +334,7 @@ module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overla
 
 // Module: joiner_pair()
 // Usage:
-//   joiner_pair(h, w, l, [a], [screwsize], [guides], [slop], [orient], [align])
+//   joiner_pair(h, w, l, [a], [screwsize], [guides], [slop], [orient], [anchor])
 // Description:
 //   Creates a joiner_pair object that can be attached to other joiner_pairs .
 // Arguments:
@@ -349,22 +349,22 @@ module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overla
 //   guides = If true, create sliding alignment guides.
 //   slop = Printer specific slop value to make parts fit more closely.
 //   orient = Orientation of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
-//   joiner_pair(spacing=50, l=10, orient=ORIENT_X) cuboid([10, 50+10-0.1, 40], align=LEFT);
+//   joiner_pair(spacing=50, l=10, orient=ORIENT_X) cuboid([10, 50+10-0.1, 40], anchor=LEFT);
 //   joiner_pair(spacing=50, l=10, n=2, orient=ORIENT_X);
 //   joiner_pair(spacing=50, l=10, n=3, alternate=false, orient=ORIENT_X);
 //   joiner_pair(spacing=50, l=10, n=3, alternate=true, orient=ORIENT_X);
 //   joiner_pair(spacing=50, l=10, n=3, alternate="alt", orient=ORIENT_X);
-module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, slop=PRINTER_SLOP, orient=ORIENT_Y, align=CENTER)
+module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, slop=PRINTER_SLOP, orient=ORIENT_Y, anchor=CENTER)
 {
 	if ($children > 0) {
 		difference() {
 			children();
-			joiner_pair_clear(spacing=spacing, h=h, w=w, a=a, clearance=0.1, orient=orient, align=align);
+			joiner_pair_clear(spacing=spacing, h=h, w=w, a=a, clearance=0.1, orient=orient, anchor=anchor);
 		}
 	}
-	orient_and_align([spacing+w, 2*l, h], orient, align, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([spacing+w, 2*l, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		left((n-1)*spacing/2) {
 			for (i=[0:n-1]) {
 				right(i*spacing) {
@@ -387,7 +387,7 @@ module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, scr
 // Description:
 //   Creates a mask to clear an area so that a pair of joiners can be placed there.
 // Usage:
-//   joiner_quad_clear(spacing, [n], [h], [w], [a], [clearance], [overlap], [orient], [align])
+//   joiner_quad_clear(spacing, [n], [h], [w], [a], [clearance], [overlap], [orient], [anchor])
 // Arguments:
 //   spacing1 = Spacing between joiner centers.
 //   spacing2 = Spacing between back-to-back pairs/sets of joiners.
@@ -398,15 +398,15 @@ module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, scr
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
 //   orient = Orientation of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   joiner_quad_clear(spacing1=50, spacing2=50, n=2);
 //   joiner_quad_clear(spacing1=50, spacing2=50, n=3);
-module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing2=undef, n=2, h=40, w=10, a=30, clearance=0, overlap=0.01, orient=ORIENT_Y, align=CENTER)
+module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing2=undef, n=2, h=40, w=10, a=30, clearance=0, overlap=0.01, orient=ORIENT_Y, anchor=CENTER)
 {
 	spacing1 = first_defined([spacing1, xspacing, 100]);
 	spacing2 = first_defined([spacing2, yspacing, 50]);
-	orient_and_align([w+spacing1, spacing2, h], orient, align, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w+spacing1, spacing2, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		zrot_copies(n=2) {
 			back(spacing2/2) {
 				joiner_pair_clear(spacing=spacing1, n=n, h=h, w=w, a=a, clearance=clearance, overlap=overlap);
@@ -420,7 +420,7 @@ module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing
 
 // Module: joiner_quad()
 // Usage:
-//   joiner_quad(h, w, l, [a], [screwsize], [guides], [slop], [orient], [align])
+//   joiner_quad(h, w, l, [a], [screwsize], [guides], [slop], [orient], [anchor])
 // Description:
 //   Creates a joiner_quad object that can be attached to other joiner_pairs .
 // Arguments:
@@ -435,24 +435,24 @@ module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing
 //   guides = If true, create sliding alignment guides.
 //   slop = Printer specific slop value to make parts fit more closely.
 //   orient = Orientation of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   align = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   joiner_quad(spacing1=50, spacing2=50, l=10, orient=ORIENT_X) cuboid([50, 50+10-0.1, 40]);
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=2, orient=ORIENT_X);
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate=false, orient=ORIENT_X);
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate=true, orient=ORIENT_X);
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate="alt", orient=ORIENT_X);
-module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=undef, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, slop=PRINTER_SLOP, orient=ORIENT_Y, align=CENTER)
+module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=undef, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, slop=PRINTER_SLOP, orient=ORIENT_Y, anchor=CENTER)
 {
 	spacing1 = first_defined([spacing1, xspacing, 100]);
 	spacing2 = first_defined([spacing2, yspacing, 50]);
 	if ($children > 0) {
 		difference() {
 			children();
-			joiner_quad_clear(spacing1=spacing1, spacing2=spacing2, h=h, w=w, a=a, clearance=0.1, orient=orient, align=align);
+			joiner_quad_clear(spacing1=spacing1, spacing2=spacing2, h=h, w=w, a=a, clearance=0.1, orient=orient, anchor=anchor);
 		}
 	}
-	orient_and_align([w+spacing1, spacing2, h], orient, align, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w+spacing1, spacing2, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		zrot_copies(n=2) {
 			back(spacing2/2) {
 				joiner_pair(spacing=spacing1, n=n, h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides, slop=slop);

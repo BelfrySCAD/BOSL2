@@ -41,8 +41,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Module: angle_pie_mask()
 // Usage:
-//   angle_pie_mask(r|d, l, ang, [orient], [align]);
-//   angle_pie_mask(r1|d1, r2|d2, l, ang, [orient], [align]);
+//   angle_pie_mask(r|d, l, ang, [orient], [anchor]);
+//   angle_pie_mask(r1|d1, r2|d2, l, ang, [orient], [anchor]);
 // Description:
 //   Creates a pie wedge shape that can be used to mask other shapes.
 // Arguments:
@@ -55,21 +55,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //   d1 = Bottom diameter of cone that wedge is created from.  (optional)
 //   d2 = Upper diameter of cone that wedge is created from. (optional)
 //   orient = Orientation of the pie slice.  Use the ORIENT_ constants from constants.h.  Default: ORIENT_Z.
-//   align = Alignment of the pie slice.  Use the constants from constants.h.  Default: CENTER.
+//   anchor = Alignment of the pie slice.  Use the constants from constants.h.  Default: CENTER.
 // Example(FR):
 //   angle_pie_mask(ang=30, d=100, l=20);
 module angle_pie_mask(
 	ang=45, l=undef,
 	r=undef, r1=undef, r2=undef,
 	d=undef, d1=undef, d2=undef,
-	orient=ORIENT_Z, align=CENTER,
+	orient=ORIENT_Z, anchor=CENTER,
 	h=undef
 ) {
 	l = first_defined([l, h, 1]);
 	r1 = get_radius(r1, r, d1, d, 10);
 	r2 = get_radius(r2, r, d2, d, 10);
-	orient_and_align([2*r1, 2*r1, l], orient, align, chain=true) {
-		pie_slice(ang=ang, l=l+0.1, r1=r1, r2=r2, align=CENTER);
+	orient_and_anchor([2*r1, 2*r1, l], orient, anchor, chain=true) {
+		pie_slice(ang=ang, l=l+0.1, r1=r1, r2=r2, anchor=CENTER);
 		children();
 	}
 }
@@ -77,19 +77,19 @@ module angle_pie_mask(
 
 // Module: cylinder_mask()
 // Usage: Mask objects
-//   cylinder_mask(l, r|d, chamfer, [chamfang], [from_end], [circum], [overage], [ends_only], [orient], [align]);
-//   cylinder_mask(l, r|d, fillet, [circum], [overage], [ends_only], [orient], [align]);
-//   cylinder_mask(l, r|d, [chamfer1|fillet1], [chamfer2|fillet2], [chamfang1], [chamfang2], [from_end], [circum], [overage], [ends_only], [orient], [align]);
+//   cylinder_mask(l, r|d, chamfer, [chamfang], [from_end], [circum], [overage], [ends_only], [orient], [anchor]);
+//   cylinder_mask(l, r|d, fillet, [circum], [overage], [ends_only], [orient], [anchor]);
+//   cylinder_mask(l, r|d, [chamfer1|fillet1], [chamfer2|fillet2], [chamfang1], [chamfang2], [from_end], [circum], [overage], [ends_only], [orient], [anchor]);
 // Usage: Masking operators
-//   cylinder_mask(l, r|d, chamfer, [chamfang], [from_end], [circum], [overage], [ends_only], [orient], [align]) ...
-//   cylinder_mask(l, r|d, fillet, [circum], [overage], [ends_only], [orient], [align]) ...
-//   cylinder_mask(l, r|d, [chamfer1|fillet1], [chamfer2|fillet2], [chamfang1], [chamfang2], [from_end], [circum], [overage], [ends_only], [orient], [align]) ...
+//   cylinder_mask(l, r|d, chamfer, [chamfang], [from_end], [circum], [overage], [ends_only], [orient], [anchor]) ...
+//   cylinder_mask(l, r|d, fillet, [circum], [overage], [ends_only], [orient], [anchor]) ...
+//   cylinder_mask(l, r|d, [chamfer1|fillet1], [chamfer2|fillet2], [chamfang1], [chamfang2], [from_end], [circum], [overage], [ends_only], [orient], [anchor]) ...
 // Description:
 //   If passed children, bevels/chamfers and/or rounds/fillets one or
 //   both ends of the origin-centered cylindrical region specified.  If
 //   passed no children, creates a mask to bevel/chamfer and/or round/fillet
 //   one or both ends of the cylindrical region.  Difference the mask
-//   from the region, making sure the center of the mask object is align
+//   from the region, making sure the center of the mask object is anchored
 //   exactly with the center of the cylindrical region to be chamferred.
 // Arguments:
 //   l = Length of the cylindrical/conical region.
@@ -113,7 +113,7 @@ module angle_pie_mask(
 //   overage = The extra thickness of the mask.  Default: `10`.
 //   ends_only = If true, only mask the ends and not around the middle of the cylinder.
 //   orient = Orientation.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the region.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Alignment of the region.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Example:
 //   difference() {
 //       cylinder(h=100, r1=60, r2=30, center=true);
@@ -132,7 +132,7 @@ module cylinder_mask(
 	fillet=undef, fillet1=undef, fillet2=undef,
 	circum=false, from_end=false,
 	overage=10, ends_only=false,
-	orient=ORIENT_Z, align=CENTER
+	orient=ORIENT_Z, anchor=CENTER
 ) {
 	r1 = get_radius(r=r, d=d, r1=r1, d1=d1, dflt=1);
 	r2 = get_radius(r=r, d=d, r1=r2, d1=d2, dflt=1);
@@ -152,7 +152,7 @@ module cylinder_mask(
 			cylinder_mask(l=l, r1=sc*r1, r2=sc*r2, chamfer1=cham1, chamfer2=cham2, chamfang1=ang1, chamfang2=ang2, fillet1=fil1, fillet2=fil2, orient=orient, from_end=from_end);
 		}
 	} else {
-		orient_and_align([2*r1, 2*r1, l], orient, align, chain=true) {
+		orient_and_anchor([2*r1, 2*r1, l], orient, anchor, chain=true) {
 			difference() {
 				union() {
 					chlen1 = cham1 / (from_end? 1 : tan(ang1));
@@ -180,7 +180,7 @@ module cylinder_mask(
 
 // Module: chamfer_mask()
 // Usage:
-//   chamfer_mask(l, chamfer, [orient], [align]);
+//   chamfer_mask(l, chamfer, [orient], [anchor]);
 // Description:
 //   Creates a shape that can be used to chamfer a 90 degree edge.
 //   Difference it from the object to be chamfered.  The center of
@@ -189,14 +189,14 @@ module cylinder_mask(
 //   l = Length of mask.
 //   chamfer = Size of chamfer
 //   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: vertical.
-//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
+//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
 // Example:
 //   difference() {
 //       cube(50);
-//       #chamfer_mask(l=50, chamfer=10, orient=ORIENT_X, align=RIGHT);
+//       #chamfer_mask(l=50, chamfer=10, orient=ORIENT_X, anchor=RIGHT);
 //   }
-module chamfer_mask(l=1, chamfer=1, orient=ORIENT_Z, align=CENTER) {
-	orient_and_align([chamfer, chamfer, l], orient, align, chain=true) {
+module chamfer_mask(l=1, chamfer=1, orient=ORIENT_Z, anchor=CENTER) {
+	orient_and_anchor([chamfer, chamfer, l], orient, anchor, chain=true) {
 		cylinder(d=chamfer*2, h=l+0.1, center=true, $fn=4);
 		children();
 	}
@@ -205,7 +205,7 @@ module chamfer_mask(l=1, chamfer=1, orient=ORIENT_Z, align=CENTER) {
 
 // Module: chamfer_mask_x()
 // Usage:
-//   chamfer_mask_x(l, chamfer, [align]);
+//   chamfer_mask_x(l, chamfer, [anchor]);
 // Description:
 //   Creates a shape that can be used to chamfer a 90 degree edge along the X axis.
 //   Difference it from the object to be chamfered.  The center of the mask
@@ -213,20 +213,20 @@ module chamfer_mask(l=1, chamfer=1, orient=ORIENT_Z, align=CENTER) {
 // Arguments:
 //   l = Height of mask
 //   chamfer = size of chamfer
-//   align = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
+//   anchor = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
 // Example:
 //   difference() {
 //       left(40) cube(80);
 //       #chamfer_mask_x(l=80, chamfer=20);
 //   }
-module chamfer_mask_x(l=1.0, chamfer=1.0, align=CENTER) {
-	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_X, align=align) children();
+module chamfer_mask_x(l=1.0, chamfer=1.0, anchor=CENTER) {
+	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_X, anchor=anchor) children();
 }
 
 
 // Module: chamfer_mask_y()
 // Usage:
-//   chamfer_mask_y(l, chamfer, [align]);
+//   chamfer_mask_y(l, chamfer, [anchor]);
 // Description:
 //   Creates a shape that can be used to chamfer a 90 degree edge along the Y axis.
 //   Difference it from the object to be chamfered.  The center of the mask
@@ -234,20 +234,20 @@ module chamfer_mask_x(l=1.0, chamfer=1.0, align=CENTER) {
 // Arguments:
 //   l = Height of mask
 //   chamfer = size of chamfer
-//   align = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
+//   anchor = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
 // Example:
 //   difference() {
 //       fwd(40) cube(80);
 //       right(80) #chamfer_mask_y(l=80, chamfer=20);
 //   }
-module chamfer_mask_y(l=1.0, chamfer=1.0, align=CENTER) {
-	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_Y, align=align) children();
+module chamfer_mask_y(l=1.0, chamfer=1.0, anchor=CENTER) {
+	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_Y, anchor=anchor) children();
 }
 
 
 // Module: chamfer_mask_z()
 // Usage:
-//   chamfer_mask_z(l, chamfer, [align]);
+//   chamfer_mask_z(l, chamfer, [anchor]);
 // Description:
 //   Creates a shape that can be used to chamfer a 90 degree edge along the Z axis.
 //   Difference it from the object to be chamfered.  The center of the mask
@@ -255,14 +255,14 @@ module chamfer_mask_y(l=1.0, chamfer=1.0, align=CENTER) {
 // Arguments:
 //   l = Height of mask
 //   chamfer = size of chamfer
-//   align = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
+//   anchor = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
 // Example:
 //   difference() {
 //       down(40) cube(80);
 //       #chamfer_mask_z(l=80, chamfer=20);
 //   }
-module chamfer_mask_z(l=1.0, chamfer=1.0, align=CENTER) {
-	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_Z, align=align) children();
+module chamfer_mask_z(l=1.0, chamfer=1.0, anchor=CENTER) {
+	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_Z, anchor=anchor) children();
 }
 
 
@@ -326,7 +326,7 @@ module chamfer(chamfer=1, size=[1,1,1], edges=EDGES_ALL)
 module chamfer_cylinder_mask(r=1.0, d=undef, chamfer=0.25, ang=45, from_end=false, orient=ORIENT_Z)
 {
 	r = get_radius(r=r, d=d, dflt=1);
-	rot(orient) cylinder_mask(l=chamfer*3, r=r, chamfer2=chamfer, chamfang2=ang, from_end=from_end, ends_only=true, align=DOWN) children();
+	rot(orient) cylinder_mask(l=chamfer*3, r=r, chamfer2=chamfer, chamfang2=ang, from_end=from_end, ends_only=true, anchor=DOWN) children();
 }
 
 
@@ -345,7 +345,7 @@ module chamfer_cylinder_mask(r=1.0, d=undef, chamfer=0.25, ang=45, from_end=fals
 //   from_end = If true, chamfer size is measured from end of hole.  If false, chamfer is measured outset from the radius of the hole.  (Default: false)
 //   overage = The extra thickness of the mask.  Default: `0.1`.
 //   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: `ORIENT_Z`.
-//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
+//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
 // Example:
 //   difference() {
 //       cube(100, center=true);
@@ -354,13 +354,13 @@ module chamfer_cylinder_mask(r=1.0, d=undef, chamfer=0.25, ang=45, from_end=fals
 //   }
 // Example:
 //   chamfer_hole_mask(d=100, chamfer=25, ang=30, overage=10);
-module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false, overage=0.1, orient=ORIENT_Z, align=CENTER)
+module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false, overage=0.1, orient=ORIENT_Z, anchor=CENTER)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	h = chamfer * (from_end? 1 : tan(90-ang));
 	r2 = r + chamfer * (from_end? tan(ang) : 1);
 	$fn = segs(r);
-	orient_and_align([2*r, 2*r, h*2], orient, align, size2=[2*r2, 2*r2], chain=true) {
+	orient_and_anchor([2*r, 2*r, h*2], orient, anchor, size2=[2*r2, 2*r2], chain=true) {
 		union() {
 			cylinder(r=r2, h=overage, center=false);
 			down(h) cylinder(r1=r, r2=r2, h=h, center=false);
@@ -375,7 +375,7 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 
 // Module: fillet_mask()
 // Usage:
-//   fillet_mask(l|h, r, [orient], [align])
+//   fillet_mask(l|h, r, [orient], [anchor])
 // Description:
 //   Creates a shape that can be used to fillet a vertical 90 degree edge.
 //   Difference it from the object to be filletted.  The center of the mask
@@ -384,17 +384,17 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 //   l = Length of mask.
 //   r = Radius of the fillet.
 //   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: vertical.
-//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
+//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       #fillet_mask(l=100, r=25, orient=ORIENT_Z, align=UP);
+//       #fillet_mask(l=100, r=25, orient=ORIENT_Z, anchor=UP);
 //   }
-module fillet_mask(l=undef, r=1.0, orient=ORIENT_Z, align=CENTER, h=undef)
+module fillet_mask(l=undef, r=1.0, orient=ORIENT_Z, anchor=CENTER, h=undef)
 {
 	l = first_defined([l, h, 1]);
 	sides = quantup(segs(r),4);
-	orient_and_align([2*r, 2*r, l], orient, align, chain=true) {
+	orient_and_anchor([2*r, 2*r, l], orient, anchor, chain=true) {
 		linear_extrude(height=l+0.1, convexity=4, center=true) {
 			difference() {
 				square(2*r, center=true);
@@ -408,7 +408,7 @@ module fillet_mask(l=undef, r=1.0, orient=ORIENT_Z, align=CENTER, h=undef)
 
 // Module: fillet_mask_x()
 // Usage:
-//   fillet_mask_x(l, r, [align])
+//   fillet_mask_x(l, r, [anchor])
 // Description:
 //   Creates a shape that can be used to fillet a 90 degree edge oriented
 //   along the X axis.  Difference it from the object to be filletted.
@@ -417,18 +417,18 @@ module fillet_mask(l=undef, r=1.0, orient=ORIENT_Z, align=CENTER, h=undef)
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the fillet.
-//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
+//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       #fillet_mask_x(l=100, r=25, align=RIGHT);
+//       #fillet_mask_x(l=100, r=25, anchor=RIGHT);
 //   }
-module fillet_mask_x(l=1.0, r=1.0, align=CENTER) fillet_mask(l=l, r=r, orient=ORIENT_X, align=align) children();
+module fillet_mask_x(l=1.0, r=1.0, anchor=CENTER) fillet_mask(l=l, r=r, orient=ORIENT_X, anchor=anchor) children();
 
 
 // Module: fillet_mask_y()
 // Usage:
-//   fillet_mask_y(l, r, [align])
+//   fillet_mask_y(l, r, [anchor])
 // Description:
 //   Creates a shape that can be used to fillet a 90 degree edge oriented
 //   along the Y axis.  Difference it from the object to be filletted.
@@ -437,18 +437,18 @@ module fillet_mask_x(l=1.0, r=1.0, align=CENTER) fillet_mask(l=l, r=r, orient=OR
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the fillet.
-//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
+//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       right(100) #fillet_mask_y(l=100, r=25, align=BACK);
+//       right(100) #fillet_mask_y(l=100, r=25, anchor=BACK);
 //   }
-module fillet_mask_y(l=1.0, r=1.0, align=CENTER) fillet_mask(l=l, r=r, orient=ORIENT_Y, align=align) children();
+module fillet_mask_y(l=1.0, r=1.0, anchor=CENTER) fillet_mask(l=l, r=r, orient=ORIENT_Y, anchor=anchor) children();
 
 
 // Module: fillet_mask_z()
 // Usage:
-//   fillet_mask_z(l, r, [align])
+//   fillet_mask_z(l, r, [anchor])
 // Description:
 //   Creates a shape that can be used to fillet a 90 degree edge oriented
 //   along the Z axis.  Difference it from the object to be filletted.
@@ -457,13 +457,13 @@ module fillet_mask_y(l=1.0, r=1.0, align=CENTER) fillet_mask(l=l, r=r, orient=OR
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the fillet.
-//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
+//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       #fillet_mask_z(l=100, r=25, align=UP);
+//       #fillet_mask_z(l=100, r=25, anchor=UP);
 //   }
-module fillet_mask_z(l=1.0, r=1.0, align=CENTER) fillet_mask(l=l, r=r, orient=ORIENT_Z, align=align) children();
+module fillet_mask_z(l=1.0, r=1.0, anchor=CENTER) fillet_mask(l=l, r=r, orient=ORIENT_Z, anchor=anchor) children();
 
 
 // Module: fillet()
@@ -505,7 +505,7 @@ module fillet(fillet=1, size=[1,1,1], edges=EDGES_ALL)
 
 // Module: fillet_angled_edge_mask()
 // Usage:
-//   fillet_angled_edge_mask(h, r, [ang], [orient], [align]);
+//   fillet_angled_edge_mask(h, r, [ang], [orient], [anchor]);
 // Description:
 //   Creates a vertical mask that can be used to fillet the edge where two
 //   face meet, at any arbitrary angle.  Difference it from the object to
@@ -516,18 +516,18 @@ module fillet(fillet=1, size=[1,1,1], edges=EDGES_ALL)
 //   r = radius of the fillet.
 //   ang = angle that the planes meet at.
 //   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: `ORIENT_Z`.
-//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
+//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
 // Example:
 //   difference() {
 //       angle_pie_mask(ang=70, h=50, d=100);
 //       #fillet_angled_edge_mask(h=51, r=20.0, ang=70, $fn=32);
 //   }
-module fillet_angled_edge_mask(h=1.0, r=1.0, ang=90, orient=ORIENT_Z, align=CENTER)
+module fillet_angled_edge_mask(h=1.0, r=1.0, ang=90, orient=ORIENT_Z, anchor=CENTER)
 {
 	sweep = 180-ang;
 	n = ceil(segs(r)*sweep/360);
 	x = r*sin(90-(ang/2))/sin(ang/2);
-	orient_and_align([2*x,2*r,h], orient, align, chain=true) {
+	orient_and_anchor([2*x,2*r,h], orient, anchor, chain=true) {
 		linear_extrude(height=h, convexity=4, center=true) {
 			polygon(
 				points=concat(
@@ -547,7 +547,7 @@ module fillet_angled_edge_mask(h=1.0, r=1.0, ang=90, orient=ORIENT_Z, align=CENT
 
 // Module: fillet_angled_corner_mask()
 // Usage:
-//   fillet_angled_corner_mask(fillet, ang, [orient], [align]);
+//   fillet_angled_corner_mask(fillet, ang, [orient], [anchor]);
 // Description:
 //   Creates a shape that can be used to fillet the corner of an angle.
 //   Difference it from the object to be filletted.  The center of the mask
@@ -556,7 +556,7 @@ module fillet_angled_edge_mask(h=1.0, r=1.0, ang=90, orient=ORIENT_Z, align=CENT
 //   fillet = radius of the fillet.
 //   ang = angle between planes that you need to fillet the corner of.
 //   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: `ORIENT_Z`.
-//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
+//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
 // Example:
 //   ang=60;
 //   difference() {
@@ -567,12 +567,12 @@ module fillet_angled_edge_mask(h=1.0, r=1.0, ang=90, orient=ORIENT_Z, align=CENT
 //       }
 //       fillet_angled_edge_mask(h=51, r=20, ang=ang);
 //   }
-module fillet_angled_corner_mask(fillet=1.0, ang=90, orient=ORIENT_Z, align=CENTER)
+module fillet_angled_corner_mask(fillet=1.0, ang=90, orient=ORIENT_Z, anchor=CENTER)
 {
 	dx = fillet / tan(ang/2);
 	dx2 = dx / cos(ang/2) + 1;
 	fn = quantup(segs(fillet), 4);
-	orient_and_align([2*dx2, 2*dx2, fillet*2], orient, align, chain=true) {
+	orient_and_anchor([2*dx2, 2*dx2, fillet*2], orient, anchor, chain=true) {
 		difference() {
 			down(fillet) cylinder(r=dx2, h=fillet+1, center=false);
 			yflip_copy() {
@@ -594,14 +594,14 @@ module fillet_angled_corner_mask(fillet=1.0, ang=90, orient=ORIENT_Z, align=CENT
 
 // Module: fillet_corner_mask()
 // Usage:
-//   fillet_corner_mask(r, [align]);
+//   fillet_corner_mask(r, [anchor]);
 // Description:
 //   Creates a shape that you can use to round 90 degree corners on a fillet.
 //   Difference it from the object to be filletted.  The center of the mask
 //   object should align exactly with the corner to be filletted.
 // Arguments:
 //   r = radius of corner fillet.
-//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
+//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
 // Example:
 //   fillet_corner_mask(r=20.0);
 // Example:
@@ -612,9 +612,9 @@ module fillet_angled_corner_mask(fillet=1.0, ang=90, orient=ORIENT_Z, align=CENT
 //     translate([15, 25, 0]) fillet_mask_z(l=81, r=15);
 //     translate([15, 25, 40]) #fillet_corner_mask(r=15);
 //   }
-module fillet_corner_mask(r=1.0, align=CENTER)
+module fillet_corner_mask(r=1.0, anchor=CENTER)
 {
-	orient_and_align([2*r, 2*r, 2*r], ORIENT_Z, align, chain=true) {
+	orient_and_anchor([2*r, 2*r, 2*r], ORIENT_Z, anchor, chain=true) {
 		difference() {
 			cube(size=r*2, center=true);
 			grid3d(n=[2,2,2], spacing=r*2-0.05) {
@@ -649,7 +649,7 @@ module fillet_corner_mask(r=1.0, align=CENTER)
 //   }
 module fillet_cylinder_mask(r=1.0, fillet=0.25)
 {
-	cylinder_mask(l=fillet*3, r=r, fillet2=fillet, overage=fillet, ends_only=true, align=DOWN) children();
+	cylinder_mask(l=fillet*3, r=r, fillet2=fillet, overage=fillet, ends_only=true, anchor=DOWN) children();
 }
 
 
@@ -668,7 +668,7 @@ module fillet_cylinder_mask(r=1.0, fillet=0.25)
 //   fillet = Radius of the filleting. (Default: 0.25)
 //   overage = The extra thickness of the mask.  Default: `0.1`.
 //   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: `ORIENT_Z`.
-//   align = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
+//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
 // Example:
 //   difference() {
 //     cube([150,150,100], center=true);
@@ -677,10 +677,10 @@ module fillet_cylinder_mask(r=1.0, fillet=0.25)
 //   }
 // Example:
 //   fillet_hole_mask(r=40, fillet=20, $fa=2, $fs=2);
-module fillet_hole_mask(r=undef, d=undef, fillet=0.25, overage=0.1, orient=ORIENT_Z, align=CENTER)
+module fillet_hole_mask(r=undef, d=undef, fillet=0.25, overage=0.1, orient=ORIENT_Z, anchor=CENTER)
 {
 	r = get_radius(r=r, d=d, dflt=1);
-	orient_and_align([2*(r+fillet), 2*(r+fillet), fillet*2], orient, align, chain=true) {
+	orient_and_anchor([2*(r+fillet), 2*(r+fillet), fillet*2], orient, anchor, chain=true) {
 		rotate_extrude(convexity=4) {
 			difference() {
 				right(r-overage) fwd(fillet) square(fillet+overage, center=false);

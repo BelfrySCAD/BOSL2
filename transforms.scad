@@ -956,11 +956,11 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   Makes a square or hexagonal grid of copies of children.
 //
 // Usage:
-//   grid2d(size, spacing, [stagger], [scale], [in_poly], [orient], [align]) ...
-//   grid2d(size, cols, rows, [stagger], [scale], [in_poly], [orient], [align]) ...
-//   grid2d(spacing, cols, rows, [stagger], [scale], [in_poly], [orient], [align]) ...
-//   grid2d(spacing, in_poly, [stagger], [scale], [orient], [align]) ...
-//   grid2d(cols, rows, in_poly, [stagger], [scale], [orient], [align]) ...
+//   grid2d(size, spacing, [stagger], [scale], [in_poly], [orient], [anchor]) ...
+//   grid2d(size, cols, rows, [stagger], [scale], [in_poly], [orient], [anchor]) ...
+//   grid2d(spacing, cols, rows, [stagger], [scale], [in_poly], [orient], [anchor]) ...
+//   grid2d(spacing, in_poly, [stagger], [scale], [orient], [anchor]) ...
+//   grid2d(cols, rows, in_poly, [stagger], [scale], [orient], [anchor]) ...
 //
 // Arguments:
 //   size = The [X,Y] size to spread the copies over.
@@ -971,7 +971,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   scale = [X,Y] scaling factors to reshape grid.
 //   in_poly = If given a list of polygon points, only creates copies whose center would be inside the polygon.  Polygon can be concave and/or self crossing.
 //   orient = Orientation axis for the grid.  Orientation is NOT applied to individual children.
-//   align = Alignment of the grid.  Alignment is NOT applies to individual children.
+//   anchor = Alignment of the grid.  Alignment is NOT applies to individual children.
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -1002,7 +1002,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //               zrot(180/6)
 //                   cylinder(h=20, d=10/cos(180/6)+0.01, $fn=6);
 //   }
-module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, scale=[1,1,1], in_poly=undef, orient=ORIENT_Z, align=CENTER)
+module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, scale=[1,1,1], in_poly=undef, orient=ORIENT_Z, anchor=CENTER)
 {
 	assert_in_list("stagger", stagger, [false, true, "alt"]);
 	scl = vmul(scalar_vec3(scale, 1), (stagger!=false? [0.5, sin(60), 0] : [1,1,0]));
@@ -1012,10 +1012,10 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 			spc = vmul(scalar_vec3(spacing), scl);
 			maxcols = ceil(siz[0]/spc[0]);
 			maxrows = ceil(siz[1]/spc[1]);
-			grid2d(spacing=spacing, cols=maxcols, rows=maxrows, stagger=stagger, scale=scale, in_poly=in_poly, orient=orient, align=align) children();
+			grid2d(spacing=spacing, cols=maxcols, rows=maxrows, stagger=stagger, scale=scale, in_poly=in_poly, orient=orient, anchor=anchor) children();
 		} else {
 			spc = [siz[0]/cols, siz[1]/rows, 0];
-			grid2d(spacing=spc, cols=cols, rows=rows, stagger=stagger, scale=scale, in_poly=in_poly, orient=orient, align=align) children();
+			grid2d(spacing=spc, cols=cols, rows=rows, stagger=stagger, scale=scale, in_poly=in_poly, orient=orient, anchor=anchor) children();
 		}
 	} else {
 		spc = is_list(spacing)? spacing : vmul(scalar_vec3(spacing), scl);
@@ -1026,7 +1026,7 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 		siz = vmul(spc, [mcols-1, mrows-1, 0]);
 		staggermod = (stagger == "alt")? 1 : 0;
 		if (stagger == false) {
-			orient_and_align(siz, orient, align) {
+			orient_and_anchor(siz, orient, anchor) {
 				for (row = [0:mrows-1]) {
 					for (col = [0:mcols-1]) {
 						pos = [col*spc[0], row*spc[1]] - point2d(siz/2);
@@ -1041,7 +1041,7 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 			}
 		} else {
 			// stagger == true or stagger == "alt"
-			orient_and_align(siz, orient, align) {
+			orient_and_anchor(siz, orient, anchor) {
 				cols1 = ceil(mcols/2);
 				cols2 = mcols - cols1;
 				for (row = [0:mrows-1]) {
@@ -2044,7 +2044,7 @@ module chain_hull()
 //   without the `angle` argument in rotate_extrude.
 //
 // Usage:
-//   extrude_arc(arc, r|d, [sa], [caps], [orient], [align], [masksize]) ...
+//   extrude_arc(arc, r|d, [sa], [caps], [orient], [anchor], [masksize]) ...
 //
 // Arguments:
 //   arc = Number of degrees to traverse.
@@ -2052,7 +2052,7 @@ module chain_hull()
 //   r = Radius of arc.
 //   d = Diameter of arc.
 //   orient = The axis to align to.  Use `ORIENT_` constants from `constants.scad`
-//   align = The side of the origin the part should be aligned with.  Use `` constants from `constants.scad`
+//   anchor = The side of the origin the part should be anchored with.  Use constants from `constants.scad`
 //   masksize = size of mask used to clear unused part of circle arc.  should be larger than height or width of 2D shapes to extrude.
 //   caps = If true, spin the 2D shapes to make rounded caps the ends of the arc.
 //   convexity = Max number of times a ray passes through the 2D shape's walls.
@@ -2063,11 +2063,11 @@ module chain_hull()
 //   extrude_arc(arc=270, sa=45, r=40, caps=true, convexity=4, $fa=2, $fs=2) {
 //       polygon(points=pts);
 //   }
-module extrude_arc(arc=90, sa=0, r=undef, d=undef, orient=ORIENT_Z, align=CENTER, masksize=100, caps=false, convexity=4)
+module extrude_arc(arc=90, sa=0, r=undef, d=undef, orient=ORIENT_Z, anchor=CENTER, masksize=100, caps=false, convexity=4)
 {
 	eps = 0.001;
 	r = get_radius(r=r, d=d, dflt=100);
-	orient_and_align([2*r, 2*r, 0], orient, align) {
+	orient_and_anchor([2*r, 2*r, 0], orient, anchor) {
 		zrot(sa) {
 			if (caps) {
 				place_copies([[r,0,0], cylindrical_to_xyz(r, arc, 0)]) {

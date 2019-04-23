@@ -390,7 +390,7 @@ function get_metric_nut_thickness(size) = lookup(size, [
 // Description:
 //   Makes a very simple screw model, useful for making screwholes.
 // Usage:
-//   screw(screwsize, screwlen, headsize, headlen, [countersunk], [orient], [align])
+//   screw(screwsize, screwlen, headsize, headlen, [countersunk], [orient], [anchor])
 // Arguments:
 //   screwsize = diameter of threaded part of screw.
 //   screwlen = length of threaded part of screw.
@@ -398,10 +398,17 @@ function get_metric_nut_thickness(size) = lookup(size, [
 //   headlen = length of the screw head.
 //   countersunk = If true, center from cap's top instead of it's bottom.
 //   orient = Orientation of the screw.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the screw.  Use the constants from `constants.scad` or `"sunken"`, or `"base"`.  Default: `"base"`.
+//   anchor = Alignment of the screw.  Use the constants from `constants.scad` or `"sunken"`, or `"base"`.  Default: `"base"`.
 // Examples:
 //   screw(screwsize=3,screwlen=10,headsize=6,headlen=3,countersunk=true);
-//   screw(screwsize=3,screwlen=10,headsize=6,headlen=3, align="base");
+//   screw(screwsize=3,screwlen=10,headsize=6,headlen=3, anchor="base");
+// Example(FlatSpin): Standard Anchors
+//   screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
+//       show_anchors(5, custom=false);
+// Example(FlatSpin): Standard Anchors
+//   transparent()
+//     screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
+//       show_anchors(5, std=false);
 module screw(
 	screwsize=3,
 	screwlen=10,
@@ -410,15 +417,15 @@ module screw(
 	pitch=undef,
 	countersunk=false,
 	orient=ORIENT_Z,
-	align="base"
+	anchor="base"
 ) {
 	sides = max(12, segs(screwsize/2));
-	algn = countersunk? DOWN : align;
-	alignments = [
-		["base",   [0,0,-headlen/2+screwlen/2]],
-		["sunken", [0,0,(headlen+screwlen)/2-0.01]]
+	algn = countersunk? DOWN : anchor;
+	anchors = [
+		anchorpt("base", [0,0,-headlen/2+screwlen/2]),
+		anchorpt("sunken", [0,0,(headlen+screwlen)/2-0.01])
 	];
-	orient_and_align([headsize, headsize, headlen+screwlen], orient, algn, alignments=alignments, chain=true) {
+	orient_and_anchor([headsize, headsize, headlen+screwlen], orient, algn, anchors=anchors, chain=true) {
 		down(headlen/2-screwlen/2) {
 			down(screwlen/2) {
 				if (pitch == undef) {
@@ -427,7 +434,7 @@ module screw(
 					threaded_rod(d=screwsize, l=screwlen+0.05, pitch=pitch, $fn=sides);
 				}
 			}
-			up(headlen/2) cylinder(r=headsize/2, h=headlen, center=true, $fn=sides*2);
+			cylinder(r=headsize/2, h=headlen, center=false, $fn=sides*2);
 		}
 		children();
 	}
@@ -449,7 +456,7 @@ module screw(
 //   phillips = If given, the size of the phillips drive hole to add.  (ie: "#1", "#2", or "#3")
 //   torx = If given, the size of the torx drive hole to add.  (ie: 10, 20, 30, etc.)
 //   orient = Orientation of the bolt.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the bolt.  Use the constants from `constants.scad` or `"sunken"`, `"base"`, or `"shank"`.  Default: `"base"`.
+//   anchor = Alignment of the bolt.  Use the constants from `constants.scad` or `"sunken"`, `"base"`, or `"shank"`.  Default: `"base"`.
 // Example: Bolt Head Types
 //   ydistribute(40) {
 //       xdistribute(30) {
@@ -482,6 +489,13 @@ module screw(
 //   metric_bolt(headtype="hex", size=10, l=15, phillips="#2");
 // Example: Hex Head with Torx
 //   metric_bolt(headtype="hex", size=10, l=15, torx=50);
+// Example(FlatSpin): Standard Anchors
+//   metric_bolt(headtype="oval", size=10, l=15, shank=5, details=true, phillips="#2")
+//       show_anchors(5, custom=false);
+// Example(FlatSpin): Custom Anchors
+//   transparent(0.125)
+//     metric_bolt(headtype="oval", size=10, l=15, shank=5, details=true, phillips="#2")
+//       show_anchors(5, std=false);
 module metric_bolt(
 	headtype="socket",
 	size=3,
@@ -494,7 +508,7 @@ module metric_bolt(
 	torx=undef,
 	flange=0,
 	orient=ORIENT_Z,
-	align="base"
+	anchor="base"
 ) {
 	D = headtype != "hex"?
 		get_metric_socket_cap_diam(size) :
@@ -524,27 +538,27 @@ module metric_bolt(
 		headlen-0.001
 	);
 
-	alignments = [
-		["sunken", [0,0,base+sunklen]],
-		["base",   [0,0,base]],
-		["shank",  [0,0,base-shank]]
+	anchors = [
+		anchorpt("sunken", [0,0,base+sunklen]),
+		anchorpt("base",   [0,0,base]),
+		anchorpt("shank",  [0,0,base-shank])
 	];
 
-	color("silver")
-	orient_and_align([D+flange, D+flange, headlen+l], orient, align, alignments=alignments, chain=true) {
+	//color("silver")
+	orient_and_anchor([size, size, headlen+l], orient, anchor, geometry="cylinder", anchors=anchors, chain=true) {
 		up(base) {
 			difference() {
 				union() {
 					// Head
 					if (headtype == "hex") {
 						difference() {
-							cylinder(d=tcirc, h=H, center=false, $fn=6);
+							cylinder(d=tcirc, h=H, $fn=6);
 
 							// Bevel hex nut top
 							if (details) {
 								up(H-bevtop) {
 									difference() {
-										upcube([tcirc+1, tcirc+1, bevtop+0.5]);
+										cube([tcirc+1, tcirc+1, bevtop+0.5], anchor=BOTTOM);
 										down(0.01) cylinder(d1=tcirc, d2=tcirc-bevtop*2, h=bevtop+0.02, center=false);
 									}
 								}
@@ -554,25 +568,25 @@ module metric_bolt(
 						sockw = get_metric_socket_cap_socket_size(size);
 						sockd = get_metric_socket_cap_socket_depth(size);
 						difference() {
-							cylinder(d=D, h=H, center=false);
-							up(H-sockd) cylinder(h=sockd+0.1, d=sockw/cos(30), center=false, $fn=6);
+							cylinder(d=D, h=H);
+							up(H-sockd) cylinder(h=sockd+0.1, d=sockw/cos(30), $fn=6);
 							if (details) {
 								kcnt = 36;
-								zring(n=kcnt, r=D/2) up(H/3) upcube([PI*D/kcnt/2, PI*D/kcnt/2, H]);
+								zring(n=kcnt, r=D/2) up(H/3) cube([PI*D/kcnt/2, PI*D/kcnt/2, H], anchor=BOTTOM);
 							}
 						}
 					} else if (headtype == "pan") {
-						cyl(l=H*0.75, d=D, fillet2=H*0.75/2, align=UP);
+						cyl(l=H*0.75, d=D, fillet2=H*0.75/2, anchor=DOWN);
 					} else if (headtype == "round") {
-						top_half() zscale(H*0.75/D*2) sphere(d=D);
+						top_half(D) zscale(H*0.75/D*2) sphere(d=D);
 					} else if (headtype == "button") {
-						up(H*0.75/3) top_half() zscale(H*0.75*2/3/D*2) sphere(d=D);
+						up(H*0.75/3) top_half(D) zscale(H*0.75*2/3/D*2) sphere(d=D);
 						cylinder(d=D, h=H*0.75/3+0.01, center=false);
 					} else if (headtype == "countersunk") {
-						cylinder(h=(D-size)/2, d1=size, d2=D, center=false);
+						cylinder(h=(D-size)/2, d1=size, d2=D);
 					} else if (headtype == "oval") {
-						up((D-size)/2) top_half() zscale(0.333) sphere(d=D);
-						cylinder(h=(D-size)/2, d1=size, d2=D, center=false);
+						up((D-size)/2) top_half(D) zscale(0.333) sphere(d=D);
+						cylinder(h=(D-size)/2, d1=size, d2=D);
 					}
 
 					// Flange
@@ -604,7 +618,7 @@ module metric_bolt(
 							// Bevel bottom end of threads
 							if (details) {
 								difference() {
-									down(0.5) upcube([size+1, size+1, bevbot+0.5]);
+									down(0.5) cube([size+1, size+1, bevbot+0.5], anchor=BOTTOM);
 									cylinder(d1=size-bevbot*2, d2=size, h=bevbot+0.01, center=false);
 								}
 							}
@@ -640,8 +654,8 @@ module metric_bolt(
 //   flange = radius of flange beyond the head.  Default = 0 (no flange)
 //   details = true if model should be rendered with extra details.  (Default: false)
 //   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   align = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `UP`.
-//   center = If true, centers the nut at the origin.  If false, sits on top of XY plane.  Overrides `align` if given.
+//   anchor = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `UP`.
+//   center = If true, centers the nut at the origin.  If false, sits on top of XY plane.  Overrides `anchor` if given.
 // Example: No details, No Hole.  Useful for a mask.
 //   metric_nut(size=10, hole=false);
 // Example:  Hole, with No Threads
@@ -662,7 +676,7 @@ module metric_nut(
 	flange=0,
 	center=undef,
 	orient=ORIENT_Z,
-	align=UP
+	anchor=UP
 ) {
 	H = get_metric_nut_thickness(size);
 	D = get_metric_nut_size(size);
@@ -671,8 +685,8 @@ module metric_nut(
 	dcirc = D/cos(30);
 	bevtop = (dcirc - D)/2;
 
-	color("silver")
-	orient_and_align([dcirc+flange, dcirc+flange, H], orient, align, center, chain=true) {
+	//color("silver")
+	orient_and_anchor([dcirc+flange, dcirc+flange, H], orient, anchor, center, geometry="cylinder", chain=true) {
 		difference() {
 			union() {
 				difference() {
@@ -680,14 +694,14 @@ module metric_nut(
 					if (details) {
 						up(H/2-bevtop) {
 							difference() {
-								upcube([dcirc+1, dcirc+1, bevtop+0.5]);
+								cube([dcirc+1, dcirc+1, bevtop+0.5], anchor=BOTTOM);
 								down(0.01) cylinder(d1=dcirc, d2=dcirc-bevtop*2, h=bevtop+0.02, center=false, $fn=nutfn);
 							}
 						}
 						if (flange == 0) {
 							down(H/2) {
 								difference() {
-									down(0.5) upcube([dcirc+1, dcirc+1, bevtop+0.5]);
+									down(0.5) cube([dcirc+1, dcirc+1, bevtop+0.5], anchor=BOTTOM);
 									down(0.01) cylinder(d1=dcirc-bevtop*2, d2=dcirc, h=bevtop+0.02, center=false, $fn=nutfn);
 								}
 							}

@@ -231,9 +231,9 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 // Example:
 //   extrude_2d_hollow(wall=2, height=100, twist=90, slices=50)
 //       circle(r=40, $fn=6);
-module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, orient=ORIENT_Z, align=UP)
+module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, orient=ORIENT_Z, anchor=UP)
 {
-	orient_and_align([0,0,height], orient, align, center, chain=true) {
+	orient_and_anchor([0,0,height], orient, anchor, center, chain=true) {
 		linear_extrude(height=height, twist=twist, slices=slices, center=true) {
 			difference() {
 				children();
@@ -259,7 +259,7 @@ module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, o
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   extrude_2dpath_along_spiral(poly, h=200, r=50, twist=1080, $fn=36);
-module extrude_2dpath_along_spiral(polyline, h, r, twist=360, center=undef, orient=ORIENT_Z, align=CENTER) {
+module extrude_2dpath_along_spiral(polyline, h, r, twist=360, center=undef, orient=ORIENT_Z, anchor=CENTER) {
 	pline_count = len(polyline);
 	steps = ceil(segs(r)*(twist/360));
 
@@ -301,7 +301,7 @@ module extrude_2dpath_along_spiral(polyline, h, r, twist=360, center=undef, orie
 	);
 
 	tri_faces = triangulate_faces(poly_points, poly_faces);
-	orient_and_align([r,r,h], orient, align, center, chain=true) {
+	orient_and_anchor([r,r,h], orient, anchor, center, chain=true) {
 		polyhedron(points=poly_points, faces=tri_faces, convexity=10);
 		children();
 	}

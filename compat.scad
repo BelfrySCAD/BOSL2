@@ -50,6 +50,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 function default(v,dflt=undef) = is_undef(v)? dflt : v;
 
 
+// Function: is_vector()
+// Usage:
+//   is_vector(v)
+// Description:
+//   Returns true if the given value is a list, and at least the first item is a number.
+function is_vector(v) = is_list(v) && is_num(v[0]);
+
+
 // Function: get_radius()
 // Description:
 //   Given various radii and diameters, returns the most specific radius.

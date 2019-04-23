@@ -52,7 +52,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //      phillips_drive(size="#2", shaft=6, l=20);
 //      phillips_drive(size="#3", shaft=6, l=20);
 //   }
-module phillips_drive(size="#2", shaft=6, l=20, orient=ORIENT_Z, align=UP) {
+module phillips_drive(size="#2", shaft=6, l=20, orient=ORIENT_Z, anchor=BOTTOM) {
 	// These are my best guess reverse-engineered measurements of
 	// the tip diameters of various phillips screwdriver sizes.
 	ang = 11;
@@ -61,7 +61,7 @@ module phillips_drive(size="#2", shaft=6, l=20, orient=ORIENT_Z, align=UP) {
 	r = radidx == []? 0 : rads[radidx][1];
 	h = (r/2)/tan(ang);
 	cr = r/2;
-	orient_and_align([shaft, shaft, l], orient, align, chain=true) {
+	orient_and_anchor([shaft, shaft, l], orient, anchor, chain=true) {
 		down(l/2) {
 			difference() {
 				intersection() {
@@ -78,12 +78,11 @@ module phillips_drive(size="#2", shaft=6, l=20, orient=ORIENT_Z, align=UP) {
 						zrot(-45) {
 							off = (r/2-cr*(sqrt(2)-1))/sqrt(2);
 							translate([off, off, 0]) {
-								linear_extrude(height=l*2, convexity=4) {
+								linear_extrude(height=l, convexity=4) {
 									difference() {
 										union() {
-											square([shaft, shaft], center=false);
-											back(cr) zrot(1.125) square([shaft, shaft], center=false);
-											right(cr) zrot(-1.125) square([shaft, shaft], center=false);
+											square([shaft/2, shaft/2], center=false);
+											mirror_copy([1,-1]) back(cr) zrot(1.125) square([shaft/2, shaft/2], center=false);
 										}
 										difference() {
 											square([cr*2, cr*2], center=true);
