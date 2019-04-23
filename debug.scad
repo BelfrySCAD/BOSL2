@@ -193,6 +193,8 @@ function standard_anchors() = [
 //   s = Length of the arrows.
 //   color = Color of the arrow.
 //   flag = If true, draw the orientation flag on the arrowhead.
+// Example:
+//   anchor_arrow(s=20);
 module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow") {
 	$fn=12;
 	recolor("gray") spheroid(d=s/6)
@@ -213,7 +215,7 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow"
 // Description:
 //   Makes the children transparent gray, while showing any
 //   anchor arrows that may exist.
-// Example:
+// Example(FlatSpin):
 //   transparent() cube(50, center=true) show_anchors();
 module transparent(opacity=0.2) {
 	show("anchor-arrow") children() show_anchors();
@@ -224,6 +226,12 @@ module transparent(opacity=0.2) {
 // Module: show_anchors()
 // Description:
 //   Show all standard anchors for the parent object.
+// Arguments:
+//   s = Length of anchor arrows.
+//   std = If true (default), show standard anchors.
+//   custom = If true (default), show custom anchors.
+// Example(FlatSpin):
+//   cube(50, center=true) show_anchors();
 module show_anchors(s=10, std=true, custom=true) {
 	if (std) {
 		for (anchor=standard_anchors()) {
@@ -257,6 +265,8 @@ module show_anchors(s=10, std=true, custom=true) {
 //   Displays X,Y,Z axis arrows in red, green, and blue respectively.
 // Arguments:
 //   s = Length of the arrows.
+// Examples:
+//   frame_ref(25);
 module frame_ref(s=15) {
 	noop() {
 		attach(RIGHT) anchor_arrow(s=s, color="red", flag=false);

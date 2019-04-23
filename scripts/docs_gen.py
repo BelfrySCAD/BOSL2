@@ -98,7 +98,7 @@ class ImageProcessing(object):
 
         scriptfile = "tmp_{0}.scad".format(imgfile.replace(".", "_"))
 
-        stdlibs = ["constants.scad", "math.scad", "transforms.scad", "shapes.scad", "debug.scad"]
+        stdlibs = ["std.scad", "debug.scad"]
         script = ""
         for lib in stdlibs:
             script += "include <BOSL2/%s>\n" % lib
