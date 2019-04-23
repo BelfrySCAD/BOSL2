@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PREVIEW_LIBS="constants compat attachments math arrays vectors matrices coords geometry triangulation quaternions convex_hull transforms primitives shapes masks paths beziers metric_screws threading involute_gears sliders joiners linear_bearings nema_steppers wiring phillips_drive torx_drive debug"
+PREVIEW_LIBS="compat attachments math arrays vectors matrices coords geometry triangulation quaternions convex_hull constants transforms primitives shapes masks paths beziers metric_screws threading involute_gears sliders joiners linear_bearings nema_steppers wiring phillips_drive torx_drive debug"
 
 dir="$(basename $PWD)"
 if [ "$dir" = "BOSL2" ]; then

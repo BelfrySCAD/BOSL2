@@ -133,7 +133,7 @@ module cuboid(
 								if (corner_edge_count(edges, [xa,ya,za]) > 2) {
 									translate(vmul([xa,ya,za]/2, size-[1,1,1]*chamfer*4/3)) {
 										rot(from=UP, to=[xa,ya,za]) {
-											upcube(chamfer*3);
+											cube(chamfer*3, anchor=BOTTOM);
 										}
 									}
 								}
@@ -1543,7 +1543,7 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 											if (zreps>1) {
 												back(cross_len/2) {
 													zrot(-cross_ang) {
-														down(strut) upcube([strut, strut, zstep+strut]);
+														down(strut) cube([strut, strut, zstep+strut], anchor=BOTTOM);
 													}
 												}
 											}
@@ -1551,7 +1551,7 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 												yflip_copy() {
 													back(soff*supp_step) {
 														skew_xy(ya=supp_ang) {
-															upcube([strut, strut, zstep]);
+															cube([strut, strut, zstep], anchor=BOTTOM);
 														}
 													}
 												}
@@ -1712,8 +1712,8 @@ module pie_slice(
 //
 // Example:
 //   union() {
-//       translate([0,2,-4]) upcube([20, 4, 24]);
-//       translate([0,-10,-4]) upcube([20, 20, 4]);
+//       translate([0,2,-4]) cube([20, 4, 24], anchor=BOTTOM);
+//       translate([0,-10,-4]) cube([20, 20, 4], anchor=BOTTOM);
 //       color("green") interior_fillet(l=20, r=10, orient=ORIENT_XNEG);
 //   }
 //

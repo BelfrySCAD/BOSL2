@@ -58,7 +58,7 @@ function anchorpt(name, pos=[0,0,0], dir=UP, rot=0) = [name, pos, dir, rot];
 // Usage:
 //   find_anchor(anchor, h, size, [size2], [shift], [edges], [corners]);
 // Description:
-//   Generates a list of typical anchors.
+//   Returns anchor data for the given vector or anchor name.
 // Arguments:
 //   anchor = Vector or named anchor string.
 //   h = Height of the region.

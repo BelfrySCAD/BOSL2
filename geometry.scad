@@ -271,7 +271,8 @@ function simplify_path_indexed(points, path, eps=EPSILON, _a=0, _b=2, _acc=[]) =
 //   point_in_polygon(point, path)
 // Description:
 //   This function tests whether the given point is inside, outside or on the boundary of
-//   the specified polygon using the Winding Number method.  (http://geomalgorithms.com/a03-_inclusion.html)
+//   the specified polygon using the Winding Number method:
+//   - (http://geomalgorithms.com/a03-_inclusion.html)
 //   The polygon is given as a list of points, not including the repeated end point.
 //   Returns -1 if the point is outside the polyon.
 //   Returns 0 if the point is on the boundary.

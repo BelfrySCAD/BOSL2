@@ -11,7 +11,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Section: Generalized Hull
+// Section: Convex Hulls
 
 // Function: convex_hull()
 // Usage:
@@ -31,8 +31,6 @@ function convex_hull(points) =
 	len(points[0]) == 3 ? convex_hull3d(points) : [];
 
 
-
-// Section: 2D Hull
 
 // Function: convex_hull2d()
 // Usage:
@@ -95,8 +93,6 @@ function _remove_conflicts_and_insert_point(polygon, conflicts, point) =
 	) polygon;
 
 
-
-// Section: 3D Hull
 
 // Function: convex_hull3d()
 // Usage:
