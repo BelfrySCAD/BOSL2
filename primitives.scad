@@ -50,6 +50,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
 //   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
 //   anchor = The side of the square to center on the origin.  Default: `FRONT+LEFT`
+// Example(2D):
+//   square(40);
+// Example(2D): Centered
+//   square([40,30], center=true);
+// Example(2D): Anchoring
+//   square([40,30], anchor=FRONT);
 module square(size, center=undef, anchor=FRONT+LEFT) {
 	size = is_num(size)? [size,size] : point2d(size);
 	s = size/2;
@@ -70,6 +76,12 @@ module square(size, center=undef, anchor=FRONT+LEFT) {
 //   r = The radius of the circle to create.
 //   d = The diameter of the circle to create.
 //   anchor = The side of the circle to center on the origin.  Default: `CENTER`
+// Example(2D): By Radius
+//   circle(r=25);
+// Example(2D): By Diameter
+//   circle(d=50);
+// Example(2D): Anchoring
+//   circle(d=50, anchor=FRONT);
 module circle(r=undef, d=undef, anchor=CENTER) {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
