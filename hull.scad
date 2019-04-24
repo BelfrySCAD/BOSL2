@@ -1,68 +1,92 @@
 //////////////////////////////////////////////////////////////////////
-// LibFile: convex_hull.scad
+// LibFile: hull.scad
 //   Functions to create 2D and 3D convex hulls.
 //   To use, add the following line to the beginning of your file:
 //   ```
 //   include <BOSL2/std.scad>
-//   include <BOSL2/convex_hull.scad>
+//   include <BOSL2/hull.scad>
 //   ```
-//   Derived from Linde's Hull:
+//   Derived from Oskar Linde's Hull:
 //   - https://github.com/openscad/scad-utils
 //////////////////////////////////////////////////////////////////////
 
 
-// Section: Convex Hulls
+// Section: 2D Convex Hulls
 
-// Function: convex_hull()
+
+// Module: hull2d_points()
 // Usage:
-//   convex_hull(points)
+//   hull2d_points(points);
 // Description:
-//   When given a list of 3D points, returns a list of faces for
-//   the minimal convex hull polyhedron of those points.  Each face
-//   is a list of indexes into `points`.
-//   When given a list of 2D points, or 3D points that are all
-//   coplanar, returns a list of indices into `points` for the path
-//   that forms the minimal convex hull polygon of those points.
-// Arguments:
-//   points = The list of points to find the minimal convex hull of.
-function convex_hull(points) = 
-	!(len(points) > 0)  ? [] :
-	len(points[0]) == 2 ? convex_hull2d(points) :
-	len(points[0]) == 3 ? convex_hull3d(points) : [];
+//   Takes a list of 2D points and creates a 2D convex polygon that encloses all those points.
+// Example(2D):
+//   pts = [[-10,-10], [0,10], [10,10], [12,-10]];
+//   hull2d_points(pts);
+module hull2d_points(points) {
+	polygon(points=points, paths=[hull2d_path(points)]);
+}
 
 
-
-// Function: convex_hull2d()
+// Module: hull2d_points_fast()
 // Usage:
-//   convex_hull2d(points)
+//   hull2d_points_fast(points);
+// Description:
+//   Takes a list of 2D points and creates a 2D convex polygon that encloses all
+//   those points, using a faster method that may emit warning messages.
+// Example(2D):
+//   pts = [[-10,-10], [0,10], [10,10], [12,-10]];
+//   hull2d_points_fast(pts);
+module hull2d_points_fast(points) {
+	hull() polygon(points);
+}
+
+
+// Function: hull2d_path()
+// Usage:
+//   hull2d_path(points)
 // Description:
 //   Takes a list of arbitrary 2D points, and finds the minimal convex
 //   hull polygon to enclose them.  Returns a path as a list of indices
 //   into `points`.
-function convex_hull2d(points) =
+// Example(2D):
+//   pts = [[-10,-10], [0,10], [10,10], [12,-10]];
+//   path = hull2d_path(pts);
+//   place_copies(pts) color("red") sphere(1);
+//   polygon(points=pts, paths=[path]);
+function hull2d_path(points) =
 	(len(points) < 3)? [] : let(
 		a=0, b=1,
 		c = _find_first_noncollinear([a,b], points, 2)
-	) (c == len(points))? _convex_hull_collinear(points) : let(
+	) (c == len(points))? _hull2d_collinear(points) : let(
 		remaining = [ for (i = [2:len(points)-1]) if (i != c) i ],
 		ccw = triangle_area2d(points[a], points[b], points[c]) > 0,
 		polygon = ccw? [a,b,c] : [a,c,b]
-	) _convex_hull_iterative_2d(points, polygon, remaining);
+	) _hull2d_iterative(points, polygon, remaining);
 
 
 // Adds the remaining points one by one to the convex hull
-function _convex_hull_iterative_2d(points, polygon, remaining, _i=0) =
+function _hull2d_iterative(points, polygon, remaining, _i=0) =
 	(_i >= len(remaining))? polygon : let (
 		// pick a point
 		i = remaining[_i],
 		// find the segments that are in conflict with the point (point not inside)
 		conflicts = _find_conflicting_segments(points, polygon, points[i])
 		// no conflicts, skip point and move on
-	) (len(conflicts) == 0)? _convex_hull_iterative_2d(points, polygon, remaining, _i+1) : let(
+	) (len(conflicts) == 0)? _hull2d_iterative(points, polygon, remaining, _i+1) : let(
 		// find the first conflicting segment and the first not conflicting
 		// conflict will be sorted, if not wrapping around, do it the easy way
 		polygon = _remove_conflicts_and_insert_point(polygon, conflicts, i)
-	) _convex_hull_iterative_2d(points, polygon, remaining, _i+1);
+	) _hull2d_iterative(points, polygon, remaining, _i+1);
+
+
+function _hull2d_collinear(points) =
+	let(
+		a = points[0],
+		n = points[1] - a,
+		points1d = [ for(p = points) (p-a)*n ],
+		min_i = min_index(points1d),
+		max_i = max_index(points1d)
+	) [min_i, max_i];
 
 
 function _find_first_noncollinear(line, points, i) = 
@@ -94,16 +118,57 @@ function _remove_conflicts_and_insert_point(polygon, conflicts, point) =
 
 
 
-// Function: convex_hull3d()
+// Section: 3D Convex Hulls
+
+
+// Module: hull3d_points()
 // Usage:
-//   convex_hull3d(points)
+//   hull3d_points(points);
+// Description:
+//   Takes a list of 3D points and creates a 3D convex polyhedron that encloses all those points.
+// Example(3D):
+//   pts = [[-20,-20,0], [20,-20,0], [0,20,5], [0,0,20]];
+//   hull3d_points(pts);
+module hull3d_points(points) {
+	indices = hull3d_faces(points);
+	if (is_vector(indices)) {
+		polyhedron(points=points, faces=[indices]);
+	} else {
+		polyhedron(points=points, faces=indices);
+	}
+}
+
+
+// Module: hull3d_points_fast()
+// Usage:
+//   hull3d_points_fast(points);
+// Description:
+//   Takes a list of 3D points and creates a 3D convex polyhedron that encloses all
+//   those points, using a faster method that may emit warning messages.
+// Example(3D):
+//   pts = [[-20,-20,0], [20,-20,0], [0,20,5], [0,0,20]];
+//   hull3d_points_fast(pts);
+module hull3d_points_fast(points) {
+	faces = [for (i=[0:len(points)-3]) let(c=_find_first_noncollinear([i,i+1], points, 2)) [i, i+1, c]];
+	hull() polyhedron(points=points, faces=faces);
+}
+
+
+// Function: hull3d_faces()
+// Usage:
+//   hull3d_faces(points)
 // Description:
 //   Takes a list of arbitrary 3D points, and finds the minimal convex
 //   hull polyhedron to enclose them.  Returns a list of faces, where
 //   each face is a list of indexes into the given `points` list.
 //   If all points passed to it are coplanar, then the return is the
 //   list of indices of points forming the minimal convex hull polygon.
-function convex_hull3d(points) = 
+// Example(3D):
+//   pts = [[-20,-20,0], [20,-20,0], [0,20,5], [0,0,20]];
+//   faces = hull3d_faces(pts);
+//   place_copies(pts) color("red") sphere(1);
+//   %polyhedron(points=pts, faces=faces);
+function hull3d_faces(points) = 
 	(len(points) < 3)? list_range(len(points)) : let (	
 		// start with a single triangle
 		a=0, b=1, c=2,
@@ -111,7 +176,7 @@ function convex_hull3d(points) =
 		d = _find_first_noncoplanar(plane, points, 3)
 	) (d == len(points))? /* all coplanar*/ let (
 		pts2d = [ for (p = points) xyz_to_planar(p, points[a], points[b], points[c]) ],
-		hull2d = convex_hull2d(pts2d)
+		hull2d = hull2d_path(pts2d)
 	) hull2d : let(
 		remaining = [for (i = [3:len(points)-1]) if (i != d) i],
 		// Build an initial tetrahedron.
@@ -128,11 +193,11 @@ function convex_hull3d(points) =
 		],
 		// calculate the plane equations
 		planes = [ for (t = triangles) plane3pt_indexed(points, t[0], t[1], t[2]) ]
-	) _convex_hull_iterative(points, triangles, planes, remaining);
+	) _hull3d_iterative(points, triangles, planes, remaining);
 
 
 // Adds the remaining points one by one to the convex hull
-function _convex_hull_iterative(points, triangles, planes, remaining, _i=0) =
+function _hull3d_iterative(points, triangles, planes, remaining, _i=0) =
 	_i >= len(remaining) ? triangles : 
 	let (
 		// pick a point
@@ -151,7 +216,7 @@ function _convex_hull_iterative(points, triangles, planes, remaining, _i=0) =
 		new_triangles = [ for (h = horizon) concat(h,i) ],
 		// calculate the corresponding plane equations
 		new_planes = [ for (t = new_triangles) plane3pt_indexed(points, t[0], t[1], t[2]) ]
-	) _convex_hull_iterative(
+	) _hull3d_iterative(
 		points,
 		//  remove the conflicting triangles and add the new ones
 		concat(list_remove(triangles, conflicts), new_triangles),
@@ -159,17 +224,6 @@ function _convex_hull_iterative(points, triangles, planes, remaining, _i=0) =
 		remaining,
 		_i+1
 	);
-
-
-function _convex_hull_collinear(points) =
-	let(
-		a = points[0],
-		n = points[1] - a,
-		points1d = [ for(p = points) (p-a)*n ],
-		min_i = min_index(points1d),
-		max_i = max_index(points1d)
-	) [min_i, max_i];
-
 
 
 function _remove_internal_edges(halfedges) = [
