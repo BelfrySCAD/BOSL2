@@ -110,7 +110,7 @@ function find_anchor(anchor, h, size, size2=undef, shift=[0,0], extra_anchors=[]
 				anchor.z>0? (UP+sidevec)/2 :
 				(DOWN+sidevec)/2
 			)
-		) echo(anchor=anchor, pos=pos, vec=vec, oang=oang) [anchor, pos, vec, oang]
+		) [anchor, pos, vec, oang]
 	);
 
 
