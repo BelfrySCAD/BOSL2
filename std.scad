@@ -42,6 +42,7 @@ include <math.scad>
 include <arrays.scad>
 include <vectors.scad>
 include <matrices.scad>
+include <quaternions.scad>
 include <coords.scad>
 include <geometry.scad>
 include <attachments.scad>

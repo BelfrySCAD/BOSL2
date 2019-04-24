@@ -91,7 +91,7 @@ module cuboid(
 	size = scalar_vec3(size);
 	if (!is_undef(p1)) {
 		if (!is_undef(p2)) {
-			translate([for (v=array_zip([p1,p2],0)) min(v)]) {
+			translate(pointlist_bounds([p1,p2])[0]) {
 				cuboid(size=vabs(p2-p1), chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
 			}
 		} else {
@@ -1125,11 +1125,11 @@ module onion(cap_h=undef, r=undef, d=undef, maxang=45, h=undef, orient=ORIENT_Z,
 //   wall = height of rectangular portion of the strut.
 //   ang = angle that the trianglar side will converge at.
 //   orient = Orientation of the length axis of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   anchor = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `FRONT`.
 //
 // Example:
 //   narrowing_strut(w=10, l=100, wall=5, ang=30);
-module narrowing_strut(w=10, l=100, wall=5, ang=30, orient=ORIENT_Y, anchor=UP)
+module narrowing_strut(w=10, l=100, wall=5, ang=30, orient=ORIENT_Y, anchor=FRONT)
 {
 	h = wall + w/2/tan(ang);
 	size = [w, h, l];
@@ -1378,8 +1378,8 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 {
 	dang = atan(h/l);
 	dlen = h/sin(dang);
-	size = [thick, l, h];
-	orient_and_anchor(size, orient, anchor, center=center, noncentered=UP+BACK, orig_orient=ORIENT_Y, chain=true) {
+	size = [thick, h, l];
+	orient_and_anchor(size, orient, anchor, center=center, noncentered=BOTTOM+FRONT, orig_orient=ORIENT_Y, chain=true) {
 		difference() {
 			union() {
 				if (!diagonly) {
@@ -1740,7 +1740,7 @@ module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01, orient=ORIENT_X, anch
 
 
 // Module: slot()
-// 
+//
 // Description:
 //   Makes a linear slot with rounded ends, appropriate for bolts to slide along.
 //
@@ -1781,7 +1781,7 @@ module slot(
 
 
 // Module: arced_slot()
-// 
+//
 // Description:
 //   Makes an arced slot, appropriate for bolts to slide along.
 //
