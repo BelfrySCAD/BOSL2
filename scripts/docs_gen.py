@@ -116,7 +116,7 @@ class ImageProcessing(object):
             imgsizes = ["800,600", "400x300"]
         elif "Big" in extype:
             imgsizes = ["1280,960", "640x480"]
-        elif "distribute" in script:
+        elif "distribute" in script or "show_anchors" in script:
             print(script)
             imgsizes = ["800,600", "400x300"]
         else:  # Small
