@@ -308,6 +308,7 @@ $color = undef;
 $overlap = 0.01;
 $attach_to = undef;
 $attach_anchor = [CENTER, CENTER, UP, 0];
+$attach_norot = false;
 $parent_size = undef;
 $parent_size2 = undef;
 $parent_shift = [0,0];

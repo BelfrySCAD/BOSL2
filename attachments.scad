@@ -67,7 +67,8 @@ function anchorpt(name, pos=[0,0,0], dir=UP, rot=0) = [name, pos, dir, rot];
 //   shift = The [X,Y] amount to shift the center of the top with respect to the center of the bottom.
 //   geometry = One of "cube", "cylinder", or "sphere" to denote the overall geometry of the shape.  Cones are "cylinder", and prismoids are "cube" for this purpose.  Default: "cube"
 //   extra_anchors = A list of extra non-standard named anchors.
-function find_anchor(anchor, h, size, size2=undef, shift=[0,0], extra_anchors=[], geometry="cube") =
+//   two_d = If true, object will be treated as 2D.
+function find_anchor(anchor, h, size, size2=undef, shift=[0,0], extra_anchors=[], geometry="cube", two_d=false) =
 	is_string(anchor)? (
 		let(found = search([anchor], extra_anchors, num_returns_per_match=1)[0])
 		assert(found!=[], str("Unknown anchor: ",anchor))
@@ -78,6 +79,7 @@ function find_anchor(anchor, h, size, size2=undef, shift=[0,0], extra_anchors=[]
 			size2 = (size2!=undef)? point2d(size2) : size,
 			shift = point2d(shift),
 			oang = (
+				two_d? 0 :
 				anchor == UP? 0 :
 				anchor == DOWN? 0 :
 				(norm([anchor.x,anchor.y]) < EPSILON)? 0 :
@@ -99,15 +101,16 @@ function find_anchor(anchor, h, size, size2=undef, shift=[0,0], extra_anchors=[]
 			botpt = point3d(vmul(size/2,xyal))+DOWN*h/2,
 			toppt = point3d(vmul(size2/2,xyal)+shift)+UP*h/2,
 			pos = lerp(botpt, toppt, (anchor.z+1)/2),
-			sidevec = rotate_points3d([point3d(xyal)], from=UP, to=toppt-botpt)[0],
+			sidevec = two_d? point3d(xyal) : rotate_points3d([point3d(xyal)], from=UP, to=toppt-botpt)[0],
 			vec = (
+				two_d? sidevec :
 				anchor==CENTER? UP :
 				norm([anchor.x,anchor.y]) < EPSILON? anchor :
 				abs(anchor.z) < EPSILON? sidevec :
 				anchor.z>0? (UP+sidevec)/2 :
 				(DOWN+sidevec)/2
 			)
-		) [anchor, pos, vec, oang]
+		) echo(anchor=anchor, pos=pos, vec=vec, oang=oang) [anchor, pos, vec, oang]
 	);
 
 
@@ -148,6 +151,7 @@ function _str_char_split(s,delim,n=0,acc=[],word="") =
 //   orig_anchor = The original anchor of the part.  Default: `CENTER`.
 //   geometry = One of "cube", "cylinder", or "sphere" to denote the overall geometry of the shape.  Cones are "cylinder", and prismoids are "cube" for this purpose.  Default: "cube"
 //   anchors = A list of extra, non-standard optional anchors.
+//   two_d = If true, object will be treated as 2D.
 //   chain = If true, allow attachable children.
 //
 // Side Effects:
@@ -168,7 +172,7 @@ module orient_and_anchor(
 	orig_orient=ORIENT_Z, orig_anchor=CENTER,
 	size2=undef, shift=[0,0],
 	anchors=[], chain=false,
-	geometry="cube"
+	geometry="cube", two_d=false
 ) {
 	size2 = point2d(default(size2, size));
 	shift = point2d(shift);
@@ -186,19 +190,21 @@ module orient_and_anchor(
 		],
 		($attach_to!=undef)? (
 			let(
-				anch = find_anchor($attach_to, size.z, size, size2=size2, shift=shift, geometry=geometry),
+				anch = find_anchor($attach_to, size.z, size, size2=size2, shift=shift, geometry=geometry, two_d=two_d),
 				ang = vector_angle(anch[2], DOWN),
 				axis = vector_axis(anch[2], DOWN),
 				ang2 = (anch[2]==UP || anch[2]==DOWN)? 0 : 180-anch[3],
 				axis2 = rotate_points3d([axis],[0,0,ang2])[0]
-			) [
-				matrix4_translate(-anch[1]),
-				matrix4_zrot(ang2),
-				matrix4_rot_by_axis(axis2, ang)
-			]
+			) concat(
+				[matrix4_translate(-anch[1])],
+				$attach_norot? [] : [
+					matrix4_zrot(ang2),
+					matrix4_rot_by_axis(axis2, ang)
+				]
+			)
 		) : concat(
 			(anchor==CENTER)? [] : [
-				let(anch = find_anchor(anchor, size.z, size, size2=size2, shift=shift, extra_anchors=anchors, geometry=geometry))
+				let(anch = find_anchor(anchor, size.z, size, size2=size2, shift=shift, extra_anchors=anchors, geometry=geometry, two_d=two_d))
 				matrix4_translate(-anch[1])
 			],
 			(orient==ORIENT_Z)? [] : [
@@ -214,8 +220,9 @@ module orient_and_anchor(
 	$parent_shift  = shift;
 	$parent_geom   = geometry;
 	$parent_orient = orient;
+	$parent_2d     = two_d;
 	$parent_anchor = anchor;
-	$parent_anchors  = anchors;
+	$parent_anchors = anchors;
 	tags = _str_char_split($tags, " ");
 	s_tags = $tags_shown;
 	h_tags = $tags_hidden;
@@ -254,16 +261,18 @@ module attach(name, to=undef, overlap=undef, norot=false)
 {
 	assert($parent_size != undef, "No object to attach to!");
 	overlap = (overlap!=undef)? overlap : $overlap;
-	anch = find_anchor(name, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, extra_anchors=$parent_anchors, geometry=$parent_geom);
+	anch = find_anchor(name, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, extra_anchors=$parent_anchors, geometry=$parent_geom, two_d=$parent_2d);
 	pos = anch[1];
 	vec = anch[2];
 	ang = anch[3];
 	$attach_to = to;
 	$attach_anchor = anch;
+	$attach_norot = norot;
 	if (norot || (norm(vec-UP)<1e-9 && ang==0)) {
 		translate(pos) translate([0,0,-overlap]) children();
 	} else {
-		translate(pos) rot(ang,from=UP,to=vec) translate([0,0,-overlap]) children();
+		fromvec = $parent_2d? BACK : UP;
+		translate(pos) rot(ang,from=fromvec,to=vec) translate([0,0,-overlap]) children();
 	}
 }
 

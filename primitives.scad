@@ -38,6 +38,50 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
+// Section: 2D Primitives
+
+
+// Module: square()
+// Usage:
+//   square(size, [center], [anchor])
+// Description:
+//   Creates a 2D square of the given size.
+// Arguments:
+//   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
+//   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
+//   anchor = The side of the square to center on the origin.  Default: `FRONT+LEFT`
+module square(size, center=undef, anchor=FRONT+LEFT) {
+	size = is_num(size)? [size,size] : point2d(size);
+	s = size/2;
+	pts = [[-s.x,-s.y], [-s.x,s.y], [s.x,s.y], [s.x,-s.y]];
+	orient_and_anchor(point3d(size), ORIENT_Z, anchor, center, noncentered=FRONT+LEFT, two_d=true, chain=true) {
+		polygon(pts);
+		children();
+	}
+}
+
+
+// Module: circle()
+// Usage:
+//   circle(r|d, [anchor])
+// Description:
+//   Creates a 2D circle of the given size.
+// Arguments:
+//   r = The radius of the circle to create.
+//   d = The diameter of the circle to create.
+//   anchor = The side of the circle to center on the origin.  Default: `CENTER`
+module circle(r=undef, d=undef, anchor=CENTER) {
+	r = get_radius(r=r, d=d, dflt=1);
+	sides = segs(r);
+	pts = [for (a=[0:360/sides:360-EPSILON]) r*[cos(a),sin(a)]];
+	orient_and_anchor([2*r,2*r,0], ORIENT_Z, anchor, geometry="cylinder", two_d=true, chain=true) {
+		polygon(pts);
+		children();
+	}
+}
+
+
+
 // Section: Primitive Shapes
 
 
