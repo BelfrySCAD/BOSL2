@@ -908,7 +908,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   spacing = Distance between copies in [X,Y] or scalar distance.
 //   cols = How many columns of copies to make.  If staggered, count both staggered and unstaggered columns.
 //   rows = How many rows of copies to make.  If staggered, count both staggered and unstaggered rows.
-//   stagger = If true, make a staggered (hexagonal) grid.  If false, make square grid.  If "alt", makes alternate staggered pattern.  Default: false
+//   stagger = If true, make a staggered (hexagonal) grid.  If false, make square grid.  If `"alt"`, makes alternate staggered pattern.  Default: false
 //   scale = [X,Y] scaling factors to reshape grid.
 //   in_poly = If given a list of polygon points, only creates copies whose center would be inside the polygon.  Polygon can be concave and/or self crossing.
 //   orient = Orientation axis for the grid.  Orientation is NOT applied to individual children.
