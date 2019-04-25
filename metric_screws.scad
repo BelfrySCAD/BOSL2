@@ -576,7 +576,7 @@ module metric_bolt(
 							}
 						}
 					} else if (headtype == "pan") {
-						cyl(l=H*0.75, d=D, fillet2=H*0.75/2, anchor=DOWN);
+						cyl(l=H*0.75, d=D, rounding2=H*0.75/2, anchor=DOWN);
 					} else if (headtype == "round") {
 						top_half(D) zscale(H*0.75/D*2) sphere(d=D);
 					} else if (headtype == "button") {

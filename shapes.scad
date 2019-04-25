@@ -43,14 +43,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Module: cuboid()
 //
 // Description:
-//   Creates a cube or cuboid object, with optional chamfering or filleting/rounding.
+//   Creates a cube or cuboid object, with optional chamfering or rounding.
 //
 // Arguments:
 //   size = The size of the cube.
 //   chamfer = Size of chamfer, inset from sides.  Default: No chamferring.
-//   fillet = Radius of fillet for edge rounding.  Default: No filleting.
-//   edges = Edges to chamfer/fillet.  Use `EDGE` constants from constants.scad. Default: `EDGES_ALL`
-//   trimcorners = If true, rounds or chamfers corners where three chamferred/filleted edges meet.  Default: `true`
+//   rounding = Radius of the edge rounding.  Default: No rounding.
+//   edges = Edges to chamfer/rounding.  Use `EDGE` constants from constants.scad. Default: `EDGES_ALL`
+//   trimcorners = If true, rounds or chamfers corners where three chamferred/rounded edges meet.  Default: `true`
 //   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=ALLNEG`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
 //   anchor = The side of the part to anchor to.  Use constants from `constants.scad`.  Default: `CENTER`
@@ -69,20 +69,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Example: Rectangular cube with chamferred edges, without trimmed corners.
 //   cuboid([30,40,50], chamfer=5, trimcorners=false);
 // Example: Rectangular cube with rounded edges and corners.
-//   cuboid([30,40,50], fillet=10);
+//   cuboid([30,40,50], rounding=10);
 // Example: Rectangular cube with rounded edges, without trimmed corners.
-//   cuboid([30,40,50], fillet=10, trimcorners=false);
+//   cuboid([30,40,50], rounding=10, trimcorners=false);
 // Example: Rectangular cube with only some edges chamferred.
 //   cuboid([30,40,50], chamfer=5, edges=EDGE_TOP_FR+EDGE_TOP_RT+EDGE_FR_RT, $fn=24);
 // Example: Rectangular cube with only some edges rounded.
-//   cuboid([30,40,50], fillet=5, edges=EDGE_TOP_FR+EDGE_TOP_RT+EDGE_FR_RT, $fn=24);
+//   cuboid([30,40,50], rounding=5, edges=EDGE_TOP_FR+EDGE_TOP_RT+EDGE_FR_RT, $fn=24);
 // Example: Standard Connectors
 //   cuboid(40, chamfer=5) show_anchors();
 module cuboid(
 	size=[1,1,1],
 	p1=undef, p2=undef,
 	chamfer=undef,
-	fillet=undef,
+	rounding=undef,
 	edges=EDGES_ALL,
 	trimcorners=true,
 	anchor=CENTER,
@@ -92,16 +92,16 @@ module cuboid(
 	if (!is_undef(p1)) {
 		if (!is_undef(p2)) {
 			translate(pointlist_bounds([p1,p2])[0]) {
-				cuboid(size=vabs(p2-p1), chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
+				cuboid(size=vabs(p2-p1), chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
 			}
 		} else {
 			translate(p1) {
-				cuboid(size=size, chamfer=chamfer, fillet=fillet, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
+				cuboid(size=size, chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
 			}
 		}
 	} else {
 		if (chamfer != undef) assert(chamfer <= min(size)/2, "chamfer must be smaller than half the cube width, length, or height.");
-		if (fillet != undef)  assert(fillet <= min(size)/2, "fillet must be smaller than half the cube width, length, or height.");
+		if (rounding != undef)  assert(rounding <= min(size)/2, "rounding radius must be smaller than half the cube width, length, or height.");
 		majrots = [[0,90,0], [90,0,0], [0,0,0]];
 		orient_and_anchor(size, ORIENT_Z, anchor, center=center, noncentered=ALLPOS, chain=true) {
 			if (chamfer != undef) {
@@ -141,20 +141,20 @@ module cuboid(
 						}
 					}
 				}
-			} else if (fillet != undef) {
-				sides = quantup(segs(fillet),4);
+			} else if (rounding != undef) {
+				sides = quantup(segs(rounding),4);
 				sc = 1/cos(180/sides);
-				isize = [for (v = size) max(0.001, v-2*fillet)];
+				isize = [for (v = size) max(0.001, v-2*rounding)];
 				if (edges == EDGES_ALL) {
 					minkowski() {
 						cube(isize, center=true);
 						if (trimcorners) {
-							sphere(r=fillet*sc, $fn=sides);
+							sphere(r=rounding*sc, $fn=sides);
 						} else {
 							intersection() {
-								zrot(180/sides) cylinder(r=fillet*sc, h=fillet*2, center=true, $fn=sides);
-								rotate([90,0,0]) zrot(180/sides) cylinder(r=fillet*sc, h=fillet*2, center=true, $fn=sides);
-								rotate([0,90,0]) zrot(180/sides) cylinder(r=fillet*sc, h=fillet*2, center=true, $fn=sides);
+								zrot(180/sides) cylinder(r=rounding*sc, h=rounding*2, center=true, $fn=sides);
+								rotate([90,0,0]) zrot(180/sides) cylinder(r=rounding*sc, h=rounding*2, center=true, $fn=sides);
+								rotate([0,90,0]) zrot(180/sides) cylinder(r=rounding*sc, h=rounding*2, center=true, $fn=sides);
 							}
 						}
 					}
@@ -167,10 +167,10 @@ module cuboid(
 							if (edges[axis][i]>0) {
 								difference() {
 									translate(vmul(EDGE_OFFSETS[axis][i], size/2)) {
-										rotate(majrots[axis]) cube([fillet*2, fillet*2, size[axis]+0.1], center=true);
+										rotate(majrots[axis]) cube([rounding*2, rounding*2, size[axis]+0.1], center=true);
 									}
-									translate(vmul(EDGE_OFFSETS[axis][i], size/2 - [1,1,1]*fillet)) {
-										rotate(majrots[axis]) zrot(180/sides) cylinder(h=size[axis]+0.2, r=fillet*sc, center=true, $fn=sides);
+									translate(vmul(EDGE_OFFSETS[axis][i], size/2 - [1,1,1]*rounding)) {
+										rotate(majrots[axis]) zrot(180/sides) cylinder(h=size[axis]+0.2, r=rounding*sc, center=true, $fn=sides);
 									}
 								}
 							}
@@ -182,10 +182,10 @@ module cuboid(
 								if (corner_edge_count(edges, [xa,ya,za]) > 2) {
 									difference() {
 										translate(vmul([xa,ya,za], size/2)) {
-											cube(fillet*2, center=true);
+											cube(rounding*2, center=true);
 										}
-										translate(vmul([xa,ya,za], size/2-[1,1,1]*fillet)) {
-											zrot(180/sides) sphere(r=fillet*sc*sc, $fn=sides);
+										translate(vmul([xa,ya,za], size/2-[1,1,1]*rounding)) {
+											zrot(180/sides) sphere(r=rounding*sc*sc, $fn=sides);
 										}
 									}
 								}
@@ -291,9 +291,9 @@ module prismoid(
 //   size1 = [width, length] of the bottom of the prism.
 //   size2 = [width, length] of the top of the prism.
 //   h = Height of the prism.
-//   r = radius of vertical edge fillets.
-//   r1 = radius of vertical edge fillets at bottom.
-//   r2 = radius of vertical edge fillets at top.
+//   r = radius of vertical edge rounding.
+//   r1 = radius of vertical edge rounding at bottom.
+//   r2 = radius of vertical edge rounding at top.
 //   shift = [x, y] amount to shift the center of the top with respect to the center of the bottom.
 //   orient = Orientation of the prismoid.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the prismoid by the axis-negative (`size1`) end.  Use the constants from `constants.scad`.  Default: `BOTTOM`.
@@ -410,10 +410,10 @@ module right_triangle(size=[1, 1, 1], orient=ORIENT_Y, anchor=ALLNEG, center=und
 //
 // Description:
 //   Creates cylinders in various anchors and orientations,
-//   with optional fillets and chamfers. You can use `r` and `l`
+//   with optional rounding and chamfers. You can use `r` and `l`
 //   interchangably, and all variants allow specifying size
 //   by either `r`|`d`, or `r1`|`d1` and `r2`|`d2`.
-//   Note that that chamfers and fillets cannot cross the
+//   Note that that chamfers and rounding cannot cross the
 //   midpoint of the cylinder's length.
 //
 // Usage: Normal Cylinders
@@ -426,11 +426,11 @@ module right_triangle(size=[1, 1, 1], orient=ORIENT_Y, anchor=ALLNEG, center=und
 //   cyl(l|h, r|d, chamfer2, [chamfang2], [from_end], [circum], [realign], [orient], [anchor], [center]);
 //   cyl(l|h, r|d, chamfer1, chamfer2, [chamfang1], [chamfang2], [from_end], [circum], [realign], [orient], [anchor], [center]);
 //
-// Usage: Rounded/Filleted Cylinders
-//   cyl(l|h, r|d, fillet, [circum], [realign], [orient], [anchor], [center]);
-//   cyl(l|h, r|d, fillet1, [circum], [realign], [orient], [anchor], [center]);
-//   cyl(l|h, r|d, fillet2, [circum], [realign], [orient], [anchor], [center]);
-//   cyl(l|h, r|d, fillet1, fillet2, [circum], [realign], [orient], [anchor], [center]);
+// Usage: Rounded End Cylinders
+//   cyl(l|h, r|d, rounding, [circum], [realign], [orient], [anchor], [center]);
+//   cyl(l|h, r|d, rounding1, [circum], [realign], [orient], [anchor], [center]);
+//   cyl(l|h, r|d, rounding2, [circum], [realign], [orient], [anchor], [center]);
+//   cyl(l|h, r|d, rounding1, rounding2, [circum], [realign], [orient], [anchor], [center]);
 //
 // Arguments:
 //   l / h = Length of cylinder along oriented axis. (Default: 1.0)
@@ -448,9 +448,9 @@ module right_triangle(size=[1, 1, 1], orient=ORIENT_Y, anchor=ALLNEG, center=und
 //   chamfang1 = The angle in degrees of the chamfer on the axis-negative end of the cylinder.
 //   chamfang2 = The angle in degrees of the chamfer on the axis-positive end of the cylinder.
 //   from_end = If true, chamfer is measured from the end of the cylinder, instead of inset from the edge.  Default: `false`.
-//   fillet = The radius of the fillets on the ends of the cylinder.  Default: none.
-//   fillet1 = The radius of the fillet on the axis-negative end of the cylinder.
-//   fillet2 = The radius of the fillet on the axis-positive end of the cylinder.
+//   rounding = The radius of the rounding on the ends of the cylinder.  Default: none.
+//   rounding1 = The radius of the rounding on the axis-negative end of the cylinder.
+//   rounding2 = The radius of the rounding on the axis-positive end of the cylinder.
 //   realign = If true, rotate the cylinder by half the angle of one face.
 //   orient = Orientation of the cylinder.  Use the `ORIENT_` constants from `constants.scad`.  Default: vertical.
 //   anchor = Alignment of the cylinder.  Use the constants from `constants.scad`.  Default: centered.
@@ -476,19 +476,19 @@ module right_triangle(size=[1, 1, 1], orient=ORIENT_Y, anchor=ALLNEG, center=und
 //       cyl(l=40, d=40, chamfer=7, chamfang=30, from_end=true);
 //   }
 //
-// Example: Rounding/Filleting
-//   cyl(l=40, d=40, fillet=10);
+// Example: Rounding
+//   cyl(l=40, d=40, rounding=10);
 //
-// Example: Heterogenous Chamfers and Fillets
+// Example: Heterogenous Chamfers and Rounding
 //   ydistribute(80) {
 //       // Shown Front to Back.
-//       cyl(l=40, d=40, fillet1=15, orient=ORIENT_X);
+//       cyl(l=40, d=40, rounding1=15, orient=ORIENT_X);
 //       cyl(l=40, d=40, chamfer2=5, orient=ORIENT_X);
-//       cyl(l=40, d=40, chamfer1=12, fillet2=10, orient=ORIENT_X);
+//       cyl(l=40, d=40, chamfer1=12, rounding2=10, orient=ORIENT_X);
 //   }
 //
 // Example: Putting it all together
-//   cyl(l=40, d1=25, d2=15, chamfer1=10, chamfang1=30, from_end=true, fillet2=5);
+//   cyl(l=40, d1=25, d2=15, chamfer1=10, chamfang1=30, from_end=true, rounding2=5);
 //
 // Example: Standard Connectors
 //   xdistribute(40) {
@@ -502,7 +502,7 @@ module cyl(
 	d=undef, d1=undef, d2=undef,
 	chamfer=undef, chamfer1=undef, chamfer2=undef,
 	chamfang=undef, chamfang1=undef, chamfang2=undef,
-	fillet=undef, fillet1=undef, fillet2=undef,
+	rounding=undef, rounding1=undef, rounding2=undef,
 	circum=false, realign=false, from_end=false,
 	orient=ORIENT_Z, anchor=CENTER, center=undef
 ) {
@@ -516,7 +516,7 @@ module cyl(
 	phi = atan2(l, r1-r2);
 	orient_and_anchor(size1, orient, anchor, center=center, size2=size2, geometry="cylinder", chain=true) {
 		zrot(realign? 180/sides : 0) {
-			if (!any_defined([chamfer, chamfer1, chamfer2, fillet, fillet1, fillet2])) {
+			if (!any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2])) {
 				cylinder(h=l, r1=r1*sc, r2=r2*sc, center=true, $fn=sides);
 			} else {
 				vang = atan2(l, r1-r2)/2;
@@ -524,8 +524,8 @@ module cyl(
 				chang2 = 90-first_defined([chamfang2, chamfang, 90-vang]);
 				cham1 = first_defined([chamfer1, chamfer]) * (from_end? 1 : tan(chang1));
 				cham2 = first_defined([chamfer2, chamfer]) * (from_end? 1 : tan(chang2));
-				fil1 = first_defined([fillet1, fillet]);
-				fil2 = first_defined([fillet2, fillet]);
+				fil1 = first_defined([rounding1, rounding]);
+				fil2 = first_defined([rounding2, rounding]);
 				if (chamfer != undef) {
 					assert(chamfer <= r1,  "chamfer is larger than the r1 radius of the cylinder.");
 					assert(chamfer <= r2,  "chamfer is larger than the r2 radius of the cylinder.");
@@ -539,18 +539,18 @@ module cyl(
 					assert(cham2 <= r2,  "chamfer2 is larger than the r2 radius of the cylinder.");
 					assert(cham2 <= l/2, "chamfer2 is larger than half the length of the cylinder.");
 				}
-				if (fillet != undef) {
-					assert(fillet <= r1,  "fillet is larger than the r1 radius of the cylinder.");
-					assert(fillet <= r2,  "fillet is larger than the r2 radius of the cylinder.");
-					assert(fillet <= l/2, "fillet is larger than half the length of the cylinder.");
+				if (rounding != undef) {
+					assert(rounding <= r1,  "rounding is larger than the r1 radius of the cylinder.");
+					assert(rounding <= r2,  "rounding is larger than the r2 radius of the cylinder.");
+					assert(rounding <= l/2, "rounding is larger than half the length of the cylinder.");
 				}
 				if (fil1 != undef) {
-					assert(fil1 <= r1,  "fillet1 is larger than the r1 radius of the cylinder.");
-					assert(fil1 <= l/2, "fillet1 is larger than half the length of the cylinder.");
+					assert(fil1 <= r1,  "rounding1 is larger than the r1 radius of the cylinder.");
+					assert(fil1 <= l/2, "rounding1 is larger than half the length of the cylinder.");
 				}
 				if (fil2 != undef) {
-					assert(fil2 <= r2,  "fillet2 is larger than the r1 radius of the cylinder.");
-					assert(fil2 <= l/2, "fillet2 is larger than half the length of the cylinder.");
+					assert(fil2 <= r2,  "rounding2 is larger than the r1 radius of the cylinder.");
+					assert(fil2 <= l/2, "rounding2 is larger than half the length of the cylinder.");
 				}
 
 				dy1 = first_defined([cham1, fil1, 0]);

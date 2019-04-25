@@ -2120,7 +2120,7 @@ module extrude_arc(arc=90, sa=0, r=undef, d=undef, orient=ORIENT_Z, anchor=CENTE
 // Arguments:
 //   r = Radius to round all concave and convex corners to.
 //   or = Radius to round only outside (convex) corners to.  Use instead of `r`.
-//   ir = Radius to round/fillet only inside (concave) corners to.  Use instead of `r`.
+//   ir = Radius to round only inside (concave) corners to.  Use instead of `r`.
 // Examples(2D):
 //   round2d(r=10) {square([40,100], center=true); square([100,40], center=true);}
 //   round2d(or=10) {square([40,100], center=true); square([100,40], center=true);}
@@ -2142,9 +2142,9 @@ module round2d(r, or, ir)
 // Arguments:
 //   thickness = Thickness of the shell.  Positive to expand outward, negative to shrink inward, or a two-element list to do both.
 //   or = Radius to round convex corners/pointy bits on the outside of the shell.
-//   ir = Radius to round/fillet concave corners on the outside of the shell.
+//   ir = Radius to round concave corners on the outside of the shell.
 //   round = Radius to round convex corners/pointy bits on the inside of the shell.
-//   fill = Radius to round/fillet concave corners on the inside of the shell.
+//   fill = Radius to round concave corners on the inside of the shell.
 // Examples(2D):
 //   shell2d(10) {square([40,100], center=true); square([100,40], center=true);}
 //   shell2d(-10) {square([40,100], center=true); square([100,40], center=true);}
