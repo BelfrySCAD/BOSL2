@@ -268,7 +268,7 @@ module show_anchors(s=10, std=true, custom=true) {
 // Examples:
 //   frame_ref(25);
 module frame_ref(s=15) {
-	noop() {
+	cube(0.01, center=true) {
 		attach(RIGHT) anchor_arrow(s=s, color="red", flag=false);
 		attach(BACK) anchor_arrow(s=s, color="green", flag=false);
 		attach(TOP) anchor_arrow(s=s, color="blue", flag=false);

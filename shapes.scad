@@ -1638,7 +1638,7 @@ module nil() union(){}
 // Description:
 //   Passes through the children passed to it, with no action at all.
 //   Useful while debugging when you want to replace a command.
-module noop(orient=ORIENT_Z) orient_and_anchor([0,0,0], orient, CENTER, chain=true) {nil(); children();}
+module noop(orient=ORIENT_Z) orient_and_anchor([0.01,0.01,0.01], orient, CENTER, chain=true) {nil(); children();}
 
 
 // Module: pie_slice()
