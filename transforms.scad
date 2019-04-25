@@ -73,57 +73,6 @@ module move(a=[0,0,0], x=0, y=0, z=0)
 }
 
 
-// Module: xmove()
-//
-// Description:
-//   Moves/translates children the given amount along the X axis.
-//
-// Usage:
-//   xmove(x) ...
-//
-// Arguments:
-//   x = Amount to move right along the X axis.  Negative values move left.
-//
-// Example:
-//   #sphere(d=10);
-//   xmove(20) sphere(d=10);
-module xmove(x=0) translate([x,0,0]) children();
-
-
-// Module: ymove()
-//
-// Description:
-//   Moves/translates children the given amount along the Y axis.
-//
-// Usage:
-//   ymove(y) ...
-//
-// Arguments:
-//   y = Amount to move back along the Y axis.  Negative values move forward.
-//
-// Example:
-//   #sphere(d=10);
-//   ymove(20) sphere(d=10);
-module ymove(y=0) translate([0,y,0]) children();
-
-
-// Module: zmove()
-//
-// Description:
-//   Moves/translates children the given amount along the Z axis.
-//
-// Usage:
-//   zmove(z) ...
-//
-// Arguments:
-//   z = Amount to move up along the Z axis.  Negative values move down.
-//
-// Example:
-//   #sphere(d=10);
-//   zmove(20) sphere(d=10);
-module zmove(z=0) translate([0,0,z]) children();
-
-
 // Module: left()
 //
 // Description:
@@ -158,14 +107,13 @@ module left(x=0) translate([-x,0,0]) children();
 module right(x=0) translate([x,0,0]) children();
 
 
-// Module: fwd() / forward()
+// Module: fwd()
 //
 // Description:
 //   Moves children forward (in the Y- direction) by the given amount.
 //
 // Usage:
 //   fwd(y) ...
-//   forward(y) ...
 //
 // Arguments:
 //   y = Scalar amount to move forward.
@@ -173,7 +121,6 @@ module right(x=0) translate([x,0,0]) children();
 // Example:
 //   #sphere(d=10);
 //   fwd(20) sphere(d=10);
-module forward(y=0) translate([0,-y,0]) children();
 module fwd(y=0) translate([0,-y,0]) children();
 
 
@@ -506,14 +453,13 @@ module zflip(cp=[0,0,0]) translate(cp) mirror([0,0,1]) translate(-cp) children()
 //////////////////////////////////////////////////////////////////////
 
 
-// Module: skew_xy() / skew_z()
+// Module: skew_xy()
 //
 // Description:
 //   Skews children on the X-Y plane, keeping constant in Z.
 //
 // Usage:
 //   skew_xy([xa], [ya]) ...
-//   skew_z([xa], [ya]) ...
 //
 // Arguments:
 //   xa = skew angle towards the X direction.
@@ -526,17 +472,15 @@ module zflip(cp=[0,0,0]) translate(cp) mirror([0,0,1]) translate(-cp) children()
 // Example(2D):
 //   skew_xy(xa=15,ya=30,planar=true) square(30);
 module skew_xy(xa=0, ya=0, planar=false) multmatrix(m = planar? matrix3_skew(xa, ya) : matrix4_skew_xy(xa, ya)) children();
-module zskew(xa=0, ya=0, planar=false) multmatrix(m = planar? matrix3_skew(xa, ya) : matrix4_skew_xy(xa, ya)) children();
 
 
-// Module: skew_yz() / skew_x()
+// Module: skew_yz()
 //
 // Description:
 //   Skews children on the Y-Z plane, keeping constant in X.
 //
 // Usage:
 //   skew_yz([ya], [za]) ...
-//   skew_x([ya], [za]) ...
 //
 // Arguments:
 //   ya = skew angle towards the Y direction.
@@ -546,17 +490,15 @@ module zskew(xa=0, ya=0, planar=false) multmatrix(m = planar? matrix3_skew(xa, y
 //   #cube(size=10);
 //   skew_yz(ya=30, za=15) cube(size=10);
 module skew_yz(ya=0, za=0) multmatrix(m = matrix4_skew_yz(ya, za)) children();
-module xskew(ya=0, za=0) multmatrix(m = matrix4_skew_yz(ya, za)) children();
 
 
-// Module: skew_xz() / skew_y()
+// Module: skew_xz()
 //
 // Description:
 //   Skews children on the X-Z plane, keeping constant in Y.
 //
 // Usage:
 //   skew_xz([xa], [za]) ...
-//   skew_y([xa], [za]) ...
 //
 // Arguments:
 //   xa = skew angle towards the X direction.
@@ -566,7 +508,6 @@ module xskew(ya=0, za=0) multmatrix(m = matrix4_skew_yz(ya, za)) children();
 //   #cube(size=10);
 //   skew_xz(xa=15, za=-10) cube(size=10);
 module skew_xz(xa=0, za=0) multmatrix(m = matrix4_skew_xz(xa, za)) children();
-module yskew(xa=0, za=0) multmatrix(m = matrix4_skew_xz(xa, za)) children();
 
 
 
@@ -2035,68 +1976,6 @@ module chain_hull()
 	}
 }
 
-
-// Module: extrude_arc()
-//
-// Description:
-//   Extrudes 2D shapes around a partial circle arc, with optional rounded caps.
-//   This is mostly useful for backwards compatability with older OpenSCAD versions
-//   without the `angle` argument in rotate_extrude.
-//
-// Usage:
-//   extrude_arc(arc, r|d, [sa], [caps], [orient], [anchor], [masksize]) ...
-//
-// Arguments:
-//   arc = Number of degrees to traverse.
-//   sa = Start angle in degrees.
-//   r = Radius of arc.
-//   d = Diameter of arc.
-//   orient = The axis to align to.  Use `ORIENT_` constants from `constants.scad`
-//   anchor = The side of the origin the part should be anchored with.  Use constants from `constants.scad`
-//   masksize = size of mask used to clear unused part of circle arc.  should be larger than height or width of 2D shapes to extrude.
-//   caps = If true, spin the 2D shapes to make rounded caps the ends of the arc.
-//   convexity = Max number of times a ray passes through the 2D shape's walls.
-//
-// Example(Med):
-//   pts=[[-5/2, -5], [-5/2, 0], [-5/2-3, 5], [5/2+3, 5], [5/2, 0], [5/2, -5]];
-//   #polygon(points=pts);
-//   extrude_arc(arc=270, sa=45, r=40, caps=true, convexity=4, $fa=2, $fs=2) {
-//       polygon(points=pts);
-//   }
-module extrude_arc(arc=90, sa=0, r=undef, d=undef, orient=ORIENT_Z, anchor=CENTER, masksize=100, caps=false, convexity=4)
-{
-	eps = 0.001;
-	r = get_radius(r=r, d=d, dflt=100);
-	orient_and_anchor([2*r, 2*r, 0], orient, anchor) {
-		zrot(sa) {
-			if (caps) {
-				place_copies([[r,0,0], cylindrical_to_xyz(r, arc, 0)]) {
-					rotate_extrude(convexity=convexity) {
-						difference() {
-							children();
-							left(masksize/2) square(masksize, center=true);
-						}
-					}
-				}
-			}
-			difference() {
-				rotate_extrude(angle=arc, convexity=convexity*2) {
-					right(r) {
-						children();
-					}
-				}
-				if(version_num() < 20190000) {
-					maxd = r + masksize;
-					if (arc<180) rotate(arc) back(maxd/2) cube([2*maxd, maxd, masksize+0.1], center=true);
-					difference() {
-						fwd(maxd/2) cube([2*maxd, maxd, masksize+0.2], center=true);
-						if (arc>180) rotate(arc-180) back(maxd/2) cube([2*maxd, maxd, masksize+0.1], center=true);
-					}
-				}
-			}
-		}
-	}
-}
 
 
 //////////////////////////////////////////////////////////////////////
