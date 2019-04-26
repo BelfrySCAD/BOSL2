@@ -370,7 +370,7 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, orient=ORIENT_Y, anchor=CENTER)
 {
 	zoff = h/2 - strut/2;
-	yoff = l/2 - strut;
+	yoff = l/2 - strut/2;
 
 	maxhyp = 1.5 * (max_bridge+strut)/2 / sin(maxang);
 	maxz = 2 * maxhyp * cos(maxang);
@@ -397,8 +397,8 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, ori
 			}
 			yspread(ystep, n=yreps) {
 				xspread(zstep, n=zreps) {
-					skew_xy(planar=true, ya=-ang) square([h-1.99*strut, strut], center=true);
-					skew_xy(planar=true, ya= ang) square([h-1.99*strut, strut], center=true);
+					skew_xy(planar=true, ya=-ang) square([(h-strut)/zreps, strut], center=true);
+					skew_xy(planar=true, ya= ang) square([(h-strut)/zreps, strut], center=true);
 				}
 			}
 		}

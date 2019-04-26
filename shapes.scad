@@ -1260,8 +1260,7 @@ module slot(
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=5);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=5);
 	sides = quantup(segs(max(r1, r2)), 4);
-	// TODO: implement orient and anchor.
-	// TODO: implement anchors.
+	// TODO: implement orient and anchors.
 	hull() spread(p1=p1, p2=p2, l=l, n=2) cyl(l=h, r1=r1, r2=r2, center=true, $fn=sides);
 }
 
@@ -1276,22 +1275,22 @@ module slot(
 //   arced_slot(h, r|d, sr1|sd1, sr2|sd2, [sa], [ea], [orient], [anchor|center], [$fn2]);
 //
 // Arguments:
-//   cp = centerpoint of slot arc. (default: [0, 0, 0])
-//   h = height of slot arc shape. (default: 1.0)
-//   r = radius of slot arc. (default: 0.5)
-//   d = diameter of slot arc. (default: 1.0)
-//   sr = radius of slot channel. (default: 0.5)
-//   sd = diameter of slot channel. (default: 0.5)
-//   sr1 = bottom radius of slot channel cone. (use instead of sr)
-//   sr2 = top radius of slot channel cone. (use instead of sr)
-//   sd1 = bottom diameter of slot channel cone. (use instead of sd)
-//   sd2 = top diameter of slot channel cone. (use instead of sd)
-//   sa = starting angle. (Default: 0.0)
-//   ea = ending angle. (Default: 90.0)
-//   orient = Orientation of the arced slot.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the arced slot.  Use the constants from `constants.scad`.  Default: `CENTER`.
-//   center = If true, centers vertically.  If false, drops flush with XY plane.  Overrides `anchor`.
-//   $fn2 = The $fn value to use on the small round endcaps.  The major arcs are still based on $fn.  Default: $fn
+//   cp = Centerpoint of slot arc.  Default: `[0, 0, 0]`
+//   h = Height of slot arc shape.  Default: `1`
+//   r = Radius of slot arc.  Default: `0.5`
+//   d = Diameter of slot arc.  Default: `1`
+//   sr = Radius of slot channel.  Default: `0.5`
+//   sd = Diameter of slot channel.  Default: `0.5`
+//   sr1 = Bottom radius of slot channel cone.  Use instead of `sr`.
+//   sr2 = Top radius of slot channel cone.  Use instead of `sr`.
+//   sd1 = Bottom diameter of slot channel cone.  Use instead of `sd`.
+//   sd2 = Top diameter of slot channel cone.  Use instead of `sd`.
+//   sa = Starting angle.  Default: `0`
+//   ea = Ending angle.  Default: `90`
+//   orient = Orientation of the arced slot.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`
+//   anchor = Alignment of the arced slot.  Use the constants from `constants.scad`.  Default: `CENTER`
+//   center = If given and true, centers vertically.  If given and false, drops flush with XY plane.  Overrides `anchor`.
+//   $fn2 = The `$fn` value to use on the small round endcaps.  The major arcs are still based on `$fn`.  Default: `$fn`
 //
 // Example: Typical Arced Slot
 //   arced_slot(d=60, h=5, sd=10, sa=60, ea=280);
