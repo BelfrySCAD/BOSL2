@@ -939,7 +939,7 @@ module spheroid(r=undef, d=undef, circum=false, orient=UP, anchor=CENTER)
 //   staggered_sphere(d=100, circum=true);
 // Example: Standard Connectors
 //   staggered_sphere(d=40, circum=true) show_anchors();
-module staggered_sphere(r=undef, d=undef, circum=false, orient=UP, anchor=CENTER) {
+module staggered_sphere(r=undef, d=undef, circum=false, orient=ORIENT_Z, anchor=CENTER) {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
 	vsides = max(3, ceil(sides/2))+1;
