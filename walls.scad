@@ -427,13 +427,13 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, ori
 //   orient = Orientation of the length axis of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
 //   anchor = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //
-// Example: Typical Shape
+// Example(Med): Typical Shape
 //   sparse_strut3d(h=30, w=30, l=100);
-// Example: Thinner strut
+// Example(Med): Thinner strut
 //   sparse_strut3d(h=30, w=30, l=100, strut=2);
-// Example: Larger maxang
+// Example(Med): Larger maxang
 //   sparse_strut3d(h=30, w=30, l=100, strut=2, maxang=50);
-// Example: Smaller max_bridge
+// Example(Med): Smaller max_bridge
 //   sparse_strut3d(h=30, w=30, l=100, strut=2, maxang=50, max_bridge=20);
 module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge=30, orient=ORIENT_Y, anchor=CENTER)
 {
