@@ -977,7 +977,7 @@ module staggered_sphere(r=undef, d=undef, circum=false, orient=UP, anchor=CENTER
 	);
 	size = [2*rr, 2*rr, 2*rr];
 	orient_and_anchor(size, orient, anchor, geometry="sphere", chain=true) {
-		polyhedron(points=pts, faces=faces);
+		zrot((floor(sides/4)%2==1)? 180/sides : 0) polyhedron(points=pts, faces=faces);
 		children();
 	}
 }
