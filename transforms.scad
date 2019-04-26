@@ -459,7 +459,7 @@ module zflip(cp=[0,0,0]) translate(cp) mirror([0,0,1]) translate(-cp) children()
 //   Skews children on the X-Y plane, keeping constant in Z.
 //
 // Usage:
-//   skew_xy([xa], [ya]) ...
+//   skew_xy([xa], [ya], [planar]) ...
 //
 // Arguments:
 //   xa = skew angle towards the X direction.

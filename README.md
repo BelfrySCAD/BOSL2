@@ -19,12 +19,12 @@ For purposes of the BOSL2 library, the following terms apply:
 
 ## Common Arguments:
 
-Args    | What it is
-------- | ----------------------------------------
-fillet  | Radius of rounding for interior or exterior edges.
-chamfer | Size of chamfers/bevels for interior or exterior edges.
-orient  | Axis a part should be oriented along.  Given as an XYZ triplet of rotation angles.  It is recommended that you use the `ORIENT_` constants from `constants.scad`.  Default is usually `ORIENT_Z` for vertical orientation.
-anchor  | Side of the object that should be anchored to the origin. Given as a vector towards the side of the part to align with the origin.  It is recommended that you use the directional constants from `constants.scad`.  Default is usually `CENTER` for centered.
+Args     | What it is
+-------- | ----------------------------------------
+rounding | Radius of rounding for interior or exterior edges.
+chamfer  | Size of chamfers/bevels for interior or exterior edges.
+orient   | Axis a part should be oriented along.  Given as an XYZ triplet of rotation angles.  It is recommended that you use the `ORIENT_` constants from `constants.scad`.  Default is usually `ORIENT_Z` for vertical orientation.
+anchor   | Side of the object that should be anchored to the origin. Given as a vector towards the side of the part to align with the origin.  It is recommended that you use the directional constants from `constants.scad`.  Default is usually `CENTER` for centered.
 
 
 ## Examples
@@ -85,6 +85,7 @@ The library files are as follows:
   - [`vectors.scad`](https://github.com/revarbat/BOSL2/wiki/vectors.scad): Vector math functions.
   - [`matrices.scad`](https://github.com/revarbat/BOSL2/wiki/matrices.scad): Matrix math and affine transformation functions.
   - [`coords.scad`](https://github.com/revarbat/BOSL2/wiki/coords.scad): Coordinate system conversions and point transformations.
+  - [`geometry.scad`](https://github.com/revarbat/BOSL2/wiki/geometry.scad): Functions to calculate various geometry.
   - [`quaternions.scad`](https://github.com/revarbat/BOSL2/wiki/quaternions.scad): Functions to work with quaternion rotations.
   - [`convex_hull.scad`](https://github.com/revarbat/BOSL2/wiki/convex_hull.scad): Functions to generate 2D and 3D hulls of points.
   - [`triangulation.scad`](https://github.com/revarbat/BOSL2/wiki/triangulation.scad): Functions to triangulate `polyhedron()` faces.

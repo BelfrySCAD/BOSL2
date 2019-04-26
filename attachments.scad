@@ -106,6 +106,7 @@ function find_anchor(anchor, h, size, size2=undef, shift=[0,0], extra_anchors=[]
 				two_d? sidevec :
 				anchor==CENTER? UP :
 				norm([anchor.x,anchor.y]) < EPSILON? anchor :
+				norm(size)+norm(size2) < EPSILON? anchor :
 				abs(anchor.z) < EPSILON? sidevec :
 				anchor.z>0? (UP+sidevec)/2 :
 				(DOWN+sidevec)/2
@@ -162,6 +163,7 @@ function _str_char_split(s,delim,n=0,acc=[],word="") =
 //   `$parent_orient` is set to the parent object's `orient` value.
 //   `$parent_anchor` is set to the parent object's `anchor` value.
 //   `$parent_anchors` is set to the parent object's list of non-standard extra anchors.
+//   `$parent_2d` is set to the parent object's `two_d` value.
 //
 // Example:
 //   #cylinder(d=5, h=10);
@@ -248,14 +250,14 @@ module orient_and_anchor(
 //   Attaches children to a parent object at an anchor point and orientation.
 // Arguments:
 //   name = The name of the parent anchor point to attach to.
-//   to = The name of the child anchor point.
-//   overlap = Amount to sink child into the parent.
-//   norot = If true, don't rotate children when attaching to the anchor point.
+//   to = Optional name of the child anchor point.  If given, orients the child such that the named anchors align together rotationally.
+//   overlap = Amount to sink child into the parent.  Equivalent to `down(X)` after the attach.
+//   norot = If true, don't rotate children when attaching to the anchor point.  Only translate to the anchor point.
 // Example:
 //   spheroid(d=20) {
-//       attach(TOP)   down(1.5) cyl(l=11.5, d1=10, d2=5, anchor=BOTTOM);
+//       attach(TOP) down(1.5) cyl(l=11.5, d1=10, d2=5, anchor=BOTTOM);
 //       attach(RIGHT, BOTTOM) down(1.5) cyl(l=11.5, d1=10, d2=5);
-//       attach(FRONT) down(1.5) cyl(l=11.5, d1=10, d2=5, anchor=BOTTOM);
+//       attach(FRONT, BOTTOM, overlap=1.5) cyl(l=11.5, d1=10, d2=5);
 //   }
 module attach(name, to=undef, overlap=undef, norot=false)
 {
@@ -296,6 +298,8 @@ module tags(tags)
 //   recolor(c) ...
 // Description:
 //   Sets the color for children that can use the $color special variable.
+// Arguments:
+//   c = Color name or RGBA vector.
 // Example:
 //   recolor("red") cyl(l=20, d=10);
 module recolor(c)
@@ -308,7 +312,13 @@ module recolor(c)
 // Module: hide()
 // Usage:
 //   hide(tags) ...
-// Description: Hides all children with the given tags.
+// Description:
+//   Hides all children with the given tags.
+// Example:
+//   hide("A") cube(50, anchor=CENTER, $tags="Main") {
+//       attach(LEFT, BOTTOM) cylinder(d=30, l=30, $tags="A");
+//       attach(RIGHT, BOTTOM) cylinder(d=30, l=30, $tags="B");
+//   }
 module hide(tags="")
 {
 	$tags_hidden = tags==""? [] : _str_char_split(tags, " ");
@@ -319,7 +329,13 @@ module hide(tags="")
 // Module: show()
 // Usage:
 //   show(tags) ...
-// Description: Shows only children with the given tags.
+// Description:
+//   Shows only children with the given tags.
+// Example:
+//   show("A B") cube(50, anchor=CENTER, $tags="Main") {
+//       attach(LEFT, BOTTOM) cylinder(d=30, l=30, $tags="A");
+//       attach(RIGHT, BOTTOM) cylinder(d=30, l=30, $tags="B");
+//   }
 module show(tags="")
 {
 	$tags_shown = tags==""? [] : _str_char_split(tags, " ");
@@ -343,6 +359,12 @@ module show(tags="")
 //   neg = String containing space delimited set of tag names of children to difference away.
 //   pos = String containing space delimited set of tag names of children to be differenced away from.
 //   keep = String containing space delimited set of tag names of children to keep whole.
+// Example:
+//   diff("neg", "pos", keep="axle")
+//   sphere(d=100, $tags="pos") {
+//       attach(CENTER) xcyl(d=40, h=120, $tags="axle");
+//       attach(CENTER) cube([40,120,100], anchor=CENTER, $tags="neg");
+//   }
 module diff(neg, pos=undef, keep=undef)
 {
 	difference() {
@@ -382,6 +404,12 @@ module diff(neg, pos=undef, keep=undef)
 //   a = String containing space delimited set of tag names of children.
 //   b = String containing space delimited set of tag names of children.
 //   keep = String containing space delimited set of tag names of children to keep whole.
+// Example:
+//   intersect("wheel", "mask", keep="axle")
+//   sphere(d=100, $tags="wheel") {
+//       attach(CENTER) cube([40,100,100], anchor=CENTER, $tags="mask");
+//       attach(CENTER) xcyl(d=40, h=100, $tags="axle");
+//   }
 module intersect(a, b=undef, keep=undef)
 {
 	intersection() {
