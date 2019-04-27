@@ -38,10 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
-function _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, parts) =
-	astep + asteps * (thread + threads * (part + parts * start));
-
-
 // Section: Generic Trapezoidal Threading
 
 // Module: trapezoidal_threaded_rod()
@@ -51,7 +47,7 @@ function _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, p
 //   For metric trapezoidal threads, use thread_angle=15 and thread_depth=pitch/2.
 //   For ACME threads, use thread_angle=14.5 and thread_depth=pitch/2.
 //   For square threads, use thread_angle=0 and thread_depth=pitch/2.
-//   For normal screw threads, use thread_angle=30 and thread_depth=pitch*3*sqrt(3)/8.
+//   For normal UTS or ISO screw threads, use the `threaded_rod()` module instead to get the correct thread profile.
 // Arguments:
 //   d = Outer diameter of threaded rod.
 //   l = Length of threaded rod.
@@ -61,6 +57,9 @@ function _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, p
 //   left_handed = If true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: true
 //   starts = The number of lead starts.  Default = 1
+//   internal = If true, make this a mask for making internal threads.
+//   slop = printer slop calibration to allow for tight fitting of parts.  Default: `PRINTER_SLOP`
+//   profile = The shape of a thread, if not a symmetric trapezoidal form.  Given as a 2D path, where X is between -1/2 and 1/2, representing the pitch distance, and Y is 0 for the peak, and `-depth/pitch` for the valleys.  The segment between the end of one thread profile and the start of the next is automatic, so the start and end coordinates should not both be at the same Y at X = ±1/2.  This path is scaled up by the pitch size in both dimensions when making the final threading.  This overrides the `thread_angle` and `thread_depth` options.
 //   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
@@ -83,36 +82,44 @@ module trapezoidal_threaded_rod(
 	left_handed=false,
 	bevel=false,
 	starts=1,
+	profile=undef,
+	internal=false,
+	slop=undef,
 	orient=ORIENT_Z,
 	anchor=CENTER,
 	center=undef
 ) {
+	function _thread_pt(thread, threads, start, starts, astep, asteps, part, parts) =
+		astep + asteps * (thread + threads * (part + parts * start));
+
+	d = internal? d+default(slop,PRINTER_SLOP)*3 : d;
 	astep = 360 / quantup(segs(d/2), starts);
 	asteps = ceil(360/astep);
 	threads = ceil(l/pitch/starts)+(starts<4?4-starts:1);
 	depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
-	pa_delta = min(pitch/4-0.01,depth*tan(thread_angle)/2);
+	pa_delta = min(pitch/4-0.01,depth*tan(thread_angle)/2)/pitch;
 	dir = left_handed? -1 : 1;
-	r1 = max(0, d/2-depth);
-	r2 = d/2;
-	rads = [r1, r2, r2, r1];
-	delta_zs = [
-		-pitch/4-pa_delta,
-		-pitch/4+pa_delta,
-		pitch/4-pa_delta,
-		pitch/4+pa_delta
+	r1 = -depth/pitch;
+	z1 = 1/4-pa_delta;
+	z2 = 1/4+pa_delta;
+	profile = profile!=undef? profile : [
+		[-z2, r1],
+		[-z1,  0],
+		[ z1,  0],
+		[ z2, r1],
 	];
-	parts = len(delta_zs);
+	parts = len(profile);
 	poly_points = concat(
 		[
 			for (
-				start = [0 : starts-1],
-				part = [0 : parts-1],
+				start  = [0 : starts-1],
+				part   = [0 : parts-1],
 				thread = [0 : threads-1],
-				astep = [0 : asteps-1]
+				astep  = [0 : asteps-1]
 			) let (
-				r = rads[part],
-				dz = delta_zs[part],
+				ppt = profile[part] * pitch,
+				dz = ppt.x,
+				r = ppt.y + d/2,
 				a = astep / asteps,
 				c = cos(360 * (a * dir + start/starts)),
 				s = sin(360 * (a * dir + start/starts)),
@@ -126,17 +133,16 @@ module trapezoidal_threaded_rod(
 		// Thread surfaces
 		[
 			for (
-				start = [0 : starts-1],
-				part = [0 : parts-2],
+				start  = [0 : starts-1],
+				part   = [0 : parts-2],
 				thread = [0 : threads-1],
-				astep = [0 : asteps-1],
-				trinum = [0 : 1]
+				astep  = [0 : asteps-1],
+				trinum = [0, 1]
 			) let (
-				n = ((thread * asteps + astep) * starts + start) * parts,
-				p0 = _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, parts),
-				p1 = _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part+1, parts),
-				p2 = _trpzd_thread_pt(thread, threads, start, starts, astep+1, asteps, part, parts),
-				p3 = _trpzd_thread_pt(thread, threads, start, starts, astep+1, asteps, part+1, parts),
+				p0 = _thread_pt(thread, threads, start, starts, astep, asteps, part, parts),
+				p1 = _thread_pt(thread, threads, start, starts, astep, asteps, part+1, parts),
+				p2 = _thread_pt(thread, threads, start, starts, astep+1, asteps, part, parts),
+				p3 = _thread_pt(thread, threads, start, starts, astep+1, asteps, part+1, parts),
 				tri = trinum==0? [p0, p1, p3] : [p0, p3, p2],
 				otri = left_handed? [tri[0], tri[2], tri[1]] : tri
 			)
@@ -145,13 +151,13 @@ module trapezoidal_threaded_rod(
 		// Thread trough bottom
 		[
 			for (
-				start = [0 : starts-1],
+				start  = [0 : starts-1],
 				thread = [0 : threads-1],
-				astep = [0 : asteps-1],
-				trinum = [0 : 1]
+				astep  = [0 : asteps-1],
+				trinum = [0, 1]
 			) let (
-				p0 = _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, parts-1, parts),
-				p1 = _trpzd_thread_pt(thread, threads, (start+(left_handed?1:starts-1))%starts, starts, astep+asteps/starts, asteps, 0, parts),
+				p0 = _thread_pt(thread, threads, start, starts, astep, asteps, parts-1, parts),
+				p1 = _thread_pt(thread, threads, (start+(left_handed?1:starts-1))%starts, starts, astep+asteps/starts, asteps, 0, parts),
 				p2 = p0 + 1,
 				p3 = p1 + 1,
 				tri = trinum==0? [p0, p1, p3] : [p0, p3, p2],
@@ -165,15 +171,15 @@ module trapezoidal_threaded_rod(
 		// top and bottom thread endcap
 		[
 			for (
-				start=[0:starts-1],
-				part=[1:parts-2],
-				is_top=[0:1]
+				start  = [0 : starts-1],
+				part   = [1 : parts-2],
+				is_top = [0, 1]
 			) let (
 				astep = is_top? asteps-1 : 0,
 				thread = is_top? threads-1 : 0,
-				p0 = _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, 0, parts),
-				p1 = _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part, parts),
-				p2 = _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, part+1, parts),
+				p0 = _thread_pt(thread, threads, start, starts, astep, asteps, 0, parts),
+				p1 = _thread_pt(thread, threads, start, starts, astep, asteps, part, parts),
+				p2 = _thread_pt(thread, threads, start, starts, astep, asteps, part+1, parts),
 				tri = is_top? [p0, p1, p2] : [p0, p2, p1],
 				otri = left_handed? [tri[0], tri[2], tri[1]] : tri
 			) otri
@@ -181,9 +187,9 @@ module trapezoidal_threaded_rod(
 		// body side triangles
 		[
 			for (
-				start=[0:starts-1],
-				is_top=[false,true],
-				trinum=[0,1]
+				start  = [0 : starts-1],
+				is_top = [false, true],
+				trinum = [0, 1]
 			) let (
 				astep = is_top? asteps-1 : 0,
 				thread = is_top? threads-1 : 0,
@@ -191,9 +197,9 @@ module trapezoidal_threaded_rod(
 				ostep = is_top? astep-asteps/starts : astep+asteps/starts,
 				oparts = is_top? parts-1 : 0,
 				p0 = is_top? point_count-1 : point_count-2,
-				p1 = _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, 0, parts),
-				p2 = _trpzd_thread_pt(thread, threads, start, starts, astep, asteps, parts-1, parts),
-				p3 = _trpzd_thread_pt(thread, threads, ostart, starts, ostep, asteps, oparts, parts),
+				p1 = _thread_pt(thread, threads, start, starts, astep, asteps, 0, parts),
+				p2 = _thread_pt(thread, threads, start, starts, astep, asteps, parts-1, parts),
+				p3 = _thread_pt(thread, threads, ostart, starts, ostep, asteps, oparts, parts),
 				tri = trinum==0?
 					(is_top? [p0, p1, p2] : [p0, p2, p1]) :
 					(is_top? [p0, p3, p1] : [p0, p3, p2]),
@@ -203,16 +209,16 @@ module trapezoidal_threaded_rod(
 		// Caps
 		[
 			for (
-				start = [0 : starts-1],
-				astep = [0 : asteps/starts-1],
-				is_top = [0:1]
+				start  = [0 : starts-1],
+				astep  = [0 : asteps/starts-1],
+				is_top = [0, 1]
 			) let (
 				thread = is_top? threads-1 : 0,
 				part = is_top? parts-1 : 0,
 				ostep = is_top? asteps-astep-2 : astep,
 				p0 = is_top? point_count-1 : point_count-2,
-				p1 = _trpzd_thread_pt(thread, threads, start, starts, ostep, asteps, part, parts),
-				p2 = _trpzd_thread_pt(thread, threads, start, starts, ostep+1, asteps, part, parts),
+				p1 = _thread_pt(thread, threads, start, starts, ostep, asteps, part, parts),
+				p2 = _thread_pt(thread, threads, start, starts, ostep+1, asteps, part, parts),
 				tri = is_top? [p0, p2, p1] : [p0, p1, p2],
 				otri = left_handed? [tri[0], tri[2], tri[1]] : tri
 			) otri
@@ -247,8 +253,9 @@ module trapezoidal_threaded_rod(
 //   thread_angle = The pressure angle profile angle of the threads.  Default = 14.5 degree ACME profile.
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
-//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   bevel = if true, bevel the thread ends.  Default: true
+//   slop = printer slop calibration to allow for tight fitting of parts.  Default: `PRINTER_SLOP`
+//   profile = The shape of a thread, if not a symmetric trapezoidal form.  Given as a 2D path, where X is between -1/2 and 1/2, representing the pitch distance, and Y is 0 for the peak, and `-depth/pitch` for the valleys.  The segment between the end of one thread profile and the start of the next is automatic, so the start and end coordinates should not both be at the same Y at X = ±1/2.  This path is scaled up by the pitch size in both dimensions when making the final threading.  This overrides the `thread_angle` and `thread_depth` options.
 //   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
@@ -262,28 +269,31 @@ module trapezoidal_threaded_nut(
 	pitch=2,
 	thread_depth=undef,
 	thread_angle=15,
+	profile=undef,
 	left_handed=false,
 	starts=1,
 	bevel=true,
-	slop=PRINTER_SLOP,
+	slop=undef,
 	orient=ORIENT_Z,
 	anchor=CENTER
 ) {
 	depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
+	slop = default(slop, PRINTER_SLOP);
 	orient_and_anchor([od/cos(30),od,h], orient, anchor, chain=true) {
 		difference() {
 			cylinder(d=od/cos(30), h=h, center=true, $fn=6);
-			zspread(slop, n=slop>0?2:1) {
-				trapezoidal_threaded_rod(
-					d=id+2*slop,
-					l=h+1,
-					pitch=pitch,
-					thread_depth=depth,
-					thread_angle=thread_angle,
-					left_handed=left_handed,
-					starts=starts
-				);
-			}
+			trapezoidal_threaded_rod(
+				d=id,
+				l=h+1,
+				pitch=pitch,
+				thread_depth=depth,
+				thread_angle=thread_angle,
+				profile=profile,
+				left_handed=left_handed,
+				starts=starts,
+				internal=true,
+				slop=slop
+			);
 			if (bevel) {
 				zflip_copy() {
 					down(h/2+0.01) {
@@ -309,19 +319,48 @@ module trapezoidal_threaded_nut(
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
+//   internal = If true, make this a mask for making internal threads.
+//   slop = printer slop calibration to allow for tight fitting of parts.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   threaded_rod(d=10, l=30, pitch=1.25, left_handed=true, $fa=1, $fs=1);
-module threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false, orient=ORIENT_Z, anchor=CENTER) {
+module threaded_rod(
+	d=10, l=100, pitch=2,
+	left_handed=false,
+	bevel=false,
+	internal=false,
+	slop=undef,
+	orient=ORIENT_Z,
+	anchor=CENTER
+) {
+	depth = pitch * cos(30) * 5/8;
+	profile = internal? [
+		[-6/16, -depth/pitch],
+		[-1/16,  0],
+		[-1/32,  0.02],
+		[ 1/32,  0.02],
+		[ 1/16,  0],
+		[ 6/16, -depth/pitch]
+	] : [
+		[-7/16, -depth/pitch*1.07],
+		[-6/16, -depth/pitch],
+		[-1/16,  0],
+		[ 1/16,  0],
+		[ 6/16, -depth/pitch],
+		[ 7/16, -depth/pitch*1.07]
+	];
 	trapezoidal_threaded_rod(
 		d=d, l=l, pitch=pitch,
-		thread_depth=pitch*3*sqrt(3)/8,
+		thread_depth=depth,
 		thread_angle=30,
+		profile=profile,
 		left_handed=left_handed,
 		bevel=bevel,
+		internal=internal,
 		orient=orient,
-		anchor=anchor
+		anchor=anchor,
+		slop=slop
 	) children();
 }
 
@@ -346,12 +385,107 @@ module threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false, orient
 module threaded_nut(
 	od=16, id=10, h=10,
 	pitch=2, left_handed=false,
-	bevel=false, slop=0.2,
+	bevel=false, slop=undef,
 	orient=ORIENT_Z, anchor=CENTER
 ) {
+	depth = pitch * cos(30) * 5/8;
+	profile = [
+		[-6/16, -depth/pitch],
+		[-1/16,  0],
+		[-1/32,  0.02],
+		[ 1/32,  0.02],
+		[ 1/16,  0],
+		[ 6/16, -depth/pitch]
+	];
 	trapezoidal_threaded_nut(
 		od=od, id=id, h=h,
 		pitch=pitch, thread_angle=30,
+		profile=profile,
+		thread_depth=pitch*3*sqrt(3)/8,
+		left_handed=left_handed,
+		bevel=bevel, slop=slop,
+		orient=orient, anchor=anchor
+	) children();
+}
+
+
+// Section: Buttress Threading
+
+// Module: buttress_threaded_rod()
+// Description:
+//   Constructs a simple buttress threaded screw rod.  This method
+//   makes much smoother threads than the naive linear_extrude method.
+// Arguments:
+//   d = Outer diameter of threaded rod.
+//   l = length of threaded rod.
+//   pitch = Length between threads.
+//   left_handed = if true, create left-handed threads.  Default = false
+//   bevel = if true, bevel the thread ends.  Default: false
+//   internal = If true, this is a mask for making internal threads.
+//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
+//   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Examples:
+//   buttress_threaded_rod(d=10, l=30, pitch=1.25, left_handed=true, $fa=1, $fs=1);
+module buttress_threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false, internal=false, slop=undef, orient=ORIENT_Z, anchor=CENTER) {
+	depth = pitch * 3/4;
+	profile = [
+		[ -7/16, -0.75],
+		[  5/16,  0],
+		[  7/16,  0],
+		[  7/16, -0.75],
+		[  1/ 2, -0.77],
+	];
+	trapezoidal_threaded_rod(
+		d=d, l=l, pitch=pitch,
+		thread_depth=depth,
+		thread_angle=30,
+		profile=profile,
+		left_handed=left_handed,
+		bevel=bevel,
+		internal=internal,
+		orient=orient,
+		anchor=anchor,
+		slop=slop
+	) children();
+}
+
+
+
+// Module: buttress_threaded_nut()
+// Description:
+//   Constructs a hex nut for a simple buttress threaded screw rod.  This method
+//   makes much smoother threads than the naive linear_extrude method.
+// Arguments:
+//   od = diameter of the nut.
+//   id = diameter of threaded rod to screw onto.
+//   h = height/thickness of nut.
+//   pitch = Length between threads.
+//   left_handed = if true, create left-handed threads.  Default = false
+//   bevel = if true, bevel the thread ends.  Default: false
+//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
+//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   anchor = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Examples:
+//   buttress_threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, slop=0.2, $fa=1, $fs=1);
+module buttress_threaded_nut(
+	od=16, id=10, h=10,
+	pitch=2, left_handed=false,
+	bevel=false, slop=undef,
+	orient=ORIENT_Z, anchor=CENTER
+) {
+	depth = pitch * 3/4;
+	profile = [
+		[ -7/16, -0.75],
+		[  5/16,  0],
+		[  7/16,  0],
+		[  7/16, -0.75],
+		[  1/ 2, -0.77],
+	];
+	trapezoidal_threaded_nut(
+		od=od, id=id, h=h,
+		pitch=pitch, thread_angle=30,
+		profile=profile,
 		thread_depth=pitch*3*sqrt(3)/8,
 		left_handed=left_handed,
 		bevel=bevel, slop=slop,
@@ -422,7 +556,7 @@ module metric_trapezoidal_threaded_nut(
 	starts=1,
 	left_handed=false,
 	bevel=false,
-	slop=PRINTER_SLOP,
+	slop=undef,
 	orient=ORIENT_Z,
 	anchor=CENTER
 ) {
@@ -509,7 +643,7 @@ module acme_threaded_nut(
 	starts=1,
 	left_handed=false,
 	bevel=false,
-	slop=PRINTER_SLOP,
+	slop=undef,
 	orient=ORIENT_Z,
 	anchor=CENTER
 ) {
@@ -588,7 +722,7 @@ module square_threaded_nut(
 	left_handed=false,
 	bevel=false,
 	starts=1,
-	slop=PRINTER_SLOP,
+	slop=undef,
 	orient=ORIENT_Z,
 	anchor=CENTER
 ) {
