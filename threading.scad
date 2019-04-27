@@ -358,9 +358,9 @@ module threaded_rod(
 		left_handed=left_handed,
 		bevel=bevel,
 		internal=internal,
+		slop=slop,
 		orient=orient,
-		anchor=anchor,
-		slop=slop
+		anchor=anchor
 	) children();
 }
 
@@ -401,7 +401,6 @@ module threaded_nut(
 		od=od, id=id, h=h,
 		pitch=pitch, thread_angle=30,
 		profile=profile,
-		thread_depth=pitch*3*sqrt(3)/8,
 		left_handed=left_handed,
 		bevel=bevel, slop=slop,
 		orient=orient, anchor=anchor
@@ -427,7 +426,15 @@ module threaded_nut(
 //   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   buttress_threaded_rod(d=10, l=30, pitch=1.25, left_handed=true, $fa=1, $fs=1);
-module buttress_threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=false, internal=false, slop=undef, orient=ORIENT_Z, anchor=CENTER) {
+module buttress_threaded_rod(
+	d=10, l=100, pitch=2,
+	left_handed=false,
+	bevel=false,
+	internal=false,
+	slop=undef,
+	orient=ORIENT_Z,
+	anchor=CENTER
+) {
 	depth = pitch * 3/4;
 	profile = [
 		[ -7/16, -0.75],
@@ -445,8 +452,8 @@ module buttress_threaded_rod(d=10, l=100, pitch=2, left_handed=false, bevel=fals
 		bevel=bevel,
 		internal=internal,
 		orient=orient,
-		anchor=anchor,
-		slop=slop
+		slop=slop,
+		anchor=anchor
 	) children();
 }
 
