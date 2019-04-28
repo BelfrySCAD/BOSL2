@@ -323,6 +323,9 @@ module trapezoidal_threaded_nut(
 //   slop = printer slop calibration to allow for tight fitting of parts.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Example(2D):
+//   projection(cut=true)
+//       threaded_rod(d=10, l=15, pitch=2, orient=ORIENT_X);
 // Examples(Med):
 //   threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
@@ -425,6 +428,9 @@ module threaded_nut(
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Example(2D):
+//   projection(cut=true)
+//       buttress_threaded_rod(d=10, l=15, pitch=2, orient=ORIENT_X);
 // Examples(Med):
 //   buttress_threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   buttress_threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
@@ -518,6 +524,9 @@ module buttress_threaded_nut(
 //   starts = The number of lead starts.  Default = 1
 //   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Example(2D):
+//   projection(cut=true)
+//       metric_trapezoidal_threaded_rod(d=10, l=15, pitch=2, orient=ORIENT_X);
 // Examples(Med):
 //   metric_trapezoidal_threaded_rod(d=10, l=30, pitch=2, left_handed=true, $fa=1, $fs=1);
 module metric_trapezoidal_threaded_rod(
@@ -599,6 +608,9 @@ module metric_trapezoidal_threaded_nut(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Example(2D):
+//   projection(cut=true)
+//       acme_threaded_rod(d=10, l=15, pitch=2, orient=ORIENT_X);
 // Examples(Med):
 //   acme_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, $fn=32);
 //   acme_threaded_rod(d=10, l=30, pitch=2, starts=3, $fa=1, $fs=1);
@@ -685,6 +697,9 @@ module acme_threaded_nut(
 //   starts = The number of lead starts.  Default = 1
 //   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Example(2D):
+//   projection(cut=true)
+//       square_threaded_rod(d=10, l=15, pitch=2, orient=ORIENT_X);
 // Examples(Med):
 //   square_threaded_rod(d=10, l=20, pitch=2, starts=2, $fn=32);
 module square_threaded_rod(
