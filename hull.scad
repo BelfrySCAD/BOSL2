@@ -43,7 +43,7 @@ function hull(points) = let(two_d = len(points[0]) == 2) two_d? hull2d_path(poin
 //   pts = [[-10,-10], [0,10], [10,10], [12,-10]];
 //   hull_points(pts);
 // Example:
-//   ptr = [for (phi = [30:60:150], theta = [0:60:359]) spherical_to_xyz(10, theta, phi)];
+//   pts = [for (phi = [30:60:150], theta = [0:60:359]) spherical_to_xyz(10, theta, phi)];
 //   hull_points(pts);
 module hull_points(points, fast=false) {
 	assert(is_list(points));
