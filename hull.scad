@@ -62,7 +62,7 @@ module hull_points(points, fast=false) {
 			}
 		} else {
 			perim = hull(points);
-			if (len(perim[0]) == 2) {
+			if (is_num(perim[0])) {
 				polygon(points=points, paths=[perim]);
 			} else {
 				polyhedron(points=points, faces=perim);
