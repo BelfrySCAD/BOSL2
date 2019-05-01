@@ -11,33 +11,64 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Section: 2D Convex Hulls
+// Section: Convex Hulls
 
 
-// Module: hull2d_points()
+// Function: hull()
 // Usage:
-//   hull2d_points(points);
+//   hull(points);
 // Description:
-//   Takes a list of 2D points and creates a 2D convex polygon that encloses all those points.
+//   Takes a list of 2D or 3D points (but not both in the same list) and
+//   returns either the list of indexes into `points` that forms the 2D
+//   convex hull perimeter path, or the list of faces that form the 3d
+//   convex hull surface.  Each face is a list of indexes into `points`.
+// Arguments:
+//   points = The set of 2D or 3D points to find the hull of.
+function hull(points) = let(two_d = len(points[0]) == 2) two_d? hull2d_path(points) : hull3d_faces(points);
+
+
+// Module: hull_points()
+// Usage:
+//   hull_points(points, [fast]);
+// Description:
+//   If given a list of 2D points, creates a 2D convex hull polygon
+//   that encloses all those points.  If given a list of 3D points,
+//   creates a 3D polyhedron that encloses all the points.  This should
+//   handle about 4000 points in slow mode.  If `fast` is set to true,
+//   this should be able to handle far more.
+// Arguments:
+//   points = The list of points to form a hull around.
+//   fast = If true, uses a faster cheat that may handle more points, but also may emit warnings that can stop your script if you have "Halt on first warning" enabled.  Default: false
 // Example(2D):
 //   pts = [[-10,-10], [0,10], [10,10], [12,-10]];
-//   hull2d_points(pts);
-module hull2d_points(points) {
-	polygon(points=points, paths=[hull2d_path(points)]);
-}
-
-
-// Module: hull2d_points_fast()
-// Usage:
-//   hull2d_points_fast(points);
-// Description:
-//   Takes a list of 2D points and creates a 2D convex polygon that encloses all
-//   those points, using a faster method that may emit warning messages.
-// Example(2D):
-//   pts = [[-10,-10], [0,10], [10,10], [12,-10]];
-//   hull2d_points_fast(pts);
-module hull2d_points_fast(points) {
-	hull() polygon(points);
+//   hull_points(pts);
+// Example:
+//   ptr = [for (phi = [30:60:150], theta = [0:60:359]) spherical_to_xyz(10, theta, phi)];
+//   hull_points(pts);
+module hull_points(points, fast=false) {
+	assert(is_list(points));
+	if (points) {
+		assert(is_list(points[0]));
+		if (fast) {
+			if (len(points[0]) == 2) {
+				hull() polygon(points=points);
+			} else {
+				extra = len(points)%3;
+				faces = concat(
+					[[for(i=[0:extra+2])i]],
+					[for(i=[extra+3:3:len(points)-3])[i,i+1,i+2]]
+				);
+				hull() polyhedron(points=points, faces=faces);
+			}
+		} else {
+			perim = hull(points);
+			if (len(perim[0]) == 2) {
+				polygon(points=points, paths=[perim]);
+			} else {
+				polyhedron(points=points, faces=perim);
+			}
+		}
+	}
 }
 
 
@@ -118,42 +149,6 @@ function _remove_conflicts_and_insert_point(polygon, conflicts, point) =
 
 
 
-// Section: 3D Convex Hulls
-
-
-// Module: hull3d_points()
-// Usage:
-//   hull3d_points(points);
-// Description:
-//   Takes a list of 3D points and creates a 3D convex polyhedron that encloses all those points.
-// Example(3D):
-//   pts = [[-20,-20,0], [20,-20,0], [0,20,5], [0,0,20]];
-//   hull3d_points(pts);
-module hull3d_points(points) {
-	indices = hull3d_faces(points);
-	if (is_vector(indices)) {
-		polyhedron(points=points, faces=[indices]);
-	} else {
-		polyhedron(points=points, faces=indices);
-	}
-}
-
-
-// Module: hull3d_points_fast()
-// Usage:
-//   hull3d_points_fast(points);
-// Description:
-//   Takes a list of 3D points and creates a 3D convex polyhedron that encloses all
-//   those points, using a faster method that may emit warning messages.
-// Example(3D):
-//   pts = [[-20,-20,0], [20,-20,0], [0,20,5], [0,0,20]];
-//   hull3d_points_fast(pts);
-module hull3d_points_fast(points) {
-	faces = [for (i=[0:len(points)-3]) let(c=_find_first_noncollinear([i,i+1], points, 2)) [i, i+1, c]];
-	hull() polyhedron(points=points, faces=faces);
-}
-
-
 // Function: hull3d_faces()
 // Usage:
 //   hull3d_faces(points)
@@ -170,8 +165,11 @@ module hull3d_points_fast(points) {
 //   %polyhedron(points=pts, faces=faces);
 function hull3d_faces(points) = 
 	(len(points) < 3)? list_range(len(points)) : let (	
-		// start with a single triangle
-		a=0, b=1, c=2,
+		// start with a single non-collinear triangle
+		a = 0,
+		b = 1,
+		c = _find_first_noncollinear([a,b], points, 2)
+	) (c == len(points))? _hull2d_collinear(points) : let(
 		plane = plane3pt_indexed(points, a, b, c),
 		d = _find_first_noncoplanar(plane, points, 3)
 	) (d == len(points))? /* all coplanar*/ let (

@@ -216,13 +216,14 @@ function xy_to_polar(x,y=undef) = let(
 //   can be useful in taking a set of nearly coplanar points, and converting
 //   them to a pure XY set of coordinates for manipulation, before convering
 //   them back to the original 3D plane.
-function xyz_to_planar(point, a, b, c) = let(
-	u = normalize(b-a),
-	v = normalize(c-a),
-	n = normalize(cross(u,v)),
-	w = normalize(cross(n,u)),
-	relpoint = point-a
-) [relpoint * w, relpoint * u];
+function xyz_to_planar(point, a, b, c) =
+	let(
+		u = normalize(b-a),
+		v = normalize(c-a),
+		n = normalize(cross(u,v)),
+		w = normalize(cross(n,u)),
+		relpoint = point-a
+	) [relpoint * w, relpoint * u];
 
 
 // Function: planar_to_xyz()

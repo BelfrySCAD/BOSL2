@@ -46,7 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //   Determine if the point is on the line segment between two points.
 //   Returns true if yes, and false if not.  
 // Arguments:
-//   point = The point to check colinearity of.
+//   point = The point to test.
 //   edge = Array of two points forming the line segment to test against.
 function point_on_segment(point, edge) =
 	point==edge[0] || point==edge[1] ||  // The point is an endpoint
@@ -99,9 +99,9 @@ function right_of_line2d(line, pt) =
 //   a = First point.
 //   b = Second point.
 //   c = Third point.
-//   eps = Acceptable max angle variance.  Default: EPSILON (1e-9) degrees.
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 function collinear(a, b, c, eps=EPSILON) =
-	abs(vector_angle(b-a,c-a)) < eps;
+	distance_from_line([a,b], c) < eps;
 
 
 // Function: collinear_indexed()
@@ -120,7 +120,23 @@ function collinear_indexed(points, a, b, c, eps=EPSILON) =
 		p1=points[a],
 		p2=points[b],
 		p3=points[c]
-	) abs(vector_angle(p2-p1,p3-p1)) < eps;
+	) collinear(p1, p2, p3, eps);
+
+
+// Function: distance_from_line()
+// Usage:
+//   distance_from_line(line, pt);
+// Description:
+//   Finds the perpendicular distance of a point `pt` from the line `line`.
+// Arguments:
+//   line = A list of two points, defining a line that both are on.
+//   pt = A point to find the distance of from the line.
+// Example:
+//   distance_from_line([[-10,0], [10,0]], [3,8]);  // Returns: 8
+function distance_from_line(line, pt) =
+	let(a=line[0], n=normalize(line[1]-a), d=a-pt)
+	norm(d - ((d * n) * n));
+
 
 
 // Function: triangle_area2d()
@@ -146,14 +162,19 @@ function triangle_area2d(a,b,c) =
 // Usage:
 //   plane3pt(p1, p2, p3);
 // Description:
-//   Generates the cartesian equation of a plane from three non-colinear points on the plane.
+//   Generates the cartesian equation of a plane from three non-collinear points on the plane.
 //   Returns [A,B,C,D] where Ax+By+Cz+D=0 is the equation of a plane.
 // Arguments:
 //   p1 = The first point on the plane.
 //   p2 = The second point on the plane.
 //   p3 = The third point on the plane.
 function plane3pt(p1, p2, p3) =
-	let(normal = normalize(cross(p3-p1, p2-p1))) concat(normal, [normal*p1]);
+	let(
+		p1=point3d(p1),
+		p2=point3d(p2),
+		p3=point3d(p3),
+		normal = normalize(cross(p3-p1, p2-p1))
+	) concat(normal, [normal*p1]);
 
 
 // Function: plane3pt_indexed()
@@ -173,9 +194,8 @@ function plane3pt_indexed(points, i1, i2, i3) =
 	let(
 		p1 = points[i1],
 		p2 = points[i2],
-		p3 = points[i3],
-		normal = normalize(cross(p3-p1, p2-p1))
-	) concat(normal, [normal*p1]);
+		p3 = points[i3]
+	) plane3pt(p1,p2,p3);
 
 
 // Function: distance_from_plane()

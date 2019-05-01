@@ -1,5 +1,5 @@
-include <BOSL2/math.scad>
-include <BOSL2/convex_hull.scad>
+include <BOSL2/std.scad>
+include <BOSL2/hull.scad>
 
 
 testpoints_on_sphere = [ for(p = 
@@ -44,7 +44,7 @@ visualize_hull(testpoints3d);
 
 
 module visualize_hull(points) {
-	hull = convex_hull(points);
+	hull = hull(points);
 	
 	%if (len(hull) > 0 && is_list(hull[0]) && len(hull[0]) > 0)
 		polyhedron(points=points, faces = hull);
