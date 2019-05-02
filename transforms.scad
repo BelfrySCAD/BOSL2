@@ -1723,29 +1723,28 @@ module half_of(v=UP, cp=[0,0,0], s=100, planar=false)
 // Module: left_half()
 //
 // Usage:
-//   left_half([cp], [s]) ...
+//   left_half([s], [x]) ...
+//   left_half(planar=true, [s], [x]) ...
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is right of it.
 //
 // Arguments:
-//   cp = If given as a scalar, moves the cut plane left by the given amount.  If given as a point, specifies a point on the cut plane.  NOTE: a `cp` of 5 is equivalent to a `cp` of `[-5,0,0]`, *not* `[5,0,0]`!  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   x = The X coordinate of the cut-plane.  Default: 0
 //   planar = If true, this becomes a 2D operation.
 //
 // Examples:
 //   left_half() sphere(r=20);
-//   left_half(cp=-8) sphere(r=20);
-//   left_half(cp=[8,0,0]) sphere(r=20);
+//   left_half(x=-8) sphere(r=20);
 // Example(2D):
 //   left_half(planar=true) circle(r=20);
-module left_half(s=100, cp=[0,0,0], planar=false)
+module left_half(s=100, x=0, planar=false)
 {
 	dir = LEFT;
-	cp = is_num(cp)? cp*dir : cp;
 	difference() {
 		children();
-		translate(cp-dir*s/2) {
+		translate([x,0,0]-dir*s/2) {
 			if (planar) {
 				square(s, center=true);
 			} else {
@@ -1760,29 +1759,28 @@ module left_half(s=100, cp=[0,0,0], planar=false)
 // Module: right_half()
 //
 // Usage:
-//   right_half([cp], [s]) ...
+//   right_half([s], [x]) ...
+//   right_half(planar=true, [s], [x]) ...
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is left of it.
 //
 // Arguments:
-//   cp = If given as a scalar, moves the cut plane right by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   x = The X coordinate of the cut-plane.  Default: 0
 //   planar = If true, this becomes a 2D operation.
 //
 // Examples(FlatSpin):
 //   right_half() sphere(r=20);
-//   right_half(cp=-5) sphere(r=20);
-//   right_half(cp=[-5,0,0]) sphere(r=20);
+//   right_half(x=-5) sphere(r=20);
 // Example(2D):
 //   right_half(planar=true) circle(r=20);
-module right_half(s=100, cp=[0,0,0], planar=false)
+module right_half(s=100, x=0, planar=false)
 {
 	dir = RIGHT;
-	cp = is_num(cp)? cp*dir : cp;
 	difference() {
 		children();
-		translate(cp-dir*s/2) {
+		translate([x,0,0]-dir*s/2) {
 			if (planar) {
 				square(s, center=true);
 			} else {
@@ -1797,29 +1795,28 @@ module right_half(s=100, cp=[0,0,0], planar=false)
 // Module: front_half()
 //
 // Usage:
-//   front_half([cp], [s]) ...
+//   front_half([s], [y]) ...
+//   front_half(planar=true, [s], [y]) ...
 //
 // Description:
 //   Slices an object at a vertical X-Z cut plane, and masks away everything that is behind it.
 //
 // Arguments:
-//   cp = If given as a scalar, moves the cut plane forward by the given amount.  If given as a point, specifies a point on the cut plane.  NOTE: a `cp` of 5 is equivalent to a `cp` of `[0,-5,0]`, *not* `[0,5,0]`!  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   y = The Y coordinate of the cut-plane.  Default: 0
 //   planar = If true, this becomes a 2D operation.
 //
 // Examples(FlatSpin):
 //   front_half() sphere(r=20);
-//   front_half(cp=5) sphere(r=20);
-//   front_half(cp=[0,5,0]) sphere(r=20);
+//   front_half(y=5) sphere(r=20);
 // Example(2D):
 //   front_half(planar=true) circle(r=20);
-module front_half(s=100, cp=[0,0,0], planar=false)
+module front_half(s=100, y=0, planar=false)
 {
 	dir = FWD;
-	cp = is_num(cp)? cp*dir : cp;
 	difference() {
 		children();
-		translate(cp-dir*s/2) {
+		translate([0,y,0]-dir*s/2) {
 			if (planar) {
 				square(s, center=true);
 			} else {
@@ -1834,29 +1831,28 @@ module front_half(s=100, cp=[0,0,0], planar=false)
 // Module: back_half()
 //
 // Usage:
-//   back_half([cp], [s]) ...
+//   back_half([s], [y]) ...
+//   back_half(planar=true, [s], [y]) ...
 //
 // Description:
 //   Slices an object at a vertical X-Z cut plane, and masks away everything that is in front of it.
 //
 // Arguments:
-//   cp = If given as a scalar, moves the cut plane back by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   y = The Y coordinate of the cut-plane.  Default: 0
 //   planar = If true, this becomes a 2D operation.
 //
 // Examples:
 //   back_half() sphere(r=20);
-//   back_half(cp=8) sphere(r=20);
-//   back_half(cp=[0,-10,0]) sphere(r=20);
+//   back_half(y=8) sphere(r=20);
 // Example(2D):
 //   back_half(planar=true) circle(r=20);
-module back_half(s=100, cp=[0,0,0], planar=false)
+module back_half(s=100, y=0, planar=false)
 {
 	dir = BACK;
-	cp = is_num(cp)? cp*dir : cp;
 	difference() {
 		children();
-		translate(cp-dir*s/2) {
+		translate([0,y,0]-dir*s/2) {
 			if (planar) {
 				square(s, center=true);
 			} else {
@@ -1871,34 +1867,25 @@ module back_half(s=100, cp=[0,0,0], planar=false)
 // Module: bottom_half()
 //
 // Usage:
-//   bottom_half([cp], [s]) ...
+//   bottom_half([s], [z]) ...
 //
 // Description:
 //   Slices an object at a horizontal X-Y cut plane, and masks away everything that is above it.
 //
 // Arguments:
-//   cp = If given as a scalar, moves the cut plane down by the given amount.  If given as a point, specifies a point on the cut plane.  NOTE: a `cp` of 5 is equivalent to a `cp` of `[0,0,-5]`, *not* `[0,0,5]`!  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
-//   planar = If true, this becomes equivalent to a planar `front_half()`.
+//   z = The Z coordinate of the cut-plane.  Default: 0
 //
 // Examples:
 //   bottom_half() sphere(r=20);
-//   bottom_half(cp=-10) sphere(r=20);
-//   bottom_half(cp=[0,0,10]) sphere(r=20);
-// Example(2D):
-//   bottom_half(planar=true) circle(r=20);
-module bottom_half(s=100, cp=[0,0,0], planar=false)
+//   bottom_half(z=-10) sphere(r=20);
+module bottom_half(s=100, z=0)
 {
-	dir = planar? FWD : DOWN;
-	cp = is_num(cp)? cp*dir : cp;
+	dir = DOWN;
 	difference() {
 		children();
-		translate(cp-dir*s/2) {
-			if (planar) {
-				square(s, center=true);
-			} else {
-				cube(s, center=true);
-			}
+		translate([0,0,z]-dir*s/2) {
+			cube(s, center=true);
 		}
 	}
 }
@@ -1908,34 +1895,25 @@ module bottom_half(s=100, cp=[0,0,0], planar=false)
 // Module: top_half()
 //
 // Usage:
-//   top_half([cp], [s]) ...
+//   top_half([s], [z]) ...
 //
 // Description:
 //   Slices an object at a horizontal X-Y cut plane, and masks away everything that is below it.
 //
 // Arguments:
-//   cp = If given as a scalar, moves the cut plane up by the given amount.  If given as a point, specifies a point on the cut plane.  Default: [0,0,0]
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
-//   planar = If true, this becomes equivalent to a planar `back_half()`.
+//   z = The Z coordinate of the cut-plane.  Default: 0
 //
 // Examples(Spin):
 //   top_half() sphere(r=20);
-//   top_half(cp=5) sphere(r=20);
-//   top_half(cp=[0,0,-8]) sphere(r=20);
-// Example(2D):
-//   top_half(planar=true) circle(r=20);
-module top_half(s=100, cp=[0,0,0], planar=false)
+//   top_half(z=5) sphere(r=20);
+module top_half(s=100, z=0)
 {
-	dir = planar? BACK : UP;
-	cp = is_num(cp)? cp*dir : cp;
+	dir = UP;
 	difference() {
 		children();
-		translate(cp-dir*s/2) {
-			if (planar) {
-				square(s, center=true);
-			} else {
-				cube(s, center=true);
-			}
+		translate([0,0,z]-dir*s/2) {
+			cube(s, center=true);
 		}
 	}
 }
