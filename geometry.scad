@@ -39,25 +39,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Section: Lines and Triangles
 
-// Function: point_on_segment()
+// Function: point_on_segment2d()
 // Usage:
-//   point_on_segment(point, edge);
+//   point_on_segment2d(point, edge);
 // Description:
 //   Determine if the point is on the line segment between two points.
 //   Returns true if yes, and false if not.  
 // Arguments:
 //   point = The point to test.
 //   edge = Array of two points forming the line segment to test against.
-function point_on_segment(point, edge) =
+function point_on_segment2d(point, edge) =
 	point==edge[0] || point==edge[1] ||  // The point is an endpoint
 	sign(edge[0].x-point.x)==sign(point.x-edge[1].x)  // point is in between the
 		&& sign(edge[0].y-point.y)==sign(point.y-edge[1].y)  // edge endpoints 
-		&& point_left_of_segment(point, edge)==0;  // and on the line defined by edge
+		&& point_left_of_segment2d(point, edge)==0;  // and on the line defined by edge
 
 
-// Function: point_left_of_segment()
+// Function: point_left_of_segment2d()
 // Usage:
-//   point_left_of_segment(point, edge);
+//   point_left_of_segment2d(point, edge);
 // Description:
 //   Return >0 if point is left of the line defined by edge.
 //   Return =0 if point is on the line.
@@ -65,16 +65,16 @@ function point_on_segment(point, edge) =
 // Arguments:
 //   point = The point to check position of.
 //   edge = Array of two points forming the line segment to test against.
-function point_left_of_segment(point, edge) =
+function point_left_of_segment2d(point, edge) =
 	(edge[1].x-edge[0].x) * (point.y-edge[0].y) - (point.x-edge[0].x) * (edge[1].y-edge[0].y);
   
 
 // Internal non-exposed function.
 function _point_above_below_segment(point, edge) =
 	edge[0].y <= point.y? (
-		(edge[1].y > point.y && point_left_of_segment(point, edge) > 0)? 1 : 0
+		(edge[1].y > point.y && point_left_of_segment2d(point, edge) > 0)? 1 : 0
 	) : (
-		(edge[1].y <= point.y && point_left_of_segment(point, edge) < 0)? -1 : 0
+		(edge[1].y <= point.y && point_left_of_segment2d(point, edge) < 0)? -1 : 0
 	);
 
 
@@ -82,7 +82,7 @@ function _point_above_below_segment(point, edge) =
 // Usage:
 //   right_of_line2d(line, pt)
 // Description:
-//   Returns true if the given point is to the left of the given line.
+//   Returns true if the given point is to the left of the extended line defined by two points on it.
 // Arguments:
 //   line = A list of two points.
 //   pt = The point to test.
@@ -255,15 +255,12 @@ function in_front_of_plane(plane, point) =
 //   simplify_path(path, [eps])
 // Arguments:
 //   path = A list of 2D path points.
-//   eps = Largest angle variance allowed.  Default: EPSILON (1-e9) degrees.
-function simplify_path(path, eps=EPSILON, _a=0, _b=2, _acc=[]) =
-	(_b >= len(path))? concat([path[0]], _acc, [path[len(path)-1]]) :
-	simplify_path(
-		path, eps,
-		(collinear_indexed(path, _a, _b-1, _b, eps=eps)? _a : _b-1),
-		_b+1,
-		(collinear_indexed(path, _a, _b-1, _b, eps=eps)? _acc : concat(_acc, [path[_b-1]]))
-	);
+//   eps = Largest positional variance allowed.  Default: `EPSILON` (1-e9)
+function simplify_path(path, eps=EPSILON) =
+	len(path)<=2? path : let(
+		indices = concat([0], [for (i=[1:len(path)-2]) if (!collinear_indexed(path, i-1, i, i+1, eps=eps)) i], [len(path)-1])
+	) [for (i = indices) path[i]];
+
 
 
 // Function: simplify_path_indexed()
@@ -276,14 +273,11 @@ function simplify_path(path, eps=EPSILON, _a=0, _b=2, _acc=[]) =
 //   points = A list of points.
 //   path = A list of indexes into `points` that forms a path.
 //   eps = Largest angle variance allowed.  Default: EPSILON (1-e9) degrees.
-function simplify_path_indexed(points, path, eps=EPSILON, _a=0, _b=2, _acc=[]) =
-	(_b >= len(path))? concat([path[0]], _acc, [path[len(path)-1]]) :
-	simplify_path_indexed(
-		points, path, eps,
-		(collinear_indexed(points, path[_a], path[_b-1], path[_b], eps=eps)? _a : _b-1),
-		_b+1,
-		(collinear_indexed(points, path[_a], path[_b-1], path[_b], eps=eps)? _acc : concat(_acc, [path[_b-1]]))
-	);
+function simplify_path_indexed(points, path, eps=EPSILON) =
+	len(path)<=2? path : let(
+		indices = concat([0], [for (i=[1:len(path)-2]) if (!collinear_indexed(points, path[i-1], path[i], path[i+1], eps=eps)) i], [len(path)-1])
+	) [for (i = indices) path[i]];
+
 
 
 // Function: point_in_polygon()
@@ -304,7 +298,7 @@ function simplify_path_indexed(points, path, eps=EPSILON, _a=0, _b=2, _acc=[]) =
 //   path = The list of 2D path points forming the perimeter of the polygon.
 function point_in_polygon(point, path) =
 	// Does the point lie on any edges?  If so return 0. 
-	sum([for(i=[0:len(path)-1]) point_on_segment(point, select(path, i, i+1))?1:0])>0 ? 0 : 
+	sum([for(i=[0:len(path)-1]) point_on_segment2d(point, select(path, i, i+1))?1:0])>0 ? 0 : 
 	// Otherwise compute winding number and return 1 for interior, -1 for exterior
 	sum([for(i=[0:len(path)-1]) _point_above_below_segment(point, select(path, i, i+1))]) != 0 ? 1 : -1;
 
