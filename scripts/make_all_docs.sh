@@ -18,7 +18,7 @@ rm -f tmpscad*.scad
 for lib in $PREVIEW_LIBS; do
     lib="$(basename $lib .scad)"
     mkdir -p images/$lib
-    rm -f images/$lib/*.png images/$lib/*.gif
+    # rm -f images/$lib/*.png images/$lib/*.gif
     echo ../scripts/docs_gen.py ../$lib.scad -o $lib.scad.md -c -i -I images/$lib/
     ../scripts/docs_gen.py ../$lib.scad -o $lib.scad.md -c -i -I images/$lib/ || exit 1
     open -a Typora $lib.scad.md
