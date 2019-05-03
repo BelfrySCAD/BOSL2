@@ -153,7 +153,8 @@ module orient_and_anchor(
 	m = matrix4_mult(concat(
 		(orig_anchor==CENTER)? [] : [
 			// If original anchor is not centered, center it.
-			matrix4_translate(vmul(size/2, -orig_anchor))
+			let(anch = find_anchor(orig_anchor, size.z, size, size2=size2, shift=shift, geometry=geometry, two_d=two_d))
+			matrix4_translate(anch[1])
 		],
 		(orig_orient==ORIENT_Z)? [] : [
 			// If original orientation is not upright, rotate it upright.
