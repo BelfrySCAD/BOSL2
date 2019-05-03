@@ -798,53 +798,63 @@ module square_threaded_nut(
 //   Creates an approximation of a standard PCO-1881 threaded beverage bottle neck.
 // Arguments:
 //   wall = Wall thickness in mm.
+// Extra Anchors:
+//   "support-ring" = Centered at the bottom of the support ring.
 // Example:
 //   pco1881_neck();
-module pco1881_neck(wall=2)
+module pco1881_neck(wall=2, orient=ORIENT_Z, anchor="support-ring")
 {
 	$fn = segs(33/2);
-	difference() {
-		union() {
-			difference() {
-				union() {
-					down(5) cylinder(d=24.20, h=17+5, anchor=BOTTOM);
+	h = 17+5;
+	anchors = [
+		anchorpt("support-ring", [0,0,5-h/2])
+	];
+	orient_and_anchor([33,33,17+5], orient, anchor, anchors=anchors, chain=true) {
+		up(5-h/2)
+		difference() {
+			union() {
+				difference() {
+					union() {
+						down(5) cylinder(d=24.20, h=17+5, anchor=BOTTOM);
 
-					// Tamper-proof retaining ring
-					cylinder(d=25.70, h=5.81, anchor=BOTTOM);
-					up(5.8) cylinder(d=28.0, h=0.59, anchor=BOTTOM);
-					up(5.8+0.589) cylinder(d1=28.0, d2=24.2, h=1.9, anchor=BOTTOM);
+						// Tamper-proof retaining ring
+						cylinder(d=25.70, h=5.81, anchor=BOTTOM);
+						up(5.8) cylinder(d=28.0, h=0.59, anchor=BOTTOM);
+						up(5.8+0.589) cylinder(d1=28.0, d2=24.2, h=1.9, anchor=BOTTOM);
+					}
+
+					// Fillet above support ridge
+					up(3) rotate_extrude(convexity=4) {
+						right(13.46) circle(r=1.08, $fn=16);
+					}
 				}
 
-				// Fillet above support ridge
-				up(3) rotate_extrude(convexity=4) {
-					right(13.46) circle(r=1.08, $fn=16);
-				}
+				// Threads
+				up(17-1.7)
+				thread_helix(
+					base_d=24.1,
+					pitch=2.7,
+					thread_depth=1.7,
+					thread_angle=15,
+					twist=650,
+					higbee=60,
+					anchor=TOP
+				);
+
+				// Support Ledge
+				cylinder(d=33, h=1.16, anchor=BOTTOM);
+				up(1.159) cylinder(d1=33, d2=25.7, h=0.979, anchor=BOTTOM);
+
+				// Top brim
+				up(17) cyl(d=24.94, h=1.5, rounding2=0.58, anchor=TOP);
+				up(17-1) cyl(d=25.07, h=0.7, anchor=TOP);
+				up(17-1.7) rounding_hole_mask(d=24.2, rounding=0.3, overage=0.01);
 			}
 
-			// Threads
-			up(17-1.7)
-			thread_helix(
-				base_d=24.2,
-				pitch=2.7,
-				thread_depth=1.6,
-				thread_angle=15,
-				twist=650,
-				higbee=60,
-				anchor=TOP
-			);
-
-			// Support Ledge
-			cylinder(d=33, h=1.16, anchor=BOTTOM);
-			up(1.159) cylinder(d1=33, d2=25.7, h=0.979, anchor=BOTTOM);
-
-			// Top brim
-			up(17) cyl(d=24.94, h=1.5, rounding2=0.58, anchor=TOP);
-			up(17-1) cyl(d=25.07, h=0.7, anchor=TOP);
-			up(17-1.7) rounding_hole_mask(d=24.2, rounding=0.3, overage=0.01);
+			// Neck hole
+			down(5.01) cylinder(d=24.2-2*wall, h=17.02+5, anchor=BOTTOM);
 		}
-
-		// Neck hole
-		down(5.01) cylinder(d=24.2-2*wall, h=17.02+5, anchor=BOTTOM);
+		children();
 	}
 }
 
@@ -856,14 +866,28 @@ module pco1881_neck(wall=2)
 //   Creates a basic cap for a PCO1881 threaded beverage bottle.
 // Arguments:
 //   wall = Wall thickness in mm.
+//   orient = Orientation of the threads.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   anchor = Alignment of the threads.  Use the constants from `constants.scad`.  Default: `"inside-top"`.
+// Extra Anchors:
+//   "inside-top" = Centered on the inside top of the cap.
 // Example:
 //   pco1881_cap();
-module pco1881_cap(wall=2)
+module pco1881_cap(wall=2, orient=ORIENT_Z, anchor=TOP)
 {
 	$fn = segs(33/2);
-	tube(id=28.58, wall=wall, h=11.2+wall, anchor=BOTTOM);
-	cylinder(d=28.58+wall, h=wall, anchor=BOTTOM);
-	up(wall+2) thread_helix(base_d=25.5, pitch=2.7, thread_depth=1.6, thread_angle=15, twist=650, higbee=45, interior=true, anchor=BOTTOM);
+	w = 28.58 + 2*wall;
+	h = 11.2 + wall;
+	anchors = [
+		anchorpt("inside-top", [0,0,h/2-wall])
+	];
+	orient_and_anchor([w, w, 11.2+wall], orient, anchor, anchors=anchors, orig_anchor=TOP, chain=true) {
+		zrot(45) xrot(180) {
+			tube(id=28.58, wall=wall, h=11.2+wall, anchor=BOTTOM);
+			cylinder(d=w, h=wall, anchor=BOTTOM);
+			up(wall+2) thread_helix(base_d=25.5, pitch=2.7, thread_depth=1.6, thread_angle=15, twist=650, higbee=45, interior=true, anchor=BOTTOM);
+		}
+		children();
+	}
 }
 
 
