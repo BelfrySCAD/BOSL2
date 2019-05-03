@@ -38,7 +38,58 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
-// Section: Generic Trapezoidal Threading
+// Section: Generic Threading
+
+// Module: thread_helix()
+// Usage:
+//   thread_helix(base_d, pitch, thread_depth, thread_angle, twist, [profile], [left_handed], [higbee], [interior], [orient], [anchor]);
+// Description:
+//   Creates a helical thread with optional end tapering.
+// Arguments:
+//   base_d = Inside base diameter of threads.
+//   pitch = Distance between threads.
+//   thread_depth = Depth of threads from top to bottom.
+//   thread_angle = Angle of the thread faces.
+//   twist = Number of degrees to rotate thread around.
+//   profile = If a an asymmetrical thread profile is needed, it can be specified here.
+//   left_handed = If true, thread has a left-handed winding.
+//   higbee = Angle to taper thread ends by.
+//   interior = If true, invert threads for interior threading.
+//   orient = Orientation of the threads.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   anchor = Alignment of the threads.  Use the constants from `constants.scad`.  Default: `CENTER`.
+module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=720, profile=undef, left_handed=false, higbee=60, interior=false, orient=ORIENT_Z, anchor=CENTER)
+{
+	h = pitch*twist/360;
+	r = base_d/2;
+	dz = thread_depth/pitch * tan(thread_angle);
+	cap = (1 - 2*dz)/2;
+	profile = !is_undef(profile)? profile : (
+		interior? [
+			[thread_depth/pitch, -cap/2-dz],
+			[0, -cap/2],
+			[0, +cap/2],
+			[thread_depth/pitch, +cap/2+dz],
+		] : [
+			[0, +cap/2+dz],
+			[thread_depth/pitch, +cap/2],
+			[thread_depth/pitch, -cap/2],
+			[0, -cap/2-dz],
+		]
+	);
+	pline = scale_points(profile, [1,1,1]*pitch);
+	dir = left_handed? -1 : 1;
+	idir = interior? -1 : 1;
+	orient_and_anchor([2*r, 2*r, h], orient, anchor, chain=true) {
+		difference() {
+			extrude_2dpath_along_spiral(pline, h=h, r=base_d/2, twist=twist*dir, $fn=segs(base_d/2), anchor=CENTER);
+			down(h/2) right(r) right(interior? thread_depth : 0) zrot(higbee*dir*idir) fwd(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
+			up(h/2) zrot(twist*dir) right(r) right(interior? thread_depth : 0) zrot(-higbee*dir*idir) back(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
+		}
+		children();
+	}
+}
+
+
 
 // Module: trapezoidal_threaded_rod()
 // Description:
@@ -760,6 +811,85 @@ module square_threaded_nut(
 		orient=orient,
 		anchor=anchor
 	) children();
+}
+
+
+// Section: PCO-1881 Bottle Threading
+
+
+// Module: pco1881_neck()
+// Usage:
+//   pco1881_neck()
+// Description:
+//   Creates an approximation of a standard PCO-1881 threaded beverage bottle neck.
+// Arguments:
+//   wall = Wall thickness in mm.
+// Example:
+//   pco1881_neck();
+module pco1881_neck(wall=2)
+{
+	$fn = segs(33/2);
+	difference() {
+		union() {
+			difference() {
+				union() {
+					down(5) cylinder(d=24.20, h=17+5, anchor=BOTTOM);
+
+					// Tamper-proof retaining ring
+					cylinder(d=25.70, h=5.81, anchor=BOTTOM);
+					up(5.8) cylinder(d=28.0, h=0.59, anchor=BOTTOM);
+					up(5.8+0.589) cylinder(d1=28.0, d2=24.2, h=1.9, anchor=BOTTOM);
+				}
+
+				// Fillet above support ridge
+				up(3) rotate_extrude(convexity=4) {
+					right(13.46) circle(r=1.08, $fn=16);
+				}
+			}
+
+			// Threads
+			up(17-1.7)
+			thread_helix(
+				base_d=24.2,
+				pitch=2.7,
+				thread_depth=1.6,
+				thread_angle=15,
+				twist=650,
+				higbee=60,
+				anchor=TOP
+			);
+
+			// Support Ledge
+			cylinder(d=33, h=1.16, anchor=BOTTOM);
+			up(1.159) cylinder(d1=33, d2=25.7, h=0.979, anchor=BOTTOM);
+
+			// Top brim
+			up(17) cyl(d=24.94, h=1.5, rounding2=0.58, anchor=TOP);
+			up(17-1) cyl(d=25.07, h=0.7, anchor=TOP);
+			up(17-1.7) rounding_hole_mask(d=24.2, rounding=0.3, overage=0.01);
+		}
+
+		// Neck hole
+		down(5.01) cylinder(d=24.2-2*wall, h=17.02+5, anchor=BOTTOM);
+	}
+}
+
+
+// Module: pco1881_cap()
+// Usage:
+//   pco1881_cap(wall);
+// Description:
+//   Creates a basic cap for a PCO1881 threaded beverage bottle.
+// Arguments:
+//   wall = Wall thickness in mm.
+// Example:
+//   pco1881_cap();
+module pco1881_cap(wall=2)
+{
+	$fn = segs(33/2);
+	tube(id=28.58, wall=wall, h=11.2+wall, anchor=BOTTOM);
+	cylinder(d=28.58+wall, h=wall, anchor=BOTTOM);
+	up(wall+2) thread_helix(base_d=25.5, pitch=2.7, thread_depth=1.6, thread_angle=15, twist=650, higbee=45, interior=true, anchor=BOTTOM);
 }
 
 
