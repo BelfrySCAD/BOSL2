@@ -37,6 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+include <BOSL2/paths.scad>
+
 
 // Section: Generic Threading
 

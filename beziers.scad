@@ -4,7 +4,6 @@
 //   To use, add the following lines to the beginning of your file:
 //   ```
 //   include <BOSL2/std.scad>
-//   include <BOSL2/paths.scad>
 //   include <BOSL2/beziers.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
@@ -37,6 +36,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
+include <BOSL2/paths.scad>
 
 
 // Section: Terminology

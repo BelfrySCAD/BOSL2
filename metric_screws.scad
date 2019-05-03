@@ -4,9 +4,6 @@
 //   To use, include the following lines at the top of your file:
 //   ```
 //   include <BOSL2/std.scad>
-//   include <BOSL2/threading.scad>
-//   include <BOSL2/phillips_drive.scad>
-//   include <BOSL2/torx_drive.scad>
 //   include <BOSL2/metric_screws.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
@@ -39,6 +36,10 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
+include <BOSL2/threading.scad>
+include <BOSL2/phillips_drive.scad>
+include <BOSL2/torx_drive.scad>
 
 
 // Section: Functions
