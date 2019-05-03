@@ -25,7 +25,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
 // Section: Terminology
 //   The outline of a gear is a smooth circle (the "pitch circle") which has
 //   mountains and valleys added so it is toothed.  There is an inner
