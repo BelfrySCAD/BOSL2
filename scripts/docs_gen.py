@@ -247,6 +247,7 @@ class LeafNode(object):
         self.description = []
         self.usages = []
         self.arguments = []
+        self.anchors = []
         self.side_effects = []
         self.examples = []
 
@@ -315,6 +316,17 @@ class LeafNode(object):
                     argname = argname.strip()
                     argdesc = argdesc.strip()
                     self.arguments.append([argname, argdesc])
+            if line.startswith("Extra Anchors:"):
+                lines, block = get_comment_block(lines, prefix)
+                for line in block:
+                    if "=" not in line:
+                        print("Error: bad anchor line:")
+                        print(line)
+                        sys.exit(2)
+                    anchorname, anchordesc = line.split("=", 1)
+                    anchorname = anchorname.strip()
+                    anchordesc = anchordesc.strip()
+                    self.anchors.append([anchorname, anchordesc])
             if line.startswith("Side Effects:"):
                 lines, block = get_comment_block(lines, prefix)
                 self.side_effects.extend(block)
@@ -369,6 +381,18 @@ class LeafNode(object):
             out.append("**Side Effects**:")
             for sfx in self.side_effects:
                 out.append("- " + mkdn_esc(sfx))
+            out.append("")
+        if self.anchors:
+            out.append("Anchor Name     | Description")
+            out.append("--------------- | ------------------------------")
+            for anchorname, anchordesc in self.anchors:
+                anchorname = anchorname.replace(" / ", "` / `")
+                out.append(
+                    "{0:15s} | {1}".format(
+                        "`{0}`".format(anchorname),
+                        mkdn_esc(anchordesc)
+                    )
+                )
             out.append("")
         exnum = 0
         for title, excode, extype in self.examples:
