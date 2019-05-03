@@ -228,10 +228,13 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 //   height = height of extrusion.
 //   twist = degrees of twist, from bottom to top.
 //   slices = how many slices to use when making extrusion.
+//   orient = Orientation of the spiral.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   anchor = Alignment of the spiral.  Use the constants from `constants.scad`.  Default: `BOTTOM`.
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
 // Example:
 //   extrude_2d_hollow(wall=2, height=100, twist=90, slices=50)
 //       circle(r=40, $fn=6);
-module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, orient=ORIENT_Z, anchor=UP)
+module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, orient=ORIENT_Z, anchor=BOTTOM)
 {
 	orient_and_anchor([0,0,height], orient, anchor, center, chain=true) {
 		linear_extrude(height=height, twist=twist, slices=slices, center=true) {
@@ -256,6 +259,9 @@ module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, o
 //   h = height of the spiral to extrude along.
 //   r = radius of the spiral to extrude along.
 //   twist = number of degrees of rotation to spiral up along height.
+//   orient = Orientation of the spiral.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
+//   anchor = Alignment of the spiral.  Use the constants from `constants.scad`.  Default: `BOTTOM`.
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   extrude_2dpath_along_spiral(poly, h=200, r=50, twist=1080, $fn=36);
