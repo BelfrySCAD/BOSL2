@@ -78,7 +78,7 @@ function nema_motor_screw_size(size) = lookup(size, [
 
 
 // Function: nema_motor_screw_depth()
-// Description: Gets mount screwhole depth of NEMA motor of given standard size.
+// Description: Gets mount screw-hole depth of NEMA motor of given standard size.
 // Arguments:
 //   size = The standard NEMA motor size.
 function nema_motor_screw_depth(size) = lookup(size, [
@@ -101,6 +101,15 @@ function nema_motor_screw_depth(size) = lookup(size, [
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 20mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
+// Extra Anchors:
+//   "shaft-top" = The top of the shaft.
+//   "shaft-middle" = The middle of the shaft.
+//   "shaft-bottom" = The bottom of the shaft, 0.1mm above the plinth.
+//   "plinth-top" = The top of the plinth.
+//   "screw1" = The screw-hole in the X+Y+ quadrant.
+//   "screw2" = The screw-hole in the X-Y+ quadrant.
+//   "screw3" = The screw-hole in the X-Y- quadrant.
+//   "screw4" = The screw-hole in the X+Y- quadrant.
 // Example:
 //   nema11_stepper();
 module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=DOWN)
@@ -113,11 +122,21 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=DOWN)
 	screw_size = nema_motor_screw_size(size);
 	screw_depth = nema_motor_screw_depth(size);
 
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, orig_anchor=DOWN, chain=true) {
+	anchors = [
+		anchorpt("shaft-top", [0,0,h/2+shaft_len]),
+		anchorpt("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
+		anchorpt("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
+		anchorpt("plinth-top", [0,0,h/2+plinth_height]),
+		anchorpt("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
+		anchorpt("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
+		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
+		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
+	];
+	orient_and_anchor([motor_width, motor_width, h], orient, anchor, anchors=anchors, orig_anchor=TOP, chain=true) {
 		union() {
 			difference() {
 				color([0.4, 0.4, 0.4]) 
-					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=DOWN);
+					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=TOP);
 				color("silver")
 					xspread(screw_spacing)
 						yspread(screw_spacing)
@@ -145,6 +164,15 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=DOWN)
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 24mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
+// Extra Anchors:
+//   "shaft-top" = The top of the shaft.
+//   "shaft-middle" = The middle of the shaft.
+//   "shaft-bottom" = The bottom of the shaft, 0.1mm above the plinth.
+//   "plinth-top" = The top of the plinth.
+//   "screw1" = The screw-hole in the X+Y+ quadrant.
+//   "screw2" = The screw-hole in the X-Y+ quadrant.
+//   "screw3" = The screw-hole in the X-Y- quadrant.
+//   "screw4" = The screw-hole in the X+Y- quadrant.
 // Example:
 //   nema14_stepper();
 module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, anchor=DOWN)
@@ -157,11 +185,21 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, anchor=DOWN)
 	screw_size = nema_motor_screw_size(size);
 	screw_depth = nema_motor_screw_depth(size);
 
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, orig_anchor=DOWN, chain=true) {
+	anchors = [
+		anchorpt("shaft-top", [0,0,h/2+shaft_len]),
+		anchorpt("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
+		anchorpt("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
+		anchorpt("plinth-top", [0,0,h/2+plinth_height]),
+		anchorpt("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
+		anchorpt("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
+		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
+		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
+	];
+	orient_and_anchor([motor_width, motor_width, h], orient, anchor, anchors=anchors, orig_anchor=TOP, chain=true) {
 		union() {
 			difference() {
 				color([0.4, 0.4, 0.4])
-					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=DOWN);
+					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=TOP);
 				color("silver")
 					xspread(screw_spacing)
 						yspread(screw_spacing)
@@ -173,7 +211,7 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, anchor=DOWN)
 					cyl(h=plinth_height*3, d=shaft+0.75);
 				}
 			}
-			color("silver") cyl(h=shaft_len, d=shaft, anchor=UP, $fn=max(12,segs(shaft/2)));
+			color("silver") cylinder(h=shaft_len, d=shaft, $fn=max(12,segs(shaft/2)));
 		}
 		children();
 	}
@@ -189,9 +227,18 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, anchor=DOWN)
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 20mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
+// Extra Anchors:
+//   "shaft-top" = The top of the shaft.
+//   "shaft-middle" = The middle of the shaft.
+//   "shaft-bottom" = The bottom of the shaft, 0.1mm above the plinth.
+//   "plinth-top" = The top of the plinth.
+//   "screw1" = The screw-hole in the X+Y+ quadrant.
+//   "screw2" = The screw-hole in the X-Y+ quadrant.
+//   "screw3" = The screw-hole in the X-Y- quadrant.
+//   "screw4" = The screw-hole in the X+Y- quadrant.
 // Example:
 //   nema17_stepper();
-module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=DOWN)
+module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=TOP)
 {
 	size = 17;
 	motor_width = nema_motor_width(size);
@@ -201,11 +248,21 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=DOWN)
 	screw_size = nema_motor_screw_size(size);
 	screw_depth = nema_motor_screw_depth(size);
 
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, orig_anchor=DOWN, chain=true) {
+	anchors = [
+		anchorpt("shaft-top", [0,0,h/2+shaft_len]),
+		anchorpt("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
+		anchorpt("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
+		anchorpt("plinth-top", [0,0,h/2+plinth_height]),
+		anchorpt("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
+		anchorpt("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
+		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
+		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
+	];
+	orient_and_anchor([motor_width, motor_width, h], orient, anchor, anchors=anchors, orig_anchor=UP, chain=true) {
 		union() {
 			difference() {
 				color([0.4, 0.4, 0.4])
-					cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=DOWN);
+					cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=TOP);
 				color("silver")
 					xspread(screw_spacing)
 						yspread(screw_spacing)
@@ -252,9 +309,18 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=DOWN)
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 25mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
+// Extra Anchors:
+//   "shaft-top" = The top of the shaft.
+//   "shaft-middle" = The middle of the shaft.
+//   "shaft-bottom" = The bottom of the shaft, 0.1mm above the plinth.
+//   "plinth-top" = The top of the plinth.
+//   "screw1" = The screw-hole in the X+Y+ quadrant.
+//   "screw2" = The screw-hole in the X-Y+ quadrant.
+//   "screw3" = The screw-hole in the X-Y- quadrant.
+//   "screw4" = The screw-hole in the X+Y- quadrant.
 // Example:
 //   nema23_stepper();
-module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, anchor=DOWN)
+module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, anchor=TOP)
 {
 	size = 23;
 	motor_width = nema_motor_width(size);
@@ -265,11 +331,21 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, anchor=DO
 	screw_depth = nema_motor_screw_depth(size);
 
 	screw_inset = motor_width - screw_spacing + 1;
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, orig_anchor=DOWN, chain=true) {
+	anchors = [
+		anchorpt("shaft-top", [0,0,h/2+shaft_len]),
+		anchorpt("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
+		anchorpt("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
+		anchorpt("plinth-top", [0,0,h/2+plinth_height]),
+		anchorpt("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
+		anchorpt("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
+		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
+		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
+	];
+	orient_and_anchor([motor_width, motor_width, h], orient, anchor, anchors=anchors, orig_anchor=TOP, chain=true) {
 		difference() {
 			union() {
 				color([0.4, 0.4, 0.4])
-					cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=DOWN);
+					cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=TOP);
 				color([0.4, 0.4, 0.4])
 					cylinder(h=plinth_height, d=plinth_diam);
 				color("silver")
@@ -279,7 +355,7 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, anchor=DO
 				xspread(screw_spacing) {
 					yspread(screw_spacing) {
 						cyl(d=screw_size, h=screw_depth*3, $fn=max(12,segs(screw_size/2)));
-						down(screw_depth) cuboid([screw_inset, screw_inset, h], anchor=DOWN);
+						down(screw_depth) cuboid([screw_inset, screw_inset, h], anchor=TOP);
 					}
 				}
 			}
@@ -298,9 +374,18 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, anchor=DO
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 32mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
+// Extra Anchors:
+//   "shaft-top" = The top of the shaft.
+//   "shaft-middle" = The middle of the shaft.
+//   "shaft-bottom" = The bottom of the shaft, 0.1mm above the plinth.
+//   "plinth-top" = The top of the plinth.
+//   "screw1" = The screw-hole in the X+Y+ quadrant.
+//   "screw2" = The screw-hole in the X-Y+ quadrant.
+//   "screw3" = The screw-hole in the X-Y- quadrant.
+//   "screw4" = The screw-hole in the X+Y- quadrant.
 // Example:
 //   nema34_stepper();
-module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, anchor=DOWN)
+module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, anchor=TOP)
 {
 	size = 34;
 	motor_width = nema_motor_width(size);
@@ -311,11 +396,21 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, anchor=DO
 	screw_depth = nema_motor_screw_depth(size);
 
 	screw_inset = motor_width - screw_spacing + 1;
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, orig_anchor=DOWN, chain=true) {
+	anchors = [
+		anchorpt("shaft-top", [0,0,h/2+shaft_len]),
+		anchorpt("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
+		anchorpt("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
+		anchorpt("plinth-top", [0,0,h/2+plinth_height]),
+		anchorpt("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
+		anchorpt("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
+		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
+		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
+	];
+	orient_and_anchor([motor_width, motor_width, h], orient, anchor, anchors=anchors, orig_anchor=TOP, chain=true) {
 		difference() {
 			union() {
 				color([0.4, 0.4, 0.4])
-					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=DOWN);
+					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=TOP);
 				color([0.4, 0.4, 0.4])
 					cylinder(h=plinth_height, d=plinth_diam);
 				color("silver")
@@ -325,7 +420,7 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, anchor=DO
 				xspread(screw_spacing) {
 					yspread(screw_spacing) {
 						cylinder(d=screw_size, h=screw_depth*3, center=true, $fn=max(12,segs(screw_size/2)));
-						down(screw_depth) downcube([screw_inset, screw_inset, h]);
+						down(screw_depth) cube([screw_inset, screw_inset, h], anchor=TOP);
 					}
 				}
 			}
@@ -349,6 +444,11 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, anchor=DO
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Extra Anchors:
+//   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
+//   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
+//   "screw3" = The center top of the screw hole/slot in the X-Y- quadrant.
+//   "screw4" = The center top of the screw hole/slot in the X+Y- quadrant.
 // Example:
 //   nema_mount_holes(size=14, depth=5, l=5);
 // Example:
@@ -362,27 +462,35 @@ module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_
 	screw_spacing = nema_motor_screw_spacing(size);
 	screw_size = nema_motor_screw_size(size)+slop;
 
-	orient_and_anchor([motor_width, motor_width, l], orient, anchor, chain=true) {
+	anchors = [
+		anchorpt("screw1", [+screw_spacing/2, +screw_spacing/2, depth/2]),
+		anchorpt("screw2", [-screw_spacing/2, +screw_spacing/2, depth/2]),
+		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, depth/2]),
+		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, depth/2]),
+	];
+	screwfn = quantup(max(8,segs(screw_size/2)),4);
+	plinthfn = quantup(max(8,segs(plinth_diam/2)),4);
+	orient_and_anchor([screw_spacing+screw_size, screw_spacing+screw_size+l, depth], orient, anchor, chain=true) {
 		union() {
 			xspread(screw_spacing) {
 				yspread(screw_spacing) {
 					if (l>0) {
 						union() {
-							yspread(l) cyl(h=depth, d=screw_size, $fn=max(8,segs(screw_size/2)));
+							yspread(l) cyl(h=depth, d=screw_size, $fn=screwfn);
 							cube([screw_size, l, depth], center=true);
 						}
 					} else {
-						cyl(h=depth, d=screw_size, $fn=max(8,segs(screw_size/2)));
+						cyl(h=depth, d=screw_size, $fn=screwfn);
 					}
 				}
 			}
 			if (l>0) {
 				union () {
-					yspread(l) cyl(h=depth, d=plinth_diam);
+					yspread(l) cyl(h=depth, d=plinth_diam, $fn=plinthfn);
 					cube([plinth_diam, l, depth], center=true);
 				}
 			} else {
-				cyl(h=depth, d=plinth_diam);
+				cyl(h=depth, d=plinth_diam, $fn=plinthfn);
 			}
 		}
 		children();
@@ -399,6 +507,11 @@ module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Extra Anchors:
+//   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
+//   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
+//   "screw3" = The center top of the screw hole/slot in the X-Y- quadrant.
+//   "screw4" = The center top of the screw hole/slot in the X+Y- quadrant.
 // Example:
 //   nema11_mount_holes(depth=5, l=5);
 // Example:
@@ -418,6 +531,11 @@ module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anch
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Extra Anchors:
+//   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
+//   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
+//   "screw3" = The center top of the screw hole/slot in the X-Y- quadrant.
+//   "screw4" = The center top of the screw hole/slot in the X+Y- quadrant.
 // Example:
 //   nema14_mount_holes(depth=5, l=5);
 // Example:
@@ -437,6 +555,11 @@ module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anch
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Extra Anchors:
+//   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
+//   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
+//   "screw3" = The center top of the screw hole/slot in the X-Y- quadrant.
+//   "screw4" = The center top of the screw hole/slot in the X+Y- quadrant.
 // Example:
 //   nema17_mount_holes(depth=5, l=5);
 // Example:
@@ -456,6 +579,11 @@ module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anch
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Extra Anchors:
+//   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
+//   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
+//   "screw3" = The center top of the screw hole/slot in the X-Y- quadrant.
+//   "screw4" = The center top of the screw hole/slot in the X+Y- quadrant.
 // Example:
 //   nema23_mount_holes(depth=5, l=5);
 // Example:
@@ -475,6 +603,11 @@ module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anch
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Extra Anchors:
+//   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
+//   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
+//   "screw3" = The center top of the screw hole/slot in the X-Y- quadrant.
+//   "screw4" = The center top of the screw hole/slot in the X+Y- quadrant.
 // Example:
 //   nema34_mount_holes(depth=5, l=5);
 // Example:
@@ -494,6 +627,11 @@ module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anch
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
+// Extra Anchors:
+//   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
+//   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
+//   "screw3" = The center top of the screw hole/slot in the X-Y- quadrant.
+//   "screw4" = The center top of the screw hole/slot in the X+Y- quadrant.
 // Example:
 //   nema34_mount_holes(depth=5, l=5);
 // Example:
