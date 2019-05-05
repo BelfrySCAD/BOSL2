@@ -114,8 +114,8 @@ function _unique_groups(m) = [
 //   or = outer radius.   Polyhedron is scaled so it has the specified outer radius.  Overrides side.
 //   r = outer radius.  Overrides or.
 //   d = outer diameter.  Overrides or.
-//   align = Side of the origin to align to.  The bounding box of the polyhedron is aligned as specified.  Use `V_` constants from `constants.scad`.  Default: `V_CENTER`
-//   center = If given, overrides `align`.  A true value sets `align=V_CENTER`, false sets `align=V_UP+V_BACK+V_RIGHT`.
+//   anchor = Side of the origin to anchor to.  The bounding box of the polyhedron is aligned as specified.  Use directional constants from `constants.scad`.  Default: `CENTER`
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP+BACK+RIGHT`.
 //   facedown = If false display the solid in native orientation.  If true orient it with a largest face down.  If set to a vertex count, orient it so a face with the specified number of vertices is down.  Default: true.
 //   rounding = Specify a rounding radius for the shape.  Note that depending on $fn the dimensions of the shape may have small dimensional errors.
 //   repeat = If true then repeat the children to fill all the faces.  If false use only the available children and stop.  Default: true.
@@ -131,7 +131,7 @@ function _unique_groups(m) = [
 //   `$center` - polyhedron center in the child coordinate system
 //
 // Examples: All of the available polyhedra by name in their native orientation
-//   regular_polyhedron("tetrahedron", facedown=false); facedown=false);
+//   regular_polyhedron("tetrahedron", facedown=false);
 //   regular_polyhedron("cube", facedown=false);
 //   regular_polyhedron("octahedron", facedown=false);
 //   regular_polyhedron("dodecahedron", facedown=false);
@@ -204,9 +204,9 @@ function _unique_groups(m) = [
 //         text(str($faceindex),halign="center",valign="center");
 //   }
 // Example: With `rotate_children` you can control direction of the children.
-//   right(3)regular_polyhedron( name="tetrahedron", align=V_UP,rotate_children=false)
+//   right(3)regular_polyhedron( name="tetrahedron", anchor=UP,rotate_children=false)
 //     cylinder(r=.1, h=.5);
-//   regular_polyhedron( name="tetrahedron", align=V_UP,rotate_children=true)
+//   regular_polyhedron( name="tetrahedron", anchor=UP,rotate_children=true)
 //     cylinder(r=.1, h=.5);
 // Example: Using `$face` you can have full control of the construction of your children.  This example constructs the Great Icosahedron.
 //   module makestar(pts) {    // Make a star from a point list
@@ -269,7 +269,7 @@ module regular_polyhedron(
 	or=undef,
 	r=undef,
 	d=undef,
-	align=[0,0,0],
+	anchor=[0,0,0],
 	center=undef,
 	rounding=0,
 	repeat=true,
@@ -287,7 +287,7 @@ module regular_polyhedron(
 		hasfaces=hasfaces, side=side,
 		ir=ir, mr=mr, or=or,
 		r=r, d=d,
-		align=align, center=center,
+		anchor=anchor, center=center,
 		facedown=facedown,
 		stellate=stellate,
 		longside=longside, h=h
@@ -547,11 +547,11 @@ function regular_polyhedron_info(
 	hasfaces=undef, side=1,
 	ir=undef, mr=undef, or=undef,
 	r=undef, d=undef,
-	align=[0,0,0], center=undef,
+	anchor=[0,0,0], center=undef,
 	facedown=true, stellate=false,
 	longside=undef, h=undef  // special parameters for trapezohedron
 ) = let(
-		align = !is_undef(center) ? [0,0,0] : align,
+		anchor = !is_undef(center) ? [0,0,0] : anchor,
 		argcount = len(remove_undefs([ir,mr,or,r,d]))
 	)
 	assert(argcount<=1, "You must specify only one of 'ir', 'mr', 'or', 'r', and 'd'")
@@ -640,7 +640,7 @@ function regular_polyhedron_info(
 		scaled_points = scalefactor * rotate_points3d(faces_normals_vertices[2], from=down_direction, to=[0,0,-1]),
 		bounds = pointlist_bounds(scaled_points),
 		boundtable = [bounds[0], [0,0,0], bounds[1]],
-		translation = [for(i=[0:2]) -boundtable[1-align[i]][i]],
+		translation = [for(i=[0:2]) -boundtable[1+anchor[i]][i]],
 		face_normals = rotate_points3d(faces_normals_vertices[1], from=down_direction, to=[0,0,-1]),
 		side_length = scalefactor * entry[edgelen]
 	)
