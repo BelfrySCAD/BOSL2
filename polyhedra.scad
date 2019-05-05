@@ -11,7 +11,13 @@
 
 include <BOSL2/hull.scad>
 
+
+// CommonCode:
+//   $fn=96;
+
+
 // Section: Polyhedra
+
 
 // Groups entries in "arr" into groups of equal values and returns index lists of those groups
 
