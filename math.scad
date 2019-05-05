@@ -65,7 +65,7 @@ function constrain(v, minval, maxval) = min(maxval, max(minval, v));
 //   a = First value.
 //   b = Second value.
 //   eps = The maximum allowed difference between `a` and `b` that will return true.
-function approx(a,b,eps=EPSILON) = let(c=a-b) (is_num(c)? c : norm(c)) <= eps;
+function approx(a,b,eps=EPSILON) = let(c=a-b) (is_num(c)? abs(c) : norm(c)) <= eps;
 
 
 // Function: min_index()
