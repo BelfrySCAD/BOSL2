@@ -61,6 +61,20 @@ module test_constrain() {
 test_constrain();
 
 
+module test_approx() {
+	assert(approx(PI, 3.141592653589793236) == true);
+	assert(approx(PI, 3.1415926) == false);
+	assert(approx(PI, 3.1415926, eps=1e-6) == true);
+	assert(approx(-PI, -3.141592653589793236) == true);
+	assert(approx(-PI, -3.1415926) == false);
+	assert(approx(-PI, -3.1415926, eps=1e-6) == true);
+	assert(approx(1/3, 0.3333333333) == true);
+	assert(approx(-1/3, -0.3333333333) == true);
+	assert(approx(10*[cos(30),sin(30)], 10*[sqrt(3)/2, 1/2]) == true);
+}
+test_approx();
+
+
 module test_min_index() {
 	vals = rands(-100,100,100);
 	minval = min(vals);
@@ -113,6 +127,17 @@ module test_modrange() {
 	assert(modrange(5,12,10,step=2) == [5,7,9,1]);
 }
 test_modrange();
+
+
+module test_sqr() {
+	assert(sqr(-3) == 9);
+	assert(sqr(0) == 0);
+	assert(sqr(1) == 1);
+	assert(sqr(2) == 4);
+	assert(sqr(3) == 9);
+	assert(sqr(16) == 256);
+}
+test_sqr();
 
 
 // TODO: Tests for gaussian_rand()
