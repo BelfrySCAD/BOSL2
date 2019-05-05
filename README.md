@@ -1,14 +1,25 @@
 # BOSL2
 
-[![Join the chat at https://gitter.im/revarbat/BOSL2](https://badges.gitter.im/revarbat/BOSL2.svg)](https://gitter.im/revarbat/BOSL2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+**The Belfry OpenScad Library, v2**     [![Join the chat at https://gitter.im/revarbat/BOSL2](https://badges.gitter.im/revarbat/BOSL2.svg)](https://gitter.im/revarbat/BOSL2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [**BOSL2 Docs**](https://github.com/revarbat/BOSL2/wiki)
 
-The Belfry OpenScad Library, v2 - A library of tools, shapes, and helpers to make OpenScad easier to use.
+A library for OpenSCAD, filled with useful tools, shapes, masks, math and manipulators, designed to make OpenSCAD easier to use.
 
-This library is a set of useful tools, shapes and manipulators that I developed while working on various
-projects, including large ones like the Snappy-Reprap printed 3D printer.
+- **NOTE:** BOSL2 IS PRE-ALPHA CODE.  THE CODE IS STILL BEING REORGANIZED.​
+- **NOTE2:** CODE WRITTEN FOR BOSLv1 PROBABLY WON'T WORK WITH BOSL2!
 
+## Installation
+
+1. Download the .zip or .tar.gz release file for this library.
+2. Unpack it. It should create a `BOSL-v2.0` directory with the library files within it.
+3. Rename the directory to `BOSL2`.
+4. Move the `BOSL2` directory into the apropriate OpenSCAD library directory for your platform:
+    - Windows: `My Documents\OpenSCAD\libraries\`
+    - Linux: `$HOME/.local/share/OpenSCAD/libraries/`
+    - Mac OS X: `$HOME/Documents/OpenSCAD/libraries/`
+5. Restart OpenSCAD.
 
 ## Terminology
+
 For purposes of the BOSL2 library, the following terms apply:
 - **Left**: Towards X-
 - **Right**: Towards X+
@@ -17,8 +28,6 @@ For purposes of the BOSL2 library, the following terms apply:
 - **Bottom**/**Down**/**Below**: Towards Z-
 - **Top**/**Up**/**Above**: Towards Z+
 
-- **Axis-Positive**: Towards the positive end of the axis the object is oriented on.  IE: X+, Y+, or Z+.
-- **Axis-Negative**: Towards the negative end of the axis the object is oriented on.  IE: X-, Y-, or Z-.
 
 ## Common Arguments:
 
