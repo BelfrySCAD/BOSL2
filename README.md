@@ -2,12 +2,12 @@
 
 **The Belfry OpenScad Library, v2**
 
-[![Join the chat at https://gitter.im/revarbat/BOSL2](https://badges.gitter.im/revarbat/BOSL2.svg)](https://gitter.im/revarbat/BOSL2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [**BOSL2 Docs**](https://github.com/revarbat/BOSL2/wiki)
-
 A library for OpenSCAD, filled with useful tools, shapes, masks, math and manipulators, designed to make OpenSCAD easier to use.
 
 - **NOTE:** BOSL2 IS PRE-ALPHA CODE.  THE CODE IS STILL BEING REORGANIZED.​
 - **NOTE2:** CODE WRITTEN FOR BOSLv1 PROBABLY WON'T WORK WITH BOSL2!
+
+[![Join the chat at https://gitter.im/revarbat/BOSL2](https://badges.gitter.im/revarbat/BOSL2.svg)](https://gitter.im/revarbat/BOSL2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [**BOSL2 Docs**](https://github.com/revarbat/BOSL2/wiki)
 
 ## Installation
 
