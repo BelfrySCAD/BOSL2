@@ -1,4 +1,7 @@
 # BOSL2
+
+[![Join the chat at https://gitter.im/revarbat/BOSL2](https://badges.gitter.im/revarbat/BOSL2.svg)](https://gitter.im/revarbat/BOSL2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 The Belfry OpenScad Library, v2 - A library of tools, shapes, and helpers to make OpenScad easier to use.
 
 This library is a set of useful tools, shapes and manipulators that I developed while working on various
