@@ -49,6 +49,39 @@ function vabs(v) = [for (x=v) abs(x)];
 function normalize(v) = v/norm(v);
 
 
+// Function: vquant()
+// Usage:
+//   vquant(v,m)
+// Description:
+//   Quantizes each scalar in the vector `v` to an integer multiple of `m`, rounding to the nearest multiple.
+// Arguments:
+//   v = The vector to quantize.
+//   m = The multiple to quantize to.
+function vquant(v,m) = [for (x=v) quant(x,m)];
+
+
+// Function: vquantdn()
+// Usage:
+//   vquantdn(v,m)
+// Description:
+//   Quantizes each scalar in the vector `v` to an integer multiple of `m`, rounding down to the nearest multiple.
+// Arguments:
+//   v = The vector to quantize.
+//   m = The multiple to quantize to.
+function vquantdn(v,m) = [for (x=v) quantdn(x,m)];
+
+
+// Function: vquantup()
+// Usage:
+//   vquantup(v,m)
+// Description:
+//   Quantizes each scalar in the vector `v` to an integer multiple of `m`, rounding up to the nearest multiple.
+// Arguments:
+//   v = The vector to quantize.
+//   m = The multiple to quantize to.
+function vquantup(v,m) = [for (x=v) quantup(x,m)];
+
+
 // Function: vector_angle()
 // Usage:
 //   vector_angle(v1,v2);
