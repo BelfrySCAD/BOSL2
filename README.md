@@ -77,6 +77,7 @@ The library files are as follows:
   - [`phillips_drive.scad`](https://github.com/revarbat/BOSL2/wiki/phillips_drive.scad): Modules to create Phillips screwdriver tips.
   - [`torx_drive.scad`](https://github.com/revarbat/BOSL2/wiki/torx_drive.scad): Functions and Modules to create Torx bit drive holes.
   - [`wiring.scad`](https://github.com/revarbat/BOSL2/wiki/wiring.scad): Modules to render routed bundles of wires.
+  - [`polyhedra.scad`](https://github.com/revarbat/BOSL2/wiki/polyhedra.scad): Modules to create various regular and stellated polyhedra.
 
 ### Various Math
   - [`constants.scad`](https://github.com/revarbat/BOSL2/wiki/constants.scad): Useful constants for vectors, edges, etc.
