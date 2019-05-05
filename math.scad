@@ -56,6 +56,18 @@ function quantup(x,y) = ceil(x/y)*y;
 function constrain(v, minval, maxval) = min(maxval, max(minval, v));
 
 
+// Function: approx()
+// Usage:
+//   approx(a,b,[eps])
+// Description:
+//   Compares two numbers or vectors, and returns true if they are closer than `eps` to each other.
+// Arguments:
+//   a = First value.
+//   b = Second value.
+//   eps = The maximum allowed difference between `a` and `b` that will return true.
+function approx(a,b,eps=EPSILON) = let(c=a-b) (is_num(c)? c : norm(c)) <= eps;
+
+
 // Function: min_index()
 // Usage:
 //   min_index(vals);
@@ -119,6 +131,16 @@ function modrange(x, y, m, step=1) =
 		b = posmod(y, m),
 		c = step>0? (a>b? b+m : b) : (a<b? b-m : b)
 	) [for (i=[a:step:c]) (i%m+m)%m];
+
+
+// Function: sqr()
+// Usage:
+//   sqr(x);
+// Description: Returns the square of the given number.
+// Examples:
+//   sqr(3);   // Returns: 9
+//   sqr(-4);  // Returns: 16
+function sqr(x) = x*x;
 
 
 // Function: gaussian_rand()
