@@ -174,7 +174,7 @@ function _unique_groups(m) = [
 //     regular_polyhedron(hasfaces=[8,10], index=i, mr=1);
 // Example: Solids that include a quadrilateral face
 //   N = len(regular_polyhedron_info("index set", hasfaces=4));
-//   for(i=[0:MM-1]) right(3*i)
+//   for(i=[0:N-1]) right(3*i)
 //     regular_polyhedron(hasfaces=4, index=i, mr=1);
 // Example: Solids with only quadrilateral faces
 //   N = len(regular_polyhedron_info("index set", facetype=4));
