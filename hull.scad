@@ -18,10 +18,13 @@
 // Usage:
 //   hull(points);
 // Description:
-//   Takes a list of 2D or 3D points (but not both in the same list) and
-//   returns either the list of indexes into `points` that forms the 2D
-//   convex hull perimeter path, or the list of faces that form the 3d
-//   convex hull surface.  Each face is a list of indexes into `points`.
+//   Takes a list of 2D or 3D points (but not both in the same list) and returns either the list of
+//   indexes into `points` that forms the 2D convex hull perimeter path, or the list of faces that
+//   form the 3d convex hull surface.  Each face is a list of indexes into `points`.  If the input
+//   points are co-linear, the result will be the indexes of the two extrema points.  If the input
+//   points are co-planar, the results will be a simple list of vertex indices that will form a planar
+//   perimeter.  Otherwise a list of faces will be returned, where each face is a simple list of
+//   vertex indices for the perimeter of the face.
 // Arguments:
 //   points = The set of 2D or 3D points to find the hull of.
 function hull(points) = let(two_d = len(points[0]) == 2) two_d? hull2d_path(points) : hull3d_faces(points);
@@ -31,11 +34,10 @@ function hull(points) = let(two_d = len(points[0]) == 2) two_d? hull2d_path(poin
 // Usage:
 //   hull_points(points, [fast]);
 // Description:
-//   If given a list of 2D points, creates a 2D convex hull polygon
-//   that encloses all those points.  If given a list of 3D points,
-//   creates a 3D polyhedron that encloses all the points.  This should
-//   handle about 4000 points in slow mode.  If `fast` is set to true,
-//   this should be able to handle far more.
+//   If given a list of 2D points, creates a 2D convex hull polygon that encloses all those points.
+//   If given a list of 3D points, creates a 3D polyhedron that encloses all the points.  This should
+//   handle about 4000 points in slow mode.  If `fast` is set to true, this should be able to handle
+//   far more.
 // Arguments:
 //   points = The list of points to form a hull around.
 //   fast = If true, uses a faster cheat that may handle more points, but also may emit warnings that can stop your script if you have "Halt on first warning" enabled.  Default: false
@@ -76,9 +78,8 @@ module hull_points(points, fast=false) {
 // Usage:
 //   hull2d_path(points)
 // Description:
-//   Takes a list of arbitrary 2D points, and finds the minimal convex
-//   hull polygon to enclose them.  Returns a path as a list of indices
-//   into `points`.
+//   Takes a list of arbitrary 2D points, and finds the minimal convex hull polygon to enclose them.
+//   Returns a path as a list of indices into `points`.
 // Example(2D):
 //   pts = [[-10,-10], [0,10], [10,10], [12,-10]];
 //   path = hull2d_path(pts);
@@ -153,11 +154,10 @@ function _remove_conflicts_and_insert_point(polygon, conflicts, point) =
 // Usage:
 //   hull3d_faces(points)
 // Description:
-//   Takes a list of arbitrary 3D points, and finds the minimal convex
-//   hull polyhedron to enclose them.  Returns a list of faces, where
-//   each face is a list of indexes into the given `points` list.
-//   If all points passed to it are coplanar, then the return is the
-//   list of indices of points forming the minimal convex hull polygon.
+//   Takes a list of arbitrary 3D points, and finds the minimal convex hull polyhedron to enclose
+//   them.  Returns a list of faces, where each face is a list of indexes into the given `points`
+//   list.  If all points passed to it are coplanar, then the return is the list of indices of points
+//   forming the minimal convex hull polygon.
 // Example(3D):
 //   pts = [[-20,-20,0], [20,-20,0], [0,20,5], [0,0,20]];
 //   faces = hull3d_faces(pts);
