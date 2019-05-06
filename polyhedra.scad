@@ -43,69 +43,83 @@ function _unique_groups(m) = [
 // Description:
 //   Creates a regular polyhedron with optional rounding.  Children are placed on the polyhedron's faces.
 //   
-//   **Selecting the polyhedron:**  You constrain the polyhedra list by specifying different characteristics, that
-//   must all be met
-//       * name: e.g. "dodecahedron" or "pentagonal icositetrahedron"
-//       * type: options are "platonic", "archimedean" and "catalan"
-//       * faces: a required number of faces
-//       * facetype: required face type.  List of vertex counts for the faces.  Exactly the list types of
-//           faces listed must appear.
-//           * facetype = 3      // polyhedron will all triangular faces
-//           * facetype = [5,6]  // polyhedron with only pentagons and hexagons (must have both!)
-//       * hasfaces: list of vertex counts for faces; at least one listed type must appear
-//           * hasfaces = 3      // polygon has at least one triangular face
-//           * hasfaces = [5,6]  // polygon has a hexagonal or a pentagonal face
-//   The result is a list of selected polyhedra.    You then specify index to choose which one of the
-//   remaining polyhedra you want.  If you don't give index the first one on the list is created.    Two examples:
-//       * faces=12, index=2:  Creates the 3rd solid with 12 faces
-//       * type="archimedean", faces=14: Creates the first archimedean solid with 14 faces (there are 3)
+//   **Selecting the polyhedron:**
+//   You constrain the polyhedra list by specifying different characteristics, that must all be met
+//   * `name`: e.g. `"dodecahedron"` or `"pentagonal icositetrahedron"`
+//   * `type`: Options are `"platonic"`, `"archimedean"` and `"catalan"`
+//   * `faces`: The required number of faces
+//   * `facetype`: The required face type(s).  List of vertex counts for the faces.  Exactly the listed types of faces must appear:
+//     * `facetype = 3`: polyhedron with all triangular faces.
+//     * `facetype = [5,6]`: polyhedron with only pentagons and hexagons. (Must have both!)
+//   * hasfaces: The list of vertex counts for faces; at least one listed type must appear:
+//     * `hasfaces = 3`: polygon has at least one triangular face
+//     * `hasfaces = [5,6]`: polygon has a hexagonal or a pentagonal face
+//   
+//   The result is a list of selected polyhedra.  You then specify `index` to choose which one of the
+//   remaining polyhedra you want.  If you don't give `index` the first one on the list is created.
+//   Two examples:
+//   * `faces=12, index=2`:  Creates the 3rd solid with 12 faces
+//   * `type="archimedean", faces=14`: Creates the first archimedean solid with 14 faces (there are 3)
 //   
 //   **Choosing the size of your polyhedron:**
-//   The default is to create a polyhedron whose smallest edge has length 1.
-//   You can specify the smallest edge length with the size option
-//   Alternatively you can specify the size of the inscribed sphere, midscribed sphere, or circumscribed sphere
-//   using ir, mr and cr respectively.  If you specify cr=3 then the outermost points of the polyhedron will
-//   be 3 units from the center.  If you specify ir=3 then the innermost faces of the polyhedron will be 3 units from the center.
-//   For the platonic solids every face meets the inscribed sphere and every corner touches the circumscribed sphere.  For the
-//   Archimedean solids the inscribed sphere will touch only some of the faces and for the Catalan solids the circumscribed sphere
-//   meets only some of the corners.
+//   The default is to create a polyhedron whose smallest edge has length 1.  You can specify the
+//   smallest edge length with the size option.  Alternatively you can specify the size of the
+//   inscribed sphere, midscribed sphere, or circumscribed sphere using `ir`, `mr` and `cr` respectively.
+//   If you specify `cr=3` then the outermost points of the polyhedron will be 3 units from the center.
+//   If you specify `ir=3` then the innermost faces of the polyhedron will be 3 units from the center.
+//   For the platonic solids every face meets the inscribed sphere and every corner touches the
+//   circumscribed sphere.  For the Archimedean solids the inscribed sphere will touch only some of
+//   the faces and for the Catalan solids the circumscribed sphere meets only some of the corners.
 //   
-//   **Orientation:**  Orientation is controled by the facedown parameter.  Set this to false to get the
-//   canonical orientation.  Set it to true to get the largest face oriented down.  If you set it to a number
-//   the module searches for a face with the specified number of vertices and orients that face down.
+//   **Orientation:**
+//   Orientation is controled by the facedown parameter.  Set this to false to get the canonical orientation.
+//   Set it to true to get the largest face oriented down.  If you set it to a number the module searches for
+//   a face with the specified number of vertices and orients that face down.
 //   
-//   **Rounding:**  If you specify the rounding parameter the module makes a rounded polyhedron by first creating an
-//   undersized model and then expanding it with minkowski().  This only produces the correct result if the in-sphere contacts
-//   all of the faces of the polyhedron, which is true for the platonic, the catalan solids and the trapezohedra but false
-//   for the archimedean solids.
+//   **Rounding:**
+//   If you specify the rounding parameter the module makes a rounded polyhedron by first creating an
+//   undersized model and then expanding it with `minkowski()`.  This only produces the correct result
+//   if the in-sphere contacts all of the faces of the polyhedron, which is true for the platonic, the
+//   catalan solids and the trapezohedra but false for the archimedean solids.
 //   
-//   **Children:**  The module places children on the faces of the polyhedron.  The child coordinate system is positioned
-//   so that the origin is the center of the face.  If rotate_children is true (the default) then the coordinate system
-//   is oriented so the z axis is normal to the face, which lies in the xy plane.
-//   If you give repeat=true (default) the children are cycled through to cover all faces.  With repeat=false each child is used once.
-//   You can specify draw=false to suppress drawing of the polyhedron, e.g. to use for difference() operations.  The module
-//   sets various parameters you can use in your children (see the side effects list below).
+//   **Children:**
+//   The module places children on the faces of the polyhedron.  The child coordinate system is
+//   positioned so that the origin is the center of the face.  If `rotate_children` is true (default)
+//   then the coordinate system is oriented so the z axis is normal to the face, which lies in the xy
+//   plane.  If you give `repeat=true` (default) the children are cycled through to cover all faces.
+//   With `repeat=false` each child is used once.  You can specify `draw=false` to suppress drawing of
+//   the polyhedron, e.g. to use for `difference()` operations.  The module sets various parameters
+//   you can use in your children (see the side effects list below).
 //   
-//   **Stellation:** Technically stellation is an operation of shifting the polyhedron's faces to produce a new shape that may have
-//   self-intersecting faces.  OpenSCAD cannot handle self-intersecting faces, so we instead erect a pyramid on each face, a process
-//   technically referred to as augmentation.  The height of the pyramid is given by the `stellate` argument.  If `stellate` is
-//   false or zero then no stellation is performed.  Otherwise stellate gives the pyramid height as a multiple of the edge length.
-//   A negative pyramid height can be used to perform excavation, where a pyramid is removed from each face.
+//   **Stellation:**
+//   Technically stellation is an operation of shifting the polyhedron's faces to produce a new shape
+//   that may have self-intersecting faces.  OpenSCAD cannot handle self-intersecting faces, so we
+//   instead erect a pyramid on each face, a process technically referred to as augmentation.  The
+//   height of the pyramid is given by the `stellate` argument.  If `stellate` is `false` or `0` then
+//   no stellation is performed.  Otherwise stellate gives the pyramid height as a multiple of the
+//   edge length.  A negative pyramid height can be used to perform excavation, where a pyramid is
+//   removed from each face.
 //   
-//   **Special Polyhedra:**  These can be selected only by name and may require different parameters, or ignore some standard parameters
-//       * trapezohedron: a family of solids with an even number of kite shaped sides.  The d10 die is a 10 face trapezohedron.  You must
-//           specify exactly two of `side`, `longside`, `h`, and `r` (or `d`).
-//               * side: length of the short side
-//               * longside: length of the long side that extends to the apex
-//               * r: radius of the polygon that defines the equatorial vertices
-//               * h: distance from the center to the apex
-//           You cannot create these shapes using mr, ir, or or.
-//       * named stellations: various polyhedra such as the Kepler-Poinsot solids are stellations with specific pyramid heights.  To make
-//           then easier to generate you can specify them by name.  This is equivalent to giving the name of the appropriate base solid and
-//           the magic stellate parameter needed to produce that shape.  The supported solids are
-//               * "great dodecahedron"
-//               * "small stellated dodecahedron"
-//               * "great stellated dodecahedron"
+//   **Special Polyhedra:**
+//   These can be selected only by name and may require different parameters, or ignore some standard
+//   parameters.
+//   * Trapezohedron: a family of solids with an even number of kite shaped sides.
+//     One example of a trapezohedron is the d10 die, which is a 10 face trapezohedron.
+//     You must specify exactly two of `side`, `longside`, `h`, and `r` (or `d`).
+//     You cannot create trapezohedron shapes using `mr`, `ir`, or `or`.
+//     * `side`: Length of the short side.
+//     * `longside`: Length of the long side that extends to the apex.
+//     * `h`: Distance from the center to the apex.
+//     * `r`: Radius of the polygon that defines the equatorial vertices.
+//     * `d`: Diameter of the polygon that defines the equatorial vertices.
+//   
+//   * Named stellations: various polyhedra such as the Kepler-Poinsot solids are stellations with
+//    specific pyramid heights.  To make them easier to generate you can specify them by name.
+//    This is equivalent to giving the name of the appropriate base solid and the magic stellate
+//    parameter needed to produce that shape.  The supported solids are:
+//     * `"great dodecahedron"`
+//     * `"small stellated dodecahedron"`
+//     * `"great stellated dodecahedron"`
 //
 // Arguments:
 //   name = Name of polyhedron to create.
@@ -132,9 +146,9 @@ function _unique_groups(m) = [
 //   h = Specify the height of the apex for a trapezohedron.  Ignored for other shapes.
 //
 // Side Effects:
-//   `$faceindex` - index number of the face
-//   `$face` - coordinates of the face (2d if rotate_children==true, 3d if not)
-//   `$center` - polyhedron center in the child coordinate system
+//   `$faceindex` - Index number of the face
+//   `$face` - Coordinates of the face (2d if rotate_children==true, 3d if not)
+//   `$center` - Polyhedron center in the child coordinate system
 //
 // Examples: All of the available polyhedra by name in their native orientation
 //   regular_polyhedron("tetrahedron", facedown=false);
@@ -640,8 +654,7 @@ function regular_polyhedron_info(
 		faces = faces_normals_vertices[0],
 		faces_vertex_count = [for(face=faces) len(face)],
 		facedown = facedown == true ? entry[facevertices][0] : facedown,
-		down_direction = facedown == false?
-			[0,0,-1] :
+		down_direction = facedown == false?  [0,0,-1] :
 			faces_normals_vertices[1][search(facedown, faces_vertex_count)[0]],
 		scaled_points = scalefactor * rotate_points3d(faces_normals_vertices[2], from=down_direction, to=[0,0,-1]),
 		bounds = pointlist_bounds(scaled_points),

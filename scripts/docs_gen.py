@@ -55,15 +55,14 @@ def get_comment_block(lines, prefix, blanks=1):
     while lines:
         if not lines[0].startswith(prefix + " "):
             break
-        line = lines.pop(0).rstrip().lstrip("/")
+        line = lines.pop(0)[len(prefix)+1:]
         if line == "":
             blankcnt += 1
             if blankcnt >= blanks:
                 break
         else:
             blankcnt = 0
-            line = line[len(prefix):]
-        out.append(line)
+        out.append(line.rstrip())
     return (lines, out)
 
 
