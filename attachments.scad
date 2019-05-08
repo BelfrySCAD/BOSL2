@@ -8,6 +8,23 @@
 //////////////////////////////////////////////////////////////////////
 
 
+// Default values for attachment code.
+$color = undef;
+$overlap = 0.01;
+$attach_to = undef;
+$attach_anchor = [CENTER, CENTER, UP, 0];
+$attach_norot = false;
+$parent_size = undef;
+$parent_size2 = undef;
+$parent_shift = [0,0];
+$parent_orient = ORIENT_Z;
+$parent_anchor = CENTER;
+$parent_anchors = [];
+$tags_shown = [];
+$tags_hidden = [];
+$tags = "";
+
+
 // Section: Functions
 
 
@@ -402,6 +419,7 @@ module intersect(a, b=undef, keep=undef)
 		hide(str(a," ",b)) children();
 	}
 }
+
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

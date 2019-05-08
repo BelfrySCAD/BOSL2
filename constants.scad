@@ -29,11 +29,11 @@ LEFT  = [-1,  0,  0];
 //   cuboid(20, anchor=RIGHT);
 RIGHT = [ 1,  0,  0];
 
-// Constant: FWD
+// Constant: FRONT
 // Description: Vector pointing forward.  [0,-1,0]
 // Example(3D): Usage with `anchor`
-//   cuboid(20, anchor=FWD);
-FWD   = [ 0, -1,  0];
+//   cuboid(20, anchor=FRONT);
+FRONT = [ 0, -1,  0];
 
 // Constant: BACK
 // Description: Vector pointing back.  [0,1,0]
@@ -41,17 +41,17 @@ FWD   = [ 0, -1,  0];
 //   cuboid(20, anchor=BACK);
 BACK  = [ 0,  1,  0];
 
-// Constant: DOWN
+// Constant: BOTTOM
 // Description: Vector pointing down.  [0,0,-1]
 // Example(3D): Usage with `anchor`
-//   cuboid(20, anchor=DOWN);
-DOWN  = [ 0,  0, -1];
+//   cuboid(20, anchor=BOTTOM);
+BOTTOM  = [ 0,  0, -1];
 
-// Constant: UP
+// Constant: TOP
 // Description: Vector pointing up.  [0,0,1]
 // Example(3D): Usage with `anchor`
-//   cuboid(20, anchor=UP);
-UP    = [ 0,  0,  1];
+//   cuboid(20, anchor=TOP);
+TOP = [ 0,  0,  1];
 
 // Constant: ALLPOS
 // Description: Vector pointing right, back, and up.  [1,1,1]
@@ -75,17 +75,12 @@ CENTER = [ 0,  0,  0];  // Centered zero vector.
 // Section: Vector Aliases
 //   Useful aliases for use with `anchor`.
 
-ABOVE  = UP;    // Vector pointing up, alias to `UP`.
-BELOW  = DOWN;  // Vector pointing down, alias to `DOWN`.
-BEFORE = FWD;   // Vector pointing forward, alias to `FWD`.
-BEHIND = BACK;  // Vector pointing back, alias to `BACK`.
-
-TOP    = UP;    // Vector pointing up, alias to `UP`.
-BOTTOM = DOWN;  // Vector pointing down, alias to `DOWN`.
-FRONT  = FWD;   // Vector pointing forward, alias to `FWD`.
-REAR   = BACK;  // Vector pointing back, alias to `BACK`.
-
-FORWARD = FWD;   // Vector pointing forward, alias to `FWD`.
+UP      = TOP;     // Vector pointing up, alias to `TOP`.
+DOWN    = BOTTOM;  // Vector pointing down, alias to `BOTTOM`.
+BTM     = BOTTOM;  // Vector pointing down, alias to `BOTTOM`.
+BOT     = BOTTOM;  // Vector pointing down, alias to `BOTTOM`.
+FWD     = FRONT;   // Vector pointing forward, alias to `FRONT`.
+FORWARD = FRONT;   // Vector pointing forward, alias to `FRONT`.
 
 
 
@@ -177,119 +172,6 @@ ORIENT_Z_270    = [  0,   0, -90];  // Orient along the Z axis, then rotate 270 
 ORIENT_XNEG_270 = [ 90,  90, -90];  // Orient reversed along the X axis, then rotate 270 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
 ORIENT_YNEG_270 = [ 90,  90,   0];  // Orient reversed along the Y axis, then rotate 270 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
 ORIENT_ZNEG_270 = [  0, 180,  90];  // Orient reversed along the Z axis, then rotate 270 degrees counter-clockwise on that axis, as seen when facing the origin from that axis orientation.
-
-
-// Section: Individual Edges
-//   Constants for specifying edges for `cuboid()`, etc.
-
-EDGE_TOP_BK = [[1,0,0,0], [0,0,0,0], [0,0,0,0]];  // Top Back edge.
-EDGE_TOP_FR = [[0,1,0,0], [0,0,0,0], [0,0,0,0]];  // Top Front edge.
-EDGE_BOT_FR = [[0,0,1,0], [0,0,0,0], [0,0,0,0]];  // Bottom Front Edge.
-EDGE_BOT_BK = [[0,0,0,1], [0,0,0,0], [0,0,0,0]];  // Bottom Back Edge.
-
-EDGE_TOP_RT = [[0,0,0,0], [1,0,0,0], [0,0,0,0]];  // Top Right edge.
-EDGE_TOP_LF = [[0,0,0,0], [0,1,0,0], [0,0,0,0]];  // Top Left edge.
-EDGE_BOT_LF = [[0,0,0,0], [0,0,1,0], [0,0,0,0]];  // Bottom Left edge.
-EDGE_BOT_RT = [[0,0,0,0], [0,0,0,1], [0,0,0,0]];  // Bottom Right edge.
-
-EDGE_BK_RT  = [[0,0,0,0], [0,0,0,0], [1,0,0,0]];  // Back Right edge.
-EDGE_BK_LF  = [[0,0,0,0], [0,0,0,0], [0,1,0,0]];  // Back Left edge.
-EDGE_FR_LF  = [[0,0,0,0], [0,0,0,0], [0,0,1,0]];  // Front Left edge.
-EDGE_FR_RT  = [[0,0,0,0], [0,0,0,0], [0,0,0,1]];  // Front Right edge.
-
-// Section: Sets of Edges
-//   Constants for specifying edges for `cuboid()`, etc.
-
-EDGES_X_TOP = [[1,1,0,0], [0,0,0,0], [0,0,0,0]];  // Both X-aligned Top edges.
-EDGES_X_BOT = [[0,0,1,1], [0,0,0,0], [0,0,0,0]];  // Both X-aligned Bottom edges.
-EDGES_X_FR  = [[0,1,1,0], [0,0,0,0], [0,0,0,0]];  // Both X-aligned Front edges.
-EDGES_X_BK  = [[1,0,0,1], [0,0,0,0], [0,0,0,0]];  // Both X-aligned Back edges.
-EDGES_X_ALL = [[1,1,1,1], [0,0,0,0], [0,0,0,0]];  // All four X-aligned edges.
-
-EDGES_Y_TOP = [[0,0,0,0], [1,1,0,0], [0,0,0,0]];  // Both Y-aligned Top edges.
-EDGES_Y_BOT = [[0,0,0,0], [0,0,1,1], [0,0,0,0]];  // Both Y-aligned Bottom edges.
-EDGES_Y_LF  = [[0,0,0,0], [0,1,1,0], [0,0,0,0]];  // Both Y-aligned Left edges.
-EDGES_Y_RT  = [[0,0,0,0], [1,0,0,1], [0,0,0,0]];  // Both Y-aligned Right edges.
-EDGES_Y_ALL = [[0,0,0,0], [1,1,1,1], [0,0,0,0]];  // All four Y-aligned edges.
-
-EDGES_Z_BK  = [[0,0,0,0], [0,0,0,0], [1,1,0,0]];  // Both Z-aligned Back edges.
-EDGES_Z_FR  = [[0,0,0,0], [0,0,0,0], [0,0,1,1]];  // Both Z-aligned Front edges.
-EDGES_Z_LF  = [[0,0,0,0], [0,0,0,0], [0,1,1,0]];  // Both Z-aligned Left edges.
-EDGES_Z_RT  = [[0,0,0,0], [0,0,0,0], [1,0,0,1]];  // Both Z-aligned Right edges.
-EDGES_Z_ALL = [[0,0,0,0], [0,0,0,0], [1,1,1,1]];  // All four Z-aligned edges.
-
-EDGES_LEFT   = [[0,0,0,0], [0,1,1,0], [0,1,1,0]];  // All four Left edges.
-EDGES_RIGHT  = [[0,0,0,0], [1,0,0,1], [1,0,0,1]];  // All four Right edges.
-EDGES_FRONT  = [[0,1,1,0], [0,0,0,0], [0,0,1,1]];  // All four Front edges.
-EDGES_BACK   = [[1,0,0,1], [0,0,0,0], [1,1,0,0]];  // All four Back edges.
-EDGES_BOTTOM = [[0,0,1,1], [0,0,1,1], [0,0,0,0]];  // All four Bottom edges.
-EDGES_TOP    = [[1,1,0,0], [1,1,0,0], [0,0,0,0]];  // All four Top edges.
-
-EDGES_NONE = [[0,0,0,0], [0,0,0,0], [0,0,0,0]];  // No edges.
-EDGES_ALL  = [[1,1,1,1], [1,1,1,1], [1,1,1,1]];  // All edges.
-
-
-// Section: Edge Helpers
-
-EDGE_OFFSETS = [   // Array of XYZ offsets to the center of each edge.
-	[[0, 1, 1], [ 0,-1, 1], [ 0,-1,-1], [0, 1,-1]],
-	[[1, 0, 1], [-1, 0, 1], [-1, 0,-1], [1, 0,-1]],
-	[[1, 1, 0], [-1, 1, 0], [-1,-1, 0], [1,-1, 0]]
-];
-
-
-// Function: corner_edge_count()
-// Description: Counts how many given edges intersect at a specific corner.
-// Arguments:
-//   edges = Standard edges array.
-//   v = Vector pointing to the corner to count edge intersections at.
-function corner_edge_count(edges, v) =
-	(v[2]<=0)? (
-		(v[1]<=0)? (
-			(v[0]<=0)? (
-				edges[0][2] + edges[1][2] + edges[2][2]
-			) : (
-				edges[0][2] + edges[1][3] + edges[2][3]
-			)
-		) : (
-			(v[0]<=0)? (
-				edges[0][3] + edges[1][2] + edges[2][1]
-			) : (
-				edges[0][3] + edges[1][3] + edges[2][0]
-			)
-		)
-	) : (
-		(v[1]<=0)? (
-			(v[0]<=0)? (
-				edges[0][1] + edges[1][1] + edges[2][2]
-			) : (
-				edges[0][1] + edges[1][0] + edges[2][3]
-			)
-		) : (
-			(v[0]<=0)? (
-				edges[0][0] + edges[1][1] + edges[2][1]
-			) : (
-				edges[0][0] + edges[1][0] + edges[2][0]
-			)
-		)
-	);
-
-
-// Default values for attachment code.
-$color = undef;
-$overlap = 0.01;
-$attach_to = undef;
-$attach_anchor = [CENTER, CENTER, UP, 0];
-$attach_norot = false;
-$parent_size = undef;
-$parent_size2 = undef;
-$parent_shift = [0,0];
-$parent_orient = ORIENT_Z;
-$parent_anchor = CENTER;
-$parent_anchors = [];
-$tags_shown = [];
-$tags_hidden = [];
-$tags = "";
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

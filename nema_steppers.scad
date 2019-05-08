@@ -136,7 +136,7 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=DOWN)
 		union() {
 			difference() {
 				color([0.4, 0.4, 0.4]) 
-					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=TOP);
+					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=edges("Z"), anchor=TOP);
 				color("silver")
 					xspread(screw_spacing)
 						yspread(screw_spacing)
@@ -199,7 +199,7 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, anchor=DOWN)
 		union() {
 			difference() {
 				color([0.4, 0.4, 0.4])
-					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=TOP);
+					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=edges("Z"), anchor=TOP);
 				color("silver")
 					xspread(screw_spacing)
 						yspread(screw_spacing)
@@ -262,7 +262,7 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=TOP)
 		union() {
 			difference() {
 				color([0.4, 0.4, 0.4])
-					cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=TOP);
+					cuboid([motor_width, motor_width, h], chamfer=2, edges=edges("Z"), anchor=TOP);
 				color("silver")
 					xspread(screw_spacing)
 						yspread(screw_spacing)
@@ -345,7 +345,7 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, anchor=TO
 		difference() {
 			union() {
 				color([0.4, 0.4, 0.4])
-					cuboid([motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=TOP);
+					cuboid([motor_width, motor_width, h], chamfer=2, edges=edges("Z"), anchor=TOP);
 				color([0.4, 0.4, 0.4])
 					cylinder(h=plinth_height, d=plinth_diam);
 				color("silver")
@@ -410,7 +410,7 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, anchor=TO
 		difference() {
 			union() {
 				color([0.4, 0.4, 0.4])
-					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=EDGES_Z_ALL, anchor=TOP);
+					cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=edges("Z"), anchor=TOP);
 				color([0.4, 0.4, 0.4])
 					cylinder(h=plinth_height, d=plinth_diam);
 				color("silver")

@@ -37,11 +37,11 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orie
 	orient_and_anchor([full_width, l, h+2*base], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		down(base+h/2) {
 			// Base
-			cuboid([full_width, l, base-slop], chamfer=2, edges=EDGE_TOP_FR+EDGE_TOP_BK+EDGES_Z_ALL, anchor=UP);
+			cuboid([full_width, l, base-slop], chamfer=2, edges=edges([FRONT,BACK], except=BOT), anchor=UP);
 
 			// Wall
 			xflip_copy(offset=w/2+slop) {
-				cuboid([wall, l, full_height], chamfer=2, edges=EDGE_TOP_RT+EDGE_FR_RT+EDGE_BK_RT, anchor=UP+RIGHT);
+				cuboid([wall, l, full_height], chamfer=2, edges=edges(RIGHT, except=BOT), anchor=UP+RIGHT);
 			}
 
 			// Sliders

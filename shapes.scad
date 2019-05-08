@@ -20,7 +20,7 @@
 //   size = The size of the cube.
 //   chamfer = Size of chamfer, inset from sides.  Default: No chamferring.
 //   rounding = Radius of the edge rounding.  Default: No rounding.
-//   edges = Edges to chamfer/rounding.  Use `EDGE` constants from constants.scad. Default: `EDGES_ALL`
+//   edges = Edges to chamfer/round.  It's recommended to use [`edges()`](edges.scad#edges) from [`edges.scad`](edges.scad). Default: All edges.
 //   trimcorners = If true, rounds or chamfers corners where three chamferred/rounded edges meet.  Default: `true`
 //   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=ALLNEG`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
@@ -44,9 +44,9 @@
 // Example: Rectangular cube with rounded edges, without trimmed corners.
 //   cuboid([30,40,50], rounding=10, trimcorners=false);
 // Example: Rectangular cube with only some edges chamferred.
-//   cuboid([30,40,50], chamfer=5, edges=EDGE_TOP_FR+EDGE_TOP_RT+EDGE_FR_RT, $fn=24);
+//   cuboid([30,40,50], chamfer=5, edges=edges([TOP+FRONT,TOP+RIGHT,FRONT+RIGHT]), $fn=24);
 // Example: Rectangular cube with only some edges rounded.
-//   cuboid([30,40,50], rounding=5, edges=EDGE_TOP_FR+EDGE_TOP_RT+EDGE_FR_RT, $fn=24);
+//   cuboid([30,40,50], rounding=5, edges=edges([TOP+FRONT,TOP+RIGHT,FRONT+RIGHT]), $fn=24);
 // Example: Standard Connectors
 //   cuboid(40, chamfer=5) show_anchors();
 module cuboid(

@@ -9,6 +9,7 @@
 
 
 include <constants.scad>
+include <edges.scad>
 include <compat.scad>
 include <math.scad>
 include <arrays.scad>

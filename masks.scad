@@ -246,21 +246,21 @@ module chamfer_mask_z(l=1.0, chamfer=1.0, anchor=CENTER) {
 // Arguments:
 //   chamfer = Inset of the chamfer from the edge. (Default: 1)
 //   size = The size of the rectangular cuboid we want to chamfer.
-//   edges = Which edges do we want to chamfer.  Recommend to use EDGE constants from constants.scad.
+//   edges = Which edges to chamfer.  Use of [`edges()`](edges.scad#edges) from [`edges.scad`](edges.scad) is recommend.
 // Description:
-//   You should use `EDGE` constants from `constants.scad` with the `edge` argument.
+//   You should use [`edges()`](edges.scad#edges) from [`edges.scad`](edges.scad) with the `edge` argument.
 //   However, if you must handle it raw, the edge ordering is this:
 //       [
-//           [Y+Z+, Y-Z+, Y-Z-, Y+Z-],
-//           [X+Z+, X-Z+, X-Z-, X+Z-],
-//           [X+Y+, X-Y+, X-Y-, X+Y-]
+//           [Y-Z-, Y+Z-, Y-Z+, Y+Z+],
+//           [X-Z-, X+Z-, X-Z+, X+Z+],
+//           [X-Y-, X+Y-, X-Y+, X+Y+]
 //       ]
 // Example(FR):
 //   chamfer(chamfer=2, size=[20,40,30]) {
 //     cube(size=[20,40,30], center=true);
 //   }
 // Example(FR):
-//   chamfer(chamfer=2, size=[20,40,30], edges=EDGES_TOP - EDGE_TOP_LF + EDGE_FR_RT) {
+//   chamfer(chamfer=2, size=[20,40,30], edges=edges([TOP,FRONT+RIGHT], except=TOP+LEFT)) {
 //     cube(size=[20,40,30], center=true);
 //   }
 module chamfer(chamfer=1, size=[1,1,1], edges=EDGES_ALL)
@@ -446,21 +446,21 @@ module rounding_mask_z(l=1.0, r=1.0, anchor=CENTER) rounding_mask(l=l, r=r, orie
 // Arguments:
 //   r = Radius of the rounding. (Default: 1)
 //   size = The size of the rectangular cuboid we want to chamfer.
-//   edges = Which edges do we want to chamfer.  Recommend to use EDGE constants from constants.scad.
+//   edges = Which edges to chamfer.  Use of [`edges()`](edges.scad#edges) from [`edges.scad`](edges.scad) is recommend.
 // Description:
-//   You should use `EDGE` constants from `constants.scad` with the `edge` argument.
+//   You should use [`edges()`](edges.scad#edges) from [`edges.scad`](edges.scad) to generate the edge array for the `edge` argument.
 //   However, if you must handle it raw, the edge ordering is this:
 //       [
-//           [Y+Z+, Y-Z+, Y-Z-, Y+Z-],
-//           [X+Z+, X-Z+, X-Z-, X+Z-],
-//           [X+Y+, X-Y+, X-Y-, X+Y-]
+//           [Y-Z-, Y+Z-, Y-Z+, Y+Z+],
+//           [X-Z-, X+Z-, X-Z+, X+Z+],
+//           [X-Y-, X+Y-, X-Y+, X+Y+]
 //       ]
 // Example(FR):
 //   rounding(r=10, size=[50,100,150], $fn=24) {
 //     cube(size=[50,100,150], center=true);
 //   }
 // Example(FR,FlatSpin):
-//   rounding(r=10, size=[50,50,75], edges=EDGES_TOP - EDGE_TOP_LF + EDGE_FR_RT, $fn=24) {
+//   rounding(r=10, size=[50,50,75], edges=edges([TOP,FRONT+RIGHT], except=TOP+LEFT), $fn=24) {
 //     cube(size=[50,50,75], center=true);
 //   }
 module rounding(r=1, size=[1,1,1], edges=EDGES_ALL)
