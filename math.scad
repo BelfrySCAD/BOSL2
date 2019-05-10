@@ -226,10 +226,10 @@ function atanh(x) = ln((1+x)/(1-x))/2;
 
 // Function: sum()
 // Description:
-//   Returns the sum of all entries in the given array.
+//   Returns the sum of all entries in the given list.
 //   If passed an array of vectors, returns a vector of sums of each part.
 // Arguments:
-//   v = The vector to get the sum of.
+//   v = The list to get the sum of.
 // Example:
 //   sum([1,2,3]);  // returns 6.
 //   sum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [9, 12, 15]
@@ -261,6 +261,18 @@ function sum_of_sines(a, sines) =
 			v=ss.x*sin(a*ss.y+ss.z)
 		) v
 	]);
+
+
+// Function: deltas()
+// Description:
+//   Returns a list with the deltas of adjacent entries in the given list.
+//   Given [a,b,c,d], returns [b-a,c-b,d-c].
+// Arguments:
+//   v = The list to get the deltas of.
+// Example:
+//   deltas([2,5,9,17]);  // returns [3,4,8].
+//   deltas([[1,2,3], [3,6,8], [4,8,11]]);  // returns [[2,4,5], [1,2,3]]
+function deltas(v) = len(v)<2? v : [for (p=pair(v)) p.y-p.x];
 
 
 // Function: mean()
