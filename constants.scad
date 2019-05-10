@@ -56,19 +56,19 @@ TOP = [ 0,  0,  1];
 // Constant: ALLPOS
 // Description: Vector pointing right, back, and up.  [1,1,1]
 // Example(3D): Usage with `anchor`
-//     cuboid(20, anchor=ALLPOS);
+//   cuboid(20, anchor=ALLPOS);
 ALLPOS = [ 1,  1,  1];  // Vector pointing X+,Y+,Z+.
 
 // Constant: ALLNEG
 // Description: Vector pointing left, forwards, and down.  [-1,-1,-1]
 // Example(3D): Usage with `anchor`
-//     cuboid(20, anchor=ALLNEG);
+//   cuboid(20, anchor=ALLNEG);
 ALLNEG = [-1, -1, -1];  // Vector pointing X-,Y-,Z-.
 
 // Constant: CENTER
 // Description: Zero vector.  Centered.  [0,0,0]
 // Example(3D): Usage with `anchor`
-//     cuboid(20, anchor=CENTER);
+//   cuboid(20, anchor=CENTER);
 CENTER = [ 0,  0,  0];  // Centered zero vector.
 
 

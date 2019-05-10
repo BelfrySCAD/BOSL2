@@ -29,18 +29,18 @@ function is_edge_array(v) = is_list(v) && is_vector(v[0]) && len(v)==3 && len(v[
 // Usage:
 //   edge(v);
 // Description:
-//   Takes an edge set descriptor and returns the EDGE array representing those edges.
+//   Takes an edge set descriptor and returns the edges array representing those edges.
 //   This function is useful for modules that take `edges` arguments, like `cuboid()`.
 //   An edge set descriptor can be any of:
-//   - A raw EDGE array.
+//   - A raw edges array.
 //   - A vector pointing towards an edge, indicating just that edge.
 //   - A vector pointing towards a face, indicating all edges surrounding that face.
 //   - A vector pointing towards a corner, indicating all edges that meet at that corner.
-//   - The string "X", indicating all X axis aligned edges.
-//   - The string "Y", indicating all Y axis aligned edges.
-//   - The string "Z", indicating all Y axis aligned edges.
-//   - The string "ALL", indicating all edges.
-//   - The string "NONE", indicating no edges at all.
+//   - The string `"X"`, indicating all X axis aligned edges.
+//   - The string `"Y"`, indicating all Y axis aligned edges.
+//   - The string `"Z"`, indicating all Y axis aligned edges.
+//   - The string `"ALL"`, indicating all edges.
+//   - The string `"NONE"`, indicating no edges at all.
 function edge_set(v) =
 	is_edge_array(v)? v : [
 	for (ax=[0:2]) [
@@ -87,21 +87,21 @@ function normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 //   edges(v)
 //   edges(v, except)
 // Description:
-//   Takes a list of edge set descriptors, and returns a normalized EDGE array
+//   Takes a list of edge set descriptors, and returns a normalized edges array
 //   that represents all those given edges.  If the `except` argument is given
 //   a list of edge set descriptors, then all those edges will be removed
-//   from the returned EDGE array.  If either argument only has a single edge
+//   from the returned edges array.  If either argument only has a single edge
 //   set descriptor, you do not have to pass it in a list.
 //   Each edge set descriptor can be any of:
-//   - A raw EDGE array.
+//   - A raw edges array.
 //   - A vector pointing towards an edge.
 //   - A vector pointing towards a face, indicating all edges surrounding that face.
 //   - A vector pointing towards a corner, indicating all edges touching that corner.
-//   - The string "X", indicating all X axis aligned edges.
-//   - The string "Y", indicating all Y axis aligned edges.
-//   - The string "Z", indicating all Y axis aligned edges.
-//   - The string "ALL", indicating all edges.
-//   - The string "NONE", indicating no edges at all.
+//   - The string `"X"`, indicating all X axis aligned edges.
+//   - The string `"Y"`, indicating all Y axis aligned edges.
+//   - The string `"Z"`, indicating all Y axis aligned edges.
+//   - The string `"ALL"`, indicating all edges.
+//   - The string `"NONE"`, indicating no edges at all.
 // Example: Just the front-top edge
 //   edges(FRONT+TOP)
 // Example: All edges surrounding either the front or top faces

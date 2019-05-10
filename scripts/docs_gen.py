@@ -52,10 +52,17 @@ def mkdn_esc(txt):
 def get_comment_block(lines, prefix, blanks=1):
     out = []
     blankcnt = 0
+    indent = 0
     while lines:
-        if not lines[0].startswith(prefix + " "):
+        if not lines[0].startswith(prefix+" "):
             break
-        line = lines.pop(0)[len(prefix)+1:]
+        line = lines.pop(0)[len(prefix):]
+        if not indent:
+            while line.startswith(" "):
+                line = line[1:]
+                indent += 1
+        else:
+            line = line[indent:]
         if line == "":
             blankcnt += 1
             if blankcnt >= blanks:
