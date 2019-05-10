@@ -302,7 +302,7 @@ function sortidx(l, idx=undef) =
 		ll=enumerate(l,idx=idx),
 		sidx = [1:len(ll[0])-1]
 	)
-	array_subindex(sort(ll, idx=sidx), 0);
+	subindex(sort(ll, idx=sidx), 0);
 
 
 // Function: unique()
@@ -325,7 +325,7 @@ function unique(arr) =
 
 // Section: Array Manipulation
 
-// Function: array_subindex()
+// Function: subindex()
 // Description:
 //   For each array item, return the indexed subitem.
 //   Returns a list of the values of each vector at the specfied
@@ -336,19 +336,41 @@ function unique(arr) =
 //   idx = The index, list of indices, or range of indices to fetch.
 // Example:
 //   v = [[[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
-//   array_subindex(v,2);      // Returns [3, 7, 11, 15]
-//   array_subindex(v,[2,1]);  // Returns [[3, 2], [7, 6], [11, 10], [15, 14]]
-//   array_subindex(v,[1:3]);  // Returns [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]
-function array_subindex(v, idx) = [
+//   subindex(v,2);      // Returns [3, 7, 11, 15]
+//   subindex(v,[2,1]);  // Returns [[3, 2], [7, 6], [11, 10], [15, 14]]
+//   subindex(v,[1:3]);  // Returns [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]
+function subindex(v, idx) = [
 	for(val=v) let(value=[for(i=idx) val[i]])
 		len(value)==1 ? value[0] : value
 ];
 
 
-// Function: array_zip()
+// Function: pair()
 // Usage:
-//   array_zip(v1, v2, v3, [fit], [fill]);
-//   array_zip(vecs, [fit], [fill]);
+//   pair(v)
+// Description:
+//   Takes a list, and returns a list of adjacent pairs from it, with the last item paired with the first at the end.
+// Example:
+//   l = ["A","B","C",D"];
+//   echo([for (p=pair(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC"]
+function pair(v) = [for (i=[0:len(v)-1]) [v[i],v[i%len(v)]]];
+
+
+// Function: pair_wrap()
+// Usage:
+//   pair_wrap(v)
+// Description:
+//   Takes a list, and returns a list of adjacent pairs from it, with the last item paired with the first at the end.
+// Example:
+//   l = ["A","B","C",D"];
+//   echo([for (p=pair_wrap(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC", "AD"]
+function pair_wrap(v) = [for (i=[0:len(v)-1]) [v[i],v[i%len(v)]]];
+
+
+// Function: zip()
+// Usage:
+//   zip(v1, v2, v3, [fit], [fill]);
+//   zip(vecs, [fit], [fill]);
 // Description:
 //   Zips together corresponding items from two or more lists.
 //   Returns a list of lists, where each sublist contains corresponding
@@ -361,19 +383,19 @@ function array_subindex(v, idx) = [
 //   v1 = [1,2,3,4];
 //   v2 = [5,6,7];
 //   v3 = [8,9,10,11];
-//   array_zip(v1,v3);                       // returns [[1,8], [2,9], [3,10], [4,11]]
-//   array_zip([v1,v3]);                     // returns [[1,8], [2,9], [3,10], [4,11]]
-//   array_zip([v1,v2], fit="short");        // returns [[1,5], [2,6], [3,7]]
-//   array_zip([v1,v2], fit="long");         // returns [[1,5], [2,6], [3,7], [4,undef]]
-//   array_zip([v1,v2], fit="long, fill=0);  // returns [[1,5], [2,6], [3,7], [4,0]]
-//   array_zip([v1,v2,v3], fit="long");      // returns [[1,5,8], [2,6,9], [3,7,10], [4,undef,11]]
+//   zip(v1,v3);                       // returns [[1,8], [2,9], [3,10], [4,11]]
+//   zip([v1,v3]);                     // returns [[1,8], [2,9], [3,10], [4,11]]
+//   zip([v1,v2], fit="short");        // returns [[1,5], [2,6], [3,7]]
+//   zip([v1,v2], fit="long");         // returns [[1,5], [2,6], [3,7], [4,undef]]
+//   zip([v1,v2], fit="long, fill=0);  // returns [[1,5], [2,6], [3,7], [4,0]]
+//   zip([v1,v2,v3], fit="long");      // returns [[1,5,8], [2,6,9], [3,7,10], [4,undef,11]]
 // Example:
 //   v1 = [[1,2,3], [4,5,6], [7,8,9]];
 //   v2 = [[20,19,18], [17,16,15], [14,13,12]];
-//   array_zip(v1,v2);    // Returns [[1,2,3,20,19,18], [4,5,6,17,16,15], [7,8,9,14,13,12]]
-function array_zip(vecs, v2, v3, fit=false, fill=undef) =
-	(v3!=undef)? array_zip([vecs,v2,v3], fit=fit, fill=fill) :
-	(v2!=undef)? array_zip([vecs,v2], fit=fit, fill=fill) :
+//   zip(v1,v2);    // Returns [[1,2,3,20,19,18], [4,5,6,17,16,15], [7,8,9,14,13,12]]
+function zip(vecs, v2, v3, fit=false, fill=undef) =
+	(v3!=undef)? zip([vecs,v2,v3], fit=fit, fill=fill) :
+	(v2!=undef)? zip([vecs,v2], fit=fit, fill=fill) :
 	let(
 		dummy1 = assert_in_list("fit", fit, [false, "short", "long"]),
 		minlen = list_shortest(vecs),
