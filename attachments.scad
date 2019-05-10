@@ -422,4 +422,29 @@ module intersect(a, b=undef, keep=undef)
 
 
 
+// Module: hulling()
+// Usage:
+//   hulling(a, [keep]) ...
+// Description:
+//   Takes the union of all children with tags that are in `a`, and hull()s them.
+//   If `keep` is given, then the result is unioned with all the children with
+//   tags in `keep`.  If `keep` is not given, all children without tags in `a` are
+//   unioned with the result.
+// Arguments:
+//   a = String containing space delimited set of tag names of children.
+//   keep = String containing space delimited set of tag names of children to keep whole.
+// Example:
+//   hulling("body", keep="axle")
+//   sphere(d=100, $tags="body") {
+//       attach(CENTER) cube([40,100,100], anchor=CENTER, $tags="body");
+//       attach(CENTER) xcyl(d=40, h=100, $tags="axle");
+//   }
+module hulling(a)
+{
+	hull() show(a) children();
+	children();
+}
+
+
+
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
