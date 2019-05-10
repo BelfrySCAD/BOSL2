@@ -353,7 +353,7 @@ function subindex(v, idx) = [
 // Example:
 //   l = ["A","B","C",D"];
 //   echo([for (p=pair(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC"]
-function pair(v) = [for (i=[0:len(v)-1]) [v[i],v[i%len(v)]]];
+function pair(v) = [for (i=[0:len(v)-2]) [v[i],v[i+1]]];
 
 
 // Function: pair_wrap()
@@ -364,7 +364,7 @@ function pair(v) = [for (i=[0:len(v)-1]) [v[i],v[i%len(v)]]];
 // Example:
 //   l = ["A","B","C",D"];
 //   echo([for (p=pair_wrap(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC", "AD"]
-function pair_wrap(v) = [for (i=[0:len(v)-1]) [v[i],v[i%len(v)]]];
+function pair_wrap(v) = [for (i=[0:len(v)-1]) [v[i],v[(i+1)%len(v)]]];
 
 
 // Function: zip()

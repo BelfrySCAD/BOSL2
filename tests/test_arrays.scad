@@ -151,27 +151,41 @@ test_unique();
 // Arrays
 
 
-module test_array_subindex() {
+module test_subindex() {
 	v = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
-	assert(array_subindex(v,2) == [3, 7, 11, 15]);
-	assert(array_subindex(v,[2,1]) == [[3, 2], [7, 6], [11, 10], [15, 14]]);
-	assert(array_subindex(v,[1:3]) == [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]);
+	assert(subindex(v,2) == [3, 7, 11, 15]);
+	assert(subindex(v,[2,1]) == [[3, 2], [7, 6], [11, 10], [15, 14]]);
+	assert(subindex(v,[1:3]) == [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]);
 }
-test_array_subindex();
+test_subindex();
 
 
-module test_array_zip() {
+module test_pair() {
+	assert(pair([3,4,5,6]) == [[3,4], [4,5], [5,6]]);
+	assert(pair("ABCD") == [["A","B"], ["B","C"], ["C","D"]]);
+}
+test_pair();
+
+
+module test_pair_wrap() {
+	assert(pair_wrap([3,4,5,6]) == [[3,4], [4,5], [5,6], [6,3]]);
+	assert(pair_wrap("ABCD") == [["A","B"], ["B","C"], ["C","D"], ["D","A"]]);
+}
+test_pair_wrap();
+
+
+module test_zip() {
 	v1 = [1,2,3,4];
 	v2 = [5,6,7];
 	v3 = [8,9,10,11];
-	assert(array_zip(v1,v3) == [[1,8],[2,9],[3,10],[4,11]]);
-	assert(array_zip([v1,v3]) == [[1,8],[2,9],[3,10],[4,11]]);
-	assert(array_zip([v1,v2],fit="short") == [[1,5],[2,6],[3,7]]);
-	assert(array_zip([v1,v2],fit="long") == [[1,5],[2,6],[3,7],[4,undef]]);
-	assert(array_zip([v1,v2],fit="long", fill=0) == [[1,5],[2,6],[3,7],[4,0]]);
-	assert(array_zip([v1,v2,v3],fit="long") == [[1,5,8],[2,6,9],[3,7,10],[4,undef,11]]);
+	assert(zip(v1,v3) == [[1,8],[2,9],[3,10],[4,11]]);
+	assert(zip([v1,v3]) == [[1,8],[2,9],[3,10],[4,11]]);
+	assert(zip([v1,v2],fit="short") == [[1,5],[2,6],[3,7]]);
+	assert(zip([v1,v2],fit="long") == [[1,5],[2,6],[3,7],[4,undef]]);
+	assert(zip([v1,v2],fit="long", fill=0) == [[1,5],[2,6],[3,7],[4,0]]);
+	assert(zip([v1,v2,v3],fit="long") == [[1,5,8],[2,6,9],[3,7,10],[4,undef,11]]);
 }
-test_array_zip();
+test_zip();
 
 
 module test_array_group() {
