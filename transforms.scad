@@ -189,6 +189,8 @@ module rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false)
 		translate(cp) rot(a=a, v=v, from=from, to=to, reverse=reverse) translate(-cp) children();
 	} else if (!is_undef(from)) {
 		assert(!is_undef(to), "`from` and `to` should be used together.");
+		from = point3d(from);
+		to = point3d(to);
 		axis = vector_axis(from, to);
 		ang = vector_angle(from, to);
 		if (ang < 0.0001 && a == 0) {
