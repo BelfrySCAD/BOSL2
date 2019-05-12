@@ -415,7 +415,8 @@ class LeafNode(object):
                 out.append("    " + line)
             out.append("")
             san_name = re.sub(r"[^A-Za-z0-9_]", "", self.name)
-            imgfile = "{0}{1}.{2}".format(
+            imgfile = "{}{}{}.{}".format(
+                "f_" if self.leaftype == "Function" else "",
                 san_name,
                 ("_%d" % exnum) if exnum > 1 else "",
                 "gif" if "Spin" in extype else "png"
