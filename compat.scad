@@ -21,6 +21,14 @@
 function default(v,dflt=undef) = is_undef(v)? dflt : v;
 
 
+// Function: is_def()
+// Usage:
+//   is_def(v)
+// Description:
+//   Returns true if `v` is not `undef`.  False if `v==undef`.
+function is_def(v) = !is_undef(v);
+
+
 // Function: is_vector()
 // Usage:
 //   is_vector(v)
