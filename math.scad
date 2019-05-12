@@ -279,12 +279,13 @@ function deltas(v) = len(v)<2? v : [for (p=pair(v)) p.y-p.x];
 // Description:
 //   Returns the product of all entries in the given list.
 //   If passed an array of vectors, returns a vector of products of each part.
+//   If passed an array of matrices, returns a the resulting product matrix.
 // Arguments:
 //   v = The list to get the product of.
 // Example:
 //   product([2,3,4]);  // returns 24.
 //   product([[1,2,3], [3,4,5], [5,6,7]]);  // returns [15, 48, 105]
-function product(v, i=0, tot=undef) = i>=len(v)? tot : product(v, i+1, ((tot==undef)? v[i] : is_list(v[i])? vmul(tot,v[i]) : tot*v[i]));
+function product(v, i=0, tot=undef) = i>=len(v)? tot : product(v, i+1, ((tot==undef)? v[i] : is_vector(v[i])? vmul(tot,v[i]) : tot*v[i]));
 
 
 // Function: mean()

@@ -263,6 +263,10 @@ test_deltas();
 module test_product() {
 	assert(product([2,3,4]) == 24);
 	assert(product([[1,2,3], [3,4,5], [5,6,7]]) == [15, 48, 105]);
+	m1 = [[2,3,4],[4,5,6],[6,7,8]];
+	m2 = [[4,1,2],[3,7,2],[8,7,4]];
+	m3 = [[3,7,8],[9,2,4],[5,8,3]];
+	assert(product([m1,m2,m3]) == m1*m2*m3);
 }
 test_product();
 
