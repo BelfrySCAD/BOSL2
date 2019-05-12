@@ -113,11 +113,9 @@ function matrix3_skew(xa, ya) = [
 //   Returns a 3x3 transformation matrix which results from applying each matrix in `matrices` in order.
 // Arguments:
 //   matrices = A list of 3x3 matrices.
-//   m = Optional starting matrix to apply everything to.
-function matrix3_mult(matrices, m=ident(3), i=0) =
-	(i>=len(matrices))? m :
-	let (newmat = is_undef(m)? matrices[i] : matrices[i] * m)
-		matrix3_mult(matrices, m=newmat, i=i+1);
+function matrix3_mult(matrices, _m=undef, _i=0) =
+	(_i>=len(matrices))? (is_undef(_m)? ident(3) : _m) :
+	matrix3_mult(matrices, _m=(is_undef(_m)? matrices[_i] : matrices[_i] * _m), _i=_i+1);
 
 
 // Function: matrix3_apply()
@@ -289,11 +287,9 @@ function matrix4_skew_yz(ya, za) = [
 //   Returns a 4x4 transformation matrix which results from applying each matrix in `matrices` in order.
 // Arguments:
 //   matrices = A list of 4x4 matrices.
-//   m = Optional starting matrix to apply everything to.
-function matrix4_mult(matrices, m=ident(4), i=0) =
-	(i>=len(matrices))? m :
-	let (newmat = is_undef(m)? matrices[i] : matrices[i] * m)
-		matrix4_mult(matrices, m=newmat, i=i+1);
+function matrix4_mult(matrices, _m=undef, _i=0) =
+	(_i>=len(matrices))? (is_undef(_m)? ident(4) : _m) :
+	matrix4_mult(matrices, _m=(is_undef(_m)? matrices[_i] : matrices[_i] * _m), _i=_i+1);
 
 
 // Function: matrix4_apply()
