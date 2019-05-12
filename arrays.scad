@@ -493,7 +493,19 @@ function array_dim(v, depth=undef) =
 //   //     ["c", "f", "i"],
 //   // ]
 // Example:
-//   transpose([3,4,5]);  // Returns: [[3],[4],[5]]
+//   arr = [
+//       ["a", "b", "c"],
+//       ["d", "e", "f"]
+//   ];
+//   t = transpose(arr);
+//   // Returns:
+//   // [
+//   //     ["a", "d"],
+//   //     ["b", "e"],
+//   //     ["c", "f"],
+//   // ]
+// Example:
+//   transpose([3,4,5]);  // Returns: [3,4,5]
 function transpose(arr) =
 	arr==[]? [] :
 	is_list(arr[0])? [for (i=[0:len(arr[0])-1]) [for (j=[0:len(arr)-1]) arr[j][i]]] : arr;
