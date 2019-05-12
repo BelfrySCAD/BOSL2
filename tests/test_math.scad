@@ -253,6 +253,20 @@ module test_sum_of_sines() {
 test_sum_of_sines();
 
 
+module test_deltas() {
+	assert(deltas([2,5,9,17]) == [3,4,8]);
+	assert(deltas([[1,2,3], [3,6,8], [4,8,11]]) == [[2,4,5], [1,2,3]]);
+}
+test_deltas();
+
+
+module test_product() {
+	assert(product([2,3,4]) == 24);
+	assert(product([[1,2,3], [3,4,5], [5,6,7]]) == [15, 48, 105]);
+}
+test_product();
+
+
 module test_mean() {
 	assert(mean([2,3,4]) == 3);
 	assert(mean([[1,2,3], [3,4,5], [5,6,7]]) == [3,4,5]);
