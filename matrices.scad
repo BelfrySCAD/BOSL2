@@ -17,27 +17,6 @@
 function ident(n) = [for (i = [0:n-1]) [for (j = [0:n-1]) (i==j)?1:0]];
 
 
-// Function: matrix_transpose()
-// Description: Returns the transposition of the given matrix.
-// Example:
-//   m = [
-//       [11,12,13,14],
-//       [21,22,23,24],
-//       [31,32,33,34],
-//       [41,42,43,44]
-//   ];
-//   tm = matrix_transpose(m);
-//   // Returns:
-//   // [
-//   //     [11,21,31,41],
-//   //     [12,22,32,42],
-//   //     [13,23,33,43],
-//   //     [14,24,34,44]
-//   // ]
-function matrix_transpose(m) = [for (i=[0:len(m[0])-1]) [for (j=[0:len(m)-1]) m[j][i]]];
-
-
-
 // Function: mat3_to_mat4()
 // Description: Takes a 3x3 matrix and returns its 4x4 affine equivalent.
 function mat3_to_mat4(m) = concat(

@@ -477,4 +477,29 @@ function array_dim(v, depth=undef) =
 
 
 
+// Function: transpose()
+// Description: Returns the transposition of the given array.
+// Example:
+//   arr = [
+//       ["a", "b", "c"],
+//       ["d", "e", "f"],
+//       ["g", "h", "i"]
+//   ];
+//   t = transpose(arr);
+//   // Returns:
+//   // [
+//   //     ["a", "d", "g"],
+//   //     ["b", "e", "h"],
+//   //     ["c", "f", "i"],
+//   // ]
+// Example:
+//   transpose([3,4,5]);  // Returns: [[3],[4],[5]]
+function transpose(arr) =
+	arr==[]? [] :
+	is_list(arr[0])? [for (i=[0:len(arr[0])-1]) [for (j=[0:len(arr)-1]) arr[j][i]]] :
+	[for (x=arr) [x]];
+
+
+
+
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
