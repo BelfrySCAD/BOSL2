@@ -114,10 +114,10 @@ function pie_slice2d(r=undef, d=undef, ang=30) =
 //   d = The diameter of the circle to get a slice of.
 //   ang = The angle of the arc of the pie slice.
 // Examples(2D):
-//   pie_slice2d(r=50,arc=30);
-//   pie_slice2d(d=100,arc=45);
-//   pie_slice2d(d=40,arc=120);
-//   pie_slice2d(d=40,arc=240);
+//   pie_slice2d(r=50,ang=30);
+//   pie_slice2d(d=100,ang=45);
+//   pie_slice2d(d=40,ang=120);
+//   pie_slice2d(d=40,ang=240);
 module pie_slice2d(r=undef, d=undef, ang=30) {
 	pts = pie_slice2d(r=r, d=d, ang=ang);
 	polygon(pts);
