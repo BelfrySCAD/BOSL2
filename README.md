@@ -74,7 +74,8 @@ The library files are as follows:
   - [`transforms.scad`](https://github.com/revarbat/BOSL2/wiki/transforms.scad): The most commonly used transformations, manipulations, and shortcuts are in this file.
   - [`attachments.scad`](https://github.com/revarbat/BOSL2/wiki/attachments.scad): Modules and functions to enable attaching parts together.
   - [`primitives.scad`](https://github.com/revarbat/BOSL2/wiki/primitives.scad): Enhanced replacements for `cube()`, `cylinder()`, and `sphere()`.
-  - [`shapes.scad`](https://github.com/revarbat/BOSL2/wiki/shapes.scad): Common useful shapes and structured objects.
+  - [`shapes.scad`](https://github.com/revarbat/BOSL2/wiki/shapes.scad): Common useful 3D shapes and structured objects.
+  - [`shapes2d.scad`](https://github.com/revarbat/BOSL2/wiki/shapes2d.scad): Common useful 2D shapes and drawing helpers.
   - [`masks.scad`](https://github.com/revarbat/BOSL2/wiki/masks.scad): Shapes that are useful for masking with `difference()` and `intersect()`.
   - [`threading.scad`](https://github.com/revarbat/BOSL2/wiki/threading.scad): Modules to make triangular and trapezoidal threaded rods and nuts.
   - [`paths.scad`](https://github.com/revarbat/BOSL2/wiki/paths.scad): Functions and modules to work with arbitrary 3D paths.

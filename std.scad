@@ -22,6 +22,7 @@ include <attachments.scad>
 include <transforms.scad>
 include <primitives.scad>
 include <shapes.scad>
+include <shapes2d.scad>
 include <masks.scad>
 
 
