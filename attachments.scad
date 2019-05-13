@@ -434,10 +434,10 @@ module intersect(a, b=undef, keep=undef)
 //   a = String containing space delimited set of tag names of children.
 //   keep = String containing space delimited set of tag names of children to keep whole.
 // Example:
-//   hulling("body", keep="axle")
+//   hulling("body")
 //   sphere(d=100, $tags="body") {
 //       attach(CENTER) cube([40,100,100], anchor=CENTER, $tags="body");
-//       attach(CENTER) xcyl(d=40, h=100, $tags="axle");
+//       attach(CENTER) xcyl(d=40, h=100);
 //   }
 module hulling(a)
 {
