@@ -48,7 +48,7 @@
 // Example: Rectangular cube with only some edges rounded.
 //   cuboid([30,40,50], rounding=5, edges=edges([TOP+FRONT,TOP+RIGHT,FRONT+RIGHT]), $fn=24);
 // Example: Standard Connectors
-//   cuboid(40, chamfer=5) show_anchors();
+//   cuboid(40) show_anchors();
 module cuboid(
 	size=[1,1,1],
 	p1=undef, p2=undef,
