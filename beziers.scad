@@ -809,7 +809,7 @@ function bezier_patch_flat(size=[100,100], N=4, orient=ORIENT_Z, trans=[0,0,0]) 
 		patch = [for (x=[0:N]) [for (y=[0:N]) vmul(point3d(size),[x/N-0.5, 0.5-y/N, 0])]]
 	) [for (row=patch)
 		translate_points(v=trans,
-			rotate_points3d(v=orient,row)
+			rotate_points3d(a=orient,row)
 		)
 	];
 
