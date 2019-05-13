@@ -123,13 +123,11 @@ class ImageProcessing(object):
         elif "Big" in extype:
             imgsizes = ["1280,960", "640x480"]
         elif "distribute" in script or "show_anchors" in script:
-            print(script)
             imgsizes = ["800,600", "400x300"]
         else:  # Small
             imgsizes = ["480,360", "240x180"]
 
-        print("")
-        print("{}: {}".format(libfile, imgfile))
+        print("  {}".format(imgfile))
 
         tmpimgs = []
         if "Spin" in extype:
@@ -155,11 +153,18 @@ class ImageProcessing(object):
                 if "FR" in extype:  # Force render
                     scadcmd.extend(["--render", ""])
                 scadcmd.append(scriptfile)
-                print(" ".join(scadcmd))
-                res = subprocess.call(scadcmd)
-                if res != 0:
+                p = subprocess.Popen(scadcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+                (stdoutdata, stderrdata) = p.communicate(None)
+                res = p.returncode
+                if res != 0 or "ERROR:" in stderrdata or "WARNING:" in stderrdata:
+                    print("%s"%stderrdata)
+                    print("////////////////////////////////////////////////////")
+                    print("// {}: {} for {}".format(libfile, scriptfile, imgfile))
+                    print("////////////////////////////////////////////////////")
                     print(script)
-                    sys.exit(res)
+                    print("////////////////////////////////////////////////////")
+                    print("")
+                    sys.exit(-1)
                 tmpimgs.append(tmpimgfile)
         else:
             tmpimgfile = self.imgroot + "tmp_" + imgfile
@@ -179,11 +184,18 @@ class ImageProcessing(object):
                 scadcmd.extend(["--render", ""])
             scadcmd.append(scriptfile)
 
-            print(" ".join(scadcmd))
-            res = subprocess.call(scadcmd)
-            if res != 0:
+            p = subprocess.Popen(scadcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+            (stdoutdata, stderrdata) = p.communicate(None)
+            res = p.returncode
+            if res != 0 or "ERROR:" in stderrdata or "WARNING:" in stderrdata:
+                print("%s"%stderrdata)
+                print("////////////////////////////////////////////////////")
+                print("// {}: {} for {}".format(libfile, scriptfile, imgfile))
+                print("////////////////////////////////////////////////////")
                 print(script)
-                sys.exit(res)
+                print("////////////////////////////////////////////////////")
+                print("")
+                sys.exit(-1)
             tmpimgs.append(tmpimgfile)
 
         if not self.keep_scripts:
@@ -192,10 +204,9 @@ class ImageProcessing(object):
         newimgfile = self.imgroot + "_new_" + imgfile
         if len(tmpimgs) == 1:
             cnvcmd = [CONVERT, tmpimgfile, "-resize", imgsizes[1], newimgfile]
-            print(" ".join(cnvcmd))
             res = subprocess.call(cnvcmd)
             if res != 0:
-                sys.exit(res)
+                sys.exit(-1)
             os.unlink(tmpimgs.pop(0))
         else:
             cnvcmd = [
@@ -211,33 +222,29 @@ class ImageProcessing(object):
             ]
             cnvcmd.extend(tmpimgs)
             cnvcmd.append(newimgfile)
-            print(" ".join(cnvcmd))
             res = subprocess.call(cnvcmd)
             if res != 0:
-                sys.exit(res)
+                sys.exit(-1)
             for tmpimg in tmpimgs:
                 os.unlink(tmpimg)
 
         # Time to compare image.
         if not os.path.isfile(targimgfile):
-            print("NEW IMAGE installed.")
+            print("    NEW IMAGE\n")
             os.rename(newimgfile, targimgfile)
         else:
             if targimgfile.endswith(".gif"):
                 cmpcmd = ["cmp", newimgfile, targimgfile]
-                print(" ".join(cmpcmd))
                 res = subprocess.call(cmpcmd)
                 issame = res == 0
             else:
                 cmpcmd = [COMPARE, "-metric", "MAE", newimgfile, targimgfile, "null:"]
-                print(" ".join(cmpcmd))
                 p = subprocess.Popen(cmpcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
                 issame = p.stdout.read().strip() == "0 (0)"
             if issame:
-                print("Image unchanged.")
                 os.unlink(newimgfile)
             else:
-                print("Image UPDATED.")
+                print("    UPDATED IMAGE\n")
                 os.unlink(targimgfile)
                 os.rename(newimgfile, targimgfile)
 
@@ -263,6 +270,8 @@ class LeafNode(object):
             return True
         if line.startswith(prefix + "Function: "):
             return True
+        if line.startswith(prefix + "Function&Module: "):
+            return True
         if line.startswith(prefix + "Module: "):
             return True
         return False
@@ -285,6 +294,10 @@ class LeafNode(object):
             blankcnt = 0
             line = line[len(prefix):]
             if line.startswith("Constant:"):
+                leaftype, title = line.split(":", 1)
+                self.name = title.strip()
+                self.leaftype = leaftype.strip()
+            if line.startswith("Function&Module:"):
                 leaftype, title = line.split(":", 1)
                 self.name = title.strip()
                 self.leaftype = leaftype.strip()
@@ -317,7 +330,7 @@ class LeafNode(object):
                     if "=" not in line:
                         print("Error: bad argument line:")
                         print(line)
-                        sys.exit(2)
+                        sys.exit(-2)
                     argname, argdesc = line.split("=", 1)
                     argname = argname.strip()
                     argdesc = argdesc.strip()
@@ -328,7 +341,7 @@ class LeafNode(object):
                     if "=" not in line:
                         print("Error: bad anchor line:")
                         print(line)
-                        sys.exit(2)
+                        sys.exit(-2)
                     anchorname, anchordesc = line.split("=", 1)
                     anchorname = anchorname.strip()
                     anchordesc = anchordesc.strip()
@@ -343,7 +356,7 @@ class LeafNode(object):
                 title = m.group(4)
                 lines, block = get_comment_block(lines, prefix)
                 if not extype:
-                    extype = "3D" if self.leaftype == "Module" else "NORENDER"
+                    extype = "3D" if self.leaftype in ["Module", "Function&Module"] else "NORENDER"
                 if not plural:
                     self.add_example(title=title, code=block, extype=extype)
                 else:
@@ -415,8 +428,7 @@ class LeafNode(object):
                 out.append("    " + line)
             out.append("")
             san_name = re.sub(r"[^A-Za-z0-9_]", "", self.name)
-            imgfile = "{}{}{}.{}".format(
-                "f_" if self.leaftype == "Function" else "",
+            imgfile = "{}{}.{}".format(
                 san_name,
                 ("_%d" % exnum) if exnum > 1 else "",
                 "gif" if "Spin" in extype else "png"
@@ -480,7 +492,7 @@ class Section(object):
                 title = m.group(4)
                 lines, block = get_comment_block(lines, prefix)
                 if not figtype:
-                    figtype = "3D" if self.figtype == "Module" else "NORENDER"
+                    figtype = "3D" if self.figtype in ["Module", "Function&Module"] else "NORENDER"
                 if not plural:
                     self.add_figure(title, block, figtype)
                 else:
