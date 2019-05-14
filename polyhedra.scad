@@ -653,7 +653,7 @@ function regular_polyhedron_info(
 		),
 		faces = faces_normals_vertices[0],
 		faces_vertex_count = [for(face=faces) len(face)],
-		facedown = facedown == true ? entry[facevertices][0] : facedown,
+		facedown = facedown == true ? (stellate==false? entry[facevertices][0] : 3) : facedown,
 		down_direction = facedown == false?  [0,0,-1] :
 			faces_normals_vertices[1][search(facedown, faces_vertex_count)[0]],
 		scaled_points = scalefactor * rotate_points3d(faces_normals_vertices[2], from=down_direction, to=[0,0,-1]),
@@ -671,7 +671,7 @@ function regular_polyhedron_info(
 	info == "mid_radius" ? side_length * entry[mid_radius] :
 	info == "out_radius" ? side_length * entry[out_radius] :
 	info == "index set" ? indexlist :
-	info == "face vertices" ? entry[facevertices] :
+	info == "face vertices" ? (stellate==false? entry[facevertices] : [3]) :
 	info == "edge length" ? scalefactor * entry[edgelen] :
 	info == "center" ? translation :
 	info == "type" ? entry[class] :
