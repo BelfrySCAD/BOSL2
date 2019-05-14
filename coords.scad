@@ -77,7 +77,7 @@ function scale_points(pts, v=[0,0,0], cp=[0,0,0]) = [for (pt = pts) [for (i = [0
 //   ang = Angle to rotate by.
 //   cp = 2D Centerpoint to rotate around.  Default: `[0,0]`
 function rotate_points2d(pts, ang, cp=[0,0]) = let(
-		m = matrix3_zrot(ang)
+		m = affine2d_zrot(ang)
 	) [for (pt = pts) m*point3d(pt-cp)+cp];
 
 
@@ -107,13 +107,13 @@ function rotate_points3d(pts, a=0, v=undef, cp=[0,0,0], from=undef, to=undef, re
 					ang = vector_angle(from, to),
 					v = vector_axis(from, to)
 				)
-				matrix4_rot_by_axis(from, -a) * matrix4_rot_by_axis(v, -ang)
+				affine3d_rot_by_axis(from, -a) * affine3d_rot_by_axis(v, -ang)
 			) : !is_undef(v)? (
-				matrix4_rot_by_axis(v, -a)
+				affine3d_rot_by_axis(v, -a)
 			) : is_num(a)? (
-				matrix4_zrot(-a)
+				affine3d_zrot(-a)
 			) : (
-				matrix4_xrot(-a.x) * matrix4_yrot(-a.y) * matrix4_zrot(-a.z)
+				affine3d_xrot(-a.x) * affine3d_yrot(-a.y) * affine3d_zrot(-a.z)
 			)
 		) : (
 			!is_undef(from)? (
@@ -123,16 +123,16 @@ function rotate_points3d(pts, a=0, v=undef, cp=[0,0,0], from=undef, to=undef, re
 					ang = vector_angle(from, to),
 					v = vector_axis(from, to)
 				)
-				matrix4_rot_by_axis(v, ang) * matrix4_rot_by_axis(from, a)
+				affine3d_rot_by_axis(v, ang) * affine3d_rot_by_axis(from, a)
 			) : !is_undef(v)? (
-				matrix4_rot_by_axis(v, a)
+				affine3d_rot_by_axis(v, a)
 			) : is_num(a)? (
-				matrix4_zrot(a)
+				affine3d_zrot(a)
 			) : (
-				matrix4_zrot(a.z) * matrix4_yrot(a.y) * matrix4_xrot(a.x)
+				affine3d_zrot(a.z) * affine3d_yrot(a.y) * affine3d_xrot(a.x)
 			)
 		),
-		m = matrix4_translate(cp) * mrot * matrix4_translate(-cp)
+		m = affine3d_translate(cp) * mrot * affine3d_translate(-cp)
 	) [for (pt = pts) point3d(m*concat(point3d(pt),[1]))];
 
 

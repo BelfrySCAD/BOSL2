@@ -3,7 +3,7 @@
 if [[ $# > 0 ]]; then
     PREVIEW_LIBS="$@"
 else
-    PREVIEW_LIBS="compat attachments math arrays vectors matrices coords geometry triangulation quaternions hull constants edges transforms primitives shapes masks shapes2d paths beziers walls metric_screws threading involute_gears sliders joiners linear_bearings nema_steppers wiring phillips_drive torx_drive polyhedra debug"
+    PREVIEW_LIBS="compat attachments math arrays vectors affine coords geometry triangulation quaternions hull constants edges transforms primitives shapes masks shapes2d paths beziers walls metric_screws threading involute_gears sliders joiners linear_bearings nema_steppers wiring phillips_drive torx_drive polyhedra debug"
 fi
 
 dir="$(basename $PWD)"

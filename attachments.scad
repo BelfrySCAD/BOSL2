@@ -167,17 +167,17 @@ module orient_and_anchor(
 	size2 = point2d(default(size2, size));
 	shift = point2d(shift);
 	anchor = !is_undef(center)? (center? CENTER : noncentered) : anchor;
-	m = matrix4_mult(concat(
+	m = affine3d_mult(concat(
 		(orig_anchor==CENTER)? [] : [
 			// If original anchor is not centered, center it.
 			let(anch = find_anchor(orig_anchor, size.z, size, size2=size2, shift=shift, geometry=geometry, two_d=two_d))
-			matrix4_translate(anch[1])
+			affine3d_translate(anch[1])
 		],
 		(orig_orient==ORIENT_Z)? [] : [
 			// If original orientation is not upright, rotate it upright.
-			matrix4_zrot(-orig_orient.z),
-			matrix4_yrot(-orig_orient.y),
-			matrix4_xrot(-orig_orient.x)
+			affine3d_zrot(-orig_orient.z),
+			affine3d_yrot(-orig_orient.y),
+			affine3d_xrot(-orig_orient.x)
 		],
 		($attach_to!=undef)? (
 			let(
@@ -187,21 +187,21 @@ module orient_and_anchor(
 				ang2 = (anch[2]==UP || anch[2]==DOWN)? 0 : 180-anch[3],
 				axis2 = rotate_points3d([axis],[0,0,ang2])[0]
 			) concat(
-				[matrix4_translate(-anch[1])],
+				[affine3d_translate(-anch[1])],
 				$attach_norot? [] : [
-					matrix4_zrot(ang2),
-					matrix4_rot_by_axis(axis2, ang)
+					affine3d_zrot(ang2),
+					affine3d_rot_by_axis(axis2, ang)
 				]
 			)
 		) : concat(
 			(anchor==CENTER)? [] : [
 				let(anch = find_anchor(anchor, size.z, size, size2=size2, shift=shift, extra_anchors=anchors, geometry=geometry, two_d=two_d))
-				matrix4_translate(-anch[1])
+				affine3d_translate(-anch[1])
 			],
 			(orient==ORIENT_Z)? [] : [
-				matrix4_xrot(orient.x),
-				matrix4_yrot(orient.y),
-				matrix4_zrot(orient.z)
+				affine3d_xrot(orient.x),
+				affine3d_yrot(orient.y),
+				affine3d_zrot(orient.z)
 			]
 		)
 	));

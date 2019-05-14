@@ -14,7 +14,7 @@ include <compat.scad>
 include <math.scad>
 include <arrays.scad>
 include <vectors.scad>
-include <matrices.scad>
+include <affine.scad>
 include <quaternions.scad>
 include <coords.scad>
 include <geometry.scad>

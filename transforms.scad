@@ -444,7 +444,7 @@ module zflip(cp=[0,0,0]) translate(cp) mirror([0,0,1]) translate(-cp) children()
 //   skew_xy(xa=30, ya=15) cube(size=10);
 // Example(2D):
 //   skew_xy(xa=15,ya=30,planar=true) square(30);
-module skew_xy(xa=0, ya=0, planar=false) multmatrix(m = planar? matrix3_skew(xa, ya) : matrix4_skew_xy(xa, ya)) children();
+module skew_xy(xa=0, ya=0, planar=false) multmatrix(m = planar? affine2d_skew(xa, ya) : affine3d_skew_xy(xa, ya)) children();
 
 
 // Module: skew_yz()
@@ -462,7 +462,7 @@ module skew_xy(xa=0, ya=0, planar=false) multmatrix(m = planar? matrix3_skew(xa,
 // Example(FlatSpin):
 //   #cube(size=10);
 //   skew_yz(ya=30, za=15) cube(size=10);
-module skew_yz(ya=0, za=0) multmatrix(m = matrix4_skew_yz(ya, za)) children();
+module skew_yz(ya=0, za=0) multmatrix(m = affine3d_skew_yz(ya, za)) children();
 
 
 // Module: skew_xz()
@@ -480,7 +480,7 @@ module skew_yz(ya=0, za=0) multmatrix(m = matrix4_skew_yz(ya, za)) children();
 // Example(FlatSpin):
 //   #cube(size=10);
 //   skew_xz(xa=15, za=-10) cube(size=10);
-module skew_xz(xa=0, za=0) multmatrix(m = matrix4_skew_xz(xa, za)) children();
+module skew_xz(xa=0, za=0) multmatrix(m = affine3d_skew_xz(xa, za)) children();
 
 
 

@@ -99,7 +99,7 @@ The library files are as follows:
   - [`math.scad`](https://github.com/revarbat/BOSL2/wiki/math.scad): Useful helper functions.
   - [`arrays.scad`](https://github.com/revarbat/BOSL2/wiki/arrays.scad): List and Array helper functions.
   - [`vectors.scad`](https://github.com/revarbat/BOSL2/wiki/vectors.scad): Vector math functions.
-  - [`matrices.scad`](https://github.com/revarbat/BOSL2/wiki/matrices.scad): Matrix math and affine transformation functions.
+  - [`affine.scad`](https://github.com/revarbat/BOSL2/wiki/affine.scad): Affine transformation matrix functions.
   - [`coords.scad`](https://github.com/revarbat/BOSL2/wiki/coords.scad): Coordinate system conversions and point transformations.
   - [`geometry.scad`](https://github.com/revarbat/BOSL2/wiki/geometry.scad): Functions to calculate various geometry.
   - [`quaternions.scad`](https://github.com/revarbat/BOSL2/wiki/quaternions.scad): Functions to work with quaternion rotations.

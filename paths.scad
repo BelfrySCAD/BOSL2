@@ -248,11 +248,11 @@ module extrude_2dpath_along_spiral(polyline, h, r, twist=360, center=undef, orie
 			dx = r*cos(a),
 			dy = r*sin(a),
 			dz = h * (p/steps),
-			pts = matrix4_apply(
+			pts = affine3d_apply(
 				polyline, [
-					matrix4_xrot(90),
-					matrix4_zrot(a),
-					matrix4_translate([dx, dy, dz-h/2])
+					affine3d_xrot(90),
+					affine3d_zrot(a),
+					affine3d_translate([dx, dy, dz-h/2])
 				]
 			)
 		) for (pt = pts) pt
