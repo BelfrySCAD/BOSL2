@@ -188,15 +188,15 @@ function _unique_groups(m) = [
 //   regular_polyhedron("great stellated dodecahedron");
 // Example: Third Archimedean solid
 //   regular_polyhedron(type="archimedean", index=2);
-// Example: Solids that have 8 or 10 vertex faces
+// Example(Med): Solids that have 8 or 10 vertex faces
 //   N = len(regular_polyhedron_info("index set", hasfaces=[8,10]));
 //   for(i=[0:N-1]) right(3*i)
 //     regular_polyhedron(hasfaces=[8,10], index=i, mr=1);
-// Example: Solids that include a quadrilateral face
+// Example(Big): Solids that include a quadrilateral face
 //   N = len(regular_polyhedron_info("index set", hasfaces=4));
 //   for(i=[0:N-1]) right(3*i)
 //     regular_polyhedron(hasfaces=4, index=i, mr=1);
-// Example: Solids with only quadrilateral faces
+// Example(Med): Solids with only quadrilateral faces
 //   N = len(regular_polyhedron_info("index set", facetype=4));
 //   for(i=[0:N-1]) right(3*i)
 //     regular_polyhedron(facetype=4, index=i, mr=1);
@@ -208,7 +208,7 @@ function _unique_groups(m) = [
 //   regular_polyhedron("octahedron", side=1, rounding=.2);
 // Example: Rounded catalon solid
 //   regular_polyhedron("rhombic dodecahedron", side=1, rounding=0.2);
-// Example: Rounded Archimedean solid compared to unrounded version.  The small faces are shifted back from their correct position.
+// Example(Med): Rounded Archimedean solid compared to unrounded version.  The small faces are shifted back from their correct position.
 //   %regular_polyhedron(type="archimedean", mr=1, rounding=0);
 //   regular_polyhedron(type="archimedean", mr=1, rounding=0.3);
 // Example: Two children are distributed arbitrarily over the faces
@@ -216,19 +216,19 @@ function _unique_groups(m) = [
 //     color("red") sphere(r=.1);
 //     color("green") sphere(r=.1);
 //   }
-// Example(): Difference the children from the polyhedron; children depend on $faceindex
+// Example(FlatSpin): Difference the children from the polyhedron; children depend on $faceindex
 //   difference(){
 //     regular_polyhedron("tetrahedron", side=25);
 //     regular_polyhedron("tetrahedron", side=25,draw=false)
 //       down(.3) linear_extrude(height=1)
 //         text(str($faceindex),halign="center",valign="center");
 //   }
-// Example: With `rotate_children` you can control direction of the children.
-//   right(3)regular_polyhedron( name="tetrahedron", anchor=UP,rotate_children=false)
+// Example(Big): With `rotate_children` you can control direction of the children.
+//   regular_polyhedron(name="tetrahedron", anchor=UP, rotate_children=true)
 //     cylinder(r=.1, h=.5);
-//   regular_polyhedron( name="tetrahedron", anchor=UP,rotate_children=true)
+//   right(2) regular_polyhedron(name="tetrahedron", anchor=UP, rotate_children=false)
 //     cylinder(r=.1, h=.5);
-// Example: Using `$face` you can have full control of the construction of your children.  This example constructs the Great Icosahedron.
+// Example(FlatSpin,Med): Using `$face` you can have full control of the construction of your children.  This example constructs the Great Icosahedron.
 //   module makestar(pts) {    // Make a star from a point list
 //       polygon(
 //         [
@@ -243,7 +243,7 @@ function _unique_groups(m) = [
 //   }
 //   regular_polyhedron("dodecahedron", side=1, repeat=true)
 //   linear_extrude(scale=0, height=sqrt((5+2*sqrt(5))/5)) makestar($face);
-// Example: The spheres are all radius 1 and the octahedra are sized to match the in-sphere, mid-sphere and out-sphere.  The sphere size is slightly adjusted for the in-sphere and out-sphere so you can see the relationship: the sphere is tangent to the faces for the former and the corners poke out for the latter.  Note also the difference in the size of the three octahedra.
+// Example(Med): The spheres are all radius 1 and the octahedra are sized to match the in-sphere, mid-sphere and out-sphere.  The sphere size is slightly adjusted for the in-sphere and out-sphere so you can see the relationship: the sphere is tangent to the faces for the former and the corners poke out for the latter.  Note also the difference in the size of the three octahedra.
 //   sphere(r=1.005);
 //   %regular_polyhedron("octahedron", ir=1, facedown=false);
 //   right(3.5) {
@@ -254,7 +254,7 @@ function _unique_groups(m) = [
 //     %sphere(r=.95);  // Slightly undersized sphere means the points poke out a bit
 //     regular_polyhedron("octahedron", or=1,facedown=false);
 //   }
-// Example: For the Archimdean solids the in-sphere does not touch all of the faces, as shown by this example, but the circumscribed sphere meets every vertex.  (This explains the problem for rounding over these solids because the rounding method uses the in-sphere.)
+// Example(Med): For the Archimdean solids the in-sphere does not touch all of the faces, as shown by this example, but the circumscribed sphere meets every vertex.  (This explains the problem for rounding over these solids because the rounding method uses the in-sphere.)
 //   sphere(r=1.005);
 //   %regular_polyhedron("snub dodecahedron", ir=1, facedown=false);
 //   right(3) {
@@ -265,7 +265,7 @@ function _unique_groups(m) = [
 //     %sphere(r=.99);
 //     regular_polyhedron("snub dodecahedron", or=1,facedown=false);
 //   }
-// Example: For a Catalan solid the in-sphere touches every face but the circumscribed sphere only touches some vertices.
+// Example(Med): For a Catalan solid the in-sphere touches every face but the circumscribed sphere only touches some vertices.
 //   sphere(r=1.002);
 //   %regular_polyhedron("pentagonal hexecontahedron", ir=1, facedown=false);
 //   right(3) {
@@ -546,20 +546,45 @@ _stellated_polyhedra_ = [
 // Usage: regular_polyhedron_info(info, ....)
 //
 // Description:
-//   Calculate characteristics of regular polyhedra or the selection set for regular_polyhedron().  Invoke with the same
-//   arguments used by regular_polyhedron() and use the `info` argument to request the desired return value. Set `info` to:
-//     * "vertices": vertex list for the selected polyhedron
-//     * "faces": list of faces for the selected polyhedron, where each entry on the list is a list of point index values to be used with the vertex list
-//     * "face normals": list of normal vectors for each face
-//     * "in_radius": in-sphere radius for the selected polyhedron
-//     * "mid_radius": mid-sphere radius for the selected polyhedron
-//     * "out_radius": circumscribed sphere radius for the selected polyhedron
-//     * "index set": index set selected by your specifications; use its length to determine the valid range for `index`.
-//     * "face vertices": number of vertices on the faces of the selected polyhedron (always a list)
-//     * "edge length": length of the smallest edge of the selected polyhedron
-//     * "center": center for the polyhedron
-//     * "type": polyhedron type, one of "platonic", "archimedean", "catalan", or "trapezohedron"
-//     * "name": name of selected polyhedron
+//   Calculate characteristics of regular polyhedra or the selection set for regular_polyhedron().
+//   Invoke with the same arguments used by regular_polyhedron() and use the `info` argument to
+//   request the desired return value. Set `info` to:
+//     * `"vertices"`: vertex list for the selected polyhedron
+//     * `"faces"`: list of faces for the selected polyhedron, where each entry on the list is a list of point index values to be used with the vertex list
+//     * `"face normals"`: list of normal vectors for each face
+//     * `"in_radius"`: in-sphere radius for the selected polyhedron
+//     * `"mid_radius"`: mid-sphere radius for the selected polyhedron
+//     * `"out_radius"`: circumscribed sphere radius for the selected polyhedron
+//     * `"index set"`: index set selected by your specifications; use its length to determine the valid range for `index`.
+//     * `"face vertices"`: number of vertices on the faces of the selected polyhedron (always a list)
+//     * `"edge length"`: length of the smallest edge of the selected polyhedron
+//     * `"center"`: center for the polyhedron
+//     * `"type"`: polyhedron type, one of "platonic", "archimedean", "catalan", or "trapezohedron"
+//     * `"name"`: name of selected polyhedron
+//
+// Arguments:
+//   name = Name of polyhedron to create.
+//   index = Index to select from polyhedron list.  Default: 0.
+//   type = Type of polyhedron: "platonic", "archimedean", "catalan".
+//   faces = Number of faces.
+//   facetype = Scalar or vector listing required type of faces as vertex count.  Polyhedron must have faces of every type listed and no other types.
+//   hasfaces = Scalar of vector list face vertex counts.  Polyhedron must have at least one of the listed types of face.
+//   side = Length of the smallest edge of the polyhedron.  Default: 1.
+//   ir = inner radius.  Polyhedron is scaled so it has the specified inner radius. Overrides side.
+//   mr = middle radius.  Polyhedron is scaled so it has the specified middle radius.  Overrides side.
+//   or = outer radius.   Polyhedron is scaled so it has the specified outer radius.  Overrides side.
+//   r = outer radius.  Overrides or.
+//   d = outer diameter.  Overrides or.
+//   anchor = Side of the origin to anchor to.  The bounding box of the polyhedron is aligned as specified.  Use directional constants from `constants.scad`.  Default: `CENTER`
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP+BACK+RIGHT`.
+//   facedown = If false display the solid in native orientation.  If true orient it with a largest face down.  If set to a vertex count, orient it so a face with the specified number of vertices is down.  Default: true.
+//   rounding = Specify a rounding radius for the shape.  Note that depending on $fn the dimensions of the shape may have small dimensional errors.
+//   repeat = If true then repeat the children to fill all the faces.  If false use only the available children and stop.  Default: true.
+//   draw = If true then draw the polyhedron.  If false, draw the children but not the polyhedron.  Default: true.
+//   rotate_children = If true then orient children normal to their associated face.  If false orient children to the parent coordinate system.  Default: true.
+//   stellate = Set to a number to erect a pyramid on every face of your polyhedron with the specified height.  The height is a multiple of the side length.  Default: false.
+//   longside = Specify the long side length for a trapezohedron.  Ignored for other shapes.
+//   h = Specify the height of the apex for a trapezohedron.  Ignored for other shapes.
 function regular_polyhedron_info(
 	info=undef, name=undef,
 	index=undef, type=undef,
