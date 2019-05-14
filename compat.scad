@@ -71,10 +71,21 @@ function remove_undefs(v) = [for (x = v) if (!is_undef(x)) x];
 function first_defined(v) = remove_undefs(v)[0];
 
 
+// Function: num_defined()
+// Description: Counts how many items in list `v` are not `undef`.
+function num_defined(v) = sum([for (x = v) is_undef(x)? 0 : 1]);
+
+
 // Function: any_defined()
 // Description:
 //   Returns true if any item in the given array is not `undef`.
-function any_defined(v) = len(remove_undefs(v))>0;
+function any_defined(v) = num_defined(v)>0;
+
+
+// Function: all_defined()
+// Description:
+//   Returns true if all items in the given array are not `undef`.
+function all_defined(v) = num_defined(v)==len(v);
 
 
 // Function: scalar_vec3()
@@ -99,7 +110,7 @@ function scalar_vec3(v, dflt=undef) =
 // Section: Modules
 
 
-// Module: assert_in_list()
+// Function&Module: assert_in_list()
 // Usage:
 //   assert_in_list(argname, val, l, [idx]);
 // Description:
@@ -111,16 +122,7 @@ function scalar_vec3(v, dflt=undef) =
 //   l = The list to look for `val` in.
 //   idx = If given, and `l` is a list of lists, look for `val` in the given index of each sublist.
 module assert_in_list(argname, val, l, idx=undef) {
-	succ = search([val], l, num_returns_per_match=1, index_col_num=idx) != [[]];
-	if (!succ) {
-		msg = str(
-			"In argument '", argname, "', ",
-			(is_string(val)? str("\"", val, "\"") : val),
-			" must be one of ",
-			(!is_undef(idx)? [for (v=l) v[idx]] : l)
-		);
-		assertion(succ, msg);
-	}
+	dummy = assert_in_list(argname, val, l, idx);
 }
 
 function assert_in_list(argname, val, l, idx=undef) =
@@ -131,31 +133,12 @@ function assert_in_list(argname, val, l, idx=undef) =
 			(is_string(val)? str("\"", val, "\"") : val),
 			" must be one of ",
 			(!is_undef(idx)? [for (v=l) v[idx]] : l)
-		)
-	) assertion(succ, msg);
+		),
+		FAILED=succ
+	) assert(FAILED, msg);
 
 
-// Module: assertion()
-// Usage:
-//   assertion(succ, msg);
-// Description:
-//   Backwards compatible assert() semi-replacement.
-//   If `succ` is false, then print an error with `msg`.
-//   You can also use this as a function call from a function.
-// Arguments:
-//   succ = If this is `false`, trigger the assertion.
-//   msg = The message to emit if `succ` is `false`.
-module assertion(succ, msg) {
-	// assert() will echo the variable name, and `succ` looks confusing there.  So we store it in FAILED.
-	FAILED = succ;
-	assert(FAILED, msg);
-}
-
-function assertion(succ, msg) =
-	let(FAILED=succ) assert(FAILED, msg);
-
-
-// Module: echo_error()
+// Function&Module: echo_error()
 // Usage:
 //   echo_error(msg, [pfx]);
 // Description:
@@ -172,7 +155,7 @@ function echo_error(msg, pfx="ERROR") =
 	echo(str("<p style=\"background-color: #ffb0b0\"><b>", pfx, ":</b> ", msg, "</p>"));
 
 
-// Module: echo_warning()
+// Function&Module: echo_warning()
 // Usage:
 //   echo_warning(msg, [pfx]);
 // Description:
@@ -189,7 +172,7 @@ function echo_warning(msg, pfx="WARNING") =
 	echo(str("<p style=\"background-color: #ffffb0\"><b>", pfx, ":</b> ", msg, "</p>"));
 
 
-// Module: deprecate()
+// Function&Module: deprecate()
 // Usage:
 //   deprecate(name, [suggest]);
 // Description:
@@ -220,7 +203,7 @@ function deprecate(name, suggest=undef) =
 	);
 
 
-// Module: deprecate_argument()
+// Function&Module: deprecate_argument()
 // Usage:
 //   deprecate(name, arg, [suggest]);
 // Description:
