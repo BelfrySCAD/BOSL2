@@ -90,16 +90,16 @@ function affine2d_skew(xa, ya) = [
 ];
 
 
-// Function: affine2d_mult()
+// Function: affine2d_chain()
 // Usage:
-//   affine2d_mult(affines)
+//   affine2d_chain(affines)
 // Description:
 //   Returns a 3x3 affine2d transformation matrix which results from applying each matrix in `affines` in order.
 // Arguments:
 //   affines = A list of 3x3 affine2d matrices.
-function affine2d_mult(affines, _m=undef, _i=0) =
+function affine2d_chain(affines, _m=undef, _i=0) =
 	(_i>=len(affines))? (is_undef(_m)? ident(3) : _m) :
-	affine2d_mult(affines, _m=(is_undef(_m)? affines[_i] : affines[_i] * _m), _i=_i+1);
+	affine2d_chain(affines, _m=(is_undef(_m)? affines[_i] : affines[_i] * _m), _i=_i+1);
 
 
 // Function: affine2d_apply()
@@ -120,7 +120,7 @@ function affine2d_mult(affines, _m=undef, _i=0) =
 //       ]
 //   );  // Returns [[5,5], [5,20], [5,35], [5,50]]
 function affine2d_apply(pts, affines) =
-	let(m = affine2d_mult(affines))
+	let(m = affine2d_chain(affines))
 	[for (p = pts) point2d(m * concat(point2d(p),[1]))];
 
 
@@ -269,16 +269,16 @@ function affine3d_skew_yz(ya, za) = [
 ];
 
 
-// Function: affine3d_mult()
+// Function: affine3d_chain()
 // Usage:
-//   affine3d_mult(affines)
+//   affine3d_chain(affines)
 // Description:
 //   Returns a 4x4 affine3d transformation matrix which results from applying each matrix in `affines` in order.
 // Arguments:
 //   affines = A list of 4x4 affine3d matrices.
-function affine3d_mult(affines, _m=undef, _i=0) =
+function affine3d_chain(affines, _m=undef, _i=0) =
 	(_i>=len(affines))? (is_undef(_m)? ident(4) : _m) :
-	affine3d_mult(affines, _m=(is_undef(_m)? affines[_i] : affines[_i] * _m), _i=_i+1);
+	affine3d_chain(affines, _m=(is_undef(_m)? affines[_i] : affines[_i] * _m), _i=_i+1);
 
 
 // Function: affine3d_apply()
@@ -299,7 +299,7 @@ function affine3d_mult(affines, _m=undef, _i=0) =
 //     ]
 //   );  // Returns [[5,5,10], [5,15,10], [5,25,10], [5,35,10]]
 function affine3d_apply(pts, affines) =
-	let(m = affine3d_mult(affines))
+	let(m = affine3d_chain(affines))
 	[for (p = pts) point3d(m * concat(point3d(p),[1]))];
 
 

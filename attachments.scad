@@ -167,7 +167,7 @@ module orient_and_anchor(
 	size2 = point2d(default(size2, size));
 	shift = point2d(shift);
 	anchor = !is_undef(center)? (center? CENTER : noncentered) : anchor;
-	m = affine3d_mult(concat(
+	m = affine3d_chain(concat(
 		(orig_anchor==CENTER)? [] : [
 			// If original anchor is not centered, center it.
 			let(anch = find_anchor(orig_anchor, size.z, size, size2=size2, shift=shift, geometry=geometry, two_d=two_d))
