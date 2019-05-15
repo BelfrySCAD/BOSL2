@@ -80,6 +80,7 @@ The library files are as follows:
   - [`threading.scad`](https://github.com/revarbat/BOSL2/wiki/threading.scad): Modules to make triangular and trapezoidal threaded rods and nuts.
   - [`paths.scad`](https://github.com/revarbat/BOSL2/wiki/paths.scad): Functions and modules to work with arbitrary 3D paths.
   - [`beziers.scad`](https://github.com/revarbat/BOSL2/wiki/beziers.scad): Functions and modules to work with bezier curves.
+  - [`roundcorners.scad`](https://github.com/revarbat/BOSL2/wiki/roundcorners.scad): Functions and modules to make rounded corners.
   - [`debug.scad`](https://github.com/revarbat/BOSL2/wiki/debug.scad): Modules to help debug beziers, `polygons()`s and `polyhedron()`s, etc.
 
 ### Standard Parts
