@@ -85,8 +85,8 @@ function vquantup(v,m) = [for (x=v) quantup(x,m)];
 // Function: vector_angle()
 // Usage:
 //   vector_angle(v1,v2);
-//   vector_angle([PT1,PT2,PT3]);
 //   vector_angle(PT1,PT2,PT3);
+//   vector_angle([PT1,PT2,PT3]);
 // Description:
 //   If given a single list of two vectors, like `vector_angle([V1,V2])`, returns the angle between the two vectors V1 and V2.
 //   If given a single list of three points, like `vector_angle([A,B,C])`, returns the angle between the line segments AB and BC.
@@ -113,11 +113,17 @@ function vector_angle(v1,v2=undef,v3=undef) =
 // Function: vector_axis()
 // Usage:
 //   vector_axis(v1,v2);
+//   vector_axis(PT1,PT2,PT3);
+//   vector_axis([PT1,PT2,PT3]);
 // Description:
-//   Returns the vector perpendicular to both of the given vectors.
+//   If given a single list of two vectors, like `vector_axis([V1,V2])`, returns the vector perpendicular the two vectors V1 and V2.
+//   If given a single list of three points, like `vector_axis([A,B,C])`, returns the vector perpendicular the line segments AB and BC.
+//   If given two vectors, like `vector_axis(V1,V1)`, returns the vector perpendicular the two vectors V1 and V2.
+//   If given three points, like `vector_axis(A,B,C)`, returns the vector perpendicular the line segments AB and BC.
 // Arguments:
-//   v1 = First vector.
-//   v2 = Second vector.
+//   v1 = First vector or point.
+//   v2 = Second vector or point.
+//   v3 = Third point in three point mode.
 function vector_axis(v1,v2=undef,v3=undef) =
 	(is_list(v1) && is_list(v1[0]) && is_undef(v2) && is_undef(v3))? (
 		assert(is_vector(v1.x))
