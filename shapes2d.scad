@@ -350,7 +350,7 @@ module glued_circles(r=undef, d=undef, spread=10, tangent=30)
 function star(n, r, d, ir, id, step, realign=false) =
 	let(
 		r = get_radius(r=r, d=d),
-		count = len(remove_undefs([ir,id,step])),
+		count = num_defined([ir,id,step]),
 		stepOK = is_undef(step) || (step>1 && step<n/2)
 	)
 	assert(count==1, "Must specify exactly one of ir, id, step")
