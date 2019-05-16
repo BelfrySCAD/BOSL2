@@ -13,6 +13,13 @@
 include <BOSL2/beziers.scad>
 
 
+// CommonCode:
+//   $fn=200;
+
+
+// Section: Functions
+
+
 // Function: round_corners()
 //
 // Description:
@@ -99,7 +106,6 @@ include <BOSL2/beziers.scad>
 //   polygon(round_corners(shape, curve="smooth", type="cut", $fs=0.1));
 //   color("red") down(.1) polygon(subindex(shape,[0:1]));
 // Example(Med3D): 3d printing test pieces to display different curvature shapes.  You can see the discontinuity in the curvature on the "C" piece in the rendered image.  
-//   $fn=200;
 //   ten = [[0,0,5],[50,0,5],[50,50,5],[0,50,5]];
 //   linear_extrude(height=14){
 //   translate([25,25,0])text("C",size=30, valign="center", halign="center");
