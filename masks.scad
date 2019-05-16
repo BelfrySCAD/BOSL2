@@ -165,11 +165,11 @@ module cylinder_mask(
 // Example:
 //   difference() {
 //       cube(50);
-//       #chamfer_mask(l=50, chamfer=10, orient=ORIENT_X, anchor=RIGHT);
+//       #chamfer_mask(l=50, chamfer=10, orient=ORIENT_X, anchor=BOTTOM);
 //   }
 module chamfer_mask(l=1, chamfer=1, orient=ORIENT_Z, anchor=CENTER) {
-	orient_and_anchor([chamfer, chamfer, l], orient, anchor, chain=true) {
-		cylinder(d=chamfer*2, h=l+0.1, center=true, $fn=4);
+	orient_and_anchor([chamfer*2, chamfer*2, l], orient, anchor, chain=true) {
+		cylinder(r=chamfer, h=l+0.1, center=true, $fn=4);
 		children();
 	}
 }
@@ -295,10 +295,10 @@ module chamfer(chamfer=1, size=[1,1,1], edges=EDGES_ALL)
 //       cylinder(r=50, h=100, center=true);
 //       up(50) #chamfer_cylinder_mask(r=50, chamfer=10);
 //   }
-module chamfer_cylinder_mask(r=1.0, d=undef, chamfer=0.25, ang=45, from_end=false, orient=ORIENT_Z)
+module chamfer_cylinder_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false, orient=ORIENT_Z)
 {
 	r = get_radius(r=r, d=d, dflt=1);
-	rot(orient) cylinder_mask(l=chamfer*3, r=r, chamfer2=chamfer, chamfang2=ang, from_end=from_end, ends_only=true, anchor=DOWN) children();
+	rot(orient) cylinder_mask(l=chamfer*3, r=r, chamfer2=chamfer, chamfang2=ang, from_end=from_end, ends_only=true, anchor=TOP);
 }
 
 
@@ -360,7 +360,7 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       #rounding_mask(l=100, r=25, orient=ORIENT_Z, anchor=UP);
+//       #rounding_mask(l=100, r=25, orient=ORIENT_Z, anchor=BOTTOM);
 //   }
 module rounding_mask(l=undef, r=1.0, orient=ORIENT_Z, anchor=CENTER, h=undef)
 {
@@ -393,9 +393,15 @@ module rounding_mask(l=undef, r=1.0, orient=ORIENT_Z, anchor=CENTER, h=undef)
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       #rounding_mask_x(l=100, r=25, anchor=RIGHT);
+//       #rounding_mask_x(l=100, r=25, anchor=LEFT);
 //   }
-module rounding_mask_x(l=1.0, r=1.0, anchor=CENTER) rounding_mask(l=l, r=r, orient=ORIENT_X, anchor=anchor) children();
+module rounding_mask_x(l=1.0, r=1.0, anchor=CENTER)
+{
+	orient_and_anchor([l, 2*r, 2*r], ORIENT_Z, anchor, chain=true) {
+		rounding_mask(l=l, r=r, orient=ORIENT_X, anchor=CENTER)
+		children();
+	}
+}
 
 
 // Module: rounding_mask_y()
@@ -413,9 +419,15 @@ module rounding_mask_x(l=1.0, r=1.0, anchor=CENTER) rounding_mask(l=l, r=r, orie
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       right(100) #rounding_mask_y(l=100, r=25, anchor=BACK);
+//       right(100) #rounding_mask_y(l=100, r=25, anchor=FRONT);
 //   }
-module rounding_mask_y(l=1.0, r=1.0, anchor=CENTER) rounding_mask(l=l, r=r, orient=ORIENT_Y, anchor=anchor) children();
+module rounding_mask_y(l=1.0, r=1.0, anchor=CENTER)
+{
+	orient_and_anchor([2*r, l, 2*r], ORIENT_Z, anchor, chain=true) {
+		rounding_mask(l=l, r=r, orient=ORIENT_Y, anchor=CENTER)
+		children();
+	}
+}
 
 
 // Module: rounding_mask_z()
@@ -433,7 +445,7 @@ module rounding_mask_y(l=1.0, r=1.0, anchor=CENTER) rounding_mask(l=l, r=r, orie
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       #rounding_mask_z(l=100, r=25, anchor=UP);
+//       #rounding_mask_z(l=100, r=25, anchor=BOTTOM);
 //   }
 module rounding_mask_z(l=1.0, r=1.0, anchor=CENTER) rounding_mask(l=l, r=r, orient=ORIENT_Z, anchor=anchor) children();
 
@@ -529,7 +541,7 @@ module rounding_angled_edge_mask(h=1.0, r=1.0, ang=90, orient=ORIENT_Z, anchor=C
 //   ang = Angle between planes that you need to round the corner of.
 //   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
-// Example:
+// Example(Med):
 //   ang=60;
 //   difference() {
 //       angle_pie_mask(ang=ang, h=50, r=200);
@@ -616,12 +628,12 @@ module rounding_corner_mask(r=1.0, anchor=CENTER)
 //   }
 // Example:
 //   difference() {
-//     cylinder(r=50, h=100, center=false);
-//     up(75) rounding_cylinder_mask(r=50, rounding=10);
+//     cylinder(r=50, h=50, center=false);
+//     up(50) rounding_cylinder_mask(r=50, rounding=10);
 //   }
 module rounding_cylinder_mask(r=1.0, rounding=0.25)
 {
-	cylinder_mask(l=rounding*3, r=r, rounding2=rounding, overage=rounding, ends_only=true, anchor=DOWN) children();
+	cylinder_mask(l=rounding*3, r=r, rounding2=rounding, overage=rounding, ends_only=true, anchor=TOP);
 }
 
 
@@ -641,7 +653,7 @@ module rounding_cylinder_mask(r=1.0, rounding=0.25)
 //   overage = The extra thickness of the mask.  Default: `0.1`.
 //   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: `ORIENT_Z`.
 //   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
-// Example:
+// Example(Med):
 //   difference() {
 //     cube([150,150,100], center=true);
 //     cylinder(r=50, h=100.1, center=true);

@@ -88,7 +88,7 @@ module circle(r=undef, d=undef, anchor=CENTER) {
 module cube(size, center=undef, anchor=ALLNEG)
 {
 	size = scalar_vec3(size);
-	orient_and_anchor(size, ORIENT_Z, anchor, center, noncentered=ALLPOS, chain=true) {
+	orient_and_anchor(size, ORIENT_Z, anchor, center, noncentered=ALLNEG, chain=true) {
 		linear_extrude(height=size.z, convexity=2, center=true) {
 			square([size.x, size.y], center=true);
 		}
