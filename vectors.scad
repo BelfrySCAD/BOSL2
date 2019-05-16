@@ -10,6 +10,15 @@
 
 // Section: Vector Manipulation
 
+
+// Function: is_vector()
+// Usage:
+//   is_vector(v)
+// Description:
+//   Returns true if the given value is a list, and at least the first item is a number.
+function is_vector(v) = is_list(v) && is_num(v[0]);
+
+
 // Function: vmul()
 // Description:
 //   Element-wise vector multiplication.  Multiplies each element of vector `v1` by

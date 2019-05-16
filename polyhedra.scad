@@ -597,7 +597,7 @@ function regular_polyhedron_info(
 	longside=undef, h=undef  // special parameters for trapezohedron
 ) = let(
 		anchor = !is_undef(center) ? [0,0,0] : anchor,
-		argcount = len(remove_undefs([ir,mr,or,r,d]))
+		argcount = num_defined([ir,mr,or,r,d])
 	)
 	assert(argcount<=1, "You must specify only one of 'ir', 'mr', 'or', 'r', and 'd'")
 	let(
@@ -725,7 +725,7 @@ function trapezohedron(faces, r, side, longside, h) =
 	assert(faces%2==0, "Number of faces must be even")
 	let(
 		N = faces/2,
-		parmcount = len(remove_undefs([r,side,longside,h]))
+		parmcount = num_defined([r,side,longside,h])
 	)
 	assert(parmcount==2,"Must define exactly two of 'r', 'side', 'longside', and 'height'")
 	let(

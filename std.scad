@@ -10,7 +10,8 @@
 
 include <constants.scad>
 include <edges.scad>
-include <compat.scad>
+include <common.scad>
+include <errors.scad>
 include <math.scad>
 include <arrays.scad>
 include <vectors.scad>

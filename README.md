@@ -97,6 +97,8 @@ The library files are as follows:
 
 ### Various Math
   - [`constants.scad`](https://github.com/revarbat/BOSL2/wiki/constants.scad): Useful constants for vectors, edges, etc.
+  - [`errors.scad`](https://github.com/revarbat/BOSL2/wiki/errors.scad): Stuff for reporting errors and warnings.
+  - [`common.scad`](https://github.com/revarbat/BOSL2/wiki/common.scad): Common argument processing helpers and functions.
   - [`math.scad`](https://github.com/revarbat/BOSL2/wiki/math.scad): Useful helper functions.
   - [`arrays.scad`](https://github.com/revarbat/BOSL2/wiki/arrays.scad): List and Array helper functions.
   - [`vectors.scad`](https://github.com/revarbat/BOSL2/wiki/vectors.scad): Vector math functions.

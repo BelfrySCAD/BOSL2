@@ -53,8 +53,8 @@ module test_vector_angle() {
 	}
 	assert(abs(vector_angle([10,10,0],[10,0,0])-45) < EPSILON);
 	assert(abs(vector_angle([[10,10,0],[10,0,0]])-45) < EPSILON);
-	assert(abs(vector_angle([11,11,1],[1,1,1],[11,-11,1])-90) < EPSILON);
-	assert(abs(vector_angle([[11,11,1],[1,1,1],[11,-11,1]])-90) < EPSILON);
+	assert(abs(vector_angle([11,11,1],[1,1,1],[11,-9,1])-90) < EPSILON);
+	assert(abs(vector_angle([[11,11,1],[1,1,1],[11,-9,1]])-90) < EPSILON);
 }
 test_vector_angle();
 
