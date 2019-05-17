@@ -393,12 +393,12 @@ module screw(
 	anchor="base"
 ) {
 	sides = max(12, segs(screwsize/2));
-	algn = countersunk? DOWN : anchor;
+	algn = countersunk? TOP : anchor;
 	anchors = [
 		anchorpt("base", [0,0,-headlen/2+screwlen/2]),
 		anchorpt("sunken", [0,0,(headlen+screwlen)/2-0.01])
 	];
-	orient_and_anchor([headsize, headsize, headlen+screwlen], orient, algn, anchors=anchors, chain=true) {
+	orient_and_anchor([screwsize, screwsize, headlen+screwlen], orient, algn, anchors=anchors, geometry="cylinder", chain=true) {
 		down(headlen/2-screwlen/2) {
 			down(screwlen/2) {
 				if (pitch == undef) {

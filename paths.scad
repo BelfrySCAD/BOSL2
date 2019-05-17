@@ -207,16 +207,13 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 //       circle(r=40, $fn=6);
 module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, orient=ORIENT_Z, anchor=BOTTOM)
 {
-	orient_and_anchor([0,0,height], orient, anchor, center, chain=true) {
-		linear_extrude(height=height, twist=twist, slices=slices, center=true) {
-			difference() {
+	linear_extrude(height=height, twist=twist, slices=slices, center=true) {
+		difference() {
+			children();
+			offset(r=-wall) {
 				children();
-				offset(r=-wall) {
-					children();
-				}
 			}
 		}
-		children();
 	}
 }
 
@@ -427,7 +424,7 @@ module trace_polyline(pline, N=1, showpts=false, size=1, color="yellow") {
 //   points = The array of 2D polygon vertices.
 //   paths = The path connections between the vertices.
 //   convexity = The max number of walls a ray can pass through the given polygon paths.
-// Example(2D):
+// Example(Big2D):
 //   debug_polygon(
 //       points=concat(
 //           path2d_regular_ngon(r=10, n=8),

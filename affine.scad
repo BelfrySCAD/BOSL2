@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////
-// LibFile: matrices.scad
+// LibFile: affine.scad
 //   Matrix math and affine transformation matrices.
 //   To use, add the following lines to the beginning of your file:
 //   ```

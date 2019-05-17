@@ -779,7 +779,7 @@ module tube(
 	od=undef, od1=undef, od2=undef,
 	ir=undef, id=undef, ir1=undef,
 	ir2=undef, id1=undef, id2=undef,
-	center=undef, orient=ORIENT_Z, anchor=UP,
+	center=undef, orient=ORIENT_Z, anchor=BOTTOM,
 	realign=false
 ) {
 	r1 = first_defined([or1, od1/2, r1, d1/2, or, od/2, r, d/2, ir1+wall, id1/2+wall, ir+wall, id/2+wall]);
@@ -1128,7 +1128,7 @@ module pie_slice(
 	ang=30, l=undef,
 	r=10, r1=undef, r2=undef,
 	d=undef, d1=undef, d2=undef,
-	orient=ORIENT_Z, anchor=UP,
+	orient=ORIENT_Z, anchor=BOTTOM,
 	center=undef, h=undef
 ) {
 	l = first_defined([l, h, 1]);
@@ -1263,9 +1263,9 @@ module slot(
 //   center = If given and true, centers vertically.  If given and false, drops flush with XY plane.  Overrides `anchor`.
 //   $fn2 = The `$fn` value to use on the small round endcaps.  The major arcs are still based on `$fn`.  Default: `$fn`
 //
-// Example: Typical Arced Slot
+// Example(Med): Typical Arced Slot
 //   arced_slot(d=60, h=5, sd=10, sa=60, ea=280);
-// Example: Conical Arced Slot
+// Example(Med): Conical Arced Slot
 //   arced_slot(r=60, h=5, sd1=10, sd2=15, sa=45, ea=180);
 module arced_slot(
 	r=undef, d=undef, h=1.0,

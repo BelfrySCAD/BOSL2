@@ -80,26 +80,43 @@ function get_lmXuu_bearing_length(size) = lookup(size, [
 //   anchor = Alignment of the housing by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `UP`
 // Example:
 //   linear_bearing_housing(d=19, l=29, wall=2, tab=6, screwsize=2.5);
-module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, orient=ORIENT_X, anchor=UP)
+module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, orient=ORIENT_X, anchor=BOTTOM)
 {
 	od = d+2*wall;
 	ogap = gap+2*tabwall;
 	tabh = tab/2+od/2*sqrt(2)-ogap/2;
-	orient_and_anchor([l, od, od], orient, anchor, orig_orient=ORIENT_X, chain=true) {
+	h = od+tab/2;
+	anchors = [
+		anchorpt("axis", [0,0,-tab/2/2]),
+		anchorpt("screw", [0,2-ogap/2,tabh-tab/2/2],FWD),
+		anchorpt("nut", [0,ogap/2-2,tabh-tab/2/2],FWD)
+	];
+	orient_and_anchor([l, od, h], orient, anchor, anchors=anchors, orig_orient=ORIENT_X, chain=true) {
+		down(tab/2/2)
 		difference() {
 			union() {
+				// Housing
 				zrot(90) teardrop(r=od/2,h=l);
-				up(tabh) cube(size=[l,ogap,tab+0.05], center=true);
-				down(od/4) cube(size=[l,od,od/2], center=true);
+
+				// Base
+				cube([l,od,od/2], anchor=TOP);
+
+				// Tabs
+				cube([l,ogap,od/2+tab/2], anchor=BOTTOM);
 			}
+
+			// Clear bearing space
 			zrot(90) teardrop(r=d/2,h=l+0.05);
-			up((d*sqrt(2)+tab)/2)
-				cube(size=[l+0.05,gap,d+tab], center=true);
+
+			// Clear gap
+			cube([l+0.05,gap,od], anchor=BOTTOM);
+
 			up(tabh) {
-				fwd(ogap/2-2+0.01)
-					xrot(90) screw(screwsize=screwsize*1.06, screwlen=ogap, headsize=screwsize*2, headlen=10);
-				back(ogap/2+0.01)
-					xrot(90) metric_nut(size=screwsize, hole=false);
+				// Screwhole
+				fwd(ogap/2-2+0.01) xrot(90) screw(screwsize=screwsize*1.06, screwlen=ogap, headsize=screwsize*2, headlen=10);
+
+				// Nut holder
+				back(ogap/2-2+0.01) xrot(90) metric_nut(size=screwsize, hole=false);
 			}
 		}
 		children();
@@ -121,7 +138,7 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 //   anchor = Alignment of the housing by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `UP`
 // Example:
 //   lmXuu_housing(size=10, wall=2, tab=6, screwsize=2.5);
-module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, orient=ORIENT_X, anchor=UP)
+module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, orient=ORIENT_X, anchor=BOTTOM)
 {
 	d = get_lmXuu_bearing_diam(size);
 	l = get_lmXuu_bearing_length(size);

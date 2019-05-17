@@ -145,11 +145,14 @@ class ImageProcessing(object):
                     "--imgsize={}".format(imgsizes[0]),
                     "--hardwarnings",
                     "--projection=o",
-                    "--view=axes,scales",
                     "--autocenter",
                     "--viewall",
                     "--camera", eye+",0,0,0"
                 ]
+                if "Edges" in extype:  # Force render
+                    scadcmd.extend(["--view=axes,scales,edges"])
+                else:
+                    scadcmd.extend(["--view=axes,scales"])
                 if "FR" in extype:  # Force render
                     scadcmd.extend(["--render", ""])
                 scadcmd.append(scriptfile)
@@ -174,12 +177,15 @@ class ImageProcessing(object):
                 "--imgsize={}".format(imgsizes[0]),
                 "--hardwarnings",
                 "--projection=o",
-                "--view=axes,scales",
                 "--autocenter",
                 "--viewall"
             ]
             if "2D" in extype:  # 2D viewpoint
                 scadcmd.extend(["--camera", "0,0,0,0,0,0,500"])
+            if "Edges" in extype:  # Force render
+                scadcmd.extend(["--view=axes,scales,edges"])
+            else:
+                scadcmd.extend(["--view=axes,scales"])
             if "FR" in extype:  # Force render
                 scadcmd.extend(["--render", ""])
             scadcmd.append(scriptfile)

@@ -66,7 +66,7 @@ module debug_vertices(vertices, size=1, disabled=false) {
 //   faces    = Array of faces by vertex numbers.
 //   size     = The size of the text used to label the faces and vertices.
 //   disabled = If true, don't draw numbers, and draw children without transparency.  Default = false.
-// Example:
+// Example(EdgesMed):
 //   verts = [for (z=[-10,10], y=[-10,10], x=[-10,10]) [x,y,z]];
 //   faces = [[0,1,2], [1,3,2], [0,4,5], [0,5,1], [1,5,7], [1,7,3], [3,7,6], [3,6,2], [2,6,4], [2,4,0], [4,6,7], [4,7,5]];
 //   debug_faces(vertices=verts, faces=faces, size=2) {
@@ -130,7 +130,7 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 //   faces = Array of faces by vertex numbers.
 //   txtsize = The size of the text used to label the faces and vertices.
 //   disabled = If true, act exactly like `polyhedron()`.  Default = false.
-// Example:
+// Example(EdgesMed):
 //   verts = [for (z=[-10,10], a=[0:120:359.9]) [10*cos(a),10*sin(a),z]];
 //   faces = [[0,1,2], [5,4,3], [0,3,4], [0,4,1], [1,4,5], [1,5,2], [2,5,3], [2,3,0]];
 //   debug_polyhedron(points=verts, faces=faces, txtsize=1);

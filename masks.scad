@@ -164,8 +164,8 @@ module cylinder_mask(
 //   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
 // Example:
 //   difference() {
-//       cube(50);
-//       #chamfer_mask(l=50, chamfer=10, orient=ORIENT_X, anchor=BOTTOM);
+//       cube(50, anchor=BOTTOM+FRONT);
+//       #chamfer_mask(l=50, chamfer=10, orient=ORIENT_X);
 //   }
 module chamfer_mask(l=1, chamfer=1, orient=ORIENT_Z, anchor=CENTER) {
 	orient_and_anchor([chamfer*2, chamfer*2, l], orient, anchor, chain=true) {
@@ -188,8 +188,8 @@ module chamfer_mask(l=1, chamfer=1, orient=ORIENT_Z, anchor=CENTER) {
 //   anchor = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
 // Example:
 //   difference() {
-//       left(40) cube(80);
-//       #chamfer_mask_x(l=80, chamfer=20);
+//       cube(50, anchor=BOTTOM+FRONT);
+//       #chamfer_mask_x(l=50, chamfer=10);
 //   }
 module chamfer_mask_x(l=1.0, chamfer=1.0, anchor=CENTER) {
 	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_X, anchor=anchor) children();
@@ -209,8 +209,8 @@ module chamfer_mask_x(l=1.0, chamfer=1.0, anchor=CENTER) {
 //   anchor = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
 // Example:
 //   difference() {
-//       fwd(40) cube(80);
-//       right(80) #chamfer_mask_y(l=80, chamfer=20);
+//       cube(50, anchor=BOTTOM+RIGHT);
+//       #chamfer_mask_y(l=50, chamfer=10);
 //   }
 module chamfer_mask_y(l=1.0, chamfer=1.0, anchor=CENTER) {
 	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_Y, anchor=anchor) children();
@@ -230,8 +230,8 @@ module chamfer_mask_y(l=1.0, chamfer=1.0, anchor=CENTER) {
 //   anchor = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
 // Example:
 //   difference() {
-//       down(40) cube(80);
-//       #chamfer_mask_z(l=80, chamfer=20);
+//       cube(50, anchor=FRONT+RIGHT);
+//       #chamfer_mask_z(l=50, chamfer=10);
 //   }
 module chamfer_mask_z(l=1.0, chamfer=1.0, anchor=CENTER) {
 	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_Z, anchor=anchor) children();
@@ -295,6 +295,11 @@ module chamfer(chamfer=1, size=[1,1,1], edges=EDGES_ALL)
 //       cylinder(r=50, h=100, center=true);
 //       up(50) #chamfer_cylinder_mask(r=50, chamfer=10);
 //   }
+// Example:
+//   difference() {
+//       cylinder(r=50, h=100, center=true);
+//       up(50) chamfer_cylinder_mask(r=50, chamfer=10);
+//   }
 module chamfer_cylinder_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false, orient=ORIENT_Z)
 {
 	r = get_radius(r=r, d=d, dflt=1);
@@ -323,6 +328,12 @@ module chamfer_cylinder_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=fa
 //       cube(100, center=true);
 //       cylinder(d=50, h=100.1, center=true);
 //       up(50) #chamfer_hole_mask(d=50, chamfer=10);
+//   }
+// Example:
+//   difference() {
+//       cube(100, center=true);
+//       cylinder(d=50, h=100.1, center=true);
+//       up(50) chamfer_hole_mask(d=50, chamfer=10);
 //   }
 // Example:
 //   chamfer_hole_mask(d=100, chamfer=25, ang=30, overage=10);
@@ -658,6 +669,12 @@ module rounding_cylinder_mask(r=1.0, rounding=0.25)
 //     cube([150,150,100], center=true);
 //     cylinder(r=50, h=100.1, center=true);
 //     up(50) #rounding_hole_mask(r=50, rounding=10);
+//   }
+// Example(Med):
+//   difference() {
+//     cube([150,150,100], center=true);
+//     cylinder(r=50, h=100.1, center=true);
+//     up(50) rounding_hole_mask(r=50, rounding=10);
 //   }
 // Example:
 //   rounding_hole_mask(r=40, rounding=20, $fa=2, $fs=2);

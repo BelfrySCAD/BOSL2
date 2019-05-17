@@ -155,7 +155,8 @@ function _str_char_split(s,delim,n=0,acc=[],word="") =
 //
 // Example:
 //   #cylinder(d=5, h=10);
-//   orient_and_anchor([5,5,10], orient=ORIENT_Y, anchor=BACK, orig_anchor=UP) cylinder(d=5, h=10);
+//   orient_and_anchor([5,5,10], orient=ORIENT_Y, anchor=BACK, orig_anchor=BOTTOM)
+//       cylinder(d=5, h=10);
 module orient_and_anchor(
 	size=undef, orient=ORIENT_Z, anchor=CENTER,
 	center=undef, noncentered=BOTTOM,
@@ -194,14 +195,21 @@ module orient_and_anchor(
 				]
 			)
 		) : concat(
-			(anchor==CENTER)? [] : [
-				let(anch = find_anchor(anchor, size.z, size, size2=size2, shift=shift, extra_anchors=anchors, geometry=geometry, two_d=two_d))
-				affine3d_translate(-anch[1])
-			],
 			(orient==ORIENT_Z)? [] : [
 				affine3d_xrot(orient.x),
 				affine3d_yrot(orient.y),
 				affine3d_zrot(orient.z)
+			],
+			(anchor==CENTER)? [] : [
+				let(
+					anchr = is_vector(anchor)? rotate_points3d([anchor], orient, reverse=true)[0] : anchor,
+					anch = find_anchor(
+						anchr, size.z, size, size2=size2,
+						shift=shift, extra_anchors=anchors,
+						geometry=geometry, two_d=two_d
+					)
+				)
+				affine3d_translate(rotate_points3d([-anch[1]],orient)[0])
 			]
 		)
 	));
@@ -436,8 +444,8 @@ module intersect(a, b=undef, keep=undef)
 // Example:
 //   hulling("body")
 //   sphere(d=100, $tags="body") {
-//       attach(CENTER) cube([40,100,100], anchor=CENTER, $tags="body");
-//       attach(CENTER) xcyl(d=40, h=100);
+//       attach(CENTER) cube([40,90,90], anchor=CENTER, $tags="body");
+//       attach(CENTER) xcyl(d=40, h=120, $tags="other");
 //   }
 module hulling(a)
 {

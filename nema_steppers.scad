@@ -100,7 +100,7 @@ function nema_motor_screw_depth(size) = lookup(size, [
 //   shaft = Shaft diameter. Default: 5mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 20mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
+//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `TOP`.
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -112,7 +112,7 @@ function nema_motor_screw_depth(size) = lookup(size, [
 //   "screw4" = The screw-hole in the X+Y- quadrant.
 // Example:
 //   nema11_stepper();
-module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=DOWN)
+module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=TOP)
 {
 	size = 11;
 	motor_width = nema_motor_width(size);
@@ -163,7 +163,7 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=DOWN)
 //   shaft = Shaft diameter. Default: 5mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 24mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
+//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `TOP`.
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -175,7 +175,7 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=DOWN)
 //   "screw4" = The screw-hole in the X+Y- quadrant.
 // Example:
 //   nema14_stepper();
-module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, anchor=DOWN)
+module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, anchor=TOP)
 {
 	size = 14;
 	motor_width = nema_motor_width(size);
@@ -226,7 +226,7 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, anchor=DOWN)
 //   shaft = Shaft diameter. Default: 5mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 20mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
+//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `TOP`.
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -308,7 +308,7 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=TOP)
 //   shaft = Shaft diameter. Default: 6.35mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 25mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
+//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `TOP`.
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -373,7 +373,7 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, anchor=TO
 //   shaft = Shaft diameter. Default: 12.7mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 32mm
 //   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `DOWN`.
+//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `TOP`.
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.

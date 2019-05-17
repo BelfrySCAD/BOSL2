@@ -29,7 +29,7 @@
 //   anchor = Alignment of the slider.  Use the constants from `constants.scad`.  Default: `UP`.
 // Example:
 //   slider(l=30, base=10, wall=4, slop=0.2, orient=ORIENT_Y);
-module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orient=ORIENT_Y, anchor=UP)
+module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orient=ORIENT_Y, anchor=BOTTOM)
 {
 	full_width = w + 2*wall;
 	full_height = h + base;
@@ -37,18 +37,18 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orie
 	orient_and_anchor([full_width, l, h+2*base], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		down(base+h/2) {
 			// Base
-			cuboid([full_width, l, base-slop], chamfer=2, edges=edges([FRONT,BACK], except=BOT), anchor=UP);
+			cuboid([full_width, l, base-slop], chamfer=2, edges=edges([FRONT,BACK], except=BOT), anchor=BOTTOM);
 
 			// Wall
 			xflip_copy(offset=w/2+slop) {
-				cuboid([wall, l, full_height], chamfer=2, edges=edges(RIGHT, except=BOT), anchor=UP+RIGHT);
+				cuboid([wall, l, full_height], chamfer=2, edges=edges(RIGHT, except=BOT), anchor=BOTTOM+LEFT);
 			}
 
 			// Sliders
 			up(base+h/2) {
 				xflip_copy(offset=w/2+slop+0.02) {
 					bev_h = h/2*tan(ang);
-					prismoid([l, h], [l-w, 0], h=bev_h+0.01, orient=ORIENT_XNEG, anchor=LEFT);
+					prismoid([l, h], [l-w, 0], h=bev_h+0.01, orient=ORIENT_XNEG, anchor=RIGHT);
 				}
 			}
 		}
@@ -73,7 +73,7 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orie
 //   anchor = Alignment of the rail.  Use the constants from `constants.scad`.  Default: `UP`.
 // Example:
 //   rail(l=100, w=10, h=10);
-module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, orient=ORIENT_Y, anchor=UP)
+module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, orient=ORIENT_Y, anchor=BOTTOM)
 {
 	attack_ang = 30;
 	attack_len = 2;
@@ -99,7 +99,7 @@ module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, orient=ORIENT_Y, anchor=UP)
 	y1 = l/2;
 	y2 = y1 - attack_len * cos(attack_ang);
 
-	orient_and_anchor([w, l, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w, h, l], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
 		polyhedron(
 			convexity=4,
 			points=[

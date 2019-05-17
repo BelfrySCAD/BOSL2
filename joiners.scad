@@ -34,7 +34,7 @@ module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, orient=ORI
 	guide_size = w/3;
 	guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
 
-	orient_and_anchor([w, guide_width, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w, guide_width, h], orient, anchor, orig_orient=ORIENT_Y) {
 		union() {
 			yspread(overlap, n=overlap>0? 2 : 1) {
 				difference() {
@@ -50,7 +50,6 @@ module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, orient=ORI
 			}
 			if (overlap>0) cube([w+clearance, overlap+0.001, h], center=true);
 		}
-		children();
 	}
 }
 
@@ -87,7 +86,7 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PR
 		}
 	}
 	render(convexity=12)
-	orient_and_anchor([w, 2*l, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w, 2*l, h], orient, anchor, orig_orient=ORIENT_Y) {
 		difference() {
 			union() {
 				// Make base.
@@ -133,7 +132,6 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PR
 				yrot(90) cylinder(r=screwsize*1.1/2, h=w+1, center=true, $fn=12);
 			}
 		}
-		children();
 	}
 }
 //half_joiner(screwsize=3, orient=ORIENT_Z, anchor=UP);
@@ -171,7 +169,7 @@ module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, orient
 	}
 
 	render(convexity=12)
-	orient_and_anchor([w, 2*l, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w, 2*l, h], orient, anchor, orig_orient=ORIENT_Y) {
 		difference() {
 			union () {
 				fwd(l/2) cube(size=[w, l, h], center=true);
@@ -186,7 +184,6 @@ module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, orient
 				xcyl(r=screwsize*1.1/2, l=w+1, $fn=12);
 			}
 		}
-		children();
 	}
 }
 
@@ -217,12 +214,11 @@ module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, orient=ORIENT_Y
 	guide_size = w/3;
 	guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
 
-	orient_and_anchor([w, guide_width, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w, guide_width, h], orient, anchor, orig_orient=ORIENT_Y) {
 		union() {
 			up(h/4) half_joiner_clear(h=h/2.0-0.01, w=w, a=a, overlap=overlap, clearance=clearance);
 			down(h/4) half_joiner_clear(h=h/2.0-0.01, w=w, a=a, overlap=overlap, clearance=-0.01);
 		}
-		children();
 	}
 }
 
@@ -245,7 +241,7 @@ module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, orient=ORIENT_Y
 //   anchor = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
 //   joiner(screwsize=3, orient=ORIENT_X);
-//   joiner(w=10, l=10, h=40, orient=ORIENT_X) cuboid([10, 10*2, 40], anchor=LEFT);
+//   joiner(w=10, l=10, h=40, orient=ORIENT_X) cuboid([10, 10*2, 40], anchor=RIGHT);
 module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER_SLOP, orient=ORIENT_Y, anchor=CENTER)
 {
 	if ($children > 0) {
@@ -254,12 +250,11 @@ module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER
 			joiner_clear(h=h, w=w, a=a, clearance=0.1, orient=orient, anchor=anchor);
 		}
 	}
-	orient_and_anchor([w, 2*l, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w, 2*l, h], orient, anchor, orig_orient=ORIENT_Y) {
 		union() {
 			up(h/4) half_joiner(h=h/2, w=w, l=l, a=a, screwsize=screwsize, guides=guides, slop=slop);
 			down(h/4) half_joiner2(h=h/2, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
 		}
-		children();
 	}
 }
 
@@ -293,11 +288,10 @@ module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overla
 	guide_size = w/3;
 	guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
 
-	orient_and_anchor([spacing+w, guide_width, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([spacing+w, guide_width, h], orient, anchor, orig_orient=ORIENT_Y) {
 		xspread(spacing, n=n) {
 			joiner_clear(h=h, w=w, a=a, clearance=clearance, overlap=overlap);
 		}
-		children();
 	}
 }
 
@@ -322,7 +316,7 @@ module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overla
 //   orient = Orientation of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
 //   anchor = Alignment of the shape by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `CENTER`.
 // Examples:
-//   joiner_pair(spacing=50, l=10, orient=ORIENT_X) cuboid([10, 50+10-0.1, 40], anchor=LEFT);
+//   joiner_pair(spacing=50, l=10, orient=ORIENT_X) cuboid([10, 50+10-0.1, 40], anchor=RIGHT);
 //   joiner_pair(spacing=50, l=10, n=2, orient=ORIENT_X);
 //   joiner_pair(spacing=50, l=10, n=3, alternate=false, orient=ORIENT_X);
 //   joiner_pair(spacing=50, l=10, n=3, alternate=true, orient=ORIENT_X);
@@ -335,7 +329,7 @@ module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, scr
 			joiner_pair_clear(spacing=spacing, h=h, w=w, a=a, clearance=0.1, orient=orient, anchor=anchor);
 		}
 	}
-	orient_and_anchor([spacing+w, 2*l, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([spacing+w, 2*l, h], orient, anchor, orig_orient=ORIENT_Y) {
 		left((n-1)*spacing/2) {
 			for (i=[0:n-1]) {
 				right(i*spacing) {
@@ -345,7 +339,6 @@ module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, scr
 				}
 			}
 		}
-		children();
 	}
 }
 
@@ -377,13 +370,12 @@ module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing
 {
 	spacing1 = first_defined([spacing1, xspacing, 100]);
 	spacing2 = first_defined([spacing2, yspacing, 50]);
-	orient_and_anchor([w+spacing1, spacing2, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w+spacing1, spacing2, h], orient, anchor, orig_orient=ORIENT_Y) {
 		zrot_copies(n=2) {
 			back(spacing2/2) {
 				joiner_pair_clear(spacing=spacing1, n=n, h=h, w=w, a=a, clearance=clearance, overlap=overlap);
 			}
 		}
-		children();
 	}
 }
 
@@ -423,13 +415,12 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 			joiner_quad_clear(spacing1=spacing1, spacing2=spacing2, h=h, w=w, a=a, clearance=0.1, orient=orient, anchor=anchor);
 		}
 	}
-	orient_and_anchor([w+spacing1, spacing2, h], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w+spacing1, spacing2, h], orient, anchor, orig_orient=ORIENT_Y) {
 		zrot_copies(n=2) {
 			back(spacing2/2) {
 				joiner_pair(spacing=spacing1, n=n, h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides, slop=slop);
 			}
 		}
-		children();
 	}
 }
 

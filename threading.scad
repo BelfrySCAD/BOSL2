@@ -97,7 +97,7 @@ module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=72
 //   trapezoidal_threaded_rod(d=10, l=40, pitch=3, thread_angle=15, left_handed=true, starts=3, $fn=36);
 //   trapezoidal_threaded_rod(d=25, l=40, pitch=10, thread_depth=8/3, thread_angle=50, starts=4, center=false, $fa=2, $fs=2);
 //   trapezoidal_threaded_rod(d=50, l=35, pitch=8, thread_angle=30, starts=3, bevel=true);
-//   trapezoidal_threaded_rod(l=25, d=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1, orient=ORIENT_X, anchor=UP);
+//   trapezoidal_threaded_rod(l=25, d=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1, orient=ORIENT_X, anchor=BOTTOM);
 module trapezoidal_threaded_rod(
 	d=10,
 	l=100,
@@ -872,7 +872,7 @@ module pco1881_neck(wall=2, orient=ORIENT_Z, anchor="support-ring")
 //   "inside-top" = Centered on the inside top of the cap.
 // Example:
 //   pco1881_cap();
-module pco1881_cap(wall=2, orient=ORIENT_Z, anchor=TOP)
+module pco1881_cap(wall=2, orient=ORIENT_ZNEG, anchor=BOTTOM)
 {
 	$fn = segs(33/2);
 	w = 28.58 + 2*wall;

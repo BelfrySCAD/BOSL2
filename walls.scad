@@ -33,7 +33,7 @@
 //
 // Example:
 //   narrowing_strut(w=10, l=100, wall=5, ang=30);
-module narrowing_strut(w=10, l=100, wall=5, ang=30, orient=ORIENT_Y, anchor=FRONT)
+module narrowing_strut(w=10, l=100, wall=5, ang=30, orient=ORIENT_Y, anchor=BOTTOM)
 {
 	h = wall + w/2/tan(ang);
 	size = [w, h, l];
