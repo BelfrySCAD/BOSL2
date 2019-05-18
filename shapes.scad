@@ -360,11 +360,11 @@ module right_triangle(size=[1, 1, 1], orient=ORIENT_Y, anchor=ALLNEG, center=und
 			}
 		} else if (orient == ORIENT_Z) {
 			ang = atan2(size.x, size.y);
-			masksize = [norm([size.x,size.y]), size.y, size.z] + [1,1,1];
-			zrot(-ang) {
+			masksize = [size.y, norm([size.x,size.y]), size.z] + [1,1,1];
+			zrot(ang) {
 				difference() {
-					zrot(ang) cube(size, center=true);
-					back(masksize.y/2) cube(masksize, center=true);
+					zrot(-ang) cube(size, center=true);
+					right(masksize.x/2) cube(masksize, center=true);
 				}
 			}
 		}
