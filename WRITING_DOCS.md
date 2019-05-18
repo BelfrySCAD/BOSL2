@@ -4,9 +4,10 @@ Documentation and example images are generated automatically from source code co
 
 - `// LibFile: NAME`
 - `// Section: NAME`
-- `// Module: NAME`
-- `// Function: NAME`
 - `// Constant: NAME`
+- `// Function: NAME`
+- `// Module: NAME`
+- `// Function&Module: NAME`
 
 ## LibFile:
 
@@ -60,7 +61,7 @@ CommonCode blocks can be used to denote code that can be shared between all of t
 //   }
 ```
 
-## Module:/Function:/Constant:
+## Module:/Function:/Function&Module:/Constant:
 
 Module, Function, and Constant docs blocks all have a similar specific format.  Most sub-blocks are optional, except the Module/Function/Constant line, and the Description block.
 
@@ -71,19 +72,21 @@ Valid sub-blocks are:
 - `Description:` - Can be single-line or a multi-line block of the description.
 - `Arguments:` - Denotes start of an indented block of argument descriptions.  Each line has the argument name, a space, an equals, another space, then the description for the argument all on one line. Like `arg = The argument description`.  If you really need to explain an argument in longer form, explain it in the Description.
 - `Side Effects:` - Denotes the start of a block describing the side effects, such as `$special_var`s that are set.
+- `Extra Anchors:` - Denotes the start of an indented block of available non-standard named anchors for a part.
 - `Example:` - Denotes the beginning of a multi-line example code block.
 - `Examples:` - Denotes the beginning of a block of examples, where each line will be shows as a separate example with a separate image if needed.
 
-Modules blocks will generate images for each example block. Function and Constant blocks will only generate images for example blocks if they have `2D` or `3D` tags.  Example blocks can have tags added by putting then inside parentheses before the colon.  Ie: `Examples(BigFlatSpin):`.  
+Modules blocks will generate images for each example block. Function and Constant blocks will only generate images for example blocks if they have `2D` or `3D` tags.  Example blocks can have tags added by putting then inside parentheses before the colon.  Ie: `Examples(BigFlatSpin):`.
 
 The full set of optional example tags are:
 
 - `2D`: Orient camera in a top-down view for showing 2D objects.
 - `3D`: Orient camera in an oblique view for showing 3D objects. Used to force an Example sub-block to generate an image in Function and Constant blocks.
 - `Spin`: Animate camera orbit around the `[0,1,1]` axis to display all sides of an object.
-- `FlatSpin` : Animate camera orbit around the Z axis, above the XY plane.
+- `FlatSpin`: Animate camera orbit around the Z axis, above the XY plane.
+- `Edges`: Highlight face edges.
 - `FR`: Force full rendering from OpenSCAD, instead of the normal preview.
-- `Small`: Make the image small sized.
+- `Small`: Make the image small sized.  (The default)
 - `Med`: Make the image medium sized.
 - `Big`: Make the image big sized.
 
@@ -102,8 +105,11 @@ Indentation is important, as it denotes the end of sub-block.
 //   A longer, multi-line description.
 //   All description blocks are added together.
 //   You _can_ use *markdown* notation as well.
-//   You can end multi-line blocks by un-indenting the
-//   next line, or by using a blank comment line like this:
+//   You can have paragraph breaks by having a blank line with
+//   only enough trailing spaces to match indentation like this:
+//   
+//   You can end multi-line blocks by un-indenting the next
+//   line, or by using a comment with no spaces like this:
 //
 // Arguments:
 //   foo = This is the description of the foo argument.  All on one line.
@@ -114,6 +120,9 @@ Indentation is important, as it denotes the end of sub-block.
 //   flie = This is the description of the flie argument.  All on one line.
 // Side Effects:
 //   `$floo` gets set to the floo value.
+// Extra Anchors:
+//   "blawb" = An anchor at the blawb point of the part, oriented upwards.
+//   "fewble" = An anchor at the fewble connector of the part, oriented back yowards Y+.
 // Examples: Each line below gets its own example block and image.
 //   foo(foo="a", bar="b");
 //   foo(foo="b", baz="c");
