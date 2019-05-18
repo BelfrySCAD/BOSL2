@@ -63,14 +63,14 @@ include <BOSL2/beziers.scad>
 //   parameters.  It is important to specify if the path is a closed path or not using the `closed`
 //   parameter.  The default is a closed path for making polygons.
 //   Path examples:
-//   * [[0,0],[0,1],[1,1],[0,1]]: 2d point list (a square), `all` was given to set rounding
-//   * [[0,0,0], [0,1,1], [1,1,2], [0,1,3]]: 3d point list, `all` was given to set rounding
-//   * [[0,0,0.2],[0,1,0.1],[1,1,0],[0,1,0.3]]: 2d point list with smoothing parameters different at every corner, `all` not given
-//   * [[0,0,0,.2], [0,1,1,.1], [1,1,2,0], [0,1,3,.3]]: 3d point list with smoothing parameters, `all` not given
-//   * [[0,0,[.3,.7], [4,0,[.2,.6]], [4,4,0], [0,4,1]]: 3d point list with smoothing parameters for the `"smooth"` type roundover, `all` not given.  Note the third entry is sometimes a pair giving both smoothing parameters, sometimes it's zero specifying no smoothing, and sometimes a single number, specifying the amount of smoothing but using the default smoothness parameter.
+//   * `[[0,0],[0,1],[1,1],[0,1]]`: 2d point list (a square), `all` was given to set rounding
+//   * `[[0,0,0], [0,1,1], [1,1,2], [0,1,3]]`: 3d point list, `all` was given to set rounding
+//   * `[[0,0,0.2],[0,1,0.1],[1,1,0],[0,1,0.3]]`: 2d point list with smoothing parameters different at every corner, `all` not given
+//   * `[[0,0,0,.2], [0,1,1,.1], [1,1,2,0], [0,1,3,.3]]`: 3d point list with smoothing parameters, `all` not given
+//   * `[[0,0,[.3,.7], [4,0,[.2,.6]], [4,4,0], [0,4,1]]`: 3d point list with smoothing parameters for the `"smooth"` type roundover, `all` not given.  Note the third entry is sometimes a pair giving both smoothing parameters, sometimes it's zero specifying no smoothing, and sometimes a single number, specifying the amount of smoothing but using the default smoothness parameter.
 //   
-//   The number of segments used for roundovers is determined by $fa, $fs and $fn as usual for
-//   circular roundovers.  For continuous curvature roundovers $fs and $fn are used and $fa is ignored.
+//   The number of segments used for roundovers is determined by `$fa`, `$fs` and `$fn` as usual for
+//   circular roundovers.  For continuous curvature roundovers `$fs` and `$fn` are used and `$fa` is ignored.
 //   When doing continuous curvature rounding be sure to use lots of segments or the effect will be
 //   hidden by the discretization.
 //
@@ -101,7 +101,7 @@ include <BOSL2/beziers.scad>
 //   shape = [[0,0,1.8], [10,0,0], [15,12,2], [6,6,.3], [6, 12,1.2], [-3,7,0]];
 //   polygon(round_corners(shape, curve="circle", type="radius"));
 //   color("red") down(.1) polygon(subindex(shape,[0:1]));
-// Example(Med2D): Continuous curvature rounding, different at every corner, with varying smoothness parameters as well, and $fs set very small
+// Example(Med2D): Continuous curvature rounding, different at every corner, with varying smoothness parameters as well, and `$fs` set very small
 //   shape = [[0,0,[1.5,.6]], [10,0,0], [15,12,2], [6,6,[.3,.7]], [6, 12,[1.2,.3]], [-3,7,0]];
 //   polygon(round_corners(shape, curve="smooth", type="cut", $fs=0.1));
 //   color("red") down(.1) polygon(subindex(shape,[0:1]));
