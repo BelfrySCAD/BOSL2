@@ -7,10 +7,8 @@ cuboid([60,40,40], rounding=5, edges=edges("Z"), anchor=BOTTOM) {
 		attach(TOP) cylinder(d=20, h=30) {
 			attach(TOP) cylinder(d1=50, d2=30, h=12);
 		}
-		for (a = [FRONT, BACK, LEFT, RIGHT]) {
-			attach(a) cylinder(d1=14, d2=5, h=20) {
-				attach(TOP, LEFT, overlap=5) prismoid([30,20], [20,20], h=10, shift=[-7,0]);
-			}
+		attach([FRONT, BACK, LEFT, RIGHT]) cylinder(d1=14, d2=5, h=20) {
+			attach(TOP, LEFT, overlap=5) prismoid([30,20], [20,20], h=10, shift=[-7,0]);
 		}
 	}
 }

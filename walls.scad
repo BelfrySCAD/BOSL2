@@ -28,16 +28,17 @@
 //   l = Length of the strut.
 //   wall = height of rectangular portion of the strut.
 //   ang = angle that the trianglar side will converge at.
-//   orient = Orientation of the length axis of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   anchor = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `FRONT`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 //
 // Example:
 //   narrowing_strut(w=10, l=100, wall=5, ang=30);
-module narrowing_strut(w=10, l=100, wall=5, ang=30, orient=ORIENT_Y, anchor=BOTTOM)
+module narrowing_strut(w=10, l=100, wall=5, ang=30, anchor=BOTTOM, spin=0, orient=UP)
 {
 	h = wall + w/2/tan(ang);
 	size = [w, h, l];
-	orient_and_anchor(size, orient, anchor, chain=true) {
+	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
 		fwd(h/2) {
 			linear_extrude(height=l, center=true, slices=2) {
 				back(wall/2) square([w, wall], center=true);
@@ -72,14 +73,15 @@ module narrowing_strut(w=10, l=100, wall=5, ang=30, orient=ORIENT_Y, anchor=BOTT
 //   ang = maximum overhang angle of diagonal brace.
 //   strut = the width of the diagonal brace.
 //   wall = the thickness of the thinned portion of the wall.
-//   orient = Orientation of the length axis of the wall.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   anchor = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 //
 // Example: Typical Shape
 //   thinning_wall(h=50, l=80, thick=4);
 // Example: Trapezoidal
 //   thinning_wall(h=50, l=[80,50], thick=4);
-module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orient=ORIENT_Z, anchor=CENTER)
+module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, anchor=CENTER, spin=0, orient=UP)
 {
 	l1 = (l[0] == undef)? l : l[0];
 	l2 = (l[1] == undef)? l : l[1];
@@ -103,7 +105,7 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orient=ORIEN
 	y2 = y1 - min(z2-z3, x2-x3) * sin(ang);
 
 	size = [l1, thick, h];
-	orient_and_anchor(size, orient, anchor, size2=[l2,thick], chain=true) {
+	orient_and_anchor(size, orient, anchor, spin=spin, size2=[l2,thick], chain=true) {
 		polyhedron(
 			points=[
 				[-x4, -y1, -z1],
@@ -216,17 +218,18 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orient=ORIEN
 //   ang = maximum overhang angle of diagonal brace.
 //   strut = the width of the diagonal brace.
 //   wall = the thickness of the thinned portion of the wall.
-//   orient = Orientation of the length axis of the wall.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   anchor = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 //
-// Example: Typical Shape
+// Example:
 //   braced_thinning_wall(h=50, l=100, thick=5);
-module braced_thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orient=ORIENT_Y, anchor=CENTER)
+module braced_thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, anchor=CENTER, spin=0, orient=UP)
 {
 	dang = atan((h-2*strut)/(l-2*strut));
 	dlen = (h-2*strut)/sin(dang);
 	size = [l, thick, h];
-	orient_and_anchor(size, orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
 		union() {
 			xrot_copies([0, 180]) {
 				down(h/2) narrowing_strut(w=thick, l=l, wall=strut, ang=ang);
@@ -268,9 +271,10 @@ module braced_thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orien
 //   strut = the width of the diagonal brace.
 //   wall = the thickness of the thinned portion of the wall.
 //   diagonly = boolean, which denotes only the diagonal side (hypotenuse) should be thick.
-//   orient = Orientation of the length axis of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   anchor = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //   center = If true, centers shape.  If false, overrides `anchor` with `UP+BACK`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 //
 // Example: Centered
 //   thinning_triangle(h=50, l=80, thick=4, ang=30, strut=5, wall=2, center=true);
@@ -278,12 +282,12 @@ module braced_thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, orien
 //   thinning_triangle(h=50, l=80, thick=4, ang=30, strut=5, wall=2, center=false);
 // Example: Diagonal Brace Only
 //   thinning_triangle(h=50, l=80, thick=4, ang=30, strut=5, wall=2, diagonly=true, center=false);
-module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly=false, center=undef, orient=ORIENT_Y, anchor=CENTER)
+module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly=false, center=undef, anchor=CENTER, spin=0, orient=UP)
 {
 	dang = atan(h/l);
 	dlen = h/sin(dang);
 	size = [thick, h, l];
-	orient_and_anchor(size, orient, anchor, center=center, noncentered=BOTTOM+FRONT, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor(size, orient, anchor, spin=spin, center=center, noncentered=BOTTOM+FRONT, chain=true) {
 		difference() {
 			union() {
 				if (!diagonly) {
@@ -327,8 +331,9 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 //   maxang = maximum overhang angle of cross-braces.
 //   max_bridge = maximum bridging distance between cross-braces.
 //   strut = the width of the cross-braces.
-//   orient = Orientation of the length axis of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   anchor = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 //
 // Example: Typical Shape
 //   sparse_strut(h=40, l=100, thick=3);
@@ -338,7 +343,7 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 //   sparse_strut(h=40, l=100, thick=3, strut=2, maxang=45);
 // Example: Longer max_bridge
 //   sparse_strut(h=40, l=100, thick=3, strut=2, maxang=45, max_bridge=30);
-module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, orient=ORIENT_Y, anchor=CENTER)
+module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anchor=CENTER, spin=0, orient=UP)
 {
 	zoff = h/2 - strut/2;
 	yoff = l/2 - strut/2;
@@ -359,7 +364,7 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, ori
 	len = zstep / cos(ang);
 
 	size = [thick, l, h];
-	orient_and_anchor(size, orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
 		yrot(90)
 		linear_extrude(height=thick, convexity=4*yreps, center=true) {
 			difference() {
@@ -395,8 +400,9 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, ori
 //   maxang = maximum overhang angle of cross-braces.
 //   max_bridge = maximum bridging distance between cross-braces.
 //   strut = the width of the cross-braces.
-//   orient = Orientation of the length axis of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   anchor = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 //
 // Example(Med): Typical Shape
 //   sparse_strut3d(h=30, w=30, l=100);
@@ -406,7 +412,7 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, ori
 //   sparse_strut3d(h=30, w=30, l=100, strut=2, maxang=50);
 // Example(Med): Smaller max_bridge
 //   sparse_strut3d(h=30, w=30, l=100, strut=2, maxang=50, max_bridge=20);
-module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge=30, orient=ORIENT_Y, anchor=CENTER)
+module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge=30, anchor=CENTER, spin=0, orient=UP)
 {
 
 	xoff = w - thick;
@@ -429,7 +435,7 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 	supp_step = cross_len/2/supp_reps;
 
 	size = [w, l, h];
-	orient_and_anchor(size, orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
 		intersection() {
 			union() {
 				ybridge = (l - (yreps+1) * strut) / yreps;
@@ -491,8 +497,9 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 //   thick = thickness of strut wall.
 //   strut = the width of the cross-braces.
 //   wall = thickness of corrugations.
-//   orient = Orientation of the length axis of the shape.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   anchor = Alignment of the shape.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 //
 // Example: Typical Shape
 //   corrugated_wall(h=50, l=100);
@@ -500,7 +507,7 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 //   corrugated_wall(h=50, l=100, strut=8);
 // Example: Thicker Wall
 //   corrugated_wall(h=50, l=100, strut=8, wall=3);
-module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2, orient=ORIENT_Y, anchor=CENTER)
+module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2, anchor=CENTER, spin=0, orient=UP)
 {
 	amplitude = (thick - wall) / 2;
 	period = min(15, thick * 2);
@@ -508,7 +515,7 @@ module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2, orient=ORIENT_Y, a
 	step = period/steps;
 	il = l - 2*strut + 2*step;
 	size = [thick, l, h];
-	orient_and_anchor(size, orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
 		union() {
 			linear_extrude(height=h-2*strut+0.1, slices=2, convexity=ceil(2*il/period), center=true) {
 				polygon(

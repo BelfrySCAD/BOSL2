@@ -221,6 +221,28 @@ function affine3d_rot_by_axis(u, ang) = let(
 ];
 
 
+// Function: affine3d_rot_from_to()
+// Usage:
+//   affine3d_rot_from_to(from, to);
+// Description:
+//   Returns the 4x4 affine3d matrix to perform a rotation of a 3D vector from one vector direction to another.
+// Arguments:
+//   from = 3D axis vector to rotate from.
+//   to = 3D axis vector to rotate to.
+function affine3d_rot_from_to(from, to) = let(
+	u = vector_axis(from,to),
+	ang = vector_angle(from,to),
+	c = cos(ang),
+	c2 = 1-c,
+	s = sin(ang)
+) [
+	[u[0]*u[0]*c2+c     , u[0]*u[1]*c2-u[2]*s, u[0]*u[2]*c2+u[1]*s, 0],
+	[u[1]*u[0]*c2+u[2]*s, u[1]*u[1]*c2+c     , u[1]*u[2]*c2-u[0]*s, 0],
+	[u[2]*u[0]*c2-u[1]*s, u[2]*u[1]*c2+u[0]*s, u[2]*u[2]*c2+c     , 0],
+	[                  0,                   0,                   0, 1]
+];
+
+
 // Function: affine3d_skew_xy()
 // Usage:
 //   affine3d_skew_xy(xa, ya)

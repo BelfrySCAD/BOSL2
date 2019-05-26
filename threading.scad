@@ -29,9 +29,10 @@ include <BOSL2/paths.scad>
 //   left_handed = If true, thread has a left-handed winding.
 //   higbee = Angle to taper thread ends by.
 //   interior = If true, invert threads for interior threading.
-//   orient = Orientation of the threads.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the threads.  Use the constants from `constants.scad`.  Default: `CENTER`.
-module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=720, profile=undef, left_handed=false, higbee=60, interior=false, orient=ORIENT_Z, anchor=CENTER)
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=720, profile=undef, left_handed=false, higbee=60, interior=false, anchor=CENTER, spin=0, orient=UP)
 {
 	h = pitch*twist/360;
 	r = base_d/2;
@@ -53,7 +54,7 @@ module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=72
 	pline = scale_points(profile, [1,1,1]*pitch);
 	dir = left_handed? -1 : 1;
 	idir = interior? -1 : 1;
-	orient_and_anchor([2*r, 2*r, h], orient, anchor, chain=true) {
+	orient_and_anchor([2*r, 2*r, h], orient, anchor, spin=spin, chain=true) {
 		difference() {
 			extrude_2dpath_along_spiral(pline, h=h, r=base_d/2, twist=twist*dir, $fn=segs(base_d/2), anchor=CENTER);
 			down(h/2) right(r) right(interior? thread_depth : 0) zrot(higbee*dir*idir) fwd(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
@@ -85,9 +86,10 @@ module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=72
 //   internal = If true, make this a mask for making internal threads.
 //   slop = printer slop calibration to allow for tight fitting of parts.  Default: `PRINTER_SLOP`
 //   profile = The shape of a thread, if not a symmetric trapezoidal form.  Given as a 2D path, where X is between -1/2 and 1/2, representing the pitch distance, and Y is 0 for the peak, and `-depth/pitch` for the valleys.  The segment between the end of one thread profile and the start of the next is automatic, so the start and end coordinates should not both be at the same Y at X = ±1/2.  This path is scaled up by the pitch size in both dimensions when making the final threading.  This overrides the `thread_angle` and `thread_depth` options.
-//   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Examples(Med):
 //   trapezoidal_threaded_rod(d=10, l=40, pitch=2, thread_angle=15, $fn=32);
 //   trapezoidal_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, thread_angle=29, $fn=32);
@@ -97,7 +99,7 @@ module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=72
 //   trapezoidal_threaded_rod(d=10, l=40, pitch=3, thread_angle=15, left_handed=true, starts=3, $fn=36);
 //   trapezoidal_threaded_rod(d=25, l=40, pitch=10, thread_depth=8/3, thread_angle=50, starts=4, center=false, $fa=2, $fs=2);
 //   trapezoidal_threaded_rod(d=50, l=35, pitch=8, thread_angle=30, starts=3, bevel=true);
-//   trapezoidal_threaded_rod(l=25, d=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1, orient=ORIENT_X, anchor=BOTTOM);
+//   trapezoidal_threaded_rod(l=25, d=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1, orient=RIGHT, anchor=BOTTOM);
 module trapezoidal_threaded_rod(
 	d=10,
 	l=100,
@@ -110,8 +112,9 @@ module trapezoidal_threaded_rod(
 	profile=undef,
 	internal=false,
 	slop=undef,
-	orient=ORIENT_Z,
 	anchor=CENTER,
+	spin=0,
+	orient=UP,
 	center=undef
 ) {
 	function _thread_pt(thread, threads, start, starts, astep, asteps, part, parts) =
@@ -249,7 +252,7 @@ module trapezoidal_threaded_rod(
 			) otri
 		]
 	);
-	orient_and_anchor([d,d,l], orient, anchor, center, chain=true) {
+	orient_and_anchor([d,d,l], orient, anchor, spin=spin, center=center, chain=true) {
 		difference() {
 			polyhedron(points=poly_points, faces=poly_faces, convexity=threads*starts*2);
 			zspread(l+4*pitch*starts) cube([d+1, d+1, 4*pitch*starts], center=true);
@@ -281,8 +284,9 @@ module trapezoidal_threaded_rod(
 //   bevel = if true, bevel the thread ends.  Default: true
 //   slop = printer slop calibration to allow for tight fitting of parts.  Default: `PRINTER_SLOP`
 //   profile = The shape of a thread, if not a symmetric trapezoidal form.  Given as a 2D path, where X is between -1/2 and 1/2, representing the pitch distance, and Y is 0 for the peak, and `-depth/pitch` for the valleys.  The segment between the end of one thread profile and the start of the next is automatic, so the start and end coordinates should not both be at the same Y at X = ±1/2.  This path is scaled up by the pitch size in both dimensions when making the final threading.  This overrides the `thread_angle` and `thread_depth` options.
-//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Examples(Med):
 //   trapezoidal_threaded_nut(od=16, id=8, h=8, pitch=2, slop=0.2, anchor=UP);
 //   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, slop=0.2, left_handed=true);
@@ -299,12 +303,13 @@ module trapezoidal_threaded_nut(
 	starts=1,
 	bevel=true,
 	slop=undef,
-	orient=ORIENT_Z,
-	anchor=CENTER
+	anchor=CENTER,
+	spin=0,
+	orient=UP
 ) {
 	depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
 	slop = default(slop, PRINTER_SLOP);
-	orient_and_anchor([od/cos(30),od,h], orient, anchor, chain=true) {
+	orient_and_anchor([od/cos(30),od,h], orient, anchor, spin=spin, chain=true) {
 		difference() {
 			cylinder(d=od/cos(30), h=h, center=true, $fn=6);
 			trapezoidal_threaded_rod(
@@ -346,11 +351,12 @@ module trapezoidal_threaded_nut(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   internal = If true, make this a mask for making internal threads.
 //   slop = printer slop calibration to allow for tight fitting of parts.  Default: `PRINTER_SLOP`
-//   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
-//       threaded_rod(d=10, l=15, pitch=2, orient=ORIENT_X);
+//       threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
 // Examples(Med):
 //   threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
@@ -360,8 +366,9 @@ module threaded_rod(
 	bevel=false,
 	internal=false,
 	slop=undef,
-	orient=ORIENT_Z,
-	anchor=CENTER
+	anchor=CENTER,
+	spin=0,
+	orient=UP
 ) {
 	depth = pitch * cos(30) * 5/8;
 	profile = internal? [
@@ -388,8 +395,9 @@ module threaded_rod(
 		bevel=bevel,
 		internal=internal,
 		slop=slop,
-		orient=orient,
-		anchor=anchor
+		anchor=anchor,
+		spin=spin,
+		orient=orient
 	) children();
 }
 
@@ -407,15 +415,16 @@ module threaded_rod(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
-//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Examples(Med):
 //   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, slop=0.2, $fa=1, $fs=1);
 module threaded_nut(
 	od=16, id=10, h=10,
 	pitch=2, left_handed=false,
 	bevel=false, slop=undef,
-	orient=ORIENT_Z, anchor=CENTER
+	anchor=CENTER, spin=0, orient=UP
 ) {
 	depth = pitch * cos(30) * 5/8;
 	profile = [
@@ -432,7 +441,8 @@ module threaded_nut(
 		profile=profile,
 		left_handed=left_handed,
 		bevel=bevel, slop=slop,
-		orient=orient, anchor=anchor
+		anchor=anchor, spin=spin,
+		orient=orient
 	) children();
 }
 
@@ -451,11 +461,12 @@ module threaded_nut(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   internal = If true, this is a mask for making internal threads.
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
-//   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
-//       buttress_threaded_rod(d=10, l=15, pitch=2, orient=ORIENT_X);
+//       buttress_threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
 // Examples(Med):
 //   buttress_threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   buttress_threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
@@ -465,8 +476,9 @@ module buttress_threaded_rod(
 	bevel=false,
 	internal=false,
 	slop=undef,
-	orient=ORIENT_Z,
-	anchor=CENTER
+	anchor=CENTER,
+	spin=0,
+	orient=UP
 ) {
 	depth = pitch * 3/4;
 	profile = [
@@ -484,9 +496,10 @@ module buttress_threaded_rod(
 		left_handed=left_handed,
 		bevel=bevel,
 		internal=internal,
-		orient=orient,
 		slop=slop,
-		anchor=anchor
+		anchor=anchor,
+		spin=spin,
+		orient=orient
 	) children();
 }
 
@@ -504,15 +517,18 @@ module buttress_threaded_rod(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
-//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Examples(Med):
 //   buttress_threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, slop=0.2, $fa=1, $fs=1);
 module buttress_threaded_nut(
 	od=16, id=10, h=10,
 	pitch=2, left_handed=false,
 	bevel=false, slop=undef,
-	orient=ORIENT_Z, anchor=CENTER
+	anchor=CENTER,
+	spin=0,
+	orient=UP
 ) {
 	depth = pitch * 3/4;
 	profile = [
@@ -529,7 +545,8 @@ module buttress_threaded_nut(
 		thread_depth=pitch*3*sqrt(3)/8,
 		left_handed=left_handed,
 		bevel=bevel, slop=slop,
-		orient=orient, anchor=anchor
+		anchor=anchor, spin=spin,
+		orient=orient
 	) children();
 }
 
@@ -547,11 +564,12 @@ module buttress_threaded_nut(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
-//   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
-//       metric_trapezoidal_threaded_rod(d=10, l=15, pitch=2, orient=ORIENT_X);
+//       metric_trapezoidal_threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
 // Examples(Med):
 //   metric_trapezoidal_threaded_rod(d=10, l=30, pitch=2, left_handed=true, $fa=1, $fs=1);
 module metric_trapezoidal_threaded_rod(
@@ -559,8 +577,9 @@ module metric_trapezoidal_threaded_rod(
 	left_handed=false,
 	starts=1,
 	bevel=false,
-	orient=ORIENT_Z,
-	anchor=CENTER
+	anchor=CENTER,
+	spin=0,
+	orient=UP
 ) {
 	trapezoidal_threaded_rod(
 		d=d, l=l,
@@ -569,8 +588,9 @@ module metric_trapezoidal_threaded_rod(
 		left_handed=left_handed,
 		starts=starts,
 		bevel=bevel,
-		orient=orient,
-		anchor=anchor
+		anchor=anchor,
+		spin=spin,
+		orient=orient
 	) children();
 }
 
@@ -589,8 +609,9 @@ module metric_trapezoidal_threaded_rod(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
-//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Examples(Med):
 //   metric_trapezoidal_threaded_nut(od=16, id=10, h=10, pitch=2, left_handed=true, bevel=true, $fa=1, $fs=1);
 module metric_trapezoidal_threaded_nut(
@@ -600,8 +621,9 @@ module metric_trapezoidal_threaded_nut(
 	left_handed=false,
 	bevel=false,
 	slop=undef,
-	orient=ORIENT_Z,
-	anchor=CENTER
+	anchor=CENTER,
+	spin=0,
+	orient=UP
 ) {
 	trapezoidal_threaded_nut(
 		od=od, id=id, h=h,
@@ -610,8 +632,9 @@ module metric_trapezoidal_threaded_nut(
 		starts=starts,
 		bevel=bevel,
 		slop=slop,
-		orient=orient,
-		anchor=anchor
+		anchor=anchor,
+		spin=spin,
+		orient=orient
 	) children();
 }
 
@@ -631,11 +654,12 @@ module metric_trapezoidal_threaded_nut(
 //   starts = The number of lead starts.  Default = 1
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
-//   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
-//       acme_threaded_rod(d=10, l=15, pitch=2, orient=ORIENT_X);
+//       acme_threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
 // Examples(Med):
 //   acme_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, $fn=32);
 //   acme_threaded_rod(d=10, l=30, pitch=2, starts=3, $fa=1, $fs=1);
@@ -646,8 +670,9 @@ module acme_threaded_rod(
 	starts=1,
 	left_handed=false,
 	bevel=false,
-	orient=ORIENT_Z,
-	anchor=CENTER
+	anchor=CENTER,
+	spin=0,
+	orient=UP
 ) {
 	trapezoidal_threaded_rod(
 		d=d, l=l, pitch=pitch,
@@ -656,8 +681,9 @@ module acme_threaded_rod(
 		starts=starts,
 		left_handed=left_handed,
 		bevel=bevel,
-		orient=orient,
-		anchor=anchor
+		anchor=anchor,
+		spin=spin,
+		orient=orient
 	) children();
 }
 
@@ -677,8 +703,9 @@ module acme_threaded_rod(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
-//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Examples(Med):
 //   acme_threaded_nut(od=16, id=3/8*25.4, h=8, pitch=1/8*25.4, slop=0.2);
 //   acme_threaded_nut(od=16, id=10, h=10, pitch=2, starts=3, slop=0.2, $fa=1, $fs=1);
@@ -690,8 +717,9 @@ module acme_threaded_nut(
 	left_handed=false,
 	bevel=false,
 	slop=undef,
-	orient=ORIENT_Z,
-	anchor=CENTER
+	anchor=CENTER,
+	spin=0,
+	orient=UP
 ) {
 	trapezoidal_threaded_nut(
 		od=od, id=id, h=h, pitch=pitch,
@@ -701,8 +729,9 @@ module acme_threaded_nut(
 		bevel=bevel,
 		starts=starts,
 		slop=slop,
-		orient=orient,
-		anchor=anchor
+		anchor=anchor,
+		spin=spin,
+		orient=orient
 	) children();
 }
 
@@ -720,11 +749,12 @@ module acme_threaded_nut(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
-//   orient = Orientation of the rod.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the rod.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
-//       square_threaded_rod(d=10, l=15, pitch=2, orient=ORIENT_X);
+//       square_threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
 // Examples(Med):
 //   square_threaded_rod(d=10, l=20, pitch=2, starts=2, $fn=32);
 module square_threaded_rod(
@@ -732,8 +762,9 @@ module square_threaded_rod(
 	left_handed=false,
 	bevel=false,
 	starts=1,
-	orient=ORIENT_Z,
-	anchor=CENTER
+	anchor=CENTER,
+	spin=0,
+	orient=UP
 ) {
 	trapezoidal_threaded_rod(
 		d=d, l=l, pitch=pitch,
@@ -741,8 +772,9 @@ module square_threaded_rod(
 		left_handed=left_handed,
 		bevel=bevel,
 		starts=starts,
-		orient=orient,
-		anchor=anchor
+		anchor=anchor,
+		spin=spin,
+		orient=orient
 	) children();
 }
 
@@ -761,8 +793,9 @@ module square_threaded_rod(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
-//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Examples(Med):
 //   square_threaded_nut(od=16, id=10, h=10, pitch=2, starts=2, slop=0.15, $fn=32);
 module square_threaded_nut(
@@ -772,8 +805,9 @@ module square_threaded_nut(
 	bevel=false,
 	starts=1,
 	slop=undef,
-	orient=ORIENT_Z,
-	anchor=CENTER
+	anchor=CENTER,
+	spin=0,
+	orient=UP
 ) {
 	trapezoidal_threaded_nut(
 		od=od, id=id, h=h, pitch=pitch,
@@ -782,8 +816,9 @@ module square_threaded_nut(
 		bevel=bevel,
 		starts=starts,
 		slop=slop,
-		orient=orient,
-		anchor=anchor
+		anchor=anchor,
+		spin=spin,
+		orient=orient
 	) children();
 }
 
@@ -798,18 +833,21 @@ module square_threaded_nut(
 //   Creates an approximation of a standard PCO-1881 threaded beverage bottle neck.
 // Arguments:
 //   wall = Wall thickness in mm.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Extra Anchors:
 //   "support-ring" = Centered at the bottom of the support ring.
 // Example:
 //   pco1881_neck();
-module pco1881_neck(wall=2, orient=ORIENT_Z, anchor="support-ring")
+module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 {
 	$fn = segs(33/2);
 	h = 17+5;
 	anchors = [
 		anchorpt("support-ring", [0,0,5-h/2])
 	];
-	orient_and_anchor([33,33,17+5], orient, anchor, anchors=anchors, chain=true) {
+	orient_and_anchor([33,33,17+5], orient, anchor, spin=spin, anchors=anchors, chain=true) {
 		up(5-h/2)
 		difference() {
 			union() {
@@ -866,22 +904,23 @@ module pco1881_neck(wall=2, orient=ORIENT_Z, anchor="support-ring")
 //   Creates a basic cap for a PCO1881 threaded beverage bottle.
 // Arguments:
 //   wall = Wall thickness in mm.
-//   orient = Orientation of the threads.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the threads.  Use the constants from `constants.scad`.  Default: `"inside-top"`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Extra Anchors:
 //   "inside-top" = Centered on the inside top of the cap.
 // Example:
 //   pco1881_cap();
-module pco1881_cap(wall=2, orient=ORIENT_ZNEG, anchor=BOTTOM)
+module pco1881_cap(wall=2, anchor=BOTTOM, spin=0, orient=UP)
 {
 	$fn = segs(33/2);
 	w = 28.58 + 2*wall;
 	h = 11.2 + wall;
 	anchors = [
-		anchorpt("inside-top", [0,0,h/2-wall])
+		anchorpt("inside-top", [0,0,-(h/2-wall)])
 	];
-	orient_and_anchor([w, w, 11.2+wall], orient, anchor, anchors=anchors, orig_anchor=TOP, chain=true) {
-		zrot(45) xrot(180) {
+	orient_and_anchor([w, w, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+		down(h/2) zrot(45) {
 			tube(id=28.58, wall=wall, h=11.2+wall, anchor=BOTTOM);
 			cylinder(d=w, h=wall, anchor=BOTTOM);
 			up(wall+2) thread_helix(base_d=25.5, pitch=2.7, thread_depth=1.6, thread_angle=15, twist=650, higbee=45, interior=true, anchor=BOTTOM);

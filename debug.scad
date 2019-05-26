@@ -169,8 +169,8 @@ function standard_anchors() = [
 module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow") {
 	$fn=12;
 	recolor("gray") spheroid(d=s/6)
-	recolor(color) cyl(h=s*2/3, d=s/15, anchor=DOWN)
-	attach(TOP) cyl(h=s/3, d1=s/5, d2=0, anchor=DOWN) {
+	attach(CENTER,BOT) recolor(color) cyl(h=s*2/3, d=s/15, anchor=BOT)
+	attach(TOP) cyl(h=s/3, d1=s/5, d2=0, anchor=BOT) {
 		if(flag) {
 			attach(BOTTOM) recolor([1,0.5,0.5]) cuboid([s/50, s/6, s/4], anchor=FRONT+TOP);
 		}
@@ -180,17 +180,17 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow"
 
 
 
-// Module: transparent()
+// Module: show_internal_anchors()
 // Usage:
-//   transparent() ...
+//   show_internal_anchors() ...
 // Description:
 //   Makes the children transparent gray, while showing any
 //   anchor arrows that may exist.
 // Example(FlatSpin):
-//   transparent() cube(50, center=true) show_anchors();
-module transparent(opacity=0.2) {
+//   show_internal_anchors() cube(50, center=true) show_anchors();
+module show_internal_anchors(opacity=0.2) {
 	show("anchor-arrow") children() show_anchors();
-	hide("anchor-arrow") recolor([0,0,0,opacity]) children();
+	hide("anchor-arrow") recolor(list_pad(point3d($color),4,fill=opacity)) children();
 }
 
 
@@ -240,9 +240,9 @@ module show_anchors(s=10, std=true, custom=true) {
 //   frame_ref(25);
 module frame_ref(s=15) {
 	cube(0.01, center=true) {
-		attach(RIGHT) anchor_arrow(s=s, color="red", flag=false);
-		attach(BACK) anchor_arrow(s=s, color="green", flag=false);
-		attach(TOP) anchor_arrow(s=s, color="blue", flag=false);
+		attach(RIGHT) anchor_arrow(s=s, flag=false, color="red");
+		attach(BACK)  anchor_arrow(s=s, flag=false, color="green");
+		attach(TOP)   anchor_arrow(s=s, flag=false, color="blue");
 		children();
 	}
 }

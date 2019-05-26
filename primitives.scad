@@ -20,18 +20,19 @@
 // Arguments:
 //   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
 //   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
-//   anchor = The side of the square to center on the origin.  Default: `FRONT+LEFT`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
 // Example(2D):
 //   square(40);
 // Example(2D): Centered
 //   square([40,30], center=true);
 // Example(2D): Anchoring
 //   square([40,30], anchor=FRONT);
-module square(size, center=undef, anchor=FRONT+LEFT) {
+module square(size, center=undef, anchor=FRONT+LEFT, spin=0) {
 	size = is_num(size)? [size,size] : point2d(size);
 	s = size/2;
 	pts = [[-s.x,-s.y], [-s.x,s.y], [s.x,s.y], [s.x,-s.y]];
-	orient_and_anchor(point3d(size), ORIENT_Z, anchor, center, noncentered=FRONT+LEFT, two_d=true, chain=true) {
+	orient_and_anchor(point3d(size), UP, anchor, spin=spin, center=center, noncentered=FRONT+LEFT, two_d=true, chain=true) {
 		polygon(pts);
 		children();
 	}
@@ -46,18 +47,19 @@ module square(size, center=undef, anchor=FRONT+LEFT) {
 // Arguments:
 //   r = The radius of the circle to create.
 //   d = The diameter of the circle to create.
-//   anchor = The side of the circle to center on the origin.  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
 // Example(2D): By Radius
 //   circle(r=25);
 // Example(2D): By Diameter
 //   circle(d=50);
 // Example(2D): Anchoring
 //   circle(d=50, anchor=FRONT);
-module circle(r=undef, d=undef, anchor=CENTER) {
+module circle(r=undef, d=undef, anchor=CENTER, spin=0) {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
 	pts = [for (a=[0:360/sides:360-EPSILON]) r*[cos(a),sin(a)]];
-	orient_and_anchor([2*r,2*r,0], ORIENT_Z, anchor, geometry="cylinder", two_d=true, chain=true) {
+	orient_and_anchor([2*r,2*r,0], UP, anchor, spin=spin, geometry="cylinder", two_d=true, chain=true) {
 		polygon(pts);
 		children();
 	}
@@ -76,19 +78,21 @@ module circle(r=undef, d=undef, anchor=CENTER) {
 //
 // Arguments:
 //   size = The size of the cube.
-//   anchor = The side of the origin to anchor to.  Use constants from `constants.scad`.  Default: `ALLNEG`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=ALLNEG`.
 //
-// Example: Simple regular cube.
+// Example: Simple cube.
 //   cube(40);
 // Example: Rectangular cube.
 //   cuboid([20,40,50]);
 // Example: Standard Connectors.
 //   cube(40, center=true) show_anchors();
-module cube(size, center=undef, anchor=ALLNEG)
+module cube(size, center=undef, anchor=ALLNEG, spin=0, orient=UP)
 {
 	size = scalar_vec3(size);
-	orient_and_anchor(size, ORIENT_Z, anchor, center, noncentered=ALLNEG, chain=true) {
+	orient_and_anchor(size, orient, anchor, center, spin=spin, noncentered=ALLNEG, chain=true) {
 		linear_extrude(height=size.z, convexity=2, center=true) {
 			square([size.x, size.y], center=true);
 		}
@@ -112,8 +116,9 @@ module cube(size, center=undef, anchor=ALLNEG)
 //   d = The diameter of the cylinder.
 //   d1 = The bottom diameter of the cylinder.  (Before orientation.)
 //   d2 = The top diameter of the cylinder.  (Before orientation.)
-//   orient = Orientation of the cylinder.  Use the `ORIENT_` constants from `constants.scad`.  Default: vertical.
-//   anchor = The side of the part to anchor to the origin.  Use constants from `constants.scad`.  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
 // Example: By Radius
 //   xdistribute(30) {
@@ -130,14 +135,14 @@ module cube(size, center=undef, anchor=ALLNEG)
 //       cylinder(h=30, d=25) show_anchors();
 //       cylinder(h=30, d1=25, d2=10) show_anchors();
 //   }
-module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, l=undef, center=undef, orient=ORIENT_Z, anchor=BOTTOM)
+module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, l=undef, center=undef, anchor=BOTTOM, spin=0, orient=UP)
 {
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
 	l = first_defined([h, l]);
 	sides = segs(max(r1,r2));
 	size = [r1*2, r1*2, l];
-	orient_and_anchor(size, orient, anchor, center, size2=[r2*2,r2*2], noncentered=BOTTOM, geometry="cylinder", chain=true) {
+	orient_and_anchor(size, orient, anchor, center, spin=spin, size2=[r2*2,r2*2], noncentered=BOTTOM, geometry="cylinder", chain=true) {
 		linear_extrude(height=l, scale=r2/r1, convexity=2, center=true) {
 			circle(r=r1, $fn=sides);
 		}
@@ -156,20 +161,21 @@ module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=unde
 // Arguments:
 //   r = Radius of the sphere.
 //   d = Diameter of the sphere.
-//   orient = Orientation of the sphere, if you don't like where the vertices lay.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the sphere.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example: By Radius
 //   sphere(r=50);
 // Example: By Diameter
 //   sphere(d=100);
 // Example: Standard Connectors
 //   sphere(d=50) show_anchors();
-module sphere(r=undef, d=undef, orient=ORIENT_Z, anchor=CENTER)
+module sphere(r=undef, d=undef, anchor=CENTER, spin=0, orient=UP)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
 	size = [r*2, r*2, r*2];
-	orient_and_anchor(size, orient, anchor, geometry="sphere", chain=true) {
+	orient_and_anchor(size, orient, anchor, spin=spin, geometry="sphere", chain=true) {
 		rotate_extrude(convexity=2) {
 			difference() {
 				circle(r=r, $fn=sides);

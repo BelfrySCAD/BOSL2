@@ -25,21 +25,22 @@
 //   d = Diameter of circle wedge is created from. (optional)
 //   d1 = Bottom diameter of cone that wedge is created from.  (optional)
 //   d2 = Upper diameter of cone that wedge is created from. (optional)
-//   orient = Orientation of the pie slice.  Use the ORIENT_ constants from constants.h.  Default: ORIENT_Z.
-//   anchor = Alignment of the pie slice.  Use the constants from constants.h.  Default: CENTER.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example(FR):
 //   angle_pie_mask(ang=30, d=100, l=20);
 module angle_pie_mask(
 	ang=45, l=undef,
 	r=undef, r1=undef, r2=undef,
 	d=undef, d1=undef, d2=undef,
-	orient=ORIENT_Z, anchor=CENTER,
-	h=undef
+	h=undef,
+	anchor=CENTER, spin=0, orient=UP
 ) {
 	l = first_defined([l, h, 1]);
 	r1 = get_radius(r1, r, d1, d, 10);
 	r2 = get_radius(r2, r, d2, d, 10);
-	orient_and_anchor([2*r1, 2*r1, l], orient, anchor, chain=true) {
+	orient_and_anchor([2*r1, 2*r1, l], orient, anchor, spin=spin, chain=true) {
 		pie_slice(ang=ang, l=l+0.1, r1=r1, r2=r2, anchor=CENTER);
 		children();
 	}
@@ -84,8 +85,9 @@ module angle_pie_mask(
 //   from_end = If true, chamfer/bevel size is measured from end of region.  If false, chamfer/bevel is measured outset from the radius of the region.  (Default: false)
 //   overage = The extra thickness of the mask.  Default: `10`.
 //   ends_only = If true, only mask the ends and not around the middle of the cylinder.
-//   orient = Orientation.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the region.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example:
 //   difference() {
 //       cylinder(h=100, r1=60, r2=30, center=true);
@@ -104,7 +106,7 @@ module cylinder_mask(
 	rounding=undef, rounding1=undef, rounding2=undef,
 	circum=false, from_end=false,
 	overage=10, ends_only=false,
-	orient=ORIENT_Z, anchor=CENTER
+	anchor=CENTER, spin=0, orient=UP
 ) {
 	r1 = get_radius(r=r, d=d, r1=r1, d1=d1, dflt=1);
 	r2 = get_radius(r=r, d=d, r1=r2, d1=d2, dflt=1);
@@ -124,7 +126,7 @@ module cylinder_mask(
 			cylinder_mask(l=l, r1=sc*r1, r2=sc*r2, chamfer1=cham1, chamfer2=cham2, chamfang1=ang1, chamfang2=ang2, rounding1=fil1, rounding2=fil2, orient=orient, from_end=from_end);
 		}
 	} else {
-		orient_and_anchor([2*r1, 2*r1, l], orient, anchor, chain=true) {
+		orient_and_anchor([2*r1, 2*r1, l], orient, anchor, spin=spin, chain=true) {
 			difference() {
 				union() {
 					chlen1 = cham1 / (from_end? 1 : tan(ang1));
@@ -160,15 +162,16 @@ module cylinder_mask(
 // Arguments:
 //   l = Length of mask.
 //   chamfer = Size of chamfer
-//   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: vertical.
-//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example:
 //   difference() {
 //       cube(50, anchor=BOTTOM+FRONT);
-//       #chamfer_mask(l=50, chamfer=10, orient=ORIENT_X);
+//       #chamfer_mask(l=50, chamfer=10, orient=RIGHT);
 //   }
-module chamfer_mask(l=1, chamfer=1, orient=ORIENT_Z, anchor=CENTER) {
-	orient_and_anchor([chamfer*2, chamfer*2, l], orient, anchor, chain=true) {
+module chamfer_mask(l=1, chamfer=1, anchor=CENTER, spin=0, orient=UP) {
+	orient_and_anchor([chamfer*2, chamfer*2, l], orient, anchor, spin=spin, chain=true) {
 		cylinder(r=chamfer, h=l+0.1, center=true, $fn=4);
 		children();
 	}
@@ -185,14 +188,15 @@ module chamfer_mask(l=1, chamfer=1, orient=ORIENT_Z, anchor=CENTER) {
 // Arguments:
 //   l = Height of mask
 //   chamfer = size of chamfer
-//   anchor = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the X axis after anchor.  See [spin](attachments#spin).  Default: `0`
 // Example:
 //   difference() {
 //       cube(50, anchor=BOTTOM+FRONT);
 //       #chamfer_mask_x(l=50, chamfer=10);
 //   }
-module chamfer_mask_x(l=1.0, chamfer=1.0, anchor=CENTER) {
-	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_X, anchor=anchor) children();
+module chamfer_mask_x(l=1.0, chamfer=1.0, anchor=CENTER, spin=0) {
+	chamfer_mask(l=l, chamfer=chamfer, anchor=anchor, spin=spin, orient=RIGHT) children();
 }
 
 
@@ -206,14 +210,15 @@ module chamfer_mask_x(l=1.0, chamfer=1.0, anchor=CENTER) {
 // Arguments:
 //   l = Height of mask
 //   chamfer = size of chamfer
-//   anchor = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Y axis after anchor.  See [spin](attachments#spin).  Default: `0`
 // Example:
 //   difference() {
 //       cube(50, anchor=BOTTOM+RIGHT);
 //       #chamfer_mask_y(l=50, chamfer=10);
 //   }
-module chamfer_mask_y(l=1.0, chamfer=1.0, anchor=CENTER) {
-	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_Y, anchor=anchor) children();
+module chamfer_mask_y(l=1.0, chamfer=1.0, anchor=CENTER, spin=0) {
+	chamfer_mask(l=l, chamfer=chamfer, anchor=anchor, spin=spin, orient=BACK) children();
 }
 
 
@@ -227,14 +232,15 @@ module chamfer_mask_y(l=1.0, chamfer=1.0, anchor=CENTER) {
 // Arguments:
 //   l = Height of mask
 //   chamfer = size of chamfer
-//   anchor = Alignment of the cylinder.  Use the constants from constants.h.  Default: centered.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
 // Example:
 //   difference() {
 //       cube(50, anchor=FRONT+RIGHT);
 //       #chamfer_mask_z(l=50, chamfer=10);
 //   }
-module chamfer_mask_z(l=1.0, chamfer=1.0, anchor=CENTER) {
-	chamfer_mask(l=l, chamfer=chamfer, orient=ORIENT_Z, anchor=anchor) children();
+module chamfer_mask_z(l=1.0, chamfer=1.0, anchor=CENTER, spin=0) {
+	chamfer_mask(l=l, chamfer=chamfer, anchor=anchor, spin=spin, orient=UP) children();
 }
 
 
@@ -289,7 +295,9 @@ module chamfer(chamfer=1, size=[1,1,1], edges=EDGES_ALL)
 //   chamfer = Size of the edge chamferred, inset from edge. (Default: 0.25)
 //   ang = Angle of chamfer in degrees from vertical.  (Default: 45)
 //   from_end = If true, chamfer size is measured from end of cylinder.  If false, chamfer is measured outset from the radius of the cylinder.  (Default: false)
-//   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: ORIENT_Z.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example:
 //   difference() {
 //       cylinder(r=50, h=100, center=true);
@@ -300,10 +308,13 @@ module chamfer(chamfer=1, size=[1,1,1], edges=EDGES_ALL)
 //       cylinder(r=50, h=100, center=true);
 //       up(50) chamfer_cylinder_mask(r=50, chamfer=10);
 //   }
-module chamfer_cylinder_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false, orient=ORIENT_Z)
+module chamfer_cylinder_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false, anchor=CENTER, spin=0, orient=UP)
 {
 	r = get_radius(r=r, d=d, dflt=1);
-	rot(orient) cylinder_mask(l=chamfer*3, r=r, chamfer2=chamfer, chamfang2=ang, from_end=from_end, ends_only=true, anchor=TOP);
+	orient_and_anchor([2*r,2*r,chamfer*2], orient, anchor, spin=spin, chain=true) {
+		cylinder_mask(l=chamfer*3, r=r, chamfer2=chamfer, chamfang2=ang, from_end=from_end, ends_only=true, anchor=TOP);
+		children();
+	}
 }
 
 
@@ -321,8 +332,9 @@ module chamfer_cylinder_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=fa
 //   ang = Angle of chamfer in degrees from vertical.  (Default: 45)
 //   from_end = If true, chamfer size is measured from end of hole.  If false, chamfer is measured outset from the radius of the hole.  (Default: false)
 //   overage = The extra thickness of the mask.  Default: `0.1`.
-//   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example:
 //   difference() {
 //       cube(100, center=true);
@@ -337,13 +349,13 @@ module chamfer_cylinder_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=fa
 //   }
 // Example:
 //   chamfer_hole_mask(d=100, chamfer=25, ang=30, overage=10);
-module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false, overage=0.1, orient=ORIENT_Z, anchor=CENTER)
+module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false, overage=0.1, anchor=CENTER, spin=0, orient=UP)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	h = chamfer * (from_end? 1 : tan(90-ang));
 	r2 = r + chamfer * (from_end? tan(ang) : 1);
 	$fn = segs(r);
-	orient_and_anchor([2*r, 2*r, h*2], orient, anchor, size2=[2*r2, 2*r2], chain=true) {
+	orient_and_anchor([2*r, 2*r, h*2], orient, anchor, spin=spin, size2=[2*r2, 2*r2], chain=true) {
 		union() {
 			cylinder(r=r2, h=overage, center=false);
 			down(h) cylinder(r1=r, r2=r2, h=h, center=false);
@@ -366,18 +378,36 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the rounding.
-//   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: vertical.
-//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
-//       #rounding_mask(l=100, r=25, orient=ORIENT_Z, anchor=BOTTOM);
+//       #rounding_mask(l=100, r=25, orient=UP, anchor=BOTTOM);
 //   }
-module rounding_mask(l=undef, r=1.0, orient=ORIENT_Z, anchor=CENTER, h=undef)
+// Example: Masking by Attachment
+//   diff("mask")
+//   cube(100, center=true)
+//       attach(FRONT+RIGHT)
+//           #rounding_mask(l=$parent_size.z+0.01, r=25, spin=45, orient=BACK, $tags="mask");
+// Example: Multiple Masking by Attachment
+//   diff("mask")
+//   cube([80,90,100], center=true) {
+//       let(p = $parent_size*1.01, $tags="mask") {
+//           attach([for (x=[-1,1],y=[-1,1]) [x,y,0]])
+//               rounding_mask(l=p.z, r=25, spin=45, orient=BACK);
+//           attach([for (x=[-1,1],z=[-1,1]) [x,0,z]])
+//               chamfer_mask(l=p.y, chamfer=20, spin=45, orient=RIGHT);
+//           attach([for (y=[-1,1],z=[-1,1]) [0,y,z]])
+//               rounding_mask(l=p.x, r=25, spin=45, orient=RIGHT);
+//       }
+//   }
+module rounding_mask(l=undef, r=1.0, anchor=CENTER, spin=0, orient=UP, h=undef)
 {
 	l = first_defined([l, h, 1]);
 	sides = quantup(segs(r),4);
-	orient_and_anchor([2*r, 2*r, l], orient, anchor, chain=true) {
+	orient_and_anchor([2*r, 2*r, l], orient, anchor, spin=spin, chain=true) {
 		linear_extrude(height=l+0.1, convexity=4, center=true) {
 			difference() {
 				square(2*r, center=true);
@@ -400,17 +430,17 @@ module rounding_mask(l=undef, r=1.0, orient=ORIENT_Z, anchor=CENTER, h=undef)
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the rounding.
-//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
 //       #rounding_mask_x(l=100, r=25, anchor=LEFT);
 //   }
-module rounding_mask_x(l=1.0, r=1.0, anchor=CENTER)
+module rounding_mask_x(l=1.0, r=1.0, spin=0)
 {
-	orient_and_anchor([l, 2*r, 2*r], ORIENT_Z, anchor, chain=true) {
-		rounding_mask(l=l, r=r, orient=ORIENT_X, anchor=CENTER)
-		children();
+	rounding_mask(l=l, r=r, spin=spin, orient=RIGHT) {
+		for (i=[0:1:$children-2]) children(i);
+		if ($children) children($children-1);
 	}
 }
 
@@ -426,17 +456,17 @@ module rounding_mask_x(l=1.0, r=1.0, anchor=CENTER)
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the rounding.
-//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
 //       right(100) #rounding_mask_y(l=100, r=25, anchor=FRONT);
 //   }
-module rounding_mask_y(l=1.0, r=1.0, anchor=CENTER)
+module rounding_mask_y(l=1.0, r=1.0, spin=0)
 {
-	orient_and_anchor([2*r, l, 2*r], ORIENT_Z, anchor, chain=true) {
-		rounding_mask(l=l, r=r, orient=ORIENT_Y, anchor=CENTER)
-		children();
+	rounding_mask(l=l, r=r, spin=spin, orient=BACK) {
+		for (i=[0:1:$children-2]) children(i);
+		if ($children) children($children-1);
 	}
 }
 
@@ -452,13 +482,19 @@ module rounding_mask_y(l=1.0, r=1.0, anchor=CENTER)
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the rounding.
-//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: centered.
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
 //       #rounding_mask_z(l=100, r=25, anchor=BOTTOM);
 //   }
-module rounding_mask_z(l=1.0, r=1.0, anchor=CENTER) rounding_mask(l=l, r=r, orient=ORIENT_Z, anchor=anchor) children();
+module rounding_mask_z(l=1.0, r=1.0, spin=0)
+{
+	rounding_mask(l=l, r=r, spin=spin, orient=UP) {
+		for (i=[0:1:$children-2]) children(i);
+		if ($children) children($children-1);
+	}
+}
 
 
 // Module: rounding()
@@ -510,19 +546,20 @@ module rounding(r=1, size=[1,1,1], edges=EDGES_ALL)
 //   h = height of vertical mask.
 //   r = radius of the rounding.
 //   ang = angle that the planes meet at.
-//   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example:
 //   difference() {
 //       angle_pie_mask(ang=70, h=50, d=100);
 //       #rounding_angled_edge_mask(h=51, r=20.0, ang=70, $fn=32);
 //   }
-module rounding_angled_edge_mask(h=1.0, r=1.0, ang=90, orient=ORIENT_Z, anchor=CENTER)
+module rounding_angled_edge_mask(h=1.0, r=1.0, ang=90, anchor=CENTER, spin=spin, orient=UP)
 {
 	sweep = 180-ang;
 	n = ceil(segs(r)*sweep/360);
 	x = r*sin(90-(ang/2))/sin(ang/2);
-	orient_and_anchor([2*x,2*r,h], orient, anchor, chain=true) {
+	orient_and_anchor([2*x,2*r,h], orient, anchor, spin=spin, chain=true) {
 		linear_extrude(height=h, convexity=4, center=true) {
 			polygon(
 				points=concat(
@@ -550,8 +587,9 @@ module rounding_angled_edge_mask(h=1.0, r=1.0, ang=90, orient=ORIENT_Z, anchor=C
 // Arguments:
 //   r = Radius of the rounding.
 //   ang = Angle between planes that you need to round the corner of.
-//   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example(Med):
 //   ang=60;
 //   difference() {
@@ -562,12 +600,12 @@ module rounding_angled_edge_mask(h=1.0, r=1.0, ang=90, orient=ORIENT_Z, anchor=C
 //       }
 //       rounding_angled_edge_mask(h=51, r=20, ang=ang);
 //   }
-module rounding_angled_corner_mask(r=1.0, ang=90, orient=ORIENT_Z, anchor=CENTER)
+module rounding_angled_corner_mask(r=1.0, ang=90, anchor=CENTER, spin=0, orient=UP)
 {
 	dx = r / tan(ang/2);
 	dx2 = dx / cos(ang/2) + 1;
 	fn = quantup(segs(r), 4);
-	orient_and_anchor([2*dx2, 2*dx2, r*2], orient, anchor, chain=true) {
+	orient_and_anchor([2*dx2, 2*dx2, r*2], orient, anchor, spin=spin, chain=true) {
 		difference() {
 			down(r) cylinder(r=dx2, h=r+1, center=false);
 			yflip_copy() {
@@ -596,7 +634,9 @@ module rounding_angled_corner_mask(r=1.0, ang=90, orient=ORIENT_Z, anchor=CENTER
 //   object should align exactly with the corner to be rounded.
 // Arguments:
 //   r = Radius of corner rounding.
-//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example:
 //   rounding_corner_mask(r=20.0);
 // Example:
@@ -607,9 +647,9 @@ module rounding_angled_corner_mask(r=1.0, ang=90, orient=ORIENT_Z, anchor=CENTER
 //     translate([15, 25, 0]) rounding_mask_z(l=81, r=15);
 //     translate([15, 25, 40]) #rounding_corner_mask(r=15);
 //   }
-module rounding_corner_mask(r=1.0, anchor=CENTER)
+module rounding_corner_mask(r=1.0, anchor=CENTER, spin=0, orient=UP)
 {
-	orient_and_anchor([2*r, 2*r, 2*r], ORIENT_Z, anchor, chain=true) {
+	orient_and_anchor([2*r, 2*r, 2*r], orient, anchor, spin=spin, chain=true) {
 		difference() {
 			cube(size=r*2, center=true);
 			grid3d(n=[2,2,2], spacing=r*2-0.05) {
@@ -662,8 +702,9 @@ module rounding_cylinder_mask(r=1.0, rounding=0.25)
 //   d = Diameter of hole to rounding.
 //   rounding = Radius of the rounding. (Default: 0.25)
 //   overage = The extra thickness of the mask.  Default: `0.1`.
-//   orient = Orientation of the mask.  Use the `ORIENT_` constants from `constants.h`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the mask.  Use the constants from `constants.h`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example(Med):
 //   difference() {
 //     cube([150,150,100], center=true);
@@ -678,10 +719,10 @@ module rounding_cylinder_mask(r=1.0, rounding=0.25)
 //   }
 // Example:
 //   rounding_hole_mask(r=40, rounding=20, $fa=2, $fs=2);
-module rounding_hole_mask(r=undef, d=undef, rounding=0.25, overage=0.1, orient=ORIENT_Z, anchor=CENTER)
+module rounding_hole_mask(r=undef, d=undef, rounding=0.25, overage=0.1, anchor=CENTER, spin, orient=UP)
 {
 	r = get_radius(r=r, d=d, dflt=1);
-	orient_and_anchor([2*(r+rounding), 2*(r+rounding), rounding*2], orient, anchor, chain=true) {
+	orient_and_anchor([2*(r+rounding), 2*(r+rounding), rounding*2], orient, anchor, spin=spin, chain=true) {
 		rotate_extrude(convexity=4) {
 			difference() {
 				right(r-overage) fwd(rounding) square(rounding+overage, center=false);

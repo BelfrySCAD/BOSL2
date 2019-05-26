@@ -181,9 +181,9 @@ module torx_drive2d(size) {
 //   center = If true, centers bit vertically.
 // Examples:
 //   torx_drive(size=30, l=10, $fa=1, $fs=1);
-module torx_drive(size, l=5, center=undef, orient=ORIENT_Z, anchor=BOTTOM) {
+module torx_drive(size, l=5, center=undef, anchor=BOTTOM, spin=0, orient=UP) {
 	od = torx_outer_diam(size);
-	orient_and_anchor([od, od, l], orient, anchor, center, chain=true) {
+	orient_and_anchor([od, od, l], orient, anchor, spin=spin, center=center, chain=true) {
 		linear_extrude(height=l, convexity=4, center=true) {
 			torx_drive2d(size);
 		}

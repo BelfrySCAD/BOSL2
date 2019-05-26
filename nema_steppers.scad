@@ -99,8 +99,9 @@ function nema_motor_screw_depth(size) = lookup(size, [
 //   h = Length of motor body.  Default: 24mm
 //   shaft = Shaft diameter. Default: 5mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 20mm
-//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `TOP`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -112,7 +113,7 @@ function nema_motor_screw_depth(size) = lookup(size, [
 //   "screw4" = The screw-hole in the X+Y- quadrant.
 // Example:
 //   nema11_stepper();
-module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=TOP)
+module nema11_stepper(h=24, shaft=5, shaft_len=20, anchor=TOP, spin=0, orient=UP)
 {
 	size = 11;
 	motor_width = nema_motor_width(size);
@@ -132,7 +133,8 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=TOP)
 		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
 		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
 	];
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, anchors=anchors, orig_anchor=TOP, chain=true) {
+	orient_and_anchor([motor_width, motor_width, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+		up(h/2)
 		union() {
 			difference() {
 				color([0.4, 0.4, 0.4]) 
@@ -162,8 +164,9 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=TOP)
 //   h = Length of motor body.  Default: 24mm
 //   shaft = Shaft diameter. Default: 5mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 24mm
-//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `TOP`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -175,7 +178,7 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=TOP)
 //   "screw4" = The screw-hole in the X+Y- quadrant.
 // Example:
 //   nema14_stepper();
-module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, anchor=TOP)
+module nema14_stepper(h=24, shaft=5, shaft_len=24, anchor=TOP, spin=0, orient=UP)
 {
 	size = 14;
 	motor_width = nema_motor_width(size);
@@ -195,7 +198,8 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, anchor=TOP)
 		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
 		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
 	];
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, anchors=anchors, orig_anchor=TOP, chain=true) {
+	orient_and_anchor([motor_width, motor_width, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+		up(h/2)
 		union() {
 			difference() {
 				color([0.4, 0.4, 0.4])
@@ -225,8 +229,9 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, anchor=TOP)
 //   h = Length of motor body.  Default: 34mm
 //   shaft = Shaft diameter. Default: 5mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 20mm
-//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `TOP`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -238,7 +243,7 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, orient=ORIENT_Z, anchor=TOP)
 //   "screw4" = The screw-hole in the X+Y- quadrant.
 // Example:
 //   nema17_stepper();
-module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=TOP)
+module nema17_stepper(h=34, shaft=5, shaft_len=20, anchor=TOP, spin=0, orient=UP)
 {
 	size = 17;
 	motor_width = nema_motor_width(size);
@@ -258,7 +263,8 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=TOP)
 		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
 		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
 	];
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, anchors=anchors, orig_anchor=UP, chain=true) {
+	orient_and_anchor([motor_width, motor_width, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+		up(h/2)
 		union() {
 			difference() {
 				color([0.4, 0.4, 0.4])
@@ -279,7 +285,7 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=TOP)
 					fwd(motor_width/2+motor_width/24/2-0.1) {
 						difference() {
 							cube(size=[motor_width/8, motor_width/24, motor_width/8], center=true);
-							cyl(d=motor_width/8-2, h=motor_width/6, orient=ORIENT_Y, $fn=12);
+							cyl(d=motor_width/8-2, h=motor_width/6, orient=BACK, $fn=12);
 						}
 					}
 				}
@@ -307,8 +313,9 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=TOP)
 //   h = Length of motor body.  Default: 50mm
 //   shaft = Shaft diameter. Default: 6.35mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 25mm
-//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `TOP`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -320,7 +327,7 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, orient=ORIENT_Z, anchor=TOP)
 //   "screw4" = The screw-hole in the X+Y- quadrant.
 // Example:
 //   nema23_stepper();
-module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, anchor=TOP)
+module nema23_stepper(h=50, shaft=6.35, shaft_len=25, anchor=TOP, spin=0, orient=UP)
 {
 	size = 23;
 	motor_width = nema_motor_width(size);
@@ -341,7 +348,8 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, anchor=TO
 		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
 		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
 	];
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, anchors=anchors, orig_anchor=TOP, chain=true) {
+	orient_and_anchor([motor_width, motor_width, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+		up(h/2)
 		difference() {
 			union() {
 				color([0.4, 0.4, 0.4])
@@ -372,8 +380,9 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, anchor=TO
 //   h = Length of motor body.  Default: 75mm
 //   shaft = Shaft diameter. Default: 12.7mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 32mm
-//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `TOP`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -385,7 +394,7 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, orient=ORIENT_Z, anchor=TO
 //   "screw4" = The screw-hole in the X+Y- quadrant.
 // Example:
 //   nema34_stepper();
-module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, anchor=TOP)
+module nema34_stepper(h=75, shaft=12.7, shaft_len=32, anchor=TOP, spin=0, orient=UP)
 {
 	size = 34;
 	motor_width = nema_motor_width(size);
@@ -406,7 +415,8 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, anchor=TO
 		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
 		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
 	];
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, anchors=anchors, orig_anchor=TOP, chain=true) {
+	orient_and_anchor([motor_width, motor_width, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+		up(h/2)
 		difference() {
 			union() {
 				color([0.4, 0.4, 0.4])
@@ -442,8 +452,9 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, anchor=TO
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
-//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -455,7 +466,7 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, orient=ORIENT_Z, anchor=TO
 //   nema_mount_holes(size=17, depth=5, l=5);
 // Example:
 //   nema_mount_holes(size=17, depth=5, l=0);
-module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anchor=CENTER)
+module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=spin, orient=UP)
 {
 	motor_width = nema_motor_width(size);
 	plinth_diam = nema_motor_plinth_diam(size)+slop;
@@ -470,7 +481,7 @@ module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_
 	];
 	screwfn = quantup(max(8,segs(screw_size/2)),4);
 	plinthfn = quantup(max(8,segs(plinth_diam/2)),4);
-	orient_and_anchor([screw_spacing+screw_size, screw_spacing+screw_size+l, depth], orient, anchor, chain=true) {
+	orient_and_anchor([screw_spacing+screw_size, screw_spacing+screw_size+l, depth], orient, anchor, spin=spin, chain=true) {
 		union() {
 			xspread(screw_spacing) {
 				yspread(screw_spacing) {
@@ -505,8 +516,9 @@ module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
-//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -516,9 +528,9 @@ module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_
 //   nema11_mount_holes(depth=5, l=5);
 // Example:
 //   nema11_mount_holes(depth=5, l=0);
-module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anchor=CENTER)
+module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
 {
-	nema_mount_holes(size=11, depth=depth, l=l, slop=slop, orient=orient, anchor=anchor) children();
+	nema_mount_holes(size=11, depth=depth, l=l, slop=slop, anchor=anchor, spin=spin, orient=orient) children();
 }
 
 
@@ -529,8 +541,9 @@ module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anch
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
-//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -540,9 +553,9 @@ module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anch
 //   nema14_mount_holes(depth=5, l=5);
 // Example:
 //   nema14_mount_holes(depth=5, l=0);
-module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anchor=CENTER)
+module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
 {
-	nema_mount_holes(size=14, depth=depth, l=l, slop=slop, orient=orient, anchor=anchor) children();
+	nema_mount_holes(size=14, depth=depth, l=l, slop=slop, anchor=anchor, spin=spin, orient=orient) children();
 }
 
 
@@ -553,8 +566,9 @@ module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anch
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
-//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -564,9 +578,9 @@ module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anch
 //   nema17_mount_holes(depth=5, l=5);
 // Example:
 //   nema17_mount_holes(depth=5, l=0);
-module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anchor=CENTER)
+module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
 {
-	nema_mount_holes(size=17, depth=depth, l=l, slop=slop, orient=orient, anchor=anchor) children();
+	nema_mount_holes(size=17, depth=depth, l=l, slop=slop, anchor=anchor, spin=spin, orient=orient) children();
 }
 
 
@@ -577,8 +591,9 @@ module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anch
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
-//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -588,9 +603,9 @@ module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anch
 //   nema23_mount_holes(depth=5, l=5);
 // Example:
 //   nema23_mount_holes(depth=5, l=0);
-module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anchor=CENTER)
+module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
 {
-	nema_mount_holes(size=23, depth=depth, l=l, slop=slop, orient=orient, anchor=anchor) children();
+	nema_mount_holes(size=23, depth=depth, l=l, slop=slop, anchor=anchor, spin=spin, orient=orient) children();
 }
 
 
@@ -601,8 +616,9 @@ module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anch
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
-//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -612,33 +628,9 @@ module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anch
 //   nema34_mount_holes(depth=5, l=5);
 // Example:
 //   nema34_mount_holes(depth=5, l=0);
-module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anchor=CENTER)
+module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
 {
-	nema_mount_holes(size=34, depth=depth, l=l, slop=slop, orient=orient, anchor=anchor) children();
-}
-
-
-
-// Module: nema34_mount_holes()
-// Description: Creates a mask to use when making NEMA 34 stepper motor mounts.
-// Arguments:
-//   depth = The thickness of the mounting hole mask.  Default: 5
-//   l = The length of the slots, for making an adjustable motor mount.  Default: 5
-//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
-//   orient = Orientation of the stepper.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the stepper.  Use the constants from `constants.scad`.  Default: `CENTER`.
-// Extra Anchors:
-//   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
-//   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
-//   "screw3" = The center top of the screw hole/slot in the X-Y- quadrant.
-//   "screw4" = The center top of the screw hole/slot in the X+Y- quadrant.
-// Example:
-//   nema34_mount_holes(depth=5, l=5);
-// Example:
-//   nema34_mount_holes(depth=5, l=0);
-module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, orient=ORIENT_Z, anchor=CENTER)
-{
-	nema_mount_holes(size=34, depth=depth, l=l, slop=slop, orient=orient, anchor=anchor) children();
+	nema_mount_holes(size=34, depth=depth, l=l, slop=slop, anchor=anchor, spin=spin, orient=orient) children();
 }
 
 

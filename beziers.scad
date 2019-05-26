@@ -414,8 +414,9 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 //   scale = Relative size of top of extrusion to the bottom.  default=1.0
 //   slices = Number of vertical slices to use for twisted extrusion.  default=20
 //   center = If true, the extruded solid is centered vertically at z=0.
-//   orient = Orientation of the extrusion.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the extrusion.  Use the constants from `constants.scad`.  Default: `UP`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example:
 //   bez = [
 //       [-10,   0],  [-15,  -5],
@@ -425,13 +426,14 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 //       [ 25, -15],  [-10,   0]
 //   ];
 //   linear_extrude_bezier(bez, height=20, splinesteps=32);
-module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=undef, convexity=undef, twist=undef, slices=undef, scale=undef, orient=ORIENT_Z, anchor=UP) {
+module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=undef, convexity=undef, twist=undef, slices=undef, scale=undef, anchor=UP, spin=0, orient=UP) {
 	maxx = max([for (pt = bezier) abs(pt[0])]);
 	maxy = max([for (pt = bezier) abs(pt[1])]);
-	orient_and_anchor([maxx*2,maxy*2,height], orient, anchor) {
+	orient_and_anchor([maxx*2,maxy*2,height], orient, anchor, spin=spin, chain=true) {
 		linear_extrude(height=height, center=true, convexity=convexity, twist=twist, slices=slices, scale=scale) {
 			bezier_polygon(bezier, splinesteps=splinesteps, N=N);
 		}
+		children();
 	}
 }
 
@@ -447,8 +449,9 @@ module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=und
 //   N = number of points in each bezier segment.  default=3 (cubic)
 //   convexity = max number of walls a line could pass through, for preview.  default=10
 //   angle = Degrees of sweep to make.  Default: 360
-//   orient = Orientation of the extrusion.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   anchor = Alignment of the extrusion.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example(FlatSpin):
 //   path = [
 //     [  0, 10], [ 50,  0], [ 50, 40],
@@ -458,11 +461,11 @@ module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=und
 //     [  0, 10]
 //   ];
 //   revolve_bezier(path, splinesteps=32, $fn=180);
-module revolve_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, orient=ORIENT_X, anchor=CENTER)
+module revolve_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, anchor=CENTER, spin=0, orient=RIGHT)
 {
 	maxx = max([for (pt = bezier) abs(pt[0])]);
 	maxy = max([for (pt = bezier) abs(pt[1])]);
-	orient_and_anchor([maxx*2,maxx*2,maxy*2], orient, anchor) {
+	orient_and_anchor([maxx*2,maxx*2,maxy*2], orient, anchor, spin=spin, geometry="cylinder", chain=true) {
 		rotate_extrude(convexity=convexity, angle=angle) {
 			xrot(180) zrot(-90) bezier_polygon(bezier, splinesteps, N);
 		}
@@ -483,8 +486,9 @@ module revolve_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, orie
 //   N = number of points in each bezier segment.  default=3 (cubic)
 //   convexity = max number of walls a line could pass through, for preview.  default=10
 //   angle = Degrees of sweep to make.  Default: 360
-//   orient = Orientation of the extrusion.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the extrusion.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example(Spin):
 //   path = [
 //     [  0, 10], [ 50,  0], [ 50, 40],
@@ -494,11 +498,11 @@ module revolve_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, orie
 //     [  0, 10]
 //   ];
 //   rotate_extrude_bezier(path, splinesteps=32, $fn=180);
-module rotate_extrude_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, orient=ORIENT_Z, anchor=CENTER)
+module rotate_extrude_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, anchor=CENTER, spin=0, orient=UP)
 {
 	maxx = max([for (pt = bezier) abs(pt[0])]);
 	maxy = max([for (pt = bezier) abs(pt[1])]);
-	orient_and_anchor([maxx*2,maxx*2,0], orient, anchor) {
+	orient_and_anchor([maxx*2,maxx*2,0], orient, anchor, spin=spin, geometry="cylinder", chain=true) {
 		rotate_extrude(convexity=convexity, angle=angle) {
 			bezier_polygon(bezier, splinesteps, N);
 		}
@@ -518,13 +522,14 @@ module rotate_extrude_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=36
 //   N = number of points in each bezier segment.  default=3 (cubic)
 //   convexity = max number of walls a line could pass through, for preview.  default=10
 //   angle = Degrees of sweep to make.  Default: 360
-//   orient = Orientation of the extrusion.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   anchor = Alignment of the extrusion.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example(FlatSpin):
 //   path = [ [0, 10], [33, 10], [66, 40], [100, 40] ];
 //   revolve_bezier_solid_to_axis(path, splinesteps=32, $fn=72);
-module revolve_bezier_solid_to_axis(bezier, splinesteps=16, N=3, convexity=10, angle=360, orient=ORIENT_X, anchor=CENTER) {
-	revolve_bezier(bezier=bezier_close_to_axis(bezier), splinesteps=splinesteps, N=N, convexity=convexity, angle=angle, orient=orient, anchor=anchor);
+module revolve_bezier_solid_to_axis(bezier, splinesteps=16, N=3, convexity=10, angle=360, anchor=CENTER, spin=0, orient=RIGHT) {
+	revolve_bezier(bezier=bezier_close_to_axis(bezier), splinesteps=splinesteps, N=N, convexity=convexity, angle=angle, anchor=anchor, spin=spin, orient=orient);
 }
 
 
@@ -540,13 +545,14 @@ module revolve_bezier_solid_to_axis(bezier, splinesteps=16, N=3, convexity=10, a
 //   N = number of points in each bezier segment.  default=3 (cubic)
 //   convexity = max number of walls a line could pass through, for preview.  default=10
 //   angle = degrees of sweep to make.  Default: 360
-//   orient = Orientation of the extrusion.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   anchor = Alignment of the extrusion.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `RIGHT`
 // Example(FlatSpin):
 //   path = [ [0, 10], [33, 10], [66, 40], [100, 40] ];
 //   revolve_bezier_offset_shell(path, offset=1, splinesteps=32, $fn=72);
-module revolve_bezier_offset_shell(bezier, offset=1, splinesteps=16, N=3, convexity=10, angle=360, orient=ORIENT_X, anchor=CENTER) {
-	revolve_bezier(bezier=bezier_offset(offset, bezier), splinesteps=splinesteps, N=N, orient=orient, anchor=anchor);
+module revolve_bezier_offset_shell(bezier, offset=1, splinesteps=16, N=3, convexity=10, angle=360, anchor=CENTER, spin=0, orient=RIGHT) {
+	revolve_bezier(bezier=bezier_offset(offset, bezier), splinesteps=splinesteps, N=N, anchor=anchor, spin=spin, orient=orient);
 }
 
 
@@ -799,17 +805,17 @@ function bezier_triangle(tri, splinesteps=16, vertices=[], faces=[]) =
 // Arguments:
 //   size = 2D XY size of the patch.
 //   N = Degree of the patch to generate.  Since this is flat, a degree of 1 should usually be sufficient.
-//   orient = The orientation to rotate the edge patch into.  Use the `ORIENT` constants in `constants.scad`.
+//   orient = The orientation to rotate the edge patch into.  Given as an [X,Y,Z] rotation angle list.
 //   trans = Amount to translate patch, after rotating to `orient`.
 // Example(3D):
 //   patch = bezier_patch_flat(size=[100,100], N=3);
 //   trace_bezier_patches([patch], size=1, showcps=true);
-function bezier_patch_flat(size=[100,100], N=4, orient=ORIENT_Z, trans=[0,0,0]) =
+function bezier_patch_flat(size=[100,100], N=4, spin=0, orient=UP, trans=[0,0,0]) =
 	let(
 		patch = [for (x=[0:N]) [for (y=[0:N]) vmul(point3d(size),[x/N-0.5, 0.5-y/N, 0])]]
 	) [for (row=patch)
 		translate_points(v=trans,
-			rotate_points3d(a=orient,row)
+			rotate_points3d(a=spin, from=UP, to=orient, row)
 		)
 	];
 

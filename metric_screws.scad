@@ -363,17 +363,20 @@ function get_metric_nut_thickness(size) = lookup(size, [
 // Description:
 //   Makes a very simple screw model, useful for making screwholes.
 // Usage:
-//   screw(screwsize, screwlen, headsize, headlen, [countersunk], [orient], [anchor])
+//   screw(screwsize, screwlen, headsize, headlen, [orient], [anchor])
 // Arguments:
 //   screwsize = diameter of threaded part of screw.
 //   screwlen = length of threaded part of screw.
 //   headsize = diameter of the screw head.
 //   headlen = length of the screw head.
-//   countersunk = If true, center from cap's top instead of it's bottom.
-//   orient = Orientation of the screw.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the screw.  Use the constants from `constants.scad` or `"sunken"`, or `"base"`.  Default: `"base"`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+// Extra Anchors:
+//   "base" = At the base of the head.
+//   "countersunk" = At the head height that would be just barely exposed when countersunk.
 // Examples:
-//   screw(screwsize=3,screwlen=10,headsize=6,headlen=3,countersunk=true);
+//   screw(screwsize=3,screwlen=10,headsize=6,headlen=3, anchor="countersunk");
 //   screw(screwsize=3,screwlen=10,headsize=6,headlen=3, anchor="base");
 // Example(FlatSpin): Standard Anchors
 //   screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
@@ -388,17 +391,16 @@ module screw(
 	headsize=6,
 	headlen=3,
 	pitch=undef,
-	countersunk=false,
-	orient=ORIENT_Z,
-	anchor="base"
+	anchor="base",
+	spin=0,
+	orient=UP
 ) {
 	sides = max(12, segs(screwsize/2));
-	algn = countersunk? TOP : anchor;
 	anchors = [
-		anchorpt("base", [0,0,-headlen/2+screwlen/2]),
-		anchorpt("sunken", [0,0,(headlen+screwlen)/2-0.01])
+		anchorpt("countersunk", [0,0,(headlen+screwlen)/2-0.01]),
+		anchorpt("base", [0,0,-headlen/2+screwlen/2])
 	];
-	orient_and_anchor([screwsize, screwsize, headlen+screwlen], orient, algn, anchors=anchors, geometry="cylinder", chain=true) {
+	orient_and_anchor([screwsize, screwsize, headlen+screwlen], orient, anchor, spin=spin, anchors=anchors, geometry="cylinder", chain=true) {
 		down(headlen/2-screwlen/2) {
 			down(screwlen/2) {
 				if (pitch == undef) {
@@ -428,8 +430,13 @@ module screw(
 //   flange = Radius of flange beyond the head.  Default = 0 (no flange)
 //   phillips = If given, the size of the phillips drive hole to add.  (ie: "#1", "#2", or "#3")
 //   torx = If given, the size of the torx drive hole to add.  (ie: 10, 20, 30, etc.)
-//   orient = Orientation of the bolt.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the bolt.  Use the constants from `constants.scad` or `"sunken"`, `"base"`, or `"shank"`.  Default: `"base"`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+// Extra Anchors:
+//   "base" = At the base of the head.
+//   "countersunk" = At the head height that would be just barely exposed when countersunk.
+//   "shank" = At the bottom start of the unthreaded shank.
 // Example: Bolt Head Types
 //   ydistribute(40) {
 //       xdistribute(30) {
@@ -480,8 +487,9 @@ module metric_bolt(
 	phillips=undef,
 	torx=undef,
 	flange=0,
-	orient=ORIENT_Z,
-	anchor="base"
+	anchor="base",
+	spin=0,
+	orient=UP
 ) {
 	D = headtype != "hex"?
 		get_metric_socket_cap_diam(size) :
@@ -498,7 +506,6 @@ module metric_bolt(
 	bevtop = (tcirc-D)/2;
 	bevbot = P/2;
 
-	//algn = (headtype == "countersunk" || headtype == "oval")? (D-size)/2 : 0;
 	headlen = (
 		(headtype == "pan" || headtype == "round" || headtype == "button")? H*0.75 :
 		(headtype == "countersunk")? (D-size)/2 :
@@ -512,13 +519,13 @@ module metric_bolt(
 	);
 
 	anchors = [
-		anchorpt("sunken", [0,0,base+sunklen]),
+		anchorpt("countersunk", [0,0,base+sunklen]),
 		anchorpt("base",   [0,0,base]),
 		anchorpt("shank",  [0,0,base-shank])
 	];
 
 	//color("silver")
-	orient_and_anchor([size, size, headlen+l], orient, anchor, geometry="cylinder", anchors=anchors, chain=true) {
+	orient_and_anchor([size, size, headlen+l], orient, anchor, spin=spin, geometry="cylinder", anchors=anchors, chain=true) {
 		up(base) {
 			difference() {
 				union() {
@@ -626,8 +633,9 @@ module metric_bolt(
 //   pitch = pitch of threads in the hole.  No threads if not given.
 //   flange = radius of flange beyond the head.  Default = 0 (no flange)
 //   details = true if model should be rendered with extra details.  (Default: false)
-//   orient = Orientation of the nut.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the nut.  Use the constants from `constants.scad`.  Default: `UP`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 //   center = If true, centers the nut at the origin.  If false, sits on top of XY plane.  Overrides `anchor` if given.
 // Example: No details, No Hole.  Useful for a mask.
 //   metric_nut(size=10, hole=false);
@@ -648,8 +656,9 @@ module metric_nut(
 	details=false,
 	flange=0,
 	center=undef,
-	orient=ORIENT_Z,
-	anchor=UP
+	anchor=CENTER,
+	spin=0,
+	orient=UP
 ) {
 	H = get_metric_nut_thickness(size);
 	D = get_metric_nut_size(size);
@@ -659,7 +668,7 @@ module metric_nut(
 	bevtop = (dcirc - D)/2;
 
 	//color("silver")
-	orient_and_anchor([dcirc+flange, dcirc+flange, H], orient, anchor, center, geometry="cylinder", chain=true) {
+	orient_and_anchor([dcirc+flange, dcirc+flange, H], orient, anchor, spin=spin, center=center, geometry="cylinder", chain=true) {
 		difference() {
 			union() {
 				difference() {

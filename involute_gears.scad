@@ -284,8 +284,9 @@ module gear2d(
 //   slices = Number of vertical layers to divide gear into.  Useful for refining gears with `twist`.
 //   scale = Scale of top of gear compared to bottom.  Useful for making crown gears.
 //   interior = If true, create a mask for difference()ing from something else.
-//   orient = Orientation of the gear.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the gear.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example: Spur Gear
 //   gear(mm_per_tooth=5, number_of_teeth=20, thickness=8, hole_diameter=5);
 // Example: Beveled Gear
@@ -303,14 +304,15 @@ module gear(
 	twist           = undef,
 	slices          = undef,
 	interior        = false,
-	orient          = ORIENT_Z,
 	anchor          = CENTER
+	spin            = 0,
+	orient          = UP
 ) {
 	p = pitch_radius(mm_per_tooth, number_of_teeth);
 	c = outer_radius(mm_per_tooth, number_of_teeth, clearance, interior);
 	r = root_radius(mm_per_tooth, number_of_teeth, clearance, interior);
 	p2 = p - (thickness*tan(bevelang));
-	orient_and_anchor([p, p, thickness], orient, anchor, geometry="cylinder", chain=true) {
+	orient_and_anchor([p, p, thickness], orient, anchor, spin=spin, geometry="cylinder", chain=true) {
 		difference() {
 			linear_extrude(height=thickness, center=true, convexity=10, twist=twist, scale=p2/p, slices=slices) {
 				gear2d(
@@ -354,8 +356,9 @@ module gear(
 //   height = Height of rack in mm, from tooth top to back of rack.
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
-//   orient = Orientation of the rack.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   anchor = Alignment of the rack.  Use the constants from `constants.scad`.  Default: `RIGHT`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Anchors:
 //   "adendum" = At the tips of the teeth, at the center of rack.
 //   "adendum-left" = At the tips of the teeth, at the left end of the rack.
@@ -377,8 +380,9 @@ module rack(
 	pressure_angle  = 28,
 	backlash        = 0.0,
 	clearance       = undef,
-	orient          = ORIENT_Z,
 	anchor          = CENTER
+	spin            = 0,
+	orient          = UP
 ) {
 	a = adendum(mm_per_tooth);
 	d = dedendum(mm_per_tooth, clearance);
@@ -397,7 +401,7 @@ module rack(
 		anchorpt("dedendum-top",    [0,-d,thickness/2],  UP),
 		anchorpt("dedendum-bottom", [0,-d,-thickness/2], DOWN),
 	];
-	orient_and_anchor([l, 2*abs(a-height), thickness], orient, anchor, anchors=anchors, chain=true) {
+	orient_and_anchor([l, 2*abs(a-height), thickness], orient, anchor, spin=spin, anchors=anchors, chain=true) {
 		left((number_of_teeth-1)*mm_per_tooth/2) {
 			linear_extrude(height = thickness, center = true, convexity = 10) {
 				for (i = [0:number_of_teeth-1] ) {

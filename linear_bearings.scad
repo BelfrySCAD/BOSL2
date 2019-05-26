@@ -76,11 +76,12 @@ function get_lmXuu_bearing_length(size) = lookup(size, [
 //   wall = Wall thickness of clamp housing. (Default: 3)
 //   gap = Gap in clamp. (Default: 5)
 //   screwsize = Size of screw to use to tighten clamp. (Default: 3)
-//   orient = Orientation of the housing.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   anchor = Alignment of the housing by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example:
 //   linear_bearing_housing(d=19, l=29, wall=2, tab=6, screwsize=2.5);
-module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, orient=ORIENT_X, anchor=BOTTOM)
+module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, anchor=BOTTOM, spin=0, orient=UP)
 {
 	od = d+2*wall;
 	ogap = gap+2*tabwall;
@@ -91,7 +92,7 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 		anchorpt("screw", [0,2-ogap/2,tabh-tab/2/2],FWD),
 		anchorpt("nut", [0,ogap/2-2,tabh-tab/2/2],FWD)
 	];
-	orient_and_anchor([l, od, h], orient, anchor, anchors=anchors, orig_orient=ORIENT_X, chain=true) {
+	orient_and_anchor([l, od, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
 		down(tab/2/2)
 		difference() {
 			union() {
@@ -113,10 +114,10 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 
 			up(tabh) {
 				// Screwhole
-				fwd(ogap/2-2+0.01) xrot(90) screw(screwsize=screwsize*1.06, screwlen=ogap, headsize=screwsize*2, headlen=10);
+				fwd(ogap/2-2+0.01) screw(screwsize=screwsize*1.06, screwlen=ogap, headsize=screwsize*2, headlen=10, orient=FWD);
 
 				// Nut holder
-				back(ogap/2-2+0.01) xrot(90) metric_nut(size=screwsize, hole=false);
+				back(ogap/2-2+0.01) metric_nut(size=screwsize, hole=false, anchor=BOTTOM, orient=BACK);
 			}
 		}
 		children();
@@ -134,15 +135,16 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 //   wall = Wall thickness of clamp housing.  Default: 3
 //   gap = Gap in clamp.  Default: 5
 //   screwsize = Size of screw to use to tighten clamp.  Default: 3
-//   orient = Orientation of the housing.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_X`.
-//   anchor = Alignment of the housing by the axis-negative (size1) end.  Use the constants from `constants.scad`.  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example:
 //   lmXuu_housing(size=10, wall=2, tab=6, screwsize=2.5);
-module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, orient=ORIENT_X, anchor=BOTTOM)
+module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, anchor=BOTTOM, spin=0, orient=UP)
 {
 	d = get_lmXuu_bearing_diam(size);
 	l = get_lmXuu_bearing_length(size);
-	linear_bearing_housing(d=d,l=l,tab=tab,gap=gap,wall=wall,tabwall=tabwall,screwsize=screwsize, orient=orient, anchor=anchor) children();
+	linear_bearing_housing(d=d, l=l, tab=tab, gap=gap, wall=wall, tabwall=tabwall, screwsize=screwsize, orient=orient, spin=spin, anchor=anchor) children();
 }
 
 

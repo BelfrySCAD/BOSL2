@@ -884,8 +884,9 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   stagger = If true, make a staggered (hexagonal) grid.  If false, make square grid.  If `"alt"`, makes alternate staggered pattern.  Default: false
 //   scale = [X,Y] scaling factors to reshape grid.
 //   in_poly = If given a list of polygon points, only creates copies whose center would be inside the polygon.  Polygon can be concave and/or self crossing.
-//   orient = Orientation axis for the grid.  Orientation is NOT applied to individual children.
-//   anchor = Alignment of the grid.  Alignment is NOT applies to individual children.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -916,7 +917,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //               zrot(180/6)
 //                   cylinder(h=20, d=10/cos(180/6)+0.01, $fn=6);
 //   }
-module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, scale=[1,1,1], in_poly=undef, orient=ORIENT_Z, anchor=CENTER)
+module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, scale=[1,1,1], in_poly=undef, anchor=CENTER, spin=0, orient=UP)
 {
 	assert_in_list("stagger", stagger, [false, true, "alt"]);
 	scl = vmul(scalar_vec3(scale, 1), (stagger!=false? [0.5, sin(60), 0] : [1,1,0]));
@@ -926,10 +927,10 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 			spc = vmul(scalar_vec3(spacing), scl);
 			maxcols = ceil(siz[0]/spc[0]);
 			maxrows = ceil(siz[1]/spc[1]);
-			grid2d(spacing=spacing, cols=maxcols, rows=maxrows, stagger=stagger, scale=scale, in_poly=in_poly, orient=orient, anchor=anchor) children();
+			grid2d(spacing=spacing, cols=maxcols, rows=maxrows, stagger=stagger, scale=scale, in_poly=in_poly, anchor=anchor, spin=spin, orient=orient) children();
 		} else {
 			spc = [siz[0]/cols, siz[1]/rows, 0];
-			grid2d(spacing=spc, cols=cols, rows=rows, stagger=stagger, scale=scale, in_poly=in_poly, orient=orient, anchor=anchor) children();
+			grid2d(spacing=spc, cols=cols, rows=rows, stagger=stagger, scale=scale, in_poly=in_poly, anchor=anchor, spin=spin, orient=orient) children();
 		}
 	} else {
 		spc = is_list(spacing)? spacing : vmul(scalar_vec3(spacing), scl);
@@ -940,7 +941,7 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 		siz = vmul(spc, [mcols-1, mrows-1, 0]);
 		staggermod = (stagger == "alt")? 1 : 0;
 		if (stagger == false) {
-			orient_and_anchor(siz, orient, anchor) {
+			orient_and_anchor(siz, orient, anchor, spin=spin) {
 				for (row = [0:mrows-1]) {
 					for (col = [0:mcols-1]) {
 						pos = [col*spc[0], row*spc[1]] - point2d(siz/2);
@@ -955,7 +956,7 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 			}
 		} else {
 			// stagger == true or stagger == "alt"
-			orient_and_anchor(siz, orient, anchor) {
+			orient_and_anchor(siz, orient, anchor, spin=spin) {
 				cols1 = ceil(mcols/2);
 				cols2 = mcols - cols1;
 				for (row = [0:mrows-1]) {

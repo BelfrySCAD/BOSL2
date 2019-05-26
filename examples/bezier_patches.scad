@@ -2,10 +2,11 @@ include <BOSL2/std.scad>
 include <BOSL2/paths.scad>
 include <BOSL2/beziers.scad>
 
+rounding_factor = 0.667;
 
-function CR_corner(size, orient=[0,0,0], trans=[0,0,0]) =
+function CR_corner(size, spin=0, orient=UP, trans=[0,0,0]) =
 	let (
-		r = 0.4,
+		r = rounding_factor,
 		k = r/2,
 		// I know this patch is not yet correct for continuous
 		// rounding, but it's a first approximation proof of concept.
@@ -19,16 +20,16 @@ function CR_corner(size, orient=[0,0,0], trans=[0,0,0]) =
 		]
 	) [for (row=patch)
 		translate_points(v=trans,
-			rotate_points3d(v=orient,
+			rotate_points3d(a=spin, from=UP, to=orient,
 				scale_points(v=size, row)
 			)
 		)
 	];
 
 
-function CR_edge(size, orient=[0,0,0], trans=[0,0,0]) =
+function CR_edge(size, spin=0, orient=UP, trans=[0,0,0]) =
 	let (
-		r = 0.4,
+		r = rounding_factor,
 		a = -1/2,
 		b = -1/4,
 		c =  1/4,
@@ -45,7 +46,7 @@ function CR_edge(size, orient=[0,0,0], trans=[0,0,0]) =
 		]
 	) [for (row=patch)
 		translate_points(v=trans,
-			rotate_points3d(v=orient,
+			rotate_points3d(a=spin, from=UP, to=orient,
 				scale_points(v=size, row)
 			)
 		)
@@ -57,43 +58,43 @@ module CR_cube(size=[100,100,100], r=10, splinesteps=8, cheat=false)
 	s = size-2*[r,r,r];
 	h = size/2;
 	corners = [
-		CR_corner([r,r,r], orient=ORIENT_Z,     trans=[-size.x/2, -size.y/2, -size.z/2]),
-		CR_corner([r,r,r], orient=ORIENT_Z_90,  trans=[ size.x/2, -size.y/2, -size.z/2]),
-		CR_corner([r,r,r], orient=ORIENT_Z_180, trans=[ size.x/2,  size.y/2, -size.z/2]),
-		CR_corner([r,r,r], orient=ORIENT_Z_270, trans=[-size.x/2,  size.y/2, -size.z/2]),
+		CR_corner([r,r,r], spin=0,   orient=UP, trans=[-size.x/2, -size.y/2, -size.z/2]),
+		CR_corner([r,r,r], spin=90,  orient=UP, trans=[ size.x/2, -size.y/2, -size.z/2]),
+		CR_corner([r,r,r], spin=180, orient=UP, trans=[ size.x/2,  size.y/2, -size.z/2]),
+		CR_corner([r,r,r], spin=270, orient=UP, trans=[-size.x/2,  size.y/2, -size.z/2]),
 
-		CR_corner([r,r,r], orient=ORIENT_ZNEG,     trans=[ size.x/2, -size.y/2,  size.z/2]),
-		CR_corner([r,r,r], orient=ORIENT_ZNEG_90,  trans=[-size.x/2, -size.y/2,  size.z/2]),
-		CR_corner([r,r,r], orient=ORIENT_ZNEG_180, trans=[-size.x/2,  size.y/2,  size.z/2]),
-		CR_corner([r,r,r], orient=ORIENT_ZNEG_270, trans=[ size.x/2,  size.y/2,  size.z/2])
+		CR_corner([r,r,r], spin=0,   orient=DOWN, trans=[ size.x/2, -size.y/2,  size.z/2]),
+		CR_corner([r,r,r], spin=90,  orient=DOWN, trans=[-size.x/2, -size.y/2,  size.z/2]),
+		CR_corner([r,r,r], spin=180, orient=DOWN, trans=[-size.x/2,  size.y/2,  size.z/2]),
+		CR_corner([r,r,r], spin=270, orient=DOWN, trans=[ size.x/2,  size.y/2,  size.z/2])
 	];
 	edges = [
-		CR_edge([r, r, s.x], orient=ORIENT_X,     trans=[   0, -h.y, -h.z]),
-		CR_edge([r, r, s.x], orient=ORIENT_X_90,  trans=[   0,  h.y, -h.z]),
-		CR_edge([r, r, s.x], orient=ORIENT_X_180, trans=[   0,  h.y,  h.z]),
-		CR_edge([r, r, s.x], orient=ORIENT_X_270, trans=[   0, -h.y,  h.z]),
+		CR_edge([r, r, s.x], spin=0,   orient=RIGHT, trans=[   0, -h.y,  h.z]),
+		CR_edge([r, r, s.x], spin=90,  orient=RIGHT, trans=[   0, -h.y, -h.z]),
+		CR_edge([r, r, s.x], spin=180, orient=RIGHT, trans=[   0,  h.y, -h.z]),
+		CR_edge([r, r, s.x], spin=270, orient=RIGHT, trans=[   0,  h.y,  h.z]),
 
-		CR_edge([r, r, s.y], orient=ORIENT_Y,     trans=[ h.x,    0, -h.z]),
-		CR_edge([r, r, s.y], orient=ORIENT_Y_90,  trans=[-h.x,    0, -h.z]),
-		CR_edge([r, r, s.y], orient=ORIENT_Y_180, trans=[-h.x,    0,  h.z]),
-		CR_edge([r, r, s.y], orient=ORIENT_Y_270, trans=[ h.x,    0,  h.z]),
+		CR_edge([r, r, s.y], spin=0,   orient=BACK,  trans=[-h.x,    0,  h.z]),
+		CR_edge([r, r, s.y], spin=90,  orient=BACK,  trans=[ h.x,    0,  h.z]),
+		CR_edge([r, r, s.y], spin=180, orient=BACK,  trans=[ h.x,    0, -h.z]),
+		CR_edge([r, r, s.y], spin=270, orient=BACK,  trans=[-h.x,    0, -h.z]),
 
-		CR_edge([r, r, s.z], orient=ORIENT_Z,     trans=[-h.x, -h.y,    0]),
-		CR_edge([r, r, s.z], orient=ORIENT_Z_90,  trans=[ h.x, -h.y,    0]),
-		CR_edge([r, r, s.z], orient=ORIENT_Z_180, trans=[ h.x,  h.y,    0]),
-		CR_edge([r, r, s.z], orient=ORIENT_Z_270, trans=[-h.x,  h.y,    0])
+		CR_edge([r, r, s.z], spin=0,   orient=UP,    trans=[-h.x, -h.y,    0]),
+		CR_edge([r, r, s.z], spin=90,  orient=UP,    trans=[ h.x, -h.y,    0]),
+		CR_edge([r, r, s.z], spin=180, orient=UP,    trans=[ h.x,  h.y,    0]),
+		CR_edge([r, r, s.z], spin=270, orient=UP,    trans=[-h.x,  h.y,    0])
 	];
 	faces = [
 		// Yes, these are degree 1 bezier patches.  That means just the four corner points.
 		// Since these are flat, it doesn't matter what degree they are, and this will reduce calculation overhead.
-		bezier_patch_flat([s.y, s.z], N=1, orient=ORIENT_X,    trans=[ h.x,    0,    0]),
-		bezier_patch_flat([s.y, s.z], N=1, orient=ORIENT_XNEG, trans=[-h.x,    0,    0]),
+		bezier_patch_flat([s.y, s.z], N=1, orient=RIGHT, trans=[ h.x,    0,    0]),
+		bezier_patch_flat([s.y, s.z], N=1, orient=LEFT,  trans=[-h.x,    0,    0]),
 
-		bezier_patch_flat([s.x, s.z], N=1, orient=ORIENT_Y,    trans=[   0,  h.y,    0]),
-		bezier_patch_flat([s.x, s.z], N=1, orient=ORIENT_YNEG, trans=[   0, -h.y,    0]),
+		bezier_patch_flat([s.x, s.z], N=1, orient=BACK,  trans=[   0,  h.y,    0]),
+		bezier_patch_flat([s.x, s.z], N=1, orient=FRONT, trans=[   0, -h.y,    0]),
 
-		bezier_patch_flat([s.x, s.y], N=1, orient=ORIENT_Z,    trans=[   0,    0,  h.z]),
-		bezier_patch_flat([s.x, s.y], N=1, orient=ORIENT_ZNEG, trans=[   0,    0, -h.z])
+		bezier_patch_flat([s.x, s.y], N=1, orient=UP,    trans=[   0,    0,  h.z]),
+		bezier_patch_flat([s.x, s.y], N=1, orient=DOWN,  trans=[   0,    0, -h.z])
 	];
 	// Generating all the patches above took about 0.05 secs.
 
@@ -107,7 +108,7 @@ module CR_cube(size=[100,100,100], r=10, splinesteps=8, cheat=false)
 }
 
 
-CR_cube(size=[100,100,100], r=20, splinesteps=9, cheat=false);
+CR_cube(size=[100,100,100], r=20, splinesteps=15, cheat=false);
 cube(1);
 
 

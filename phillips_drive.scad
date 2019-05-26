@@ -18,13 +18,16 @@
 //   size = The size of the bit.  "#1", "#2", or "#3"
 //   shaft = The diameter of the drive bit's shaft.
 //   l = The length of the drive bit.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example:
 //   xdistribute(10) {
 //      phillips_drive(size="#1", shaft=4, l=20);
 //      phillips_drive(size="#2", shaft=6, l=20);
 //      phillips_drive(size="#3", shaft=6, l=20);
 //   }
-module phillips_drive(size="#2", shaft=6, l=20, orient=ORIENT_Z, anchor=BOTTOM) {
+module phillips_drive(size="#2", shaft=6, l=20, anchor=BOTTOM, spin=0, orient=UP) {
 	// These are my best guess reverse-engineered measurements of
 	// the tip diameters of various phillips screwdriver sizes.
 	ang = 11;

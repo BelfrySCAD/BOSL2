@@ -25,16 +25,17 @@
 //   wall = Width of wall behind each side of the slider.
 //   ang = Overhang angle for slider, to facilitate supportless printig.
 //   slop = Printer-specific slop value to make parts fit exactly.
-//   orient = Orientation of the slider.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
 //   anchor = Alignment of the slider.  Use the constants from `constants.scad`.  Default: `UP`.
+//   orient = Orientation of the slider.  Use the directional constants from `constants.scad`.  Default: `BACK`.
+//   spin = Number of degrees to rotate around the Z axis, before orienting.
 // Example:
-//   slider(l=30, base=10, wall=4, slop=0.2, orient=ORIENT_Y);
-module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orient=ORIENT_Y, anchor=BOTTOM)
+//   slider(l=30, base=10, wall=4, slop=0.2, spin=90);
+module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, anchor=BOTTOM, spin=0, orient=UP)
 {
 	full_width = w + 2*wall;
 	full_height = h + base;
 
-	orient_and_anchor([full_width, l, h+2*base], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([full_width, l, h+2*base], orient, anchor, spin=spin, chain=true) {
 		down(base+h/2) {
 			// Base
 			cuboid([full_width, l, base-slop], chamfer=2, edges=edges([FRONT,BACK], except=BOT), anchor=BOTTOM);
@@ -48,7 +49,7 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orie
 			up(base+h/2) {
 				xflip_copy(offset=w/2+slop+0.02) {
 					bev_h = h/2*tan(ang);
-					prismoid([l, h], [l-w, 0], h=bev_h+0.01, orient=ORIENT_XNEG, anchor=RIGHT);
+					prismoid([h, l], [0, l-w], h=bev_h+0.01, orient=LEFT, anchor=BOT);
 				}
 			}
 		}
@@ -69,11 +70,12 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, orie
 //   h = Height of slider.
 //   chamfer = Size of chamfer at end of rail.
 //   ang = Overhang angle for slider, to facilitate supportless printig.
-//   orient = Orientation of the rail.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Y`.
-//   anchor = Alignment of the rail.  Use the constants from `constants.scad`.  Default: `UP`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `BOTTOM`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 // Example:
 //   rail(l=100, w=10, h=10);
-module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, orient=ORIENT_Y, anchor=BOTTOM)
+module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, anchor=BOTTOM, spin=0, orient=UP)
 {
 	attack_ang = 30;
 	attack_len = 2;
@@ -99,7 +101,7 @@ module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, orient=ORIENT_Y, anchor=BOTTO
 	y1 = l/2;
 	y2 = y1 - attack_len * cos(attack_ang);
 
-	orient_and_anchor([w, h, l], orient, anchor, orig_orient=ORIENT_Y, chain=true) {
+	orient_and_anchor([w, l, h], orient, anchor, spin=spin, chain=true) {
 		polyhedron(
 			convexity=4,
 			points=[

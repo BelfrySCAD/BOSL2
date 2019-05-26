@@ -199,21 +199,25 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 //   height = height of extrusion.
 //   twist = degrees of twist, from bottom to top.
 //   slices = how many slices to use when making extrusion.
-//   orient = Orientation of the spiral.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the spiral.  Use the constants from `constants.scad`.  Default: `BOTTOM`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
 // Example:
 //   extrude_2d_hollow(wall=2, height=100, twist=90, slices=50)
 //       circle(r=40, $fn=6);
-module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, orient=ORIENT_Z, anchor=BOTTOM)
+module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, anchor=BOTTOM, spin=0, orient=UP)
 {
-	linear_extrude(height=height, twist=twist, slices=slices, center=true) {
-		difference() {
-			children();
-			offset(r=-wall) {
+	orient_and_anchor([0.01,0.01,height], orient, anchor, spin=spin, center=center, chain=true) {
+		linear_extrude(height=height, twist=twist, slices=slices, center=true) {
+			difference() {
 				children();
+				offset(r=-wall) {
+					children();
+				}
 			}
 		}
+		children();
 	}
 }
 
@@ -227,13 +231,14 @@ module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, o
 //   h = height of the spiral to extrude along.
 //   r = radius of the spiral to extrude along.
 //   twist = number of degrees of rotation to spiral up along height.
-//   orient = Orientation of the spiral.  Use the `ORIENT_` constants from `constants.scad`.  Default: `ORIENT_Z`.
-//   anchor = Alignment of the spiral.  Use the constants from `constants.scad`.  Default: `BOTTOM`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   extrude_2dpath_along_spiral(poly, h=200, r=50, twist=1080, $fn=36);
-module extrude_2dpath_along_spiral(polyline, h, r, twist=360, center=undef, orient=ORIENT_Z, anchor=BOTTOM) {
+module extrude_2dpath_along_spiral(polyline, h, r, twist=360, center=undef, anchor=BOTTOM, spin=0, orient=UP) {
 	pline_count = len(polyline);
 	steps = ceil(segs(r)*(twist/360));
 
@@ -275,7 +280,7 @@ module extrude_2dpath_along_spiral(polyline, h, r, twist=360, center=undef, orie
 	);
 
 	tri_faces = triangulate_faces(poly_points, poly_faces);
-	orient_and_anchor([r,r,h], orient, anchor, center, chain=true) {
+	orient_and_anchor([r,r,h], orient, anchor, spin=spin, center=center, geometry="cylinder", chain=true) {
 		polyhedron(points=poly_points, faces=tri_faces, convexity=10);
 		children();
 	}

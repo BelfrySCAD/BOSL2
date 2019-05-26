@@ -96,6 +96,7 @@ class ImageProcessing(object):
 
     def gen_example_image(self, libfile, imgfile, code, extype):
         OPENSCAD = "/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD"
+        GIT = "/usr/local/bin/git"
         CONVERT = "/usr/local/bin/convert"
         COMPARE = "/usr/local/bin/compare"
 
@@ -208,6 +209,7 @@ class ImageProcessing(object):
             os.unlink(scriptfile)
         targimgfile = self.imgroot + imgfile
         newimgfile = self.imgroot + "_new_" + imgfile
+
         if len(tmpimgs) == 1:
             cnvcmd = [CONVERT, tmpimgfile, "-resize", imgsizes[1], newimgfile]
             res = subprocess.call(cnvcmd)
@@ -233,6 +235,11 @@ class ImageProcessing(object):
                 sys.exit(-1)
             for tmpimg in tmpimgs:
                 os.unlink(tmpimg)
+
+        # Pull previous committed image from git, if it exists.
+        gitcmd = [GIT, "checkout", targimgfile]
+        p = subprocess.Popen(gitcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
+        err = p.stdout.read()
 
         # Time to compare image.
         if not os.path.isfile(targimgfile):
@@ -428,28 +435,30 @@ class LeafNode(object):
                 extitle = "**Example {0}**:".format(exnum)
             if title:
                 extitle += " " + mkdn_esc(title)
-            out.append(extitle)
-            out.append("")
-            for line in excode:
-                out.append("    " + line)
-            out.append("")
             san_name = re.sub(r"[^A-Za-z0-9_]", "", self.name)
             imgfile = "{}{}.{}".format(
                 san_name,
                 ("_%d" % exnum) if exnum > 1 else "",
                 "gif" if "Spin" in extype else "png"
             )
-            if extype != "NORENDER":
-                out.append(
-                    "![{0} Example{1}]({2}{3})".format(
-                        mkdn_esc(self.name),
-                        (" %d" % exnum) if len(self.examples) > 1 else "",
-                        imgroot,
-                        imgfile
-                    )
-                )
-                out.append("")
+            if "NORENDER" not in extype:
                 imgprc.add_image(fileroot+".scad", imgfile, excode, extype)
+            if "Hide" not in extype:
+                out.append(extitle)
+                out.append("")
+                for line in excode:
+                    out.append("    " + line)
+                out.append("")
+                if "NORENDER" not in extype:
+                    out.append(
+                        "![{0} Example{1}]({2}{3})".format(
+                            mkdn_esc(self.name),
+                            (" %d" % exnum) if len(self.examples) > 1 else "",
+                            imgroot,
+                            imgfile
+                        )
+                    )
+                    out.append("")
         out.append("---")
         out.append("")
         return out
