@@ -12,8 +12,8 @@
 
 // Module: angle_pie_mask()
 // Usage:
-//   angle_pie_mask(r|d, l, ang, [orient], [anchor]);
-//   angle_pie_mask(r1|d1, r2|d2, l, ang, [orient], [anchor]);
+//   angle_pie_mask(r|d, l, ang);
+//   angle_pie_mask(r1|d1, r2|d2, l, ang);
 // Description:
 //   Creates a pie wedge shape that can be used to mask other shapes.
 // Arguments:
@@ -49,13 +49,13 @@ module angle_pie_mask(
 
 // Module: cylinder_mask()
 // Usage: Mask objects
-//   cylinder_mask(l, r|d, chamfer, [chamfang], [from_end], [circum], [overage], [ends_only], [orient], [anchor]);
-//   cylinder_mask(l, r|d, rounding, [circum], [overage], [ends_only], [orient], [anchor]);
-//   cylinder_mask(l, r|d, [chamfer1|rounding1], [chamfer2|rounding2], [chamfang1], [chamfang2], [from_end], [circum], [overage], [ends_only], [orient], [anchor]);
+//   cylinder_mask(l, r|d, chamfer, [chamfang], [from_end], [circum], [overage], [ends_only]);
+//   cylinder_mask(l, r|d, rounding, [circum], [overage], [ends_only]);
+//   cylinder_mask(l, r|d, [chamfer1|rounding1], [chamfer2|rounding2], [chamfang1], [chamfang2], [from_end], [circum], [overage], [ends_only]);
 // Usage: Masking operators
-//   cylinder_mask(l, r|d, chamfer, [chamfang], [from_end], [circum], [overage], [ends_only], [orient], [anchor]) ...
-//   cylinder_mask(l, r|d, rounding, [circum], [overage], [ends_only], [orient], [anchor]) ...
-//   cylinder_mask(l, r|d, [chamfer1|rounding1], [chamfer2|rounding2], [chamfang1], [chamfang2], [from_end], [circum], [overage], [ends_only], [orient], [anchor]) ...
+//   cylinder_mask(l, r|d, chamfer, [chamfang], [from_end], [circum], [overage], [ends_only]) ...
+//   cylinder_mask(l, r|d, rounding, [circum], [overage], [ends_only]) ...
+//   cylinder_mask(l, r|d, [chamfer1|rounding1], [chamfer2|rounding2], [chamfang1], [chamfang2], [from_end], [circum], [overage], [ends_only]) ...
 // Description:
 //   If passed children, bevels/chamfers and/or rounds one or both
 //   ends of the origin-centered cylindrical region specified.  If
@@ -154,7 +154,7 @@ module cylinder_mask(
 
 // Module: chamfer_mask()
 // Usage:
-//   chamfer_mask(l, chamfer, [orient], [anchor]);
+//   chamfer_mask(l, chamfer);
 // Description:
 //   Creates a shape that can be used to chamfer a 90 degree edge.
 //   Difference it from the object to be chamfered.  The center of
@@ -283,7 +283,7 @@ module chamfer(chamfer=1, size=[1,1,1], edges=EDGES_ALL)
 
 // Module: chamfer_cylinder_mask()
 // Usage:
-//   chamfer_cylinder_mask(r|d, chamfer, [ang], [from_end], [orient])
+//   chamfer_cylinder_mask(r|d, chamfer, [ang], [from_end])
 // Description:
 //   Create a mask that can be used to bevel/chamfer the end of a cylindrical region.
 //   Difference it from the end of the region to be chamferred.  The center of the mask
@@ -370,7 +370,7 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 
 // Module: rounding_mask()
 // Usage:
-//   rounding_mask(l|h, r, [orient], [anchor])
+//   rounding_mask(l|h, r)
 // Description:
 //   Creates a shape that can be used to round a vertical 90 degree edge.
 //   Difference it from the object to be rounded.  The center of the mask
@@ -538,7 +538,7 @@ module rounding(r=1, size=[1,1,1], edges=EDGES_ALL)
 
 // Module: rounding_angled_edge_mask()
 // Usage:
-//   rounding_angled_edge_mask(h, r, [ang], [orient], [anchor]);
+//   rounding_angled_edge_mask(h, r, [ang]);
 // Description:
 //   Creates a vertical mask that can be used to round the edge where two
 //   face meet, at any arbitrary angle.  Difference it from the object to
@@ -581,7 +581,7 @@ module rounding_angled_edge_mask(h=1.0, r=1.0, ang=90, anchor=CENTER, spin=0, or
 
 // Module: rounding_angled_corner_mask()
 // Usage:
-//   rounding_angled_corner_mask(r, ang, [orient], [anchor]);
+//   rounding_angled_corner_mask(r, ang);
 // Description:
 //   Creates a shape that can be used to round the corner of an angle.
 //   Difference it from the object to be rounded.  The center of the mask

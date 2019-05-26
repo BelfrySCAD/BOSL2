@@ -185,7 +185,7 @@ module cuboid(
 //   Creates a rectangular prismoid shape.
 //
 // Usage:
-//   prismoid(size1, size2, h, [shift], [anchor], [spin], [orient]);
+//   prismoid(size1, size2, h, [shift]);
 //
 // Arguments:
 //   size1 = [width, length] of the axis-negative end of the prism.
@@ -322,7 +322,7 @@ module rounded_prismoid(
 //   Creates a 3D right triangular prism.
 //
 // Usage:
-//   right_triangle(size, [orient], [anchor|center]);
+//   right_triangle(size, [center]);
 //
 // Arguments:
 //   size = [width, thickness, height]
@@ -364,20 +364,20 @@ module right_triangle(size=[1, 1, 1], anchor=ALLNEG, spin=0, orient=UP, center=u
 //   midpoint of the cylinder's length.
 //
 // Usage: Normal Cylinders
-//   cyl(l|h, r|d, [circum], [realign], [orient], [anchor], [center]);
-//   cyl(l|h, r1|d1, r2/d2, [circum], [realign], [orient], [anchor], [center]);
+//   cyl(l|h, r|d, [circum], [realign], [center]);
+//   cyl(l|h, r1|d1, r2/d2, [circum], [realign], [center]);
 //
 // Usage: Chamferred Cylinders
-//   cyl(l|h, r|d, chamfer, [chamfang], [from_end], [circum], [realign], [orient], [anchor], [center]);
-//   cyl(l|h, r|d, chamfer1, [chamfang1], [from_end], [circum], [realign], [orient], [anchor], [center]);
-//   cyl(l|h, r|d, chamfer2, [chamfang2], [from_end], [circum], [realign], [orient], [anchor], [center]);
-//   cyl(l|h, r|d, chamfer1, chamfer2, [chamfang1], [chamfang2], [from_end], [circum], [realign], [orient], [anchor], [center]);
+//   cyl(l|h, r|d, chamfer, [chamfang], [from_end], [circum], [realign], [center]);
+//   cyl(l|h, r|d, chamfer1, [chamfang1], [from_end], [circum], [realign], [center]);
+//   cyl(l|h, r|d, chamfer2, [chamfang2], [from_end], [circum], [realign], [center]);
+//   cyl(l|h, r|d, chamfer1, chamfer2, [chamfang1], [chamfang2], [from_end], [circum], [realign], [center]);
 //
 // Usage: Rounded End Cylinders
-//   cyl(l|h, r|d, rounding, [circum], [realign], [orient], [anchor], [center]);
-//   cyl(l|h, r|d, rounding1, [circum], [realign], [orient], [anchor], [center]);
-//   cyl(l|h, r|d, rounding2, [circum], [realign], [orient], [anchor], [center]);
-//   cyl(l|h, r|d, rounding1, rounding2, [circum], [realign], [orient], [anchor], [center]);
+//   cyl(l|h, r|d, rounding, [circum], [realign], [center]);
+//   cyl(l|h, r|d, rounding1, [circum], [realign], [center]);
+//   cyl(l|h, r|d, rounding2, [circum], [realign], [center]);
+//   cyl(l|h, r|d, rounding1, rounding2, [circum], [realign], [center]);
 //
 // Arguments:
 //   l / h = Length of cylinder along oriented axis. (Default: 1.0)
@@ -706,12 +706,12 @@ module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   Makes a hollow tube with the given outer size and wall thickness.
 //
 // Usage:
-//   tube(h, ir|id, wall, [realign], [orient], [anchor]);
-//   tube(h, or|od, wall, [realign], [orient], [anchor]);
-//   tube(h, ir|id, or|od, [realign], [orient], [anchor]);
-//   tube(h, ir1|id1, ir2|id2, wall, [realign], [orient], [anchor]);
-//   tube(h, or1|od1, or2|od2, wall, [realign], [orient], [anchor]);
-//   tube(h, ir1|id1, ir2|id2, or1|od1, or2|od2, [realign], [orient], [anchor]);
+//   tube(h, ir|id, wall, [realign]);
+//   tube(h, or|od, wall, [realign]);
+//   tube(h, ir|id, or|od, [realign]);
+//   tube(h, ir1|id1, ir2|id2, wall, [realign]);
+//   tube(h, or1|od1, or2|od2, wall, [realign]);
+//   tube(h, ir1|id1, ir2|id2, or1|od1, or2|od2, [realign]);
 //
 // Arguments:
 //   h = height of tube. (Default: 1)
@@ -784,8 +784,8 @@ module tube(
 //   Creates a torus shape.
 //
 // Usage:
-//   torus(r|d, r2|d2, [orient], [anchor]);
-//   torus(or|od, ir|id, [orient], [anchor]);
+//   torus(r|d, r2|d2);
+//   torus(or|od, ir|id);
 //
 // Arguments:
 //   r  = major radius of torus ring. (use with of 'r2', or 'd2')
@@ -981,7 +981,7 @@ module teardrop2d(r=1, d=undef, ang=45, cap_h=undef)
 //   Makes a teardrop shape in the XZ plane. Useful for 3D printable holes.
 //
 // Usage:
-//   teardrop(r|d, l|h, [ang], [cap_h], [orient], [anchor])
+//   teardrop(r|d, l|h, [ang], [cap_h])
 //
 // Arguments:
 //   r = Radius of circular part of teardrop.  (Default: 1)
@@ -1019,7 +1019,7 @@ module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, anchor=
 //   Creates a sphere with a conical hat, to make a 3D teardrop.
 //
 // Usage:
-//   onion(r|d, [maxang], [cap_h], [orient], [anchor]);
+//   onion(r|d, [maxang], [cap_h]);
 //
 // Arguments:
 //   r = radius of spherical portion of the bottom. (Default: 1)
@@ -1088,8 +1088,8 @@ module noop(spin=0, orient=UP) orient_and_anchor([0.01,0.01,0.01], orient, CENTE
 //   Creates a pie slice shape.
 //
 // Usage:
-//   pie_slice(ang, l|h, r|d, [orient], [anchor|center]);
-//   pie_slice(ang, l|h, r1|d1, r2|d2, [orient], [anchor|center]);
+//   pie_slice(ang, l|h, r|d, [center]);
+//   pie_slice(ang, l|h, r1|d1, r2|d2, [center]);
 //
 // Arguments:
 //   ang = pie slice angle in degrees.
@@ -1142,7 +1142,7 @@ module pie_slice(
 //   Center this part along the concave edge to be chamferred and union it in.
 //
 // Usage:
-//   interior_fillet(l, r, [ang], [overlap], [orient], [anchor]);
+//   interior_fillet(l, r, [ang], [overlap]);
 //
 // Arguments:
 //   l = length of edge to fillet.
@@ -1187,10 +1187,10 @@ module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01, anchor=CENTER, spin=0
 //   Makes a linear slot with rounded ends, appropriate for bolts to slide along.
 //
 // Usage:
-//   slot(h, l, r|d, [orient], [anchor|center]);
-//   slot(h, p1, p2, r|d, [orient], [anchor|center]);
-//   slot(h, l, r1|d1, r2|d2, [orient], [anchor|center]);
-//   slot(h, p1, p2, r1|d1, r2|d2, [orient], [anchor|center]);
+//   slot(h, l, r|d, [center]);
+//   slot(h, p1, p2, r|d, [center]);
+//   slot(h, l, r1|d1, r2|d2, [center]);
+//   slot(h, p1, p2, r1|d1, r2|d2, [center]);
 //
 // Arguments:
 //   p1 = center of starting circle of slot.
@@ -1227,8 +1227,8 @@ module slot(
 //   Makes an arced slot, appropriate for bolts to slide along.
 //
 // Usage:
-//   arced_slot(h, r|d, sr|sd, [sa], [ea], [orient], [anchor|center], [$fn2]);
-//   arced_slot(h, r|d, sr1|sd1, sr2|sd2, [sa], [ea], [orient], [anchor|center], [$fn2]);
+//   arced_slot(h, r|d, sr|sd, [sa], [ea], [center], [$fn2]);
+//   arced_slot(h, r|d, sr1|sd1, sr2|sd2, [sa], [ea], [center], [$fn2]);
 //
 // Arguments:
 //   cp = Centerpoint of slot arc.  Default: `[0, 0, 0]`

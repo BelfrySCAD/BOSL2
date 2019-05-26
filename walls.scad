@@ -21,7 +21,7 @@
 //   overhangs.
 //
 // Usage:
-//   narrowing_strut(w, l, wall, [ang], [orient], [anchor]);
+//   narrowing_strut(w, l, wall, [ang]);
 //
 // Arguments:
 //   w = Width (thickness) of the strut.
@@ -65,7 +65,7 @@ module narrowing_strut(w=10, l=100, wall=5, ang=30, anchor=BOTTOM, spin=0, orien
 //   with angled supports to prevent critical overhangs.
 //
 // Usage:
-//   thinning_wall(h, l, thick, [ang], [strut], [wall], [orient], [anchor]);
+//   thinning_wall(h, l, thick, [ang], [strut], [wall]);
 //
 // Arguments:
 //   h = height of wall.
@@ -210,7 +210,7 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, anchor=CENTE
 //   with angled supports to prevent critical overhangs.
 //
 // Usage:
-//   braced_thinning_wall(h, l, thick, [ang], [strut], [wall], [orient], [anchor]);
+//   braced_thinning_wall(h, l, thick, [ang], [strut], [wall]);
 //
 // Arguments:
 //   h = height of wall.
@@ -262,7 +262,7 @@ module braced_thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, ancho
 //   the center, with angled supports to prevent critical overhangs.
 //
 // Usage:
-//   thinning_triangle(h, l, thick, [ang], [strut], [wall], [diagonly], [orient], [anchor|center]);
+//   thinning_triangle(h, l, thick, [ang], [strut], [wall], [diagonly], [center]);
 //
 // Arguments:
 //   h = height of wall.
@@ -323,7 +323,7 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 //   the need for support material in 3D printing.
 //
 // Usage:
-//   sparse_strut(h, l, thick, [strut], [maxang], [max_bridge], [orient], [anchor])
+//   sparse_strut(h, l, thick, [strut], [maxang], [max_bridge])
 //
 // Arguments:
 //   h = height of strut wall.
@@ -387,7 +387,7 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anc
 // Module: sparse_strut3d()
 //
 // Usage:
-//   sparse_strut3d(h, w, l, [thick], [maxang], [max_bridge], [strut], [orient], [anchor]);
+//   sparse_strut3d(h, w, l, [thick], [maxang], [max_bridge], [strut]);
 //
 // Description:
 //   Makes an open rectangular strut with X-shaped cross-bracing, designed to reduce the
@@ -490,7 +490,7 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 //   providing support strength.  Designed with 3D printing in mind.
 //
 // Usage:
-//   corrugated_wall(h, l, thick, [strut], [wall], [orient], [anchor]);
+//   corrugated_wall(h, l, thick, [strut], [wall]);
 //
 // Arguments:
 //   h = height of strut wall.

@@ -103,8 +103,8 @@ module cube(size, center=undef, anchor=ALLNEG, spin=0, orient=UP)
 
 // Module: cylinder()
 // Usage:
-//   cylinder(h, r|d, [center], [orient], [anchor]);
-//   cylinder(h, r1/d1, r2/d2, [center], [orient], [anchor]);
+//   cylinder(h, r|d, [center]);
+//   cylinder(h, r1/d1, r2/d2, [center]);
 // Description:
 //   Creates a cylinder object, with support for anchoring and attachments.
 //   This is a drop-in replacement for the built-in `cylinder()` module.
@@ -154,7 +154,7 @@ module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=unde
 
 // Module: sphere()
 // Usage:
-//   sphere(r|d, [orient], [anchor])
+//   sphere(r|d)
 // Description:
 //   Creates a sphere object, with support for anchoring and attachments.
 //   This is a drop-in replacement for the built-in `sphere()` module.

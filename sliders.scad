@@ -16,7 +16,7 @@
 // Description:
 //   Creates a slider to match a V-groove rail.
 // Usage:
-//   slider(l, w, h, [base], [wall], [ang], [slop], [orient], [anchor])
+//   slider(l, w, h, [base], [wall], [ang], [slop])
 // Arguments:
 //   l = Length (long axis) of slider.
 //   w = Width of slider.
@@ -25,9 +25,9 @@
 //   wall = Width of wall behind each side of the slider.
 //   ang = Overhang angle for slider, to facilitate supportless printig.
 //   slop = Printer-specific slop value to make parts fit exactly.
-//   anchor = Alignment of the slider.  Use the constants from `constants.scad`.  Default: `UP`.
-//   orient = Orientation of the slider.  Use the directional constants from `constants.scad`.  Default: `BACK`.
-//   spin = Number of degrees to rotate around the Z axis, before orienting.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
 //   slider(l=30, base=10, wall=4, slop=0.2, spin=90);
 module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, anchor=BOTTOM, spin=0, orient=UP)
@@ -64,7 +64,7 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, anch
 // Description:
 //   Creates a V-groove rail.
 // Usage:
-//   rail(l, w, h, [chamfer], [ang], [orient], [anchor])
+//   rail(l, w, h, [chamfer], [ang])
 // Arguments:
 //   l = Length (long axis) of slider.
 //   w = Width of slider.

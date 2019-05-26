@@ -16,7 +16,7 @@ include <BOSL2/paths.scad>
 
 // Module: thread_helix()
 // Usage:
-//   thread_helix(base_d, pitch, thread_depth, thread_angle, twist, [profile], [left_handed], [higbee], [interior], [orient], [anchor]);
+//   thread_helix(base_d, pitch, thread_depth, thread_angle, twist, [profile], [left_handed], [higbee], [interior]);
 // Description:
 //   Creates a helical thread with optional end tapering.
 // Arguments:

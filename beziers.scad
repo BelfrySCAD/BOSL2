@@ -401,7 +401,7 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 
 // Module: linear_extrude_bezier()
 // Usage:
-//   linear_extrude_bezier(bezier, height, [splinesteps], [N], [center], [convexity], [twist], [slices], [scale], [orient], [anchor]);
+//   linear_extrude_bezier(bezier, height, [splinesteps], [N], [center], [convexity], [twist], [slices], [scale]);
 // Description:
 //   Takes a closed 2D bezier path, centered on the XY plane, and
 //   extrudes it linearly upwards, forming a solid.
@@ -440,7 +440,7 @@ module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=und
 
 // Module: revolve_bezier()
 // Usage:
-//   revolve_bezier(bezier, [splinesteps], [N], [convexity], [angle], [orient], [anchor])
+//   revolve_bezier(bezier, [splinesteps], [N], [convexity], [angle])
 // Description:
 //   Takes a closed 2D bezier and rotates it around the X axis, forming a solid.
 // Arguments:
@@ -476,7 +476,7 @@ module revolve_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, anch
 
 // Module: rotate_extrude_bezier()
 // Usage:
-//   rotate_extrude_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360)
+//   rotate_extrude_bezier(bezier, [splinesteps], [N], [convexity], [angle])
 // Description:
 //   Takes a closed 2D bezier and rotates it around the Z axis, forming a solid.
 //   Behaves like rotate_extrude(), except for beziers instead of shapes.
@@ -513,7 +513,7 @@ module rotate_extrude_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=36
 
 // Module: revolve_bezier_solid_to_axis()
 // Usage:
-//   revolve_bezier_solid_to_axis(bezier, [splinesteps], [N], [convexity], [angle], [orient], [anchor]);
+//   revolve_bezier_solid_to_axis(bezier, [splinesteps], [N], [convexity], [angle]);
 // Description:
 //   Takes a 2D bezier and rotates it around the X axis, forming a solid.
 // Arguments:
@@ -535,7 +535,7 @@ module revolve_bezier_solid_to_axis(bezier, splinesteps=16, N=3, convexity=10, a
 
 // Module: revolve_bezier_offset_shell()
 // Usage:
-//   revolve_bezier_offset_shell(bezier, offset, [splinesteps], [N], [convexity], [angle], [orient], [anchor]);
+//   revolve_bezier_offset_shell(bezier, offset, [splinesteps], [N], [convexity], [angle]);
 // Description:
 //   Takes a 2D bezier and rotates it around the X axis, into a hollow shell.
 // Arguments:
@@ -799,7 +799,7 @@ function bezier_triangle(tri, splinesteps=16, vertices=[], faces=[]) =
 
 // Function: bezier_patch_flat()
 // Usage:
-//   bezier_patch_flat(size, [N], [orient], [trans]);
+//   bezier_patch_flat(size, [N], [spin], [orient], [trans]);
 // Description:
 //   Returns a flat rectangular bezier patch of degree `N`, centered on the XY plane.
 // Arguments:

@@ -16,7 +16,7 @@
 // Description:
 //   Creates a mask to clear an area so that a half_joiner can be placed there.
 // Usage:
-//   half_joiner_clear(h, w, [a], [clearance], [overlap], [orient], [anchor])
+//   half_joiner_clear(h, w, [a], [clearance], [overlap])
 // Arguments:
 //   h = Height of the joiner to clear space for.
 //   w = Width of the joiner to clear space for.
@@ -58,7 +58,7 @@ module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CEN
 
 // Module: half_joiner()
 // Usage:
-//   half_joiner(h, w, l, [a], [screwsize], [guides], [slop], [orient], [anchor])
+//   half_joiner(h, w, l, [a], [screwsize], [guides], [slop])
 // Description:
 //   Creates a half_joiner object that can be attached to half_joiner2 object.
 // Arguments:
@@ -142,7 +142,7 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PR
 
 // Module: half_joiner2()
 // Usage:
-//   half_joiner2(h, w, l, [a], [screwsize], [guides], [orient], [anchor])
+//   half_joiner2(h, w, l, [a], [screwsize], [guides])
 // Description:
 //   Creates a half_joiner2 object that can be attached to half_joiner object.
 // Arguments:
@@ -199,7 +199,7 @@ module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor
 // Description:
 //   Creates a mask to clear an area so that a joiner can be placed there.
 // Usage:
-//   joiner_clear(h, w, [a], [clearance], [overlap], [orient], [anchor])
+//   joiner_clear(h, w, [a], [clearance], [overlap])
 // Arguments:
 //   h = Height of the joiner to clear space for.
 //   w = Width of the joiner to clear space for.
@@ -230,7 +230,7 @@ module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, 
 
 // Module: joiner()
 // Usage:
-//   joiner(h, w, l, [a], [screwsize], [guides], [slop], [orient], [anchor])
+//   joiner(h, w, l, [a], [screwsize], [guides], [slop])
 // Description:
 //   Creates a joiner object that can be attached to another joiner object.
 // Arguments:
@@ -272,7 +272,7 @@ module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER
 // Description:
 //   Creates a mask to clear an area so that a pair of joiners can be placed there.
 // Usage:
-//   joiner_pair_clear(spacing, [n], [h], [w], [a], [clearance], [overlap], [orient], [anchor])
+//   joiner_pair_clear(spacing, [n], [h], [w], [a], [clearance], [overlap])
 // Arguments:
 //   spacing = Spacing between joiner centers.
 //   h = Height of the joiner to clear space for.
@@ -305,7 +305,7 @@ module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overla
 
 // Module: joiner_pair()
 // Usage:
-//   joiner_pair(h, w, l, [a], [screwsize], [guides], [slop], [orient], [anchor])
+//   joiner_pair(h, w, l, [a], [screwsize], [guides], [slop])
 // Description:
 //   Creates a joiner_pair object that can be attached to other joiner_pairs .
 // Arguments:
@@ -358,7 +358,7 @@ module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, scr
 // Description:
 //   Creates a mask to clear an area so that a pair of joiners can be placed there.
 // Usage:
-//   joiner_quad_clear(spacing, [n], [h], [w], [a], [clearance], [overlap], [orient], [anchor])
+//   joiner_quad_clear(spacing, [n], [h], [w], [a], [clearance], [overlap])
 // Arguments:
 //   spacing1 = Spacing between joiner centers.
 //   spacing2 = Spacing between back-to-back pairs/sets of joiners.
@@ -391,7 +391,7 @@ module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing
 
 // Module: joiner_quad()
 // Usage:
-//   joiner_quad(h, w, l, [a], [screwsize], [guides], [slop], [orient], [anchor])
+//   joiner_quad(h, w, l, [a], [screwsize], [guides], [slop])
 // Description:
 //   Creates a joiner_quad object that can be attached to other joiner_pairs .
 // Arguments:

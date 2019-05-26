@@ -363,7 +363,7 @@ function get_metric_nut_thickness(size) = lookup(size, [
 // Description:
 //   Makes a very simple screw model, useful for making screwholes.
 // Usage:
-//   screw(screwsize, screwlen, headsize, headlen, [orient], [anchor])
+//   screw(screwsize, screwlen, headsize, headlen)
 // Arguments:
 //   screwsize = diameter of threaded part of screw.
 //   screwlen = length of threaded part of screw.
