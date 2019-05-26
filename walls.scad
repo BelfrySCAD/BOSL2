@@ -37,8 +37,9 @@
 module narrowing_strut(w=10, l=100, wall=5, ang=30, anchor=BOTTOM, spin=0, orient=UP)
 {
 	h = wall + w/2/tan(ang);
-	size = [w, h, l];
+	size = [w, l, h];
 	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
+		xrot(90)
 		fwd(h/2) {
 			linear_extrude(height=l, center=true, slices=2) {
 				back(wall/2) square([w, wall], center=true);
@@ -286,7 +287,7 @@ module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly
 {
 	dang = atan(h/l);
 	dlen = h/sin(dang);
-	size = [thick, h, l];
+	size = [thick, l, h];
 	orient_and_anchor(size, orient, anchor, spin=spin, center=center, noncentered=BOTTOM+FRONT, chain=true) {
 		difference() {
 			union() {
