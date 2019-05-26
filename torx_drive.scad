@@ -179,6 +179,9 @@ module torx_drive2d(size) {
 //   size = Torx size.
 //   l = Length of bit.
 //   center = If true, centers bit vertically.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples:
 //   torx_drive(size=30, l=10, $fa=1, $fs=1);
 module torx_drive(size, l=5, center=undef, anchor=BOTTOM, spin=0, orient=UP) {

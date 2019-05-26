@@ -884,9 +884,9 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   stagger = If true, make a staggered (hexagonal) grid.  If false, make square grid.  If `"alt"`, makes alternate staggered pattern.  Default: false
 //   scale = [X,Y] scaling factors to reshape grid.
 //   in_poly = If given a list of polygon points, only creates copies whose center would be inside the polygon.  Polygon can be concave and/or self crossing.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.

@@ -284,9 +284,9 @@ module gear2d(
 //   slices = Number of vertical layers to divide gear into.  Useful for refining gears with `twist`.
 //   scale = Scale of top of gear compared to bottom.  Useful for making crown gears.
 //   interior = If true, create a mask for difference()ing from something else.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example: Spur Gear
 //   gear(mm_per_tooth=5, number_of_teeth=20, thickness=8, hole_diameter=5);
 // Example: Beveled Gear
@@ -356,9 +356,9 @@ module gear(
 //   height = Height of rack in mm, from tooth top to back of rack.
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Anchors:
 //   "adendum" = At the tips of the teeth, at the center of rack.
 //   "adendum-left" = At the tips of the teeth, at the left end of the rack.

@@ -99,9 +99,9 @@ function nema_motor_screw_depth(size) = lookup(size, [
 //   h = Length of motor body.  Default: 24mm
 //   shaft = Shaft diameter. Default: 5mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 20mm
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -164,9 +164,9 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, anchor=TOP, spin=0, orient=UP
 //   h = Length of motor body.  Default: 24mm
 //   shaft = Shaft diameter. Default: 5mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 24mm
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -229,9 +229,9 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, anchor=TOP, spin=0, orient=UP
 //   h = Length of motor body.  Default: 34mm
 //   shaft = Shaft diameter. Default: 5mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 20mm
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -313,9 +313,9 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, anchor=TOP, spin=0, orient=UP
 //   h = Length of motor body.  Default: 50mm
 //   shaft = Shaft diameter. Default: 6.35mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 25mm
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -380,9 +380,9 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, anchor=TOP, spin=0, orient
 //   h = Length of motor body.  Default: 75mm
 //   shaft = Shaft diameter. Default: 12.7mm
 //   shaft_len = Length of shaft protruding out the top of the stepper motor.  Default: 32mm
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "shaft-top" = The top of the shaft.
 //   "shaft-middle" = The middle of the shaft.
@@ -452,9 +452,9 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, anchor=TOP, spin=0, orient
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -516,9 +516,9 @@ module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER,
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -541,9 +541,9 @@ module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -566,9 +566,9 @@ module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -591,9 +591,9 @@ module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -616,9 +616,9 @@ module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
 //   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.

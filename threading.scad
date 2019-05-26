@@ -29,9 +29,9 @@ include <BOSL2/paths.scad>
 //   left_handed = If true, thread has a left-handed winding.
 //   higbee = Angle to taper thread ends by.
 //   interior = If true, invert threads for interior threading.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=720, profile=undef, left_handed=false, higbee=60, interior=false, anchor=CENTER, spin=0, orient=UP)
 {
 	h = pitch*twist/360;
@@ -87,9 +87,9 @@ module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=72
 //   slop = printer slop calibration to allow for tight fitting of parts.  Default: `PRINTER_SLOP`
 //   profile = The shape of a thread, if not a symmetric trapezoidal form.  Given as a 2D path, where X is between -1/2 and 1/2, representing the pitch distance, and Y is 0 for the peak, and `-depth/pitch` for the valleys.  The segment between the end of one thread profile and the start of the next is automatic, so the start and end coordinates should not both be at the same Y at X = ±1/2.  This path is scaled up by the pitch size in both dimensions when making the final threading.  This overrides the `thread_angle` and `thread_depth` options.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples(Med):
 //   trapezoidal_threaded_rod(d=10, l=40, pitch=2, thread_angle=15, $fn=32);
 //   trapezoidal_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, thread_angle=29, $fn=32);
@@ -284,9 +284,9 @@ module trapezoidal_threaded_rod(
 //   bevel = if true, bevel the thread ends.  Default: true
 //   slop = printer slop calibration to allow for tight fitting of parts.  Default: `PRINTER_SLOP`
 //   profile = The shape of a thread, if not a symmetric trapezoidal form.  Given as a 2D path, where X is between -1/2 and 1/2, representing the pitch distance, and Y is 0 for the peak, and `-depth/pitch` for the valleys.  The segment between the end of one thread profile and the start of the next is automatic, so the start and end coordinates should not both be at the same Y at X = ±1/2.  This path is scaled up by the pitch size in both dimensions when making the final threading.  This overrides the `thread_angle` and `thread_depth` options.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples(Med):
 //   trapezoidal_threaded_nut(od=16, id=8, h=8, pitch=2, slop=0.2, anchor=UP);
 //   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, slop=0.2, left_handed=true);
@@ -351,9 +351,9 @@ module trapezoidal_threaded_nut(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   internal = If true, make this a mask for making internal threads.
 //   slop = printer slop calibration to allow for tight fitting of parts.  Default: `PRINTER_SLOP`
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
 //       threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
@@ -415,9 +415,9 @@ module threaded_rod(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples(Med):
 //   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, slop=0.2, $fa=1, $fs=1);
 module threaded_nut(
@@ -461,9 +461,9 @@ module threaded_nut(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   internal = If true, this is a mask for making internal threads.
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
 //       buttress_threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
@@ -517,9 +517,9 @@ module buttress_threaded_rod(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples(Med):
 //   buttress_threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, slop=0.2, $fa=1, $fs=1);
 module buttress_threaded_nut(
@@ -564,9 +564,9 @@ module buttress_threaded_nut(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
 //       metric_trapezoidal_threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
@@ -609,9 +609,9 @@ module metric_trapezoidal_threaded_rod(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples(Med):
 //   metric_trapezoidal_threaded_nut(od=16, id=10, h=10, pitch=2, left_handed=true, bevel=true, $fa=1, $fs=1);
 module metric_trapezoidal_threaded_nut(
@@ -654,9 +654,9 @@ module metric_trapezoidal_threaded_nut(
 //   starts = The number of lead starts.  Default = 1
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
 //       acme_threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
@@ -703,9 +703,9 @@ module acme_threaded_rod(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples(Med):
 //   acme_threaded_nut(od=16, id=3/8*25.4, h=8, pitch=1/8*25.4, slop=0.2);
 //   acme_threaded_nut(od=16, id=10, h=10, pitch=2, starts=3, slop=0.2, $fa=1, $fs=1);
@@ -749,9 +749,9 @@ module acme_threaded_nut(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
 //       square_threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
@@ -793,9 +793,9 @@ module square_threaded_rod(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 //   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples(Med):
 //   square_threaded_nut(od=16, id=10, h=10, pitch=2, starts=2, slop=0.15, $fn=32);
 module square_threaded_nut(
@@ -833,9 +833,9 @@ module square_threaded_nut(
 //   Creates an approximation of a standard PCO-1881 threaded beverage bottle neck.
 // Arguments:
 //   wall = Wall thickness in mm.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "support-ring" = Centered at the bottom of the support ring.
 // Example:
@@ -904,9 +904,9 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 //   Creates a basic cap for a PCO1881 threaded beverage bottle.
 // Arguments:
 //   wall = Wall thickness in mm.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "inside-top" = Centered on the inside top of the cap.
 // Example:

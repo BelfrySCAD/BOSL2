@@ -76,9 +76,9 @@ function get_lmXuu_bearing_length(size) = lookup(size, [
 //   wall = Wall thickness of clamp housing. (Default: 3)
 //   gap = Gap in clamp. (Default: 5)
 //   screwsize = Size of screw to use to tighten clamp. (Default: 3)
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
 //   linear_bearing_housing(d=19, l=29, wall=2, tab=6, screwsize=2.5);
 module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, anchor=BOTTOM, spin=0, orient=UP)
@@ -135,9 +135,9 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 //   wall = Wall thickness of clamp housing.  Default: 3
 //   gap = Gap in clamp.  Default: 5
 //   screwsize = Size of screw to use to tighten clamp.  Default: 3
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
 //   lmXuu_housing(size=10, wall=2, tab=6, screwsize=2.5);
 module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, anchor=BOTTOM, spin=0, orient=UP)

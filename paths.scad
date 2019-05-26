@@ -199,9 +199,9 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 //   height = height of extrusion.
 //   twist = degrees of twist, from bottom to top.
 //   slices = how many slices to use when making extrusion.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
 // Example:
 //   extrude_2d_hollow(wall=2, height=100, twist=90, slices=50)
@@ -230,9 +230,9 @@ module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, a
 //   h = height of the spiral to extrude along.
 //   r = radius of the spiral to extrude along.
 //   twist = number of degrees of rotation to spiral up along height.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];

@@ -369,9 +369,9 @@ function get_metric_nut_thickness(size) = lookup(size, [
 //   screwlen = length of threaded part of screw.
 //   headsize = diameter of the screw head.
 //   headlen = length of the screw head.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "base" = At the base of the head.
 //   "countersunk" = At the head height that would be just barely exposed when countersunk.
@@ -430,9 +430,9 @@ module screw(
 //   flange = Radius of flange beyond the head.  Default = 0 (no flange)
 //   phillips = If given, the size of the phillips drive hole to add.  (ie: "#1", "#2", or "#3")
 //   torx = If given, the size of the torx drive hole to add.  (ie: 10, 20, 30, etc.)
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "base" = At the base of the head.
 //   "countersunk" = At the head height that would be just barely exposed when countersunk.
@@ -633,9 +633,9 @@ module metric_bolt(
 //   pitch = pitch of threads in the hole.  No threads if not given.
 //   flange = radius of flange beyond the head.  Default = 0 (no flange)
 //   details = true if model should be rendered with extra details.  (Default: false)
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //   center = If true, centers the nut at the origin.  If false, sits on top of XY plane.  Overrides `anchor` if given.
 // Example: No details, No Hole.  Useful for a mask.
 //   metric_nut(size=10, hole=false);

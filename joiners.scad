@@ -23,9 +23,9 @@
 //   a = Overhang angle of the joiner.
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
 //   half_joiner_clear(spin=-90);
 module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
@@ -69,9 +69,9 @@ module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CEN
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
 //   slop = Printer specific slop value to make parts fit more closely.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
 //   half_joiner(screwsize=3, spin=-90);
 module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
@@ -152,9 +152,9 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PR
 //   a = Overhang angle of the half_joiner.
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
 //   half_joiner2(screwsize=3, spin=-90);
 module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
@@ -206,9 +206,9 @@ module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor
 //   a = Overhang angle of the joiner.
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
 //   joiner_clear(spin=-90);
 module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
@@ -241,9 +241,9 @@ module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, 
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
 //   slop = Printer specific slop value to make parts fit more closely.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples:
 //   joiner(screwsize=3, spin=-90);
 //   joiner(w=10, l=10, h=40, spin=-90) cuboid([10, 10*2, 40], anchor=RIGHT);
@@ -281,9 +281,9 @@ module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER
 //   n = Number of joiners (2 by default) to clear for.
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples:
 //   joiner_pair_clear(spacing=50, n=2);
 //   joiner_pair_clear(spacing=50, n=3);
@@ -319,9 +319,9 @@ module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overla
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
 //   slop = Printer specific slop value to make parts fit more closely.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples:
 //   joiner_pair(spacing=50, l=10, spin=-90) cuboid([10, 50+10-0.1, 40], anchor=RIGHT);
 //   joiner_pair(spacing=50, l=10, n=2, spin=-90);
@@ -368,9 +368,9 @@ module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, scr
 //   n = Number of joiners in a row.  Default: 2
 //   clearance = Extra width to clear.
 //   overlap = Extra depth to clear.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples:
 //   joiner_quad_clear(spacing1=50, spacing2=50, n=2);
 //   joiner_quad_clear(spacing1=50, spacing2=50, n=3);
@@ -405,9 +405,9 @@ module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
 //   slop = Printer specific slop value to make parts fit more closely.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples:
 //   joiner_quad(spacing1=50, spacing2=50, l=10, spin=-90) cuboid([50, 50+10-0.1, 40]);
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=2, spin=-90);

@@ -38,8 +38,8 @@ $tags_hidden = [];
 //   * Spin is a simple rotation around the Z axis.
 //   * Orientation is rotating an object so that its top is pointed towards a given vector.
 //   An object will first be translated to its anchor position, then spun, then oriented.
-
-// Section: Anchor
+//   
+//   ## Anchor
 //   Anchoring is specified with the `anchor` argument in most shape modules.
 //   Specifying `anchor` when creating an object will translate the object so
 //   that the anchor point is at the origin (0,0,0).  Anchoring always occurs
@@ -72,14 +72,14 @@ $tags_hidden = [];
 //   etc. to refer to the various screwholes on the stepper motor shape.  The names,
 //   positions, directions, and spins of these anchors will be specific to the object,
 //   and will be documented when they exist.
-
-// Section: Spin
+//   
+//   ## Spin
 //   Spin is specified with the `spin` argument in most shape modules.  Specifying `spin`
 //   when creating an object will rotate the object counter-clockwise around the Z axis
 //   by the given number of degrees.  Spin is always applied after anchoring, and before
 //   orientation.
-
-// Section: Orient
+//   
+//   ## Orient
 //   Orientation is specified with the `orient` argument in most shape modules.  Specifying
 //   `orient` when creating an object will rotate the object such that the top of the
 //   object will be pointed at the vector direction given in the `orient` argument.
@@ -209,9 +209,9 @@ function _str_char_split(s,delim,n=0,acc=[],word="") =
 //   size = The [X,Y,Z] size of the part.
 //   size2 = The [X,Y] size of the top of the part.
 //   shift = The [X,Y] offset of the top of the part, compared to the bottom of the part.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments#orient).  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //   center = If given, overrides `anchor`.  If true, centers vertically.  If false, `anchor` will be set to the value in `noncentered`.
 //   noncentered = The value to set `anchor` to if `center` == `false`.  Default: `BOTTOM`.
 //   geometry = One of "cube", "cylinder", or "sphere" to denote the overall geometry of the shape.  Cones are "cylinder", and prismoids are "cube" for this purpose.  Default: "cube"
