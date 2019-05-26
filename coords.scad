@@ -16,7 +16,8 @@
 //   If given a 3D point, removes the Z coordinate.
 // Arguments:
 //   p = The coordinates to force into a 2D vector/point.
-function point2d(p) = [for (i=[0:1]) (p[i]==undef)? 0 : p[i]];
+//   fill = Value to fill missing values in vector with.
+function point2d(p, fill=0) = [for (i=[0:1]) (p[i]==undef)? fill : p[i]];
 
 
 // Function: path2d()
@@ -25,7 +26,8 @@ function point2d(p) = [for (i=[0:1]) (p[i]==undef)? 0 : p[i]];
 //   If given a 3D point list, removes the Z coordinates from each point.
 // Arguments:
 //   points = A list of 2D or 3D points/vectors.
-function path2d(points) = [for (point = points) point2d(point)];
+//   fill = Value to fill missing values in vectors with.
+function path2d(points, fill=0) = [for (point = points) point2d(point, fill=fill)];
 
 
 // Function: point3d()
@@ -33,7 +35,8 @@ function path2d(points) = [for (point = points) point2d(point)];
 //   Returns a 3D vector/point from a 2D or 3D vector.
 // Arguments:
 //   p = The coordinates to force into a 3D vector/point.
-function point3d(p) = [for (i=[0:2]) (p[i]==undef)? 0 : p[i]];
+//   fill = Value to fill missing values in vector with.
+function point3d(p, fill=0) = [for (i=[0:2]) (p[i]==undef)? fill : p[i]];
 
 
 // Function: path3d()
@@ -41,7 +44,26 @@ function point3d(p) = [for (i=[0:2]) (p[i]==undef)? 0 : p[i]];
 //   Returns a list of 3D vectors/points from a list of 2D or 3D vectors/points.
 // Arguments:
 //   points = A list of 2D or 3D points/vectors.
-function path3d(points) = [for (point = points) point3d(point)];
+//   fill = Value to fill missing values in vectors with.
+function path3d(points, fill=0) = [for (point = points) point3d(point, fill=fill)];
+
+
+// Function: point4d()
+// Description:
+//   Returns a 4D vector/point from a 2D or 3D vector.
+// Arguments:
+//   p = The coordinates to force into a 4D vector/point.
+//   fill = Value to fill missing values in vector with.
+function point4d(p, fill=0) = [for (i=[0:3]) (p[i]==undef)? fill : p[i]];
+
+
+// Function: path4d()
+// Description:
+//   Returns a list of 4D vectors/points from a list of 2D or 3D vectors/points.
+// Arguments:
+//   points = A list of 2D or 3D points/vectors.
+//   fill = Value to fill missing values in vectors with.
+function path4d(points, fill=0) = [for (point = points) point4d(point, fill=fill)];
 
 
 // Function: translate_points()
