@@ -339,28 +339,10 @@ module rounded_prismoid(
 module right_triangle(size=[1, 1, 1], anchor=ALLNEG, spin=0, orient=UP, center=undef)
 {
 	size = scalar_vec3(size);
-	orient_and_anchor(size, orient, anchor, spin=spin, center=center, chain=true) {
-		if (orient == RIGHT) {
-			ang = atan2(size.y, size.z);
-			masksize = [size.x, size.y, norm([size.y,size.z])] + [1,1,1];
-			difference() {
-				cube(size, center=true);
-				xrot(ang) back(masksize.y/2) cube(masksize, center=true);
-			}
-		} else if (orient == BACK) {
-			ang = atan2(size.x, size.z);
-			masksize = [size.x, size.y, norm([size.x,size.z])] + [1,1,1];
-			difference() {
-				cube(size, center=true);
-				yrot(-ang) right(masksize.x/2) cube(masksize, center=true);
-			}
-		} else if (orient == UP) {
-			ang = atan2(size.x, size.y);
-			masksize = [size.y, norm([size.x,size.y]), size.z] + [1,1,1];
-			difference() {
-				cube(size, center=true);
-				zrot(ang) right(masksize.x/2) cube(masksize, center=true);
-			}
+	orient_and_anchor(size, orient, anchor, spin=spin, center=center, noncentered=ALLNEG, chain=true) {
+		xrot(90)
+		linear_extrude(height=size.y, convexity=2, center=true) {
+			polygon([[-size.x/2,-size.z/2], [-size.x/2,size.z/2], [size.x/2,-size.z/2]]);
 		}
 		children();
 	}
