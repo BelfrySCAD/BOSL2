@@ -343,29 +343,23 @@ module right_triangle(size=[1, 1, 1], anchor=ALLNEG, spin=0, orient=UP, center=u
 		if (orient == RIGHT) {
 			ang = atan2(size.y, size.z);
 			masksize = [size.x, size.y, norm([size.y,size.z])] + [1,1,1];
-			xrot(ang) {
-				difference() {
-					xrot(-ang) cube(size, center=true);
-					back(masksize.y/2) cube(masksize, center=true);
-				}
+			difference() {
+				cube(size, center=true);
+				xrot(ang) back(masksize.y/2) cube(masksize, center=true);
 			}
 		} else if (orient == BACK) {
 			ang = atan2(size.x, size.z);
 			masksize = [size.x, size.y, norm([size.x,size.z])] + [1,1,1];
-			yrot(-ang) {
-				difference() {
-					yrot(ang) cube(size, center=true);
-					right(masksize.x/2) cube(masksize, center=true);
-				}
+			difference() {
+				cube(size, center=true);
+				yrot(-ang) right(masksize.x/2) cube(masksize, center=true);
 			}
 		} else if (orient == UP) {
 			ang = atan2(size.x, size.y);
-			masksize = [norm([size.x,size.y]), size.y, size.z] + [1,1,1];
-			zrot(-ang) {
-				difference() {
-					zrot(ang) cube(size, center=true);
-					back(masksize.y/2) cube(masksize, center=true);
-				}
+			masksize = [size.y, norm([size.x,size.y]), size.z] + [1,1,1];
+			difference() {
+				cube(size, center=true);
+				zrot(ang) right(masksize.x/2) cube(masksize, center=true);
 			}
 		}
 		children();
