@@ -36,6 +36,7 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, slop=PRINTER_SLOP, anch
 	full_height = h + base;
 
 	orient_and_anchor([full_width, l, h+2*base], orient, anchor, spin=spin, chain=true) {
+		zrot(90)
 		down(base+h/2) {
 			// Base
 			cuboid([full_width, l, base-slop], chamfer=2, edges=edges([FRONT,BACK], except=BOT), anchor=BOTTOM);
