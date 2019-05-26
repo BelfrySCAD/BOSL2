@@ -304,7 +304,7 @@ module gear(
 	twist           = undef,
 	slices          = undef,
 	interior        = false,
-	anchor          = CENTER
+	anchor          = CENTER,
 	spin            = 0,
 	orient          = UP
 ) {
@@ -380,7 +380,7 @@ module rack(
 	pressure_angle  = 28,
 	backlash        = 0.0,
 	clearance       = undef,
-	anchor          = CENTER
+	anchor          = CENTER,
 	spin            = 0,
 	orient          = UP
 ) {
