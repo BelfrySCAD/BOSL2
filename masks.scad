@@ -436,9 +436,10 @@ module rounding_mask(l=undef, r=1.0, anchor=CENTER, spin=0, orient=UP, h=undef)
 //       cube(size=100, center=false);
 //       #rounding_mask_x(l=100, r=25, anchor=LEFT);
 //   }
-module rounding_mask_x(l=1.0, r=1.0, spin=0)
+module rounding_mask_x(l=1.0, r=1.0, anchor=CENTER, spin=0)
 {
-	rounding_mask(l=l, r=r, spin=spin, orient=RIGHT) {
+	anchor = rotate_points3d([anchor], from=RIGHT, to=TOP)[0];
+	rounding_mask(l=l, r=r, anchor=anchor, spin=spin, orient=RIGHT) {
 		for (i=[0:1:$children-2]) children(i);
 		if ($children) children($children-1);
 	}
@@ -462,9 +463,10 @@ module rounding_mask_x(l=1.0, r=1.0, spin=0)
 //       cube(size=100, center=false);
 //       right(100) #rounding_mask_y(l=100, r=25, anchor=FRONT);
 //   }
-module rounding_mask_y(l=1.0, r=1.0, spin=0)
+module rounding_mask_y(l=1.0, r=1.0, anchor=CENTER, spin=0)
 {
-	rounding_mask(l=l, r=r, spin=spin, orient=BACK) {
+	anchor = rotate_points3d([anchor], from=BACK, to=TOP)[0];
+	rounding_mask(l=l, r=r, anchor=anchor, spin=spin, orient=BACK) {
 		for (i=[0:1:$children-2]) children(i);
 		if ($children) children($children-1);
 	}
@@ -488,9 +490,9 @@ module rounding_mask_y(l=1.0, r=1.0, spin=0)
 //       cube(size=100, center=false);
 //       #rounding_mask_z(l=100, r=25, anchor=BOTTOM);
 //   }
-module rounding_mask_z(l=1.0, r=1.0, spin=0)
+module rounding_mask_z(l=1.0, r=1.0, anchor=CENTER, spin=0)
 {
-	rounding_mask(l=l, r=r, spin=spin, orient=UP) {
+	rounding_mask(l=l, r=r, anchor=anchor, spin=spin, orient=UP) {
 		for (i=[0:1:$children-2]) children(i);
 		if ($children) children($children-1);
 	}
@@ -554,7 +556,7 @@ module rounding(r=1, size=[1,1,1], edges=EDGES_ALL)
 //       angle_pie_mask(ang=70, h=50, d=100);
 //       #rounding_angled_edge_mask(h=51, r=20.0, ang=70, $fn=32);
 //   }
-module rounding_angled_edge_mask(h=1.0, r=1.0, ang=90, anchor=CENTER, spin=spin, orient=UP)
+module rounding_angled_edge_mask(h=1.0, r=1.0, ang=90, anchor=CENTER, spin=0, orient=UP)
 {
 	sweep = 180-ang;
 	n = ceil(segs(r)*sweep/360);
@@ -719,7 +721,7 @@ module rounding_cylinder_mask(r=1.0, rounding=0.25)
 //   }
 // Example:
 //   rounding_hole_mask(r=40, rounding=20, $fa=2, $fs=2);
-module rounding_hole_mask(r=undef, d=undef, rounding=0.25, overage=0.1, anchor=CENTER, spin, orient=UP)
+module rounding_hole_mask(r=undef, d=undef, rounding=0.25, overage=0.1, anchor=CENTER, spin=0, orient=UP)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	orient_and_anchor([2*(r+rounding), 2*(r+rounding), rounding*2], orient, anchor, spin=spin, chain=true) {
