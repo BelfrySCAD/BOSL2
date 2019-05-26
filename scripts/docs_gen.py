@@ -202,6 +202,13 @@ class ImageProcessing(object):
                 print(script)
                 print("////////////////////////////////////////////////////")
                 print("")
+                with open("FAILED.scad", "w") as f:
+                    print("////////////////////////////////////////////////////", file=f)
+                    print("// {}: {} for {}".format(libfile, scriptfile, imgfile), file=f)
+                    print("////////////////////////////////////////////////////", file=f)
+                    print(script, file=f)
+                    print("////////////////////////////////////////////////////", file=f)
+                    print("", file=f)
                 sys.exit(-1)
             tmpimgs.append(tmpimgfile)
 
@@ -248,8 +255,9 @@ class ImageProcessing(object):
         else:
             if targimgfile.endswith(".gif"):
                 cmpcmd = ["cmp", newimgfile, targimgfile]
-                res = subprocess.call(cmpcmd)
-                issame = res == 0
+                p = subprocess.Popen(cmpcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
+                err = p.stdout.read()
+                issame = p.returncode == 0
             else:
                 cmpcmd = [COMPARE, "-metric", "MAE", newimgfile, targimgfile, "null:"]
                 p = subprocess.Popen(cmpcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
