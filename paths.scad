@@ -208,7 +208,7 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 //       circle(r=40, $fn=6);
 module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, anchor=BOTTOM, spin=0, orient=UP)
 {
-	orient_and_anchor([0.01,0.01,height], orient, anchor, spin=spin, center=center, chain=true) {
+	orient_and_anchor([0.01,0.01,height], orient, anchor, spin=spin, center=center) {
 		linear_extrude(height=height, twist=twist, slices=slices, center=true) {
 			difference() {
 				children();
@@ -217,7 +217,6 @@ module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, a
 				}
 			}
 		}
-		children();
 	}
 }
 
