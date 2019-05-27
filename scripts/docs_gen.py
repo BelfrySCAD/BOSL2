@@ -254,10 +254,9 @@ class ImageProcessing(object):
             os.rename(newimgfile, targimgfile)
         else:
             if targimgfile.endswith(".gif"):
-                cmpcmd = ["cmp", newimgfile, targimgfile]
-                p = subprocess.Popen(cmpcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-                err = p.stdout.read()
-                issame = p.returncode == 0
+                cmpcmd = ["cmp", "-s", newimgfile, targimgfile]
+                res = subprocess.call(cmpcmd)
+                issame = res == 0
             else:
                 cmpcmd = [COMPARE, "-metric", "MAE", newimgfile, targimgfile, "null:"]
                 p = subprocess.Popen(cmpcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
