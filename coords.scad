@@ -218,9 +218,9 @@ function project_plane(point, a, b, c) =
 	) relpoint * transpose([w,u]);
 
 
-// Function: list_plane()
+// Function: lift_plane()
 // Usage:
-//   list_plane(point, a, b, c);
+//   lift_plane(point, a, b, c);
 // Description:
 //   Given three points defining a plane, converts a planar [X,Y] coordinate to the actual
 //   corresponding 3D point on the plane.  The origin of the planar coordinate system [0,0]
