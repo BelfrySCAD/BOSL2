@@ -51,28 +51,6 @@ function path_length(path) =
 	sum([for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i])]);
 
 
-// Function: path2d_regular_ngon()
-// Description:
-//   Returns a 2D open counter-clockwise path of the vertices of a regular polygon of `n` sides.
-// Usage:
-//   path2d_regular_ngon(n, r|d, [cp], [scale]);
-// Arguments:
-//   n = Number of polygon sides.
-//   r = Radius of regular polygon.
-//   d = Radius of regular polygon.
-//   cp = Centerpoint of regular polygon. Default: `[0,0]`
-//   scale = [X,Y] scaling factors for each axis.  Default: `[1,1]`
-// Example(2D):
-//   trace_polyline(path2d_regular_ngon(n=12, r=50), N=1, showpts=true);
-function path2d_regular_ngon(n=6, r=undef, d=undef, cp=[0,0], scale=[1,1]) =
-	let(
-		rr=get_radius(r=r, d=d, dflt=100)
-	) [
-		for (i=[0:1:n-1])
-			rr * [cos(i*360/n)*scale.x, sin(i*360/n)*scale.y] + cp
-	];
-
-
 // Function: path3d_spiral()
 // Description:
 //   Returns a 3D spiral path.
