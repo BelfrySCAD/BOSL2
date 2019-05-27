@@ -13,19 +13,29 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Module: move()
+// Function&Module: move()
 //
 // Description:
-//   Moves/translates children.
+//   If called as a module, moves/translates all children.  If called as a function with the `pts`
+//   argument, returns the translated point or list of points.  If called as a function without the
+//   `pts` argument, returns an affine translation matrix, either 2D or 3D depending on the length
+//   of the offset vector `a`.
 //
-// Usage:
+// Usage: As Module
 //   move([x], [y], [z]) ...
-//   move([x,y,z]) ...
+//   move(a) ...
+// Usage: Translate Points
+//   pts = move(a, p);
+//   pts = move([x], [y], [z], p);
+// Usage: Get Translation Matrix
+//   mat = move(a);
 //
 // Arguments:
+//   a = An [X,Y,Z] vector to translate by.
 //   x = X axis translation.
 //   y = Y axis translation.
 //   z = Z axis translation.
+//   p = Either a point, or a list of points to be translated when used as a function.
 //
 // Example:
 //   #sphere(d=10);
@@ -38,10 +48,29 @@
 // Example:
 //   #sphere(d=10);
 //   move(x=-10, y=-5) sphere(d=10);
+//
+// Example(NORENDER):
+//   pt1 = move([0,20,30], p=[15,23,42]);       // Returns: [15, 43, 72]
+//   pt2 = move(y=10, p=[15,23,42]);            // Returns: [15, 33, 42]
+//   pt3 = move([0,3,1], p=[[1,2,3],[4,5,6]]);  // Returns: [[1,5,4], [4,8,7]]
+//   pt4 = move(y=11, p=[[1,2,3],[4,5,6]]);     // Returns: [[1,13,3], [4,16,6]]
+//   mat2d = move([2,3]);    // Returns: [[1,0,2],[0,1,3],[0,0,1]]
+//   mat3d = move([2,3,4]);  // Returns: [[1,0,0,2],[0,1,0,3],[0,0,1,4],[0,0,0,1]]
 module move(a=[0,0,0], x=0, y=0, z=0)
 {
 	translate(a+[x,y,z]) children();
 }
+
+function translate(a=[0,0,0], p=undef) = move(a=a, p=p);
+
+function move(a=[0,0,0], p=undef, x=0, y=0, z=0) =
+	is_undef(p)? (
+		len(a)==2? affine2d_translate(a+[x,y]) :
+		affine3d_translate(point3d(a)+[x,y,z])
+	) : (
+		is_vector(p)? p+a+[x,y,z] :
+		[for (pt = p) pt+a+[x,y,z]]
+	);
 
 
 // Module: left()
@@ -152,11 +181,14 @@ module up(z=0) translate([0,0,z]) children();
 //////////////////////////////////////////////////////////////////////
 
 
-// Module: rot()
+// Function&Module: rot()
 //
 // Description:
-//   Rotates children around an arbitrary axis by the given number of degrees.
+//   When called as a module, rotates all children around an arbitrary axis by the given number of degrees.
 //   Can be used as a drop-in replacement for `rotate()`, with extra features.
+//   When called as a function with a `p` argument containing a point, returns the rotated point.
+//   When called as a function with a `p` argument containing a list of points, returns the list of rotated points.
+//   When called as a function without a `p` argument, returns the rotational matrix.  2D if planar is true, 3D otherwise.
 //
 // Usage:
 //   rot(a, [cp], [reverse]) ...
@@ -171,6 +203,8 @@ module up(z=0) translate([0,0,z]) children();
 //   from = Starting vector for vector-based rotations.
 //   to = Target vector for vector-based rotations.
 //   reverse = If true, exactly reverses the rotation, including axis rotation ordering.  Default: false
+//   planar = If called as a function, this specifies if you want to work with 2D points.
+//   p = If called as a function, this contains a point or list of points to rotate.
 //
 // Example:
 //   #cube([2,4,9]);
@@ -214,6 +248,51 @@ module rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false)
 		rotate(a=a, v=v) children();
 	}
 }
+
+function rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false, p=undef, planar=false) =
+	assert(is_undef(from)==is_undef(to), "from and to must be specified together.")
+	let(rev = reverse? -1 : 1)
+	is_undef(p)? (
+		is_undef(cp)? (
+			planar? (
+				is_undef(from)? affine2d_zrot(a*rev) :
+				affine2d_zrot(vector_angle(from,to)*sign(vector_axis(from,to)[2])*rev)
+			) : (
+				!is_undef(from)? affine3d_rot_by_axis(vector_axis(from,to),vector_angle(from,to)*rev) :
+				!is_undef(v)? affine3d_rot_by_axis(v,a*rev) :
+				is_num(a)? affine3d_zrot(a*rev) :
+				reverse? affine3d_chain([affine3d_zrot(-a.z),affine3d_yrot(-a.y),affine3d_xrot(-a.x)]) :
+				affine3d_chain([affine3d_xrot(a.x),affine3d_yrot(a.y),affine3d_zrot(a.z)])
+			)
+		) : (
+			planar? (
+				affine2d_chain([
+					move(-cp),
+					rot(a=a, v=v, from=from, to=to, reverse=reverse, planar=true),
+					move(cp)
+				])
+			) : (
+				affine3d_chain([
+					move(-cp),
+					rot(a=a, v=v, from=from, to=to, reverse=reverse),
+					move(cp)
+				])
+			)
+		)
+	) : (
+		is_vector(p)? (
+			rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, p=[p], planar=planar)[0]
+		) : (
+			planar? (
+				is_undef(from)? rotate_points2d(p, a=ang*rev, cp=cp) :
+				rotate_points2d(p, ang=vector_angle(from,to)*sign(vector_axis(from,to)[2])*rev, cp=cp)
+			) : (
+				rotate_points3d(p, a=a, v=v, cp=(is_undef(cp)? [0,0,0] : cp), from=from, to=to, reverse=reverse)
+			)
+		)
+	);
+
+
 
 
 // Module: xrot()
@@ -301,6 +380,34 @@ module zrot(a=0, cp=undef)
 //////////////////////////////////////////////////////////////////////
 // Section: Scaling and Mirroring
 //////////////////////////////////////////////////////////////////////
+
+
+// Function&Module: scale()
+// Usage: As Module
+//   scale([X,Y,Z]) ...
+// Usage: Scale Points
+//   pts = scale(a, pts);
+// Usage: Get Scaling Matrix
+//   mat = scale(a);
+// Description:
+//   When called as the built-in module, scales all children by the [X,Y,Z] scaling factors.  When
+//   called as a function with a point in the `p` argument, returns the point scaled by the [X,Y,Z]
+//   scaling factors in `a`.  When called as a function with a list of points in the `p` argument,
+//   returns the list of points, with each one scaled by the [X,Y,Z] scaling factors in `a`.
+// Arguments:
+//   a = The [X,Y,Z] scaling factors.
+//   p = If called as a function, the point or list of points to scale.
+// Example(NORENDER):
+//   pt1 = scale([2,3,4], p=[3,1,4]);       // Returns: [6,3,16]
+//   pt3 = scale([2,3,4], p=[[1,2,3],[4,5,6]]);  // Returns: [[2,6,12], [8,15,24]]
+//   mat2d = scale([2,3]);    // Returns: [[2,0,0],[0,3,0],[0,0,1]]
+//   mat3d = scale([2,3,4]);  // Returns: [[2,0,0,0],[0,3,0,0],[0,0,4,0],[0,0,0,1]]
+function scale(a=[1,1,1], p=undef) =
+	is_undef(p)? (
+		len(a)==2? affine2d_scale(a) : affine3d_scale(point3d(a))
+	) : (
+		is_vector(p)? vmul(p,a) : [for (pt = p) vmul(pt,a)]
+	);
 
 
 // Module: xscale()
