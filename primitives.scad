@@ -29,6 +29,10 @@
 //   square([40,30], center=true);
 // Example(2D): Anchoring
 //   square([40,30], anchor=FRONT);
+// Example(2D): Spin
+//   square([40,30], anchor=FRONT, spin=30);
+// Example(NORENDER): Called as Function
+//   path = square([40,30], anchor=FRONT, spin=30);
 module square(size, center=undef, anchor=FRONT+LEFT, spin=0) {
 	size = is_num(size)? [size,size] : point2d(size);
 	s = size/2;
@@ -63,6 +67,10 @@ function square(size, center=undef, anchor=FRONT+LEFT, spin=0) =
 //   circle(d=50);
 // Example(2D): Anchoring
 //   circle(d=50, anchor=FRONT);
+// Example(2D): Spin
+//   circle(d=50, anchor=FRONT, spin=45);
+// Example(NORENDER): Called as Function
+//   path = circle(d=50, anchor=FRONT, spin=45);
 module circle(r=undef, d=undef, anchor=CENTER, spin=0) {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
@@ -102,7 +110,13 @@ function circle(r=undef, d=undef, anchor=CENTER, spin=0) =
 // Example: Simple cube.
 //   cube(40);
 // Example: Rectangular cube.
-//   cuboid([20,40,50]);
+//   cube([20,40,50]);
+// Example: Anchoring.
+//   cube([20,40,50], anchor=BOTTOM+FRONT);
+// Example: Spin.
+//   cube([20,40,50], anchor=BOTTOM+FRONT, spin=30);
+// Example: Orientation.
+//   cube([20,40,50], anchor=BOTTOM+FRONT, spin=30, orient=FWD);
 // Example: Standard Connectors.
 //   cube(40, center=true) show_anchors();
 module cube(size, center=undef, anchor=ALLNEG, spin=0, orient=UP)
@@ -146,7 +160,13 @@ module cube(size, center=undef, anchor=ALLNEG, spin=0, orient=UP)
 //       cylinder(h=40, d=25);
 //       cylinder(h=40, d1=25, d2=10);
 //   }
-// Example: Standard Connectors
+// Example(Med): Anchoring
+//   cylinder(h=40, r1=10, r2=5, anchor=BOTTOM+FRONT);
+// Example(Med): Spin
+//   cylinder(h=40, r1=10, r2=5, anchor=BOTTOM+FRONT, spin=45);
+// Example(Med): Orient
+//   cylinder(h=40, r1=10, r2=5, anchor=BOTTOM+FRONT, spin=45, orient=FWD);
+// Example(Big): Standard Connectors
 //   xdistribute(40) {
 //       cylinder(h=30, d=25) show_anchors();
 //       cylinder(h=30, d1=25, d2=10) show_anchors();
@@ -184,6 +204,12 @@ module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=unde
 //   sphere(r=50);
 // Example: By Diameter
 //   sphere(d=100);
+// Example: Anchoring
+//   sphere(d=100, anchor=FRONT);
+// Example: Spin
+//   sphere(d=100, anchor=FRONT, spin=45);
+// Example: Orientation
+//   sphere(d=100, anchor=FRONT, spin=45, orient=FWD);
 // Example: Standard Connectors
 //   sphere(d=50) show_anchors();
 module sphere(r=undef, d=undef, anchor=CENTER, spin=0, orient=UP)
