@@ -409,8 +409,8 @@ module trace_polyline(pline, N=1, showpts=false, size=1, color="yellow") {
 // Example(Big2D):
 //   debug_polygon(
 //       points=concat(
-//           path2d_regular_ngon(r=10, n=8),
-//           path2d_regular_ngon(r=8, n=8)
+//           regular_ngon(r=10, n=8),
+//           regular_ngon(r=8, n=8)
 //       ),
 //       paths=[
 //           [for (i=[0:7]) i],
