@@ -272,7 +272,7 @@ function sum_of_sines(a, sines) =
 // Example:
 //   deltas([2,5,9,17]);  // returns [3,4,8].
 //   deltas([[1,2,3], [3,6,8], [4,8,11]]);  // returns [[2,4,5], [1,2,3]]
-function deltas(v) = len(v)<2? v : [for (p=pair(v)) p.y-p.x];
+function deltas(v) = [for (p=pair(v)) p.y-p.x];
 
 
 // Function: product()
