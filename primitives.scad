@@ -12,11 +12,12 @@
 // Section: 2D Primitives
 
 
-// Module: square()
+// Function&Module: square()
 // Usage:
 //   square(size, [center], [anchor])
 // Description:
-//   Creates a 2D square of the given size.
+//   When called as a module, creates a 2D square of the given size.
+//   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
 // Arguments:
 //   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
 //   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
@@ -38,12 +39,19 @@ module square(size, center=undef, anchor=FRONT+LEFT, spin=0) {
 	}
 }
 
+function square(size, center=undef, anchor=FRONT+LEFT, spin=0) =
+	let(
+		size = is_num(size)? [size,size] : point2d(size),
+		s=size/2
+	) rot(spin, p=move(-vmul(anchor,s), p=[[-s.x,-s.y], [-s.x,s.y], [s.x,s.y], [s.x,-s.y]]));
 
-// Module: circle()
+
+// Function&Module: circle()
 // Usage:
 //   circle(r|d, [anchor])
 // Description:
-//   Creates a 2D circle of the given size.
+//   When called as a module, creates a 2D circle of the given size.
+//   When called as a function, returns a 2D path/list of points for a circle of the given size.
 // Arguments:
 //   r = The radius of the circle to create.
 //   d = The diameter of the circle to create.
@@ -64,6 +72,14 @@ module circle(r=undef, d=undef, anchor=CENTER, spin=0) {
 		children();
 	}
 }
+
+
+function circle(r=undef, d=undef, anchor=CENTER, spin=0) =
+	let(
+		r = get_radius(r=r, d=d, dflt=1),
+		sides = segs(r),
+		pts = [for (i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]]
+	) rot(spin, p=move(-vmul(anchor,s), p=pts));
 
 
 
