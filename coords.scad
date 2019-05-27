@@ -199,41 +199,40 @@ function xy_to_polar(x,y=undef) = let(
 	) [norm([xx,yy]), atan2(yy,xx)];
 
 
-// Function: xyz_to_planar()
+// Function: project_plane()
 // Usage:
-//   xyz_to_planar(point, a, b, c);
+//   project_plane(point, a, b, c);
 // Description:
-//   Given three points defining a plane, returns the projected planar
-//   [X,Y] coordinates of the closest point to a 3D `point`.  The origin
-//   of the planar coordinate system [0,0] will be at point `a`, and the
-//   Y+ axis direction will be towards point `b`.  This coordinate system
-//   can be useful in taking a set of nearly coplanar points, and converting
-//   them to a pure XY set of coordinates for manipulation, before convering
-//   them back to the original 3D plane.
-function xyz_to_planar(point, a, b, c) =
+//   Given three points defining a plane, returns the projected planar [X,Y] coordinates of the
+//   closest point to a 3D `point`.  The origin of the planar coordinate system [0,0] will be at point
+//   `a`, and the Y+ axis direction will be towards point `b`.  This coordinate system can be useful
+//   in taking a set of nearly coplanar points, and converting them to a pure XY set of coordinates
+//   for manipulation, before convering them back to the original 3D plane.
+function project_plane(point, a, b, c) =
 	let(
 		u = normalize(b-a),
 		v = normalize(c-a),
 		n = normalize(cross(u,v)),
 		w = normalize(cross(n,u)),
-		relpoint = point-a
-	) [relpoint * w, relpoint * u];
+		relpoint = is_vector(point)? (point-a) : translate_points(point,-a)
+	) relpoint * transpose([w,u]);
 
 
-// Function: planar_to_xyz()
+// Function: list_plane()
 // Usage:
-//   planar_to_xyz(point, a, b, c);
+//   list_plane(point, a, b, c);
 // Description:
-//   Given three points defining a plane, converts a planar [X,Y]
-//   coordinate to the actual corresponding 3D point on the plane.
-//   The origin of the planar coordinate system [0,0] will be at point
-//   `a`, and the Y+ axis direction will be towards point `b`.
-function planar_to_xyz(point, a, b, c) = let(
-	u = normalize(b-a),
-	v = normalize(c-a),
-	n = normalize(cross(u,v)),
-	w = normalize(cross(n,u))
-) a + point.x * w + point.y * u;
+//   Given three points defining a plane, converts a planar [X,Y] coordinate to the actual
+//   corresponding 3D point on the plane.  The origin of the planar coordinate system [0,0]
+//   will be at point `a`, and the Y+ axis direction will be towards point `b`.
+function lift_plane(point, a, b, c) =
+	let(
+		u = normalize(b-a),
+		v = normalize(c-a),
+		n = normalize(cross(u,v)),
+		w = normalize(cross(n,u)),
+		remapped = point*[w,u]
+	) is_vector(remapped)? (a+remapped) : translate_points(remapped,a);
 
 
 // Function: cylindrical_to_xyz()

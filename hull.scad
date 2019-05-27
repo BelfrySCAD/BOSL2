@@ -173,7 +173,7 @@ function hull3d_faces(points) =
 		plane = plane3pt_indexed(points, a, b, c),
 		d = _find_first_noncoplanar(plane, points, 3)
 	) (d == len(points))? /* all coplanar*/ let (
-		pts2d = [ for (p = points) xyz_to_planar(p, points[a], points[b], points[c]) ],
+		pts2d = [ for (p = points) project_plane(p, points[a], points[b], points[c]) ],
 		hull2d = hull2d_path(pts2d)
 	) hull2d : let(
 		remaining = [for (i = [3:1:len(points)-1]) if (i != d) i],
