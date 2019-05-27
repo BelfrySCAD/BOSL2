@@ -98,7 +98,6 @@ function slice(arr,st,end) = let(
 //   select(l, [1,3]);  // Returns [4,6]
 function select(list, start, end=undef) =
 	let(l=len(list))
-	(list==[])? [] :
 	end==undef? (
 		is_num(start)?
 			let(s=(start%l+l)%l) list[s] :
@@ -203,7 +202,7 @@ function list_longest(vecs) =
 //   minlen = The minimum length to pad the list to.
 //   fill = The value to pad the list with.
 function list_pad(v, minlen, fill=undef) =
-	let(l=len(v)) [for (i=[0:1:max(l,minlen)-1]) i<l? v[i] : fill];
+	concat(v,replist(fill,minlen-len(v)));
 
 
 // Function: list_trim()
@@ -213,7 +212,7 @@ function list_pad(v, minlen, fill=undef) =
 //   v = A list.
 //   minlen = The minimum length to pad the list to.
 function list_trim(v, maxlen) =
-	maxlen<1? [] : [for (i=[0:1:min(len(v),maxlen)-1]) v[i]];
+	[for (i=[0:1:min(len(v),maxlen)-1]) v[i]];
 
 
 // Function: list_fit()
@@ -240,7 +239,6 @@ function list_fit(v, length, fill) =
 //   enumerate([[88,"a"],[76,"b"],[21,"c"]], idx=1);  // Returns: [[0,"a"], [1,"b"], [2,"c"]]
 //   enumerate([["cat","a",12],["dog","b",10],["log","c",14]], idx=[1:2]);  // Returns: [[0,"a",12], [1,"b",10], [2,"c",14]]
 function enumerate(l,idx=undef) =
-	(l==[])? [] :
 	(idx==undef)?
 		[for (i=[0:1:len(l)-1]) [i,l[i]]] :
 		[for (i=[0:1:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
