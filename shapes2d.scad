@@ -103,7 +103,7 @@ function pie_slice2d(r=undef, d=undef, ang=30) =
 		sides = ceil(segs(r)*ang/360)
 	) concat(
 		[[0,0]],
-		[for (i=[0:sides]) let(a=i*ang/sides) r*[cos(a),sin(a)]]
+		[for (i=[0:1:sides]) let(a=i*ang/sides) r*[cos(a),sin(a)]]
 	);
 
 
@@ -313,10 +313,10 @@ function glued_circles(r=undef, d=undef, spread=10, tangent=30) =
 		arcsegs = ceil(segs(r2)*abs(subarc)/360),
 		arcstep = subarc / arcsegs
 	) concat(
-		[for (i=[0:lobesegs]) let(a=sa1+i*lobestep)     r  * [cos(a),sin(a)] - cp1],
-		tangent==0? [] : [for (i=[0:arcsegs])  let(a=ea2-i*arcstep+180)  r2 * [cos(a),sin(a)] - cp2],
-		[for (i=[0:lobesegs]) let(a=sa1+i*lobestep+180) r  * [cos(a),sin(a)] + cp1],
-		tangent==0? [] : [for (i=[0:arcsegs])  let(a=ea2-i*arcstep)      r2 * [cos(a),sin(a)] + cp2]
+		[for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep)     r  * [cos(a),sin(a)] - cp1],
+		tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep+180)  r2 * [cos(a),sin(a)] - cp2],
+		[for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep+180) r  * [cos(a),sin(a)] + cp1],
+		tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep)      r2 * [cos(a),sin(a)] + cp2]
 	);
 
 
@@ -360,7 +360,7 @@ function star(n, r, d, ir, id, step, realign=false) =
 		ir = get_radius(r=ir, d=id, dflt=stepr),
 		offset = 90+(realign? 180/n : 0)
 	)
-	[for(i=[0:2*n-1]) let(theta=180*i/n+offset, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]];
+	[for(i=[0:1:2*n-1]) let(theta=180*i/n+offset, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]];
 
 
 module star(n, r, d, ir, id, step, realign=false)

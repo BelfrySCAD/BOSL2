@@ -64,7 +64,7 @@ function bez_point(curve,u)=
 	(len(curve) <= 1) ?
 		curve[0] :
 		bez_point(
-			[for(i=[0:len(curve)-2]) curve[i]*(1-u)+curve[i+1]*u],
+			[for(i=[0:1:len(curve)-2]) curve[i]*(1-u)+curve[i+1]*u],
 			u
 		);
 
@@ -239,7 +239,7 @@ function bezier_path_closest_point(path, pt, N=3, max_err=0.01, seg=0, min_seg=u
 //   max_deflect = The largest amount of deflection from the true curve to allow for approximation.
 function bezier_path_length(path, N=3, max_deflect=0.001) =
 	sum([
-		for (seg=[0:(len(path)-1)/N-1]) (
+		for (seg=[0:1:(len(path)-1)/N-1]) (
 			bezier_segment_length(
 				select(path, seg*N, (seg+1)*N),
 				max_deflect=max_deflect
@@ -270,7 +270,7 @@ function bezier_path_length(path, N=3, max_deflect=0.001) =
 function bezier_polyline(bezier, splinesteps=16, N=3) = let(
 		segs = (len(bezier)-1)/N
 	) concat(
-		[for (seg = [0:segs-1], i = [0:splinesteps-1]) bezier_path_point(bezier, seg, i/splinesteps, N=N)],
+		[for (seg = [0:1:segs-1], i = [0:1:splinesteps-1]) bezier_path_point(bezier, seg, i/splinesteps, N=N)],
 		[bezier_path_point(bezier, segs-1, 1, N=N)]
 	);
 
@@ -293,7 +293,7 @@ function bezier_polyline(bezier, splinesteps=16, N=3) = let(
 function fillet_path(pts, fillet, maxerr=0.1) = concat(
 	[pts[0], pts[0]],
 	(len(pts) < 3)? [] : [
-		for (p = [1 : len(pts)-2]) let(
+		for (p = [1:1:len(pts)-2]) let(
 			p1 = pts[p],
 			p0 = (pts[p-1]+p1)/2,
 			p2 = (pts[p+1]+p1)/2
@@ -326,15 +326,15 @@ function bezier_close_to_axis(bezier, N=3, axis="X") =
 		sp = bezier[0],
 		ep = bezier[bezend]
 	) (axis=="X")? concat(
-		[for (i=[0:N-1]) lerp([sp.x,0], sp, i/N)],
+		[for (i=[0:1:N-1]) lerp([sp.x,0], sp, i/N)],
 		bezier,
-		[for (i=[1:N]) lerp(ep, [ep.x,0], i/N)],
-		[for (i=[1:N]) lerp([ep.x,0], [sp.x,0], i/N)]
+		[for (i=[1:1:N]) lerp(ep, [ep.x,0], i/N)],
+		[for (i=[1:1:N]) lerp([ep.x,0], [sp.x,0], i/N)]
 	) : (axis=="Y")? concat(
-		[for (i=[0:N-1]) lerp([0,sp.y], sp, i/N)],
+		[for (i=[0:1:N-1]) lerp([0,sp.y], sp, i/N)],
 		bezier,
-		[for (i=[1:N]) lerp(ep, [0,ep.y], i/N)],
-		[for (i=[1:N]) lerp([0,ep.y], [0,sp.y], i/N)]
+		[for (i=[1:1:N]) lerp(ep, [0,ep.y], i/N)],
+		[for (i=[1:1:N]) lerp([0,ep.y], [0,sp.y], i/N)]
 	) : (
 		assert_in_list("axis", axis, ["X","Y"])
 	);
@@ -364,9 +364,9 @@ function bezier_offset(inset, bezier, N=3, axis="X") =
 		bezend = len(bezier)-1
 	) concat(
 		bezier,
-		[for (i=[1:N-1]) lerp(bezier[bezend], backbez[0], i/N)],
+		[for (i=[1:1:N-1]) lerp(bezier[bezend], backbez[0], i/N)],
 		backbez,
-		[for (i=[1:N]) lerp(backbez[bezend], bezier[0], i/N)]
+		[for (i=[1:1:N]) lerp(backbez[bezend], bezier[0], i/N)]
 	);
 
 
@@ -685,9 +685,9 @@ function bezier_triangle_point(tri, u, v) =
 	len(tri) == 1 ? tri[0][0] :
 	let(
 		n = len(tri)-1,
-		Pu = [for(i=[0:n-1]) [for (j=[1:len(tri[i])-1]) tri[i][j]]],
-		Pv = [for(i=[0:n-1]) [for (j=[0:len(tri[i])-2]) tri[i][j]]],
-		Pw = [for(i=[1:len(tri)-1]) tri[i]]
+		Pu = [for(i=[0:1:n-1]) [for (j=[1:1:len(tri[i])-1]) tri[i][j]]],
+		Pv = [for(i=[0:1:n-1]) [for (j=[0:1:len(tri[i])-2]) tri[i][j]]],
+		Pw = [for(i=[1:1:len(tri)-1]) tri[i]]
 	)
 	bezier_triangle_point(u*Pu + v*Pv + (1-u-v)*Pw, u, v);
 
@@ -721,12 +721,12 @@ function bezier_triangle_point(tri, u, v) =
 function bezier_patch(patch, splinesteps=16, vertices=[], faces=[]) =
 	let(
 		base = len(vertices),
-		pts = [for (v=[0:splinesteps], u=[0:splinesteps]) bezier_patch_point(patch, u/splinesteps, v/splinesteps)],
+		pts = [for (v=[0:1:splinesteps], u=[0:1:splinesteps]) bezier_patch_point(patch, u/splinesteps, v/splinesteps)],
 		new_vertices = concat(vertices, pts),
 		new_faces = [
 			for (
-				v=[0:splinesteps-1],
-				u=[0:splinesteps-1],
+				v=[0:1:splinesteps-1],
+				u=[0:1:splinesteps-1],
 				i=[0,1]
 			) let (
 				v1 = u+v*(splinesteps+1) + base,
@@ -771,8 +771,8 @@ function bezier_triangle(tri, splinesteps=16, vertices=[], faces=[]) =
 		base = len(vertices),
 		pts = [
 			for (
-				u=[0:splinesteps],
-				v=[0:splinesteps-u]
+				u=[0:1:splinesteps],
+				v=[0:1:splinesteps-u]
 			) bezier_triangle_point(tri, u/splinesteps, v/splinesteps)
 		],
 		new_vertices = concat(vertices, pts),
@@ -780,8 +780,8 @@ function bezier_triangle(tri, splinesteps=16, vertices=[], faces=[]) =
 		tricnt = _tri_count(splinesteps+1),
 		new_faces = [
 			for (
-				u=[0:splinesteps-1],
-				v=[0:splinesteps-u-1]
+				u=[0:1:splinesteps-1],
+				v=[0:1:splinesteps-u-1]
 			) let (
 				v1 = v + (tricnt - _tri_count(splinesteps+1-u)) + base,
 				v2 = v1 + 1,
@@ -812,7 +812,7 @@ function bezier_triangle(tri, splinesteps=16, vertices=[], faces=[]) =
 //   trace_bezier_patches([patch], size=1, showcps=true);
 function bezier_patch_flat(size=[100,100], N=4, spin=0, orient=UP, trans=[0,0,0]) =
 	let(
-		patch = [for (x=[0:N]) [for (y=[0:N]) vmul(point3d(size),[x/N-0.5, 0.5-y/N, 0])]]
+		patch = [for (x=[0:1:N]) [for (y=[0:1:N]) vmul(point3d(size),[x/N-0.5, 0.5-y/N, 0])]]
 	) [for (row=patch)
 		translate_points(v=trans,
 			rotate_points3d(a=spin, from=UP, to=orient, row)
@@ -1014,7 +1014,7 @@ module trace_bezier_patches(patches=[], tris=[], size=1, showcps=false, splinest
 		for (patch = patches) {
 			place_copies(flatten(patch)) color("red") sphere(d=size*2);
 			color("cyan")
-			for (i=[0:len(patch)-1], j=[0:len(patch[i])-1]) {
+			for (i=[0:1:len(patch)-1], j=[0:1:len(patch[i])-1]) {
 				if (i<len(patch)-1) extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
 				if (j<len(patch[i])-1) extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
 			}
@@ -1024,7 +1024,7 @@ module trace_bezier_patches(patches=[], tris=[], size=1, showcps=false, splinest
 		for (patch = tris) {
 			place_copies(flatten(patch)) color("red") sphere(d=size*2);
 			color("cyan")
-			for (i=[0:len(patch)-2], j=[0:len(patch[i])-2]) {
+			for (i=[0:1:len(patch)-2], j=[0:1:len(patch[i])-2]) {
 				extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
 				extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
 				extrude_from_to(patch[i+1][j], patch[i][j+1]) circle(d=size);

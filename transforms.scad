@@ -675,7 +675,7 @@ module spread(p1=undef, p2=undef, spacing=undef, l=undef, n=undef)
 	);
 	assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `spread()`.");
 	spos = !is_undef(p1)? point3d(p1) : -(cnt-1)/2 * spc;
-	for (i=[0 : cnt-1]) {
+	for (i=[0:1:cnt-1]) {
 		pos = i * spc + spos;
 		$pos = pos;
 		$idx = i;
@@ -821,12 +821,12 @@ module zspread(spacing=undef, n=undef, l=undef, sp=undef)
 module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
 {
 	gaps = ($children < 2)? [0] :
-		!is_undef(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
-		[for (i=[0:$children-2]) 0];
+		!is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+		[for (i=[0:1:$children-2]) 0];
 	spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
 	gaps2 = [for (gap = gaps) gap+spc];
 	spos = dir * -sum(gaps2)/2;
-	for (i=[0:$children-1]) {
+	for (i=[0:1:$children-1]) {
 		totspc = sum(concat([0], slice(gaps2, 0, i)));
 		$pos = spos + totspc * dir;
 		$idx = i;
@@ -866,12 +866,12 @@ module xdistribute(spacing=10, sizes=undef, l=undef)
 {
 	dir = RIGHT;
 	gaps = ($children < 2)? [0] :
-		!is_undef(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
-		[for (i=[0:$children-2]) 0];
+		!is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+		[for (i=[0:1:$children-2]) 0];
 	spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
 	gaps2 = [for (gap = gaps) gap+spc];
 	spos = dir * -sum(gaps2)/2;
-	for (i=[0:$children-1]) {
+	for (i=[0:1:$children-1]) {
 		totspc = sum(concat([0], slice(gaps2, 0, i)));
 		$pos = spos + totspc * dir;
 		$idx = i;
@@ -911,12 +911,12 @@ module ydistribute(spacing=10, sizes=undef, l=undef)
 {
 	dir = BACK;
 	gaps = ($children < 2)? [0] :
-		!is_undef(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
-		[for (i=[0:$children-2]) 0];
+		!is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+		[for (i=[0:1:$children-2]) 0];
 	spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
 	gaps2 = [for (gap = gaps) gap+spc];
 	spos = dir * -sum(gaps2)/2;
-	for (i=[0:$children-1]) {
+	for (i=[0:1:$children-1]) {
 		totspc = sum(concat([0], slice(gaps2, 0, i)));
 		$pos = spos + totspc * dir;
 		$idx = i;
@@ -956,12 +956,12 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 {
 	dir = UP;
 	gaps = ($children < 2)? [0] :
-		!is_undef(sizes)? [for (i=[0:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
-		[for (i=[0:$children-2]) 0];
+		!is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+		[for (i=[0:1:$children-2]) 0];
 	spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
 	gaps2 = [for (gap = gaps) gap+spc];
 	spos = dir * -sum(gaps2)/2;
-	for (i=[0:$children-1]) {
+	for (i=[0:1:$children-1]) {
 		totspc = sum(concat([0], slice(gaps2, 0, i)));
 		$pos = spos + totspc * dir;
 		$idx = i;
@@ -1042,15 +1042,15 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 	} else {
 		spc = is_list(spacing)? spacing : vmul(scalar_vec3(spacing), scl);
 		bounds = !is_undef(in_poly)? pointlist_bounds(in_poly) : undef;
-		bnds = !is_undef(bounds)? [for (a=[0:1]) 2*max(vabs([ for (i=[0,1]) bounds[i][a] ]))+1 ] : undef;
+		bnds = !is_undef(bounds)? [for (a=[0,1]) 2*max(vabs([ for (i=[0,1]) bounds[i][a] ]))+1 ] : undef;
 		mcols = !is_undef(cols)? cols : (!is_undef(spc) && !is_undef(bnds))? quantup(ceil(bnds[0]/spc[0])-1, 4)+1 : undef;
 		mrows = !is_undef(rows)? rows : (!is_undef(spc) && !is_undef(bnds))? quantup(ceil(bnds[1]/spc[1])-1, 4)+1 : undef;
 		siz = vmul(spc, [mcols-1, mrows-1, 0]);
 		staggermod = (stagger == "alt")? 1 : 0;
 		if (stagger == false) {
 			orient_and_anchor(siz, orient, anchor, spin=spin) {
-				for (row = [0:mrows-1]) {
-					for (col = [0:mcols-1]) {
+				for (row = [0:1:mrows-1]) {
+					for (col = [0:1:mcols-1]) {
 						pos = [col*spc[0], row*spc[1]] - point2d(siz/2);
 						if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
 							$col = col;
@@ -1066,10 +1066,10 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 			orient_and_anchor(siz, orient, anchor, spin=spin) {
 				cols1 = ceil(mcols/2);
 				cols2 = mcols - cols1;
-				for (row = [0:mrows-1]) {
+				for (row = [0:1:mrows-1]) {
 					rowcols = ((row%2) == staggermod)? cols1 : cols2;
 					if (rowcols > 0) {
-						for (col = [0:rowcols-1]) {
+						for (col = [0:1:rowcols-1]) {
 							rowdx = (row%2 != staggermod)? spc[0] : 0;
 							pos = [2*col*spc[0]+rowdx, row*spc[1]] - point2d(siz/2);
 							if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
@@ -1124,9 +1124,9 @@ module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
 	n = scalar_vec3(n, 1);
 	spacing = scalar_vec3(spacing, undef);
 	if (!is_undef(n) && !is_undef(spacing)) {
-		for (xi = [0:n.x-1]) {
-			for (yi = [0:n.y-1]) {
-				for (zi = [0:n.z-1]) {
+		for (xi = [0:1:n.x-1]) {
+			for (yi = [0:1:n.y-1]) {
+				for (zi = [0:1:n.z-1]) {
 					$idx = [xi,yi,zi];
 					$pos = vmul(spacing, $idx - (n-[1,1,1])/2);
 					translate($pos) children();
@@ -1204,16 +1204,16 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], count=undef, n=undef, sa=0, offs
 {
 	cnt = first_defined([count, n]);
 	sang = sa + offset;
-	angs = !is_undef(cnt)? (cnt<=0? [] : [for (i=[0:cnt-1]) i/cnt*360+sang]) : rots;
+	angs = !is_undef(cnt)? (cnt<=0? [] : [for (i=[0:1:cnt-1]) i/cnt*360+sang]) : rots;
 	if (cp != [0,0,0]) {
 		translate(cp) rot_copies(rots=rots, v=v, n=cnt, sa=sang, delta=delta, subrot=subrot) children();
 	} else if (subrot) {
-		for ($idx = [0:len(angs)-1]) {
+		for ($idx = [0:1:len(angs)-1]) {
 			$ang = angs[$idx];
 			rotate(a=$ang,v=v) translate(delta) rot(a=sang,v=v,reverse=true) children();
 		}
 	} else {
-		for ($idx = [0:len(angs)-1]) {
+		for ($idx = [0:1:len(angs)-1]) {
 			$ang = angs[$idx];
 			rotate(a=$ang,v=v) translate(delta) rot(a=$ang,v=v,reverse=true) children();
 		}
@@ -1525,7 +1525,7 @@ module arc_of(
 	ea = posmod(ea, 360);
 	n = (abs(ea-sa)<0.01)?(n+1):n;
 	delt = (((ea<=sa)?360.0:0)+ea-sa)/(n-1);
-	for ($idx = [0:n-1]) {
+	for ($idx = [0:1:n-1]) {
 		$ang = sa + ($idx * delt);
 		$pos =[rx*cos($ang), ry*sin($ang), 0];
 		translate($pos) {
@@ -1577,9 +1577,9 @@ module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=tr
 	// Calculate an array of [theta,phi] angles for `n` number of
 	// points, almost evenly spaced across the surface of a sphere.
 	// This approximation is based on the golden spiral method.
-	theta_phis = [for (x=[0:n-1]) [180*(1+sqrt(5))*(x+0.5)%360, acos(1-2*(x+0.5)/cnt)]];
+	theta_phis = [for (x=[0:1:n-1]) [180*(1+sqrt(5))*(x+0.5)%360, acos(1-2*(x+0.5)/cnt)]];
 
-	for ($idx = [0:len(theta_phis)-1]) {
+	for ($idx = [0:1:len(theta_phis)-1]) {
 		tp = theta_phis[$idx];
 		xyz = spherical_to_xyz(r, tp[0], tp[1]);
 		$pos = vmul(xyz,scale);
@@ -2025,7 +2025,7 @@ module chain_hull()
 		if ($children == 1) {
 			children();
 		} else if ($children > 1) {
-			for (i =[1:$children-1]) {
+			for (i =[1:1:$children-1]) {
 				hull() {
 					children(i-1);
 					children(i);

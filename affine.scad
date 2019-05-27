@@ -14,7 +14,7 @@
 // Description: Create an `n` by `n` identity matrix.
 // Arguments:
 //   n = The size of the identity matrix square, `n` by `n`.
-function ident(n) = [for (i = [0:n-1]) [for (j = [0:n-1]) (i==j)?1:0]];
+function ident(n) = [for (i = [0:1:n-1]) [for (j = [0:1:n-1]) (i==j)?1:0]];
 
 
 // Function: affine2d_to_affine3d()

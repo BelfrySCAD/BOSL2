@@ -28,7 +28,7 @@ function is_vector(v) = is_list(v) && is_num(v[0]);
 //   v2 = The second vector.
 // Example:
 //   vmul([3,4,5], [8,7,6]);  // Returns [24, 28, 30]
-function vmul(v1, v2) = [for (i = [0:len(v1)-1]) v1[i]*v2[i]];
+function vmul(v1, v2) = [for (i = [0:1:len(v1)-1]) v1[i]*v2[i]];
 
 
 // Function: vdiv()
@@ -40,7 +40,7 @@ function vmul(v1, v2) = [for (i = [0:len(v1)-1]) v1[i]*v2[i]];
 //   v2 = The second vector.
 // Example:
 //   vdiv([24,28,30], [8,7,6]);  // Returns [3, 4, 5]
-function vdiv(v1, v2) = [for (i = [0:len(v1)-1]) v1[i]/v2[i]];
+function vdiv(v1, v2) = [for (i = [0:1:len(v1)-1]) v1[i]/v2[i]];
 
 
 // Function: vabs()

@@ -31,7 +31,7 @@ module debug_vertices(vertices, size=1, disabled=false) {
 	if (!disabled) {
 		echo(vertices=vertices);
 		color("blue") {
-			for (i = [0:len(vertices)-1]) {
+			for (i = [0:1:len(vertices)-1]) {
 				v = vertices[i];
 				translate(v) {
 					up(size/8) zrot($vpr[2]) xrot(90) {
@@ -76,7 +76,7 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 	if (!disabled) {
 		vlen = len(vertices);
 		color("red") {
-			for (i = [0:len(faces)-1]) {
+			for (i = [0:1:len(faces)-1]) {
 				face = faces[i];
 				if (face[0] < 0 || face[1] < 0 || face[2] < 0 || face[0] >= vlen || face[1] >= vlen || face[2] >= vlen) {
 					echo("BAD FACE: ", vlen=vlen, face=face);

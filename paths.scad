@@ -48,7 +48,7 @@ function simplify3d_path(path, eps=1e-6) = simplify_path(path, eps=eps);
 //   echo(path_length(path));
 function path_length(path) =
 	len(path)<2? 0 :
-	sum([for (i = [0:len(path)-2]) norm(path[i+1]-path[i])]);
+	sum([for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i])]);
 
 
 // Function: path2d_regular_ngon()
@@ -68,7 +68,7 @@ function path2d_regular_ngon(n=6, r=undef, d=undef, cp=[0,0], scale=[1,1]) =
 	let(
 		rr=get_radius(r=r, d=d, dflt=100)
 	) [
-		for (i=[0:n-1])
+		for (i=[0:1:n-1])
 			rr * [cos(i*360/n)*scale.x, sin(i*360/n)*scale.y] + cp
 	];
 
@@ -93,7 +93,7 @@ function path3d_spiral(turns=3, h=100, n=12, r=undef, d=undef, cp=[0,0], scale=[
 		cnt=floor(turns*n),
 		dz=h/cnt
 	) [
-		for (i=[0:cnt]) [
+		for (i=[0:1:cnt]) [
 			rr * cos(i*360/n) * scale.x + cp.x,
 			rr * sin(i*360/n) * scale.y + cp.y,
 			i*dz
@@ -133,7 +133,7 @@ function points_along_path3d(
 	roth = Q_Mul(hrot, q),
 	rotm = Q_Mul(arot, q)
 ) concat(
-	[for (i = [0:len(polyline)-1]) Q_Rot_Vector(point3d(polyline[i]),roth) + path[n]],
+	[for (i = [0:1:len(polyline)-1]) Q_Rot_Vector(point3d(polyline[i]),roth) + path[n]],
 	(n == end)? [] : points_along_path3d(polyline, path, rotm, n+1)
 );
 
@@ -243,7 +243,7 @@ module extrude_2dpath_along_spiral(polyline, h, r, twist=360, center=undef, anch
 
 	poly_points = [
 		for (
-			p = [0:steps]
+			p = [0:1:steps]
 		) let (
 			a = twist * (p/steps),
 			dx = r*cos(a),
@@ -260,11 +260,11 @@ module extrude_2dpath_along_spiral(polyline, h, r, twist=360, center=undef, anch
 	];
 
 	poly_faces = concat(
-		[[for (b = [0:pline_count-1]) b]],
+		[[for (b = [0:1:pline_count-1]) b]],
 		[
 			for (
-				p = [0:steps-1],
-				b = [0:pline_count-1],
+				p = [0:1:steps-1],
+				b = [0:1:pline_count-1],
 				i = [0:1]
 			) let (
 				b2 = (b == pline_count-1)? 0 : b+1,
@@ -309,11 +309,11 @@ module extrude_2dpath_along_3dpath(polyline, path, ang=0, convexity=10) {
 	poly_points = points_along_path3d(polyline, path);
 
 	poly_faces = concat(
-		[[for (b = [0:pline_count-1]) b]],
+		[[for (b = [0:1:pline_count-1]) b]],
 		[
 			for (
-				p = [0:path_count-2],
-				b = [0:pline_count-1],
+				p = [0:1:path_count-2],
+				b = [0:1:pline_count-1],
 				i = [0:1]
 			) let (
 				b2 = (b == pline_count-1)? 0 : b+1,
@@ -357,7 +357,7 @@ module extrude_2d_shapes_along_3dpath(path, convexity=10, clipsize=100) {
 	epsilon = 0.0001;  // Make segments ever so slightly too long so they overlap.
 	ptcount = len(path);
 	pquats = polyquats(path);
-	for (i = [0 : ptcount-2]) {
+	for (i = [0:1:ptcount-2]) {
 		pt1 = path[i];
 		pt2 = path[i+1];
 		dist = pquats[i][0];
@@ -400,7 +400,7 @@ module extrude_2d_shapes_along_3dpath(path, convexity=10, clipsize=100) {
 //   trace_polyline(polyline, showpts=true, size=0.5, color="lightgreen");
 module trace_polyline(pline, N=1, showpts=false, size=1, color="yellow") {
 	if (showpts) {
-		for (i = [0:len(pline)-1]) {
+		for (i = [0:1:len(pline)-1]) {
 			translate(pline[i]) {
 				if (i%N == 0) {
 					color("blue") sphere(d=size*2.5, $fn=8);
@@ -414,7 +414,7 @@ module trace_polyline(pline, N=1, showpts=false, size=1, color="yellow") {
 			}
 		}
 	}
-	for (i = [0:len(pline)-2]) {
+	for (i = [0:1:len(pline)-2]) {
 		if (N!=3 || (i%N) != 1) {
 			color(color) extrude_from_to(pline[i], pline[i+1]) circle(d=size/2);
 		}
@@ -441,13 +441,13 @@ module trace_polyline(pline, N=1, showpts=false, size=1, color="yellow") {
 //   );
 module debug_polygon(points, paths=undef, convexity=2, size=1)
 {
-	pths = is_undef(paths)? [for (i=[0:len(points)-1]) i] : is_num(paths[0])? [paths] : paths;
+	pths = is_undef(paths)? [for (i=[0:1:len(points)-1]) i] : is_num(paths[0])? [paths] : paths;
 	echo(points=points);
 	echo(paths=paths);
 	linear_extrude(height=0.01, convexity=convexity, center=true) {
 		polygon(points=points, paths=paths, convexity=convexity);
 	}
-	for (i = [0:len(points)-1]) {
+	for (i = [0:1:len(points)-1]) {
 		color("red") {
 			up(0.2) {
 				translate(points[i]) {
@@ -458,7 +458,7 @@ module debug_polygon(points, paths=undef, convexity=2, size=1)
 			}
 		}
 	}
-	for (j = [0:len(paths)-1]) {
+	for (j = [0:1:len(paths)-1]) {
 		path = paths[j];
 		translate(points[path[0]]) {
 			color("cyan") up(0.1) cylinder(d=size*1.5, h=0.01, center=false, $fn=12);
@@ -466,7 +466,7 @@ module debug_polygon(points, paths=undef, convexity=2, size=1)
 		translate(points[path[len(path)-1]]) {
 			color("pink") up(0.11) cylinder(d=size*1.5, h=0.01, center=false, $fn=4);
 		}
-		for (i = [0:len(path)-1]) {
+		for (i = [0:1:len(path)-1]) {
 			midpt = (points[path[i]] + points[path[(i+1)%len(path)]])/2;
 			color("blue") {
 				up(0.2) {

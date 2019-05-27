@@ -24,7 +24,7 @@ function face_normal(points, face) =
 	normalize(
 		sum(
 			[
-				for(i=[0:count-1]) cross(
+				for(i=[0:1:count-1]) cross(
 					points[face[(i+1)%count]]-points[face[0]],
 					points[face[(i+2)%count]]-points[face[(i+1)%count]]
 				)
@@ -91,7 +91,7 @@ function _check_point_in_ear(point, tests) =
 function normalize_vertex_perimeter(v) =
 	(len(v) < 2)? v :
 		(v[len(v)-1] != v[0])? v :
-			[for (i=[0:len(v)-2]) v[i]]
+			[for (i=[0:1:len(v)-2]) v[i]]
 ;
 
 
@@ -110,7 +110,7 @@ function is_only_noncolinear_vertex(points, facelist, vertex) =
 	)
 	0==sum(
 		[
-			for(i=[0:count-1]) norm(
+			for(i=[0:1:count-1]) norm(
 				cross(
 					points[face[(i+1)%count]]-points[face[0]],
 					points[face[(i+2)%count]]-points[face[(i+1)%count]]
@@ -180,7 +180,7 @@ function triangulate_face(points, face) =
 //   faces = Array of faces for the polyhedron. Each face is a list of 3 or more indices into the `points` array.
 function triangulate_faces(points, faces) =
 	[
-		for (i=[0 : len(faces)-1])
+		for (i=[0:1:len(faces)-1])
 			let(facet = normalize_vertex_perimeter(faces[i]))
 			for (face = triangulate_face(points, facet))
 				if (face[0]!=face[1] && face[1]!=face[2] && face[2]!=face[0]) face

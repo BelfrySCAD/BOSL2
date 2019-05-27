@@ -442,9 +442,9 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 				ybridge = (l - (yreps+1) * strut) / yreps;
 				xspread(xoff) sparse_strut(h=h, l=l, thick=thick, maxang=maxang, strut=strut, max_bridge=ybridge/ceil(ybridge/max_bridge));
 				yspread(yoff) zrot(90) sparse_strut(h=h, l=w, thick=thick, maxang=maxang, strut=strut, max_bridge=max_bridge);
-				for(zs = [0:zreps-1]) {
-					for(xs = [0:xreps-1]) {
-						for(ys = [0:yreps-1]) {
+				for(zs = [0:1:zreps-1]) {
+					for(xs = [0:1:xreps-1]) {
+						for(ys = [0:1:yreps-1]) {
 							translate([(xs+0.5)*xstep-xoff/2, (ys+0.5)*ystep-yoff/2, (zs+0.5)*zstep-zoff/2]) {
 								zflip_copy(offset=-(zstep-strut)/2) {
 									xflip_copy() {
@@ -459,7 +459,7 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 													}
 												}
 											}
-											for (soff = [0 : supp_reps-1] ) {
+											for (soff = [0:1:supp_reps-1] ) {
 												yflip_copy() {
 													back(soff*supp_step) {
 														skew_xy(ya=supp_ang) {

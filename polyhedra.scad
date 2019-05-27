@@ -22,7 +22,7 @@ include <BOSL2/hull.scad>
 // Groups entries in "arr" into groups of equal values and returns index lists of those groups
 
 function _unique_groups(m) = [
-	for (i=[0:len(m)-1]) let(
+	for (i=[0:1:len(m)-1]) let(
 		s = search([m[i]], m, 0)[0]
 	) if (s[0]==i) s
 ];
@@ -333,7 +333,7 @@ module regular_polyhedron(
 	}
 	if ($children>0) {
 		maxrange = repeat ? len(faces)-1 : $children-1;
-		for(i=[0:maxrange]) {
+		for(i=[0:1:maxrange]) {
 			// Would like to orient so an edge (longest edge?) is parallel to x axis
 			facepts = translate_points(select(scaled_points, faces[i]), translation);
 			center = mean(facepts);
@@ -622,7 +622,7 @@ function regular_polyhedron_info(
 		stellate = stellate_index==[] ? stellate : _stellated_polyhedra_[stellate_index][2],
 		indexlist = (
 			name=="trapezohedron" ? [0] : [  // dumy list of one item
-				for(i=[0:len(_polyhedra_)-1]) (
+				for(i=[0:1:len(_polyhedra_)-1]) (
 					if (
 						(is_undef(name) || _polyhedra_[i][pname]==name) &&
 						(is_undef(type) || _polyhedra_[i][class]==type) &&
@@ -712,10 +712,10 @@ function stellate_faces(scalefactor,stellate,vertices,faces_normals) =
 	(stellate == false || stellate == 0)? concat(faces_normals,[vertices]) :
 	let(
 		faces = [for(face=faces_normals[0]) select(face,hull(select(vertices,face)))],
-		direction = [for(i=[0:len(faces)-1]) _facenormal(vertices, faces[i])*faces_normals[1][i]>0 ? 1 : -1],
+		direction = [for(i=[0:1:len(faces)-1]) _facenormal(vertices, faces[i])*faces_normals[1][i]>0 ? 1 : -1],
 		maxvertex = len(vertices),
-		newpts = [for(i=[0:len(faces)-1]) mean(select(vertices,faces[i]))+stellate*scalefactor*faces_normals[1][i]],
-		newfaces = [for(i=[0:len(faces)-1], j=[0:len(faces[i])-1]) concat([i+maxvertex],select(faces[i], [j, j+direction[i]]))],
+		newpts = [for(i=[0:1:len(faces)-1]) mean(select(vertices,faces[i]))+stellate*scalefactor*faces_normals[1][i]],
+		newfaces = [for(i=[0:1:len(faces)-1], j=[0:len(faces[i])-1]) concat([i+maxvertex],select(faces[i], [j, j+direction[i]]))],
 		allpts = concat(vertices, newpts),
 		normals = [for(face=newfaces) _facenormal(allpts,face)]
 	) [newfaces, normals, allpts];
@@ -744,8 +744,8 @@ function trapezohedron(faces, r, side, longside, h) =
 			!is_undef(side) ? sqrt((sqr(separation) - sqr(side))/2/(cos(180/N)-1)) :
 			sqrt(sqr(longside) - sqr(h-separation/2))
 		),
-		top = [for(i=[0:N-1]) [r*cos(360/N*i), r*sin(360/N*i),separation/2]],
-		bot = [for(i=[0:N-1]) [r*cos(180/N+360/N*i), r*sin(180/N+360/N*i),-separation/2]],
+		top = [for(i=[0:1:N-1]) [r*cos(360/N*i), r*sin(360/N*i),separation/2]],
+		bot = [for(i=[0:1:N-1]) [r*cos(180/N+360/N*i), r*sin(180/N+360/N*i),-separation/2]],
 		vertices = concat([[0,0,h],[0,0,-h]],top,bot)
 	) [
 		"trapezohedron", "trapezohedron", faces, [4],

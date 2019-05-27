@@ -31,7 +31,7 @@ function hex_offset_ring(d, lev=0) =
 	(lev == 0)? [[0,0]] : [
 		for (
 			sideang = [0:60:359.999],
-			sidenum = [1:lev]
+			sidenum = [1:1:lev]
 		) [
 			lev*d*cos(sideang)+sidenum*d*cos(sideang+120),
 			lev*d*sin(sideang)+sidenum*d*sin(sideang+120)
@@ -93,8 +93,8 @@ module wiring(path, wires, wirediam=2, rounding=10, wirenum=0, bezsteps=12) {
 	poly = simplify3d_path(path3d(bezier_polyline(bezpath, bezsteps)));
 	n = max(segs(wirediam), 8);
 	r = wirediam/2;
-	for (i = [0:wires-1]) {
-		extpath = [for (j = [0:n-1]) let(a=j*360/n) [r*cos(a)+offsets[i][0], r*sin(a)+offsets[i][1]]];
+	for (i = [0:1:wires-1]) {
+		extpath = [for (j = [0:1:n-1]) let(a=j*360/n) [r*cos(a)+offsets[i][0], r*sin(a)+offsets[i][1]]];
 		color(colors[(i+wirenum)%len(colors)]) {
 			extrude_2dpath_along_3dpath(extpath, poly);
 		}

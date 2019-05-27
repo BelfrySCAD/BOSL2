@@ -214,7 +214,7 @@ module gear2d(
 	r = root_radius(mm_per_tooth, number_of_teeth, clearance, interior);
 	ang = 360/number_of_teeth/2;
 	union() {
-		for (i = [0:number_of_teeth-teeth_to_hide-1] ) {
+		for (i = [0:1:number_of_teeth-teeth_to_hide-1] ) {
 			rotate(i*360/number_of_teeth) {
 				translate([0,r,0]) {
 					gear_tooth_profile(
@@ -404,7 +404,7 @@ module rack(
 	orient_and_anchor([l, 2*abs(a-height), thickness], orient, anchor, spin=spin, anchors=anchors, chain=true) {
 		left((number_of_teeth-1)*mm_per_tooth/2) {
 			linear_extrude(height = thickness, center = true, convexity = 10) {
-				for (i = [0:number_of_teeth-1] ) {
+				for (i = [0:1:number_of_teeth-1] ) {
 					translate([i*mm_per_tooth,0,0]) {
 						polygon(
 							points=[

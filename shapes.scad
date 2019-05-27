@@ -898,7 +898,7 @@ module staggered_sphere(r=undef, d=undef, circum=false, anchor=CENTER, spin=0, o
 	pts = concat(
 		[[0,0,rr]],
 		[
-			for (p = [1:vsides-2], t = [0:sides-1]) let(
+			for (p = [1:1:vsides-2], t = [0:1:sides-1]) let(
 				ta = (t+(p%2/2))*step,
 				pa = p*vstep
 			) spherical_to_xyz(rr, ta, pa)
@@ -908,13 +908,13 @@ module staggered_sphere(r=undef, d=undef, circum=false, anchor=CENTER, spin=0, o
 	pcnt = len(pts);
 	faces = concat(
 		[
-			for (i = [1:sides]) each [
+			for (i = [1:1:sides]) each [
 				[0, i%sides+1, i],
 				[pcnt-1, pcnt-1-(i%sides+1), pcnt-1-i]
 			]
 		],
 		[
-			for (p = [0:vsides-4], i = [0:sides-1]) let(
+			for (p = [0:1:vsides-4], i = [0:1:sides-1]) let(
 				b1 = 1+p*sides,
 				b2 = 1+(p+1)*sides,
 				v1 = b1+i,

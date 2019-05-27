@@ -140,10 +140,10 @@ module trapezoidal_threaded_rod(
 	poly_points = concat(
 		[
 			for (
-				start  = [0 : starts-1],
-				part   = [0 : parts-1],
-				thread = [0 : threads-1],
-				astep  = [0 : asteps-1]
+				start  = [0:1:starts-1],
+				part   = [0:1:parts-1],
+				thread = [0:1:threads-1],
+				astep  = [0:1:asteps-1]
 			) let (
 				ppt = profile[part] * pitch,
 				dz = ppt.x,
@@ -161,10 +161,10 @@ module trapezoidal_threaded_rod(
 		// Thread surfaces
 		[
 			for (
-				start  = [0 : starts-1],
-				part   = [0 : parts-2],
-				thread = [0 : threads-1],
-				astep  = [0 : asteps-1],
+				start  = [0:1:starts-1],
+				part   = [0:1:parts-2],
+				thread = [0:1:threads-1],
+				astep  = [0:1:asteps-1],
 				trinum = [0, 1]
 			) let (
 				p0 = _thread_pt(thread, threads, start, starts, astep, asteps, part, parts),
@@ -179,9 +179,9 @@ module trapezoidal_threaded_rod(
 		// Thread trough bottom
 		[
 			for (
-				start  = [0 : starts-1],
-				thread = [0 : threads-1],
-				astep  = [0 : asteps-1],
+				start  = [0:1:starts-1],
+				thread = [0:1:threads-1],
+				astep  = [0:1:asteps-1],
 				trinum = [0, 1]
 			) let (
 				p0 = _thread_pt(thread, threads, start, starts, astep, asteps, parts-1, parts),
@@ -199,8 +199,8 @@ module trapezoidal_threaded_rod(
 		// top and bottom thread endcap
 		[
 			for (
-				start  = [0 : starts-1],
-				part   = [1 : parts-2],
+				start  = [0:1:starts-1],
+				part   = [1:1:parts-2],
 				is_top = [0, 1]
 			) let (
 				astep = is_top? asteps-1 : 0,
@@ -215,7 +215,7 @@ module trapezoidal_threaded_rod(
 		// body side triangles
 		[
 			for (
-				start  = [0 : starts-1],
+				start  = [0:1:starts-1],
 				is_top = [false, true],
 				trinum = [0, 1]
 			) let (
@@ -237,8 +237,8 @@ module trapezoidal_threaded_rod(
 		// Caps
 		[
 			for (
-				start  = [0 : starts-1],
-				astep  = [0 : asteps/starts-1],
+				start  = [0:1:starts-1],
+				astep  = [0:1:asteps/starts-1],
 				is_top = [0, 1]
 			) let (
 				thread = is_top? threads-1 : 0,

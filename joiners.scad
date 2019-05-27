@@ -338,7 +338,7 @@ module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, scr
 	}
 	orient_and_anchor([spacing+w, 2*l, h], orient, anchor, spin=spin) {
 		left((n-1)*spacing/2) {
-			for (i=[0:n-1]) {
+			for (i=[0:1:n-1]) {
 				right(i*spacing) {
 					yrot(180 + (alternate? (i*180+(alternate=="alt"?180:0))%360 : 0)) {
 						joiner(h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides, slop=slop);

@@ -74,7 +74,7 @@ function square(size, center=undef, anchor=FRONT+LEFT, spin=0) =
 module circle(r=undef, d=undef, anchor=CENTER, spin=0) {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
-	pts = [for (a=[0:360/sides:360-EPSILON]) r*[cos(a),sin(a)]];
+	pts = [for (i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]];
 	orient_and_anchor([2*r,2*r,0], UP, anchor, spin=spin, geometry="cylinder", two_d=true, chain=true) {
 		polygon(pts);
 		children();

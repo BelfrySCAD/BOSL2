@@ -34,9 +34,9 @@
 //   replist(0, [2,2,3]);  // Returns [[[0,0,0],[0,0,0]], [[0,0,0],[0,0,0]]]
 //   replist([1,2,3],3);   // Returns [[1,2,3], [1,2,3], [1,2,3]]
 function replist(val, n, i=0) =
-	is_num(n)? [for(j=[1:n]) val] :
+	is_num(n)? [for(j=[1:1:n]) val] :
 	(i>=len(n))? val :
-	[for (j=[1:n[i]]) replist(val, n, i+1)];
+	[for (j=[1:1:n[i]]) replist(val, n, i+1)];
 
 
 // Function: in_list()
@@ -69,7 +69,7 @@ function in_list(x,l,idx=undef) = search([x], l, num_returns_per_match=1, index_
 function slice(arr,st,end) = let(
 		s=st<0?(len(arr)+st):st,
 		e=end<0?(len(arr)+end+1):end
-	) (s==e)? [] : [for (i=[s:e-1]) if (e>s) arr[i]];
+	) [for (i=[s:1:e-1]) if (e>s) arr[i]];
 
 
 // Function: select()
@@ -106,8 +106,8 @@ function select(list, start, end=undef) =
 	) : (
 		let(s=(start%l+l)%l, e=(end%l+l)%l)
 		(s<=e)?
-			[for (i = [s:e]) list[i]] :
-			concat([for (i = [s:l-1]) list[i]], [for (i = [0:e]) list[i]])
+			[for (i = [s:1:e]) list[i]] :
+			concat([for (i = [s:1:l-1]) list[i]], [for (i = [0:1:e]) list[i]])
 	);
 
 
@@ -136,8 +136,8 @@ function select(list, start, end=undef) =
 //   list_range(s=4, e=8, step=2);   // Returns [4,6,8]
 //   list_range(n=4, s=[3,4], step=[2,3]);  // Returns [[3,4], [5,7], [7,10], [9,13]]
 function list_range(n=undef, s=0, e=undef, step=1) =
-	(n!=undef && e!=undef)? [for (i=[0:n-1]) let(v=s+step*i) if (v<=e) v] :
-	(n!=undef)? [for (i=[0:n-1]) let(v=s+step*i) v] :
+	(n!=undef && e!=undef)? [for (i=[0:1:n-1]) let(v=s+step*i) if (v<=e) v] :
+	(n!=undef)? [for (i=[0:1:n-1]) let(v=s+step*i) v] :
 	(e!=undef)? [for (v=[s:step:e]) v] :
 	assert(e!=undef||n!=undef, "Must supply one of `n` or `e`.");
 
@@ -160,7 +160,7 @@ function reverse(list) = [ for (i = [len(list)-1 : -1 : 0]) list[i] ];
 //   list = The list to remove items from.
 //   elements = The list of indexes of items to remove.
 function list_remove(list, elements) = [
-	for (i = [0:len(list)-1]) if (!search(i, elements)) list[i]
+	for (i = [0:1:len(list)-1]) if (!search(i, elements)) list[i]
 ];
 
 
@@ -173,7 +173,7 @@ function list_insert(list, pos, elements) =
 	concat(
 		slice(list,0,pos),
 		elements,
-		(pos<len(list)? slide(list,pos,-1) : [])
+		(pos<len(list)? slice(list,pos,-1) : [])
 	);
 
 
@@ -203,7 +203,7 @@ function list_longest(vecs) =
 //   minlen = The minimum length to pad the list to.
 //   fill = The value to pad the list with.
 function list_pad(v, minlen, fill=undef) =
-	let(l=len(v)) [for (i=[0:max(l,minlen)-1]) i<l? v[i] : fill];
+	let(l=len(v)) [for (i=[0:1:max(l,minlen)-1]) i<l? v[i] : fill];
 
 
 // Function: list_trim()
@@ -213,7 +213,7 @@ function list_pad(v, minlen, fill=undef) =
 //   v = A list.
 //   minlen = The minimum length to pad the list to.
 function list_trim(v, maxlen) =
-	maxlen<1? [] : [for (i=[0:min(len(v),maxlen)-1]) v[i]];
+	maxlen<1? [] : [for (i=[0:1:min(len(v),maxlen)-1]) v[i]];
 
 
 // Function: list_fit()
@@ -242,8 +242,8 @@ function list_fit(v, length, fill) =
 function enumerate(l,idx=undef) =
 	(l==[])? [] :
 	(idx==undef)?
-		[for (i=[0:len(l)-1]) [i,l[i]]] :
-		[for (i=[0:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
+		[for (i=[0:1:len(l)-1]) [i,l[i]]] :
+		[for (i=[0:1:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
 
 
 // Function: sort()
@@ -268,9 +268,9 @@ function sort(arr, idx=undef) =
 				cmp = compare_vals(val, pivotval)
 			) cmp
 		],
-		lesser  = [ for (i = [0:len(arr)-1]) if (compare[i] < 0) arr[i] ],
-		equal   = [ for (i = [0:len(arr)-1]) if (compare[i] ==0) arr[i] ],
-		greater = [ for (i = [0:len(arr)-1]) if (compare[i] > 0) arr[i] ]
+		lesser  = [ for (i = [0:1:len(arr)-1]) if (compare[i] < 0) arr[i] ],
+		equal   = [ for (i = [0:1:len(arr)-1]) if (compare[i] ==0) arr[i] ],
+		greater = [ for (i = [0:1:len(arr)-1]) if (compare[i] > 0) arr[i] ]
 	)
 	concat(sort(lesser,idx), equal, sort(greater,idx));
 
@@ -316,7 +316,7 @@ function unique(arr) =
 	len(arr)<=1? arr : let(
 		sorted = sort(arr)
 	) [
-		for (i=[0:len(sorted)-1])
+		for (i=[0:1:len(sorted)-1])
 			if (i==0 || (sorted[i] != sorted[i-1]))
 				sorted[i]
 	];
@@ -353,7 +353,7 @@ function subindex(v, idx) = [
 // Example:
 //   l = ["A","B","C",D"];
 //   echo([for (p=pair(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC"]
-function pair(v) = [for (i=[0:len(v)-2]) [v[i],v[i+1]]];
+function pair(v) = [for (i=[0:1:len(v)-2]) [v[i],v[i+1]]];
 
 
 // Function: pair_wrap()
@@ -364,7 +364,7 @@ function pair(v) = [for (i=[0:len(v)-2]) [v[i],v[i+1]]];
 // Example:
 //   l = ["A","B","C",D"];
 //   echo([for (p=pair_wrap(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC", "AD"]
-function pair_wrap(v) = [for (i=[0:len(v)-1]) [v[i],v[(i+1)%len(v)]]];
+function pair_wrap(v) = [for (i=[0:1:len(v)-1]) [v[i],v[(i+1)%len(v)]]];
 
 
 // Function: zip()
@@ -402,8 +402,8 @@ function zip(vecs, v2, v3, fit=false, fill=undef) =
 		maxlen = list_longest(vecs),
 		dummy2 = (fit==false)? assert(minlen==maxlen, "Input vectors must have the same length") : 0
 	) (fit == "long")?
-		[for(i=[0:maxlen-1]) [for(v=vecs) for(x=(i<len(v)? v[i] : (fill==undef)? [fill] : fill)) x] ] :
-		[for(i=[0:minlen-1]) [for(v=vecs) for(x=v[i]) x] ];
+		[for(i=[0:1:maxlen-1]) [for(v=vecs) for(x=(i<len(v)? v[i] : (fill==undef)? [fill] : fill)) x] ] :
+		[for(i=[0:1:minlen-1]) [for(v=vecs) for(x=v[i]) x] ];
 
 
 
@@ -420,7 +420,7 @@ function zip(vecs, v2, v3, fit=false, fill=undef) =
 //   array_group(v,2) returns [[1,2], [3,4], [5,6]]
 //   array_group(v,3) returns [[1,2,3], [4,5,6]]
 //   array_group(v,4,0) returns [[1,2,3,4], [5,6,0,0]]
-function array_group(v, cnt=2, dflt=0) = [for (i = [0:cnt:len(v)-1]) [for (j = [0:cnt-1]) default(v[i+j], dflt)]];
+function array_group(v, cnt=2, dflt=0) = [for (i = [0:cnt:len(v)-1]) [for (j = [0:1:cnt-1]) default(v[i+j], dflt)]];
 
 
 // Function: flatten()
@@ -508,7 +508,7 @@ function array_dim(v, depth=undef) =
 //   transpose([3,4,5]);  // Returns: [3,4,5]
 function transpose(arr) =
 	arr==[]? [] :
-	is_list(arr[0])? [for (i=[0:len(arr[0])-1]) [for (j=[0:len(arr)-1]) arr[j][i]]] : arr;
+	is_list(arr[0])? [for (i=[0:1:len(arr[0])-1]) [for (j=[0:1:len(arr)-1]) arr[j][i]]] : arr;
 
 
 

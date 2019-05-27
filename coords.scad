@@ -86,7 +86,7 @@ function translate_points(pts, v=[0,0,0]) = [for (pt = pts) pt+v];
 //   pts = List of points to scale.
 //   v = A vector with a scaling factor for each axis.
 //   cp = Centerpoint to scale around.
-function scale_points(pts, v=[0,0,0], cp=[0,0,0]) = [for (pt = pts) [for (i = [0:len(pt)-1]) (pt[i]-cp[i])*v[i]+cp[i]]];
+function scale_points(pts, v=[0,0,0], cp=[0,0,0]) = [for (pt = pts) [for (i = [0:1:len(pt)-1]) (pt[i]-cp[i])*v[i]+cp[i]]];
 
 
 // Function: rotate_points2d()

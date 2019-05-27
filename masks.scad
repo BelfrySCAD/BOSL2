@@ -565,8 +565,8 @@ module rounding_angled_edge_mask(h=1.0, r=1.0, ang=90, anchor=CENTER, spin=0, or
 		linear_extrude(height=h, convexity=4, center=true) {
 			polygon(
 				points=concat(
-					[for (i = [0:n]) let (a=90+ang+i*sweep/n) [r*cos(a)+x, r*sin(a)+r]],
-					[for (i = [0:n]) let (a=90+i*sweep/n) [r*cos(a)+x, r*sin(a)-r]],
+					[for (i = [0:1:n]) let (a=90+ang+i*sweep/n) [r*cos(a)+x, r*sin(a)+r]],
+					[for (i = [0:1:n]) let (a=90+i*sweep/n) [r*cos(a)+x, r*sin(a)-r]],
 					[
 						[min(-1, r*cos(270-ang)+x-1), r*sin(270-ang)-r],
 						[min(-1, r*cos(90+ang)+x-1), r*sin(90+ang)+r],

@@ -154,7 +154,7 @@ function round_corners(path, curve, type, all=undef,  closed=true) =
 		// dk will be a list of parameters, for the "smooth" type the distance and curvature parameter pair,
 		// and for the circle type, distance and radius.  
 		dk = [
-			for(i=[0:len(points)-1]) let(  
+			for(i=[0:1:len(points)-1]) let(  
 				angle = pathangle(select(points,i-1,i+1))/2,
 				parm0 = is_list(parm[i]) ? parm[i][0] : parm[i],
 				k = (curve=="circle" && type=="radius")? parm0 :
@@ -167,9 +167,9 @@ function round_corners(path, curve, type, all=undef,  closed=true) =
 			(curve=="smooth" && type=="joint")? [parm0,k] :
 			[8*parm0/cos(angle)/(1+4*k),k]
 		],
-		lengths = [for(i=[0:len(points)]) norm(select(points,i)-select(points,i-1))],
+		lengths = [for(i=[0:1:len(points)]) norm(select(points,i)-select(points,i-1))],
 		scalefactors = [
-			for(i=[0:len(points)-1])
+			for(i=[0:1:len(points)-1])
 				min(
 					lengths[i]/sum(subindex(select(dk,i-1,i),0)),
 					lengths[i+1]/sum(subindex(select(dk,i,i+1),0))
@@ -179,7 +179,7 @@ function round_corners(path, curve, type, all=undef,  closed=true) =
 	echo("Roundover scale factors:",scalefactors)
 	assert(min(scalefactors)>=1,"Curves are too big for the path")
 	[
-		for(i=[0:len(points)-1]) each
+		for(i=[0:1:len(points)-1]) each
 			(dk[i][0] == 0)? [points[i]] :
 			(curve=="smooth")? bezcorner(select(points,i-1,i+1), dk[i]) :
 			circlecorner(select(points,i-1,i+1), dk[i])
@@ -235,7 +235,7 @@ function circular_arc(center, p1, p2, N) =
 		)
 		assert(dir != 0, "Colinear inputs don't define a unique arc")
 		[
-			for(i=[0:N-1]) let(
+			for(i=[0:1:N-1]) let(
 				theta=atan2(v1.y,v1.x)+i*dir*angle/(N-1)
 			) r*[cos(theta),sin(theta)]+center
 		]
@@ -243,14 +243,14 @@ function circular_arc(center, p1, p2, N) =
 		let(axis = cross(v1,v2))
 		assert(axis != [0,0,0], "Colinear inputs don't define a unique arc")
 		[
-			for(i=[0:N-1])
+			for(i=[0:1:N-1])
 				matrix3_rot_by_axis(axis, i*angle/(N-1)) * v1 + center
 		]
 	);
 
 
 function bezier_curve(P,N) =
-   [for(i=[0:N-1]) bez_point(P, i/(N-1))];
+   [for(i=[0:1:N-1]) bez_point(P, i/(N-1))];
 
 
 function pathangle(pts) = vector_angle(pts[0]-pts[1], pts[2]-pts[1]);

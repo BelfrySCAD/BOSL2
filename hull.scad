@@ -57,7 +57,7 @@ module hull_points(points, fast=false) {
 			} else {
 				extra = len(points)%3;
 				faces = concat(
-					[[for(i=[0:extra+2])i]],
+					[[for(i=[0:1:extra+2])i]],
 					[for(i=[extra+3:3:len(points)-3])[i,i+1,i+2]]
 				);
 				hull() polyhedron(points=points, faces=faces);
@@ -90,7 +90,7 @@ function hull2d_path(points) =
 		a=0, b=1,
 		c = _find_first_noncollinear([a,b], points, 2)
 	) (c == len(points))? _hull2d_collinear(points) : let(
-		remaining = [ for (i = [2:len(points)-1]) if (i != c) i ],
+		remaining = [ for (i = [2:1:len(points)-1]) if (i != c) i ],
 		ccw = triangle_area2d(points[a], points[b], points[c]) > 0,
 		polygon = ccw? [a,b,c] : [a,c,b]
 	) _hull2d_iterative(points, polygon, remaining);
@@ -127,7 +127,7 @@ function _find_first_noncollinear(line, points, i) =
 
 
 function _find_conflicting_segments(points, polygon, point) = [
-	for (i = [0:len(polygon)-1]) let(
+	for (i = [0:1:len(polygon)-1]) let(
 		j = (i+1) % len(polygon),
 		p1 = points[polygon[i]],
 		p2 = points[polygon[j]],
@@ -139,12 +139,12 @@ function _find_conflicting_segments(points, polygon, point) = [
 // remove the conflicting segments from the polygon
 function _remove_conflicts_and_insert_point(polygon, conflicts, point) = 
 	(conflicts[0] == 0)? let(
-		nonconflicting = [ for(i = [0:len(polygon)-1]) if (!in_list(i, conflicts)) i ],
+		nonconflicting = [ for(i = [0:1:len(polygon)-1]) if (!in_list(i, conflicts)) i ],
 		new_indices = concat(nonconflicting, (nonconflicting[len(nonconflicting)-1]+1) % len(polygon)),
 		polygon = concat([ for (i = new_indices) polygon[i] ], point)
 	) polygon : let(
-		before_conflicts = [ for(i = [0:min(conflicts)]) polygon[i] ],
-		after_conflicts  = (max(conflicts) >= (len(polygon)-1))? [] : [ for(i = [max(conflicts)+1:len(polygon)-1]) polygon[i] ],
+		before_conflicts = [ for(i = [0:1:min(conflicts)]) polygon[i] ],
+		after_conflicts  = (max(conflicts) >= (len(polygon)-1))? [] : [ for(i = [max(conflicts)+1:1:len(polygon)-1]) polygon[i] ],
 		polygon = concat(before_conflicts, point, after_conflicts)
 	) polygon;
 
@@ -176,7 +176,7 @@ function hull3d_faces(points) =
 		pts2d = [ for (p = points) xyz_to_planar(p, points[a], points[b], points[c]) ],
 		hull2d = hull2d_path(pts2d)
 	) hull2d : let(
-		remaining = [for (i = [3:len(points)-1]) if (i != d) i],
+		remaining = [for (i = [3:1:len(points)-1]) if (i != d) i],
 		// Build an initial tetrahedron.
 		// Swap b, c if d is in front of triangle t.
 		ifop = in_front_of_plane(plane, points[d]),
@@ -232,7 +232,7 @@ function _remove_internal_edges(halfedges) = [
 
 
 function _find_conflicts(point, planes) = [
-	for (i = [0:len(planes)-1])
+	for (i = [0:1:len(planes)-1])
 		if (in_front_of_plane(planes[i], point))
 			i
 ];

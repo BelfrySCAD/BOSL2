@@ -229,7 +229,7 @@ function in_front_of_plane(plane, point) =
 //   eps = Largest positional variance allowed.  Default: `EPSILON` (1-e9)
 function simplify_path(path, eps=EPSILON) =
 	len(path)<=2? path : let(
-		indices = concat([0], [for (i=[1:len(path)-2]) if (!collinear_indexed(path, i-1, i, i+1, eps=eps)) i], [len(path)-1])
+		indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(path, i-1, i, i+1, eps=eps)) i], [len(path)-1])
 	) [for (i = indices) path[i]];
 
 
@@ -246,7 +246,7 @@ function simplify_path(path, eps=EPSILON) =
 //   eps = Largest angle variance allowed.  Default: EPSILON (1-e9) degrees.
 function simplify_path_indexed(points, path, eps=EPSILON) =
 	len(path)<=2? path : let(
-		indices = concat([0], [for (i=[1:len(path)-2]) if (!collinear_indexed(points, path[i-1], path[i], path[i+1], eps=eps)) i], [len(path)-1])
+		indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(points, path[i-1], path[i], path[i+1], eps=eps)) i], [len(path)-1])
 	) [for (i = indices) path[i]];
 
 
@@ -269,9 +269,9 @@ function simplify_path_indexed(points, path, eps=EPSILON) =
 //   path = The list of 2D path points forming the perimeter of the polygon.
 function point_in_polygon(point, path) =
 	// Does the point lie on any edges?  If so return 0. 
-	sum([for(i=[0:len(path)-1]) point_on_segment2d(point, select(path, i, i+1))?1:0])>0 ? 0 : 
+	sum([for(i=[0:1:len(path)-1]) point_on_segment2d(point, select(path, i, i+1))?1:0])>0 ? 0 : 
 	// Otherwise compute winding number and return 1 for interior, -1 for exterior
-	sum([for(i=[0:len(path)-1]) _point_above_below_segment(point, select(path, i, i+1))]) != 0 ? 1 : -1;
+	sum([for(i=[0:1:len(path)-1]) _point_above_below_segment(point, select(path, i, i+1))]) != 0 ? 1 : -1;
 
 
 // Function: pointlist_bounds()

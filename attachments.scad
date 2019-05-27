@@ -280,7 +280,7 @@ module orient_and_anchor(
 		{
 			if ($children>1 && chain) {
 				if(shown && !hidden) {
-					color($color) for (i=[0:$children-2]) children(i);
+					color($color) for (i=[0:1:$children-2]) children(i);
 				}
 				children($children-1);
 			} else {
@@ -294,7 +294,7 @@ module orient_and_anchor(
 		{
 			if ($children>1 && chain) {
 				if(shown && !hidden) {
-					color($color) for (i=[0:$children-2]) children(i);
+					color($color) for (i=[0:1:$children-2]) children(i);
 				}
 				children($children-1);
 			} else {
