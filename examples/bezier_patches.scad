@@ -104,9 +104,9 @@ module CR_cube(size=[100,100,100], r=10, splinesteps=8, cheat=false, debug=false
 		hull() bezier_polyhedron(patches=corners, splinesteps=splinesteps);
 	} else {
 		if (debug) {
-			trace_bezier_patches(patches=concat(edges, faces), tris=corners, showcps=true, splinesteps=splinesteps);
+			trace_bezier_patches(patches=concat(edges, faces, corners), showcps=true, splinesteps=splinesteps);
 		} else {
-			bezier_polyhedron(patches=concat(edges, faces), tris=corners, splinesteps=splinesteps);
+			bezier_polyhedron(patches=concat(edges, faces, corners), splinesteps=splinesteps);
 		}
 	}
 }
