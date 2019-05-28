@@ -300,6 +300,59 @@ function product(v, i=0, tot=undef) = i>=len(v)? tot : product(v, i+1, ((tot==un
 function mean(v) = sum(v)/len(v);
 
 
+// Function: det2()
+// Description:
+//   Optimized function that returns the determinant for the given 2x2 square matrix.
+// Arguments:
+//   M = The 2x2 square matrix to get the determinant of.
+// Example:
+//   M = [ [6,-2], [1,8] ];
+//   det = det3(M);  // Returns: 50
+function det2(M) = M[0][0] * M[1][1] - M[0][1]*M[1][0];
+
+
+// Function: det3()
+// Description:
+//   Optimized function that returns the determinant for the given 3x3 square matrix.
+// Arguments:
+//   M = The 3x3 square matrix to get the determinant of.
+// Example:
+//   M = [ [6,4,-2], [1,-2,8], [1,5,7] ];
+//   det = det3(M);  // Returns: -334
+function det3(M) =
+	M[0][0] * (M[1][1]*M[2][2]-M[2][1]*M[1][2]) -
+	M[1][0] * (M[0][1]*M[2][2]-M[2][1]*M[0][2]) +
+	M[2][0] * (M[0][1]*M[1][2]-M[1][1]*M[0][2]);
+
+
+// Function: determinant()
+// Description:
+//   Returns the determinant for the given square matrix.
+// Arguments:
+//   M = The NxN square matrix to get the determinant of.
+// Example:
+//   M = [ [6,4,-2,9], [1,-2,8,3], [1,5,7,6], [4,2,5,1] ];
+//   det = determinant(M);  // Returns: 2267
+function determinant(M) =
+	assert(len(M)==len(M[0]))
+	len(M)==1? M[0][0] :
+	len(M)==2? det2(M) :
+	len(M)==3? det3(M) :
+	sum(
+		[for (col=[0:1:len(M)-1])
+			((col%2==0)? 1 : -1) *
+			M[col][0] *
+			determinant(
+				[for (r=[1:1:len(M)-1])
+					[for (c=[0:1:len(M)-1])
+						if (c!=col) M[c][r]
+					]
+				]
+			)
+		]
+	);
+
+
 // Section: Comparisons and Logic
 
 
