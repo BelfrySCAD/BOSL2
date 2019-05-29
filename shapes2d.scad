@@ -113,6 +113,120 @@ module pie_slice2d(r=undef, d=undef, ang=30) {
 }
 
 
+// Function&Module: arc()
+// Usage: 2D arc from 0º to `angle` degrees.
+//   arc(N, r|d, angle);
+// Usage: 2D arc from START to END degrees.
+//   arc(N, r|d, angle=[START,END])
+// Usage: 2D arc from `start` to `start+angle` degrees.
+//   arc(N, r|d, start, angle)
+// Usage: 2D circle segment by `width` and `thickness`, starting and ending on the X axis.
+//   arc(N, width, thickness)
+// Usage: Shortest 2d or 3d arc around centerpoint `cp`, starting at P0 and ending on the vector pointing from `cp` to `P1`.
+//   arc(N, cp, points=[P0,P1])
+// Usage: 2D or 3D arc, starting at `P0`, passing through `P1` and ending at `P2`.
+//   arc(N, points=[P0,P1,P2])
+// Description:
+//   If called as a function, returns a 2D or 3D path forming an arc.
+//   If called as a module, creates a 2D arc polygon or pie slice shape.
+// Arguments:
+//   N = Number of line segments to form the arc curve from.
+//   r = Radius of the arc.
+//   d = Diameter of the arc.
+//   angle = If a scalar, specifies the end angle in degrees.  If a vector of two scalars, specifies start and end angles.
+//   cp = Centerpoint of arc.
+//   points = Points on the arc.
+//   width = If given with `thickness`, arc starts and ends on X axis, to make a circle segment.
+//   thickness = If given with `width`, arc starts and ends on X axis, to make a circle segment.
+//   start = Start angle of arc.
+//   wedge = If true, include centerpoint `cp` in output to form pie slice shape.
+// Examples(2D):
+//   arc(N=8, r=30, angle=30, wedge=true);
+//   arc(N=8, d=60, angle=30, wedge=true);
+//   arc(N=12, d=60, angle=120);
+//   arc(N=12, d=60, angle=120, wedge=true);
+//   arc(N=12, r=30, angle=[75,135], wedge=true);
+//   arc(N=12, r=30, start=45, angle=75, wedge=true);
+//   arc(N=24, width=60, thickness=20);
+//   arc(N=12, cp=[-10,5], points=[[20,10],[0,35]], wedge=true);
+//   arc(N=12, points=[[30,-5],[20,10],[-10,20]], wedge=true);
+// Example(FlatSpin):
+//   include <BOSL2/paths.scad>
+//   path = arc(N=12, points=[[0,30,0],[0,0,30],[30,0,0]]);
+//   trace_polyline(path, showpts=true, color="cyan");
+module arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false)
+{
+	path = arc(N=N, r=r, angle=angle, d=d, cp=cp, points=points, width=width, thickness=thickness, start=start, wedge=wedge);
+	polygon(path);
+}
+
+
+function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false) =
+	// First try for 2d arc specified by angles
+	is_def(width) && is_def(thickness)? (
+		arc(N,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge)
+	) : is_def(angle)? (
+		let(
+			parmok = is_undef(points) && is_undef(width) && is_undef(thickness) &&
+				((is_vector(angle) && len(angle)==2 && is_undef(start)) || is_num(angle))
+		)
+		assert(parmok,"Invalid parameters in arc")
+		let(
+			cp = is_def(cp) ? cp : [0,0], 
+			start = is_def(start)? start : is_vector(angle) ? angle[0] : 0,
+			angle = is_vector(angle)? angle[1]-angle[0] : angle,
+			r = get_radius(r=r,d=d),
+			N = max(3,N),
+			arcpoints = [for(i=[0:N-1]) let(theta = start + i*angle/(N-1)) r*[cos(theta),sin(theta)]+cp],
+			extra = wedge? [cp] : []
+		)
+		concat(extra,arcpoints)
+	) :
+	assert(is_list(points),"Invalid parameters")
+	// Arc is 3d, so transform points to 2d and make a recursive call, then remap back to 3d
+	len(points[0])==3? (
+		let(
+			thirdpoint = is_def(cp) ? cp : points[2],
+			center2d = is_def(cp) ? project_plane(cp,thirdpoint,points[0],points[1]) : undef,
+			points2d = project_plane(points,thirdpoint,points[0],points[1])
+		)
+		lift_plane(arc(N,cp=center2d,points=points2d,wedge=wedge),thirdpoint,points[0],points[1])
+	) : is_def(cp)? (
+		// Arc defined by center plus two points, will have radius defined by center and points[0]
+		// and extent defined by direction of point[1] from the center
+		let(
+			angle = vector_angle(points[0], cp, points[1]),
+			v1 = points[0]-cp,
+			v2 = points[1]-cp,
+			dir = sign(det2([v1,v2])),   // z component of cross product
+			r=norm(v1)
+		)
+		assert(dir!=0,"Collinear inputs don't define a unique arc")
+		arc(N,cp=cp,r=r,start=atan2(v1.y,v1.x),angle=dir*angle,wedge=wedge)
+	) : (
+		// Final case is arc passing through three points, starting at point[0] and ending at point[3]
+		let(col = collinear(points[0],points[1],points[2],1e-3))
+		assert(!col, "Collinear inputs do not define an arc")
+		let(
+			cp = line_intersection(_normal_segment(points[0],points[1]),_normal_segment(points[1],points[2])),
+			// select order to be counterclockwise
+			dir = det2([points[1]-points[0],points[2]-points[1]]) > 0,
+			points = dir? select(points,[0,2]) : select(points,[2,0]),  
+			r = norm(points[0]-cp),
+			theta_start = atan2(points[0].y-cp.y, points[0].x-cp.x),
+			theta_end = atan2(points[1].y-cp.y, points[1].x-cp.x),
+			angle = posmod(theta_end-theta_start, 360),
+			arcpts = arc(N,cp=cp,r=r,start=theta_start,angle=angle,wedge=wedge)
+		)
+		dir ? arcpts : reverse(arcpts)
+	);
+
+
+function _normal_segment(p1,p2) =
+    let(center = (p1+p2)/2)
+    [center, center + norm(p1-p2)/2 * line_normal(p1,p2)];
+
+
 // Function&Module: trapezoid()
 // Usage:
 //   trapezoid(h, w1, w2);
