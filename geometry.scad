@@ -110,6 +110,72 @@ function distance_from_line(line, pt) =
 
 
 
+// Function: line_normal()
+// Usage:
+//   line_normal([P1,P2])
+//   line_normal(p1,p2)
+// Description: Returns the 2D normal vector to the given 2D line.
+// Arguments:
+//   p1 = First point on 2D line.
+//   p2 = Second point on 2D line.
+function line_normal(p1,p2) =
+	is_undef(p2)? line_normal(p1[0],p1[1]) :
+	normalize([p1.y-p2.y,p2.x-p1.x]);
+
+
+// 2D Line intersection from two segments.
+// This function returns [p,t,u] where p is the intersection point of
+// the lines defined by the two segments, t is the bezier parameter
+// for the intersection point on s1 and u is the bezier parameter for
+// the intersection point on s2.  The bezier parameter runs over [0,1]
+// for each segment, so if it is in this range, then the intersection
+// lies on the segment.  Otherwise it lies somewhere on the extension
+// of the segment.
+function _general_line_intersection(s1,s2) =
+  let(  denominator = det2([s1[0],s2[0]]-[s1[1],s2[1]]),
+        t=det2([s1[0],s2[0]]-s2)/denominator,
+        u=det2([s1[0],s1[0]]-[s1[1],s2[1]])/denominator)
+        [denominator==0 ? undef : s1[0]+t*(s1[1]-s1[0]),t,u];
+
+
+// Function: line_intersection()
+// Usage:
+//   line_intersection(l1, l2);
+// Description:
+//   Returns the 2D intersection point of two unbounded 2D lines.
+//   Returns `undef` if the lines are parallel.
+// Arguments:
+//   l1 = First 2D line, given as a list of two 2D points on the line.
+//   l2 = Second 2D line, given as a list of two 2D points on the line.
+function line_intersection(l1,l2) = let( isect = _general_line_intersection(l1,l2)) isect[0];
+
+
+// Function: segment_intersection()
+// Usage:
+//   segment_intersection(s1, s2);
+// Description:
+//   Returns the 2D intersection point of two 2D line segments.
+//   Returns `undef` if they do not intersect.
+// Arguments:
+//   s1 = First 2D segment, given as a list of the two 2D endpoints of the line segment.
+//   s2 = Second 2D segment, given as a list of the two 2D endpoints of the line segment.
+function segment_intersection(s1,s2) = let( isect = _general_line_intersection(s1,s2))
+        isect[1]<0 || isect[1]>1 || isect[2]<0 || isect[2]>1 ? undef : isect[0];
+
+
+// Function: line_segment_intersection()
+// Usage:
+//   line_segment_intersection(line, segment);
+// Description:
+//   Returns the 2D intersection point of an unbounded 2D line, and a bounded 2D line segment.
+//   Returns `undef` if they do not intersect.
+// Arguments:
+//   line = The unbounded 2D line, defined by two 2D points on the line.
+//   segment = The bounded 2D line  segment, given as a list of the two 2D endpoints of the segment.
+function line_segment_intersection(line,segment) = let(
+		isect = _general_line_intersection(line,segment)
+	) isect[2]<0 || isect[2]>1 ? undef : isect[0];
+
 // Function: triangle_area2d()
 // Usage:
 //   triangle_area2d(a,b,c);
@@ -167,6 +233,14 @@ function plane3pt_indexed(points, i1, i2, i3) =
 		p2 = points[i2],
 		p3 = points[i3]
 	) plane3pt(p1,p2,p3);
+
+
+// Function: plane_normal()
+// Usage:
+//   plane_normal(plane);
+// Description:
+//   Returns the normal vector for the given plane.
+function plane_normal(plane) = [for (i=[0:2]) plane[i]];
 
 
 // Function: distance_from_plane()
@@ -256,8 +330,8 @@ function simplify_path_indexed(points, path, eps=EPSILON) =
 //   point_in_polygon(point, path)
 // Description:
 //   This function tests whether the given point is inside, outside or on the boundary of
-//   the specified polygon using the Winding Number method.
-//   The polygon is given as a list of points, not including the repeated end point.
+//   the specified 2D polygon using the Winding Number method.
+//   The polygon is given as a list of 2D points, not including the repeated end point.
 //   Returns -1 if the point is outside the polyon.
 //   Returns 0 if the point is on the boundary.
 //   Returns 1 if the point lies in the interior.
@@ -278,7 +352,7 @@ function point_in_polygon(point, path) =
 // Usage:
 //   pointlist_bounds(pts);
 // Description:
-//   Finds the bounds containing all the points in pts.
+//   Finds the bounds containing all the 2D or 3D points in `pts`.
 //   Returns [[minx, miny, minz], [maxx, maxy, maxz]]
 // Arguments:
 //   pts = List of points.
@@ -286,6 +360,26 @@ function pointlist_bounds(pts) = [
 	[for (a=[0:2]) min([ for (x=pts) point3d(x)[a] ]) ],
 	[for (a=[0:2]) max([ for (x=pts) point3d(x)[a] ]) ]
 ];
+
+
+// Function: polygon_clockwise()
+// Usage:
+//   polygon_clockwise(path);
+// Description:
+//   Return true if the given 2D simple polygon is in clockwise order, false otherwise.
+//   Results for complex (self-intersecting) polygon are indeterminate.
+// Arguments:
+//   path = The list of 2D path points for the perimeter of the polygon.
+function polygon_clockwise(path) =
+  let( 
+       minx = min(array_subindex(path,0)),
+       lowind = search(minx, path, 0, 0),
+       lowpts = select(path, lowind),
+       miny = min(array_subindex(lowpts, 1)),
+       extreme_sub = search(miny, lowpts, 1, 1)[0],
+       extreme = select(lowind,extreme_sub)
+     )
+  det2(  [select(path,extreme+1)-path[extreme], select(path, extreme-1)-path[extreme]])<0;
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
