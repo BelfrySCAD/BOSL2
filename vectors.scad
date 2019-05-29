@@ -53,9 +53,10 @@ function vabs(v) = [for (x=v) abs(x)];
 // Function: normalize()
 // Description:
 //   Returns unit length normalized version of vector v.
+//   If passed a zero-length vector, returns the unchanged vector.
 // Arguments:
 //   v = The vector to normalize.
-function normalize(v) = v/norm(v);
+function normalize(v) = v==[0,0,0]? v : v/norm(v);
 
 
 // Function: vquant()

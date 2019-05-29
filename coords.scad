@@ -98,7 +98,9 @@ function scale_points(pts, v=[0,0,0], cp=[0,0,0]) = [for (pt = pts) [for (i = [0
 //   pts = List of 3D points to rotate.
 //   ang = Angle to rotate by.
 //   cp = 2D Centerpoint to rotate around.  Default: `[0,0]`
-function rotate_points2d(pts, ang, cp=[0,0]) = let(
+function rotate_points2d(pts, ang, cp=[0,0]) =
+	approx(ang,0)? pts :
+	let(
 		m = affine2d_zrot(ang)
 	) [for (pt = pts) m*point3d(pt-cp)+cp];
 
@@ -155,7 +157,9 @@ function rotate_points3d(pts, a=0, v=undef, cp=[0,0,0], from=undef, to=undef, re
 			)
 		),
 		m = affine3d_translate(cp) * mrot * affine3d_translate(-cp)
-	) [for (pt = pts) point3d(m*concat(point3d(pt),[1]))];
+	) (!is_undef(from) && approx(from,to))? pts :
+	(a==0 || a==[0,0,0])? pts :
+	[for (pt = pts) point3d(m*concat(point3d(pt),[1]))];
 
 
 
