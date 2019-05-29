@@ -355,7 +355,7 @@ class LeafNode(object):
                     argname = argname.strip()
                     argdesc = argdesc.strip()
                     self.arguments.append([argname, argdesc])
-            if line.startswith("Extra Anchors:"):
+            if line.startswith("Extra Anchors:") or line.startswith("Anchors:"):
                 lines, block = get_comment_block(lines, prefix)
                 for line in block:
                     if "=" not in line:
@@ -388,16 +388,17 @@ class LeafNode(object):
         out = []
         if self.name:
             out.append("### " + mkdn_esc(self.name))
+            out.append("**Type:** {0}".format(mkdn_esc(self.leaftype.replace("&","/"))))
             out.append("")
         if self.status:
             out.append("**{0}**".format(mkdn_esc(self.status)))
             out.append("")
         for title, usages in self.usages:
             if not title:
-                title = "Usage"
-            out.append("**{0}**:".format(mkdn_esc(title)))
+                title = ""
+            out.append("**Usage:** {0}".format(mkdn_esc(title)))
             for usage in usages:
-                out.append("- {0}".format(mkdn_esc(usage)))
+                out.append("- ${0}$".format(mkdn_esc(usage)))
             out.append("")
         if self.description:
             out.append("**Description**:")
