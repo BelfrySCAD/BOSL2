@@ -398,7 +398,7 @@ class LeafNode(object):
                 title = ""
             out.append("**Usage:** {0}".format(mkdn_esc(title)))
             for usage in usages:
-                out.append("- ${0}$".format(mkdn_esc(usage)))
+                out.append("- {0}".format(mkdn_esc(usage)))
             out.append("")
         if self.description:
             out.append("**Description**:")
