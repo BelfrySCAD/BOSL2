@@ -372,10 +372,10 @@ function pointlist_bounds(pts) = [
 //   path = The list of 2D path points for the perimeter of the polygon.
 function polygon_clockwise(path) =
   let( 
-       minx = min(array_subindex(path,0)),
+       minx = min(subindex(path,0)),
        lowind = search(minx, path, 0, 0),
        lowpts = select(path, lowind),
-       miny = min(array_subindex(lowpts, 1)),
+       miny = min(subindex(lowpts, 1)),
        extreme_sub = search(miny, lowpts, 1, 1)[0],
        extreme = select(lowind,extreme_sub)
      )
