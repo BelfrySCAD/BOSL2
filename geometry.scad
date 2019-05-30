@@ -159,8 +159,11 @@ function line_intersection(l1,l2) = let( isect = _general_line_intersection(l1,l
 // Arguments:
 //   s1 = First 2D segment, given as a list of the two 2D endpoints of the line segment.
 //   s2 = Second 2D segment, given as a list of the two 2D endpoints of the line segment.
-function segment_intersection(s1,s2) = let( isect = _general_line_intersection(s1,s2))
-        isect[1]<0 || isect[1]>1 || isect[2]<0 || isect[2]>1 ? undef : isect[0];
+function segment_intersection(s1,s2) =
+	let(
+		isect = _general_line_intersection(s1,s2),
+		eps=EPSILON
+	) isect[1]<0-eps || isect[1]>1+eps || isect[2]<0-eps || isect[2]>1+eps ? undef : isect[0];
 
 
 // Function: line_segment_intersection()
@@ -172,9 +175,12 @@ function segment_intersection(s1,s2) = let( isect = _general_line_intersection(s
 // Arguments:
 //   line = The unbounded 2D line, defined by two 2D points on the line.
 //   segment = The bounded 2D line  segment, given as a list of the two 2D endpoints of the segment.
-function line_segment_intersection(line,segment) = let(
-		isect = _general_line_intersection(line,segment)
-	) isect[2]<0 || isect[2]>1 ? undef : isect[0];
+function line_segment_intersection(line,segment) =
+	let(
+		isect = _general_line_intersection(line,segment),
+		eps = EPSILON
+	) isect[2]<0-eps || isect[2]>1+eps ? undef : isect[0];
+
 
 // Function: triangle_area2d()
 // Usage:
