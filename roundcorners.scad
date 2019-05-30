@@ -9,7 +9,7 @@
 //   ```
 //////////////////////////////////////////////////////////////////////
 
-
+include <BOSL2/std.scad>
 include <BOSL2/beziers.scad>
 
 
@@ -155,7 +155,7 @@ function round_corners(path, curve, type, all=undef,  closed=true) =
 		// and for the circle type, distance and radius.  
 		dk = [
 			for(i=[0:1:len(points)-1]) let(  
-				angle = pathangle(select(points,i-1,i+1))/2,
+				angle = vector_angle(select(points,i-1,i+1))/2,
 				parm0 = is_list(parm[i]) ? parm[i][0] : parm[i],
 				k = (curve=="circle" && type=="radius")? parm0 :
 					(curve=="circle" && type=="cut")? parm0 / (1/sin(angle) - 1) : 
@@ -181,79 +181,74 @@ function round_corners(path, curve, type, all=undef,  closed=true) =
 	[
 		for(i=[0:1:len(points)-1]) each
 			(dk[i][0] == 0)? [points[i]] :
-			(curve=="smooth")? bezcorner(select(points,i-1,i+1), dk[i]) :
-			circlecorner(select(points,i-1,i+1), dk[i])
+			(curve=="smooth")? _bezcorner(select(points,i-1,i+1), dk[i]) :
+			_circlecorner(select(points,i-1,i+1), dk[i])
 	];
 
+// Computes the continuous curvature control points for a corner when given as
+// input three points in a list defining the corner.  The points must be
+// equidistant from each other to produce the continuous curvature result.
+// The output control points will include the 3 input points plus two
+// interpolated points.  
+//
+// k is the curvature parameter, ranging from 0 for very slow transition
+// up to 1 for a sharp transition that doesn't have continuous curvature any more
+function _smooth_bez_fill(points,k) = 
+            [
+              points[0],
+              lerp(points[1],points[0],k),
+              points[1],
+              lerp(points[1],points[2],k),
+              points[2],
+            ];
 
-function bezcorner(points, parm) =
-	let(
-		d = parm[0],
-		k = parm[1],
-		prev = normalize(points[0]-points[1]),
-		next = normalize(points[2]-points[1]),
-		P = [
-			points[1]+d*prev,
-			points[1]+k*d*prev,
-			points[1],
-			points[1]+k*d*next,
-			points[1]+d*next
-		],
-		N = $fn>0 ? max(3,$fn) : ceil(bezier_segment_length(P)/$fs)
+// Computes the points of a continuous curvature roundover given as input
+// the list of 3 points defining the corner and a parameter specification
+//
+// If parm is a scalar then it is treated as the curvature and the control
+// points are calculated using _smooth_bez_fill.  Otherwise, parm is assumed
+// to be a pair [d,k] where d is the length of the curve.  The length is
+// calculated from the input point list and the control point list will not
+// necessarily include points[0] or points[2] on its output.
+//
+// The number of points output is $fn if it is set.  Otherwise $fs is used
+// to calculate the point count.  
+
+function _bezcorner(points, parm) =
+        let(
+            P = is_list(parm) ?
+                let(
+		 d = parm[0],
+		 k = parm[1],
+		 prev = normalize(points[0]-points[1]),
+		 next = normalize(points[2]-points[1]))
+               [
+                points[1]+d*prev,
+                points[1]+k*d*prev,
+                points[1],
+                points[1]+k*d*next,
+                points[1]+d*next
+               ] :
+            _smooth_bez_fill(points,parm),
+            N = $fn>0 ? max(3,$fn) : ceil(bezier_segment_length(P)/$fs)
 	)
 	bezier_curve(P,N);
 
 
-function circlecorner(points, parm) =
+function _circlecorner(points, parm) =
 	let(
-		angle = pathangle(points)/2,
+		angle = vector_angle(points)/2,
 		d = parm[0],
 		r = parm[1],
 		prev = normalize(points[0]-points[1]),
 		next = normalize(points[2]-points[1]),
-		center = r/sin(angle) * normalize(prev+next)+points[1]
+		center = r/sin(angle) * normalize(prev+next)+points[1],
+                start = points[1]+prev*d,
+                end = points[1]+next*d
 	)
-	circular_arc(center, points[1]+prev*d, points[1]+next*d, 300);
-
-
-// Compute points for the shortest circular arc that is centered at
-// the specified center, starts at p1, and ends on the vector
-// p2-center.  The radius is the length of (p1-center).  If (p2-center)
-// has the same length then the arc will end at p2.
-
-function circular_arc(center, p1, p2, N) =
-	let(
-		angle = pathangle([p1,center,p2]),
-		v1 = p1-center,
-		v2 = p2-center,
-		N = ceil(angle/360) * segs(norm(v1))
-	)
-	len(center)==2? (
-		let(
-			dir = sign(v1.x*v2.y-v1.y*v2.x),   // z component of cross product
-			r=norm(v1)
-		)
-		assert(dir != 0, "Colinear inputs don't define a unique arc")
-		[
-			for(i=[0:1:N-1]) let(
-				theta=atan2(v1.y,v1.x)+i*dir*angle/(N-1)
-			) r*[cos(theta),sin(theta)]+center
-		]
-	) : (
-		let(axis = cross(v1,v2))
-		assert(axis != [0,0,0], "Colinear inputs don't define a unique arc")
-		[
-			for(i=[0:1:N-1])
-				matrix3_rot_by_axis(axis, i*angle/(N-1)) * v1 + center
-		]
-	);
-
+	arc(segs(norm(start-center)), cp=center, points=[start,end]);
 
 function bezier_curve(P,N) =
    [for(i=[0:1:N-1]) bez_point(P, i/(N-1))];
-
-
-function pathangle(pts) = vector_angle(pts[0]-pts[1], pts[2]-pts[1]);
-
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
