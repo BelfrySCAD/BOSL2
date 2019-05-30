@@ -143,6 +143,22 @@ function modrange(x, y, m, step=1) =
 function sqr(x) = x*x;
 
 
+// Function: rand_int(min,max,N,seed)
+// Usage:
+//   rand_int(min,max,N,[seed]);
+// Description:
+//   Return a list of random integers in the range of min to max, inclusive.
+// Arguments:
+//   min = Minimum integer value to return.
+//   max = Maximum integer value to return.
+//   N = Number of random integers to return.
+//   seed = Random number seed.
+function rand_int(min,max,N,seed=undef) =
+	assert(max >= min, "Max value cannot be smaller than min")
+	let (rvect = is_def(seed) ? rands(min,max+1,N,seed) : rands(min,max+1,N))
+	[for(entry = rvect) floor(entry)];
+
+
 // Function: gaussian_rand()
 // Usage:
 //   gaussian_rand(mean, stddev)

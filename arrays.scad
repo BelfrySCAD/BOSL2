@@ -244,6 +244,18 @@ function enumerate(l,idx=undef) =
 		[for (i=[0:1:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
 
 
+// Function: shuffle(list)
+// Description:
+//   Shuffles the input list into random order.
+function shuffle(list) =
+	len(list)<=1 ? list :
+	let (
+		rval = rands(0,1,len(list)),
+		left  = [for (i=[0:len(list)-1]) if (rval[i]< 0.5) list[i]],
+		right = [for (i=[0:len(list)-1]) if (rval[i]>=0.5) list[i]]
+	) concat(shuffle(left), shuffle(right));
+
+
 // Function: sort()
 // Usage:
 //   sort(arr, [idx])
