@@ -80,42 +80,6 @@ module stroke(path, width=1, endcaps=true, close=false)
 // Section: 2D Shapes
 
 
-// Function&Module: pie_slice2d()
-// Usage:
-//   pie_slice2d(r|d, ang);
-// Description:
-//   When called as a function, returns the 2D path for a "pie" slice of a circle.
-//   When called as a module, creates a 2D "pie" slice of a circle.
-// Arguments:
-//   r = The radius of the circle to get a slice of.
-//   d = The diameter of the circle to get a slice of.
-//   ang = The angle of the arc of the pie slice.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-// Examples(2D):
-//   pie_slice2d(r=50,ang=30);
-//   pie_slice2d(d=100,ang=45);
-//   pie_slice2d(d=40,ang=120);
-//   pie_slice2d(d=40,ang=240);
-// Example(2D): Called as Function
-//   stroke(close=true, pie_slice2d(r=50,ang=30));
-function pie_slice2d(r=undef, d=undef, ang=30, anchor=CENTER, spin=0) =
-	let(
-		r = get_radius(r=r, d=d, dflt=10),
-		sides = ceil(segs(r)*ang/360),
-		path = concat(
-			[[0,0]],
-			[for (i=[0:1:sides]) let(a=i*ang/sides) r*[cos(a),sin(a)]]
-		)
-	) echo(r=r, path=path, anchor=anchor, na=normalize(anchor)) rot(spin, p=move(-r*normalize(anchor), p=path));
-
-
-module pie_slice2d(r=undef, d=undef, ang=30, anchor=CENTER, spin=0) {
-	pts = pie_slice2d(r=r, d=d, ang=ang, anchor=anchor, spin=spin);
-	polygon(pts);
-}
-
-
 // Function&Module: arc()
 // Usage: 2D arc from 0º to `angle` degrees.
 //   arc(N, r|d, angle);
@@ -145,21 +109,22 @@ module pie_slice2d(r=undef, d=undef, ang=30, anchor=CENTER, spin=0) {
 //   wedge = If true, include centerpoint `cp` in output to form pie slice shape.
 // Examples(2D):
 //   arc(N=4, r=30, angle=30, wedge=true);
-//   arc(N=4, d=60, angle=30, wedge=true);
-//   arc(N=8, d=60, angle=120);
-//   arc(N=8, d=60, angle=120, wedge=true);
-//   arc(N=12, r=30, angle=[75,135], wedge=true);
-//   arc(N=12, r=30, start=45, angle=75, wedge=true);
-//   arc(N=12, width=60, thickness=20);
-//   arc(N=12, cp=[-10,5], points=[[20,10],[0,35]], wedge=true);
-//   arc(N=12, points=[[30,-5],[20,10],[-10,20]], wedge=true);
-//   arc(N=12, points=[[5,30],[-10,-10],[30,5]], wedge=true);
+//   arc(r=30, angle=30, wedge=true);
+//   arc(d=60, angle=30, wedge=true);
+//   arc(d=60, angle=120);
+//   arc(d=60, angle=120, wedge=true);
+//   arc(r=30, angle=[75,135], wedge=true);
+//   arc(r=30, start=45, angle=75, wedge=true);
+//   arc(width=60, thickness=20);
+//   arc(cp=[-10,5], points=[[20,10],[0,35]], wedge=true);
+//   arc(points=[[30,-5],[20,10],[-10,20]], wedge=true);
+//   arc(points=[[5,30],[-10,-10],[30,5]], wedge=true);
 // Example(2D):
-//   path = arc(N=12, points=[[5,30],[-10,-10],[30,5]], wedge=true);
+//   path = arc(points=[[5,30],[-10,-10],[30,5]], wedge=true);
 //   stroke(close=true, path);
 // Example(FlatSpin):
 //   include <BOSL2/paths.scad>
-//   path = arc(N=12, points=[[0,30,0],[0,0,30],[30,0,0]]);
+//   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
 //   trace_polyline(path, showpts=true, color="cyan");
 function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false) =
 	// First try for 2d arc specified by angles
@@ -176,7 +141,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false) =
 			start = is_def(start)? start : is_vector(angle) ? angle[0] : 0,
 			angle = is_vector(angle)? angle[1]-angle[0] : angle,
 			r = get_radius(r=r,d=d),
-			N = max(3,N),
+			N = max(3, is_undef(N)? ceil(segs(r)*angle/360) : N),
 			arcpoints = [for(i=[0:N-1]) let(theta = start + i*angle/(N-1)) r*[cos(theta),sin(theta)]+cp],
 			extra = wedge? [cp] : []
 		)
