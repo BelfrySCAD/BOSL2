@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import print_function
 
@@ -7,6 +7,8 @@ import re
 import sys
 import math
 import random
+import hashlib
+import dbm.gnu
 import os.path
 import argparse
 import subprocess
@@ -79,6 +81,7 @@ class ImageProcessing(object):
         self.commoncode = []
         self.imgroot = ""
         self.keep_scripts = False
+        self.force = False
 
     def set_keep_scripts(self, x):
         self.keep_scripts = x
@@ -89,12 +92,14 @@ class ImageProcessing(object):
     def set_commoncode(self, code):
         self.commoncode = code
 
-    def process_examples(self, imgroot):
+    def process_examples(self, imgroot, force=False):
         self.imgroot = imgroot
-        for libfile, imgfile, code, extype in self.examples:
-            self.gen_example_image(libfile, imgfile, code, extype)
+        self.force = force
+        with dbm.gnu.open("examples_hashes.gdbm", "c") as db:
+            for libfile, imgfile, code, extype in self.examples:
+                self.gen_example_image(db, libfile, imgfile, code, extype)
 
-    def gen_example_image(self, libfile, imgfile, code, extype):
+    def gen_example_image(self, db, libfile, imgfile, code, extype):
         OPENSCAD = "/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD"
         GIT = "/usr/local/bin/git"
         CONVERT = "/usr/local/bin/convert"
@@ -103,7 +108,25 @@ class ImageProcessing(object):
         if extype == "NORENDER":
             return
 
+        print("  {}".format(imgfile))
+
         scriptfile = "tmp_{0}.scad".format(imgfile.replace(".", "_"))
+        targimgfile = self.imgroot + imgfile
+        newimgfile = self.imgroot + "_new_" + imgfile
+
+        # Pull previous committed image from git, if it exists.
+        gitcmd = [GIT, "checkout", targimgfile]
+        p = subprocess.Popen(gitcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
+        err = p.stdout.read()
+
+        m = hashlib.sha256()
+        m.update(extype.encode("utf8"))
+        for line in code:
+            m.update(line.encode("utf8"))
+        hash = m.digest()
+        key = "{0} - {1}".format(libfile, imgfile)
+        if key in db and db[key] == hash and not self.force:
+            return
 
         stdlibs = ["std.scad", "debug.scad"]
         script = ""
@@ -127,8 +150,6 @@ class ImageProcessing(object):
             imgsizes = ["800,600", "400x300"]
         else:  # Small
             imgsizes = ["480,360", "240x180"]
-
-        print("  {}".format(imgfile))
 
         tmpimgs = []
         if "Spin" in extype:
@@ -160,7 +181,7 @@ class ImageProcessing(object):
                 p = subprocess.Popen(scadcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
                 (stdoutdata, stderrdata) = p.communicate(None)
                 res = p.returncode
-                if res != 0 or "ERROR:" in stderrdata or "WARNING:" in stderrdata:
+                if res != 0 or b"ERROR:" in stderrdata or b"WARNING:" in stderrdata:
                     print("%s"%stderrdata)
                     print("////////////////////////////////////////////////////")
                     print("// {}: {} for {}".format(libfile, scriptfile, imgfile))
@@ -194,7 +215,7 @@ class ImageProcessing(object):
             p = subprocess.Popen(scadcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
             (stdoutdata, stderrdata) = p.communicate(None)
             res = p.returncode
-            if res != 0 or "ERROR:" in stderrdata or "WARNING:" in stderrdata:
+            if res != 0 or b"ERROR:" in stderrdata or b"WARNING:" in stderrdata:
                 print("%s"%stderrdata)
                 print("////////////////////////////////////////////////////")
                 print("// {}: {} for {}".format(libfile, scriptfile, imgfile))
@@ -214,8 +235,6 @@ class ImageProcessing(object):
 
         if not self.keep_scripts:
             os.unlink(scriptfile)
-        targimgfile = self.imgroot + imgfile
-        newimgfile = self.imgroot + "_new_" + imgfile
 
         if len(tmpimgs) == 1:
             cnvcmd = [CONVERT, tmpimgfile, "-resize", imgsizes[1], newimgfile]
@@ -243,11 +262,6 @@ class ImageProcessing(object):
             for tmpimg in tmpimgs:
                 os.unlink(tmpimg)
 
-        # Pull previous committed image from git, if it exists.
-        gitcmd = [GIT, "checkout", targimgfile]
-        p = subprocess.Popen(gitcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-        err = p.stdout.read()
-
         # Time to compare image.
         if not os.path.isfile(targimgfile):
             print("    NEW IMAGE\n")
@@ -260,13 +274,15 @@ class ImageProcessing(object):
             else:
                 cmpcmd = [COMPARE, "-metric", "MAE", newimgfile, targimgfile, "null:"]
                 p = subprocess.Popen(cmpcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-                issame = p.stdout.read().strip() == "0 (0)"
+                resbin = p.stdout.read().strip()
+                issame = resbin == b'0 (0)'
             if issame:
                 os.unlink(newimgfile)
             else:
                 print("    UPDATED IMAGE\n")
                 os.unlink(targimgfile)
                 os.rename(newimgfile, targimgfile)
+        db[key] = hash
 
 
 imgprc = ImageProcessing()
@@ -688,7 +704,7 @@ class LibFile(object):
         return out
 
 
-def processFile(infile, outfile=None, gen_imgs=False, imgroot="", prefix=""):
+def processFile(infile, outfile=None, gen_imgs=False, imgroot="", prefix="", force=False):
     if imgroot and not imgroot.endswith('/'):
         imgroot += "/"
 
@@ -708,7 +724,7 @@ def processFile(infile, outfile=None, gen_imgs=False, imgroot="", prefix=""):
         print(line, file=f)
 
     if gen_imgs:
-        imgprc.process_examples(imgroot)
+        imgprc.process_examples(imgroot, force=force)
 
     if outfile:
         f.close()
@@ -720,6 +736,8 @@ def main():
                         help="If given, don't delete the temporary image OpenSCAD scripts.")
     parser.add_argument('-c', '--comments-only', action="store_true",
                         help='If given, only process lines that start with // comments.')
+    parser.add_argument('-f', '--force', action="store_true",
+                        help='If given, force generation of images when the code is unchanged.')
     parser.add_argument('-i', '--images', action="store_true",
                         help='If given, generate images for examples with OpenSCAD.')
     parser.add_argument('-I', '--imgroot', default="",
@@ -735,7 +753,8 @@ def main():
         outfile=args.outfile,
         gen_imgs=args.images,
         imgroot=args.imgroot,
-        prefix="// " if args.comments_only else ""
+        prefix="// " if args.comments_only else "",
+        force=args.force
     )
 
     sys.exit(0)
