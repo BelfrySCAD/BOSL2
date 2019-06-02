@@ -83,13 +83,16 @@ function bez_point(curve,u)=
 //   n = The number of points to generate along the bezier curve.
 // Example(2D): Quadratic (Degree 2) Bezier.
 //   bez = [[0,0], [30,30], [80,0]];
-//   stroke(bezier_curve(bez, 16));
+//   place_copies(bezier_curve(bez, 16)) sphere(r=1);
+//   trace_bezier(bez, N=len(bez)-1);
 // Example(2D): Cubic (Degree 3) Bezier
 //   bez = [[0,0], [5,35], [60,-25], [80,0]];
-//   stroke(bezier_curve(bez, 16));
+//   place_copies(bezier_curve(bez, 16)) sphere(r=1);
+//   trace_bezier(bez, N=len(bez)-1);
 // Example(2D): Degree 4 Bezier.
 //   bez = [[0,0], [5,15], [40,20], [60,-15], [80,0]];
-//   stroke(bezier_curve(bez, 16));
+//   place_copies(bezier_curve(bez, 16)) sphere(r=1);
+//   trace_bezier(bez, N=len(bez)-1);
 function bezier_curve(curve,n) = [for(i=[0:1:n-1]) bez_point(curve, i/(n-1))];
 
 
