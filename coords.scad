@@ -122,12 +122,16 @@ function rotate_points2d(pts, ang, cp=[0,0]) =
 //   reverse = If true, performs an exactly reversed rotation.
 function rotate_points3d(pts, a=0, v=undef, cp=[0,0,0], from=undef, to=undef, reverse=false) =
 	assert(is_undef(from)==is_undef(to), "`from` and `to` must be given together.")
-	let(
+	(is_undef(from) && (a==0 || a==[0,0,0]))? pts :
+	let (
+		from = is_undef(from)? undef : (from / norm(from)),
+		to = is_undef(to)? undef : (to / norm(to))
+	)
+	(!is_undef(from) && approx(from,to))? pts :
+	let (
 		mrot = reverse? (
 			!is_undef(from)? (
 				let (
-					from = from / norm(from),
-					to = to / norm(from),
 					ang = vector_angle(from, to),
 					v = vector_axis(from, to)
 				)
@@ -147,6 +151,7 @@ function rotate_points3d(pts, a=0, v=undef, cp=[0,0,0], from=undef, to=undef, re
 					ang = vector_angle(from, to),
 					v = vector_axis(from, to)
 				)
+				echo("EEE",from=from,to=to,ang=ang,v=v,a=a)
 				affine3d_rot_by_axis(v, ang) * affine3d_rot_by_axis(from, a)
 			) : !is_undef(v)? (
 				affine3d_rot_by_axis(v, a)
@@ -157,8 +162,7 @@ function rotate_points3d(pts, a=0, v=undef, cp=[0,0,0], from=undef, to=undef, re
 			)
 		),
 		m = affine3d_translate(cp) * mrot * affine3d_translate(-cp)
-	) (!is_undef(from) && approx(from,to))? pts :
-	(a==0 || a==[0,0,0])? pts :
+	)
 	[for (pt = pts) point3d(m*concat(point3d(pt),[1]))];
 
 

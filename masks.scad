@@ -438,7 +438,7 @@ module rounding_mask(l=undef, r=1.0, anchor=CENTER, spin=0, orient=UP, h=undef)
 //   }
 module rounding_mask_x(l=1.0, r=1.0, anchor=CENTER, spin=0)
 {
-	anchor = rotate_points3d([anchor], from=RIGHT, to=TOP)[0];
+	anchor = rot(p=anchor, from=RIGHT, to=TOP);
 	rounding_mask(l=l, r=r, anchor=anchor, spin=spin, orient=RIGHT) {
 		for (i=[0:1:$children-2]) children(i);
 		if ($children) children($children-1);
@@ -465,7 +465,7 @@ module rounding_mask_x(l=1.0, r=1.0, anchor=CENTER, spin=0)
 //   }
 module rounding_mask_y(l=1.0, r=1.0, anchor=CENTER, spin=0)
 {
-	anchor = rotate_points3d([anchor], from=BACK, to=TOP)[0];
+	anchor = rot(p=anchor, from=BACK, to=TOP);
 	rounding_mask(l=l, r=r, anchor=anchor, spin=spin, orient=BACK) {
 		for (i=[0:1:$children-2]) children(i);
 		if ($children) children($children-1);
