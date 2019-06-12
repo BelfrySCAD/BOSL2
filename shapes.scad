@@ -438,6 +438,12 @@ module right_triangle(size=[1, 1, 1], anchor=ALLNEG, spin=0, orient=UP, center=u
 // Example: Putting it all together
 //   cyl(l=40, d1=25, d2=15, chamfer1=10, chamfang1=30, from_end=true, rounding2=5);
 //
+// Example: External Chamfers
+//   cyl(l=50, r=30, chamfer=-5, chamfang=30, $fa=1, $fs=1);
+//
+// Example: External Roundings
+//   cyl(l=50, r=30, rounding1=-5, rounding2=5, $fa=1, $fs=1);
+//
 // Example: Standard Connectors
 //   xdistribute(40) {
 //       cyl(l=30, d=25) show_anchors();
@@ -461,7 +467,7 @@ module cyl(
 	size2 = [r2*2,r2*2,l];
 	sides = segs(max(r1,r2));
 	sc = circum? 1/cos(180/sides) : 1;
-	phi = atan2(l, r1-r2);
+	phi = atan2(l, r2-r1);
 	orient_and_anchor(size1, orient, anchor, spin=spin, center=center, size2=size2, geometry="cylinder", chain=true) {
 		zrot(realign? 180/sides : 0) {
 			if (!any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2])) {
@@ -477,110 +483,66 @@ module cyl(
 				if (chamfer != undef) {
 					assert(chamfer <= r1,  "chamfer is larger than the r1 radius of the cylinder.");
 					assert(chamfer <= r2,  "chamfer is larger than the r2 radius of the cylinder.");
-					assert(chamfer <= l/2, "chamfer is larger than half the length of the cylinder.");
 				}
 				if (cham1 != undef) {
 					assert(cham1 <= r1,  "chamfer1 is larger than the r1 radius of the cylinder.");
-					assert(cham1 <= l/2, "chamfer1 is larger than half the length of the cylinder.");
 				}
 				if (cham2 != undef) {
 					assert(cham2 <= r2,  "chamfer2 is larger than the r2 radius of the cylinder.");
-					assert(cham2 <= l/2, "chamfer2 is larger than half the length of the cylinder.");
 				}
 				if (rounding != undef) {
 					assert(rounding <= r1,  "rounding is larger than the r1 radius of the cylinder.");
 					assert(rounding <= r2,  "rounding is larger than the r2 radius of the cylinder.");
-					assert(rounding <= l/2, "rounding is larger than half the length of the cylinder.");
 				}
 				if (fil1 != undef) {
 					assert(fil1 <= r1,  "rounding1 is larger than the r1 radius of the cylinder.");
-					assert(fil1 <= l/2, "rounding1 is larger than half the length of the cylinder.");
 				}
 				if (fil2 != undef) {
 					assert(fil2 <= r2,  "rounding2 is larger than the r1 radius of the cylinder.");
-					assert(fil2 <= l/2, "rounding2 is larger than half the length of the cylinder.");
 				}
+				dy1 = abs(first_defined([cham1, fil1, 0]));
+				dy2 = abs(first_defined([cham2, fil2, 0]));
+				assert(dy1+dy2 <= l, "Sum of fillets and chamfer sizes must be less than the length of the cylinder.");
 
-				dy1 = first_defined([cham1, fil1, 0]);
-				dy2 = first_defined([cham2, fil2, 0]);
-				maxd = max(r1,r2,l);
+				path = concat(
+					[[0,l/2]],
 
+					!is_undef(cham2)? (
+						let(
+							p1 = [r2-cham2/tan(chang2),l/2],
+							p2 = lerp([r2,l/2],[r1,-l/2],abs(cham2)/l)
+						) [p1,p2]
+					) : !is_undef(fil2)? (
+						let(
+							cn = find_circle_2tangents([r2-fil2,l/2], [r2,l/2], [r1,-l/2], r=abs(fil2)),
+							ang = fil2<0? phi : phi-180,
+							steps = ceil(abs(ang)/360*segs(abs(fil2))),
+							step = ang/steps,
+							pts = [for (i=[0:1:steps]) let(a=90+i*step) cn[0]+abs(fil2)*[cos(a),sin(a)]]
+						) pts
+					) : [[r2,l/2]],
+
+					!is_undef(cham1)? (
+						let(
+							p1 = lerp([r1,-l/2],[r2,l/2],abs(cham1)/l),
+							p2 = [r1-cham1/tan(chang1),-l/2]
+						) [p1,p2]
+					) : !is_undef(fil1)? (
+						let(
+							cn = find_circle_2tangents([r1-fil1,-l/2], [r1,-l/2], [r2,l/2], r=abs(fil1)),
+							ang = fil1<0? 180-phi : -phi,
+							steps = ceil(abs(ang)/360*segs(abs(fil1))),
+							step = ang/steps,
+							pts = [for (i=[0:1:steps]) let(a=(fil1<0?180:0)+(phi-90)+i*step) cn[0]+abs(fil1)*[cos(a),sin(a)]]
+						) pts
+					) : [[r1,-l/2]],
+
+					[[0,-l/2]]
+				);
 				rotate_extrude(convexity=2) {
-					hull() {
-						difference() {
-							union() {
-								difference() {
-									back(l/2) {
-										if (cham2!=undef && cham2>0) {
-											rr2 = sc * (r2 + (r1-r2)*dy2/l);
-											chlen2 = min(rr2, cham2/sin(chang2));
-											translate([rr2,-cham2]) {
-												rotate(-chang2) {
-													translate([-chlen2,-chlen2]) {
-														square(chlen2, center=false);
-													}
-												}
-											}
-										} else if (fil2!=undef && fil2>0) {
-											translate([r2-fil2*tan(vang),-fil2]) {
-												circle(r=fil2);
-											}
-										} else {
-											translate([r2-0.005,-0.005]) {
-												square(0.01, center=true);
-											}
-										}
-									}
-
-									// Make sure the corner fiddly bits never cross the X axis.
-									fwd(maxd) square(maxd, center=false);
-								}
-								difference() {
-									fwd(l/2) {
-										if (cham1!=undef && cham1>0) {
-											rr1 = sc * (r1 + (r2-r1)*dy1/l);
-											chlen1 = min(rr1, cham1/sin(chang1));
-											translate([rr1,cham1]) {
-												rotate(chang1) {
-													left(chlen1) {
-														square(chlen1, center=false);
-													}
-												}
-											}
-										} else if (fil1!=undef && fil1>0) {
-											right(r1) {
-												translate([-fil1/tan(vang),fil1]) {
-													fsegs1 = quantup(segs(fil1),4);
-													circle(r=fil1,$fn=fsegs1);
-												}
-											}
-										} else {
-											right(r1-0.01) {
-												square(0.01, center=false);
-											}
-										}
-									}
-
-									// Make sure the corner fiddly bits never cross the X axis.
-									square(maxd, center=false);
-								}
-
-								// Force the hull to extend to the axis
-								right(0.01/2) square([0.01, l], center=true);
-							}
-
-							// Clear anything left of the Y axis.
-							left(maxd/2) square(maxd, center=true);
-
-							// Clear anything right of face
-							right((r1+r2)/2) {
-								rotate(90-vang*2) {
-									fwd(maxd/2) square(maxd, center=false);
-								}
-							}
-						}
-					}
+					polygon(path);
 				}
+				//!place_copies(path) sphere(d=1);
 			}
 		}
 		children();

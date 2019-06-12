@@ -182,6 +182,35 @@ function line_segment_intersection(line,segment) =
 	) isect[2]<0-eps || isect[2]>1+eps ? undef : isect[0];
 
 
+// Function: find_circle_2tangents()
+// Usage:
+//   find_circle_2tangents(pt1, pt2, pt3, r|d);
+// Description:
+//   Returns [centerpoint, normal] of a circle of known size that is between and tangent to two rays with the same starting point.
+//   Both rays start at `pt2`, and one passes through `pt1`, while the other passes through `pt3`.
+//   If the rays given are 180º apart, `undef` is returned.  If the rays are 3D, the normal returned is the plane normal of the circle.
+// Arguments:
+//   pt1 = A point that the first ray passes though.
+//   pt2 = The starting point of both rays.
+//   pt3 = A point that the second ray passes though.
+//   r = The radius of the circle to find.
+//   d = The diameter of the circle to find.
+function find_circle_2tangents(pt1, pt2, pt3, r=undef, d=undef) =
+	let(
+		r = get_radius(r=r, d=d, dflt=undef),
+		v1 = normalize(pt1 - pt2),
+		v2 = normalize(pt3 - pt2)
+	) approx(norm(v1+v2))? undef :
+	assert(r!=undef, "Must specify either r or d.")
+	let(
+		a = vector_angle(v1,v2),
+		n = vector_axis(v1,v2),
+		v = normalize(mean([v1,v2])),
+		s = r/sin(a/2),
+		cp = pt2 + s*v/norm(v)
+	) [cp, n];
+
+
 // Function: triangle_area2d()
 // Usage:
 //   triangle_area2d(a,b,c);
