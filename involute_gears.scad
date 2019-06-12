@@ -350,7 +350,7 @@ module gear2d(
 // Example: Spur Gear
 //   gear(pitch=5, teeth=20, thickness=8, shaft_diam=5);
 // Example: Beveled Gear
-//   gear(pitch=5, teeth=20, thickness=10*cos(45), shaft_diam=5, helical=-30, slices=12, $fa=1, $fs=1);
+//   gear(pitch=5, teeth=20, thickness=10, shaft_diam=5, helical=-30, slices=12, $fa=1, $fs=1);
 module gear(
 	pitch     = 3,
 	teeth     = 11,
@@ -436,7 +436,8 @@ module gear(
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   bevelang = Angle of beveled gear face.
-//   spiral = Radius of spiral arc for teeth, if given.  If 0, then gear will not be spiral.
+//   spiral_rad = Radius of spiral arc for teeth.  If 0, then gear will not be spiral.  Default: 0
+//   spiral_ang = The base angle for spiral teeth.  Default: 0
 //   slices = Number of vertical layers to divide gear into.  Useful for refining gears with `spiral`.
 //   scale = Scale of top of gear compared to bottom.  Useful for making crown gears.
 //   interior = If true, create a mask for difference()ing from something else.
@@ -444,7 +445,7 @@ module gear(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example: Beveled Gear
-//   bevel_gear(pitch=5, teeth=20, face_width=10, shaft_diam=5, spiral=-30, bevelang=45, slices=12, $fa=1, $fs=1);
+//   bevel_gear(pitch=5, teeth=36, face_width=10, shaft_diam=5, spiral_rad=-20, spiral_ang=35, bevelang=45, slices=12, $fa=1, $fs=1);
 module bevel_gear(
 	pitch      = 3,
 	teeth      = 11,
