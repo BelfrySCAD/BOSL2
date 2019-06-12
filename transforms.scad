@@ -386,9 +386,10 @@ module zrot(a=0, cp=undef)
 
 // Function&Module: scale()
 // Usage: As Module
+//   scale(SCALAR) ...
 //   scale([X,Y,Z]) ...
 // Usage: Scale Points
-//   pts = scale(a, pts);
+//   pts = scale(a, p);
 // Usage: Get Scaling Matrix
 //   mat = scale(a);
 // Description:
@@ -397,14 +398,16 @@ module zrot(a=0, cp=undef)
 //   scaling factors in `a`.  When called as a function with a list of points in the `p` argument,
 //   returns the list of points, with each one scaled by the [X,Y,Z] scaling factors in `a`.
 // Arguments:
-//   a = The [X,Y,Z] scaling factors.
+//   a = The [X,Y,Z] scaling factors, or a scalar value for uniform scaling across all axes.  Default: 1
 //   p = If called as a function, the point or list of points to scale.
 // Example(NORENDER):
-//   pt1 = scale([2,3,4], p=[3,1,4]);       // Returns: [6,3,16]
+//   pt1 = scale(3, p=[3,1,4]);        // Returns: [9,3,12]
+//   pt2 = scale([2,3,4], p=[3,1,4]);  // Returns: [6,3,16]
 //   pt3 = scale([2,3,4], p=[[1,2,3],[4,5,6]]);  // Returns: [[2,6,12], [8,15,24]]
 //   mat2d = scale([2,3]);    // Returns: [[2,0,0],[0,3,0],[0,0,1]]
 //   mat3d = scale([2,3,4]);  // Returns: [[2,0,0,0],[0,3,0,0],[0,0,4,0],[0,0,0,1]]
-function scale(a=[1,1,1], p=undef) =
+function scale(a=1, p=undef) =
+	let(a = is_num(a)? [a,a,a] : a)
 	is_undef(p)? (
 		len(a)==2? affine2d_scale(a) : affine3d_scale(point3d(a))
 	) : (
