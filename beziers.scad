@@ -69,6 +69,33 @@ function bez_point(curve,u)=
 		);
 
 
+// Function: bezier_curve()
+// Usage:
+//   bezier_curve(curve, n);
+// Description:
+//   Takes a list of bezier curve control points, and a count of path points to generate.  The points
+//   returned will be along the curve, starting at the first control point, then about every `1/n`th
+//   of the way along the curve, ending about `1/n`th of the way *before* the final control point.
+//   The distance between the points will *not* be equidistant.  The degree of the curve, N, is one
+//   less than the number of points in `curve`.
+// Arguments:
+//   curve = The list of endpoints and control points for this bezier segment.
+//   n = The number of points to generate along the bezier curve.
+// Example(2D): Quadratic (Degree 2) Bezier.
+//   bez = [[0,0], [30,30], [80,0]];
+//   place_copies(bezier_curve(bez, 16)) sphere(r=1);
+//   trace_bezier(bez, N=len(bez)-1);
+// Example(2D): Cubic (Degree 3) Bezier
+//   bez = [[0,0], [5,35], [60,-25], [80,0]];
+//   place_copies(bezier_curve(bez, 16)) sphere(r=1);
+//   trace_bezier(bez, N=len(bez)-1);
+// Example(2D): Degree 4 Bezier.
+//   bez = [[0,0], [5,15], [40,20], [60,-15], [80,0]];
+//   place_copies(bezier_curve(bez, 16)) sphere(r=1);
+//   trace_bezier(bez, N=len(bez)-1);
+function bezier_curve(curve,n) = [for(i=[0:1:n-1]) bez_point(curve, i/(n-1))];
+
+
 // Function: bezier_segment_closest_point()
 // Usage:
 //   bezier_segment_closest_point(bezier,pt)
