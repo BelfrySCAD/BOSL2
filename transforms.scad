@@ -466,10 +466,10 @@ module zscale(z) scale([1,1,z]) children();
 //   Mirrors the children along the X axis, like `mirror([1,0,0])` or `xscale(-1)`
 //
 // Usage:
-//   xflip([cp]) ...
+//   xflip([x]) ...
 //
 // Arguments:
-//   cp = A point that lies on the plane of reflection.
+//   x = The X coordinate of the plane of reflection.  Default: 0
 //
 // Example:
 //   xflip() yrot(90) cylinder(d1=10, d2=0, h=20);
@@ -477,10 +477,10 @@ module zscale(z) scale([1,1,z]) children();
 //   color("red", 0.333) yrot(90) cylinder(d1=10, d2=0, h=20);
 //
 // Example:
-//   xflip(cp=[-5,0,0]) yrot(90) cylinder(d1=10, d2=0, h=20);
+//   xflip(x=-5) yrot(90) cylinder(d1=10, d2=0, h=20);
 //   color("blue", 0.25) left(5) cube([0.01,15,15], center=true);
 //   color("red", 0.333) yrot(90) cylinder(d1=10, d2=0, h=20);
-module xflip(cp=[0,0,0]) translate(cp) mirror([1,0,0]) translate(-cp) children();
+module xflip(x=0) translate([x,0,0]) mirror([1,0,0]) translate([-x,0,0]) children();
 
 
 // Module: yflip()
@@ -489,10 +489,10 @@ module xflip(cp=[0,0,0]) translate(cp) mirror([1,0,0]) translate(-cp) children()
 //   Mirrors the children along the Y axis, like `mirror([0,1,0])` or `yscale(-1)`
 //
 // Usage:
-//   yflip([cp]) ...
+//   yflip([y]) ...
 //
 // Arguments:
-//   cp = A point that lies on the plane of reflection.
+//   y = The Y coordinate of the plane of reflection.  Default: 0
 //
 // Example:
 //   yflip() xrot(90) cylinder(d1=10, d2=0, h=20);
@@ -500,10 +500,10 @@ module xflip(cp=[0,0,0]) translate(cp) mirror([1,0,0]) translate(-cp) children()
 //   color("red", 0.333) xrot(90) cylinder(d1=10, d2=0, h=20);
 //
 // Example:
-//   yflip(cp=[0,5,0]) xrot(90) cylinder(d1=10, d2=0, h=20);
+//   yflip(y=5) xrot(90) cylinder(d1=10, d2=0, h=20);
 //   color("blue", 0.25) back(5) cube([15,0.01,15], center=true);
 //   color("red", 0.333) xrot(90) cylinder(d1=10, d2=0, h=20);
-module yflip(cp=[0,0,0]) translate(cp) mirror([0,1,0]) translate(-cp) children();
+module yflip(y=0) translate([0,y,0]) mirror([0,1,0]) translate([0,-y,0]) children();
 
 
 // Module: zflip()
@@ -512,10 +512,10 @@ module yflip(cp=[0,0,0]) translate(cp) mirror([0,1,0]) translate(-cp) children()
 //   Mirrors the children along the Z axis, like `mirror([0,0,1])` or `zscale(-1)`
 //
 // Usage:
-//   zflip([cp]) ...
+//   zflip([z]) ...
 //
 // Arguments:
-//   cp = A point that lies on the plane of reflection.
+//   z = The Z coordinate of the plane of reflection.  Default: 0
 //
 // Example:
 //   zflip() cylinder(d1=10, d2=0, h=20);
@@ -523,10 +523,10 @@ module yflip(cp=[0,0,0]) translate(cp) mirror([0,1,0]) translate(-cp) children()
 //   color("red", 0.333) cylinder(d1=10, d2=0, h=20);
 //
 // Example:
-//   zflip(cp=[0,0,-5]) cylinder(d1=10, d2=0, h=20);
+//   zflip(z=-5) cylinder(d1=10, d2=0, h=20);
 //   color("blue", 0.25) down(5) cube([15,15,0.01], center=true);
 //   color("red", 0.333) cylinder(d1=10, d2=0, h=20);
-module zflip(cp=[0,0,0]) translate(cp) mirror([0,0,1]) translate(-cp) children();
+module zflip(z=0) translate([0,0,z]) mirror([0,0,1]) translate([0,0,-z]) children();
 
 
 
@@ -1661,11 +1661,11 @@ module mirror_copy(v=[0,0,1], offset=0, cp=[0,0,0])
 //   Makes a copy of the children, mirrored across the X axis.
 //
 // Usage:
-//   xflip_copy([cp], [offset]) ...
+//   xflip_copy([x], [offset]) ...
 //
 // Arguments:
 //   offset = Distance to offset children right, before copying.
-//   cp = A point that lies on the mirroring plane.
+//   x = The X coordinate of the mirroring plane.  Default: 0
 //
 // Side Effects:
 //   `$orig` is true for the original instance of children.  False for the copy.
@@ -1680,11 +1680,11 @@ module mirror_copy(v=[0,0,1], offset=0, cp=[0,0,0])
 //   color("blue",0.25) cube([0.01,15,15], center=true);
 //
 // Example:
-//   xflip_copy(cp=[-5,0,0]) yrot(90) cylinder(h=20, r1=4, r2=0);
+//   xflip_copy(x=-5) yrot(90) cylinder(h=20, r1=4, r2=0);
 //   color("blue",0.25) left(5) cube([0.01,15,15], center=true);
-module xflip_copy(offset=0, cp=[0,0,0])
+module xflip_copy(offset=0, x=0)
 {
-	mirror_copy(v=[1,0,0], offset=offset, cp=cp) children();
+	mirror_copy(v=[1,0,0], offset=offset, cp=[x,0,0]) children();
 }
 
 
@@ -1694,11 +1694,11 @@ module xflip_copy(offset=0, cp=[0,0,0])
 //   Makes a copy of the children, mirrored across the Y axis.
 //
 // Usage:
-//   yflip_copy([cp], [offset]) ...
+//   yflip_copy([y], [offset]) ...
 //
 // Arguments:
 //   offset = Distance to offset children back, before copying.
-//   cp = A point that lies on the mirroring plane.
+//   y = The Y coordinate of the mirroring plane.  Default: 0
 //
 // Side Effects:
 //   `$orig` is true for the original instance of children.  False for the copy.
@@ -1713,11 +1713,11 @@ module xflip_copy(offset=0, cp=[0,0,0])
 //   color("blue",0.25) cube([15,0.01,15], center=true);
 //
 // Example:
-//   yflip_copy(cp=[0,-5,0]) xrot(-90) cylinder(h=20, r1=4, r2=0);
+//   yflip_copy(y=-5) xrot(-90) cylinder(h=20, r1=4, r2=0);
 //   color("blue",0.25) fwd(5) cube([15,0.01,15], center=true);
-module yflip_copy(offset=0, cp=[0,0,0])
+module yflip_copy(offset=0, y=0)
 {
-	mirror_copy(v=[0,1,0], offset=offset, cp=cp) children();
+	mirror_copy(v=[0,1,0], offset=offset, cp=[0,y,0]) children();
 }
 
 
@@ -1727,15 +1727,15 @@ module yflip_copy(offset=0, cp=[0,0,0])
 //   Makes a copy of the children, mirrored across the Z axis.
 //
 // Usage:
-//   zflip_copy([cp], [offset]) ...
-//   `$idx` is set to the index value of each copy.
+//   zflip_copy([z], [offset]) ...
 //
 // Arguments:
 //   offset = Distance to offset children up, before copying.
-//   cp = A point that lies on the mirroring plane.
+//   z = The Z coordinate of the mirroring plane.  Default: 0
 //
 // Side Effects:
 //   `$orig` is true for the original instance of children.  False for the copy.
+//   `$idx` is set to the index value of each copy.
 //
 // Example:
 //   zflip_copy() cylinder(h=20, r1=4, r2=0);
@@ -1746,11 +1746,11 @@ module yflip_copy(offset=0, cp=[0,0,0])
 //   color("blue",0.25) cube([15,15,0.01], center=true);
 //
 // Example:
-//   zflip_copy(cp=[0,0,-5]) cylinder(h=20, r1=4, r2=0);
+//   zflip_copy(z=-5) cylinder(h=20, r1=4, r2=0);
 //   color("blue",0.25) down(5) cube([15,15,0.01], center=true);
-module zflip_copy(offset=0, cp=[0,0,0])
+module zflip_copy(offset=0, z=0)
 {
-	mirror_copy(v=[0,0,1], offset=offset, cp=cp) children();
+	mirror_copy(v=[0,0,1], offset=offset, cp=[0,0,z]) children();
 }
 
 
