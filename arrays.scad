@@ -150,6 +150,44 @@ function list_range(n=undef, s=0, e=undef, step=1) =
 function reverse(list) = [ for (i = [len(list)-1 : -1 : 0]) list[i] ];
 
 
+
+// Function: list_set()
+//
+// list_set(indices, values, list, dftl, minlen)
+// Takes the input list and returns a new list such that
+//    list[indices[i]] = values[i]
+// for all of the (index,value) pairs supplied.  If you supply indices
+// that are beyond the length of the list then the list is extended
+// and filled in with the dflt value.
+//
+// If you set minlen then the list is lengthed, if necessary, by padding
+// with dflt to that length.  
+// 
+// The `indices` list can be in any order but run time will be (much) faster
+// for long lists if it is already sorted.  Reptitions are not allowed.  
+// 
+function list_set(indices,values,list=[],dflt=0,minlen=0) =
+    !is_list(indices) ? list_set(list,[indices],[values],dflt) :
+    assert(len(indices)==len(values),"Index list and value list must have the same length")
+    len(indices)==0 ? concat(list, replist(dflt, minlen-len(list))) :
+    let( sortind = list_increasing(indices) ? list_range(len(indices)) : sortidx(indices),
+         lastind = indices[select(sortind,-1)]
+    )
+    concat([for(j=[0:1:indices[sortind[0]]-1]) j>=len(list) ? dflt : list[j]], [values[sortind[0]]], 
+          [for(i=[1:1:len(sortind)-1])   
+                                        each
+                                          assert(indices[sortind[i]]!=indices[sortind[i-1]],"Repeated index")
+                                          concat(
+                                            [for(j=[1+indices[sortind[i-1]]:1:indices[sortind[i]]-1]) j>=len(list) ? dflt : list[j]],
+                                            [values[sortind[i]]]
+                                         )
+          ],
+          slice(list,1+lastind, len(list)),
+          replist(dflt, minlen-lastind-1)
+    );
+
+
+
 // Function: list_remove()
 // Usage:
 //   list_remove(list, elements)
@@ -158,9 +196,16 @@ function reverse(list) = [ for (i = [len(list)-1 : -1 : 0]) list[i] ];
 // Arguments:
 //   list = The list to remove items from.
 //   elements = The list of indexes of items to remove.
-function list_remove(list, elements) = [
-	for (i = [0:1:len(list)-1]) if (!search(i, elements)) list[i]
-];
+function list_remove(list,elements) =
+    !is_list(elements) ? list_remove(list,[elements]) :
+    let( sortind = list_increasing(elements) ? list_range(len(elements)) : sortidx(elements),
+         lastind = elements[select(sortind,-1)]
+    )
+    assert(lastind<len(list),"Element index beyond list end")
+    concat(slice(list, 0, elements[sortind[0]]),
+          [for(i=[1:1:len(sortind)-1]) each slice(list,1+elements[sortind[i-1]], elements[sortind[i]])],
+          slice(list,1+lastind, len(list))
+    );
 
 
 // Function: list_insert()
