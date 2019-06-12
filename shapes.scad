@@ -15,6 +15,8 @@
 //
 // Description:
 //   Creates a cube or cuboid object, with optional chamfering or rounding.
+//   Negative chamfers and roundings can be applied to create external masks,
+//   but only apply to edges around the top or bottom faces.
 //
 // Arguments:
 //   size = The size of the cube.
@@ -34,20 +36,28 @@
 //   cuboid(20, p1=[10,0,0]);
 // Example: Rectangular cube, with given X, Y, and Z sizes.
 //   cuboid([20,40,50]);
-// Example: Rectangular cube defined by opposing cornerpoints.
+// Example: Cube by Opposing Corners.
 //   cuboid(p1=[0,10,0], p2=[20,30,30]);
-// Example: Rectangular cube with chamferred edges and corners.
+// Example: Chamferred Edges and Corners.
 //   cuboid([30,40,50], chamfer=5);
-// Example: Rectangular cube with chamferred edges, without trimmed corners.
+// Example: Chamferred Edges, Untrimmed Corners.
 //   cuboid([30,40,50], chamfer=5, trimcorners=false);
-// Example: Rectangular cube with rounded edges and corners.
+// Example: Rounded Edges and Corners
 //   cuboid([30,40,50], rounding=10);
-// Example: Rectangular cube with rounded edges, without trimmed corners.
+// Example: Rounded Edges, Untrimmed Corners
 //   cuboid([30,40,50], rounding=10, trimcorners=false);
-// Example: Rectangular cube with only some edges chamferred.
+// Example: Chamferring Selected Edges
 //   cuboid([30,40,50], chamfer=5, edges=edges([TOP+FRONT,TOP+RIGHT,FRONT+RIGHT]), $fn=24);
-// Example: Rectangular cube with only some edges rounded.
+// Example: Rounding Selected Edges
 //   cuboid([30,40,50], rounding=5, edges=edges([TOP+FRONT,TOP+RIGHT,FRONT+RIGHT]), $fn=24);
+// Example: Negative Chamferring
+//   cuboid([30,40,50], chamfer=-5, edges=edges([TOP,BOT], RIGHT), $fn=24);
+// Example: Negative Chamferring, Untrimmed Corners
+//   cuboid([30,40,50], chamfer=-5, edges=edges([TOP,BOT], RIGHT), trimcorners=false, $fn=24);
+// Example: Negative Rounding
+//   cuboid([30,40,50], rounding=-5, edges=edges([TOP,BOT], RIGHT), $fn=24);
+// Example: Negative Rounding, Untrimmed Corners
+//   cuboid([30,40,50], rounding=-5, edges=edges([TOP,BOT], RIGHT), trimcorners=false, $fn=24);
 // Example: Standard Connectors
 //   cuboid(40) show_anchors();
 module cuboid(
@@ -78,12 +88,61 @@ module cuboid(
 		majrots = [[0,90,0], [90,0,0], [0,0,0]];
 		orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
 			if (chamfer != undef) {
-				isize = [for (v = size) max(0.001, v-2*chamfer)];
 				if (edges == EDGES_ALL && trimcorners) {
-					hull() {
-						cube([size.x, isize.y, isize.z], center=true);
-						cube([isize.x, size.y, isize.z], center=true);
-						cube([isize.x, isize.y, size.z], center=true);
+					if (chamfer<0) {
+						cube(size, center=true) {
+							attach(TOP) prismoid([size.x,size.y], [size.x-2*chamfer,size.y-2*chamfer], h=-chamfer, anchor=TOP);
+							attach(BOT) prismoid([size.x,size.y], [size.x-2*chamfer,size.y-2*chamfer], h=-chamfer, anchor=TOP);
+						}
+					} else {
+						isize = [for (v = size) max(0.001, v-2*chamfer)];
+						hull() {
+							cube([size.x, isize.y, isize.z], center=true);
+							cube([isize.x, size.y, isize.z], center=true);
+							cube([isize.x, isize.y, size.z], center=true);
+						}
+					}
+				} else if (chamfer<0) {
+					ach = abs(chamfer);
+					cube(size, center=true);
+
+					// External-Chamfer mask edges
+					difference() {
+						union() {
+							for (i = [0:3], axis=[0:1]) {
+								if (edges[axis][i]>0) {
+									vec = EDGE_OFFSETS[axis][i];
+									translate(vmul(vec/2, size+[ach,ach,-ach])) {
+										rotate(majrots[axis]) {
+											cube([ach, ach, size[axis]], center=true);
+										}
+									}
+								}
+							}
+
+							// Add multi-edge corners.
+							if (trimcorners) {
+								for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
+									if (corner_edge_count(edges, [xa,ya,za]) > 1) {
+										translate(vmul([xa,ya,za]/2, size+[ach-0.01,ach-0.01,-ach])) {
+											cube([ach+0.01,ach+0.01,ach], center=true);
+										}
+									}
+								}
+							}
+						}
+
+						// Remove bevels from overhangs.
+						for (i = [0:3], axis=[0:1]) {
+							if (edges[axis][i]>0) {
+								vec = EDGE_OFFSETS[axis][i];
+								translate(vmul(vec/2, size+[2*ach,2*ach,-2*ach])) {
+									rotate(majrots[axis]) {
+										zrot(45) cube([ach*sqrt(2), ach*sqrt(2), size[axis]+2.1*ach], center=true);
+									}
+								}
+							}
+						}
 					}
 				} else {
 					difference() {
@@ -117,17 +176,74 @@ module cuboid(
 			} else if (rounding != undef) {
 				sides = quantup(segs(rounding),4);
 				sc = 1/cos(180/sides);
-				isize = [for (v = size) max(0.001, v-2*rounding)];
 				if (edges == EDGES_ALL) {
-					minkowski() {
-						cube(isize, center=true);
-						if (trimcorners) {
-							sphere(r=rounding*sc, $fn=sides);
-						} else {
-							intersection() {
-								zrot(180/sides) cylinder(r=rounding*sc, h=rounding*2, center=true, $fn=sides);
-								rotate([90,0,0]) zrot(180/sides) cylinder(r=rounding*sc, h=rounding*2, center=true, $fn=sides);
-								rotate([0,90,0]) zrot(180/sides) cylinder(r=rounding*sc, h=rounding*2, center=true, $fn=sides);
+					if(rounding<0) {
+						cube(size, center=true);
+						zflip_copy() {
+							up(size.z/2) {
+								difference() {
+									down(-rounding/2) cube([size.x-2*rounding, size.y-2*rounding, -rounding], center=true);
+									down(-rounding) {
+										yspread(size.y-2*rounding) xcyl(l=size.x-3*rounding, r=-rounding);
+										xspread(size.x-2*rounding) ycyl(l=size.y-3*rounding, r=-rounding);
+									}
+								}
+							}
+						}
+					} else {
+						isize = [for (v = size) max(0.001, v-2*rounding)];
+						minkowski() {
+							cube(isize, center=true);
+							if (trimcorners) {
+								sphere(r=rounding*sc, $fn=sides);
+							} else {
+								intersection() {
+									zrot(180/sides) cylinder(r=rounding*sc, h=rounding*2, center=true, $fn=sides);
+									rotate([90,0,0]) zrot(180/sides) cylinder(r=rounding*sc, h=rounding*2, center=true, $fn=sides);
+									rotate([0,90,0]) zrot(180/sides) cylinder(r=rounding*sc, h=rounding*2, center=true, $fn=sides);
+								}
+							}
+						}
+					}
+				} else if (rounding<0) {
+					ard = abs(rounding);
+					cube(size, center=true);
+
+					// External-Chamfer mask edges
+					difference() {
+						union() {
+							for (i = [0:3], axis=[0:1]) {
+								if (edges[axis][i]>0) {
+									vec = EDGE_OFFSETS[axis][i];
+									translate(vmul(vec/2, size+[ard,ard,-ard])) {
+										rotate(majrots[axis]) {
+											cube([ard, ard, size[axis]], center=true);
+										}
+									}
+								}
+							}
+
+							// Add multi-edge corners.
+							if (trimcorners) {
+								for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
+									if (corner_edge_count(edges, [xa,ya,za]) > 1) {
+										translate(vmul([xa,ya,za]/2, size+[ard-0.01,ard-0.01,-ard])) {
+											cube([ard+0.01,ard+0.01,ard], center=true);
+										}
+									}
+								}
+							}
+						}
+
+						// Remove roundings from overhangs.
+						for (i = [0:3], axis=[0:1]) {
+							if (edges[axis][i]>0) {
+								vec = EDGE_OFFSETS[axis][i];
+								translate(vmul(vec/2, size+[2*ard,2*ard,-2*ard])) {
+									rotate(majrots[axis]) {
+										cyl(l=size[axis]+2.1*ard, r=ard);
+									}
+								}
 							}
 						}
 					}
@@ -583,7 +699,11 @@ module cyl(
 //   }
 module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, anchor=CENTER)
 {
-	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=RIGHT, anchor=anchor) children();
+	anchor = rot(from=RIGHT, to=UP, p=anchor);
+	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=RIGHT, anchor=anchor) {
+		for (i=[0:1:$children-2]) children(i);
+		if ($children>0) children(0);
+	}
 }
 
 
@@ -620,7 +740,11 @@ module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   }
 module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, anchor=CENTER)
 {
-	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=BACK, anchor=anchor) children();
+	anchor = rot(from=BACK, to=UP, p=anchor);
+	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=BACK, anchor=anchor) {
+		for (i=[0:1:$children-2]) children(i);
+		if ($children>0) children(0);
+	}
 }
 
 
@@ -657,7 +781,10 @@ module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   }
 module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, anchor=CENTER)
 {
-	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=UP, anchor=anchor) children();
+	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=UP, anchor=anchor) {
+		for (i=[0:1:$children-2]) children(i);
+		if ($children>0) children(0);
+	}
 }
 
 
