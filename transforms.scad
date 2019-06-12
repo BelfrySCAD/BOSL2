@@ -284,9 +284,9 @@ function rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false, p=unde
 			rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, p=[p], planar=planar)[0]
 		) : (
 			planar? (
-				is_undef(from)? rotate_points2d(p, a=ang*rev, cp=cp) : (
+				is_undef(from)? rotate_points2d(p, a=a*rev, cp=cp) : (
 					approx(from,to)? p :
-					rotate_points2d(p, ang=vector_angle(from,to)*sign(vector_axis(from,to)[2])*rev, cp=cp)
+					rotate_points2d(p, a=vector_angle(from,to)*sign(vector_axis(from,to)[2])*rev, cp=cp)
 				)
 			) : (
 				rotate_points3d(p, a=a, v=v, cp=(is_undef(cp)? [0,0,0] : cp), from=from, to=to, reverse=reverse)
