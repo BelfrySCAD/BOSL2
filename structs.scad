@@ -21,7 +21,6 @@
 //    value = value to set the keyword to
 //    grow = Set to true to allow structure to grow, or false for new keywords to generate an error.  Default: true
 function struct_set(struct, keyword, value=undef, grow=true) =
-    let(aa=echo(struct=struct, keyword=keyword, value=value, grow=grow))
      !is_list(keyword) ?
         let(ind=search([keyword],struct,1,0)[0])
         (ind==[] ? assert(grow,str("Unknown keyword \"",keyword))
@@ -32,7 +31,7 @@ function struct_set(struct, keyword, value=undef, grow=true) =
 function _parse_pairs(spec, input, grow=true, index=0, result=undef) =
      assert(len(input)%2==0,"Odd number of entries in [keyword,value] pair list")
      let( result = result==undef ? spec : result)
-     index == len(input) ? result :  let(dd=echo(dd=spec, input, grow,index, result))
+     index == len(input) ? result :  
    _parse_pairs(spec,input,grow,index+2,struct_set(result, input[index], input[index+1],grow));
 
 // Function: struct_remove()
@@ -56,7 +55,8 @@ function struct_remove(struct, keyword) =
 // Arguments:
 //    struct = input structure
 //    keyword = keyword whose value to return
-function struct_val(struct,keyword) = 
+function struct_val(struct,keyword) =
+     assert(is_def(keyword),"keyword is missing")
      let(ind = search([keyword],struct)[0])
      ind == [] ? undef : struct[ind][1];
 
