@@ -477,41 +477,60 @@ module star(n, r, d, ir, id, step, realign=false, anchor=CENTER, spin=0)
 function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 	pow(pow(abs(cos(m1*theta/4)/a),n2)+pow(abs(sin(m2*theta/4)/b),n3),-1/n1);
 
-
-// Function&Module: superformula_shape()
+// Function&Module: supershape()
 // Usage:
-//   superformula_shape(step,m1,m2,n1,n2,n3,[a],[b]);
+//   supershape(step,[m1],[m2],[n1],[n2],[n3],[a],[b],[r|d]);
 // Description:
 //   When called as a function, returns a 2D path for the outline of the [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
 //   When called as a module, creates a 2D [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
 // Arguments:
 //   step = The angle step size for sampling the superformula shape.  Smaller steps are slower but more accurate.
-//   scale = The scaling multiplier for the size of the shape.
-//   m1 = The m1 argument for the superformula.
-//   m2 = The m2 argument for the superformula.
-//   n1 = The n1 argument for the superformula.
-//   n2 = The n2 argument for the superformula.
-//   n3 = The n3 argument for the superformula.
-//   a = The a argument for the superformula.
-//   b = The b argument for the superformula.
+//   m1 = The m1 argument for the superformula. Default: 4. 
+//   m2 = The m2 argument for the superformula. Default: m1.
+//   n1 = The n1 argument for the superformula. Default: 1.
+//   n2 = The n2 argument for the superformula. Default: n1.
+//   n3 = The n3 argument for the superformula. Default: n2.
+//   a = The a argument for the superformula.  Default: 1.
+//   b = The b argument for the superformula.  Default: a.
+//   r = Radius of the shape.  Scale shape to fit in a circle of radius r.
+//   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D):
-//   superformula_shape(step=0.5,scale=100,m1=16,m2=16,n1=0.5,n2=0.5,n3=16);
+//   supershape(step=0.5,m1=16,m2=16,n1=0.5,n2=0.5,n3=16,r=50);
 // Example(2D): Called as Function
-//   stroke(close=true, superformula_shape(step=0.5,scale=100,m1=16,m2=16,n1=0.5,n2=0.5,n3=16));
-function superformula_shape(step=0.5,scale=1,m1,m2,n1,n2=1,n3=1,a=1,b=1, anchor=CENTER, spin=0) =
+//   stroke(close=true, supershape(step=0.5,m1=16,m2=16,n1=0.5,n2=0.5,n3=16,d=100));
+// Examples2(2D):
+//   for(n=[2:5]) right(2.5*(n-2)) supershape(m1=4,m2=4,n1=n,a=1,b=2);  // Superellipses
+//   m=[2,3,5,7]; for(i=[0:3]) right(2.5*i) supershape(.5,m1=m[i],n1=1);
+//   m=[6,8,10,12]; for(i=[0:3]) right(2.7*i) supershape(.5,m1=m[i],n1=1,b=1.5);  // m should be even
+//   m=[1,2,3,5]; for(i=[0:3]) fwd(1.5*i) supershape(m1=m[i],n1=0.4);
+//   supershape(m1=5, n1=4, n2=1); right(2.5) supershape(m1=5, n1=40, n2=10);
+//   m=[2,3,5,7]; for(i=[0:3]) right(2.5*i) supershape(m1=m[i], n1=60, n2=55, n3=30);
+//   n=[0.5,0.2,0.1,0.02]; for(i=[0:3]) right(2.5*i) supershape(m1=5,n1=n[i], n2=1.7);
+//   supershape(m1=2, n1=1, n2=4, n3=8);
+//   supershape(m1=7, n1=2, n2=8, n3=4);
+//   supershape(m1=7, n1=3, n2=4, n3=17);
+//   supershape(m1=4, n1=1/2, n2=1/2, n3=4);
+//   supershape(m1=4, n1=4.0,n2=16, n3=1.5, a=0.9, b=9);
+//   for(i=[1:4]) right(3*i) supershape(m1=i, m2=3*i, n1=2);  
+//   m=[4,6,10]; for(i=[0:2]) right(i*5) supershape(m1=m[i], n1=12, n2=8, n3=5, a=2.7);
+function supershape(step=0.5,m1=4,m2=undef,n1=1,n2=undef,n3=undef,a=1,b=undef,r=undef,d=undef,anchor=CENTER, spin=0) =
 	let(
+                r = get_radius(r=r,d=d,dflt=undef),
+                m2 = is_def(m2) ? m2 : m1,
+                n2 = is_def(n2) ? n2 : n1,
+                n3 = is_def(n3) ? n3 : n2,
+                b = is_def(b) ? b : a,
 		steps = ceil(360/step),
 		step = 360/steps,
 		angs = [for (i = [0:steps-1]) step*i],
-		rads = [for (a = angs) scale*_superformula(theta=a,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3)],
-		path = [for (i = [0:steps-1]) let(a=angs[i]) rads[i]*[cos(a), sin(a)]]
-	) rot(spin, p=move(-max(rads)*normalize(anchor), p=path));
+		rads = [for (theta = angs) _superformula(theta=theta,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b)],
+                scale = is_def(r) ? r/max(rads) : 1,
+		path = [for (i = [0:steps-1]) let(a=angs[i]) scale*rads[i]*[cos(a), sin(a)]]
+	) rot(spin, p=move(-scale*max(rads)*normalize(anchor), p=path));
 
-
-module superformula_shape(step=0.5,scale=1,m1,m2,n1,n2=1,n3=1,a=1,b=1, anchor=CENTER, spin=0)
-	polygon(superformula_shape(step=step,scale=scale,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b, anchor=anchor, spin=spin));
-
+module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0)
+	polygon(supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b, r=r,d=d, anchor=anchor, spin=spin));
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
