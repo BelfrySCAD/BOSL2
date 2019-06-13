@@ -150,56 +150,42 @@ function list_range(n=undef, s=0, e=undef, step=1) =
 function reverse(list) = [ for (i = [len(list)-1 : -1 : 0]) list[i] ];
 
 
-
 // Function: list_set()
-//
-// list_set(indices, values, list, dftl, minlen)
-// Takes the input list and returns a new list such that
-//    list[indices[i]] = values[i]
-// for all of the (index,value) pairs supplied.  If you supply indices
-// that are beyond the length of the list then the list is extended
-// and filled in with the dflt value.
-//
-// If you set minlen then the list is lengthed, if necessary, by padding
-// with dflt to that length.  
-// 
-// The `indices` list can be in any order but run time will be (much) faster
-// for long lists if it is already sorted.  Reptitions are not allowed.  
-// 
+// Usage:
+//   list_set(indices, values, list, [dflt], [minlen])
+// Description:
+//   Takes the input list and returns a new list such that `list[indices[i]] = values[i]` for all of
+//   the (index,value) pairs supplied.  If you supply `indices` that are beyond the length of the list
+//   then the list is extended and filled in with the `dflt` value.  If you set `minlen` then the list is
+//   lengthed, if necessary, by padding with `dflt` to that length.  The `indices` list can be in any
+//   order but run time will be (much) faster for long lists if it is already sorted.  Reptitions are
+//   not allowed.
+// Arguments:
+//   indices = List of indices into `list` to set.
+//   values = List of values to set.
+//   list = List to set items in.
+//   dflt = Default value to store in sparse skipped indices.
+//   minlen = Minimum length to expand list to.
 function list_set(indices,values,list=[],dflt=0,minlen=0) =
-    !is_list(indices) ? list_set(list,[indices],[values],dflt) :
-    assert(len(indices)==len(values),"Index list and value list must have the same length")
-    len(indices)==0 ? concat(list, replist(dflt, minlen-len(list))) :
-    let( sortind = list_increasing(indices) ? list_range(len(indices)) : sortidx(indices),
-         lastind = indices[select(sortind,-1)]
-    )
-    concat([for(j=[0:1:indices[sortind[0]]-1]) j>=len(list) ? dflt : list[j]], [values[sortind[0]]], 
-          [for(i=[1:1:len(sortind)-1])   
-                                        each
-                                          assert(indices[sortind[i]]!=indices[sortind[i-1]],"Repeated index")
-                                          concat(
-                                            [for(j=[1+indices[sortind[i-1]]:1:indices[sortind[i]]-1]) j>=len(list) ? dflt : list[j]],
-                                            [values[sortind[i]]]
-                                         )
-          ],
-          slice(list,1+lastind, len(list)),
-          replist(dflt, minlen-lastind-1)
-    );
-
-// Function: list_increasing()
-// Usage:
-//    list_increasing(list)
-// Description: returns true if the list is (non-strictly) increasing
-function list_increasing(list,ind=0) = ind < len(list)-1 && list[ind]<=list[ind+1] ? list_increasing(list,ind+1) :
-                                       (ind>=len(list)-1 ? true : false);
-
-
-// Function: list_decreasing()
-// Usage:
-//    list_increasing(list)
-// Description: returns true if the list is (non-strictly) decreasing
-function list_decreasing(list,ind=0) = ind < len(list)-1 && list[ind]>=list[ind+1] ? list_increasing(list,ind+1) :
-                                       (ind>=len(list)-1 ? true : false);
+	!is_list(indices) ? list_set(list,[indices],[values],dflt) :
+	assert(len(indices)==len(values),"Index list and value list must have the same length")
+	let(
+		sortind = list_increasing(indices) ? list_range(len(indices)) : sortidx(indices),
+		lastind = indices[select(sortind,-1)]
+	)
+	concat(
+		[for(j=[0:1:indices[sortind[0]]-1]) j>=len(list) ? dflt : list[j]],
+		[values[sortind[0]]], 
+		[for(i=[1:1:len(sortind)-1]) each
+			assert(indices[sortind[i]]!=indices[sortind[i-1]],"Repeated index")
+			concat(
+				[for(j=[1+indices[sortind[i-1]]:1:indices[sortind[i]]-1]) j>=len(list) ? dflt : list[j]],
+				[values[sortind[i]]]
+			)
+		],
+		slice(list,1+lastind, len(list)),
+		replist(dflt, minlen-lastind-1)
+	);
 
 
 // Function: list_remove()
@@ -210,7 +196,7 @@ function list_decreasing(list,ind=0) = ind < len(list)-1 && list[ind]>=list[ind+
 // Arguments:
 //   list = The list to remove items from.
 //   elements = The list of indexes of items to remove.
-function list_remove(list,elements) =
+function list_remove(list, elements) =
     !is_list(elements) ? list_remove(list,[elements]) :
     let( sortind = list_increasing(elements) ? list_range(len(elements)) : sortidx(elements),
          lastind = elements[select(sortind,-1)]
@@ -233,6 +219,16 @@ function list_insert(list, pos, elements) =
 		elements,
 		(pos<len(list)? slice(list,pos,-1) : [])
 	);
+
+
+// True if the list is (non-strictly) increasing
+function list_increasing(list,ind=0) = ind < len(list)-1 && list[ind]<=list[ind+1] ? list_increasing(list,ind+1) :
+                                       (ind>=len(list)-1 ? true : false);
+
+
+// True if the list is (non-strictly) decreasing
+function list_decreasing(list,ind=0) = ind < len(list)-1 && list[ind]>=list[ind+1] ? list_increasing(list,ind+1) :
+                                       (ind>=len(list)-1 ? true : false);
 
 
 // Function: list_shortest()

@@ -176,11 +176,12 @@ module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=unde
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
 	l = first_defined([h, l]);
+	hh = h/2;
 	sides = segs(max(r1,r2));
 	size = [r1*2, r1*2, l];
 	orient_and_anchor(size, orient, anchor, center, spin=spin, size2=[r2*2,r2*2], noncentered=BOTTOM, geometry="cylinder", chain=true) {
-		linear_extrude(height=l, scale=r2/r1, convexity=2, center=true) {
-			circle(r=r1, $fn=sides);
+		rotate_extrude(convexity=2, $fn=sides) {
+			polygon([[0,hh],[r2,hh],[r1,-hh],[0,-hh]]);
 		}
 		children();
 	}
