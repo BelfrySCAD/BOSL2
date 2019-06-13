@@ -16,7 +16,7 @@ include <BOSL2/paths.scad>
 
 // Module: thread_helix()
 // Usage:
-//   thread_helix(base_d, pitch, thread_depth, thread_angle, twist, [profile], [left_handed], [higbee], [interior]);
+//   thread_helix(base_d, pitch, thread_depth, thread_angle, twist, [profile], [left_handed], [higbee], [internal]);
 // Description:
 //   Creates a helical thread with optional end tapering.
 // Arguments:
@@ -28,18 +28,18 @@ include <BOSL2/paths.scad>
 //   profile = If a an asymmetrical thread profile is needed, it can be specified here.
 //   left_handed = If true, thread has a left-handed winding.
 //   higbee = Angle to taper thread ends by.
-//   interior = If true, invert threads for interior threading.
+//   internal = If true, invert threads for internal threading.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=720, profile=undef, left_handed=false, higbee=60, interior=false, anchor=CENTER, spin=0, orient=UP)
+module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=720, profile=undef, left_handed=false, higbee=60, internal=false, anchor=CENTER, spin=0, orient=UP)
 {
 	h = pitch*twist/360;
 	r = base_d/2;
 	dz = thread_depth/pitch * tan(thread_angle);
 	cap = (1 - 2*dz)/2;
 	profile = !is_undef(profile)? profile : (
-		interior? [
+		internal? [
 			[thread_depth/pitch, -cap/2-dz],
 			[0, -cap/2],
 			[0, +cap/2],
@@ -53,12 +53,12 @@ module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=72
 	);
 	pline = scale_points(profile, [1,1,1]*pitch);
 	dir = left_handed? -1 : 1;
-	idir = interior? -1 : 1;
+	idir = internal? -1 : 1;
 	orient_and_anchor([2*r, 2*r, h], orient, anchor, spin=spin, chain=true) {
 		difference() {
 			extrude_2dpath_along_spiral(pline, h=h, r=base_d/2, twist=twist*dir, $fn=segs(base_d/2), anchor=CENTER);
-			down(h/2) right(r) right(interior? thread_depth : 0) zrot(higbee*dir*idir) fwd(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
-			up(h/2) zrot(twist*dir) right(r) right(interior? thread_depth : 0) zrot(-higbee*dir*idir) back(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
+			down(h/2) right(r) right(internal? thread_depth : 0) zrot(higbee*dir*idir) fwd(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
+			up(h/2) zrot(twist*dir) right(r) right(internal? thread_depth : 0) zrot(-higbee*dir*idir) back(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
 		}
 		children();
 	}
@@ -564,6 +564,8 @@ module buttress_threaded_nut(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
+//   internal = If true, this is a mask for making internal threads.
+//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -577,6 +579,8 @@ module metric_trapezoidal_threaded_rod(
 	left_handed=false,
 	starts=1,
 	bevel=false,
+	internal=false,
+	slop=undef,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
@@ -588,6 +592,8 @@ module metric_trapezoidal_threaded_rod(
 		left_handed=left_handed,
 		starts=starts,
 		bevel=bevel,
+		internal=internal,
+		slop=slop,
 		anchor=anchor,
 		spin=spin,
 		orient=orient
@@ -654,6 +660,8 @@ module metric_trapezoidal_threaded_nut(
 //   starts = The number of lead starts.  Default = 1
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
+//   internal = If true, this is a mask for making internal threads.
+//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -670,6 +678,8 @@ module acme_threaded_rod(
 	starts=1,
 	left_handed=false,
 	bevel=false,
+	internal=false,
+	slop=undef,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
@@ -681,6 +691,8 @@ module acme_threaded_rod(
 		starts=starts,
 		left_handed=left_handed,
 		bevel=bevel,
+		internal=internal,
+		slop=slop,
 		anchor=anchor,
 		spin=spin,
 		orient=orient
@@ -749,6 +761,8 @@ module acme_threaded_nut(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
+//   internal = If true, this is a mask for making internal threads.
+//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -762,6 +776,8 @@ module square_threaded_rod(
 	left_handed=false,
 	bevel=false,
 	starts=1,
+	internal=false,
+	slop=undef,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
@@ -772,6 +788,8 @@ module square_threaded_rod(
 		left_handed=left_handed,
 		bevel=bevel,
 		starts=starts,
+		internal=internal,
+		slop=slop,
 		anchor=anchor,
 		spin=spin,
 		orient=orient
@@ -923,7 +941,7 @@ module pco1881_cap(wall=2, anchor=BOTTOM, spin=0, orient=UP)
 		down(h/2) zrot(45) {
 			tube(id=28.58, wall=wall, h=11.2+wall, anchor=BOTTOM);
 			cylinder(d=w, h=wall, anchor=BOTTOM);
-			up(wall+2) thread_helix(base_d=25.5, pitch=2.7, thread_depth=1.6, thread_angle=15, twist=650, higbee=45, interior=true, anchor=BOTTOM);
+			up(wall+2) thread_helix(base_d=25.5, pitch=2.7, thread_depth=1.6, thread_angle=15, twist=650, higbee=45, internal=true, anchor=BOTTOM);
 		}
 		children();
 	}
