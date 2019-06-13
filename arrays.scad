@@ -186,6 +186,20 @@ function list_set(indices,values,list=[],dflt=0,minlen=0) =
           replist(dflt, minlen-lastind-1)
     );
 
+// Function: list_increasing()
+// Usage:
+//    list_increasing(list)
+// Description: returns true if the list is (non-strictly) increasing
+function list_increasing(list,ind=0) = ind < len(list)-1 && list[ind]<=list[ind+1] ? list_increasing(list,ind+1) :
+                                       (ind>=len(list)-1 ? true : false);
+
+
+// Function: list_decreasing()
+// Usage:
+//    list_increasing(list)
+// Description: returns true if the list is (non-strictly) decreasing
+function list_decreasing(list,ind=0) = ind < len(list)-1 && list[ind]>=list[ind+1] ? list_increasing(list,ind+1) :
+                                       (ind>=len(list)-1 ? true : false);
 
 
 // Function: list_remove()
