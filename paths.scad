@@ -14,6 +14,30 @@ include <BOSL2/triangulation.scad>
 // Section: Functions
 
 
+// Function: is_path()
+// Usage:
+//   is_path(x);
+// Description:
+//   Returns true if the given item looks like a path.
+function is_path(x) = is_list(x) && is_vector(x.x);
+
+
+// Function: is_closed_path()
+// Usage:
+//   is_closed_path(path, [eps]);
+// Description:
+//   Returns true if the first and last points in the given path are coincident.
+function is_closed_path(path, eps=1e-6) = approx(path[0], path[len(path)-1], eps=eps);
+
+
+// Function: close_path(path)
+// Usage:
+//   close_path(path);
+// Description:
+//   If a path's last point does not coincide with its first point, closes the path so it does.
+function close_path(path) = approx(path[0],path[len(path)-1])? path : concat(path,[path[0]]);
+
+
 // Function: simplify2d_path()
 // Description:
 //   Takes a 2D polyline and removes unnecessary collinear points.
@@ -49,6 +73,74 @@ function simplify3d_path(path, eps=1e-6) = simplify_path(path, eps=eps);
 function path_length(path) =
 	len(path)<2? 0 :
 	sum([for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i])]);
+
+
+// Function path_subselect()
+// Usage:
+//   path_subselect(path,s1,u1,s2,u2):
+// Description:
+//   Returns a portion of a path, from between the `u1` part of segment `s1`, to the `u2` part of
+//   segment `s2`.  Both `u1` and `u2` are values between 0.0 and 1.0, inclusive, where 0 is the start
+//   of the segment, and 1 is the end.  Both `s1` and `s2` are integers, where 0 is the first segment.
+// Arguments:
+//   s1 = The number of the starting segment.
+//   u1 = The proportion along the starting segment, between 0.0 and 1.0, inclusive.
+//   s2 = The number of the ending segment.
+//   u2 = The proportion along the ending segment, between 0.0 and 1.0, inclusive.
+function path_subselect(path,s1,u1,s2,u2) =
+	let(
+		l = len(path)-1,
+		u1 = s1<0? 0 : s1>l? 1 : u1,
+		u2 = s2<0? 0 : s2>l? 1 : u2,
+		s1 = constrain(s1,0,l),
+		s2 = constrain(s2,0,l),
+		pathout = concat(
+			(s1<l)? [lerp(path[s1],path[s1+1],u1)] : [],
+			[for (i=[s1+1:1:s2]) path[i]],
+			(s2<l)? [lerp(path[s2],path[s2+1],u2)] : []
+		)
+	) pathout;
+
+
+// Function: assemble_path_fragments()
+// Usage:
+//   assemble_path_fragments(subpaths);
+// Description:
+//   Given a list of incomplete paths, assembles them together into complete closed paths if it can.
+function assemble_path_fragments(subpaths,_finished=[]) =
+	len(subpaths)<=1? concat(_finished, subpaths) :
+	let(
+		path = subpaths[0],
+		matches = [
+			for (i=[1:1:len(subpaths)-1], rev1=[0,1], rev2=[0,1]) let(
+				idx1 = rev1? 0 : len(path)-1,
+				idx2 = rev2? len(subpaths[i])-1 : 0
+			) if (approx(path[idx1], subpaths[i][idx2])) [
+				i, concat(
+					rev1? reverse(path) : path,
+					select(rev2? reverse(subpaths[i]) : subpaths[i], 1,-1)
+				)
+			]
+		]
+	) len(matches)==0? (
+		assemble_path_fragments(
+			select(subpaths,1,-1),
+			concat(_finished, [path])
+		)
+	) : is_closed_path(matches[0][1])? (
+		assemble_path_fragments(
+			[for (i=[1:1:len(subpaths)-1]) if(i != matches[0][0]) subpaths[i]],
+			concat(_finished, [matches[0][1]])
+		)
+	) : (
+		assemble_path_fragments(
+			concat(
+				[matches[0][1]],
+				[for (i = [1:1:len(subpaths)-1]) if(i != matches[0][0]) subpaths[i]]
+			),
+			_finished
+		)
+	);
 
 
 // Function: path3d_spiral()

@@ -228,6 +228,7 @@ function triangle_area2d(a,b,c) =
 	) / 2;
 
 
+
 // Section: Planes
 
 // Function: plane3pt()
@@ -383,6 +384,23 @@ function point_in_polygon(point, path) =
 	sum([for(i=[0:1:len(path)-1]) _point_above_below_segment(point, select(path, i, i+1))]) != 0 ? 1 : -1;
 
 
+// Function: point_in_region()
+// Usage:
+//   point_in_region(point, region);
+// Description:
+//   Tests if a point is inside, outside, or on the border of a region.
+//   Returns -1 if the point is outside the region.
+//   Returns 0 if the point is on the boundary.
+//   Returns 1 if the point lies inside the region.
+// Arguments:
+//   point = The point to test.
+//   region = The region to test against.  Given as a list of polygon paths.
+function point_in_region(point, region, _i=0, _cnt=0) =
+	(_i >= len(region))? ((_cnt%2==1)? 1 : -1) : let(
+		pip = point_in_polygon(point, region[_i])
+	) pip==0? 0 : point_in_region(point, region, _i+1, _cnt + (pip>0? 1 : 0));
+
+
 // Function: pointlist_bounds()
 // Usage:
 //   pointlist_bounds(pts);
@@ -415,6 +433,214 @@ function polygon_clockwise(path) =
        extreme = select(lowind,extreme_sub)
      )
   det2(  [select(path,extreme+1)-path[extreme], select(path, extreme-1)-path[extreme]])<0;
+
+
+
+// Section: Regions and Boolean 2D Geometry
+
+
+// Function: is_region()
+// Usage:
+//   is_region(x);
+// Description:
+//   Returns true if the given item looks like a region, which is a list of paths.
+function is_region(x) = is_list(x) && is_path(x.x);
+
+
+// Function: close_region(path)
+// Usage:
+//   close_region(region);
+// Description:
+//   Closes all paths within a given region.
+function close_region(region) = [for (path=region) close_path(path)];
+
+
+// Function: region_path_crossings()
+// Usage:
+//   region_path_crossings(path, region);
+// Description:
+//   Returns a sorted list of [SEGMENT, U] that describe where a given path is crossed by a second path.
+// Arguments:
+//   path = The path to find crossings on.
+//   region = Region to test for crossings of.
+function region_path_crossings(path, region) = sort([
+	for (s1=enumerate(pair_wrap(path)), path=region, s2=pair_wrap(path)) let(
+		isect = _general_line_intersection(s1.y,s2),
+		eps = 1e-9
+	) if (
+		!is_undef(isect) &&
+		isect[1] >= 0-eps && isect[1] < 1-eps &&
+		isect[2] >= 0-eps && isect[2] < 1-eps
+	) [s1.x, isect[1]]
+]);
+
+
+function _split_path_at_region_crossings(path, region, eps=1e-6) =
+	let(
+		path = deduplicate(path, eps=eps),
+		region = [for (path=region) deduplicate(path, eps=eps)],
+		crossings = deduplicate(concat(
+			[[0,0]],
+			region_path_crossings(path, region),
+			[[len(path)-2,1]]
+		))
+	) [for (p = pair(crossings)) path_subselect(path, p[0][0], p[0][1], p[1][0], p[1][1])];
+
+
+function _tag_subpaths(path, region) =
+	let(
+		subpaths = _split_path_at_region_crossings(path, region),
+		tagged = [
+			for (subpath = subpaths) let(
+				midpt = lerp(subpath[0], subpath[1], 0.5),
+				rel = point_in_region(midpt,region)
+			) rel<0? ["O", subpath] : rel>0? ["I", subpath] : let(
+				sidept = midpt + rot(90, planar=true, p=normalize(subpath[0][1]-subpath[0][0])*0.01),
+				rel2 = (point_in_region(sidept,region)>0) == (point_in_region(sidept,region)>0)
+			) rel2? ["S", subpath] : ["U", subpath]
+		]
+	) tagged;
+
+
+function _tag_region_subpaths(region1, region2) =
+	[for (path=region1) each _tag_subpaths(path, region2)];
+
+
+function _tagged_region(region1,region2,keep1,keep2) =
+	let(
+		region1 = close_region(region1),
+		region2 = close_region(region2),
+		tagged1 = _tag_region_subpaths(region1,region2),
+		tagged2 = _tag_region_subpaths(region2,region1),
+		tagged = concat(
+			[for (tagpath = tagged1) if (in_list(tagpath[0], keep1)) tagpath[1]],
+			[for (tagpath = tagged2) if (in_list(tagpath[0], keep2)) tagpath[1]]
+		),
+		outregion = assemble_path_fragments(tagged)
+	) outregion;
+
+
+// Function: union()
+// Usage:
+//   union(regions);
+// Description:
+//   Given a list of regions, where each region is a list of closed 2D paths, returns the region boolean union of all given regions.
+// Arguments:
+//   regions = List of regions to union.  Each region is a list of closed paths.
+// Example(2D):
+//   shape1 = move([-8,-8,0], p=circle(d=50));
+//   shape2 = move([ 8, 8,0], p=circle(d=50));
+//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, close=true);
+//   color("green") region(union(shape1,shape2));
+function union(regions=[],b=undef,c=undef) =
+	b!=undef? union(concat([regions],[b],c==undef?[]:[c])) :
+	len(regions)<=1? regions[0] :
+	union(
+		let(regions=[for (r=regions) is_path(r)? [r] : r])
+		concat(
+			[_tagged_region(regions[0],regions[1],["O","S"],["O"])],
+			[for (i=[2:1:len(regions)-1]) regions[i]]
+		)
+	);
+
+
+// Function: difference()
+// Usage:
+//   difference(regions);
+// Description:
+//   Given a list of regions, where each region is a list of closed 2D paths, takes the first
+//   region and differences away all other regions from it.  The resulting region is returned.
+// Arguments:
+//   regions = List of regions to difference.  Each region is a list of closed paths.
+// Example(2D):
+//   shape1 = move([-8,-8,0], p=circle(d=50));
+//   shape2 = move([ 8, 8,0], p=circle(d=50));
+//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, close=true);
+//   color("green") region(difference(shape1,shape2));
+function difference(regions=[],b=undef,c=undef) =
+	b!=undef? difference(concat([regions],[b],c==undef?[]:[c])) :
+	len(regions)<=1? regions[0] :
+	difference(
+		let(regions=[for (r=regions) is_path(r)? [r] : r])
+		concat(
+			[_tagged_region(regions[0],regions[1],["O","U"],["I"])],
+			[for (i=[2:1:len(regions)-1]) regions[i]]
+		)
+	);
+
+
+// Function: intersection()
+// Usage:
+//   intersection(regions);
+// Description:
+//   Given a list of regions, where each region is a list of closed 2D paths, returns the region boolean intersection of all given regions.
+// Arguments:
+//   regions = List of regions to intersection.  Each region is a list of closed paths.
+// Example(2D):
+//   shape1 = move([-8,-8,0], p=circle(d=50));
+//   shape2 = move([ 8, 8,0], p=circle(d=50));
+//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, close=true);
+//   color("green") region(intersection(shape1,shape2));
+function intersection(regions=[],b=undef,c=undef) =
+	b!=undef? intersection(concat([regions],[b],c==undef?[]:[c])) :
+	len(regions)<=1? regions[0] :
+	intersection(
+		let(regions=[for (r=regions) is_path(r)? [r] : r])
+		concat(
+			[_tagged_region(regions[0],regions[1],["I","S"],["I"])],
+			[for (i=[2:1:len(regions)-1]) regions[i]]
+		)
+	);
+
+
+// Function: exclusive_or()
+// Usage:
+//   exclusive_or(regions);
+// Description:
+//   Given a list of regions, where each region is a list of closed 2D paths, returns the region boolean exclusive_or of all given regions.
+// Arguments:
+//   regions = List of regions to exclusive_or.  Each region is a list of closed paths.
+// Example(2D):
+//   shape1 = move([-8,-8,0], p=circle(d=50));
+//   shape2 = move([ 8, 8,0], p=circle(d=50));
+//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, close=true);
+//   color("green") region(exclusive_or(shape1,shape2));
+function exclusive_or(regions=[],b=undef,c=undef) =
+	b!=undef? exclusive_or(concat([regions],[b],c==undef?[]:[c])) :
+	len(regions)<=1? regions[0] :
+	exclusive_or(
+		let(regions=[for (r=regions) is_path(r)? [r] : r])
+		concat(
+			[union([
+				difference([regions[0],regions[1]]),
+				difference([regions[1],regions[0]])
+			])],
+			[for (i=[2:1:len(regions)-1]) regions[i]]
+		)
+	);
+
+
+// Module: region()
+// Usage:
+//   region(r);
+// Description:
+//   Creates 2D polygons for the given region.
+// Example(2D):
+//   shape1 = circle(d=50);
+//   shape2 = circle(d=30);
+//   region([shape1,shape2]);
+module region(r)
+{
+	points = flatten(r);
+	paths = [
+		for (i=[0:1:len(r)-1]) let(
+			start = default(sum([for (j=[0:1:i-1]) len(r[j])]),0)
+		) [for (k=[0:1:len(r[i])-1]) start+k]
+	];
+	polygon(points=points, paths=paths);
+}
+
+
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
