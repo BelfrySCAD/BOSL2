@@ -150,6 +150,25 @@ function list_range(n=undef, s=0, e=undef, step=1) =
 function reverse(list) = [ for (i = [len(list)-1 : -1 : 0]) list[i] ];
 
 
+// Function: deduplicate()
+// Usage:
+//   deduplicate(list);
+// Description:
+//   Removes consecutive duplicate items in a list.
+//   This is different from `unique()` in that the list is *not* sorted.
+// Arguments:
+//   list = The list to deduplicate.
+//   eps = The maximum difference to allow between numbers or vectors.
+// Examples:
+//   deduplicate([8,3,4,4,4,8,2,3,3,7]);  // Returns: [8,3,4,8,2,3,7]
+//   deduplicate("Hello");  // Returns: ["H","e","l","o"]
+//   deduplicate([[3,4],[7,2],[7,1.99],[1,4]],eps=0.1);  // Returns: [[3,4],[7,2],[1,4]]
+function deduplicate(list, eps=EPSILON) =
+	(is_num(list[0]) || is_vector(list[0]))?
+		[for (i=[0:1:len(list)-1]) if (!approx(list[i], list[i+1], eps)) list[i]] :
+		[for (i=[0:1:len(list)-1]) if (list[i] != list[i+1]) list[i]];
+
+
 // Function: list_set()
 // Usage:
 //   list_set(indices, values, list, [dflt], [minlen])
