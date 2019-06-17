@@ -45,6 +45,7 @@ module square(size, center=undef, anchor=FRONT+LEFT, spin=0) {
 
 function square(size, center=undef, anchor=FRONT+LEFT, spin=0) =
 	let(
+		anchor = center==true? CENTER : center==false? FRONT+LEFT : anchor,
 		size = is_num(size)? [size,size] : point2d(size),
 		s=size/2
 	) rot(spin, p=move(-vmul(anchor,s), p=[[-s.x,-s.y], [-s.x,s.y], [s.x,s.y], [s.x,-s.y]]));
@@ -87,7 +88,7 @@ function circle(r=undef, d=undef, anchor=CENTER, spin=0) =
 		r = get_radius(r=r, d=d, dflt=1),
 		sides = segs(r),
 		pts = [for (i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]]
-	) rot(spin, p=move(-vmul(anchor,s), p=pts));
+	) rot(spin, p=move(-normalize(anchor)*r, p=pts));
 
 
 
