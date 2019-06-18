@@ -500,7 +500,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   supershape(step=0.5,m1=16,m2=16,n1=0.5,n2=0.5,n3=16,r=50);
 // Example(2D): Called as Function
 //   stroke(close=true, supershape(step=0.5,m1=16,m2=16,n1=0.5,n2=0.5,n3=16,d=100));
-// Examples2(2D):
+// Examples(2D,Med):
 //   for(n=[2:5]) right(2.5*(n-2)) supershape(m1=4,m2=4,n1=n,a=1,b=2);  // Superellipses
 //   m=[2,3,5,7]; for(i=[0:3]) right(2.5*i) supershape(.5,m1=m[i],n1=1);
 //   m=[6,8,10,12]; for(i=[0:3]) right(2.7*i) supershape(.5,m1=m[i],n1=1,b=1.5);  // m should be even
@@ -517,20 +517,22 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   m=[4,6,10]; for(i=[0:2]) right(i*5) supershape(m1=m[i], n1=12, n2=8, n3=5, a=2.7);
 function supershape(step=0.5,m1=4,m2=undef,n1=1,n2=undef,n3=undef,a=1,b=undef,r=undef,d=undef,anchor=CENTER, spin=0) =
 	let(
-                r = get_radius(r=r,d=d,dflt=undef),
-                m2 = is_def(m2) ? m2 : m1,
-                n2 = is_def(n2) ? n2 : n1,
-                n3 = is_def(n3) ? n3 : n2,
-                b = is_def(b) ? b : a,
+		r = get_radius(r=r,d=d,dflt=undef),
+		m2 = is_def(m2) ? m2 : m1,
+		n2 = is_def(n2) ? n2 : n1,
+		n3 = is_def(n3) ? n3 : n2,
+		b = is_def(b) ? b : a,
 		steps = ceil(360/step),
 		step = 360/steps,
 		angs = [for (i = [0:steps-1]) step*i],
 		rads = [for (theta = angs) _superformula(theta=theta,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b)],
-                scale = is_def(r) ? r/max(rads) : 1,
+		scale = is_def(r) ? r/max(rads) : 1,
 		path = [for (i = [0:steps-1]) let(a=angs[i]) scale*rads[i]*[cos(a), sin(a)]]
 	) rot(spin, p=move(-scale*max(rads)*normalize(anchor), p=path));
 
 module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0)
 	polygon(supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b, r=r,d=d, anchor=anchor, spin=spin));
+
+
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
