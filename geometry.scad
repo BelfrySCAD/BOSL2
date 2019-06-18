@@ -642,11 +642,16 @@ function _tagged_region(region1,region2,keep1,keep2,eps=EPSILON) =
 	) outregion;
 
 
-// Function: union()
+// Function&Module: union()
 // Usage:
-//   union(regions);
+//   union() {...}
+//   region = union(regions);
+//   region = union(REGION1,REGION2);
+//   region = union(REGION1,REGION2,REGION3);
 // Description:
-//   Given a list of regions, where each region is a list of closed 2D paths, returns the region boolean union of all given regions.
+//   When called as a function and given a list of regions, where each region is a list of closed
+//   2D paths, returns the boolean union of all given regions.  Result is a single region.
+//   When called as the built-in module, makes the boolean union of the given children.
 // Arguments:
 //   regions = List of regions to union.  Each region is a list of closed paths.
 // Example(2D):
@@ -667,12 +672,17 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 	);
 
 
-// Function: difference()
+// Function&Module: difference()
 // Usage:
-//   difference(regions);
+//   difference() {...}
+//   region = difference(regions);
+//   region = difference(REGION1,REGION2);
+//   region = difference(REGION1,REGION2,REGION3);
 // Description:
-//   Given a list of regions, where each region is a list of closed 2D paths, takes the first
-//   region and differences away all other regions from it.  The resulting region is returned.
+//   When called as a function, and given a list of regions, where each region is a list of closed
+//   2D paths, takes the first region and differences away all other regions from it.  The resulting
+//   region is returned.
+//   When called as the built-in module, makes the boolean difference of the given children.
 // Arguments:
 //   regions = List of regions to difference.  Each region is a list of closed paths.
 // Example(2D):
@@ -693,11 +703,16 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 	);
 
 
-// Function: intersection()
+// Function&Module: intersection()
 // Usage:
-//   intersection(regions);
+//   intersection() {...}
+//   region = intersection(regions);
+//   region = intersection(REGION1,REGION2);
+//   region = intersection(REGION1,REGION2,REGION3);
 // Description:
-//   Given a list of regions, where each region is a list of closed 2D paths, returns the region boolean intersection of all given regions.
+//   When called as a function, and given a list of regions, where each region is a list of closed
+//   2D paths, returns the boolean intersection of all given regions.  Result is a single region.
+//   When called as the built-in module, makes the boolean intersection of all the given children.
 // Arguments:
 //   regions = List of regions to intersection.  Each region is a list of closed paths.
 // Example(2D):
@@ -721,20 +736,26 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 // Function&Module: exclusive_or()
 // Usage:
 //   exclusive_or() {...}
-//   foo = exclusive_or(REGION1,REGION2);
-//   foo = exclusive_or(REGION1,REGION2,REGION3);
-//   foo = exclusive_or([REGIONS]);
+//   region = exclusive_or(regions);
+//   region = exclusive_or(REGION1,REGION2);
+//   region = exclusive_or(REGION1,REGION2,REGION3);
 // Description:
 //   When called as a function and given a list of regions, where each region is a list of closed
-//   2D paths, returns the boolean exclusive_or of all given regions, as a single region.
+//   2D paths, returns the boolean exclusive_or of all given regions.  Result is a single region.
 //   When called as a module, performs a boolean exclusive-or of up to 10 children.
 // Arguments:
 //   regions = List of regions to exclusive_or.  Each region is a list of closed paths.
-// Example(2D):
+// Example(2D): As Function
 //   shape1 = move([-8,-8,0], p=circle(d=50));
 //   shape2 = move([ 8, 8,0], p=circle(d=50));
-//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, close=true);
+//   for (shape = [shape1,shape2])
+//       color("red") stroke(shape, width=0.5, close=true);
 //   color("green") region(exclusive_or(shape1,shape2));
+// Example(2D): As Module
+//   exclusive_or() {
+//       square(40,center=false);
+//       circle(d=40);
+//   }
 function exclusive_or(regions=[],b=undef,c=undef,eps=EPSILON) =
 	b!=undef? exclusive_or(concat([regions],[b],c==undef?[]:[c]),eps=eps) :
 	len(regions)<=1? regions[0] :
@@ -871,11 +892,17 @@ module exclusive_or() {
 // Usage:
 //   region(r);
 // Description:
-//   Creates 2D polygons for the given region.
+//   Creates 2D polygons for the given region.  The region given is a list of closed 2D paths.
+//   Each path will be effectively exclusive-ORed from all other paths in the region, so if a
+//   path is inside another path, it will be effectively subtracted from it.
 // Example(2D):
-//   shape1 = circle(d=50);
-//   shape2 = circle(d=30);
-//   region([shape1,shape2]);
+//   region([circle(d=50), square(25,center=true)]);
+// Example(2D):
+//   rgn = concat(
+//       [for (d=[50:-10:10]) circle(d=d-5)],
+//       [square([60,10], center=true)]
+//   );
+//   region(rgn);
 module region(r)
 {
 	points = flatten(r);
