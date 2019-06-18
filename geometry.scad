@@ -718,11 +718,16 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 	);
 
 
-// Function: exclusive_or()
+// Function&Module: exclusive_or()
 // Usage:
-//   exclusive_or(regions);
+//   exclusive_or() {...}
+//   foo = exclusive_or(REGION1,REGION2);
+//   foo = exclusive_or(REGION1,REGION2,REGION3);
+//   foo = exclusive_or([REGIONS]);
 // Description:
-//   Given a list of regions, where each region is a list of closed 2D paths, returns the region boolean exclusive_or of all given regions.
+//   When called as a function and given a list of regions, where each region is a list of closed
+//   2D paths, returns the boolean exclusive_or of all given regions, as a single region.
+//   When called as a module, performs a boolean exclusive-or of up to 10 children.
 // Arguments:
 //   regions = List of regions to exclusive_or.  Each region is a list of closed paths.
 // Example(2D):
@@ -744,6 +749,122 @@ function exclusive_or(regions=[],b=undef,c=undef,eps=EPSILON) =
 		),
 		eps=eps
 	);
+
+
+module exclusive_or() {
+	if ($children==1) {
+		children();
+	} else if ($children==2) {
+		difference() {
+			children(0);
+			children(1);
+		}
+		difference() {
+			children(1);
+			children(0);
+		}
+	} else if ($children==3) {
+		exclusive_or() {
+			exclusive_or() {
+				children(0);
+				children(1);
+			}
+			children(2);
+		}
+	} else if ($children==4) {
+		exclusive_or() {
+			exclusive_or() {
+				children(0);
+				children(1);
+			}
+			exclusive_or() {
+				children(2);
+				children(3);
+			}
+		}
+	} else if ($children==5) {
+		exclusive_or() {
+			exclusive_or() {
+				children(0);
+				children(1);
+				children(2);
+				children(3);
+			}
+			children(4);
+		}
+	} else if ($children==6) {
+		exclusive_or() {
+			exclusive_or() {
+				children(0);
+				children(1);
+				children(2);
+				children(3);
+			}
+			children(4);
+			children(5);
+		}
+	} else if ($children==7) {
+		exclusive_or() {
+			exclusive_or() {
+				children(0);
+				children(1);
+				children(2);
+				children(3);
+			}
+			children(4);
+			children(5);
+			children(6);
+		}
+	} else if ($children==8) {
+		exclusive_or() {
+			exclusive_or() {
+				children(0);
+				children(1);
+				children(2);
+				children(3);
+			}
+			exclusive_or() {
+				children(4);
+				children(5);
+				children(6);
+				children(7);
+			}
+		}
+	} else if ($children==9) {
+		exclusive_or() {
+			exclusive_or() {
+				children(0);
+				children(1);
+				children(2);
+				children(3);
+			}
+			exclusive_or() {
+				children(4);
+				children(5);
+				children(6);
+				children(7);
+			}
+			children(8);
+		}
+	} else if ($children==10) {
+		exclusive_or() {
+			exclusive_or() {
+				children(0);
+				children(1);
+				children(2);
+				children(3);
+			}
+			exclusive_or() {
+				children(4);
+				children(5);
+				children(6);
+				children(7);
+			}
+			children(8);
+			children(9);
+		}
+	}
+}
 
 
 // Module: region()
