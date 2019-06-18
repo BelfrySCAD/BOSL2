@@ -12,11 +12,15 @@ rgn1 = [
 rgn2 = [
 	[[0,0], [100,100], [100,0]],
 	[[27,10], [90,73], [90,10]],
-	move([70,30], p=circle(d=20))
+	move([70,30], p=circle(d=25))
 ];
 
 
-module showit(label, rgn, poly=undef, outline=undef, width=0.75) {
+polycolor=[0.5,1,0.5];
+outlinecolor="black";
+
+
+module showit(label, rgn, poly=polycolor, outline=outlinecolor, width=0.5) {
 	move([-50,-50]) {
 		if(outline) color(outline) linear_extrude(height=max(0.1,1-width)) for(path=rgn) stroke(path, width=width, close=true);
 		if(poly) color(poly) linear_extrude(height=0.1) region(rgn);
@@ -27,21 +31,18 @@ module showit(label, rgn, poly=undef, outline=undef, width=0.75) {
 
 ydistribute(-125) {
 	xdistribute(120) {
-		showit("Region A", rgn1, poly="green", outline="black");
-		showit("Region B", rgn2, poly="green", outline="black");
+		showit("Region A", rgn1, poly=[1,0,0,0.5]);
+		showit("Region B", rgn2, poly=[0,0,1,0.5]);
 		union() {
-			showit("A and B Overlaid", rgn1, outline="red",width=1);
-			showit("", rgn2, outline="blue",width=0.5);
+			showit("A and B Overlaid", rgn1, poly=[1,0,0,0.5]);
+			showit("", rgn2, poly=[0,0,1,0.5]);
 		}
 	}
 	xdistribute(120) {
-		showit("Union A+B", union(rgn1, rgn2), poly="green", outline="black");
-		showit("Difference A-B", difference(rgn1, rgn2), poly="green", outline="black");
-		showit("Difference B-A", difference(rgn2, rgn1), poly="green", outline="black");
-	}
-	xdistribute(120) {
-		showit("Intersection A&B", intersection(rgn1, rgn2), poly="green", outline="black");
-		showit("Exclusive OR A^B", exclusive_or(rgn1, rgn2), poly="green", outline="black");
+		showit("Union A+B", union(rgn1, rgn2));
+		showit("Difference A-B", difference(rgn1, rgn2));
+		showit("Intersection A&B", intersection(rgn1, rgn2));
+		showit("Exclusive OR A^B", exclusive_or(rgn1, rgn2));
 	}
 }
 
