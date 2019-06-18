@@ -566,13 +566,18 @@ function close_region(region, eps=EPSILON) = [for (path=region) close_path(path,
 //   region = Region to test for crossings of.
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 function region_path_crossings(path, region, eps=EPSILON) = sort([
-	for (s1=enumerate(pair_wrap(path)), path=region, s2=pair_wrap(path)) let(
+	for (
+		s1=enumerate(pair(close_path(path))),
+		p=close_region(region),
+		s2=pair(p)
+	) let(
 		isect = _general_line_intersection(s1[1],s2,eps=eps)
 	) if (
 		!is_undef(isect) &&
-		isect[1] >= 0-eps && isect[1] < 1-eps &&
-		isect[2] >= 0-eps && isect[2] < 1-eps
-	) [s1[0], isect[1]]
+		isect[1] >= 0-eps && isect[1] < 1+eps &&
+		isect[2] >= 0-eps && isect[2] < 1+eps
+	)
+	[s1[0], isect[1]]
 ]);
 
 
@@ -580,15 +585,23 @@ function _split_path_at_region_crossings(path, region, eps=EPSILON) =
 	let(
 		path = deduplicate(path, eps=eps),
 		region = [for (path=region) deduplicate(path, eps=eps)],
+		xings = region_path_crossings(path, region, eps=eps),
 		crossings = deduplicate(
 			concat(
 				[[0,0]],
-				region_path_crossings(path, region),
+				xings,
 				[[len(path)-2,1]]
 			),
 			eps=eps
-		)
-	) [for (p = pair(crossings)) path_subselect(path, p[0][0], p[0][1], p[1][0], p[1][1])];
+		),
+		subpaths = [
+			for (p = pair(crossings))
+				deduplicate(eps=eps,
+					path_subselect(path, p[0][0], p[0][1], p[1][0], p[1][1])
+				)
+		]
+	)
+	subpaths;
 
 
 function _tag_subpaths(path, region, eps=EPSILON) =
