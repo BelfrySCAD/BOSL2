@@ -114,19 +114,35 @@ function bezier_curve(curve,n) = [for(i=[0:1:n-1]) bez_point(curve, i/(n-1))];
 //   trace_bezier(bez, N=len(bez)-1);
 //   color("red") translate(pt) sphere(r=1);
 //   color("blue") translate(bez_point(bez,u)) sphere(r=1);
-function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1, step_u=undef, min_dist=undef, min_u=undef) = 
+function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1) = 
 	let(
-		step = step_u == undef? (end_u-u)/(len(curve)*2) : step_u,
-		t_u = min(u, end_u),
-		dist = norm(bez_point(curve, t_u)-pt),
-		md = (min_dist==undef || dist<min_dist)? dist : min_dist,
-		mu = (min_dist==undef || dist<min_dist)? t_u : min_u
-	)
-	(u>(end_u-step/2))? (
-		(step<max_err)? mu : bezier_segment_closest_point(curve, pt, max_err, max(0, mu-step/2), min(1, mu+step/2), step/2)
-	) : (
-		bezier_segment_closest_point(curve, pt, max_err, u+step, end_u, step, md, mu)
-	);
+		steps = len(curve)*3,
+		path = [for (i=[0:1:steps]) let(v=(end_u-u)*(i/steps)+u) [v, bez_point(curve, v)]],
+		bracketed = concat([path[0]], path, [path[len(path)-1]]),
+		minima_ranges = [
+			for (pts = triplet(bracketed)) let(
+				d1=norm(pts.x.y-pt),
+				d2=norm(pts.y.y-pt),
+				d3=norm(pts.z.y-pt)
+			) if(d2<=d1 && d2<=d3) [pts.x.x,pts.z.x]
+		]
+	) len(minima_ranges)>1? (
+		let(
+			min_us = [
+				for (minima = minima_ranges)
+					bezier_segment_closest_point(curve, pt, max_err=max_err, u=minima.x, end_u=minima.y)
+			],
+			dists = [for (v=min_us) norm(bez_point(curve,v)-pt)],
+			min_i = min_index(dists)
+		) min_us[min_i]
+	) : let(
+		minima = minima_ranges[0],
+		p1 = bez_point(curve, minima.x),
+		p2 = bez_point(curve, minima.y),
+		err = norm(p2-p1)
+	) err<max_err? mean(minima) :
+	bezier_segment_closest_point(curve, pt, max_err=max_err, u=minima.x, end_u=minima.y);
+
 
 
 
