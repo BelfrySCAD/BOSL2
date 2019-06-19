@@ -433,7 +433,7 @@ function subindex(v, idx) = [
 // Usage:
 //   pair(v)
 // Description:
-//   Takes a list, and returns a list of adjacent pairs from it, with the last item paired with the first at the end.
+//   Takes a list, and returns a list of adjacent pairs from it.
 // Example:
 //   l = ["A","B","C",D"];
 //   echo([for (p=pair(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC"]
@@ -444,11 +444,33 @@ function pair(v) = [for (i=[0:1:len(v)-2]) [v[i],v[i+1]]];
 // Usage:
 //   pair_wrap(v)
 // Description:
-//   Takes a list, and returns a list of adjacent pairs from it, with the last item paired with the first at the end.
+//   Takes a list, and returns a list of adjacent pairss from it, wrapping around from the end to the start of the list.
 // Example:
-//   l = ["A","B","C",D"];
+//   l = ["A","B","C","D"];
 //   echo([for (p=pair_wrap(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC", "AD"]
 function pair_wrap(v) = [for (i=[0:1:len(v)-1]) [v[i],v[(i+1)%len(v)]]];
+
+
+// Function: triplet()
+// Usage:
+//   triplet(v)
+// Description:
+//   Takes a list, and returns a list of adjacent triplets from it.
+// Example:
+//   l = ["A","B","C","D","E"];
+//   echo([for (p=triplet(l)) str(p.z,p.y,p.x)]);  // Outputs: ["CBA", "DCB", "EDC"]
+function triplet(v) = [for (i=[0:1:len(v)-3]) [v[i],v[i+1],v[i+2]]];
+
+
+// Function: triplet_wrap()
+// Usage:
+//   triplet_wrap(v)
+// Description:
+//   Takes a list, and returns a list of adjacent triplets from it, wrapping around from the end to the start of the list.
+// Example:
+//   l = ["A","B","C","D"];
+//   echo([for (p=triplet_wrap(l)) str(p.z,p.y,p.x)]);  // Outputs: ["CBA", "DCB", "ADC", "BAD"]
+function triplet_wrap(v) = [for (i=[0:1:len(v)-1]) [v[i],v[(i+1)%len(v)],v[(i+2)%len(v)]]];
 
 
 // Function: zip()
