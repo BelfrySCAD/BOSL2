@@ -121,7 +121,43 @@ include <BOSL2/beziers.scad>
 //     translate([0,60,0])polygon(round_corners([[0,0],[50,0],[50,50],[0,50]],all=[5,.7],
 //                                             curve="smooth", type="cut"));
 //   }   
-
+// Example(Med2D): Rounding a path that is not closed in a three different ways.
+//   $fs=.25;
+//   $fa=1;
+//   zigzagx = [-10, 0, 10, 20, 29, 38, 46, 52, 59, 66, 72, 78, 83, 88, 92, 96, 99, 102, 112];
+//   zigzagy = concat([0], flatten(replist([-10,10],8)), [-10,0]);
+//   zig = zip(zigzagx,zigzagy);
+//   stroke(zig,width=1);   // Original shape
+//   fwd(20)            // Smooth all corners with a cut of 4 and curvature parameter 0.6
+//     stroke(round_corners(zig,all=[4,0.6],closed=false, curve="smooth", type="cut"),width=1);
+// 
+//   fwd(40)            // Smooth all corners with circular arcs and a cut of 4
+//     stroke(round_corners(zig,all=[4,0.6],closed=false, curve="circle", type="cut"),width=1);
+//                      // Smooth all corners with a circular arc and radius 1.5 (close to maximum possible)
+//   fwd(60)            // Note how the different points are cut back by different amounts
+//     stroke(round_corners(zig,all=1.5,closed=false, curve="circle", type="radius"),width=1);
+// Example(spin): Rounding some random 3d paths
+//   $fn=36; 
+//   list1= [[2.88736, 4.03497, 6.37209], [5.68221, 9.37103, 0.783548], [7.80846, 4.39414, 1.84377],
+//           [0.941085, 5.30548, 4.46753], [1.86054, 9.81574, 6.49753], [6.93818, 7.21163, 5.79453]];
+//   list2= [[1.07907, 4.74091, 6.90039], [8.77585, 4.42248, 6.65185], [5.94714, 9.17137, 6.15642],
+//           [0.66266, 6.9563, 5.88423], [6.56454, 8.86334, 9.95311], [5.42015, 4.91874, 3.86696]];
+//   extrude_2dpath_along_3dpath(regular_ngon(n=36,or=.1),round_corners(list1,closed=false, curve="smooth", type="cut", all=.65));
+//   right(6) 
+//     extrude_2dpath_along_3dpath(regular_ngon(n=36,or=.1),round_corners(list2,closed=false, curve="circle", type="cut", all=.75));  
+// Example(spin):  Rounding a spiral with increased rounding along the length
+//   $fn=36;
+//   // Construct a square spiral path in 3d
+//   square = [[0,0],[1,0],[1,1],[0,1]];
+//   spiral = flatten(replist(concat(square,reverse(square)),5));
+//   z= list_range(40)*.2+[for(i=[0:9]) each [i,i,i,i]];
+//      // Make rounding parameters, which get larger up the spiral
+//      // and set the smoothing parameter to 1.
+//   rvect = zip([for(i=[0:9]) each [i,i,i,i]]/20,replist(1,40));  
+//   rounding = [for(i=rvect) [i]];  // Needed because zip removes a list level
+//   path3d = zip([spiral,z,rounding]);
+//   rpath = round_corners(path3d, curve="smooth", type="joint",closed=false);
+//   extrude_2dpath_along_3dpath( regular_ngon(n=36, or=.1), rpath);
 function round_corners(path, curve, type, all=undef,  closed=true) =
 	let(
 		default_curvature = 0.5,   // default curvature for "smooth" curves
