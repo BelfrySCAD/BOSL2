@@ -385,7 +385,7 @@ module gear(
 				);
 			}
 			if (shaft_diam > 0) {
-				cylinder(h=2*thickness+1, r=shaft_diam/2, center=true);
+				cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
 			}
 		}
 		children();
@@ -552,7 +552,7 @@ module bevel_gear(
 					polyhedron(points=vertices, faces=faces, convexity=floor(teeth/2));
 				}
 				if (shaft_diam > 0) {
-					cylinder(h=2*thickness+1, r=shaft_diam/2, center=true);
+					cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
 				}
 				if (bevelang != 0) {
 					h = (c1-r1)/tan(45);
