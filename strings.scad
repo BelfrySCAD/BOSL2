@@ -15,12 +15,15 @@
 //   substr("abcdefg",2);       // Returns "cdefg"
 //   substr("abcdefg",len=3);   // Returns "abc"
 //   substr("abcdefg",[2,4]);   // Returns "cde"
-//   substr("abcdefg",len=-2)); // Returns ""
-function substr(str, pos=0, len=undef, substr="") =
-        is_list(pos) ? substr(str, pos[0], pos[1]-pos[0]+1) :
+//   substr("abcdefg",len=-2);  // Returns ""
+function substr(str, pos=0, len=undef) =
+        is_list(pos) ? _substr(str, pos[0], pos[1]-pos[0]+1) :
+        len == undef ? _substr(str, pos, len(str)-pos) :
+        _substr(str,pos,len);
+
+function _substr(str,pos,len,substr="") = 
         len <= 0 || pos>=len(str) ? substr :
-        len == undef ? substr(str, pos, len(str)-pos, substr) :
-        substr(str, pos+1, len-1, str(substr, str[pos]));
+        _substr(str, pos+1, len-1, str(substr, str[pos]));
 
 // Function suffix()
 // Usage:
@@ -198,3 +201,111 @@ function str_split_recurse(str,sep,i,result) =
                     
 function _remove_empty_strs(list) =
     list_remove(list, search([""], list,0)[0]);
+
+
+// _str_cmp(str,sindex,pattern)
+//    returns true if the string pattern matches the string
+//    starting at index position sindex in the string.
+//
+//    This is carefully optimized for speed.  Precomputing the length
+//    cuts run time in half when the string is long.  Two other string
+//    comparison methods were slower.  
+function _str_cmp(str,sindex,pattern) =
+  len(str)-sindex <len(pattern)? false :
+  _str_cmp_recurse(str,sindex,pattern,len(pattern));
+
+function _str_cmp_recurse(str,sindex,pattern,plen,pindex=0,) = 
+   pindex < plen && pattern[pindex]==str[sindex] ? _str_cmp_recurse(str,sindex+1,pattern,plen,pindex+1): (pindex==plen);
+
+// Function: str_match()
+// Usage:
+//   str_match(str,pattern,[last],[all],[start])
+// Description:
+//   Searches input string `str` for the string `pattern` and returns the index or indices of the matches in `str`.  
+//   By default str_match() returns the index of the first match in `str`.  If `last` is true then it returns the index of the last match.
+//   If the pattern is the empty string the first match is at zero and the last match is the last character of the `str`.
+//   If `start` is set then the search begins at index start, working either forward and backward from that position.  If you set `start`
+//   and `last` is true then the search will find the pattern if it begins at index `start`.  If no match exists, returns undef. 
+//   If you set `all` to true then all str_match() returns all of the matches in a list, or an empty list if there are no matches.  
+// Arguments:
+//   str = string to search
+//   pattern = string pattern to search for
+//   last = set to true to return the last match. Default: false
+//   all = set to true to return all matches as a list.  Overrides last.  Default: false  
+//   start = index where the search starts
+// Example:
+//   str_match("abc123def123abc","123");   // Returns 3
+//   str_match("abc123def123abc","b");     // Returns 1
+//   str_match("abc123def123abc","1234");  // Returns undef
+//   str_match("abc","");                  // Returns 0
+//   str_match("abc123def123", "123", start=4);     // Returns 9
+//   str_match("abc123def123abc","123",last=true);  // Returns 9
+//   str_match("abc123def123abc","b",last=true);    // Returns 13
+//   str_match("abc123def123abc","1234",last=true); // Returns undef
+//   str_match("abc","",last=true);                 // Returns 2
+//   str_match("abc123def123", "123", start=8, last=true));  // Returns 3
+//   str_match("abc123def123abc","123",all=true);   // Returns [3,9]
+//   str_match("abc123def123abc","b",all=true);     // Returns [1,13]
+//   str_match("abc123def123abc","1234",all=true);  // Returns []
+//   str_match("abc","",all=true);                  // Returns [0,1,2]
+function str_match(str,pattern,start=undef,last=false,all=false) =
+                                 all ? _str_matches(str,pattern) :
+                                 let( start = first_defined([start,last?len(str)-len(pattern):0]))
+                                 pattern=="" ? start :
+                                 last ? _str_match_last(str,pattern,start) :
+                                         _str_match(str,pattern,len(str)-len(pattern),start);
+
+function _str_match(str,pattern,max_sindex,sindex) = 
+  sindex<=max_sindex && !_str_cmp(str,sindex, pattern) ? _str_match(str,pattern,max_sindex,sindex+1) :
+                                                        (sindex <= max_sindex ? sindex : undef);
+function _str_match_last(str,pattern,sindex) = 
+  sindex>=0 && !_str_cmp(str,sindex, pattern) ? _str_match_last(str,pattern,sindex-1) :
+                                                        (sindex >=0 ? sindex : undef);
+function _str_matches(str,pattern) =
+   pattern == "" ? list_range(len(str)) :
+   [for(i=[0:1:len(str)-len(pattern)]) if (_str_cmp(str,i,pattern)) i];
+
+
+// Function: str_matches()
+// Usage:
+//   str_matches(str,pattern)
+// Description:
+//   Returns the indices of all matches where the string `pattern` appears in the input string `str`.
+//   If `pattern` is empty then it matches every character of `str`.  
+// Arguments:
+//   str = string to search
+//   pattern = string pattern to search for
+// Example:
+
+
+// Function: starts_with()
+// Usage:
+//    starts_with(str,pattern)
+// Description:
+//    Returns true if the input string `str` starts with the specified string pattern, `pattern`.
+//    Otherwise returns false.   
+// Arguments:
+//   str = string to search
+//   pattern = string pattern to search for
+// Example:
+//   starts_with("abcdef","abc");  // Returns true
+//   starts_with("abcdef","def");  // Returns false
+//   starts_with("abcdef","");     // Returns true
+function starts_with(str,pattern) = _str_cmp(str,0,pattern);
+
+
+// Function: ends_with()
+// Usage:
+//    ends_with(str,pattern)
+// Description:
+//    Returns true if the input string `str` ends with the specified string pattern, `pattern`.
+//    Otherwise returns false. 
+// Arguments:
+//   str = string to search
+//   pattern = string pattern to search for
+// Example:
+//   ends_with("abcdef","def");  // Returns true
+//   ends_with("abcdef","de");   // Returns false
+//   ends_with("abcdef","");     // Returns true
+function ends_with(str,pattern) = _str_cmp(str,len(str)-len(pattern),pattern);
+
