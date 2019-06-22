@@ -376,7 +376,8 @@ module extrude_2d_shapes_along_3dpath(path, convexity=10, clipsize=100) {
 // Example(FlatSpin):
 //   polyline = [for (a=[0:30:210]) 10*[cos(a), sin(a), sin(a)]];
 //   trace_polyline(polyline, showpts=true, size=0.5, color="lightgreen");
-module trace_polyline(pline, N=1, showpts=false, size=1, color="yellow") {
+module trace_polyline(pline, showpts=false, N=1, size=1, color="yellow") {
+	sides = segs(size/2);
 	if (showpts) {
 		for (i = [0:1:len(pline)-1]) {
 			translate(pline[i]) {
@@ -392,9 +393,13 @@ module trace_polyline(pline, N=1, showpts=false, size=1, color="yellow") {
 			}
 		}
 	}
-	for (i = [0:1:len(pline)-2]) {
-		if (N!=3 || (i%N) != 1) {
-			color(color) extrude_from_to(pline[i], pline[i+1]) circle(d=size/2);
+	if (N!=3) {
+		extrude_2dpath_along_3dpath(circle(d=size,$fn=sides), path3d(pline));
+	} else {
+		for (i = [0:1:len(pline)-2]) {
+			if (N!=3 || (i%N) != 1) {
+				color(color) extrude_from_to(pline[i], pline[i+1]) circle(d=size, $fn=sides);
+			}
 		}
 	}
 }
