@@ -131,7 +131,7 @@ function rotate_points3d(pts, a=0, v=undef, cp=[0,0,0], from=undef, to=undef, re
 		cp = point3d(cp),
 		pts2 = path3d(pts)
 	)
-	(!is_undef(from) && approx(from,to))? pts2 :
+	(!is_undef(from) && approx(from,to) && (a==0 || a == [0,0,0]))? pts2 :
 	let (
 		mrot = reverse? (
 			!is_undef(from)? (
