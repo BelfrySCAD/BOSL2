@@ -13,7 +13,7 @@ include <BOSL2/beziers.scad>
 
 
 // CommonCode:
-//   $fn=200;
+//   $fn=36;
 
 
 // Section: Functions
@@ -137,7 +137,6 @@ include <BOSL2/beziers.scad>
 //   fwd(60)            // Note how the different points are cut back by different amounts
 //     stroke(round_corners(zig,all=1.5,closed=false, curve="circle", type="radius"),width=1);
 // Example(spin): Rounding some random 3d paths
-//   $fn=36; 
 //   list1= [[2.88736, 4.03497, 6.37209], [5.68221, 9.37103, 0.783548], [7.80846, 4.39414, 1.84377],
 //           [0.941085, 5.30548, 4.46753], [1.86054, 9.81574, 6.49753], [6.93818, 7.21163, 5.79453]];
 //   list2= [[1.07907, 4.74091, 6.90039], [8.77585, 4.42248, 6.65185], [5.94714, 9.17137, 6.15642],
@@ -146,7 +145,6 @@ include <BOSL2/beziers.scad>
 //   right(6) 
 //     extrude_2dpath_along_3dpath(regular_ngon(n=36,or=.1),round_corners(list2,closed=false, curve="circle", type="cut", all=.75));  
 // Example(spin):  Rounding a spiral with increased rounding along the length
-//   $fn=36;
 //   // Construct a square spiral path in 3d
 //   square = [[0,0],[1,0],[1,1],[0,1]];
 //   spiral = flatten(replist(concat(square,reverse(square)),5));
