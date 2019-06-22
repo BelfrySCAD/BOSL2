@@ -6,7 +6,6 @@ include <BOSL2/metric_screws.scad>
 include <BOSL2/debug.scad>
 
 
-transparent()
 metric_bolt(headtype="oval", size=10, l=15, shank=5, details=true, phillips="#2")
 show_anchors(5, std=false);
 
