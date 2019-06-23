@@ -125,25 +125,56 @@ function str_float(str) =
 
 // Function: str_frac()
 // Usage:
-//   str_frac(str)
+//   str_frac(str,[mixed],[improper],[signed])
 // Description:
-//   Converts a string fraction, two integers separated by a "/" character, to a floating point number.
+//   Converts a string fraction to a floating point number.  A string fraction has the form `[-][# ][#/#]` where each `#` is one or more of the
+//   digits 0-9, and there is an optional sign character at the beginning. 
+//   The full form is a sign character and an integer, followed by exactly one space, followed by two more
+//   integers separated by a "/" character.  The leading integer and 
+//   space can be omitted or the trailing fractional part can be omitted.  If you set `mixed` to false then the leading integer part is not
+//   accepted and the input must include a slash.  If you set `improper` to false then the fractional part must be a proper fraction, where
+//   the numerator is smaller than the denominator.  If you set `signed` to false then the leading sign character is not permitted.
+//   The empty string evaluates to zero.  Any invalid string evaluates to NaN.    
 // Arguments:
 //   str = string to convert
+//   mixed = set to true to accept mixed fractions, false to reject them.  Default: true  
+//   improper = set to true to accept improper fractions, false to reject them.  Default: true
+//   signed = set to true to accept a leading sign character, false to reject.  Default: true  
 // Example:
 //   str_frac("3/4");     // Returns 0.75
 //   str_frac("-77/9");   // Returns -8.55556
 //   str_frac("+1/3");    // Returns 0.33333
 //   str_frac("19");      // Returns 19
+//   str_frac("2 3/4");   // Returns 2.75
+//   str_frac("-2 12/4"); // Returns -5
 //   str_frac("");        // Returns 0
 //   str_frac("3/0");     // Returns inf
 //   str_frac("0/0");     // Returns nan
-function str_frac(str) =
+//   str_frac("-77/9",improper=false);   // Returns nan
+//   str_frac("-2 12/4",improper=false); // Returns nan
+//   str_frac("-2 12/4",signed=false);   // Returns nan
+//   str_frac("-2 12/4",mixed=false);    // Returns nan
+//   str_frac("2 1/4",mixed=false);      // Returns nan
+function str_frac(str,mixed=true,improper=true,signed=true) =
     str == undef ? undef :
-    let( num = str_split(str,"/"))
-    len(num)==1 ? str_int(num[0]) :
-    len(num)==2 ? str_int(num[0])/str_int(num[1]) :
-    (0/0);
+    len(str)==0 ? 0 :
+    signed && str[0]=="-" ? -str_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
+    signed && str[0]=="+" ?  str_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
+    mixed ? (                      
+               str_find(str," ")>0 || is_undef(str_find(str,"/")) ?
+                  let(whole = str_split(str,[" "]))
+                  _str_int_recurse(whole[0],10,len(whole[0])-1) + str_frac(whole[1], mixed=false, improper=improper, signed=false)
+                  :
+                  str_frac(str,mixed=false, improper=improper)
+            )
+          :
+            let(split = str_split(str,"/"))
+            len(split)!=2 ? (0/0) :
+                 let(numerator =  _str_int_recurse(split[0],10,len(split[0])-1),
+                     denominator = _str_int_recurse(split[1],10,len(split[1])-1))
+                 !improper && numerator>=denominator? (0/0) :
+                  denominator<0 ? (0/0) : numerator/denominator;
+          
 
 // Function: str_num()
 // Usage:
@@ -217,16 +248,16 @@ function _str_cmp(str,sindex,pattern) =
 function _str_cmp_recurse(str,sindex,pattern,plen,pindex=0,) = 
    pindex < plen && pattern[pindex]==str[sindex] ? _str_cmp_recurse(str,sindex+1,pattern,plen,pindex+1): (pindex==plen);
 
-// Function: str_match()
+// Function: str_find()
 // Usage:
-//   str_match(str,pattern,[last],[all],[start])
+//   str_find(str,pattern,[last],[all],[start])
 // Description:
 //   Searches input string `str` for the string `pattern` and returns the index or indices of the matches in `str`.  
-//   By default str_match() returns the index of the first match in `str`.  If `last` is true then it returns the index of the last match.
+//   By default str_find() returns the index of the first match in `str`.  If `last` is true then it returns the index of the last match.
 //   If the pattern is the empty string the first match is at zero and the last match is the last character of the `str`.
 //   If `start` is set then the search begins at index start, working either forward and backward from that position.  If you set `start`
 //   and `last` is true then the search will find the pattern if it begins at index `start`.  If no match exists, returns undef. 
-//   If you set `all` to true then all str_match() returns all of the matches in a list, or an empty list if there are no matches.  
+//   If you set `all` to true then all str_find() returns all of the matches in a list, or an empty list if there are no matches.  
 // Arguments:
 //   str = string to search
 //   pattern = string pattern to search for
@@ -234,48 +265,36 @@ function _str_cmp_recurse(str,sindex,pattern,plen,pindex=0,) =
 //   all = set to true to return all matches as a list.  Overrides last.  Default: false  
 //   start = index where the search starts
 // Example:
-//   str_match("abc123def123abc","123");   // Returns 3
-//   str_match("abc123def123abc","b");     // Returns 1
-//   str_match("abc123def123abc","1234");  // Returns undef
-//   str_match("abc","");                  // Returns 0
-//   str_match("abc123def123", "123", start=4);     // Returns 9
-//   str_match("abc123def123abc","123",last=true);  // Returns 9
-//   str_match("abc123def123abc","b",last=true);    // Returns 13
-//   str_match("abc123def123abc","1234",last=true); // Returns undef
-//   str_match("abc","",last=true);                 // Returns 2
-//   str_match("abc123def123", "123", start=8, last=true));  // Returns 3
-//   str_match("abc123def123abc","123",all=true);   // Returns [3,9]
-//   str_match("abc123def123abc","b",all=true);     // Returns [1,13]
-//   str_match("abc123def123abc","1234",all=true);  // Returns []
-//   str_match("abc","",all=true);                  // Returns [0,1,2]
-function str_match(str,pattern,start=undef,last=false,all=false) =
-                                 all ? _str_matches(str,pattern) :
+//   str_find("abc123def123abc","123");   // Returns 3
+//   str_find("abc123def123abc","b");     // Returns 1
+//   str_find("abc123def123abc","1234");  // Returns undef
+//   str_find("abc","");                  // Returns 0
+//   str_find("abc123def123", "123", start=4);     // Returns 9
+//   str_find("abc123def123abc","123",last=true);  // Returns 9
+//   str_find("abc123def123abc","b",last=true);    // Returns 13
+//   str_find("abc123def123abc","1234",last=true); // Returns undef
+//   str_find("abc","",last=true);                 // Returns 2
+//   str_find("abc123def123", "123", start=8, last=true));  // Returns 3
+//   str_find("abc123def123abc","123",all=true);   // Returns [3,9]
+//   str_find("abc123def123abc","b",all=true);     // Returns [1,13]
+//   str_find("abc123def123abc","1234",all=true);  // Returns []
+//   str_find("abc","",all=true);                  // Returns [0,1,2]
+function str_find(str,pattern,start=undef,last=false,all=false) =
+                                 all ? _str_find_all(str,pattern) :
                                  let( start = first_defined([start,last?len(str)-len(pattern):0]))
                                  pattern=="" ? start :
-                                 last ? _str_match_last(str,pattern,start) :
-                                         _str_match(str,pattern,len(str)-len(pattern),start);
+                                 last ? _str_find_last(str,pattern,start) :
+                                         _str_find_first(str,pattern,len(str)-len(pattern),start);
 
-function _str_match(str,pattern,max_sindex,sindex) = 
-  sindex<=max_sindex && !_str_cmp(str,sindex, pattern) ? _str_match(str,pattern,max_sindex,sindex+1) :
+function _str_find_first(str,pattern,max_sindex,sindex) = 
+  sindex<=max_sindex && !_str_cmp(str,sindex, pattern) ? _str_find_first(str,pattern,max_sindex,sindex+1) :
                                                         (sindex <= max_sindex ? sindex : undef);
-function _str_match_last(str,pattern,sindex) = 
-  sindex>=0 && !_str_cmp(str,sindex, pattern) ? _str_match_last(str,pattern,sindex-1) :
+function _str_find_last(str,pattern,sindex) = 
+  sindex>=0 && !_str_cmp(str,sindex, pattern) ? _str_find_last(str,pattern,sindex-1) :
                                                         (sindex >=0 ? sindex : undef);
-function _str_matches(str,pattern) =
+function _str_find_all(str,pattern) =
    pattern == "" ? list_range(len(str)) :
    [for(i=[0:1:len(str)-len(pattern)]) if (_str_cmp(str,i,pattern)) i];
-
-
-// Function: str_matches()
-// Usage:
-//   str_matches(str,pattern)
-// Description:
-//   Returns the indices of all matches where the string `pattern` appears in the input string `str`.
-//   If `pattern` is empty then it matches every character of `str`.  
-// Arguments:
-//   str = string to search
-//   pattern = string pattern to search for
-// Example:
 
 
 // Function: starts_with()
