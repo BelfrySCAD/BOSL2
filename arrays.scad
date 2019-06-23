@@ -541,7 +541,7 @@ function array_group(v, cnt=2, dflt=0) = [for (i = [0:cnt:len(v)-1]) [for (j = [
 //   l = List to flatten.
 // Example:
 //   flatten([[1,2,3], [4,5,[6,7,8]]]) returns [1,2,3,4,5,[6,7,8]]
-function flatten(l) = [for (a = l) for (b = a) b];
+function flatten(l) = [for (a = l) each a];
 
 
 // Internal.  Not exposed.
