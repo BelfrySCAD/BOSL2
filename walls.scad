@@ -84,6 +84,8 @@ module narrowing_strut(w=10, l=100, wall=5, ang=30, anchor=BOTTOM, spin=0, orien
 //   thinning_wall(h=50, l=80, thick=4);
 // Example: Trapezoidal
 //   thinning_wall(h=50, l=[80,50], thick=4);
+// Example: Trapezoidal with Braces
+//   thinning_wall(h=50, l=[80,50], thick=4, strut=4, wall=2, braces=true);
 module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut=5, wall=2, anchor=CENTER, spin=0, orient=UP)
 {
 	l1 = (l[0] == undef)? l : l[0];
