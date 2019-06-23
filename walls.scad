@@ -8,6 +8,7 @@
 //   ```
 //////////////////////////////////////////////////////////////////////
 
+include <BOSL2/paths.scad>
 
 // Section: Walls
 
@@ -68,12 +69,13 @@ module narrowing_strut(w=10, l=100, wall=5, ang=30, anchor=BOTTOM, spin=0, orien
 //   thinning_wall(h, l, thick, [ang], [strut], [wall]);
 //
 // Arguments:
-//   h = height of wall.
-//   l = length of wall.  If given as a vector of two numbers, specifies bottom and top lengths, respectively.
-//   thick = thickness of wall.
-//   ang = maximum overhang angle of diagonal brace.
-//   strut = the width of the diagonal brace.
-//   wall = the thickness of the thinned portion of the wall.
+//   h = Height of wall.
+//   l = Length of wall.  If given as a vector of two numbers, specifies bottom and top lengths, respectively.
+//   thick = Thickness of wall.
+//   wall = The thickness of the thinned portion of the wall.
+//   ang = Maximum overhang angle of diagonal brace.
+//   braces = If true, adds diagonal crossbraces for strength.
+//   strut = The width of the borders and diagonal braces.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -82,177 +84,152 @@ module narrowing_strut(w=10, l=100, wall=5, ang=30, anchor=BOTTOM, spin=0, orien
 //   thinning_wall(h=50, l=80, thick=4);
 // Example: Trapezoidal
 //   thinning_wall(h=50, l=[80,50], thick=4);
-module thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, anchor=CENTER, spin=0, orient=UP)
+module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut=5, wall=2, anchor=CENTER, spin=0, orient=UP)
 {
 	l1 = (l[0] == undef)? l : l[0];
 	l2 = (l[1] == undef)? l : l[1];
 
-	trap_ang = atan2((l2-l1)/2, h);
-	corr1 = 1 + sin(trap_ang);
-	corr2 = 1 - sin(trap_ang);
+	bevel_h = strut + (thick-wall)/2/tan(ang);
+	cp1 = find_circle_2tangents([0,0,h/2], [l2/2,0,h/2], [l1/2,0,-h/2], r=strut)[0];
+	cp2 = find_circle_2tangents([0,0,h/2], [l2/2,0,h/2], [l1/2,0,-h/2], r=bevel_h)[0];
+	cp3 = find_circle_2tangents([0,0,-h/2], [l1/2,0,-h/2], [l2/2,0,h/2], r=bevel_h)[0];
+	cp4 = find_circle_2tangents([0,0,-h/2], [l1/2,0,-h/2], [l2/2,0,h/2], r=strut)[0];
 
 	z1 = h/2;
-	z2 = max(0.1, z1 - strut);
-	z3 = max(0.05, z2 - (thick-wall)/2*sin(90-ang)/sin(ang));
+	z2 = cp1.z;
+	z3 = cp2.z;
 
 	x1 = l2/2;
-	x2 = max(0.1, x1 - strut*corr1);
-	x3 = max(0.05, x2 - (thick-wall)/2*sin(90-ang)/sin(ang)*corr1);
+	x2 = cp1.x;
+	x3 = cp2.x;
 	x4 = l1/2;
-	x5 = max(0.1, x4 - strut*corr2);
-	x6 = max(0.05, x5 - (thick-wall)/2*sin(90-ang)/sin(ang)*corr2);
+	x5 = cp4.x;
+	x6 = cp3.x;
 
 	y1 = thick/2;
-	y2 = y1 - min(z2-z3, x2-x3) * sin(ang);
+	y2 = wall/2;
+
+	corner1 = [ x2, 0,  z2];
+	corner2 = [-x5, 0, -z2];
+	brace_len = norm(corner1-corner2);
 
 	size = [l1, thick, h];
 	orient_and_anchor(size, orient, anchor, spin=spin, size2=[l2,thick], chain=true) {
-		polyhedron(
-			points=[
-				[-x4, -y1, -z1],
-				[ x4, -y1, -z1],
-				[ x1, -y1,  z1],
-				[-x1, -y1,  z1],
-
-				[-x5, -y1, -z2],
-				[ x5, -y1, -z2],
-				[ x2, -y1,  z2],
-				[-x2, -y1,  z2],
-
-				[-x6, -y2, -z3],
-				[ x6, -y2, -z3],
-				[ x3, -y2,  z3],
-				[-x3, -y2,  z3],
-
-				[-x4,  y1, -z1],
-				[ x4,  y1, -z1],
-				[ x1,  y1,  z1],
-				[-x1,  y1,  z1],
-
-				[-x5,  y1, -z2],
-				[ x5,  y1, -z2],
-				[ x2,  y1,  z2],
-				[-x2,  y1,  z2],
-
-				[-x6,  y2, -z3],
-				[ x6,  y2, -z3],
-				[ x3,  y2,  z3],
-				[-x3,  y2,  z3],
-			],
-			faces=[
-				[ 4,  5,  1],
-				[ 5,  6,  2],
-				[ 6,  7,  3],
-				[ 7,  4,  0],
-
-				[ 4,  1,  0],
-				[ 5,  2,  1],
-				[ 6,  3,  2],
-				[ 7,  0,  3],
-
-				[ 8,  9,  5],
-				[ 9, 10,  6],
-				[10, 11,  7],
-				[11,  8,  4],
-
-				[ 8,  5,  4],
-				[ 9,  6,  5],
-				[10,  7,  6],
-				[11,  4,  7],
-
-				[11, 10,  9],
-				[20, 21, 22],
-
-				[11,  9,  8],
-				[20, 22, 23],
-
-				[16, 17, 21],
-				[17, 18, 22],
-				[18, 19, 23],
-				[19, 16, 20],
-
-				[16, 21, 20],
-				[17, 22, 21],
-				[18, 23, 22],
-				[19, 20, 23],
-
-				[12, 13, 17],
-				[13, 14, 18],
-				[14, 15, 19],
-				[15, 12, 16],
-
-				[12, 17, 16],
-				[13, 18, 17],
-				[14, 19, 18],
-				[15, 16, 19],
-
-				[ 0,  1, 13],
-				[ 1,  2, 14],
-				[ 2,  3, 15],
-				[ 3,  0, 12],
-
-				[ 0, 13, 12],
-				[ 1, 14, 13],
-				[ 2, 15, 14],
-				[ 3, 12, 15],
-			],
-			convexity=6
-		);
-		children();
-	}
-}
-
-
-// Module: braced_thinning_wall()
-//
-// Description:
-//   Makes a rectangular wall with cross-bracing, which thins to a smaller width in the center,
-//   with angled supports to prevent critical overhangs.
-//
-// Usage:
-//   braced_thinning_wall(h, l, thick, [ang], [strut], [wall]);
-//
-// Arguments:
-//   h = height of wall.
-//   l = length of wall.
-//   thick = thickness of wall.
-//   ang = maximum overhang angle of diagonal brace.
-//   strut = the width of the diagonal brace.
-//   wall = the thickness of the thinned portion of the wall.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//
-// Example:
-//   braced_thinning_wall(h=50, l=100, thick=5);
-module braced_thinning_wall(h=50, l=100, thick=5, ang=30, strut=5, wall=2, anchor=CENTER, spin=0, orient=UP)
-{
-	dang = atan((h-2*strut)/(l-2*strut));
-	dlen = (h-2*strut)/sin(dang);
-	size = [l, thick, h];
-	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
 		union() {
-			xrot_copies([0, 180]) {
-				down(h/2) narrowing_strut(w=thick, l=l, wall=strut, ang=ang);
-				fwd(l/2) xrot(-90) narrowing_strut(w=thick, l=h-0.1, wall=strut, ang=ang);
-				intersection() {
-					cube(size=[thick, l, h], center=true);
-					xrot_copies([-dang,dang]) {
-						zspread(strut/2) {
-							scale([1,1,1.5]) yrot(45) {
-								cube(size=[thick/sqrt(2), dlen, thick/sqrt(2)], center=true);
-							}
+			polyhedron(
+				points=[
+					[-x4, -y1, -z1],
+					[ x4, -y1, -z1],
+					[ x1, -y1,  z1],
+					[-x1, -y1,  z1],
+
+					[-x5, -y1, -z2],
+					[ x5, -y1, -z2],
+					[ x2, -y1,  z2],
+					[-x2, -y1,  z2],
+
+					[-x6, -y2, -z3],
+					[ x6, -y2, -z3],
+					[ x3, -y2,  z3],
+					[-x3, -y2,  z3],
+
+					[-x4,  y1, -z1],
+					[ x4,  y1, -z1],
+					[ x1,  y1,  z1],
+					[-x1,  y1,  z1],
+
+					[-x5,  y1, -z2],
+					[ x5,  y1, -z2],
+					[ x2,  y1,  z2],
+					[-x2,  y1,  z2],
+
+					[-x6,  y2, -z3],
+					[ x6,  y2, -z3],
+					[ x3,  y2,  z3],
+					[-x3,  y2,  z3],
+				],
+				faces=[
+					[ 4,  5,  1],
+					[ 5,  6,  2],
+					[ 6,  7,  3],
+					[ 7,  4,  0],
+
+					[ 4,  1,  0],
+					[ 5,  2,  1],
+					[ 6,  3,  2],
+					[ 7,  0,  3],
+
+					[ 8,  9,  5],
+					[ 9, 10,  6],
+					[10, 11,  7],
+					[11,  8,  4],
+
+					[ 8,  5,  4],
+					[ 9,  6,  5],
+					[10,  7,  6],
+					[11,  4,  7],
+
+					[11, 10,  9],
+					[20, 21, 22],
+
+					[11,  9,  8],
+					[20, 22, 23],
+
+					[16, 17, 21],
+					[17, 18, 22],
+					[18, 19, 23],
+					[19, 16, 20],
+
+					[16, 21, 20],
+					[17, 22, 21],
+					[18, 23, 22],
+					[19, 20, 23],
+
+					[12, 13, 17],
+					[13, 14, 18],
+					[14, 15, 19],
+					[15, 12, 16],
+
+					[12, 17, 16],
+					[13, 18, 17],
+					[14, 19, 18],
+					[15, 16, 19],
+
+					[ 0,  1, 13],
+					[ 1,  2, 14],
+					[ 2,  3, 15],
+					[ 3,  0, 12],
+
+					[ 0, 13, 12],
+					[ 1, 14, 13],
+					[ 2, 15, 14],
+					[ 3, 12, 15],
+				],
+				convexity=6
+			);
+			if(braces) {
+				bracepath = [
+					[-strut*0.33,thick/2],
+					[ strut*0.33,thick/2],
+					[ strut*0.33+(thick-wall)/2/tan(ang), wall/2],
+					[ strut*0.33+(thick-wall)/2/tan(ang),-wall/2],
+					[ strut*0.33,-thick/2],
+					[-strut*0.33,-thick/2],
+					[-strut*0.33-(thick-wall)/2/tan(ang),-wall/2],
+					[-strut*0.33-(thick-wall)/2/tan(ang), wall/2]
+				];
+				xflip_copy() {
+					difference() {
+						extrude_from_to(corner1,corner2) {
+							polygon(bracepath);
 						}
-						cube(size=[thick, dlen, strut/2], center=true);
 					}
 				}
 			}
-			cube(size=[wall, l-0.1, h-0.1], center=true);
 		}
 		children();
 	}
 }
-
 
 
 // Module: thinning_triangle()
