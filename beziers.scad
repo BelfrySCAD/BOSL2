@@ -385,7 +385,7 @@ function bezier_close_to_axis(bezier, N=3, axis="X") =
 
 // Function: bezier_offset()
 // Usage:
-//   bezier_offset(offset, bezier, [N], [axis]);
+//   bezier_offset(offset, bezier, [N]);
 // Description:
 //   Takes a 2D bezier path and closes it with a matching reversed path that is offset by the given `offset` [X,Y] distance.
 // Arguments:
