@@ -371,6 +371,7 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 // Module: rounding_mask()
 // Usage:
 //   rounding_mask(l|h, r)
+//   rounding_mask(l|h, r1, r2)
 // Description:
 //   Creates a shape that can be used to round a vertical 90 degree edge.
 //   Difference it from the object to be rounded.  The center of the mask
@@ -378,6 +379,8 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the rounding.
+//   r1 = Bottom radius of rounding.
+//   r2 = Top radius of rounding.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -385,6 +388,11 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 //   difference() {
 //       cube(size=100, center=false);
 //       #rounding_mask(l=100, r=25, orient=UP, anchor=BOTTOM);
+//   }
+// Example: Varying Rounding Radius
+//   difference() {
+//       cube(size=100, center=false);
+//       #rounding_mask(l=100, r1=25, r2=10, orient=UP, anchor=BOTTOM);
 //   }
 // Example: Masking by Attachment
 //   diff("mask")
@@ -403,15 +411,17 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 //               rounding_mask(l=p.x, r=25, spin=45, orient=RIGHT);
 //       }
 //   }
-module rounding_mask(l=undef, r=1.0, anchor=CENTER, spin=0, orient=UP, h=undef)
+module rounding_mask(l=undef, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0, orient=UP, h=undef)
 {
 	l = first_defined([l, h, 1]);
-	sides = quantup(segs(r),4);
-	orient_and_anchor([2*r, 2*r, l], orient, anchor, spin=spin, chain=true) {
-		linear_extrude(height=l+0.1, convexity=4, center=true) {
+	r1 = get_radius(r1=r1, r=r, dflt=1);
+	r2 = get_radius(r1=r2, r=r, dflt=1);
+	sides = quantup(segs(max(r1,r2)),4);
+	orient_and_anchor([2*r1, 2*r1, l], orient, anchor, spin=spin, size2=[2*r2,2*r2], chain=true) {
+		linear_extrude(height=l+0.1, convexity=4, center=true, scale=r2/r1) {
 			difference() {
-				square(2*r, center=true);
-				xspread(2*r) yspread(2*r) circle(r=r, $fn=sides);
+				square(2*r1, center=true);
+				xspread(2*r1) yspread(2*r1) circle(r=r1, $fn=sides);
 			}
 		}
 		children();
@@ -422,6 +432,7 @@ module rounding_mask(l=undef, r=1.0, anchor=CENTER, spin=0, orient=UP, h=undef)
 // Module: rounding_mask_x()
 // Usage:
 //   rounding_mask_x(l, r, [anchor])
+//   rounding_mask_x(l, r1, r2, [anchor])
 // Description:
 //   Creates a shape that can be used to round a 90 degree edge oriented
 //   along the X axis.  Difference it from the object to be rounded.
@@ -430,16 +441,23 @@ module rounding_mask(l=undef, r=1.0, anchor=CENTER, spin=0, orient=UP, h=undef)
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the rounding.
+//   r1 = Left end radius of rounding.
+//   r2 = Right end radius of rounding.
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
 //       #rounding_mask_x(l=100, r=25, anchor=LEFT);
 //   }
-module rounding_mask_x(l=1.0, r=1.0, anchor=CENTER, spin=0)
+// Example: Varying Rounding Radius
+//   difference() {
+//       cube(size=100, center=false);
+//       #rounding_mask_x(l=100, r1=10, r2=30, anchor=LEFT);
+//   }
+module rounding_mask_x(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0)
 {
 	anchor = rot(p=anchor, from=RIGHT, to=TOP);
-	rounding_mask(l=l, r=r, anchor=anchor, spin=spin, orient=RIGHT) {
+	rounding_mask(l=l, r=r, r1=r1, r2=r2, anchor=anchor, spin=spin, orient=RIGHT) {
 		for (i=[0:1:$children-2]) children(i);
 		if ($children) children($children-1);
 	}
@@ -449,6 +467,7 @@ module rounding_mask_x(l=1.0, r=1.0, anchor=CENTER, spin=0)
 // Module: rounding_mask_y()
 // Usage:
 //   rounding_mask_y(l, r, [anchor])
+//   rounding_mask_y(l, r1, r2, [anchor])
 // Description:
 //   Creates a shape that can be used to round a 90 degree edge oriented
 //   along the Y axis.  Difference it from the object to be rounded.
@@ -457,16 +476,23 @@ module rounding_mask_x(l=1.0, r=1.0, anchor=CENTER, spin=0)
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the rounding.
+//   r1 = Front end radius of rounding.
+//   r2 = Back end radius of rounding.
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
 //       right(100) #rounding_mask_y(l=100, r=25, anchor=FRONT);
 //   }
-module rounding_mask_y(l=1.0, r=1.0, anchor=CENTER, spin=0)
+// Example: Varying Rounding Radius
+//   difference() {
+//       cube(size=100, center=false);
+//       right(100) #rounding_mask_y(l=100, r1=10, r2=30, anchor=FRONT);
+//   }
+module rounding_mask_y(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0)
 {
 	anchor = rot(p=anchor, from=BACK, to=TOP);
-	rounding_mask(l=l, r=r, anchor=anchor, spin=spin, orient=BACK) {
+	rounding_mask(l=l, r=r, r1=r1, r2=r2, anchor=anchor, spin=spin, orient=BACK) {
 		for (i=[0:1:$children-2]) children(i);
 		if ($children) children($children-1);
 	}
@@ -476,6 +502,7 @@ module rounding_mask_y(l=1.0, r=1.0, anchor=CENTER, spin=0)
 // Module: rounding_mask_z()
 // Usage:
 //   rounding_mask_z(l, r, [anchor])
+//   rounding_mask_z(l, r1, r2, [anchor])
 // Description:
 //   Creates a shape that can be used to round a 90 degree edge oriented
 //   along the Z axis.  Difference it from the object to be rounded.
@@ -484,15 +511,22 @@ module rounding_mask_y(l=1.0, r=1.0, anchor=CENTER, spin=0)
 // Arguments:
 //   l = Length of mask.
 //   r = Radius of the rounding.
+//   r1 = Bottom radius of rounding.
+//   r2 = Top radius of rounding.
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
 //       #rounding_mask_z(l=100, r=25, anchor=BOTTOM);
 //   }
-module rounding_mask_z(l=1.0, r=1.0, anchor=CENTER, spin=0)
+// Example: Varying Rounding Radius
+//   difference() {
+//       cube(size=100, center=false);
+//       #rounding_mask_z(l=100, r1=10, r2=30, anchor=BOTTOM);
+//   }
+module rounding_mask_z(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0)
 {
-	rounding_mask(l=l, r=r, anchor=anchor, spin=spin, orient=UP) {
+	rounding_mask(l=l, r=r, r1=r1, r2=r2, anchor=anchor, spin=spin, orient=UP) {
 		for (i=[0:1:$children-2]) children(i);
 		if ($children) children($children-1);
 	}
@@ -507,7 +541,7 @@ module rounding_mask_z(l=1.0, r=1.0, anchor=CENTER, spin=0)
 // Arguments:
 //   r = Radius of the rounding. (Default: 1)
 //   size = The size of the rectangular cuboid we want to chamfer.
-//   edges = Which edges to chamfer.  Use of [`edges()`](edges.scad#edges) from [`edges.scad`](edges.scad) is recommend.
+//   edges = Which edges to round.  Use of [`edges()`](edges.scad#edges) from [`edges.scad`](edges.scad) is recommend.
 // Description:
 //   You should use [`edges()`](edges.scad#edges) from [`edges.scad`](edges.scad) to generate the edge array for the `edge` argument.
 //   However, if you must handle it raw, the edge ordering is this:
@@ -539,15 +573,17 @@ module rounding(r=1, size=[1,1,1], edges=EDGES_ALL)
 // Module: rounding_angled_edge_mask()
 // Usage:
 //   rounding_angled_edge_mask(h, r, [ang]);
+//   rounding_angled_edge_mask(h, r1, r2, [ang]);
 // Description:
-//   Creates a vertical mask that can be used to round the edge where two
-//   face meet, at any arbitrary angle.  Difference it from the object to
-//   be rounded.  The center of the mask should align exactly with the
-//   edge to be rounded.
+//   Creates a vertical mask that can be used to round the edge where two face meet, at any arbitrary
+//   angle.  Difference it from the object to be rounded.  The center of the mask should align exactly
+//   with the edge to be rounded.
 // Arguments:
-//   h = height of vertical mask.
-//   r = radius of the rounding.
-//   ang = angle that the planes meet at.
+//   h = Height of vertical mask.
+//   r = Radius of the rounding.
+//   r1 = Bottom radius of rounding.
+//   r2 = Top radius of rounding.
+//   ang = Angle that the planes meet at.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -556,20 +592,27 @@ module rounding(r=1, size=[1,1,1], edges=EDGES_ALL)
 //       angle_pie_mask(ang=70, h=50, d=100);
 //       #rounding_angled_edge_mask(h=51, r=20.0, ang=70, $fn=32);
 //   }
-module rounding_angled_edge_mask(h=1.0, r=1.0, ang=90, anchor=CENTER, spin=0, orient=UP)
+// Example: Varying Rounding Radius
+//   difference() {
+//       angle_pie_mask(ang=70, h=50, d=100);
+//       #rounding_angled_edge_mask(h=51, r1=10, r2=25, ang=70, $fn=32);
+//   }
+module rounding_angled_edge_mask(h=1.0, r=undef, r1=undef, r2=undef, ang=90, anchor=CENTER, spin=0, orient=UP)
 {
 	sweep = 180-ang;
-	n = ceil(segs(r)*sweep/360);
-	x = r*sin(90-(ang/2))/sin(ang/2);
-	orient_and_anchor([2*x,2*r,h], orient, anchor, spin=spin, chain=true) {
-		linear_extrude(height=h, convexity=4, center=true) {
+	n = ceil(segs(max(r1,r2))*sweep/360);
+	x = r1*sin(90-(ang/2))/sin(ang/2);
+	r1 = get_radius(r1=r1, r=r, dflt=1);
+	r2 = get_radius(r1=r2, r=r, dflt=1);
+	orient_and_anchor([2*x,2*r1,h], orient, anchor, spin=spin, size2=[2*x*r2/r1,2*r2], chain=true) {
+		linear_extrude(height=h, convexity=4, center=true, scale=r2/r1) {
 			polygon(
 				points=concat(
-					[for (i = [0:1:n]) let (a=90+ang+i*sweep/n) [r*cos(a)+x, r*sin(a)+r]],
-					[for (i = [0:1:n]) let (a=90+i*sweep/n) [r*cos(a)+x, r*sin(a)-r]],
+					[for (i = [0:1:n]) let (a=90+ang+i*sweep/n) [r1*cos(a)+x, r1*sin(a)+r1]],
+					[for (i = [0:1:n]) let (a=90+i*sweep/n) [r1*cos(a)+x, r1*sin(a)-r1]],
 					[
-						[min(-1, r*cos(270-ang)+x-1), r*sin(270-ang)-r],
-						[min(-1, r*cos(90+ang)+x-1), r*sin(90+ang)+r],
+						[min(-1, r1*cos(270-ang)+x-1), r1*sin(270-ang)-r1],
+						[min(-1, r1*cos(90+ang)+x-1), r1*sin(90+ang)+r1],
 					]
 				)
 			);
