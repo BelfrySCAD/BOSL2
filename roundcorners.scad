@@ -130,7 +130,6 @@ include <BOSL2/beziers.scad>
 //   stroke(zig,width=1);   // Original shape
 //   fwd(20)            // Smooth all corners with a cut of 4 and curvature parameter 0.6
 //     stroke(round_corners(zig,all=[4,0.6],closed=false, curve="smooth", type="cut"),width=1);
-// 
 //   fwd(40)            // Smooth all corners with circular arcs and a cut of 4
 //     stroke(round_corners(zig,all=[4,0.6],closed=false, curve="circle", type="cut"),width=1);
 //                      // Smooth all corners with a circular arc and radius 1.5 (close to maximum possible)
