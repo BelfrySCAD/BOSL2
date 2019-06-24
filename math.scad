@@ -366,49 +366,49 @@ function determinant(M) =
 // Section: Comparisons and Logic
 
 
+function _type_num(x) =
+	is_undef(x)?  0 :
+	is_bool(x)?   1 :
+	is_num(x)?    2 :
+	is_string(x)? 3 :
+	is_list(x)?   4 : 5;
+
+
 // Function: compare_vals()
 // Usage:
 //   compare_vals(a, b);
 // Description:
 //   Compares two values.  Lists are compared recursively.
-//   Results are undefined if the two values are not of similar types.
+//   If types are not the same, then undef < bool < num < str < list < range.
 // Arguments:
 //   a = First value to compare.
 //   b = Second value to compare.
 function compare_vals(a, b) =
 	(a==b)? 0 :
-	(a==undef)? -1 :
-	(b==undef)? 1 :
-	((a==[] || a=="" || a[0]!=undef) && (b==[] || b=="" || b[0]!=undef))? (
-		compare_lists(a, b)
-	) : (a<b)? -1 :
-	(a>b)? 1 : 0;
+	let(t1=_type_num(a), t2=_type_num(b)) (t1!=t2)? (t1-t2) :
+	is_list(a)? compare_lists(a,b) :
+	(a<b)? -1 : (a>b)? 1 : 0;
 
 
 // Function: compare_lists()
 // Usage:
 //   compare_lists(a, b)
 // Description:
-//   Compare contents of two lists.
+//   Compare contents of two lists using `compare_vals()`.
 //   Returns <0 if `a`<`b`.
 //   Returns 0 if `a`==`b`.
 //   Returns >0 if `a`>`b`.
-//   Results are undefined if elements are not of similar types.
 // Arguments:
 //   a = First list to compare.
 //   b = Second list to compare.
-function compare_lists(a, b, n=0) =
-	let(
-		// This curious construction enables tail recursion optimization.
-		cmp = (a==b)? 0 :
-			(len(a)<=n)? -1 :
-			(len(b)<=n)? 1 :
-			(a==a[n] || b==b[n])? (
-				a<b? -1 : a>b? 1 : 0
-			) : compare_vals(a[n], b[n])
-	)
-	(cmp != 0 || a==b)? cmp :
-	compare_lists(a, b, n+1);
+function compare_lists(a, b) =
+	a==b? 0 : let(
+		cmps = [
+			for(i=[0:1:min(len(a),len(b))-1]) let(
+				cmp = compare_vals(a[i],b[i])
+			) if(cmp!=0) cmp
+		]
+	) cmps==[]? (len(a)-len(b)) : cmps[0];
 
 
 // Function: any()

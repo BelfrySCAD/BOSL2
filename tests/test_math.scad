@@ -282,52 +282,101 @@ test_mean();
 
 
 module test_compare_vals() {
-	assert(compare_vals(-10,0) == -1);
-	assert(compare_vals(10,0) == 1);
+	assert(compare_vals(-10,0) < 0);
+	assert(compare_vals(10,0) > 0);
 	assert(compare_vals(10,10) == 0);
 
-	assert(compare_vals("abc","abcd") == -1);
-	assert(compare_vals("abcd","abc") == 1);
+	assert(compare_vals("abc","abcd") < 0);
+	assert(compare_vals("abcd","abc") > 0);
 	assert(compare_vals("abcd","abcd") == 0);
 
 	assert(compare_vals(false,false) == 0);
-	assert(compare_vals(true,false) == 1);
-	assert(compare_vals(false,true) == -1);
+	assert(compare_vals(true,false) > 0);
+	assert(compare_vals(false,true) < 0);
 	assert(compare_vals(true,true) == 0);
 
-	assert(compare_vals([2,3,4], [2,3,4,5]) == -1);
+	assert(compare_vals([2,3,4], [2,3,4,5]) < 0);
 	assert(compare_vals([2,3,4,5], [2,3,4,5]) == 0);
-	assert(compare_vals([2,3,4,5], [2,3,4]) == 1);
-	assert(compare_vals([2,3,4,5], [2,3,5,5]) == -1);
-	assert(compare_vals([[2,3,4,5]], [[2,3,5,5]]) == -1);
+	assert(compare_vals([2,3,4,5], [2,3,4]) > 0);
+	assert(compare_vals([2,3,4,5], [2,3,5,5]) < 0);
+	assert(compare_vals([[2,3,4,5]], [[2,3,5,5]]) < 0);
 
 	assert(compare_vals([[2,3,4],[3,4,5]], [[2,3,4], [3,4,5]]) == 0);
-	assert(compare_vals([[2,3,4],[3,4,5]], [[2,3,4,5], [3,4,5]]) == -1);
-	assert(compare_vals([[2,3,4],[3,4,5]], [[2,3,4], [3,4,5,6]]) == -1);
-	assert(compare_vals([[2,3,4,5],[3,4,5]], [[2,3,4], [3,4,5]]) == 1);
-	assert(compare_vals([[2,3,4],[3,4,5,6]], [[2,3,4], [3,4,5]]) == 1);
-	assert(compare_vals([[2,3,4],[3,5,5]], [[2,3,4], [3,4,5]]) == 1);
-	assert(compare_vals([[2,3,4],[3,4,5]], [[2,3,4], [3,5,5]]) == -1);
+	assert(compare_vals([[2,3,4],[3,4,5]], [[2,3,4,5], [3,4,5]]) < 0);
+	assert(compare_vals([[2,3,4],[3,4,5]], [[2,3,4], [3,4,5,6]]) < 0);
+	assert(compare_vals([[2,3,4,5],[3,4,5]], [[2,3,4], [3,4,5]]) > 0);
+	assert(compare_vals([[2,3,4],[3,4,5,6]], [[2,3,4], [3,4,5]]) > 0);
+	assert(compare_vals([[2,3,4],[3,5,5]], [[2,3,4], [3,4,5]]) > 0);
+	assert(compare_vals([[2,3,4],[3,4,5]], [[2,3,4], [3,5,5]]) < 0);
+
+	assert(compare_vals(undef, undef) == 0);
+	assert(compare_vals(undef, true) < 0);
+	assert(compare_vals(undef, 0) < 0);
+	assert(compare_vals(undef, "foo") < 0);
+	assert(compare_vals(undef, [2,3,4]) < 0);
+	assert(compare_vals(undef, [0:3]) < 0);
+
+	assert(compare_vals(true, undef) > 0);
+	assert(compare_vals(true, true) == 0);
+	assert(compare_vals(true, 0) < 0);
+	assert(compare_vals(true, "foo") < 0);
+	assert(compare_vals(true, [2,3,4]) < 0);
+	assert(compare_vals(true, [0:3]) < 0);
+
+	assert(compare_vals(0, undef) > 0);
+	assert(compare_vals(0, true) > 0);
+	assert(compare_vals(0, 0) == 0);
+	assert(compare_vals(0, "foo") < 0);
+	assert(compare_vals(0, [2,3,4]) < 0);
+	assert(compare_vals(0, [0:3]) < 0);
+
+	assert(compare_vals(1, undef) > 0);
+	assert(compare_vals(1, true) > 0);
+	assert(compare_vals(1, 1) == 0);
+	assert(compare_vals(1, "foo") < 0);
+	assert(compare_vals(1, [2,3,4]) < 0);
+	assert(compare_vals(1, [0:3]) < 0);
+
+	assert(compare_vals("foo", undef) > 0);
+	assert(compare_vals("foo", true) > 0);
+	assert(compare_vals("foo", 1) > 0);
+	assert(compare_vals("foo", "foo") == 0);
+	assert(compare_vals("foo", [2,3,4]) < 0);
+	assert(compare_vals("foo", [0:3]) < 0);
+
+	assert(compare_vals([2,3,4], undef) > 0);
+	assert(compare_vals([2,3,4], true) > 0);
+	assert(compare_vals([2,3,4], 1) > 0);
+	assert(compare_vals([2,3,4], "foo") > 0);
+	assert(compare_vals([2,3,4], [2,3,4]) == 0);
+	assert(compare_vals([2,3,4], [0:3]) < 0);
+
+	assert(compare_vals([0:3], undef) > 0);
+	assert(compare_vals([0:3], true) > 0);
+	assert(compare_vals([0:3], 1) > 0);
+	assert(compare_vals([0:3], "foo") > 0);
+	assert(compare_vals([0:3], [2,3,4]) > 0);
+	assert(compare_vals([0:3], [0:3]) == 0);
 }
 test_compare_vals();
 
 
 module test_compare_lists() {
-	assert(compare_lists([2,3,4], [2,3,4,5]) == -1);
+	assert(compare_lists([2,3,4], [2,3,4,5]) < 0);
 	assert(compare_lists([2,3,4,5], [2,3,4,5]) == 0);
-	assert(compare_lists([2,3,4,5], [2,3,4]) == 1);
-	assert(compare_lists([2,3,4,5], [2,3,5,5]) == -1);
+	assert(compare_lists([2,3,4,5], [2,3,4]) > 0);
+	assert(compare_lists([2,3,4,5], [2,3,5,5]) < 0);
 
 	assert(compare_lists([[2,3,4],[3,4,5]], [[2,3,4], [3,4,5]]) == 0);
-	assert(compare_lists([[2,3,4],[3,4,5]], [[2,3,4,5], [3,4,5]]) == -1);
-	assert(compare_lists([[2,3,4],[3,4,5]], [[2,3,4], [3,4,5,6]]) == -1);
-	assert(compare_lists([[2,3,4,5],[3,4,5]], [[2,3,4], [3,4,5]]) == 1);
-	assert(compare_lists([[2,3,4],[3,4,5,6]], [[2,3,4], [3,4,5]]) == 1);
-	assert(compare_lists([[2,3,4],[3,5,5]], [[2,3,4], [3,4,5]]) == 1);
-	assert(compare_lists([[2,3,4],[3,4,5]], [[2,3,4], [3,5,5]]) == -1);
+	assert(compare_lists([[2,3,4],[3,4,5]], [[2,3,4,5], [3,4,5]]) < 0);
+	assert(compare_lists([[2,3,4],[3,4,5]], [[2,3,4], [3,4,5,6]]) < 0);
+	assert(compare_lists([[2,3,4,5],[3,4,5]], [[2,3,4], [3,4,5]]) > 0);
+	assert(compare_lists([[2,3,4],[3,4,5,6]], [[2,3,4], [3,4,5]]) > 0);
+	assert(compare_lists([[2,3,4],[3,5,5]], [[2,3,4], [3,4,5]]) > 0);
+	assert(compare_lists([[2,3,4],[3,4,5]], [[2,3,4], [3,5,5]]) < 0);
 
-	assert(compare_lists("cat", "bat") == 1);
-	assert(compare_lists(["cat"], ["bat"]) == 1);
+	assert(compare_lists("cat", "bat") > 0);
+	assert(compare_lists(["cat"], ["bat"]) > 0);
 }
 test_compare_lists();
 
