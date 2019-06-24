@@ -70,33 +70,27 @@ function approx(a,b,eps=EPSILON) = let(c=a-b) (is_num(c)? abs(c) : norm(c)) <= e
 
 // Function: min_index()
 // Usage:
-//   min_index(vals);
+//   min_index(vals,[all]);
 // Description:
-//   Returns the index of the minimal value in the given list.
-function min_index(vals, _minval, _minidx, _i=0) =
-	_i>=len(vals)? _minidx :
-	min_index(
-		vals,
-		((_minval == undef || vals[_i] < _minval)? vals[_i] : _minval),
-		((_minval == undef || vals[_i] < _minval)? _i : _minidx),
-		_i+1
-	);
-
+//   Returns the index of the first occurrence of the mainimum value in the given list. 
+//   If `all` is true then returns a list of all indices where the minimum value occurs.
+// Arguments:
+//   vals = vector of values
+//   all = set to true to return indices of all occurences of the minimum.  Default: false
+function min_index(vals, all=false) =
+        all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
 
 // Function: max_index()
 // Usage:
-//   max_index(vals);
+//   max_index(vals,[all]);
 // Description:
-//   Returns the index of the maximum value in the given list.
-function max_index(vals, _maxval, _maxidx, _i=0) =
-	_i>=len(vals)? _maxidx :
-	max_index(
-		vals,
-		((_maxval == undef || vals[_i] > _maxval)? vals[_i] : _maxval),
-		((_maxval == undef || vals[_i] > _maxval)? _i : _maxidx),
-		_i+1
-	);
-
+//   Returns the index of the first occurrence of the maximum value in the given list. 
+//   If `all` is true then returns a list of all indices where the maximum value occurs.
+// Arguments:
+//   vals = vector of values
+//   all = set to true to return indices of all occurences of the maximum.  Default: false
+function max_index(vals, all=false) =
+        all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
 
 // Function: posmod()
 // Usage:
