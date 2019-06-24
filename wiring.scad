@@ -96,7 +96,7 @@ module wiring(path, wires, wirediam=2, rounding=10, wirenum=0, bezsteps=12) {
 	for (i = [0:1:wires-1]) {
 		extpath = [for (j = [0:1:n-1]) let(a=j*360/n) [r*cos(a)+offsets[i][0], r*sin(a)+offsets[i][1]]];
 		color(colors[(i+wirenum)%len(colors)]) {
-			extrude_2dpath_along_3dpath(extpath, poly);
+			path_sweep(extpath, poly);
 		}
 	}
 }

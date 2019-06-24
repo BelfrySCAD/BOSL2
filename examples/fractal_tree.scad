@@ -9,7 +9,7 @@ module leaf(s) {
 		[-1.5,-1], [0,0]
 	];
 	xrot(90)
-	linear_extrude_bezier(
+	linear_sweep_bezier(
 		scale_points(path, [s,s]/2),
 		height=0.02
 	);

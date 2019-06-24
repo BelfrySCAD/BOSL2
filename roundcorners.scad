@@ -141,9 +141,9 @@ include <BOSL2/beziers.scad>
 //           [0.941085, 5.30548, 4.46753], [1.86054, 9.81574, 6.49753], [6.93818, 7.21163, 5.79453]];
 //   list2= [[1.07907, 4.74091, 6.90039], [8.77585, 4.42248, 6.65185], [5.94714, 9.17137, 6.15642],
 //           [0.66266, 6.9563, 5.88423], [6.56454, 8.86334, 9.95311], [5.42015, 4.91874, 3.86696]];
-//   extrude_2dpath_along_3dpath(regular_ngon(n=36,or=.1),round_corners(list1,closed=false, curve="smooth", type="cut", all=.65));
+//   path_sweep(regular_ngon(n=36,or=.1),round_corners(list1,closed=false, curve="smooth", type="cut", all=.65));
 //   right(6) 
-//     extrude_2dpath_along_3dpath(regular_ngon(n=36,or=.1),round_corners(list2,closed=false, curve="circle", type="cut", all=.75));  
+//     path_sweep(regular_ngon(n=36,or=.1),round_corners(list2,closed=false, curve="circle", type="cut", all=.75));  
 // Example(FlatSpin):  Rounding a spiral with increased rounding along the length
 //   // Construct a square spiral path in 3d
 //   square = [[0,0],[1,0],[1,1],[0,1]];
@@ -155,7 +155,7 @@ include <BOSL2/beziers.scad>
 //   rounding = [for(i=rvect) [i]];  // Needed because zip removes a list level
 //   path3d = zip([spiral,z,rounding]);
 //   rpath = round_corners(path3d, curve="smooth", type="joint",closed=false);
-//   extrude_2dpath_along_3dpath( regular_ngon(n=36, or=.1), rpath);
+//   path_sweep( regular_ngon(n=36, or=.1), rpath);
 function round_corners(path, curve, type, all=undef,  closed=true) =
 	let(
 		default_curvature = 0.5,   // default curvature for "smooth" curves

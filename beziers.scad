@@ -442,9 +442,9 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 }
 
 
-// Module: linear_extrude_bezier()
+// Module: linear_sweep_bezier()
 // Usage:
-//   linear_extrude_bezier(bezier, height, [splinesteps], [N], [center], [convexity], [twist], [slices], [scale]);
+//   linear_sweep_bezier(bezier, height, [splinesteps], [N], [center], [convexity], [twist], [slices], [scale]);
 // Description:
 //   Takes a closed 2D bezier path, centered on the XY plane, and
 //   extrudes it linearly upwards, forming a solid.
@@ -468,8 +468,8 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 //       [  5,  10],  [  0,  10],  [-5,  10],
 //       [ 25, -15],  [-10,   0]
 //   ];
-//   linear_extrude_bezier(bez, height=20, splinesteps=32);
-module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=undef, convexity=undef, twist=undef, slices=undef, scale=undef, anchor=UP, spin=0, orient=UP) {
+//   linear_sweep_bezier(bez, height=20, splinesteps=32);
+module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center=undef, convexity=undef, twist=undef, slices=undef, scale=undef, anchor=UP, spin=0, orient=UP) {
 	maxx = max([for (pt = bezier) abs(pt[0])]);
 	maxy = max([for (pt = bezier) abs(pt[1])]);
 	orient_and_anchor([maxx*2,maxy*2,height], orient, anchor, spin=spin, chain=true) {
@@ -481,45 +481,9 @@ module linear_extrude_bezier(bezier, height=100, splinesteps=16, N=3, center=und
 }
 
 
-// Module: revolve_bezier()
+// Module: rotate_sweep_bezier()
 // Usage:
-//   revolve_bezier(bezier, [splinesteps], [N], [convexity], [angle])
-// Description:
-//   Takes a closed 2D bezier and rotates it around the X axis, forming a solid.
-// Arguments:
-//   bezier = array of 2D points for the bezier path to rotate.
-//   splinesteps = number of segments to divide each bezier segment into. default=16
-//   N = number of points in each bezier segment.  default=3 (cubic)
-//   convexity = max number of walls a line could pass through, for preview.  default=10
-//   angle = Degrees of sweep to make.  Default: 360
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-// Example(FlatSpin):
-//   path = [
-//     [  0, 10], [ 50,  0], [ 50, 40],
-//     [ 95, 40], [100, 40], [100, 45],
-//     [ 95, 45], [ 66, 45], [  0, 20],
-//     [  0, 12], [  0, 12], [  0, 10],
-//     [  0, 10]
-//   ];
-//   revolve_bezier(path, splinesteps=32, $fn=180);
-module revolve_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, anchor=CENTER, spin=0, orient=RIGHT)
-{
-	maxx = max([for (pt = bezier) abs(pt[0])]);
-	maxy = max([for (pt = bezier) abs(pt[1])]);
-	orient_and_anchor([maxx*2,maxx*2,maxy*2], orient, anchor, spin=spin, geometry="cylinder", chain=true) {
-		rotate_extrude(convexity=convexity, angle=angle) {
-			xrot(180) zrot(-90) bezier_polygon(bezier, splinesteps, N);
-		}
-	}
-}
-
-
-
-// Module: rotate_extrude_bezier()
-// Usage:
-//   rotate_extrude_bezier(bezier, [splinesteps], [N], [convexity], [angle])
+//   rotate_sweep_bezier(bezier, [splinesteps], [N], [convexity], [angle])
 // Description:
 //   Takes a closed 2D bezier and rotates it around the Z axis, forming a solid.
 //   Behaves like rotate_extrude(), except for beziers instead of shapes.
@@ -540,8 +504,8 @@ module revolve_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, anch
 //     [  0, 12], [  0, 12], [  0, 10],
 //     [  0, 10]
 //   ];
-//   rotate_extrude_bezier(path, splinesteps=32, $fn=180);
-module rotate_extrude_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, anchor=CENTER, spin=0, orient=UP)
+//   rotate_sweep_bezier(path, splinesteps=32, $fn=180);
+module rotate_sweep_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, anchor=CENTER, spin=0, orient=UP)
 {
 	maxx = max([for (pt = bezier) abs(pt[0])]);
 	maxy = max([for (pt = bezier) abs(pt[1])]);
@@ -553,75 +517,29 @@ module rotate_extrude_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=36
 }
 
 
-
-// Module: revolve_bezier_solid_to_axis()
+// Module: bezier_path_extrude()
 // Usage:
-//   revolve_bezier_solid_to_axis(bezier, [splinesteps], [N], [convexity], [angle]);
+//   bezier_path_extrude(bezier, [splinesteps], [N], [convexity], [clipsize]) ...
 // Description:
-//   Takes a 2D bezier and rotates it around the X axis, forming a solid.
-// Arguments:
-//   bezier = array of points for the bezier path to rotate.
-//   splinesteps = number of segments to divide each bezier segment into. default=16
-//   N = number of points in each bezier segment.  default=3 (cubic)
-//   convexity = max number of walls a line could pass through, for preview.  default=10
-//   angle = Degrees of sweep to make.  Default: 360
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-// Example(FlatSpin):
-//   path = [ [0, 10], [33, 10], [66, 40], [100, 40] ];
-//   revolve_bezier_solid_to_axis(path, splinesteps=32, $fn=72);
-module revolve_bezier_solid_to_axis(bezier, splinesteps=16, N=3, convexity=10, angle=360, anchor=CENTER, spin=0, orient=RIGHT) {
-	revolve_bezier(bezier=bezier_close_to_axis(bezier), splinesteps=splinesteps, N=N, convexity=convexity, angle=angle, anchor=anchor, spin=spin, orient=orient);
-}
-
-
-// Module: revolve_bezier_offset_shell()
-// Usage:
-//   revolve_bezier_offset_shell(bezier, offset, [splinesteps], [N], [convexity], [angle]);
-// Description:
-//   Takes a 2D bezier and rotates it around the X axis, into a hollow shell.
-// Arguments:
-//   bezier = array of points for the bezier path to rotate.
-//   offset = the thickness of the created shell.
-//   splinesteps = number of segments to divide each bezier segment into. default=16
-//   N = number of points in each bezier segment.  default=3 (cubic)
-//   convexity = max number of walls a line could pass through, for preview.  default=10
-//   angle = degrees of sweep to make.  Default: 360
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `RIGHT`
-// Example(FlatSpin):
-//   path = [ [0, 10], [33, 10], [66, 40], [100, 40] ];
-//   revolve_bezier_offset_shell(path, offset=1, splinesteps=32, $fn=72);
-module revolve_bezier_offset_shell(bezier, offset=1, splinesteps=16, N=3, convexity=10, angle=360, anchor=CENTER, spin=0, orient=RIGHT) {
-	revolve_bezier(bezier=bezier_offset(offset, bezier), splinesteps=splinesteps, N=N, anchor=anchor, spin=spin, orient=orient);
-}
-
-
-// Module: extrude_2d_shapes_along_bezier()
-// Usage:
-//   extrude_2d_shapes_along_bezier(bezier, [splinesteps], [N], [convexity], [clipsize]) ...
-// Description:
-//   Extrudes 2D children along a bezier path.
+//   Extrudes 2D shape children along a bezier path.
 // Arguments:
 //   bezier = array of points for the bezier path to extrude along.
 //   splinesteps = number of segments to divide each bezier segment into. default=16
 // Example(FR):
 //   path = [ [0, 0, 0], [33, 33, 33], [66, -33, -33], [100, 0, 0] ];
-//   extrude_2d_shapes_along_bezier(path) difference(){
+//   bezier_path_extrude(path) difference(){
 //       circle(r=10);
 //       fwd(10/2) circle(r=8);
 //   }
-module extrude_2d_shapes_along_bezier(bezier, splinesteps=16, N=3, convexity=10, clipsize=1000) {
+module bezier_path_extrude(bezier, splinesteps=16, N=3, convexity=10, clipsize=1000) {
 	path = slice(bezier_polyline(bezier, splinesteps, N), 0, -1);
-	extrude_2d_shapes_along_3dpath(path, convexity=convexity, clipsize=clipsize) children();
+	path_extrude(path, convexity=convexity, clipsize=clipsize) children();
 }
 
 
-// Module: extrude_bezier_along_bezier()
+// Module: bezier_sweep_bezier()
 // Usage:
-//   extrude_bezier_along_bezier(bezier, path, [pathsteps], [bezsteps], [bezN], [pathN]);
+//   bezier_sweep_bezier(bezier, path, [pathsteps], [bezsteps], [bezN], [pathN]);
 // Description:
 //   Takes a closed 2D bezier path, centered on the XY plane, and
 //   extrudes it perpendicularly along a 3D bezier path, forming a solid.
@@ -641,11 +559,11 @@ module extrude_2d_shapes_along_bezier(bezier, splinesteps=16, N=3, convexity=10,
 //       [ 25, -15],  [-10,   0]
 //   ];
 //   path = [ [0, 0, 0], [33, 33, 33], [90, 33, -33], [100, 0, 0] ];
-//   extrude_bezier_along_bezier(bez, path, pathsteps=32, bezsteps=16);
-module extrude_bezier_along_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, pathN=3) {
+//   bezier_sweep_bezier(bez, path, pathsteps=32, bezsteps=16);
+module bezier_sweep_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, pathN=3) {
 	bez_points = simplify2d_path(bezier_polyline(bezier, bezsteps, bezN));
 	path_points = simplify3d_path(path3d(bezier_polyline(path, pathsteps, pathN)));
-	extrude_2dpath_along_3dpath(bez_points, path_points);
+	path_sweep(bez_points, path_points);
 }
 
 

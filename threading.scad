@@ -56,7 +56,7 @@ module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=72
 	idir = internal? -1 : 1;
 	orient_and_anchor([2*r, 2*r, h], orient, anchor, spin=spin, chain=true) {
 		difference() {
-			extrude_2dpath_along_spiral(pline, h=h, r=base_d/2, twist=twist*dir, $fn=segs(base_d/2), anchor=CENTER);
+			spiral_sweep(pline, h=h, r=base_d/2, twist=twist*dir, $fn=segs(base_d/2), anchor=CENTER);
 			down(h/2) right(r) right(internal? thread_depth : 0) zrot(higbee*dir*idir) fwd(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
 			up(h/2) zrot(twist*dir) right(r) right(internal? thread_depth : 0) zrot(-higbee*dir*idir) back(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
 		}

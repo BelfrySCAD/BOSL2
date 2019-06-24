@@ -169,37 +169,7 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 
 
 
-// Module: extrude_2d_hollow()
-// Description:
-//   Similar to linear_extrude(), except the result is a hollow shell.
-// Arguments:
-//   wall = thickness of shell wall.
-//   height = height of extrusion.
-//   twist = degrees of twist, from bottom to top.
-//   slices = how many slices to use when making extrusion.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
-// Example:
-//   extrude_2d_hollow(wall=2, height=100, twist=90, slices=50)
-//       circle(r=40, $fn=6);
-module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, anchor=BOTTOM, spin=0, orient=UP)
-{
-	orient_and_anchor([0.01,0.01,height], orient, anchor, spin=spin, center=center) {
-		linear_extrude(height=height, twist=twist, slices=slices, center=true) {
-			difference() {
-				children();
-				offset(r=-wall) {
-					children();
-				}
-			}
-		}
-	}
-}
-
-
-// Module: extrude_2dpath_along_spiral()
+// Module: spiral_sweep()
 // Description:
 //   Takes a closed 2D polyline path, centered on the XY plane, and
 //   extrudes it along a 3D spiral path of a given radius, height and twist.
@@ -214,8 +184,8 @@ module extrude_2d_hollow(wall=2, height=50, twist=90, slices=60, center=undef, a
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
-//   extrude_2dpath_along_spiral(poly, h=200, r=50, twist=1080, $fn=36);
-module extrude_2dpath_along_spiral(polyline, h, r, twist=360, center=undef, anchor=BOTTOM, spin=0, orient=UP) {
+//   spiral_sweep(poly, h=200, r=50, twist=1080, $fn=36);
+module spiral_sweep(polyline, h, r, twist=360, center=undef, anchor=BOTTOM, spin=0, orient=UP) {
 	pline_count = len(polyline);
 	steps = ceil(segs(r)*(twist/360));
 
@@ -264,7 +234,7 @@ module extrude_2dpath_along_spiral(polyline, h, r, twist=360, center=undef, anch
 }
 
 
-// Module: extrude_2dpath_along_3dpath()
+// Module: path_sweep()
 // Description:
 //   Takes a closed 2D path `polyline`, centered on the XY plane, and extrudes it perpendicularly along a 3D path `path`, forming a solid.
 // Arguments:
@@ -278,8 +248,8 @@ module extrude_2dpath_along_spiral(polyline, h, r, twist=360, center=undef, anch
 //       [for (a=[30:30:180]) [50*cos(a)+50, 50*sin(a), 20*sin(a)]],
 //       [for (a=[330:-30:180]) [50*cos(a)-50, 50*sin(a), 20*sin(a)]]
 //   );
-//   extrude_2dpath_along_3dpath(shape, path, ang=140);
-module extrude_2dpath_along_3dpath(polyline, path, ang=0, convexity=10) {
+//   path_sweep(shape, path, ang=140);
+module path_sweep(polyline, path, ang=0, convexity=10) {
 	pline_count = len(polyline);
 	path_count = len(path);
 
@@ -311,7 +281,7 @@ module extrude_2dpath_along_3dpath(polyline, path, ang=0, convexity=10) {
 
 
 
-// Module: extrude_2d_shapes_along_3dpath()
+// Module: path_extrude()
 // Description:
 //   Extrudes 2D children along a 3D polyline path.  This may be slow.
 // Arguments:
@@ -320,8 +290,8 @@ module extrude_2dpath_along_3dpath(polyline, path, ang=0, convexity=10) {
 //   clipsize = increase if artifacts are left.  Default: 1000
 // Example(FlatSpin):
 //   path = [ [0, 0, 0], [33, 33, 33], [66, 33, 40], [100, 0, 0], [150,0,0] ];
-//   extrude_2d_shapes_along_3dpath(path) circle(r=10, $fn=6);
-module extrude_2d_shapes_along_3dpath(path, convexity=10, clipsize=100) {
+//   path_extrude(path) circle(r=10, $fn=6);
+module path_extrude(path, convexity=10, clipsize=100) {
 	function polyquats(path, q=Q_Ident(), v=[0,0,1], i=0) = let(
 			v2 = path[i+1] - path[i],
 			ang = vector_angle(v,v2),
@@ -394,7 +364,7 @@ module trace_polyline(pline, showpts=false, N=1, size=1, color="yellow") {
 		}
 	}
 	if (N!=3) {
-		extrude_2dpath_along_3dpath(circle(d=size,$fn=sides), path3d(pline));
+		path_sweep(circle(d=size,$fn=sides), path3d(pline));
 	} else {
 		for (i = [0:1:len(pline)-2]) {
 			if (N!=3 || (i%N) != 1) {
