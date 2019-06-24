@@ -385,25 +385,24 @@ function bezier_close_to_axis(bezier, N=3, axis="X") =
 
 // Function: bezier_offset()
 // Usage:
-//   bezier_offset(inset, bezier, [N], [axis]);
+//   bezier_offset(offset, bezier, [N], [axis]);
 // Description:
-//   Takes a 2D bezier path and closes it with a matching reversed path that is closer to the given axis by distance `inset`.
+//   Takes a 2D bezier path and closes it with a matching reversed path that is offset by the given `offset` [X,Y] distance.
 // Arguments:
-//   inset = Amount to lower second path by.
+//   offset = Amount to offset second path by.
 //   bezier = The 2D bezier path.
 //   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
-//   axis = The axis to offset towards, "X", or "Y".  Default: "X"
 // Example(2D):
 //   bez = [[50,30], [40,10], [10,50], [0,30], [-10, 10], [-30,10], [-50,20]];
-//   closed = bezier_offset(5, bez);
+//   closed = bezier_offset([0,-5], bez);
 //   trace_bezier(closed, size=1);
 // Example(2D):
 //   bez = [[30,50], [10,40], [50,10], [30,0], [10, -10], [10,-30], [20,-50]];
-//   closed = bezier_offset(5, bez, axis="Y");
+//   closed = bezier_offset([-5,0], bez);
 //   trace_bezier(closed, size=1);
-function bezier_offset(inset, bezier, N=3, axis="X") =
+function bezier_offset(offset, bezier, N=3) =
 	let(
-		backbez = reverse([ for (pt = bezier) pt-(axis=="X"? [0,inset] : [inset,0]) ]),
+		backbez = reverse([ for (pt = bezier) pt+offset ]),
 		bezend = len(bezier)-1
 	) concat(
 		bezier,
@@ -457,7 +456,7 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 //   scale = Relative size of top of extrusion to the bottom.  default=1.0
 //   slices = Number of vertical slices to use for twisted extrusion.  default=20
 //   center = If true, the extruded solid is centered vertically at z=0.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
@@ -469,10 +468,10 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 //       [ 25, -15],  [-10,   0]
 //   ];
 //   linear_sweep_bezier(bez, height=20, splinesteps=32);
-module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center=undef, convexity=undef, twist=undef, slices=undef, scale=undef, anchor=UP, spin=0, orient=UP) {
+module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center=undef, convexity=undef, twist=undef, slices=undef, scale=undef, anchor=BOTTOM, spin=0, orient=UP) {
 	maxx = max([for (pt = bezier) abs(pt[0])]);
 	maxy = max([for (pt = bezier) abs(pt[1])]);
-	orient_and_anchor([maxx*2,maxy*2,height], orient, anchor, spin=spin, chain=true) {
+	orient_and_anchor([maxx*2,maxy*2,height], orient, anchor, spin=spin, center=center, chain=true) {
 		linear_extrude(height=height, center=true, convexity=convexity, twist=twist, slices=slices, scale=scale) {
 			bezier_polygon(bezier, splinesteps=splinesteps, N=N);
 		}
@@ -491,7 +490,7 @@ module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center=undef
 //   bezier = array of 2D points for the bezier path to rotate.
 //   splinesteps = number of segments to divide each bezier segment into. default=16
 //   N = number of points in each bezier segment.  default=3 (cubic)
-//   convexity = max number of walls a line could pass through, for preview.  default=10
+//   convexity = max number of walls a line could pass through, for preview.  default=2
 //   angle = Degrees of sweep to make.  Default: 360
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -505,7 +504,7 @@ module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center=undef
 //     [  0, 10]
 //   ];
 //   rotate_sweep_bezier(path, splinesteps=32, $fn=180);
-module rotate_sweep_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360, anchor=CENTER, spin=0, orient=UP)
+module rotate_sweep_bezier(bezier, splinesteps=16, N=3, convexity=undef, angle=360, anchor=CENTER, spin=0, orient=UP)
 {
 	maxx = max([for (pt = bezier) abs(pt[0])]);
 	maxy = max([for (pt = bezier) abs(pt[1])]);
@@ -525,13 +524,16 @@ module rotate_sweep_bezier(bezier, splinesteps=16, N=3, convexity=10, angle=360,
 // Arguments:
 //   bezier = array of points for the bezier path to extrude along.
 //   splinesteps = number of segments to divide each bezier segment into. default=16
+//   N = The degree of the bezier path to extrude.
+//   convexity = max number of walls a line could pass through, for preview.  default=2
+//   clipsize = Size of cube to use for clipping beveled ends with.
 // Example(FR):
 //   path = [ [0, 0, 0], [33, 33, 33], [66, -33, -33], [100, 0, 0] ];
 //   bezier_path_extrude(path) difference(){
 //       circle(r=10);
 //       fwd(10/2) circle(r=8);
 //   }
-module bezier_path_extrude(bezier, splinesteps=16, N=3, convexity=10, clipsize=1000) {
+module bezier_path_extrude(bezier, splinesteps=16, N=3, convexity=undef, clipsize=1000) {
 	path = slice(bezier_polyline(bezier, splinesteps, N), 0, -1);
 	path_extrude(path, convexity=convexity, clipsize=clipsize) children();
 }
@@ -565,7 +567,6 @@ module bezier_sweep_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, path
 	path_points = simplify3d_path(path3d(bezier_polyline(path, pathsteps, pathN)));
 	path_sweep(bez_points, path_points);
 }
-
 
 
 // Module: trace_bezier()
@@ -651,7 +652,6 @@ function bezier_triangle_point(tri, u, v) =
 		Pw = [for(i=[1:1:len(tri)-1]) tri[i]]
 	)
 	bezier_triangle_point(u*Pu + v*Pv + (1-u-v)*Pw, u, v);
-
 
 
 // Function: is_tripatch()
