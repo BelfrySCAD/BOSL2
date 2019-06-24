@@ -153,7 +153,9 @@ function find_anchor(anchor, h, size, size2=undef, shift=[0,0], anchors=[], geom
 			botpt = point3d(vmul(size/2,xyal))+DOWN*h/2,
 			toppt = point3d(vmul(size2/2,xyal)+shift)+UP*h/2,
 			pos = lerp(botpt, toppt, (anchor.z+1)/2),
-			sidevec = two_d? point3d(xyal) : rotate_points3d([point3d(xyal)], from=UP, to=toppt-botpt)[0],
+			sidevec = two_d? point3d(xyal) :
+				approx(norm(xyal),0)? [0,0,0] :
+				rotate_points3d([point3d(xyal)], from=UP, to=toppt-botpt)[0],
 			vec = (
 				two_d? sidevec :
 				anchor==CENTER? UP :

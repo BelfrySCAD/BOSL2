@@ -135,6 +135,8 @@ function rotate_points3d(pts, a=0, v=undef, cp=[0,0,0], from=undef, to=undef, re
 	let (
 		mrot = reverse? (
 			!is_undef(from)? (
+				assert(norm(from)>0, "The from argument cannot equal [0,0] or [0,0,0]")
+				assert(norm(to)>0, "The to argument cannot equal [0,0] or [0,0,0]")
 				let (
 					ang = vector_angle(from, to),
 					v = vector_axis(from, to)
@@ -149,6 +151,8 @@ function rotate_points3d(pts, a=0, v=undef, cp=[0,0,0], from=undef, to=undef, re
 			)
 		) : (
 			!is_undef(from)? (
+				assert(norm(from)>0, "The from argument cannot equal [0,0] or [0,0,0]")
+				assert(norm(to)>0, "The to argument cannot equal [0,0] or [0,0,0]")
 				let (
 					from = from / norm(from),
 					to = to / norm(from),
