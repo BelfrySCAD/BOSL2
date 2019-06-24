@@ -356,7 +356,7 @@ module trapezoidal_threaded_nut(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
-//       threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
+//       threaded_rod(d=10, l=15, pitch=2, orient=BACK);
 // Examples(Med):
 //   threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
@@ -466,7 +466,7 @@ module threaded_nut(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
-//       buttress_threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
+//       buttress_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
 // Examples(Med):
 //   buttress_threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   buttress_threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
@@ -571,7 +571,7 @@ module buttress_threaded_nut(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
-//       metric_trapezoidal_threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
+//       metric_trapezoidal_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
 // Examples(Med):
 //   metric_trapezoidal_threaded_rod(d=10, l=30, pitch=2, left_handed=true, $fa=1, $fs=1);
 module metric_trapezoidal_threaded_rod(
@@ -667,7 +667,7 @@ module metric_trapezoidal_threaded_nut(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
-//       acme_threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
+//       acme_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
 // Examples(Med):
 //   acme_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, $fn=32);
 //   acme_threaded_rod(d=10, l=30, pitch=2, starts=3, $fa=1, $fs=1);
@@ -768,7 +768,7 @@ module acme_threaded_nut(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example(2D):
 //   projection(cut=true)
-//       square_threaded_rod(d=10, l=15, pitch=2, orient=RIGHT);
+//       square_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
 // Examples(Med):
 //   square_threaded_rod(d=10, l=20, pitch=2, starts=2, $fn=32);
 module square_threaded_rod(
