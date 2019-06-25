@@ -116,10 +116,11 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 //   size = The [X,Y] size of the bottom of the cubical region.
 //   size2 = The [X,Y] size of the top of the cubical region.
 //   shift = The [X,Y] amount to shift the center of the top with respect to the center of the bottom.
+//   offset = The offset of the center of the object from the CENTER anchor.
 //   geometry = One of "cube", "cylinder", or "sphere" to denote the overall geometry of the shape.  Cones are "cylinder", and prismoids are "cube" for this purpose.  Default: "cube"
 //   anchors = A list of extra non-standard named anchors.
 //   two_d = If true, object will be treated as 2D.
-function find_anchor(anchor, h, size, size2=undef, shift=[0,0], anchors=[], geometry="cube", two_d=false) =
+function find_anchor(anchor, h, size, size2=undef, shift=[0,0], offset=[0,0,0], anchors=[], geometry="cube", two_d=false) =
 	is_string(anchor)? (
 		let(found = search([anchor], anchors, num_returns_per_match=1)[0])
 		assert(found!=[], str("Unknown anchor: ",anchor))
@@ -142,7 +143,8 @@ function find_anchor(anchor, h, size, size2=undef, shift=[0,0], anchors=[], geom
 			phi = (anchor==UP||anchor==CENTER)? 0 : anchor==DOWN? 180 : 90 + (45 * anchor.z),
 			theta = anchor==CENTER? 90 : atan2(anchor.y, anchor.x),
 			vec = spherical_to_xyz(1, theta, phi),
-			pos = anchor==CENTER? CENTER : vmul(vec, (point3d(size)+h*UP)/2)
+			offset = vmul(offset,vabs(anchor)),
+			pos = anchor==CENTER? CENTER : vmul(vec, (point3d(size)+h*UP)/2) + offset
 		) [anchor, pos, vec, oang] : let (
 			xyal = (
 				geometry=="cylinder"? (
@@ -152,7 +154,8 @@ function find_anchor(anchor, h, size, size2=undef, shift=[0,0], anchors=[], geom
 			),
 			botpt = point3d(vmul(size/2,xyal))+DOWN*h/2,
 			toppt = point3d(vmul(size2/2,xyal)+shift)+UP*h/2,
-			pos = lerp(botpt, toppt, (anchor.z+1)/2),
+			offset = vmul(offset,vabs(anchor)),
+			pos = lerp(botpt, toppt, (anchor.z+1)/2) + offset,
 			sidevec = two_d? point3d(xyal) :
 				approx(norm(xyal),0)? [0,0,0] :
 				rotate_points3d([point3d(xyal)], from=UP, to=toppt-botpt)[0],
@@ -216,6 +219,7 @@ function _str_char_split(s,delim,n=0,acc=[],word="") =
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //   center = If given, overrides `anchor`.  If true, centers vertically.  If false, `anchor` will be set to the value in `noncentered`.
 //   noncentered = The value to set `anchor` to if `center` == `false`.  Default: `BOTTOM`.
+//   offset = The offset of the center of the object from the CENTER anchor.
 //   geometry = One of "cube", "cylinder", or "sphere" to denote the overall geometry of the shape.  Cones are "cylinder", and prismoids are "cube" for this purpose.  Default: "cube"
 //   anchors = A list of extra, non-standard optional anchors.
 //   chain = If true, allow attachable children.
@@ -244,6 +248,7 @@ module orient_and_anchor(
 	spin=0,
 	size2=undef,
 	shift=[0,0],
+	offset=[0,0,0],
 	geometry="cube",
 	anchors=[],
 	chain=false,
@@ -252,13 +257,14 @@ module orient_and_anchor(
 	size2 = point2d(default(size2, size));
 	shift = point2d(shift);
 	anchr = is_undef(center)? anchor : (center? CENTER : noncentered);
-	pos = find_anchor(anchr, size.z, size, size2=size2, shift=shift, anchors=anchors, geometry=geometry, two_d=two_d)[1];
+	pos = find_anchor(anchr, size.z, size, size2=size2, shift=shift, offset=offset, anchors=anchors, geometry=geometry, two_d=two_d)[1];
 
 	$parent_size   = size;
 	$parent_size2  = size2;
 	$parent_shift  = shift;
 	$parent_geom   = geometry;
 	$parent_orient = orient;
+	$parent_offset = offset;
 	$parent_2d     = two_d;
 	$parent_anchor = anchr;
 	$parent_anchors = anchors;
@@ -269,7 +275,7 @@ module orient_and_anchor(
 	shown  = !s_tags || any([for (tag=tags) in_list(tag, s_tags)]);
 	hidden = any([for (tag=tags) in_list(tag, h_tags)]);
 	if ($attach_to != undef) {
-		anch = find_anchor($attach_to, size.z, size, size2=size2, shift=shift, anchors=anchors, geometry=geometry, two_d=two_d);
+		anch = find_anchor($attach_to, size.z, size, size2=size2, shift=shift, offset=offset, anchors=anchors, geometry=geometry, two_d=two_d);
 		ang = vector_angle(anch[2], DOWN);
 		axis = vector_axis(anch[2], DOWN);
 		ang2 = (anch[2]==UP || anch[2]==DOWN)? 0 : 180-anch[3];
@@ -326,7 +332,7 @@ module position(from, overlap=undef, norot=false)
 	assert($parent_size != undef, "No object to attach to!");
 	anchors = (is_vector(from)||is_string(from))? [from] : from;
 	for (anchr = anchors) {
-		anch = find_anchor(anchr, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, anchors=$parent_anchors, geometry=$parent_geom, two_d=$parent_2d);
+		anch = find_anchor(anchr, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, offset=$parent_offset, anchors=$parent_anchors, geometry=$parent_geom, two_d=$parent_2d);
 		$attach_to = undef;
 		$attach_anchor = anch;
 		$attach_norot = true;
@@ -358,7 +364,7 @@ module attach(from, to=undef, overlap=undef, norot=false)
 	overlap = (overlap!=undef)? overlap : $overlap;
 	anchors = (is_vector(from)||is_string(from))? [from] : from;
 	for (anchr = anchors) {
-		anch = find_anchor(anchr, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, anchors=$parent_anchors, geometry=$parent_geom, two_d=$parent_2d);
+		anch = find_anchor(anchr, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, offset=$parent_offset, anchors=$parent_anchors, geometry=$parent_geom, two_d=$parent_2d);
 		$attach_to = to;
 		$attach_anchor = anch;
 		$attach_norot = norot;
