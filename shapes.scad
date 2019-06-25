@@ -83,8 +83,16 @@ module cuboid(
 			}
 		}
 	} else {
-		if (chamfer != undef) assert(chamfer <= min(size)/2, "chamfer must be smaller than half the cube width, length, or height.");
-		if (rounding != undef)  assert(rounding <= min(size)/2, "rounding radius must be smaller than half the cube width, length, or height.");
+		if (chamfer != undef) {
+			if (any(edges[0])) assert(chamfer <= size.y/2 && chamfer <=size.z/2, "chamfer must be smaller than half the cube length or height.");
+			if (any(edges[1])) assert(chamfer <= size.x/2 && chamfer <=size.z/2, "chamfer must be smaller than half the cube width or height.");
+			if (any(edges[2])) assert(chamfer <= size.x/2 && chamfer <=size.y/2, "chamfer must be smaller than half the cube width or length.");
+		}
+		if (rounding != undef) {
+			if (any(edges[0])) assert(rounding <= size.y/2 && rounding<=size.z/2, "rounding radius must be smaller than half the cube length or height.");
+			if (any(edges[1])) assert(rounding <= size.x/2 && rounding<=size.z/2, "rounding radius must be smaller than half the cube width or height.");
+			if (any(edges[2])) assert(rounding <= size.x/2 && rounding<=size.y/2, "rounding radius must be smaller than half the cube width or length.");
+		}
 		majrots = [[0,90,0], [90,0,0], [0,0,0]];
 		orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
 			if (chamfer != undef) {
