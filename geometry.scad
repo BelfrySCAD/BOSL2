@@ -15,7 +15,7 @@
 //   point_on_segment2d(point, edge);
 // Description:
 //   Determine if the point is on the line segment between two points.
-//   Returns true if yes, and false if not.  
+//   Returns true if yes, and false if not.
 // Arguments:
 //   point = The point to test.
 //   edge = Array of two points forming the line segment to test against.
@@ -23,7 +23,7 @@
 function point_on_segment2d(point, edge, eps=EPSILON) =
 	approx(point,edge[0],eps=eps) || approx(point,edge[1],eps=eps) ||  // The point is an endpoint
 	sign(edge[0].x-point.x)==sign(point.x-edge[1].x)  // point is in between the
-		&& sign(edge[0].y-point.y)==sign(point.y-edge[1].y)  // edge endpoints 
+		&& sign(edge[0].y-point.y)==sign(point.y-edge[1].y)  // edge endpoints
 		&& approx(point_left_of_segment2d(point, edge),0,eps=eps);  // and on the line defined by edge
 
 
@@ -39,7 +39,7 @@ function point_on_segment2d(point, edge, eps=EPSILON) =
 //   edge = Array of two points forming the line segment to test against.
 function point_left_of_segment2d(point, edge) =
 	(edge[1].x-edge[0].x) * (point.y-edge[0].y) - (point.x-edge[0].x) * (edge[1].y-edge[0].y);
-  
+
 
 // Internal non-exposed function.
 function _point_above_below_segment(point, edge, eps=EPSILON) =
@@ -226,8 +226,8 @@ function find_circle_2tangents(pt1, pt2, pt3, r=undef, d=undef) =
 //   triangle_area2d([10,0], [5,10], [0,0]);  // Returns 50
 function triangle_area2d(a,b,c) =
 	(
-		a.x * (b.y - c.y) + 
-		b.x * (c.y - a.y) + 
+		a.x * (b.y - c.y) +
+		b.x * (c.y - a.y) +
 		c.x * (a.y - b.y)
 	) / 2;
 
@@ -478,8 +478,8 @@ function simplify_path_indexed(points, path, eps=EPSILON) =
 //   path = The list of 2D path points forming the perimeter of the polygon.
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 function point_in_polygon(point, path, eps=EPSILON) =
-	// Does the point lie on any edges?  If so return 0. 
-	sum([for(i=[0:1:len(path)-1]) point_on_segment2d(point, select(path, i, i+1), eps=eps)?1:0])>0 ? 0 : 
+	// Does the point lie on any edges?  If so return 0.
+	sum([for(i=[0:1:len(path)-1]) point_on_segment2d(point, select(path, i, i+1), eps=eps)?1:0])>0 ? 0 :
 	// Otherwise compute winding number and return 1 for interior, -1 for exterior
 	sum([for(i=[0:1:len(path)-1]) _point_above_below_segment(point, select(path, i, i+1), eps=eps)]) != 0 ? 1 : -1;
 
@@ -525,15 +525,14 @@ function pointlist_bounds(pts) = [
 // Arguments:
 //   path = The list of 2D path points for the perimeter of the polygon.
 function polygon_clockwise(path) =
-  let( 
-       minx = min(subindex(path,0)),
-       lowind = search(minx, path, 0, 0),
-       lowpts = select(path, lowind),
-       miny = min(subindex(lowpts, 1)),
-       extreme_sub = search(miny, lowpts, 1, 1)[0],
-       extreme = select(lowind,extreme_sub)
-     )
-  det2(  [select(path,extreme+1)-path[extreme], select(path, extreme-1)-path[extreme]])<0;
+	let(
+		minx = min(subindex(path,0)),
+		lowind = search(minx, path, 0, 0),
+		lowpts = select(path, lowind),
+		miny = min(subindex(lowpts, 1)),
+		extreme_sub = search(miny, lowpts, 1, 1)[0],
+		extreme = select(lowind,extreme_sub)
+	) det2([select(path,extreme+1)-path[extreme], select(path, extreme-1)-path[extreme]])<0;
 
 
 
@@ -579,6 +578,278 @@ function region_path_crossings(path, region, eps=EPSILON) = sort([
 	)
 	[s1[0], isect[1]]
 ]);
+
+
+function _offset_chamfer(center, points, delta) =
+	let(
+		dist = sign(delta)*norm(center-line_intersection(select(points,[0,2]), [center, points[1]])),
+		endline = _shift_segment(select(points,[0,2]), delta-dist)
+	) [
+		line_intersection(endline, select(points,[0,1])),
+		line_intersection(endline, select(points,[1,2]))
+	];
+
+function _shift_segment(segment, d) =
+	move(d*line_normal(segment),segment);
+
+// Extend to segments to their intersection point.  First check if the segments already have a point in common,
+// which can happen if two colinear segments are input to the path variant of `offset()`
+function _segment_extension(s1,s2) =
+	norm(s1[1]-s2[0])<1e-6 ? s1[1] : line_intersection(s1,s2);
+
+function _makefaces(direction, startind, good, pointcount, closed) =
+	let(
+		lenlist = list_bset(good, pointcount),
+		numfirst = len(lenlist),
+		numsecond = sum(lenlist),
+		prelim_faces = _makefaces_recurse(startind, startind+len(lenlist), numfirst, numsecond, lenlist, closed)
+	)
+	direction? [for(entry=prelim_faces) reverse(entry)] : prelim_faces;
+
+
+function _makefaces_recurse(startind1, startind2, numfirst, numsecond, lenlist, closed, firstind=0, secondind=0, faces=[]) =
+	// We are done if *both* firstind and secondind reach their max value, which is the last point if !closed or one past
+	// the last point if closed (wrapping around).  If you don't check both you can leave a triangular gap in the output.
+	((firstind == numfirst - (closed?0:1)) && (secondind == numsecond - (closed?0:1)))? faces :
+	_makefaces_recurse(
+		startind1, startind2, numfirst, numsecond, lenlist, closed, firstind+1, secondind+lenlist[firstind],
+		lenlist[firstind]==0? (
+			// point in original path has been deleted in offset path, so it has no match.  We therefore
+			// make a triangular face using the current point from the offset (second) path
+			// (The current point in the second path can be equal to numsecond if firstind is the last point)
+			concat(faces,[[secondind%numsecond+startind2, firstind+startind1, (firstind+1)%numfirst+startind1]])
+			// in this case a point or points exist in the offset path corresponding to the original path
+		) : (
+			concat(faces,
+				// First generate triangular faces for all of the extra points (if there are any---loop may be empty)
+				[for(i=[0:1:lenlist[firstind]-2]) [firstind+startind1, secondind+i+1+startind2, secondind+i+startind2]],
+				// Finish (unconditionally) with a quadrilateral face
+				[
+					[
+						firstind+startind1,
+						(firstind+1)%numfirst+startind1,
+						(secondind+lenlist[firstind])%numsecond+startind2,
+						(secondind+lenlist[firstind]-1)%numsecond+startind2
+					]
+				]
+			)
+		)
+	);
+
+// Determine which of the shifted segments are good
+function _good_segments(path, d, shiftsegs, closed, quality) =
+	let(
+		maxind = len(path)-(closed ? 1 : 2),
+		pathseg = [for(i=[0:maxind]) select(path,i+1)-path[i]],
+		pathseg_len =  [for(seg=pathseg) norm(seg)],
+		pathseg_unit = [for(i=[0:maxind]) pathseg[i]/pathseg_len[i]],
+		// Order matters because as soon as a valid point is found, the test stops
+		// This order works better for circular paths because they succeed in the center
+		alpha = concat([for(i=[1:1:quality]) i/(quality+1)],[0,1])
+	) [
+		for (i=[0:len(shiftsegs)-1])
+			(i>maxind)? true :
+			_segment_good(path,pathseg_unit,pathseg_len, d - 1e-4, shiftsegs[i], alpha)
+	];
+
+
+// Determine if a segment is good (approximately)
+// Input is the path, the path segments normalized to unit length, the length of each path segment
+// the distance threshold, the segment to test, and the locations on the segment to test (normalized to [0,1])
+// The last parameter, index, gives the current alpha index.
+//
+// A segment is good if any part of it is farther than distance d from the path.  The test is expensive, so
+// we want to quit as soon as we find a point with distance > d, hence the recursive code structure.
+//
+// This test is approximate because it only samples the points listed in alpha.  Listing more points
+// will make the test more accurate, but slower.
+function _segment_good(path,pathseg_unit,pathseg_len, d, seg,alpha ,index=0) =
+	index == len(alpha) ? false :
+	_point_dist(path,pathseg_unit,pathseg_len, alpha[index]*seg[0]+(1-alpha[index])*seg[1]) > d ? true :
+	_segment_good(path,pathseg_unit,pathseg_len,d,seg,alpha,index+1);
+
+
+// Input is the path, the path segments normalized to unit length, the length of each path segment
+// and a test point.  Computes the (minimum) distance from the path to the point, taking into
+// account that the minimal distance may be anywhere along a path segment, not just at the ends.
+function _point_dist(path,pathseg_unit,pathseg_len,pt) =
+	min([
+		for(i=[0:len(pathseg_unit)-1]) let(
+			v = pt-path[i],
+			projection = v*pathseg_unit[i],
+			segdist = projection < 0? norm(pt-path[i]) :
+				projection > pathseg_len[i]? norm(pt-select(path,i+1)) :
+				norm(v-projection*pathseg_unit[i])
+		) segdist
+	]);
+
+
+// Function: offset()
+//
+// Description:
+//   Takes an input path and returns a path offset by the specified amount.  As with offset(), you can use
+//   r to specify rounded offset and delta to specify offset with corners.  Positive offsets shift the path
+//   to the left (relative to the direction of the path).
+//
+//   When offsets shrink the path, segments cross and become invalid.  By default `offset()` checks for this situation.
+//   To test validity the code checks that segments have distance larger than (r or delta) from the input path.
+//   This check takes O(N^2) time and may mistakenly eliminate segments you wanted included in various situations,
+//   so you can disable it if you wish by setting check_valid=false.  Another situation is that the test is not
+//   sufficiently thorough and some segments persist that should be eliminated.  In this case, increase `quality`
+//   to 2 or 3.  (This increases the number of samples on the segment that are checked.)  Run time will increase.
+//   In some situations you may be able to decrease run time by setting quality to 0, which causes only segment
+//   ends to be checked.
+//
+//   For construction of polyhedra `offset()` can also return face lists.  These list faces between the
+//   original path and the offset path where the vertices are ordered with the original path first,
+//   starting at `firstface_index` and the offset path vertices appearing afterwords.  The direction
+//   of the faces can be flipped using `flip_faces`.  When you request faces the return value
+//   is a list: [offset_path, face_list].
+//
+// Arguments:
+//   path = the path to process.  A list of 2d points.
+//   r = offset radius.  Distance to offset.  Will round over corners.
+//   delta = offset distance.  Distance to offset with pointed corners.
+//   chamfer = chamfer corners when you specify `delta`.  Default: false
+//   closed = path is a closed curve. Default: False.
+//   check_valid = perform segment validity check.  Default: True.
+//   quality = validity check quality parameter, a small integer.  Default: 1.
+//   return_faces = return face list.  Default: False.
+//   firstface_index = starting index for face list.  Default: 0.
+//   flip_faces = flip face direction.  Default: false
+// Example(2D):
+//   test = [[0,0],[10,0],[10,7],[0,7], [-1,-3]];
+//   polygon(offset(test,r=1.9, closed=true, check_valid=true,quality=2));
+//   %down(.1)polygon(test);
+// Example(2D):
+//   star = star(5, r=100, ir=30);
+//   #stroke(close=true, star);
+//   stroke(close=true, offset(star, delta=-10, closed=true));
+// Example(2D):
+//   star = star(5, r=100, ir=30);
+//   #stroke(close=true, star);
+//   stroke(close=true, offset(star, delta=-10, chamfer=true, closed=true));
+// Example(2D):
+//   star = star(5, r=100, ir=30);
+//   #stroke(close=true, star);
+//   stroke(close=true, offset(star, r=-10, closed=true));
+// Example(2D):
+//   star = star(5, r=100, ir=30);
+//   #stroke(close=true, star);
+//   stroke(close=true, offset(star, delta=10, closed=true));
+// Example(2D):
+//   star = star(5, r=100, ir=30);
+//   #stroke(close=true, star);
+//   stroke(close=true, offset(star, delta=-10, chamfer=true, closed=true));
+// Example(2D):
+//   star = star(5, r=100, ir=30);
+//   #stroke(close=true, star);
+//   stroke(close=true, offset(star, r=10, closed=true));
+// Example(2D):
+//   ellipse = scale([1,0.3,1], p=circle(r=100));
+//   #stroke(close=true, ellipse);
+//   stroke(close=true, offset(ellipse, r=-15, check_valid=true, closed=true));
+// Example(2D):
+//   sinpath = 2*[for(theta=[-180:5:180]) [theta/4,45*sin(theta)]];
+//   #stroke(sinpath);
+//   stroke(offset(sinpath, r=17.5));
+function offset(
+	path, r=undef, delta=undef, chamfer=false,
+	maxstep=0.1, closed=false, check_valid=true,
+	quality=1, return_faces=false, firstface_index=0,
+	flip_faces=false
+) =
+	let(rcount = num_defined([r,delta]))
+	assert(rcount==1,"Must define exactly one of 'delta' and 'r'")
+	let(
+		chamfer = is_def(r) ? false : chamfer,
+		quality = max(0,round(quality)),
+		d = is_def(r)? r : delta,
+		shiftsegs = [for(i=[0:len(path)-1]) _shift_segment(select(path,i,i+1), d)],
+		// good segments are ones where no point on the segment is less than distance d from any point on the path
+		good = check_valid ? _good_segments(path, abs(d), shiftsegs, closed, quality) : replist(true,len(shiftsegs)),
+		goodsegs = bselect(shiftsegs, good),
+		goodpath = bselect(path,good)
+	)
+	assert(len(goodsegs)>0,"Offset of path is degenerate")
+	let(
+		// Extend the shifted segments to their intersection points
+		sharpcorners = [for(i=[0:len(goodsegs)-1]) _segment_extension(select(goodsegs,i-1), select(goodsegs,i))],
+		// If some segments are parallel then the extended segments are undefined.  This case is not handled
+		// Note if !closed the last corner doesn't matter, so exclude it
+		parallelcheck =
+			(len(sharpcorners)==2 && !closed) ||
+			all_defined(select(sharpcorners,closed?0:1,-1))
+	)
+	assert(parallelcheck, "Path turns back on itself (180 deg turn)")
+	let(
+		// This is a boolean array that indicates whether a corner is an outside or inside corner
+		// For outside corners, the newcorner is an extension (angle 0), for inside corners, it turns backward
+		// If either side turns back it is an inside corner---must check both.
+		// Outside corners can get rounded (if r is specified and there is space to round them)
+		outsidecorner = [
+			for(i=[0:len(goodsegs)-1]) let(
+				prevseg=select(goodsegs,i-1)
+			) (
+				(goodsegs[i][1]-goodsegs[i][0]) *
+				(goodsegs[i][0]-sharpcorners[i]) > 0
+			) && (
+				(prevseg[1]-prevseg[0]) *
+				(sharpcorners[i]-prevseg[1]) > 0
+			)
+		],
+		steps = is_def(delta) ? [] : [
+			for(i=[0:len(goodsegs)-1])
+			ceil(
+				abs(r)*vector_angle(
+					select(goodsegs,i-1)[1]-goodpath[i],
+					goodsegs[i][0]-goodpath[i]
+				)*PI/180/maxstep
+			)
+		],
+		// If rounding is true then newcorners replaces sharpcorners with rounded arcs where needed
+		// Otherwise it's the same as sharpcorners
+		// If rounding is on then newcorners[i] will be the point list that replaces goodpath[i] and newcorners later
+		// gets flattened.  If rounding is off then we set it to [sharpcorners] so we can later flatten it and get
+		// plain sharpcorners back.
+		newcorners = is_def(delta) && !chamfer ? [sharpcorners] : [
+			for(i=[0:len(goodsegs)-1]) (
+				(!chamfer && steps[i] <=2)  //Chamfer all points but only round if steps is 3 or more
+				|| !outsidecorner[i]        // Don't round inside corners
+				|| (!closed && (i==0 || i==len(goodsegs)-1))  // Don't round ends of an open path
+			)? [sharpcorners[i]] : (
+				chamfer?
+					_offset_chamfer(
+						goodpath[i], [
+							select(goodsegs,i-1)[1],
+							sharpcorners[i],
+							goodsegs[i][0]
+						], d
+					) :
+				arc(
+					cp=goodpath[i],
+					points=[
+						select(goodsegs,i-1)[1],
+						goodsegs[i][0]
+					],
+					N=steps[i]
+				)
+			)
+		],
+		pointcount = (is_def(delta) && !chamfer)?
+			replist(1,len(sharpcorners)) :
+			[for(i=[0:len(goodsegs)-1]) len(newcorners[i])],
+		start = [goodsegs[0][0]],
+		end = [goodsegs[len(goodsegs)-2][1]],
+		edges =  closed?
+			flatten(newcorners) :
+			concat(start,slice(flatten(newcorners),1,-2),end),
+		faces = !return_faces? [] :
+			_makefaces(
+				flip_faces, firstface_index, good,
+				pointcount, closed
+			)
+	) return_faces? [edges,faces] : edges;
 
 
 function _split_path_at_region_crossings(path, region, eps=EPSILON) =
