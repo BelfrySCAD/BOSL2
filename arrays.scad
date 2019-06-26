@@ -240,10 +240,48 @@ function list_insert(list, pos, elements) =
 	);
 
 
+// Function: bselect()
+// Usage:
+//   bselect(array,index);
+// Description:
+//   Returns the items in `array` whose matching element in `index` is true.
+// Arguments:
+//   array = Initial list to extract items from.
+//   index = List of booleans.
+// Example:
+//   bselect([3,4,5,6,7], [false,true,true,false,true]);  // Returns: [4,5,7]
+function bselect(array,index) =
+	[for(i=[0:len(array)-1]) if (index[i]) array[i]];
+
+
+// Function: list_bset()
+// Usage:
+//   list_bset(indexset, valuelist)
+// Description:
+//   Opposite of `bselect()`.  Returns a list the same length as `indexlist`, where each item will
+//   either be 0 if the corresponding item in `indexset` is false, or the next sequential value
+//   from `valuelist` if true.  The number of `true` values in `indexset` must be equal to the length
+//   of `valuelist`.
+// Arguments:
+//   indexset = A list of boolean values.
+//   valuelist = The list of values to set into the returned list.
+//   dflt = Default value to store when the indexset item is false.
+// Example:
+//   list_bset([false,true,false,true,false], [3,4]);  // Returns: [0,3,0,4,0]
+function list_bset(indexset, valuelist, dflt=0) =
+    let(
+		trueind = search([true], indexset,0)[0]
+    ) concat(
+		list_set(trueind, valuelist, dflt=dflt),    // Fill in all of the values
+		replist(dflt,len(indexset)-max(trueind)-1)  // Add trailing values so length matches indexset
+    );
+
+
 // Function: list_increasing()
 // Usage:
 //    list_increasing(list)
-// Description: returns true if the list is (non-strictly) increasing
+// Description:
+//   Returns true if the list is (non-strictly) increasing
 function list_increasing(list,ind=0) = ind < len(list)-1 && list[ind]<=list[ind+1] ? list_increasing(list,ind+1) :
                                        (ind>=len(list)-1 ? true : false);
 
