@@ -374,18 +374,75 @@ function shuffle(list) =
 	) concat(shuffle(left), shuffle(right));
 
 
-// Function: sort()
-// Usage:
-//   sort(arr, [idx])
-// Description:
-//   Sorts the given list using `compare_vals()`.  Results are undefined if list elements are not of similar type.
-// Arguments:
-//   arr = The list to sort.
-//   idx = If given, the index, range, or list of indices of sublist items to compare.
-// Example:
-//   l = [45,2,16,37,8,3,9,23,89,12,34];
-//   sorted = sort(l);  // Returns [2,3,8,9,12,16,23,34,37,45,89]
-function sort(arr, idx=undef) =
+// Sort a vector of scalar values
+function _sort_scalars(arr) =
+  len(arr)<=1 ? arr :
+      let(  pivot   = arr[floor(len(arr)/2)],
+            lesser  = [ for (y = arr) if (y  < pivot) y ],
+            equal   = [ for (y = arr) if (y == pivot) y ],
+            greater = [ for (y = arr) if (y  > pivot) y ]
+      )
+      concat( _sort_scalars(lesser), equal, _sort_scalars(greater) );
+
+// Sort a vector of vectors based on the first entry only of each vector
+function _sort_vectors1(arr) =
+  len(arr)<=1 ? arr :
+  !(len(arr)>0) ? [] :
+      let(  pivot   = arr[floor(len(arr)/2)],
+            lesser  = [ for (y = arr) if (y[0]  < pivot[0]) y ],
+            equal   = [ for (y = arr) if (y[0] == pivot[0]) y ],
+            greater = [ for (y = arr) if (y[0]  > pivot[0]) y ]
+      )
+      concat( _sort_vectors1(lesser), equal, _sort_vectors1(greater) );
+
+// Sort a vector of vectors based on the first two entries of each vector
+// Lexicographic order, remaining entries of vector ignored
+function _sort_vectors2(arr) =
+  len(arr)<=1 ? arr :
+  !(len(arr)>0) ? [] :
+      let(  pivot   = arr[floor(len(arr)/2)],
+            lesser  = [ for (y = arr) if (y[0] < pivot[0] || (y[0]==pivot[0] && y[1]<pivot[1])) y ],
+            equal   = [ for (y = arr) if (y[0] == pivot[0] && y[1]==pivot[1]) y ],
+            greater  = [ for (y = arr) if (y[0] > pivot[0] || (y[0]==pivot[0] && y[1]>pivot[1])) y ]
+        )
+      concat( _sort_vectors2(lesser), equal, _sort_vectors2(greater) );
+
+// Sort a vector of vectors based on the first three entries of each vector
+// Lexicographic order, remaining entries of vector ignored
+function _sort_vectors3(arr) =
+  len(arr)<=1 ? arr :
+      let(  pivot   = arr[floor(len(arr)/2)],
+            lesser  = [ for (y = arr) if (y[0] < pivot[0] ||
+                                          (y[0]==pivot[0] && (y[1]<pivot[1] ||
+                                                              (y[1]==pivot[1] && y[2]<pivot[2])))) y],
+            equal   = [ for (y = arr) if (y[0] == pivot[0] && y[1]== pivot[1] && y[2]==pivot[2]) y ],
+            greater = [ for (y = arr) if (y[0] > pivot[0] ||
+                                          (y[0]==pivot[0] && (y[1]>pivot[1] ||
+                                                              (y[1]==pivot[1] && y[2]>pivot[2])))) y]
+        )
+      concat( _sort_vectors3(lesser), equal, _sort_vectors3(greater) );
+
+
+// Sort a vector of vectors based on the first four entries of each vector
+// Lexicographic order, remaining entries of vector ignored
+function _sort_vectors4(arr) =
+  len(arr)<=1 ? arr :
+      let(  pivot   = arr[floor(len(arr)/2)],
+            lesser  = [ for (y = arr) if (y[0] < pivot[0] ||
+                                          (y[0]==pivot[0] && (y[1]<pivot[1] ||
+                                                              (y[1]==pivot[1] && (y[2]<pivot[2] ||
+                                                                                  (y[2]==pivot[2] && y[3]<pivot[3])))))) y ],
+                                                               
+            equal   = [ for (y = arr) if (y[0] == pivot[0] && y[1]== pivot[1] && y[2]==pivot[2] && y[3]==pivot[3]) y ],
+            greater = [ for (y = arr) if (y[0] > pivot[0] ||
+                                          (y[0]==pivot[0] && (y[1]>pivot[1] ||
+                                                              (y[1]==pivot[1] && (y[2]>pivot[2] ||
+                                                                                  (y[2]==pivot[2] && y[3]>pivot[3])))))) y ]
+        )
+      concat( _sort_vectors4(lesser), equal, _sort_vectors4(greater) );
+
+
+function _sort_general(arr, idx=undef) =
 	(len(arr)<=1) ? arr :
 	let(
 		pivot = arr[floor(len(arr)/2)],
@@ -400,7 +457,38 @@ function sort(arr, idx=undef) =
 		equal   = [ for (i = [0:1:len(arr)-1]) if (compare[i] ==0) arr[i] ],
 		greater = [ for (i = [0:1:len(arr)-1]) if (compare[i] > 0) arr[i] ]
 	)
-	concat(sort(lesser,idx), equal, sort(greater,idx));
+	concat(_sort_general(lesser,idx), equal, _sort_general(greater,idx));
+
+
+// Function: sort()
+// Usage:
+//   sort(list, [idx])
+// Description:
+//   Sorts the given list using `compare_vals()`, sorting in lexicographic order, with types ordered according to
+//   `undef < boolean < number < string < list`.  Comparison of lists is recursive. 
+//   If the list is a list of vectors whose length is from 1 to 4 and the `idx` parameter is not passed, then 
+//   `sort` uses a much more efficient method for comparisons and will run much faster.  In this case, all entries
+//   in the data are compared using the native comparison operator, so comparisons between types will fail.  
+// Arguments:
+//   list = The list to sort.
+//   idx = If given, do the comparison based just on the specified index, range or list of indices.  
+// Example:
+//   l = [45,2,16,37,8,3,9,23,89,12,34];
+//   sorted = sort(l);  // Returns [2,3,8,9,12,16,23,34,37,45,89]
+function sort(list, idx=undef) =
+  !is_list(list) || len(list)<=1 ? list :
+  is_def(idx) ? _sort_general(list,idx) :
+  let(size = array_dim(list))
+  len(size)==1 ? _sort_scalars(list) :
+  len(size)==2 && size[1] <=4 ? (
+                                       size[1]==0 ? list :
+                                       size[1]==1 ? _sort_vectors1(list) :
+                                       size[1]==2 ? _sort_vectors2(list) :
+                                       size[1]==3 ? _sort_vectors3(list) :
+                                     /*size[1]==4*/ _sort_vectors4(list)
+    ) :
+  _sort_general(list);
+     
 
 
 // Function: sortidx()
@@ -413,7 +501,7 @@ function sort(arr, idx=undef) =
 // Example:
 //   lst = ["d","b","e","c"];
 //   idxs = sortidx(lst);  // Returns: [1,3,0,2]
-//   ordered = [for (i=idxs) lst[i]];  // Returns: ["b", "c", "d", "e"]
+//   ordered = select(lst, idxs);   // Returns: ["b", "c", "d", "e"]
 // Example:
 //   lst = [
 //   	["foo", 88, [0,0,1], false],
@@ -424,13 +512,23 @@ function sort(arr, idx=undef) =
 //   idxs1 = sortidx(lst, idx=1); // Returns: [3,0,2,1]
 //   idxs2 = sortidx(lst, idx=0); // Returns: [1,2,0,3]
 //   idxs3 = sortidx(lst, idx=[1,3]); // Returns: [3,0,2,1]
-function sortidx(l, idx=undef) =
-	(l==[])? [] :
+function sortidx(list, idx=undef) =
+	list==[] ? [] :
 	let(
-		ll=enumerate(l,idx=idx),
-		sidx = [1:len(ll[0])-1]
-	)
-	subindex(sort(ll, idx=sidx), 0);
+              size = array_dim(list),
+              aug = is_undef(idx) && (len(size) == 1 || (len(size) == 2 && size[1]<=4)) ? zip(list, list_range(len(list))) :
+                                                                                        enumerate(list,idx=idx)
+           )
+        is_undef(idx) && len(size) == 1 ? subindex(_sort_vectors1(aug),1) :
+        is_undef(idx) && len(size) == 2 && size[1] <=4 ? (
+                                          size[1]==0 ? list_range(len(arr)) :
+                                          size[1]==1 ? subindex(_sort_vectors1(aug),1) :
+                                          size[1]==2 ? subindex(_sort_vectors2(aug),2) :
+                                          size[1]==3 ? subindex(_sort_vectors3(aug),3) :
+                                        /*size[1]==4*/ subindex(_sort_vectors4(aug),4)
+                                     ) :
+        // general case
+	subindex(_sort_general(aug, idx=list_range(s=1,n=len(aug)-1)), 0);
 
 
 // Function: unique()
