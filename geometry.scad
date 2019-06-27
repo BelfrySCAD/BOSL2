@@ -8,6 +8,10 @@
 //////////////////////////////////////////////////////////////////////
 
 
+// CommonCode:
+//   include <BOSL2/roundcorners.scad>
+
+
 // Section: Lines and Triangles
 
 // Function: point_on_segment2d()
@@ -392,7 +396,14 @@ function path_subselect(path,s1,u1,s2,u2) =
 function assemble_path_fragments(subpaths,eps=EPSILON,_finished=[]) =
 	len(subpaths)<=1? concat(_finished, subpaths) :
 	let(
-		path = subpaths[0],
+		path = subpaths[0]
+	) is_closed_path(path, eps=eps)? (
+		assemble_path_fragments(
+			[for (i=[1:1:len(subpaths)-1]) subpaths[i]],
+			eps=eps,
+			_finished=concat(_finished, [path])
+		)
+	) : let(
 		matches = [
 			for (i=[1:1:len(subpaths)-1], rev1=[0,1], rev2=[0,1]) let(
 				idx1 = rev1? 0 : len(path)-1,
@@ -589,13 +600,16 @@ function _offset_chamfer(center, points, delta) =
 		line_intersection(endline, select(points,[1,2]))
 	];
 
+
 function _shift_segment(segment, d) =
 	move(d*line_normal(segment),segment);
+
 
 // Extend to segments to their intersection point.  First check if the segments already have a point in common,
 // which can happen if two colinear segments are input to the path variant of `offset()`
 function _segment_extension(s1,s2) =
 	norm(s1[1]-s2[0])<1e-6 ? s1[1] : line_intersection(s1,s2);
+
 
 function _makefaces(direction, startind, good, pointcount, closed) =
 	let(
@@ -635,6 +649,7 @@ function _makefaces_recurse(startind1, startind2, numfirst, numsecond, lenlist, 
 			)
 		)
 	);
+
 
 // Determine which of the shifted segments are good
 function _good_segments(path, d, shiftsegs, closed, quality) =
@@ -682,6 +697,42 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 				norm(v-projection*pathseg_unit[i])
 		) segdist
 	]);
+
+
+function _offset_region(
+	paths, r, delta, chamfer, closed,
+	maxstep, check_valid, quality,
+	return_faces, firstface_index,
+	flip_faces, _acc=[], _i=0
+) =
+	_i>=len(paths)? _acc :
+	_offset_region(
+		paths, _i=_i+1,
+		_acc = (paths[_i].x % 2 == 0)? (
+			union(_acc, [
+				offset(
+					paths[_i].y,
+					r=r, delta=delta, chamfer=chamfer, closed=closed,
+					maxstep=maxstep, check_valid=check_valid, quality=quality,
+					return_faces=return_faces, firstface_index=firstface_index,
+					flip_faces=flip_faces
+				)
+			])
+		) : (
+			difference(_acc, [
+				offset(
+					paths[_i].y,
+					r=-r, delta=-delta, chamfer=chamfer, closed=closed,
+					maxstep=maxstep, check_valid=check_valid, quality=quality,
+					return_faces=return_faces, firstface_index=firstface_index,
+					flip_faces=flip_faces
+				)
+			])
+		),
+		r=r, delta=delta, chamfer=chamfer, closed=closed,
+		maxstep=maxstep, check_valid=check_valid, quality=quality,
+		return_faces=return_faces, firstface_index=firstface_index, flip_faces=flip_faces
+	);
 
 
 // Function: offset()
@@ -753,13 +804,36 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   sinpath = 2*[for(theta=[-180:5:180]) [theta/4,45*sin(theta)]];
 //   #stroke(sinpath);
 //   stroke(offset(sinpath, r=17.5));
+// Example(2D): Region
+//   rgn = difference(circle(d=100), union(square([20,40], center=true), square([40,20], center=true)));
+//   #linear_extrude(height=1.1) for (p=rgn) stroke(close=true, width=0.5, p);
+//   region(offset(rgn, r=-5));
 function offset(
 	path, r=undef, delta=undef, chamfer=false,
 	maxstep=0.1, closed=false, check_valid=true,
 	quality=1, return_faces=false, firstface_index=0,
 	flip_faces=false
 ) =
-	let(rcount = num_defined([r,delta]))
+	is_region(path)? (
+		let(
+			path = [for (p=path) polygon_clockwise(p)? p : reverse(p)],
+			rgn = exclusive_or([for (p = path) [p]]),
+			pathlist = sort(idx=0,[
+				for (i=[0:1:len(rgn)-1]) [
+					sum([
+						for (j=[0:1:len(rgn)-1]) if (i!=j)
+							point_in_polygon(rgn[i][0],rgn[j])>=0? 1 : 0
+					]),
+					rgn[i]
+				]
+			])
+		) _offset_region(
+			pathlist, r=r, delta=delta, chamfer=chamfer, closed=true,
+			maxstep=maxstep, check_valid=check_valid, quality=quality,
+			return_faces=return_faces, firstface_index=firstface_index,
+			flip_faces=flip_faces
+		)
+	) : let(rcount = num_defined([r,delta]))
 	assert(rcount==1,"Must define exactly one of 'delta' and 'r'")
 	let(
 		chamfer = is_def(r) ? false : chamfer,
@@ -1184,7 +1258,6 @@ module region(r)
 	];
 	polygon(points=points, paths=paths);
 }
-
 
 
 
