@@ -171,7 +171,7 @@ function deduplicate(list, eps=EPSILON) =
 
 // Function: list_set()
 // Usage:
-//   list_set(indices, values, list, [dflt], [minlen])
+//   list_set(list, indices, values, [dflt], [minlen])
 // Description:
 //   Takes the input list and returns a new list such that `list[indices[i]] = values[i]` for all of
 //   the (index,value) pairs supplied.  If you supply `indices` that are beyond the length of the list
@@ -180,12 +180,12 @@ function deduplicate(list, eps=EPSILON) =
 //   order but run time will be (much) faster for long lists if it is already sorted.  Reptitions are
 //   not allowed.
 // Arguments:
+//   list = List to set items in.  Default: []
 //   indices = List of indices into `list` to set.
 //   values = List of values to set.
-//   list = List to set items in.
 //   dflt = Default value to store in sparse skipped indices.
 //   minlen = Minimum length to expand list to.
-function list_set(indices,values,list=[],dflt=0,minlen=0) =
+function list_set(list=[],indices,values,dflt=0,minlen=0) =
 	!is_list(indices) ? list_set(list,[indices],[values],dflt) :
 	assert(len(indices)==len(values),"Index list and value list must have the same length")
 	let(
@@ -272,7 +272,7 @@ function list_bset(indexset, valuelist, dflt=0) =
     let(
 		trueind = search([true], indexset,0)[0]
     ) concat(
-		list_set(trueind, valuelist, dflt=dflt),    // Fill in all of the values
+		list_set([],trueind, valuelist, dflt=dflt),    // Fill in all of the values
 		replist(dflt,len(indexset)-max(trueind)-1)  // Add trailing values so length matches indexset
     );
 

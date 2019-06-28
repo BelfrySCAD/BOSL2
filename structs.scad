@@ -25,7 +25,7 @@ function struct_set(struct, keyword, value=undef, grow=true) =
         let(ind=search([keyword],struct,1,0)[0])
         (ind==[] ? assert(grow,str("Unknown keyword \"",keyword))
                    concat(struct, [[keyword,value]]) :
-               list_set([ind], [[keyword,value]],struct)) :
+               list_set(struct, [ind], [[keyword,value]])) :
                _parse_pairs(struct,keyword,grow);
 
 function _parse_pairs(spec, input, grow=true, index=0, result=undef) =
