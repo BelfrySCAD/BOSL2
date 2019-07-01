@@ -141,7 +141,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false) =
 			start = is_def(start)? start : is_vector(angle) ? angle[0] : 0,
 			angle = is_vector(angle)? angle[1]-angle[0] : angle,
 			r = get_radius(r=r,d=d),
-			N = max(3, is_undef(N)? ceil(segs(r)*angle/360) : N),
+			N = max(3, is_undef(N)? ceil(segs(r)*abs(angle)/360) : N),
 			arcpoints = [for(i=[0:N-1]) let(theta = start + i*angle/(N-1)) r*[cos(theta),sin(theta)]+cp],
 			extra = wedge? [cp] : []
 		)
