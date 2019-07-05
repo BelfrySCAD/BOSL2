@@ -2189,9 +2189,9 @@ module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
 //   Sets the color to progressive values along the ROYGBIV spectrum for each item.
 //   Sets `$idx` to the index of the current item in `list` that we want to show.
 //   Sets `$item` to the current item in `list` that we want to show.
-// Example:
+// Example(2D):
 //   rainbow(["Foo","Bar","Baz"]) fwd($idx*10) text(text=$item,size=8,halign="center",valign="center");
-// Example:
+// Example(2D):
 //   rgn = [circle(d=45,$fn=3), circle(d=75,$fn=4), circle(d=50)];
 //   rainbow(rgn) stroke($item, close=true);
 module rainbow(list)
