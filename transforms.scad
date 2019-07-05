@@ -2115,5 +2115,65 @@ module shell2d(thickness, or=0, ir=0, fill=0, round=0)
 }
 
 
+//////////////////////////////////////////////////////////////////////
+// Section: Colors
+//////////////////////////////////////////////////////////////////////
+
+// Function&Module: HSL()
+// Usage:
+//   HSL(h,[s],[l],[a]) ...
+//   rgb = HSL(h,[s],[l]);
+// Description:
+//   When called as a function, returns the [R,G,B] color for the given hue `h`, saturation `s`, and lightness `l` from the HSL colorspace.
+//   When called as a module, sets the color to the given hue `h`, saturation `s`, and lightness `l` from the HSL colorspace.
+// Arguments:
+//   h = The hue, given as a value between 0 and 360.  0=red, 60=yellow, 120=green, 180=cyan, 240=blue, 300=magenta.
+//   s = The saturation, given as a value between 0 and 1.  0 = grayscale, 1 = vivid colors.
+//   l = The lightness, between 0 and 1.  0 = black, 0.5 = bright colors, 1 = white.
+// Example:
+//   HSL(h=120,s=1,l=0.5) sphere(d=50);
+// Example:
+//   rgb = HSL(h=270,s=0.75,l=0.6);
+//   color(rgb) cube(50, center=true);
+function HSL(h,s=1,l=0.5) =
+	let(
+		h=posmod(h,360)
+	) [
+		for (n=[0,8,4]) let(
+			k=(n+h/30)%12
+		) l - s*min(l,1-l)*max(min(k-3,9-k,1),-1)
+	];
+
+module HSL(h,s=1,l=0.5,a=1) color(HSL(h,s,l),a) children();
+
+
+// Function&Module: HSV()
+// Usage:
+//   HSV(h,[s],[v],[a]) ...
+//   rgb = HSV(h,[s],[v]);
+// Description:
+//   When called as a function, returns the [R,G,B] color for the given hue `h`, saturation `s`, and value `v` from the HSV colorspace.
+//   When called as a module, sets the color to the given hue `h`, saturation `s`, and value `v` from the HSV colorspace.
+// Arguments:
+//   h = The hue, given as a value between 0 and 360.  0=red, 60=yellow, 120=green, 180=cyan, 240=blue, 300=magenta.
+//   s = The saturation, given as a value between 0 and 1.  0 = grayscale, 1 = vivid colors.
+//   v = The value, between 0 and 1.  0 = darkest black, 1 = bright.
+// Example:
+//   HSV(h=120,s=1,v=1) sphere(d=50);
+// Example:
+//   rgb = HSV(h=270,s=0.75,v=0.9);
+//   color(rgb) cube(50, center=true);
+function HSV(h,s=1,v=1) =
+	let(
+		h=posmod(h,360),
+		v2=v*(1-s),
+		r=lookup(h,[[0,v], [60,v], [120,v2], [240,v2], [300,v], [360,v]]),
+		g=lookup(h,[[0,v2], [60,v], [180,v], [240,v2], [360,v2]]),
+		b=lookup(h,[[0,v2], [120,v2], [180,v], [300,v], [360,v2]])
+	) [r,g,b];
+
+module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
+
+
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
