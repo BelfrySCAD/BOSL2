@@ -16,7 +16,30 @@
 //   is_vector(v)
 // Description:
 //   Returns true if the given value is a list, and at least the first item is a number.
+// Example:
+//   is_vector([1,2,3]);    // Returns: true
+//   is_vector([[1,2,3]]);  // Returns: false
+//   is_vector(["foo"]);    // Returns: false
+//   is_vector([]);         // Returns: false
+//   is_vector(1);          // Returns: false
+//   is_vector("foo");      // Returns: false
+//   is_vector(true);       // Returns: false
 function is_vector(v) = is_list(v) && is_num(v[0]);
+
+
+// Function: add_scalar()
+// Usage:
+//   add_scalar(v,s);
+// Description:
+//   Given a vector and a scalar, returns the vector with the scalar added to each item in it.
+//   If given a list of vectors, recursively adds the scalar to the each vector.
+// Arguments:
+//   v = The initial list of values.
+//   s = A scalar value to add to every item in the vector.
+// Example:
+//   add_scalar([1,2,3],3);            // Returns: [4,5,6]
+//   add_scalar([[1,2,3],[3,4,5]],3);  // Returns: [[4,5,6],[6,7,8]]
+function add_scalar(v,s) = [for (x=v) is_list(x)? add_scalar(x,s) : x+s];
 
 
 // Function: vmul()
@@ -47,6 +70,8 @@ function vdiv(v1, v2) = [for (i = [0:1:len(v1)-1]) v1[i]/v2[i]];
 // Description: Returns a vector of the absolute value of each element of vector `v`.
 // Arguments:
 //   v = The vector to get the absolute values of.
+// Example:
+//   vabs([-1,3,-9]);  // Returns: [1,3,9]
 function vabs(v) = [for (x=v) abs(x)];
 
 
@@ -56,7 +81,13 @@ function vabs(v) = [for (x=v) abs(x)];
 //   If passed a zero-length vector, returns the unchanged vector.
 // Arguments:
 //   v = The vector to normalize.
-function normalize(v) = v==[0,0,0]? v : v/norm(v);
+// Examples:
+//   normalize([10,0,0]);   // Returns: [1,0,0]
+//   normalize([0,10,0]);   // Returns: [0,1,0]
+//   normalize([0,0,10]);   // Returns: [0,0,1]
+//   normalize([0,-10,0]);  // Returns: [0,-1,0]
+//   normalize([0,0,0]);    // Returns: [0,0,0]
+function normalize(v) = norm(v)<=EPSILON? v : v/norm(v);
 
 
 // Function: vquant()
@@ -67,6 +98,16 @@ function normalize(v) = v==[0,0,0]? v : v/norm(v);
 // Arguments:
 //   v = The vector to quantize.
 //   m = The multiple to quantize to.
+// Examples:
+//   vquant(12,4);  // Returns: 12
+//   vquant(13,4);  // Returns: 12
+//   vquant(14,4);  // Returns: 16
+//   vquant(15,4);  // Returns: 16
+//   vquant(16,4);  // Returns: 16
+//   vquant(9,3);   // Returns: 9
+//   vquant(10,3);  // Returns: 9
+//   vquant(11,3);  // Returns: 12
+//   vquant(12,3);  // Returns: 12
 function vquant(v,m) = [for (x=v) quant(x,m)];
 
 
@@ -78,6 +119,16 @@ function vquant(v,m) = [for (x=v) quant(x,m)];
 // Arguments:
 //   v = The vector to quantize.
 //   m = The multiple to quantize to.
+// Examples:
+//   vquant(12,4);  // Returns: 12
+//   vquant(13,4);  // Returns: 12
+//   vquant(14,4);  // Returns: 12
+//   vquant(15,4);  // Returns: 12
+//   vquant(16,4);  // Returns: 16
+//   vquant(9,3);   // Returns: 9
+//   vquant(10,3);  // Returns: 9
+//   vquant(11,3);  // Returns: 9
+//   vquant(12,3);  // Returns: 12
 function vquantdn(v,m) = [for (x=v) quantdn(x,m)];
 
 
@@ -89,6 +140,16 @@ function vquantdn(v,m) = [for (x=v) quantdn(x,m)];
 // Arguments:
 //   v = The vector to quantize.
 //   m = The multiple to quantize to.
+// Examples:
+//   vquant(12,4);  // Returns: 12
+//   vquant(13,4);  // Returns: 16
+//   vquant(14,4);  // Returns: 16
+//   vquant(15,4);  // Returns: 16
+//   vquant(16,4);  // Returns: 16
+//   vquant(9,3);   // Returns: 9
+//   vquant(10,3);  // Returns: 12
+//   vquant(11,3);  // Returns: 12
+//   vquant(12,3);  // Returns: 12
 function vquantup(v,m) = [for (x=v) quantup(x,m)];
 
 
@@ -100,13 +161,19 @@ function vquantup(v,m) = [for (x=v) quantup(x,m)];
 // Description:
 //   If given a single list of two vectors, like `vector_angle([V1,V2])`, returns the angle between the two vectors V1 and V2.
 //   If given a single list of three points, like `vector_angle([A,B,C])`, returns the angle between the line segments AB and BC.
-//   If given two vectors, like `vector_angle(V1,V1)`, returns the angle between the two vectors V1 and V2.
+//   If given two vectors, like `vector_angle(V1,V2)`, returns the angle between the two vectors V1 and V2.
 //   If given three points, like `vector_angle(A,B,C)`, returns the angle between the line segments AB and BC.
 // Arguments:
 //   v1 = First vector or point.
 //   v2 = Second vector or point.
 //   v3 = Third point in three point mode.
-// NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
+// Examples:
+//   vector_angle(UP,LEFT);     // Returns: 90
+//   vector_angle(RIGHT,LEFT);  // Returns: 180
+//   vector_angle(UP+RIGHT,RIGHT);  // Returns: 45
+//   vector_angle([10,10], [0,0], [10,-10]);  // Returns: 90
+//   vector_angle([10,0,10], [0,0,0], [-10,10,0]);  // Returns: 120
+//   vector_angle([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: 120
 function vector_angle(v1,v2=undef,v3=undef) =
 	(is_list(v1) && is_list(v1[0]) && is_undef(v2) && is_undef(v3))? (
 		assert(is_vector(v1.x))
@@ -116,6 +183,7 @@ function vector_angle(v1,v2=undef,v3=undef) =
 		assert(false, "Bad arguments.")
 	) :
 	(is_vector(v1) && is_vector(v2) && is_vector(v3))? vector_angle(v1-v2, v3-v2) :
+	// NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
 	(is_vector(v1) && is_vector(v2) && is_undef(v3))? acos(constrain((v1*v2)/(norm(v1)*norm(v2)), -1, 1)) :
 	assert(false, "Bad arguments.");
 
@@ -134,6 +202,13 @@ function vector_angle(v1,v2=undef,v3=undef) =
 //   v1 = First vector or point.
 //   v2 = Second vector or point.
 //   v3 = Third point in three point mode.
+// Examples:
+//   vector_axis(UP,LEFT);     // Returns: [0,-1,0] (FWD)
+//   vector_axis(RIGHT,LEFT);  // Returns: [0,-1,0] (FWD)
+//   vector_axis(UP+RIGHT,RIGHT);  // Returns: [0,1,0] (BACK)
+//   vector_axis([10,10], [0,0], [10,-10]);  // Returns: [0,0,-1] (DOWN)
+//   vector_axis([10,0,10], [0,0,0], [-10,10,0]);  // Returns: [-0.57735, -0.57735, 0.57735]
+//   vector_axis([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: [-0.57735, -0.57735, 0.57735]
 function vector_axis(v1,v2=undef,v3=undef) =
 	(is_list(v1) && is_list(v1[0]) && is_undef(v2) && is_undef(v3))? (
 		assert(is_vector(v1.x))
