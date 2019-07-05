@@ -46,11 +46,11 @@ function point_left_of_segment2d(point, edge) =
 
 
 // Internal non-exposed function.
-function _point_above_below_segment(point, edge, eps=EPSILON) =
-	edge[0].y <= point.y+eps? (
-		(edge[1].y > point.y-eps && point_left_of_segment2d(point, edge) > eps)? 1 : 0
+function _point_above_below_segment(point, edge) =
+	edge[0].y <= point.y? (
+		(edge[1].y > point.y && point_left_of_segment2d(point, edge) > 0)? 1 : 0
 	) : (
-		(edge[1].y <= point.y+eps && point_left_of_segment2d(point, edge) < eps)? -1 : 0
+		(edge[1].y <= point.y && point_left_of_segment2d(point, edge) < 0)? -1 : 0
 	);
 
 
@@ -427,6 +427,23 @@ function assemble_path_fragments(subpaths,eps=EPSILON,_finished=[]) =
 			eps=eps,
 			_finished=concat(_finished, [matches[0][1]])
 		)
+	) : let(
+		subpath = matches[0][1],
+		splen = len(subpath),
+		conn1 = [for (i=[1:splen-1]) if (approx(subpath[0],subpath[i])) i],
+		conn2 = [for (i=[0:splen-2]) if (approx(subpath[splen-1],subpath[i])) i]
+	) (conn1 != [] || conn2 != [])? let(
+		finpath = select(subpath, 0, conn1!=[]? conn1[0] : conn2[0]),
+		subpath2 = select(subpath, conn1!=[]? conn1[0] : conn2[0], -1)
+	) (
+		assemble_path_fragments(
+			concat(
+				[subpath2],
+				[for (i = [1:1:len(subpaths)-1]) if(i != matches[0][0]) subpaths[i]]
+			),
+			eps=eps,
+			_finished=concat(_finished, [finpath])
+		)
 	) : (
 		assemble_path_fragments(
 			concat(
@@ -489,10 +506,11 @@ function simplify_path_indexed(points, path, eps=EPSILON) =
 //   path = The list of 2D path points forming the perimeter of the polygon.
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 function point_in_polygon(point, path, eps=EPSILON) =
+	// Original algorithm from http://geomalgorithms.com/a03-_inclusion.html
 	// Does the point lie on any edges?  If so return 0.
-	sum([for(i=[0:1:len(path)-1]) point_on_segment2d(point, select(path, i, i+1), eps=eps)?1:0])>0 ? 0 :
+	sum([for(i=[0:1:len(path)-1]) let(seg=select(path,i,i+1)) if(!approx(seg[0],seg[1],eps=eps)) point_on_segment2d(point, seg, eps=eps)?1:0]) > 0? 0 :
 	// Otherwise compute winding number and return 1 for interior, -1 for exterior
-	sum([for(i=[0:1:len(path)-1]) _point_above_below_segment(point, select(path, i, i+1), eps=eps)]) != 0 ? 1 : -1;
+	sum([for(i=[0:1:len(path)-1]) let(seg=select(path,i,i+1)) if(!approx(seg[0],seg[1],eps=eps)) _point_above_below_segment(point, seg)]) != 0? 1 : -1;
 
 
 // Function: point_in_region()
@@ -510,7 +528,7 @@ function point_in_polygon(point, path, eps=EPSILON) =
 function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
 	(_i >= len(region))? ((_cnt%2==1)? 1 : -1) : let(
 		pip = point_in_polygon(point, region[_i], eps=eps)
-	) approx(pip,0,eps=eps)? 0 : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>eps? 1 : 0));
+	) pip==0? 0 : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
 
 
 // Function: pointlist_bounds()
