@@ -2128,13 +2128,14 @@ module shell2d(thickness, or=0, ir=0, fill=0, round=0)
 //   When called as a module, sets the color to the given hue `h`, saturation `s`, and lightness `l` from the HSL colorspace.
 // Arguments:
 //   h = The hue, given as a value between 0 and 360.  0=red, 60=yellow, 120=green, 180=cyan, 240=blue, 300=magenta.
-//   s = The saturation, given as a value between 0 and 1.  0 = grayscale, 1 = vivid colors.
-//   l = The lightness, between 0 and 1.  0 = black, 0.5 = bright colors, 1 = white.
+//   s = The saturation, given as a value between 0 and 1.  0 = grayscale, 1 = vivid colors.  Default: 1
+//   l = The lightness, between 0 and 1.  0 = black, 0.5 = bright colors, 1 = white.  Default: 0.5
+//   a = When called as a module, specifies the alpha channel as a value between 0 and 1.  0 = fully transparent, 1=opaque.  Default: 1
 // Example:
-//   HSL(h=120,s=1,l=0.5) sphere(d=50);
+//   HSL(h=120,s=1,l=0.5) sphere(d=60);
 // Example:
 //   rgb = HSL(h=270,s=0.75,l=0.6);
-//   color(rgb) cube(50, center=true);
+//   color(rgb) cube(60, center=true);
 function HSL(h,s=1,l=0.5) =
 	let(
 		h=posmod(h,360)
@@ -2156,13 +2157,14 @@ module HSL(h,s=1,l=0.5,a=1) color(HSL(h,s,l),a) children();
 //   When called as a module, sets the color to the given hue `h`, saturation `s`, and value `v` from the HSV colorspace.
 // Arguments:
 //   h = The hue, given as a value between 0 and 360.  0=red, 60=yellow, 120=green, 180=cyan, 240=blue, 300=magenta.
-//   s = The saturation, given as a value between 0 and 1.  0 = grayscale, 1 = vivid colors.
-//   v = The value, between 0 and 1.  0 = darkest black, 1 = bright.
+//   s = The saturation, given as a value between 0 and 1.  0 = grayscale, 1 = vivid colors.  Default: 1
+//   v = The value, between 0 and 1.  0 = darkest black, 1 = bright.  Default: 1
+//   a = When called as a module, specifies the alpha channel as a value between 0 and 1.  0 = fully transparent, 1=opaque.  Default: 1
 // Example:
-//   HSV(h=120,s=1,v=1) sphere(d=50);
+//   HSV(h=120,s=1,v=1) sphere(d=60);
 // Example:
 //   rgb = HSV(h=270,s=0.75,v=0.9);
-//   color(rgb) cube(50, center=true);
+//   color(rgb) cube(60, center=true);
 function HSV(h,s=1,v=1) =
 	let(
 		h=posmod(h,360),
