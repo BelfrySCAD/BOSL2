@@ -1,5 +1,6 @@
 // Section: String Operations
 //-----------------------------------------------------------------------------
+
 // Function: substr()
 // Usage:
 //   substr(str, [pos], [len])
@@ -328,3 +329,111 @@ function starts_with(str,pattern) = _str_cmp(str,0,pattern);
 //   ends_with("abcdef","");     // Returns true
 function ends_with(str,pattern) = _str_cmp(str,len(str)-len(pattern),pattern);
 
+
+function _str_count_leading(s,c,_i=0) =
+	(_i>=len(s)||!in_list(s[_i],[each c]))? _i :
+	_str_count_leading(s,c,_i=_i+1);
+
+function _str_count_trailing(s,c,_i=0) =
+	(_i>=len(s)||!in_list(s[len(s)-1-_i],[each c]))? _i :
+	_str_count_trailing(s,c,_i=_i+1);
+
+// Function: str_strip_leading()
+// Usage:
+//   str_strip_leading(s,c);
+// Description:
+//   Takes a string `s` and strips off all leading characters that exist in string `c`.
+// Arguments:
+//   s = The string to strip leading characters from.
+//   c = The string of characters to strip.
+// Example:
+//   str_strip_leading("--##--123--##--","#-");  // Returns: "123--##--"
+//   str_strip_leading("--##--123--##--","-");  // Returns: "##--123--##--"
+//   str_strip_leading("--##--123--##--","#");  // Returns: "--##--123--##--"
+function str_strip_leading(s,c) = substr(s,pos=_str_count_leading(s,c));
+
+
+// Function: str_strip_trailing()
+// Usage:
+//   str_strip_trailing(s,c);
+// Description:
+//   Takes a string `s` and strips off all trailing characters that exist in string `c`.
+// Arguments:
+//   s = The string to strip trailing characters from.
+//   c = The string of characters to strip.
+// Example:
+//   str_strip_trailing("--##--123--##--","#-");  // Returns: "--##--123"
+//   str_strip_trailing("--##--123--##--","-");  // Returns: "--##--123--##"
+//   str_strip_trailing("--##--123--##--","#");  // Returns: "--##--123--##--"
+function str_strip_trailing(s,c) = substr(s,len=len(s)-_str_count_trailing(s,c));
+
+
+// Function: str_strip()
+// Usage:
+//   str_strip(s,c);
+// Description:
+//   Takes a string `s` and strips off all leading or trailing characters that exist in string `c`.
+// Arguments:
+//   s = The string to strip leading or trailing characters from.
+//   c = The string of characters to strip.
+// Example:
+//   str_strip("--##--123--##--","#-");  // Returns: "123"
+//   str_strip("--##--123--##--","-");  // Returns: "##--123--##"
+//   str_strip("--##--123--##--","#");  // Returns: "--##--123--##--"
+function str_strip(s,c) = str_strip_trailing(str_strip_leading(s,c),c);
+
+
+// Function: fmti()
+// Usage:
+//   fmti(i, [mindigits]);
+// Description:
+//   Formats an integer number into a string.  This can handle larger numbers than `str()`.
+// Arguments:
+//   i = The integer to make a string of.
+//   mindigits = If the number has fewer than this many digits, pad the front with zeros until it does.  Default: 1.
+// Example:
+//   str(123456789012345);  // Returns "1.23457e+14"
+//   fmti(123456789012345);  // Returns "123456789012345"
+//   fmti(-123456789012345);  // Returns "-123456789012345"
+function fmti(i,mindigits=1) =
+	i<0? str("-", fmti(-i)) :
+	let(i=floor(i), e=floor(log(i)+1e-15))
+	i==0? "0" :
+	str_join(
+		concat(
+			[for (j=[0:1:mindigits-e-2]) "0"],
+			[for (j=[e:-1:0]) str(floor(i/pow(10,j)%10))]
+		)
+	);
+
+
+// Function: fmtf()
+// Usage:
+//   fmtf(f,[sig]);
+// Description:
+//   Formats the given floating point number `f` into a string with `sig` significant digits.
+//   Strips trailing `0`s after the decimal point.  Strips trailing decimal point.
+//   If the number can be represented in `sig` significant digits without a mantissa, it will be.
+//   If given a list of numbers, recursively prints each item in the list, returning a string like `[3,4,5]`
+// Arguments:
+//   f = The floating point number to format.
+//   sig = The number of significant digits to display.  Default: 12
+// Example:
+//   fmtf(PI,12);  // Returns: "3.14159265359"
+//   fmtf([PI,-16.75],12);  // Returns: "[3.14159265359, -16.75]"
+function fmtf(f,sig=12) =
+	is_list(f)? str("[",str_join(sep=", ", [for (g=f) fmtf(g,sig=sig)]),"]") :
+	f==0? "0" :
+	str(f)=="nan"? "nan" :
+	str(f)=="inf"? "inf" :
+	f<0? str("-",fmtf(-f,sig=sig)) :
+	let(e=floor(log(f)+1e-15))
+	(e<-sig/2||e>=sig)? str(fmtf(f*pow(10,-e),sig=sig),"e",e) :
+	let(
+		whole=floor(f),
+		part=floor((f-whole)*pow(10,sig-e-1)+0.5)
+	)
+	part>0? str(fmti(whole), str_strip_trailing(str(".",fmti(part,mindigits=sig-abs(e)-1)),"0.")) : fmti(whole);
+
+
+// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
