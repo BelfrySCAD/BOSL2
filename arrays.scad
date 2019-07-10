@@ -345,6 +345,21 @@ function list_fit(v, length, fill) =
 	let(l=len(v)) (l==length)? v : (l>length)? list_trim(v,length) : list_pad(v,length,fill);
 
 
+// Function: idx(list)
+// Usage:
+//   i = idx(list);
+//   for(i=idx(list)) ...
+// Description:
+//   Returns the range of indexes for the given list.
+// Arguments:
+//   list = The list to returns the index range of.
+//   step = The step size to stride through the list.  Default: 1
+// Example(2D):
+//   colors = ["red", "green", "blue"];
+//   for (i=idx(colors)) right(20*i) color(colors[i]) circle(d=10);
+function idx(list,step=1) = [0:step:len(list)-1];
+
+
 // Function: enumerate()
 // Description:
 //   Returns a list, with each item of the given list `l` numbered in a sublist.
@@ -356,6 +371,9 @@ function list_fit(v, length, fill) =
 //   enumerate(["a","b","c"]);  // Returns: [[0,"a"], [1,"b"], [2,"c"]]
 //   enumerate([[88,"a"],[76,"b"],[21,"c"]], idx=1);  // Returns: [[0,"a"], [1,"b"], [2,"c"]]
 //   enumerate([["cat","a",12],["dog","b",10],["log","c",14]], idx=[1:2]);  // Returns: [[0,"a",12], [1,"b",10], [2,"c",14]]
+// Example(2D):
+//   colors = ["red", "green", "blue"];
+//   for (p=enumerate(colors)) right(20*p[0]) color(p[1]) circle(d=10);
 function enumerate(l,idx=undef) =
 	(idx==undef)?
 		[for (i=[0:1:len(l)-1]) [i,l[i]]] :
