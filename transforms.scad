@@ -283,7 +283,7 @@ function rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false, p=unde
 		is_vector(p)? (
 			rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, p=[p], planar=planar)[0]
 		) : (
-			planar? (
+			(planar || (p!=[] && len(p[0])==2))? (
 				is_undef(from)? rotate_points2d(p, a=a*rev, cp=cp) : (
 					approx(from,to)? p :
 					rotate_points2d(p, a=vector_angle(from,to)*sign(vector_axis(from,to)[2])*rev, cp=cp)
