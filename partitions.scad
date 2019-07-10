@@ -70,13 +70,13 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 //   partition_mask(w=50, gap=30, cutsize=15, cutpath="jigsaw");
 //   partition_mask(w=50, cutsize=[20,20], gap=30, cutpath="jigsaw");
 // Examples(2D):
-//   partition_mask(w=20, spin=90, cutpath="sawtooth");
-//   partition_mask(w=20, spin=90, cutpath="sinewave");
-//   partition_mask(w=20, spin=90, cutpath="comb");
-//   partition_mask(w=20, spin=90, cutpath="finger");
-//   partition_mask(w=20, spin=90, cutpath="dovetail");
-//   partition_mask(w=20, spin=90, cutpath="hammerhead");
-//   partition_mask(w=20, spin=90, cutpath="jigsaw");
+//   partition_mask(w=20, cutpath="sawtooth");
+//   partition_mask(w=20, cutpath="sinewave");
+//   partition_mask(w=20, cutpath="comb");
+//   partition_mask(w=20, cutpath="finger");
+//   partition_mask(w=20, cutpath="dovetail");
+//   partition_mask(w=20, cutpath="hammerhead");
+//   partition_mask(w=20, cutpath="jigsaw");
 module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath=undef, gap=0, inverse=false, spin=0, orient=UP)
 {
 	cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
@@ -106,19 +106,19 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath=undef, gap=0, inv
 //   gap = Empty gaps between cutpath iterations.  Default: 0
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
-// Example:
+// Examples:
 //   partition_cut_mask(gap=0, cutpath="dovetail");
 //   partition_cut_mask(gap=30, cutpath="dovetail");
 //   partition_cut_mask(gap=30, cutsize=15, cutpath="dovetail");
 //   partition_cut_mask(gap=30, cutsize=[20,20], cutpath="dovetail");
 // Examples(2D):
-//   partition_cut_mask(spin=90, cutpath="sawtooth");
-//   partition_cut_mask(spin=90, cutpath="sinewave");
-//   partition_cut_mask(spin=90, cutpath="comb");
-//   partition_cut_mask(spin=90, cutpath="finger");
-//   partition_cut_mask(spin=90, cutpath="dovetail");
-//   partition_cut_mask(spin=90, cutpath="hammerhead");
-//   partition_cut_mask(spin=90, cutpath="jigsaw");
+//   partition_cut_mask(cutpath="sawtooth");
+//   partition_cut_mask(cutpath="sinewave");
+//   partition_cut_mask(cutpath="comb");
+//   partition_cut_mask(cutpath="finger");
+//   partition_cut_mask(cutpath="dovetail");
+//   partition_cut_mask(cutpath="hammerhead");
+//   partition_cut_mask(cutpath="jigsaw");
 module partition_cut_mask(l=100, h=100, cutsize=10, cutpath=undef, gap=0, spin=0, orient=UP)
 {
 	cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
@@ -145,7 +145,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath=undef, gap=0, spin=0
 //   cutpath = The cutpath to use.  Standard named paths are "flat", "sawtooth", "sinewave", "comb", "finger", "dovetail", "hammerhead", and "jigsaw".  Alternatively, you can give a cutpath as a 2D path, where X is between 0 and 1, and Y is between -0.5 and 0.5.
 //   gap = Empty gaps between cutpath iterations.  Default: 0
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
-// Example:
+// Examples:
 //   partition(spread=12, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=12, gap=30, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=20, gap=20, cutsize=15, cutpath="dovetail") cylinder(h=50, d=80, center=false);
