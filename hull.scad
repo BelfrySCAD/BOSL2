@@ -91,7 +91,7 @@ function hull2d_path(points) =
 		c = _find_first_noncollinear([a,b], points, 2)
 	) (c == len(points))? _hull2d_collinear(points) : let(
 		remaining = [ for (i = [2:1:len(points)-1]) if (i != c) i ],
-		ccw = triangle_area2d(points[a], points[b], points[c]) > 0,
+		ccw = triangle_area(points[a], points[b], points[c]) > 0,
 		polygon = ccw? [a,b,c] : [a,c,b]
 	) _hull2d_iterative(points, polygon, remaining);
 
@@ -131,7 +131,7 @@ function _find_conflicting_segments(points, polygon, point) = [
 		j = (i+1) % len(polygon),
 		p1 = points[polygon[i]],
 		p2 = points[polygon[j]],
-		area = triangle_area2d(p1, p2, point)
+		area = triangle_area(p1, p2, point)
 	) if (area < 0) i
 ];
 

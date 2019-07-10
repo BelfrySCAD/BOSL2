@@ -207,17 +207,17 @@ function find_circle_2tangents(pt1, pt2, pt3, r=undef, d=undef) =
 	) [cp, n];
 
 
-// Function: triangle_area2d()
+// Function: triangle_area()
 // Usage:
-//   triangle_area2d(a,b,c);
+//   triangle_area(a,b,c);
 // Description:
-//   Returns the area of a triangle formed between three vertices.
-//   Result will be negative if the points are in clockwise order.
+//   Returns the area of a triangle formed between three 2D or 3D vertices.
+//   Result will be negative if the points are 2D and in in clockwise order.
 // Examples:
-//   triangle_area2d([0,0], [5,10], [10,0]);  // Returns -50
-//   triangle_area2d([10,0], [5,10], [0,0]);  // Returns 50
-function triangle_area2d(a,b,c) =
-	(
+//   triangle_area([0,0], [5,10], [10,0]);  // Returns -50
+//   triangle_area([10,0], [5,10], [0,0]);  // Returns 50
+function triangle_area(a,b,c) =
+	len(a)==3? 0.5*norm(cross(c-a,c-b)) : (
 		a.x * (b.y - c.y) +
 		b.x * (c.y - a.y) +
 		c.x * (a.y - b.y)
@@ -374,6 +374,15 @@ function path_subselect(path,s1,u1,s2,u2) =
 			(s2<l)? [lerp(path[s2],path[s2+1],u2)] : []
 		)
 	) pathout;
+
+
+// Function: polygon_area()
+// Usage:
+//   area = polygon_area(vertices);
+// Description:
+//   Given a polygon, returns the area of that polygon.  If the polygon is self-crossing, the results are undefined.
+function polygon_area(vertices) =
+	0.5*sum([for(i=[0:len(vertices)-1]) det2(select(vertices,i,i+1))]);
 
 
 // Function: assemble_path_fragments()
