@@ -341,8 +341,8 @@ function in_front_of_plane(plane, point) =
 // Usage:
 //   is_path(x);
 // Description:
-//   Returns true if the given item looks like a path.
-function is_path(x) = is_list(x) && is_vector(x.x);
+//   Returns true if the given item looks like a path.  A path is defined as a list of two or more points.
+function is_path(x) = is_list(x) && is_vector(x.x) && len(x)>1;
 
 
 // Function: is_closed_path()
@@ -572,7 +572,7 @@ function polygon_clockwise(path) =
 // Usage:
 //   is_region(x);
 // Description:
-//   Returns true if the given item looks like a region, which is a list of paths.
+//   Returns true if the given item looks like a region.  A region is defined as a list of zero or more paths.
 function is_region(x) = is_list(x) && is_path(x.x);
 
 
@@ -1288,6 +1288,7 @@ module region(r)
 //   heightfield = The 2D rectangular array of heights.
 //   size = The [X,Y] size of the surface to create.  If given as a scalar, use it for both X and Y sizes.
 //   bottom = The Z coordinate for the bottom of the heightfield object to create.  Must be less than the minimum heightfield value.  Default: 0
+//   convexity = Max number of times a line could intersect a wall of the surface being formed.
 // Example:
 //   heightfield(size=[100,100], bottom=-20, heightfield=[
 //       for (x=[-180:4:180]) [for(y=[-180:4:180]) 10*cos(3*norm([x,y]))]
