@@ -33,6 +33,7 @@ module stroke(path, width=1, endcaps=true, close=false)
 {
 	$fn = quantup(segs(width/2),4);
 	path = close? concat(path,[path[0]]) : path;
+	assert(is_list(path) && is_vector(path[0]) && len(path[0])==2, "path must be a 2D list of points.");
 	segments = pair(path);
 	segpairs = pair(segments);
 
