@@ -54,18 +54,6 @@ function _point_above_below_segment(point, edge) =
 	);
 
 
-// Function: right_of_line2d()
-// Usage:
-//   right_of_line2d(line, pt)
-// Description:
-//   Returns true if the given point is to the left of the extended line defined by two points on it.
-// Arguments:
-//   line = A list of two points.
-//   pt = The point to test.
-function right_of_line2d(line, pt) =
-	triangle_area2d(line[0], line[1], pt) < 0;
-
-
 // Function: collinear()
 // Usage:
 //   collinear(a, b, c, [eps]);
