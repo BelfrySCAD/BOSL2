@@ -111,7 +111,7 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath=undef, gap=0, inv
 //   partition_cut_mask(gap=30, cutpath="dovetail");
 //   partition_cut_mask(gap=30, cutsize=15, cutpath="dovetail");
 //   partition_cut_mask(gap=30, cutsize=[20,20], cutpath="dovetail");
-// Examples(2D):
+// Examples(2DMed):
 //   partition_cut_mask(cutpath="sawtooth");
 //   partition_cut_mask(cutpath="sinewave");
 //   partition_cut_mask(cutpath="comb");
@@ -145,12 +145,12 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath=undef, gap=0, spin=0
 //   cutpath = The cutpath to use.  Standard named paths are "flat", "sawtooth", "sinewave", "comb", "finger", "dovetail", "hammerhead", and "jigsaw".  Alternatively, you can give a cutpath as a 2D path, where X is between 0 and 1, and Y is between -0.5 and 0.5.
 //   gap = Empty gaps between cutpath iterations.  Default: 0
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
-// Examples:
+// Examples(Med):
 //   partition(spread=12, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=12, gap=30, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=20, gap=20, cutsize=15, cutpath="dovetail") cylinder(h=50, d=80, center=false);
 //   partition(spread=25, gap=15, cutsize=[20,20], cutpath="dovetail") cylinder(h=50, d=80, center=false);
-// Examples(2D):
+// Examples(2DMed):
 //   partition(cutpath="sawtooth") cylinder(h=50, d=80, center=false);
 //   partition(cutpath="sinewave") cylinder(h=50, d=80, center=false);
 //   partition(cutpath="comb") cylinder(h=50, d=80, center=false);
