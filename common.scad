@@ -33,7 +33,17 @@ function default(v,dflt=undef) = is_undef(v)? dflt : v;
 // Description:
 //   Returns the first item in the list that is not `undef`.
 //   If all items are `undef`, or list is empty, returns `undef`.
-function first_defined(v,_i=0) = _i<len(v) && is_undef(v[_i])? first_defined(v,_i+1) : v[_i];
+// Arguments:
+//   v = The list whose items are being checked.
+//   recursive = If true, sublists are checked recursively for defined values.  The first sublist that has a defined item is returned.
+function first_defined(v,recursive=false,_i=0) =
+	_i<len(v) && (
+		is_undef(v[_i]) || (
+			recursive &&
+			is_list(v[_i]) &&
+			is_undef(first_defined(v[_i],recursive=recursive))
+		)
+	)? first_defined(v,recursive=recursive,_i=_i+1) : v[_i];
 
 
 // Function: num_defined()
@@ -44,13 +54,19 @@ function num_defined(v,_i=0,_cnt=0) = _i>=len(v)? _cnt : num_defined(v,_i+1,_cnt
 // Function: any_defined()
 // Description:
 //   Returns true if any item in the given array is not `undef`.
-function any_defined(v) = first_defined(v) != undef;
+// Arguments:
+//   v = The list whose items are being checked.
+//   recursive = If true, any sublists are evaluated recursively.
+function any_defined(v,recursive=false) = first_defined(v,recursive=recursive) != undef;
 
 
 // Function: all_defined()
 // Description:
 //   Returns true if all items in the given array are not `undef`.
-function all_defined(v,_i=0) = _i<len(v) && !is_undef(v[_i])? all_defined(v,_i+1) : (_i >= len(v));
+// Arguments:
+//   v = The list whose items are being checked.
+//   recursive = If true, any sublists are evaluated recursively.
+function all_defined(v,recursive=false) = max([for (x=v) is_undef(x)||(recursive&&is_list(x)&&!all_defined(x))? 1 : 0])==0;
 
 
 // Section: Argument Helpers
