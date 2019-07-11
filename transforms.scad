@@ -283,9 +283,16 @@ function rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false, p=unde
 		is_vector(p)? (
 			rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, p=[p], planar=planar)[0]
 		) : (
-			(planar || (p!=[] && len(p[0])==2))? (
+			(
+				(planar || (p!=[] && len(p[0])==2)) && !(
+					(is_vector(a) && norm(point2d(a))>0) ||
+					(!is_undef(v) && norm(point2d(v))>0 && !approx(a,0)) ||
+					(!is_undef(from) && !approx(from,to) && !(abs(from.z)>0 || abs(to.z))) ||
+					(!is_undef(from) && approx(from,to) && norm(point2d(from))>0 && a!=0)
+				)
+			)? (
 				is_undef(from)? rotate_points2d(p, a=a*rev, cp=cp) : (
-					approx(from,to)? p :
+					approx(from,to)&&approx(a,0)? p :
 					rotate_points2d(p, a=vector_angle(from,to)*sign(vector_axis(from,to)[2])*rev, cp=cp)
 				)
 			) : (
@@ -297,17 +304,25 @@ function rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false, p=unde
 
 
 
-// Module: xrot()
+// Function&Module: xrot()
 //
 // Description:
-//   Rotates children around the X axis by the given number of degrees.
+//   When called as a module, rotates children around the X axis by the given number of degrees.
+//   When called as a function with the `p` argument, rotates the coordinates in `p` around the X axis by the given number of degrees.
+//   When called as a function without the `p` argument, returns an affine matrix to rotate around the X axis by the given number of degrees.
+//   If given, rotations are centered around the centerpoint `cp`.
 //
-// Usage:
+// Usage: As Module
 //   xrot(a, [cp]) ...
+// Usage: Rotate Points
+//   rotated = xrot(a, p, [cp]);
+// Usage: Get Rotation Matrix
+//   mat = xrot(a, [cp]);
 //
 // Arguments:
 //   a = angle to rotate by in degrees.
 //   cp = centerpoint to rotate around. Default: [0,0,0]
+//   p = If called as a function, this contains a point or list of points to rotate.
 //
 // Example:
 //   #cylinder(h=50, r=10, center=true);
@@ -323,18 +338,28 @@ module xrot(a=0, cp=undef)
 	}
 }
 
+function xrot(a=0, cp=undef, p=undef) = rot([a,0,0], cp=cp, p=p);
 
-// Module: yrot()
+
+// Function&Module: yrot()
 //
 // Description:
-//   Rotates children around the Y axis by the given number of degrees.
+//   When called as a module, rotates children around the Y axis by the given number of degrees.
+//   When called as a function with the `p` argument, rotates the coordinates in `p` around the Y axis by the given number of degrees.
+//   When called as a function without the `p` argument, returns an affine matrix to rotate around the Y axis by the given number of degrees.
+//   If given, rotations are centered around the centerpoint `cp`.
 //
-// Usage:
+// Usage: As Module
 //   yrot(a, [cp]) ...
+// Usage: Rotate Points
+//   rotated = yrot(a, p, [cp]);
+// Usage: Get Rotation Matrix
+//   mat = yrot(a, [cp]);
 //
 // Arguments:
 //   a = angle to rotate by in degrees.
 //   cp = centerpoint to rotate around. Default: [0,0,0]
+//   p = If called as a function, this contains a point or list of points to rotate.
 //
 // Example:
 //   #cylinder(h=50, r=10, center=true);
@@ -350,18 +375,28 @@ module yrot(a=0, cp=undef)
 	}
 }
 
+function yrot(a=0, cp=undef, p=undef) = rot([0,a,0], cp=cp, p=p);
 
-// Module: zrot()
+
+// Function&Module: zrot()
 //
 // Description:
-//   Rotates children around the Z axis by the given number of degrees.
+//   When called as a module, rotates children around the Z axis by the given number of degrees.
+//   When called as a function with the `p` argument, rotates the coordinates in `p` around the Z axis by the given number of degrees.
+//   When called as a function without the `p` argument, returns an affine matrix to rotate around the Z axis by the given number of degrees.
+//   If given, rotations are centered around the centerpoint `cp`.
 //
-// Usage:
+// Usage: As Module
 //   zrot(a, [cp]) ...
+// Usage: Rotate Points
+//   rotated = zrot(a, p, [cp]);
+// Usage: Get Rotation Matrix
+//   mat = zrot(a, [cp]);
 //
 // Arguments:
 //   a = angle to rotate by in degrees.
 //   cp = centerpoint to rotate around. Default: [0,0,0]
+//   p = If called as a function, this contains a point or list of points to rotate.
 //
 // Example:
 //   #cube(size=[60,20,40], center=true);
@@ -377,6 +412,7 @@ module zrot(a=0, cp=undef)
 	}
 }
 
+function zrot(a=0, cp=undef, p=undef) = rot(a, cp=cp, p=p);
 
 
 //////////////////////////////////////////////////////////////////////
@@ -406,6 +442,10 @@ module zrot(a=0, cp=undef)
 //   pt3 = scale([2,3,4], p=[[1,2,3],[4,5,6]]);  // Returns: [[2,6,12], [8,15,24]]
 //   mat2d = scale([2,3]);    // Returns: [[2,0,0],[0,3,0],[0,0,1]]
 //   mat3d = scale([2,3,4]);  // Returns: [[2,0,0,0],[0,3,0,0],[0,0,4,0],[0,0,0,1]]
+// Example(2D):
+//   path = circle(d=50,$fn=12);
+//   #stroke(path);
+//   stroke(scale([1.5,3],p=path));
 function scale(a=1, p=undef) =
 	let(a = is_num(a)? [a,a,a] : a)
 	is_undef(p)? (
@@ -415,52 +455,91 @@ function scale(a=1, p=undef) =
 	);
 
 
-// Module: xscale()
+// Function&Module: xscale()
+//
+// Usage: As Module
+//   xscale(x) ...
+// Usage: Scale Points
+//   scaled = xscale(x, p);
+// Usage: Get Scaling Matrix
+//   mat = xscale(x, planar);
 //
 // Description:
-//   Scales children by the given factor on the X axis.
-//
-// Usage:
-//   xscale(x) ...
+//   When called as a module, scales children by the given `x` factor on the X axis.
+//   When called as a function with the `p` argument, scales the coordinates in `p` by the given scale `x` in the X axis.
+//   When called as a function without the `p` argument, returns an affine matrix to scale by the given scale `x` in the X axis.
 //
 // Arguments:
-//   x = Factor to scale by along the X axis.
+//   x = Factor to scale by, along the X axis.
+//   p = A point or path to scale, when called as a function.
+//   planar = If true, and `p` is not given, then the matrix returned is an affine2d matrix instead of an affine3d matrix.
 //
-// Example:
+// Example: As Module
 //   xscale(3) sphere(r=10);
-module xscale(x) scale([x,1,1]) children();
+//
+// Example(2D): Scaling Points
+//   path = circle(d=50,$fn=12);
+//   #stroke(path);
+//   stroke(xscale(2,p=path));
+module xscale(x=1) scale([x,1,1]) children();
+
+function xscale(x=1, p=undef, planar=false) = (planar || (!is_undef(p) && len(p)==2))? scale([x,1],p=p) : scale([x,1,1],p=p);
 
 
-// Module: yscale()
+// Function&Module: yscale()
 //
 // Description:
-//   Scales children by the given factor on the Y axis.
+//   When called as a module, scales children by the given `y` factor on the Y axis.
+//   When called as a function with the `p` argument, scales the coordinates in `p` by the given scale `y` in the Y axis.
+//   When called as a function without the `p` argument, returns an affine matrix to scale by the given scale `y` in the Y axis.
 //
 // Usage:
 //   yscale(y) ...
+//   mat = yscale(y);
+//   scaled = yscale(y, p);
 //
 // Arguments:
-//   y = Factor to scale by along the Y axis.
+//   y = Factor to scale by, along the Y axis.
+//   p = A point or path to scale, when called as a function.
+//   planar = If true, and `p` is not given, then the matrix returned is an affine2d matrix instead of an affine3d matrix.
 //
-// Example:
+// Example: As Module
 //   yscale(3) sphere(r=10);
-module yscale(y) scale([1,y,1]) children();
+//
+// Example(2D): Scaling Points
+//   path = circle(d=50,$fn=12);
+//   #stroke(path);
+//   stroke(yscale(2,p=path));
+module yscale(y=1) scale([1,y,1]) children();
+
+function yscale(y=1, p=undef, planar=false) = (planar || (!is_undef(p) && len(p)==2))? scale([1,y],p=p) : scale([1,y,1],p=p);
 
 
-// Module: zscale()
+// Function&Module: zscale()
 //
 // Description:
-//   Scales children by the given factor on the Z axis.
+//   When called as a module, scales children by the given `z` factor on the Z axis.
+//   When called as a function with the `p` argument, scales the coordinates in `p` by the given scale `z` in the Z axis.
+//   When called as a function without the `p` argument, returns an affine matrix to scale by the given scale `z` in the Z axis.
 //
 // Usage:
 //   zscale(z) ...
 //
 // Arguments:
-//   z = Factor to scale by along the Z axis.
+//   z = Factor to scale by, along the Z axis.
+//   p = A point or path to scale, when called as a function.
+//   planar = If true, and `p` is not given, then the matrix returned is an affine2d matrix instead of an affine3d matrix.
 //
-// Example:
+// Example: As Module
 //   zscale(3) sphere(r=10);
-module zscale(z) scale([1,1,z]) children();
+//
+// Example: Scaling Points
+//   path = xrot(90,p=circle(d=50,$fn=12));
+//   #trace_polyline(path);
+//   trace_polyline(zscale(2,p=path));
+module zscale(z=1) scale([1,1,z]) children();
+
+function zscale(z=1, p=undef) = scale([1,1,z],p=p);
 
 
 // Module: xflip()
