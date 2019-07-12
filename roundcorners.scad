@@ -77,7 +77,7 @@ include <BOSL2/beziers.scad>
 //   When doing continuous curvature rounding be sure to use lots of segments or the effect will be
 //   hidden by the discretization.
 //
-// Figure(2D):
+// Figure(2DMed):
 //   h = 18;
 //   w = 12.6;
 //   example = [[0,0],[w,h],[2*w,0]];
