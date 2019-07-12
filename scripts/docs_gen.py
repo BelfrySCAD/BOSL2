@@ -372,7 +372,8 @@ class LeafNode(object):
                 lines, block = get_comment_block(lines, prefix)
                 for line in block:
                     if "=" not in line:
-                        print("Error: bad argument line:")
+                        print("Error in {}: Could not parse line in Argument block.  Missing '='.".format(self.name))
+                        print("Line read was:")
                         print(line)
                         sys.exit(-2)
                     argname, argdesc = line.split("=", 1)

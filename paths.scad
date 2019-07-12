@@ -572,7 +572,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
 //   dists = distances where the path should be cut (a list) or a scalar single distance 
 //   closed = set to true if the curve is closed.  Default: false
 //   direction = set to true to return direction vectors.  Default: false                                   
-//                                   
+//
 // Example(NORENDER):
 //   square=[[0,0],[1,0],[1,1],[0,1]];
 //   path_cut(square, [.5,1.5,2.5]);   // Returns [[[0.5, 0], 1], [[1, 0.5], 2], [[0.5, 1], 3]]
