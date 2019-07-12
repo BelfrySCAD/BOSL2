@@ -121,7 +121,7 @@ module snap_socket(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, 
 //   snapdiam = Diameter/width of locking snaps.
 //   hingegap = Size in mm of the gap at the bottom of the hinge, to make room for folding.
 //   layerheight = The expected printing layer height in mm.
-// Example:
+// Example(Med):
 //   size=100;
 //   apply_folding_hinges_and_snaps(
 //       thick=3, foldangle=54.74,
