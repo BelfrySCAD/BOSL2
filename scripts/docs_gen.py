@@ -95,9 +95,12 @@ class ImageProcessing(object):
     def process_examples(self, imgroot, force=False):
         self.imgroot = imgroot
         self.force = force
+        self.hashes = {}
         with dbm.gnu.open("examples_hashes.gdbm", "c") as db:
             for libfile, imgfile, code, extype in self.examples:
                 self.gen_example_image(db, libfile, imgfile, code, extype)
+            for key, hash in self.hashes.items():
+                db[key] = hash
 
     def gen_example_image(self, db, libfile, imgfile, code, extype):
         OPENSCAD = "/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD"
@@ -282,7 +285,7 @@ class ImageProcessing(object):
                 print("    UPDATED IMAGE\n")
                 os.unlink(targimgfile)
                 os.rename(newimgfile, targimgfile)
-        db[key] = hash
+        self.hashes[key] = hash
 
 
 imgprc = ImageProcessing()
@@ -298,6 +301,7 @@ class LeafNode(object):
         self.arguments = []
         self.anchors = []
         self.side_effects = []
+        self.figures = []
         self.examples = []
 
     @classmethod
@@ -312,12 +316,16 @@ class LeafNode(object):
             return True
         return False
 
+    def add_figure(self, title, code, figtype):
+        self.figures.append((title, code, figtype))
+
     def add_example(self, title, code, extype):
         self.examples.append((title, code, extype))
 
     def parse_lines(self, lines, prefix):
         blankcnt = 0
         expat = re.compile(r"^(Examples?)(\(([^\)]*)\))?: *(.*)$")
+        figpat = re.compile(r"^(Figures?)(\(([^\)]*)\))?: *(.*)$")
         while lines:
             if prefix and not lines[0].startswith(prefix.strip()):
                 break
@@ -398,6 +406,19 @@ class LeafNode(object):
                 else:
                     for line in block:
                         self.add_example(title="", code=[line], extype=extype)
+            m = figpat.match(line)
+            if m:  # Figure(TYPE):
+                plural = m.group(1) == "Figures"
+                figtype = m.group(3)
+                title = m.group(4)
+                lines, block = get_comment_block(lines, prefix)
+                if not figtype:
+                    figtype = "3D"
+                if not plural:
+                    self.add_figure(title, block, figtype)
+                else:
+                    for line in block:
+                        self.add_figure("", [line], figtype)
         return lines
 
     def gen_md(self, fileroot, imgroot):
@@ -420,6 +441,29 @@ class LeafNode(object):
             out.append("**Description**:")
             for line in self.description:
                 out.append(mkdn_esc(line))
+            out.append("")
+        fignum = 0
+        for title, excode, extype in self.figures:
+            fignum += 1
+            extitle = "**Figure {0}**:".format(fignum)
+            if title:
+                extitle += " " + mkdn_esc(title)
+            san_name = re.sub(r"[^A-Za-z0-9_]", "", self.name)
+            imgfile = "{}_{}.{}".format(
+                san_name,
+                ("fig%d" % fignum),
+                "gif" if "Spin" in extype else "png"
+            )
+            imgprc.add_image(fileroot+".scad", imgfile, excode, extype)
+            out.append(extitle)
+            out.append(
+                "![{0} Figure {1}]({2}{3})".format(
+                    mkdn_esc(self.name),
+                    fignum,
+                    imgroot,
+                    imgfile
+                )
+            )
             out.append("")
         if self.arguments:
             out.append("Argument        | What it does")
