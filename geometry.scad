@@ -789,39 +789,39 @@ function _offset_region(
 //   %down(.1)polygon(test);
 // Example(2D):
 //   star = star(5, r=100, ir=30);
-//   #stroke(close=true, star);
-//   stroke(close=true, offset(star, delta=-10, closed=true));
+//   #stroke(closed=true, star);
+//   stroke(closed=true, offset(star, delta=-10, closed=true));
 // Example(2D):
 //   star = star(5, r=100, ir=30);
-//   #stroke(close=true, star);
-//   stroke(close=true, offset(star, delta=-10, chamfer=true, closed=true));
+//   #stroke(closed=true, star);
+//   stroke(closed=true, offset(star, delta=-10, chamfer=true, closed=true));
 // Example(2D):
 //   star = star(5, r=100, ir=30);
-//   #stroke(close=true, star);
-//   stroke(close=true, offset(star, r=-10, closed=true));
+//   #stroke(closed=true, star);
+//   stroke(closed=true, offset(star, r=-10, closed=true));
 // Example(2D):
 //   star = star(5, r=100, ir=30);
-//   #stroke(close=true, star);
-//   stroke(close=true, offset(star, delta=10, closed=true));
+//   #stroke(closed=true, star);
+//   stroke(closed=true, offset(star, delta=10, closed=true));
 // Example(2D):
 //   star = star(5, r=100, ir=30);
-//   #stroke(close=true, star);
-//   stroke(close=true, offset(star, delta=-10, chamfer=true, closed=true));
+//   #stroke(closed=true, star);
+//   stroke(closed=true, offset(star, delta=-10, chamfer=true, closed=true));
 // Example(2D):
 //   star = star(5, r=100, ir=30);
-//   #stroke(close=true, star);
-//   stroke(close=true, offset(star, r=10, closed=true));
+//   #stroke(closed=true, star);
+//   stroke(closed=true, offset(star, r=10, closed=true));
 // Example(2D):
 //   ellipse = scale([1,0.3,1], p=circle(r=100));
-//   #stroke(close=true, ellipse);
-//   stroke(close=true, offset(ellipse, r=-15, check_valid=true, closed=true));
+//   #stroke(closed=true, ellipse);
+//   stroke(closed=true, offset(ellipse, r=-15, check_valid=true, closed=true));
 // Example(2D):
 //   sinpath = 2*[for(theta=[-180:5:180]) [theta/4,45*sin(theta)]];
 //   #stroke(sinpath);
 //   stroke(offset(sinpath, r=17.5));
 // Example(2D): Region
 //   rgn = difference(circle(d=100), union(square([20,40], center=true), square([40,20], center=true)));
-//   #linear_extrude(height=1.1) for (p=rgn) stroke(close=true, width=0.5, p);
+//   #linear_extrude(height=1.1) for (p=rgn) stroke(closed=true, width=0.5, p);
 //   region(offset(rgn, r=-5));
 function offset(
 	path, r=undef, delta=undef, chamfer=false,
@@ -1017,7 +1017,7 @@ function _tagged_region(region1,region2,keep1,keep2,eps=EPSILON) =
 // Example(2D):
 //   shape1 = move([-8,-8,0], p=circle(d=50));
 //   shape2 = move([ 8, 8,0], p=circle(d=50));
-//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, close=true);
+//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(union(shape1,shape2));
 function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 	b!=undef? union(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
@@ -1048,7 +1048,7 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 // Example(2D):
 //   shape1 = move([-8,-8,0], p=circle(d=50));
 //   shape2 = move([ 8, 8,0], p=circle(d=50));
-//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, close=true);
+//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(difference(shape1,shape2));
 function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 	b!=undef? difference(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
@@ -1078,7 +1078,7 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 // Example(2D):
 //   shape1 = move([-8,-8,0], p=circle(d=50));
 //   shape2 = move([ 8, 8,0], p=circle(d=50));
-//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, close=true);
+//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(intersection(shape1,shape2));
 function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 	b!=undef? intersection(concat([regions],[b],c==undef?[]:[c]),eps=eps) :
@@ -1109,7 +1109,7 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   shape1 = move([-8,-8,0], p=circle(d=50));
 //   shape2 = move([ 8, 8,0], p=circle(d=50));
 //   for (shape = [shape1,shape2])
-//       color("red") stroke(shape, width=0.5, close=true);
+//       color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(exclusive_or(shape1,shape2));
 // Example(2D): As Module
 //   exclusive_or() {

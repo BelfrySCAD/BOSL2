@@ -12,14 +12,14 @@
 
 // Module: stroke()
 // Usage:
-//   stroke(path, width, [endcap], [close]);
+//   stroke(path, width, [endcap], [closed]);
 // Description:
 //   Draws a 2D line path with a given line thickness.
 // Arguments:
 //   path = The 2D path to draw along.
 //   width = The width of the line to draw.
 //   endcaps = If true, draw round endcaps at the ends of the line.
-//   close = If true, draw an additional line from the end of the path to the start.
+//   closed = If true, draw an additional line from the end of the path to the start.
 // Example(2D):
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   stroke(path, width=10, endcaps=false);
@@ -28,11 +28,11 @@
 //   stroke(path, width=20, endcaps=true);
 // Example(2D):
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=20, endcaps=true, close=true);
-module stroke(path, width=1, endcaps=true, close=false)
+//   stroke(path, width=20, endcaps=true, closed=true);
+module stroke(path, width=1, endcaps=true, closed=false)
 {
 	$fn = quantup(segs(width/2),4);
-	path = close? concat(path,[path[0]]) : path;
+	path = closed? concat(path,[path[0]]) : path;
 	assert(is_list(path) && is_vector(path[0]) && len(path[0])==2, "path must be a 2D list of points.");
 	segments = pair(path);
 	segpairs = pair(segments);
@@ -122,7 +122,7 @@ module stroke(path, width=1, endcaps=true, close=false)
 //   arc(points=[[5,30],[-10,-10],[30,5]], wedge=true);
 // Example(2D):
 //   path = arc(points=[[5,30],[-10,-10],[30,5]], wedge=true);
-//   stroke(close=true, path);
+//   stroke(closed=true, path);
 // Example(FlatSpin):
 //   include <BOSL2/paths.scad>
 //   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
@@ -217,7 +217,7 @@ function _normal_segment(p1,p2) =
 //   trapezoid(h=25, w1=20, w2=35);
 //   trapezoid(h=20, w1=40, w2=0);
 // Example(2D): Called as Function
-//   stroke(close=true, trapezoid(h=30, w1=40, w2=20));
+//   stroke(closed=true, trapezoid(h=30, w1=40, w2=20));
 function trapezoid(h, w1, w2, anchor=CENTER, spin=0) =
 	let(
 		s = anchor.y>0? [w2,h] : anchor.y<0? [w1,h] : [(w1+w2)/2,h],
@@ -259,7 +259,7 @@ module trapezoid(h, w1, w2, anchor=CENTER, spin=0)
 // Example(2D): Realigned
 //   regular_ngon(n=8, side=20, realign=true);
 // Example(2D): Called as Function
-//   stroke(close=true, regular_ngon(n=6, or=30));
+//   stroke(closed=true, regular_ngon(n=6, or=30));
 function regular_ngon(n=6, or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false, anchor=CENTER, spin=0) =
 	let(
 		sc = 1/cos(180/n),
@@ -301,7 +301,7 @@ module regular_ngon(n=6, or=undef, od=undef, ir=undef, id=undef, side=undef, rea
 // Example(2D): Realigned
 //   pentagon(side=20, realign=true);
 // Example(2D): Called as Function
-//   stroke(close=true, pentagon(or=30));
+//   stroke(closed=true, pentagon(or=30));
 function pentagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false, anchor=CENTER, spin=0) =
 	regular_ngon(n=5, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
 
@@ -336,7 +336,7 @@ module pentagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=fals
 // Example(2D): Realigned
 //   hexagon(side=20, realign=true);
 // Example(2D): Called as Function
-//   stroke(close=true, hexagon(or=30));
+//   stroke(closed=true, hexagon(or=30));
 function hexagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false, anchor=CENTER, spin=0) =
 	regular_ngon(n=6, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
 
@@ -371,7 +371,7 @@ module hexagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false
 // Example(2D): Realigned
 //   octagon(side=20, realign=true);
 // Example(2D): Called as Function
-//   stroke(close=true, octagon(or=30));
+//   stroke(closed=true, octagon(or=30));
 function octagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false, anchor=CENTER, spin=0) =
 	regular_ngon(n=8, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
 
@@ -399,7 +399,7 @@ module octagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false
 //   glued_circles(d=30, spread=30, tangent=15);
 //   glued_circles(d=30, spread=30, tangent=-30);
 // Example(2D): Called as Function
-//   stroke(close=true, glued_circles(r=15, spread=40, tangent=45));
+//   stroke(closed=true, glued_circles(r=15, spread=40, tangent=45));
 function glued_circles(r=undef, d=undef, spread=10, tangent=30, anchor=CENTER, spin=0) =
 	let(
 		r = get_radius(r=r, d=d, dflt=10),
@@ -454,7 +454,7 @@ module glued_circles(r=undef, d=undef, spread=10, tangent=30, anchor=CENTER, spi
 // Example(2D): Realigned
 //   star(n=7, r=50, step=3, realign=true);
 // Example(2D): Called as Function
-//   stroke(close=true, star(n=5, r=50, ir=25));
+//   stroke(closed=true, star(n=5, r=50, ir=25));
 function star(n, r, d, ir, id, step, realign=false, anchor=CENTER, spin=0) =
 	let(
 		r = get_radius(r=r, d=d),
@@ -500,7 +500,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 // Example(2D):
 //   supershape(step=0.5,m1=16,m2=16,n1=0.5,n2=0.5,n3=16,r=50);
 // Example(2D): Called as Function
-//   stroke(close=true, supershape(step=0.5,m1=16,m2=16,n1=0.5,n2=0.5,n3=16,d=100));
+//   stroke(closed=true, supershape(step=0.5,m1=16,m2=16,n1=0.5,n2=0.5,n3=16,d=100));
 // Examples(2D,Med):
 //   for(n=[2:5]) right(2.5*(n-2)) supershape(m1=4,m2=4,n1=n,a=1,b=2);  // Superellipses
 //   m=[2,3,5,7]; for(i=[0:3]) right(2.5*i) supershape(.5,m1=m[i],n1=1);

@@ -2274,7 +2274,7 @@ module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
 //   rainbow(["Foo","Bar","Baz"]) fwd($idx*10) text(text=$item,size=8,halign="center",valign="center");
 // Example(2D):
 //   rgn = [circle(d=45,$fn=3), circle(d=75,$fn=4), circle(d=50)];
-//   rainbow(rgn) stroke($item, close=true);
+//   rainbow(rgn) stroke($item, closed=true);
 module rainbow(list)
 	for($idx=[0:1:len(list)-1],$item=[list[$idx]])
 		HSV(h=360*$idx/len(list))

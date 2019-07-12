@@ -464,19 +464,19 @@ module debug_polygon(points, paths=undef, convexity=2, size=1)
 //   color("red") path_spread(spiral, n=100) circle(r=1);
 // Example(2D):
 //   circle = regular_ngon(n=64, or=10);
-//   stroke(circle,width=1,close=true);
+//   stroke(circle,width=1,closed=true);
 //   color("green")path_spread(circle, n=7, closed=true) circle(r=1+$idx/3);
 // Example(2D):  
 //   heptagon = regular_ngon(n=7, or=10);
-//   stroke(heptagon, width=1, close=true);
+//   stroke(heptagon, width=1, closed=true);
 //   color("purple") path_spread(heptagon, n=9, closed=true) square([0.5,3],anchor=FRONT);
 // Example(2D): Direction at the corners is the average of the two adjacent edges
 //   heptagon = regular_ngon(n=7, or=10);
-//   stroke(heptagon, width=1, close=true);
+//   stroke(heptagon, width=1, closed=true);
 //   color("purple") path_spread(heptagon, n=7, closed=true) square([0.5,3],anchor=FRONT);
 // Example(2D):  Don't rotate the children
 //   heptagon = regular_ngon(n=7, or=10);
-//   stroke(heptagon, width=1, close=true);
+//   stroke(heptagon, width=1, closed=true);
 //   color("red") path_spread(heptagon, n=9, closed=true, rotate_children=false) square([0.5,3],anchor=FRONT);
 // Example(2D): Open path, specify `n`
 //   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
@@ -488,7 +488,7 @@ module debug_polygon(points, paths=undef, convexity=2, size=1)
 //   color("red")path_spread(sinwav, n=5, spacing=1) square([.2,1.5],anchor=FRONT);
 // Example(2D)): Closed path, specify `n` and `spacing`, copies centered around circle[0]
 //   circle = regular_ngon(n=64,or=10);
-//   stroke(circle,width=.1,close=true);
+//   stroke(circle,width=.1,closed=true);
 //   color("red")path_spread(circle, n=10, spacing=1, closed=true) square([.2,1.5],anchor=FRONT);
 // Example(2D): Open path, specify `spacing`
 //   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];

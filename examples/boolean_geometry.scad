@@ -22,7 +22,7 @@ outlinecolor="black";
 
 module showit(label, rgn, poly=polycolor, outline=outlinecolor, width=0.5) {
 	move([-50,-50]) {
-		if(outline) color(outline) linear_extrude(height=max(0.1,1-width)) for(path=rgn) stroke(path, width=width, close=true);
+		if(outline) color(outline) linear_extrude(height=max(0.1,1-width)) for(path=rgn) stroke(path, width=width, closed=true);
 		if(poly) color(poly) linear_extrude(height=0.1) region(rgn);
 		color("black") right(50) fwd(7) linear_extrude(height=0.1) text(text=label, size=8, halign="center", valign="center");
 	}
