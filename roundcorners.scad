@@ -22,60 +22,72 @@ include <BOSL2/beziers.scad>
 // Function: round_corners()
 //
 // Description:
-//   Takes a 2d or 3d point list as input (a path or the points of a polygon) and rounds each corner
+//   Takes a 2D or 3D point list as input (a path or the points of a polygon) and rounds each corner
 //   by a specified amount.  The rounding at each point can be different and some points can have zero
 //   rounding.  The `round_corners()` function supports two types of rounding: circular rounding and
 //   continuous curvature rounding using 4th order bezier curves.  Circular rounding can produce a
 //   tactile "bump" where the curvature changes from flat to circular.
 //   See https://hackernoon.com/apples-icons-have-that-shape-for-a-very-good-reason-720d4e7c8a14
 //   
-//   You select the type of rounding using the `curve` option, which should be either `"smooth"` to get
-//   continuous curvature rounding or `"circle"` to get circular rounding.  The default is circle rounding.
-//   Each rounding method has two
-//   options for how you measure the amount of rounding, which you specify using the `measure` argument.
-//   Both rounding methods accept `measure="cut"`, which is the default.
-//   This mode specifies the amount of rounding as the
-//   minimum distance from the corner to the curve.  This can be easier to understand than setting a circular
-//   radius, which can be unexpectedly extreme when the corner is very sharp.  It also allows a
-//   systematic specification of curves that is the same for both `"circle"` and `"smooth"`.  
+//   You select the type of rounding using the `curve` option, which should be either `"smooth"` to
+//   get continuous curvature rounding or `"circle"` to get circular rounding.  The default is circle
+//   rounding.  Each rounding method has two options for how you measure the amount of rounding, which
+//   you specify using the `measure` argument.  Both rounding methods accept `measure="cut"`, which is
+//   the default.  This mode specifies the amount of rounding as the minimum distance from the corner
+//   to the curve.  This can be easier to understand than setting a circular radius, which can be
+//   unexpectedly extreme when the corner is very sharp.  It also allows a systematic specification of
+//   curves that is the same for both `"circle"` and `"smooth"`.
 //   
 //   The second `measure` setting for circular rounding is `"radius"`, which sets a circular rounding
 //   radius.  The second `measure` setting for smooth rounding is `"joint"` which specifies the distance
 //   away from the corner along the path where the roundover should start.  The figure below shows
 //   the cut and joint distances for a given roundover.  
-//   The `"smooth"` type rounding also has a
-//   parameter that specifies how smooth the curvature match is.  This parameter, `k`, ranges from 0 to 1,
-//   with a default of 0.5.  Larger values give a more abrupt transition and smaller ones a more
-//   gradual transition.  If you set the value much higher than 0.8 the curvature changes abruptly
-//   enough that though it is theoretically continuous, it may not be continous in practice.  If you
-//   set it very small then the transition is so gradual that the length of the roundover may be
-//   extremely long.  
-//
+//   
+//   The `"smooth"` type rounding also has a parameter that specifies how smooth the curvature match
+//   is.  This parameter, `k`, ranges from 0 to 1, with a default of 0.5.  Larger values give a more
+//   abrupt transition and smaller ones a more gradual transition.  If you set the value much higher
+//   than 0.8 the curvature changes abruptly enough that though it is theoretically continuous, it may
+//   not be continous in practice.  If you set it very small then the transition is so gradual that
+//   the length of the roundover may be extremely long.
+//   
 //   If you select curves that are too large to fit the function will fail with an error.  It displays
 //   a set of scale factors that you can apply to the (first) smoothing parameter that will reduce the
 //   size of the curves so that they will fit on your path.  If the scale factors are larger than one
 //   then they indicate how much you can increase the curve sizes before collisions will occur.
 //   
 //   To specify rounding parameters you can use the `size` option to round every point in a path.
-//   Examples:
-//   * `curve="circle", measure="radius", size=2`: Rounds every point with circular, radius 2 roundover
-//   * `curve="smooth", measure="cut", size=2`: Rounds every point with continuous curvature rounding with a cut of 2, and a default 0.5 smoothing parameter
-//   * `curve="smooth", measure="cut", size=[2,.3]`: Rounds every point with continuous curvature rounding with a cut of 2, and a very gentle 0.3 smoothness setting
 //   
-//   The path is a list of 2d or 3d points, possibly with an extra coordinate giving smoothing
+//   Examples:
+//   * `curve="circle", measure="radius", size=2`:
+//       Rounds every point with circular, radius 2 roundover
+//   * `curve="smooth", measure="cut", size=2`:
+//       Rounds every point with continuous curvature rounding with a cut of 2, and a default 0.5 smoothing parameter
+//   * `curve="smooth", measure="cut", size=[2,.3]`:
+//       Rounds every point with continuous curvature rounding with a cut of 2, and a very gentle 0.3 smoothness setting
+//   
+//   The path is a list of 2D or 3D points, possibly with an extra coordinate giving smoothing
 //   parameters.  It is important to specify if the path is a closed path or not using the `closed`
 //   parameter.  The default is a closed path for making polygons.
+//   
 //   Path examples:
-//   * `[[0,0],[0,1],[1,1],[0,1]]`: 2d point list (a square), `size` was given to set rounding
-//   * `[[0,0,0], [0,1,1], [1,1,2], [0,1,3]]`: 3d point list, `size` was given to set rounding
-//   * `[[0,0,0.2],[0,1,0.1],[1,1,0],[0,1,0.3]]`: 2d point list with smoothing parameters different at every corner, `size` not given
-//   * `[[0,0,0,.2], [0,1,1,.1], [1,1,2,0], [0,1,3,.3]]`: 3d point list with smoothing parameters, `size` not given
-//   * `[[0,0,[.3,.7], [4,0,[.2,.6]], [4,4,0], [0,4,1]]`: 3d point list with smoothing parameters for the `"smooth"` type roundover, `size` not given.  Note the third entry is sometimes a pair giving both smoothing parameters, sometimes it's zero specifying no smoothing, and sometimes a single number, specifying the amount of smoothing but using the default smoothness parameter.
+//   * `[[0,0],[0,1],[1,1],[0,1]]`:
+//       2D point list (a square), `size` was given to set rounding
+//   * `[[0,0,0], [0,1,1], [1,1,2], [0,1,3]]`:
+//       3D point list, `size` was given to set rounding
+//   * `[[0,0,0.2],[0,1,0.1],[1,1,0],[0,1,0.3]]`:
+//       2D point list with smoothing parameters different at every corner, `size` not given
+//   * `[[0,0,0,.2], [0,1,1,.1], [1,1,2,0], [0,1,3,.3]]`:
+//       3D point list with smoothing parameters, `size` not given
+//   * `[[0,0,[.3,.7], [4,0,[.2,.6]], [4,4,0], [0,4,1]]`:
+//       3D point list with smoothing parameters for the `"smooth"` type roundover, `size` not given.
+//       Note the third entry is sometimes a pair giving both smoothing parameters, sometimes it's zero
+//       specifying no smoothing, and sometimes a single number, specifying the amount of smoothing but
+//       using the default smoothness parameter.
 //   
 //   The number of segments used for roundovers is determined by `$fa`, `$fs` and `$fn` as usual for
-//   circular roundovers.  For continuous curvature roundovers `$fs` and `$fn` are used and `$fa` is ignored.
-//   When doing continuous curvature rounding be sure to use lots of segments or the effect will be
-//   hidden by the discretization.
+//   circular roundovers.  For continuous curvature roundovers `$fs` and `$fn` are used and `$fa` is
+//   ignored.  When doing continuous curvature rounding be sure to use lots of segments or the effect
+//   will be hidden by the discretization.
 //
 // Figure(2DMed):
 //   h = 18;
@@ -90,7 +102,7 @@ include <BOSL2/beziers.scad>
 //   color("blue")translate([w/2-1.1,h/2+.6])  scale(.1)rotate(90-vector_angle(example)/2)text("joint");
 //   
 // Arguments:
-//   path = list of points defining the path to be rounded.  Can be 2d or 3d, and may have an extra coordinate giving rounding parameters.  If you specify rounding parameters you must do so on every point.  
+//   path = list of points defining the path to be rounded.  Can be 2D or 3D, and may have an extra coordinate giving rounding parameters.  If you specify rounding parameters you must do so on every point.  
 //   curve = rounding method to use.  Set to "circle" for circular rounding and "smooth" for continuous curvature 4th order bezier rounding
 //   measure = how to measure the amount of rounding.  Set to "cut" to specify the cut back with either "smooth" or "circle" rounding curves.  Set to "radius" with `curve="circle"` to set circular radius rounding.  Set to "joint" with `curve="smooth"` for joint type rounding.  (See above for details on these rounding options.)
 //   size = curvature parameter(s).  Set this to a single curvature parameter or parameter pair to apply uniform roundovers to every corner.  Alternatively set this to a list of curvature parameters with the same length as `path` to specify the curvature at every corner.  If you set this then all values given in `path` are treated as geometric coordinates.  If you don't set this then the last value of each entry in `path` is treated as a rounding parameter.
@@ -121,7 +133,7 @@ include <BOSL2/beziers.scad>
 //   shape = [[0,0,[1.5,.6]], [10,0,0], [15,12,2], [6,6,[.3,.7]], [6, 12,[1.2,.3]], [-3,7,0]];
 //   polygon(round_corners(shape, curve="smooth", measure="cut", $fs=0.1));
 //   color("red") down(.1) polygon(subindex(shape,[0:1]));
-// Example(Med3D): 3d printing test pieces to display different curvature shapes.  You can see the discontinuity in the curvature on the "C" piece in the rendered image.  
+// Example(Med3D): 3D printing test pieces to display different curvature shapes.  You can see the discontinuity in the curvature on the "C" piece in the rendered image.  
 //   ten = [[0,0,5],[50,0,5],[50,50,5],[0,50,5]];
 //   linear_extrude(height=14){
 //   translate([25,25,0])text("C",size=30, valign="center", halign="center");
@@ -153,20 +165,32 @@ include <BOSL2/beziers.scad>
 //   fwd(60)            // Note how the different points are cut back by different amounts
 //     stroke(round_corners(zig,size=1.5,closed=false, curve="circle", measure="radius"),width=1);
 // Example(FlatSpin): Rounding some random 3D paths
-//   list1= [[2.88736, 4.03497, 6.37209], [5.68221, 9.37103, 0.783548], [7.80846, 4.39414, 1.84377],
-//           [0.941085, 5.30548, 4.46753], [1.86054, 9.81574, 6.49753], [6.93818, 7.21163, 5.79453]];
-//   list2= [[1.07907, 4.74091, 6.90039], [8.77585, 4.42248, 6.65185], [5.94714, 9.17137, 6.15642],
-//           [0.66266, 6.9563, 5.88423], [6.56454, 8.86334, 9.95311], [5.42015, 4.91874, 3.86696]];
+//   list1= [
+//     [2.887360, 4.03497, 6.372090],
+//     [5.682210, 9.37103, 0.783548],
+//     [7.808460, 4.39414, 1.843770],
+//     [0.941085, 5.30548, 4.467530],
+//     [1.860540, 9.81574, 6.497530],
+//     [6.938180, 7.21163, 5.794530]
+//   ];
+//   list2= [
+//     [1.079070, 4.74091, 6.900390],
+//     [8.775850, 4.42248, 6.651850],
+//     [5.947140, 9.17137, 6.156420],
+//     [0.662660, 6.95630, 5.884230],
+//     [6.564540, 8.86334, 9.953110],
+//     [5.420150, 4.91874, 3.866960]
+//   ];
 //   path_sweep(regular_ngon(n=36,or=.1),round_corners(list1,closed=false, curve="smooth", measure="cut", size=.65));
 //   right(6) 
 //     path_sweep(regular_ngon(n=36,or=.1),round_corners(list2,closed=false, curve="circle", measure="cut", size=.75));  
 // Example(FlatSpin):  Rounding a spiral with increased rounding along the length
-//   // Construct a square spiral path in 3d
+//   // Construct a square spiral path in 3D
 //   square = [[0,0],[1,0],[1,1],[0,1]];
 //   spiral = flatten(replist(concat(square,reverse(square)),5));  // Squares repeat 10 times, forward and backward
 //   squareind = [for(i=[0:9]) each [i,i,i,i]];                    // Index of the square for each point
 //   z = list_range(40)*.2+squareind;                              
-//   path3d = zip(spiral,z);                                       // 3d spiral 
+//   path3d = zip(spiral,z);                                       // 3D spiral 
 //   rounding = squareind/20;      // Rounding parameters get larger up the spiral
 //       // Setting k=1 means curvature won't be continuous, but curves are as round as possible
 //       // Try changing the value to see the effect.  
@@ -180,14 +204,14 @@ function round_corners(path, curve="circle", measure="cut", size=undef,  k=0.5, 
 			(curve=="circle" && measure=="radius") ||
 			(curve=="smooth" && measure=="joint")
 		),
-                path = is_region(path) ?
-                  assert(len(path)==1, "Region supplied as path does not have exactly one component")
-                  path[0] : path,
+				path = is_region(path) ?
+				  assert(len(path)==1, "Region supplied as path does not have exactly one component")
+				  path[0] : path,
 		pathdim = array_dim(path,1),
 		have_size = size==undef ? 0 : 1,
 		pathsize_ok = is_num(pathdim) && pathdim >= 3-have_size && pathdim <= 4-have_size,
-                size_ok = !have_size || is_num(size) ||
-                   is_list(size) && ((len(size)==2 && curve=="smooth") || len(size)==len(path))
+				size_ok = !have_size || is_num(size) ||
+				   is_list(size) && ((len(size)==2 && curve=="smooth") || len(size)==len(path))
 	)
 	assert(curve=="smooth" || curve=="circle", "Unknown 'curve' setting in round_corners")
 	assert(measureok, curve=="circle"?
@@ -200,23 +224,23 @@ function round_corners(path, curve="circle", measure="cut", size=undef,  k=0.5, 
 		2+have_size, " or ", 3+have_size,
 		have_size ? " when 'size' is specified" : "when 'all' is not specified"
 	))
-        assert(len(path)>2,str("Path has length ",len(path),".  Length must be 3 or more."))
-        assert(size_ok, is_list(size)?
-                          (str("Input `size` has length ", len(size),".  Length must be ",
-                              (curve=="smooth"?"2 or ":""), len(path))) :
-                                      str("Input `size` is ",size," which is not a number"))
+		assert(len(path)>2,str("Path has length ",len(path),".  Length must be 3 or more."))
+		assert(size_ok, is_list(size)?
+						  (str("Input `size` has length ", len(size),".  Length must be ",
+							  (curve=="smooth"?"2 or ":""), len(path))) :
+									  str("Input `size` is ",size," which is not a number"))
 	let(
-                dim = pathdim - 1 + have_size,
-                points = have_size ? path : subindex(path, [0:dim-1]),
-                parm = have_size && is_list(size) && len(size)>2 ? size :
-                       have_size ? replist(size, len(path)) :
-                       subindex(path, dim),
+				dim = pathdim - 1 + have_size,
+				points = have_size ? path : subindex(path, [0:dim-1]),
+				parm = have_size && is_list(size) && len(size)>2 ? size :
+					   have_size ? replist(size, len(path)) :
+					   subindex(path, dim),
 		// dk will be a list of parameters, for the "smooth" curve the distance and curvature parameter pair,
 		// and for the "circle" curve, distance and radius.
 		dk = [
 			for(i=[0:1:len(points)-1]) let(  
 				angle = vector_angle(select(points,i-1,i+1))/2,
-                                fkd=echo(angle=angle),
+								fkd=echo(angle=angle),
 				parm0 = is_list(parm[i]) ? parm[i][0] : parm[i],
 				k = (curve=="circle" && measure=="radius")? parm0 :
 					(curve=="circle" && measure=="cut")? parm0 / (1/sin(angle) - 1) : 
@@ -255,13 +279,13 @@ function round_corners(path, curve="circle", measure="cut", size=undef,  k=0.5, 
 // k is the curvature parameter, ranging from 0 for very slow transition
 // up to 1 for a sharp transition that doesn't have continuous curvature any more
 function _smooth_bez_fill(points,k) = 
-            [
-              points[0],
-              lerp(points[1],points[0],k),
-              points[1],
-              lerp(points[1],points[2],k),
-              points[2],
-            ];
+			[
+			  points[0],
+			  lerp(points[1],points[0],k),
+			  points[1],
+			  lerp(points[1],points[2],k),
+			  points[2],
+			];
 
 // Computes the points of a continuous curvature roundover given as input
 // the list of 3 points defining the corner and a parameter specification
@@ -276,22 +300,22 @@ function _smooth_bez_fill(points,k) =
 // to calculate the point count.  
 
 function _bezcorner(points, parm) =
-        let(
-            P = is_list(parm) ?
-                let(
+		let(
+			P = is_list(parm) ?
+				let(
 		 d = parm[0],
 		 k = parm[1],
 		 prev = normalize(points[0]-points[1]),
 		 next = normalize(points[2]-points[1]))
-               [
-                points[1]+d*prev,
-                points[1]+k*d*prev,
-                points[1],
-                points[1]+k*d*next,
-                points[1]+d*next
-               ] :
-            _smooth_bez_fill(points,parm),
-            N = $fn>0 ? max(3,$fn) : ceil(bezier_segment_length(P)/$fs)
+			   [
+				points[1]+d*prev,
+				points[1]+k*d*prev,
+				points[1],
+				points[1]+k*d*next,
+				points[1]+d*next
+			   ] :
+			_smooth_bez_fill(points,parm),
+			N = $fn>0 ? max(3,$fn) : ceil(bezier_segment_length(P)/$fs)
 	)
 	bezier_curve(P,N);
 
@@ -304,8 +328,8 @@ function _circlecorner(points, parm) =
 		prev = normalize(points[0]-points[1]),
 		next = normalize(points[2]-points[1]),
 		center = r/sin(angle) * normalize(prev+next)+points[1],
-                start = points[1]+prev*d,
-                end = points[1]+next*d
+				start = points[1]+prev*d,
+				end = points[1]+next*d
 	)
 	arc(segs(norm(start-center)), cp=center, points=[start,end]);
 
