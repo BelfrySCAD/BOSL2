@@ -10,6 +10,7 @@
 //////////////////////////////////////////////////////////////////////
 
 include <BOSL2/beziers.scad>
+include <BOSL2/strings.scad>
 include <BOSL2/structs.scad>
 
 
