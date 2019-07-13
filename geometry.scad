@@ -9,7 +9,7 @@
 
 
 // CommonCode:
-//   include <BOSL2/roundcorners.scad>
+//   include <BOSL2/rounding.scad>
 
 
 // Section: Lines and Triangles

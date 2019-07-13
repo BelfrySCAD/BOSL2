@@ -1,11 +1,11 @@
 //////////////////////////////////////////////////////////////////////
-// LibFile: roundcorners.scad
+// LibFile: rounding.scad
 //   Routines to create rounded corners, with either circular rounding,
 //   or continuous curvature rounding with no sudden curvature transitions.
 //   To use, add the following lines to the beginning of your file:
 //   ```
 //   include <BOSL2/std.scad>
-//   include <BOSL2/roundcorners.scad>
+//   include <BOSL2/rounding.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 
