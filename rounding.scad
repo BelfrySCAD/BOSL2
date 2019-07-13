@@ -347,13 +347,33 @@ function bezier_curve(P,N) =
 //   If your shape doesn't develop corners you may be able to save a lot of time by setting `check_valid=false`.         
 //   Multiple rounding shapes are available, including circular rounding, teardrop rounding, and chamfer "rounding".
 //   Also note that if the rounding radius is negative then the rounding will flare outwards.
-//
+//   
 //   Rounding options:
-//     * "circle": Circular rounding with radius as specified
-//     * "teardrop": Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
-//     * "chamfer": Chamfer the edge at 45 degrees.  The radius specifies the height of the chamfer.  
-//     * "smooth": Continuous curvature rounding, with "cut" and "joint" as for round_corners
-//     * "custom": Specify "points",[list] to get a custom "roundover".  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  
+//   - "circle": Circular rounding with radius as specified
+//   - "teardrop": Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
+//   - "chamfer": Chamfer the edge at 45 degrees.  The radius specifies the height of the chamfer.  
+//   - "smooth": Continuous curvature rounding, with "cut" and "joint" as for round_corners
+//   - "custom": Specify "points",[list] to get a custom "roundover".  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  
+//   
+//   The rounding spec is a list of pairs of keywords and values, e.g. ["r",12, type, "circle"]
+//   The keywords are
+//   - "r" - the radius of the roundover, which may be zero for no roundover, or negative to round or flare outward (Default: 0)
+//   - "extra" - extra height added for unions/differences (Default: 0)
+//   - "type" - type of rounding to apply, one of "circle", "teardrop", "chamfer", "smooth", or "custom" (Default: "circle")
+//   - "check_valid" - passed to offset.  Default: true.
+//   - "quality" - passed to offset.  Default: 1.
+//   - "steps" - number of steps to use for the roundover.  Default: 16.
+//   - "offset" - select "round" (r=) or "delta" (delta=) offset type for offset.  Default: "round"
+//   You can change the some of the defaults by passing an argument to the function, which is more convenient if you want
+//   a setting to be the same at both ends.
+//   
+//   You can use several helper functions to provide the rounding spec:
+//   - rs_circle(r,cut,extra,check_valid, quality,steps, offset_maxstep, offset)
+//   - rs_teardrop(r,cut,extra,check_valid, quality,steps, offset_maxstep, offset)
+//   - rs_chamfer(height, cut, extra,check_valid, quality,steps, offset_maxstep, offset)
+//   - rs_smooth(cut, joint, extra,check_valid, quality,steps, offset_maxstep, offset)
+//   - rs_custom(points, extra,check_valid, quality,steps, offset_maxstep, offset)
+//   For example, you could round a path using `rounded_sweep(path, top=rs_teardrop(r=10), bottom=rs_chamfer(height=-10,extra=1))`
 //
 // Arguments:
 //   path = 2d path (list of points) to extrude
@@ -364,26 +384,6 @@ function bezier_curve(P,N) =
 //   steps = default step count (see below)
 //   quality = default quality (see below)
 //   check_valid = default check_valid (see below)
-//
-//   The rounding spec is a list of pairs of keywords and values, e.g. ["r",12, type, "circle"]
-//   The keywords are
-//      "r" - the radius of the roundover, which may be zero for no roundover, or negative to round or flare outward (Default: 0)
-//      "extra" - extra height added for unions/differences (Default: 0)
-//      "type" - type of rounding to apply, one of "circle", "teardrop", "chamfer", "smooth", or "custom" (Default: "circle")
-//      "check_valid" - passed to offset.  Default: true.
-//      "quality" - passed to offset.  Default: 1.
-//      "steps" - number of steps to use for the roundover.  Default: 16.
-//      "offset" - select "round" (r=) or "delta" (delta=) offset type for offset.  Default: "round"
-//   You can change the some of the defaults by passing an argument to the function, which is more convenient if you want
-//   a setting to be the same at both ends.
-//
-//   You can use several helper functions to provide the rounding spec:
-//      rs_circle(r,cut,extra,check_valid, quality,steps, offset_maxstep, offset)
-//      rs_teardrop(r,cut,extra,check_valid, quality,steps, offset_maxstep, offset)
-//      rs_chamfer(height, cut, extra,check_valid, quality,steps, offset_maxstep, offset)
-//      rs_smooth(cut, joint, extra,check_valid, quality,steps, offset_maxstep, offset)
-//      rs_custom(points, extra,check_valid, quality,steps, offset_maxstep, offset)
-//   For example, you could round a path using `rounded_sweep(path, top=rs_teardrop(r=10), bottom=rs_chamfer(height=-10,extra=1))`
 //
 // Example: Rounding a star shaped prism with postive radius values
 //   star = star(5, r=22, ir=13);
