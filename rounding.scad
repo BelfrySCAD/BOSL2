@@ -345,46 +345,68 @@ function bezier_curve(P,N) =
 //   in sequence to produce the profile (not multiple shifts from one parent), so coarse definition of the input path will
 //   degrade from the successive shifts.  If the result seems rough or strange try increasing the number of points you use for your input.
 //   However, be aware that large numbers of points (especially when check_valid is true) can lead to lengthy run times.
-//   If your shape doesn't develop corners you may be able to save a lot of time by setting `check_valid=false`.         
+//   If your shape doesn't develop corners you may be able to save a lot of time by setting `check_valid=false`.  Be aware that disabling the
+//   validity check when it is needed can generate invalid polyhedra that will produce CGAL errors upon rendering.  
 //   Multiple rounding shapes are available, including circular rounding, teardrop rounding, and chamfer "rounding".
 //   Also note that if the rounding radius is negative then the rounding will flare outwards.
 //   
 //   Rounding options:
 //   - "circle": Circular rounding with radius as specified
 //   - "teardrop": Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
-//   - "chamfer": Chamfer the edge at 45 degrees.  The radius specifies the height of the chamfer.  
+//   - "chamfer": Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle will be ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.  
 //   - "smooth": Continuous curvature rounding, with "cut" and "joint" as for round_corners
-//   - "custom": Specify "points",[list] to get a custom "roundover".  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  
+//   - "custom": Specify "points",[list] to get a custom "roundover".  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  It is recommended that the y values are increasing, but this condition is not enforced.  It is the user's responsibility to avoid creating invalid self-intersecting polyhedra when violating this condition.  
 //   
-//   The rounding spec is a list of pairs of keywords and values, e.g. ["r",12, type, "circle"]
-//   The keywords are
-//   - "r" - the radius of the roundover, which may be zero for no roundover, or negative to round or flare outward (Default: 0)
-//   - "extra" - extra height added for unions/differences (Default: 0)
+//   The rounding spec is a list of pairs of keywords and values, e.g. ["r",12, type, "circle"]. The keywords are
 //   - "type" - type of rounding to apply, one of "circle", "teardrop", "chamfer", "smooth", or "custom" (Default: "circle")
+//   - "r" - the radius of the roundover, which may be zero for no roundover, or negative to round or flare outward.  Default: 0
+//   - "cut" - the cut distance for the roundover or chamfer, which may be negative for flares
+//   - "width" - the width of a chamfer
+//   - "height" - the height of a chamfer
+//   - "angle" - the chamfer angle, measured from the vertical (so zero is vertical, 90 is horizontal).  Default: 45
+//   - "joint" - the joint distance for a "smooth" roundover
+//   - "k" - the curvature smoothness parameter for "smooth" roundovers, a value in [0,1].  Default: 0.75
+//   - "points" - point list for use with the "custom" type
+//   - "extra" - extra height added for unions/differences.  This makes the shape taller than the requested height.  (Default: 0) 
 //   - "check_valid" - passed to offset.  Default: true.
 //   - "quality" - passed to offset.  Default: 1.
-//   - "steps" - number of steps to use for the roundover.  Default: 16.
+//   - "steps" - number of vertical steps to use for the roundover.  Default: 16.
+//   - "offset_maxstep" - maxstep distance for offset() calls; controls the horizontal step density.  Default: 1
 //   - "offset" - select "round" (r=) or "delta" (delta=) offset type for offset.  Default: "round"
-//   You can change the some of the defaults by passing an argument to the function, which is more convenient if you want
-//   a setting to be the same at both ends.
-//   
-//   You can use several helper functions to provide the rounding spec:
+//
+//   You can change the the defaults by passing an argument to the rounded_sweep, which is more convenient if you want
+//   a setting to be the same at both ends.  
+//
+//   You can use several helper functions to provide the rounding spec.  These use function arguments to set the same parameters listed above, where the
+//   function name indicates the type of rounding and only parameters valid for that rounding type are accepted:
 //   - rs_circle(r,cut,extra,check_valid, quality,steps, offset_maxstep, offset)
 //   - rs_teardrop(r,cut,extra,check_valid, quality,steps, offset_maxstep, offset)
-//   - rs_chamfer(height, cut, extra,check_valid, quality,steps, offset_maxstep, offset)
+//   - rs_chamfer(height, width, cut, extra,check_valid, quality,steps, offset_maxstep, offset)
 //   - rs_smooth(cut, joint, extra,check_valid, quality,steps, offset_maxstep, offset)
 //   - rs_custom(points, extra,check_valid, quality,steps, offset_maxstep, offset)
+// 
 //   For example, you could round a path using `rounded_sweep(path, top=rs_teardrop(r=10), bottom=rs_chamfer(height=-10,extra=1))`
+//   Many of the arguments are described as setting "default" values because they establish settings which may be overridden by 
+//   the top and bottom rounding specifications.  
 //
 // Arguments:
 //   path = 2d path (list of points) to extrude
-//   height = total height (including rounded portions) of the output
-//   top = [rounding spec]
-//   bottom = [rounding spec]
-//   offset = default offset (see below)
-//   steps = default step count (see below)
-//   quality = default quality (see below)
-//   check_valid = default check_valid (see below)
+//   height = total height (including rounded portions, but not extra sections) of the output
+//   top = rounding spec for the top end.  
+//   bottom = rounding spec for the bottom end 
+//   offset = default offset, `"round"` or `"delta"`.  Default: `"round"`
+//   steps = default step count.  Default: 16
+//   quality = default quality.  Default: 1
+//   check_valid = default check_valid.  Default: true.
+//   offset_maxstep = default maxstep value to pass to offset.  Default: 1
+//   extra = default extra height.  Default: 0
+//   cut = default cut value.
+//   width = default width value for chamfers.
+//   height = default height value for chamfers.
+//   angle = default angle for chamfers.  Default: 45
+//   joint = default joint value for smooth roundover.
+//   k = default curvature parameter value for "smooth" roundover
+//   convexity = convexity setting for use with polyhedron.  Default: 10
 //
 // Example: Rounding a star shaped prism with postive radius values
 //   star = star(5, r=22, ir=13);
@@ -418,7 +440,7 @@ function bezier_curve(P,N) =
 //   roundbox = round_corners(smallbox, curve="smooth", measure="cut", size=4, $fn=36);
 //   thickness=4;
 //   height=50;
-//   front_half(y=37, s=200)
+//   back_half(y=37, s=200)
 //     difference(){
 //       rounded_sweep(roundbox, height=height, bottom=["r",10,"type","teardrop"], top=["r",2], steps = 22, check_valid=false);
 //       up(thickness)
@@ -459,7 +481,7 @@ function bezier_curve(P,N) =
 //   rounded_sweep(sq, height=20, top=sinwave, offset_maxstep=.05, offset="delta");
 // Example: a box with a flared top.  A nice roundover on the top requires a custom edge, but we can use "extra" to create a small chamfer.
 //   rhex = round_corners(hexagon(side=10), curve="smooth",measure="joint", size=2, $fs=0.2);
-//   left_half()
+//   back_half()
 //     difference(){
 //       rounded_sweep(rhex, height=10, bottom=rs_teardrop(r=2), top=rs_teardrop(r=-4, extra=0.2));
 //       up(1)
@@ -493,7 +515,6 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=undef, s
     // z_dir is the direction multiplier (1 to build up, -1 to build down)
     function rounding_offsets(edgespec,flipR,z_dir=1) =
       let( 
-
         edgetype = struct_val(edgespec, "type"),
         extra = struct_val(edgespec,"extra"),
         N = struct_val(edgespec, "steps"),
@@ -501,33 +522,34 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=undef, s
         cut = flipR * struct_val(edgespec,"cut"),
         k = struct_val(edgespec,"k"),
         radius = in_list(edgetype,["circle","teardrop"]) ?
-                        first_defined([r, cut/(sqrt(2)-1)]) : 
+                        first_defined([cut/(sqrt(2)-1),r]) : 
                  edgetype=="chamfer" ? first_defined([sqrt(2)*cut,r]) :
                  undef,
         chamf_angle = struct_val(edgespec, "angle"),
         cheight = struct_val(edgespec, "height"),
         cwidth = flipR * struct_val(edgespec, "width"),
-        chamf_width = first_defined([cut/cos(chamf_angle), cheight*tan(chamf_angle), cwidth]),
-        chamf_height = first_defined([cut/sin(chamf_angle),cwidth/tan(chamf_angle) , cheight]),
+        chamf_width = first_defined([cut/cos(chamf_angle), cwidth, cheight*tan(chamf_angle)]),
+        chamf_height = first_defined([cut/sin(chamf_angle),cheight, cwidth/tan(chamf_angle)]),
         joint = first_defined([flipR*struct_val(edgespec,"joint"),
                                16*cut/sqrt(2)/(1+4*k)]),
         points = struct_val(edgespec, "points"), 
-        argsOK = in_list(edgetype,["circle","teardrop"]) ? num_defined([r,cut])==1 :
+        argsOK = in_list(edgetype,["circle","teardrop"]) ? is_def(radius) :
                  edgetype == "chamfer" ? angle>0 && angle<90 && num_defined([chamf_height,chamf_width])==2 :
                  edgetype == "smooth" ? num_defined([k,joint])==2 :
                  edgetype == "custom" ? points[0]==[0,0] :
                  false)
     assert(argsOK,str("Invalid specification with type ",edgetype))
     let(
-        offsets =  edgetype == "custom" ? scale([-flipR,z_dir], points) :
-                   edgetype == "chamfer" ? [[-chamf_width,z_dir*abs(chamf_height)]] :
-                   edgetype == "teardrop" ? concat([for(i=[1:N]) [radius*(cos(i*45/N)-1),z_dir*abs(radius)* sin(i*45/N)]],
+        offsets =  edgetype == "custom" ? scale([-flipR,z_dir], slice(points,1,-1)) :
+                   edgetype == "chamfer" ?  width==0 && height==0 ? [] : [[-chamf_width,z_dir*abs(chamf_height)]] :
+                   edgetype == "teardrop" ? radius==0 ? [] : concat([for(i=[1:N]) [radius*(cos(i*45/N)-1),z_dir*abs(radius)* sin(i*45/N)]],
                                    [[-2*radius*(1-sqrt(2)/2), z_dir*abs(radius)]]):
-                   edgetype == "circle" ?  [for(i=[1:N]) [radius*(cos(i*90/N)-1), z_dir*abs(radius)*sin(i*90/N)]] :
-                   /* smooth */  select(
+                   edgetype == "circle" ?  radius==0 ? [] : [for(i=[1:N]) [radius*(cos(i*90/N)-1), z_dir*abs(radius)*sin(i*90/N)]] :
+                   /* smooth */  joint==0 ? [] :
+                                 select(
                                         _bezcorner([[0,0],[0,z_dir*abs(joint)],[-joint,z_dir*abs(joint)]], k, $fn=N+2),
                                         1, -1) 
-      )
+      ) 
       extra > 0 ? concat(offsets, [select(offsets,-1)+[0,z_dir*extra]]) : offsets;
 
   
@@ -550,6 +572,8 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=undef, s
   top = struct_set(argspec, top, grow=false);
   bottom = struct_set(argspec, bottom, grow=false);
 
+  struct_echo(top,"top");
+  
   clockwise = polygon_clockwise(path);
   flipR = clockwise ? 1 : -1;
 
@@ -564,10 +588,12 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=undef, s
   
   offsets_bot = rounding_offsets(bottom, flipR,-1);
   offsets_top = rounding_offsets(top, flipR,1);
+
+  echo(ofstop = offsets_top);
   
   // "Extra" height enlarges the result beyond the requested height, so subtract it
-  bottom_height = abs(select(offsets_bot,-1)[1]) - struct_val(bottom,"extra");
-  top_height = abs(select(offsets_top,-1)[1]) - struct_val(top,"extra");;
+  bottom_height = len(offsets_bot)==0 ? 0 : abs(select(offsets_bot,-1)[1]) - struct_val(bottom,"extra");
+  top_height = len(offsets_top)==0 ? 0 : abs(select(offsets_top,-1)[1]) - struct_val(top,"extra");
 
   middle = height-bottom_height-top_height;
   assert(middle>=0,str("Specified end treatments (bottom height = ",bottom_height,
@@ -589,8 +615,12 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=undef, s
   up(bottom_height)
     polyhedron(concat(vertices_faces_bot[0],vertices_faces_top[0]),
                faces=concat(vertices_faces_bot[1], vertices_faces_top[1], middle_faces),convexity=convexity);
+  echo(botv=vertices_faces_bot[0]);
+  echo(topv=vertices_faces_top[0]);
+  echo(fbot=vertices_faces_bot[1]);
+  echo(ftop=vertices_faces_top[1]);
+  echo(fmid=middle_faces);
 }
-
 
 function rs_circle(r,cut,extra,check_valid, quality,steps, offset_maxstep, offset) =
      assert(num_defined([r,cut])==1, "Must define exactly one of `r` and `cut`")
@@ -623,7 +653,8 @@ function rs_teardrop(r,cut,extra,check_valid, quality,steps, offset_maxstep, off
      ]);
 
 function rs_chamfer(height, width, cut, angle, extra,check_valid, quality,steps, offset_maxstep, offset) =
-     assert(num_defined([height,width,cut])==1, "Must define exactly one of `height`, `width` and `cut`")
+     let(ok = (is_def(cut) && num_defined([height,width])==0) || num_defined([height,width])>0)
+     assert(ok, "Must define `cut`, or one or both of `width` and `height`")
      _remove_undefined_vals(
      [
       "type", "chamfer",
@@ -656,7 +687,7 @@ function rs_smooth(cut, joint, k, extra,check_valid, quality,steps, offset_maxst
      ]);
 
 function rs_custom(points, extra,check_valid, quality,steps, offset_maxstep, offset) =
-     assert(is_path(points),"Custom point list is not valid")
+     //assert(is_path(points),"Custom point list is not valid")
      _remove_undefined_vals(
      [
       "type", "custom",
