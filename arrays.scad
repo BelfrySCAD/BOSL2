@@ -190,7 +190,7 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 	assert(len(indices)==len(values),"Index list and value list must have the same length")
 	let(
 		sortind = list_increasing(indices) ? list_range(len(indices)) : sortidx(indices),
-		lastind = indices[select(sortind,-1)]
+		lastind = len(indices)==0 ? -1 : indices[select(sortind,-1)]
 	)
 	concat(
 		[for(j=[0:1:indices[sortind[0]]-1]) j>=len(list) ? dflt : list[j]],
@@ -217,6 +217,7 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 //   elements = The list of indexes of items to remove.
 function list_remove(list, elements) =
     !is_list(elements) ? list_remove(list,[elements]) :
+    len(elements)==0 ? list :
     let( sortind = list_increasing(elements) ? list_range(len(elements)) : sortidx(elements),
          lastind = elements[select(sortind,-1)]
     )
