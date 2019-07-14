@@ -1379,5 +1379,112 @@ module arced_slot(
 }
 
 
+// Module: heightfield()
+// Usage:
+//   heightfield(heightfield, [size], [bottom]);
+// Description:
+//   Given a regular rectangular 2D grid of scalar values, generates a 3D surface where the height at
+//   any given point is the scalar value for that position.
+// Arguments:
+//   heightfield = The 2D rectangular array of heights.
+//   size = The [X,Y] size of the surface to create.  If given as a scalar, use it for both X and Y sizes.
+//   bottom = The Z coordinate for the bottom of the heightfield object to create.  Must be less than the minimum heightfield value.  Default: 0
+//   convexity = Max number of times a line could intersect a wall of the surface being formed.
+// Example:
+//   heightfield(size=[100,100], bottom=-20, heightfield=[
+//       for (x=[-180:4:180]) [for(y=[-180:4:180]) 10*cos(3*norm([x,y]))]
+//   ]);
+// Example:
+//   intersection() {
+//       heightfield(size=[100,100], heightfield=[
+//           for (x=[-180:5:180]) [for(y=[-180:5:180]) 10+5*cos(3*x)*sin(3*y)]
+//       ]);
+//       cylinder(h=50,d=100);
+//   }
+module heightfield(heightfield, size=[100,100], bottom=0, convexity=10)
+{
+	size = is_num(size)? [size,size] : point2d(size);
+	dim = array_dim(heightfield);
+	assert(dim.x!=undef);
+	assert(dim.y!=undef);
+	assert(bottom<min(flatten(heightfield)), "bottom must be less than the minimum heightfield value.");
+	spacing = vdiv(size,dim-[1,1]);
+	vertices = concat(
+		[
+			for (i=[0:1:dim.x-1], j=[0:1:dim.y-1]) let(
+				pos = [i*spacing.x-size.x/2, j*spacing.y-size.y/2, heightfield[i][j]]
+			) pos
+		], [
+			for (i=[0:1:dim.x-1]) let(
+				pos = [i*spacing.x-size.x/2, -size.y/2, bottom]
+			) pos
+		], [
+			for (i=[0:1:dim.x-1]) let(
+				pos = [i*spacing.x-size.x/2, size.y/2, bottom]
+			) pos
+		], [
+			for (j=[0:1:dim.y-1]) let(
+				pos = [-size.x/2, j*spacing.y-size.y/2, bottom]
+			) pos
+		], [
+			for (j=[0:1:dim.y-1]) let(
+				pos = [size.x/2, j*spacing.y-size.y/2, bottom]
+			) pos
+		]
+	);
+	faces = concat(
+		[
+			for (i=[0:1:dim.x-2], j=[0:1:dim.y-2]) let(
+				idx1 = (i+0)*dim.y + j+0,
+				idx2 = (i+0)*dim.y + j+1,
+				idx3 = (i+1)*dim.y + j+0,
+				idx4 = (i+1)*dim.y + j+1
+			) each [[idx1, idx2, idx4], [idx1, idx4, idx3]]
+		], [
+			for (i=[0:1:dim.x-2]) let(
+				idx1 = dim.x*dim.y,
+				idx2 = dim.x*dim.y+dim.x+i,
+				idx3 = idx2+1
+			) [idx1,idx3,idx2]
+		], [
+			for (i=[0:1:dim.y-2]) let(
+				idx1 = dim.x*dim.y,
+				idx2 = dim.x*dim.y+dim.x*2+dim.y+i,
+				idx3 = idx2+1
+			) [idx1,idx2,idx3]
+		], [
+			for (i=[0:1:dim.x-2]) let(
+				idx1 = (i+0)*dim.y+0,
+				idx2 = (i+1)*dim.y+0,
+				idx3 = dim.x*dim.y+i,
+				idx4 = idx3+1
+			) each [[idx1, idx2, idx4], [idx1, idx4, idx3]]
+		], [
+			for (i=[0:1:dim.x-2]) let(
+				idx1 = (i+0)*dim.y+dim.y-1,
+				idx2 = (i+1)*dim.y+dim.y-1,
+				idx3 = dim.x*dim.y+dim.x+i,
+				idx4 = idx3+1
+			) each [[idx1, idx4, idx2], [idx1, idx3, idx4]]
+		], [
+			for (j=[0:1:dim.y-2]) let(
+				idx1 = j,
+				idx2 = j+1,
+				idx3 = dim.x*dim.y+dim.x*2+j,
+				idx4 = idx3+1
+			) each [[idx1, idx4, idx2], [idx1, idx3, idx4]]
+		], [
+			for (j=[0:1:dim.y-2]) let(
+				idx1 = (dim.x-1)*dim.y+j,
+				idx2 = idx1+1,
+				idx3 = dim.x*dim.y+dim.x*2+dim.y+j,
+				idx4 = idx3+1
+			) each [[idx1, idx2, idx4], [idx1, idx4, idx3]]
+		]
+	);
+	polyhedron(points=vertices, faces=faces, convexity=convexity);
+}
+
+
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
