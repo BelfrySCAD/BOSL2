@@ -622,7 +622,7 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 // Example(2D): The previous spiral grows linearly and eventually intersects itself.  This one grows geometrically and does not.
 //   path = turtle(concat(["angle",71],flatten(replist(["move","left","scale",1.05],50))));
 //   stroke(path,width=.05);
-// Example: Koch Snowflake
+// Example(2D): Koch Snowflake
 //   function koch_unit(depth) =
 //       depth==0 ? ["move"] :
 //       concat(
