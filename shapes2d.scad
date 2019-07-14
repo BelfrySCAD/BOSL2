@@ -612,7 +612,7 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //   stroke(path, width=.1);
 // Example(2DMed): square spiral
 //   path = turtle(flatten(replist(["move","left","addlength",1],50)));
-//   stroke(path,width=.1);
+//   stroke(path,width=.2);
 // Example(2DMed): pentagonal spiral
 //   path = turtle(concat(["angle",360/5],flatten(replist(["move","left","addlength",1],50))));
 //   stroke(path,width=.2);
