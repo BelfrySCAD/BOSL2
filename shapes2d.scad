@@ -90,7 +90,7 @@ module stroke(path, width=1, endcaps=true, closed=false)
 //   arc(N, r|d, start, angle)
 // Usage: 2D circle segment by `width` and `thickness`, starting and ending on the X axis.
 //   arc(N, width, thickness)
-// Usage: Shortest 2d or 3d arc around centerpoint `cp`, starting at P0 and ending on the vector pointing from `cp` to `P1`.
+// Usage: Shortest 2D or 3D arc around centerpoint `cp`, starting at P0 and ending on the vector pointing from `cp` to `P1`.
 //   arc(N, cp, points=[P0,P1])
 // Usage: 2D or 3D arc, starting at `P0`, passing through `P1` and ending at `P2`.
 //   arc(N, points=[P0,P1,P2])
@@ -128,7 +128,7 @@ module stroke(path, width=1, endcaps=true, closed=false)
 //   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
 //   trace_polyline(path, showpts=true, color="cyan");
 function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false) =
-	// First try for 2d arc specified by angles
+	// First try for 2D arc specified by angles
 	is_def(width) && is_def(thickness)? (
 		arc(N,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge)
 	) : is_def(angle)? (
@@ -149,7 +149,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false) =
 		concat(extra,arcpoints)
 	) :
 	assert(is_list(points),"Invalid parameters")
-	// Arc is 3d, so transform points to 2d and make a recursive call, then remap back to 3d
+	// Arc is 3D, so transform points to 2D and make a recursive call, then remap back to 3D
 	len(points[0])==3? (
 		let(
 			thirdpoint = is_def(cp) ? cp : points[2],
@@ -574,16 +574,16 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //   state = starting turtle state (from previous call) or starting point.  Default: start at the origin
 //   full_state = if true return the full turtle state for continuing the path in subsequent turtle calls.  Default: false
 //
-// Example(2d): Simple rectangle
+// Example(2D): Simple rectangle
 //   path = turtle(["xmove",3, "ymove", "xmove",-3, "ymove",-1]);
 //   stroke(path,width=.1);
-// Example(2d): Pentagon
+// Example(2D): Pentagon
 //   path=turtle(["angle",360/5,"move","turn","move","turn","move","turn","move"]);
 //   stroke(path,width=.1,closed=true);
-// Example(2d): Pentagram
+// Example(2D): Pentagram
 //   path = turtle(flatten(replist(["move","left",144],10)));
 //   stroke(path,width=.05);
-// Example(2d): Sawtooth path
+// Example(2D): Sawtooth path
 //   path = turtle([
 //       "turn", 55,
 //       "untily", 2,
@@ -599,7 +599,7 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //       "untily", 0
 //   ]);
 //   stroke(path, width=.1);
-// Example(2d): Simpler way to draw the sawtooth.  The direction of the turtle is preserved when executing "yjump".
+// Example(2D): Simpler way to draw the sawtooth.  The direction of the turtle is preserved when executing "yjump".
 //   path = turtle([
 //       "turn", 55,
 //       "untily", 2,
@@ -610,16 +610,16 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //       "yjump", 0,
 //   ]);
 //   stroke(path, width=.1);
-// Example(2d): square spiral
+// Example(2D): square spiral
 //   path = turtle(flatten(replist(["move","left","addlength",1],50)));
 //   stroke(path,width=.1);
-// Example(2d): pentagonal spiral
+// Example(2D): pentagonal spiral
 //   path = turtle(concat(["angle",360/5],flatten(replist(["move","left","addlength",1],50))));
 //   stroke(path,width=.2);
-// Example(2d): yet another spiral
+// Example(2D): yet another spiral
 //   path = turtle(concat(["angle",71],flatten(replist(["move","left","addlength",1],50))));
 //   stroke(path,width=.2);
-// Example(2d): The previous spiral grows linearly and eventually intersects itself.  This one grows geometrically and does not.
+// Example(2D): The previous spiral grows linearly and eventually intersects itself.  This one grows geometrically and does not.
 //   path = turtle(concat(["angle",71],flatten(replist(["move","left","scale",1.05],50))));
 //   stroke(path,width=.05);
 // Example: Koch Snowflake
