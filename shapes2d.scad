@@ -177,7 +177,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false) =
 			cp = line_intersection(_normal_segment(points[0],points[1]),_normal_segment(points[1],points[2])),
 			// select order to be counterclockwise
 			dir = det2([points[1]-points[0],points[2]-points[1]]) > 0,
-			points = dir? select(points,[0,2]) : select(points,[2,0]),  
+			points = dir? select(points,[0,2]) : select(points,[2,0]),
 			r = norm(points[0]-cp),
 			theta_start = atan2(points[0].y-cp.y, points[0].x-cp.x),
 			theta_end = atan2(points[1].y-cp.y, points[1].x-cp.x),
@@ -196,8 +196,8 @@ module arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false)
 
 
 function _normal_segment(p1,p2) =
-    let(center = (p1+p2)/2)
-    [center, center + norm(p1-p2)/2 * line_normal(p1,p2)];
+	let(center = (p1+p2)/2)
+	[center, center + norm(p1-p2)/2 * line_normal(p1,p2)];
 
 
 // Function&Module: trapezoid()
@@ -486,7 +486,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   When called as a module, creates a 2D [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
 // Arguments:
 //   step = The angle step size for sampling the superformula shape.  Smaller steps are slower but more accurate.
-//   m1 = The m1 argument for the superformula. Default: 4. 
+//   m1 = The m1 argument for the superformula. Default: 4.
 //   m2 = The m2 argument for the superformula. Default: m1.
 //   n1 = The n1 argument for the superformula. Default: 1.
 //   n2 = The n2 argument for the superformula. Default: n1.
@@ -514,7 +514,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   supershape(m1=7, n1=3, n2=4, n3=17);
 //   supershape(m1=4, n1=1/2, n2=1/2, n3=4);
 //   supershape(m1=4, n1=4.0,n2=16, n3=1.5, a=0.9, b=9);
-//   for(i=[1:4]) right(3*i) supershape(m1=i, m2=3*i, n1=2);  
+//   for(i=[1:4]) right(3*i) supershape(m1=i, m2=3*i, n1=2);
 //   m=[4,6,10]; for(i=[0:2]) right(i*5) supershape(m1=m[i], n1=12, n2=8, n3=5, a=2.7);
 //   for(i=[-1.5:3:1.5]) right(i*1.5) supershape(m1=2,m2=10,n1=i,n2=1);
 //   for(i=[1:3],j=[-1,1]) translate([3.5*i,1.5*j])supershape(m1=4,m2=6,n1=i*j,n2=1);
@@ -540,35 +540,35 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 
 // Function: turtle()
 // Usage:
-//    turtle(commands, [state], [return_state])
+//   turtle(commands, [state], [return_state])
 // Description:
-//    Use a sequence of turtle graphics commands to generate a path.  The parameter `commands` is a list of
-//    turtle commands and optional parameters for each command.  The turtle state has a position, movement direction, 
-//    movement distance, and default turn angle.  If you do not give `state` as input then the turtle starts at the 
-//    origin, pointed along the positive x axis with a movement distance of 1.  By default, `turtle` returns just
-//    the computed turtle path.  If you set `full_state` to true then it instead returns the full turtle state.
-//    You can invoke `turtle` again with this full state to continue the turtle path where you left off.  
+//   Use a sequence of turtle graphics commands to generate a path.  The parameter `commands` is a list of
+//   turtle commands and optional parameters for each command.  The turtle state has a position, movement direction,
+//   movement distance, and default turn angle.  If you do not give `state` as input then the turtle starts at the
+//   origin, pointed along the positive x axis with a movement distance of 1.  By default, `turtle` returns just
+//   the computed turtle path.  If you set `full_state` to true then it instead returns the full turtle state.
+//   You can invoke `turtle` again with this full state to continue the turtle path where you left off.
+//   
+//   For the list below, `dist` is the current movement distance.
+//   
+//   Turtle commands:
+//   - "move", [scale]: Move turtle scale*dist units in the turtle direction.  Default scale=1.
+//   - "xmove", [scale]: Move turtle scale*dist units in the x direction. Default scale=1.
+//   - "ymove", [scale]: Move turtle scale*dist units in the y direction. Default scale=1.
+//   - "untilx", xtarget: Move turtle in turtle direction until x==xtarget.  Produces an error if xtarget is not reachable.
+//   - "untily", ytarget: Move turtle in turtle direction until y==ytarget.  Produces an error if xtarget is not reachable.
+//   - "jump", point: Move the turtle to the specified point
+//   - "xjump", x: Move the turtle's x position to the specified value
+//   - "yjump, y: Move the turtle's y position to the specified value
+//   - "turn", [angle]: Turn turtle direction by specified angle, or the turtle's default turn angle.  The default angle starts at 90.
+//   - "left", [angle]: Same as "turn"
+//   - "right", [angle]: Same as "turn", -angle
+//   - "angle", angle: Set the default turn angle.
+//   - "setdir", dir: Set turtle direction.  The parameter `dir` can be an angle or a vector.
+//   - "length", length: Change the turtle move distance to `length`
+//   - "scale", factor: Multiply turtle move distance by `factor`
+//   - "addlength", length: Add `length` to the turtle move distance
 //
-//    For the list below, `dist` is the current movement distance.  
-//
-//    Turtle commands:
-//    - "move", [scale]: Move turtle scale*dist units in the turtle direction.  Default scale=1.
-//    - "xmove", [scale]: Move turtle scale*dist units in the x direction. Default scale=1.
-//    - "ymove", [scale]: Move turtle scale*dist units in the y direction. Default scale=1.
-//    - "untilx", xtarget: Move turtle in turtle direction until x==xtarget.  Produces an error if xtarget is not reachable.
-//    - "untily", ytarget: Move turtle in turtle direction until y==ytarget.  Produces an error if xtarget is not reachable.
-//    - "jump", point: Move the turtle to the specified point
-//    - "xjump", x: Move the turtle's x position to the specified value
-//    - "yjump, y: Move the turtle's y position to the specified value
-//    - "turn", [angle]: Turn turtle direction by specified angle, or the turtle's default turn angle.  The default angle starts at 90.  
-//    - "left", [angle]: Same as "turn"
-//    - "right", [angle]: Same as "turn", -angle
-//    - "angle", angle: Set the default turn angle.
-//    - "setdir", dir: Set turtle direction.  The parameter `dir` can be an angle or a vector.  
-//    - "length", length: Change the turtle move distance to `length`
-//    - "scale", factor: Multiply turtle move distance by `factor`
-//    - "addlength", length: Add `length` to the turtle move distance
-//    
 // Arguments:
 //   commands = list of turtle commands
 //   state = starting turtle state (from previous call) or starting point.  Default: start at the origin
@@ -584,29 +584,31 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //   path = turtle(flatten(replist(["move","left",144],10)));
 //   stroke(path,width=.05);
 // Example(2d): Sawtooth path
-//   path = turtle(["turn", 55,
-//                  "untily", 2,
-//                  "turn", -55-90,
-//                  "untily", 0,
-//                  "turn", 55+90,
-//                  "untily", 2.5,
-//                  "turn", -55-90,
-//                  "untily", 0,
-//                  "turn", 55+90,
-//                  "untily", 3,
-//                  "turn", -55-90,
-//                  "untily", 0
-//                  ]);
+//   path = turtle([
+//       "turn", 55,
+//       "untily", 2,
+//       "turn", -55-90,
+//       "untily", 0,
+//       "turn", 55+90,
+//       "untily", 2.5,
+//       "turn", -55-90,
+//       "untily", 0,
+//       "turn", 55+90,
+//       "untily", 3,
+//       "turn", -55-90,
+//       "untily", 0
+//   ]);
 //   stroke(path, width=.1);
-// Example(2d): Simpler way to draw the sawtooth.  The direction of the turtle is preserved when executing "yjump".  
-//   path = turtle(["turn", 55,
-//                  "untily", 2,
-//                  "yjump", 0,
-//                  "untily", 2.5,
-//                  "yjump", 0,
-//                  "untily", 3,
-//                  "yjump", 0,
-//                  ]);
+// Example(2d): Simpler way to draw the sawtooth.  The direction of the turtle is preserved when executing "yjump".
+//   path = turtle([
+//       "turn", 55,
+//       "untily", 2,
+//       "yjump", 0,
+//       "untily", 2.5,
+//       "yjump", 0,
+//       "untily", 3,
+//       "yjump", 0,
+//   ]);
 //   stroke(path, width=.1);
 // Example(2d): square spiral
 //   path = turtle(flatten(replist(["move","left","addlength",1],50)));
@@ -617,87 +619,92 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 // Example(2d): yet another spiral
 //   path = turtle(concat(["angle",71],flatten(replist(["move","left","addlength",1],50))));
 //   stroke(path,width=.2);
-// Example(2d): The previous spiral grows linearly and eventually intersects itself.  This one grows geometrically and does not. 
+// Example(2d): The previous spiral grows linearly and eventually intersects itself.  This one grows geometrically and does not.
 //   path = turtle(concat(["angle",71],flatten(replist(["move","left","scale",1.05],50))));
 //   stroke(path,width=.05);
 // Example: Koch Snowflake
 //   function koch_unit(depth) =
 //       depth==0 ? ["move"] :
 //       concat(
-//              koch_unit(depth-1),
-//              ["right"],
-//              koch_unit(depth-1),
-//              ["left","left"],
-//              koch_unit(depth-1),
-//              ["right"],
-//              koch_unit(depth-1)
-//             );
+//           koch_unit(depth-1),
+//           ["right"],
+//           koch_unit(depth-1),
+//           ["left","left"],
+//           koch_unit(depth-1),
+//           ["right"],
+//           koch_unit(depth-1)
+//       );
 //   koch=concat(["angle",60],flatten(replist(concat(koch_unit(3),["left","left"]),3)));
 //   polygon(turtle(koch));
 function turtle(commands, state=[[[0,0]],[1,0],90], full_state=false) =
-     let( state = is_vector(state) ? [[state],[1,0],90] : state ) 
-     _turtle(commands,state,full_state);
+	let( state = is_vector(state) ? [[state],[1,0],90] : state )
+	_turtle(commands,state,full_state);
 
 function _turtle(commands, state, full_state, index=0) =
-     index < len(commands) ? _turtle(commands,
-                                    turtle_command(commands[index],commands[index+1],state,index),
-                                    full_state,
-                                    index+(!is_string(commands[index+1])?2:1)
-                                   )
-                           : ( full_state ? state : state[0] );
+	index < len(commands) ?
+		_turtle(commands,
+			turtle_command(commands[index],commands[index+1],state,index),
+			full_state,
+			index+(!is_string(commands[index+1])?2:1)
+		) :
+		( full_state ? state : state[0] );
 
 // Turtle state: state = [path, step_vector, default angle]
 
 function turtle_command(command, parm, state, index) =
-     let(
-          path = 0,
-          step=1,
-          angle=2,
-          parm = !is_string(parm) ? parm : undef, 
-          needvec = ["jump"],
-          neednum = ["untilx","untily","xjump","yjump","angle","length","scale","addlength"],
-          needeither = ["setdir"],
-          chvec = !in_list(command,needvec) || is_vector(parm),
-          chnum = !in_list(command,neednum) || is_num(parm),
-          vec_or_num = !in_list(command,needeither) || (is_num(parm) || is_vector(parm)),
-          lastpt = select(state[path],-1)
-       )
-     assert(chvec,str("\"",command,"\" requires a vector parameter at index ",index))
-     assert(chnum,str("\"",command,"\" requires a numeric parameter at index ",index))
-     assert(vec_or_num,str("\"",command,"\" requires a vector or numeric parameter at index ",index))
-     
- 
-     command=="move" ? list_set(state, path, concat(state[path],[default(parm,1)*state[step]+lastpt])):
-     command=="untilx" ?  let(
-                               int = line_intersection([lastpt,lastpt+state[step]], [[parm,0],[parm,1]]),
-                               xgood = sign(state[step].x) == sign(int.x-lastpt.x)
-                          )
-                          assert(xgood,str("\"untilx\" never reaches desired goal at index ",index))
-                          list_set(state,path,concat(state[path],[int])):
-     command=="untily" ?  let(
-                               int = line_intersection([lastpt,lastpt+state[step]], [[0,parm],[1,parm]]),
-                               ffd=echo(int=int),
-                               ygood = is_def(int) && sign(state[step].y) == sign(int.y-lastpt.y)
-                          )
-                          assert(ygood,str("\"untily\" never reaches desired goal at index ",index))
-                          list_set(state,path,concat(state[path],[int])):
-     command=="xmove" ? list_set(state, path, concat(state[path],[default(parm,1)*norm(state[step])*[1,0]+lastpt])):
-     command=="ymove" ? list_set(state, path, concat(state[path],[default(parm,1)*norm(state[step])*[0,1]+lastpt])):
-     command=="jump" ?  list_set(state, path, concat(state[path],[parm])):
-     command=="xjump" ? list_set(state, path, concat(state[path],[[parm,lastpt.y]])):
-     command=="yjump" ? list_set(state, path, concat(state[path],[[lastpt.x,parm]])):
-     command=="turn" || command=="left" ? list_set(state, step, rot(default(parm,state[angle]),p=state[step],planar=true)) :
-     command=="right" ? list_set(state, step, rot(-default(parm,state[angle]),p=state[step],planar=true)) :
-     command=="angle" ? list_set(state, angle, parm) :
-     command=="setdir" ? (
-                           is_vector(parm) ? list_set(state, step, norm(state[step]) * normalize(parm))
-                                           : list_set(state, step, norm(state[step]) * [cos(parm),sin(parm)])
-                         ) :
-     command=="length" ? list_set(state, step, parm*normalize(state[step])) :
-     command=="scale" ?  list_set(state, step, parm*state[step]) :
-     command=="addlength" ?  list_set(state, step, state[step]+normalize(state[step])*parm) :
-     assert(false,str("Unknown turtle command \"",command,"\" at index",index)) 
-     [];
+	let(
+		path = 0,
+		step=1,
+		angle=2,
+		parm = !is_string(parm) ? parm : undef,
+		needvec = ["jump"],
+		neednum = ["untilx","untily","xjump","yjump","angle","length","scale","addlength"],
+		needeither = ["setdir"],
+		chvec = !in_list(command,needvec) || is_vector(parm),
+		chnum = !in_list(command,neednum) || is_num(parm),
+		vec_or_num = !in_list(command,needeither) || (is_num(parm) || is_vector(parm)),
+		lastpt = select(state[path],-1)
+	)
+	assert(chvec,str("\"",command,"\" requires a vector parameter at index ",index))
+	assert(chnum,str("\"",command,"\" requires a numeric parameter at index ",index))
+	assert(vec_or_num,str("\"",command,"\" requires a vector or numeric parameter at index ",index))
+
+	command=="move" ? list_set(state, path, concat(state[path],[default(parm,1)*state[step]+lastpt])) :
+	command=="untilx" ? (
+		let(
+			int = line_intersection([lastpt,lastpt+state[step]], [[parm,0],[parm,1]]),
+			xgood = sign(state[step].x) == sign(int.x-lastpt.x)
+		)
+		assert(xgood,str("\"untilx\" never reaches desired goal at index ",index))
+		list_set(state,path,concat(state[path],[int]))
+	) :
+	command=="untily" ? (
+		let(
+			int = line_intersection([lastpt,lastpt+state[step]], [[0,parm],[1,parm]]),
+			ffd=echo(int=int),
+			ygood = is_def(int) && sign(state[step].y) == sign(int.y-lastpt.y)
+		)
+		assert(ygood,str("\"untily\" never reaches desired goal at index ",index))
+		list_set(state,path,concat(state[path],[int]))
+	) :
+	command=="xmove" ? list_set(state, path, concat(state[path],[default(parm,1)*norm(state[step])*[1,0]+lastpt])):
+	command=="ymove" ? list_set(state, path, concat(state[path],[default(parm,1)*norm(state[step])*[0,1]+lastpt])):
+	command=="jump" ?  list_set(state, path, concat(state[path],[parm])):
+	command=="xjump" ? list_set(state, path, concat(state[path],[[parm,lastpt.y]])):
+	command=="yjump" ? list_set(state, path, concat(state[path],[[lastpt.x,parm]])):
+	command=="turn" || command=="left" ? list_set(state, step, rot(default(parm,state[angle]),p=state[step],planar=true)) :
+	command=="right" ? list_set(state, step, rot(-default(parm,state[angle]),p=state[step],planar=true)) :
+	command=="angle" ? list_set(state, angle, parm) :
+	command=="setdir" ? (
+		is_vector(parm) ?
+			list_set(state, step, norm(state[step]) * normalize(parm)) :
+			list_set(state, step, norm(state[step]) * [cos(parm),sin(parm)])
+	) :
+	command=="length" ? list_set(state, step, parm*normalize(state[step])) :
+	command=="scale" ?  list_set(state, step, parm*state[step]) :
+	command=="addlength" ?  list_set(state, step, state[step]+normalize(state[step])*parm) :
+	assert(false,str("Unknown turtle command \"",command,"\" at index",index))
+	[];
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
