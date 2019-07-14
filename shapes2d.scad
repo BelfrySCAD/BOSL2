@@ -610,16 +610,16 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //       "yjump", 0,
 //   ]);
 //   stroke(path, width=.1);
-// Example(2D): square spiral
+// Example(2DMed): square spiral
 //   path = turtle(flatten(replist(["move","left","addlength",1],50)));
 //   stroke(path,width=.1);
-// Example(2D): pentagonal spiral
+// Example(2DMed): pentagonal spiral
 //   path = turtle(concat(["angle",360/5],flatten(replist(["move","left","addlength",1],50))));
 //   stroke(path,width=.2);
-// Example(2D): yet another spiral
+// Example(2DMed): yet another spiral
 //   path = turtle(concat(["angle",71],flatten(replist(["move","left","addlength",1],50))));
 //   stroke(path,width=.2);
-// Example(2D): The previous spiral grows linearly and eventually intersects itself.  This one grows geometrically and does not.
+// Example(2DMed): The previous spiral grows linearly and eventually intersects itself.  This one grows geometrically and does not.
 //   path = turtle(concat(["angle",71],flatten(replist(["move","left","scale",1.05],50))));
 //   stroke(path,width=.05);
 // Example(2D): Koch Snowflake
