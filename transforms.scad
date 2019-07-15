@@ -701,7 +701,7 @@ module skew_xz(xa=0, za=0) multmatrix(m = affine3d_skew_xz(xa, za)) children();
 //   place_copies([[-25,-25,0], [25,-25,0], [0,0,50], [0,25,0]]) sphere(r=10);
 module place_copies(a=[[0,0,0]])
 {
-	for (off = a) translate(off) children();
+	for (off = a) assert(is_vector(off)) translate(off) children();
 }
 
 
@@ -1290,7 +1290,9 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], count=undef, n=undef, sa=0, offs
 {
 	cnt = first_defined([count, n]);
 	sang = sa + offset;
-	angs = !is_undef(cnt)? (cnt<=0? [] : [for (i=[0:1:cnt-1]) i/cnt*360+sang]) : rots;
+	angs = !is_undef(cnt)?
+		(cnt<=0? [] : [for (i=[0:1:cnt-1]) i/cnt*360+sang]) :
+		assert(is_vector(rots)) rots;
 	if (cp != [0,0,0]) {
 		translate(cp) rot_copies(rots=rots, v=v, n=cnt, sa=sang, delta=delta, subrot=subrot) children();
 	} else if (subrot) {
@@ -1494,7 +1496,7 @@ module xring(n=2, r=0, sa=0, cp=[0,0,0], rot=true)
 
 
 // Module: yring()
-// 
+//
 // Description:
 //   Distributes `n` copies of the given children on a circle of radius `r`
 //   around the Y axis.  If `rot` is true, each copy is rotated in place to keep
@@ -2135,12 +2137,10 @@ module chain_hull()
 //   round2d(ir) ...
 //   round2d(or, ir) ...
 // Description:
-//   Rounds an arbitrary 2d objects.  Giving `r` rounds all concave and
-//   convex corners.  Giving just `ir` rounds just concave corners.
-//   Giving just `or` rounds convex corners.  Giving both `ir` and `or`
-//   can let you round to different radii for concave and convex corners.
-//   The 2d object must not have any parts narrower than twice the `or`
-//   radius.  Such parts will disappear.
+//   Rounds arbitrary 2D objects.  Giving `r` rounds all concave and convex corners.  Giving just `ir`
+//   rounds just concave corners.  Giving just `or` rounds convex corners.  Giving both `ir` and `or`
+//   can let you round to different radii for concave and convex corners.  The 2D object must not have
+//   any parts narrower than twice the `or` radius.  Such parts will disappear.
 // Arguments:
 //   r = Radius to round all concave and convex corners to.
 //   or = Radius to round only outside (convex) corners to.  Use instead of `r`.
@@ -2158,11 +2158,83 @@ module round2d(r, or, ir)
 }
 
 
+// Module: round3d()
+// Usage:
+//   round3d(r) ...
+//   round3d(or) ...
+//   round3d(ir) ...
+//   round3d(or, ir) ...
+// Description:
+//   Rounds arbitrary 3D objects.  Giving `r` rounds all concave and convex corners.  Giving just `ir`
+//   rounds just concave corners.  Giving just `or` rounds convex corners.  Giving both `ir` and `or`
+//   can let you round to different radii for concave and convex corners.  The 3D object must not have
+//   any parts narrower than twice the `or` radius.  Such parts will disappear.  This is an *extremely*
+//   slow operation.  I cannot emphasize enough just how slow it is.  It uses `minkowski()` multiple times.
+//   Use this as a last resort.
+// Arguments:
+//   r = Radius to round all concave and convex corners to.
+//   or = Radius to round only outside (convex) corners to.  Use instead of `r`.
+//   ir = Radius to round only inside (concave) corners to.  Use instead of `r`.
+// Examples(2D):
+//   round3d(r=10)  {cube([40,100,40], center=true); cube([100,40,40], center=true);}
+//   round3d(or=10) {cube([40,100,40], center=true); cube([100,40,40], center=true);}
+//   round3d(ir=10) {cube([40,100,40], center=true); cube([100,40,40], center=true);}
+//   round3d(or=16,ir=8) {cube([40,100,40], center=true); cube([100,40,40], center=true);}
+module round3d(r, or, ir, size=100)
+{
+	or = get_radius(r1=or, r=r, dflt=0);
+	ir = get_radius(r1=ir, r=r, dflt=0);
+	offset3d(or, size=size)
+		offset3d(-ir-or, size=size)
+			offset3d(ir, size=size)
+				children();
+}
+
+
+// Module: offset3d()
+// Usage:
+//   offset3d(r, [size], [convexity]);
+// Description:
+//   Expands or contracts the surface of a 3D object by a given amount.  This is very, very slow.
+//   No really, this is unbearably slow.  It uses `minkowski()`.  Use this as a last resort.
+// Arguments:
+//   r = Radius to expand object by.  Negative numbers contract the object.
+//   size = Maximum size of object to be contracted, given as a scalar.  Default: 100
+//   convexity = Max number of times a line could intersect the walls of the object.  Default: 10
+module offset3d(r=1, size=100, convexity=10) {
+	n = quant(max(8,segs(abs(r))),4);
+	if (r==0) {
+		children();
+	} else if (r>0) {
+		render(convexity=convexity)
+		minkowski() {
+			children();
+			sphere(r, $fn=n);
+		}
+	} else {
+		size2 = size * [1,1,1];
+		size1 = size2 * 1.02;
+		render(convexity=convexity)
+		difference() {
+			cube(size2, center=true);
+			minkowski() {
+				difference() {
+					cube(size1, center=true);
+					children();
+				}
+				sphere(-r, $fn=n);
+			}
+		}
+	}
+}
+
+
+
 // Module: shell2d()
 // Usage:
 //   shell2d(thickness, [or], [ir], [fill], [round])
 // Description:
-//   Creates a hollow shell from 2d children, with optional rounding.
+//   Creates a hollow shell from 2D children, with optional rounding.
 // Arguments:
 //   thickness = Thickness of the shell.  Positive to expand outward, negative to shrink inward, or a two-element list to do both.
 //   or = Radius to round convex corners/pointy bits on the outside of the shell.
