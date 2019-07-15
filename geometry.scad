@@ -207,6 +207,51 @@ function find_circle_2tangents(pt1, pt2, pt3, r=undef, d=undef) =
 	) [cp, n];
 
 
+// Function: find_circle_3points()
+// Usage:
+//   find_circle_3points(pt1, pt2, pt3);
+// Description:
+//   Returns the [CENTERPOINT, RADIUS, NORMAL] of the circle that passes through three non-collinear
+//   points.  The centerpoint will be a 2D or 3D vector, depending on the points input.  If all three
+//   points are 2D, then the resulting centerpoint will be 2D, and the normal will be UP ([0,0,1]).
+//   If any of the points are 3D, then the resulting centerpoint will be 3D.  If the three points are
+//   collinear, then `[undef,undef,undef]` will be returned.  The normal will be a normalized 3D
+//   vector with a non-negative Z axis.
+// Arguments:
+//   pt1 = The first point.
+//   pt2 = The second point.
+//   pt3 = The third point.
+function find_circle_3points(pt1, pt2, pt3) =
+	collinear(pt1,pt2,pt3)? [undef,undef,undef] :
+	let(
+		v1 = pt1-pt2,
+		v2 = pt3-pt2,
+		n = vector_axis(v1,v2),
+		n2 = n.z<0? -n : n
+	) len(pt1)+len(pt2)+len(pt3)>6? (
+		let(
+			a = project_plane(pt1, pt1, pt2, pt3),
+			b = project_plane(pt2, pt1, pt2, pt3),
+			c = project_plane(pt3, pt1, pt2, pt3),
+			res = find_circle_3points(a, b, c)
+		) res[0]==undef? [undef,undef,undef] : let(
+			cp = lift_plane(res[0], pt1, pt2, pt3),
+			r = norm(p2-cp)
+		) [cp, r, n2]
+	) : let(
+		mp1 = pt2 + v1/2,
+		mp2 = pt2 + v2/2,
+		mpv1 = rot(90, v=n, p=v1),
+		mpv2 = rot(90, v=n, p=v2),
+		l1 = [mp1, mp1+mpv1],
+		l2 = [mp2, mp2+mpv2],
+		isect = line_intersection(l1,l2)
+	) is_undef(isect)? [undef,undef,undef] : let(
+		r = norm(p2-isect)
+	) [isect, r, n2];
+
+
+
 // Function: triangle_area()
 // Usage:
 //   triangle_area(a,b,c);
