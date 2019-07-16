@@ -568,11 +568,13 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //   - "length", length: Change the turtle move distance to `length`
 //   - "scale", factor: Multiply turtle move distance by `factor`
 //   - "addlength", length: Add `length` to the turtle move distance
+//   - "repeat", count, comands: Repeats a list of commands `count` times.  
 //
 // Arguments:
 //   commands = list of turtle commands
 //   state = starting turtle state (from previous call) or starting point.  Default: start at the origin
 //   full_state = if true return the full turtle state for continuing the path in subsequent turtle calls.  Default: false
+//   repeat = number of times to repeat the command list.  Default: 1
 //
 // Example(2D): Simple rectangle
 //   path = turtle(["xmove",3, "ymove", "xmove",-3, "ymove",-1]);
@@ -580,8 +582,14 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 // Example(2D): Pentagon
 //   path=turtle(["angle",360/5,"move","turn","move","turn","move","turn","move"]);
 //   stroke(path,width=.1,closed=true);
+// Example(2D): Pentagon using the repeat argument
+//   path=turtle(["move","turn",360/5],repeat=5);
+//   stroke(path,width=.1,closed=true);
+// Example(2D): Pentagon using the repeat turtle command, setting the turn angle
+//   path=turtle(["angle",360/5,"repeat",5,["move","turn"]]);
+//   stroke(path,width=.1,closed=true);
 // Example(2D): Pentagram
-//   path = turtle(flatten(replist(["move","left",144],10)));
+//   path = turtle(["move","left",144], repeat=10);
 //   stroke(path,width=.05);
 // Example(2D): Sawtooth path
 //   path = turtle([
@@ -611,16 +619,16 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //   ]);
 //   stroke(path, width=.1);
 // Example(2DMed): square spiral
-//   path = turtle(flatten(replist(["move","left","addlength",1],50)));
+//   path = turtle(["move","left","addlength",1],repeat=50);
 //   stroke(path,width=.2);
 // Example(2DMed): pentagonal spiral
-//   path = turtle(concat(["angle",360/5],flatten(replist(["move","left","addlength",1],50))));
+//   path = turtle(["move","left",360/5,"addlength",1],repeat=50);
 //   stroke(path,width=.2);
-// Example(2DMed): yet another spiral
+// Example(2DMed): yet another spiral, without using `repeat`
 //   path = turtle(concat(["angle",71],flatten(replist(["move","left","addlength",1],50))));
 //   stroke(path,width=.2);
 // Example(2DMed): The previous spiral grows linearly and eventually intersects itself.  This one grows geometrically and does not.
-//   path = turtle(concat(["angle",71],flatten(replist(["move","left","scale",1.05],50))));
+//   path = turtle(["move","left",71,"scale",1.05],repeat=50);
 //   stroke(path,width=.05);
 // Example(2D): Koch Snowflake
 //   function koch_unit(depth) =
@@ -634,24 +642,39 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //           ["right"],
 //           koch_unit(depth-1)
 //       );
-//   koch=concat(["angle",60],flatten(replist(concat(koch_unit(3),["left","left"]),3)));
+//   koch=concat(["angle",60,"repeat",3],[concat(koch_unit(3),["left","left"])]);
 //   polygon(turtle(koch));
-function turtle(commands, state=[[[0,0]],[1,0],90], full_state=false) =
+function turtle(commands, state=[[[0,0]],[1,0],90], full_state=false, repeat=1) =
 	let( state = is_vector(state) ? [[state],[1,0],90] : state )
-	_turtle(commands,state,full_state);
+        repeat == 1 ? _turtle(commands,state,full_state) 
+                    : _turtle_repeat(commands, state, full_state, repeat);
+
+function _turtle_repeat(commands, state, full_state, repeat) =
+       repeat==1 ? _turtle(commands,state,full_state)
+                 : _turtle_repeat(commands, _turtle(commands, state, true), full_state, repeat-1);
+                 
+
+function _turtle_command_len(commands, index) =
+         commands[index] == "repeat" ? 3 :   // Repeat command requires 2 args
+         is_string(commands[index+1]) ? 1    // If 2nd item is a string it's must be a new command
+         : 2;                                  // Otherwise we have command and arg
 
 function _turtle(commands, state, full_state, index=0) =
 	index < len(commands) ?
 		_turtle(commands,
-			turtle_command(commands[index],commands[index+1],state,index),
+			_turtle_command(commands[index],commands[index+1],commands[index+2],state,index),
 			full_state,
-			index+(!is_string(commands[index+1])?2:1)
+			index+_turtle_command_len(commands,index)
 		) :
 		( full_state ? state : state[0] );
 
 // Turtle state: state = [path, step_vector, default angle]
 
-function turtle_command(command, parm, state, index) =
+function _turtle_command(command, parm, parm2, state, index) =
+        command == "repeat" ? assert(is_num(parm),str("\"repeat\" command requires a numeric parameter at index ",index))
+                              assert(is_list(parm2),str("\"repeat\" command requires a command list parameter at index ",index))
+                              _turtle_repeat(parm2, state, true, parm)
+        :
 	let(
 		path = 0,
 		step=1,
