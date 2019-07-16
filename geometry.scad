@@ -813,7 +813,7 @@ function _offset_region(
 //   Takes an input path and returns a path offset by the specified amount.  As with the built-in offset() module, you can use
 //   `r` to specify rounded offset and `delta` to specify offset with corners.  Positive offsets shift the path
 //   to the left (relative to the direction of the path).
-//
+//   
 //   When offsets shrink the path, segments cross and become invalid.  By default `offset()` checks for this situation.
 //   To test validity the code checks that segments have distance larger than (r or delta) from the input path.
 //   This check takes O(N^2) time and may mistakenly eliminate segments you wanted included in various situations,
@@ -822,13 +822,12 @@ function _offset_region(
 //   to 2 or 3.  (This increases the number of samples on the segment that are checked.)  Run time will increase.
 //   In some situations you may be able to decrease run time by setting quality to 0, which causes only segment
 //   ends to be checked.
-//
+//   
 //   For construction of polyhedra `offset()` can also return face lists.  These list faces between the
 //   original path and the offset path where the vertices are ordered with the original path first,
 //   starting at `firstface_index` and the offset path vertices appearing afterwords.  The direction
 //   of the faces can be flipped using `flip_faces`.  When you request faces the return value
 //   is a list: [offset_path, face_list].
-//
 // Arguments:
 //   path = the path to process.  A list of 2d points.
 //   r = offset radius.  Distance to offset.  Will round over corners.
