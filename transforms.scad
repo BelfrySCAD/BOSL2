@@ -2125,39 +2125,6 @@ module chain_hull()
 
 
 
-//////////////////////////////////////////////////////////////////////
-// Section: 2D Mutators
-//////////////////////////////////////////////////////////////////////
-
-
-// Module: round2d()
-// Usage:
-//   round2d(r) ...
-//   round2d(or) ...
-//   round2d(ir) ...
-//   round2d(or, ir) ...
-// Description:
-//   Rounds arbitrary 2D objects.  Giving `r` rounds all concave and convex corners.  Giving just `ir`
-//   rounds just concave corners.  Giving just `or` rounds convex corners.  Giving both `ir` and `or`
-//   can let you round to different radii for concave and convex corners.  The 2D object must not have
-//   any parts narrower than twice the `or` radius.  Such parts will disappear.
-// Arguments:
-//   r = Radius to round all concave and convex corners to.
-//   or = Radius to round only outside (convex) corners to.  Use instead of `r`.
-//   ir = Radius to round only inside (concave) corners to.  Use instead of `r`.
-// Examples(2D):
-//   round2d(r=10) {square([40,100], center=true); square([100,40], center=true);}
-//   round2d(or=10) {square([40,100], center=true); square([100,40], center=true);}
-//   round2d(ir=10) {square([40,100], center=true); square([100,40], center=true);}
-//   round2d(or=16,ir=8) {square([40,100], center=true); square([100,40], center=true);}
-module round2d(r, or, ir)
-{
-	or = get_radius(r1=or, r=r, dflt=0);
-	ir = get_radius(r1=ir, r=r, dflt=0);
-	offset(or) offset(-ir-or) offset(delta=ir) children();
-}
-
-
 // Module: round3d()
 // Usage:
 //   round3d(r) ...
@@ -2224,6 +2191,40 @@ module offset3d(r=1, size=100, convexity=10) {
 	}
 }
 
+
+
+
+//////////////////////////////////////////////////////////////////////
+// Section: 2D Mutators
+//////////////////////////////////////////////////////////////////////
+
+
+// Module: round2d()
+// Usage:
+//   round2d(r) ...
+//   round2d(or) ...
+//   round2d(ir) ...
+//   round2d(or, ir) ...
+// Description:
+//   Rounds arbitrary 2D objects.  Giving `r` rounds all concave and convex corners.  Giving just `ir`
+//   rounds just concave corners.  Giving just `or` rounds convex corners.  Giving both `ir` and `or`
+//   can let you round to different radii for concave and convex corners.  The 2D object must not have
+//   any parts narrower than twice the `or` radius.  Such parts will disappear.
+// Arguments:
+//   r = Radius to round all concave and convex corners to.
+//   or = Radius to round only outside (convex) corners to.  Use instead of `r`.
+//   ir = Radius to round only inside (concave) corners to.  Use instead of `r`.
+// Examples(2D):
+//   round2d(r=10) {square([40,100], center=true); square([100,40], center=true);}
+//   round2d(or=10) {square([40,100], center=true); square([100,40], center=true);}
+//   round2d(ir=10) {square([40,100], center=true); square([100,40], center=true);}
+//   round2d(or=16,ir=8) {square([40,100], center=true); square([100,40], center=true);}
+module round2d(r, or, ir)
+{
+	or = get_radius(r1=or, r=r, dflt=0);
+	ir = get_radius(r1=ir, r=r, dflt=0);
+	offset(or) offset(-ir-or) offset(delta=ir) children();
+}
 
 
 // Module: shell2d()
