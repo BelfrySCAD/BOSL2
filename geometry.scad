@@ -385,6 +385,18 @@ function polygon_area(vertices) =
 	0.5*sum([for(i=[0:len(vertices)-1]) det2(select(vertices,i,i+1))]);
 
 
+// Function: centroid()
+// Usage:
+//   centroid(vertices)
+// Description:
+//   Given a simple polygon, returns the coordinates of the polygon's centroid.
+//   If the polygon is self-intersecting, the results are undefined.
+function centroid(vertices) =
+    sum([for(i=[0:len(vertices)-1])
+            let(segment=select(vertices,i,i+1))
+            det2(segment)*sum(segment)]) / 6 / polygon_area(vertices);
+
+
 // Function: assemble_path_fragments()
 // Usage:
 //   assemble_path_fragments(subpaths);
