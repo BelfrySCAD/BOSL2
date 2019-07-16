@@ -810,10 +810,10 @@ function _offset_region(
 // Function: offset()
 //
 // Description:
-//   Takes an input path and returns a path offset by the specified amount.  As with offset(), you can use
-//   r to specify rounded offset and delta to specify offset with corners.  Positive offsets shift the path
+//   Takes an input path and returns a path offset by the specified amount.  As with the built-in offset() module, you can use
+//   `r` to specify rounded offset and `delta` to specify offset with corners.  Positive offsets shift the path
 //   to the left (relative to the direction of the path).
-//
+//   
 //   When offsets shrink the path, segments cross and become invalid.  By default `offset()` checks for this situation.
 //   To test validity the code checks that segments have distance larger than (r or delta) from the input path.
 //   This check takes O(N^2) time and may mistakenly eliminate segments you wanted included in various situations,
@@ -822,13 +822,12 @@ function _offset_region(
 //   to 2 or 3.  (This increases the number of samples on the segment that are checked.)  Run time will increase.
 //   In some situations you may be able to decrease run time by setting quality to 0, which causes only segment
 //   ends to be checked.
-//
+//   
 //   For construction of polyhedra `offset()` can also return face lists.  These list faces between the
 //   original path and the offset path where the vertices are ordered with the original path first,
 //   starting at `firstface_index` and the offset path vertices appearing afterwords.  The direction
 //   of the faces can be flipped using `flip_faces`.  When you request faces the return value
 //   is a list: [offset_path, face_list].
-//
 // Arguments:
 //   path = the path to process.  A list of 2d points.
 //   r = offset radius.  Distance to offset.  Will round over corners.
@@ -840,10 +839,6 @@ function _offset_region(
 //   return_faces = return face list.  Default: False.
 //   firstface_index = starting index for face list.  Default: 0.
 //   flip_faces = flip face direction.  Default: false
-// Example(2D):
-//   test = [[0,0],[10,0],[10,7],[0,7], [-1,-3]];
-//   polygon(offset(test,r=1.9, closed=true, check_valid=true,quality=2));
-//   %down(.1)polygon(test);
 // Example(2D):
 //   star = star(5, r=100, ir=30);
 //   #stroke(closed=true, star);
@@ -868,10 +863,33 @@ function _offset_region(
 //   star = star(5, r=100, ir=30);
 //   #stroke(closed=true, star);
 //   stroke(closed=true, offset(star, r=10, closed=true));
-// Example(2D):
-//   ellipse = scale([1,0.3,1], p=circle(r=100));
-//   #stroke(closed=true, ellipse);
-//   stroke(closed=true, offset(ellipse, r=-15, check_valid=true, closed=true));
+// Example(2D):  This case needs `quality=2` for success
+//   test = [[0,0],[10,0],[10,7],[0,7], [-1,-3]];
+//   polygon(offset(test,r=1.9, closed=true, quality=2));
+//   //polygon(offset(test,r=1.9, closed=true, quality=1));  // Fails with erroneous 180 deg path error
+//   %down(.1)polygon(test);
+// Example(2D): This case fails if `check_valid=true` when delta is large enough because segments are too close to the opposite side of the curve.  
+//   star = star(5, r=22, ir=13);
+//   stroke(star,width=.1,closed=true);                                                           
+//   color("green")
+//     stroke(offset(star, delta=9, closed=true),width=.1,closed=true); // Works with check_valid=true (the default)
+//   color("red")
+//     stroke(offset(star, delta=10, closed=true, check_valid=false),   // Fails if check_valid=true 
+//            width=.1,closed=true); 
+// Example(2D): But if you use rounding with offset then you need `check_valid=true` when `r` is big enough.  It works without the validity check as long as the offset shape retains a some of the straight edges at the star tip, but once the shape shrinks smaller than that, it fails.  There is no simple way to get a correct result for the case with `r=10`, because as in the previous example, it will fail if you turn on validity checks.  
+//   star = star(5, r=22, ir=13);
+//   color("green")
+//     stroke(offset(star, r=8, closed=true,check_valid=false), width=.1, closed=true);
+//   color("red")
+//     stroke(offset(star, r=10, closed=true,check_valid=false), width=.1, closed=true);
+// Example(2D): The extra triangles in this example show that the validity check cannot be skipped
+//   ellipse = scale([20,4], p=circle(r=1));
+//   stroke(ellipse, closed=true, width=0.3);
+//   stroke(offset(ellipse, r=-3, check_valid=false, closed=true), width=0.3, closed=true);
+// Example(2D): The triangles are removed by the validity check
+//   ellipse = scale([20,4], p=circle(r=1));
+//   stroke(ellipse, closed=true, width=0.3);
+//   stroke(offset(ellipse, r=-3, check_valid=true, closed=true), width=0.3, closed=true);
 // Example(2D):
 //   sinpath = 2*[for(theta=[-180:5:180]) [theta/4,45*sin(theta)]];
 //   #stroke(sinpath);
