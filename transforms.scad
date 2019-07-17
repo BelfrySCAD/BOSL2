@@ -1113,7 +1113,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, scale=[1,1,1], in_poly=undef, anchor=CENTER, spin=0, orient=UP)
 {
 	assert_in_list("stagger", stagger, [false, true, "alt"]);
-	scl = vmul(scalar_vec3(scale, 1), (stagger!=false? [0.5, sin(60), 0] : [1,1,0]));
+	scl = vmul(scalar_vec3(scale, 1), (stagger!=false? [0.5, sin(60), 1] : [1,1,1]));
 	if (!is_undef(size)) {
 		siz = scalar_vec3(size);
 		if (!is_undef(spacing)) {
@@ -1131,7 +1131,8 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 		bnds = !is_undef(bounds)? [for (a=[0,1]) 2*max(vabs([ for (i=[0,1]) bounds[i][a] ]))+1 ] : undef;
 		mcols = !is_undef(cols)? cols : (!is_undef(spc) && !is_undef(bnds))? quantup(ceil(bnds[0]/spc[0])-1, 4)+1 : undef;
 		mrows = !is_undef(rows)? rows : (!is_undef(spc) && !is_undef(bnds))? quantup(ceil(bnds[1]/spc[1])-1, 4)+1 : undef;
-		siz = vmul(spc, [mcols-1, mrows-1, 0]);
+		siz = vmul(spc, [mcols-1, mrows-1, 0.01]);
+		echo(siz=siz, spc=spc, spacing=spacing, scl=scl, mcols=mcols, mrows=mrows);
 		staggermod = (stagger == "alt")? 1 : 0;
 		if (stagger == false) {
 			orient_and_anchor(siz, orient, anchor, spin=spin) {
@@ -1142,7 +1143,7 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 							$col = col;
 							$row = row;
 							$pos = pos;
-							translate(pos) rot(orient,reverse=true) children();
+							translate(pos) children();
 						}
 					}
 				}
@@ -1162,7 +1163,7 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 								$col = col * 2 + ((row%2!=staggermod)? 1 : 0);
 								$row = row;
 								$pos = pos;
-								translate(pos) rot(orient,reverse=true) children();
+								translate(pos) children();
 							}
 						}
 					}
