@@ -976,10 +976,10 @@ function offset(
 			rgn = exclusive_or([for (p = path) [p]]),
 			pathlist = sort(idx=0,[
 				for (i=[0:1:len(rgn)-1]) [
-					sum([
+					sum(concat([0],[
 						for (j=[0:1:len(rgn)-1]) if (i!=j)
 							point_in_polygon(rgn[i][0],rgn[j])>=0? 1 : 0
-					]),
+					])),
 					rgn[i]
 				]
 			])
