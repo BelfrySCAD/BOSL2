@@ -252,6 +252,69 @@ function find_circle_3points(pt1, pt2, pt3) =
 
 
 
+// Function: tri_calc()
+// Usage:
+//   tri_calc(ang,ang2,adj,opp,hyp);
+// Description:
+//   Given a side length and an angle, or two side lengths, calculates the rest of the side lengths
+//   and angles of a right triangle.  Returns [ADJACENT, OPPOSITE, HYPOTENUSE, ANGLE, ANGLE2] where
+//   ADJACENT is the length of the side adjacent to ANGLE, and OPPOSITE is the length of the side
+//   opposite of ANGLE and adjacent to ANGLE2.  ANGLE and ANGLE2 are measured in degrees.
+//   This is certainly more verbose and slower than writing your own calculations, but has the nice
+//   benefit that you can just specify the info you have, and don't have to figure out which trig
+//   formulas you need to use.
+// Figure(2D):
+//   color("#ccc") {
+//       stroke(closed=false, width=0.5, [[45,0], [45,5], [50,5]]);
+//       stroke(closed=false, width=0.5, arc(N=6, r=15, cp=[0,0], start=0, angle=30));
+//       stroke(closed=false, width=0.5, arc(N=6, r=14, cp=[50,30], start=212, angle=58));
+//   }
+//   color("black") stroke(closed=true, [[0,0], [50,30], [50,0]]);
+//   color("#0c0") {
+//       translate([10.5,2.5]) text(size=3,text="ang",halign="center",valign="center");
+//       translate([44.5,22]) text(size=3,text="ang2",halign="center",valign="center");
+//   }
+//   color("blue") {
+//       translate([25,-3]) text(size=3,text="Adjacent",halign="center",valign="center");
+//       translate([53,15]) rotate(-90) text(size=3,text="Opposite",halign="center",valign="center");
+//       translate([25,18]) rotate(30) text(size=3,text="Hypotenuse",halign="center",valign="center");
+//   }
+// Arguments:
+//   ang = The angle in degrees of the primary corner of the triangle.
+//   ang2 = The angle in degrees of the other non-right corner of the triangle.
+//   adj = The length of the side adjacent to the primary corner.
+//   opp = The length of the side opposite to the primary corner.
+//   hyp = The length of the hypotenuse.
+// Example:
+//   tri = tri_calc(opp=15,hyp=30);
+//   echo(adjacent=tri[0], opposite=tri[1], hypotenuse=tri[2], angle=tri[3], angle2=tri[4]);
+// Examples:
+//   adj = tri_calc(ang=30,opp=10)[0];
+//   opp = tri_calc(ang=20,hyp=30)[1];
+//   hyp = tri_calc(ang2=50,adj=20)[2];
+//   ang = tri_calc(adj=20,hyp=30)[3];
+//   ang2 = tri_calc(adj=20,hyp=40)[4];
+function tri_calc(ang,ang2,adj,opp,hyp) =
+	assert(num_defined([ang,ang2])<2,"You cannot specify both ang and ang2.")
+	assert(num_defined([ang,ang2,adj,opp,hyp])==2, "You must specify exactly two arguments.")
+	let(
+		ang = ang!=undef? assert(ang>0&&ang<90) ang :
+			ang2!=undef? (90-ang2) :
+			adj==undef? asin(constrain(opp/hyp,-1,1)) :
+			opp==undef? acos(constrain(adj/hyp,-1,1)) :
+			atan2(opp,adj),
+		ang2 = ang2!=undef? assert(ang2>0&&ang2<90) ang2 : (90-ang),
+		adj = adj!=undef? assert(adj>0) adj :
+			(opp!=undef? (opp/tan(ang)) : (hyp*cos(ang))),
+		opp = opp!=undef? assert(opp>0) opp :
+			(adj!=undef? (adj*tan(ang)) : (hyp*sin(ang))),
+		hyp = hyp!=undef? assert(hyp>0) assert(adj<hyp) assert(opp<hyp) hyp :
+			(adj!=undef? (adj/cos(ang)) : (opp/sin(ang)))
+	)
+	[adj, opp, hyp, ang, ang2];
+
+
+
 // Function: triangle_area()
 // Usage:
 //   triangle_area(a,b,c);
@@ -437,9 +500,11 @@ function polygon_area(vertices) =
 //   Given a simple polygon, returns the coordinates of the polygon's centroid.
 //   If the polygon is self-intersecting, the results are undefined.
 function centroid(vertices) =
-    sum([for(i=[0:len(vertices)-1])
-            let(segment=select(vertices,i,i+1))
-            det2(segment)*sum(segment)]) / 6 / polygon_area(vertices);
+	sum([
+		for(i=[0:len(vertices)-1])
+		let(segment=select(vertices,i,i+1))
+		det2(segment)*sum(segment)
+	]) / 6 / polygon_area(vertices);
 
 
 // Function: assemble_path_fragments()
