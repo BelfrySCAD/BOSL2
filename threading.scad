@@ -32,6 +32,18 @@ include <BOSL2/paths.scad>
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Example(2DMed): Typical Tooth Profile
+//   pitch = 2;
+//   depth = pitch * cos(30) * 5/8;
+//   profile = [
+//       [-7/16, -depth/pitch*1.07],
+//       [-6/16, -depth/pitch],
+//       [-1/16,  0],
+//       [ 1/16,  0],
+//       [ 6/16, -depth/pitch],
+//       [ 7/16, -depth/pitch*1.07]
+//   ];
+//   stroke(profile, width=0.02);
 module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=720, profile=undef, left_handed=false, higbee=60, internal=false, anchor=CENTER, spin=0, orient=UP)
 {
 	h = pitch*twist/360;
@@ -100,6 +112,18 @@ module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=72
 //   trapezoidal_threaded_rod(d=25, l=40, pitch=10, thread_depth=8/3, thread_angle=50, starts=4, center=false, $fa=2, $fs=2);
 //   trapezoidal_threaded_rod(d=50, l=35, pitch=8, thread_angle=30, starts=3, bevel=true);
 //   trapezoidal_threaded_rod(l=25, d=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1, orient=RIGHT, anchor=BOTTOM);
+// Example(2DMed): Typical Tooth Profile
+//   pitch = 2;
+//   depth = pitch * cos(30) * 5/8;
+//   profile = [
+//       [-7/16, -depth/pitch*1.07],
+//       [-6/16, -depth/pitch],
+//       [-1/16,  0],
+//       [ 1/16,  0],
+//       [ 6/16, -depth/pitch],
+//       [ 7/16, -depth/pitch*1.07]
+//   ];
+//   stroke(profile, width=0.02);
 module trapezoidal_threaded_rod(
 	d=10,
 	l=100,
