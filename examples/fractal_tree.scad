@@ -19,7 +19,7 @@ module branches(minsize){
     if($parent_size2.x>minsize) {
 		attach(TOP)
 		zrot(gaussian_rand(90,20))
-		zring(n=floor(log_rand(2,5,4)))
+		zrot_copies(n=floor(log_rand(2,5,4)))
 		zrot(gaussian_rand(0,5))
 		yrot(gaussian_rand(30,10))
 		let(

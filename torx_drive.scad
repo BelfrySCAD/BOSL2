@@ -151,9 +151,9 @@ module torx_drive2d(size) {
 	difference() {
 		union() {
 			circle(d=base);
-			zring(n=2) {
+			zrot_copies(n=2) {
 				hull() {
-					zring(n=3) {
+					zrot_copies(n=3) {
 						translate([base/2,0,0]) {
 							circle(r=tip, $fn=$fn/2);
 						}
@@ -161,7 +161,7 @@ module torx_drive2d(size) {
 				}
 			}
 		}
-		zring(n=6) {
+		zrot_copies(n=6) {
 			zrot(180/6) {
 				translate([id/2+rounding,0,0]) {
 					circle(r=rounding);

@@ -1238,8 +1238,14 @@ module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
 // Module: rot_copies()
 //
 // Description:
-//   Given a number of XYZ rotation angles, or a list of angles and an axis `v`,
-//   rotates copies of the children to each of those angles.
+//   Given a list of [X,Y,Z] rotation angles in `rots`, rotates copies of the children to each of those angles, regardless of axis of rotation.
+//   Given a list of scalar angles in `rots`, rotates copies of the children to each of those angles around the axis of rotation.
+//   If given a vector `v`, that becomes the axis of rotation.  Default axis of rotation is UP.
+//   If given a count `n`, makes that many copies, rotated evenly around the axis.
+//   If given an offset `delta`, translates each child by that amount before rotating them into place.  This makes rings.
+//   If given a centerpoint `cp`, centers the ring around that centerpoint.
+//   If `subrot` is true, each child will be rotated in place to keep the same size towards the center.
+//   The first (unrotated) copy will be placed at the relative starting angle `sa`.
 //
 // Usage:
 //   rot_copies(rots, [cp], [sa], [delta], [subrot]) ...
@@ -1248,9 +1254,9 @@ module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
 //
 // Arguments:
 //   rots = A list of [X,Y,Z] rotation angles in degrees.  If `v` is given, this will be a list of scalar angles in degrees to rotate around `v`.
-//   v = If given, this is the vector to rotate around.
+//   v = If given, this is the vector of the axis to rotate around.
 //   cp = Centerpoint to rotate around.
-//   n = Optional number of evenly distributed copies, rotated around the ring.
+//   n = Optional number of evenly distributed copies, rotated around the axis.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise.
 //   delta = [X,Y,Z] amount to move away from cp before rotating.  Makes rings of copies.
 //   subrot = If false, don't sub-rotate children as they are copied around the ring.
@@ -1287,24 +1293,22 @@ module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
 //   rot_copies(n=6, v=DOWN+BACK, delta=[20,0,0], subrot=false)
 //       yrot(90) cylinder(h=20, r1=5, r2=0);
 //   color("red",0.333) yrot(90) cylinder(h=20, r1=5, r2=0);
-module rot_copies(rots=[], v=undef, cp=[0,0,0], count=undef, n=undef, sa=0, offset=0, delta=[0,0,0], subrot=true)
+module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[0,0,0], subrot=true)
 {
-	cnt = first_defined([count, n]);
 	sang = sa + offset;
-	angs = !is_undef(cnt)?
-		(cnt<=0? [] : [for (i=[0:1:cnt-1]) i/cnt*360+sang]) :
+	angs = !is_undef(n)?
+		(n<=0? [] : [for (i=[0:1:n-1]) i/n*360+sang]) :
 		assert(is_vector(rots)) rots;
-	if (cp != [0,0,0]) {
-		translate(cp) rot_copies(rots=rots, v=v, n=cnt, sa=sang, delta=delta, subrot=subrot) children();
-	} else if (subrot) {
-		for ($idx = [0:1:len(angs)-1]) {
-			$ang = angs[$idx];
-			rotate(a=$ang,v=v) translate(delta) rot(a=sang,v=v,reverse=true) children();
-		}
-	} else {
-		for ($idx = [0:1:len(angs)-1]) {
-			$ang = angs[$idx];
-			rotate(a=$ang,v=v) translate(delta) rot(a=$ang,v=v,reverse=true) children();
+	for ($idx = idx(angs)) {
+		$ang = angs[$idx];
+		translate(cp) {
+			rotate(a=$ang, v=v) {
+				translate(delta) {
+					rot(a=(subrot? sang : $ang), v=v, reverse=true) {
+						children();
+					}
+				}
+			}
 		}
 	}
 }
@@ -1312,13 +1316,17 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], count=undef, n=undef, sa=0, offs
 
 // Module: xrot_copies()
 //
-// Description:
-//   Given an array of angles, rotates copies of the children
-//   to each of those angles around the X axis.
-//
 // Usage:
 //   xrot_copies(rots, [r], [cp], [sa], [subrot]) ...
 //   xrot_copies(n, [r], [cp], [sa], [subrot]) ...
+//
+// Description:
+//   Given an array of angles, rotates copies of the children to each of those angles around the X axis.
+//   If given a count `n`, makes that many copies, rotated evenly around the X axis.
+//   If given an offset radius `r`, distributes children around a ring of that radius.
+//   If given a centerpoint `cp`, centers the ring around that centerpoint.
+//   If `subrot` is true, each child will be rotated in place to keep the same size towards the center.
+//   The first (unrotated) copy will be placed at the relative starting angle `sa`.
 //
 // Arguments:
 //   rots = Optional array of rotation angles, in degrees, to make copies at.
@@ -1329,7 +1337,8 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], count=undef, n=undef, sa=0, offs
 //   subrot = If false, don't sub-rotate children as they are copied around the ring.
 //
 // Side Effects:
-//   `$ang` is set to the rotation angle of each child copy, and can be used to modify each child individually.
+//   `$idx` is set to the index value of each child copy.
+//   `$ang` is set to the [X,Y,Z] rotation angles of each child copy, and can be used to modify each child individually.
 //
 // Example:
 //   xrot_copies([180, 270, 315])
@@ -1355,23 +1364,25 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], count=undef, n=undef, sa=0, offs
 //   xrot_copies(n=6, r=20, subrot=false)
 //       xrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
 //   color("red",0.333) xrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
-module xrot_copies(rots=[], cp=[0,0,0], n=undef, count=undef, sa=0, offset=0, r=0, subrot=true)
+module xrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 {
-	cnt = first_defined([count, n]);
-	sang = sa + offset;
-	rot_copies(rots=rots, v=RIGHT, cp=cp, n=cnt, sa=sang, delta=[0, r, 0], subrot=subrot) children();
+	rot_copies(rots=rots, v=RIGHT, cp=cp, n=n, sa=sa, delta=[0, r, 0], subrot=subrot) children();
 }
 
 
 // Module: yrot_copies()
 //
-// Description:
-//   Given an array of angles, rotates copies of the children
-//   to each of those angles around the Y axis.
-//
 // Usage:
 //   yrot_copies(rots, [r], [cp], [sa], [subrot]) ...
 //   yrot_copies(n, [r], [cp], [sa], [subrot]) ...
+//
+// Description:
+//   Given an array of angles, rotates copies of the children to each of those angles around the Y axis.
+//   If given a count `n`, makes that many copies, rotated evenly around the Y axis.
+//   If given an offset radius `r`, distributes children around a ring of that radius.
+//   If given a centerpoint `cp`, centers the ring around that centerpoint.
+//   If `subrot` is true, each child will be rotated in place to keep the same size towards the center.
+//   The first (unrotated) copy will be placed at the relative starting angle `sa`.
 //
 // Arguments:
 //   rots = Optional array of rotation angles, in degrees, to make copies at.
@@ -1382,7 +1393,8 @@ module xrot_copies(rots=[], cp=[0,0,0], n=undef, count=undef, sa=0, offset=0, r=
 //   subrot = If false, don't sub-rotate children as they are copied around the ring.
 //
 // Side Effects:
-//   `$ang` is set to the rotation angle of each child copy, and can be used to modify each child individually.
+//   `$idx` is set to the index value of each child copy.
+//   `$ang` is set to the [X,Y,Z] rotation angles of each child copy, and can be used to modify each child individually.
 //
 // Example:
 //   yrot_copies([180, 270, 315])
@@ -1408,34 +1420,37 @@ module xrot_copies(rots=[], cp=[0,0,0], n=undef, count=undef, sa=0, offset=0, r=
 //   yrot_copies(n=6, r=20, subrot=false)
 //       yrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
 //   color("red",0.333) yrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
-module yrot_copies(rots=[], cp=[0,0,0], n=undef, count=undef, sa=0, offset=0, r=0, subrot=true)
+module yrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 {
-	cnt = first_defined([count, n]);
-	sang = sa + offset;
-	rot_copies(rots=rots, v=BACK, cp=cp, n=cnt, sa=sang, delta=[-r, 0, 0], subrot=subrot) children();
+	rot_copies(rots=rots, v=BACK, cp=cp, n=n, sa=sa, delta=[-r, 0, 0], subrot=subrot) children();
 }
 
 
 // Module: zrot_copies()
 //
-// Description:
-//   Given an array of angles, rotates copies of the children
-//   to each of those angles around the Z axis.
-//
 // Usage:
 //   zrot_copies(rots, [r], [cp], [sa], [subrot]) ...
 //   zrot_copies(n, [r], [cp], [sa], [subrot]) ...
 //
+// Description:
+//   Given an array of angles, rotates copies of the children to each of those angles around the Z axis.
+//   If given a count `n`, makes that many copies, rotated evenly around the Z axis.
+//   If given an offset radius `r`, distributes children around a ring of that radius.
+//   If given a centerpoint `cp`, centers the ring around that centerpoint.
+//   If `subrot` is true, each child will be rotated in place to keep the same size towards the center.
+//   The first (unrotated) copy will be placed at the relative starting angle `sa`.
+//
 // Arguments:
 //   rots = Optional array of rotation angles, in degrees, to make copies at.
-//   cp = Centerpoint to rotate around.
+//   cp = Centerpoint to rotate around.  Default: [0,0,0]
 //   n = Optional number of evenly distributed copies to be rotated around the ring.
-//   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from X+, when facing the origin from Z+.
-//   r = Radius to move children right, away from cp, before rotating.  Makes rings of copies.
-//   subrot = If false, don't sub-rotate children as they are copied around the ring.
+//   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from X+, when facing the origin from Z+.  Default: 0
+//   r = Radius to move children right, away from cp, before rotating.  Makes rings of copies.  Default: 0
+//   subrot = If false, don't sub-rotate children as they are copied around the ring.  Default: true
 //
 // Side Effects:
-//   `$ang` is set to the rotation angle of each child copy, and can be used to modify each child individually.
+//   `$idx` is set to the index value of each child copy.
+//   `$ang` is set to the [X,Y,Z] rotation angles of each child copy, and can be used to modify each child individually.
 //
 // Example:
 //   zrot_copies([180, 270, 315])
@@ -1461,102 +1476,9 @@ module yrot_copies(rots=[], cp=[0,0,0], n=undef, count=undef, sa=0, offset=0, r=
 //   zrot_copies(n=6, r=20, subrot=false)
 //       yrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
 //   color("red",0.333) yrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
-module zrot_copies(rots=[], cp=[0,0,0], n=undef, count=undef, sa=0, offset=0, r=0, subrot=true)
+module zrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 {
-	cnt = first_defined([count, n]);
-	sang = sa + offset;
-	rot_copies(rots=rots, v=UP, cp=cp, n=cnt, sa=sang, delta=[r, 0, 0], subrot=subrot) children();
-}
-
-
-// Module: xring()
-// Description:
-//   Distributes `n` copies of the given children on a circle of radius `r`
-//   around the X axis.  If `rot` is true, each copy is rotated in place to keep
-//   the same side towards the center.  The first, unrotated copy will be at the
-//   starting angle `sa`.
-// Usage:
-//   xring(n, r, [sa], [cp], [rot]) ...
-// Arguments:
-//   n = Number of copies of children to distribute around the circle. (Default: 2)
-//   r = Radius of ring to distribute children around. (Default: 0)
-//   sa = Start angle for first (unrotated) copy.  (Default: 0)
-//   cp = Centerpoint of ring.  Default: [0,0,0]
-//   rot = If true, rotate each copy to keep the same side towards the center of the ring.  Default: true.
-// Side Effects:
-//   `$ang` is set to the rotation angle of each child copy, and can be used to modify each child individually.
-//   `$idx` is set to the index value of each child copy.
-// Examples:
-//   xring(n=6, r=10) xrot(-90) cylinder(h=20, r1=5, r2=0);
-//   xring(n=6, r=10, sa=45) xrot(-90) cylinder(h=20, r1=5, r2=0);
-//   xring(n=6, r=20, rot=false) cylinder(h=20, r1=6, r2=0, center=true);
-module xring(n=2, r=0, sa=0, cp=[0,0,0], rot=true)
-{
-	xrot_copies(count=n, r=r, sa=sa, cp=cp, subrot=rot) children();
-}
-
-
-// Module: yring()
-//
-// Description:
-//   Distributes `n` copies of the given children on a circle of radius `r`
-//   around the Y axis.  If `rot` is true, each copy is rotated in place to keep
-//   the same side towards the center.  The first, unrotated copy will be at the
-//   starting angle `sa`.
-//
-// Usage:
-//   yring(n, r, [sa], [cp], [rot]) ...
-//
-// Arguments:
-//   n = Number of copies of children to distribute around the circle. (Default: 2)
-//   r = Radius of ring to distribute children around. (Default: 0)
-//   sa = Start angle for first (unrotated) copy.  (Default: 0)
-//   cp = Centerpoint of ring.  Default: [0,0,0]
-//   rot = If true, rotate each copy to keep the same side towards the center of the ring.  Default: true.
-//
-// Side Effects:
-//   `$ang` is set to the rotation angle of each child copy, and can be used to modify each child individually.
-//   `$idx` is set to the index value of each child copy.
-//
-// Examples:
-//   yring(n=6, r=10) yrot(-90) cylinder(h=20, r1=5, r2=0);
-//   yring(n=6, r=10, sa=45) yrot(-90) cylinder(h=20, r1=5, r2=0);
-//   yring(n=6, r=20, rot=false) cylinder(h=20, r1=6, r2=0, center=true);
-module yring(n=2, r=0, sa=0, cp=[0,0,0], rot=true)
-{
-	yrot_copies(count=n, r=r, sa=sa, cp=cp, subrot=rot) children();
-}
-
-
-// Module: zring()
-//
-// Description:
-//   Distributes `n` copies of the given children on a circle of radius `r`
-//   around the Z axis.  If `rot` is true, each copy is rotated in place to keep
-//   the same side towards the center.  The first, unrotated copy will be at the
-//   starting angle `sa`.
-//
-// Usage:
-//   zring(r, n, [sa], [cp], [rot]) ...
-//
-// Arguments:
-//   n = Number of copies of children to distribute around the circle. (Default: 2)
-//   r = Radius of ring to distribute children around. (Default: 0)
-//   sa = Start angle for first (unrotated) copy.  (Default: 0)
-//   cp = Centerpoint of ring.  Default: [0,0,0]
-//   rot = If true, rotate each copy to keep the same side towards the center of the ring.  Default: true.
-//
-// Side Effects:
-//   `$ang` is set to the relative angle from `cp` of each child copy, and can be used to modify each child individually.
-//   `$idx` is set to the index value of each child copy.
-//
-// Examples:
-//   zring(n=6, r=10) yrot(90) cylinder(h=20, r1=5, r2=0);
-//   zring(n=6, r=10, sa=45) yrot(90) cylinder(h=20, r1=5, r2=0);
-//   zring(n=6, r=20, rot=false) yrot(90) cylinder(h=20, r1=6, r2=0, center=true);
-module zring(n=2, r=0, sa=0, cp=[0,0,0], rot=true)
-{
-	zrot_copies(count=n, r=r, sa=sa, cp=cp, subrot=rot) children();
+	rot_copies(rots=rots, v=UP, cp=cp, n=n, sa=sa, delta=[r, 0, 0], subrot=subrot) children();
 }
 
 

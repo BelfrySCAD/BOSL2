@@ -48,7 +48,7 @@ module phillips_drive(size="#2", shaft=6, l=20, anchor=BOTTOM, spin=0, orient=UP
 					cylinder(d=shaft, h=l, center=false, $fn=24);
 				}
 				zrot(45)
-				zring(n=4) {
+				zrot_copies(n=4) {
 					yrot(ang) {
 						zrot(-45) {
 							off = (r/2-cr*(sqrt(2)-1))/sqrt(2);

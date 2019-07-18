@@ -552,7 +552,7 @@ module metric_bolt(
 							up(H-sockd) cylinder(h=sockd+0.1, d=sockw/cos(30), $fn=6);
 							if (details) {
 								kcnt = 36;
-								zring(n=kcnt, r=D/2) up(H/3) cube([PI*D/kcnt/2, PI*D/kcnt/2, H], anchor=BOTTOM);
+								zrot_copies(n=kcnt, r=D/2) up(H/3) cube([PI*D/kcnt/2, PI*D/kcnt/2, H], anchor=BOTTOM);
 							}
 						}
 					} else if (headtype == "pan") {
