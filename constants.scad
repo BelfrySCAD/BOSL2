@@ -10,7 +10,7 @@
 
 // Section: General Constants
 
-PRINTER_SLOP = 0.20;  // The printer specific amount of slop in mm to print with to make parts fit exactly.  You may need to override this value for your printer.
+$slop = 0.20;  // The printer specific amount of slop in mm to print with to make parts fit exactly.  You may need to override this value for your printer.
 
 
 

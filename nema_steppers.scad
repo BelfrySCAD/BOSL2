@@ -451,10 +451,10 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, anchor=TOP, spin=0, orient
 //   size = The standard NEMA motor size to make a mount for.
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
-//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -466,12 +466,12 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, anchor=TOP, spin=0, orient
 //   nema_mount_holes(size=17, depth=5, l=5);
 // Example:
 //   nema_mount_holes(size=17, depth=5, l=0);
-module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
+module nema_mount_holes(size=17, depth=5, l=5, anchor=CENTER, spin=0, orient=UP)
 {
 	motor_width = nema_motor_width(size);
-	plinth_diam = nema_motor_plinth_diam(size)+slop;
+	plinth_diam = nema_motor_plinth_diam(size)+$slop;
 	screw_spacing = nema_motor_screw_spacing(size);
-	screw_size = nema_motor_screw_size(size)+slop;
+	screw_size = nema_motor_screw_size(size)+$slop;
 
 	anchors = [
 		anchorpt("screw1", [+screw_spacing/2, +screw_spacing/2, depth/2]),
@@ -515,10 +515,10 @@ module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER,
 // Arguments:
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
-//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -528,9 +528,9 @@ module nema_mount_holes(size=17, depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER,
 //   nema11_mount_holes(depth=5, l=5);
 // Example:
 //   nema11_mount_holes(depth=5, l=0);
-module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
+module nema11_mount_holes(depth=5, l=5, anchor=CENTER, spin=0, orient=UP)
 {
-	nema_mount_holes(size=11, depth=depth, l=l, slop=slop, anchor=anchor, spin=spin, orient=orient) children();
+	nema_mount_holes(size=11, depth=depth, l=l, anchor=anchor, spin=spin, orient=orient) children();
 }
 
 
@@ -540,10 +540,10 @@ module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0
 // Arguments:
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
-//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -553,9 +553,9 @@ module nema11_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0
 //   nema14_mount_holes(depth=5, l=5);
 // Example:
 //   nema14_mount_holes(depth=5, l=0);
-module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
+module nema14_mount_holes(depth=5, l=5, anchor=CENTER, spin=0, orient=UP)
 {
-	nema_mount_holes(size=14, depth=depth, l=l, slop=slop, anchor=anchor, spin=spin, orient=orient) children();
+	nema_mount_holes(size=14, depth=depth, l=l, anchor=anchor, spin=spin, orient=orient) children();
 }
 
 
@@ -565,10 +565,10 @@ module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0
 // Arguments:
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
-//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -578,9 +578,9 @@ module nema14_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0
 //   nema17_mount_holes(depth=5, l=5);
 // Example:
 //   nema17_mount_holes(depth=5, l=0);
-module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
+module nema17_mount_holes(depth=5, l=5, anchor=CENTER, spin=0, orient=UP)
 {
-	nema_mount_holes(size=17, depth=depth, l=l, slop=slop, anchor=anchor, spin=spin, orient=orient) children();
+	nema_mount_holes(size=17, depth=depth, l=l, anchor=anchor, spin=spin, orient=orient) children();
 }
 
 
@@ -590,10 +590,10 @@ module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0
 // Arguments:
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
-//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -603,9 +603,9 @@ module nema17_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0
 //   nema23_mount_holes(depth=5, l=5);
 // Example:
 //   nema23_mount_holes(depth=5, l=0);
-module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
+module nema23_mount_holes(depth=5, l=5, anchor=CENTER, spin=0, orient=UP)
 {
-	nema_mount_holes(size=23, depth=depth, l=l, slop=slop, anchor=anchor, spin=spin, orient=orient) children();
+	nema_mount_holes(size=23, depth=depth, l=l, anchor=anchor, spin=spin, orient=orient) children();
 }
 
 
@@ -615,10 +615,10 @@ module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0
 // Arguments:
 //   depth = The thickness of the mounting hole mask.  Default: 5
 //   l = The length of the slots, for making an adjustable motor mount.  Default: 5
-//   slop = The printer-specific slop value to make parts fit just right.  Default: `PRINTER_SLOP`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Extra Anchors:
 //   "screw1" = The center top of the screw hole/slot in the X+Y+ quadrant.
 //   "screw2" = The center top of the screw hole/slot in the X-Y+ quadrant.
@@ -628,9 +628,9 @@ module nema23_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0
 //   nema34_mount_holes(depth=5, l=5);
 // Example:
 //   nema34_mount_holes(depth=5, l=0);
-module nema34_mount_holes(depth=5, l=5, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
+module nema34_mount_holes(depth=5, l=5, anchor=CENTER, spin=0, orient=UP)
 {
-	nema_mount_holes(size=34, depth=depth, l=l, slop=slop, anchor=anchor, spin=spin, orient=orient) children();
+	nema_mount_holes(size=34, depth=depth, l=l, anchor=anchor, spin=spin, orient=orient) children();
 }
 
 

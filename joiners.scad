@@ -58,7 +58,7 @@ module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CEN
 
 // Module: half_joiner()
 // Usage:
-//   half_joiner(h, w, l, [a], [screwsize], [guides], [slop])
+//   half_joiner(h, w, l, [a], [screwsize], [guides], [$slop])
 // Description:
 //   Creates a half_joiner object that can be attached to half_joiner2 object.
 // Arguments:
@@ -68,13 +68,13 @@ module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CEN
 //   a = Overhang angle of the half_joiner.
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
-//   slop = Printer specific slop value to make parts fit more closely.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = Printer specific slop value to make parts fit more closely.
 // Example:
 //   half_joiner(screwsize=3, spin=-90);
-module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
+module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
 	dmnd_height = h*1.0;
 	dmnd_width = dmnd_height*tan(a);
@@ -98,13 +98,13 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PR
 
 					// Clear diamond for tab
 					grid3d(xa=[-(w*2/3), (w*2/3)]) {
-						half_joiner_clear(h=h+0.01, w=w, clearance=slop*2, a=a);
+						half_joiner_clear(h=h+0.01, w=w, clearance=$slop*2, a=a);
 					}
 				}
 
 				difference() {
 					// Make tab
-					scale([w/3-slop*2, dmnd_width/2, dmnd_height/2]) xrot(45)
+					scale([w/3-$slop*2, dmnd_width/2, dmnd_height/2]) xrot(45)
 						cube(size=[1,sqrt(2),sqrt(2)], center=true);
 
 					// Blunt point of tab.
@@ -115,7 +115,7 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PR
 
 				// Guide ridges.
 				if (guides == true) {
-					xspread(w/3-slop*2) {
+					xspread(w/3-$slop*2) {
 						// Guide ridge.
 						fwd(0.05/2) {
 							scale([0.75, 1, 2]) yrot(45)
@@ -180,7 +180,7 @@ module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor
 			}
 
 			// Subtract mated half_joiner.
-			zrot(180) half_joiner(h=h+0.01, w=w+0.01, l=guide_width+0.01, a=a, screwsize=undef, guides=guides, slop=0.0);
+			zrot(180) half_joiner(h=h+0.01, w=w+0.01, l=guide_width+0.01, a=a, screwsize=undef, guides=guides, $slop=0.0);
 
 			// Make screwholes, if needed.
 			if (screwsize != undef) {
@@ -230,7 +230,7 @@ module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, 
 
 // Module: joiner()
 // Usage:
-//   joiner(h, w, l, [a], [screwsize], [guides], [slop])
+//   joiner(h, w, l, [a], [screwsize], [guides], [$slop])
 // Description:
 //   Creates a joiner object that can be attached to another joiner object.
 // Arguments:
@@ -240,14 +240,14 @@ module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, 
 //   a = Overhang angle of the joiner.
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
-//   slop = Printer specific slop value to make parts fit more closely.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = Printer specific slop value to make parts fit more closely.
 // Examples:
 //   joiner(screwsize=3, spin=-90);
 //   joiner(w=10, l=10, h=40, spin=-90) cuboid([10, 10*2, 40], anchor=RIGHT);
-module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
+module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
 	if ($children > 0) {
 		difference() {
@@ -257,7 +257,7 @@ module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, slop=PRINTER
 	}
 	orient_and_anchor([w, 2*l, h], orient, anchor, spin=spin) {
 		union() {
-			up(h/4) half_joiner(h=h/2, w=w, l=l, a=a, screwsize=screwsize, guides=guides, slop=slop);
+			up(h/4) half_joiner(h=h/2, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
 			down(h/4) half_joiner2(h=h/2, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
 		}
 	}
@@ -305,7 +305,7 @@ module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overla
 
 // Module: joiner_pair()
 // Usage:
-//   joiner_pair(h, w, l, [a], [screwsize], [guides], [slop])
+//   joiner_pair(h, w, l, [a], [screwsize], [guides], [$slop])
 // Description:
 //   Creates a joiner_pair object that can be attached to other joiner_pairs .
 // Arguments:
@@ -318,17 +318,17 @@ module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overla
 //   alternate = If true (default), each joiner alternates it's orientation.  If alternate is "alt", do opposite alternating orientations.
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
-//   slop = Printer specific slop value to make parts fit more closely.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = Printer specific slop value to make parts fit more closely.
 // Examples:
 //   joiner_pair(spacing=50, l=10, spin=-90) cuboid([10, 50+10-0.1, 40], anchor=RIGHT);
 //   joiner_pair(spacing=50, l=10, n=2, spin=-90);
 //   joiner_pair(spacing=50, l=10, n=3, alternate=false, spin=-90);
 //   joiner_pair(spacing=50, l=10, n=3, alternate=true, spin=-90);
 //   joiner_pair(spacing=50, l=10, n=3, alternate="alt", spin=-90);
-module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
+module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
 	if ($children > 0) {
 		difference() {
@@ -341,7 +341,7 @@ module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, scr
 			for (i=[0:1:n-1]) {
 				right(i*spacing) {
 					yrot(180 + (alternate? (i*180+(alternate=="alt"?180:0))%360 : 0)) {
-						joiner(h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides, slop=slop);
+						joiner(h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
 					}
 				}
 			}
@@ -391,7 +391,7 @@ module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing
 
 // Module: joiner_quad()
 // Usage:
-//   joiner_quad(h, w, l, [a], [screwsize], [guides], [slop])
+//   joiner_quad(h, w, l, [a], [screwsize], [guides], [$slop])
 // Description:
 //   Creates a joiner_quad object that can be attached to other joiner_pairs .
 // Arguments:
@@ -404,7 +404,7 @@ module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing
 //   alternate = If true (default), each joiner alternates it's orientation.  If alternate is "alt", do opposite alternating orientations.
 //   screwsize = Diameter of screwhole.
 //   guides = If true, create sliding alignment guides.
-//   slop = Printer specific slop value to make parts fit more closely.
+//   $slop = Printer specific slop value to make parts fit more closely.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -414,7 +414,7 @@ module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate=false, spin=-90);
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate=true, spin=-90);
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate="alt", spin=-90);
-module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=undef, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, slop=PRINTER_SLOP, anchor=CENTER, spin=0, orient=UP)
+module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=undef, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
 	spacing1 = first_defined([spacing1, xspacing, 100]);
 	spacing2 = first_defined([spacing2, yspacing, 50]);
@@ -427,7 +427,7 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 	orient_and_anchor([w+spacing1, spacing2, h], orient, anchor, spin=spin) {
 		zrot_copies(n=2) {
 			back(spacing2/2) {
-				joiner_pair(spacing=spacing1, n=n, h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides, slop=slop);
+				joiner_pair(spacing=spacing1, n=n, h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
 			}
 		}
 	}

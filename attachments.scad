@@ -9,7 +9,6 @@
 
 
 // Default values for attachment code.
-$slop = 0.20;
 $tags = "";
 $overlap = 0.01;
 $color = undef;

@@ -96,12 +96,12 @@ module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=72
 //   bevel = if true, bevel the thread ends.  Default: true
 //   starts = The number of lead starts.  Default = 1
 //   internal = If true, make this a mask for making internal threads.
-//   slop = printer slop calibration to allow for tight fitting of parts.  Default: `PRINTER_SLOP`
 //   profile = The shape of a thread, if not a symmetric trapezoidal form.  Given as a 2D path, where X is between -1/2 and 1/2, representing the pitch distance, and Y is 0 for the peak, and `-depth/pitch` for the valleys.  The segment between the end of one thread profile and the start of the next is automatic, so the start and end coordinates should not both be at the same Y at X = ±1/2.  This path is scaled up by the pitch size in both dimensions when making the final threading.  This overrides the `thread_angle` and `thread_depth` options.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Examples(Med):
 //   trapezoidal_threaded_rod(d=10, l=40, pitch=2, thread_angle=15, $fn=32);
 //   trapezoidal_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, thread_angle=29, $fn=32);
@@ -135,7 +135,6 @@ module trapezoidal_threaded_rod(
 	starts=1,
 	profile=undef,
 	internal=false,
-	slop=undef,
 	anchor=CENTER,
 	spin=0,
 	orient=UP,
@@ -144,7 +143,7 @@ module trapezoidal_threaded_rod(
 	function _thread_pt(thread, threads, start, starts, astep, asteps, part, parts) =
 		astep + asteps * (thread + threads * (part + parts * start));
 
-	d = internal? d+default(slop,PRINTER_SLOP)*3 : d;
+	d = internal? d+$slop*3 : d;
 	astep = 360 / quantup(segs(d/2), starts);
 	asteps = ceil(360/astep);
 	threads = ceil(l/pitch/starts)+(starts<4?4-starts:1);
@@ -306,14 +305,14 @@ module trapezoidal_threaded_rod(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   starts = The number of lead starts.  Default = 1
 //   bevel = if true, bevel the thread ends.  Default: true
-//   slop = printer slop calibration to allow for tight fitting of parts.  Default: `PRINTER_SLOP`
 //   profile = The shape of a thread, if not a symmetric trapezoidal form.  Given as a 2D path, where X is between -1/2 and 1/2, representing the pitch distance, and Y is 0 for the peak, and `-depth/pitch` for the valleys.  The segment between the end of one thread profile and the start of the next is automatic, so the start and end coordinates should not both be at the same Y at X = ±1/2.  This path is scaled up by the pitch size in both dimensions when making the final threading.  This overrides the `thread_angle` and `thread_depth` options.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Examples(Med):
-//   trapezoidal_threaded_nut(od=16, id=8, h=8, pitch=2, slop=0.2, anchor=UP);
-//   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, slop=0.2, left_handed=true);
+//   trapezoidal_threaded_nut(od=16, id=8, h=8, pitch=2, $slop=0.2, anchor=UP);
+//   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, $slop=0.2, left_handed=true);
 //   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1);
 module trapezoidal_threaded_nut(
 	od=17.4,
@@ -326,13 +325,11 @@ module trapezoidal_threaded_nut(
 	left_handed=false,
 	starts=1,
 	bevel=true,
-	slop=undef,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
 ) {
 	depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
-	slop = default(slop, PRINTER_SLOP);
 	orient_and_anchor([od/cos(30),od,h], orient, anchor, spin=spin, chain=true) {
 		difference() {
 			cylinder(d=od/cos(30), h=h, center=true, $fn=6);
@@ -345,13 +342,12 @@ module trapezoidal_threaded_nut(
 				profile=profile,
 				left_handed=left_handed,
 				starts=starts,
-				internal=true,
-				slop=slop
+				internal=true
 			);
 			if (bevel) {
 				zflip_copy() {
 					down(h/2+0.01) {
-						cylinder(r1=id/2+slop, r2=id/2+slop-depth, h=depth, center=false);
+						cylinder(r1=id/2+$slop, r2=id/2+$slop-depth, h=depth, center=false);
 					}
 				}
 			}
@@ -374,10 +370,10 @@ module trapezoidal_threaded_nut(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   internal = If true, make this a mask for making internal threads.
-//   slop = printer slop calibration to allow for tight fitting of parts.  Default: `PRINTER_SLOP`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Example(2D):
 //   projection(cut=true)
 //       threaded_rod(d=10, l=15, pitch=2, orient=BACK);
@@ -389,7 +385,6 @@ module threaded_rod(
 	left_handed=false,
 	bevel=false,
 	internal=false,
-	slop=undef,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
@@ -418,7 +413,6 @@ module threaded_rod(
 		left_handed=left_handed,
 		bevel=bevel,
 		internal=internal,
-		slop=slop,
 		anchor=anchor,
 		spin=spin,
 		orient=orient
@@ -438,16 +432,15 @@ module threaded_rod(
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
-//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Examples(Med):
-//   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, slop=0.2, $fa=1, $fs=1);
+//   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, $slop=0.2, $fa=1, $fs=1);
 module threaded_nut(
 	od=16, id=10, h=10,
-	pitch=2, left_handed=false,
-	bevel=false, slop=undef,
+	pitch=2, left_handed=false, bevel=false,
 	anchor=CENTER, spin=0, orient=UP
 ) {
 	depth = pitch * cos(30) * 5/8;
@@ -464,7 +457,7 @@ module threaded_nut(
 		pitch=pitch, thread_angle=30,
 		profile=profile,
 		left_handed=left_handed,
-		bevel=bevel, slop=slop,
+		bevel=bevel,
 		anchor=anchor, spin=spin,
 		orient=orient
 	) children();
@@ -484,10 +477,10 @@ module threaded_nut(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   internal = If true, this is a mask for making internal threads.
-//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Example(2D):
 //   projection(cut=true)
 //       buttress_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
@@ -499,7 +492,6 @@ module buttress_threaded_rod(
 	left_handed=false,
 	bevel=false,
 	internal=false,
-	slop=undef,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
@@ -520,7 +512,6 @@ module buttress_threaded_rod(
 		left_handed=left_handed,
 		bevel=bevel,
 		internal=internal,
-		slop=slop,
 		anchor=anchor,
 		spin=spin,
 		orient=orient
@@ -540,16 +531,16 @@ module buttress_threaded_rod(
 //   pitch = Length between threads.
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
-//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Examples(Med):
-//   buttress_threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, slop=0.2, $fa=1, $fs=1);
+//   buttress_threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, $slop=0.2, $fa=1, $fs=1);
 module buttress_threaded_nut(
 	od=16, id=10, h=10,
 	pitch=2, left_handed=false,
-	bevel=false, slop=undef,
+	bevel=false,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
@@ -568,7 +559,7 @@ module buttress_threaded_nut(
 		profile=profile,
 		thread_depth=pitch*3*sqrt(3)/8,
 		left_handed=left_handed,
-		bevel=bevel, slop=slop,
+		bevel=bevel,
 		anchor=anchor, spin=spin,
 		orient=orient
 	) children();
@@ -589,10 +580,10 @@ module buttress_threaded_nut(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 //   internal = If true, this is a mask for making internal threads.
-//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Example(2D):
 //   projection(cut=true)
 //       metric_trapezoidal_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
@@ -604,7 +595,6 @@ module metric_trapezoidal_threaded_rod(
 	starts=1,
 	bevel=false,
 	internal=false,
-	slop=undef,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
@@ -617,7 +607,6 @@ module metric_trapezoidal_threaded_rod(
 		starts=starts,
 		bevel=bevel,
 		internal=internal,
-		slop=slop,
 		anchor=anchor,
 		spin=spin,
 		orient=orient
@@ -638,10 +627,10 @@ module metric_trapezoidal_threaded_rod(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
-//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Examples(Med):
 //   metric_trapezoidal_threaded_nut(od=16, id=10, h=10, pitch=2, left_handed=true, bevel=true, $fa=1, $fs=1);
 module metric_trapezoidal_threaded_nut(
@@ -650,7 +639,6 @@ module metric_trapezoidal_threaded_nut(
 	starts=1,
 	left_handed=false,
 	bevel=false,
-	slop=undef,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
@@ -661,7 +649,6 @@ module metric_trapezoidal_threaded_nut(
 		left_handed=left_handed,
 		starts=starts,
 		bevel=bevel,
-		slop=slop,
 		anchor=anchor,
 		spin=spin,
 		orient=orient
@@ -685,10 +672,10 @@ module metric_trapezoidal_threaded_nut(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   internal = If true, this is a mask for making internal threads.
-//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Example(2D):
 //   projection(cut=true)
 //       acme_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
@@ -703,7 +690,6 @@ module acme_threaded_rod(
 	left_handed=false,
 	bevel=false,
 	internal=false,
-	slop=undef,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
@@ -716,7 +702,6 @@ module acme_threaded_rod(
 		left_handed=left_handed,
 		bevel=bevel,
 		internal=internal,
-		slop=slop,
 		anchor=anchor,
 		spin=spin,
 		orient=orient
@@ -738,13 +723,13 @@ module acme_threaded_rod(
 //   thread_angle = The pressure angle profile angle of the threads.  Default = 14.5 degree ACME profile.
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
-//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Examples(Med):
-//   acme_threaded_nut(od=16, id=3/8*25.4, h=8, pitch=1/8*25.4, slop=0.2);
-//   acme_threaded_nut(od=16, id=10, h=10, pitch=2, starts=3, slop=0.2, $fa=1, $fs=1);
+//   acme_threaded_nut(od=16, id=3/8*25.4, h=8, pitch=1/8*25.4, $slop=0.2);
+//   acme_threaded_nut(od=16, id=10, h=10, pitch=2, starts=3, $slop=0.2, $fa=1, $fs=1);
 module acme_threaded_nut(
 	od, id, h, pitch,
 	thread_angle=14.5,
@@ -752,7 +737,6 @@ module acme_threaded_nut(
 	starts=1,
 	left_handed=false,
 	bevel=false,
-	slop=undef,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
@@ -764,7 +748,6 @@ module acme_threaded_nut(
 		left_handed=left_handed,
 		bevel=bevel,
 		starts=starts,
-		slop=slop,
 		anchor=anchor,
 		spin=spin,
 		orient=orient
@@ -786,10 +769,10 @@ module acme_threaded_nut(
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
 //   internal = If true, this is a mask for making internal threads.
-//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Example(2D):
 //   projection(cut=true)
 //       square_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
@@ -801,7 +784,6 @@ module square_threaded_rod(
 	bevel=false,
 	starts=1,
 	internal=false,
-	slop=undef,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
@@ -813,7 +795,6 @@ module square_threaded_rod(
 		bevel=bevel,
 		starts=starts,
 		internal=internal,
-		slop=slop,
 		anchor=anchor,
 		spin=spin,
 		orient=orient
@@ -834,19 +815,18 @@ module square_threaded_rod(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   starts = The number of lead starts.  Default = 1
-//   slop = printer slop calibration to allow for tight fitting of parts.  default=0.2
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
 // Examples(Med):
-//   square_threaded_nut(od=16, id=10, h=10, pitch=2, starts=2, slop=0.15, $fn=32);
+//   square_threaded_nut(od=16, id=10, h=10, pitch=2, starts=2, $slop=0.15, $fn=32);
 module square_threaded_nut(
 	od=17.4, id=10.5, h=10,
 	pitch=3.175,
 	left_handed=false,
 	bevel=false,
 	starts=1,
-	slop=undef,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
@@ -857,7 +837,6 @@ module square_threaded_nut(
 		left_handed=left_handed,
 		bevel=bevel,
 		starts=starts,
-		slop=slop,
 		anchor=anchor,
 		spin=spin,
 		orient=orient
