@@ -374,10 +374,10 @@ function bezier_curve(P,N) =
 //   - "steps" - number of vertical steps to use for the roundover.  Default: 16.
 //   - "offset_maxstep" - maxstep distance for offset() calls; controls the horizontal step density.  Default: 1
 //   - "offset" - select "round" (r=) or "delta" (delta=) offset type for offset.  Default: "round"
-//
+//   
 //   You can change the the defaults by passing an argument to the rounded_sweep, which is more convenient if you want
 //   a setting to be the same at both ends.  
-//
+//   
 //   You can use several helper functions to provide the rounding spec.  These use function arguments to set the same parameters listed above, where the
 //   function name indicates the type of rounding and only parameters valid for that rounding type are accepted:
 //   - rs_circle(r,cut,extra,check_valid, quality,steps, offset_maxstep, offset)
@@ -385,11 +385,11 @@ function bezier_curve(P,N) =
 //   - rs_chamfer(height, width, cut, extra,check_valid, quality,steps, offset_maxstep, offset)
 //   - rs_smooth(cut, joint, extra,check_valid, quality,steps, offset_maxstep, offset)
 //   - rs_custom(points, extra,check_valid, quality,steps, offset_maxstep, offset)
-// 
+//   
 //   For example, you could round a path using `rounded_sweep(path, top=rs_teardrop(r=10), bottom=rs_chamfer(height=-10,extra=1))`
 //   Many of the arguments are described as setting "default" values because they establish settings which may be overridden by 
 //   the top and bottom rounding specifications.  
-//
+//   
 // Arguments:
 //   path = 2d path (list of points) to extrude
 //   height = total height (including rounded portions, but not extra sections) of the output
@@ -408,7 +408,7 @@ function bezier_curve(P,N) =
 //   joint = default joint value for smooth roundover.
 //   k = default curvature parameter value for "smooth" roundover
 //   convexity = convexity setting for use with polyhedron.  Default: 10
-//
+//   
 // Example: Rounding a star shaped prism with postive radius values
 //   star = star(5, r=22, ir=13);
 //   rounded_star = round_corners(zip(star, flatten(replist([.5,0],5))), curve="circle", measure="cut", $fn=12);
@@ -441,7 +441,7 @@ function bezier_curve(P,N) =
 //   roundbox = round_corners(smallbox, curve="smooth", measure="cut", size=4, $fn=36);
 //   thickness=4;
 //   height=50;
-//   back_half(y=37, s=200)
+//   back_half(y=25, s=200)
 //     difference(){
 //       rounded_sweep(roundbox, height=height, bottom=["r",10,"type","teardrop"], top=["r",2], steps = 22, check_valid=false);
 //       up(thickness)
@@ -449,6 +449,24 @@ function bezier_curve(P,N) =
 //                       height=height-thickness, steps=22,
 //                       bottom=["r",6],
 //                       top=["type","chamfer","angle",30,"height",-3,"extra",1,"check_valid",false]); 
+//     }
+// Example: A box with multiple sections and rounded dividers
+//   thickness = 2;
+//   box = ([[0,0], [0,50], [255,50], [255,0]]);
+//   cutpoints = [0, 125, 190, 255];
+//   rbox = round_corners(box, curve="smooth", measure="cut", size=4, $fn=36);
+//   back_half(y=25, s=700)
+//     difference(){
+//       rounded_sweep(rbox, height=50, check_valid=false, steps=22, bottom=rs_teardrop(r=2), top=rs_circle(r=1));
+//       up(thickness)
+//         for(i=[0:2]){
+//           ofs = i==1 ? 2 : 0;
+//           hole = round_corners([[cutpoints[i]-ofs,0], [cutpoints[i]-ofs,50], [cutpoints[i+1]+ofs, 50], [cutpoints[i+1]+ofs,0]],
+//                                curve="smooth", measure="cut", size=4, $fn=36);
+//           rounded_sweep(offset(hole, r=-thickness, closed=true,check_valid=false),
+//                         height=48, steps=22, check_valid=false, bottom=rs_circle(r=4), top=rs_circle(r=-1,extra=1));
+//   
+//         }
 //     }
 // Example: Star shaped box
 //   star = star(5, r=22, ir=13);
@@ -458,7 +476,7 @@ function bezier_curve(P,N) =
 //   difference(){
 //     rounded_sweep(rounded_star, height=ht, bottom=["r",4], top=["r",1], steps=15);
 //     up(thickness)
-//         rounded_sweep(offset(rounded_star,r=thickness,closed=true),
+//         rounded_sweep(offset(rounded_star,r=-thickness,closed=true),
 //                       height=ht-thickness, check_valid=false,
 //                       bottom=rs_circle(r=7), top=rs_circle(r=-1, extra=1));
 //     }
@@ -488,7 +506,7 @@ function bezier_curve(P,N) =
 //       up(1)
 //         rounded_sweep(offset(rhex,r=1), height=9.5, bottom=rs_circle(r=2), top=rs_teardrop(r=-4));
 //     }
-module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=undef, steps=16, quality=1, check_valid=true, offset_maxstep=1, extra=0, 
+module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=0, steps=16, quality=1, check_valid=true, offset_maxstep=1, extra=0, 
                      cut=undef, width=undef, joint=undef, k=0.75, angle=45, convexity=10)
 {
     // This function does the actual work of repeatedly calling offset() and concatenating the resulting face and vertex lists to produce
@@ -514,13 +532,13 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=undef, s
 
     // Produce edge profile curve from the edge specification
     // z_dir is the direction multiplier (1 to build up, -1 to build down)
-    function rounding_offsets(edgespec,flipR,z_dir=1) =
+    function rounding_offsets(edgespec,z_dir=1) =
       let( 
         edgetype = struct_val(edgespec, "type"),
         extra = struct_val(edgespec,"extra"),
         N = struct_val(edgespec, "steps"),
-        r = flipR * struct_val(edgespec,"r"),
-        cut = flipR * struct_val(edgespec,"cut"),
+        r = struct_val(edgespec,"r"),
+        cut = struct_val(edgespec,"cut"),
         k = struct_val(edgespec,"k"),
         radius = in_list(edgetype,["circle","teardrop"]) ?
                         first_defined([cut/(sqrt(2)-1),r]) : 
@@ -528,10 +546,10 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=undef, s
                  undef,
         chamf_angle = struct_val(edgespec, "angle"),
         cheight = struct_val(edgespec, "height"),
-        cwidth = flipR * struct_val(edgespec, "width"),
+        cwidth = struct_val(edgespec, "width"),
         chamf_width = first_defined([cut/cos(chamf_angle), cwidth, cheight*tan(chamf_angle)]),
         chamf_height = first_defined([cut/sin(chamf_angle),cheight, cwidth/tan(chamf_angle)]),
-        joint = first_defined([flipR*struct_val(edgespec,"joint"),
+        joint = first_defined([struct_val(edgespec,"joint"),
                                16*cut/sqrt(2)/(1+4*k)]),
         points = struct_val(edgespec, "points"), 
         argsOK = in_list(edgetype,["circle","teardrop"]) ? is_def(radius) :
@@ -541,7 +559,7 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=undef, s
                  false)
     assert(argsOK,str("Invalid specification with type ",edgetype))
     let(
-        offsets =  edgetype == "custom" ? scale([-flipR,z_dir], slice(points,1,-1)) :
+        offsets =  edgetype == "custom" ? scale([-1,z_dir], slice(points,1,-1)) :
                    edgetype == "chamfer" ?  width==0 && height==0 ? [] : [[-chamf_width,z_dir*abs(chamf_height)]] :
                    edgetype == "teardrop" ? radius==0 ? [] : concat([for(i=[1:N]) [radius*(cos(i*45/N)-1),z_dir*abs(radius)* sin(i*45/N)]],
                                    [[-2*radius*(1-sqrt(2)/2), z_dir*abs(radius)]]):
@@ -554,8 +572,8 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=undef, s
       extra > 0 ? concat(offsets, [select(offsets,-1)+[0,z_dir*extra]]) : offsets;
 
   
-  argspec = [["r",0],
-             ["extra",0],
+  argspec = [["r",r],
+             ["extra",extra],
              ["type","circle"],
              ["check_valid",check_valid],
              ["quality",quality],
@@ -570,13 +588,13 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=undef, s
              ["k", k],
              ["points", []],
             ];
+
+  path = make_path_valid(path, [2], closed=true);
+  
   top = struct_set(argspec, top, grow=false);
   bottom = struct_set(argspec, bottom, grow=false);
 
-  struct_echo(top,"top");
-  
   clockwise = polygon_clockwise(path);
-  flipR = clockwise ? 1 : -1;
 
   assert(height>=0, "Height must be nonnegative");
 
@@ -587,11 +605,9 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=undef, s
   assert(offsetsok,"Offsets must be one of \"round\" or \"delta\"");
   */
   
-  offsets_bot = rounding_offsets(bottom, flipR,-1);
-  offsets_top = rounding_offsets(top, flipR,1);
+  offsets_bot = rounding_offsets(bottom, -1);
+  offsets_top = rounding_offsets(top, 1);
 
-  echo(ofstop = offsets_top);
-  
   // "Extra" height enlarges the result beyond the requested height, so subtract it
   bottom_height = len(offsets_bot)==0 ? 0 : abs(select(offsets_bot,-1)[1]) - struct_val(bottom,"extra");
   top_height = len(offsets_top)==0 ? 0 : abs(select(offsets_top,-1)[1]) - struct_val(top,"extra");
@@ -616,11 +632,6 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=undef, s
   up(bottom_height)
     polyhedron(concat(vertices_faces_bot[0],vertices_faces_top[0]),
                faces=concat(vertices_faces_bot[1], vertices_faces_top[1], middle_faces),convexity=convexity);
-  echo(botv=vertices_faces_bot[0]);
-  echo(topv=vertices_faces_top[0]);
-  echo(fbot=vertices_faces_bot[1]);
-  echo(ftop=vertices_faces_top[1]);
-  echo(fmid=middle_faces);
 }
 
 function rs_circle(r,cut,extra,check_valid, quality,steps, offset_maxstep, offset) =
