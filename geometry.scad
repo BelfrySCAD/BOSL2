@@ -449,7 +449,7 @@ function is_path(x) = is_list(x) && is_vector(x.x) && len(x)>1;
 function is_closed_path(path, eps=EPSILON) = approx(path[0], path[len(path)-1], eps=eps);
 
 
-// Function: close_path(path)
+// Function: close_path()
 // Usage:
 //   close_path(path);
 // Description:
@@ -457,7 +457,15 @@ function is_closed_path(path, eps=EPSILON) = approx(path[0], path[len(path)-1], 
 function close_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? path : concat(path,[path[0]]);
 
 
-// Function path_subselect()
+// Function: cleanup_path()
+// Usage:
+//   cleanup_path(path);
+// Description:
+//   If a path's last point coincides with its first point, deletes the last point in the path.
+function cleanup_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? select(path,0,-2) : path;
+
+
+// Function: path_subselect()
 // Usage:
 //   path_subselect(path,s1,u1,s2,u2):
 // Description:
@@ -695,12 +703,20 @@ function polygon_clockwise(path) =
 function is_region(x) = is_list(x) && is_path(x.x);
 
 
-// Function: close_region(path)
+// Function: close_region()
 // Usage:
 //   close_region(region);
 // Description:
 //   Closes all paths within a given region.
 function close_region(region, eps=EPSILON) = [for (path=region) close_path(path, eps=eps)];
+
+
+// Function: cleanup_region()
+// Usage:
+//   cleanup_region(region);
+// Description:
+//   For all paths in the given region, if the last point coincides with the first point, removes the last point.
+function cleanup_region(region, eps=EPSILON) = [for (path=region) cleanup_path(path, eps=eps)];
 
 
 // Function: region_path_crossings()
