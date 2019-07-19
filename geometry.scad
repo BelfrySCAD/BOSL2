@@ -710,6 +710,31 @@ function is_region(x) = is_list(x) && is_path(x.x);
 //   Closes all paths within a given region.
 function close_region(region, eps=EPSILON) = [for (path=region) close_path(path, eps=eps)];
 
+// Function: check_and_fix_path()
+// Usage:
+//   make_path_valid(path, [valid_dim], [closed])
+// Description:
+//   Checks that the input is a path.  If it is a region with one component, converts it to a path.
+//   valid_dim specfies the allowed dimension of the points in the path.
+//   If the path is closed, removed duplicate endpoint if present.
+// Arguments:
+//   path = path to process
+//   valid_dim = list of allowed dimensions for the points in the path, e.g. [2,3] to require 2 or 3 dimensional input.  If left undefined do not perform this check.  Default: undef
+//   closed = set to true if the path is closed, which enables a check for endpoint duplication
+function make_path_valid(path,valid_dim=undef,closed=false) =
+  let( path = is_region(path) ?
+                  assert(len(path)==1,"Region supplied as path does not have exactly one component")
+                  path[0] :
+              assert(is_path(path), "Input is not a path") path,
+       dim = array_dim(path))
+   assert(dim[0]>1,"Path must have at least 2 points")
+   assert(len(dim)==2,"Invalid path: path is either a list of scalars or a list of matrices")
+   assert(is_def(dim[1]), "Invalid path: entries in the path have variable length")
+   let(valid=is_undef(valid_dim) || in_list(dim[1],valid_dim))
+   assert(valid, str("The points on the path have length ",dim[1]," but length must be ",
+                     len(valid_dim)==1? valid_dim[0] : str("one of ",valid_dim)))
+   closed && approx(path[0],select(path,-1)) ? slice(path,0,-2) : path;
+
 
 // Function: cleanup_region()
 // Usage:
@@ -924,6 +949,18 @@ function _offset_region(
 // Example(2D):
 //   star = star(5, r=100, ir=30);
 //   #stroke(closed=true, star);
+//   stroke(closed=true, offset(star, delta=10, closed=true));
+// Example(2D):
+//   star = star(5, r=100, ir=30);
+//   #stroke(closed=true, star);
+//   stroke(closed=true, offset(star, delta=10, chamfer=true, closed=true));
+// Example(2D):
+//   star = star(5, r=100, ir=30);
+//   #stroke(closed=true, star);
+//   stroke(closed=true, offset(star, r=10, closed=true));
+// Example(2D):
+//   star = star(5, r=100, ir=30);
+//   #stroke(closed=true, star);
 //   stroke(closed=true, offset(star, delta=-10, closed=true));
 // Example(2D):
 //   star = star(5, r=100, ir=30);
@@ -933,46 +970,34 @@ function _offset_region(
 //   star = star(5, r=100, ir=30);
 //   #stroke(closed=true, star);
 //   stroke(closed=true, offset(star, r=-10, closed=true));
-// Example(2D):
-//   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, delta=10, closed=true));
-// Example(2D):
-//   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, delta=-10, chamfer=true, closed=true));
-// Example(2D):
-//   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, r=10, closed=true));
 // Example(2D):  This case needs `quality=2` for success
 //   test = [[0,0],[10,0],[10,7],[0,7], [-1,-3]];
-//   polygon(offset(test,r=1.9, closed=true, quality=2));
-//   //polygon(offset(test,r=1.9, closed=true, quality=1));  // Fails with erroneous 180 deg path error
+//   polygon(offset(test,r=-1.9, closed=true, quality=2));
+//   //polygon(offset(test,r=-1.9, closed=true, quality=1));  // Fails with erroneous 180 deg path error
 //   %down(.1)polygon(test);
 // Example(2D): This case fails if `check_valid=true` when delta is large enough because segments are too close to the opposite side of the curve.  
 //   star = star(5, r=22, ir=13);
-//   stroke(star,width=.1,closed=true);                                                           
+//   stroke(star,width=.2,closed=true);                                                           
 //   color("green")
-//     stroke(offset(star, delta=9, closed=true),width=.1,closed=true); // Works with check_valid=true (the default)
+//     stroke(offset(star, delta=-9, closed=true),width=.2,closed=true); // Works with check_valid=true (the default)
 //   color("red")
-//     stroke(offset(star, delta=10, closed=true, check_valid=false),   // Fails if check_valid=true 
-//            width=.1,closed=true); 
+//     stroke(offset(star, delta=-10, closed=true, check_valid=false),   // Fails if check_valid=true 
+//            width=.2,closed=true); 
 // Example(2D): But if you use rounding with offset then you need `check_valid=true` when `r` is big enough.  It works without the validity check as long as the offset shape retains a some of the straight edges at the star tip, but once the shape shrinks smaller than that, it fails.  There is no simple way to get a correct result for the case with `r=10`, because as in the previous example, it will fail if you turn on validity checks.  
 //   star = star(5, r=22, ir=13);
 //   color("green")
-//     stroke(offset(star, r=8, closed=true,check_valid=false), width=.1, closed=true);
+//     stroke(offset(star, r=-8, closed=true,check_valid=false), width=.1, closed=true);
 //   color("red")
-//     stroke(offset(star, r=10, closed=true,check_valid=false), width=.1, closed=true);
+//     stroke(offset(star, r=-10, closed=true,check_valid=false), width=.1, closed=true);
 // Example(2D): The extra triangles in this example show that the validity check cannot be skipped
-//   ellipse = scale([20,4], p=circle(r=1));
+//   ellipse = scale([20,4], p=circle(r=1,$fn=64));
 //   stroke(ellipse, closed=true, width=0.3);
 //   stroke(offset(ellipse, r=-3, check_valid=false, closed=true), width=0.3, closed=true);
 // Example(2D): The triangles are removed by the validity check
-//   ellipse = scale([20,4], p=circle(r=1));
+//   ellipse = scale([20,4], p=circle(r=1,$fn=64));
 //   stroke(ellipse, closed=true, width=0.3);
 //   stroke(offset(ellipse, r=-3, check_valid=true, closed=true), width=0.3, closed=true);
-// Example(2D):
+// Example(2D): Open path.  The path moves from left to right and the positive offset shifts to the left of the initial red path.
 //   sinpath = 2*[for(theta=[-180:5:180]) [theta/4,45*sin(theta)]];
 //   #stroke(sinpath);
 //   stroke(offset(sinpath, r=17.5));
@@ -1010,7 +1035,8 @@ function offset(
 	let(
 		chamfer = is_def(r) ? false : chamfer,
 		quality = max(0,round(quality)),
-		d = is_def(r)? r : delta,
+                flip_dir = closed && !polygon_clockwise(path) ? -1 : 1,
+		d = flip_dir * (is_def(r) ? r : delta),
 		shiftsegs = [for(i=[0:len(path)-1]) _shift_segment(select(path,i,i+1), d)],
 		// good segments are ones where no point on the segment is less than distance d from any point on the path
 		good = check_valid ? _good_segments(path, abs(d), shiftsegs, closed, quality) : replist(true,len(shiftsegs)),
