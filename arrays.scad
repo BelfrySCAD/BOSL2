@@ -158,15 +158,20 @@ function reverse(list) = [ for (i = [len(list)-1 : -1 : 0]) list[i] ];
 //   This is different from `unique()` in that the list is *not* sorted.
 // Arguments:
 //   list = The list to deduplicate.
+//   closed = If true, drops trailing items if they match the first list item.
 //   eps = The maximum difference to allow between numbers or vectors.
 // Examples:
-//   deduplicate([8,3,4,4,4,8,2,3,3,7]);  // Returns: [8,3,4,8,2,3,7]
+//   deduplicate([8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3,8]
+//   deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3]
 //   deduplicate("Hello");  // Returns: ["H","e","l","o"]
 //   deduplicate([[3,4],[7,2],[7,1.99],[1,4]],eps=0.1);  // Returns: [[3,4],[7,2],[1,4]]
-function deduplicate(list, eps=EPSILON) =
-	(is_num(list[0]) || is_vector(list[0]))?
-		[for (i=[0:1:len(list)-1]) if (!approx(list[i], list[i+1], eps)) list[i]] :
-		[for (i=[0:1:len(list)-1]) if (list[i] != list[i+1]) list[i]];
+function deduplicate(list, closed=false, eps=EPSILON) =
+	let(
+		l = len(list),
+		end = l-(closed?0:1)
+	) (is_num(list[0]) || is_vector(list[0]))?
+		[for (i=[0:1:l-1]) if (i==end || !approx(list[i], list[(i+1)%l], eps)) list[i]] :
+		[for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]];
 
 
 // Function: list_set()
@@ -216,16 +221,16 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 //   list = The list to remove items from.
 //   elements = The list of indexes of items to remove.
 function list_remove(list, elements) =
-    !is_list(elements) ? list_remove(list,[elements]) :
-    len(elements)==0 ? list :
-    let( sortind = list_increasing(elements) ? list_range(len(elements)) : sortidx(elements),
-         lastind = elements[select(sortind,-1)]
-    )
-    assert(lastind<len(list),"Element index beyond list end")
-    concat(slice(list, 0, elements[sortind[0]]),
-          [for(i=[1:1:len(sortind)-1]) each slice(list,1+elements[sortind[i-1]], elements[sortind[i]])],
-          slice(list,1+lastind, len(list))
-    );
+	!is_list(elements) ? list_remove(list,[elements]) :
+	len(elements)==0 ? list :
+	let( sortind = list_increasing(elements) ? list_range(len(elements)) : sortidx(elements),
+		lastind = elements[select(sortind,-1)]
+	)
+	assert(lastind<len(list),"Element index beyond list end")
+	concat(slice(list, 0, elements[sortind[0]]),
+		[for(i=[1:1:len(sortind)-1]) each slice(list,1+elements[sortind[i-1]], elements[sortind[i]])],
+		slice(list,1+lastind, len(list))
+	);
 
 
 // Function: list_insert()
@@ -270,12 +275,12 @@ function bselect(array,index) =
 // Example:
 //   list_bset([false,true,false,true,false], [3,4]);  // Returns: [0,3,0,4,0]
 function list_bset(indexset, valuelist, dflt=0) =
-    let(
+	let(
 		trueind = search([true], indexset,0)[0]
-    ) concat(
+	) concat(
 		list_set([],trueind, valuelist, dflt=dflt),    // Fill in all of the values
 		replist(dflt,len(indexset)-max(trueind)-1)  // Add trailing values so length matches indexset
-    );
+	);
 
 
 // Function: list_increasing()
@@ -283,16 +288,20 @@ function list_bset(indexset, valuelist, dflt=0) =
 //    list_increasing(list)
 // Description:
 //   Returns true if the list is (non-strictly) increasing
-function list_increasing(list,ind=0) = ind < len(list)-1 && list[ind]<=list[ind+1] ? list_increasing(list,ind+1) :
-                                       (ind>=len(list)-1 ? true : false);
+function list_increasing(list,ind=0) =
+	(ind < len(list)-1 && list[ind]<=list[ind+1])?
+		list_increasing(list,ind+1) :
+		(ind>=len(list)-1 ? true : false);
 
 
 // Function: list_decreasing()
 // Usage:
 //    list_increasing(list)
 // Description: returns true if the list is (non-strictly) decreasing
-function list_decreasing(list,ind=0) = ind < len(list)-1 && list[ind]>=list[ind+1] ? list_increasing(list,ind+1) :
-                                       (ind>=len(list)-1 ? true : false);
+function list_decreasing(list,ind=0) =
+	(ind < len(list)-1 && list[ind]>=list[ind+1])?
+		list_increasing(list,ind+1) :
+		(ind>=len(list)-1 ? true : false);
 
 
 // Function: list_shortest()
@@ -395,70 +404,119 @@ function shuffle(list) =
 
 // Sort a vector of scalar values
 function _sort_scalars(arr) =
-  len(arr)<=1 ? arr :
-      let(  pivot   = arr[floor(len(arr)/2)],
-            lesser  = [ for (y = arr) if (y  < pivot) y ],
-            equal   = [ for (y = arr) if (y == pivot) y ],
-            greater = [ for (y = arr) if (y  > pivot) y ]
-      )
-      concat( _sort_scalars(lesser), equal, _sort_scalars(greater) );
+	len(arr)<=1 ? arr : let(
+		pivot   = arr[floor(len(arr)/2)],
+		lesser  = [ for (y = arr) if (y  < pivot) y ],
+		equal   = [ for (y = arr) if (y == pivot) y ],
+		greater = [ for (y = arr) if (y  > pivot) y ]
+	) concat( _sort_scalars(lesser), equal, _sort_scalars(greater) );
+
 
 // Sort a vector of vectors based on the first entry only of each vector
 function _sort_vectors1(arr) =
-  len(arr)<=1 ? arr :
-  !(len(arr)>0) ? [] :
-      let(  pivot   = arr[floor(len(arr)/2)],
-            lesser  = [ for (y = arr) if (y[0]  < pivot[0]) y ],
-            equal   = [ for (y = arr) if (y[0] == pivot[0]) y ],
-            greater = [ for (y = arr) if (y[0]  > pivot[0]) y ]
-      )
-      concat( _sort_vectors1(lesser), equal, _sort_vectors1(greater) );
+	len(arr)<=1 ? arr :
+	!(len(arr)>0) ? [] : let(
+		pivot   = arr[floor(len(arr)/2)],
+		lesser  = [ for (y = arr) if (y[0]  < pivot[0]) y ],
+		equal   = [ for (y = arr) if (y[0] == pivot[0]) y ],
+		greater = [ for (y = arr) if (y[0]  > pivot[0]) y ]
+	) concat( _sort_vectors1(lesser), equal, _sort_vectors1(greater) );
+
 
 // Sort a vector of vectors based on the first two entries of each vector
 // Lexicographic order, remaining entries of vector ignored
 function _sort_vectors2(arr) =
-  len(arr)<=1 ? arr :
-  !(len(arr)>0) ? [] :
-      let(  pivot   = arr[floor(len(arr)/2)],
-            lesser  = [ for (y = arr) if (y[0] < pivot[0] || (y[0]==pivot[0] && y[1]<pivot[1])) y ],
-            equal   = [ for (y = arr) if (y[0] == pivot[0] && y[1]==pivot[1]) y ],
-            greater  = [ for (y = arr) if (y[0] > pivot[0] || (y[0]==pivot[0] && y[1]>pivot[1])) y ]
-        )
-      concat( _sort_vectors2(lesser), equal, _sort_vectors2(greater) );
+	len(arr)<=1 ? arr :
+	!(len(arr)>0) ? [] : let(
+		pivot   = arr[floor(len(arr)/2)],
+		lesser  = [ for (y = arr) if (y[0] < pivot[0] || (y[0]==pivot[0] && y[1]<pivot[1])) y ],
+		equal   = [ for (y = arr) if (y[0] == pivot[0] && y[1]==pivot[1]) y ],
+		greater  = [ for (y = arr) if (y[0] > pivot[0] || (y[0]==pivot[0] && y[1]>pivot[1])) y ]
+	) concat( _sort_vectors2(lesser), equal, _sort_vectors2(greater) );
 
 // Sort a vector of vectors based on the first three entries of each vector
 // Lexicographic order, remaining entries of vector ignored
 function _sort_vectors3(arr) =
-  len(arr)<=1 ? arr :
-      let(  pivot   = arr[floor(len(arr)/2)],
-            lesser  = [ for (y = arr) if (y[0] < pivot[0] ||
-                                          (y[0]==pivot[0] && (y[1]<pivot[1] ||
-                                                              (y[1]==pivot[1] && y[2]<pivot[2])))) y],
-            equal   = [ for (y = arr) if (y[0] == pivot[0] && y[1]== pivot[1] && y[2]==pivot[2]) y ],
-            greater = [ for (y = arr) if (y[0] > pivot[0] ||
-                                          (y[0]==pivot[0] && (y[1]>pivot[1] ||
-                                                              (y[1]==pivot[1] && y[2]>pivot[2])))) y]
-        )
-      concat( _sort_vectors3(lesser), equal, _sort_vectors3(greater) );
+	len(arr)<=1 ? arr : let(
+		pivot   = arr[floor(len(arr)/2)],
+		lesser  = [
+			for (y = arr) if (
+				y[0] < pivot[0] || (
+					y[0]==pivot[0] && (
+						y[1]<pivot[1] || (
+							y[1]==pivot[1] &&
+							y[2]<pivot[2]
+						)
+					)
+				)
+			) y
+		],
+		equal = [
+			for (y = arr) if (
+				y[0] == pivot[0] && y[1]== pivot[1] && y[2]==pivot[2]
+			) y
+		],
+		greater = [
+			for (y = arr) if (
+				y[0] > pivot[0] || (
+					y[0]==pivot[0] && (
+						y[1]>pivot[1] || (
+							y[1]==pivot[1] &&
+							y[2]>pivot[2]
+						)
+					)
+				)
+			) y
+		]
+	) concat( _sort_vectors3(lesser), equal, _sort_vectors3(greater) );
 
 
 // Sort a vector of vectors based on the first four entries of each vector
 // Lexicographic order, remaining entries of vector ignored
 function _sort_vectors4(arr) =
-  len(arr)<=1 ? arr :
-      let(  pivot   = arr[floor(len(arr)/2)],
-            lesser  = [ for (y = arr) if (y[0] < pivot[0] ||
-                                          (y[0]==pivot[0] && (y[1]<pivot[1] ||
-                                                              (y[1]==pivot[1] && (y[2]<pivot[2] ||
-                                                                                  (y[2]==pivot[2] && y[3]<pivot[3])))))) y ],
-                                                               
-            equal   = [ for (y = arr) if (y[0] == pivot[0] && y[1]== pivot[1] && y[2]==pivot[2] && y[3]==pivot[3]) y ],
-            greater = [ for (y = arr) if (y[0] > pivot[0] ||
-                                          (y[0]==pivot[0] && (y[1]>pivot[1] ||
-                                                              (y[1]==pivot[1] && (y[2]>pivot[2] ||
-                                                                                  (y[2]==pivot[2] && y[3]>pivot[3])))))) y ]
-        )
-      concat( _sort_vectors4(lesser), equal, _sort_vectors4(greater) );
+	len(arr)<=1 ? arr : let(
+		pivot = arr[floor(len(arr)/2)],
+		lesser = [
+			for (y = arr) if (
+				y[0] < pivot[0] || (
+					y[0]==pivot[0] && (
+						y[1]<pivot[1] || (
+							y[1]==pivot[1] && (
+								y[2]<pivot[2] || (
+									y[2]==pivot[2] &&
+									y[3]<pivot[3]
+								)
+							)
+						)
+					)
+				)
+			) y
+		],
+		equal = [
+			for (y = arr) if (
+				y[0] == pivot[0] &&
+				y[1] == pivot[1] &&
+				y[2] == pivot[2] &&
+				y[3] == pivot[3]
+			) y
+		],
+		greater = [
+			for (y = arr) if (
+				y[0] > pivot[0] || (
+					y[0]==pivot[0] && (
+						y[1]>pivot[1] || (
+							y[1]==pivot[1] && (
+								y[2]>pivot[2] || (
+									y[2]==pivot[2] &&
+									y[3]>pivot[3]
+								)
+							)
+						)
+					)
+				)
+			) y
+		]
+	) concat( _sort_vectors4(lesser), equal, _sort_vectors4(greater) );
 
 
 function _sort_general(arr, idx=undef) =
@@ -495,19 +553,17 @@ function _sort_general(arr, idx=undef) =
 //   l = [45,2,16,37,8,3,9,23,89,12,34];
 //   sorted = sort(l);  // Returns [2,3,8,9,12,16,23,34,37,45,89]
 function sort(list, idx=undef) =
-  !is_list(list) || len(list)<=1 ? list :
-  is_def(idx) ? _sort_general(list,idx) :
-  let(size = array_dim(list))
-  len(size)==1 ? _sort_scalars(list) :
-  len(size)==2 && size[1] <=4 ? (
-                                       size[1]==0 ? list :
-                                       size[1]==1 ? _sort_vectors1(list) :
-                                       size[1]==2 ? _sort_vectors2(list) :
-                                       size[1]==3 ? _sort_vectors3(list) :
-                                     /*size[1]==4*/ _sort_vectors4(list)
-    ) :
-  _sort_general(list);
-     
+	!is_list(list) || len(list)<=1 ? list :
+	is_def(idx) ? _sort_general(list,idx) :
+	let(size = array_dim(list))
+	len(size)==1 ? _sort_scalars(list) :
+	len(size)==2 && size[1] <=4 ? (
+		size[1]==0 ? list :
+		size[1]==1 ? _sort_vectors1(list) :
+		size[1]==2 ? _sort_vectors2(list) :
+		size[1]==3 ? _sort_vectors3(list) :
+		/*size[1]==4*/ _sort_vectors4(list)
+	) : _sort_general(list);
 
 
 // Function: sortidx()
@@ -532,21 +588,21 @@ function sort(list, idx=undef) =
 //   idxs2 = sortidx(lst, idx=0); // Returns: [1,2,0,3]
 //   idxs3 = sortidx(lst, idx=[1,3]); // Returns: [3,0,2,1]
 function sortidx(list, idx=undef) =
-	list==[] ? [] :
-	let(
-              size = array_dim(list),
-              aug = is_undef(idx) && (len(size) == 1 || (len(size) == 2 && size[1]<=4)) ? zip(list, list_range(len(list))) :
-                                                                                        enumerate(list,idx=idx)
-           )
-        is_undef(idx) && len(size) == 1 ? subindex(_sort_vectors1(aug),1) :
-        is_undef(idx) && len(size) == 2 && size[1] <=4 ? (
-                                          size[1]==0 ? list_range(len(arr)) :
-                                          size[1]==1 ? subindex(_sort_vectors1(aug),1) :
-                                          size[1]==2 ? subindex(_sort_vectors2(aug),2) :
-                                          size[1]==3 ? subindex(_sort_vectors3(aug),3) :
-                                        /*size[1]==4*/ subindex(_sort_vectors4(aug),4)
-                                     ) :
-        // general case
+	list==[] ? [] : let(
+		size = array_dim(list),
+		aug = is_undef(idx) && (len(size) == 1 || (len(size) == 2 && size[1]<=4))?
+			zip(list, list_range(len(list))) :
+			enumerate(list,idx=idx)
+	)
+	is_undef(idx) && len(size) == 1? subindex(_sort_vectors1(aug),1) :
+	is_undef(idx) && len(size) == 2 && size[1] <=4? (
+		size[1]==0? list_range(len(arr)) :
+		size[1]==1? subindex(_sort_vectors1(aug),1) :
+		size[1]==2? subindex(_sort_vectors2(aug),2) :
+		size[1]==3? subindex(_sort_vectors3(aug),3) :
+		/*size[1]==4*/ subindex(_sort_vectors4(aug),4)
+	) :
+	// general case
 	subindex(_sort_general(aug, idx=list_range(s=1,n=len(aug)-1)), 0);
 
 
@@ -701,7 +757,7 @@ function flatten(l) = [for (a = l) each a];
 
 // Internal.  Not exposed.
 function _array_dim_recurse(v) =
-    !is_list(v[0])?  (
+	!is_list(v[0])?  (
 		sum( [for(entry=v) is_list(entry) ? 1 : 0]) == 0 ? [] : [undef]
 	) : let(
 		firstlen = len(v[0]),
