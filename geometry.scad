@@ -702,13 +702,17 @@ function is_region(x) = is_list(x) && is_path(x.x);
 //   Closes all paths within a given region.
 function close_region(region, eps=EPSILON) = [for (path=region) close_path(path, eps=eps)];
 
-// Function: make_path_valid()
+// Function: check_and_fix_path()
 // Usage:
 //   make_path_valid(path, [valid_dim], [closed])
 // Description:
 //   Checks that the input is a path.  If it is a region with one component, converts it to a path.
 //   valid_dim specfies the allowed dimension of the points in the path.
-//   If the path is closed, removed duplicate endpoint if present.  
+//   If the path is closed, removed duplicate endpoint if present.
+// Arguments:
+//   path = path to process
+//   valid_dim = list of allowed dimensions for the points in the path, e.g. [2,3] to require 2 or 3 dimensional input.  If left undefined do not perform this check.  Default: undef
+//   closed = set to true if the path is closed, which enables a check for endpoint duplication
 function make_path_valid(path,valid_dim=undef,closed=false) =
   let( path = is_region(path) ?
                   assert(len(path)==1,"Region supplied as path does not have exactly one component")

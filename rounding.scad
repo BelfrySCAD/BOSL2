@@ -589,7 +589,7 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=0, steps
              ["points", []],
             ];
 
-  path = make_path_valid(path, [2], closed=true);
+  path = check_and_fix_path(path, [2], closed=true);
   
   top = struct_set(argspec, top, grow=false);
   bottom = struct_set(argspec, bottom, grow=false);
