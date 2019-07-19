@@ -355,7 +355,7 @@ function list_fit(v, length, fill) =
 	let(l=len(v)) (l==length)? v : (l>length)? list_trim(v,length) : list_pad(v,length,fill);
 
 
-// Function: idx(list)
+// Function: idx()
 // Usage:
 //   i = idx(list);
 //   for(i=idx(list)) ...
@@ -390,7 +390,7 @@ function enumerate(l,idx=undef) =
 		[for (i=[0:1:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
 
 
-// Function: shuffle(list)
+// Function: shuffle()
 // Description:
 //   Shuffles the input list into random order.
 function shuffle(list) =
