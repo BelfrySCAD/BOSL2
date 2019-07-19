@@ -137,7 +137,7 @@ function modrange(x, y, m, step=1) =
 function sqr(x) = x*x;
 
 
-// Function: rand_int(min,max,N,seed)
+// Function: rand_int()
 // Usage:
 //   rand_int(min,max,N,[seed]);
 // Description:
