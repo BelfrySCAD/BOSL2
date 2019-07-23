@@ -681,7 +681,7 @@ function pointlist_bounds(pts) = [
 // Arguments:
 //   path = The list of 2D path points for the perimeter of the polygon.
 function polygon_clockwise(path) =
-	let(
+	let(    
 		minx = min(subindex(path,0)),
 		lowind = search(minx, path, 0, 0),
 		lowpts = select(path, lowind),
@@ -712,7 +712,7 @@ function close_region(region, eps=EPSILON) = [for (path=region) close_path(path,
 
 // Function: check_and_fix_path()
 // Usage:
-//   make_path_valid(path, [valid_dim], [closed])
+//   check_and_fix_path(path, [valid_dim], [closed])
 // Description:
 //   Checks that the input is a path.  If it is a region with one component, converts it to a path.
 //   valid_dim specfies the allowed dimension of the points in the path.
@@ -721,7 +721,7 @@ function close_region(region, eps=EPSILON) = [for (path=region) close_path(path,
 //   path = path to process
 //   valid_dim = list of allowed dimensions for the points in the path, e.g. [2,3] to require 2 or 3 dimensional input.  If left undefined do not perform this check.  Default: undef
 //   closed = set to true if the path is closed, which enables a check for endpoint duplication
-function make_path_valid(path,valid_dim=undef,closed=false) =
+function check_and_fix_path(path,valid_dim=undef,closed=false) =
   let( path = is_region(path) ?
                   assert(len(path)==1,"Region supplied as path does not have exactly one component")
                   path[0] :
