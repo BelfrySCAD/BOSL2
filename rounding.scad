@@ -341,15 +341,18 @@ function bezier_curve(P,N) =
 // Module: rounded_sweep()
 //
 // Description:
-//   Takes a 2d path as input and extrudes it to a specified height with roundovers or chamfers at the ends.
-//   The rounding is accomplished by using offset to shift the input path.  The path is shifted multiple times
-//   in sequence to produce the profile (not multiple shifts from one parent), so coarse definition of the input path will
-//   degrade from the successive shifts.  If the result seems rough or strange try increasing the number of points you use for your input.
-//   However, be aware that large numbers of points (especially when check_valid is true) can lead to lengthy run times.
-//   If your shape doesn't develop corners you may be able to save a lot of time by setting `check_valid=false`.  Be aware that disabling the
-//   validity check when it is needed can generate invalid polyhedra that will produce CGAL errors upon rendering.  
-//   Multiple rounding shapes are available, including circular rounding, teardrop rounding, and chamfer "rounding".
-//   Also note that if the rounding radius is negative then the rounding will flare outwards.
+//   Takes a 2d path as input and extrudes it to a specified height with roundovers or chamfers at the ends.  The
+//   rounding is accomplished by using offset to shift the input path.  The path is shifted multiple times in sequence
+//   to produce the profile (not multiple shifts from one parent), so coarse definition of the input path will degrade
+//   from the successive shifts.  If the result seems rough or strange try increasing the number of points you use for
+//   your input.  If you get unexpected corners in your result, decrease `offset_maxstep` or decrease `steps`.  You must
+//   choose `offset_maxstep` small enough so that the first offset step rounds, otherwise you will probably not get any
+//   rounding, even if you have selected rounding.  This may require a much smaller value than you expect.  However, be
+//   aware that large numbers of points (especially when check_valid is true) can lead to lengthy run times.  If your
+//   shape doesn't develop corners you may be able to save a lot of time by setting `check_valid=false`.  Be aware that
+//   disabling the validity check when it is needed can generate invalid polyhedra that will produce CGAL errors upon
+//   rendering.  Multiple rounding shapes are available, including circular rounding, teardrop rounding, and chamfer
+//   "rounding".  Also note that if the rounding radius is negative then the rounding will flare outwards.
 //   
 //   Rounding options:
 //   - "circle": Circular rounding with radius as specified
@@ -372,7 +375,7 @@ function bezier_curve(P,N) =
 //   - "check_valid" - passed to offset.  Default: true.
 //   - "quality" - passed to offset.  Default: 1.
 //   - "steps" - number of vertical steps to use for the roundover.  Default: 16.
-//   - "offset_maxstep" - maxstep distance for offset() calls; controls the horizontal step density.  Default: 1
+//   - "offset_maxstep" - maxstep distance for offset() calls; controls the horizontal step density.  Set smaller if you don't get expected rounding.  Default: 1
 //   - "offset" - select "round" (r=) or "delta" (delta=) offset type for offset.  Default: "round"
 //   
 //   You can change the the defaults by passing an argument to the rounded_sweep, which is more convenient if you want
@@ -417,6 +420,15 @@ function bezier_curve(P,N) =
 //   star = star(5, r=22, ir=13);
 //   rounded_star = round_corners(zip(star, flatten(replist([.5,0],5))), curve="circle", measure="cut", $fn=12);
 //   rounded_sweep(rounded_star, height=20, bottom=rs_circle(r=-4), top=rs_circle(r=-1), steps=15);
+// Example: Unexpected corners in the result even with `offset="round"` (the default), even with offset_maxstep set small.  
+//   triangle = [[0,0],[10,0],[5,10]];
+//   rounded_sweep(triangle, height=6, bottom = rs_circle(r=-2),steps=16,offset_maxstep=0.25);
+// Example: Can improve the result by decreasing the number of steps
+//   triangle = [[0,0],[10,0],[5,10]];
+//   rounded_sweep(triangle, height=6, bottom = rs_circle(r=-2),steps=4,offset_maxstep=0.25);
+// Example: Or by decreasing `offset_maxstep`
+//   triangle = [[0,0],[10,0],[5,10]];
+//   rounded_sweep(triangle, height=6, bottom = rs_circle(r=-2),steps=16,offset_maxstep=0.01);
 // Example: Here is the star chamfered at the top with a teardrop rounding at the bottom. Check out the rounded corners on the chamfer.  Note that a very small value of `offset_maxstep` is needed to keep these round.  Observe how the rounded star points vanish at the bottom in the teardrop: the number of vertices does not remain constant from layer to layer.  
 //   star = star(5, r=22, ir=13);
 //   rounded_star = round_corners(zip(star, flatten(replist([.5,0],5))), curve="circle", measure="cut", $fn=12);
@@ -519,7 +531,8 @@ module rounded_sweep(path, height, top=[], bottom=[], offset="round", r=0, steps
          [vertices, concat(faces,[oriented_bottom])] :
       let( this_offset = offsetind==0 ? offsets[0][0] : offsets[offsetind][0] - offsets[offsetind-1][0],
            delta = offset_type=="delta" ? this_offset : undef,
-           r = offset_type=="round" ? this_offset : undef)
+           r = offset_type=="round" ? this_offset : undef
+        )
       assert(num_defined([r,delta])==1,"Must set `offset` to \"round\" or \"delta")
       let(
            vertices_faces = offset(path, r=r, delta=delta, closed=true, check_valid=check_valid, quality=quality, maxstep=maxstep, 
