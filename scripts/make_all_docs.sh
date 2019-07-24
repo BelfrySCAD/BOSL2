@@ -3,10 +3,12 @@
 FORCED=""
 IMGGEN=""
 FILES=""
+DISPMD=""
 for opt in "$@" ; do
   case $opt in
     -f ) FORCED=$opt ;;
     -i ) IMGGEN=$opt ;;
+    -d ) DISPMD=$opt ;;
     * ) FILES="$FILES $opt" ;;
   esac
 done
@@ -29,12 +31,14 @@ rm -f tmpscad*.scad
 for lib in $PREVIEW_LIBS; do
     lib="$(basename $lib .scad)"
     mkdir -p images/$lib
-    if [ "$IMGGEN" = "-i" ]; then
+    if [ "$IMGGEN" != "" ]; then
         rm -f images/$lib/*.png images/$lib/*.gif
     fi
     echo "$lib.scad"
     ../scripts/docs_gen.py ../$lib.scad -o $lib.scad.md -c $IMGGEN $FORCED -I images/$lib/ || exit 1
-    open -a Typora $lib.scad.md
+    if [ "$DISPMD" != "" ]; then
+        open -a Typora $lib.scad.md
+    fi
 done
 
 
