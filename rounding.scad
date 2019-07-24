@@ -102,7 +102,7 @@ include <BOSL2/structs.scad>
 //   color("blue")stroke(_shift_segment([[w,h], ll], -.7), width=.1);
 //   color("green")translate([w-.3,h-4])scale(.1)rotate(90)text("cut");
 //   color("blue")translate([w/2-1.1,h/2+.6])  scale(.1)rotate(90-vector_angle(example)/2)text("joint");
-//   
+//
 // Arguments:
 //   path = list of points defining the path to be rounded.  Can be 2D or 3D, and may have an extra coordinate giving rounding parameters.  If you specify rounding parameters you must do so on every point.  
 //   curve = rounding method to use.  Set to "circle" for circular rounding and "smooth" for continuous curvature 4th order bezier rounding
@@ -411,7 +411,7 @@ function bezier_curve(P,N) =
 //   joint = default joint value for smooth roundover.
 //   k = default curvature parameter value for "smooth" roundover
 //   convexity = convexity setting for use with polyhedron.  Default: 10
-//   
+//
 // Example: Rounding a star shaped prism with postive radius values
 //   star = star(5, r=22, ir=13);
 //   rounded_star = round_corners(zip(star, flatten(replist([.5,0],5))), curve="circle", measure="cut", $fn=12);
