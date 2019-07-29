@@ -844,6 +844,64 @@ module square_threaded_nut(
 }
 
 
+// Section: Ball Screws
+
+// Module: ball_screw_rod()
+// Description:
+//   Constructs a ball screw rod.  This method makes much smoother threads than the naive linear_extrude method.
+// Arguments:
+//   d = Outer diameter of threaded rod.
+//   l = length of threaded rod.
+//   pitch = Length between threads.  Also, the diameter of the ball bearings used.
+//   ball_diam = The diameter of the ball bearings to use with this ball screw.
+//   ball_arc = The arc portion that should touch the ball bearings. Default: 120 degrees.
+//   left_handed = if true, create left-handed threads.  Default = false
+//   starts = The number of lead starts.  Default = 1
+//   bevel = if true, bevel the thread ends.  Default: false
+//   internal = If true, make this a mask for making internal threads.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
+// Example(2D): Thread Profile, ball_diam=4, ball_arc=100
+//   projection(cut=true) ball_screw_rod(d=10, l=15, pitch=5, ball_diam=4, ball_arc=100, orient=BACK);
+// Example(2D): Thread Profile, ball_diam=4, ball_arc=120
+//   projection(cut=true) ball_screw_rod(d=10, l=15, pitch=5, ball_diam=4, ball_arc=120, orient=BACK);
+// Example(2D): Thread Profile, ball_diam=3, ball_arc=120
+//   projection(cut=true) ball_screw_rod(d=10, l=15, pitch=5, ball_diam=3, ball_arc=120, orient=BACK);
+// Examples(Med):
+//   ball_screw_rod(d=15, l=20, pitch=8, ball_diam=5, ball_arc=120, $fa=1, $fs=1);
+//   ball_screw_rod(d=15, l=20, pitch=5, ball_diam=4, ball_arc=120, $fa=1, $fs=1);
+//   ball_screw_rod(d=15, l=20, pitch=5, ball_diam=4, ball_arc=120, left_handed=true, $fa=1, $fs=1);
+module ball_screw_rod(
+	d=10, l=100, pitch=2, starts=1,
+	ball_diam=5, ball_arc=100,
+	left_handed=false,
+	internal=false,
+	bevel=false,
+	anchor=CENTER,
+	spin=0,
+	orient=UP
+) {
+	depth = ball_diam * (1-cos(ball_arc/2))/2;
+	profile = arc(N=11, d=ball_diam/pitch, cp=[0,ball_diam/2/pitch*cos(ball_arc/2)], start=270-ball_arc/2, angle=ball_arc);
+	trapezoidal_threaded_rod(
+		d=d, l=l, pitch=pitch,
+		thread_depth=depth,
+		thread_angle=90-ball_arc/2,
+		profile=profile,
+		left_handed=left_handed,
+		starts=starts,
+		bevel=bevel,
+		internal=internal,
+		anchor=anchor,
+		spin=spin,
+		orient=orient
+	) children();
+}
+
+
+
 // Section: PCO-1881 Bottle Threading
 
 
