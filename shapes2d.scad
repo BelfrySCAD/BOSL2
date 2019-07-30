@@ -38,24 +38,21 @@
 //   trim = Trim the the start and end line segments by this much, to keep them from interfering with custom endcaps.
 //   trim1 = Trim the the starting line segment by this much, to keep it from interfering with a custom endcap.
 //   trim2 = Trim the the ending line segment by this much, to keep it from interfering with a custom endcap.
-// Example(2D): Closing the Path
+// Example(2D): Drawing a Path
+//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
+//   stroke(path, width=20);
+// Example(2D): Closing a Path
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   stroke(path, width=20, endcaps=true, closed=true);
-// Example(2D): Flat Endcaps
+// Example(2D): Fancy Arrow Endcaps
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=10, endcaps=false);
-// Example(2D): Round Endcaps
+//   stroke(path, width=10, endcaps="arrow2");
+// Example(2D): Modified Fancy Arrow Endcaps
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=10, endcaps="round");
-// Example(2D): Arrow Endcaps
-//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=10, endcaps="arrow");
+//   stroke(path, width=10, endcaps="arrow2", endcap_size=6, arrow_length=3, arrow_indent=2);
 // Example(2D): Mixed Endcaps
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=10, endcap1="butt", endcap2="arrow");
-// Example(2D): Modified Arrow Endcaps
-//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=10, endcaps="arrow", endcap_size=6, arrow_length=3, arrow_indent=2);
+//   stroke(path, width=10, endcap1="tail2", endcap2="arrow2");
 // Example(2D): Custom Endcap Shapes
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   arrow = [[0,0], [2,-3], [0.5,-2.3], [2,-4], [0.5,-3.5], [-0.5,-3.5], [-2,-4], [-0.5,-2.3], [-2,-3]];
