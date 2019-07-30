@@ -9,6 +9,7 @@ for opt in "$@" ; do
     -f ) FORCED=$opt ;;
     -i ) IMGGEN=$opt ;;
     -d ) DISPMD=$opt ;;
+    -* ) echo "Unknown option $opt"; exit -1 ;;
     * ) FILES="$FILES $opt" ;;
   esac
 done
