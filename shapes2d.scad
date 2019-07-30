@@ -15,7 +15,7 @@
 //   stroke(path, width, [endcap], [closed]);
 // Description:
 //   Draws a 2D line path with a given line thickness.  Endcaps can be specified for each end individually.
-// Figure(2D,Med): Endcap Types
+// Figure(2D,Big): Endcap Types
 //   endcaps = ["butt", "line", "square", "cross", "round", "dot", "chisel", "x", "arrow", "arrow2", "tail", "tail2"];
 //   for (i=idx(endcaps)) {
 //       cap = endcaps[i];
