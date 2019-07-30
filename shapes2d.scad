@@ -14,57 +14,116 @@
 // Usage:
 //   stroke(path, width, [endcap], [closed]);
 // Description:
-//   Draws a 2D line path with a given line thickness.
+//   Draws a 2D line path with a given line thickness.  Endcaps can be specified for each end individually.
+// Figure(2D): Endcap Types
+//   endcaps = ["butt", "line", "square", "cross", "round", "dot", "chisel", "x", "arrow", "arrow2", "tail", "tail2"];
+//   for (i=idx(endcaps)) {
+//       cap = endcaps[i];
+//       right((i%2)*60-60+5) fwd(floor(i/2)*10+15) {
+//           right(28) color("black") text(text=cap, size=5, halign="left", valign="center");
+//           stroke([[0,0], [20,0]], width=3, endcap_size=3, endcap1=false, endcap2=cap);
+//           color("black") stroke([[0,0], [20,0]], width=0.25, endcaps=false);
+//       }
+//   }
 // Arguments:
 //   path = The 2D path to draw along.
 //   width = The width of the line to draw.
-//   endcaps = If true or "round", draws round endcaps at both ends of the line. If "arrow", draws arrows at both ends of the line.  If any other value, draws flat endcaps.
-//   endcap1 = If true or "round", draws a round endcap at the start of the line. If "arrow", draws an arrow at the start of the line.  If any other value, draws a flat endcap.
-//   endcap2 = If true or "round", draws a round endcap at the end of the line. If "arrow", draws an arrow at the end of the line.  If any other value, draws a flat endcap.
 //   closed = If true, draw an additional line from the end of the path to the start.
-// Example(2D):
-//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=10, endcaps=false);
-// Example(2D):
-//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=20, endcaps=true);
-// Example(2D):
+//   endcaps = Specifies the endcap type for both ends of the line.  If a 2D path is given, use that to draw custom endcaps.
+//   endcap1 = Specifies the endcap type for the start of the line.  If a 2D path is given, use that to draw a custom endcap.
+//   endcap2 = Specifies the endcap type for the end of the line.  If a 2D path is given, use that to draw a custom endcap.
+//   endcap_size = Some endcap types are wider than the line.  This specifies the size of endcaps, in multiples of the line width.  Default: 3
+//   arrow_length = Length of arrow endcaps, in multiples of the line width.  Default: 4.5
+//   arrow_indent = Distance the from tip of an arrow endcap to the central indent at the back of the arrow, in multiples of the line width.  If used with `endcap_shape`, defines where the back of the arrow is to draw to.  Default: 3.75
+//   trim = Trim the the start and end line segments by this much, to keep them from interfering with custom endcaps.
+//   trim1 = Trim the the starting line segment by this much, to keep it from interfering with a custom endcap.
+//   trim2 = Trim the the ending line segment by this much, to keep it from interfering with a custom endcap.
+// Example(2D): Closing the Path
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   stroke(path, width=20, endcaps=true, closed=true);
-module stroke(path, width=1, endcaps=undef, endcap1=undef, endcap2=undef, closed=false)
+// Example(2D): Flat Endcaps
+//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
+//   stroke(path, width=10, endcaps=false);
+// Example(2D): Round Endcaps
+//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
+//   stroke(path, width=10, endcaps="round");
+// Example(2D): Arrow Endcaps
+//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
+//   stroke(path, width=10, endcaps="arrow");
+// Example(2D): Mixed Endcaps
+//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
+//   stroke(path, width=10, endcap1="butt", endcap2="arrow");
+// Example(2D): Modified Arrow Endcaps
+//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
+//   stroke(path, width=10, endcaps="arrow", endcap_size=6, arrow_length=3, arrow_indent=2);
+// Example(2D): Custom Endcap Shapes
+//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
+//   arrow = [[0,0], [2,-3], [0.5,-2.3], [2,-4], [0.5,-3.5], [-0.5,-3.5], [-2,-4], [-0.5,-2.3], [-2,-3]];
+//   stroke(path, width=10, trim=3.5, endcaps=arrow);
+module stroke(path, width=1, closed=false, endcaps, endcap1, endcap2, trim, trim1, trim2, endcap_size, arrow_length, arrow_indent)
 {
+	function _endcap_shape(cap,w,l,indent) = (
+		let(sq2=sqrt(2))
+		(cap=="round" || cap==true)? circle(d=1, $fn=max(8, segs(w/2))) :
+		cap=="chisel"? [[-0.5,0], [0,0.5], [0.5,0], [0,-0.5]] :
+		cap=="square"? [[-0.5,-0.5], [-0.5,0.5], [0.5,0.5], [0.5,-0.5]] :
+		cap=="dot"?    circle(d=3, $fn=max(12, segs(w*3/2))) :
+		cap=="x"?      [for (a=[0:90:270]) each rot(a,p=[[w+sq2/2,w-sq2/2]/2, [w-sq2/2,w+sq2/2]/2, [0,sq2/2]]) ] :
+		cap=="cross"?  [for (a=[0:90:270]) each rot(a,p=[[1,w]/2, [-1,w]/2, [-1,1]/2]) ] :
+		cap=="line"?   [[w/2,0.5], [w/2,-0.5], [-w/2,-0.5], [-w/2,0.5]] :
+		cap=="arrow"?  [[0,0], [w/2,-w/2], [w/2,-w/2-sq2], [0,-sq2], [-w/2,-w/2-sq2], [-w/2,-w/2]] :
+		cap=="arrow2"? [[0,0], [w/2,-l], [0,-indent], [-w/2,-l]] :
+		cap=="tail"?   [[0,0], [w/2,w/2], [w/2,w/2-sq2], [0,-sq2], [-w/2,w/2-sq2], [-w/2,w/2]] :
+		cap=="tail2"?  [[w/2,0], [w/2,-1], [0,-w/2-1], [-w/2,-1], [-w/2,0]] :
+		is_path(cap)? cap :
+		[]
+	) * width;
+
+	endcap1 = first_defined([endcap1, endcaps, "round"]);
+	endcap2 = first_defined([endcap2, endcaps, "round"]);
+	endcap_size  = default(endcap_size, 3.5);
+	arrow_length = default(arrow_length, 4.5);
+	arrow_indent = default(arrow_indent, 3.75);
+	endcap_shape1 = _endcap_shape(endcap1, endcap_size, arrow_length, arrow_indent);
+	endcap_shape2 = _endcap_shape(endcap2, endcap_size, arrow_length, arrow_indent);
+
+
 	$fn = quantup(segs(width/2),4);
 	path = closed? concat(path,[path[0]]) : path;
 	assert(is_list(path) && is_vector(path[0]) && len(path[0])==2, "path must be a 2D list of points.");
+
 	segments = pair(path);
 	segpairs = pair(segments);
-	endcap1 = first_defined([endcap1, endcaps, "round"]);
-	endcap2 = first_defined([endcap2, endcaps, "round"]);
-
 	start_seg = segments[0];
 	start_vec = start_seg[0] - start_seg[1];
 	end_seg = select(segments,-1);
 	end_vec = end_seg[1] - end_seg[0];
 
-	arrow_width = width*3.5;
-	arrow_indent = width*4;
-	arrow_length = width*5;
-
-	trim1 = (endcap1=="arrow")? arrow_indent-0.01 : 0;
-	trim2 = (endcap2=="arrow")? arrow_indent-0.01 : 0;
+	trim1 = width * first_defined([
+		trim1, trim,
+		(endcap1=="arrow")? sqrt(2) :
+		(endcap1=="arrow2")? arrow_indent*3/4 :
+		0
+	]);
+	trim2 = width * first_defined([
+		trim2, trim,
+		(endcap2=="arrow")? sqrt(2) :
+		(endcap2=="arrow2")? arrow_indent*3/4 :
+		0
+	]);
 
 	if (len(segments)==1) {
 		seglen = norm(start_seg[1] - start_seg[0]);
 		translate(start_seg[0]-normalize(start_vec)*trim1)
-			rot(from=BACK,to=delt)
-				square([width, seglen-trim1-trim2], anchor=FRONT);
+			rot(from=BACK,to=-start_vec)
+				square([width, max(0.01, seglen-trim1-trim2)], anchor=FRONT);
 	} else {
-		seglen1 = norm(start_vec) - trim1;
+		seglen1 = max(0.01, norm(start_vec) - trim1);
 		translate(start_seg[1])
 			rot(from=BACK,to=start_vec)
 				square([width, seglen1], anchor=FRONT);
 
-		seglen2 = norm(end_vec) - trim2;
+		seglen2 = max(0.01, norm(end_vec) - trim2);
 		translate(end_seg[0])
 			rot(from=BACK,to=end_vec)
 				square([width, seglen2], anchor=FRONT);
@@ -97,22 +156,14 @@ module stroke(path, width=1, endcaps=undef, endcap1=undef, endcap2=undef, closed
 	// Endcap1
 	translate(start_seg[0]) {
 		rot(from=BACK, to=start_vec) {
-			if (endcap1 == "round" || endcap1==true) {
-				circle(d=width);
-			} else if (endcap1 == "arrow") {
-				polygon([[0,0], [arrow_width/2,-arrow_length], [0,-arrow_indent], [-arrow_width/2,-arrow_length]]);
-			}
+			polygon(endcap_shape1);
 		}
 	}
 
 	// Endcap2
 	translate(end_seg[1]) {
 		rot(from=BACK, to=end_vec) {
-			if (endcap2 == "round" || endcap2==true) {
-				circle(d=width);
-			} else if (endcap2 == "arrow") {
-				polygon([[0,0], [arrow_width/2,-arrow_length], [0,-arrow_indent], [-arrow_width/2,-arrow_length]]);
-			}
+			polygon(endcap_shape2);
 		}
 	}
 }
