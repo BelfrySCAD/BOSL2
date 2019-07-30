@@ -18,7 +18,9 @@
 // Arguments:
 //   path = The 2D path to draw along.
 //   width = The width of the line to draw.
-//   endcaps = If true, draw round endcaps at the ends of the line.
+//   endcaps = If true or "round", draws round endcaps at both ends of the line. If "arrow", draws arrows at both ends of the line.  If any other value, draws flat endcaps.
+//   endcap1 = If true or "round", draws a round endcap at the start of the line. If "arrow", draws an arrow at the start of the line.  If any other value, draws a flat endcap.
+//   endcap2 = If true or "round", draws a round endcap at the end of the line. If "arrow", draws an arrow at the end of the line.  If any other value, draws a flat endcap.
 //   closed = If true, draw an additional line from the end of the path to the start.
 // Example(2D):
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
@@ -29,21 +31,51 @@
 // Example(2D):
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   stroke(path, width=20, endcaps=true, closed=true);
-module stroke(path, width=1, endcaps=true, closed=false)
+module stroke(path, width=1, endcaps=undef, endcap1=undef, endcap2=undef, closed=false)
 {
 	$fn = quantup(segs(width/2),4);
 	path = closed? concat(path,[path[0]]) : path;
 	assert(is_list(path) && is_vector(path[0]) && len(path[0])==2, "path must be a 2D list of points.");
 	segments = pair(path);
 	segpairs = pair(segments);
+	endcap1 = first_defined([endcap1, endcaps, "round"]);
+	endcap2 = first_defined([endcap2, endcaps, "round"]);
+
+	start_seg = segments[0];
+	start_vec = start_seg[0] - start_seg[1];
+	end_seg = select(segments,-1);
+	end_vec = end_seg[1] - end_seg[0];
+
+	arrow_width = width*3.5;
+	arrow_indent = width*4;
+	arrow_length = width*5;
+
+	trim1 = (endcap1=="arrow")? arrow_indent-0.01 : 0;
+	trim2 = (endcap2=="arrow")? arrow_indent-0.01 : 0;
+
+	if (len(segments)==1) {
+		seglen = norm(start_seg[1] - start_seg[0]);
+		translate(start_seg[0]-normalize(start_vec)*trim1)
+			rot(from=BACK,to=delt)
+				square([width, seglen-trim1-trim2], anchor=FRONT);
+	} else {
+		seglen1 = norm(start_vec) - trim1;
+		translate(start_seg[1])
+			rot(from=BACK,to=start_vec)
+				square([width, seglen1], anchor=FRONT);
+
+		seglen2 = norm(end_vec) - trim2;
+		translate(end_seg[0])
+			rot(from=BACK,to=end_vec)
+				square([width, seglen2], anchor=FRONT);
+	}
 
 	// Line segments
-	for (seg = segments) {
+	for (seg = slice(segments,1,-2)) {
 		delt = seg[1] - seg[0];
 		translate(seg[0])
 			rot(from=BACK,to=delt)
-				left(width/2)
-					square([width, norm(delt)], center=false);
+				square([width, norm(delt)], anchor=FRONT);
 	}
 
 	// Joints
@@ -62,18 +94,26 @@ module stroke(path, width=1, endcaps=true, closed=false)
 		}
 	}
 
-	// Endcaps
-	if (endcaps) {
-		seg1 = segments[0];
-		delt1 = seg1[1] - seg1[0];
-		translate(seg1[0])
-			rot(from=BACK, to=delt1)
+	// Endcap1
+	translate(start_seg[0]) {
+		rot(from=BACK, to=start_vec) {
+			if (endcap1 == "round" || endcap1==true) {
 				circle(d=width);
-		seg2 = select(segments,-1);
-		delt2 = seg2[1] - seg2[0];
-		translate(seg2[1])
-			rot(from=BACK, to=delt2)
+			} else if (endcap1 == "arrow") {
+				polygon([[0,0], [arrow_width/2,-arrow_length], [0,-arrow_indent], [-arrow_width/2,-arrow_length]]);
+			}
+		}
+	}
+
+	// Endcap2
+	translate(end_seg[1]) {
+		rot(from=BACK, to=end_vec) {
+			if (endcap2 == "round" || endcap2==true) {
 				circle(d=width);
+			} else if (endcap2 == "arrow") {
+				polygon([[0,0], [arrow_width/2,-arrow_length], [0,-arrow_indent], [-arrow_width/2,-arrow_length]]);
+			}
+		}
 	}
 }
 
@@ -646,18 +686,19 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //   polygon(turtle(koch));
 function turtle(commands, state=[[[0,0]],[1,0],90], full_state=false, repeat=1) =
 	let( state = is_vector(state) ? [[state],[1,0],90] : state )
-        repeat == 1 ? _turtle(commands,state,full_state) 
-                    : _turtle_repeat(commands, state, full_state, repeat);
+		repeat == 1?
+			_turtle(commands,state,full_state) :
+			_turtle_repeat(commands, state, full_state, repeat);
 
 function _turtle_repeat(commands, state, full_state, repeat) =
-       repeat==1 ? _turtle(commands,state,full_state)
-                 : _turtle_repeat(commands, _turtle(commands, state, true), full_state, repeat-1);
-                 
+	repeat==1?
+		_turtle(commands,state,full_state) :
+		_turtle_repeat(commands, _turtle(commands, state, true), full_state, repeat-1);
 
 function _turtle_command_len(commands, index) =
-         commands[index] == "repeat" ? 3 :   // Repeat command requires 2 args
-         is_string(commands[index+1]) ? 1    // If 2nd item is a string it's must be a new command
-         : 2;                                  // Otherwise we have command and arg
+	commands[index] == "repeat"? 3 :   // Repeat command requires 2 args
+	is_string(commands[index+1])? 1 :  // If 2nd item is a string it's must be a new command
+	2;                                 // Otherwise we have command and arg
 
 function _turtle(commands, state, full_state, index=0) =
 	index < len(commands) ?
@@ -671,10 +712,10 @@ function _turtle(commands, state, full_state, index=0) =
 // Turtle state: state = [path, step_vector, default angle]
 
 function _turtle_command(command, parm, parm2, state, index) =
-        command == "repeat" ? assert(is_num(parm),str("\"repeat\" command requires a numeric parameter at index ",index))
-                              assert(is_list(parm2),str("\"repeat\" command requires a command list parameter at index ",index))
-                              _turtle_repeat(parm2, state, true, parm)
-        :
+	command == "repeat"?
+		assert(is_num(parm),str("\"repeat\" command requires a numeric parameter at index ",index))
+		assert(is_list(parm2),str("\"repeat\" command requires a command list parameter at index ",index))
+		_turtle_repeat(parm2, state, true, parm) :
 	let(
 		path = 0,
 		step=1,
