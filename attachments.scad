@@ -153,7 +153,7 @@ function find_anchor(anchor, h, size, size2=undef, shift=[0,0], offset=[0,0,0], 
 			),
 			botpt = point3d(vmul(size/2,xyal))+DOWN*h/2,
 			toppt = point3d(vmul(size2/2,xyal)+shift)+UP*h/2,
-			offset = vmul(offset,vabs(anchor)),
+			offset = anchor==CENTER? [0,0,0] : offset,
 			pos = lerp(botpt, toppt, (anchor.z+1)/2) + offset,
 			sidevec = two_d? point3d(xyal) :
 				approx(norm(xyal),0)? [0,0,0] :
