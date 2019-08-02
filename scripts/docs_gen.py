@@ -145,14 +145,12 @@ class ImageProcessing(object):
         with open(scriptfile, "w") as f:
             f.write(script)
 
-        if "Med" in extype:
-            imgsizes = ["800,600", "400x300"]
-        elif "Big" in extype:
-            imgsizes = ["1280,960", "640x480"]
-        elif "distribute" in script or "show_anchors" in script:
-            imgsizes = ["800,600", "400x300"]
+        if "Big" in extype:
+            imgsize = [640, 480]
+        elif "Med" in extype or "distribute" in script or "show_anchors" in script:
+            imgsize = [480, 360]
         else:  # Small
-            imgsizes = ["480,360", "240x180"]
+            imgsize = [320, 240]
 
         tmpimgs = []
         if "Spin" in extype:
@@ -167,7 +165,7 @@ class ImageProcessing(object):
                 scadcmd = [
                     OPENSCAD,
                     "-o", tmpimgfile,
-                    "--imgsize={}".format(imgsizes[0]),
+                    "--imgsize={},{}".format(imgsize[0]*2, imgsize[1]*2),
                     "--hardwarnings",
                     "--projection=o",
                     "--autocenter",
@@ -199,7 +197,7 @@ class ImageProcessing(object):
             scadcmd = [
                 OPENSCAD,
                 "-o", tmpimgfile,
-                "--imgsize={}".format(imgsizes[0]),
+                "--imgsize={},{}".format(imgsize[0]*2, imgsize[1]*2),
                 "--hardwarnings",
                 "--projection=o",
                 "--autocenter",
@@ -240,7 +238,12 @@ class ImageProcessing(object):
             os.unlink(scriptfile)
 
         if len(tmpimgs) == 1:
-            cnvcmd = [CONVERT, tmpimgfile, "-resize", imgsizes[1], newimgfile]
+            cnvcmd = [
+                CONVERT,
+                tmpimgfile,
+                "-resize", "{}x{}".format(imgsize[0], imgsize[1]),
+                newimgfile
+            ]
             res = subprocess.call(cnvcmd)
             if res != 0:
                 sys.exit(-1)
@@ -251,7 +254,7 @@ class ImageProcessing(object):
                 "-delay", "25",
                 "-loop", "0",
                 "-coalesce",
-                "-scale", imgsizes[1],
+                "-scale", "{}x{}".format(imgsize[0], imgsize[1]),
                 "-fuzz", "2%",
                 "+dither",
                 "-layers", "Optimize",
