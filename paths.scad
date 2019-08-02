@@ -582,7 +582,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
 function path_cut(path, dists, closed=false, direction=false) =
       let( long_enough = len(path) >= (closed ? 3 : 2)) 
       assert(long_enough,len(path)<2 ? "Two points needed to define a path" : "Closed path must include three points")                                                       
-      !is_list(dists) ? _path_cut(path, [dists],closed, direction)[0] :
+      !is_list(dists) ? path_cut(path, [dists],closed, direction)[0] :
       let(cuts = _path_cut(path,dists,closed))
       !direction ? cuts :
               let( dir = _path_cuts_dir(path, cuts, closed),

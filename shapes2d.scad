@@ -677,8 +677,8 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //   path=turtle(["angle",360/5,"repeat",5,["move","turn"]]);
 //   stroke(path,width=.1,closed=true);
 // Example(2D): Pentagram
-//   path = turtle(["move","left",144], repeat=10);
-//   stroke(path,width=.05);
+//   path = turtle(["move","left",144], repeat=4);
+//   stroke(path,width=.05,closed=true);
 // Example(2D): Sawtooth path
 //   path = turtle([
 //       "turn", 55,
