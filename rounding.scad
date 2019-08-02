@@ -784,7 +784,7 @@ function _remove_undefined_vals(list) =
 //   quality = passed to offset().  Default: 1
 //   maxstep = passed to offset() to define number of points in the offset.  Default: 0.1
 //   closed = true if the curve is closed, false otherwise.  Default: false
-//   
+//
 // Example(2D):  Basic examples illustrating flat, round, and pointed ends, on a finely sampled arc and a path made from 3 segments. 
 //   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
 //   path = [[0,0],[6,2],[9,7],[8,10]];  
@@ -814,9 +814,9 @@ function _remove_undefined_vals(list) =
 //   }
 // Example(2D):  The left stroke uses flat ends with a relative angle of zero.  The right hand one uses flat ends with an absolute angle of zero, so the ends are parallel to the x-axis.  
 //   path = [[0,0],[6,2],[9,7],[8,10]];  
-//   offset_stroke(segpath, start=os_flat(angle=0), end=os_flat(angle=0));
+//   offset_stroke(path, start=os_flat(angle=0), end=os_flat(angle=0));
 //   right(5)
-//     offset_stroke(segpath, start=os_flat(abs_angle=0), end=os_flat(abs_angle=0));
+//     offset_stroke(path, start=os_flat(abs_angle=0), end=os_flat(abs_angle=0));
 // Example(2D):  With continuous sampling the end treatment can remove segments or extend the last segment linearly, as shown here.  Again the left side uses relative angle flat ends and the right hand example uses absolute angle. 
 //   arc = arc(points=[[4,0],[3,4],[6,3]],N=50);
 //   offset_stroke(arc, start=os_flat(angle=45), end=os_flat(angle=45));
@@ -830,7 +830,6 @@ function _remove_undefined_vals(list) =
 //   fwd(7)  
 //     offset_stroke(arc, width=2, start=os_pointed(loc=2,dist=2),end=os_pointed(loc=.5,dist=-1));
 // Example(2D):  The os_round() end treatment adds roundovers to the end corners by specifying the `cut` parameter.  In the first example, the cut parameter is the same at each corner.  The bezier smoothness parameter `k` is given to allow a larger cut.  In the second example, each corner is given a different roundover, including zero for no rounding at all.  The red shows the same strokes without the roundover.  
-//   $fn=24;
 //   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
 //   path = [[0,0],[6,2],[9,7],[8,10]];  
 //   offset_stroke(path, width=2, rounded=false,start=os_round(angle=-20, cut=0.4,k=.9), end=os_round(angle=-35, cut=0.4,k=.9));
@@ -840,7 +839,6 @@ function _remove_undefined_vals(list) =
 //     color("red")down(.1)offset_stroke(arc, width=2, rounded=false, start=os_flat(-45), end=os_flat(20));
 //   }
 // Example(2D):  Negative cut values produce a flaring end.  Note how the absolute angle aligns the ends of the first example withi the axes.  In the second example positive and negative cut values are combined.  Note also that very different cuts are needed at the start end to produce a similar looking flare.  
-//   $fn=24;
 //   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
 //   path = [[0,0],[6,2],[9,7],[8,10]];  
 //   offset_stroke(path, width=2, rounded=false,start=os_round(cut=-1, abs_angle=90), end=os_round(cut=-0.5, abs_angle=0));
