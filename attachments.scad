@@ -115,7 +115,7 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 //   size = The [X,Y] size of the bottom of the cubical region.
 //   size2 = The [X,Y] size of the top of the cubical region.
 //   shift = The [X,Y] amount to shift the center of the top with respect to the center of the bottom.
-//   offset = The offset of the center of the object from the CENTER anchor.
+//   offset = If the anchor is not CENTER, this is the offset to add to the rest of the anchor points.
 //   geometry = One of "cube", "cylinder", or "sphere" to denote the overall geometry of the shape.  Cones are "cylinder", and prismoids are "cube" for this purpose.  Default: "cube"
 //   anchors = A list of extra non-standard named anchors.
 //   two_d = If true, object will be treated as 2D.
@@ -142,7 +142,7 @@ function find_anchor(anchor, h, size, size2=undef, shift=[0,0], offset=[0,0,0], 
 			phi = (anchor==UP||anchor==CENTER)? 0 : anchor==DOWN? 180 : 90 + (45 * anchor.z),
 			theta = anchor==CENTER? 90 : atan2(anchor.y, anchor.x),
 			vec = spherical_to_xyz(1, theta, phi),
-			offset = vmul(offset,vabs(anchor)),
+			offset = anchor==CENTER? [0,0,0] : offset,
 			pos = anchor==CENTER? CENTER : vmul(vec, (point3d(size)+h*UP)/2) + offset
 		) [anchor, pos, vec, oang] : let (
 			xyal = (
