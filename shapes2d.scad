@@ -16,12 +16,15 @@
 // Description:
 //   Draws a 2D line path with a given line thickness.  Endcaps can be specified for each end individually.
 // Figure(2D,Big): Endcap Types
-//   endcaps = ["butt", "line", "square", "cross", "round", "dot", "chisel", "x", "arrow", "arrow2", "tail", "tail2"];
-//   for (i=idx(endcaps)) {
-//       cap = endcaps[i];
-//       right((i%2)*60-60+5) fwd(floor(i/2)*10+15) {
+//   endcaps = [
+//       ["butt", "square", "round", "chisel", "tail", "tail2"],
+//       ["line", "cross", "dot", "diamond", "x", "arrow", "arrow2"]
+//   ];
+//   for (x=idx(endcaps), y=idx(endcaps[x])) {
+//       cap = endcaps[x][y];
+//       right(x*60-60+5) fwd(y*10+15) {
 //           right(28) color("black") text(text=cap, size=5, halign="left", valign="center");
-//           stroke([[0,0], [20,0]], width=3, endcap_size=3, endcap1=false, endcap2=cap);
+//           stroke([[0,0], [20,0]], width=3, endcap_width=3, endcap1=false, endcap2=cap);
 //           color("black") stroke([[0,0], [20,0]], width=0.25, endcaps=false);
 //       }
 //   }
@@ -32,9 +35,15 @@
 //   endcaps = Specifies the endcap type for both ends of the line.  If a 2D path is given, use that to draw custom endcaps.
 //   endcap1 = Specifies the endcap type for the start of the line.  If a 2D path is given, use that to draw a custom endcap.
 //   endcap2 = Specifies the endcap type for the end of the line.  If a 2D path is given, use that to draw a custom endcap.
-//   endcap_size = Some endcap types are wider than the line.  This specifies the size of endcaps, in multiples of the line width.  Default: 3
-//   arrow_length = Length of arrow endcaps, in multiples of the line width.  Default: 4.5
-//   arrow_indent = Distance the from tip of an arrow endcap to the central indent at the back of the arrow, in multiples of the line width.  If used with `endcap_shape`, defines where the back of the arrow is to draw to.  Default: 3.75
+//   endcap_width = Some endcap types are wider than the line.  This specifies the size of endcaps, in multiples of the line width.  Default: 3.5
+//   endcap_width1 = This specifies the size of starting endcap, in multiples of the line width.  Default: 3.5
+//   endcap_width2 = This specifies the size of ending endcap, in multiples of the line width.  Default: 3.5
+//   endcap_length = Length of endcaps, in multiples of the line width.  Default: `endcap_width*0.5`
+//   endcap_length1 = Length of starting endcap, in multiples of the line width.  Default: `endcap_width1*0.5`
+//   endcap_length2 = Length of ending endcap, in multiples of the line width.  Default: `endcap_width2*0.5`
+//   endcap_extent = Extents length of endcaps, in multiples of the line width.  Default: `endcap_width*0.5`
+//   endcap_extent1 = Extents length of starting endcap, in multiples of the line width.  Default: `endcap_width1*0.5`
+//   endcap_extent2 = Extents length of ending endcap, in multiples of the line width.  Default: `endcap_width2*0.5`
 //   trim = Trim the the start and end line segments by this much, to keep them from interfering with custom endcaps.
 //   trim1 = Trim the the starting line segment by this much, to keep it from interfering with a custom endcap.
 //   trim2 = Trim the the ending line segment by this much, to keep it from interfering with a custom endcap.
@@ -49,7 +58,7 @@
 //   stroke(path, width=10, endcaps="arrow2");
 // Example(2D): Modified Fancy Arrow Endcaps
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=10, endcaps="arrow2", endcap_size=6, arrow_length=3, arrow_indent=2);
+//   stroke(path, width=10, endcaps="arrow2", endcap_width=6, endcap_length=3, endcap_extent=2);
 // Example(2D): Mixed Endcaps
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   stroke(path, width=10, endcap1="tail2", endcap2="arrow2");
@@ -57,33 +66,46 @@
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   arrow = [[0,0], [2,-3], [0.5,-2.3], [2,-4], [0.5,-3.5], [-0.5,-3.5], [-2,-4], [-0.5,-2.3], [-2,-3]];
 //   stroke(path, width=10, trim=3.5, endcaps=arrow);
-module stroke(path, width=1, closed=false, endcaps, endcap1, endcap2, trim, trim1, trim2, endcap_size, arrow_length, arrow_indent)
-{
-	function _endcap_shape(cap,w,l,indent) = (
-		let(sq2=sqrt(2))
+module stroke(
+	path, width=1, closed=false,
+	endcaps, endcap1, endcap2,
+	trim, trim1, trim2,
+	endcap_width, endcap_width1, endcap_width2,
+	endcap_length, endcap_length1, endcap_length2,
+	endcap_extent, endcap_extent1, endcap_extent2
+) {
+	function _endcap_shape(cap,linewidth,w,l,l2) = (
+		let(sq2=sqrt(2), l3=l-l2)
 		(cap=="round" || cap==true)? circle(d=1, $fn=max(8, segs(w/2))) :
 		cap=="chisel"? [[-0.5,0], [0,0.5], [0.5,0], [0,-0.5]] :
 		cap=="square"? [[-0.5,-0.5], [-0.5,0.5], [0.5,0.5], [0.5,-0.5]] :
+		cap=="diamond"? [[0,w/2], [w/2,0], [0,-w/2], [-w/2,0]] :
 		cap=="dot"?    circle(d=3, $fn=max(12, segs(w*3/2))) :
 		cap=="x"?      [for (a=[0:90:270]) each rot(a,p=[[w+sq2/2,w-sq2/2]/2, [w-sq2/2,w+sq2/2]/2, [0,sq2/2]]) ] :
 		cap=="cross"?  [for (a=[0:90:270]) each rot(a,p=[[1,w]/2, [-1,w]/2, [-1,1]/2]) ] :
 		cap=="line"?   [[w/2,0.5], [w/2,-0.5], [-w/2,-0.5], [-w/2,0.5]] :
-		cap=="arrow"?  [[0,0], [w/2,-w/2], [w/2,-w/2-sq2], [0,-sq2], [-w/2,-w/2-sq2], [-w/2,-w/2]] :
-		cap=="arrow2"? [[0,0], [w/2,-l], [0,-indent], [-w/2,-l]] :
-		cap=="tail"?   [[0,0], [w/2,w/2], [w/2,w/2-sq2], [0,-sq2], [-w/2,w/2-sq2], [-w/2,w/2]] :
-		cap=="tail2"?  [[w/2,0], [w/2,-1], [0,-w/2-1], [-w/2,-1], [-w/2,0]] :
+		cap=="arrow"?  [[0,0], [w/2,-l2], [w/2,-l2-l], [0,-l], [-w/2,-l2-l], [-w/2,-l2]] :
+		cap=="arrow2"? [[0,0], [w/2,-l2-l], [0,-l], [-w/2,-l2-l]] :
+		cap=="tail"?   [[0,0], [w/2,l2], [w/2,l2-l], [0,-l], [-w/2,l2-l], [-w/2,l2]] :
+		cap=="tail2"?  [[w/2,0], [w/2,-l], [1/2,-l-l2], [-1/2,-l-l2], [-w/2,-l], [-w/2,0]] :
 		is_path(cap)? cap :
 		[]
 	) * width;
 
 	endcap1 = first_defined([endcap1, endcaps, "round"]);
 	endcap2 = first_defined([endcap2, endcaps, "round"]);
-	endcap_size  = default(endcap_size, 3.5);
-	arrow_length = default(arrow_length, 4.5);
-	arrow_indent = default(arrow_indent, 3.75);
-	endcap_shape1 = _endcap_shape(endcap1, endcap_size, arrow_length, arrow_indent);
-	endcap_shape2 = _endcap_shape(endcap2, endcap_size, arrow_length, arrow_indent);
 
+	endcap_width1 = first_defined([endcap_width1, endcap_width, 3.5]);
+	endcap_width2 = first_defined([endcap_width2, endcap_width, 3.5]);
+
+	endcap_length1 = first_defined([endcap_length1, endcap_length, endcap_width1*0.5]);
+	endcap_length2 = first_defined([endcap_length2, endcap_length, endcap_width2*0.5]);
+
+	endcap_extent1 = first_defined([endcap_extent1, endcap_extent, endcap_width1*0.5]);
+	endcap_extent2 = first_defined([endcap_extent2, endcap_extent, endcap_width2*0.5]);
+
+	endcap_shape1 = _endcap_shape(endcap1, width, endcap_width1, endcap_length1, endcap_extent1);
+	endcap_shape2 = _endcap_shape(endcap2, width, endcap_width2, endcap_length2, endcap_extent2);
 
 	$fn = quantup(segs(width/2),4);
 	path = closed? concat(path,[path[0]]) : path;
@@ -98,14 +120,14 @@ module stroke(path, width=1, closed=false, endcaps, endcap1, endcap2, trim, trim
 
 	trim1 = width * first_defined([
 		trim1, trim,
-		(endcap1=="arrow")? sqrt(2) :
-		(endcap1=="arrow2")? arrow_indent*3/4 :
+		(endcap1=="arrow")? endcap_length1-0.01 :
+		(endcap1=="arrow2")? endcap_length1*3/4 :
 		0
 	]);
 	trim2 = width * first_defined([
 		trim2, trim,
-		(endcap2=="arrow")? sqrt(2) :
-		(endcap2=="arrow2")? arrow_indent*3/4 :
+		(endcap2=="arrow")? endcap_length2-0.01 :
+		(endcap2=="arrow2")? endcap_length2*3/4 :
 		0
 	]);
 
