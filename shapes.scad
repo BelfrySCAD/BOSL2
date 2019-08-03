@@ -584,8 +584,8 @@ module cyl(
 	circum=false, realign=false, from_end=false,
 	anchor=CENTER, spin=0, orient=UP, center=undef
 ) {
-	r1 = get_radius(r1, r, d1, d, 1);
-	r2 = get_radius(r2, r, d2, d, 1);
+	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
+	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
 	l = first_defined([l, h, 1]);
 	size1 = [r1*2,r1*2,l];
 	size2 = [r2*2,r2*2,l];
@@ -1214,8 +1214,8 @@ module pie_slice(
 	center=undef, h=undef
 ) {
 	l = first_defined([l, h, 1]);
-	r1 = get_radius(r1, r, d1, d, 10);
-	r2 = get_radius(r2, r, d2, d, 10);
+	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
+	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
 	maxd = max(r1,r2)+0.1;
 	size = [2*r1, 2*r1, l];
 	orient_and_anchor(size, orient, anchor, spin=spin, center=center, geometry="cylinder", chain=true) {
@@ -1358,8 +1358,8 @@ module arced_slot(
 	$fn2 = undef
 ) {
 	r = get_radius(r=r, d=d, dflt=2);
-	sr1 = get_radius(sr1, sr, sd1, sd, 2);
-	sr2 = get_radius(sr2, sr, sd2, sd, 2);
+	sr1 = get_radius(r1=sr1, r=sr, d1=sd1, d=sd, dflt=2);
+	sr2 = get_radius(r1=sr2, r=sr, d1=sd2, d=sd, dflt=2);
 	fn_minor = first_defined([$fn2, $fn]);
 	da = ea - sa;
 	size = [r+sr1, r+sr1, h];

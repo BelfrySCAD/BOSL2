@@ -59,8 +59,8 @@ module knurled_cylinder(
 	rounding=undef, rounding1=undef, rounding2=undef,
 	anchor=CENTER, spin=0, orient=UP
 ) {
-	r1 = get_radius(r1=r1,r=r,d1=d1,d=d,dflt=10);
-	r2 = get_radius(r1=r2,r=r,d1=d2,d=d,dflt=10);
+	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
+	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
 	inset = r1 * sin(180/count) / tan(profile/2);
 	twist = 360*l*tan(helix)/(r1*2*PI);
 	c1 = circle(r=r1,$fn=count);
@@ -156,8 +156,8 @@ module knurled_cylinder_mask(
 	count=30, profile=120, helix=30,
 	anchor=CENTER, spin=0, orient=UP
 ) {
-	r1 = get_radius(r1=r1,r=r,d1=d1,d=d,dflt=10);
-	r2 = get_radius(r1=r2,r=r,d1=d2,d=d,dflt=10);
+	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
+	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
 	orient_and_anchor([2*r1,2*r1,l], size2=[2*r2,2*r2], anchor=anchor, spin=spin, orient=orient, geometry="cylinder", chain=true) {
 		difference() {
 			cylinder(r1=r1+overage, r2=r2+overage, h=l, center=true);

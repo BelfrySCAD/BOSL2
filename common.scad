@@ -83,12 +83,16 @@ function all_defined(v,recursive=false) = max([for (x=v) is_undef(x)||(recursive
 // Arguments:
 //   r1 = Most specific radius.
 //   d1 = Most specific diameter.
+//   r2 = Second most specific radius.
+//   d2 = Second most specific diameter.
 //   r = Most general radius.
 //   d = Most general diameter.
 //   dflt = Value to return if all other values given are `undef`.
-function get_radius(r1=undef, r=undef, d1=undef, d=undef, dflt=undef) = (
+function get_radius(r1=undef, r2=undef, r=undef, d1=undef, d2=undef, d=undef, dflt=undef) = (
 	!is_undef(r1)? r1 :
+	!is_undef(r2)? r2 :
 	!is_undef(d1)? d1/2 :
+	!is_undef(d2)? d2/2 :
 	!is_undef(r)? r :
 	!is_undef(d)? d/2 :
 	dflt

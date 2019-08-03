@@ -1530,8 +1530,8 @@ module arc_of(
 	sa=0, ea=360,
 	rot=true
 ) {
-	rx = get_radius(rx, r, dx, d, 1);
-	ry = get_radius(ry, r, dy, d, 1);
+	rx = get_radius(r1=rx, r=r, d1=dx, d=d, dflt=1);
+	ry = get_radius(r1=ry, r=r, d1=dy, d=d, dflt=1);
 	sa = posmod(sa, 360);
 	ea = posmod(ea, 360);
 	n = (abs(ea-sa)<0.01)?(n+1):n;

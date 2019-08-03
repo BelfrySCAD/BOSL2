@@ -38,8 +38,8 @@ module angle_pie_mask(
 	anchor=CENTER, spin=0, orient=UP
 ) {
 	l = first_defined([l, h, 1]);
-	r1 = get_radius(r1, r, d1, d, 10);
-	r2 = get_radius(r2, r, d2, d, 10);
+	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
+	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
 	orient_and_anchor([2*r1, 2*r1, l], orient, anchor, spin=spin, chain=true) {
 		pie_slice(ang=ang, l=l+0.1, r1=r1, r2=r2, anchor=CENTER);
 		children();

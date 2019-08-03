@@ -251,7 +251,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false) =
 			cp = is_def(cp) ? cp : [0,0],
 			start = is_def(start)? start : is_vector(angle) ? angle[0] : 0,
 			angle = is_vector(angle)? angle[1]-angle[0] : angle,
-			r = get_radius(r=r,d=d),
+			r = get_radius(r=r, d=d),
 			N = max(3, is_undef(N)? ceil(segs(r)*abs(angle)/360) : N),
 			arcpoints = [for(i=[0:N-1]) let(theta = start + i*angle/(N-1)) r*[cos(theta),sin(theta)]+cp],
 			extra = wedge? [cp] : []
@@ -370,17 +370,17 @@ module trapezoid(h, w1, w2, anchor=CENTER, spin=0)
 //   regular_ngon(n=8, side=20, realign=true);
 // Example(2D): Called as Function
 //   stroke(closed=true, regular_ngon(n=6, or=30));
-function regular_ngon(n=6, or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false, anchor=CENTER, spin=0) =
+function regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
 	let(
 		sc = 1/cos(180/n),
-		r = get_radius(r1=ir*sc, r=or, d1=id*sc, d=od, dflt=side/2/sin(180/n)),
+		r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n)),
 		offset = 90 + (realign? (180/n) : 0),
 		path = [for (a=[0:360/n:360-EPSILON]) r*[cos(a+offset),sin(a+offset)]]
 	) rot(spin, p=move(-r*normalize(anchor), p=path));
 
 
-module regular_ngon(n=6, or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false, anchor=CENTER, spin=0)
-	polygon(regular_ngon(n=n,or=or,od=od,ir=ir,id=id,side=side,realign=realign, anchor=anchor, spin=spin));
+module regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
+	polygon(regular_ngon(n=n,r=r,d=d,or=or,od=od,ir=ir,id=id,side=side,realign=realign, anchor=anchor, spin=spin));
 
 
 // Function&Module: pentagon()
@@ -412,12 +412,12 @@ module regular_ngon(n=6, or=undef, od=undef, ir=undef, id=undef, side=undef, rea
 //   pentagon(side=20, realign=true);
 // Example(2D): Called as Function
 //   stroke(closed=true, pentagon(or=30));
-function pentagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false, anchor=CENTER, spin=0) =
-	regular_ngon(n=5, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
+function pentagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
+	regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
 
 
-module pentagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false, anchor=CENTER, spin=0)
-	polygon(pentagon(or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin));
+module pentagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
+	polygon(pentagon(r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin));
 
 
 // Function&Module: hexagon()
@@ -447,12 +447,12 @@ module pentagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=fals
 //   hexagon(side=20, realign=true);
 // Example(2D): Called as Function
 //   stroke(closed=true, hexagon(or=30));
-function hexagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false, anchor=CENTER, spin=0) =
-	regular_ngon(n=6, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
+function hexagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
+	regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
 
 
-module hexagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false, anchor=CENTER, spin=0)
-	polygon(hexagon(or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin));
+module hexagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
+	polygon(hexagon(r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin));
 
 
 // Function&Module: octagon()
@@ -482,12 +482,12 @@ module hexagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false
 //   octagon(side=20, realign=true);
 // Example(2D): Called as Function
 //   stroke(closed=true, octagon(or=30));
-function octagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false, anchor=CENTER, spin=0) =
-	regular_ngon(n=8, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
+function octagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
+	regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
 
 
-module octagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false, anchor=CENTER, spin=0)
-	polygon(octagon(or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin));
+module octagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
+	polygon(octagon(r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin));
 
 
 // Function&Module: glued_circles()
@@ -510,7 +510,7 @@ module octagon(or=undef, od=undef, ir=undef, id=undef, side=undef, realign=false
 //   glued_circles(d=30, spread=30, tangent=-30);
 // Example(2D): Called as Function
 //   stroke(closed=true, glued_circles(r=15, spread=40, tangent=45));
-function glued_circles(r=undef, d=undef, spread=10, tangent=30, anchor=CENTER, spin=0) =
+function glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) =
 	let(
 		r = get_radius(r=r, d=d, dflt=10),
 		r2 = (spread/2 / sin(tangent)) - r,
@@ -536,7 +536,7 @@ function glued_circles(r=undef, d=undef, spread=10, tangent=30, anchor=CENTER, s
 	) rot(spin, p=move(-vmul(anchor,s), p=path));
 
 
-module glued_circles(r=undef, d=undef, spread=10, tangent=30, anchor=CENTER, spin=0)
+module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0)
 	polygon(glued_circles(r=r, d=d, spread=spread, tangent=tangent, anchor=anchor, spin=spin));
 
 
@@ -631,7 +631,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   for(i=[1:3]) right(2.5*i)supershape(step=.5,m1=88, m2=64, n1=-i*i,n2=1,r=1);
 function supershape(step=0.5,m1=4,m2=undef,n1=1,n2=undef,n3=undef,a=1,b=undef,r=undef,d=undef,anchor=CENTER, spin=0) =
 	let(
-		r = get_radius(r=r,d=d,dflt=undef),
+		r = get_radius(r=r, d=d, dflt=undef),
 		m2 = is_def(m2) ? m2 : m1,
 		n2 = is_def(n2) ? n2 : n1,
 		n3 = is_def(n3) ? n3 : n2,
