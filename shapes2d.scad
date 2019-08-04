@@ -342,7 +342,7 @@ module trapezoid(h, w1, w2, anchor=CENTER, spin=0)
 
 // Function&Module: regular_ngon()
 // Usage:
-//   regular_ngon(n, or|od, [realign]);
+//   regular_ngon(n, r|d|or|od, [realign]);
 //   regular_ngon(n, ir|id, [realign]);
 //   regular_ngon(n, side, [realign]);
 // Description:
@@ -351,7 +351,9 @@ module trapezoid(h, w1, w2, anchor=CENTER, spin=0)
 // Arguments:
 //   n = The number of sides.
 //   or = Outside radius, at points.
+//   r = Same as or
 //   od = Outside diameter, at points.
+//   d = Same as od
 //   ir = Inside radius, at center of sides.
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
@@ -393,7 +395,9 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CENTE
 //   When called as a module, creates a 2D regular pentagon.
 // Arguments:
 //   or = Outside radius, at points.
+//   r = Same as or.
 //   od = Outside diameter, at points.
+//   d = Same as od.
 //   ir = Inside radius, at center of sides.
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
@@ -428,7 +432,9 @@ module pentagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0
 //   When called as a module, creates a 2D regular hexagon.
 // Arguments:
 //   or = Outside radius, at points.
+//   r = Same as or
 //   od = Outside diameter, at points.
+//   d = Same as od
 //   ir = Inside radius, at center of sides.
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
@@ -463,7 +469,9 @@ module hexagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
 //   When called as a module, creates a 2D regular octagon.
 // Arguments:
 //   or = Outside radius, at points.
+//   r = Same as or
 //   od = Outside diameter, at points.
+//   d = Same as od
 //   ir = Inside radius, at center of sides.
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
@@ -542,14 +550,16 @@ module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0)
 
 // Function&Module: star()
 // Usage:
-//   star(n, r|d, ir|id|step, [realign]);
+//   star(n, r|d|or|od, ir|id|step, [realign]);
 // Description:
 //   When called as a function, returns the path needed to create a star polygon with N points.
 //   When called as a module, creates a star polygon with N points.
 // Arguments:
 //   n = The number of stellate tips on the star.
 //   r = The radius to the tips of the star.
+//   or = Same as r
 //   d = The diameter to the tips of the star.
+//   od = Same as d
 //   ir = The radius to the inner corners of the star.
 //   id = The diameter to the inner corners of the star.
 //   step = Calculates the radius of the inner star corners by virtually drawing a straight line `step` tips around the star.  2 <= step < n/2
@@ -565,12 +575,13 @@ module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0)
 //   star(n=7, r=50, step=3, realign=true);
 // Example(2D): Called as Function
 //   stroke(closed=true, star(n=5, r=50, ir=25));
-function star(n, r, d, ir, id, step, realign=false, anchor=CENTER, spin=0) =
+function star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0) =
 	let(
-		r = get_radius(r=r, d=d),
+		r = get_radius(r1=or, d1=od, r=r, d=d),
 		count = num_defined([ir,id,step]),
 		stepOK = is_undef(step) || (step>1 && step<n/2)
 	)
+        assert(is_def(n), "Must specify number of points, n")
 	assert(count==1, "Must specify exactly one of ir, id, step")
 	assert(stepOK, str("Parameter 'step' must be between 2 and ",floor(n/2)," for ",n," point star"))
 	let(
@@ -581,8 +592,8 @@ function star(n, r, d, ir, id, step, realign=false, anchor=CENTER, spin=0) =
 	) rot(spin, p=move(-r*normalize(anchor), p=path));
 
 
-module star(n, r, d, ir, id, step, realign=false, anchor=CENTER, spin=0)
-	polygon(star(n=n, r=r, d=d, ir=ir, id=id, step=step, realign=realign, anchor=anchor, spin=spin));
+module star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0)
+	polygon(star(n=n, r=r, d=d, od=od, or=or, ir=ir, id=id, step=step, realign=realign, anchor=anchor, spin=spin));
 
 
 function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
