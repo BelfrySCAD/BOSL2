@@ -112,6 +112,11 @@ module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=72
 //   trapezoidal_threaded_rod(d=25, l=40, pitch=10, thread_depth=8/3, thread_angle=50, starts=4, center=false, $fa=2, $fs=2);
 //   trapezoidal_threaded_rod(d=50, l=35, pitch=8, thread_angle=30, starts=3, bevel=true);
 //   trapezoidal_threaded_rod(l=25, d=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1, orient=RIGHT, anchor=BOTTOM);
+// Example(Med): Using as a Mask to Make Internal Threads
+//   bottom_half() difference() {
+//       cube(50, center=true);
+//       trapezoidal_threaded_rod(d=40, l=51, pitch=5, thread_angle=30, internal=true, orient=RIGHT, $fn=36);
+//   }
 // Example(2DMed): Typical Tooth Profile
 //   pitch = 2;
 //   depth = pitch * cos(30) * 5/8;
@@ -143,7 +148,7 @@ module trapezoidal_threaded_rod(
 	function _thread_pt(thread, threads, start, starts, astep, asteps, part, parts) =
 		astep + asteps * (thread + threads * (part + parts * start));
 
-	d = internal? d+$slop*3 : d;
+	d = internal? (d/cos(180/segs(d/2)) + $slop*3) : d;
 	astep = 360 / quantup(segs(d/2), starts);
 	asteps = ceil(360/astep);
 	threads = ceil(l/pitch/starts)+(starts<4?4-starts:1);
