@@ -63,8 +63,6 @@ module move(a=[0,0,0], x=0, y=0, z=0)
 	translate(a+[x,y,z]) children();
 }
 
-function translate(a=[0,0,0], p=undef) = move(a=a, p=p);
-
 function move(a=[0,0,0], p=undef, x=0, y=0, z=0) =
 	is_undef(p)? (
 		len(a)==2? affine2d_translate(a+[x,y]) :
@@ -73,6 +71,8 @@ function move(a=[0,0,0], p=undef, x=0, y=0, z=0) =
 		is_vector(p)? p+a+[x,y,z] :
 		[for (pt = p) pt+a+[x,y,z]]
 	);
+
+function translate(a=[0,0,0], p=undef) = move(a=a, p=p);
 
 
 // Module: left()
@@ -695,13 +695,19 @@ module skew_xz(xa=0, za=0) multmatrix(m = affine3d_skew_xz(xa, za)) children();
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
+//   `$idx` is set to the index number of each child being copied.
 //
 // Example:
 //   #sphere(r=10);
 //   place_copies([[-25,-25,0], [25,-25,0], [0,0,50], [0,25,0]]) sphere(r=10);
 module place_copies(a=[[0,0,0]])
 {
-	for (off = a) assert(is_vector(off)) translate(off) children();
+	assert(is_list(a));
+	for ($idx = idx(a)) {
+		$pos = a[$idx];
+		assert(is_vector($pos));
+		translate($pos) children();
+	}
 }
 
 
@@ -1264,6 +1270,7 @@ module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
 // Side Effects:
 //   `$ang` is set to the rotation angle (or XYZ rotation triplet) of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index value of each child copy.
+//   `$axis` is set to the axis to rotate around, if `rots` was given as a list of angles instead of a list of [X,Y,Z] rotation angles.
 //
 // Example:
 //   #cylinder(h=20, r1=5, r2=0);
@@ -1301,6 +1308,7 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[
 		assert(is_vector(rots)) rots;
 	for ($idx = idx(angs)) {
 		$ang = angs[$idx];
+		$axis = v;
 		translate(cp) {
 			rotate(a=$ang, v=v) {
 				translate(delta) {
@@ -1338,7 +1346,8 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[
 //
 // Side Effects:
 //   `$idx` is set to the index value of each child copy.
-//   `$ang` is set to the [X,Y,Z] rotation angles of each child copy, and can be used to modify each child individually.
+//   `$ang` is set to the rotation angle of each child copy, and can be used to modify each child individually.
+//   `$axis` is set to the axis vector rotated around.
 //
 // Example:
 //   xrot_copies([180, 270, 315])
@@ -1394,7 +1403,8 @@ module xrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 //
 // Side Effects:
 //   `$idx` is set to the index value of each child copy.
-//   `$ang` is set to the [X,Y,Z] rotation angles of each child copy, and can be used to modify each child individually.
+//   `$ang` is set to the rotation angle of each child copy, and can be used to modify each child individually.
+//   `$axis` is set to the axis vector rotated around.
 //
 // Example:
 //   yrot_copies([180, 270, 315])
@@ -1450,7 +1460,8 @@ module yrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 //
 // Side Effects:
 //   `$idx` is set to the index value of each child copy.
-//   `$ang` is set to the [X,Y,Z] rotation angles of each child copy, and can be used to modify each child individually.
+//   `$ang` is set to the rotation angle of each child copy, and can be used to modify each child individually.
+//   `$axis` is set to the axis vector rotated around.
 //
 // Example:
 //   zrot_copies([180, 270, 315])
@@ -1590,7 +1601,7 @@ module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=tr
 	// This approximation is based on the golden spiral method.
 	theta_phis = [for (x=[0:1:n-1]) [180*(1+sqrt(5))*(x+0.5)%360, acos(1-2*(x+0.5)/cnt)]];
 
-	for ($idx = [0:1:len(theta_phis)-1]) {
+	for ($idx = idx(theta_phis)) {
 		tp = theta_phis[$idx];
 		xyz = spherical_to_xyz(r, tp[0], tp[1]);
 		$pos = vmul(xyz,scale);
@@ -2023,12 +2034,24 @@ module top_half(s=100, z=0)
 //   operation, but it can provide results that are hard to get
 //   otherwise.
 //
+// Side Effects:
+//   `$idx` is set to the index value of the first child of each hulling pair, and can be used to modify each child pair individually.
+//   `$primary` is set to true when the child is the first in a chain pair.
+//
 // Example:
 //   chain_hull() {
 //       cube(5, center=true);
 //       translate([30, 0, 0]) sphere(d=15);
 //       translate([60, 30, 0]) cylinder(d=10, h=20);
 //       translate([60, 60, 0]) cube([10,1,20], center=false);
+//   }
+// Example: Using `$idx` and `$primary`
+//   chain_hull() {
+//       zrot(  0) right(100) if ($primary) cube(5+3*$idx,center=true); else sphere(r=10+3*$idx);
+//       zrot( 45) right(100) if ($primary) cube(5+3*$idx,center=true); else sphere(r=10+3*$idx);
+//       zrot( 90) right(100) if ($primary) cube(5+3*$idx,center=true); else sphere(r=10+3*$idx);
+//       zrot(135) right(100) if ($primary) cube(5+3*$idx,center=true); else sphere(r=10+3*$idx);
+//       zrot(180) right(100) if ($primary) cube(5+3*$idx,center=true); else sphere(r=10+3*$idx);
 //   }
 module chain_hull()
 {
@@ -2037,9 +2060,10 @@ module chain_hull()
 			children();
 		} else if ($children > 1) {
 			for (i =[1:1:$children-1]) {
+				$idx = i;
 				hull() {
-					children(i-1);
-					children(i);
+					let($primary=true) children(i-1);
+					let($primary=false) children(i);
 				}
 			}
 		}
@@ -2268,7 +2292,7 @@ module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
 //   rgn = [circle(d=45,$fn=3), circle(d=75,$fn=4), circle(d=50)];
 //   rainbow(rgn) stroke($item, closed=true);
 module rainbow(list)
-	for($idx=[0:1:len(list)-1],$item=[list[$idx]])
+	for($idx=idx(list),$item=[list[$idx]])
 		HSV(h=360*$idx/len(list))
 			children();
 
