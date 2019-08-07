@@ -137,6 +137,17 @@ function modrange(x, y, m, step=1) =
 function sqr(x) = x*x;
 
 
+// Function: log2()
+// Usage:
+//   foo = log2(x);
+// Description: Returns the logarith base 10 of the value given.
+// Examples:
+//   log2(0.125);  // Returns -3
+//   log2(16);     // Returns 4
+//   log2(256);    // Returns 8
+function log2(x) = ln(x)/ln(2);
+
+
 // Function: rand_int()
 // Usage:
 //   rand_int(min,max,N,[seed]);
@@ -243,7 +254,29 @@ function atanh(x) = ln((1+x)/(1-x))/2;
 // Example:
 //   sum([1,2,3]);  // returns 6.
 //   sum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [9, 12, 15]
-function sum(v, i=0, tot=undef) = i>=len(v)? tot : sum(v, i+1, ((tot==undef)? v[i] : tot+v[i]));
+function sum(v, _i=0, _acc=undef) = _i>=len(v)? _acc : sum(v, _i+1, ((_acc==undef)? v[_i] : _acc+v[_i]));
+
+
+// Function: cumsum()
+// Description:
+//   Returns a list where each item is the cumulative sum of all items up to and including the corresponding entry in the input list.
+//   If passed an array of vectors, returns a list of cumulative vectors sums.
+// Arguments:
+//   v = The list to get the sum of.
+// Example:
+//   cumsum([1,1,1]);  // returns [1,2,3]
+//   cumsum([2,2,2]);  // returns [2,4,6]
+//   cumsum([1,2,3]);  // returns [1,3,6]
+//   cumsum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [[1,2,3], [4,6,8], [9,12,15]]
+function cumsum(v,_i=0,_acc=[]) =
+	_i==len(v) ? _acc :
+	cumsum(
+		v, _i+1,
+		concat(
+			_acc,
+			[_i==0 ? v[_i] : select(_acc,-1)+v[_i]]
+		)
+	);
 
 
 // Function: sum_of_squares()
