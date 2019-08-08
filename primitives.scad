@@ -35,10 +35,9 @@
 //   path = square([40,30], anchor=FRONT, spin=30);
 module square(size, center=undef, anchor=FRONT+LEFT, spin=0) {
 	size = is_num(size)? [size,size] : point2d(size);
-	s = size/2;
-	pts = [[-s.x,-s.y], [-s.x,s.y], [s.x,s.y], [s.x,-s.y]];
+	pts = [[0,0], [0,size.y], size, [size.x,0]];
 	orient_and_anchor(point3d(size), UP, anchor, spin=spin, center=center, noncentered=FRONT+LEFT, two_d=true, chain=true) {
-		polygon(pts);
+		translate(-size/2) polygon(pts);
 		children();
 	}
 }
