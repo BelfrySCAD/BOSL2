@@ -1104,6 +1104,11 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //      zrot(180/6) cylinder(d=5, h=1, $fn=6);
 //   %polygon(poly);
 //
+// Example: Using `$row` and `$col`
+//   grid2d(spacing=[8,8], cols=8, rows=8, anchor=LEFT+FRONT)
+//       color(($row+$col)%2?"black":"red")
+//           cube([8,8,0.01], center=false);
+//
 // Example:
 //   // Makes a grid of hexagon pillars whose tops are all
 //   // angled to reflect light at [0,0,50], if they were shiny.
@@ -1124,27 +1129,27 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 		siz = scalar_vec3(size);
 		if (!is_undef(spacing)) {
 			spc = vmul(scalar_vec3(spacing), scl);
-			maxcols = ceil(siz[0]/spc[0]);
-			maxrows = ceil(siz[1]/spc[1]);
+			maxcols = ceil(siz.x/spc.x);
+			maxrows = ceil(siz.y/spc.y);
 			grid2d(spacing=spacing, cols=maxcols, rows=maxrows, stagger=stagger, scale=scale, in_poly=in_poly, anchor=anchor, spin=spin, orient=orient) children();
 		} else {
-			spc = [siz[0]/cols, siz[1]/rows, 0];
+			spc = [siz.x/cols, siz.y/rows];
 			grid2d(spacing=spc, cols=cols, rows=rows, stagger=stagger, scale=scale, in_poly=in_poly, anchor=anchor, spin=spin, orient=orient) children();
 		}
 	} else {
-		spc = is_list(spacing)? spacing : vmul(scalar_vec3(spacing), scl);
+		spc = is_list(spacing)? point3d(spacing) : vmul(scalar_vec3(spacing), scl);
 		bounds = !is_undef(in_poly)? pointlist_bounds(in_poly) : undef;
 		bnds = !is_undef(bounds)? [for (a=[0,1]) 2*max(vabs([ for (i=[0,1]) bounds[i][a] ]))+1 ] : undef;
 		mcols = !is_undef(cols)? cols : (!is_undef(spc) && !is_undef(bnds))? quantup(ceil(bnds[0]/spc[0])-1, 4)+1 : undef;
 		mrows = !is_undef(rows)? rows : (!is_undef(spc) && !is_undef(bnds))? quantup(ceil(bnds[1]/spc[1])-1, 4)+1 : undef;
-		siz = vmul(spc, [mcols-1, mrows-1, 0.01]);
+		siz = vmul(spc, [mcols-1, mrows-1, 0])+[0,0,0.01];
 		echo(siz=siz, spc=spc, spacing=spacing, scl=scl, mcols=mcols, mrows=mrows);
 		staggermod = (stagger == "alt")? 1 : 0;
 		if (stagger == false) {
 			orient_and_anchor(siz, orient, anchor, spin=spin) {
 				for (row = [0:1:mrows-1]) {
 					for (col = [0:1:mcols-1]) {
-						pos = [col*spc[0], row*spc[1]] - point2d(siz/2);
+						pos = [col*spc.x, row*spc.y] - point2d(siz/2);
 						if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
 							$col = col;
 							$row = row;
