@@ -1012,6 +1012,7 @@ function offset(
 	flip_faces=false
 ) =
 	is_region(path)? (
+		assert(!return_faces, "return_faces not supported for regions.")
 		let(
 			path = [for (p=path) polygon_clockwise(p)? p : reverse(p)],
 			rgn = exclusive_or([for (p = path) [p]]),
