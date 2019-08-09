@@ -17,9 +17,9 @@
 function ident(n) = [for (i = [0:1:n-1]) [for (j = [0:1:n-1]) (i==j)?1:0]];
 
 
-// Function: affine2d_to_affine3d()
+// Function: affine2d_to_3d()
 // Description: Takes a 3x3 affine2d matrix and returns its 4x4 affine3d equivalent.
-function mat3_to_mat4(m) = concat(
+function affine2d_to_3d(m) = concat(
 	[for (r = [0:2])
 		concat(
 			[for (c = [0:2]) m[r][c]],

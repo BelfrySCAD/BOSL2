@@ -43,7 +43,7 @@ function simplify3d_path(path, eps=1e-6) = simplify_path(path, eps=eps);
 //   Returns the length of the path.
 // Arguments:
 //   path = The list of points of the path to measure.
-//   closed = true if the path is closed.  Default: false  
+//   closed = true if the path is closed.  Default: false
 // Example:
 //   path = [[0,0], [5,35], [60,-25], [80,0]];
 //   echo(path_length(path));
@@ -441,7 +441,7 @@ module debug_polygon(points, paths=undef, convexity=2, size=1)
 //   Uniformly spreads out copies of children along a path.  Copies are located based on path length.  If you specify `n` but not spacing then `n` copies will be placed
 //   with one at path[0] of `closed` is true, or spanning the entire path from start to end if `closed` is false.
 //   If you specify `spacing` but not `n` then copies will spread out starting from one at path[0] for `closed=true` or at the path center for open paths.
-//   If you specify `sp` then the copies will start at `sp`.  
+//   If you specify `sp` then the copies will start at `sp`.
 //
 // Usage:
 //   path_spread(path), [n], [spacing], [sp], [rotate_children], [closed]) ...
@@ -454,10 +454,10 @@ module debug_polygon(points, paths=undef, convexity=2, size=1)
 //
 // Side Effects:
 //   `$pos` is set to the center of each copy
-//   `$idx` is set to the index number of each copy.  In the case of closed paths the first copy is at `path[0]` unless you give `sp`. 
+//   `$idx` is set to the index number of each copy.  In the case of closed paths the first copy is at `path[0]` unless you give `sp`.
 //   `$dir` is set to the direction vector of the path at the point where the copy is placed.
 //   `$normal` is set to the direction of the normal vector to the path direction that is coplanar with the path at this point
-// 
+//
 // Example(2D):
 //   spiral = [for(theta=[0:360*8]) theta * [cos(theta), sin(theta)]]/100;
 //   stroke(spiral,width=.25);
@@ -466,7 +466,7 @@ module debug_polygon(points, paths=undef, convexity=2, size=1)
 //   circle = regular_ngon(n=64, or=10);
 //   stroke(circle,width=1,closed=true);
 //   color("green")path_spread(circle, n=7, closed=true) circle(r=1+$idx/3);
-// Example(2D):  
+// Example(2D):
 //   heptagon = regular_ngon(n=7, or=10);
 //   stroke(heptagon, width=1, closed=true);
 //   color("purple") path_spread(heptagon, n=9, closed=true) square([0.5,3],anchor=FRONT);
@@ -498,7 +498,7 @@ module debug_polygon(points, paths=undef, convexity=2, size=1)
 //   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
 //   stroke(sinwav,width=.1);
 //   color("red")path_spread(sinwav, n=5, sp=18) square([.2,1.5],anchor=FRONT);
-// Example(2D): 
+// Example(2D):
 //   wedge = arc(angle=[0,100], r=10, $fn=64);
 //   difference(){
 //     polygon(concat([[0,0]],wedge));
@@ -520,39 +520,47 @@ module debug_polygon(points, paths=undef, convexity=2, size=1)
 //   }
 module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=false)
 {
-  length = path_length(path,closed);
-  distances = is_def(sp) ? (
-                 is_def(n) && is_def(spacing) ? list_range(s=sp, step=spacing, n=n) :
-                 is_def(n) ? list_range(s=sp, e=length, n=n) :
-                             list_range(s=sp, step=spacing, e=length)
-              ) :
-              is_def(n) && is_undef(spacing) ? (closed ? let(range=list_range(s=0,e=length, n=n+1)) slice(range,0,-2) :
-                                                         list_range(s=0, e=length, n=n)
-                                               ) :
-              let( n = is_def(n) ? n : floor(length/spacing)+(closed?0:1),
-                   ptlist = list_range(s=0,step=spacing,n=n),
-                   listcenter = mean(ptlist)
-                  )
-              closed ? sort([for(entry=ptlist) posmod(entry-listcenter,length)]) :
-                            [for(entry=ptlist) entry + length/2-listcenter ];
-  distOK = min(distances)>=0 && max(distances)<=length;
-  assert(distOK,"Cannot fit all of the copies");
-  cutlist = path_cut(path, distances, closed, direction=true);
-  planar = len(path[0])==2;
-  if (true) for(i=[0:1:len(cutlist)-1]) {
-      $pos = cutlist[i][0];
-      $idx = i;
-      $dir = rotate_children ? (planar?[1,0]:[1,0,0]) : cutlist[i][2];
-      $normal = rotate_children? (planar?[0,1]:[0,0,1]) : cutlist[i][3];
-      translate($pos) {
-         if (rotate_children) {
-           if(planar) rot(from=[0,1],to=cutlist[i][3]) children(); 
-           else multmatrix(mat3_to_mat4(transpose([cutlist[i][2],cross(cutlist[i][3],cutlist[i][2]), cutlist[i][3]]))) children(); 
-          }
-          else children();
-      }
-  }
-}  
+	length = path_length(path,closed);
+	distances = is_def(sp)? (
+		is_def(n) && is_def(spacing)? list_range(s=sp, step=spacing, n=n) :
+		is_def(n)? list_range(s=sp, e=length, n=n) :
+		list_range(s=sp, step=spacing, e=length)
+	) : is_def(n) && is_undef(spacing)? (
+		closed?
+			let(range=list_range(s=0,e=length, n=n+1)) slice(range,0,-2) :
+			list_range(s=0, e=length, n=n)
+	) : (
+		let(
+			n = is_def(n)? n : floor(length/spacing)+(closed?0:1),
+			ptlist = list_range(s=0,step=spacing,n=n),
+			listcenter = mean(ptlist)
+		) closed?
+			sort([for(entry=ptlist) posmod(entry-listcenter,length)]) :
+			[for(entry=ptlist) entry + length/2-listcenter ]
+	);
+	distOK = min(distances)>=0 && max(distances)<=length;
+	assert(distOK,"Cannot fit all of the copies");
+	cutlist = path_cut(path, distances, closed, direction=true);
+	planar = len(path[0])==2;
+	if (true) for(i=[0:1:len(cutlist)-1]) {
+		$pos = cutlist[i][0];
+		$idx = i;
+		$dir = rotate_children ? (planar?[1,0]:[1,0,0]) : cutlist[i][2];
+		$normal = rotate_children? (planar?[0,1]:[0,0,1]) : cutlist[i][3];
+		translate($pos) {
+			if (rotate_children) {
+				if(planar) {
+					rot(from=[0,1],to=cutlist[i][3]) children();
+				} else {
+					multmatrix(affine2d_to_3d(transpose([cutlist[i][2],cross(cutlist[i][3],cutlist[i][2]), cutlist[i][3]])))
+						children();
+				}
+			} else {
+				children();
+			}
+		}
+	}
+}
 
 
 // Function: path_cut()
@@ -561,17 +569,20 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
 //   path_cut(path, dists, [closed], [direction])
 //
 // Description:
-//   Cuts a path at a list of distances from the first point in the path.  Returns a list of the cut points and indices of the next point in the path after that point. 
-//   So for example, a return value entry of [[2,3], 5] means that the cut point was [2,3] and the next point on the path after this point is path[5].  
-//   If the path is too short then path_cut returns undef.  If you set `direction` to true then `path_cut` will also return the tangent vector to the path 
-//   and a normal vector to the path.  It tries to find a normal vector that is coplanar to the path near the cut point.  If this fails it will return a normal
-//   vector parallel to the xy plane.  The output with direction vectors will be `[point, next_index, tangent, normal]`.  
+//   Cuts a path at a list of distances from the first point in the path.  Returns a list of the cut
+//   points and indices of the next point in the path after that point.  So for example, a return
+//   value entry of [[2,3], 5] means that the cut point was [2,3] and the next point on the path after
+//   this point is path[5].  If the path is too short then path_cut returns undef.  If you set
+//   `direction` to true then `path_cut` will also return the tangent vector to the path and a normal
+//   vector to the path.  It tries to find a normal vector that is coplanar to the path near the cut
+//   point.  If this fails it will return a normal vector parallel to the xy plane.  The output with
+//   direction vectors will be `[point, next_index, tangent, normal]`.
 //
 // Arguments:
 //   path = path to cut
-//   dists = distances where the path should be cut (a list) or a scalar single distance 
+//   dists = distances where the path should be cut (a list) or a scalar single distance
 //   closed = set to true if the curve is closed.  Default: false
-//   direction = set to true to return direction vectors.  Default: false                                   
+//   direction = set to true to return direction vectors.  Default: false
 //
 // Example(NORENDER):
 //   square=[[0,0],[1,0],[1,1],[0,1]];
@@ -580,75 +591,76 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
 //   path_cut(square, [0,0.8,1.6,2.4,3.2], closed=true);  // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], [[0, 0.8], 4]]
 //   path_cut(square, [0,0.8,1.6,2.4,3.2]);               // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], undef]
 function path_cut(path, dists, closed=false, direction=false) =
-      let( long_enough = len(path) >= (closed ? 3 : 2)) 
-      assert(long_enough,len(path)<2 ? "Two points needed to define a path" : "Closed path must include three points")                                                       
-      !is_list(dists) ? path_cut(path, [dists],closed, direction)[0] :
-      let(cuts = _path_cut(path,dists,closed))
-      !direction ? cuts :
-              let( dir = _path_cuts_dir(path, cuts, closed),
-                   normals = _path_cuts_normals(path, cuts, dir, closed)
-                )
-              zip(cuts, array_group(dir,1), array_group(normals,1));
+	let(long_enough = len(path) >= (closed ? 3 : 2))
+	assert(long_enough,len(path)<2 ? "Two points needed to define a path" : "Closed path must include three points")
+	!is_list(dists)? path_cut(path, [dists],closed, direction)[0] :
+	let(cuts = _path_cut(path,dists,closed))
+	!direction ? cuts : let(
+		dir = _path_cuts_dir(path, cuts, closed),
+		normals = _path_cuts_normals(path, cuts, dir, closed)
+	) zip(cuts, array_group(dir,1), array_group(normals,1));
 
 // Main recursive path cut function
-function _path_cut(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[]) = 
-      dind == len(dists) ? result : 
-      let(
-         lastpt = len(result)>0 ? select(result,-1)[0] : [],
-         dpartial = len(result)==0 ? 0 : norm(lastpt-path[pind]),
-         nextpoint = dpartial > dists[dind]-dtotal ? 
-                              [lerp(lastpt,path[pind], (dists[dind]-dtotal)/dpartial),pind]
-                          :   
-                              _path_cut_single(path, dists[dind]-dtotal-dpartial, closed, pind)
-      )
-     nextpoint == undef ? concat(result, replist(undef,len(dists)-dind)):
-     _path_cut(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
+function _path_cut(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[]) =
+	dind == len(dists) ? result :
+	let(
+		lastpt = len(result)>0? select(result,-1)[0] : [],
+		dpartial = len(result)==0? 0 : norm(lastpt-path[pind]),
+		nextpoint = dpartial > dists[dind]-dtotal?
+			[lerp(lastpt,path[pind], (dists[dind]-dtotal)/dpartial),pind] :
+			_path_cut_single(path, dists[dind]-dtotal-dpartial, closed, pind)
+	) is_undef(nextpoint)?
+		concat(result, replist(undef,len(dists)-dind)) :
+		_path_cut(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
 
 // Search for a single cut point in the path
-function _path_cut_single(path, dist, closed=false, ind=0, eps=1e-7) = 
-                ind>=len(path) ? undef :
-                ind==len(path)-1 && !closed ? (dist<eps? [path[ind],ind+1] : undef) :
-                let(d = norm(path[ind]-select(path,ind+1)))
-                d > dist ? [lerp(path[ind],select(path,ind+1),dist/d), ind+1] :
-                            _path_cut_single(path, dist-d,closed, ind+1, eps);
+function _path_cut_single(path, dist, closed=false, ind=0, eps=1e-7) =
+	ind>=len(path)? undef :
+	ind==len(path)-1 && !closed? (dist<eps? [path[ind],ind+1] : undef) :
+	let(d = norm(path[ind]-select(path,ind+1))) d > dist ?
+		[lerp(path[ind],select(path,ind+1),dist/d), ind+1] :
+		_path_cut_single(path, dist-d,closed, ind+1, eps);
 
 // Find normal directions to the path, coplanar to local part of the path
 // Or return a vector parallel to the x-y plane if the above fails
 function _path_cuts_normals(path, cuts, dirs, closed=false) =
-      [for(i=[0:len(cuts)-1])
-        len(path[0])==2? [-dirs[i].y,dirs[i].x] : 
-        let(
-         plane = len(path)<3 ? undef :
-           let( start = max(min(cuts[i][1],len(path)-1),2))
-           _path_plane(path, start, start-2)
-        )
-         plane==undef ? normalize([-dirs[i].y, dirs[i].x,0]) :
-                        normalize(cross(dirs[i],cross(plane[0],plane[1])))
-       ];
+	[for(i=[0:len(cuts)-1])
+		len(path[0])==2? [-dirs[i].y, dirs[i].x] : (
+			let(
+				plane = len(path)<3 ? undef :
+				let(start = max(min(cuts[i][1],len(path)-1),2)) _path_plane(path, start, start-2)
+			)
+			plane==undef?
+				normalize([-dirs[i].y, dirs[i].x,0]) :
+				normalize(cross(dirs[i],cross(plane[0],plane[1])))
+		)
+	];
 
 // Scan from the specified point (ind) to find a noncoplanar triple to use
-// to define the plane of the path. 
+// to define the plane of the path.
 function _path_plane(path, ind, i,closed) =
-     i<(closed?-1:0) ? undef :
-     !collinear(path[ind],path[ind-1], select(path,i)) ? [select(path,i)-path[ind-1],path[ind]-path[ind-1]] : _path_plane(path, ind, i-1);
+	i<(closed?-1:0) ? undef :
+	!collinear(path[ind],path[ind-1], select(path,i))?
+		[select(path,i)-path[ind-1],path[ind]-path[ind-1]] :
+		_path_plane(path, ind, i-1);
 
 // Find the direction of the path at the cut points
 function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
-    [for(ind=[0:len(cuts)-1])
-      let(
-          nextind = cuts[ind][1],
-          nextpath = normalize(select(path, nextind+1)-select(path, nextind)),
-          thispath = normalize(select(path, nextind) - path[nextind-1]),
-          lastpath = normalize(path[nextind-1] - select(path, nextind-2)),
-          nextdir = 
-            nextind==len(path) && !closed ? lastpath :
-           (nextind<=len(path)-2 || closed) && approx(cuts[ind][0], path[nextind],eps) ? 
-            normalize(nextpath+thispath) :
-           (nextind>1 || closed) && approx(cuts[ind][0],path[nextind-1],eps) ?   
-            normalize(thispath+lastpath) :
-            thispath
-        )
-     nextdir];
+	[for(ind=[0:len(cuts)-1])
+		let(
+			nextind = cuts[ind][1],
+			nextpath = normalize(select(path, nextind+1)-select(path, nextind)),
+			thispath = normalize(select(path, nextind) - path[nextind-1]),
+			lastpath = normalize(path[nextind-1] - select(path, nextind-2)),
+			nextdir =
+				nextind==len(path) && !closed? lastpath :
+				(nextind<=len(path)-2 || closed) && approx(cuts[ind][0], path[nextind],eps)?
+					normalize(nextpath+thispath) :
+					(nextind>1 || closed) && approx(cuts[ind][0],path[nextind-1],eps)?
+						normalize(thispath+lastpath) :
+						thispath
+		) nextdir
+	];
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
