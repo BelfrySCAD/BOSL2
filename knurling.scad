@@ -43,7 +43,7 @@
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
-// Examples:
+// Examples(Med):
 //   knurled_cylinder(l=30, r=20, count=30, profile=120, helix=45);
 //   knurled_cylinder(l=30, r=20, count=30, profile=120, helix=30);
 //   knurled_cylinder(l=30, r=20, count=30, profile=90, helix=30);
@@ -84,12 +84,12 @@ module knurled_cylinder(
 		[
 			for (layer = [0:1:layers-1], i=idx(path)) let(
 				loff = (layer%2)? 2 : 0,
-				i1 = layer*plen+i,
-				i2 = layer*plen+((i+1)%plen),
-				i3 = (layer+1)*plen+posmod(i+0+loff,plen),
-				i4 = (layer+1)*plen+posmod(i+1+loff,plen),
-				i5 = (layer+1)*plen+posmod(i-1+loff,plen),
-				i6 = (layer+1)*plen+posmod(i-2+loff,plen)
+				i1 = layer*plen+((i+1)%plen),
+				i2 = layer*plen+((i+2)%plen),
+				i3 = (layer+1)*plen+posmod(i+1+loff,plen),
+				i4 = (layer+1)*plen+posmod(i+2+loff,plen),
+				i5 = (layer+1)*plen+posmod(i-0+loff,plen),
+				i6 = (layer+1)*plen+posmod(i-1+loff,plen)
 			) each [
 				[i1, i2, ((i%2)? i5 : i3)],
 				[i3, i5, ((i%2)? i2 : i1)]
