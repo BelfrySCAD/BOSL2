@@ -263,14 +263,14 @@ module frame_ref(s=15) {
 //   alpha = transparency value.  Default: 1.0
 //   unit = unit to mark.  Scales the ruler marks to a different length.  Default: 1
 //   inch = set to true for a ruler scaled to inches (assuming base dimension is mm).  Default: false
-// Examples:
+// Examples(2D,Big):
 //   ruler(100,depth=3);
 //   ruler(100,depth=3,labels=true);
 //   ruler(27);
 //   ruler(27,maxscale=0);
 //   ruler(100,pipscale=3/4,depth=2);
 //   ruler(100,width=2,depth=2);
-// Example:  Metric vs Imperial
+// Example(2D,Big):  Metric vs Imperial
 //   ruler(12,width=50,inch=true,labels=true,maxscale=0);
 //   fwd(50)ruler(300,width=50,labels=true);
 module ruler(length=100, width=undef, thickness=1, depth=3, labels=false, pipscale=1/3, maxscale=undef, colors=["black","white"], alpha=1.0, unit=1, inch=false, anchor=ALLNEG, spin=0, orient=UP)
