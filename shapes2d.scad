@@ -234,7 +234,6 @@ module stroke(
 //   path = arc(points=[[5,30],[-10,-10],[30,5]], wedge=true);
 //   stroke(closed=true, path);
 // Example(FlatSpin):
-//   include <BOSL2/paths.scad>
 //   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
 //   trace_polyline(path, showpts=true, color="cyan");
 function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false) =

@@ -19,6 +19,7 @@ include <affine.scad>
 include <quaternions.scad>
 include <coords.scad>
 include <geometry.scad>
+include <paths.scad>
 include <attachments.scad>
 include <transforms.scad>
 include <primitives.scad>
