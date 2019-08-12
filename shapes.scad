@@ -710,7 +710,7 @@ module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 	anchor = rot(from=RIGHT, to=UP, p=anchor);
 	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=RIGHT, anchor=anchor) {
 		for (i=[0:1:$children-2]) children(i);
-		if ($children>0) children(0);
+		if ($children>0) children($children-1);
 	}
 }
 
@@ -751,7 +751,7 @@ module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 	anchor = rot(from=BACK, to=UP, p=anchor);
 	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=BACK, anchor=anchor) {
 		for (i=[0:1:$children-2]) children(i);
-		if ($children>0) children(0);
+		if ($children>0) children($children-1);
 	}
 }
 
@@ -791,7 +791,7 @@ module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 {
 	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=UP, anchor=anchor) {
 		for (i=[0:1:$children-2]) children(i);
-		if ($children>0) children(0);
+		if ($children>0) children($children-1);
 	}
 }
 
