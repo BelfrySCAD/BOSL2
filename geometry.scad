@@ -1428,6 +1428,8 @@ module exclusive_or() {
 			children(8);
 			children(9);
 		}
+	} else {
+		assert($children<=10, "exclusive_or() can only handle up to 10 children.");
 	}
 }
 
