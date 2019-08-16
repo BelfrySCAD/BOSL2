@@ -107,10 +107,18 @@ function distance_from_line(line, pt) =
 // Usage:
 //   line_normal([P1,P2])
 //   line_normal(p1,p2)
-// Description: Returns the 2D normal vector to the given 2D line.
+// Description:
+//   Returns the 2D normal vector to the given 2D line. This is otherwise known as the perpendicular vector counter-clockwise to the given ray.
 // Arguments:
 //   p1 = First point on 2D line.
 //   p2 = Second point on 2D line.
+// Example(2D):
+//   p1 = [10,10];
+//   p2 = [50,30];
+//   n = line_normal(p1,p2);
+//   stroke([p1,p2], endcap2="arrow2");
+//   color("green") stroke([p1,p1+10*n], endcap2="arrow2");
+//   color("blue") place_copies([p1,p2]) circle(d=2, $fn=12);
 function line_normal(p1,p2) =
 	is_undef(p2)? line_normal(p1[0],p1[1]) :
 	normalize([p1.y-p2.y,p2.x-p1.x]);
@@ -191,6 +199,22 @@ function line_segment_intersection(line,segment,eps=EPSILON) =
 //   pt3 = A point that the second ray passes though.
 //   r = The radius of the circle to find.
 //   d = The diameter of the circle to find.
+// Example(2D):
+//   pts = [[60,40], [10,10], [65,5]];
+//   rad = 10;
+//   stroke([pts[1],pts[0]], endcap2="arrow2");
+//   stroke([pts[1],pts[2]], endcap2="arrow2");
+//   circ = find_circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad);
+//   translate(circ[0]) {
+//       color("green") {
+//           stroke(circle(r=rad),closed=true);
+//           stroke([[0,0],rad*[cos(315),sin(315)]]);
+//       }
+//   }
+//   place_copies(pts) color("blue") circle(d=2, $fn=12);
+//   translate(circ[0]) color("red") circle(d=2, $fn=12);
+//   labels = [[pts[0], "pt1"], [pts[1],"pt2"], [pts[2],"pt3"], [circ[0], "CP"], [circ[0]+[cos(315),sin(315)]*rad*0.7, "r"]];
+//   for(l=labels) translate(l[0]+[0,2]) color("black") text(text=l[1], size=2.5, halign="center");
 function find_circle_2tangents(pt1, pt2, pt3, r=undef, d=undef) =
 	let(
 		r = get_radius(r=r, d=d, dflt=undef),
@@ -221,6 +245,12 @@ function find_circle_2tangents(pt1, pt2, pt3, r=undef, d=undef) =
 //   pt1 = The first point.
 //   pt2 = The second point.
 //   pt3 = The third point.
+// Example(2D):
+//   pts = [[60,40], [10,10], [65,5]];
+//   circ = find_circle_3points(pts[0], pts[1], pts[2]);
+//   translate(circ[0]) color("green") stroke(circle(r=circ[1]),closed=true,$fn=72);
+//   translate(circ[0]) color("red") circle(d=3, $fn=12);
+//   place_copies(pts) color("blue") circle(d=3, $fn=12);
 function find_circle_3points(pt1, pt2, pt3) =
 	collinear(pt1,pt2,pt3)? [undef,undef,undef] :
 	let(
@@ -247,7 +277,7 @@ function find_circle_3points(pt1, pt2, pt3) =
 		l2 = [mp2, mp2+mpv2],
 		isect = line_intersection(l1,l2)
 	) is_undef(isect)? [undef,undef,undef] : let(
-		r = norm(p2-isect)
+		r = norm(pt2-isect)
 	) [isect, r, n2];
 
 
@@ -663,7 +693,7 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
 //   pointlist_bounds(pts);
 // Description:
 //   Finds the bounds containing all the 2D or 3D points in `pts`.
-//   Returns [[minx, miny, minz], [maxx, maxy, maxz]]
+//   Returns `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
 // Arguments:
 //   pts = List of points.
 function pointlist_bounds(pts) = [
