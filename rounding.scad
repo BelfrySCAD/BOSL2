@@ -306,7 +306,7 @@ function _smooth_bez_fill(points,k) = [
 
 function _bezcorner(points, parm) =
 	let(
-		P = is_list(parm)? (
+		P = is_list(parm)?
 			let(
 				d = parm[0],
 				k = parm[1],
@@ -318,11 +318,8 @@ function _bezcorner(points, parm) =
 				points[1],
 				points[1]+k*d*next,
 				points[1]+d*next
-			]
-		) : (
-			_smooth_bez_fill(points,parm),
-			N = max(3,$fn>0 ?$fn : ceil(bezier_segment_length(P)/$fs))
-		)
+			] : _smooth_bez_fill(points,parm),
+		N = max(3,$fn>0 ?$fn : ceil(bezier_segment_length(P)/$fs))
 	)
 	bezier_curve(P,N);
 
