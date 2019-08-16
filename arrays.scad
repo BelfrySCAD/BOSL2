@@ -183,15 +183,22 @@ function deduplicate(list, closed=false, eps=EPSILON) =
 //   then the list is extended and filled in with the `dflt` value.  If you set `minlen` then the list is
 //   lengthed, if necessary, by padding with `dflt` to that length.  The `indices` list can be in any
 //   order but run time will be (much) faster for long lists if it is already sorted.  Reptitions are
-//   not allowed.
+//   not allowed.  If `indices` is given as a non-list scalar, then that index of the given `list` will
+//   be set to the value of `values`.
 // Arguments:
 //   list = List to set items in.  Default: []
 //   indices = List of indices into `list` to set.
 //   values = List of values to set.
 //   dflt = Default value to store in sparse skipped indices.
 //   minlen = Minimum length to expand list to.
+// Examples:
+//   list_set([2,3,4,5], 2, 21);  // Returns: [2,3,21,5]
+//   list_set([2,3,4,5], [1,3], [81,47]);  // Returns: [2,81,4,47]
 function list_set(list=[],indices,values,dflt=0,minlen=0) =
-	!is_list(indices) ? list_set(list,[indices],[values],dflt) :
+	!is_list(indices)? (
+		(is_num(indices) && indices<len(list))? [for (i=idx(list)) i==indices? values : list[i]] :
+		list_set(list,[indices],[values],dflt)
+	) :
 	assert(len(indices)==len(values),"Index list and value list must have the same length")
 	let(
 		sortind = list_increasing(indices) ? list_range(len(indices)) : sortidx(indices),
