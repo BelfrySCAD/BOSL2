@@ -102,7 +102,6 @@ function distance_from_line(line, pt) =
 	norm(d - ((d * n) * n));
 
 
-
 // Function: line_normal()
 // Usage:
 //   line_normal([P1,P2])
@@ -184,6 +183,39 @@ function line_segment_intersection(line,segment,eps=EPSILON) =
 	let(
 		isect = _general_line_intersection(line,segment,eps=eps)
 	) isect[2]<0-eps || isect[2]>1+eps ? undef : isect[0];
+
+
+// Function: line_closest_point()
+// Usage:
+//   line_closest_point(line,pt);
+// Description:
+//   Returns the point on the given `line` that is closest to the given point `pt`.
+// Arguments:
+//   line = A list of two points that are on the unbounded line.
+//   pt = The point to find the closest point on the line to.
+function line_closest_point(line,pt) =
+	let(
+		n = line_normal(line),
+		isect = _general_line_intersection(line,[pt,pt+n])
+	) isect[0];
+
+
+// Function: segment_closest_point()
+// Usage:
+//   segment_closest_point(seg,pt);
+// Description:
+//   Returns the point on the given line segment `seg` that is closest to the given point `pt`.
+// Arguments:
+//   seg = A list of two points that are the endpoints of the bounded line segment.
+//   pt = The point to find the closest point on the segment to.
+function segment_closest_point(seg,pt) =
+	let(
+		n = line_normal(seg),
+		isect = _general_line_intersection(seg,[pt,pt+n])
+	)
+	isect[1]<=0? seg[0] :
+	isect[1]>=1? seg[1] :
+	isect[0];
 
 
 // Function: find_circle_2tangents()

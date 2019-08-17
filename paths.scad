@@ -52,6 +52,31 @@ function path_length(path,closed=false) =
 	sum([for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i])])+(closed?norm(path[len(path)-1]-path[0]):0);
 
 
+// Function: path_closest_point()
+// Usage:
+//   path_closest_point(path, pt);
+// Description:
+//   Finds the closest path segment, and point on that segment to the given point.
+//   Returns `[SEGNUM, POINT]`
+// Arguments:
+//   path = The path to find the closest point on.
+//   pt = the point to find the closest point to.
+// Example(2D):
+//   path = circle(d=100,$fn=6);
+//   pt = [20,10];
+//   closest = path_closest_point(path, pt);
+//   stroke(path, closed=true);
+//   color("blue") translate(pt) circle(d=3, $fn=12);
+//   color("red") translate(closest[1]) circle(d=3, $fn=12);
+function path_closest_point(path, pt) =
+	let(
+		pts = [for (seg=idx(path)) segment_closest_point(select(path,seg,seg+1),pt)],
+		dists = [for (p=pts) norm(p-pt)],
+		min_seg = min_index(dists)
+	) [min_seg, pts[min_seg]];
+
+
+
 // Function: path3d_spiral()
 // Description:
 //   Returns a 3D spiral path.
