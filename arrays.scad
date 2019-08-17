@@ -245,11 +245,33 @@ function list_remove(list, elements) =
 //   list_insert(list, pos, elements);
 // Description:
 //   Insert `elements` into `list` before position `pos`.
-function list_insert(list, pos, elements) =
-	concat(
-		slice(list,0,pos),
-		elements,
-		(pos<len(list)? slice(list,pos,-1) : [])
+// Example:
+//   list_insert([3,6,9,12],1,5);  // Returns [3,5,6,9,12]
+//   list_insert([3,6,9,12],[1,3],[5,11]);  // Returns [3,5,6,9,11,12]
+function list_insert(list, pos, elements, _i=0) =
+	is_list(pos)? (
+		assert(len(pos)==len(elements))
+		let(
+			idxs = sortidx(pos),
+			lastidx = pos[idxs[len(idxs)-1]]
+		)
+		concat(
+			[
+				for(i=idx(idxs)) each concat(
+					assert(pos[idxs[i]]<=len(list), "Indices in pos must be <= len(list)")
+					[for (j=[(i==0?0:pos[idxs[i-1]]):1:pos[idxs[i]]-1]) list[j]],
+					[elements[idxs[i]]]
+				)
+			],
+			[for (j=[lastidx:1:len(list)-1]) list[j]]
+		)
+	) : (
+		assert(pos<=len(list), "Indices in pos must be <= len(list)")
+		concat(
+			slice(list,0,pos),
+			elements,
+			(pos<len(list)? slice(list,pos,-1) : [])
+		)
 	);
 
 
