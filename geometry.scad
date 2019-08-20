@@ -213,6 +213,7 @@ function segment_closest_point(seg,pt) =
 		n = line_normal(seg),
 		isect = _general_line_intersection(seg,[pt,pt+n])
 	)
+	norm(n)==0? seg[0] :
 	isect[1]<=0? seg[0] :
 	isect[1]>=1? seg[1] :
 	isect[0];
@@ -416,6 +417,16 @@ function plane3pt(p1, p2, p3) =
 	) concat(normal, [normal*p1]);
 
 
+function plane_from_pointslist(points) =
+	let(
+		points = deduplicate(points),
+		indices = find_noncollinear_points(points),
+		p1 = points[indices[0]],
+		p2 = points[indices[1]],
+		p3 = points[indices[2]]
+	) plane3pt(p1,p2,p3);
+
+
 // Function: plane3pt_indexed()
 // Usage:
 //   plane3pt_indexed(points, i1, i2, i3);
@@ -563,11 +574,38 @@ function polygon_area(vertices) =
 	0.5*sum([for(i=[0:len(vertices)-1]) det2(select(vertices,i,i+1))]);
 
 
+// Function: first_noncollinear()
+// Usage:
+//   first_noncollinear(i1, i2, points);
+// Description:
+//   Finds the first point in `points` that is not collinear with the points indexed by `i1` and `i2`.  Returns the index of the found point.
+// Arguments:
+//   i1 = The first point.
+//   i2 = The second point.
+//   points = The list of points to find a non-collinear point from.
+function first_noncollinear(i1, i2, points, _i) =
+    (_i>=len(points) || !collinear_indexed(points, i1, i2, _i))? _i :
+	find_first_noncollinear(i1, i2, points, _i=_i+1);
+
+
+// Function: noncollinear_points()
+// Usage:
+//   find_noncollinear_points(points);
+// Description:
+//   Finds the indexes of three good points in the points list `points` that are not collinear.
+function find_noncollinear_points(points) =
+	let(
+		a = 0,
+		b = furthest_point(a, points),
+		c = first_noncollinear(a, b, points)
+	) [a, b, c];
+
+
 // Function: centroid()
 // Usage:
 //   centroid(vertices)
 // Description:
-//   Given a simple polygon, returns the coordinates of the polygon's centroid.
+//   Given a simple 2D polygon, returns the coordinates of the polygon's centroid.
 //   If the polygon is self-intersecting, the results are undefined.
 function centroid(vertices) =
 	sum([
@@ -732,6 +770,34 @@ function pointlist_bounds(pts) = [
 	[for (a=[0:2]) min([ for (x=pts) point3d(x)[a] ]) ],
 	[for (a=[0:2]) max([ for (x=pts) point3d(x)[a] ]) ]
 ];
+
+
+// Function: closest_point()
+// Usage:
+//   closest_point(pt, points);
+// Description:
+//   Given a list of `points`, finds the point that is closest to the given point `pt`, and returns the index of it.
+// Arguments:
+//   pt = The point to find the closest point to.
+//   points = The list of points to search.
+function closest_point(pt, points) =
+	let(
+		i = min_index([for (j=idx(points)) norm(points[j]-pt)])
+	) i;
+
+
+// Function: furthest_point()
+// Usage:
+//   furthest_point(pt, points);
+// Description:
+//   Given a list of `points`, finds the point that is farthest from the given point `pt`, and returns the index of it.
+// Arguments:
+//   pt = The point to find the farthest point from.
+//   points = The list of points to search.
+function furthest_point(pt, points) =
+	let(
+		i = max_index([for (j=idx(points)) norm(points[j]-pt)])
+	) i;
 
 
 // Function: polygon_clockwise()
