@@ -88,7 +88,7 @@ module hull_points(points, fast=false) {
 function hull2d_path(points) =
 	(len(points) < 3)? [] : let(
 		a=0, b=1,
-		c = _find_first_noncollinear([a,b], points, 2)
+		c = first_noncollinear(a, b, points, 2)
 	) (c == len(points))? _hull2d_collinear(points) : let(
 		remaining = [ for (i = [2:1:len(points)-1]) if (i != c) i ],
 		ccw = triangle_area(points[a], points[b], points[c]) > 0,
@@ -119,11 +119,6 @@ function _hull2d_collinear(points) =
 		min_i = min_index(points1d),
 		max_i = max_index(points1d)
 	) [min_i, max_i];
-
-
-function _find_first_noncollinear(line, points, i) = 
-    (i>=len(points) || !collinear_indexed(points, line[0], line[1], i))? i :
-	_find_first_noncollinear(line, points, i+1);
 
 
 function _find_conflicting_segments(points, polygon, point) = [
@@ -168,7 +163,7 @@ function hull3d_faces(points) =
 		// start with a single non-collinear triangle
 		a = 0,
 		b = 1,
-		c = _find_first_noncollinear([a,b], points, 2)
+		c = first_noncollinear(a, b, points, 2)
 	) (c == len(points))? _hull2d_collinear(points) : let(
 		plane = plane3pt_indexed(points, a, b, c),
 		d = _find_first_noncoplanar(plane, points, 3)
