@@ -393,10 +393,12 @@ function list_fit(v, length, fill) =
 // Arguments:
 //   list = The list to returns the index range of.
 //   step = The step size to stride through the list.  Default: 1
+//   end= The delta from the end of the list.  Default: -1
 // Example(2D):
 //   colors = ["red", "green", "blue"];
 //   for (i=idx(colors)) right(20*i) color(colors[i]) circle(d=10);
-function idx(list,step=1) = [0:step:len(list)-1];
+function idx(list, step=1, end=-1) =
+	[0 : step : len(list)+end];
 
 
 // Function: enumerate()
