@@ -417,16 +417,6 @@ function plane3pt(p1, p2, p3) =
 	) concat(normal, [normal*p1]);
 
 
-function plane_from_pointslist(points) =
-	let(
-		points = deduplicate(points),
-		indices = find_noncollinear_points(points),
-		p1 = points[indices[0]],
-		p2 = points[indices[1]],
-		p3 = points[indices[2]]
-	) plane3pt(p1,p2,p3);
-
-
 // Function: plane3pt_indexed()
 // Usage:
 //   plane3pt_indexed(points, i1, i2, i3);
@@ -445,6 +435,22 @@ function plane3pt_indexed(points, i1, i2, i3) =
 		p1 = points[i1],
 		p2 = points[i2],
 		p3 = points[i3]
+	) plane3pt(p1,p2,p3);
+
+
+// Function: plane_from_pointslist()
+// Usage:
+//   plane_from_pointslist(points);
+// Description:
+//   Given a list of coplanar points, returns the cartesian equation of a plane.
+//   Returns [A,B,C,D] where Ax+By+Cz+D=0 is the equation of the plane.
+function plane_from_pointslist(points) =
+	let(
+		points = deduplicate(points),
+		indices = find_noncollinear_points(points),
+		p1 = points[indices[0]],
+		p2 = points[indices[1]],
+		p3 = points[indices[2]]
 	) plane3pt(p1,p2,p3);
 
 
@@ -572,6 +578,21 @@ function path_subselect(path,s1,u1,s2,u2) =
 //   Given a polygon, returns the area of that polygon.  If the polygon is self-crossing, the results are undefined.
 function polygon_area(vertices) =
 	0.5*sum([for(i=[0:len(vertices)-1]) det2(select(vertices,i,i+1))]);
+
+
+// Function: polygon_shift_to_closest_point()
+// Usage:
+//   polygon_shift_to_closest_point(path, pt);
+// Description:
+//   Given a polygon `path`, rotates the point ordering so that the first point in the path is the one closest to the given point `pt`.
+function polygon_shift_to_closest_point(path, pt) =
+	let(
+		path = cleanup_path(path),
+		closest = path_closest_point(path,pt),
+		seg = select(path,closest[0],closest[0]+1),
+		u = norm(closest[1]-seg[0]) / norm(seg[1]-seg[0]),
+		segnum = closest[0] + (u>0.5? 1 : 0)
+	) select(path,segnum,segnum+len(path)-1);
 
 
 // Function: first_noncollinear()
@@ -740,24 +761,6 @@ function point_in_polygon(point, path, eps=EPSILON) =
 	sum([for(i=[0:1:len(path)-1]) let(seg=select(path,i,i+1)) if(!approx(seg[0],seg[1],eps=eps)) _point_above_below_segment(point, seg)]) != 0? 1 : -1;
 
 
-// Function: point_in_region()
-// Usage:
-//   point_in_region(point, region);
-// Description:
-//   Tests if a point is inside, outside, or on the border of a region.
-//   Returns -1 if the point is outside the region.
-//   Returns 0 if the point is on the boundary.
-//   Returns 1 if the point lies inside the region.
-// Arguments:
-//   point = The point to test.
-//   region = The region to test against.  Given as a list of polygon paths.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
-	(_i >= len(region))? ((_cnt%2==1)? 1 : -1) : let(
-		pip = point_in_polygon(point, region[_i], eps=eps)
-	) pip==0? 0 : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
-
-
 // Function: pointlist_bounds()
 // Usage:
 //   pointlist_bounds(pts);
@@ -800,15 +803,15 @@ function furthest_point(pt, points) =
 	) i;
 
 
-// Function: polygon_clockwise()
+// Function: polygon_is_clockwise()
 // Usage:
-//   polygon_clockwise(path);
+//   polygon_is_clockwise(path);
 // Description:
 //   Return true if the given 2D simple polygon is in clockwise order, false otherwise.
 //   Results for complex (self-intersecting) polygon are indeterminate.
 // Arguments:
 //   path = The list of 2D path points for the perimeter of the polygon.
-function polygon_clockwise(path) =
+function polygon_is_clockwise(path) =
 	let(    
 		minx = min(subindex(path,0)),
 		lowind = search(minx, path, 0, 0),
@@ -817,6 +820,24 @@ function polygon_clockwise(path) =
 		extreme_sub = search(miny, lowpts, 1, 1)[0],
 		extreme = select(lowind,extreme_sub)
 	) det2([select(path,extreme+1)-path[extreme], select(path, extreme-1)-path[extreme]])<0;
+
+
+// Function: clockwise_polygon()
+// Usage:
+//   clockwise_polygon(path);
+// Description:
+//   Given a polygon path, returns the clockwise winding version of that path.
+function clockwise_polygon(path) =
+	polygon_is_clockwise(path)? path : reverse(path);
+
+
+// Function: ccw_polygon()
+// Usage:
+//   ccw_polygon(path);
+// Description:
+//   Given a polygon path, returns the counter-clockwise winding version of that path.
+function ccw_polygon(path) =
+	polygon_is_clockwise(path)? reverse(path) : path;
 
 
 
@@ -870,6 +891,24 @@ function check_and_fix_path(path,valid_dim=undef,closed=false) =
 // Description:
 //   For all paths in the given region, if the last point coincides with the first point, removes the last point.
 function cleanup_region(region, eps=EPSILON) = [for (path=region) cleanup_path(path, eps=eps)];
+
+
+// Function: point_in_region()
+// Usage:
+//   point_in_region(point, region);
+// Description:
+//   Tests if a point is inside, outside, or on the border of a region.
+//   Returns -1 if the point is outside the region.
+//   Returns 0 if the point is on the boundary.
+//   Returns 1 if the point lies inside the region.
+// Arguments:
+//   point = The point to test.
+//   region = The region to test against.  Given as a list of polygon paths.
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
+	(_i >= len(region))? ((_cnt%2==1)? 1 : -1) : let(
+		pip = point_in_polygon(point, region[_i], eps=eps)
+	) pip==0? 0 : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
 
 
 // Function: region_path_crossings()
@@ -1142,7 +1181,7 @@ function offset(
 	is_region(path)? (
 		assert(!return_faces, "return_faces not supported for regions.")
 		let(
-			path = [for (p=path) polygon_clockwise(p)? p : reverse(p)],
+			path = [for (p=path) polygon_is_clockwise(p)? p : reverse(p)],
 			rgn = exclusive_or([for (p = path) [p]]),
 			pathlist = sort(idx=0,[
 				for (i=[0:1:len(rgn)-1]) [
@@ -1164,7 +1203,7 @@ function offset(
 	let(
 		chamfer = is_def(r) ? false : chamfer,
 		quality = max(0,round(quality)),
-                flip_dir = closed && !polygon_clockwise(path) ? -1 : 1,
+                flip_dir = closed && !polygon_is_clockwise(path) ? -1 : 1,
 		d = flip_dir * (is_def(r) ? r : delta),
 		shiftsegs = [for(i=[0:len(path)-1]) _shift_segment(select(path,i,i+1), d)],
 		// good segments are ones where no point on the segment is less than distance d from any point on the path

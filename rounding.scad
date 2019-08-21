@@ -636,7 +636,7 @@ module rounded_sweep(
 	top = struct_set(argspec, top, grow=false);
 	bottom = struct_set(argspec, bottom, grow=false);
 
-	clockwise = polygon_clockwise(path);
+	clockwise = polygon_is_clockwise(path);
 
 	assert(height>=0, "Height must be nonnegative");
 
