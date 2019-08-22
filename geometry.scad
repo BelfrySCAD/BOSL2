@@ -580,6 +580,23 @@ function polygon_area(vertices) =
 	0.5*sum([for(i=[0:len(vertices)-1]) det2(select(vertices,i,i+1))]);
 
 
+// Function: polygon_shift()
+// Usage:
+//   polygon_shift(poly, i);
+// Description:
+//   Given a polygon `poly`, rotates the point ordering so that the first point in the polygon path is the one at index `i`.
+// Arguments:
+//   poly = The list of points in the polygon path.
+//   i = The index of the point to shift to the front of the path.
+// Example:
+//   polygon_shift([[3,4], [8,2], [0,2], [-4,0]], 2);   // Returns [[0,2], [-4,0], [3,4], [8,2]]
+function polygon_shift(poly, i) = 
+	assert(i<len(poly))
+	let(
+		poly = cleanup_path(poly)
+	) select(poly,i,i+len(poly)-1);
+
+
 // Function: polygon_shift_to_closest_point()
 // Usage:
 //   polygon_shift_to_closest_point(path, pt);
