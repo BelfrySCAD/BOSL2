@@ -16,9 +16,9 @@
 // Function&Module: move()
 //
 // Description:
-//   If called as a module, moves/translates all children.  If called as a function with the `pts`
+//   If called as a module, moves/translates all children.  If called as a function with the `p`
 //   argument, returns the translated point or list of points.  If called as a function without the
-//   `pts` argument, returns an affine translation matrix, either 2D or 3D depending on the length
+//   `p` argument, returns an affine translation matrix, either 2D or 3D depending on the length
 //   of the offset vector `a`.
 //
 // Usage: As Module
@@ -73,106 +73,194 @@ function move(a=[0,0,0], p=undef, x=0, y=0, z=0) =
 function translate(a=[0,0,0], p=undef) = move(a=a, p=p);
 
 
-// Module: left()
+// Function&Module: left()
+//
+// Usage: As Module
+//   left(x) ...
+// Usage: Translate Points
+//   pts = left(x, p);
+// Usage: Get Translation Matrix
+//   mat = left(x);
 //
 // Description:
-//   Moves children left (in the X- direction) by the given amount.
-//
-// Usage:
-//   left(x) ...
+//   If called as a module, moves/translates all children left (in the X- direction) by the given amount.
+//   If called as a function with the `p` argument, returns the translated point or list of points.
+//   If called as a function without the `p` argument, returns an affine3d translation matrix.
 //
 // Arguments:
 //   x = Scalar amount to move left.
+//   p = Either a point, or a list of points to be translated when used as a function.
 //
 // Example:
 //   #sphere(d=10);
 //   left(20) sphere(d=10);
+//
+// Example(NORENDER):
+//   pt1 = left(20, p=[23,42]);           // Returns: [3,42]
+//   pt2 = left(20, p=[15,23,42]);        // Returns: [-5,23,42]
+//   pt3 = left(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[-2,2,3], [1,5,6]]
+//   mat3d = left(4);  // Returns: [[1,0,0,-4],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
 module left(x=0) translate([-x,0,0]) children();
 
+function left(x=0,p=undef) = translate([-x,0,0],p=p);
 
-// Module: right()
+
+// Function&Module: right()
+//
+// Usage: As Module
+//   right(x) ...
+// Usage: Translate Points
+//   pts = right(x, p);
+// Usage: Get Translation Matrix
+//   mat = right(x);
 //
 // Description:
-//   Moves children right (in the X+ direction) by the given amount.
-//
-// Usage:
-//   right(x) ...
+//   If called as a module, moves/translates all children right (in the X+ direction) by the given amount.
+//   If called as a function with the `p` argument, returns the translated point or list of points.
+//   If called as a function without the `p` argument, returns an affine3d translation matrix.
 //
 // Arguments:
 //   x = Scalar amount to move right.
+//   p = Either a point, or a list of points to be translated when used as a function.
 //
 // Example:
 //   #sphere(d=10);
 //   right(20) sphere(d=10);
+//
+// Example(NORENDER):
+//   pt1 = right(20, p=[23,42]);           // Returns: [43,42]
+//   pt2 = right(20, p=[15,23,42]);        // Returns: [35,23,42]
+//   pt3 = right(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[4,2,3], [7,5,6]]
+//   mat3d = right(4);  // Returns: [[1,0,0,4],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
 module right(x=0) translate([x,0,0]) children();
 
+function right(x=0,p=undef) = translate([x,0,0],p=p);
 
-// Module: fwd()
+
+// Function&Module: fwd()
+//
+// Usage: As Module
+//   fwd(y) ...
+// Usage: Translate Points
+//   pts = fwd(y, p);
+// Usage: Get Translation Matrix
+//   mat = fwd(y);
 //
 // Description:
-//   Moves children forward (in the Y- direction) by the given amount.
-//
-// Usage:
-//   fwd(y) ...
+//   If called as a module, moves/translates all children forward (in the Y- direction) by the given amount.
+//   If called as a function with the `p` argument, returns the translated point or list of points.
+//   If called as a function without the `p` argument, returns an affine3d translation matrix.
 //
 // Arguments:
 //   y = Scalar amount to move forward.
+//   p = Either a point, or a list of points to be translated when used as a function.
 //
 // Example:
 //   #sphere(d=10);
 //   fwd(20) sphere(d=10);
+//
+// Example(NORENDER):
+//   pt1 = fwd(20, p=[23,42]);           // Returns: [23,22]
+//   pt2 = fwd(20, p=[15,23,42]);        // Returns: [15,3,42]
+//   pt3 = fwd(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[1,-1,3], [4,2,6]]
+//   mat3d = fwd(4);  // Returns: [[1,0,0,0],[0,1,0,-4],[0,0,1,0],[0,0,0,1]]
 module fwd(y=0) translate([0,-y,0]) children();
 
+function fwd(y=0,p=undef) = translate([0,-y,0],p=p);
 
-// Module: back()
+
+// Function&Module: back()
+//
+// Usage: As Module
+//   back(y) ...
+// Usage: Translate Points
+//   pts = back(y, p);
+// Usage: Get Translation Matrix
+//   mat = back(y);
 //
 // Description:
-//   Moves children back (in the Y+ direction) by the given amount.
-//
-// Usage:
-//   back(y) ...
+//   If called as a module, moves/translates all children back (in the Y+ direction) by the given amount.
+//   If called as a function with the `p` argument, returns the translated point or list of points.
+//   If called as a function without the `p` argument, returns an affine3d translation matrix.
 //
 // Arguments:
 //   y = Scalar amount to move back.
+//   p = Either a point, or a list of points to be translated when used as a function.
 //
 // Example:
 //   #sphere(d=10);
 //   back(20) sphere(d=10);
+//
+// Example(NORENDER):
+//   pt1 = back(20, p=[23,42]);           // Returns: [23,62]
+//   pt2 = back(20, p=[15,23,42]);        // Returns: [15,43,42]
+//   pt3 = back(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[1,5,3], [4,8,6]]
+//   mat3d = back(4);  // Returns: [[1,0,0,0],[0,1,0,4],[0,0,1,0],[0,0,0,1]]
 module back(y=0) translate([0,y,0]) children();
 
+function back(y=0,p=undef) = translate([0,y,0],p=p);
 
-// Module: down()
+
+// Function&Module: down()
+//
+// Usage: As Module
+//   down(z) ...
+// Usage: Translate Points
+//   pts = down(z, p);
+// Usage: Get Translation Matrix
+//   mat = down(z);
 //
 // Description:
-//   Moves children down (in the Z- direction) by the given amount.
-//
-// Usage:
-//   down(z) ...
+//   If called as a module, moves/translates all children down (in the Z- direction) by the given amount.
+//   If called as a function with the `p` argument, returns the translated point or list of points.
+//   If called as a function without the `p` argument, returns an affine3d translation matrix.
 //
 // Arguments:
 //   z = Scalar amount to move down.
+//   p = Either a point, or a list of points to be translated when used as a function.
 //
 // Example:
 //   #sphere(d=10);
 //   down(20) sphere(d=10);
+//
+// Example(NORENDER):
+//   pt1 = down(20, p=[15,23,42]);        // Returns: [15,23,22]
+//   pt2 = down(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[1,2,0], [4,5,3]]
+//   mat3d = down(4);  // Returns: [[1,0,0,0],[0,1,0,0],[0,0,1,-4],[0,0,0,1]]
 module down(z=0) translate([0,0,-z]) children();
 
+function down(z=0,p=undef) = translate([0,0,-z],p=p);
 
-// Module: up()
+
+// Function&Module: up()
+//
+// Usage: As Module
+//   up(z) ...
+// Usage: Translate Points
+//   pts = up(z, p);
+// Usage: Get Translation Matrix
+//   mat = up(z);
 //
 // Description:
-//   Moves children up (in the Z+ direction) by the given amount.
-//
-// Usage:
-//   up(z) ...
+//   If called as a module, moves/translates all children up (in the Z+ direction) by the given amount.
+//   If called as a function with the `p` argument, returns the translated point or list of points.
+//   If called as a function without the `p` argument, returns an affine3d translation matrix.
 //
 // Arguments:
 //   z = Scalar amount to move up.
+//   p = Either a point, or a list of points to be translated when used as a function.
 //
 // Example:
 //   #sphere(d=10);
 //   up(20) sphere(d=10);
+//
+// Example(NORENDER):
+//   pt1 = up(20, p=[15,23,42]);        // Returns: [15,23,62]
+//   pt2 = up(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[1,2,6], [4,5,9]]
+//   mat3d = up(4);  // Returns: [[1,0,0,0],[0,1,0,0],[0,0,1,4],[0,0,0,1]]
 module up(z=0) translate([0,0,z]) children();
+
+function up(z=0,p=undef) = translate([0,0,z],p=p);
 
 
 
