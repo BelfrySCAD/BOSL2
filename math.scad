@@ -20,28 +20,37 @@ EPSILON = 1e-9;  // A really small value useful in comparing FP numbers.  ie: ab
 // Function: quant()
 // Description:
 //   Quantize a value `x` to an integer multiple of `y`, rounding to the nearest multiple.
+//   If `x` is a list, then every item in that list will be recursively quantized.
 // Arguments:
 //   x = The value to quantize.
 //   y = The multiple to quantize to.
-function quant(x,y) = floor(x/y+0.5)*y;
+function quant(x,y) =
+	is_list(x)? [for (v=x) quant(v,y)] :
+	floor(x/y+0.5)*y;
 
 
 // Function: quantdn()
 // Description:
 //   Quantize a value `x` to an integer multiple of `y`, rounding down to the previous multiple.
+//   If `x` is a list, then every item in that list will be recursively quantized down.
 // Arguments:
 //   x = The value to quantize.
 //   y = The multiple to quantize to.
-function quantdn(x,y) = floor(x/y)*y;
+function quantdn(x,y) =
+	is_list(x)? [for (v=x) quantdn(v,y)] :
+	floor(x/y)*y;
 
 
 // Function: quantup()
 // Description:
 //   Quantize a value `x` to an integer multiple of `y`, rounding up to the next multiple.
+//   If `x` is a list, then every item in that list will be recursively quantized up.
 // Arguments:
 //   x = The value to quantize.
 //   y = The multiple to quantize to.
-function quantup(x,y) = ceil(x/y)*y;
+function quantup(x,y) =
+	is_list(x)? [for (v=x) quantup(v,y)] :
+	ceil(x/y)*y;
 
 
 // Function: constrain()
