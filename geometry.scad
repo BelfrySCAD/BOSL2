@@ -1722,11 +1722,6 @@ function _vnf_get_vertices(vnf=[[],[]], pts, _i=0, _idxs=[]) =
 //   vnf = The VNF structure to add a face to.
 //   pts = The vertex points for the face.
 function vnf_add_face(vnf=[[],[]], pts) =
-	let(base=len(vnf[0])) [
-		concat(vnf[0],pts),
-		concat(vnf[1],[[for (i=idx(pts)) i+base]])
-	];
-	/*
 	let(
 		vvnf = vnf_get_vertex(vnf, pts),
 		face = deduplicate(vvnf[0], closed=true),
@@ -1735,7 +1730,6 @@ function vnf_add_face(vnf=[[],[]], pts) =
 		vnf_vertices(vnf2),
 		concat(vnf_faces(vnf2), len(face)>2? [face] : [])
 	];
-	*/
 
 
 // Function: vnf_add_faces()
