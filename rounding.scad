@@ -341,7 +341,7 @@ function _circlecorner(points, parm) =
 // Module: rounded_sweep()
 //
 // Description:
-//   Takes a 2d path as input and extrudes it to a specified height with roundovers or chamfers at the ends.  The
+//   Takes a 2d path as input and extrudes it to a specified height with roundovers or chamfers, or custom treatments at the ends.   The
 //   rounding is accomplished by using offset to shift the input path.  The path is shifted multiple times in sequence
 //   to produce the profile (not multiple shifts from one parent), so coarse definition of the input path will degrade
 //   from the successive shifts.  If the result seems rough or strange try increasing the number of points you use for
@@ -351,8 +351,11 @@ function _circlecorner(points, parm) =
 //   aware that large numbers of points (especially when check_valid is true) can lead to lengthy run times.  If your
 //   shape doesn't develop corners you may be able to save a lot of time by setting `check_valid=false`.  Be aware that
 //   disabling the validity check when it is needed can generate invalid polyhedra that will produce CGAL errors upon
-//   rendering.  Multiple rounding shapes are available, including circular rounding, teardrop rounding, and chamfer
-//   "rounding".  Also note that if the rounding radius is negative then the rounding will flare outwards.
+//   rendering.  Multiple rounding shapes are available, including circular rounding, teardrop rounding, chamfer
+//   "rounding", as well as application of a custom profile.  Also note that if the rounding radius is negative
+//   then the rounding will flare outwards.
+//   The rounding profile
+//   will be quantized to 1/1024 steps to avoid failures in offset() that can occur with very tiny offsets.  
 //   
 //   Rounding options:
 //   - "circle": Circular rounding with radius as specified
@@ -365,8 +368,8 @@ function _circlecorner(points, parm) =
 //   - "type" - type of rounding to apply, one of "circle", "teardrop", "chamfer", "smooth", or "custom" (Default: "circle")
 //   - "r" - the radius of the roundover, which may be zero for no roundover, or negative to round or flare outward.  Default: 0
 //   - "cut" - the cut distance for the roundover or chamfer, which may be negative for flares
-//   - "width" - the width of a chamfer
-//   - "height" - the height of a chamfer
+//   - "chamfer_width" - the width of a chamfer
+//   - "chamfer_height" - the height of a chamfer
 //   - "angle" - the chamfer angle, measured from the vertical (so zero is vertical, 90 is horizontal).  Default: 45
 //   - "joint" - the joint distance for a "smooth" roundover
 //   - "k" - the curvature smoothness parameter for "smooth" roundovers, a value in [0,1].  Default: 0.75
@@ -395,7 +398,7 @@ function _circlecorner(points, parm) =
 //   
 // Arguments:
 //   path = 2d path (list of points) to extrude
-//   height = total height (including rounded portions, but not extra sections) of the output
+//   height / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.  
 //   top = rounding spec for the top end.  
 //   bottom = rounding spec for the bottom end 
 //   offset = default offset, `"round"` or `"delta"`.  Default: `"round"`
@@ -405,8 +408,8 @@ function _circlecorner(points, parm) =
 //   offset_maxstep = default maxstep value to pass to offset.  Default: 1
 //   extra = default extra height.  Default: 0
 //   cut = default cut value.
-//   width = default width value for chamfers.
-//   height = default height value for chamfers.
+//   chamfer_width = default width value for chamfers.
+//   chamfer_height = default height value for chamfers.
 //   angle = default angle for chamfers.  Default: 45
 //   joint = default joint value for smooth roundover.
 //   k = default curvature parameter value for "smooth" roundover
@@ -460,7 +463,7 @@ function _circlecorner(points, parm) =
 //         rounded_sweep(offset(roundbox, r=-thickness, closed=true),
 //                       height=height-thickness, steps=22,
 //                       bottom=["r",6],
-//                       top=["type","chamfer","angle",30,"height",-3,"extra",1,"check_valid",false]); 
+//                       top=["type","chamfer","angle",30,"chamfer_height",-3,"extra",1,"check_valid",false]); 
 //     }
 // Example: A box with multiple sections and rounded dividers
 //   thickness = 2;
@@ -519,12 +522,12 @@ function _circlecorner(points, parm) =
 //         rounded_sweep(offset(rhex,r=1), height=9.5, bottom=rs_circle(r=2), top=rs_teardrop(r=-4));
 //     }
 module rounded_sweep(
-	path, height,
+	path, height, h, l, 
 	top=[], bottom=[],
 	offset="round", r=0, steps=16,
 	quality=1, check_valid=true,
 	offset_maxstep=1, extra=0,
-	cut=undef, width=undef,
+	cut=undef, chamfer_width=undef, chamfer_height=undef,
 	joint=undef, k=0.75, angle=45,
 	convexity=10
 ) {
@@ -578,8 +581,8 @@ module rounded_sweep(
 				first_defined([cut/(sqrt(2)-1),r]) :
 				edgetype=="chamfer"? first_defined([sqrt(2)*cut,r]) : undef,
 			chamf_angle = struct_val(edgespec, "angle"),
-			cheight = struct_val(edgespec, "height"),
-			cwidth = struct_val(edgespec, "width"),
+			cheight = struct_val(edgespec, "chamfer_height"),
+			cwidth = struct_val(edgespec, "chamfer_width"),
 			chamf_width = first_defined([cut/cos(chamf_angle), cwidth, cheight*tan(chamf_angle)]),
 			chamf_height = first_defined([cut/sin(chamf_angle),cheight, cwidth/tan(chamf_angle)]),
 			joint = first_defined([
@@ -597,7 +600,7 @@ module rounded_sweep(
 		let(
 			offsets =
 				edgetype == "custom"? scale([-1,z_dir], slice(points,1,-1)) :
-				edgetype == "chamfer"?  width==0 && height==0? [] : [[-chamf_width,z_dir*abs(chamf_height)]] :
+				edgetype == "chamfer"?  chamf_width==0 && chamf_height==0? [] : [[-chamf_width,z_dir*abs(chamf_height)]] :
 				edgetype == "teardrop"? (
 					radius==0? [] : concat(
 						[for(i=[1:N]) [radius*(cos(i*45/N)-1),z_dir*abs(radius)* sin(i*45/N)]],
@@ -611,7 +614,7 @@ module rounded_sweep(
 					1, -1
 				)
 		) 
-		extra > 0? concat(offsets, [select(offsets,-1)+[0,z_dir*extra]]) : offsets;
+		quant(extra > 0? concat(offsets, [select(offsets,-1)+[0,z_dir*extra]]) : offsets, 1/1024);
 
 	argspec = [
 		["r",r],
@@ -622,8 +625,8 @@ module rounded_sweep(
 		["offset_maxstep", offset_maxstep],
 		["steps",steps],
 		["offset",offset],
-		["width",width],
-		["height",undef],
+		["chamfer_width",chamfer_width],
+		["chamfer_height",chamfer_height],
 		["angle",angle],
 		["cut",cut],
 		["joint",joint],
@@ -632,13 +635,10 @@ module rounded_sweep(
 	];
 
 	path = check_and_fix_path(path, [2], closed=true);
+	clockwise = polygon_is_clockwise(path);
 
 	top = struct_set(argspec, top, grow=false);
 	bottom = struct_set(argspec, bottom, grow=false);
-
-	clockwise = polygon_is_clockwise(path);
-
-	assert(height>=0, "Height must be nonnegative");
 
 	//  This code does not work.  It hits the error in make_polyhedron from offset being wrong
 	//  before this code executes.  Had to move the test into make_polyhedron, which is ugly since it's in the loop
@@ -653,6 +653,9 @@ module rounded_sweep(
 	bottom_height = len(offsets_bot)==0 ? 0 : abs(select(offsets_bot,-1)[1]) - struct_val(bottom,"extra");
 	top_height = len(offsets_top)==0 ? 0 : abs(select(offsets_top,-1)[1]) - struct_val(top,"extra");
 
+        height = get_height(l=l,h=h,height=height,dflt=bottom_height+top_height);
+	assert(height>=0, "Height must be nonnegative");
+        
 	middle = height-bottom_height-top_height;
 	assert(
 		middle>=0, str(
@@ -728,8 +731,8 @@ function rs_chamfer(height, width, cut, angle, extra,check_valid, quality,steps,
 	assert(ok, "Must define `cut`, or one or both of `width` and `height`")
 	_remove_undefined_vals([
 		"type", "chamfer",
-		"width",width,
-		"height",height,
+		"chamfer_width",width,
+		"chamfer_height",height,
 		"cut",cut,
 		"angle",angle,
 		"extra",extra,
@@ -1097,6 +1100,7 @@ function _path_line_intersection(path, line, ind=0) =
 
 module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, quality=1, maxstep=0.1, chamfer=false, closed=false) 
 {
+        no_children($children);
 	result = offset_stroke(
 		path, width=width, rounded=rounded,
 		start=start, end=end,
