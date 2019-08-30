@@ -1088,7 +1088,7 @@ module teardrop2d(r=1, d=undef, ang=45, cap_h=undef)
 //   cap_h = If given, height above center where the shape will be truncated.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `BACK`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //
 // Example: Typical Shape
 //   teardrop(r=30, h=10, ang=30);
@@ -1096,12 +1096,13 @@ module teardrop2d(r=1, d=undef, ang=45, cap_h=undef)
 //   teardrop(r=30, h=10, ang=30, cap_h=40);
 // Example: Close Crop
 //   teardrop(r=30, h=10, ang=30, cap_h=20);
-module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, anchor=CENTER, spin=0, orient=FWD)
+module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, anchor=CENTER, spin=0, orient=UP)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	l = first_defined([l, h, 1]);
-	size = [r*2,r*2,l];
-	orient_and_anchor(size, orient, anchor, spin=spin, geometry="cylinder", chain=true) {
+	size = [r*2,l,r*2];
+	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
+		rot(from=UP,to=FWD)
 		linear_extrude(height=l, center=true, slices=2) {
 			teardrop2d(r=r, ang=ang, cap_h=cap_h);
 		}
