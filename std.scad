@@ -12,20 +12,24 @@ include <constants.scad>
 include <edges.scad>
 include <common.scad>
 include <errors.scad>
-include <math.scad>
 include <arrays.scad>
+
+include <math.scad>
 include <vectors.scad>
-include <affine.scad>
 include <quaternions.scad>
+include <affine.scad>
 include <coords.scad>
 include <geometry.scad>
-include <paths.scad>
-include <attachments.scad>
+
 include <transforms.scad>
+include <attachments.scad>
 include <primitives.scad>
 include <shapes.scad>
 include <shapes2d.scad>
 include <masks.scad>
+include <paths.scad>
+
+include <knurling.scad>
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

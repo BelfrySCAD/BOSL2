@@ -4,7 +4,6 @@
 //   To use, add the following lines to the beginning of your file:
 //   ```
 //   include <BOSL2/std.scad>
-//   include <BOSL2/knurling.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 

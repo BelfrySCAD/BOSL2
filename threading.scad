@@ -980,11 +980,12 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 
 // Module: pco1881_cap()
 // Usage:
-//   pco1881_cap(wall);
+//   pco1881_cap(wall, [texture]);
 // Description:
 //   Creates a basic cap for a PCO1881 threaded beverage bottle.
 // Arguments:
 //   wall = Wall thickness in mm.
+//   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -992,7 +993,7 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 //   "inside-top" = Centered on the inside top of the cap.
 // Example:
 //   pco1881_cap();
-module pco1881_cap(wall=2, anchor=BOTTOM, spin=0, orient=UP)
+module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
 {
 	$fn = segs(33/2);
 	w = 28.58 + 2*wall;
@@ -1002,8 +1003,22 @@ module pco1881_cap(wall=2, anchor=BOTTOM, spin=0, orient=UP)
 	];
 	orient_and_anchor([w, w, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
 		down(h/2) zrot(45) {
-			tube(id=28.58, wall=wall, h=11.2+wall, anchor=BOTTOM);
-			cylinder(d=w, h=wall, anchor=BOTTOM);
+			difference() {
+				union() {
+					if (texture == "knurled") {
+						knurled_cylinder(d=w, helix=45, l=11.2+wall, anchor=BOTTOM);
+						cyl(d=w-1.5, l=11.2+wall, anchor=BOTTOM);
+					} else if (texture == "ribbed") {
+						zrot_copies(n=30, r=(w-1)/2) {
+							cube([1, 1, 11.2+wall], anchor=BOTTOM);
+						}
+						cyl(d=w-1, l=11.2+wall, anchor=BOTTOM);
+					} else {
+						cyl(d=w, l=11.2+wall, anchor=BOTTOM);
+					}
+				}
+				up(wall) cyl(d=28.58, h=11.2+wall, anchor=BOTTOM);
+			}
 			up(wall+2) thread_helix(base_d=25.5, pitch=2.7, thread_depth=1.6, thread_angle=15, twist=650, higbee=45, internal=true, anchor=BOTTOM);
 		}
 		children();
