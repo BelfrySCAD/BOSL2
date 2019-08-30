@@ -98,6 +98,37 @@ function get_radius(r1=undef, r2=undef, r=undef, d1=undef, d2=undef, d=undef, df
 	dflt
 );
 
+// Function: get_height()
+// Usage:
+//   get_height([h],[l],[height],[dflt])
+// Description:
+//   Given several different parameters for height check that height is not multiply defined
+//   and return a single value.  If the three values `l`, `h`, and `height` are all undefined
+//   then return the value `dflt`, if given, or undef otherwise.
+// Arguments:
+//   l = l.
+//   h = h.
+//   height = height.
+//   dflt = Value to return if other values are `undef`. 
+function get_height(h=undef,l=undef,height=undef,dflt=undef) =
+    assert(num_defined([h,l,height])<=1,"You must specify only one of `l`, `h`, and `height`")
+    first_defined([h,l,height,dflt]);
+
+
+// Module: no_children()
+// Usage:
+//   no_children($children);
+// Description:
+//   Assert that the calling module does not support children.  Prints an error message to this effect and fails if children are present,
+//   as indicated by its argument.
+// Arguments:
+//   $children = number of children the module has.  
+module no_children(count)
+{
+  assert(count==0, str("Module ",parent_module(1),"() does not support child modules"));
+}    
+
+
 
 // Function: scalar_vec3()
 // Usage:

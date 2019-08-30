@@ -1026,7 +1026,7 @@ function _good_segments(path, d, shiftsegs, closed, quality) =
 	) [
 		for (i=[0:len(shiftsegs)-1])
 			(i>maxind)? true :
-			_segment_good(path,pathseg_unit,pathseg_len, d - 1e-4, shiftsegs[i], alpha)
+			_segment_good(path,pathseg_unit,pathseg_len, d - 1e-7, shiftsegs[i], alpha)
 	];
 
 
