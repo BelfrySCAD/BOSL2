@@ -1795,57 +1795,58 @@ function vnf_triangulate(vnf) =
 // Example(3D):
 //   vnf = vnf_vertex_array(
 //       points=[
-//           for (h = [0:5:180-EPSILON], t = [0:5:360-EPSILON])
-//               cylindrical_to_xyz(100 + 12 * cos((h/2 + t)*6), t, h)
+//           for (h = [0:5:180-EPSILON]) [
+//               for (t = [0:5:360-EPSILON])
+//                   cylindrical_to_xyz(100 + 12 * cos((h/2 + t)*6), t, h)
+//           ]
 //       ],
-//       cols=360/5, col_wrap=true, caps=true, reverse=true, style="alt"
+//       col_wrap=true, caps=true, reverse=true, style="alt"
 //   );
 //   vnf_polyhedron(vnf);
 // Example(3D): Both `col_wrap` and `row_wrap` are true to make a torus.
-//   profile = circle(d=20);
 //   vnf = vnf_vertex_array(
 //       points=[
 //           for (a=[0:5:360-EPSILON])
-//               each zrot(a,p=right(30,p=xrot(90,p=path3d(profile))))
+//               affine3d_apply(
+//                   circle(d=20),
+//                   [xrot(90), right(30), zrot(a)]
+//               )
 //       ],
-//       cols=len(profile), col_wrap=true, row_wrap=true, reverse=true
+//       col_wrap=true, row_wrap=true, reverse=true
 //   );
 //   vnf_polyhedron(vnf);
 // Example(3D): Möbius Strip.  Note that `row_wrap` is not used, and the first and last profile copies are the same.
-//   profile = square([1,10],center=true);
 //   vnf = vnf_vertex_array(
 //       points=[
-//           for (a=[0:5:360]) each
-//               zrot(a,p=right(30,p=xrot(90,p=zrot(a/2+60,p=path3d(profile)))))
+//           for (a=[0:5:360]) affine3d_apply(
+//               square([1,10], center=true),
+//               [zrot(a/2+60), xrot(90), right(30), zrot(a)]
+//           )
 //       ],
-//       cols=len(profile), col_wrap=true, reverse=true
+//       col_wrap=true, reverse=true
 //   );
 //   vnf_polyhedron(vnf);
 // Example(3D): Assembling a Polyhedron from Multiple Parts
-//   profile = circle(d=100);
-//   wall_points=[
-//       for (a=[-90:2:90])
-//           each up(a, p=scale([1-0.1*cos(a*6),1-0.1*cos((a+90)*6),1], p=path3d(profile)))
+//   wall_points = [
+//       for (a = [-90:2:90]) affine3d_apply(
+//           circle(d=100),
+//           [scale([1-0.1*cos(a*6), 1-0.1*cos((a+90)*6), 1]), up(a)]
+//       )
 //   ];
-//   cap_profile = select(wall_points,0,len(profile)-1);
-//   cap_points=[
-//       for (a=[0:0.01:1.001]) each
-//           up(90-5*sin(a*360*2), p=scale([a,a,1], p=cap_profile))
+//   cap = [
+//       for (a = [0:0.01:1+EPSILON]) affine3d_apply(
+//           wall_points[0],
+//           [scale([a,a,1]), up(90-5*sin(a*360*2))]
+//       )
 //   ];
-//   vnf1 = vnf_vertex_array(
-//       points=wall_points, cols=len(profile), col_wrap=true
-//   );
-//   vnf2 = vnf_vertex_array(
-//       points=down(90, p=zscale(-1, p=cap_points)),
-//       cols=len(profile), col_wrap=true
-//   );
-//   vnf3 = vnf_vertex_array(
-//       points=up(90, p=cap_points),
-//       cols=len(profile), col_wrap=true, reverse=true
-//   );
+//   cap1 = [for (p=cap) down(90, p=zscale(-1, p=p))];
+//   cap2 = [for (p=cap) up(90, p=p)];
+//   vnf1 = vnf_vertex_array(points=wall_points, col_wrap=true);
+//   vnf2 = vnf_vertex_array(points=cap1, col_wrap=true);
+//   vnf3 = vnf_vertex_array(points=cap2, col_wrap=true, reverse=true);
 //   vnf_polyhedron([vnf1, vnf2, vnf3]);
 function vnf_vertex_array(
-	points, cols,
+	points,
 	caps, cap1, cap2,
 	col_wrap=false,
 	row_wrap=false,
@@ -1853,12 +1854,13 @@ function vnf_vertex_array(
 	style="default",
 	vnf=[[],[]]
 ) =
-	assert(len(points)%cols==0)
 	assert((!caps)||(caps&&col_wrap))
 	assert(in_list(style,["default","alt","quincunx"]))
 	let(
-		pcnt = len(points),
-		rows = pcnt/cols,
+		pts = flatten(points),
+		rows = len(points),
+		cols = len(points[0]),
+		errchk = [for (row=points) assert(len(row)==cols, "All rows much have the same number of columns.") 0],
 		cap1 = first_defined([cap1,caps,false]),
 		cap2 = first_defined([cap2,caps,false]),
 		colcnt = cols - (col_wrap?0:1),
@@ -1867,7 +1869,7 @@ function vnf_vertex_array(
 	vnf_merge([
 		vnf, [
 			concat(
-				points,
+				pts,
 				style!="quincunx"? [] : [
 					for (r = [0:1:rowcnt-1]) (
 						for (c = [0:1:colcnt-1]) (
@@ -1876,7 +1878,7 @@ function vnf_vertex_array(
 								i2 = ((r+1)%rows)*cols + ((c+0)%cols),
 								i3 = ((r+1)%rows)*cols + ((c+1)%cols),
 								i4 = ((r+0)%rows)*cols + ((c+1)%cols)
-							) mean([points[i1], points[i2], points[i3], points[i4]])
+							) mean([pts[i1], pts[i2], pts[i3], pts[i4]])
 						)
 					)
 				]
