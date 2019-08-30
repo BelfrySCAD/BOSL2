@@ -991,8 +991,10 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "inside-top" = Centered on the inside top of the cap.
-// Example:
+// Examples:
 //   pco1881_cap();
+//   pco1881_cap(texture="knurled");
+//   pco1881_cap(texture="ribbed");
 module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
 {
 	$fn = segs(33/2);
