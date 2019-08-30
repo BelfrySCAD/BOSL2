@@ -326,7 +326,7 @@ module orient_and_anchor(
 //       position(RIGHT) cyl(l=10, d1=10, d2=5, anchor=BOTTOM);
 //       position(FRONT) cyl(l=10, d1=10, d2=5, anchor=BOTTOM);
 //   }
-module position(from, overlap=undef, norot=false)
+module position(from)
 {
 	assert($parent_size != undef, "No object to attach to!");
 	anchors = (is_vector(from)||is_string(from))? [from] : from;
