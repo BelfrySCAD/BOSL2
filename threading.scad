@@ -904,6 +904,177 @@ module ball_screw_rod(
 
 
 
+// Section: PCO-1810 Bottle Threading
+
+
+// Module: pco1810_neck()
+// Usage:
+//   pco1810_neck()
+// Description:
+//   Creates an approximation of a standard PCO-1881 threaded beverage bottle neck.
+// Arguments:
+//   wall = Wall thickness in mm.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Extra Anchors:
+//   "tamper-ring" = Centered at the top of the anti-tamper ring channel.
+//   "support-ring" = Centered at the bottom of the support ring.
+// Example:
+//   pco1810_neck();
+module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
+{
+	inner_d = 21.74;
+	neck_d = 26.19;
+	neck_h = 5.00;
+	support_d = 33.00;
+	support_width = 1.45;
+	support_rad = 0.40;
+	support_h = 21.00;
+	support_ang = 16;
+	tamper_ring_d = 27.97;
+	tamper_ring_width = 0.50;
+	tamper_ring_r = 1.60;
+	tamper_base_d = 25.71;
+	tamper_base_h = 14.10;
+	threadbase_d = 24.51;
+	thread_pitch = 3.18;
+	thread_angle = 20;
+	thread_od = 27.43;
+	lip_d = 25.07;
+	lip_h = 1.70;
+	lip_leadin_r = 0.20;
+	lip_recess_d = 24.94;
+	lip_recess_h = 1.00;
+	lip_roundover_r = 0.58;
+
+	$fn = segs(support_d/2);
+	h = support_h+neck_h;
+	thread_h = (thread_od-threadbase_d)/2;
+	anchors = [
+		anchorpt("support-ring", [0,0,neck_h-h/2]),
+		anchorpt("tamper-ring", [0,0,h/2-tamper_base_h])
+	];
+	orient_and_anchor([support_d,support_d,h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+		down(h/2) {
+			rotate_extrude(convexity=10) {
+				polygon(turtle(
+					state=[inner_d/2,0], [
+						"untilx", neck_d/2,
+						"left", 90,
+						"move", neck_h - 1,
+						"repeat", 1, turtle_arc(r=1, ang=-90),  // Support ring base.
+						"untilx", support_d/2-support_rad,
+						"repeat", 1, turtle_arc(r=support_rad, ang=90),
+						"move", support_width,
+						"repeat", 1, turtle_arc(r=support_rad, ang=90-support_ang),
+						"untilx", tamper_base_d/2,
+						"right", 90-support_ang,
+						"untily", h-tamper_base_h,   // Tamper ring holder base.
+						"right", 90,
+						"untilx", tamper_ring_d/2,
+						"left", 90,
+						"move", tamper_ring_width,
+						"repeat", 1, turtle_arc(r=tamper_ring_r, ang=90),
+						"untilx", threadbase_d/2,
+						"right", 90,
+						"untily", h-lip_h-lip_leadin_r,  // Lip base.
+						"repeat", 1, turtle_arc(r=lip_leadin_r, ang=-90),
+						"untilx", lip_d/2,
+						"left", 90,
+						"untily", h-lip_recess_h,
+						"left", 90,
+						"untilx", lip_recess_d/2,
+						"right", 90,
+						"untily", h-lip_roundover_r,
+						"repeat", 1, turtle_arc(r=lip_roundover_r, ang=90),
+						"untilx", inner_d/2
+					]
+				));
+			}
+			up(h-lip_h) {
+				bottom_half() {
+					difference() {
+						thread_helix(
+							base_d=threadbase_d-0.1,
+							pitch=thread_pitch,
+							thread_depth=thread_h+0.1,
+							thread_angle=thread_angle,
+							twist=810,
+							higbee=75,
+							anchor=TOP
+						);
+						zrot_copies(rots=[90,270]) {
+							zrot_copies(rots=[-28,28], r=threadbase_d/2) {
+								prismoid([20,1.82], [20,1.82+2*sin(29)*thread_h], h=thread_h+0.1, anchor=BOT, orient=RIGHT);
+							}
+						}
+					}
+				}
+			}
+		}
+		children();
+	}
+}
+
+
+// Module: pco1810_cap()
+// Usage:
+//   pco1810_cap(wall, [texture]);
+// Description:
+//   Creates a basic cap for a PCO1881 threaded beverage bottle.
+// Arguments:
+//   wall = Wall thickness in mm.
+//   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Extra Anchors:
+//   "inside-top" = Centered on the inside top of the cap.
+// Examples:
+//   pco1810_cap();
+//   pco1810_cap(texture="knurled");
+//   pco1810_cap(texture="ribbed");
+module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
+{
+	cap_id = 28.58;
+	tamper_ring_h = 14.10;
+	thread_pitch = 3.18;
+	thread_angle = 20;
+	thread_od = cap_id;
+	thread_depth = 1.6;
+
+	$fn = segs(33/2);
+	w = cap_id + 2*wall;
+	h = tamper_ring_h + wall;
+	anchors = [
+		anchorpt("inside-top", [0,0,-(h/2-wall)])
+	];
+	orient_and_anchor([w, w, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+		down(h/2) zrot(45) {
+			difference() {
+				union() {
+					if (texture == "knurled") {
+						knurled_cylinder(d=w, helix=45, l=tamper_ring_h+wall, anchor=BOTTOM);
+						cyl(d=w-1.5, l=tamper_ring_h+wall, anchor=BOTTOM);
+					} else if (texture == "ribbed") {
+						zrot_copies(n=30, r=(w-1)/2) {
+							cube([1, 1, tamper_ring_h+wall], anchor=BOTTOM);
+						}
+						cyl(d=w-1, l=tamper_ring_h+wall, anchor=BOTTOM);
+					} else {
+						cyl(d=w, l=tamper_ring_h+wall, anchor=BOTTOM);
+					}
+				}
+				up(wall) cyl(d=cap_id, h=tamper_ring_h+wall, anchor=BOTTOM);
+			}
+			up(wall+2) thread_helix(base_d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, thread_angle=thread_angle, twist=810, higbee=45, internal=true, anchor=BOTTOM);
+		}
+		children();
+	}
+}
+
+
 // Section: PCO-1881 Bottle Threading
 
 
@@ -918,60 +1089,100 @@ module ball_screw_rod(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
+//   "tamper-ring" = Centered at the top of the anti-tamper ring channel.
 //   "support-ring" = Centered at the bottom of the support ring.
 // Example:
 //   pco1881_neck();
 module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 {
-	$fn = segs(33/2);
-	h = 17+5;
+	inner_d = 21.74;
+	neck_d = 26.19;
+	neck_h = 5.00;
+	support_d = 33.00;
+	support_width = 0.58;
+	support_rad = 0.30;
+	support_h = 17.00;
+	support_ang = 15;
+	tamper_ring_d = 28.00;
+	tamper_ring_width = 0.30;
+	tamper_ring_ang = 45;
+	tamper_base_d = 25.71;
+	tamper_base_h = 11.20;
+	tamper_divot_r = 1.08;
+	threadbase_d = 24.20;
+	thread_pitch = 2.70;
+	thread_angle = 15;
+	thread_od = 27.4;
+	lip_d = 25.07;
+	lip_h = 1.70;
+	lip_leadin_r = 0.30;
+	lip_recess_d = 24.94;
+	lip_recess_h = 1.00;
+	lip_roundover_r = 0.58;
+
+	$fn = segs(support_d/2);
+	h = support_h+neck_h;
+	thread_h = (thread_od-threadbase_d)/2;
 	anchors = [
-		anchorpt("support-ring", [0,0,5-h/2])
+		anchorpt("support-ring", [0,0,neck_h-h/2]),
+		anchorpt("tamper-ring", [0,0,h/2-tamper_base_h])
 	];
-	orient_and_anchor([33,33,17+5], orient, anchor, spin=spin, anchors=anchors, chain=true) {
-		up(5-h/2)
-		difference() {
-			union() {
+	orient_and_anchor([support_d,support_d,h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+		down(h/2) {
+			rotate_extrude(convexity=10) {
+				polygon(turtle(
+					state=[inner_d/2,0], [
+						"untilx", neck_d/2,
+						"left", 90,
+						"move", neck_h - 1,
+						"repeat", 1, turtle_arc(r=1, ang=-90),  // Support ring base.
+						"untilx", support_d/2-support_rad,
+						"repeat", 1, turtle_arc(r=support_rad, ang=90),
+						"move", support_width,
+						"repeat", 1, turtle_arc(r=support_rad, ang=90-support_ang),
+						"untilx", tamper_base_d/2,
+						"repeat", 1, turtle_arc(r=tamper_divot_r, ang=support_ang*2-180),
+						"left", 90-support_ang,
+						"untily", h-tamper_base_h,   // Tamper ring holder base.
+						"right", 90,
+						"untilx", tamper_ring_d/2,
+						"left", 90,
+						"move", tamper_ring_width,
+						"left", tamper_ring_ang,
+						"untilx", threadbase_d/2,
+						"right", tamper_ring_ang,
+						"untily", h-lip_h-lip_leadin_r,  // Lip base.
+						"repeat", 1, turtle_arc(r=lip_leadin_r, ang=-90),
+						"untilx", lip_d/2,
+						"left", 90,
+						"untily", h-lip_recess_h,
+						"left", 90,
+						"untilx", lip_recess_d/2,
+						"right", 90,
+						"untily", h-lip_roundover_r,
+						"repeat", 1, turtle_arc(r=lip_roundover_r, ang=90),
+						"untilx", inner_d/2
+					]
+				));
+			}
+			up(h-lip_h) {
 				difference() {
-					union() {
-						down(5) cylinder(d=24.20, h=17+5, anchor=BOTTOM);
-
-						// Tamper-proof retaining ring
-						cylinder(d=25.70, h=5.81, anchor=BOTTOM);
-						up(5.8) cylinder(d=28.0, h=0.59, anchor=BOTTOM);
-						up(5.8+0.589) cylinder(d1=28.0, d2=24.2, h=1.9, anchor=BOTTOM);
-					}
-
-					// Fillet above support ridge
-					up(3) rotate_extrude(convexity=4) {
-						right(13.46) circle(r=1.08, $fn=16);
+					thread_helix(
+						base_d=threadbase_d-0.1,
+						pitch=thread_pitch,
+						thread_depth=thread_h+0.1,
+						thread_angle=thread_angle,
+						twist=650,
+						higbee=75,
+						anchor=TOP
+					);
+					zrot_copies(rots=[90,270]) {
+						zrot_copies(rots=[-28,28], r=threadbase_d/2) {
+							prismoid([20,1.82], [20,1.82+2*sin(29)*thread_h], h=thread_h+0.1, anchor=BOT, orient=RIGHT);
+						}
 					}
 				}
-
-				// Threads
-				up(17-1.7)
-				thread_helix(
-					base_d=24.1,
-					pitch=2.7,
-					thread_depth=1.7,
-					thread_angle=15,
-					twist=650,
-					higbee=60,
-					anchor=TOP
-				);
-
-				// Support Ledge
-				cylinder(d=33, h=1.16, anchor=BOTTOM);
-				up(1.159) cylinder(d1=33, d2=25.7, h=0.979, anchor=BOTTOM);
-
-				// Top brim
-				up(17) cyl(d=24.94, h=1.5, rounding2=0.58, anchor=TOP);
-				up(17-1) cyl(d=25.07, h=0.7, anchor=TOP);
-				up(17-1.7) rounding_hole_mask(d=24.2, rounding=0.3, overage=0.01);
 			}
-
-			// Neck hole
-			down(5.01) cylinder(d=24.2-2*wall, h=17.02+5, anchor=BOTTOM);
 		}
 		children();
 	}

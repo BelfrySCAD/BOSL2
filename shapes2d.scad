@@ -851,4 +851,36 @@ function _turtle_command(command, parm, parm2, state, index) =
 	[];
 
 
+// Function: turtle_arc(d,r,ang);
+// Usage:
+//   arccmds = turtle_arc(d|r, ang);
+// Description:
+//   Generates a list of `turtle()` commands to make an arc path.
+// Arguments:
+//   r = The radius of the arc.
+//   d = The diameter of the arc.
+//   ang = The total angle to arc.  Negative is clockwise.
+//   n = If given, the number of segments.
+// Examples:
+//   stroke(turtle(turtle_arc(d=100,arc=120)));
+//   stroke(turtle(turtle_arc(d=100,arc=-45)));
+//   stroke(turtle(concat(["move", 100], turtle_arc(d=100,arc=120), ["move", 100])));
+//   stroke(turtle(["move", 100, "repeat", 1, turtle_arc(d=100,arc=120), "move", 100])));
+function turtle_arc(d,r,ang,n) =
+	let(
+		r = get_radius(r=r, d=d, dflt=1),
+		n = max(2,default(n,ceil(segs(r)*abs(ang)/360))),
+		stepang = ang/n
+	) echo(n=n) concat(
+		[
+			for(i=[0:1:n-1]) each [
+				stepang<0? "right" : "left", abs(stepang) * (i? 1 : 0.5),
+				"move", abs(2*r*sin(stepang/2)),
+			]
+		],
+		[stepang<0? "right" : "left", abs(stepang) * 0.5]
+	);
+
+
+
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
