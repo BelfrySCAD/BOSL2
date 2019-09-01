@@ -963,11 +963,11 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 						"untilx", neck_d/2,
 						"left", 90,
 						"move", neck_h - 1,
-						"repeat", 1, turtle_arc(r=1, ang=-90),  // Support ring base.
+						"arcright", 1, 90,
 						"untilx", support_d/2-support_rad,
-						"repeat", 1, turtle_arc(r=support_rad, ang=90),
+						"arcleft", support_rad, 90,
 						"move", support_width,
-						"repeat", 1, turtle_arc(r=support_rad, ang=90-support_ang),
+						"arcleft", support_rad, 90-support_ang,
 						"untilx", tamper_base_d/2,
 						"right", 90-support_ang,
 						"untily", h-tamper_base_h,   // Tamper ring holder base.
@@ -975,11 +975,11 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 						"untilx", tamper_ring_d/2,
 						"left", 90,
 						"move", tamper_ring_width,
-						"repeat", 1, turtle_arc(r=tamper_ring_r, ang=90),
+						"arcleft", tamper_ring_r, 90,
 						"untilx", threadbase_d/2,
 						"right", 90,
 						"untily", h-lip_h-lip_leadin_r,  // Lip base.
-						"repeat", 1, turtle_arc(r=lip_leadin_r, ang=-90),
+						"arcright", lip_leadin_r, 90,
 						"untilx", lip_d/2,
 						"left", 90,
 						"untily", h-lip_recess_h,
@@ -987,7 +987,7 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 						"untilx", lip_recess_d/2,
 						"right", 90,
 						"untily", h-lip_roundover_r,
-						"repeat", 1, turtle_arc(r=lip_roundover_r, ang=90),
+						"arcleft", lip_roundover_r, 90,
 						"untilx", inner_d/2
 					]
 				));
@@ -1135,13 +1135,13 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 						"untilx", neck_d/2,
 						"left", 90,
 						"move", neck_h - 1,
-						"repeat", 1, turtle_arc(r=1, ang=-90),  // Support ring base.
+						"arcright", 1, 90,
 						"untilx", support_d/2-support_rad,
-						"repeat", 1, turtle_arc(r=support_rad, ang=90),
+						"arcleft", support_rad, 90,
 						"move", support_width,
-						"repeat", 1, turtle_arc(r=support_rad, ang=90-support_ang),
+						"arcleft", support_rad, 90-support_ang,
 						"untilx", tamper_base_d/2,
-						"repeat", 1, turtle_arc(r=tamper_divot_r, ang=support_ang*2-180),
+						"arcright", tamper_divot_r, 180-support_ang*2,
 						"left", 90-support_ang,
 						"untily", h-tamper_base_h,   // Tamper ring holder base.
 						"right", 90,
@@ -1152,7 +1152,7 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 						"untilx", threadbase_d/2,
 						"right", tamper_ring_ang,
 						"untily", h-lip_h-lip_leadin_r,  // Lip base.
-						"repeat", 1, turtle_arc(r=lip_leadin_r, ang=-90),
+						"arcright", lip_leadin_r, 90,
 						"untilx", lip_d/2,
 						"left", 90,
 						"untily", h-lip_recess_h,
@@ -1160,7 +1160,7 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 						"untilx", lip_recess_d/2,
 						"right", 90,
 						"untily", h-lip_roundover_r,
-						"repeat", 1, turtle_arc(r=lip_roundover_r, ang=90),
+						"arcleft", lip_roundover_r, 90,
 						"untilx", inner_d/2
 					]
 				));
