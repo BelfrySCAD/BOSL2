@@ -688,7 +688,9 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //   - "length", length: Change the turtle move distance to `length`
 //   - "scale", factor: Multiply turtle move distance by `factor`
 //   - "addlength", length: Add `length` to the turtle move distance
-//   - "repeat", count, comands: Repeats a list of commands `count` times.  
+//   - "repeat", count, comands: Repeats a list of commands `count` times.
+//   - "arcleft", radius, [angle]: Draw an arc from the current position toward the left at the specified radius and angle
+//   - "arcright", radius, [angle]: Draw an arc from the current position toward the right at the specified radius and angle
 //
 // Arguments:
 //   commands = list of turtle commands
@@ -776,13 +778,16 @@ function _turtle_repeat(commands, state, full_state, repeat) =
 		_turtle_repeat(commands, _turtle(commands, state, true), full_state, repeat-1);
 
 function _turtle_command_len(commands, index) =
+       let( one_or_two_arg = ["arcleft","arcright"] )
 	commands[index] == "repeat"? 3 :   // Repeat command requires 2 args
+                      // For these, the first arg is required, second arg is present if it is not a string
+        in_list(commands[index], one_or_two_arg) && len(commands)>index+2 && !is_string(commands[index+2]) ? 3 :  
 	is_string(commands[index+1])? 1 :  // If 2nd item is a string it's must be a new command
 	2;                                 // Otherwise we have command and arg
 
 function _turtle(commands, state, full_state, index=0) =
 	index < len(commands) ?
-		_turtle(commands,
+	_turtle(commands,
 			_turtle_command(commands[index],commands[index+1],commands[index+2],state,index),
 			full_state,
 			index+_turtle_command_len(commands,index)
@@ -801,6 +806,7 @@ function _turtle_command(command, parm, parm2, state, index) =
 		step=1,
 		angle=2,
 		parm = !is_string(parm) ? parm : undef,
+                parm2 = !is_string(parm2) ? parm2 : undef,
 		needvec = ["jump"],
 		neednum = ["untilx","untily","xjump","yjump","angle","length","scale","addlength"],
 		needeither = ["setdir"],
@@ -847,6 +853,18 @@ function _turtle_command(command, parm, parm2, state, index) =
 	command=="length" ? list_set(state, step, parm*normalize(state[step])) :
 	command=="scale" ?  list_set(state, step, parm*state[step]) :
 	command=="addlength" ?  list_set(state, step, state[step]+normalize(state[step])*parm) :
+        command=="arcleft" || command=="arcright" ?
+                         let( myangle = default(parm2,state[angle]),
+                              lrsign = command=="arcleft" ? 1 : -1,
+                              radius = parm,
+                              center = lastpt + lrsign*radius*line_normal([0,0],state[step]),
+                              arcpath = myangle == 0 ? [] :
+                                        arc(segs(radius), points = [lastpt, rot(cp=center, p=lastpt, a=lrsign*myangle/2),
+                                                                            rot(cp=center, p=lastpt, a=lrsign*myangle)])
+                            )
+                          list_set(state, [path,step],
+                                     [ concat(state[path],slice(arcpath,1,-1)),
+                                       rot(lrsign * myangle,p=state[step],planar=true) ]) :
 	assert(false,str("Unknown turtle command \"",command,"\" at index",index))
 	[];
 
