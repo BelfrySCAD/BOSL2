@@ -911,7 +911,7 @@ module ball_screw_rod(
 // Usage:
 //   pco1810_neck()
 // Description:
-//   Creates an approximation of a standard PCO-1881 threaded beverage bottle neck.
+//   Creates an approximation of a standard PCO-1810 threaded beverage bottle neck.
 // Arguments:
 //   wall = Wall thickness in mm.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -1022,7 +1022,7 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 // Usage:
 //   pco1810_cap(wall, [texture]);
 // Description:
-//   Creates a basic cap for a PCO1881 threaded beverage bottle.
+//   Creates a basic cap for a PCO1810 threaded beverage bottle.
 // Arguments:
 //   wall = Wall thickness in mm.
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
