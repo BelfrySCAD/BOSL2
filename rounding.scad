@@ -368,15 +368,15 @@ function _circlecorner(points, parm) =
 //   - smooth: os_smooth(cut|joint).  Define continuous curvature rounding, with `cut` and `joint` as for round_corners.
 //   - teardrop: os_teardrop(r|cut).  Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
 //   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle will be ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.
-//
-//   The general settings that you can use with all of the helper functions are mostly used to control how the offset() function is called.
+//   
+//   The general settings that you can use with all of the helper functions are mostly used to control how offset_sweep() calls the offset() function.
 //   - extra: Add an extra vertical step of the specified height, to be used for intersections or differences.  This extra step will extend the resulting object beyond the height you specify.  Default: 0
 //   - check_valid: passed to offset().  Default: true
 //   - quality: passed to offset().  Default: 1
 //   - steps: Number of vertical steps to use for the profile.  (Not used by os_profile).  Default: 16
 //   - offset_maxstep: The maxstep distance for offset() calls; controls the horizontal step density.  Set smaller if you don't get the expected rounding.  Default: 1
 //   - offset: Select "round" (r=) or "delta" (delta=) offset types for offset.  Default: "round"
-//
+//   
 //   Many of the arguments are described as setting "default" values because they establish settings which may be overridden by 
 //   the top and bottom profile specifications.  
 //   
@@ -417,7 +417,6 @@ function _circlecorner(points, parm) =
 //   - "offset_maxstep" - maxstep distance for offset() calls; controls the horizontal step density.  Set smaller if you don't get expected rounding.  Default: 1
 //   - "offset" - select "round" (r=) or "delta" (delta=) offset type for offset.  Default: "round"
 //   
-//
 // Example: Rounding a star shaped prism with postive radius values
 //   star = star(5, r=22, ir=13);
 //   rounded_star = round_corners(zip(star, flatten(replist([.5,0],5))), curve="circle", measure="cut", $fn=12);
