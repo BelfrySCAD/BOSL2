@@ -671,29 +671,30 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //   
 //   For the list below, `dist` is the current movement distance.
 //   
-//   Turtle commands:
-//   - "move", [scale]: Move turtle scale*dist units in the turtle direction.  Default scale=1.
-//   - "xmove", [scale]: Move turtle scale*dist units in the x direction. Default scale=1.
-//   - "ymove", [scale]: Move turtle scale*dist units in the y direction. Default scale=1.
-//   - "untilx", xtarget: Move turtle in turtle direction until x==xtarget.  Produces an error if xtarget is not reachable.
-//   - "untily", ytarget: Move turtle in turtle direction until y==ytarget.  Produces an error if xtarget is not reachable.
-//   - "jump", point: Move the turtle to the specified point
-//   - "xjump", x: Move the turtle's x position to the specified value
-//   - "yjump, y: Move the turtle's y position to the specified value
-//   - "turn", [angle]: Turn turtle direction by specified angle, or the turtle's default turn angle.  The default angle starts at 90.
-//   - "left", [angle]: Same as "turn"
-//   - "right", [angle]: Same as "turn", -angle
-//   - "angle", angle: Set the default turn angle.
-//   - "setdir", dir: Set turtle direction.  The parameter `dir` can be an angle or a vector.
-//   - "length", length: Change the turtle move distance to `length`
-//   - "scale", factor: Multiply turtle move distance by `factor`
-//   - "addlength", length: Add `length` to the turtle move distance
-//   - "repeat", count, commands: Repeats a list of commands `count` times.
-//   - "arcleft", radius, [angle]: Draw an arc from the current position toward the left at the specified radius and angle.  The turtle turns by `angle`.  A negative angle draws the arc to the right instead of the left, and leaves the turtle facing right.  A negative radius draws the arc to the right but leaves the turtle facing left.  
-//   - "arcright", radius, [angle]: Draw an arc from the current position toward the right at the specified radius and angle
-//   - "arcleftto", radius, angle: Draw an arc at the given radius turning toward the left until reaching the specified absolute angle.  
-//   - "arcrightto", radius, angle: Draw an arc at the given radius turning toward the right until reaching the specified absolute angle.  
-//   - "arcsteps", count: Specifies the number of segments to use for drawing arcs.  If you set it to zero then the standard `$fn`, `$fa` and `$fs` variables define the number of segments.  
+//   Commands     | Arguments          | What it does
+//   ------------ | ------------------ | -------------------------------
+//   "move"       | [dist]             | Move turtle scale*dist units in the turtle direction.  Default dist=1.
+//   "xmove"      | [dist]             | Move turtle scale*dist units in the x direction. Default dist=1.
+//   "ymove"      | [dist]             | Move turtle scale*dist units in the y direction. Default dist=1.
+//   "untilx"     | xtarget            | Move turtle in turtle direction until x==xtarget.  Produces an error if xtarget is not reachable.
+//   "untily"     | ytarget            | Move turtle in turtle direction until y==ytarget.  Produces an error if xtarget is not reachable.
+//   "jump"       | point              | Move the turtle to the specified point
+//   "xjump"      | x                  | Move the turtle's x position to the specified value
+//   "yjump       | y                  | Move the turtle's y position to the specified value
+//   "turn"       | [angle]            | Turn turtle direction by specified angle, or the turtle's default turn angle.  The default angle starts at 90.
+//   "left"       | [angle]            | Same as "turn"
+//   "right"      | [angle]            | Same as "turn", -angle
+//   "angle"      | angle              | Set the default turn angle.
+//   "setdir"     | dir                | Set turtle direction.  The parameter `dir` can be an angle or a vector.
+//   "length"     | length             | Change the turtle move distance to `length`
+//   "scale"      | factor             | Multiply turtle move distance by `factor`
+//   "addlength"  | length             | Add `length` to the turtle move distance
+//   "repeat"     | count, commands    | Repeats a list of commands `count` times.
+//   "arcleft"    | radius, [angle]    | Draw an arc from the current position toward the left at the specified radius and angle.  The turtle turns by `angle`.  A negative angle draws the arc to the right instead of the left, and leaves the turtle facing right.  A negative radius draws the arc to the right but leaves the turtle facing left.  
+//   "arcright"   | radius, [angle]    | Draw an arc from the current position toward the right at the specified radius and angle
+//   "arcleftto"  | radius, angle      | Draw an arc at the given radius turning toward the left until reaching the specified absolute angle.  
+//   "arcrightto" | radius, angle      | Draw an arc at the given radius turning toward the right until reaching the specified absolute angle.  
+//   "arcsteps"   | count              | Specifies the number of segments to use for drawing arcs.  If you set it to zero then the standard `$fn`, `$fa` and `$fs` variables define the number of segments.  
 //
 // Arguments:
 //   commands = list of turtle commands
