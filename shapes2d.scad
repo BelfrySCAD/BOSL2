@@ -280,7 +280,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false) =
 		arc(N,cp=cp,r=r,start=atan2(v1.y,v1.x),angle=dir*angle,wedge=wedge)
 	) : (
 		// Final case is arc passing through three points, starting at point[0] and ending at point[3]
-		let(col = collinear(points[0],points[1],points[2],1e-3))
+		let(col = collinear(points[0],points[1],points[2]))
 		assert(!col, "Collinear inputs do not define an arc")
 		let(
 			cp = line_intersection(_normal_segment(points[0],points[1]),_normal_segment(points[1],points[2])),
@@ -689,8 +689,11 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //   - "scale", factor: Multiply turtle move distance by `factor`
 //   - "addlength", length: Add `length` to the turtle move distance
 //   - "repeat", count, commands: Repeats a list of commands `count` times.
-//   - "arcleft", radius, [angle]: Draw an arc from the current position toward the left at the specified radius and angle
+//   - "arcleft", radius, [angle]: Draw an arc from the current position toward the left at the specified radius and angle.  The turtle turns by `angle`.  A negative angle draws the arc to the right instead of the left, and leaves the turtle facing right.  A negative radius draws the arc to the right but leaves the turtle facing left.  
 //   - "arcright", radius, [angle]: Draw an arc from the current position toward the right at the specified radius and angle
+//   - "arcleftto", radius, angle: Draw an arc at the given radius turning toward the left until reaching the specified absolute angle.  
+//   - "arcrightto", radius, angle: Draw an arc at the given radius turning toward the right until reaching the specified absolute angle.  
+//   - "arcsteps", count: Specifies the number of segments to use for drawing arcs.  If you set it to zero then the standard `$fn`, `$fa` and `$fs` variables define the number of segments.  
 //
 // Arguments:
 //   commands = list of turtle commands
@@ -766,8 +769,8 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //       );
 //   koch=concat(["angle",60,"repeat",3],[concat(koch_unit(3),["left","left"])]);
 //   polygon(turtle(koch));
-function turtle(commands, state=[[[0,0]],[1,0],90], full_state=false, repeat=1) =
-	let( state = is_vector(state) ? [[state],[1,0],90] : state )
+function turtle(commands, state=[[[0,0]],[1,0],90,0], full_state=false, repeat=1) =
+	let( state = is_vector(state) ? [[state],[1,0],90,0] : state )
 		repeat == 1?
 			_turtle(commands,state,full_state) :
 			_turtle_repeat(commands, state, full_state, repeat);
@@ -778,7 +781,7 @@ function _turtle_repeat(commands, state, full_state, repeat) =
 		_turtle_repeat(commands, _turtle(commands, state, true), full_state, repeat-1);
 
 function _turtle_command_len(commands, index) =
-	let( one_or_two_arg = ["arcleft","arcright"] )
+	let( one_or_two_arg = ["arcleft","arcright", "arcleftto", "arcrightto"] )
 	commands[index] == "repeat"? 3 :   // Repeat command requires 2 args
 	// For these, the first arg is required, second arg is present if it is not a string
 	in_list(commands[index], one_or_two_arg) && len(commands)>index+2 && !is_string(commands[index+2]) ? 3 :  
@@ -798,13 +801,14 @@ function _turtle(commands, state, full_state, index=0) =
 
 function _turtle_command(command, parm, parm2, state, index) =
 	command == "repeat"?
-		assert(is_num(parm),str("\"repeat\" command requires a numeric parameter at index ",index))
+		assert(is_num(parm),str("\"repeat\" command requires a numeric repeat count at index ",index))
 		assert(is_list(parm2),str("\"repeat\" command requires a command list parameter at index ",index))
 		_turtle_repeat(parm2, state, true, parm) :
 	let(
 		path = 0,
 		step=1,
 		angle=2,
+                arcsteps=3,
 		parm = !is_string(parm) ? parm : undef,
 		parm2 = !is_string(parm2) ? parm2 : undef,
 		needvec = ["jump"],
@@ -831,7 +835,6 @@ function _turtle_command(command, parm, parm2, state, index) =
 	command=="untily" ? (
 		let(
 			int = line_intersection([lastpt,lastpt+state[step]], [[0,parm],[1,parm]]),
-			ffd=echo(int=int),
 			ygood = is_def(int) && sign(state[step].y) == sign(int.y-lastpt.y)
 		)
 		assert(ygood,str("\"untily\" never reaches desired goal at index ",index))
@@ -853,18 +856,21 @@ function _turtle_command(command, parm, parm2, state, index) =
 	command=="length" ? list_set(state, step, parm*normalize(state[step])) :
 	command=="scale" ?  list_set(state, step, parm*state[step]) :
 	command=="addlength" ?  list_set(state, step, state[step]+normalize(state[step])*parm) :
+        command=="arcsteps" ? list_set(state, arcsteps, parm) :
 	command=="arcleft" || command=="arcright" ?
+		assert(is_num(parm),str("\"",command,"\" command requires a numeric radius value at index ",index))  
 		let(
 			myangle = default(parm2,state[angle]),
 			lrsign = command=="arcleft" ? 1 : -1,
-			radius = parm,
+			radius = parm*sign(myangle),
 			center = lastpt + lrsign*radius*line_normal([0,0],state[step]),
-			arcpath = myangle == 0 ? [] : arc(
-				segs(radius),
+                        steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps], 
+			arcpath = myangle == 0 || radius == 0 ? [] : arc(
+				steps,
 				points = [
 					lastpt,
-					rot(cp=center, p=lastpt, a=lrsign*myangle/2),
-					rot(cp=center, p=lastpt, a=lrsign*myangle)
+					rot(cp=center, p=lastpt, a=sign(parm)*lrsign*myangle/2),
+					rot(cp=center, p=lastpt, a=sign(parm)*lrsign*myangle)
 				]
 			)
 		)
@@ -874,6 +880,36 @@ function _turtle_command(command, parm, parm2, state, index) =
 				rot(lrsign * myangle,p=state[step],planar=true)
 			]
 		) :
+	command=="arcleftto" || command=="arcrightto" ?
+		assert(is_num(parm),str("\"",command,"\" command requires a numeric radius value at index ",index))
+		assert(is_num(parm2),str("\"",command,"\" command requires a numeric angle value at index ",index))
+		let(
+                        radius = parm,
+			lrsign = command=="arcleftto" ? 1 : -1,
+			center = lastpt + lrsign*radius*line_normal([0,0],state[step]),
+                        steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps],
+                        start_angle = posmod(atan2(state[step].y, state[step].x),360),
+                        end_angle = posmod(parm2,360),
+                        delta_angle =  -start_angle + (lrsign * end_angle < lrsign*start_angle ? end_angle+lrsign*360 : end_angle),
+fda=                        echo(angles = start_angle, end_angle,delta_angle, lrsign),
+			arcpath = delta_angle == 0 || radius==0 ? [] : arc(
+				steps,
+				points = [
+					lastpt,
+					rot(cp=center, p=lastpt, a=sign(radius)*delta_angle/2),
+					rot(cp=center, p=lastpt, a=sign(radius)*delta_angle)
+				]
+			)
+		)
+		list_set(
+			state, [path,step], [
+				concat(state[path], slice(arcpath,1,-1)),
+				rot(delta_angle,p=state[step],planar=true)
+			]
+		) :
+
+
+  
 	assert(false,str("Unknown turtle command \"",command,"\" at index",index))
 	[];
 
