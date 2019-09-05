@@ -380,6 +380,24 @@ function _circlecorner(points, parm) =
 //   Many of the arguments are described as setting "default" values because they establish settings which may be overridden by 
 //   the top and bottom profile specifications.  
 //   
+//   You will generally want to use the above helper functions to generate the profiles.  
+//   The profile specification is a list of pairs of keywords and values, e.g. ["r",12, type, "circle"]. The keywords are
+//   - "type" - type of rounding to apply, one of "circle", "teardrop", "chamfer", "smooth", or "profile" (Default: "circle")
+//   - "r" - the radius of the roundover, which may be zero for no roundover, or negative to round or flare outward.  Default: 0
+//   - "cut" - the cut distance for the roundover or chamfer, which may be negative for flares
+//   - "chamfer_width" - the width of a chamfer
+//   - "chamfer_height" - the height of a chamfer
+//   - "angle" - the chamfer angle, measured from the vertical (so zero is vertical, 90 is horizontal).  Default: 45
+//   - "joint" - the joint distance for a "smooth" roundover
+//   - "k" - the curvature smoothness parameter for "smooth" roundovers, a value in [0,1].  Default: 0.75
+//   - "points" - point list for use with the "profile" type
+//   - "extra" - extra height added for unions/differences.  This makes the shape taller than the requested height.  (Default: 0) 
+//   - "check_valid" - passed to offset.  Default: true.
+//   - "quality" - passed to offset.  Default: 1.
+//   - "steps" - number of vertical steps to use for the roundover.  Default: 16.
+//   - "offset_maxstep" - maxstep distance for offset() calls; controls the horizontal step density.  Set smaller if you don't get expected rounding.  Default: 1
+//   - "offset" - select "round" (r=) or "delta" (delta=) offset type for offset.  Default: "round"
+//
 // Arguments:
 //   path = 2d path (list of points) to extrude
 //   height / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.  
@@ -398,25 +416,7 @@ function _circlecorner(points, parm) =
 //   joint = default joint value for smooth roundover.
 //   k = default curvature parameter value for "smooth" roundover
 //   convexity = convexity setting for use with polyhedron.  Default: 10
-//   
-//   You will generally want to use the above helper functions to generate the profiles.  
-//   The profile specification is a list of pairs of keywords and values, e.g. ["r",12, type, "circle"]. The keywords are
-//   - "type" - type of rounding to apply, one of "circle", "teardrop", "chamfer", "smooth", or "profile" (Default: "circle")
-//   - "r" - the radius of the roundover, which may be zero for no roundover, or negative to round or flare outward.  Default: 0
-//   - "cut" - the cut distance for the roundover or chamfer, which may be negative for flares
-//   - "chamfer_width" - the width of a chamfer
-//   - "chamfer_height" - the height of a chamfer
-//   - "angle" - the chamfer angle, measured from the vertical (so zero is vertical, 90 is horizontal).  Default: 45
-//   - "joint" - the joint distance for a "smooth" roundover
-//   - "k" - the curvature smoothness parameter for "smooth" roundovers, a value in [0,1].  Default: 0.75
-//   - "points" - point list for use with the "profile" type
-//   - "extra" - extra height added for unions/differences.  This makes the shape taller than the requested height.  (Default: 0) 
-//   - "check_valid" - passed to offset.  Default: true.
-//   - "quality" - passed to offset.  Default: 1.
-//   - "steps" - number of vertical steps to use for the roundover.  Default: 16.
-//   - "offset_maxstep" - maxstep distance for offset() calls; controls the horizontal step density.  Set smaller if you don't get expected rounding.  Default: 1
-//   - "offset" - select "round" (r=) or "delta" (delta=) offset type for offset.  Default: "round"
-//   
+//
 // Example: Rounding a star shaped prism with postive radius values
 //   star = star(5, r=22, ir=13);
 //   rounded_star = round_corners(zip(star, flatten(replist([.5,0],5))), curve="circle", measure="cut", $fn=12);
