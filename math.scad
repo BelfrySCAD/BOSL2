@@ -359,7 +359,7 @@ function mean(v) = sum(v)/len(v);
 //   M = The 2x2 square matrix to get the determinant of.
 // Example:
 //   M = [ [6,-2], [1,8] ];
-//   det = det3(M);  // Returns: 50
+//   det = det2(M);  // Returns: 50
 function det2(M) = M[0][0] * M[1][1] - M[0][1]*M[1][0];
 
 
