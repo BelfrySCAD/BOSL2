@@ -125,18 +125,18 @@ function line_normal(p1,p2) =
 
 // 2D Line intersection from two segments.
 // This function returns [p,t,u] where p is the intersection point of
-// the lines defined by the two segments, t is the bezier parameter
-// for the intersection point on s1 and u is the bezier parameter for
-// the intersection point on s2.  The bezier parameter runs over [0,1]
-// for each segment, so if it is in this range, then the intersection
-// lies on the segment.  Otherwise it lies somewhere on the extension
-// of the segment.
+// the lines defined by the two segments, t is the proportional distance
+// of the intersection point along s1, and u is the proportional distance
+// of the intersection point along s2.  The proportional values run over
+// the range of 0 to 1 for each segment, so if it is in this range, then
+// the intersection lies on the segment.  Otherwise it lies somewhere on
+// the extension of the segment.
 function _general_line_intersection(s1,s2,eps=EPSILON) =
 	let(
 		denominator = det2([s1[0],s2[0]]-[s1[1],s2[1]])
 	) approx(denominator,0,eps=eps)? [undef,undef,undef] : let(
 		t = det2([s1[0],s2[0]]-s2) / denominator,
-		u = det2([s1[0],s1[0]]-[s1[1],s2[1]]) /denominator
+		u = det2([s1[0],s1[0]]-[s2[0],s1[1]]) / denominator
 	) [s1[0]+t*(s1[1]-s1[0]), t, u];
 
 
@@ -544,6 +544,88 @@ function close_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? path : co
 function cleanup_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? select(path,0,-2) : path;
 
 
+// Function: path_self_intersections()
+// Usage:
+//   isects = path_self_intersections(path, [eps]);
+// Description:
+//   Locates all self intersections of the given path.  Returns a list of intersections, where
+//   each intersection is a list like [POINT, SEGNUM1, PROPORTION1, SEGNUM2, PROPORTION2] where
+//   POINT is the coordinates of the intersection point, SEGNUMs are the integer indices of the
+//   intersecting segments along the path, and the PROPORTIONS are the 0.0 to 1.0 proportions
+//   of how far along those segments they intersect at.  A proportion of 0.0 indicates the start
+//   of the segment, and a proportion of 1.0 indicates the end of the segment.
+// Arguments:
+//   path = The path to find self intersections of.
+//   closed = If true, treat path like a closed polygon.  Default: true
+//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+// Example(2D):
+//   path = [
+//       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
+//   ];
+//   isects = path_self_intersections(path, closed=true);
+//   // isects == [[[-33.3333, 0], 0, 0.666667, 4, 0.333333], [[33.3333, 0], 1, 0.333333, 3, 0.666667]]
+//   stroke(path, closed=true, width=1);
+//   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
+//   echo(isects=isects);
+function path_self_intersections(path, closed=true, eps=EPSILON) =
+	let(
+		path = cleanup_path(path, eps=eps)
+	) [
+		for (i = idx(path,end=closed?-2:-3), j = idx(path,start=i+1,end=closed?-1:-2)) let(
+			a = select(path,i,i+1),
+			b = select(path,j,j+1),
+			isect = _general_line_intersection(a,b,eps=eps)
+		) if ( !is_undef(isect) && isect[1]>0 && isect[1]<=1 && isect[2]>0 && isect[2]<=1)
+		[isect[0], i, isect[1], j, isect[2]]
+	];
+
+
+// Function: decompose_path()
+// Usage:
+//   splitpaths = decompose_path(path, [closed], [eps]);
+// Description:
+//   Given a possibly self-intersecting path, splits it up into a list of non-intersecting sub-paths.
+//   If the given path is not a closed polygon, then the first returned subpath will not be closed.
+//   All other returned subpaths should be considered as closed polygons.  Subpaths of crossing areas
+//   will have the opposite clockwise-ness from the first path returned.
+// Arguments:
+//   path = The path to split up.
+//   closed = If true, treat path like a closed polygon.  Default: true
+//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+// Example(2D):
+//   path = [
+//       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
+//   ];
+//   splitpaths = decompose_path(path, closed=true);
+//   rainbow(splitpaths) stroke($item, closed=true, width=3);
+function decompose_path(path, closed=true, eps=EPSILON) =
+	let(
+		path = cleanup_path(path, eps=eps),
+		isects = path_self_intersections(path, closed, eps)
+	) isects==[]? [path] :
+	let(
+		isect = isects[0],
+		plen = len(path)
+	) concat(
+		decompose_path(
+			let(
+				subpath1 = path_subselect(path, 0, 0, isect[1], isect[2]),
+				subpath2 = path_subselect(path, isect[3], isect[4], plen-(closed?0:1), 1),
+				patha = cleanup_path(deduplicate(concat(subpath1, subpath2), eps=eps), eps=eps)
+			) patha,
+			closed=closed,
+			eps=eps
+		),
+		decompose_path(
+			let(
+				subpath3 = path_subselect(path, isect[1], isect[2], isect[3], isect[4]),
+				pathb = cleanup_path(subpath3, eps=eps)
+			) pathb,
+			closed=true,
+			eps=eps
+		)
+	);
+
 // Function: path_subselect()
 // Usage:
 //   path_subselect(path,s1,u1,s2,u2):
@@ -590,7 +672,7 @@ function polygon_area(vertices) =
 //   i = The index of the point to shift to the front of the path.
 // Example:
 //   polygon_shift([[3,4], [8,2], [0,2], [-4,0]], 2);   // Returns [[0,2], [-4,0], [3,4], [8,2]]
-function polygon_shift(poly, i) = 
+function polygon_shift(poly, i) =
 	assert(i<len(poly))
 	let(
 		poly = cleanup_path(poly)
@@ -829,7 +911,7 @@ function furthest_point(pt, points) =
 // Arguments:
 //   path = The list of 2D path points for the perimeter of the polygon.
 function polygon_is_clockwise(path) =
-	let(    
+	let(
 		minx = min(subindex(path,0)),
 		lowind = search(minx, path, 0, 0),
 		lowpts = select(path, lowind),
