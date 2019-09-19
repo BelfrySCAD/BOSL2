@@ -29,8 +29,6 @@ include <shapes2d.scad>
 include <masks.scad>
 include <paths.scad>
 
-include <knurling.scad>
-
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
 
