@@ -566,7 +566,6 @@ function cleanup_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? select(
 //   // isects == [[[-33.3333, 0], 0, 0.666667, 4, 0.333333], [[33.3333, 0], 1, 0.333333, 3, 0.666667]]
 //   stroke(path, closed=true, width=1);
 //   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
-//   echo(isects=isects);
 function path_self_intersections(path, closed=true, eps=EPSILON) =
 	let(
 		path = cleanup_path(path, eps=eps)
@@ -609,8 +608,8 @@ function decompose_path(path, closed=true, eps=EPSILON) =
 	) concat(
 		decompose_path(
 			let(
-				subpath1 = path_subselect(path, 0, 0, isect[1], isect[2]),
-				subpath2 = path_subselect(path, isect[3], isect[4], plen-(closed?0:1), 1),
+				subpath1 = path_subselect(path, 0, 0, isect[1], isect[2], closed=closed),
+				subpath2 = path_subselect(path, isect[3], isect[4], plen-(closed?0:1), 1, closed=closed),
 				patha = cleanup_path(deduplicate(concat(subpath1, subpath2), eps=eps), eps=eps)
 			) patha,
 			closed=closed,
@@ -618,7 +617,7 @@ function decompose_path(path, closed=true, eps=EPSILON) =
 		),
 		decompose_path(
 			let(
-				subpath3 = path_subselect(path, isect[1], isect[2], isect[3], isect[4]),
+				subpath3 = path_subselect(path, isect[1], isect[2], isect[3], isect[4], closed=closed),
 				pathb = cleanup_path(subpath3, eps=eps)
 			) pathb,
 			closed=true,
@@ -628,27 +627,30 @@ function decompose_path(path, closed=true, eps=EPSILON) =
 
 // Function: path_subselect()
 // Usage:
-//   path_subselect(path,s1,u1,s2,u2):
+//   path_subselect(path,s1,u1,s2,u2,[closed]):
 // Description:
 //   Returns a portion of a path, from between the `u1` part of segment `s1`, to the `u2` part of
 //   segment `s2`.  Both `u1` and `u2` are values between 0.0 and 1.0, inclusive, where 0 is the start
 //   of the segment, and 1 is the end.  Both `s1` and `s2` are integers, where 0 is the first segment.
 // Arguments:
+//   path = The path to get a section of.
 //   s1 = The number of the starting segment.
 //   u1 = The proportion along the starting segment, between 0.0 and 1.0, inclusive.
 //   s2 = The number of the ending segment.
 //   u2 = The proportion along the ending segment, between 0.0 and 1.0, inclusive.
-function path_subselect(path,s1,u1,s2,u2) =
+//   closed = If true, treat path as a closed polygon.
+function path_subselect(path, s1, u1, s2, u2, closed=false) =
 	let(
-		l = len(path)-1,
+		lp = len(path),
+		l = lp-(closed?0:1),
 		u1 = s1<0? 0 : s1>l? 1 : u1,
 		u2 = s2<0? 0 : s2>l? 1 : u2,
 		s1 = constrain(s1,0,l),
 		s2 = constrain(s2,0,l),
 		pathout = concat(
-			(s1<l)? [lerp(path[s1],path[s1+1],u1)] : [],
+			(s1<l && u1<1)? [lerp(path[s1],path[(s1+1)%lp],u1)] : [],
 			[for (i=[s1+1:1:s2]) path[i]],
-			(s2<l)? [lerp(path[s2],path[s2+1],u2)] : []
+			(s2<l && u2>0)? [lerp(path[s2],path[(s2+1)%lp],u2)] : []
 		)
 	) pathout;
 
@@ -704,7 +706,7 @@ function polygon_shift_to_closest_point(path, pt) =
 //   i2 = The second point.
 //   points = The list of points to find a non-collinear point from.
 function first_noncollinear(i1, i2, points, _i) =
-    (_i>=len(points) || !collinear_indexed(points, i1, i2, _i))? _i :
+	(_i>=len(points) || !collinear_indexed(points, i1, i2, _i))? _i :
 	find_first_noncollinear(i1, i2, points, _i=_i+1);
 
 
@@ -969,19 +971,29 @@ function close_region(region, eps=EPSILON) = [for (path=region) close_path(path,
 //   path = path to process
 //   valid_dim = list of allowed dimensions for the points in the path, e.g. [2,3] to require 2 or 3 dimensional input.  If left undefined do not perform this check.  Default: undef
 //   closed = set to true if the path is closed, which enables a check for endpoint duplication
-function check_and_fix_path(path,valid_dim=undef,closed=false) =
-  let( path = is_region(path) ?
-                  assert(len(path)==1,"Region supplied as path does not have exactly one component")
-                  path[0] :
-              assert(is_path(path), "Input is not a path") path,
-       dim = array_dim(path))
-   assert(dim[0]>1,"Path must have at least 2 points")
-   assert(len(dim)==2,"Invalid path: path is either a list of scalars or a list of matrices")
-   assert(is_def(dim[1]), "Invalid path: entries in the path have variable length")
-   let(valid=is_undef(valid_dim) || in_list(dim[1],valid_dim))
-   assert(valid, str("The points on the path have length ",dim[1]," but length must be ",
-                     len(valid_dim)==1? valid_dim[0] : str("one of ",valid_dim)))
-   closed && approx(path[0],select(path,-1)) ? slice(path,0,-2) : path;
+function check_and_fix_path(path, valid_dim=undef, closed=false) =
+	let(
+		path = is_region(path)? (
+			assert(len(path)==1,"Region supplied as path does not have exactly one component")
+			path[0]
+		) : (
+			assert(is_path(path), "Input is not a path")
+			path
+		),
+		dim = array_dim(path)
+	)
+	assert(dim[0]>1,"Path must have at least 2 points")
+	assert(len(dim)==2,"Invalid path: path is either a list of scalars or a list of matrices")
+	assert(is_def(dim[1]), "Invalid path: entries in the path have variable length")
+	let(valid=is_undef(valid_dim) || in_list(dim[1],valid_dim))
+	assert(
+		valid, str(
+			"The points on the path have length ",
+			dim[1], " but length must be ",
+			len(valid_dim)==1? valid_dim[0] : str("one of ",valid_dim)
+		)
+	)
+	closed && approx(path[0],select(path,-1))? slice(path,0,-2) : path;
 
 
 // Function: cleanup_region()
@@ -989,7 +1001,11 @@ function check_and_fix_path(path,valid_dim=undef,closed=false) =
 //   cleanup_region(region);
 // Description:
 //   For all paths in the given region, if the last point coincides with the first point, removes the last point.
-function cleanup_region(region, eps=EPSILON) = [for (path=region) cleanup_path(path, eps=eps)];
+// Arguments:
+//   region = The region to clean up.  Given as a list of polygon paths.
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+function cleanup_region(region, eps=EPSILON) =
+	[for (path=region) cleanup_path(path, eps=eps)];
 
 
 // Function: point_in_region()
@@ -1018,20 +1034,23 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
 // Arguments:
 //   path = The path to find crossings on.
 //   region = Region to test for crossings of.
+//   closed = If true, treat path as a closed polygon.  Default: true
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function region_path_crossings(path, region, eps=EPSILON) = sort([
-	for (
-		s1=enumerate(pair(close_path(path))),
-		p=close_region(region),
-		s2=pair(p)
-	) let(
-		isect = _general_line_intersection(s1[1],s2,eps=eps)
+function region_path_crossings(path, region, closed=true, eps=EPSILON) = sort([
+	let(
+		segs = pair(closed? close_path(path) : cleanup_path(path))
+	) for (
+		si = idx(segs),
+		p = close_region(region),
+		s2 = pair(p)
+	) let (
+		isect = _general_line_intersection(segs[si], s2, eps=eps)
 	) if (
 		!is_undef(isect) &&
 		isect[1] >= 0-eps && isect[1] < 1+eps &&
 		isect[2] >= 0-eps && isect[2] < 1+eps
 	)
-	[s1[0], isect[1]]
+	[si, isect[1]]
 ]);
 
 
@@ -1302,7 +1321,7 @@ function offset(
 	let(
 		chamfer = is_def(r) ? false : chamfer,
 		quality = max(0,round(quality)),
-                flip_dir = closed && !polygon_is_clockwise(path) ? -1 : 1,
+		flip_dir = closed && !polygon_is_clockwise(path)? -1 : 1,
 		d = flip_dir * (is_def(r) ? r : delta),
 		shiftsegs = [for(i=[0:len(path)-1]) _shift_segment(select(path,i,i+1), d)],
 		// good segments are ones where no point on the segment is less than distance d from any point on the path
@@ -1391,23 +1410,80 @@ function offset(
 	) return_faces? [edges,faces] : edges;
 
 
-function _split_path_at_region_crossings(path, region, eps=EPSILON) =
+// Function: split_path_at_self_crossings()
+// Usage:
+//   polylines = split_path_at_self_crossings(path, [closed], [eps]);
+// Description:
+//   Splits a path into polyline sections wherever the path crosses itself.
+//   Splits may occur mid-segment, so new vertices will be created at the intersection points.
+// Arguments:
+//   path = The path to split up.
+//   closed = If true, treat path as a closed polygon.  Default: true
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+// Example(2D):
+//   path = [ [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100] ];
+//   polylines = split_path_at_self_crossings(path);
+//   rainbow(polylines) stroke($item, closed=false, width=2);
+function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
+	let(
+		path = cleanup_path(path, eps=eps),
+		isects = deduplicate(
+			eps=eps,
+			concat(
+				[[0, 0]],
+				sort([
+					for (
+						a = path_self_intersections(path, closed=closed, eps=eps),
+						ss = [ [a[1],a[2]], [a[3],a[4]] ]
+					) if (ss[0] != undef) ss
+				]),
+				[[len(path)-(closed?1:2), 1]]
+			)
+		)
+	) [
+		for (p = pair(isects))
+			let(
+				s1 = p[0][0],
+				u1 = p[0][1],
+				s2 = p[1][0],
+				u2 = p[1][1],
+				section = path_subselect(path, s1, u1, s2, u2, closed=closed),
+				outpath = deduplicate(eps=eps, section)
+			)
+			outpath
+	];
+
+
+// Function: split_path_at_region_crossings()
+// Usage:
+//   polylines = split_path_at_region_crossings(path, region, [eps]);
+// Description:
+//   Splits a path into polyline sections wherever the path crosses the perimeter of a region.
+//   Splits may occur mid-segment, so new vertices will be created at the intersection points.
+// Arguments:
+//   path = The path to split up.
+//   region = The region to check for perimeter crossings of.
+//   closed = If true, treat path as a closed polygon.  Default: true
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+// Example(2D):
+//   path = square(50,center=false);
+//   region = [circle(d=80), circle(d=40)];
+//   polylines = split_path_at_region_crossings(path, region);
+//   color("#aaa") region(region);
+//   rainbow(polylines) stroke($item, closed=false, width=2);
+function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) =
 	let(
 		path = deduplicate(path, eps=eps),
 		region = [for (path=region) deduplicate(path, eps=eps)],
-		xings = region_path_crossings(path, region, eps=eps),
+		xings = region_path_crossings(path, region, closed=closed, eps=eps),
 		crossings = deduplicate(
-			concat(
-				[[0,0]],
-				xings,
-				[[len(path)-2,1]]
-			),
+			concat([[0,0]], xings, [[len(path)-1,1]]),
 			eps=eps
 		),
 		subpaths = [
 			for (p = pair(crossings))
 				deduplicate(eps=eps,
-					path_subselect(path, p[0][0], p[0][1], p[1][0], p[1][1])
+					path_subselect(path, p[0][0], p[0][1], p[1][0], p[1][1], closed=closed)
 				)
 		]
 	)
@@ -1416,7 +1492,7 @@ function _split_path_at_region_crossings(path, region, eps=EPSILON) =
 
 function _tag_subpaths(path, region, eps=EPSILON) =
 	let(
-		subpaths = _split_path_at_region_crossings(path, region, eps=eps),
+		subpaths = split_path_at_region_crossings(path, region, eps=eps),
 		tagged = [
 			for (sub = subpaths) let(
 				subpath = deduplicate(sub)
