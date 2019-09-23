@@ -101,6 +101,7 @@ function min_index(vals, all=false) =
 function max_index(vals, all=false) =
         all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
 
+
 // Function: posmod()
 // Usage:
 //   posmod(x,m)
@@ -111,6 +112,15 @@ function max_index(vals, all=false) =
 //   x = The value to constrain.
 //   m = Modulo value.
 function posmod(x,m) = (x%m+m)%m;
+
+
+// Function: modang(x)
+// Usage:
+//   ang = modang(x)
+// Description:
+//   Takes an angle in degrees and normalizes it to an equivalent angle value between -180 and 180.
+function modang(x) =
+	let(xx = posmod(x,360)) xx<180? xx : xx-360;
 
 
 // Function: modrange()
