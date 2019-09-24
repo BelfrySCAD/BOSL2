@@ -2373,6 +2373,7 @@ module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
 //   This is useful for debugging lists of paths and such.
 // Arguments:
 //   list = The list of items to iterate through.
+//   stride = Consecutive colors stride around the color wheel divided into this many parts.
 // Side Effects:
 //   Sets the color to progressive values along the ROYGBIV spectrum for each item.
 //   Sets `$idx` to the index of the current item in `list` that we want to show.
@@ -2382,10 +2383,16 @@ module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
 // Example(2D):
 //   rgn = [circle(d=45,$fn=3), circle(d=75,$fn=4), circle(d=50)];
 //   rainbow(rgn) stroke($item, closed=true);
-module rainbow(list)
-	for($idx=idx(list),$item=[list[$idx]])
-		HSV(h=360*$idx/len(list))
-			children();
+module rainbow(list, stride=1)
+{
+	ll = len(list);
+	huestep = 360 / ll;
+	hues = [for (i=[0:1:ll-1]) posmod(i*huestep+i*360/stride,360)];
+	for($idx=idx(list)) {
+		$item = list[$idx];
+		HSV(h=hues[$idx]) children();
+	}
+}
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
