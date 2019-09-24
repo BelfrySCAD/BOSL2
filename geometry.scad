@@ -579,14 +579,31 @@ function path_self_intersections(path, closed=true, eps=EPSILON) =
 	];
 
 
+function _tag_self_crossing_subpaths(path, closed=true, eps=EPSILON) =
+	let(
+		subpaths = split_path_at_self_crossings(
+			path, closed=closed, eps=eps
+		)
+	) [
+		for (subpath = subpaths) let(
+			seg = select(subpath,0,1),
+			mp = mean(seg),
+			n = line_normal(seg) / 2048,
+			p1 = mp + n,
+			p2 = mp - n,
+			p1in = point_in_polygon(p1, path) >= 0,
+			p2in = point_in_polygon(p2, path) >= 0,
+			tag = (p1in && p2in)? "I" : "O"
+		) [tag, subpath]
+	];
+
+
 // Function: decompose_path()
 // Usage:
 //   splitpaths = decompose_path(path, [closed], [eps]);
 // Description:
-//   Given a possibly self-intersecting path, splits it up into a list of non-intersecting sub-paths.
-//   If the given path is not a closed polygon, then the first returned subpath will not be closed.
-//   All other returned subpaths should be considered as closed polygons.  Subpaths of crossing areas
-//   will have the opposite clockwise-ness from the first path returned.
+//   Given a possibly self-crossing path, decompose it into non-crossing paths that are on the perimeter
+//   of the areas bounded by that path.
 // Arguments:
 //   path = The path to split up.
 //   closed = If true, treat path like a closed polygon.  Default: true
@@ -600,30 +617,11 @@ function path_self_intersections(path, closed=true, eps=EPSILON) =
 function decompose_path(path, closed=true, eps=EPSILON) =
 	let(
 		path = cleanup_path(path, eps=eps),
-		isects = path_self_intersections(path, closed, eps)
-	) isects==[]? [path] :
-	let(
-		isect = isects[0],
-		plen = len(path)
-	) concat(
-		decompose_path(
-			let(
-				subpath1 = path_subselect(path, 0, 0, isect[1], isect[2], closed=closed),
-				subpath2 = path_subselect(path, isect[3], isect[4], plen-(closed?0:1), 1, closed=closed),
-				patha = cleanup_path(deduplicate(concat(subpath1, subpath2), eps=eps), eps=eps)
-			) patha,
-			closed=closed,
-			eps=eps
-		),
-		decompose_path(
-			let(
-				subpath3 = path_subselect(path, isect[1], isect[2], isect[3], isect[4], closed=closed),
-				pathb = cleanup_path(subpath3, eps=eps)
-			) pathb,
-			closed=true,
-			eps=eps
-		)
-	);
+		tagged = _tag_self_crossing_subpaths(path, closed=closed, eps=eps),
+		kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
+		outregion = assemble_path_fragments(kept, eps=eps)
+	) outregion;
+
 
 // Function: path_subselect()
 // Usage:
@@ -737,72 +735,94 @@ function centroid(vertices) =
 	]) / 6 / polygon_area(vertices);
 
 
+function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
+	!fragments? [undef, []] :
+	let(
+		delta = seg[1] - seg[0],
+		segang = atan2(delta.y,delta.x),
+		frags = [
+			for (i = idx(fragments)) let(
+				fragment = fragments[i],
+				fwdmatch = approx(seg[1], fragment[0], eps=eps),
+				bakmatch =  approx(seg[1], select(fragment,-1), eps=eps)
+			) [
+				fwdmatch,
+				bakmatch,
+				bakmatch? reverse(fragment) : fragment
+			]
+		],
+		angs = [
+			for (frag = frags)
+				(frag[0] || frag[1])? let(
+					delta2 = frag[2][1] - frag[2][0],
+					segang2 = atan2(delta2.y, delta2.x)
+				) modang(segang2 - segang) : (
+					rightmost? 999 : -999
+				)
+		],
+		fi = rightmost? min_index(angs) : max_index(angs)
+	) abs(angs[fi]) > 360? [undef, fragments] : let(
+		remainder = [for (i=idx(fragments)) if (i!=fi) fragments[i]],
+		frag = frags[fi],
+		foundfrag = frag[2]
+	) [foundfrag, remainder];
+
+
 // Function: assemble_path_fragments()
 // Usage:
 //   assemble_path_fragments(subpaths);
 // Description:
 //   Given a list of incomplete paths, assembles them together into complete closed paths if it can.
-function assemble_path_fragments(subpaths,eps=EPSILON,_finished=[]) =
-	len(subpaths)<=1? concat(_finished, subpaths) :
+function assemble_path_fragments(fragments, rightmost=false, eps=EPSILON, _finished=[]) =
+	len(fragments)==0? _finished :
 	let(
-		path = subpaths[0]
+		path = fragments[0],
+		newfrags = slice(fragments, 1, -1),
+		finished = concat(_finished, [path])
 	) is_closed_path(path, eps=eps)? (
-		assemble_path_fragments(
-			[for (i=[1:1:len(subpaths)-1]) subpaths[i]],
-			eps=eps,
-			_finished=concat(_finished, [path])
-		)
+		// starting fragment is already closed
+		assemble_path_fragments(fragments=newfrags, rightmost=rightmost, eps=eps, _finished=finished)
 	) : let(
-		matches = [
-			for (i=[1:1:len(subpaths)-1], rev1=[0,1], rev2=[0,1]) let(
-				idx1 = rev1? 0 : len(path)-1,
-				idx2 = rev2? len(subpaths[i])-1 : 0
-			) if (approx(path[idx1], subpaths[i][idx2], eps=eps)) [
-				i, concat(
-					rev1? reverse(path) : path,
-					select(rev2? reverse(subpaths[i]) : subpaths[i], 1,-1)
-				)
-			]
-		]
-	) len(matches)==0? (
-		assemble_path_fragments(
-			select(subpaths,1,-1),
-			eps=eps,
-			_finished=concat(_finished, [path])
+		// Find rightmost/leftmost continuation fragment
+		extrema = _extreme_angle_fragment(
+			seg=select(path,-2,-1),
+			fragments=slice(fragments,1,-1),
+			rightmost=rightmost,
+			eps=eps
+		),
+		foundfrag = extrema[0],
+		remainder = extrema[1],
+		newfrags = remainder,
+		finished = concat(_finished, [path])
+	) is_undef(foundfrag)? (
+		// No remaining fragments connect!  INCOMPLETE PATH!
+		// Treat it as complete.
+		assemble_path_fragments(fragments=newfrags, rightmost=rightmost, eps=eps, _finished=finished)
+	) : is_closed_path(foundfrag, eps=eps)? (
+		let(
+			newfrags = concat([path], remainder),
+			finished = concat(_finished, [foundfrag])
 		)
-	) : is_closed_path(matches[0][1], eps=eps)? (
-		assemble_path_fragments(
-			[for (i=[1:1:len(subpaths)-1]) if(i != matches[0][0]) subpaths[i]],
-			eps=eps,
-			_finished=concat(_finished, [matches[0][1]])
-		)
+		// Found fragment is already closed
+		assemble_path_fragments(fragments=newfrags, rightmost=rightmost, eps=eps, _finished=finished)
 	) : let(
-		subpath = matches[0][1],
-		splen = len(subpath),
-		conn1 = [for (i=[1:splen-1]) if (approx(subpath[0],subpath[i])) i],
-		conn2 = [for (i=[0:splen-2]) if (approx(subpath[splen-1],subpath[i])) i]
-	) (conn1 != [] || conn2 != [])? let(
-		finpath = select(subpath, 0, conn1!=[]? conn1[0] : conn2[0]),
-		subpath2 = select(subpath, conn1!=[]? conn1[0] : conn2[0], -1)
-	) (
-		assemble_path_fragments(
-			concat(
-				[subpath2],
-				[for (i = [1:1:len(subpaths)-1]) if(i != matches[0][0]) subpaths[i]]
-			),
-			eps=eps,
-			_finished=concat(_finished, [finpath])
+		fragend = select(foundfrag,-1),
+		hits = [for (i = idx(path,end=-2)) if(approx(path[i],fragend,eps=eps)) i]
+	) hits? (
+		let(
+			// Found fragment intersects with initial path
+			hitidx = select(hits,-1),
+			newpath = slice(path,0,hitidx+1),
+			newfrags = concat(len(newpath)>1? [newpath] : [], remainder),
+			finished = concat(_finished,[concat(slice(path,hitidx,-2),foundfrag)])
 		)
-	) : (
-		assemble_path_fragments(
-			concat(
-				[matches[0][1]],
-				[for (i = [1:1:len(subpaths)-1]) if(i != matches[0][0]) subpaths[i]]
-			),
-			eps=eps,
-			_finished=_finished
-		)
-	);
+		assemble_path_fragments(fragments=newfrags, rightmost=rightmost, eps=eps, _finished=finished)
+	) : let(
+		// Path still incomplete.  Continue building it.
+		newpath = concat(path, slice(foundfrag, 1, -1)),
+		newfrags = concat([newpath], remainder)
+	)
+	assemble_path_fragments(fragments=newfrags, rightmost=rightmost, eps=eps, _finished=_finished);
 
 
 // Function: simplify_path()
