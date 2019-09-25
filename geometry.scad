@@ -568,14 +568,33 @@ function cleanup_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? select(
 //   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
 function path_self_intersections(path, closed=true, eps=EPSILON) =
 	let(
-		path = cleanup_path(path, eps=eps)
+		path = cleanup_path(path, eps=eps),
+		plen = len(path)
 	) [
-		for (i = idx(path,end=closed?-2:-3), j = idx(path,start=i+1,end=closed?-1:-2)) let(
-			a = select(path,i,i+1),
-			b = select(path,j,j+1),
-			isect = _general_line_intersection(a,b,eps=eps)
-		) if ( !is_undef(isect) && isect[1]>0 && isect[1]<=1 && isect[2]>0 && isect[2]<=1)
-		[isect[0], i, isect[1], j, isect[2]]
+		for (i = [0:1:plen-(closed?2:3)], j=[i+1:1:plen-(closed?1:2)]) let(
+			a1 = path[i],
+			a2 = path[(i+1)%plen],
+			b1 = path[j],
+			b2 = path[(j+1)%plen],
+			isect =
+				(max(a1.x, a2.x) < min(b1.x, b2.x))? undef :
+				(min(a1.x, a2.x) > max(b1.x, b2.x))? undef :
+				(max(a1.y, a2.y) < min(b1.y, b2.y))? undef :
+				(min(a1.y, a2.y) > max(b1.y, b2.y))? undef :
+				let(
+					c = a1-a2,
+					d = b1-b2,
+					denom = (c.x*d.y)-(c.y*d.x)
+				) abs(denom)<eps? undef : let(
+					e = a1-b1,
+					t = ((e.x*d.y)-(e.y*d.x)) / denom,
+					u = ((e.x*c.y)-(e.y*c.x)) / denom
+				) [a1+t*(a2-a1), t, u]
+		) if (
+			isect != undef &&
+			isect[1]>eps && isect[1]<=1+eps &&
+			isect[2]>eps && isect[2]<=1+eps
+		) [isect[0], i, isect[1], j, isect[2]]
 	];
 
 
@@ -768,43 +787,43 @@ function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
 	) [foundfrag, remainder];
 
 
-// Function: assemble_path_fragments()
+// Function: assemble_a_path_from_fragments()
 // Usage:
-//   assemble_path_fragments(subpaths);
+//   assemble_a_path_from_fragments(subpaths);
 // Description:
-//   Given a list of incomplete paths, assembles them together into complete closed paths if it can.
-function assemble_path_fragments(fragments, rightmost=false, eps=EPSILON, _finished=[]) =
+//   Given a list of incomplete paths, assembles them together into one complete closed path, and
+//   remainder fragments.  Returns [PATH, FRAGMENTS] where FRAGMENTS is the list of remaining
+//   polyline path fragments.
+// Arguments:
+//   fragments = List of polylines to be assembled into complete polygons.
+//   rightmost = If true, assemble paths using rightmost turns. Leftmost if false.
+//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+function assemble_a_path_from_fragments(fragments, rightmost=true, eps=EPSILON) =
 	len(fragments)==0? _finished :
 	let(
 		path = fragments[0],
-		newfrags = slice(fragments, 1, -1),
-		finished = concat(_finished, [path])
+		newfrags = slice(fragments, 1, -1)
 	) is_closed_path(path, eps=eps)? (
 		// starting fragment is already closed
-		assemble_path_fragments(fragments=newfrags, rightmost=rightmost, eps=eps, _finished=finished)
+		[path, newfrags]
 	) : let(
 		// Find rightmost/leftmost continuation fragment
-		extrema = _extreme_angle_fragment(
-			seg=select(path,-2,-1),
-			fragments=slice(fragments,1,-1),
-			rightmost=rightmost,
-			eps=eps
-		),
+		seg = select(path,-2,-1),
+		frags = slice(fragments,1,-1),
+		extrema = _extreme_angle_fragment(seg=seg, fragments=frags, rightmost=rightmost, eps=eps),
 		foundfrag = extrema[0],
 		remainder = extrema[1],
-		newfrags = remainder,
-		finished = concat(_finished, [path])
+		newfrags = remainder
 	) is_undef(foundfrag)? (
 		// No remaining fragments connect!  INCOMPLETE PATH!
 		// Treat it as complete.
-		assemble_path_fragments(fragments=newfrags, rightmost=rightmost, eps=eps, _finished=finished)
+		[path, newfrags]
 	) : is_closed_path(foundfrag, eps=eps)? (
 		let(
-			newfrags = concat([path], remainder),
-			finished = concat(_finished, [foundfrag])
+			newfrags = concat([path], remainder)
 		)
 		// Found fragment is already closed
-		assemble_path_fragments(fragments=newfrags, rightmost=rightmost, eps=eps, _finished=finished)
+		[foundfrag, newfrags]
 	) : let(
 		fragend = select(foundfrag,-1),
 		hits = [for (i = idx(path,end=-2)) if(approx(path[i],fragend,eps=eps)) i]
@@ -814,15 +833,47 @@ function assemble_path_fragments(fragments, rightmost=false, eps=EPSILON, _finis
 			hitidx = select(hits,-1),
 			newpath = slice(path,0,hitidx+1),
 			newfrags = concat(len(newpath)>1? [newpath] : [], remainder),
-			finished = concat(_finished,[concat(slice(path,hitidx,-2),foundfrag)])
+			outpath = concat(slice(path,hitidx,-2), foundfrag)
 		)
-		assemble_path_fragments(fragments=newfrags, rightmost=rightmost, eps=eps, _finished=finished)
+		[outpath, newfrags]
 	) : let(
 		// Path still incomplete.  Continue building it.
 		newpath = concat(path, slice(foundfrag, 1, -1)),
 		newfrags = concat([newpath], remainder)
 	)
-	assemble_path_fragments(fragments=newfrags, rightmost=rightmost, eps=eps, _finished=_finished);
+	assemble_a_path_from_fragments(
+		fragments=newfrags,
+		rightmost=rightmost,
+		eps=eps
+	);
+
+
+// Function: assemble_path_fragments()
+// Usage:
+//   assemble_path_fragments(subpaths);
+// Description:
+//   Given a list of incomplete paths, assembles them together into complete closed paths if it can.
+// Arguments:
+//   fragments = List of polylines to be assembled into complete polygons.
+//   rightmost = If true, assemble paths using rightmost turns. Leftmost if false.
+//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+function assemble_path_fragments(fragments, rightmost=true, eps=EPSILON, _finished=[]) =
+	len(fragments)==0? _finished :
+	let(
+		result = assemble_a_path_from_fragments(
+			fragments=fragments,
+			rightmost=rightmost,
+			eps=eps
+		),
+		newpath = result[0],
+		remainder = result[1],
+		finished = concat(_finished, [newpath])
+	) assemble_path_fragments(
+		fragments=remainder,
+		rightmost=rightmost, eps=eps,
+		_finished=finished
+	);
+
 
 
 // Function: simplify_path()
