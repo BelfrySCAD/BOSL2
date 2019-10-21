@@ -1,10 +1,10 @@
 //////////////////////////////////////////////////////////////////////
-// LibFile: stack.scad
+// LibFile: stacks.scad
 //   Stack data structure implementation.
 //   To use, add the following lines to the beginning of your file:
 //   ```
 //   use <BOSL2/std.scad>
-//   use <BOSL2/stack.scad>
+//   use <BOSL2/stacks.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
 
