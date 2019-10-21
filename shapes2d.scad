@@ -809,7 +809,7 @@ function _turtle_command(command, parm, parm2, state, index) =
 		path = 0,
 		step=1,
 		angle=2,
-                arcsteps=3,
+		arcsteps=3,
 		parm = !is_string(parm) ? parm : undef,
 		parm2 = !is_string(parm2) ? parm2 : undef,
 		needvec = ["jump"],
@@ -857,7 +857,7 @@ function _turtle_command(command, parm, parm2, state, index) =
 	command=="length" ? list_set(state, step, parm*normalize(state[step])) :
 	command=="scale" ?  list_set(state, step, parm*state[step]) :
 	command=="addlength" ?  list_set(state, step, state[step]+normalize(state[step])*parm) :
-        command=="arcsteps" ? list_set(state, arcsteps, parm) :
+	command=="arcsteps" ? list_set(state, arcsteps, parm) :
 	command=="arcleft" || command=="arcright" ?
 		assert(is_num(parm),str("\"",command,"\" command requires a numeric radius value at index ",index))  
 		let(
@@ -865,7 +865,7 @@ function _turtle_command(command, parm, parm2, state, index) =
 			lrsign = command=="arcleft" ? 1 : -1,
 			radius = parm*sign(myangle),
 			center = lastpt + lrsign*radius*line_normal([0,0],state[step]),
-                        steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps], 
+			steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps], 
 			arcpath = myangle == 0 || radius == 0 ? [] : arc(
 				steps,
 				points = [
@@ -885,14 +885,13 @@ function _turtle_command(command, parm, parm2, state, index) =
 		assert(is_num(parm),str("\"",command,"\" command requires a numeric radius value at index ",index))
 		assert(is_num(parm2),str("\"",command,"\" command requires a numeric angle value at index ",index))
 		let(
-                        radius = parm,
+			radius = parm,
 			lrsign = command=="arcleftto" ? 1 : -1,
 			center = lastpt + lrsign*radius*line_normal([0,0],state[step]),
-                        steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps],
-                        start_angle = posmod(atan2(state[step].y, state[step].x),360),
-                        end_angle = posmod(parm2,360),
-                        delta_angle =  -start_angle + (lrsign * end_angle < lrsign*start_angle ? end_angle+lrsign*360 : end_angle),
-fda=                        echo(angles = start_angle, end_angle,delta_angle, lrsign),
+			steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps],
+			start_angle = posmod(atan2(state[step].y, state[step].x),360),
+			end_angle = posmod(parm2,360),
+			delta_angle =  -start_angle + (lrsign * end_angle < lrsign*start_angle ? end_angle+lrsign*360 : end_angle),
 			arcpath = delta_angle == 0 || radius==0 ? [] : arc(
 				steps,
 				points = [
