@@ -9,6 +9,9 @@
 //////////////////////////////////////////////////////////////////////
 
 
+include <BOSL2/vnf.scad>
+
+
 // Section: Terminology
 //   **Polyline**: A series of points joined by straight line segements.
 //   
