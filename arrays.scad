@@ -227,10 +227,14 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 // Arguments:
 //   list = The list to remove items from.
 //   elements = The list of indexes of items to remove.
+// Example:
+//   list_insert([3,6,9,12],1);      // Returns [3,9,12]
+//   list_insert([3,6,9,12],[1,3]);  // Returns [3,9]
 function list_remove(list, elements) =
 	!is_list(elements) ? list_remove(list,[elements]) :
 	len(elements)==0 ? list :
-	let( sortind = list_increasing(elements) ? list_range(len(elements)) : sortidx(elements),
+	let(
+		sortind = list_increasing(elements) ? list_range(len(elements)) : sortidx(elements),
 		lastind = elements[select(sortind,-1)]
 	)
 	assert(lastind<len(list),"Element index beyond list end")
@@ -238,6 +242,32 @@ function list_remove(list, elements) =
 		[for(i=[1:1:len(sortind)-1]) each slice(list,1+elements[sortind[i-1]], elements[sortind[i]])],
 		slice(list,1+lastind, len(list))
 	);
+
+
+// Function: list_remove_values()
+// Usage:
+//   list_remove_values(list,values,all=false) =
+// Description:
+//   Removes the first, or all instances of the given `values` from the `list`.
+//   Returns the modified list.
+// Arguments:
+//   list = The list to modify.
+//   values = The values to remove from the list.
+//   all = If true, remove all instances of the value `value` from the list `list`.  If false, remove only the first.  Default: false
+// Example:
+//   animals = ["bat", "cat", "rat", "dog", "bat", "rat"];
+//   animals2 = list_remove_values(animals, "rat");   // Returns: ["bat","cat","dog","bat","rat"]
+//   nonflying = list_remove_values(animals, "bat", all=true);  // Returns: ["cat","rat","dog","rat"]
+//   animals3 = list_remove_values(animals, ["bat","rat"]);  // Returns: ["cat","dog","bat","rat"]
+//   domestic = list_remove_values(animals, ["bat","rat"], all=true);  // Returns: ["cat","dog"]
+//   animals4 = list_remove_values(animals, ["tucan","rat"], all=true);  // Returns: ["bat","cat","dog","bat"]
+function list_remove_values(list,values=[],all=false) =
+	assert(is_list(list))
+	!is_list(values)? list_remove_values(list, values=[values], all=all) :
+	let(
+		idxs = all? flatten(search(values,list,0)) : search(values,list,1),
+		uidxs = unique(idxs)
+	) list_remove(list,uidxs);
 
 
 // Function: list_insert()
