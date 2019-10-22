@@ -315,6 +315,42 @@ function find_circle_3points(pt1, pt2, pt3) =
 
 
 
+// Function: find_circle_tangents()
+// Usage:
+//   tangents = find_circle_tangents(r|d, cp, pt);
+// Description:
+//   Given a circle and a point outside that circle, finds the tangent point(s) on the circle for a
+//   line passing through the point.  Returns list of zero or more sublists of [ANG, TANGPT]
+// Arguments:
+//   r = Radius of the circle.
+//   d = Diameter of the circle.
+//   cp = The coordinates of the circle centerpoint.
+//   pt = The coordinates of the external point.
+// Example(2D):
+//   cp = [-10,-10];  r = 30;  pt = [30,10];
+//   tanpts = subindex(find_circle_tangents(r=r, cp=cp, pt=pt),1);
+//   color("yellow") translate(cp) circle(r=r);
+//   color("cyan") for(tp=tanpts) {stroke([tp,pt]); stroke([tp,cp]);}
+//   color("red") place_copies(tanpts) circle(d=3,$fn=12);
+//   color("blue") place_copies([cp,pt]) circle(d=3,$fn=12);
+function find_circle_tangents(r, d, cp, pt) =
+	assert(is_num(r) || is_num(d))
+	assert(is_vector(cp))
+	assert(is_vector(pt))
+	let(
+		r = get_radius(r=r, d=d, dflt=1),
+		delta = pt - cp,
+		dist = norm(delta),
+		baseang = atan2(delta.y,delta.x)
+	) dist < r? [] :
+	approx(dist,r)? [[baseang, pt]] :
+	let(
+		relang = acos(r/dist),
+		angs = [baseang + relang, baseang - relang]
+	) [for (ang=angs) [ang, cp + r*[cos(ang),sin(ang)]]];
+
+
+
 // Function: tri_calc()
 // Usage:
 //   tri_calc(ang,ang2,adj,opp,hyp);
@@ -421,7 +457,7 @@ function plane3pt(p1, p2, p3) =
 // Usage:
 //   plane3pt_indexed(points, i1, i2, i3);
 // Description:
-//   Given a list of points, and the indexes of three of those points,
+//   Given a list of points, and the indices of three of those points,
 //   generates the cartesian equation of a plane that those points all
 //   lie on.  Requires that the three indexed points be non-collinear.
 //   Returns [A,B,C,D] where Ax+By+Cz+D=0 is the equation of a plane.
@@ -442,7 +478,7 @@ function plane3pt_indexed(points, i1, i2, i3) =
 // Usage:
 //   plane_from_pointslist(points);
 // Description:
-//   Given a list of coplanar points, returns the cartesian equation of a plane.
+//   Given a list of 3 or more coplanar points, returns the cartesian equation of a plane.
 //   Returns [A,B,C,D] where Ax+By+Cz+D=0 is the equation of the plane.
 function plane_from_pointslist(points) =
 	let(
@@ -731,7 +767,7 @@ function first_noncollinear(i1, i2, points, _i) =
 // Usage:
 //   find_noncollinear_points(points);
 // Description:
-//   Finds the indexes of three good points in the points list `points` that are not collinear.
+//   Finds the indices of three good non-collinear points from the points list `points`.
 function find_noncollinear_points(points) =
 	let(
 		a = 0,
@@ -893,13 +929,13 @@ function simplify_path(path, eps=EPSILON) =
 
 // Function: simplify_path_indexed()
 // Description:
-//   Takes a list of points, and a path as a list of indexes into `points`,
+//   Takes a list of points, and a path as a list of indices into `points`,
 //   and removes all path points that are unecessarily collinear.
 // Usage:
 //   simplify_path_indexed(path, eps)
 // Arguments:
 //   points = A list of points.
-//   path = A list of indexes into `points` that forms a path.
+//   path = A list of indices into `points` that forms a path.
 //   eps = Largest angle variance allowed.  Default: EPSILON (1-e9) degrees.
 function simplify_path_indexed(points, path, eps=EPSILON) =
 	len(path)<=2? path : let(
