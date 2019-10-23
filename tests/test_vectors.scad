@@ -1,6 +1,25 @@
 include <BOSL2/std.scad>
 
 
+module test_is_vector() {
+	assert(is_vector([1,2,3]) == true);
+	assert(is_vector([[1,2,3]]) == false);
+	assert(is_vector(["foo"]) == false);
+	assert(is_vector([]) == false);
+	assert(is_vector(1) == false);
+	assert(is_vector("foo") == false);
+	assert(is_vector(true) == false);
+}
+test_is_vector();
+
+
+module test_add_scalar() {
+	assert(add_scalar([1,2,3],3) == [4,5,6]);
+	assert(add_scalar([[1,2,3],[3,4,5]],3) == [[4,5,6],[6,7,8]]);
+}
+test_add_scalar()
+
+
 module test_vmul() {
 	assert(vmul([3,4,5], [8,7,6]) == [24,28,30]);
 	assert(vmul([1,2,3], [4,5,6]) == [4,10,18]);

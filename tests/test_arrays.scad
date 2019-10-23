@@ -66,8 +66,76 @@ module test_reverse() {
 test_reverse();
 
 
-// TODO: list_remove()
-// TODO: list_insert()
+module test_deduplicate() {
+	assert(deduplicate([8,3,4,4,4,8,2,3,3,8,8]) == [8,3,4,8,2,3,8]);
+	assert(deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]) == [8,3,4,8,2,3]);
+	assert(deduplicate("Hello") == ["H","e","l","o"]);
+	assert(deduplicate([[3,4],[7,2],[7,1.99],[1,4]],eps=0.1) == [[3,4],[7,2],[1,4]]);
+}
+test_deduplicate();
+
+
+module test_list_set() {
+	assert(list_set([2,3,4,5], 2, 21) == [2,3,21,5]);
+	assert(list_set([2,3,4,5], [1,3], [81,47]) == [2,81,4,47]);
+}
+test_list_set();
+
+
+module test_list_remove() {
+	assert(list_insert([3,6,9,12],1) == [3,9,12]);
+	assert(list_insert([3,6,9,12],[1,3]) == [3,9]);
+}
+test_list_remove();
+
+
+module test_list_remove_values() {
+	animals = ["bat", "cat", "rat", "dog", "bat", "rat"];
+	assert(list_remove_values(animals, "rat") == ["bat","cat","dog","bat","rat"]);
+	assert(list_remove_values(animals, "bat", all=true) == ["cat","rat","dog","rat"]);
+	assert(list_remove_values(animals, ["bat","rat"]) == ["cat","dog","bat","rat"]);
+	assert(list_remove_values(animals, ["bat","rat"], all=true) == ["cat","dog"]);
+	assert(list_remove_values(animals, ["tucan","rat"], all=true) == ["bat","cat","dog","bat"]);
+}
+test_list_remove_values();
+
+
+module test_list_insert() {
+	assert(list_insert([3,6,9,12],1,5) == [3,5,6,9,12]);
+	assert(list_insert([3,6,9,12],[1,3],[5,11]) == [3,5,6,9,11,12]);
+}
+test_list_insert();
+
+
+module test_bselect() {
+	assert(bselect([3,4,5,6,7], [false,false,false,false,false]) == []);
+	assert(bselect([3,4,5,6,7], [false,true,true,false,true]) == [4,5,7]);
+	assert(bselect([3,4,5,6,7], [true,true,true,true,true]) == [3,4,5,6,7]);
+}
+test_bselect();
+
+
+module test_bset() {
+	assert(list_bset([false,true,false,true,false], [3,4]) == [0,3,0,4,0]);
+	assert(list_bset([false,true,false,true,false], [3,4], dflt=1) == [1,3,1,4,1]);
+}
+test_bset();
+
+
+module test_list_increasing() {
+	assert(list_increasing([1,2,3,4]) == true);
+	assert(list_increasing([1,3,2,4]) == false);
+	assert(list_increasing([4,3,2,1]) == false);
+}
+test_list_increasing();
+
+
+module test_list_decreasing() {
+	assert(list_decreasing([1,2,3,4]) == false);
+	assert(list_decreasing([4,2,3,1]) == false);
+	assert(list_decreasing([4,3,2,1]) == true);
+}
+test_list_decreasing();
 
 
 module test_list_shortest() {
@@ -106,12 +174,25 @@ module test_list_fit() {
 test_list_fit();
 
 
+module test_idx() {
+	colors = ["red", "green", "blue", "cyan"];
+	assert([for (i=idx(colors)) i] == [0,1,2,3]);
+	assert([for (i=idx(colors,end=-2)) i] == [0,1,2]);
+	assert([for (i=idx(colors,start=1)) i] == [1,2,3]);
+	assert([for (i=idx(colors,start=1,end=-2)) i] == [1,2]);
+}
+test_idx();
+
+
 module test_enumerate() {
 	assert(enumerate(["a","b","c"]) == [[0,"a"], [1,"b"], [2,"c"]]);
 	assert(enumerate([[88,"a"],[76,"b"],[21,"c"]], idx=1) == [[0,"a"], [1,"b"], [2,"c"]]);
 	assert(enumerate([["cat","a",12],["dog","b",10],["log","c",14]], idx=[1:2]) == [[0,"a",12], [1,"b",10], [2,"c",14]]);
 }
 test_enumerate();
+
+
+// TODO: Add tests for shuffle()
 
 
 module test_sort() {
@@ -172,6 +253,20 @@ module test_pair_wrap() {
 	assert(pair_wrap("ABCD") == [["A","B"], ["B","C"], ["C","D"], ["D","A"]]);
 }
 test_pair_wrap();
+
+
+module test_triplet() {
+	assert(triplet([3,4,5,6,7]) == [[3,4,5], [4,5,6], [5,6,7]]);
+	assert(triplet("ABCDE") == [["A","B","C"], ["B","C","D"], ["C","D","E"]]);
+}
+test_triplet();
+
+
+module test_triplet_wrap() {
+	assert(triplet_wrap([3,4,5,6]) == [[3,4,5], [4,5,6], [5,6,3], [6,3,4]]);
+	assert(triplet_wrap("ABCD") == [["A","B","C"], ["B","C","D"], ["C","D","A"], ["D","A","B"]]);
+}
+test_triplet_wrap();
 
 
 module test_zip() {

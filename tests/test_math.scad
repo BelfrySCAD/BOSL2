@@ -13,6 +13,9 @@ module test_quant() {
 	assert(quant(3,3) == 3);
 	assert(quant(4,3) == 3);
 	assert(quant(7,3) == 6);
+	assert(quant([12,13,13.1,14,14.1,15,16],4) == [12,12,12,16,16,16,16])
+	assert(quant([9,10,10.4,10.5,11,12],3) == [9,9,9,12,12,12])
+	assert(quant([[9,10,10.4],[10.5,11,12]],3) == [[9,9,9],[12,12,12]])
 }
 test_quant();
 
@@ -28,6 +31,9 @@ module test_quantdn() {
 	assert(quantdn(3,3) == 3);
 	assert(quantdn(4,3) == 3);
 	assert(quantdn(7,3) == 6);
+	assert(quantdn([12,13,13.1,14,14.1,15,16],4) == [12,12,12,12,12,12,16])
+	assert(quantdn([9,10,10.4,10.5,11,12],3) == [9,9,9,9,9,12])
+	assert(quantdn([[9,10,10.4],[10.5,11,12]],3) == [[9,9,9],[9,9,12]])
 }
 test_quantdn();
 
@@ -43,6 +49,9 @@ module test_quantup() {
 	assert(quantup(3,3) == 3);
 	assert(quantup(4,3) == 6);
 	assert(quantup(7,3) == 9);
+	assert(quantup([12,13,13.1,14,14.1,15,16],4) == [12,16,16,16,16,16,16])
+	assert(quantup([9,10,10.4,10.5,11,12],3) == [9,12,12,12,12,12])
+	assert(quantup([[9,10,10.4],[10.5,11,12]],3) == [[9,12,12],[12,12,12]])
 }
 test_quantup();
 
@@ -120,6 +129,17 @@ module test_posmod() {
 test_posmod();
 
 
+module test_modang() {
+	assert(modang(-700,360) == 20)
+	assert(modang(-270,360) == 90)
+	assert(modang(-120,360) == -120)
+	assert(modang(120,360) == 120)
+	assert(modang(270,360) == -90)
+	assert(modang(700,360) == -20)
+}
+test_modang();
+
+
 module test_modrange() {
 	assert(modrange(-5,5,3) == [1,2]);
 	assert(modrange(-1,4,3) == [2,0,1]);
@@ -140,8 +160,18 @@ module test_sqr() {
 test_sqr();
 
 
+module test_log2() {
+	assert(log2(0.125) == -3);
+	assert(log2(16) == 4);
+	assert(log2(256) == 8);
+}
+test_log2();
+
+
+// TODO: Tests for rand_int()
 // TODO: Tests for gaussian_rand()
 // TODO: Tests for log_rand()
+
 
 module test_segs() {
 	assert(segs(50,$fn=8) == 8);
@@ -235,6 +265,16 @@ module test_sum() {
 test_sum();
 
 
+module test_cumsum() {
+	assert(cumsum([1,1,1]) == [1,2,3]);
+	assert(cumsum([2,2,2]) == [2,4,6]);
+	assert(cumsum([1,2,3]) == [1,3,6]);
+	assert(cumsum([-2,-1,0,1,2]) == 0);
+	assert(cumsum([[1,2,3], [3,4,5], [5,6,7]]) == [[1,2,3],[4,6,8],[9,12,15]);
+}
+test_cumsum();
+
+
 module test_sum_of_squares() {
 	assert(sum_of_squares([1,2,3]) == 14);
 	assert(sum_of_squares([1,2,4]) == 21);
@@ -276,6 +316,28 @@ module test_mean() {
 	assert(mean([[1,2,3], [3,4,5], [5,6,7]]) == [3,4,5]);
 }
 test_mean();
+
+
+module test_det2() {
+	assert(det2([[6,-2], [1,8]]) == 50);
+	assert(det2([[4,7], [3,2]]) == -13);
+	assert(det2([[4,3], [3,4]]) == 7);
+}
+test_det2();
+
+
+module test_det3() {
+	M = [ [6,4,-2], [1,-2,8], [1,5,7] ];
+	assert(det3(M) == -334);
+}
+test_det3();
+
+
+module test_determinant() {
+	M = [ [6,4,-2,9], [1,-2,8,3], [1,5,7,6], [4,2,5,1] ];
+	assert(determinant(M) == 2267);
+}
+test_determinant();
 
 
 // Logic
