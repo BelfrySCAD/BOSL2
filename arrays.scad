@@ -228,8 +228,8 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 //   list = The list to remove items from.
 //   elements = The list of indexes of items to remove.
 // Example:
-//   list_insert([3,6,9,12],1);      // Returns [3,9,12]
-//   list_insert([3,6,9,12],[1,3]);  // Returns [3,9]
+//   list_insert([3,6,9,12],1);      // Returns: [3,9,12]
+//   list_insert([3,6,9,12],[1,3]);  // Returns: [3,9]
 function list_remove(list, elements) =
 	!is_list(elements) ? list_remove(list,[elements]) :
 	len(elements)==0 ? list :
@@ -321,7 +321,7 @@ function bselect(array,index) =
 
 // Function: list_bset()
 // Usage:
-//   list_bset(indexset, valuelist)
+//   list_bset(indexset, valuelist,[dflt])
 // Description:
 //   Opposite of `bselect()`.  Returns a list the same length as `indexlist`, where each item will
 //   either be 0 if the corresponding item in `indexset` is false, or the next sequential value
@@ -333,6 +333,7 @@ function bselect(array,index) =
 //   dflt = Default value to store when the indexset item is false.
 // Example:
 //   list_bset([false,true,false,true,false], [3,4]);  // Returns: [0,3,0,4,0]
+//   list_bset([false,true,false,true,false], [3,4],dflt=1);  // Returns: [1,3,1,4,1]
 function list_bset(indexset, valuelist, dflt=0) =
 	let(
 		trueind = search([true], indexset,0)[0]
@@ -347,6 +348,10 @@ function list_bset(indexset, valuelist, dflt=0) =
 //    list_increasing(list)
 // Description:
 //   Returns true if the list is (non-strictly) increasing
+// Example:
+//   list_increasing([1,2,3,4]);  // Returns: true
+//   list_increasing([1,3,2,4]);  // Returns: false
+//   list_increasing([4,3,2,1]);  // Returns: false
 function list_increasing(list,ind=0) =
 	(ind < len(list)-1 && list[ind]<=list[ind+1])?
 		list_increasing(list,ind+1) :
@@ -356,7 +361,12 @@ function list_increasing(list,ind=0) =
 // Function: list_decreasing()
 // Usage:
 //    list_increasing(list)
-// Description: returns true if the list is (non-strictly) decreasing
+// Description:
+//   Returns true if the list is (non-strictly) decreasing
+// Example:
+//   list_increasing([1,2,3,4]);  // Returns: false
+//   list_increasing([4,2,3,1]);  // Returns: false
+//   list_increasing([4,3,2,1]);  // Returns: true
 function list_decreasing(list,ind=0) =
 	(ind < len(list)-1 && list[ind]>=list[ind+1])?
 		list_increasing(list,ind+1) :

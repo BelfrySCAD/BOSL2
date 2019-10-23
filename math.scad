@@ -24,6 +24,23 @@ EPSILON = 1e-9;  // A really small value useful in comparing FP numbers.  ie: ab
 // Arguments:
 //   x = The value to quantize.
 //   y = The multiple to quantize to.
+// Example:
+//   quant(12,4);    // Returns: 12
+//   quant(13,4);    // Returns: 12
+//   quant(13.1,4);  // Returns: 12
+//   quant(14,4);    // Returns: 16
+//   quant(14.1,4);  // Returns: 16
+//   quant(15,4);    // Returns: 16
+//   quant(16,4);    // Returns: 16
+//   quant(9,3);     // Returns: 9
+//   quant(10,3);    // Returns: 9
+//   quant(10.4,3);  // Returns: 9
+//   quant(10.5,3);  // Returns: 12
+//   quant(11,3);    // Returns: 12
+//   quant(12,3);    // Returns: 12
+//   quant([12,13,13.1,14,14.1,15,16],4);  // Returns: [12,12,12,16,16,16,16]
+//   quant([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,12,12,12]
+//   quant([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[12,12,12]]
 function quant(x,y) =
 	is_list(x)? [for (v=x) quant(v,y)] :
 	floor(x/y+0.5)*y;
@@ -36,6 +53,23 @@ function quant(x,y) =
 // Arguments:
 //   x = The value to quantize.
 //   y = The multiple to quantize to.
+// Examples:
+//   quantdn(12,4);    // Returns: 12
+//   quantdn(13,4);    // Returns: 12
+//   quantdn(13.1,4);  // Returns: 12
+//   quantdn(14,4);    // Returns: 12
+//   quantdn(14.1,4);  // Returns: 12
+//   quantdn(15,4);    // Returns: 12
+//   quantdn(16,4);    // Returns: 16
+//   quantdn(9,3);     // Returns: 9
+//   quantdn(10,3);    // Returns: 9
+//   quantdn(10.4,3);  // Returns: 9
+//   quantdn(10.5,3);  // Returns: 9
+//   quantdn(11,3);    // Returns: 9
+//   quantdn(12,3);    // Returns: 12
+//   quantdn([12,13,13.1,14,14.1,15,16],4);  // Returns: [12,12,12,12,12,12,16]
+//   quantdn([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,9,9,12]
+//   quantdn([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[9,9,12]]
 function quantdn(x,y) =
 	is_list(x)? [for (v=x) quantdn(v,y)] :
 	floor(x/y)*y;
@@ -48,6 +82,23 @@ function quantdn(x,y) =
 // Arguments:
 //   x = The value to quantize.
 //   y = The multiple to quantize to.
+// Examples:
+//   quantup(12,4);    // Returns: 12
+//   quantup(13,4);    // Returns: 16
+//   quantup(13.1,4);  // Returns: 16
+//   quantup(14,4);    // Returns: 16
+//   quantup(14.1,4);  // Returns: 16
+//   quantup(15,4);    // Returns: 16
+//   quantup(16,4);    // Returns: 16
+//   quantup(9,3);     // Returns: 9
+//   quantup(10,3);    // Returns: 12
+//   quantup(10.4,3);  // Returns: 12
+//   quantup(10.5,3);  // Returns: 12
+//   quantup(11,3);    // Returns: 12
+//   quantup(12,3);    // Returns: 12
+//   quantup([12,13,13.1,14,14.1,15,16],4);  // Returns: [12,16,16,16,16,16,16]
+//   quantup([9,10,10.4,10.5,11,12],3);      // Returns: [9,12,12,12,12,12]
+//   quantup([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,12,12],[12,12,12]]
 function quantup(x,y) =
 	is_list(x)? [for (v=x) quantup(v,y)] :
 	ceil(x/y)*y;
@@ -62,6 +113,12 @@ function quantup(x,y) =
 //   v = value to constrain.
 //   minval = minimum value to return, if out of range.
 //   maxval = maximum value to return, if out of range.
+// Example:
+//   constrain(-5, -1, 1);   // Returns: -1
+//   constrain(5, -1, 1);    // Returns: 1
+//   constrain(0.3, -1, 1);  // Returns: 0.3
+//   constrain(9.1, 0, 9);   // Returns: 9
+//   constrain(-0.1, 0, 9);  // Returns: 0
 function constrain(v, minval, maxval) = min(maxval, max(minval, v));
 
 
@@ -74,6 +131,12 @@ function constrain(v, minval, maxval) = min(maxval, max(minval, v));
 //   a = First value.
 //   b = Second value.
 //   eps = The maximum allowed difference between `a` and `b` that will return true.
+// Example:
+//   approx(-0.3333333333,-1/3);  // Returns: true
+//   approx(0.3333333333,1/3);    // Returns: true
+//   approx(0.3333,1/3);          // Returns: false
+//   approx(0.3333,1/3,eps=1e-3);  // Returns: true
+//   approx(PI,3.1415926536);     // Returns: true
 function approx(a,b,eps=EPSILON) = let(c=a-b) (is_num(c)? abs(c) : norm(c)) <= eps;
 
 
@@ -86,6 +149,9 @@ function approx(a,b,eps=EPSILON) = let(c=a-b) (is_num(c)? abs(c) : norm(c)) <= e
 // Arguments:
 //   vals = vector of values
 //   all = set to true to return indices of all occurences of the minimum.  Default: false
+// Example:
+//   min_index([5,3,9,6,2,7,8,2,1]); // Returns: 4
+//   min_index([5,3,9,6,2,7,8,2,1],all=true); // Returns: [4,7]
 function min_index(vals, all=false) =
         all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
 
@@ -98,6 +164,9 @@ function min_index(vals, all=false) =
 // Arguments:
 //   vals = vector of values
 //   all = set to true to return indices of all occurences of the maximum.  Default: false
+// Example:
+//   max_index([5,3,9,6,2,7,8,9,1]); // Returns: 2
+//   max_index([5,3,9,6,2,7,8,9,1],all=true); // Returns: [2,7]
 function max_index(vals, all=false) =
         all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
 
@@ -107,10 +176,17 @@ function max_index(vals, all=false) =
 //   posmod(x,m)
 // Description:
 //   Returns the positive modulo `m` of `x`.  Value returned will be in the range 0 ... `m`-1.
-//   This if useful for normalizing angles to 0 ... 360.
 // Arguments:
 //   x = The value to constrain.
 //   m = Modulo value.
+// Example:
+//   posmod(-700,360);  // Returns: 340
+//   posmod(-270,360);  // Returns: 90
+//   posmod(-120,360);  // Returns: 240
+//   posmod(120,360);   // Returns: 120
+//   posmod(270,360);   // Returns: 270
+//   posmod(700,360);   // Returns: 340
+//   posmod(3,2.5);     // Returns: 0.5
 function posmod(x,m) = (x%m+m)%m;
 
 
@@ -119,6 +195,13 @@ function posmod(x,m) = (x%m+m)%m;
 //   ang = modang(x)
 // Description:
 //   Takes an angle in degrees and normalizes it to an equivalent angle value between -180 and 180.
+// Example:
+//   modang(-700,360);  // Returns: 20
+//   modang(-270,360);  // Returns: 90
+//   modang(-120,360);  // Returns: -120
+//   modang(120,360);   // Returns: 120
+//   modang(270,360);   // Returns: -90
+//   modang(700,360);   // Returns: -20
 function modang(x) =
 	let(xx = posmod(x,360)) xx<180? xx : xx-360;
 
@@ -134,10 +217,10 @@ function modang(x) =
 //   m = Modulo value.
 //   step = Step by this amount.
 // Examples:
-//   modrange(90,270,360, step=45);   // Outputs [90,135,180,225,270]
-//   modrange(270,90,360, step=45);   // Outputs [270,315,0,45,90]
-//   modrange(90,270,360, step=-45);  // Outputs [90,45,0,315,270]
-//   modrange(270,90,360, step=-45);  // Outputs [270,225,180,135,90]
+//   modrange(90,270,360, step=45);   // Returns: [90,135,180,225,270]
+//   modrange(270,90,360, step=45);   // Returns: [270,315,0,45,90]
+//   modrange(90,270,360, step=-45);  // Returns: [90,45,0,315,270]
+//   modrange(270,90,360, step=-45);  // Returns: [270,225,180,135,90]
 function modrange(x, y, m, step=1) =
 	let(
 		a = posmod(x, m),
@@ -161,9 +244,9 @@ function sqr(x) = x*x;
 //   foo = log2(x);
 // Description: Returns the logarith base 10 of the value given.
 // Examples:
-//   log2(0.125);  // Returns -3
-//   log2(16);     // Returns 4
-//   log2(256);    // Returns 8
+//   log2(0.125);  // Returns: -3
+//   log2(16);     // Returns: 4
+//   log2(256);    // Returns: 8
 function log2(x) = ln(x)/ln(2);
 
 
@@ -177,6 +260,9 @@ function log2(x) = ln(x)/ln(2);
 //   max = Maximum integer value to return.
 //   N = Number of random integers to return.
 //   seed = Random number seed.
+// Example:
+//   ints = rand_int(0,100,3);
+//   int = rand_int(-10,10,1)[0];
 function rand_int(min,max,N,seed=undef) =
 	assert(max >= min, "Max value cannot be smaller than min")
 	let (rvect = is_def(seed) ? rands(min,max+1,N,seed) : rands(min,max+1,N))
@@ -191,7 +277,8 @@ function rand_int(min,max,N,seed=undef) =
 // Arguments:
 //   mean = The average random number returned.
 //   stddev = The standard deviation of the numbers to be returned.
-function gaussian_rand(mean, stddev) = let(s=rands(0,1,2)) mean + stddev*sqrt(-2*ln(s.x))*cos(360*s.y);
+function gaussian_rand(mean, stddev) =
+	let(s=rands(0,1,2)) mean + stddev*sqrt(-2*ln(s.x))*cos(360*s.y);
 
 
 // Function: log_rand()
@@ -203,7 +290,8 @@ function gaussian_rand(mean, stddev) = let(s=rands(0,1,2)) mean + stddev*sqrt(-2
 //   minval = Minimum value to return.
 //   maxval = Maximum value to return.  `minval` <= X < `maxval`.
 //   factor = Log factor to use.  Values of X are returned `factor` times more often than X+1.
-function log_rand(minval, maxval, factor) = -ln(1-rands(1-1/pow(factor,minval), 1-1/pow(factor,maxval), 1)[0])/ln(factor);
+function log_rand(minval, maxval, factor) =
+	-ln(1-rands(1-1/pow(factor,minval), 1-1/pow(factor,maxval), 1)[0])/ln(factor);
 
 
 // Function: segs()
@@ -222,7 +310,8 @@ function segs(r) =
 //   a = First value.
 //   b = Second value.
 //   u = The proportion from `a` to `b` to calculate.  Valid range is 0.0 to 1.0, inclusive.
-function lerp(a,b,u) = (1-u)*a + u*b;
+function lerp(a,b,u) =
+	(1-u)*a + u*b;
 
 
 // Function: hypot()
@@ -231,37 +320,44 @@ function lerp(a,b,u) = (1-u)*a + u*b;
 //   x = Length on the X axis.
 //   y = Length on the Y axis.
 //   z = Length on the Z axis.
-function hypot(x,y,z=0) = norm([x,y,z]);
+function hypot(x,y,z=0) =
+	norm([x,y,z]);
 
 
 // Function: sinh()
 // Description: Takes a value `x`, and returns the hyperbolic sine of it.
-function sinh(x) = (exp(x)-exp(-x))/2;
+function sinh(x) =
+	(exp(x)-exp(-x))/2;
 
 
 // Function: cosh()
 // Description: Takes a value `x`, and returns the hyperbolic cosine of it.
-function cosh(x) = (exp(x)+exp(-x))/2;
+function cosh(x) =
+	(exp(x)+exp(-x))/2;
 
 
 // Function: tanh()
 // Description: Takes a value `x`, and returns the hyperbolic tangent of it.
-function tanh(x) = sinh(x)/cosh(x);
+function tanh(x) =
+	sinh(x)/cosh(x);
 
 
 // Function: asinh()
 // Description: Takes a value `x`, and returns the inverse hyperbolic sine of it.
-function asinh(x) = ln(x+sqrt(x*x+1));
+function asinh(x) =
+	ln(x+sqrt(x*x+1));
 
 
 // Function: acosh()
 // Description: Takes a value `x`, and returns the inverse hyperbolic cosine of it.
-function acosh(x) = ln(x+sqrt(x*x-1));
+function acosh(x) =
+	ln(x+sqrt(x*x-1));
 
 
 // Function: atanh()
 // Description: Takes a value `x`, and returns the inverse hyperbolic tangent of it.
-function atanh(x) = ln((1+x)/(1-x))/2;
+function atanh(x) =
+	ln((1+x)/(1-x))/2;
 
 
 // Function: sum()
@@ -304,7 +400,9 @@ function cumsum(v,_i=0,_acc=[]) =
 // Arguments:
 //   v = The vector to get the sum of.
 // Example:
-//   sum_of_squares([1,2,3]);  // returns 14.
+//   sum_of_squares([1,2,3]);  // Returns: 14.
+//   sum_of_squares([1,2,4]);  // Returns: 21
+//   sum_of_squares([-3,-2,-1]);  // Returns: 14
 function sum_of_squares(v, i=0, tot=0) = sum(vmul(v,v));
 
 
@@ -316,6 +414,8 @@ function sum_of_squares(v, i=0, tot=0) = sum(vmul(v,v));
 // Arguments:
 //   a = Angle to get the value for.
 //   sines = List of [amplitude, frequency, offset] items, where the frequency is the number of times the cycle repeats around the circle.
+// Examples:
+//   v = sum_of_sines(30, [[10,3,0], [5,5.5,60]]);
 function sum_of_sines(a, sines) =
 	sum([
 		for (s = sines) let(

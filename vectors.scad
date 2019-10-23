@@ -90,69 +90,6 @@ function vabs(v) = [for (x=v) abs(x)];
 function normalize(v) = norm(v)<=EPSILON? v : v/norm(v);
 
 
-// Function: vquant()
-// Usage:
-//   vquant(v,m)
-// Description:
-//   Quantizes each scalar in the vector `v` to an integer multiple of `m`, rounding to the nearest multiple.
-// Arguments:
-//   v = The vector to quantize.
-//   m = The multiple to quantize to.
-// Examples:
-//   vquant(12,4);  // Returns: 12
-//   vquant(13,4);  // Returns: 12
-//   vquant(14,4);  // Returns: 16
-//   vquant(15,4);  // Returns: 16
-//   vquant(16,4);  // Returns: 16
-//   vquant(9,3);   // Returns: 9
-//   vquant(10,3);  // Returns: 9
-//   vquant(11,3);  // Returns: 12
-//   vquant(12,3);  // Returns: 12
-function vquant(v,m) = [for (x=v) quant(x,m)];
-
-
-// Function: vquantdn()
-// Usage:
-//   vquantdn(v,m)
-// Description:
-//   Quantizes each scalar in the vector `v` to an integer multiple of `m`, rounding down to the nearest multiple.
-// Arguments:
-//   v = The vector to quantize.
-//   m = The multiple to quantize to.
-// Examples:
-//   vquant(12,4);  // Returns: 12
-//   vquant(13,4);  // Returns: 12
-//   vquant(14,4);  // Returns: 12
-//   vquant(15,4);  // Returns: 12
-//   vquant(16,4);  // Returns: 16
-//   vquant(9,3);   // Returns: 9
-//   vquant(10,3);  // Returns: 9
-//   vquant(11,3);  // Returns: 9
-//   vquant(12,3);  // Returns: 12
-function vquantdn(v,m) = [for (x=v) quantdn(x,m)];
-
-
-// Function: vquantup()
-// Usage:
-//   vquantup(v,m)
-// Description:
-//   Quantizes each scalar in the vector `v` to an integer multiple of `m`, rounding up to the nearest multiple.
-// Arguments:
-//   v = The vector to quantize.
-//   m = The multiple to quantize to.
-// Examples:
-//   vquant(12,4);  // Returns: 12
-//   vquant(13,4);  // Returns: 16
-//   vquant(14,4);  // Returns: 16
-//   vquant(15,4);  // Returns: 16
-//   vquant(16,4);  // Returns: 16
-//   vquant(9,3);   // Returns: 9
-//   vquant(10,3);  // Returns: 12
-//   vquant(11,3);  // Returns: 12
-//   vquant(12,3);  // Returns: 12
-function vquantup(v,m) = [for (x=v) quantup(x,m)];
-
-
 // Function: vector_angle()
 // Usage:
 //   vector_angle(v1,v2);
