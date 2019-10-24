@@ -74,7 +74,10 @@ function path4d(points, fill=0) = [for (point = points) point4d(point, fill=fill
 // Arguments:
 //   pts = List of points to translate.
 //   v = Amount to translate points by.
-function translate_points(pts, v=[0,0,0]) = [for (pt = pts) pt+v];
+function translate_points(pts, v=[0,0,0]) =
+	pts==[]? [] : let(
+		v=point3d(v)
+	) [for (pt = pts) pt+v];
 
 
 // Function: scale_points()
@@ -86,7 +89,11 @@ function translate_points(pts, v=[0,0,0]) = [for (pt = pts) pt+v];
 //   pts = List of points to scale.
 //   v = A vector with a scaling factor for each axis.
 //   cp = Centerpoint to scale around.
-function scale_points(pts, v=[0,0,0], cp=[0,0,0]) = [for (pt = pts) [for (i = [0:1:len(pt)-1]) (pt[i]-cp[i])*v[i]+cp[i]]];
+function scale_points(pts, v=[1,1,1], cp=[0,0,0]) =
+	pts==[]? [] : let(
+		cp = point3d(cp),
+		v = point3d(v,fill=1)
+	) [for (pt = pts) vmul(pt-cp,v)+cp];
 
 
 // Function: rotate_points2d()
@@ -187,8 +194,9 @@ function rotate_points3d(pts, a=0, v=undef, cp=[0,0,0], from=undef, to=undef, re
 //   r = distance from the origin.
 //   theta = angle in degrees, counter-clockwise of X+.
 // Examples:
-//   xy = polar_to_xy(20,30);
-//   xy = polar_to_xy([40,60]);
+//   xy = polar_to_xy(20,45);    // Returns: ~[14.1421365, 14.1421365]
+//   xy = polar_to_xy(40,30);    // Returns: ~[34.6410162, 15]
+//   xy = polar_to_xy([40,30]);  // Returns: ~[34.6410162, 15]
 function polar_to_xy(r,theta=undef) = let(
 		rad = theta==undef? r[0] : r,
 		t = theta==undef? r[1] : theta
