@@ -112,12 +112,15 @@ function select(list, start, end=undef) =
 
 // Function: list_range()
 // Usage:
-//   list_range(n, [s], [e], [step])
+//   list_range(n, [s], [e])
+//   list_range(n, [s], [step])
 //   list_range(e, [step])
 //   list_range(s, e, [step])
 // Description:
 //   Returns a list, counting up from starting value `s`, by `step` increments,
 //   until either `n` values are in the list, or it reaches the end value `e`.
+//   If both `n` and `e` are given, returns `n` values evenly spread fron `s`
+//   to `e`, and `step` is ignored.
 // Arguments:
 //   n = Desired number of values in returned list, if given.
 //   s = Starting value.  Default: 0
@@ -134,8 +137,11 @@ function select(list, start, end=undef) =
 //   list_range(s=3, e=8, step=2);   // Returns [3,5,7]
 //   list_range(s=4, e=8, step=2);   // Returns [4,6,8]
 //   list_range(n=4, s=[3,4], step=[2,3]);  // Returns [[3,4], [5,7], [7,10], [9,13]]
-function list_range(n=undef, s=0, e=undef, step=1) =
-	(n!=undef && e!=undef)? [for (i=[0:1:n-1]) s+(e-s)*i/(n-1)] :
+function list_range(n=undef, s=0, e=undef, step=undef) =
+	(n!=undef && e!=undef)? (
+		assert(n!=undef && e!=undef && step!=undef, "At most 2 of n, e, and step can be given.")
+		[for (i=[0:1:n-1]) s+(e-s)*i/(n-1)]
+	) : let(step = default(step,1))
 	(n!=undef)? [for (i=[0:1:n-1]) let(v=s+step*i) v] :
 	(e!=undef)? [for (v=[s:step:e]) v] :
 	assert(e!=undef||n!=undef, "Must supply one of `n` or `e`.");
@@ -353,24 +359,20 @@ function list_bset(indexset, valuelist, dflt=0) =
 //   list_increasing([1,3,2,4]);  // Returns: false
 //   list_increasing([4,3,2,1]);  // Returns: false
 function list_increasing(list,ind=0) =
-	(ind < len(list)-1 && list[ind]<=list[ind+1])?
-		list_increasing(list,ind+1) :
-		(ind>=len(list)-1 ? true : false);
+	len([for (p=pair(list)) if(p.x>p.y) true])==0;
 
 
 // Function: list_decreasing()
 // Usage:
-//    list_increasing(list)
+//    list_decreasing(list)
 // Description:
 //   Returns true if the list is (non-strictly) decreasing
 // Example:
-//   list_increasing([1,2,3,4]);  // Returns: false
-//   list_increasing([4,2,3,1]);  // Returns: false
-//   list_increasing([4,3,2,1]);  // Returns: true
-function list_decreasing(list,ind=0) =
-	(ind < len(list)-1 && list[ind]>=list[ind+1])?
-		list_increasing(list,ind+1) :
-		(ind>=len(list)-1 ? true : false);
+//   list_decreasing([1,2,3,4]);  // Returns: false
+//   list_decreasing([4,2,3,1]);  // Returns: false
+//   list_decreasing([4,3,2,1]);  // Returns: true
+function list_decreasing(list) =
+	len([for (p=pair(list)) if(p.x<p.y) true])==0;
 
 
 // Function: list_shortest()
