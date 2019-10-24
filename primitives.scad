@@ -33,7 +33,7 @@
 //   square([40,30], anchor=FRONT, spin=30);
 // Example(NORENDER): Called as Function
 //   path = square([40,30], anchor=FRONT, spin=30);
-module square(size, center=undef, anchor=FRONT+LEFT, spin=0) {
+module square(size=1, center=undef, anchor=FRONT+LEFT, spin=0) {
 	size = is_num(size)? [size,size] : point2d(size);
 	pts = [[0,0], [0,size.y], size, [size.x,0]];
 	orient_and_anchor(point3d(size), UP, anchor, spin=spin, center=center, noncentered=FRONT+LEFT, two_d=true, chain=true) {
@@ -42,7 +42,7 @@ module square(size, center=undef, anchor=FRONT+LEFT, spin=0) {
 	}
 }
 
-function square(size, center=undef, anchor=FRONT+LEFT, spin=0) =
+function square(size=1, center=undef, anchor=FRONT+LEFT, spin=0) =
 	let(
 		anchor = center==true? CENTER : center==false? FRONT+LEFT : anchor,
 		size = is_num(size)? [size,size] : point2d(size),
@@ -119,7 +119,7 @@ function circle(r=undef, d=undef, anchor=CENTER, spin=0) =
 //   cube([20,40,50], anchor=BOTTOM+FRONT, spin=30, orient=FWD);
 // Example: Standard Connectors.
 //   cube(40, center=true) show_anchors();
-module cube(size, center=undef, anchor=ALLNEG, spin=0, orient=UP)
+module cube(size=1, center=undef, anchor=ALLNEG, spin=0, orient=UP)
 {
 	size = scalar_vec3(size);
 	orient_and_anchor(size, orient, anchor, center, spin=spin, noncentered=ALLNEG, chain=true) {
@@ -175,7 +175,7 @@ module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=unde
 {
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
-	l = first_defined([h, l]);
+	l = first_defined([h, l, 1]);
 	hh = l/2;
 	sides = segs(max(r1,r2));
 	size = [r1*2, r1*2, l];
