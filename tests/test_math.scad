@@ -13,9 +13,9 @@ module test_quant() {
 	assert(quant(3,3) == 3);
 	assert(quant(4,3) == 3);
 	assert(quant(7,3) == 6);
-	assert(quant([12,13,13.1,14,14.1,15,16],4) == [12,12,12,16,16,16,16])
-	assert(quant([9,10,10.4,10.5,11,12],3) == [9,9,9,12,12,12])
-	assert(quant([[9,10,10.4],[10.5,11,12]],3) == [[9,9,9],[12,12,12]])
+	assert(quant([12,13,13.1,14,14.1,15,16],4) == [12,12,12,16,16,16,16]);
+	assert(quant([9,10,10.4,10.5,11,12],3) == [9,9,9,12,12,12]);
+	assert(quant([[9,10,10.4],[10.5,11,12]],3) == [[9,9,9],[12,12,12]]);
 }
 test_quant();
 
@@ -31,9 +31,9 @@ module test_quantdn() {
 	assert(quantdn(3,3) == 3);
 	assert(quantdn(4,3) == 3);
 	assert(quantdn(7,3) == 6);
-	assert(quantdn([12,13,13.1,14,14.1,15,16],4) == [12,12,12,12,12,12,16])
-	assert(quantdn([9,10,10.4,10.5,11,12],3) == [9,9,9,9,9,12])
-	assert(quantdn([[9,10,10.4],[10.5,11,12]],3) == [[9,9,9],[9,9,12]])
+	assert(quantdn([12,13,13.1,14,14.1,15,16],4) == [12,12,12,12,12,12,16]);
+	assert(quantdn([9,10,10.4,10.5,11,12],3) == [9,9,9,9,9,12]);
+	assert(quantdn([[9,10,10.4],[10.5,11,12]],3) == [[9,9,9],[9,9,12]]);
 }
 test_quantdn();
 
@@ -49,9 +49,9 @@ module test_quantup() {
 	assert(quantup(3,3) == 3);
 	assert(quantup(4,3) == 6);
 	assert(quantup(7,3) == 9);
-	assert(quantup([12,13,13.1,14,14.1,15,16],4) == [12,16,16,16,16,16,16])
-	assert(quantup([9,10,10.4,10.5,11,12],3) == [9,12,12,12,12,12])
-	assert(quantup([[9,10,10.4],[10.5,11,12]],3) == [[9,12,12],[12,12,12]])
+	assert(quantup([12,13,13.1,14,14.1,15,16],4) == [12,16,16,16,16,16,16]);
+	assert(quantup([9,10,10.4,10.5,11,12],3) == [9,12,12,12,12,12]);
+	assert(quantup([[9,10,10.4],[10.5,11,12]],3) == [[9,12,12],[12,12,12]]);
 }
 test_quantup();
 
@@ -130,12 +130,12 @@ test_posmod();
 
 
 module test_modang() {
-	assert(modang(-700,360) == 20)
-	assert(modang(-270,360) == 90)
-	assert(modang(-120,360) == -120)
-	assert(modang(120,360) == 120)
-	assert(modang(270,360) == -90)
-	assert(modang(700,360) == -20)
+	assert(modang(-700) == 20);
+	assert(modang(-270) == 90);
+	assert(modang(-120) == -120);
+	assert(modang(120) == 120);
+	assert(modang(270) == -90);
+	assert(modang(700) == -20);
 }
 test_modang();
 
@@ -269,8 +269,8 @@ module test_cumsum() {
 	assert(cumsum([1,1,1]) == [1,2,3]);
 	assert(cumsum([2,2,2]) == [2,4,6]);
 	assert(cumsum([1,2,3]) == [1,3,6]);
-	assert(cumsum([-2,-1,0,1,2]) == 0);
-	assert(cumsum([[1,2,3], [3,4,5], [5,6,7]]) == [[1,2,3],[4,6,8],[9,12,15]);
+	assert(cumsum([-2,-1,0,1,2]) == [-2,-3,-3,-2,0]);
+	assert(cumsum([[1,2,3], [3,4,5], [5,6,7]]) == [[1,2,3],[4,6,8],[9,12,15]]);
 }
 test_cumsum();
 
@@ -477,6 +477,7 @@ module test_count_true() {
 test_count_true();
 
 
+cube();
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

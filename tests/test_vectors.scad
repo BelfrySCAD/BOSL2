@@ -17,7 +17,7 @@ module test_add_scalar() {
 	assert(add_scalar([1,2,3],3) == [4,5,6]);
 	assert(add_scalar([[1,2,3],[3,4,5]],3) == [[4,5,6],[6,7,8]]);
 }
-test_add_scalar()
+test_add_scalar();
 
 
 module test_vmul() {
@@ -95,6 +95,9 @@ module test_vector_axis() {
 	assert(norm(vector_axis([[11,1,11],[1,1,1],[1,-9,1]]) - [sin(45),0,-sin(45)]) < EPSILON);
 }
 test_vector_axis();
+
+
+cube();
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

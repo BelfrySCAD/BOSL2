@@ -40,14 +40,6 @@ module test_point_left_of_segment() {
 test_point_left_of_segment();
 
 
-module test_right_of_line2d() {
-	assert(right_of_line2d([[-10,-10], [10,10]], [ -3,  0]) == false);
-	assert(right_of_line2d([[-10,-10], [10,10]], [  0,  0]) == false);
-	assert(right_of_line2d([[-10,-10], [10,10]], [  3,  0]) == true);
-}
-test_right_of_line2d();
-
-
 module test_collinear() {
 	assert(collinear([-10,-10], [-15, -16], [10,10]) == false);
 	assert(collinear([-10,-10], [-15, -15], [10,10]) == true);
@@ -84,12 +76,12 @@ module test_distance_from_line() {
 test_distance_from_line();
 
 
-module test_triangle_area2d() {
-	assert(abs(triangle_area2d([0,0], [0,10], [10,0]) + 50) < EPSILON);
-	assert(abs(triangle_area2d([0,0], [0,10], [0,15])) < EPSILON);
-	assert(abs(triangle_area2d([0,0], [10,0], [0,10]) - 50) < EPSILON);
+module test_triangle_area() {
+	assert(abs(triangle_area([0,0], [0,10], [10,0]) + 50) < EPSILON);
+	assert(abs(triangle_area([0,0], [0,10], [0,15])) < EPSILON);
+	assert(abs(triangle_area([0,0], [10,0], [0,10]) - 50) < EPSILON);
 }
-test_triangle_area2d();
+test_triangle_area();
 
 
 module test_plane3pt() {
@@ -197,6 +189,8 @@ module test_pointlist_bounds() {
 }
 test_pointlist_bounds();
 
+
+cube();
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

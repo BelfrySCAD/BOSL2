@@ -31,10 +31,29 @@ module test_path3d() {
 test_path3d();
 
 
+module test_point4d() {
+	assert(point4d([1,2,3,4,5])==[1,2,3,4]);
+	assert(point4d([1,2,3,4])==[1,2,3,4]);
+	assert(point4d([1,2,3])==[1,2,3,0]);
+	assert(point4d([2,3])==[2,3,0,0]);
+	assert(point4d([1])==[1,0,0,0]);
+}
+test_point4d();
+
+
+module test_path4d() {
+	assert(path4d([[1], [1,2], [1,2,3], [1,2,3,4], [1,2,3,4,5]])==[[1,0,0,0],[1,2,0,0],[1,2,3,0],[1,2,3,4],[1,2,3,4]]);
+}
+test_path4d();
+
+
 module test_translate_points() {
 	pts = [[0,0,1], [0,1,0], [1,0,0], [0,0,-1], [0,-1,0], [-1,0,0]];
 	assert(translate_points(pts, v=[1,2,3]) == [[1,2,4], [1,3,3], [2,2,3], [1,2,2], [1,1,3], [0,2,3]]);
 	assert(translate_points(pts, v=[-1,-2,-3]) == [[-1,-2,-2], [-1,-1,-3], [0,-2,-3], [-1,-2,-4], [-1,-3,-3], [-2,-2,-3]]);
+	assert(translate_points(pts, v=[1,2]) == [[1,2,1], [1,3,0], [2,2,0], [1,2,-1], [1,1,0], [0,2,0]]);
+	pts2 = [[0,1], [1,0], [0,-1], [-1,0]];
+	assert(translate_points(pts2, v=[1,2]) == [[1,3], [2,2], [1,1], [0,2]]);
 }
 test_translate_points();
 
@@ -45,6 +64,8 @@ module test_scale_points() {
 	assert(scale_points(pts, v=[-2,-3,-4]) == [[0,0,-4], [0,-3,0], [-2,0,0], [0,0,4], [0,3,0], [2,0,0]]);
 	assert(scale_points(pts, v=[1,1,1]) == [[0,0,1], [0,1,0], [1,0,0], [0,0,-1], [0,-1,0], [-1,0,0]]);
 	assert(scale_points(pts, v=[-1,-1,-1]) == [[0,0,-1], [0,-1,0], [-1,0,0], [0,0,1], [0,1,0], [1,0,0]]);
+	pts2 = [[0,1], [1,0], [0,-1], [-1,0]];
+	assert(scale_points(pts2, v=[2,3]) == [[0,3], [2,0], [0,-3], [-2,0]]);
 }
 test_scale_points();
 
@@ -76,21 +97,31 @@ module test_rotate_points3d() {
 test_rotate_points3d();
 
 
-module test_simplify_path()
-{
-	path = [[-20,10],[-10,0],[-5,0],[0,0],[5,0],[10,0], [10,10]];
-	assert(simplify_path(path) == [[-20,10],[-10,0],[10,0], [10,10]]);
+module test_polar_to_xy() {
+	assert(approx(polar_to_xy(20,45), [20/sqrt(2), 20/sqrt(2)]));
+	assert(approx(polar_to_xy(20,135), [-20/sqrt(2), 20/sqrt(2)]));
+	assert(approx(polar_to_xy(20,-135), [-20/sqrt(2), -20/sqrt(2)]));
+	assert(approx(polar_to_xy(20,-45), [20/sqrt(2), -20/sqrt(2)]));
+	assert(approx(polar_to_xy(40,30), [40*sqrt(3)/2, 40/2]));
+	assert(approx(polar_to_xy([40,30]), [40*sqrt(3)/2, 40/2]));
 }
-test_simplify_path();
+test_polar_to_xy();
 
 
-module test_simplify_path_indexed()
-{
-	points = [[-20,10],[-10,0],[-5,0],[0,0],[5,0],[10,0], [10,10]];
-	path = list_range(len(points));
-	assert(simplify_path_indexed(points, path) == [0,1,5,6]);
+module test_xy_to_polar() {
+	assert(approx(xy_to_polar([20/sqrt(2), 20/sqrt(2)]),[20,45]));
+	assert(approx(xy_to_polar([-20/sqrt(2), 20/sqrt(2)]),[20,135]));
+	assert(approx(xy_to_polar([-20/sqrt(2), -20/sqrt(2)]),[20,-135]));
+	assert(approx(xy_to_polar([20/sqrt(2), -20/sqrt(2)]),[20,-45]));
+	assert(approx(xy_to_polar([40*sqrt(3)/2, 40/2]),[40,30]));
+	assert(approx(xy_to_polar([-40*sqrt(3)/2, 40/2]),[40,150]));
+	assert(approx(xy_to_polar([-40*sqrt(3)/2, -40/2]),[40,-150]));
+	assert(approx(xy_to_polar([40*sqrt(3)/2, -40/2]),[40,-30]));
 }
-test_simplify_path_indexed();
+test_xy_to_polar();
+
+
+cube();
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

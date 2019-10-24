@@ -49,7 +49,6 @@ module test_list_range() {
 	assert(list_range(4) == [0,1,2,3]);
 	assert(list_range(n=4, step=2) == [0,2,4,6]);
 	assert(list_range(n=4, s=3, step=3) == [3,6,9,12]);
-	assert(list_range(n=4, s=3, e=9, step=3) == [3,6,9]);
 	assert(list_range(e=3) == [0,1,2,3]);
 	assert(list_range(e=6, step=2) == [0,2,4,6]);
 	assert(list_range(s=3, e=5) == [3,4,5]);
@@ -70,7 +69,7 @@ module test_deduplicate() {
 	assert(deduplicate([8,3,4,4,4,8,2,3,3,8,8]) == [8,3,4,8,2,3,8]);
 	assert(deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]) == [8,3,4,8,2,3]);
 	assert(deduplicate("Hello") == ["H","e","l","o"]);
-	assert(deduplicate([[3,4],[7,2],[7,1.99],[1,4]],eps=0.1) == [[3,4],[7,2],[1,4]]);
+	assert(deduplicate([[3,4],[7,1.99],[7,2],[1,4]],eps=0.1) == [[3,4],[7,2],[1,4]]);
 }
 test_deduplicate();
 
@@ -83,8 +82,8 @@ test_list_set();
 
 
 module test_list_remove() {
-	assert(list_insert([3,6,9,12],1) == [3,9,12]);
-	assert(list_insert([3,6,9,12],[1,3]) == [3,9]);
+	assert(list_remove([3,6,9,12],1) == [3,9,12]);
+	assert(list_remove([3,6,9,12],[1,3]) == [3,9]);
 }
 test_list_remove();
 
@@ -314,6 +313,8 @@ module test_transpose() {
 }
 test_transpose();
 
+
+cube();
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
