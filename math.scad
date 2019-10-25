@@ -153,7 +153,7 @@ function approx(a,b,eps=EPSILON) = let(c=a-b) (is_num(c)? abs(c) : norm(c)) <= e
 //   min_index([5,3,9,6,2,7,8,2,1]); // Returns: 4
 //   min_index([5,3,9,6,2,7,8,2,1],all=true); // Returns: [4,7]
 function min_index(vals, all=false) =
-        all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
+	all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
 
 // Function: max_index()
 // Usage:
@@ -168,7 +168,7 @@ function min_index(vals, all=false) =
 //   max_index([5,3,9,6,2,7,8,9,1]); // Returns: 2
 //   max_index([5,3,9,6,2,7,8,9,1],all=true); // Returns: [2,7]
 function max_index(vals, all=false) =
-        all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
+	all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
 
 
 // Function: posmod()

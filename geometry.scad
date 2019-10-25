@@ -758,12 +758,11 @@ function polygon_shift_to_closest_point(path, pt) =
 //   i1 = The first point.
 //   i2 = The second point.
 //   points = The list of points to find a non-collinear point from.
-function first_noncollinear(i1, i2, points, _i) =
-	(_i>=len(points) || !collinear_indexed(points, i1, i2, _i))? _i :
-	find_first_noncollinear(i1, i2, points, _i=_i+1);
+function first_noncollinear(i1, i2, points) =
+	[for (j = idx(points)) if (j!=i1 && j!=i2 && !collinear_indexed(points,i1,i2,j)) j][0];
 
 
-// Function: noncollinear_points()
+// Function: find_noncollinear_points()
 // Usage:
 //   find_noncollinear_points(points);
 // Description:
@@ -771,8 +770,8 @@ function first_noncollinear(i1, i2, points, _i) =
 function find_noncollinear_points(points) =
 	let(
 		a = 0,
-		b = furthest_point(a, points),
-		c = first_noncollinear(a, b, points)
+		b = furthest_point(points[a], points),
+		c = max_index([for (p=points) norm(p-points[a])*norm(p-points[b])])
 	) [a, b, c];
 
 
@@ -987,28 +986,25 @@ function pointlist_bounds(pts) = [
 // Usage:
 //   closest_point(pt, points);
 // Description:
-//   Given a list of `points`, finds the point that is closest to the given point `pt`, and returns the index of it.
+//   Given a list of `points`, finds the index of the closest point to `pt`.
 // Arguments:
 //   pt = The point to find the closest point to.
 //   points = The list of points to search.
 function closest_point(pt, points) =
-	let(
-		i = min_index([for (j=idx(points)) norm(points[j]-pt)])
-	) i;
+	min_index([for (p=points) norm(p-pt)]);
 
 
 // Function: furthest_point()
 // Usage:
 //   furthest_point(pt, points);
 // Description:
-//   Given a list of `points`, finds the point that is farthest from the given point `pt`, and returns the index of it.
+//   Given a list of `points`, finds the index of the furthest point from `pt`.
 // Arguments:
 //   pt = The point to find the farthest point from.
 //   points = The list of points to search.
+// Example:
 function furthest_point(pt, points) =
-	let(
-		i = max_index([for (j=idx(points)) norm(points[j]-pt)])
-	) i;
+	max_index([for (p=points) norm(p-pt)]);
 
 
 // Function: polygon_is_clockwise()

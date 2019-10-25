@@ -224,14 +224,34 @@ function xy_to_polar(x,y=undef) = let(
 
 // Function: project_plane()
 // Usage:
-//   project_plane(point, a, b, c);
+//   xy = project_plane(point, a, b, c);
+//   xy = project_plane(point, [A,B,C]];
 // Description:
 //   Given three points defining a plane, returns the projected planar [X,Y] coordinates of the
 //   closest point to a 3D `point`.  The origin of the planar coordinate system [0,0] will be at point
 //   `a`, and the Y+ axis direction will be towards point `b`.  This coordinate system can be useful
 //   in taking a set of nearly coplanar points, and converting them to a pure XY set of coordinates
 //   for manipulation, before convering them back to the original 3D plane.
+// Arguments:
+//   point = The 3D point, or list of 3D points to project into the plane's 2D coordinate system.
+//   a = A 3D point that the plane passes through.  Used to define the plane.
+//   b = A 3D point that the plane passes through.  Used to define the plane.
+//   c = A 3D point that the plane passes through.  Used to define the plane.
+// Example:
+//   pt = [5,-5,5];
+//   a=[0,0,0];  b=[10,-10,0];  c=[10,0,10];
+//   xy = project_plane(pt, a, b, c);
+//   xy2 = project_plane(pt, [a,b,c]);
+//   echo(xy,xy2);
 function project_plane(point, a, b, c) =
+	echo(point=point,a=a,b=b,c=c)
+	is_undef(b) && is_undef(c) && is_list(a)? let(
+		indices = find_noncollinear_points(a)
+	) echo(indices=indices) project_plane(point, a[indices[0]], a[indices[1]], a[indices[2]]) :
+	assert(is_vector(a))
+	assert(is_vector(b))
+	assert(is_vector(c))
+	assert(is_vector(point)||is_path(point))
 	let(
 		u = normalize(b-a),
 		v = normalize(c-a),
@@ -243,12 +263,25 @@ function project_plane(point, a, b, c) =
 
 // Function: lift_plane()
 // Usage:
-//   lift_plane(point, a, b, c);
+//   xyz = lift_plane(point, a, b, c);
+//   xyz = lift_plane(point, [A,B,C]);
 // Description:
 //   Given three points defining a plane, converts a planar [X,Y] coordinate to the actual
 //   corresponding 3D point on the plane.  The origin of the planar coordinate system [0,0]
 //   will be at point `a`, and the Y+ axis direction will be towards point `b`.
+// Arguments:
+//   point = The 2D point, or list of 2D points in the plane's coordinate system to get the 3D position of.
+//   a = A 3D point that the plane passes through.  Used to define the plane.
+//   b = A 3D point that the plane passes through.  Used to define the plane.
+//   c = A 3D point that the plane passes through.  Used to define the plane.
 function lift_plane(point, a, b, c) =
+	is_undef(b) && is_undef(c) && is_list(a)? let(
+		indices = find_noncollinear_points(a)
+	) lift_plane(point, a[indices[0]], a[indices[1]], a[indices[2]]) :
+	assert(is_vector(a))
+	assert(is_vector(b))
+	assert(is_vector(c))
+	assert(is_vector(point)||is_path(point))
 	let(
 		u = normalize(b-a),
 		v = normalize(c-a),
