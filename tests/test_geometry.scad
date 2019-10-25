@@ -76,6 +76,103 @@ module test_distance_from_line() {
 test_distance_from_line();
 
 
+module test_line_normal() {
+	assert(line_normal([0,0],[10,0]) == [0,1]);
+	assert(line_normal([0,0],[0,10]) == [-1,0]);
+	assert(line_normal([0,0],[-10,0]) == [0,-1]);
+	assert(line_normal([0,0],[0,-10]) == [1,0]);
+	assert(approx(line_normal([0,0],[10,10]), [-sqrt(2)/2,sqrt(2)/2]));
+	assert(line_normal([[0,0],[10,0]]) == [0,1]);
+	assert(line_normal([[0,0],[0,10]]) == [-1,0]);
+	assert(line_normal([[0,0],[-10,0]]) == [0,-1]);
+	assert(line_normal([[0,0],[0,-10]]) == [1,0]);
+	assert(approx(line_normal([[0,0],[10,10]]), [-sqrt(2)/2,sqrt(2)/2]));
+	for (i=list_range(1000)) {
+		p1 = rands(-100,100,2);
+		p2 = rands(-100,100,2);
+		n = normalize(p2-p1);
+		n1 = [-n.y, n.x];
+		n2 = line_normal(p1,p2);
+		assert(approx(n2, n1));
+	}
+}
+test_line_normal();
+
+
+module test_line_intersection() {
+	assert(line_intersection([[-10,-10], [ -1,-10]], [[ 10,-10], [  1,-10]]) == undef);
+	assert(line_intersection([[-10,  0], [ -1,  0]], [[ 10,  0], [  1,  0]]) == undef);
+	assert(line_intersection([[-10,  0], [ -1,  0]], [[  1,  0], [ 10,  0]]) == undef);
+	assert(line_intersection([[-10,  0], [ 10,  0]], [[-10,  0], [ 10,  0]]) == undef);
+	assert(line_intersection([[-10, 10], [ 10, 10]], [[-10,-10], [ 10,-10]]) == undef);
+	assert(line_intersection([[-10,-10], [ -1, -1]], [[ 10,-10], [  1, -1]]) == [0,0]);
+	assert(line_intersection([[-10,-10], [ 10, 10]], [[ 10,-10], [-10, 10]]) == [0,0]);
+	assert(line_intersection([[ -8,  0], [ 12,  4]], [[ 12,  0], [ -8,  4]]) == [2,2]);
+}
+test_line_intersection();
+
+
+module test_segment_intersection() {
+	assert(segment_intersection([[-10,-10], [ -1, -1]], [[ 10,-10], [  1, -1]]) == undef);
+	assert(segment_intersection([[-10,-10], [ -1,-10]], [[ 10,-10], [  1,-10]]) == undef);
+	assert(segment_intersection([[-10,  0], [ -1,  0]], [[ 10,  0], [  1,  0]]) == undef);
+	assert(segment_intersection([[-10,  0], [ -1,  0]], [[  1,  0], [ 10,  0]]) == undef);
+	assert(segment_intersection([[-10, 10], [ -1,  1]], [[ 10, 10], [  1,  1]]) == undef);
+	assert(segment_intersection([[-10,  0], [ 10,  0]], [[-10,  0], [ 10,  0]]) == undef);
+	assert(segment_intersection([[-10, 10], [ 10, 10]], [[-10,-10], [ 10,-10]]) == undef);
+	assert(segment_intersection([[-10,  0], [  0, 10]], [[  0, 10], [ 10,  0]]) == [0,10]);
+	assert(segment_intersection([[-10,  0], [  0, 10]], [[-10, 20], [ 10,  0]]) == [0,10]);
+	assert(segment_intersection([[-10,-10], [ 10, 10]], [[ 10,-10], [-10, 10]]) == [0,0]);
+	assert(segment_intersection([[ -8,  0], [ 12,  4]], [[ 12,  0], [ -8,  4]]) == [2,2]);
+}
+test_segment_intersection();
+
+
+module test_line_segment_intersection() {
+	assert(line_segment_intersection([[-10,-10], [ -1,-10]], [[ 10,-10], [  1,-10]]) == undef);
+	assert(line_segment_intersection([[-10,  0], [ -1,  0]], [[ 10,  0], [  1,  0]]) == undef);
+	assert(line_segment_intersection([[-10,  0], [ -1,  0]], [[  1,  0], [ 10,  0]]) == undef);
+	assert(line_segment_intersection([[-10,  0], [ 10,  0]], [[-10,  0], [ 10,  0]]) == undef);
+	assert(line_segment_intersection([[-10, 10], [ 10, 10]], [[-10,-10], [ 10,-10]]) == undef);
+	assert(line_segment_intersection([[-10,-10], [ -1, -1]], [[ 10,-10], [  1, -1]]) == undef);
+	assert(line_segment_intersection([[-10,-10], [ 10, 10]], [[ 10,-10], [-10, 10]]) == [0,0]);
+	assert(line_segment_intersection([[ -8,  0], [ 12,  4]], [[ 12,  0], [ -8,  4]]) == [2,2]);
+	assert(line_segment_intersection([[-10,-10], [ 10, 10]], [[ 10,-10], [  1, -1]]) == undef);
+	assert(line_segment_intersection([[-10,-10], [ 10, 10]], [[ 10,-10], [ -1,  1]]) == [0,0]);
+}
+test_line_segment_intersection();
+
+
+// TODO: test line_closest_point()
+// TODO: test segment_closest_point()
+// TODO: test find_circle_2tangents()
+// TODO: test find_circle_3points()
+// TODO: test find_circle_tangents()
+
+
+module test_tri_calc() {
+	sides = rands(1,100,100,seed_value=8888);
+	for (p=pair_wrap(sides)) {
+		opp = p[0];
+		adj = p[1];
+		hyp = norm([opp,adj]);
+		ang = acos(adj/hyp);
+		ang2 = 90-ang;
+		expected = [adj, opp, hyp, ang, ang2];
+		assert(approx(tri_calc(adj=adj, hyp=hyp), expected));
+		assert(approx(tri_calc(opp=opp, hyp=hyp), expected));
+		assert(approx(tri_calc(adj=adj, opp=opp), expected));
+		assert(approx(tri_calc(adj=adj, ang=ang), expected));
+		assert(approx(tri_calc(opp=opp, ang=ang), expected, eps=1e-8));
+		assert(approx(tri_calc(hyp=hyp, ang=ang), expected));
+		assert(approx(tri_calc(adj=adj, ang2=ang2), expected));
+		assert(approx(tri_calc(opp=opp, ang2=ang2), expected, eps=1e-8));
+		assert(approx(tri_calc(hyp=hyp, ang2=ang2), expected));
+	}
+}
+test_tri_calc();
+
+
 module test_triangle_area() {
 	assert(abs(triangle_area([0,0], [0,10], [10,0]) + 50) < EPSILON);
 	assert(abs(triangle_area([0,0], [0,10], [0,15])) < EPSILON);
@@ -112,6 +209,10 @@ module test_plane3pt_indexed() {
 test_plane3pt_indexed();
 
 
+// TODO: test plane_from_pointslist()
+// TODO: test plane_normal()
+
+
 module test_distance_from_plane() {
 	plane1 = plane3pt([-10,0,0], [0,10,0], [10,0,0]);
 	assert(distance_from_plane(plane1, [0,0,5]) == 5);
@@ -144,6 +245,23 @@ module test_in_front_of_plane() {
 	assert(in_front_of_plane(plane, [0,0,-5]) == false);
 }
 test_in_front_of_plane();
+
+
+// TODO: test is_path()
+// TODO: test is_closed_path()
+// TODO: test close_path()
+// TODO: test cleanup_path()
+// TODO: test path_self_intersections()
+// TODO: test decompose_path()
+// TODO: test path_subselect()
+// TODO: test polygon_area()
+// TODO: test polygon_shift()
+// TODO: test polygon_shift_to_closest_point()
+// TODO: test first_noncollinear()
+// TODO: test noncollinear_points()
+// TODO: test centroid()
+// TODO: test assemble_a_path_from_fragments()
+// TODO: test assemble_path_fragments()
 
 
 module test_simplify_path() {
@@ -190,7 +308,25 @@ module test_pointlist_bounds() {
 test_pointlist_bounds();
 
 
-cube();
+// TODO: test closest_point()
+// TODO: test furthest_point()
+// TODO: test clockwise_polygon()
+// TODO: test ccw_polygon()
+// TODO: test is_region()
+// TODO: test check_and_fix_path()
+// TODO: test cleanup_region()
+// TODO: test point_in_region()
+// TODO: test region_path_crossings()
+// TODO: test offset()
+// TODO: test split_path_at_self_crossings()
+// TODO: test split_path_at_region_crossings()
+// TODO: test union()
+// TODO: test difference()
+// TODO: test intersection()
+// TODO: test exclusive_or()
+
+
+cube();  // Prevents warning about no top-level geometry.
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
