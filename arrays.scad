@@ -153,7 +153,35 @@ function list_range(n=undef, s=0, e=undef, step=undef) =
 //   list = The list to reverse.
 // Example:
 //   reverse([3,4,5,6]);  // Returns [6,5,4,3]
-function reverse(list) = [ for (i = [len(list)-1 : -1 : 0]) list[i] ];
+function reverse(list) =
+	assert(is_list(list)||is_string(list))
+	[ for (i = [len(list)-1 : -1 : 0]) list[i] ];
+
+
+// Function: list_rotate()
+// Usage:
+//   rlist = list_rotate(list,n);
+// Description:
+//   Rotates the contents of a list by `n` positions left.
+//   If `n` is negative, then the rotation is `abs(n)` positions to the right.
+// Arguments:
+//   list = The list to rotate.
+//   n = The number of positions to rotate by.  If negative, rotated to the right.  Positive rotates to the left.  Default: 1
+// Example:
+//   l1 = list_rotate([1,2,3,4,5],-2); // Returns: [4,5,1,2,3]
+//   l2 = list_rotate([1,2,3,4,5],-1); // Returns: [5,1,2,3,4]
+//   l3 = list_rotate([1,2,3,4,5],0);  // Returns: [1,2,3,4,5]
+//   l4 = list_rotate([1,2,3,4,5],1);  // Returns: [2,3,4,5,1]
+//   l5 = list_rotate([1,2,3,4,5],2);  // Returns: [3,4,5,1,2]
+//   l6 = list_rotate([1,2,3,4,5],3);  // Returns: [4,5,1,2,3]
+//   l7 = list_rotate([1,2,3,4,5],4);  // Returns: [5,1,2,3,4]
+//   l8 = list_rotate([1,2,3,4,5],5);  // Returns: [1,2,3,4,5]
+//   l9 = list_rotate([1,2,3,4,5],6);  // Returns: [2,3,4,5,1]
+function list_rotate(list,n=1) =
+	assert(is_list(list)||is_string(list))
+	assert(is_num(n))
+	let(n = posmod(n,len(list)))
+	n==0? list : concat(select(list,n,-1), select(list,0,n-1));
 
 
 // Function: deduplicate()
@@ -172,6 +200,7 @@ function reverse(list) = [ for (i = [len(list)-1 : -1 : 0]) list[i] ];
 //   deduplicate("Hello");  // Returns: ["H","e","l","o"]
 //   deduplicate([[3,4],[7,2],[7,1.99],[1,4]],eps=0.1);  // Returns: [[3,4],[7,2],[1,4]]
 function deduplicate(list, closed=false, eps=EPSILON) =
+	assert(is_list(list)||is_string(list))
 	let(
 		l = len(list),
 		end = l-(closed?0:1)
@@ -201,6 +230,7 @@ function deduplicate(list, closed=false, eps=EPSILON) =
 //   list_set([2,3,4,5], 2, 21);  // Returns: [2,3,21,5]
 //   list_set([2,3,4,5], [1,3], [81,47]);  // Returns: [2,81,4,47]
 function list_set(list=[],indices,values,dflt=0,minlen=0) =
+	assert(is_list(list)||is_string(list))
 	!is_list(indices)? (
 		(is_num(indices) && indices<len(list))? [for (i=idx(list)) i==indices? values : list[i]] :
 		list_set(list,[indices],[values],dflt)
@@ -237,6 +267,7 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 //   list_insert([3,6,9,12],1);      // Returns: [3,9,12]
 //   list_insert([3,6,9,12],[1,3]);  // Returns: [3,9]
 function list_remove(list, elements) =
+	assert(is_list(list)||is_string(list))
 	!is_list(elements) ? list_remove(list,[elements]) :
 	len(elements)==0 ? list :
 	let(
@@ -268,7 +299,7 @@ function list_remove(list, elements) =
 //   domestic = list_remove_values(animals, ["bat","rat"], all=true);  // Returns: ["cat","dog"]
 //   animals4 = list_remove_values(animals, ["tucan","rat"], all=true);  // Returns: ["bat","cat","dog","bat"]
 function list_remove_values(list,values=[],all=false) =
-	assert(is_list(list))
+	assert(is_list(list)||is_string(list))
 	!is_list(values)? list_remove_values(list, values=[values], all=all) :
 	let(
 		idxs = all? flatten(search(values,list,0)) : search(values,list,1),
@@ -285,6 +316,7 @@ function list_remove_values(list,values=[],all=false) =
 //   list_insert([3,6,9,12],1,5);  // Returns [3,5,6,9,12]
 //   list_insert([3,6,9,12],[1,3],[5,11]);  // Returns [3,5,6,9,11,12]
 function list_insert(list, pos, elements, _i=0) =
+	assert(is_list(list)||is_string(list))
 	is_list(pos)? (
 		assert(len(pos)==len(elements))
 		let(
@@ -322,6 +354,8 @@ function list_insert(list, pos, elements, _i=0) =
 // Example:
 //   bselect([3,4,5,6,7], [false,true,true,false,true]);  // Returns: [4,5,7]
 function bselect(array,index) =
+	assert(is_list(array)||is_string(list))
+	assert(is_list(index))
 	[for(i=[0:len(array)-1]) if (index[i]) array[i]];
 
 
@@ -341,6 +375,8 @@ function bselect(array,index) =
 //   list_bset([false,true,false,true,false], [3,4]);  // Returns: [0,3,0,4,0]
 //   list_bset([false,true,false,true,false], [3,4],dflt=1);  // Returns: [1,3,1,4,1]
 function list_bset(indexset, valuelist, dflt=0) =
+	assert(is_list(indexset))
+	assert(is_list(valuelist))
 	let(
 		trueind = search([true], indexset,0)[0]
 	) concat(
@@ -358,7 +394,8 @@ function list_bset(indexset, valuelist, dflt=0) =
 //   list_increasing([1,2,3,4]);  // Returns: true
 //   list_increasing([1,3,2,4]);  // Returns: false
 //   list_increasing([4,3,2,1]);  // Returns: false
-function list_increasing(list,ind=0) =
+function list_increasing(list) =
+	assert(is_list(list)||is_string(list))
 	len([for (p=pair(list)) if(p.x>p.y) true])==0;
 
 
@@ -372,6 +409,7 @@ function list_increasing(list,ind=0) =
 //   list_decreasing([4,2,3,1]);  // Returns: false
 //   list_decreasing([4,3,2,1]);  // Returns: true
 function list_decreasing(list) =
+	assert(is_list(list)||is_string(list))
 	len([for (p=pair(list)) if(p.x<p.y) true])==0;
 
 
@@ -381,6 +419,7 @@ function list_decreasing(list) =
 // Arguments:
 //   vecs = A list of lists.
 function list_shortest(vecs) =
+	assert(is_list(vecs)||is_string(list))
 	min([for (v = vecs) len(v)]);
 
 
@@ -390,6 +429,7 @@ function list_shortest(vecs) =
 // Arguments:
 //   vecs = A list of lists.
 function list_longest(vecs) =
+	assert(is_list(vecs)||is_string(list))
 	max([for (v = vecs) len(v)]);
 
 
@@ -401,6 +441,7 @@ function list_longest(vecs) =
 //   minlen = The minimum length to pad the list to.
 //   fill = The value to pad the list with.
 function list_pad(v, minlen, fill=undef) =
+	assert(is_list(v)||is_string(list))
 	concat(v,replist(fill,minlen-len(v)));
 
 
@@ -411,6 +452,7 @@ function list_pad(v, minlen, fill=undef) =
 //   v = A list.
 //   minlen = The minimum length to pad the list to.
 function list_trim(v, maxlen) =
+	assert(is_list(v)||is_string(list))
 	[for (i=[0:1:min(len(v),maxlen)-1]) v[i]];
 
 
@@ -423,6 +465,7 @@ function list_trim(v, maxlen) =
 //   minlen = The minimum length to pad the list to.
 //   fill = The value to pad the list with.
 function list_fit(v, length, fill) =
+	assert(is_list(v)||is_string(list))
 	let(l=len(v)) (l==length)? v : (l>length)? list_trim(v,length) : list_pad(v,length,fill);
 
 
@@ -441,6 +484,7 @@ function list_fit(v, length, fill) =
 //   colors = ["red", "green", "blue"];
 //   for (i=idx(colors)) right(20*i) color(colors[i]) circle(d=10);
 function idx(list, step=1, end=-1,start=0) =
+	assert(is_list(list)||is_string(list))
 	[start : step : len(list)+end];
 
 
@@ -459,6 +503,7 @@ function idx(list, step=1, end=-1,start=0) =
 //   colors = ["red", "green", "blue"];
 //   for (p=enumerate(colors)) right(20*p[0]) color(p[1]) circle(d=10);
 function enumerate(l,idx=undef) =
+	assert(is_list(l)||is_string(list))
 	(idx==undef)?
 		[for (i=[0:1:len(l)-1]) [i,l[i]]] :
 		[for (i=[0:1:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
@@ -468,6 +513,7 @@ function enumerate(l,idx=undef) =
 // Description:
 //   Shuffles the input list into random order.
 function shuffle(list) =
+	assert(is_list(l)||is_string(list))
 	len(list)<=1 ? list :
 	let (
 		rval = rands(0,1,len(list)),
@@ -688,6 +734,7 @@ function sortidx(list, idx=undef) =
 // Arguments:
 //   arr = The list to uniquify.
 function unique(arr) =
+	assert(is_list(arr)||is_string(list))
 	len(arr)<=1? arr : let(
 		sorted = sort(arr)
 	) [
@@ -728,7 +775,9 @@ function subindex(v, idx) = [
 // Example:
 //   l = ["A","B","C",D"];
 //   echo([for (p=pair(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC"]
-function pair(v) = [for (i=[0:1:len(v)-2]) [v[i],v[i+1]]];
+function pair(v) =
+	assert(is_list(v)||is_string(v))
+	[for (i=[0:1:len(v)-2]) [v[i],v[i+1]]];
 
 
 // Function: pair_wrap()
@@ -739,7 +788,9 @@ function pair(v) = [for (i=[0:1:len(v)-2]) [v[i],v[i+1]]];
 // Example:
 //   l = ["A","B","C","D"];
 //   echo([for (p=pair_wrap(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC", "AD"]
-function pair_wrap(v) = [for (i=[0:1:len(v)-1]) [v[i],v[(i+1)%len(v)]]];
+function pair_wrap(v) =
+	assert(is_list(v)||is_string(v))
+	[for (i=[0:1:len(v)-1]) [v[i],v[(i+1)%len(v)]]];
 
 
 // Function: triplet()
@@ -750,7 +801,9 @@ function pair_wrap(v) = [for (i=[0:1:len(v)-1]) [v[i],v[(i+1)%len(v)]]];
 // Example:
 //   l = ["A","B","C","D","E"];
 //   echo([for (p=triplet(l)) str(p.z,p.y,p.x)]);  // Outputs: ["CBA", "DCB", "EDC"]
-function triplet(v) = [for (i=[0:1:len(v)-3]) [v[i],v[i+1],v[i+2]]];
+function triplet(v) =
+	assert(is_list(v)||is_string(v))
+	[for (i=[0:1:len(v)-3]) [v[i],v[i+1],v[i+2]]];
 
 
 // Function: triplet_wrap()
@@ -761,7 +814,9 @@ function triplet(v) = [for (i=[0:1:len(v)-3]) [v[i],v[i+1],v[i+2]]];
 // Example:
 //   l = ["A","B","C","D"];
 //   echo([for (p=triplet_wrap(l)) str(p.z,p.y,p.x)]);  // Outputs: ["CBA", "DCB", "ADC", "BAD"]
-function triplet_wrap(v) = [for (i=[0:1:len(v)-1]) [v[i],v[(i+1)%len(v)],v[(i+2)%len(v)]]];
+function triplet_wrap(v) =
+	assert(is_list(v)||is_string(v))
+	[for (i=[0:1:len(v)-1]) [v[i],v[(i+1)%len(v)],v[(i+2)%len(v)]]];
 
 
 // Function: zip()

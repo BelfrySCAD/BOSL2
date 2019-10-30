@@ -65,6 +65,21 @@ module test_reverse() {
 test_reverse();
 
 
+module test_list_rotate() {
+	assert(list_rotate([1,2,3,4,5],-2) == [4,5,1,2,3]);
+	assert(list_rotate([1,2,3,4,5],-1) == [5,1,2,3,4]);
+	assert(list_rotate([1,2,3,4,5],0) == [1,2,3,4,5]);
+	assert(list_rotate([1,2,3,4,5],1) == [2,3,4,5,1]);
+	assert(list_rotate([1,2,3,4,5],2) == [3,4,5,1,2]);
+	assert(list_rotate([1,2,3,4,5],3) == [4,5,1,2,3]);
+	assert(list_rotate([1,2,3,4,5],4) == [5,1,2,3,4]);
+	assert(list_rotate([1,2,3,4,5],5) == [1,2,3,4,5]);
+	assert(list_rotate([1,2,3,4,5],6) == [2,3,4,5,1]);
+	assert(list_rotate([],3) == []);
+}
+test_list_rotate();
+
+
 module test_deduplicate() {
 	assert(deduplicate([8,3,4,4,4,8,2,3,3,8,8]) == [8,3,4,8,2,3,8]);
 	assert(deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]) == [8,3,4,8,2,3]);
