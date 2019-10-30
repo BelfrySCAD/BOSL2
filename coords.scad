@@ -242,12 +242,10 @@ function xy_to_polar(x,y=undef) = let(
 //   a=[0,0,0];  b=[10,-10,0];  c=[10,0,10];
 //   xy = project_plane(pt, a, b, c);
 //   xy2 = project_plane(pt, [a,b,c]);
-//   echo(xy,xy2);
 function project_plane(point, a, b, c) =
-	echo(point=point,a=a,b=b,c=c)
 	is_undef(b) && is_undef(c) && is_list(a)? let(
 		indices = find_noncollinear_points(a)
-	) echo(indices=indices) project_plane(point, a[indices[0]], a[indices[1]], a[indices[2]]) :
+	) project_plane(point, a[indices[0]], a[indices[1]], a[indices[2]]) :
 	assert(is_vector(a))
 	assert(is_vector(b))
 	assert(is_vector(c))
