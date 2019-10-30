@@ -249,12 +249,13 @@ function segment_closest_point(seg,pt) =
 //   labels = [[pts[0], "pt1"], [pts[1],"pt2"], [pts[2],"pt3"], [circ[0], "CP"], [circ[0]+[cos(315),sin(315)]*rad*0.7, "r"]];
 //   for(l=labels) translate(l[0]+[0,2]) color("black") text(text=l[1], size=2.5, halign="center");
 function find_circle_2tangents(pt1, pt2, pt3, r=undef, d=undef) =
+	let(r = get_radius(r=r, d=d, dflt=undef))
+	assert(r!=undef, "Must specify either r or d.")
+	(is_undef(pt2) && is_undef(pt3) && is_list(pt1))? find_circle_2tangents(pt1[0], pt1[1], pt1[2], r=r) :
 	let(
-		r = get_radius(r=r, d=d, dflt=undef),
 		v1 = normalize(pt1 - pt2),
 		v2 = normalize(pt3 - pt2)
 	) approx(norm(v1+v2))? undef :
-	assert(r!=undef, "Must specify either r or d.")
 	let(
 		a = vector_angle(v1,v2),
 		n = vector_axis(v1,v2),
@@ -285,6 +286,7 @@ function find_circle_2tangents(pt1, pt2, pt3, r=undef, d=undef) =
 //   translate(circ[0]) color("red") circle(d=3, $fn=12);
 //   place_copies(pts) color("blue") circle(d=3, $fn=12);
 function find_circle_3points(pt1, pt2, pt3) =
+	(is_undef(pt2) && is_undef(pt3) && is_list(pt1))? find_circle_3points(pt1[0], pt1[1], pt1[2]) :
 	collinear(pt1,pt2,pt3)? [undef,undef,undef] :
 	let(
 		v1 = pt1-pt2,
@@ -299,7 +301,7 @@ function find_circle_3points(pt1, pt2, pt3) =
 			res = find_circle_3points(a, b, c)
 		) res[0]==undef? [undef,undef,undef] : let(
 			cp = lift_plane(res[0], pt1, pt2, pt3),
-			r = norm(p2-cp)
+			r = norm(pt2-cp)
 		) [cp, r, n2]
 	) : let(
 		mp1 = pt2 + v1/2,
@@ -394,7 +396,7 @@ function find_circle_tangents(r, d, cp, pt) =
 //   ang = tri_calc(adj=20,hyp=30)[3];
 //   ang2 = tri_calc(adj=20,hyp=40)[4];
 function tri_calc(ang,ang2,adj,opp,hyp) =
-	assert(num_defined([ang,ang2])<2,"You cannot specify both ang and ang2.")
+	assert(ang==undef || ang2==undef,"You cannot specify both ang and ang2.")
 	assert(num_defined([ang,ang2,adj,opp,hyp])==2, "You must specify exactly two arguments.")
 	let(
 		ang = ang!=undef? assert(ang>0&&ang<90) ang :
@@ -412,6 +414,200 @@ function tri_calc(ang,ang2,adj,opp,hyp) =
 	)
 	[adj, opp, hyp, ang, ang2];
 
+
+// Function: hyp_opp_to_adj()
+// Usage:
+//   adj = hyp_opp_to_adj(hyp,opp);
+// Description:
+//   Given the lengths of the hypotenuse and opposite side of a right triangle, returns the length
+//   of the adjacent side.
+// Arguments:
+//   hyp = The length of the hypotenuse of the right triangle.
+//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+// Example:
+//   hyp = hyp_opp_to_adj(5,3);  // Returns: 4
+function hyp_opp_to_adj(hyp,opp) =
+	assert(is_num(hyp)&&hyp>=0)
+	assert(is_num(opp)&&opp>=0)
+	sqrt(hyp*hyp-opp*opp);
+
+
+// Function: hyp_ang_to_adj()
+// Usage:
+//   adj = hyp_ang_to_adj(hyp,ang);
+// Description:
+//   Given the length of the hypotenuse and the angle of the primary corner of a right triangle,
+//   returns the length of the adjacent side.
+// Arguments:
+//   hyp = The length of the hypotenuse of the right triangle.
+//   ang = The angle in degrees of the primary corner of the right triangle.
+// Example:
+//   adj = hyp_ang_to_adj(8,60);  // Returns: 4
+function hyp_ang_to_adj(hyp,ang) =
+	assert(is_num(hyp)&&hyp>=0)
+	assert(is_num(ang)&&ang>0&&ang<90)
+	hyp*cos(ang);
+
+
+// Function: opp_ang_to_adj()
+// Usage:
+//   adj = opp_ang_to_adj(opp,ang);
+// Description:
+//   Given the angle of the primary corner of a right triangle, and the length of the side opposite of it,
+//   returns the length of the adjacent side.
+// Arguments:
+//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+//   ang = The angle in degrees of the primary corner of the right triangle.
+// Example:
+//   adj = opp_ang_to_adj(8,30);  // Returns: 4
+function opp_ang_to_adj(opp,ang) =
+	assert(is_num(opp)&&opp>=0)
+	assert(is_num(ang)&&ang>0&&ang<90)
+	opp/tan(ang);
+
+
+// Function: hyp_adj_to_opp()
+// Usage:
+//   opp = hyp_adj_to_opp(hyp,adj);
+// Description:
+//   Given the length of the hypotenuse and the adjacent side, returns the length of the opposite side.
+// Arguments:
+//   hyp = The length of the hypotenuse of the right triangle.
+//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+// Example:
+//   opp = hyp_adj_to_opp(5,4);  // Returns: 3
+function hyp_adj_to_opp(hyp,adj) =
+	assert(is_num(hyp)&&hyp>=0)
+	assert(is_num(adj)&&adj>=0)
+	sqrt(hyp*hyp-adj*adj);
+
+
+// Function: hyp_ang_to_opp()
+// Usage:
+//   opp = hyp_ang_to_opp(hyp,adj);
+// Description:
+//   Given the length of the hypotenuse of a right triangle, and the angle of the corner, returns the length of the opposite side.
+// Arguments:
+//   hyp = The length of the hypotenuse of the right triangle.
+//   ang = The angle in degrees of the primary corner of the right triangle.
+// Example:
+//   opp = hyp_ang_to_opp(8,30);  // Returns: 4
+function hyp_ang_to_opp(hyp,ang) =
+	assert(is_num(hyp)&&hyp>=0)
+	assert(is_num(ang)&&ang>0&&ang<90)
+	hyp*sin(ang);
+
+
+// Function: adj_ang_to_opp()
+// Usage:
+//   opp = adj_ang_to_opp(adj,ang);
+// Description:
+//   Given the length of the adjacent side of a right triangle, and the angle of the corner, returns the length of the opposite side.
+// Arguments:
+//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+//   ang = The angle in degrees of the primary corner of the right triangle.
+// Example:
+//   opp = adj_ang_to_opp(8,45);  // Returns: 8
+function adj_ang_to_opp(adj,ang) =
+	assert(is_num(adj)&&adj>=0)
+	assert(is_num(ang)&&ang>0&&ang<90)
+	adj*tan(ang);
+
+
+// Function: adj_opp_to_hyp()
+// Usage:
+//   hyp = adj_opp_to_hyp(adj,opp);
+// Description:
+//   Given the length of the adjacent and opposite sides of a right triangle, returns the length of thee hypotenuse.
+// Arguments:
+//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+// Example:
+//   hyp = adj_opp_to_hyp(3,4);  // Returns: 5
+function adj_opp_to_hyp(adj,opp) =
+	assert(is_num(adj)&&adj>=0)
+	assert(is_num(opp)&&opp>=0)
+	norm([opp,adj]);
+
+
+// Function: adj_ang_to_hyp()
+// Usage:
+//   hyp = adj_ang_to_hyp(adj,ang);
+// Description:
+//   For a right triangle, given the length of the adjacent side, and the corner angle, returns the length of the hypotenuse.
+// Arguments:
+//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+//   ang = The angle in degrees of the primary corner of the right triangle.
+// Example:
+//   hyp = adj_ang_to_hyp(4,60);  // Returns: 8
+function adj_ang_to_hyp(adj,ang) =
+	assert(is_num(adj)&&adj>=0)
+	assert(is_num(ang)&&ang>=0&&ang<90)
+	adj/cos(ang);
+
+
+// Function: opp_ang_to_hyp()
+// Usage:
+//   hyp = opp_ang_to_hyp(opp,ang);
+// Description:
+//   For a right triangle, given the length of the opposite side, and the corner angle, returns the length of the hypotenuse.
+// Arguments:
+//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+//   ang = The angle in degrees of the primary corner of the right triangle.
+// Example:
+//   hyp = opp_ang_to_hyp(4,30);  // Returns: 8
+function opp_ang_to_hyp(opp,ang) =
+	assert(is_num(opp)&&opp>=0)
+	assert(is_num(ang)&&ang>0&&ang<=90)
+	opp/sin(ang);
+
+
+// Function: hyp_adj_to_ang()
+// Usage:
+//   ang = hyp_adj_to_ang(hyp,adj);
+// Description:
+//   For a right triangle, given the lengths of the hypotenuse and the adjacent sides, returns the angle of the corner.
+// Arguments:
+//   hyp = The length of the hypotenuse of the right triangle.
+//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+// Example:
+//   ang = hyp_adj_to_ang(8,4);  // Returns: 60 degrees
+function hyp_adj_to_ang(hyp,adj) =
+	assert(is_num(hyp)&&hyp>0)
+	assert(is_num(adj)&&adj>=0)
+	acos(adj/hyp);
+
+
+// Function: hyp_opp_to_ang()
+// Usage:
+//   ang = hyp_opp_to_ang(hyp,opp);
+// Description:
+//   For a right triangle, given the lengths of the hypotenuse and the opposite sides, returns the angle of the corner.
+// Arguments:
+//   hyp = The length of the hypotenuse of the right triangle.
+//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+// Example:
+//   ang = hyp_opp_to_ang(8,4);  // Returns: 30 degrees
+function hyp_opp_to_ang(hyp,opp) =
+	assert(is_num(hyp)&&hyp>0)
+	assert(is_num(opp)&&opp>=0)
+	asin(opp/hyp);
+
+
+// Function: adj_opp_to_ang()
+// Usage:
+//   ang = adj_opp_to_ang(adj,opp);
+// Description:
+//   For a right triangle, given the lengths of the adjacent and opposite sides, returns the angle of the corner.
+// Arguments:
+//   adj = The length of the side of the right triangle that is adjacent to the primary angle.
+//   opp = The length of the side of the right triangle that is opposite from the primary angle.
+// Example:
+//   ang = adj_opp_to_ang(sqrt(3)/2,0.5);  // Returns: 30 degrees
+function adj_opp_to_ang(adj,opp) =
+	assert(is_num(adj)&&adj>=0)
+	assert(is_num(opp)&&opp>=0)
+	atan2(opp,adj);
 
 
 // Function: triangle_area()
@@ -486,8 +682,10 @@ function plane_from_pointslist(points) =
 		indices = find_noncollinear_points(points),
 		p1 = points[indices[0]],
 		p2 = points[indices[1]],
-		p3 = points[indices[2]]
-	) plane3pt(p1,p2,p3);
+		p3 = points[indices[2]],
+		plane = plane3pt(p1,p2,p3),
+		out = ((plane.x+plane.y+plane.z)<0)? plane3pt(p1,p3,p2) : plane
+	) out;
 
 
 // Function: plane_normal()
@@ -512,7 +710,7 @@ function plane_normal(plane) = [for (i=[0:2]) plane[i]];
 //   plane = The [A,B,C,D] values for the equation of the plane.
 //   point = The point to test.
 function distance_from_plane(plane, point) =
-	[plane.x, plane.y, plane.z] * point - plane[3];
+	[plane.x, plane.y, plane.z] * point3d(point) - plane[3];
 
 
 // Function: coplanar()
