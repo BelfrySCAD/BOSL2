@@ -926,10 +926,7 @@ function polygon_area(vertices) =
 // Example:
 //   polygon_shift([[3,4], [8,2], [0,2], [-4,0]], 2);   // Returns [[0,2], [-4,0], [3,4], [8,2]]
 function polygon_shift(poly, i) =
-	assert(i<len(poly))
-	let(
-		poly = cleanup_path(poly)
-	) select(poly,i,i+len(poly)-1);
+	list_rotate(cleanup_path(poly), i);
 
 
 // Function: polygon_shift_to_closest_point()

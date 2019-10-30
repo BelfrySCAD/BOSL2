@@ -180,8 +180,7 @@ function reverse(list) =
 function list_rotate(list,n=1) =
 	assert(is_list(list)||is_string(list))
 	assert(is_num(n))
-	let(n = posmod(n,len(list)))
-	n==0? list : concat(select(list,n,-1), select(list,0,n-1));
+	select(list,n,n+len(list)-1);
 
 
 // Function: deduplicate()
