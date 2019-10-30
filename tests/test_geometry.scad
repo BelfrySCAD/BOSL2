@@ -87,9 +87,10 @@ module test_line_normal() {
 	assert(line_normal([[0,0],[-10,0]]) == [0,-1]);
 	assert(line_normal([[0,0],[0,-10]]) == [1,0]);
 	assert(approx(line_normal([[0,0],[10,10]]), [-sqrt(2)/2,sqrt(2)/2]));
-	for (i=list_range(1000)) {
-		p1 = rands(-100,100,2);
-		p2 = rands(-100,100,2);
+	pts = [for (i=list_range(1000)) rands(-100,100,2,seed_value=4312)];
+	for (p = pair_wrap(pts)) {
+		p1 = p.x;
+		p2 = p.y;
 		n = normalize(p2-p1);
 		n1 = [-n.y, n.x];
 		n2 = line_normal(p1,p2);
@@ -143,11 +144,167 @@ module test_line_segment_intersection() {
 test_line_segment_intersection();
 
 
-// TODO: test line_closest_point()
-// TODO: test segment_closest_point()
-// TODO: test find_circle_2tangents()
-// TODO: test find_circle_3points()
-// TODO: test find_circle_tangents()
+module test_line_closest_point() {
+	assert(approx(line_closest_point([[-10,-10], [10,10]], [1,-1]), [0,0]));
+	assert(approx(line_closest_point([[-10,-10], [10,10]], [-1,1]), [0,0]));
+	assert(approx(line_closest_point([[-10,-20], [10,20]], [1,2]+[-2,1]), [1,2]));
+	assert(approx(line_closest_point([[-10,-20], [10,20]], [1,2]+[2,-1]), [1,2]));
+	assert(approx(line_closest_point([[-10,-20], [10,20]], [13,31]), [15,30]));
+}
+test_line_closest_point();
+
+
+module test_segment_closest_point() {
+	assert(approx(segment_closest_point([[-10,-10], [10,10]], [1,-1]), [0,0]));
+	assert(approx(segment_closest_point([[-10,-10], [10,10]], [-1,1]), [0,0]));
+	assert(approx(segment_closest_point([[-10,-20], [10,20]], [1,2]+[-2,1]), [1,2]));
+	assert(approx(segment_closest_point([[-10,-20], [10,20]], [1,2]+[2,-1]), [1,2]));
+	assert(approx(segment_closest_point([[-10,-20], [10,20]], [13,31]), [10,20]));
+	assert(approx(segment_closest_point([[-10,-20], [10,20]], [15,25]), [10,20]));
+}
+test_segment_closest_point();
+
+
+module test_find_circle_2tangents() {
+	assert(approx(find_circle_2tangents([10,10],[0,0],[10,-10],r=10/sqrt(2))[0],[10,0]));
+	assert(approx(find_circle_2tangents([-10,10],[0,0],[-10,-10],r=10/sqrt(2))[0],[-10,0]));
+	assert(approx(find_circle_2tangents([-10,10],[0,0],[10,10],r=10/sqrt(2))[0],[0,10]));
+	assert(approx(find_circle_2tangents([-10,-10],[0,0],[10,-10],r=10/sqrt(2))[0],[0,-10]));
+	assert(approx(find_circle_2tangents([0,10],[0,0],[10,0],r=10)[0],[10,10]));
+	assert(approx(find_circle_2tangents([10,0],[0,0],[0,-10],r=10)[0],[10,-10]));
+	assert(approx(find_circle_2tangents([0,-10],[0,0],[-10,0],r=10)[0],[-10,-10]));
+	assert(approx(find_circle_2tangents([-10,0],[0,0],[0,10],r=10)[0],[-10,10]));
+	assert(approx(find_circle_2tangents(polar_to_xy(10,60),[0,0],[10,0],r=10)[0],polar_to_xy(20,30)));
+}
+test_find_circle_2tangents();
+
+
+module test_find_circle_3points() {
+	count = 200;
+	coords = rands(-100,100,count,seed_value=888);
+	radii = rands(10,100,count,seed_value=390);
+	angles = rands(0,360,count,seed_value=699);
+	// 2D tests.
+	for(i = list_range(count)) {
+		cp = select(coords,i,i+1);
+		r = radii[i];
+		angs = sort(select(angles,i,i+2));
+		pts = [for (a=angs) cp+polar_to_xy(r,a)];
+		res = find_circle_3points(pts);
+		if (!approx(res[0], cp)) {
+			echo(cp=cp, r=r, angs=angs);
+			echo(pts=pts);
+			echo(got=res[0], expected=cp, delta=res[0]-cp);
+			assert(approx(res[0], cp));
+		}
+		if (!approx(res[1], r)) {
+			echo(cp=cp, r=r, angs=angs);
+			echo(pts=pts);
+			echo(got=res[1], expected=r, delta=res[1]-r);
+			assert(approx(res[1], r));
+		}
+		if (!approx(res[2], UP)) {
+			echo(cp=cp, r=r, angs=angs);
+			echo(pts=pts);
+			echo(got=res[2], expected=UP, delta=res[2]-UP);
+			assert(approx(res[2], UP));
+		}
+	}
+	for(i = list_range(count)) {
+		cp = select(coords,i,i+1);
+		r = radii[i];
+		angs = sort(select(angles,i,i+2));
+		pts = [for (a=angs) cp+polar_to_xy(r,a)];
+		res = find_circle_3points(pts[0], pts[1], pts[2]);
+		if (!approx(res[0], cp)) {
+			echo(cp=cp, r=r, angs=angs);
+			echo(pts=pts);
+			echo(got=res[0], expected=cp, delta=res[0]-cp);
+			assert(approx(res[0], cp));
+		}
+		if (!approx(res[1], r)) {
+			echo(cp=cp, r=r, angs=angs);
+			echo(pts=pts);
+			echo(got=res[1], expected=r, delta=res[1]-r);
+			assert(approx(res[1], r));
+		}
+		if (!approx(res[2], UP)) {
+			echo(cp=cp, r=r, angs=angs);
+			echo(pts=pts);
+			echo(got=res[2], expected=UP, delta=res[2]-UP);
+			assert(approx(res[2], UP));
+		}
+	}
+	// 3D tests.
+	for(i = list_range(count)) {
+		cp = select(coords,i,i+2);
+		r = radii[i];
+		nrm = normalize(select(coords,i+10,i+12));
+		n = nrm.z<0? -nrm : nrm;
+		angs = sort(select(angles,i,i+2));
+		pts = translate(cp,p=rot(from=UP,to=n,p=[for (a=angs) point3d(polar_to_xy(r,a))]));
+		res = find_circle_3points(pts);
+		if (!approx(res[0], cp)) {
+			echo(cp=cp, r=r, angs=angs, n=n);
+			echo(pts=pts);
+			echo("CP:", got=res[0], expected=cp, delta=res[0]-cp);
+			assert(approx(res[0], cp));
+		}
+		if (!approx(res[1], r)) {
+			echo(cp=cp, r=r, angs=angs, n=n);
+			echo(pts=pts);
+			echo("R:", got=res[1], expected=r, delta=res[1]-r);
+			assert(approx(res[1], r));
+		}
+		if (!approx(res[2], n)) {
+			echo(cp=cp, r=r, angs=angs, n=n);
+			echo(pts=pts);
+			echo("NORMAL:", got=res[2], expected=n, delta=res[2]-n);
+			assert(approx(res[2], n));
+		}
+	}
+	for(i = list_range(count)) {
+		cp = select(coords,i,i+2);
+		r = radii[i];
+		nrm = normalize(select(coords,i+10,i+12));
+		n = nrm.z<0? -nrm : nrm;
+		angs = sort(select(angles,i,i+2));
+		pts = translate(cp,p=rot(from=UP,to=n,p=[for (a=angs) point3d(polar_to_xy(r,a))]));
+		res = find_circle_3points(pts[0], pts[1], pts[2]);
+		if (!approx(res[0], cp)) {
+			echo(cp=cp, r=r, angs=angs, n=n);
+			echo(pts=pts);
+			echo("CENTER:", got=res[0], expected=cp, delta=res[0]-cp);
+			assert(approx(res[0], cp));
+		}
+		if (!approx(res[1], r)) {
+			echo(cp=cp, r=r, angs=angs, n=n);
+			echo(pts=pts);
+			echo("RADIUS:", got=res[1], expected=r, delta=res[1]-r);
+			assert(approx(res[1], r));
+		}
+		if (!approx(res[2], n)) {
+			echo(cp=cp, r=r, angs=angs, n=n);
+			echo(pts=pts);
+			echo("NORMAL:", got=res[2], expected=n, delta=res[2]-n);
+			assert(approx(res[2], n));
+		}
+	}
+}
+test_find_circle_3points();
+
+
+module test_find_circle_tangents() {
+	tangs = find_circle_tangents(r=50,cp=[0,0],pt=[50*sqrt(2),0]);
+	assert(approx(subindex(tangs,0), [45,-45]));
+	expected = [for (ang=subindex(tangs,0)) polar_to_xy(50,ang)];
+	got = subindex(tangs,1);
+	if (!approx(flatten(got), flatten(expected))) {
+		echo("TAN_PTS:", got=got, expected=expected, delta=got-expected);
+		assert(approx(flatten(got), flatten(expected)));
+	}
+}
+test_find_circle_tangents();
 
 
 module test_tri_calc() {
@@ -173,6 +330,30 @@ module test_tri_calc() {
 test_tri_calc();
 
 
+module test_tri_functions() {
+	sides = rands(1,100,100,seed_value=8181);
+	for (p = pair_wrap(sides)) {
+		adj = p.x;
+		opp = p.y;
+		hyp = norm([opp,adj]);
+		ang = atan2(opp,adj);
+		assert(approx(hyp_opp_to_adj(hyp,opp),adj));
+		assert(approx(hyp_ang_to_adj(hyp,ang),adj));
+		assert(approx(opp_ang_to_adj(opp,ang),adj));
+		assert(approx(hyp_adj_to_opp(hyp,adj),opp));
+		assert(approx(hyp_ang_to_opp(hyp,ang),opp));
+		assert(approx(adj_ang_to_opp(adj,ang),opp));
+		assert(approx(adj_opp_to_hyp(adj,opp),hyp));
+		assert(approx(adj_ang_to_hyp(adj,ang),hyp));
+		assert(approx(opp_ang_to_hyp(opp,ang),hyp));
+		assert(approx(hyp_adj_to_ang(hyp,adj),ang));
+		assert(approx(hyp_opp_to_ang(hyp,opp),ang));
+		assert(approx(adj_opp_to_ang(adj,opp),ang));
+	}
+}
+test_tri_functions();
+
+
 module test_triangle_area() {
 	assert(abs(triangle_area([0,0], [0,10], [10,0]) + 50) < EPSILON);
 	assert(abs(triangle_area([0,0], [0,10], [0,15])) < EPSILON);
@@ -193,9 +374,7 @@ test_plane3pt();
 
 
 module test_plane3pt_indexed() {
-	pts = [
-		[0,0,0], [10,0,0], [0,10,0], [0,0,10]
-	];
+	pts = [ [0,0,0], [10,0,0], [0,10,0], [0,0,10] ];
 	s13 = sqrt(1/3);
 	assert(plane3pt_indexed(pts, 0,3,2) == [1,0,0,0]);
 	assert(plane3pt_indexed(pts, 0,2,3) == [-1,0,0,0]);
@@ -209,8 +388,26 @@ module test_plane3pt_indexed() {
 test_plane3pt_indexed();
 
 
-// TODO: test plane_from_pointslist()
-// TODO: test plane_normal()
+module test_plane_from_pointslist() {
+	assert(plane_from_pointslist([[0,0,20], [0,10,10], [0,0,0], [0,5,3]]) == [1,0,0,0]);
+	assert(plane_from_pointslist([[2,0,20], [2,10,10], [2,0,0], [2,3,4]]) == [1,0,0,2]);
+	assert(plane_from_pointslist([[0,0,0], [10,0,10], [0,0,20], [5,0,7]]) == [0,1,0,0]);
+	assert(plane_from_pointslist([[0,2,0], [10,2,10], [0,2,20], [4,2,3]]) == [0,1,0,2]);
+	assert(plane_from_pointslist([[0,0,0], [10,10,0], [20,0,0], [8,3,0]]) == [0,0,1,0]);
+	assert(plane_from_pointslist([[0,0,2], [10,10,2], [20,0,2], [3,4,2]]) == [0,0,1,2]);
+}
+test_plane_from_pointslist();
+
+
+module test_plane_normal() {
+	assert(plane_normal(plane3pt([0,0,20], [0,10,10], [0,0,0])) == [1,0,0]);
+	assert(plane_normal(plane3pt([2,0,20], [2,10,10], [2,0,0])) == [1,0,0]);
+	assert(plane_normal(plane3pt([0,0,0], [10,0,10], [0,0,20])) == [0,1,0]);
+	assert(plane_normal(plane3pt([0,2,0], [10,2,10], [0,2,20])) == [0,1,0]);
+	assert(plane_normal(plane3pt([0,0,0], [10,10,0], [20,0,0])) == [0,0,1]);
+	assert(plane_normal(plane3pt([0,0,2], [10,10,2], [20,0,2])) == [0,0,1]);
+}
+test_plane_normal();
 
 
 module test_distance_from_plane() {
@@ -247,10 +444,42 @@ module test_in_front_of_plane() {
 test_in_front_of_plane();
 
 
-// TODO: test is_path()
-// TODO: test is_closed_path()
-// TODO: test close_path()
-// TODO: test cleanup_path()
+module test_is_path() {
+	assert(!is_path(123));
+	assert(!is_path("foo"));
+	assert(!is_path(true));
+	assert(!is_path([]));
+	assert(!is_path([[]]));
+	assert(!is_path([["foo","bar","baz"]]));
+	assert(!is_path([[1,2,3]]));
+	assert(!is_path([["foo","bar","baz"],["qux","quux","quuux"]]));
+	assert(is_path([[1,2,3],[4,5,6]]));
+	assert(is_path([[1,2,3],[4,5,6],[7,8,9]]));
+}
+test_is_path();
+
+
+module test_is_closed_path() {
+	assert(!is_closed_path([[1,2,3],[4,5,6],[1,8,9]]));
+	assert(is_closed_path([[1,2,3],[4,5,6],[1,8,9],[1,2,3]]));
+}
+test_is_closed_path();
+
+
+module test_close_path() {
+	assert(close_path([[1,2,3],[4,5,6],[1,8,9]]) == [[1,2,3],[4,5,6],[1,8,9],[1,2,3]]);
+	assert(close_path([[1,2,3],[4,5,6],[1,8,9],[1,2,3]]) == [[1,2,3],[4,5,6],[1,8,9],[1,2,3]]);
+}
+test_close_path();
+
+
+module test_cleanup_path() {
+	assert(cleanup_path([[1,2,3],[4,5,6],[1,8,9]]) == [[1,2,3],[4,5,6],[1,8,9]]);
+	assert(cleanup_path([[1,2,3],[4,5,6],[1,8,9],[1,2,3]]) == [[1,2,3],[4,5,6],[1,8,9]]);
+}
+test_cleanup_path();
+
+
 // TODO: test path_self_intersections()
 // TODO: test decompose_path()
 // TODO: test path_subselect()
