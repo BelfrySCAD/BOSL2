@@ -948,7 +948,7 @@ function polygon_shift_to_closest_point(path, pt) =
 // Usage:
 //   first_noncollinear(i1, i2, points);
 // Description:
-//   Finds the first point in `points` that is not collinear with the points indexed by `i1` and `i2`.  Returns the index of the found point.
+//   Returns index of the first point in `points` that is not collinear with the points indexed by `i1` and `i2`.
 // Arguments:
 //   i1 = The first point.
 //   i2 = The second point.
@@ -966,7 +966,11 @@ function find_noncollinear_points(points) =
 	let(
 		a = 0,
 		b = furthest_point(points[a], points),
-		c = max_index([for (p=points) norm(p-points[a])*norm(p-points[b])])
+		c = max_index([
+			for (p=points)
+				sin(vector_angle(points[a]-p,points[b]-p)) *
+					norm(p-points[a]) * norm(p-points[b])
+		])
 	) [a, b, c];
 
 
