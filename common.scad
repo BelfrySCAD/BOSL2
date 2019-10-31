@@ -8,15 +8,63 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Section: Handling `undef`s.
+// Section: Type handling helpers.
+
+
+// Function: typeof()
+// Usage:
+//   typ = typeof(x);
+// Description:
+//   Returns a string representing the type of the value.  One of "undef", "boolean", "number", "string", "list", or "range"
+function typeof(x) =
+	is_undef(x)? "undef" :
+	is_bool(x)? "boolean" :
+	is_num(x)? "number" :
+	is_string(x)? "string" :
+	is_list(x)? "list" :
+	"range";
+
+
+// Function: is_type()
+// Usage:
+//   b = is_type(x, types);
+// Description:
+//   Returns true if the type of the value `x` is one of those given as strings in the list `types`. 
+//   Valid types are "undef", "boolean", "number", "string", "list", or "range"
+// Arguments:
+//   x = The value to check the type of.
+//   types = A list of types to check 
+// Example:
+//   is_str_or_list = is_type("foo", ["string","list"]);   // Returns: true
+//   is_str_or_list2 = is_type([1,2,3], ["string","list"]);  // Returns: true
+//   is_str_or_list3 = is_type(2, ["string","list"]);  // Returns: false
+//   is_str = is_type("foo", "string");  // Returns: true
+//   is_str2 = is_type([3,4], "string");  // Returns: false
+//   is_str3 = is_type(["foo"], "string");  // Returns: false
+//   is_str4 = is_type(3, "string");  // Returns: false
+function is_type(x,types) =
+	is_list(types)? in_list(typeof(x),types) :
+	is_string(types)? typeof(x) == types :
+	assert(is_list(types)||is_string(types));
 
 
 // Function: is_def()
 // Usage:
-//   is_def(v)
+//   is_def(x)
 // Description:
-//   Returns true if `v` is not `undef`.  False if `v==undef`.
-function is_def(v) = !is_undef(v);
+//   Returns true if `x` is not `undef`.  False if `x==undef`.
+function is_def(x) = !is_undef(x);
+
+
+// Function: is_str()
+// Usage:
+//   is_str(x)
+// Description:
+//   Returns true if `x` is a string.  A shortcut for `is_string()`.
+function is_str(x) = is_string(x);
+
+
+// Section: Handling `undef`s.
 
 
 // Function: default()
@@ -117,21 +165,6 @@ function get_radius(r1=undef, r2=undef, r=undef, d1=undef, d2=undef, d=undef, df
 function get_height(h=undef,l=undef,height=undef,dflt=undef) =
     assert(num_defined([h,l,height])<=1,"You must specify only one of `l`, `h`, and `height`")
     first_defined([h,l,height,dflt]);
-
-
-// Module: no_children()
-// Usage:
-//   no_children($children);
-// Description:
-//   Assert that the calling module does not support children.  Prints an error message to this effect and fails if children are present,
-//   as indicated by its argument.
-// Arguments:
-//   $children = number of children the module has.  
-module no_children(count)
-{
-  assert(count==0, str("Module ",parent_module(1),"() does not support child modules"));
-}    
-
 
 
 // Function: scalar_vec3()

@@ -40,6 +40,19 @@ function assert_in_list(argname, val, l, idx=undef) =
 	) assert(FAILED, msg);
 
 
+// Module: no_children()
+// Usage:
+//   no_children($children);
+// Description:
+//   Assert that the calling module does not support children.  Prints an error message to this effect and fails if children are present,
+//   as indicated by its argument.
+// Arguments:
+//   $children = number of children the module has.  
+module no_children(count) {
+  assert(count==0, str("Module ",parent_module(1),"() does not support child modules"));
+}
+
+
 // Function&Module: echo_error()
 // Usage:
 //   echo_error(msg, [pfx]);
