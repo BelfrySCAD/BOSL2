@@ -379,7 +379,7 @@ function bezier_close_to_axis(bezier, N=3, axis="X") =
 		[for (i=[1:1:N]) lerp(ep, [0,ep.y], i/N)],
 		[for (i=[1:1:N]) lerp([0,ep.y], [0,sp.y], i/N)]
 	) : (
-		assert_in_list("axis", axis, ["X","Y"])
+		assert(in_list(axis, ["X","Y"]))
 	);
 
 

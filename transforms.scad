@@ -1209,7 +1209,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   }
 module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, scale=[1,1,1], in_poly=undef, anchor=CENTER, spin=0, orient=UP)
 {
-	assert_in_list("stagger", stagger, [false, true, "alt"]);
+	assert(in_list(stagger, [false, true, "alt"]));
 	scl = vmul(scalar_vec3(scale, 1), (stagger!=false? [0.5, sin(60), 1] : [1,1,1]));
 	if (!is_undef(size)) {
 		siz = scalar_vec3(size);

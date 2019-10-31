@@ -35,7 +35,7 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 		cutpath = is_path(cutpath)? cutpath : (
 			assert(is_string(cutpath), "cutpath must be a 2D path or a string.")
 			let(idx = search([cutpath], _partition_cutpaths))
-			idx==[[]]? assert_in_list("cutpath",cutpath,_partition_cutpaths,idx=0) :
+			idx==[[]]? assert(in_list(cutpath,_partition_cutpaths,idx=0)) :
 			_partition_cutpaths[idx.x][1]
 		),
 		reps = ceil(l/(cutsize.x+gap)),

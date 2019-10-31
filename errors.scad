@@ -12,34 +12,6 @@
 // Section: Warnings and Errors
 
 
-// Function&Module: assert_in_list()
-// Usage:
-//   assert_in_list(argname, val, l, [idx]);
-// Description:
-//   Emulates the newer OpenSCAD `assert()` with an `in_list()` test.
-//   You can also use this as a function call from a function.
-// Arguments:
-//   argname = The name of the argument value being tested.
-//   val = The value to test if it exists in the list.
-//   l = The list to look for `val` in.
-//   idx = If given, and `l` is a list of lists, look for `val` in the given index of each sublist.
-module assert_in_list(argname, val, l, idx=undef) {
-	dummy = assert_in_list(argname, val, l, idx);
-}
-
-function assert_in_list(argname, val, l, idx=undef) =
-	let(succ = search([val], l, num_returns_per_match=1, index_col_num=idx) != [[]])
-	succ? 0 : let(
-		msg = str(
-			"In argument '", argname, "', ",
-			(is_string(val)? str("\"", val, "\"") : val),
-			" must be one of ",
-			(!is_undef(idx)? [for (v=l) v[idx]] : l)
-		),
-		FAILED=succ
-	) assert(FAILED, msg);
-
-
 // Module: no_children()
 // Usage:
 //   no_children($children);

@@ -848,7 +848,7 @@ function zip(vecs, v2, v3, fit=false, fill=undef) =
 	(v3!=undef)? zip([vecs,v2,v3], fit=fit, fill=fill) :
 	(v2!=undef)? zip([vecs,v2], fit=fit, fill=fill) :
 	let(
-		dummy1 = assert_in_list("fit", fit, [false, "short", "long"]),
+		dummy1 = assert(in_list(fit, [false, "short", "long"])),
 		minlen = list_shortest(vecs),
 		maxlen = list_longest(vecs),
 		dummy2 = (fit==false)? assert(minlen==maxlen, "Input vectors must have the same length") : 0
