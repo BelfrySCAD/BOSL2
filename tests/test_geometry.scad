@@ -483,11 +483,78 @@ test_cleanup_path();
 // TODO: test path_self_intersections()
 // TODO: test decompose_path()
 // TODO: test path_subselect()
-// TODO: test polygon_area()
-// TODO: test polygon_shift()
-// TODO: test polygon_shift_to_closest_point()
-// TODO: test first_noncollinear()
-// TODO: test noncollinear_points()
+
+
+module test_polygon_area() {
+	assert(approx(polygon_area([[1,1],[-1,1],[-1,-1],[1,-1]]), 4));
+	assert(approx(polygon_area(circle(r=50,$fn=1000)), -PI*50*50, eps=0.1));
+}
+test_polygon_area();
+
+
+module test_polygon_shift() {
+	path = [[1,1],[-1,1],[-1,-1],[1,-1]];
+	assert(polygon_shift(path,1) == [[-1,1],[-1,-1],[1,-1],[1,1]]);
+	assert(polygon_shift(path,2) == [[-1,-1],[1,-1],[1,1],[-1,1]]);
+}
+test_polygon_shift();
+
+
+module test_polygon_shift_to_closest_point() {
+	path = [[1,1],[-1,1],[-1,-1],[1,-1]];
+	assert(polygon_shift_to_closest_point(path,[1.1,1.1]) == [[1,1],[-1,1],[-1,-1],[1,-1]]);
+	assert(polygon_shift_to_closest_point(path,[-1.1,1.1]) == [[-1,1],[-1,-1],[1,-1],[1,1]]);
+	assert(polygon_shift_to_closest_point(path,[-1.1,-1.1]) == [[-1,-1],[1,-1],[1,1],[-1,1]]);
+	assert(polygon_shift_to_closest_point(path,[1.1,-1.1]) == [[1,-1],[1,1],[-1,1],[-1,-1]]);
+}
+test_polygon_shift_to_closest_point();
+
+
+module test_first_noncollinear(){
+	pts = [
+		[1,1], [2,2], [3,3], [4,4], [4,5], [5,6]
+	];
+	assert(first_noncollinear(0,1,pts) == 4);
+	assert(first_noncollinear(1,0,pts) == 4);
+	assert(first_noncollinear(0,2,pts) == 4);
+	assert(first_noncollinear(2,0,pts) == 4);
+	assert(first_noncollinear(1,2,pts) == 4);
+	assert(first_noncollinear(2,1,pts) == 4);
+	assert(first_noncollinear(0,3,pts) == 4);
+	assert(first_noncollinear(3,0,pts) == 4);
+	assert(first_noncollinear(1,3,pts) == 4);
+	assert(first_noncollinear(3,1,pts) == 4);
+	assert(first_noncollinear(2,3,pts) == 4);
+	assert(first_noncollinear(3,2,pts) == 4);
+	assert(first_noncollinear(0,4,pts) == 1);
+	assert(first_noncollinear(4,0,pts) == 1);
+	assert(first_noncollinear(1,4,pts) == 0);
+	assert(first_noncollinear(4,1,pts) == 0);
+	assert(first_noncollinear(2,4,pts) == 0);
+	assert(first_noncollinear(4,2,pts) == 0);
+	assert(first_noncollinear(3,4,pts) == 0);
+	assert(first_noncollinear(4,3,pts) == 0);
+	assert(first_noncollinear(0,5,pts) == 1);
+	assert(first_noncollinear(5,0,pts) == 1);
+	assert(first_noncollinear(1,5,pts) == 0);
+	assert(first_noncollinear(5,1,pts) == 0);
+	assert(first_noncollinear(2,5,pts) == 0);
+	assert(first_noncollinear(5,2,pts) == 0);
+	assert(first_noncollinear(3,5,pts) == 0);
+	assert(first_noncollinear(5,3,pts) == 0);
+	assert(first_noncollinear(4,5,pts) == 0);
+	assert(first_noncollinear(5,4,pts) == 0);
+}
+test_first_noncollinear();
+
+
+module test_find_noncollinear_points() {
+	assert(find_noncollinear_points([[1,1],[2,2],[3,3],[4,4],[4,5],[5,6]]) == [0,5,3]);
+	assert(find_noncollinear_points([[1,1],[2,2],[8,3],[4,4],[4,5],[5,6]]) == [0,2,5]);
+}
+test_find_noncollinear_points();
+
+
 // TODO: test centroid()
 // TODO: test assemble_a_path_from_fragments()
 // TODO: test assemble_path_fragments()
@@ -537,11 +604,69 @@ module test_pointlist_bounds() {
 test_pointlist_bounds();
 
 
-// TODO: test closest_point()
-// TODO: test furthest_point()
-// TODO: test clockwise_polygon()
-// TODO: test ccw_polygon()
-// TODO: test is_region()
+module test_closest_point() {
+	ptlist = [for (i=list_range(100)) rands(-100,100,2,seed_value=8463)];
+	testpts = [for (i=list_range(100)) rands(-100,100,2,seed_value=6834)];
+	for (pt = testpts) {
+		pidx = closest_point(pt,ptlist);
+		dists = [for (p=ptlist) norm(pt-p)];
+		mindist = min(dists);
+		assert(mindist == dists[pidx]);
+	}
+}
+test_closest_point();
+
+
+module test_furthest_point() {
+	ptlist = [for (i=list_range(100)) rands(-100,100,2,seed_value=8463)];
+	testpts = [for (i=list_range(100)) rands(-100,100,2,seed_value=6834)];
+	for (pt = testpts) {
+		pidx = furthest_point(pt,ptlist);
+		dists = [for (p=ptlist) norm(pt-p)];
+		mindist = max(dists);
+		assert(mindist == dists[pidx]);
+	}
+}
+test_furthest_point();
+
+
+module test_polygon_is_clockwise() {
+	assert(polygon_is_clockwise([[-1,1],[1,1],[1,-1],[-1,-1]]));
+	assert(!polygon_is_clockwise([[1,1],[-1,1],[-1,-1],[1,-1]]));
+	assert(polygon_is_clockwise(circle(d=100)));
+	assert(polygon_is_clockwise(square(100)));
+}
+test_polygon_is_clockwise();
+
+
+module test_clockwise_polygon() {
+	path = circle(d=100);
+	assert(clockwise_polygon(path) == path);
+	assert(clockwise_polygon(reverse(path)) == path);
+}
+test_clockwise_polygon();
+
+
+module test_ccw_polygon() {
+	path = circle(d=100);
+	assert(ccw_polygon(path) == reverse(path));
+	assert(ccw_polygon(reverse(path)) == reverse(path));
+}
+test_ccw_polygon();
+
+
+module test_is_region() {
+	assert(is_region([circle(d=10),square(10)]));
+	assert(is_region([circle(d=10),square(10),circle(d=50)]));
+	assert(is_region([square(10)]));
+	assert(!is_region([]));
+	assert(!is_region(23));
+	assert(!is_region(true));
+	assert(!is_region("foo"));
+}
+test_is_region();
+
+
 // TODO: test check_and_fix_path()
 // TODO: test cleanup_region()
 // TODO: test point_in_region()
