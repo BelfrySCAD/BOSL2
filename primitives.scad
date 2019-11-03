@@ -35,19 +35,20 @@
 //   path = square([40,30], anchor=FRONT, spin=30);
 module square(size=1, center=undef, anchor=FRONT+LEFT, spin=0) {
 	size = is_num(size)? [size,size] : point2d(size);
-	pts = [[0,0], [0,size.y], size, [size.x,0]];
+	pts = [[size.x,0], [0,0], [0,size.y], size];
 	orient_and_anchor(point3d(size), UP, anchor, spin=spin, center=center, noncentered=FRONT+LEFT, two_d=true, chain=true) {
 		translate(-size/2) polygon(pts);
 		children();
 	}
 }
 
+
 function square(size=1, center=undef, anchor=FRONT+LEFT, spin=0) =
 	let(
 		anchor = center==true? CENTER : center==false? FRONT+LEFT : anchor,
 		size = is_num(size)? [size,size] : point2d(size),
 		s=size/2
-	) rot(spin, p=move(-vmul(anchor,s), p=[[-s.x,-s.y], [-s.x,s.y], [s.x,s.y], [s.x,-s.y]]));
+	) rot(spin, p=move(-vmul(anchor,s), p=[[s.x,-s.y], [-s.x,-s.y], [-s.x,s.y], [s.x,s.y]]));
 
 
 // Function&Module: circle()
