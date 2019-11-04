@@ -679,13 +679,12 @@ function plane3pt_indexed(points, i1, i2, i3) =
 function plane_from_pointslist(points) =
 	let(
 		points = deduplicate(points),
-		indices = find_noncollinear_points(points),
+		indices = sort(find_noncollinear_points(points)),
 		p1 = points[indices[0]],
 		p2 = points[indices[1]],
 		p3 = points[indices[2]],
-		plane = plane3pt(p1,p2,p3),
-		out = ((plane.x+plane.y+plane.z)<0)? plane3pt(p1,p3,p2) : plane
-	) out;
+		plane = plane3pt(p1,p2,p3)
+	) plane;
 
 
 // Function: plane_normal()
