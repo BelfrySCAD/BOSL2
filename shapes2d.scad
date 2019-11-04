@@ -330,7 +330,7 @@ function _normal_segment(p1,p2) =
 function trapezoid(h, w1, w2, anchor=CENTER, spin=0) =
 	let(
 		s = anchor.y>0? [w2,h] : anchor.y<0? [w1,h] : [(w1+w2)/2,h],
-		path = [[-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2], [w1/2,-h/2]]
+		path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2]]
 	) rot(spin, p=move(-vmul(anchor,s/2), p=path));
 
 
@@ -375,13 +375,18 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CEN
 	let(
 		sc = 1/cos(180/n),
 		r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n)),
-		offset = 90 + (realign? (180/n) : 0),
-		path = [for (a=[0:360/n:360-EPSILON]) r*[cos(a+offset),sin(a+offset)]]
+		path = circle(r=r, realign=realign, spin=90, $fn=n)
 	) rot(spin, p=move(-r*normalize(anchor), p=path));
 
 
-module regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
-	polygon(regular_ngon(n=n,r=r,d=d,or=or,od=od,ir=ir,id=id,side=side,realign=realign, anchor=anchor, spin=spin));
+module regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) {
+	sc = 1/cos(180/n);
+	r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n));
+	orient_and_anchor([2*r,2*r,0], UP, anchor, spin=spin, geometry="cylinder", two_d=true, chain=true) {
+		polygon(circle(r=r, realign=realign, spin=90, $fn=n));
+		children();
+	}
+}
 
 
 // Function&Module: pentagon()
@@ -420,7 +425,7 @@ function pentagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin
 
 
 module pentagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
-	polygon(pentagon(r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin));
+	regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin) children();
 
 
 // Function&Module: hexagon()
@@ -457,7 +462,7 @@ function hexagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=
 
 
 module hexagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
-	polygon(hexagon(r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin));
+	regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin) children();
 
 
 // Function&Module: octagon()
@@ -494,7 +499,7 @@ function octagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=
 
 
 module octagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
-	polygon(octagon(r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin));
+	regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin) children();
 
 
 // Function&Module: glued_circles()
