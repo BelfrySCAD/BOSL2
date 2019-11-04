@@ -9,6 +9,9 @@
 //////////////////////////////////////////////////////////////////////
 
 
+include <triangulation.scad>
+
+
 // Section: Creating Polyhedrons with VNF Structures
 //   VNF stands for "Vertices'N'Faces".  VNF structures are 2-item lists, `[VERTICES,FACES]` where the
 //   first item is a list of vertex points, and the second is a list of face indices into the vertex
