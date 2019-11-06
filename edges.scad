@@ -38,7 +38,7 @@ function is_edge_array(v) = is_list(v) && is_vector(v[0]) && len(v)==3 && len(v[
 //   - A vector pointing towards a corner, indicating all edges that meet at that corner.
 //   - The string `"X"`, indicating all X axis aligned edges.
 //   - The string `"Y"`, indicating all Y axis aligned edges.
-//   - The string `"Z"`, indicating all Y axis aligned edges.
+//   - The string `"Z"`, indicating all Z axis aligned edges.
 //   - The string `"ALL"`, indicating all edges.
 //   - The string `"NONE"`, indicating no edges at all.
 function edge_set(v) =
@@ -99,7 +99,7 @@ function normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 //   - A vector pointing towards a corner, indicating all edges touching that corner.
 //   - The string `"X"`, indicating all X axis aligned edges.
 //   - The string `"Y"`, indicating all Y axis aligned edges.
-//   - The string `"Z"`, indicating all Y axis aligned edges.
+//   - The string `"Z"`, indicating all Z axis aligned edges.
 //   - The string `"ALL"`, indicating all edges.
 //   - The string `"NONE"`, indicating no edges at all.
 // Example: Just the front-top edge
