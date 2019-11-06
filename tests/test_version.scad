@@ -43,6 +43,7 @@ module test_version_to_list() {
 	assert(version_to_list(2.010001)==[2,1,1]);
 	assert(version_to_list("2.1.1")==[2,1,1]);
 	assert(version_to_list([2,1,1])==[2,1,1]);
+	assert(version_to_list(2.010035)==[2,1,35]);
 	assert(version_to_list(2.345678)==[2,34,5678]);
 	assert(version_to_list("2.34.5678")==[2,34,5678]);
 	assert(version_to_list([2,34,5678])==[2,34,5678]);
