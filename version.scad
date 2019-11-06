@@ -8,7 +8,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-BOSL_VERSION = [2,0,2];
+BOSL_VERSION = [2,0,3];
 
 
 // Section: BOSL Library Version Functions
@@ -83,9 +83,9 @@ function _version_split_str(x, _i=0, _out=[], _num=0) =
 //   v3 = version_to_list([2,3,4]);   // Returns: [2,3,4]
 //   v4 = version_to_list([2,3,4,5]); // Returns: [2,3,4]
 function version_to_list(x) =
-	is_list(x)? x :
+	is_list(x)? [default(x[0],0), default(x[1],0), default(x[2],0)] :
 	is_string(x)? _version_split_str(x) :
-	is_num(x)? [int(x), int(x*100%100), int(x*1000000%1000000)] :
+	is_num(x)? [floor(x), floor(x*100%100), floor(x*1000000%10000+0.5)] :
 	assert(is_num(x) || is_vector(x) || is_string(x)) 0;
 
 
@@ -116,7 +116,7 @@ function version_to_str(x) =
 //   v4 = version_to_num("2.6.79");   // Returns: 2.060079
 function version_to_num(x) =
 	let(x = version_to_list(x))
-	x[0] + x[1]/100 + x[2]/1000000;
+	(x[0]*1000000 + x[1]*10000 + x[2])/1000000;
 
 
 // Function: version_cmp()
@@ -130,7 +130,11 @@ function version_to_num(x) =
 //   cmp2 = version_cmp(2.010034, "2.1.34");  // Returns: 0
 //   cmp3 = version_cmp(2.010034, "2.1.35");  // Returns: <0
 function version_cmp(a,b) =
-	list_compare(version_to_list(a), version_to_list(b));
+	let(
+		a = version_to_list(a),
+		b = version_to_list(b),
+		cmps = [for (i=[0:1:2]) if(a[i]!=b[i]) a[i]-b[i]]
+	) cmps==[]? 0 : cmps[0];
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

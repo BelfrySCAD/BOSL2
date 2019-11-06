@@ -25,9 +25,9 @@ EDGES_ALL      = [[1,1,1,1], [1,1,1,1], [1,1,1,1]];  // All edges.
 function is_edge_array(v) = is_list(v) && is_vector(v[0]) && len(v)==3 && len(v[0])==4;
 
 
-// Function: edge()
+// Function: edge_set()
 // Usage:
-//   edge(v);
+//   edge_set(v);
 // Description:
 //   Takes an edge set descriptor and returns the edges array representing those edges.
 //   This function is useful for modules that take `edges` arguments, like `cuboid()`.
