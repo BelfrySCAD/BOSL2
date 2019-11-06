@@ -133,7 +133,7 @@ function queue_tail(queue,n=undef) =
 function queue_peek(queue,pos=0,n=undef) =
 	assert(is_list(queue))
 	assert(is_num(pos))
-	assert(pos>0)
+	assert(pos>=0)
 	let(queuesize = len(queue))
 	assert(queuesize>=pos, "queue underflow")
 	is_undef(n)? (
@@ -141,7 +141,7 @@ function queue_peek(queue,pos=0,n=undef) =
 	) : (
 		assert(is_num(n))
 		assert(n>=0)
-		assert(n<pos)
+		assert(n<queuesize-pos)
 		[for (i=[0:1:n-1]) queue[pos+i]]
 	);
 
