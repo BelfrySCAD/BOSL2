@@ -99,26 +99,26 @@ function stack_top(stack,n=undef) =
 //   If `n` is given, returns a list of the `n` stack items at and above depth `depth`.
 // Arguments:
 //   stack = The stack to read from.
-//   depth = The depth of the stack item to read.  Default: 1
+//   depth = The depth of the stack item to read.  Default: 0
 //   n = The number of stack items to return.  Default: undef (Return only the stack item at `depth`)
 // Example:
 //   stack = [2,3,4,5,6,7,8,9];
 //   item = stack_peek(stack);  // Returns: 9
 //   item2 = stack_peek(stack, 3);  // Returns: 7
 //   list = stack_peek(stack, 6, 4);  // Returns: [4,5,6,7]
-function stack_peek(stack,depth=1,n=undef) =
+function stack_peek(stack,depth=0,n=undef) =
 	assert(is_list(stack))
 	assert(is_num(depth))
-	assert(depth>0)
+	assert(depth>=0)
 	let(stacksize = len(stack))
 	assert(stacksize>=depth, "stack underflow")
 	is_undef(n)? (
-		stack[stacksize-depth]
+		stack[stacksize-depth-1]
 	) : (
 		assert(is_num(n))
 		assert(n>=0)
-		assert(n<depth)
-		[for (i=[0:1:n-1]) stack[stacksize-depth+i]]
+		assert(n<=depth+1)
+		[for (i=[0:1:n-1]) stack[stacksize-1-depth+i]]
 	);
 
 
