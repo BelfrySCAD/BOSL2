@@ -58,6 +58,8 @@ function vnf_faces(vnf) = vnf[1];
 //   vnf4 = vnf_get_vertex(vnf3, p=[[1,3,2],[3,2,1]]);  // Returns: [[1,2], [[[3,5,8],[3,2,1],[1,3,2]],[]]]
 function vnf_get_vertex(vnf=[[],[]], p) =
 	is_path(p)? _vnf_get_vertices(vnf, p) :
+	assert(is_vnf(vnf))
+	assert(is_vector(p))
 	let(
 		p = quant(p,1/1024),  // OpenSCAD internally quantizes objects to 1/1024.
 		v = search([p], vnf[0])[0]
@@ -89,6 +91,8 @@ function _vnf_get_vertices(vnf=[[],[]], pts, _i=0, _idxs=[]) =
 //   vnf = The VNF structure to add a face to.
 //   pts = The vertex points for the face.
 function vnf_add_face(vnf=[[],[]], pts) =
+	assert(is_vnf(vnf))
+	assert(is_path(pts))
 	let(
 		vvnf = vnf_get_vertex(vnf, pts),
 		face = deduplicate(vvnf[0], closed=true),
@@ -111,7 +115,8 @@ function vnf_add_face(vnf=[[],[]], pts) =
 //   vnf = The VNF structure to add a face to.
 //   faces = The list of faces, where each face is given as a list of vertex points.
 function vnf_add_faces(vnf=[[],[]], faces, _i=0) =
-	_i<len(faces)? vnf_add_faces(vnf_add_face(vnf, faces[_i]), faces, _i=_i+1) : vnf;
+	(assert(is_vnf(vnf)) assert(is_list(faces)) _i>=len(faces))? vnf :
+	vnf_add_faces(vnf_add_face(vnf, faces[_i]), faces, _i=_i+1);
 
 
 // Function: vnf_merge()
@@ -119,7 +124,8 @@ function vnf_add_faces(vnf=[[],[]], faces, _i=0) =
 //   vnf = vnf_merge([VNF, VNF, VNF, ...]);
 // Description:
 //   Given a list of VNF structures, merges them all into a single VNF structure.
-function vnf_merge(vnfs=[],_i=0,_acc=[[],[]]) = _i>=len(vnfs)? _acc :
+function vnf_merge(vnfs=[],_i=0,_acc=[[],[]]) =
+	(assert(is_vnf_list(vnfs)) _i>=len(vnfs))? _acc :
 	vnf_merge(
 		vnfs, _i=_i+1,
 		_acc = let(base=len(_acc[0])) [
@@ -225,6 +231,7 @@ function vnf_vertex_array(
 	assert(in_list(style,["default","alt","quincunx"]))
 	let(
 		pts = flatten(points),
+		pcnt = len(pts),
 		rows = len(points),
 		cols = len(points[0]),
 		errchk = [for (row=points) assert(len(row)==cols, "All rows much have the same number of columns.") 0],
