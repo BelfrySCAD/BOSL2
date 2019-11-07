@@ -330,6 +330,20 @@ module test_tri_calc() {
 test_tri_calc();
 
 
+// Dummy modules to show up in coverage check script.
+module test_hyp_opp_to_adj();
+module test_hyp_ang_to_adj();
+module test_opp_ang_to_adj();
+module test_hyp_adj_to_opp();
+module test_hyp_ang_to_opp();
+module test_adj_ang_to_opp();
+module test_adj_opp_to_hyp();
+module test_adj_ang_to_hyp();
+module test_opp_ang_to_hyp();
+module test_hyp_adj_to_ang();
+module test_hyp_opp_to_ang();
+module test_adj_opp_to_ang();
+
 module test_tri_functions() {
 	sides = rands(1,100,100,seed_value=8181);
 	for (p = pair_wrap(sides)) {
