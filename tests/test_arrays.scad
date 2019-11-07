@@ -129,11 +129,11 @@ module test_bselect() {
 test_bselect();
 
 
-module test_bset() {
+module test_list_bset() {
 	assert(list_bset([false,true,false,true,false], [3,4]) == [0,3,0,4,0]);
 	assert(list_bset([false,true,false,true,false], [3,4], dflt=1) == [1,3,1,4,1]);
 }
-test_bset();
+test_list_bset();
 
 
 module test_list_increasing() {
@@ -206,7 +206,17 @@ module test_enumerate() {
 test_enumerate();
 
 
-// TODO: Add tests for shuffle()
+module test_shuffle() {
+	nums1 = [for (i=list_range(100)) i];
+	nums2 = shuffle(nums1);
+	nums3 = shuffle(nums2);
+	assert(len(nums2)==len(nums1));
+	assert(len(nums3)==len(nums2));
+	assert(nums1!=nums2);
+	assert(nums2!=nums3);
+	assert(nums1!=nums3);
+}
+test_shuffle();
 
 
 module test_sort() {
