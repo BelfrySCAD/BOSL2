@@ -18,12 +18,12 @@ module leaf(s) {
 module branches(minsize){
     if($parent_size2.x>minsize) {
 		attach(TOP)
-		zrot(gaussian_rand(90,20))
-		zrot_copies(n=floor(log_rand(2,5,4)))
-		zrot(gaussian_rand(0,5))
-		yrot(gaussian_rand(30,10))
+		zrot(gaussian_rands(90,20)[0])
+		zrot_copies(n=floor(log_rands(2,5,4)[0]))
+		zrot(gaussian_rands(0,5)[0])
+		yrot(gaussian_rands(30,10)[0])
 		let(
-			sc = gaussian_rand(0.7,0.05),
+			sc = gaussian_rands(0.7,0.05)[0],
 			s1 = $parent_size.z*sc,
 			s2 = $parent_size2.x
 		)
@@ -32,7 +32,7 @@ module branches(minsize){
 	} else {
 		recolor("springgreen")
 		attach(TOP) zrot(90)
-		leaf(gaussian_rand(100,5));
+		leaf(gaussian_rands(100,5)[0]);
 	}
 }
 recolor("lightgray") cylinder(d1=300, d2=250, l=1500) branches(10);

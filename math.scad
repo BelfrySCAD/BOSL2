@@ -259,39 +259,49 @@ function log2(x) = ln(x)/ln(2);
 //   min = Minimum integer value to return.
 //   max = Maximum integer value to return.
 //   N = Number of random integers to return.
-//   seed = Random number seed.
+//   seed = If given, sets the random number seed.
 // Example:
 //   ints = rand_int(0,100,3);
 //   int = rand_int(-10,10,1)[0];
-function rand_int(min,max,N,seed=undef) =
+function rand_int(min, max, N, seed=undef) =
 	assert(max >= min, "Max value cannot be smaller than min")
 	let (rvect = is_def(seed) ? rands(min,max+1,N,seed) : rands(min,max+1,N))
 	[for(entry = rvect) floor(entry)];
 
 
-// Function: gaussian_rand()
+// Function: gaussian_rands()
 // Usage:
-//   gaussian_rand(mean, stddev)
+//   gaussian_rands(mean, stddev, [N], [seed])
 // Description:
 //   Returns a random number with a gaussian/normal distribution.
 // Arguments:
 //   mean = The average random number returned.
 //   stddev = The standard deviation of the numbers to be returned.
-function gaussian_rand(mean, stddev) =
-	let(s=rands(0,1,2)) mean + stddev*sqrt(-2*ln(s.x))*cos(360*s.y);
+//   N = Number of random numbers to return.  Default: 1
+//   seed = If given, sets the random number seed.
+function gaussian_rands(mean, stddev, N=1, seed=undef) =
+	let(nums = is_undef(seed)? rands(0,1,N*2) : rands(0,1,N*2,seed))
+	[for (i = list_range(N)) mean + stddev*sqrt(-2*ln(nums[i*2]))*cos(360*nums[i*2+1])];
 
 
-// Function: log_rand()
+// Function: log_rands()
 // Usage:
-//   log_rand(minval, maxval, factor);
+//   log_rands(minval, maxval, factor, [N], [seed]);
 // Description:
 //   Returns a single random number, with a logarithmic distribution.
 // Arguments:
 //   minval = Minimum value to return.
 //   maxval = Maximum value to return.  `minval` <= X < `maxval`.
 //   factor = Log factor to use.  Values of X are returned `factor` times more often than X+1.
-function log_rand(minval, maxval, factor) =
-	-ln(1-rands(1-1/pow(factor,minval), 1-1/pow(factor,maxval), 1)[0])/ln(factor);
+//   N = Number of random numbers to return.  Default: 1
+//   seed = If given, sets the random number seed.
+function log_rands(minval, maxval, factor, N=1, seed=undef) =
+	assert(maxval >= minval, "maxval cannot be smaller than minval")
+	let(
+		minv = 1-1/pow(factor,minval),
+		maxv = 1-1/pow(factor,maxval),
+		nums = is_undef(seed)? rands(minv, maxv, N) : rands(minv, maxv, N, seed)
+	) [for (num=nums) -ln(1-num)/ln(factor)];
 
 
 // Function: segs()

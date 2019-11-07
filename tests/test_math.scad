@@ -168,9 +168,42 @@ module test_log2() {
 test_log2();
 
 
-// TODO: Tests for rand_int()
-// TODO: Tests for gaussian_rand()
-// TODO: Tests for log_rand()
+module test_rand_int() {
+	nums = rand_int(-100,100,1000,seed=2134);
+	assert(len(nums)==1000);
+	for (num = nums) {
+		assert(num>=-100);
+		assert(num<=100);
+		assert(num==floor(num));
+	}
+}
+test_rand_int();
+
+
+module test_gaussian_rands() {
+	nums1 = gaussian_rands(0,10,1000,seed=2132);
+	nums2 = gaussian_rands(0,10,1000,seed=2130);
+	nums3 = gaussian_rands(0,10,1000,seed=2132);
+	assert(len(nums1)==1000);
+	assert(len(nums2)==1000);
+	assert(len(nums3)==1000);
+	assert(nums1==nums3);
+	assert(nums1!=nums2);
+}
+test_gaussian_rands();
+
+
+module test_log_rands() {
+	nums1 = log_rands(0,100,10,1000,seed=2189);
+	nums2 = log_rands(0,100,10,1000,seed=2310);
+	nums3 = log_rands(0,100,10,1000,seed=2189);
+	assert(len(nums1)==1000);
+	assert(len(nums2)==1000);
+	assert(len(nums3)==1000);
+	assert(nums1==nums3);
+	assert(nums1!=nums2);
+}
+test_log_rands();
 
 
 module test_segs() {
