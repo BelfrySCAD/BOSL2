@@ -512,7 +512,7 @@ function enumerate(l,idx=undef) =
 // Description:
 //   Shuffles the input list into random order.
 function shuffle(list) =
-	assert(is_list(l)||is_string(list))
+	assert(is_list(list)||is_string(list))
 	len(list)<=1 ? list :
 	let (
 		rval = rands(0,1,len(list)),
