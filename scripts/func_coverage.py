@@ -1,41 +1,57 @@
 #!/usr/bin/env python3
 
 import os
+import operator
 
 funcs = {}
-
 for filename in os.listdir("."):
     if filename.endswith(".scad"):
         filepath = os.path.join(".",filename)
         with open(filepath, "r") as f:
-            for i,line in enumerate(f.readlines()):
+            for linenum,line in enumerate(f.readlines()):
                 if line.startswith("function "):
                     funcname = line[9:].strip().split("(")[0].strip()
                     if funcname.startswith("_"):
                         continue
                     if funcname in funcs:
-                        print("WARNING!!! Function {} re-defined at {}:{}".format(funcname, filename, i));
-                        print("           Previously defined at {}".format(funcs[funcname]));
+                        print("WARNING!!! Function {} re-defined at {}:{}".format(funcname, filename, linenum));
+                        print("           Previously defined at {}:{}".format(*funcs[funcname]));
                     else:
-                        funcs[funcname] = filename + ":" + str(i)
+                        funcs[funcname] = (filename, linenum)
 
 covered = []
+uncovered = funcs.copy()
 for filename in os.listdir("tests"):
     if filename.startswith("test_") and filename.endswith(".scad"):
         filepath = os.path.join("tests",filename)
         with open(filepath, "r") as f:
-            for i,line in enumerate(f.readlines()):
+            for line in f.readlines():
                 if line.startswith("module "):
                     funcname = line[7:].strip().split("(")[0].strip().split("_",1)[1]
-                    if funcname in funcs:
+                    if funcname in uncovered:
                         covered.append(funcname)
-                        del funcs[funcname]
+                        del uncovered[funcname]
 
-for funcname in sorted(covered):
-    print("COVERED: function {}".format(funcname))
+uncovered_by_file = {}
+for funcname in sorted(list(uncovered.keys())):
+    filename = uncovered[funcname][0]
+    if filename not in uncovered_by_file:
+        uncovered_by_file[filename] = []
+    uncovered_by_file[filename].append(funcname)
 
-for funcname in sorted(list(funcs.keys())):
-    print("NOT COVERED: function {}  ({})".format(funcname, funcs[funcname]))
+mostest = []
+for filename in uncovered_by_file.keys():
+    mostest.append( (len(uncovered_by_file[filename]), filename) )
+
+# for funcname in sorted(covered):
+#     print("COVERED: function {}".format(funcname))
+
+print("NOT COVERED:")
+for cnt, filename in sorted(mostest, key=operator.itemgetter(0)):
+    filefuncs = uncovered_by_file[filename]
+    print("  {}: {:d} uncovered functions".format(filename, cnt))
+    for funcname in filefuncs:
+        print("    {}".format(funcname))
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
