@@ -55,15 +55,25 @@ test_stack_push();
 
 
 module test_stack_pop() {
-	q = ["Foo", "Bar", "Baz", "Qux"];
-	q1 = stack_pop(q);
-	assert(q1 == ["Foo", "Bar", "Baz"]);
-	q2 = stack_pop(q,2);
-	assert(q2 == ["Foo", "Bar"]);
-	q3 = stack_pop(q,3);
-	assert(q3 == ["Foo"]);
+	s = ["Foo", "Bar", "Baz", "Qux"];
+	s1 = stack_pop(s);
+	assert(s1 == ["Foo", "Bar", "Baz"]);
+	s2 = stack_pop(s,2);
+	assert(s2 == ["Foo", "Bar"]);
+	s3 = stack_pop(s,3);
+	assert(s3 == ["Foo"]);
 }
 test_stack_pop();
+
+
+module test_stack_rotate() {
+	s = ["Foo", "Bar", "Baz", "Qux", "Quux"];
+	s1 = stack_rotate(s,4);
+	assert(s1 == ["Foo", "Baz", "Qux", "Quux", "Bar"]);
+	s2 = stack_rotate(s,-4);
+	assert(s2 == ["Foo", "Quux", "Bar", "Baz", "Qux"]);
+}
+test_stack_rotate();
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
