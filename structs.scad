@@ -103,6 +103,8 @@ module struct_echo(struct,name="") {
 //    is_struct(struct)
 // Description: Returns true if the input has the form of a structure, false otherwise.  
 function is_struct(struct, ind=0) =
-     struct == [] ||
-       let(dim = array_dim(struct))
-       len(dim)==2 && dim[1]==2;
+    is_list(struct) && (
+	struct == [] ||
+	let(dim = array_dim(struct))
+	len(dim)==2 && dim[1]==2
+    );
