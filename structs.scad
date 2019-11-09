@@ -1,3 +1,14 @@
+//////////////////////////////////////////////////////////////////////
+// LibFile: structs.scad
+//   Struct/Dictionary manipulation functions.
+//   To use, add the following lines to the beginning of your file:
+//   ```
+//   use <BOSL2/std.scad>
+//   use <BOSL2/structs.scad>
+//   ```
+//////////////////////////////////////////////////////////////////////
+
+
 // Section: struct operations
 //
 // A struct is a data structure that associates arbitrary keywords (of any type) with values (of any type).
