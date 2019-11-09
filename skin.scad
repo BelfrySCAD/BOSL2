@@ -96,10 +96,12 @@ function skin(profiles, closed=false, caps=true, matching="distance") =
 				cp1 = mean(prof1),
 				cp2 = mean(prof2),
 				midpt = (cp1+cp2)/2,
-				n = normalize(cp2-cp1),
 				n1 = plane_normal(plane_from_pointslist(prof1)),
 				n2 = plane_normal(plane_from_pointslist(prof2)),
-				perp = vector_angle(n1,n2)>0.01? vector_axis(n1,n2) : vector_angle(n,UP)>44? vector_axis(n,UP) : vector_axis(n,LEFT),
+				vang = vector_angle(n1,n2),
+				perp = vang>0.01 && vang<179.99? vector_axis(n1,n2) :
+					vector_angle(n1,UP)>44? vector_axis(n1,UP) :
+					vector_axis(n1,LEFT),
 				perp1 = vector_axis(n1,perp),
 				perp2 = vector_axis(n2,perp),
 				poly1 = ccw_polygon(project_plane(prof1, cp1, cp1+perp, cp1+perp1)),
