@@ -53,11 +53,12 @@ for cnt, filename in sorted(mostest, key=operator.itemgetter(0)):
     for funcname in filefuncs:
         print("    {}".format(funcname))
 
+totfuncs = len(funcs.keys())
+covfuncs = len(covered)
+
 print(
     "Total coverage: {} of {} functions ({:.2f}%)".format(
-        len(uncovered.keys()),
-        len(funcs.keys()),
-        100.0*len(uncovered.keys())/len(funcs.keys())
+        covfuncs, totfuncs, 100.0*covfuncs/totfuncs
     )
 )
 
