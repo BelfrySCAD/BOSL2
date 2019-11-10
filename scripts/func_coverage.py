@@ -53,5 +53,12 @@ for cnt, filename in sorted(mostest, key=operator.itemgetter(0)):
     for funcname in filefuncs:
         print("    {}".format(funcname))
 
+print(
+    "Total coverage: {} of {} functions ({:.2f}%)".format(
+        len(uncovered.keys()),
+        len(funcs.keys()),
+        100.0*len(uncovered.keys())/len(funcs.keys())
+    )
+)
 
 # vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
