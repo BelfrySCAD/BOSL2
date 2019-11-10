@@ -22,7 +22,7 @@ module test_typeof() {
 test_typeof();
 
 
-module test_istype() {
+module test_is_type() {
 	assert(is_type(undef,"undef"));
 	assert(is_type(true,"boolean"));
 	assert(is_type(false,"boolean"));
@@ -52,7 +52,7 @@ module test_istype() {
 	assert(is_type(123,["number","string"]));
 	assert(is_type("foo",["number","string"]));
 }
-test_istype();
+test_is_type();
 
 
 module test_is_def() {
