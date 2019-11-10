@@ -121,7 +121,132 @@ module test_xy_to_polar() {
 test_xy_to_polar();
 
 
-cube();
+module test_project_plane() {
+	assert(approx(project_plane([-5,0,-5], [-10,0,-10], [0,0,0], [0,-10,-10]),[0,10*sqrt(2)/2]));
+	assert(approx(project_plane([0,-5,-5], [-10,0,-10], [0,0,0], [0,-10,-10]),[6.12372, 10.6066],eps=1e-5));
+}
+test_project_plane();
+
+
+module test_lift_plane() {
+	assert(approx(lift_plane([0,10*sqrt(2)/2], [-10,0,-10], [0,0,0], [0,-10,-10]),[-5,0,-5]));
+	assert(approx(lift_plane([6.12372, 10.6066], [-10,0,-10], [0,0,0], [0,-10,-10]),[0,-5,-5],eps=1e-5));
+}
+test_lift_plane();
+
+
+module test_cylindrical_to_xyz() {
+	assert(approx(cylindrical_to_xyz(100,90,10),[0,100,10]));
+	assert(approx(cylindrical_to_xyz(100,270,-10),[0,-100,-10]));
+	assert(approx(cylindrical_to_xyz(100,-90,-10),[0,-100,-10]));
+	assert(approx(cylindrical_to_xyz(100,180,0),[-100,0,0]));
+	assert(approx(cylindrical_to_xyz(100,0,0),[100,0,0]));
+	assert(approx(cylindrical_to_xyz(100,45,10),[100*sqrt(2)/2,100*sqrt(2)/2,10]));
+	assert(approx(cylindrical_to_xyz([100,90,10]),[0,100,10]));
+	assert(approx(cylindrical_to_xyz([100,270,-10]),[0,-100,-10]));
+	assert(approx(cylindrical_to_xyz([100,-90,-10]),[0,-100,-10]));
+	assert(approx(cylindrical_to_xyz([100,180,0]),[-100,0,0]));
+	assert(approx(cylindrical_to_xyz([100,0,0]),[100,0,0]));
+	assert(approx(cylindrical_to_xyz([100,45,10]),[100*sqrt(2)/2,100*sqrt(2)/2,10]));
+}
+test_cylindrical_to_xyz();
+
+
+module test_xyz_to_cylindrical() {
+	assert(approx(xyz_to_cylindrical(0,100,10),[100,90,10]));
+	assert(approx(xyz_to_cylindrical(0,-100,-10),[100,-90,-10]));
+	assert(approx(xyz_to_cylindrical(-100,0,0),[100,180,0]));
+	assert(approx(xyz_to_cylindrical(100,0,0),[100,0,0]));
+	assert(approx(xyz_to_cylindrical(100*sqrt(2)/2,100*sqrt(2)/2,10),[100,45,10]));
+	assert(approx(xyz_to_cylindrical([0,100,10]),[100,90,10]));
+	assert(approx(xyz_to_cylindrical([0,-100,-10]),[100,-90,-10]));
+	assert(approx(xyz_to_cylindrical([-100,0,0]),[100,180,0]));
+	assert(approx(xyz_to_cylindrical([100,0,0]),[100,0,0]));
+	assert(approx(xyz_to_cylindrical([100*sqrt(2)/2,100*sqrt(2)/2,10]),[100,45,10]));
+}
+test_xyz_to_cylindrical();
+
+
+module test_spherical_to_xyz() {
+	assert(approx(spherical_to_xyz(100,90,45),100*[0,sqrt(2)/2,sqrt(2)/2]));
+	assert(approx(spherical_to_xyz(100,270,45),100*[0,-sqrt(2)/2,sqrt(2)/2]));
+	assert(approx(spherical_to_xyz(100,-90,45),100*[0,-sqrt(2)/2,sqrt(2)/2]));
+	assert(approx(spherical_to_xyz(100,90,90),100*[0,1,0]));
+	assert(approx(spherical_to_xyz(100,-90,90),100*[0,-1,0]));
+	assert(approx(spherical_to_xyz(100,180,90),100*[-1,0,0]));
+	assert(approx(spherical_to_xyz(100,0,90),100*[1,0,0]));
+	assert(approx(spherical_to_xyz(100,0,0),100*[0,0,1]));
+	assert(approx(spherical_to_xyz(100,0,180),100*[0,0,-1]));
+	assert(approx(spherical_to_xyz([100,90,45]),100*[0,sqrt(2)/2,sqrt(2)/2]));
+	assert(approx(spherical_to_xyz([100,270,45]),100*[0,-sqrt(2)/2,sqrt(2)/2]));
+	assert(approx(spherical_to_xyz([100,-90,45]),100*[0,-sqrt(2)/2,sqrt(2)/2]));
+	assert(approx(spherical_to_xyz([100,90,90]),100*[0,1,0]));
+	assert(approx(spherical_to_xyz([100,-90,90]),100*[0,-1,0]));
+	assert(approx(spherical_to_xyz([100,180,90]),100*[-1,0,0]));
+	assert(approx(spherical_to_xyz([100,0,90]),100*[1,0,0]));
+	assert(approx(spherical_to_xyz([100,0,0]),100*[0,0,1]));
+	assert(approx(spherical_to_xyz([100,0,180]),100*[0,0,-1]));
+}
+test_spherical_to_xyz();
+
+
+module test_xyz_to_spherical() {
+	assert(approx(xyz_to_spherical(0, 100*sqrt(2)/2,100*sqrt(2)/2),[100, 90,45]));
+	assert(approx(xyz_to_spherical(0,-100*sqrt(2)/2,100*sqrt(2)/2),[100,-90,45]));
+	assert(approx(xyz_to_spherical(   0, 100,   0),[100, 90, 90]));
+	assert(approx(xyz_to_spherical(   0,-100,   0),[100,-90, 90]));
+	assert(approx(xyz_to_spherical(-100,   0,   0),[100,180, 90]));
+	assert(approx(xyz_to_spherical( 100,   0,   0),[100,  0, 90]));
+	assert(approx(xyz_to_spherical(   0,   0, 100),[100,  0,  0]));
+	assert(approx(xyz_to_spherical(   0,   0,-100),[100,  0,180]));
+	assert(approx(xyz_to_spherical([0, 100*sqrt(2)/2,100*sqrt(2)/2]),[100, 90,45]));
+	assert(approx(xyz_to_spherical([0,-100*sqrt(2)/2,100*sqrt(2)/2]),[100,-90,45]));
+	assert(approx(xyz_to_spherical([   0, 100,   0]),[100, 90, 90]));
+	assert(approx(xyz_to_spherical([   0,-100,   0]),[100,-90, 90]));
+	assert(approx(xyz_to_spherical([-100,   0,   0]),[100,180, 90]));
+	assert(approx(xyz_to_spherical([ 100,   0,   0]),[100,  0, 90]));
+	assert(approx(xyz_to_spherical([   0,   0, 100]),[100,  0,  0]));
+	assert(approx(xyz_to_spherical([   0,   0,-100]),[100,  0,180]));
+}
+test_xyz_to_spherical();
+
+
+module test_altaz_to_xyz() {
+	assert(approx(altaz_to_xyz(  0,  0,100),[   0,100,   0]));
+	assert(approx(altaz_to_xyz( 90,  0,100),[   0,  0, 100]));
+	assert(approx(altaz_to_xyz(-90,  0,100),[   0,  0,-100]));
+	assert(approx(altaz_to_xyz(  0, 90,100),[ 100,  0,   0]));
+	assert(approx(altaz_to_xyz(  0,-90,100),[-100,  0,   0]));
+	assert(approx(altaz_to_xyz( 45, 90,100),[100*sqrt(2)/2,0,100*sqrt(2)/2]));
+	assert(approx(altaz_to_xyz(-45, 90,100),[100*sqrt(2)/2,0,-100*sqrt(2)/2]));
+	assert(approx(altaz_to_xyz([  0,  0,100]),[   0,100,   0]));
+	assert(approx(altaz_to_xyz([ 90,  0,100]),[   0,  0, 100]));
+	assert(approx(altaz_to_xyz([-90,  0,100]),[   0,  0,-100]));
+	assert(approx(altaz_to_xyz([  0, 90,100]),[ 100,  0,   0]));
+	assert(approx(altaz_to_xyz([  0,-90,100]),[-100,  0,   0]));
+	assert(approx(altaz_to_xyz([ 45, 90,100]),[100*sqrt(2)/2,0,100*sqrt(2)/2]));
+	assert(approx(altaz_to_xyz([-45, 90,100]),[100*sqrt(2)/2,0,-100*sqrt(2)/2]));
+}
+test_altaz_to_xyz();
+
+
+module test_xyz_to_altaz() {
+	assert(approx(xyz_to_altaz(   0,100,   0),[  0,  0,100]));
+	assert(approx(xyz_to_altaz(   0,  0, 100),[ 90,  0,100]));
+	assert(approx(xyz_to_altaz(   0,  0,-100),[-90,  0,100]));
+	assert(approx(xyz_to_altaz( 100,  0,   0),[  0, 90,100]));
+	assert(approx(xyz_to_altaz(-100,  0,   0),[  0,-90,100]));
+	assert(approx(xyz_to_altaz(100*sqrt(2)/2,0,100*sqrt(2)/2),[ 45, 90,100]));
+	assert(approx(xyz_to_altaz(100*sqrt(2)/2,0,-100*sqrt(2)/2),[-45, 90,100]));
+	assert(approx(xyz_to_altaz([   0,100,   0]),[  0,  0,100]));
+	assert(approx(xyz_to_altaz([   0,  0, 100]),[ 90,  0,100]));
+	assert(approx(xyz_to_altaz([   0,  0,-100]),[-90,  0,100]));
+	assert(approx(xyz_to_altaz([ 100,  0,   0]),[  0, 90,100]));
+	assert(approx(xyz_to_altaz([-100,  0,   0]),[  0,-90,100]));
+	assert(approx(xyz_to_altaz([100*sqrt(2)/2,0,100*sqrt(2)/2]),[ 45, 90,100]));
+	assert(approx(xyz_to_altaz([100*sqrt(2)/2,0,-100*sqrt(2)/2]),[-45, 90,100]));
+}
+test_xyz_to_altaz();
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
