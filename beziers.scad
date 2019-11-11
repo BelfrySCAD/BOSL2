@@ -674,18 +674,17 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 
 // Function: bezier_patch()
 // Usage:
-//   bezier_patch(patch, [splinesteps], [vertices], [faces]);
+//   bezier_patch(patch, [splinesteps], [vnf]);
 // Description:
 //   Calculate vertices and faces for forming a partial polyhedron from the given bezier rectangular
-//   or triangular patch.  Returns a list containing two elements.  The first is the list of unique
-//   vertices.  The second is the list of faces, where each face is a list of indices into the list of
-//   vertices.  You can chain calls to this, to add more vertices and faces for multiple bezier
+//   or triangular patch.  Returns a [VNF structure](vnf.scad): a list containing two elements.  The first is the
+//   list of unique vertices.  The second is the list of faces, where each face is a list of indices into the
+//   list of vertices.  You can chain calls to this, to add more vertices and faces for multiple bezier
 //   patches, to stitch them together into a complete polyhedron.
 // Arguments:
 //   patch = The rectangular or triangular array of endpoints and control points for this bezier patch.
-//   splinesteps = Number of steps to divide each bezier segment into.  Default: 16
-//   vertices = Vertex list to add new points to.  Default: []
-//   faces = Face list to add new faces to.  Default: []
+//   splinesteps = Number of steps to divide each bezier segment into.  For rectangular patches you can specify [XSTEPS,YSTEPS].  Default: 16
+//   vnf = Vertices'n'Faces [VNF structure](vnf.scad) to add new vertices and faces to.  Default: empty VNF
 // Example(3D):
 //   patch = [
 //       [[-50, 50,  0], [-16, 50, -20], [ 16, 50,  20], [50, 50,  0]],
@@ -694,7 +693,7 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //       [[-50,-50,  0], [-16,-50,  20], [ 16,-50, -20], [50,-50,  0]]
 //   ];
 //   vnf = bezier_patch(patch, splinesteps=16);
-//   polyhedron(points=vnf[0], faces=vnf[1]);
+//   vnf_polyhedron(vnf);
 // Example(3D):
 //   tri = [
 //       [[-50,-33,0], [-25,16,50], [0,66,0]],
@@ -702,52 +701,107 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //       [[50,-33,0]]
 //   ];
 //   vnf = bezier_patch(tri, splinesteps=16);
-//   polyhedron(points=vnf[0], faces=vnf[1]);
-function bezier_patch(patch, splinesteps=16, vertices=[], faces=[]) =
-	is_tripatch(patch)? _bezier_triangle(patch, splinesteps=splinesteps, vertices=vertices, faces=faces) :
+//   vnf_polyhedron(vnf);
+// Example(3DFlatSpin): Chaining Patches
+//   patch = [
+//   	[[0,  0,0], [33,  0,  0], [67,  0,  0], [100,  0,0]],
+//   	[[0, 33,0], [33, 33, 33], [67, 33, 33], [100, 33,0]],
+//   	[[0, 67,0], [33, 67, 33], [67, 67, 33], [100, 67,0]],
+//   	[[0,100,0], [33,100,  0], [67,100,  0], [100,100,0]],
+//   ];
+//   vnf1 = bezier_patch(patch_translate(patch,[-50,-50,50]));
+//   vnf2 = bezier_patch(vnf=vnf1, patch_rotate(a=[90,0,0],patch_translate(patch,[-50,-50,50])));
+//   vnf3 = bezier_patch(vnf=vnf2, patch_rotate(a=[-90,0,0],patch_translate(patch,[-50,-50,50])));
+//   vnf4 = bezier_patch(vnf=vnf3, patch_rotate(a=[180,0,0],patch_translate(patch,[-50,-50,50])));
+//   vnf5 = bezier_patch(vnf=vnf4, patch_rotate(a=[0,90,0],patch_translate(patch,[-50,-50,50])));
+//   vnf6 = bezier_patch(vnf=vnf5, patch_rotate(a=[0,-90,0],patch_translate(patch,[-50,-50,50])));
+//   vnf_polyhedron(vnf6);
+// Example(3D): Chaining Patches with Assymmetric Splinesteps
+//   steps = 8;
+//   edge_patch = [
+//       [[-60, 0,-40], [0, 0,-40], [60, 0,-40]],
+//       [[-60, 0,  0], [0, 0,  0], [60, 0,  0]],
+//       [[-60,40,  0], [0,40,  0], [60,40,  0]],
+//   ];
+//   corner_patch = [
+//       [[40,  0,-40], [ 0,  0,-40], [ 0, 40,-40]],
+//       [[40,  0,  0], [ 0,  0,  0], [ 0, 40,  0]],
+//       [[40, 40,  0], [40, 40,  0], [40, 40,  0]]
+//   ];
+//   face_patch = bezier_patch_flat([120,120],N=1,orient=LEFT);
+//   edges = [
+//       for (axrot=[[0,0,0],[0,90,0],[0,0,90]], xang=[-90:90:180])
+//       bezier_patch(
+//           splinesteps=[1,steps],
+//           patch_rotate(a=axrot,
+//               patch_rotate(a=[xang,0,0],
+//                   patch_translate(v=[0,-100,100],edge_patch)
+//               )
+//           )
+//       )
+//   ];
+//   corners = [
+//       for (zang=[0,180], xang=[-90:90:180])
+//       bezier_patch(
+//           splinesteps=steps,
+//           patch_rotate(a=[xang,0,zang],
+//               patch_translate(v=[-100,-100,100],corner_patch)
+//           )
+//       )
+//   ];
+//   faces = [
+//       for (axrot=[[0,0,0],[0,90,0],[0,0,90]], zang=[0,180])
+//       bezier_patch(
+//           splinesteps=1,
+//           patch_rotate(a=axrot,
+//               patch_rotate(a=[0,0,zang],
+//                   patch_translate(v=[-100,0,0], face_patch)
+//               )
+//           )
+//       )
+//   ];
+//   vnf_polyhedron(concat(edges,corners,faces));
+function bezier_patch(patch, splinesteps=16, vnf=[[],[]]) =
+	assert(is_num(splinesteps)||is_list(splinesteps))
+	is_tripatch(patch)? _bezier_triangle(patch, splinesteps=splinesteps, vnf=vnf) :
 	let(
-		base = len(vertices),
-		pts = [for (v=[0:1:splinesteps], u=[0:1:splinesteps]) bezier_patch_point(patch, u/splinesteps, v/splinesteps)],
-		new_vertices = concat(vertices, pts),
-		new_faces = [
+		splinesteps = is_list(splinesteps)? splinesteps : [splinesteps, splinesteps],
+		pts = [for (v=[0:1:splinesteps.y], u=[0:1:splinesteps.x]) bezier_patch_point(patch, u/splinesteps.x, v/splinesteps.y)],
+		faces = [
 			for (
-				v=[0:1:splinesteps-1],
-				u=[0:1:splinesteps-1],
-				i=[0,1]
+				v=[0:1:splinesteps.y-1],
+				u=[0:1:splinesteps.x-1]
 			) let (
-				v1 = u+v*(splinesteps+1) + base,
+				v1 = u+v*(splinesteps.x+1),
 				v2 = v1 + 1,
-				v3 = v1 + splinesteps + 1,
-				v4 = v3 + 1,
-				face = i? [v1,v3,v2] : [v2,v3,v4]
-			) face
+				v3 = v1 + splinesteps.x + 1,
+				v4 = v3 + 1
+			) each [[v1,v3,v2], [v2,v3,v4]]
 		]
-	) [new_vertices, concat(faces, new_faces)];
+	) vnf_merge([vnf, [pts, faces]]);
 
 
 function _tri_count(n) = (n*(1+n))/2;
 
 
-function _bezier_triangle(tri, splinesteps=16, vertices=[], faces=[]) =
+function _bezier_triangle(tri, splinesteps=16, vnf=[[],[]]) =
+	assert(is_num(splinesteps))
 	let(
-		base = len(vertices),
 		pts = [
 			for (
 				u=[0:1:splinesteps],
 				v=[0:1:splinesteps-u]
 			) bezier_triangle_point(tri, u/splinesteps, v/splinesteps)
 		],
-		new_vertices = concat(vertices, pts),
-		patchlen = len(tri),
 		tricnt = _tri_count(splinesteps+1),
-		new_faces = [
+		faces = [
 			for (
 				u=[0:1:splinesteps-1],
 				v=[0:1:splinesteps-u-1]
 			) let (
-				v1 = v + (tricnt - _tri_count(splinesteps+1-u)) + base,
+				v1 = v + (tricnt - _tri_count(splinesteps+1-u)),
 				v2 = v1 + 1,
-				v3 = v + (tricnt - _tri_count(splinesteps-u)) + base,
+				v3 = v + (tricnt - _tri_count(splinesteps-u)),
 				v4 = v3 + 1,
 				allfaces = concat(
 					[[v1,v2,v3]],
@@ -755,7 +809,7 @@ function _bezier_triangle(tri, splinesteps=16, vertices=[], faces=[]) =
 				)
 			)  for (face=allfaces) face
 		]
-	) [new_vertices, concat(faces, new_faces)];
+	) vnf_merge([vnf,[pts, faces]]);
 
 
 
@@ -865,21 +919,18 @@ function patches_rotate(patches, a=undef, v=undef, cp=[0,0,0]) = [for (patch=pat
 
 // Function: bezier_surface()
 // Usage:
-//   bezier_surface(patches, [splinesteps], [vertices], [faces]);
+//   bezier_surface(patches, [splinesteps], [vnf]);
 // Description:
-//   Calculate vertices and faces for forming a (possibly partial)
-//   polyhedron from the given rectangular and/or triangular bezier
-//   patches.  Returns a list containing two elements.  The first is
-//   the list of unique vertices.  The second is the list of faces,
-//   where each face is a list of indices into the list of vertices.
-//   You can chain calls to this, to add more vertices and faces for
-//   multiple bezier patches, to stitch them together into a complete
-//   polyhedron.
+//   Calculate vertices and faces for forming a (possibly partial) polyhedron from the given
+//   rectangular and/or triangular bezier patches.  Returns a [VNF structure](vnf.scad): a list
+//   containing two elements.  The first is the the list of unique vertices.  The second is the list
+//   of faces, where each face is a list of indices into the list of vertices.  You can chain calls to
+//   this, to add more vertices and faces for multiple bezier patches, to stitch them together into a
+//   complete polyhedron.
 // Arguments:
 //   patches = A list of triangular and/or rectangular bezier patches.
 //   splinesteps = Number of steps to divide each bezier segment into.  Default: 16
-//   vertices = Vertex list to add new points to.  Default: []
-//   faces = Face list to add new faces to.  Default: []
+//   vnf = Vertices'n'Faces [VNF structure](vnf.scad) to add new vertices and faces to.  Default: empty VNF
 // Example(3D):
 //   patch1 = [
 //   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
@@ -895,12 +946,12 @@ function patches_rotate(patches, a=undef, v=undef, cp=[0,0,0]) = [for (patch=pat
 //   ];
 //   vnf = bezier_surface(patches=[patch1, patch2], splinesteps=16);
 //   polyhedron(points=vnf[0], faces=vnf[1]);
-function bezier_surface(patches=[], splinesteps=16, i=0, vertices=[], faces=[]) =
+function bezier_surface(patches=[], splinesteps=16, i=0, vnf=[[],[]]) =
 	let(
-		vnf = (i >= len(patches))? [vertices, faces] :
-			bezier_patch(patches[i], splinesteps=splinesteps, vertices=vertices, faces=faces)
+		vnf = (i >= len(patches))? vnf :
+			bezier_patch(patches[i], splinesteps=splinesteps, vnf=vnf)
 	) (i >= len(patches))? vnf :
-	bezier_surface(patches=patches, splinesteps=splinesteps, i=i+1, vertices=vnf[0], faces=vnf[1]);
+	bezier_surface(patches=patches, splinesteps=splinesteps, i=i+1, vnf=vnf);
 
 
 
@@ -909,14 +960,13 @@ function bezier_surface(patches=[], splinesteps=16, i=0, vertices=[], faces=[]) 
 
 // Module: bezier_polyhedron()
 // Useage:
-//   bezier_polyhedron(patches, [splinesteps], [vertices], [faces])
+//   bezier_polyhedron(patches, [splinesteps], [vnf])
 // Description:
 //   Takes a list of two or more bezier patches and attempts to make a complete polyhedron from them.
 // Arguments:
 //   patches = A list of triangular and/or rectangular bezier patches.
 //   splinesteps = Number of steps to divide each bezier segment into. Default: 16
-//   vertices = Vertex list for additional non-bezier faces.  Default: []
-//   faces = Additional non-bezier faces.  Default: []
+//   vnf = Vertices'n'Faces [VNF structure](vnf.scad) to add extra vertices and faces to.  Default: empty VNF
 // Example:
 //   patch1 = [
 //   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
@@ -931,10 +981,11 @@ function bezier_surface(patches=[], splinesteps=16, i=0, vertices=[], faces=[]) 
 //   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
 //   ];
 //   bezier_polyhedron([patch1, patch2], splinesteps=8);
-module bezier_polyhedron(patches=[], splinesteps=16, vertices=[], faces=[])
+module bezier_polyhedron(patches=[], splinesteps=16, vnf=[[],[]])
 {
-	sfc = bezier_surface(patches=patches, splinesteps=splinesteps, vertices=vertices, faces=faces);
-	polyhedron(points=sfc[0], faces=sfc[1]);
+	vnf_polyhedron(
+		bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf)
+	);
 }
 
 
