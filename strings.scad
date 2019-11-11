@@ -433,7 +433,7 @@ function fmtf(f,sig=12) =
 		whole=floor(f),
 		part=floor((f-whole)*pow(10,sig-e-1)+0.5)
 	)
-	part>0? str(fmti(whole), str_strip_trailing(str(".",fmti(part,mindigits=sig-abs(e)-1)),"0.")) : fmti(whole);
+	part>0? str(fmti(whole), str_strip_trailing(str(".",fmti(part,mindigits=sig-e-1)),"0.")) : fmti(whole);
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
