@@ -127,26 +127,26 @@ function normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 //   ydistribute(50) {
 //       ydistribute(10) {
 //           xdistribute(30) {
-//               text3d("RIGHT");
-//               text3d("BACK");
-//               text3d("TOP");
-//           }
-//           xdistribute(30) {
-//               cuboid(20,chamfer=3,edges=RIGHT);
-//               cuboid(20,chamfer=3,edges=BACK);
-//               cuboid(20,chamfer=3,edges=TOP);
-//           }
-//       }
-//       ydistribute(10) {
-//           xdistribute(30) {
 //               text3d("LEFT");
 //               text3d("FRONT");
-//               text3d("BTM");
+//               text3d("RIGHT");
 //           }
 //           xdistribute(30) {
 //               cuboid(20,chamfer=3,edges=LEFT);
 //               cuboid(20,chamfer=3,edges=FRONT);
-//               cuboid(20,chamfer=3,edges=BTM);
+//               cuboid(20,chamfer=3,edges=RIGHT);
+//           }
+//       }
+//       ydistribute(10) {
+//           xdistribute(30) {
+//               text3d("TOP");
+//               text3d("BACK");
+//               text3d("BOTTOM");
+//           }
+//           xdistribute(30) {
+//               cuboid(20,chamfer=3,edges=TOP);
+//               cuboid(20,chamfer=3,edges=BACK);
+//               cuboid(20,chamfer=3,edges=BOTTOM);
 //           }
 //       }
 //   }
