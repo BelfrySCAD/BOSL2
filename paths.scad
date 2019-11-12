@@ -137,7 +137,7 @@ function points_along_path3d(
 	roth = Q_Mul(hrot, q),
 	rotm = Q_Mul(arot, q)
 ) concat(
-	[for (i = [0:1:len(polyline)-1]) Q_Rot_Vector(point3d(polyline[i]),roth) + path[n]],
+	[for (i = [0:1:len(polyline)-1]) Qrot(roth,p=point3d(polyline[i])) + path[n]],
 	(n == end)? [] : points_along_path3d(polyline, path, rotm, n+1)
 );
 

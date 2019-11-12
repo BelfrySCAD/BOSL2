@@ -240,28 +240,38 @@ function Q_Axis(q) = let(d = sqrt(1-(q[3]*q[3]))) (d==0)? [0,0,1] : [q[0]/d, q[1
 function Q_Angle(q) = 2 * acos(q[3]);
 
 
-// Function: Q_Rot_Vector()
-// Usage:
-//   Q_Rot_Vector(v,q);
-// Description:
-//   Returns the vector `v` after rotating it by the quaternion `q`.
-function Q_Rot_Vector(v,q) = Q_Mul(Q_Mul(q,concat(v,0)),Q_Conj(q));
-
-
-// Module: Qrot()
-// Usage:
+// Function&Module: Qrot()
+// Usage: As Module
 //   Qrot(q) ...
+// Usage: As Function
+//   pts = Qrot(q,p);
 // Description:
-//   Rotate all children by the rotation stored in quaternion `q`.
+//   When called as a module, rotates all children by the rotation stored in quaternion `q`.
+//   When called as a function with a `p` argument, rotates the point or list of points in `p` by the rotation stored in quaternion `q`.
+//   When called as a function without a `p` argument, returns the affine3d rotation matrix for the rotation stored in quaternion `q`.
 // Example(FlatSpin):
 //   q = QuatXYZ([45,35,10]);
 //   color("red",0.25) cylinder(d=1,h=80);
 //   Qrot(q) cylinder(d=1,h=80);
+// Example(NORENDER):
+//   q = QuatXYZ([45,35,10]);
+//   mat4x4 = Qrot(q);
+// Example(NORENDER):
+//   q = QuatXYZ([45,35,10]);
+//   pt = Qrot(q, p=[4,5,6]);
+// Example(NORENDER):
+//   q = QuatXYZ([45,35,10]);
+//   pts = Qrot(q, p=[[2,3,4], [4,5,6], [9,2,3]]);
 module Qrot(q) {
 	multmatrix(Q_Matrix4(q)) {
 		children();
 	}
 }
+
+function Qrot(q,p) =
+	is_undef(p)? Q_Matrix4(q) :
+	is_vector(p)? Qrot(q,[p])[0] :
+	affine3d_apply(p,[Q_Matrix4(q)]);
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
