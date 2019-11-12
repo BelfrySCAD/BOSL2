@@ -460,6 +460,7 @@ class LeafNode(object):
             )
             imgprc.add_image(fileroot+".scad", imgfile, excode, extype)
             out.append(extitle)
+            out.append("")
             out.append(
                 "![{0} Figure {1}]({2}{3})".format(
                     mkdn_esc(self.name),
