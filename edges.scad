@@ -116,7 +116,7 @@ function normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 //           [X-Y-, X+Y-, X-Y+, X+Y+]
 //       ]
 //       ```
-// Figure(3DMedSpin): Face Vector Edge Sets
+// Figure(3DBig): Face Vector Edge Sets
 //   module text3d(txt) {
 //       xrot(90)
 //       color("#000")
