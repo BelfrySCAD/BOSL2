@@ -32,7 +32,6 @@ function is_edge_array(v) = is_list(v) && is_vector(v[0]) && len(v)==3 && len(v[
 //   Takes an edge set descriptor and returns the edges array representing those edges.
 //   This function is useful for modules that take `edges` arguments, like `cuboid()`.
 //   An edge set descriptor can be any of:
-//   - A raw edges array.
 //   - A vector pointing towards an edge, indicating just that edge.
 //   - A vector pointing towards a face, indicating all edges surrounding that face.
 //   - A vector pointing towards a corner, indicating all edges that meet at that corner.
@@ -41,6 +40,14 @@ function is_edge_array(v) = is_list(v) && is_vector(v[0]) && len(v)==3 && len(v[
 //   - The string `"Z"`, indicating all Z axis aligned edges.
 //   - The string `"ALL"`, indicating all edges.
 //   - The string `"NONE"`, indicating no edges at all.
+//   - A raw edges array, where each edge is represented by a 1 or a 0.  The edge ordering is:
+//       ```
+//       [
+//           [Y-Z-, Y+Z-, Y-Z+, Y+Z+],
+//           [X-Z-, X+Z-, X-Z+, X+Z+],
+//           [X-Y-, X+Y-, X-Y+, X+Y+]
+//       ]
+//       ```
 function edge_set(v) =
 	is_edge_array(v)? v : [
 	for (ax=[0:2]) [
@@ -93,7 +100,6 @@ function normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 //   from the returned edges array.  If either argument only has a single edge
 //   set descriptor, you do not have to pass it in a list.
 //   Each edge set descriptor can be any of:
-//   - A raw edges array.
 //   - A vector pointing towards an edge.
 //   - A vector pointing towards a face, indicating all edges surrounding that face.
 //   - A vector pointing towards a corner, indicating all edges touching that corner.
@@ -102,6 +108,80 @@ function normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 //   - The string `"Z"`, indicating all Z axis aligned edges.
 //   - The string `"ALL"`, indicating all edges.
 //   - The string `"NONE"`, indicating no edges at all.
+//   - A raw edges array, where each edge is represented by a 1 or a 0.  The edge ordering is:
+//       ```
+//       [
+//           [Y-Z-, Y+Z-, Y-Z+, Y+Z+],
+//           [X-Z-, X+Z-, X-Z+, X+Z+],
+//           [X-Y-, X+Y-, X-Y+, X+Y+]
+//       ]
+//       ```
+// Figure(3DMedSpin): Face Vector Edge Sets
+//   module text3d(txt) {
+//       xrot(90)
+//       color("#000")
+//       linear_extrude(height=0.1) {
+//           text(text=txt, size=3, halign="center", valign="center");
+//       }
+//   }
+//   ydistribute(50) {
+//       ydistribute(10) {
+//           xdistribute(30) {
+//               text3d("RIGHT");
+//               text3d("BACK");
+//               text3d("TOP");
+//           }
+//           xdistribute(30) {
+//               cuboid(20,chamfer=3,edges=RIGHT);
+//               cuboid(20,chamfer=3,edges=BACK);
+//               cuboid(20,chamfer=3,edges=TOP);
+//           }
+//       }
+//       ydistribute(10) {
+//           xdistribute(30) {
+//               text3d("LEFT");
+//               text3d("FRONT");
+//               text3d("BTM");
+//           }
+//           xdistribute(30) {
+//               cuboid(20,chamfer=3,edges=LEFT);
+//               cuboid(20,chamfer=3,edges=FRONT);
+//               cuboid(20,chamfer=3,edges=BTM);
+//           }
+//       }
+//   }
+// Figure(3DBig): Named Edge Sets
+//   module text3d(txt) {
+//       xrot(90)
+//       color("#000")
+//       linear_extrude(height=0.1) {
+//           text(text=txt, size=3.5, halign="center", valign="center");
+//       }
+//   }
+//   ydistribute(75) {
+//       ydistribute(10) {
+//           xdistribute(30) {
+//               text3d("\"X\"");
+//               text3d("\"Y\"");
+//               text3d("\"Z\"");
+//           }
+//           xdistribute(30) {
+//               cuboid(20,chamfer=3,edges="X");
+//               cuboid(20,chamfer=3,edges="Y");
+//               cuboid(20,chamfer=3,edges="Z");
+//           }
+//       }
+//       ydistribute(10) {
+//           xdistribute(30) {
+//               text3d("\"ALL\"");
+//               text3d("\"NONE\"");
+//           }
+//           xdistribute(30) {
+//               cuboid(20,chamfer=3,edges="ALL");
+//               cuboid(20,chamfer=3,edges="NONE");
+//           }
+//       }
+//   }
 // Example: Just the front-top edge
 //   edges(FRONT+TOP)
 // Example: All edges surrounding either the front or top faces

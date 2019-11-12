@@ -248,19 +248,12 @@ module chamfer_mask_z(l=1.0, chamfer=1.0, anchor=CENTER, spin=0) {
 // Usage:
 //   chamfer(chamfer, size, [edges]) ...
 // Description:
-//   Chamfers the edges of a cuboid region containing childrem, centered on the origin.
+//   Chamfers the edges of a cuboid region containing the given children, centered on the origin.
 // Arguments:
 //   chamfer = Inset of the chamfer from the edge. (Default: 1)
 //   size = The size of the rectangular cuboid we want to chamfer.
-//   edges = Which edges to chamfer.  Use of [`edges()`](edges.scad#edges) from [`edges.scad`](edges.scad) is recommend.
-// Description:
-//   You should use [`edges()`](edges.scad#edges) from [`edges.scad`](edges.scad) with the `edge` argument.
-//   However, if you must handle it raw, the edge ordering is this:
-//       [
-//           [Y-Z-, Y+Z-, Y-Z+, Y+Z+],
-//           [X-Z-, X+Z-, X-Z+, X+Z+],
-//           [X-Y-, X+Y-, X-Y+, X+Y+]
-//       ]
+//   edges = Edges to chamfer.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
+//   except_edges = Edges to explicitly NOT chamfer.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
 // Example(FR):
 //   chamfer(chamfer=2, size=[20,40,30]) {
 //     cube(size=[20,40,30], center=true);
@@ -269,13 +262,13 @@ module chamfer_mask_z(l=1.0, chamfer=1.0, anchor=CENTER, spin=0) {
 //   chamfer(chamfer=2, size=[20,40,30], edges=edges([TOP,FRONT+RIGHT], except=TOP+LEFT)) {
 //     cube(size=[20,40,30], center=true);
 //   }
-module chamfer(chamfer=1, size=[1,1,1], edges=EDGES_ALL)
+module chamfer(chamfer=1, size=[1,1,1], edges=EDGES_ALL, except_edges=[])
 {
 	difference() {
 		children();
 		difference() {
 			cube(size, center=true);
-			cuboid(size+[1,1,1]*0.02, chamfer=chamfer+0.01, edges=edges, trimcorners=true);
+			cuboid(size+[1,1,1]*0.02, chamfer=chamfer+0.01, edges=edges, except_edges=except_edges, trimcorners=true);
 		}
 	}
 }
@@ -541,15 +534,8 @@ module rounding_mask_z(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 // Arguments:
 //   r = Radius of the rounding. (Default: 1)
 //   size = The size of the rectangular cuboid we want to chamfer.
-//   edges = Which edges to round.  Use of [`edges()`](edges.scad#edges) from [`edges.scad`](edges.scad) is recommend.
-// Description:
-//   You should use [`edges()`](edges.scad#edges) from [`edges.scad`](edges.scad) to generate the edge array for the `edge` argument.
-//   However, if you must handle it raw, the edge ordering is this:
-//       [
-//           [Y-Z-, Y+Z-, Y-Z+, Y+Z+],
-//           [X-Z-, X+Z-, X-Z+, X+Z+],
-//           [X-Y-, X+Y-, X-Y+, X+Y+]
-//       ]
+//   edges = Edges to round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
+//   except_edges = Edges to explicitly NOT round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
 // Example(FR):
 //   rounding(r=10, size=[50,100,150], $fn=24) {
 //     cube(size=[50,100,150], center=true);
@@ -558,13 +544,13 @@ module rounding_mask_z(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 //   rounding(r=10, size=[50,50,75], edges=edges([TOP,FRONT+RIGHT], except=TOP+LEFT), $fn=24) {
 //     cube(size=[50,50,75], center=true);
 //   }
-module rounding(r=1, size=[1,1,1], edges=EDGES_ALL)
+module rounding(r=1, size=[1,1,1], edges=EDGES_ALL, except_edges=[])
 {
 	difference() {
 		children();
 		difference() {
 			cube(size, center=true);
-			cuboid(size+[1,1,1]*0.01, rounding=r, edges=edges, trimcorners=true);
+			cuboid(size+[1,1,1]*0.01, rounding=r, edges=edges, except_edges=except_edges, trimcorners=true);
 		}
 	}
 }

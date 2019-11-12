@@ -22,7 +22,8 @@
 //   size = The size of the cube.
 //   chamfer = Size of chamfer, inset from sides.  Default: No chamferring.
 //   rounding = Radius of the edge rounding.  Default: No rounding.
-//   edges = Edges to chamfer/round.  It's recommended to use [`edges()`](edges.scad#edges) from [`edges.scad`](edges.scad). Default: All edges.
+//   edges = Edges to chamfer/round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
+//   except_edges = Edges to explicitly NOT chamfer/round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
 //   trimcorners = If true, rounds or chamfers corners where three chamferred/rounded edges meet.  Default: `true`
 //   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=ALLNEG`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
@@ -66,12 +67,14 @@ module cuboid(
 	chamfer=undef,
 	rounding=undef,
 	edges=EDGES_ALL,
+	except_edges=[],
 	trimcorners=true,
 	anchor=CENTER,
 	spin=0,
 	orient=UP
 ) {
 	size = scalar_vec3(size);
+	edges = edges(edges, except=except_edges);
 	if (!is_undef(p1)) {
 		if (!is_undef(p2)) {
 			translate(pointlist_bounds([p1,p2])[0]) {
