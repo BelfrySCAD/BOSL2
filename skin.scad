@@ -74,8 +74,37 @@ include <vnf.scad>
 //       move([0,0,  0], p=scale([1,2,1],p=path3d(circle(d=50,$fn=36)))),
 //       move([0,0,100], p=scale([2,1,1],p=path3d(circle(d=50,$fn=36))))
 //   ], matching="evenly");
+// Example: Beware Self-intersecting Creases!
+//   skin([
+//       for (a = [0:30:180]) let(
+//           pos  = [-60*sin(a),     0, a    ],
+//           pos2 = [-60*sin(a+0.1), 0, a+0.1]
+//       ) move(pos,
+//           p=rot(from=UP, to=pos2-pos,
+//               p=path3d(circle(d=150))
+//           )
+//       )
+//   ]);
+//   color("red") {
+//       zrot(25) fwd(130) xrot(75) {
+//           linear_extrude(height=0.1) {
+//               ydistribute(25) {
+//                   text(text="BAD POLYHEDRONS!", size=20, halign="center", valign="center");
+//                   text(text="CREASES MAKE", size=20, halign="center", valign="center");
+//               }
+//           }
+//       }
+//       up(160) zrot(25) fwd(130) xrot(75) {
+//           stroke(zrot(30, p=yscale(0.5, p=circle(d=120))),width=10,closed=true);
+//       }
+//   }
+// Example: Beware Making Incomplete Polyhedrons!
+//   skin([
+//       move([0,0, 0], p=path3d(circle(d=100,$fn=36))),
+//       move([0,0,50], p=path3d(circle(d=100,$fn=6)))
+//   ], caps=false);
 module skin(profiles, closed=false, caps=true, matching="distance") {
-	vnf_polyhedron(skin(profiles, caps=!closed, closed=closed, matching=matching));
+	vnf_polyhedron(skin(profiles, caps=caps, closed=closed, matching=matching));
 }
 
 
