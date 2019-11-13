@@ -40,9 +40,9 @@ include <vnf.scad>
 //   matching = Specifies the algorithm used to match up vertices between profiles, to create faces.  Given as a string, one of `"distance"`, `"angle"`, or `"evenly"`.  If given as a list of strings, equal in number to the number of profile transitions, lets you specify the algorithm used for each transition.  Default: "distance"
 // Example(FlatSpin):
 //   skin([
-//       move([0,0,  0], p=scale([2,1,1], p=path3d(circle(d=100,$fn=48)))),
-//       move([0,0,100], p=path3d(circle(d=100,$fn=4))),
-//       move([0,0,200], p=path3d(circle(d=100,$fn=12))),
+//      scale([2,1,1], p=path3d(circle(d=100,$fn=48))),
+//      path3d(circle(d=100,$fn=4),100),
+//      path3d(circle(d=100,$fn=12),200),
 //   ]);
 // Example(FlatSpin):
 //   skin([
@@ -74,6 +74,32 @@ include <vnf.scad>
 //       move([0,0,  0], p=scale([1,2,1],p=path3d(circle(d=50,$fn=36)))),
 //       move([0,0,100], p=scale([2,1,1],p=path3d(circle(d=50,$fn=36))))
 //   ], matching="evenly");
+// Example:
+//   fn=32;
+//   base = round_corners(square([2,4],center=true), measure="radius", size=0.5, $fn=fn);
+//   skin([
+//   	path3d(base,0),
+//           path3d(base,2),
+//           path3d(circle($fn=fn,r=0.5),3),
+//   	     path3d(circle($fn=fn,r=0.5),4),
+//   	     path3d(circle($fn=fn,r=0.6),4),
+//   	     path3d(circle($fn=fn,r=0.5),5),
+//   	     path3d(circle($fn=fn,r=0.6),5),
+//   	     path3d(circle($fn=fn,r=0.5),6),
+//   	     path3d(circle($fn=fn,r=0.6),6),
+//   	     path3d(circle($fn=fn,r=0.5),7),
+//        ],matching="evenly");
+// Example: Forma Candle Holder
+//   r = 50;
+//   height = 140;
+//   layers = 10;
+//   wallthickness = 5;
+//   holeradius = r - wallthickness;
+//   difference() {
+//     skin([for (i=[0:layers-1]) 
+//   	   zrot(-30*i,p=path3d(hexagon(ir=r),i*height/layers))]);
+//     up(height/layers) cylinder(r=holeradius, h=height);
+//   }
 // Example: Beware Self-intersecting Creases!
 //   skin([
 //       for (a = [0:30:180]) let(
