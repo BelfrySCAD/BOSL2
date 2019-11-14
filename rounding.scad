@@ -327,6 +327,7 @@ function _bezcorner(points, parm) =
 function _circlecorner(points, parm) =
 	let(
 		angle = vector_angle(points)/2,
+                df=echo(angle=angle),
 		d = parm[0],
 		r = parm[1],
 		prev = normalize(points[0]-points[1]),
@@ -335,7 +336,7 @@ function _circlecorner(points, parm) =
 			start = points[1]+prev*d,
 			end = points[1]+next*d
 	)
-	arc(segs(norm(start-center)), cp=center, points=[start,end]);
+	arc(max(3,angle/180*segs(norm(start-center))), cp=center, points=[start,end]);
 
 
 // Module: offset_sweep()

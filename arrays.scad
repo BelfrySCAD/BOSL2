@@ -847,16 +847,15 @@ function triplet_wrap(v) =
 function zip(vecs, v2, v3, fit=false, fill=undef) =
 	(v3!=undef)? zip([vecs,v2,v3], fit=fit, fill=fill) :
 	(v2!=undef)? zip([vecs,v2], fit=fit, fill=fill) :
+	assert(in_list(fit, [false, "short", "long"]))
+        assert(all(  [for(v=vecs) is_list(v)]), "One of the inputs to zip is not a vector")
 	let(
-		dummy1 = assert(in_list(fit, [false, "short", "long"])),
 		minlen = list_shortest(vecs),
 		maxlen = list_longest(vecs),
-		dummy2 = (fit==false)? assert(minlen==maxlen, "Input vectors must have the same length") : 0
+		dummy = (fit==false)? assert(minlen==maxlen, "Input vectors to zip must have the same length") : 0
 	) (fit == "long")?
 		[for(i=[0:1:maxlen-1]) [for(v=vecs) for(x=(i<len(v)? v[i] : (fill==undef)? [fill] : fill)) x] ] :
 		[for(i=[0:1:minlen-1]) [for(v=vecs) for(x=v[i]) x] ];
-
-
 
 // Function: array_group()
 // Description:
