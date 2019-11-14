@@ -43,7 +43,7 @@ include <vnf.scad>
 //      scale([2,1,1], p=path3d(circle(d=100,$fn=48))),
 //      path3d(circle(d=100,$fn=4),100),
 //      path3d(circle(d=100,$fn=12),200),
-//   ]);
+//   ], method="distance");
 // Example(FlatSpin):
 //   skin([
 //       for (ang = [0:10:90])
