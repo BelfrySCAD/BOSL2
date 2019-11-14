@@ -19,9 +19,9 @@ include <vnf.scad>
 
 // Function&Module: skin()
 // Usage: As Module
-//   skin(profiles, [closed], [matching]);
+//   skin(profiles, [closed], [method]);
 // Usage: As Function
-//   vnf = skin(profiles, [closed], [caps], [matching]);
+//   vnf = skin(profiles, [closed], [caps], [method]);
 // Description
 //   Given a list of two or more 2D path `profiles` that have been moved and/or rotated into 3D-space,
 //   produces faces to skin a surface between consecutive profiles.  Optionally, the first and last
@@ -29,15 +29,15 @@ include <vnf.scad>
 //   The user is responsible for making sure the orientation of the first vertex of each profile are relatively aligned.
 //   If called as a function, returns a VNF structure like `[VERTICES, FACES]`.  See [VNF](vnf.scad).
 //   If called as a module, creates a polyhedron of the skinned profiles.
-//   The vertex matching algorithms are as follows:
+//   The vertex matching methods are as follows:
 //   - `"distance"`: Vertices between profiles are matched based on closest next position, relative to the center of each profile.
 //   - `"angle"`: Vertices between profiles are matched based on closest next polar angle, relative to the center of each profile.
-//   - `"evenly"`: Vertices are evenly matched between profiles, such that a point 30% of the way through one profile, will be matched to a vertex 30% of the way through the other profile, based on vertex count.
+//   - `"uniform"`: Vertices are uniformly matched between profiles, such that a point 30% of the way through one profile, will be matched to a vertex 30% of the way through the other profile, based on vertex count.
 // Arguments:
 //   profiles = A list of 2D paths that have been moved and/or rotated into 3D-space.
 //   closed = If true, the last profile is skinned to the first profile, to allow for making a closed loop.  Assumes `caps=false`.  Default: false
 //   caps = If true, endcap faces are created.  Assumes `closed=false`.  Default: true
-//   matching = Specifies the algorithm used to match up vertices between profiles, to create faces.  Given as a string, one of `"distance"`, `"angle"`, or `"evenly"`.  If given as a list of strings, equal in number to the number of profile transitions, lets you specify the algorithm used for each transition.  Default: "distance"
+//   method = Specifies the method used to match up vertices between profiles, to create faces.  Given as a string, one of `"distance"`, `"angle"`, or `"uniform"`.  If given as a list of strings, equal in number to the number of profile transitions, lets you specify the method used for each transition.  Default: "uniform"
 // Example(FlatSpin):
 //   skin([
 //      scale([2,1,1], p=path3d(circle(d=100,$fn=48))),
@@ -63,32 +63,33 @@ include <vnf.scad>
 //   skin([
 //       move([0,0,  0], p=scale([1,2,1],p=path3d(circle(d=50,$fn=36)))),
 //       move([0,0,100], p=scale([2,1,1],p=path3d(circle(d=50,$fn=36))))
-//   ], matching="distance");
+//   ], method="distance");
 // Example: Angle Matching
 //   skin([
 //       move([0,0,  0], p=scale([1,2,1],p=path3d(circle(d=50,$fn=36)))),
 //       move([0,0,100], p=scale([2,1,1],p=path3d(circle(d=50,$fn=36))))
-//   ], matching="angle");
+//   ], method="angle");
 // Example: Evenly Matching
 //   skin([
 //       move([0,0,  0], p=scale([1,2,1],p=path3d(circle(d=50,$fn=36)))),
 //       move([0,0,100], p=scale([2,1,1],p=path3d(circle(d=50,$fn=36))))
-//   ], matching="evenly");
+//   ], method="uniform");
 // Example:
+//   include <BOSL2/rounding.scad>
 //   fn=32;
 //   base = round_corners(square([2,4],center=true), measure="radius", size=0.5, $fn=fn);
 //   skin([
-//   	path3d(base,0),
-//           path3d(base,2),
-//           path3d(circle($fn=fn,r=0.5),3),
-//   	     path3d(circle($fn=fn,r=0.5),4),
-//   	     path3d(circle($fn=fn,r=0.6),4),
-//   	     path3d(circle($fn=fn,r=0.5),5),
-//   	     path3d(circle($fn=fn,r=0.6),5),
-//   	     path3d(circle($fn=fn,r=0.5),6),
-//   	     path3d(circle($fn=fn,r=0.6),6),
-//   	     path3d(circle($fn=fn,r=0.5),7),
-//        ],matching="evenly");
+//       path3d(base,0),
+//       path3d(base,2),
+//       path3d(circle($fn=fn,r=0.5),3),
+//       path3d(circle($fn=fn,r=0.5),4),
+//       path3d(circle($fn=fn,r=0.6),4),
+//       path3d(circle($fn=fn,r=0.5),5),
+//       path3d(circle($fn=fn,r=0.6),5),
+//       path3d(circle($fn=fn,r=0.5),6),
+//       path3d(circle($fn=fn,r=0.6),6),
+//       path3d(circle($fn=fn,r=0.5),7),
+//   ],method="uniform");
 // Example: Forma Candle Holder
 //   r = 50;
 //   height = 140;
@@ -96,9 +97,8 @@ include <vnf.scad>
 //   wallthickness = 5;
 //   holeradius = r - wallthickness;
 //   difference() {
-//     skin([for (i=[0:layers-1]) 
-//   	   zrot(-30*i,p=path3d(hexagon(ir=r),i*height/layers))]);
-//     up(height/layers) cylinder(r=holeradius, h=height);
+//       skin([for (i=[0:layers-1]) zrot(-30*i,p=path3d(hexagon(ir=r),i*height/layers))]);
+//       up(height/layers) cylinder(r=holeradius, h=height);
 //   }
 // Example: Beware Self-intersecting Creases!
 //   skin([
@@ -129,19 +129,19 @@ include <vnf.scad>
 //       move([0,0, 0], p=path3d(circle(d=100,$fn=36))),
 //       move([0,0,50], p=path3d(circle(d=100,$fn=6)))
 //   ], caps=false);
-module skin(profiles, closed=false, caps=true, matching="distance") {
-	vnf_polyhedron(skin(profiles, caps=caps, closed=closed, matching=matching));
+module skin(profiles, closed=false, caps=true, method="uniform") {
+	vnf_polyhedron(skin(profiles, caps=caps, closed=closed, method=method));
 }
 
 
-function skin(profiles, closed=false, caps=true, matching="distance") =
+function skin(profiles, closed=false, caps=true, method="uniform") =
 	assert(is_list(profiles))
 	assert(is_bool(closed))
 	assert(is_bool(caps))
 	assert(!closed||!caps)
-	assert(is_string(matching)||is_list(matching))
-	let( matching = is_list(matching)? matching : [for (pidx=idx(profiles,end=closed?-1:-2)) matching] )
-	assert(len(matching) == len(profiles)-closed?0:1)
+	assert(is_string(method)||is_list(method))
+	let( method = is_list(method)? method : [for (pidx=idx(profiles,end=closed?-1:-2)) method] )
+	assert(len(method) == len(profiles)-closed?0:1)
 	vnf_triangulate(
 		concat([
 			for(pidx=idx(profiles,end=closed? -1 : -2))
@@ -161,7 +161,7 @@ function skin(profiles, closed=false, caps=true, matching="distance") =
 				perp2 = vector_axis(n2,perp),
 				poly1 = ccw_polygon(project_plane(prof1, cp1, cp1+perp, cp1+perp1)),
 				poly2 = ccw_polygon(project_plane(prof2, cp2, cp2+perp, cp2+perp2)),
-				match = matching[pidx],
+				match = method[pidx],
 				faces = [
 					for(
 						first = true,
@@ -181,8 +181,8 @@ function skin(profiles, closed=false, caps=true, matching="distance") =
 							j>=plen2? 1 :
 							match=="angle"? (dang1>dang2? 1 : 0) :
 							match=="distance"? (dist1>dist2? 1 : 0) :
-							match=="evenly"? (i/plen1 > j/plen2? 0 : 1) :
-							assert(in_list(matching[i],["angle","distance","evenly"]),str("Got `",matching,"'")),
+							match=="uniform"? (i/plen1 > j/plen2? 0 : 1) :
+							assert(in_list(method[i],["angle","distance","uniform"]),str("Got `",method,"'")),
 						p1 = lift_plane(poly1[i%plen1], cp1, cp1+perp, cp1+perp1),
 						p2 = lift_plane(poly2[j%plen2], cp2, cp2+perp, cp2+perp2),
 						p3 = side?
