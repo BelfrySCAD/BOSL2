@@ -23,11 +23,12 @@ include <vnf.scad>
 // Usage: As Function
 //   vnf = skin(profiles, [closed], [caps], [method]);
 // Description
-//   Given a list of two or more 2D path `profiles` that have been moved and/or rotated into 3D-space,
-//   produces faces to skin a surface between consecutive profiles.  Optionally, the first and last
-//   profiles can have endcaps, or the last and first profiles can be skinned together.
-//   The user is responsible for making sure the orientation of the first vertex of each profile are relatively aligned.
-//   If called as a function, returns a VNF structure like `[VERTICES, FACES]`.  See [VNF](vnf.scad).
+//   Given a list of two or more path `profiles` in 3D-space, produces faces to skin a surface between
+//   consecutive profiles.  Optionally, the first and last profiles can have endcaps, or the last and
+//   first profiles can be skinned together.  Each profile should be roughly planar, but some variance
+//   is allowed.  The orientation of the first vertex of each profile should be relatively aligned with
+//   that of the next profile.  Each profile should rotate the same clockwise direction.
+//   If called as a function, returns a [VNF structure](vnf.scad) like `[VERTICES, FACES]`.
 //   If called as a module, creates a polyhedron of the skinned profiles.
 //   The vertex matching methods are as follows:
 //   - `"distance"`: Vertices between profiles are matched based on closest next position, relative to the center of each profile.
@@ -59,21 +60,63 @@ include <vnf.scad>
 //       for (i = [0:5])
 //       rot([0,i*60,0], cp=[100,0,0], p=path3d(circle(d=30,$fn=3+i%3)))
 //   ], closed=true, caps=false);
-// Example: Distance Matching
-//   skin([
-//       move([0,0,  0], p=scale([1,2,1],p=path3d(circle(d=50,$fn=36)))),
-//       move([0,0,100], p=scale([2,1,1],p=path3d(circle(d=50,$fn=36))))
-//   ], method="distance");
-// Example: Angle Matching
-//   skin([
-//       move([0,0,  0], p=scale([1,2,1],p=path3d(circle(d=50,$fn=36)))),
-//       move([0,0,100], p=scale([2,1,1],p=path3d(circle(d=50,$fn=36))))
-//   ], method="angle");
-// Example: Evenly Matching
-//   skin([
-//       move([0,0,  0], p=scale([1,2,1],p=path3d(circle(d=50,$fn=36)))),
-//       move([0,0,100], p=scale([2,1,1],p=path3d(circle(d=50,$fn=36))))
-//   ], method="uniform");
+// Example(FlatSpin): Method "distance" is a good general purpose vertex matching method.
+//   method = "distance";
+//   xdistribute(150) {
+//       $fn=24;
+//       skin([
+//           yscale(2, p=path3d(circle(d=75))),
+//           [[40,0,100], [35,-15,100], [20,-30,100],[0,-40,100],[-40,0,100],[0,40,100],[20,30,100], [35,15,100]]
+//       ], method=method);
+//       skin([
+//           for (b=[0,90]) [
+//               for (a=[360:-360/$fn:0.01])
+//                   point3d(polar_to_xy((100+50*cos((a+b)*2))/2,a),b/90*100)
+//           ]
+//       ], method=method);
+//       skin([
+//           scale([1,2,1],p=path3d(circle(d=50))),
+//           scale([2,1,1],p=path3d(circle(d=50),100))
+//       ], method=method);
+//   }
+// Example(FlatSpin): Method "angle" works subtly better with profiles created from a polar function.
+//   method = "angle";
+//   xdistribute(150) {
+//       $fn=24;
+//       skin([
+//           yscale(2, p=path3d(circle(d=75))),
+//           [[40,0,100], [35,-15,100], [20,-30,100],[0,-40,100],[-40,0,100],[0,40,100],[20,30,100], [35,15,100]]
+//       ], method=method);
+//       skin([
+//           for (b=[0,90]) [
+//               for (a=[360:-360/$fn:0.01])
+//                   point3d(polar_to_xy((100+50*cos((a+b)*2))/2,a),b/90*100)
+//           ]
+//       ], method=method);
+//       skin([
+//           scale([1,2,1],p=path3d(circle(d=50))),
+//           scale([2,1,1],p=path3d(circle(d=50),100))
+//       ], method=method);
+//   }
+// Example(FlatSpin): Method "uniform" works well with symmetrical profiles that are regularly spaced.
+//   method = "uniform";
+//   xdistribute(150) {
+//       $fn=24;
+//       skin([
+//           yscale(2, p=path3d(circle(d=75))),
+//           [[40,0,100], [35,-15,100], [20,-30,100],[0,-40,100],[-40,0,100],[0,40,100],[20,30,100], [35,15,100]]
+//       ], method=method);
+//       skin([
+//           for (b=[0,90]) [
+//               for (a=[360:-360/$fn:0.01])
+//                   point3d(polar_to_xy((100+50*cos((a+b)*2))/2,a),b/90*100)
+//           ]
+//       ], method=method);
+//       skin([
+//           scale([1,2,1],p=path3d(circle(d=50))),
+//           scale([2,1,1],p=path3d(circle(d=50),100))
+//       ], method=method);
+//   }
 // Example:
 //   include <BOSL2/rounding.scad>
 //   fn=32;
@@ -155,12 +198,12 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 				n2 = plane_normal(plane_from_pointslist(prof2)),
 				vang = vector_angle(n1,n2),
 				perp = vang>0.01 && vang<179.99? vector_axis(n1,n2) :
-					vector_angle(n1,UP)>44? vector_axis(n1,UP) :
-					vector_axis(n1,LEFT),
-				perp1 = vector_axis(n1,perp),
-				perp2 = vector_axis(n2,perp),
-				poly1 = ccw_polygon(project_plane(prof1, cp1, cp1+perp, cp1+perp1)),
-				poly2 = ccw_polygon(project_plane(prof2, cp2, cp2+perp, cp2+perp2)),
+					vector_angle(n1,RIGHT)>44? vector_axis(n1,RIGHT) :
+					vector_axis(n1,UP),
+				perp1 = vector_axis(perp,n1),
+				perp2 = vector_axis(perp,n2),
+				poly1 = project_plane(prof1, cp1, cp1+perp, cp1+perp1),
+				poly2 = project_plane(prof2, cp2, cp2+perp, cp2+perp2),
 				match = method[pidx],
 				faces = [
 					for(
@@ -173,21 +216,21 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 
 						!finished;
 
-						dang1 = abs(xy_to_polar(poly1[i%plen1]).y - xy_to_polar(poly2[(j+1)%plen2]).y),
-						dang2 = abs(xy_to_polar(poly2[j%plen2]).y - xy_to_polar(poly1[(i+1)%plen1]).y),
+						dang1 = abs(modang(xy_to_polar(poly1[i%plen1]).y - xy_to_polar(poly2[(j+1)%plen2]).y)),
+						dang2 = abs(modang(xy_to_polar(poly2[j%plen2]).y - xy_to_polar(poly1[(i+1)%plen1]).y)),
 						dist1 = norm(poly1[i%plen1] - poly2[(j+1)%plen2]),
 						dist2 = norm(poly2[j%plen2] - poly1[(i+1)%plen1]),
+						pctdist1 = abs((i/plen1) - ((j+1)/plen2)),
+						pctdist2 = abs((j/plen2) - ((i+1)/plen1)),
 						side = i>=plen1? 0 :
 							j>=plen2? 1 :
 							match=="angle"? (dang1>dang2? 1 : 0) :
 							match=="distance"? (dist1>dist2? 1 : 0) :
-							match=="uniform"? (i/plen1 > j/plen2? 0 : 1) :
+							match=="uniform"? (pctdist1>pctdist2? 1 : 0) :
 							assert(in_list(method[i],["angle","distance","uniform"]),str("Got `",method,"'")),
-						p1 = lift_plane(poly1[i%plen1], cp1, cp1+perp, cp1+perp1),
-						p2 = lift_plane(poly2[j%plen2], cp2, cp2+perp, cp2+perp2),
-						p3 = side?
-							lift_plane(poly1[(i+1)%plen1], cp1, cp1+perp, cp1+perp1) :
-							lift_plane(poly2[(j+1)%plen2], cp2, cp2+perp, cp2+perp2),
+						p1 = prof1[i%plen1],
+						p2 = prof2[j%plen2],
+						p3 = side? prof1[(i+1)%plen1] : prof2[(j+1)%plen2],
 						face = [p1, p3, p2],
 						i = i + (side? 1 : 0),
 						j = j + (side? 0 : 1),
@@ -199,16 +242,10 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 			) vnf_add_faces(faces=faces)
 		], closed||!caps? [] : let(
 			prof1 = profiles[0],
-			prof2 = select(profiles,-1),
-			ncl1 = sort(find_noncollinear_points(prof1)),
-			ncl2 = sort(find_noncollinear_points(prof2)),
-			pa1=prof1[ncl1.x], pa2=prof1[ncl1.y], pa3=prof1[ncl1.z],
-			pb1=prof2[ncl2.x], pb2=prof2[ncl2.y], pb3=prof2[ncl2.z],
-			poly1 = ccw_polygon(project_plane(prof1, pa1, pa2, pa3)),
-			poly2 = clockwise_polygon(project_plane(prof2, pb1, pb2, pb3))
+			prof2 = select(profiles,-1)
 		) [
-			vnf_add_face(pts=lift_plane(poly1, pa1, pa2, pa3)),
-			vnf_add_face(pts=lift_plane(poly2, pb1, pb2, pb3))
+			vnf_add_face(pts=reverse(prof1)),
+			vnf_add_face(pts=prof2)
 		])
 	);
 
