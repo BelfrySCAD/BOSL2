@@ -163,7 +163,7 @@ function hull3d_faces(points) =
 		// start with a single non-collinear triangle
 		a = 0,
 		b = 1,
-		c = first_noncollinear(a, b, points, 2)
+		c = first_noncollinear(a, b, points)
 	) (c == len(points))? _hull2d_collinear(points) : let(
 		plane = plane3pt_indexed(points, a, b, c),
 		d = _find_first_noncoplanar(plane, points, 3)
