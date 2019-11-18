@@ -655,18 +655,29 @@ test_polygon_is_clockwise();
 
 module test_clockwise_polygon() {
 	path = circle(d=100);
+	rpath = concat([path[0]], reverse(select(path,1,-1)));
 	assert(clockwise_polygon(path) == path);
-	assert(clockwise_polygon(reverse(path)) == path);
+	assert(clockwise_polygon(rpath) == path);
 }
 test_clockwise_polygon();
 
 
 module test_ccw_polygon() {
 	path = circle(d=100);
-	assert(ccw_polygon(path) == reverse(path));
-	assert(ccw_polygon(reverse(path)) == reverse(path));
+	rpath = concat([path[0]], reverse(select(path,1,-1)));
+	assert(ccw_polygon(path) == rpath);
+	assert(ccw_polygon(rpath) == rpath);
 }
 test_ccw_polygon();
+
+
+module test_reverse_polygon() {
+	path = circle(d=100);
+	rpath = concat([path[0]], reverse(select(path,1,-1)));
+	assert(reverse_polygon(path) == rpath);
+	assert(reverse_polygon(rpath) == path);
+}
+test_reverse_polygon();
 
 
 module test_is_region() {

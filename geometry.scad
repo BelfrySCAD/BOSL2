@@ -1230,7 +1230,7 @@ function polygon_is_clockwise(path) =
 // Description:
 //   Given a polygon path, returns the clockwise winding version of that path.
 function clockwise_polygon(path) =
-	polygon_is_clockwise(path)? path : reverse(path);
+	polygon_is_clockwise(path)? path : reverse_polygon(path);
 
 
 // Function: ccw_polygon()
@@ -1239,7 +1239,16 @@ function clockwise_polygon(path) =
 // Description:
 //   Given a polygon path, returns the counter-clockwise winding version of that path.
 function ccw_polygon(path) =
-	polygon_is_clockwise(path)? reverse(path) : path;
+	polygon_is_clockwise(path)? reverse_polygon(path) : path;
+
+
+// Function: reverse_polygon()
+// Usage:
+//   reverse_polygon(poly)
+// Description:
+//   Reverses a polygon's winding direction, while still using the same start point.
+function reverse_polygon(poly) =
+	let(lp=len(poly)) [for (i=idx(poly)) poly[(lp-i)%lp]];
 
 
 
