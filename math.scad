@@ -319,9 +319,10 @@ function segs(r) =
 // Arguments:
 //   a = First value.
 //   b = Second value.
-//   u = The proportion from `a` to `b` to calculate.  Valid range is 0.0 to 1.0, inclusive.
+//   u = The proportion from `a` to `b` to calculate.  Valid range is 0.0 to 1.0, inclusive.  If given as a list or range of values, returns a list of results.
 function lerp(a,b,u) =
-	(1-u)*a + u*b;
+	is_num(u)? (1-u)*a + u*b :
+	[for (v = u) lerp(a,b,v)];
 
 
 // Function: hypot()
