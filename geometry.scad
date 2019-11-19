@@ -943,6 +943,81 @@ function polygon_shift_to_closest_point(path, pt) =
 	) select(path,segnum,segnum+len(path)-1);
 
 
+// Function: reindex_polygon(reference, poly)
+//
+// Description:
+//   Rotates the point order and possibly reverses the point order of a polygon path to optimize its pairwise its
+//   point association with a reference polygon.  The two polygons must have the same number of vertices.
+//   The optimization is done by computing the distance, norm(reference[i]-poly[i]), between corresponding pairs of
+//   vertices of the two polygons and choosing the polygon point order that makes the total sum over all pairs as
+//   small as possible.  Returns the reindexed polygon.  Note that the geometry of the polygon is not changed by
+//   this operation, just the labeling of its vertices.  If the input polygon is oriented opposite
+//   the reference then its point order is flipped.  
+//   
+// Arguments:
+//   reference = reference polygon path
+//   poly = input polygon to reindex
+//   
+// Example(2D):  The red dots show the 0th entry in the two input path lists.  Note that the red dots are not near each other.  The blue dot shows the 0th entry in the output polygon
+//   pent = subdivide_path([for(i=[0:4])[sin(72*i),cos(72*i)]],30);
+//   circ = circle($fn=30,r=2.2);
+//   reindexed = reindex_polygon(circ,pent);
+//   place_copies(concat(circ,pent)) circle(r=.1,$fn=32);
+//   color("red") place_copies([pent[0],circ[0]]) circle(r=.1,$fn=32);
+//   color("blue") translate(reindexed[0])circle(r=.1,$fn=32);
+// Example(2D): The indexing that minimizes the total distance will not necessarily associate the nearest point of `poly` with the reference, as in this example where again the blue dot indicates the 0th entry in the reindexed result.
+//   pent = move([3.5,-1],p=subdivide_path([for(i=[0:4])[sin(72*i),cos(72*i)]],30));
+//   circ = circle($fn=30,r=2.2);
+//   reindexed = reindex_polygon(circ,pent);
+//   place_copies(concat(circ,pent)) circle(r=.1,$fn=32);
+//   color("red") place_copies([pent[0],circ[0]]) circle(r=.1,$fn=32);
+//   color("blue") translate(reindexed[0])circle(r=.1,$fn=32);
+function reindex_polygon(reference, poly, return_error=false) = 
+   assert(is_path(reference) && is_path(poly))
+   assert(len(reference)==len(poly), "Polygons must be the same length in reindex_polygon")
+   let(
+     N = len(reference),
+     fixpoly = polygon_is_clockwise(reference) ? clockwise_polygon(poly) : ccw_polygon(poly),
+     dist = [for (p1=reference) [for (p2=fixpoly) norm(p1-p2)]],  // Matrix of all pairwise distances
+     // Compute the sum of all distance pairs for a each shift
+     sums = [for(shift=[0:N-1])
+               sum([for(i=[0:N-1]) dist[i][(i+shift)%N]])],
+     optimal_poly = polygon_shift(fixpoly,min_index(sums))
+   )
+   return_error ? [optimal_poly, min(sums)] : optimal_poly;
+
+
+// Function: align_polygon(reference, poly, angles, [cp])
+//
+// Description:
+//   Tries the list or range of angles to find a rotation of the specified polygon that best aligns
+//   with the reference polygon.  For each angle, the polygon is reindexed, which is a costly operation
+//   so if run time is a problem, use a smaller sampling of angles.  Returns the rotated and reindexed
+//   polygon.
+//   
+// Arguments:
+//   reference = reference polygon 
+//   poly = polygon to rotate into alignment with the reference
+//   angles = list or range of angles to test
+//   cp = centerpoint for rotations
+//   
+// Example(2D): The original hexagon in yellow is not well aligned with the pentagon.  Turning it so the faces line up gives an optimal alignment, shown in red.  
+//   $fn=32;
+//   pentagon = subdivide_path(pentagon(side=2),60);
+//   hexagon = subdivide_path(hexagon(side=2.7),60);
+//   color("red")place_copies(scale(1.4,p=align_polygon(pentagon,hexagon,[0:10:359],cp=[1,1])))circle(r=.1);
+//   place_copies(concat(pentagon,hexagon))circle(r=.1);
+function align_polygon(reference, poly, angles, cp) =
+   assert(is_path(reference) && is_path(poly))
+   assert(len(reference)==len(poly), "Polygons must be the same length to be aligned in align_polygon")
+   assert(is_num(angles[0]), "The `angle` parameter to align_polygon must be a range or vector")
+   let(     // alignments is a vector of entries of the form: [polygon, error]
+     alignments = [for(angle=angles) reindex_polygon(reference, zrot(angle,p=poly,cp=cp),return_error=true)],
+     best = min_index(subindex(alignments,1))
+   )
+   alignments[best][0];
+
+
 // Function: first_noncollinear()
 // Usage:
 //   first_noncollinear(i1, i2, points);

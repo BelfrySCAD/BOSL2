@@ -687,5 +687,103 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 		) nextdir
 	];
 
+// Input `data` is a list that sums to an integer. 
+// Returns rounded version of input data so that every 
+// entry is rounded to an integer and the sum is the same as
+// that of the input.  Works by rounding an entry in the list
+// and passing the rounding error forward to the next entry.
+// This will generally distribute the error in a uniform manner. 
+function _sum_preserving_round(data, index=0) =
+     index == len(data)-1 ? list_set(data, len(data)-1, round(data[len(data)-1])) :
+     let(
+       newval = round(data[index]),
+       error = newval - data[index]
+     )
+     _sum_preserving_round(list_set(data, [index,index+1], [newval, data[index+1]-error]), index+1);
+
+
+// Function: subdivide_path(path, N, method)
+//  
+// Description:
+//   Takes a path as input (closed or open) and subdivides the path to produce a more
+//   finely sampled path.  The new points can be distributed proportional to length
+//   (`method="length"`) or they can be divided up evenly among all the path segments
+//   (`method="segment"`).  If the extra points don't fit evenly on the path then the
+//   algorithm attempts to distribute them uniformly.  The `exact` option requires that
+//   the final length is exactly as requested.  If you set it to `false` then the
+//   algorithm will favor uniformity and the output path may have a different number of
+//   points due to rounding error.
+//   
+//   With the `"segment"` method you can also specify a vector of lengths.  This vector, 
+//   `N` specfies the desired point count on each segment: with vector input, `subdivide_path`
+//   attempts to place `N[i]-1` points on segment `i`.  The reason for the -1 is to avoid
+//   double counting the endpoints, which are shared by pairs of segments, so that for
+//   a closed polygon the total number of points will be sum(N).  Note that with an open
+//   path there is an extra point at the end, so the number of points will be sum(N)+1. 
+//   
+// Arguments:
+//     path = path to subdivide
+//     N = scalar total number of points desired or with `method="segment"` can be a vector requesting `N[i]-1` points on segment i.
+//     closed = set to false if the path is open.  Default: True
+//     exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  Default: True
+//  
+// Example(2D):
+//   mypath = subdivide_path(square([2,2],center=true), 12);
+//   place_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D):
+//   mypath = subdivide_path(square([8,2],center=true), 12);
+//   place_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D):
+//   mypath = subdivide_path(square([8,2],center=true), 12, method="segment");
+//   place_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D):
+ //  mypath = subdivide_path(square([2,2],center=true), 17, closed=false);
+//   place_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): Specifying different numbers of points on each segment
+//   mypath = subdivide_path(hexagon(side=2), [2,3,4,5,6,7], method="segment");
+//   place_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): Requested point total is 14 but 15 points output due to extra end point
+//   mypath = subdivide_path(pentagon(side=2), [3,4,3,4], method="segment", closed=false);
+//   place_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): Since 17 is not divisible by 5, a completely uniform distribution is not possible. 
+//   mypath = subdivide_path(pentagon(side=2), 17);
+//   place_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): With `exact=false` a uniform distribution, but only 15 points
+//   mypath = subdivide_path(pentagon(side=2), 17, exact=false);
+//   place_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): With `exact=false` you can also get extra points, here 20 instead of requested 18
+//   mypath = subdivide_path(pentagon(side=2), 18, exact=false);
+//   place_copies(mypath)circle(r=.1,$fn=32);
+// Example(FlatSpin): Three-dimensional paths also work
+//   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
+//   place_copies(mypath)sphere(r=.1,$fn=32);
+function subdivide_path(path, N, closed=true, exact=true, method="length") =
+    assert(is_path(path))
+    assert(method=="length" || method=="segment")
+    assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
+    let(
+      count = len(path) - (closed?0:1), 
+      add_guess = 
+        method=="segment" ? 
+            (is_list(N) ? assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
+                          add_scalar(N,-1)
+                        : replist((N-len(path)) / count, count))
+        : // method=="length"
+            assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
+            let(
+               path_lens = concat([for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i])],
+                                  closed?[norm(path[len(path)-1]-path[0])]:[]),
+               add_density = (N - len(path)) / sum(path_lens)
+               )
+            path_lens * add_density,
+        add = exact ? _sum_preserving_round(add_guess) : [for (val=add_guess) round(val)]
+      )
+      concat(
+        [for (i=[0:1:count])
+          each [for(j=[0:1:add[i]]) lerp(path[i],select(path,i+1), j/(add[i]+1))]],
+        closed ? [] : [select(path,-1)]
+      );
+
+
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
