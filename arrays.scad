@@ -139,7 +139,7 @@ function select(list, start, end=undef) =
 //   list_range(n=4, s=[3,4], step=[2,3]);  // Returns [[3,4], [5,7], [7,10], [9,13]]
 function list_range(n=undef, s=0, e=undef, step=undef) =
 	(n!=undef && e!=undef)? (
-		assert(n!=undef && e!=undef && step!=undef, "At most 2 of n, e, and step can be given.")
+		assert(is_undef(n) || is_undef(e) || is_undef(step), "At most 2 of n, e, and step can be given.")
 		[for (i=[0:1:n-1]) s+(e-s)*i/(n-1)]
 	) : let(step = default(step,1))
 	(n!=undef)? [for (i=[0:1:n-1]) let(v=s+step*i) v] :

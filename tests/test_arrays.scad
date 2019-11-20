@@ -54,6 +54,7 @@ module test_list_range() {
 	assert(list_range(s=3, e=5) == [3,4,5]);
 	assert(list_range(s=3, e=8, step=2) == [3,5,7]);
 	assert(list_range(s=4, e=8, step=2) == [4,6,8]);
+	assert(list_range(e=4, n=3) == [0,2,4]);
 	assert(list_range(n=4, s=[3,4], step=[2,3]) == [[3,4], [5,7], [7,10], [9,13]]);
 }
 test_list_range();
