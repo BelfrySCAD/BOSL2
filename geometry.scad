@@ -1003,7 +1003,7 @@ function reindex_polygon(reference, poly, return_error=false) =
 //   $fn=32;
 //   pentagon = subdivide_path(pentagon(side=2),60);
 //   hexagon = subdivide_path(hexagon(side=2.7),60);
-//   color("red")place_copies(scale(1.4,p=align_polygon(pentagon,hexagon,[0:10:359],cp=[1,1])))circle(r=.1);
+//   color("red") place_copies(scale(1.4,p=align_polygon(pentagon,hexagon,[0:10:359]))) circle(r=.1);
 //   place_copies(concat(pentagon,hexagon))circle(r=.1);
 function align_polygon(reference, poly, angles, cp) =
    assert(is_path(reference) && is_path(poly))
