@@ -702,8 +702,9 @@ function _sum_preserving_round(data, index=0) =
      _sum_preserving_round(list_set(data, [index,index+1], [newval, data[index+1]-error]), index+1);
 
 
-// Function: subdivide_path(path, N, method)
-//  
+// Function: subdivide_path()
+// Usage:
+//   newpath = subdivide_path(path, N, method);
 // Description:
 //   Takes a path as input (closed or open) and subdivides the path to produce a more
 //   finely sampled path.  The new points can be distributed proportional to length
@@ -720,13 +721,11 @@ function _sum_preserving_round(data, index=0) =
 //   double counting the endpoints, which are shared by pairs of segments, so that for
 //   a closed polygon the total number of points will be sum(N).  Note that with an open
 //   path there is an extra point at the end, so the number of points will be sum(N)+1. 
-//   
 // Arguments:
-//     path = path to subdivide
-//     N = scalar total number of points desired or with `method="segment"` can be a vector requesting `N[i]-1` points on segment i.
-//     closed = set to false if the path is open.  Default: True
-//     exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  Default: True
-//  
+//   path = path to subdivide
+//   N = scalar total number of points desired or with `method="segment"` can be a vector requesting `N[i]-1` points on segment i.
+//   closed = set to false if the path is open.  Default: True
+//   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  Default: True
 // Example(2D):
 //   mypath = subdivide_path(square([2,2],center=true), 12);
 //   place_copies(mypath)circle(r=.1,$fn=32);
@@ -737,7 +736,7 @@ function _sum_preserving_round(data, index=0) =
 //   mypath = subdivide_path(square([8,2],center=true), 12, method="segment");
 //   place_copies(mypath)circle(r=.1,$fn=32);
 // Example(2D):
- //  mypath = subdivide_path(square([2,2],center=true), 17, closed=false);
+//   mypath = subdivide_path(square([2,2],center=true), 17, closed=false);
 //   place_copies(mypath)circle(r=.1,$fn=32);
 // Example(2D): Specifying different numbers of points on each segment
 //   mypath = subdivide_path(hexagon(side=2), [2,3,4,5,6,7], method="segment");

@@ -943,8 +943,9 @@ function polygon_shift_to_closest_point(path, pt) =
 	) select(path,segnum,segnum+len(path)-1);
 
 
-// Function: reindex_polygon(reference, poly)
-//
+// Function: reindex_polygon()
+// Usage:
+//   newpoly = reindex_polygon(reference, poly);
 // Description:
 //   Rotates the point order and possibly reverses the point order of a polygon path to optimize its pairwise its
 //   point association with a reference polygon.  The two polygons must have the same number of vertices.
@@ -953,11 +954,9 @@ function polygon_shift_to_closest_point(path, pt) =
 //   small as possible.  Returns the reindexed polygon.  Note that the geometry of the polygon is not changed by
 //   this operation, just the labeling of its vertices.  If the input polygon is oriented opposite
 //   the reference then its point order is flipped.  
-//   
 // Arguments:
 //   reference = reference polygon path
 //   poly = input polygon to reindex
-//   
 // Example(2D):  The red dots show the 0th entry in the two input path lists.  Note that the red dots are not near each other.  The blue dot shows the 0th entry in the output polygon
 //   pent = subdivide_path([for(i=[0:4])[sin(72*i),cos(72*i)]],30);
 //   circ = circle($fn=30,r=2.2);
@@ -987,20 +986,19 @@ function reindex_polygon(reference, poly, return_error=false) =
    return_error ? [optimal_poly, min(sums)] : optimal_poly;
 
 
-// Function: align_polygon(reference, poly, angles, [cp])
-//
+// Function: align_polygon()
+// Usage:
+//   newpoly = align_polygon(reference, poly, angles, [cp]);
 // Description:
 //   Tries the list or range of angles to find a rotation of the specified polygon that best aligns
 //   with the reference polygon.  For each angle, the polygon is reindexed, which is a costly operation
 //   so if run time is a problem, use a smaller sampling of angles.  Returns the rotated and reindexed
 //   polygon.
-//   
 // Arguments:
 //   reference = reference polygon 
 //   poly = polygon to rotate into alignment with the reference
 //   angles = list or range of angles to test
 //   cp = centerpoint for rotations
-//   
 // Example(2D): The original hexagon in yellow is not well aligned with the pentagon.  Turning it so the faces line up gives an optimal alignment, shown in red.  
 //   $fn=32;
 //   pentagon = subdivide_path(pentagon(side=2),60);
