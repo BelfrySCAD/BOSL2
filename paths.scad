@@ -731,10 +731,10 @@ function _sum_preserving_round(data, index=0) =
 //   place_copies(mypath)circle(r=.1,$fn=32);
 // Example(2D):
 //   mypath = subdivide_path(square([8,2],center=true), 12);
-//   place_copies(mypath)circle(r=.1,$fn=32);
+//   place_copies(mypath)circle(r=.2,$fn=32);
 // Example(2D):
 //   mypath = subdivide_path(square([8,2],center=true), 12, method="segment");
-//   place_copies(mypath)circle(r=.1,$fn=32);
+//   place_copies(mypath)circle(r=.2,$fn=32);
 // Example(2D):
 //   mypath = subdivide_path(square([2,2],center=true), 17, closed=false);
 //   place_copies(mypath)circle(r=.1,$fn=32);
