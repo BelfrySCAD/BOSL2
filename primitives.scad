@@ -33,7 +33,7 @@
 //   square([40,30], anchor=FRONT, spin=30);
 // Example(NORENDER): Called as Function
 //   path = square([40,30], anchor=FRONT, spin=30);
-module square(size=1, center=undef, anchor=FRONT+LEFT, spin=0) {
+module square(size=1, center, anchor=FRONT+LEFT, spin=0) {
 	size = is_num(size)? [size,size] : point2d(size);
 	pts = [[size.x,0], [0,0], [0,size.y], size];
 	orient_and_anchor(point3d(size), UP, anchor, spin=spin, center=center, noncentered=FRONT+LEFT, two_d=true, chain=true) {
@@ -43,7 +43,7 @@ module square(size=1, center=undef, anchor=FRONT+LEFT, spin=0) {
 }
 
 
-function square(size=1, center=undef, anchor=FRONT+LEFT, spin=0) =
+function square(size=1, center, anchor=FRONT+LEFT, spin=0) =
 	let(
 		anchor = center==true? CENTER : center==false? FRONT+LEFT : anchor,
 		size = is_num(size)? [size,size] : point2d(size),
@@ -74,7 +74,7 @@ function square(size=1, center=undef, anchor=FRONT+LEFT, spin=0) =
 //   circle(d=50, anchor=FRONT, spin=45);
 // Example(NORENDER): Called as Function
 //   path = circle(d=50, anchor=FRONT, spin=45);
-module circle(r=undef, d=undef, realign=false, circum=false, anchor=CENTER, spin=0) {
+module circle(r, d, realign=false, circum=false, anchor=CENTER, spin=0) {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
 	rr = circum? r/cos(180/sides) : r;
@@ -86,7 +86,7 @@ module circle(r=undef, d=undef, realign=false, circum=false, anchor=CENTER, spin
 }
 
 
-function circle(r=undef, d=undef, realign=false, circum=false, anchor=CENTER, spin=0) =
+function circle(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 	let(
 		r = get_radius(r=r, d=d, dflt=1),
 		sides = segs(r),
@@ -108,10 +108,10 @@ function circle(r=undef, d=undef, realign=false, circum=false, anchor=CENTER, sp
 //
 // Arguments:
 //   size = The size of the cube.
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=ALLNEG`.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=ALLNEG`.
 //
 // Example: Simple cube.
 //   cube(40);
@@ -125,7 +125,7 @@ function circle(r=undef, d=undef, realign=false, circum=false, anchor=CENTER, sp
 //   cube([20,40,50], anchor=BOTTOM+FRONT, spin=30, orient=FWD);
 // Example: Standard Connectors.
 //   cube(40, center=true) show_anchors();
-module cube(size=1, center=undef, anchor=ALLNEG, spin=0, orient=UP)
+module cube(size=1, center, anchor=ALLNEG, spin=0, orient=UP)
 {
 	size = scalar_vec3(size);
 	orient_and_anchor(size, orient, anchor, center, spin=spin, noncentered=ALLNEG, chain=true) {
@@ -146,16 +146,16 @@ module cube(size=1, center=undef, anchor=ALLNEG, spin=0, orient=UP)
 //   This is a drop-in replacement for the built-in `cylinder()` module.
 // Arguments:
 //   l / h = The height of the cylinder.
-//   r = The radius of the cylinder.
 //   r1 = The bottom radius of the cylinder.  (Before orientation.)
 //   r2 = The top radius of the cylinder.  (Before orientation.)
-//   d = The diameter of the cylinder.
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
 //   d1 = The bottom diameter of the cylinder.  (Before orientation.)
 //   d2 = The top diameter of the cylinder.  (Before orientation.)
+//   r = The radius of the cylinder.
+//   d = The diameter of the cylinder.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
 // Example: By Radius
 //   xdistribute(30) {
 //       cylinder(h=40, r=10);
@@ -177,7 +177,7 @@ module cube(size=1, center=undef, anchor=ALLNEG, spin=0, orient=UP)
 //       cylinder(h=30, d=25) show_anchors();
 //       cylinder(h=30, d1=25, d2=10) show_anchors();
 //   }
-module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, l=undef, center=undef, anchor=BOTTOM, spin=0, orient=UP)
+module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor=BOTTOM, spin=0, orient=UP)
 {
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
@@ -220,7 +220,7 @@ module cylinder(r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=unde
 //   sphere(d=100, anchor=FRONT, spin=45, orient=FWD);
 // Example: Standard Connectors
 //   sphere(d=50) show_anchors();
-module sphere(r=undef, d=undef, anchor=CENTER, spin=0, orient=UP)
+module sphere(r, d, anchor=CENTER, spin=0, orient=UP)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
