@@ -8,11 +8,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// CommonCode:
-//   include <BOSL2/rounding.scad>
-
-
-// Section: Lines and Triangles
+// Section: Lines, Rays, and Segments
 
 // Function: point_on_segment2d()
 // Usage:
@@ -130,7 +126,7 @@ function line_normal(p1,p2) =
 // of the intersection point along s2.  The proportional values run over
 // the range of 0 to 1 for each segment, so if it is in this range, then
 // the intersection lies on the segment.  Otherwise it lies somewhere on
-// the extension of the segment.
+// the extension of the segment.  Result is undef for coincident lines.
 function _general_line_intersection(s1,s2,eps=EPSILON) =
 	let(
 		denominator = det2([s1[0],s2[0]]-[s1[1],s2[1]])
@@ -149,8 +145,73 @@ function _general_line_intersection(s1,s2,eps=EPSILON) =
 // Arguments:
 //   l1 = First 2D line, given as a list of two 2D points on the line.
 //   l2 = Second 2D line, given as a list of two 2D points on the line.
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 function line_intersection(l1,l2,eps=EPSILON) =
 	let(isect = _general_line_intersection(l1,l2,eps=eps)) isect[0];
+
+
+// Function: line_ray_intersection()
+// Usage:
+//   line_ray_intersection(line, ray);
+// Description:
+//   Returns the 2D intersection point of an unbounded 2D line, and a half-bounded 2D ray.
+//   Returns `undef` if they do not intersect.
+// Arguments:
+//   line = The unbounded 2D line, defined by two 2D points on the line.
+//   ray = The 2D ray, given as a list `[START,POINT]` of the 2D start-point START, and a 2D point POINT on the ray.
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+function line_ray_intersection(line,ray,eps=EPSILON) =
+	let(
+		isect = _general_line_intersection(line,ray,eps=eps)
+	) isect[2]<0-eps? undef : isect[0];
+
+
+// Function: line_segment_intersection()
+// Usage:
+//   line_segment_intersection(line, segment);
+// Description:
+//   Returns the 2D intersection point of an unbounded 2D line, and a bounded 2D line segment.
+//   Returns `undef` if they do not intersect.
+// Arguments:
+//   line = The unbounded 2D line, defined by two 2D points on the line.
+//   segment = The bounded 2D line segment, given as a list of the two 2D endpoints of the segment.
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+function line_segment_intersection(line,segment,eps=EPSILON) =
+	let(
+		isect = _general_line_intersection(line,segment,eps=eps)
+	) isect[2]<0-eps || isect[2]>1+eps ? undef : isect[0];
+
+
+// Function: ray_intersection()
+// Usage:
+//   ray_intersection(s1, s2);
+// Description:
+//   Returns the 2D intersection point of two 2D line rays.
+//   Returns `undef` if they do not intersect.
+// Arguments:
+//   r1 = First 2D ray, given as a list `[START,POINT]` of the 2D start-point START, and a 2D point POINT on the ray.
+//   r2 = Second 2D ray, given as a list `[START,POINT]` of the 2D start-point START, and a 2D point POINT on the ray.
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+function ray_intersection(r1,r2,eps=EPSILON) =
+	let(
+		isect = _general_line_intersection(r1,r2,eps=eps)
+	) isect[1]<0-eps || isect[2]<0-eps? undef : isect[0];
+
+
+// Function: ray_segment_intersection()
+// Usage:
+//   ray_segment_intersection(ray, segment);
+// Description:
+//   Returns the 2D intersection point of a half-bounded 2D ray, and a bounded 2D line segment.
+//   Returns `undef` if they do not intersect.
+// Arguments:
+//   ray = The 2D ray, given as a list `[START,POINT]` of the 2D start-point START, and a 2D point POINT on the ray.
+//   segment = The bounded 2D line segment, given as a list of the two 2D endpoints of the segment.
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+function ray_segment_intersection(ray,segment,eps=EPSILON) =
+	let(
+		isect = _general_line_intersection(ray,segment,eps=eps)
+	) isect[1]<0-eps || isect[2]<0-eps || isect[2]>1+eps ? undef : isect[0];
 
 
 // Function: segment_intersection()
@@ -167,22 +228,6 @@ function segment_intersection(s1,s2,eps=EPSILON) =
 	let(
 		isect = _general_line_intersection(s1,s2,eps=eps)
 	) isect[1]<0-eps || isect[1]>1+eps || isect[2]<0-eps || isect[2]>1+eps ? undef : isect[0];
-
-
-// Function: line_segment_intersection()
-// Usage:
-//   line_segment_intersection(line, segment);
-// Description:
-//   Returns the 2D intersection point of an unbounded 2D line, and a bounded 2D line segment.
-//   Returns `undef` if they do not intersect.
-// Arguments:
-//   line = The unbounded 2D line, defined by two 2D points on the line.
-//   segment = The bounded 2D line  segment, given as a list of the two 2D endpoints of the segment.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function line_segment_intersection(line,segment,eps=EPSILON) =
-	let(
-		isect = _general_line_intersection(line,segment,eps=eps)
-	) isect[2]<0-eps || isect[2]>1+eps ? undef : isect[0];
 
 
 // Function: line_closest_point()
@@ -219,139 +264,7 @@ function segment_closest_point(seg,pt) =
 	isect[0];
 
 
-// Function: find_circle_2tangents()
-// Usage:
-//   find_circle_2tangents(pt1, pt2, pt3, r|d);
-// Description:
-//   Returns [centerpoint, normal] of a circle of known size that is between and tangent to two rays with the same starting point.
-//   Both rays start at `pt2`, and one passes through `pt1`, while the other passes through `pt3`.
-//   If the rays given are 180º apart, `undef` is returned.  If the rays are 3D, the normal returned is the plane normal of the circle.
-// Arguments:
-//   pt1 = A point that the first ray passes though.
-//   pt2 = The starting point of both rays.
-//   pt3 = A point that the second ray passes though.
-//   r = The radius of the circle to find.
-//   d = The diameter of the circle to find.
-// Example(2D):
-//   pts = [[60,40], [10,10], [65,5]];
-//   rad = 10;
-//   stroke([pts[1],pts[0]], endcap2="arrow2");
-//   stroke([pts[1],pts[2]], endcap2="arrow2");
-//   circ = find_circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad);
-//   translate(circ[0]) {
-//       color("green") {
-//           stroke(circle(r=rad),closed=true);
-//           stroke([[0,0],rad*[cos(315),sin(315)]]);
-//       }
-//   }
-//   place_copies(pts) color("blue") circle(d=2, $fn=12);
-//   translate(circ[0]) color("red") circle(d=2, $fn=12);
-//   labels = [[pts[0], "pt1"], [pts[1],"pt2"], [pts[2],"pt3"], [circ[0], "CP"], [circ[0]+[cos(315),sin(315)]*rad*0.7, "r"]];
-//   for(l=labels) translate(l[0]+[0,2]) color("black") text(text=l[1], size=2.5, halign="center");
-function find_circle_2tangents(pt1, pt2, pt3, r=undef, d=undef) =
-	let(r = get_radius(r=r, d=d, dflt=undef))
-	assert(r!=undef, "Must specify either r or d.")
-	(is_undef(pt2) && is_undef(pt3) && is_list(pt1))? find_circle_2tangents(pt1[0], pt1[1], pt1[2], r=r) :
-	let(
-		v1 = normalize(pt1 - pt2),
-		v2 = normalize(pt3 - pt2)
-	) approx(norm(v1+v2))? undef :
-	let(
-		a = vector_angle(v1,v2),
-		n = vector_axis(v1,v2),
-		v = normalize(mean([v1,v2])),
-		s = r/sin(a/2),
-		cp = pt2 + s*v/norm(v)
-	) [cp, n];
-
-
-// Function: find_circle_3points()
-// Usage:
-//   find_circle_3points(pt1, pt2, pt3);
-// Description:
-//   Returns the [CENTERPOINT, RADIUS, NORMAL] of the circle that passes through three non-collinear
-//   points.  The centerpoint will be a 2D or 3D vector, depending on the points input.  If all three
-//   points are 2D, then the resulting centerpoint will be 2D, and the normal will be UP ([0,0,1]).
-//   If any of the points are 3D, then the resulting centerpoint will be 3D.  If the three points are
-//   collinear, then `[undef,undef,undef]` will be returned.  The normal will be a normalized 3D
-//   vector with a non-negative Z axis.
-// Arguments:
-//   pt1 = The first point.
-//   pt2 = The second point.
-//   pt3 = The third point.
-// Example(2D):
-//   pts = [[60,40], [10,10], [65,5]];
-//   circ = find_circle_3points(pts[0], pts[1], pts[2]);
-//   translate(circ[0]) color("green") stroke(circle(r=circ[1]),closed=true,$fn=72);
-//   translate(circ[0]) color("red") circle(d=3, $fn=12);
-//   place_copies(pts) color("blue") circle(d=3, $fn=12);
-function find_circle_3points(pt1, pt2, pt3) =
-	(is_undef(pt2) && is_undef(pt3) && is_list(pt1))? find_circle_3points(pt1[0], pt1[1], pt1[2]) :
-	collinear(pt1,pt2,pt3)? [undef,undef,undef] :
-	let(
-		v1 = pt1-pt2,
-		v2 = pt3-pt2,
-		n = vector_axis(v1,v2),
-		n2 = n.z<0? -n : n
-	) len(pt1)+len(pt2)+len(pt3)>6? (
-		let(
-			a = project_plane(pt1, pt1, pt2, pt3),
-			b = project_plane(pt2, pt1, pt2, pt3),
-			c = project_plane(pt3, pt1, pt2, pt3),
-			res = find_circle_3points(a, b, c)
-		) res[0]==undef? [undef,undef,undef] : let(
-			cp = lift_plane(res[0], pt1, pt2, pt3),
-			r = norm(pt2-cp)
-		) [cp, r, n2]
-	) : let(
-		mp1 = pt2 + v1/2,
-		mp2 = pt2 + v2/2,
-		mpv1 = rot(90, v=n, p=v1),
-		mpv2 = rot(90, v=n, p=v2),
-		l1 = [mp1, mp1+mpv1],
-		l2 = [mp2, mp2+mpv2],
-		isect = line_intersection(l1,l2)
-	) is_undef(isect)? [undef,undef,undef] : let(
-		r = norm(pt2-isect)
-	) [isect, r, n2];
-
-
-
-// Function: find_circle_tangents()
-// Usage:
-//   tangents = find_circle_tangents(r|d, cp, pt);
-// Description:
-//   Given a circle and a point outside that circle, finds the tangent point(s) on the circle for a
-//   line passing through the point.  Returns list of zero or more sublists of [ANG, TANGPT]
-// Arguments:
-//   r = Radius of the circle.
-//   d = Diameter of the circle.
-//   cp = The coordinates of the circle centerpoint.
-//   pt = The coordinates of the external point.
-// Example(2D):
-//   cp = [-10,-10];  r = 30;  pt = [30,10];
-//   tanpts = subindex(find_circle_tangents(r=r, cp=cp, pt=pt),1);
-//   color("yellow") translate(cp) circle(r=r);
-//   color("cyan") for(tp=tanpts) {stroke([tp,pt]); stroke([tp,cp]);}
-//   color("red") place_copies(tanpts) circle(d=3,$fn=12);
-//   color("blue") place_copies([cp,pt]) circle(d=3,$fn=12);
-function find_circle_tangents(r, d, cp, pt) =
-	assert(is_num(r) || is_num(d))
-	assert(is_vector(cp))
-	assert(is_vector(pt))
-	let(
-		r = get_radius(r=r, d=d, dflt=1),
-		delta = pt - cp,
-		dist = norm(delta),
-		baseang = atan2(delta.y,delta.x)
-	) dist < r? [] :
-	approx(dist,r)? [[baseang, pt]] :
-	let(
-		relang = acos(r/dist),
-		angs = [baseang + relang, baseang - relang]
-	) [for (ang=angs) [ang, cp + r*[cos(ang),sin(ang)]]];
-
-
+// Section: 2D Triangles
 
 // Function: tri_calc()
 // Usage:
@@ -712,6 +625,96 @@ function distance_from_plane(plane, point) =
 	[plane.x, plane.y, plane.z] * point3d(point) - plane[3];
 
 
+// Function: closest_point_on_plane()
+// Usage:
+//   pt = closest_point_on_plane(plane, point);
+// Description:
+//   Takes a point, and a plane [A,B,C,D] where the equation of that plane is `Ax+By+Cz+D=0`.
+//   Returns the coordinates of the closest point on that plane to the given `point`.
+// Arguments:
+//   plane = The [A,B,C,D] values for the equation of the plane.
+//   point = The 3D point to find the closest point to.
+function closest_point_on_plane(plane, point) =
+	let(
+		n = normalize(plane_normal(plane)),
+		d = distance_from_plane(plane, point)
+	) point - n*d;
+
+
+function _general_plane_line_intersection(plane, line, eps=EPSILON) =
+	let(
+		p0 = line[0],
+		p1 = line[1],
+		n = plane_normal(plane),
+		u = p1 - p0,
+		d = n * u
+	) abs(d)<eps? (
+		undef  // Line parallel to plane
+	) : let(
+		v0 = closest_point_on_plane(plane, [0,0,0]),
+		w = p0 - v0,
+		s1 = (-n * w) / d,
+		pt = s1 * u + p0
+	) [pt, s1];
+
+
+// Function: plane_line_intersection()
+// Usage:
+//   pt = plane_line_intersection(plane, line, [eps]);
+// Description:
+//   Takes a line, and a plane [A,B,C,D] where the equation of that plane is `Ax+By+Cz+D=0`.
+//   Returns the coordinates of the where the given `line` intersects the given `plane`.
+//   Returns `undef` if the line is parallel to the plane.
+// Arguments:
+//   plane = The [A,B,C,D] values for the equation of the plane.
+//   line = A list of two 3D points that are on the line.
+//   bounded = If false, the line is considered unbounded.  If true, it is treated as a bounded line segment.  If given as `[true, false]` or `[false, true]`, the boundedness of the points are specified individually, allowing the line to be treated as a half-bounded ray.  Default: false (unbounded)
+//   eps = The epsilon error value to determine whether the line is too close to parallel to the plane.  Default: `EPSILON` (1e-9)
+function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
+	assert(is_vector(plane)&&len(plane)==4)
+	assert(is_path(line)&&len(line)==2)
+	let(
+		bounded = is_list(bounded)? bounded : [bounded, bounded],
+		res = _general_plane_line_intersection(plane, line, eps=eps)
+	)
+	bounded[0]&&res[1]<0? undef :
+	bounded[1]&&res[1]>1? undef :
+	res[0];
+
+
+// Function: polygon_line_intersection()
+// Usage:
+//   pt = polygon_line_intersection(poly, line, [bounded], [eps]);
+// Description:
+//   Takes a possibly bounded line, and a 3D planar polygon, and finds their intersection point.
+//   Returns the 3D coordinates of the intersection point, or `undef` if they do not intersect.
+// Arguments:
+//   poly = The 3D planar polygon to find the intersection with.
+//   line = A list of two 3D points that are on the line.
+//   bounded = If false, the line is considered unbounded.  If true, it is treated as a bounded line segment.  If given as `[true, false]` or `[false, true]`, the boundedness of the points are specified individually, allowing the line to be treated as a half-bounded ray.  Default: false (unbounded)
+//   eps = The epsilon error value to determine whether the line is too close to parallel to the plane.  Default: `EPSILON` (1e-9)
+function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
+	assert(is_path(poly))
+	assert(is_path(line)&&len(line)==2)
+	let(
+		bounded = is_list(bounded)? bounded : [bounded, bounded],
+		poly = deduplicate(poly),
+		indices = sort(find_noncollinear_points(poly)),
+		p1 = poly[indices[0]],
+		p2 = poly[indices[1]],
+		p3 = poly[indices[2]],
+		plane = plane3pt(p1,p2,p3),
+		res = _general_plane_line_intersection(plane, line, eps=eps)
+	)
+	bounded[0]&&res[1]<0? undef :
+	bounded[1]&&res[1]>1? undef :
+	let(
+		proj = clockwise_polygon(project_plane(poly, p1, p2, p3)),
+		pt = project_plane(res[0], p1, p2, p3)
+	) point_in_polygon(pt, proj) < 0? undef :
+	res[0];
+
+
 // Function: coplanar()
 // Usage:
 //   coplanar(plane, point);
@@ -739,6 +742,143 @@ function coplanar(plane, point) =
 //   point = The point to test.
 function in_front_of_plane(plane, point) =
 	distance_from_plane(plane, point) > EPSILON;
+
+
+
+// Section: Circle Calculations
+
+// Function: find_circle_2tangents()
+// Usage:
+//   find_circle_2tangents(pt1, pt2, pt3, r|d);
+// Description:
+//   Returns [centerpoint, normal] of a circle of known size that is between and tangent to two rays with the same starting point.
+//   Both rays start at `pt2`, and one passes through `pt1`, while the other passes through `pt3`.
+//   If the rays given are 180º apart, `undef` is returned.  If the rays are 3D, the normal returned is the plane normal of the circle.
+// Arguments:
+//   pt1 = A point that the first ray passes though.
+//   pt2 = The starting point of both rays.
+//   pt3 = A point that the second ray passes though.
+//   r = The radius of the circle to find.
+//   d = The diameter of the circle to find.
+// Example(2D):
+//   pts = [[60,40], [10,10], [65,5]];
+//   rad = 10;
+//   stroke([pts[1],pts[0]], endcap2="arrow2");
+//   stroke([pts[1],pts[2]], endcap2="arrow2");
+//   circ = find_circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad);
+//   translate(circ[0]) {
+//       color("green") {
+//           stroke(circle(r=rad),closed=true);
+//           stroke([[0,0],rad*[cos(315),sin(315)]]);
+//       }
+//   }
+//   place_copies(pts) color("blue") circle(d=2, $fn=12);
+//   translate(circ[0]) color("red") circle(d=2, $fn=12);
+//   labels = [[pts[0], "pt1"], [pts[1],"pt2"], [pts[2],"pt3"], [circ[0], "CP"], [circ[0]+[cos(315),sin(315)]*rad*0.7, "r"]];
+//   for(l=labels) translate(l[0]+[0,2]) color("black") text(text=l[1], size=2.5, halign="center");
+function find_circle_2tangents(pt1, pt2, pt3, r=undef, d=undef) =
+	let(r = get_radius(r=r, d=d, dflt=undef))
+	assert(r!=undef, "Must specify either r or d.")
+	(is_undef(pt2) && is_undef(pt3) && is_list(pt1))? find_circle_2tangents(pt1[0], pt1[1], pt1[2], r=r) :
+	let(
+		v1 = normalize(pt1 - pt2),
+		v2 = normalize(pt3 - pt2)
+	) approx(norm(v1+v2))? undef :
+	let(
+		a = vector_angle(v1,v2),
+		n = vector_axis(v1,v2),
+		v = normalize(mean([v1,v2])),
+		s = r/sin(a/2),
+		cp = pt2 + s*v/norm(v)
+	) [cp, n];
+
+
+// Function: find_circle_3points()
+// Usage:
+//   find_circle_3points(pt1, pt2, pt3);
+// Description:
+//   Returns the [CENTERPOINT, RADIUS, NORMAL] of the circle that passes through three non-collinear
+//   points.  The centerpoint will be a 2D or 3D vector, depending on the points input.  If all three
+//   points are 2D, then the resulting centerpoint will be 2D, and the normal will be UP ([0,0,1]).
+//   If any of the points are 3D, then the resulting centerpoint will be 3D.  If the three points are
+//   collinear, then `[undef,undef,undef]` will be returned.  The normal will be a normalized 3D
+//   vector with a non-negative Z axis.
+// Arguments:
+//   pt1 = The first point.
+//   pt2 = The second point.
+//   pt3 = The third point.
+// Example(2D):
+//   pts = [[60,40], [10,10], [65,5]];
+//   circ = find_circle_3points(pts[0], pts[1], pts[2]);
+//   translate(circ[0]) color("green") stroke(circle(r=circ[1]),closed=true,$fn=72);
+//   translate(circ[0]) color("red") circle(d=3, $fn=12);
+//   place_copies(pts) color("blue") circle(d=3, $fn=12);
+function find_circle_3points(pt1, pt2, pt3) =
+	(is_undef(pt2) && is_undef(pt3) && is_list(pt1))? find_circle_3points(pt1[0], pt1[1], pt1[2]) :
+	collinear(pt1,pt2,pt3)? [undef,undef,undef] :
+	let(
+		v1 = pt1-pt2,
+		v2 = pt3-pt2,
+		n = vector_axis(v1,v2),
+		n2 = n.z<0? -n : n
+	) len(pt1)+len(pt2)+len(pt3)>6? (
+		let(
+			a = project_plane(pt1, pt1, pt2, pt3),
+			b = project_plane(pt2, pt1, pt2, pt3),
+			c = project_plane(pt3, pt1, pt2, pt3),
+			res = find_circle_3points(a, b, c)
+		) res[0]==undef? [undef,undef,undef] : let(
+			cp = lift_plane(res[0], pt1, pt2, pt3),
+			r = norm(pt2-cp)
+		) [cp, r, n2]
+	) : let(
+		mp1 = pt2 + v1/2,
+		mp2 = pt2 + v2/2,
+		mpv1 = rot(90, v=n, p=v1),
+		mpv2 = rot(90, v=n, p=v2),
+		l1 = [mp1, mp1+mpv1],
+		l2 = [mp2, mp2+mpv2],
+		isect = line_intersection(l1,l2)
+	) is_undef(isect)? [undef,undef,undef] : let(
+		r = norm(pt2-isect)
+	) [isect, r, n2];
+
+
+
+// Function: find_circle_tangents()
+// Usage:
+//   tangents = find_circle_tangents(r|d, cp, pt);
+// Description:
+//   Given a circle and a point outside that circle, finds the tangent point(s) on the circle for a
+//   line passing through the point.  Returns list of zero or more sublists of [ANG, TANGPT]
+// Arguments:
+//   r = Radius of the circle.
+//   d = Diameter of the circle.
+//   cp = The coordinates of the circle centerpoint.
+//   pt = The coordinates of the external point.
+// Example(2D):
+//   cp = [-10,-10];  r = 30;  pt = [30,10];
+//   tanpts = subindex(find_circle_tangents(r=r, cp=cp, pt=pt),1);
+//   color("yellow") translate(cp) circle(r=r);
+//   color("cyan") for(tp=tanpts) {stroke([tp,pt]); stroke([tp,cp]);}
+//   color("red") place_copies(tanpts) circle(d=3,$fn=12);
+//   color("blue") place_copies([cp,pt]) circle(d=3,$fn=12);
+function find_circle_tangents(r, d, cp, pt) =
+	assert(is_num(r) || is_num(d))
+	assert(is_vector(cp))
+	assert(is_vector(pt))
+	let(
+		r = get_radius(r=r, d=d, dflt=1),
+		delta = pt - cp,
+		dist = norm(delta),
+		baseang = atan2(delta.y,delta.x)
+	) dist < r? [] :
+	approx(dist,r)? [[baseang, pt]] :
+	let(
+		relang = acos(r/dist),
+		angs = [baseang + relang, baseang - relang]
+	) [for (ang=angs) [ang, cp + r*[cos(ang),sin(ang)]]];
+
 
 
 
@@ -775,104 +915,6 @@ function close_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? path : co
 // Description:
 //   If a path's last point coincides with its first point, deletes the last point in the path.
 function cleanup_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? select(path,0,-2) : path;
-
-
-// Function: path_self_intersections()
-// Usage:
-//   isects = path_self_intersections(path, [eps]);
-// Description:
-//   Locates all self intersections of the given path.  Returns a list of intersections, where
-//   each intersection is a list like [POINT, SEGNUM1, PROPORTION1, SEGNUM2, PROPORTION2] where
-//   POINT is the coordinates of the intersection point, SEGNUMs are the integer indices of the
-//   intersecting segments along the path, and the PROPORTIONS are the 0.0 to 1.0 proportions
-//   of how far along those segments they intersect at.  A proportion of 0.0 indicates the start
-//   of the segment, and a proportion of 1.0 indicates the end of the segment.
-// Arguments:
-//   path = The path to find self intersections of.
-//   closed = If true, treat path like a closed polygon.  Default: true
-//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-// Example(2D):
-//   path = [
-//       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
-//   ];
-//   isects = path_self_intersections(path, closed=true);
-//   // isects == [[[-33.3333, 0], 0, 0.666667, 4, 0.333333], [[33.3333, 0], 1, 0.333333, 3, 0.666667]]
-//   stroke(path, closed=true, width=1);
-//   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
-function path_self_intersections(path, closed=true, eps=EPSILON) =
-	let(
-		path = cleanup_path(path, eps=eps),
-		plen = len(path)
-	) [
-		for (i = [0:1:plen-(closed?2:3)], j=[i+1:1:plen-(closed?1:2)]) let(
-			a1 = path[i],
-			a2 = path[(i+1)%plen],
-			b1 = path[j],
-			b2 = path[(j+1)%plen],
-			isect =
-				(max(a1.x, a2.x) < min(b1.x, b2.x))? undef :
-				(min(a1.x, a2.x) > max(b1.x, b2.x))? undef :
-				(max(a1.y, a2.y) < min(b1.y, b2.y))? undef :
-				(min(a1.y, a2.y) > max(b1.y, b2.y))? undef :
-				let(
-					c = a1-a2,
-					d = b1-b2,
-					denom = (c.x*d.y)-(c.y*d.x)
-				) abs(denom)<eps? undef : let(
-					e = a1-b1,
-					t = ((e.x*d.y)-(e.y*d.x)) / denom,
-					u = ((e.x*c.y)-(e.y*c.x)) / denom
-				) [a1+t*(a2-a1), t, u]
-		) if (
-			isect != undef &&
-			isect[1]>eps && isect[1]<=1+eps &&
-			isect[2]>eps && isect[2]<=1+eps
-		) [isect[0], i, isect[1], j, isect[2]]
-	];
-
-
-function _tag_self_crossing_subpaths(path, closed=true, eps=EPSILON) =
-	let(
-		subpaths = split_path_at_self_crossings(
-			path, closed=closed, eps=eps
-		)
-	) [
-		for (subpath = subpaths) let(
-			seg = select(subpath,0,1),
-			mp = mean(seg),
-			n = line_normal(seg) / 2048,
-			p1 = mp + n,
-			p2 = mp - n,
-			p1in = point_in_polygon(p1, path) >= 0,
-			p2in = point_in_polygon(p2, path) >= 0,
-			tag = (p1in && p2in)? "I" : "O"
-		) [tag, subpath]
-	];
-
-
-// Function: decompose_path()
-// Usage:
-//   splitpaths = decompose_path(path, [closed], [eps]);
-// Description:
-//   Given a possibly self-crossing path, decompose it into non-crossing paths that are on the perimeter
-//   of the areas bounded by that path.
-// Arguments:
-//   path = The path to split up.
-//   closed = If true, treat path like a closed polygon.  Default: true
-//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-// Example(2D):
-//   path = [
-//       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
-//   ];
-//   splitpaths = decompose_path(path, closed=true);
-//   rainbow(splitpaths) stroke($item, closed=true, width=3);
-function decompose_path(path, closed=true, eps=EPSILON) =
-	let(
-		path = cleanup_path(path, eps=eps),
-		tagged = _tag_self_crossing_subpaths(path, closed=closed, eps=eps),
-		kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
-		outregion = assemble_path_fragments(kept, eps=eps)
-	) outregion;
 
 
 // Function: path_subselect()
@@ -1060,6 +1102,246 @@ function centroid(vertices) =
 	]) / 6 / polygon_area(vertices);
 
 
+// Function: simplify_path()
+// Description:
+//   Takes a path and removes unnecessary collinear points.
+// Usage:
+//   simplify_path(path, [eps])
+// Arguments:
+//   path = A list of 2D path points.
+//   eps = Largest positional variance allowed.  Default: `EPSILON` (1-e9)
+function simplify_path(path, eps=EPSILON) =
+	len(path)<=2? path : let(
+		indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(path, i-1, i, i+1, eps=eps)) i], [len(path)-1])
+	) [for (i = indices) path[i]];
+
+
+
+// Function: simplify_path_indexed()
+// Description:
+//   Takes a list of points, and a path as a list of indices into `points`,
+//   and removes all path points that are unecessarily collinear.
+// Usage:
+//   simplify_path_indexed(path, eps)
+// Arguments:
+//   points = A list of points.
+//   path = A list of indices into `points` that forms a path.
+//   eps = Largest angle variance allowed.  Default: EPSILON (1-e9) degrees.
+function simplify_path_indexed(points, path, eps=EPSILON) =
+	len(path)<=2? path : let(
+		indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(points, path[i-1], path[i], path[i+1], eps=eps)) i], [len(path)-1])
+	) [for (i = indices) path[i]];
+
+
+
+// Function: point_in_polygon()
+// Usage:
+//   point_in_polygon(point, path, [eps])
+// Description:
+//   This function tests whether the given point is inside, outside or on the boundary of
+//   the specified 2D polygon using the Winding Number method.
+//   The polygon is given as a list of 2D points, not including the repeated end point.
+//   Returns -1 if the point is outside the polyon.
+//   Returns 0 if the point is on the boundary.
+//   Returns 1 if the point lies in the interior.
+//   The polygon does not need to be simple: it can have self-intersections.
+//   But the polygon cannot have holes (it must be simply connected).
+//   Rounding error may give mixed results for points on or near the boundary.
+// Arguments:
+//   point = The point to check position of.
+//   path = The list of 2D path points forming the perimeter of the polygon.
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+function point_in_polygon(point, path, eps=EPSILON) =
+	// Original algorithm from http://geomalgorithms.com/a03-_inclusion.html
+	// Does the point lie on any edges?  If so return 0.
+	sum([for(i=[0:1:len(path)-1]) let(seg=select(path,i,i+1)) if(!approx(seg[0],seg[1],eps=eps)) point_on_segment2d(point, seg, eps=eps)?1:0]) > 0? 0 :
+	// Otherwise compute winding number and return 1 for interior, -1 for exterior
+	sum([for(i=[0:1:len(path)-1]) let(seg=select(path,i,i+1)) if(!approx(seg[0],seg[1],eps=eps)) _point_above_below_segment(point, seg)]) != 0? 1 : -1;
+
+
+// Function: pointlist_bounds()
+// Usage:
+//   pointlist_bounds(pts);
+// Description:
+//   Finds the bounds containing all the 2D or 3D points in `pts`.
+//   Returns `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
+// Arguments:
+//   pts = List of points.
+function pointlist_bounds(pts) = [
+	[for (a=[0:2]) min([ for (x=pts) point3d(x)[a] ]) ],
+	[for (a=[0:2]) max([ for (x=pts) point3d(x)[a] ]) ]
+];
+
+
+// Function: closest_point()
+// Usage:
+//   closest_point(pt, points);
+// Description:
+//   Given a list of `points`, finds the index of the closest point to `pt`.
+// Arguments:
+//   pt = The point to find the closest point to.
+//   points = The list of points to search.
+function closest_point(pt, points) =
+	min_index([for (p=points) norm(p-pt)]);
+
+
+// Function: furthest_point()
+// Usage:
+//   furthest_point(pt, points);
+// Description:
+//   Given a list of `points`, finds the index of the furthest point from `pt`.
+// Arguments:
+//   pt = The point to find the farthest point from.
+//   points = The list of points to search.
+// Example:
+function furthest_point(pt, points) =
+	max_index([for (p=points) norm(p-pt)]);
+
+
+// Function: polygon_is_clockwise()
+// Usage:
+//   polygon_is_clockwise(path);
+// Description:
+//   Return true if the given 2D simple polygon is in clockwise order, false otherwise.
+//   Results for complex (self-intersecting) polygon are indeterminate.
+// Arguments:
+//   path = The list of 2D path points for the perimeter of the polygon.
+function polygon_is_clockwise(path) =
+	let(
+		minx = min(subindex(path,0)),
+		lowind = search(minx, path, 0, 0),
+		lowpts = select(path, lowind),
+		miny = min(subindex(lowpts, 1)),
+		extreme_sub = search(miny, lowpts, 1, 1)[0],
+		extreme = select(lowind,extreme_sub)
+	) det2([select(path,extreme+1)-path[extreme], select(path, extreme-1)-path[extreme]])<0;
+
+
+// Function: clockwise_polygon()
+// Usage:
+//   clockwise_polygon(path);
+// Description:
+//   Given a polygon path, returns the clockwise winding version of that path.
+function clockwise_polygon(path) =
+	polygon_is_clockwise(path)? path : reverse_polygon(path);
+
+
+// Function: ccw_polygon()
+// Usage:
+//   ccw_polygon(path);
+// Description:
+//   Given a polygon path, returns the counter-clockwise winding version of that path.
+function ccw_polygon(path) =
+	polygon_is_clockwise(path)? reverse_polygon(path) : path;
+
+
+// Function: reverse_polygon()
+// Usage:
+//   reverse_polygon(poly)
+// Description:
+//   Reverses a polygon's winding direction, while still using the same start point.
+function reverse_polygon(poly) =
+	let(lp=len(poly)) [for (i=idx(poly)) poly[(lp-i)%lp]];
+
+
+// Function: path_self_intersections()
+// Usage:
+//   isects = path_self_intersections(path, [eps]);
+// Description:
+//   Locates all self intersections of the given path.  Returns a list of intersections, where
+//   each intersection is a list like [POINT, SEGNUM1, PROPORTION1, SEGNUM2, PROPORTION2] where
+//   POINT is the coordinates of the intersection point, SEGNUMs are the integer indices of the
+//   intersecting segments along the path, and the PROPORTIONS are the 0.0 to 1.0 proportions
+//   of how far along those segments they intersect at.  A proportion of 0.0 indicates the start
+//   of the segment, and a proportion of 1.0 indicates the end of the segment.
+// Arguments:
+//   path = The path to find self intersections of.
+//   closed = If true, treat path like a closed polygon.  Default: true
+//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+// Example(2D):
+//   path = [
+//       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
+//   ];
+//   isects = path_self_intersections(path, closed=true);
+//   // isects == [[[-33.3333, 0], 0, 0.666667, 4, 0.333333], [[33.3333, 0], 1, 0.333333, 3, 0.666667]]
+//   stroke(path, closed=true, width=1);
+//   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
+function path_self_intersections(path, closed=true, eps=EPSILON) =
+	let(
+		path = cleanup_path(path, eps=eps),
+		plen = len(path)
+	) [
+		for (i = [0:1:plen-(closed?2:3)], j=[i+1:1:plen-(closed?1:2)]) let(
+			a1 = path[i],
+			a2 = path[(i+1)%plen],
+			b1 = path[j],
+			b2 = path[(j+1)%plen],
+			isect =
+				(max(a1.x, a2.x) < min(b1.x, b2.x))? undef :
+				(min(a1.x, a2.x) > max(b1.x, b2.x))? undef :
+				(max(a1.y, a2.y) < min(b1.y, b2.y))? undef :
+				(min(a1.y, a2.y) > max(b1.y, b2.y))? undef :
+				let(
+					c = a1-a2,
+					d = b1-b2,
+					denom = (c.x*d.y)-(c.y*d.x)
+				) abs(denom)<eps? undef : let(
+					e = a1-b1,
+					t = ((e.x*d.y)-(e.y*d.x)) / denom,
+					u = ((e.x*c.y)-(e.y*c.x)) / denom
+				) [a1+t*(a2-a1), t, u]
+		) if (
+			isect != undef &&
+			isect[1]>eps && isect[1]<=1+eps &&
+			isect[2]>eps && isect[2]<=1+eps
+		) [isect[0], i, isect[1], j, isect[2]]
+	];
+
+
+function _tag_self_crossing_subpaths(path, closed=true, eps=EPSILON) =
+	let(
+		subpaths = split_path_at_self_crossings(
+			path, closed=closed, eps=eps
+		)
+	) [
+		for (subpath = subpaths) let(
+			seg = select(subpath,0,1),
+			mp = mean(seg),
+			n = line_normal(seg) / 2048,
+			p1 = mp + n,
+			p2 = mp - n,
+			p1in = point_in_polygon(p1, path) >= 0,
+			p2in = point_in_polygon(p2, path) >= 0,
+			tag = (p1in && p2in)? "I" : "O"
+		) [tag, subpath]
+	];
+
+
+// Function: decompose_path()
+// Usage:
+//   splitpaths = decompose_path(path, [closed], [eps]);
+// Description:
+//   Given a possibly self-crossing path, decompose it into non-crossing paths that are on the perimeter
+//   of the areas bounded by that path.
+// Arguments:
+//   path = The path to split up.
+//   closed = If true, treat path like a closed polygon.  Default: true
+//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+// Example(2D):
+//   path = [
+//       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
+//   ];
+//   splitpaths = decompose_path(path, closed=true);
+//   rainbow(splitpaths) stroke($item, closed=true, width=3);
+function decompose_path(path, closed=true, eps=EPSILON) =
+	let(
+		path = cleanup_path(path, eps=eps),
+		tagged = _tag_self_crossing_subpaths(path, closed=closed, eps=eps),
+		kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
+		outregion = assemble_path_fragments(kept, eps=eps)
+	) outregion;
+
+
 function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
 	!fragments? [undef, []] :
 	let(
@@ -1181,618 +1463,6 @@ function assemble_path_fragments(fragments, rightmost=true, eps=EPSILON, _finish
 	);
 
 
-
-// Function: simplify_path()
-// Description:
-//   Takes a path and removes unnecessary collinear points.
-// Usage:
-//   simplify_path(path, [eps])
-// Arguments:
-//   path = A list of 2D path points.
-//   eps = Largest positional variance allowed.  Default: `EPSILON` (1-e9)
-function simplify_path(path, eps=EPSILON) =
-	len(path)<=2? path : let(
-		indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(path, i-1, i, i+1, eps=eps)) i], [len(path)-1])
-	) [for (i = indices) path[i]];
-
-
-
-// Function: simplify_path_indexed()
-// Description:
-//   Takes a list of points, and a path as a list of indices into `points`,
-//   and removes all path points that are unecessarily collinear.
-// Usage:
-//   simplify_path_indexed(path, eps)
-// Arguments:
-//   points = A list of points.
-//   path = A list of indices into `points` that forms a path.
-//   eps = Largest angle variance allowed.  Default: EPSILON (1-e9) degrees.
-function simplify_path_indexed(points, path, eps=EPSILON) =
-	len(path)<=2? path : let(
-		indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(points, path[i-1], path[i], path[i+1], eps=eps)) i], [len(path)-1])
-	) [for (i = indices) path[i]];
-
-
-
-// Function: point_in_polygon()
-// Usage:
-//   point_in_polygon(point, path)
-// Description:
-//   This function tests whether the given point is inside, outside or on the boundary of
-//   the specified 2D polygon using the Winding Number method.
-//   The polygon is given as a list of 2D points, not including the repeated end point.
-//   Returns -1 if the point is outside the polyon.
-//   Returns 0 if the point is on the boundary.
-//   Returns 1 if the point lies in the interior.
-//   The polygon does not need to be simple: it can have self-intersections.
-//   But the polygon cannot have holes (it must be simply connected).
-//   Rounding error may give mixed results for points on or near the boundary.
-// Arguments:
-//   point = The point to check position of.
-//   path = The list of 2D path points forming the perimeter of the polygon.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function point_in_polygon(point, path, eps=EPSILON) =
-	// Original algorithm from http://geomalgorithms.com/a03-_inclusion.html
-	// Does the point lie on any edges?  If so return 0.
-	sum([for(i=[0:1:len(path)-1]) let(seg=select(path,i,i+1)) if(!approx(seg[0],seg[1],eps=eps)) point_on_segment2d(point, seg, eps=eps)?1:0]) > 0? 0 :
-	// Otherwise compute winding number and return 1 for interior, -1 for exterior
-	sum([for(i=[0:1:len(path)-1]) let(seg=select(path,i,i+1)) if(!approx(seg[0],seg[1],eps=eps)) _point_above_below_segment(point, seg)]) != 0? 1 : -1;
-
-
-// Function: pointlist_bounds()
-// Usage:
-//   pointlist_bounds(pts);
-// Description:
-//   Finds the bounds containing all the 2D or 3D points in `pts`.
-//   Returns `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
-// Arguments:
-//   pts = List of points.
-function pointlist_bounds(pts) = [
-	[for (a=[0:2]) min([ for (x=pts) point3d(x)[a] ]) ],
-	[for (a=[0:2]) max([ for (x=pts) point3d(x)[a] ]) ]
-];
-
-
-// Function: closest_point()
-// Usage:
-//   closest_point(pt, points);
-// Description:
-//   Given a list of `points`, finds the index of the closest point to `pt`.
-// Arguments:
-//   pt = The point to find the closest point to.
-//   points = The list of points to search.
-function closest_point(pt, points) =
-	min_index([for (p=points) norm(p-pt)]);
-
-
-// Function: furthest_point()
-// Usage:
-//   furthest_point(pt, points);
-// Description:
-//   Given a list of `points`, finds the index of the furthest point from `pt`.
-// Arguments:
-//   pt = The point to find the farthest point from.
-//   points = The list of points to search.
-// Example:
-function furthest_point(pt, points) =
-	max_index([for (p=points) norm(p-pt)]);
-
-
-// Function: polygon_is_clockwise()
-// Usage:
-//   polygon_is_clockwise(path);
-// Description:
-//   Return true if the given 2D simple polygon is in clockwise order, false otherwise.
-//   Results for complex (self-intersecting) polygon are indeterminate.
-// Arguments:
-//   path = The list of 2D path points for the perimeter of the polygon.
-function polygon_is_clockwise(path) =
-	let(
-		minx = min(subindex(path,0)),
-		lowind = search(minx, path, 0, 0),
-		lowpts = select(path, lowind),
-		miny = min(subindex(lowpts, 1)),
-		extreme_sub = search(miny, lowpts, 1, 1)[0],
-		extreme = select(lowind,extreme_sub)
-	) det2([select(path,extreme+1)-path[extreme], select(path, extreme-1)-path[extreme]])<0;
-
-
-// Function: clockwise_polygon()
-// Usage:
-//   clockwise_polygon(path);
-// Description:
-//   Given a polygon path, returns the clockwise winding version of that path.
-function clockwise_polygon(path) =
-	polygon_is_clockwise(path)? path : reverse_polygon(path);
-
-
-// Function: ccw_polygon()
-// Usage:
-//   ccw_polygon(path);
-// Description:
-//   Given a polygon path, returns the counter-clockwise winding version of that path.
-function ccw_polygon(path) =
-	polygon_is_clockwise(path)? reverse_polygon(path) : path;
-
-
-// Function: reverse_polygon()
-// Usage:
-//   reverse_polygon(poly)
-// Description:
-//   Reverses a polygon's winding direction, while still using the same start point.
-function reverse_polygon(poly) =
-	let(lp=len(poly)) [for (i=idx(poly)) poly[(lp-i)%lp]];
-
-
-
-// Section: Regions and Boolean 2D Geometry
-
-
-// Function: is_region()
-// Usage:
-//   is_region(x);
-// Description:
-//   Returns true if the given item looks like a region.  A region is defined as a list of zero or more paths.
-function is_region(x) = is_list(x) && is_path(x.x);
-
-
-// Function: close_region()
-// Usage:
-//   close_region(region);
-// Description:
-//   Closes all paths within a given region.
-function close_region(region, eps=EPSILON) = [for (path=region) close_path(path, eps=eps)];
-
-// Function: check_and_fix_path()
-// Usage:
-//   check_and_fix_path(path, [valid_dim], [closed])
-// Description:
-//   Checks that the input is a path.  If it is a region with one component, converts it to a path.
-//   valid_dim specfies the allowed dimension of the points in the path.
-//   If the path is closed, removed duplicate endpoint if present.
-// Arguments:
-//   path = path to process
-//   valid_dim = list of allowed dimensions for the points in the path, e.g. [2,3] to require 2 or 3 dimensional input.  If left undefined do not perform this check.  Default: undef
-//   closed = set to true if the path is closed, which enables a check for endpoint duplication
-function check_and_fix_path(path, valid_dim=undef, closed=false) =
-	let(
-		path = is_region(path)? (
-			assert(len(path)==1,"Region supplied as path does not have exactly one component")
-			path[0]
-		) : (
-			assert(is_path(path), "Input is not a path")
-			path
-		),
-		dim = array_dim(path)
-	)
-	assert(dim[0]>1,"Path must have at least 2 points")
-	assert(len(dim)==2,"Invalid path: path is either a list of scalars or a list of matrices")
-	assert(is_def(dim[1]), "Invalid path: entries in the path have variable length")
-	let(valid=is_undef(valid_dim) || in_list(dim[1],valid_dim))
-	assert(
-		valid, str(
-			"The points on the path have length ",
-			dim[1], " but length must be ",
-			len(valid_dim)==1? valid_dim[0] : str("one of ",valid_dim)
-		)
-	)
-	closed && approx(path[0],select(path,-1))? slice(path,0,-2) : path;
-
-
-// Function: cleanup_region()
-// Usage:
-//   cleanup_region(region);
-// Description:
-//   For all paths in the given region, if the last point coincides with the first point, removes the last point.
-// Arguments:
-//   region = The region to clean up.  Given as a list of polygon paths.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function cleanup_region(region, eps=EPSILON) =
-	[for (path=region) cleanup_path(path, eps=eps)];
-
-
-// Function: point_in_region()
-// Usage:
-//   point_in_region(point, region);
-// Description:
-//   Tests if a point is inside, outside, or on the border of a region.
-//   Returns -1 if the point is outside the region.
-//   Returns 0 if the point is on the boundary.
-//   Returns 1 if the point lies inside the region.
-// Arguments:
-//   point = The point to test.
-//   region = The region to test against.  Given as a list of polygon paths.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
-	(_i >= len(region))? ((_cnt%2==1)? 1 : -1) : let(
-		pip = point_in_polygon(point, region[_i], eps=eps)
-	) pip==0? 0 : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
-
-
-// Function: region_path_crossings()
-// Usage:
-//   region_path_crossings(path, region);
-// Description:
-//   Returns a sorted list of [SEGMENT, U] that describe where a given path is crossed by a second path.
-// Arguments:
-//   path = The path to find crossings on.
-//   region = Region to test for crossings of.
-//   closed = If true, treat path as a closed polygon.  Default: true
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function region_path_crossings(path, region, closed=true, eps=EPSILON) = sort([
-	let(
-		segs = pair(closed? close_path(path) : cleanup_path(path))
-	) for (
-		si = idx(segs),
-		p = close_region(region),
-		s2 = pair(p)
-	) let (
-		isect = _general_line_intersection(segs[si], s2, eps=eps)
-	) if (
-		!is_undef(isect) &&
-		isect[1] >= 0-eps && isect[1] < 1+eps &&
-		isect[2] >= 0-eps && isect[2] < 1+eps
-	)
-	[si, isect[1]]
-]);
-
-
-function _offset_chamfer(center, points, delta) =
-	let(
-		dist = sign(delta)*norm(center-line_intersection(select(points,[0,2]), [center, points[1]])),
-		endline = _shift_segment(select(points,[0,2]), delta-dist)
-	) [
-		line_intersection(endline, select(points,[0,1])),
-		line_intersection(endline, select(points,[1,2]))
-	];
-
-
-function _shift_segment(segment, d) =
-	move(d*line_normal(segment),segment);
-
-
-// Extend to segments to their intersection point.  First check if the segments already have a point in common,
-// which can happen if two colinear segments are input to the path variant of `offset()`
-function _segment_extension(s1,s2) =
-	norm(s1[1]-s2[0])<1e-6 ? s1[1] : line_intersection(s1,s2);
-
-
-function _makefaces(direction, startind, good, pointcount, closed) =
-	let(
-		lenlist = list_bset(good, pointcount),
-		numfirst = len(lenlist),
-		numsecond = sum(lenlist),
-		prelim_faces = _makefaces_recurse(startind, startind+len(lenlist), numfirst, numsecond, lenlist, closed)
-	)
-	direction? [for(entry=prelim_faces) reverse(entry)] : prelim_faces;
-
-
-function _makefaces_recurse(startind1, startind2, numfirst, numsecond, lenlist, closed, firstind=0, secondind=0, faces=[]) =
-	// We are done if *both* firstind and secondind reach their max value, which is the last point if !closed or one past
-	// the last point if closed (wrapping around).  If you don't check both you can leave a triangular gap in the output.
-	((firstind == numfirst - (closed?0:1)) && (secondind == numsecond - (closed?0:1)))? faces :
-	_makefaces_recurse(
-		startind1, startind2, numfirst, numsecond, lenlist, closed, firstind+1, secondind+lenlist[firstind],
-		lenlist[firstind]==0? (
-			// point in original path has been deleted in offset path, so it has no match.  We therefore
-			// make a triangular face using the current point from the offset (second) path
-			// (The current point in the second path can be equal to numsecond if firstind is the last point)
-			concat(faces,[[secondind%numsecond+startind2, firstind+startind1, (firstind+1)%numfirst+startind1]])
-			// in this case a point or points exist in the offset path corresponding to the original path
-		) : (
-			concat(faces,
-				// First generate triangular faces for all of the extra points (if there are any---loop may be empty)
-				[for(i=[0:1:lenlist[firstind]-2]) [firstind+startind1, secondind+i+1+startind2, secondind+i+startind2]],
-				// Finish (unconditionally) with a quadrilateral face
-				[
-					[
-						firstind+startind1,
-						(firstind+1)%numfirst+startind1,
-						(secondind+lenlist[firstind])%numsecond+startind2,
-						(secondind+lenlist[firstind]-1)%numsecond+startind2
-					]
-				]
-			)
-		)
-	);
-
-
-// Determine which of the shifted segments are good
-function _good_segments(path, d, shiftsegs, closed, quality) =
-	let(
-		maxind = len(path)-(closed ? 1 : 2),
-		pathseg = [for(i=[0:maxind]) select(path,i+1)-path[i]],
-		pathseg_len =  [for(seg=pathseg) norm(seg)],
-		pathseg_unit = [for(i=[0:maxind]) pathseg[i]/pathseg_len[i]],
-		// Order matters because as soon as a valid point is found, the test stops
-		// This order works better for circular paths because they succeed in the center
-		alpha = concat([for(i=[1:1:quality]) i/(quality+1)],[0,1])
-	) [
-		for (i=[0:len(shiftsegs)-1])
-			(i>maxind)? true :
-			_segment_good(path,pathseg_unit,pathseg_len, d - 1e-7, shiftsegs[i], alpha)
-	];
-
-
-// Determine if a segment is good (approximately)
-// Input is the path, the path segments normalized to unit length, the length of each path segment
-// the distance threshold, the segment to test, and the locations on the segment to test (normalized to [0,1])
-// The last parameter, index, gives the current alpha index.
-//
-// A segment is good if any part of it is farther than distance d from the path.  The test is expensive, so
-// we want to quit as soon as we find a point with distance > d, hence the recursive code structure.
-//
-// This test is approximate because it only samples the points listed in alpha.  Listing more points
-// will make the test more accurate, but slower.
-function _segment_good(path,pathseg_unit,pathseg_len, d, seg,alpha ,index=0) =
-	index == len(alpha) ? false :
-	_point_dist(path,pathseg_unit,pathseg_len, alpha[index]*seg[0]+(1-alpha[index])*seg[1]) > d ? true :
-	_segment_good(path,pathseg_unit,pathseg_len,d,seg,alpha,index+1);
-
-
-// Input is the path, the path segments normalized to unit length, the length of each path segment
-// and a test point.  Computes the (minimum) distance from the path to the point, taking into
-// account that the minimal distance may be anywhere along a path segment, not just at the ends.
-function _point_dist(path,pathseg_unit,pathseg_len,pt) =
-	min([
-		for(i=[0:len(pathseg_unit)-1]) let(
-			v = pt-path[i],
-			projection = v*pathseg_unit[i],
-			segdist = projection < 0? norm(pt-path[i]) :
-				projection > pathseg_len[i]? norm(pt-select(path,i+1)) :
-				norm(v-projection*pathseg_unit[i])
-		) segdist
-	]);
-
-
-function _offset_region(
-	paths, r, delta, chamfer, closed,
-	maxstep, check_valid, quality,
-	return_faces, firstface_index,
-	flip_faces, _acc=[], _i=0
-) =
-	_i>=len(paths)? _acc :
-	_offset_region(
-		paths, _i=_i+1,
-		_acc = (paths[_i].x % 2 == 0)? (
-			union(_acc, [
-				offset(
-					paths[_i].y,
-					r=r, delta=delta, chamfer=chamfer, closed=closed,
-					maxstep=maxstep, check_valid=check_valid, quality=quality,
-					return_faces=return_faces, firstface_index=firstface_index,
-					flip_faces=flip_faces
-				)
-			])
-		) : (
-			difference(_acc, [
-				offset(
-					paths[_i].y,
-					r=-r, delta=-delta, chamfer=chamfer, closed=closed,
-					maxstep=maxstep, check_valid=check_valid, quality=quality,
-					return_faces=return_faces, firstface_index=firstface_index,
-					flip_faces=flip_faces
-				)
-			])
-		),
-		r=r, delta=delta, chamfer=chamfer, closed=closed,
-		maxstep=maxstep, check_valid=check_valid, quality=quality,
-		return_faces=return_faces, firstface_index=firstface_index, flip_faces=flip_faces
-	);
-
-
-// Function: offset()
-//
-// Description:
-//   Takes an input path and returns a path offset by the specified amount.  As with the built-in
-//   offset() module, you can use `r` to specify rounded offset and `delta` to specify offset with
-//   corners.  Positive offsets shift the path to the left (relative to the direction of the path).
-//   
-//   When offsets shrink the path, segments cross and become invalid.  By default `offset()` checks
-//   for this situation.  To test validity the code checks that segments have distance larger than (r
-//   or delta) from the input path.  This check takes O(N^2) time and may mistakenly eliminate
-//   segments you wanted included in various situations, so you can disable it if you wish by setting
-//   check_valid=false.  Another situation is that the test is not sufficiently thorough and some
-//   segments persist that should be eliminated.  In this case, increase `quality` to 2 or 3.  (This
-//   increases the number of samples on the segment that are checked.)  Run time will increase.  In
-//   some situations you may be able to decrease run time by setting quality to 0, which causes only
-//   segment ends to be checked.
-//   
-//   For construction of polyhedra `offset()` can also return face lists.  These list faces between
-//   the original path and the offset path where the vertices are ordered with the original path
-//   first, starting at `firstface_index` and the offset path vertices appearing afterwords.  The
-//   direction of the faces can be flipped using `flip_faces`.  When you request faces the return
-//   value is a list: [offset_path, face_list].
-// Arguments:
-//   path = the path to process.  A list of 2d points.
-//   r = offset radius.  Distance to offset.  Will round over corners.
-//   delta = offset distance.  Distance to offset with pointed corners.
-//   chamfer = chamfer corners when you specify `delta`.  Default: false
-//   closed = path is a closed curve. Default: False.
-//   check_valid = perform segment validity check.  Default: True.
-//   quality = validity check quality parameter, a small integer.  Default: 1.
-//   return_faces = return face list.  Default: False.
-//   firstface_index = starting index for face list.  Default: 0.
-//   flip_faces = flip face direction.  Default: false
-// Example(2D):
-//   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, delta=10, closed=true));
-// Example(2D):
-//   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, delta=10, chamfer=true, closed=true));
-// Example(2D):
-//   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, r=10, closed=true));
-// Example(2D):
-//   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, delta=-10, closed=true));
-// Example(2D):
-//   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, delta=-10, chamfer=true, closed=true));
-// Example(2D):
-//   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, r=-10, closed=true));
-// Example(2D):  This case needs `quality=2` for success
-//   test = [[0,0],[10,0],[10,7],[0,7], [-1,-3]];
-//   polygon(offset(test,r=-1.9, closed=true, quality=2));
-//   //polygon(offset(test,r=-1.9, closed=true, quality=1));  // Fails with erroneous 180 deg path error
-//   %down(.1)polygon(test);
-// Example(2D): This case fails if `check_valid=true` when delta is large enough because segments are too close to the opposite side of the curve.  
-//   star = star(5, r=22, ir=13);
-//   stroke(star,width=.2,closed=true);                                                           
-//   color("green")
-//     stroke(offset(star, delta=-9, closed=true),width=.2,closed=true); // Works with check_valid=true (the default)
-//   color("red")
-//     stroke(offset(star, delta=-10, closed=true, check_valid=false),   // Fails if check_valid=true 
-//            width=.2,closed=true); 
-// Example(2D): But if you use rounding with offset then you need `check_valid=true` when `r` is big enough.  It works without the validity check as long as the offset shape retains a some of the straight edges at the star tip, but once the shape shrinks smaller than that, it fails.  There is no simple way to get a correct result for the case with `r=10`, because as in the previous example, it will fail if you turn on validity checks.  
-//   star = star(5, r=22, ir=13);
-//   color("green")
-//     stroke(offset(star, r=-8, closed=true,check_valid=false), width=.1, closed=true);
-//   color("red")
-//     stroke(offset(star, r=-10, closed=true,check_valid=false), width=.1, closed=true);
-// Example(2D): The extra triangles in this example show that the validity check cannot be skipped
-//   ellipse = scale([20,4], p=circle(r=1,$fn=64));
-//   stroke(ellipse, closed=true, width=0.3);
-//   stroke(offset(ellipse, r=-3, check_valid=false, closed=true), width=0.3, closed=true);
-// Example(2D): The triangles are removed by the validity check
-//   ellipse = scale([20,4], p=circle(r=1,$fn=64));
-//   stroke(ellipse, closed=true, width=0.3);
-//   stroke(offset(ellipse, r=-3, check_valid=true, closed=true), width=0.3, closed=true);
-// Example(2D): Open path.  The path moves from left to right and the positive offset shifts to the left of the initial red path.
-//   sinpath = 2*[for(theta=[-180:5:180]) [theta/4,45*sin(theta)]];
-//   #stroke(sinpath);
-//   stroke(offset(sinpath, r=17.5));
-// Example(2D): Region
-//   rgn = difference(circle(d=100), union(square([20,40], center=true), square([40,20], center=true)));
-//   #linear_extrude(height=1.1) for (p=rgn) stroke(closed=true, width=0.5, p);
-//   region(offset(rgn, r=-5));
-function offset(
-	path, r=undef, delta=undef, chamfer=false,
-	maxstep=0.1, closed=false, check_valid=true,
-	quality=1, return_faces=false, firstface_index=0,
-	flip_faces=false
-) =
-	is_region(path)? (
-		assert(!return_faces, "return_faces not supported for regions.")
-		let(
-			path = [for (p=path) polygon_is_clockwise(p)? p : reverse(p)],
-			rgn = exclusive_or([for (p = path) [p]]),
-			pathlist = sort(idx=0,[
-				for (i=[0:1:len(rgn)-1]) [
-					sum(concat([0],[
-						for (j=[0:1:len(rgn)-1]) if (i!=j)
-							point_in_polygon(rgn[i][0],rgn[j])>=0? 1 : 0
-					])),
-					rgn[i]
-				]
-			])
-		) _offset_region(
-			pathlist, r=r, delta=delta, chamfer=chamfer, closed=true,
-			maxstep=maxstep, check_valid=check_valid, quality=quality,
-			return_faces=return_faces, firstface_index=firstface_index,
-			flip_faces=flip_faces
-		)
-	) : let(rcount = num_defined([r,delta]))
-	assert(rcount==1,"Must define exactly one of 'delta' and 'r'")
-	let(
-		chamfer = is_def(r) ? false : chamfer,
-		quality = max(0,round(quality)),
-		flip_dir = closed && !polygon_is_clockwise(path)? -1 : 1,
-		d = flip_dir * (is_def(r) ? r : delta),
-		shiftsegs = [for(i=[0:len(path)-1]) _shift_segment(select(path,i,i+1), d)],
-		// good segments are ones where no point on the segment is less than distance d from any point on the path
-		good = check_valid ? _good_segments(path, abs(d), shiftsegs, closed, quality) : replist(true,len(shiftsegs)),
-		goodsegs = bselect(shiftsegs, good),
-		goodpath = bselect(path,good)
-	)
-	assert(len(goodsegs)>0,"Offset of path is degenerate")
-	let(
-		// Extend the shifted segments to their intersection points
-		sharpcorners = [for(i=[0:len(goodsegs)-1]) _segment_extension(select(goodsegs,i-1), select(goodsegs,i))],
-		// If some segments are parallel then the extended segments are undefined.  This case is not handled
-		// Note if !closed the last corner doesn't matter, so exclude it
-		parallelcheck =
-			(len(sharpcorners)==2 && !closed) ||
-			all_defined(select(sharpcorners,closed?0:1,-1))
-	)
-	assert(parallelcheck, "Path turns back on itself (180 deg turn)")
-	let(
-		// This is a boolean array that indicates whether a corner is an outside or inside corner
-		// For outside corners, the newcorner is an extension (angle 0), for inside corners, it turns backward
-		// If either side turns back it is an inside corner---must check both.
-		// Outside corners can get rounded (if r is specified and there is space to round them)
-		outsidecorner = [
-			for(i=[0:len(goodsegs)-1]) let(
-				prevseg=select(goodsegs,i-1)
-			) (
-				(goodsegs[i][1]-goodsegs[i][0]) *
-				(goodsegs[i][0]-sharpcorners[i]) > 0
-			) && (
-				(prevseg[1]-prevseg[0]) *
-				(sharpcorners[i]-prevseg[1]) > 0
-			)
-		],
-		steps = is_def(delta) ? [] : [
-			for(i=[0:len(goodsegs)-1])
-			ceil(
-				abs(r)*vector_angle(
-					select(goodsegs,i-1)[1]-goodpath[i],
-					goodsegs[i][0]-goodpath[i]
-				)*PI/180/maxstep
-			)
-		],
-		// If rounding is true then newcorners replaces sharpcorners with rounded arcs where needed
-		// Otherwise it's the same as sharpcorners
-		// If rounding is on then newcorners[i] will be the point list that replaces goodpath[i] and newcorners later
-		// gets flattened.  If rounding is off then we set it to [sharpcorners] so we can later flatten it and get
-		// plain sharpcorners back.
-		newcorners = is_def(delta) && !chamfer ? [sharpcorners] : [
-			for(i=[0:len(goodsegs)-1]) (
-				(!chamfer && steps[i] <=2)  //Chamfer all points but only round if steps is 3 or more
-				|| !outsidecorner[i]        // Don't round inside corners
-				|| (!closed && (i==0 || i==len(goodsegs)-1))  // Don't round ends of an open path
-			)? [sharpcorners[i]] : (
-				chamfer?
-					_offset_chamfer(
-						goodpath[i], [
-							select(goodsegs,i-1)[1],
-							sharpcorners[i],
-							goodsegs[i][0]
-						], d
-					) :
-				arc(
-					cp=goodpath[i],
-					points=[
-						select(goodsegs,i-1)[1],
-						goodsegs[i][0]
-					],
-					N=steps[i]
-				)
-			)
-		],
-		pointcount = (is_def(delta) && !chamfer)?
-			replist(1,len(sharpcorners)) :
-			[for(i=[0:len(goodsegs)-1]) len(newcorners[i])],
-		start = [goodsegs[0][0]],
-		end = [goodsegs[len(goodsegs)-2][1]],
-		edges =  closed?
-			flatten(newcorners) :
-			concat(start,slice(flatten(newcorners),1,-2),end),
-		faces = !return_faces? [] :
-			_makefaces(
-				flip_faces, firstface_index, good,
-				pointcount, closed
-			)
-	) return_faces? [edges,faces] : edges;
-
-
 // Function: split_path_at_self_crossings()
 // Usage:
 //   polylines = split_path_at_self_crossings(path, [closed], [eps]);
@@ -1836,354 +1506,6 @@ function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
 			outpath
 	];
 
-
-// Function: split_path_at_region_crossings()
-// Usage:
-//   polylines = split_path_at_region_crossings(path, region, [eps]);
-// Description:
-//   Splits a path into polyline sections wherever the path crosses the perimeter of a region.
-//   Splits may occur mid-segment, so new vertices will be created at the intersection points.
-// Arguments:
-//   path = The path to split up.
-//   region = The region to check for perimeter crossings of.
-//   closed = If true, treat path as a closed polygon.  Default: true
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-// Example(2D):
-//   path = square(50,center=false);
-//   region = [circle(d=80), circle(d=40)];
-//   polylines = split_path_at_region_crossings(path, region);
-//   color("#aaa") region(region);
-//   rainbow(polylines) stroke($item, closed=false, width=2);
-function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) =
-	let(
-		path = deduplicate(path, eps=eps),
-		region = [for (path=region) deduplicate(path, eps=eps)],
-		xings = region_path_crossings(path, region, closed=closed, eps=eps),
-		crossings = deduplicate(
-			concat([[0,0]], xings, [[len(path)-1,1]]),
-			eps=eps
-		),
-		subpaths = [
-			for (p = pair(crossings))
-				deduplicate(eps=eps,
-					path_subselect(path, p[0][0], p[0][1], p[1][0], p[1][1], closed=closed)
-				)
-		]
-	)
-	subpaths;
-
-
-function _tag_subpaths(path, region, eps=EPSILON) =
-	let(
-		subpaths = split_path_at_region_crossings(path, region, eps=eps),
-		tagged = [
-			for (sub = subpaths) let(
-				subpath = deduplicate(sub)
-			) if (len(sub)>1) let(
-				midpt = lerp(subpath[0], subpath[1], 0.5),
-				rel = point_in_region(midpt,region,eps=eps)
-			) rel<0? ["O", subpath] : rel>0? ["I", subpath] : let(
-				vec = normalize(subpath[1]-subpath[0]),
-				perp = rot(90, planar=true, p=vec),
-				sidept = midpt + perp*0.01,
-				rel1 = point_in_polygon(sidept,path,eps=eps)>0,
-				rel2 = point_in_region(sidept,region,eps=eps)>0
-			) rel1==rel2? ["S", subpath] : ["U", subpath]
-		]
-	) tagged;
-
-
-function _tag_region_subpaths(region1, region2, eps=EPSILON) =
-	[for (path=region1) each _tag_subpaths(path, region2, eps=eps)];
-
-
-function _tagged_region(region1,region2,keep1,keep2,eps=EPSILON) =
-	let(
-		region1 = close_region(region1, eps=eps),
-		region2 = close_region(region2, eps=eps),
-		tagged1 = _tag_region_subpaths(region1, region2, eps=eps),
-		tagged2 = _tag_region_subpaths(region2, region1, eps=eps),
-		tagged = concat(
-			[for (tagpath = tagged1) if (in_list(tagpath[0], keep1)) tagpath[1]],
-			[for (tagpath = tagged2) if (in_list(tagpath[0], keep2)) tagpath[1]]
-		),
-		outregion = assemble_path_fragments(tagged, eps=eps)
-	) outregion;
-
-
-// Function&Module: union()
-// Usage:
-//   union() {...}
-//   region = union(regions);
-//   region = union(REGION1,REGION2);
-//   region = union(REGION1,REGION2,REGION3);
-// Description:
-//   When called as a function and given a list of regions, where each region is a list of closed
-//   2D paths, returns the boolean union of all given regions.  Result is a single region.
-//   When called as the built-in module, makes the boolean union of the given children.
-// Arguments:
-//   regions = List of regions to union.  Each region is a list of closed paths.
-// Example(2D):
-//   shape1 = move([-8,-8,0], p=circle(d=50));
-//   shape2 = move([ 8, 8,0], p=circle(d=50));
-//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
-//   color("green") region(union(shape1,shape2));
-function union(regions=[],b=undef,c=undef,eps=EPSILON) =
-	b!=undef? union(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
-	len(regions)<=1? regions[0] :
-	union(
-		let(regions=[for (r=regions) is_path(r)? [r] : r])
-		concat(
-			[_tagged_region(regions[0],regions[1],["O","S"],["O"], eps=eps)],
-			[for (i=[2:1:len(regions)-1]) regions[i]]
-		),
-		eps=eps
-	);
-
-
-// Function&Module: difference()
-// Usage:
-//   difference() {...}
-//   region = difference(regions);
-//   region = difference(REGION1,REGION2);
-//   region = difference(REGION1,REGION2,REGION3);
-// Description:
-//   When called as a function, and given a list of regions, where each region is a list of closed
-//   2D paths, takes the first region and differences away all other regions from it.  The resulting
-//   region is returned.
-//   When called as the built-in module, makes the boolean difference of the given children.
-// Arguments:
-//   regions = List of regions to difference.  Each region is a list of closed paths.
-// Example(2D):
-//   shape1 = move([-8,-8,0], p=circle(d=50));
-//   shape2 = move([ 8, 8,0], p=circle(d=50));
-//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
-//   color("green") region(difference(shape1,shape2));
-function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
-	b!=undef? difference(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
-	len(regions)<=1? regions[0] :
-	difference(
-		let(regions=[for (r=regions) is_path(r)? [r] : r])
-		concat(
-			[_tagged_region(regions[0],regions[1],["O","U"],["I"], eps=eps)],
-			[for (i=[2:1:len(regions)-1]) regions[i]]
-		),
-		eps=eps
-	);
-
-
-// Function&Module: intersection()
-// Usage:
-//   intersection() {...}
-//   region = intersection(regions);
-//   region = intersection(REGION1,REGION2);
-//   region = intersection(REGION1,REGION2,REGION3);
-// Description:
-//   When called as a function, and given a list of regions, where each region is a list of closed
-//   2D paths, returns the boolean intersection of all given regions.  Result is a single region.
-//   When called as the built-in module, makes the boolean intersection of all the given children.
-// Arguments:
-//   regions = List of regions to intersection.  Each region is a list of closed paths.
-// Example(2D):
-//   shape1 = move([-8,-8,0], p=circle(d=50));
-//   shape2 = move([ 8, 8,0], p=circle(d=50));
-//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
-//   color("green") region(intersection(shape1,shape2));
-function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
-	b!=undef? intersection(concat([regions],[b],c==undef?[]:[c]),eps=eps) :
-	len(regions)<=1? regions[0] :
-	intersection(
-		let(regions=[for (r=regions) is_path(r)? [r] : r])
-		concat(
-			[_tagged_region(regions[0],regions[1],["I","S"],["I"],eps=eps)],
-			[for (i=[2:1:len(regions)-1]) regions[i]]
-		),
-		eps=eps
-	);
-
-
-// Function&Module: exclusive_or()
-// Usage:
-//   exclusive_or() {...}
-//   region = exclusive_or(regions);
-//   region = exclusive_or(REGION1,REGION2);
-//   region = exclusive_or(REGION1,REGION2,REGION3);
-// Description:
-//   When called as a function and given a list of regions, where each region is a list of closed
-//   2D paths, returns the boolean exclusive_or of all given regions.  Result is a single region.
-//   When called as a module, performs a boolean exclusive-or of up to 10 children.
-// Arguments:
-//   regions = List of regions to exclusive_or.  Each region is a list of closed paths.
-// Example(2D): As Function
-//   shape1 = move([-8,-8,0], p=circle(d=50));
-//   shape2 = move([ 8, 8,0], p=circle(d=50));
-//   for (shape = [shape1,shape2])
-//       color("red") stroke(shape, width=0.5, closed=true);
-//   color("green") region(exclusive_or(shape1,shape2));
-// Example(2D): As Module
-//   exclusive_or() {
-//       square(40,center=false);
-//       circle(d=40);
-//   }
-function exclusive_or(regions=[],b=undef,c=undef,eps=EPSILON) =
-	b!=undef? exclusive_or(concat([regions],[b],c==undef?[]:[c]),eps=eps) :
-	len(regions)<=1? regions[0] :
-	exclusive_or(
-		let(regions=[for (r=regions) is_path(r)? [r] : r])
-		concat(
-			[union([
-				difference([regions[0],regions[1]], eps=eps),
-				difference([regions[1],regions[0]], eps=eps)
-			], eps=eps)],
-			[for (i=[2:1:len(regions)-1]) regions[i]]
-		),
-		eps=eps
-	);
-
-
-module exclusive_or() {
-	if ($children==1) {
-		children();
-	} else if ($children==2) {
-		difference() {
-			children(0);
-			children(1);
-		}
-		difference() {
-			children(1);
-			children(0);
-		}
-	} else if ($children==3) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-			}
-			children(2);
-		}
-	} else if ($children==4) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-			}
-			exclusive_or() {
-				children(2);
-				children(3);
-			}
-		}
-	} else if ($children==5) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-				children(2);
-				children(3);
-			}
-			children(4);
-		}
-	} else if ($children==6) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-				children(2);
-				children(3);
-			}
-			children(4);
-			children(5);
-		}
-	} else if ($children==7) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-				children(2);
-				children(3);
-			}
-			children(4);
-			children(5);
-			children(6);
-		}
-	} else if ($children==8) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-				children(2);
-				children(3);
-			}
-			exclusive_or() {
-				children(4);
-				children(5);
-				children(6);
-				children(7);
-			}
-		}
-	} else if ($children==9) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-				children(2);
-				children(3);
-			}
-			exclusive_or() {
-				children(4);
-				children(5);
-				children(6);
-				children(7);
-			}
-			children(8);
-		}
-	} else if ($children==10) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-				children(2);
-				children(3);
-			}
-			exclusive_or() {
-				children(4);
-				children(5);
-				children(6);
-				children(7);
-			}
-			children(8);
-			children(9);
-		}
-	} else {
-		assert($children<=10, "exclusive_or() can only handle up to 10 children.");
-	}
-}
-
-
-// Module: region()
-// Usage:
-//   region(r);
-// Description:
-//   Creates 2D polygons for the given region.  The region given is a list of closed 2D paths.
-//   Each path will be effectively exclusive-ORed from all other paths in the region, so if a
-//   path is inside another path, it will be effectively subtracted from it.
-// Example(2D):
-//   region([circle(d=50), square(25,center=true)]);
-// Example(2D):
-//   rgn = concat(
-//       [for (d=[50:-10:10]) circle(d=d-5)],
-//       [square([60,10], center=true)]
-//   );
-//   region(rgn);
-module region(r)
-{
-	points = flatten(r);
-	paths = [
-		for (i=[0:1:len(r)-1]) let(
-			start = default(sum([for (j=[0:1:i-1]) len(r[j])]),0)
-		) [for (k=[0:1:len(r[i])-1]) start+k]
-	];
-	polygon(points=points, paths=paths);
-}
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -23,6 +23,7 @@ include <quaternions.scad>
 include <affine.scad>
 include <coords.scad>
 include <geometry.scad>
+include <regions.scad>
 
 include <transforms.scad>
 include <attachments.scad>
