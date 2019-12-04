@@ -75,6 +75,22 @@ function affine2d_zrot(ang) = [
 ];
 
 
+// Function: affine2d_mirror()
+// Usage:
+//   mat = affine2d_mirror(v);
+// Description:
+//   Returns the 3x3 affine2d matrix to perform a reflection of a 2D vector across the line given by its normal vector.
+// Arguments:
+//   v = The normal vector of the line to reflect across.
+function affine2d_mirror(v) =
+	let(v=normalize(point2d(v)), a=v.x, b=v.y)
+	[
+		[1-2*a*a, 0-2*a*b, 0],
+		[0-2*a*b, 1-2*b*b, 0],
+		[      0,       0, 1]
+	];
+
+
 // Function: affine2d_skew()
 // Usage:
 //   affine2d_skew(xa, ya)
@@ -241,6 +257,23 @@ function affine3d_rot_from_to(from, to) = let(
 	[u[2]*u[0]*c2-u[1]*s, u[2]*u[1]*c2+u[0]*s, u[2]*u[2]*c2+c     , 0],
 	[                  0,                   0,                   0, 1]
 ];
+
+
+// Function: affine3d_mirror()
+// Usage:
+//   mat = affine3d_mirror(v);
+// Description:
+//   Returns the 4x4 affine3d matrix to perform a reflection of a 3D vector across the plane given by its normal vector.
+// Arguments:
+//   v = The normal vector of the plane to reflect across.
+function affine3d_mirror(v) =
+	let(v=normalize(point3d(v)), a=v.x, b=v.y, c=v.z)
+	[
+		[1-2*a*a,  -2*a*b,  -2*a*c, 0],
+		[ -2*b*a, 1-2*b*b,  -2*b*c, 0],
+		[ -2*c*a,  -2*c*b, 1-2*c*c, 0],
+		[      0,       0,       0, 1]
+	];
 
 
 // Function: affine3d_skew_xy()
