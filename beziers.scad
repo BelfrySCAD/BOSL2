@@ -709,12 +709,12 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //   	[[0, 67,0], [33, 67, 33], [67, 67, 33], [100, 67,0]],
 //   	[[0,100,0], [33,100,  0], [67,100,  0], [100,100,0]],
 //   ];
-//   vnf1 = bezier_patch(patch_translate(patch,[-50,-50,50]));
-//   vnf2 = bezier_patch(vnf=vnf1, patch_rotate(a=[90,0,0],patch_translate(patch,[-50,-50,50])));
-//   vnf3 = bezier_patch(vnf=vnf2, patch_rotate(a=[-90,0,0],patch_translate(patch,[-50,-50,50])));
-//   vnf4 = bezier_patch(vnf=vnf3, patch_rotate(a=[180,0,0],patch_translate(patch,[-50,-50,50])));
-//   vnf5 = bezier_patch(vnf=vnf4, patch_rotate(a=[0,90,0],patch_translate(patch,[-50,-50,50])));
-//   vnf6 = bezier_patch(vnf=vnf5, patch_rotate(a=[0,-90,0],patch_translate(patch,[-50,-50,50])));
+//   vnf1 = bezier_patch(translate(p=patch,[-50,-50,50]));
+//   vnf2 = bezier_patch(vnf=vnf1, rot(a=[90,0,0],p=translate(p=patch,[-50,-50,50])));
+//   vnf3 = bezier_patch(vnf=vnf2, rot(a=[-90,0,0],p=translate(p=patch,[-50,-50,50])));
+//   vnf4 = bezier_patch(vnf=vnf3, rot(a=[180,0,0],p=translate(p=patch,[-50,-50,50])));
+//   vnf5 = bezier_patch(vnf=vnf4, rot(a=[0,90,0],p=translate(p=patch,[-50,-50,50])));
+//   vnf6 = bezier_patch(vnf=vnf5, rot(a=[0,-90,0],p=translate(p=patch,[-50,-50,50])));
 //   vnf_polyhedron(vnf6);
 // Example(3D): Chaining Patches with Assymmetric Splinesteps
 //   steps = 8;
@@ -733,9 +733,9 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //       for (axrot=[[0,0,0],[0,90,0],[0,0,90]], xang=[-90:90:180])
 //       bezier_patch(
 //           splinesteps=[1,steps],
-//           patch_rotate(a=axrot,
-//               patch_rotate(a=[xang,0,0],
-//                   patch_translate(v=[0,-100,100],edge_patch)
+//           rot(a=axrot,
+//               p=rot(a=[xang,0,0],
+//                   p=translate(v=[0,-100,100],p=edge_patch)
 //               )
 //           )
 //       )
@@ -744,8 +744,8 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //       for (zang=[0,180], xang=[-90:90:180])
 //       bezier_patch(
 //           splinesteps=steps,
-//           patch_rotate(a=[xang,0,zang],
-//               patch_translate(v=[-100,-100,100],corner_patch)
+//           rot(a=[xang,0,zang],
+//               p=translate(v=[-100,-100,100],p=corner_patch)
 //           )
 //       )
 //   ];
@@ -753,9 +753,9 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //       for (axrot=[[0,0,0],[0,90,0],[0,0,90]], zang=[0,180])
 //       bezier_patch(
 //           splinesteps=1,
-//           patch_rotate(a=axrot,
-//               patch_rotate(a=[0,0,zang],
-//                   patch_translate(v=[-100,0,0], face_patch)
+//           rot(a=axrot,
+//               p=rot(a=[0,0,zang],
+//                   p=translate(v=[-100,0,0], p=face_patch)
 //               )
 //           )
 //       )
@@ -845,76 +845,6 @@ function bezier_patch_flat(size=[100,100], N=4, spin=0, orient=UP, trans=[0,0,0]
 // Arguments:
 //   patch = The patch to reverse.
 function patch_reverse(patch) = [for (row=patch) reverse(row)];
-
-
-
-// Function: patch_translate()
-// Usage:
-//   patch_translate(patch, v)
-// Description: Translates all coordinates in a rectangular or triangular patch by a given amount.
-// Arguments:
-//   patch = The patch to translate.
-//   v = Vector to translate by.
-function patch_translate(patch, v=[0,0,0]) = [for(row=patch) translate_points(row, v)];
-
-
-// Function: patch_scale()
-// Usage:
-//   patch_scale(patch, v, [cp])
-// Description: Scales all coordinates in a rectangular or triangular patch by a given amount.
-// Arguments:
-//   patch = The patch to scale.
-//   v = [X,Y,Z] scaling factors.
-//   cp = Centerpoint to scale around.
-function patch_scale(patch, v=[1,1,1], cp=[0,0,0]) = [for(row=patch) scale_points(row, v, cp)];
-
-
-// Function: patch_rotate()
-// Usage:
-//   patch_rotate(patch, a, [cp])
-//   patch_rotate(patch, a, v, [cp])
-// Description: Rotates all coordinates in a rectangular or triangular patch by a given amount.
-// Arguments:
-//   patch = The patch to rotate.
-//   a = Rotation angle(s) in degrees.
-//   v = Vector axis to rotate round.
-//   cp = Centerpoint to rotate around.
-function patch_rotate(patch, a=undef, v=undef, cp=[0,0,0]) =
-	[for(row=patch) rotate_points3d(row, a=a, v=v, cp=cp)];
-
-
-// Function: patches_translate()
-// Usage:
-//   patches_translate(patch, v, [cp])
-// Description: Translates all coordinates in each of a list of rectangular or triangular patches.
-// Arguments:
-//   patches = List of patches to translate.
-//   v = Vector to translate by.
-function patches_translate(patches, v=[0,0,0]) = [for (patch=patches) patch_translate(patch,v)];
-
-
-// Function: patches_scale()
-// Usage:
-//   patches_scale(patch, v, [cp])
-// Description: Scales all coordinates in each of a list of rectangular or triangular patches.
-// Arguments:
-//   patches = List of patches to scale.
-//   v = [X,Y,Z] scaling factors.
-//   cp = Centerpoint to scale around.
-function patches_scale(patches, v=[1,1,1], cp=[0,0,0]) = [for (patch=patches) patch_scale(patch,v,cp)];
-
-
-// Function: patches_rotate()
-// Usage:
-//   patches_rotate(patch, a, [cp])
-//   patches_rotate(patch, a, v, [cp])
-// Description: Rotates all coordinates in each of a list of rectangular or triangular patches.
-// Arguments:
-//   patches = List of patches to rotate.
-//   a = Rotation angle(s) in degrees.
-//   v = Vector axis to rotate round.
-//   cp = Centerpoint to rotate around.
-function patches_rotate(patches, a=undef, v=undef, cp=[0,0,0]) = [for (patch=patches) patch_rotate(patch, a=a, v=v, cp=cp)];
 
 
 // Function: bezier_surface()

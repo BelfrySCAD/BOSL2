@@ -18,13 +18,12 @@ function CR_corner(size, spin=0, orient=UP, trans=[0,0,0]) =
 			[[a,1,0], [1,a,0]],
 			[[1,1,0]],
 		]
-	) [for (row=patch)
-		translate_points(v=trans,
-			rotate_points3d(a=spin, from=UP, to=orient,
-				scale_points(v=size, row)
-			)
+	)
+	translate(trans,
+		p=rot(a=spin, from=UP, to=orient,
+			p=scale(size, patch)
 		)
-	];
+	);
 
 
 function CR_edge(size, spin=0, orient=UP, trans=[0,0,0]) =
@@ -47,13 +46,12 @@ function CR_edge(size, spin=0, orient=UP, trans=[0,0,0]) =
 			[[0,a,m], [0,a,n], [0,a,o], [0,a,p], [0,a,q], [0,a,r]],
 			[[0,1,m], [0,1,n], [0,1,o], [0,1,p], [0,1,q], [0,1,r]],
 		]
-	) [for (row=patch)
-		translate_points(v=trans,
-			rotate_points3d(a=spin, from=UP, to=orient,
-				scale_points(v=size, row)
-			)
+	) 
+	translate(trans,
+		p=rot(a=spin, from=UP, to=orient,
+			p=scale(size, p=patch)
 		)
-	];
+	);
 
 
 module CR_cube(size=[100,100,100], r=10, splinesteps=8, cheat=false, debug=false)
