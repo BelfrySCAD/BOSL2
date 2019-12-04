@@ -12,7 +12,8 @@
 
 // Module: stroke()
 // Usage:
-//   stroke(path, width, [endcap], [closed]);
+//   stroke(path, [width], [closed], [endcaps], [endcap_width], [endcap_length], [endcap_extent], [trim]);
+//   stroke(path, [width], [closed], [endcap1], [endcap2], [endcap_width1], [endcap_width2], [endcap_length1], [endcap_length2], [endcap_extent1], [endcap_extent2], [trim1], [trim2]);
 // Description:
 //   Draws a 2D line path with a given line thickness.  Endcaps can be specified for each end individually.
 // Figure(2D,Big): Endcap Types
