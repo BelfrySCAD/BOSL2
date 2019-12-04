@@ -592,7 +592,10 @@ function scale(v=1, p=undef) =
 	) : (
 		assert(is_list(p))
 		is_num(p.x)? vmul(p,v) :
-		is_vnf(p)? [scale(v=v,p=p.x), p.y] :
+		is_vnf(p)? let(inv=product([for (x=v) x<0? -1 : 1])) [
+			scale(v=v,p=p.x),
+			inv>=0? p.y : [for (l=p.y) reverse(l)]
+		] :
 		[for (l=p) is_vector(l)? vmul(l,v) : scale(v=v, p=l)]
 	);
 
@@ -627,8 +630,8 @@ function scale(v=1, p=undef) =
 //
 // Example(2D): Scaling Points
 //   path = circle(d=50,$fn=12);
-//   #stroke(path);
-//   stroke(xscale(2,p=path));
+//   #stroke(path,closed=true);
+//   stroke(xscale(2,p=path),closed=true);
 module xscale(x=1) scale([x,1,1]) children();
 
 function xscale(x=1, p=undef, planar=false) = (planar || (!is_undef(p) && len(p)==2))? scale([x,1],p=p) : scale([x,1,1],p=p);
@@ -663,8 +666,8 @@ function xscale(x=1, p=undef, planar=false) = (planar || (!is_undef(p) && len(p)
 //
 // Example(2D): Scaling Points
 //   path = circle(d=50,$fn=12);
-//   #stroke(path);
-//   stroke(yscale(2,p=path));
+//   #stroke(path,closed=true);
+//   stroke(yscale(2,p=path),closed=true);
 module yscale(y=1) scale([1,y,1]) children();
 
 function yscale(y=1, p=undef, planar=false) = (planar || (!is_undef(p) && len(p)==2))? scale([1,y],p=p) : scale([1,y,1],p=p);
