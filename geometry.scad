@@ -1090,16 +1090,28 @@ function find_noncollinear_points(points) =
 
 // Function: centroid()
 // Usage:
-//   centroid(vertices)
+//   cp = centroid(poly);
 // Description:
-//   Given a simple 2D polygon, returns the coordinates of the polygon's centroid.
+//   Given a simple 2D polygon, returns the 2D coordinates of the polygon's centroid.
+//   Given a simple 3D planar polygon, returns the 3D coordinates of the polygon's centroid.
 //   If the polygon is self-intersecting, the results are undefined.
-function centroid(vertices) =
-	sum([
-		for(i=[0:len(vertices)-1])
-		let(segment=select(vertices,i,i+1))
-		det2(segment)*sum(segment)
-	]) / 6 / polygon_area(vertices);
+function centroid(poly) =
+	len(poly[0])==2? (
+		sum([
+			for(i=[0:len(poly)-1])
+			let(segment=select(poly,i,i+1))
+			det2(segment)*sum(segment)
+		]) / 6 / polygon_area(poly)
+	) : (
+		let(
+			n = plane_normal(plane_from_pointslist(poly)),
+			p1 = vector_angle(n,UP)>15? vector_axis(n,UP) : vector_axis(n,RIGHT),
+			p2 = vector_axis(n,p1),
+			cp = mean(poly),
+			proj = project_plane(poly,cp,cp+p1,cp+p2),
+			cxy = centroid(proj)
+		) lift_plane(cxy,cp,cp+p1,cp+p2)
+	);
 
 
 // Function: simplify_path()
