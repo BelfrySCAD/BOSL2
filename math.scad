@@ -648,5 +648,50 @@ function count_true(l, nmax=undef, i=0, cnt=0) =
 		)
 	);
 
+// If argument is a list return it.  Otherwise return a singleton list containing the argument. 
+function _force_list(x) = is_list(x) ? x : [x];
+
+// Function: gcd()
+// Usage:
+//   gcd(a,b)
+// Description:
+//   Computes the greatest common divisor of `a` and `b`.  
+function gcd(a,b) =
+   assert(is_integer(a) && is_integer(b),"Arguments to gcd must be integers")
+   b==0 ? abs(a) : gcd(b,a % b);
+
+// Computes lcm for two scalars
+function _lcm(a,b) =
+  let(
+    parmok = is_integer(a) && is_integer(b),
+    dummy=assert(parmok,"Invalid non-integer parameters to lcm")
+          assert(a!=0 && b!=0, "Arguments to lcm must be nonzero")
+  )
+  abs(a*b) / gcd(a,b);
+
+// Computes lcm for a list of values
+function _lcmlist(a) =
+    len(a)==1 ? a[0] : _lcmlist(concat(slice(a,0,len(a)-2),[lcm(a[len(a)-2],a[len(a)-1])]));
+
+// Function: lcm()
+// Usage:
+//   lcm(a,b)
+//   lcm(list)
+// Description: Computes the least common multiple of the two arguments or a list of arguments.  Inputs should be
+//   nonzero integers.  The output is always a positive integer.  It is an error to pass zero as an argument.  
+function lcm(a,b=[]) =
+  !is_list(a) && !is_list(b) ? _lcm(a,b) : 
+  let(
+    arglist = concat(_force_list(a),_force_list(b))
+  )
+  assert(len(arglist)>0,"invalid call to lcm with empty list(s)")
+       _lcmlist(arglist);
+
+// Function: is_integer()
+// Usage:
+//   is_integer(n)
+// Description: returns true if the given value is an integer (it is a number and it rounds to itself).  
+function is_integer(n) = is_num(n) && n == round(n);
+
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -208,6 +208,46 @@ function deduplicate(list, closed=false, eps=EPSILON) =
 		[for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]];
 
 
+// Function: repeat_entries()
+// Usage:
+//   newlist = repeat_entries(list, N)
+// Description:
+//   Takes a list as input and duplicates some of its entries to produce a list
+//   with length `N`.  If the requested `N` is not a multiple of the list length then
+//   the entries will be duplicated as uniformly as possible.  You can also set `N` to a vector,
+//   in which case len(N) must equal len(list) and the output repeats the ith entry N[i] times.
+//   In either case, the result will be a list of length `N`.  The `exact` option requires
+//   that the final length is exactly as requested.  If you set it to `false` then the
+//   algorithm will favor uniformity and the output list may have a different number of
+//   entries due to rounding.
+//
+//   When applied to a path the output path is the same geometrical shape but has some vertices
+//   repeated.  This can be useful when you need to align paths with a different number of points.
+//   (See also subdivide_path for a different way to do that.) 
+// Arguments:
+//   list = list whose entries will be repeated
+//   N = scalar total number of points desired or vector requesting N[i] copies of vertex i.  
+//   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform points that may not match the number of points requested.  Default: True
+// Examples:
+//   list = [0,1,2,3]/
+//   echo(repeat_entries(list, 6));  // Ouputs [0,0,1,2,2,3]
+//   echo(repeat_entries(list, 6, exact=false));  // Ouputs [0,0,1,1,2,2,3,3]
+//   echo(repeat_entries(list, [1,1,2,1], exact=false));  // Ouputs [0,1,2,2,3]
+function repeat_entries(list, N, exact = true) =
+   assert(is_list(list))
+   assert((is_num(N) && N>0) || is_vector(N),"Parameter N to repeat_entries must be postive number or vector")
+   let(
+     length = len(list),
+     reps_guess = is_list(N) ?
+               assert(len(N)==len(list), "Vector parameter N to repeat_entries has the wrong length")
+               N
+        : replist(N/length,length),
+     reps = exact ? _sum_preserving_round(reps_guess)
+                  : [for (val=reps_guess) round(val)]
+   )
+   [for(i=[0:length-1]) each replist(list[i],reps[i])];
+
+
 // Function: list_set()
 // Usage:
 //   list_set(list, indices, values, [dflt], [minlen])
