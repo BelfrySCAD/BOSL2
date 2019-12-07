@@ -726,6 +726,7 @@ function _sum_preserving_round(data, index=0) =
 //   N = scalar total number of points desired or with `method="segment"` can be a vector requesting `N[i]-1` points on segment i.
 //   closed = set to false if the path is open.  Default: True
 //   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  Default: True
+//   method = One of `"length"` or `"segment"`.  If `"length"`, adds vertices evenly along the total path length.  If `"segment"`, adds points evenly among the segments.  Default: `"length"`
 // Example(2D):
 //   mypath = subdivide_path(square([2,2],center=true), 12);
 //   place_copies(mypath)circle(r=.1,$fn=32);
