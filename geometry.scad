@@ -978,11 +978,9 @@ function polygon_shift(poly, i) =
 function polygon_shift_to_closest_point(path, pt) =
 	let(
 		path = cleanup_path(path),
-		closest = path_closest_point(path,pt),
-		seg = select(path,closest[0],closest[0]+1),
-		u = norm(closest[1]-seg[0]) / norm(seg[1]-seg[0]),
-		segnum = closest[0] + (u>0.5? 1 : 0)
-	) select(path,segnum,segnum+len(path)-1);
+		dists = [for (p=path) norm(p-pt)],
+		closest = min_index(dists)
+	) select(path,closest,closest+len(path)-1);
 
 
 // Function: reindex_polygon()
