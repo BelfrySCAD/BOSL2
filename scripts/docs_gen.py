@@ -8,11 +8,22 @@ import sys
 import math
 import random
 import hashlib
+import filecmp
 import dbm.gnu
 import os.path
+import platform
 import argparse
 import subprocess
 
+from PIL import Image, ImageChops
+
+
+if platform.system() == "Darwin":
+    OPENSCAD = "/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD"
+    GIT = "/usr/local/bin/git"
+else:
+    OPENSCAD = "/usr/local/bin/openscad"
+    GIT = "git"
 
 
 def get_header_link(name):
@@ -75,6 +86,86 @@ def get_comment_block(lines, prefix, blanks=1):
     return (lines, out)
 
 
+def image_compare(file1, file2):
+    img1 = Image.open(file1)
+    img2 = Image.open(file2)
+    if img1.size != img2.size or img1.getbands() != img2.getbands():
+        return False
+    diff = ImageChops.difference(img1, img2).histogram()
+    sq = (value * (i % 256) ** 2 for i, value in enumerate(diff))
+    sum_squares = sum(sq)
+    rms = math.sqrt(sum_squares / float(img1.size[0] * img1.size[1]))
+    return rms<100
+
+
+def image_resize(infile, outfile, newsize=(320,240)):
+    im = Image.open(infile)
+    im.thumbnail(newsize, Image.ANTIALIAS)
+    im.save(outfile)
+
+
+def make_animated_gif(imgfiles, outfile, size):
+    imgs = []
+    for file in imgfiles:
+        img = Image.open(file)
+        img.thumbnail(size, Image.ANTIALIAS)
+        imgs.append(img)
+    imgs[0].save(
+        outfile,
+        save_all=True,
+        append_images=imgs[1:],
+        duration=250,
+        loop=0
+    )
+
+def git_checkout(filename):
+    # Pull previous committed image from git, if it exists.
+    gitcmd = [GIT, "checkout", filename]
+    p = subprocess.Popen(gitcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
+    err = p.stdout.read()
+
+
+def run_openscad_script(libfile, infile, imgfile, imgsize=(320,240), eye=None, show_edges=False, render=False):
+    scadcmd = [
+        OPENSCAD,
+        "-o", imgfile,
+        "--imgsize={},{}".format(imgsize[0]*2, imgsize[1]*2),
+        "--hardwarnings",
+        "--projection=o",
+        "--autocenter",
+        "--viewall"
+    ]
+    if eye is not None:
+        scadcmd.extend(["--camera", eye+",0,0,0"])
+    if show_edges:
+        scadcmd.extend(["--view=axes,scales,edges"])
+    else:
+        scadcmd.extend(["--view=axes,scales"])
+    if render:  # Force render
+        scadcmd.extend(["--render", ""])
+    scadcmd.append(infile)
+    p = subprocess.Popen(scadcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+    (stdoutdata, stderrdata) = p.communicate(None)
+    res = p.returncode
+    if res != 0 or b"ERROR:" in stderrdata or b"WARNING:" in stderrdata:
+        print("%s"%stderrdata)
+        print("////////////////////////////////////////////////////")
+        print("// {}: {} for {}".format(libfile, infile, imgfile))
+        print("////////////////////////////////////////////////////")
+        print(script)
+        print("////////////////////////////////////////////////////")
+        print("")
+        with open("FAILED.scad", "w") as f:
+            print("////////////////////////////////////////////////////", file=f)
+            print("// {}: {} for {}".format(libfile, infile, imgfile), file=f)
+            print("////////////////////////////////////////////////////", file=f)
+            print(script, file=f)
+            print("////////////////////////////////////////////////////", file=f)
+            print("", file=f)
+        sys.exit(-1)
+    return imgfile
+
+
 class ImageProcessing(object):
     def __init__(self):
         self.examples = []
@@ -103,24 +194,18 @@ class ImageProcessing(object):
                 db[key] = hash
 
     def gen_example_image(self, db, libfile, imgfile, code, extype):
-        OPENSCAD = "/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD"
-        GIT = "/usr/local/bin/git"
-        CONVERT = "/usr/local/bin/convert"
-        COMPARE = "/usr/local/bin/compare"
-
         if extype == "NORENDER":
             return
 
-        print("  {}".format(imgfile))
+        print("  {}".format(imgfile), end='')
+        sys.stdout.flush()
 
         scriptfile = "tmp_{0}.scad".format(imgfile.replace(".", "_"))
         targimgfile = self.imgroot + imgfile
         newimgfile = self.imgroot + "_new_" + imgfile
 
         # Pull previous committed image from git, if it exists.
-        gitcmd = [GIT, "checkout", targimgfile]
-        p = subprocess.Popen(gitcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-        err = p.stdout.read()
+        git_checkout(targimgfile)
 
         m = hashlib.sha256()
         m.update(extype.encode("utf8"))
@@ -129,6 +214,7 @@ class ImageProcessing(object):
         hash = m.digest()
         key = "{0} - {1}".format(libfile, imgfile)
         if key in db and db[key] == hash and not self.force:
+            print("")
             return
 
         stdlibs = ["std.scad", "debug.scad"]
@@ -146,11 +232,14 @@ class ImageProcessing(object):
             f.write(script)
 
         if "Big" in extype:
-            imgsize = [640, 480]
+            imgsize = (640, 480)
         elif "Med" in extype or "distribute" in script or "show_anchors" in script:
-            imgsize = [480, 360]
+            imgsize = (480, 360)
         else:  # Small
-            imgsize = [320, 240]
+            imgsize = (320, 240)
+
+        show_edges = "Edges" in extype
+        render = "FR" in extype
 
         tmpimgs = []
         if "Spin" in extype:
@@ -162,111 +251,40 @@ class ImageProcessing(object):
                     500*math.sin(arad),
                     500 if "Flat" in extype else 500*math.sin(arad)
                 )
-                scadcmd = [
-                    OPENSCAD,
-                    "-o", tmpimgfile,
-                    "--imgsize={},{}".format(imgsize[0]*2, imgsize[1]*2),
-                    "--hardwarnings",
-                    "--projection=o",
-                    "--autocenter",
-                    "--viewall",
-                    "--camera", eye+",0,0,0"
-                ]
-                if "Edges" in extype:  # Force render
-                    scadcmd.extend(["--view=axes,scales,edges"])
-                else:
-                    scadcmd.extend(["--view=axes,scales"])
-                if "FR" in extype:  # Force render
-                    scadcmd.extend(["--render", ""])
-                scadcmd.append(scriptfile)
-                p = subprocess.Popen(scadcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
-                (stdoutdata, stderrdata) = p.communicate(None)
-                res = p.returncode
-                if res != 0 or b"ERROR:" in stderrdata or b"WARNING:" in stderrdata:
-                    print("%s"%stderrdata)
-                    print("////////////////////////////////////////////////////")
-                    print("// {}: {} for {}".format(libfile, scriptfile, imgfile))
-                    print("////////////////////////////////////////////////////")
-                    print(script)
-                    print("////////////////////////////////////////////////////")
-                    print("")
-                    sys.exit(-1)
+                run_openscad_script(
+                    libfile, scriptfile, tmpimgfile,
+                    imgsize=(imgsize[0]*2,imgsize[1]*2),
+                    eye=eye,
+                    show_edges=show_edges,
+                    render=render
+                )
                 tmpimgs.append(tmpimgfile)
+                print(".", end='')
+                sys.stdout.flush()
         else:
             tmpimgfile = self.imgroot + "tmp_" + imgfile
-            scadcmd = [
-                OPENSCAD,
-                "-o", tmpimgfile,
-                "--imgsize={},{}".format(imgsize[0]*2, imgsize[1]*2),
-                "--hardwarnings",
-                "--projection=o",
-                "--autocenter",
-                "--viewall"
-            ]
-            if "2D" in extype:  # 2D viewpoint
-                scadcmd.extend(["--camera", "0,0,0,0,0,0,500"])
-            if "Edges" in extype:  # Force render
-                scadcmd.extend(["--view=axes,scales,edges"])
-            else:
-                scadcmd.extend(["--view=axes,scales"])
-            if "FR" in extype:  # Force render
-                scadcmd.extend(["--render", ""])
-            scadcmd.append(scriptfile)
-
-            p = subprocess.Popen(scadcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
-            (stdoutdata, stderrdata) = p.communicate(None)
-            res = p.returncode
-            if res != 0 or b"ERROR:" in stderrdata or b"WARNING:" in stderrdata:
-                print("%s"%stderrdata)
-                print("////////////////////////////////////////////////////")
-                print("// {}: {} for {}".format(libfile, scriptfile, imgfile))
-                print("////////////////////////////////////////////////////")
-                print(script)
-                print("////////////////////////////////////////////////////")
-                print("")
-                with open("FAILED.scad", "w") as f:
-                    print("////////////////////////////////////////////////////", file=f)
-                    print("// {}: {} for {}".format(libfile, scriptfile, imgfile), file=f)
-                    print("////////////////////////////////////////////////////", file=f)
-                    print(script, file=f)
-                    print("////////////////////////////////////////////////////", file=f)
-                    print("", file=f)
-                sys.exit(-1)
+            eye = "0,0,500" if "2D" in extype else None
+            run_openscad_script(
+                libfile, scriptfile, tmpimgfile,
+                imgsize=(imgsize[0]*2,imgsize[1]*2),
+                eye=eye,
+                show_edges=show_edges,
+                render=render
+            )
             tmpimgs.append(tmpimgfile)
 
         if not self.keep_scripts:
             os.unlink(scriptfile)
 
         if len(tmpimgs) == 1:
-            cnvcmd = [
-                CONVERT,
-                tmpimgfile,
-                "-resize", "{}x{}".format(imgsize[0], imgsize[1]),
-                newimgfile
-            ]
-            res = subprocess.call(cnvcmd)
-            if res != 0:
-                sys.exit(-1)
+            image_resize(tmpimgfile, newimgfile, imgsize)
             os.unlink(tmpimgs.pop(0))
         else:
-            cnvcmd = [
-                CONVERT,
-                "-delay", "25",
-                "-loop", "0",
-                "-coalesce",
-                "-scale", "{}x{}".format(imgsize[0], imgsize[1]),
-                "-fuzz", "2%",
-                "+dither",
-                "-layers", "Optimize",
-                "+map"
-            ]
-            cnvcmd.extend(tmpimgs)
-            cnvcmd.append(newimgfile)
-            res = subprocess.call(cnvcmd)
-            if res != 0:
-                sys.exit(-1)
+            make_animated_gif(tmpimgs, newimgfile, size=imgsize)
             for tmpimg in tmpimgs:
                 os.unlink(tmpimg)
+
+        print("")
 
         # Time to compare image.
         if not os.path.isfile(targimgfile):
@@ -274,14 +292,9 @@ class ImageProcessing(object):
             os.rename(newimgfile, targimgfile)
         else:
             if targimgfile.endswith(".gif"):
-                cmpcmd = ["cmp", "-s", newimgfile, targimgfile]
-                res = subprocess.call(cmpcmd)
-                issame = res == 0
+                issame = filecmp.cmp(targimgfile, newimgfile, shallow=False)
             else:
-                cmpcmd = [COMPARE, "-metric", "MAE", newimgfile, targimgfile, "null:"]
-                p = subprocess.Popen(cmpcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-                resbin = p.stdout.read().strip()
-                issame = resbin == b'0 (0)'
+                issame  = image_compare(targimgfile, newimgfile);
             if issame:
                 os.unlink(newimgfile)
             else:
