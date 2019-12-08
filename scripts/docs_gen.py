@@ -20,9 +20,9 @@ from PIL import Image, ImageChops
 
 if platform.system() == "Darwin":
     OPENSCAD = "/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD"
-    GIT = "/usr/local/bin/git"
+    GIT = "git"
 else:
-    OPENSCAD = "/usr/local/bin/openscad"
+    OPENSCAD = "openscad"
     GIT = "git"
 
 
