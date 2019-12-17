@@ -2189,7 +2189,7 @@ module half_of(v=UP, cp=[0,0,0], s=100, planar=false)
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is right of it.
 //
 // Arguments:
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 10000
 //   x = The X coordinate of the cut-plane.  Default: 0
 //   planar = If true, this becomes a 2D operation.
 //
@@ -2198,7 +2198,7 @@ module half_of(v=UP, cp=[0,0,0], s=100, planar=false)
 //   left_half(x=-8) sphere(r=20);
 // Example(2D):
 //   left_half(planar=true) circle(r=20);
-module left_half(s=100, x=0, planar=false)
+module left_half(s=10000, x=0, planar=false)
 {
 	dir = LEFT;
 	difference() {
@@ -2225,7 +2225,7 @@ module left_half(s=100, x=0, planar=false)
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is left of it.
 //
 // Arguments:
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 10000
 //   x = The X coordinate of the cut-plane.  Default: 0
 //   planar = If true, this becomes a 2D operation.
 //
@@ -2234,7 +2234,7 @@ module left_half(s=100, x=0, planar=false)
 //   right_half(x=-5) sphere(r=20);
 // Example(2D):
 //   right_half(planar=true) circle(r=20);
-module right_half(s=100, x=0, planar=false)
+module right_half(s=10000, x=0, planar=false)
 {
 	dir = RIGHT;
 	difference() {
@@ -2261,7 +2261,7 @@ module right_half(s=100, x=0, planar=false)
 //   Slices an object at a vertical X-Z cut plane, and masks away everything that is behind it.
 //
 // Arguments:
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 10000
 //   y = The Y coordinate of the cut-plane.  Default: 0
 //   planar = If true, this becomes a 2D operation.
 //
@@ -2270,7 +2270,7 @@ module right_half(s=100, x=0, planar=false)
 //   front_half(y=5) sphere(r=20);
 // Example(2D):
 //   front_half(planar=true) circle(r=20);
-module front_half(s=100, y=0, planar=false)
+module front_half(s=10000, y=0, planar=false)
 {
 	dir = FWD;
 	difference() {
@@ -2297,7 +2297,7 @@ module front_half(s=100, y=0, planar=false)
 //   Slices an object at a vertical X-Z cut plane, and masks away everything that is in front of it.
 //
 // Arguments:
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 10000
 //   y = The Y coordinate of the cut-plane.  Default: 0
 //   planar = If true, this becomes a 2D operation.
 //
@@ -2306,7 +2306,7 @@ module front_half(s=100, y=0, planar=false)
 //   back_half(y=8) sphere(r=20);
 // Example(2D):
 //   back_half(planar=true) circle(r=20);
-module back_half(s=100, y=0, planar=false)
+module back_half(s=10000, y=0, planar=false)
 {
 	dir = BACK;
 	difference() {
@@ -2332,13 +2332,13 @@ module back_half(s=100, y=0, planar=false)
 //   Slices an object at a horizontal X-Y cut plane, and masks away everything that is above it.
 //
 // Arguments:
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 10000
 //   z = The Z coordinate of the cut-plane.  Default: 0
 //
 // Examples:
 //   bottom_half() sphere(r=20);
 //   bottom_half(z=-10) sphere(r=20);
-module bottom_half(s=100, z=0)
+module bottom_half(s=10000, z=0)
 {
 	dir = DOWN;
 	difference() {
@@ -2360,13 +2360,13 @@ module bottom_half(s=100, z=0)
 //   Slices an object at a horizontal X-Y cut plane, and masks away everything that is below it.
 //
 // Arguments:
-//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: 100
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 10000
 //   z = The Z coordinate of the cut-plane.  Default: 0
 //
 // Examples(Spin):
 //   top_half() sphere(r=20);
 //   top_half(z=5) sphere(r=20);
-module top_half(s=100, z=0)
+module top_half(s=10000, z=0)
 {
 	dir = UP;
 	difference() {
