@@ -901,19 +901,15 @@ function zflip(z=0,p) =
 //////////////////////////////////////////////////////////////////////
 
 
-// Function&Module: skew_xy()
-//
+// Function&Module: skew()
 // Usage: As Module
-//   skew_xy([xa], [ya], [planar]) ...
+//   skew(sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0) ...
 // Usage: As Function
-//   pt = skew_xy([xa], [ya], [planar], p);
+//   pts = skew(p, [sxy], [sxz], [syx], [syz], [szx], [szy]);
 // Usage: Get Affine Matrix
-//   mat = skew_xy([xa], [ya], [planar]);
-//
+//   mat = skew([sxy], [sxz], [syx], [syz], [szx], [szy], [planar]);
 // Description:
-//   Skews geometry on the X-Y plane, keeping constant in Z.
-//   The argument `xa` is the angle in degrees to skew towards the X+ direction.
-//   The argument `ya` is the angle in degrees to skew towards the Y+ direction.
+//   Skews geometry by the given skew factors.
 //   * Called as the built-in module, skews all children.
 //   * Called as a function with a point in the `p` argument, returns the skewed point.
 //   * Called as a function with a list of points in the `p` argument, returns the list of skewed points.
@@ -921,25 +917,63 @@ function zflip(z=0,p) =
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the skewed VNF.
 //   * Called as a function without a `p` argument, and with `planar` true, returns the affine2d 3x3 skew matrix.
 //   * Called as a function without a `p` argument, and with `planar` false, returns the affine3d 4x4 skew matrix.
-//
+//   Each skew factor is a multiplier.  For example, if `sxy=2`, then it will skew along the X axis by 2x the value of the Y axis.
 // Arguments:
-//   xa = skew angle towards the X+ direction.
-//   ya = skew angle towards the Y+ direction.
-//   planar = If true, this becomes a 2D operation.
-//
-// Example(FlatSpin):
-//   #cube(size=10);
-//   skew_xy(xa=30, ya=15) cube(size=10);
-// Example(2D):
-//   skew_xy(xa=15,ya=30,planar=true) square(30);
-// Example(2D):
-//   path = square([50,30], center=true);
-//   #stroke(path, closed=true);
-//   stroke(skew_xy(15,30,planar=true,p=path), closed=true);
-module skew_xy(xa=0, ya=0, planar=false) multmatrix(m = planar? affine2d_skew(xa, ya) : affine3d_skew_xy(xa, ya)) children();
+//   sxy = Skew factor multiplier for skewing along the X axis as you get farther from the Y axis.  Default: 0
+//   sxz = Skew factor multiplier for skewing along the X axis as you get farther from the Z axis.  Default: 0
+//   syx = Skew factor multiplier for skewing along the Y axis as you get farther from the X axis.  Default: 0
+//   syz = Skew factor multiplier for skewing along the Y axis as you get farther from the Z axis.  Default: 0
+//   szx = Skew factor multiplier for skewing along the Z axis as you get farther from the X axis.  Default: 0
+//   szy = Skew factor multiplier for skewing along the Z axis as you get farther from the Y axis.  Default: 0
+// Example(2D): Skew along the X axis in 2D.
+//   skew(sxy=0.5) square(40, center=true);
+// Example(2D): Skew along the Y axis in 2D.
+//   skew(syx=0.5) square(40, center=true);
+// Example: Skew along the X axis in 3D as a factor of Y coordinate.
+//   skew(sxy=0.5) cube(40, center=true);
+// Example: Skew along the X axis in 3D as a factor of Z coordinate.
+//   skew(sxz=0.5) cube(40, center=true);
+// Example: Skew along the Y axis in 3D as a factor of X coordinate.
+//   skew(syx=0.5) cube(40, center=true);
+// Example: Skew along the Y axis in 3D as a factor of Z coordinate.
+//   skew(syz=0.5) cube(40, center=true);
+// Example: Skew along the Z axis in 3D as a factor of X coordinate.
+//   skew(szx=0.5) cube(40, center=true);
+// Example: Skew along the Z axis in 3D as a factor of Y coordinate.
+//   skew(szy=0.75) cube(40, center=true);
+// Example(FlatSpin): Skew Along Multiple Axes.
+//   skew(sxy=0.5, syx=0.3, szy=0.75) cube(40, center=true);
+// Example(2D): Calling as a 2D Function
+//   pts = skew(p=square(40,center=true), sxy=0.5);
+//   color("yellow") stroke(pts, closed=true);
+//   color("blue") place_copies(pts) circle(d=3, $fn=8);
+// Example(FlatSpin): Calling as a 3D Function
+//   pts = skew(p=path3d(square(40,center=true)), szx=0.5, szy=0.3);
+//   trace_polyline(close_path(pts), showpts=true);
+module skew(sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0)
+{
+	multmatrix([
+		[  1, sxy, sxz, 0],
+		[syx,   1, syz, 0],
+		[szx, szy,   1, 0],
+		[  0,   0,   0, 1]
+	]) children();
+}
 
-function skew_xy(xa=0, ya=0, planar=false, p) =
-	let(m = planar? affine2d_skew(xa, ya) : affine3d_skew_xy(xa, ya))
+function skew(p, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0, planar=false) =
+	let(
+		planar = planar || (is_list(p) && is_num(p.x) && len(p)==2),
+		m = planar? [
+			[  1, sxy, 0],
+			[syx,   1, 0],
+			[  0,   0, 1]
+		] : [
+			[  1, sxy, sxz, 0],
+			[syx,   1, syz, 0],
+			[szx, szy,   1, 0],
+			[  0,   0,   0, 1]
+		]
+	)
 	is_undef(p)? m :
 	assert(is_list(p))
 	is_num(p.x)? (
@@ -947,84 +981,8 @@ function skew_xy(xa=0, ya=0, planar=false, p) =
 			point2d(m*concat(point2d(p),[1])) :
 			point3d(m*concat(point3d(p),[1]))
 	) :
-	is_vnf(p)? [skew_xy(xa=xa, ya=ya, planar=planar, p=p.x), p.y] :
-	[for (l=p) skew_xy(xa=xa, ya=ya, planar=planar, p=l)];
-
-
-// Function&Module: skew_yz()
-//
-// Usage: As Module
-//   skew_yz([ya], [za]) ...
-// Usage: As Function
-//   pt = skew_yz([ya], [za], p);
-// Usage: Get Affine Matrix
-//   mat = skew_yz([ya], [za]);
-//
-// Description:
-//   Skews geometry on the Y-Z plane, keeping constant in X.
-//   The argument `ya` is the angle in degrees to skew towards the Y+ direction.
-//   The argument `za` is the angle in degrees to skew towards the Z+ direction.
-//   * Called as the built-in module, skews all children.
-//   * Called as a function with a point in the `p` argument, returns the skewed point.
-//   * Called as a function with a list of points in the `p` argument, returns the list of skewed points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the skewed patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the skewed VNF.
-//   * Called as a function without a `p` argument, returns the affine3d 4x4 skew matrix.
-//
-// Arguments:
-//   ya = skew angle towards the Y direction.
-//   za = skew angle towards the Z direction.
-//
-// Example(FlatSpin):
-//   #cube(size=10);
-//   skew_yz(ya=30, za=15) cube(size=10);
-module skew_yz(ya=0, za=0) multmatrix(m = affine3d_skew_yz(ya, za)) children();
-
-function skew_yz(ya=0, za=0, p) =
-	let(m = affine3d_skew_yz(ya, za))
-	is_undef(p)? m :
-	assert(is_list(p))
-	is_num(p.x)? point3d(m*concat(point3d(p),[1])) :
-	is_vnf(p)? [skew_yz(ya=ya, za=za, p=p.x), p.y] :
-	[for (l=p) skew_yz(ya=ya, za=za, p=l)];
-
-
-// Function&Module: skew_xz()
-//
-// Usage: As Module
-//   skew_xz([xa], [za]) ...
-// Usage: As Function
-//   pt = skew_xz([xa], [za], p);
-// Usage: Get Affime Matrix
-//   mat = skew_xz([xa], [za]);
-//
-// Description:
-//   Skews geometry on the X-Z plane, keeping constant in Y.
-//   The argument `xa` is the angle in degrees to skew towards the X+ direction.
-//   The argument `za` is the angle in degrees to skew towards the Z+ direction.
-//   * Called as the built-in module, skews all children.
-//   * Called as a function with a point in the `p` argument, returns the skewed point.
-//   * Called as a function with a list of points in the `p` argument, returns the list of skewed points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the skewed patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the skewed VNF.
-//   * Called as a function without a `p` argument, returns the affine3d 4x4 skew matrix.
-//
-// Arguments:
-//   xa = skew angle towards the X direction.
-//   za = skew angle towards the Z direction.
-//
-// Example(FlatSpin):
-//   #cube(size=10);
-//   skew_xz(xa=15, za=-10) cube(size=10);
-module skew_xz(xa=0, za=0) multmatrix(m = affine3d_skew_xz(xa, za)) children();
-
-function skew_xz(xa=0, za=0, p) =
-	let(m = affine3d_skew_xz(xa, za))
-	is_undef(p)? m :
-	assert(is_list(p))
-	is_num(p.x)? point3d(m*concat(point3d(p),[1])) :
-	is_vnf(p)? [skew_xz(xa=xa, za=za, p=p.x), p.y] :
-	[for (l=p) skew_xz(xa=xa, za=za, p=l)];
+	is_vnf(p)? [skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy, planar=planar, p=p.x), p.y] :
+	[for (l=p) skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy, planar=planar, p=l)];
 
 
 
