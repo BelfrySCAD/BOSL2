@@ -352,8 +352,8 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anc
 			}
 			yspread(ystep, n=yreps) {
 				xspread(zstep, n=zreps) {
-					skew_xy(planar=true, ya=-ang) square([(h-strut)/zreps, strut], center=true);
-					skew_xy(planar=true, ya= ang) square([(h-strut)/zreps, strut], center=true);
+					skew(syx=tan(-ang)) square([(h-strut)/zreps, strut], center=true);
+					skew(syx=tan( ang)) square([(h-strut)/zreps, strut], center=true);
 				}
 			}
 		}
@@ -440,7 +440,7 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 											for (soff = [0:1:supp_reps-1] ) {
 												yflip_copy() {
 													back(soff*supp_step) {
-														skew_xy(ya=supp_ang) {
+														skew(syz=tan(supp_ang)) {
 															cube([strut, strut, zstep], anchor=BOTTOM);
 														}
 													}

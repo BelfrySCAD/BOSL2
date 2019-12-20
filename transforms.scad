@@ -952,12 +952,9 @@ function zflip(z=0,p) =
 //   trace_polyline(close_path(pts), showpts=true);
 module skew(sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0)
 {
-	multmatrix([
-		[  1, sxy, sxz, 0],
-		[syx,   1, syz, 0],
-		[szx, szy,   1, 0],
-		[  0,   0,   0, 1]
-	]) children();
+	multmatrix(
+		affine3d_skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy)
+	) children();
 }
 
 function skew(p, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0, planar=false) =
@@ -967,12 +964,7 @@ function skew(p, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0, planar=false) =
 			[  1, sxy, 0],
 			[syx,   1, 0],
 			[  0,   0, 1]
-		] : [
-			[  1, sxy, sxz, 0],
-			[syx,   1, syz, 0],
-			[szx, szy,   1, 0],
-			[  0,   0,   0, 1]
-		]
+		] : affine3d_skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy)
 	)
 	is_undef(p)? m :
 	assert(is_list(p))

@@ -276,11 +276,31 @@ function affine3d_mirror(v) =
 	];
 
 
+// Function: affine3d_skew()
+// Usage:
+//   mat = affine3d_skew([sxy], [sxz], [syx], [xyz], [szx], [szy]);
+// Description:
+//   Returns the 4x4 affine3d matrix to perform a skew transformation.
+// Arguments:
+//   sxy = Skew factor multiplier for skewing along the X axis as you get farther from the Y axis.  Default: 0
+//   sxz = Skew factor multiplier for skewing along the X axis as you get farther from the Z axis.  Default: 0
+//   syx = Skew factor multiplier for skewing along the Y axis as you get farther from the X axis.  Default: 0
+//   syz = Skew factor multiplier for skewing along the Y axis as you get farther from the Z axis.  Default: 0
+//   szx = Skew factor multiplier for skewing along the Z axis as you get farther from the X axis.  Default: 0
+//   szy = Skew factor multiplier for skewing along the Z axis as you get farther from the Y axis.  Default: 0
+function affine3d_skew(sxy=0, sxz=0, syx=0, xyz=0, szx=0, szy=0) = [
+	[  1, sxy, sxz, 0],
+	[syx,   1, syz, 0],
+	[szx, szy,   1, 0],
+	[  0,   0,   0, 1]
+];
+
+
 // Function: affine3d_skew_xy()
 // Usage:
 //   affine3d_skew_xy(xa, ya)
 // Description:
-//   Returns the 4x4 affine3d matrix to perform a skew transformation along the XY plane..
+//   Returns the 4x4 affine3d matrix to perform a skew transformation along the XY plane.
 // Arguments:
 //   xa = Skew angle, in degrees, in the direction of the X axis.
 //   ya = Skew angle, in degrees, in the direction of the Y axis.
