@@ -20,6 +20,8 @@
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
 // Arguments:
 //   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
+//   rounding = The rounding radius for the corners.  Default: 0 (no rounding)
+//   chamfer = The chamfer size for the corners.  Default: 0 (no chamfer)
 //   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -27,15 +29,21 @@
 //   square(40);
 // Example(2D): Centered
 //   square([40,30], center=true);
-// Example(2D): Anchoring
+// Example(2D): Anchored
 //   square([40,30], anchor=FRONT);
-// Example(2D): Spin
+// Example(2D): Spun
 //   square([40,30], anchor=FRONT, spin=30);
-// Example(NORENDER): Called as Function
-//   path = square([40,30], anchor=FRONT, spin=30);
-module square(size=1, center, anchor=FRONT+LEFT, spin=0) {
+// Example(2D): Chamferred Rect
+//   square([40,40], chamfer=5, center=true);
+// Example(2D): Rounded Rect
+//   square([40,40], rounding=5, center=true);
+// Example(2D): Called as Function
+//   path = square([40,30], chamfer=5, anchor=FRONT, spin=30);
+//   stroke(path, closed=true);
+//   place_copies(path) color("blue") sphere(d=2);
+module square(size=1, rounding=0, chamfer=0, center, anchor=FRONT+LEFT, spin=0) {
 	size = is_num(size)? [size,size] : point2d(size);
-	pts = [[size.x,0], [0,0], [0,size.y], size];
+	pts = square(size=size, rounding=rounding, center=false, chamfer=chamfer);
 	orient_and_anchor(point3d(size), UP, anchor, spin=spin, center=center, noncentered=FRONT+LEFT, two_d=true, chain=true) {
 		translate(-size/2) polygon(pts);
 		children();
@@ -43,12 +51,43 @@ module square(size=1, center, anchor=FRONT+LEFT, spin=0) {
 }
 
 
-function square(size=1, center, anchor=FRONT+LEFT, spin=0) =
+function square(size=1, rounding=0, chamfer=0, center, anchor=FRONT+LEFT, spin=0) =
 	let(
 		anchor = center==true? CENTER : center==false? FRONT+LEFT : anchor,
 		size = is_num(size)? [size,size] : point2d(size),
-		s=size/2
-	) rot(spin, p=move(-vmul(anchor,s), p=[[s.x,-s.y], [-s.x,-s.y], [-s.x,s.y], [s.x,s.y]]));
+		s = size/2,
+		cverts = max(0,floor((segs(rounding)-4)/4)),
+		step = 90/(cverts+1),
+		inset =
+			chamfer>0?
+				assert(size.x>=2*chamfer)
+				assert(size.y>=2*chamfer)
+				[2,2]*chamfer :
+			rounding>0?
+				assert(size.x>=2*rounding)
+				assert(size.y>=2*rounding)
+				[2,2]*rounding :
+			[0,0],
+		is = (size-inset)/2,
+		path =
+			chamfer>0? concat(
+				[[ is.x,- s.y], [-is.x,- s.y]],
+				[[- s.x,-is.y], [- s.x, is.y]],
+				[[-is.x,  s.y], [ is.x,  s.y]],
+				[[  s.x, is.y], [  s.x,-is.y]]
+			) :
+			rounding>0? concat(
+				[for (i=[0:1:cverts-1]) let(ang=360-step*(i+1)) [ is.x,-is.y] + polar_to_xy(rounding,ang)],
+				[[ is.x,- s.y], [-is.x,- s.y]],
+				[for (i=[0:1:cverts-1]) let(ang=270-step*(i+1)) [-is.x,-is.y] + polar_to_xy(rounding,ang)],
+				[[- s.x,-is.y], [- s.x, is.y]],
+				[for (i=[0:1:cverts-1]) let(ang=180-step*(i+1)) [-is.x, is.y] + polar_to_xy(rounding,ang)],
+				[[-is.x,  s.y], [ is.x,  s.y]],
+				[for (i=[0:1:cverts-1]) let(ang= 90-step*(i+1)) [ is.x, is.y] + polar_to_xy(rounding,ang)],
+				[[  s.x, is.y], [  s.x,-is.y]]
+			) :
+			[[s.x,-s.y], [-s.x,-s.y], [-s.x,s.y], [s.x,s.y]]
+	) rot(spin, p=move(-vmul(anchor,s), p=path));
 
 
 // Function&Module: circle()
