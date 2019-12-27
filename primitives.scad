@@ -34,9 +34,9 @@
 // Example(2D): Spun
 //   square([40,30], anchor=FRONT, spin=30);
 // Example(2D): Chamferred Rect
-//   square([40,40], chamfer=5, center=true);
+//   square([40,30], chamfer=5, center=true);
 // Example(2D): Rounded Rect
-//   square([40,40], rounding=5, center=true);
+//   square([40,30], rounding=5, center=true);
 // Example(2D): Called as Function
 //   path = square([40,30], chamfer=5, anchor=FRONT, spin=30);
 //   stroke(path, closed=true);
