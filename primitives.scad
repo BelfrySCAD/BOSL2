@@ -40,7 +40,7 @@
 // Example(2D): Called as Function
 //   path = square([40,30], chamfer=5, anchor=FRONT, spin=30);
 //   stroke(path, closed=true);
-//   place_copies(path) color("blue") sphere(d=2);
+//   place_copies(path) color("blue") circle(d=2,$fn=8);
 module square(size=1, rounding=0, chamfer=0, center, anchor=FRONT+LEFT, spin=0) {
 	size = is_num(size)? [size,size] : point2d(size);
 	pts = square(size=size, rounding=rounding, center=false, chamfer=chamfer);
