@@ -42,6 +42,18 @@ function is_vector(v) = is_list(v) && is_num(v[0]);
 function add_scalar(v,s) = [for (x=v) is_list(x)? add_scalar(x,s) : x+s];
 
 
+// Function: vang()
+// Usage:
+//   theta = vang([X,Y]);
+//   theta_phi = vang([X,Y,Z]);
+// Description:
+//   Given a 2D vector, returns the angle in degrees counter-clockwise from X+ on the XY plane.
+//   Given a 3D vector, returns [THETA,PHI] where THETA is the number of degrees counter-clockwise from X+ on the XY plane, and PHI is the number of degrees up from the X+ axis along the XZ plane.
+function vang(v) =
+	len(v)==2? atan2(v.y,v.x) :
+	let(res=xyz_to_spherical(v)) [res[1], 90-res[2]];
+
+
 // Function: vmul()
 // Description:
 //   Element-wise vector multiplication.  Multiplies each element of vector `v1` by
