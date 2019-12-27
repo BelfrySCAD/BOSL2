@@ -279,7 +279,7 @@ module path_sweep(polyline, path, ang=0, convexity=10) {
 	pline_count = len(polyline);
 	path_count = len(path);
 
-	polyline = rotate_points2d(path2d(polyline), ang);
+	polyline = rotate_points2d(ccw_polygon(path2d(polyline)), ang);
 	poly_points = points_along_path3d(polyline, path);
 
 	poly_faces = concat(
@@ -365,6 +365,7 @@ module path_extrude(path, convexity=10, clipsize=100) {
 //   Can also optionally show the individual vertex points.
 // Arguments:
 //   pline = The array of points in the polyline.
+//   closed = If true, draw the segment from the last vertex to the first.  Default: false
 //   showpts = If true, draw vertices and control points.
 //   N = Mark the first and every Nth vertex after in a different color and shape.
 //   size = Diameter of the lines drawn.
@@ -372,8 +373,9 @@ module path_extrude(path, convexity=10, clipsize=100) {
 // Example(FlatSpin):
 //   polyline = [for (a=[0:30:210]) 10*[cos(a), sin(a), sin(a)]];
 //   trace_polyline(polyline, showpts=true, size=0.5, color="lightgreen");
-module trace_polyline(pline, showpts=false, N=1, size=1, color="yellow") {
+module trace_polyline(pline, closed=false, showpts=false, N=1, size=1, color="yellow") {
 	sides = segs(size/2);
+	pline = closed? close_path(pline) : pline;
 	if (showpts) {
 		for (i = [0:1:len(pline)-1]) {
 			translate(pline[i]) {
@@ -390,7 +392,7 @@ module trace_polyline(pline, showpts=false, N=1, size=1, color="yellow") {
 		}
 	}
 	if (N!=3) {
-		path_sweep(circle(d=size,$fn=sides), path3d(pline));
+		color(color) path_sweep(circle(d=size,$fn=sides), path3d(pline));
 	} else {
 		for (i = [0:1:len(pline)-2]) {
 			if (N!=3 || (i%N) != 1) {
