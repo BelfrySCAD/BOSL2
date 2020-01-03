@@ -1444,7 +1444,6 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 		mcols = !is_undef(cols)? cols : (!is_undef(spc) && !is_undef(bnds))? quantup(ceil(bnds[0]/spc[0])-1, 4)+1 : undef;
 		mrows = !is_undef(rows)? rows : (!is_undef(spc) && !is_undef(bnds))? quantup(ceil(bnds[1]/spc[1])-1, 4)+1 : undef;
 		siz = vmul(spc, [mcols-1, mrows-1, 0])+[0,0,0.01];
-		echo(siz=siz, spc=spc, spacing=spacing, scl=scl, mcols=mcols, mrows=mrows);
 		staggermod = (stagger == "alt")? 1 : 0;
 		if (stagger == false) {
 			orient_and_anchor(siz, orient, anchor, spin=spin) {
@@ -1611,7 +1610,8 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[
 	sang = sa + offset;
 	angs = !is_undef(n)?
 		(n<=0? [] : [for (i=[0:1:n-1]) i/n*360+sang]) :
-		assert(is_vector(rots)) rots;
+		assert(is_list(rots))
+		rots;
 	for ($idx = idx(angs)) {
 		$ang = angs[$idx];
 		$axis = v;
