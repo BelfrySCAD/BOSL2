@@ -1036,45 +1036,6 @@ module staggered_sphere(r=undef, d=undef, circum=false, anchor=CENTER, spin=0, o
 // Section: 3D Printing Shapes
 
 
-// Module: teardrop2d()
-//
-// Description:
-//   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.
-//
-// Usage:
-//   teardrop2d(r|d, [ang], [cap_h]);
-//
-// Arguments:
-//   r = radius of circular part of teardrop.  (Default: 1)
-//   d = diameter of spherical portion of bottom. (Use instead of r)
-//   ang = angle of hat walls from the Y axis.  (Default: 45 degrees)
-//   cap_h = if given, height above center where the shape will be truncated.
-//
-// Example(2D): Typical Shape
-//   teardrop2d(r=30, ang=30);
-// Example(2D): Crop Cap
-//   teardrop2d(r=30, ang=30, cap_h=40);
-// Example(2D): Close Crop
-//   teardrop2d(r=30, ang=30, cap_h=20);
-module teardrop2d(r=1, d=undef, ang=45, cap_h=undef)
-{
-	eps = 0.01;
-	r = get_radius(r=r, d=d, dflt=1);
-	cord = 2 * r * cos(ang);
-	cord_h = r * sin(ang);
-	tip_y = (cord/2)/tan(ang);
-	cap_h = min((!is_undef(cap_h)? cap_h : tip_y+cord_h), tip_y+cord_h);
-	cap_w = cord * (1 - (cap_h - cord_h)/tip_y);
-	difference() {
-		hull() {
-			zrot(90) circle(r=r);
-			back(cap_h-eps/2) square([max(eps,cap_w), eps], center=true);
-		}
-		back(r+cap_h) square(2*r, center=true);
-	}
-}
-
-
 // Module: teardrop()
 //
 // Description:

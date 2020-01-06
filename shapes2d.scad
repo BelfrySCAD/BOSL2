@@ -189,9 +189,6 @@ module stroke(
 }
 
 
-// Section: 2D Shapes
-
-
 // Function&Module: arc()
 // Usage: 2D arc from 0º to `angle` degrees.
 //   arc(N, r|d, angle);
@@ -308,363 +305,6 @@ module arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false)
 function _normal_segment(p1,p2) =
 	let(center = (p1+p2)/2)
 	[center, center + norm(p1-p2)/2 * line_normal(p1,p2)];
-
-
-// Function&Module: trapezoid()
-// Usage:
-//   trapezoid(h, w1, w2);
-// Description:
-//   When called as a function, returns a 2D path for a trapezoid with parallel front and back sides.
-//   When called as a module, creates a 2D trapezoid with parallel front and back sides.
-// Arguments:
-//   h = The Y axis height of the trapezoid.
-//   w1 = The X axis width of the front end of the trapezoid.
-//   w2 = The X axis width of the back end of the trapezoid.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-// Examples(2D):
-//   trapezoid(h=30, w1=40, w2=20);
-//   trapezoid(h=25, w1=20, w2=35);
-//   trapezoid(h=20, w1=40, w2=0);
-// Example(2D): Called as Function
-//   stroke(closed=true, trapezoid(h=30, w1=40, w2=20));
-function trapezoid(h, w1, w2, anchor=CENTER, spin=0) =
-	let(
-		s = anchor.y>0? [w2,h] : anchor.y<0? [w1,h] : [(w1+w2)/2,h],
-		path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2]]
-	) rot(spin, p=move(-vmul(anchor,s/2), p=path));
-
-
-
-module trapezoid(h, w1, w2, anchor=CENTER, spin=0)
-	polygon(trapezoid(h=h, w1=w1, w2=w2, anchor=anchor, spin=spin));
-
-
-// Function&Module: regular_ngon()
-// Usage:
-//   regular_ngon(n, r|d|or|od, [realign]);
-//   regular_ngon(n, ir|id, [realign]);
-//   regular_ngon(n, side, [realign]);
-// Description:
-//   When called as a function, returns a 2D path for a regular N-sided polygon.
-//   When called as a module, creates a 2D regular N-sided polygon.
-// Arguments:
-//   n = The number of sides.
-//   or = Outside radius, at points.
-//   r = Same as or
-//   od = Outside diameter, at points.
-//   d = Same as od
-//   ir = Inside radius, at center of sides.
-//   id = Inside diameter, at center of sides.
-//   side = Length of each side.
-//   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-// Example(2D): by Outer Size
-//   regular_ngon(n=5, or=30);
-//   regular_ngon(n=5, od=60);
-// Example(2D): by Inner Size
-//   regular_ngon(n=5, ir=30);
-//   regular_ngon(n=5, id=60);
-// Example(2D): by Side Length
-//   regular_ngon(n=8, side=20);
-// Example(2D): Realigned
-//   regular_ngon(n=8, side=20, realign=true);
-// Example(2D): Called as Function
-//   stroke(closed=true, regular_ngon(n=6, or=30));
-function regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
-	let(
-		sc = 1/cos(180/n),
-		r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n)),
-		path = circle(r=r, realign=realign, spin=90, $fn=n)
-	) rot(spin, p=move(-r*normalize(anchor), p=path));
-
-
-module regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) {
-	sc = 1/cos(180/n);
-	r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n));
-	orient_and_anchor([2*r,2*r,0], UP, anchor, spin=spin, geometry="cylinder", two_d=true, chain=true) {
-		polygon(circle(r=r, realign=realign, spin=90, $fn=n));
-		children();
-	}
-}
-
-
-// Function&Module: pentagon()
-// Usage:
-//   pentagon(or|od, [realign]);
-//   pentagon(ir|id, [realign];
-//   pentagon(side, [realign];
-// Description:
-//   When called as a function, returns a 2D path for a regular pentagon.
-//   When called as a module, creates a 2D regular pentagon.
-// Arguments:
-//   or = Outside radius, at points.
-//   r = Same as or.
-//   od = Outside diameter, at points.
-//   d = Same as od.
-//   ir = Inside radius, at center of sides.
-//   id = Inside diameter, at center of sides.
-//   side = Length of each side.
-//   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-// Example(2D): by Outer Size
-//   pentagon(or=30);
-//   pentagon(od=60);
-// Example(2D): by Inner Size
-//   pentagon(ir=30);
-//   pentagon(id=60);
-// Example(2D): by Side Length
-//   pentagon(side=20);
-// Example(2D): Realigned
-//   pentagon(side=20, realign=true);
-// Example(2D): Called as Function
-//   stroke(closed=true, pentagon(or=30));
-function pentagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
-	regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
-
-
-module pentagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
-	regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin) children();
-
-
-// Function&Module: hexagon()
-// Usage:
-//   hexagon(or, od, ir, id, side);
-// Description:
-//   When called as a function, returns a 2D path for a regular hexagon.
-//   When called as a module, creates a 2D regular hexagon.
-// Arguments:
-//   or = Outside radius, at points.
-//   r = Same as or
-//   od = Outside diameter, at points.
-//   d = Same as od
-//   ir = Inside radius, at center of sides.
-//   id = Inside diameter, at center of sides.
-//   side = Length of each side.
-//   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-// Example(2D): by Outer Size
-//   hexagon(or=30);
-//   hexagon(od=60);
-// Example(2D): by Inner Size
-//   hexagon(ir=30);
-//   hexagon(id=60);
-// Example(2D): by Side Length
-//   hexagon(side=20);
-// Example(2D): Realigned
-//   hexagon(side=20, realign=true);
-// Example(2D): Called as Function
-//   stroke(closed=true, hexagon(or=30));
-function hexagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
-	regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
-
-
-module hexagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
-	regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin) children();
-
-
-// Function&Module: octagon()
-// Usage:
-//   octagon(or, od, ir, id, side);
-// Description:
-//   When called as a function, returns a 2D path for a regular octagon.
-//   When called as a module, creates a 2D regular octagon.
-// Arguments:
-//   or = Outside radius, at points.
-//   r = Same as or
-//   od = Outside diameter, at points.
-//   d = Same as od
-//   ir = Inside radius, at center of sides.
-//   id = Inside diameter, at center of sides.
-//   side = Length of each side.
-//   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-// Example(2D): by Outer Size
-//   octagon(or=30);
-//   octagon(od=60);
-// Example(2D): by Inner Size
-//   octagon(ir=30);
-//   octagon(id=60);
-// Example(2D): by Side Length
-//   octagon(side=20);
-// Example(2D): Realigned
-//   octagon(side=20, realign=true);
-// Example(2D): Called as Function
-//   stroke(closed=true, octagon(or=30));
-function octagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
-	regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
-
-
-module octagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
-	regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin) children();
-
-
-// Function&Module: glued_circles()
-// Usage:
-//   glued_circles(r|d, spread, tangent);
-// Description:
-//   When called as a function, returns a 2D path forming a shape of two circles joined by curved waist.
-//   When called as a module, creates a 2D shape of two circles joined by curved waist.
-// Arguments:
-//   r = The radius of the end circles.
-//   d = The diameter of the end circles.
-//   spread = The distance between the centers of the end circles.
-//   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the Y axis.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-// Examples(2D):
-//   glued_circles(r=15, spread=40, tangent=45);
-//   glued_circles(d=30, spread=30, tangent=30);
-//   glued_circles(d=30, spread=30, tangent=15);
-//   glued_circles(d=30, spread=30, tangent=-30);
-// Example(2D): Called as Function
-//   stroke(closed=true, glued_circles(r=15, spread=40, tangent=45));
-function glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) =
-	let(
-		r = get_radius(r=r, d=d, dflt=10),
-		r2 = (spread/2 / sin(tangent)) - r,
-		cp1 = [spread/2, 0],
-		cp2 = [0, (r+r2)*cos(tangent)],
-		sa1 = 90-tangent,
-		ea1 = 270+tangent,
-		lobearc = ea1-sa1,
-		lobesegs = floor(segs(r)*lobearc/360),
-		lobestep = lobearc / lobesegs,
-		sa2 = 270-tangent,
-		ea2 = 270+tangent,
-		subarc = ea2-sa2,
-		arcsegs = ceil(segs(r2)*abs(subarc)/360),
-		arcstep = subarc / arcsegs,
-		s = [spread/2+r, r],
-		path = concat(
-			[for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep)     r  * [cos(a),sin(a)] - cp1],
-			tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep+180)  r2 * [cos(a),sin(a)] - cp2],
-			[for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep+180) r  * [cos(a),sin(a)] + cp1],
-			tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep)      r2 * [cos(a),sin(a)] + cp2]
-		)
-	) rot(spin, p=move(-vmul(anchor,s), p=path));
-
-
-module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0)
-	polygon(glued_circles(r=r, d=d, spread=spread, tangent=tangent, anchor=anchor, spin=spin));
-
-
-// Function&Module: star()
-// Usage:
-//   star(n, r|d|or|od, ir|id|step, [realign]);
-// Description:
-//   When called as a function, returns the path needed to create a star polygon with N points.
-//   When called as a module, creates a star polygon with N points.
-// Arguments:
-//   n = The number of stellate tips on the star.
-//   r = The radius to the tips of the star.
-//   or = Same as r
-//   d = The diameter to the tips of the star.
-//   od = Same as d
-//   ir = The radius to the inner corners of the star.
-//   id = The diameter to the inner corners of the star.
-//   step = Calculates the radius of the inner star corners by virtually drawing a straight line `step` tips around the star.  2 <= step < n/2
-//   realign = If false, a tip is aligned with the Y+ axis.  If true, an inner corner is aligned with the Y+ axis.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-// Examples(2D):
-//   star(n=5, r=50, ir=25);
-//   star(n=5, r=50, step=2);
-//   star(n=7, r=50, step=2);
-//   star(n=7, r=50, step=3);
-// Example(2D): Realigned
-//   star(n=7, r=50, step=3, realign=true);
-// Example(2D): Called as Function
-//   stroke(closed=true, star(n=5, r=50, ir=25));
-function star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0) =
-	let(
-		r = get_radius(r1=or, d1=od, r=r, d=d),
-		count = num_defined([ir,id,step]),
-		stepOK = is_undef(step) || (step>1 && step<n/2)
-	)
-	assert(is_def(n), "Must specify number of points, n")
-	assert(count==1, "Must specify exactly one of ir, id, step")
-	assert(stepOK, str("Parameter 'step' must be between 2 and ",floor(n/2)," for ",n," point star"))
-	let(
-		stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n),
-		ir = get_radius(r=ir, d=id, dflt=stepr),
-		offset = 90+(realign? 180/n : 0),
-		path = [for(i=[0:1:2*n-1]) let(theta=180*i/n+offset, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]]
-	) rot(spin, p=move(-r*normalize(anchor), p=path));
-
-
-module star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0)
-	polygon(star(n=n, r=r, d=d, od=od, or=or, ir=ir, id=id, step=step, realign=realign, anchor=anchor, spin=spin));
-
-
-function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
-	pow(pow(abs(cos(m1*theta/4)/a),n2)+pow(abs(sin(m2*theta/4)/b),n3),-1/n1);
-
-// Function&Module: supershape()
-// Usage:
-//   supershape(step,[m1],[m2],[n1],[n2],[n3],[a],[b],[r|d]);
-// Description:
-//   When called as a function, returns a 2D path for the outline of the [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
-//   When called as a module, creates a 2D [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
-// Arguments:
-//   step = The angle step size for sampling the superformula shape.  Smaller steps are slower but more accurate.
-//   m1 = The m1 argument for the superformula. Default: 4.
-//   m2 = The m2 argument for the superformula. Default: m1.
-//   n1 = The n1 argument for the superformula. Default: 1.
-//   n2 = The n2 argument for the superformula. Default: n1.
-//   n3 = The n3 argument for the superformula. Default: n2.
-//   a = The a argument for the superformula.  Default: 1.
-//   b = The b argument for the superformula.  Default: a.
-//   r = Radius of the shape.  Scale shape to fit in a circle of radius r.
-//   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-// Example(2D):
-//   supershape(step=0.5,m1=16,m2=16,n1=0.5,n2=0.5,n3=16,r=50);
-// Example(2D): Called as Function
-//   stroke(closed=true, supershape(step=0.5,m1=16,m2=16,n1=0.5,n2=0.5,n3=16,d=100));
-// Examples(2D,Med):
-//   for(n=[2:5]) right(2.5*(n-2)) supershape(m1=4,m2=4,n1=n,a=1,b=2);  // Superellipses
-//   m=[2,3,5,7]; for(i=[0:3]) right(2.5*i) supershape(.5,m1=m[i],n1=1);
-//   m=[6,8,10,12]; for(i=[0:3]) right(2.7*i) supershape(.5,m1=m[i],n1=1,b=1.5);  // m should be even
-//   m=[1,2,3,5]; for(i=[0:3]) fwd(1.5*i) supershape(m1=m[i],n1=0.4);
-//   supershape(m1=5, n1=4, n2=1); right(2.5) supershape(m1=5, n1=40, n2=10);
-//   m=[2,3,5,7]; for(i=[0:3]) right(2.5*i) supershape(m1=m[i], n1=60, n2=55, n3=30);
-//   n=[0.5,0.2,0.1,0.02]; for(i=[0:3]) right(2.5*i) supershape(m1=5,n1=n[i], n2=1.7);
-//   supershape(m1=2, n1=1, n2=4, n3=8);
-//   supershape(m1=7, n1=2, n2=8, n3=4);
-//   supershape(m1=7, n1=3, n2=4, n3=17);
-//   supershape(m1=4, n1=1/2, n2=1/2, n3=4);
-//   supershape(m1=4, n1=4.0,n2=16, n3=1.5, a=0.9, b=9);
-//   for(i=[1:4]) right(3*i) supershape(m1=i, m2=3*i, n1=2);
-//   m=[4,6,10]; for(i=[0:2]) right(i*5) supershape(m1=m[i], n1=12, n2=8, n3=5, a=2.7);
-//   for(i=[-1.5:3:1.5]) right(i*1.5) supershape(m1=2,m2=10,n1=i,n2=1);
-//   for(i=[1:3],j=[-1,1]) translate([3.5*i,1.5*j])supershape(m1=4,m2=6,n1=i*j,n2=1);
-//   for(i=[1:3]) right(2.5*i)supershape(step=.5,m1=88, m2=64, n1=-i*i,n2=1,r=1);
-// Examples:
-//   linear_extrude(height=0.3, scale=0) supershape(step=1, m1=6, n1=0.4, n2=0, n3=6);
-//   linear_extrude(height=5, scale=0) supershape(step=1, b=3, m1=6, n1=3.8, n2=16, n3=10);
-function supershape(step=0.5,m1=4,m2=undef,n1=1,n2=undef,n3=undef,a=1,b=undef,r=undef,d=undef,anchor=CENTER, spin=0) =
-	let(
-		r = get_radius(r=r, d=d, dflt=undef),
-		m2 = is_def(m2) ? m2 : m1,
-		n2 = is_def(n2) ? n2 : n1,
-		n3 = is_def(n3) ? n3 : n2,
-		b = is_def(b) ? b : a,
-		steps = ceil(360/step),
-		step = 360/steps,
-		angs = [for (i = [0:steps-1]) step*i],
-		rads = [for (theta = angs) _superformula(theta=theta,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b)],
-		scale = is_def(r) ? r/max(rads) : 1,
-		path = [for (i = [0:steps-1]) let(a=angs[i]) scale*rads[i]*[cos(a), sin(a)]]
-	) rot(spin, p=move(-scale*max(rads)*normalize(anchor), p=path));
-
-module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0)
-	polygon(supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b, r=r,d=d, anchor=anchor, spin=spin));
 
 
 // Function: turtle()
@@ -921,6 +561,420 @@ function _turtle_command(command, parm, parm2, state, index) =
   
 	assert(false,str("Unknown turtle command \"",command,"\" at index",index))
 	[];
+
+
+// Section: 2D N-Gons
+
+// Function&Module: regular_ngon()
+// Usage:
+//   regular_ngon(n, r|d|or|od, [realign]);
+//   regular_ngon(n, ir|id, [realign]);
+//   regular_ngon(n, side, [realign]);
+// Description:
+//   When called as a function, returns a 2D path for a regular N-sided polygon.
+//   When called as a module, creates a 2D regular N-sided polygon.
+// Arguments:
+//   n = The number of sides.
+//   or = Outside radius, at points.
+//   r = Same as or
+//   od = Outside diameter, at points.
+//   d = Same as od
+//   ir = Inside radius, at center of sides.
+//   id = Inside diameter, at center of sides.
+//   side = Length of each side.
+//   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Example(2D): by Outer Size
+//   regular_ngon(n=5, or=30);
+//   regular_ngon(n=5, od=60);
+// Example(2D): by Inner Size
+//   regular_ngon(n=5, ir=30);
+//   regular_ngon(n=5, id=60);
+// Example(2D): by Side Length
+//   regular_ngon(n=8, side=20);
+// Example(2D): Realigned
+//   regular_ngon(n=8, side=20, realign=true);
+// Example(2D): Called as Function
+//   stroke(closed=true, regular_ngon(n=6, or=30));
+function regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
+	let(
+		sc = 1/cos(180/n),
+		r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n)),
+		path = circle(r=r, realign=realign, spin=90, $fn=n)
+	) rot(spin, p=move(-r*normalize(anchor), p=path));
+
+
+module regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) {
+	sc = 1/cos(180/n);
+	r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n));
+	orient_and_anchor([2*r,2*r,0], UP, anchor, spin=spin, geometry="cylinder", two_d=true, chain=true) {
+		polygon(circle(r=r, realign=realign, spin=90, $fn=n));
+		children();
+	}
+}
+
+
+// Function&Module: pentagon()
+// Usage:
+//   pentagon(or|od, [realign]);
+//   pentagon(ir|id, [realign];
+//   pentagon(side, [realign];
+// Description:
+//   When called as a function, returns a 2D path for a regular pentagon.
+//   When called as a module, creates a 2D regular pentagon.
+// Arguments:
+//   or = Outside radius, at points.
+//   r = Same as or.
+//   od = Outside diameter, at points.
+//   d = Same as od.
+//   ir = Inside radius, at center of sides.
+//   id = Inside diameter, at center of sides.
+//   side = Length of each side.
+//   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Example(2D): by Outer Size
+//   pentagon(or=30);
+//   pentagon(od=60);
+// Example(2D): by Inner Size
+//   pentagon(ir=30);
+//   pentagon(id=60);
+// Example(2D): by Side Length
+//   pentagon(side=20);
+// Example(2D): Realigned
+//   pentagon(side=20, realign=true);
+// Example(2D): Called as Function
+//   stroke(closed=true, pentagon(or=30));
+function pentagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
+	regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
+
+
+module pentagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
+	regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin) children();
+
+
+// Function&Module: hexagon()
+// Usage:
+//   hexagon(or, od, ir, id, side);
+// Description:
+//   When called as a function, returns a 2D path for a regular hexagon.
+//   When called as a module, creates a 2D regular hexagon.
+// Arguments:
+//   or = Outside radius, at points.
+//   r = Same as or
+//   od = Outside diameter, at points.
+//   d = Same as od
+//   ir = Inside radius, at center of sides.
+//   id = Inside diameter, at center of sides.
+//   side = Length of each side.
+//   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Example(2D): by Outer Size
+//   hexagon(or=30);
+//   hexagon(od=60);
+// Example(2D): by Inner Size
+//   hexagon(ir=30);
+//   hexagon(id=60);
+// Example(2D): by Side Length
+//   hexagon(side=20);
+// Example(2D): Realigned
+//   hexagon(side=20, realign=true);
+// Example(2D): Called as Function
+//   stroke(closed=true, hexagon(or=30));
+function hexagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
+	regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
+
+
+module hexagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
+	regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin) children();
+
+
+// Function&Module: octagon()
+// Usage:
+//   octagon(or, od, ir, id, side);
+// Description:
+//   When called as a function, returns a 2D path for a regular octagon.
+//   When called as a module, creates a 2D regular octagon.
+// Arguments:
+//   or = Outside radius, at points.
+//   r = Same as or
+//   od = Outside diameter, at points.
+//   d = Same as od
+//   ir = Inside radius, at center of sides.
+//   id = Inside diameter, at center of sides.
+//   side = Length of each side.
+//   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Example(2D): by Outer Size
+//   octagon(or=30);
+//   octagon(od=60);
+// Example(2D): by Inner Size
+//   octagon(ir=30);
+//   octagon(id=60);
+// Example(2D): by Side Length
+//   octagon(side=20);
+// Example(2D): Realigned
+//   octagon(side=20, realign=true);
+// Example(2D): Called as Function
+//   stroke(closed=true, octagon(or=30));
+function octagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
+	regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
+
+
+module octagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
+	regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin) children();
+
+
+
+// Section: Other 2D Shapes
+
+
+// Function&Module: trapezoid()
+// Usage:
+//   trapezoid(h, w1, w2);
+// Description:
+//   When called as a function, returns a 2D path for a trapezoid with parallel front and back sides.
+//   When called as a module, creates a 2D trapezoid with parallel front and back sides.
+// Arguments:
+//   h = The Y axis height of the trapezoid.
+//   w1 = The X axis width of the front end of the trapezoid.
+//   w2 = The X axis width of the back end of the trapezoid.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Examples(2D):
+//   trapezoid(h=30, w1=40, w2=20);
+//   trapezoid(h=25, w1=20, w2=35);
+//   trapezoid(h=20, w1=40, w2=0);
+// Example(2D): Called as Function
+//   stroke(closed=true, trapezoid(h=30, w1=40, w2=20));
+function trapezoid(h, w1, w2, anchor=CENTER, spin=0) =
+	let(
+		s = anchor.y>0? [w2,h] : anchor.y<0? [w1,h] : [(w1+w2)/2,h],
+		path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2]]
+	) rot(spin, p=move(-vmul(anchor,s/2), p=path));
+
+
+
+module trapezoid(h, w1, w2, anchor=CENTER, spin=0)
+	polygon(trapezoid(h=h, w1=w1, w2=w2, anchor=anchor, spin=spin));
+
+
+// Function&Module: teardrop2d()
+//
+// Description:
+//   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.
+//
+// Usage:
+//   teardrop2d(r|d, [ang], [cap_h]);
+//
+// Arguments:
+//   r = radius of circular part of teardrop.  (Default: 1)
+//   d = diameter of spherical portion of bottom. (Use instead of r)
+//   ang = angle of hat walls from the Y axis.  (Default: 45 degrees)
+//   cap_h = if given, height above center where the shape will be truncated.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//
+// Example(2D): Typical Shape
+//   teardrop2d(r=30, ang=30);
+// Example(2D): Crop Cap
+//   teardrop2d(r=30, ang=30, cap_h=40);
+// Example(2D): Close Crop
+//   teardrop2d(r=30, ang=30, cap_h=20);
+module teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0)
+{
+	path = teardrop2d(r=r, d=d, ang=ang, cap_h=cap_h, anchor=anchor, spin=spin);
+	polygon(path);
+}
+
+
+function teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0) =
+	let(
+		r = get_radius(r=r, d=d, dflt=1),
+		cord = 2 * r * cos(ang),
+		cord_h = r * sin(ang),
+		tip_y = (cord/2)/tan(ang),
+		cap_h = min((!is_undef(cap_h)? cap_h : tip_y+cord_h), tip_y+cord_h),
+		cap_w = cord * (1 - (cap_h - cord_h)/tip_y),
+		ang = min(ang,asin(cap_h/r)),
+		sa = 180 - ang,
+		ea = 360 + ang,
+		steps = segs(r)*(ea-sa)/360,
+		step = (ea-sa)/steps,
+		path = concat(
+			[[ cap_w/2,cap_h]],
+			[for (i=[0:1:steps]) let(a=ea-i*step) r*[cos(a),sin(a)]],
+			[[-cap_w/2,cap_h]]
+		)
+	) rot(spin, p=move(-vmul(anchor,[r,cap_h]), p=deduplicate(path,closed=true)));
+
+
+
+// Function&Module: glued_circles()
+// Usage:
+//   glued_circles(r|d, spread, tangent);
+// Description:
+//   When called as a function, returns a 2D path forming a shape of two circles joined by curved waist.
+//   When called as a module, creates a 2D shape of two circles joined by curved waist.
+// Arguments:
+//   r = The radius of the end circles.
+//   d = The diameter of the end circles.
+//   spread = The distance between the centers of the end circles.
+//   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the Y axis.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Examples(2D):
+//   glued_circles(r=15, spread=40, tangent=45);
+//   glued_circles(d=30, spread=30, tangent=30);
+//   glued_circles(d=30, spread=30, tangent=15);
+//   glued_circles(d=30, spread=30, tangent=-30);
+// Example(2D): Called as Function
+//   stroke(closed=true, glued_circles(r=15, spread=40, tangent=45));
+function glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) =
+	let(
+		r = get_radius(r=r, d=d, dflt=10),
+		r2 = (spread/2 / sin(tangent)) - r,
+		cp1 = [spread/2, 0],
+		cp2 = [0, (r+r2)*cos(tangent)],
+		sa1 = 90-tangent,
+		ea1 = 270+tangent,
+		lobearc = ea1-sa1,
+		lobesegs = floor(segs(r)*lobearc/360),
+		lobestep = lobearc / lobesegs,
+		sa2 = 270-tangent,
+		ea2 = 270+tangent,
+		subarc = ea2-sa2,
+		arcsegs = ceil(segs(r2)*abs(subarc)/360),
+		arcstep = subarc / arcsegs,
+		s = [spread/2+r, r],
+		path = concat(
+			[for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep)     r  * [cos(a),sin(a)] - cp1],
+			tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep+180)  r2 * [cos(a),sin(a)] - cp2],
+			[for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep+180) r  * [cos(a),sin(a)] + cp1],
+			tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep)      r2 * [cos(a),sin(a)] + cp2]
+		)
+	) rot(spin, p=move(-vmul(anchor,s), p=path));
+
+
+module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0)
+	polygon(glued_circles(r=r, d=d, spread=spread, tangent=tangent, anchor=anchor, spin=spin));
+
+
+// Function&Module: star()
+// Usage:
+//   star(n, r|d|or|od, ir|id|step, [realign]);
+// Description:
+//   When called as a function, returns the path needed to create a star polygon with N points.
+//   When called as a module, creates a star polygon with N points.
+// Arguments:
+//   n = The number of stellate tips on the star.
+//   r = The radius to the tips of the star.
+//   or = Same as r
+//   d = The diameter to the tips of the star.
+//   od = Same as d
+//   ir = The radius to the inner corners of the star.
+//   id = The diameter to the inner corners of the star.
+//   step = Calculates the radius of the inner star corners by virtually drawing a straight line `step` tips around the star.  2 <= step < n/2
+//   realign = If false, a tip is aligned with the Y+ axis.  If true, an inner corner is aligned with the Y+ axis.  Default: false
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Examples(2D):
+//   star(n=5, r=50, ir=25);
+//   star(n=5, r=50, step=2);
+//   star(n=7, r=50, step=2);
+//   star(n=7, r=50, step=3);
+// Example(2D): Realigned
+//   star(n=7, r=50, step=3, realign=true);
+// Example(2D): Called as Function
+//   stroke(closed=true, star(n=5, r=50, ir=25));
+function star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0) =
+	let(
+		r = get_radius(r1=or, d1=od, r=r, d=d),
+		count = num_defined([ir,id,step]),
+		stepOK = is_undef(step) || (step>1 && step<n/2)
+	)
+	assert(is_def(n), "Must specify number of points, n")
+	assert(count==1, "Must specify exactly one of ir, id, step")
+	assert(stepOK, str("Parameter 'step' must be between 2 and ",floor(n/2)," for ",n," point star"))
+	let(
+		stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n),
+		ir = get_radius(r=ir, d=id, dflt=stepr),
+		offset = 90+(realign? 180/n : 0),
+		path = [for(i=[0:1:2*n-1]) let(theta=180*i/n+offset, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]]
+	) rot(spin, p=move(-r*normalize(anchor), p=path));
+
+
+module star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0)
+	polygon(star(n=n, r=r, d=d, od=od, or=or, ir=ir, id=id, step=step, realign=realign, anchor=anchor, spin=spin));
+
+
+function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
+	pow(pow(abs(cos(m1*theta/4)/a),n2)+pow(abs(sin(m2*theta/4)/b),n3),-1/n1);
+
+// Function&Module: supershape()
+// Usage:
+//   supershape(step,[m1],[m2],[n1],[n2],[n3],[a],[b],[r|d]);
+// Description:
+//   When called as a function, returns a 2D path for the outline of the [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
+//   When called as a module, creates a 2D [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
+// Arguments:
+//   step = The angle step size for sampling the superformula shape.  Smaller steps are slower but more accurate.
+//   m1 = The m1 argument for the superformula. Default: 4.
+//   m2 = The m2 argument for the superformula. Default: m1.
+//   n1 = The n1 argument for the superformula. Default: 1.
+//   n2 = The n2 argument for the superformula. Default: n1.
+//   n3 = The n3 argument for the superformula. Default: n2.
+//   a = The a argument for the superformula.  Default: 1.
+//   b = The b argument for the superformula.  Default: a.
+//   r = Radius of the shape.  Scale shape to fit in a circle of radius r.
+//   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Example(2D):
+//   supershape(step=0.5,m1=16,m2=16,n1=0.5,n2=0.5,n3=16,r=50);
+// Example(2D): Called as Function
+//   stroke(closed=true, supershape(step=0.5,m1=16,m2=16,n1=0.5,n2=0.5,n3=16,d=100));
+// Examples(2D,Med):
+//   for(n=[2:5]) right(2.5*(n-2)) supershape(m1=4,m2=4,n1=n,a=1,b=2);  // Superellipses
+//   m=[2,3,5,7]; for(i=[0:3]) right(2.5*i) supershape(.5,m1=m[i],n1=1);
+//   m=[6,8,10,12]; for(i=[0:3]) right(2.7*i) supershape(.5,m1=m[i],n1=1,b=1.5);  // m should be even
+//   m=[1,2,3,5]; for(i=[0:3]) fwd(1.5*i) supershape(m1=m[i],n1=0.4);
+//   supershape(m1=5, n1=4, n2=1); right(2.5) supershape(m1=5, n1=40, n2=10);
+//   m=[2,3,5,7]; for(i=[0:3]) right(2.5*i) supershape(m1=m[i], n1=60, n2=55, n3=30);
+//   n=[0.5,0.2,0.1,0.02]; for(i=[0:3]) right(2.5*i) supershape(m1=5,n1=n[i], n2=1.7);
+//   supershape(m1=2, n1=1, n2=4, n3=8);
+//   supershape(m1=7, n1=2, n2=8, n3=4);
+//   supershape(m1=7, n1=3, n2=4, n3=17);
+//   supershape(m1=4, n1=1/2, n2=1/2, n3=4);
+//   supershape(m1=4, n1=4.0,n2=16, n3=1.5, a=0.9, b=9);
+//   for(i=[1:4]) right(3*i) supershape(m1=i, m2=3*i, n1=2);
+//   m=[4,6,10]; for(i=[0:2]) right(i*5) supershape(m1=m[i], n1=12, n2=8, n3=5, a=2.7);
+//   for(i=[-1.5:3:1.5]) right(i*1.5) supershape(m1=2,m2=10,n1=i,n2=1);
+//   for(i=[1:3],j=[-1,1]) translate([3.5*i,1.5*j])supershape(m1=4,m2=6,n1=i*j,n2=1);
+//   for(i=[1:3]) right(2.5*i)supershape(step=.5,m1=88, m2=64, n1=-i*i,n2=1,r=1);
+// Examples:
+//   linear_extrude(height=0.3, scale=0) supershape(step=1, m1=6, n1=0.4, n2=0, n3=6);
+//   linear_extrude(height=5, scale=0) supershape(step=1, b=3, m1=6, n1=3.8, n2=16, n3=10);
+function supershape(step=0.5,m1=4,m2=undef,n1=1,n2=undef,n3=undef,a=1,b=undef,r=undef,d=undef,anchor=CENTER, spin=0) =
+	let(
+		r = get_radius(r=r, d=d, dflt=undef),
+		m2 = is_def(m2) ? m2 : m1,
+		n2 = is_def(n2) ? n2 : n1,
+		n3 = is_def(n3) ? n3 : n2,
+		b = is_def(b) ? b : a,
+		steps = ceil(360/step),
+		step = 360/steps,
+		angs = [for (i = [0:steps-1]) step*i],
+		rads = [for (theta = angs) _superformula(theta=theta,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b)],
+		scale = is_def(r) ? r/max(rads) : 1,
+		path = [for (i = [0:steps-1]) let(a=angs[i]) scale*rads[i]*[cos(a), sin(a)]]
+	) rot(spin, p=move(-scale*max(rads)*normalize(anchor), p=path));
+
+module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0)
+	polygon(supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b, r=r,d=d, anchor=anchor, spin=spin));
 
 
 
