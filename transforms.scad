@@ -818,7 +818,7 @@ function xflip(x=0,p) =
 	move([x,0,0],p=mirror([1,0,0],p=move([-x,0,0],p=p)));
 
 
-// Module: Function&yflip()
+// Function&Module: yflip()
 //
 // Usage: As Module
 //   yflip([y]) ...
