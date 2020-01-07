@@ -288,7 +288,7 @@ function affine3d_mirror(v) =
 //   syz = Skew factor multiplier for skewing along the Y axis as you get farther from the Z axis.  Default: 0
 //   szx = Skew factor multiplier for skewing along the Z axis as you get farther from the X axis.  Default: 0
 //   szy = Skew factor multiplier for skewing along the Z axis as you get farther from the Y axis.  Default: 0
-function affine3d_skew(sxy=0, sxz=0, syx=0, xyz=0, szx=0, szy=0) = [
+function affine3d_skew(sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0) = [
 	[  1, sxy, sxz, 0],
 	[syx,   1, syz, 0],
 	[szx, szy,   1, 0],
