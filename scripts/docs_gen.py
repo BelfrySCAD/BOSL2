@@ -144,11 +144,13 @@ def run_openscad_script(libfile, infile, imgfile, imgsize=(320,240), eye=None, s
     if render:  # Force render
         scadcmd.extend(["--render", ""])
     scadcmd.append(infile)
+    with open(infile, "r") as f:
+        script = "".join(f.readlines());
     p = subprocess.Popen(scadcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
     (stdoutdata, stderrdata) = p.communicate(None)
     res = p.returncode
     if res != 0 or b"ERROR:" in stderrdata or b"WARNING:" in stderrdata:
-        print("%s"%stderrdata)
+        print("\n\n{}".format(stderrdata.decode('utf-8')))
         print("////////////////////////////////////////////////////")
         print("// {}: {} for {}".format(libfile, infile, imgfile))
         print("////////////////////////////////////////////////////")
