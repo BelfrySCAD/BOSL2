@@ -31,18 +31,18 @@ include <BOSL2/structs.scad>
 //   tactile "bump" where the curvature changes from flat to circular.
 //   See https://hackernoon.com/apples-icons-have-that-shape-for-a-very-good-reason-720d4e7c8a14
 //   
-//   You select the type of rounding using the `curve` option, which should be either `"smooth"` to
-//   get continuous curvature rounding or `"circle"` to get circular rounding.  The default is circle
+//   You select the type of rounding using the `curve` option, which should be "smooth"` to
+//   get continuous curvature rounding, `"circle"` to get circular rounding, or `"chamfer"` to get chamfers.  The default is circle
 //   rounding.  Each rounding method has two options for how you measure the amount of rounding, which
-//   you specify using the `measure` argument.  Both rounding methods accept `measure="cut"`, which is
+//   you specify using the `measure` argument.  All of the rounding methods accept `measure="cut"`, which is
 //   the default.  This mode specifies the amount of rounding as the minimum distance from the corner
 //   to the curve.  This can be easier to understand than setting a circular radius, which can be
 //   unexpectedly extreme when the corner is very sharp.  It also allows a systematic specification of
 //   curves that is the same for both `"circle"` and `"smooth"`.
 //   
 //   The second `measure` setting for circular rounding is `"radius"`, which sets a circular rounding
-//   radius.  The second `measure` setting for smooth rounding is `"joint"` which specifies the distance
-//   away from the corner along the path where the roundover should start.  The figure below shows
+//   radius.  The second `measure` setting for smooth rounding and chamfers is `"joint"` which specifies the distance
+//   away from the corner along the path where the roundover or chamfer should start.  The figure below shows
 //   the cut and joint distances for a given roundover.  
 //   
 //   The `"smooth"` type rounding also has a parameter that specifies how smooth the curvature match
@@ -105,8 +105,8 @@ include <BOSL2/structs.scad>
 //
 // Arguments:
 //   path = list of points defining the path to be rounded.  Can be 2D or 3D, and may have an extra coordinate giving rounding parameters.  If you specify rounding parameters you must do so on every point.  
-//   curve = rounding method to use.  Set to "circle" for circular rounding and "smooth" for continuous curvature 4th order bezier rounding
-//   measure = how to measure the amount of rounding.  Set to "cut" to specify the cut back with either "smooth" or "circle" rounding curves.  Set to "radius" with `curve="circle"` to set circular radius rounding.  Set to "joint" with `curve="smooth"` for joint type rounding.  (See above for details on these rounding options.)
+//   curve = rounding method to use.  Set to "chamfer" for chamfers, "circle" for circular rounding and "smooth" for continuous curvature 4th order bezier rounding
+//   measure = how to measure the amount of rounding.  Set to "cut" to specify the cut back with either "chamfer", "smooth", or "circle" rounding curves.  Set to "radius" with `curve="circle"` to set circular radius rounding.  Set to "joint" with `curve="smooth"` for joint type rounding.  (See above for details on these rounding options.)
 //   size = curvature parameter(s).  Set this to a single curvature parameter or parameter pair to apply uniform roundovers to every corner.  Alternatively set this to a list of curvature parameters with the same length as `path` to specify the curvature at every corner.  If you set this then all values given in `path` are treated as geometric coordinates.  If you don't set this then the last value of each entry in `path` is treated as a rounding parameter.
 //   closed = if true treat the path as a closed polygon, otherwise treat it as open.  Default: true.
 //   k = continuous curvature smoothness parameter default value.  This value will apply with `curve=="smooth"` if you don't otherwise specify a smoothness parameter for a corner.  Default: 0.5.  
@@ -135,6 +135,10 @@ include <BOSL2/structs.scad>
 //   shape = [[0,0,[1.5,.6]], [10,0,0], [15,12,2], [6,6,[.3,.7]], [6, 12,[1.2,.3]], [-3,7,0]];
 //   polygon(round_corners(shape, curve="smooth", measure="cut", $fs=0.1));
 //   color("red") down(.1) polygon(subindex(shape,[0:1]));
+// Example(Med2D): Chamfers
+//   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
+//   polygon(round_corners(shape, curve="chamfer", measure="cut", size=1));
+//   color("red") down(.1) polygon(shape);
 // Example(Med3D): 3D printing test pieces to display different curvature shapes.  You can see the discontinuity in the curvature on the "C" piece in the rendered image.  
 //   ten = [[0,0,5],[50,0,5],[50,50,5],[0,50,5]];
 //   linear_extrude(height=14){
@@ -192,8 +196,9 @@ include <BOSL2/structs.scad>
 //   spiral = flatten(replist(concat(square,reverse(square)),5));  // Squares repeat 10 times, forward and backward
 //   squareind = [for(i=[0:9]) each [i,i,i,i]];                    // Index of the square for each point
 //   z = list_range(40)*.2+squareind;                              
-//   path3d = zip(spiral,z);                                       // 3D spiral 
-//   rounding = squareind/20;      // Rounding parameters get larger up the spiral
+//   path3d = zip(spiral,z);                                       // 3D spiral
+//                                          // Rounding parameters get larger up the spiral; delete last point because
+//   rounding = select(squareind/20,0,-2);  // the path is not closed, so there are only len(path)-1 corners
 //       // Setting k=1 means curvature won't be continuous, but curves are as round as possible
 //       // Try changing the value to see the effect.  
 //   rpath = round_corners(path3d, size=rounding, k=1, curve="smooth", measure="joint",closed=false);
@@ -204,7 +209,7 @@ function round_corners(path, curve="circle", measure="cut", size=undef,  k=0.5, 
 		measureok = (
 			measure == "cut" ||
 			(curve=="circle" && measure=="radius") ||
-			(curve=="smooth" && measure=="joint")
+			((curve=="smooth" ||curve=="chamfer") && measure=="joint")
 		),
 		path = is_region(path)?
 			assert(len(path)==1, "Region supplied as path does not have exactly one component")
@@ -213,12 +218,12 @@ function round_corners(path, curve="circle", measure="cut", size=undef,  k=0.5, 
 		have_size = size==undef ? 0 : 1,
 		pathsize_ok = is_num(pathdim) && pathdim >= 3-have_size && pathdim <= 4-have_size,
 		size_ok = !have_size || is_num(size) ||
-			is_list(size) && ((len(size)==2 && curve=="smooth") || len(size)==len(path))
+			is_list(size) && ((len(size)==2 && curve=="smooth") || len(size)==len(path)-(closed?0:1))
 	)
-	assert(curve=="smooth" || curve=="circle", "Unknown 'curve' setting in round_corners")
+	assert(curve=="smooth" || curve=="circle" || curve=="chamfer", "Unknown 'curve' setting in round_corners")
 	assert(measureok, curve=="circle"?
 		"In round_corners curve==\"circle\" requires 'measure' of 'radius' or 'cut'" :
-		"In round_corners curve==\"smooth\" requires 'measure' of 'joint' or 'cut'"
+		"In round_corners curve==\"smooth\" or \"chamfer\" requires 'measure' of 'joint' or 'cut'"
 	)
 	assert(pathdim!=undef, "Input 'path' has entries with inconsistent length")
 	assert(pathsize_ok, str(
@@ -232,7 +237,7 @@ function round_corners(path, curve="circle", measure="cut", size=undef,  k=0.5, 
 			str(
 				"Input `size` has length ", len(size),
 				".  Length must be ",
-				(curve=="smooth"?"2 or ":""), len(path)
+				(curve=="smooth"?"2 or ":""), len(path)-(closed?0:1)
 			)
 		) : str("Input `size` is ",size," which is not a number")
 	)
@@ -254,6 +259,8 @@ function round_corners(path, curve="circle", measure="cut", size=undef,  k=0.5, 
 					default_curvature
 			)
 			(!closed && (i==0 || i==len(points)-1))? [0,0] :
+                        (curve=="chamfer" && measure=="joint") ? [parm0] :
+                        (curve=="chamfer" && measure=="cut") ? [parm0/cos(angle)] :
 			(curve=="circle")? [k/tan(angle), k] :
 			(curve=="smooth" && measure=="joint")? [parm0,k] :
 			[8*parm0/cos(angle)/(1+4*k),k]
@@ -273,6 +280,7 @@ function round_corners(path, curve="circle", measure="cut", size=undef,  k=0.5, 
 		for(i=[0:1:len(points)-1]) each
 			(dk[i][0] == 0)? [points[i]] :
 			(curve=="smooth")? _bezcorner(select(points,i-1,i+1), dk[i]) :
+                        (curve=="chamfer") ? _chamfcorner(select(points,i-1,i+1), dk[i]) :
 			_circlecorner(select(points,i-1,i+1), dk[i])
 	];
 
@@ -323,11 +331,17 @@ function _bezcorner(points, parm) =
 	)
 	bezier_curve(P,N);
 
+function _chamfcorner(points, parm) =
+        let(
+                d = parm[0],
+		prev = normalize(points[0]-points[1]),
+		next = normalize(points[2]-points[1])
+          )
+       [points[1]+prev*d, points[1]+next*d];
 
 function _circlecorner(points, parm) =
 	let(
 		angle = vector_angle(points)/2,
-                df=echo(angle=angle),
 		d = parm[0],
 		r = parm[1],
 		prev = normalize(points[0]-points[1]),
