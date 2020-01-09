@@ -15,7 +15,138 @@ PHI = (1+sqrt(5))/2;  // The golden ratio phi.
 EPSILON = 1e-9;  // A really small value useful in comparing FP numbers.  ie: abs(a-b)<EPSILON
 
 
-// Section: Simple Calculations
+
+// Section: Simple math
+
+// Function: sqr()
+// Usage:
+//   sqr(x);
+// Description:
+//   Returns the square of the given number.
+// Examples:
+//   sqr(3);   // Returns: 9
+//   sqr(-4);  // Returns: 16
+function sqr(x) = x*x;
+
+
+// Function: log2()
+// Usage:
+//   foo = log2(x);
+// Description:
+//   Returns the logarithm base 2 of the value given.
+// Examples:
+//   log2(0.125);  // Returns: -3
+//   log2(16);     // Returns: 4
+//   log2(256);    // Returns: 8
+function log2(x) = ln(x)/ln(2);
+
+
+// Function: hypot()
+// Usage:
+//   l = hypot(x,y,[z]);
+// Description:
+//   Calculate hypotenuse length of a 2D or 3D triangle.
+// Arguments:
+//   x = Length on the X axis.
+//   y = Length on the Y axis.
+//   z = Length on the Z axis.  Optional.
+// Example:
+//   l = hypot(3,4);  // Returns: 5
+//   l = hypot(3,4,5);  // Returns: ~7.0710678119
+function hypot(x,y,z=0) = norm([x,y,z]);
+
+
+// Function: factorial()
+// Usage:
+//   x = factorial(n,[d]);
+// Description:
+//   Returns the factorial of the given integer value.
+// Arguments:
+//   n = The integer number to get the factorial of.  (n!)
+//   d = If given, the returned value will be (n! / d!)
+// Example:
+//   x = factorial(4);  // Returns: 24
+//   y = factorial(6);  // Returns: 720
+//   z = factorial(9);  // Returns: 362880
+function factorial(n,d=1) = product([for (i=[n:-1:d]) i]);
+
+
+// Function: lerp()
+// Usage:
+//   x = lerp(a, b, u);
+//   l = lerp(a, b, LIST);
+// Description:
+//   Interpolate between two values or vectors.
+//   If `u` is given as a number, returns the single interpolated value.
+//   If `u` is 0.0, then the value of `a` is returned.
+//   If `u` is 1.0, then the value of `b` is returned.
+//   If `u` is a range, or list of numbers, returns a list of interpolated values.
+//   It is valid to use a `u` value outside the range 0 to 1.  The result will be a predicted
+//   value along the slope formed by `a` and `b`, but not between those two values.
+// Arguments:
+//   a = First value or vector.
+//   b = Second value or vector.
+//   u = The proportion from `a` to `b` to calculate.  Standard range is 0.0 to 1.0, inclusive.  If given as a list or range of values, returns a list of results.
+// Example:
+//   x = lerp(0,20,0.3);  // Returns: 6
+//   x = lerp(0,20,0.8);  // Returns: 16
+//   x = lerp(0,20,-0.1); // Returns: -2
+//   x = lerp(0,20,1.1);  // Returns: 22
+//   p = lerp([0,0],[20,10],0.25);  // Returns [5,2.5]
+//   l = lerp(0,20,[0.4,0.6]);  // Returns: [8,12]
+//   l = lerp(0,20,[0.25:0.25:0.75]);  // Returns: [5,10,15]
+// Example(2D):
+//   p1 = [-50,-20];  p2 = [50,30];
+//   stroke([p1,p2]);
+//   pts = lerp(p1, p2, [0:1/8:1]);
+//   // Points colored in ROYGBIV order.
+//   rainbow(pts) translate($item) circle(d=3,$fn=8);
+function lerp(a,b,u) =
+	is_num(u)? (1-u)*a + u*b :
+	[for (v = u) lerp(a,b,v)];
+
+
+
+// Section: Hyperbolic Trigonometry
+
+// Function: sinh()
+// Description: Takes a value `x`, and returns the hyperbolic sine of it.
+function sinh(x) =
+	(exp(x)-exp(-x))/2;
+
+
+// Function: cosh()
+// Description: Takes a value `x`, and returns the hyperbolic cosine of it.
+function cosh(x) =
+	(exp(x)+exp(-x))/2;
+
+
+// Function: tanh()
+// Description: Takes a value `x`, and returns the hyperbolic tangent of it.
+function tanh(x) =
+	sinh(x)/cosh(x);
+
+
+// Function: asinh()
+// Description: Takes a value `x`, and returns the inverse hyperbolic sine of it.
+function asinh(x) =
+	ln(x+sqrt(x*x+1));
+
+
+// Function: acosh()
+// Description: Takes a value `x`, and returns the inverse hyperbolic cosine of it.
+function acosh(x) =
+	ln(x+sqrt(x*x-1));
+
+
+// Function: atanh()
+// Description: Takes a value `x`, and returns the inverse hyperbolic tangent of it.
+function atanh(x) =
+	ln((1+x)/(1-x))/2;
+
+
+
+// Section: Quantization
 
 // Function: quant()
 // Description:
@@ -104,6 +235,8 @@ function quantup(x,y) =
 	ceil(x/y)*y;
 
 
+// Section: Constraints and Modulos
+
 // Function: constrain()
 // Usage:
 //   constrain(v, minval, maxval);
@@ -120,55 +253,6 @@ function quantup(x,y) =
 //   constrain(9.1, 0, 9);   // Returns: 9
 //   constrain(-0.1, 0, 9);  // Returns: 0
 function constrain(v, minval, maxval) = min(maxval, max(minval, v));
-
-
-// Function: approx()
-// Usage:
-//   approx(a,b,[eps])
-// Description:
-//   Compares two numbers or vectors, and returns true if they are closer than `eps` to each other.
-// Arguments:
-//   a = First value.
-//   b = Second value.
-//   eps = The maximum allowed difference between `a` and `b` that will return true.
-// Example:
-//   approx(-0.3333333333,-1/3);  // Returns: true
-//   approx(0.3333333333,1/3);    // Returns: true
-//   approx(0.3333,1/3);          // Returns: false
-//   approx(0.3333,1/3,eps=1e-3);  // Returns: true
-//   approx(PI,3.1415926536);     // Returns: true
-function approx(a,b,eps=EPSILON) = let(c=a-b) (is_num(c)? abs(c) : norm(c)) <= eps;
-
-
-// Function: min_index()
-// Usage:
-//   min_index(vals,[all]);
-// Description:
-//   Returns the index of the first occurrence of the mainimum value in the given list. 
-//   If `all` is true then returns a list of all indices where the minimum value occurs.
-// Arguments:
-//   vals = vector of values
-//   all = set to true to return indices of all occurences of the minimum.  Default: false
-// Example:
-//   min_index([5,3,9,6,2,7,8,2,1]); // Returns: 4
-//   min_index([5,3,9,6,2,7,8,2,1],all=true); // Returns: [4,7]
-function min_index(vals, all=false) =
-	all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
-
-// Function: max_index()
-// Usage:
-//   max_index(vals,[all]);
-// Description:
-//   Returns the index of the first occurrence of the maximum value in the given list. 
-//   If `all` is true then returns a list of all indices where the maximum value occurs.
-// Arguments:
-//   vals = vector of values
-//   all = set to true to return indices of all occurences of the maximum.  Default: false
-// Example:
-//   max_index([5,3,9,6,2,7,8,9,1]); // Returns: 2
-//   max_index([5,3,9,6,2,7,8,9,1],all=true); // Returns: [2,7]
-function max_index(vals, all=false) =
-	all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
 
 
 // Function: posmod()
@@ -229,26 +313,8 @@ function modrange(x, y, m, step=1) =
 	) [for (i=[a:step:c]) (i%m+m)%m];
 
 
-// Function: sqr()
-// Usage:
-//   sqr(x);
-// Description: Returns the square of the given number.
-// Examples:
-//   sqr(3);   // Returns: 9
-//   sqr(-4);  // Returns: 16
-function sqr(x) = x*x;
 
-
-// Function: log2()
-// Usage:
-//   foo = log2(x);
-// Description: Returns the logarith base 10 of the value given.
-// Examples:
-//   log2(0.125);  // Returns: -3
-//   log2(16);     // Returns: 4
-//   log2(256);    // Returns: 8
-function log2(x) = ln(x)/ln(2);
-
+// Section: Random Number Generation
 
 // Function: rand_int()
 // Usage:
@@ -304,72 +370,55 @@ function log_rands(minval, maxval, factor, N=1, seed=undef) =
 	) [for (num=nums) -ln(1-num)/ln(factor)];
 
 
-// Function: segs()
+
+// Section: GCD/GCF, LCM
+
+// If argument is a list return it.  Otherwise return a singleton list containing the argument. 
+function _force_list(x) = is_list(x) ? x : [x];
+
+// Function: gcd()
+// Usage:
+//   gcd(a,b)
 // Description:
-//   Calculate the standard number of sides OpenSCAD would give a circle based on `$fn`, `$fa`, and `$fs`.
-// Arguments:
-//   r = Radius of circle to get the number of segments for.
-function segs(r) =
-	$fn>0? ($fn>3? $fn : 3) :
-	ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs)));
+//   Computes the Greatest Common Divisor/Factor of `a` and `b`.  
+function gcd(a,b) =
+	assert(is_int(a) && is_int(b),"Arguments to gcd must be integers")
+	b==0 ? abs(a) : gcd(b,a % b);
 
 
-// Function: lerp()
-// Description: Interpolate between two values or vectors.
-// Arguments:
-//   a = First value.
-//   b = Second value.
-//   u = The proportion from `a` to `b` to calculate.  Valid range is 0.0 to 1.0, inclusive.  If given as a list or range of values, returns a list of results.
-function lerp(a,b,u) =
-	is_num(u)? (1-u)*a + u*b :
-	[for (v = u) lerp(a,b,v)];
+// Computes lcm for two scalars
+function _lcm(a,b) =
+	assert(is_int(a), "Invalid non-integer parameters to lcm")
+	assert(is_int(b), "Invalid non-integer parameters to lcm")
+	assert(a!=0 && b!=0, "Arguments to lcm must be nonzero")
+	abs(a*b) / gcd(a,b);
 
 
-// Function: hypot()
-// Description: Calculate hypotenuse length of a 2D or 3D triangle.
-// Arguments:
-//   x = Length on the X axis.
-//   y = Length on the Y axis.
-//   z = Length on the Z axis.
-function hypot(x,y,z=0) =
-	norm([x,y,z]);
+// Computes lcm for a list of values
+function _lcmlist(a) =
+	len(a)==1 ? a[0] :
+	_lcmlist(concat(slice(a,0,len(a)-2),[lcm(a[len(a)-2],a[len(a)-1])]));
 
 
-// Function: sinh()
-// Description: Takes a value `x`, and returns the hyperbolic sine of it.
-function sinh(x) =
-	(exp(x)-exp(-x))/2;
+// Function: lcm()
+// Usage:
+//   lcm(a,b)
+//   lcm(list)
+// Description:
+//   Computes the Least Common Multiple of the two arguments or a list of arguments.  Inputs should
+//   be non-zero integers.  The output is always a positive integer.  It is an error to pass zero
+//   as an argument.  
+function lcm(a,b=[]) =
+	!is_list(a) && !is_list(b) ? _lcm(a,b) : 
+	let(
+		arglist = concat(_force_list(a),_force_list(b))
+	)
+	assert(len(arglist)>0,"invalid call to lcm with empty list(s)")
+	_lcmlist(arglist);
 
 
-// Function: cosh()
-// Description: Takes a value `x`, and returns the hyperbolic cosine of it.
-function cosh(x) =
-	(exp(x)+exp(-x))/2;
 
-
-// Function: tanh()
-// Description: Takes a value `x`, and returns the hyperbolic tangent of it.
-function tanh(x) =
-	sinh(x)/cosh(x);
-
-
-// Function: asinh()
-// Description: Takes a value `x`, and returns the inverse hyperbolic sine of it.
-function asinh(x) =
-	ln(x+sqrt(x*x+1));
-
-
-// Function: acosh()
-// Description: Takes a value `x`, and returns the inverse hyperbolic cosine of it.
-function acosh(x) =
-	ln(x+sqrt(x*x-1));
-
-
-// Function: atanh()
-// Description: Takes a value `x`, and returns the inverse hyperbolic tangent of it.
-function atanh(x) =
-	ln((1+x)/(1-x))/2;
-
+// Section: Sums, Products, Aggregate Functions.
 
 // Function: sum()
 // Description:
@@ -380,7 +429,12 @@ function atanh(x) =
 // Example:
 //   sum([1,2,3]);  // returns 6.
 //   sum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [9, 12, 15]
-function sum(v, _i=0, _acc=undef) = _i>=len(v)? _acc : sum(v, _i+1, ((_acc==undef)? v[_i] : _acc+v[_i]));
+function sum(v, _i=0, _acc=undef) =
+	_i>=len(v)? _acc :
+	sum(
+		v, _i=_i+1,
+		_acc=v[_i] + (is_undef(_acc)? 0 : _acc)
+	);
 
 
 // Function: cumsum()
@@ -473,6 +527,9 @@ function product(v, i=0, tot=undef) = i>=len(v)? tot : product(v, i+1, ((tot==un
 function mean(v) = sum(v)/len(v);
 
 
+
+// Section: Determinants
+
 // Function: det2()
 // Description:
 //   Optimized function that returns the determinant for the given 2x2 square matrix.
@@ -526,7 +583,25 @@ function determinant(M) =
 	);
 
 
+
 // Section: Comparisons and Logic
+
+// Function: approx()
+// Usage:
+//   approx(a,b,[eps])
+// Description:
+//   Compares two numbers or vectors, and returns true if they are closer than `eps` to each other.
+// Arguments:
+//   a = First value.
+//   b = Second value.
+//   eps = The maximum allowed difference between `a` and `b` that will return true.
+// Example:
+//   approx(-0.3333333333,-1/3);  // Returns: true
+//   approx(0.3333333333,1/3);    // Returns: true
+//   approx(0.3333,1/3);          // Returns: false
+//   approx(0.3333,1/3,eps=1e-3);  // Returns: true
+//   approx(PI,3.1415926536);     // Returns: true
+function approx(a,b,eps=EPSILON) = let(c=a-b) (is_num(c)? abs(c) : norm(c)) <= eps;
 
 
 function _type_num(x) =
@@ -647,51 +722,6 @@ function count_true(l, nmax=undef, i=0, cnt=0) =
 			(l[i]? 1 : 0)
 		)
 	);
-
-// If argument is a list return it.  Otherwise return a singleton list containing the argument. 
-function _force_list(x) = is_list(x) ? x : [x];
-
-// Function: gcd()
-// Usage:
-//   gcd(a,b)
-// Description:
-//   Computes the greatest common divisor of `a` and `b`.  
-function gcd(a,b) =
-   assert(is_integer(a) && is_integer(b),"Arguments to gcd must be integers")
-   b==0 ? abs(a) : gcd(b,a % b);
-
-// Computes lcm for two scalars
-function _lcm(a,b) =
-  let(
-    parmok = is_integer(a) && is_integer(b),
-    dummy=assert(parmok,"Invalid non-integer parameters to lcm")
-          assert(a!=0 && b!=0, "Arguments to lcm must be nonzero")
-  )
-  abs(a*b) / gcd(a,b);
-
-// Computes lcm for a list of values
-function _lcmlist(a) =
-    len(a)==1 ? a[0] : _lcmlist(concat(slice(a,0,len(a)-2),[lcm(a[len(a)-2],a[len(a)-1])]));
-
-// Function: lcm()
-// Usage:
-//   lcm(a,b)
-//   lcm(list)
-// Description: Computes the least common multiple of the two arguments or a list of arguments.  Inputs should be
-//   nonzero integers.  The output is always a positive integer.  It is an error to pass zero as an argument.  
-function lcm(a,b=[]) =
-  !is_list(a) && !is_list(b) ? _lcm(a,b) : 
-  let(
-    arglist = concat(_force_list(a),_force_list(b))
-  )
-  assert(len(arglist)>0,"invalid call to lcm with empty list(s)")
-       _lcmlist(arglist);
-
-// Function: is_integer()
-// Usage:
-//   is_integer(n)
-// Description: returns true if the given value is an integer (it is a number and it rounds to itself).  
-function is_integer(n) = is_num(n) && n == round(n);
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

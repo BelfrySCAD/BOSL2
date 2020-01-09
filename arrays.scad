@@ -806,6 +806,38 @@ function subindex(v, idx) = [
 ];
 
 
+// Function: min_index()
+// Usage:
+//   min_index(vals,[all]);
+// Description:
+//   Returns the index of the first occurrence of the minimum value in the given list. 
+//   If `all` is true then returns a list of all indices where the minimum value occurs.
+// Arguments:
+//   vals = vector of values
+//   all = set to true to return indices of all occurences of the minimum.  Default: false
+// Example:
+//   min_index([5,3,9,6,2,7,8,2,1]); // Returns: 4
+//   min_index([5,3,9,6,2,7,8,2,1],all=true); // Returns: [4,7]
+function min_index(vals, all=false) =
+	all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
+
+
+// Function: max_index()
+// Usage:
+//   max_index(vals,[all]);
+// Description:
+//   Returns the index of the first occurrence of the maximum value in the given list. 
+//   If `all` is true then returns a list of all indices where the maximum value occurs.
+// Arguments:
+//   vals = vector of values
+//   all = set to true to return indices of all occurences of the maximum.  Default: false
+// Example:
+//   max_index([5,3,9,6,2,7,8,9,1]); // Returns: 2
+//   max_index([5,3,9,6,2,7,8,9,1],all=true); // Returns: [2,7]
+function max_index(vals, all=false) =
+	all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
+
+
 // Function: pair()
 // Usage:
 //   pair(v)
@@ -856,6 +888,28 @@ function triplet(v) =
 function triplet_wrap(v) =
 	assert(is_list(v)||is_string(v))
 	[for (i=[0:1:len(v)-1]) [v[i],v[(i+1)%len(v)],v[(i+2)%len(v)]]];
+
+
+// Function: permute()
+// Usage:
+//   list = permute(l, [n]);
+// Description:
+//   Returns an ordered list of every unique permutation of `n` items out of the given list `l`.
+//   For the list `[1,2,3,4]`, with `n=2`, this will return `[[1,2], [1,3], [1,4], [2,3], [2,4], [3,4]]`.
+//   For the list `[1,2,3,4]`, with `n=3`, this will return `[[1,2,3], [1,2,4], [1,3,4], [2,3,4]]`.
+// Arguments:
+//   l = The list to provide permutations for.
+//   n = The number of items in each permutation. Default: 2
+// Example:
+//   pairs = permute([3,4,5,6]);  // Returns: [[3,4],[3,5],[3,6],[4,5],[4,6],[5,6]]
+//   triplets = permute([3,4,5,6],n=3);  // Returns: [[3,4,5],[3,4,6],[3,5,6],[4,5,6]]
+// Example(2D):
+//   for (p=permute(regular_ngon(n=7,d=100))) stroke(p);
+function permute(l,n=2,_s=0) =
+	assert(is_list(l))
+	assert(len(l)-_s >= n)
+	n==1? [for (i=[_s:1:len(l)-1]) [l[i]]] :
+	[for (i=[_s:1:len(l)-n], p=permute(l,n=n-1,_s=i+1)) concat([l[i]], p)];
 
 
 // Function: zip()

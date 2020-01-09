@@ -64,6 +64,16 @@ function is_def(x) = !is_undef(x);
 function is_str(x) = is_string(x);
 
 
+// Function: is_int()
+// Usage:
+//   is_int(n)
+// Description:
+//   Returns true if the given value is an integer (it is a number and it rounds to itself).  
+function is_int(n) = is_num(n) && n == round(n);
+function is_integer(n) = is_num(n) && n == round(n);
+
+
+
 // Section: Handling `undef`s.
 
 
@@ -182,6 +192,18 @@ function scalar_vec3(v, dflt=undef) =
 	is_undef(v)? undef :
 	is_list(v)? [for (i=[0:2]) default(v[i], default(dflt, 0))] :
 	!is_undef(dflt)? [v,dflt,dflt] : [v,v,v];
+
+
+// Function: segs()
+// Usage:
+//   sides = segs(r);
+// Description:
+//   Calculate the standard number of sides OpenSCAD would give a circle based on `$fn`, `$fa`, and `$fs`.
+// Arguments:
+//   r = Radius of circle to get the number of segments for.
+function segs(r) =
+	$fn>0? ($fn>3? $fn : 3) :
+	ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs)));
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
