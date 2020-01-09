@@ -429,12 +429,9 @@ function lcm(a,b=[]) =
 // Example:
 //   sum([1,2,3]);  // returns 6.
 //   sum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [9, 12, 15]
-function sum(v, _i=0, _acc=undef) =
+function sum(v, _i=0, _acc) =
 	_i>=len(v)? _acc :
-	sum(
-		v, _i=_i+1,
-		_acc=v[_i] + (is_undef(_acc)? 0 : _acc)
-	);
+	sum(v, _i=_i+1, _acc=is_undef(_acc)? v[_i] : _acc+v[_i]);
 
 
 // Function: cumsum()
