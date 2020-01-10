@@ -5,71 +5,16 @@
 //   ```
 //   use <BOSL2/std.scad>
 //   ```
-//////////////////////////////////////////////////////////////////////
-
-
-// Section: Terminology
+//   
+//   # Terminology
 //   - **List**: An ordered collection of zero or more items.  ie: ["a", "b", "c"]
 //   - **Vector**: A list of numbers. ie: [4, 5, 6]
 //   - **Array**: A nested list of lists, or list of lists of lists, or deeper.  ie: [[2,3], [4,5], [6,7]]
 //   - **Dimension**: The depth of nesting of lists in an array.  A List is 1D.  A list of lists is 2D.  etc.
+//////////////////////////////////////////////////////////////////////
 
 
-// Section: List Operations
-
-
-// Function: replist()
-// Usage:
-//   replist(val, n)
-// Description:
-//   Generates a list or array of `n` copies of the given `list`.
-//   If the count `n` is given as a list of counts, then this creates a
-//   multi-dimensional array, filled with `val`.
-// Arguments:
-//   val = The value to repeat to make the list or array.
-//   n = The number of copies to make of `val`.
-// Example:
-//   replist(1, 4);        // Returns [1,1,1,1]
-//   replist(8, [2,3]);    // Returns [[8,8,8], [8,8,8]]
-//   replist(0, [2,2,3]);  // Returns [[[0,0,0],[0,0,0]], [[0,0,0],[0,0,0]]]
-//   replist([1,2,3],3);   // Returns [[1,2,3], [1,2,3], [1,2,3]]
-function replist(val, n, i=0) =
-	is_num(n)? [for(j=[1:1:n]) val] :
-	(i>=len(n))? val :
-	[for (j=[1:1:n[i]]) replist(val, n, i+1)];
-
-
-// Function: in_list()
-// Description: Returns true if value `x` is in list `l`.
-// Arguments:
-//   x = The value to search for.
-//   l = The list to search.
-//   idx = If given, searches the given subindexes for matches for `x`.
-// Example:
-//   in_list("bar", ["foo", "bar", "baz"]);  // Returns true.
-//   in_list("bee", ["foo", "bar", "baz"]);  // Returns false.
-//   in_list("bar", [[2,"foo"], [4,"bar"], [3,"baz"]], idx=1);  // Returns true.
-function in_list(x,l,idx=undef) = search([x], l, num_returns_per_match=1, index_col_num=idx) != [[]];
-
-
-// Function: slice()
-// Description:
-//   Returns a slice of a list.  The first item is index 0.
-//   Negative indexes are counted back from the end.  The last item is -1.
-// Arguments:
-//   arr = The array/list to get the slice of.
-//   st = The index of the first item to return.
-//   end = The index after the last item to return, unless negative, in which case the last item to return.
-// Example:
-//   slice([3,4,5,6,7,8,9], 3, 5);   // Returns [6,7]
-//   slice([3,4,5,6,7,8,9], 2, -1);  // Returns [5,6,7,8,9]
-//   slice([3,4,5,6,7,8,9], 1, 1);   // Returns []
-//   slice([3,4,5,6,7,8,9], 6, -1);  // Returns [9]
-//   slice([3,4,5,6,7,8,9], 2, -2);  // Returns [5,6,7,8]
-function slice(arr,st,end) = let(
-		s=st<0?(len(arr)+st):st,
-		e=end<0?(len(arr)+end+1):end
-	) [for (i=[s:1:e-1]) if (e>s) arr[i]];
+// Section: List Query Operations
 
 
 // Function: select()
@@ -110,6 +55,124 @@ function select(list, start, end=undef) =
 	);
 
 
+// Function: slice()
+// Description:
+//   Returns a slice of a list.  The first item is index 0.
+//   Negative indexes are counted back from the end.  The last item is -1.
+// Arguments:
+//   arr = The array/list to get the slice of.
+//   st = The index of the first item to return.
+//   end = The index after the last item to return, unless negative, in which case the last item to return.
+// Example:
+//   slice([3,4,5,6,7,8,9], 3, 5);   // Returns [6,7]
+//   slice([3,4,5,6,7,8,9], 2, -1);  // Returns [5,6,7,8,9]
+//   slice([3,4,5,6,7,8,9], 1, 1);   // Returns []
+//   slice([3,4,5,6,7,8,9], 6, -1);  // Returns [9]
+//   slice([3,4,5,6,7,8,9], 2, -2);  // Returns [5,6,7,8]
+function slice(arr,st,end) = let(
+		s=st<0?(len(arr)+st):st,
+		e=end<0?(len(arr)+end+1):end
+	) [for (i=[s:1:e-1]) if (e>s) arr[i]];
+
+
+// Function: in_list()
+// Description: Returns true if value `x` is in list `l`.
+// Arguments:
+//   x = The value to search for.
+//   l = The list to search.
+//   idx = If given, searches the given subindexes for matches for `x`.
+// Example:
+//   in_list("bar", ["foo", "bar", "baz"]);  // Returns true.
+//   in_list("bee", ["foo", "bar", "baz"]);  // Returns false.
+//   in_list("bar", [[2,"foo"], [4,"bar"], [3,"baz"]], idx=1);  // Returns true.
+function in_list(x,l,idx=undef) = search([x], l, num_returns_per_match=1, index_col_num=idx) != [[]];
+
+
+// Function: min_index()
+// Usage:
+//   min_index(vals,[all]);
+// Description:
+//   Returns the index of the first occurrence of the minimum value in the given list. 
+//   If `all` is true then returns a list of all indices where the minimum value occurs.
+// Arguments:
+//   vals = vector of values
+//   all = set to true to return indices of all occurences of the minimum.  Default: false
+// Example:
+//   min_index([5,3,9,6,2,7,8,2,1]); // Returns: 4
+//   min_index([5,3,9,6,2,7,8,2,1],all=true); // Returns: [4,7]
+function min_index(vals, all=false) =
+	all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
+
+
+// Function: max_index()
+// Usage:
+//   max_index(vals,[all]);
+// Description:
+//   Returns the index of the first occurrence of the maximum value in the given list. 
+//   If `all` is true then returns a list of all indices where the maximum value occurs.
+// Arguments:
+//   vals = vector of values
+//   all = set to true to return indices of all occurences of the maximum.  Default: false
+// Example:
+//   max_index([5,3,9,6,2,7,8,9,1]); // Returns: 2
+//   max_index([5,3,9,6,2,7,8,9,1],all=true); // Returns: [2,7]
+function max_index(vals, all=false) =
+	all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
+
+
+// Function: list_increasing()
+// Usage:
+//    list_increasing(list)
+// Description:
+//   Returns true if the list is (non-strictly) increasing
+// Example:
+//   list_increasing([1,2,3,4]);  // Returns: true
+//   list_increasing([1,3,2,4]);  // Returns: false
+//   list_increasing([4,3,2,1]);  // Returns: false
+function list_increasing(list) =
+	assert(is_list(list)||is_string(list))
+	len([for (p=pair(list)) if(p.x>p.y) true])==0;
+
+
+// Function: list_decreasing()
+// Usage:
+//    list_decreasing(list)
+// Description:
+//   Returns true if the list is (non-strictly) decreasing
+// Example:
+//   list_decreasing([1,2,3,4]);  // Returns: false
+//   list_decreasing([4,2,3,1]);  // Returns: false
+//   list_decreasing([4,3,2,1]);  // Returns: true
+function list_decreasing(list) =
+	assert(is_list(list)||is_string(list))
+	len([for (p=pair(list)) if(p.x<p.y) true])==0;
+
+
+
+// Section: Basic List Generation
+
+
+// Function: replist()
+// Usage:
+//   replist(val, n)
+// Description:
+//   Generates a list or array of `n` copies of the given `list`.
+//   If the count `n` is given as a list of counts, then this creates a
+//   multi-dimensional array, filled with `val`.
+// Arguments:
+//   val = The value to repeat to make the list or array.
+//   n = The number of copies to make of `val`.
+// Example:
+//   replist(1, 4);        // Returns [1,1,1,1]
+//   replist(8, [2,3]);    // Returns [[8,8,8], [8,8,8]]
+//   replist(0, [2,2,3]);  // Returns [[[0,0,0],[0,0,0]], [[0,0,0],[0,0,0]]]
+//   replist([1,2,3],3);   // Returns [[1,2,3], [1,2,3], [1,2,3]]
+function replist(val, n, i=0) =
+	is_num(n)? [for(j=[1:1:n]) val] :
+	(i>=len(n))? val :
+	[for (j=[1:1:n[i]]) replist(val, n, i+1)];
+
+
 // Function: list_range()
 // Usage:
 //   list_range(n, [s], [e])
@@ -145,6 +208,10 @@ function list_range(n=undef, s=0, e=undef, step=undef) =
 	(n!=undef)? [for (i=[0:1:n-1]) let(v=s+step*i) v] :
 	(e!=undef)? [for (v=[s:step:e]) v] :
 	assert(e!=undef||n!=undef, "Must supply one of `n` or `e`.");
+
+
+
+// Section: List Manipulation
 
 
 // Function: reverse()
@@ -220,7 +287,7 @@ function deduplicate(list, closed=false, eps=EPSILON) =
 //   that the final length is exactly as requested.  If you set it to `false` then the
 //   algorithm will favor uniformity and the output list may have a different number of
 //   entries due to rounding.
-//
+//   
 //   When applied to a path the output path is the same geometrical shape but has some vertices
 //   repeated.  This can be useful when you need to align paths with a different number of points.
 //   (See also subdivide_path for a different way to do that.) 
@@ -234,18 +301,17 @@ function deduplicate(list, closed=false, eps=EPSILON) =
 //   echo(repeat_entries(list, 6, exact=false));  // Ouputs [0,0,1,1,2,2,3,3]
 //   echo(repeat_entries(list, [1,1,2,1], exact=false));  // Ouputs [0,1,2,2,3]
 function repeat_entries(list, N, exact = true) =
-   assert(is_list(list))
-   assert((is_num(N) && N>0) || is_vector(N),"Parameter N to repeat_entries must be postive number or vector")
-   let(
-     length = len(list),
-     reps_guess = is_list(N) ?
-               assert(len(N)==len(list), "Vector parameter N to repeat_entries has the wrong length")
-               N
-        : replist(N/length,length),
-     reps = exact ? _sum_preserving_round(reps_guess)
-                  : [for (val=reps_guess) round(val)]
-   )
-   [for(i=[0:length-1]) each replist(list[i],reps[i])];
+	assert(is_list(list))
+	assert((is_num(N) && N>0) || is_vector(N),"Parameter N to repeat_entries must be postive number or vector")
+	let(
+		length = len(list),
+		reps_guess = is_list(N)?
+			assert(len(N)==len(list), "Vector parameter N to repeat_entries has the wrong length")
+			N : replist(N/length,length),
+		reps = exact? _sum_preserving_round(reps_guess) :
+			[for (val=reps_guess) round(val)]
+	)
+	[for(i=[0:length-1]) each replist(list[i],reps[i])];
 
 
 // Function: list_set()
@@ -291,6 +357,42 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 		],
 		slice(list,1+lastind, len(list)),
 		replist(dflt, minlen-lastind-1)
+	);
+
+
+// Function: list_insert()
+// Usage:
+//   list_insert(list, pos, elements);
+// Description:
+//   Insert `elements` into `list` before position `pos`.
+// Example:
+//   list_insert([3,6,9,12],1,5);  // Returns [3,5,6,9,12]
+//   list_insert([3,6,9,12],[1,3],[5,11]);  // Returns [3,5,6,9,11,12]
+function list_insert(list, pos, elements, _i=0) =
+	assert(is_list(list)||is_string(list))
+	is_list(pos)? (
+		assert(len(pos)==len(elements))
+		let(
+			idxs = sortidx(pos),
+			lastidx = pos[idxs[len(idxs)-1]]
+		)
+		concat(
+			[
+				for(i=idx(idxs)) each concat(
+					assert(pos[idxs[i]]<=len(list), "Indices in pos must be <= len(list)")
+					[for (j=[(i==0?0:pos[idxs[i-1]]):1:pos[idxs[i]]-1]) list[j]],
+					[elements[idxs[i]]]
+				)
+			],
+			[for (j=[lastidx:1:len(list)-1]) list[j]]
+		)
+	) : (
+		assert(pos<=len(list), "Indices in pos must be <= len(list)")
+		concat(
+			slice(list,0,pos),
+			elements,
+			(pos<len(list)? slice(list,pos,-1) : [])
+		)
 	);
 
 
@@ -346,42 +448,6 @@ function list_remove_values(list,values=[],all=false) =
 	) list_remove(list,uidxs);
 
 
-// Function: list_insert()
-// Usage:
-//   list_insert(list, pos, elements);
-// Description:
-//   Insert `elements` into `list` before position `pos`.
-// Example:
-//   list_insert([3,6,9,12],1,5);  // Returns [3,5,6,9,12]
-//   list_insert([3,6,9,12],[1,3],[5,11]);  // Returns [3,5,6,9,11,12]
-function list_insert(list, pos, elements, _i=0) =
-	assert(is_list(list)||is_string(list))
-	is_list(pos)? (
-		assert(len(pos)==len(elements))
-		let(
-			idxs = sortidx(pos),
-			lastidx = pos[idxs[len(idxs)-1]]
-		)
-		concat(
-			[
-				for(i=idx(idxs)) each concat(
-					assert(pos[idxs[i]]<=len(list), "Indices in pos must be <= len(list)")
-					[for (j=[(i==0?0:pos[idxs[i-1]]):1:pos[idxs[i]]-1]) list[j]],
-					[elements[idxs[i]]]
-				)
-			],
-			[for (j=[lastidx:1:len(list)-1]) list[j]]
-		)
-	) : (
-		assert(pos<=len(list), "Indices in pos must be <= len(list)")
-		concat(
-			slice(list,0,pos),
-			elements,
-			(pos<len(list)? slice(list,pos,-1) : [])
-		)
-	);
-
-
 // Function: bselect()
 // Usage:
 //   bselect(array,index);
@@ -424,33 +490,8 @@ function list_bset(indexset, valuelist, dflt=0) =
 	);
 
 
-// Function: list_increasing()
-// Usage:
-//    list_increasing(list)
-// Description:
-//   Returns true if the list is (non-strictly) increasing
-// Example:
-//   list_increasing([1,2,3,4]);  // Returns: true
-//   list_increasing([1,3,2,4]);  // Returns: false
-//   list_increasing([4,3,2,1]);  // Returns: false
-function list_increasing(list) =
-	assert(is_list(list)||is_string(list))
-	len([for (p=pair(list)) if(p.x>p.y) true])==0;
 
-
-// Function: list_decreasing()
-// Usage:
-//    list_decreasing(list)
-// Description:
-//   Returns true if the list is (non-strictly) decreasing
-// Example:
-//   list_decreasing([1,2,3,4]);  // Returns: false
-//   list_decreasing([4,2,3,1]);  // Returns: false
-//   list_decreasing([4,3,2,1]);  // Returns: true
-function list_decreasing(list) =
-	assert(is_list(list)||is_string(list))
-	len([for (p=pair(list)) if(p.x<p.y) true])==0;
-
+// Section: List Length Manipulation
 
 // Function: list_shortest()
 // Description:
@@ -508,45 +549,8 @@ function list_fit(v, length, fill) =
 	let(l=len(v)) (l==length)? v : (l>length)? list_trim(v,length) : list_pad(v,length,fill);
 
 
-// Function: idx()
-// Usage:
-//   i = idx(list);
-//   for(i=idx(list)) ...
-// Description:
-//   Returns the range of indexes for the given list.
-// Arguments:
-//   list = The list to returns the index range of.
-//   step = The step size to stride through the list.  Default: 1
-//   end = The delta from the end of the list.  Default: -1
-//   start = The starting index.  Default: 0
-// Example(2D):
-//   colors = ["red", "green", "blue"];
-//   for (i=idx(colors)) right(20*i) color(colors[i]) circle(d=10);
-function idx(list, step=1, end=-1,start=0) =
-	assert(is_list(list)||is_string(list))
-	[start : step : len(list)+end];
 
-
-// Function: enumerate()
-// Description:
-//   Returns a list, with each item of the given list `l` numbered in a sublist.
-//   Something like: `[[0,l[0]], [1,l[1]], [2,l[2]], ...]`
-// Arguments:
-//   l = List to enumerate.
-//   idx = If given, enumerates just the given subindex items of `l`.
-// Example:
-//   enumerate(["a","b","c"]);  // Returns: [[0,"a"], [1,"b"], [2,"c"]]
-//   enumerate([[88,"a"],[76,"b"],[21,"c"]], idx=1);  // Returns: [[0,"a"], [1,"b"], [2,"c"]]
-//   enumerate([["cat","a",12],["dog","b",10],["log","c",14]], idx=[1:2]);  // Returns: [[0,"a",12], [1,"b",10], [2,"c",14]]
-// Example(2D):
-//   colors = ["red", "green", "blue"];
-//   for (p=enumerate(colors)) right(20*p[0]) color(p[1]) circle(d=10);
-function enumerate(l,idx=undef) =
-	assert(is_list(l)||is_string(list))
-	(idx==undef)?
-		[for (i=[0:1:len(l)-1]) [i,l[i]]] :
-		[for (i=[0:1:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
-
+// Section: List Shuffling and Sorting
 
 // Function: shuffle()
 // Description:
@@ -784,58 +788,46 @@ function unique(arr) =
 
 
 
-// Section: Array Manipulation
+// Section: List Iteration Helpers
 
-// Function: subindex()
-// Description:
-//   For each array item, return the indexed subitem.
-//   Returns a list of the values of each vector at the specfied
-//   index list or range.  If the index list or range has
-//   only one entry the output list is flattened.  
-// Arguments:
-//   v = The given list of lists.
-//   idx = The index, list of indices, or range of indices to fetch.
-// Example:
-//   v = [[[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
-//   subindex(v,2);      // Returns [3, 7, 11, 15]
-//   subindex(v,[2,1]);  // Returns [[3, 2], [7, 6], [11, 10], [15, 14]]
-//   subindex(v,[1:3]);  // Returns [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]
-function subindex(v, idx) = [
-	for(val=v) let(value=[for(i=idx) val[i]])
-		len(value)==1 ? value[0] : value
-];
-
-
-// Function: min_index()
+// Function: idx()
 // Usage:
-//   min_index(vals,[all]);
+//   i = idx(list);
+//   for(i=idx(list)) ...
 // Description:
-//   Returns the index of the first occurrence of the minimum value in the given list. 
-//   If `all` is true then returns a list of all indices where the minimum value occurs.
+//   Returns the range of indexes for the given list.
 // Arguments:
-//   vals = vector of values
-//   all = set to true to return indices of all occurences of the minimum.  Default: false
-// Example:
-//   min_index([5,3,9,6,2,7,8,2,1]); // Returns: 4
-//   min_index([5,3,9,6,2,7,8,2,1],all=true); // Returns: [4,7]
-function min_index(vals, all=false) =
-	all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
+//   list = The list to returns the index range of.
+//   step = The step size to stride through the list.  Default: 1
+//   end = The delta from the end of the list.  Default: -1
+//   start = The starting index.  Default: 0
+// Example(2D):
+//   colors = ["red", "green", "blue"];
+//   for (i=idx(colors)) right(20*i) color(colors[i]) circle(d=10);
+function idx(list, step=1, end=-1,start=0) =
+	assert(is_list(list)||is_string(list))
+	[start : step : len(list)+end];
 
 
-// Function: max_index()
-// Usage:
-//   max_index(vals,[all]);
+// Function: enumerate()
 // Description:
-//   Returns the index of the first occurrence of the maximum value in the given list. 
-//   If `all` is true then returns a list of all indices where the maximum value occurs.
+//   Returns a list, with each item of the given list `l` numbered in a sublist.
+//   Something like: `[[0,l[0]], [1,l[1]], [2,l[2]], ...]`
 // Arguments:
-//   vals = vector of values
-//   all = set to true to return indices of all occurences of the maximum.  Default: false
+//   l = List to enumerate.
+//   idx = If given, enumerates just the given subindex items of `l`.
 // Example:
-//   max_index([5,3,9,6,2,7,8,9,1]); // Returns: 2
-//   max_index([5,3,9,6,2,7,8,9,1],all=true); // Returns: [2,7]
-function max_index(vals, all=false) =
-	all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
+//   enumerate(["a","b","c"]);  // Returns: [[0,"a"], [1,"b"], [2,"c"]]
+//   enumerate([[88,"a"],[76,"b"],[21,"c"]], idx=1);  // Returns: [[0,"a"], [1,"b"], [2,"c"]]
+//   enumerate([["cat","a",12],["dog","b",10],["log","c",14]], idx=[1:2]);  // Returns: [[0,"a",12], [1,"b",10], [2,"c",14]]
+// Example(2D):
+//   colors = ["red", "green", "blue"];
+//   for (p=enumerate(colors)) right(20*p[0]) color(p[1]) circle(d=10);
+function enumerate(l,idx=undef) =
+	assert(is_list(l)||is_string(list))
+	(idx==undef)?
+		[for (i=[0:1:len(l)-1]) [i,l[i]]] :
+		[for (i=[0:1:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
 
 
 // Function: pair()
@@ -912,6 +904,28 @@ function permute(l,n=2,_s=0) =
 	[for (i=[_s:1:len(l)-n], p=permute(l,n=n-1,_s=i+1)) concat([l[i]], p)];
 
 
+// Section: Array Manipulation
+
+// Function: subindex()
+// Description:
+//   For each array item, return the indexed subitem.
+//   Returns a list of the values of each vector at the specfied
+//   index list or range.  If the index list or range has
+//   only one entry the output list is flattened.  
+// Arguments:
+//   v = The given list of lists.
+//   idx = The index, list of indices, or range of indices to fetch.
+// Example:
+//   v = [[[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
+//   subindex(v,2);      // Returns [3, 7, 11, 15]
+//   subindex(v,[2,1]);  // Returns [[3, 2], [7, 6], [11, 10], [15, 14]]
+//   subindex(v,[1:3]);  // Returns [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]
+function subindex(v, idx) = [
+	for(val=v) let(value=[for(i=idx) val[i]])
+		len(value)==1 ? value[0] : value
+];
+
+
 // Function: zip()
 // Usage:
 //   zip(v1, v2, v3, [fit], [fill]);
@@ -942,7 +956,7 @@ function zip(vecs, v2, v3, fit=false, fill=undef) =
 	(v3!=undef)? zip([vecs,v2,v3], fit=fit, fill=fill) :
 	(v2!=undef)? zip([vecs,v2], fit=fit, fill=fill) :
 	assert(in_list(fit, [false, "short", "long"]))
-        assert(all(  [for(v=vecs) is_list(v)]), "One of the inputs to zip is not a vector")
+	assert(all([for(v=vecs) is_list(v)]), "One of the inputs to zip is not a list")
 	let(
 		minlen = list_shortest(vecs),
 		maxlen = list_longest(vecs),
@@ -950,6 +964,7 @@ function zip(vecs, v2, v3, fit=false, fill=undef) =
 	) (fit == "long")?
 		[for(i=[0:1:maxlen-1]) [for(v=vecs) for(x=(i<len(v)? v[i] : (fill==undef)? [fill] : fill)) x] ] :
 		[for(i=[0:1:minlen-1]) [for(v=vecs) for(x=v[i]) x] ];
+
 
 // Function: array_group()
 // Description:
