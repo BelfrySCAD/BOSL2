@@ -5,13 +5,14 @@
 //   ```
 //   use <BOSL2/std.scad>
 //   ```
-//   
-//   # Terminology
-//   - **List**: An ordered collection of zero or more items.  ie: ["a", "b", "c"]
-//   - **Vector**: A list of numbers. ie: [4, 5, 6]
-//   - **Array**: A nested list of lists, or list of lists of lists, or deeper.  ie: [[2,3], [4,5], [6,7]]
-//   - **Dimension**: The depth of nesting of lists in an array.  A List is 1D.  A list of lists is 2D.  etc.
 //////////////////////////////////////////////////////////////////////
+
+
+// Section: Terminology
+//   - **List**: An ordered collection of zero or more items.  ie: `["a", "b", "c"]`
+//   - **Vector**: A list of numbers. ie: `[4, 5, 6]`
+//   - **Array**: A nested list of lists, or list of lists of lists, or deeper.  ie: `[[2,3], [4,5], [6,7]]`
+//   - **Dimension**: The depth of nesting of lists in an array.  A List is 1D.  A list of lists is 2D.  etc.
 
 
 // Section: List Query Operations
