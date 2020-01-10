@@ -9,6 +9,10 @@
 //////////////////////////////////////////////////////////////////////
 
 
+include <BOSL2/rounding.scad>
+include <BOSL2/skin.scad>
+
+
 // Section: Half Joiners
 
 
@@ -460,10 +464,10 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 //   round = 
 // Example: Ordinary straight dovetail, male version (sticking up) and female verison (below the xy plane)
 //   dovetail("male", length=30, width=15, height=8);
-//   fwd(25)dovetail("female", length=30, width=15, height=8);
+//   fwd(25) dovetail("female", length=30, width=15, height=8);
 // Example: Adding a 6 degree taper (Such a big taper is usually not necessary, but easier to see for the example.)
-//   dovetail("male", length=30, width=15, ,height=8, taper=6);
-//   fwd(25)dovetail("female", length=30, width=15, height=8, taper=6);
+//   dovetail("male", length=30, width=15, height=8, taper=6);
+//   fwd(25) dovetail("female", length=30, width=15, height=8, taper=6);
 // Example: A block that can link to itself
 //   diff("remove")
 //     cuboid([50,30,10]){
