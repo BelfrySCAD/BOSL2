@@ -39,6 +39,7 @@ include <vnf.scad>
 //   closed = If true, the last profile is skinned to the first profile, to allow for making a closed loop.  Assumes `caps=false`.  Default: false
 //   caps = If true, endcap faces are created.  Assumes `closed=false`.  Default: true
 //   method = Specifies the method used to match up vertices between profiles, to create faces.  Given as a string, one of `"distance"`, `"angle"`, or `"uniform"`.  If given as a list of strings, equal in number to the number of profile transitions, lets you specify the method used for each transition.  Default: "uniform"
+//   convexity = Max number of times a line could intersect a wall of the shape.  (Module use only.)  Default: 2.
 // Example(FlatSpin):
 //   skin([
 //      scale([2,1,1], p=path3d(circle(d=100,$fn=48))),
@@ -172,8 +173,8 @@ include <vnf.scad>
 //       move([0,0, 0], p=path3d(circle(d=100,$fn=36))),
 //       move([0,0,50], p=path3d(circle(d=100,$fn=6)))
 //   ], caps=false);
-module skin(profiles, closed=false, caps=true, method="uniform") {
-	vnf_polyhedron(skin(profiles, caps=caps, closed=closed, method=method));
+module skin(profiles, closed=false, caps=true, method="uniform", convexity=2) {
+	vnf_polyhedron(skin(profiles, caps=caps, closed=closed, method=method), convexity=convexity);
 }
 
 

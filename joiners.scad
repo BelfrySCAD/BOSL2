@@ -512,64 +512,73 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 //   diff("remove")
 //     cuboid([50,30,10])
 //       position(TOP+BACK) xspread(10,5) dovetail("female", length=10, width=7, height=4, spin=90,$tags="remove",anchor=BOTTOM+RIGHT);
-module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, width2, chamfer, extra=0.01,orient,spin=0,r,radius,round=false,anchor=BOTTOM)
+module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, width2, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient)
 {
-  radius = get_radius(r1=radius,r2=r);
-  lcount = num_defined([l,length]);
-  hcount = num_defined([h,height]);
-  wcount = num_defined([w,width]);
-  assert(lcount==1, "Must define exactly one of l and length");
-  assert(wcount==1, "Must define exactly one of w and width");
-  assert(lcount==1, "Must define exactly one of h and height");
-  h = first_defined([h,height]);
-  w = first_defined([w,width]);
-  length = first_defined([l,length]);
-  orient = is_def(orient) ? orient :
-           gender == "female" ? DOWN : UP;
-  count = num_defined([angle,slope]);
-  assert(count<=1, "Do not specify both angle and slope");
-  count2 = num_defined([taper,width2]);
-  assert(count2<=1, "Do not specify both taper and width2");
-  count3 = num_defined([chamfer, radius]);
-  assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
-  slope = is_def(slope) ? slope :
-          is_def(angle) ? 1/tan(angle) :  6;
-  width = gender == "male" ? w : w + $slop;
-  height = h + (gender == "female" ? $slop : 0);
+	radius = get_radius(r1=radius,r2=r);
+	lcount = num_defined([l,length]);
+	hcount = num_defined([h,height]);
+	wcount = num_defined([w,width]);
+	assert(lcount==1, "Must define exactly one of l and length");
+	assert(wcount==1, "Must define exactly one of w and width");
+	assert(hcount==1, "Must define exactly one of h and height");
+	h = first_defined([h,height]);
+	w = first_defined([w,width]);
+	length = first_defined([l,length]);
+	orient = is_def(orient) ? orient :
+		gender == "female" ? DOWN : UP;
+	count = num_defined([angle,slope]);
+	assert(count<=1, "Do not specify both angle and slope");
+	count2 = num_defined([taper,width2]);
+	assert(count2<=1, "Do not specify both taper and width2");
+	count3 = num_defined([chamfer, radius]);
+	assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
+	slope = is_def(slope) ? slope :
+		is_def(angle) ? 1/tan(angle) :  6;
+	width = gender == "male" ? w : w + $slop;
+	height = h + (gender == "female" ? $slop : 0);
 
-  front_offset = is_def(taper) ? extra * tan(taper) :
-                 is_def(width2) ? extra * (width2-width)/length/2 : 0;
+	front_offset = is_def(taper) ? extra * tan(taper) :
+		is_def(width2) ? extra * (width2-width)/length/2 : 0;
 
-  size = is_def(chamfer) && chamfer>0 ? chamfer :
-         is_def(radius) && radius>0 ? radius : 0;
-  type = is_def(chamfer) && chamfer>0 ? "chamfer" : "circle";
+	size = is_def(chamfer) && chamfer>0 ? chamfer :
+		is_def(radius) && radius>0 ? radius : 0;
+	type = is_def(chamfer) && chamfer>0 ? "chamfer" : "circle";
 
-  fullsize = round ? [0,size,size] :
-             gender == "male" ? [0,size,0] : [0,0,size];
-  
-  smallend_half =    round_corners(
-                      move([-length/2-extra,0,0],
-                        p=[[0,0                     , height],
-                           [0,width/2-front_offset  , height],
-                           [0,width/2 - height/slope - front_offset, 0 ],
-                           [0,width/2 - front_offset + height, 0]
-                          ]),
-                       curve=type, size = fullsize,closed=false);
-  smallend_points = concat(select(smallend_half, 1, -2), [down(extra,p=select(smallend_half, -2))]);
-  offset = is_def(taper) ? (length+extra) * tan(taper) :
-           is_def(width2) ? (width2-width) / 2 : 0;
-  bigend_points = move([length+2*extra,offset,0], p=smallend_points);
+	fullsize = round ? [0,size,size] :
+		gender == "male" ? [0,size,0] : [0,0,size];
 
-  adjustment = gender == "male" ? -0.01 : 0.01;  // Adjustment for default overlap in attach()
+	smallend_half = round_corners(
+		move(
+			[-length/2-extra,0,0],
+			p=[
+				[0,0                     , height],
+				[0,width/2-front_offset  , height],
+				[0,width/2 - height/slope - front_offset, 0 ],
+				[0,width/2 - front_offset + height, 0]
+			]
+		),
+		curve=type, size=fullsize, closed=false
+	);
+	smallend_points = concat(select(smallend_half, 1, -2), [down(extra,p=select(smallend_half, -2))]);
+	offset = is_def(taper) ? (length+extra) * tan(taper) :
+		is_def(width2) ? (width2-width) / 2 : 0;
+	bigend_points = move([length+2*extra,offset,0], p=smallend_points);
 
-  orient_and_anchor([length, width+2*offset, height],anchor=anchor,orient=orient,spin=spin, chain=true)
-    down(height/2+adjustment)  
-    skin([
-            concat(smallend_points, yflip(p=reverse(smallend_points))),
-            concat(bigend_points, yflip(p=reverse(bigend_points)))]
-        );
+	adjustment = gender == "male" ? -0.01 : 0.01;  // Adjustment for default overlap in attach()
+
+	orient_and_anchor([length, width+2*offset, height],anchor=anchor,orient=orient,spin=spin, chain=true) {
+		down(height/2+adjustment) {
+			skin(
+				[
+					concat(smallend_points, yflip(p=reverse(smallend_points))),
+					concat(bigend_points, yflip(p=reverse(bigend_points)))
+				],
+				convexity=4
+			);
+		}
+		children();
+	}
 }
-
 
 
 

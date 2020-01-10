@@ -301,9 +301,10 @@ function vnf_vertex_array(
 //   Given a VNF structure, or a list of VNF structures, creates a polyhedron from them.
 // Arguments:
 //   vnf = A VNF structure, or list of VNF structures.
-module vnf_polyhedron(vnf) {
+//   convexity = Max number of times a line could intersect a wall of the shape.
+module vnf_polyhedron(vnf, convexity=2) {
 	vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf;
-	polyhedron(vnf[0], vnf[1]);
+	polyhedron(vnf[0], vnf[1], convexity=convexity);
 }
 
 
