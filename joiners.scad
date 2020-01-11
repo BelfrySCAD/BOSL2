@@ -438,7 +438,12 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 }
 
 
+// Section: Dovetails
+
 // Module: dovetail()
+//
+// Usage:
+//   dovetail(l|length, h|height, w|width, slope|angle, taper|width2, [chamfer], [r|radius], [round], [$slop])
 //
 // Description:
 //   Produces a possibly tapered dovetail joint shape to attach to or subtract from two parts you wish to join together.
@@ -447,9 +452,6 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 //   printing and assembly, or choose a fully rounded joint that looks more like a puzzle piece.  The dovetail appears
 //   parallel to the X axis and projecting upwards, so in its default orientation it will slide together with a translation
 //   in the X direction.
-//
-// Usage:
-//   dovetail(l|length, h|height, w|width, slope|angle, taper|width2, chamfer, r|radius, round, anchor, orient, spin)
 //
 // Arguments:
 //   l / length = Length of the dovetail (amount the joint slides during assembly)
@@ -534,8 +536,8 @@ module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, wid
 	assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
 	slope = is_def(slope) ? slope :
 		is_def(angle) ? 1/tan(angle) :  6;
-	width = gender == "male" ? w : w + $slop;
-	height = h + (gender == "female" ? $slop : 0);
+	width = gender == "male" ? w : w + 2*$slop;
+	height = h + (gender == "female" ? 2*$slop : 0);
 
 	front_offset = is_def(taper) ? extra * tan(taper) :
 		is_def(width2) ? extra * (width2-width)/length/2 : 0;
