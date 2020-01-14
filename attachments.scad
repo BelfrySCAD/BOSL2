@@ -346,10 +346,15 @@ module position(from)
 //   attach(from, to, [overlap]) ...
 // Description:
 //   Attaches children to a parent object at an anchor point and orientation.
+//   Attached objects will be overlapped into the parent object by a little bit,
+//   as specified by the default `$overlap` value (0.01 by default), or by the
+//   overriding `overlap=` argument.  This is to prevent OpenSCAD from making
+//   non-manifold objects.  You can also define `$overlap=` as an argument in a
+//   parent module to set the default for all attachments to it.
 // Arguments:
 //   from = The vector, or name of the parent anchor point to attach to.
 //   to = Optional name of the child anchor point.  If given, orients the child such that the named anchors align together rotationally.
-//   overlap = Amount to sink child into the parent.  Equivalent to `down(X)` after the attach.
+//   overlap = Amount to sink child into the parent.  Equivalent to `down(X)` after the attach.  This defaults to the value in `$overlap`, which is `0.01` by default.
 //   norot = If true, don't rotate children when attaching to the anchor point.  Only translate to the anchor point.
 // Example:
 //   spheroid(d=20) {

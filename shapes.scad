@@ -445,11 +445,11 @@ module rounded_prismoid(
 
 // Module: right_triangle()
 //
-// Description:
-//   Creates a 3D right triangular prism.
-//
 // Usage:
 //   right_triangle(size, [center]);
+//
+// Description:
+//   Creates a 3D right triangular prism with the hypotenuse in the X+Y+ quadrant.
 //
 // Arguments:
 //   size = [width, thickness, height]
@@ -458,18 +458,17 @@ module rounded_prismoid(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //
 // Example: Centered
-//   right_triangle([60, 10, 40], center=true);
+//   right_triangle([60, 40, 10], center=true);
 // Example: *Non*-Centered
-//   right_triangle([60, 10, 40]);
+//   right_triangle([60, 40, 10]);
 // Example: Standard Connectors
-//   right_triangle([60, 15, 40]) show_anchors();
+//   right_triangle([60, 40, 15]) show_anchors();
 module right_triangle(size=[1, 1, 1], anchor=ALLNEG, spin=0, orient=UP, center=undef)
 {
 	size = scalar_vec3(size);
 	orient_and_anchor(size, orient, anchor, spin=spin, center=center, noncentered=ALLNEG, chain=true) {
-		xrot(90)
-		linear_extrude(height=size.y, convexity=2, center=true) {
-			polygon([[-size.x/2,-size.z/2], [-size.x/2,size.z/2], [size.x/2,-size.z/2]]);
+		linear_extrude(height=size.z, convexity=2, center=true) {
+			polygon([[-size.x/2,-size.y/2], [-size.x/2,size.y/2], [size.x/2,-size.y/2]]);
 		}
 		children();
 	}
@@ -1211,8 +1210,9 @@ module pie_slice(
 //   r = radius of fillet.
 //   ang = angle between faces to fillet.
 //   overlap = overlap size for unioning with faces.
-//   orient = Orientation of the fillet.  Use the directional constants from `constants.scad`.  Default: `RIGHT`.
-//   anchor = Alignment of the fillet.  Use the constants from `constants.scad`.  Default: `CENTER`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `FRONT+LEFT`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //
 // Example:
 //   union() {
@@ -1223,19 +1223,25 @@ module pie_slice(
 //
 // Example:
 //   interior_fillet(l=40, r=10, spin=180);
-module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01, anchor=CENTER, spin=0, orient=UP) {
+//
+// Example: Using with Attachments
+//   cube(50,center=true) {
+//     position(FRONT+LEFT)
+//       interior_fillet(l=50, r=10, spin=-90);
+//     position(BOT+FRONT)
+//       interior_fillet(l=50, r=10, spin=180, orient=RIGHT);
+//   }
+module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01, anchor=FRONT+LEFT, spin=0, orient=UP) {
 	dy = r/tan(ang/2);
-	size = [l,r,r];
-	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
-		difference() {
-			translate([0,-overlap/tan(ang/2),-overlap]) {
-				if (ang == 90) {
-					translate([0,r/2,r/2]) cube([l,r,r], center=true);
-				} else {
-					rotate([90,0,90]) pie_slice(ang=ang, r=dy+overlap, h=l, center=true);
-				}
-			}
-			translate([0,dy,r]) xcyl(l=l+0.1, r=r);
+	steps = ceil(segs(r)*ang/360);
+	step = ang/steps;
+	orient_and_anchor([r,r,l], orient, anchor, spin=spin, chain=true) {
+		linear_extrude(height=l, convexity=4, center=true) {
+			path = concat(
+				[[0,0]],
+				[for (i=[0:1:steps]) let(a=270-i*step) r*[cos(a),sin(a)]+[dy,r]]
+			);
+			translate(-[r,r]/2) polygon(path);
 		}
 		children();
 	}
