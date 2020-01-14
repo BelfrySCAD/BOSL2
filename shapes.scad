@@ -1218,11 +1218,11 @@ module pie_slice(
 //   union() {
 //       translate([0,2,-4]) cube([20, 4, 24], anchor=BOTTOM);
 //       translate([0,-10,-4]) cube([20, 20, 4], anchor=BOTTOM);
-//       color("green") interior_fillet(l=20, r=10, spin=180);
+//       color("green") interior_fillet(l=20, r=10, spin=180, orient=RIGHT);
 //   }
 //
 // Example:
-//   interior_fillet(l=40, r=10, spin=180);
+//   interior_fillet(l=40, r=10, spin=-90);
 //
 // Example: Using with Attachments
 //   cube(50,center=true) {
