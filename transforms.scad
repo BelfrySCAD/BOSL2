@@ -2476,7 +2476,7 @@ module round2d(r, or, ir)
 {
 	or = get_radius(r1=or, r=r, dflt=0);
 	ir = get_radius(r1=ir, r=r, dflt=0);
-	offset(or) offset(-ir-or) offset(delta=ir) children();
+	offset(or) offset(-ir-or) offset(delta=ir,chamfer=true) children();
 }
 
 
