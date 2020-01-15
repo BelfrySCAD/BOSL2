@@ -136,7 +136,7 @@ function circle(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 
 
 
-// Section: Primitive Shapes
+// Section: Primitive 3D Shapes
 
 
 // Module: cube()

@@ -275,8 +275,8 @@ module orient_and_anchor(
 	hidden = any([for (tag=tags) in_list(tag, h_tags)]);
 	if ($attach_to != undef) {
 		anch = find_anchor($attach_to, size.z, size, size2=size2, shift=shift, offset=offset, anchors=anchors, geometry=geometry, two_d=two_d);
-		ang = vector_angle(anch[2], DOWN);
-		axis = vector_axis(anch[2], DOWN);
+		ang = vector_angle(anch[2], two_d? BACK : DOWN);
+		axis = two_d? UP : vector_axis(anch[2], DOWN);
 		ang2 = (anch[2]==UP || anch[2]==DOWN)? 0 : 180-anch[3];
 		axis2 = rotate_points3d([axis],[0,0,ang2])[0];
 		$attach_to = undef;

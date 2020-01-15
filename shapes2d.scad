@@ -781,8 +781,12 @@ function trapezoid(h, w1, w2, anchor=CENTER, spin=0) =
 
 
 
-module trapezoid(h, w1, w2, anchor=CENTER, spin=0)
-	polygon(trapezoid(h=h, w1=w1, w2=w2, anchor=anchor, spin=spin));
+module trapezoid(h, w1, w2, anchor=CENTER, spin=0) {
+	orient_and_anchor([w1,h,0], size2=[w2,h], UP, anchor, spin=spin, two_d=true, chain=true) {
+		polygon(trapezoid(h=h, w1=w1, w2=w2));
+		children();
+	}
+}
 
 
 // Function&Module: teardrop2d()
