@@ -2104,7 +2104,7 @@ module zflip_copy(offset=0, z=0)
 //   half_of(DOWN+LEFT, s=200) sphere(d=150);
 // Example(2D):
 //   half_of([1,1], planar=true) circle(d=50);
-module half_of(v=UP, cp=[0,0,0], s=100, planar=false)
+module half_of(v=UP, cp=[0,0,0], s=1000, planar=false)
 {
 	cp = is_num(cp)? cp*normalize(v) : cp;
 	if (cp != [0,0,0]) {
@@ -2148,7 +2148,7 @@ module half_of(v=UP, cp=[0,0,0], s=100, planar=false)
 //   left_half(x=-8) sphere(r=20);
 // Example(2D):
 //   left_half(planar=true) circle(r=20);
-module left_half(s=10000, x=0, planar=false)
+module left_half(s=1000, x=0, planar=false)
 {
 	dir = LEFT;
 	difference() {
@@ -2184,7 +2184,7 @@ module left_half(s=10000, x=0, planar=false)
 //   right_half(x=-5) sphere(r=20);
 // Example(2D):
 //   right_half(planar=true) circle(r=20);
-module right_half(s=10000, x=0, planar=false)
+module right_half(s=1000, x=0, planar=false)
 {
 	dir = RIGHT;
 	difference() {
@@ -2220,7 +2220,7 @@ module right_half(s=10000, x=0, planar=false)
 //   front_half(y=5) sphere(r=20);
 // Example(2D):
 //   front_half(planar=true) circle(r=20);
-module front_half(s=10000, y=0, planar=false)
+module front_half(s=1000, y=0, planar=false)
 {
 	dir = FWD;
 	difference() {
@@ -2256,7 +2256,7 @@ module front_half(s=10000, y=0, planar=false)
 //   back_half(y=8) sphere(r=20);
 // Example(2D):
 //   back_half(planar=true) circle(r=20);
-module back_half(s=10000, y=0, planar=false)
+module back_half(s=1000, y=0, planar=false)
 {
 	dir = BACK;
 	difference() {
@@ -2288,7 +2288,7 @@ module back_half(s=10000, y=0, planar=false)
 // Examples:
 //   bottom_half() sphere(r=20);
 //   bottom_half(z=-10) sphere(r=20);
-module bottom_half(s=10000, z=0)
+module bottom_half(s=1000, z=0)
 {
 	dir = DOWN;
 	difference() {
@@ -2316,7 +2316,7 @@ module bottom_half(s=10000, z=0)
 // Examples(Spin):
 //   top_half() sphere(r=20);
 //   top_half(z=5) sphere(r=20);
-module top_half(s=10000, z=0)
+module top_half(s=1000, z=0)
 {
 	dir = UP;
 	difference() {
