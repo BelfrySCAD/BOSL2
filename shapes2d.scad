@@ -582,6 +582,7 @@ function _turtle_command(command, parm, parm2, state, index) =
 //   ir = Inside radius, at center of sides.
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
+//   rounding = Radius of rounding for the tips of the polygon.  Default: 0 (no rounding)
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -597,15 +598,26 @@ function _turtle_command(command, parm, parm2, state, index) =
 //   regular_ngon(n=8, side=20, realign=true);
 // Example(2D): Called as Function
 //   stroke(closed=true, regular_ngon(n=6, or=30));
-function regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
+function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
 	let(
 		sc = 1/cos(180/n),
 		r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n)),
-		path = circle(r=r, realign=realign, spin=90, $fn=n)
+		path = rounding==0? circle(r=r, realign=realign, spin=90, $fn=n) :
+			let(
+				steps = floor(segs(r)/n),
+				step = 360/n/steps
+			) [
+				for (i=[0:1:n-1], j=[0:1:steps]) let(
+					a = 90 - (realign? 180/n : 0) - i*360/n,
+					b = a + 180/n - j*step
+				)
+				(r-rounding*sc)*[cos(a),sin(a)] +
+				rounding*[cos(b),sin(b)]
+			]
 	) rot(spin, p=move(-r*normalize(anchor), p=path));
 
 
-module regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) {
+module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) {
 	sc = 1/cos(180/n);
 	r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n));
 	orient_and_anchor([2*r,2*r,0], UP, anchor, spin=spin, geometry="cylinder", two_d=true, chain=true) {
@@ -631,6 +643,7 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CENTE
 //   ir = Inside radius, at center of sides.
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
+//   rounding = Radius of rounding for the tips of the polygon.  Default: 0 (no rounding)
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -646,12 +659,12 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, realign=false, anchor=CENTE
 //   pentagon(side=20, realign=true);
 // Example(2D): Called as Function
 //   stroke(closed=true, pentagon(or=30));
-function pentagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
-	regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
+function pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
+	regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin);
 
 
-module pentagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
-	regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin) children();
+module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0)
+	regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin) children();
 
 
 // Function&Module: hexagon()
@@ -668,6 +681,7 @@ module pentagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0
 //   ir = Inside radius, at center of sides.
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
+//   rounding = Radius of rounding for the tips of the polygon.  Default: 0 (no rounding)
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -683,12 +697,12 @@ module pentagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0
 //   hexagon(side=20, realign=true);
 // Example(2D): Called as Function
 //   stroke(closed=true, hexagon(or=30));
-function hexagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
-	regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
+function hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
+	regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin);
 
 
-module hexagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
-	regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin) children();
+module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0)
+	regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin) children();
 
 
 // Function&Module: octagon()
@@ -705,6 +719,7 @@ module hexagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
 //   ir = Inside radius, at center of sides.
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
+//   rounding = Radius of rounding for the tips of the polygon.  Default: 0 (no rounding)
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -720,12 +735,12 @@ module hexagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
 //   octagon(side=20, realign=true);
 // Example(2D): Called as Function
 //   stroke(closed=true, octagon(or=30));
-function octagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0) =
-	regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin);
+function octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
+	regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin);
 
 
-module octagon(r, d, or, od, ir, id, side, realign=false, anchor=CENTER, spin=0)
-	regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, realign=realign, anchor=anchor, spin=spin) children();
+module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0)
+	regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin) children();
 
 
 
