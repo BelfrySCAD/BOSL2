@@ -596,6 +596,8 @@ function _turtle_command(command, parm, parm2, state, index) =
 //   regular_ngon(n=8, side=20);
 // Example(2D): Realigned
 //   regular_ngon(n=8, side=20, realign=true);
+// Example(2D): Rounded
+//   regular_ngon(n=5, od=100, rounding=20, $fn=20);
 // Example(2D): Called as Function
 //   stroke(closed=true, regular_ngon(n=6, or=30));
 function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
@@ -621,7 +623,7 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 	sc = 1/cos(180/n);
 	r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n));
 	orient_and_anchor([2*r,2*r,0], UP, anchor, spin=spin, geometry="cylinder", two_d=true, chain=true) {
-		polygon(circle(r=r, realign=realign, spin=90, $fn=n));
+		polygon(regular_ngon(n=n, r=r, rounding=rounding, realign=realign));
 		children();
 	}
 }
@@ -657,6 +659,8 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 //   pentagon(side=20);
 // Example(2D): Realigned
 //   pentagon(side=20, realign=true);
+// Example(2D): Rounded
+//   pentagon(od=100, rounding=20, $fn=20);
 // Example(2D): Called as Function
 //   stroke(closed=true, pentagon(or=30));
 function pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
@@ -695,6 +699,8 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CE
 //   hexagon(side=20);
 // Example(2D): Realigned
 //   hexagon(side=20, realign=true);
+// Example(2D): Rounded
+//   hexagon(od=100, rounding=20, $fn=20);
 // Example(2D): Called as Function
 //   stroke(closed=true, hexagon(or=30));
 function hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
@@ -733,6 +739,8 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CEN
 //   octagon(side=20);
 // Example(2D): Realigned
 //   octagon(side=20, realign=true);
+// Example(2D): Rounded
+//   octagon(od=100, rounding=20, $fn=20);
 // Example(2D): Called as Function
 //   stroke(closed=true, octagon(or=30));
 function octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
