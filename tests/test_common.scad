@@ -89,6 +89,50 @@ module test_is_str() {
 test_is_str();
 
 
+module test_is_int() {
+	assert(is_int(-999));
+	assert(is_int(-1));
+	assert(is_int(0));
+	assert(is_int(1));
+	assert(is_int(999));
+	assert(!is_int(-1.1));
+	assert(!is_int(1.1));
+	assert(!is_int(-0.1));
+	assert(!is_int(0.1));
+	assert(!is_int(-99.1));
+	assert(!is_int(99.1));
+	assert(!is_int(undef));
+	assert(!is_int(false));
+	assert(!is_int(true));
+	assert(!is_int("foo"));
+	assert(!is_int([0,1,2]));
+	assert(!is_int([0:1:2]));
+}
+test_is_int();
+
+
+module test_is_integer() {
+	assert(is_integer(-999));
+	assert(is_integer(-1));
+	assert(is_integer(0));
+	assert(is_integer(1));
+	assert(is_integer(999));
+	assert(!is_integer(-1.1));
+	assert(!is_integer(1.1));
+	assert(!is_integer(-0.1));
+	assert(!is_integer(0.1));
+	assert(!is_integer(-99.1));
+	assert(!is_integer(99.1));
+	assert(!is_integer(undef));
+	assert(!is_integer(false));
+	assert(!is_integer(true));
+	assert(!is_integer("foo"));
+	assert(!is_integer([0,1,2]));
+	assert(!is_integer([0:1:2]));
+}
+test_is_integer();
+
+
 module test_default() {
 	assert(default(undef,23) == 23);
 	assert(default(true,23) == true);
