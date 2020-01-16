@@ -294,6 +294,22 @@ module test_triplet_wrap() {
 test_triplet_wrap();
 
 
+module test_permute() {
+	assert(permute([3,4,5,6]) ==  [[3,4],[3,5],[3,6],[4,5],[4,6],[5,6]]);
+	assert(permute([3,4,5,6],n=3) == [[3,4,5],[3,4,6],[3,5,6],[4,5,6]]);
+}
+test_permute();
+
+
+module test_repeat_entries() {
+	list = [0,1,2,3];
+	assert(repeat_entries(list, 6) == [0,0,1,2,2,3]);
+	assert(repeat_entries(list, 6, exact=false) == [0,0,1,1,2,2,3,3]);
+	assert(repeat_entries(list, [1,1,2,1], exact=false) == [0,1,2,2,3]);
+}
+test_repeat_entries();
+
+
 module test_zip() {
 	v1 = [1,2,3,4];
 	v2 = [5,6,7];
