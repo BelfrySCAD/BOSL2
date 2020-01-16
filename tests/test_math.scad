@@ -512,7 +512,34 @@ module test_count_true() {
 test_count_true();
 
 
-cube();
+module test_factorial() {
+	assert(factorial(1) == 1);
+	assert(factorial(2) == 2);
+	assert(factorial(3) == 6);
+	assert(factorial(4) == 24);
+	assert(factorial(5) == 120);
+	assert(factorial(6) == 720);
+	assert(factorial(7) == 5040);
+	assert(factorial(8) == 40320);
+}
+test_factorial();
+
+
+module test_gcd() {
+	assert(gcd(15,25) == 5);
+	assert(gcd(15,27) == 3);
+	assert(gcd(270,405) == 135);
+}
+test_gcd();
+
+
+module test_lcm() {
+	assert(lcm(15,25) == 75);
+	assert(lcm(15,27) == 135);
+	assert(lcm(270,405) == 810);
+}
+test_lcm();
+
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
