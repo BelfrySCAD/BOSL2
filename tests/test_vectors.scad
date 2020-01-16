@@ -42,6 +42,30 @@ module test_vabs() {
 }
 test_vabs();
 
+include <BOSL2/strings.scad>
+module test_vang() {
+	assert(vang([1,0])==0);
+	assert(vang([0,1])==90);
+	assert(vang([-1,0])==180);
+	assert(vang([0,-1])==-90);
+	assert(vang([1,1])==45);
+	assert(vang([-1,1])==135);
+	assert(vang([1,-1])==-45);
+	assert(vang([-1,-1])==-135);
+	assert(vang([0,0,1])==[0,90]);
+	assert(vang([0,1,1])==[90,45]);
+	assert(vang([0,1,-1])==[90,-45]);
+	assert(vang([1,0,0])==[0,0]);
+	assert(vang([0,1,0])==[90,0]);
+	assert(vang([0,-1,0])==[-90,0]);
+	assert(vang([-1,0,0])==[180,0]);
+	assert(vang([1,0,1])==[0,45]);
+	assert(vang([0,1,1])==[90,45]);
+	assert(vang([0,-1,1])==[-90,45]);
+	assert(approx(vang([1,1,1]),[45, 35.2643896828]));
+}
+test_vang();
+
 
 module test_normalize() {
 	assert(normalize([10,0,0]) == [1,0,0]);
