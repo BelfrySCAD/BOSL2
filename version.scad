@@ -8,7 +8,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-BOSL_VERSION = [2,0,92];
+BOSL_VERSION = [2,0,93];
 
 
 // Section: BOSL Library Version Functions

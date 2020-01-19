@@ -220,10 +220,11 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut=5, wall=2
 					[-strut*0.33-(thick-wall)/2/tan(ang), wall/2]
 				];
 				xflip_copy() {
-					difference() {
+					intersection() {
 						extrude_from_to(corner1,corner2) {
 							polygon(bracepath);
 						}
+						cube([l,thick,h],center=true);
 					}
 				}
 			}
