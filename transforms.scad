@@ -1566,11 +1566,11 @@ module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
 // Arguments:
 //   rots = A list of [X,Y,Z] rotation angles in degrees.  If `v` is given, this will be a list of scalar angles in degrees to rotate around `v`.
 //   v = If given, this is the vector of the axis to rotate around.
-//   cp = Centerpoint to rotate around.
+//   cp = Centerpoint to rotate around.  Default: `[0,0,0]`
 //   n = Optional number of evenly distributed copies, rotated around the axis.
-//   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise.
-//   delta = [X,Y,Z] amount to move away from cp before rotating.  Makes rings of copies.
-//   subrot = If false, don't sub-rotate children as they are copied around the ring.
+//   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise.  Default: 0
+//   delta = [X,Y,Z] amount to move away from cp before rotating.  Makes rings of copies.  Default: `[0,0,0]`
+//   subrot = If false, don't sub-rotate children as they are copied around the ring.  Only makes sense when used with `delta`.  Default: `true`
 //
 // Side Effects:
 //   `$ang` is set to the rotation angle (or XYZ rotation triplet) of each child copy, and can be used to modify each child individually.
@@ -1619,7 +1619,9 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[
 			rotate(a=$ang, v=v) {
 				translate(delta) {
 					rot(a=(subrot? sang : $ang), v=v, reverse=true) {
-						children();
+						translate(-cp) {
+							children();
+						}
 					}
 				}
 			}
