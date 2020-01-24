@@ -297,7 +297,7 @@ function deduplicate(list, closed=false, eps=EPSILON) =
 //   N = scalar total number of points desired or vector requesting N[i] copies of vertex i.  
 //   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform points that may not match the number of points requested.  Default: True
 // Examples:
-//   list = [0,1,2,3]/
+//   list = [0,1,2,3];
 //   echo(repeat_entries(list, 6));  // Ouputs [0,0,1,2,2,3]
 //   echo(repeat_entries(list, 6, exact=false));  // Ouputs [0,0,1,1,2,2,3,3]
 //   echo(repeat_entries(list, [1,1,2,1], exact=false));  // Ouputs [0,1,2,2,3]
