@@ -444,7 +444,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   - quality: passed to offset().  Default: 1
 //   - steps: Number of vertical steps to use for the profile.  (Not used by os_profile).  Default: 16
 //   - offset_maxstep: The maxstep distance for offset() calls; controls the horizontal step density.  Set smaller if you don't get the expected rounding.  Default: 1
-//   - offset: Select "round" (r=) or "delta" (delta=) offset types for offset.  Default: "round"
+//   - offset: Select "round" (r=) or "delta" (delta=) offset types for offset. You can also choose "chamfer" but this leads to exponential growth in the number of vertices with the steps parameter.  Default: "round"
 //   
 //   Many of the arguments are described as setting "default" values because they establish settings which may be overridden by 
 //   the top and bottom profile specifications.  
@@ -465,8 +465,16 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   - "quality" - passed to offset.  Default: 1.
 //   - "steps" - number of vertical steps to use for the roundover.  Default: 16.
 //   - "offset_maxstep" - maxstep distance for offset() calls; controls the horizontal step density.  Set smaller if you don't get expected rounding.  Default: 1
-//   - "offset" - select "round" (r=) or "delta" (delta=) offset type for offset.  Default: "round"
+//   - "offset" - select "round" (r=), "delta" (delta=), or "chamfer" offset type for offset.  Default: "round"
 //
+//   Note that if you set the "offset" parameter to "chamfer" then every exterior corner turns from one vertex into two vertices with
+//   each offset operation.  Since the offsets are done one after another, each on the output of the previous one, this leads to
+//   exponential growth in the number of vertices.  This can lead to long run times or yield models that
+//   run out of recursion depth and give a cryptic error.  Furthermore, the generated vertices are distributed non-uniformly.  Generally you
+//   will get a similar or better looking model with fewer vertices using "round" instead of
+//   "chamfer".  Use the "chamfer" style offset only in cases where the number of steps is very small or just one (such as when using
+//   the `os_chamfer` profile type).  
+//   
 // Arguments:
 //   path = 2d path (list of points) to extrude
 //   height / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.  
@@ -613,13 +621,14 @@ module offset_sweep(
 		) : (
 			let(
 				this_offset = offsetind==0? offsets[0][0] : offsets[offsetind][0] - offsets[offsetind-1][0],
-				delta = offset_type=="delta"? this_offset : undef,
-				r = offset_type=="round"? this_offset : undef
+				delta = offset_type=="delta" || offset_type=="chamfer" ? this_offset : undef,
+				r = offset_type=="round"? this_offset : undef,
+                                do_chamfer = offset_type == "chamfer"
 			)
 			assert(num_defined([r,delta])==1,"Must set `offset` to \"round\" or \"delta")
 			let(
 				vertices_faces = offset(
-					path, r=r, delta=delta, closed=true,
+					path, r=r, delta=delta, chamfer = do_chamfer, closed=true,
 					check_valid=check_valid, quality=quality,
 					maxstep=maxstep, return_faces=true,
 					firstface_index=vertexcount,
@@ -673,6 +682,9 @@ module offset_sweep(
 	offsets_bot = _rounding_offsets(bottom, -1);
 	offsets_top = _rounding_offsets(top, 1);
 
+        if (offset == "chamfer" && (len(offsets_bot)>5 || len(offsets_top)>5)) {
+          echo("WARNING: You have selected offset=\"chamfer\", which leads to exponential growth in the vertex count and requested many layers.  This can be slow or run out of recursion depth.");
+        }
 	// "Extra" height enlarges the result beyond the requested height, so subtract it
 	bottom_height = len(offsets_bot)==0 ? 0 : abs(select(offsets_bot,-1)[1]) - struct_val(bottom,"extra");
 	top_height = len(offsets_top)==0 ? 0 : abs(select(offsets_top,-1)[1]) - struct_val(top,"extra");
@@ -844,6 +856,9 @@ function os_profile(points, extra,check_valid, quality, offset_maxstep, offset) 
 //   - "extra" - extra height added for unions/differences.  This makes the shape taller than the requested height.  (Default: 0) 
 //   - "steps" - number of vertical steps to use for the roundover.  Default: 16.
 //   - "offset" - select "round" (r=) or "delta" (delta=) offset type for offset.  Default: "round"
+//
+// Note that unlike `offset_sweep`, because the offset operation is always performed from the base shape, using chamfered offsets does not increase the
+// number of vertices or lead to any special complications.  
 //
 // Arguments:
 //   height / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.  
