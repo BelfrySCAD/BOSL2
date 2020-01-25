@@ -353,6 +353,60 @@ function _circlecorner(points, parm) =
 	arc(max(3,angle/180*segs(norm(start-center))), cp=center, points=[start,end]);
 
 
+
+// Used by offset_sweep and convex_offset_extrude:
+// Produce edge profile curve from the edge specification
+// z_dir is the direction multiplier (1 to build up, -1 to build down)
+function _rounding_offsets(edgespec,z_dir=1) =
+        let(                  
+		edgetype = struct_val(edgespec, "type"),
+		extra = struct_val(edgespec,"extra"),
+		N = struct_val(edgespec, "steps"),
+		r = struct_val(edgespec,"r"),
+		cut = struct_val(edgespec,"cut"),
+		k = struct_val(edgespec,"k"),
+		radius = in_list(edgetype,["circle","teardrop"])?
+			first_defined([cut/(sqrt(2)-1),r]) :
+			edgetype=="chamfer"? first_defined([sqrt(2)*cut,r]) : undef,
+		chamf_angle = struct_val(edgespec, "angle"),
+		cheight = struct_val(edgespec, "chamfer_height"),
+		cwidth = struct_val(edgespec, "chamfer_width"),
+		chamf_width = first_defined([cut/cos(chamf_angle), cwidth, cheight*tan(chamf_angle)]),
+		chamf_height = first_defined([cut/sin(chamf_angle),cheight, cwidth/tan(chamf_angle)]),
+		joint = first_defined([
+			struct_val(edgespec,"joint"),
+			16*cut/sqrt(2)/(1+4*k)
+		]),
+		points = struct_val(edgespec, "points"), 
+		argsOK = in_list(edgetype,["circle","teardrop"])? is_def(radius) :
+			edgetype == "chamfer"? chamf_angle>0 && chamf_angle<90 && num_defined([chamf_height,chamf_width])==2 :
+			edgetype == "smooth"? num_defined([k,joint])==2 :
+			edgetype == "profile"? points[0]==[0,0] :
+			false
+	)
+	assert(argsOK,str("Invalid specification with type ",edgetype))
+	let(
+		offsets =
+			edgetype == "profile"? scale([-1,z_dir], slice(points,1,-1)) :
+			edgetype == "chamfer"?  chamf_width==0 && chamf_height==0? [] : [[-chamf_width,z_dir*abs(chamf_height)]] :
+			edgetype == "teardrop"? (
+				radius==0? [] : concat(
+					[for(i=[1:N]) [radius*(cos(i*45/N)-1),z_dir*abs(radius)* sin(i*45/N)]],
+					[[-2*radius*(1-sqrt(2)/2), z_dir*abs(radius)]]
+				)
+			) :
+			edgetype == "circle"? radius==0? [] : [for(i=[1:N]) [radius*(cos(i*90/N)-1), z_dir*abs(radius)*sin(i*90/N)]] :
+			/* smooth */ joint==0 ? [] :
+			select(
+				_bezcorner([[0,0],[0,z_dir*abs(joint)],[-joint,z_dir*abs(joint)]], k, $fn=N+2),
+				1, -1
+			)
+	) 
+	quant(extra > 0? concat(offsets, [select(offsets,-1)+[0,z_dir*extra]]) : offsets, 1/1024);
+
+
+
+
 // Module: offset_sweep()
 //
 // Description:
@@ -390,7 +444,7 @@ function _circlecorner(points, parm) =
 //   - quality: passed to offset().  Default: 1
 //   - steps: Number of vertical steps to use for the profile.  (Not used by os_profile).  Default: 16
 //   - offset_maxstep: The maxstep distance for offset() calls; controls the horizontal step density.  Set smaller if you don't get the expected rounding.  Default: 1
-//   - offset: Select "round" (r=) or "delta" (delta=) offset types for offset.  Default: "round"
+//   - offset: Select "round" (r=) or "delta" (delta=) offset types for offset. You can also choose "chamfer" but this leads to exponential growth in the number of vertices with the steps parameter.  Default: "round"
 //   
 //   Many of the arguments are described as setting "default" values because they establish settings which may be overridden by 
 //   the top and bottom profile specifications.  
@@ -411,8 +465,16 @@ function _circlecorner(points, parm) =
 //   - "quality" - passed to offset.  Default: 1.
 //   - "steps" - number of vertical steps to use for the roundover.  Default: 16.
 //   - "offset_maxstep" - maxstep distance for offset() calls; controls the horizontal step density.  Set smaller if you don't get expected rounding.  Default: 1
-//   - "offset" - select "round" (r=) or "delta" (delta=) offset type for offset.  Default: "round"
+//   - "offset" - select "round" (r=), "delta" (delta=), or "chamfer" offset type for offset.  Default: "round"
 //
+//   Note that if you set the "offset" parameter to "chamfer" then every exterior corner turns from one vertex into two vertices with
+//   each offset operation.  Since the offsets are done one after another, each on the output of the previous one, this leads to
+//   exponential growth in the number of vertices.  This can lead to long run times or yield models that
+//   run out of recursion depth and give a cryptic error.  Furthermore, the generated vertices are distributed non-uniformly.  Generally you
+//   will get a similar or better looking model with fewer vertices using "round" instead of
+//   "chamfer".  Use the "chamfer" style offset only in cases where the number of steps is very small or just one (such as when using
+//   the `os_chamfer` profile type).  
+//   
 // Arguments:
 //   path = 2d path (list of points) to extrude
 //   height / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.  
@@ -559,13 +621,14 @@ module offset_sweep(
 		) : (
 			let(
 				this_offset = offsetind==0? offsets[0][0] : offsets[offsetind][0] - offsets[offsetind-1][0],
-				delta = offset_type=="delta"? this_offset : undef,
-				r = offset_type=="round"? this_offset : undef
+				delta = offset_type=="delta" || offset_type=="chamfer" ? this_offset : undef,
+				r = offset_type=="round"? this_offset : undef,
+                                do_chamfer = offset_type == "chamfer"
 			)
 			assert(num_defined([r,delta])==1,"Must set `offset` to \"round\" or \"delta")
 			let(
 				vertices_faces = offset(
-					path, r=r, delta=delta, closed=true,
+					path, r=r, delta=delta, chamfer = do_chamfer, closed=true,
 					check_valid=check_valid, quality=quality,
 					maxstep=maxstep, return_faces=true,
 					firstface_index=vertexcount,
@@ -584,54 +647,6 @@ module offset_sweep(
 			)
 		);
 
-	// Produce edge profile curve from the edge specification
-	// z_dir is the direction multiplier (1 to build up, -1 to build down)
-	function rounding_offsets(edgespec,z_dir=1) =
-                let(                  
-			edgetype = struct_val(edgespec, "type"),
-			extra = struct_val(edgespec,"extra"),
-			N = struct_val(edgespec, "steps"),
-			r = struct_val(edgespec,"r"),
-			cut = struct_val(edgespec,"cut"),
-			k = struct_val(edgespec,"k"),
-			radius = in_list(edgetype,["circle","teardrop"])?
-				first_defined([cut/(sqrt(2)-1),r]) :
-				edgetype=="chamfer"? first_defined([sqrt(2)*cut,r]) : undef,
-			chamf_angle = struct_val(edgespec, "angle"),
-			cheight = struct_val(edgespec, "chamfer_height"),
-			cwidth = struct_val(edgespec, "chamfer_width"),
-			chamf_width = first_defined([cut/cos(chamf_angle), cwidth, cheight*tan(chamf_angle)]),
-			chamf_height = first_defined([cut/sin(chamf_angle),cheight, cwidth/tan(chamf_angle)]),
-			joint = first_defined([
-				struct_val(edgespec,"joint"),
-				16*cut/sqrt(2)/(1+4*k)
-			]),
-			points = struct_val(edgespec, "points"), 
-			argsOK = in_list(edgetype,["circle","teardrop"])? is_def(radius) :
-				edgetype == "chamfer"? angle>0 && angle<90 && num_defined([chamf_height,chamf_width])==2 :
-				edgetype == "smooth"? num_defined([k,joint])==2 :
-				edgetype == "profile"? points[0]==[0,0] :
-				false
-		)
-		assert(argsOK,str("Invalid specification with type ",edgetype))
-		let(
-			offsets =
-				edgetype == "profile"? scale([-1,z_dir], slice(points,1,-1)) :
-				edgetype == "chamfer"?  chamf_width==0 && chamf_height==0? [] : [[-chamf_width,z_dir*abs(chamf_height)]] :
-				edgetype == "teardrop"? (
-					radius==0? [] : concat(
-						[for(i=[1:N]) [radius*(cos(i*45/N)-1),z_dir*abs(radius)* sin(i*45/N)]],
-						[[-2*radius*(1-sqrt(2)/2), z_dir*abs(radius)]]
-					)
-				) :
-				edgetype == "circle"? radius==0? [] : [for(i=[1:N]) [radius*(cos(i*90/N)-1), z_dir*abs(radius)*sin(i*90/N)]] :
-				/* smooth */ joint==0 ? [] :
-				select(
-					_bezcorner([[0,0],[0,z_dir*abs(joint)],[-joint,z_dir*abs(joint)]], k, $fn=N+2),
-					1, -1
-				)
-		) 
-		quant(extra > 0? concat(offsets, [select(offsets,-1)+[0,z_dir*extra]]) : offsets, 1/1024);
 
 	argspec = [
 		["r",r],
@@ -664,9 +679,12 @@ module offset_sweep(
 	//assert(offsetsok,"Offsets must be one of \"round\" or \"delta\"");
         
         
-	offsets_bot = rounding_offsets(bottom, -1);
-	offsets_top = rounding_offsets(top, 1);
+	offsets_bot = _rounding_offsets(bottom, -1);
+	offsets_top = _rounding_offsets(top, 1);
 
+        if (offset == "chamfer" && (len(offsets_bot)>5 || len(offsets_top)>5)) {
+          echo("WARNING: You have selected offset=\"chamfer\", which leads to exponential growth in the vertex count and requested many layers.  This can be slow or run out of recursion depth.");
+        }
 	// "Extra" height enlarges the result beyond the requested height, so subtract it
 	bottom_height = len(offsets_bot)==0 ? 0 : abs(select(offsets_bot,-1)[1]) - struct_val(bottom,"extra");
 	top_height = len(offsets_top)==0 ? 0 : abs(select(offsets_top,-1)[1]) - struct_val(top,"extra");
@@ -787,6 +805,172 @@ function os_profile(points, extra,check_valid, quality, offset_maxstep, offset) 
 		"offset_maxstep", offset_maxstep,
 		"offset", offset
 	]);
+
+
+// Module: convex_offset_extrude()
+//
+// Description:
+//   Extrudes 2d children with layers formed from the convex hull of the offset of each child according to a sequence of offset values.
+//   Like `offset_sweep` this module can use built-in offset profiles to provide treatments such as roundovers or chamfers but unlike `offset_sweep()` it
+//   operates on 2d children rather than a point list.  Each offset is computed using
+//   the native `offset()` module from the input geometry.  If your geometry has internal holes or is too small for the specified offset then you may get
+//   unexpected results.
+//
+//   The build-in profiles are: circular rounding, teardrop rounding, chamfer, continuous curvature rounding, and chamfer.  
+//   Also note that when a rounding radius is negative the rounding will flare outwards.  The easieast way to specify
+//   the profile is by using the profile helper functions.  These functions take profile parameters, as well as some
+//   general settings and translate them into a profile specification, with error checking on your input.  The description below
+//   describes the helper functions and the parameters specific to each function.  Below that is a description of the generic
+//   settings that you can optionally use with all of the helper functions.
+//
+//   The final shape is created by combining convex hulls of small extrusions.  The thickness of these small extrusions may result
+//   your model being slightly too long (if the curvature at the end is flaring outward), so if the exact length is very important
+//   you may need to intersect with a bounding cube.  (Note that extra length can also be intentionally added with the `extra` argument.)
+//   
+//   - profile: os_profile(points)
+//     Define the offset profile with a list of points.  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  If the y value ever decreases then you might create a self-intersecting polyhedron, which is invalid.  Such invalid polyhedra will create cryptic assertion errors when you render your model and it is your responsibility to avoid creating them.  Note that the starting point of the profile is the center of the extrusion.  If you use a profile as the top it will rise upwards.  If you use it as the bottom it will be inverted, and will go downward.  
+//   - circle: os_circle(r|cut).  Define circular rounding either by specifying the radius or cut distance.  
+//   - smooth: os_smooth(cut|joint).  Define continuous curvature rounding, with `cut` and `joint` as for round_corners.
+//   - teardrop: os_teardrop(r|cut).  Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
+//   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle will be ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.
+//   
+//   The general settings that you can use with all of the helper functions are mostly used to control how offset_sweep() calls the offset() function.
+//   - extra: Add an extra vertical step of the specified height, to be used for intersections or differences.  This extra step will extend the resulting object beyond the height you specify.  Default: 0
+//   - steps: Number of vertical steps to use for the profile.  (Not used by os_profile).  Default: 16
+//   - offset: Select "round" (r=), "delta" (delta=), or "chamfer" offset types for offset.  Default: "round"
+//   
+//   Many of the arguments are described as setting "default" values because they establish settings which may be overridden by 
+//   the top and bottom profile specifications.  
+//   
+//   You will generally want to use the above helper functions to generate the profiles.  
+//   The profile specification is a list of pairs of keywords and values, e.g. ["r",12, type, "circle"]. The keywords are
+//   - "type" - type of rounding to apply, one of "circle", "teardrop", "chamfer", "smooth", or "profile" (Default: "circle")
+//   - "r" - the radius of the roundover, which may be zero for no roundover, or negative to round or flare outward.  Default: 0
+//   - "cut" - the cut distance for the roundover or chamfer, which may be negative for flares
+//   - "chamfer_width" - the width of a chamfer
+//   - "chamfer_height" - the height of a chamfer
+//   - "angle" - the chamfer angle, measured from the vertical (so zero is vertical, 90 is horizontal).  Default: 45
+//   - "joint" - the joint distance for a "smooth" roundover
+//   - "k" - the curvature smoothness parameter for "smooth" roundovers, a value in [0,1].  Default: 0.75
+//   - "points" - point list for use with the "profile" type
+//   - "extra" - extra height added for unions/differences.  This makes the shape taller than the requested height.  (Default: 0) 
+//   - "steps" - number of vertical steps to use for the roundover.  Default: 16.
+//   - "offset" - select "round" (r=) or "delta" (delta=) offset type for offset.  Default: "round"
+//
+// Note that unlike `offset_sweep`, because the offset operation is always performed from the base shape, using chamfered offsets does not increase the
+// number of vertices or lead to any special complications.  
+//
+// Arguments:
+//   height / l / h = total height (including rounded portions, but not extra sections) of the output.  Default: combined height of top and bottom end treatments.  
+//   top = rounding spec for the top end.  
+//   bottom = rounding spec for the bottom end 
+//   offset = default offset, `"round"`, `"delta"`, or `"chamfer"`.  Default: `"round"`
+//   steps = default step count.  Default: 16
+//   extra = default extra height.  Default: 0
+//   cut = default cut value.
+//   chamfer_width = default width value for chamfers.
+//   chamfer_height = default height value for chamfers.
+//   angle = default angle for chamfers.  Default: 45
+//   joint = default joint value for smooth roundover.
+//   k = default curvature parameter value for "smooth" roundover
+//   convexity = convexity setting for use with polyhedron.  Default: 10
+//
+// Example: Chamfered elliptical prism.  If you stretch a chamfered cylinder the chamfer will be uneven.
+//   $fn=32;
+//   convex_offset_extrude(bottom = os_chamfer(height=-2), top=os_chamfer(height=1), height=7)
+//   xscale(4)circle(r=6);
+// Example: Elliptical prism with circular roundovers.
+//   $fn=32;
+//   convex_offset_extrude(bottom=os_circle(r=-2), top=os_circle(r=1), height=7,steps=10)
+//   xscale(4)circle(r=6);
+// Example: If you give a non-convex input you get a convex hull output
+//   $fn=32;
+//   right(50) linear_extrude(height=7) star(5,r=22,ir=13);
+//   convex_offset_extrude(bottom = os_chamfer(height=-2), top=os_chamfer(height=1), height=7)
+//     star(5,r=22,ir=13)
+module convex_offset_extrude(
+	height, h, l, 
+	top=[], bottom=[],
+	offset="round", r=0, steps=16,
+	extra=0,
+	cut=undef, chamfer_width=undef, chamfer_height=undef,
+	joint=undef, k=0.75, angle=45,
+	convexity=10, thickness = 1/1024
+) {
+	argspec = [
+		["r",r],
+		["extra",extra],
+		["type","circle"],
+		["steps",steps],
+		["offset",offset],
+		["chamfer_width",chamfer_width],
+		["chamfer_height",chamfer_height],
+		["angle",angle],
+		["cut",cut],
+		["joint",joint],
+		["k", k],
+		["points", []],
+	];
+	top = struct_set(argspec, top, grow=false);
+	bottom = struct_set(argspec, bottom, grow=false);
+
+	offsets_bot = rounding_offsets(bottom, -1);
+	offsets_top = rounding_offsets(top, 1);
+
+	// "Extra" height enlarges the result beyond the requested height, so subtract it
+	bottom_height = len(offsets_bot)==0 ? 0 : abs(select(offsets_bot,-1)[1]) - struct_val(bottom,"extra");
+	top_height = len(offsets_top)==0 ? 0 : abs(select(offsets_top,-1)[1]) - struct_val(top,"extra");
+
+        height = get_height(l=l,h=h,height=height,dflt=bottom_height+top_height);
+	assert(height>=0, "Height must be nonnegative");
+        
+	middle = height-bottom_height-top_height;
+	assert(
+		middle>=0, str(
+			"Specified end treatments (bottom height = ",bottom_height,
+			" top_height = ",top_height,") are too large for extrusion height (",height,")"
+		)
+	);
+        // The entry r[i] is [radius,z] for a given layer
+        r = move([0,bottom_height],p=concat(
+                          reverse(offsets_bot), [[0,0], [0,middle]], move([0,middle], p=offsets_top)));
+        delta = [for(val=deltas(subindex(r,0))) sign(val)];
+        below=[-thickness,0];
+        above=[0,thickness];
+           // layers is a list of pairs of the relative positions for each layer, e.g. [0,thickness]
+           // puts the layer above the polygon, and [-thickness,0] puts it below.  
+        layers = [for (i=[0:len(r)-1])
+          i==0 ? (delta[0]<0 ? below : above) :
+          i==len(r)-1 ? (delta[len(delta)-1] < 0 ? below : above) :
+          delta[i]==0 ? above :
+          delta[i+1]==0 ? below :
+          delta[i]==delta[i-1] ? [-thickness/2, thickness/2] :
+          delta[i] == 1 ? above :
+          /* delta[i] == -1 ? */ below];
+        dochamfer = offset=="chamfer";
+        for(i=[0:len(r)-2])
+          for(j=[0:$children-1])
+           hull(){
+             up(r[i][1]+layers[i][0])
+               linear_extrude(convexity=convexity,height=layers[i][1]-layers[i][0])
+                 if (offset=="round")
+                   offset(r=r[i][0])
+                     children(j);
+                 else
+                   offset(delta=r[i][0],chamfer = dochamfer)
+                     children(j);
+             up(r[i+1][1]+layers[i+1][0])
+               linear_extrude(convexity=convexity,height=layers[i+1][1]-layers[i+1][0])
+                 if (offset=="round")
+                   offset(r=r[i+1][0])
+                     children(j);
+                 else
+                   offset(delta=r[i+1][0],chamfer=dochamfer)
+                     children(j);
+                   
+           }
+}
+
 
 
 function _remove_undefined_vals(list) =

@@ -460,7 +460,7 @@ function list_remove_values(list,values=[],all=false) =
 // Example:
 //   bselect([3,4,5,6,7], [false,true,true,false,true]);  // Returns: [4,5,7]
 function bselect(array,index) =
-	assert(is_list(array)||is_string(list))
+	assert(is_list(array)||is_string(array))
 	assert(is_list(index))
 	[for(i=[0:len(array)-1]) if (index[i]) array[i]];
 

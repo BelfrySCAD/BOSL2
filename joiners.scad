@@ -443,15 +443,16 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 // Module: dovetail()
 //
 // Usage:
-//   dovetail(l|length, h|height, w|width, slope|angle, taper|width2, [chamfer], [r|radius], [round], [$slop])
+//   dovetail(l|length, h|height, w|width, slope|angle, taper|back_width, [chamfer], [r|radius], [round], [$slop])
 //
 // Description:
 //   Produces a possibly tapered dovetail joint shape to attach to or subtract from two parts you wish to join together.
 //   The tapered dovetail is particularly advantageous for long joints because the joint assembles without binding until
 //   it is fully closed, and then wedges tightly.  You can chamfer or round the corners of the dovetail shape for better
-//   printing and assembly, or choose a fully rounded joint that looks more like a puzzle piece.  The dovetail appears
-//   parallel to the X axis and projecting upwards, so in its default orientation it will slide together with a translation
-//   in the X direction.
+//   printing and assembly, or choose a fully rounded joint that looks more like a puzzle piece.  The dovetail appears 
+//   parallel to the Y axis and projecting upwards, so in its default orientation it will slide together with a translation
+//   in the positive Y direction.  The default anchor for dovetails is BOTTOM; the default orientation depends on the gender,
+//   with male dovetails oriented UP and female ones DOWN.  
 //
 // Arguments:
 //   l / length = Length of the dovetail (amount the joint slides during assembly)
@@ -459,62 +460,64 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 //   w / width = Width (at the wider, top end) of the dovetail before tapering
 //   slope = slope of the dovetail.  Standard woodworking slopes are 4, 6, or 8.  Default: 6.  
 //   angle = angle (in degrees) of the dovetail.  Specify only one of slope and angle.
-//   taper = taper angle (in degrees). Dovetail gets wider by this angle.  Default: no taper
-//   width2 = width of right hand end of the dovetail.  This alternate method of specifying the taper may be easier to manage.  Specify only one of taper and width2.
+//   taper = taper angle (in degrees). Dovetail gets narrower by this angle.  Default: no taper
+//   back_width = width of right hand end of the dovetail.  This alternate method of specifying the taper may be easier to manage.  Specify only one of `taper` and `back_width`.  Note that `back_width` should be smaller than `width` to taper in the customary direction, with the smaller end at the back.  
 //   chamfer = amount to chamfer the corners of the joint (Default: no chamfer)
 //   r / radius = amount to round over the corners of the joint (Default: no rounding)
-//   round = 
-// Example: Ordinary straight dovetail, male version (sticking up) and female verison (below the xy plane)
+//   round = true to round both corners of the dovetail and give it a puzzle piece look.  Default: false.  
+//   extra = amount of extra length and base extension added to dovetails for unions and differences.  Default: 0.01
+// Example: Ordinary straight dovetail, male version (sticking up) and female version (below the xy plane)
 //   dovetail("male", length=30, width=15, height=8);
-//   fwd(25) dovetail("female", length=30, width=15, height=8);
+//   right(20) dovetail("female", length=30, width=15, height=8);
 // Example: Adding a 6 degree taper (Such a big taper is usually not necessary, but easier to see for the example.)
 //   dovetail("male", length=30, width=15, height=8, taper=6);
-//   fwd(25) dovetail("female", length=30, width=15, height=8, taper=6);
+//   right(20) dovetail("female", length=30, width=15, height=8, taper=6);
 // Example: A block that can link to itself
 //   diff("remove")
 //     cuboid([50,30,10]){
-//       attach(BACK) dovetail("male", length=10, width=15, height=8,spin=90);
-//       attach(FRONT) dovetail("female", length=10, width=15, height=8,spin=90,$tags="remove");
+//       attach(BACK) dovetail("male", length=10, width=15, height=8);
+//       attach(FRONT) dovetail("female", length=10, width=15, height=8,$tags="remove");
 //     }
 // Example: Setting the dovetail angle.  This is too extreme to be useful.  
 //   diff("remove")
 //     cuboid([50,30,10]){
-//       attach(BACK) dovetail("male", length=10, width=15, height=8,angle=30,spin=90);
-//       attach(FRONT) dovetail("female", length=10, width=15, height=8,angle=30,spin=90,$tags="remove");
+//       attach(BACK) dovetail("male", length=10, width=15, height=8,angle=30);
+//       attach(FRONT) dovetail("female", length=10, width=15, height=8,angle=30,$tags="remove");
 //     }
 // Example: Adding a chamfer helps printed parts fit together without problems at the corners
 //   diff("remove")
 //     cuboid([50,30,10]){
-//       attach(BACK) dovetail("male", length=10, width=15, height=8,spin=90,chamfer=1);
-//       attach(FRONT) dovetail("female", length=10, width=15, height=8,spin=90,chamfer=1,$tags="remove");
+//       attach(BACK) dovetail("male", length=10, width=15, height=8,chamfer=1);
+//       attach(FRONT) dovetail("female", length=10, width=15, height=8,chamfer=1,$tags="remove");
 //     }
 // Example: Rounding the outside corners is another option
 //   diff("remove")
 //     cuboid([50,30,10]){
-//       attach(BACK) dovetail("male", length=10, width=15, height=8,spin=90,radius=1);
-//       attach(FRONT) dovetail("female", length=10, width=15, height=8,spin=90,radius=1,$tags="remove");
+//       attach(BACK) dovetail("male", length=10, width=15, height=8,radius=1,$fn=32);
+//       attach(FRONT) dovetail("female", length=10, width=15, height=8,radius=1,$tags="remove",$fn=32);
 //     }
 // Example: Or you can make a fully rounded joint
+//   $fn=32;
 //   diff("remove")
 //     cuboid([50,30,10]){
-//       attach(BACK) dovetail("male", length=10, width=15, height=8,spin=90,radius=1.5, round=true);
-//       attach(FRONT) dovetail("female", length=10, width=15, height=8,spin=90,radius=1.5, round=true, $tags="remove");
+//       attach(BACK) dovetail("male", length=10, width=15, height=8,radius=1.5, round=true);
+//       attach(FRONT) dovetail("female", length=10, width=15, height=8,radius=1.5, round=true, $tags="remove");
 //   }
-// Example: With a long joint like this, a taper makes the joint easy to assemble.  It will go together easily and wedge tightly if you get the tolerances right.  Specifying the taper with `width2` may be easier than using a taper angle.  
+// Example: With a long joint like this, a taper makes the joint easy to assemble.  It will go together easily and wedge tightly if you get the tolerances right.  Specifying the taper with `back_width` may be easier than using a taper angle.  
 //   cuboid([50,30,10])
-//     attach(TOP) dovetail("male", length=50, width=15, height=4, width2=18);
+//     attach(TOP) dovetail("male", length=50, width=18, height=4, back_width=15, spin=90);
 //   fwd(35)
 //     diff("remove")
 //       cuboid([50,30,10])
-//         attach(TOP) dovetail("female", length=50, width=15, height=4, width2=18, $tags="remove");
+//         attach(TOP) dovetail("female", length=50, width=18, height=4, back_width=15, spin=90,$tags="remove");
 // Example: A series of dovtails
 //   cuboid([50,30,10])
-//     attach(BACK) xspread(10,5) dovetail("male", length=10, width=7, height=4, spin=90);
-// Example: Mating pin board for a right angle joint  
+//     attach(BACK) xspread(10,5) dovetail("male", length=10, width=7, height=4);
+// Example: Mating pin board for a right angle joint.  Note that the anchor method and use of `spin` ensures that the joint works even with a taper.
 //   diff("remove")
 //     cuboid([50,30,10])
-//       position(TOP+BACK) xspread(10,5) dovetail("female", length=10, width=7, height=4, spin=90,$tags="remove",anchor=BOTTOM+RIGHT);
-module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, width2, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient)
+//       position(TOP+BACK) xspread(10,5) dovetail("female", length=10, width=7, taper=4, height=4, $tags="remove",anchor=BOTTOM+FRONT,spin=180);
+module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, back_width, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient)
 {
 	radius = get_radius(r1=radius,r2=r);
 	lcount = num_defined([l,length]);
@@ -530,8 +533,8 @@ module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, wid
 		gender == "female" ? DOWN : UP;
 	count = num_defined([angle,slope]);
 	assert(count<=1, "Do not specify both angle and slope");
-	count2 = num_defined([taper,width2]);
-	assert(count2<=1, "Do not specify both taper and width2");
+	count2 = num_defined([taper,back_width]);
+	assert(count2<=1, "Do not specify both taper and back_width");
 	count3 = num_defined([chamfer, radius]);
 	assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
 	slope = is_def(slope) ? slope :
@@ -539,8 +542,8 @@ module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, wid
 	width = gender == "male" ? w : w + 2*$slop;
 	height = h + (gender == "female" ? 2*$slop : 0);
 
-	front_offset = is_def(taper) ? extra * tan(taper) :
-		is_def(width2) ? extra * (width2-width)/length/2 : 0;
+	front_offset = is_def(taper) ? -extra * tan(taper) :
+		is_def(back_width) ? extra * (back_width-width)/length/2 : 0;
 
 	size = is_def(chamfer) && chamfer>0 ? chamfer :
 		is_def(radius) && radius>0 ? radius : 0;
@@ -551,29 +554,29 @@ module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, wid
 
 	smallend_half = round_corners(
 		move(
-			[-length/2-extra,0,0],
+			[0,-length/2-extra,0],
 			p=[
-				[0,0                     , height],
-				[0,width/2-front_offset  , height],
-				[0,width/2 - height/slope - front_offset, 0 ],
-				[0,width/2 - front_offset + height, 0]
+				[0                     , 0, height],
+				[width/2-front_offset  , 0, height],
+				[width/2 - height/slope - front_offset, 0, 0 ],
+				[width/2 - front_offset + height, 0, 0]
 			]
 		),
 		curve=type, size=fullsize, closed=false
 	);
 	smallend_points = concat(select(smallend_half, 1, -2), [down(extra,p=select(smallend_half, -2))]);
-	offset = is_def(taper) ? (length+extra) * tan(taper) :
-		is_def(width2) ? (width2-width) / 2 : 0;
-	bigend_points = move([length+2*extra,offset,0], p=smallend_points);
+	offset = is_def(taper) ? -(length+extra) * tan(taper) :
+		is_def(back_width) ? (back_width-width) / 2 : 0;
+	bigend_points = move([offset,length+2*extra,0], p=smallend_points);
 
 	adjustment = gender == "male" ? -0.01 : 0.01;  // Adjustment for default overlap in attach()
 
-	orient_and_anchor([length, width+2*offset, height],anchor=anchor,orient=orient,spin=spin, chain=true) {
+	orient_and_anchor([width+2*offset, length, height],anchor=anchor,orient=orient,spin=spin, chain=true) {
 		down(height/2+adjustment) {
 			skin(
 				[
-					concat(smallend_points, yflip(p=reverse(smallend_points))),
-					concat(bigend_points, yflip(p=reverse(bigend_points)))
+					reverse(concat(smallend_points, xflip(p=reverse(smallend_points)))),
+					reverse(concat(bigend_points, xflip(p=reverse(bigend_points))))
 				],
 				convexity=4
 			);
