@@ -15,7 +15,7 @@
 // Module: phillips_drive()
 // Description: Creates a model of a phillips driver bit of a given named size.
 // Arguments:
-//   size = The size of the bit.  "#1", "#2", or "#3"
+//   size = The size of the bit as a string.  "#0", "#1", "#2", "#3", or "#4"
 //   shaft = The diameter of the drive bit's shaft.
 //   l = The length of the drive bit.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -27,44 +27,44 @@
 //      phillips_drive(size="#2", shaft=6, l=20);
 //      phillips_drive(size="#3", shaft=6, l=20);
 //   }
-module phillips_drive(size="#2", shaft=6, l=20, anchor=BOTTOM, spin=0, orient=UP) {
-	// These are my best guess reverse-engineered measurements of
-	// the tip diameters of various phillips screwdriver sizes.
-	ang = 11;
-	rads = [["#1", 1.25], ["#2", 1.77], ["#3", 2.65]];
-	radidx = search([size], rads)[0];
-	r = radidx == []? 0 : rads[radidx][1];
-	h = (r/2)/tan(ang);
-	cr = r/2;
-	orient_and_anchor([shaft, shaft, l], orient, anchor, chain=true) {
+module phillips_drive(size="#2", shaft=6, l=20, $fn=36, anchor=BOTTOM, spin=0, orient=UP) {
+	assert(is_string(size));
+	assert(in_list(size,["#0","#1","#2","#3","#4"]));
+
+	num = ord(size[1]) - ord("0");
+	b =     [0.61, 0.97, 1.47, 2.41, 3.48][num];
+	e =     [0.31, 0.43, 0.81, 2.00, 2.41][num];
+	g =     [0.81, 1.27, 2.29, 3.81, 5.08][num];
+	//f =     [0.33, 0.53, 0.70, 0.82, 1.23][num];
+	//r =     [0.30, 0.50, 0.60, 0.80, 1.00][num];
+	alpha = [ 136,  138,  140,  146,  153][num];
+	beta  = [7.00, 7.00, 5.75, 5.75, 7.00][num];
+	gamma = 92.0;
+	ang1 = 28.0;
+	ang2 = 26.5;
+	h1 = adj_ang_to_opp(g/2, ang1);
+	h2 = adj_ang_to_opp((shaft-g)/2, 90-ang2);
+	h3 = adj_ang_to_opp(b/2, ang1);
+	p0 = [0,0];
+	p1 = [e/2, adj_ang_to_opp(e/2, 90-alpha/2)];
+	p2 = p1 + [(shaft-e)/2, adj_ang_to_hyp((shaft-e)/2, 90-gamma/2)];
+	orient_and_anchor([shaft,shaft,l], anchor=anchor, spin=spin, orient=orient, geometry="cylinder", chain=true) {
 		down(l/2) {
 			difference() {
-				intersection() {
-					union() {
-						clip = (shaft-1.2*r)/2/tan(26.5);
-						zrot(360/8/2) cylinder(h=clip, d1=1.2*r/cos(360/8/2), d2=shaft/cos(360/8/2), center=false, $fn=8);
-						up(clip-0.01) cylinder(h=l-clip, d=shaft, center=false, $fn=24);
+				union() {
+					cyl(d1=0, d2=g, h=h1, anchor=BOT);
+					up(h1) {
+						cyl(d1=g, d2=shaft, h=h2, anchor=BOT);
+						up(h2) cyl(d=shaft, h=l-h1-h2, anchor=BOT);
 					}
-					cylinder(d=shaft, h=l, center=false, $fn=24);
 				}
 				zrot(45)
-				zrot_copies(n=4) {
-					yrot(ang) {
-						zrot(-45) {
-							off = (r/2-cr*(sqrt(2)-1))/sqrt(2);
-							translate([off, off, 0]) {
-								linear_extrude(height=l, convexity=4) {
-									difference() {
-										union() {
-											square([shaft/2, shaft/2], center=false);
-											mirror_copy([1,-1]) back(cr) zrot(1.125) square([shaft/2, shaft/2], center=false);
-										}
-										difference() {
-											square([cr*2, cr*2], center=true);
-											translate([cr,cr,0]) circle(r=cr, $fn=8);
-										}
-									}
-								}
+				zrot_copies(n=4, r=b/2/cos(90-alpha/2), sa=90) {
+					up(h3) {
+						xrot(-beta) {
+							linear_extrude(height=(h1+h2)*20, convexity=4, center=true) {
+								path = [p0, p1, p2, [-p2.x,p2.y], [-p1.x,p1.y]];
+								polygon(path);
 							}
 						}
 					}
