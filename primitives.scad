@@ -16,12 +16,12 @@
 // Usage:
 //   square(size, [center], [anchor])
 // Description:
-//   When called as a module, creates a 2D square of the given size.
+//   When called as a module, creates a 2D square of the given size, with optional rounding or chamferring.
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
 // Arguments:
 //   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
-//   rounding = The rounding radius for the corners.  Default: 0 (no rounding)
-//   chamfer = The chamfer size for the corners.  Default: 0 (no chamfer)
+//   rounding = The rounding radius for the corners.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
+//   chamfer = The chamfer size for the corners.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
 //   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -37,6 +37,8 @@
 //   square([40,30], chamfer=5, center=true);
 // Example(2D): Rounded Rect
 //   square([40,30], rounding=5, center=true);
+// Example(2D): Mixed Chamferring and Rounding
+//   square([40,30],center=true,rounding=[5,0,10,0],chamfer=[0,8,0,15],$fa=1,$fs=1);
 // Example(2D): Called as Function
 //   path = square([40,30], chamfer=5, anchor=FRONT, spin=30);
 //   stroke(path, closed=true);
@@ -52,42 +54,38 @@ module square(size=1, rounding=0, chamfer=0, center, anchor=FRONT+LEFT, spin=0) 
 
 
 function square(size=1, rounding=0, chamfer=0, center, anchor=FRONT+LEFT, spin=0) =
+	assert(is_num(chamfer)  || len(chamfer)==4)
+	assert(is_num(rounding) || len(rounding)==4)
 	let(
+		chamfer = is_list(chamfer)? chamfer : [for (i=[0:3]) chamfer],
+		rounding = is_list(rounding)? rounding : [for (i=[0:3]) rounding],
 		anchor = center==true? CENTER : center==false? FRONT+LEFT : anchor,
 		size = is_num(size)? [size,size] : point2d(size),
-		s = size/2,
-		cverts = max(0,floor((segs(rounding)-4)/4)),
-		step = 90/(cverts+1),
-		inset =
-			chamfer>0?
-				assert(size.x>=2*chamfer)
-				assert(size.y>=2*chamfer)
-				[2,2]*chamfer :
-			rounding>0?
-				assert(size.x>=2*rounding)
-				assert(size.y>=2*rounding)
-				[2,2]*rounding :
-			[0,0],
-		is = (size-inset)/2,
-		path =
-			chamfer>0? concat(
-				[[ is.x,- s.y], [-is.x,- s.y]],
-				[[- s.x,-is.y], [- s.x, is.y]],
-				[[-is.x,  s.y], [ is.x,  s.y]],
-				[[  s.x, is.y], [  s.x,-is.y]]
-			) :
-			rounding>0? concat(
-				[for (i=[0:1:cverts-1]) let(ang=360-step*(i+1)) [ is.x,-is.y] + polar_to_xy(rounding,ang)],
-				[[ is.x,- s.y], [-is.x,- s.y]],
-				[for (i=[0:1:cverts-1]) let(ang=270-step*(i+1)) [-is.x,-is.y] + polar_to_xy(rounding,ang)],
-				[[- s.x,-is.y], [- s.x, is.y]],
-				[for (i=[0:1:cverts-1]) let(ang=180-step*(i+1)) [-is.x, is.y] + polar_to_xy(rounding,ang)],
-				[[-is.x,  s.y], [ is.x,  s.y]],
-				[for (i=[0:1:cverts-1]) let(ang= 90-step*(i+1)) [ is.x, is.y] + polar_to_xy(rounding,ang)],
-				[[  s.x, is.y], [  s.x,-is.y]]
-			) :
-			[[s.x,-s.y], [-s.x,-s.y], [-s.x,s.y], [s.x,s.y]]
-	) rot(spin, p=move(-vmul(anchor,s), p=path));
+		quadorder = [3,2,1,0],
+		quadpos = [[1,1],[-1,1],[-1,-1],[1,-1]],
+		insets = [for (i=[0:3]) chamfer[i]>0? chamfer[i] : rounding[i]>0? rounding[i] : 0],
+		insets_x = max(insets[0]+insets[1],insets[2]+insets[3]),
+		insets_y = max(insets[0]+insets[3],insets[1]+insets[2])
+	)
+	assert(insets_x <= size.x, "Requested roundings and/or chamfers exceed the square width.")
+	assert(insets_y <= size.y, "Requested roundings and/or chamfers exceed the square height.")
+	let(
+		path = [
+			for(i = [0:3])
+			let(
+				quad = quadorder[i],
+				inset = insets[quad],
+				cverts = quant(segs(inset),4)/4,
+				cp = vmul(size/2-[inset,inset], quadpos[quad]),
+				step = 90/cverts,
+				angs =
+					chamfer[quad] > 0?  [0,-90]-90*[i,i] :
+					rounding[quad] > 0? [for (j=[0:1:cverts]) 360-j*step-i*90] :
+					[0]
+			)
+			each [for (a = angs) cp + inset*[cos(a),sin(a)]]
+		]
+	) rot(spin, p=move(-vmul(anchor,size/2), p=path));
 
 
 // Function&Module: circle()
