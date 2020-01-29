@@ -31,7 +31,7 @@
 //   }
 // Arguments:
 //   path = The 2D path to draw along.
-//   width = The width of the line to draw.
+//   width = The width of the line to draw.  If given as a list of widths, (one for each path point), draws the line with varying thickness to each point.
 //   closed = If true, draw an additional line from the end of the path to the start.
 //   endcaps = Specifies the endcap type for both ends of the line.  If a 2D path is given, use that to draw custom endcaps.
 //   endcap1 = Specifies the endcap type for the start of the line.  If a 2D path is given, use that to draw a custom endcap.
@@ -67,6 +67,10 @@
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   arrow = [[0,0], [2,-3], [0.5,-2.3], [2,-4], [0.5,-3.5], [-0.5,-3.5], [-2,-4], [-0.5,-2.3], [-2,-3]];
 //   stroke(path, width=10, trim=3.5, endcaps=arrow);
+// Example(2D): Variable Line Width
+//   path = circle(d=50,$fn=18);
+//   widths = [for (i=idx(path)) 10*i/len(path)+2];
+//   stroke(path,width=widths,$fa=1,$fs=1);
 module stroke(
 	path, width=1, closed=false,
 	endcaps, endcap1, endcap2,
@@ -91,97 +95,99 @@ module stroke(
 		cap=="tail2"?  [[w/2,0], [w/2,-l], [1/2,-l-l2], [-1/2,-l-l2], [-w/2,-l], [-w/2,0]] :
 		is_path(cap)? cap :
 		[]
-	) * width;
+	) * linewidth;
+
+	assert(is_path(path));
+	assert(is_bool(closed));
+	assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
+	width = is_list(width)? width : [for (x=path) width];
 
 	endcap1 = first_defined([endcap1, endcaps, "round"]);
 	endcap2 = first_defined([endcap2, endcaps, "round"]);
+	assert(is_bool(endcap1) || is_string(endcap1));
+	assert(is_bool(endcap2) || is_string(endcap2));
 
 	endcap_width1 = first_defined([endcap_width1, endcap_width, 3.5]);
 	endcap_width2 = first_defined([endcap_width2, endcap_width, 3.5]);
+	assert(is_num(endcap_width1));
+	assert(is_num(endcap_width2));
 
 	endcap_length1 = first_defined([endcap_length1, endcap_length, endcap_width1*0.5]);
 	endcap_length2 = first_defined([endcap_length2, endcap_length, endcap_width2*0.5]);
+	assert(is_num(endcap_length1));
+	assert(is_num(endcap_length2));
 
 	endcap_extent1 = first_defined([endcap_extent1, endcap_extent, endcap_width1*0.5]);
 	endcap_extent2 = first_defined([endcap_extent2, endcap_extent, endcap_width2*0.5]);
+	assert(is_num(endcap_extent1));
+	assert(is_num(endcap_extent2));
 
-	endcap_shape1 = _endcap_shape(endcap1, width, endcap_width1, endcap_length1, endcap_extent1);
-	endcap_shape2 = _endcap_shape(endcap2, width, endcap_width2, endcap_length2, endcap_extent2);
+	endcap_shape1 = _endcap_shape(endcap1, select(width,0), endcap_width1, endcap_length1, endcap_extent1);
+	endcap_shape2 = _endcap_shape(endcap2, select(width,-1), endcap_width2, endcap_length2, endcap_extent2);
 
-	$fn = quantup(segs(width/2),4);
 	path = closed? concat(path,[path[0]]) : path;
 	assert(is_list(path) && is_vector(path[0]) && len(path[0])==2, "path must be a 2D list of points.");
 
 	segments = pair(path);
-	segpairs = pair(segments);
-	start_seg = segments[0];
-	start_vec = start_seg[0] - start_seg[1];
-	end_seg = select(segments,-1);
-	end_vec = end_seg[1] - end_seg[0];
 
-	trim1 = width * first_defined([
+	trim1 = select(width,0) * first_defined([
 		trim1, trim,
 		(endcap1=="arrow")? endcap_length1-0.01 :
 		(endcap1=="arrow2")? endcap_length1*3/4 :
 		0
 	]);
-	trim2 = width * first_defined([
+	assert(is_num(trim1));
+
+	trim2 = select(width,-1) * first_defined([
 		trim2, trim,
 		(endcap2=="arrow")? endcap_length2-0.01 :
 		(endcap2=="arrow2")? endcap_length2*3/4 :
 		0
 	]);
+	assert(is_num(trim2));
 
-	if (len(segments)==1) {
-		seglen = norm(start_seg[1] - start_seg[0]);
-		translate(start_seg[0]-normalize(start_vec)*trim1)
-			rot(from=BACK,to=-start_vec)
-				square([width, max(0.01, seglen-trim1-trim2)], anchor=FRONT);
-	} else {
-		seglen1 = max(0.01, norm(start_vec) - trim1);
-		translate(start_seg[1])
-			rot(from=BACK,to=start_vec)
-				square([width, seglen1], anchor=FRONT);
-
-		seglen2 = max(0.01, norm(end_vec) - trim2);
-		translate(end_seg[0])
-			rot(from=BACK,to=end_vec)
-				square([width, seglen2], anchor=FRONT);
-	}
+	spos = path_pos_from_start(path,trim1,closed=false);
+	epos = path_pos_from_end(path,trim2,closed=false);
+	path2 = path_subselect(path, spos[0], spos[1], epos[0], epos[1]);
+	widths = concat(
+		[lerp(width[spos[0]], width[(spos[0]+1)%len(width)], spos[1])],
+		[for (i = [spos[0]+1:1:epos[0]]) width[i]],
+		[lerp(width[epos[0]], width[(epos[0]+1)%len(width)], epos[1])]
+	);
 
 	// Line segments
-	for (seg = slice(segments,1,-2)) {
+	for (i = idx(path2,end=-2)) {
+		seg = select(path2,i,i+1);
 		delt = seg[1] - seg[0];
 		translate(seg[0])
 			rot(from=BACK,to=delt)
-				square([width, norm(delt)], anchor=FRONT);
+				trapezoid(w1=widths[i], w2=widths[i+1], h=norm(delt), anchor=FRONT);
 	}
 
 	// Joints
-	for (segpair = segpairs) {
-		seg1 = segpair[0];
-		seg2 = segpair[1];
-		delt1 = seg1[1] - seg1[0];
-		delt2 = seg2[1] - seg2[0];
+	for (i = [1:1:len(path2)-2]) {
+		$fn = quantup(segs(widths[i]/2),4);
 		hull() {
-			translate(seg1[1])
-				rot(from=BACK,to=delt1)
-					circle(d=width);
-			translate(seg2[0])
-				rot(from=BACK,to=delt2)
-					circle(d=width);
+			translate(path2[i]) {
+				rot(from=BACK, to=path2[i]-path2[i-1])
+					circle(d=widths[i]);
+				rot(from=BACK, to=path2[i+1]-path2[i])
+					circle(d=widths[i]);
+			}
 		}
 	}
 
 	// Endcap1
-	translate(start_seg[0]) {
+	translate(path[0]) {
+		start_vec = select(path,0) - select(path,1);
 		rot(from=BACK, to=start_vec) {
 			polygon(endcap_shape1);
 		}
 	}
 
 	// Endcap2
-	translate(end_seg[1]) {
+	translate(select(path,-1)) {
+		end_vec = select(path,-1) - select(path,-2);
 		rot(from=BACK, to=end_vec) {
 			polygon(endcap_shape2);
 		}
