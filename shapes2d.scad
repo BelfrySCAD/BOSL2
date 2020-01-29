@@ -97,10 +97,13 @@ module stroke(
 		[]
 	) * linewidth;
 
-	assert(is_path(path));
 	assert(is_bool(closed));
+	assert(is_path(path));
+	path = closed? concat(path,[path[0]]) : path;
+	assert(is_list(path) && is_vector(path[0]) && len(path[0])==2, "path must be a 2D list of points.");
+
 	assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
-	width = is_list(width)? width : [for (x=path) width];
+	width = is_num(width)? [for (x=path) width] : width;
 
 	endcap1 = first_defined([endcap1, endcaps, "round"]);
 	endcap2 = first_defined([endcap2, endcaps, "round"]);
@@ -124,9 +127,6 @@ module stroke(
 
 	endcap_shape1 = _endcap_shape(endcap1, select(width,0), endcap_width1, endcap_length1, endcap_extent1);
 	endcap_shape2 = _endcap_shape(endcap2, select(width,-1), endcap_width2, endcap_length2, endcap_extent2);
-
-	path = closed? concat(path,[path[0]]) : path;
-	assert(is_list(path) && is_vector(path[0]) && len(path[0])==2, "path must be a 2D list of points.");
 
 	segments = pair(path);
 
