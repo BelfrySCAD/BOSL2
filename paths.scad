@@ -52,6 +52,112 @@ function path_length(path,closed=false) =
 	sum([for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i])])+(closed?norm(path[len(path)-1]-path[0]):0);
 
 
+// Function: path_pos_from_start()
+// Usage:
+//   pos = path_pos_from_start(path,length,[closed]);
+// Description:
+//   Finds the segment and relative position along that segment that is `length` distance from the
+//   front of the given `path`.  Returned as [SEGNUM, U] where SEGNUM is the segment number, and U is
+//   the relative distance along that segment, a number from 0 to 1.  If the path is shorter than the
+//   asked for length, this returns `undef`.
+// Arguments:
+//   path = The path to find the position on.
+//   length = The length from the start of the path to find the segment and position of.
+// Example(2D):
+//   path = circle(d=50,$fn=18);
+//   pos = path_pos_from_start(path,20,closed=false);
+//   stroke(path,width=1,endcaps=false);
+//   pt = lerp(path[pos[0]], path[(pos[0]+1)%len(path)], pos[1]);
+//   color("red") translate(pt) circle(d=2,$fn=12);
+function path_pos_from_start(path,length,closed=false,_d=0,_i=0) =
+	let (lp = len(path))
+	_i >= lp - (closed?0:1)? undef :
+	let (l = norm(path[(_i+1)%lp]-path[_i]))
+	_d+l <= length? path_pos_from_start(path,length,closed,_d+l,_i+1) :
+	[_i, (length-_d)/l];
+
+
+// Function: path_pos_from_end()
+// Usage:
+//   pos = path_pos_from_end(path,length,[closed]);
+// Description:
+//   Finds the segment and relative position along that segment that is `length` distance from the
+//   end of the given `path`.  Returned as [SEGNUM, U] where SEGNUM is the segment number, and U is
+//   the relative distance along that segment, a number from 0 to 1.  If the path is shorter than the
+//   asked for length, this returns `undef`.
+// Arguments:
+//   path = The path to find the position on.
+//   length = The length from the end of the path to find the segment and position of.
+// Example(2D):
+//   path = circle(d=50,$fn=18);
+//   pos = path_pos_from_end(path,20,closed=false);
+//   stroke(path,width=1,endcaps=false);
+//   pt = lerp(path[pos[0]], path[(pos[0]+1)%len(path)], pos[1]);
+//   color("red") translate(pt) circle(d=2,$fn=12);
+function path_pos_from_end(path,length,closed=false,_d=0,_i=undef) =
+	let (
+		lp = len(path),
+		_i = _i!=undef? _i : lp - (closed?1:2)
+	)
+	_i < 0? undef :
+	let (l = norm(path[(_i+1)%lp]-path[_i]))
+	_d+l <= length? path_pos_from_end(path,length,closed,_d+l,_i-1) :
+	[_i, 1-(length-_d)/l];
+
+
+// Function: path_trim_start()
+// Usage:
+//   path_trim_start(path,trim);
+// Description:
+//   Returns the `path`, with the start shortened by the length `trim`.
+// Arguments:
+//   path = The path to trim.
+//   trim = The length to trim from the start.
+// Example(2D):
+//   path = circle(d=50,$fn=18);
+//   path2 = path_trim_start(path,5);
+//   path3 = path_trim_start(path,20);
+//   color("blue") stroke(path3,width=5,endcaps=false);
+//   color("cyan") stroke(path2,width=3,endcaps=false);
+//   color("red") stroke(path,width=1,endcaps=false);
+function path_trim_start(path,trim,_d=0,_i=0) =
+	_i >= len(path)-1? [] :
+	let (l = norm(path[_i+1]-path[_i]))
+	_d+l <= trim? path_trim_start(path,trim,_d+l,_i+1) :
+	let (v = normalize(path[_i+1]-path[_i]))
+	concat(
+		[path[_i+1]-v*(l-(trim-_d))],
+		[for (i=[_i+1:1:len(path)-1]) path[i]]
+	);
+
+
+// Function: path_trim_end()
+// Usage:
+//   path_trim_end(path,trim);
+// Description:
+//   Returns the `path`, with the end shortened by the length `trim`.
+// Arguments:
+//   path = The path to trim.
+//   trim = The length to trim from the end.
+// Example(2D):
+//   path = circle(d=50,$fn=18);
+//   path2 = path_trim_end(path,5);
+//   path3 = path_trim_end(path,20);
+//   color("blue") stroke(path3,width=5,endcaps=false);
+//   color("cyan") stroke(path2,width=3,endcaps=false);
+//   color("red") stroke(path,width=1,endcaps=false);
+function path_trim_end(path,trim,_d=0,_i=undef) =
+	let (_i = _i!=undef? _i : len(path)-1)
+	_i <= 0? [] :
+	let (l = norm(path[_i]-path[_i-1]))
+	_d+l <= trim? path_trim_end(path,trim,_d+l,_i-1) :
+	let (v = normalize(path[_i]-path[_i-1]))
+	concat(
+		[for (i=[0:1:_i-1]) path[i]],
+		[path[_i-1]+v*(l-(trim-_d))]
+	);
+
+
 // Function: path_closest_point()
 // Usage:
 //   path_closest_point(path, pt);
