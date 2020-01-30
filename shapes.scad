@@ -410,6 +410,7 @@ module prismoid(
 module rounded_prismoid(
 	size1, size2, h, shift=[0,0],
 	r=undef, r1=undef, r2=undef,
+	edges=EDGES_ALL,
 	anchor=BOTTOM, spin=0, orient=UP
 ) {
 	eps = 0.001;
@@ -422,16 +423,12 @@ module rounded_prismoid(
 		down(h/2) {
 			hull() {
 				linear_extrude(height=eps, center=false, convexity=2) {
-					offset(r=rr1) {
-						square([max(eps, size1[0]-2*rr1), max(eps, size1[1]-2*rr1)], center=true);
-					}
+					square([max(eps, size1[0]-2*rr1), max(eps, size1[1]-2*rr1)], rounding=rr1, center=true);
 				}
 				up(h-0.01) {
 					translate(shiftby) {
 						linear_extrude(height=eps, center=false, convexity=2) {
-							offset(r=rr2) {
-								square([max(eps, size2[0]-2*rr2), max(eps, size2[1]-2*rr2)], center=true);
-							}
+							square([max(eps, size2[0]-2*rr2), max(eps, size2[1]-2*rr2)], rounding=rr2, center=true);
 						}
 					}
 				}
