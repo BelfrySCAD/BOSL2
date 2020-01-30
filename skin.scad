@@ -205,10 +205,14 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 	assert(is_bool(caps))
 	assert(!closed||!caps)
 	assert(is_string(method)||is_list(method))
-	let( method = is_list(method)? method : [for (pidx=idx(profiles,end=closed?-1:-2)) method] )
+	let(
+		method = is_list(method)? method : [for (pidx=idx(profiles,end=closed?-1:-2)) method],
+		vertices = [for (prof=profiles) each prof],
+		plens = [for (prof=profiles) len(prof)]
+	)
 	assert(len(method) == len(profiles)-closed?0:1)
-	vnf_triangulate(
-		concat([
+	let(
+		sidefaces = [
 			for(pidx=idx(profiles,end=closed? -1 : -2))
 			let(
 				prof1 = profiles[pidx%len(profiles)],
@@ -228,6 +232,7 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 				poly1 = project_plane(prof1, cp1, cp1+perp, cp1+perp1),
 				poly2 = project_plane(prof2, cp2, cp2+perp, cp2+perp2),
 				match = method[pidx],
+				voff = default(sum([for (i=[0:1:pidx-1]) plens[i]]),0),
 				faces = [
 					for(
 						first = true,
@@ -269,9 +274,9 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 								pctdist2 = abs((j/plen2) - ((i+1)/plen1))
 							) (pctdist1>pctdist2? 1 : 0) :
 							assert(in_list(match,["distance","angle","convex","uniform"]),str("Got `",method,"'")),
-						p1 = prof1[i%plen1],
-						p2 = prof2[j%plen2],
-						p3 = side? prof1[(i+1)%plen1] : prof2[(j+1)%plen2],
+						p1 = voff + (i%plen1),
+						p2 = voff + (j%plen2) + plen1,
+						p3 = voff + (side? ((i+1)%plen1) : (((j+1)%plen2) + plen1)),
 						face = [p1, p3, p2],
 						i = i + (side? 1 : 0),
 						j = j + (side? 0 : 1),
@@ -280,15 +285,18 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 						finishing = i>=plen1 && j>=plen2
 					) if (!first) face
 				]
-			) vnf_add_faces(faces=faces)
-		], closed||!caps? [] : let(
+			) each faces
+		],
+		capfaces = closed||!caps? [] : let(
 			prof1 = profiles[0],
-			prof2 = select(profiles,-1)
+			prof2 = select(profiles,-1),
+			eoff = sum(select(plens,0,-2))
 		) [
-			vnf_add_face(pts=reverse(prof1)),
-			vnf_add_face(pts=prof2)
-		])
-	);
+			[for (i=idx(prof1)) plens[0]-1-i],
+			[for (i=idx(prof2)) eoff+i]
+		],
+		vnfout = vnf_triangulate([[vertices, concat(sidefaces,capfaces)]])
+	) echo(out=vnfout) vnfout;
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
