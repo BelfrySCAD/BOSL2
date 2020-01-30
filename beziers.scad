@@ -563,8 +563,8 @@ module bezier_path_extrude(bezier, splinesteps=16, N=3, convexity=undef, clipsiz
 //   path = [ [0, 0, 0], [33, 33, 33], [90, 33, -33], [100, 0, 0] ];
 //   bezier_sweep_bezier(bez, path, pathsteps=32, bezsteps=16);
 module bezier_sweep_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, pathN=3) {
-	bez_points = simplify2d_path(bezier_polyline(bezier, bezsteps, bezN));
-	path_points = simplify3d_path(path3d(bezier_polyline(path, pathsteps, pathN)));
+	bez_points = simplify_path(bezier_polyline(bezier, bezsteps, bezN));
+	path_points = simplify_path(path3d(bezier_polyline(path, pathsteps, pathN)));
 	path_sweep(bez_points, path_points);
 }
 

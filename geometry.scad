@@ -881,71 +881,79 @@ function find_circle_tangents(r, d, cp, pt) =
 
 
 
+// Section: Pointlists
 
-// Section: Paths and Polygons
-
-
-// Function: is_path()
+// Function: first_noncollinear()
 // Usage:
-//   is_path(x);
+//   first_noncollinear(i1, i2, points);
 // Description:
-//   Returns true if the given item looks like a path.  A path is defined as a list of two or more points.
-function is_path(x) = is_list(x) && is_vector(x.x) && len(x)>1;
-
-
-// Function: is_closed_path()
-// Usage:
-//   is_closed_path(path, [eps]);
-// Description:
-//   Returns true if the first and last points in the given path are coincident.
-function is_closed_path(path, eps=EPSILON) = approx(path[0], path[len(path)-1], eps=eps);
-
-
-// Function: close_path()
-// Usage:
-//   close_path(path);
-// Description:
-//   If a path's last point does not coincide with its first point, closes the path so it does.
-function close_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? path : concat(path,[path[0]]);
-
-
-// Function: cleanup_path()
-// Usage:
-//   cleanup_path(path);
-// Description:
-//   If a path's last point coincides with its first point, deletes the last point in the path.
-function cleanup_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? select(path,0,-2) : path;
-
-
-// Function: path_subselect()
-// Usage:
-//   path_subselect(path,s1,u1,s2,u2,[closed]):
-// Description:
-//   Returns a portion of a path, from between the `u1` part of segment `s1`, to the `u2` part of
-//   segment `s2`.  Both `u1` and `u2` are values between 0.0 and 1.0, inclusive, where 0 is the start
-//   of the segment, and 1 is the end.  Both `s1` and `s2` are integers, where 0 is the first segment.
+//   Returns index of the first point in `points` that is not collinear with the points indexed by `i1` and `i2`.
 // Arguments:
-//   path = The path to get a section of.
-//   s1 = The number of the starting segment.
-//   u1 = The proportion along the starting segment, between 0.0 and 1.0, inclusive.
-//   s2 = The number of the ending segment.
-//   u2 = The proportion along the ending segment, between 0.0 and 1.0, inclusive.
-//   closed = If true, treat path as a closed polygon.
-function path_subselect(path, s1, u1, s2, u2, closed=false) =
-	let(
-		lp = len(path),
-		l = lp-(closed?0:1),
-		u1 = s1<0? 0 : s1>l? 1 : u1,
-		u2 = s2<0? 0 : s2>l? 1 : u2,
-		s1 = constrain(s1,0,l),
-		s2 = constrain(s2,0,l),
-		pathout = concat(
-			(s1<l && u1<1)? [lerp(path[s1],path[(s1+1)%lp],u1)] : [],
-			[for (i=[s1+1:1:s2]) path[i]],
-			(s2<l && u2>0)? [lerp(path[s2],path[(s2+1)%lp],u2)] : []
-		)
-	) pathout;
+//   i1 = The first point.
+//   i2 = The second point.
+//   points = The list of points to find a non-collinear point from.
+function first_noncollinear(i1, i2, points) =
+	[for (j = idx(points)) if (j!=i1 && j!=i2 && !collinear_indexed(points,i1,i2,j)) j][0];
 
+
+// Function: find_noncollinear_points()
+// Usage:
+//   find_noncollinear_points(points);
+// Description:
+//   Finds the indices of three good non-collinear points from the points list `points`.
+function find_noncollinear_points(points) =
+	let(
+		a = 0,
+		b = furthest_point(points[a], points),
+		c = max_index([
+			for (p=points)
+				sin(vector_angle(points[a]-p,points[b]-p)) *
+					norm(p-points[a]) * norm(p-points[b])
+		])
+	) [a, b, c];
+
+
+// Function: pointlist_bounds()
+// Usage:
+//   pointlist_bounds(pts);
+// Description:
+//   Finds the bounds containing all the 2D or 3D points in `pts`.
+//   Returns `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
+// Arguments:
+//   pts = List of points.
+function pointlist_bounds(pts) = [
+	[for (a=[0:2]) min([ for (x=pts) point3d(x)[a] ]) ],
+	[for (a=[0:2]) max([ for (x=pts) point3d(x)[a] ]) ]
+];
+
+
+// Function: closest_point()
+// Usage:
+//   closest_point(pt, points);
+// Description:
+//   Given a list of `points`, finds the index of the closest point to `pt`.
+// Arguments:
+//   pt = The point to find the closest point to.
+//   points = The list of points to search.
+function closest_point(pt, points) =
+	min_index([for (p=points) norm(p-pt)]);
+
+
+// Function: furthest_point()
+// Usage:
+//   furthest_point(pt, points);
+// Description:
+//   Given a list of `points`, finds the index of the furthest point from `pt`.
+// Arguments:
+//   pt = The point to find the farthest point from.
+//   points = The list of points to search.
+// Example:
+function furthest_point(pt, points) =
+	max_index([for (p=points) norm(p-pt)]);
+
+
+
+// Section: Polygons
 
 // Function: polygon_area()
 // Usage:
@@ -1057,36 +1065,6 @@ function align_polygon(reference, poly, angles, cp) =
    alignments[best][0];
 
 
-// Function: first_noncollinear()
-// Usage:
-//   first_noncollinear(i1, i2, points);
-// Description:
-//   Returns index of the first point in `points` that is not collinear with the points indexed by `i1` and `i2`.
-// Arguments:
-//   i1 = The first point.
-//   i2 = The second point.
-//   points = The list of points to find a non-collinear point from.
-function first_noncollinear(i1, i2, points) =
-	[for (j = idx(points)) if (j!=i1 && j!=i2 && !collinear_indexed(points,i1,i2,j)) j][0];
-
-
-// Function: find_noncollinear_points()
-// Usage:
-//   find_noncollinear_points(points);
-// Description:
-//   Finds the indices of three good non-collinear points from the points list `points`.
-function find_noncollinear_points(points) =
-	let(
-		a = 0,
-		b = furthest_point(points[a], points),
-		c = max_index([
-			for (p=points)
-				sin(vector_angle(points[a]-p,points[b]-p)) *
-					norm(p-points[a]) * norm(p-points[b])
-		])
-	) [a, b, c];
-
-
 // Function: centroid()
 // Usage:
 //   cp = centroid(poly);
@@ -1113,38 +1091,6 @@ function centroid(poly) =
 	);
 
 
-// Function: simplify_path()
-// Description:
-//   Takes a path and removes unnecessary collinear points.
-// Usage:
-//   simplify_path(path, [eps])
-// Arguments:
-//   path = A list of 2D path points.
-//   eps = Largest positional variance allowed.  Default: `EPSILON` (1-e9)
-function simplify_path(path, eps=EPSILON) =
-	len(path)<=2? path : let(
-		indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(path, i-1, i, i+1, eps=eps)) i], [len(path)-1])
-	) [for (i = indices) path[i]];
-
-
-
-// Function: simplify_path_indexed()
-// Description:
-//   Takes a list of points, and a path as a list of indices into `points`,
-//   and removes all path points that are unecessarily collinear.
-// Usage:
-//   simplify_path_indexed(path, eps)
-// Arguments:
-//   points = A list of points.
-//   path = A list of indices into `points` that forms a path.
-//   eps = Largest angle variance allowed.  Default: EPSILON (1-e9) degrees.
-function simplify_path_indexed(points, path, eps=EPSILON) =
-	len(path)<=2? path : let(
-		indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(points, path[i-1], path[i], path[i+1], eps=eps)) i], [len(path)-1])
-	) [for (i = indices) path[i]];
-
-
-
 // Function: point_in_polygon()
 // Usage:
 //   point_in_polygon(point, path, [eps])
@@ -1168,45 +1114,6 @@ function point_in_polygon(point, path, eps=EPSILON) =
 	sum([for(i=[0:1:len(path)-1]) let(seg=select(path,i,i+1)) if(!approx(seg[0],seg[1],eps=eps)) point_on_segment2d(point, seg, eps=eps)?1:0]) > 0? 0 :
 	// Otherwise compute winding number and return 1 for interior, -1 for exterior
 	sum([for(i=[0:1:len(path)-1]) let(seg=select(path,i,i+1)) if(!approx(seg[0],seg[1],eps=eps)) _point_above_below_segment(point, seg)]) != 0? 1 : -1;
-
-
-// Function: pointlist_bounds()
-// Usage:
-//   pointlist_bounds(pts);
-// Description:
-//   Finds the bounds containing all the 2D or 3D points in `pts`.
-//   Returns `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
-// Arguments:
-//   pts = List of points.
-function pointlist_bounds(pts) = [
-	[for (a=[0:2]) min([ for (x=pts) point3d(x)[a] ]) ],
-	[for (a=[0:2]) max([ for (x=pts) point3d(x)[a] ]) ]
-];
-
-
-// Function: closest_point()
-// Usage:
-//   closest_point(pt, points);
-// Description:
-//   Given a list of `points`, finds the index of the closest point to `pt`.
-// Arguments:
-//   pt = The point to find the closest point to.
-//   points = The list of points to search.
-function closest_point(pt, points) =
-	min_index([for (p=points) norm(p-pt)]);
-
-
-// Function: furthest_point()
-// Usage:
-//   furthest_point(pt, points);
-// Description:
-//   Given a list of `points`, finds the index of the furthest point from `pt`.
-// Arguments:
-//   pt = The point to find the farthest point from.
-//   points = The list of points to search.
-// Example:
-function furthest_point(pt, points) =
-	max_index([for (p=points) norm(p-pt)]);
 
 
 // Function: polygon_is_clockwise()
@@ -1253,269 +1160,6 @@ function ccw_polygon(path) =
 //   Reverses a polygon's winding direction, while still using the same start point.
 function reverse_polygon(poly) =
 	let(lp=len(poly)) [for (i=idx(poly)) poly[(lp-i)%lp]];
-
-
-// Function: path_self_intersections()
-// Usage:
-//   isects = path_self_intersections(path, [eps]);
-// Description:
-//   Locates all self intersections of the given path.  Returns a list of intersections, where
-//   each intersection is a list like [POINT, SEGNUM1, PROPORTION1, SEGNUM2, PROPORTION2] where
-//   POINT is the coordinates of the intersection point, SEGNUMs are the integer indices of the
-//   intersecting segments along the path, and the PROPORTIONS are the 0.0 to 1.0 proportions
-//   of how far along those segments they intersect at.  A proportion of 0.0 indicates the start
-//   of the segment, and a proportion of 1.0 indicates the end of the segment.
-// Arguments:
-//   path = The path to find self intersections of.
-//   closed = If true, treat path like a closed polygon.  Default: true
-//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-// Example(2D):
-//   path = [
-//       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
-//   ];
-//   isects = path_self_intersections(path, closed=true);
-//   // isects == [[[-33.3333, 0], 0, 0.666667, 4, 0.333333], [[33.3333, 0], 1, 0.333333, 3, 0.666667]]
-//   stroke(path, closed=true, width=1);
-//   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
-function path_self_intersections(path, closed=true, eps=EPSILON) =
-	let(
-		path = cleanup_path(path, eps=eps),
-		plen = len(path)
-	) [
-		for (i = [0:1:plen-(closed?2:3)], j=[i+1:1:plen-(closed?1:2)]) let(
-			a1 = path[i],
-			a2 = path[(i+1)%plen],
-			b1 = path[j],
-			b2 = path[(j+1)%plen],
-			isect =
-				(max(a1.x, a2.x) < min(b1.x, b2.x))? undef :
-				(min(a1.x, a2.x) > max(b1.x, b2.x))? undef :
-				(max(a1.y, a2.y) < min(b1.y, b2.y))? undef :
-				(min(a1.y, a2.y) > max(b1.y, b2.y))? undef :
-				let(
-					c = a1-a2,
-					d = b1-b2,
-					denom = (c.x*d.y)-(c.y*d.x)
-				) abs(denom)<eps? undef : let(
-					e = a1-b1,
-					t = ((e.x*d.y)-(e.y*d.x)) / denom,
-					u = ((e.x*c.y)-(e.y*c.x)) / denom
-				) [a1+t*(a2-a1), t, u]
-		) if (
-			isect != undef &&
-			isect[1]>eps && isect[1]<=1+eps &&
-			isect[2]>eps && isect[2]<=1+eps
-		) [isect[0], i, isect[1], j, isect[2]]
-	];
-
-
-function _tag_self_crossing_subpaths(path, closed=true, eps=EPSILON) =
-	let(
-		subpaths = split_path_at_self_crossings(
-			path, closed=closed, eps=eps
-		)
-	) [
-		for (subpath = subpaths) let(
-			seg = select(subpath,0,1),
-			mp = mean(seg),
-			n = line_normal(seg) / 2048,
-			p1 = mp + n,
-			p2 = mp - n,
-			p1in = point_in_polygon(p1, path) >= 0,
-			p2in = point_in_polygon(p2, path) >= 0,
-			tag = (p1in && p2in)? "I" : "O"
-		) [tag, subpath]
-	];
-
-
-// Function: decompose_path()
-// Usage:
-//   splitpaths = decompose_path(path, [closed], [eps]);
-// Description:
-//   Given a possibly self-crossing path, decompose it into non-crossing paths that are on the perimeter
-//   of the areas bounded by that path.
-// Arguments:
-//   path = The path to split up.
-//   closed = If true, treat path like a closed polygon.  Default: true
-//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-// Example(2D):
-//   path = [
-//       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
-//   ];
-//   splitpaths = decompose_path(path, closed=true);
-//   rainbow(splitpaths) stroke($item, closed=true, width=3);
-function decompose_path(path, closed=true, eps=EPSILON) =
-	let(
-		path = cleanup_path(path, eps=eps),
-		tagged = _tag_self_crossing_subpaths(path, closed=closed, eps=eps),
-		kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
-		outregion = assemble_path_fragments(kept, eps=eps)
-	) outregion;
-
-
-function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
-	!fragments? [undef, []] :
-	let(
-		delta = seg[1] - seg[0],
-		segang = atan2(delta.y,delta.x),
-		frags = [
-			for (i = idx(fragments)) let(
-				fragment = fragments[i],
-				fwdmatch = approx(seg[1], fragment[0], eps=eps),
-				bakmatch =  approx(seg[1], select(fragment,-1), eps=eps)
-			) [
-				fwdmatch,
-				bakmatch,
-				bakmatch? reverse(fragment) : fragment
-			]
-		],
-		angs = [
-			for (frag = frags)
-				(frag[0] || frag[1])? let(
-					delta2 = frag[2][1] - frag[2][0],
-					segang2 = atan2(delta2.y, delta2.x)
-				) modang(segang2 - segang) : (
-					rightmost? 999 : -999
-				)
-		],
-		fi = rightmost? min_index(angs) : max_index(angs)
-	) abs(angs[fi]) > 360? [undef, fragments] : let(
-		remainder = [for (i=idx(fragments)) if (i!=fi) fragments[i]],
-		frag = frags[fi],
-		foundfrag = frag[2]
-	) [foundfrag, remainder];
-
-
-// Function: assemble_a_path_from_fragments()
-// Usage:
-//   assemble_a_path_from_fragments(subpaths);
-// Description:
-//   Given a list of incomplete paths, assembles them together into one complete closed path, and
-//   remainder fragments.  Returns [PATH, FRAGMENTS] where FRAGMENTS is the list of remaining
-//   polyline path fragments.
-// Arguments:
-//   fragments = List of polylines to be assembled into complete polygons.
-//   rightmost = If true, assemble paths using rightmost turns. Leftmost if false.
-//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-function assemble_a_path_from_fragments(fragments, rightmost=true, eps=EPSILON) =
-	len(fragments)==0? _finished :
-	let(
-		path = fragments[0],
-		newfrags = slice(fragments, 1, -1)
-	) is_closed_path(path, eps=eps)? (
-		// starting fragment is already closed
-		[path, newfrags]
-	) : let(
-		// Find rightmost/leftmost continuation fragment
-		seg = select(path,-2,-1),
-		frags = slice(fragments,1,-1),
-		extrema = _extreme_angle_fragment(seg=seg, fragments=frags, rightmost=rightmost, eps=eps),
-		foundfrag = extrema[0],
-		remainder = extrema[1],
-		newfrags = remainder
-	) is_undef(foundfrag)? (
-		// No remaining fragments connect!  INCOMPLETE PATH!
-		// Treat it as complete.
-		[path, newfrags]
-	) : is_closed_path(foundfrag, eps=eps)? (
-		let(
-			newfrags = concat([path], remainder)
-		)
-		// Found fragment is already closed
-		[foundfrag, newfrags]
-	) : let(
-		fragend = select(foundfrag,-1),
-		hits = [for (i = idx(path,end=-2)) if(approx(path[i],fragend,eps=eps)) i]
-	) hits? (
-		let(
-			// Found fragment intersects with initial path
-			hitidx = select(hits,-1),
-			newpath = slice(path,0,hitidx+1),
-			newfrags = concat(len(newpath)>1? [newpath] : [], remainder),
-			outpath = concat(slice(path,hitidx,-2), foundfrag)
-		)
-		[outpath, newfrags]
-	) : let(
-		// Path still incomplete.  Continue building it.
-		newpath = concat(path, slice(foundfrag, 1, -1)),
-		newfrags = concat([newpath], remainder)
-	)
-	assemble_a_path_from_fragments(
-		fragments=newfrags,
-		rightmost=rightmost,
-		eps=eps
-	);
-
-
-// Function: assemble_path_fragments()
-// Usage:
-//   assemble_path_fragments(subpaths);
-// Description:
-//   Given a list of incomplete paths, assembles them together into complete closed paths if it can.
-// Arguments:
-//   fragments = List of polylines to be assembled into complete polygons.
-//   rightmost = If true, assemble paths using rightmost turns. Leftmost if false.
-//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-function assemble_path_fragments(fragments, rightmost=true, eps=EPSILON, _finished=[]) =
-	len(fragments)==0? _finished :
-	let(
-		result = assemble_a_path_from_fragments(
-			fragments=fragments,
-			rightmost=rightmost,
-			eps=eps
-		),
-		newpath = result[0],
-		remainder = result[1],
-		finished = concat(_finished, [newpath])
-	) assemble_path_fragments(
-		fragments=remainder,
-		rightmost=rightmost, eps=eps,
-		_finished=finished
-	);
-
-
-// Function: split_path_at_self_crossings()
-// Usage:
-//   polylines = split_path_at_self_crossings(path, [closed], [eps]);
-// Description:
-//   Splits a path into polyline sections wherever the path crosses itself.
-//   Splits may occur mid-segment, so new vertices will be created at the intersection points.
-// Arguments:
-//   path = The path to split up.
-//   closed = If true, treat path as a closed polygon.  Default: true
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-// Example(2D):
-//   path = [ [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100] ];
-//   polylines = split_path_at_self_crossings(path);
-//   rainbow(polylines) stroke($item, closed=false, width=2);
-function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
-	let(
-		path = cleanup_path(path, eps=eps),
-		isects = deduplicate(
-			eps=eps,
-			concat(
-				[[0, 0]],
-				sort([
-					for (
-						a = path_self_intersections(path, closed=closed, eps=eps),
-						ss = [ [a[1],a[2]], [a[3],a[4]] ]
-					) if (ss[0] != undef) ss
-				]),
-				[[len(path)-(closed?1:2), 1]]
-			)
-		)
-	) [
-		for (p = pair(isects))
-			let(
-				s1 = p[0][0],
-				u1 = p[0][1],
-				s2 = p[1][0],
-				u2 = p[1][1],
-				section = path_subselect(path, s1, u1, s2, u2, closed=closed),
-				outpath = deduplicate(eps=eps, section)
-			)
-			outpath
-	];
 
 
 

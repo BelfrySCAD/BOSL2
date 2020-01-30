@@ -90,7 +90,7 @@ module wiring(path, wires, wirediam=2, rounding=10, wirenum=0, bezsteps=12) {
 	];
 	offsets = hex_offsets(wires, wirediam);
 	bezpath = fillet_path(path, rounding);
-	poly = simplify3d_path(path3d(bezier_polyline(bezpath, bezsteps)));
+	poly = simplify_path(path3d(bezier_polyline(bezpath, bezsteps)));
 	n = max(segs(wirediam), 8);
 	r = wirediam/2;
 	for (i = [0:1:wires-1]) {
