@@ -31,8 +31,9 @@ include <vnf.scad>
 //   If called as a function, returns a [VNF structure](vnf.scad) like `[VERTICES, FACES]`.
 //   If called as a module, creates a polyhedron of the skinned profiles.
 //   The vertex matching methods are as follows:
-//   - `"distance"`: Vertices between profiles are matched based on closest next position, relative to the center of each profile.
-//   - `"angle"`: Vertices between profiles are matched based on closest next polar angle, relative to the center of each profile.
+//   - `"distance"`: Chooses face configurations with shorter edge lengths.
+//   - `"angle"`: Chooses face configurations with edge angles closest to vertical.
+//   - `"convex"`: Chooses the more convex of possible face configurations.
 //   - `"uniform"`: Vertices are uniformly matched between profiles, such that a point 30% of the way through one profile, will be matched to a vertex 30% of the way through the other profile, based on vertex count.
 // Arguments:
 //   profiles = A list of 2D paths that have been moved and/or rotated into 3D-space.
@@ -82,6 +83,25 @@ include <vnf.scad>
 //   }
 // Example(FlatSpin): Method "angle" works subtly better with profiles created from a polar function.
 //   method = "angle";
+//   xdistribute(150) {
+//       $fn=24;
+//       skin([
+//           yscale(2, p=path3d(circle(d=75))),
+//           [[40,0,100], [35,-15,100], [20,-30,100],[0,-40,100],[-40,0,100],[0,40,100],[20,30,100], [35,15,100]]
+//       ], method=method);
+//       skin([
+//           for (b=[0,90]) [
+//               for (a=[360:-360/$fn:0.01])
+//                   point3d(polar_to_xy((100+50*cos((a+b)*2))/2,a),b/90*100)
+//           ]
+//       ], method=method);
+//       skin([
+//           scale([1,2,1],p=path3d(circle(d=50))),
+//           scale([2,1,1],p=path3d(circle(d=50),100))
+//       ], method=method);
+//   }
+// Example(FlatSpin): Method "convex" maximizes convexity.
+//   method = "convex";
 //   xdistribute(150) {
 //       $fn=24;
 //       skin([
@@ -180,6 +200,7 @@ module skin(profiles, closed=false, caps=true, method="uniform", convexity=2) {
 
 function skin(profiles, closed=false, caps=true, method="uniform") =
 	assert(is_list(profiles))
+	assert(all([for (profile=profiles) is_list(profile) && len(profile[0])==3]), "All profiles must be 3D paths.")
 	assert(is_bool(closed))
 	assert(is_bool(caps))
 	assert(!closed||!caps)
@@ -192,11 +213,12 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 			let(
 				prof1 = profiles[pidx%len(profiles)],
 				prof2 = profiles[(pidx+1)%len(profiles)],
-				cp1 = mean(prof1),
-				cp2 = mean(prof2),
+				cp1 = centroid(prof1),
+				cp2 = centroid(prof2),
 				midpt = (cp1+cp2)/2,
 				n1 = plane_normal(plane_from_pointslist(prof1)),
 				n2 = plane_normal(plane_from_pointslist(prof2)),
+				midn = normalize((n1+n2)/2),
 				vang = vector_angle(n1,n2),
 				perp = vang>0.01 && vang<179.99? vector_axis(n1,n2) :
 					vector_angle(n1,RIGHT)>44? vector_axis(n1,RIGHT) :
@@ -217,18 +239,36 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 
 						!finished;
 
-						dang1 = abs(modang(xy_to_polar(poly1[i%plen1]).y - xy_to_polar(poly2[(j+1)%plen2]).y)),
-						dang2 = abs(modang(xy_to_polar(poly2[j%plen2]).y - xy_to_polar(poly1[(i+1)%plen1]).y)),
-						dist1 = norm(poly1[i%plen1] - poly2[(j+1)%plen2]),
-						dist2 = norm(poly2[j%plen2] - poly1[(i+1)%plen1]),
-						pctdist1 = abs((i/plen1) - ((j+1)/plen2)),
-						pctdist2 = abs((j/plen2) - ((i+1)/plen1)),
-						side = i>=plen1? 0 :
-							j>=plen2? 1 :
-							match=="angle"? (dang1>dang2? 1 : 0) :
-							match=="distance"? (dist1>dist2? 1 : 0) :
-							match=="uniform"? (pctdist1>pctdist2? 1 : 0) :
-							assert(in_list(method[i],["angle","distance","uniform"]),str("Got `",method,"'")),
+						side =
+							i>=plen1*2? 0 :
+							j>=plen2*2? 1 :
+							let(
+								p1a = prof1[(i+0)%plen1],
+								p1b = prof1[(i+1)%plen1],
+								p2a = prof2[(j+0)%plen2],
+								p2b = prof2[(j+1)%plen2]
+							)
+							match=="distance"? let(
+								dist1 = norm(p1a-p2b),
+								dist2 = norm(p1b-p2a)
+							) (dist1>dist2? 1 : 0) :
+							match=="angle"? let(
+								delta1 = rot(from=midn, to=UP, p=p2b - p1a),
+								delta2 = rot(from=midn, to=UP, p=p2a - p1b),
+								dist1 = atan2(norm([delta1.x, delta1.y]), abs(delta1.z)),
+								dist2 = atan2(norm([delta2.x, delta2.y]), abs(delta2.z))
+							) (dist1>dist2? 1 : 0) :
+							match=="convex"? let(
+								mid1 = (p2b + p1a)/2,
+								mid2 = (p2a + p1b)/2,
+								dist1 = norm(mid1-midpt),
+								dist2 = norm(mid2-midpt)
+							) (dist1<dist2? 1 : 0) :
+							match=="uniform"? let(
+								pctdist1 = abs((i/plen1) - ((j+1)/plen2)),
+								pctdist2 = abs((j/plen2) - ((i+1)/plen1))
+							) (pctdist1>pctdist2? 1 : 0) :
+							assert(in_list(match,["distance","angle","convex","uniform"]),str("Got `",method,"'")),
 						p1 = prof1[i%plen1],
 						p2 = prof2[j%plen2],
 						p3 = side? prof1[(i+1)%plen1] : prof2[(j+1)%plen2],
