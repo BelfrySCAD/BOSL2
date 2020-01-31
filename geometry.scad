@@ -964,6 +964,25 @@ function polygon_area(vertices) =
 	0.5*sum([for(i=[0:len(vertices)-1]) det2(select(vertices,i,i+1))]);
 
 
+// Function: polygon_is_convex()
+// Usage:
+//   polygon_is_convex(poly);
+// Description:
+//   Returns true if the given polygon is convex.  Result is undefined if the polygon is self-intersecting.
+// Example:
+//   polygon_is_convex(circle(d=50));  // Returns: true
+// Example:
+//   spiral = [for (i=[0:36]) let(a=-i*10) (10+i)*[cos(a),sin(a)]];
+//   polygon_is_convex(spiral);  // Returns: false
+function polygon_is_convex(poly) =
+	let(
+		l = len(poly),
+		c = [for (i=idx(poly)) cross(poly[(i+1)%l]-poly[i],poly[(i+2)%l]-poly[(i+1)%l])]
+	)
+	len([for (x=c) if(x>0) 1])==0 ||
+	len([for (x=c) if(x<0) 1])==0;
+
+
 // Function: polygon_shift()
 // Usage:
 //   polygon_shift(poly, i);
