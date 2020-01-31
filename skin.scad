@@ -287,8 +287,8 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 			[for (i=idx(prof1)) plens[0]-1-i],
 			[for (i=idx(prof2)) eoff+i]
 		],
-		vnfout = vnf_triangulate([[vertices, concat(sidefaces,capfaces)]])
-	) echo(out=vnfout) vnfout;
+		vnfout = [vertices, concat(sidefaces,capfaces)]
+	) vnfout;
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
