@@ -223,14 +223,6 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 				n1 = plane_normal(plane_from_pointslist(prof1)),
 				n2 = plane_normal(plane_from_pointslist(prof2)),
 				midn = normalize((n1+n2)/2),
-				vang = vector_angle(n1,n2),
-				perp = vang>0.01 && vang<179.99? vector_axis(n1,n2) :
-					vector_angle(n1,RIGHT)>44? vector_axis(n1,RIGHT) :
-					vector_axis(n1,UP),
-				perp1 = vector_axis(perp,n1),
-				perp2 = vector_axis(perp,n2),
-				poly1 = project_plane(prof1, cp1, cp1+perp, cp1+perp1),
-				poly2 = project_plane(prof2, cp2, cp2+perp, cp2+perp2),
 				match = method[pidx],
 				voff = default(sum([for (i=[0:1:pidx-1]) plens[i]]),0),
 				faces = [
@@ -238,8 +230,8 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 						first = true,
 						finishing = false,
 						finished = false,
-						plen1 = len(poly1),
-						plen2 = len(poly2),
+						plen1 = len(prof1),
+						plen2 = len(prof2),
 						i=0, j=0, side=0;
 
 						!finished;
