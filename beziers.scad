@@ -716,7 +716,7 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //   vnf5 = bezier_patch(vnf=vnf4, rot(a=[0,90,0],p=translate(p=patch,[-50,-50,50])));
 //   vnf6 = bezier_patch(vnf=vnf5, rot(a=[0,-90,0],p=translate(p=patch,[-50,-50,50])));
 //   vnf_polyhedron(vnf6);
-// Example(3D): Chaining Patches with Assymmetric Splinesteps
+// Example(3D): Chaining Patches with Asymmetric Splinesteps
 //   steps = 8;
 //   edge_patch = [
 //       [[-60, 0,-40], [0, 0,-40], [60, 0,-40]],
