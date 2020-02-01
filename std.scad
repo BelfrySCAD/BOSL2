@@ -27,6 +27,8 @@ include <geometry.scad>
 include <regions.scad>
 
 include <transforms.scad>
+include <distributors.scad>
+include <mutators.scad>
 include <attachments.scad>
 include <primitives.scad>
 include <shapes.scad>
