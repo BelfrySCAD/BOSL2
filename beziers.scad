@@ -728,7 +728,7 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //       [[40,  0,  0], [ 0,  0,  0], [ 0, 40,  0]],
 //       [[40, 40,  0], [40, 40,  0], [40, 40,  0]]
 //   ];
-//   face_patch = bezier_patch_flat([120,120],N=1,orient=LEFT);
+//   face_patch = bezier_patch_flat([120,120],orient=LEFT);
 //   edges = [
 //       for (axrot=[[0,0,0],[0,90,0],[0,0,90]], xang=[-90:90:180])
 //       bezier_patch(
