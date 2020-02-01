@@ -373,6 +373,50 @@ function path_self_intersections(path, closed=true, eps=EPSILON) =
 	];
 
 
+// Function: split_path_at_self_crossings()
+// Usage:
+//   polylines = split_path_at_self_crossings(path, [closed], [eps]);
+// Description:
+//   Splits a path into polyline sections wherever the path crosses itself.
+//   Splits may occur mid-segment, so new vertices will be created at the intersection points.
+// Arguments:
+//   path = The path to split up.
+//   closed = If true, treat path as a closed polygon.  Default: true
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+// Example(2D):
+//   path = [ [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100] ];
+//   polylines = split_path_at_self_crossings(path);
+//   rainbow(polylines) stroke($item, closed=false, width=2);
+function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
+	let(
+		path = cleanup_path(path, eps=eps),
+		isects = deduplicate(
+			eps=eps,
+			concat(
+				[[0, 0]],
+				sort([
+					for (
+						a = path_self_intersections(path, closed=closed, eps=eps),
+						ss = [ [a[1],a[2]], [a[3],a[4]] ]
+					) if (ss[0] != undef) ss
+				]),
+				[[len(path)-(closed?1:2), 1]]
+			)
+		)
+	) [
+		for (p = pair(isects))
+			let(
+				s1 = p[0][0],
+				u1 = p[0][1],
+				s2 = p[1][0],
+				u2 = p[1][1],
+				section = path_subselect(path, s1, u1, s2, u2, closed=closed),
+				outpath = deduplicate(eps=eps, section)
+			)
+			outpath
+	];
+
+
 function _tag_self_crossing_subpaths(path, closed=true, eps=EPSILON) =
 	let(
 		subpaths = split_path_at_self_crossings(
@@ -536,50 +580,6 @@ function assemble_path_fragments(fragments, rightmost=true, eps=EPSILON, _finish
 		rightmost=rightmost, eps=eps,
 		_finished=finished
 	);
-
-
-// Function: split_path_at_self_crossings()
-// Usage:
-//   polylines = split_path_at_self_crossings(path, [closed], [eps]);
-// Description:
-//   Splits a path into polyline sections wherever the path crosses itself.
-//   Splits may occur mid-segment, so new vertices will be created at the intersection points.
-// Arguments:
-//   path = The path to split up.
-//   closed = If true, treat path as a closed polygon.  Default: true
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-// Example(2D):
-//   path = [ [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100] ];
-//   polylines = split_path_at_self_crossings(path);
-//   rainbow(polylines) stroke($item, closed=false, width=2);
-function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
-	let(
-		path = cleanup_path(path, eps=eps),
-		isects = deduplicate(
-			eps=eps,
-			concat(
-				[[0, 0]],
-				sort([
-					for (
-						a = path_self_intersections(path, closed=closed, eps=eps),
-						ss = [ [a[1],a[2]], [a[3],a[4]] ]
-					) if (ss[0] != undef) ss
-				]),
-				[[len(path)-(closed?1:2), 1]]
-			)
-		)
-	) [
-		for (p = pair(isects))
-			let(
-				s1 = p[0][0],
-				u1 = p[0][1],
-				s2 = p[1][0],
-				u2 = p[1][1],
-				section = path_subselect(path, s1, u1, s2, u2, closed=closed),
-				outpath = deduplicate(eps=eps, section)
-			)
-			outpath
-	];
 
 
 
