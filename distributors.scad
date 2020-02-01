@@ -22,7 +22,7 @@
 //   place_copies(a) ...
 //
 // Arguments:
-//   a = array of XYZ offset vectors. Default [[0,0,0]]
+//   a = Array of XYZ offset vectors. Default `[[0,0,0]]`
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
