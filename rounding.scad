@@ -31,7 +31,7 @@ include <BOSL2/structs.scad>
 //   tactile "bump" where the curvature changes from flat to circular.
 //   See https://hackernoon.com/apples-icons-have-that-shape-for-a-very-good-reason-720d4e7c8a14
 //   
-//   You select the type of rounding using the `curve` option, which should be "smooth"` to
+//   You select the type of rounding using the `curve` option, which should be `"smooth"` to
 //   get continuous curvature rounding, `"circle"` to get circular rounding, or `"chamfer"` to get chamfers.  The default is circle
 //   rounding.  Each rounding method has two options for how you measure the amount of rounding, which
 //   you specify using the `measure` argument.  All of the rounding methods accept `measure="cut"`, which is
