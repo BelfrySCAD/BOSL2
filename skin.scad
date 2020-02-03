@@ -262,9 +262,11 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 								dist2 = norm(mid2-midpt)
 							) (dist1<dist2? 1 : 0) :
 							match=="uniform"? let(
-								pctdist1 = abs((i/plen1) - ((j+1)/plen2)),
-								pctdist2 = abs((j/plen2) - ((i+1)/plen1))
-							) (pctdist1>pctdist2? 1 : 0) :
+								pct1 = i/plen1,
+								pct2 = j/plen2,
+								dist1 = norm(p1a-p2b),
+								dist2 = norm(p1b-p2a)
+							) (approx(pct1,pct2)? (dist1>dist2? 1 : 0) : (pct1<=pct2? 1 : 0)) :
 							assert(in_list(match,["distance","angle","convex","uniform"]),str("Got `",method,"'")),
 						p1 = voff + (i%plen1),
 						p2 = voff + (j%plen2) + plen1,
