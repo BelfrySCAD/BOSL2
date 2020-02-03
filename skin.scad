@@ -557,7 +557,8 @@ function tangent_align(poly1, poly2) =
         swap = len(poly1)>len(poly2),
         big = swap ? poly1 : poly2,
         small = swap ? poly2 : poly1,
-        cutpts = [for(i=[0:len(small)-1]) find_one_tangent(big, select(small,i,i+1))],
+        curve_offset = centroid(small)-centroid(big),
+        cutpts = [for(i=[0:len(small)-1]) find_one_tangent(big, select(small,i,i+1),curve_offset=curve_offset)],
         d=echo(cutpts = cutpts),
         shift = select(cutpts,-1)+1, 
         newbig = polygon_shift(big, shift),
@@ -568,7 +569,7 @@ function tangent_align(poly1, poly2) =
       swap ? [newbig, newsmall] : [newsmall, newbig];
 
 
-function find_one_tangent(curve, edge, closed=true) =
+function find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
   let(
    angles = 
    [for(i=[0:len(curve)-(closed?1:2)])
@@ -577,10 +578,11 @@ function find_one_tangent(curve, edge, closed=true) =
        tangent = [curve[i], select(curve,i+1)]
        )
    plane_line_angle(plane,tangent)],
-   zcross = [for(i=[0:len(curve)-(closed?1:2)]) if (sign(angles[i]) != sign(select(angles,i+1))) i],
-   d = [for(i=zcross) distance_from_line(edge, curve[i])]
+   zero_cross = [for(i=[0:len(curve)-(closed?1:2)]) if (sign(angles[i]) != sign(select(angles,i+1))) i],
+   d = [for(i=zero_cross) distance_from_line(edge, curve[i]+curve_offset)]
     )
-   zcross[min_index(d)];//zcross;
+   zero_cross[min_index(d)];//zcross;
+
 
 
 function plane_line_angle(plane, line) =
