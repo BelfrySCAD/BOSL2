@@ -193,37 +193,22 @@ include <vnf.scad>
 //       move([0,0, 0], p=path3d(circle(d=100,$fn=36))),
 //       move([0,0,50], p=path3d(circle(d=100,$fn=6)))
 //   ], caps=false);
-module skin(profiles, closed=false, caps=true, method="uniform", convexity=2) {
-	vnf_polyhedron(skin(profiles, caps=caps, closed=closed, method=method), convexity=convexity);
-}
-
-
-function skin(profiles, closed=false, caps=true, method="uniform") =
+function _skin_core(profiles, closed=false, caps=true) =
 	assert(is_list(profiles))
 	assert(all([for (profile=profiles) is_list(profile) && len(profile[0])==3]), "All profiles must be 3D paths.")
 	assert(is_bool(closed))
 	assert(is_bool(caps))
 	assert(!closed||!caps)
-	assert(is_string(method)||is_list(method))
 	let(
-		method = is_list(method)? method : [for (pidx=idx(profiles,end=closed?-1:-2)) method],
 		vertices = [for (prof=profiles) each prof],
 		plens = [for (prof=profiles) len(prof)]
 	)
-	assert(len(method) == len(profiles)-closed?0:1)
 	let(
 		sidefaces = [
 			for(pidx=idx(profiles,end=closed? -1 : -2))
 			let(
 				prof1 = profiles[pidx%len(profiles)],
 				prof2 = profiles[(pidx+1)%len(profiles)],
-				cp1 = centroid(prof1),
-				cp2 = centroid(prof2),
-				midpt = (cp1+cp2)/2,
-				n1 = plane_normal(plane_from_pointslist(prof1)),
-				n2 = plane_normal(plane_from_pointslist(prof2)),
-				midn = normalize((n1+n2)/2),
-				match = method[pidx],
 				voff = default(sum([for (i=[0:1:pidx-1]) plens[i]]),0),
 				faces = [
 					for(
@@ -237,37 +222,14 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 						!finished;
 
 						side =
-							i>=plen1*2? 0 :
-							j>=plen2*2? 1 :
 							let(
 								p1a = prof1[(i+0)%plen1],
 								p1b = prof1[(i+1)%plen1],
 								p2a = prof2[(j+0)%plen2],
-								p2b = prof2[(j+1)%plen2]
-							)
-							match=="distance"? let(
+								p2b = prof2[(j+1)%plen2],
 								dist1 = norm(p1a-p2b),
 								dist2 = norm(p1b-p2a)
-							) (dist1>dist2? 1 : 0) :
-							match=="angle"? let(
-								delta1 = rot(from=midn, to=UP, p=p2b - p1a),
-								delta2 = rot(from=midn, to=UP, p=p2a - p1b),
-								dist1 = atan2(norm([delta1.x, delta1.y]), abs(delta1.z)),
-								dist2 = atan2(norm([delta2.x, delta2.y]), abs(delta2.z))
-							) (dist1>dist2? 1 : 0) :
-							match=="convex"? let(
-								mid1 = (p2b + p1a)/2,
-								mid2 = (p2a + p1b)/2,
-								dist1 = norm(mid1-midpt),
-								dist2 = norm(mid2-midpt)
-							) (dist1<dist2? 1 : 0) :
-							match=="uniform"? let(
-								pct1 = i/plen1,
-								pct2 = j/plen2,
-								dist1 = norm(p1a-p2b),
-								dist2 = norm(p1b-p2a)
-							) (approx(pct1,pct2)? (dist1>dist2? 1 : 0) : (pct1<=pct2? 1 : 0)) :
-							assert(in_list(match,["distance","angle","convex","uniform"]),str("Got `",method,"'")),
+							) (i==j) ? (dist1>dist2? 1 : 0) : (i<j ? 1 : 0) ,
 						p1 = voff + (i%plen1),
 						p2 = voff + (j%plen2) + plen1,
 						p3 = voff + (side? ((i+1)%plen1) : (((j+1)%plen2) + plen1)),
@@ -305,9 +267,9 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 
 // Function&Module: superskin()
 // Usage: As module:
-//   skin(profiles, [slices], [samples|refine], [method], [smethod], [caps], [closed], [z]);
+//   skin(profiles, [slices], [samples|refine], [method], [sampling], [caps], [closed], [z]);
 // Usage: As function:
-//   vnf = skin(profiles, [slices], [samples|refine], [method], [smethod], [caps], [closed], [z]);
+//   vnf = skin(profiles, [slices], [samples|refine], [method], [sampling], [caps], [closed], [z]);
 // Description:
 //   Given a list of two ore more path `profiles` in 3d space, produces faces to skin a surface between
 //   the profiles.  Optionally the first and last profiles can have endcaps, or the first and last profiles
@@ -340,7 +302,7 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 //   of the largest profile, which will do nothing if all profiles are the same size.  
 //   
 //   Two methods are available for resampling, `"length"` and `"segment"`.  Specify them using
-//   the `smethod` argument.  The length resampling method resamples proportional to length.
+//   the `sampling` argument.  The length resampling method resamples proportional to length.
 //   The segment method divides each segment of a profile into the same number of points.
 //   A uniform division may be impossible, in which case the code computes an approximation.
 //   See `subdivide_path` for more details.  
@@ -364,24 +326,27 @@ function skin(profiles, closed=false, caps=true, method="uniform") =
 //   slices = scalar or vector number of slices to insert between each pair of profiles.  Default: 8.
 //   samples = resample each profile to this many points.  If `method` is distance default is undef, otherwise default is the length of longest profile.
 //   refine = resample profiles to this number of points per side.  If `method` is "distance" default is 10, otherwise undef. 
-//   smethod = sampling method, either "length" or "segment".  If `method` is "distance" or tangent default is "segment", otherwise "length".
+//   sampling = sampling method, either "length" or "segment".  If `method` is "distance" or tangent default is "segment", otherwise "length".
 //   caps = true to create endcap faces.  Default is true if closed is false.
 //   method = method for aligning and connecting profiles
 //   closed = set to true to connect first and last profile.  Default: false
 //   z = array of height values for each profile if the profiles are 2d
-module superskin(profiles, slices=8, samples, refine, method="uniform", smethod, caps, closed=false, z)
+module skin(profiles, slices=8, samples, refine, method="uniform", sampling, caps, closed=false, z)
 {
-  	vnf_polyhedron(superskin(profiles, slices, samples, refine, method, smethod, caps, closed, z));
+  	vnf_polyhedron(skin(profiles, slices, samples, refine, method, sampling, caps, closed, z));
 }        
 
-function superskin(profiles, slices=8, samples, refine, method="uniform", smethod, caps, closed=false, z) = 
+function skin(profiles, slices=8, samples, refine, method="uniform", sampling, caps, closed=false, z) =
+  assert(is_list(profiles) && len(profiles)>1, "Must provide at least two profiles")
+  let( bad = [for(i=[0:len(profiles)-1]) if (!(is_path(profiles[i]) && len(profiles[i])>2)) i])
+  assert(len(bad)==0, str("Profiles ",bad," are not a paths or have length less than 3"))
   let(
     legal_methods = ["uniform","align","distance","tangent"],
     caps = is_def(caps) ? caps :
            closed ? false : true,
     default_refine = 10,  
     maxsize = list_longest(profiles),
-    samples = echo(at_sample_method=method)is_def(samples) && is_def(refine) ? undef :
+    samples = is_def(samples) && is_def(refine) ? undef :
               is_def(samples) ? samples :
               is_def(refine)  ? maxsize*refine :
               method=="distance" ? maxsize*default_refine :
@@ -390,7 +355,7 @@ function superskin(profiles, slices=8, samples, refine, method="uniform", smetho
     methodok = is_list(method) || in_list(method, legal_methods),
     methodlistok = is_list(method) ? [for(i=[0:len(method)-1]) if (!in_list(method[i], legal_methods)) i] : [],
     method = is_string(method) ? replist(method, len(profiles)+ (closed?1:0)) : method,
-    smethod = is_def(smethod)? smethod :
+    sampling = is_def(sampling)? sampling :
               all([for(m=method) m=="distance" || m=="tangent"]) ? "segment" : "length"
     )
 
@@ -416,13 +381,13 @@ function superskin(profiles, slices=8, samples, refine, method="uniform", smetho
             method[i]=="distance" ? minimum_distance_match(profiles[i],select(profiles,i+1)) :
             method[i]=="tangent" ? tangent_align(profiles[i],select(profiles,i+1)) :
             /*method[i]=="align" || method[i]=="uniform" ?*/
-               let( p1 = subdivide_path(profiles[i],samples, method=smethod),
-                    p2 = subdivide_path(select(profiles,i+1),samples, method=smethod)
+               let( p1 = subdivide_path(profiles[i],samples, method=sampling),
+                    p2 = subdivide_path(select(profiles,i+1),samples, method=sampling)
                ) (method[i]=="uniform" ? [p1,p2] : [p1, reindex_polygon(p1, p2)])
           )
-          each interp_and_slice(pair,slices, samples, submethod=smethod)]
+          each interp_and_slice(pair,slices, samples, submethod=sampling)]
   )
-  skin(full_list, method="uniform");
+  _skin_core(full_list,closed=closed,caps=caps);
 
 
 
