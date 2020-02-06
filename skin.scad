@@ -341,7 +341,7 @@ function skin(profiles, slices=8, samples, refine, method="uniform", sampling, c
   let( bad = [for(i=[0:len(profiles)-1]) if (!(is_path(profiles[i]) && len(profiles[i])>2)) i])
   assert(len(bad)==0, str("Profiles ",bad," are not a paths or have length less than 3"))
   let(
-    legal_methods = ["uniform","align","distance","tangent"],
+    legal_methods = ["uniform","align","distance","tangent","sym_distance"],
     caps = is_def(caps) ? caps :
            closed ? false : true,
     default_refine = 10,  
@@ -349,14 +349,14 @@ function skin(profiles, slices=8, samples, refine, method="uniform", sampling, c
     samples = is_def(samples) && is_def(refine) ? undef :
               is_def(samples) ? samples :
               is_def(refine)  ? maxsize*refine :
-              method=="distance" ? maxsize*default_refine :
+              method=="distance" || method=="sym_distance" ? maxsize*default_refine :
                                    maxsize,
     
     methodok = is_list(method) || in_list(method, legal_methods),
     methodlistok = is_list(method) ? [for(i=[0:len(method)-1]) if (!in_list(method[i], legal_methods)) i] : [],
     method = is_string(method) ? replist(method, len(profiles)+ (closed?1:0)) : method,
     sampling = is_def(sampling)? sampling :
-              all([for(m=method) m=="distance" || m=="tangent"]) ? "segment" : "length"
+              all([for(m=method) m=="distance" || m=="sym_distance" || m=="tangent"]) ? "segment" : "length"
     )
 
   assert(methodok,str("method must be one of ",legal_methods,". Got ",method))
@@ -379,13 +379,15 @@ function skin(profiles, slices=8, samples, refine, method="uniform", sampling, c
         let(
           pair = 
             method[i]=="distance" ? minimum_distance_match(profiles[i],select(profiles,i+1)) :
+            method[i]=="sym_distance" ? sym_minimum_distance_match(profiles[i],select(profiles,i+1)) :
             method[i]=="tangent" ? tangent_align(profiles[i],select(profiles,i+1)) :
             /*method[i]=="align" || method[i]=="uniform" ?*/
                let( p1 = subdivide_path(profiles[i],samples, method=sampling),
                     p2 = subdivide_path(select(profiles,i+1),samples, method=sampling)
-               ) (method[i]=="uniform" ? [p1,p2] : [p1, reindex_polygon(p1, p2)])
+               ) (method[i]=="uniform" ? [p1,p2] : [p1, reindex_polygon(p1, p2)]),
+            nsamples = is_def(refine) && method=="sym_distance" ? refine * len(pair[0]) : samples
           )
-          each interp_and_slice(pair,slices, samples, submethod=sampling)]
+          each interp_and_slice(pair,slices, nsamples, submethod=sampling)]
   )
   _skin_core(full_list,closed=closed,caps=caps);
 
@@ -563,4 +565,98 @@ function plane_line_angle(plane, line) =
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
 
 
+
+_MAP_DIAG = 0;
+_MAP_LEFT = 1;
+_MAP_UP = 2;
+
+/*  // recursive version
+function sym_qp_distance_array(small, big, abort_thresh=1/0, small_ind=0, tdist=[], map=[]) =
+   small_ind == len(small) ? [tdist[len(small)-1][len(big)-1], map] :
+//   small_ind == len(small) ? [tdist, map] :  
+   let( row_results = sym_qp_distance_row(small, big, small_ind, tdist) )
+    min(row_results[0])> abort_thresh ? [tdist[len(tdist)-1][len(big)-1],map] :
+   sym_qp_distance_array(small, big, abort_thresh, small_ind+1, concat(tdist, [row_results[0]]), concat(map, [row_results[1]]));
+*/
+
+function sym_qp_distance_array(small, big, abort_thresh=1e50) =
+   [for(
+        small_ind = 0,
+        tdist = [],
+        map = []
+           ;
+        small_ind<=len(small)
+           ;
+        newrow =small_ind==len(small) ? [0,0,0] :  // dummy end case
+                           sym_qp_distance_row(small,big,small_ind,tdist),
+        tdist = concat(tdist, [newrow[0]]),
+        map = concat(map, [newrow[1]]),
+        small_ind = min(newrow[0])>abort_thresh ? len(small) : small_ind+1
+       )
+     if (small_ind==len(small)) each [tdist[len(tdist)-1][len(big)-1], map]];
+                                     //[tdist,map]];
+                                
+
+function sym_qp_distance_row(small, big, small_ind, tdist) =
+   small_ind == 0 ? [cumsum([for(i=[0:len(big)-1]) norm(big[i]-small[0])]), replist(_MAP_LEFT,len(big))] :
+   [for(big_ind=1,
+       newrow=[ norm(big[0] - small[small_ind]) + tdist[small_ind-1][0] ],
+       newmap = [_MAP_UP]
+         ;
+       big_ind<=len(big)
+         ;
+       costs = big_ind == len(big) ? [0] :    // handle extra iteration
+                             [tdist[small_ind-1][big_ind-1],  // diag
+                              newrow[big_ind-1],              // left 
+                              tdist[small_ind-1][big_ind]],   // up
+       newrow = concat(newrow, [min(costs)+norm(big[big_ind]-small[small_ind])]),
+       newmap = concat(newmap, [min_index(costs)]),
+       big_ind = big_ind+1
+   ) if (big_ind==len(big)) each [newrow,newmap]];
+
+function sym_qp_one_map(map) = 
+      [for(
+           i=len(map)-1,
+           j=len(map[0])-1,
+           smallmap=[i],
+           bigmap = [j]
+              ;
+           j >= 0
+              ;
+           advance_i = map[i][j]==_MAP_UP || map[i][j]==_MAP_DIAG,
+           advance_j = map[i][j]==_MAP_LEFT || map[i][j]==_MAP_DIAG,
+           i = i - (advance_i ? 1 : 0), 
+           j = j - (advance_j ? 1 : 0),
+           bigmap = concat( [j],  bigmap),
+           smallmap = concat( [i] , smallmap)
+          )
+        if (i==0 && j==0) each [smallmap,bigmap]];
+     
+
+function sym_minimum_distance_match(poly1,poly2) =
+   let(
+      swap = len(poly1)>len(poly2),
+      big = swap ? poly1 : poly2,
+      small = swap ? poly2 : poly1,
+      map_poly = [ for(
+              i=0,
+              bestcost = 1e50,
+              bestmap = -1,
+              bestpoly = -1
+              ;
+              i<=len(big)
+              ;
+              shifted = polygon_shift(big,i),
+              result = sym_qp_distance_array(small, shifted, abort_thresh = bestcost),
+              bestmap = result[0]<bestcost ? result[1] : bestmap,
+              bestpoly = result[0]<bestcost ? shifted : bestpoly,
+              bestcost = min(result[0], bestcost),
+              i=i+1
+              )
+              if (i==len(big)) each [bestmap,bestpoly]],
+      map = sym_qp_one_map(map_poly[0]),
+      newbig = repeat_entries(map_poly[1],unique_count(map[1])[1]),
+      newsmall = repeat_entries(small,unique_count(map[0])[1])
+      )
+      swap ? [newbig, newsmall] : [newsmall,newbig];
 
