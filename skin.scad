@@ -579,47 +579,72 @@ function sym_qp_distance_array(small, big, abort_thresh=1/0, small_ind=0, tdist=
    sym_qp_distance_array(small, big, abort_thresh, small_ind+1, concat(tdist, [row_results[0]]), concat(map, [row_results[1]]));
 */
 
-function sym_qp_distance_array(small, big, abort_thresh=1e50) =
+
+function sym_qp_distance_array(small, big, abort_thresh=1/0) =
    [for(
         small_ind = 0,
         tdist = [],
         map = []
            ;
-        small_ind<=len(small)
+        small_ind<=len(small)+1
            ;
-        newrow =small_ind==len(small) ? [0,0,0] :  // dummy end case
+        newrow =small_ind==len(small)+1 ? [0,0,0] :  // dummy end case
                            sym_qp_distance_row(small,big,small_ind,tdist),
         tdist = concat(tdist, [newrow[0]]),
         map = concat(map, [newrow[1]]),
-        small_ind = min(newrow[0])>abort_thresh ? len(small) : small_ind+1
+        small_ind = min(newrow[0])>abort_thresh ? len(small)+1 : small_ind+1
        )
-     if (small_ind==len(small)) each [tdist[len(tdist)-1][len(big)-1], map]];
+     if (small_ind==len(small)+1) each [tdist[len(tdist)-1][len(big)], map]];
                                      //[tdist,map]];
-                                
+
+
 
 function sym_qp_distance_row(small, big, small_ind, tdist) =
-   small_ind == 0 ? [cumsum([for(i=[0:len(big)-1]) norm(big[i]-small[0])]), replist(_MAP_LEFT,len(big))] :
+                    // Top left corner is zero because it gets counted at the end in bottom right corner
+   small_ind == 0 ? [cumsum([0,for(i=[1:len(big)]) norm(big[i%len(big)]-small[0])]), replist(_MAP_LEFT,len(big)+1)] :
    [for(big_ind=1,
-       newrow=[ norm(big[0] - small[small_ind]) + tdist[small_ind-1][0] ],
+       newrow=[ norm(big[0] - small[small_ind%len(small)]) + tdist[small_ind-1][0] ],
        newmap = [_MAP_UP]
          ;
-       big_ind<=len(big)
+       big_ind<=len(big)+1
          ;
-       costs = big_ind == len(big) ? [0] :    // handle extra iteration
+       costs = big_ind == len(big)+1 ? [0] :    // handle extra iteration
                              [tdist[small_ind-1][big_ind-1],  // diag
                               newrow[big_ind-1],              // left 
                               tdist[small_ind-1][big_ind]],   // up
-       newrow = concat(newrow, [min(costs)+norm(big[big_ind]-small[small_ind])]),
+       newrow = concat(newrow, [min(costs)+norm(big[big_ind%len(big)]-small[small_ind%len(small)])]),
        newmap = concat(newmap, [min_index(costs)]),
        big_ind = big_ind+1
-   ) if (big_ind==len(big)) each [newrow,newmap]];
+   ) if (big_ind==len(big)+1) each [newrow,newmap]];
 
-function sym_qp_one_map(map) = 
+
+function nsym_qp_distance_row(small, big, small_ind, tdist) =
+                    // Top left corner is zero because it gets counted at the end in bottom right corner
+   small_ind == 0 ? [cumsum([0,for(i=[1:len(big)]) triangle_area(big[i-1],big[i%len(big)], small[0])]), replist(_MAP_LEFT,len(big)+1)] :
+   [for(big_ind=1,
+       newrow=[triangle_area(big[0], small[small_ind%len(small)], small[small_ind-1]) + tdist[small_ind-1][0] ],
+       newmap = [_MAP_UP]
+         ;
+       big_ind<=len(big)+1
+         ;
+       costs = big_ind == len(big)+1 ? [0] :    // handle extra iteration
+                             [tdist[small_ind-1][big_ind-1] +                   //diag
+                                          quad_area(big[big_ind-1],big[big_ind%len(big)], small[small_ind%len(small)], small[small_ind-1]), 
+                              newrow[big_ind-1] + triangle_area(big[big_ind-1],big[big_ind%len(big)], small[small_ind%len(small)]),       // left
+                              tdist[small_ind-1][big_ind] + triangle_area(big[big_ind%len(big)], small[small_ind%len(small)], small[small_ind-1])],
+       newrow = concat(newrow, [min(costs)]),
+       newmap = concat(newmap, [min_index(costs)]),
+       big_ind = big_ind+1
+   ) if (big_ind==len(big)+1) each [newrow,newmap]];
+
+
+
+function sym_qp_one_map(map) =  
       [for(
            i=len(map)-1,
            j=len(map[0])-1,
-           smallmap=[i],
-           bigmap = [j]
+           smallmap=[],
+           bigmap = []
               ;
            j >= 0
               ;
@@ -627,8 +652,8 @@ function sym_qp_one_map(map) =
            advance_j = map[i][j]==_MAP_LEFT || map[i][j]==_MAP_DIAG,
            i = i - (advance_i ? 1 : 0), 
            j = j - (advance_j ? 1 : 0),
-           bigmap = concat( [j],  bigmap),
-           smallmap = concat( [i] , smallmap)
+           bigmap = concat( [j%(len(map[0])-1)] ,  bigmap),
+           smallmap = concat( [i%(len(map)-1)]  , smallmap)
           )
         if (i==0 && j==0) each [smallmap,bigmap]];
      
@@ -640,23 +665,37 @@ function sym_minimum_distance_match(poly1,poly2) =
       small = swap ? poly2 : poly1,
       map_poly = [ for(
               i=0,
-              bestcost = 1e50,
+              bestcost = 1/0,
               bestmap = -1,
               bestpoly = -1
               ;
               i<=len(big)
               ;
               shifted = polygon_shift(big,i),
-              result = sym_qp_distance_array(small, shifted, abort_thresh = bestcost),
+              result =sym_qp_distance_array(small, shifted, abort_thresh = bestcost),
               bestmap = result[0]<bestcost ? result[1] : bestmap,
               bestpoly = result[0]<bestcost ? shifted : bestpoly,
+              best_i = result[0]<bestcost ? i : best_i,
               bestcost = min(result[0], bestcost),
               i=i+1
               )
-              if (i==len(big)) each [bestmap,bestpoly]],
+              if (i==len(big)) each [bestmap,bestpoly,best_i]],
       map = sym_qp_one_map(map_poly[0]),
-      newbig = repeat_entries(map_poly[1],unique_count(map[1])[1]),
-      newsmall = repeat_entries(small,unique_count(map[0])[1])
+      eew = echo(map_poly[2],map_poly[0]),
+   dade=   echo(map=map),
+      smallmap = map[0],
+      bigmap = map[1],
+      // These shifts are needed to handle the case when points from both ends of one curve map to a single point on the other
+      bigshift =  len(bigmap) - max(max_index(bigmap,all=true))-1,
+      smallshift = len(smallmap) - max(max_index(smallmap,all=true))-1,
+ fdas=     echo(smallmap=smallmap, bigmap=bigmap),
+      newsmall = polygon_shift(repeat_entries(small,unique_count(smallmap)[1]),smallshift),
+      newbig = polygon_shift(repeat_entries(map_poly[1],unique_count(bigmap)[1]),bigshift)
       )
       swap ? [newbig, newsmall] : [newsmall,newbig];
+
+
+
+
+
 
