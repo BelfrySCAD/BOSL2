@@ -14,6 +14,10 @@ PHI = (1+sqrt(5))/2;  // The golden ratio phi.
 
 EPSILON = 1e-9;  // A really small value useful in comparing FP numbers.  ie: abs(a-b)<EPSILON
 
+INF = 1/0;  // The value `inf`, useful for comparisons.
+
+NAN = acos(2);  // The value `nan`, useful for comparisons.
+
 
 
 // Section: Simple math
