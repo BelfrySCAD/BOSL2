@@ -78,11 +78,7 @@ function is_integer(n) = is_num(n) && n == round(n);
 //   is_nan(x);
 // Description:
 //   Returns true if a given value `x` is nan, a floating point value representing "not a number".
-//   This test is far more complicated than it should be, because while arguable correct, the tests
-//   `is_num(nan)` and `nan==nan` both returns false.
-function is_nan(x) =
-	!is_num(x) && !is_undef(x) && !is_string(x) &&
-	!is_list(x) && !(x<=INF) && is_undef(x[0]);
+function is_nan(x) = (x!=x);
 
 
 
