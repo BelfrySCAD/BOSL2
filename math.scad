@@ -428,14 +428,16 @@ function lcm(a,b=[]) =
 // Description:
 //   Returns the sum of all entries in the given list.
 //   If passed an array of vectors, returns a vector of sums of each part.
+//   If passed an empty list, the value of `dflt` will be returned.
 // Arguments:
 //   v = The list to get the sum of.
+//   dflt = The default value to return if `v` is an empty list.  Default: 0
 // Example:
 //   sum([1,2,3]);  // returns 6.
 //   sum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [9, 12, 15]
-function sum(v, _i=0, _acc) =
-	_i>=len(v)? _acc :
-	sum(v, _i=_i+1, _acc=is_undef(_acc)? v[_i] : _acc+v[_i]);
+function sum(v, dflt=0, _i=0, _acc) =
+	_i>=len(v)? (len(v)? _acc : dflt) :
+	sum(v, dflt=dflt, _i=_i+1, _acc=is_undef(_acc)? v[_i] : _acc+v[_i]);
 
 
 // Function: cumsum()

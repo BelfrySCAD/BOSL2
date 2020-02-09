@@ -293,6 +293,8 @@ test_atanh();
 
 
 module test_sum() {
+	assert(sum([]) == 0);
+	assert(sum([],dflt=undef) == undef);
 	assert(sum([1,2,3]) == 6);
 	assert(sum([-2,-1,0,1,2]) == 0);
 	assert(sum([[1,2,3], [3,4,5], [5,6,7]]) == [9,12,15]);
@@ -301,6 +303,7 @@ test_sum();
 
 
 module test_cumsum() {
+	assert(cumsum([]) == []);
 	assert(cumsum([1,1,1]) == [1,2,3]);
 	assert(cumsum([2,2,2]) == [2,4,6]);
 	assert(cumsum([1,2,3]) == [1,3,6]);
