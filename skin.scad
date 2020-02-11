@@ -193,11 +193,27 @@ include <vnf.scad>
 //       skin([for (i=[0:layers-1]) zrot(-30*i,p=path3d(hexagon(ir=r),i*height/layers))],slices=0);
 //       up(height/layers) cylinder(r=holeradius, h=height);
 //   }
+// Example(FlatSpin): A box that is octagonal on the outside and circular on the inside
+//   height = 45;
+//   sub_base = octagon(d=71, rounding=2, $fn=128);
+//   base = octagon(d=75, rounding=2, $fn=128);
+//   interior = regular_ngon(n=len(base), d=60);
+//   right_half()
+//     skin([ sub_base, base, base, sub_base, interior], z=[0,2,height, height, 2], slices=0, refine=1, method="reindex");
 // Example(FlatSpin): Connecting a pentagon and circle with the "tangent" method produces triangular faces.
 //   skin([pentagon(4), circle($fn=80,r=2)], z=[0,3], slices=10, method="tangent");
 // Example(FlatSpin): Another "tangent" example with non-parallel profiles
 //   skin([path3d(pentagon(4)),
 //         yrot(35,p=path3d(right(4,p=circle($fn=80,r=2)),5))], slices=10, method="tangent");
+// Example: rounding corners of a square.  Note that $fn makes the number of points constant, and avoiding the `rounding=0` case keeps everything simple.  In this case, the connections between profiles are linear, so there is no benefit to setting `slices` bigger than zero.  
+//   shapes = [for(i=[.01:.045:2])zrot(-i*180/2,cp=[-8,0,0],p=xrot(90,p=path3d(regular_ngon(n=4, side=4, rounding=i, $fn=64))))];
+//   skin( shapes, slices=0);
+// Example: Here's a simplified version of the above, with `i=0` included.  That first layer doesn't look good. 
+//   shapes = [for(i=[0:.2:1]) path3d(regular_ngon(n=4, side=4, rounding=i, $fn=32),i*5)];
+//   skin( shapes, slices=0);
+// Example: You can fix it by specifying "tangent" for the first method, but you still need "direct" for the rest. 
+//   shapes = [for(i=[0:.2:1]) path3d(regular_ngon(n=4, side=4, rounding=i, $fn=32),i*5)];
+//   skin( shapes, slices=0, method=concat(["tangent"],replist("direct",len(shapes)-2)));
 // Example(FlatSpin): Connecting square to pentagon using "direct" method.
 //   skin([regular_ngon(n=4, r=4), regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10);
 // Example(FlatSpin): Connecting square to pentagon using "direct" method.
@@ -236,6 +252,10 @@ include <vnf.scad>
 //   skin([repeat_entries(prof1,[2,2,1,1,1,1,1]),
 //         prof2], 
 //        method="distance", slices=10, refine=10);
+// Example(FlatSpin): The "distance" method will often produces results similar to the "tangent" method if you use it with a polygon and a curve, but the results can also look like this:
+//   skin([path3d(circle($fn=128, r=10)), xrot(39, p=path3d(square([8,10]),10))],  method="distance", slices=0);
+// Example(FlatSpin): Using the "tangent" method produces:
+//   skin([path3d(circle($fn=128, r=10)), xrot(39, p=path3d(square([8,10]),10))],  method="tangent", slices=0);
 // Example(FlatSpin): Torus using hexagons and pentagons, where `closed=true`
 //   hex = back(7,p=path3d(hexagon(r=3)));
 //   pent = back(7,p=path3d(pentagon(r=3)));
@@ -264,6 +284,31 @@ include <vnf.scad>
 //       for (ang = [0:10:90])
 //       rot([0,ang,0], cp=[200,0,0], p=path3d(circle(d=100,$fn=12-(ang/10))))
 //   ],method="distance",slices=10,refine=10);
+// Example: If you create a self-intersecting polyhedron the result is invalid.  In some cases self-intersection may be obvous.  Here is a more subtle example. 
+//   skin([
+//          for (a = [0:30:180]) let(
+//              pos  = [-60*sin(a),     0, a    ],
+//              pos2 = [-60*sin(a+0.1), 0, a+0.1]
+//          ) move(pos,
+//              p=rot(from=UP, to=pos2-pos,
+//                  p=path3d(circle(d=150))
+//              )
+//          )
+//      ],refine=1,slices=0);
+//      color("red") {
+//          zrot(25) fwd(130) xrot(75) {
+//              linear_extrude(height=0.1) {
+//                  ydistribute(25) {
+//                      text(text="BAD POLYHEDRONS!", size=20, halign="center", valign="center");
+//                      text(text="CREASES MAKE", size=20, halign="center", valign="center");
+//                  }
+//              }
+//          }
+//          up(160) zrot(25) fwd(130) xrot(75) {
+//              stroke(zrot(30, p=yscale(0.5, p=circle(d=120))),width=10,closed=true);
+//          }
+//      }
+
 
 module skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, convexity=10)
 {
@@ -275,16 +320,16 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
   assert(is_list(profiles) && len(profiles)>1, "Must provide at least two profiles")
   let( bad = [for(i=idx(profiles)) if (!(is_path(profiles[i]) && len(profiles[i])>2)) i])
   assert(len(bad)==0, str("Profiles ",bad," are not a paths or have length less than 3"))
-  assert(is_integer(slices) && slices>=0,"slices must be specified as a nonnegative integer")
   let(
     legal_methods = ["direct","reindex","distance","tangent"],
     caps = is_def(caps) ? caps :
            closed ? false : true,
     capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
     fullcaps = is_bool(caps) ? [caps,caps] : caps,
-    refine = is_list(refine) ? refine :
-             replist(refine, len(profiles)),
+    refine = is_list(refine) ? refine : replist(refine, len(profiles)),
+    slices = is_list(slices) ? slices : replist(slices, len(profiles)-1),
     refineOK = [for(i=idx(refine)) if (refine[i]<=0 || !is_integer(refine[i])) i],
+    slicesOK = [for(i=idx(slices)) if (!is_integer(slices[i]) || slices[i]<0) i],
     maxsize = list_longest(profiles),
     methodok = is_list(method) || in_list(method, legal_methods),
     methodlistok = is_list(method) ? [for(i=idx(method)) if (!in_list(method[i], legal_methods)) i] : [],
@@ -297,7 +342,9 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
                in_list(DUPLICATOR,method_type) ? "segment" : "length" 
   )
   assert(len(refine)==len(profiles), "refine list is the wrong length")
-  assert(refineOK==[],str("refine must be integer valued and postive"))
+  assert(len(slices)==len(profiles)-1, "slices list is the wrong length")
+  assert(slicesOK==[],str("slices must be nonnegative integers"))
+  assert(refineOK==[],str("refine must be postive integer"))
   assert(methodok,str("method must be one of ",legal_methods,". Got ",method))
   assert(methodlistok==[], str("method list contains invalid method at ",methodlistok))
   assert(len(method) == len(profiles) + (closed?0:-1),"Method list is the wrong length")
@@ -318,24 +365,16 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
                [for(i=idx(profiles)) path3d(profiles[i], z[i])],
     // True length (not counting repeated vertices) of profiles after refinement
     refined_len = [for(i=idx(profiles)) refine[i]*len(profiles[i])],
-rety=    echo(refine=refine),
-  fdabe=  echo(refined_len = refined_len),
     // Define this to be 1 if a profile is used on either side by a resampling method, zero otherwise.
     profile_resampled = [for(i=idx(profiles)) 
       1-(
            i==0 ?  method_type[0] * (closed? select(method_type,-1) : 1) :
            i==len(profiles)-1 ? select(method_type,-1) * (closed ? select(method_type,-2) : 1) :
          method_type[i] * method_type[i-1])],
-    
-    
-  efqqw=echo(method_type = method_type),       
-  fdae=  echo(profile_resampled=profile_resampled),
     parts = search(1,[1,for(i=[0:1:len(profile_resampled)-2]) profile_resampled[i]!=profile_resampled[i+1] ? 1 : 0],0),
     plen = [for(i=idx(parts)) (i== len(parts)-1? len(refined_len) : parts[i+1]) - parts[i]],
     max_list = [for(i=idx(parts)) each replist(max(select(refined_len, parts[i], parts[i]+plen[i]-1)), plen[i])],
-fdafee=    echo(max_list=max_list),
     transition_profiles = [for(i=[(closed?0:1):1:len(profiles)-(closed?1:2)]) if (select(method_type,i-1) != method_type[i]) i],
-    ttr=echo(transition_profiles=transition_profiles),
     badind = [for(tranprof=transition_profiles) if (refined_len[tranprof] != max_list[tranprof]) tranprof]
   )
   assert(badind==[],str("Profile length mismatch at method transition at indices ",badind," in skin()"))
@@ -360,7 +399,7 @@ fdafee=    echo(max_list=max_list),
                                                         ".  Method ",method[i]," requires equal values"))
                refine[i] * len(pair[0])
           )
-          each interp_and_slice(pair,slices, nsamples, submethod=sampling)]
+          each interp_and_slice(pair,slices[i], nsamples, submethod=sampling)]
   )
   _skin_core(full_list,caps=fullcaps);
 
