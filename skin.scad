@@ -15,197 +15,363 @@ include <vnf.scad>
 
 
 // Section: Skinning
-
-
+//
 // Function&Module: skin()
-// Usage: As Module
-//   skin(profiles, [closed], [method]);
-// Usage: As Function
-//   vnf = skin(profiles, [closed], [caps], [method]);
-// Description
-//   Given a list of two or more path `profiles` in 3D-space, produces faces to skin a surface between
-//   consecutive profiles.  Optionally, the first and last profiles can have endcaps, or the last and
-//   first profiles can be skinned together.  Each profile should be roughly planar, but some variance
-//   is allowed.  The orientation of the first vertex of each profile should be relatively aligned with
-//   that of the next profile.  Each profile should rotate the same clockwise direction.
-//   If called as a function, returns a [VNF structure](vnf.scad) like `[VERTICES, FACES]`.
-//   If called as a module, creates a polyhedron of the skinned profiles.
-//   The vertex matching methods are as follows:
-//   - `"distance"`: Chooses face configurations with shorter edge lengths.
-//   - `"angle"`: Chooses face configurations with edge angles closest to vertical.
-//   - `"convex"`: Chooses the more convex of possible face configurations.
-//   - `"uniform"`: Vertices are uniformly matched between profiles, such that a point 30% of the way through one profile, will be matched to a vertex 30% of the way through the other profile, based on vertex count.
+// Usage: As module:
+//   skin(profiles, [slices], [refine], [method], [sampling], [caps], [closed], [z]);
+// Usage: As function:
+//   vnf = skin(profiles, [slices], [refine], [method], [sampling], [caps], [closed], [z]);
+// Description:
+//   Given a list of two ore more path `profiles` in 3d space, produces faces to skin a surface between
+//   the profiles.  Optionally the first and last profiles can have endcaps, or the first and last profiles
+//   can be connected together.  Each profile should be roughly planar, but some variation is allowed.
+//   Each profile must rotate in the same clockwise direction.  If called as a function, returns a
+//   [VNF structure](vnf.scad) like `[VERTICES, FACES]`.  If called as a module, creates a polyhedron
+//    of the skined profiles.
+//   
+//   The profiles can be specified either as a list of 3d curves or they can be specified as
+//   2d curves with heights given in the `z` parameter.  
+//   
+//   For this operation to be well-defined, the profiles must all have the same vertex count and
+//   we must assume that profiles are aligned so that vertex `i` links to vertex `i` on all polygons.  
+//   Many interesting cases do not comply with this restriction.  Two basic methods can handle
+//   these cases: either add points to edges (resample) so that the profiles are compatible,
+//   or repeat vertices.  Repeating vertices allows two edges to terminate at the same point, creating
+//   triangular faces.  You can adjust non-matchines profiles yourself
+//   either by resampling them using `subdivide_path` or by duplicating vertices using
+//   `repeat_entries`.  It is OK to pass a profile that has the same vertex repeated, such as
+//   a square with 5 points (two of which are identical), so that it can match up to a pentagon.
+//   Such a combination would create a triangular face at the location of the duplicated vertex.
+//   Alternatively, `skin` provides methods (described below) for matching up incompatible paths.
+//   
+//   In order for skinned surfaces to look good it is usually necessary to use a fine sampling of
+//   points on all of the profiles, and a large number of extra interpolated slices between the
+//   profiles that you specify.  It is generally best if the triangules forming your polyhedron
+//   are approximately equilateral.  The `slices` parameter specifies the number of slices to insert
+//   between each pair of profiles, either a scalar to insert the same number everywhere, or a vector
+//   to insert a different number between each pair.  To resample the profiles you can use set
+//   `refine=N` which will place `N` points on each edge of your profile.  This has the effect of 
+//   muliplying the number of points by N, so a profile with 8 points will have 8*N points afer
+//   refinement.  Note that when dealing with continuous curves it is always better to adjust the
+//   sampling in your code to generate the desired sampling rather than using the `refine` argument. 
+//   
+//   Two methods are available for resampling, `"length"` and `"segment"`.  Specify them using
+//   the `sampling` argument.  The length resampling method resamples proportional to length.
+//   The segment method divides each segment of a profile into the same number of points.
+//   A uniform division may be impossible, in which case the code computes an approximation.
+//   See `subdivide_path` for more details.  
+//    
+//   You can choose from four methods for specifying alignment for incomensurate profiles.
+//   The available methods are `"distance"`, `"tangent"`, `"direct"` and `"reindex"`.
+//   It is useful to distinguish between continuous curves like a circle and discrete profiles
+//   like a hexagon or star, because the algorithms' suitability depend on this distinction. 
+//   
+//   The "direct" and "reindex" methods work by resampling the profiles if necessary.  As noted above,
+//   for continuous input curves, it is better to generate your curves directly at the desired sample size,
+//   but for mapping between a discrete profile like a hexagon and a circle, the hexagon must be resampled
+//   to match the circle.  You can do this in two different ways using the `sampling` parameter.  The default
+//   of `sampling="length"` approximates a uniform length sampling of the profile.  The other option
+//   is `sampling="segment"` which attempts to place the same number of new points on each segment.
+//   If the segments are of varying length, this will produce a different result.  Note that "direct" is
+//   the default method.  If you simply supply a list of compatible profiles it will link them up
+//   exactly as you have provided them.  You may find that profiles you want to connect define the 
+//   right shapes but the point lists don't start from points that you want aligned in your skinned
+//   polyhedron.  You can correct this yourself using `reindex_polygon`, or you can use the "reindex"
+//   method which will look for the index choice that will minimize the length of all of the edges
+//   in the polyhedron---in will produce the least twisted possible result.  This algorithm has quadratic
+//   run time so it can be slow with very large profiles.
+//   
+//   The "distance" and "tangent" methods are work by duplicating vertices to create
+//   triangular faces.  The "distance" method finds the global minimum distance method for connecting two
+//   profiles.  This algorithm generally produces a good result when both profiles are discrete ones with
+//   a small number of vertices.  It is computationally intensive (O(N^3)) and may be
+//   slow on large inputs.  The resulting surfaces generally have curves faces, so be
+//   sure to select a sufficiently large value for `slices` and `refine`.  
+//   The `"tangent"` method generally produces good results when
+//   connecting a discrete polygon to a convex, finely sampled curve.  It works by finding
+//   a plane that passed through each edge of the polygon that is tangent to
+//   the curve.  It may fail if the curved profile is non-convex, or doesn't have enough points to distinguish
+//   all of the tangent points from each other.  It connects all of the points of the curve to the corners of the discrete
+//   polygon using triangular faces.  Using `refine` with this method will have little effect on the model, so
+//   you should do it only for agreement with other profiles, and these models are linear, so extra slices also
+//   have no effect.  For best efficiency set `refine=1` and `slices=0`.  When you use refinement with either
+//   of these methods, it is always the "segment" based resampling described above.  This is necessary because
+//   sampling by length will ignore the repeated vertices and break the alignment.
+//   
+//   It is possible to specify `method` and `refine` as arrays, but it is important to observe
+//   matching rules when you do this.  If a pair of profiles is connected using "tangent" or "distance"
+//   then the `refine` values for those two profiles must be equal.  If a profile is connected by
+//   a vertex duplicating method on one side and a resampling method on the other side, then
+//   `refine` must be set so that the resulting number of vertices matches the number that is
+//   used for the resampled profiles.  The best way to avoid confusion is to ensure that the
+//   profiles connected by "direct" or "realign" all have the same number of points and at the
+//   transition, the refined number of points matches.  
+//   
 // Arguments:
-//   profiles = A list of 2D paths that have been moved and/or rotated into 3D-space.
-//   closed = If true, the last profile is skinned to the first profile, to allow for making a closed loop.  Assumes `caps=false`.  Default: false
-//   caps = If true, endcap faces are created.  Assumes `closed=false`.  Default: true
-//   method = Specifies the method used to match up vertices between profiles, to create faces.  Given as a string, one of `"distance"`, `"angle"`, or `"uniform"`.  If given as a list of strings, equal in number to the number of profile transitions, lets you specify the method used for each transition.  Default: "uniform"
-//   convexity = Max number of times a line could intersect a wall of the shape.  (Module use only.)  Default: 2.
+//   profiles = list of 2d or 3d profiles to be skinned.  (If 2d must also give `z`.)
+//   slices = scalar or vector number of slices to insert between each pair of profiles.  Set to zero to use only the profiles you provided.  Recommend starting with a value around 10. 
+//   refine = resample profiles to this number of points per edge.  Can be a list to give a refinement for each profile.  Recommend using a value above 10 when using the "distance" method.  Default: 1. 
+//   sampling = sampling method to use with "direct" and "reindex" methods.  Can be "length" or "segment".  Ignored if any profile pair uses either the "distance" or "tangent" methods.  Default: "length".  
+//   closed = set to true to connect first and last profile (to make a torus).  Default: false
+//   caps = true to create endcap faces when closed is false.  Can be a length 2 boolean array.  Default is true if closed is false.
+//   method = method for connecting profiles, one of "distance", "tangent", "direct" or "reindex".  Default: "direct".
+//   z = array of height values for each profile if the profiles are 2d
 // Example(FlatSpin):
-//   skin([
-//      scale([2,1,1], p=path3d(circle(d=100,$fn=48))),
-//      path3d(circle(d=100,$fn=4),100),
-//      path3d(circle(d=100,$fn=12),200),
-//   ], method="distance");
+//   skin([octagon(4), regular_ngon(n=70,r=2)], z=[0,3], slices=10);
+// Example(FlatSpin): The circle() and pentagon() modules place the zero index at different locations, giving a twist
+//   skin([pentagon(4), circle($fn=80,r=2)], z=[0,3], slices=10);
+// Example(FlatSpin): You can untwist it with the "reindex" method
+//   skin([pentagon(4), circle($fn=80,r=2)], z=[0,3], slices=10, method="reindex");
+// Example(FlatSpin): Offsetting the starting edge connects to circles in an interesting way:
+//   circ = circle($fn=80, r=3);
+//   skin([circ, rot(110,p=circ)], z=[0,5], slices=20);
+// Example(FlatSpin): 
+//   skin([ yrot(37,p=path3d(circle($fn=128, r=4))), path3d(square(3),3)], method="reindex",slices=10);
+// Example(FlatSpin): Ellipses connected with twist
+//   ellipse = xscale(2.5,p=circle($fn=80));
+//   skin([ellipse, rot(45,p=ellipse)], z=[0,1.5], slices=10);
+// Example(FlatSpin): Ellipses connected without a twist.  (Note ellipses stay in the same position: just the connecting edges are different.)
+//   ellipse = xscale(2.5,p=circle($fn=80));
+//   skin([ellipse, rot(45,p=ellipse)], z=[0,1.5], slices=10, method="reindex");
 // Example(FlatSpin):
+//   $fn=24;
 //   skin([
-//       for (ang = [0:10:90])
-//       rot([0,ang,0], cp=[200,0,0], p=path3d(circle(d=100,$fn=3+(ang/10))))
-//   ]);
-// Example(FlatSpin): Möbius Strip
+//         yrot(35, p=yscale(2,p=path3d(circle(d=75)))),
+//         [[40,0,100], [35,-15,100], [20,-30,100],[0,-40,100],[-40,0,100],[0,40,100],[20,30,100], [35,15,100]]
+//   ],slices=10);
+// Example(FlatSpin):
+//   $fn=48;
 //   skin([
-//       for (ang = [0:10:360])
-//       rot([0,ang,0], cp=[100,0,0], p=rot(ang/2, p=path3d(square([1,30],center=true))))
-//   ], caps=false);
-// Example(FlatSpin): Closed Loop
-//   skin([
-//       for (i = [0:5])
-//       rot([0,i*60,0], cp=[100,0,0], p=path3d(circle(d=30,$fn=3+i%3)))
-//   ], closed=true, caps=false);
-// Example(FlatSpin): Method "distance" is a good general purpose vertex matching method.
-//   method = "distance";
-//   xdistribute(150) {
-//       $fn=24;
-//       skin([
-//           yscale(2, p=path3d(circle(d=75))),
-//           [[40,0,100], [35,-15,100], [20,-30,100],[0,-40,100],[-40,0,100],[0,40,100],[20,30,100], [35,15,100]]
-//       ], method=method);
-//       skin([
-//           for (b=[0,90]) [
-//               for (a=[360:-360/$fn:0.01])
-//                   point3d(polar_to_xy((100+50*cos((a+b)*2))/2,a),b/90*100)
-//           ]
-//       ], method=method);
-//       skin([
-//           scale([1,2,1],p=path3d(circle(d=50))),
-//           scale([2,1,1],p=path3d(circle(d=50),100))
-//       ], method=method);
-//   }
-// Example(FlatSpin): Method "angle" works subtly better with profiles created from a polar function.
-//   method = "angle";
-//   xdistribute(150) {
-//       $fn=24;
-//       skin([
-//           yscale(2, p=path3d(circle(d=75))),
-//           [[40,0,100], [35,-15,100], [20,-30,100],[0,-40,100],[-40,0,100],[0,40,100],[20,30,100], [35,15,100]]
-//       ], method=method);
-//       skin([
-//           for (b=[0,90]) [
-//               for (a=[360:-360/$fn:0.01])
-//                   point3d(polar_to_xy((100+50*cos((a+b)*2))/2,a),b/90*100)
-//           ]
-//       ], method=method);
-//       skin([
-//           scale([1,2,1],p=path3d(circle(d=50))),
-//           scale([2,1,1],p=path3d(circle(d=50),100))
-//       ], method=method);
-//   }
-// Example(FlatSpin): Method "convex" maximizes convexity.
-//   method = "convex";
-//   xdistribute(150) {
-//       $fn=24;
-//       skin([
-//           yscale(2, p=path3d(circle(d=75))),
-//           [[40,0,100], [35,-15,100], [20,-30,100],[0,-40,100],[-40,0,100],[0,40,100],[20,30,100], [35,15,100]]
-//       ], method=method);
-//       skin([
-//           for (b=[0,90]) [
-//               for (a=[360:-360/$fn:0.01])
-//                   point3d(polar_to_xy((100+50*cos((a+b)*2))/2,a),b/90*100)
-//           ]
-//       ], method=method);
-//       skin([
-//           scale([1,2,1],p=path3d(circle(d=50))),
-//           scale([2,1,1],p=path3d(circle(d=50),100))
-//       ], method=method);
-//   }
-// Example(FlatSpin): Method "uniform" works well with symmetrical profiles that are regularly spaced.
-//   method = "uniform";
-//   xdistribute(150) {
-//       $fn=24;
-//       skin([
-//           yscale(2, p=path3d(circle(d=75))),
-//           [[40,0,100], [35,-15,100], [20,-30,100],[0,-40,100],[-40,0,100],[0,40,100],[20,30,100], [35,15,100]]
-//       ], method=method);
-//       skin([
-//           for (b=[0,90]) [
-//               for (a=[360:-360/$fn:0.01])
-//                   point3d(polar_to_xy((100+50*cos((a+b)*2))/2,a),b/90*100)
-//           ]
-//       ], method=method);
-//       skin([
-//           scale([1,2,1],p=path3d(circle(d=50))),
-//           scale([2,1,1],p=path3d(circle(d=50),100))
-//       ], method=method);
-//   }
-// Example:
+//       for (b=[0,90]) [
+//           for (a=[360:-360/$fn:0.01])
+//               point3d(polar_to_xy((100+50*cos((a+b)*2))/2,a),b/90*100)
+//       ]
+//   ], slices=20);
+// Example(FlatSpin): Vaccum connector example from list-comprehension-demos
 //   include <BOSL2/rounding.scad>
-//   fn=32;
-//   base = round_corners(square([2,4],center=true), measure="radius", size=0.5, $fn=fn);
+//   $fn=32;
+//   base = round_corners(square([2,4],center=true), measure="radius", size=0.5);
 //   skin([
 //       path3d(base,0),
 //       path3d(base,2),
-//       path3d(circle($fn=fn,r=0.5),3),
-//       path3d(circle($fn=fn,r=0.5),4),
-//       path3d(circle($fn=fn,r=0.6),4),
-//       path3d(circle($fn=fn,r=0.5),5),
-//       path3d(circle($fn=fn,r=0.6),5),
-//       path3d(circle($fn=fn,r=0.5),6),
-//       path3d(circle($fn=fn,r=0.6),6),
-//       path3d(circle($fn=fn,r=0.5),7),
-//   ],method="uniform");
-// Example: Forma Candle Holder
+//       path3d(circle(r=0.5),3),
+//       path3d(circle(r=0.5),4),
+//       for(i=[0:2]) each [path3d(circle(r=0.6), i+4),
+//                          path3d(circle(r=0.5), i+5)]
+//   ],slices=0);
+// Example(FlatSpin): Vaccum nozzle example from list-comprehension-demos, using "length" sampling (the default)
+//   xrot(90)down(1.5)
+//   difference() {
+//   	skin(
+//   		[square([2,.2],center=true),
+//   		 circle($fn=64,r=0.5)], z=[0,3], 
+//   		slices=40,sampling="length",method="reindex");
+//   	skin(
+//   		[square([1.9,.1],center=true),
+//   		 circle($fn=64,r=0.45)], z=[-.01,3.01], 
+//   		slices=40,sampling="length",method="reindex");
+//   }
+// Example(FlatSpin): Same thing with "segment" sampling
+//   xrot(90)down(1.5)
+//   difference() {
+//   	skin(
+//   		[square([2,.2],center=true),
+//   		 circle($fn=64,r=0.5)], z=[0,3], 
+//   		slices=40,sampling="segment",method="reindex");
+//   	skin(
+//   		[square([1.9,.1],center=true),
+//   		 circle($fn=64,r=0.45)], z=[-.01,3.01], 
+//   		slices=40,sampling="segment",method="reindex");
+//   }
+// Example(FlatSpin): Forma Candle Holder (from list-comprehension-demos)
 //   r = 50;
 //   height = 140;
 //   layers = 10;
 //   wallthickness = 5;
 //   holeradius = r - wallthickness;
 //   difference() {
-//       skin([for (i=[0:layers-1]) zrot(-30*i,p=path3d(hexagon(ir=r),i*height/layers))]);
+//       skin([for (i=[0:layers-1]) zrot(-30*i,p=path3d(hexagon(ir=r),i*height/layers))],slices=0);
 //       up(height/layers) cylinder(r=holeradius, h=height);
 //   }
-// Example: Beware Self-intersecting Creases!
+// Example(FlatSpin): Connecting a pentagon and circle with the "tangent" method produces triangular faces.
+//   skin([pentagon(4), circle($fn=80,r=2)], z=[0,3], slices=10, method="tangent");
+// Example(FlatSpin): Another "tangent" example with non-parallel profiles
+//   skin([path3d(pentagon(4)),
+//         yrot(35,p=path3d(right(4,p=circle($fn=80,r=2)),5))], slices=10, method="tangent");
+// Example(FlatSpin): Connecting square to pentagon using "direct" method.
+//   skin([regular_ngon(n=4, r=4), regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10);
+// Example(FlatSpin): Connecting square to pentagon using "direct" method.
+//   skin([regular_ngon(n=4, r=4), right(4)regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10);
+// Example(FlatSpin): To improve the look, you can actually rotate the polygons for a more symmetric pattern of lines.   You have to resample yourself before calling `align_polygon` and you should choose a length that is a multiple of both polygon lengths.  
+//   sq = subdivide_path(regular_ngon(n=4, r=4),40);
+//   pent = subdivide_path(regular_ngon(n=5,r=5),40);
+//   skin([sq, align_polygon(sq,pent,[0:1:360/5])], z=[0,4], slices=10);
+// Example(FlatSpin): The "distance" method is a completely different approach.
+//   skin([regular_ngon(n=4, r=4), regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10, method="distance");
+// Example(FlatSpin): Connecting pentagon to heptagon inserts two triangular faces on each side
+//   small = path3d(circle(r=3, $fn=5));
+//   big = up(2,p=yrot( 0,p=path3d(circle(r=3, $fn=7), 6)));
+//   skin([small,big],method="distance", slices=10, refine=10);
+// Example(FlatSpin): But just a slight rotation moves the two triangles to one end
+//   small = path3d(circle(r=3, $fn=5));
+//   big = up(2,p=yrot(14,p=path3d(circle(r=3, $fn=7), 6)));
+//   skin([small,big],method="distance", slices=10, refine=10);
+// Example(FlatSpin): Another "distance" example:
+//   off = [0,2]; 
+//   shape = turtle(["right",45,"move", "left",45,"move", "left",45, "move", "jump", [.5+sqrt(2)/2,8]]);
+//   rshape = rot(180,cp=centroid(shape)+off, p=shape);
+//   skin([shape,rshape],z=[0,4], method="distance",slices=10,refine=15);
+// Example(FlatSpin): Slightly shifting the profile changes the optimal linkage
+//   off = [0,1]; 
+//   shape = turtle(["right",45,"move", "left",45,"move", "left",45, "move", "jump", [.5+sqrt(2)/2,8]]);
+//   rshape = rot(180,cp=centroid(shape)+off, p=shape);
+//   skin([shape,rshape],z=[0,4], method="distance",slices=10,refine=15);
+// Example(FlatSpin): This optimal solution doesn't look terrible:
+//   prof1 = path3d([[50,-50], [-50,-50], [-50,50], [-25,25], [0,50], [25,25], [50,50]]);
+//   prof2 = path3d(regular_ngon(n=7, r=50),100);
+//   skin([prof1, prof2], method="distance", slices=10, refine=10);
+// Example(FlatSpin): But this one looks better.  The "distance" method doesn't find it because it uses two more edges, so it clearly has a higher total edge distance.  We force it by doubling the first two vertices of one of the profiles.
+//   prof1 = path3d([[50,-50], [-50,-50], [-50,50], [-25,25], [0,50], [25,25], [50,50]]);
+//   prof2 = path3d(regular_ngon(n=7, r=50),100);
+//   skin([repeat_entries(prof1,[2,2,1,1,1,1,1]),
+//         prof2], 
+//        method="distance", slices=10, refine=10);
+// Example(FlatSpin): Torus using hexagons and pentagons, where `closed=true`
+//   hex = back(7,p=path3d(hexagon(r=3)));
+//   pent = back(7,p=path3d(pentagon(r=3)));
+//   N=5;
+//   skin(
+//        [for(i=[0:2*N-1]) xrot(360*i/2/N, p=(i%2==0 ? hex : pent))],
+//        refine=1,slices=0,method="distance",closed=true);
+// Example(FlatSpin): A smooth morph is achieved when you can calculate all the slices yourself.  Since you provide all the slices, set `slices=0`.
+//   skin([for(n=[.1:.02:.5])
+//            yrot(n*60-.5*60,p=path3d(supershape(step=360/128,m1=5,n1=n, n2=1.7),5-10*n))],
+//        slices=0);
+// Example(FlatSpin): Another smooth supershape morph:
+//   skin([for(alpha=[-.2:.05:1.5])
+//            path3d(supershape(step=360/256,m1=7, n1=lerp(2,3,alpha),
+//                              n2=lerp(8,4,alpha), n3=lerp(4,17,alpha)),alpha*5)],
+//        slices=0);
+// Example(FlatSpin): Several polygons connected using "distance"
+//   skin([regular_ngon(n=4, r=3),
+//         regular_ngon(n=6, r=3),
+//         regular_ngon(n=9, r=4),
+//         rot(17,p=regular_ngon(n=6, r=3)),
+//         rot(37,p=regular_ngon(n=4, r=3))],
+//        z=[0,2,4,6,9], method="distance", slices=10, refine=10);
+// Example(FlatSpin): Size of the polygon changes every time
 //   skin([
-//       for (a = [0:30:180]) let(
-//           pos  = [-60*sin(a),     0, a    ],
-//           pos2 = [-60*sin(a+0.1), 0, a+0.1]
-//       ) move(pos,
-//           p=rot(from=UP, to=pos2-pos,
-//               p=path3d(circle(d=150))
-//           )
-//       )
-//   ]);
-//   color("red") {
-//       zrot(25) fwd(130) xrot(75) {
-//           linear_extrude(height=0.1) {
-//               ydistribute(25) {
-//                   text(text="BAD POLYHEDRONS!", size=20, halign="center", valign="center");
-//                   text(text="CREASES MAKE", size=20, halign="center", valign="center");
-//               }
-//           }
-//       }
-//       up(160) zrot(25) fwd(130) xrot(75) {
-//           stroke(zrot(30, p=yscale(0.5, p=circle(d=120))),width=10,closed=true);
-//       }
-//   }
-// Example: Beware Making Incomplete Polyhedrons!
-//   skin([
-//       move([0,0, 0], p=path3d(circle(d=100,$fn=36))),
-//       move([0,0,50], p=path3d(circle(d=100,$fn=6)))
-//   ], caps=false);
-function _skin_core(profiles, closed=false, caps=true) =
-	assert(is_list(profiles))
-	assert(all([for (profile=profiles) is_list(profile) && len(profile[0])==3]), "All profiles must be 3D paths.")
-	assert(is_bool(closed))
-	assert(is_bool(caps))
-	assert(!closed||!caps)
+//       for (ang = [0:10:90])
+//       rot([0,ang,0], cp=[200,0,0], p=path3d(circle(d=100,$fn=12-(ang/10))))
+//   ],method="distance",slices=10,refine=10);
+
+module skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, convexity=10)
+{
+  	vnf_polyhedron(skin(profiles, slices, refine, method, sampling, caps, closed, z), convexity=convexity);
+}        
+
+
+function skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z) =
+  assert(is_list(profiles) && len(profiles)>1, "Must provide at least two profiles")
+  let( bad = [for(i=idx(profiles)) if (!(is_path(profiles[i]) && len(profiles[i])>2)) i])
+  assert(len(bad)==0, str("Profiles ",bad," are not a paths or have length less than 3"))
+  assert(is_integer(slices) && slices>=0,"slices must be specified as a nonnegative integer")
+  let(
+    legal_methods = ["direct","reindex","distance","tangent"],
+    caps = is_def(caps) ? caps :
+           closed ? false : true,
+    capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
+    fullcaps = is_bool(caps) ? [caps,caps] : caps,
+    refine = is_list(refine) ? refine :
+             replist(refine, len(profiles)),
+    refineOK = [for(i=idx(refine)) if (refine[i]<=0 || !is_integer(refine[i])) i],
+    maxsize = list_longest(profiles),
+    methodok = is_list(method) || in_list(method, legal_methods),
+    methodlistok = is_list(method) ? [for(i=idx(method)) if (!in_list(method[i], legal_methods)) i] : [],
+    method = is_string(method) ? replist(method, len(profiles)+ (closed?0:-1)) : method,
+    // Define to be zero where a resampling method is used and 1 where a vertex duplicator is used
+    RESAMPLING = 0,
+    DUPLICATOR = 1,
+    method_type = [for(m = method) m=="direct" || m=="reindex" ? 0 : 1],
+    sampling = is_def(sampling) ? sampling :
+               in_list(DUPLICATOR,method_type) ? "segment" : "length" 
+  )
+  assert(len(refine)==len(profiles), "refine list is the wrong length")
+  assert(refineOK==[],str("refine must be integer valued and postive"))
+  assert(methodok,str("method must be one of ",legal_methods,". Got ",method))
+  assert(methodlistok==[], str("method list contains invalid method at ",methodlistok))
+  assert(len(method) == len(profiles) + (closed?0:-1),"Method list is the wrong length")
+  assert(in_list(sampling,["length","segment"]), "sampling must be set to \"length\" or \"segment\"")
+  assert(sampling=="segment" || (!in_list("distance",method) && !in_list("tangent",method)), "sampling is set to \"length\" which is only allowed iwith methods \"direct\" and \"reindex\"")
+  assert(capsOK, "caps must be boolean or a list of two booleans")
+  assert(!closed || !caps, "Cannot make closed shape with caps")
+  let(
+    profile_dim=array_dim(profiles,2),
+    profiles_ok = (profile_dim==2 && is_list(z) && len(z)==len(profiles)) || profile_dim==3
+  )
+  assert(profiles_ok,"Profiles must all be 3d or must all be 2d, with matching length z parameter.")
+  assert(is_undef(z) || profile_dim==2, "Do not specify z with 3d profiles")
+  assert(profile_dim==3 || len(z)==len(profiles),"Length of z does not match length of profiles.")
+  let(
+    // Adjoin Z coordinates to 2d profiles
+    profiles = profile_dim==3 ? profiles :
+               [for(i=idx(profiles)) path3d(profiles[i], z[i])],
+    // True length (not counting repeated vertices) of profiles after refinement
+    refined_len = [for(i=idx(profiles)) refine[i]*len(profiles[i])],
+rety=    echo(refine=refine),
+  fdabe=  echo(refined_len = refined_len),
+    // Define this to be 1 if a profile is used on either side by a resampling method, zero otherwise.
+    profile_resampled = [for(i=idx(profiles)) 
+      1-(
+           i==0 ?  method_type[0] * (closed? select(method_type,-1) : 1) :
+           i==len(profiles)-1 ? select(method_type,-1) * (closed ? select(method_type,-2) : 1) :
+         method_type[i] * method_type[i-1])],
+    
+    
+  efqqw=echo(method_type = method_type),       
+  fdae=  echo(profile_resampled=profile_resampled),
+    parts = search(1,[1,for(i=[0:1:len(profile_resampled)-2]) profile_resampled[i]!=profile_resampled[i+1] ? 1 : 0],0),
+    plen = [for(i=idx(parts)) (i== len(parts)-1? len(refined_len) : parts[i+1]) - parts[i]],
+    max_list = [for(i=idx(parts)) each replist(max(select(refined_len, parts[i], parts[i]+plen[i]-1)), plen[i])],
+fdafee=    echo(max_list=max_list),
+    transition_profiles = [for(i=[(closed?0:1):1:len(profiles)-(closed?1:2)]) if (select(method_type,i-1) != method_type[i]) i],
+    ttr=echo(transition_profiles=transition_profiles),
+    badind = [for(tranprof=transition_profiles) if (refined_len[tranprof] != max_list[tranprof]) tranprof]
+  )
+  assert(badind==[],str("Profile length mismatch at method transition at indices ",badind," in skin()"))
+  let(
+    
+    // With "distance" and "tangent" methods, the path lengths are made equal by inserting
+    // repeated vertices, so no further adjustment is required.  With "direct" and "reindex"
+    // lengths match due to resampling, and we have to upsample to the longest profile.  
+    samples = in_list("direct", method) || in_list("reindex", method) ? max(refined_len) : 0, 
+    full_list =
+      [for(i=[0:len(profiles)-(closed?1:2)])
+        let(
+          pair = 
+            method[i]=="distance" ? minimum_distance_match(profiles[i],select(profiles,i+1)) :
+            method[i]=="tangent" ? tangent_align(profiles[i],select(profiles,i+1)) :
+            /*method[i]=="reindex" || method[i]=="direct" ?*/ 
+               let( p1 = subdivide_path(profiles[i],max_list[i], method=sampling),
+                    p2 = subdivide_path(select(profiles,i+1),max_list[i], method=sampling)
+               ) (method[i]=="direct" ? [p1,p2] : [p1, reindex_polygon(p1, p2)]),
+            nsamples =  method_type[i]==RESAMPLING ? len(pair[0]) :
+               assert(refine[i]==select(refine,i+1),str("Refine value mismatch at indices ",[i,(i+1)%len(refine)],
+                                                        ".  Method ",method[i]," requires equal values"))
+               refine[i] * len(pair[0])
+          )
+          each interp_and_slice(pair,slices, nsamples, submethod=sampling)]
+  )
+  _skin_core(full_list,caps=fullcaps);
+
+
+
+function _skin_core(profiles, caps) =
 	let(
-		vertices = [for (prof=profiles) each prof],
-		plens = [for (prof=profiles) len(prof)]
-	)
-	let(
+                vertices = [for (prof=profiles) each prof],
+		plens = [for (prof=profiles) len(prof)],
 		sidefaces = [
-			for(pidx=idx(profiles,end=closed? -1 : -2))
+			for(pidx=idx(profiles,end=-2))
 			let(
 				prof1 = profiles[pidx%len(profiles)],
 				prof2 = profiles[(pidx+1)%len(profiles)],
@@ -243,153 +409,14 @@ function _skin_core(profiles, closed=false, caps=true) =
 				]
 			) each faces
 		],
-		capfaces = closed||!caps? [] : let(
-			prof1 = profiles[0],
+                firstcap = !caps[0] ? [] : let(
+                        prof1 = profiles[0]
+                ) [[for (i=idx(prof1)) plens[0]-1-i]],
+                secondcap = !caps[1] ? [] : let(
 			prof2 = select(profiles,-1),
 			eoff = sum(select(plens,0,-2))
-		) [
-			[for (i=idx(prof1)) plens[0]-1-i],
-			[for (i=idx(prof2)) eoff+i]
-		],
-		vnfout = [vertices, concat(sidefaces,capfaces)]
-	) vnfout;
-
-
-
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-//
-// Developmental skin wrapper, called superskin() for now, but this
-// is not meant to be the final name.
-
-// Function&Module: superskin()
-// Usage: As module:
-//   skin(profiles, [slices], [samples|refine], [method], [sampling], [caps], [closed], [z]);
-// Usage: As function:
-//   vnf = skin(profiles, [slices], [samples|refine], [method], [sampling], [caps], [closed], [z]);
-// Description:
-//   Given a list of two ore more path `profiles` in 3d space, produces faces to skin a surface between
-//   the profiles.  Optionally the first and last profiles can have endcaps, or the first and last profiles
-//   can be connected together.  Each profile should be roughly planar, but some variation is allowed.
-//   Each profile must rotate in the same clockwise direction.  If called as a function, returns a
-//   [VNF structure](vnf.scad) like `[VERTICES, FACES]`.  If called as a module, creates a polyhedron
-//    of the skined profiles.
-//   
-//   The profiles can be specified either as a list of 3d curves or they can be specified as
-//   2d curves with heights given in the `z` parameter.  
-//   
-//   For this operation to be well-defined, we the profiles must all have the same vertex count and
-//   we must assume that profiles are aligned so that vertex `i` links to vertex `i` on all polygons.  
-//   Many interesting cases do not comply with this restriction.  To handle these cases, you can
-//   specify various matching methods (listed below).  You can also adjust non-matching profiles
-//   by either resampling them using `subdivide_path` or by duplicating vertices using
-//   `repeat_entries`.  It is OK to pass a profile that has the same vertex repeated, such as
-//   a square with 5 points (two of which are identical), so that it can match up to a pentagon.
-//   Such a combination would create a triangular face at the location of the duplicated vertex.
-//   
-//   In order for skinned surfaces to look good it is usually necessary to use a fine sampling of
-//   points on all of the profiles, and a large number of extra interpolated slices between the
-//   profiles that you specify.  The `slices` parameter specifies the number of slices to insert
-//   between each pair of profiles, either a scalar to insert the same number everywhere, or a vector
-//   to insert a different number between each pair.  To resample the profiles you can specify the
-//   number of samples at each profiles with the `samples` argument or you can use `refine`.  The
-//   `refine` parameter specifies a multiplication factor relative to the largest profile, so
-//   if refine is 10 and the largest profile has length 6 then you will get a total of 60 points,
-//   or 10 points per side of the longest profile.  The default is `samples` equal to the size
-//   of the largest profile, which will do nothing if all profiles are the same size.  
-//   
-//   Two methods are available for resampling, `"length"` and `"segment"`.  Specify them using
-//   the `sampling` argument.  The length resampling method resamples proportional to length.
-//   The segment method divides each segment of a profile into the same number of points.
-//   A uniform division may be impossible, in which case the code computes an approximation.
-//   See `subdivide_path` for more details.  
-//   
-//   You can choose from four methods for specifying alignment for incomensurate profiles.
-//   The available methods are `"distance"`, `"tangent"`, `"uniform"` and `"align"`.
-//   The "distance" method finds the global minimum distance method for connecting two
-//   profiles.  This algorithm generally produces a good result when both profiles have
-//   a small number of vertices.  It is computationally intensive (O(N^3)) and may be
-//   slow on large inputs.  The `"tangent"` method generally produces good results when
-//   connecting a discrete polygon to a convex, finely sampled curve.  It works by finding
-//   a plane that passed through each edge of the polygon that is tangent to
-//   the curve.  The `"uniform"` method simply connects the vertices, after resampling
-//   if it is required.  The `"align"` method resamples the vertices and then reindexes
-//   to find the shortest distance alignment.  This will result in the faces with the
-//   smallest amount of twist.  The align algorithm has quadratic run time and can be slow
-//   with large profiles.  
-//   
-// Arguments:
-//   profiles = list of 2d or 3d profiles to be skinned.  (If 2d must also give `z`.)
-//   slices = scalar or vector number of slices to insert between each pair of profiles.  Default: 8.
-//   samples = resample each profile to this many points.  If `method` is distance default is undef, otherwise default is the length of longest profile.
-//   refine = resample profiles to this number of points per side.  If `method` is "distance" default is 10, otherwise undef. 
-//   sampling = sampling method, either "length" or "segment".  If `method` is "distance" or tangent default is "segment", otherwise "length".
-//   caps = true to create endcap faces.  Default is true if closed is false.
-//   method = method for aligning and connecting profiles
-//   closed = set to true to connect first and last profile.  Default: false
-//   z = array of height values for each profile if the profiles are 2d
-module skin(profiles, slices=8, samples, refine, method="uniform", sampling, caps, closed=false, z)
-{
-  	vnf_polyhedron(skin(profiles, slices, samples, refine, method, sampling, caps, closed, z));
-}        
-
-function skin(profiles, slices=8, samples, refine, method="uniform", sampling, caps, closed=false, z) =
-  assert(is_list(profiles) && len(profiles)>1, "Must provide at least two profiles")
-  let( bad = [for(i=[0:len(profiles)-1]) if (!(is_path(profiles[i]) && len(profiles[i])>2)) i])
-  assert(len(bad)==0, str("Profiles ",bad," are not a paths or have length less than 3"))
-  let(
-    legal_methods = ["uniform","align","distance","tangent","sym_distance"],
-    caps = is_def(caps) ? caps :
-           closed ? false : true,
-    default_refine = 10,  
-    maxsize = list_longest(profiles),
-    samples = is_def(samples) && is_def(refine) ? undef :
-              is_def(samples) ? samples :
-              is_def(refine)  ? maxsize*refine :
-              method=="distance" || method=="sym_distance" ? maxsize*default_refine :
-                                   maxsize,
-    
-    methodok = is_list(method) || in_list(method, legal_methods),
-    methodlistok = is_list(method) ? [for(i=[0:len(method)-1]) if (!in_list(method[i], legal_methods)) i] : [],
-    method = is_string(method) ? replist(method, len(profiles)+ (closed?1:0)) : method,
-    sampling = is_def(sampling)? sampling :
-              all([for(m=method) m=="distance" || m=="sym_distance" || m=="tangent"]) ? "segment" : "length"
-    )
-
-  assert(methodok,str("method must be one of ",legal_methods,". Got ",method))
-  assert(methodlistok==[], str("method list contains invalid method at ",methodlistok))
-  assert(!closed || !caps, "Cannot make closed shape with caps")
-  assert(is_def(samples),"Specify only one of `refine` and `samples`")
-  assert(samples>=maxsize,str("Requested number of samples ",samples," is smaller than size of largest profile, ",maxsize))
-  let(
-    profile_dim=array_dim(profiles,2),
-    profiles_ok = (profile_dim==2 && is_list(z) && len(z)==len(profiles)) || profile_dim==3
-  )
-  assert(profiles_ok,"Profiles must all be 3d or must all be 2d, with matching length z parameter.")
-  assert(is_undef(z) || profile_dim==2, "Do not specify z with 3d profiles")
-  assert(profile_dim==3 || len(z)==len(profiles),"Length of z does not match length of profiles.")
-  let(
-    profiles = profile_dim==3 ? profiles :
-               [for(i=[0:len(profiles)-1]) path3d(profiles[i], z[i])],
-    full_list =
-      [for(i=[0:len(profiles)-(closed?1:2)])
-        let(
-          pair = 
-            method[i]=="distance" ? minimum_distance_match(profiles[i],select(profiles,i+1)) :
-            method[i]=="sym_distance" ? sym_minimum_distance_match(profiles[i],select(profiles,i+1)) :
-            method[i]=="tangent" ? tangent_align(profiles[i],select(profiles,i+1)) :
-            /*method[i]=="align" || method[i]=="uniform" ?*/
-               let( p1 = subdivide_path(profiles[i],samples, method=sampling),
-                    p2 = subdivide_path(select(profiles,i+1),samples, method=sampling)
-               ) (method[i]=="uniform" ? [p1,p2] : [p1, reindex_polygon(p1, p2)]),
-            nsamples = is_def(refine) && method=="sym_distance" ? refine * len(pair[0]) : samples
-          )
-          each interp_and_slice(pair,slices, nsamples, submethod=sampling)]
-  )
-  _skin_core(full_list,closed=closed,caps=caps);
+		) [[for (i=idx(prof2)) eoff+i]]
+	) [vertices, concat(sidefaces,firstcap,secondcap)];
 
 
 
@@ -446,78 +473,144 @@ function _unique_count(arr, ulist, counts, ind, curtot) =
 
 ///////////////////////////////////////////////////////
 //
-// Given inputs of a small polygon (`small`) and a larger polygon (`big`), computes an onto mapping of
-// the the vertices of `big` onto `small` that minimizes the sum of the distances between every matched
-// pair of vertices.  The algorithm uses quadratic programming to calculate the optimal mapping under
-// the assumption that big[0]->small[0] and big[len(big)-1] does NOT map to small[0].  We then
-// rotate through all the possible indexings of `big`.  The theoretical run time is quadratic
-// in len(big) and linear in len(small).  
+
+// Given inputs of a two polygons, computes a mapping between their vertices that minimizes the sum the sum of
+// the distances between every matched pair of vertices.  The algorithm uses dynamic programming to calculate
+// the optimal mapping under the assumption that poly1[0] <-> poly2[0].  We then rotate through all the
+// possible indexings of the longer polygon.  The theoretical run time is quadratic in the longer polygon and
+// linear in the shorter one.
 //
-// The top level function, nbest_dmatch() cycles through all the of the indexings of `big`, computes
-// all of the optimal values, and chooses the overall best result.  It then interprets the result to
-// produce the index mapping.  The function _qp_extract_map() threads back through the quadratic programming
-// array to identify the actual mapping.
+// The top level function, minimum_distance_match(), cycles through all the of the indexings of the larger
+// polygon, computes the optimal value for each indexing, and chooses the overall best result.  It uses
+// _dp_extract_map() to thread back through the dynamic programming array to determine the actual mapping, and
+// then converts the result to an index repetition count list, which is passed to repeat_entries().
 // 
-// The function _qp_distance_array builds up the rows of the quadratic programming matrix with reference
+// The function _dp_distance_array builds up the rows of the dynamic programming matrix with reference
 // to the previous rows, where `tdist` holds the total distance for a given mapping, and `map`
 // holds the information about which path was optimal for each position.
 //
-// The function _qp_distance_row constructs each row of the quadratic programming matrix.  Note that
-// in this problem we can delete entries from `big` but we cannot insert.  This means we can only
-// move to the right, or diagonally, and not down.  This in turn means that only a portion of the
-// quadratic programming matrix is reachable, so we fill in the unreachable lefthand triangular portion
-// with zeros and we just don't compute the righthand portion (meaning that each row of the output
-// has a different length).
-
-// This function builds up the quadratic programming distance array where each entry in the
+// The function _dp_distance_row constructs each row of the dynamic programming matrix in the usual
+// way where entries fill in based on the three entries above and to the left.  Note that we duplicate
+// entry zero so account for wrap-around at the ends, and we initialize the distance to zero to avoid
+// double counting the length of the 0-0 pair.  
+//
+// This function builds up the dynamic programming distance array where each entry in the
 // array gives the optimal distance for aligning the corresponding subparts of the two inputs.
 // When the array is fully populated, the bottom right corner gives the minimum distance
-// for matching the full input lists.  The `map` array contains a 0 when the optimal value came from
-// the left (a "deletion") which means you match the next vertex in `big` with the previous, already
-// used vertex of `small`, or a 1 when the optimal value came from the diagonal, which means you
-// match the next vertex of `big` with the next vertex of `small`.
+// for matching the full input lists.  The `map` array contains a the three key values for the three
+// directions, where _MAP_DIAG means you map the next vertex of `big` to the next vertex of `small`,
+// _MAP_LEFT means you map the next vertex of `big` to the current vertex of `small`, and _MAP_UP
+// means you map the next vertex of `small` to the current vertex of `big`.  
 //
 // Return value is [min_distance, map], where map is the array that is used to extract the actual
 // vertex map.  
-function _qp_distance_array(small, big, small_ind=0, tdist=[], map=[]) =
-   let(
-       N = len(small),
-       M = len(big)
-   )  
-   small_ind == N ? [tdist[N-1][M-1], map] :
-   let(
-     row_results = small_ind == 0 ? [cumsum([for(i=[0:M-N+1]) norm(big[i]-small[0])]), replist(0,M-N+1)] :
-                   _qp_distance_row(small, big, small_ind, small_ind, tdist, replist(0,small_ind), replist(0, small_ind))
-   )
-   _qp_distance_array(small, big, small_ind+1, concat(tdist, [row_results[0]]), concat(map, [row_results[1]]));
+
+_MAP_DIAG = 0;
+_MAP_LEFT = 1;
+_MAP_UP = 2;
 
 
-function _qp_distance_row(small,big,small_ind, big_ind, tdist, newrow, maprow) =
-    big_ind == len(big)-len(small) + small_ind + 1 ? [newrow,maprow] :
-    _qp_distance_row(small,big, small_ind, big_ind+1, tdist,
-                concat(newrow, [norm(small[small_ind]-big[big_ind]) +
-                                (small_ind==big_ind ? tdist[small_ind-1][big_ind-1] : min(tdist[small_ind-1][big_ind-1],newrow[big_ind-1]))]), 
-                concat(maprow, [small_ind!=big_ind && newrow[big_ind-1] < tdist[small_ind-1][big_ind-1] ? 0 : 1]));
+/*
+function _dp_distance_array(small, big, abort_thresh=1/0, small_ind=0, tdist=[], map=[]) =
+   small_ind == len(small)+1 ? [tdist[len(tdist)-1][len(big)-1], map] :
+   let( newrow = _dp_distance_row(small, big, small_ind, tdist) )
+   min(newrow[0]) > abort_thresh ? [tdist[len(tdist)-1][len(big)-1],map] :
+   _dp_distance_array(small, big, abort_thresh, small_ind+1, concat(tdist, [newrow[0]]), concat(map, [newrow[1]]));
+*/
 
 
-function _qp_extract_map(map,i,j,result) =
-  is_undef(i) ? _qp_extract_map(map,len(map)-1,len(select(map,-1))-1,[]) :
-  i==0 && j==0 ? concat([0], result) :
-  _qp_extract_map(map,i-map[i][j],j-1,concat([i],result));
+function _dp_distance_array(small, big, abort_thresh=1/0) =
+   [for(
+        small_ind = 0,
+        tdist = [],
+        map = []
+           ;
+        small_ind<=len(small)+1
+           ;
+        newrow =small_ind==len(small)+1 ? [0,0,0] :  // dummy end case
+                           _dp_distance_row(small,big,small_ind,tdist),
+        tdist = concat(tdist, [newrow[0]]),
+        map = concat(map, [newrow[1]]),
+        small_ind = min(newrow[0])>abort_thresh ? len(small)+1 : small_ind+1
+       )
+     if (small_ind==len(small)+1) each [tdist[len(tdist)-1][len(big)], map]];
+                                     //[tdist,map]];
 
+
+function _dp_distance_row(small, big, small_ind, tdist) =
+                    // Top left corner is zero because it gets counted at the end in bottom right corner
+   small_ind == 0 ? [cumsum([0,for(i=[1:len(big)]) norm(big[i%len(big)]-small[0])]), replist(_MAP_LEFT,len(big)+1)] :
+   [for(big_ind=1,
+       newrow=[ norm(big[0] - small[small_ind%len(small)]) + tdist[small_ind-1][0] ],
+       newmap = [_MAP_UP]
+         ;
+       big_ind<=len(big)+1
+         ;
+       costs = big_ind == len(big)+1 ? [0] :    // handle extra iteration
+                             [tdist[small_ind-1][big_ind-1],  // diag
+                              newrow[big_ind-1],              // left 
+                              tdist[small_ind-1][big_ind]],   // up
+       newrow = concat(newrow, [min(costs)+norm(big[big_ind%len(big)]-small[small_ind%len(small)])]),
+       newmap = concat(newmap, [min_index(costs)]),
+       big_ind = big_ind+1
+   ) if (big_ind==len(big)+1) each [newrow,newmap]];
+
+
+function _dp_extract_map(map) =  
+      [for(
+           i=len(map)-1,
+           j=len(map[0])-1,
+           smallmap=[],
+           bigmap = []
+              ;
+           j >= 0
+              ;
+           advance_i = map[i][j]==_MAP_UP || map[i][j]==_MAP_DIAG,
+           advance_j = map[i][j]==_MAP_LEFT || map[i][j]==_MAP_DIAG,
+           i = i - (advance_i ? 1 : 0), 
+           j = j - (advance_j ? 1 : 0),
+           bigmap = concat( [j%(len(map[0])-1)] ,  bigmap),
+           smallmap = concat( [i%(len(map)-1)]  , smallmap)
+          )
+        if (i==0 && j==0) each [smallmap,bigmap]];
+     
 
 function minimum_distance_match(poly1,poly2) =
    let(
       swap = len(poly1)>len(poly2),
       big = swap ? poly1 : poly2,
       small = swap ? poly2 : poly1,
-      matchres = [for(i=[0:len(big)-1]) _qp_distance_array(small,polygon_shift(big,i))],
-      best = min_index(subindex(matchres,0)),
-      newbig = polygon_shift(big,best),
-      newsmall = repeat_entries(small,unique_count(_qp_extract_map(matchres[best][1]))[1])
+      map_poly = [ for(
+              i=0,
+              bestcost = 1/0,
+              bestmap = -1,
+              bestpoly = -1
+              ;
+              i<=len(big)
+              ;
+              shifted = polygon_shift(big,i),
+              result =_dp_distance_array(small, shifted, abort_thresh = bestcost),
+              bestmap = result[0]<bestcost ? result[1] : bestmap,
+              bestpoly = result[0]<bestcost ? shifted : bestpoly,
+              best_i = result[0]<bestcost ? i : best_i,
+              bestcost = min(result[0], bestcost),
+              i=i+1
+              )
+              if (i==len(big)) each [bestmap,bestpoly,best_i]],
+      map = _dp_extract_map(map_poly[0]),
+      smallmap = map[0],
+      bigmap = map[1],
+      // These shifts are needed to handle the case when points from both ends of one curve map to a single point on the other
+      bigshift =  len(bigmap) - max(max_index(bigmap,all=true))-1,
+      smallshift = len(smallmap) - max(max_index(smallmap,all=true))-1,
+      newsmall = polygon_shift(repeat_entries(small,unique_count(smallmap)[1]),smallshift),
+      newbig = polygon_shift(repeat_entries(map_poly[1],unique_count(bigmap)[1]),bigshift)
       )
       swap ? [newbig, newsmall] : [newsmall,newbig];
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function tangent_align(poly1, poly2) =
     let(
@@ -560,142 +653,4 @@ function plane_line_angle(plane, line) =
         )
    asin(constrain(sin_angle,-1,1));
 
-
-
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
-
-
-
-_MAP_DIAG = 0;
-_MAP_LEFT = 1;
-_MAP_UP = 2;
-
-/*  // recursive version
-function sym_qp_distance_array(small, big, abort_thresh=1/0, small_ind=0, tdist=[], map=[]) =
-   small_ind == len(small) ? [tdist[len(small)-1][len(big)-1], map] :
-//   small_ind == len(small) ? [tdist, map] :  
-   let( row_results = sym_qp_distance_row(small, big, small_ind, tdist) )
-    min(row_results[0])> abort_thresh ? [tdist[len(tdist)-1][len(big)-1],map] :
-   sym_qp_distance_array(small, big, abort_thresh, small_ind+1, concat(tdist, [row_results[0]]), concat(map, [row_results[1]]));
-*/
-
-
-function sym_qp_distance_array(small, big, abort_thresh=1/0) =
-   [for(
-        small_ind = 0,
-        tdist = [],
-        map = []
-           ;
-        small_ind<=len(small)+1
-           ;
-        newrow =small_ind==len(small)+1 ? [0,0,0] :  // dummy end case
-                           sym_qp_distance_row(small,big,small_ind,tdist),
-        tdist = concat(tdist, [newrow[0]]),
-        map = concat(map, [newrow[1]]),
-        small_ind = min(newrow[0])>abort_thresh ? len(small)+1 : small_ind+1
-       )
-     if (small_ind==len(small)+1) each [tdist[len(tdist)-1][len(big)], map]];
-                                     //[tdist,map]];
-
-
-
-function sym_qp_distance_row(small, big, small_ind, tdist) =
-                    // Top left corner is zero because it gets counted at the end in bottom right corner
-   small_ind == 0 ? [cumsum([0,for(i=[1:len(big)]) norm(big[i%len(big)]-small[0])]), replist(_MAP_LEFT,len(big)+1)] :
-   [for(big_ind=1,
-       newrow=[ norm(big[0] - small[small_ind%len(small)]) + tdist[small_ind-1][0] ],
-       newmap = [_MAP_UP]
-         ;
-       big_ind<=len(big)+1
-         ;
-       costs = big_ind == len(big)+1 ? [0] :    // handle extra iteration
-                             [tdist[small_ind-1][big_ind-1],  // diag
-                              newrow[big_ind-1],              // left 
-                              tdist[small_ind-1][big_ind]],   // up
-       newrow = concat(newrow, [min(costs)+norm(big[big_ind%len(big)]-small[small_ind%len(small)])]),
-       newmap = concat(newmap, [min_index(costs)]),
-       big_ind = big_ind+1
-   ) if (big_ind==len(big)+1) each [newrow,newmap]];
-
-
-function nsym_qp_distance_row(small, big, small_ind, tdist) =
-                    // Top left corner is zero because it gets counted at the end in bottom right corner
-   small_ind == 0 ? [cumsum([0,for(i=[1:len(big)]) triangle_area(big[i-1],big[i%len(big)], small[0])]), replist(_MAP_LEFT,len(big)+1)] :
-   [for(big_ind=1,
-       newrow=[triangle_area(big[0], small[small_ind%len(small)], small[small_ind-1]) + tdist[small_ind-1][0] ],
-       newmap = [_MAP_UP]
-         ;
-       big_ind<=len(big)+1
-         ;
-       costs = big_ind == len(big)+1 ? [0] :    // handle extra iteration
-                             [tdist[small_ind-1][big_ind-1] +                   //diag
-                                          quad_area(big[big_ind-1],big[big_ind%len(big)], small[small_ind%len(small)], small[small_ind-1]), 
-                              newrow[big_ind-1] + triangle_area(big[big_ind-1],big[big_ind%len(big)], small[small_ind%len(small)]),       // left
-                              tdist[small_ind-1][big_ind] + triangle_area(big[big_ind%len(big)], small[small_ind%len(small)], small[small_ind-1])],
-       newrow = concat(newrow, [min(costs)]),
-       newmap = concat(newmap, [min_index(costs)]),
-       big_ind = big_ind+1
-   ) if (big_ind==len(big)+1) each [newrow,newmap]];
-
-
-
-function sym_qp_one_map(map) =  
-      [for(
-           i=len(map)-1,
-           j=len(map[0])-1,
-           smallmap=[],
-           bigmap = []
-              ;
-           j >= 0
-              ;
-           advance_i = map[i][j]==_MAP_UP || map[i][j]==_MAP_DIAG,
-           advance_j = map[i][j]==_MAP_LEFT || map[i][j]==_MAP_DIAG,
-           i = i - (advance_i ? 1 : 0), 
-           j = j - (advance_j ? 1 : 0),
-           bigmap = concat( [j%(len(map[0])-1)] ,  bigmap),
-           smallmap = concat( [i%(len(map)-1)]  , smallmap)
-          )
-        if (i==0 && j==0) each [smallmap,bigmap]];
-     
-
-function sym_minimum_distance_match(poly1,poly2) =
-   let(
-      swap = len(poly1)>len(poly2),
-      big = swap ? poly1 : poly2,
-      small = swap ? poly2 : poly1,
-      map_poly = [ for(
-              i=0,
-              bestcost = 1/0,
-              bestmap = -1,
-              bestpoly = -1
-              ;
-              i<=len(big)
-              ;
-              shifted = polygon_shift(big,i),
-              result =sym_qp_distance_array(small, shifted, abort_thresh = bestcost),
-              bestmap = result[0]<bestcost ? result[1] : bestmap,
-              bestpoly = result[0]<bestcost ? shifted : bestpoly,
-              best_i = result[0]<bestcost ? i : best_i,
-              bestcost = min(result[0], bestcost),
-              i=i+1
-              )
-              if (i==len(big)) each [bestmap,bestpoly,best_i]],
-      map = sym_qp_one_map(map_poly[0]),
-      eew = echo(map_poly[2],map_poly[0]),
-   dade=   echo(map=map),
-      smallmap = map[0],
-      bigmap = map[1],
-      // These shifts are needed to handle the case when points from both ends of one curve map to a single point on the other
-      bigshift =  len(bigmap) - max(max_index(bigmap,all=true))-1,
-      smallshift = len(smallmap) - max(max_index(smallmap,all=true))-1,
- fdas=     echo(smallmap=smallmap, bigmap=bigmap),
-      newsmall = polygon_shift(repeat_entries(small,unique_count(smallmap)[1]),smallshift),
-      newbig = polygon_shift(repeat_entries(map_poly[1],unique_count(bigmap)[1]),bigshift)
-      )
-      swap ? [newbig, newsmall] : [newsmall,newbig];
-
-
-
-
-
-
