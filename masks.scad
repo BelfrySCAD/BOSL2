@@ -411,10 +411,21 @@ module rounding_mask(l=undef, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 	r2 = get_radius(r1=r2, r=r, dflt=1);
 	sides = quantup(segs(max(r1,r2)),4);
 	orient_and_anchor([2*r1, 2*r1, l], orient, anchor, spin=spin, size2=[2*r2,2*r2], chain=true) {
-		linear_extrude(height=l+0.1, convexity=4, center=true, scale=r2/r1) {
-			difference() {
-				square(2*r1, center=true);
-				xspread(2*r1) yspread(2*r1) circle(r=r1, $fn=sides);
+		if (r1<r2) {
+			zflip() {
+				linear_extrude(height=l, convexity=4, center=true, scale=r1/r2) {
+					difference() {
+						square(2*r2, center=true);
+						xspread(2*r2) yspread(2*r2) circle(r=r2, $fn=sides);
+					}
+				}
+			}
+		} else {
+			linear_extrude(height=l, convexity=4, center=true, scale=r2/r1) {
+				difference() {
+					square(2*r1, center=true);
+					xspread(2*r1) yspread(2*r1) circle(r=r1, $fn=sides);
+				}
 			}
 		}
 		children();
