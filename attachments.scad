@@ -382,6 +382,99 @@ module attach(from, to=undef, overlap=undef, norot=false)
 }
 
 
+// Module: edge_profile()
+// Usage:
+//   edge_profile([edges], [except], [convexity]) ...
+// Description:
+//   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation
+//   and extruded length to be `diff()`ed away, to give the edge a matching profile.
+// Arguments:
+//   edges = Edges to mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
+//   except = Edges to explicitly NOT mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
+//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
+// Side Effects:
+//   Sets `$tags = "mask"` for all children.
+// Example:
+//   diff("mask")
+//   cube([50,60,70],center=true)
+//       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
+//           mask2d_roundover(r=10, inset=2);
+module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
+	assert($parent_size != undef, "No object to attach to!");
+	edges = edges(edges, except=except);
+	vecs = [
+		for (i = [0:3], axis=[0:2])
+		if (edges[axis][i]>0)
+		EDGE_OFFSETS[axis][i]
+	];
+	for (vec = vecs) {
+		vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
+		assert(vcount == 2, "Not an edge vector!");
+		anch = find_anchor(vec, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, offset=$parent_offset, anchors=$parent_anchors, geometry=$parent_geom, two_d=$parent_2d);
+		$attach_to = undef;
+		$attach_anchor = anch;
+		$attach_norot = true;
+		$tags = "mask";
+		length = sum(vmul($parent_size, [for (x=vec) x?0:1]))+0.1;
+		rotang =
+			vec.z<0? [90,0,180+vang(point2d(vec))] :
+			vec.z==0 && sign(vec.x)==sign(vec.y)? 135+vang(point2d(vec)) :
+			vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+vang(point2d(vec))] :
+			[-90,0,180+vang(point2d(vec))];
+		translate(anch[1]) {
+			rot(rotang) {
+				linear_extrude(height=length, center=true, convexity=convexity) {
+					children();
+				}
+			}
+		}
+	}
+}
+
+
+// Module: edge_mask()
+// Usage:
+//   edge_mask([edges], [except]) ...
+// Description:
+//   Takes a 3D mask shape, and attaches it to the given edges, with the
+//   appropriate orientation to be `diff()`ed away.
+// Arguments:
+//   edges = Edges to mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
+//   except = Edges to explicitly NOT mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
+// Side Effects:
+//   Sets `$tags = "mask"` for all children.
+// Example:
+//   diff("mask")
+//   cube([50,60,70],center=true)
+//       edge_mask([TOP,"Z"],except=[BACK,TOP+LEFT])
+//           rounding_mask_z(l=71,r=10);
+module edge_mask(edges=EDGES_ALL, except=[]) {
+	assert($parent_size != undef, "No object to attach to!");
+	edges = edges(edges, except=except);
+	vecs = [
+		for (i = [0:3], axis=[0:2])
+		if (edges[axis][i]>0)
+		EDGE_OFFSETS[axis][i]
+	];
+	for (vec = vecs) {
+		vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
+		assert(vcount == 2, "Not an edge vector!");
+		anch = find_anchor(vec, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, offset=$parent_offset, anchors=$parent_anchors, geometry=$parent_geom, two_d=$parent_2d);
+		$attach_to = undef;
+		$attach_anchor = anch;
+		$attach_norot = true;
+		$tags = "mask";
+		length = sum(vmul($parent_size, [for (x=vec) x?0:1]))+0.1;
+		rotang =
+			vec.z<0? [90,0,180+vang(point2d(vec))] :
+			vec.z==0 && sign(vec.x)==sign(vec.y)? 135+vang(point2d(vec)) :
+			vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+vang(point2d(vec))] :
+			[-90,0,180+vang(point2d(vec))];
+		translate(anch[1]) rot(rotang) children();
+	}
+}
+
+
 // Module: tags()
 // Usage:
 //   tags(tags) ...

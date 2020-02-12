@@ -1010,5 +1010,331 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 	polygon(supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b, r=r,d=d, anchor=anchor, spin=spin));
 
 
+// Section: 2D Masking Shapes
+
+// Function&Module: mask2d_roundover()
+// Usage:
+//   mask2d_roundover(r|d, [inset], [excess]);
+// Description:
+//   Creates a 2D roundover/bead mask shape that is useful for extruding into a 3D mask for a 90º edge.
+//   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   If called as a function, this just returns a 2D path of the outline of the mask shape.
+// Arguments:
+//   r = Radius of the roundover.
+//   d = Diameter of the roundover.
+//   inset = Optional bead inset size.  Default: 0
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+// Example(2D): 2D Roundover Mask
+//   mask2d_roundover(r=10);
+// Example(2D): 2D Bead Mask
+//   mask2d_roundover(r=10,inset=2);
+// Example: Masking by Edge Attachment
+//   diff("mask")
+//   cube([50,60,70],center=true)
+//       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
+//           mask2d_roundover(r=10, inset=2);
+module mask2d_roundover(r, d, excess, inset=0) {
+	polygon(mask2d_roundover(r=r,d=d,excess=excess,inset=inset));
+}
+
+function mask2d_roundover(r, d, excess, inset=0) =
+	assert(is_num(r)||is_num(d))
+	assert(is_undef(excess)||is_num(excess))
+	assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
+	let(
+		inset = is_list(inset)? inset : [inset,inset],
+		excess = default(excess,$overlap),
+		r = get_radius(r=r,d=d,dflt=1),
+		steps = quantup(segs(r),4)/4,
+		step = 90/steps
+	) [
+		[-excess,-excess], [-excess, r+inset.y],
+		for (i=[0:1:steps]) [r,r] + inset + polar_to_xy(r,180+i*step),
+		[r+inset.x,-excess]
+	];
+
+
+// Function&Module: mask2d_cove()
+// Usage:
+//   mask2d_cove(r|d, [inset], [excess]);
+// Description:
+//   Creates a 2D cove mask shape that is useful for extruding into a 3D mask for a 90º edge.
+//   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   If called as a function, this just returns a 2D path of the outline of the mask shape.
+// Arguments:
+//   r = Radius of the cove.
+//   d = Diameter of the cove.
+//   inset = Optional amount to inset code from corner.  Default: 0
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+// Example(2D): 2D Cove Mask
+//   mask2d_cove(r=10);
+// Example(2D): 2D Inset Cove Mask
+//   mask2d_cove(r=10,inset=3);
+// Example: Masking by Edge Attachment
+//   diff("mask")
+//   cube([50,60,70],center=true)
+//       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
+//           mask2d_cove(r=10, inset=2);
+module mask2d_cove(r, d, inset=0, excess) {
+	polygon(mask2d_cove(r=r,d=d,excess=excess,inset=inset));
+}
+
+function mask2d_cove(r, d, inset=0, excess) =
+	assert(is_num(r)||is_num(d))
+	assert(is_undef(excess)||is_num(excess))
+	assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
+	let(
+		inset = is_list(inset)? inset : [inset,inset],
+		excess = default(excess,$overlap),
+		r = get_radius(r=r,d=d,dflt=1),
+		steps = quantup(segs(r),4)/4,
+		step = 90/steps
+	) [
+		[-excess,-excess], [-excess, r+inset.y],
+		for (i=[0:1:steps]) inset + polar_to_xy(r,90-i*step),
+		[r+inset.x,-excess]
+	];
+
+
+// Function&Module: mask2d_chamfer()
+// Usage:
+//   mask2d_chamfer(x|y|edge, [angle], [inset], [excess]);
+// Description:
+//   Creates a 2D chamfer mask shape that is useful for extruding into a 3D mask for a 90º edge.
+//   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   If called as a function, this just returns a 2D path of the outline of the mask shape.
+// Arguments:
+//   x = The width of the chamfer.
+//   y = The height of the chamfer.
+//   edge = The length of the edge of the chamfer.
+//   angle = The angle of the chamfer edge, away from vertical.  Default: 45.
+//   inset = Optional amount to inset code from corner.  Default: 0
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+// Example(2D): 2D Chamfer Mask
+//   mask2d_chamfer(x=10);
+// Example(2D): 2D Chamfer Mask by Width.
+//   mask2d_chamfer(x=10, angle=30);
+// Example(2D): 2D Chamfer Mask by Height.
+//   mask2d_chamfer(y=10, angle=30);
+// Example(2D): 2D Inset Chamfer Mask
+//   mask2d_chamfer(x=10, inset=2);
+// Example: Masking by Edge Attachment
+//   diff("mask")
+//   cube([50,60,70],center=true)
+//       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
+//           mask2d_chamfer(x=10, inset=2);
+module mask2d_chamfer(x, y, edge, angle=45, excess, inset=0) {
+	polygon(mask2d_chamfer(x=x, y=y, edge=edge, angle=angle, excess=excess, inset=inset));
+}
+
+function mask2d_chamfer(x, y, edge, angle=45, excess, inset=0) =
+	assert(num_defined([x,y,edge])==1)
+	assert(is_num(first_defined([x,y,edge])))
+	assert(is_num(angle))
+	assert(is_undef(excess)||is_num(excess))
+	assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
+	let(
+		inset = is_list(inset)? inset : [inset,inset],
+		excess = default(excess,$overlap),
+		x = !is_undef(x)? x :
+			!is_undef(y)? adj_ang_to_opp(adj=y,ang=angle) :
+			hyp_ang_to_opp(hyp=edge,ang=angle),
+		y = opp_ang_to_adj(opp=x,ang=angle)
+	) [
+		[-excess, -excess], [-excess, y+inset.y],
+		[inset.x, y+inset.y], [x+inset.x, inset.y],
+		[x+inset.x, -excess]
+	];
+
+
+// Function&Module: mask2d_rabbet()
+// Usage:
+//   mask2d_rabbet(size, [excess]);
+// Description:
+//   Creates a 2D rabbet mask shape that is useful for extruding into a 3D mask for a 90º edge.
+//   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   If called as a function, this just returns a 2D path of the outline of the mask shape.
+// Arguments:
+//   size = The size of the rabbet, either as a scalar or an [X,Y] list.
+//   inset = Optional amount to inset code from corner.  Default: 0
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+// Example(2D): 2D Rabbet Mask
+//   mask2d_rabbet(size=10);
+// Example(2D): 2D Asymmetrical Rabbet Mask
+//   mask2d_rabbet(size=[5,10]);
+// Example: Masking by Edge Attachment
+//   diff("mask")
+//   cube([50,60,70],center=true)
+//       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
+//           mask2d_rabbet(size=10);
+module mask2d_rabbet(size, excess) {
+	polygon(mask2d_rabbet(size=size, excess=excess));
+}
+
+function mask2d_rabbet(size, excess) =
+	assert(is_num(size)||(is_vector(size)&&len(size)==2))
+	assert(is_undef(excess)||is_num(excess))
+	let(
+		excess = default(excess,$overlap),
+		size = is_list(size)? size : [size,size]
+	) [
+		[-excess, -excess], [-excess, size.y], size, [size.x, -excess]
+	];
+
+
+// Function&Module: mask2d_dovetail()
+// Usage:
+//   mask2d_dovetail(x|y|edge, [angle], [inset], [shelf], [excess]);
+// Description:
+//   Creates a 2D dovetail mask shape that is useful for extruding into a 3D mask for a 90º edge.
+//   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   If called as a function, this just returns a 2D path of the outline of the mask shape.
+// Arguments:
+//   x = The width of the dovetail.
+//   y = The height of the dovetail.
+//   edge = The length of the edge of the dovetail.
+//   angle = The angle of the chamfer edge, away from vertical.  Default: 30.
+//   inset = Optional amount to inset code from corner.  Default: 0
+//   shelf = The extra height to add to the inside corner of the dovetail.  Default: 0
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+// Example(2D): 2D Dovetail Mask
+//   mask2d_dovetail(x=10);
+// Example(2D): 2D Dovetail Mask by Width.
+//   mask2d_dovetail(x=10, angle=30);
+// Example(2D): 2D Dovetail Mask by Height.
+//   mask2d_dovetail(y=10, angle=30);
+// Example(2D): 2D Inset Dovetail Mask
+//   mask2d_dovetail(x=10, inset=2);
+// Example: Masking by Edge Attachment
+//   diff("mask")
+//   cube([50,60,70],center=true)
+//       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
+//           mask2d_dovetail(x=10, inset=2);
+module mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess) {
+	polygon(mask2d_dovetail(x=x, y=y, edge=edge, angle=angle, inset=inset, shelf=shelf, excess=excess));
+}
+
+function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess) =
+	assert(num_defined([x,y,edge])==1)
+	assert(is_num(first_defined([x,y,edge])))
+	assert(is_num(angle))
+	assert(is_undef(excess)||is_num(excess))
+	assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
+	let(
+		inset = is_list(inset)? inset : [inset,inset],
+		excess = default(excess,$overlap),
+		x = !is_undef(x)? x :
+			!is_undef(y)? adj_ang_to_opp(adj=y,ang=angle) :
+			hyp_ang_to_opp(hyp=edge,ang=angle),
+		y = opp_ang_to_adj(opp=x,ang=angle)
+	) [
+		[-excess, 0], [-excess, y+inset.y+shelf],
+		inset+[x,y+shelf], inset+[x,y], inset, [inset.x,0]
+	];
+
+
+// Function&Module: mask2d_ogee()
+// Usage:
+//   mask2d_ogee(x|y|edge, [angle], [inset], [shelf], [excess]);
+//
+// Description:
+//   Creates a 2D Ogee mask shape that is useful for extruding into a 3D mask for a 90º edge.
+//   This 2D mask is designed to be `difference()`d  away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   Since there are a number of shapes that fall under the name ogee, the shape of this mask is given as a pattern.
+//   Patterns are given as TYPE, VALUE pairs.  ie: `["fillet",10, "xstep",2, "step",[5,5], ...]`.  See Patterns below.
+//   If called as a function, this just returns a 2D path of the outline of the mask shape.
+//   
+//   ### Patterns
+//   
+//   Type     | Argument  | Description
+//   -------- | --------- | ----------------
+//   "step"   | [x,y]     | Makes a line to a point `x` right and `y` down.
+//   "xstep"  | dist      | Makes a `dist` length line towards X+.
+//   "ystep"  | dist      | Makes a `dist` length line towards Y-.
+//   "round"  | radius    | Makes an arc that will mask a roundover.
+//   "fillet" | radius    | Makes an arc that will mask a fillet.
+//
+// Arguments:
+//   pattern = A list of pattern pieces to describe the Ogee.
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//
+// Example(2D): 2D Ogee Mask
+//   mask2d_ogee([
+//       "xstep",1,  "ystep",1,  // Starting shoulder.
+//       "fillet",5, "round",5,  // S-curve.
+//       "ystep",1,  "xstep",1   // Ending shoulder.
+//   ]);
+module mask2d_ogee(pattern, excess) {
+	polygon(mask2d_ogee(pattern, excess=excess));
+}
+
+function mask2d_ogee(pattern, excess) =
+	assert(is_list(pattern))
+	assert(len(pattern)>0)
+	assert(len(pattern)%2==0,"pattern must be a list of TYPE, VAL pairs.")
+	assert(all([for (i = idx(pattern,step=2)) in_list(pattern[i],["step","xstep","ystep","round","fillet"])]))
+	let(
+		excess = default(excess,$overlap),
+		x = concat([0], cumsum([
+			for (i=idx(pattern,step=2)) let(
+				type = pattern[i],
+				val = pattern[i+1]
+			) (
+				type=="step"?   val.x :
+				type=="xstep"?  val :
+				type=="round"?  val :
+				type=="fillet"? val :
+				0
+			)
+		])),
+		y = concat([0], cumsum([
+			for (i=idx(pattern,step=2)) let(
+				type = pattern[i],
+				val = pattern[i+1]
+			) (
+				type=="step"?   val.y :
+				type=="ystep"?  val :
+				type=="round"?  val :
+				type=="fillet"? val :
+				0
+			)
+		])),
+		tot_x = select(x,-1),
+		tot_y = select(y,-1),
+		data = [
+			for (i=idx(pattern,step=2)) let(
+				type = pattern[i],
+				val = pattern[i+1],
+				pt = [x[i/2], tot_y-y[i/2]] + (
+					type=="step"?   [val.x,-val.y] :
+					type=="xstep"?  [val,0] :
+					type=="ystep"?  [0,-val] :
+					type=="round"?  [val,0] :
+					type=="fillet"? [0,-val] :
+					[0,0]
+				)
+			) [type, val, pt]
+		],
+		path = [
+			[tot_x,-excess],
+			[-excess,-excess],
+			[-excess,tot_y],
+			for (pat = data) each
+				pat[0]=="step"?  [pat[2]] :
+				pat[0]=="xstep"? [pat[2]] :
+				pat[0]=="ystep"? [pat[2]] :
+				let(
+					r = pat[1],
+					steps = segs(abs(r)),
+					step = 90/steps
+				) [
+					for (i=[0:1:steps]) let(
+						a = pat[0]=="round"? (180+i*step) : (90-i*step)
+					) pat[2] + abs(r)*[cos(a),sin(a)]
+				]
+		]
+	) deduplicate(path);
+
+
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
