@@ -788,6 +788,26 @@ function unique(arr) =
 	];
 
 
+// Function: unique_count()
+// Usage:
+//   unique_count(arr);
+// Description:
+//   Returns `[sorted,counts]` where `sorted` is a sorted list of the unique items in `arr` and `counts` is a list such 
+//   that `count[i]` gives the number of times that `sorted[i]` appears in `arr`.  
+// Arguments:
+//   arr = The list to analyze. 
+function unique_count(arr) =
+	assert(is_list(arr)||is_string(list))
+	len(arr)==0 ? [[],[]] :
+        len(arr)==1 ? [arr,[1]] :
+        _unique_count(sort(arr), ulist=[], counts=[], ind=1, curtot=1);
+
+function _unique_count(arr, ulist, counts, ind, curtot) = 
+     ind == len(arr)+1 ? [ulist, counts] :
+     ind==len(arr) || arr[ind] != arr[ind-1] ? _unique_count(arr,concat(ulist,[arr[ind-1]]), concat(counts,[curtot]),ind+1,1) :
+     _unique_count(arr,ulist,counts,ind+1,curtot+1);
+
+
 
 // Section: List Iteration Helpers
 
