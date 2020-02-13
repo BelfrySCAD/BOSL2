@@ -658,6 +658,21 @@ function _general_plane_line_intersection(plane, line, eps=EPSILON) =
 	) [pt, s1];
 
 
+// Function: plane_line_angle()
+// Usage: plane_line_angle(plane,line)
+// Description:
+//   Compute the angle between a plane [A, B, C, D] and a line, specified as a pair of points [p1,p2].
+//   The resulting angle is signed, with the sign positive if the vector p2-p1 lies on 
+//   the same side of the plane as the plane's normal vector.  
+function plane_line_angle(plane, line) =
+   let(
+        vect = line[1]-line[0],
+        zplane = plane_normal(plane),
+        sin_angle = vect*zplane/norm(zplane)/norm(vect)
+        )
+   asin(constrain(sin_angle,-1,1));
+
+
 // Function: plane_line_intersection()
 // Usage:
 //   pt = plane_line_intersection(plane, line, [eps]);
