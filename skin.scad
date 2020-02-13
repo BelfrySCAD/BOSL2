@@ -289,6 +289,11 @@ include <vnf.scad>
 //       for (ang = [0:10:90])
 //       rot([0,ang,0], cp=[200,0,0], p=path3d(circle(d=100,$fn=12-(ang/10))))
 //   ],method="distance",slices=10,refine=10);
+// Example(FlatSpin): Möbius Strip.  This is a tricky model because when you work your way around to the connection, the direction of the profiles is flipped, so how can the proper geometry be created?  The trick is to duplicate the first profile and turn the caps off.  The model closes up and forms a valid polyhedron.  
+//   skin([
+//     for (ang = [0:5:360])
+//     rot([0,ang,0], cp=[100,0,0], p=rot(ang/2, p=path3d(square([1,30],center=true))))
+//   ], caps=false, slices=0, refine=20);
 // Example: If you create a self-intersecting polyhedron the result is invalid.  In some cases self-intersection may be obvous.  Here is a more subtle example. 
 //   skin([
 //          for (a = [0:30:180]) let(
