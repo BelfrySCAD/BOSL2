@@ -33,6 +33,22 @@
 //       cuboid(size=size,chamfer=chamfer,edges=edges);
 //       fwd(size/2) text3d(lbl2, size=txtsize);
 //   }
+//   module corner_cube(size=20, txtsize=3, corners="ALL") {
+//       corner_set = _corner_set(corners);
+//       echo(corners=corners, corner_set=corner_set);
+//       lbl = is_string(corners)? [str("\"",corners,"\"")] : concat(
+//            corners.z>0? ["TOP"] : corners.z<0? ["BTM"] : [],
+//            corners.y>0? ["BACK"] : corners.y<0? ["FWD"] : [],
+//            corners.x>0? ["RIGHT"] : corners.x<0? ["LEFT"] : []
+//       );
+//       lbl2 = [for (i=idx(lbl)) i<len(lbl)-1? str(lbl[i],"+") : lbl[i]];
+//       for (i=[0:7]) if (corner_set[i]>0)
+//         translate(CORNER_OFFSETS[i]*size/2)
+//           color("red")
+//             cube(1, center=true);
+//       fwd(size/2) text3d(lbl2, size=txtsize);
+//       color("yellow",0.7) cuboid(size=size);
+//   }
 
 
 // Section: Sets of Edges
@@ -222,6 +238,152 @@ EDGE_OFFSETS = [   // Array of XYZ offsets to the center of each edge.
 		[-1, 1, 0],
 		[ 1, 1, 0]
 	]
+];
+
+
+// Section: Corner Sets
+//   Constants for specifying corners.
+
+CORNERS_NONE = [0,0,0,0,0,0,0,0];  // No corners.
+CORNERS_ALL = [1,1,1,1,1,1,1,1];  // All corners.
+
+
+// Section: Corner Helpers
+
+// Function: is_corner_array()
+// Usage:
+//   is_corner_array(v)
+// Description:
+//   Returns true if the given value has the form of a corner array.
+function is_corner_array(v) = is_vector(v) && len(v)==8 && all([for (x=v) x==1||x==0]);
+
+
+// Function: normalize_corners()
+// Usage:
+//   normalize_corners(v);
+// Description:
+//   Normalizes all values in a corner array to be `1`, if it was originally greater than `0`,
+//   or `0`, if it was originally less than or equal to `0`.
+function normalize_corners(v) = [for (x=v) x>0? 1 : 0];
+
+
+function _corner_set(v) =
+	is_corner_array(v)? v : [
+	for (i=[0:7]) let(
+		v2 = CORNER_OFFSETS[i]
+	) (
+		is_string(v)? (
+			v=="ALL"? true :    // Return all corners.
+			v=="NONE"? false :  // Return no corners.
+			let(valid_values = ["ALL", "NONE"])
+			assert(
+				in_list(v, valid_values),
+				str(v, " must be a vector, corner array, or one of ", valid_values)
+			) v
+		) :
+		echo("A", v=v, v2=v2, [for (i=[0:2]) !v[i] || (v[i]==v2[i])])
+		all([for (i=[0:2]) !v[i] || (v[i]==v2[i])])
+	)? 1 : 0
+];
+
+
+// Function: corners()
+// Usage:
+//   corners(v)
+//   corners(v, except)
+// Description:
+//   Takes a list of corner set descriptors, and returns a normalized corners array
+//   that represents all those given corners.  If the `except` argument is given
+//   a list of corner set descriptors, then all those corners will be removed
+//   from the returned corners array.  If either argument only has a single corner
+//   set descriptor, you do not have to pass it in a list.
+//   Each corner set descriptor can be any of:
+//   - A vector pointing towards an edge indicating both corners at the ends of that edge.
+//   - A vector pointing towards a face, indicating all the corners of that face.
+//   - A vector pointing towards a corner, indicating just that corner.
+//   - The string `"ALL"`, indicating all corners.
+//   - The string `"NONE"`, indicating no corners at all.
+//   - A raw corners array, where each corner is represented by a 1 or a 0.  The corner ordering is:
+//       ```
+//       [X-Y-Z-, X+Y-Z-, X-Y+Z-, X+Y+Z-, X-Y-Z+, X+Y-Z+, X-Y+Z+, X+Y+Z+]
+//       ```
+// Figure(3DBig): Edge Vectors
+//   ydistribute(55) {
+//       xdistribute(35) {
+//           corner_cube(corners=BOT+RIGHT);
+//           corner_cube(corners=BOT+BACK);
+//           corner_cube(corners=BOT+LEFT);
+//           corner_cube(corners=BOT+FRONT);
+//       }
+//       xdistribute(35) {
+//           corner_cube(corners=FWD+RIGHT);
+//           corner_cube(corners=BACK+RIGHT);
+//           corner_cube(corners=BACK+LEFT);
+//           corner_cube(corners=FWD+LEFT);
+//       }
+//       xdistribute(35) {
+//           corner_cube(corners=TOP+RIGHT);
+//           corner_cube(corners=TOP+BACK);
+//           corner_cube(corners=TOP+LEFT);
+//           corner_cube(corners=TOP+FRONT);
+//       }
+//   }
+// Figure(3DBig): Corner Vector Edge Sets
+//   ydistribute(55) {
+//       xdistribute(35) {
+//           corner_cube(corners=FRONT+LEFT+TOP);
+//           corner_cube(corners=FRONT+RIGHT+TOP);
+//           corner_cube(corners=FRONT+LEFT+BOT);
+//           corner_cube(corners=FRONT+RIGHT+BOT);
+//       }
+//       xdistribute(35) {
+//           corner_cube(corners=TOP+LEFT+BACK);
+//           corner_cube(corners=TOP+RIGHT+BACK);
+//           corner_cube(corners=BOT+LEFT+BACK);
+//           corner_cube(corners=BOT+RIGHT+BACK);
+//       }
+//   }
+// Figure(3D): Face Vector Edge Sets
+//   ydistribute(55) {
+//       xdistribute(35) {
+//           corner_cube(corners=LEFT);
+//           corner_cube(corners=FRONT);
+//           corner_cube(corners=RIGHT);
+//       }
+//       xdistribute(35) {
+//           corner_cube(corners=TOP);
+//           corner_cube(corners=BACK);
+//           corner_cube(corners=BOTTOM);
+//       }
+//   }
+// Figure(3D): Named Edge Sets
+//   xdistribute(35) {
+//       corner_cube(corners="ALL");
+//       corner_cube(corners="NONE");
+//   }
+// Example: Just the front-top-right corner
+//   corners(FRONT+TOP+RIGHT)
+// Example: All corners surrounding either the front or top faces
+//   corners([FRONT,TOP])
+// Example: All corners around the bottom face, except any that are also on the front
+//   corners(BTM, except=FRONT)
+// Example: All corners except those around the bottom face.
+//   corners("ALL", except=BOTTOM)
+// Example: All corners around the bottom or front faces, except those on the bottom-front edge.
+//   corners([BOTTOM,FRONT], except=BOTTOM+FRONT)
+function corners(v, except=[]) =
+	(is_string(v) || is_corner_array(v))? corners([v], except=except) :
+	(is_string(except) || is_corner_array(except))? corners(v, except=[except]) :
+	except==[]? normalize_corners(sum([for (x=v) _corner_set(x)])) :
+	normalize_corners(
+		normalize_corners(sum([for (x=v) _corner_set(x)])) -
+		sum([for (x=except) _corner_set(x)])
+	);
+
+
+CORNER_OFFSETS = [   // Array of XYZ offsets to each corner.
+	[-1,-1,-1], [ 1,-1,-1], [-1, 1,-1], [ 1, 1,-1],
+	[-1,-1, 1], [ 1,-1, 1], [-1, 1, 1], [ 1, 1, 1]
 ];
 
 
