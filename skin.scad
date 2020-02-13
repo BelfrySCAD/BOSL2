@@ -6,13 +6,11 @@
 //   include <BOSL2/std.scad>
 //   include <BOSL2/skin.scad>
 //   ```
-//   Derived from list-comprehension-demos skin():
+//   Inspired by list-comprehension-demos skin():
 //   - https://github.com/openscad/list-comprehension-demos/blob/master/skin.scad
 //////////////////////////////////////////////////////////////////////
 
-
 include <vnf.scad>
-
 
 // Section: Skinning
 //
@@ -30,7 +28,10 @@ include <vnf.scad>
 //    of the skined profiles.
 //   
 //   The profiles can be specified either as a list of 3d curves or they can be specified as
-//   2d curves with heights given in the `z` parameter.  
+//   2d curves with heights given in the `z` parameter.  It is your responsibility to ensure
+//   that the resulting polyhedron is free from self-intersections, which would make it invalid
+//   and can result in cryptic CGAL errors upon rendering, even though the polyhedron appears
+//   OK during preview.  
 //   
 //   For this operation to be well-defined, the profiles must all have the same vertex count and
 //   we must assume that profiles are aligned so that vertex `i` links to vertex `i` on all polygons.  
@@ -136,7 +137,7 @@ include <vnf.scad>
 // Example(FlatSpin):
 //   $fn=24;
 //   skin([
-//         yrot(35, p=yscale(2,p=path3d(circle(d=75)))),
+//         yrot(0, p=yscale(2,p=path3d(circle(d=75)))),
 //         [[40,0,100], [35,-15,100], [20,-30,100],[0,-40,100],[-40,0,100],[0,40,100],[20,30,100], [35,15,100]]
 //   ],slices=10);
 // Example(FlatSpin):
@@ -205,30 +206,34 @@ include <vnf.scad>
 // Example(FlatSpin): Another "tangent" example with non-parallel profiles
 //   skin([path3d(pentagon(4)),
 //         yrot(35,p=path3d(right(4,p=circle($fn=80,r=2)),5))], slices=10, method="tangent");
-// Example: rounding corners of a square.  Note that $fn makes the number of points constant, and avoiding the `rounding=0` case keeps everything simple.  In this case, the connections between profiles are linear, so there is no benefit to setting `slices` bigger than zero.  
+// Example(FlatSpin): rounding corners of a square.  Note that $fn makes the number of points constant, and avoiding the `rounding=0` case keeps everything simple.  In this case, the connections between profiles are linear, so there is no benefit to setting `slices` bigger than zero.  
 //   shapes = [for(i=[.01:.045:2])zrot(-i*180/2,cp=[-8,0,0],p=xrot(90,p=path3d(regular_ngon(n=4, side=4, rounding=i, $fn=64))))];
 //   skin( shapes, slices=0);
-// Example: Here's a simplified version of the above, with `i=0` included.  That first layer doesn't look good. 
+// Example(FlatSpin): Here's a simplified version of the above, with `i=0` included.  That first layer doesn't look good. 
 //   shapes = [for(i=[0:.2:1]) path3d(regular_ngon(n=4, side=4, rounding=i, $fn=32),i*5)];
 //   skin( shapes, slices=0);
-// Example: You can fix it by specifying "tangent" for the first method, but you still need "direct" for the rest. 
+// Example(FlatSpin): You can fix it by specifying "tangent" for the first method, but you still need "direct" for the rest. 
 //   shapes = [for(i=[0:.2:1]) path3d(regular_ngon(n=4, side=4, rounding=i, $fn=32),i*5)];
 //   skin( shapes, slices=0, method=concat(["tangent"],replist("direct",len(shapes)-2)));
 // Example(FlatSpin): Connecting square to pentagon using "direct" method.
 //   skin([regular_ngon(n=4, r=4), regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10);
-// Example(FlatSpin): Connecting square to pentagon using "direct" method.
-//   skin([regular_ngon(n=4, r=4), right(4)regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10);
+// Example(FlatSpin): Connecting square to shifted pentagon using "direct" method.
+//   skin([regular_ngon(n=4, r=4), right(4,p=regular_ngon(n=5,r=5))], z=[0,4], refine=10, slices=10);
 // Example(FlatSpin): To improve the look, you can actually rotate the polygons for a more symmetric pattern of lines.   You have to resample yourself before calling `align_polygon` and you should choose a length that is a multiple of both polygon lengths.  
 //   sq = subdivide_path(regular_ngon(n=4, r=4),40);
 //   pent = subdivide_path(regular_ngon(n=5,r=5),40);
 //   skin([sq, align_polygon(sq,pent,[0:1:360/5])], z=[0,4], slices=10);
+// Example(FlatSpin): For the shifted pentagon we can also align, making sure to pass an appropriate centerpoint to `align_polygon`.
+//   sq = subdivide_path(regular_ngon(n=4, r=4),40);
+//   pent = right(4,p=subdivide_path(regular_ngon(n=5,r=5),40));
+//   skin([sq, align_polygon(sq,pent,[0:1:360/5],cp=[4,0])], z=[0,4], refine=10, slices=10);
 // Example(FlatSpin): The "distance" method is a completely different approach.
 //   skin([regular_ngon(n=4, r=4), regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10, method="distance");
 // Example(FlatSpin): Connecting pentagon to heptagon inserts two triangular faces on each side
 //   small = path3d(circle(r=3, $fn=5));
 //   big = up(2,p=yrot( 0,p=path3d(circle(r=3, $fn=7), 6)));
 //   skin([small,big],method="distance", slices=10, refine=10);
-// Example(FlatSpin): But just a slight rotation moves the two triangles to one end
+// Example(FlatSpin): But just a slight rotation of the top profile moves the two triangles to one end
 //   small = path3d(circle(r=3, $fn=5));
 //   big = up(2,p=yrot(14,p=path3d(circle(r=3, $fn=7), 6)));
 //   skin([small,big],method="distance", slices=10, refine=10);
@@ -279,7 +284,7 @@ include <vnf.scad>
 //         rot(17,p=regular_ngon(n=6, r=3)),
 //         rot(37,p=regular_ngon(n=4, r=3))],
 //        z=[0,2,4,6,9], method="distance", slices=10, refine=10);
-// Example(FlatSpin): Size of the polygon changes every time
+// Example(FlatSpin): Vertex count of the polygon changes at every profile
 //   skin([
 //       for (ang = [0:10:90])
 //       rot([0,ang,0], cp=[200,0,0], p=path3d(circle(d=100,$fn=12-(ang/10))))
@@ -321,19 +326,20 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
   let( bad = [for(i=idx(profiles)) if (!(is_path(profiles[i]) && len(profiles[i])>2)) i])
   assert(len(bad)==0, str("Profiles ",bad," are not a paths or have length less than 3"))
   let(
+    profcount = len(profiles) - (closed?0:1),
     legal_methods = ["direct","reindex","distance","tangent"],
     caps = is_def(caps) ? caps :
            closed ? false : true,
     capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
     fullcaps = is_bool(caps) ? [caps,caps] : caps,
     refine = is_list(refine) ? refine : replist(refine, len(profiles)),
-    slices = is_list(slices) ? slices : replist(slices, len(profiles)-1),
+    slices = is_list(slices) ? slices : replist(slices, profcount),
     refineOK = [for(i=idx(refine)) if (refine[i]<=0 || !is_integer(refine[i])) i],
     slicesOK = [for(i=idx(slices)) if (!is_integer(slices[i]) || slices[i]<0) i],
     maxsize = list_longest(profiles),
     methodok = is_list(method) || in_list(method, legal_methods),
     methodlistok = is_list(method) ? [for(i=idx(method)) if (!in_list(method[i], legal_methods)) i] : [],
-    method = is_string(method) ? replist(method, len(profiles)+ (closed?0:-1)) : method,
+    method = is_string(method) ? replist(method, profcount) : method,
     // Define to be zero where a resampling method is used and 1 where a vertex duplicator is used
     RESAMPLING = 0,
     DUPLICATOR = 1,
@@ -342,12 +348,12 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
                in_list(DUPLICATOR,method_type) ? "segment" : "length" 
   )
   assert(len(refine)==len(profiles), "refine list is the wrong length")
-  assert(len(slices)==len(profiles)-1, "slices list is the wrong length")
+  assert(len(slices)==profcount, "slices list is the wrong length")
   assert(slicesOK==[],str("slices must be nonnegative integers"))
   assert(refineOK==[],str("refine must be postive integer"))
   assert(methodok,str("method must be one of ",legal_methods,". Got ",method))
   assert(methodlistok==[], str("method list contains invalid method at ",methodlistok))
-  assert(len(method) == len(profiles) + (closed?0:-1),"Method list is the wrong length")
+  assert(len(method) == profcount,"Method list is the wrong length")
   assert(in_list(sampling,["length","segment"]), "sampling must be set to \"length\" or \"segment\"")
   assert(sampling=="segment" || (!in_list("distance",method) && !in_list("tangent",method)), "sampling is set to \"length\" which is only allowed iwith methods \"direct\" and \"reindex\"")
   assert(capsOK, "caps must be boolean or a list of two booleans")
@@ -374,18 +380,23 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
     parts = search(1,[1,for(i=[0:1:len(profile_resampled)-2]) profile_resampled[i]!=profile_resampled[i+1] ? 1 : 0],0),
     plen = [for(i=idx(parts)) (i== len(parts)-1? len(refined_len) : parts[i+1]) - parts[i]],
     max_list = [for(i=idx(parts)) each replist(max(select(refined_len, parts[i], parts[i]+plen[i]-1)), plen[i])],
-    transition_profiles = [for(i=[(closed?0:1):1:len(profiles)-(closed?1:2)]) if (select(method_type,i-1) != method_type[i]) i],
+    transition_profiles = [for(i=[(closed?0:1):1:profcount-1]) if (select(method_type,i-1) != method_type[i]) i],
     badind = [for(tranprof=transition_profiles) if (refined_len[tranprof] != max_list[tranprof]) tranprof]
   )
   assert(badind==[],str("Profile length mismatch at method transition at indices ",badind," in skin()"))
   let(
-    
-    // With "distance" and "tangent" methods, the path lengths are made equal by inserting
-    // repeated vertices, so no further adjustment is required.  With "direct" and "reindex"
-    // lengths match due to resampling, and we have to upsample to the longest profile.  
-    samples = in_list("direct", method) || in_list("reindex", method) ? max(refined_len) : 0, 
-    full_list =
-      [for(i=[0:len(profiles)-(closed?1:2)])
+    full_list =    // If there are no duplicators then use more efficient where the whole input is treated together
+      !in_list(DUPLICATOR,method_type) ?
+         let(
+             resampled = [for(i=idx(profiles)) subdivide_path(profiles[i], max_list[i], method=sampling)],
+             fixedprof = [for(i=idx(profiles)) 
+                             i==0 || method[i-1]=="direct" ? resampled[i]
+                                                         :echo("reindexing") reindex_polygon(resampled[i-1],resampled[i])],
+             sliced = slice_profiles(fixedprof, slices, closed)            
+            )
+            !closed ? sliced : concat(sliced,[sliced[0]])
+      :  // There are duplicators, so use approach where each pair is treated separately
+      [for(i=[0:profcount-1])
         let(
           pair = 
             method[i]=="distance" ? minimum_distance_match(profiles[i],select(profiles,i+1)) :
@@ -399,7 +410,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
                                                         ".  Method ",method[i]," requires equal values"))
                refine[i] * len(pair[0])
           )
-          each interp_and_slice(pair,slices[i], nsamples, submethod=sampling)]
+          each subdivide_and_slice(pair,slices[i], nsamples, method=sampling)]
   )
   _skin_core(full_list,caps=fullcaps);
 
@@ -459,60 +470,60 @@ function _skin_core(profiles, caps) =
 
 
 
-
-// plist is list of polygons, N is list or value for number of slices to insert
-// numpoints can be "max", "lcm" or a number
-function interp_and_slice(plist, N, numpoints="max", align=false,submethod="length") =
+// Function: subdivide_and_slice()
+// Usage: subdivide_and_slice(profiles, slices, [numpoints], [method], [closed])
+// Description: Subdivides the input profiles to have length `numpoints` where
+//   `numpoints` must be at least as big as the largest input profile.
+//   By default `numpoints` is set equal to the length of the largest profile.
+//   You can set `numpoints="lcm"` to sample to the least common multiple of
+//   all curves, which will avoid sampling artifacts but may produce a huge output.
+//   After subdivision, profiles are sliced.  
+// Arguments:
+//   profiles = profiles to operate on
+//   slices = number of slices to insert between each pair of profiles.  May be a vector
+//   numpoints = number of points after sampling.
+//   method = method used for calling `subdivide_path`, either `"length"` or `"segment"`.  Default: `"length"`
+//   closed = the first and last profile are connected.  Default: false
+function subdivide_and_slice(profiles, slices, numpoints, method="length", closed=false) =
   let(
-    maxsize = list_longest(plist),
-    numpoints = numpoints == "max" ? maxsize :
-                numpoints == "lcm" ? lcmlist([for(p=plist) len(p)]) :
+    maxsize = list_longest(profiles),
+    numpoints = is_undef(numpoints) ? maxsize :
+                numpoints == "lcm" ? lcmlist([for(p=profiles) len(p)]) :
                 is_num(numpoints) ? round(numpoints) : undef
   )
   assert(is_def(numpoints), "Parameter numpoints must be \"max\", \"lcm\" or a positive number")
   assert(numpoints>=maxsize, "Number of points requested is smaller than largest profile")
-  let(fixpoly = [for(poly=plist) subdivide_path(poly, numpoints,method=submethod)])
-  add_slices(fixpoly, N);
+  let(fixpoly = [for(poly=profiles) subdivide_path(poly, numpoints,method=method)])
+  slice_profiles(fixpoly, slices, closed);
   
 
-
-
-function add_slices(plist,N) =
-  assert(is_num(N) || is_list(N))
-  let(listok = !is_list(N) || len(N)==len(plist)-1)
-  assert(listok, "Input N to add_slices is a list with the wrong length")
+// Function slice_profiles()
+// Usage: slice_profiles(profiles,slices,[closed])
+// Description:
+//   Given an input list of profiles, linearly interpolate between each pair to produce a
+//   more finely sampled list.  The parameters `slices` specifies the number of slices to
+//   be inserted between each pair of profiles and can be a number or a list.
+// Arguments:
+//   profiles = list of paths to operate on.  They must be lists of the same shape and length.
+//   slices = number of slices to insert between each pair, or a list to vary the number inserted.
+//   closed = set to true if last profile connects to first one.  Default: false
+function slice_profiles(profiles,slices,closed=false) =
+  assert(is_num(slices) || is_list(slices))
+  let(listok = !is_list(slices) || len(slices)==len(profiles)-(closed?0:1))
+  assert(listok, "Input slices to slice_profiles is a list with the wrong length")
   let(
-    count = is_num(N) ? replist(N,len(plist)-1) : N,
-    slicelist = [for (i=[0:len(plist)-2])
-      each [for(j = [0:count[i]]) lerp(plist[i],plist[i+1],j/(count[i]+1))]
+    count = is_num(slices) ? replist(slices,len(profiles)-(closed?0:1)) : slices,
+    slicelist = [for (i=[0:len(profiles)-(closed?1:2)])
+      each [for(j = [0:count[i]]) lerp(profiles[i],select(profiles,i+1),j/(count[i]+1))]
     ]
   )
-  concat(slicelist, [plist[len(plist)-1]]);
+  concat(slicelist, closed?[]:[profiles[len(profiles)-1]]);
 
 
-
-// Function: unique_count()
-// Usage:
-//   unique_count(arr);
-// Description:
-//   Returns `[sorted,counts]` where `sorted` is a sorted list of the unique items in `arr` and `counts` is a list such 
-//   that `count[i]` gives the number of times that `sorted[i]` appears in `arr`.  
-// Arguments:
-//   arr = The list to analyze. 
-function unique_count(arr) =
-	assert(is_list(arr)||is_string(list))
-	len(arr)==0 ? [[],[]] :
-        len(arr)==1 ? [arr,[1]] :
-        _unique_count(sort(arr), ulist=[], counts=[], ind=1, curtot=1);
-
-function _unique_count(arr, ulist, counts, ind, curtot) = 
-     ind == len(arr)+1 ? [ulist, counts] :
-     ind==len(arr) || arr[ind] != arr[ind-1] ? _unique_count(arr,concat(ulist,[arr[ind-1]]), concat(counts,[curtot]),ind+1,1) :
-     _unique_count(arr,ulist,counts,ind+1,curtot+1);
-
-///////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 //
-
+// Minimum Distance Mapping using Dynamic Programming
+//
 // Given inputs of a two polygons, computes a mapping between their vertices that minimizes the sum the sum of
 // the distances between every matched pair of vertices.  The algorithm uses dynamic programming to calculate
 // the optimal mapping under the assumption that poly1[0] <-> poly2[0].  We then rotate through all the
@@ -547,7 +558,6 @@ function _unique_count(arr, ulist, counts, ind, curtot) =
 _MAP_DIAG = 0;
 _MAP_LEFT = 1;
 _MAP_UP = 2;
-
 
 /*
 function _dp_distance_array(small, big, abort_thresh=1/0, small_ind=0, tdist=[], map=[]) =
@@ -614,6 +624,17 @@ function _dp_extract_map(map) =
         if (i==0 && j==0) each [smallmap,bigmap]];
      
 
+// Function: minimum_distance_match()
+// Usage: minimum_distance_match(poly1,poly2)
+// Description:
+//   Find a way of associating the vertices of poly1 and vertices of poly2
+//   that minimizes the sum of the length of the edges that connect the two polygons.
+//   Polygons can be in 2d or 3d.  The algorithm has cubic run time, so it can be
+//   slow if you pass large polygons.  The output is a pair of polygons with vertices
+//   duplicated as appropriate to be used as input to `skin()`.
+// Arguments:
+//   poly1 = first polygon to match
+//   poly2 = second polygon to match
 function minimum_distance_match(poly1,poly2) =
    let(
       swap = len(poly1)>len(poly2),
@@ -646,18 +667,27 @@ function minimum_distance_match(poly1,poly2) =
       newbig = polygon_shift(repeat_entries(map_poly[1],unique_count(bigmap)[1]),bigshift)
       )
       swap ? [newbig, newsmall] : [newsmall,newbig];
-
-
+//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+//
+// Function: tangent_align()
+// Usage: tangent_align(poly1, poly2)
+// Description:
+//    Finds a mapping of the vertices of the larger polygon onto the smaller one.  Whichever input is the 
+//    shorter path is the polygon, and the longer input is the curve.  For every edge of the polygon, the algorithm seeks a plane that contains that
+//    edge and is tangent to the curve.  There will be more than one such point.  To choose one, the algorithm centers the polygon and curve on their centroids
+//    and chooses the closer tangent point.  The algorithm works its way around the polygon, computing a series of tangent points and then maps all of the
+//    points on the curve between two tangent points into one vertex of the polygon.  This algorithm can fail if the curve has too few points or if it is concave.  
+// Arguments:
+//    poly1 = input polygon
+//    poly2 = input polygon
 function tangent_align(poly1, poly2) =
     let(
         swap = len(poly1)>len(poly2),
         big = swap ? poly1 : poly2,
         small = swap ? poly2 : poly1,
         curve_offset = centroid(small)-centroid(big),
-        cutpts = [for(i=[0:len(small)-1]) find_one_tangent(big, select(small,i,i+1),curve_offset=curve_offset)],
+        cutpts = [for(i=[0:len(small)-1]) _find_one_tangent(big, select(small,i,i+1),curve_offset=curve_offset)],
         d=echo(cutpts = cutpts),
         shift = select(cutpts,-1)+1, 
         newbig = polygon_shift(big, shift),
@@ -668,20 +698,19 @@ function tangent_align(poly1, poly2) =
       swap ? [newbig, newsmall] : [newsmall, newbig];
 
 
-function find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
+function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
   let(
    angles = 
-   [for(i=[0:len(curve)-(closed?1:2)])
-     let( 
-       plane = plane3pt( edge[0], edge[1], curve[i]),
-       tangent = [curve[i], select(curve,i+1)]
+     [for(i=[0:len(curve)-(closed?1:2)])
+       let( 
+         plane = plane3pt( edge[0], edge[1], curve[i]),
+         tangent = [curve[i], select(curve,i+1)]
        )
-   plane_line_angle(plane,tangent)],
+     plane_line_angle(plane,tangent)],
    zero_cross = [for(i=[0:len(curve)-(closed?1:2)]) if (sign(angles[i]) != sign(select(angles,i+1))) i],
    d = [for(i=zero_cross) distance_from_line(edge, curve[i]+curve_offset)]
-    )
-   zero_cross[min_index(d)];//zcross;
-
+  )
+  zero_cross[min_index(d)];
 
 
 function plane_line_angle(plane, line) =
