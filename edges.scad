@@ -35,7 +35,6 @@
 //   }
 //   module corner_cube(size=20, txtsize=3, corners="ALL") {
 //       corner_set = _corner_set(corners);
-//       echo(corners=corners, corner_set=corner_set);
 //       lbl = is_string(corners)? [str("\"",corners,"\"")] : concat(
 //            corners.z>0? ["TOP"] : corners.z<0? ["BTM"] : [],
 //            corners.y>0? ["BACK"] : corners.y<0? ["FWD"] : [],
@@ -281,7 +280,6 @@ function _corner_set(v) =
 				str(v, " must be a vector, corner array, or one of ", valid_values)
 			) v
 		) :
-		echo("A", v=v, v2=v2, [for (i=[0:2]) !v[i] || (v[i]==v2[i])])
 		all([for (i=[0:2]) !v[i] || (v[i]==v2[i])])
 	)? 1 : 0
 ];
@@ -372,13 +370,13 @@ function _corner_set(v) =
 // Example: All corners around the bottom or front faces, except those on the bottom-front edge.
 //   corners([BOTTOM,FRONT], except=BOTTOM+FRONT)
 function corners(v, except=[]) =
-	(is_string(v) || is_corner_array(v))? corners([v], except=except) :
-	(is_string(except) || is_corner_array(except))? corners(v, except=[except]) :
+	(is_string(v) || is_vector(v) || is_corner_array(v))? corners([v], except=except) :
+	(is_string(except) || is_vector(except) || is_corner_array(except))? corners(v, except=[except]) :
 	except==[]? normalize_corners(sum([for (x=v) _corner_set(x)])) :
-	normalize_corners(
-		normalize_corners(sum([for (x=v) _corner_set(x)])) -
-		sum([for (x=except) _corner_set(x)])
-	);
+	let(
+		a = normalize_corners(sum([for (x=v) _corner_set(x)])),
+		b = normalize_corners(sum([for (x=except) _corner_set(x)]))
+	) normalize_corners(a - b);
 
 
 CORNER_OFFSETS = [   // Array of XYZ offsets to each corner.

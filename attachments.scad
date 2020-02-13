@@ -464,12 +464,51 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 		$attach_anchor = anch;
 		$attach_norot = true;
 		$tags = "mask";
-		length = sum(vmul($parent_size, [for (x=vec) x?0:1]))+0.1;
 		rotang =
 			vec.z<0? [90,0,180+vang(point2d(vec))] :
 			vec.z==0 && sign(vec.x)==sign(vec.y)? 135+vang(point2d(vec)) :
 			vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+vang(point2d(vec))] :
 			[-90,0,180+vang(point2d(vec))];
+		translate(anch[1]) rot(rotang) children();
+	}
+}
+
+
+// Module: corner_mask()
+// Usage:
+//   corner_mask([corners], [except]) ...
+// Description:
+//   Takes a 3D mask shape, and attaches it to the given corners, with the appropriate
+//   orientation to be `diff()`ed away.  The 3D corner mask shape should be designed to
+//   mask away the X+Y+Z+ octant.
+// Arguments:
+//   corners = Edges to mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: All corners.
+//   except = Edges to explicitly NOT mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: No corners.
+// Side Effects:
+//   Sets `$tags = "mask"` for all children.
+// Example:
+//   diff("mask")
+//   cube(100, center=true)
+//       corner_mask([TOP,FRONT],LEFT+FRONT+TOP)
+//           difference() {
+//               translate(-0.01*[1,1,1]) cube(20);
+//               translate([20,20,20]) sphere(r=20);
+//           }
+module corner_mask(corners=CORNERS_ALL, except=[]) {
+	assert($parent_size != undef, "No object to attach to!");
+	corners = corners(corners, except=except);
+	vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
+	for (vec = vecs) {
+		vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
+		assert(vcount == 3, "Not an edge vector!");
+		anch = find_anchor(vec, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, offset=$parent_offset, anchors=$parent_anchors, geometry=$parent_geom, two_d=$parent_2d);
+		$attach_to = undef;
+		$attach_anchor = anch;
+		$attach_norot = true;
+		$tags = "mask";
+		rotang = vec.z<0?
+			[  0,0,180+vang(point2d(vec))-45] :
+			[180,0,-90+vang(point2d(vec))-45];
 		translate(anch[1]) rot(rotang) children();
 	}
 }
