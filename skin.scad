@@ -399,8 +399,8 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
       [for(i=[0:profcount-1])
         let(
           pair = 
-            method[i]=="distance" ? minimum_distance_match(profiles[i],select(profiles,i+1)) :
-            method[i]=="tangent" ? tangent_align(profiles[i],select(profiles,i+1)) :
+            method[i]=="distance" ? _skin_distance_match(profiles[i],select(profiles,i+1)) :
+            method[i]=="tangent" ? _skin_tangent_match(profiles[i],select(profiles,i+1)) :
             /*method[i]=="reindex" || method[i]=="direct" ?*/ 
                let( p1 = subdivide_path(profiles[i],max_list[i], method=sampling),
                     p2 = subdivide_path(select(profiles,i+1),max_list[i], method=sampling)
@@ -530,7 +530,7 @@ function slice_profiles(profiles,slices,closed=false) =
 // possible indexings of the longer polygon.  The theoretical run time is quadratic in the longer polygon and
 // linear in the shorter one.
 //
-// The top level function, minimum_distance_match(), cycles through all the of the indexings of the larger
+// The top level function, _skin_distance_match(), cycles through all the of the indexings of the larger
 // polygon, computes the optimal value for each indexing, and chooses the overall best result.  It uses
 // _dp_extract_map() to thread back through the dynamic programming array to determine the actual mapping, and
 // then converts the result to an index repetition count list, which is passed to repeat_entries().
@@ -624,8 +624,8 @@ function _dp_extract_map(map) =
         if (i==0 && j==0) each [smallmap,bigmap]];
      
 
-// Function: minimum_distance_match()
-// Usage: minimum_distance_match(poly1,poly2)
+// Internal Function: _skin_distance_match(poly1,poly2)
+// Usage: _skin_distance_match(poly1,poly2)
 // Description:
 //   Find a way of associating the vertices of poly1 and vertices of poly2
 //   that minimizes the sum of the length of the edges that connect the two polygons.
@@ -635,7 +635,7 @@ function _dp_extract_map(map) =
 // Arguments:
 //   poly1 = first polygon to match
 //   poly2 = second polygon to match
-function minimum_distance_match(poly1,poly2) =
+function _skin_distance_match(poly1,poly2) =
    let(
       swap = len(poly1)>len(poly2),
       big = swap ? poly1 : poly2,
@@ -670,8 +670,8 @@ function minimum_distance_match(poly1,poly2) =
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Function: tangent_align()
-// Usage: tangent_align(poly1, poly2)
+// Internal Function: _skin_tangent_match()
+// Usage: _skin_tangent_match(poly1, poly2)
 // Description:
 //    Finds a mapping of the vertices of the larger polygon onto the smaller one.  Whichever input is the 
 //    shorter path is the polygon, and the longer input is the curve.  For every edge of the polygon, the algorithm seeks a plane that contains that
@@ -681,7 +681,7 @@ function minimum_distance_match(poly1,poly2) =
 // Arguments:
 //    poly1 = input polygon
 //    poly2 = input polygon
-function tangent_align(poly1, poly2) =
+function _skin_tangent_match(poly1, poly2) =
     let(
         swap = len(poly1)>len(poly2),
         big = swap ? poly1 : poly2,
@@ -712,13 +712,5 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
   )
   zero_cross[min_index(d)];
 
-
-function plane_line_angle(plane, line) =
-   let(
-        vect = line[1]-line[0],
-        zplane = select(plane,0,2),
-        sin_angle = vect*zplane/norm(zplane)/norm(vect)
-        )
-   asin(constrain(sin_angle,-1,1));
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
