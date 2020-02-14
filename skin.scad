@@ -203,12 +203,9 @@ include <vnf.scad>
 //     skin([ sub_base, base, base, sub_base, interior], z=[0,2,height, height, 2], slices=0, refine=1, method="reindex");
 // Example: Connecting a pentagon and circle with the "tangent" method produces triangular faces.
 //   skin([pentagon(4), circle($fn=80,r=2)], z=[0,3], slices=10, method="tangent");
-// Example: Another "tangent" example with non-parallel profiles
-//   skin([path3d(pentagon(4)),
-//         yrot(35,p=path3d(right(4,p=circle($fn=80,r=2)),5))], slices=10, method="tangent");
 // Example: rounding corners of a square.  Note that `$fn` makes the number of points constant, and avoiding the `rounding=0` case keeps everything simple.  In this case, the connections between profiles are linear, so there is no benefit to setting `slices` bigger than zero.
 //   shapes = [for(i=[.01:.045:2])zrot(-i*180/2,cp=[-8,0,0],p=xrot(90,p=path3d(regular_ngon(n=4, side=4, rounding=i, $fn=64))))];
-//   skin( shapes, slices=0);
+//   rotate(180) skin( shapes, slices=0);
 // Example: Here's a simplified version of the above, with `i=0` included.  That first layer doesn't look good.
 //   shapes = [for(i=[0:.2:1]) path3d(regular_ngon(n=4, side=4, rounding=i, $fn=32),i*5)];
 //   skin( shapes, slices=0);
