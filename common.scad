@@ -73,6 +73,14 @@ function is_int(n) = is_num(n) && n == round(n);
 function is_integer(n) = is_num(n) && n == round(n);
 
 
+// Function: is_nan()
+// Usage:
+//   is_nan(x);
+// Description:
+//   Returns true if a given value `x` is nan, a floating point value representing "not a number".
+function is_nan(x) = (x!=x);
+
+
 
 // Section: Handling `undef`s.
 
