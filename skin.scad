@@ -13,7 +13,7 @@
 include <vnf.scad>
 
 // Section: Skinning
-//
+
 // Function&Module: skin()
 // Usage: As module:
 //   skin(profiles, [slices], [refine], [method], [sampling], [caps], [closed], [z]);
@@ -31,10 +31,10 @@ include <vnf.scad>
 //   2d curves with heights given in the `z` parameter.  It is your responsibility to ensure
 //   that the resulting polyhedron is free from self-intersections, which would make it invalid
 //   and can result in cryptic CGAL errors upon rendering, even though the polyhedron appears
-//   OK during preview.  
+//   OK during preview.
 //   
 //   For this operation to be well-defined, the profiles must all have the same vertex count and
-//   we must assume that profiles are aligned so that vertex `i` links to vertex `i` on all polygons.  
+//   we must assume that profiles are aligned so that vertex `i` links to vertex `i` on all polygons.
 //   Many interesting cases do not comply with this restriction.  Two basic methods can handle
 //   these cases: either add points to edges (resample) so that the profiles are compatible,
 //   or repeat vertices.  Repeating vertices allows two edges to terminate at the same point, creating
@@ -51,21 +51,21 @@ include <vnf.scad>
 //   are approximately equilateral.  The `slices` parameter specifies the number of slices to insert
 //   between each pair of profiles, either a scalar to insert the same number everywhere, or a vector
 //   to insert a different number between each pair.  To resample the profiles you can use set
-//   `refine=N` which will place `N` points on each edge of your profile.  This has the effect of 
+//   `refine=N` which will place `N` points on each edge of your profile.  This has the effect of
 //   muliplying the number of points by N, so a profile with 8 points will have 8*N points afer
 //   refinement.  Note that when dealing with continuous curves it is always better to adjust the
-//   sampling in your code to generate the desired sampling rather than using the `refine` argument. 
+//   sampling in your code to generate the desired sampling rather than using the `refine` argument.
 //   
 //   Two methods are available for resampling, `"length"` and `"segment"`.  Specify them using
 //   the `sampling` argument.  The length resampling method resamples proportional to length.
 //   The segment method divides each segment of a profile into the same number of points.
 //   A uniform division may be impossible, in which case the code computes an approximation.
-//   See `subdivide_path` for more details.  
+//   See `subdivide_path` for more details.
 //    
 //   You can choose from four methods for specifying alignment for incomensurate profiles.
 //   The available methods are `"distance"`, `"tangent"`, `"direct"` and `"reindex"`.
 //   It is useful to distinguish between continuous curves like a circle and discrete profiles
-//   like a hexagon or star, because the algorithms' suitability depend on this distinction. 
+//   like a hexagon or star, because the algorithms' suitability depend on this distinction.
 //   
 //   The "direct" and "reindex" methods work by resampling the profiles if necessary.  As noted above,
 //   for continuous input curves, it is better to generate your curves directly at the desired sample size,
@@ -75,7 +75,7 @@ include <vnf.scad>
 //   is `sampling="segment"` which attempts to place the same number of new points on each segment.
 //   If the segments are of varying length, this will produce a different result.  Note that "direct" is
 //   the default method.  If you simply supply a list of compatible profiles it will link them up
-//   exactly as you have provided them.  You may find that profiles you want to connect define the 
+//   exactly as you have provided them.  You may find that profiles you want to connect define the
 //   right shapes but the point lists don't start from points that you want aligned in your skinned
 //   polyhedron.  You can correct this yourself using `reindex_polygon`, or you can use the "reindex"
 //   method which will look for the index choice that will minimize the length of all of the edges
@@ -87,7 +87,7 @@ include <vnf.scad>
 //   profiles.  This algorithm generally produces a good result when both profiles are discrete ones with
 //   a small number of vertices.  It is computationally intensive (O(N^3)) and may be
 //   slow on large inputs.  The resulting surfaces generally have curves faces, so be
-//   sure to select a sufficiently large value for `slices` and `refine`.  
+//   sure to select a sufficiently large value for `slices` and `refine`.
 //   The `"tangent"` method generally produces good results when
 //   connecting a discrete polygon to a convex, finely sampled curve.  It works by finding
 //   a plane that passed through each edge of the polygon that is tangent to
@@ -106,24 +106,24 @@ include <vnf.scad>
 //   `refine` must be set so that the resulting number of vertices matches the number that is
 //   used for the resampled profiles.  The best way to avoid confusion is to ensure that the
 //   profiles connected by "direct" or "realign" all have the same number of points and at the
-//   transition, the refined number of points matches.  
+//   transition, the refined number of points matches.
 //   
 // Arguments:
 //   profiles = list of 2d or 3d profiles to be skinned.  (If 2d must also give `z`.)
-//   slices = scalar or vector number of slices to insert between each pair of profiles.  Set to zero to use only the profiles you provided.  Recommend starting with a value around 10. 
-//   refine = resample profiles to this number of points per edge.  Can be a list to give a refinement for each profile.  Recommend using a value above 10 when using the "distance" method.  Default: 1. 
-//   sampling = sampling method to use with "direct" and "reindex" methods.  Can be "length" or "segment".  Ignored if any profile pair uses either the "distance" or "tangent" methods.  Default: "length".  
+//   slices = scalar or vector number of slices to insert between each pair of profiles.  Set to zero to use only the profiles you provided.  Recommend starting with a value around 10.
+//   refine = resample profiles to this number of points per edge.  Can be a list to give a refinement for each profile.  Recommend using a value above 10 when using the "distance" method.  Default: 1.
+//   sampling = sampling method to use with "direct" and "reindex" methods.  Can be "length" or "segment".  Ignored if any profile pair uses either the "distance" or "tangent" methods.  Default: "length".
 //   closed = set to true to connect first and last profile (to make a torus).  Default: false
 //   caps = true to create endcap faces when closed is false.  Can be a length 2 boolean array.  Default is true if closed is false.
 //   method = method for connecting profiles, one of "distance", "tangent", "direct" or "reindex".  Default: "direct".
 //   z = array of height values for each profile if the profiles are 2d
-// Example(FlatSpin):
+// Example:
 //   skin([octagon(4), regular_ngon(n=70,r=2)], z=[0,3], slices=10);
-// Example(FlatSpin): The circle() and pentagon() modules place the zero index at different locations, giving a twist
+// Example: The circle() and pentagon() modules place the zero index at different locations, giving a twist
 //   skin([pentagon(4), circle($fn=80,r=2)], z=[0,3], slices=10);
-// Example(FlatSpin): You can untwist it with the "reindex" method
+// Example: You can untwist it with the "reindex" method
 //   skin([pentagon(4), circle($fn=80,r=2)], z=[0,3], slices=10, method="reindex");
-// Example(FlatSpin): Offsetting the starting edge connects to circles in an interesting way:
+// Example: Offsetting the starting edge connects to circles in an interesting way:
 //   circ = circle($fn=80, r=3);
 //   skin([circ, rot(110,p=circ)], z=[0,5], slices=20);
 // Example(FlatSpin): 
@@ -148,7 +148,7 @@ include <vnf.scad>
 //               point3d(polar_to_xy((100+50*cos((a+b)*2))/2,a),b/90*100)
 //       ]
 //   ], slices=20);
-// Example(FlatSpin): Vaccum connector example from list-comprehension-demos
+// Example: Vaccum connector example from list-comprehension-demos
 //   include <BOSL2/rounding.scad>
 //   $fn=32;
 //   base = round_corners(square([2,4],center=true), measure="radius", size=0.5);
@@ -160,31 +160,31 @@ include <vnf.scad>
 //       for(i=[0:2]) each [path3d(circle(r=0.6), i+4),
 //                          path3d(circle(r=0.5), i+5)]
 //   ],slices=0);
-// Example(FlatSpin): Vaccum nozzle example from list-comprehension-demos, using "length" sampling (the default)
+// Example: Vaccum nozzle example from list-comprehension-demos, using "length" sampling (the default)
 //   xrot(90)down(1.5)
 //   difference() {
 //   	skin(
 //   		[square([2,.2],center=true),
-//   		 circle($fn=64,r=0.5)], z=[0,3], 
+//   		 circle($fn=64,r=0.5)], z=[0,3],
 //   		slices=40,sampling="length",method="reindex");
 //   	skin(
 //   		[square([1.9,.1],center=true),
-//   		 circle($fn=64,r=0.45)], z=[-.01,3.01], 
+//   		 circle($fn=64,r=0.45)], z=[-.01,3.01],
 //   		slices=40,sampling="length",method="reindex");
 //   }
-// Example(FlatSpin): Same thing with "segment" sampling
+// Example: Same thing with "segment" sampling
 //   xrot(90)down(1.5)
 //   difference() {
 //   	skin(
 //   		[square([2,.2],center=true),
-//   		 circle($fn=64,r=0.5)], z=[0,3], 
+//   		 circle($fn=64,r=0.5)], z=[0,3],
 //   		slices=40,sampling="segment",method="reindex");
 //   	skin(
 //   		[square([1.9,.1],center=true),
-//   		 circle($fn=64,r=0.45)], z=[-.01,3.01], 
+//   		 circle($fn=64,r=0.45)], z=[-.01,3.01],
 //   		slices=40,sampling="segment",method="reindex");
 //   }
-// Example(FlatSpin): Forma Candle Holder (from list-comprehension-demos)
+// Example: Forma Candle Holder (from list-comprehension-demos)
 //   r = 50;
 //   height = 140;
 //   layers = 10;
@@ -201,25 +201,25 @@ include <vnf.scad>
 //   interior = regular_ngon(n=len(base), d=60);
 //   right_half()
 //     skin([ sub_base, base, base, sub_base, interior], z=[0,2,height, height, 2], slices=0, refine=1, method="reindex");
-// Example(FlatSpin): Connecting a pentagon and circle with the "tangent" method produces triangular faces.
+// Example: Connecting a pentagon and circle with the "tangent" method produces triangular faces.
 //   skin([pentagon(4), circle($fn=80,r=2)], z=[0,3], slices=10, method="tangent");
-// Example(FlatSpin): Another "tangent" example with non-parallel profiles
+// Example: Another "tangent" example with non-parallel profiles
 //   skin([path3d(pentagon(4)),
 //         yrot(35,p=path3d(right(4,p=circle($fn=80,r=2)),5))], slices=10, method="tangent");
-// Example(FlatSpin): rounding corners of a square.  Note that $fn makes the number of points constant, and avoiding the `rounding=0` case keeps everything simple.  In this case, the connections between profiles are linear, so there is no benefit to setting `slices` bigger than zero.  
+// Example: rounding corners of a square.  Note that `$fn` makes the number of points constant, and avoiding the `rounding=0` case keeps everything simple.  In this case, the connections between profiles are linear, so there is no benefit to setting `slices` bigger than zero.
 //   shapes = [for(i=[.01:.045:2])zrot(-i*180/2,cp=[-8,0,0],p=xrot(90,p=path3d(regular_ngon(n=4, side=4, rounding=i, $fn=64))))];
 //   skin( shapes, slices=0);
-// Example(FlatSpin): Here's a simplified version of the above, with `i=0` included.  That first layer doesn't look good. 
+// Example: Here's a simplified version of the above, with `i=0` included.  That first layer doesn't look good.
 //   shapes = [for(i=[0:.2:1]) path3d(regular_ngon(n=4, side=4, rounding=i, $fn=32),i*5)];
 //   skin( shapes, slices=0);
-// Example(FlatSpin): You can fix it by specifying "tangent" for the first method, but you still need "direct" for the rest. 
+// Example: You can fix it by specifying "tangent" for the first method, but you still need "direct" for the rest.
 //   shapes = [for(i=[0:.2:1]) path3d(regular_ngon(n=4, side=4, rounding=i, $fn=32),i*5)];
 //   skin( shapes, slices=0, method=concat(["tangent"],replist("direct",len(shapes)-2)));
 // Example(FlatSpin): Connecting square to pentagon using "direct" method.
 //   skin([regular_ngon(n=4, r=4), regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10);
 // Example(FlatSpin): Connecting square to shifted pentagon using "direct" method.
 //   skin([regular_ngon(n=4, r=4), right(4,p=regular_ngon(n=5,r=5))], z=[0,4], refine=10, slices=10);
-// Example(FlatSpin): To improve the look, you can actually rotate the polygons for a more symmetric pattern of lines.   You have to resample yourself before calling `align_polygon` and you should choose a length that is a multiple of both polygon lengths.  
+// Example(FlatSpin): To improve the look, you can actually rotate the polygons for a more symmetric pattern of lines.   You have to resample yourself before calling `align_polygon` and you should choose a length that is a multiple of both polygon lengths.
 //   sq = subdivide_path(regular_ngon(n=4, r=4),40);
 //   pent = subdivide_path(regular_ngon(n=5,r=5),40);
 //   skin([sq, align_polygon(sq,pent,[0:1:360/5])], z=[0,4], slices=10);
@@ -255,7 +255,7 @@ include <vnf.scad>
 //   prof1 = path3d([[50,-50], [-50,-50], [-50,50], [-25,25], [0,50], [25,25], [50,50]]);
 //   prof2 = path3d(regular_ngon(n=7, r=50),100);
 //   skin([repeat_entries(prof1,[2,2,1,1,1,1,1]),
-//         prof2], 
+//         prof2],
 //        method="distance", slices=10, refine=10);
 // Example(FlatSpin): The "distance" method will often produces results similar to the "tangent" method if you use it with a polygon and a curve, but the results can also look like this:
 //   skin([path3d(circle($fn=128, r=10)), xrot(39, p=path3d(square([8,10]),10))],  method="distance", slices=0);
@@ -268,16 +268,16 @@ include <vnf.scad>
 //   skin(
 //        [for(i=[0:2*N-1]) xrot(360*i/2/N, p=(i%2==0 ? hex : pent))],
 //        refine=1,slices=0,method="distance",closed=true);
-// Example(FlatSpin): A smooth morph is achieved when you can calculate all the slices yourself.  Since you provide all the slices, set `slices=0`.
+// Example: A smooth morph is achieved when you can calculate all the slices yourself.  Since you provide all the slices, set `slices=0`.
 //   skin([for(n=[.1:.02:.5])
 //            yrot(n*60-.5*60,p=path3d(supershape(step=360/128,m1=5,n1=n, n2=1.7),5-10*n))],
 //        slices=0);
-// Example(FlatSpin): Another smooth supershape morph:
+// Example: Another smooth supershape morph:
 //   skin([for(alpha=[-.2:.05:1.5])
 //            path3d(supershape(step=360/256,m1=7, n1=lerp(2,3,alpha),
 //                              n2=lerp(8,4,alpha), n3=lerp(4,17,alpha)),alpha*5)],
 //        slices=0);
-// Example(FlatSpin): Several polygons connected using "distance"
+// Example: Several polygons connected using "distance"
 //   skin([regular_ngon(n=4, r=3),
 //         regular_ngon(n=6, r=3),
 //         regular_ngon(n=9, r=4),
@@ -289,12 +289,12 @@ include <vnf.scad>
 //       for (ang = [0:10:90])
 //       rot([0,ang,0], cp=[200,0,0], p=path3d(circle(d=100,$fn=12-(ang/10))))
 //   ],method="distance",slices=10,refine=10);
-// Example(FlatSpin): Möbius Strip.  This is a tricky model because when you work your way around to the connection, the direction of the profiles is flipped, so how can the proper geometry be created?  The trick is to duplicate the first profile and turn the caps off.  The model closes up and forms a valid polyhedron.  
+// Example: Möbius Strip.  This is a tricky model because when you work your way around to the connection, the direction of the profiles is flipped, so how can the proper geometry be created?  The trick is to duplicate the first profile and turn the caps off.  The model closes up and forms a valid polyhedron.
 //   skin([
 //     for (ang = [0:5:360])
 //     rot([0,ang,0], cp=[100,0,0], p=rot(ang/2, p=path3d(square([1,30],center=true))))
 //   ], caps=false, slices=0, refine=20);
-// Example: If you create a self-intersecting polyhedron the result is invalid.  In some cases self-intersection may be obvous.  Here is a more subtle example. 
+// Example: If you create a self-intersecting polyhedron the result is invalid.  In some cases self-intersection may be obvous.  Here is a more subtle example.
 //   skin([
 //          for (a = [0:30:180]) let(
 //              pos  = [-60*sin(a),     0, a    ],
@@ -482,7 +482,7 @@ function _skin_core(profiles, caps) =
 //   By default `numpoints` is set equal to the length of the largest profile.
 //   You can set `numpoints="lcm"` to sample to the least common multiple of
 //   all curves, which will avoid sampling artifacts but may produce a huge output.
-//   After subdivision, profiles are sliced.  
+//   After subdivision, profiles are sliced.
 // Arguments:
 //   profiles = profiles to operate on
 //   slices = number of slices to insert between each pair of profiles.  May be a vector
@@ -547,7 +547,7 @@ function slice_profiles(profiles,slices,closed=false) =
 // The function _dp_distance_row constructs each row of the dynamic programming matrix in the usual
 // way where entries fill in based on the three entries above and to the left.  Note that we duplicate
 // entry zero so account for wrap-around at the ends, and we initialize the distance to zero to avoid
-// double counting the length of the 0-0 pair.  
+// double counting the length of the 0-0 pair.
 //
 // This function builds up the dynamic programming distance array where each entry in the
 // array gives the optimal distance for aligning the corresponding subparts of the two inputs.
@@ -555,10 +555,10 @@ function slice_profiles(profiles,slices,closed=false) =
 // for matching the full input lists.  The `map` array contains a the three key values for the three
 // directions, where _MAP_DIAG means you map the next vertex of `big` to the next vertex of `small`,
 // _MAP_LEFT means you map the next vertex of `big` to the current vertex of `small`, and _MAP_UP
-// means you map the next vertex of `small` to the current vertex of `big`.  
+// means you map the next vertex of `small` to the current vertex of `big`.
 //
 // Return value is [min_distance, map], where map is the array that is used to extract the actual
-// vertex map.  
+// vertex map.
 
 _MAP_DIAG = 0;
 _MAP_LEFT = 1;
@@ -602,7 +602,7 @@ function _dp_distance_row(small, big, small_ind, tdist) =
          ;
        costs = big_ind == len(big)+1 ? [0] :    // handle extra iteration
                              [tdist[small_ind-1][big_ind-1],  // diag
-                              newrow[big_ind-1],              // left 
+                              newrow[big_ind-1],              // left
                               tdist[small_ind-1][big_ind]],   // up
        newrow = concat(newrow, [min(costs)+norm(big[big_ind%len(big)]-small[small_ind%len(small)])]),
        newmap = concat(newmap, [min_index(costs)]),
@@ -621,7 +621,7 @@ function _dp_extract_map(map) =
               ;
            advance_i = map[i][j]==_MAP_UP || map[i][j]==_MAP_DIAG,
            advance_j = map[i][j]==_MAP_LEFT || map[i][j]==_MAP_DIAG,
-           i = i - (advance_i ? 1 : 0), 
+           i = i - (advance_i ? 1 : 0),
            j = j - (advance_j ? 1 : 0),
            bigmap = concat( [j%(len(map[0])-1)] ,  bigmap),
            smallmap = concat( [i%(len(map)-1)]  , smallmap)
@@ -678,11 +678,11 @@ function _skin_distance_match(poly1,poly2) =
 // Internal Function: _skin_tangent_match()
 // Usage: _skin_tangent_match(poly1, poly2)
 // Description:
-//    Finds a mapping of the vertices of the larger polygon onto the smaller one.  Whichever input is the 
+//    Finds a mapping of the vertices of the larger polygon onto the smaller one.  Whichever input is the
 //    shorter path is the polygon, and the longer input is the curve.  For every edge of the polygon, the algorithm seeks a plane that contains that
 //    edge and is tangent to the curve.  There will be more than one such point.  To choose one, the algorithm centers the polygon and curve on their centroids
 //    and chooses the closer tangent point.  The algorithm works its way around the polygon, computing a series of tangent points and then maps all of the
-//    points on the curve between two tangent points into one vertex of the polygon.  This algorithm can fail if the curve has too few points or if it is concave.  
+//    points on the curve between two tangent points into one vertex of the polygon.  This algorithm can fail if the curve has too few points or if it is concave.
 // Arguments:
 //    poly1 = input polygon
 //    poly2 = input polygon
@@ -694,7 +694,7 @@ function _skin_tangent_match(poly1, poly2) =
         curve_offset = centroid(small)-centroid(big),
         cutpts = [for(i=[0:len(small)-1]) _find_one_tangent(big, select(small,i,i+1),curve_offset=curve_offset)],
         d=echo(cutpts = cutpts),
-        shift = select(cutpts,-1)+1, 
+        shift = select(cutpts,-1)+1,
         newbig = polygon_shift(big, shift),
         repeat_counts = [for(i=[0:len(small)-1]) posmod(cutpts[i]-select(cutpts,i-1),len(big))],
         newsmall = repeat_entries(small,repeat_counts)
