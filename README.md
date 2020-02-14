@@ -70,44 +70,71 @@ A lot of the features of this library are to allow shorter, easier-to-read, inte
 ## The Library Files
 The library files are as follows:
 
-### Commonly Used
-  - [`transforms.scad`](https://github.com/revarbat/BOSL2/wiki/transforms.scad): The most commonly used transformations, manipulations, and shortcuts are in this file.
-  - [`attachments.scad`](https://github.com/revarbat/BOSL2/wiki/attachments.scad): Modules and functions to enable attaching parts together.
-  - [`primitives.scad`](https://github.com/revarbat/BOSL2/wiki/primitives.scad): Enhanced replacements for `cube()`, `cylinder()`, and `sphere()`.
-  - [`shapes.scad`](https://github.com/revarbat/BOSL2/wiki/shapes.scad): Common useful 3D shapes and structured objects.
-  - [`shapes2d.scad`](https://github.com/revarbat/BOSL2/wiki/shapes2d.scad): Common useful 2D shapes and drawing helpers.
-  - [`masks.scad`](https://github.com/revarbat/BOSL2/wiki/masks.scad): Shapes that are useful for masking with `difference()` and `intersect()`.
-  - [`threading.scad`](https://github.com/revarbat/BOSL2/wiki/threading.scad): Modules to make triangular and trapezoidal threaded rods and nuts.
-  - [`paths.scad`](https://github.com/revarbat/BOSL2/wiki/paths.scad): Functions and modules to work with arbitrary 3D paths.
-  - [`beziers.scad`](https://github.com/revarbat/BOSL2/wiki/beziers.scad): Functions and modules to work with bezier curves.
-  - [`roundcorners.scad`](https://github.com/revarbat/BOSL2/wiki/roundcorners.scad): Functions and modules to make rounded corners.
-  - [`debug.scad`](https://github.com/revarbat/BOSL2/wiki/debug.scad): Modules to help debug beziers, `polygons()`s and `polyhedron()`s, etc.
+### Basics (Imported via std.scad)
+  - [`transforms.scad`](transforms.scad): Commonly used transformations shortcuts.
+  - [`distributors.scad`](distributors.scad): Modules and Functions to distribute items.
+  - [`mutators.scad`](mutators.scad): Modules and Functions to mutate items.
+  - [`attachments.scad`](attachments.scad): Modules and functions to enable attachments.
+  - [`primitives.scad`](primitives.scad): Attachment aware replacements for built-in shapes.
+  - [`shapes.scad`](shapes.scad): Common useful 3D shapes and structured objects.
+  - [`shapes2d.scad`](shapes2d.scad): Common useful 2D shapes and drawing helpers.
+  - [`masks.scad`](masks.scad): Shapes that are useful for masking with `difference()` and `intersect()`.
 
-### Standard Parts
-  - [`involute_gears.scad`](https://github.com/revarbat/BOSL2/wiki/involute_gears.scad): Modules and functions to make involute gears and racks.
-  - [`joiners.scad`](https://github.com/revarbat/BOSL2/wiki/joiners.scad): Modules to make joiner shapes for connecting separately printed objects.
-  - [`sliders.scad`](https://github.com/revarbat/BOSL2/wiki/sliders.scad): Modules for creating simple sliders and rails.
-  - [`metric_screws.scad`](https://github.com/revarbat/BOSL2/wiki/metric_screws.scad): Functions and modules to make metric screws, nuts, and screwholes.
-  - [`linear_bearings.scad`](https://github.com/revarbat/BOSL2/wiki/linear_bearings.scad): Modules to make mounts for LMxUU style linear bearings.
-  - [`nema_steppers.scad`](https://github.com/revarbat/BOSL2/wiki/nema_steppers.scad): Modules to make mounting holes for NEMA motors.
-  - [`phillips_drive.scad`](https://github.com/revarbat/BOSL2/wiki/phillips_drive.scad): Modules to create Phillips screwdriver tips.
-  - [`torx_drive.scad`](https://github.com/revarbat/BOSL2/wiki/torx_drive.scad): Functions and Modules to create Torx bit drive holes.
-  - [`wiring.scad`](https://github.com/revarbat/BOSL2/wiki/wiring.scad): Modules to render routed bundles of wires.
-  - [`polyhedra.scad`](https://github.com/revarbat/BOSL2/wiki/polyhedra.scad): Modules to create various regular and stellated polyhedra.
+### Math (Imported via std.scad)
+  - [`math.scad`](math.scad): Useful math helper functions.
+  - [`vectors.scad`](vectors.scad): Functions for vector math.
+  - [`arrays.scad`](arrays.scad): Functions to manipulate lists and arrays.
+  - [`quaternions.scad`](quaternions.scad): Functions to work with quaternion rotations.
+  - [`affine.scad`](affine.scad): Functions for affine transformation matrix math.
+  - [`coords.scad`](coords.scad): Functions for coordinate system conversions and transformations.
 
-### Various Math
-  - [`constants.scad`](https://github.com/revarbat/BOSL2/wiki/constants.scad): Useful constants for vectors, edges, etc.
-  - [`errors.scad`](https://github.com/revarbat/BOSL2/wiki/errors.scad): Stuff for reporting errors and warnings.
-  - [`common.scad`](https://github.com/revarbat/BOSL2/wiki/common.scad): Common argument processing helpers and functions.
-  - [`math.scad`](https://github.com/revarbat/BOSL2/wiki/math.scad): Useful helper functions.
-  - [`arrays.scad`](https://github.com/revarbat/BOSL2/wiki/arrays.scad): List and Array helper functions.
-  - [`vectors.scad`](https://github.com/revarbat/BOSL2/wiki/vectors.scad): Vector math functions.
-  - [`affine.scad`](https://github.com/revarbat/BOSL2/wiki/affine.scad): Affine transformation matrix functions.
-  - [`coords.scad`](https://github.com/revarbat/BOSL2/wiki/coords.scad): Coordinate system conversions and point transformations.
-  - [`geometry.scad`](https://github.com/revarbat/BOSL2/wiki/geometry.scad): Functions to calculate various geometry.
-  - [`quaternions.scad`](https://github.com/revarbat/BOSL2/wiki/quaternions.scad): Functions to work with quaternion rotations.
-  - [`convex_hull.scad`](https://github.com/revarbat/BOSL2/wiki/convex_hull.scad): Functions to generate 2D and 3D hulls of points.
-  - [`triangulation.scad`](https://github.com/revarbat/BOSL2/wiki/triangulation.scad): Functions to triangulate `polyhedron()` faces.
+### Geometry (Imported via std.scad)
+  - [`geometry.scad`](geometry.scad): Functions to find line intersections, circles from 3 points, etc.
+  - [`edges.scad`](edges.scad): Constants and functions to specify edges and corners.
+  - [`vnf.scad`](vnf.scad): Vertices 'n' Faces structure to make creating `polyhedron()`s easier. 
+  - [`paths.scad`](paths.scad): Functions and modules to work with arbitrary 3D paths.
+  - [`regions.scad`](regions.scad): Perform offsets and boolean geometry on 2D paths and regions.
+
+### Common (Imported via std.scad)
+  - [`common.scad`](common.scad): Useful helpers for argument processing.
+  - [`constants.scad`](constants.scad): Useful constants for vectors, edges, etc.
+  - [`errors.scad`](errors.scad): Routines to help print out warnings and errors.
+  - [`version.scad`](version.scad): Ways to parse and compare semantic versions.
+
+### Processes
+  - [`beziers.scad`](beziers.scad): Functions and modules to work with bezier curves.
+  - [`threading.scad`](threading.scad): Modules to make triangular and trapezoidal threaded rods and nuts.
+  - [`rounding.scad`](rounding.scad): Functions to help rounding corners in a path.
+  - [`knurling.scad`](knurling.scad): Masks and shapes to help with knurling.
+  - [`partitions.scad`](partitions.scad): Modules to help partition large objects into smaller assembled parts.
+  - [`rounding.scad`](rounding.scad): Functions and modules to create rounded paths and boxes.
+  - [`skin.scad`](skin.scad): Functions to skin surfaces between 2D cross-section paths.
+  - [`hull.scad`](hull.scad): Functions to create 2D and 3D convex hulls.
+  - [`triangulation.scad`](triangulation.scad): Functions to triangulate `polyhedron()` faces.
+  - [`debug.scad`](debug.scad): Modules to help debug `polygons()`s and `polyhedron()`s
+
+### Data Structures
+  - [`strings.scad`](strings.scad): String manipulation functions.
+  - [`stacks.scad`](stacks.scad): Functions to manipulate stack data structures.
+  - [`queues.scad`](queues.scad): Functions to manipulate queue data structures.
+  - [`structs.scad`](structs.scad): Structure/Dictionary creation and manipulation functions.
+
+### Miscellaneous Parts
+  - [`polyhedra.scad`](polyhedra.scad): Modules to create various regular and stellated polyhedra.
+  - [`walls.scad`](walls.scad): Modules to create walls and structural elements for 3D printing.
+  - [`cubetruss.scad`](cubetruss.scad): Modules to create modular open-framed trusses and joiners.
+  - [`involute_gears.scad`](involute_gears.scad): Modules and functions to make involute gears and racks.
+  - [`joiners.scad`](joiners.scad): Modules to make joiner shapes for connecting separately printed objects.
+  - [`sliders.scad`](sliders.scad): Modules for creating simple sliders and rails.
+  - [`metric_screws.scad`](metric_screws.scad): Functions and modules to make metric screws, nuts, and screwholes.
+  - [`linear_bearings.scad`](linear_bearings.scad): Modules to make mounts for LMxUU style linear bearings.
+  - [`nema_steppers.scad`](nema_steppers.scad): Modules to make mounting holes for NEMA motors.
+  - [`phillips_drive.scad`](phillips_drive.scad): Modules to create Phillips screwdriver tips.
+  - [`torx_drive.scad`](torx_drive.scad): Functions and Modules to create Torx bit drive holes.
+  - [`wiring.scad`](wiring.scad): Modules to render routed bundles of wires.
+  - [`hingesnaps.scad`](hingesnaps.scad): Modules to make foldable, snap-locking parts.
+  - [`bottlecaps.scad`](bottlecaps.scad): Modules to make standard beverage bottle caps and necks.
+
 
 ## Documentation
 The full library docs can be found at https://github.com/revarbat/BOSL2/wiki
