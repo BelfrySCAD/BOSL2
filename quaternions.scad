@@ -190,13 +190,17 @@ function Q_Dist(q1, q2) = norm(q2-q1);
 //   color("red",0.25) Qrot(b) cylinder(d=1, h=80);
 //   Qrot(Q_Slerp(a, b, 0.6)) cylinder(d=1, h=80);
 function Q_Slerp(q1, q2, u) = let(
-		dot = Q_Dot(q1, q2),
-		qq2 = dot<0? Q_Neg(q2) : q2,
-		dott = dot<0? -dot : dot,
-		theta = u * acos(constrain(dott,-1,1))
-	) (dott>0.9995)?
-		Q_Normalize(q1 + ((qq2-q1) * u)) :
-		(q1*cos(theta) + (Q_Normalize(qq2 - (q1 * dott)) * sin(theta)));
+		q1 = Q_Normalize(q1),
+		q2 = Q_Normalize(q2),
+		dot = Q_Dot(q1, q2)
+	) (dot>0.9995)? Q_Normalize(q1 + (u * (q2-q1))) :
+	let(
+		dot = constrain(dot,-1,1),
+		theta_0 = acos(dot),
+		theta = theta_0 * u,
+		q3 = Q_Normalize(q2 - q1*dot),
+		out = q1*cos(theta) + q3*sin(theta)
+	) out;
 
 
 // Function: Q_Matrix3()
