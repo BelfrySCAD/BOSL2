@@ -95,7 +95,7 @@ def image_compare(file1, file2):
     sq = (value * (i % 256) ** 2 for i, value in enumerate(diff))
     sum_squares = sum(sq)
     rms = math.sqrt(sum_squares / float(img1.size[0] * img1.size[1]))
-    return rms<100
+    return rms<10
 
 
 def image_resize(infile, outfile, newsize=(320,240)):
