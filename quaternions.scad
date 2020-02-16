@@ -12,9 +12,9 @@
 //   Quaternions are fast methods of storing and calculating arbitrary rotations.
 //   Quaternions contain information on both axis of rotation, and rotation angle.
 //   You can chain multiple rotation together by multiplying quaternions together.
-//   They don't suffer from the gimbal-lock issues that [X,Y,Z] rotation angles do.
+//   They don't suffer from the gimbal-lock issues that `[X,Y,Z]` rotation angles do.
 //   Quaternions are stored internally as a 4-value vector:
-//   `[X, Y, Z, W]  =  W + Xi + Yj + Zk`
+//   `[X,Y,Z,W]`, where the quaternion formula is `W+Xi+Yj+Zk`
 
 
 // Internal
