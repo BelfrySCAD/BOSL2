@@ -183,16 +183,29 @@ function Q_Dist(q1, q2) = norm(q2-q1);
 //   q1 = The first quaternion. (u=0)
 //   q2 = The second quaternion. (u=1)
 //   u = The proportional value, from 0 to 1, of what part of the interpolation to return.
-// Example(3D):
-//   a = QuatY(15);
-//   b = QuatY(75);
-//   color("blue",0.25) Qrot(a) cylinder(d=1, h=80);
-//   color("red",0.25) Qrot(b) cylinder(d=1, h=80);
-//   Qrot(Q_Slerp(a, b, 0.6)) cylinder(d=1, h=80);
-function Q_Slerp(q1, q2, u) = let(
+// Example(3D): Giving `u` as a Scalar
+//   a = QuatY(-135);
+//   b = QuatXYZ([0,-30,30]);
+//   for (u=[0:0.1:1])
+//       Qrot(Q_Slerp(a, b, u))
+//           right(80) cube([10,10,1]);
+//   #sphere(r=80);
+// Example(3D): Giving `u` as a Range
+//   a = QuatZ(-135);
+//   b = QuatXYZ([90,0,-45]);
+//   for (q = Q_Slerp(a, b, [0:0.1:1]))
+//       Qrot(q) right(80) cube([10,10,1]);
+//   #sphere(r=80);
+function Q_Slerp(q1, q2, u) =
+	assert(is_num(u) || is_num(u[0]))
+	!is_num(u)? [for (uu=u) Q_Slerp(q1,q2,uu)] :
+    let(
 		q1 = Q_Normalize(q1),
 		q2 = Q_Normalize(q2),
 		dot = Q_Dot(q1, q2)
+	) let(
+		q2 = dot<0? Q_Neg(q2) : q2,
+		dot = dot<0? -dot : dot
 	) (dot>0.9995)? Q_Normalize(q1 + (u * (q2-q1))) :
 	let(
 		dot = constrain(dot,-1,1),
@@ -254,9 +267,10 @@ function Q_Angle(q) = 2 * acos(q[3]);
 //   When called as a function with a `p` argument, rotates the point or list of points in `p` by the rotation stored in quaternion `q`.
 //   When called as a function without a `p` argument, returns the affine3d rotation matrix for the rotation stored in quaternion `q`.
 // Example(FlatSpin):
-//   q = QuatXYZ([45,35,10]);
-//   color("red",0.25) cylinder(d=1,h=80);
-//   Qrot(q) cylinder(d=1,h=80);
+//   module shape() translate([80,0,0]) cube([10,10,1]);
+//   q = QuatXYZ([90,-15,-45]);
+//   Qrot(q) shape();
+//   #shape();
 // Example(NORENDER):
 //   q = QuatXYZ([45,35,10]);
 //   mat4x4 = Qrot(q);
@@ -276,6 +290,23 @@ function Qrot(q,p) =
 	is_undef(p)? Q_Matrix4(q) :
 	is_vector(p)? Qrot(q,[p])[0] :
 	affine3d_apply(p,[Q_Matrix4(q)]);
+
+
+// Module: Qrot_copies()
+// Usage:
+//   Qrot_copies(quats) ...
+// Description:
+//   For each quaternion given in the list `quats`, rotates to that orientation and creates a copy
+//   of all children.  This is equivalent to `for (q=quats) Qrot(q) ...`.
+// Arguments:
+//   quats = A list containing all quaternions to rotate to and create copies of all children for.
+// Example:
+//   a = QuatZ(-135);
+//   b = QuatXYZ([0,-30,30]);
+//   Qrot_copies(Q_Slerp(a, b, [0:0.1:1]))
+//       right(80) cube([10,10,1]);
+//   #sphere(r=80);
+module Qrot_copies(quats) for (q=quats) Qrot(q) children();
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
