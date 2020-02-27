@@ -1058,8 +1058,10 @@ function reindex_polygon(reference, poly, return_error=false) =
    assert(is_path(reference) && is_path(poly))
    assert(len(reference)==len(poly), "Polygons must be the same length in reindex_polygon")
    let(
+     dim = len(reference[0]),
      N = len(reference),
-     fixpoly = polygon_is_clockwise(reference) ? clockwise_polygon(poly) : ccw_polygon(poly),
+     fixpoly = dim != 2 ? poly :
+               polygon_is_clockwise(reference) ? clockwise_polygon(poly) : ccw_polygon(poly),
      dist = [for (p1=reference) [for (p2=fixpoly) norm(p1-p2)]],  // Matrix of all pairwise distances
      // Compute the sum of all distance pairs for a each shift
      sums = [for(shift=[0:N-1])
@@ -1159,6 +1161,7 @@ function point_in_polygon(point, path, eps=EPSILON) =
 // Arguments:
 //   path = The list of 2D path points for the perimeter of the polygon.
 function polygon_is_clockwise(path) =
+        assert(is_path(path) && len(path[0])==2, "Input must be a 2d path")
 	let(
 		minx = min(subindex(path,0)),
 		lowind = search(minx, path, 0, 0),
@@ -1195,6 +1198,59 @@ function ccw_polygon(path) =
 function reverse_polygon(poly) =
 	let(lp=len(poly)) [for (i=idx(poly)) poly[(lp-i)%lp]];
 
+
+
+// Function: path_tangents()
+// Usage: path_tangents(path, [closed])
+// Description:
+//   Compute the tangent vector to the input path.  The derivative approximation is described in deriv().
+//   The returns vectors will be normalized to length 1.
+function path_tangents(path, closed=false) =
+    assert(is_path(path))
+    [for(t=deriv(path)) normalize(t)];
+
+// Function: path_normals()
+// Usage:  path_normals(path, [tangents], [closed])
+// Description:
+//   Compute the normal vector to the input path.  This vector is perpendicular to the
+//   path tangent and lies in the plane of the curve.  When there are collinear points,
+//   the curve does not define a unique plane and the normal is not uniquely defined.  
+function path_normals(path, tangents, closed=false) =
+     assert(is_path(path))
+     assert(is_bool(closed))
+     let( tangents = default(tangents, path_tangents(path,closed)))
+     assert(is_path(tangents))
+     [for(i=idx(path))
+           let( pts = i==0 ? (closed ? select(path,-1,1) : select(path,0,2)) :
+                      i==len(path)-1 ? (closed ? select(path,i-1,i+1) : select(path,i-2,i)) :
+                      select(path,i-1,i+1)
+            )
+          normalize( cross(cross(pts[1]-pts[0], pts[2]-pts[0]),tangents[i]))];
+
+
+// Function: path_curvature()
+// Usage: path_curvature(path, [closed])
+// Description:
+//   Numerically estimate the curvature of the path (in any dimension). 
+function path_curvature(path, closed=false) =
+   let( 
+       d1 = deriv(path, closed=closed),
+       d2 = deriv2(path, closed=closed)
+   )
+   [for(i=idx(path)) sqrt(sqr(norm(d1[i])*norm(d2[i])) - sqr(d1[i]*d2[i]))/ pow(norm(d1[i]),3)];
+
+
+// Function: path_torsion()
+// Usage: path_torsion(path, [closed])
+// Description:
+//   Numerically estimate the torsion of a 3d path.  
+function path_torsion(path, closed=false) =
+   let(
+       d1 = deriv(path,closed=closed),
+       d2 = deriv2(path,closed=closed),
+       d3 = deriv3(path,closed=closed)
+   )
+   [for(i=idx(path)) let(crossterm = cross(d1[i],d2[i])) crossterm * d3[i] / sqr(norm(crossterm))];
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

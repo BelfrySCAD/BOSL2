@@ -726,5 +726,93 @@ function count_true(l, nmax=undef, i=0, cnt=0) =
 		)
 	);
 
+// Section: Calculus
+
+// Function deriv()
+// Usage: deriv(data, [h], [closed])
+// Description:
+//   Computes a numerical derivative estimate of the data, which may be scalar or vector valued.
+//   The `h` parameter gives the step size of your sampling so the derivative can be scaled correctly. 
+//   If the `closed` parameter is true the data is assumed to be defined on a loop with data[0] adjacent to
+//   data[len(data)-1].  This function uses a symetric derivative approximation
+//   for internal points, f'(t) = (f(t+h)-f(t-h))/2h.  For the endpoints (when closed=false) the algorithm
+//   uses a two point method if sufficient points are available: f'(t) = (3*(f(t+h)-f(t)) - (f(t+2*h)-f(t+h)))/2h.
+function deriv(data, h=1, closed=false) =
+    let( L = len(data) )
+    closed ?
+        [ for(i=[0:1:L-1]) (data[(i+1)%L]-data[(L+i-1)%L])/2/h ] :
+        let( first = L<3 ? 
+                      data[1]-data[0] : 
+                      3*(data[1]-data[0]) - (data[2]-data[1]),
+             last = L<3 ?
+                      data[L-1]-data[L-2]:
+                      (data[L-3]-data[L-2])-3*(data[L-2]-data[L-1])
+        )
+        [ first/2/h,
+          for(i=[1:1:L-2]) (data[i+1]-data[i-1])/2/h,
+          last/2/h];
+
+
+// Function deriv2()
+// Usage: deriv2(data, [h], [closed])
+// Description:
+//   Computes a numerical esimate of the second derivative of the data, which may be scalar or vector valued.
+//   The `h` parameter gives the step size of your sampling so the derivative can be scaled correctly. 
+//   If the `closed` parameter is true the data is assumed to be defined on a loop with data[0] adjacent to
+//   data[len(data)-1].  For internal points this function uses the approximation 
+//   f''(t) = (f(t-h)-2*f(t)+f(t+h))/h^2.  For the endpoints (when closed=false) the algorithm
+//   when sufficient points are available the method is either the four point expression
+//   f''(t) = (2*f(t) - 5*f(t+h) + 4*f(t+2*h) - f(t+3*h))/h^2 or if five points are available
+//   f''(t) = (35*f(t) - 104*f(t+h) + 114*f(t+2*h) - 56*f(t+3*h) + 11*f(t+4*h)) / 12h^2
+function deriv2(data, h=1, closed=false) =
+    let( L = len(data) )
+    closed ?
+        [ for(i=[0:1:L-1]) (data[(i+1)%L]-2*data[i]+data[(L+i-1)%L])/h/h ] :
+        let( first =  L<3 ? undef : 
+                     L==3 ? data[0] - 2*data[1] + data[2] :
+                     L==4 ? 2*data[0] - 5*data[1] + 4*data[2] - data[3] :
+                            (35*data[0] - 104*data[1] + 114*data[2] - 56*data[3] + 11*data[4])/12, 
+             last =   L<3 ? undef :
+                     L==3 ? data[L-1] - 2*data[L-2] + data[L-3] :
+                     L==4 ? -2*data[L-1] + 5*data[L-2] - 4*data[L-3] + data[L-4] :
+                            (35*data[L-1] - 104*data[L-2] + 114*data[L-3] - 56*data[L-4] + 11*data[L-5])/12
+        )
+        [ first/h/h,
+          for(i=[1:1:L-2]) (data[i+1]-2*data[i]+data[i-1])/h/h,
+          last/h/h];
+
+
+
+// Function deriv3()
+// Usage: deriv3(data, [h], [closed])
+// Description:
+//   Computes a numerical third derivative estimate of the data, which may be scalar or vector valued.
+//   The `h` parameter gives the step size of your sampling so the derivative can be scaled correctly. 
+//   If the `closed` parameter is true the data is assumed to be defined on a loop with data[0] adjacent to
+//   data[len(data)-1].  This function uses a five point derivative estimate, so the input must include five points:
+//   f'''(t) = (-f(t-2*h)+2*f(t-h)-2*f(t+h)+f(t+2*h)) / 2h^3.  At the first and second points from the end
+//   the estimates are f'''(t) = (-5*f(t)+18*f(t+h)-24*f(t+2*h)+14*f(t+3*h)-3*f(t+4*h)) / 2h^3 and
+//   f'''(t) = (-3*f(t-h)+10*f(t)-12*f(t+h)+6*f(t+2*h)-f(t+3*h)) / 2h^3.
+function deriv3(data, h=1, closed=false) =
+    let( L = len(data),
+         h3 = h*h*h
+        )
+    assert(L>=5, "Need five points for 3rd derivative estimate")
+    closed ?
+       [ for(i=[0:1:L-1]) (-data[(L+i-2)%L]+2*data[(L+i-1)%L]-2*data[(i+1)%L]+data[(i+2)%L])/2/h3] :
+     let(
+          first=(-5*data[0]+18*data[1]-24*data[2]+14*data[3]-3*data[4])/2,
+          second=(-3*data[0]+10*data[1]-12*data[2]+6*data[3]-data[4])/2,
+          last=(5*data[L-1]-18*data[L-2]+24*data[L-3]-14*data[L-4]+3*data[L-5])/2,
+          prelast=(3*data[L-1]-10*data[L-2]+12*data[L-3]-6*data[L-4]+data[L-5])/2
+        )
+     [
+       first/h3,
+       second/h3,
+       for(i=[2:1:L-3]) (-data[i-2]+2*data[i-1]-2*data[i+1]+data[i+2])/2/h3,
+       prelast/h3,
+       last/h3
+     ];
+
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
