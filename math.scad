@@ -530,8 +530,94 @@ function product(v, i=0, tot=undef) = i>=len(v)? tot : product(v, i+1, ((tot==un
 function mean(v) = sum(v)/len(v);
 
 
+// Section: Matrix math
 
-// Section: Determinants
+// Function: qr_factor()
+// Usage: qr = qr_factor(A)
+// Description:
+//   Calculates the QR factorization of the input matrix A and returns it as the list [Q,R].  This factorization can be
+//   used to solve linear systems of equations.  
+function qr_factor(A) =
+  let(
+     dim = array_dim(A),
+     m = dim[0],
+     n = dim[1]
+  )
+  assert(len(dim)==2)
+  let(
+    qr =_qr_factor(A, column=0, m = m, n=m, Q=ident(m)),
+    Rzero = [for(i=[0:m-1]) [for(j=[0:n-1]) i>j ? 0 : qr[1][i][j]]]
+  )
+  [qr[0],Rzero];
+
+function _qr_factor(A,Q, column, m, n) =
+   column >= min(m-1,n) ? [Q,A] :
+   let(
+     x = [for(i=[column:1:m-1]) A[i][column]],
+     alpha = (x[0]<=0 ? 1 : -1) * norm(x),
+     u = x - concat([alpha],replist(0,m-1)),
+     v = u / norm(u),
+     Qc = ident(len(x)) - 2*transpose([v])*[v],
+     Qf = [for(i=[0:m-1]) [for(j=[0:m-1]) i<column || j<column ? (i==j ? 1 : 0) : Qc[i-column][j-column]]]
+   )
+   _qr_factor(Qf*A, Q*Qf, column+1, m, n);
+   
+
+// Function: submatrix()
+// Usage: submatrix(M, ind1, ind2)
+// Description:
+//   Returns a submatrix with the specified index ranges or index sets.  
+function submatrix(M,ind1,ind2) =
+  [for(i=ind1)
+    [for(j=ind2)
+      M[i][j]
+    ]
+  ];
+
+
+// Function: linear_solve()
+// Usage: linear_solve(A,b)
+// Description:
+//   Solves the linear system Ax=b.  If A is square and non-singular the unique solution is returned.  If A is overdetermined
+//   the least squares solution is returned.  If A is underdetermined, the minimal norm solution is returned.
+//   If A is rank deficient or singular then linear_solve returns `undef`.
+function linear_solve(A,b) =
+  let(
+    dim = array_dim(A),
+    m=dim[0], n=dim[1]
+  )
+  assert(len(b)==m,str("Incompatible matrix and vector",dim,len(b)))
+  let (
+    qr = m<n ? qr_factor(transpose(A)) : qr_factor(A),
+    maxdim = max(n,m),
+    mindim = min(n,m),
+    Q = submatrix(qr[0],[0:maxdim-1], [0:mindim-1]),
+    R = submatrix(qr[1],[0:mindim-1], [0:mindim-1]),
+    zeros = [for(i=[0:mindim-1]) if (approx(R[i][i],0)) i]
+  )
+  zeros != [] ? undef :
+  m<n ? Q*back_substitute(R,b,transpose=true) :
+        back_substitute(R, transpose(Q)*b);
+
+// Function: back_substitute()
+// Usage: back_substitute(R, b, [transpose])
+// Description:
+//   Solves the problem Rx=b where R is an upper triangular square matrix.  No check is made that the lower triangular entries
+//   are actually zero.  If transpose==true then instead solve transpose(R)*x=b.      
+function back_substitute(R, b, x=[],transpose = false) =
+  let(n=len(b))
+  transpose ?
+      reverse(back_substitute(
+                [for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]],
+                reverse(b), x, false)) :
+  len(x) == n ? x : 
+  let(
+    ind = n - len(x) - 1,
+    newvalue =  len(x)==0 ? b[ind]/R[ind][ind] : 
+                            (b[ind]-select(R[ind],ind+1,-1) * x)/R[ind][ind]
+  )
+  back_substitute(R, b, concat([newvalue],x));
+
 
 // Function: det2()
 // Description:
