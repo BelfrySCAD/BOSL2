@@ -721,6 +721,7 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
 		plane = plane3pt(p1,p2,p3),
 		res = _general_plane_line_intersection(plane, line, eps=eps)
 	)
+	is_undef(res)? undef :
 	bounded[0]&&res[1]<0? undef :
 	bounded[1]&&res[1]>1? undef :
 	let(
