@@ -188,6 +188,42 @@ function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) 
 	subpaths;
 
 
+// Function: split_nested_region()
+// Usage:
+//   rgns = split_nested_region(region);
+// Description:
+//   Separates the distinct (possibly nested) positive subregions of a larger compound region.
+//   Returns a list of regions, such that each returned region has exactly one positive outline
+//   and zero or more void outlines.
+function split_nested_region(region) =
+	let(
+		paths = sort(idx=0, [
+			for(i = idx(region)) let(
+				cnt = sum([
+					for (j = idx(region)) if (i!=j)
+					let(pt = lerp(region[i][0],region[i][1],0.5))
+					point_in_polygon(pt, region[j]) >=0 ? 1 : 0
+				])
+			) [cnt, region[i]]
+		]),
+		outs = [
+			for (candout = paths) let(
+				lev = candout[0],
+				parent = candout[1]
+			) if (lev % 2 == 0) [
+				parent,
+				for (path = paths) if (
+					path[0] == lev+1 &&
+					point_in_polygon(
+						lerp(path[1][0], path[1][1], 0.5),
+						parent
+					) >= 0
+				) path[1]
+			]
+		]
+	) outs;
+
+
 
 // Section: Offsets and Boolean 2D Geometry
 
