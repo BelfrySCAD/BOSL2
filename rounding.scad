@@ -876,15 +876,12 @@ function os_profile(points, extra,check_valid, quality, offset_maxstep, offset) 
 //   convexity = convexity setting for use with polyhedron.  Default: 10
 //
 // Example: Chamfered elliptical prism.  If you stretch a chamfered cylinder the chamfer will be uneven.
-//   $fn=32;
 //   convex_offset_extrude(bottom = os_chamfer(height=-2), top=os_chamfer(height=1), height=7)
 //   xscale(4)circle(r=6);
 // Example: Elliptical prism with circular roundovers.
-//   $fn=32;
 //   convex_offset_extrude(bottom=os_circle(r=-2), top=os_circle(r=1), height=7,steps=10)
 //   xscale(4)circle(r=6);
 // Example: If you give a non-convex input you get a convex hull output
-//   $fn=32;
 //   right(50) linear_extrude(height=7) star(5,r=22,ir=13);
 //   convex_offset_extrude(bottom = os_chamfer(height=-2), top=os_chamfer(height=1), height=7)
 //     star(5,r=22,ir=13)
