@@ -700,52 +700,6 @@ module spiral_sweep(polyline, h, r, twist=360, center=undef, anchor=BOTTOM, spin
 }
 
 
-// Module: path_sweep()
-// Description:
-//   Takes a closed 2D path `polyline`, centered on the XY plane, and extrudes it perpendicularly along a 3D path `path`, forming a solid.
-// Arguments:
-//   polyline = Array of points of a polyline path, to be extruded.
-//   path = Array of points of a polyline path, to extrude along.
-//   ang = Angle in degrees to rotate 2D polyline before extrusion.
-//   convexity = max number of surfaces any single ray could pass through.
-// Example(FlatSpin):
-//   shape = [[0,-10], [5,-3], [5,3], [0,10], [30,0]];
-//   path = concat(
-//       [for (a=[30:30:180]) [50*cos(a)+50, 50*sin(a), 20*sin(a)]],
-//       [for (a=[330:-30:180]) [50*cos(a)-50, 50*sin(a), 20*sin(a)]]
-//   );
-//   path_sweep(shape, path, ang=140);
-module path_sweep(polyline, path, ang=0, convexity=10) {
-	pline_count = len(polyline);
-	path_count = len(path);
-
-	polyline = rotate_points2d(ccw_polygon(path2d(polyline)), ang);
-	poly_points = points_along_path3d(polyline, path);
-
-	poly_faces = concat(
-		[[for (b = [0:1:pline_count-1]) b]],
-		[
-			for (
-				p = [0:1:path_count-2],
-				b = [0:1:pline_count-1],
-				i = [0:1]
-			) let (
-				b2 = (b == pline_count-1)? 0 : b+1,
-				p0 = p * pline_count + b,
-				p1 = p * pline_count + b2,
-				p2 = (p+1) * pline_count + b2,
-				p3 = (p+1) * pline_count + b,
-				pt = (i==0)? [p0, p2, p1] : [p0, p3, p2]
-			) pt
-		],
-		[[for (b = [pline_count-1:-1:0]) b+(path_count-1)*pline_count]]
-	);
-
-	tri_faces = triangulate_faces(poly_points, poly_faces);
-	polyhedron(points=poly_points, faces=tri_faces, convexity=convexity);
-}
-
-
 
 // Module: path_extrude()
 // Description:
@@ -1225,6 +1179,24 @@ function subdivide_path(path, N, closed=true, exact=true, method="length") =
           each [for(j=[0:1:add[i]]) lerp(path[i],select(path,i+1), j/(add[i]+1))]],
         closed ? [] : [select(path,-1)]
       );
+
+
+// Function: path_length_fractions()
+// Usage: path_length_fractions(path, [closed])
+// Description:
+//    Returns the distance fraction of each point in the path along the path, so the first
+//    point is zero and the final point is 1.  If the path is closed the length of the output
+//    will have one extra point because of the final connecting segment that connects the last
+//    point of the path to the first point.
+function path_length_fractions(path, closed=false) =
+  assert(is_path(path))
+  assert(is_bool(closed))
+  let(
+    lengths = [0, for(i=[0:1:len(path)-(closed?1:2)]) norm(select(path,i+1)-path[i])],
+    partial_len = cumsum(lengths),
+    total_len = select(partial_len,-1)
+  )
+  partial_len / total_len;
 
 
 

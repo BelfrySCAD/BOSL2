@@ -715,4 +715,484 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
   zero_cross[min_index(d)];
 
 
+// Function&Module: sweep()
+// Usage: sweep(shape, transformations, [closed], [caps])
+// Description:
+//   The input `shape` must be a non-self-intersecting polygon in two dimensions, and `transformations`
+//   is a list of 4x4 transformation matrices.  The sweep algorithm applies each transformation in sequence
+//   to the shape input and links the resulting polygons together to form a polyhedron.
+//   If `closed=true` then the first and last transformation are linked together.
+//   The `caps` parameter controls whether the ends of the shape are closed.
+//   As a function, returns the VNF for the polyhedron.  As a module, computes the polyhedron.
+//   
+//   Note that this is a very powerful, general framework for producing polyhedra.  It is important
+//   to ensure that your resulting polyhedron does not include any self-intersections, or it will
+//   be invalid and will generate CGAL errors.  If you get such errors, most likely you have an
+//   overlooked self-intersection.  Note also that the errors will not occur when your shape is alone
+//   in your model, but will arise if you add a second object to the model.  This may mislead you into
+//   thinking the second object caused a problem.  Even adding a simple cube to the model will reveal the problem.  
+// Arguments:
+//   shape = 2d path describing shape to be swept
+//   transformations = list of 4x4 matrices to apply
+//   closed = set to true to form a closed (torus) model.  Default: false
+//   caps = true to create endcap faces when closed is false.  Can be a singe boolean to specify endcaps at both ends, or a length 2 boolean array.  Default is true if closed is false.
+// Example: This is the "sweep-drop" example from list-comprehension-demos.
+//   function drop(t) = 100 * 0.5 * (1 - cos(180 * t)) * sin(180 * t) + 1;
+//   function path(t) = [0, 0, 80 + 80 * cos(180 * t)];
+//   function rotate(t) = 180 * pow((1 - t), 3);
+//  
+//   step = 0.01;
+//   path_transforms = [for (t=[0:step:1-step]) translate(path(t)) * zrot(rotate(t)) * scale([drop(t), drop(t), 1])];
+//   sweep(circle(1, $fn=12), path_transforms);
+// Example: Another example from list-comprehension-demos
+//   function f(x) = 3 - 2.5 * x;
+//   function r(x) = 2 * 180 * x * x * x;
+//   pathstep = 1;
+//   height = 100;
+//   shape_points = subdivide_path(square(10),40,closed=true);
+//   path_transforms = [for (i=[0:pathstep:height]) let(t=i/height) up(i) * scale([f(t),f(t),i]) * zrot(r(t))];
+//   sweep(shape_points, path_transforms);
+// Example: Twisted container.  Note that this technique doesn't create a fixed container wall thickness.  
+//   shape = subdivide_path(square(30,center=true), 40, closed=true);
+//   outside = [for(i=[0:24]) up(i)*rot(i)*scale(1.25*i/24+1)];
+//   inside = [for(i=[24:-1:2]) up(i)*rot(i)*scale(1.2*i/24+1)];
+//   sweep(shape, concat(outside,inside));
+
+function sweep(shape, transformations, closed=false, caps) =
+  let(
+    tdim = array_dim(transformations),
+    shapedim = array_dim(shape),
+    caps = is_def(caps) ? caps :
+           closed ? false : true,
+    capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
+    fullcaps = is_bool(caps) ? [caps,caps] : caps
+  )
+  assert(len(tdim)==3 && tdim[1]==4 && tdim[2]==4, "transformations must be a list of 4x4 matrices in sweep")
+  assert(tdim[0]>1, "transformation must be length 2 or more")
+  assert(len(shapedim)==2 && shapedim[0]>2, "shape must be a path of at least 3 points")
+  assert(shapedim[1]==2, "shape must be a path in 2-dimensions")
+  assert(capsOK, "caps must be boolean or a list of two booleans")
+  assert(!closed || !caps, "Cannot make closed shape with caps")
+  _skin_core([for(i=[0:len(transformations)-(closed?0:1)]) apply(transformations[i%len(transformations)],path3d(shape))],caps=fullcaps);
+
+module sweep(shape, transformations, closed=false, caps, convexity=10) {
+  vnf_polyhedron(sweep(shape, transformations, closed, caps), convexity=convexity);
+}  
+
+// Function: affine_frame_map()
+// Usage: map = affine_frame_map(x=v1,y=v2);
+//        map = affine_frame_map(x=v1,z=v2);
+//        map = affine_frame_map(y=v1,y=v2);
+//        map = affine_frame_map(v1,v2,v3);
+// Description:
+//   Returns a transformation that maps one coordinate frame to another.  You must specify two or three of `x`, `y`, and `z`.  The specified
+//   axes are mapped to the vectors you supplied.  If you give two inputs, the third vector is mapped to the appropriate normal to maintain a right hand coordinate system.  
+//   If the vectors you give are orthogonal the result will be a rotation.  The `reverse` parameter will supply the inverse map, which enables you
+//   to map two arbitrary coordinate systems two each other by using the canonical coordinate system as an intermediary.
+// Arguments:
+//   x = Destination vector for x axis
+//   y = Destination vector for y axis
+//   z = Destination vector for z axis
+//   reverse = reverse direction of the map.  Default: false
+// Examples:
+//   T = affine_frame_map(x=[1,1,0], y=[-1,1]);   // This map is just a rotation around the z axis
+//   T = affine_frame_map(x=[1,0,0], y=[1,1]);    // This map is not a rotation because x and y aren't orthogonal
+//                  // The next map sends [1,1,0] to [0,1,1] and [-1,1,0] to [0,-1,1]
+//   T = affine_frame_map(x=[0,1,1], y=[0,-1,1]) * affine_frame_map(x=[1,1,0], y=[-1,1,0],reverse=true);
+function affine_frame_map(x,y,z, reverse=false) =
+  assert(num_defined([x,y,z])>=2, "Must define at least two inputs")
+  let(
+    xvalid = is_undef(x) || (is_vector(x) && len(x)==3),
+    yvalid = is_undef(y) || (is_vector(y) && len(y)==3),
+    zvalid = is_undef(z) || (is_vector(z) && len(z)==3)
+  )
+  assert(xvalid,"Input x must be a length 3 vector")
+  assert(yvalid,"Input y must be a length 3 vector")
+  assert(zvalid,"Input z must be a length 3 vector")
+  let(
+    x = is_def(x) ? normalize(x) : undef,
+    y = is_def(y) ? normalize(y) : undef,    
+    z = is_def(z) ? normalize(z) : undef,    
+    map = is_undef(x) ? [cross(y,z), y, z] :
+          is_undef(y) ? [x, cross(z,x), z] :
+          is_undef(z) ? [x, y, cross(x,y)] :
+                        [x, y, z]
+  )
+  reverse ? affine2d_to_3d(map) : affine2d_to_3d(transpose(map));
+
+// Function&Module: path_sweep()
+// Usage: path_sweep(shape, path, [method], [normal], [closed], [twist], [twist_by_length], [symmetry], [last_normal], [tangent], [relaxed], [caps], [convexity], [transforms])
+// Description:
+//   Takes as input a 2d shape (specified as a point list) and a 3d path and constructs a polyhedron by sweeping the shape along the path.
+//   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF by default or if you set `transforms=true` then
+//   it returns a list of transformations suitable as input to `sweep`.
+//   
+//   The sweep operation has an ambiguity: the shape can rotate around the axis defined by the path.  Several options provide
+//   methods for controlling this rotation.  You can choose from three different methods for selecting the rotation of your shape.
+//   None of these methods will produce good, or even valid, results on all inputs, so it is important to select a suitable method. 
+//   You can also add (or remove) twist to the model.  This twist adjustment is done uniformly in arc length by default, or you
+//   can set `twist_by_length=false` to distribute the twist uniformly over the path point list.
+//   
+//   The method is set using the parameter with that name to one of the following:
+//   
+//   The "incremental" method (the default) works by adjusting the shape at each step by the minimal rotation that makes the shape normal to the tangent
+//   at the next point.  This method is robust in that it always produces a valid result for well-behaved paths with sufficiently high
+//   sampling.  Unfortunately, it can produce a large amount of undesirable twist.  When constructing a closed shape this algorithm in
+//   its basic form provides no guarantee that the start and end shapes match up.  To prevent a sudden twist at the last segment,
+//   the method calculates the required twist for a good match and distributes it over the whole model (as if you had specified a
+//   twist amount).  By default the end shape is required to match the starting shape exactly, but if your shape as rotational
+//   symmetry you can specify this using the `symmetry` argument, and then a smaller amount of twist is needed to make this adjustment.
+//   The symmetry argument gives the number of rotations that map the shape exatly onto itself, so a pentagon has 5-fold symmetry.
+//   This argument is only valid for closed sweeps.  To start the algorithm, we need an initial condition.  This is supplied by
+//   using the `normal` argument to give a direction to align the Y axis of your shape.  By default the normal points UP if the path
+//   makes an angle of 45 deg or less with the xy plane and it points BACK if the path makes a higher angle with the XY plane.  You
+//   can also supply `last_normal` which provides an ending orientation constraint.  Be aware that the curve may still exhibit
+//   twisting in the middle.  This method is the default because it is the most robust, not because it generally produces the best result.  
+//   
+//   The "natural" method works by computing the Frenet frame at each point on the path.  This is defined by the tangent to the curve and
+//   the normal which lies in the plane defined by the curve at each point.  This normal points in the direction of curvature of the curve.
+//   The result is a very well behaved set of sections without any unexpected twisting---as long as the curvature never falls to zero.  At a
+//   point of zero curvature (a flat point), the curve does not define a plane and the natural normal is not defined.  Furthermore, even if
+//   you skip over this troublesome point so the normal is defined, it can change direction abruptly when the curvature is zero, leading to
+//   a nasty twist and an invalid model.  A simple example is a circular arc joined to another arc that curves the other direction.  Note
+//   that the X axis of the shape is aligned with the normal from the Frenet frame.
+//   
+//   The "manual" method allows you to specify your desired normal either globally with a single vector, or locally with
+//   a list of normal vectors for every path point.  The normal you supply is projected to be orthogonal to the tangent to the
+//   path and the Y direction of your shape will be aligned with the projected normal.  (Note this is different from the "natural" method.)  
+//   Careless choice of a normal may result in a twist in the shape, or an error if your normal is parallel to the path tangent.
+//   If you set `relax=true` then the condition that the cross sections are orthogonal to the path is relaxed and the swept object
+//   uses the actual specified normal.  In this case, the tangent is projected to be orthogonal to your supplied normal to define
+//   the cross section orientation.  Specifying a list of normal vectors gives you complete control over the orientation of your
+//   cross sections and can be useful if you want to position your model to be on the surface of some solid.
+//   
+//   For any method you can use the `twist` argument to add the specified number of degrees of twist into the model.  
+//   If the model is closed then the twist must be a multiple of 360/symmetry.  The twist is normally spread uniformly along your shape
+//   based on the path length.  If you set `twist_by_length` to false then the twist will be uniform based on the point count of your path.
+// Arguments:
+//   shape = a 2d path describing the shape to be swept
+//   path = 3d path giving the path to sweep over
+//   method = one of "incremental", "natural" or "manual".  Default: "incremental"
+//   normal = normal vector for initializing the incremental method, or for setting normals with method="manual".  Default: UP if the path makes an angle lower than 45 degrees to the xy plane, BACK otherwise.
+//   closed = path is a closed loop.  Default: false
+//   twist = amount of twist to add in degrees.  For closed sweeps must be a multiple of 360/symmetry.  Default: 0
+//   symmetry = symmetry of the shape when closed=true.  Allows the shape to join with a 360/symmetry rotation instead of a full 360 rotation.  Default: 1
+//   last_normal = normal to last point in the path for the "incremental" method.  Constrains the orientation of the last cross section if you supply it.
+//   tangent = a list of tangent vectors in case you need more accuracy (particularly at the end points of your curve)
+//   relaxed = set to true with the "manual" method to relax the orthogonality requirement of cross sections to the path tangent.  Default: false
+//   caps = Can be a boolean or vector of two booleans.  Set to false to disable caps at the two ends.  Default: true
+//   convexity = convexity parameter for polyhedron().  Only accepted by the module version.  Default: 10
+//   transforms = set to true to return transforms instead of a VNF.  These transforms can be manipulated and passed to sweep().  Default: false. 
+//
+// Example(2D): We'll use this shape in several examples
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   polygon(ushape);
+// Example: Sweep along a clockwise elliptical arc, using default "incremental" method.
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,00], r=30));  // Clockwise 
+//   path_sweep(ushape, path3d(elliptic_arc));
+// Example: Sweep along a counter-clockwise elliptical arc.  Note that the orientation of the shape flips.  
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=30));   // Counter-clockwise 
+//   path_sweep(ushape, path3d(elliptic_arc));
+// Example: Sweep along a clockwise elliptical arc, using "natural" method, which lines up the X axis of the shape with the direction of curvature.  This means the X axis will point inward, so a counterclockwise arc gives:
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=30));  // Counter-clockwise 
+//   path_sweep(ushape, path3d(elliptic_arc), method="natural");
+// Example: Sweep along a clockwise elliptical arc, using "natural" method.  If the curve is clockwise than the shape flips upside-down to align the X axis.  
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
+//   path_sweep(ushape, path3d(elliptic_arc), method="natural");
+// Example: Sweep along a clockwise elliptical arc, using "manual" method.  You can orient the shape in a direction you choose (subject to the constraint that the profiles remain normal to the path):
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
+//   path_sweep(ushape, path3d(elliptic_arc), method="manual", normal=UP+RIGHT);
+// Example: Sweep along a clockwise elliptical arc, using "manual" method.  You can orient the shape in a direction you choose (subject to the constraint that the profiles remain normal to the path):
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   elliptic_arc = yscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
+//   path_sweep(ushape, path3d(elliptic_arc), method="manual", normal=UP+RIGHT, relaxed=false);
+// Example: It is easy to produce an invalid shape when your path has a smaller radius of curvature than the width of your shape.  The exact threshold where the shape becomes invalid depends on the density of points on your path.  The error may not be immediately obvious, as the swept shape appears fine when alone in your model, but adding a cube to the model reveals the problem.  
+//   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
+//   echo(radius_of_curvature = 1/max(path_curvature(qpath)));   // Prints 0.9, but we use pentagon with radius of 1.0 > 0.9
+//   path_sweep(pentagon(r=1), qpath, normal=BACK, method="manual", relaxed=false);
+//   cube(0.5);    // Adding a small cube forces a CGAL computation which reveals the error with a cryptic message
+// Example: Using the `relax` option we allow the profiles to deviate from orthogonality to the path.  This eliminates the crease that broke the previous example because the sections are all parallel to each other.  
+//   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
+//   path_sweep(pentagon(r=1), qpath, normal=BACK, method="manual", relaxed=true);
+//   cube(0.5);    // Adding a small cube is not a problem with this valid model
+// Example:  This 3d arc produces a result that twists to an undefined angle.  By default the incremental method sets the starting normal to UP, but the ending normal is unconstrained.  
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
+//   path_sweep(ushape, arc, method="incremental");
+// Example: You can constrain the last normal as well.  Here we point it right, which produces a nice result.  
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
+//   path_sweep(ushape, arc, method="incremental", last_normal=RIGHT);
+// Example: Here we constrain the last normal to UP.  Be aware that the behavior in the middle is unconstrained.  
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
+//   path_sweep(ushape, arc, method="incremental", last_normal=UP);
+// Example: The "natural" method produces a very different result
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   arc = yrot(37, p=path3d(arc($fn=64, r=30, angle=[0,180])));
+//   path_sweep(ushape, arc, method="natural");
+// Example: When the path starts at an angle of more that 45 deg to the xy plane the initial normal for "incremental" is BACK.  This produces the effect of the shape rising up out of the xy plane.  (Using UP for a vertical path is invalid, hence the need for a split in the defaults.)  
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   arc = xrot(75, p=path3d(arc($fn=64, r=30, angle=[0,180])));
+//   path_sweep(ushape, arc, method="incremental");
+// Example: Adding twist
+//   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=3));   // Counter-clockwise 
+//   path_sweep(pentagon(r=1), path3d(elliptic_arc), twist=72);
+// Example: Closed shape
+//   ellipse = xscale(2, p=circle($fn=64, r=3));  
+//   path_sweep(pentagon(r=1), path3d(ellipse), closed=true);
+// Example: Closed shape with added twist
+//   ellipse = xscale(2, p=circle($fn=64, r=3));
+//   pentagon = subdivide_path(pentagon(r=1), 30);  // Looks better with finer sampling
+//   path_sweep(pentagon, path3d(ellipse), closed=true, twist=360);
+// Example: The last example was a lot of twist.  In order to use less twist you have to tell `path_sweep` that your shape has symmetry, in this case 5-fold.  Mobius strip with pentagon cross section:
+//   ellipse = xscale(2, p=circle($fn=64, r=3));
+//   pentagon = subdivide_path(pentagon(r=1), 30);  // Looks better with finer sampling
+//   path_sweep(pentagon, path3d(ellipse), closed=true, symmetry = 5, twist=2*360/5);
+// Example: A helical path reveals the big problem with the "incremental" method: it can introduce unexpected and extreme twisting.  (Note helix example came from list-comprehension-demos)
+//   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
+//                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
+//                         200 * (1 - t)];
+//   helix_steps = 200;
+//   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   path_sweep(ushape, helix);
+// Example: You can constrain both ends, but still the twist remains:
+//   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
+//                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
+//                         200 * (1 - t)];
+//   helix_steps = 200;
+//   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   path_sweep(ushape, helix, normal=UP, last_normal=UP);
+// Example: Even if you manually guess the amount of twist and remove it, the result twists one way and then the other:
+//   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
+//                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
+//                         200 * (1 - t)];
+//   helix_steps = 200;
+//   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   path_sweep(ushape, helix, normal=UP, last_normal=UP, twist=360);
+// Example: To get a good result you must use a different method.  
+//   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
+//                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
+//                         200 * (1 - t)];
+//   helix_steps = 200;
+//   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   path_sweep(ushape, helix, method="natural");
+// Example: Note that it may look like the shape above is flat, but the profiles are very slightly tilted due to the nonzero torsion of the curve.  If you want as flat as possible, specify it so with the "manual" method:
+//   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
+//                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
+//                         200 * (1 - t)];
+//   helix_steps = 200;
+//   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   path_sweep(ushape, helix, method="manual", normal=UP);
+// Example: What if you want to angle the shape inward?  This requires a different normal at every point in the path:
+//   function helix(t) = [(t / 1.5 + 0.5) * 30 * cos(6 * 360 * t),
+//                        (t / 1.5 + 0.5) * 30 * sin(6 * 360 * t),
+//                         200 * (1 - t)];
+//   helix_steps = 200;
+//   helix = [for (i=[0:helix_steps]) helix(i/helix_steps)];
+//   normals = [for(i=[0:helix_steps]) [-cos(6*360*i/helix_steps), -sin(6*360*i/helix_steps), 2.5]];
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   path_sweep(ushape, helix, method="manual", normal=normals);
+// Example: When using "manual" it is important to choose a normal that works for the whole path, producing a consistent result.  Here we have specified an upward normal, and indeed the shape is pointed up everywhere, but two abrupt transitional twists render the model invalid.  
+//   yzcircle = yrot(90,p=circle($fn=64, r=30));
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   path_sweep(ushape, yzcircle, method="manual", normal=UP, closed=true);
+// Examples: The "natural" method will introduce twists when the curvature changes direction.  A warning is displayed.  
+//   arc1 = path3d(arc(angle=90, r=30));
+//   arc2 = xrot(-90, cp=[0,30],p=path3d(arc(angle=[90,180], r=30)));
+//   two_arcs = simplify_path(concat(arc1,arc2));
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   path_sweep(ushape, two_arcs, method="natural");
+// Examples: The only simple way to get a good result is the "incremental" method:
+//   arc1 = path3d(arc(angle=90, r=30));
+//   arc2 = xrot(-90, cp=[0,30],p=path3d(arc(angle=[90,180], r=30)));
+//   arc3 = apply( translate([-30,60,30])*yrot(90), path3d(arc(angle=[270,180], r=30)));
+//   three_arcs = simplify_path(concat(arc1,arc2,arc3));
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   path_sweep(ushape, three_arcs, method="incremental");
+// Example: knot example from list-comprehension-demos, "incremental" method
+//   function knot(a,b,t) =   // rolling knot 
+//        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
+//          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
+//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
+//   a = 0.8; b = sqrt (1 - a * a); 
+//   ksteps = 400;
+//   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   path_sweep(ushape, knot_path, closed=true, method="incremental");
+// Example: knot example from list-comprehension-demos, "natural" method.  Which one do you like better? 
+//   function knot(a,b,t) =   // rolling knot 
+//        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
+//          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
+//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
+//   a = 0.8; b = sqrt (1 - a * a); 
+//   ksteps = 400;
+//   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   path_sweep(ushape, knot_path, closed=true, method="natural");
+// Example: knot with twist.  Note if you twist it the other direction the center section untwists because of the natural twist there.  Also compare to the "incremental" method which has less twist in the center.  
+//  function knot(a,b,t) =   // rolling knot 
+//        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
+//          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
+//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
+//   a = 0.8; b = sqrt (1 - a * a); 
+//   ksteps = 400;
+//   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
+//   path_sweep(subdivide_path(pentagon(r=12),30), knot_path, closed=true, twist=-360*8, symmetry=5, method="natural");
+// Example: twisted knot with twist distributed by path sample points instead of by length using `twist_by_length=false`
+//   function knot(a,b,t) =   // rolling knot 
+//           [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
+//             a * sin( 3 * t) / (1 - b* sin (2 *t)), 
+//           1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
+//      a = 0.8; b = sqrt (1 - a * a); 
+//      ksteps = 400;
+//      knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
+//      path_sweep(subdivide_path(pentagon(r=12),30), knot_path, closed=true, twist=-360*8, symmetry=5, method="natural", twist_by_length=false);
+// Example: This torus knot example comes from list-comprehension-demos.  The knot lies on the surface of a torus.  When we use the "natural" method the swept figure is angled compared to the surface of the torus because the curve doesn't follow geodesics of the torus.  
+//   function knot(phi,R,r,p,q) = 
+//       [ (r * cos(q * phi) + R) * cos(p * phi),
+//         (r * cos(q * phi) + R) * sin(p * phi),
+//          r * sin(q * phi) ];
+//   ushape = 3*[[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   points = 50;       // points per loop
+//   R = 400; r = 150;  // Torus size
+//   p = 2;  q = 5;     // Knot parameters
+//   %torus(r=R,r2=r);
+//   k = max(p,q) / gcd(p,q) * points; 
+//   knot_path   = [ for (i=[0:k-1]) knot(360*i/k/gcd(p,q),R,r,p,q) ];
+//   path_sweep(rot(90,p=ushape),knot_path,  method="natural", closed=true);
+// Example: By computing the normal to the torus at the path we can orient the path to lie on the surface of the torus:
+//   function knot(phi,R,r,p,q) = 
+//       [ (r * cos(q * phi) + R) * cos(p * phi),
+//         (r * cos(q * phi) + R) * sin(p * phi),
+//          r * sin(q * phi) ];
+//   function knot_normal(phi,R,r,p,q) =  
+//       knot(phi,R,r,p,q) 
+//           - R*normalize(knot(phi,R,r,p,q)
+//               - [0,0, knot(phi,R,r,p,q)[2]]) ;
+//   ushape = 3*[[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   points = 50;       // points per loop
+//   R = 400; r = 150;  // Torus size
+//   p = 2;  q = 5;     // Knot parameters
+//   %torus(r=R,r2=r);
+//   k = max(p,q) / gcd(p,q) * points; 
+//   knot_path   = [ for (i=[0:k-1]) knot(360*i/k/gcd(p,q),R,r,p,q) ];
+//   normals = [ for (i=[0:k-1]) knot_normal(360*i/k/gcd(p,q),R,r,p,q) ];
+//   path_sweep(ushape,knot_path,normal=normals, method="manual", closed=true);
+// Example: You can request the transformations and manipulate them before passing them on to sweep.  Here we construct a tube that changes scale by first generating the transforms and then applying the scale factor and connecting the inside and outside.  Note that the wall thickness varies because it is produced by scaling.  
+//   shape = star(n=5, r=10, ir=5);
+//   rpath = arc(25, points=[[-30,0,0], [-3,1,7], [0,3,6]]);
+//   trans = path_sweep(shape, rpath, transforms=true);
+//   outside = [for(i=[0:len(trans)-1]) trans[i]*scale(lerp(1,1.5,i/(len(trans)-1)))];
+//   inside = [for(i=[len(trans)-1:-1:0]) trans[i]*scale(lerp(1.1,1.4,i/(len(trans)-1)))];
+//   sweep(shape, concat(outside,inside),closed=true);
+
+module path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
+                    symmetry=1, last_normal, tangent, relaxed=false, caps, convexity=10)
+{
+  vnf_polyhedron(path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
+                    symmetry, last_normal, tangent, relaxed, caps), convexity=convexity);
+}
+
+function path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
+                    symmetry=1, last_normal, tangent, relaxed=false, caps, transforms=false) = 
+  assert(!closed || twist % (360/symmetry)==0, str("For a closed sweep, twist must be a multiple of 360/symmetry = ",360/symmetry))
+  assert(closed || symmetry==1, "symmetry must be 1 when closed is false")
+  assert(is_integer(symmetry) && symmetry>0, "symmetry must be a positive integer")
+  assert(is_path(shape) && len(shape[0])==2, "shape must be a 2d path")
+  assert(is_path(path) && len(path[0])==3, "path must be a 3d path")
+  let(
+    caps = is_def(caps) ? caps :
+           closed ? false : true,
+    capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
+    fullcaps = is_bool(caps) ? [caps,caps] : caps
+  )
+  assert(capsOK, "caps must be boolean or a list of two booleans")
+  assert(!closed || !caps, "Cannot make closed shape with caps")
+  assert(is_undef(normal) || (is_vector(normal) && len(normal)==3) || (is_path(normal) && len(normal)==len(path) && len(normal[0])==3), "Invalid normal specified")
+  assert(is_undef(tangent) || (is_path(tangent) && len(tangent)==len(path) && len(tangent[0])==3), "Invalid tangent specified")
+  let(
+    tangents = is_undef(tangent) ? path_tangents(path) : [for(t=tangent) normalize(t)],
+    normal = is_path(normal) ? [for(n=normal) normalize(n)] :
+             is_def(normal) ? normalize(normal) :
+             method =="incremental" && abs(tangents[0].z) > 1/sqrt(2) ? BACK : UP,
+    normals = is_path(normal) ? normal : replist(normal,len(path)),
+    pathfrac = twist_by_length ? path_length_fractions(path, closed) : [for(i=[0:1:len(path)]) i / (len(path)-(closed?0:1))],
+    L = len(path),
+    transform_list = 
+      method=="incremental" ?
+        let(rotations =
+               [for( i  = 0,
+                     ynormal = normal - (normal * tangents[0])*tangents[0],
+                     rotation = affine_frame_map(y=ynormal, z=tangents[0]) 
+                       ;
+                     i < len(tangents) + (closed?1:0) ;
+                     rotation = i<len(tangents)-1+(closed?1:0)? rot(from=tangents[i],to=tangents[(i+1)%L])*rotation : undef,
+                     i=i+1
+                    )
+                 rotation],
+            // The mismatch is the inverse of the last transform times the first one for the closed case, or the inverse of the
+            // desired final transform times the realized final transform in the open case.  Note that when closed==true the last transform
+            // is a actually looped around and applies to the first point position, so if we got back exactly where we started
+            // then it will be the identity, but we might have accumulated some twist which will show up as a rotation around the
+            // X axis.  Similarly, in the closed==false case the desired and actual transformations can only differ in the twist,
+            // so we can need to calculate the twist angle so we can apply a correction, which we distribute uniformly over the whole path.
+            reference_rot = closed ? rotations[0] :   
+                         is_undef(last_normal) ? select(rotations,-1) : 
+                           let(
+                               last_tangent = select(tangents,-1),
+                               lastynormal = last_normal - (last_normal * last_tangent) * last_tangent
+                           )
+                         affine_frame_map(y=lastynormal, z=last_tangent),
+            mismatch = transpose(select(rotations,-1)) * reference_rot, 
+            correction_twist = atan2(mismatch[1][0], mismatch[0][0]),
+            // Spread out this extra twist over the whole sweep so that it doesn't occur
+            // abruptly as an artifact at the last step.  
+            twistfix = correction_twist%(360/symmetry),
+            adjusted_final = !closed ? undef :
+                          translate(path[0]) * rotations[0] * zrot(-correction_twist+correction_twist%(360/symmetry)-twist)
+        )  [for(i=idx(path)) translate(path[i]) * rotations[i] * zrot((twistfix-twist)*pathfrac[i]), if(closed) adjusted_final] :
+      method=="manual" ?
+            [for(i=[0:L-(closed?0:1)]) let(    
+                     ynormal = relaxed ? normals[i%L] : normals[i%L] - (normals[i%L] * tangents[i%L])*tangents[i%L],
+                     znormal = relaxed ? tangents[i%L] - (normals[i%L] * tangents[i%L])*normals[i%L] : tangents[i%L],
+                     rotation = affine_frame_map(y=ynormal, z=znormal)
+                 )
+                 assert(approx(ynormal*znormal,0),str("Supplied normal is parallel to the path tangent at point ",i))
+                 translate(path[i%L])*rotation*zrot(-twist*pathfrac[i]),
+            ] :
+      method=="natural" ?   // map x axis of shape to the path normal, which points in direction of curvature
+            let (pathnormal = path_normals(path, tangents, closed))
+            assert(all_defined(pathnormal),"Natural normal vanishes on your curve, select a different method")
+            let( testnormals = [for(i=[0:len(pathnormal)-1-(closed?1:2)]) pathnormal[i]*select(pathnormal,i+2)],
+                 dummy = min(testnormals) < .5 ? echo_warning("abrupt change in normal direction.  Consider a different method") :0
+               )
+            [for(i=[0:L-(closed?0:1)]) let(
+                     rotation = affine_frame_map(x=pathnormal[i%L], z=tangents[i%L])
+                 )
+                 translate(path[i%L])*rotation*zrot(-twist*pathfrac[i])
+               ] :
+      assert(false,"Unknown method or no method given")[], // unknown method
+      ends_match = !closed ? true :
+           let(
+             start = apply(transform_list[0],path3d(shape)),
+             end = reindex_polygon(start, apply(transform_list[L],path3d(shape)))
+             )
+             all([for(i=idx(start)) approx(start[i],end[i])]),
+      dummy = ends_match ? 0 :echo_warning("The points do not match when closing the model")
+    )
+    transforms ? transform_list : sweep(shape, transform_list, closed=false, caps=fullcaps);
+
+
+
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
