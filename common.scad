@@ -138,6 +138,27 @@ function all_defined(v,recursive=false) = max([for (x=v) is_undef(x)||(recursive
 // Section: Argument Helpers
 
 
+// Function: get_anchor()
+// Usage:
+//   get_anchor(anchor,center,[uncentered],[dflt]);
+// Description:
+//   Calculated the correct anchor from `anchor` and `center`.  In order:
+//   - If `center` is not `undef` and `center` evaluates as true, then `CENTER` (`[0,0,0]`) is returned.
+//   - Otherwise, if `center` is not `undef` and `center` evaluates as false, then the value of `uncentered` is returned.
+//   - Otherwise, if `anchor` is not `undef`, then the value of `anchor` is returned.
+//   - Otherwise, the value of `dflt` is returned.
+//   This ordering ensures that `center` will override `anchor`.
+// Arguments:
+//   anchor = The anchor name or vector.
+//   center = If not `undef`, this overrides the value of `anchor`.
+//   uncentered = The value to return if `center` is not `undef` and evaluates as false.  Default: ALLNEG
+//   dflt = The default value to return if both `anchor` and `center` are `undef`.  Default: `CENTER`
+function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
+	!is_undef(center)? (center? CENTER : uncentered) :
+	!is_undef(anchor)? anchor :
+	dflt;
+
+
 // Function: get_radius()
 // Usage:
 //   get_radius([r1], [r2], [r], [d1], [d2], [d], [dflt]);
