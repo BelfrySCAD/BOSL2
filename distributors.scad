@@ -414,9 +414,6 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   stagger = If true, make a staggered (hexagonal) grid.  If false, make square grid.  If `"alt"`, makes alternate staggered pattern.  Default: false
 //   scale = [X,Y] scaling factors to reshape grid.
 //   in_poly = If given a list of polygon points, only creates copies whose center would be inside the polygon.  Polygon can be concave and/or self crossing.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -452,7 +449,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //               zrot(180/6)
 //                   cylinder(h=20, d=10/cos(180/6)+0.01, $fn=6);
 //   }
-module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, scale=[1,1,1], in_poly=undef, anchor=CENTER, spin=0, orient=UP)
+module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, scale=[1,1,1], in_poly=undef)
 {
 	assert(in_list(stagger, [false, true, "alt"]));
 	scl = vmul(scalar_vec3(scale, 1), (stagger!=false? [0.5, sin(60), 1] : [1,1,1]));
@@ -476,36 +473,32 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 		siz = vmul(spc, [mcols-1, mrows-1, 0])+[0,0,0.01];
 		staggermod = (stagger == "alt")? 1 : 0;
 		if (stagger == false) {
-			orient_and_anchor(siz, orient, anchor, spin=spin) {
-				for (row = [0:1:mrows-1]) {
-					for (col = [0:1:mcols-1]) {
-						pos = [col*spc.x, row*spc.y] - point2d(siz/2);
-						if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
-							$col = col;
-							$row = row;
-							$pos = pos;
-							translate(pos) children();
-						}
+			for (row = [0:1:mrows-1]) {
+				for (col = [0:1:mcols-1]) {
+					pos = [col*spc.x, row*spc.y] - point2d(siz/2);
+					if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
+						$col = col;
+						$row = row;
+						$pos = pos;
+						translate(pos) children();
 					}
 				}
 			}
 		} else {
 			// stagger == true or stagger == "alt"
-			orient_and_anchor(siz, orient, anchor, spin=spin) {
-				cols1 = ceil(mcols/2);
-				cols2 = mcols - cols1;
-				for (row = [0:1:mrows-1]) {
-					rowcols = ((row%2) == staggermod)? cols1 : cols2;
-					if (rowcols > 0) {
-						for (col = [0:1:rowcols-1]) {
-							rowdx = (row%2 != staggermod)? spc[0] : 0;
-							pos = [2*col*spc[0]+rowdx, row*spc[1]] - point2d(siz/2);
-							if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
-								$col = col * 2 + ((row%2!=staggermod)? 1 : 0);
-								$row = row;
-								$pos = pos;
-								translate(pos) children();
-							}
+			cols1 = ceil(mcols/2);
+			cols2 = mcols - cols1;
+			for (row = [0:1:mrows-1]) {
+				rowcols = ((row%2) == staggermod)? cols1 : cols2;
+				if (rowcols > 0) {
+					for (col = [0:1:rowcols-1]) {
+						rowdx = (row%2 != staggermod)? spc[0] : 0;
+						pos = [2*col*spc[0]+rowdx, row*spc[1]] - point2d(siz/2);
+						if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
+							$col = col * 2 + ((row%2!=staggermod)? 1 : 0);
+							$row = row;
+							$pos = pos;
+							translate(pos) children();
 						}
 					}
 				}
