@@ -778,7 +778,7 @@ function sortidx(list, idx=undef) =
 // Arguments:
 //   arr = The list to uniquify.
 function unique(arr) =
-	assert(is_list(arr)||is_string(list))
+	assert(is_list(arr)||is_string(arr))
 	len(arr)<=1? arr : let(
 		sorted = sort(arr)
 	) [
