@@ -35,7 +35,7 @@ module slider(l=30, w=10, h=10, base=10, wall=5, ang=30, anchor=BOTTOM, spin=0, 
 	full_width = w + 2*wall;
 	full_height = h + base;
 
-	orient_and_anchor([full_width, l, h+2*base], orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, size=[full_width, l, h+2*base]) {
 		zrot(90)
 		down(base+h/2) {
 			// Base
@@ -102,7 +102,7 @@ module rail(l=30, w=10, h=10, chamfer=1.0, ang=30, anchor=BOTTOM, spin=0, orient
 	y1 = l/2;
 	y2 = y1 - attack_len * cos(attack_ang);
 
-	orient_and_anchor([w, l, h], orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, size=[w, l, h]) {
 		polyhedron(
 			convexity=4,
 			points=[

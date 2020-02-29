@@ -48,7 +48,7 @@ module phillips_drive(size="#2", shaft=6, l=20, $fn=36, anchor=BOTTOM, spin=0, o
 	p0 = [0,0];
 	p1 = [e/2, adj_ang_to_opp(e/2, 90-alpha/2)];
 	p2 = p1 + [(shaft-e)/2, adj_ang_to_hyp((shaft-e)/2, 90-gamma/2)];
-	orient_and_anchor([shaft,shaft,l], anchor=anchor, spin=spin, orient=orient, geometry="cylinder", chain=true) {
+	attachable(anchor,spin,orient, d=shaft, l=l) {
 		down(l/2) {
 			difference() {
 				union() {

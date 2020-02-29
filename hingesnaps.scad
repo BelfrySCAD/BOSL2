@@ -30,7 +30,9 @@
 module folding_hinge_mask(l, thick, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
 {
 	hingegap = default(hingegap, layerheight)+2*$slop;
-	orient_and_anchor(size=[l, hingegap, 2*thick], size2=[l,hingegap+2*thick*tan(foldangle/2)], anchor=anchor, spin=spin, orient=orient, chain=true) {
+	size = [l, hingegap, 2*thick];
+	size2 = [l, hingegap+2*thick*tan(foldangle/2)];
+	attachable(anchor,spin,orient, size=size, size2=size2) {
 		up(layerheight*2) prismoid([l,hingegap], [l, hingegap+2*thick/tan(foldangle/2)], h=thick, anchor=BOT);
 		children();
 	}
@@ -58,7 +60,8 @@ module snap_lock(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hi
 {
 	hingegap = default(hingegap, layerheight)+2*$slop;
 	snap_x = (snapdiam/2) / tan(foldangle/2) + (thick-2*layerheight)/tan(foldangle/2) + hingegap/2;
-	orient_and_anchor(size=[snaplen, snapdiam, 2*thick], anchor=anchor, spin=spin, orient=orient, chain=true) {
+	size = [snaplen, snapdiam, 2*thick];
+	attachable(anchor,spin,orient, size=size) {
 		back(snap_x) {
 			cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
 				attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=16);
@@ -91,7 +94,8 @@ module snap_socket(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, 
 {
 	hingegap = default(hingegap, layerheight)+2*$slop;
 	snap_x = (snapdiam/2) / tan(foldangle/2) + (thick-2*layerheight)/tan(foldangle/2) + hingegap/2;
-	orient_and_anchor(size=[snaplen, snapdiam, 2*thick], anchor=anchor, spin=spin, orient=orient, chain=true) {
+	size = [snaplen, snapdiam, 2*thick];
+	attachable(anchor,spin,orient, size=size) {
 		fwd(snap_x) {
 			zrot_copies([0,180], r=snaplen+$slop) {
 				diff("divot")

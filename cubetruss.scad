@@ -55,7 +55,7 @@ module cubetruss_segment(size=undef, strut=undef, bracing=undef, anchor=CENTER, 
 	h = size;
 	crossthick = strut/sqrt(2);
 	voffset = 0.333;
-	orient_and_anchor(size=[size, size, size], anchor=anchor, spin=spin, orient=orient, chain=true) {
+	attachable(anchor,spin,orient, size=[size,size,size]) {
 		render(convexity=10)
 		union() {
 			difference() {
@@ -123,7 +123,7 @@ module cubetruss_clip(extents=1, size=undef, strut=undef, clipthick=undef, ancho
 	clipheight = min(size+strut, size/3+2*strut*2.6);
 	clipsize = 0.5;
 	s = [extents*(size-strut)+strut+2*clipthick, strut*2, clipheight-2*strut];
-	orient_and_anchor(size=s, anchor=anchor, spin=spin, orient=orient, chain=true) {
+	attachable(anchor,spin,orient, size=s) {
 		xflip_copy(offset=(extents*(size-strut)+strut)/2) {
 			difference() {
 				union() {
@@ -184,7 +184,7 @@ module cubetruss_foot(w=1, size=undef, strut=undef, clipthick=undef, anchor=CENT
 	wall_h = strut+clipthick*1.5;
 	cyld = (size-2*strut)/cos(180/8);
 	s = [w*(size-strut)+strut+2*clipthick, size-2*strut, strut+clipthick];
-	orient_and_anchor(size=s, anchor=anchor, spin=spin, orient=orient, offset=[0,0,(strut-clipthick)/2], chain=true) {
+	attachable(anchor,spin,orient, size=s, offset=[0,0,(strut-clipthick)/2]) {
 		down(clipthick) {
 			// Base
 			up(clipthick/2) {
@@ -258,7 +258,7 @@ module cubetruss_joiner(w=1, vert=true, size=undef, strut=undef, clipthick=undef
 	clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
 	clipsize = 0.5;
 	s = [cubetruss_dist(w,1)+2*clipthick, cubetruss_dist(2,0)-0.1, strut+clipthick];
-	orient_and_anchor(size=s, anchor=anchor, spin=spin, orient=orient, offset=[0,0,-(clipthick-strut)/2], chain=true) {
+	attachable(anchor,spin,orient, size=s, offset=[0,0,-(clipthick-strut)/2]) {
 		down(clipthick) {
 			// Base
 			cube([w*(size-strut)+strut+2*clipthick, size, clipthick], anchor=BOT);
@@ -319,7 +319,7 @@ module cubetruss_uclip(dual=true, size=undef, strut=undef, clipthick=undef, anch
 	clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
 	clipsize = 0.5;
 	s = [(dual?2:1)*strut+2*clipthick+$slop, strut+2*clipthick, size/3.5];
-	orient_and_anchor(size=s, anchor=anchor, spin=spin, orient=orient, chain=true) {
+	attachable(anchor,spin,orient, size=s) {
 		union() {
 			difference() {
 				cube(s, center=true);
@@ -373,7 +373,7 @@ module cubetruss(extents=6, clips=[], bracing=undef, size=undef, strut=undef, cl
 	l = extents[1];
 	h = extents[2];
 	s = [cubetruss_dist(w,1), cubetruss_dist(l,1), cubetruss_dist(h,1)];
-	orient_and_anchor(size=s, anchor=anchor, spin=spin, orient=orient, chain=true) {
+	attachable(anchor,spin,orient, size=s) {
 		union() {
 			for (zrow = [0:h-1]) {
 				up((zrow-(h-1)/2)*(size-strut)) {
@@ -437,7 +437,7 @@ module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing=undef, size=undef, str
 	exts = is_vector(extents)? list_fit(extents,5,fill=0) : [extents, extents, 0, 0, extents];
 	s = [cubetruss_dist(1+exts[0]+exts[2],1), cubetruss_dist(1+exts[1]+exts[3],1), cubetruss_dist(h+exts[4],1)];
 	offset = [cubetruss_dist(exts[0]-exts[2],0), cubetruss_dist(exts[1]-exts[3],0), cubetruss_dist(exts[4],0)]/2;
-	orient_and_anchor(size=s, anchor=anchor, spin=spin, orient=orient, offset=offset, chain=true) {
+	attachable(anchor,spin,orient, size=s, offset=offset) {
 		union() {
 			for (zcol = [0:h-1]) {
 				up((size-strut+0.01)*zcol) {

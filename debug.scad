@@ -168,13 +168,17 @@ function standard_anchors() = [
 //   anchor_arrow(s=20);
 module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow") {
 	$fn=12;
-	recolor("gray") spheroid(d=s/6)
-	attach(CENTER,BOT) recolor(color) cyl(h=s*2/3, d=s/15, anchor=BOT)
-	attach(TOP) cyl(h=s/3, d1=s/5, d2=0, anchor=BOT) {
-		if(flag) {
-			attach(BOTTOM) recolor([1,0.5,0.5]) cuboid([s/50, s/6, s/4], anchor=FRONT+TOP);
+	recolor("gray") spheroid(d=s/6) {
+		attach(CENTER,BOT) recolor(color) cyl(h=s*2/3, d=s/15) {
+			attach(TOP,BOT) cyl(h=s/3, d1=s/5, d2=0) {
+				if(flag) {
+					position(BOT)
+						recolor([1,0.5,0.5])
+							cuboid([s/100, s/6, s/4], anchor=FRONT+BOT);
+				}
+				children();
+			}
 		}
-		children();
 	}
 }
 
@@ -210,7 +214,7 @@ module show_anchors(s=10, std=true, custom=true) {
 		}
 	}
 	if (custom) {
-		for (anchor=$parent_anchors) {
+		for (anchor=select($parent_geom,-1)) {
 			attach(anchor[0]) {
 				anchor_arrow(s, color="cyan");
 				recolor("black")
@@ -287,7 +291,7 @@ module ruler(length=100, width=undef, thickness=1, depth=3, labels=false, pipsca
     width = default(width, scales[0]);
     widths = width * widthfactor * [for(logsize = [0:-1:-depth+1]) pow(pipscale,-logsize)];
     offsets = concat([0],cumsum(widths));
-    orient_and_anchor([length,width,thickness], anchor=anchor, spin=spin, orient=orient, chain=true) {
+	attachable(anchor,spin,orient, size=[length,width,thickness], offset=offset) {
       translate([-length/2, -width/2, 0]) 
         for(i=[0:1:len(scales)-1]){
           count = ceil(length/scales[i]);

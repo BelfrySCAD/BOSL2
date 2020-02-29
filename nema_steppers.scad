@@ -133,7 +133,7 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, anchor=TOP, spin=0, orient=UP
 		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
 		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
 	];
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+	attachable(anchor,spin,orient, size=[motor_width, motor_width, h], anchors=anchors) {
 		up(h/2)
 		union() {
 			difference() {
@@ -198,7 +198,7 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, anchor=TOP, spin=0, orient=UP
 		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
 		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
 	];
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+	attachable(anchor,spin,orient, size=[motor_width, motor_width, h], anchors=anchors) {
 		up(h/2)
 		union() {
 			difference() {
@@ -263,7 +263,7 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, anchor=TOP, spin=0, orient=UP
 		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
 		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
 	];
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+	attachable(anchor,spin,orient, size=[motor_width, motor_width, h], anchors=anchors) {
 		up(h/2)
 		union() {
 			difference() {
@@ -348,7 +348,7 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, anchor=TOP, spin=0, orient
 		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
 		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
 	];
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+	attachable(anchor,spin,orient, size=[motor_width, motor_width, h], anchors=anchors) {
 		up(h/2)
 		difference() {
 			union() {
@@ -415,7 +415,7 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, anchor=TOP, spin=0, orient
 		anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
 		anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
 	];
-	orient_and_anchor([motor_width, motor_width, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+	attachable(anchor,spin,orient, size=[motor_width, motor_width, h], anchors=anchors) {
 		up(h/2)
 		difference() {
 			union() {
@@ -481,7 +481,8 @@ module nema_mount_holes(size=17, depth=5, l=5, anchor=CENTER, spin=0, orient=UP)
 	];
 	screwfn = quantup(max(8,segs(screw_size/2)),4);
 	plinthfn = quantup(max(8,segs(plinth_diam/2)),4);
-	orient_and_anchor([screw_spacing+screw_size, screw_spacing+screw_size+l, depth], orient, anchor, spin=spin, chain=true) {
+	s = [screw_spacing+screw_size, screw_spacing+screw_size+l, depth];
+	attachable(anchor,spin,orient, size=s, anchors=anchors) {
 		union() {
 			xspread(screw_spacing) {
 				yspread(screw_spacing) {

@@ -38,7 +38,7 @@ module narrowing_strut(w=10, l=100, wall=5, ang=30, anchor=BOTTOM, spin=0, orien
 {
 	h = wall + w/2/tan(ang);
 	size = [w, l, h];
-	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, size=size) {
 		xrot(90)
 		fwd(h/2) {
 			linear_extrude(height=l, center=true, slices=2) {
@@ -115,7 +115,7 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut=5, wall=2
 	brace_len = norm(corner1-corner2);
 
 	size = [l1, thick, h];
-	orient_and_anchor(size, orient, anchor, spin=spin, size2=[l2,thick], chain=true) {
+	attachable(anchor,spin,orient, size=size, size2=[l2,thick]) {
 		union() {
 			polyhedron(
 				points=[
@@ -262,12 +262,13 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut=5, wall=2
 //   thinning_triangle(h=50, l=80, thick=4, ang=30, strut=5, wall=2, center=false);
 // Example: Diagonal Brace Only
 //   thinning_triangle(h=50, l=80, thick=4, ang=30, strut=5, wall=2, diagonly=true, center=false);
-module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly=false, center=undef, anchor=CENTER, spin=0, orient=UP)
+module thinning_triangle(h=50, l=100, thick=5, ang=30, strut=5, wall=3, diagonly=false, center, anchor, spin=0, orient=UP)
 {
 	dang = atan(h/l);
 	dlen = h/sin(dang);
 	size = [thick, l, h];
-	orient_and_anchor(size, orient, anchor, spin=spin, center=center, noncentered=BOTTOM+FRONT, chain=true) {
+	anchor = get_anchor(anchor, center, BOT+FRONT, CENTER);
+	attachable(anchor,spin,orient, size=size) {
 		difference() {
 			union() {
 				if (!diagonly) {
@@ -344,7 +345,7 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anc
 	len = zstep / cos(ang);
 
 	size = [thick, l, h];
-	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, size=size) {
 		yrot(90)
 		linear_extrude(height=thick, convexity=4*yreps, center=true) {
 			difference() {
@@ -415,7 +416,7 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 	supp_step = cross_len/2/supp_reps;
 
 	size = [w, l, h];
-	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, size=size) {
 		intersection() {
 			union() {
 				ybridge = (l - (yreps+1) * strut) / yreps;
@@ -495,7 +496,7 @@ module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2, anchor=CENTER, spi
 	step = period/steps;
 	il = l - 2*strut + 2*step;
 	size = [thick, l, h];
-	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, size=size) {
 		union() {
 			linear_extrude(height=h-2*strut+0.1, slices=2, convexity=ceil(2*il/period), center=true) {
 				polygon(

@@ -468,10 +468,11 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 //       [ 25, -15],  [-10,   0]
 //   ];
 //   linear_sweep_bezier(bez, height=20, splinesteps=32);
-module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center=undef, convexity=undef, twist=undef, slices=undef, scale=undef, anchor=BOTTOM, spin=0, orient=UP) {
+module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center, convexity, twist, slices, scale, anchor, spin=0, orient=UP) {
 	maxx = max([for (pt = bezier) abs(pt[0])]);
 	maxy = max([for (pt = bezier) abs(pt[1])]);
-	orient_and_anchor([maxx*2,maxy*2,height], orient, anchor, spin=spin, center=center, chain=true) {
+	anchor = get_anchor(anchor,center,BOT,BOT);
+	attachable(anchor,spin,orient, size=[maxx*2,maxy*2,height]) {
 		linear_extrude(height=height, center=true, convexity=convexity, twist=twist, slices=slices, scale=scale) {
 			bezier_polygon(bezier, splinesteps=splinesteps, N=N);
 		}
@@ -506,11 +507,13 @@ module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center=undef
 //   rotate_sweep_bezier(path, splinesteps=32, $fn=180);
 module rotate_sweep_bezier(bezier, splinesteps=16, N=3, convexity=undef, angle=360, anchor=CENTER, spin=0, orient=UP)
 {
-	maxx = max([for (pt = bezier) abs(pt[0])]);
-	maxy = max([for (pt = bezier) abs(pt[1])]);
-	orient_and_anchor([maxx*2,maxx*2,0], orient, anchor, spin=spin, geometry="cylinder", chain=true) {
+	oline = bezier_polyline(bezier, splinesteps=splinesteps, N=N);
+	maxx = max([for (pt = oline) abs(pt[0])]);
+	miny = min(subindex(oline,1));
+	maxy = max(subindex(oline,1));
+	attachable(anchor,spin,orient, r=maxx, l=max(abs(miny),abs(maxy))*2) {
 		rotate_extrude(convexity=convexity, angle=angle) {
-			bezier_polygon(bezier, splinesteps, N);
+			polygon(oline);
 		}
 	}
 }

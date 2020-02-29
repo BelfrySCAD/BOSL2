@@ -628,8 +628,9 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
 module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) {
 	sc = 1/cos(180/n);
 	r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n));
-	orient_and_anchor([2*r,2*r,0], UP, anchor, spin=spin, geometry="cylinder", two_d=true, chain=true) {
-		polygon(regular_ngon(n=n, r=r, rounding=rounding, realign=realign));
+	path = regular_ngon(n=n, r=r, rounding=rounding, realign=realign);
+	attachable(anchor,spin, two_d=true, path=path) {
+		polygon(path);
 		children();
 	}
 }
@@ -788,8 +789,9 @@ function trapezoid(h, w1, w2, anchor=CENTER, spin=0) =
 
 
 module trapezoid(h, w1, w2, anchor=CENTER, spin=0) {
-	orient_and_anchor([w1,h,0], size2=[w2,h], UP, anchor, spin=spin, two_d=true, chain=true) {
-		polygon(trapezoid(h=h, w1=w1, w2=w2));
+	path = trapezoid(h=h, w1=w1, w2=w2);
+	attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2) {
+		polygon(path);
 		children();
 	}
 }
@@ -819,8 +821,11 @@ module trapezoid(h, w1, w2, anchor=CENTER, spin=0) {
 //   teardrop2d(r=30, ang=30, cap_h=20);
 module teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0)
 {
-	path = teardrop2d(r=r, d=d, ang=ang, cap_h=cap_h, anchor=anchor, spin=spin);
-	polygon(path);
+	path = teardrop2d(r=r, d=d, ang=ang, cap_h=cap_h);
+	attachable(anchor,spin, two_d=true, path=path) {
+		polygon(path);
+		children();
+	}
 }
 
 
@@ -892,8 +897,13 @@ function glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) =
 	) rot(spin, p=move(-vmul(anchor,s), p=path));
 
 
-module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0)
-	polygon(glued_circles(r=r, d=d, spread=spread, tangent=tangent, anchor=anchor, spin=spin));
+module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) {
+	path = glued_circles(r=r, d=d, spread=spread, tangent=tangent);
+	attachable(anchor,spin, two_d=true, path=path, extent=true) {
+		polygon(path);
+		children();
+	}
+}
 
 
 // Function&Module: star()
@@ -940,8 +950,13 @@ function star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=
 	) rot(spin, p=move(-r*normalize(anchor), p=path));
 
 
-module star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0)
-	polygon(star(n=n, r=r, d=d, od=od, or=or, ir=ir, id=id, step=step, realign=realign, anchor=anchor, spin=spin));
+module star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0) {
+	path = star(n=n, r=r, d=d, od=od, or=or, ir=ir, id=id, step=step, realign=realign);
+	attachable(anchor,spin, two_d=true, path=path, extent=true) {
+		polygon(path);
+		children();
+	}
+}
 
 
 function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
@@ -1006,8 +1021,13 @@ function supershape(step=0.5,m1=4,m2=undef,n1=1,n2=undef,n3=undef,a=1,b=undef,r=
 		path = [for (i = [0:steps-1]) let(a=angs[i]) scale*rads[i]*[cos(a), sin(a)]]
 	) rot(spin, p=move(-scale*max(rads)*normalize(anchor), p=path));
 
-module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0)
-	polygon(supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b, r=r,d=d, anchor=anchor, spin=spin));
+module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0) {
+	path = supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b,r=r,d=d);
+	attachable(anchor,spin, two_d=true, path=path, extent=true) {
+		polygon(path);
+		children();
+	}
+}
 
 
 // Section: 2D Masking Shapes

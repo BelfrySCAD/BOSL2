@@ -371,7 +371,7 @@ module gear(
 	c = outer_radius(pitch, teeth, clearance, interior);
 	r = root_radius(pitch, teeth, clearance, interior);
 	twist = atan2(thickness*tan(helical),p);
-	orient_and_anchor([p, p, thickness], orient, anchor, spin=spin, geometry="cylinder", chain=true) {
+	attachable(anchor,spin,orient, r=p, l=thickness) {
 		difference() {
 			linear_extrude(height=thickness, center=true, convexity=10, twist=twist) {
 				gear2d(
@@ -545,7 +545,7 @@ module bevel_gear(
 			]
 		]
 	);
-	orient_and_anchor([p1, p1, thickness], orient, anchor, spin=spin, size2=[p2,p2], geometry="cylinder", chain=true) {
+	attachable(anchor,spin,orient, r1=p1, r2=p2, l=thickness) {
 		union() {
 			difference() {
 				down(thickness/2) {
@@ -630,7 +630,7 @@ module rack(
 		anchorpt("dedendum-top",    [0,-d,thickness/2],  UP),
 		anchorpt("dedendum-bottom", [0,-d,-thickness/2], DOWN),
 	];
-	orient_and_anchor([l, 2*abs(a-height), thickness], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+	attachable(anchor,spin,orient, size=[l, 2*abs(a-height), thickness], anchors=anchors) {
 		left((teeth-1)*pitch/2) {
 			linear_extrude(height = thickness, center = true, convexity = 10) {
 				for (i = [0:1:teeth-1] ) {

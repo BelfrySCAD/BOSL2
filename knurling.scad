@@ -107,7 +107,7 @@ module knurled_cylinder(
 			]
 		]
 	);
-	orient_and_anchor([2*r1,2*r1,l], size2=[2*r2,2*r2], anchor=anchor, spin=spin, orient=orient, geometry="cylinder", chain=true) {
+	attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
 		intersection() {
 			polyhedron(points=vertices, faces=faces, convexity=2*layers);
 			cyl(
@@ -157,7 +157,7 @@ module knurled_cylinder_mask(
 ) {
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
-	orient_and_anchor([2*r1,2*r1,l], size2=[2*r2,2*r2], anchor=anchor, spin=spin, orient=orient, geometry="cylinder", chain=true) {
+	attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
 		difference() {
 			cylinder(r1=r1+overage, r2=r2+overage, h=l, center=true);
 			knurled_cylinder(r1=r1, r2=r2, l=l+0.01);

@@ -184,9 +184,10 @@ module torx_drive2d(size) {
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples:
 //   torx_drive(size=30, l=10, $fa=1, $fs=1);
-module torx_drive(size, l=5, center=undef, anchor=BOTTOM, spin=0, orient=UP) {
+module torx_drive(size, l=5, center, anchor, spin=0, orient=UP) {
+	anchor = get_anchor(anchor, center, BOT, BOT);
 	od = torx_outer_diam(size);
-	orient_and_anchor([od, od, l], orient, anchor, spin=spin, center=center, chain=true) {
+	attachable(anchor,spin,orient, d=od, l=l) {
 		linear_extrude(height=l, convexity=4, center=true) {
 			torx_drive2d(size);
 		}

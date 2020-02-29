@@ -64,7 +64,7 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 		anchorpt("support-ring", [0,0,neck_h-h/2]),
 		anchorpt("tamper-ring", [0,0,h/2-tamper_base_h])
 	];
-	orient_and_anchor([support_d,support_d,h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+	attachable(anchor,spin,orient, d=support_d, l=h, anchors=anchors) {
 		down(h/2) {
 			rotate_extrude(convexity=10) {
 				polygon(turtle(
@@ -159,7 +159,7 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
 	anchors = [
 		anchorpt("inside-top", [0,0,-(h/2-wall)])
 	];
-	orient_and_anchor([w, w, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+	attachable(anchor,spin,orient, d=w, l=h, anchors=anchors) {
 		down(h/2) zrot(45) {
 			difference() {
 				union() {
@@ -236,7 +236,7 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 		anchorpt("support-ring", [0,0,neck_h-h/2]),
 		anchorpt("tamper-ring", [0,0,h/2-tamper_base_h])
 	];
-	orient_and_anchor([support_d,support_d,h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+	attachable(anchor,spin,orient, d=support_d, l=h, anchors=anchors) {
 		down(h/2) {
 			rotate_extrude(convexity=10) {
 				polygon(turtle(
@@ -323,7 +323,7 @@ module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
 	anchors = [
 		anchorpt("inside-top", [0,0,-(h/2-wall)])
 	];
-	orient_and_anchor([w, w, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+	attachable(anchor,spin,orient, d=w, l=h, anchors=anchors) {
 		down(h/2) zrot(45) {
 			difference() {
 				union() {

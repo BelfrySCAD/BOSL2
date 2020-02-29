@@ -400,7 +400,7 @@ module screw(
 		anchorpt("countersunk", [0,0,(headlen+screwlen)/2-0.01]),
 		anchorpt("base", [0,0,-headlen/2+screwlen/2])
 	];
-	orient_and_anchor([screwsize, screwsize, headlen+screwlen], orient, anchor, spin=spin, anchors=anchors, geometry="cylinder", chain=true) {
+	attachable(anchor,spin,orient, d=screwsize, l=headlen+screwlen, anchors=anchors) {
 		down(headlen/2-screwlen/2) {
 			down(screwlen/2) {
 				if (pitch == undef) {
@@ -525,7 +525,7 @@ module metric_bolt(
 	];
 
 	//color("silver")
-	orient_and_anchor([size, size, headlen+l], orient, anchor, spin=spin, geometry="cylinder", anchors=anchors, chain=true) {
+	attachable(anchor,spin,orient, d=size, l=headlen+l, anchors=anchors) {
 		up(base) {
 			difference() {
 				union() {
@@ -655,8 +655,8 @@ module metric_nut(
 	pitch=undef,
 	details=false,
 	flange=0,
-	center=undef,
-	anchor=CENTER,
+	center,
+	anchor,
 	spin=0,
 	orient=UP
 ) {
@@ -668,7 +668,8 @@ module metric_nut(
 	bevtop = (dcirc - D)/2;
 
 	//color("silver")
-	orient_and_anchor([dcirc+flange, dcirc+flange, H], orient, anchor, spin=spin, center=center, geometry="cylinder", chain=true) {
+	anchor = get_anchor(anchor,center,BOT,CENTER);
+	attachable(anchor,spin,orient, d=dcirc+flange, l=H) {
 		difference() {
 			union() {
 				difference() {

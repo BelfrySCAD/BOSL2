@@ -17,12 +17,12 @@ $attach_to = undef;
 $attach_anchor = [CENTER, CENTER, UP, 0];
 $attach_norot = false;
 
-$parent_size = undef;
-$parent_size2 = undef;
-$parent_shift = [0,0];
-$parent_anchors = [];
 $parent_anchor = BOTTOM;
+$parent_spin = 0;
 $parent_orient = UP;
+
+$parent_size = undef;
+$parent_geom = undef;
 
 $tags_shown = [];
 $tags_hidden = [];
@@ -103,72 +103,226 @@ $tags_hidden = [];
 function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, spin];
 
 
+// Function: attach_geom_2d()
+// Usage:
+//   attach_geom_2d(geom);
+// Description:
+//   Returns true if the given attachment geometry description is for a 2D shape.
+function attach_geom_2d(geom) =
+	let( type = geom[0] )
+	type == "rect" || type == "circle" ||
+	type == "path_isect" || type == "path_extent";
+
+
+// Function: attach_geom_size()
+// Usage:
+//   attach_geom_size(geom);
+// Description:
+//   Returns the `[X,Y,Z]` bounding size for the given attachment geometry description.
+function attach_geom_size(geom) =
+	let( type = geom[0] )
+	type == "cuboid"? ( //size, size2, shift
+		let(
+			size=geom[1], size2=geom[2], shift=point2d(geom[3]),
+			maxx = max(size.x,size2.x),
+			maxy = max(size.y,size2.y),
+			z = size.z
+		) [maxx, maxy, z]
+	) : type == "cyl"? ( //r1, r2, l, shift
+		let(
+			r1=geom[1], r2=geom[2], l=geom[3], shift=point2d(geom[4]),
+			maxr = max(r1,r2)
+		) [2*maxr,2*maxr,l]
+	) : type == "spheroid"? ( //r
+		let( r=geom[1] ) [2,2,2]*r
+	) : type == "vnf_extent" || type=="vnf_isect"? ( //vnf
+		let(
+			mm = pointlist_bounds(geom[1][0]),
+			delt = mm[1]-mm[0]
+		) delt
+	) : type == "rect"? ( //size, size2
+		let(
+			size=geom[1], size2=geom[2],
+			maxx = max(size.x,size2)
+		) [maxx, size.y]
+	) : type == "circle"? ( //r
+		let( r=geom[1] ) [2,2]*r
+	) : type == "path_isect" || type == "path_extent"? ( //path
+		let(
+			mm = pointlist_bounds(geom[1]),
+			delt = mm[1]-mm[0]
+		) [delt.x, delt.y]
+	) :
+	assert(false, "Unknown attachment geometry type.");
+
+
 
 // Function: find_anchor()
 // Usage:
-//   find_anchor(anchor, h, size, [size2], [shift], [edges], [corners]);
+//   find_anchor(anchor, geom);
 // Description:
-//   Returns anchor data for the given vector or anchor name.
+//   Calculates the anchor data for the given `anchor` vector or name, in the given attachment
+//   geometry.  Returns `[ANCHOR, POS, VEC, ANG]` where `ANCHOR` is the requested anchorname
+//   or vector, `POS` is the anchor position, `VEC` is the direction vector of the anchor, and
+//   `ANG` is the angle to align with around the rotation axis of th anchor direction vector.
 // Arguments:
 //   anchor = Vector or named anchor string.
-//   h = Height of the region.
-//   size = The [X,Y] size of the bottom of the cubical region.
-//   size2 = The [X,Y] size of the top of the cubical region.
-//   shift = The [X,Y] amount to shift the center of the top with respect to the center of the bottom.
-//   offset = If the anchor is not CENTER, this is the offset to add to the rest of the anchor points.
-//   geometry = One of "cube", "cylinder", or "sphere" to denote the overall geometry of the shape.  Cones are "cylinder", and prismoids are "cube" for this purpose.  Default: "cube"
-//   anchors = A list of extra non-standard named anchors.
-//   two_d = If true, object will be treated as 2D.
-function find_anchor(anchor, h, size, size2=undef, shift=[0,0], offset=[0,0,0], anchors=[], geometry="cube", two_d=false) =
+//   geom = The geometry description of the shape.
+function find_anchor(anchor, geom) =
+	let(
+		anchor = point3d(anchor),
+		offset = anchor==CENTER? CENTER : select(geom,-2),
+		anchors = select(geom,-1),
+		type = geom[0]
+	)
 	is_string(anchor)? (
 		let(found = search([anchor], anchors, num_returns_per_match=1)[0])
 		assert(found!=[], str("Unknown anchor: ",anchor))
 		anchors[found]
-	) : (
-		assert(is_vector(anchor),str("anchor=",anchor))
+	) :
+	assert(is_vector(anchor),str("anchor=",anchor))
+	anchor==CENTER? [anchor, CENTER, UP, 0] :
+	let(
+		oang = (
+			approx(point2d(anchor), [0,0])? 0 :
+			atan2(anchor.y, anchor.x)+90
+		)
+	)
+	type == "cuboid"? ( //size, size2, shift
 		let(
-			size = point2d(size),
-			size2 = (size2!=undef)? point2d(size2) : size,
-			shift = point2d(shift),
-			oang = (
-				two_d? 0 :
-				anchor == UP? 0 :
-				anchor == DOWN? 0 :
-				(norm([anchor.x,anchor.y]) < EPSILON)? 0 :
-				atan2(anchor.y, anchor.x)+90
+			size=geom[1], size2=geom[2], shift=point2d(geom[3]),
+			h = size.z,
+			u = (anchor.z+1)/2,
+			axy = point2d(anchor),
+			bot = point3d(vmul(point2d(size)/2,axy),-h/2),
+			top = point3d(vmul(point2d(size2)/2,axy)+shift,h/2),
+			pos = lerp(bot,top,u)+offset,
+			sidevec = normalize(rot(from=UP, to=top-bot, p=point3d(axy))),
+			vvec = normalize([0,0,anchor.z]),
+			vec = anchor==CENTER? UP :
+				approx(axy,[0,0])? normalize(anchor) :
+				approx(anchor.z,0)? sidevec :
+				normalize((sidevec+vvec)/2)
+		) [anchor, pos, vec, oang]
+	) : type == "cyl"? ( //r1, r2, l, shift
+		let(
+			r1=geom[1], r2=geom[2], l=geom[3], shift=point2d(geom[4]),
+			u = (anchor.z+1)/2,
+			axy = normalize(point2d(anchor)),
+			bot = point3d(r1*axy,-l/2),
+			top = point3d(r2*axy+shift, l/2),
+			pos = lerp(bot,top,u)+offset,
+			sidevec = rot(from=UP, to=top-bot, p=point3d(axy)),
+			vvec = normalize([0,0,anchor.z]),
+			vec = anchor==CENTER? UP :
+				approx(axy,[0,0])? normalize(anchor) :
+				approx(anchor.z,0)? sidevec :
+				normalize((sidevec+vvec)/2)
+		) [anchor, pos, vec, oang]
+	) : type == "spheroid"? ( //r
+		let(
+			r=geom[1]
+		) [anchor, r*normalize(anchor)+offset, normalize(anchor), oang]
+	) : type == "vnf_isect"? ( //vnf
+		let(
+			vnf=geom[1],
+			eps = 1/2048,
+			rpts = rot(from=anchor, to=RIGHT, p=vnf[0]),
+			hits = [
+				for (i = idx(vnf[1])) let(
+					face = vnf[1][i],
+					verts = select(rpts, face)
+				) if (
+					max(subindex(verts,0)) >= -eps &&
+					max(subindex(verts,1)) >= -eps &&
+					max(subindex(verts,2)) >= -eps &&
+					min(subindex(verts,1)) <=  eps &&
+					min(subindex(verts,2)) <=  eps
+				) let(
+					pt = polygon_line_intersection(
+						select(vnf[0], face),
+						[CENTER,anchor], eps=eps
+					)
+				) if (!is_undef(pt)) [norm(pt),i,pt]
+			]
+		)
+		assert(len(hits)>0, "Anchor vector does not intersect with the shape.  Attachment failed.")
+		let(
+			furthest = max_index(subindex(hits,0)),
+			pos = hits[furthest][2],
+			dist = hits[furthest][0],
+			nfaces = [for (hit = hits) if(approx(hit[0],dist,eps=eps)) hit[1]],
+			n = normalize(
+				sum([
+					for (i = nfaces) let(
+						faceverts = select(vnf[0],vnf[1][i]),
+						faceplane = plane_from_pointslist(faceverts),
+						nrm = plane_normal(faceplane)
+					) nrm
+				]) / len(nfaces)
 			)
 		)
-		geometry=="sphere"? let(
-			phi = (anchor==UP||anchor==CENTER)? 0 : anchor==DOWN? 180 : 90 + (45 * anchor.z),
-			theta = anchor==CENTER? 90 : atan2(anchor.y, anchor.x),
-			vec = spherical_to_xyz(1, theta, phi),
-			offset = anchor==CENTER? [0,0,0] : offset,
-			pos = anchor==CENTER? CENTER : vmul(vec, (point3d(size)+h*UP)/2) + offset
-		) [anchor, pos, vec, oang] : let (
-			xyal = (
-				geometry=="cylinder"? (
-					let(xy = point2d(anchor))
-					norm(xy)>0? xy/norm(xy) : [0,0]
-				) : point2d(anchor)
-			),
-			botpt = point3d(vmul(size/2,xyal))+DOWN*h/2,
-			toppt = point3d(vmul(size2/2,xyal)+shift)+UP*h/2,
-			offset = anchor==CENTER? [0,0,0] : offset,
-			pos = lerp(botpt, toppt, (anchor.z+1)/2) + offset,
-			sidevec = two_d? point3d(xyal) :
-				approx(norm(xyal),0)? [0,0,0] :
-				rotate_points3d([point3d(xyal)], from=UP, to=toppt-botpt)[0],
-			vec = (
-				two_d? sidevec :
-				anchor==CENTER? UP :
-				norm([anchor.x,anchor.y]) < EPSILON? anchor :
-				norm(size)+norm(size2) < EPSILON? anchor :
-				abs(anchor.z) < EPSILON? sidevec :
-				anchor.z>0? (UP+sidevec)/2 :
-				(DOWN+sidevec)/2
-			)
-		) [anchor, pos, vec, oang]
-	);
+		[anchor, pos, n, oang]
+	) : type == "vnf_extent"? ( //vnf
+		let(
+			vnf=geom[1],
+			rpts = rot(from=anchor, to=RIGHT, p=vnf[0]),
+			maxx = max(subindex(rpts,0)),
+			idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
+			mm = pointlist_bounds(select(rpts,idxs)),
+			avgy = (mm[0].y+mm[1].y)/2,
+			avgz = (mm[0].z+mm[1].z)/2,
+			pos = rot(from=RIGHT, to=anchor, p=[maxx, avgy, avgz])
+		) [anchor, pos, anchor, oang]
+	) : type == "rect"? ( //size, size2
+		let(
+			size=geom[1], size2=geom[2],
+			u = (anchor.y+1)/2,
+			frpt = [size.x/2*anchor.x, -size.y/2],
+			bkpt = [size2/2*anchor.x,  size.y/2],
+			pos = lerp(frpt, bkpt, u),
+			vec = normalize(rot(from=BACK, to=bkpt-frpt, p=anchor))
+		) [anchor, pos, vec, 0]
+	) : type == "circle"? ( //r
+		let(
+			r=geom[1],
+			anchor = normalize(point2d(anchor))
+		) [anchor, r*anchor+offset, anchor, 0]
+	) : type == "path_isect"? ( //path
+		let(
+			path=geom[1],
+			anchor = point2d(anchor),
+			isects = [
+				for (t=triplet_wrap(path)) let(
+					seg1 = [t[0],t[1]],
+					seg2 = [t[1],t[2]],
+					isect = ray_segment_intersection([[0,0],anchor], seg1),
+					n = is_undef(isect)? [0,1] :
+						!approx(isect, t[1])? line_normal(seg1) :
+						normalize((line_normal(seg1)+line_normal(seg2))/2),
+					n2 = vector_angle(anchor,n)>90? -n : n
+				)
+				if(!is_undef(isect) && !approx(isect,t[0])) [norm(isect), isect, n2]
+			],
+			maxidx = max_index(subindex(isects,0)),
+			isect = isects[maxidx],
+			pos = isect[1],
+			vec = normalize(isect[2])
+		) [anchor, pos, vec, 0]
+	) : type == "path_extent"? ( //path
+		let(
+			path=geom[1],
+			anchor = point2d(anchor),
+			rpath = rot(from=anchor, to=RIGHT, p=path),
+			maxx = max(subindex(rpath,0)),
+			idxs = [for (i = idx(rpath)) if (approx(rpath[i].x, maxx)) i],
+			miny = min([for (i=idxs) rpath[i].y]),
+			maxy = max([for (i=idxs) rpath[i].y]),
+			avgy = (miny+maxy)/2,
+			pos = rot(from=RIGHT, to=anchor, p=[maxx,avgy])
+		) [anchor, pos, anchor, 0]
+	) :
+	assert(false, "Unknown attachment geometry type.");
 
 
 
@@ -180,17 +334,33 @@ function _str_char_split(s,delim,n=0,acc=[],word="") =
 
 
 
-// Section: Modules
+// Section: Attachability Modules
 
 
-// Module: orient_and_anchor()
+// Module: attachable()
+//
+// Usage:
+//   attachable(anchor, spin, [orient], two_d, size, [size2], [shift], [offset], [anchors] ...
+//   attachable(anchor, spin, [orient], two_d, r|d, [offset], [anchors]) ...
+//   attachable(anchor, spin, [orient], two_d, path, [extent], [offset], [anchors] ...
+//   attachable(anchor, spin, [orient], size, [size2], [shift], [offset], [anchors] ...
+//   attachable(anchor, spin, [orient], r|d, l, [offset], [anchors]) ...
+//   attachable(anchor, spin, [orient], r1|d1, r2|d2, l, [offset], [anchors]) ...
+//   attachable(anchor, spin, [orient], r|d, [offset], [anchors]) ...
+//   attachable(anchor, spin, [orient], vnf, [extent], [offset], [anchors]) ...
 //
 // Description:
-//   Takes a vertically oriented part and anchors, spins and orients it.
-//   This is useful for making a custom shape available in various
-//   orientations and anchorings without extra translate()s and rotate()s.
-//   Children should be vertically (Z-axis) oriented, and centered.
-//   Non-vector anchor points should be named via the `anchors` arg.
+//   Manages the anchoring, spin, orientation, and attachments for a 3D volume or 2D area.
+//   A managed 3D volume is assumed to be vertically (Z-axis) oriented, and centered.
+//   A managed 2D area is just assumed to be centered.  The shape to be managed is given
+//   as the first child to this module, and the second child should be given as `children()`.
+//   For example, to manage a conical shape:
+//   ```openscad
+//   attachable(anchor, spin, orient, r1=r1, r2=r2, l=h) {
+//       cyl(r1=r1, r2=r2, l=h);
+//       children();
+//   }
+//   ```
 //   
 //   If this is *not* run as a child of `attach()` with the `to` argument
 //   given, then the following transformations are performed in order:
@@ -206,67 +376,182 @@ function _str_char_split(s,delim,n=0,acc=[],word="") =
 //   * Rotates this part so it's anchor direction vector exactly opposes the parent's anchor direction vector.
 //   * Rotates this part so it's anchor spin matches the parent's anchor spin.
 //
-// Usage:
-//   orient_and_anchor(size, [anchor], [spin], [orient], [center], [noncentered], [anchors], [chain]) ...
-//
 // Arguments:
-//   size = The [X,Y,Z] size of the part.
-//   size2 = The [X,Y] size of the top of the part.
-//   shift = The [X,Y] offset of the top of the part, compared to the bottom of the part.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//   center = If given, overrides `anchor`.  If true, centers vertically.  If false, `anchor` will be set to the value in `noncentered`.
-//   noncentered = The value to set `anchor` to if `center` == `false`.  Default: `BOTTOM`.
-//   offset = The offset of the center of the object from the CENTER anchor.
-//   geometry = One of "cube", "cylinder", or "sphere" to denote the overall geometry of the shape.  Cones are "cylinder", and prismoids are "cube" for this purpose.  Default: "cube"
-//   anchors = A list of extra, non-standard optional anchors.
-//   chain = If true, allow attachable children.
-//   two_d = If true, object will be treated as 2D.
+//   size = If given as a 3D vector, contains the XY size of the bottom of the cuboidal/prismoidal volume, and the Z height.  If given as a 2D vector, contains the front X width of the rectangular/trapezoidal shape, and the Y length.
+//   size2 = If given as a 2D vector, contains the XY size of the top of the prismoidal volume.  If given as a number, contains the back width of the trapezoidal shape.
+//   shift = If given as a 2D vector, shifts the top of the prismoidal or conical shape by the given amount.  If given as a number, shifts the back of the trapezoidal shape right by that amount.  Default: No shift.
+//   r = Radius of the cylindrical/conical volume.
+//   d = Diameter of the cylindrical/conical volume.
+//   r1 = Radius of the bottom of the conical volume.
+//   r2 = Radius of the top of the conical volume.
+//   d1 = Diameter of the bottom of the conical volume.
+//   d2 = Diameter of the top of the conical volume.
+//   l = Length of the cylindrical/conical volume along axis.
+//   vnf = The [VNF](vnf.scad) of the volume.
+//   path = The path to generate a polygon from.
+//   extent = If true, calculate anchors by extents, rather than intersection.  Default: false.
+//   offset = If given, offsets the center of the volume.
+//   anchors = If given as a list of anchor points, allows named anchor points.
+//   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //
 // Side Effects:
-//   `$parent_size` is set to the parent object's cubical region size.
-//   `$parent_size2` is set to the parent object's top [X,Y] size.
-//   `$parent_shift` is set to the parent object's `shift` value, if any.
-//   `$parent_geom` is set to the parent object's `geometry` value.
-//   `$parent_orient` is set to the parent object's `orient` value.
 //   `$parent_anchor` is set to the parent object's `anchor` value.
-//   `$parent_anchors` is set to the parent object's list of non-standard extra anchors.
-//   `$parent_2d` is set to the parent object's `two_d` value.
+//   `$parent_spin` is set to the parent object's `spin` value.
+//   `$parent_orient` is set to the parent object's `orient` value.
+//   `$parent_geom` is set to the parent object's `geom` value.
+//   `$parent_size` is set to the parent object's cubical `[X,Y,Z]` volume size.
 //
-// Example(Med):
-//   #cylinder(d1=50, d2=30, h=60);
-//   orient_and_anchor(size=[50,50,60], size2=[30,30], anchor=RIGHT, orient=FWD)
-//       cylinder(d1=50, d2=30, h=60);
-module orient_and_anchor(
-	size=undef,
-	orient=UP,
+// Example(NORENDER): Cubical Shape
+//   attachable(anchor, spin, orient, size=size) {
+//       cube(size, center=true);
+//       children();
+//   }
+//
+// Example(NORENDER): Prismoidal Shape
+//   attachable(
+//       anchor, spin, orient,
+//       size=point3d(botsize,h),
+//       size2=topsize,
+//       shift=shift
+//   ) {
+//       prismoid(botsize, topsize, h=h, shift=shift);
+//       children();
+//   }
+//
+// Example(NORENDER): Cylindrical Shape
+//   attachable(anchor, spin, orient, r=r, l=h) {
+//       cyl(r=r, l=h);
+//       children();
+//   }
+//
+// Example(NORENDER): Conical Shape
+//   attachable(anchor, spin, orient, r1=r1, r2=r2, l=h) {
+//       cyl(r1=r1, r2=r2, l=h);
+//       children();
+//   }
+//
+// Example(NORENDER): Spherical Shape
+//   attachable(anchor, spin, orient, r=r) {
+//       staggered_sphere(r=r);
+//       children();
+//   }
+//
+// Example(NORENDER): Arbitrary VNF Shape
+//   attachable(anchor, spin, orient, vnf=vnf) {
+//       vnf_polyhedron(vnf);
+//       children();
+//   }
+//
+// Example(NORENDER): 2D Rectangular Shape
+//   attachable(anchor, spin, orient, size=size) {
+//       square(size, center=true);
+//       children();
+//   }
+//
+// Example(NORENDER): 2D Trapezoidal Shape
+//   attachable(
+//       anchor, spin, orient,
+//       size=[x1,y],
+//       size2=x2,
+//       shift=shift
+//   ) {
+//       trapezoid(w1=x1, w2=x2, h=y, shift=shift);
+//       children();
+//   }
+//
+// Example(NORENDER): 2D Circular Shape
+//   attachable(anchor, spin, orient, two_d=true, r=r) {
+//       circle(r=r);
+//       children();
+//   }
+//
+// Example(NORENDER): Arbitrary 2D Polygon Shape
+//   attachable(anchor, spin, orient, path=path) {
+//       polygon(path);
+//       children();
+//   }
+module attachable(
 	anchor=CENTER,
-	center=undef,
-	noncentered=BOTTOM,
 	spin=0,
-	size2=undef,
-	shift=[0,0],
+	orient=UP,
+	size, size2, shift,
+	r,r1,r2, d,d1,d2, l,
+	vnf, path,
+	extent=true,
 	offset=[0,0,0],
-	geometry="cube",
 	anchors=[],
-	chain=false,
 	two_d=false
 ) {
-	size2 = point2d(default(size2, size));
-	shift = point2d(shift);
-	anchr = is_undef(center)? anchor : (center? CENTER : noncentered);
-	pos = find_anchor(anchr, size.z, size, size2=size2, shift=shift, offset=offset, anchors=anchors, geometry=geometry, two_d=two_d)[1];
+	assert($children==2);
+	assert(is_string(anchor) || is_vector(anchor));
+	assert(is_num(spin));
+	assert(is_vector(orient));
+	assert(is_vector(offset));
+	assert(is_list(anchors));
 
-	$parent_size   = size;
-	$parent_size2  = size2;
-	$parent_shift  = shift;
-	$parent_geom   = geometry;
+	geom = !is_undef(size)? (
+			two_d? (
+				let(
+					size2 = default(size2, size.x),
+					shift = default(shift, 0)
+				)
+				assert(is_vector(size) && len(size)==2)
+				assert(is_num(size2))
+				assert(is_num(shift))
+				["rect", point2d(size), size2, shift, offset, anchors]
+			) : (
+				let(
+					size2 = default(size2, point2d(size)),
+					shift = default(shift, [0,0])
+				)
+				assert(is_vector(size) && len(size)==3)
+				assert(is_vector(size2) && len(size2)==2)
+				assert(is_vector(shift) && len(shift)==2)
+				["cuboid", size, size2, shift, offset, anchors]
+			)
+		) : !is_undef(vnf)? (
+			assert(is_vnf(vnf))
+			assert(two_d == false)
+			extent? ["vnf_extent", vnf, offset, anchors] :
+			["vnf_isect", vnf, offset, anchors]
+		) : !is_undef(path)? (
+			assert(is_path(path))
+			assert(two_d == true)
+			extent? ["path_extent", path, offset, anchors] :
+			["path_isect", path, offset, anchors]
+		) :
+		let(
+			r1 = get_radius(r1=r1,d1=d1,r=r,d=d,dflt=undef)
+		)
+		!is_undef(r1)? (
+			assert(is_num(r1))
+			!is_undef(l)? (
+				let(
+					shift = default(shift, [0,0]),
+					r2 = get_radius(r1=r2,d1=d2,r=r,d=d,dflt=undef)
+				)
+				assert(is_num(l))
+				assert(is_num(r2))
+				assert(is_vector(shift) && len(shift)==2)
+				["cyl", r1, r2, l, shift, offset, anchors]
+			) : (
+				two_d? ["circle", r1, offset, anchors] :
+				["spheroid", r1, offset, anchors]
+			)
+		) :
+		assert(false, "attachable(): Unrecognizable geometry description.");
+
+	pos = find_anchor(anchor, geom)[1];
+	size = attach_geom_size(geom);
+
+	$parent_anchor = anchor;
+	$parent_spin   = spin;
 	$parent_orient = orient;
-	$parent_offset = offset;
-	$parent_2d     = two_d;
-	$parent_anchor = anchr;
-	$parent_anchors = anchors;
+	$parent_geom   = geom;
+	$parent_size   = size;
 
 	tags = _str_char_split($tags, " ");
 	s_tags = $tags_shown;
@@ -274,7 +559,7 @@ module orient_and_anchor(
 	shown  = !s_tags || any([for (tag=tags) in_list(tag, s_tags)]);
 	hidden = any([for (tag=tags) in_list(tag, h_tags)]);
 	if ($attach_to != undef) {
-		anch = find_anchor($attach_to, size.z, size, size2=size2, shift=shift, offset=offset, anchors=anchors, geometry=geometry, two_d=two_d);
+		anch = find_anchor($attach_to, geom);
 		ang = vector_angle(anch[2], two_d? BACK : DOWN);
 		axis = two_d? UP : vector_axis(anch[2], DOWN);
 		ang2 = (anch[2]==UP || anch[2]==DOWN)? 0 : 180-anch[3];
@@ -283,34 +568,37 @@ module orient_and_anchor(
 
 		rot(ang, v=axis2)
 		rotate(ang2+spin)
-		translate(-anch[1])
-		{
-			if ($children>1 && chain) {
-				if(shown && !hidden) {
-					color($color) for (i=[0:1:$children-2]) children(i);
+		translate(-anch[1]) {
+			if(shown && !hidden) {
+				if (is_undef($color)) {
+					children(0);
+				} else color($color) {
+					$color = undef;
+					children(0);
 				}
-				children($children-1);
-			} else {
-				if(shown && !hidden) color($color) children();
 			}
+			children(1);
 		}
 	} else {
 		rot(from=UP,to=orient)
 		rotate(spin)
-		translate(-pos)
-		{
-			if ($children>1 && chain) {
-				if(shown && !hidden) {
-					color($color) for (i=[0:1:$children-2]) children(i);
+		translate(-pos) {
+			if(shown && !hidden) {
+				if (is_undef($color)) {
+					children(0);
+				} else color($color) {
+					$color = undef;
+					children(0);
 				}
-				children($children-1);
-			} else {
-				if(shown && !hidden) color($color) children();
 			}
+			children(1);
 		}
 	}
 }
 
+
+
+// Section: Attachment Positioning
 
 
 // Module: position()
@@ -328,10 +616,10 @@ module orient_and_anchor(
 //   }
 module position(from)
 {
-	assert($parent_size != undef, "No object to attach to!");
+	assert($parent_geom != undef, "No object to attach to!");
 	anchors = (is_vector(from)||is_string(from))? [from] : from;
 	for (anchr = anchors) {
-		anch = find_anchor(anchr, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, offset=$parent_offset, anchors=$parent_anchors, geometry=$parent_geom, two_d=$parent_2d);
+		anch = find_anchor(anchr, $parent_geom);
 		$attach_to = undef;
 		$attach_anchor = anch;
 		$attach_norot = true;
@@ -364,18 +652,19 @@ module position(from)
 //   }
 module attach(from, to=undef, overlap=undef, norot=false)
 {
-	assert($parent_size != undef, "No object to attach to!");
+	assert($parent_geom != undef, "No object to attach to!");
 	overlap = (overlap!=undef)? overlap : $overlap;
 	anchors = (is_vector(from)||is_string(from))? [from] : from;
 	for (anchr = anchors) {
-		anch = find_anchor(anchr, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, offset=$parent_offset, anchors=$parent_anchors, geometry=$parent_geom, two_d=$parent_2d);
+		anch = find_anchor(anchr, $parent_geom);
+		two_d = attach_geom_2d($parent_geom);
 		$attach_to = to;
 		$attach_anchor = anch;
 		$attach_norot = norot;
 		if (norot || (norm(anch[2]-UP)<1e-9 && anch[3]==0)) {
 			translate(anch[1]) translate([0,0,-overlap]) children();
 		} else {
-			fromvec = $parent_2d? BACK : UP;
+			fromvec = two_d? BACK : UP;
 			translate(anch[1]) rot(anch[3],from=fromvec,to=anch[2]) translate([0,0,-overlap]) children();
 		}
 	}
@@ -400,7 +689,7 @@ module attach(from, to=undef, overlap=undef, norot=false)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_roundover(r=10, inset=2);
 module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
-	assert($parent_size != undef, "No object to attach to!");
+	assert($parent_geom != undef, "No object to attach to!");
 	edges = edges(edges, except=except);
 	vecs = [
 		for (i = [0:3], axis=[0:2])
@@ -410,7 +699,7 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 	for (vec = vecs) {
 		vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
 		assert(vcount == 2, "Not an edge vector!");
-		anch = find_anchor(vec, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, offset=$parent_offset, anchors=$parent_anchors, geometry=$parent_geom, two_d=$parent_2d);
+		anch = find_anchor(vec, $parent_geom);
 		$attach_to = undef;
 		$attach_anchor = anch;
 		$attach_norot = true;
@@ -449,7 +738,7 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 //       edge_mask([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           rounding_mask_z(l=71,r=10);
 module edge_mask(edges=EDGES_ALL, except=[]) {
-	assert($parent_size != undef, "No object to attach to!");
+	assert($parent_geom != undef, "No object to attach to!");
 	edges = edges(edges, except=except);
 	vecs = [
 		for (i = [0:3], axis=[0:2])
@@ -459,7 +748,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 	for (vec = vecs) {
 		vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
 		assert(vcount == 2, "Not an edge vector!");
-		anch = find_anchor(vec, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, offset=$parent_offset, anchors=$parent_anchors, geometry=$parent_geom, two_d=$parent_2d);
+		anch = find_anchor(vec, $parent_geom);
 		$attach_to = undef;
 		$attach_anchor = anch;
 		$attach_norot = true;
@@ -495,13 +784,13 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 //               translate([20,20,20]) sphere(r=20);
 //           }
 module corner_mask(corners=CORNERS_ALL, except=[]) {
-	assert($parent_size != undef, "No object to attach to!");
+	assert($parent_geom != undef, "No object to attach to!");
 	corners = corners(corners, except=except);
 	vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
 	for (vec = vecs) {
 		vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
 		assert(vcount == 3, "Not an edge vector!");
-		anch = find_anchor(vec, $parent_size.z, point2d($parent_size), size2=$parent_size2, shift=$parent_shift, offset=$parent_offset, anchors=$parent_anchors, geometry=$parent_geom, two_d=$parent_2d);
+		anch = find_anchor(vec, $parent_geom);
 		$attach_to = undef;
 		$attach_anchor = anch;
 		$attach_norot = true;
@@ -597,7 +886,7 @@ module show(tags="")
 // Example:
 //   diff("neg", "pos", keep="axle")
 //   sphere(d=100, $tags="pos") {
-//       attach(CENTER) xcyl(d=40, h=120, $tags="axle");
+//       attach(CENTER) xcyl(d=40, l=120, $tags="axle");
 //       attach(CENTER) cube([40,120,100], anchor=CENTER, $tags="neg");
 //   }
 // Example: Masking
@@ -655,7 +944,7 @@ module diff(neg, pos=undef, keep=undef)
 //   intersect("wheel", "mask", keep="axle")
 //   sphere(d=100, $tags="wheel") {
 //       attach(CENTER) cube([40,100,100], anchor=CENTER, $tags="mask");
-//       attach(CENTER) xcyl(d=40, h=100, $tags="axle");
+//       attach(CENTER) xcyl(d=40, l=100, $tags="axle");
 //   }
 module intersect(a, b=undef, keep=undef)
 {
@@ -695,7 +984,7 @@ module intersect(a, b=undef, keep=undef)
 //   hulling("body")
 //   sphere(d=100, $tags="body") {
 //       attach(CENTER) cube([40,90,90], anchor=CENTER, $tags="body");
-//       attach(CENTER) xcyl(d=40, h=120, $tags="other");
+//       attach(CENTER) xcyl(d=40, l=120, $tags="other");
 //   }
 module hulling(a)
 {

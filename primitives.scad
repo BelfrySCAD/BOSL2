@@ -43,24 +43,36 @@
 //   path = square([40,30], chamfer=5, anchor=FRONT, spin=30);
 //   stroke(path, closed=true);
 //   place_copies(path) color("blue") circle(d=2,$fn=8);
-module square(size=1, rounding=0, chamfer=0, center, anchor=FRONT+LEFT, spin=0) {
+module square(size=1, rounding=0, chamfer=0, center, anchor, spin=0) {
 	size = is_num(size)? [size,size] : point2d(size);
-	pts = square(size=size, rounding=rounding, center=false, chamfer=chamfer);
-	orient_and_anchor(point3d(size), UP, anchor, spin=spin, center=center, noncentered=FRONT+LEFT, two_d=true, chain=true) {
+	anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT);
+	pts = square(size=size, rounding=rounding, chamfer=chamfer, center=false);
+	attachable(anchor,spin, two_d=true, size=size) {
 		translate(-size/2) polygon(pts);
 		children();
 	}
 }
 
 
-function square(size=1, rounding=0, chamfer=0, center, anchor=FRONT+LEFT, spin=0) =
+function square(size=1, rounding=0, chamfer=0, center, anchor, spin=0) =
+	assert(is_num(size)     || is_vector(size))
 	assert(is_num(chamfer)  || len(chamfer)==4)
 	assert(is_num(rounding) || len(rounding)==4)
 	let(
+		size = is_num(size)? [size,size] : point2d(size),
+		anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT)
+	)
+	(rounding==0 && chamfer==0)? let(
+		path = [
+			[ size.x/2, -size.y/2],
+			[-size.x/2, -size.y/2],
+			[-size.x/2,  size.y/2],
+			[ size.x/2,  size.y/2] 
+		]
+	) rot(spin, p=move(-vmul(anchor,size/2), p=path)) :
+	let(
 		chamfer = is_list(chamfer)? chamfer : [for (i=[0:3]) chamfer],
 		rounding = is_list(rounding)? rounding : [for (i=[0:3]) rounding],
-		anchor = center==true? CENTER : center==false? FRONT+LEFT : anchor,
-		size = is_num(size)? [size,size] : point2d(size),
 		quadorder = [3,2,1,0],
 		quadpos = [[1,1],[-1,1],[-1,-1],[1,-1]],
 		insets = [for (i=[0:3]) chamfer[i]>0? chamfer[i] : rounding[i]>0? rounding[i] : 0],
@@ -116,7 +128,7 @@ module circle(r, d, realign=false, circum=false, anchor=CENTER, spin=0) {
 	sides = segs(r);
 	rr = circum? r/cos(180/sides) : r;
 	pts = circle(r=rr, realign=realign, $fn=sides);
-	orient_and_anchor([2*rr,2*rr,0], UP, anchor, spin=spin, geometry="cylinder", two_d=true, chain=true) {
+	attachable(anchor,spin, two_d=true, r=rr) {
 		polygon(pts);
 		children();
 	}
@@ -162,10 +174,11 @@ function circle(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 //   cube([20,40,50], anchor=BOTTOM+FRONT, spin=30, orient=FWD);
 // Example: Standard Connectors.
 //   cube(40, center=true) show_anchors();
-module cube(size=1, center, anchor=ALLNEG, spin=0, orient=UP)
+module cube(size=1, center, anchor, spin=0, orient=UP)
 {
 	size = scalar_vec3(size);
-	orient_and_anchor(size, orient, anchor, center, spin=spin, noncentered=ALLNEG, chain=true) {
+	anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
+	attachable(anchor,spin,orient, size=size) {
 		linear_extrude(height=size.z, convexity=2, center=true) {
 			square([size.x, size.y], center=true);
 		}
@@ -214,8 +227,9 @@ module cube(size=1, center, anchor=ALLNEG, spin=0, orient=UP)
 //       cylinder(h=30, d=25) show_anchors();
 //       cylinder(h=30, d1=25, d2=10) show_anchors();
 //   }
-module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor=BOTTOM, spin=0, orient=UP)
+module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 {
+	anchor = get_anchor(anchor, center, BOTTOM, BOTTOM);
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
 	l = first_defined([h, l, 1]);
@@ -223,7 +237,7 @@ module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor=BOTTOM, spin=0, orien
 	sides = segs(max(r1,r2));
 	size = [r1*2, r1*2, l];
 	path = [[0,hh],[r2,hh],[r1,-hh],[0,-hh]];
-	orient_and_anchor(size, orient, anchor, center, spin=spin, size2=[r2*2,r2*2], noncentered=BOTTOM, geometry="cylinder", chain=true) {
+	attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
 		rotate_extrude(convexity=2, $fn=sides) {
 			polygon(path);
 		}
@@ -262,7 +276,7 @@ module sphere(r, d, anchor=CENTER, spin=0, orient=UP)
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
 	size = [r*2, r*2, r*2];
-	orient_and_anchor(size, orient, anchor, spin=spin, geometry="sphere", chain=true) {
+	attachable(anchor,spin,orient, r=r) {
 		rotate_extrude(convexity=2) {
 			difference() {
 				circle(r=r, $fn=sides);

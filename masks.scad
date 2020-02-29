@@ -40,7 +40,7 @@ module angle_pie_mask(
 	l = first_defined([l, h, 1]);
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
-	orient_and_anchor([2*r1, 2*r1, l], orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
 		pie_slice(ang=ang, l=l+0.1, r1=r1, r2=r2, anchor=CENTER);
 		children();
 	}
@@ -126,7 +126,7 @@ module cylinder_mask(
 			cylinder_mask(l=l, r1=sc*r1, r2=sc*r2, chamfer1=cham1, chamfer2=cham2, chamfang1=ang1, chamfang2=ang2, rounding1=fil1, rounding2=fil2, orient=orient, from_end=from_end);
 		}
 	} else {
-		orient_and_anchor([2*r1, 2*r1, l], orient, anchor, spin=spin, chain=true) {
+		attachable(anchor,spin,orient, r=r1, l=l) {
 			difference() {
 				union() {
 					chlen1 = cham1 / (from_end? 1 : tan(ang1));
@@ -142,7 +142,7 @@ module cylinder_mask(
 				}
 				cyl(r1=sc*r1, r2=sc*r2, l=l, chamfer1=cham1, chamfer2=cham2, chamfang1=ang1, chamfang2=ang2, from_end=from_end, rounding1=fil1, rounding2=fil2);
 			}
-			children();
+			nil();
 		}
 	}
 }
@@ -171,7 +171,7 @@ module cylinder_mask(
 //       #chamfer_mask(l=50, chamfer=10, orient=RIGHT);
 //   }
 module chamfer_mask(l=1, chamfer=1, anchor=CENTER, spin=0, orient=UP) {
-	orient_and_anchor([chamfer*2, chamfer*2, l], orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, size=[chamfer*2, chamfer*2, l]) {
 		cylinder(r=chamfer, h=l+0.1, center=true, $fn=4);
 		children();
 	}
@@ -304,7 +304,7 @@ module chamfer(chamfer=1, size=[1,1,1], edges=EDGES_ALL, except_edges=[])
 module chamfer_cylinder_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false, anchor=CENTER, spin=0, orient=UP)
 {
 	r = get_radius(r=r, d=d, dflt=1);
-	orient_and_anchor([2*r,2*r,chamfer*2], orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, r=r, l=chamfer*2) {
 		cylinder_mask(l=chamfer*3, r=r, chamfer2=chamfer, chamfang2=ang, from_end=from_end, ends_only=true, anchor=TOP);
 		children();
 	}
@@ -348,7 +348,7 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 	h = chamfer * (from_end? 1 : tan(90-ang));
 	r2 = r + chamfer * (from_end? tan(ang) : 1);
 	$fn = segs(r);
-	orient_and_anchor([2*r, 2*r, h*2], orient, anchor, spin=spin, size2=[2*r2, 2*r2], chain=true) {
+	attachable(anchor,spin,orient, r1=r, r2=r2, l=h*2) {
 		union() {
 			cylinder(r=r2, h=overage, center=false);
 			down(h) cylinder(r1=r, r2=r2, h=h, center=false);
@@ -410,7 +410,7 @@ module rounding_mask(l=undef, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 	r1 = get_radius(r1=r1, r=r, dflt=1);
 	r2 = get_radius(r1=r2, r=r, dflt=1);
 	sides = quantup(segs(max(r1,r2)),4);
-	orient_and_anchor([2*r1, 2*r1, l], orient, anchor, spin=spin, size2=[2*r2,2*r2], chain=true) {
+	attachable(anchor,spin,orient, size=[2*r1,2*r1,l], size2=[2*r2,2*r2]) {
 		if (r1<r2) {
 			zflip() {
 				linear_extrude(height=l, convexity=4, center=true, scale=r1/r2) {
@@ -596,23 +596,28 @@ module rounding(r=1, size=[1,1,1], edges=EDGES_ALL, except_edges=[])
 //   }
 module rounding_angled_edge_mask(h=1.0, r=undef, r1=undef, r2=undef, ang=90, anchor=CENTER, spin=0, orient=UP)
 {
+	function _mask_shape(r) = [
+		for (i = [0:1:n]) let (a=90+ang+i*sweep/n) [r*cos(a)+x, r*sin(a)+r],
+		for (i = [0:1:n]) let (a=90+i*sweep/n) [r*cos(a)+x, r*sin(a)-r],
+		[min(-1, r*cos(270-ang)+x-1), r*sin(270-ang)-r],
+		[min(-1, r*cos(90+ang)+x-1), r*sin(90+ang)+r],
+	];
+
 	sweep = 180-ang;
 	n = ceil(segs(max(r1,r2))*sweep/360);
 	x = r1*sin(90-(ang/2))/sin(ang/2);
 	r1 = get_radius(r1=r1, r=r, dflt=1);
 	r2 = get_radius(r1=r2, r=r, dflt=1);
-	orient_and_anchor([2*x,2*r1,h], orient, anchor, spin=spin, size2=[2*x*r2/r1,2*r2], chain=true) {
-		linear_extrude(height=h, convexity=4, center=true, scale=r2/r1) {
-			polygon(
-				points=concat(
-					[for (i = [0:1:n]) let (a=90+ang+i*sweep/n) [r1*cos(a)+x, r1*sin(a)+r1]],
-					[for (i = [0:1:n]) let (a=90+i*sweep/n) [r1*cos(a)+x, r1*sin(a)-r1]],
-					[
-						[min(-1, r1*cos(270-ang)+x-1), r1*sin(270-ang)-r1],
-						[min(-1, r1*cos(90+ang)+x-1), r1*sin(90+ang)+r1],
-					]
-				)
-			);
+	attachable(anchor,spin,orient, size=[2*x,2*r1,h], size2=[2*x*r2/r1,2*r2]) {
+		if(r1<r2) {
+			zflip()
+			linear_extrude(height=h, convexity=4, center=true, scale=r1/r2) {
+				polygon(_mask_shape(r2));
+			}
+		} else {
+			linear_extrude(height=h, convexity=4, center=true, scale=r2/r1) {
+				polygon(_mask_shape(r1));
+			}
 		}
 		children();
 	}
@@ -647,7 +652,7 @@ module rounding_angled_corner_mask(r=1.0, ang=90, anchor=CENTER, spin=0, orient=
 	dx = r / tan(ang/2);
 	dx2 = dx / cos(ang/2) + 1;
 	fn = quantup(segs(r), 4);
-	orient_and_anchor([2*dx2, 2*dx2, r*2], orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, d=dx2, l=2*r) {
 		difference() {
 			down(r) cylinder(r=dx2, h=r+1, center=false);
 			yflip_copy() {
@@ -691,7 +696,7 @@ module rounding_angled_corner_mask(r=1.0, ang=90, anchor=CENTER, spin=0, orient=
 //   }
 module rounding_corner_mask(r=1.0, anchor=CENTER, spin=0, orient=UP)
 {
-	orient_and_anchor([2*r, 2*r, 2*r], orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, size=[2,2,2]*r) {
 		difference() {
 			cube(size=r*2, center=true);
 			grid3d(n=[2,2,2], spacing=r*2-0.05) {
@@ -764,7 +769,7 @@ module rounding_cylinder_mask(r=1.0, rounding=0.25)
 module rounding_hole_mask(r=undef, d=undef, rounding=0.25, overage=0.1, anchor=CENTER, spin=0, orient=UP)
 {
 	r = get_radius(r=r, d=d, dflt=1);
-	orient_and_anchor([2*(r+rounding), 2*(r+rounding), rounding*2], orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, r=r+rounding, l=2*rounding) {
 		rotate_extrude(convexity=4) {
 			difference() {
 				right(r-overage) fwd(rounding) square(rounding+overage, center=false);

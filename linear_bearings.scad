@@ -92,7 +92,7 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 		anchorpt("screw", [0,2-ogap/2,tabh-tab/2/2],FWD),
 		anchorpt("nut", [0,ogap/2-2,tabh-tab/2/2],FWD)
 	];
-	orient_and_anchor([l, od, h], orient, anchor, spin=spin, anchors=anchors, chain=true) {
+	attachable(anchor,spin,orient, size=[l, od, h], anchors=anchors) {
 		down(tab/2/2)
 		difference() {
 			union() {

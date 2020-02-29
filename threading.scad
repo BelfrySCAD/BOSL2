@@ -63,7 +63,7 @@ module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=72
 	pline = scale_points(profile, [1,1,1]*pitch);
 	dir = left_handed? -1 : 1;
 	idir = internal? -1 : 1;
-	orient_and_anchor([2*r, 2*r, h], orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, r=r, l=h) {
 		difference() {
 			spiral_sweep(pline, h=h, r=base_d/2, twist=twist*dir, $fn=segs(base_d/2), anchor=CENTER);
 			down(h/2) right(r) right(internal? thread_depth : 0) zrot(higbee*dir*idir) fwd(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
@@ -137,10 +137,7 @@ module trapezoidal_threaded_rod(
 	starts=1,
 	profile=undef,
 	internal=false,
-	anchor=CENTER,
-	spin=0,
-	orient=UP,
-	center=undef
+	center, anchor, spin=0, orient=UP
 ) {
 	function _thread_pt(thread, threads, start, starts, astep, asteps, part, parts) =
 		astep + asteps * (thread + threads * (part + parts * start));
@@ -277,7 +274,8 @@ module trapezoidal_threaded_rod(
 			) otri
 		]
 	);
-	orient_and_anchor([d,d,l], orient, anchor, spin=spin, center=center, chain=true) {
+	anchor = get_anchor(anchor, center, BOT, CENTER);
+	attachable(anchor,spin,orient, d=d, l=l) {
 		difference() {
 			polyhedron(points=poly_points, faces=poly_faces, convexity=threads*starts*2);
 			zspread(l+4*pitch*starts) cube([d+1, d+1, 4*pitch*starts], center=true);
@@ -332,7 +330,7 @@ module trapezoidal_threaded_nut(
 	orient=UP
 ) {
 	depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
-	orient_and_anchor([od/cos(30),od,h], orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, size=[od/cos(30),od,h]) {
 		difference() {
 			cylinder(d=od/cos(30), h=h, center=true, $fn=6);
 			trapezoidal_threaded_rod(

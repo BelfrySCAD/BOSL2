@@ -97,7 +97,7 @@ module cuboid(
 			if (any(edges[2])) assert(rounding <= size.x/2 && rounding<=size.y/2, "rounding radius must be smaller than half the cube width or length.");
 		}
 		majrots = [[0,90,0], [90,0,0], [0,0,0]];
-		orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
+		attachable(anchor,spin,orient, size=size) {
 			if (chamfer != undef) {
 				if (edges == EDGES_ALL && trimcorners) {
 					if (chamfer<0) {
@@ -349,7 +349,7 @@ module prismoid(
 	shiftby = point3d(point2d(shift));
 	s1 = [max(size1.x, eps), max(size1.y, eps)];
 	s2 = [max(size2.x, eps), max(size2.y, eps)];
-	orient_and_anchor([s1.x,s1.y,h], orient, anchor, spin=spin, size2=s2, shift=shift, chain=true) {
+	attachable(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift) {
 		polyhedron(
 			points=[
 				[+s2.x/2, +s2.y/2, +h/2] + shiftby,
@@ -419,16 +419,16 @@ module rounded_prismoid(
 	rr1 = min(maxrad1, (r1!=undef)? r1 : r);
 	rr2 = min(maxrad2, (r2!=undef)? r2 : r);
 	shiftby = point3d(shift);
-	orient_and_anchor([size1.x, size1.y, h], orient, anchor, spin=spin, size2=size2, shift=shift, noncentered=UP, chain=true) {
+	attachable(anchor,spin,orient, size=[size1.x, size1.y, h], size2=size2, shift=shift) {
 		down(h/2) {
 			hull() {
 				linear_extrude(height=eps, center=false, convexity=2) {
-					square([max(eps, size1[0]-2*rr1), max(eps, size1[1]-2*rr1)], rounding=rr1, center=true);
+					square(size1, rounding=rr1, center=true);
 				}
 				up(h-0.01) {
 					translate(shiftby) {
 						linear_extrude(height=eps, center=false, convexity=2) {
-							square([max(eps, size2[0]-2*rr2), max(eps, size2[1]-2*rr2)], rounding=rr2, center=true);
+							square(size2, rounding=rr2, center=true);
 						}
 					}
 				}
@@ -460,10 +460,11 @@ module rounded_prismoid(
 //   right_triangle([60, 40, 10]);
 // Example: Standard Connectors
 //   right_triangle([60, 40, 15]) show_anchors();
-module right_triangle(size=[1, 1, 1], anchor=ALLNEG, spin=0, orient=UP, center=undef)
+module right_triangle(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
 {
 	size = scalar_vec3(size);
-	orient_and_anchor(size, orient, anchor, spin=spin, center=center, noncentered=ALLNEG, chain=true) {
+	anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
+	attachable(anchor,spin,orient, size=size) {
 		linear_extrude(height=size.z, convexity=2, center=true) {
 			polygon([[-size.x/2,-size.y/2], [-size.x/2,size.y/2], [size.x/2,-size.y/2]]);
 		}
@@ -581,17 +582,16 @@ module cyl(
 	chamfang=undef, chamfang1=undef, chamfang2=undef,
 	rounding=undef, rounding1=undef, rounding2=undef,
 	circum=false, realign=false, from_end=false,
-	anchor=CENTER, spin=0, orient=UP, center=undef
+	center, anchor, spin=0, orient=UP
 ) {
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
 	l = first_defined([l, h, 1]);
-	size1 = [r1*2,r1*2,l];
-	size2 = [r2*2,r2*2,l];
 	sides = segs(max(r1,r2));
 	sc = circum? 1/cos(180/sides) : 1;
 	phi = atan2(l, r2-r1);
-	orient_and_anchor(size1, orient, anchor, spin=spin, center=center, size2=size2, geometry="cylinder", chain=true) {
+	anchor = get_anchor(anchor,center,BOT,CENTER);
+	attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
 		zrot(realign? 180/sides : 0) {
 			if (!any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2])) {
 				cylinder(h=l, r1=r1*sc, r2=r2*sc, center=true, $fn=sides);
@@ -850,8 +850,8 @@ module tube(
 	od=undef, od1=undef, od2=undef,
 	ir=undef, id=undef, ir1=undef,
 	ir2=undef, id1=undef, id2=undef,
-	anchor=BOTTOM, spin=0, orient=UP, 
-	center=undef, realign=false
+	anchor, spin=0, orient=UP, 
+	center, realign=false
 ) {
 	r1 = first_defined([or1, od1/2, r1, d1/2, or, od/2, r, d/2, ir1+wall, id1/2+wall, ir+wall, id/2+wall]);
 	r2 = first_defined([or2, od2/2, r2, d2/2, or, od/2, r, d/2, ir2+wall, id2/2+wall, ir+wall, id/2+wall]);
@@ -860,9 +860,8 @@ module tube(
 	assert(ir1 <= r1, "Inner radius is larger than outer radius.");
 	assert(ir2 <= r2, "Inner radius is larger than outer radius.");
 	sides = segs(max(r1,r2));
-	size = [r1*2,r1*2,h];
-	size2 = [r2*2,r2*2,h];
-	orient_and_anchor(size, orient, anchor, spin=spin, center=center, size2=size2, geometry="cylinder", chain=true) {
+	anchor = get_anchor(anchor, center, BOT, BOT);
+	attachable(anchor,spin,orient, r1=r1, r2=r2) {
 		zrot(realign? 180/sides : 0) {
 			difference() {
 				cyl(h=h, r1=r1, r2=r2, $fn=sides) children();
@@ -908,15 +907,14 @@ module torus(
 	r2=undef, d2=undef,
 	or=undef, od=undef,
 	ir=undef, id=undef,
-	anchor=CENTER, center=undef,
-	spin=0, orient=UP
+	center, anchor, spin=0, orient=UP
 ) {
 	orr = get_radius(r=or, d=od, dflt=1.0);
 	irr = get_radius(r=ir, d=id, dflt=0.5);
 	majrad = get_radius(r=r, d=d, dflt=(orr+irr)/2);
 	minrad = get_radius(r=r2, d=d2, dflt=(orr-irr)/2);
-	size = [(majrad+minrad)*2, (majrad+minrad)*2, minrad*2];
-	orient_and_anchor(size, orient, anchor, spin=spin, center=center, geometry="cylinder", chain=true) {
+	anchor = get_anchor(anchor, center, BOT, CENTER);
+	attachable(anchor,spin,orient, r=(majrad+minrad), l=minrad*2) {
 		rotate_extrude(convexity=4) {
 			right(majrad) circle(minrad);
 		}
@@ -953,8 +951,7 @@ module spheroid(r=undef, d=undef, circum=false, anchor=CENTER, spin=0, orient=UP
 	hsides = segs(r);
 	vsides = ceil(hsides/2);
 	rr = circum? (r / cos(90/vsides) / cos(180/hsides)) : r;
-	size = [2*rr, 2*rr, 2*rr];
-	orient_and_anchor(size, orient, anchor, spin=spin, geometry="sphere", chain=true) {
+	attachable(anchor,spin,orient, r=rr) {
 		sphere(r=rr);
 		children();
 	}
@@ -1020,8 +1017,7 @@ module staggered_sphere(r=undef, d=undef, circum=false, anchor=CENTER, spin=0, o
 			) each [[v1,v4,v3], [v1,v2,v4]]
 		]
 	);
-	size = [2*rr, 2*rr, 2*rr];
-	orient_and_anchor(size, orient, anchor, spin=spin, geometry="sphere", chain=true) {
+	attachable(anchor,spin,orient, r=rr) {
 		zrot((floor(sides/4)%2==1)? 180/sides : 0) polyhedron(points=pts, faces=faces);
 		children();
 	}
@@ -1061,10 +1057,11 @@ module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, anchor=
 	r = get_radius(r=r, d=d, dflt=1);
 	l = first_defined([l, h, 1]);
 	size = [r*2,l,r*2];
-	orient_and_anchor(size, orient, anchor, spin=spin, chain=true) {
-		rot(from=UP,to=FWD)
-		linear_extrude(height=l, center=true, slices=2) {
-			teardrop2d(r=r, ang=ang, cap_h=cap_h);
+	attachable(anchor,spin,orient, size=size) {
+		rot(from=UP,to=FWD) {
+			linear_extrude(height=l, center=true, slices=2) {
+				teardrop2d(r=r, ang=ang, cap_h=cap_h);
+			}
 		}
 		children();
 	}
@@ -1101,11 +1098,10 @@ module onion(cap_h=undef, r=undef, d=undef, maxang=45, h=undef, anchor=CENTER, s
 	r = get_radius(r=r, d=d, dflt=1);
 	h = first_defined([cap_h, h]);
 	maxd = 3*r/tan(maxang);
-	size = [r*2,r*2,r*2];
 	anchors = [
 		["cap", [0,0,h], UP, 0]
 	];
-	orient_and_anchor(size, orient, anchor, spin=spin, geometry="sphere", anchors=anchors, chain=true) {
+	attachable(anchor,spin,orient, r=r, anchors=anchors) {
 		rotate_extrude(convexity=2) {
 			difference() {
 				teardrop2d(r=r, ang=maxang, cap_h=h);
@@ -1137,7 +1133,7 @@ module nil() union(){}
 // Arguments:
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-module noop(spin=0, orient=UP) orient_and_anchor([0.01,0.01,0.01], orient, CENTER, spin=spin, chain=true) {nil(); children();}
+module noop(spin=0, orient=UP) attachable(CENTER,spin,orient, d=0.01) {nil(); children();}
 
 
 // Module: pie_slice()
@@ -1171,15 +1167,15 @@ module pie_slice(
 	ang=30, l=undef,
 	r=10, r1=undef, r2=undef,
 	d=undef, d1=undef, d2=undef,
-	anchor=BOTTOM, spin=0, orient=UP,
-	center=undef, h=undef
+	h=undef, center,
+	anchor, spin=0, orient=UP
 ) {
 	l = first_defined([l, h, 1]);
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
 	maxd = max(r1,r2)+0.1;
-	size = [2*r1, 2*r1, l];
-	orient_and_anchor(size, orient, anchor, spin=spin, center=center, geometry="cylinder", chain=true) {
+	anchor = get_anchor(anchor, center, BOT, BOT);
+	attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
 		difference() {
 			cylinder(r1=r1, r2=r2, h=l, center=true);
 			if (ang<180) rotate(ang) back(maxd/2) cube([2*maxd, maxd, l+0.1], center=true);
@@ -1232,7 +1228,7 @@ module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01, anchor=FRONT+LEFT, sp
 	dy = r/tan(ang/2);
 	steps = ceil(segs(r)*ang/360);
 	step = ang/steps;
-	orient_and_anchor([r,r,l], orient, anchor, spin=spin, chain=true) {
+	attachable(anchor,spin,orient, size=[r,r,l]) {
 		linear_extrude(height=l, convexity=4, center=true) {
 			path = concat(
 				[[0,0]],
@@ -1330,8 +1326,7 @@ module arced_slot(
 	sr2 = get_radius(r1=sr2, r=sr, d1=sd2, d=sd, dflt=2);
 	fn_minor = first_defined([$fn2, $fn]);
 	da = ea - sa;
-	size = [r+sr1, r+sr1, h];
-	orient_and_anchor(size, orient, anchor, spin=spin, geometry="cylinder", chain=true) {
+	attachable(anchor,spin,orient, r1=r+sr1, r2=r+sr2) {
 		translate(cp) {
 			zrot(sa) {
 				difference() {
