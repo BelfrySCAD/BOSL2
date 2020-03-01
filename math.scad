@@ -814,7 +814,7 @@ function count_true(l, nmax=undef, i=0, cnt=0) =
 
 // Section: Calculus
 
-// Function deriv()
+// Function: deriv()
 // Usage: deriv(data, [h], [closed])
 // Description:
 //   Computes a numerical derivative estimate of the data, which may be scalar or vector valued.
@@ -839,7 +839,7 @@ function deriv(data, h=1, closed=false) =
           last/2/h];
 
 
-// Function deriv2()
+// Function: deriv2()
 // Usage: deriv2(data, [h], [closed])
 // Description:
 //   Computes a numerical esimate of the second derivative of the data, which may be scalar or vector valued.
@@ -869,7 +869,7 @@ function deriv2(data, h=1, closed=false) =
 
 
 
-// Function deriv3()
+// Function: deriv3()
 // Usage: deriv3(data, [h], [closed])
 // Description:
 //   Computes a numerical third derivative estimate of the data, which may be scalar or vector valued.
