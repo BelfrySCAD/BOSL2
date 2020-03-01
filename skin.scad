@@ -967,13 +967,13 @@ module sweep(shape, transformations, closed=false, caps, convexity=10) {
 //   yzcircle = yrot(90,p=circle($fn=64, r=30));
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, yzcircle, method="manual", normal=UP, closed=true);
-// Examples: The "natural" method will introduce twists when the curvature changes direction.  A warning is displayed.  
+// Example: The "natural" method will introduce twists when the curvature changes direction.  A warning is displayed.  
 //   arc1 = path3d(arc(angle=90, r=30));
 //   arc2 = xrot(-90, cp=[0,30],p=path3d(arc(angle=[90,180], r=30)));
 //   two_arcs = simplify_path(concat(arc1,arc2));
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, two_arcs, method="natural");
-// Examples: The only simple way to get a good result is the "incremental" method:
+// Example: The only simple way to get a good result is the "incremental" method:
 //   arc1 = path3d(arc(angle=90, r=30));
 //   arc2 = xrot(-90, cp=[0,30],p=path3d(arc(angle=[90,180], r=30)));
 //   arc3 = apply( translate([-30,60,30])*yrot(90), path3d(arc(angle=[270,180], r=30)));

@@ -17,7 +17,7 @@ done
 if [[ "$FILES" != "" ]]; then
     PREVIEW_LIBS="$FILES"
 else
-    PREVIEW_LIBS="version common errors attachments math arrays vectors affine coords geometry triangulation quaternions strings stacks queues structs vnf skin hull constants edges transforms primitives shapes masks shapes2d paths beziers rounding walls cubetruss metric_screws threading partitions involute_gears sliders joiners linear_bearings nema_steppers wiring phillips_drive torx_drive polyhedra knurling cubetruss debug"
+    PREVIEW_LIBS="affine arrays attachments beziers bosl1compat bottlecaps common constants coords cubetruss debug distributors edges errors geometry hingesnaps hull involute_gears joiners knurling linear_bearings masks math metric_screws mutators nema_steppers partitions paths phillips_drive polyhedra primitives quaternions queues regions rounding shapes shapes2d skin sliders stacks std strings structs threading torx_drive transforms triangulation vectors version vnf walls wiring"
 fi
 
 dir="$(basename $PWD)"

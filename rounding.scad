@@ -12,6 +12,7 @@
 include <BOSL2/beziers.scad>
 include <BOSL2/strings.scad>
 include <BOSL2/structs.scad>
+include <BOSL2/skin.scad>
 
 
 // CommonCode:
@@ -884,7 +885,7 @@ function os_profile(points, extra,check_valid, quality, offset_maxstep, offset) 
 // Example: If you give a non-convex input you get a convex hull output
 //   right(50) linear_extrude(height=7) star(5,r=22,ir=13);
 //   convex_offset_extrude(bottom = os_chamfer(height=-2), top=os_chamfer(height=1), height=7)
-//     star(5,r=22,ir=13)
+//     star(5,r=22,ir=13);
 module convex_offset_extrude(
 	height, h, l, 
 	top=[], bottom=[],
