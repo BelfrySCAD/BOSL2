@@ -556,7 +556,7 @@ module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, bac
 					reverse(concat(smallend_points, xflip(p=reverse(smallend_points)))),
 					reverse(concat(bigend_points, xflip(p=reverse(bigend_points))))
 				],
-				convexity=4, slices=0
+				slices=0, convexity=4
 			);
 		}
 		children();

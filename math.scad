@@ -532,6 +532,43 @@ function mean(v) = sum(v)/len(v);
 
 // Section: Matrix math
 
+// Function: linear_solve()
+// Usage: linear_solve(A,b)
+// Description:
+//   Solves the linear system Ax=b.  If A is square and non-singular the unique solution is returned.  If A is overdetermined
+//   the least squares solution is returned.  If A is underdetermined, the minimal norm solution is returned.
+//   If A is rank deficient or singular then linear_solve returns `undef`.
+function linear_solve(A,b) =
+  let(
+    dim = array_dim(A),
+    m=dim[0], n=dim[1]
+  )
+  assert(len(b)==m,str("Incompatible matrix and vector",dim,len(b)))
+  let (
+    qr = m<n ? qr_factor(transpose(A)) : qr_factor(A),
+    maxdim = max(n,m),
+    mindim = min(n,m),
+    Q = submatrix(qr[0],[0:maxdim-1], [0:mindim-1]),
+    R = submatrix(qr[1],[0:mindim-1], [0:mindim-1]),
+    zeros = [for(i=[0:mindim-1]) if (approx(R[i][i],0)) i]
+  )
+  zeros != [] ? undef :
+  m<n ? Q*back_substitute(R,b,transpose=true) :
+        back_substitute(R, transpose(Q)*b);
+
+
+// Function: submatrix()
+// Usage: submatrix(M, ind1, ind2)
+// Description:
+//   Returns a submatrix with the specified index ranges or index sets.  
+function submatrix(M,ind1,ind2) =
+  [for(i=ind1)
+    [for(j=ind2)
+      M[i][j]
+    ]
+  ];
+
+
 // Function: qr_factor()
 // Usage: qr = qr_factor(A)
 // Description:
@@ -563,41 +600,6 @@ function _qr_factor(A,Q, column, m, n) =
    _qr_factor(Qf*A, Q*Qf, column+1, m, n);
    
 
-// Function: submatrix()
-// Usage: submatrix(M, ind1, ind2)
-// Description:
-//   Returns a submatrix with the specified index ranges or index sets.  
-function submatrix(M,ind1,ind2) =
-  [for(i=ind1)
-    [for(j=ind2)
-      M[i][j]
-    ]
-  ];
-
-
-// Function: linear_solve()
-// Usage: linear_solve(A,b)
-// Description:
-//   Solves the linear system Ax=b.  If A is square and non-singular the unique solution is returned.  If A is overdetermined
-//   the least squares solution is returned.  If A is underdetermined, the minimal norm solution is returned.
-//   If A is rank deficient or singular then linear_solve returns `undef`.
-function linear_solve(A,b) =
-  let(
-    dim = array_dim(A),
-    m=dim[0], n=dim[1]
-  )
-  assert(len(b)==m,str("Incompatible matrix and vector",dim,len(b)))
-  let (
-    qr = m<n ? qr_factor(transpose(A)) : qr_factor(A),
-    maxdim = max(n,m),
-    mindim = min(n,m),
-    Q = submatrix(qr[0],[0:maxdim-1], [0:mindim-1]),
-    R = submatrix(qr[1],[0:mindim-1], [0:mindim-1]),
-    zeros = [for(i=[0:mindim-1]) if (approx(R[i][i],0)) i]
-  )
-  zeros != [] ? undef :
-  m<n ? Q*back_substitute(R,b,transpose=true) :
-        back_substitute(R, transpose(Q)*b);
 
 // Function: back_substitute()
 // Usage: back_substitute(R, b, [transpose])
@@ -814,7 +816,7 @@ function count_true(l, nmax=undef, i=0, cnt=0) =
 
 // Section: Calculus
 
-// Function deriv()
+// Function: deriv()
 // Usage: deriv(data, [h], [closed])
 // Description:
 //   Computes a numerical derivative estimate of the data, which may be scalar or vector valued.
@@ -839,7 +841,7 @@ function deriv(data, h=1, closed=false) =
           last/2/h];
 
 
-// Function deriv2()
+// Function: deriv2()
 // Usage: deriv2(data, [h], [closed])
 // Description:
 //   Computes a numerical esimate of the second derivative of the data, which may be scalar or vector valued.
@@ -869,7 +871,7 @@ function deriv2(data, h=1, closed=false) =
 
 
 
-// Function deriv3()
+// Function: deriv3()
 // Usage: deriv3(data, [h], [closed])
 // Description:
 //   Computes a numerical third derivative estimate of the data, which may be scalar or vector valued.
