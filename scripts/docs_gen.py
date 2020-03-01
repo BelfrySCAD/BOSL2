@@ -149,7 +149,7 @@ def run_openscad_script(libfile, infile, imgfile, imgsize=(320,240), eye=None, s
     p = subprocess.Popen(scadcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
     (stdoutdata, stderrdata) = p.communicate(None)
     res = p.returncode
-    if res != 0 or b"ERROR:" in stderrdata or b"WARNING:" in stderrdata:
+    if res != 0 or b"ERROR:" in stderrdata or b"TRACE:" in stderrdata:
         print("\n\n{}".format(stderrdata.decode('utf-8')))
         print("////////////////////////////////////////////////////")
         print("// {}: {} for {}".format(libfile, infile, imgfile))
