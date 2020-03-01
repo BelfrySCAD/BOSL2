@@ -1030,13 +1030,13 @@ function polygon_shift_to_closest_point(path, pt) =
 // Usage:
 //   newpoly = reindex_polygon(reference, poly);
 // Description:
-//   Rotates and possibly reverses the point order of a polygon path to optimize its pairwise point
-//   association with a reference polygon.  The two polygons must have the same number of vertices.
+//   Rotates and possibly reverses the point order of a 2d or 3d polygon path to optimize its pairwise point
+//   association with a reference polygon.  The two polygons must have the same number of vertices and be the same dimension. 
 //   The optimization is done by computing the distance, norm(reference[i]-poly[i]), between
 //   corresponding pairs of vertices of the two polygons and choosing the polygon point order that
 //   makes the total sum over all pairs as small as possible.  Returns the reindexed polygon.  Note
 //   that the geometry of the polygon is not changed by this operation, just the labeling of its
-//   vertices.  If the input polygon is oriented opposite the reference then its point order is
+//   vertices.  If the input polygon is 2d and is oriented opposite the reference then its point order is
 //   flipped.
 // Arguments:
 //   reference = reference polygon path
