@@ -1051,7 +1051,7 @@ module sweep(shape, transformations, closed=false, caps, convexity=10) {
 //   path_sweep(ushape,knot_path,normal=normals, method="manual", closed=true);
 // Example: You can request the transformations and manipulate them before passing them on to sweep.  Here we construct a tube that changes scale by first generating the transforms and then applying the scale factor and connecting the inside and outside.  Note that the wall thickness varies because it is produced by scaling.  
 //   shape = star(n=5, r=10, ir=5);
-//   rpath = arc(25, points=[[-30,0,0], [-3,1,7], [0,3,6]]);
+//   rpath = arc(25, points=[[29,6,-4], [3,4,6], [1,1,7]]);
 //   trans = path_sweep(shape, rpath, transforms=true);
 //   outside = [for(i=[0:len(trans)-1]) trans[i]*scale(lerp(1,1.5,i/(len(trans)-1)))];
 //   inside = [for(i=[len(trans)-1:-1:0]) trans[i]*scale(lerp(1.1,1.4,i/(len(trans)-1)))];
