@@ -81,6 +81,25 @@ function is_integer(n) = is_num(n) && n == round(n);
 function is_nan(x) = (x!=x);
 
 
+// Function: is_list_of()
+// Usage:
+//   is_list_of(list, pattern)
+// Description:
+//   Tests whether the input is a list whose entries are all numeric lists that have the same
+//   list shape as the pattern.
+// Example:
+//   is_list_of([3,4,5], 0);            // Returns true
+//   is_list_of([3,4,undef], 0);        // Returns false
+//   is_list_of([[3,4],[4,5]], [1,1]);  // Returns true
+//   is_list_of([[3,4], 6, [4,5]], [1,1]);  // Returns false
+//   is_list_of([[1,[3,4]], [4,[5,6]]], [1,[2,3]]);    // Returne true
+//   is_list_of([[1,[3,INF]], [4,[5,6]]], [1,[2,3]]);  // Returne false
+function is_list_of(list,pattern) =
+	is_list(list) &&
+	let(pattern = 0*pattern)
+	[]==[for(entry=list) if (entry*0 != pattern) entry];
+
+
 
 // Section: Handling `undef`s.
 

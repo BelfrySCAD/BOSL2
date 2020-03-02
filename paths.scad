@@ -16,10 +16,35 @@ include <BOSL2/triangulation.scad>
 
 // Function: is_path()
 // Usage:
-//   is_path(x);
+//   is_path(list, [dim], [fast])
 // Description:
-//   Returns true if the given item looks like a path.  A path is defined as a list of two or more points.
-function is_path(x) = is_list(x) && is_vector(x.x) && len(x)>1;
+//   Returns true if `list` is a path.  A path is a list of two or more numeric vectors (AKA points).
+//   All vectors must of the same size, and may only contain numbers that are not inf or nan.
+// Examples:
+//   is_path([[3,4],[5,6]]);    // Returns true
+//   is_path([[3,4]]);          // Returns false
+//   is_path([[3,4],[4,5]],2);  // Returns true
+//   is_path([[3,4,3],[5,4,5]],2);  // Returns false
+//   is_path([[3,4,3],[5,4,5]],2);  // Returns false
+//   is_path([[3,4,5],undef,[4,5,6]]);  // Returns false
+//   is_path([[3,5],[undef,undef],[4,5]]);  // Returns false
+//   is_path([[3,4],[5,6],[5,3]]);     // Returns true
+//   is_path([3,4,5,6,7,8]);           // Returns false
+//   is_path([[3,4],[5,6]], dim=[2,3]);// Returns true
+//   is_path([[3,4],[5,6]], dim=[1,3]);// Returns false
+//   is_path([[3,4],"hello"], fast=true); // Returns true
+//   is_path([[3,4],[3,4,5]]);            // Returns false
+//   is_path([[1,2,3,4],[2,3,4,5]]);      // Returns false
+// Arguments:
+//   list = list to check
+//   dim = list of allowed dimensions of the vectors in the path.  Default: [2,3]
+//   fast = set to true for fast check that only looks at first entry.  Default: false
+function is_path(list, dim=[2,3], fast=false) =
+	fast? is_list(list) && is_vector(list[0],fast=true) :
+	is_list(list) && is_list(list[0]) && len(list)>1 &&
+	let( d = len(list[0]) )
+	(is_undef(dim) || in_list(d, is_list(dim)?dim:[dim]) ) &&
+	is_list_of(list, replist(0,d));
 
 
 // Function: is_closed_path()

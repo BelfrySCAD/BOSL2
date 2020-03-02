@@ -13,18 +13,26 @@
 
 // Function: is_vector()
 // Usage:
-//   is_vector(v)
+//   is_vector(v, [length], [fast]);
 // Description:
-//   Returns true if the given value is a list, and at least the first item is a number.
+//   Returns true if v is a list of finite numbers.
+// Arguments:
+//   v = The value to test to see if it is a vector.
+//   length = If given, make sure the vector is `length` items long.
+//   fast = If true, do a shallow test that is faster.
 // Example:
-//   is_vector([1,2,3]);    // Returns: true
-//   is_vector([[1,2,3]]);  // Returns: false
-//   is_vector(["foo"]);    // Returns: false
-//   is_vector([]);         // Returns: false
-//   is_vector(1);          // Returns: false
-//   is_vector("foo");      // Returns: false
-//   is_vector(true);       // Returns: false
-function is_vector(v) = is_list(v) && is_num(v[0]);
+//   is_vector(4);              // Returns false
+//   is_vector([4,true,false]); // Returns false
+//   is_vector([3,4,INF,5]);    // Returns false
+//   is_vector([3,4,5,6]);      // Returns true
+//   is_vector([3,4,undef,5]);  // Returns false
+//   is_vector([3,4,5],3);      // Returns true
+//   is_vector([3,4,5],4);      // Returns true
+//   is_vector([]);             // Returns false
+//   is_vector([3,undef,undef,true], fast=true);  // Returns true
+function is_vector(v,length,fast=false) =
+	(fast? (is_list(v) && is_num(v[0])) : is_list_of(v,0)) &&
+	len(v) && (is_undef(length) || length==len(v));
 
 
 // Function: add_scalar()
