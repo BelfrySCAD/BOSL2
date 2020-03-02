@@ -252,6 +252,71 @@ function path_closest_point(path, pt) =
 	) [min_seg, pts[min_seg]];
 
 
+// Function: path_tangents()
+// Usage: path_tangents(path, [closed])
+// Description:
+//   Compute the tangent vector to the input path.  The derivative approximation is described in deriv().
+//   The returns vectors will be normalized to length 1.
+function path_tangents(path, closed=false) =
+	assert(is_path(path))
+	[for(t=deriv(path)) normalize(t)];
+
+
+// Function: path_normals()
+// Usage:  path_normals(path, [tangents], [closed])
+// Description:
+//   Compute the normal vector to the input path.  This vector is perpendicular to the
+//   path tangent and lies in the plane of the curve.  When there are collinear points,
+//   the curve does not define a unique plane and the normal is not uniquely defined.  
+function path_normals(path, tangents, closed=false) =
+	assert(is_path(path))
+	assert(is_bool(closed))
+	let( tangents = default(tangents, path_tangents(path,closed)) )
+	assert(is_path(tangents))
+	[
+		for(i=idx(path)) let(
+			pts = i==0? (closed? select(path,-1,1) : select(path,0,2)) :
+				i==len(path)-1? (closed? select(path,i-1,i+1) : select(path,i-2,i)) :
+				select(path,i-1,i+1)
+		) normalize(cross(
+			cross(pts[1]-pts[0], pts[2]-pts[0]),
+			tangents[i]
+		))
+	];
+
+
+// Function: path_curvature()
+// Usage: path_curvature(path, [closed])
+// Description:
+//   Numerically estimate the curvature of the path (in any dimension). 
+function path_curvature(path, closed=false) =
+	let( 
+		d1 = deriv(path, closed=closed),
+		d2 = deriv2(path, closed=closed)
+	) [
+		for(i=idx(path))
+		sqrt(
+			sqr(norm(d1[i])*norm(d2[i])) -
+			sqr(d1[i]*d2[i])
+		) / pow(norm(d1[i]),3)
+	];
+
+
+// Function: path_torsion()
+// Usage: path_torsion(path, [closed])
+// Description:
+//   Numerically estimate the torsion of a 3d path.  
+function path_torsion(path, closed=false) =
+	let(
+		d1 = deriv(path,closed=closed),
+		d2 = deriv2(path,closed=closed),
+		d3 = deriv3(path,closed=closed)
+	) [
+		for (i=idx(path)) let(
+			crossterm = cross(d1[i],d2[i])
+		) crossterm * d3[i] / sqr(norm(crossterm))
+	];
+
 
 // Function: path3d_spiral()
 // Description:
@@ -1091,12 +1156,14 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 // and passing the rounding error forward to the next entry.
 // This will generally distribute the error in a uniform manner. 
 function _sum_preserving_round(data, index=0) =
-     index == len(data)-1 ? list_set(data, len(data)-1, round(data[len(data)-1])) :
-     let(
-       newval = round(data[index]),
-       error = newval - data[index]
-     )
-     _sum_preserving_round(list_set(data, [index,index+1], [newval, data[index+1]-error]), index+1);
+	index == len(data)-1 ? list_set(data, len(data)-1, round(data[len(data)-1])) :
+	let(
+		newval = round(data[index]),
+		error = newval - data[index]
+	) _sum_preserving_round(
+		list_set(data, [index,index+1], [newval, data[index+1]-error]),
+		index+1
+	);
 
 
 // Function: subdivide_path()
@@ -1155,31 +1222,37 @@ function _sum_preserving_round(data, index=0) =
 //   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
 //   place_copies(mypath)sphere(r=.1,$fn=32);
 function subdivide_path(path, N, closed=true, exact=true, method="length") =
-    assert(is_path(path))
-    assert(method=="length" || method=="segment")
-    assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
-    let(
-      count = len(path) - (closed?0:1), 
-      add_guess = 
-        method=="segment" ? 
-            (is_list(N) ? assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
-                          add_scalar(N,-1)
-                        : replist((N-len(path)) / count, count))
-        : // method=="length"
-            assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
-            let(
-               path_lens = concat([for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i])],
-                                  closed?[norm(path[len(path)-1]-path[0])]:[]),
-               add_density = (N - len(path)) / sum(path_lens)
-               )
-            path_lens * add_density,
-        add = exact ? _sum_preserving_round(add_guess) : [for (val=add_guess) round(val)]
-      )
-      concat(
-        [for (i=[0:1:count])
-          each [for(j=[0:1:add[i]]) lerp(path[i],select(path,i+1), j/(add[i]+1))]],
-        closed ? [] : [select(path,-1)]
-      );
+	assert(is_path(path))
+	assert(method=="length" || method=="segment")
+	assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
+	let(
+		count = len(path) - (closed?0:1), 
+		add_guess = method=="segment"? (
+				is_list(N)? (
+					assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
+					add_scalar(N,-1)
+				) : replist((N-len(path)) / count, count)
+			) : // method=="length"
+			assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
+			let(
+				path_lens = concat(
+					[ for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i]) ],
+					closed? [norm(path[len(path)-1]-path[0])] : []
+				),
+				add_density = (N - len(path)) / sum(path_lens)
+			)
+			path_lens * add_density,
+		add = exact? _sum_preserving_round(add_guess) :
+			[for (val=add_guess) round(val)]
+	) concat(
+		[
+			for (i=[0:1:count]) each [
+				for(j=[0:1:add[i]])
+				lerp(path[i],select(path,i+1), j/(add[i]+1))
+			]
+		],
+		closed? [] : [select(path,-1)]
+	);
 
 
 // Function: path_length_fractions()
@@ -1190,14 +1263,17 @@ function subdivide_path(path, N, closed=true, exact=true, method="length") =
 //    will have one extra point because of the final connecting segment that connects the last
 //    point of the path to the first point.
 function path_length_fractions(path, closed=false) =
-  assert(is_path(path))
-  assert(is_bool(closed))
-  let(
-    lengths = [0, for(i=[0:1:len(path)-(closed?1:2)]) norm(select(path,i+1)-path[i])],
-    partial_len = cumsum(lengths),
-    total_len = select(partial_len,-1)
-  )
-  partial_len / total_len;
+	assert(is_path(path))
+	assert(is_bool(closed))
+	let(
+		lengths = [
+			0,
+			for (i=[0:1:len(path)-(closed?1:2)])
+				norm(select(path,i+1)-path[i])
+		],
+		partial_len = cumsum(lengths),
+		total_len = select(partial_len,-1)
+	) partial_len / total_len;
 
 
 
