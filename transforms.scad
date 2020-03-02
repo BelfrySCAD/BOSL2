@@ -376,7 +376,13 @@ function rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false, p=unde
 				is_undef(from)? affine2d_zrot(a*rev) :
 				affine2d_zrot(vector_angle(from,to)*sign(vector_axis(from,to)[2])*rev)
 			) : (
-				!is_undef(from)? affine3d_rot_by_axis(vector_axis(from,to),vector_angle(from,to)*rev) :
+				!is_undef(from)? affine3d_chain([
+					affine3d_zrot(a*rev),
+					affine3d_rot_by_axis(
+						vector_axis(from,to),
+						vector_angle(from,to)*rev
+					)
+				]) :
 				!is_undef(v)? affine3d_rot_by_axis(v,a*rev) :
 				is_num(a)? affine3d_zrot(a*rev) :
 				reverse? affine3d_chain([affine3d_zrot(-a.z),affine3d_yrot(-a.y),affine3d_xrot(-a.x)]) :
