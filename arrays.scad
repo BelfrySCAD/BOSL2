@@ -89,20 +89,6 @@ function slice(arr,st,end) = let(
 function in_list(x,l,idx=undef) = search([x], l, num_returns_per_match=1, index_col_num=idx) != [[]];
 
 
-// Function: is_consistent()
-// Usage:
-//   is_consistent(v);
-// Description:
-//   Returns true if all items of the given list are the same size.
-// Example:
-//   is_consistent([3,4,5,6]);  // Returns: true
-//   is_consistent([[3,4],[4,5],[5,6]]);  // Returns: true
-//   is_consistent([[3,4,5],[4,5,6],[5,6,7]]);  // Returns: true
-//   is_consistent([[3,4,5],[4,5],[5,6,7]]);  // Returns: false
-//   is_consistent([[3,4,5],[4,undef,6],[5,6,7]]);  // Returns: false
-function is_consistent(v) = v==[] || is_list_of(v, v[0]);
-
-
 // Function: min_index()
 // Usage:
 //   min_index(vals,[all]);
