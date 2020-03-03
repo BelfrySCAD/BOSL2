@@ -22,13 +22,19 @@ function point2d(p, fill=0) = [for (i=[0:1]) (p[i]==undef)? fill : p[i]];
 
 // Function: path2d()
 // Description:
-//   Returns a list of 2D vectors/points from a list of 2D or 3D vectors/points.
-//   If given a 3D point list, removes the Z coordinates from each point.
+//   Returns a list of 2D vectors/points from a list of 2D, 3D or higher
+//   dimensional vectors/points. Removes the extra coordinates from
+//   higher dimensional points.  The input must be a path, where
+//   every vector has the same length.  
 // Arguments:
 //   points = A list of 2D or 3D points/vectors.
 //   fill = Value to fill missing values in vectors with.
-function path2d(points, fill=0) = [for (point = points) point2d(point, fill=fill)];
-
+function path2d(points) =
+   assert(is_path(points,dim=undef,fast=true),"Input to path2d is not a path")
+   let (result = points * concat(ident(2), replist([0,0], len(points[0])-2)))
+   assert(is_def(result), "Invalid input to path2d")
+   result;
+                                                                     
 
 // Function: point3d()
 // Description:
@@ -41,11 +47,22 @@ function point3d(p, fill=0) = [for (i=[0:2]) (p[i]==undef)? fill : p[i]];
 
 // Function: path3d()
 // Description:
-//   Returns a list of 3D vectors/points from a list of 2D or 3D vectors/points.
+//   Returns a list of 3D vectors/points from a list of 2D or higher dimensional vectors/points
+//   by removing extra coordinates or adding the z coordinate.  
 // Arguments:
-//   points = A list of 2D or 3D points/vectors.
-//   fill = Value to fill missing values in vectors with.
-function path3d(points, fill=0) = [for (point = points) point3d(point, fill=fill)];
+//   points = A list of 2D, 3D or higher dimensional points/vectors.
+//   fill = Value to fill missing values in vectors with (in the 2D case)
+function path3d(points, fill=0) =
+   assert(is_num(fill))
+   assert(is_path(points, dim=undef, fast=true), "Input to path3d is not a path")
+   let (
+      change = len(points[0])-3,
+      M = change < 0 ? [[1,0,0],[0,1,0]] : 
+                       concat(ident(3), replist([0,0,0],change)),
+      result = points*M
+   )
+   assert(is_def(result), "Input to path3d is invalid")
+   fill == 0 || change>=0 ? result : result + replist([0,0,fill], len(result));
 
 
 // Function: point4d()
@@ -63,7 +80,24 @@ function point4d(p, fill=0) = [for (i=[0:3]) (p[i]==undef)? fill : p[i]];
 // Arguments:
 //   points = A list of 2D or 3D points/vectors.
 //   fill = Value to fill missing values in vectors with.
-function path4d(points, fill=0) = [for (point = points) point4d(point, fill=fill)];
+
+function path4d(points, fill=0) = 
+   assert(is_num(fill) || is_vector(fill))
+   assert(is_path(points, dim=undef, fast=true), "Input to path4d is not a path")
+   let (
+      change = len(points[0])-4,
+      M = change < 0 ? select(ident(4), 0, len(points[0])-1) :
+                       concat(ident(4), replist([0,0,0,0],change)),
+      result = points*M
+   ) 
+   assert(is_def(result), "Input to path4d is invalid")
+   fill == 0 || change >= 0 ? result :
+    let(
+      addition = is_list(fill) ? concat(0*points[0],fill) :
+                                 concat(0*points[0],replist(fill,-change))
+    )
+    assert(len(addition) == 4, "Fill is the wrong length")
+    result + replist(addition, len(result));
 
 
 // Function: translate_points()

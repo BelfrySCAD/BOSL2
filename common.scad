@@ -100,6 +100,21 @@ function is_list_of(list,pattern) =
 	[]==[for(entry=list) if (entry*0 != pattern) entry];
 
 
+// Function: is_consistent()
+// Usage:
+//   is_consistent(list)
+// Description:
+//   Tests whether input is a list of entries which all have the same list structure
+//   and are filled with finite numerical data.
+// Example:
+//   is_consistent([3,4,5]);              // Returns true
+//   is_consistent([[3,4],[4,5],[6,7]]);  // Returns true
+//   is_consistent([[3,4,5],[3,4]]);      // Returns false
+//   is_consistent([[3,[3,4,[5]]], [5,[2,9,[9]]]]); // Returns true
+//   is_consistent([[3,[3,4,[5]]], [5,[2,9,9]]]);   // Returns false
+function is_consistent(list) =
+  is_list(list) && is_list_of(list, list[0]);
+
 
 // Section: Handling `undef`s.
 

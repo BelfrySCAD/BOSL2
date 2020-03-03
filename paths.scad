@@ -20,6 +20,8 @@ include <BOSL2/triangulation.scad>
 // Description:
 //   Returns true if `list` is a path.  A path is a list of two or more numeric vectors (AKA points).
 //   All vectors must of the same size, and may only contain numbers that are not inf or nan.
+//   By default the vectors in a path must be 2d or 3d.  Set the `dim` parameter to specify a list
+//   of allowed dimensions, or set it to `undef` to allow any dimension.  
 // Examples:
 //   is_path([[3,4],[5,6]]);    // Returns true
 //   is_path([[3,4]]);          // Returns false
@@ -35,6 +37,7 @@ include <BOSL2/triangulation.scad>
 //   is_path([[3,4],"hello"], fast=true); // Returns true
 //   is_path([[3,4],[3,4,5]]);            // Returns false
 //   is_path([[1,2,3,4],[2,3,4,5]]);      // Returns false
+//   is_path([[1,2,3,4],[2,3,4,5]],undef);// Returns true
 // Arguments:
 //   list = list to check
 //   dim = list of allowed dimensions of the vectors in the path.  Default: [2,3]
