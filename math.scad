@@ -432,9 +432,11 @@ function lcm(a,b=[]) =
 // Example:
 //   sum([1,2,3]);  // returns 6.
 //   sum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [9, 12, 15]
-function sum(v, dflt=0, _i=0, _acc) =
-	_i>=len(v)? (len(v)? _acc : dflt) :
-	sum(v, dflt=dflt, _i=_i+1, _acc=is_undef(_acc)? v[_i] : _acc+v[_i]);
+function sum(v, dflt=0) =
+    assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
+    len(v) == 0 ? dflt : _sum(v,v[0]*0);
+
+function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
 
 
 // Function: cumsum()
