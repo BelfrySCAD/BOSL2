@@ -30,11 +30,11 @@ function point2d(p, fill=0) = [for (i=[0:1]) (p[i]==undef)? fill : p[i]];
 //   points = A list of 2D or 3D points/vectors.
 //   fill = Value to fill missing values in vectors with.
 function path2d(points) =
-   assert(is_path(points,dim=undef,fast=true),"Input to path2d is not a path")
-   let (result = points * concat(ident(2), replist([0,0], len(points[0])-2)))
-   assert(is_def(result), "Invalid input to path2d")
-   result;
-                                                                     
+	assert(is_path(points,dim=undef,fast=true),"Input to path2d is not a path")
+	let (result = points * concat(ident(2), replist([0,0], len(points[0])-2)))
+	assert(is_def(result), "Invalid input to path2d")
+	result;
+
 
 // Function: point3d()
 // Description:
@@ -53,16 +53,16 @@ function point3d(p, fill=0) = [for (i=[0:2]) (p[i]==undef)? fill : p[i]];
 //   points = A list of 2D, 3D or higher dimensional points/vectors.
 //   fill = Value to fill missing values in vectors with (in the 2D case)
 function path3d(points, fill=0) =
-   assert(is_num(fill))
-   assert(is_path(points, dim=undef, fast=true), "Input to path3d is not a path")
-   let (
-      change = len(points[0])-3,
-      M = change < 0 ? [[1,0,0],[0,1,0]] : 
-                       concat(ident(3), replist([0,0,0],change)),
-      result = points*M
-   )
-   assert(is_def(result), "Input to path3d is invalid")
-   fill == 0 || change>=0 ? result : result + replist([0,0,fill], len(result));
+	assert(is_num(fill))
+	assert(is_path(points, dim=undef, fast=true), "Input to path3d is not a path")
+	let (
+		change = len(points[0])-3,
+		M = change < 0? [[1,0,0],[0,1,0]] : 
+			concat(ident(3), replist([0,0,0],change)),
+		result = points*M
+	)
+	assert(is_def(result), "Input to path3d is invalid")
+	fill == 0 || change>=0 ? result : result + replist([0,0,fill], len(result));
 
 
 // Function: point4d()
