@@ -433,7 +433,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   %polygon(poly);
 //
 // Example: Using `$row` and `$col`
-//   grid2d(spacing=[8,8], cols=8, rows=8, anchor=LEFT+FRONT)
+//   grid2d(spacing=[8,8], cols=8, rows=8)
 //       color(($row+$col)%2?"black":"red")
 //           cube([8,8,0.01], center=false);
 //
@@ -459,10 +459,10 @@ module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, 
 			spc = vmul(scalar_vec3(spacing), scl);
 			maxcols = ceil(siz.x/spc.x);
 			maxrows = ceil(siz.y/spc.y);
-			grid2d(spacing=spacing, cols=maxcols, rows=maxrows, stagger=stagger, scale=scale, in_poly=in_poly, anchor=anchor, spin=spin, orient=orient) children();
+			grid2d(spacing=spacing, cols=maxcols, rows=maxrows, stagger=stagger, scale=scale, in_poly=in_poly) children();
 		} else {
 			spc = [siz.x/cols, siz.y/rows];
-			grid2d(spacing=spc, cols=cols, rows=rows, stagger=stagger, scale=scale, in_poly=in_poly, anchor=anchor, spin=spin, orient=orient) children();
+			grid2d(spacing=spc, cols=cols, rows=rows, stagger=stagger, scale=scale, in_poly=in_poly) children();
 		}
 	} else {
 		spc = is_list(spacing)? point3d(spacing) : vmul(scalar_vec3(spacing), scl);
