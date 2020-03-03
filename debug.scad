@@ -85,11 +85,11 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 					v1 = vertices[face[1]];
 					v2 = vertices[face[2]];
 					c = (v0 + v1 + v2) / 3;
-					dv0 = normalize(v1 - v0);
-					dv1 = normalize(v2 - v0);
-					nrm0 = normalize(cross(dv0, dv1));
+					dv0 = unit(v1 - v0);
+					dv1 = unit(v2 - v0);
+					nrm0 = unit(cross(dv0, dv1));
 					nrm1 = [0, 0, 1];
-					axis = normalize(cross(nrm0, nrm1));
+					axis = unit(cross(nrm0, nrm1));
 					ang = vector_angle(nrm0,  nrm1);
 					theta = atan2(nrm0[1], nrm0[0]);
 					translate(c) {

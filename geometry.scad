@@ -94,7 +94,7 @@ function collinear_indexed(points, a, b, c, eps=EPSILON) =
 // Example:
 //   distance_from_line([[-10,0], [10,0]], [3,8]);  // Returns: 8
 function distance_from_line(line, pt) =
-	let(a=line[0], n=normalize(line[1]-a), d=a-pt)
+	let(a=line[0], n=unit(line[1]-a), d=a-pt)
 	norm(d - ((d * n) * n));
 
 
@@ -116,7 +116,7 @@ function distance_from_line(line, pt) =
 //   color("blue") place_copies([p1,p2]) circle(d=2, $fn=12);
 function line_normal(p1,p2) =
 	is_undef(p2)? line_normal(p1[0],p1[1]) :
-	normalize([p1.y-p2.y,p2.x-p1.x]);
+	unit([p1.y-p2.y,p2.x-p1.x]);
 
 
 // 2D Line intersection from two segments.
@@ -558,7 +558,7 @@ function plane3pt(p1, p2, p3) =
 		p1=point3d(p1),
 		p2=point3d(p2),
 		p3=point3d(p3),
-		normal = normalize(cross(p3-p1, p2-p1))
+		normal = unit(cross(p3-p1, p2-p1))
 	) concat(normal, [normal*p1]);
 
 
@@ -636,7 +636,7 @@ function distance_from_plane(plane, point) =
 //   point = The 3D point to find the closest point to.
 function closest_point_on_plane(plane, point) =
 	let(
-		n = normalize(plane_normal(plane)),
+		n = unit(plane_normal(plane)),
 		d = distance_from_plane(plane, point)
 	) point - n*d;
 
@@ -796,13 +796,13 @@ function find_circle_2tangents(pt1, pt2, pt3, r=undef, d=undef) =
 	assert(r!=undef, "Must specify either r or d.")
 	(is_undef(pt2) && is_undef(pt3) && is_list(pt1))? find_circle_2tangents(pt1[0], pt1[1], pt1[2], r=r) :
 	let(
-		v1 = normalize(pt1 - pt2),
-		v2 = normalize(pt3 - pt2)
+		v1 = unit(pt1 - pt2),
+		v2 = unit(pt3 - pt2)
 	) approx(norm(v1+v2))? undef :
 	let(
 		a = vector_angle(v1,v2),
 		n = vector_axis(v1,v2),
-		v = normalize(mean([v1,v2])),
+		v = unit(mean([v1,v2])),
 		s = r/sin(a/2),
 		cp = pt2 + s*v/norm(v)
 	) [cp, n];

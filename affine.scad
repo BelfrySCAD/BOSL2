@@ -83,7 +83,7 @@ function affine2d_zrot(ang) = [
 // Arguments:
 //   v = The normal vector of the line to reflect across.
 function affine2d_mirror(v) =
-	let(v=normalize(point2d(v)), a=v.x, b=v.y)
+	let(v=unit(point2d(v)), a=v.x, b=v.y)
 	[
 		[1-2*a*a, 0-2*a*b, 0],
 		[0-2*a*b, 1-2*b*b, 0],
@@ -225,7 +225,7 @@ function affine3d_zrot(ang) = [
 //   u = 3D axis vector to rotate around.
 //   ang = number of degrees to rotate.
 function affine3d_rot_by_axis(u, ang) = let(
-	u = normalize(u),
+	u = unit(u),
 	c = cos(ang),
 	c2 = 1-c,
 	s = sin(ang)
@@ -290,9 +290,9 @@ function affine_frame_map(x,y,z, reverse=false) =
   assert(yvalid,"Input y must be a length 3 vector")
   assert(zvalid,"Input z must be a length 3 vector")
   let(
-    x = is_def(x) ? normalize(x) : undef,
-    y = is_def(y) ? normalize(y) : undef,    
-    z = is_def(z) ? normalize(z) : undef,    
+    x = is_def(x) ? unit(x) : undef,
+    y = is_def(y) ? unit(y) : undef,    
+    z = is_def(z) ? unit(z) : undef,    
     map = is_undef(x) ? [cross(y,z), y, z] :
           is_undef(y) ? [x, cross(z,x), z] :
           is_undef(z) ? [x, y, cross(x,y)] :
@@ -310,7 +310,7 @@ function affine_frame_map(x,y,z, reverse=false) =
 // Arguments:
 //   v = The normal vector of the plane to reflect across.
 function affine3d_mirror(v) =
-	let(v=normalize(point3d(v)), a=v.x, b=v.y, c=v.z)
+	let(v=unit(point3d(v)), a=v.x, b=v.y, c=v.z)
 	[
 		[1-2*a*a,  -2*a*b,  -2*a*c, 0],
 		[ -2*b*a, 1-2*b*b,  -2*b*c, 0],

@@ -444,7 +444,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   grid2d(spacing=10, stagger=true, in_poly=hexregion) {
 //       // Note: You must use for(var=[val]) or let(var=val)
 //       // to set vars from $pos or other special vars in this scope.
-//       let (ref_v = (normalize([0,0,50]-point3d($pos)) + UP)/2)
+//       let (ref_v = (unit([0,0,50]-point3d($pos)) + UP)/2)
 //           half_of(v=-ref_v, cp=[0,0,5])
 //               zrot(180/6)
 //                   cylinder(h=20, d=10/cos(180/6)+0.01, $fn=6);
@@ -920,7 +920,7 @@ module arc_of(
 //
 // Example:
 //   ovoid_spread(n=500, d=100, cone_ang=180)
-//       color(normalize(point3d(vabs($pos))))
+//       color(unit(point3d(vabs($pos))))
 //           cylinder(d=8, h=10, center=false);
 module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=true)
 {

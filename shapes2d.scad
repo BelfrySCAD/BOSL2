@@ -506,12 +506,12 @@ function _turtle_command(command, parm, parm2, state, index) =
 	command=="angle" ? list_set(state, angle, parm) :
 	command=="setdir" ? (
 		is_vector(parm) ?
-			list_set(state, step, norm(state[step]) * normalize(parm)) :
+			list_set(state, step, norm(state[step]) * unit(parm)) :
 			list_set(state, step, norm(state[step]) * [cos(parm),sin(parm)])
 	) :
-	command=="length" ? list_set(state, step, parm*normalize(state[step])) :
+	command=="length" ? list_set(state, step, parm*unit(state[step])) :
 	command=="scale" ?  list_set(state, step, parm*state[step]) :
-	command=="addlength" ?  list_set(state, step, state[step]+normalize(state[step])*parm) :
+	command=="addlength" ?  list_set(state, step, state[step]+unit(state[step])*parm) :
 	command=="arcsteps" ? list_set(state, arcsteps, parm) :
 	command=="arcleft" || command=="arcright" ?
 		assert(is_num(parm),str("\"",command,"\" command requires a numeric radius value at index ",index))  
@@ -625,7 +625,7 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
 				(r-rounding*sc)*[cos(a),sin(a)] +
 				rounding*[cos(b),sin(b)]
 			]
-	) rot(spin, p=move(-r*normalize(anchor), p=path));
+	) rot(spin, p=move(-r*unit(anchor), p=path));
 
 
 module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) {
@@ -951,7 +951,7 @@ function star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=
 		ir = get_radius(r=ir, d=id, dflt=stepr),
 		offset = 90+(realign? 180/n : 0),
 		path = [for(i=[0:1:2*n-1]) let(theta=180*i/n+offset, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]]
-	) rot(spin, p=move(-r*normalize(anchor), p=path));
+	) rot(spin, p=move(-r*unit(anchor), p=path));
 
 
 module star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0) {
@@ -1023,7 +1023,7 @@ function supershape(step=0.5,m1=4,m2=undef,n1=1,n2=undef,n3=undef,a=1,b=undef,r=
 		rads = [for (theta = angs) _superformula(theta=theta,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b)],
 		scale = is_def(r) ? r/max(rads) : 1,
 		path = [for (i = [0:steps-1]) let(a=angs[i]) scale*rads[i]*[cos(a), sin(a)]]
-	) rot(spin, p=move(-scale*max(rads)*normalize(anchor), p=path));
+	) rot(spin, p=move(-scale*max(rads)*unit(anchor), p=path));
 
 module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0) {
 	path = supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b,r=r,d=d);

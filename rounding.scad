@@ -319,8 +319,8 @@ function _bezcorner(points, parm) =
 			let(
 				d = parm[0],
 				k = parm[1],
-				prev = normalize(points[0]-points[1]),
-				next = normalize(points[2]-points[1])
+				prev = unit(points[0]-points[1]),
+				next = unit(points[2]-points[1])
 			) [
 				points[1]+d*prev,
 				points[1]+k*d*prev,
@@ -335,8 +335,8 @@ function _bezcorner(points, parm) =
 function _chamfcorner(points, parm) =
         let(
                 d = parm[0],
-		prev = normalize(points[0]-points[1]),
-		next = normalize(points[2]-points[1])
+		prev = unit(points[0]-points[1]),
+		next = unit(points[2]-points[1])
           )
        [points[1]+prev*d, points[1]+next*d];
 
@@ -345,9 +345,9 @@ function _circlecorner(points, parm) =
 		angle = vector_angle(points)/2,
 		d = parm[0],
 		r = parm[1],
-		prev = normalize(points[0]-points[1]),
-		next = normalize(points[2]-points[1]),
-		center = r/sin(angle) * normalize(prev+next)+points[1],
+		prev = unit(points[0]-points[1]),
+		next = unit(points[2]-points[1]),
+		center = r/sin(angle) * unit(prev+next)+points[1],
 			start = points[1]+prev*d,
 			end = points[1]+next*d
 	)
@@ -1212,8 +1212,8 @@ function _stroke_end(width,left, right, spec) =
 		normal_seg = _normal_segment(right[0], left[0]),
 		normal_pt = normal_seg[1],
 		center = normal_seg[0],
-		parallel_dir = normalize(left[0]-right[0]),
-		normal_dir = normalize(normal_seg[1]-normal_seg[0]),
+		parallel_dir = unit(left[0]-right[0]),
+		normal_dir = unit(normal_seg[1]-normal_seg[0]),
 		width_dir = sign(width[0]-width[1])
 	)
 	type == "round"? [arc(points=[right[0],normal_pt,left[0]],N=50),1,1]  :
@@ -1270,7 +1270,7 @@ function _stroke_end(width,left, right, spec) =
 		)
 		assert(roundover_fits,"Roundover too large to fit")
 		let(
-			angled_dir = normalize(newleft[0]-newright[0]),
+			angled_dir = unit(newleft[0]-newright[0]),
 			nPleft = [
 				leftcorner - jointleft*angled_dir,
 				leftcorner,

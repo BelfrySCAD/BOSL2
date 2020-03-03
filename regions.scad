@@ -594,7 +594,7 @@ function _tag_subpaths(path, region, eps=EPSILON) =
 				midpt = lerp(subpath[0], subpath[1], 0.5),
 				rel = point_in_region(midpt,region,eps=eps)
 			) rel<0? ["O", subpath] : rel>0? ["I", subpath] : let(
-				vec = normalize(subpath[1]-subpath[0]),
+				vec = unit(subpath[1]-subpath[0]),
 				perp = rot(90, planar=true, p=vec),
 				sidept = midpt + perp*0.01,
 				rel1 = point_in_polygon(sidept,path,eps=eps)>0,

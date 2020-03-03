@@ -251,10 +251,10 @@ function project_plane(point, a, b, c) =
 	assert(is_vector(c))
 	assert(is_vector(point)||is_path(point))
 	let(
-		u = normalize(b-a),
-		v = normalize(c-a),
-		n = normalize(cross(u,v)),
-		w = normalize(cross(n,u)),
+		u = unit(b-a),
+		v = unit(c-a),
+		n = unit(cross(u,v)),
+		w = unit(cross(n,u)),
 		relpoint = is_vector(point)? (point-a) : translate_points(point,-a)
 	) relpoint * transpose([w,u]);
 
@@ -281,10 +281,10 @@ function lift_plane(point, a, b, c) =
 	assert(is_vector(c))
 	assert(is_vector(point)||is_path(point))
 	let(
-		u = normalize(b-a),
-		v = normalize(c-a),
-		n = normalize(cross(u,v)),
-		w = normalize(cross(n,u)),
+		u = unit(b-a),
+		v = unit(c-a),
+		n = unit(cross(u,v)),
+		w = unit(cross(n,u)),
 		remapped = point*[w,u]
 	) is_vector(remapped)? (a+remapped) : translate_points(remapped,a);
 

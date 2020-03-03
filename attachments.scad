@@ -197,32 +197,32 @@ function find_anchor(anchor, geom) =
 			bot = point3d(vmul(point2d(size)/2,axy),-h/2),
 			top = point3d(vmul(point2d(size2)/2,axy)+shift,h/2),
 			pos = lerp(bot,top,u)+offset,
-			sidevec = normalize(rot(from=UP, to=top-bot, p=point3d(axy))),
-			vvec = normalize([0,0,anchor.z]),
+			sidevec = unit(rot(from=UP, to=top-bot, p=point3d(axy))),
+			vvec = unit([0,0,anchor.z]),
 			vec = anchor==CENTER? UP :
-				approx(axy,[0,0])? normalize(anchor) :
+				approx(axy,[0,0])? unit(anchor) :
 				approx(anchor.z,0)? sidevec :
-				normalize((sidevec+vvec)/2)
+				unit((sidevec+vvec)/2)
 		) [anchor, pos, vec, oang]
 	) : type == "cyl"? ( //r1, r2, l, shift
 		let(
 			r1=geom[1], r2=geom[2], l=geom[3], shift=point2d(geom[4]),
 			u = (anchor.z+1)/2,
-			axy = normalize(point2d(anchor)),
+			axy = unit(point2d(anchor)),
 			bot = point3d(r1*axy,-l/2),
 			top = point3d(r2*axy+shift, l/2),
 			pos = lerp(bot,top,u)+offset,
 			sidevec = rot(from=UP, to=top-bot, p=point3d(axy)),
-			vvec = normalize([0,0,anchor.z]),
+			vvec = unit([0,0,anchor.z]),
 			vec = anchor==CENTER? UP :
-				approx(axy,[0,0])? normalize(anchor) :
+				approx(axy,[0,0])? unit(anchor) :
 				approx(anchor.z,0)? sidevec :
-				normalize((sidevec+vvec)/2)
+				unit((sidevec+vvec)/2)
 		) [anchor, pos, vec, oang]
 	) : type == "spheroid"? ( //r
 		let(
 			r=geom[1]
-		) [anchor, r*normalize(anchor)+offset, normalize(anchor), oang]
+		) [anchor, r*unit(anchor)+offset, unit(anchor), oang]
 	) : type == "vnf_isect"? ( //vnf
 		let(
 			vnf=geom[1],
@@ -252,7 +252,7 @@ function find_anchor(anchor, geom) =
 			pos = hits[furthest][2],
 			dist = hits[furthest][0],
 			nfaces = [for (hit = hits) if(approx(hit[0],dist,eps=eps)) hit[1]],
-			n = normalize(
+			n = unit(
 				sum([
 					for (i = nfaces) let(
 						faceverts = select(vnf[0],vnf[1][i]),
@@ -281,12 +281,12 @@ function find_anchor(anchor, geom) =
 			frpt = [size.x/2*anchor.x, -size.y/2],
 			bkpt = [size2/2*anchor.x,  size.y/2],
 			pos = lerp(frpt, bkpt, u),
-			vec = normalize(rot(from=BACK, to=bkpt-frpt, p=anchor))
+			vec = unit(rot(from=BACK, to=bkpt-frpt, p=anchor))
 		) [anchor, pos, vec, 0]
 	) : type == "circle"? ( //r
 		let(
 			r=geom[1],
-			anchor = normalize(point2d(anchor))
+			anchor = unit(point2d(anchor))
 		) [anchor, r*anchor+offset, anchor, 0]
 	) : type == "path_isect"? ( //path
 		let(
@@ -299,7 +299,7 @@ function find_anchor(anchor, geom) =
 					isect = ray_segment_intersection([[0,0],anchor], seg1),
 					n = is_undef(isect)? [0,1] :
 						!approx(isect, t[1])? line_normal(seg1) :
-						normalize((line_normal(seg1)+line_normal(seg2))/2),
+						unit((line_normal(seg1)+line_normal(seg2))/2),
 					n2 = vector_angle(anchor,n)>90? -n : n
 				)
 				if(!is_undef(isect) && !approx(isect,t[0])) [norm(isect), isect, n2]
@@ -307,7 +307,7 @@ function find_anchor(anchor, geom) =
 			maxidx = max_index(subindex(isects,0)),
 			isect = isects[maxidx],
 			pos = isect[1],
-			vec = normalize(isect[2])
+			vec = unit(isect[2])
 		) [anchor, pos, vec, 0]
 	) : type == "path_extent"? ( //path
 		let(

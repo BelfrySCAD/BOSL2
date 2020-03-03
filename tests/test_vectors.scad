@@ -67,17 +67,17 @@ module test_vang() {
 test_vang();
 
 
-module test_normalize() {
-	assert(normalize([10,0,0]) == [1,0,0]);
-	assert(normalize([0,10,0]) == [0,1,0]);
-	assert(normalize([0,0,10]) == [0,0,1]);
-	assert(abs(norm(normalize([10,10,10]))-1) < EPSILON);
-	assert(abs(norm(normalize([-10,-10,-10]))-1) < EPSILON);
-	assert(abs(norm(normalize([-10,0,0]))-1) < EPSILON);
-	assert(abs(norm(normalize([0,-10,0]))-1) < EPSILON);
-	assert(abs(norm(normalize([0,0,-10]))-1) < EPSILON);
+module test_unit() {
+	assert(unit([10,0,0]) == [1,0,0]);
+	assert(unit([0,10,0]) == [0,1,0]);
+	assert(unit([0,0,10]) == [0,0,1]);
+	assert(abs(norm(unit([10,10,10]))-1) < EPSILON);
+	assert(abs(norm(unit([-10,-10,-10]))-1) < EPSILON);
+	assert(abs(norm(unit([-10,0,0]))-1) < EPSILON);
+	assert(abs(norm(unit([0,-10,0]))-1) < EPSILON);
+	assert(abs(norm(unit([0,0,-10]))-1) < EPSILON);
 }
-test_normalize();
+test_unit();
 
 
 module test_vector_angle() {

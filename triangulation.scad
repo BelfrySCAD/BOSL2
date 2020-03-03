@@ -21,7 +21,7 @@
 //   face = The face, given as a list of indices into the vertex array `points`.
 function face_normal(points, face) =
 	let(count=len(face))
-	normalize(
+	unit(
 		sum(
 			[
 				for(i=[0:1:count-1]) cross(

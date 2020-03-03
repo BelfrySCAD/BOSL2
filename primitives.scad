@@ -142,7 +142,7 @@ function circle(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 		offset = realign? 180/sides : 0,
 		rr = r / (circum? cos(180/sides) : 1),
 		pts = [for (i=[0:1:sides-1]) let(a=360-offset-i*360/sides) rr*[cos(a),sin(a)]]
-	) rot(spin, p=move(-normalize(anchor)*rr, p=pts));
+	) rot(spin, p=move(-unit(anchor)*rr, p=pts));
 
 
 

@@ -8,15 +8,15 @@ testpoints_on_sphere = [ for(p =
 		[0,1,PHI], [0,-1,PHI], [0,1,-PHI], [0,-1,-PHI],
 		[PHI,0,1], [-PHI,0,1], [PHI,0,-1], [-PHI,0,-1]
 	])
-	normalize(p)
+	unit(p)
 ];
 
 testpoints_circular = [ for(a = [0:15:360-EPSILON]) [cos(a),sin(a)] ];
 
-testpoints_coplanar = let(u = normalize([1,3,7]), v = normalize([-2,1,-2])) [ for(i = [1:10]) rands(-1,1,1)[0] * u + rands(-1,1,1)[0] * v ];
+testpoints_coplanar = let(u = unit([1,3,7]), v = unit([-2,1,-2])) [ for(i = [1:10]) rands(-1,1,1)[0] * u + rands(-1,1,1)[0] * v ];
 
-testpoints_collinear_2d = let(u = normalize([5,3]))    [ for(i = [1:20]) rands(-1,1,1)[0] * u ];
-testpoints_collinear_3d = let(u = normalize([5,3,-5])) [ for(i = [1:20]) rands(-1,1,1)[0] * u ];
+testpoints_collinear_2d = let(u = unit([5,3]))    [ for(i = [1:20]) rands(-1,1,1)[0] * u ];
+testpoints_collinear_3d = let(u = unit([5,3,-5])) [ for(i = [1:20]) rands(-1,1,1)[0] * u ];
 
 testpoints2d = 20 * [for (i = [1:10]) concat(rands(-1,1,2))];
 testpoints3d = 20 * [for (i = [1:50]) concat(rands(-1,1,3))];

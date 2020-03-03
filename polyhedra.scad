@@ -758,7 +758,7 @@ function trapezohedron(faces, r, side, longside, h) =
 	];
 
 
-function _facenormal(pts, face) = normalize(cross(pts[face[2]]-pts[face[0]], pts[face[1]]-pts[face[0]]));
+function _facenormal(pts, face) = unit(cross(pts[face[2]]-pts[face[0]], pts[face[1]]-pts[face[0]]));
 
 // hull() function returns triangulated faces.	This function identifies the vertices that belong to each face
 // by grouping together the face triangles that share normal vectors.	The output gives the face polygon

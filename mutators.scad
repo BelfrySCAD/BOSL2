@@ -33,7 +33,7 @@
 //   half_of([1,1], planar=true) circle(d=50);
 module half_of(v=UP, cp=[0,0,0], s=1000, planar=false)
 {
-	cp = is_num(cp)? cp*normalize(v) : cp;
+	cp = is_num(cp)? cp*unit(v) : cp;
 	if (cp != [0,0,0]) {
 		translate(cp) half_of(v=v, s=s, planar=planar) translate(-cp) children();
 	} else if (planar) {

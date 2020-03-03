@@ -219,7 +219,7 @@ function path_trim_start(path,trim,_d=0,_i=0) =
 	_i >= len(path)-1? [] :
 	let (l = norm(path[_i+1]-path[_i]))
 	_d+l <= trim? path_trim_start(path,trim,_d+l,_i+1) :
-	let (v = normalize(path[_i+1]-path[_i]))
+	let (v = unit(path[_i+1]-path[_i]))
 	concat(
 		[path[_i+1]-v*(l-(trim-_d))],
 		[for (i=[_i+1:1:len(path)-1]) path[i]]
@@ -246,7 +246,7 @@ function path_trim_end(path,trim,_d=0,_i=undef) =
 	_i <= 0? [] :
 	let (l = norm(path[_i]-path[_i-1]))
 	_d+l <= trim? path_trim_end(path,trim,_d+l,_i-1) :
-	let (v = normalize(path[_i]-path[_i-1]))
+	let (v = unit(path[_i]-path[_i-1]))
 	concat(
 		[for (i=[0:1:_i-1]) path[i]],
 		[path[_i-1]+v*(l-(trim-_d))]
@@ -284,7 +284,7 @@ function path_closest_point(path, pt) =
 //   The returns vectors will be normalized to length 1.
 function path_tangents(path, closed=false) =
 	assert(is_path(path))
-	[for(t=deriv(path)) normalize(t)];
+	[for(t=deriv(path)) unit(t)];
 
 
 // Function: path_normals()
@@ -303,7 +303,7 @@ function path_normals(path, tangents, closed=false) =
 			pts = i==0? (closed? select(path,-1,1) : select(path,0,2)) :
 				i==len(path)-1? (closed? select(path,i-1,i+1) : select(path,i-2,i)) :
 				select(path,i-1,i+1)
-		) normalize(cross(
+		) unit(cross(
 			cross(pts[1]-pts[0], pts[2]-pts[0]),
 			tangents[i]
 		))
@@ -392,8 +392,8 @@ function points_along_path3d(
 	n=0  // Used in recursion
 ) = let(
 	end = len(path)-1,
-	v1 = (n == 0)?  [0, 0, 1] : normalize(path[n]-path[n-1]),
-	v2 = (n == end)? normalize(path[n]-path[n-1]) : normalize(path[n+1]-path[n]),
+	v1 = (n == 0)?  [0, 0, 1] : unit(path[n]-path[n-1]),
+	v2 = (n == end)? unit(path[n]-path[n-1]) : unit(path[n+1]-path[n]),
 	crs = cross(v1, v2),
 	axis = norm(crs) <= 0.001? [0, 0, 1] : crs,
 	ang = vector_angle(v1, v2),
@@ -806,7 +806,7 @@ module path_extrude(path, convexity=10, clipsize=100) {
 	function polyquats(path, q=Q_Ident(), v=[0,0,1], i=0) = let(
 			v2 = path[i+1] - path[i],
 			ang = vector_angle(v,v2),
-			axis = ang>0.001? normalize(cross(v,v2)) : [0,0,1],
+			axis = ang>0.001? unit(cross(v,v2)) : [0,0,1],
 			newq = Q_Mul(Quat(axis, ang), q),
 			dist = norm(v2)
 		) i < (len(path)-2)?
@@ -1143,8 +1143,8 @@ function _path_cuts_normals(path, cuts, dirs, closed=false) =
 				let(start = max(min(cuts[i][1],len(path)-1),2)) _path_plane(path, start, start-2)
 			)
 			plane==undef?
-				normalize([-dirs[i].y, dirs[i].x,0]) :
-				normalize(cross(dirs[i],cross(plane[0],plane[1])))
+				unit([-dirs[i].y, dirs[i].x,0]) :
+				unit(cross(dirs[i],cross(plane[0],plane[1])))
 		)
 	];
 
@@ -1161,15 +1161,15 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 	[for(ind=[0:len(cuts)-1])
 		let(
 			nextind = cuts[ind][1],
-			nextpath = normalize(select(path, nextind+1)-select(path, nextind)),
-			thispath = normalize(select(path, nextind) - path[nextind-1]),
-			lastpath = normalize(path[nextind-1] - select(path, nextind-2)),
+			nextpath = unit(select(path, nextind+1)-select(path, nextind)),
+			thispath = unit(select(path, nextind) - path[nextind-1]),
+			lastpath = unit(path[nextind-1] - select(path, nextind-2)),
 			nextdir =
 				nextind==len(path) && !closed? lastpath :
 				(nextind<=len(path)-2 || closed) && approx(cuts[ind][0], path[nextind],eps)?
-					normalize(nextpath+thispath) :
+					unit(nextpath+thispath) :
 					(nextind>1 || closed) && approx(cuts[ind][0],path[nextind-1],eps)?
-						normalize(thispath+lastpath) :
+						unit(thispath+lastpath) :
 						thispath
 		) nextdir
 	];

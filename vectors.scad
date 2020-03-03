@@ -95,19 +95,19 @@ function vdiv(v1, v2) = [for (i = [0:1:len(v1)-1]) v1[i]/v2[i]];
 function vabs(v) = [for (x=v) abs(x)];
 
 
-// Function: normalize()
+// Function: unit()
 // Description:
 //   Returns unit length normalized version of vector v.
 //   If passed a zero-length vector, returns the unchanged vector.
 // Arguments:
 //   v = The vector to normalize.
 // Examples:
-//   normalize([10,0,0]);   // Returns: [1,0,0]
-//   normalize([0,10,0]);   // Returns: [0,1,0]
-//   normalize([0,0,10]);   // Returns: [0,0,1]
-//   normalize([0,-10,0]);  // Returns: [0,-1,0]
-//   normalize([0,0,0]);    // Returns: [0,0,0]
-function normalize(v) = norm(v)<=EPSILON? v : v/norm(v);
+//   unit([10,0,0]);   // Returns: [1,0,0]
+//   unit([0,10,0]);   // Returns: [0,1,0]
+//   unit([0,0,10]);   // Returns: [0,0,1]
+//   unit([0,-10,0]);  // Returns: [0,-1,0]
+//   unit([0,0,0]);    // Returns: [0,0,0]
+function unit(v) = norm(v)<=EPSILON? v : v/norm(v);
 
 
 // Function: vector_angle()
@@ -182,7 +182,7 @@ function vector_axis(v1,v2=undef,v3=undef) =
 		v3 = (norm(v1-v2) > eps && norm(v1+v2) > eps)? v2 :
 			(norm(vabs(v2)-UP) > eps)? UP :
 			RIGHT
-	) normalize(cross(v1,v3)) : assert(false, "Bad arguments.");
+	) unit(cross(v1,v3)) : assert(false, "Bad arguments.");
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

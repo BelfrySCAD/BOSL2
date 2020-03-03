@@ -91,7 +91,7 @@ module test_line_normal() {
 	for (p = pair_wrap(pts)) {
 		p1 = p.x;
 		p2 = p.y;
-		n = normalize(p2-p1);
+		n = unit(p2-p1);
 		n1 = [-n.y, n.x];
 		n2 = line_normal(p1,p2);
 		assert(approx(n2, n1));
@@ -239,7 +239,7 @@ module test_find_circle_3points() {
 	for(i = list_range(count)) {
 		cp = select(coords,i,i+2);
 		r = radii[i];
-		nrm = normalize(select(coords,i+10,i+12));
+		nrm = unit(select(coords,i+10,i+12));
 		n = nrm.z<0? -nrm : nrm;
 		angs = sort(select(angles,i,i+2));
 		pts = translate(cp,p=rot(from=UP,to=n,p=[for (a=angs) point3d(polar_to_xy(r,a))]));
@@ -266,7 +266,7 @@ module test_find_circle_3points() {
 	for(i = list_range(count)) {
 		cp = select(coords,i,i+2);
 		r = radii[i];
-		nrm = normalize(select(coords,i+10,i+12));
+		nrm = unit(select(coords,i+10,i+12));
 		n = nrm.z<0? -nrm : nrm;
 		angs = sort(select(angles,i,i+2));
 		pts = translate(cp,p=rot(from=UP,to=n,p=[for (a=angs) point3d(polar_to_xy(r,a))]));

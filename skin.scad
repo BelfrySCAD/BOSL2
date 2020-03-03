@@ -1038,7 +1038,7 @@ module sweep(shape, transformations, closed=false, caps, convexity=10) {
 //          r * sin(q * phi) ];
 //   function knot_normal(phi,R,r,p,q) =  
 //       knot(phi,R,r,p,q) 
-//           - R*normalize(knot(phi,R,r,p,q)
+//           - R*unit(knot(phi,R,r,p,q)
 //               - [0,0, knot(phi,R,r,p,q)[2]]) ;
 //   ushape = 3*[[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   points = 50;       // points per loop
@@ -1082,9 +1082,9 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
   assert(is_undef(normal) || (is_vector(normal) && len(normal)==3) || (is_path(normal) && len(normal)==len(path) && len(normal[0])==3), "Invalid normal specified")
   assert(is_undef(tangent) || (is_path(tangent) && len(tangent)==len(path) && len(tangent[0])==3), "Invalid tangent specified")
   let(
-    tangents = is_undef(tangent) ? path_tangents(path) : [for(t=tangent) normalize(t)],
-    normal = is_path(normal) ? [for(n=normal) normalize(n)] :
-             is_def(normal) ? normalize(normal) :
+    tangents = is_undef(tangent) ? path_tangents(path) : [for(t=tangent) unit(t)],
+    normal = is_path(normal) ? [for(n=normal) unit(n)] :
+             is_def(normal) ? unit(normal) :
              method =="incremental" && abs(tangents[0].z) > 1/sqrt(2) ? BACK : UP,
     normals = is_path(normal) ? normal : replist(normal,len(path)),
     pathfrac = twist_by_length ? path_length_fractions(path, closed) : [for(i=[0:1:len(path)]) i / (len(path)-(closed?0:1))],
