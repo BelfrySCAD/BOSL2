@@ -802,15 +802,15 @@ module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   Makes a hollow tube with the given outer size and wall thickness.
 //
 // Usage:
-//   tube(h, ir|id, wall, [realign]);
-//   tube(h, or|od, wall, [realign]);
-//   tube(h, ir|id, or|od, [realign]);
-//   tube(h, ir1|id1, ir2|id2, wall, [realign]);
-//   tube(h, or1|od1, or2|od2, wall, [realign]);
-//   tube(h, ir1|id1, ir2|id2, or1|od1, or2|od2, [realign]);
+//   tube(h|l, ir|id, wall, [realign]);
+//   tube(h|l, or|od, wall, [realign]);
+//   tube(h|l, ir|id, or|od, [realign]);
+//   tube(h|l, ir1|id1, ir2|id2, wall, [realign]);
+//   tube(h|l, or1|od1, or2|od2, wall, [realign]);
+//   tube(h|l, ir1|id1, ir2|id2, or1|od1, or2|od2, [realign]);
 //
 // Arguments:
-//   h = height of tube. (Default: 1)
+//   h|l = height of tube. (Default: 1)
 //   or = Outer radius of tube.
 //   or1 = Outer radius of bottom of tube.  (Default: value of r)
 //   or2 = Outer radius of top of tube.  (Default: value of r)
@@ -843,7 +843,7 @@ module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 // Example: Standard Connectors
 //   tube(h=30, or=40, wall=5) show_anchors();
 module tube(
-	h=1, wall=undef,
+	h, wall=undef,
 	r=undef, r1=undef, r2=undef,
 	d=undef, d1=undef, d2=undef,
 	or=undef, or1=undef, or2=undef,
@@ -851,8 +851,9 @@ module tube(
 	ir=undef, id=undef, ir1=undef,
 	ir2=undef, id1=undef, id2=undef,
 	anchor, spin=0, orient=UP, 
-	center, realign=false
+	center, realign=false, l
 ) {
+	h = first_defined([h,l,1]);
 	r1 = first_defined([or1, od1/2, r1, d1/2, or, od/2, r, d/2, ir1+wall, id1/2+wall, ir+wall, id/2+wall]);
 	r2 = first_defined([or2, od2/2, r2, d2/2, or, od/2, r, d/2, ir2+wall, id2/2+wall, ir+wall, id/2+wall]);
 	ir1 = first_defined([ir1, id1/2, ir, id/2, r1-wall, d1/2-wall, r-wall, d/2-wall]);
@@ -861,7 +862,7 @@ module tube(
 	assert(ir2 <= r2, "Inner radius is larger than outer radius.");
 	sides = segs(max(r1,r2));
 	anchor = get_anchor(anchor, center, BOT, BOT);
-	attachable(anchor,spin,orient, r1=r1, r2=r2) {
+	attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
 		zrot(realign? 180/sides : 0) {
 			difference() {
 				cyl(h=h, r1=r1, r2=r2, $fn=sides) children();
