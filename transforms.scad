@@ -369,7 +369,11 @@ module rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false)
 
 function rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false, p=undef, planar=false) =
 	assert(is_undef(from)==is_undef(to), "from and to must be specified together.")
-	let(rev = reverse? -1 : 1)
+	let(
+		rev = reverse? -1 : 1,
+		from = is_undef(from)? undef : point3d(from),
+		to = is_undef(to)? undef : point3d(to)
+	)
 	is_undef(p)? (
 		is_undef(cp)? (
 			planar? (
@@ -416,7 +420,7 @@ function rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false, p=unde
 				(planar || (p!=[] && len(p[0])==2)) && !(
 					(is_vector(a) && norm(point2d(a))>0) ||
 					(!is_undef(v) && norm(point2d(v))>0 && !approx(a,0)) ||
-					(!is_undef(from) && !approx(from,to) && !(abs(from.z)>0 || abs(to.z))) ||
+					(!is_undef(from) && !approx(from,to) && !(abs(point3d(from).z)>0 || abs(point3d(to).z))) ||
 					(!is_undef(from) && approx(from,to) && norm(point2d(from))>0 && a!=0)
 				)
 			)? (
@@ -425,7 +429,8 @@ function rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false, p=unde
 					rotate_points2d(p, a=vector_angle(from,to)*sign(vector_axis(from,to)[2])*rev, cp=cp)
 				)
 			) : (
-				rotate_points3d(p, a=a, v=v, cp=(is_undef(cp)? [0,0,0] : cp), from=from, to=to, reverse=reverse)
+				let( cp = is_undef(cp)? [0,0,0] : cp )
+				rotate_points3d(p, a=a, v=v, cp=cp, from=from, to=to, reverse=reverse)
 			)
 		)
 	);

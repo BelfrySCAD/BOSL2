@@ -633,7 +633,7 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 	r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n));
 	assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.");
 	path = regular_ngon(n=n, r=r, rounding=rounding, realign=realign);
-	attachable(anchor,spin, two_d=true, path=path) {
+	attachable(anchor,spin, two_d=true, path=path, extent=false) {
 		polygon(path);
 		children();
 	}

@@ -140,9 +140,11 @@ function vector_angle(v1,v2=undef,v3=undef) =
 		assert(false, "Bad arguments.")
 	) :
 	(is_vector(v1) && is_vector(v2) && is_vector(v3))? vector_angle(v1-v2, v3-v2) :
-	// NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
-	(is_vector(v1) && is_vector(v2) && is_undef(v3))? acos(constrain((v1*v2)/(norm(v1)*norm(v2)), -1, 1)) :
-	assert(false, "Bad arguments.");
+	(is_vector(v1) && is_vector(v2) && is_undef(v3))? (
+		assert(len(v1)==len(v2))
+		// NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
+		acos(constrain((v1*v2)/(norm(v1)*norm(v2)), -1, 1))
+	) : assert(false, "Bad arguments.");
 
 
 // Function: vector_axis()
