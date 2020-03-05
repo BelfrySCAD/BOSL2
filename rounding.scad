@@ -9,10 +9,10 @@
 //   ```
 //////////////////////////////////////////////////////////////////////
 
-include <BOSL2/beziers.scad>
-include <BOSL2/strings.scad>
-include <BOSL2/structs.scad>
-include <BOSL2/skin.scad>
+include <beziers.scad>
+include <strings.scad>
+include <structs.scad>
+include <skin.scad>
 
 
 // CommonCode:
@@ -409,16 +409,23 @@ function _rounding_offsets(edgespec,z_dir=1) =
 
 // Function: smooth_path()
 // Usage:
-//   smooth_path(path, [tangents], [splinesteps], [closed]
+//   smooth_path(path, [tangents], [k], [splinesteps], [closed]
 // Description:
 //   Smooths the input path using a cubic spline.  Every segment of the path will be replaced by a cubic curve
 //   with `splinesteps` points.  The cubic interpolation will pass through every input point on the path
 //   and will match the tangents at every point.  If you do not specify tangents they will be computed using
-//   deriv().  Note that the magnitude of the tangents affects the result.  See also path_to_bezier().  
+//   deriv().  See also path_to_bezier().
+//
+//   Note that the magnitude of the tangents affects the result.  If you increase it you will get a blunter
+//   corner with a larger radius of curvature.  Decreasing it will produce a sharp corner.  You can specify
+//   the curvature factor `k` to adjust the curvature.  It can be a scalar or a vector the same length as
+//   the path and is used to scale the tangent vectors.  Negative values of k create loops at the corners,
+//   so they are not allowed.  Sufficiently large k values will also produce loops.
 // Arguments:
 //   path = path to smooth
 //   tangents = tangent vectors of the path
 //   splinesteps = number of points to insert between the path points.  Default: 10
+//   k = curvature parameter, a scalar or vector to adjust curvature at each point
 //   closed = set to true for a closed path.  Default: false
 // Example(2D): Original path in green, smoothed path in yellow:
 //   color("green")stroke(square(4), width=0.1);
@@ -428,19 +435,28 @@ function _rounding_offsets(edgespec,z_dir=1) =
 // Example(2D): A more interesting shape:
 //   path = [[0,0], [4,0], [7,14], [-3,12]];
 //   polygon(smooth_path(path,closed=true));
-// Example(2D): Scaling the tangent data can decrease or increase the amount of smoothing:
-//   shape = square(4);
-//   polygon(smooth_path(shape, tangents=0.5*deriv(shape, closed=true),closed=true));
+// Example(2D): Scaling the tangent data using the curvature parameter k can decrease or increase the amount of smoothing.  Note this is the same
+//   as just multiplying the deriv(square(4)) by k.
+//   polygon(smooth_path(square(4), k=0.5,closed=true));
 // Example(2D): Or you can specify your own tangent values to alter the shape of the curve
 //   polygon(smooth_path(square(4),tangents=1.25*[[-2,-1], [-2,1], [1,2], [2,-1]],closed=true));
 // Example(FlatSpin):  Works on 3d paths as well
 //   path = [[0,0,0],[3,3,2],[6,0,1],[9,9,0]];
 //   trace_polyline(smooth_path(path),size=.3);
-function smooth_path(path, tangents, splinesteps=10, closed=false) =
-  let(
-     bez = path_to_bezier(path, tangents=tangents, closed=closed)
+// Example(2D): The curve passes through all the points, but features some unexpected wiggles.  These occur because the curvature is too low to change fast enough.  
+//   path = [[0,0], [0,3], [.5,2.8], [1,2.2], [1,0]];
+//   polygon(smooth_path(path));
+//   color("red") place_copies(path)circle(r=.1,$fn=16);
+// Example(2D):  Using the k parameter is one way to fix this problem.  By allowing sharper curvature (k<1) at the two points next to the problematic point we can achieve a smoother result.  The other fix is to move your points.  
+//   path = [[0,0], [0,3], [.5,2.8], [1,2.2], [1,0]];
+//   polygon(smooth_path(path,k=[1,.5,1,.5,1]));
+//   color("red") place_copies(path)circle(r=.1,$fn=16);
+function smooth_path(path, tangents, k, splinesteps=10, closed=false) =
+  let (
+     bez = path_to_bezier(path, tangents, k=k, closed=closed)
   )
   bezier_polyline(bez,splinesteps=splinesteps);
+
 
 
 // Module: offset_sweep()

@@ -318,26 +318,40 @@ function bezier_polyline(bezier, splinesteps=16, N=3) = let(
 	);
 
 
+
 // Function: path_to_bezier()
 // Usage:
-//   path_to_bezier(path,[tangent],[closed]);
+//   path_to_bezier(path,[tangent],[k],[closed]);
 // Description:
 //   Given an input path and optional path of tangent vectors, computes a cubic (degree 3) bezier path that passes
 //   through every point on the input path and matches the tangent vectors.  If you do not supply
 //   the tangent it will be computed using path_tangents.  If the path is closed specify this
-//   by setting closed=true.
+//   by setting closed=true.  If you specify the curvature parameter k it scales the tangent vectors,
+//   which will increase or decrease the curvature of the interpolated bezier.  Negative values of k create loops at the corners,
+//   so they are not allowed.  Sufficiently large k values will also produce loops.
 // Arguments:
 //   path = path of points to define the bezier
 //   tangents = optional list of tangent vectors at every point
+//   k = curvature parameter, a scalar or vector to adjust curvature at each point
 //   closed = set to true for a closed path.  Default: false
-function path_to_bezier(path, tangents, closed=false) =
+function path_to_bezier(path, tangents, k, closed=false) =
   assert(is_path(path,dim=undef),"Input path is not a valid path")
   assert(is_undef(tangents) || is_path(tangents,dim=len(path[0])),"Tangents must be a path of the same dimension as the input path")
+  assert(is_undef(tangents) || len(path)==len(tangents), "Input tangents must be the same length as the input path")
+  let(
+     k = is_undef(k) ? repeat(1, len(path)) :
+         is_list(k) ? k : repeat(k, len(path)),
+     k_bad = [for(entry=k) if (entry<0) entry]
+  )
+  assert(len(k)==len(path), "Curvature parameter k must have the same length as the path")
+  assert(k_bad==[], "Curvature parameter k must be a nonnegative number or list of nonnegative numbers")
   let(
     tangents = is_def(tangents)? tangents : deriv(path, closed=closed),
     lastpt = len(path) - (closed?0:1)
   )
-  [for(i=[0:lastpt-1]) each [path[i], path[i]+tangents[i]/3, select(path,i+1)-select(tangents,i+1)/3],
+  [for(i=[0:lastpt-1]) each [path[i],
+                             path[i]+k[i]*tangents[i]/3,
+                             select(path,i+1)-select(k,i+1)*select(tangents,i+1)/3],
    select(path,lastpt)];
 
 
