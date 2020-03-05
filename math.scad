@@ -412,7 +412,7 @@ function _lcmlist(a) =
 function lcm(a,b=[]) =
 	!is_list(a) && !is_list(b) ? _lcm(a,b) : 
 	let(
-		arglist = concat((is_list(a)?a:[a]), (is_list(b)?b:[b]))
+		arglist = concat(force_list(a),force_list(b))
 	)
 	assert(len(arglist)>0,"invalid call to lcm with empty list(s)")
 	_lcmlist(arglist);

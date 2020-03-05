@@ -407,6 +407,33 @@ function _rounding_offsets(edgespec,z_dir=1) =
 
 
 
+// Function: smooth_path()
+// Usage:
+//   smooth_path(path, [tangent], [splinesteps], [closed]
+// Description:
+//   Smooths the input path using a cubic spline.  Every segment of the path will be replaced by a cubic curve
+//   with `splinesteps` points.  The cubic interpolation will pass through every input point on the path
+//   and will match the tangents at every point.  If you do not specify tangents they will be computed using
+//   path_tangents().  See also path_to_bezier().  
+// Arguments:
+//   path = path to smooth
+//   tangents = tangent vectors of the path
+//   splinesteps = number of points to insert between the path points.  Default: 10
+//   closed = set to true for a closed path.  Default: false
+// Example(2D): Original path in green, smoothed path in yellow:
+//   color("green")stroke(square(4), width=0.1);
+//   stroke(smooth_path(square(4)), width=0.1);
+// Example(2D): Closing the path changes the end tangents
+//   polygon(smooth_path(square(4), closed=true));
+// Example(FlatSpin):  Works on 3d paths as well
+//   path = [[0,0,0],[3,3,2],[6,0,1],[9,9,0]];
+//   trace_polyline(smooth_path(path),size=.3);
+function smooth_path(path, tangent, splinesteps=10, closed=false) =
+  let(
+     bez = path_to_bezier(path, tangent=tangent, closed=closed)
+  )
+  bezier_polyline(bez,splinesteps=splinesteps);
+
 
 // Module: offset_sweep()
 //

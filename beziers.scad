@@ -9,8 +9,8 @@
 //////////////////////////////////////////////////////////////////////
 
 
-include <BOSL2/vnf.scad>
-
+include <vnf.scad>
+include <skin.scad>
 
 // Section: Terminology
 //   **Polyline**: A series of points joined by straight line segements.
@@ -316,6 +316,29 @@ function bezier_polyline(bezier, splinesteps=16, N=3) = let(
 		[for (seg = [0:1:segs-1], i = [0:1:splinesteps-1]) bezier_path_point(bezier, seg, i/splinesteps, N=N)],
 		[bezier_path_point(bezier, segs-1, 1, N=N)]
 	);
+
+
+// Function: path_to_bezier()
+// Usage:
+//   path_to_bezier(path,[tangent],[closed]);
+// Description:
+//   Given an input path and optional path of tangent vectors, computes a cubic (degree 3) bezier path that passes
+//   through every point on the input path and matches the tangent vectors.  If you do not supply
+//   the tangent it will be computed using path_tangents.  If the path is closed specify this
+//   by setting closed=true.
+// Arguments:
+//   path = path of points to define the bezier
+//   tangents = optional list of tangent vectors at every point
+//   closed = set to true for a closed path.  Default: false
+function path_to_bezier(path, tangent, closed=false) =
+  assert(is_path(path,dim=undef),"Input path is not a valid path")
+  assert(is_undef(tangent) || is_path(tanget,dim=len(path[0])),"Tangent must be a path of the same dimension as the input path")
+  let(
+    tangent = is_def(tangent)? tangent : path_tangents(path, closed=closed),
+    lastpt = len(path) - (closed?0:1)
+  )
+  [for(i=[0:lastpt-1]) each [path[i], path[i]+tangent[i], select(path,i+1)-select(tangent,i+1)],
+   select(path,lastpt)];
 
 
 

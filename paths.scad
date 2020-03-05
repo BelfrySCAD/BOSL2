@@ -46,7 +46,7 @@ function is_path(list, dim=[2,3], fast=false) =
 	fast? is_list(list) && is_vector(list[0],fast=true) :
 	is_list(list) && is_list(list[0]) && len(list)>1 &&
 	let( d = len(list[0]) )
-	(is_undef(dim) || in_list(d, is_list(dim)?dim:[dim]) ) &&
+	(is_undef(dim) || in_list(d, force_list(dim))) &&
 	is_list_of(list, replist(0,d));
 
 
@@ -287,7 +287,7 @@ function path_closest_point(path, pt) =
 //   The returns vectors will be normalized to length 1.
 function path_tangents(path, closed=false) =
 	assert(is_path(path))
-	[for(t=deriv(path)) unit(t)];
+	[for(t=deriv(path,closed=closed)) unit(t)];
 
 
 // Function: path_normals()
@@ -862,6 +862,7 @@ module path_extrude(path, convexity=10, clipsize=100) {
 //   polyline = [for (a=[0:30:210]) 10*[cos(a), sin(a), sin(a)]];
 //   trace_polyline(polyline, showpts=true, size=0.5, color="lightgreen");
 module trace_polyline(pline, closed=false, showpts=false, N=1, size=1, color="yellow") {
+        assert(is_path(pline),"Input pline is not a path");
 	sides = segs(size/2);
 	pline = closed? close_path(pline) : pline;
 	if (showpts) {

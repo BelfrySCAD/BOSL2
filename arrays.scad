@@ -851,6 +851,15 @@ function enumerate(l,idx=undef) =
 		[for (i=[0:1:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
 
 
+// Function: force_list()
+// Usage:
+//   list = force_list(value)
+// Description:
+//   If value is a list returns value, otherwise returns [value].  Makes it easy to
+//   treat a scalar input consistently as a singleton list along with list inputs.  
+function force_list(value) = is_list(value) ? value : [value];
+
+
 // Function: pair()
 // Usage:
 //   pair(v)

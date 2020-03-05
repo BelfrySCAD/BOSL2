@@ -324,6 +324,7 @@ module skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=
 
 
 function skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z) =
+  assert(is_def(slices),"The slices argument must be specified.")
   assert(is_list(profiles) && len(profiles)>1, "Must provide at least two profiles")
   let( bad = [for(i=idx(profiles)) if (!(is_path(profiles[i]) && len(profiles[i])>2)) i])
   assert(len(bad)==0, str("Profiles ",bad," are not a paths or have length less than 3"))
@@ -715,6 +716,71 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
   zero_cross[min_index(d)];
 
 
+// Function: associate_vertices()
+// Usage:
+//   associate_vertices(polygons, split)
+// Description:
+//   Takes as input a list of polygons and duplicates specified vertices in each polygon in the list through the series so
+//   that the input can be passed to `skin()`.  This allows you to decide how the vertices are linked up rather than accepting
+//   the automatically computed minimal distance linkage.  However, the number of vertices in the polygons must not decrease in the list.
+//   The output is a list of polygons that all have the same number of vertices with some duplicates.  You specify the vertix splitting
+//   using the `split` which is a list where each entry corresponds to a polygon: split[i] is a value or list specfying which vertices in polygon i to split.
+//   Give the empty list if you don't want a split for a particular polygon.  If you list a vertex once then it will be split and mapped to
+//   two vertices in the next polygon.  If you list it N times then N copies will be created to map to N+1 vertices in the next polygon.
+//   You must ensure that each mapping produces the correct number of vertices to exactly map onto every vertex of the next polygon.
+//   Note that if you split (only) vertex i of a polygon that means it will map to vertices i and i+1 of the next polygon.  Vertex 0 will always
+//   map to vertex 0 and the last vertices will always map to each other, so if you want something different than that you'll need to reindex
+//   your polygons.  
+// Arguments:
+//   polygons = list of polygons to split
+//   split = list of lists of split vertices
+// Example(FlatSpin):  If you skin together a square and hexagon using the optimal distance method you get two triangular faces on opposite sides:
+//   sq = regular_ngon(4,side=2);
+//   hex = apply(rot(15),hexagon(side=2));
+//   skin([sq,hex], slices=10, refine=10, method="distance", z=[0,4]);
+// Example(FlatSpin):  Using associate_vertices you can change the location of the triangular faces.  Here they are connect to two adjacent vertices of the square:
+//   sq = regular_ngon(4,side=2);
+//   hex = apply(rot(15),hexagon(side=2));
+//   skin(associate_vertices([sq,hex],[[1,2]]), slices=10, refine=10, sampling="segment", z=[0,4]);
+// Example(FlatSpin): Here the two triangular faces connect to a single vertex on the square.  Note that we had to rotate the hexagon to line them up because the vertices match counting forward, so in this case vertex 0 of the square matches to vertices 0, 1, and 2 of the hexagon.  
+//   sq = regular_ngon(4,side=2);
+//   hex = apply(rot(60),hexagon(side=2));
+//   skin(associate_vertices([sq,hex],[[0,0]]), slices=10, refine=10, sampling="segment", z=[0,4]);
+// Example: This example shows several polygons, with only a single vertex split at each step:
+//   sq = regular_ngon(4,side=2);
+//   pent = pentagon(side=2);
+//   hex = hexagon(side=2);
+//   sep = regular_ngon(7,side=2);
+//   skin(associate_vertices([sq,pent,hex,sep], [1,3,4]) ,slices=10, refine=10, method="distance", z=[0,2,4,6]);
+// Example: The polygons cannot shrink, so if you want to have decreasing polygons you'll need to concatenate multiple results.  Note that it is perfectly ok to duplicate a profile as shown here, where the pentagon is duplicated:
+//   sq = regular_ngon(4,side=2);
+//   pent = pentagon(side=2);
+//   grow = associate_vertices([sq,pent],[1]);
+//   shrink = associate_vertices([sq,pent],[2]);
+//   skin(concat(grow, reverse(shrink)), slices=10, refine=10, method="distance", z=[0,2,2,4]);
+function associate_vertices(polygons, split, curpoly=0) =
+   curpoly==len(polygons)-1 ? polygons :
+   let(
+      polylen = len(polygons[curpoly]),
+      cursplit = force_list(split[curpoly]),
+     fdsa= echo(cursplit=cursplit)
+   )
+    assert(len(split)==len(polygons)-1,str(split,"Split list length mismatch: it has length ", len(split)," but must have length ",len(polygons)-1))
+    assert(polylen<=len(polygons[curpoly+1]),str("Polygon ",curpoly," has more vertices than the next one."))
+    assert(len(cursplit)+polylen == len(polygons[curpoly+1]),
+           str("Polygon ", curpoly, " has ", polylen, " vertices.  Next polygon has ", len(polygons[curpoly+1]),
+                  " vertices.  Split list has length ", len(cursplit), " but must have length ", len(polygons[curpoly+1])-polylen))
+    assert(max(cursplit)<polylen && min(curpoly)>=0,
+           str("Split ",cursplit," at polygon ",curpoly," has invalid vertices.  Must be in [0:",polylen-1,"]"))
+    len(cursplit)==0 ? associate_vertices(polygons,split,curpoly+1) :
+    let(
+      splitindex = sort(concat(list_range(polylen), cursplit)),
+      newpoly = [for(i=[0:len(polygons)-1]) i<=curpoly ? select(polygons[i],splitindex) : polygons[i]]
+    )
+   associate_vertices(newpoly, split, curpoly+1);
+
+
+
 // Function&Module: sweep()
 // Usage: sweep(shape, transformations, [closed], [caps])
 // Description:
@@ -759,18 +825,16 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
 //   sweep(shape, concat(outside,inside));
 
 function sweep(shape, transformations, closed=false, caps) =
+  assert(is_list_of(transformations, ident(4)), "Input transformations must be a list of numeric 4x4 matrices in sweep")
+  assert(is_path(shape,2), "Input shape must be a 2d path")
   let(
-    tdim = array_dim(transformations),
-    shapedim = array_dim(shape),
     caps = is_def(caps) ? caps :
            closed ? false : true,
     capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
     fullcaps = is_bool(caps) ? [caps,caps] : caps
   )
-  assert(len(tdim)==3 && tdim[1]==4 && tdim[2]==4, "transformations must be a list of 4x4 matrices in sweep")
-  assert(tdim[0]>1, "transformation must be length 2 or more")
-  assert(len(shapedim)==2 && shapedim[0]>2, "shape must be a path of at least 3 points")
-  assert(shapedim[1]==2, "shape must be a path in 2-dimensions")
+  assert(len(transformations), "transformation must be length 2 or more")
+  assert(len(shape)>=3, "shape must be a path of at least 3 points")
   assert(capsOK, "caps must be boolean or a list of two booleans")
   assert(!closed || !caps, "Cannot make closed shape with caps")
   _skin_core([for(i=[0:len(transformations)-(closed?0:1)]) apply(transformations[i%len(transformations)],path3d(shape))],caps=fullcaps);
@@ -783,7 +847,7 @@ module sweep(shape, transformations, closed=false, caps, convexity=10) {
 // Function&Module: path_sweep()
 // Usage: path_sweep(shape, path, [method], [normal], [closed], [twist], [twist_by_length], [symmetry], [last_normal], [tangent], [relaxed], [caps], [convexity], [transforms])
 // Description:
-//   Takes as input a 2d shape (specified as a point list) and a 3d path and constructs a polyhedron by sweeping the shape along the path.
+//   Takes as input a 2d shape (specified as a point list) and a 2d or 3d path and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF by default or if you set `transforms=true` then
 //   it returns a list of transformations suitable as input to `sweep`.
 //   
@@ -858,7 +922,7 @@ module sweep(shape, transformations, closed=false, caps, convexity=10) {
 // Example: Sweep along a clockwise elliptical arc, using "natural" method, which lines up the X axis of the shape with the direction of curvature.  This means the X axis will point inward, so a counterclockwise arc gives:
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = xscale(2, p=arc($fn=64,angle=[0,180], r=30));  // Counter-clockwise 
-//   path_sweep(ushape, path3d(elliptic_arc), method="natural");
+//   path_sweep(ushape, elliptic_arc, method="natural");
 // Example: Sweep along a clockwise elliptical arc, using "natural" method.  If the curve is clockwise than the shape flips upside-down to align the X axis.  
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = xscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
@@ -1069,9 +1133,10 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
   assert(!closed || twist % (360/symmetry)==0, str("For a closed sweep, twist must be a multiple of 360/symmetry = ",360/symmetry))
   assert(closed || symmetry==1, "symmetry must be 1 when closed is false")
   assert(is_integer(symmetry) && symmetry>0, "symmetry must be a positive integer")
-  assert(is_path(shape) && len(shape[0])==2, "shape must be a 2d path")
-  assert(is_path(path) && len(path[0])==3, "path must be a 3d path")
+  assert(is_path(shape,2), "shape must be a 2d path")
+  assert(is_path(path), "input path is not a path")
   let(
+    path = path3d(path),
     caps = is_def(caps) ? caps :
            closed ? false : true,
     capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
