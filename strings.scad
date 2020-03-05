@@ -405,7 +405,7 @@ function str_strip(s,c) = str_strip_trailing(str_strip_leading(s,c),c);
 //   fmti(-123456789012345);  // Returns "-123456789012345"
 function fmti(i,mindigits=1) =
 	i<0? str("-", fmti(-i)) :
-	let(i=floor(i), e=floor(log(i)+1e-15))
+	let(i=floor(i), e=floor(log(i)))
 	i==0? "0" :
 	str_join(
 		concat(
