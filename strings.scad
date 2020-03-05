@@ -18,13 +18,13 @@
 //   substr("abcdefg",[2,4]);   // Returns "cde"
 //   substr("abcdefg",len=-2);  // Returns ""
 function substr(str, pos=0, len=undef) =
-        is_list(pos) ? _substr(str, pos[0], pos[1]-pos[0]+1) :
-        len == undef ? _substr(str, pos, len(str)-pos) :
-        _substr(str,pos,len);
+	is_list(pos) ? _substr(str, pos[0], pos[1]-pos[0]+1) :
+	len == undef ? _substr(str, pos, len(str)-pos) :
+	_substr(str,pos,len);
 
 function _substr(str,pos,len,substr="") = 
-        len <= 0 || pos>=len(str) ? substr :
-        _substr(str, pos+1, len-1, str(substr, str[pos]));
+	len <= 0 || pos>=len(str) ? substr :
+	_substr(str, pos+1, len-1, str(substr, str[pos]));
 
 // Function suffix()
 // Usage:
@@ -47,8 +47,8 @@ function suffix(str,len) = substr(str, len(str)-len,len);
 //   str_join(["abc","def","ghi"]);        // Returns "abcdefghi"
 //   str_join(["abc","def","ghi"], " + ");  // Returns "abc + def + ghi"
 function str_join(list,sep="",_i=0, _result="") =
-    _i >= len(list)-1 ? (_i==len(list) ? _result : str(_result,list[_i])) :
-      str_join(list,sep,_i+1,str(_result,list[_i],sep));
+	_i >= len(list)-1 ? (_i==len(list) ? _result : str(_result,list[_i])) :
+	str_join(list,sep,_i+1,str(_result,list[_i],sep));
 
 // Function: downcase()
 // Usage:
@@ -61,7 +61,7 @@ function str_join(list,sep="",_i=0, _result="") =
 // Example:
 //   downcase("ABCdef");   // Returns "abcdef"
 function downcase(str) =
-   str_join([for(char=str) let(code=ord(char)) code>=65 && code<=90 ? chr(code+32) : char]);
+	str_join([for(char=str) let(code=ord(char)) code>=65 && code<=90 ? chr(code+32) : char]);
 
 // Function: str_int()
 // Usage:
@@ -84,18 +84,19 @@ function downcase(str) =
 //   str_int("CEDE", 16);   // Returns 52958
 //   str_int("");           // Returns 0
 function str_int(str,base=10) =
-    str==undef ? undef :
-    len(str)==0 ? 0 : 
-    let(str=downcase(str))
-    str[0] == "-" ? -_str_int_recurse(substr(str,1),base,len(str)-2) :
-    str[0] == "+" ?  _str_int_recurse(substr(str,1),base,len(str)-2) :
-    _str_int_recurse(str,base,len(str)-1);
+	str==undef ? undef :
+	len(str)==0 ? 0 : 
+	let(str=downcase(str))
+	str[0] == "-" ? -_str_int_recurse(substr(str,1),base,len(str)-2) :
+	str[0] == "+" ?  _str_int_recurse(substr(str,1),base,len(str)-2) :
+	_str_int_recurse(str,base,len(str)-1);
 
 function _str_int_recurse(str,base,i) =
-    let( digit = search(str[i],"0123456789abcdef"),
-         last_digit = digit == [] || digit[0] >= base ? (0/0) : digit[0])
-    i==0 ? last_digit : 
-        _str_int_recurse(str,base,i-1)*base + last_digit;
+	let(
+		digit = search(str[i],"0123456789abcdef"),
+		last_digit = digit == [] || digit[0] >= base ? (0/0) : digit[0]
+	) i==0 ? last_digit : 
+	_str_int_recurse(str,base,i-1)*base + last_digit;
 
 // Function: str_float()
 // Usage:
@@ -114,15 +115,15 @@ function _str_int_recurse(str,base,i) =
 //   str_float("7.342e-4"); // Returns 0.0007342
 //   str_float("");         // Returns 0
 function str_float(str) =
-     str==undef ? undef :
-     len(str) == 0 ? 0 :
-     in_list(str[1], ["+","-"]) ? (0/0) : // Don't allow --3, or +-3
-     str[0]=="-" ? -str_float(substr(str,1)) :
-     str[0]=="+" ?  str_float(substr(str,1)) :
-     let(esplit = str_split(str,"eE") )
-     len(esplit)==2 ? str_float(esplit[0]) * pow(10,str_int(esplit[1])) :
-     let( dsplit = str_split(str,["."]))
-     str_int(dsplit[0])+str_int(dsplit[1])/pow(10,len(dsplit[1]));
+	str==undef ? undef :
+	len(str) == 0 ? 0 :
+	in_list(str[1], ["+","-"]) ? (0/0) : // Don't allow --3, or +-3
+	str[0]=="-" ? -str_float(substr(str,1)) :
+	str[0]=="+" ?  str_float(substr(str,1)) :
+	let(esplit = str_split(str,"eE") )
+	len(esplit)==2 ? str_float(esplit[0]) * pow(10,str_int(esplit[1])) :
+	let( dsplit = str_split(str,["."]))
+	str_int(dsplit[0])+str_int(dsplit[1])/pow(10,len(dsplit[1]));
 
 // Function: str_frac()
 // Usage:
@@ -157,25 +158,24 @@ function str_float(str) =
 //   str_frac("-2 12/4",mixed=false);    // Returns nan
 //   str_frac("2 1/4",mixed=false);      // Returns nan
 function str_frac(str,mixed=true,improper=true,signed=true) =
-    str == undef ? undef :
-    len(str)==0 ? 0 :
-    signed && str[0]=="-" ? -str_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
-    signed && str[0]=="+" ?  str_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
-    mixed ? (                      
-               str_find(str," ")>0 || is_undef(str_find(str,"/")) ?
-                  let(whole = str_split(str,[" "]))
-                  _str_int_recurse(whole[0],10,len(whole[0])-1) + str_frac(whole[1], mixed=false, improper=improper, signed=false)
-                  :
-                  str_frac(str,mixed=false, improper=improper)
-            )
-          :
-            let(split = str_split(str,"/"))
-            len(split)!=2 ? (0/0) :
-                 let(numerator =  _str_int_recurse(split[0],10,len(split[0])-1),
-                     denominator = _str_int_recurse(split[1],10,len(split[1])-1))
-                 !improper && numerator>=denominator? (0/0) :
-                  denominator<0 ? (0/0) : numerator/denominator;
-          
+	str == undef ? undef :
+	len(str)==0 ? 0 :
+	signed && str[0]=="-" ? -str_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
+	signed && str[0]=="+" ?  str_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
+	mixed ? (                      
+		str_find(str," ")>0 || is_undef(str_find(str,"/"))? (
+			let(whole = str_split(str,[" "]))
+			_str_int_recurse(whole[0],10,len(whole[0])-1) + str_frac(whole[1], mixed=false, improper=improper, signed=false)
+		) : str_frac(str,mixed=false, improper=improper)
+	) : (
+		let(split = str_split(str,"/"))
+		len(split)!=2 ? (0/0) :
+		let(
+			numerator =  _str_int_recurse(split[0],10,len(split[0])-1),
+			denominator = _str_int_recurse(split[1],10,len(split[1])-1)
+		) !improper && numerator>=denominator? (0/0) :
+		denominator<0 ? (0/0) : numerator/denominator;
+	)  
 
 // Function: str_num()
 // Usage:
@@ -187,10 +187,10 @@ function str_frac(str,mixed=true,improper=true,signed=true) =
 //   str_num("3/4");    // Returns 0.75
 //   str_num("3.4e-2"); // Returns 0.034
 function str_num(str) =
-    str == undef ? undef :
-    let( val = str_frac(str) )
-    val == val ? val :
-    str_float(str);
+	str == undef ? undef :
+	let( val = str_frac(str) )
+	val == val ? val :
+	str_float(str);
 
 
 // Function: str_split()
@@ -218,21 +218,25 @@ function str_num(str) =
 //   str_split("abc+def-qrs*iop",["+","-","*"]);     // Returns ["abc", "def", "qrs", "iop"]
 //   str_split("abc+def-qrs*iop",["-","+","*"]);     // Returns ["abc+def", "qrs*iop", "", ""]
 function str_split(str,sep,keep_nulls=true) =
-   !keep_nulls ? _remove_empty_strs(str_split(str,sep,keep_nulls=true)) :
-   is_list(sep) ? str_split_recurse(str,sep,i=0,result=[]) :
-   let( cutpts = concat([-1],sort(flatten(search(sep, str,0))),[len(str)]))
-   [for(i=[0:len(cutpts)-2]) substr(str,cutpts[i]+1,cutpts[i+1]-cutpts[i]-1)];
+	!keep_nulls ? _remove_empty_strs(str_split(str,sep,keep_nulls=true)) :
+	is_list(sep) ? str_split_recurse(str,sep,i=0,result=[]) :
+	let( cutpts = concat([-1],sort(flatten(search(sep, str,0))),[len(str)]))
+	[for(i=[0:len(cutpts)-2]) substr(str,cutpts[i]+1,cutpts[i+1]-cutpts[i]-1)];
 
 function str_split_recurse(str,sep,i,result) =
-   i == len(sep) ? concat(result,[str]) :
-    let( pos = search(sep[i], str),
-         end = pos==[] ? len(str) : pos[0]
-      )
-    str_split_recurse(substr(str,end+1), sep, i+1,
-                    concat(result, [substr(str,0,end)]));
-                    
+	i == len(sep) ? concat(result,[str]) :
+	let(
+		pos = search(sep[i], str),
+		end = pos==[] ? len(str) : pos[0]
+	)
+	str_split_recurse(
+		substr(str,end+1),
+		sep, i+1,
+		concat(result, [substr(str,0,end)])
+	);
+
 function _remove_empty_strs(list) =
-    list_remove(list, search([""], list,0)[0]);
+	list_remove(list, search([""], list,0)[0]);
 
 
 // _str_cmp(str,sindex,pattern)
@@ -243,11 +247,11 @@ function _remove_empty_strs(list) =
 //    cuts run time in half when the string is long.  Two other string
 //    comparison methods were slower.  
 function _str_cmp(str,sindex,pattern) =
-  len(str)-sindex <len(pattern)? false :
-  _str_cmp_recurse(str,sindex,pattern,len(pattern));
+	len(str)-sindex <len(pattern)? false :
+	_str_cmp_recurse(str,sindex,pattern,len(pattern));
 
 function _str_cmp_recurse(str,sindex,pattern,plen,pindex=0,) = 
-   pindex < plen && pattern[pindex]==str[sindex] ? _str_cmp_recurse(str,sindex+1,pattern,plen,pindex+1): (pindex==plen);
+	pindex < plen && pattern[pindex]==str[sindex] ? _str_cmp_recurse(str,sindex+1,pattern,plen,pindex+1): (pindex==plen);
 
 // Function: str_find()
 // Usage:
@@ -281,21 +285,25 @@ function _str_cmp_recurse(str,sindex,pattern,plen,pindex=0,) =
 //   str_find("abc123def123abc","1234",all=true);  // Returns []
 //   str_find("abc","",all=true);                  // Returns [0,1,2]
 function str_find(str,pattern,start=undef,last=false,all=false) =
-                                 all ? _str_find_all(str,pattern) :
-                                 let( start = first_defined([start,last?len(str)-len(pattern):0]))
-                                 pattern=="" ? start :
-                                 last ? _str_find_last(str,pattern,start) :
-                                         _str_find_first(str,pattern,len(str)-len(pattern),start);
+	all? _str_find_all(str,pattern) :
+	let( start = first_defined([start,last?len(str)-len(pattern):0]) )
+	pattern==""? start :
+	last? _str_find_last(str,pattern,start) :
+	_str_find_first(str,pattern,len(str)-len(pattern),start);
 
 function _str_find_first(str,pattern,max_sindex,sindex) = 
-  sindex<=max_sindex && !_str_cmp(str,sindex, pattern) ? _str_find_first(str,pattern,max_sindex,sindex+1) :
-                                                        (sindex <= max_sindex ? sindex : undef);
+	sindex<=max_sindex && !_str_cmp(str,sindex, pattern)?
+		_str_find_first(str,pattern,max_sindex,sindex+1) :
+		(sindex <= max_sindex ? sindex : undef);
+
 function _str_find_last(str,pattern,sindex) = 
-  sindex>=0 && !_str_cmp(str,sindex, pattern) ? _str_find_last(str,pattern,sindex-1) :
-                                                        (sindex >=0 ? sindex : undef);
+	sindex>=0 && !_str_cmp(str,sindex, pattern)?
+		_str_find_last(str,pattern,sindex-1) :
+		(sindex >=0 ? sindex : undef);
+
 function _str_find_all(str,pattern) =
-   pattern == "" ? list_range(len(str)) :
-   [for(i=[0:1:len(str)-len(pattern)]) if (_str_cmp(str,i,pattern)) i];
+	pattern == "" ? list_range(len(str)) :
+	[for(i=[0:1:len(str)-len(pattern)]) if (_str_cmp(str,i,pattern)) i];
 
 
 // Function: starts_with()
@@ -422,18 +430,34 @@ function fmti(i,mindigits=1) =
 //   fmtf(PI,12);  // Returns: "3.14159265359"
 //   fmtf([PI,-16.75],12);  // Returns: "[3.14159265359, -16.75]"
 function fmtf(f,sig=12) =
+	assert(is_num(f))
+	assert(is_int(sig))
+	assert(sig>0)
 	is_list(f)? str("[",str_join(sep=", ", [for (g=f) fmtf(g,sig=sig)]),"]") :
 	f==0? "0" :
 	str(f)=="nan"? "nan" :
 	str(f)=="inf"? "inf" :
 	f<0? str("-",fmtf(-f,sig=sig)) :
-	let(e=floor(log(f)+1e-15))
-	(e<-sig/2||e>=sig)? str(fmtf(f*pow(10,-e),sig=sig),"e",e) :
 	let(
-		whole=floor(f),
-		part=floor((f-whole)*pow(10,sig-e-1)+0.5)
+		e = floor(log(f)),
+		mv = sig - e - 1
+	) mv == 0? fmti(floor(f + 0.5)) :
+	(e<-sig/2||mv<0)? str(fmtf(f*pow(10,-e),sig=sig),"e",e) :
+	let(
+		ff = f + pow(10,-mv)*0.5,
+		whole = floor(ff),
+		part = floor((ff-whole) * pow(10,mv))
 	)
-	part>0? str(fmti(whole), str_strip_trailing(str(".",fmti(part,mindigits=sig-e-1)),"0.")) : fmti(whole);
+	str_join([
+		str(whole),
+		str_strip_trailing(
+			str_join([
+				".",
+				fmti(part, mindigits=mv)
+			]),
+			"0."
+		)
+	]);
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
