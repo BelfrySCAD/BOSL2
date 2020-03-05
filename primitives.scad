@@ -43,7 +43,7 @@
 //   path = square([40,30], chamfer=5, anchor=FRONT, spin=30);
 //   stroke(path, closed=true);
 //   place_copies(path) color("blue") circle(d=2,$fn=8);
-module square(size=1, rounding=0, chamfer=0, center, anchor, spin=0) {
+module square(size=1, center, rounding=0, chamfer=0, anchor, spin=0) {
 	size = is_num(size)? [size,size] : point2d(size);
 	anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT);
 	pts = square(size=size, rounding=rounding, chamfer=chamfer, center=false);
@@ -54,7 +54,7 @@ module square(size=1, rounding=0, chamfer=0, center, anchor, spin=0) {
 }
 
 
-function square(size=1, rounding=0, chamfer=0, center, anchor, spin=0) =
+function square(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
 	assert(is_num(size)     || is_vector(size))
 	assert(is_num(chamfer)  || len(chamfer)==4)
 	assert(is_num(rounding) || len(rounding)==4)
@@ -102,7 +102,7 @@ function square(size=1, rounding=0, chamfer=0, center, anchor, spin=0) =
 
 // Function&Module: circle()
 // Usage:
-//   circle(r|d, [anchor])
+//   circle(r|d, [realign], [circum])
 // Description:
 //   When called as a module, creates a 2D polygon that approximates a circle of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle of the given size.
