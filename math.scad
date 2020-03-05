@@ -412,7 +412,7 @@ function _lcmlist(a) =
 function lcm(a,b=[]) =
 	!is_list(a) && !is_list(b) ? _lcm(a,b) : 
 	let(
-		arglist = concat((is_list(a)?a:[a]), (is_list(b)?b:[b]))
+		arglist = concat(force_list(a),force_list(b))
 	)
 	assert(len(arglist)>0,"invalid call to lcm with empty list(s)")
 	_lcmlist(arglist);
@@ -590,7 +590,7 @@ function _qr_factor(A,Q, column, m, n) =
 	let(
 		x = [for(i=[column:1:m-1]) A[i][column]],
 		alpha = (x[0]<=0 ? 1 : -1) * norm(x),
-		u = x - concat([alpha],replist(0,m-1)),
+		u = x - concat([alpha],repeat(0,m-1)),
 		v = u / norm(u),
 		Qc = ident(len(x)) - 2*transpose([v])*[v],
 		Qf = [for(i=[0:m-1]) [for(j=[0:m-1]) i<column || j<column ? (i==j ? 1 : 0) : Qc[i-column][j-column]]]

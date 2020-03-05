@@ -565,4 +565,220 @@ module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, bac
 
 
 
+// h is total height above 0 of the nub
+// nub extends below xy plane by distance nub/2
+module _pin_nub(r, nub, h)
+{
+    L = h / 4;
+    rotate_extrude(){
+      polygon(
+       [[ 0,-nub/2],
+        [-r,-nub/2],
+        [-r-nub, nub/2],
+        [-r-nub, nub/2+L],
+        [-r, h],
+        [0, h]]);
+     }  
+}
+
+
+module _pin_slot(l, r, t, d, nub, depth, stretch) {
+  yscale(4)
+    intersection() {
+      translate([t, 0, d + t / 4])
+          _pin_nub(r = r + t, nub = nub, h = l - (d + t / 4));
+      translate([-t, 0, d + t / 4]) 
+          _pin_nub(r = r + t, nub = nub, h = l - (d + t / 4));
+    }
+  cube([2 * r, depth, 2 * l], center = true);
+  up(l)
+    zscale(stretch)
+      ycyl(r = r, h = depth);
+}
+
+
+module _pin_shaft(r, lStraight, nub, nubscale, stretch, d, pointed)
+{
+   extra = 0.02;
+   rPoint = r / sqrt(2);
+   down(extra) cylinder(r = r, h = lStraight + extra);
+   up(lStraight) {
+      zscale(stretch) {
+         sphere(r = r);
+         if (pointed) up(rPoint) cylinder(r1 = rPoint, r2 = 0, h = rPoint);
+      }
+   }
+   up(d) yscale(nubscale) _pin_nub(r = r, nub = nub, h = lStraight - d);
+}
+
+function _pin_size(size) =
+  is_undef(size) ? [] :
+  let(sizeok = in_list(size,["tiny", "small","medium", "large", "standard"]))
+  assert(sizeok,"Pin size must be one of \"tiny\", \"small\", or \"standard\"")
+  size=="standard" || size=="large" ?
+     struct_set([], ["length", 10.8,
+                     "diameter", 7,
+                     "snap", 0.5,
+                     "nub_depth", 1.8,
+                     "thickness", 1.8,
+                     "preload", 0.2]):
+  size=="medium" ?
+     struct_set([], ["length", 8,
+                     "diameter", 4.6,
+                     "snap", 0.45,
+                     "nub_depth", 1.5,
+                     "thickness", 1.4,
+                     "preload", 0.2]) :
+  size=="small" ? 
+     struct_set([], ["length", 6, 
+                     "diameter", 3.2,
+                     "snap", 0.4,
+                     "nub_depth", 1.2,
+                     "thickness", 1.0,
+                     "preload", 0.16]) :
+  size=="tiny" ? 
+     struct_set([], ["length", 4, 
+                     "diameter", 2.5,
+                     "snap", 0.25,
+                     "nub_depth", 0.9,
+                     "thickness", 0.8,
+                     "preload", 0.1]):
+  undef;
+
+
+// Module: snap_pin()
+// Usage:
+//    snap_pin(size, [pointed], [anchor], [spin], [orient])
+//    snap_pin(r|radius|d|diameter, l|length, nub_depth, snap, thickness, [clearance], [preload], [pointed], [anchor], [spin], [orient])
+// Description:
+//    Creates a snap pin that can be inserted into an appropriate socket to connect two objects together.  You can choose from some standard
+//    pin dimensions by giving a size, or you can specify all the pin geometry parameters yourself.  If you use a standard size you can
+//    override the standard parameters by specifying other ones.  The pins have flat sides so they can
+//    be printed.  When oriented UP the shaft of the pin runs in the Z direction and the flat sides are the front and back.  The default
+//    orientation (FRONT) and anchor (FRONT) places the pin in a printable configuration, flat side down on the xy plane.
+//    The tightness of fit is determined by `preload` and `clearance`.  To make pins tighter increase `preload` and/or decrease `clearance`.  
+//    
+//    The "large" or "standard" size pin has a length of 10.8 and diameter of 7.  The "medium" pin has a length of 8 and diameter of 4.6.  The "small" pin
+//    has a length of 6 and diameter of 3.2.  The "tiny" pin has a length of 4 and a diameter of 2.5.  
+//    
+//    This pin is based on https://www.thingiverse.com/thing:213310 by Emmett Lalishe
+//    and a modified version at https://www.thingiverse.com/thing:3218332 by acwest
+//    and distributed under the Creative Commons - Attribution - Share Alike License
+// Arguments:
+//    size = text string to select from a list of predefined sizes, one of "standard", "small", or "tiny".
+//    pointed = set to true to get a pointed pin, false to get one with a rounded end.  Default: true
+//    r|radius = radius of the pin
+//    d|diameter = diameter of the pin
+//    l|length = length of the pin
+//    nub_depth = the distance of the nub from the base of the pin
+//    snap = how much snap the pin provides (the nub projection)
+//    thickness = thickness of the pin walls
+//    pointed = if true the pin is pointed, otherwise it has a rounded tip.  Default: true
+//    clearance = how far to shrink the pin away from the socket walls.  Default: 0.2
+//    preload = amount to move the nub towards the pin base, which can create tension from the misalignment with the socket.  Default: 0.2
+// Example: Pin in native orientation
+//    snap_pin("standard", anchor=CENTER, orient=UP, thickness = 1, $fn=40);
+// Example: Pins oriented for printing
+//    xspread(spacing=10, n=4) snap_pin("standard", $fn=40);
+module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, clearance=0.2, preload, pointed=true, anchor=FRONT, spin=0, orient=FRONT, center) {
+  preload_default = 0.2;
+  sizedat = _pin_size(size);
+  radius = get_radius(r1=r,r2=radius,d1=d,d2=diameter,dflt=struct_val(sizedat,"diameter")/2);
+  length = first_defined([l,length,struct_val(sizedat,"length")]);
+  snap = first_defined([snap, struct_val(sizedat,"snap")]);
+  thickness = first_defined([thickness, struct_val(sizedat,"thickness")]);
+  nub_depth = first_defined([nub_depth, struct_val(sizedat,"nub_depth")]);
+  preload = first_defined([first_defined([preload, struct_val(sizedat, "preload")]),preload_default]);
+
+  nubscale = 0.9;      // Mysterious arbitrary parameter
+
+  // The basic pin assumes a rounded cap of length sqrt(2)*r, which defines lStraight.
+  // If the point is enabled the cap length is instead 2*r
+  // preload shrinks the length, bringing the nubs closer together  
+
+  rInner = radius - clearance;
+  stretch = sqrt(2)*radius/rInner;  // extra stretch factor to make cap have proper length even though r is reduced.
+  lStraight = length - sqrt(2) * radius - clearance;
+  lPin = lStraight + (pointed ? 2*radius : sqrt(2)*radius);
+  attachable(anchor=anchor,spin=spin, orient=orient,
+             size=[nubscale*(2*rInner+2*snap + clearance),radius*sqrt(2)-2*clearance,2*lPin]){
+  zflip_copy()
+      difference() {
+        intersection() {
+            cube([3 * (radius + snap), radius * sqrt(2) - 2 * clearance, 2 * length + 3 * radius], center = true);
+            _pin_shaft(rInner, lStraight, snap+clearance/2, nubscale, stretch, nub_depth-preload, pointed);
+        }
+        _pin_slot(l = lStraight, r = rInner - thickness, t = thickness, d = nub_depth - preload, nub = snap, depth = 2 * radius + 0.02, stretch = stretch);
+      }
+  children();
+  }
+}
+
+// Module: snap_pin_socket()
+// Usage:
+//   snap_pin_socket(size, [fixed], [fins], [pointed], [anchor], [spin], [orient]);
+//   snap_pin_socket(r|radius|d|diameter, l|length, nub_depth, snap, [fixed], [pointed], [fins], [anchor], [spin], [orient])
+// Description:
+//   Constructs a socket suitable for a snap_pin with the same parameters.   If `fixed` is true then the socket has flat walls and the
+//   pin will not rotate in the socket.  If `fixed` is false then the socket is round and the pin will rotate, particularly well
+//   if you add a lubricant.  If `pointed` is true the socket is pointed to receive a pointed pin, otherwise it has a rounded and and
+//   will be shorter.  If `fins` is set to true then two fins are included inside the socket to act as supports (which may help when printing tip up,
+//   especially when `pointed=false`).  The default orientation is DOWN with anchor BOTTOM so that you can difference() the socket away from an object.
+//
+//   The "large" or "standard" size pin has a length of 10.8 and diameter of 7.  The "medium" pin has a length of 8 and diameter of 4.6.  The "small" pin
+//   has a length of 6 and diameter of 3.2.  The "tiny" pin has a length of 4 and a diameter of 2.5.  
+// Arguments:
+//   size = text string to select from a list of predefined sizes, one of "standard", "small", or "tiny".
+//   pointed = set to true to get a pointed pin, false to get one with a rounded end.  Default: true
+//   r|radius = radius of the pin
+//   d|diameter = diameter of the pin
+//   l|length = length of the pin
+//   nub_depth = the distance of the nub from the base of the pin
+//   snap = how much snap the pin provides (the nub projection)
+//   fixed = if true the pin cannot rotate, if false it can.  Default: true
+//   pointed = if true the socket has a pointed tip.  Default: true
+//   fins = if true supporting fins are included.  Default: false
+// Example:  The socket shape itself in native orientation.
+//   snap_pin_socket("standard", anchor=CENTER, orient=UP, fins=true, $fn=40);
+// Example:  A spinning socket with fins:
+//   snap_pin_socket("standard", anchor=CENTER, orient=UP, fins=true, fixed=false, $fn=40);
+// Example:  A cube with a socket in the middle and one half-way off the front edge so you can see inside:
+//   $fn=40;
+//   diff("socket") cuboid([20,20,20]) {
+//     attach(TOP) snap_pin_socket("standard", $tags="socket");
+//     position(TOP+FRONT)snap_pin_socket("standard", $tags="socket");
+//   }  
+module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fixed=true, pointed=true, fins=false, anchor=BOTTOM, spin=0, orient=DOWN) {
+  sizedat = _pin_size(size);
+  radius = get_radius(r1=r,r2=radius,d1=d,d2=diameter,dflt=struct_val(sizedat,"diameter")/2);
+  length = first_defined([l,length,struct_val(sizedat,"length")]);
+  snap = first_defined([snap, struct_val(sizedat,"snap")]);
+  nub_depth = first_defined([nub_depth, struct_val(sizedat,"nub_depth")]);
+
+  tip = pointed ? sqrt(2) * radius : radius;
+  lPin = length + (pointed?(2-sqrt(2))*radius:0);
+  lStraight = lPin - (pointed?sqrt(2)*radius:radius);
+  attachable(anchor=anchor,spin=spin,orient=orient,
+             size=[2*(radius+snap),radius*sqrt(2),lPin])
+  {  
+  down(lPin/2)
+    intersection() {
+      if (fixed) 
+        cube([3 * (radius + snap), radius * sqrt(2), 3 * lPin + 3 * radius], center = true);
+      union() {
+        _pin_shaft(radius,lStraight,snap,1,1,nub_depth,pointed);
+        if (fins) 
+          up(lStraight){
+            cube([2 * radius, 0.01, 2 * tip], center = true);
+            cube([0.01, 2 * radius, 2 * tip], center = true);
+          }
+      }
+    }
+  children();
+  } 
+}
+
+
+
+
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

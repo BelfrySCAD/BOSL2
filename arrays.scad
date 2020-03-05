@@ -153,9 +153,9 @@ function list_decreasing(list) =
 // Section: Basic List Generation
 
 
-// Function: replist()
+// Function: repeat()
 // Usage:
-//   replist(val, n)
+//   repeat(val, n)
 // Description:
 //   Generates a list or array of `n` copies of the given `list`.
 //   If the count `n` is given as a list of counts, then this creates a
@@ -164,14 +164,14 @@ function list_decreasing(list) =
 //   val = The value to repeat to make the list or array.
 //   n = The number of copies to make of `val`.
 // Example:
-//   replist(1, 4);        // Returns [1,1,1,1]
-//   replist(8, [2,3]);    // Returns [[8,8,8], [8,8,8]]
-//   replist(0, [2,2,3]);  // Returns [[[0,0,0],[0,0,0]], [[0,0,0],[0,0,0]]]
-//   replist([1,2,3],3);   // Returns [[1,2,3], [1,2,3], [1,2,3]]
-function replist(val, n, i=0) =
+//   repeat(1, 4);        // Returns [1,1,1,1]
+//   repeat(8, [2,3]);    // Returns [[8,8,8], [8,8,8]]
+//   repeat(0, [2,2,3]);  // Returns [[[0,0,0],[0,0,0]], [[0,0,0],[0,0,0]]]
+//   repeat([1,2,3],3);   // Returns [[1,2,3], [1,2,3], [1,2,3]]
+function repeat(val, n, i=0) =
 	is_num(n)? [for(j=[1:1:n]) val] :
 	(i>=len(n))? val :
-	[for (j=[1:1:n[i]]) replist(val, n, i+1)];
+	[for (j=[1:1:n[i]]) repeat(val, n, i+1)];
 
 
 // Function: list_range()
@@ -308,11 +308,11 @@ function repeat_entries(list, N, exact = true) =
 		length = len(list),
 		reps_guess = is_list(N)?
 			assert(len(N)==len(list), "Vector parameter N to repeat_entries has the wrong length")
-			N : replist(N/length,length),
+			N : repeat(N/length,length),
 		reps = exact? _sum_preserving_round(reps_guess) :
 			[for (val=reps_guess) round(val)]
 	)
-	[for(i=[0:length-1]) each replist(list[i],reps[i])];
+	[for(i=[0:length-1]) each repeat(list[i],reps[i])];
 
 
 // Function: list_set()
@@ -357,7 +357,7 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 			)
 		],
 		slice(list,1+lastind, len(list)),
-		replist(dflt, minlen-lastind-1)
+		repeat(dflt, minlen-lastind-1)
 	);
 
 
@@ -487,7 +487,7 @@ function list_bset(indexset, valuelist, dflt=0) =
 		trueind = search([true], indexset,0)[0]
 	) concat(
 		list_set([],trueind, valuelist, dflt=dflt),    // Fill in all of the values
-		replist(dflt,len(indexset)-max(trueind)-1)  // Add trailing values so length matches indexset
+		repeat(dflt,len(indexset)-max(trueind)-1)  // Add trailing values so length matches indexset
 	);
 
 
@@ -523,7 +523,7 @@ function list_longest(vecs) =
 //   fill = The value to pad the list with.
 function list_pad(v, minlen, fill=undef) =
 	assert(is_list(v)||is_string(list))
-	concat(v,replist(fill,minlen-len(v)));
+	concat(v,repeat(fill,minlen-len(v)));
 
 
 // Function: list_trim()
@@ -849,6 +849,15 @@ function enumerate(l,idx=undef) =
 	(idx==undef)?
 		[for (i=[0:1:len(l)-1]) [i,l[i]]] :
 		[for (i=[0:1:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
+
+
+// Function: force_list()
+// Usage:
+//   list = force_list(value)
+// Description:
+//   If value is a list returns value, otherwise returns [value].  Makes it easy to
+//   treat a scalar input consistently as a singleton list along with list inputs.  
+function force_list(value) = is_list(value) ? value : [value];
 
 
 // Function: pair()

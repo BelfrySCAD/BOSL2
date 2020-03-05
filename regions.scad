@@ -499,7 +499,7 @@ function offset(
 		d = flip_dir * (is_def(r) ? r : delta),
 		shiftsegs = [for(i=[0:len(path)-1]) _shift_segment(select(path,i,i+1), d)],
 		// good segments are ones where no point on the segment is less than distance d from any point on the path
-		good = check_valid ? _good_segments(path, abs(d), shiftsegs, closed, quality) : replist(true,len(shiftsegs)),
+		good = check_valid ? _good_segments(path, abs(d), shiftsegs, closed, quality) : repeat(true,len(shiftsegs)),
 		goodsegs = bselect(shiftsegs, good),
 		goodpath = bselect(path,good)
 	)
@@ -569,7 +569,7 @@ function offset(
 			)
 		],
 		pointcount = (is_def(delta) && !chamfer)?
-			replist(1,len(sharpcorners)) :
+			repeat(1,len(sharpcorners)) :
 			[for(i=[0:len(goodsegs)-1]) len(newcorners[i])],
 		start = [goodsegs[0][0]],
 		end = [goodsegs[len(goodsegs)-2][1]],

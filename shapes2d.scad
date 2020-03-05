@@ -406,7 +406,7 @@ function _normal_segment(p1,p2) =
 //   path = turtle(["move","left",360/5,"addlength",1],repeat=50);
 //   stroke(path,width=.2);
 // Example(2DMed): yet another spiral, without using `repeat`
-//   path = turtle(concat(["angle",71],flatten(replist(["move","left","addlength",1],50))));
+//   path = turtle(concat(["angle",71],flatten(repeat(["move","left","addlength",1],50))));
 //   stroke(path,width=.2);
 // Example(2DMed): The previous spiral grows linearly and eventually intersects itself.  This one grows geometrically and does not.
 //   path = turtle(["move","left",71,"scale",1.05],repeat=50);

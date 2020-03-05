@@ -161,7 +161,7 @@ include <BOSL2/skin.scad>
 //   $fs=.25;
 //   $fa=1;
 //   zigzagx = [-10, 0, 10, 20, 29, 38, 46, 52, 59, 66, 72, 78, 83, 88, 92, 96, 99, 102, 112];
-//   zigzagy = concat([0], flatten(replist([-10,10],8)), [-10,0]);
+//   zigzagy = concat([0], flatten(repeat([-10,10],8)), [-10,0]);
 //   zig = zip(zigzagx,zigzagy);
 //   stroke(zig,width=1);   // Original shape
 //   fwd(20)            // Smooth size corners with a cut of 4 and curvature parameter 0.6
@@ -194,7 +194,7 @@ include <BOSL2/skin.scad>
 // Example(FlatSpin):  Rounding a spiral with increased rounding along the length
 //   // Construct a square spiral path in 3D
 //   square = [[0,0],[1,0],[1,1],[0,1]];
-//   spiral = flatten(replist(concat(square,reverse(square)),5));  // Squares repeat 10 times, forward and backward
+//   spiral = flatten(repeat(concat(square,reverse(square)),5));  // Squares repeat 10 times, forward and backward
 //   squareind = [for(i=[0:9]) each [i,i,i,i]];                    // Index of the square for each point
 //   z = list_range(40)*.2+squareind;                              
 //   path3d = zip(spiral,z);                                       // 3D spiral
@@ -246,7 +246,7 @@ function round_corners(path, curve="circle", measure="cut", size=undef,  k=0.5, 
 		dim = pathdim - 1 + have_size,
 		points = have_size ? path : subindex(path, [0:dim-1]),
 		parm = have_size && is_list(size) && len(size)>2? size :
-			have_size? replist(size, len(path)) :
+			have_size? repeat(size, len(path)) :
 			subindex(path, dim),
 		// dk will be a list of parameters, for the "smooth" curve the distance and curvature parameter pair,
 		// and for the "circle" curve, distance and radius.
@@ -407,6 +407,41 @@ function _rounding_offsets(edgespec,z_dir=1) =
 
 
 
+// Function: smooth_path()
+// Usage:
+//   smooth_path(path, [tangents], [splinesteps], [closed]
+// Description:
+//   Smooths the input path using a cubic spline.  Every segment of the path will be replaced by a cubic curve
+//   with `splinesteps` points.  The cubic interpolation will pass through every input point on the path
+//   and will match the tangents at every point.  If you do not specify tangents they will be computed using
+//   deriv().  Note that the magnitude of the tangents affects the result.  See also path_to_bezier().  
+// Arguments:
+//   path = path to smooth
+//   tangents = tangent vectors of the path
+//   splinesteps = number of points to insert between the path points.  Default: 10
+//   closed = set to true for a closed path.  Default: false
+// Example(2D): Original path in green, smoothed path in yellow:
+//   color("green")stroke(square(4), width=0.1);
+//   stroke(smooth_path(square(4)), width=0.1);
+// Example(2D): Closing the path changes the end tangents
+//   polygon(smooth_path(square(4), closed=true));
+// Example(2D): A more interesting shape:
+//   path = [[0,0], [4,0], [7,14], [-3,12]];
+//   polygon(smooth_path(path,closed=true));
+// Example(2D): Scaling the tangent data can decrease or increase the amount of smoothing:
+//   shape = square(4);
+//   polygon(smooth_path(shape, tangents=0.5*deriv(shape, closed=true),closed=true));
+// Example(2D): Or you can specify your own tangent values to alter the shape of the curve
+//   polygon(smooth_path(square(4),tangents=1.25*[[-2,-1], [-2,1], [1,2], [2,-1]],closed=true));
+// Example(FlatSpin):  Works on 3d paths as well
+//   path = [[0,0,0],[3,3,2],[6,0,1],[9,9,0]];
+//   trace_polyline(smooth_path(path),size=.3);
+function smooth_path(path, tangents, splinesteps=10, closed=false) =
+  let(
+     bez = path_to_bezier(path, tangents=tangents, closed=closed)
+  )
+  bezier_polyline(bez,splinesteps=splinesteps);
+
 
 // Module: offset_sweep()
 //
@@ -497,11 +532,11 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //
 // Example: Rounding a star shaped prism with postive radius values
 //   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(zip(star, flatten(replist([.5,0],5))), curve="circle", measure="cut", $fn=12);
+//   rounded_star = round_corners(zip(star, flatten(repeat([.5,0],5))), curve="circle", measure="cut", $fn=12);
 //   offset_sweep(rounded_star, height=20, bottom=os_circle(r=4), top=os_circle(r=1), steps=15);
 // Example: Rounding a star shaped prism with negative radius values
 //   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(zip(star, flatten(replist([.5,0],5))), curve="circle", measure="cut", $fn=12);
+//   rounded_star = round_corners(zip(star, flatten(repeat([.5,0],5))), curve="circle", measure="cut", $fn=12);
 //   offset_sweep(rounded_star, height=20, bottom=os_circle(r=-4), top=os_circle(r=-1), steps=15);
 // Example: Unexpected corners in the result even with `offset="round"` (the default), even with offset_maxstep set small.  
 //   triangle = [[0,0],[10,0],[5,10]];
@@ -514,7 +549,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   offset_sweep(triangle, height=6, bottom = os_circle(r=-2),steps=16,offset_maxstep=0.01);
 // Example: Here is the star chamfered at the top with a teardrop rounding at the bottom. Check out the rounded corners on the chamfer.  Note that a very small value of `offset_maxstep` is needed to keep these round.  Observe how the rounded star points vanish at the bottom in the teardrop: the number of vertices does not remain constant from layer to layer.  
 //   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(zip(star, flatten(replist([.5,0],5))), curve="circle", measure="cut", $fn=12);
+//   rounded_star = round_corners(zip(star, flatten(repeat([.5,0],5))), curve="circle", measure="cut", $fn=12);
 //   offset_sweep(rounded_star, height=20, bottom=os_teardrop(r=4), top=os_chamfer(width=4,offset_maxstep=.1));
 // Example: We round a cube using the continous curvature rounding profile.  But note that the corners are not smooth because the curved square collapses into a square with corners.    When a collapse like this occurs, we cannot turn `check_valid` off.  
 //   square = [[0,0],[1,0],[1,1],[0,1]];
@@ -565,7 +600,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //     }
 // Example: Star shaped box
 //   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(zip(star, flatten(replist([.5,0],5))), curve="circle", measure="cut", $fn=12);
+//   rounded_star = round_corners(zip(star, flatten(repeat([.5,0],5))), curve="circle", measure="cut", $fn=12);
 //   thickness = 2;
 //   ht=20;
 //   difference(){
@@ -577,12 +612,12 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //     }
 // Example: A profile defined by an arbitrary sequence of points. 
 //   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(zip(star, flatten(replist([.5,0],5))), curve="circle", measure="cut", $fn=12);
+//   rounded_star = round_corners(zip(star, flatten(repeat([.5,0],5))), curve="circle", measure="cut", $fn=12);
 //   profile = os_profile(points=[[0,0],[.3,.1],[.6,.3],[.9,.9], [1.2, 2.7],[.8,2.7],[.8,3]]);
 //   offset_sweep(reverse(rounded_star), height=20, top=profile, bottom=profile);
 // Example: Parabolic rounding
 //   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(zip(star, flatten(replist([.5,0],5))), curve="circle", measure="cut", $fn=12);
+//   rounded_star = round_corners(zip(star, flatten(repeat([.5,0],5))), curve="circle", measure="cut", $fn=12);
 //   offset_sweep(rounded_star, height=20, top=os_profile(points=[for(r=[0:.1:2])[sqr(r),r]]),
 //                                          bottom=os_profile(points=[for(r=[0:.2:5])[-sqrt(r),r]]));
 // Example: This example uses a sine wave offset profile.  Note that because the offsets occur sequentially and the path grows incrementally the offset needs a very fine resolution to produce the proper result.  Note that we give no specification for the bottom, so it is straight.  
@@ -642,7 +677,7 @@ module offset_sweep(
 				offsetind+1, vertexcount+len(path),
 				vertices=concat(
 					vertices,
-					zip(vertices_faces[0],replist(offsets[offsetind][1],len(vertices_faces[0])))
+					zip(vertices_faces[0],repeat(offsets[offsetind][1],len(vertices_faces[0])))
 				),
 				faces=concat(faces, vertices_faces[1])
 			)
@@ -711,7 +746,7 @@ module offset_sweep(
 	);
 
 	top_start_ind = len(vertices_faces_bot[0]);
-	initial_vertices_top = zip(path, replist(middle,len(path)));
+	initial_vertices_top = zip(path, repeat(middle,len(path)));
 	vertices_faces_top = make_polyhedron(
 		path, translate_points(offsets_top,[0,middle]),
 		struct_val(top,"offset"), !clockwise,

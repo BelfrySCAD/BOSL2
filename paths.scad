@@ -46,8 +46,8 @@ function is_path(list, dim=[2,3], fast=false) =
 	fast? is_list(list) && is_vector(list[0],fast=true) :
 	is_list(list) && is_list(list[0]) && len(list)>1 &&
 	let( d = len(list[0]) )
-	(is_undef(dim) || in_list(d, is_list(dim)?dim:[dim]) ) &&
-	is_list_of(list, replist(0,d));
+	(is_undef(dim) || in_list(d, force_list(dim))) &&
+	is_list_of(list, repeat(0,d));
 
 
 // Function: is_closed_path()
@@ -287,7 +287,7 @@ function path_closest_point(path, pt) =
 //   The returns vectors will be normalized to length 1.
 function path_tangents(path, closed=false) =
 	assert(is_path(path))
-	[for(t=deriv(path)) unit(t)];
+	[for(t=deriv(path,closed=closed)) unit(t)];
 
 
 // Function: path_normals()
@@ -862,6 +862,7 @@ module path_extrude(path, convexity=10, clipsize=100) {
 //   polyline = [for (a=[0:30:210]) 10*[cos(a), sin(a), sin(a)]];
 //   trace_polyline(polyline, showpts=true, size=0.5, color="lightgreen");
 module trace_polyline(pline, closed=false, showpts=false, N=1, size=1, color="yellow") {
+        assert(is_path(pline),"Input pline is not a path");
 	sides = segs(size/2);
 	pline = closed? close_path(pline) : pline;
 	if (showpts) {
@@ -1125,7 +1126,7 @@ function _path_cut(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[
 			[lerp(lastpt,path[pind], (dists[dind]-dtotal)/dpartial),pind] :
 			_path_cut_single(path, dists[dind]-dtotal-dpartial, closed, pind)
 	) is_undef(nextpoint)?
-		concat(result, replist(undef,len(dists)-dind)) :
+		concat(result, repeat(undef,len(dists)-dind)) :
 		_path_cut(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
 
 // Search for a single cut point in the path
@@ -1259,7 +1260,7 @@ function subdivide_path(path, N, closed=true, exact=true, method="length") =
 				is_list(N)? (
 					assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
 					add_scalar(N,-1)
-				) : replist((N-len(path)) / count, count)
+				) : repeat((N-len(path)) / count, count)
 			) : // method=="length"
 			assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
 			let(

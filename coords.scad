@@ -31,7 +31,7 @@ function point2d(p, fill=0) = [for (i=[0:1]) (p[i]==undef)? fill : p[i]];
 //   fill = Value to fill missing values in vectors with.
 function path2d(points) =
 	assert(is_path(points,dim=undef,fast=true),"Input to path2d is not a path")
-	let (result = points * concat(ident(2), replist([0,0], len(points[0])-2)))
+	let (result = points * concat(ident(2), repeat([0,0], len(points[0])-2)))
 	assert(is_def(result), "Invalid input to path2d")
 	result;
 
@@ -58,11 +58,11 @@ function path3d(points, fill=0) =
 	let (
 		change = len(points[0])-3,
 		M = change < 0? [[1,0,0],[0,1,0]] : 
-			concat(ident(3), replist([0,0,0],change)),
+			concat(ident(3), repeat([0,0,0],change)),
 		result = points*M
 	)
 	assert(is_def(result), "Input to path3d is invalid")
-	fill == 0 || change>=0 ? result : result + replist([0,0,fill], len(result));
+	fill == 0 || change>=0 ? result : result + repeat([0,0,fill], len(result));
 
 
 // Function: point4d()
@@ -87,17 +87,17 @@ function path4d(points, fill=0) =
    let (
       change = len(points[0])-4,
       M = change < 0 ? select(ident(4), 0, len(points[0])-1) :
-                       concat(ident(4), replist([0,0,0,0],change)),
+                       concat(ident(4), repeat([0,0,0,0],change)),
       result = points*M
    ) 
    assert(is_def(result), "Input to path4d is invalid")
    fill == 0 || change >= 0 ? result :
     let(
       addition = is_list(fill) ? concat(0*points[0],fill) :
-                                 concat(0*points[0],replist(fill,-change))
+                                 concat(0*points[0],repeat(fill,-change))
     )
     assert(len(addition) == 4, "Fill is the wrong length")
-    result + replist(addition, len(result));
+    result + repeat(addition, len(result));
 
 
 // Function: translate_points()
