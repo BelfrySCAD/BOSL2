@@ -644,7 +644,7 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 	b!=undef? union(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
 	len(regions)<=1? regions[0] :
 	union(
-		let(regions=[for (r=regions) is_path(r)? [r] : r])
+		let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
 		concat(
 			[_tagged_region(regions[0],regions[1],["O","S"],["O"], eps=eps)],
 			[for (i=[2:1:len(regions)-1]) regions[i]]
@@ -675,7 +675,7 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 	b!=undef? difference(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
 	len(regions)<=1? regions[0] :
 	difference(
-		let(regions=[for (r=regions) is_path(r)? [r] : r])
+		let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
 		concat(
 			[_tagged_region(regions[0],regions[1],["O","U"],["I"], eps=eps)],
 			[for (i=[2:1:len(regions)-1]) regions[i]]
@@ -705,7 +705,7 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 	b!=undef? intersection(concat([regions],[b],c==undef?[]:[c]),eps=eps) :
 	len(regions)<=1? regions[0] :
 	intersection(
-		let(regions=[for (r=regions) is_path(r)? [r] : r])
+		let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
 		concat(
 			[_tagged_region(regions[0],regions[1],["I","S"],["I"],eps=eps)],
 			[for (i=[2:1:len(regions)-1]) regions[i]]
