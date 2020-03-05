@@ -174,8 +174,8 @@ function str_frac(str,mixed=true,improper=true,signed=true) =
 			numerator =  _str_int_recurse(split[0],10,len(split[0])-1),
 			denominator = _str_int_recurse(split[1],10,len(split[1])-1)
 		) !improper && numerator>=denominator? (0/0) :
-		denominator<0 ? (0/0) : numerator/denominator;
-	)  
+		denominator<0 ? (0/0) : numerator/denominator
+	);
 
 // Function: str_num()
 // Usage:
