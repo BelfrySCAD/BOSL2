@@ -425,6 +425,8 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   stroke(smooth_path(square(4)), width=0.1);
 // Example(2D): Closing the path changes the end tangents
 //   polygon(smooth_path(square(4), closed=true));
+// Example(2D): You can specify your own tangent values to alter the shape of the curve
+//   polygon(smooth_path(square(4),tangent=[[-2,-1], [-2,1], [1,2], [2,-1]],closed=true));
 // Example(FlatSpin):  Works on 3d paths as well
 //   path = [[0,0,0],[3,3,2],[6,0,1],[9,9,0]];
 //   trace_polyline(smooth_path(path),size=.3);

@@ -332,9 +332,9 @@ function bezier_polyline(bezier, splinesteps=16, N=3) = let(
 //   closed = set to true for a closed path.  Default: false
 function path_to_bezier(path, tangent, closed=false) =
   assert(is_path(path,dim=undef),"Input path is not a valid path")
-  assert(is_undef(tangent) || is_path(tanget,dim=len(path[0])),"Tangent must be a path of the same dimension as the input path")
+  assert(is_undef(tangent) || is_path(tangent,dim=len(path[0])),"Tangent must be a path of the same dimension as the input path")
   let(
-    tangent = is_def(tangent)? tangent : path_tangents(path, closed=closed),
+    tangent = is_def(tangent)? [for(t=tangent) unit(t)] : path_tangents(path, closed=closed),
     lastpt = len(path) - (closed?0:1)
   )
   [for(i=[0:lastpt-1]) each [path[i], path[i]+tangent[i], select(path,i+1)-select(tangent,i+1)],
