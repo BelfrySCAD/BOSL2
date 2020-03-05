@@ -47,7 +47,7 @@ function is_path(list, dim=[2,3], fast=false) =
 	is_list(list) && is_list(list[0]) && len(list)>1 &&
 	let( d = len(list[0]) )
 	(is_undef(dim) || in_list(d, force_list(dim))) &&
-	is_list_of(list, replist(0,d));
+	is_list_of(list, repeat(0,d));
 
 
 // Function: is_closed_path()
@@ -1126,7 +1126,7 @@ function _path_cut(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[
 			[lerp(lastpt,path[pind], (dists[dind]-dtotal)/dpartial),pind] :
 			_path_cut_single(path, dists[dind]-dtotal-dpartial, closed, pind)
 	) is_undef(nextpoint)?
-		concat(result, replist(undef,len(dists)-dind)) :
+		concat(result, repeat(undef,len(dists)-dind)) :
 		_path_cut(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
 
 // Search for a single cut point in the path
@@ -1260,7 +1260,7 @@ function subdivide_path(path, N, closed=true, exact=true, method="length") =
 				is_list(N)? (
 					assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
 					add_scalar(N,-1)
-				) : replist((N-len(path)) / count, count)
+				) : repeat((N-len(path)) / count, count)
 			) : // method=="length"
 			assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
 			let(

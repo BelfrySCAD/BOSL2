@@ -211,7 +211,7 @@ include <vnf.scad>
 //   skin( shapes, slices=0);
 // Example: You can fix it by specifying "tangent" for the first method, but you still need "direct" for the rest.
 //   shapes = [for(i=[0:.2:1]) path3d(regular_ngon(n=4, side=4, rounding=i, $fn=32),i*5)];
-//   skin( shapes, slices=0, method=concat(["tangent"],replist("direct",len(shapes)-2)));
+//   skin( shapes, slices=0, method=concat(["tangent"],repeat("direct",len(shapes)-2)));
 // Example(FlatSpin): Connecting square to pentagon using "direct" method.
 //   skin([regular_ngon(n=4, r=4), regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10);
 // Example(FlatSpin): Connecting square to shifted pentagon using "direct" method.
@@ -335,14 +335,14 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
            closed ? false : true,
     capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
     fullcaps = is_bool(caps) ? [caps,caps] : caps,
-    refine = is_list(refine) ? refine : replist(refine, len(profiles)),
-    slices = is_list(slices) ? slices : replist(slices, profcount),
+    refine = is_list(refine) ? refine : repeat(refine, len(profiles)),
+    slices = is_list(slices) ? slices : repeat(slices, profcount),
     refineOK = [for(i=idx(refine)) if (refine[i]<=0 || !is_integer(refine[i])) i],
     slicesOK = [for(i=idx(slices)) if (!is_integer(slices[i]) || slices[i]<0) i],
     maxsize = list_longest(profiles),
     methodok = is_list(method) || in_list(method, legal_methods),
     methodlistok = is_list(method) ? [for(i=idx(method)) if (!in_list(method[i], legal_methods)) i] : [],
-    method = is_string(method) ? replist(method, profcount) : method,
+    method = is_string(method) ? repeat(method, profcount) : method,
     // Define to be zero where a resampling method is used and 1 where a vertex duplicator is used
     RESAMPLING = 0,
     DUPLICATOR = 1,
@@ -382,7 +382,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
          method_type[i] * method_type[i-1])],
     parts = search(1,[1,for(i=[0:1:len(profile_resampled)-2]) profile_resampled[i]!=profile_resampled[i+1] ? 1 : 0],0),
     plen = [for(i=idx(parts)) (i== len(parts)-1? len(refined_len) : parts[i+1]) - parts[i]],
-    max_list = [for(i=idx(parts)) each replist(max(select(refined_len, parts[i], parts[i]+plen[i]-1)), plen[i])],
+    max_list = [for(i=idx(parts)) each repeat(max(select(refined_len, parts[i], parts[i]+plen[i]-1)), plen[i])],
     transition_profiles = [for(i=[(closed?0:1):1:profcount-1]) if (select(method_type,i-1) != method_type[i]) i],
     badind = [for(tranprof=transition_profiles) if (refined_len[tranprof] != max_list[tranprof]) tranprof]
   )
@@ -515,7 +515,7 @@ function slice_profiles(profiles,slices,closed=false) =
   let(listok = !is_list(slices) || len(slices)==len(profiles)-(closed?0:1))
   assert(listok, "Input slices to slice_profiles is a list with the wrong length")
   let(
-    count = is_num(slices) ? replist(slices,len(profiles)-(closed?0:1)) : slices,
+    count = is_num(slices) ? repeat(slices,len(profiles)-(closed?0:1)) : slices,
     slicelist = [for (i=[0:len(profiles)-(closed?1:2)])
       each [for(j = [0:count[i]]) lerp(profiles[i],select(profiles,i+1),j/(count[i]+1))]
     ]
@@ -591,7 +591,7 @@ function _dp_distance_array(small, big, abort_thresh=1/0) =
 
 function _dp_distance_row(small, big, small_ind, tdist) =
                     // Top left corner is zero because it gets counted at the end in bottom right corner
-   small_ind == 0 ? [cumsum([0,for(i=[1:len(big)]) norm(big[i%len(big)]-small[0])]), replist(_MAP_LEFT,len(big)+1)] :
+   small_ind == 0 ? [cumsum([0,for(i=[1:len(big)]) norm(big[i%len(big)]-small[0])]), repeat(_MAP_LEFT,len(big)+1)] :
    [for(big_ind=1,
        newrow=[ norm(big[0] - small[small_ind%len(small)]) + tdist[small_ind-1][0] ],
        newmap = [_MAP_UP]
@@ -1151,7 +1151,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
     normal = is_path(normal) ? [for(n=normal) unit(n)] :
              is_def(normal) ? unit(normal) :
              method =="incremental" && abs(tangents[0].z) > 1/sqrt(2) ? BACK : UP,
-    normals = is_path(normal) ? normal : replist(normal,len(path)),
+    normals = is_path(normal) ? normal : repeat(normal,len(path)),
     pathfrac = twist_by_length ? path_length_fractions(path, closed) : [for(i=[0:1:len(path)]) i / (len(path)-(closed?0:1))],
     L = len(path),
     transform_list = 

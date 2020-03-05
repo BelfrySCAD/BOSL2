@@ -590,7 +590,7 @@ function _qr_factor(A,Q, column, m, n) =
 	let(
 		x = [for(i=[column:1:m-1]) A[i][column]],
 		alpha = (x[0]<=0 ? 1 : -1) * norm(x),
-		u = x - concat([alpha],replist(0,m-1)),
+		u = x - concat([alpha],repeat(0,m-1)),
 		v = u / norm(u),
 		Qc = ident(len(x)) - 2*transpose([v])*[v],
 		Qf = [for(i=[0:m-1]) [for(j=[0:m-1]) i<column || j<column ? (i==j ? 1 : 0) : Qc[i-column][j-column]]]
