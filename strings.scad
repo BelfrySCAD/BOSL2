@@ -430,7 +430,6 @@ function fmti(i,mindigits=1) =
 //   fmtf(PI,12);  // Returns: "3.14159265359"
 //   fmtf([PI,-16.75],12);  // Returns: "[3.14159265359, -16.75]"
 function fmtf(f,sig=12) =
-	assert(is_num(f))
 	assert(is_int(sig))
 	assert(sig>0)
 	is_list(f)? str("[",str_join(sep=", ", [for (g=f) fmtf(g,sig=sig)]),"]") :
@@ -438,6 +437,7 @@ function fmtf(f,sig=12) =
 	str(f)=="nan"? "nan" :
 	str(f)=="inf"? "inf" :
 	f<0? str("-",fmtf(-f,sig=sig)) :
+	assert(is_num(f))
 	let(
 		e = floor(log(f)),
 		mv = sig - e - 1
