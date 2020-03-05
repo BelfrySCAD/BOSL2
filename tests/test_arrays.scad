@@ -3,13 +3,13 @@ include <BOSL2/std.scad>
 
 // List/Array Ops
 
-module test_replist() {
-	assert(replist(1, 4) == [1,1,1,1]);
-	assert(replist(8, [2,3]) == [[8,8,8], [8,8,8]]);
-	assert(replist(0, [2,2,3]) == [[[0,0,0],[0,0,0]], [[0,0,0],[0,0,0]]]);
-	assert(replist([1,2,3],3) == [[1,2,3], [1,2,3], [1,2,3]]);
+module test_repeat() {
+	assert(repeat(1, 4) == [1,1,1,1]);
+	assert(repeat(8, [2,3]) == [[8,8,8], [8,8,8]]);
+	assert(repeat(0, [2,2,3]) == [[[0,0,0],[0,0,0]], [[0,0,0],[0,0,0]]]);
+	assert(repeat([1,2,3],3) == [[1,2,3], [1,2,3], [1,2,3]]);
 }
-test_replist();
+test_repeat();
 
 
 module test_in_list() {
