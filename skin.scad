@@ -751,12 +751,13 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
 //   pent = pentagon(side=2);
 //   hex = hexagon(side=2);
 //   sep = regular_ngon(7,side=2);
-//   skin(associate_vertices([sq,pent,hex,sep], [1,3,4]) ,slices=10, refine=10, method="distance", z=[0,2,4,6]);
+//   profiles = associate_vertices([sq,pent,hex,sep], [1,3,4]);
+//   skin(profiles ,slices=10, refine=10, method="distance", z=[0,2,4,6]);
 // Example: The polygons cannot shrink, so if you want to have decreasing polygons you'll need to concatenate multiple results.  Note that it is perfectly ok to duplicate a profile as shown here, where the pentagon is duplicated:
 //   sq = regular_ngon(4,side=2);
 //   pent = pentagon(side=2);
-//   grow = associate_vertices([sq,pent],[1]);
-//   shrink = associate_vertices([sq,pent],[2]);
+//   grow = associate_vertices([sq,pent], [1]);
+//   shrink = associate_vertices([sq,pent], [2]);
 //   skin(concat(grow, reverse(shrink)), slices=10, refine=10, method="distance", z=[0,2,2,4]);
 function associate_vertices(polygons, split, curpoly=0) =
    curpoly==len(polygons)-1 ? polygons :
