@@ -538,6 +538,8 @@ function mean(v) = sum(v)/len(v);
 //   the least squares solution is returned.  If A is underdetermined, the minimal norm solution is returned.
 //   If A is rank deficient or singular then linear_solve returns `undef`.
 function linear_solve(A,b) =
+        assert(is_matrix(A))
+        assert(is_vector(b))
 	let(
 		dim = array_dim(A),
 		m=dim[0], n=dim[1]
@@ -569,6 +571,7 @@ function submatrix(M,ind1,ind2) = [for(i=ind1) [for(j=ind2) M[i][j] ] ];
 //   Calculates the QR factorization of the input matrix A and returns it as the list [Q,R].  This factorization can be
 //   used to solve linear systems of equations.  
 function qr_factor(A) =
+        assert(is_matrix(A))
 	let(
 		dim = array_dim(A),
 		m = dim[0],
@@ -672,6 +675,19 @@ function determinant(M) =
 		]
 	);
 
+
+// Function: is_matrix()
+// Usage:
+//   is_matrix(A,[m],[n])
+// Description:
+//   Returns true if A is a numeric matrix of height m and width n.  If m or n
+//   are omitted or set to undef then true is returned for any positive dimension.
+function is_matrix(A,m,n) =
+  is_list(A) && len(A)>0 &&
+  (is_undef(m) || len(A)==m) &&
+  is_vector(A[0]) &&
+  (is_undef(n) || len(A[0])==n) &&
+  is_consistent(A);
 
 
 // Section: Comparisons and Logic
