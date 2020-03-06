@@ -241,6 +241,8 @@ module gear_tooth_profile(
 //   clearance = Gap between top of a tooth on one gear and bottom of valley on a meshing gear (in millimeters)
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   interior = If true, create a mask for difference()ing from something else.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D): Typical Gear Shape
 //   gear2d(pitch=5, teeth=20);
 // Example(2D): Lower Pressure Angle
@@ -254,8 +256,11 @@ function gear2d(
 	PA        = 28,
 	clearance = undef,
 	backlash  = 0.0,
-	interior  = false
+	interior  = false,
+	anchor    = CENTER,
+	spin      = 0
 ) = let(
+	pr = pitch_radius(pitch=pitch, teeth=teeth),
 	pts = concat(
 		[for (tooth = [0:1:teeth-hide-1])
 			each rot(tooth*360/teeth,
@@ -273,7 +278,7 @@ function gear2d(
 		],
 		hide>0? [[0,0]] : []
 	)
-) pts;
+) attachable(anchor,spin, two_d=true, r=pr, p=pts);
 
 
 module gear2d(
@@ -283,19 +288,23 @@ module gear2d(
 	PA        = 28,
 	clearance = undef,
 	backlash  = 0.0,
-	interior  = false
+	interior  = false,
+	anchor    = CENTER,
+	spin      = 0
 ) {
-	polygon(
-		gear2d(
-			pitch     = pitch,
-			teeth     = teeth,
-			hide      = hide,
-			PA        = PA,
-			clearance = clearance,
-			backlash  = backlash,
-			interior  = interior
-		)
+	path = gear2d(
+		pitch     = pitch,
+		teeth     = teeth,
+		hide      = hide,
+		PA        = PA,
+		clearance = clearance,
+		backlash  = backlash,
+		interior  = interior
 	);
+	attachable(anchor,spin, two_d=true, r=pr) {
+		polygon(path);
+		children();
+	}
 }
 
 

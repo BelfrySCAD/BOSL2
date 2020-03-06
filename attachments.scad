@@ -89,7 +89,6 @@ $tags_hidden = [];
 
 // Section: Functions
 
-
 // Function: anchorpt()
 // Usage:
 //   anchor(name, pos, [dir], [rot])
@@ -101,6 +100,142 @@ $tags_hidden = [];
 //   orient = A vector pointing in the direction parts should project from the anchor position.
 //   spin = If needed, the angle to rotate the part around the direction vector.
 function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, spin];
+
+
+// Function: attach_geom()
+//
+// Usage:
+//   geom = attach_geom(anchor, spin, [orient], two_d, size, [size2], [shift], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], two_d, r|d, [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], two_d, path, [extent], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], size, [size2], [shift], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], r|d, l, [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], r1|d1, r2|d2, l, [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], r|d, [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], vnf, [extent], [offset], [anchors]);
+//
+// Description:
+//   Given arguments that describe the geometry of an attachable object, returns the internal geometry description.
+//
+// Arguments:
+//   size = If given as a 3D vector, contains the XY size of the bottom of the cuboidal/prismoidal volume, and the Z height.  If given as a 2D vector, contains the front X width of the rectangular/trapezoidal shape, and the Y length.
+//   size2 = If given as a 2D vector, contains the XY size of the top of the prismoidal volume.  If given as a number, contains the back width of the trapezoidal shape.
+//   shift = If given as a 2D vector, shifts the top of the prismoidal or conical shape by the given amount.  If given as a number, shifts the back of the trapezoidal shape right by that amount.  Default: No shift.
+//   r = Radius of the cylindrical/conical volume.
+//   d = Diameter of the cylindrical/conical volume.
+//   r1 = Radius of the bottom of the conical volume.
+//   r2 = Radius of the top of the conical volume.
+//   d1 = Diameter of the bottom of the conical volume.
+//   d2 = Diameter of the top of the conical volume.
+//   l = Length of the cylindrical/conical volume along axis.
+//   vnf = The [VNF](vnf.scad) of the volume.
+//   path = The path to generate a polygon from.
+//   extent = If true, calculate anchors by extents, rather than intersection.  Default: false.
+//   offset = If given, offsets the center of the volume.
+//   anchors = If given as a list of anchor points, allows named anchor points.
+//   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
+//
+// Example(NORENDER): Cubical Shape
+//   geom = attach_geom(anchor, spin, orient, size=size);
+//
+// Example(NORENDER): Prismoidal Shape
+//   geom = attach_geom(
+//       anchor, spin, orient,
+//       size=point3d(botsize,h),
+//       size2=topsize, shift=shift
+//   );
+//
+// Example(NORENDER): Cylindrical Shape
+//   geom = attach_geom(anchor, spin, orient, r=r, h=h);
+//
+// Example(NORENDER): Conical Shape
+//   geom = attach_geom(anchor, spin, orient, r1=r1, r2=r2, h=h);
+//
+// Example(NORENDER): Spherical Shape
+//   geom = attach_geom(anchor, spin, orient, r=r);
+//
+// Example(NORENDER): Arbitrary VNF Shape
+//   geom = attach_geom(anchor, spin, orient, vnf=vnf);
+//
+// Example(NORENDER): 2D Rectangular Shape
+//   geom = attach_geom(anchor, spin, orient, size=size);
+//
+// Example(NORENDER): 2D Trapezoidal Shape
+//   geom = attach_geom(
+//       anchor, spin, orient,
+//       size=[x1,y], size2=x2, shift=shift
+//   );
+//
+// Example(NORENDER): 2D Circular Shape
+//   geom = attach_geom(anchor, spin, orient, two_d=true, r=r);
+//
+// Example(NORENDER): Arbitrary 2D Polygon Shape
+//   geom = attach_geom(anchor, spin, orient, path=path);
+//
+function attach_geom(
+	size, size2, shift,
+	r,r1,r2, d,d1,d2, l,h,
+	vnf, path,
+	extent=true,
+	offset=[0,0,0],
+	anchors=[],
+	two_d=false
+) =
+	assert(is_vector(offset))
+	assert(is_list(anchors))
+	!is_undef(size)? (
+		two_d? (
+			let(
+				size2 = default(size2, size.x),
+				shift = default(shift, 0)
+			)
+			assert(is_vector(size) && len(size)==2)
+			assert(is_num(size2))
+			assert(is_num(shift))
+			["rect", point2d(size), size2, shift, offset, anchors]
+		) : (
+			let(
+				size2 = default(size2, point2d(size)),
+				shift = default(shift, [0,0])
+			)
+			assert(is_vector(size) && len(size)==3)
+			assert(is_vector(size2) && len(size2)==2)
+			assert(is_vector(shift) && len(shift)==2)
+			["cuboid", size, size2, shift, offset, anchors]
+		)
+	) : !is_undef(vnf)? (
+		assert(is_vnf(vnf))
+		assert(two_d == false)
+		extent? ["vnf_extent", vnf, offset, anchors] :
+		["vnf_isect", vnf, offset, anchors]
+	) : !is_undef(path)? (
+		assert(is_path(path))
+		assert(two_d == true)
+		extent? ["path_extent", path, offset, anchors] :
+		["path_isect", path, offset, anchors]
+	) :
+	let(
+		r1 = get_radius(r1=r1,d1=d1,r=r,d=d,dflt=undef)
+	)
+	!is_undef(r1)? (
+		assert(is_num(r1))
+		let( l = default(l, h) )
+		!is_undef(l)? (
+			let(
+				shift = default(shift, [0,0]),
+				r2 = get_radius(r1=r2,d1=d2,r=r,d=d,dflt=undef)
+			)
+			assert(is_num(l))
+			assert(is_num(r2))
+			assert(is_vector(shift) && len(shift)==2)
+			["cyl", r1, r2, l, shift, offset, anchors]
+		) : (
+			two_d? ["circle", r1, offset, anchors] :
+			["spheroid", r1, offset, anchors]
+		)
+	) :
+	assert(false, "Unrecognizable geometry description.");
+
 
 
 // Function: attach_geom_2d()
@@ -155,6 +290,65 @@ function attach_geom_size(geom) =
 	) :
 	assert(false, "Unknown attachment geometry type.");
 
+
+// Function: attach_transform()
+// Usage:
+//   mat = attach_transform(anchor=CENTER, spin=0, orient=UP, geom);
+// Description:
+//   Returns the affine3d transformation matrix needed to `anchor`, `spin`, and `orient`
+//   the given geometry `geom` shape into position.
+// Arguments:
+//   anchor = Anchor point to translate to the origin `[0,0,0]`.  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   geom = The geometry description of the shape.
+//   p = If given as a VNF, path, or point, applies the affine3d transformation matrix to it and returns the result.
+function attach_transform(anchor=CENTER, spin=0, orient=UP, geom, p) =
+	assert(is_string(anchor) || is_vector(anchor))
+	assert(is_num(spin))
+	assert(is_vector(orient))
+	let(
+		two_d = attach_geom_2d(geom),
+		m = ($attach_to != undef)? (
+			let(
+				anch = find_anchor($attach_to, geom),
+				pos = anch[1]
+			) two_d? (
+				let(
+					ang = vector_angle(anch[2], BACK)
+				)
+				affine3d_zrot(ang+spin) *
+				affine3d_translate(point3d(-pos))
+			) : (
+				let(
+					ang = vector_angle(anch[2], DOWN),
+					axis = vector_axis(anch[2], DOWN),
+					ang2 = (anch[2]==UP || anch[2]==DOWN)? 0 : 180-anch[3],
+					axis2 = rotate_points3d([axis],[0,0,ang2])[0]
+				)
+				affine3d_rot_by_axis(axis2,ang) *
+				affine3d_zrot(ang2+spin) *
+				affine3d_translate(point3d(-pos))
+			)
+		) : (
+			let(
+				pos = find_anchor(anchor, geom)[1]
+			) two_d? (
+				affine3d_zrot(spin) *
+				affine3d_translate(point3d(-pos))
+			) : (
+				let(
+					axis = vector_axis(UP,orient),
+					ang = vector_angle(UP,orient)
+				)
+				affine3d_rot_by_axis(axis,ang) *
+				affine3d_zrot(spin) *
+				affine3d_translate(point3d(-pos))
+			)
+		)
+	) is_undef(p)? m :
+	is_vnf(p)? [apply(m, p[0]), p[1]] :
+	apply(m, p);
 
 
 // Function: find_anchor()
@@ -325,6 +519,18 @@ function find_anchor(anchor, geom) =
 	assert(false, "Unknown attachment geometry type.");
 
 
+// Function: attachment_is_shown()
+// Usage:
+//   attachment_is_shown(tags);
+// Description:
+//   Returns true if the given space-delimited string of tag names should currently be shown.
+function attachment_is_shown(tags) =
+	let(
+		tags = _str_char_split(tags, " "),
+		shown  = !$tags_shown || any([for (tag=tags) in_list(tag, $tags_shown)]),
+		hidden = any([for (tag=tags) in_list(tag, $tags_hidden)])
+	) shown && !hidden;
+
 
 function _str_char_split(s,delim,n=0,acc=[],word="") =
 	(n>=len(s))? concat(acc, [word]) :
@@ -333,9 +539,87 @@ function _str_char_split(s,delim,n=0,acc=[],word="") =
 		_str_char_split(s,delim,n+1,acc,str(word,s[n]));
 
 
+// Function: reorient()
+//
+// Usage:
+//   reorient(anchor, spin, [orient], two_d, size, [size2], [shift], [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], two_d, r|d, [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], two_d, path, [extent], [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], size, [size2], [shift], [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], r|d, l, [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], r1|d1, r2|d2, l, [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], r|d, [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], vnf, [extent], [offset], [anchors], [p]);
+//
+// Description:
+//   Given anchor, spin, orient, and general geometry info for a managed volume, this calculates
+//   the transformation matrix needed to be applied to the contents of that volume.  A managed 3D
+//   volume is assumed to be vertically (Z-axis) oriented, and centered.  A managed 2D area is just
+//   assumed to be centered.
+//   
+//   If `p` is not given, then the transformation matrix will be returned.
+//   If `p` contains a VNF, a new VNF will be returned with the vertices transformed by the matrix.
+//   If `p` contains a path, a new path will be returned with the vertices transformed by the matrix.
+//   If `p` contains a point, a new point will be returned, transformed by the matrix.
+//   
+//   If `$attach_to` is not defined, then the following transformations are performed in order:
+//   * Translates so the `anchor` point is at the origin (0,0,0).
+//   * Rotates around the Z axis by `spin` degrees counter-clockwise.
+//   * Rotates so the top of the part points towards the vector `orient`.
+//   
+//   If `$attach_to` is defined, as a consequence of `attach(from,to)`, then
+//   the following transformations are performed in order:
+//   * Translates this part so it's anchor position matches the parent's anchor position.
+//   * Rotates this part so it's anchor direction vector exactly opposes the parent's anchor direction vector.
+//   * Rotates this part so it's anchor spin matches the parent's anchor spin.
+//
+// Arguments:
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   size = If given as a 3D vector, contains the XY size of the bottom of the cuboidal/prismoidal volume, and the Z height.  If given as a 2D vector, contains the front X width of the rectangular/trapezoidal shape, and the Y length.
+//   size2 = If given as a 2D vector, contains the XY size of the top of the prismoidal volume.  If given as a number, contains the back width of the trapezoidal shape.
+//   shift = If given as a 2D vector, shifts the top of the prismoidal or conical shape by the given amount.  If given as a number, shifts the back of the trapezoidal shape right by that amount.  Default: No shift.
+//   r = Radius of the cylindrical/conical volume.
+//   d = Diameter of the cylindrical/conical volume.
+//   r1 = Radius of the bottom of the conical volume.
+//   r2 = Radius of the top of the conical volume.
+//   d1 = Diameter of the bottom of the conical volume.
+//   d2 = Diameter of the top of the conical volume.
+//   l = Length of the cylindrical/conical volume along axis.
+//   vnf = The [VNF](vnf.scad) of the volume.
+//   path = The path to generate a polygon from.
+//   extent = If true, calculate anchors by extents, rather than intersection.  Default: false.
+//   offset = If given, offsets the center of the volume.
+//   anchors = If given as a list of anchor points, allows named anchor points.
+//   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
+//   p = The VNF, path, or point to transform.
+function reorient(
+	anchor=CENTER,
+	spin=0,
+	orient=UP,
+	size, size2, shift,
+	r,r1,r2, d,d1,d2, l,h,
+	vnf, path,
+	extent=true,
+	offset=[0,0,0],
+	anchors=[],
+	two_d=false,
+	p=undef
+) = let(
+	geom = attach_geom(
+		size=size, size2=size2, shift=shift,
+		r=r, r1=r1, r2=r2, h=h,
+		d=d, d1=d1, d2=d2, l=l,
+		vnf=vnf, path=path, extent=extent,
+		offset=offset, anchors=anchors,
+		two_d=two_d
+	)
+) attach_transform(anchor,spin,orient,geom,p);
+
+
 
 // Section: Attachability Modules
-
 
 // Module: attachable()
 //
@@ -478,7 +762,7 @@ module attachable(
 	spin=0,
 	orient=UP,
 	size, size2, shift,
-	r,r1,r2, d,d1,d2, l,
+	r,r1,r2, d,d1,d2, l,h,
 	vnf, path,
 	extent=true,
 	offset=[0,0,0],
@@ -486,110 +770,32 @@ module attachable(
 	two_d=false
 ) {
 	assert($children==2);
-	assert(is_string(anchor) || is_vector(anchor));
-	assert(is_num(spin));
-	assert(is_vector(orient));
-	assert(is_vector(offset));
-	assert(is_list(anchors));
+	geom = attach_geom(
+		size=size, size2=size2, shift=shift,
+		r=r, r1=r1, r2=r2, h=h,
+		d=d, d1=d1, d2=d2, l=l,
+		vnf=vnf, path=path, extent=extent,
+		offset=offset, anchors=anchors,
+		two_d=two_d
+	);
+	m = attach_transform(anchor,spin,orient,geom);
+	multmatrix(m) {
+		if (attachment_is_shown($tags)) {
+			$parent_anchor = anchor;
+			$parent_spin   = spin;
+			$parent_orient = orient;
+			$parent_geom   = geom;
+			$parent_size   = attach_geom_size(geom);
 
-	geom = !is_undef(size)? (
-			two_d? (
-				let(
-					size2 = default(size2, size.x),
-					shift = default(shift, 0)
-				)
-				assert(is_vector(size) && len(size)==2)
-				assert(is_num(size2))
-				assert(is_num(shift))
-				["rect", point2d(size), size2, shift, offset, anchors]
-			) : (
-				let(
-					size2 = default(size2, point2d(size)),
-					shift = default(shift, [0,0])
-				)
-				assert(is_vector(size) && len(size)==3)
-				assert(is_vector(size2) && len(size2)==2)
-				assert(is_vector(shift) && len(shift)==2)
-				["cuboid", size, size2, shift, offset, anchors]
-			)
-		) : !is_undef(vnf)? (
-			assert(is_vnf(vnf))
-			assert(two_d == false)
-			extent? ["vnf_extent", vnf, offset, anchors] :
-			["vnf_isect", vnf, offset, anchors]
-		) : !is_undef(path)? (
-			assert(is_path(path))
-			assert(two_d == true)
-			extent? ["path_extent", path, offset, anchors] :
-			["path_isect", path, offset, anchors]
-		) :
-		let(
-			r1 = get_radius(r1=r1,d1=d1,r=r,d=d,dflt=undef)
-		)
-		!is_undef(r1)? (
-			assert(is_num(r1))
-			!is_undef(l)? (
-				let(
-					shift = default(shift, [0,0]),
-					r2 = get_radius(r1=r2,d1=d2,r=r,d=d,dflt=undef)
-				)
-				assert(is_num(l))
-				assert(is_num(r2))
-				assert(is_vector(shift) && len(shift)==2)
-				["cyl", r1, r2, l, shift, offset, anchors]
-			) : (
-				two_d? ["circle", r1, offset, anchors] :
-				["spheroid", r1, offset, anchors]
-			)
-		) :
-		assert(false, "attachable(): Unrecognizable geometry description.");
+			$attach_to   = undef;
+			$tags_shown  = undef;
+			$tags_hidden = undef;
 
-	pos = find_anchor(anchor, geom)[1];
-	size = attach_geom_size(geom);
-
-	$parent_anchor = anchor;
-	$parent_spin   = spin;
-	$parent_orient = orient;
-	$parent_geom   = geom;
-	$parent_size   = size;
-
-	tags = _str_char_split($tags, " ");
-	s_tags = $tags_shown;
-	h_tags = $tags_hidden;
-	shown  = !s_tags || any([for (tag=tags) in_list(tag, s_tags)]);
-	hidden = any([for (tag=tags) in_list(tag, h_tags)]);
-	if ($attach_to != undef) {
-		anch = find_anchor($attach_to, geom);
-		ang = vector_angle(anch[2], two_d? BACK : DOWN);
-		axis = two_d? UP : vector_axis(anch[2], DOWN);
-		ang2 = (anch[2]==UP || anch[2]==DOWN)? 0 : 180-anch[3];
-		axis2 = rotate_points3d([axis],[0,0,ang2])[0];
-		$attach_to = undef;
-
-		rot(ang, v=axis2)
-		rotate(ang2+spin)
-		translate(-anch[1]) {
-			if(shown && !hidden) {
-				if (is_undef($color)) {
-					children(0);
-				} else color($color) {
-					$color = undef;
-					children(0);
-				}
-			}
-			children(1);
-		}
-	} else {
-		rot(from=UP,to=orient)
-		rotate(spin)
-		translate(-pos) {
-			if(shown && !hidden) {
-				if (is_undef($color)) {
-					children(0);
-				} else color($color) {
-					$color = undef;
-					children(0);
-				}
+			if (is_undef($color)) {
+				children(0);
+			} else color($color) {
+				$color = undef;
+				children(0);
 			}
 			children(1);
 		}
@@ -599,7 +805,6 @@ module attachable(
 
 
 // Section: Attachment Positioning
-
 
 // Module: position()
 // Usage:

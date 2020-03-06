@@ -562,11 +562,9 @@ function _turtle_command(command, parm, parm2, state, index) =
 				rot(delta_angle,p=state[step],planar=true)
 			]
 		) :
-
-
-  
 	assert(false,str("Unknown turtle command \"",command,"\" at index",index))
 	[];
+
 
 
 // Section: 2D N-Gons
@@ -625,7 +623,7 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
 				(r-rounding*sc)*[cos(a),sin(a)] +
 				rounding*[cos(b),sin(b)]
 			]
-	) rot(spin, p=move(-r*unit(anchor), p=path));
+	) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
 
 
 module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) {
@@ -643,8 +641,8 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 // Function&Module: pentagon()
 // Usage:
 //   pentagon(or|od, [realign]);
-//   pentagon(ir|id, [realign];
-//   pentagon(side, [realign];
+//   pentagon(ir|id, [realign]);
+//   pentagon(side, [realign]);
 // Description:
 //   When called as a function, returns a 2D path for a regular pentagon.
 //   When called as a module, creates a 2D regular pentagon.
@@ -786,14 +784,13 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CEN
 //   stroke(closed=true, trapezoid(h=30, w1=40, w2=20));
 function trapezoid(h, w1, w2, anchor=CENTER, spin=0) =
 	let(
-		s = anchor.y>0? [w2,h] : anchor.y<0? [w1,h] : [(w1+w2)/2,h],
 		path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2]]
-	) rot(spin, p=move(-vmul(anchor,s/2), p=path));
+	) reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, p=path);
 
 
 
 module trapezoid(h, w1, w2, anchor=CENTER, spin=0) {
-	path = trapezoid(h=h, w1=w1, w2=w2);
+	path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2]];
 	attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2) {
 		polygon(path);
 		children();
@@ -846,12 +843,14 @@ function teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0) =
 		ea = 360 + ang,
 		steps = segs(r)*(ea-sa)/360,
 		step = (ea-sa)/steps,
-		path = concat(
-			[[ cap_w/2,cap_h]],
-			[for (i=[0:1:steps]) let(a=ea-i*step) r*[cos(a),sin(a)]],
-			[[-cap_w/2,cap_h]]
+		path = deduplicate(
+			[
+				[ cap_w/2,cap_h],
+				for (i=[0:1:steps]) let(a=ea-i*step) r*[cos(a),sin(a)],
+				[-cap_w/2,cap_h]
+			], closed=true
 		)
-	) rot(spin, p=move(-vmul(anchor,[r,cap_h]), p=deduplicate(path,closed=true)));
+	) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 
 
@@ -891,14 +890,13 @@ function glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) =
 		subarc = ea2-sa2,
 		arcsegs = ceil(segs(r2)*abs(subarc)/360),
 		arcstep = subarc / arcsegs,
-		s = [spread/2+r, r],
 		path = concat(
 			[for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep)     r  * [cos(a),sin(a)] - cp1],
 			tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep+180)  r2 * [cos(a),sin(a)] - cp2],
 			[for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep+180) r  * [cos(a),sin(a)] + cp1],
 			tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep)      r2 * [cos(a),sin(a)] + cp2]
 		)
-	) rot(spin, p=move(-vmul(anchor,s), p=path));
+	) reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
 
 
 module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) {
@@ -951,12 +949,12 @@ function star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=
 		ir = get_radius(r=ir, d=id, dflt=stepr),
 		offset = 90+(realign? 180/n : 0),
 		path = [for(i=[0:1:2*n-1]) let(theta=180*i/n+offset, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]]
-	) rot(spin, p=move(-r*unit(anchor), p=path));
+	) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 
 module star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0) {
 	path = star(n=n, r=r, d=d, od=od, or=or, ir=ir, id=id, step=step, realign=realign);
-	attachable(anchor,spin, two_d=true, path=path, extent=true) {
+	attachable(anchor,spin, two_d=true, path=path) {
 		polygon(path);
 		children();
 	}
@@ -1023,11 +1021,11 @@ function supershape(step=0.5,m1=4,m2=undef,n1=1,n2=undef,n3=undef,a=1,b=undef,r=
 		rads = [for (theta = angs) _superformula(theta=theta,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b)],
 		scale = is_def(r) ? r/max(rads) : 1,
 		path = [for (i = [0:steps-1]) let(a=angs[i]) scale*rads[i]*[cos(a), sin(a)]]
-	) rot(spin, p=move(-scale*max(rads)*unit(anchor), p=path));
+	) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0) {
 	path = supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b,r=r,d=d);
-	attachable(anchor,spin, two_d=true, path=path, extent=true) {
+	attachable(anchor,spin, two_d=true, path=path) {
 		polygon(path);
 		children();
 	}
@@ -1057,11 +1055,15 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_roundover(r=10, inset=2);
-module mask2d_roundover(r, d, excess, inset=0) {
-	polygon(mask2d_roundover(r=r,d=d,excess=excess,inset=inset));
+module mask2d_roundover(r, d, excess, inset=0, anchor=CENTER,spin=0) {
+	path = mask2d_roundover(r=r,d=d,excess=excess,inset=inset);
+	attachable(anchor,spin, two_d=true, path=path, p=path) {
+		polygon(path);
+		children();
+	}
 }
 
-function mask2d_roundover(r, d, excess, inset=0) =
+function mask2d_roundover(r, d, excess, inset=0, anchor=CENTER,spin=0) =
 	assert(is_num(r)||is_num(d))
 	assert(is_undef(excess)||is_num(excess))
 	assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
@@ -1070,12 +1072,13 @@ function mask2d_roundover(r, d, excess, inset=0) =
 		excess = default(excess,$overlap),
 		r = get_radius(r=r,d=d,dflt=1),
 		steps = quantup(segs(r),4)/4,
-		step = 90/steps
-	) [
-		[-excess,-excess], [-excess, r+inset.y],
-		for (i=[0:1:steps]) [r,r] + inset + polar_to_xy(r,180+i*step),
-		[r+inset.x,-excess]
-	];
+		step = 90/steps,
+		path = [
+			[-excess,-excess], [-excess, r+inset.y],
+			for (i=[0:1:steps]) [r,r] + inset + polar_to_xy(r,180+i*step),
+			[r+inset.x,-excess]
+		]
+	) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
 
 
 // Function&Module: mask2d_cove()
@@ -1099,11 +1102,15 @@ function mask2d_roundover(r, d, excess, inset=0) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_cove(r=10, inset=2);
-module mask2d_cove(r, d, inset=0, excess) {
-	polygon(mask2d_cove(r=r,d=d,excess=excess,inset=inset));
+module mask2d_cove(r, d, inset=0, excess, anchor=CENTER,spin=0) {
+	path = mask2d_cove(r=r,d=d,excess=excess,inset=inset);
+	attachable(anchor,spin, two_d=true, path=path) {
+		polygon(path);
+		children();
+	}
 }
 
-function mask2d_cove(r, d, inset=0, excess) =
+function mask2d_cove(r, d, inset=0, excess, anchor=CENTER,spin=0) =
 	assert(is_num(r)||is_num(d))
 	assert(is_undef(excess)||is_num(excess))
 	assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
@@ -1112,12 +1119,13 @@ function mask2d_cove(r, d, inset=0, excess) =
 		excess = default(excess,$overlap),
 		r = get_radius(r=r,d=d,dflt=1),
 		steps = quantup(segs(r),4)/4,
-		step = 90/steps
-	) [
-		[-excess,-excess], [-excess, r+inset.y],
-		for (i=[0:1:steps]) inset + polar_to_xy(r,90-i*step),
-		[r+inset.x,-excess]
-	];
+		step = 90/steps,
+		path = [
+			[-excess,-excess], [-excess, r+inset.y],
+			for (i=[0:1:steps]) inset + polar_to_xy(r,90-i*step),
+			[r+inset.x,-excess]
+		]
+	) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 
 // Function&Module: mask2d_chamfer()
@@ -1147,11 +1155,15 @@ function mask2d_cove(r, d, inset=0, excess) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_chamfer(x=10, inset=2);
-module mask2d_chamfer(x, y, edge, angle=45, excess, inset=0) {
-	polygon(mask2d_chamfer(x=x, y=y, edge=edge, angle=angle, excess=excess, inset=inset));
+module mask2d_chamfer(x, y, edge, angle=45, excess, inset=0, anchor=CENTER,spin=0) {
+	path = mask2d_chamfer(x=x, y=y, edge=edge, angle=angle, excess=excess, inset=inset);
+	attachable(anchor,spin, two_d=true, path=path, extent=true) {
+		polygon(path);
+		children();
+	}
 }
 
-function mask2d_chamfer(x, y, edge, angle=45, excess, inset=0) =
+function mask2d_chamfer(x, y, edge, angle=45, excess, inset=0, anchor=CENTER,spin=0) =
 	assert(num_defined([x,y,edge])==1)
 	assert(is_num(first_defined([x,y,edge])))
 	assert(is_num(angle))
@@ -1163,12 +1175,13 @@ function mask2d_chamfer(x, y, edge, angle=45, excess, inset=0) =
 		x = !is_undef(x)? x :
 			!is_undef(y)? adj_ang_to_opp(adj=y,ang=angle) :
 			hyp_ang_to_opp(hyp=edge,ang=angle),
-		y = opp_ang_to_adj(opp=x,ang=angle)
-	) [
-		[-excess, -excess], [-excess, y+inset.y],
-		[inset.x, y+inset.y], [x+inset.x, inset.y],
-		[x+inset.x, -excess]
-	];
+		y = opp_ang_to_adj(opp=x,ang=angle),
+		path = [
+			[-excess, -excess], [-excess, y+inset.y],
+			[inset.x, y+inset.y], [x+inset.x, inset.y],
+			[x+inset.x, -excess]
+		]
+	) reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
 
 
 // Function&Module: mask2d_rabbet()
@@ -1191,19 +1204,25 @@ function mask2d_chamfer(x, y, edge, angle=45, excess, inset=0) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_rabbet(size=10);
-module mask2d_rabbet(size, excess) {
-	polygon(mask2d_rabbet(size=size, excess=excess));
+module mask2d_rabbet(size, excess, anchor=CENTER,spin=0) {
+	path = mask2d_rabbet(size=size, excess=excess);
+	attachable(anchor,spin, two_d=true, path=path, extent=false, p=path) {
+		polygon(path);
+		children();
+	}
 }
 
-function mask2d_rabbet(size, excess) =
+function mask2d_rabbet(size, excess, anchor=CENTER,spin=0) =
 	assert(is_num(size)||(is_vector(size)&&len(size)==2))
 	assert(is_undef(excess)||is_num(excess))
 	let(
 		excess = default(excess,$overlap),
-		size = is_list(size)? size : [size,size]
-	) [
-		[-excess, -excess], [-excess, size.y], size, [size.x, -excess]
-	];
+		size = is_list(size)? size : [size,size],
+		path = [
+			[-excess, -excess], [-excess, size.y],
+			size, [size.x, -excess]
+		]
+	) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
 
 
 // Function&Module: mask2d_dovetail()
@@ -1234,11 +1253,15 @@ function mask2d_rabbet(size, excess) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_dovetail(x=10, inset=2);
-module mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess) {
-	polygon(mask2d_dovetail(x=x, y=y, edge=edge, angle=angle, inset=inset, shelf=shelf, excess=excess));
+module mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=CENTER, spin=0) {
+	path = mask2d_dovetail(x=x, y=y, edge=edge, angle=angle, inset=inset, shelf=shelf, excess=excess);
+	attachable(anchor,spin, two_d=true, path=path) {
+		polygon(path);
+		children();
+	}
 }
 
-function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess) =
+function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=CENTER, spin=0) =
 	assert(num_defined([x,y,edge])==1)
 	assert(is_num(first_defined([x,y,edge])))
 	assert(is_num(angle))
@@ -1250,11 +1273,12 @@ function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess) =
 		x = !is_undef(x)? x :
 			!is_undef(y)? adj_ang_to_opp(adj=y,ang=angle) :
 			hyp_ang_to_opp(hyp=edge,ang=angle),
-		y = opp_ang_to_adj(opp=x,ang=angle)
-	) [
-		[-excess, 0], [-excess, y+inset.y+shelf],
-		inset+[x,y+shelf], inset+[x,y], inset, [inset.x,0]
-	];
+		y = opp_ang_to_adj(opp=x,ang=angle),
+		path = [
+			[-excess, 0], [-excess, y+inset.y+shelf],
+			inset+[x,y+shelf], inset+[x,y], inset, [inset.x,0]
+		]
+	) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 
 // Function&Module: mask2d_ogee()
@@ -1289,7 +1313,11 @@ function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess) =
 //       "ystep",1,  "xstep",1   // Ending shoulder.
 //   ]);
 module mask2d_ogee(pattern, excess) {
-	polygon(mask2d_ogee(pattern, excess=excess));
+	path = mask2d_ogee(pattern, excess=excess);
+	attachable(anchor,spin, two_d=true, path=path) {
+		polygon(path);
+		children();
+	}
 }
 
 function mask2d_ogee(pattern, excess) =
@@ -1356,8 +1384,9 @@ function mask2d_ogee(pattern, excess) =
 						a = pat[0]=="round"? (180+i*step) : (90-i*step)
 					) pat[2] + abs(r)*[cos(a),sin(a)]
 				]
-		]
-	) deduplicate(path);
+		],
+		path2 = deduplicate(path)
+	) reorient(anchor,spin, two_d=true, path=path2, p=path2);
 
 
 
