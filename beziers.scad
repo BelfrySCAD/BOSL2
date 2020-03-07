@@ -161,17 +161,26 @@ function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1) =
 //   echo(bezier_segment_length(bez));
 function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
 	let(
-		mid_u=lerp(start_u, end_u, 0.5),
-		sp = bez_point(curve,start_u),
-		bez_mp = bez_point(curve,mid_u),
-		ep = bez_point(curve,end_u),
-		lin_mp = lerp(sp,ep,0.5),
-		defl = norm(bez_mp-lin_mp)
+		segs = len(curve) * 2,
+		path = [
+			for (i=[0:1:segs])
+			let(u=lerp(start_u, end_u, i/segs))
+			bez_point(curve,u)
+		],
+		defl = max([
+			for (i=idx(path,end=-3)) let(
+				mp = (path[i] + path[i+2]) / 2
+			) norm(path[i+1] - mp)
+		]),
+		mid_u = lerp(start_u, end_u, 0.5)
 	)
-	((end_u-start_u) >= 0.125 || defl > max_deflect)? (
-		bezier_segment_length(curve, start_u, mid_u, max_deflect) +
-		bezier_segment_length(curve, mid_u, end_u, max_deflect)
-	) : norm(ep-sp);
+	defl <= max_deflect? path_length(path) :
+	sum([
+		for (i=[0:1:segs-1]) let(
+			su = lerp(start_u, end_u, i/segs),
+			eu = lerp(start_u, end_u, (i+1)/segs)
+		) bezier_segment_length(curve, su, eu, max_deflect)
+	]);
 
 
 
