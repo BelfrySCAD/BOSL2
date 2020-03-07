@@ -548,7 +548,7 @@ function triangle_area(a,b,c) =
 //   plane3pt(p1, p2, p3);
 // Description:
 //   Generates the cartesian equation of a plane from three non-collinear points on the plane.
-//   Returns [A,B,C,D] where Ax+By+Cz+D=0 is the equation of a plane.
+//   Returns [A,B,C,D] where Ax + By + Cz = D is the equation of a plane.
 // Arguments:
 //   p1 = The first point on the plane.
 //   p2 = The second point on the plane.
@@ -581,6 +581,46 @@ function plane3pt_indexed(points, i1, i2, i3) =
 		p2 = points[i2],
 		p3 = points[i3]
 	) plane3pt(p1,p2,p3);
+
+
+// Function: plane_intersection()
+// Usage:
+//   plane_intersection(plane1, plane2, [plane3])
+// Description:
+//   Compute the point which is the intersection of the three planes, or the line intersection of two planes.
+//   If you give three planes the intersection is returned as a point.  If you give two planes the intersection
+//   is returned as a list of two points on the line of intersection.  If any of the input planes are parallel
+//   then returns undef.  
+function plane_intersection(plane1,plane2,plane3) =
+  is_def(plane3) ?
+    let (
+       matrix = [for(p=[plane1,plane2,plane3]) select(p,0,2)],
+       rhs = [for(p=[plane1,plane2,plane3]) p[3]]
+      )
+    linear_solve(matrix,rhs)
+  :
+   let(
+      normal = cross(plane_normal(plane1), plane_normal(plane2))
+    )
+   approx(normal,0) ? undef :
+   let(
+      matrix =  [for(p=[plane1,plane2]) select(p,0,2)],
+      rhs =  [for(p=[plane1,plane2]) p[3]],
+      point = linear_solve(matrix,rhs),
+      dd=echo(point=point, normal=normal)
+   )
+   [point, point+normal];
+
+
+// Function: plane_from_normal()
+// Usage:
+//   plane_from_normal(normal, pt)
+// Description:
+//   Returns a plane defined by a normal vector and a point.
+// Example:
+//   plane_from_normal([0,0,1], [2,2,2]);  // Returns the xy plane passing through the point (2,2,2)
+function plane_from_normal(normal, pt) =
+  concat(normal, [normal*pt]);
 
 
 // Function: plane_from_pointslist()
