@@ -435,8 +435,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 // Example(2D): A more interesting shape:
 //   path = [[0,0], [4,0], [7,14], [-3,12]];
 //   polygon(smooth_path(path,closed=true));
-// Example(2D): Scaling the tangent data using the curvature parameter k can decrease or increase the amount of smoothing.  Note this is the same
-//   as just multiplying the deriv(square(4)) by k.
+// Example(2D): Scaling the tangent data using the curvature parameter k can decrease or increase the amount of smoothing.  Note this is the same as just multiplying the deriv(square(4)) by k.
 //   polygon(smooth_path(square(4), k=0.5,closed=true));
 // Example(2D): Or you can specify your own tangent values to alter the shape of the curve
 //   polygon(smooth_path(square(4),tangents=1.25*[[-2,-1], [-2,1], [1,2], [2,-1]],closed=true));
