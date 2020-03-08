@@ -181,15 +181,17 @@ function attach_geom(
 	anchors=[],
 	two_d=false
 ) =
+	assert(is_bool(extent))
 	assert(is_vector(offset))
 	assert(is_list(anchors))
+	assert(is_bool(two_d))
 	!is_undef(size)? (
 		two_d? (
 			let(
 				size2 = default(size2, size.x),
 				shift = default(shift, 0)
 			)
-			assert(is_vector(size) && len(size)==2)
+			assert(is_vector(size,2))
 			assert(is_num(size2))
 			assert(is_num(shift))
 			["rect", point2d(size), size2, shift, offset, anchors]
@@ -198,9 +200,9 @@ function attach_geom(
 				size2 = default(size2, point2d(size)),
 				shift = default(shift, [0,0])
 			)
-			assert(is_vector(size) && len(size)==3)
-			assert(is_vector(size2) && len(size2)==2)
-			assert(is_vector(shift) && len(shift)==2)
+			assert(is_vector(size,3))
+			assert(is_vector(size2,2))
+			assert(is_vector(shift,2))
 			["cuboid", size, size2, shift, offset, anchors]
 		)
 	) : !is_undef(vnf)? (
@@ -209,7 +211,7 @@ function attach_geom(
 		extent? ["vnf_extent", vnf, offset, anchors] :
 		["vnf_isect", vnf, offset, anchors]
 	) : !is_undef(path)? (
-		assert(is_path(path))
+		assert(is_path(path),2)
 		assert(two_d == true)
 		extent? ["path_extent", path, offset, anchors] :
 		["path_isect", path, offset, anchors]
@@ -227,7 +229,7 @@ function attach_geom(
 			)
 			assert(is_num(l))
 			assert(is_num(r2))
-			assert(is_vector(shift) && len(shift)==2)
+			assert(is_vector(shift,2))
 			["cyl", r1, r2, l, shift, offset, anchors]
 		) : (
 			two_d? ["circle", r1, offset, anchors] :
@@ -769,7 +771,10 @@ module attachable(
 	anchors=[],
 	two_d=false
 ) {
-	assert($children==2);
+	assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.");
+	assert(!is_undef(anchor), str("anchor undefined in attachable().  Did you forget to set a default value for anchor in ", parent_module(1)));
+	assert(!is_undef(spin), str("spin undefined in attachable().  Did you forget to set a default value for spin in ", parent_module(1)));
+	assert(!is_undef(orient), str("orient undefined in attachable().  Did you forget to set a default value for orient in ", parent_module(1)));
 	geom = attach_geom(
 		size=size, size2=size2, shift=shift,
 		r=r, r1=r1, r2=r2, h=h,
