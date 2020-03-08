@@ -60,7 +60,8 @@ function square(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
 	assert(is_num(rounding) || len(rounding)==4)
 	let(
 		size = is_num(size)? [size,size] : point2d(size),
-		anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT)
+		anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT),
+		complex = rounding!=0 || chamfer!=0
 	)
 	(rounding==0 && chamfer==0)? let(
 		path = [
@@ -97,7 +98,9 @@ function square(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
 			)
 			each [for (a = angs) cp + inset*[cos(a),sin(a)]]
 		]
-	) rot(spin, p=move(-vmul(anchor,size/2), p=path));
+	) complex?
+		reorient(anchor,spin, two_d=true, path=path, p=path) :
+		reorient(anchor,spin, two_d=true, size=size, p=path);
 
 
 // Function&Module: circle()
@@ -142,7 +145,7 @@ function circle(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 		offset = realign? 180/sides : 0,
 		rr = r / (circum? cos(180/sides) : 1),
 		pts = [for (i=[0:1:sides-1]) let(a=360-offset-i*360/sides) rr*[cos(a),sin(a)]]
-	) rot(spin, p=move(-unit(anchor)*rr, p=pts));
+	) reorient(anchor,spin, two_d=true, r=rr, p=pts);
 
 
 
@@ -235,7 +238,6 @@ module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 	l = first_defined([h, l, 1]);
 	hh = l/2;
 	sides = segs(max(r1,r2));
-	size = [r1*2, r1*2, l];
 	path = [[0,hh],[r2,hh],[r1,-hh],[0,-hh]];
 	attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
 		rotate_extrude(convexity=2, $fn=sides) {
@@ -275,7 +277,6 @@ module sphere(r, d, anchor=CENTER, spin=0, orient=UP)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
-	size = [r*2, r*2, r*2];
 	attachable(anchor,spin,orient, r=r) {
 		rotate_extrude(convexity=2) {
 			difference() {

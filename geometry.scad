@@ -569,7 +569,7 @@ function plane3pt(p1, p2, p3) =
 //   Given a list of points, and the indices of three of those points,
 //   generates the cartesian equation of a plane that those points all
 //   lie on.  Requires that the three indexed points be non-collinear.
-//   Returns [A,B,C,D] where Ax+By+Cz+D=0 is the equation of a plane.
+//   Returns [A,B,C,D] where Ax+By+Cz=D is the equation of a plane.
 // Arguments:
 //   points = A list of points.
 //   i1 = The index into `points` of the first point on the plane.
@@ -628,7 +628,7 @@ function plane_from_normal(normal, pt) =
 //   plane_from_pointslist(points);
 // Description:
 //   Given a list of 3 or more coplanar points, returns the cartesian equation of a plane.
-//   Returns [A,B,C,D] where Ax+By+Cz+D=0 is the equation of the plane.
+//   Returns [A,B,C,D] where Ax+By+Cz=D is the equation of the plane.
 function plane_from_pointslist(points) =
 	let(
 		points = deduplicate(points),
@@ -653,7 +653,7 @@ function plane_normal(plane) = [for (i=[0:2]) plane[i]];
 //   distance_from_plane(plane, point)
 // Description:
 //   Given a plane as [A,B,C,D] where the cartesian equation for that plane
-//   is Ax+By+Cz+D=0, determines how far from that plane the given point is.
+//   is Ax+By+Cz=D, determines how far from that plane the given point is.
 //   The returned distance will be positive if the point is in front of the
 //   plane; on the same side of the plane as the normal of that plane points
 //   towards.  If the point is behind the plane, then the distance returned
@@ -669,7 +669,7 @@ function distance_from_plane(plane, point) =
 // Usage:
 //   pt = closest_point_on_plane(plane, point);
 // Description:
-//   Takes a point, and a plane [A,B,C,D] where the equation of that plane is `Ax+By+Cz+D=0`.
+//   Takes a point, and a plane [A,B,C,D] where the equation of that plane is `Ax+By+Cz=D`.
 //   Returns the coordinates of the closest point on that plane to the given `point`.
 // Arguments:
 //   plane = The [A,B,C,D] values for the equation of the plane.
@@ -716,7 +716,7 @@ function plane_line_angle(plane, line) =
 // Usage:
 //   pt = plane_line_intersection(plane, line, [eps]);
 // Description:
-//   Takes a line, and a plane [A,B,C,D] where the equation of that plane is `Ax+By+Cz+D=0`.
+//   Takes a line, and a plane [A,B,C,D] where the equation of that plane is `Ax+By+Cz=D`.
 //   Returns the coordinates of the where the given `line` intersects the given `plane`.
 //   Returns `undef` if the line is parallel to the plane.
 // Arguments:
@@ -775,7 +775,7 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
 //   coplanar(plane, point);
 // Description:
 //   Given a plane as [A,B,C,D] where the cartesian equation for that plane
-//   is Ax+By+Cz+D=0, determines if the given point is on that plane.
+//   is Ax+By+Cz=D, determines if the given point is on that plane.
 //   Returns true if the point is on that plane.
 // Arguments:
 //   plane = The [A,B,C,D] values for the equation of the plane.
@@ -789,7 +789,7 @@ function coplanar(plane, point) =
 //   in_front_of_plane(plane, point);
 // Description:
 //   Given a plane as [A,B,C,D] where the cartesian equation for that plane
-//   is Ax+By+Cz+D=0, determines if the given point is on the side of that
+//   is Ax+By+Cz=D, determines if the given point is on the side of that
 //   plane that the normal points towards.  The normal of the plane is the
 //   same as [A,B,C].
 // Arguments:
