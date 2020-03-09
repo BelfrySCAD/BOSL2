@@ -174,14 +174,16 @@ module stroke(
 		[lerp(width[epos[0]], width[(epos[0]+1)%len(width)], epos[1])]
 	);
 
-	if (is_path(path,2)) {
+	if (len(path[0]) == 2) {
 		// Straight segments
 		for (i = idx(path2,end=-2)) {
 			seg = select(path2,i,i+1);
 			delt = seg[1] - seg[0];
-			translate(seg[0])
-				rot(from=BACK,to=delt)
+			translate(seg[0]) {
+				rot(from=BACK,to=delt) {
 					trapezoid(w1=widths[i], w2=widths[i+1], h=norm(delt), anchor=FRONT);
+				}
+			}
 		}
 
 		// Joints
@@ -217,17 +219,21 @@ module stroke(
 		for (i = idx(path2,end=-2)) {
 			seg = select(path2,i,i+1);
 			delt = seg[1] - seg[0];
-			translate(seg[0])
-				rot(from=UP,to=delt)
+			translate(seg[0]) {
+				rot(from=UP,to=delt) {
 					cylinder(r1=widths[i]/2, r2=widths[i+1]/2, h=norm(delt), center=false);
+				}
+			}
 		}
 
 		// Joints
 		for (i = [1:1:len(path2)-2]) {
 			$fn = quantup(segs(widths[i]/2),4);
-			translate(path2[i])
-				rot(from=UP, to=path2[i]-path2[i-1])
+			translate(path2[i]) {
+				rot(from=UP, to=path2[i]-path2[i-1]) {
 					sphere(d=widths[i]);
+				}
+			}
 		}
 
 		// Endcap1
