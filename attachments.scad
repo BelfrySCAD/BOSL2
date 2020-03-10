@@ -785,17 +785,17 @@ module attachable(
 	);
 	m = attach_transform(anchor,spin,orient,geom);
 	multmatrix(m) {
+		$parent_anchor = anchor;
+		$parent_spin   = spin;
+		$parent_orient = orient;
+		$parent_geom   = geom;
+		$parent_size   = attach_geom_size(geom);
+
+		$attach_to   = undef;
+		$tags_shown  = undef;
+		$tags_hidden = undef;
+
 		if (attachment_is_shown($tags)) {
-			$parent_anchor = anchor;
-			$parent_spin   = spin;
-			$parent_orient = orient;
-			$parent_geom   = geom;
-			$parent_size   = attach_geom_size(geom);
-
-			$attach_to   = undef;
-			$tags_shown  = undef;
-			$tags_hidden = undef;
-
 			if (is_undef($color)) {
 				children(0);
 			} else color($color) {
