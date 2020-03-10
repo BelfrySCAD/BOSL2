@@ -808,7 +808,7 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //       )
 //   ];
 //   vnf_polyhedron(concat(edges,corners,faces));
-function bezier_patch(patch, splinesteps=16, vnf=[[],[]]) =
+function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF) =
 	assert(is_num(splinesteps)||is_list(splinesteps))
 	is_tripatch(patch)? _bezier_triangle(patch, splinesteps=splinesteps, vnf=vnf) :
 	let(
@@ -831,7 +831,7 @@ function bezier_patch(patch, splinesteps=16, vnf=[[],[]]) =
 function _tri_count(n) = (n*(1+n))/2;
 
 
-function _bezier_triangle(tri, splinesteps=16, vnf=[[],[]]) =
+function _bezier_triangle(tri, splinesteps=16, vnf=EMPTY_VNF) =
 	assert(is_num(splinesteps))
 	let(
 		pts = [
@@ -923,7 +923,7 @@ function patch_reverse(patch) = [for (row=patch) reverse(row)];
 //   ];
 //   vnf = bezier_surface(patches=[patch1, patch2], splinesteps=16);
 //   polyhedron(points=vnf[0], faces=vnf[1]);
-function bezier_surface(patches=[], splinesteps=16, vnf=[[],[]], i=0) =
+function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, i=0) =
 	let(
 		vnf = (i >= len(patches))? vnf :
 			bezier_patch(patches[i], splinesteps=splinesteps, vnf=vnf)
@@ -958,7 +958,7 @@ function bezier_surface(patches=[], splinesteps=16, vnf=[[],[]], i=0) =
 //   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
 //   ];
 //   bezier_polyhedron([patch1, patch2], splinesteps=8);
-module bezier_polyhedron(patches=[], splinesteps=16, vnf=[[],[]])
+module bezier_polyhedron(patches=[], splinesteps=16, vnf=EMPTY_VNF)
 {
 	vnf_polyhedron(
 		bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf)

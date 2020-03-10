@@ -20,6 +20,9 @@ include <triangulation.scad>
 //   merge the various VNFs to get the completed polyhedron vertex list and faces.
 
 
+EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
+
+
 // Function: is_vnf()
 // Description: Returns true if the given value looks passingly like a VNF structure.
 function is_vnf(x) = is_list(x) && len(x)==2 && is_list(x[0]) && is_list(x[1]) && (x[0]==[] || is_vector(x[0][0])) && (x[1]==[] || is_vector(x[1][0]));
@@ -56,7 +59,7 @@ function vnf_faces(vnf) = vnf[1];
 //   vnf2 = vnf_get_vertex(vnf1, p=[3,2,1]);  // Returns: [1, [[[3,5,8],[3,2,1]],[]]]
 //   vnf3 = vnf_get_vertex(vnf2, p=[3,5,8]);  // Returns: [0, [[[3,5,8],[3,2,1]],[]]]
 //   vnf4 = vnf_get_vertex(vnf3, p=[[1,3,2],[3,2,1]]);  // Returns: [[1,2], [[[3,5,8],[3,2,1],[1,3,2]],[]]]
-function vnf_get_vertex(vnf=[[],[]], p) =
+function vnf_get_vertex(vnf=EMPTY_VNF, p) =
 	is_path(p)? _vnf_get_vertices(vnf, p) :
 	assert(is_vnf(vnf))
 	assert(is_vector(p))
@@ -73,7 +76,7 @@ function vnf_get_vertex(vnf=[[],[]], p) =
 
 
 // Internal use only
-function _vnf_get_vertices(vnf=[[],[]], pts, _i=0, _idxs=[]) =
+function _vnf_get_vertices(vnf=EMPTY_VNF, pts, _i=0, _idxs=[]) =
 	_i>=len(pts)? [_idxs, vnf] :
 	let(
 		vvnf = vnf_get_vertex(vnf, pts[_i])
@@ -90,7 +93,7 @@ function _vnf_get_vertices(vnf=[[],[]], pts, _i=0, _idxs=[]) =
 // Arguments:
 //   vnf = The VNF structure to add a face to.
 //   pts = The vertex points for the face.
-function vnf_add_face(vnf=[[],[]], pts) =
+function vnf_add_face(vnf=EMPTY_VNF, pts) =
 	assert(is_vnf(vnf))
 	assert(is_path(pts))
 	let(
@@ -114,7 +117,7 @@ function vnf_add_face(vnf=[[],[]], pts) =
 // Arguments:
 //   vnf = The VNF structure to add a face to.
 //   faces = The list of faces, where each face is given as a list of vertex points.
-function vnf_add_faces(vnf=[[],[]], faces, _i=0) =
+function vnf_add_faces(vnf=EMPTY_VNF, faces, _i=0) =
 	(assert(is_vnf(vnf)) assert(is_list(faces)) _i>=len(faces))? vnf :
 	vnf_add_faces(vnf_add_face(vnf, faces[_i]), faces, _i=_i+1);
 
@@ -124,7 +127,7 @@ function vnf_add_faces(vnf=[[],[]], faces, _i=0) =
 //   vnf = vnf_merge([VNF, VNF, VNF, ...]);
 // Description:
 //   Given a list of VNF structures, merges them all into a single VNF structure.
-function vnf_merge(vnfs=[],_i=0,_acc=[[],[]]) =
+function vnf_merge(vnfs=[],_i=0,_acc=EMPTY_VNF) =
 	(assert(is_vnf_list(vnfs)) _i>=len(vnfs))? _acc :
 	vnf_merge(
 		vnfs, _i=_i+1,
@@ -224,7 +227,7 @@ function vnf_vertex_array(
 	row_wrap=false,
 	reverse=false,
 	style="default",
-	vnf=[[],[]]
+	vnf=EMPTY_VNF
 ) =
 	assert((!caps)||(caps&&col_wrap))
 	assert(in_list(style,["default","alt","quincunx"]))
