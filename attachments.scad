@@ -527,6 +527,8 @@ function find_anchor(anchor, geom) =
 // Description:
 //   Returns true if the given space-delimited string of tag names should currently be shown.
 function attachment_is_shown(tags) =
+	assert(!is_undef($tags_shown))
+	assert(!is_undef($tags_hidden))
 	let(
 		tags = _str_char_split(tags, " "),
 		shown  = !$tags_shown || any([for (tag=tags) in_list(tag, $tags_shown)]),
@@ -790,11 +792,7 @@ module attachable(
 		$parent_orient = orient;
 		$parent_geom   = geom;
 		$parent_size   = attach_geom_size(geom);
-
 		$attach_to   = undef;
-		$tags_shown  = undef;
-		$tags_hidden = undef;
-
 		if (attachment_is_shown($tags)) {
 			if (is_undef($color)) {
 				children(0);
