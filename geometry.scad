@@ -606,8 +606,7 @@ function plane_intersection(plane1,plane2,plane3) =
    let(
       matrix =  [for(p=[plane1,plane2]) select(p,0,2)],
       rhs =  [for(p=[plane1,plane2]) p[3]],
-      point = linear_solve(matrix,rhs),
-      dd=echo(point=point, normal=normal)
+      point = linear_solve(matrix,rhs)
    )
    [point, point+normal];
 

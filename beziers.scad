@@ -923,12 +923,12 @@ function patch_reverse(patch) = [for (row=patch) reverse(row)];
 //   ];
 //   vnf = bezier_surface(patches=[patch1, patch2], splinesteps=16);
 //   polyhedron(points=vnf[0], faces=vnf[1]);
-function bezier_surface(patches=[], splinesteps=16, i=0, vnf=[[],[]]) =
+function bezier_surface(patches=[], splinesteps=16, vnf=[[],[]], i=0) =
 	let(
 		vnf = (i >= len(patches))? vnf :
 			bezier_patch(patches[i], splinesteps=splinesteps, vnf=vnf)
 	) (i >= len(patches))? vnf :
-	bezier_surface(patches=patches, splinesteps=splinesteps, i=i+1, vnf=vnf);
+	bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf, i=i+1);
 
 
 
