@@ -366,7 +366,6 @@ function attach_transform(anchor=CENTER, spin=0, orient=UP, geom, p) =
 //   geom = The geometry description of the shape.
 function find_anchor(anchor, geom) =
 	let(
-		anchor = point3d(anchor),
 		offset = anchor==CENTER? CENTER : select(geom,-2),
 		anchors = select(geom,-1),
 		type = geom[0]
@@ -377,6 +376,7 @@ function find_anchor(anchor, geom) =
 		anchors[found]
 	) :
 	assert(is_vector(anchor),str("anchor=",anchor))
+	let(anchor = point3d(anchor))
 	anchor==CENTER? [anchor, CENTER, UP, 0] :
 	let(
 		oang = (
