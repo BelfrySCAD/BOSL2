@@ -802,8 +802,8 @@ module attachable(
 				$color = undef;
 				children(0);
 			}
-			children(1);
 		}
+		children(1);
 	}
 }
 
