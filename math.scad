@@ -579,7 +579,7 @@ function qr_factor(A) =
 	)
 	assert(len(dim)==2)
 	let(
-		qr =_qr_factor(A, column=0, m = m, n=m, Q=ident(m)),
+		qr =_qr_factor(A, column=0, m = m, n=n, Q=ident(m)),
 		Rzero = [
 			for(i=[0:m-1]) [
 				for(j=[0:n-1])
