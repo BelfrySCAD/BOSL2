@@ -46,9 +46,9 @@
 module square(size=1, center, rounding=0, chamfer=0, anchor, spin=0) {
 	size = is_num(size)? [size,size] : point2d(size);
 	anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT);
-	pts = square(size=size, rounding=rounding, chamfer=chamfer, center=false);
+	pts = square(size=size, rounding=rounding, chamfer=chamfer, center=true);
 	attachable(anchor,spin, two_d=true, size=size) {
-		translate(-size/2) polygon(pts);
+		translate(-size/2) polygon(move(size/2,p=pts));  // Extraneous translation works around fine grid quantizing.
 		children();
 	}
 }
