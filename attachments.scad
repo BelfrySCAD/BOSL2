@@ -468,7 +468,8 @@ function find_anchor(anchor, geom) =
 			mm = pointlist_bounds(select(rpts,idxs)),
 			avgy = (mm[0].y+mm[1].y)/2,
 			avgz = (mm[0].z+mm[1].z)/2,
-			pos = rot(from=RIGHT, to=anchor, p=[maxx, avgy, avgz])
+			mpt = approx(point2d(anchor),[0,0])? [maxx,0,0] : [maxx, avgy, avgz],
+			pos = rot(from=RIGHT, to=anchor, p=mpt)
 		) [anchor, pos, anchor, oang]
 	) : type == "rect"? ( //size, size2
 		let(
