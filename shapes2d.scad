@@ -114,7 +114,7 @@ module stroke(
 
 	assert(is_bool(closed));
 	assert(is_path(path,[2,3]), "The path argument must be a list of 2D or 3D points.");
-	path = closed? concat(path,[path[0]]) : path;
+	path = deduplicate( closed? close_path(path) : path );
 
 	assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
 	width = is_num(width)? [for (x=path) width] : width;
@@ -174,6 +174,8 @@ module stroke(
 		[lerp(width[epos[0]], width[(epos[0]+1)%len(width)], epos[1])]
 	);
 
+	start_vec = select(path,0) - select(path,1);
+	end_vec = select(path,-1) - select(path,-2);
 	if (len(path[0]) == 2) {
 		// Straight segments
 		for (i = idx(path2,end=-2)) {
@@ -209,7 +211,6 @@ module stroke(
 
 		// Endcap2
 		translate(select(path,-1)) {
-			end_vec = select(path,-1) - select(path,-2);
 			rot(from=BACK, to=end_vec) {
 				polygon(endcap_shape2);
 			}
@@ -238,7 +239,6 @@ module stroke(
 
 		// Endcap1
 		translate(path[0]) {
-			start_vec = select(path,0) - select(path,1);
 			rot(from=UP, to=start_vec) {
 				if (is_undef(endcap_angle1)) {
 					rotate_extrude(convexity=convexity) {
@@ -258,7 +258,6 @@ module stroke(
 
 		// Endcap2
 		translate(select(path,-1)) {
-			end_vec = select(path,-1) - select(path,-2);
 			rot(from=UP, to=end_vec) {
 				if (is_undef(endcap_angle2)) {
 					rotate_extrude(convexity=convexity) {
