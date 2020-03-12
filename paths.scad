@@ -655,22 +655,38 @@ function assemble_a_path_from_fragments(fragments, rightmost=true, eps=EPSILON) 
 //   Given a list of incomplete paths, assembles them together into complete closed paths if it can.
 // Arguments:
 //   fragments = List of polylines to be assembled into complete polygons.
-//   rightmost = If true, assemble paths using rightmost turns. Leftmost if false.
 //   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-function assemble_path_fragments(fragments, rightmost=true, eps=EPSILON, _finished=[]) =
+function assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
 	len(fragments)==0? _finished :
 	let(
-		result = assemble_a_path_from_fragments(
-			fragments=fragments,
-			rightmost=rightmost,
+		minxidx = min_index([
+			for (frag=fragments) min(subindex(frag,0))
+		]),
+		promoted = [
+			fragments[minxidx],
+			for (i=idx(fragments))
+				if (i!=minxidx)
+					fragments[i]
+		],
+		result_l = assemble_a_path_from_fragments(
+			fragments=promoted,
+			rightmost=false,
 			eps=eps
 		),
-		newpath = result[0],
+		result_r = assemble_a_path_from_fragments(
+			fragments=promoted,
+			rightmost=true,
+			eps=eps
+		),
+		l_area = abs(polygon_area(result_l[0])),
+		r_area = abs(polygon_area(result_r[0])),
+		result = l_area < r_area? result_l : result_r,
+		newpath = cleanup_path(result[0]),
 		remainder = result[1],
 		finished = concat(_finished, [newpath])
 	) assemble_path_fragments(
 		fragments=remainder,
-		rightmost=rightmost, eps=eps,
+		eps=eps,
 		_finished=finished
 	);
 
