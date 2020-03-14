@@ -781,14 +781,11 @@ function zscale(z=1, p=undef) = scale([1,1,z],p=p);
 //   #stroke(path,closed=true);
 //   stroke(mirror(n, p=path),closed=true);
 function mirror(v, p) =
-	is_undef(p)? (
-		len(v)==2? affine2d_mirror(v) : affine3d_mirror(v)
-	) : (
-		assert(is_list(p))
-		is_num(p.x)? p - (2*(p*v)/(v*v))*v :
-		is_vnf(p)? [mirror(v=v,p=p.x), [for (l=p.y) reverse(l)]] :
-		[for (l=p) mirror(v=v, p=l)]
-	);
+	assert(is_list(p))
+	let(m = len(v)==2? affine2d_mirror(v) : affine3d_mirror(v))
+	is_undef(p)? m :
+	is_vnf(p)? [mirror(v=v,p=p[0]), [for (face=p[1]) reverse(face)]] :
+	apply(m, p);
 
 
 // Function&Module: xflip()
