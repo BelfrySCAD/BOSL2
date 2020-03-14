@@ -16,6 +16,7 @@ include <edges.scad>
 include <common.scad>
 include <errors.scad>
 include <arrays.scad>
+include <strings.scad>
 include <vnf.scad>
 
 include <math.scad>

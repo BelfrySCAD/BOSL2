@@ -531,17 +531,10 @@ function attachment_is_shown(tags) =
 	assert(!is_undef($tags_shown))
 	assert(!is_undef($tags_hidden))
 	let(
-		tags = _str_char_split(tags, " "),
+		tags = str_split(tags, " "),
 		shown  = !$tags_shown || any([for (tag=tags) in_list(tag, $tags_shown)]),
 		hidden = any([for (tag=tags) in_list(tag, $tags_hidden)])
 	) shown && !hidden;
-
-
-function _str_char_split(s,delim,n=0,acc=[],word="") =
-	(n>=len(s))? concat(acc, [word]) :
-	(s[n]==delim)?
-		_str_char_split(s,delim,n+1,concat(acc,[word]),"") :
-		_str_char_split(s,delim,n+1,acc,str(word,s[n]));
 
 
 // Function: reorient()
@@ -1054,7 +1047,7 @@ module recolor(c)
 //   }
 module hide(tags="")
 {
-	$tags_hidden = tags==""? [] : _str_char_split(tags, " ");
+	$tags_hidden = tags==""? [] : str_split(tags, " ");
 	children();
 }
 
@@ -1071,7 +1064,7 @@ module hide(tags="")
 //   }
 module show(tags="")
 {
-	$tags_shown = tags==""? [] : _str_char_split(tags, " ");
+	$tags_shown = tags==""? [] : str_split(tags, " ");
 	children();
 }
 
