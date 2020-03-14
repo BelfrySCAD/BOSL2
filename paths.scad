@@ -45,9 +45,8 @@ include <BOSL2/triangulation.scad>
 function is_path(list, dim=[2,3], fast=false) =
 	fast? is_list(list) && is_vector(list[0],fast=true) :
 	is_list(list) && is_list(list[0]) && len(list)>1 &&
-	let( d = len(list[0]) )
-	(is_undef(dim) || in_list(d, force_list(dim))) &&
-	is_list_of(list, repeat(0,d));
+	(is_undef(dim) || in_list(len(list[0]), force_list(dim))) &&
+	is_list_of(list, repeat(0,len(list[0])));
 
 
 // Function: is_closed_path()
