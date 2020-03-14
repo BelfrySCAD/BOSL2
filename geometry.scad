@@ -779,6 +779,21 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
 	res[0];
 
 
+// Function: points_are_collinear()
+// Usage:
+//   points_are_collinear(points);
+// Description:
+//   Given a list of points, returns true if all points in the list are collinear.
+// Arguments:
+//   points = The list of points to test.
+//   eps = How much variance is allowed in testing that each point is on the same line.  Default: `EPSILON` (1e-9)
+function points_are_collinear(points, eps=EPSILON) =
+	let(
+		a = furthest_point(points[0], points),
+		b = furthest_point(points[a], points)
+	) all([for (pt = points) collinear(points[a], points[b], pt, eps=eps)]);
+
+
 // Function: coplanar()
 // Usage:
 //   coplanar(plane, point);
@@ -794,15 +809,15 @@ function coplanar(plane, point, eps=EPSILON) =
 	abs(distance_from_plane(plane, point)) <= eps;
 
 
-// Function: pointslist_is_coplanar()
+// Function: points_are_coplanar()
 // Usage:
-//   pointslist_is_coplanar(points);
+//   points_are_coplanar(points);
 // Description:
 //   Given a list of points, returns true if all points in the list are coplanar.
 // Arguments:
 //   points = The list of points to test.
 //   eps = How much variance is allowed in testing that each point is on the same plane.  Default: `EPSILON` (1e-9)
-function pointslist_is_coplanar(points, eps=EPSILON) =
+function points_are_coplanar(points, eps=EPSILON) =
 	let(
 		plane = plane_from_pointslist(points, fast=true, eps=eps)
 	) all([for (pt = points) coplanar(plane, pt, eps=eps)]);
