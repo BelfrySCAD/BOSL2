@@ -608,6 +608,7 @@ function is_letter(s) =
 //   - An optional `.` followed by an integer precision length, for specifying how many digits to display in numeric formats.  If not give, 6 digits is assumed.
 //   - An optional letter to indicate the formatting style to use.  If not given, `s` is assumed, which will do it's generic best to format any data type.
 //   - A trailing `}` character to show the end of the placeholder.
+//   
 //   Formatting styles, and their effects are as follows:
 //   - `s`: Converts the value to a string with `str()` to display.  This is very generic.
 //   - `i` or `d`: Formats numeric values as integers.
