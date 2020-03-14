@@ -624,19 +624,29 @@ function plane_from_normal(normal, pt) =
 
 // Function: plane_from_pointslist()
 // Usage:
-//   plane_from_pointslist(points);
+//   plane_from_pointslist(points, [fast], [eps]);
 // Description:
 //   Given a list of 3 or more coplanar points, returns the cartesian equation of a plane.
 //   Returns [A,B,C,D] where Ax+By+Cz=D is the equation of the plane.
-function plane_from_pointslist(points) =
+//   If not all the points in the points list are coplanar, then `undef` is returned.
+//   If `fast` is true, then a list where not all points are coplanar will result
+//   in an invalid plane value, as all coplanar checks are skipped.
+// Arguments:
+//   points = The list of points to find the plane of.
+//   fast = If true, don't verify that all points in the list are coplanar.  Default: false
+//   eps = How much variance is allowed in testing that each point is on the same plane.  Default: `EPSILON` (1e-9)
+function plane_from_pointslist(points, fast=false, eps=EPSILON) =
 	let(
 		points = deduplicate(points),
 		indices = sort(find_noncollinear_points(points)),
 		p1 = points[indices[0]],
 		p2 = points[indices[1]],
 		p3 = points[indices[2]],
-		plane = plane3pt(p1,p2,p3)
-	) plane;
+		plane = plane3pt(p1,p2,p3),
+		all_coplanar = fast || all([
+			for (pt = points) coplanar(plane,pt,eps=eps)
+		])
+	) all_coplanar? plane : undef;
 
 
 // Function: plane_normal()
@@ -779,8 +789,24 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
 // Arguments:
 //   plane = The [A,B,C,D] values for the equation of the plane.
 //   point = The point to test.
-function coplanar(plane, point) =
-	abs(distance_from_plane(plane, point)) <= EPSILON;
+//   eps = How much variance is allowed in testing that each point is on the same plane.  Default: `EPSILON` (1e-9)
+function coplanar(plane, point, eps=EPSILON) =
+	abs(distance_from_plane(plane, point)) <= eps;
+
+
+// Function: pointslist_is_coplanar()
+// Usage:
+//   pointslist_is_coplanar(points);
+// Description:
+//   Given a list of points, returns true if all points in the list are coplanar.
+// Arguments:
+//   points = The list of points to test.
+//   eps = How much variance is allowed in testing that each point is on the same plane.  Default: `EPSILON` (1e-9)
+function pointslist_is_coplanar(points, eps=EPSILON) =
+	let(
+		plane = plane_from_pointslist(points, fast=true, eps=eps)
+	) all([for (pt = points) coplanar(plane, pt, eps=eps)]);
+
 
 
 // Function: in_front_of_plane()
