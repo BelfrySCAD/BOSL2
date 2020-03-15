@@ -197,9 +197,9 @@ function vnf_triangulate(vnf) =
 //   vnf = vnf_vertex_array(
 //       points=[
 //           for (a=[0:5:360-EPSILON])
-//               affine3d_apply(
-//                   circle(d=20),
-//                   [xrot(90), right(30), zrot(a)]
+//               apply(
+//                   zrot(a) * right(30) * xrot(90),
+//                   circle(d=20)
 //               )
 //       ],
 //       col_wrap=true, row_wrap=true, reverse=true
@@ -208,9 +208,9 @@ function vnf_triangulate(vnf) =
 // Example(3D): Möbius Strip.  Note that `row_wrap` is not used, and the first and last profile copies are the same.
 //   vnf = vnf_vertex_array(
 //       points=[
-//           for (a=[0:5:360]) affine3d_apply(
-//               square([1,10], center=true),
-//               [zrot(a/2+60), xrot(90), right(30), zrot(a)]
+//           for (a=[0:5:360]) apply(
+//               zrot(a) * right(30) * xrot(90) * zrot(a/2+60),
+//               square([1,10], center=true)
 //           )
 //       ],
 //       col_wrap=true, reverse=true
@@ -218,15 +218,15 @@ function vnf_triangulate(vnf) =
 //   vnf_polyhedron(vnf);
 // Example(3D): Assembling a Polyhedron from Multiple Parts
 //   wall_points = [
-//       for (a = [-90:2:90]) affine3d_apply(
-//           circle(d=100),
-//           [scale([1-0.1*cos(a*6), 1-0.1*cos((a+90)*6), 1]), up(a)]
+//       for (a = [-90:2:90]) apply(
+//           up(a) * scale([1-0.1*cos(a*6),1-0.1*cos((a+90)*6),1]),
+//           circle(d=100)
 //       )
 //   ];
 //   cap = [
-//       for (a = [0:0.01:1+EPSILON]) affine3d_apply(
-//           wall_points[0],
-//           [scale([a,a,1]), up(90-5*sin(a*360*2))]
+//       for (a = [0:0.01:1+EPSILON]) apply(
+//           up(90-5*sin(a*360*2)) * scale([a,a,1]),
+//           wall_points[0]
 //       )
 //   ];
 //   cap1 = [for (p=cap) down(90, p=zscale(-1, p=p))];

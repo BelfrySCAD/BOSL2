@@ -289,7 +289,7 @@ module Qrot(q) {
 function Qrot(q,p) =
 	is_undef(p)? Q_Matrix4(q) :
 	is_vector(p)? Qrot(q,[p])[0] :
-	affine3d_apply(p,[Q_Matrix4(q)]);
+	apply(Q_Matrix4(q), p);
 
 
 // Module: Qrot_copies()
