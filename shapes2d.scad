@@ -406,14 +406,17 @@ function _normal_segment(p1,p2) =
 //   origin, pointed along the positive x axis with a movement distance of 1.  By default, `turtle` returns just
 //   the computed turtle path.  If you set `full_state` to true then it instead returns the full turtle state.
 //   You can invoke `turtle` again with this full state to continue the turtle path where you left off.
+//
+//   The turtle state is a list with three entries: the path constructed so far, the current step as a 2-vector, and the current default angle.
 //   
 //   For the list below, `dist` is the current movement distance.
 //   
 //   Commands     | Arguments          | What it does
 //   ------------ | ------------------ | -------------------------------
-//   "move"       | [dist]             | Move turtle scale*dist units in the turtle direction.  Default dist=1.
-//   "xmove"      | [dist]             | Move turtle scale*dist units in the x direction. Default dist=1.
-//   "ymove"      | [dist]             | Move turtle scale*dist units in the y direction. Default dist=1.
+//   "move"       | [dist]             | Move turtle scale*dist units in the turtle direction.  Default dist=1.  
+//   "xmove"      | [dist]             | Move turtle scale*dist units in the x direction. Default dist=1.  Does not change turtle direction.
+//   "ymove"      | [dist]             | Move turtle scale*dist units in the y direction. Default dist=1.  Does not change turtle direction.
+//   "xymove"     | vector             | Move turtle by the specified vector.  Does not change turtle direction. 
 //   "untilx"     | xtarget            | Move turtle in turtle direction until x==xtarget.  Produces an error if xtarget is not reachable.
 //   "untily"     | ytarget            | Move turtle in turtle direction until y==ytarget.  Produces an error if xtarget is not reachable.
 //   "jump"       | point              | Move the turtle to the specified point
@@ -550,12 +553,12 @@ function _turtle_command(command, parm, parm2, state, index) =
 		arcsteps=3,
 		parm = !is_string(parm) ? parm : undef,
 		parm2 = !is_string(parm2) ? parm2 : undef,
-		needvec = ["jump"],
+		needvec = ["jump", "xymove"],
 		neednum = ["untilx","untily","xjump","yjump","angle","length","scale","addlength"],
 		needeither = ["setdir"],
-		chvec = !in_list(command,needvec) || is_vector(parm),
+		chvec = !in_list(command,needvec) || is_vector(parm,2),
 		chnum = !in_list(command,neednum) || is_num(parm),
-		vec_or_num = !in_list(command,needeither) || (is_num(parm) || is_vector(parm)),
+		vec_or_num = !in_list(command,needeither) || (is_num(parm) || is_vector(parm,2)),
 		lastpt = select(state[path],-1)
 	)
 	assert(chvec,str("\"",command,"\" requires a vector parameter at index ",index))
@@ -581,6 +584,7 @@ function _turtle_command(command, parm, parm2, state, index) =
 	) :
 	command=="xmove" ? list_set(state, path, concat(state[path],[default(parm,1)*norm(state[step])*[1,0]+lastpt])):
 	command=="ymove" ? list_set(state, path, concat(state[path],[default(parm,1)*norm(state[step])*[0,1]+lastpt])):
+        command=="xymove" ? list_set(state, path, concat(state[path], [lastpt+parm])):
 	command=="jump" ?  list_set(state, path, concat(state[path],[parm])):
 	command=="xjump" ? list_set(state, path, concat(state[path],[[parm,lastpt.y]])):
 	command=="yjump" ? list_set(state, path, concat(state[path],[[lastpt.x,parm]])):
