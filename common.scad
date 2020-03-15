@@ -95,8 +95,8 @@ function is_nan(x) = (x!=x);
 //   is_list_of([[1,[3,4]], [4,[5,6]]], [1,[2,3]]);    // Returne true
 //   is_list_of([[1,[3,INF]], [4,[5,6]]], [1,[2,3]]);  // Returne false
 function is_list_of(list,pattern) =
-	is_list(list) &&
 	let(pattern = 0*pattern)
+	is_list(list) &&
 	[]==[for(entry=list) if (entry*0 != pattern) entry];
 
 
