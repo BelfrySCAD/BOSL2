@@ -349,6 +349,7 @@ module vnf_polyhedron(vnf, convexity=2) {
 //   - Overlapping coplanar faces.
 // Arguments:
 //   vnf = The VNF to validate.
+//   size = The width of the lines and diameter of points used to highlight edges and vertices.  Module only.  Default: 1
 // Example:
 //   vnf = skin([
 //   	path3d(regular_ngon(n=4, d=100),0),
@@ -422,7 +423,7 @@ function vnf_validate(vnf) =
 		]
 	) concat(hole_edges, overpop_edges, t_fails, nonplanars, bigfaces);
 
-module vnf_validate(vnf) {
+module vnf_validate(vnf, size=1) {
 	faults = vnf_validate(vnf);
 	for (fault = faults) {
 		typ = fault[0];
@@ -433,12 +434,12 @@ module vnf_validate(vnf) {
 		echo(str(typ, " ", err, ": ", msg, " at ", pts));
 		color(clr) {
 			if (len(pts)==2) {
-				stroke(pts, width=2);
+				stroke(pts, width=size);
 			} else if (len(pts)>2) {
-				stroke(pts, width=2, closed=true);
+				stroke(pts, width=size, closed=true);
 				polyhedron(pts,[[for (i=idx(pts)) i]]);
 			} else {
-				place_copies(pts) sphere(d=2);
+				place_copies(pts) sphere(d=size);
 			}
 		}
 	}
