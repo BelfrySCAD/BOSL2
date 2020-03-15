@@ -137,6 +137,21 @@ function vnf_merge(vnfs=[],_i=0,_acc=EMPTY_VNF) =
 		]
 	);
 
+// Function: vnf_compact()
+// Usage:
+//   cvnf = vnf_compact(vnf);
+// Description:
+//   Takes a VNF and consolidates all duplicate vertices, and drops unreferenced vertices.
+function vnf_compact(vnf) =
+	let(
+		verts = vnf[0],
+		faces = [
+			for (face=vnf[1]) [
+				for (i=face) verts[i]
+			]
+		]
+	) vnf_add_faces(faces=faces);
+
 
 // Function: vnf_triangulate()
 // Usage:
@@ -307,6 +322,127 @@ function vnf_vertex_array(
 module vnf_polyhedron(vnf, convexity=2) {
 	vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf;
 	polyhedron(vnf[0], vnf[1], convexity=convexity);
+}
+
+
+// Function&Module: vnf_validate()
+// Usage: As Function
+//   fails = vnf_validate(vnf);
+// Usage: As Module
+//   vnf_validate(vnf);
+// Description:
+//   When called as a function, returns a list of non-manifold errors with the given VNF.
+//   Each error has the format `[ERR_OR_WARN,CODE,MESG,POINTS,COLOR]`.
+//   When called as a module, echoes the non-manifold errors to the console, and color hilites the
+//   bad edges and vertices, overlaid on a transparent gray polyhedron of the VNF.
+//   Currently searches for these non-manifold errors:
+//   - HOLE_EDGE: Edge bounds Hole (magenta)
+//   - T_JUNC: Vertex is mid-edge on another Face (red)
+//   - NONPLANAR: Face vertices are not coplanar (cyan)
+//   
+//   Also checks for these warnings:
+//   - OPOP_EDGE: Too many faces attached at Edge (orange)
+//   - BIG_FACE: Face has more than 3 vertices, and may confuse CGAL (yellow)
+//   
+//   Still to implement:
+//   - Face intersections.
+//   - Overlapping coplanar faces.
+// Arguments:
+//   vnf = The VNF to validate.
+// Example:
+//   vnf = skin([
+//   	path3d(regular_ngon(n=4, d=100),0),
+//   	path3d(regular_ngon(n=5, d=100),100)
+//   ], slices=0, caps=false);
+//   vnf_validate(vnf);
+function vnf_validate(vnf) =
+	let(
+		vnf = vnf_compact(vnf),
+		edges = sort([
+			for (face=vnf[1], edge=pair_wrap(face))
+			edge[0]<edge[1]? edge : [edge[1],edge[0]]
+		]),
+		edgecnts = unique_count(edges),
+		uniq_edges = edgecnts[0],
+		hole_edges = [
+			for (i=idx(uniq_edges))
+			if (edgecnts[1][i]<2) [
+				"ERROR",
+				"HOLE_EDGE",
+				"Edge bounds Hole",
+				[for (i=uniq_edges[i]) vnf[0][i]],
+				"magenta"
+			]
+		],
+		overpop_edges = [
+			for (i=idx(uniq_edges))
+			if (edgecnts[1][i]>2) [
+				"WARNING",
+				"OPOP_EDGE",
+				"Too many faces attached at Edge",
+				[for (i=uniq_edges[i]) vnf[0][i]],
+				"orange"
+			]
+		],
+		t_fails = [
+			for (v=idx(vnf[0]), edge=uniq_edges)
+			if (v!=edge[0] && v!=edge[1]) let(
+				a = vnf[0][edge[0]],
+				b = vnf[0][v],
+				c = vnf[0][edge[1]],
+				pt = segment_closest_point([a,c],b)
+			) if (approx(pt,b)) [
+				"ERROR",
+				"T_JUNC",
+				"Vertex is mid-edge on another Face",
+				[b],
+				"red"
+			]
+		],
+		nonplanars = [
+			for (face = vnf[1]) let(
+				verts = [for (i=face) vnf[0][i]]
+			) if (!points_are_coplanar(verts)) [
+				"ERROR",
+				"NONPLANAR",
+				"Face vertices are not coplanar",
+				verts,
+				"cyan"
+			]
+		],
+		bigfaces = [
+			for (face = vnf[1])
+			if (len(face) > 3) [
+				"WARNING",
+				"BIG_FACE",
+				"Face has more than 3 vertices, and may confuse CGAL",
+				[for (i=face) vnf[0][i]],
+				"yellow"
+			]
+		]
+	) concat(hole_edges, overpop_edges, t_fails, nonplanars, bigfaces);
+
+module vnf_validate(vnf) {
+	faults = vnf_validate(vnf);
+	for (fault = faults) {
+		typ = fault[0];
+		err = fault[1];
+		msg = fault[2];
+		pts = fault[3];
+		clr = fault[4];
+		echo(str(typ, " ", err, ": ", msg, " at ", pts));
+		color(clr) {
+			if (len(pts)==2) {
+				stroke(pts, width=2);
+			} else if (len(pts)>2) {
+				stroke(pts, width=2, closed=true);
+				polyhedron(pts,[[for (i=idx(pts)) i]]);
+			} else {
+				place_copies(pts) sphere(d=2);
+			}
+		}
+	}
+	color([0.5,0.5,0.5,0.5]) vnf_polyhedron(vnf);
 }
 
 
