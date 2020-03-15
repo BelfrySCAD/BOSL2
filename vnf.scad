@@ -199,7 +199,7 @@ function vnf_triangulate(vnf) =
 //           for (a=[0:5:360-EPSILON])
 //               apply(
 //                   zrot(a) * right(30) * xrot(90),
-//                   circle(d=20)
+//                   path3d(circle(d=20))
 //               )
 //       ],
 //       col_wrap=true, row_wrap=true, reverse=true
@@ -210,7 +210,7 @@ function vnf_triangulate(vnf) =
 //       points=[
 //           for (a=[0:5:360]) apply(
 //               zrot(a) * right(30) * xrot(90) * zrot(a/2+60),
-//               square([1,10], center=true)
+//               path3d(square([1,10], center=true))
 //           )
 //       ],
 //       col_wrap=true, reverse=true
@@ -220,7 +220,7 @@ function vnf_triangulate(vnf) =
 //   wall_points = [
 //       for (a = [-90:2:90]) apply(
 //           up(a) * scale([1-0.1*cos(a*6),1-0.1*cos((a+90)*6),1]),
-//           circle(d=100)
+//           path3d(circle(d=100))
 //       )
 //   ];
 //   cap = [
