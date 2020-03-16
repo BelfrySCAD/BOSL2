@@ -772,7 +772,7 @@ module spiral_sweep(polyline, h, r, twist=360, center, anchor, spin=0, orient=UP
 			dx = r*cos(a),
 			dy = r*sin(a),
 			dz = h * (p/steps),
-			pts = affine3d_apply(
+			pts = apply_list(
 				polyline, [
 					affine3d_xrot(90),
 					affine3d_zrot(a),

@@ -118,28 +118,6 @@ function affine2d_chain(affines, _m=undef, _i=0) =
 	affine2d_chain(affines, _m=(is_undef(_m)? affines[_i] : affines[_i] * _m), _i=_i+1);
 
 
-// Function: affine2d_apply()
-// Usage:
-//   affine2d_apply(pts, affines)
-// Description:
-//   Given a list of 3x3 affine2d transformation matrices, applies them in order to the points in the point list.
-// Arguments:
-//   pts = A list of 2D points to transform.
-//   affines = A list of 3x3 affine2d matrices to apply, in order.
-// Example:
-//   npts = affine2d_apply(
-//       pts = [for (x=[0:3]) [5*x,0]],
-//       affines =[
-//           affine2d_scale([3,1]),
-//           affine2d_rot(90),
-//           affine2d_translate([5,5])
-//       ]
-//   );  // Returns [[5,5], [5,20], [5,35], [5,50]]
-function affine2d_apply(pts, affines) =
-	let(m = affine2d_chain(affines))
-	[for (p = pts) point2d(m * concat(point2d(p),[1]))];
-
-
 
 // Section: Affine3d 4x4 Transformation Matrices
 
@@ -397,29 +375,6 @@ function affine3d_skew_yz(ya, za) = [
 function affine3d_chain(affines, _m=undef, _i=0) =
 	(_i>=len(affines))? (is_undef(_m)? ident(4) : _m) :
 	affine3d_chain(affines, _m=(is_undef(_m)? affines[_i] : affines[_i] * _m), _i=_i+1);
-
-
-// Function: affine3d_apply()
-// Usage:
-//   affine3d_apply(pts, affines)
-// Description:
-//   Given a list of affine3d transformation matrices, applies them in order to the points in the point list.
-// Arguments:
-//   pts = A list of 3D points to transform.
-//   affines = A list of 4x4 matrices to apply, in order.
-// Example:
-//   npts = affine3d_apply(
-//     pts = [for (x=[0:3]) [5*x,0,0]],
-//     affines =[
-//       affine3d_scale([2,1,1]),
-//       affine3d_zrot(90),
-//       affine3d_translate([5,5,10])
-//     ]
-//   );  // Returns [[5,5,10], [5,15,10], [5,25,10], [5,35,10]]
-function affine3d_apply(pts, affines) =
-	let(m = affine3d_chain(affines))
-	[for (p = pts) point3d(m * concat(point3d(p),[1]))];
-
 
 
 // Function: apply()

@@ -137,6 +137,21 @@ function vnf_merge(vnfs=[],_i=0,_acc=EMPTY_VNF) =
 		]
 	);
 
+// Function: vnf_compact()
+// Usage:
+//   cvnf = vnf_compact(vnf);
+// Description:
+//   Takes a VNF and consolidates all duplicate vertices, and drops unreferenced vertices.
+function vnf_compact(vnf) =
+	let(
+		verts = vnf[0],
+		faces = [
+			for (face=vnf[1]) [
+				for (i=face) verts[i]
+			]
+		]
+	) vnf_add_faces(faces=faces);
+
 
 // Function: vnf_triangulate()
 // Usage:
@@ -182,9 +197,9 @@ function vnf_triangulate(vnf) =
 //   vnf = vnf_vertex_array(
 //       points=[
 //           for (a=[0:5:360-EPSILON])
-//               affine3d_apply(
-//                   circle(d=20),
-//                   [xrot(90), right(30), zrot(a)]
+//               apply(
+//                   zrot(a) * right(30) * xrot(90),
+//                   path3d(circle(d=20))
 //               )
 //       ],
 //       col_wrap=true, row_wrap=true, reverse=true
@@ -193,9 +208,9 @@ function vnf_triangulate(vnf) =
 // Example(3D): Möbius Strip.  Note that `row_wrap` is not used, and the first and last profile copies are the same.
 //   vnf = vnf_vertex_array(
 //       points=[
-//           for (a=[0:5:360]) affine3d_apply(
-//               square([1,10], center=true),
-//               [zrot(a/2+60), xrot(90), right(30), zrot(a)]
+//           for (a=[0:5:360]) apply(
+//               zrot(a) * right(30) * xrot(90) * zrot(a/2+60),
+//               path3d(square([1,10], center=true))
 //           )
 //       ],
 //       col_wrap=true, reverse=true
@@ -203,15 +218,15 @@ function vnf_triangulate(vnf) =
 //   vnf_polyhedron(vnf);
 // Example(3D): Assembling a Polyhedron from Multiple Parts
 //   wall_points = [
-//       for (a = [-90:2:90]) affine3d_apply(
-//           circle(d=100),
-//           [scale([1-0.1*cos(a*6), 1-0.1*cos((a+90)*6), 1]), up(a)]
+//       for (a = [-90:2:90]) apply(
+//           up(a) * scale([1-0.1*cos(a*6),1-0.1*cos((a+90)*6),1]),
+//           path3d(circle(d=100))
 //       )
 //   ];
 //   cap = [
-//       for (a = [0:0.01:1+EPSILON]) affine3d_apply(
-//           wall_points[0],
-//           [scale([a,a,1]), up(90-5*sin(a*360*2))]
+//       for (a = [0:0.01:1+EPSILON]) apply(
+//           up(90-5*sin(a*360*2)) * scale([a,a,1]),
+//           wall_points[0]
 //       )
 //   ];
 //   cap1 = [for (p=cap) down(90, p=zscale(-1, p=p))];
@@ -307,6 +322,216 @@ function vnf_vertex_array(
 module vnf_polyhedron(vnf, convexity=2) {
 	vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf;
 	polyhedron(vnf[0], vnf[1], convexity=convexity);
+}
+
+
+// Function&Module: vnf_validate()
+// Usage: As Function
+//   fails = vnf_validate(vnf);
+// Usage: As Module
+//   vnf_validate(vnf);
+// Description:
+//   When called as a function, returns a list of non-manifold errors with the given VNF.
+//   Each error has the format `[ERR_OR_WARN,CODE,MESG,POINTS,COLOR]`.
+//   When called as a module, echoes the non-manifold errors to the console, and color hilites the
+//   bad edges and vertices, overlaid on a transparent gray polyhedron of the VNF.
+//   
+//   Currently checks for these problems:
+//   Type    | Color    | Code         | Message 
+//   ------- | -------- | ------------ | ---------------------------------
+//   WARNING | Yellow   | BIG_FACE     | Face has more than 3 vertices, and may confuse CGAL
+//   ERROR   | Cyan     | NONPLANAR    | Face vertices are not coplanar
+//   ERROR   | Orange   | OVRPOP_EDGE  | Too many faces attached at edge
+//   ERROR   | Violet   | REVERSAL     | Faces reverse across edge
+//   ERROR   | Red      | T_JUNCTION   | Vertex is mid-edge on another Face
+//   ERROR   | Magenta  | HOLE_EDGE    | Edge bounds Hole
+//   
+//   Still to implement:
+//   - Face intersections.
+//   - Overlapping coplanar faces.
+// Arguments:
+//   vnf = The VNF to validate.
+//   size = The width of the lines and diameter of points used to highlight edges and vertices.  Module only.  Default: 1
+// Example: BIG_FACE Warnings; Faces with More Than 3 Vertices.  CGAL often will fail to accept that a face is planar after a rotation, if it has more than 3 vertices.
+//   vnf = skin([
+//       path3d(regular_ngon(n=3, d=100),0),
+//       path3d(regular_ngon(n=5, d=100),100)
+//   ], slices=0, caps=true, method="tangent");
+//   vnf_validate(vnf);
+// Example: NONPLANAR Errors; Face Vertices are Not Coplanar
+//   a = [  0,  0,-50];
+//   b = [-50,-50, 50];
+//   c = [-50, 50, 50];
+//   d = [ 50, 50, 60];
+//   e = [ 50,-50, 50];
+//   vnf = vnf_add_faces(faces=[
+//       [a, b, e], [a, c, b], [a, d, c], [a, e, d], [b, c, d, e]
+//   ]);
+//   vnf_validate(vnf);
+// Example: OVRPOP_EDGE Errors; More Than Two Faces Attached to the Same Edge.  This confuses CGAL, and can lead to failed renders.
+//   vnf = vnf_triangulate(linear_sweep(union(square(50), square(50,anchor=BACK+RIGHT)), height=50));
+//   vnf_validate(vnf);
+// Example: REVERSAL Errors; Faces Reversed Across Edge
+//   vnf1 = skin([
+//       path3d(square(100,center=true),0),
+//       path3d(square(100,center=true),100),
+//   ], slices=0, caps=false);
+//   vnf = vnf_add_faces(vnf=vnf1, faces=[
+//       [[-50,-50,  0], [ 50, 50,  0], [-50, 50,  0]],
+//       [[-50,-50,  0], [ 50,-50,  0], [ 50, 50,  0]],
+//       [[-50,-50,100], [-50, 50,100], [ 50, 50,100]],
+//       [[-50,-50,100], [ 50,-50,100], [ 50, 50,100]],
+//   ]);
+//   vnf_validate(vnf);
+// Example: T_JUNCTION Errors; Vertex is Mid-Edge on Another Face.
+//   vnf1 = skin([
+//       path3d(square(100,center=true),0),
+//       path3d(square(100,center=true),100),
+//   ], slices=0, caps=false);
+//   vnf = vnf_add_faces(vnf=vnf1, faces=[
+//       [[-50,-50,0], [50,50,0], [-50,50,0]],
+//       [[-50,-50,0], [50,-50,0], [50,50,0]],
+//       [[-50,-50,100], [-50,50,100], [0,50,100]],
+//       [[-50,-50,100], [0,50,100], [0,-50,100]],
+//       [[0,-50,100], [0,50,100], [50,50,100]],
+//       [[0,-50,100], [50,50,100], [50,-50,100]],
+//   ]);
+//   vnf_validate(vnf);
+// Example: HOLE_EDGE Errors; Edges Adjacent to Holes.  
+//   vnf = skin([
+//       path3d(regular_ngon(n=4, d=100),0),
+//       path3d(regular_ngon(n=5, d=100),100)
+//   ], slices=0, caps=false);
+//   vnf_validate(vnf);
+function vnf_validate(vnf) =
+	let(
+		vnf = vnf_compact(vnf),
+		edges = sort([
+			for (face=vnf[1], edge=pair_wrap(face))
+			edge[0]<edge[1]? edge : [edge[1],edge[0]]
+		]),
+		edgecnts = unique_count(edges),
+		uniq_edges = edgecnts[0],
+		bigfaces = [
+			for (face = vnf[1])
+			if (len(face) > 3) [
+				"WARNING",
+				"BIG_FACE",
+				"Face has more than 3 vertices, and may confuse CGAL",
+				[for (i=face) vnf[0][i]],
+				"yellow"
+			]
+		],
+		nonplanars = unique([
+			for (face = vnf[1]) let(
+				verts = [for (i=face) vnf[0][i]]
+			) if (!points_are_coplanar(verts)) [
+				"ERROR",
+				"NONPLANAR",
+				"Face vertices are not coplanar",
+				verts,
+				"cyan"
+			]
+		]),
+		overpop_edges = unique([
+			for (i=idx(uniq_edges))
+			if (edgecnts[1][i]>2) [
+				"ERROR",
+				"OVRPOP_EDGE",
+				"Too many faces attached at Edge",
+				[for (i=uniq_edges[i]) vnf[0][i]],
+				"#f70"
+			]
+		]),
+		reversals = unique([
+			for(i = idx(vnf[1]), j = idx(vnf[1])) if(i != j)
+			for(edge1 = pair_wrap(vnf[1][i]))
+			for(edge2 = pair_wrap(vnf[1][j]))
+			if(edge1 == edge2)
+			if(_edge_not_reported(edge1, vnf, overpop_edges))
+			[
+				"ERROR",
+				"REVERSAL",
+				"Faces Reverse Across Edge",
+				[for (i=edge1) vnf[0][i]],
+				"violet"
+			]
+		]),
+		t_juncts = unique([
+			for (v=idx(vnf[0]), edge=uniq_edges)
+			if (v!=edge[0] && v!=edge[1]) let(
+				a = vnf[0][edge[0]],
+				b = vnf[0][v],
+				c = vnf[0][edge[1]],
+				pt = segment_closest_point([a,c],b)
+			) if (approx(pt,b)) [
+				"ERROR",
+				"T_JUNCTION",
+				"Vertex is mid-edge on another Face",
+				[b],
+				"red"
+			]
+		]),
+		hole_edges = unique([
+			for (i=idx(uniq_edges))
+			if (edgecnts[1][i]<2)
+			if (_pts_not_reported(uniq_edges[i], vnf, t_juncts))
+			[
+				"ERROR",
+				"HOLE_EDGE",
+				"Edge bounds Hole",
+				[for (i=uniq_edges[i]) vnf[0][i]],
+				"magenta"
+			]
+		])
+	) concat(
+		bigfaces,
+		nonplanars,
+		overpop_edges,
+		reversals,
+		t_juncts,
+		hole_edges
+	);
+
+
+function _pts_not_reported(pts, vnf, reports) =
+	[
+		for (i = pts, report = reports, pt = report[3])
+		if (approx(vnf[0][i], pt)) 1
+	] == [];
+
+
+function _edge_not_reported(edge, vnf, reports) =
+	let(
+		edge = sort([for (i=edge) vnf[0][i]])
+	) [
+		for (report = reports) let(
+			pts = sort(report[3])
+		) if (len(pts)==2 && edge == pts) 1
+	] == [];
+
+
+module vnf_validate(vnf, size=1) {
+	faults = vnf_validate(vnf);
+	for (fault = faults) {
+		typ = fault[0];
+		err = fault[1];
+		msg = fault[2];
+		pts = fault[3];
+		clr = fault[4];
+		echo(str(typ, " ", err, ": ", msg, " at ", pts));
+		color(clr) {
+			if (len(pts)==2) {
+				stroke(pts, width=size);
+			} else if (len(pts)>2) {
+				stroke(pts, width=size, closed=true);
+				polyhedron(pts,[[for (i=idx(pts)) i]]);
+			} else {
+				place_copies(pts) sphere(d=size*3, $fn=18);
+			}
+		}
+	}
+	color([0.5,0.5,0.5,0.5]) vnf_polyhedron(vnf);
 }
 
 

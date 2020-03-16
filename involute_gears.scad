@@ -516,7 +516,7 @@ module bevel_gear(
 				),
 				pp = rot(theta, cp=spiral_cp, p=[0,Rm,0]),
 				ang = atan2(pp.y,pp.x)-90,
-				pts = affine3d_apply(pts=profile, affines=[
+				pts = apply_list(profile, [
 					move([0,-p,0]),
 					rot([0,ang,0]),
 					rot([bevelang,0,0]),
