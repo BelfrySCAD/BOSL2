@@ -285,7 +285,7 @@ function region_faces(region, transform, reverse=false, vnf=EMPTY_VNF) =
 			if (vnf != EMPTY_VNF) vnf,
 			for (rgn = regions) let(
 				cleaved = _cleave_simple_region(rgn),
-				face = is_undef(transform)? cleaved : apply(transform,cleaved),
+				face = is_undef(transform)? cleaved : apply(transform,path3d(cleaved)),
 				faceidxs = reverse? [for (i=[len(face)-1:-1:0]) i] : [for (i=[0:1:len(face)-1]) i]
 			) [face, [faceidxs]]
 		],
