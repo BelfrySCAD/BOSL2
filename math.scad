@@ -433,8 +433,8 @@ function lcm(a,b=[]) =
 //   sum([1,2,3]);  // returns 6.
 //   sum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [9, 12, 15]
 function sum(v, dflt=0) =
-    assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
-    len(v) == 0 ? dflt : _sum(v,v[0]*0);
+	assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
+	len(v) == 0 ? dflt : _sum(v,v[0]*0);
 
 function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
 
@@ -519,14 +519,33 @@ function product(v, i=0, tot=undef) = i>=len(v)? tot : product(v, i+1, ((tot==un
 
 // Function: mean()
 // Description:
-//   Returns the mean of all entries in the given array.
-//   If passed an array of vectors, returns a vector of mean of each part.
+//   Returns the arithmatic mean/average of all entries in the given array.
+//   If passed a list of vectors, returns a vector of the mean of each part.
 // Arguments:
 //   v = The list of values to get the mean of.
 // Example:
 //   mean([2,3,4]);  // returns 3.
 //   mean([[1,2,3], [3,4,5], [5,6,7]]);  // returns [3, 4, 5]
 function mean(v) = sum(v)/len(v);
+
+
+// Function: median()
+// Usage:
+//   x = median(v);
+// Description:
+//   Given a list of numbers or vectors, finds the median value or midpoint.
+//   If passed a list of vectors, returns the vector of the median of each part.
+function median(v) =
+	assert(is_list(v))
+	assert(len(v)>0)
+	is_vector(v[0])? (
+		assert(is_consistent(v))
+		[
+			for (i=idx(v[0]))
+			let(vals = subindex(v,i))
+			(min(vals)+max(vals))/2
+		]
+	) : (min(v)+max(v))/2;
 
 
 // Section: Matrix math
@@ -538,23 +557,23 @@ function mean(v) = sum(v)/len(v);
 //   the least squares solution is returned.  If A is underdetermined, the minimal norm solution is returned.
 //   If A is rank deficient or singular then linear_solve returns `undef`.
 function linear_solve(A,b) =
-        assert(is_matrix(A))
-        assert(is_vector(b))
+	assert(is_matrix(A))
+	assert(is_vector(b))
 	let(
 		dim = array_dim(A),
 		m=dim[0], n=dim[1]
 	)
 	assert(len(b)==m,str("Incompatible matrix and vector",dim,len(b)))
 	let (
-		qr = m<n ? qr_factor(transpose(A)) : qr_factor(A),
+		qr = m<n? qr_factor(transpose(A)) : qr_factor(A),
 		maxdim = max(n,m),
 		mindim = min(n,m),
 		Q = submatrix(qr[0],[0:maxdim-1], [0:mindim-1]),
 		R = submatrix(qr[1],[0:mindim-1], [0:mindim-1]),
 		zeros = [for(i=[0:mindim-1]) if (approx(R[i][i],0)) i]
 	)
-	zeros != [] ? undef :
-	m<n ? Q*back_substitute(R,b,transpose=true) :
+	zeros != []? undef :
+	m<n? Q*back_substitute(R,b,transpose=true) :
 	back_substitute(R, transpose(Q)*b);
 
 
@@ -571,7 +590,7 @@ function submatrix(M,ind1,ind2) = [for(i=ind1) [for(j=ind2) M[i][j] ] ];
 //   Calculates the QR factorization of the input matrix A and returns it as the list [Q,R].  This factorization can be
 //   used to solve linear systems of equations.  
 function qr_factor(A) =
-        assert(is_matrix(A))
+	assert(is_matrix(A))
 	let(
 		dim = array_dim(A),
 		m = dim[0],
@@ -683,11 +702,11 @@ function determinant(M) =
 //   Returns true if A is a numeric matrix of height m and width n.  If m or n
 //   are omitted or set to undef then true is returned for any positive dimension.
 function is_matrix(A,m,n) =
-  is_list(A) && len(A)>0 &&
-  (is_undef(m) || len(A)==m) &&
-  is_vector(A[0]) &&
-  (is_undef(n) || len(A[0])==n) &&
-  is_consistent(A);
+	is_list(A) && len(A)>0 &&
+	(is_undef(m) || len(A)==m) &&
+	is_vector(A[0]) &&
+	(is_undef(n) || len(A[0])==n) &&
+	is_consistent(A);
 
 
 // Section: Comparisons and Logic
