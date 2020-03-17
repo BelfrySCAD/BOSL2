@@ -344,14 +344,15 @@ module vnf_polyhedron(vnf, convexity=2) {
 //   ERROR   | Orange   | OVRPOP_EDGE  | Too many faces attached at edge
 //   ERROR   | Violet   | REVERSAL     | Faces reverse across edge
 //   ERROR   | Red      | T_JUNCTION   | Vertex is mid-edge on another Face
+//   ERROR   | Blue     | FACE_ISECT   | Faces intersect
 //   ERROR   | Magenta  | HOLE_EDGE    | Edge bounds Hole
 //   
 //   Still to implement:
-//   - Face intersections.
 //   - Overlapping coplanar faces.
 // Arguments:
 //   vnf = The VNF to validate.
 //   size = The width of the lines and diameter of points used to highlight edges and vertices.  Module only.  Default: 1
+//   check_isects = If true, performs slow checks for intersecting faces.  Default: false
 // Example: BIG_FACE Warnings; Faces with More Than 3 Vertices.  CGAL often will fail to accept that a face is planar after a rotation, if it has more than 3 vertices.
 //   vnf = skin([
 //       path3d(regular_ngon(n=3, d=100),0),
@@ -397,13 +398,19 @@ module vnf_polyhedron(vnf, convexity=2) {
 //       [[0,-50,100], [50,50,100], [50,-50,100]],
 //   ]);
 //   vnf_validate(vnf);
+// Example: FACE_ISECT Errors; Faces Intersect
+//   vnf = vnf_merge([
+//       vnf_triangulate(linear_sweep(square(100,center=true), height=100)),
+//       move([75,35,30],p=vnf_triangulate(linear_sweep(square(100,center=true), height=100)))
+//   ]);
+//   vnf_validate(vnf,size=2,check_isects=true);
 // Example: HOLE_EDGE Errors; Edges Adjacent to Holes.  
 //   vnf = skin([
 //       path3d(regular_ngon(n=4, d=100),0),
 //       path3d(regular_ngon(n=5, d=100),100)
 //   ], slices=0, caps=false);
-//   vnf_validate(vnf);
-function vnf_validate(vnf) =
+//   vnf_validate(vnf,size=2);
+function vnf_validate(vnf, check_isects=false) =
 	let(
 		vnf = vnf_compact(vnf),
 		edges = sort([
@@ -472,10 +479,48 @@ function vnf_validate(vnf) =
 				"red"
 			]
 		]),
+		isect_faces = !check_isects? [] : unique([
+			for (i = [0:1:len(vnf[1])-2])
+			for (j = [i+1:1:len(vnf[1])-1]) let(
+				f1 = vnf[1][i],
+				f2 = vnf[1][j],
+				shared_edges = [
+					for (edge1 = pair_wrap(f1), edge2 = pair_wrap(f2)) let(
+						e1 = edge1[0]<edge1[1]? edge1 : [edge1[1],edge1[0]],
+						e2 = edge2[0]<edge2[1]? edge2 : [edge2[1],edge2[0]]
+					) if (e1==e2) 1
+				]
+			)
+			if (!shared_edges) let(
+				plane1 = plane3pt_indexed(vnf[0], f1[0], f1[1], f1[2]),
+				plane2 = plane3pt_indexed(vnf[0], f2[0], f2[1], f2[2]),
+				line = plane_intersection(plane1, plane2)
+			)
+			if (!is_undef(line)) let(
+				poly1 = select(vnf[0],f1),
+				isects = polygon_line_intersection(poly1,line)
+			)
+			if (!is_undef(isects))
+			for (isect=isects)
+			if (len(isect)>1) let(
+				poly2 = select(vnf[0],f2),
+				isects2 = polygon_line_intersection(poly2,isect,bounded=true)
+			)
+			if (!is_undef(isects2))
+			for (seg=isects2)
+			if (!approx(seg[0],seg[1])) [
+				"ERROR",
+				"FACE_ISECT",
+				"Faces intersect",
+				seg,
+				"blue"
+			]
+		]),
 		hole_edges = unique([
 			for (i=idx(uniq_edges))
 			if (edgecnts[1][i]<2)
 			if (_pts_not_reported(uniq_edges[i], vnf, t_juncts))
+			if (_pts_not_reported(uniq_edges[i], vnf, isect_faces))
 			[
 				"ERROR",
 				"HOLE_EDGE",
@@ -490,6 +535,7 @@ function vnf_validate(vnf) =
 		overpop_edges,
 		reversals,
 		t_juncts,
+		isect_faces,
 		hole_edges
 	);
 
@@ -511,8 +557,8 @@ function _edge_not_reported(edge, vnf, reports) =
 	] == [];
 
 
-module vnf_validate(vnf, size=1) {
-	faults = vnf_validate(vnf);
+module vnf_validate(vnf, size=1, check_isects=false) {
+	faults = vnf_validate(vnf, check_isects=check_isects);
 	for (fault = faults) {
 		typ = fault[0];
 		err = fault[1];
