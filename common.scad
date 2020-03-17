@@ -116,6 +116,17 @@ function is_consistent(list) =
   is_list(list) && is_list_of(list, list[0]);
 
 
+// Function: same_shape()
+// Usage:
+//   same_shape(a,b)
+// Description:
+//   Tests whether the inputs `a` and `b` are both numeric and are the same shaped list.
+// Example:
+//   same_shape([3,[4,5]],[7,[3,4]]);   // Returns true
+//   same_shape([3,4,5], [7,[3,4]]);    // Returns false
+function same_shape(a,b) = a*0 == b*0;
+
+
 // Section: Handling `undef`s.
 
 

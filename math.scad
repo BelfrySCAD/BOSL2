@@ -106,7 +106,9 @@ function factorial(n,d=1) = product([for (i=[n:-1:d]) i]);
 //   // Points colored in ROYGBIV order.
 //   rainbow(pts) translate($item) circle(d=3,$fn=8);
 function lerp(a,b,u) =
+        assert(same_shape(a,b), "Bad or inconsistent inputs to lerp")
 	is_num(u)? (1-u)*a + u*b :
+        assert(is_vector(u), "Input u to lerp must be number or vector")
 	[for (v = u) lerp(a,b,v)];
 
 
@@ -536,15 +538,17 @@ function mean(v) = sum(v)/len(v);
 // Description:
 //   Solves the linear system Ax=b.  If A is square and non-singular the unique solution is returned.  If A is overdetermined
 //   the least squares solution is returned.  If A is underdetermined, the minimal norm solution is returned.
-//   If A is rank deficient or singular then linear_solve returns `undef`.
+//   If A is rank deficient or singular then linear_solve returns `undef`.  If b is a matrix that is compatible with A
+//   then the problem is solved for the matrix valued right hand side and a matrix is returned.  Note that if you 
+//   want to solve Ax=b1 and Ax=b2 that you need to form the matrix transpose([b1,b2]) for the right hand side and then
+//   transpose the returned value.  
 function linear_solve(A,b) =
         assert(is_matrix(A))
-        assert(is_vector(b))
-	let(
-		dim = array_dim(A),
-		m=dim[0], n=dim[1]
-	)
-	assert(len(b)==m,str("Incompatible matrix and vector",dim,len(b)))
+        let(
+          m = len(A),
+          n = len(A[0])
+        )
+        assert(is_vector(b,m) || is_matrix(b,m),"Incompatible matrix and right hand side")
 	let (
 		qr = m<n ? qr_factor(transpose(A)) : qr_factor(A),
 		maxdim = max(n,m),
@@ -555,7 +559,19 @@ function linear_solve(A,b) =
 	)
 	zeros != [] ? undef :
 	m<n ? Q*back_substitute(R,b,transpose=true) :
-	back_substitute(R, transpose(Q)*b);
+         	back_substitute(R, transpose(Q)*b);
+
+// Function: matrix_inverse()
+// Usage:
+//    matrix_inverse(A)
+// Description:
+//    Compute the matrix inverse of the square matrix A.  If A is singular, returns undef.
+//    Note that if you just want to solve a linear system of equations you should NOT
+//    use this function.  Instead use linear_solve, or use qr_factor.  The computation
+//    will be faster and more accurate.  
+function matrix_inverse(A) =
+  assert(is_matrix(A,square=true),"Input to matrix_inverse() must be a square matrix")
+  linear_solve(A,ident(len(A)));
 
 
 // Function: submatrix()
@@ -573,11 +589,9 @@ function submatrix(M,ind1,ind2) = [for(i=ind1) [for(j=ind2) M[i][j] ] ];
 function qr_factor(A) =
         assert(is_matrix(A))
 	let(
-		dim = array_dim(A),
-		m = dim[0],
-		n = dim[1]
+	  m = len(A),
+	  n = len(A[0])
 	)
-	assert(len(dim)==2)
 	let(
 		qr =_qr_factor(A, column=0, m = m, n=n, Q=ident(m)),
 		Rzero = [
@@ -601,14 +615,18 @@ function _qr_factor(A,Q, column, m, n) =
 	_qr_factor(Qf*A, Q*Qf, column+1, m, n);
 
 
-
 // Function: back_substitute()
 // Usage: back_substitute(R, b, [transpose])
 // Description:
 //   Solves the problem Rx=b where R is an upper triangular square matrix.  No check is made that the lower triangular entries
-//   are actually zero.  If transpose==true then instead solve transpose(R)*x=b.      
+//   are actually zero.  If transpose==true then instead solve transpose(R)*x=b.
+//   You can supply a compatible matrix b and it will produce the solution for every column of b.  Note that if you want to
+//   solve Rx=b1 and Rx=b2 you must set b to transpose([b1,b2]) and then take the transpose of the result. 
 function back_substitute(R, b, x=[],transpose = false) =
-	let(n=len(b))
+        assert(is_matrix(R, square=true))
+        let(n=len(R))
+        assert(is_vector(b,n) || is_matrix(b,n),"R and b are not compatible in back_substitute")
+        !is_vector(b) ? transpose([for(i=[0:len(b[0])-1]) back_substitute(R,subindex(b,i))]) :
 	transpose?
 		reverse(back_substitute(
 			[for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]],
@@ -678,16 +696,25 @@ function determinant(M) =
 
 // Function: is_matrix()
 // Usage:
-//   is_matrix(A,[m],[n])
+//   is_matrix(A,[m],[n],[square])
 // Description:
 //   Returns true if A is a numeric matrix of height m and width n.  If m or n
 //   are omitted or set to undef then true is returned for any positive dimension.
-function is_matrix(A,m,n) =
+//   If `square` is true then the matrix is required to be square.  Note if you
+//   specify m != n and require a square matrix then the result will always be false.
+// Arguments:
+//   A = matrix to test
+//   m = optional height of matrix
+//   n = optional width of matrix
+//   square = set to true to require a square matrix.  Default: false        
+function is_matrix(A,m,n, square=false) =
   is_list(A) && len(A)>0 &&
   (is_undef(m) || len(A)==m) &&
   is_vector(A[0]) &&
   (is_undef(n) || len(A[0])==n) &&
+  (!square || n==m) &&
   is_consistent(A);
+
 
 
 // Section: Comparisons and Logic
