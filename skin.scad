@@ -691,7 +691,6 @@ function _skin_tangent_match(poly1, poly2) =
         small = swap ? poly2 : poly1,
         curve_offset = centroid(small)-centroid(big),
         cutpts = [for(i=[0:len(small)-1]) _find_one_tangent(big, select(small,i,i+1),curve_offset=curve_offset)],
-        d=echo(cutpts = cutpts),
         shift = select(cutpts,-1)+1,
         newbig = polygon_shift(big, shift),
         repeat_counts = [for(i=[0:len(small)-1]) posmod(cutpts[i]-select(cutpts,i-1),len(big))],
