@@ -245,13 +245,14 @@ function affine3d_rot_from_to(from, to) = let(
 // Description:
 //   Returns a transformation that maps one coordinate frame to another.  You must specify two or three of `x`, `y`, and `z`.  The specified
 //   axes are mapped to the vectors you supplied.  If you give two inputs, the third vector is mapped to the appropriate normal to maintain a right hand coordinate system.  
-//   If the vectors you give are orthogonal the result will be a rotation.  The `reverse` parameter will supply the inverse map, which enables you
-//   to map two arbitrary coordinate systems two each other by using the canonical coordinate system as an intermediary.
+//   If the vectors you give are orthogonal the result will be a rotation and the `reverse` parameter will supply the inverse map, which enables you
+//   to map two arbitrary coordinate systems two each other by using the canonical coordinate system as an intermediary.  You cannot use the `reverse` option 
+//   with non-orthogonal inputs.  
 // Arguments:
 //   x = Destination vector for x axis
 //   y = Destination vector for y axis
 //   z = Destination vector for z axis
-//   reverse = reverse direction of the map.  Default: false
+//   reverse = reverse direction of the map for orthogonal inputs.  Default: false
 // Examples:
 //   T = affine_frame_map(x=[1,1,0], y=[-1,1]);   // This map is just a rotation around the z axis
 //   T = affine_frame_map(x=[1,0,0], y=[1,1]);    // This map is not a rotation because x and y aren't orthogonal
@@ -276,7 +277,12 @@ function affine_frame_map(x,y,z, reverse=false) =
           is_undef(z) ? [x, y, cross(x,y)] :
                         [x, y, z]
   )
-  reverse ? affine2d_to_3d(map) : affine2d_to_3d(transpose(map));
+  reverse ?
+     let( ocheck = approx(map[0]*map[1],0) && approx(map[0]*map[2],0) && approx(map[1]*map[2],0))
+     assert(ocheck, "Inputs must be orthogonal when reverse==true")
+     affine2d_to_3d(map)
+  :
+     affine2d_to_3d(transpose(map));
 
 
 
