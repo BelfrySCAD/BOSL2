@@ -106,9 +106,9 @@ function factorial(n,d=1) = product([for (i=[n:-1:d]) i]);
 //   // Points colored in ROYGBIV order.
 //   rainbow(pts) translate($item) circle(d=3,$fn=8);
 function lerp(a,b,u) =
-        assert(same_shape(a,b), "Bad or inconsistent inputs to lerp")
+  assert(same_shape(a,b), "Bad or inconsistent inputs to lerp")
 	is_num(u)? (1-u)*a + u*b :
-        assert(is_vector(u), "Input u to lerp must be number or vector")
+  assert(!is_undef(u)&&!is_bool(u)&&!is_string(u), "Input u to lerp must be a number, vector, or range.")
 	[for (v = u) lerp(a,b,v)];
 
 
@@ -435,8 +435,8 @@ function lcm(a,b=[]) =
 //   sum([1,2,3]);  // returns 6.
 //   sum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [9, 12, 15]
 function sum(v, dflt=0) =
-    assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
-    len(v) == 0 ? dflt : _sum(v,v[0]*0);
+	assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
+	len(v) == 0 ? dflt : _sum(v,v[0]*0);
 
 function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
 
@@ -521,14 +521,33 @@ function product(v, i=0, tot=undef) = i>=len(v)? tot : product(v, i+1, ((tot==un
 
 // Function: mean()
 // Description:
-//   Returns the mean of all entries in the given array.
-//   If passed an array of vectors, returns a vector of mean of each part.
+//   Returns the arithmatic mean/average of all entries in the given array.
+//   If passed a list of vectors, returns a vector of the mean of each part.
 // Arguments:
 //   v = The list of values to get the mean of.
 // Example:
 //   mean([2,3,4]);  // returns 3.
 //   mean([[1,2,3], [3,4,5], [5,6,7]]);  // returns [3, 4, 5]
 function mean(v) = sum(v)/len(v);
+
+
+// Function: median()
+// Usage:
+//   x = median(v);
+// Description:
+//   Given a list of numbers or vectors, finds the median value or midpoint.
+//   If passed a list of vectors, returns the vector of the median of each part.
+function median(v) =
+	assert(is_list(v))
+	assert(len(v)>0)
+	is_vector(v[0])? (
+		assert(is_consistent(v))
+		[
+			for (i=idx(v[0]))
+			let(vals = subindex(v,i))
+			(min(vals)+max(vals))/2
+		]
+	) : (min(v)+max(v))/2;
 
 
 // Section: Matrix math
@@ -550,7 +569,7 @@ function linear_solve(A,b) =
         )
         assert(is_vector(b,m) || is_matrix(b,m),"Incompatible matrix and right hand side")
 	let (
-		qr = m<n ? qr_factor(transpose(A)) : qr_factor(A),
+		qr = m<n? qr_factor(transpose(A)) : qr_factor(A),
 		maxdim = max(n,m),
 		mindim = min(n,m),
 		Q = submatrix(qr[0],[0:maxdim-1], [0:mindim-1]),
@@ -587,7 +606,7 @@ function submatrix(M,ind1,ind2) = [for(i=ind1) [for(j=ind2) M[i][j] ] ];
 //   Calculates the QR factorization of the input matrix A and returns it as the list [Q,R].  This factorization can be
 //   used to solve linear systems of equations.  
 function qr_factor(A) =
-        assert(is_matrix(A))
+	assert(is_matrix(A))
 	let(
 	  m = len(A),
 	  n = len(A[0])
@@ -708,12 +727,12 @@ function determinant(M) =
 //   n = optional width of matrix
 //   square = set to true to require a square matrix.  Default: false        
 function is_matrix(A,m,n, square=false) =
-  is_list(A) && len(A)>0 &&
-  (is_undef(m) || len(A)==m) &&
-  is_vector(A[0]) &&
-  (is_undef(n) || len(A[0])==n) &&
-  (!square || n==m) &&
-  is_consistent(A);
+    is_list(A) && len(A)>0 &&
+    (is_undef(m) || len(A)==m) &&
+    is_vector(A[0]) &&
+    (is_undef(n) || len(A[0])==n) &&
+    (!square || n==m) &&
+    is_consistent(A);
 
 
 

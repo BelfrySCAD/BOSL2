@@ -592,23 +592,19 @@ function plane3pt_indexed(points, i1, i2, i3) =
 //   is returned as a list of two points on the line of intersection.  If any of the input planes are parallel
 //   then returns undef.  
 function plane_intersection(plane1,plane2,plane3) =
-  is_def(plane3) ?
-    let (
-       matrix = [for(p=[plane1,plane2,plane3]) select(p,0,2)],
-       rhs = [for(p=[plane1,plane2,plane3]) p[3]]
-      )
-    linear_solve(matrix,rhs)
-  :
-   let(
-      normal = cross(plane_normal(plane1), plane_normal(plane2))
-    )
-   approx(normal,0) ? undef :
-   let(
-      matrix =  [for(p=[plane1,plane2]) select(p,0,2)],
-      rhs =  [for(p=[plane1,plane2]) p[3]],
-      point = linear_solve(matrix,rhs)
-   )
-   [point, point+normal];
+	is_def(plane3)? let(
+		matrix = [for(p=[plane1,plane2,plane3]) select(p,0,2)],
+		rhs = [for(p=[plane1,plane2,plane3]) p[3]]
+	) linear_solve(matrix,rhs) :
+	let(
+		normal = cross(plane_normal(plane1), plane_normal(plane2))
+	) approx(norm(normal),0) ? undef :
+	let(
+		matrix = [for(p=[plane1,plane2]) select(p,0,2)],
+		rhs = [for(p=[plane1,plane2]) p[3]],
+		point = linear_solve(matrix,rhs)
+	) is_undef(point)? undef :
+	[point, point+normal];
 
 
 // Function: plane_from_normal()
@@ -653,8 +649,8 @@ function plane_from_pointslist(points, fast=false, eps=EPSILON) =
 // Usage:
 //   plane_normal(plane);
 // Description:
-//   Returns the normal vector for the given plane.
-function plane_normal(plane) = [for (i=[0:2]) plane[i]];
+//   Returns the unit length normal vector for the given plane.
+function plane_normal(plane) = unit([for (i=[0:2]) plane[i]]);
 
 
 // Function: distance_from_plane()
@@ -690,6 +686,9 @@ function closest_point_on_plane(plane, point) =
 	) point - n*d;
 
 
+// Returns [POINT, U] if line intersects plane at one point.
+// Returns [LINE, undef] if the line is on the plane.
+// Returns undef if line is parallel to, but not on the given plane.
 function _general_plane_line_intersection(plane, line, eps=EPSILON) =
 	let(
 		p0 = line[0],
@@ -698,6 +697,7 @@ function _general_plane_line_intersection(plane, line, eps=EPSILON) =
 		u = p1 - p0,
 		d = n * u
 	) abs(d)<eps? (
+		coplanar(plane, p0)? [line,undef] :  // Line on plane
 		undef  // Line parallel to plane
 	) : let(
 		v0 = closest_point_on_plane(plane, [0,0,0]),
@@ -726,20 +726,24 @@ function plane_line_angle(plane, line) =
 //   pt = plane_line_intersection(plane, line, [eps]);
 // Description:
 //   Takes a line, and a plane [A,B,C,D] where the equation of that plane is `Ax+By+Cz=D`.
-//   Returns the coordinates of the where the given `line` intersects the given `plane`.
-//   Returns `undef` if the line is parallel to the plane.
+//   If `line` intersects `plane` at one point, then that intersection point is returned.
+//   If `line` lies on `plane`, then the original given `line` is returned.
+//   If `line` is parallel to, but not on `plane`, then `undef` is returned.
 // Arguments:
 //   plane = The [A,B,C,D] values for the equation of the plane.
 //   line = A list of two 3D points that are on the line.
 //   bounded = If false, the line is considered unbounded.  If true, it is treated as a bounded line segment.  If given as `[true, false]` or `[false, true]`, the boundedness of the points are specified individually, allowing the line to be treated as a half-bounded ray.  Default: false (unbounded)
 //   eps = The epsilon error value to determine whether the line is too close to parallel to the plane.  Default: `EPSILON` (1e-9)
 function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
-	assert(is_vector(plane)&&len(plane)==4)
-	assert(is_path(line)&&len(line)==2)
+	assert(is_vector(plane)&&len(plane)==4, "Invalid plane value.")
+	assert(is_path(line)&&len(line)==2, "Invalid line value.")
+	assert(!approx(line[0],line[1]), "The two points defining the line must not be the same point.")
 	let(
 		bounded = is_list(bounded)? bounded : [bounded, bounded],
 		res = _general_plane_line_intersection(plane, line, eps=eps)
 	)
+	is_undef(res)? undef :
+	is_undef(res[1])? res[0] :
 	bounded[0]&&res[1]<0? undef :
 	bounded[1]&&res[1]>1? undef :
 	res[0];
@@ -750,7 +754,10 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 //   pt = polygon_line_intersection(poly, line, [bounded], [eps]);
 // Description:
 //   Takes a possibly bounded line, and a 3D planar polygon, and finds their intersection point.
-//   Returns the 3D coordinates of the intersection point, or `undef` if they do not intersect.
+//   If the line is on the plane as the polygon, and intersects, then a list of 3D line
+//   segments is returned, one for each section of the line that is inside the polygon.
+//   If the line is not on the plane of the polygon, but intersects, then the 3D intersection
+//   point is returned.  If the line does not intersect the polygon, then `undef` is returned.
 // Arguments:
 //   poly = The 3D planar polygon to find the intersection with.
 //   line = A list of two 3D points that are on the line.
@@ -770,6 +777,27 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
 		res = _general_plane_line_intersection(plane, line, eps=eps)
 	)
 	is_undef(res)? undef :
+	is_undef(res[1])? (
+		let(
+			// Line is on polygon plane.
+			linevec = unit(line[1] - line[0]),
+			lp1 = line[0] + (bounded[0]? 0 : -1000000) * linevec,
+			lp2 = line[1] + (bounded[1]? 0 :  1000000) * linevec,
+			poly2d = clockwise_polygon(project_plane(poly, p1, p2, p3)),
+			line2d = project_plane([lp1,lp2], p1, p2, p3),
+			parts = split_path_at_region_crossings(line2d, [poly2d], closed=false),
+			inside = [
+				for (part = parts)
+				if (point_in_polygon(mean(part), poly2d)>0) part
+			]
+		) !inside? undef :
+		let(
+			isegs = [
+				for (seg = inside)
+				lift_plane(seg, p1, p2, p3)
+			]
+		) isegs
+	) :
 	bounded[0]&&res[1]<0? undef :
 	bounded[1]&&res[1]>1? undef :
 	let(
