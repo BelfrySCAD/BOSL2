@@ -406,7 +406,7 @@ function _normal_segment(p1,p2) =
 //   origin, pointed along the positive x axis with a movement distance of 1.  By default, `turtle` returns just
 //   the computed turtle path.  If you set `full_state` to true then it instead returns the full turtle state.
 //   You can invoke `turtle` again with this full state to continue the turtle path where you left off.
-//
+//   
 //   The turtle state is a list with three entries: the path constructed so far, the current step as a 2-vector, and the current default angle.
 //   
 //   For the list below, `dist` is the current movement distance.
