@@ -797,17 +797,11 @@ function unique(arr) =
 // Arguments:
 //   arr = The list to analyze. 
 function unique_count(arr) =
-	assert(is_list(arr)||is_string(list))
-	len(arr)==0 ? [[],[]] :
-        len(arr)==1 ? [arr,[1]] :
-        _unique_count(sort(arr), ulist=[], counts=[], ind=1, curtot=1);
-
-function _unique_count(arr, ulist, counts, ind, curtot) = 
-     ind == len(arr)+1 ? [ulist, counts] :
-     ind==len(arr) || arr[ind] != arr[ind-1] ? _unique_count(arr,concat(ulist,[arr[ind-1]]), concat(counts,[curtot]),ind+1,1) :
-     _unique_count(arr,ulist,counts,ind+1,curtot+1);
-
-
+      assert(is_list(arr) || is_string(arr))
+      let( arr=sort(arr) )
+      let(ind = [0,for(i=[1:1:len(arr)-1]) if (arr[i]!=arr[i-1]) i])
+      [select(arr,ind),
+       deltas(concat(ind,[len(arr)]))];
 
 // Section: List Iteration Helpers
 
