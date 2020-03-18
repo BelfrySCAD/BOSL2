@@ -646,7 +646,7 @@ function back_substitute(R, b, x=[],transpose = false) =
 	assert(is_matrix(R, square=true))
 	let(n=len(R))
 	assert(is_vector(b,n) || is_matrix(b,n),"R and b are not compatible in back_substitute")
-	!is_vector(b) ? transpose([for(i=[0:len(b[0])-1]) back_substitute(R,subindex(b,i))]) :
+	!is_vector(b) ? transpose([for(i=[0:len(b[0])-1]) back_substitute(R,subindex(b,i),transpose=transpose)]) :
 	transpose?
 		reverse(back_substitute(
 			[for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]],
