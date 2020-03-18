@@ -106,9 +106,9 @@ function factorial(n,d=1) = product([for (i=[n:-1:d]) i]);
 //   // Points colored in ROYGBIV order.
 //   rainbow(pts) translate($item) circle(d=3,$fn=8);
 function lerp(a,b,u) =
-  assert(same_shape(a,b), "Bad or inconsistent inputs to lerp")
+	assert(same_shape(a,b), "Bad or inconsistent inputs to lerp")
 	is_num(u)? (1-u)*a + u*b :
-  assert(!is_undef(u)&&!is_bool(u)&&!is_string(u), "Input u to lerp must be a number, vector, or range.")
+	assert(!is_undef(u)&&!is_bool(u)&&!is_string(u), "Input u to lerp must be a number, vector, or range.")
 	[for (v = u) lerp(a,b,v)];
 
 
@@ -562,12 +562,12 @@ function median(v) =
 //   want to solve Ax=b1 and Ax=b2 that you need to form the matrix transpose([b1,b2]) for the right hand side and then
 //   transpose the returned value.  
 function linear_solve(A,b) =
-        assert(is_matrix(A))
-        let(
-          m = len(A),
-          n = len(A[0])
-        )
-        assert(is_vector(b,m) || is_matrix(b,m),"Incompatible matrix and right hand side")
+	assert(is_matrix(A))
+	let(
+		m = len(A),
+		n = len(A[0])
+	)
+	assert(is_vector(b,m) || is_matrix(b,m),"Incompatible matrix and right hand side")
 	let (
 		qr = m<n? qr_factor(transpose(A)) : qr_factor(A),
 		maxdim = max(n,m),
@@ -578,7 +578,8 @@ function linear_solve(A,b) =
 	)
 	zeros != [] ? undef :
 	m<n ? Q*back_substitute(R,b,transpose=true) :
-         	back_substitute(R, transpose(Q)*b);
+	back_substitute(R, transpose(Q)*b);
+
 
 // Function: matrix_inverse()
 // Usage:
@@ -589,8 +590,8 @@ function linear_solve(A,b) =
 //    use this function.  Instead use linear_solve, or use qr_factor.  The computation
 //    will be faster and more accurate.  
 function matrix_inverse(A) =
-  assert(is_matrix(A,square=true),"Input to matrix_inverse() must be a square matrix")
-  linear_solve(A,ident(len(A)));
+	assert(is_matrix(A,square=true),"Input to matrix_inverse() must be a square matrix")
+	linear_solve(A,ident(len(A)));
 
 
 // Function: submatrix()
@@ -642,10 +643,10 @@ function _qr_factor(A,Q, column, m, n) =
 //   You can supply a compatible matrix b and it will produce the solution for every column of b.  Note that if you want to
 //   solve Rx=b1 and Rx=b2 you must set b to transpose([b1,b2]) and then take the transpose of the result. 
 function back_substitute(R, b, x=[],transpose = false) =
-        assert(is_matrix(R, square=true))
-        let(n=len(R))
-        assert(is_vector(b,n) || is_matrix(b,n),"R and b are not compatible in back_substitute")
-        !is_vector(b) ? transpose([for(i=[0:len(b[0])-1]) back_substitute(R,subindex(b,i))]) :
+	assert(is_matrix(R, square=true))
+	let(n=len(R))
+	assert(is_vector(b,n) || is_matrix(b,n),"R and b are not compatible in back_substitute")
+	!is_vector(b) ? transpose([for(i=[0:len(b[0])-1]) back_substitute(R,subindex(b,i))]) :
 	transpose?
 		reverse(back_substitute(
 			[for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]],
@@ -727,12 +728,12 @@ function determinant(M) =
 //   n = optional width of matrix
 //   square = set to true to require a square matrix.  Default: false        
 function is_matrix(A,m,n, square=false) =
-    is_list(A) && len(A)>0 &&
-    (is_undef(m) || len(A)==m) &&
-    is_vector(A[0]) &&
-    (is_undef(n) || len(A[0])==n) &&
-    (!square || n==m) &&
-    is_consistent(A);
+	is_list(A) && len(A)>0 &&
+	(is_undef(m) || len(A)==m) &&
+	is_vector(A[0]) &&
+	(is_undef(n) || len(A[0])==n) &&
+	(!square || n==m) &&
+	is_consistent(A);
 
 
 
