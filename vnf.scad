@@ -43,9 +43,21 @@ function vnf_vertices(vnf) = vnf[0];
 function vnf_faces(vnf) = vnf[1];
 
 
+// Function: vnf_quantize()
+// Usage:
+//   vnf2 = vnf_quantize(vnf,[q]);
+// Description:
+//   Quantizes the vertex coordinates of the VNF to the given quanta `q`.
+// Arguments:
+//   vnf = The VNF to quantize.
+//   q = The quanta to quantize the VNF coordinates to.
+function vnf_quantize(vnf,q=pow(2,-12)) =
+	[[for (pt = vnf[0]) quant(pt,q)], vnf[1]];
+
+
 // Function: vnf_get_vertex()
 // Usage:
-//   vvnf = vnf_get_vertex(vnf, p);
+//   vvnf = vnf_get_vertex(vnf, p, [eps]);
 // Description:
 //   Finds the index number of the given vertex point `p` in the given VNF structure `vnf`.  If said
 //   point does not already exist in the VNF vertex list, it is added.  Returns: `[INDEX, VNF]` where
@@ -54,17 +66,19 @@ function vnf_faces(vnf) = vnf[1];
 // Arguments:
 //   vnf = The VNF structue to get the point index from.
 //   p = The point, or list of points to get the index of.
+//   eps = Maximum variance when comparing points.  Default: 2^-30
 // Example:
 //   vnf1 = vnf_get_vertex(p=[3,5,8]);  // Returns: [0, [[[3,5,8]],[]]]
 //   vnf2 = vnf_get_vertex(vnf1, p=[3,2,1]);  // Returns: [1, [[[3,5,8],[3,2,1]],[]]]
 //   vnf3 = vnf_get_vertex(vnf2, p=[3,5,8]);  // Returns: [0, [[[3,5,8],[3,2,1]],[]]]
 //   vnf4 = vnf_get_vertex(vnf3, p=[[1,3,2],[3,2,1]]);  // Returns: [[1,2], [[[3,5,8],[3,2,1],[1,3,2]],[]]]
-function vnf_get_vertex(vnf=EMPTY_VNF, p) =
-	is_path(p)? _vnf_get_vertices(vnf, p) :
+function vnf_get_vertex(vnf=EMPTY_VNF, p, eps=pow(2,-30)) =
+	is_path(p)? _vnf_get_vertices(vnf, p, eps=eps) :
 	assert(is_vnf(vnf))
 	assert(is_vector(p))
 	let(
-		p = quant(p,1/1024),  // OpenSCAD internally quantizes objects to 1/1024.
+		quantum = pow(2,floor(log2(eps))),
+		p = quant(p,quantum),
 		v = search([p], vnf[0])[0]
 	) [
 		v != []? v : len(vnf[0]),
@@ -76,11 +90,11 @@ function vnf_get_vertex(vnf=EMPTY_VNF, p) =
 
 
 // Internal use only
-function _vnf_get_vertices(vnf=EMPTY_VNF, pts, _i=0, _idxs=[]) =
+function _vnf_get_vertices(vnf=EMPTY_VNF, pts, eps=pow(2,-30), _i=0, _idxs=[]) =
 	_i>=len(pts)? [_idxs, vnf] :
 	let(
-		vvnf = vnf_get_vertex(vnf, pts[_i])
-	) _vnf_get_vertices(vvnf[1], pts, _i=_i+1, _idxs=concat(_idxs,[vvnf[0]]));
+		vvnf = vnf_get_vertex(vnf, pts[_i], eps=eps)
+	) _vnf_get_vertices(vvnf[1], pts, eps=eps, _i=_i+1, _idxs=concat(_idxs,[vvnf[0]]));
 
 
 // Function: vnf_add_face()
@@ -93,12 +107,13 @@ function _vnf_get_vertices(vnf=EMPTY_VNF, pts, _i=0, _idxs=[]) =
 // Arguments:
 //   vnf = The VNF structure to add a face to.
 //   pts = The vertex points for the face.
-function vnf_add_face(vnf=EMPTY_VNF, pts) =
+//   eps = Maximum variance when comparing points.  Default: `EPSILON` (1e-9)
+function vnf_add_face(vnf=EMPTY_VNF, pts, eps=pow(2,-30)) =
 	assert(is_vnf(vnf))
 	assert(is_path(pts))
 	let(
-		vvnf = vnf_get_vertex(vnf, pts),
-		face = deduplicate(vvnf[0], closed=true),
+		vvnf = vnf_get_vertex(vnf, pts, eps=eps),
+		face = deduplicate(vvnf[0], closed=true, eps=eps),
 		vnf2 = vvnf[1]
 	) [
 		vnf_vertices(vnf2),
@@ -108,7 +123,7 @@ function vnf_add_face(vnf=EMPTY_VNF, pts) =
 
 // Function: vnf_add_faces()
 // Usage:
-//   vnf_add_faces(vnf, faces);
+//   vnf_add_faces(vnf, faces, [eps]);
 // Description:
 //   Given a VNF structure and a list of faces, where each face is given as a list of vertex points,
 //   adds the faces to the VNF structure.  Returns the modified VNF structure `[VERTICES, FACES]`.
@@ -117,9 +132,10 @@ function vnf_add_face(vnf=EMPTY_VNF, pts) =
 // Arguments:
 //   vnf = The VNF structure to add a face to.
 //   faces = The list of faces, where each face is given as a list of vertex points.
-function vnf_add_faces(vnf=EMPTY_VNF, faces, _i=0) =
+//   eps = Maximum variance when comparing points.  Default: `EPSILON` (1e-9)
+function vnf_add_faces(vnf=EMPTY_VNF, faces, eps=pow(2,-30), _i=0) =
 	(assert(is_vnf(vnf)) assert(is_list(faces)) _i>=len(faces))? vnf :
-	vnf_add_faces(vnf_add_face(vnf, faces[_i]), faces, _i=_i+1);
+	vnf_add_faces(vnf_add_face(vnf, faces[_i], eps=eps), faces, eps=eps, _i=_i+1);
 
 
 // Function: vnf_merge()
@@ -139,10 +155,10 @@ function vnf_merge(vnfs=[],_i=0,_acc=EMPTY_VNF) =
 
 // Function: vnf_compact()
 // Usage:
-//   cvnf = vnf_compact(vnf);
+//   cvnf = vnf_compact(vnf, [eps]);
 // Description:
 //   Takes a VNF and consolidates all duplicate vertices, and drops unreferenced vertices.
-function vnf_compact(vnf) =
+function vnf_compact(vnf,eps=pow(2,-30)) =
 	let(
 		verts = vnf[0],
 		faces = [
@@ -150,7 +166,7 @@ function vnf_compact(vnf) =
 				for (i=face) verts[i]
 			]
 		]
-	) vnf_add_faces(faces=faces);
+	) vnf_add_faces(faces=faces,eps=eps);
 
 
 // Function: vnf_triangulate()
@@ -340,6 +356,7 @@ module vnf_polyhedron(vnf, convexity=2) {
 //   Type    | Color    | Code         | Message 
 //   ------- | -------- | ------------ | ---------------------------------
 //   WARNING | Yellow   | BIG_FACE     | Face has more than 3 vertices, and may confuse CGAL
+//   WARNING | Brown    | NULL_FACE   | Face has zero area
 //   ERROR   | Cyan     | NONPLANAR    | Face vertices are not coplanar
 //   ERROR   | Orange   | OVRPOP_EDGE  | Too many faces attached at edge
 //   ERROR   | Violet   | REVERSAL     | Faces reverse across edge
@@ -410,16 +427,16 @@ module vnf_polyhedron(vnf, convexity=2) {
 //       path3d(regular_ngon(n=5, d=100),100)
 //   ], slices=0, caps=false);
 //   vnf_validate(vnf,size=2);
-function vnf_validate(vnf, check_isects=false) =
+function vnf_validate(vnf, show_warns=true, check_isects=false, eps=pow(2,-30)) =
 	let(
-		vnf = vnf_compact(vnf),
+		vnf = vnf_compact(vnf,eps=eps),
 		edges = sort([
 			for (face=vnf[1], edge=pair_wrap(face))
 			edge[0]<edge[1]? edge : [edge[1],edge[0]]
 		]),
 		edgecnts = unique_count(edges),
 		uniq_edges = edgecnts[0],
-		bigfaces = [
+		big_faces = !show_warns? [] : [
 			for (face = vnf[1])
 			if (len(face) > 3) [
 				"WARNING",
@@ -429,10 +446,22 @@ function vnf_validate(vnf, check_isects=false) =
 				"yellow"
 			]
 		],
+		null_faces = !show_warns? [] : [
+			for (face = vnf[1]) let(
+				verts = [for (k=face) vnf[0][k]],
+				area = abs(polygon_area(verts))
+			) if (area < eps) [
+				"WARNING",
+				"NULL_FACE",
+				str("Face has zero area: ",fmt_float(area,15)),
+				verts,
+				"brown"
+			]
+		],
 		nonplanars = unique([
 			for (face = vnf[1]) let(
-				verts = [for (i=face) vnf[0][i]]
-			) if (!points_are_coplanar(verts)) [
+				verts = [for (k=face) vnf[0][k]]
+			) if (!points_are_coplanar(verts,eps=eps)) [
 				"ERROR",
 				"NONPLANAR",
 				"Face vertices are not coplanar",
@@ -454,7 +483,7 @@ function vnf_validate(vnf, check_isects=false) =
 			for(i = idx(vnf[1]), j = idx(vnf[1])) if(i != j)
 			for(edge1 = pair_wrap(vnf[1][i]))
 			for(edge2 = pair_wrap(vnf[1][j]))
-			if(edge1 == edge2)
+			if(edge1 == edge2)  // Valid adjacent faces will never have the same vertex ordering.
 			if(_edge_not_reported(edge1, vnf, overpop_edges))
 			[
 				"ERROR",
@@ -471,7 +500,7 @@ function vnf_validate(vnf, check_isects=false) =
 				b = vnf[0][v],
 				c = vnf[0][edge[1]],
 				pt = segment_closest_point([a,c],b)
-			) if (approx(pt,b)) [
+			) if (pt == b) [
 				"ERROR",
 				"T_JUNCTION",
 				"Vertex is mid-edge on another Face",
@@ -508,7 +537,7 @@ function vnf_validate(vnf, check_isects=false) =
 			)
 			if (!is_undef(isects2))
 			for (seg=isects2)
-			if (!approx(seg[0],seg[1])) [
+			if (seg[0] != seg[1]) [
 				"ERROR",
 				"FACE_ISECT",
 				"Faces intersect",
@@ -530,7 +559,8 @@ function vnf_validate(vnf, check_isects=false) =
 			]
 		])
 	) concat(
-		bigfaces,
+		big_faces,
+		null_faces,
 		nonplanars,
 		overpop_edges,
 		reversals,
@@ -543,7 +573,7 @@ function vnf_validate(vnf, check_isects=false) =
 function _pts_not_reported(pts, vnf, reports) =
 	[
 		for (i = pts, report = reports, pt = report[3])
-		if (approx(vnf[0][i], pt)) 1
+		if (vnf[0][i] == pt) 1
 	] == [];
 
 
@@ -557,8 +587,11 @@ function _edge_not_reported(edge, vnf, reports) =
 	] == [];
 
 
-module vnf_validate(vnf, size=1, check_isects=false) {
-	faults = vnf_validate(vnf, check_isects=check_isects);
+module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
+	faults = vnf_validate(
+		vnf, show_warns=show_warns,
+		check_isects=check_isects
+	);
 	for (fault = faults) {
 		typ = fault[0];
 		err = fault[1];
