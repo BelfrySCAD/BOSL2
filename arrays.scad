@@ -798,6 +798,7 @@ function unique(arr) =
 //   arr = The list to analyze. 
 function unique_count(arr) =
       assert(is_list(arr) || is_string(arr))
+      arr == [] ? [[],[]] : 
       let( arr=sort(arr) )
       let(ind = [0,for(i=[1:1:len(arr)-1]) if (arr[i]!=arr[i-1]) i])
       [select(arr,ind),
