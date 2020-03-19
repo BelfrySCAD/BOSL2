@@ -618,9 +618,9 @@ function plane_from_normal(normal, pt) =
   concat(normal, [normal*pt]);
 
 
-// Function: plane_from_pointslist()
+// Function: plane_from_points()
 // Usage:
-//   plane_from_pointslist(points, [fast], [eps]);
+//   plane_from_points(points, [fast], [eps]);
 // Description:
 //   Given a list of 3 or more coplanar points, returns the cartesian equation of a plane.
 //   Returns [A,B,C,D] where Ax+By+Cz=D is the equation of the plane.
@@ -631,7 +631,7 @@ function plane_from_normal(normal, pt) =
 //   points = The list of points to find the plane of.
 //   fast = If true, don't verify that all points in the list are coplanar.  Default: false
 //   eps = How much variance is allowed in testing that each point is on the same plane.  Default: `EPSILON` (1e-9)
-function plane_from_pointslist(points, fast=false, eps=EPSILON) =
+function plane_from_points(points, fast=false, eps=EPSILON) =
 	let(
 		points = deduplicate(points),
 		indices = sort(find_noncollinear_points(points)),
@@ -839,7 +839,7 @@ function coplanar(plane, point, eps=EPSILON) =
 
 // Function: points_are_coplanar()
 // Usage:
-//   points_are_coplanar(points);
+//   points_are_coplanar(points, [eps]);
 // Description:
 //   Given a list of points, returns true if all points in the list are coplanar.
 // Arguments:
@@ -847,7 +847,7 @@ function coplanar(plane, point, eps=EPSILON) =
 //   eps = How much variance is allowed in testing that each point is on the same plane.  Default: `EPSILON` (1e-9)
 function points_are_coplanar(points, eps=EPSILON) =
 	let(
-		plane = plane_from_pointslist(points, fast=true, eps=eps)
+		plane = plane_from_points(points, fast=true, eps=eps)
 	) all([for (pt = points) coplanar(plane, pt, eps=eps)]);
 
 
@@ -1080,11 +1080,18 @@ function furthest_point(pt, points) =
 
 // Function: polygon_area()
 // Usage:
-//   area = polygon_area(vertices);
+//   area = polygon_area(poly);
 // Description:
-//   Given a polygon, returns the area of that polygon.  If the polygon is self-crossing, the results are undefined.
-function polygon_area(vertices) =
-	0.5*sum([for(i=[0:len(vertices)-1]) det2(select(vertices,i,i+1))]);
+//   Given a 2D or 3D planar polygon, returns the area of that polygon.  If the polygon is self-crossing, the results are undefined.
+function polygon_area(poly) =
+	len(poly)<3? 0 :
+	len(poly[0])==2? 0.5*sum([for(i=[0:1:len(poly)-1]) det2(select(poly,i,i+1))]) :
+	let(
+		plane = plane_from_points(poly),
+		n = unit(plane_normal(plane)),
+		total = sum([for (i=[0:1:len(poly)-1]) cross(poly[i], select(poly,i+1))]),
+		res = abs(total * n) / 2
+	) res;
 
 
 // Function: polygon_is_convex()
@@ -1240,7 +1247,7 @@ function centroid(poly) =
 		]) / 6 / polygon_area(poly)
 	) : (
 		let(
-			n = plane_normal(plane_from_pointslist(poly)),
+			n = plane_normal(plane_from_points(poly)),
 			p1 = vector_angle(n,UP)>15? vector_axis(n,UP) : vector_axis(n,RIGHT),
 			p2 = vector_axis(n,p1),
 			cp = mean(poly),

@@ -452,7 +452,7 @@ function find_anchor(anchor, geom) =
 				sum([
 					for (i = nfaces) let(
 						faceverts = select(vnf[0],vnf[1][i]),
-						faceplane = plane_from_pointslist(faceverts),
+						faceplane = plane_from_points(faceverts),
 						nrm = plane_normal(faceplane)
 					) nrm
 				]) / len(nfaces)
