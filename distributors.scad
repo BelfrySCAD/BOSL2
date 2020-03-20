@@ -633,8 +633,10 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[
 	sang = sa + offset;
 	angs = !is_undef(n)?
 		(n<=0? [] : [for (i=[0:1:n-1]) i/n*360+sang]) :
-		assert(is_list(rots))
-		rots;
+		rots==[]? [] :
+		assert(!is_string(rots), "Argument rots must be an angle, a list of angles, or a range of angles.")
+		assert(!is_undef(rots[0]), "Argument rots must be an angle, a list of angles, or a range of angles.")
+		[for (a=rots) a];
 	for ($idx = idx(angs)) {
 		$ang = angs[$idx];
 		$axis = v;
