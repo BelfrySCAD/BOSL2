@@ -402,15 +402,15 @@ module test_plane3pt_indexed() {
 test_plane3pt_indexed();
 
 
-module test_plane_from_pointslist() {
-	assert(plane_from_pointslist([[0,0,20], [0,10,10], [0,0,0], [0,5,3]]) == [1,0,0,0]);
-	assert(plane_from_pointslist([[2,0,20], [2,10,10], [2,0,0], [2,3,4]]) == [1,0,0,2]);
-	assert(plane_from_pointslist([[0,0,0], [10,0,10], [0,0,20], [5,0,7]]) == [0,1,0,0]);
-	assert(plane_from_pointslist([[0,2,0], [10,2,10], [0,2,20], [4,2,3]]) == [0,1,0,2]);
-	assert(plane_from_pointslist([[0,0,0], [10,10,0], [20,0,0], [8,3,0]]) == [0,0,1,0]);
-	assert(plane_from_pointslist([[0,0,2], [10,10,2], [20,0,2], [3,4,2]]) == [0,0,1,2]);
+module test_plane_from_points() {
+	assert(plane_from_points([[0,0,20], [0,10,10], [0,0,0], [0,5,3]]) == [1,0,0,0]);
+	assert(plane_from_points([[2,0,20], [2,10,10], [2,0,0], [2,3,4]]) == [1,0,0,2]);
+	assert(plane_from_points([[0,0,0], [10,0,10], [0,0,20], [5,0,7]]) == [0,1,0,0]);
+	assert(plane_from_points([[0,2,0], [10,2,10], [0,2,20], [4,2,3]]) == [0,1,0,2]);
+	assert(plane_from_points([[0,0,0], [10,10,0], [20,0,0], [8,3,0]]) == [0,0,1,0]);
+	assert(plane_from_points([[0,0,2], [10,10,2], [20,0,2], [3,4,2]]) == [0,0,1,2]);
 }
-test_plane_from_pointslist();
+test_plane_from_points();
 
 
 module test_plane_normal() {
