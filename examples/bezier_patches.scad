@@ -54,11 +54,11 @@ function CR_edge(size, spin=0, orient=UP, trans=[0,0,0]) =
 	);
 
 
-module CR_cube(size=[100,100,100], r=10, splinesteps=8, cheat=false, debug=false)
+module CR_cube(size=[100,100,100], r=10, splinesteps=8, debug=false)
 {
 	s = size-2*[r,r,r];
 	h = size/2;
-	corners = [
+	corners = bezier_surface([
 		CR_corner([r,r,r], spin=0,   orient=UP, trans=[-size.x/2, -size.y/2, -size.z/2]),
 		CR_corner([r,r,r], spin=90,  orient=UP, trans=[ size.x/2, -size.y/2, -size.z/2]),
 		CR_corner([r,r,r], spin=180, orient=UP, trans=[ size.x/2,  size.y/2, -size.z/2]),
@@ -68,8 +68,8 @@ module CR_cube(size=[100,100,100], r=10, splinesteps=8, cheat=false, debug=false
 		CR_corner([r,r,r], spin=90,  orient=DOWN, trans=[-size.x/2, -size.y/2,  size.z/2]),
 		CR_corner([r,r,r], spin=180, orient=DOWN, trans=[-size.x/2,  size.y/2,  size.z/2]),
 		CR_corner([r,r,r], spin=270, orient=DOWN, trans=[ size.x/2,  size.y/2,  size.z/2]),
-	];
-	edges = [
+	], splinesteps=splinesteps);
+	edges = bezier_surface([
 		CR_edge([r, r, s.x], spin=0,   orient=RIGHT, trans=[   0, -h.y,  h.z]),
 		CR_edge([r, r, s.x], spin=90,  orient=RIGHT, trans=[   0, -h.y, -h.z]),
 		CR_edge([r, r, s.x], spin=180, orient=RIGHT, trans=[   0,  h.y, -h.z]),
@@ -84,8 +84,8 @@ module CR_cube(size=[100,100,100], r=10, splinesteps=8, cheat=false, debug=false
 		CR_edge([r, r, s.z], spin=90,  orient=UP,    trans=[ h.x, -h.y,    0]),
 		CR_edge([r, r, s.z], spin=180, orient=UP,    trans=[ h.x,  h.y,    0]),
 		CR_edge([r, r, s.z], spin=270, orient=UP,    trans=[-h.x,  h.y,    0])
-	];
-	faces = [
+	], splinesteps=[1,splinesteps]);
+	faces = bezier_surface([
 		// Yes, these are degree 1 bezier patches.  That means just the four corner points.
 		// Since these are flat, it doesn't matter what degree they are, and this will reduce calculation overhead.
 		bezier_patch_flat([s.y, s.z], N=1, orient=RIGHT, trans=[ h.x,    0,    0]),
@@ -96,21 +96,17 @@ module CR_cube(size=[100,100,100], r=10, splinesteps=8, cheat=false, debug=false
 
 		bezier_patch_flat([s.x, s.y], N=1, orient=UP,    trans=[   0,    0,  h.z]),
 		bezier_patch_flat([s.x, s.y], N=1, orient=DOWN,  trans=[   0,    0, -h.z])
-	];
+	], splinesteps=1);
 
-	if (cheat) {
-		hull() bezier_polyhedron(patches=corners, splinesteps=splinesteps);
+	if (debug) {
+		vnf_validate([edges, faces, corners], convexity=4);
 	} else {
-		if (debug) {
-			trace_bezier_patches(patches=concat(edges, faces, corners), showcps=true, splinesteps=splinesteps);
-		} else {
-			bezier_polyhedron(patches=concat(edges, faces, corners), splinesteps=splinesteps);
-		}
+		vnf_polyhedron([edges, faces, corners], convexity=4);
 	}
 }
 
 
-CR_cube(size=[100,100,100], r=20, splinesteps=16, cheat=false, debug=false);
+CR_cube(size=[100,100,100], r=20, splinesteps=16, debug=false);
 cube(1);
 
 
