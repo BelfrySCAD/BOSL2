@@ -57,7 +57,7 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
 
 // Function: vnf_get_vertex()
 // Usage:
-//   vvnf = vnf_get_vertex(vnf, p, [eps]);
+//   vvnf = vnf_get_vertex(vnf, p);
 // Description:
 //   Finds the index number of the given vertex point `p` in the given VNF structure `vnf`.  If said
 //   point does not already exist in the VNF vertex list, it is added.  Returns: `[INDEX, VNF]` where
@@ -66,19 +66,16 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
 // Arguments:
 //   vnf = The VNF structue to get the point index from.
 //   p = The point, or list of points to get the index of.
-//   eps = Maximum variance when comparing points.  Default: 2^-30
 // Example:
 //   vnf1 = vnf_get_vertex(p=[3,5,8]);  // Returns: [0, [[[3,5,8]],[]]]
 //   vnf2 = vnf_get_vertex(vnf1, p=[3,2,1]);  // Returns: [1, [[[3,5,8],[3,2,1]],[]]]
 //   vnf3 = vnf_get_vertex(vnf2, p=[3,5,8]);  // Returns: [0, [[[3,5,8],[3,2,1]],[]]]
 //   vnf4 = vnf_get_vertex(vnf3, p=[[1,3,2],[3,2,1]]);  // Returns: [[1,2], [[[3,5,8],[3,2,1],[1,3,2]],[]]]
-function vnf_get_vertex(vnf=EMPTY_VNF, p, eps=pow(2,-30)) =
-	is_path(p)? _vnf_get_vertices(vnf, p, eps=eps) :
+function vnf_get_vertex(vnf=EMPTY_VNF, p) =
+	is_path(p)? _vnf_get_vertices(vnf, p) :
 	assert(is_vnf(vnf))
 	assert(is_vector(p))
 	let(
-		quantum = pow(2,floor(log2(eps))),
-		p = quant(p,quantum),
 		v = search([p], vnf[0])[0]
 	) [
 		v != []? v : len(vnf[0]),
@@ -90,11 +87,11 @@ function vnf_get_vertex(vnf=EMPTY_VNF, p, eps=pow(2,-30)) =
 
 
 // Internal use only
-function _vnf_get_vertices(vnf=EMPTY_VNF, pts, eps=pow(2,-30), _i=0, _idxs=[]) =
+function _vnf_get_vertices(vnf=EMPTY_VNF, pts, _i=0, _idxs=[]) =
 	_i>=len(pts)? [_idxs, vnf] :
 	let(
-		vvnf = vnf_get_vertex(vnf, pts[_i], eps=eps)
-	) _vnf_get_vertices(vvnf[1], pts, eps=eps, _i=_i+1, _idxs=concat(_idxs,[vvnf[0]]));
+		vvnf = vnf_get_vertex(vnf, pts[_i])
+	) _vnf_get_vertices(vvnf[1], pts, _i=_i+1, _idxs=concat(_idxs,[vvnf[0]]));
 
 
 // Function: vnf_add_face()
@@ -107,13 +104,12 @@ function _vnf_get_vertices(vnf=EMPTY_VNF, pts, eps=pow(2,-30), _i=0, _idxs=[]) =
 // Arguments:
 //   vnf = The VNF structure to add a face to.
 //   pts = The vertex points for the face.
-//   eps = Maximum variance when comparing points.  Default: `EPSILON` (1e-9)
-function vnf_add_face(vnf=EMPTY_VNF, pts, eps=pow(2,-30)) =
+function vnf_add_face(vnf=EMPTY_VNF, pts) =
 	assert(is_vnf(vnf))
 	assert(is_path(pts))
 	let(
-		vvnf = vnf_get_vertex(vnf, pts, eps=eps),
-		face = deduplicate(vvnf[0], closed=true, eps=eps),
+		vvnf = vnf_get_vertex(vnf, pts),
+		face = deduplicate(vvnf[0], closed=true),
 		vnf2 = vvnf[1]
 	) [
 		vnf_vertices(vnf2),
@@ -123,7 +119,7 @@ function vnf_add_face(vnf=EMPTY_VNF, pts, eps=pow(2,-30)) =
 
 // Function: vnf_add_faces()
 // Usage:
-//   vnf_add_faces(vnf, faces, [eps]);
+//   vnf_add_faces(vnf, faces);
 // Description:
 //   Given a VNF structure and a list of faces, where each face is given as a list of vertex points,
 //   adds the faces to the VNF structure.  Returns the modified VNF structure `[VERTICES, FACES]`.
@@ -132,10 +128,9 @@ function vnf_add_face(vnf=EMPTY_VNF, pts, eps=pow(2,-30)) =
 // Arguments:
 //   vnf = The VNF structure to add a face to.
 //   faces = The list of faces, where each face is given as a list of vertex points.
-//   eps = Maximum variance when comparing points.  Default: `EPSILON` (1e-9)
-function vnf_add_faces(vnf=EMPTY_VNF, faces, eps=pow(2,-30), _i=0) =
+function vnf_add_faces(vnf=EMPTY_VNF, faces, _i=0) =
 	(assert(is_vnf(vnf)) assert(is_list(faces)) _i>=len(faces))? vnf :
-	vnf_add_faces(vnf_add_face(vnf, faces[_i], eps=eps), faces, eps=eps, _i=_i+1);
+	vnf_add_faces(vnf_add_face(vnf, faces[_i]), faces, _i=_i+1);
 
 
 // Function: vnf_merge()
@@ -155,10 +150,10 @@ function vnf_merge(vnfs=[],_i=0,_acc=EMPTY_VNF) =
 
 // Function: vnf_compact()
 // Usage:
-//   cvnf = vnf_compact(vnf, [eps]);
+//   cvnf = vnf_compact(vnf);
 // Description:
 //   Takes a VNF and consolidates all duplicate vertices, and drops unreferenced vertices.
-function vnf_compact(vnf,eps=pow(2,-30)) =
+function vnf_compact(vnf) =
 	let(
 		verts = vnf[0],
 		faces = [
@@ -166,7 +161,7 @@ function vnf_compact(vnf,eps=pow(2,-30)) =
 				for (i=face) verts[i]
 			]
 		]
-	) vnf_add_faces(faces=faces,eps=eps);
+	) vnf_add_faces(faces=faces);
 
 
 // Function: vnf_triangulate()
@@ -427,9 +422,9 @@ module vnf_polyhedron(vnf, convexity=2) {
 //       path3d(regular_ngon(n=5, d=100),100)
 //   ], slices=0, caps=false);
 //   vnf_validate(vnf,size=2);
-function vnf_validate(vnf, show_warns=true, check_isects=false, eps=pow(2,-30)) =
+function vnf_validate(vnf, show_warns=true, check_isects=false) =
 	let(
-		vnf = vnf_compact(vnf,eps=eps),
+		vnf = vnf_compact(vnf),
 		edges = sort([
 			for (face=vnf[1], edge=pair_wrap(face))
 			edge[0]<edge[1]? edge : [edge[1],edge[0]]
@@ -450,7 +445,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false, eps=pow(2,-30)) 
 			for (face = vnf[1]) let(
 				verts = [for (k=face) vnf[0][k]],
 				area = abs(polygon_area(verts))
-			) if (area < eps) [
+			) if (area < EPSILON) [
 				"WARNING",
 				"NULL_FACE",
 				str("Face has zero area: ",fmt_float(area,15)),
@@ -461,7 +456,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false, eps=pow(2,-30)) 
 		nonplanars = unique([
 			for (face = vnf[1]) let(
 				verts = [for (k=face) vnf[0][k]]
-			) if (!points_are_coplanar(verts,eps=eps)) [
+			) if (!points_are_coplanar(verts)) [
 				"ERROR",
 				"NONPLANAR",
 				"Face vertices are not coplanar",
