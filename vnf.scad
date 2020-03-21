@@ -340,7 +340,9 @@ module vnf_polyhedron(vnf, convexity=2) {
 // Usage:
 //   vol = vnf_volume(vnf);
 // Description:
-//   Returns the volume enclosed by the given manifold VNF.  May return a negative value if faces are reversed.
+//   Returns the volume enclosed by the given manifold VNF.   The VNF must describe a valid polyhedron with consistent face direction and
+//   no holes; otherwise the results are undefined.  Returns a positive volume if face direction is clockwise and a negative volume
+//   if face direction is counter-clockwise.  
 function vnf_volume(vnf) =
 	let(vnf = vnf_triangulate(vnf))
 	sum([
@@ -355,7 +357,8 @@ function vnf_volume(vnf) =
 // Usage:
 //   vol = vnf_centroid(vnf);
 // Description:
-//   Returns the centroid of the given manifold VNF.
+//   Returns the centroid of the given manifold VNF.  The VNF must describe a valid polyhedron with consistent face direction and
+//   no holes; otherwise the results are undefined.  
 function vnf_centroid(vnf) =
 	let(
 		vnf = vnf_triangulate(vnf),
@@ -367,9 +370,9 @@ function vnf_centroid(vnf) =
 			) [
 				face[0] * n,
 				vmul(n,
-					vsqr(face[0] + face[1]) +
-					vsqr(face[0] + face[2]) +
-					vsqr(face[1] + face[2])
+					sqr(face[0] + face[1]) +
+					sqr(face[0] + face[2]) +
+					sqr(face[1] + face[2])
 				)
 			]
 		])
