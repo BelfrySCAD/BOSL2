@@ -766,7 +766,7 @@ function _facenormal(pts, face) = unit(cross(pts[face[2]]-pts[face[0]], pts[face
 
 function _full_faces(pts,faces) =
 	let(
-		normals = [for(face=faces) vquant(_facenormal(pts,face),1e-12)],
+		normals = [for(face=faces) quant(_facenormal(pts,face),1e-12)],
 		groups = _unique_groups(normals),
 		faces = [for(entry=groups) unique(flatten(select(faces, entry)))],
 		facenormals = [for(entry=groups) normals[entry[0]]]
