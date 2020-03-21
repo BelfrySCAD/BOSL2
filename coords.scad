@@ -100,36 +100,6 @@ function path4d(points, fill=0) =
     result + repeat(addition, len(result));
 
 
-// Function: translate_points()
-// Usage:
-//   translate_points(pts, v);
-// Description:
-//   Moves each point in an array by a given amount.
-// Arguments:
-//   pts = List of points to translate.
-//   v = Amount to translate points by.
-function translate_points(pts, v=[0,0,0]) =
-	pts==[]? [] : let(
-		v=point3d(v)
-	) [for (pt = pts) pt+v];
-
-
-// Function: scale_points()
-// Usage:
-//   scale_points(pts, v, [cp]);
-// Description:
-//   Scales each point in an array by a given amount, around a given centerpoint.
-// Arguments:
-//   pts = List of points to scale.
-//   v = A vector with a scaling factor for each axis.
-//   cp = Centerpoint to scale around.
-function scale_points(pts, v=[1,1,1], cp=[0,0,0]) =
-	pts==[]? [] : let(
-		cp = point3d(cp),
-		v = point3d(v,fill=1)
-	) [for (pt = pts) vmul(pt-cp,v)+cp];
-
-
 // Function: rotate_points2d()
 // Usage:
 //   rotate_points2d(pts, a, [cp]);
@@ -289,7 +259,7 @@ function project_plane(point, a, b, c) =
 		v = unit(c-a),
 		n = unit(cross(u,v)),
 		w = unit(cross(n,u)),
-		relpoint = is_vector(point)? (point-a) : translate_points(point,-a)
+		relpoint = apply(move(-a),point)
 	) relpoint * transpose([w,u]);
 
 
@@ -320,7 +290,7 @@ function lift_plane(point, a, b, c) =
 		n = unit(cross(u,v)),
 		w = unit(cross(n,u)),
 		remapped = point*[w,u]
-	) is_vector(remapped)? (a+remapped) : translate_points(remapped,a);
+	) apply(move(a),remapped);
 
 
 // Function: cylindrical_to_xyz()

@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-include <BOSL2/hull.scad>
+include <hull.scad>
 
 
 // CommonCode:
@@ -320,14 +320,14 @@ module regular_polyhedron(
 	in_radius = entry[5];
 	if (draw){
 		if (rounding==0)
-			polyhedron(translate_points(scaled_points, translation), faces = face_triangles);
+			polyhedron(move(translation, p=scaled_points), faces = face_triangles);
 		else {
 			fn = segs(rounding);
 			rounding = rounding/cos(180/fn);
 			adjusted_scale = 1 - rounding / in_radius;
 			minkowski(){
 				sphere(r=rounding, $fn=fn);
-				polyhedron(translate_points(adjusted_scale*scaled_points,translation), faces = face_triangles);
+				polyhedron(move(translation,p=adjusted_scale*scaled_points), faces = face_triangles);
 			}
 		}
 	}
@@ -335,13 +335,13 @@ module regular_polyhedron(
 		maxrange = repeat ? len(faces)-1 : $children-1;
 		for(i=[0:1:maxrange]) {
 			// Would like to orient so an edge (longest edge?) is parallel to x axis
-			facepts = translate_points(select(scaled_points, faces[i]), translation);
+			facepts = move(translation, p=select(scaled_points, faces[i]));
 			center = mean(facepts);
-			rotatedface = rotate_points3d(translate_points(facepts,-center), from=face_normals[i], to=[0,0,1]);
+			rotatedface = rotate_points3d(move(-center, p=facepts), from=face_normals[i], to=[0,0,1]);
 			clockwise = sortidx([for(pt=rotatedface) -atan2(pt.y,pt.x)]);
 			$face = rotate_children?
 						path2d(select(rotatedface,clockwise)) :
-						select(translate_points(facepts,-center), clockwise);
+						select(move(-center,p=facepts), clockwise);
 			$faceindex = i;
 			$center = -translation-center;
 			translate(center)
@@ -549,6 +549,7 @@ _stellated_polyhedra_ = [
 //   Calculate characteristics of regular polyhedra or the selection set for regular_polyhedron().
 //   Invoke with the same arguments used by regular_polyhedron() and use the `info` argument to
 //   request the desired return value. Set `info` to:
+//     * `"vnf"`: vnf for the selected polyhedron
 //     * `"vertices"`: vertex list for the selected polyhedron
 //     * `"faces"`: list of faces for the selected polyhedron, where each entry on the list is a list of point index values to be used with the vertex list
 //     * `"face normals"`: list of normal vectors for each face
@@ -688,8 +689,15 @@ function regular_polyhedron_info(
 		face_normals = rotate_points3d(faces_normals_vertices[1], from=down_direction, to=[0,0,-1]),
 		side_length = scalefactor * entry[edgelen]
 	)
-	info == "fullentry" ? [scaled_points, translation,stellate ? faces : face_triangles, faces, face_normals, side_length*entry[in_radius]] :
-	info == "vertices" ? translate_points(scaled_points,translation) :
+	info == "fullentry" ? [scaled_points,
+                               translation,
+                               stellate ? faces : face_triangles,
+                               faces,
+                               face_normals,
+                               side_length*entry[in_radius]] :
+        info == "vnf" ? [move(translation,p=scaled_points),
+                         stellate ? faces : face_triangles] : 
+	info == "vertices" ? move(translation,p=scaled_points) :
 	info == "faces" ? faces :
 	info == "face normals" ? face_normals :
 	info == "in_radius" ? side_length * entry[in_radius] :
