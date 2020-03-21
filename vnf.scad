@@ -336,6 +336,47 @@ module vnf_polyhedron(vnf, convexity=2) {
 }
 
 
+// Function: vnf_volume()
+// Usage:
+//   vol = vnf_volume(vnf);
+// Description:
+//   Returns the volume enclosed by the given manifold VNF.  May return a negative value if faces are reversed.
+function vnf_volume(vnf) =
+	let(vnf = vnf_triangulate(vnf))
+	sum([
+		for(face_index=vnf[1]) let(
+			face = select(vnf[0], face_index),
+			n = cross(face[2]-face[0],face[1]-face[0])
+		) face[0] * n
+	])/6;
+
+
+// Function: vnf_centroid()
+// Usage:
+//   vol = vnf_centroid(vnf);
+// Description:
+//   Returns the centroid of the given manifold VNF.
+function vnf_centroid(vnf) =
+	let(
+		vnf = vnf_triangulate(vnf),
+		val=sum([
+			for(face_index=vnf[1])
+			let(
+				face = select(vnf[0], face_index),
+				n = cross(face[2]-face[0],face[1]-face[0])
+			) [
+				face[0] * n,
+				vmul(n,
+					vsqr(face[0] + face[1]) +
+					vsqr(face[0] + face[2]) +
+					vsqr(face[1] + face[2])
+				)
+			]
+		])
+	) val[1]/val[0]/8;
+
+
+
 // Function&Module: vnf_validate()
 // Usage: As Function
 //   fails = vnf_validate(vnf);
