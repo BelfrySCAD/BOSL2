@@ -358,7 +358,9 @@ function vnf_volume(vnf) =
 //   vol = vnf_centroid(vnf);
 // Description:
 //   Returns the centroid of the given manifold VNF.  The VNF must describe a valid polyhedron with consistent face direction and
-//   no holes; otherwise the results are undefined.  
+//   no holes; otherwise the results are undefined.
+
+// Algorithm from: https://wwwf.imperial.ac.uk/~rn/centroid.pdf
 function vnf_centroid(vnf) =
 	let(
 		vnf = vnf_triangulate(vnf),
