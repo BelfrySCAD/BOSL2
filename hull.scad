@@ -88,7 +88,7 @@ module hull_points(points, fast=false) {
 function hull2d_path(points) =
 	(len(points) < 3)? [] : let(
 		a=0, b=1,
-		c = first_noncollinear(a, b, points, 2)
+		c = first_noncollinear(a, b, points)
 	) (c == len(points))? _hull2d_collinear(points) : let(
 		remaining = [ for (i = [2:1:len(points)-1]) if (i != c) i ],
 		ccw = triangle_area(points[a], points[b], points[c]) > 0,
