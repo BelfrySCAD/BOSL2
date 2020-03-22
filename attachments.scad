@@ -326,7 +326,7 @@ function attach_transform(anchor=CENTER, spin=0, orient=UP, geom, p) =
 					ang = vector_angle(anch[2], DOWN),
 					axis = vector_axis(anch[2], DOWN),
 					ang2 = (anch[2]==UP || anch[2]==DOWN)? 0 : 180-anch[3],
-					axis2 = rotate_points3d([axis],[0,0,ang2])[0]
+					axis2 = rot(p=axis,[0,0,ang2])
 				)
 				affine3d_rot_by_axis(axis2,ang) *
 				affine3d_zrot(ang2+spin) *

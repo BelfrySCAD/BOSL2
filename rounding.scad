@@ -763,7 +763,7 @@ module offset_sweep(
 	top_start_ind = len(vertices_faces_bot[0]);
 	initial_vertices_top = zip(path, repeat(middle,len(path)));
 	vertices_faces_top = make_polyhedron(
-		path, translate_points(offsets_top,[0,middle]),
+		path, move(p=offsets_top,[0,middle]),
 		struct_val(top,"offset"), !clockwise,
 		struct_val(top,"quality"),
 		struct_val(top,"check_valid"),
@@ -1278,7 +1278,7 @@ function _stroke_end(width,left, right, spec) =
 		angle = struct_val(spec,"absolute")?
 			angle_between_lines(left[0]-right[0],[cos(user_angle),sin(user_angle)]) :
 			user_angle,
-		endseg = [center, rotate_points2d([left[0]],angle, cp=center)[0]],
+		endseg = [center, rot(p=[left[0]], angle, cp=center)[0]],
 		intright = angle>0,
 		pathclip = _path_line_intersection(intright? right : left, endseg),
 		pathextend = line_intersection(endseg, select(intright? left:right,0,1))

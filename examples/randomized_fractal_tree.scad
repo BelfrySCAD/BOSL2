@@ -10,7 +10,7 @@ module leaf(s) {
 	];
 	xrot(90)
 	linear_sweep_bezier(
-		scale_points(path, [s,s]/2),
+		path * s/2,
 		height=0.02
 	);
 }

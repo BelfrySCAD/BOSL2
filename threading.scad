@@ -60,7 +60,7 @@ module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=72
 			[0, -cap/2-dz],
 		]
 	);
-	pline = scale_points(profile, [1,1,1]*pitch);
+	pline = profile * pitch;
 	dir = left_handed? -1 : 1;
 	idir = internal? -1 : 1;
 	attachable(anchor,spin,orient, r=r, l=h) {

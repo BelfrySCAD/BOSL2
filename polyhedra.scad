@@ -320,14 +320,14 @@ module regular_polyhedron(
 	in_radius = entry[5];
 	if (draw){
 		if (rounding==0)
-			polyhedron(translate_points(scaled_points, translation), faces = face_triangles);
+			polyhedron(move(p=scaled_points, translation), faces = face_triangles);
 		else {
 			fn = segs(rounding);
 			rounding = rounding/cos(180/fn);
 			adjusted_scale = 1 - rounding / in_radius;
 			minkowski(){
 				sphere(r=rounding, $fn=fn);
-				polyhedron(translate_points(adjusted_scale*scaled_points,translation), faces = face_triangles);
+				polyhedron(move(p=adjusted_scale*scaled_points,translation), faces = face_triangles);
 			}
 		}
 	}
@@ -335,13 +335,13 @@ module regular_polyhedron(
 		maxrange = repeat ? len(faces)-1 : $children-1;
 		for(i=[0:1:maxrange]) {
 			// Would like to orient so an edge (longest edge?) is parallel to x axis
-			facepts = translate_points(select(scaled_points, faces[i]), translation);
+			facepts = move(p=select(scaled_points, faces[i]), translation);
 			center = mean(facepts);
-			rotatedface = rotate_points3d(translate_points(facepts,-center), from=face_normals[i], to=[0,0,1]);
+			rotatedface = rot(p=move(p=facepts,-center), from=face_normals[i], to=[0,0,1]);
 			clockwise = sortidx([for(pt=rotatedface) -atan2(pt.y,pt.x)]);
 			$face = rotate_children?
 						path2d(select(rotatedface,clockwise)) :
-						select(translate_points(facepts,-center), clockwise);
+						select(move(p=facepts,-center), clockwise);
 			$faceindex = i;
 			$center = -translation-center;
 			translate(center)
@@ -681,15 +681,15 @@ function regular_polyhedron_info(
 		facedown = facedown == true ? (stellate==false? entry[facevertices][0] : 3) : facedown,
 		down_direction = facedown == false?  [0,0,-1] :
 			faces_normals_vertices[1][search(facedown, faces_vertex_count)[0]],
-		scaled_points = scalefactor * rotate_points3d(faces_normals_vertices[2], from=down_direction, to=[0,0,-1]),
+		scaled_points = scalefactor * rot(p=faces_normals_vertices[2], from=down_direction, to=[0,0,-1]),
 		bounds = pointlist_bounds(scaled_points),
 		boundtable = [bounds[0], [0,0,0], bounds[1]],
 		translation = [for(i=[0:2]) -boundtable[1+anchor[i]][i]],
-		face_normals = rotate_points3d(faces_normals_vertices[1], from=down_direction, to=[0,0,-1]),
+		face_normals = rot(p=faces_normals_vertices[1], from=down_direction, to=[0,0,-1]),
 		side_length = scalefactor * entry[edgelen]
 	)
 	info == "fullentry" ? [scaled_points, translation,stellate ? faces : face_triangles, faces, face_normals, side_length*entry[in_radius]] :
-	info == "vertices" ? translate_points(scaled_points,translation) :
+	info == "vertices" ? move(p=scaled_points,translation) :
 	info == "faces" ? faces :
 	info == "face normals" ? face_normals :
 	info == "in_radius" ? side_length * entry[in_radius] :
