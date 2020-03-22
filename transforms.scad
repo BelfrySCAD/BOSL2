@@ -738,8 +738,9 @@ function mirror(v, p) =
 	assert(is_list(p))
 	let(m = len(v)==2? affine2d_mirror(v) : affine3d_mirror(v))
 	is_undef(p)? m :
+	is_num(p.x)? apply(m,p) :
 	is_vnf(p)? [mirror(v=v,p=p[0]), [for (face=p[1]) reverse(face)]] :
-	apply(m, p);
+	[for (l=p) is_vector(l)? apply(m,l) : mirror(v=v, p=l)];
 
 
 // Function&Module: xflip()
