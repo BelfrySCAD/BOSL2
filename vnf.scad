@@ -82,7 +82,7 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
 //   vnf4 = vnf_get_vertex(vnf3, p=[[1,3,2],[3,2,1]]);  // Returns: [[1,2], [[[3,5,8],[3,2,1],[1,3,2]],[]]]
 function vnf_get_vertex(vnf=EMPTY_VNF, p) =
 	is_path(p)? _vnf_get_vertices(vnf, p) :
-	assert(is_vnf(vnf))
+	assert(is_list(vnf) && len(vnf)==2 && is_list(vnf[0]) && is_list(vnf[1]), "Argument vnf should contain a VNF structure.")
 	assert(is_vector(p))
 	let(
 		v = search([p], vnf[0])[0]
