@@ -24,8 +24,17 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 
 
 // Function: is_vnf()
-// Description: Returns true if the given value looks passingly like a VNF structure.
-function is_vnf(x) = is_list(x) && len(x)==2 && is_list(x[0]) && is_list(x[1]) && (x[0]==[] || is_vector(x[0][0])) && (x[1]==[] || is_vector(x[1][0]));
+// Usage:
+//   bool = is_vnf(x);
+// Description:
+//   Returns true if the given value looks like a VNF structure.
+function is_vnf(x) =
+	is_list(x) &&
+	len(x)==2 &&
+	is_list(x[0]) &&
+	is_list(x[1]) &&
+	(x[0]==[] || (len(x[0])>=3 && is_vector(x[0][0]))) &&
+	(x[1]==[] || is_vector(x[1][0]));
 
 
 // Function: is_vnf_list()
