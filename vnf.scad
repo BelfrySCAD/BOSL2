@@ -24,8 +24,17 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 
 
 // Function: is_vnf()
-// Description: Returns true if the given value looks passingly like a VNF structure.
-function is_vnf(x) = is_list(x) && len(x)==2 && is_list(x[0]) && is_list(x[1]) && (x[0]==[] || is_vector(x[0][0])) && (x[1]==[] || is_vector(x[1][0]));
+// Usage:
+//   bool = is_vnf(x);
+// Description:
+//   Returns true if the given value looks like a VNF structure.
+function is_vnf(x) =
+	is_list(x) &&
+	len(x)==2 &&
+	is_list(x[0]) &&
+	is_list(x[1]) &&
+	(x[0]==[] || (len(x[0])>=3 && is_vector(x[0][0]))) &&
+	(x[1]==[] || is_vector(x[1][0]));
 
 
 // Function: is_vnf_list()
@@ -73,7 +82,7 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
 //   vnf4 = vnf_get_vertex(vnf3, p=[[1,3,2],[3,2,1]]);  // Returns: [[1,2], [[[3,5,8],[3,2,1],[1,3,2]],[]]]
 function vnf_get_vertex(vnf=EMPTY_VNF, p) =
 	is_path(p)? _vnf_get_vertices(vnf, p) :
-	assert(is_vnf(vnf))
+	assert(is_list(vnf) && len(vnf)==2 && is_list(vnf[0]) && is_list(vnf[1]), "Argument vnf should contain a VNF structure.")
 	assert(is_vector(p))
 	let(
 		v = search([p], vnf[0])[0]

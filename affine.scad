@@ -202,17 +202,19 @@ function affine3d_zrot(ang) = [
 // Arguments:
 //   u = 3D axis vector to rotate around.
 //   ang = number of degrees to rotate.
-function affine3d_rot_by_axis(u, ang) = let(
-	u = unit(u),
-	c = cos(ang),
-	c2 = 1-c,
-	s = sin(ang)
-) [
-	[u[0]*u[0]*c2+c     , u[0]*u[1]*c2-u[2]*s, u[0]*u[2]*c2+u[1]*s, 0],
-	[u[1]*u[0]*c2+u[2]*s, u[1]*u[1]*c2+c     , u[1]*u[2]*c2-u[0]*s, 0],
-	[u[2]*u[0]*c2-u[1]*s, u[2]*u[1]*c2+u[0]*s, u[2]*u[2]*c2+c     , 0],
-	[                  0,                   0,                   0, 1]
-];
+function affine3d_rot_by_axis(u, ang) =
+	approx(ang,0)? affine3d_identity() :
+	let(
+		u = unit(u),
+		c = cos(ang),
+		c2 = 1-c,
+		s = sin(ang)
+	) [
+		[u.x*u.x*c2+c    , u.x*u.y*c2-u.z*s, u.x*u.z*c2+u.y*s, 0],
+		[u.y*u.x*c2+u.z*s, u.y*u.y*c2+c    , u.y*u.z*c2-u.x*s, 0],
+		[u.z*u.x*c2-u.y*s, u.z*u.y*c2+u.x*s, u.z*u.z*c2+c    , 0],
+		[               0,                0,                0, 1]
+	];
 
 
 // Function: affine3d_rot_from_to()
@@ -223,18 +225,23 @@ function affine3d_rot_by_axis(u, ang) = let(
 // Arguments:
 //   from = 3D axis vector to rotate from.
 //   to = 3D axis vector to rotate to.
-function affine3d_rot_from_to(from, to) = let(
-	u = vector_axis(from,to),
-	ang = vector_angle(from,to),
-	c = cos(ang),
-	c2 = 1-c,
-	s = sin(ang)
-) [
-	[u[0]*u[0]*c2+c     , u[0]*u[1]*c2-u[2]*s, u[0]*u[2]*c2+u[1]*s, 0],
-	[u[1]*u[0]*c2+u[2]*s, u[1]*u[1]*c2+c     , u[1]*u[2]*c2-u[0]*s, 0],
-	[u[2]*u[0]*c2-u[1]*s, u[2]*u[1]*c2+u[0]*s, u[2]*u[2]*c2+c     , 0],
-	[                  0,                   0,                   0, 1]
-];
+function affine3d_rot_from_to(from, to) =
+	let(
+		from = unit(point3d(from)),
+		to = unit(point3d(to))
+	) approx(from,to)? affine3d_identity() :
+	let(
+		u = vector_axis(from,to),
+		ang = vector_angle(from,to),
+		c = cos(ang),
+		c2 = 1-c,
+		s = sin(ang)
+	) [
+		[u.x*u.x*c2+c    , u.x*u.y*c2-u.z*s, u.x*u.z*c2+u.y*s, 0],
+		[u.y*u.x*c2+u.z*s, u.y*u.y*c2+c    , u.y*u.z*c2-u.x*s, 0],
+		[u.z*u.x*c2-u.y*s, u.z*u.y*c2+u.x*s, u.z*u.z*c2+c    , 0],
+		[               0,                0,                0, 1]
+	];
 
 
 // Function: affine_frame_map()
@@ -246,7 +253,7 @@ function affine3d_rot_from_to(from, to) = let(
 //   Returns a transformation that maps one coordinate frame to another.  You must specify two or three of `x`, `y`, and `z`.  The specified
 //   axes are mapped to the vectors you supplied.  If you give two inputs, the third vector is mapped to the appropriate normal to maintain a right hand coordinate system.  
 //   If the vectors you give are orthogonal the result will be a rotation and the `reverse` parameter will supply the inverse map, which enables you
-//   to map two arbitrary coordinate systems two each other by using the canonical coordinate system as an intermediary.  You cannot use the `reverse` option 
+//   to map two arbitrary coordinate systems to each other by using the canonical coordinate system as an intermediary.  You cannot use the `reverse` option 
 //   with non-orthogonal inputs.  
 // Arguments:
 //   x = Destination vector for x axis
@@ -259,30 +266,35 @@ function affine3d_rot_from_to(from, to) = let(
 //                  // The next map sends [1,1,0] to [0,1,1] and [-1,1,0] to [0,-1,1]
 //   T = affine_frame_map(x=[0,1,1], y=[0,-1,1]) * affine_frame_map(x=[1,1,0], y=[-1,1,0],reverse=true);
 function affine_frame_map(x,y,z, reverse=false) =
-  assert(num_defined([x,y,z])>=2, "Must define at least two inputs")
-  let(
-    xvalid = is_undef(x) || (is_vector(x) && len(x)==3),
-    yvalid = is_undef(y) || (is_vector(y) && len(y)==3),
-    zvalid = is_undef(z) || (is_vector(z) && len(z)==3)
-  )
-  assert(xvalid,"Input x must be a length 3 vector")
-  assert(yvalid,"Input y must be a length 3 vector")
-  assert(zvalid,"Input z must be a length 3 vector")
-  let(
-    x = is_def(x) ? unit(x) : undef,
-    y = is_def(y) ? unit(y) : undef,    
-    z = is_def(z) ? unit(z) : undef,    
-    map = is_undef(x) ? [cross(y,z), y, z] :
-          is_undef(y) ? [x, cross(z,x), z] :
-          is_undef(z) ? [x, y, cross(x,y)] :
-                        [x, y, z]
-  )
-  reverse ?
-     let( ocheck = approx(map[0]*map[1],0) && approx(map[0]*map[2],0) && approx(map[1]*map[2],0))
-     assert(ocheck, "Inputs must be orthogonal when reverse==true")
-     affine2d_to_3d(map)
-  :
-     affine2d_to_3d(transpose(map));
+	assert(num_defined([x,y,z])>=2, "Must define at least two inputs")
+	let(
+		xvalid = is_undef(x) || (is_vector(x) && len(x)==3),
+		yvalid = is_undef(y) || (is_vector(y) && len(y)==3),
+		zvalid = is_undef(z) || (is_vector(z) && len(z)==3)
+	)
+	assert(xvalid,"Input x must be a length 3 vector")
+	assert(yvalid,"Input y must be a length 3 vector")
+	assert(zvalid,"Input z must be a length 3 vector")
+	let(
+		x = is_undef(x)? undef : unit(x),
+		y = is_undef(y)? undef : unit(y),
+		z = is_undef(z)? undef : unit(z),
+		map = is_undef(x)? [cross(y,z), y, z] :
+			is_undef(y)? [x, cross(z,x), z] :
+			is_undef(z)? [x, y, cross(x,y)] :
+			[x, y, z]
+	)
+	reverse? (
+		let(
+			ocheck = (
+				approx(map[0]*map[1],0) &&
+				approx(map[0]*map[2],0) &&
+				approx(map[1]*map[2],0)
+			)
+		)
+		assert(ocheck, "Inputs must be orthogonal when reverse==true")
+		affine2d_to_3d(map)
+	) : affine2d_to_3d(transpose(map));
 
 
 
@@ -294,8 +306,10 @@ function affine_frame_map(x,y,z, reverse=false) =
 // Arguments:
 //   v = The normal vector of the plane to reflect across.
 function affine3d_mirror(v) =
-	let(v=unit(point3d(v)), a=v.x, b=v.y, c=v.z)
-	[
+	let(
+		v=unit(point3d(v)),
+		a=v.x, b=v.y, c=v.z
+	) [
 		[1-2*a*a,  -2*a*b,  -2*a*c, 0],
 		[ -2*b*a, 1-2*b*b,  -2*b*c, 0],
 		[ -2*c*a,  -2*c*b, 1-2*c*c, 0],
@@ -437,11 +451,13 @@ function apply_list(points,transform_list) =
     
 
 // Function: is_2d_transform()
-// Usage: is_2d_transform(t)
-// Description: Checks if the input is a 3d transform that does not act on the z coordinate, except
+// Usage:
+//   is_2d_transform(t)
+// Description:
+//   Checks if the input is a 3d transform that does not act on the z coordinate, except
 //   possibly for a simple scaling of z.  Note that an input which is only a zscale returns false.  
 function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][2]!=1 so scale() works
-  t[2][0]==0 && t[2][1]==0 && t[2][3]==0 && t[0][2] == 0 && t[1][2]==0 &&  
+  t[2][0]==0 && t[2][1]==0 && t[2][3]==0 && t[0][2] == 0 && t[1][2]==0 &&
   (t[2][2]==1 || !(t[0][0]==1 && t[0][1]==0 && t[1][0]==0 && t[1][1]==1));   // But rule out zscale()
 
 

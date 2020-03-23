@@ -65,7 +65,7 @@ module orient_cubes() {
 	}
 
 	for (ang = [0:90:270]) {
-		off = rotate_points3d([40*BACK],ang)[0];
+		off = rot(p=40*BACK,ang);
 		translate(off) {
 			orient_cube(ang);
 		}

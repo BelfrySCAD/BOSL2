@@ -757,7 +757,11 @@ function is_matrix(A,m,n, square=false) =
 //   approx(0.3333,1/3);          // Returns: false
 //   approx(0.3333,1/3,eps=1e-3);  // Returns: true
 //   approx(PI,3.1415926536);     // Returns: true
-function approx(a,b,eps=EPSILON) = let(c=a-b) (is_num(c)? abs(c) : norm(c)) <= eps;
+function approx(a,b,eps=EPSILON) =
+	a==b? true :
+	a*0!=b*0? false :
+	is_list(a)? ([for (i=idx(a)) if(!approx(a[i],b[i],eps=eps)) 1] == []) :
+	(abs(a-b) <= eps);
 
 
 function _type_num(x) =

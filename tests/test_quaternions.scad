@@ -11,11 +11,11 @@ function rec_cmp(a,b,eps=1e-9) =
 
 module verify_f(actual,expected) {
 	if (!rec_cmp(actual,expected)) {
-		echo(str("Expected: ",fmtf(expected,10)));
+		echo(str("Expected: ",fmt_float(expected,10)));
 		echo(str("        : ",expected));
-		echo(str("Actual  : ",fmtf(actual,10)));
+		echo(str("Actual  : ",fmt_float(actual,10)));
 		echo(str("        : ",actual));
-		echo(str("Delta   : ",fmtf(expected-actual,10)));
+		echo(str("Delta   : ",fmt_float(expected-actual,10)));
 		echo(str("        : ",expected-actual));
 		assert(approx(expected,actual));
 	}

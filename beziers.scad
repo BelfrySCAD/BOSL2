@@ -884,12 +884,14 @@ function _bezier_triangle(tri, splinesteps=16, vnf=EMPTY_VNF) =
 //   trace_bezier_patches([patch], size=1, showcps=true);
 function bezier_patch_flat(size=[100,100], N=4, spin=0, orient=UP, trans=[0,0,0]) =
 	let(
-		patch = [for (x=[0:1:N]) [for (y=[0:1:N]) vmul(point3d(size),[x/N-0.5, 0.5-y/N, 0])]]
-	) [for (row=patch)
-		translate_points(v=trans,
-			rotate_points3d(a=spin, from=UP, to=orient, row)
-		)
-	];
+		patch = [
+			for (x=[0:1:N]) [
+				for (y=[0:1:N])
+				vmul(point3d(size), [x/N-0.5, 0.5-y/N, 0])
+			]
+		],
+		m = move(trans) * rot(a=spin, from=UP, to=orient)
+	) [for (row=patch) apply(m, row)];
 
 
 

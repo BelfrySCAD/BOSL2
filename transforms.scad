@@ -337,102 +337,56 @@ function up(z=0,p=undef) = move([0,0,z],p=p);
 //   stroke(rot(30,p=path), closed=true);
 module rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false)
 {
-	if (!is_undef(cp)) {
-		translate(cp) rot(a=a, v=v, from=from, to=to, reverse=reverse) translate(-cp) children();
-	} else if (!is_undef(from)) {
-		assert(!is_undef(to), "`from` and `to` should be used together.");
-		from = point3d(from);
-		to = point3d(to);
-		axis = vector_axis(from, to);
-		ang = vector_angle(from, to);
-		if (ang < 0.0001 && a == 0) {
-			children();  // May be slightly faster?
-		} else if (reverse) {
-			rotate(a=-ang, v=axis) rotate(a=-a, v=from) children();
-		} else {
-			rotate(a=ang, v=axis) rotate(a=a, v=from) children();
-		}
-	} else if (a == 0) {
-		children();  // May be slightly faster?
-	} else if (reverse) {
-		if (!is_undef(v)) {
-			rotate(a=-a, v=v) children();
-		} else if (is_num(a)) {
-			rotate(-a) children();
-		} else {
-			rotate([-a[0],0,0]) rotate([0,-a[1],0]) rotate([0,0,-a[2]]) children();
-		}
-	} else {
-		rotate(a=a, v=v) children();
-	}
+	m = rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, planar=false);
+	multmatrix(m) children();
 }
 
-function rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false, p=undef, planar=false) =
+function rot(a=0, v, cp, from, to, reverse=false, planar=false, p, _m) =
 	assert(is_undef(from)==is_undef(to), "from and to must be specified together.")
-	let(
-		rev = reverse? -1 : 1,
-		from = is_undef(from)? undef : point3d(from),
-		to = is_undef(to)? undef : point3d(to)
-	)
 	is_undef(p)? (
-		is_undef(cp)? (
-			planar? (
-				is_undef(from)? affine2d_zrot(a*rev) :
-				affine2d_zrot(vector_angle(from,to)*sign(vector_axis(from,to)[2])*rev)
-			) : (
-				!is_undef(from)? affine3d_chain([
-					affine3d_zrot(a*rev),
-					affine3d_rot_by_axis(
-						vector_axis(from,to),
-						vector_angle(from,to)*rev
-					)
-				]) :
-				!is_undef(v)? affine3d_rot_by_axis(v,a*rev) :
-				is_num(a)? affine3d_zrot(a*rev) :
-				reverse? affine3d_chain([affine3d_zrot(-a.z),affine3d_yrot(-a.y),affine3d_xrot(-a.x)]) :
-				affine3d_chain([affine3d_xrot(a.x),affine3d_yrot(a.y),affine3d_zrot(a.z)])
-			)
-		) : (
-			planar? (
-				affine2d_chain([
-					move(-cp),
-					rot(a=a, v=v, from=from, to=to, reverse=reverse, planar=true),
-					move(cp)
-				])
-			) : (
-				affine3d_chain([
-					move(-cp),
-					rot(a=a, v=v, from=from, to=to, reverse=reverse),
-					move(cp)
-				])
-			)
-		)
+		planar? let(
+			cp = is_undef(cp)? cp : point2d(cp),
+			m1 = is_undef(from)? affine2d_zrot(a) :
+				assert(is_vector(from))
+				assert(!approx(norm(from),0))
+				assert(approx(point3d(from).z, 0))
+				assert(is_vector(to))
+				assert(!approx(norm(to),0))
+				assert(approx(point3d(to).z, 0))
+				affine2d_zrot(
+					vang(point2d(to)) -
+					vang(point2d(from))
+				),
+			m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
+			m3 = reverse? matrix_inverse(m2) : m2
+		) m3 : let(
+			from = is_undef(from)? undef : point3d(from),
+			to = is_undef(to)? undef : point3d(to),
+			cp = is_undef(cp)? undef : point3d(cp),
+			m1 = !is_undef(from)? (
+					assert(is_vector(from))
+					assert(!approx(norm(from),0))
+					assert(is_vector(to))
+					assert(!approx(norm(to),0))
+					affine3d_rot_from_to(from,to) * affine3d_zrot(a)
+				) :
+				!is_undef(v)? affine3d_rot_by_axis(v,a) :
+				is_num(a)? affine3d_zrot(a) :
+				affine3d_zrot(a.z) * affine3d_yrot(a.y) * affine3d_xrot(a.x),
+			m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
+			m3 = reverse? matrix_inverse(m2) : m2
+		) m3
 	) : (
 		assert(is_list(p))
-		is_num(p.x)? (
-			rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, p=[p], planar=planar)[0]
-		) : is_vnf(p)? (
-			[rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, p=p.x, planar=planar), p.y]
-		) : is_list(p.x) && is_list(p.x.x)? (
-			[for (l=p) rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, p=l, planar=planar)]
-		) : (
-			(
-				(planar || (p!=[] && len(p[0])==2)) && !(
-					(is_vector(a) && norm(point2d(a))>0) ||
-					(!is_undef(v) && norm(point2d(v))>0 && !approx(a,0)) ||
-					(!is_undef(from) && !approx(from,to) && !(abs(point3d(from).z)>0 || abs(point3d(to).z))) ||
-					(!is_undef(from) && approx(from,to) && norm(point2d(from))>0 && a!=0)
-				)
-			)? (
-				is_undef(from)? rotate_points2d(p, a=a*rev, cp=cp) : (
-					approx(from,to)&&approx(a,0)? p :
-					rotate_points2d(p, a=vector_angle(from,to)*sign(vector_axis(from,to)[2])*rev, cp=cp)
-				)
-			) : (
-				let( cp = is_undef(cp)? [0,0,0] : cp )
-				rotate_points3d(p, a=a, v=v, cp=cp, from=from, to=to, reverse=reverse)
-			)
-		)
+		let(
+			m = !is_undef(_m)? _m :
+				rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, planar=planar),
+			res = p==[]? [] :
+				is_vector(p)? apply(m, p) :
+				is_vnf(p)? [apply(m, p[0]), p[1]] :
+				is_list(p[0])? [for (pp=p) rot(p=pp, _m=m)] :
+				assert(false, "The p argument for rot() is not a point, path, patch, matrix, or VNF.")
+		) res
 	);
 
 
@@ -784,8 +738,9 @@ function mirror(v, p) =
 	assert(is_list(p))
 	let(m = len(v)==2? affine2d_mirror(v) : affine3d_mirror(v))
 	is_undef(p)? m :
+	is_num(p.x)? apply(m,p) :
 	is_vnf(p)? [mirror(v=v,p=p[0]), [for (face=p[1]) reverse(face)]] :
-	apply(m, p);
+	[for (l=p) is_vector(l)? apply(m,l) : mirror(v=v, p=l)];
 
 
 // Function&Module: xflip()

@@ -337,7 +337,7 @@ module regular_polyhedron(
 			// Would like to orient so an edge (longest edge?) is parallel to x axis
 			facepts = move(translation, p=select(scaled_points, faces[i]));
 			center = mean(facepts);
-			rotatedface = rotate_points3d(move(-center, p=facepts), from=face_normals[i], to=[0,0,1]);
+			rotatedface = rot(from=face_normals[i], to=[0,0,1], p=move(-center, p=facepts));
 			clockwise = sortidx([for(pt=rotatedface) -atan2(pt.y,pt.x)]);
 			$face = rotate_children?
 						path2d(select(rotatedface,clockwise)) :
@@ -682,21 +682,22 @@ function regular_polyhedron_info(
 		facedown = facedown == true ? (stellate==false? entry[facevertices][0] : 3) : facedown,
 		down_direction = facedown == false?  [0,0,-1] :
 			faces_normals_vertices[1][search(facedown, faces_vertex_count)[0]],
-		scaled_points = scalefactor * rotate_points3d(faces_normals_vertices[2], from=down_direction, to=[0,0,-1]),
+		scaled_points = scalefactor * rot(p=faces_normals_vertices[2], from=down_direction, to=[0,0,-1]),
 		bounds = pointlist_bounds(scaled_points),
 		boundtable = [bounds[0], [0,0,0], bounds[1]],
 		translation = [for(i=[0:2]) -boundtable[1+anchor[i]][i]],
-		face_normals = rotate_points3d(faces_normals_vertices[1], from=down_direction, to=[0,0,-1]),
+		face_normals = rot(p=faces_normals_vertices[1], from=down_direction, to=[0,0,-1]),
 		side_length = scalefactor * entry[edgelen]
 	)
-	info == "fullentry" ? [scaled_points,
-                               translation,
-                               stellate ? faces : face_triangles,
-                               faces,
-                               face_normals,
-                               side_length*entry[in_radius]] :
-        info == "vnf" ? [move(translation,p=scaled_points),
-                         stellate ? faces : face_triangles] : 
+	info == "fullentry" ? [
+		scaled_points,
+		translation,
+		stellate ? faces : face_triangles,
+		faces,
+		face_normals,
+		side_length*entry[in_radius]
+	] :
+	info == "vnf" ? [move(translation,p=scaled_points), stellate ? faces : face_triangles] : 
 	info == "vertices" ? move(translation,p=scaled_points) :
 	info == "faces" ? faces :
 	info == "face normals" ? face_normals :
