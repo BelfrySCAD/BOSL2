@@ -14,7 +14,7 @@
 
 // Function&Module: square()
 // Usage:
-//   square(size, [center], [anchor])
+//   square(size, [center], [rounding], [chamfer], [anchor], [spin])
 // Description:
 //   When called as a module, creates a 2D square of the given size, with optional rounding or chamferring.
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
