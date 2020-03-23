@@ -26,11 +26,14 @@ NAN = acos(2);  // The value `nan`, useful for comparisons.
 // Usage:
 //   sqr(x);
 // Description:
-//   Returns the square of the given number.
+//   Returns the square of the given number or entries in list
 // Examples:
-//   sqr(3);   // Returns: 9
-//   sqr(-4);  // Returns: 16
-function sqr(x) = x*x;
+//   sqr(3);     // Returns: 9
+//   sqr(-4);    // Returns: 16
+//   sqr([3,4]); // Returns: [9,16]
+//   sqr([[1,2],[3,4]]);  // Returns [[1,4],[9,16]]
+//   sqr([[1,2],3]);      // Returns [[1,4],9]
+function sqr(x) = is_list(x) ? [for(val=x) sqr(val)] : x*x;
 
 
 // Function: log2()

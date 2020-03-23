@@ -81,6 +81,11 @@ function is_integer(n) = is_num(n) && n == round(n);
 function is_nan(x) = (x!=x);
 
 
+// Function: is_range()
+// Description:
+//   Returns true if its argument is a range
+function is_range(x) = is_num(x[0]) && !is_list(x);
+
 // Function: is_list_of()
 // Usage:
 //   is_list_of(list, pattern)
@@ -157,6 +162,25 @@ function first_defined(v,recursive=false,_i=0) =
 	)? first_defined(v,recursive=recursive,_i=_i+1) : v[_i];
 
 
+// Function: one_defined()
+// Usage:
+//   one_defined(vars, names, [required])
+// Description:
+//   Examines the input list `vars` and returns the entry which is not `undef`.  If more
+//   than one entry is `undef` then issues an assertion specifying "Must define exactly one of" followed
+//   by the defined items from the `names` parameter.  If `required` is set to false then it is OK if all of the
+//   entries of `vars` are undefined, and in this case, `undef` is returned.
+// Example:
+//   length = one_defined([length,L,l], ["length","L","l"]);
+function one_defined(vars, names, required=true) =
+   assert(len(vars)==len(names))
+   let (
+     ok = num_defined(vars)==1 || (!required && num_defined(vars)==0)
+   )
+   assert(ok,str("Must define ",required?"exactly":"at most"," one of ",[for(i=[0:len(vars)]) if (is_def(vars[i])) names[i]]))
+   first_defined(vars);
+
+
 // Function: num_defined()
 // Description: Counts how many items in list `v` are not `undef`.
 function num_defined(v,_i=0,_cnt=0) = _i>=len(v)? _cnt : num_defined(v,_i+1,_cnt+(is_undef(v[_i])? 0 : 1));
@@ -178,6 +202,8 @@ function any_defined(v,recursive=false) = first_defined(v,recursive=recursive) !
 //   v = The list whose items are being checked.
 //   recursive = If true, any sublists are evaluated recursively.
 function all_defined(v,recursive=false) = max([for (x=v) is_undef(x)||(recursive&&is_list(x)&&!all_defined(x))? 1 : 0])==0;
+
+
 
 
 // Section: Argument Helpers

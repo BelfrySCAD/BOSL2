@@ -100,6 +100,7 @@ function path4d(points, fill=0) =
     result + repeat(addition, len(result));
 
 
+
 // Section: Coordinate Systems
 
 // Function: polar_to_xy()
@@ -174,7 +175,7 @@ function project_plane(point, a, b, c) =
 		v = unit(c-a),
 		n = unit(cross(u,v)),
 		w = unit(cross(n,u)),
-		relpoint = is_vector(point)? (point-a) : move(-a,p=point)
+		relpoint = apply(move(-a),point)
 	) relpoint * transpose([w,u]);
 
 
@@ -205,7 +206,7 @@ function lift_plane(point, a, b, c) =
 		n = unit(cross(u,v)),
 		w = unit(cross(n,u)),
 		remapped = point*[w,u]
-	) is_vector(remapped)? (a+remapped) : move(a,p=remapped);
+	) apply(move(a),remapped);
 
 
 // Function: cylindrical_to_xyz()

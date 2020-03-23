@@ -95,13 +95,6 @@ function vdiv(v1, v2) = [for (i = [0:1:len(v1)-1]) v1[i]/v2[i]];
 function vabs(v) = [for (x=v) abs(x)];
 
 
-// Function: vsqr()
-// Usage:
-//   x = vsqr(v);
-// Description:
-//   Returns a vector where each value in the original given vector is squared.
-function vsqr(v) = [for(i=v) i*i];
-
 
 // Function: unit()
 // Description:
