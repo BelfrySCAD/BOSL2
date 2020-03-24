@@ -129,46 +129,47 @@ function is_only_noncolinear_vertex(points, facelist, vertex) =
 //   points = Array of vertices for the polyhedron.
 //   face = The face, given as a list of indices into the vertex array `points`.
 function triangulate_face(points, face) =
-	let(count=len(face))
-	(3==count)?
-		[face]
-	:
-		let(
-			facenorm=face_normal(points, face),
-			cv=find_convex_vertex(points, face, facenorm),
-			pv=(count+cv-1)%count,
-			nv=(cv+1)%count,
-			p0=points[face[pv]],
-			p1=points[face[cv]],
-			p2=points[face[nv]],
-			tests=[
-				[cross(facenorm, p0-p2), cross(facenorm, p0-p2)*p0],
-				[cross(facenorm, p1-p0), cross(facenorm, p1-p0)*p1],
-				[cross(facenorm, p2-p1), cross(facenorm, p2-p1)*p2]
-			],
-			ear_test=point_in_ear(points, face, tests),
-			clipable_ear=(ear_test[0]<0),
-			diagonal_point=ear_test[1]
-		)
-		(clipable_ear)? // There is no point inside the ear.
-			is_only_noncolinear_vertex(points, face, cv)?
-				// In the point&line degeneracy clip to somewhere in the middle of the line.
-				flatten([
-					triangulate_face(points, select(face, cv, (cv+2)%count)),
-					triangulate_face(points, select(face, (cv+2)%count, cv))
-				])
-			:
-				// Otherwise the ear is safe to clip.
-				flatten([
-					[select(face, pv, nv)],
-					triangulate_face(points, select(face, nv, pv))
-				])
-		: // If there is a point inside the ear, make a diagonal and clip along that.
+	let(
+		face = deduplicate(face),
+		count = len(face)
+	)
+	(count < 3)? [] :
+	(count == 3)? [face] :
+	let(
+		facenorm=face_normal(points, face),
+		cv=find_convex_vertex(points, face, facenorm),
+		pv=(count+cv-1)%count,
+		nv=(cv+1)%count,
+		p0=points[face[pv]],
+		p1=points[face[cv]],
+		p2=points[face[nv]],
+		tests=[
+			[cross(facenorm, p0-p2), cross(facenorm, p0-p2)*p0],
+			[cross(facenorm, p1-p0), cross(facenorm, p1-p0)*p1],
+			[cross(facenorm, p2-p1), cross(facenorm, p2-p1)*p2]
+		],
+		ear_test=point_in_ear(points, face, tests),
+		clipable_ear=(ear_test[0]<0),
+		diagonal_point=ear_test[1]
+	)
+	(clipable_ear)? // There is no point inside the ear.
+		is_only_noncolinear_vertex(points, face, cv)?
+			// In the point&line degeneracy clip to somewhere in the middle of the line.
 			flatten([
-				triangulate_face(points, select(face, cv, diagonal_point)),
-				triangulate_face(points, select(face, diagonal_point, cv))
+				triangulate_face(points, select(face, cv, (cv+2)%count)),
+				triangulate_face(points, select(face, (cv+2)%count, cv))
 			])
-;
+		:
+			// Otherwise the ear is safe to clip.
+			flatten([
+				[select(face, pv, nv)],
+				triangulate_face(points, select(face, nv, pv))
+			])
+	: // If there is a point inside the ear, make a diagonal and clip along that.
+		flatten([
+			triangulate_face(points, select(face, cv, diagonal_point)),
+			triangulate_face(points, select(face, diagonal_point, cv))
+		]);
 
 
 // Function: triangulate_faces()
