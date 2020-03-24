@@ -130,7 +130,7 @@ function is_only_noncolinear_vertex(points, facelist, vertex) =
 //   face = The face, given as a list of indices into the vertex array `points`.
 function triangulate_face(points, face) =
 	let(
-		face = deduplicate(face),
+		face = deduplicate_indexed(points,face),
 		count = len(face)
 	)
 	(count < 3)? [] :

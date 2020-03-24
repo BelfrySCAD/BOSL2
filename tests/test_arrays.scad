@@ -90,6 +90,13 @@ module test_deduplicate() {
 test_deduplicate();
 
 
+module test_deduplicate_indexed() {
+	assert(deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1]) == [1,4,1,2,0,1]);
+	assert(deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1], closed=true) == [1,4,1,2,0]);
+}
+test_deduplicate_indexed();
+
+
 module test_list_set() {
 	assert(list_set([2,3,4,5], 2, 21) == [2,3,21,5]);
 	assert(list_set([2,3,4,5], [1,3], [81,47]) == [2,81,4,47]);

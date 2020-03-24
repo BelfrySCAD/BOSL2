@@ -276,6 +276,40 @@ function deduplicate(list, closed=false, eps=EPSILON) =
 		[for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]];
 
 
+// Function: deduplicate_indexed()
+// Usage:
+//   new_idxs = deduplicate_indexed(list, indices, [closed], [eps]);
+// Description:
+//   Given a list, and indices into it, removes consecutive indices that
+//   index to the same values in the list.
+// Arguments:
+//   list = The list that the indices index into.
+//   indices = The list of indices to deduplicate.
+//   closed = If true, drops trailing indices if what they index matches what the first index indexes.
+//   eps = The maximum difference to allow between numbers or vectors.
+// Examples:
+//   deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1]);  // Returns: [1,4,3,2,0,1]
+//   deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1], closed=true);  // Returns: [1,4,3,2,0]
+function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
+	assert(is_list(list)||is_string(list))
+	assert(indices==[] || is_vector(indices))
+	indices==[]? [] :
+	let(
+		l = len(indices),
+		end = l-(closed?0:1)
+	) [
+		for (i = [0:1:l-1]) let(
+			a = list[indices[i]],
+			b = list[indices[(i+1)%l]],
+			eq = (a == b)? true :
+				(a*0 != b*0)? false :
+				is_num(a)? approx(a, b, eps=eps) :
+				is_vector(a)? approx(a, b, eps=eps) :
+				false
+		) if (i==end || !eq) indices[i]
+	];
+
+
 // Function: repeat_entries()
 // Usage:
 //   newlist = repeat_entries(list, N)
