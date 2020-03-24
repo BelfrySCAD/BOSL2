@@ -258,7 +258,10 @@ def processFile(infile, outfile=None, imgroot=""):
         imgnum = 0
         for line in f.readlines():
             line = line.rstrip("\n")
-            outdata.append(line)
+            if line.startswith("```openscad"):
+                outdata.append("```openscad")
+            else:
+                outdata.append(line)
             if in_script:
                 if line == "```":
                     in_script = False
