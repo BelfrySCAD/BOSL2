@@ -278,7 +278,7 @@ module trapezoidal_threaded_rod(
 	attachable(anchor,spin,orient, d=d, l=l) {
 		difference() {
 			polyhedron(points=poly_points, faces=poly_faces, convexity=threads*starts*2);
-			zspread(l+4*pitch*starts) cube([d+1, d+1, 4*pitch*starts], center=true);
+			zcopies(l+4*pitch*starts) cube([d+1, d+1, 4*pitch*starts], center=true);
 			if (bevel) cylinder_mask(d=d, l=l+0.01, chamfer=depth);
 		}
 		children();

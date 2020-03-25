@@ -416,7 +416,7 @@ module rounding_mask(l=undef, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 				linear_extrude(height=l, convexity=4, center=true, scale=r1/r2) {
 					difference() {
 						square(2*r2, center=true);
-						xspread(2*r2) yspread(2*r2) circle(r=r2, $fn=sides);
+						xcopies(2*r2) ycopies(2*r2) circle(r=r2, $fn=sides);
 					}
 				}
 			}
@@ -424,7 +424,7 @@ module rounding_mask(l=undef, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 			linear_extrude(height=l, convexity=4, center=true, scale=r2/r1) {
 				difference() {
 					square(2*r1, center=true);
-					xspread(2*r1) yspread(2*r1) circle(r=r1, $fn=sides);
+					xcopies(2*r1) ycopies(2*r1) circle(r=r1, $fn=sides);
 				}
 			}
 		}

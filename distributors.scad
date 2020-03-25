@@ -42,18 +42,18 @@ module move_copies(a=[[0,0,0]])
 }
 
 
-// Module: spread()
+// Module: line_of()
 //
 // Description:
 //   Evenly distributes `n` copies of all children along a line.
 //   Copies every child at each position.
 //
 // Usage:
-//   spread(l, [n], [p1]) ...
-//   spread(l, spacing, [p1]) ...
-//   spread(spacing, [n], [p1]) ...
-//   spread(p1, p2, [n]) ...
-//   spread(p1, p2, spacing) ...
+//   line_of(l, [n], [p1]) ...
+//   line_of(l, spacing, [p1]) ...
+//   line_of(spacing, [n], [p1]) ...
+//   line_of(p1, p2, [n]) ...
+//   line_of(p1, p2, spacing) ...
 //
 // Arguments:
 //   p1 = Starting point of line.
@@ -67,18 +67,18 @@ module move_copies(a=[[0,0,0]])
 //   `$idx` is set to the index number of each child being copied.
 //
 // Example(FlatSpin):
-//   spread([0,0,0], [5,5,20], n=6) cube(size=[3,2,1],center=true);
+//   line_of([0,0,0], [5,5,20], n=6) cube(size=[3,2,1],center=true);
 // Examples:
-//   spread(l=40, n=6) cube(size=[3,2,1],center=true);
-//   spread(l=[15,30], n=6) cube(size=[3,2,1],center=true);
-//   spread(l=40, spacing=10) cube(size=[3,2,1],center=true);
-//   spread(spacing=[5,5,0], n=5) cube(size=[3,2,1],center=true);
+//   line_of(l=40, n=6) cube(size=[3,2,1],center=true);
+//   line_of(l=[15,30], n=6) cube(size=[3,2,1],center=true);
+//   line_of(l=40, spacing=10) cube(size=[3,2,1],center=true);
+//   line_of(spacing=[5,5,0], n=5) cube(size=[3,2,1],center=true);
 // Example:
-//   spread(l=20, n=3) {
+//   line_of(l=20, n=3) {
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
-module spread(p1=undef, p2=undef, spacing=undef, l=undef, n=undef)
+module line_of(p1, p2, spacing, l, n)
 {
 	ll = (
 		!is_undef(l)? scalar_vec3(l, 0) :
@@ -96,7 +96,7 @@ module spread(p1=undef, p2=undef, spacing=undef, l=undef, n=undef)
 		is_num(spacing) && !is_undef(ll)? (ll/(cnt-1)) :
 		scalar_vec3(spacing, 0)
 	);
-	assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `spread()`.");
+	assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `line_of()`.");
 	spos = !is_undef(p1)? point3d(p1) : -(cnt-1)/2 * spc;
 	for (i=[0:1:cnt-1]) {
 		pos = i * spc + spos;
@@ -107,14 +107,14 @@ module spread(p1=undef, p2=undef, spacing=undef, l=undef, n=undef)
 }
 
 
-// Module: xspread()
+// Module: xcopies()
 //
 // Description:
 //   Spreads out `n` copies of the children along a line on the X axis.
 //
 // Usage:
-//   xspread(spacing, [n], [sp]) ...
-//   xspread(l, [n], [sp]) ...
+//   xcopies(spacing, [n], [sp]) ...
+//   xcopies(l, [n], [sp]) ...
 //
 // Arguments:
 //   spacing = spacing between copies. (Default: 1.0)
@@ -127,29 +127,29 @@ module spread(p1=undef, p2=undef, spacing=undef, l=undef, n=undef)
 //   `$idx` is set to the index number of each child being copied.
 //
 // Examples:
-//   xspread(20) sphere(3);
-//   xspread(20, n=3) sphere(3);
-//   xspread(spacing=15, l=50) sphere(3);
-//   xspread(n=4, l=30, sp=[0,10,0]) sphere(3);
+//   xcopies(20) sphere(3);
+//   xcopies(20, n=3) sphere(3);
+//   xcopies(spacing=15, l=50) sphere(3);
+//   xcopies(n=4, l=30, sp=[0,10,0]) sphere(3);
 // Example:
-//   xspread(10, n=3) {
+//   xcopies(10, n=3) {
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
-module xspread(spacing=undef, n=undef, l=undef, sp=undef)
+module xcopies(spacing, n, l, sp)
 {
-	spread(l=l*RIGHT, spacing=spacing*RIGHT, n=n, p1=sp) children();
+	line_of(l=l*RIGHT, spacing=spacing*RIGHT, n=n, p1=sp) children();
 }
 
 
-// Module: yspread()
+// Module: ycopies()
 //
 // Description:
 //   Spreads out `n` copies of the children along a line on the Y axis.
 //
 // Usage:
-//   yspread(spacing, [n], [sp]) ...
-//   yspread(l, [n], [sp]) ...
+//   ycopies(spacing, [n], [sp]) ...
+//   ycopies(l, [n], [sp]) ...
 //
 // Arguments:
 //   spacing = spacing between copies. (Default: 1.0)
@@ -162,29 +162,29 @@ module xspread(spacing=undef, n=undef, l=undef, sp=undef)
 //   `$idx` is set to the index number of each child being copied.
 //
 // Examples:
-//   yspread(20) sphere(3);
-//   yspread(20, n=3) sphere(3);
-//   yspread(spacing=15, l=50) sphere(3);
-//   yspread(n=4, l=30, sp=[10,0,0]) sphere(3);
+//   ycopies(20) sphere(3);
+//   ycopies(20, n=3) sphere(3);
+//   ycopies(spacing=15, l=50) sphere(3);
+//   ycopies(n=4, l=30, sp=[10,0,0]) sphere(3);
 // Example:
-//   yspread(10, n=3) {
+//   ycopies(10, n=3) {
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
-module yspread(spacing=undef, n=undef, l=undef, sp=undef)
+module ycopies(spacing, n, l, sp)
 {
-	spread(l=l*BACK, spacing=spacing*BACK, n=n, p1=sp) children();
+	line_of(l=l*BACK, spacing=spacing*BACK, n=n, p1=sp) children();
 }
 
 
-// Module: zspread()
+// Module: zcopies()
 //
 // Description:
 //   Spreads out `n` copies of the children along a line on the Z axis.
 //
 // Usage:
-//   zspread(spacing, [n], [sp]) ...
-//   zspread(l, [n], [sp]) ...
+//   zcopies(spacing, [n], [sp]) ...
+//   zcopies(l, [n], [sp]) ...
 //
 // Arguments:
 //   spacing = spacing between copies. (Default: 1.0)
@@ -197,18 +197,18 @@ module yspread(spacing=undef, n=undef, l=undef, sp=undef)
 //   `$idx` is set to the index number of each child being copied.
 //
 // Examples:
-//   zspread(20) sphere(3);
-//   zspread(20, n=3) sphere(3);
-//   zspread(spacing=15, l=50) sphere(3);
-//   zspread(n=4, l=30, sp=[10,0,0]) sphere(3);
+//   zcopies(20) sphere(3);
+//   zcopies(20, n=3) sphere(3);
+//   zcopies(spacing=15, l=50) sphere(3);
+//   zcopies(n=4, l=30, sp=[10,0,0]) sphere(3);
 // Example:
-//   zspread(10, n=3) {
+//   zcopies(10, n=3) {
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
-module zspread(spacing=undef, n=undef, l=undef, sp=undef)
+module zcopies(spacing, n, l, sp)
 {
-	spread(l=l*UP, spacing=spacing*UP, n=n, p1=sp) children();
+	line_of(l=l*UP, spacing=spacing*UP, n=n, p1=sp) children();
 }
 
 

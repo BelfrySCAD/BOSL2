@@ -195,8 +195,8 @@ module cuboid(
 								difference() {
 									down(-rounding/2) cube([size.x-2*rounding, size.y-2*rounding, -rounding], center=true);
 									down(-rounding) {
-										yspread(size.y-2*rounding) xcyl(l=size.x-3*rounding, r=-rounding);
-										xspread(size.x-2*rounding) ycyl(l=size.y-3*rounding, r=-rounding);
+										ycopies(size.y-2*rounding) xcyl(l=size.x-3*rounding, r=-rounding);
+										xcopies(size.x-2*rounding) ycyl(l=size.y-3*rounding, r=-rounding);
 									}
 								}
 							}
@@ -1278,7 +1278,7 @@ module slot(
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=5);
 	sides = quantup(segs(max(r1, r2)), 4);
 	// TODO: implement orient and anchors.
-	hull() spread(p1=p1, p2=p2, l=l, n=2) cyl(l=h, r1=r1, r2=r2, center=true, $fn=sides);
+	hull() line_of(p1=p1, p2=p2, l=l, n=2) cyl(l=h, r1=r1, r2=r2, center=true, $fn=sides);
 }
 
 

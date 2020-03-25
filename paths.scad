@@ -728,7 +728,7 @@ module modulated_circle(r=40, sines=[10])
 //   slices = Number of slices along the extrusion to break the extrusion into.  Useful for refining `twist` extrusions.
 // Example(FlatSpin):
 //   extrude_from_to([0,0,0], [10,20,30], convexity=4, twist=360, scale=3.0, slices=40) {
-//       xspread(3) circle(3, $fn=32);
+//       xcopies(3) circle(3, $fn=32);
 //   }
 module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slices=undef) {
 	rtp = xyz_to_spherical(pt2-pt1);

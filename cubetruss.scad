@@ -151,8 +151,8 @@ module cubetruss_clip(extents=1, size=undef, strut=undef, clipthick=undef, ancho
 						yscale(1.5) chamfer_mask_z(l=size+1, chamfer=clipsize+clipthick/3);
 					}
 				}
-				zspread(clipheight-strut) cube([clipthick*3, cliplen*2, strut], center=true);
-				zspread(clipheight-2*strut) right(clipthick) chamfer_mask_y(l=cliplen*2, chamfer=clipthick);
+				zcopies(clipheight-strut) cube([clipthick*3, cliplen*2, strut], center=true);
+				zcopies(clipheight-2*strut) right(clipthick) chamfer_mask_y(l=cliplen*2, chamfer=clipthick);
 			}
 		}
 		children();
@@ -192,7 +192,7 @@ module cubetruss_foot(w=1, size=undef, strut=undef, clipthick=undef, anchor=CENT
 			}
 
 			// Walls
-			xspread(w*(size-strut)+strut+clipthick) {
+			xcopies(w*(size-strut)+strut+clipthick) {
 				up(clipthick-0.01) {
 					prismoid([clipthick, (size-4*strut)], [clipthick, size/3.5], h=wall_h, anchor=BOT);
 				}
@@ -200,7 +200,7 @@ module cubetruss_foot(w=1, size=undef, strut=undef, clipthick=undef, anchor=CENT
 
 			// Horiz Wall Clips
 			up(clipthick+strut+$slop*2) {
-				xspread(w*(size-strut)+strut) {
+				xcopies(w*(size-strut)+strut) {
 					prismoid([clipsize*2, size/3.5], [0.1, size/3.5], h=clipsize*3, anchor=BOT);
 				}
 			}
@@ -216,7 +216,7 @@ module cubetruss_foot(w=1, size=undef, strut=undef, clipthick=undef, anchor=CENT
 
 						// Bevel to fit.
 						up(clipthick+strut) {
-							yspread(size-2*strut-4*$slop) {
+							ycopies(size-2*strut-4*$slop) {
 								chamfer_mask_x(l=size-strut, chamfer=strut*2/3);
 							}
 						}
@@ -263,18 +263,18 @@ module cubetruss_joiner(w=1, vert=true, size=undef, strut=undef, clipthick=undef
 			// Base
 			cube([w*(size-strut)+strut+2*clipthick, size, clipthick], anchor=BOT);
 
-			xspread(w*(size-strut)+strut+clipthick) {
+			xcopies(w*(size-strut)+strut+clipthick) {
 				cube([clipthick, size, clipthick+strut*3/4], anchor=BOT);
 			}
 
 			// Use feet
-			yspread(size) {
+			ycopies(size) {
 				cubetruss_foot(w=w, size=size, strut=strut, clipthick=clipthick, anchor=BOT);
 			}
 
 			if (vert) {
 				// Vert Walls
-				xspread(w*(size-strut)+strut+clipthick) {
+				xcopies(w*(size-strut)+strut+clipthick) {
 					up(clipthick-0.01) {
 						prismoid([clipthick, size], [clipthick, 2*strut+2*clipthick], h=size*0.6, anchor=BOT);
 					}

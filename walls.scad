@@ -352,8 +352,8 @@ module sparse_strut(h=50, l=100, thick=4, maxang=30, strut=5, max_bridge=20, anc
 				square([h, l], center=true);
 				square([h-2*strut, l-2*strut], center=true);
 			}
-			yspread(ystep, n=yreps) {
-				xspread(zstep, n=zreps) {
+			ycopies(ystep, n=yreps) {
+				xcopies(zstep, n=zreps) {
 					skew(syx=tan(-ang)) square([(h-strut)/zreps, strut], center=true);
 					skew(syx=tan( ang)) square([(h-strut)/zreps, strut], center=true);
 				}
@@ -420,8 +420,8 @@ module sparse_strut3d(h=50, l=100, w=50, thick=3, maxang=40, strut=3, max_bridge
 		intersection() {
 			union() {
 				ybridge = (l - (yreps+1) * strut) / yreps;
-				xspread(xoff) sparse_strut(h=h, l=l, thick=thick, maxang=maxang, strut=strut, max_bridge=ybridge/ceil(ybridge/max_bridge));
-				yspread(yoff) zrot(90) sparse_strut(h=h, l=w, thick=thick, maxang=maxang, strut=strut, max_bridge=max_bridge);
+				xcopies(xoff) sparse_strut(h=h, l=l, thick=thick, maxang=maxang, strut=strut, max_bridge=ybridge/ceil(ybridge/max_bridge));
+				ycopies(yoff) zrot(90) sparse_strut(h=h, l=w, thick=thick, maxang=maxang, strut=strut, max_bridge=max_bridge);
 				for(zs = [0:1:zreps-1]) {
 					for(xs = [0:1:xreps-1]) {
 						for(ys = [0:1:yreps-1]) {

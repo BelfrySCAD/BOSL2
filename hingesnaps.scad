@@ -65,7 +65,7 @@ module snap_lock(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hi
 		back(snap_x) {
 			cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
 				attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=16);
-				attach(TOP) xspread(snaplen-snapdiam/4/3) xscale(0.333) sphere(d=snapdiam*0.8, $fn=12);
+				attach(TOP) xcopies(snaplen-snapdiam/4/3) xscale(0.333) sphere(d=snapdiam*0.8, $fn=12);
 			}
 		}
 		children();

@@ -406,7 +406,7 @@ module ruler(length=100, width=undef, thickness=1, depth=3, labels=false, pipsca
 			count = ceil(length/scales[i]);
 			fontsize = 0.5*min(widths[i], scales[i]/ceil(log(count*scales[i]/unit)));
 			back(offsets[i]) {
-				xspread(scales[i], n=count, sp=[0,0,0]) union() {
+				xcopies(scales[i], n=count, sp=[0,0,0]) union() {
 					actlen = ($idx<count-1) || approx(length%scales[i],0) ? scales[i] : length % scales[i];
 					color(colors[$idx%2], alpha=alpha) {
 						w = i>0 ? quantup(widths[i],1/1024) : widths[i];    // What is the i>0 test supposed to do here? 

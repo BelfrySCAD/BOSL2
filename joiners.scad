@@ -41,14 +41,14 @@ module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CEN
 
 	attachable(anchor,spin,orient, size=[w, guide_width, h]) {
 		union() {
-			yspread(overlap, n=overlap>0? 2 : 1) {
+			ycopies(overlap, n=overlap>0? 2 : 1) {
 				difference() {
 					// Diamonds.
 					scale([w+clearance, dmnd_width/2, dmnd_height/2]) {
 						xrot(45) cube(size=[1,sqrt(2),sqrt(2)], center=true);
 					}
 					// Blunt point of tab.
-					yspread(guide_width+4) {
+					ycopies(guide_width+4) {
 						cube(size=[(w+clearance)*1.05, 4, h*0.99], center=true);
 					}
 				}
@@ -96,7 +96,7 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=
 					fwd(l/2) cube(size=[w, l, h], center=true);
 
 					// Clear diamond for tab
-					xspread(2*w*2/3) {
+					xcopies(2*w*2/3) {
 						half_joiner_clear(h=h+0.01, w=w, clearance=$slop*2, a=a);
 					}
 				}
@@ -114,7 +114,7 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=
 
 				// Guide ridges.
 				if (guides == true) {
-					xspread(w/3-$slop*2) {
+					xcopies(w/3-$slop*2) {
 						// Guide ridge.
 						fwd(0.05/2) {
 							scale([0.75, 1, 2]) yrot(45)
@@ -285,7 +285,7 @@ module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overla
 	guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
 
 	attachable(anchor,spin,orient, size=[spacing+w, guide_width, h]) {
-		xspread(spacing, n=n) {
+		xcopies(spacing, n=n) {
 			joiner_clear(h=h, w=w, a=a, clearance=clearance, overlap=overlap);
 		}
 		children();
@@ -490,11 +490,11 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 //         attach(TOP) dovetail("female", length=50, width=18, height=4, back_width=15, spin=90,$tags="remove");
 // Example: A series of dovtails
 //   cuboid([50,30,10])
-//     attach(BACK) xspread(10,5) dovetail("male", length=10, width=7, height=4);
+//     attach(BACK) xcopies(10,5) dovetail("male", length=10, width=7, height=4);
 // Example: Mating pin board for a right angle joint.  Note that the anchor method and use of `spin` ensures that the joint works even with a taper.
 //   diff("remove")
 //     cuboid([50,30,10])
-//       position(TOP+BACK) xspread(10,5) dovetail("female", length=10, width=7, taper=4, height=4, $tags="remove",anchor=BOTTOM+FRONT,spin=180);
+//       position(TOP+BACK) xcopies(10,5) dovetail("female", length=10, width=7, taper=4, height=4, $tags="remove",anchor=BOTTOM+FRONT,spin=180);
 module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, back_width, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient)
 {
 	radius = get_radius(r1=radius,r2=r);
@@ -679,7 +679,7 @@ function _pin_size(size) =
 // Example: Pin in native orientation
 //    snap_pin("standard", anchor=CENTER, orient=UP, thickness = 1, $fn=40);
 // Example: Pins oriented for printing
-//    xspread(spacing=10, n=4) snap_pin("standard", $fn=40);
+//    xcopies(spacing=10, n=4) snap_pin("standard", $fn=40);
 module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, clearance=0.2, preload, pointed=true, anchor=FRONT, spin=0, orient=FRONT, center) {
   preload_default = 0.2;
   sizedat = _pin_size(size);

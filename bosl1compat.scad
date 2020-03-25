@@ -3,7 +3,11 @@ module xmove(x) right(x) children();
 module ymove(y) back(y) children();
 module zmove(z) up(z) children();
 
-module line_of(p1=[0,0,0], p2=[10,0,0], n=2) spread(p1=p1, p2=p2, n=n) children();
+module xspread(spacing, n, l, sp) xcopies(spacing=spacing, n=n, l=l, sp=sp) children();
+module yspread(spacing, n, l, sp) ycopies(spacing=spacing, n=n, l=l, sp=sp) children();
+module zspread(spacing, n, l, sp) zcopies(spacing=spacing, n=n, l=l, sp=sp) children();
+
+module spread(p1=[0,0,0], p2=[10,0,0], spacing, l, n=2) line_of(p1=p1, p2=p2, spacing=spacing, l=l, n=n) children();
 module grid_of(xa=[0],ya=[0],za=[0],count,spacing) grid3d(xa=xa, ya=ya, za=za, n=count, spacing=spacing) children();
 
 module xring(n=2,r=0,sa=0,cp=[0,0,0],rot=true) xrot_copies(n=n,r=r,sa=sa,cp=cp,subrot=rot) children();
