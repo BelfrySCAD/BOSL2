@@ -1,10 +1,8 @@
-# BOSL2 Basics Tutorial
+# BOSL2 Transforms Tutorial
 
 <!-- TOC -->
 
-## Transforms
-
-### Translation
+## Translation
 The `translate()` command is very simple:
 ```openscad
 #sphere(d=20);
@@ -58,7 +56,7 @@ specify the motion on each axis more clearly:
 ```
 
 
-### Scaling
+## Scaling
 The `scale()` command is also fairly simple:
 ```openscad
     scale(2) cube(10, center=true);
@@ -81,7 +79,7 @@ commands to do just that; `xscale()`, `yscale()`, and `zscale()`:
 ```
 
 
-### Rotation
+## Rotation
 The `rotate()` command is fairly straightforward:
 ```openscad
     rotate([0,30,0]) cube(20, center=true);
@@ -157,7 +155,7 @@ This lets you rewrite the above vector rotation more clearly as:
 ```
 
 
-### Mirroring
+## Mirroring
 The standard `mirror()` command works like this:
 ```openscad
     #yrot(60) cylinder(h=50, d1=20, d2=10);
@@ -200,7 +198,7 @@ All of the flip commands can offset where the mirroring is performed:
 ```
 
 
-### Skewing
+## Skewing
 One transform that OpenSCAD does not perform natively is skewing.
 BOSL2 provides the `skew()` command for that.  You give it multipliers
 for the skews you want to perform.  The arguments used all start with `s`,
