@@ -147,8 +147,8 @@ Constant                       | Value        | Direction
 `BACK`                         | `[ 0, 1, 0]` | Towards Y+
 `DOWN`, `BOTTOM`, `BOT`, `BTM` | `[ 0, 0,-1]` | Towards Z-
 `UP`, `TOP`                    | `[ 0, 0, 1]` | Towards Z+
+`ALLNEG`                       | `[-1,-1,-1]` | Towards X-Y-Z-
 `ALLPOS`                       | `[ 1, 1, 1]` | Towards X+Y+Z+
-`ALLNEG`                       | `[-1,-1,-1]` | Towards X+Y+Z+
 
 This lets you rewrite the above vector rotation more clearly as:
 ```openscad
@@ -161,13 +161,13 @@ This lets you rewrite the above vector rotation more clearly as:
 The standard `mirror()` command works like this:
 ```openscad
     #yrot(60) cylinder(h=50, d1=20, d2=10);
-    mirror([1,0,0]) yrot(-60) cylinder(h=50, d1=20, d2=10);
+    mirror([1,0,0]) yrot(60) cylinder(h=50, d1=20, d2=10);
 ```
 
 BOSL2 provides shortcuts for mirroring across the standard axes; `xflip()`, `yflip()`, and `zflip()`:
 ```openscad
     #yrot(60) cylinder(h=50, d1=20, d2=10);
-    xflip() yrot(-60) cylinder(h=50, d1=20, d2=10);
+    xflip() yrot(60) cylinder(h=50, d1=20, d2=10);
 ```
 
 ```openscad

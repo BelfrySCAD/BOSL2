@@ -30,7 +30,7 @@ rm -f tmp_*.scad
 for base in $PREVIEW_LIBS; do
     base="$(basename $base .md)"
     mkdir -p images/tutorials
-    rm -f images/tutorials/$base_*.png images/tutorials/*.gif
+    rm -f images/tutorials/${base}_*.png images/tutorials/${base}_*.gif
     echo "$base.md"
     ../scripts/tutorial_gen.py ../tutorials/$base.md -o Tutorial-$base.md $FORCED -I images/tutorials/ || exit 1
     if [ "$DISPMD" != "" ]; then

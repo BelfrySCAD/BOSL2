@@ -551,6 +551,8 @@ function zrot(a=0, cp=undef, p=undef) = rot(a, cp=cp, p=p);
 //   #stroke(path,closed=true);
 //   stroke(scale([1.5,3],p=path),closed=true);
 function scale(v=1, p=undef) =
+	assert(is_vector(v))
+	assert(is_undef(p) || is_list(p))
 	let(v = is_num(v)? [v,v,v] : v)
 	is_undef(p)? (
 		len(v)==2? affine2d_scale(v) : affine3d_scale(point3d(v))
@@ -735,7 +737,8 @@ function zscale(z=1, p=undef) = scale([1,1,z],p=p);
 //   #stroke(path,closed=true);
 //   stroke(mirror(n, p=path),closed=true);
 function mirror(v, p) =
-	assert(is_list(p))
+	assert(is_vector(v))
+	assert(is_undef(p) || is_list(p))
 	let(m = len(v)==2? affine2d_mirror(v) : affine3d_mirror(v))
 	is_undef(p)? m :
 	is_num(p.x)? apply(m,p) :
