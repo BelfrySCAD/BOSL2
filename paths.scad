@@ -1133,34 +1133,34 @@ function _sum_preserving_round(data, index=0) =
 //   method = One of `"length"` or `"segment"`.  If `"length"`, adds vertices evenly along the total path length.  If `"segment"`, adds points evenly among the segments.  Default: `"length"`
 // Example(2D):
 //   mypath = subdivide_path(square([2,2],center=true), 12);
-//   place_copies(mypath)circle(r=.1,$fn=32);
+//   move_copies(mypath)circle(r=.1,$fn=32);
 // Example(2D):
 //   mypath = subdivide_path(square([8,2],center=true), 12);
-//   place_copies(mypath)circle(r=.2,$fn=32);
+//   move_copies(mypath)circle(r=.2,$fn=32);
 // Example(2D):
 //   mypath = subdivide_path(square([8,2],center=true), 12, method="segment");
-//   place_copies(mypath)circle(r=.2,$fn=32);
+//   move_copies(mypath)circle(r=.2,$fn=32);
 // Example(2D):
 //   mypath = subdivide_path(square([2,2],center=true), 17, closed=false);
-//   place_copies(mypath)circle(r=.1,$fn=32);
+//   move_copies(mypath)circle(r=.1,$fn=32);
 // Example(2D): Specifying different numbers of points on each segment
 //   mypath = subdivide_path(hexagon(side=2), [2,3,4,5,6,7], method="segment");
-//   place_copies(mypath)circle(r=.1,$fn=32);
+//   move_copies(mypath)circle(r=.1,$fn=32);
 // Example(2D): Requested point total is 14 but 15 points output due to extra end point
 //   mypath = subdivide_path(pentagon(side=2), [3,4,3,4], method="segment", closed=false);
-//   place_copies(mypath)circle(r=.1,$fn=32);
+//   move_copies(mypath)circle(r=.1,$fn=32);
 // Example(2D): Since 17 is not divisible by 5, a completely uniform distribution is not possible. 
 //   mypath = subdivide_path(pentagon(side=2), 17);
-//   place_copies(mypath)circle(r=.1,$fn=32);
+//   move_copies(mypath)circle(r=.1,$fn=32);
 // Example(2D): With `exact=false` a uniform distribution, but only 15 points
 //   mypath = subdivide_path(pentagon(side=2), 17, exact=false);
-//   place_copies(mypath)circle(r=.1,$fn=32);
+//   move_copies(mypath)circle(r=.1,$fn=32);
 // Example(2D): With `exact=false` you can also get extra points, here 20 instead of requested 18
 //   mypath = subdivide_path(pentagon(side=2), 18, exact=false);
-//   place_copies(mypath)circle(r=.1,$fn=32);
+//   move_copies(mypath)circle(r=.1,$fn=32);
 // Example(FlatSpin): Three-dimensional paths also work
 //   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
-//   place_copies(mypath)sphere(r=.1,$fn=32);
+//   move_copies(mypath)sphere(r=.1,$fn=32);
 function subdivide_path(path, N, closed=true, exact=true, method="length") =
 	assert(is_path(path))
 	assert(method=="length" || method=="segment")

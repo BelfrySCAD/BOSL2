@@ -445,11 +445,11 @@ function _rounding_offsets(edgespec,z_dir=1) =
 // Example(2D): The curve passes through all the points, but features some unexpected wiggles.  These occur because the curvature is too low to change fast enough.  
 //   path = [[0,0], [0,3], [.5,2.8], [1,2.2], [1,0]];
 //   polygon(smooth_path(path));
-//   color("red") place_copies(path)circle(r=.1,$fn=16);
+//   color("red") move_copies(path)circle(r=.1,$fn=16);
 // Example(2D):  Using the k parameter is one way to fix this problem.  By allowing sharper curvature (k<1) at the two points next to the problematic point we can achieve a smoother result.  The other fix is to move your points.  
 //   path = [[0,0], [0,3], [.5,2.8], [1,2.2], [1,0]];
 //   polygon(smooth_path(path,k=[1,.5,1,.5,1]));
-//   color("red") place_copies(path)circle(r=.1,$fn=16);
+//   color("red") move_copies(path)circle(r=.1,$fn=16);
 function smooth_path(path, tangents, k, splinesteps=10, closed=false) =
   let (
      bez = path_to_bezier(path, tangents, k=k, closed=closed)

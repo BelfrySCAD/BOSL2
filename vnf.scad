@@ -656,7 +656,7 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
 				stroke(pts, width=size, closed=true);
 				polyhedron(pts,[[for (i=idx(pts)) i]]);
 			} else {
-				place_copies(pts) sphere(d=size*3, $fn=18);
+				move_copies(pts) sphere(d=size*3, $fn=18);
 			}
 		}
 	}

@@ -665,7 +665,6 @@ module cyl(
 				rotate_extrude(convexity=2) {
 					polygon(path);
 				}
-				//!place_copies(path) sphere(d=1);
 			}
 		}
 		children();

@@ -82,15 +82,15 @@ function bez_point(curve,u)=
 //   n = The number of points to generate along the bezier curve.
 // Example(2D): Quadratic (Degree 2) Bezier.
 //   bez = [[0,0], [30,30], [80,0]];
-//   place_copies(bezier_curve(bez, 16)) sphere(r=1);
+//   move_copies(bezier_curve(bez, 16)) sphere(r=1);
 //   trace_bezier(bez, N=len(bez)-1);
 // Example(2D): Cubic (Degree 3) Bezier
 //   bez = [[0,0], [5,35], [60,-25], [80,0]];
-//   place_copies(bezier_curve(bez, 16)) sphere(r=1);
+//   move_copies(bezier_curve(bez, 16)) sphere(r=1);
 //   trace_bezier(bez, N=len(bez)-1);
 // Example(2D): Degree 4 Bezier.
 //   bez = [[0,0], [5,15], [40,20], [60,-15], [80,0]];
-//   place_copies(bezier_curve(bez, 16)) sphere(r=1);
+//   move_copies(bezier_curve(bez, 16)) sphere(r=1);
 //   trace_bezier(bez, N=len(bez)-1);
 function bezier_curve(curve,n) = [for(i=[0:1:n-1]) bez_point(curve, i/(n-1))];
 
@@ -1006,7 +1006,7 @@ module trace_bezier_patches(patches=[], size=1, showcps=false, splinesteps=16)
 {
 	if (showcps) {
 		for (patch = patches) {
-			place_copies(flatten(patch)) color("red") sphere(d=size*2);
+			move_copies(flatten(patch)) color("red") sphere(d=size*2);
 			color("cyan")
 			if (is_tripatch(patch)) {
 				for (i=[0:1:len(patch)-2], j=[0:1:len(patch[i])-2]) {
@@ -1021,7 +1021,7 @@ module trace_bezier_patches(patches=[], size=1, showcps=false, splinesteps=16)
 				}
 			}
 			vnf = bezier_patch(patch, splinesteps=splinesteps);
-			color("blue") place_copies(vnf[0]) sphere(d=size);
+			color("blue") move_copies(vnf[0]) sphere(d=size);
 		}
 	}
 	bezier_polyhedron(patches=patches, splinesteps=splinesteps);

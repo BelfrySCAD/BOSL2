@@ -13,13 +13,13 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Module: place_copies()
+// Module: move_copies()
 //
 // Description:
-//   Makes copies of the given children at each of the given offsets.
+//   Translates copies of all children to each given translation offset.
 //
 // Usage:
-//   place_copies(a) ...
+//   move_copies(a) ...
 //
 // Arguments:
 //   a = Array of XYZ offset vectors. Default `[[0,0,0]]`
@@ -30,8 +30,8 @@
 //
 // Example:
 //   #sphere(r=10);
-//   place_copies([[-25,-25,0], [25,-25,0], [0,0,50], [0,25,0]]) sphere(r=10);
-module place_copies(a=[[0,0,0]])
+//   move_copies([[-25,-25,0], [25,-25,0], [0,0,50], [0,25,0]]) sphere(r=10);
+module move_copies(a=[[0,0,0]])
 {
 	assert(is_list(a));
 	for ($idx = idx(a)) {

@@ -68,7 +68,7 @@
 //   mat3d = move([2,3,4]);  // Returns: [[1,0,0,2],[0,1,0,3],[0,0,1,4],[0,0,0,1]]
 module move(v=[0,0,0], x=0, y=0, z=0)
 {
-	translate(v+[x,y,z]) children();
+	translate(point3d(v)+[x,y,z]) children();
 }
 
 function move(v=[0,0,0], p=undef, x=0, y=0, z=0) =
@@ -909,7 +909,7 @@ function zflip(z=0,p) =
 // Example(2D): Calling as a 2D Function
 //   pts = skew(p=square(40,center=true), sxy=0.5);
 //   color("yellow") stroke(pts, closed=true);
-//   color("blue") place_copies(pts) circle(d=3, $fn=8);
+//   color("blue") move_copies(pts) circle(d=3, $fn=8);
 // Example(FlatSpin): Calling as a 3D Function
 //   pts = skew(p=path3d(square(40,center=true)), szx=0.5, szy=0.3);
 //   trace_polyline(close_path(pts), showpts=true);

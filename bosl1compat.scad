@@ -1,4 +1,4 @@
-module translate_copies(a=[[0,0,0]]) place_copies(a) children();
+module translate_copies(a=[[0,0,0]]) move_copies(a) children();
 module xmove(x) right(x) children();
 module ymove(y) back(y) children();
 module zmove(z) up(z) children();

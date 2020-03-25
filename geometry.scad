@@ -113,7 +113,7 @@ function distance_from_line(line, pt) =
 //   n = line_normal(p1,p2);
 //   stroke([p1,p2], endcap2="arrow2");
 //   color("green") stroke([p1,p1+10*n], endcap2="arrow2");
-//   color("blue") place_copies([p1,p2]) circle(d=2, $fn=12);
+//   color("blue") move_copies([p1,p2]) circle(d=2, $fn=12);
 function line_normal(p1,p2) =
 	is_undef(p2)? line_normal(p1[0],p1[1]) :
 	unit([p1.y-p2.y,p2.x-p1.x]);
@@ -895,7 +895,7 @@ function in_front_of_plane(plane, point) =
 //           stroke([[0,0],rad*[cos(315),sin(315)]]);
 //       }
 //   }
-//   place_copies(pts) color("blue") circle(d=2, $fn=12);
+//   move_copies(pts) color("blue") circle(d=2, $fn=12);
 //   translate(circ[0]) color("red") circle(d=2, $fn=12);
 //   labels = [[pts[0], "pt1"], [pts[1],"pt2"], [pts[2],"pt3"], [circ[0], "CP"], [circ[0]+[cos(315),sin(315)]*rad*0.7, "r"]];
 //   for(l=labels) translate(l[0]+[0,2]) color("black") text(text=l[1], size=2.5, halign="center");
@@ -935,7 +935,7 @@ function find_circle_2tangents(pt1, pt2, pt3, r=undef, d=undef) =
 //   circ = find_circle_3points(pts[0], pts[1], pts[2]);
 //   translate(circ[0]) color("green") stroke(circle(r=circ[1]),closed=true,$fn=72);
 //   translate(circ[0]) color("red") circle(d=3, $fn=12);
-//   place_copies(pts) color("blue") circle(d=3, $fn=12);
+//   move_copies(pts) color("blue") circle(d=3, $fn=12);
 function find_circle_3points(pt1, pt2, pt3) =
 	(is_undef(pt2) && is_undef(pt3) && is_list(pt1))? find_circle_3points(pt1[0], pt1[1], pt1[2]) :
 	collinear(pt1,pt2,pt3)? [undef,undef,undef] :
@@ -984,8 +984,8 @@ function find_circle_3points(pt1, pt2, pt3) =
 //   tanpts = subindex(find_circle_tangents(r=r, cp=cp, pt=pt),1);
 //   color("yellow") translate(cp) circle(r=r);
 //   color("cyan") for(tp=tanpts) {stroke([tp,pt]); stroke([tp,cp]);}
-//   color("red") place_copies(tanpts) circle(d=3,$fn=12);
-//   color("blue") place_copies([cp,pt]) circle(d=3,$fn=12);
+//   color("red") move_copies(tanpts) circle(d=3,$fn=12);
+//   color("blue") move_copies([cp,pt]) circle(d=3,$fn=12);
 function find_circle_tangents(r, d, cp, pt) =
 	assert(is_num(r) || is_num(d))
 	assert(is_vector(cp))
@@ -1159,15 +1159,15 @@ function polygon_shift_to_closest_point(path, pt) =
 //   pent = subdivide_path([for(i=[0:4])[sin(72*i),cos(72*i)]],30);
 //   circ = circle($fn=30,r=2.2);
 //   reindexed = reindex_polygon(circ,pent);
-//   place_copies(concat(circ,pent)) circle(r=.1,$fn=32);
-//   color("red") place_copies([pent[0],circ[0]]) circle(r=.1,$fn=32);
+//   move_copies(concat(circ,pent)) circle(r=.1,$fn=32);
+//   color("red") move_copies([pent[0],circ[0]]) circle(r=.1,$fn=32);
 //   color("blue") translate(reindexed[0])circle(r=.1,$fn=32);
 // Example(2D): The indexing that minimizes the total distance will not necessarily associate the nearest point of `poly` with the reference, as in this example where again the blue dot indicates the 0th entry in the reindexed result.
 //   pent = move([3.5,-1],p=subdivide_path([for(i=[0:4])[sin(72*i),cos(72*i)]],30));
 //   circ = circle($fn=30,r=2.2);
 //   reindexed = reindex_polygon(circ,pent);
-//   place_copies(concat(circ,pent)) circle(r=.1,$fn=32);
-//   color("red") place_copies([pent[0],circ[0]]) circle(r=.1,$fn=32);
+//   move_copies(concat(circ,pent)) circle(r=.1,$fn=32);
+//   color("red") move_copies([pent[0],circ[0]]) circle(r=.1,$fn=32);
 //   color("blue") translate(reindexed[0])circle(r=.1,$fn=32);
 function reindex_polygon(reference, poly, return_error=false) = 
 	assert(is_path(reference) && is_path(poly))
@@ -1213,8 +1213,8 @@ function reindex_polygon(reference, poly, return_error=false) =
 //   $fn=32;
 //   pentagon = subdivide_path(pentagon(side=2),60);
 //   hexagon = subdivide_path(hexagon(side=2.7),60);
-//   color("red") place_copies(scale(1.4,p=align_polygon(pentagon,hexagon,[0:10:359]))) circle(r=.1);
-//   place_copies(concat(pentagon,hexagon))circle(r=.1);
+//   color("red") move_copies(scale(1.4,p=align_polygon(pentagon,hexagon,[0:10:359]))) circle(r=.1);
+//   move_copies(concat(pentagon,hexagon))circle(r=.1);
 function align_polygon(reference, poly, angles, cp) =
 	assert(is_path(reference) && is_path(poly))
 	assert(len(reference)==len(poly), "Polygons must be the same length to be aligned in align_polygon")

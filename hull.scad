@@ -83,7 +83,7 @@ module hull_points(points, fast=false) {
 // Example(2D):
 //   pts = [[-10,-10], [0,10], [10,10], [12,-10]];
 //   path = hull2d_path(pts);
-//   place_copies(pts) color("red") sphere(1);
+//   move_copies(pts) color("red") sphere(1);
 //   polygon(points=pts, paths=[path]);
 function hull2d_path(points) =
 	(len(points) < 3)? [] : let(
@@ -156,7 +156,7 @@ function _remove_conflicts_and_insert_point(polygon, conflicts, point) =
 // Example(3D):
 //   pts = [[-20,-20,0], [20,-20,0], [0,20,5], [0,0,20]];
 //   faces = hull3d_faces(pts);
-//   place_copies(pts) color("red") sphere(1);
+//   move_copies(pts) color("red") sphere(1);
 //   %polyhedron(points=pts, faces=faces);
 function hull3d_faces(points) = 
 	(len(points) < 3)? list_range(len(points)) : let (	
