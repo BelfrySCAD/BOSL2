@@ -432,7 +432,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   %polygon(poly);
 //
 // Example: Using `$row` and `$col`
-//   grid2d(spacing=8], n=8)
+//   grid2d(spacing=8, n=8)
 //       color(($row+$col)%2?"black":"red")
 //           cube([8,8,0.01], center=false);
 //
