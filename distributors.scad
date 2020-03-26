@@ -400,19 +400,17 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   Makes a square or hexagonal grid of copies of children.
 //
 // Usage:
-//   grid2d(size, spacing, [stagger], [scale], [in_poly]) ...
-//   grid2d(size, cols, rows, [stagger], [scale], [in_poly]) ...
-//   grid2d(spacing, cols, rows, [stagger], [scale], [in_poly]) ...
+//   grid2d(spacing, size, [stagger], [scale], [in_poly]) ...
+//   grid2d(n, size, [stagger], [scale], [in_poly]) ...
+//   grid2d(spacing, n, [stagger], [scale], [in_poly]) ...
 //   grid2d(spacing, in_poly, [stagger], [scale]) ...
-//   grid2d(cols, rows, in_poly, [stagger], [scale]) ...
+//   grid2d(n, in_poly, [stagger], [scale]) ...
 //
 // Arguments:
 //   size = The [X,Y] size to spread the copies over.
 //   spacing = Distance between copies in [X,Y] or scalar distance.
-//   cols = How many columns of copies to make.  If staggered, count both staggered and unstaggered columns.
-//   rows = How many rows of copies to make.  If staggered, count both staggered and unstaggered rows.
+//   n = How many columns and rows of copies to make.  Can be given as `[COLS,ROWS]`, or just as a scalar that specifies both.  If staggered, count both staggered and unstaggered columns and rows.  Default: 2 (3 if staggered)
 //   stagger = If true, make a staggered (hexagonal) grid.  If false, make square grid.  If `"alt"`, makes alternate staggered pattern.  Default: false
-//   scale = [X,Y] scaling factors to reshape grid.
 //   in_poly = If given a list of polygon points, only creates copies whose center would be inside the polygon.  Polygon can be concave and/or self crossing.
 //
 // Side Effects:
@@ -421,10 +419,11 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   `$row` is set to the integer row number for each child.
 //
 // Examples:
-//   grid2d(size=50, spacing=10, stagger=false) cylinder(d=10, h=1);
-//   grid2d(spacing=10, rows=7, cols=13, stagger=true) cylinder(d=6, h=5);
-//   grid2d(spacing=10, rows=7, cols=13, stagger="alt") cylinder(d=6, h=5);
-//   grid2d(size=50, rows=11, cols=11, stagger=true) cylinder(d=5, h=1);
+//   grid2d(size=50, spacing=10) cylinder(d=10, h=1);
+//   grid2d(size=50, spacing=[10,15]) cylinder(d=10, h=1);
+//   grid2d(spacing=10, n=[13,7], stagger=true) cylinder(d=6, h=5);
+//   grid2d(spacing=10, n=[13,7], stagger="alt") cylinder(d=6, h=5);
+//   grid2d(size=50, n=11, stagger=true) cylinder(d=5, h=1);
 //
 // Example:
 //   poly = [[-25,-25], [25,25], [-25,25], [25,-25]];
@@ -433,7 +432,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   %polygon(poly);
 //
 // Example: Using `$row` and `$col`
-//   grid2d(spacing=[8,8], cols=8, rows=8)
+//   grid2d(spacing=8], n=8)
 //       color(($row+$col)%2?"black":"red")
 //           cube([8,8,0.01], center=false);
 //
@@ -449,57 +448,59 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //               zrot(180/6)
 //                   cylinder(h=20, d=10/cos(180/6)+0.01, $fn=6);
 //   }
-module grid2d(size=undef, spacing=undef, cols=undef, rows=undef, stagger=false, scale=[1,1,1], in_poly=undef)
+module grid2d(spacing, n, size, stagger=false, in_poly=undef)
 {
 	assert(in_list(stagger, [false, true, "alt"]));
-	scl = vmul(scalar_vec3(scale, 1), (stagger!=false? [0.5, sin(60), 1] : [1,1,1]));
-	if (!is_undef(size)) {
-		siz = scalar_vec3(size);
-		if (!is_undef(spacing)) {
-			spc = vmul(scalar_vec3(spacing), scl);
-			maxcols = ceil(siz.x/spc.x);
-			maxrows = ceil(siz.y/spc.y);
-			grid2d(spacing=spacing, cols=maxcols, rows=maxrows, stagger=stagger, scale=scale, in_poly=in_poly) children();
-		} else {
-			spc = [siz.x/cols, siz.y/rows];
-			grid2d(spacing=spc, cols=cols, rows=rows, stagger=stagger, scale=scale, in_poly=in_poly) children();
+	bounds = is_undef(in_poly)? undef : pointlist_bounds(in_poly);
+	size = is_num(size)? [size, size] :
+		is_vector(size)? assert(len(size)==2) size :
+		bounds!=undef? [
+			for (i=[0:1]) 2*max(abs(bounds[0][i]),bounds[1][i])
+		] : undef;
+	spacing = is_num(spacing)? (
+			stagger!=false? polar_to_xy(spacing,60) :
+			[spacing,spacing]
+		) :
+		is_vector(spacing)? assert(len(spacing)==2) spacing :
+		size!=undef? (
+			is_num(n)? vdiv(size,(n-1)*[1,1]) :
+			is_vector(n)? assert(len(n)==2) vdiv(size,n-[1,1]) :
+			vdiv(size,(stagger==false? [1,1] : [2,2]))
+		) :
+		undef;
+	n = is_num(n)? [n,n] :
+		is_vector(n)? assert(len(n)==2) n :
+		size!=undef && spacing!=undef? vfloor(vdiv(size,spacing))+[1,1] :
+		[2,2];
+	offset = vmul(spacing, n-[1,1])/2;
+	if (stagger == false) {
+		for (row = [0:1:n.y-1]) {
+			for (col = [0:1:n.x-1]) {
+				pos = vmul([col,row],spacing) - offset;
+				if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
+					$col = col;
+					$row = row;
+					$pos = pos;
+					translate(pos) children();
+				}
+			}
 		}
 	} else {
-		spc = is_list(spacing)? point3d(spacing) : vmul(scalar_vec3(spacing), scl);
-		bounds = !is_undef(in_poly)? pointlist_bounds(in_poly) : undef;
-		bnds = !is_undef(bounds)? [for (a=[0,1]) 2*max(vabs([ for (i=[0,1]) bounds[i][a] ]))+1 ] : undef;
-		mcols = !is_undef(cols)? cols : (!is_undef(spc) && !is_undef(bnds))? quantup(ceil(bnds[0]/spc[0])-1, 4)+1 : undef;
-		mrows = !is_undef(rows)? rows : (!is_undef(spc) && !is_undef(bnds))? quantup(ceil(bnds[1]/spc[1])-1, 4)+1 : undef;
-		siz = vmul(spc, [mcols-1, mrows-1, 0])+[0,0,0.01];
+		// stagger == true or stagger == "alt"
 		staggermod = (stagger == "alt")? 1 : 0;
-		if (stagger == false) {
-			for (row = [0:1:mrows-1]) {
-				for (col = [0:1:mcols-1]) {
-					pos = [col*spc.x, row*spc.y] - point2d(siz/2);
+		cols1 = ceil(n.x/2);
+		cols2 = n.x - cols1;
+		for (row = [0:1:n.y-1]) {
+			rowcols = ((row%2) == staggermod)? cols1 : cols2;
+			if (rowcols > 0) {
+				for (col = [0:1:rowcols-1]) {
+					rowdx = (row%2 != staggermod)? spacing.x : 0;
+					pos = vmul([2*col,row],spacing) + [rowdx,0] - offset;
 					if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
-						$col = col;
+						$col = col * 2 + ((row%2!=staggermod)? 1 : 0);
 						$row = row;
 						$pos = pos;
 						translate(pos) children();
-					}
-				}
-			}
-		} else {
-			// stagger == true or stagger == "alt"
-			cols1 = ceil(mcols/2);
-			cols2 = mcols - cols1;
-			for (row = [0:1:mrows-1]) {
-				rowcols = ((row%2) == staggermod)? cols1 : cols2;
-				if (rowcols > 0) {
-					for (col = [0:1:rowcols-1]) {
-						rowdx = (row%2 != staggermod)? spc[0] : 0;
-						pos = [2*col*spc[0]+rowdx, row*spc[1]] - point2d(siz/2);
-						if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
-							$col = col * 2 + ((row%2!=staggermod)? 1 : 0);
-							$row = row;
-							$pos = pos;
-							translate(pos) children();
-						}
 					}
 				}
 			}

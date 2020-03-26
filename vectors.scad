@@ -95,6 +95,17 @@ function vdiv(v1, v2) = [for (i = [0:1:len(v1)-1]) v1[i]/v2[i]];
 function vabs(v) = [for (x=v) abs(x)];
 
 
+// Function: vfloor()
+// Description:
+//   Returns the given vector after performing a `floor()` on all items.
+function vfloor(v) = [for (x=v) floor(x)];
+
+
+// Function: vceil()
+// Description:
+//   Returns the given vector after performing a `ceil()` on all items.
+function vceil(v) = [for (x=v) ceil(x)];
+
 
 // Function: unit()
 // Description:
