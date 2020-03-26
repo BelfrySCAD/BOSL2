@@ -439,14 +439,14 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 // Example:
 //   // Makes a grid of hexagon pillars whose tops are all
 //   // angled to reflect light at [0,0,50], if they were shiny.
-//   hexregion = [for (a = [0:60:359.9]) 50.01*[cos(a), sin(a)]];
-//   grid2d(spacing=10, stagger=true, in_poly=hexregion) {
-//       // Note: You must use for(var=[val]) or let(var=val)
-//       // to set vars from $pos or other special vars in this scope.
-//       let (ref_v = (unit([0,0,50]-point3d($pos)) + UP)/2)
-//           half_of(v=-ref_v, cp=[0,0,5])
-//               zrot(180/6)
-//                   cylinder(h=20, d=10/cos(180/6)+0.01, $fn=6);
+//   hexregion = circle(r=50.01,$fn=6);
+//   grid2d(spacing=10, stagger=true, in_poly=hexregion) union() {
+//       // Note: The union() is needed or else $pos will be
+//       //   inexplicably unreadable.
+//       ref_v = (unit([0,0,50]-point3d($pos)) + UP)/2;
+//       half_of(v=-ref_v, cp=[0,0,5])
+//           zrot(180/6)
+//               cylinder(h=20, d=10/cos(180/6)+0.01, $fn=6);
 //   }
 module grid2d(spacing, n, size, stagger=false, in_poly=undef)
 {
