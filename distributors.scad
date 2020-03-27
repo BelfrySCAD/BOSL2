@@ -400,18 +400,18 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   Makes a square or hexagonal grid of copies of children.
 //
 // Usage:
-//   grid2d(spacing, size, [stagger], [scale], [in_poly]) ...
-//   grid2d(n, size, [stagger], [scale], [in_poly]) ...
-//   grid2d(spacing, n, [stagger], [scale], [in_poly]) ...
-//   grid2d(spacing, in_poly, [stagger], [scale]) ...
-//   grid2d(n, in_poly, [stagger], [scale]) ...
+//   grid2d(spacing, size, [stagger], [scale], [inside]) ...
+//   grid2d(n, size, [stagger], [scale], [inside]) ...
+//   grid2d(spacing, n, [stagger], [scale], [inside]) ...
+//   grid2d(spacing, inside, [stagger], [scale]) ...
+//   grid2d(n, inside, [stagger], [scale]) ...
 //
 // Arguments:
 //   size = The [X,Y] size to spread the copies over.
 //   spacing = Distance between copies in [X,Y] or scalar distance.
 //   n = How many columns and rows of copies to make.  Can be given as `[COLS,ROWS]`, or just as a scalar that specifies both.  If staggered, count both staggered and unstaggered columns and rows.  Default: 2 (3 if staggered)
 //   stagger = If true, make a staggered (hexagonal) grid.  If false, make square grid.  If `"alt"`, makes alternate staggered pattern.  Default: false
-//   in_poly = If given a list of polygon points, only creates copies whose center would be inside the polygon.  Polygon can be concave and/or self crossing.
+//   inside = If given a list of polygon points, or a region, only creates copies whose center would be inside the polygon or region.  Polygon can be concave and/or self crossing.
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -427,7 +427,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //
 // Example:
 //   poly = [[-25,-25], [25,25], [-25,25], [25,-25]];
-//   grid2d(spacing=5, stagger=true, in_poly=poly)
+//   grid2d(spacing=5, stagger=true, inside=poly)
 //      zrot(180/6) cylinder(d=5, h=1, $fn=6);
 //   %polygon(poly);
 //
@@ -440,7 +440,7 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   // Makes a grid of hexagon pillars whose tops are all
 //   // angled to reflect light at [0,0,50], if they were shiny.
 //   hexregion = circle(r=50.01,$fn=6);
-//   grid2d(spacing=10, stagger=true, in_poly=hexregion) union() {
+//   grid2d(spacing=10, stagger=true, inside=hexregion) union() {
 //       // Note: The union() is needed or else $pos will be
 //       //   inexplicably unreadable.
 //       ref_v = (unit([0,0,50]-point3d($pos)) + UP)/2;
@@ -448,10 +448,13 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //           zrot(180/6)
 //               cylinder(h=20, d=10/cos(180/6)+0.01, $fn=6);
 //   }
-module grid2d(spacing, n, size, stagger=false, in_poly=undef)
+module grid2d(spacing, n, size, stagger=false, inside=undef)
 {
 	assert(in_list(stagger, [false, true, "alt"]));
-	bounds = is_undef(in_poly)? undef : pointlist_bounds(in_poly);
+	bounds = is_undef(inside)? undef :
+		is_path(inside)? pointlist_bounds(inside) :
+		assert(is_region(inside))
+		pointlist_bounds(flatten(inside));
 	size = is_num(size)? [size, size] :
 		is_vector(size)? assert(len(size)==2) size :
 		bounds!=undef? [
@@ -477,7 +480,11 @@ module grid2d(spacing, n, size, stagger=false, in_poly=undef)
 		for (row = [0:1:n.y-1]) {
 			for (col = [0:1:n.x-1]) {
 				pos = vmul([col,row],spacing) - offset;
-				if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
+				if (
+					is_undef(inside) ||
+					(is_path(inside) && point_in_polygon(pos, inside)>=0) ||
+					(is_region(inside) && point_in_region(pos, inside)>=0)
+				) {
 					$col = col;
 					$row = row;
 					$pos = pos;
@@ -496,7 +503,11 @@ module grid2d(spacing, n, size, stagger=false, in_poly=undef)
 				for (col = [0:1:rowcols-1]) {
 					rowdx = (row%2 != staggermod)? spacing.x : 0;
 					pos = vmul([2*col,row],spacing) + [rowdx,0] - offset;
-					if (is_undef(in_poly) || point_in_polygon(pos, in_poly)>=0) {
+					if (
+						is_undef(inside) ||
+						(is_path(inside) && point_in_polygon(pos, inside)>=0) ||
+						(is_region(inside) && point_in_region(pos, inside)>=0)
+					) {
 						$col = col * 2 + ((row%2!=staggermod)? 1 : 0);
 						$row = row;
 						$pos = pos;
