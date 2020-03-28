@@ -70,4 +70,5 @@ module thinning_brace(h=50, l=100, thick=5, ang=30, strut=5, wall=3, center=true
 	thinning_triangle(h=h, l=l, thick=thick, ang=ang, strut=strut, wall=wall, diagonly=true, center=center);
 
 
+// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
 
