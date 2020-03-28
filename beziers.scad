@@ -1009,11 +1009,22 @@ module bezier_polyhedron(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="defau
 //   trace_bezier_patches(patches=[patch1, patch2], splinesteps=8, showcps=true);
 module trace_bezier_patches(patches=[], size, splinesteps=16, showcps=true, showdots=false, showpatch=true, convexity=10, style="default")
 {
+	assert(is_undef(size)||is_num(size));
+	assert(is_int(splinesteps) && splinesteps>0);
+	assert(is_list(patches) && all([for (patch=patches) is_patch(patch)]));
+	assert(is_bool(showcps));
+	assert(is_bool(showdots));
+	assert(is_bool(showpatch));
+	assert(is_int(convexity) && convexity>0);
+	vnfs = [
+		for (patch = patches)
+		bezier_patch(patch, splinesteps=splinesteps, style=style)
+	];
 	if (showcps || showdots) {
 		for (patch = patches) {
-			bounds = pointlist_bounds(flatten(patch));
-			size = default(size, max(bounds[1]-bounds[0])*0.01);
-			echo(size=size);
+			size = is_num(size)? size :
+				let( bounds = pointlist_bounds(flatten(patch)) )
+				max(bounds[1]-bounds[0])*0.01;
 			if (showcps) {
 				move_copies(flatten(patch)) color("red") sphere(d=size*2);
 				color("cyan") {
@@ -1032,13 +1043,12 @@ module trace_bezier_patches(patches=[], size, splinesteps=16, showcps=true, show
 				}
 			}
 			if (showdots){
-				vnf = bezier_patch(patch, splinesteps=splinesteps, style=style);
-				color("blue") move_copies(vnf[0]) sphere(d=size);
+				color("blue") move_copies(vnfs[i][0]) sphere(d=size);
 			}
 		}
 	}
 	if (showpatch) {
-		bezier_polyhedron(patches=patches, splinesteps=splinesteps, convexity=convexity, style=style);
+		vnf_polyhedron(vnfs, convexity=convexity);
 	}
 }
 
