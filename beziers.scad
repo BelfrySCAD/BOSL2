@@ -1002,7 +1002,7 @@ module bezier_polyhedron(patches=[], splinesteps=16, vnf=EMPTY_VNF)
 //   	[[15,85,0], [33,100,  0], [ 67,100,  0], [ 85, 85,0]],
 //   ];
 //   trace_bezier_patches(patches=[patch1, patch2], splinesteps=8, showcps=true);
-module trace_bezier_patches(patches=[], size=1, showcps=false, splinesteps=16)
+module trace_bezier_patches(patches=[], size=1, showcps=false, splinesteps=16, showpatch=true, showdots=true)
 {
 	if (showcps) {
 		for (patch = patches) {
@@ -1020,11 +1020,14 @@ module trace_bezier_patches(patches=[], size=1, showcps=false, splinesteps=16)
 					if (j<len(patch[i])-1) extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
 				}
 			}
-			vnf = bezier_patch(patch, splinesteps=splinesteps);
-			color("blue") move_copies(vnf[0]) sphere(d=size);
+                        if (showdots){
+  			  vnf = bezier_patch(patch, splinesteps=splinesteps);
+			  color("blue") move_copies(vnf[0]) sphere(d=size);
+                        }
 		}
 	}
-	bezier_polyhedron(patches=patches, splinesteps=splinesteps);
+        if (showpatch)
+  	  bezier_polyhedron(patches=patches, splinesteps=splinesteps);
 }
 
 
