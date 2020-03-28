@@ -721,7 +721,7 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 
 // Function: bezier_patch()
 // Usage:
-//   bezier_patch(patch, [splinesteps], [vnf]);
+//   bezier_patch(patch, [splinesteps], [vnf], [style]);
 // Description:
 //   Calculate vertices and faces for forming a partial polyhedron from the given bezier rectangular
 //   or triangular patch.  Returns a [VNF structure](vnf.scad): a list containing two elements.  The first is the
@@ -732,6 +732,7 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //   patch = The rectangular or triangular array of endpoints and control points for this bezier patch.
 //   splinesteps = Number of steps to divide each bezier segment into.  For rectangular patches you can specify [XSTEPS,YSTEPS].  Default: 16
 //   vnf = Vertices'n'Faces [VNF structure](vnf.scad) to add new vertices and faces to.  Default: empty VNF
+//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".
 // Example(3D):
 //   patch = [
 //       [[-50, 50,  0], [-16, 50, -20], [ 16, 50,  20], [50, 50,  0]],
@@ -808,7 +809,7 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //       )
 //   ];
 //   vnf_polyhedron(concat(edges,corners,faces));
-function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF) =
+function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF, style="default") =
 	assert(is_num(splinesteps) || is_vector(splinesteps,2))
 	is_tripatch(patch) ? _bezier_triangle(patch, splinesteps=splinesteps, vnf=vnf) :
 	let(
@@ -820,21 +821,13 @@ function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF) =
 			]
 		],
 		pts = [
-			for(step=[0:1:splinesteps.y], bezparm=bpatch)
-			bez_point(bezparm, step/splinesteps.y)
+			for(step=[0:1:splinesteps.y]) [
+				for(bezparm=bpatch)
+				bez_point(bezparm, step/splinesteps.y)
+			]
 		],
-		faces = [
-			for (
-				v=[0:1:splinesteps.y-1],
-				u=[0:1:splinesteps.x-1]
-			) let (
-				v1 = u+v*(splinesteps.x+1),
-				v2 = v1 + 1,
-				v3 = v1 + splinesteps.x + 1,
-				v4 = v3 + 1
-			) each [[v1,v3,v2], [v2,v3,v4]]
-		]
-   ) vnf_merge([vnf, [pts, faces]]);
+		vnf = vnf_vertex_array(pts, style=style, vnf=vnf)
+   ) vnf;
 
 
 function _tri_count(n) = (n*(1+n))/2;
@@ -907,7 +900,7 @@ function patch_reverse(patch) = [for (row=patch) reverse(row)];
 
 // Function: bezier_surface()
 // Usage:
-//   bezier_surface(patches, [splinesteps], [vnf]);
+//   bezier_surface(patches, [splinesteps], [vnf], [style]);
 // Description:
 //   Calculate vertices and faces for forming a (possibly partial) polyhedron from the given
 //   rectangular and/or triangular bezier patches.  Returns a [VNF structure](vnf.scad): a list
@@ -919,6 +912,7 @@ function patch_reverse(patch) = [for (row=patch) reverse(row)];
 //   patches = A list of triangular and/or rectangular bezier patches.
 //   splinesteps = Number of steps to divide each bezier segment into.  Default: 16
 //   vnf = Vertices'n'Faces [VNF structure](vnf.scad) to add new vertices and faces to.  Default: empty VNF
+//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".
 // Example(3D):
 //   patch1 = [
 //   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
@@ -934,12 +928,12 @@ function patch_reverse(patch) = [for (row=patch) reverse(row)];
 //   ];
 //   vnf = bezier_surface(patches=[patch1, patch2], splinesteps=16);
 //   polyhedron(points=vnf[0], faces=vnf[1]);
-function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, i=0) =
+function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="default", i=0) =
 	let(
 		vnf = (i >= len(patches))? vnf :
-			bezier_patch(patches[i], splinesteps=splinesteps, vnf=vnf)
+			bezier_patch(patches[i], splinesteps=splinesteps, vnf=vnf, style=style)
 	) (i >= len(patches))? vnf :
-	bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf, i=i+1);
+	bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf, style=style, i=i+1);
 
 
 
@@ -948,13 +942,15 @@ function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, i=0) =
 
 // Module: bezier_polyhedron()
 // Useage:
-//   bezier_polyhedron(patches, [splinesteps], [vnf])
+//   bezier_polyhedron(patches, [splinesteps], [vnf], [style], [convexity])
 // Description:
 //   Takes a list of two or more bezier patches and attempts to make a complete polyhedron from them.
 // Arguments:
 //   patches = A list of triangular and/or rectangular bezier patches.
 //   splinesteps = Number of steps to divide each bezier segment into. Default: 16
 //   vnf = Vertices'n'Faces [VNF structure](vnf.scad) to add extra vertices and faces to.  Default: empty VNF
+//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".
+//   convexity = Max number of times a line could intersect a wall of the shape.
 // Example:
 //   patch1 = [
 //   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
@@ -969,10 +965,11 @@ function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, i=0) =
 //   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
 //   ];
 //   bezier_polyhedron([patch1, patch2], splinesteps=8);
-module bezier_polyhedron(patches=[], splinesteps=16, vnf=EMPTY_VNF)
+module bezier_polyhedron(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="default", convexity=10)
 {
 	vnf_polyhedron(
-		bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf)
+		bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf, style=style),
+		convexity=convexity
 	);
 }
 
