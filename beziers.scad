@@ -830,7 +830,7 @@ function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF, style="default") =
 				bez_point(bezparm, step/splinesteps.y)
 			]
 		],
-		vnf = vnf_vertex_array(pts, style=style, vnf=vnf)
+		vnf = vnf_vertex_array(pts, style=style, vnf=vnf, reverse=true)
 	) vnf;
 
 
