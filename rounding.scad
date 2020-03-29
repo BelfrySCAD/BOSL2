@@ -1366,6 +1366,294 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
 
 
 
+function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
+   let(
+     N = len(top),
+     plane = plane3pt_indexed(top,0,1,2),
+     rtop_in = is_list(rtop) ? rtop[0] : rtop,
+     rtop_down = is_list(rtop) ? rtop[1] : abs(rtop)
+   )
+  [for(i=[0:N-1])
+           let(
+               rside_prev = is_list(rsides[i])? rsides[i][0] : rsides[i],
+               rside_next = is_list(rsides[i])? rsides[i][1] : rsides[i],
+	       concave_sign = (concave[i] ? -1 : 1) * (rtop_in>=0 ? 1 : -1),  // Negative if normals need to go "out" 
+               prev = select(top,i-1) - top[i],
+               next = select(top,i+1) - top[i],
+               prev_offset = top[i] + rside_prev * unit(prev) / sin(vector_angle(prev,bot[i]-top[i])),
+               next_offset = top[i] + rside_next * unit(next) / sin(vector_angle(next,bot[i]-top[i])),
+               down = rtop_down * unit(bot[i]-top[i]) / sin(abs(plane_line_angle(plane, [bot[i],top[i]]))),
+               row2 = [prev_offset,     top[i],     next_offset     ],
+               row4 = [prev_offset+down,top[i]+down,next_offset+down],
+               in_prev = concave_sign * unit(next-(next*prev)*prev/(prev*prev)),
+               in_next = concave_sign * unit(prev-(prev*next)*next/(next*next)),
+	       far_corner = top[i]+ concave_sign*unit(unit(prev)+unit(next))* abs(rtop_in) / sin(vector_angle(prev,next)/2),
+               row0 = 
+                 concave_sign<0 ?
+                    [prev_offset+abs(rtop_in)*in_prev, far_corner, next_offset+abs(rtop_in)*in_next]
+                 :
+                    let(
+                       prev_corner = prev_offset + abs(rtop_in)*in_prev,
+                       next_corner = next_offset + abs(rtop_in)*in_next,
+                       prev_degenerate = is_undef(ray_intersection([far_corner, far_corner+prev], [prev_offset, prev_offset+in_prev])),
+                       next_degenerate = is_undef(ray_intersection([far_corner, far_corner+next], [next_offset, next_offset+in_next]))
+                    )
+                    [ prev_degenerate ? far_corner : prev_corner,
+                      far_corner,
+                      next_degenerate ? far_corner : next_corner]
+            ) _smooth_bez_fill(
+                      [for(row=[row0, row2, row4]) _smooth_bez_fill(row,ksides[i])],
+                      ktop)];
+
+
+function patch_transform(transform,patch) =
+     [for(j=[0:4]) apply(transform,patch[j])];
+
+
+// Function&Module: rounded_prism()
+// Usage:
+//   rounded_prism(bottom, [top], joint_top, joint_bot, joint_sides, [k], [k_top], [k_bot], [k_sides], [splinesteps], [height|h|length|l], [debug], [convexity])
+//   vnf = rounded_prism(bottom, [top], joint_top, joint_bot, joint_sides, [k], [k_top], [k_bot], [k_sides], [splinesteps], [height|h|length|l], [debug])
+// Description:
+//   Construct a generalized prism with continuous curvature rounding.  You supply the polygons for the top and bottom of the prism.  The only
+//   limitation is that joining the edges must produce a valid polyhedron with coplaner side faces.  You specify the rounding by giving
+//   the joint distance away from the corner for the rounding curve.  The k parameter ranges from 0 to 1 with a default of 0.5.  Larger
+//   values give a more abrupt transition and smaller ones a more gradual transition.  If you set the value much higher
+//   than 0.8 the curvature changes abruptly enough that though it is theoretically continuous, it may
+//   not be continous in practice.  A value of 0.92 is a good approximation to a circle.  If you set it very small then the transition
+//   is so gradual that the roundover may be very small.  If you want a very smooth roundover, set the joint parameter as large as possible and
+//   then adjust the k value down as low as gives a sufficiently large roundover.
+//   
+//   You can specify the bottom and top polygons by giving two compatible 3d paths.  You can also give 2d paths and a height/length and the
+//   two shapes will be offset in the z direction from each other.  The final option is to specify just the bottom along with a height/length;
+//   in this case the top will be a copy of the bottom, offset in the z direction by the specified height.
+//
+//   You define rounding for all of the top edges, all of the bottom edges, and independently for each of the connecting side edges.
+//   You specify rounding the rounding by giving the joint distance for where the curved section should start.  If the joint distance is 1 then
+//   it means the curved section begins 1 unit away from the edge (in the perpendicular direction).  Typically each joint distance is a scalar
+//   value and the rounding is symmetric around each edge.  However, you can specify a 2-vector for the joint distance to produce asymmetric
+//   rounding which is different on the two sides of the edge.  This may be useful when one one edge in your polygon is much larger than another.
+//   For the top and bottom you can specify negative joint distances.  If you give a scalar negative value then the roundover will flare
+//   outward.  If you give a vector value then a negative value then if joint_top[0] is negative the shape will flare outward, but if
+//   joint_top[1] is negative the shape will flare upward.  At least one value must be non-negative.  The same rules apply for joint_bot.
+//   The joint_sides parameter must be entirely nonnegative.
+//
+//   If you set `debug` to true the module version will display the polyhedron even when it is invalid and it will show the bezier patches at the corners.
+//   This can help troubleshoot problems with your parameters.  With the function form setting debug to true causes it to return [patches,vnf] where
+//   patches is a list of the bezier control points for the corner patches.  
+//   
+// Arguments:
+//   bottom = 2d or 3d path describing bottom polygon
+//   top = 2d or 3d path describing top polygon (must be the same dimension as bottom)
+//   height/length/h/l = height of the shape when you give 2d bottom
+//   joint_top = rounding length for top (number or 2-vector)
+//   joint_bot = rounding length for bottom (number or 2-vector)
+//   joint_sides = rounding length for side edges, a number/2-vector or list of them
+//   k = continuous curvature rounding parameter for all edges.  Default: 0.5
+//   k_top = continuous curvature rounding parameter for top
+//   k_bot = continuous curvature rounding parameter for bottom
+//   k_bot = continuous curvature rounding parameter for bottom
+//   splinesteps = number of segments to use for curved patches.  Default: 16
+//   debug = turn on debug mode which displays illegal polyhedra and shows the bezier corner patches for troubleshooting purposes.  Default: False
+//   convexity = convexity parameter for polyhedron(), only for module version.  Default: 10
+// Example: Uniformly rounded pentagonal prism
+//   rounded_prism(pentagon(3), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
+// Example: Maximum possible rounding.  
+//   rounded_prism(pentagon(3), height=3, joint_top=1.5, joint_bot=1.5, joint_sides=1.5);
+// Example: Decreasing k from the default of 0.5 to 0.3 gives a smoother round over which takes up more space, so it appears less rounded.  
+//   rounded_prism(pentagon(3), height=3, joint_top=1.5, joint_bot=1.5, joint_sides=1.5, k=0.3, splinesteps=32);
+// Example: Increasing k from the default of 0.5 to 0.92 approximates a circular roundover, which does not have continuous curvature.  Notice the visible "edges" at the boundary of the corner and edge patches.  
+//   rounded_prism(pentagon(3), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5, k=0.92);
+// Example: rounding just one edge
+//   rounded_prism(pentagon(side=3), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=[0,0,0.5,0,0], splinesteps=16);
+// Example: rounding all the edges differently
+//   rounded_prism(pentagon(side=3), height=3, joint_top=0.25, joint_bot=0.5, joint_sides=[1.7,.5,.7,1.2,.4], splinesteps=32);
+// Example: different k values for top, bottom and sides
+//   rounded_prism(pentagon(side=3.0), height=3.0, joint_top=1.4, joint_bot=1.4, joint_sides=0.7, k_top=0.7, k_bot=0.3, k_sides=0.5, splinesteps=48);
+// Example: flared bottom
+//   rounded_prism(pentagon(3), height=3, joint_top=1.0, joint_bot=-0.5, joint_sides=0.5);
+// Example: truncated pyramid
+//   rounded_prism(pentagon(3), apply(scale(.7),pentagon(3)), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
+// Example: top translated
+//   rounded_prism(pentagon(3), apply(right(2),pentagon(3)), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
+// Example(NORENDER): top rotated: fails due to non-coplanar side faces
+//   rounded_prism(pentagon(3), apply(rot(45),pentagon(3)), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
+// Example: skew top
+//   rounded_prism(path3d(pentagon(3)), apply(affine3d_skew_yz(0,-20),path3d(pentagon(3),3)), joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
+// Example: this rotation gives coplanar sides
+//   rounded_prism(path3d(square(4)), apply(yrot(-100)*right(2),path3d(square(4),3)), joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
+// Example: a shape with concave corners
+//   M = path3d(turtle(["left", 180, "length",3,"move", "left", "move", 3, "right", "move", "right", "move", 4, "right", "move", 3, "right", "move", 2]));
+//   rounded_prism(M, apply(up(3),M), joint_top=0.75, joint_bot=0.2, joint_sides=[.2,2.5,2,0.5,1.5,.5,2.5], splinesteps=32);
+// Example: using debug mode to see the corner patch sizes, which may help figure out problems with interfering corners or invalid polyhedra.  The corner patches must not intersect each other.
+//   M = path3d(turtle(["left", 180, "length",3,"move", "left", "move", 3, "right", "move", "right", "move", 4, "right", "move", 3, "right", "move", 2]));
+//   rounded_prism(M, apply(up(3),M), joint_top=0.75, joint_bot=0.2, joint_sides=[.2,2.5,2,0.5,1.5,.5,2.5], splinesteps=16,debug=true);
+// Example: applying transformation to the previous example
+//   M = path3d(turtle(["left", 180, "length",3,"move", "left", "move", 3, "right", "move", "right", "move", 4, "right", "move", 3, "right", "move", 2]));
+//   rounded_prism(M, apply(right(1)*scale(.75)*up(3),M), joint_top=0.5, joint_bot=0.2, joint_sides=[.2,1,1,0.5,1.5,.5,2], splinesteps=32);
+// Example: this example shows the different types of patches that rounded_prism creates.  Note that some of the patches are close to interfering with each other across the top of the polyhedron, which would create an invalid result that rounded_prism() would not detect.  
+//   N = apply(rot(180)*yscale(.8),turtle(["length",3,"left", "move", 2, "right", 135, "move", sqrt(2), "left", "move", sqrt(2), "right", 135, "move", 2]));
+//   rounded_prism(N, height=3, joint_bot=0.5, joint_top=1.25, joint_sides=[[1,1.75],0,.5,.5,2], debug=true);
+// Example: This object has different scales on its different axies.  Here is the largest symmetric rounding that fits.  Note that the rounding is slightly smaller than the object dimensions because of roundoff error.  
+//   rounded_prism(square([100.1,30.1]), height=8.1, joint_top=4, joint_bot=4, joint_sides=15, k_sides=0.3, splinesteps=32);
+// Example: Using asymetric rounding enables a much more rounded form:
+//   rounded_prism(square([100.1,30.1]), height=8.1, joint_top=[15,4], joint_bot=[15,4], joint_sides=[[15,50],[50,15],[15,50],[50,15]], k_sides=0.3, splinesteps=32);
+// Example: Flaring the top upward instead of outward.  The bottom has an asymmetric rounding with a small flare but a large rounding up the side.  
+//   rounded_prism(pentagon(3), height=3, joint_top=[1,-1], joint_bot=[-0.5,2], joint_sides=0.5);
+// Example: Sideways polygons:
+//   rounded_prism(apply(yrot(95),path3d(hexagon(3))), apply(yrot(95), path3d(hexagon(3),3)), joint_top=2, joint_bot=1, joint_sides=1);
+
+module rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_top, k_sides, k=0.5, splinesteps=16, h, length, l, height,
+                     convexity=10, debug=false)
+{
+  result = rounded_prism(bottom=bottom, top=top, joint_bot=joint_bot, joint_top=joint_top, joint_sides=joint_sides, 
+                         k_bot=k_bot, k_top=k_top, k_sides=k_sides, k=k, splinesteps=splinesteps, h=h, length=length, height=height, l=l,debug=debug);
+  if (debug){
+    vnf_polyhedron(result[1], convexity=convexity);
+    trace_bezier_patches(result[0], showcps=true, splinesteps=16, $fn=16, showdots=false, showpatch=false);
+  }
+  else
+    vnf_polyhedron(result,convexity=convexity);
+}  
+
+function rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_top, k_sides, k=0.5, splinesteps=16,
+                       h, length, l, height, debug=false) =
+   assert(is_path(bottom) && len(bottom)>=3)
+   assert(is_num(k) && k>=0 && k<=1, "Curvature parameter k must be in interval [0,1]")
+   let(
+     N=len(bottom),
+     k_top = default(k_top, k),
+     k_bot = default(k_bot, k),
+     k_sides = default(k_sides, k),
+     height = one_defined([h,l,height,length],["height","length","l","h"], required=false),
+     shapedimok = (len(bottom[0])==3 && is_path(top,3)) || (len(bottom[0])==2 && (is_undef(top) || is_path(top,2)))
+   )
+   assert(is_num(k_top) && k_top>=0 && k_top<=1, "Curvature parameter k_top must be in interval [0,1]")
+   assert(is_num(k_bot) && k_bot>=0 && k_bot<=1, "Curvature parameter k_bot must be in interval [0,1]")
+   assert(shapedimok,"bottom and top must be 2d or 3d paths with the same dimension")
+   assert(len(bottom[0])==3 || is_num(height),"Must give height/length with 2d polygon input")
+   let(
+     // Determine which points are concave by making bottom 2d if necessary
+     bot_proj = len(bottom[0])==2 ? bottom :  project_plane(bottom, select(bottom,0,2)),
+     bottom_sign = polygon_is_clockwise(bot_proj) ? 1 : -1,
+     concave = [for(i=[0:N-1]) bottom_sign*sign(point_left_of_segment2d(select(bot_proj,i+1), select(bot_proj, i-1,i)))>0],
+     top = is_undef(top) ? path3d(bottom,height/2) :
+           len(top[0])==2 ? path3d(top,height/2) :
+           top,
+     bottom = len(bottom[0])==2 ? path3d(bottom,-height/2) : bottom,
+     jssingleok = (is_num(joint_sides) && joint_sides > 0) || (is_vector(joint_sides,2) && joint_sides[0]>=0 && joint_sides[1]>=0),
+     jsvecok = is_list(joint_sides) && len(joint_sides)==N && []==[for(entry=joint_sides) if (!(is_num(entry) || is_vector(entry,2))) entry]
+   )
+   assert(is_num(joint_top) || is_vector(joint_top,2))
+   assert(is_num(joint_bot) || is_vector(joint_bot,2))
+   assert(is_num(joint_top) || (joint_top[0]>=0 ||joint_top[1]>=0), "Both entries in joint_top cannot be negative")
+   assert(is_num(joint_bot) || (joint_bot[0]>=0 ||joint_bot[1]>=0), "Both entries in joint_bot cannot be negative")
+   assert(jsvecok || jssingleok,
+          str("Argument joint_sides is invalid.  All entries must be nonnegative, and it must be a number, 2-vector, or a length ",N," list those."))
+   assert(is_num(k_sides) || is_vector(k_sides,N), str("Curvature parameter k_sides must be a number or length ",N," vector"))
+   assert(points_are_coplanar(bottom))
+   assert(points_are_coplanar(top))
+   assert(!is_num(k_sides) || (k_sides>=0 && k_sides<=1), "Curvature parameter k_sides must be in interval [0,1]")
+   let(
+     non_coplanar=[for(i=[0:N-1]) if (!points_are_coplanar(concat(select(top,i,i+1), select(bottom,i,i+1)))) [i,(i+1)%N]],
+     k_sides_vec = is_num(k_sides) ? repeat(k_sides, N) : k_sides,
+     kbad = [for(i=[0:N-1]) if (k_sides_vec[i]<0 || k_sides_vec[i]>1) i],
+     joint_sides_vec = jssingleok ? repeat(joint_sides,N) : joint_sides
+   )
+   assert(non_coplanar==[], str("Side faces are non-coplanar at edges: ",non_coplanar))
+   assert(kbad==[], str("k_sides parameter outside interval [0,1] at indices: ",kbad))
+   let(
+     top_patch = _rp_compute_patches(top, bottom, joint_top, joint_sides_vec, k_top, k_sides_vec, concave),
+     bot_patch = _rp_compute_patches(bottom, top, joint_bot, joint_sides_vec, k_bot, k_sides_vec, concave),
+     corner_patches = [for(i=[0:N-1]) each [top_patch[i], bot_patch[i]]],
+
+     /*  // Compute maps between corner patches
+         // Could be used to improve speed in some cases where corner patches are linear transforms of each other
+     maps = 
+     [0,for(i=[1:1:2*N-1])
+       min([for(j=[0:1:i])
+       let(
+         tpatch = patch_transform(translate(-corner_patches[i][2][2]), corner_patches[i]),
+         tref = patch_transform(translate(-corner_patches[j][2][2]), corner_patches[j]),
+         map = affine2d_to_3d(transpose(linear_solve([tpatch[0][2], tpatch[4][0], tpatch[4][4]],
+                                      [tref[0][2], tref[4][0], tref[4][4]]))),
+         map_patch = patch_transform(map, tpatch)
+       ) if (approx(map_patch, tref)) j])],
+     dummy=echo(maps=maps),
+     */
+
+     vertbad = [for(i=[0:N-1])
+                   if (norm(top[i]-top_patch[i][4][2]) + norm(bottom[i]-bot_patch[i][4][2]) > norm(bottom[i]-top[i])) i],
+     topbad = [for(i=[0:N-1])
+                   if (norm(top_patch[i][2][4]-top_patch[i][2][2]) + norm(select(top_patch,i+1)[2][0]-select(top_patch,i+1)[2][2])
+		          > norm(top_patch[i][2][2] - select(top_patch,i+1)[2][2]))   [i,(i+1)%N]],
+     botbad = [for(i=[0:N-1])
+                   if (norm(bot_patch[i][2][4]-bot_patch[i][2][2]) + norm(select(bot_patch,i+1)[2][0]-select(bot_patch,i+1)[2][2])
+		          > norm(bot_patch[i][2][2] - select(bot_patch,i+1)[2][2]))   [i,(i+1)%N]],
+     topinbad = [for(i=[0:N-1])
+                   if (norm(top_patch[i][0][2]-top_patch[i][0][4]) + norm(select(top_patch,i+1)[0][0]-select(top_patch,i+1)[0][2])
+                          > norm(top_patch[i][0][2]-select(top_patch,i+1)[0][2])) [i,(i+1)%N]],
+     botinbad = [for(i=[0:N-1])
+                   if (norm(bot_patch[i][0][2]-bot_patch[i][0][4]) + norm(select(bot_patch,i+1)[0][0]-select(bot_patch,i+1)[0][2])
+                          > norm(bot_patch[i][0][2]-select(bot_patch,i+1)[0][2])) [i,(i+1)%N]]
+   )
+   assert(debug || vertbad==[], str("Top and bottom joint lengths are too large; they interfere with each other at vertices: ",vertbad))
+   assert(debug || topbad==[], str("Joint lengths too large at top edges: ",topbad))
+   assert(debug || botbad==[], str("Joint lengths too large at bottom edges: ",botbad))
+   assert(debug || topinbad==[], str("Joint length too large on the top face at edges: ", topinbad))
+   assert(debug || botinbad==[], str("Joint length too large on the bottom face at edges: ", botinbad))
+   let(
+     edge_patches = 
+       [for(i=[0:N-1])
+          let(
+             top_corn1 = top_patch[i],
+             top_corn2 = select(top_patch,i+1),
+             bot_corn1 = bot_patch[i],
+             bot_corn2 = select(bot_patch, i+1),
+             top_edge = reverse(lerp(subindex(top_corn1,4), subindex(top_corn2,0),  [0,.25,.5,.75,1])),
+             bot_edge = lerp(subindex(bot_corn1,4), subindex(bot_corn2,0),  [0,.25,.5,.75,1]),
+             vert_edge = lerp(top_corn1[4], bot_corn1[4], [0,.25,.5,.75,1])
+             )
+             each [top_edge, bot_edge, vert_edge]],
+     faces = [
+             [for(i=[0:N-1]) each top_patch[i][0][0]==top_patch[i][0][2] && top_patch[i][0][2]==top_patch[i][0][4] ? [top_patch[i][0][0]] :
+                                  bezier_polyline(top_patch[i][0],splinesteps,4)],
+             [for(i=[N-1:-1:0]) each bot_patch[i][0][0]==bot_patch[i][0][2] && bot_patch[i][0][2]==bot_patch[i][0][4] ? [bot_patch[i][0][0]] :
+                                      reverse(  bezier_polyline(bot_patch[i][0],splinesteps,4))],
+              for(i=[0:N-1]) [
+                                bot_patch[i][4][4],
+                                select(bot_patch,i+1)[4][0],
+                                select(top_patch,i+1)[4][0],
+                                top_patch[i][4][4]
+                              ]
+             ],
+     // verify vertical edges
+     verify_vert =
+       [for(i=[0:N-1],j=[0:4])
+         let(
+               vline = concat(select(subindex(corner_patches[2*i],j),2,4),
+                              select(subindex(corner_patches[2*i+1],j),2,4))
+             )
+         if (!points_are_collinear(vline)) [i,j]],
+     //verify horiz edges
+     verify_horiz=[for(i=[0:N-1], j=[0:4])
+         let(
+             hline_top = concat(select(corner_patches[2*i][j],2,4), select(select(corner_patches, 2*(i+1))[j],0,2)),
+             hline_bot = concat(select(corner_patches[2*i+1][j],2,4), select(select(corner_patches, 2*(i+1)+1)[j],0,2))
+         ) 
+         if (!points_are_collinear(hline_top) || !points_are_collinear(hline_bot)) [i,j]]
+    ) 
+    assert(debug || (verify_vert==[] && verify_horiz==[]), "Curvature continuity failed")
+    let (
+      vnf = 
+        bezier_surface(top_patch, splinesteps,
+        bezier_surface([for(patch=bot_patch) patch_reverse(patch)], splinesteps, 
+        bezier_surface(edge_patches, [splinesteps,1], 
+        vnf_triangulate(vnf_add_faces(EMPTY_VNF,faces)))))
+    )
+    debug ? [corner_patches, vnf] : vnf;
+
+
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
 
 
