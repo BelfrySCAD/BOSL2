@@ -9,9 +9,9 @@
 //////////////////////////////////////////////////////////////////////
 
 
-include <BOSL2/threading.scad>
-include <BOSL2/phillips_drive.scad>
-include <BOSL2/torx_drive.scad>
+include <threading.scad>
+include <phillips_drive.scad>
+include <torx_drive.scad>
 
 
 // Section: Functions

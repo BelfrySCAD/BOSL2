@@ -9,8 +9,8 @@
 //////////////////////////////////////////////////////////////////////
 
 
-include <BOSL2/rounding.scad>
-include <BOSL2/skin.scad>
+include <rounding.scad>
+include <skin.scad>
 
 
 // Section: Half Joiners

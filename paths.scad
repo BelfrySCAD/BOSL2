@@ -8,7 +8,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-include <BOSL2/triangulation.scad>
+include <triangulation.scad>
 
 
 // Section: Functions

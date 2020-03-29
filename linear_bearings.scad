@@ -9,7 +9,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-include <BOSL2/metric_screws.scad>
+include <metric_screws.scad>
 
 
 // Section: Functions
