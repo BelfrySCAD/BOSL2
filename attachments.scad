@@ -307,7 +307,6 @@ function attach_geom_size(geom) =
 //   p = If given as a VNF, path, or point, applies the affine3d transformation matrix to it and returns the result.
 function attach_transform(anchor=CENTER, spin=0, orient=UP, geom, p) =
 	assert(is_string(anchor) || is_vector(anchor))
-	assert(is_num(spin) || is_vector(spin,3))
 	assert(is_vector(orient))
 	let(
 		two_d = attach_geom_2d(geom),
@@ -316,36 +315,49 @@ function attach_transform(anchor=CENTER, spin=0, orient=UP, geom, p) =
 				anch = find_anchor($attach_to, geom),
 				pos = anch[1]
 			) two_d? (
+				assert(two_d && is_num(spin))
 				let(
 					ang = vector_angle(anch[2], BACK)
 				)
 				affine3d_zrot(ang+spin) *
 				affine3d_translate(point3d(-pos))
 			) : (
+				assert(is_num(spin) || is_vector(spin,3))
 				let(
 					ang = vector_angle(anch[2], DOWN),
 					axis = vector_axis(anch[2], DOWN),
 					ang2 = (anch[2]==UP || anch[2]==DOWN)? 0 : 180-anch[3],
 					axis2 = rot(p=axis,[0,0,ang2])
 				)
-				affine3d_rot_by_axis(axis2,ang) *
-				affine3d_zrot(ang2+spin) *
-				affine3d_translate(point3d(-pos))
+				affine3d_rot_by_axis(axis2,ang) * (
+					is_num(spin)? affine3d_zrot(ang2+spin) : (
+						affine3d_zrot(spin.z) *
+						affine3d_yrot(spin.y) *
+						affine3d_xrot(spin.x) *
+						affine3d_zrot(ang2)
+					)
+				) * affine3d_translate(point3d(-pos))
 			)
 		) : (
 			let(
 				pos = find_anchor(anchor, geom)[1]
 			) two_d? (
+				assert(two_d && is_num(spin))
 				affine3d_zrot(spin) *
 				affine3d_translate(point3d(-pos))
 			) : (
+				assert(is_num(spin) || is_vector(spin,3))
 				let(
 					axis = vector_axis(UP,orient),
 					ang = vector_angle(UP,orient)
 				)
-				affine3d_rot_by_axis(axis,ang) *
-				affine3d_zrot(spin) *
-				affine3d_translate(point3d(-pos))
+				affine3d_rot_by_axis(axis,ang) * (
+					is_num(spin)? affine3d_zrot(spin) : (
+						affine3d_zrot(spin.z) *
+						affine3d_yrot(spin.y) *
+						affine3d_xrot(spin.x)
+					)
+				) * affine3d_translate(point3d(-pos))
 			)
 		)
 	) is_undef(p)? m :
