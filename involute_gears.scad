@@ -278,7 +278,7 @@ function gear2d(
 		],
 		hide>0? [[0,0]] : []
 	)
-) attachable(anchor,spin, two_d=true, r=pr, p=pts);
+) reorient(anchor,spin, two_d=true, r=pr, p=pts);
 
 
 module gear2d(
@@ -301,6 +301,7 @@ module gear2d(
 		backlash  = backlash,
 		interior  = interior
 	);
+	pr = pitch_radius(pitch=pitch, teeth=teeth);
 	attachable(anchor,spin, two_d=true, r=pr) {
 		polygon(path);
 		children();
