@@ -345,6 +345,9 @@ module vnf_polyhedron(vnf, convexity=2) {
 }
 
 
+
+
+
 // Function: vnf_volume()
 // Usage:
 //   vol = vnf_volume(vnf);
@@ -353,13 +356,14 @@ module vnf_polyhedron(vnf, convexity=2) {
 //   no holes; otherwise the results are undefined.  Returns a positive volume if face direction is clockwise and a negative volume
 //   if face direction is counter-clockwise.  
 function vnf_volume(vnf) =
-	let(vnf = vnf_triangulate(vnf))
-	sum([
-		for(face_index=vnf[1]) let(
-			face = select(vnf[0], face_index),
-			n = cross(face[2]-face[0],face[1]-face[0])
-		) face[0] * n
-	])/6;
+                let(vnf = vnf_triangulate(vnf),
+                    vert=vnf[0])
+                sum([
+                                for(face_index=vnf[1]) let(
+                                                face = select(vert, face_index),
+                                                n = cross(face[2]-face[0],face[1]-face[0])
+                                ) face[0] * n
+                ])/6;
 
 
 // Function: vnf_centroid()
@@ -373,10 +377,11 @@ function vnf_volume(vnf) =
 function vnf_centroid(vnf) =
 	let(
 		vnf = vnf_triangulate(vnf),
+                vert = vnf[0],
 		val=sum([
 			for(face_index=vnf[1])
 			let(
-				face = select(vnf[0], face_index),
+				face = select(vert, face_index),
 				n = cross(face[2]-face[0],face[1]-face[0])
 			) [
 				face[0] * n,
