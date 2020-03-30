@@ -2,16 +2,16 @@
 
 ## Distributors
 
-Distributors are modules that are useful for placing multiple copies of a child
-across a line, area, volume, or ring.  Many transforms also have one or more
-distributive variation.
+Distributors are modules that are useful for placing multiple copies of a
+child across a line, area, volume, or ring.  Many transforms have one or
+more distributive variation.
 
 Transforms              | Related Distributors
 ----------------------- | ---------------------
 `left()`, `right()`     | `xcopies()`
 `fwd()`, `back()`       | `ycopies()`
 `down()`, `up()`        | `zcopies()`
-`move()`, `translate()` | `move_copies()`, `line_of()`, `grid2d()`, `grid3d()`
+`move()`, `translate()` | `move_copies()`, `line_of()`, `grid2d()`
 `xrot()`                | `xrot_copies()`
 `yrot()`                | `yrot_copies()`
 `zrot()`                | `zrot_copies()`
@@ -46,7 +46,7 @@ zcopies(20, n=5) sphere(d=10);
 ```
 
 If you don't give the `n=` argument to `xcopies()`, `ycopies()` or `zcopies()`,
-then it defaults to 2 (two) copies:
+then it defaults to 2 (two) copies.  This actually is the most common usage:
 ```openscad-2D
 xcopies(20) sphere(d=10);
 ```
@@ -59,9 +59,9 @@ ycopies(20) sphere(d=10);
 zcopies(20) sphere(d=10);
 ```
 
-If you don't know the spacing you want, but instead know how long a line you want
-the copies distributed over, you can use the `l=` argument instead of the `spacing=`
-argument:
+If you don't know the spacing you want, but instead know how long a line you
+want the copies distributed over, you can use the `l=` argument instead of
+the `spacing=` argument:
 ```openscad-2D
 xcopies(l=100, n=5) sphere(d=10);
 ```
@@ -74,9 +74,9 @@ ycopies(l=100, n=5) sphere(d=10);
 zcopies(l=100, n=5) sphere(d=10);
 ```
 
-If you don't want the line of copies centered on the origin, you can give a starting
-point, `sp=`, and the line of copies will start there.  For `xcopies()`, the line of
-copies will extend to the right of the starting point.
+If you don't want the line of copies centered on the origin, you can give a
+starting point `sp=`, and the line of copies will start there.  For `xcopies()`,
+the line of copies will extend to the right of the starting point.
 ```openscad-2D
 xcopies(20, n=5, sp=[0,0,0]) sphere(d=10);
 ```
@@ -103,20 +103,21 @@ With the `p1=` argument, you can specify the starting point of the line:
 line_of(spacing=(BACK+RIGHT)*20, n=5, p1=[0,0,0]) sphere(d=10);
 ```
 
-IF you give both `p1=` and `p2=`, you can nail down both the start and endpoints
-of the line of copies:
+If you give both `p1=` and `p2=`, you can nail down both the start and
+endpoints of the line of copies:
 ```openscad-2D
 line_of(p1=[0,100,0], p2=[100,0,0], n=4)
     sphere(d=10);
 ```
 
-You can also spread copies across a 2D area using the `grid2d()` command:
+The `grid2d()` command will let you spread copies across both the X and Y
+axes at the same time:
 ```openscad-2D
 grid2d(20, n=6) sphere(d=10);
 ```
 
-The spacing can be separately specified for both the X and Y axes, as can the
-count of rows and columns:
+The spacing can be separately specified for both the X and Y axes, as can
+the count of rows and columns:
 ```openscad-2D
 grid2d([20,30], n=[6,4]) sphere(d=10);
 ```
@@ -136,7 +137,7 @@ you a hexagonal grid, with the spacing being the distance from an item to all
 six of the surrounding items.  If you give the spacing as a 2-item vector,
 then that will force the X and Y spacings between columns and rows instead.
 ```openscad-2D
-grid2d([20,20], n=[6,6], stagger=true) sphere(d=10);
+grid2d([20,20], n=6, stagger=true) sphere(d=10);
 ```
 
 You can alternately specify a grid using size and spacing:
@@ -152,7 +153,7 @@ grid2d(20, size=[100,80]) sphere(d=10);
 grid2d(20, size=[100,80], stagger=true) sphere(d=10);
 ```
 
-You can also make grids by spacifying size and column/row count:
+You can also make grids by specifying size and column/row count:
 ```openscad-2D
 grid2d(n=5, size=100) sphere(d=10);
 ```
@@ -165,9 +166,9 @@ grid2d(n=[4,5], size=100) sphere(d=10);
 grid2d(n=[4,5], size=[100,80]) sphere(d=10);
 ```
 
-Finally, the `grid2d()` command will let you give a polygon or region shape to
-fill with items.  Only the items in the grid whose center would be inside the
-polygon or region will be created.  To fill a star shape with items, you
+Finally, the `grid2d()` command will let you give a polygon or region shape
+to fill with items.  Only the items in the grid whose center would be inside
+the polygon or region will be created.  To fill a star shape with items, you
 can do something like:
 ```openscad
 poly = [for (i=[0:11]) polar_to_xy(50*(i%2+1), i*360/12-90)];
