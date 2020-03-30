@@ -307,7 +307,7 @@ function attach_geom_size(geom) =
 //   p = If given as a VNF, path, or point, applies the affine3d transformation matrix to it and returns the result.
 function attach_transform(anchor=CENTER, spin=0, orient=UP, geom, p) =
 	assert(is_string(anchor) || is_vector(anchor))
-	assert(is_num(spin))
+	assert(is_num(spin) || is_vector(spin,3))
 	assert(is_vector(orient))
 	let(
 		two_d = attach_geom_2d(geom),
