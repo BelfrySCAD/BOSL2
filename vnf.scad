@@ -121,14 +121,14 @@ function vnf_add_face(vnf=EMPTY_VNF, pts) =
 // Arguments:
 //   vnf = The VNF structure to add a face to.
 //   faces = The list of faces, where each face is given as a list of vertex points.
-function vnf_add_faces(vnf=EMPTY_VNF, faces, _i=0) =
+function vnf_add_faces(vnf=EMPTY_VNF, faces) =
 	assert(is_vnf(vnf))
 	assert(is_list(faces))
 	let(
-		res = set_union(vnf[0],flatten(faces), get_indices=true),
+		res = set_union(vnf[0], flatten(faces), get_indices=true),
 		idxs = res[0],
 		nverts = res[1],
-		offs = cumsum([for (face=faces) len(face)]),
+		offs = cumsum([0, for (face=faces) len(face)]),
 		ifaces = [
 			for (i=idx(faces)) [
 				for (j=idx(faces[i]))
@@ -163,6 +163,7 @@ function vnf_merge(vnfs=[],_i=0,_acc=EMPTY_VNF) =
 //   Takes a VNF and consolidates all duplicate vertices, and drops unreferenced vertices.
 function vnf_compact(vnf) =
 	let(
+		vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf,
 		verts = vnf[0],
 		faces = [
 			for (face=vnf[1]) [
@@ -179,8 +180,9 @@ function vnf_compact(vnf) =
 //   Forces triangulation of faces in the VNF that have more than 3 vertices.
 function vnf_triangulate(vnf) =
 	let(
-		vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf
-	) [vnf[0], triangulate_faces(vnf[0], vnf[1])];
+		vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf,
+		verts = vnf[0]
+	) [verts, triangulate_faces(verts, vnf[1])];
 
 
 // Function: vnf_vertex_array()
@@ -355,14 +357,15 @@ module vnf_polyhedron(vnf, convexity=2) {
 //   no holes; otherwise the results are undefined.  Returns a positive volume if face direction is clockwise and a negative volume
 //   if face direction is counter-clockwise.  
 function vnf_volume(vnf) =
-                let(vnf = vnf_triangulate(vnf),
-                    vert=vnf[0])
-                sum([
-                                for(face_index=vnf[1]) let(
-                                                face = select(vert, face_index),
-                                                n = cross(face[2]-face[0],face[1]-face[0])
-                                ) face[0] * n
-                ])/6;
+	let(
+		vnf = vnf_triangulate(vnf),
+		verts = vnf[0]
+	) sum([
+		for(face_index=vnf[1]) let(
+			face = select(verts, face_index),
+			n = cross(face[2]-face[0],face[1]-face[0])
+		) face[0] * n
+	])/6;
 
 
 // Function: vnf_centroid()
@@ -376,11 +379,11 @@ function vnf_volume(vnf) =
 function vnf_centroid(vnf) =
 	let(
 		vnf = vnf_triangulate(vnf),
-                vert = vnf[0],
+		verts = vnf[0],
 		val=sum([
 			for(face_index=vnf[1])
 			let(
-				face = select(vert, face_index),
+				face = select(verts, face_index),
 				n = cross(face[2]-face[0],face[1]-face[0])
 			) [
 				face[0] * n,
@@ -482,44 +485,47 @@ function vnf_centroid(vnf) =
 //   ], slices=0, caps=false);
 //   vnf_validate(vnf,size=2);
 function vnf_validate(vnf, show_warns=true, check_isects=false) =
+	assert(is_path(vnf[0]))
 	let(
 		vnf = vnf_compact(vnf),
+		varr = vnf[0],
+		faces = vnf[1],
 		edges = sort([
-			for (face=vnf[1], edge=pair_wrap(face))
+			for (face=faces, edge=pair_wrap(face))
 			edge[0]<edge[1]? edge : [edge[1],edge[0]]
 		]),
 		edgecnts = unique_count(edges),
 		uniq_edges = edgecnts[0],
 		big_faces = !show_warns? [] : [
-			for (face = vnf[1])
+			for (face = faces)
 			if (len(face) > 3) [
 				"WARNING",
 				"BIG_FACE",
 				"Face has more than 3 vertices, and may confuse CGAL",
-				[for (i=face) vnf[0][i]],
+				[for (i=face) varr[i]],
 				"yellow"
 			]
 		],
 		null_faces = !show_warns? [] : [
-			for (face = vnf[1]) let(
-				verts = [for (k=face) vnf[0][k]],
-				area = abs(polygon_area(verts))
+			for (face = faces) let(
+				faceverts = [for (k=face) varr[k]],
+				area = abs(polygon_area(faceverts))
 			) if (area < EPSILON) [
 				"WARNING",
 				"NULL_FACE",
 				str("Face has zero area: ",fmt_float(area,15)),
-				verts,
+				faceverts,
 				"brown"
 			]
 		],
 		nonplanars = unique([
-			for (face = vnf[1]) let(
-				verts = [for (k=face) vnf[0][k]]
-			) if (!points_are_coplanar(verts)) [
+			for (face = faces) let(
+				faceverts = [for (k=face) varr[k]]
+			) if (!points_are_coplanar(faceverts)) [
 				"ERROR",
 				"NONPLANAR",
 				"Face vertices are not coplanar",
-				verts,
+				faceverts,
 				"cyan"
 			]
 		]),
@@ -529,30 +535,30 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
 				"ERROR",
 				"OVRPOP_EDGE",
 				"Too many faces attached at Edge",
-				[for (i=uniq_edges[i]) vnf[0][i]],
+				[for (i=uniq_edges[i]) varr[i]],
 				"#f70"
 			]
 		]),
 		reversals = unique([
-			for(i = idx(vnf[1]), j = idx(vnf[1])) if(i != j)
-			for(edge1 = pair_wrap(vnf[1][i]))
-			for(edge2 = pair_wrap(vnf[1][j]))
+			for(i = idx(faces), j = idx(faces)) if(i != j)
+			for(edge1 = pair_wrap(faces[i]))
+			for(edge2 = pair_wrap(faces[j]))
 			if(edge1 == edge2)  // Valid adjacent faces will never have the same vertex ordering.
-			if(_edge_not_reported(edge1, vnf, overpop_edges))
+			if(_edge_not_reported(edge1, varr, overpop_edges))
 			[
 				"ERROR",
 				"REVERSAL",
 				"Faces Reverse Across Edge",
-				[for (i=edge1) vnf[0][i]],
+				[for (i=edge1) varr[i]],
 				"violet"
 			]
 		]),
 		t_juncts = unique([
-			for (v=idx(vnf[0]), edge=uniq_edges)
+			for (v=idx(varr), edge=uniq_edges)
 			if (v!=edge[0] && v!=edge[1]) let(
-				a = vnf[0][edge[0]],
-				b = vnf[0][v],
-				c = vnf[0][edge[1]],
+				a = varr[edge[0]],
+				b = varr[v],
+				c = varr[edge[1]],
 				pt = segment_closest_point([a,c],b)
 			) if (pt == b) [
 				"ERROR",
@@ -563,10 +569,10 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
 			]
 		]),
 		isect_faces = !check_isects? [] : unique([
-			for (i = [0:1:len(vnf[1])-2])
-			for (j = [i+1:1:len(vnf[1])-1]) let(
-				f1 = vnf[1][i],
-				f2 = vnf[1][j],
+			for (i = [0:1:len(faces)-2])
+			for (j = [i+1:1:len(faces)-1]) let(
+				f1 = faces[i],
+				f2 = faces[j],
 				shared_edges = [
 					for (edge1 = pair_wrap(f1), edge2 = pair_wrap(f2)) let(
 						e1 = edge1[0]<edge1[1]? edge1 : [edge1[1],edge1[0]],
@@ -575,18 +581,18 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
 				]
 			)
 			if (!shared_edges) let(
-				plane1 = plane3pt_indexed(vnf[0], f1[0], f1[1], f1[2]),
-				plane2 = plane3pt_indexed(vnf[0], f2[0], f2[1], f2[2]),
+				plane1 = plane3pt_indexed(varr, f1[0], f1[1], f1[2]),
+				plane2 = plane3pt_indexed(varr, f2[0], f2[1], f2[2]),
 				line = plane_intersection(plane1, plane2)
 			)
 			if (!is_undef(line)) let(
-				poly1 = select(vnf[0],f1),
+				poly1 = select(varr,f1),
 				isects = polygon_line_intersection(poly1,line)
 			)
 			if (!is_undef(isects))
 			for (isect=isects)
 			if (len(isect)>1) let(
-				poly2 = select(vnf[0],f2),
+				poly2 = select(varr,f2),
 				isects2 = polygon_line_intersection(poly2,isect,bounded=true)
 			)
 			if (!is_undef(isects2))
@@ -602,13 +608,13 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
 		hole_edges = unique([
 			for (i=idx(uniq_edges))
 			if (edgecnts[1][i]<2)
-			if (_pts_not_reported(uniq_edges[i], vnf, t_juncts))
-			if (_pts_not_reported(uniq_edges[i], vnf, isect_faces))
+			if (_pts_not_reported(uniq_edges[i], varr, t_juncts))
+			if (_pts_not_reported(uniq_edges[i], varr, isect_faces))
 			[
 				"ERROR",
 				"HOLE_EDGE",
 				"Edge bounds Hole",
-				[for (i=uniq_edges[i]) vnf[0][i]],
+				[for (i=uniq_edges[i]) varr[i]],
 				"magenta"
 			]
 		])
@@ -624,16 +630,16 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
 	);
 
 
-function _pts_not_reported(pts, vnf, reports) =
+function _pts_not_reported(pts, varr, reports) =
 	[
 		for (i = pts, report = reports, pt = report[3])
-		if (vnf[0][i] == pt) 1
+		if (varr[i] == pt) 1
 	] == [];
 
 
-function _edge_not_reported(edge, vnf, reports) =
+function _edge_not_reported(edge, varr, reports) =
 	let(
-		edge = sort([for (i=edge) vnf[0][i]])
+		edge = sort([for (i=edge) varr[i]])
 	) [
 		for (report = reports) let(
 			pts = sort(report[3])
