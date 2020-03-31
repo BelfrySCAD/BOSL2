@@ -13,6 +13,7 @@
 //   - **Vector**: A list of numbers. ie: `[4, 5, 6]`
 //   - **Array**: A nested list of lists, or list of lists of lists, or deeper.  ie: `[[2,3], [4,5], [6,7]]`
 //   - **Dimension**: The depth of nesting of lists in an array.  A List is 1D.  A list of lists is 2D.  etc.
+//   - **Set**: A list of unique items.
 
 
 // Section: List Query Operations
@@ -964,6 +965,80 @@ function permute(l,n=2,_s=0) =
 	assert(len(l)-_s >= n)
 	n==1? [for (i=[_s:1:len(l)-1]) [l[i]]] :
 	[for (i=[_s:1:len(l)-n], p=permute(l,n=n-1,_s=i+1)) concat([l[i]], p)];
+
+
+
+// Section: Set Manipulation
+
+// Function: set_union()
+// Usage:
+//   s = set_union(a, b, [get_indices]);
+// Description:
+//   Given two sets (lists with unique items), returns the set of unique items that are in either `a` or `b`.
+//   If `get_indices` is true, a list of indices into the new union set are returned for each item in `b`,
+//   in addition to returning the new union set.  In this case, a 2-item list is returned, `[INDICES, NEWSET]`,
+//   where INDICES is the list of indices for items in `b`, and NEWSET is the new union set.
+// Arguments:
+//   a = One of the two sets to merge.
+//   b = The other of the two sets to merge.
+//   get_indices = If true, indices into the new union set are also returned for each item in `b`.  Returns `[INDICES, NEWSET]`.  Default: false
+// Example:
+//   set_a = [2,3,5,7,11];
+//   set_b = [1,2,3,5,8];
+//   set_u = set_union(set_a, set_b);
+//   // set_u now equals [2,3,5,7,11,1,8]
+//   set_v = set_union(set_a, set_b, get_indices=true);
+//   // set_v now equals [[5,0,1,2,6], [2,3,5,7,11,1,8]]
+function set_union(a, b, get_indices=false) =
+	let(
+		found = search(b, a, num_returns_per_match=1),
+		nset = concat(a, [
+			for (i=idx(found)) if(found[i]==[]) b[i]
+		])
+	) !get_indices? nset :
+	let(
+		nidx = cumsum([len(a), for (i=found) (i==[])? 1 : 0]),
+		idxs = [for (i=idx(found)) (found[i]==[])? nidx[i] : found[i]]
+	) [idxs, nset];
+
+
+// Function: set_difference()
+// Usage:
+//   s = set_difference(a, b);
+// Description:
+//   Given two sets (lists with unique items), returns the set of items that are in `a`, but not `b`.
+// Arguments:
+//   a = The starting set.
+//   b = The set of items to remove from set `a`.
+// Example:
+//   set_a = [2,3,5,7,11];
+//   set_b = [1,2,3,5,8];
+//   set_d = set_difference(set_a, set_b);
+//   // set_d now equals [7,11]
+function set_difference(a, b) =
+	let(
+		found = search(a, b, num_returns_per_match=1)
+	) [ for (i=idx(a)) if(found[i]==[]) a[i] ];
+
+
+// Function: set_intersection()
+// Usage:
+//   s = set_intersection(a, b);
+// Description:
+//   Given two sets (lists with unique items), returns the set of items that are in both sets.
+// Arguments:
+//   a = The starting set.
+//   b = The set of items to intersect with set `a`.
+// Example:
+//   set_a = [2,3,5,7,11];
+//   set_b = [1,2,3,5,8];
+//   set_i = set_intersection(set_a, set_b);
+//   // set_i now equals [2,3,5]
+function set_intersection(a, b) =
+	let(
+		found = search(a, b, num_returns_per_match=1)
+	) [ for (i=idx(a)) if(found[i]!=[]) a[i] ];
+
 
 
 // Section: Array Manipulation
