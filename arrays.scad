@@ -991,14 +991,23 @@ function permute(l,n=2,_s=0) =
 //   // set_v now equals [[5,0,1,2,6], [2,3,5,7,11,1,8]]
 function set_union(a, b, get_indices=false) =
 	let(
-		found = search(b, a, num_returns_per_match=1),
-		nset = concat(a, [
-			for (i=idx(found)) if(found[i]==[]) b[i]
-		])
+		found1 = search(b, a),
+		found2 = search(b, b),
+		c = [
+			for (i=idx(b))
+			if (found1[i] == [] && found2[i] == i)
+			b[i]
+		],
+		nset = concat(a, c)
 	) !get_indices? nset :
 	let(
-		nidx = cumsum([len(a), for (i=found) (i==[])? 1 : 0]),
-		idxs = [for (i=idx(found)) (found[i]==[])? nidx[i] : found[i]]
+		la = len(a),
+		found3 = search(b, c),
+		idxs = [
+			for (i=idx(b))
+			(found1[i] != [])? found1[i] :
+			la + found3[i]
+		]
 	) [idxs, nset];
 
 
