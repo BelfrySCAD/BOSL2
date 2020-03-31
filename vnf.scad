@@ -81,26 +81,11 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
 //   vnf3 = vnf_get_vertex(vnf2, p=[3,5,8]);  // Returns: [0, [[[3,5,8],[3,2,1]],[]]]
 //   vnf4 = vnf_get_vertex(vnf3, p=[[1,3,2],[3,2,1]]);  // Returns: [[1,2], [[[3,5,8],[3,2,1],[1,3,2]],[]]]
 function vnf_get_vertex(vnf=EMPTY_VNF, p) =
-	is_path(p)? _vnf_get_vertices(vnf, p) :
-	assert(is_list(vnf) && len(vnf)==2 && is_list(vnf[0]) && is_list(vnf[1]), "Argument vnf should contain a VNF structure.")
-	assert(is_vector(p))
 	let(
-		v = search([p], vnf[0])[0]
-	) [
-		v != []? v : len(vnf[0]),
-		[
-			concat(vnf[0], v != []? [] : [p]),
-			vnf[1]
-		]
-	];
-
-
-// Internal use only
-function _vnf_get_vertices(vnf=EMPTY_VNF, pts, _i=0, _idxs=[]) =
-	_i>=len(pts)? [_idxs, vnf] :
-	let(
-		vvnf = vnf_get_vertex(vnf, pts[_i])
-	) _vnf_get_vertices(vvnf[1], pts, _i=_i+1, _idxs=concat(_idxs,[vvnf[0]]));
+		p = is_vector(p)? [p] : p,
+		res = set_union(vnf[0], p, get_indices=true)
+	)
+	[res[0], [res[1],vnf[1]]];
 
 
 // Function: vnf_add_face()
@@ -117,12 +102,11 @@ function vnf_add_face(vnf=EMPTY_VNF, pts) =
 	assert(is_vnf(vnf))
 	assert(is_path(pts))
 	let(
-		vvnf = vnf_get_vertex(vnf, pts),
-		face = deduplicate(vvnf[0], closed=true),
-		vnf2 = vvnf[1]
+		res = set_union(vnf[0], pts, get_indices=true),
+		face = deduplicate(res[0], closed=true)
 	) [
-		vnf_vertices(vnf2),
-		concat(vnf_faces(vnf2), len(face)>2? [face] : [])
+		res[1],
+		concat(vnf[1], len(face)>2? [face] : [])
 	];
 
 
@@ -138,8 +122,23 @@ function vnf_add_face(vnf=EMPTY_VNF, pts) =
 //   vnf = The VNF structure to add a face to.
 //   faces = The list of faces, where each face is given as a list of vertex points.
 function vnf_add_faces(vnf=EMPTY_VNF, faces, _i=0) =
-	(assert(is_vnf(vnf)) assert(is_list(faces)) _i>=len(faces))? vnf :
-	vnf_add_faces(vnf_add_face(vnf, faces[_i]), faces, _i=_i+1);
+	assert(is_vnf(vnf))
+	assert(is_list(faces))
+	let(
+		res = set_union(vnf[0],flatten(faces), get_indices=true),
+		idxs = res[0],
+		nverts = res[1],
+		offs = cumsum([for (face=faces) len(face)]),
+		ifaces = [
+			for (i=idx(faces)) [
+				for (j=idx(faces[i]))
+				idxs[offs[i]+j]
+			]
+		]
+	) [
+		nverts,
+		concat(vnf[1],ifaces)
+	];
 
 
 // Function: vnf_merge()
