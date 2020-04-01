@@ -75,8 +75,9 @@ function select(list, start, end=undef) =
 //   slice([3,4,5,6,7,8,9], 6, -1);  // Returns [9]
 //   slice([3,4,5,6,7,8,9], 2, -2);  // Returns [5,6,7,8]
 function slice(arr,st,end) = let(
-		s=st<0?(len(arr)+st):st,
-		e=end<0?(len(arr)+end+1):end
+		l=len(arr),
+		s=st<0?(l+st):st,
+		e=end<0?(l+end+1):end
 	) [for (i=[s:1:e-1]) if (e>s) arr[i]];
 
 

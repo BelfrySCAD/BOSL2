@@ -549,8 +549,37 @@ function decompose_path(path, closed=true, eps=EPSILON) =
 		path = cleanup_path(path, eps=eps),
 		tagged = _tag_self_crossing_subpaths(path, closed=closed, eps=eps),
 		kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
-		outregion = assemble_path_fragments(kept, eps=eps)
-	) outregion;
+		completed = [for (frag=kept) if(is_closed_path(frag)) frag],
+		incomplete = [for (frag=kept) if(!is_closed_path(frag)) frag],
+		defrag = _path_fast_defragment(incomplete, eps=eps),
+		completed2 = assemble_path_fragments(defrag, eps=eps)
+	) concat(completed2,completed);
+
+
+function _path_fast_defragment(fragments, eps=EPSILON, _done=[]) =
+	len(fragments)==0? _done :
+	let(
+		path = fragments[0],
+		endpt = select(path,-1),
+		extenders = [
+			for (i = [1:1:len(fragments)-1]) let(
+				test1 = approx(endpt,fragments[i][0],eps=eps),
+				test2 = approx(endpt,select(fragments[i],-1),eps=eps)
+			) if (test1 || test2) (test1? i : -1)
+		]
+	) len(extenders) == 1 && extenders[0] >= 0? _path_fast_defragment(
+		fragments=[
+			concat(select(path,0,-2),fragments[extenders[0]]),
+			for (i = [1:1:len(fragments)-1])
+				if (i != extenders[0]) fragments[i]
+		],
+		eps=eps,
+		_done=_done
+	) : _path_fast_defragment(
+		fragments=[for (i = [1:1:len(fragments)-1]) fragments[i]],
+		eps=eps,
+		_done=concat(_done,[deduplicate(path,closed=true,eps=eps)])
+	);
 
 
 function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
@@ -596,33 +625,29 @@ function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
 // Arguments:
 //   fragments = List of polylines to be assembled into complete polygons.
 //   rightmost = If true, assemble paths using rightmost turns. Leftmost if false.
+//   startfrag = The fragment to start with.  Default: 0
 //   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-function assemble_a_path_from_fragments(fragments, rightmost=true, eps=EPSILON) =
+function assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, eps=EPSILON) =
 	len(fragments)==0? _finished :
 	let(
-		path = fragments[0],
-		newfrags = slice(fragments, 1, -1)
+		path = fragments[startfrag],
+		newfrags = [for (i=idx(fragments)) if (i!=startfrag) fragments[i]]
 	) is_closed_path(path, eps=eps)? (
 		// starting fragment is already closed
 		[path, newfrags]
 	) : let(
 		// Find rightmost/leftmost continuation fragment
 		seg = select(path,-2,-1),
-		frags = slice(fragments,1,-1),
-		extrema = _extreme_angle_fragment(seg=seg, fragments=frags, rightmost=rightmost, eps=eps),
+		extrema = _extreme_angle_fragment(seg=seg, fragments=newfrags, rightmost=rightmost, eps=eps),
 		foundfrag = extrema[0],
-		remainder = extrema[1],
-		newfrags = remainder
+		remainder = extrema[1]
 	) is_undef(foundfrag)? (
 		// No remaining fragments connect!  INCOMPLETE PATH!
 		// Treat it as complete.
-		[path, newfrags]
+		[path, remainder]
 	) : is_closed_path(foundfrag, eps=eps)? (
-		let(
-			newfrags = concat([path], remainder)
-		)
 		// Found fragment is already closed
-		[foundfrag, newfrags]
+		[foundfrag, concat([path], remainder)]
 	) : let(
 		fragend = select(foundfrag,-1),
 		hits = [for (i = idx(path,end=-2)) if(approx(path[i],fragend,eps=eps)) i]
@@ -661,19 +686,15 @@ function assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
 		minxidx = min_index([
 			for (frag=fragments) min(subindex(frag,0))
 		]),
-		promoted = [
-			fragments[minxidx],
-			for (i=idx(fragments))
-				if (i!=minxidx)
-					fragments[i]
-		],
 		result_l = assemble_a_path_from_fragments(
-			fragments=promoted,
+			fragments=fragments,
+			startfrag=minxidx,
 			rightmost=false,
 			eps=eps
 		),
 		result_r = assemble_a_path_from_fragments(
-			fragments=promoted,
+			fragments=fragments,
+			startfrag=minxidx,
 			rightmost=true,
 			eps=eps
 		),
