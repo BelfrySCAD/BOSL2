@@ -1558,9 +1558,13 @@ function rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_
      non_coplanar=[for(i=[0:N-1]) if (!points_are_coplanar(concat(select(top,i,i+1), select(bottom,i,i+1)))) [i,(i+1)%N]],
      k_sides_vec = is_num(k_sides) ? repeat(k_sides, N) : k_sides,
      kbad = [for(i=[0:N-1]) if (k_sides_vec[i]<0 || k_sides_vec[i]>1) i],
-     joint_sides_vec = jssingleok ? repeat(joint_sides,N) : joint_sides
+     joint_sides_vec = jssingleok ? repeat(joint_sides,N) : joint_sides,
+     top_collinear = [for(i=[0:N-1]) if (points_are_collinear(select(top,i-1,i+1))) i],
+     bot_collinear = [for(i=[0:N-1]) if (points_are_collinear(select(bottom,i-1,i+1))) i]
    )
    assert(non_coplanar==[], str("Side faces are non-coplanar at edges: ",non_coplanar))
+   assert(top_collinear==[], str("Top has collinear or duplicated points at indices: ",top_collinear))
+   assert(bot_collinear==[], str("Bottom has collinear or duplicated points at indices: ",bot_collinear))
    assert(kbad==[], str("k_sides parameter outside interval [0,1] at indices: ",kbad))
    let(
      top_patch = _rp_compute_patches(top, bottom, joint_top, joint_sides_vec, k_top, k_sides_vec, concave),
@@ -1627,6 +1631,8 @@ function rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_
                                 top_patch[i][4][4]
                               ]
              ],
+     top_intersections = path_self_intersections(faces[0]),
+     bot_intersections = path_self_intersections(faces[1]),
      // verify vertical edges
      verify_vert =
        [for(i=[0:N-1],j=[0:4])
@@ -1643,6 +1649,10 @@ function rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_
          ) 
          if (!points_are_collinear(hline_top) || !points_are_collinear(hline_bot)) [i,j]]
     ) 
+    assert(debug || top_intersections==[],
+          "Roundovers interfere with each other on top face: either input is self intersecting or top joint length is too large")
+    assert(debug || bot_intersections==[],
+          "Roundovers interfere with each other on bottom face: either input is self intersecting or top joint length is too large")
     assert(debug || (verify_vert==[] && verify_horiz==[]), "Curvature continuity failed")
     let (
       vnf = 
