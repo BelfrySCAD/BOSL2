@@ -143,20 +143,23 @@ function unit(v) = norm(v)<=EPSILON? v : v/norm(v);
 //   vector_angle([10,10], [0,0], [10,-10]);  // Returns: 90
 //   vector_angle([10,0,10], [0,0,0], [-10,10,0]);  // Returns: 120
 //   vector_angle([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: 120
-function vector_angle(v1,v2=undef,v3=undef) =
-	(is_list(v1) && is_list(v1[0]) && is_undef(v2) && is_undef(v3))? (
-		assert(is_vector(v1.x))
-		assert(is_vector(v1.y))
-		len(v1)==3? assert(is_vector(v1.z)) vector_angle(v1.x, v1.y, v1.z) :
-		len(v1)==2? vector_angle(v1.x, v1.y) :
-		assert(false, "Bad arguments.")
-	) :
-	(is_vector(v1) && is_vector(v2) && is_vector(v3))? vector_angle(v1-v2, v3-v2) :
-	(is_vector(v1) && is_vector(v2) && is_undef(v3))? (
-		assert(len(v1)==len(v2))
-		// NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
-		acos(constrain((v1*v2)/(norm(v1)*norm(v2)), -1, 1))
-	) : assert(false, "Bad arguments.");
+function vector_angle(v1,v2,v3) =
+	let(
+		vecs = !is_undef(v3)? [v1-v2,v3-v2] :
+			!is_undef(v2)? [v1,v2] :
+			len(v1) == 3? [v1[0]-v1[1],v1[2]-v1[1]] :
+			len(v1) == 2? v1 :
+			assert(false, "Bad arguments to vector_angle()"),
+		is_valid = is_vector(vecs[0]) && is_vector(vecs[1]) && vecs[0]*0 == vecs[1]*0
+	)
+	assert(is_valid, "Bad arguments to vector_angle()")
+	let(
+		norm0 = norm(vecs[0]),
+		norm1 = norm(vecs[1])
+	)
+	assert(norm0>0 && norm1>0,"Zero length vector given to vector_angle()")
+	// NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
+	acos(constrain((vecs[0]*vecs[1])/(norm0*norm1), -1, 1));
 
 
 // Function: vector_axis()
