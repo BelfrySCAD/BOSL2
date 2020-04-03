@@ -61,6 +61,7 @@ function _point_above_below_segment(point, edge) =
 //   c = Third point.
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 function collinear(a, b, c, eps=EPSILON) =
+	approx(a,b,eps=eps)? true :
 	distance_from_line([a,b], c) < eps;
 
 
