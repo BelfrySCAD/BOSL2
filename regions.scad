@@ -702,6 +702,7 @@ function offset(
 		],
 		steps = is_def(delta) ? [] : [
 			for(i=[0:len(goodsegs)-1])
+                        r==0 ? 0 :
 			ceil(
 				abs(r)*vector_angle(
 					select(goodsegs,i-1)[1]-goodpath[i],
