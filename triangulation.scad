@@ -47,9 +47,10 @@ function find_convex_vertex(points, face, facenorm, i=0) =
 		p1=points[face[(i+1)%count]],
 		p2=points[face[(i+2)%count]]
 	)
-	(len(face)>i)?
-		(cross(p1-p0, p2-p1)*facenorm>0)? (i+1)%count : find_convex_vertex(points, face, facenorm, i+1)
-	: //This should never happen since there is at least 1 convex vertex.
+	(len(face)>i)? (
+		(cross(p1-p0, p2-p1)*facenorm>0)? (i+1)%count :
+		find_convex_vertex(points, face, facenorm, i+1)
+	) : //This should never happen since there is at least 1 convex vertex.
 		undef
 ;
 
@@ -138,7 +139,10 @@ function triangulate_face(points, face) =
 	(count == 3)? [face] :
 	let(
 		facenorm=face_normal(points, face),
-		cv=find_convex_vertex(points, face, facenorm),
+		cv=find_convex_vertex(points, face, facenorm)
+	)
+	assert(!is_undef(cv), "Cannot triangulate self-crossing face perimeters.")
+	let(
 		pv=(count+cv-1)%count,
 		nv=(cv+1)%count,
 		p0=points[face[pv]],
