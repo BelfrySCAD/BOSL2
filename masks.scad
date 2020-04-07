@@ -63,7 +63,7 @@ module angle_pie_mask(
 //   one or both ends of the cylindrical region.  Difference the mask
 //   from the region, making sure the center of the mask object is
 //   anchored exactly with the center of the cylindrical region to
-//   be chamferred.
+//   be chamfered.
 // Arguments:
 //   l = Length of the cylindrical/conical region.
 //   r = Radius of cylindrical region to chamfer.
@@ -279,13 +279,13 @@ module chamfer(chamfer=1, size=[1,1,1], edges=EDGES_ALL, except_edges=[])
 //   chamfer_cylinder_mask(r|d, chamfer, [ang], [from_end])
 // Description:
 //   Create a mask that can be used to bevel/chamfer the end of a cylindrical region.
-//   Difference it from the end of the region to be chamferred.  The center of the mask
+//   Difference it from the end of the region to be chamfered.  The center of the mask
 //   object should align exactly with the center of the end of the cylindrical region
-//   to be chamferred.
+//   to be chamfered.
 // Arguments:
 //   r = Radius of cylinder to chamfer.
 //   d = Diameter of cylinder to chamfer. Use instead of r.
-//   chamfer = Size of the edge chamferred, inset from edge. (Default: 0.25)
+//   chamfer = Size of the edge chamfered, inset from edge. (Default: 0.25)
 //   ang = Angle of chamfer in degrees from vertical.  (Default: 45)
 //   from_end = If true, chamfer size is measured from end of cylinder.  If false, chamfer is measured outset from the radius of the cylinder.  (Default: false)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -316,8 +316,8 @@ module chamfer_cylinder_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=fa
 //   chamfer_hole_mask(r|d, chamfer, [ang], [from_end]);
 // Description:
 //   Create a mask that can be used to bevel/chamfer the end of a cylindrical hole.
-//   Difference it from the hole to be chamferred.  The center of the mask object
-//   should align exactly with the center of the end of the hole to be chamferred.
+//   Difference it from the hole to be chamfered.  The center of the mask object
+//   should align exactly with the center of the end of the hole to be chamfered.
 // Arguments:
 //   r = Radius of hole to chamfer.
 //   d = Diameter of hole to chamfer. Use instead of r.

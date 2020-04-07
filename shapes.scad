@@ -20,11 +20,11 @@
 //
 // Arguments:
 //   size = The size of the cube.
-//   chamfer = Size of chamfer, inset from sides.  Default: No chamferring.
+//   chamfer = Size of chamfer, inset from sides.  Default: No chamfering.
 //   rounding = Radius of the edge rounding.  Default: No rounding.
 //   edges = Edges to chamfer/round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
 //   except_edges = Edges to explicitly NOT chamfer/round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
-//   trimcorners = If true, rounds or chamfers corners where three chamferred/rounded edges meet.  Default: `true`
+//   trimcorners = If true, rounds or chamfers corners where three chamfered/rounded edges meet.  Default: `true`
 //   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=ALLNEG`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -1193,7 +1193,7 @@ module pie_slice(
 //
 // Description:
 //   Creates a shape that can be unioned into a concave joint between two faces, to fillet them.
-//   Center this part along the concave edge to be chamferred and union it in.
+//   Center this part along the concave edge to be chamfered and union it in.
 //
 // Usage:
 //   interior_fillet(l, r, [ang], [overlap]);
