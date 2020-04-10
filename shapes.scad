@@ -186,7 +186,6 @@ module cuboid(
 				}
 			} else if (rounding != undef) {
 				sides = quantup(segs(rounding),4);
-				sc = 1/cos(180/sides);
 				if (edges == EDGES_ALL) {
 					if(rounding<0) {
 						cube(size, center=true);
@@ -206,12 +205,12 @@ module cuboid(
 						minkowski() {
 							cube(isize, center=true);
 							if (trimcorners) {
-								sphere(r=rounding*sc, $fn=sides);
+								sphere(r=rounding, $fn=sides);
 							} else {
 								intersection() {
-									zrot(180/sides) cylinder(r=rounding*sc, h=rounding*2, center=true, $fn=sides);
-									rotate([90,0,0]) zrot(180/sides) cylinder(r=rounding*sc, h=rounding*2, center=true, $fn=sides);
-									rotate([0,90,0]) zrot(180/sides) cylinder(r=rounding*sc, h=rounding*2, center=true, $fn=sides);
+									zrot(180/sides) cylinder(r=rounding, h=rounding*2, center=true, $fn=sides);
+									rotate([90,0,0]) zrot(180/sides) cylinder(r=rounding, h=rounding*2, center=true, $fn=sides);
+									rotate([0,90,0]) zrot(180/sides) cylinder(r=rounding, h=rounding*2, center=true, $fn=sides);
 								}
 							}
 						}
@@ -270,7 +269,7 @@ module cuboid(
 										rotate(majrots[axis]) cube([rounding*2, rounding*2, size[axis]+0.1], center=true);
 									}
 									translate(vmul(EDGE_OFFSETS[axis][i], size/2 - [1,1,1]*rounding)) {
-										rotate(majrots[axis]) zrot(180/sides) cylinder(h=size[axis]+0.2, r=rounding*sc, center=true, $fn=sides);
+										rotate(majrots[axis]) zrot(180/sides) cylinder(h=size[axis]+0.2, r=rounding, center=true, $fn=sides);
 									}
 								}
 							}
@@ -285,7 +284,7 @@ module cuboid(
 											cube(rounding*2, center=true);
 										}
 										translate(vmul([xa,ya,za], size/2-[1,1,1]*rounding)) {
-											zrot(180/sides) sphere(r=rounding*sc*sc, $fn=sides);
+											zrot(180/sides) sphere(r=rounding, $fn=sides);
 										}
 									}
 								}
