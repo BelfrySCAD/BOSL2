@@ -18,6 +18,7 @@ include <errors.scad>
 include <arrays.scad>
 include <strings.scad>
 include <vnf.scad>
+include <debug.scad>
 
 include <math.scad>
 include <vectors.scad>
