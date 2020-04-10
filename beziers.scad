@@ -563,6 +563,7 @@ module rotate_sweep_bezier(bezier, splinesteps=16, N=3, convexity=undef, angle=3
 		rotate_extrude(convexity=convexity, angle=angle) {
 			polygon(oline);
 		}
+		children();
 	}
 }
 
