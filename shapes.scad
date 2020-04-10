@@ -208,9 +208,9 @@ module cuboid(
 								sphere(r=rounding, $fn=sides);
 							} else {
 								intersection() {
-									zrot(180/sides) cylinder(r=rounding, h=rounding*2, center=true, $fn=sides);
-									rotate([90,0,0]) zrot(180/sides) cylinder(r=rounding, h=rounding*2, center=true, $fn=sides);
-									rotate([0,90,0]) zrot(180/sides) cylinder(r=rounding, h=rounding*2, center=true, $fn=sides);
+									cylinder(r=rounding, h=rounding*2, center=true, $fn=sides);
+									rotate([90,0,0]) cylinder(r=rounding, h=rounding*2, center=true, $fn=sides);
+									rotate([0,90,0]) cylinder(r=rounding, h=rounding*2, center=true, $fn=sides);
 								}
 							}
 						}
@@ -269,7 +269,7 @@ module cuboid(
 										rotate(majrots[axis]) cube([rounding*2, rounding*2, size[axis]+0.1], center=true);
 									}
 									translate(vmul(EDGE_OFFSETS[axis][i], size/2 - [1,1,1]*rounding)) {
-										rotate(majrots[axis]) zrot(180/sides) cylinder(h=size[axis]+0.2, r=rounding, center=true, $fn=sides);
+										rotate(majrots[axis]) cylinder(h=size[axis]+0.2, r=rounding, center=true, $fn=sides);
 									}
 								}
 							}
@@ -284,7 +284,7 @@ module cuboid(
 											cube(rounding*2, center=true);
 										}
 										translate(vmul([xa,ya,za], size/2-[1,1,1]*rounding)) {
-											zrot(180/sides) sphere(r=rounding, $fn=sides);
+											sphere(r=rounding, $fn=sides);
 										}
 									}
 								}
