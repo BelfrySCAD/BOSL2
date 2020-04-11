@@ -934,6 +934,67 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 	}
 }
 
+// Module: corner_profile()
+// Usage:
+//   corner_profile([corners], [except], [convexity]) ...
+// Description:
+//   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
+//   to the selected corners with the appropriate orientation.  Tags it as a "mask" to allow it to be
+//   `diff()`ed away, to give the corner a matching profile.
+// Arguments:
+//   corners = Edges to mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: All corners.
+//   except = Edges to explicitly NOT mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: No corners.
+//   r = Radius of corner mask.
+//   d = Diameter of corner mask.
+//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
+// Side Effects:
+//   Sets `$tags = "mask"` for all children.
+// Example:
+//   diff("mask")
+//   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
+//   	corner_profile(BOT,r=10)
+//   		mask2d_teardrop(r=10, angle=40);
+//   }
+module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
+	assert($parent_geom != undef, "No object to attach to!");
+	r = get_radius(r=r, d=d, dflt=undef);
+	assert(is_num(r));
+	corners = corners(corners, except=except);
+	vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
+	for (vec = vecs) {
+		vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
+		assert(vcount == 3, "Not an edge vector!");
+		anch = find_anchor(vec, $parent_geom);
+		$attach_to = undef;
+		$attach_anchor = anch;
+		$attach_norot = true;
+		$tags = "mask";
+		rotang = vec.z<0?
+			[  0,0,180+vang(point2d(vec))-45] :
+			[180,0,-90+vang(point2d(vec))-45];
+		translate(anch[1]) {
+			rot(rotang) {
+				render(convexity=convexity)
+				difference() {
+					translate(-0.1*[1,1,1]) cube(r+0.1, center=false);
+					right(r) back(r) zrot(180) {
+						rotate_extrude(angle=90, convexity=convexity) {
+							xflip() left(r) {
+								difference() {
+									square(r,center=false);
+									children();
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
 
 // Module: edge_mask()
 // Usage:

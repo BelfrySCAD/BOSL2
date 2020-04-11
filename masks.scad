@@ -781,4 +781,39 @@ module rounding_hole_mask(r=undef, d=undef, rounding=0.25, overage=0.1, anchor=C
 }
 
 
+// Module: teardrop_corner_mask()
+// Usage:
+//   teardrop_corner_mask(r|d, [angle], [excess]);
+// Description:
+//   Makes an apropriate 3D corner rounding mask that keeps within `angle` degrees of vertical.
+// Arguments:
+//   r = Radius of the mask rounding.
+//   d = Diameter of the mask rounding.
+//   angle = Maximum angle from vertical. Default: 45
+//   excess = Excess mask size.  Default: 0.1
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Example:
+//   teardrop_corner_mask(r=20, angle=40);
+// Example:
+//   diff("mask")
+//   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
+//   	edge_profile(BOT)
+//   		mask2d_teardrop(r=10, angle=40);
+//      	corner_profile(BOT,r=10)
+//      		mask2d_teardrop(r=10, angle=40);
+//   }
+module teardrop_corner_mask(r, d, angle, excess=0.1, anchor=CENTER, spin=0, orient=UP) {
+	assert(is_num(angle));
+	assert(is_num(excess));
+	assert(angle>0 && angle<90);
+	r = get_radius(r=r, d=d, dflt=1);
+	difference() {
+		translate(-[1,1,1]*excess) cube(r+excess, center=false);
+		translate([1,1,1]*r) onion(r=r,maxang=angle,orient=DOWN);
+	}
+}
+
+
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

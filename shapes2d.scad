@@ -1405,7 +1405,7 @@ function mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) =
 			bp, bp-[0,excess], [-excess,-excess], [-excess,r],
 			for (i=[0:1:n]) cp+polar_to_xy(r,180+i*step)
 		]
-	) echo(cp=cp,tp=tp,bp=bp,path=path) reorient(anchor,spin, two_d=true, path=path, p=path);
+	) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 module mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) {
 	path = mask2d_teardrop(r=r, d=d, angle=angle, excess=excess);
