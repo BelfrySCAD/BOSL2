@@ -318,12 +318,18 @@ function bezier_path_length(path, N=3, max_deflect=0.001) =
 //   ];
 //   trace_polyline(bez, size=1, N=3, showpts=true);
 //   trace_polyline(bezier_polyline(bez, N=3), size=3);
-function bezier_polyline(bezier, splinesteps=16, N=3) = let(
+function bezier_polyline(bezier, splinesteps=16, N=3) =
+	assert(is_path(bezier))
+	assert(is_int(N))
+	assert(is_int(splinesteps))
+	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
+	let(
 		segs = (len(bezier)-1)/N
-	) concat(
-		[for (seg = [0:1:segs-1], i = [0:1:splinesteps-1]) bezier_path_point(bezier, seg, i/splinesteps, N=N)],
-		[bezier_path_point(bezier, segs-1, 1, N=N)]
-	);
+	) deduplicate([
+		for (seg = [0:1:segs-1], i = [0:1:splinesteps-1])
+			bezier_path_point(bezier, seg, i/splinesteps, N=N),
+		bezier_path_point(bezier, segs-1, 1, N=N)
+	]);
 
 
 
@@ -412,6 +418,9 @@ function fillet_path(pts, fillet, maxerr=0.1) = concat(
 //   closed = bezier_close_to_axis(bez, axis="Y");
 //   trace_bezier(closed, size=1);
 function bezier_close_to_axis(bezier, N=3, axis="X") =
+	assert(is_path(bezier))
+	assert(is_int(N))
+	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
 	let(
 		bezend = len(bezier)-1,
 		sp = bezier[0],
@@ -449,6 +458,10 @@ function bezier_close_to_axis(bezier, N=3, axis="X") =
 //   closed = bezier_offset([-5,0], bez);
 //   trace_bezier(closed, size=1);
 function bezier_offset(offset, bezier, N=3) =
+	assert(is_num(offset))
+	assert(is_path(bezier))
+	assert(is_int(N))
+	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
 	let(
 		backbez = reverse([ for (pt = bezier) pt+offset ]),
 		bezend = len(bezier)-1
@@ -638,7 +651,7 @@ module bezier_sweep_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, path
 //   ];
 //   trace_bezier(bez, N=3, size=0.5);
 module trace_bezier(bez, N=3, size=1) {
-	trace_polyline(bez, N=N, showpts=true, size=size/2, color="green");
+	trace_polyline(bez, N=N, showpts=true, size=size, color="green");
 	trace_polyline(bezier_polyline(bez, N=N), size=size, color="cyan");
 }
 

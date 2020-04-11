@@ -47,7 +47,7 @@ module trace_polyline(pline, closed=false, showpts=false, N=1, size=1, color="ye
 		}
 	}
 	if (N!=3) {
-		color(color) path_sweep(circle(d=size,$fn=sides), path3d(pline));
+		color(color) stroke(path3d(pline), width=size, $fn=8);
 	} else {
 		for (i = [0:1:len(pline)-2]) {
 			if (N!=3 || (i%N) != 1) {
