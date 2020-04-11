@@ -1368,9 +1368,56 @@ function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=
 	) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 
+// Function&Module: mask2d_teardrop()
+// Usage:
+//   mask2d_teardrop(r|d, [angle], [excess]);
+// Description:
+//   Creates a 2D teardrop mask shape that is useful for extruding into a 3D mask for a 90º edge.
+//   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
+//   If called as a function, this just returns a 2D path of the outline of the mask shape.
+//   This is particularly useful to make partially rounded bottoms, that don't need support to print.
+// Arguments:
+//   r = Radius of the rounding.
+//   d = Diameter of the rounding.
+//   angle = The maximum angle from vertical.
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+// Example(2D): 2D Teardrop Mask
+//   mask2d_teardrop(r=10);
+// Example(2D): Using a Custom Angle
+//   mask2d_teardrop(r=10,angle=30);
+// Example: Masking by Edge Attachment
+//   diff("mask")
+//   cube([50,60,70],center=true)
+//       edge_profile(BOT)
+//           mask2d_teardrop(r=10, angle=40);
+function mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) =  
+	assert(is_num(angle))
+	assert(angle>0 && angle<90)
+	assert(is_num(excess))
+	let(
+		r = get_radius(r=r, d=d, dflt=1),
+		n = ceil(segs(r) * angle/360),
+		cp = [r,r],
+		tp = cp + polar_to_xy(r,180+angle),
+		bp = [tp.x+adj_ang_to_opp(tp.y,angle), 0],
+		step = angle/n,
+		path = [
+			bp, bp-[0,excess], [-excess,-excess], [-excess,r],
+			for (i=[0:1:n]) cp+polar_to_xy(r,180+i*step)
+		]
+	) echo(cp=cp,tp=tp,bp=bp,path=path) reorient(anchor,spin, two_d=true, path=path, p=path);
+
+module mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) {
+	path = mask2d_teardrop(r=r, d=d, angle=angle, excess=excess);
+	attachable(anchor,spin, two_d=true, path=path) {
+		polygon(path);
+		children();
+	}
+}
+
 // Function&Module: mask2d_ogee()
 // Usage:
-//   mask2d_ogee(x|y|edge, [angle], [inset], [shelf], [excess]);
+//   mask2d_ogee(pattern, [excess]);
 //
 // Description:
 //   Creates a 2D Ogee mask shape that is useful for extruding into a 3D mask for a 90º edge.
@@ -1399,7 +1446,7 @@ function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=
 //       "fillet",5, "round",5,  // S-curve.
 //       "ystep",1,  "xstep",1   // Ending shoulder.
 //   ]);
-module mask2d_ogee(pattern, excess) {
+module mask2d_ogee(pattern, excess, anchor=CENTER,spin=0) {
 	path = mask2d_ogee(pattern, excess=excess);
 	attachable(anchor,spin, two_d=true, path=path) {
 		polygon(path);
@@ -1407,7 +1454,7 @@ module mask2d_ogee(pattern, excess) {
 	}
 }
 
-function mask2d_ogee(pattern, excess) =
+function mask2d_ogee(pattern, excess, anchor=CENTER, spin=0) =
 	assert(is_list(pattern))
 	assert(len(pattern)>0)
 	assert(len(pattern)%2==0,"pattern must be a list of TYPE, VAL pairs.")
