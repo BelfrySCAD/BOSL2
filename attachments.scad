@@ -885,6 +885,26 @@ module attach(from, to=undef, overlap=undef, norot=false)
 }
 
 
+// Module: face_profile()
+// Usage:
+//   face_profile(faces=[], convexity=10, r, d) ...
+// Description:
+//   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face.
+// Arguments:
+//   faces = Faces to mask edges and corners of.
+//   r = Radius of corner mask.
+//   d = Diameter of corner mask.
+//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
+module face_profile(faces=[], r, d, convexity=10) {
+	faces = is_vector(faces)? [faces] : faces;
+	assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "Vector in faces doesn't point at a face.");
+	r = get_radius(r=r, d=d, dflt=undef);
+	assert(is_num(r) && r>0);
+	edge_profile(faces) children();
+	corner_profile(faces, convexity=convexity, r=r) children();
+}
+
+
 // Module: edge_profile()
 // Usage:
 //   edge_profile([edges], [except], [convexity]) ...
