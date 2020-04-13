@@ -1144,7 +1144,7 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //           mask2d_roundover(r=10, inset=2);
 module mask2d_roundover(r, d, excess, inset=0, anchor=CENTER,spin=0) {
 	path = mask2d_roundover(r=r,d=d,excess=excess,inset=inset);
-	attachable(anchor,spin, two_d=true, path=path, p=path) {
+	attachable(anchor,spin, two_d=true, path=path) {
 		polygon(path);
 		children();
 	}
@@ -1293,7 +1293,7 @@ function mask2d_chamfer(x, y, edge, angle=45, excess, inset=0, anchor=CENTER,spi
 //           mask2d_rabbet(size=10);
 module mask2d_rabbet(size, excess, anchor=CENTER,spin=0) {
 	path = mask2d_rabbet(size=size, excess=excess);
-	attachable(anchor,spin, two_d=true, path=path, extent=false, p=path) {
+	attachable(anchor,spin, two_d=true, path=path, extent=false) {
 		polygon(path);
 		children();
 	}
