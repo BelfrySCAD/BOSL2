@@ -438,10 +438,10 @@ function _normal_segment(p1,p2) =
 //   "arcsteps"   | count              | Specifies the number of segments to use for drawing arcs.  If you set it to zero then the standard `$fn`, `$fa` and `$fs` variables define the number of segments.  
 //
 // Arguments:
-//   commands = list of turtle commands
-//   state = starting turtle state (from previous call) or starting point.  Default: start at the origin
-//   full_state = if true return the full turtle state for continuing the path in subsequent turtle calls.  Default: false
-//   repeat = number of times to repeat the command list.  Default: 1
+//   commands = List of turtle commands
+//   state = Starting turtle state (from previous call) or starting point.  Default: start at the origin, pointing right.
+//   full_state = If true return the full turtle state for continuing the path in subsequent turtle calls.  Default: false
+//   repeat = Number of times to repeat the command list.  Default: 1
 //
 // Example(2D): Simple rectangle
 //   path = turtle(["xmove",3, "ymove", "xmove",-3, "ymove",-1]);
@@ -698,18 +698,21 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
 	)
 	assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.")
 	let(
-		path = rounding==0? circle(r=r, realign=realign, spin=90, $fn=n) :
+		path = rounding==0? circle(r=r, realign=realign, $fn=n) : (
 			let(
 				steps = floor(segs(r)/n),
-				step = 360/n/steps
-			) [
-				for (i=[0:1:n-1], j=[0:1:steps]) let(
-					a = 90 - (realign? 180/n : 0) - i*360/n,
-					b = a + 180/n - j*step
-				)
-				(r-rounding*sc)*[cos(a),sin(a)] +
-				rounding*[cos(b),sin(b)]
-			]
+				step = 360/n/steps,
+				path2 = [
+					for (i = [0:1:n-1]) let(
+						a = 360 - i*360/n - (realign? 180/n : 0),
+						p = polar_to_xy(r-rounding, a)
+					)
+					each arc(N=steps, cp=p, r=rounding*sc, start=a+180/n, angle=-360/n)
+				],
+				maxx_idx = max_index(subindex(path2,0)),
+				path3 = polygon_shift(path2,maxx_idx)
+			) path3
+		)
 	) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
 
 
@@ -936,8 +939,10 @@ function teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0) =
 				for (i=[0:1:steps]) let(a=ea-i*step) r*[cos(a),sin(a)],
 				[-cap_w/2,cap_h]
 			], closed=true
-		)
-	) reorient(anchor,spin, two_d=true, path=path, p=path);
+		),
+		maxx_idx = max_index(subindex(path,0)),
+		path2 = polygon_shift(path,maxx_idx)
+	) reorient(anchor,spin, two_d=true, path=path2, p=path2);
 
 
 
@@ -982,8 +987,10 @@ function glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) =
 			tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep+180)  r2 * [cos(a),sin(a)] - cp2],
 			[for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep+180) r  * [cos(a),sin(a)] + cp1],
 			tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep)      r2 * [cos(a),sin(a)] + cp2]
-		)
-	) reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
+		),
+		maxx_idx = max_index(subindex(path,0)),
+		path2 = reverse_polygon(polygon_shift(path,maxx_idx))
+	) reorient(anchor,spin, two_d=true, path=path2, extent=true, p=path2);
 
 
 module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) {
@@ -1034,8 +1041,8 @@ function star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=
 	let(
 		stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n),
 		ir = get_radius(r=ir, d=id, dflt=stepr),
-		offset = 90+(realign? 180/n : 0),
-		path = [for(i=[0:1:2*n-1]) let(theta=180*i/n+offset, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]]
+		offset = realign? 180/n : 0,
+		path = [for(i=[2*n:-1:1]) let(theta=180*i/n+offset, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]]
 	) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 
@@ -1104,10 +1111,10 @@ function supershape(step=0.5,m1=4,m2=undef,n1=1,n2=undef,n3=undef,a=1,b=undef,r=
 		b = is_def(b) ? b : a,
 		steps = ceil(360/step),
 		step = 360/steps,
-		angs = [for (i = [0:steps-1]) step*i],
+		angs = [for (i = [0:steps]) step*i],
 		rads = [for (theta = angs) _superformula(theta=theta,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b)],
 		scale = is_def(r) ? r/max(rads) : 1,
-		path = [for (i = [0:steps-1]) let(a=angs[i]) scale*rads[i]*[cos(a), sin(a)]]
+		path = [for (i = [steps:-1:1]) let(a=angs[i]) scale*rads[i]*[cos(a), sin(a)]]
 	) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0) {
@@ -1161,9 +1168,10 @@ function mask2d_roundover(r, d, excess, inset=0, anchor=CENTER,spin=0) =
 		steps = quantup(segs(r),4)/4,
 		step = 90/steps,
 		path = [
-			[-excess,-excess], [-excess, r+inset.y],
-			for (i=[0:1:steps]) [r,r] + inset + polar_to_xy(r,180+i*step),
-			[r+inset.x,-excess]
+			[r+inset.x,-excess],
+			[-excess,-excess],
+			[-excess, r+inset.y],
+			for (i=[0:1:steps]) [r,r] + inset + polar_to_xy(r,180+i*step)
 		]
 	) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
 
@@ -1208,9 +1216,10 @@ function mask2d_cove(r, d, inset=0, excess, anchor=CENTER,spin=0) =
 		steps = quantup(segs(r),4)/4,
 		step = 90/steps,
 		path = [
-			[-excess,-excess], [-excess, r+inset.y],
-			for (i=[0:1:steps]) inset + polar_to_xy(r,90-i*step),
-			[r+inset.x,-excess]
+			[r+inset.x,-excess],
+			[-excess,-excess],
+			[-excess, r+inset.y],
+			for (i=[0:1:steps]) inset + polar_to_xy(r,90-i*step)
 		]
 	) reorient(anchor,spin, two_d=true, path=path, p=path);
 
@@ -1264,9 +1273,11 @@ function mask2d_chamfer(x, y, edge, angle=45, excess, inset=0, anchor=CENTER,spi
 			hyp_ang_to_opp(hyp=edge,ang=angle),
 		y = opp_ang_to_adj(opp=x,ang=angle),
 		path = [
-			[-excess, -excess], [-excess, y+inset.y],
-			[inset.x, y+inset.y], [x+inset.x, inset.y],
-			[x+inset.x, -excess]
+			[x+inset.x, -excess],
+			[-excess, -excess],
+			[-excess, y+inset.y],
+			[inset.x, y+inset.y],
+			[x+inset.x, inset.y]
 		]
 	) reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
 
@@ -1306,8 +1317,10 @@ function mask2d_rabbet(size, excess, anchor=CENTER,spin=0) =
 		excess = default(excess,$overlap),
 		size = is_list(size)? size : [size,size],
 		path = [
-			[-excess, -excess], [-excess, size.y],
-			size, [size.x, -excess]
+			[size.x, -excess],
+			[-excess, -excess],
+			[-excess, size.y],
+			size
 		]
 	) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
 
@@ -1362,8 +1375,12 @@ function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=
 			hyp_ang_to_opp(hyp=edge,ang=angle),
 		y = opp_ang_to_adj(opp=x,ang=angle),
 		path = [
-			[-excess, 0], [-excess, y+inset.y+shelf],
-			inset+[x,y+shelf], inset+[x,y], inset, [inset.x,0]
+			[inset.x,0],
+			[-excess, 0],
+			[-excess, y+inset.y+shelf],
+			inset+[x,y+shelf],
+			inset+[x,y],
+			inset
 		]
 	) reorient(anchor,spin, two_d=true, path=path, p=path);
 
