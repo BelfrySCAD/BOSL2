@@ -121,8 +121,8 @@ module stroke(
 
 	endcap1 = first_defined([endcap1, endcaps, "round"]);
 	endcap2 = first_defined([endcap2, endcaps, "round"]);
-	assert(is_bool(endcap1) || is_string(endcap1));
-	assert(is_bool(endcap2) || is_string(endcap2));
+	assert(is_bool(endcap1) || is_string(endcap1) || is_path(endcap1));
+	assert(is_bool(endcap2) || is_string(endcap2) || is_path(endcap2));
 
 	endcap_width1 = first_defined([endcap_width1, endcap_width, 3.5]);
 	endcap_width2 = first_defined([endcap_width2, endcap_width, 3.5]);
