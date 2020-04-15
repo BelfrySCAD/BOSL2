@@ -52,6 +52,7 @@
 //   trim1 = Trim the the starting line segment by this much, to keep it from interfering with a custom endcap.
 //   trim2 = Trim the the ending line segment by this much, to keep it from interfering with a custom endcap.
 //   convexity = Max number of times a line could intersect a wall of an endcap.
+//   hull = If true, use `hull()` to make higher quality joints between segments, at the cost of being much slower.  Default: true
 // Example(2D): Drawing a Path
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   stroke(path, width=20);
@@ -92,7 +93,7 @@ module stroke(
 	endcap_length, endcap_length1, endcap_length2,
 	endcap_extent, endcap_extent1, endcap_extent2,
 	endcap_angle, endcap_angle1, endcap_angle2,
-	convexity=10
+	convexity=10, hull=true
 ) {
 	function _endcap_shape(cap,linewidth,w,l,l2) = (
 		let(sq2=sqrt(2), l3=l-l2)
@@ -147,8 +148,6 @@ module stroke(
 	endcap_shape1 = _endcap_shape(endcap1, select(width,0), endcap_width1, endcap_length1, endcap_extent1);
 	endcap_shape2 = _endcap_shape(endcap2, select(width,-1), endcap_width2, endcap_length2, endcap_extent2);
 
-	segments = pair(path);
-
 	trim1 = select(width,0) * first_defined([
 		trim1, trim,
 		(endcap1=="arrow")? endcap_length1-0.01 :
@@ -191,7 +190,16 @@ module stroke(
 		// Joints
 		for (i = [1:1:len(path2)-2]) {
 			$fn = quantup(segs(widths[i]/2),4);
-			hull() {
+			if (hull) {
+				hull() {
+					translate(path2[i]) {
+						rot(from=BACK, to=path2[i]-path2[i-1])
+							circle(d=widths[i]);
+						rot(from=BACK, to=path2[i+1]-path2[i])
+							circle(d=widths[i]);
+					}
+				}
+			} else {
 				translate(path2[i]) {
 					rot(from=BACK, to=path2[i]-path2[i-1])
 						circle(d=widths[i]);
@@ -216,30 +224,61 @@ module stroke(
 			}
 		}
 	} else {
+		quatsums = Q_Cumulative([
+			for (i = idx(path2,end=-2)) let(
+				vec1 = i==0? UP : unit(path2[i]-path2[i-1]),
+				vec2 = unit(path2[i+1]-path2[i]),
+				axis = vector_axis(vec1,vec2),
+				ang = vector_angle(vec1,vec2)
+			) Quat(axis,ang)
+		]);
+		rotmats = [for (q=quatsums) Q_Matrix4(q)];
+		sides = [
+			for (i = idx(path2,end=-2))
+			quantup(segs(max(widths[i],widths[i+1])/2),4)
+		];
+
 		// Straight segments
 		for (i = idx(path2,end=-2)) {
-			seg = select(path2,i,i+1);
-			delt = seg[1] - seg[0];
-			translate(seg[0]) {
-				rot(from=UP,to=delt) {
-					cylinder(r1=widths[i]/2, r2=widths[i+1]/2, h=norm(delt), center=false);
+			dist = norm(path2[i+1] - path2[i]);
+			w1 = widths[i]/2;
+			w2 = widths[i+1]/2;
+			$fn = sides[i];
+			translate(path2[i]) {
+				multmatrix(rotmats[i]) {
+					cylinder(r1=w1, r2=w2, h=dist, center=false);
 				}
 			}
 		}
 
 		// Joints
 		for (i = [1:1:len(path2)-2]) {
-			$fn = quantup(segs(widths[i]/2),4);
+			$fn = sides[i];
 			translate(path2[i]) {
-				rot(from=UP, to=path2[i]-path2[i-1]) {
-					sphere(d=widths[i]);
+				if (hull) {
+					hull(){
+						multmatrix(rotmats[i]) {
+							sphere(d=widths[i]);
+						}
+						multmatrix(rotmats[i-1]) {
+							sphere(d=widths[i]);
+						}
+					}
+				} else {
+					multmatrix(rotmats[i]) {
+						sphere(d=widths[i]);
+					}
+					multmatrix(rotmats[i-1]) {
+						sphere(d=widths[i]);
+					}
 				}
 			}
 		}
 
 		// Endcap1
 		translate(path[0]) {
-			rot(from=UP, to=start_vec) {
+			multmatrix(rotmats[0]) {
+				$fn = sides[0];
 				if (is_undef(endcap_angle1)) {
 					rotate_extrude(convexity=convexity) {
 						right_half(planar=true) {
@@ -258,7 +297,8 @@ module stroke(
 
 		// Endcap2
 		translate(select(path,-1)) {
-			rot(from=UP, to=end_vec) {
+			multmatrix(select(rotmats,-1)) {
+				$fn = select(sides,-1);
 				if (is_undef(endcap_angle2)) {
 					rotate_extrude(convexity=convexity) {
 						right_half(planar=true) {

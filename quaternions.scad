@@ -132,6 +132,24 @@ function Q_Mul(a, b) = [
 ];
 
 
+// Function: Q_Cumulative()
+// Usage:
+//   Q_Cumulative(v);
+// Description:
+//   Given a list of Quaternions, cumulatively multiplies them, returning a list
+//   of each cumulative Quaternion product.  It starts with the first quaternion
+//   given in the list, and applies successive quaternion rotations in list order.
+function Q_Cumulative(v, _i=0, _acc=[]) = 
+	_i==len(v) ? _acc :
+	Q_Cumulative(
+		v, _i+1,
+		concat(
+			_acc,
+			[_i==0 ? v[_i] : Q_Mul(v[_i], select(_acc,-1))]
+		)
+	);
+
+
 // Function: Q_Dot()
 // Usage:
 //   Q_Dot(a, b)
