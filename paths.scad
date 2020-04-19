@@ -781,6 +781,7 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   spiral_sweep(poly, h=200, r=50, twist=1080, $fn=36);
 module spiral_sweep(polyline, h, r, twist=360, center, anchor, spin=0, orient=UP) {
+	polyline = path3d(polyline);
 	pline_count = len(polyline);
 	steps = ceil(segs(r)*(twist/360));
 	anchor = get_anchor(anchor,center,BOT,BOT);
