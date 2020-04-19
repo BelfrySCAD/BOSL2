@@ -875,17 +875,27 @@ function in_front_of_plane(plane, point) =
 
 // Function: find_circle_2tangents()
 // Usage:
-//   find_circle_2tangents(pt1, pt2, pt3, r|d);
+//   find_circle_2tangents(pt1, pt2, pt3, r|d, [tangents]);
 // Description:
-//   Returns [centerpoint, normal] of a circle of known size that is between and tangent to two rays with the same starting point.
-//   Both rays start at `pt2`, and one passes through `pt1`, while the other passes through `pt3`.
-//   If the rays given are 180º apart, `undef` is returned.  If the rays are 3D, the normal returned is the plane normal of the circle.
+//   Given a pair of rays with a common origin, and a known circle radius/diameter, finds
+//   the centerpoint for the circle of that size that touches both rays tangentally.
+//   Both rays start at `pt2`, one passing through `pt1`, and the other through `pt3`.
+//   If the rays given are collinear, `undef` is returned.  Otherwise, if `tangents` is
+//   true, then `[CP,NORMAL]` is returned.  If `tangents` is false, the more extended
+//   `[CP,NORMAL,TANPT1,TANPT2,ANG1,ANG2]` is returned
+//   - CP is the centerpoint of the circle.
+//   - NORMAL is the normal vector of the plane that the circle is on (UP or DOWN if the points are 2D).
+//   - TANPT1 is the point where the circle is tangent to the ray `[pt2,pt1]`.
+//   - TANPT2 is the point where the circle is tangent to the ray `[pt2,pt3]`.
+//   - ANG1 is the angle from the ray `[CP,pt2]` to the ray `[CP,TANPT1]`
+//   - ANG2 is the angle from the ray `[CP,pt2]` to the ray `[CP,TANPT2]`
 // Arguments:
 //   pt1 = A point that the first ray passes though.
 //   pt2 = The starting point of both rays.
 //   pt3 = A point that the second ray passes though.
 //   r = The radius of the circle to find.
 //   d = The diameter of the circle to find.
+//   tangents = If true, extended information about the tangent points is calculated and returned.  Default: false
 // Example(2D):
 //   pts = [[60,40], [10,10], [65,5]];
 //   rad = 10;
@@ -902,21 +912,28 @@ function in_front_of_plane(plane, point) =
 //   translate(circ[0]) color("red") circle(d=2, $fn=12);
 //   labels = [[pts[0], "pt1"], [pts[1],"pt2"], [pts[2],"pt3"], [circ[0], "CP"], [circ[0]+[cos(315),sin(315)]*rad*0.7, "r"]];
 //   for(l=labels) translate(l[0]+[0,2]) color("black") text(text=l[1], size=2.5, halign="center");
-function find_circle_2tangents(pt1, pt2, pt3, r=undef, d=undef) =
+function find_circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
 	let(r = get_radius(r=r, d=d, dflt=undef))
 	assert(r!=undef, "Must specify either r or d.")
 	(is_undef(pt2) && is_undef(pt3) && is_list(pt1))? find_circle_2tangents(pt1[0], pt1[1], pt1[2], r=r) :
+	collinear(pt1, pt2, pt3)? undef :
 	let(
 		v1 = unit(pt1 - pt2),
-		v2 = unit(pt3 - pt2)
-	) approx(norm(v1+v2))? undef :
+		v2 = unit(pt3 - pt2),
+		vmid = unit(mean([v1, v2])),
+		n = vector_axis(v1, v2),
+		a = vector_angle(v1, v2),
+		hyp = r / sin(a/2),
+		cp = pt2 + hyp * vmid
+	) !tangents? [cp, n] :
 	let(
-		a = vector_angle(v1,v2),
-		n = vector_axis(v1,v2),
-		v = unit(mean([v1,v2])),
-		s = r/sin(a/2),
-		cp = pt2 + s*v/norm(v)
-	) [cp, n];
+		x = hyp * cos(a/2),
+		tp1 = pt2 + x * v1,
+		tp2 = pt2 + x * v2,
+		fff=echo(tp1=tp1,cp=cp,pt2=pt2),
+		dang1 = vector_angle(tp1-cp,pt2-cp),
+		dang2 = vector_angle(tp2-cp,pt2-cp)
+	) [cp, n, tp1, tp2, dang1, dang2];
 
 
 // Function: find_circle_3points()
