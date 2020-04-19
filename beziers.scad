@@ -261,6 +261,10 @@ function bezier_path_point(path, seg, u, N=3) = bez_point(select(path,seg*N,(seg
 //   color("red") translate(pt) sphere(r=1);
 //   color("blue") translate(xy) sphere(r=1);
 function bezier_path_closest_point(path, pt, N=3, max_err=0.01, seg=0, min_seg=undef, min_u=undef, min_dist=undef) =
+	assert(is_vector(pt))
+	assert(is_int(N))
+	assert(is_num(max_err))
+	assert(len(path)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
 	let(curve = select(path,seg*N,(seg+1)*N))
 	(seg*N+1 >= len(path))? (
 		let(curve = select(path, min_seg*N, (min_seg+1)*N))
@@ -289,6 +293,9 @@ function bezier_path_closest_point(path, pt, N=3, max_err=0.01, seg=0, min_seg=u
 //   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
 //   max_deflect = The largest amount of deflection from the true curve to allow for approximation.
 function bezier_path_length(path, N=3, max_deflect=0.001) =
+	assert(is_int(N))
+	assert(is_num(max_deflect))
+	assert(len(path)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
 	sum([
 		for (seg=[0:1:(len(path)-1)/N-1]) (
 			bezier_segment_length(
@@ -418,7 +425,7 @@ function fillet_path(pts, fillet, maxerr=0.1) = concat(
 //   closed = bezier_close_to_axis(bez, axis="Y");
 //   trace_bezier(closed, size=1);
 function bezier_close_to_axis(bezier, N=3, axis="X") =
-	assert(is_path(bezier))
+	assert(is_path(bezier,2), "bezier_close_to_axis() can only work on 2D bezier paths.")
 	assert(is_int(N))
 	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
 	let(
@@ -459,7 +466,7 @@ function bezier_close_to_axis(bezier, N=3, axis="X") =
 //   trace_bezier(closed, size=1);
 function bezier_offset(offset, bezier, N=3) =
 	assert(is_num(offset))
-	assert(is_path(bezier))
+	assert(is_path(bezier,2), "bezier_offset() can only work on 2D bezier paths.")
 	assert(is_int(N))
 	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
 	let(
@@ -497,6 +504,10 @@ function bezier_offset(offset, bezier, N=3) =
 //   trace_bezier(bez, N=3, size=3);
 //   linear_extrude(height=0.1) bezier_polygon(bez, N=3);
 module bezier_polygon(bezier, splinesteps=16, N=3) {
+	assert(is_path(bezier,2), "bezier_polygon() can only work on 2D bezier paths.");
+	assert(is_int(N));
+	assert(is_int(splinesteps));
+	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
 	polypoints=bezier_polyline(bezier, splinesteps, N);
 	polygon(points=slice(polypoints, 0, -1));
 }
@@ -530,6 +541,11 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 //   ];
 //   linear_sweep_bezier(bez, height=20, splinesteps=32);
 module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center, convexity, twist, slices, scale, anchor, spin=0, orient=UP) {
+	assert(is_path(bezier,2), "linear_sweep_bezier() can only work on 2D bezier paths.");
+	assert(is_num(height));
+	assert(is_int(splinesteps));
+	assert(is_int(N));
+	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
 	maxx = max([for (pt = bezier) abs(pt[0])]);
 	maxy = max([for (pt = bezier) abs(pt[1])]);
 	anchor = get_anchor(anchor,center,BOT,BOT);
@@ -568,6 +584,11 @@ module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center, conv
 //   rotate_sweep_bezier(path, splinesteps=32, $fn=180);
 module rotate_sweep_bezier(bezier, splinesteps=16, N=3, convexity=undef, angle=360, anchor=CENTER, spin=0, orient=UP)
 {
+	assert(is_path(bezier,2), "rotate_sweep_bezier() can only work on 2D bezier paths.");
+	assert(is_int(splinesteps));
+	assert(is_int(N));
+	assert(is_num(angle));
+	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
 	oline = bezier_polyline(bezier, splinesteps=splinesteps, N=N);
 	maxx = max([for (pt = oline) abs(pt[0])]);
 	miny = min(subindex(oline,1));
@@ -599,6 +620,11 @@ module rotate_sweep_bezier(bezier, splinesteps=16, N=3, convexity=undef, angle=3
 //       fwd(10/2) circle(r=8);
 //   }
 module bezier_path_extrude(bezier, splinesteps=16, N=3, convexity=undef, clipsize=1000) {
+	assert(is_path(bezier));
+	assert(is_int(splinesteps));
+	assert(is_int(N));
+	assert(is_num(clipsize));
+	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
 	path = slice(bezier_polyline(bezier, splinesteps, N), 0, -1);
 	path_extrude(path, convexity=convexity, clipsize=clipsize) children();
 }
@@ -628,6 +654,14 @@ module bezier_path_extrude(bezier, splinesteps=16, N=3, convexity=undef, clipsiz
 //   path = [ [0, 0, 0], [33, 33, 33], [90, 33, -33], [100, 0, 0] ];
 //   bezier_sweep_bezier(bez, path, pathsteps=32, bezsteps=16);
 module bezier_sweep_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, pathN=3) {
+	assert(is_path(bezier,2), "Argument bezier must be a 2D bezier path.");
+	assert(is_path(path));
+	assert(is_int(pathsteps));
+	assert(is_int(bezsteps));
+	assert(is_int(bezN));
+	assert(is_int(pathN));
+	assert(len(bezier)%bezN == 1, str("For argument bezier, a degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
+	assert(len(path)%pathN == 1, str("For argument bezier, a degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
 	bez_points = simplify_path(bezier_polyline(bezier, bezsteps, bezN));
 	path_points = simplify_path(path3d(bezier_polyline(path, pathsteps, pathN)));
 	path_sweep(bez_points, path_points);
@@ -651,6 +685,9 @@ module bezier_sweep_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, path
 //   ];
 //   trace_bezier(bez, N=3, size=0.5);
 module trace_bezier(bez, N=3, size=1) {
+	assert(is_path(bez));
+	assert(is_int(N));
+	assert(len(bez)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
 	trace_polyline(bez, N=N, showpts=true, size=size, color="green");
 	trace_polyline(bezier_polyline(bez, N=N), size=size, color="cyan");
 }
