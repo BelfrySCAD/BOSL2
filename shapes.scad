@@ -1325,7 +1325,7 @@ module arced_slot(
 	sr2 = get_radius(r1=sr2, r=sr, d1=sd2, d=sd, dflt=2);
 	fn_minor = first_defined([$fn2, $fn]);
 	da = ea - sa;
-	attachable(anchor,spin,orient, r1=r+sr1, r2=r+sr2) {
+	attachable(anchor,spin,orient, r1=r+sr1, r2=r+sr2, l=h) {
 		translate(cp) {
 			zrot(sa) {
 				difference() {
