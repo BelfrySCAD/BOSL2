@@ -649,7 +649,7 @@ function smooth_path(path, tangents, k, splinesteps=10, closed=false) =
 //     difference(){
 //       offset_sweep(rhex, height=10, bottom=os_teardrop(r=2), top=os_teardrop(r=-4, extra=0.2));
 //       up(1)
-//         offset_sweep(offset(rhex,r=1), height=9.5, bottom=os_circle(r=2), top=os_teardrop(r=-4));
+//         offset_sweep(offset(rhex,r=-1), height=9.5, bottom=os_circle(r=2), top=os_teardrop(r=-4));
 //     }
 module offset_sweep(
 	path, height, h, l, 
