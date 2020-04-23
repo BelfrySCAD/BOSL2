@@ -742,12 +742,13 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
 			let(
 				steps = floor(segs(r)/n),
 				step = 360/n/steps,
+				inset = opp_ang_to_hyp(rounding, (180-360/n)/2),
 				path2 = [
 					for (i = [0:1:n-1]) let(
 						a = 360 - i*360/n - (realign? 180/n : 0),
-						p = polar_to_xy(r-rounding, a)
+						p = polar_to_xy(r-inset, a)
 					)
-					each arc(N=steps, cp=p, r=rounding*sc, start=a+180/n, angle=-360/n)
+					each arc(N=steps, cp=p, r=rounding, start=a+180/n, angle=-360/n)
 				],
 				maxx_idx = max_index(subindex(path2,0)),
 				path3 = polygon_shift(path2,maxx_idx)
