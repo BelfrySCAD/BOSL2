@@ -118,11 +118,11 @@ include <vnf.scad>
 //   method = method for connecting profiles, one of "distance", "tangent", "direct" or "reindex".  Default: "direct".
 //   z = array of height values for each profile if the profiles are 2d
 // Example:
-//   skin([octagon(4), regular_ngon(n=70,r=2)], z=[0,3], slices=10);
-// Example: The circle() and pentagon() modules place the zero index at different locations, giving a twist
-//   skin([pentagon(4), circle($fn=80,r=2)], z=[0,3], slices=10);
+//   skin([octagon(4), circle($fn=70,r=2)], z=[0,3], slices=10);
+// Example: Rotating the pentagon place the zero index at different locations, giving a twist
+//   skin([rot(90,p=pentagon(4)), circle($fn=80,r=2)], z=[0,3], slices=10);
 // Example: You can untwist it with the "reindex" method
-//   skin([pentagon(4), circle($fn=80,r=2)], z=[0,3], slices=10, method="reindex");
+//   skin([rot(90,p=pentagon(4)), circle($fn=80,r=2)], z=[0,3], slices=10, method="reindex");
 // Example: Offsetting the starting edge connects to circles in an interesting way:
 //   circ = circle($fn=80, r=3);
 //   skin([circ, rot(110,p=circ)], z=[0,5], slices=20);
@@ -208,10 +208,10 @@ include <vnf.scad>
 //   rotate(180) skin( shapes, slices=0);
 // Example: Here's a simplified version of the above, with `i=0` included.  That first layer doesn't look good.
 //   shapes = [for(i=[0:.2:1]) path3d(regular_ngon(n=4, side=4, rounding=i, $fn=32),i*5)];
-//   skin( shapes, slices=0);
+//   skin(shapes, slices=0);
 // Example: You can fix it by specifying "tangent" for the first method, but you still need "direct" for the rest.
 //   shapes = [for(i=[0:.2:1]) path3d(regular_ngon(n=4, side=4, rounding=i, $fn=32),i*5)];
-//   skin( shapes, slices=0, method=concat(["tangent"],repeat("direct",len(shapes)-2)));
+//   skin(shapes, slices=0, method=concat(["tangent"],repeat("direct",len(shapes)-2)));
 // Example(FlatSpin): Connecting square to pentagon using "direct" method.
 //   skin([regular_ngon(n=4, r=4), regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10);
 // Example(FlatSpin): Connecting square to shifted pentagon using "direct" method.
@@ -245,11 +245,11 @@ include <vnf.scad>
 //   rshape = rot(180,cp=centroid(shape)+off, p=shape);
 //   skin([shape,rshape],z=[0,4], method="distance",slices=10,refine=15);
 // Example(FlatSpin): This optimal solution doesn't look terrible:
-//   prof1 = path3d([[50,-50], [-50,-50], [-50,50], [-25,25], [0,50], [25,25], [50,50]]);
+//   prof1 = path3d([[-50,-50], [-50,50], [50,50], [25,25], [50,0], [25,-25], [50,-50]]);
 //   prof2 = path3d(regular_ngon(n=7, r=50),100);
 //   skin([prof1, prof2], method="distance", slices=10, refine=10);
 // Example(FlatSpin): But this one looks better.  The "distance" method doesn't find it because it uses two more edges, so it clearly has a higher total edge distance.  We force it by doubling the first two vertices of one of the profiles.
-//   prof1 = path3d([[50,-50], [-50,-50], [-50,50], [-25,25], [0,50], [25,25], [50,50]]);
+//   prof1 = path3d([[-50,-50], [-50,50], [50,50], [25,25], [50,0], [25,-25], [50,-50]]);
 //   prof2 = path3d(regular_ngon(n=7, r=50),100);
 //   skin([repeat_entries(prof1,[2,2,1,1,1,1,1]),
 //         prof2],
@@ -259,11 +259,11 @@ include <vnf.scad>
 // Example(FlatSpin): Using the "tangent" method produces:
 //   skin([path3d(circle($fn=128, r=10)), xrot(39, p=path3d(square([8,10]),10))],  method="tangent", slices=0);
 // Example(FlatSpin): Torus using hexagons and pentagons, where `closed=true`
-//   hex = back(7,p=path3d(hexagon(r=3)));
-//   pent = back(7,p=path3d(pentagon(r=3)));
+//   hex = right(7,p=path3d(hexagon(r=3)));
+//   pent = right(7,p=path3d(pentagon(r=3)));
 //   N=5;
 //   skin(
-//        [for(i=[0:2*N-1]) xrot(360*i/2/N, p=(i%2==0 ? hex : pent))],
+//        [for(i=[0:2*N-1]) yrot(360*i/2/N, p=(i%2==0 ? hex : pent))],
 //        refine=1,slices=0,method="distance",closed=true);
 // Example: A smooth morph is achieved when you can calculate all the slices yourself.  Since you provide all the slices, set `slices=0`.
 //   skin([for(n=[.1:.02:.5])
@@ -934,14 +934,14 @@ module sweep(shape, transformations, closed=false, caps, convexity=10) {
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   elliptic_arc = yscale(2, p=arc($fn=64,angle=[180,0], r=30));  // Clockwise 
 //   path_sweep(ushape, path3d(elliptic_arc), method="manual", normal=UP+RIGHT, relaxed=false);
-// Example: It is easy to produce an invalid shape when your path has a smaller radius of curvature than the width of your shape.  The exact threshold where the shape becomes invalid depends on the density of points on your path.  The error may not be immediately obvious, as the swept shape appears fine when alone in your model, but adding a cube to the model reveals the problem.  
+// Example: It is easy to produce an invalid shape when your path has a smaller radius of curvature than the width of your shape.  The exact threshold where the shape becomes invalid depends on the density of points on your path.  The error may not be immediately obvious, as the swept shape appears fine when alone in your model, but adding a cube to the model reveals the problem.  In this case the pentagon is turned so its longest direction points inward to create the singularity.  
 //   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
 //   echo(radius_of_curvature = 1/max(path_curvature(qpath)));   // Prints 0.9, but we use pentagon with radius of 1.0 > 0.9
-//   path_sweep(pentagon(r=1), qpath, normal=BACK, method="manual", relaxed=false);
-//   cube(0.5);    // Adding a small cube forces a CGAL computation which reveals the error with a cryptic message
+//   path_sweep(apply(rot(90),pentagon(r=1)), qpath, normal=BACK, method="manual", relaxed=false);
+//   cube(0.5);    // Adding a small cube forces a CGAL computation which reveals the error by displaying nothing or giving a cryptic message
 // Example: Using the `relax` option we allow the profiles to deviate from orthogonality to the path.  This eliminates the crease that broke the previous example because the sections are all parallel to each other.  
 //   qpath = [for(x=[-3:.01:3]) [x,x*x/1.8,0]];
-//   path_sweep(pentagon(r=1), qpath, normal=BACK, method="manual", relaxed=true);
+//   path_sweep(apply(rot(90),pentagon(r=1)), qpath, normal=BACK, method="manual", relaxed=true);
 //   cube(0.5);    // Adding a small cube is not a problem with this valid model
 // Example:  This 3d arc produces a result that twists to an undefined angle.  By default the incremental method sets the starting normal to UP, but the ending normal is unconstrained.  
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
