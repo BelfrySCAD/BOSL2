@@ -315,13 +315,13 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   sphere(r=50);
 // Example: By Diameter
 //   sphere(d=100);
-// Figure(3D): style="orig"
+// Example: style="orig"
 //   sphere(d=100, style="orig", $fn=10);
-// Figure(3D): style="alt"
+// Example: style="alt"
 //   sphere(d=100, style="alt", $fn=10);
-// Figure(3D): style="stagger"
+// Example: style="stagger"
 //   sphere(d=100, style="stagger", $fn=10);
-// Figure(3D): style="icosa"
+// Example: style="icosa"
 //   sphere(d=100, style="icosa", $fn=10);
 //   // In "icosa" style, $fn is quantized
 //   //   to the nearest multiple of 5.
