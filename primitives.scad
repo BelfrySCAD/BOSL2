@@ -397,7 +397,7 @@ function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=
 		faces = style=="orig"? [
 			[for (i=[0:1:hsides-1]) hsides-i-1],
 			[for (i=[0:1:hsides-1]) lv-hsides+i],
-			for (i=[0:1:vsides-1], j=[0:1:hsides-1]) each [
+			for (i=[0:1:vsides-2], j=[0:1:hsides-1]) each [
 				[(i+1)*hsides+j, i*hsides+j, i*hsides+(j+1)%hsides],
 				[(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
 			]
