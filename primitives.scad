@@ -184,10 +184,10 @@ function circle(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 //   vnf_polyhedron(vnf);
 module cube(size=1, center, anchor, spin=0, orient=UP)
 {
-	size = scalar_vec3(size);
 	anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
 	vnf = cube(size, center=true);
-	attachable(anchor,spin,orient, size=size) {
+	siz = scalar_vec3(size);
+	attachable(anchor,spin,orient, size=siz) {
 		vnf_polyhedron(vnf, convexity=2);
 		children();
 	}
@@ -195,22 +195,24 @@ module cube(size=1, center, anchor, spin=0, orient=UP)
 
 function cube(size=1, center, anchor, spin=0, orient=UP) =
 	let(
-		size = scalar_vec3(size),
+		siz = scalar_vec3(size),
 		anchor = get_anchor(anchor, center, ALLNEG, ALLNEG),
 		unscaled = [
 			[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
-			[-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1]
+			[-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1],
 		]/2,
-		verts = vmul(unscaled, size),
+		verts = is_num(size)? unscaled * size :
+			is_vector(size,3)? [for (p=unscaled) vmul(p,size)] :
+			assert(is_num(size) || is_vector(size,3)),
 		faces = [
-			[0,1,2], [0,2,3],  //TOP
+			[0,1,2], [0,2,3],  //BOTTOM
 			[0,4,5], [0,5,1],  //FRONT
 			[1,5,6], [1,6,2],  //RIGHT
 			[2,6,7], [2,7,3],  //BACK
 			[3,7,4], [3,4,0],  //LEFT
-			[6,4,7], [6,5,4]   //BOT
+			[6,4,7], [6,5,4]   //TOP
 		]
-	) [reorient(anchor,spin,orient, size=size, p=verts), faces];
+	) [reorient(anchor,spin,orient, size=siz, p=verts), faces];
 
 
 // Function&Module: cylinder()
