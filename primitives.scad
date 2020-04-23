@@ -281,8 +281,8 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 		l = first_defined([h, l, 1]),
 		sides = segs(max(r1,r2)),
 		verts = [
-			for (i=[0:1:sides-1]) let(a=i*360/sides) [r1*cos(a),r1*sin(a),-l/2],
-			for (i=[0:1:sides-1]) let(a=i*360/sides) [r2*cos(a),r2*sin(a), l/2],
+			for (i=[0:1:sides-1]) let(a=360*(1-i/sides)) [r1*cos(a),r1*sin(a),-l/2],
+			for (i=[0:1:sides-1]) let(a=360*(1-i/sides)) [r2*cos(a),r2*sin(a), l/2],
 		],
 		faces = [
 			[for (i=[0:1:sides-1]) sides-1-i],

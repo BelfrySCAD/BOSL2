@@ -194,7 +194,7 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 					v0 = vertices[face[0]];
 					v1 = vertices[face[1]];
 					v2 = vertices[face[2]];
-					c = (v0 + v1 + v2) / 3;
+					c = mean(select(vertices,face));
 					dv0 = unit(v1 - v0);
 					dv1 = unit(v2 - v0);
 					nrm0 = unit(cross(dv0, dv1));
