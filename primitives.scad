@@ -152,19 +152,21 @@ function circle(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 // Section: Primitive 3D Shapes
 
 
-// Module: cube()
-//
+// Function&Module: cube()
+// Usage: As Module
+//   cube(size, [center]);
+// Usage: As Function
+//   vnf = cube(size, [center]);
 // Description:
-//   Creates a cube object, with support for anchoring and attachments.
-//   This is a drop-in replacement for the built-in `cube()` module.
-//
+//   Creates a 3D cubic object with support for anchoring and attachments.
+//   This can be used as a drop-in replacement for the built-in `cube()` module.
+//   When called as a function, returns a [VNF](vnf.scad) for a cube.
 // Arguments:
 //   size = The size of the cube.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=ALLNEG`.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//
 // Example: Simple cube.
 //   cube(40);
 // Example: Rectangular cube.
@@ -177,26 +179,51 @@ function circle(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 //   cube([20,40,50], anchor=BOTTOM+FRONT, spin=30, orient=FWD);
 // Example: Standard Connectors.
 //   cube(40, center=true) show_anchors();
+// Example: Called as Function
+//   vnf = cube([20,40,50]);
+//   vnf_polyhedron(vnf);
 module cube(size=1, center, anchor, spin=0, orient=UP)
 {
 	size = scalar_vec3(size);
 	anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
+	vnf = cube(size, center=true);
 	attachable(anchor,spin,orient, size=size) {
-		linear_extrude(height=size.z, convexity=2, center=true) {
-			square([size.x, size.y], center=true);
-		}
+		vnf_polyhedron(vnf, convexity=2);
 		children();
 	}
 }
 
+function cube(size=1, center, anchor, spin=0, orient=UP) =
+	let(
+		size = scalar_vec3(size),
+		anchor = get_anchor(anchor, center, ALLNEG, ALLNEG),
+		unscaled = [
+			[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
+			[-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1]
+		]/2,
+		verts = vmul(unscaled, size),
+		faces = [
+			[0,1,2], [0,2,3],  //TOP
+			[0,4,5], [0,5,1],  //FRONT
+			[1,5,6], [1,6,2],  //RIGHT
+			[2,6,7], [2,7,3],  //BACK
+			[3,7,4], [3,4,0],  //LEFT
+			[6,4,7], [6,5,4]   //BOT
+		]
+	) [reorient(anchor,spin,orient, size=size, p=verts), faces];
 
-// Module: cylinder()
-// Usage:
+
+// Function&Module: cylinder()
+// Usage: As Module
 //   cylinder(h, r|d, [center]);
 //   cylinder(h, r1/d1, r2/d2, [center]);
+// Usage: As Function
+//   vnf = cylinder(h, r|d, [center]);
+//   vnf = cylinder(h, r1/d1, r2/d2, [center]);
 // Description:
-//   Creates a cylinder object, with support for anchoring and attachments.
-//   This is a drop-in replacement for the built-in `cylinder()` module.
+//   Creates a 3D cylinder or conic object with support for anchoring and attachments.
+//   This can be used as a drop-in replacement for the built-in `cylinder()` module.
+//   When called as a function, returns a [VNF](vnf.scad) for a cylinder.
 // Arguments:
 //   l / h = The height of the cylinder.
 //   r1 = The bottom radius of the cylinder.  (Before orientation.)
@@ -236,28 +263,49 @@ module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
 	l = first_defined([h, l, 1]);
-	hh = l/2;
 	sides = segs(max(r1,r2));
-	path = [[0,hh],[r2,hh],[r1,-hh],[0,-hh]];
+	vnf = cylinder(l=l, r1=r1, r2=r2, center=true);
 	attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
-		rotate_extrude(convexity=2, $fn=sides) {
-			polygon(path);
-		}
+		vnf_polyhedron(vnf, convexity=2);
 		children();
 	}
 }
 
+function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP) =
+	let(
+		anchor = get_anchor(anchor, center, BOTTOM, BOTTOM),
+		r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
+		r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
+		l = first_defined([h, l, 1]),
+		sides = segs(max(r1,r2)),
+		verts = [
+			for (i=[0:1:sides-1]) let(a=i*360/sides) [r1*cos(a),r1*sin(a),-l/2],
+			for (i=[0:1:sides-1]) let(a=i*360/sides) [r2*cos(a),r2*sin(a), l/2],
+		],
+		faces = [
+			[for (i=[0:1:sides-1]) sides-1-i],
+			for (i=[0:1:sides-1]) [i, ((i+1)%sides)+sides, i+sides],
+			for (i=[0:1:sides-1]) [i, (i+1)%sides, ((i+1)%sides)+sides],
+			[for (i=[0:1:sides-1]) sides+i]
+		]
+	) [reorient(anchor,spin,orient, l=l, r1=r1, r2=r2, p=verts), faces];
 
 
-// Module: sphere()
-// Usage:
-//   sphere(r|d)
+
+// Function&Module: sphere()
+// Usage: As Module
+//   sphere(r|d, [circum], [style])
+// Usage: As Function
+//   vnf = sphere(r|d, [circum], [style])
 // Description:
 //   Creates a sphere object, with support for anchoring and attachments.
 //   This is a drop-in replacement for the built-in `sphere()` module.
+//   When called as a function, returns a [VNF](vnf.scad) for a sphere.
 // Arguments:
 //   r = Radius of the sphere.
 //   d = Diameter of the sphere.
+//   circum = If true, the sphere is made large enough to circumscribe the sphere of the ideal side.  Otherwise inscribes.  Default: false (inscribes)
+//   style = The style of the sphere's construction. One of "orig", "alt", "stagger", or "icosa".  Default: "orig"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -265,6 +313,16 @@ module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   sphere(r=50);
 // Example: By Diameter
 //   sphere(d=100);
+// Figure(3D): style="orig"
+//   sphere(d=100, style="orig", $fn=10);
+// Figure(3D): style="alt"
+//   sphere(d=100, style="alt", $fn=10);
+// Figure(3D): style="stagger"
+//   sphere(d=100, style="stagger", $fn=10);
+// Figure(3D): style="icosa"
+//   sphere(d=100, style="icosa", $fn=10);
+//   // In "icosa" style, $fn is quantized
+//   //   to the nearest multiple of 5.
 // Example: Anchoring
 //   sphere(d=100, anchor=FRONT);
 // Example: Spin
@@ -273,21 +331,113 @@ module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   sphere(d=100, anchor=FRONT, spin=45, orient=FWD);
 // Example: Standard Connectors
 //   sphere(d=50) show_anchors();
-module sphere(r, d, anchor=CENTER, spin=0, orient=UP)
+// Example: Called as Function
+//   vnf = sphere(d=100, style="icosa");
+//   vnf_polyhedron(vnf);
+module sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP)
 {
 	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
+	vnf = sphere(r=r, circum=circum, style=style);
 	attachable(anchor,spin,orient, r=r) {
-		rotate_extrude(convexity=2) {
-			difference() {
-				circle(r=r, $fn=sides);
-				left(r+0.1) square(r*2+0.2, center=true);
-			}
-		}
+		vnf_polyhedron(vnf, convexity=2);
 		children();
 	}
 }
 
+
+function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP) =
+	let(
+		r = get_radius(r=r, d=d, dflt=1),
+		hsides = segs(r),
+		vsides = max(2,ceil(hsides/2)),
+		icosa_steps = round(max(5,hsides)/5),
+		rr = circum? (r / cos(90/vsides) / cos(180/hsides)) : r,
+		stagger = style=="stagger",
+		verts = style=="orig"? [
+			for (i=[0:1:vsides-1]) let(phi = (i+0.5)*180/(vsides))
+			for (j=[0:1:hsides-1]) let(theta = j*360/hsides)
+			spherical_to_xyz(rr, theta, phi),
+		] : style=="alt" || style=="stagger"? [
+			spherical_to_xyz(rr, 0, 0),
+			for (i=[1:1:vsides-1]) let(phi = i*180/vsides)
+				for (j=[0:1:hsides-1]) let(theta = (j+((stagger && i%2!=0)?0.5:0))*360/hsides)
+					spherical_to_xyz(rr, theta, phi),
+			spherical_to_xyz(rr, 0, 180)
+		] : style=="icosa"? [
+			for (tb=[0,1], j=[0,2], i = [0:1:4]) let(
+				theta0 = i*360/5,
+				theta1 = (i-0.5)*360/5,
+				theta2 = (i+0.5)*360/5,
+				phi0 = 180/3 * j,
+				phi1 = 180/3,
+				v0 = spherical_to_xyz(1,theta0,phi0),
+				v1 = spherical_to_xyz(1,theta1,phi1),
+				v2 = spherical_to_xyz(1,theta2,phi1),
+				ax0 = vector_axis(v0, v1),
+				ang0 = vector_angle(v0, v1),
+				ax1 = vector_axis(v0, v2),
+				ang1 = vector_angle(v0, v2)
+			)
+			for (k = [0:1:icosa_steps]) let(
+				u = k/icosa_steps,
+				vv0 = rot(ang0*u, ax0, p=v0),
+				vv1 = rot(ang1*u, ax1, p=v0),
+				ax2 = vector_axis(vv0, vv1),
+				ang2 = vector_angle(vv0, vv1)
+			)
+			for (l = [0:1:k]) let(
+				v = k? l/k : 0,
+				pt = rot(ang2*v, v=ax2, p=vv0) * rr * (tb? -1 : 1)
+			) pt
+		] : assert(in_list(style,["orig","alt","stagger","icosa"])),
+		lv = len(verts),
+		faces = style=="orig"? [
+			[for (i=[0:1:hsides-1]) hsides-i-1],
+			[for (i=[0:1:hsides-1]) lv-hsides+i],
+			for (i=[0:1:vsides-1], j=[0:1:hsides-1]) each [
+				[(i+1)*hsides+j, i*hsides+j, i*hsides+(j+1)%hsides],
+				[(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
+			]
+		] : style=="alt" || style=="stagger"? [
+			for (i=[0:1:hsides-1]) let(
+				b2 = lv-2-hsides
+			) each [
+				[i+1, 0, ((i+1)%hsides)+1],
+				[lv-1, b2+i+1, b2+((i+1)%hsides)+1],
+			],
+			for (i=[0:1:vsides-3], j=[0:1:hsides-1]) let(
+				base = 1 + hsides*i
+			) each (
+				(stagger && i%2!=0)? [
+					[base+j, base+hsides+j%hsides, base+hsides+(j+hsides-1)%hsides],
+					[base+j, base+(j+1)%hsides, base+hsides+j],
+				] : [
+					[base+j, base+(j+1)%hsides, base+hsides+(j+1)%hsides],
+					[base+j, base+hsides+(j+1)%hsides, base+hsides+j],
+				]
+			)
+		] : style=="icosa"? let(
+			pyr = [for (x=[0:1:icosa_steps+1]) x],
+			tri = sum(pyr),
+			soff = cumsum(pyr)
+		) [
+			for (tb=[0,1], j=[0,1], i = [0:1:4]) let(
+				base = ((((tb*2) + j) * 5) + i) * tri
+			)
+			for (k = [0:1:icosa_steps-1])
+			for (l = [0:1:k]) let(
+				v1 = base + soff[k] + l,
+				v2 = base + soff[k+1] + l,
+				v3 = base + soff[k+1] + (l + 1),
+				faces = [
+					if(l>0) [v1-1,v1,v2],
+					[v1,v3,v2],
+				],
+				faces2 = (tb+j)%2? [for (f=faces) reverse(f)] : faces
+			) each faces2
+		] : []
+	) [reorient(anchor,spin,orient, r=r, p=verts), faces];
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
