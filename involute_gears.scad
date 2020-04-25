@@ -517,14 +517,16 @@ module bevel_gear(
 				),
 				pp = rot(theta, cp=spiral_cp, p=[0,Rm,0]),
 				ang = atan2(pp.y,pp.x)-90,
-				pts = apply_list(profile, [
-					move([0,-p,0]),
-					rot([0,ang,0]),
-					rot([bevelang,0,0]),
-					move(pp),
-					rot(tooth*360/teeth),
-					move([0,0,thickness*u])
-				])
+				pts = apply_list(
+					path3d(profile), [
+						move([0,-p,0]),
+						rot([0,ang,0]),
+						rot([bevelang,0,0]),
+						move(pp),
+						rot(tooth*360/teeth),
+						move([0,0,thickness*u])
+					]
+				)
 			) each pts
 		], [
 			[0,0,-dy], [0,0,thickness]

@@ -465,7 +465,7 @@ function bezier_close_to_axis(bezier, N=3, axis="X") =
 //   closed = bezier_offset([-5,0], bez);
 //   trace_bezier(closed, size=1);
 function bezier_offset(offset, bezier, N=3) =
-	assert(is_num(offset))
+	assert(is_vector(offset,2))
 	assert(is_path(bezier,2), "bezier_offset() can only work on 2D bezier paths.")
 	assert(is_int(N))
 	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
@@ -660,8 +660,8 @@ module bezier_sweep_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, path
 	assert(is_int(bezsteps));
 	assert(is_int(bezN));
 	assert(is_int(pathN));
-	assert(len(bezier)%bezN == 1, str("For argument bezier, a degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
-	assert(len(path)%pathN == 1, str("For argument bezier, a degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
+	assert(len(bezier)%bezN == 1, str("For argument bezier, a degree ",bezN," bezier path shound have a multiple of ",bezN," points in it, plus 1."));
+	assert(len(path)%pathN == 1, str("For argument bezier, a degree ",pathN," bezier path shound have a multiple of ",pathN," points in it, plus 1."));
 	bez_points = simplify_path(bezier_polyline(bezier, bezsteps, bezN));
 	path_points = simplify_path(path3d(bezier_polyline(path, pathsteps, pathN)));
 	path_sweep(bez_points, path_points);
