@@ -14,138 +14,59 @@
 
 // Function&Module: square()
 // Usage:
-//   square(size, [center], [rounding], [chamfer], [anchor], [spin])
+//   square(size, [center])
 // Description:
-//   When called as a module, creates a 2D square of the given size, with optional rounding or chamfering.
+//   When called as the builtin module, creates a 2D square or rectangle of the given size.
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
 // Arguments:
 //   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
-//   rounding = The rounding radius for the corners.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
-//   chamfer = The chamfer size for the corners.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
 //   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = (Function only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = (Function only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D):
 //   square(40);
 // Example(2D): Centered
 //   square([40,30], center=true);
-// Example(2D): Anchored
-//   square([40,30], anchor=FRONT);
-// Example(2D): Spun
-//   square([40,30], anchor=FRONT, spin=30);
-// Example(2D): Chamferred Rect
-//   square([40,30], chamfer=5, center=true);
-// Example(2D): Rounded Rect
-//   square([40,30], rounding=5, center=true);
-// Example(2D): Mixed Chamferring and Rounding
-//   square([40,30],center=true,rounding=[5,0,10,0],chamfer=[0,8,0,15],$fa=1,$fs=1);
 // Example(2D): Called as Function
-//   path = square([40,30], chamfer=5, anchor=FRONT, spin=30);
+//   path = square([40,30], anchor=FRONT, spin=30);
 //   stroke(path, closed=true);
 //   move_copies(path) color("blue") circle(d=2,$fn=8);
-module square(size=1, center, rounding=0, chamfer=0, anchor, spin=0) {
-	size = is_num(size)? [size,size] : point2d(size);
-	anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT);
-	pts = square(size=size, rounding=rounding, chamfer=chamfer, center=true);
-	attachable(anchor,spin, two_d=true, size=size) {
-		translate(-size/2) polygon(move(size/2,p=pts));  // Extraneous translation works around fine grid quantizing.
-		children();
-	}
-}
-
-
-function square(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
-	assert(is_num(size)     || is_vector(size))
-	assert(is_num(chamfer)  || len(chamfer)==4)
-	assert(is_num(rounding) || len(rounding)==4)
+function square(size=1, center, anchor, spin=0) =
 	let(
+		anchor = get_anchor(anchor, center, [-1,-1], [-1,-1]),
 		size = is_num(size)? [size,size] : point2d(size),
-		anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT),
-		complex = rounding!=0 || chamfer!=0
-	)
-	(rounding==0 && chamfer==0)? let(
 		path = [
-			[ size.x/2, -size.y/2],
-			[-size.x/2, -size.y/2],
-			[-size.x/2,  size.y/2],
-			[ size.x/2,  size.y/2] 
-		]
-	) rot(spin, p=move(-vmul(anchor,size/2), p=path)) :
-	let(
-		chamfer = is_list(chamfer)? chamfer : [for (i=[0:3]) chamfer],
-		rounding = is_list(rounding)? rounding : [for (i=[0:3]) rounding],
-		quadorder = [3,2,1,0],
-		quadpos = [[1,1],[-1,1],[-1,-1],[1,-1]],
-		insets = [for (i=[0:3]) chamfer[i]>0? chamfer[i] : rounding[i]>0? rounding[i] : 0],
-		insets_x = max(insets[0]+insets[1],insets[2]+insets[3]),
-		insets_y = max(insets[0]+insets[3],insets[1]+insets[2])
-	)
-	assert(insets_x <= size.x, "Requested roundings and/or chamfers exceed the square width.")
-	assert(insets_y <= size.y, "Requested roundings and/or chamfers exceed the square height.")
-	let(
-		path = [
-			for(i = [0:3])
-			let(
-				quad = quadorder[i],
-				inset = insets[quad],
-				cverts = quant(segs(inset),4)/4,
-				cp = vmul(size/2-[inset,inset], quadpos[quad]),
-				step = 90/cverts,
-				angs =
-					chamfer[quad] > 0?  [0,-90]-90*[i,i] :
-					rounding[quad] > 0? [for (j=[0:1:cverts]) 360-j*step-i*90] :
-					[0]
-			)
-			each [for (a = angs) cp + inset*[cos(a),sin(a)]]
-		]
-	) complex?
-		reorient(anchor,spin, two_d=true, path=path, p=path) :
-		reorient(anchor,spin, two_d=true, size=size, p=path);
+			[ size.x,-size.y],
+			[-size.x,-size.y],
+			[-size.x, size.y],
+			[ size.x, size.y]
+		] / 2
+	) reorient(anchor,spin, two_d=true, size=size, p=path);
 
 
 // Function&Module: circle()
 // Usage:
-//   circle(r|d, [realign], [circum])
+//   circle(r|d)
 // Description:
-//   When called as a module, creates a 2D polygon that approximates a circle of the given size.
+//   When called as the builtin module, creates a 2D polygon that approximates a circle of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle of the given size.
 // Arguments:
 //   r = The radius of the circle to create.
 //   d = The diameter of the circle to create.
-//   realign = If true, rotates the polygon that approximates the circle by half of one size.
-//   circum = If true, the polygon that approximates the circle will be upsized slightly to circumscribe the theoretical circle.  If false, it inscribes the theoretical circle.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = (Function only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = (Function only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D): By Radius
 //   circle(r=25);
 // Example(2D): By Diameter
 //   circle(d=50);
-// Example(2D): Anchoring
-//   circle(d=50, anchor=FRONT);
-// Example(2D): Spin
-//   circle(d=50, anchor=FRONT, spin=45);
 // Example(NORENDER): Called as Function
 //   path = circle(d=50, anchor=FRONT, spin=45);
-module circle(r, d, realign=false, circum=false, anchor=CENTER, spin=0) {
-	r = get_radius(r=r, d=d, dflt=1);
-	sides = segs(r);
-	rr = circum? r/cos(180/sides) : r;
-	pts = circle(r=rr, realign=realign, $fn=sides);
-	attachable(anchor,spin, two_d=true, r=rr) {
-		polygon(pts);
-		children();
-	}
-}
-
-
-function circle(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
+function circle(r, d, anchor=CENTER, spin=0) =
 	let(
 		r = get_radius(r=r, d=d, dflt=1),
 		sides = segs(r),
-		offset = realign? 180/sides : 0,
-		rr = r / (circum? cos(180/sides) : 1),
-		pts = [for (i=[0:1:sides-1]) let(a=360-offset-i*360/sides) rr*[cos(a),sin(a)]]
-	) reorient(anchor,spin, two_d=true, r=rr, p=pts);
+		path = [for (i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]]
+	) reorient(anchor,spin, two_d=true, r=r, p=path);
 
 
 
@@ -185,10 +106,11 @@ function circle(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 module cube(size=1, center, anchor, spin=0, orient=UP)
 {
 	anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
-	vnf = cube(size, center=true);
-	siz = scalar_vec3(size);
-	attachable(anchor,spin,orient, size=siz) {
-		vnf_polyhedron(vnf, convexity=2);
+	size = scalar_vec3(size);
+	attachable(anchor,spin,orient, size=size) {
+		linear_extrude(height=size.z, center=true, convexity=2) {
+			square([size.x,size.y], center=true);
+		}
 		children();
 	}
 }
@@ -266,9 +188,18 @@ module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
 	l = first_defined([h, l, 1]);
 	sides = segs(max(r1,r2));
-	vnf = cylinder(l=l, r1=r1, r2=r2, center=true);
 	attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
-		vnf_polyhedron(vnf, convexity=2);
+		if(r1>r2) {
+			linear_extrude(height=l, center=true, convexity=2, scale=r2/r1) {
+				circle(r=r1);
+			}
+		} else {
+			zflip() {
+				linear_extrude(height=l, center=true, convexity=2, scale=r1/r2) {
+					circle(r=r2);
+				}
+			}
+		}
 		children();
 	}
 }
@@ -307,7 +238,7 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   r = Radius of the sphere.
 //   d = Diameter of the sphere.
 //   circum = If true, the sphere is made large enough to circumscribe the sphere of the ideal side.  Otherwise inscribes.  Default: false (inscribes)
-//   style = The style of the sphere's construction. One of "orig", "alt", "stagger", or "icosa".  Default: "orig"
+//   style = The style of the sphere's construction. One of "orig", "aligned", "stagger", or "icosa".  Default: "orig"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -317,8 +248,8 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   sphere(d=100);
 // Example: style="orig"
 //   sphere(d=100, style="orig", $fn=10);
-// Example: style="alt"
-//   sphere(d=100, style="alt", $fn=10);
+// Example: style="aligned"
+//   sphere(d=100, style="aligned", $fn=10);
 // Example: style="stagger"
 //   sphere(d=100, style="stagger", $fn=10);
 // Example: style="icosa"
@@ -336,110 +267,12 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 // Example: Called as Function
 //   vnf = sphere(d=100, style="icosa");
 //   vnf_polyhedron(vnf);
-module sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP)
-{
-	r = get_radius(r=r, d=d, dflt=1);
-	sides = segs(r);
-	vnf = sphere(r=r, circum=circum, style=style);
-	attachable(anchor,spin,orient, r=r) {
-		vnf_polyhedron(vnf, convexity=2);
-		children();
-	}
-}
+module sphere(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orient=UP)
+	spheroid(r=r, d=d, circum=circum, style=style, anchor=anchor, spin=spin, orient=orient) children();
 
 
-function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP) =
-	let(
-		r = get_radius(r=r, d=d, dflt=1),
-		hsides = segs(r),
-		vsides = max(2,ceil(hsides/2)),
-		icosa_steps = round(max(5,hsides)/5),
-		rr = circum? (r / cos(90/vsides) / cos(180/hsides)) : r,
-		stagger = style=="stagger",
-		verts = style=="orig"? [
-			for (i=[0:1:vsides-1]) let(phi = (i+0.5)*180/(vsides))
-			for (j=[0:1:hsides-1]) let(theta = j*360/hsides)
-			spherical_to_xyz(rr, theta, phi),
-		] : style=="alt" || style=="stagger"? [
-			spherical_to_xyz(rr, 0, 0),
-			for (i=[1:1:vsides-1]) let(phi = i*180/vsides)
-				for (j=[0:1:hsides-1]) let(theta = (j+((stagger && i%2!=0)?0.5:0))*360/hsides)
-					spherical_to_xyz(rr, theta, phi),
-			spherical_to_xyz(rr, 0, 180)
-		] : style=="icosa"? [
-			for (tb=[0,1], j=[0,2], i = [0:1:4]) let(
-				theta0 = i*360/5,
-				theta1 = (i-0.5)*360/5,
-				theta2 = (i+0.5)*360/5,
-				phi0 = 180/3 * j,
-				phi1 = 180/3,
-				v0 = spherical_to_xyz(1,theta0,phi0),
-				v1 = spherical_to_xyz(1,theta1,phi1),
-				v2 = spherical_to_xyz(1,theta2,phi1),
-				ax0 = vector_axis(v0, v1),
-				ang0 = vector_angle(v0, v1),
-				ax1 = vector_axis(v0, v2),
-				ang1 = vector_angle(v0, v2)
-			)
-			for (k = [0:1:icosa_steps]) let(
-				u = k/icosa_steps,
-				vv0 = rot(ang0*u, ax0, p=v0),
-				vv1 = rot(ang1*u, ax1, p=v0),
-				ax2 = vector_axis(vv0, vv1),
-				ang2 = vector_angle(vv0, vv1)
-			)
-			for (l = [0:1:k]) let(
-				v = k? l/k : 0,
-				pt = rot(ang2*v, v=ax2, p=vv0) * rr * (tb? -1 : 1)
-			) pt
-		] : assert(in_list(style,["orig","alt","stagger","icosa"])),
-		lv = len(verts),
-		faces = style=="orig"? [
-			[for (i=[0:1:hsides-1]) hsides-i-1],
-			[for (i=[0:1:hsides-1]) lv-hsides+i],
-			for (i=[0:1:vsides-2], j=[0:1:hsides-1]) each [
-				[(i+1)*hsides+j, i*hsides+j, i*hsides+(j+1)%hsides],
-				[(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
-			]
-		] : style=="alt" || style=="stagger"? [
-			for (i=[0:1:hsides-1]) let(
-				b2 = lv-2-hsides
-			) each [
-				[i+1, 0, ((i+1)%hsides)+1],
-				[lv-1, b2+i+1, b2+((i+1)%hsides)+1],
-			],
-			for (i=[0:1:vsides-3], j=[0:1:hsides-1]) let(
-				base = 1 + hsides*i
-			) each (
-				(stagger && i%2!=0)? [
-					[base+j, base+hsides+j%hsides, base+hsides+(j+hsides-1)%hsides],
-					[base+j, base+(j+1)%hsides, base+hsides+j],
-				] : [
-					[base+j, base+(j+1)%hsides, base+hsides+(j+1)%hsides],
-					[base+j, base+hsides+(j+1)%hsides, base+hsides+j],
-				]
-			)
-		] : style=="icosa"? let(
-			pyr = [for (x=[0:1:icosa_steps+1]) x],
-			tri = sum(pyr),
-			soff = cumsum(pyr)
-		) [
-			for (tb=[0,1], j=[0,1], i = [0:1:4]) let(
-				base = ((((tb*2) + j) * 5) + i) * tri
-			)
-			for (k = [0:1:icosa_steps-1])
-			for (l = [0:1:k]) let(
-				v1 = base + soff[k] + l,
-				v2 = base + soff[k+1] + l,
-				v3 = base + soff[k+1] + (l + 1),
-				faces = [
-					if(l>0) [v1-1,v1,v2],
-					[v1,v3,v2],
-				],
-				faces2 = (tb+j)%2? [for (f=faces) reverse(f)] : faces
-			) each faces2
-		] : []
-	) [reorient(anchor,spin,orient, r=r, p=verts), faces];
+function sphere(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orient=UP) =
+	spheroid(r=r, d=d, circum=circum, style=style, anchor=anchor, spin=spin, orient=orient);
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -844,7 +844,8 @@ module sweep(shape, transformations, closed=false, caps, convexity=10) {
 
 
 // Function&Module: path_sweep()
-// Usage: path_sweep(shape, path, [method], [normal], [closed], [twist], [twist_by_length], [symmetry], [last_normal], [tangent], [relaxed], [caps], [convexity], [transforms])
+// Usage:
+//   path_sweep(shape, path, [method], [normal], [closed], [twist], [twist_by_length], [symmetry], [last_normal], [tangent], [relaxed], [caps], [convexity], [transforms])
 // Description:
 //   Takes as input a 2d shape (specified as a point list) and a 2d or 3d path and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF by default or if you set `transforms=true` then
@@ -1027,7 +1028,7 @@ module sweep(shape, transformations, closed=false, caps, convexity=10) {
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, helix, method="manual", normal=normals);
 // Example: When using "manual" it is important to choose a normal that works for the whole path, producing a consistent result.  Here we have specified an upward normal, and indeed the shape is pointed up everywhere, but two abrupt transitional twists render the model invalid.  
-//   yzcircle = yrot(90,p=circle($fn=64, r=30));
+//   yzcircle = yrot(90,p=path3d(circle($fn=64, r=30)));
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, yzcircle, method="manual", normal=UP, closed=true);
 // Example: The "natural" method will introduce twists when the curvature changes direction.  A warning is displayed.  

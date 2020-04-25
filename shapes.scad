@@ -205,12 +205,12 @@ module cuboid(
 						minkowski() {
 							cube(isize, center=true);
 							if (trimcorners) {
-								sphere(r=rounding, $fn=sides);
+								spheroid(r=rounding, $fn=sides);
 							} else {
 								intersection() {
-									cylinder(r=rounding, h=rounding*2, center=true, $fn=sides);
-									rotate([90,0,0]) cylinder(r=rounding, h=rounding*2, center=true, $fn=sides);
-									rotate([0,90,0]) cylinder(r=rounding, h=rounding*2, center=true, $fn=sides);
+									cyl(r=rounding, h=rounding*2, $fn=sides);
+									rotate([90,0,0]) cyl(r=rounding, h=rounding*2, $fn=sides);
+									rotate([0,90,0]) cyl(r=rounding, h=rounding*2, $fn=sides);
 								}
 							}
 						}
@@ -269,7 +269,7 @@ module cuboid(
 										rotate(majrots[axis]) cube([rounding*2, rounding*2, size[axis]+0.1], center=true);
 									}
 									translate(vmul(EDGE_OFFSETS[axis][i], size/2 - [1,1,1]*rounding)) {
-										rotate(majrots[axis]) cylinder(h=size[axis]+0.2, r=rounding, center=true, $fn=sides);
+										rotate(majrots[axis]) cyl(h=size[axis]+0.2, r=rounding, $fn=sides);
 									}
 								}
 							}
@@ -284,7 +284,7 @@ module cuboid(
 											cube(rounding*2, center=true);
 										}
 										translate(vmul([xa,ya,za], size/2-[1,1,1]*rounding)) {
-											sphere(r=rounding, $fn=sides);
+											spheroid(r=rounding, $fn=sides);
 										}
 									}
 								}
@@ -422,12 +422,12 @@ module rounded_prismoid(
 		down(h/2) {
 			hull() {
 				linear_extrude(height=eps, center=false, convexity=2) {
-					square(size1, rounding=rr1, center=true);
+					rect(size1, rounding=rr1, center=true);
 				}
 				up(h-0.01) {
 					translate(shiftby) {
 						linear_extrude(height=eps, center=false, convexity=2) {
-							square(size2, rounding=rr2, center=true);
+							rect(size2, rounding=rr2, center=true);
 						}
 					}
 				}
@@ -705,10 +705,7 @@ module cyl(
 module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, anchor=CENTER)
 {
 	anchor = rot(from=RIGHT, to=UP, p=anchor);
-	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=RIGHT, anchor=anchor) {
-		for (i=[0:1:$children-2]) children(i);
-		if ($children>0) children($children-1);
-	}
+	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=RIGHT, anchor=anchor) children();
 }
 
 
@@ -746,10 +743,7 @@ module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, anchor=CENTER)
 {
 	anchor = rot(from=BACK, to=UP, p=anchor);
-	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=BACK, anchor=anchor) {
-		for (i=[0:1:$children-2]) children(i);
-		if ($children>0) children($children-1);
-	}
+	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=BACK, anchor=anchor) children();
 }
 
 
@@ -786,10 +780,7 @@ module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   }
 module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, anchor=CENTER)
 {
-	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=UP, anchor=anchor) {
-		for (i=[0:1:$children-2]) children(i);
-		if ($children>0) children($children-1);
-	}
+	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=UP, anchor=anchor) children();
 }
 
 
@@ -915,7 +906,7 @@ module torus(
 	anchor = get_anchor(anchor, center, BOT, CENTER);
 	attachable(anchor,spin,orient, r=(majrad+minrad), l=minrad*2) {
 		rotate_extrude(convexity=4) {
-			right(majrad) circle(minrad);
+			right(majrad) circle(r=minrad);
 		}
 		children();
 	}
@@ -923,104 +914,171 @@ module torus(
 
 
 
-// Section: Spheroids
+// Section: Spheroid
 
 
-// Module: spheroid()
+// Function&Module: spheroid()
+// Usage: As Module
+//   spheroid(r|d, [circum], [style])
+// Usage: As Function
+//   vnf = spheroid(r|d, [circum], [style])
 // Description:
-//   An version of `sphere()` with anchors points and orientation.
-// Usage:
-//   spheroid(r|d, [circum])
+//   Creates a spheroid object, with support for anchoring and attachments.
+//   This is a drop-in replacement for the built-in `sphere()` module.
+//   When called as a function, returns a [VNF](vnf.scad) for a spheroid.
 // Arguments:
-//   r = Radius of the sphere.
-//   d = Diameter of the sphere.
-//   circum = If true, circumscribes the perfect sphere of the given radius/diameter.
+//   r = Radius of the spheroid.
+//   d = Diameter of the spheroid.
+//   circum = If true, the spheroid is made large enough to circumscribe the sphere of the ideal side.  Otherwise inscribes.  Default: false (inscribes)
+//   style = The style of the spheroid's construction. One of "orig", "aligned", "stagger", or "icosa".  Default: "aligned"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example: By Radius
-//   spheroid(r=50, circum=true);
+//   spheroid(r=50);
 // Example: By Diameter
-//   spheroid(d=100, circum=true);
+//   spheroid(d=100);
+// Example: style="orig"
+//   spheroid(d=100, style="orig", $fn=10);
+// Example: style="aligned"
+//   spheroid(d=100, style="aligned", $fn=10);
+// Example: style="stagger"
+//   spheroid(d=100, style="stagger", $fn=10);
+// Example: style="icosa"
+//   spheroid(d=100, style="icosa", $fn=10);
+//   // In "icosa" style, $fn is quantized
+//   //   to the nearest multiple of 5.
+// Example: Anchoring
+//   spheroid(d=100, anchor=FRONT);
+// Example: Spin
+//   spheroid(d=100, anchor=FRONT, spin=45);
+// Example: Orientation
+//   spheroid(d=100, anchor=FRONT, spin=45, orient=FWD);
 // Example: Standard Connectors
-//   spheroid(d=40, circum=true) show_anchors();
-module spheroid(r=undef, d=undef, circum=false, anchor=CENTER, spin=0, orient=UP)
+//   spheroid(d=50) show_anchors();
+// Example: Called as Function
+//   vnf = spheroid(d=100, style="icosa");
+//   vnf_polyhedron(vnf);
+module spheroid(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orient=UP)
 {
 	r = get_radius(r=r, d=d, dflt=1);
-	hsides = segs(r);
-	vsides = ceil(hsides/2);
-	rr = circum? (r / cos(90/vsides) / cos(180/hsides)) : r;
-	attachable(anchor,spin,orient, r=rr) {
-		sphere(r=rr);
-		children();
-	}
-}
-
-
-
-// Module: staggered_sphere()
-//
-// Description:
-//   An alternate construction to the standard `sphere()` built-in, with different triangulation.
-//
-// Usage:
-//   staggered_sphere(r|d, [circum])
-//
-// Arguments:
-//   r = Radius of the sphere.
-//   d = Diameter of the sphere.
-//   circum = If true, circumscribes the perfect sphere of the given size.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//
-// Example: By Radius
-//   staggered_sphere(r=50, circum=true);
-// Example: By Diameter
-//   staggered_sphere(d=100, circum=true);
-// Example: Standard Connectors
-//   staggered_sphere(d=40, circum=true) show_anchors();
-module staggered_sphere(r=undef, d=undef, circum=false, anchor=CENTER, spin=0, orient=UP) {
-	r = get_radius(r=r, d=d, dflt=1);
 	sides = segs(r);
-	vsides = max(3, ceil(sides/2))+1;
-	step = 360/sides;
-	vstep = 180/(vsides-1);
-	rr = circum? (r / cos(180/sides) / cos(90/vsides)) : r;
-	pts = concat(
-		[[0,0,rr]],
-		[
-			for (p = [1:1:vsides-2], t = [0:1:sides-1]) let(
-				ta = (t+(p%2/2))*step,
-				pa = p*vstep
-			) spherical_to_xyz(rr, ta, pa)
-		],
-		[[0,0,-rr]]
-	);
-	pcnt = len(pts);
-	faces = concat(
-		[
-			for (i = [1:1:sides]) each [
-				[0, i%sides+1, i],
-				[pcnt-1, pcnt-1-(i%sides+1), pcnt-1-i]
-			]
-		],
-		[
-			for (p = [0:1:vsides-4], i = [0:1:sides-1]) let(
-				b1 = 1+p*sides,
-				b2 = 1+(p+1)*sides,
-				v1 = b1+i,
-				v2 = b1+(i+1)%sides,
-				v3 = b2+((i+((p%2)?(sides-1):0))%sides),
-				v4 = b2+((i+1+((p%2)?(sides-1):0))%sides)
-			) each [[v1,v4,v3], [v1,v2,v4]]
-		]
-	);
-	attachable(anchor,spin,orient, r=rr) {
-		zrot((floor(sides/4)%2==1)? 180/sides : 0) polyhedron(points=pts, faces=faces);
+	attachable(anchor,spin,orient, r=r) {
+		if (style=="orig") {
+			rotate_extrude(convexity=2,$fn=sides) {
+				difference() {
+					zrot(180/sides) oval(r=r, circum=circum, $fn=sides);
+					left(r) square(2*r,center=true);
+				}
+			}
+		} else if (style=="aligned") {
+			rotate_extrude(convexity=2,$fn=sides) {
+				difference() {
+					oval(r=r, circum=circum, $fn=sides);
+					left(r) square(2*r,center=true);
+				}
+			}
+		} else {
+			vnf = spheroid(r=r, circum=circum, style=style);
+			vnf_polyhedron(vnf, convexity=2);
+		}
 		children();
 	}
 }
+
+
+function spheroid(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orient=UP) =
+	let(
+		r = get_radius(r=r, d=d, dflt=1),
+		hsides = segs(r),
+		vsides = max(2,ceil(hsides/2)),
+		icosa_steps = round(max(5,hsides)/5),
+		rr = circum? (r / cos(90/vsides) / cos(180/hsides)) : r,
+		stagger = style=="stagger",
+		verts = style=="orig"? [
+			for (i=[0:1:vsides-1]) let(phi = (i+0.5)*180/(vsides))
+			for (j=[0:1:hsides-1]) let(theta = j*360/hsides)
+			spherical_to_xyz(rr, theta, phi),
+		] : style=="aligned" || style=="stagger"? [
+			spherical_to_xyz(rr, 0, 0),
+			for (i=[1:1:vsides-1]) let(phi = i*180/vsides)
+				for (j=[0:1:hsides-1]) let(theta = (j+((stagger && i%2!=0)?0.5:0))*360/hsides)
+					spherical_to_xyz(rr, theta, phi),
+			spherical_to_xyz(rr, 0, 180)
+		] : style=="icosa"? [
+			for (tb=[0,1], j=[0,2], i = [0:1:4]) let(
+				theta0 = i*360/5,
+				theta1 = (i-0.5)*360/5,
+				theta2 = (i+0.5)*360/5,
+				phi0 = 180/3 * j,
+				phi1 = 180/3,
+				v0 = spherical_to_xyz(1,theta0,phi0),
+				v1 = spherical_to_xyz(1,theta1,phi1),
+				v2 = spherical_to_xyz(1,theta2,phi1),
+				ax0 = vector_axis(v0, v1),
+				ang0 = vector_angle(v0, v1),
+				ax1 = vector_axis(v0, v2),
+				ang1 = vector_angle(v0, v2)
+			)
+			for (k = [0:1:icosa_steps]) let(
+				u = k/icosa_steps,
+				vv0 = rot(ang0*u, ax0, p=v0),
+				vv1 = rot(ang1*u, ax1, p=v0),
+				ax2 = vector_axis(vv0, vv1),
+				ang2 = vector_angle(vv0, vv1)
+			)
+			for (l = [0:1:k]) let(
+				v = k? l/k : 0,
+				pt = rot(ang2*v, v=ax2, p=vv0) * rr * (tb? -1 : 1)
+			) pt
+		] : assert(in_list(style,["orig","aligned","stagger","icosa"])),
+		lv = len(verts),
+		faces = style=="orig"? [
+			[for (i=[0:1:hsides-1]) hsides-i-1],
+			[for (i=[0:1:hsides-1]) lv-hsides+i],
+			for (i=[0:1:vsides-2], j=[0:1:hsides-1]) each [
+				[(i+1)*hsides+j, i*hsides+j, i*hsides+(j+1)%hsides],
+				[(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
+			]
+		] : style=="aligned" || style=="stagger"? [
+			for (i=[0:1:hsides-1]) let(
+				b2 = lv-2-hsides
+			) each [
+				[i+1, 0, ((i+1)%hsides)+1],
+				[lv-1, b2+i+1, b2+((i+1)%hsides)+1],
+			],
+			for (i=[0:1:vsides-3], j=[0:1:hsides-1]) let(
+				base = 1 + hsides*i
+			) each (
+				(stagger && i%2!=0)? [
+					[base+j, base+hsides+j%hsides, base+hsides+(j+hsides-1)%hsides],
+					[base+j, base+(j+1)%hsides, base+hsides+j],
+				] : [
+					[base+j, base+(j+1)%hsides, base+hsides+(j+1)%hsides],
+					[base+j, base+hsides+(j+1)%hsides, base+hsides+j],
+				]
+			)
+		] : style=="icosa"? let(
+			pyr = [for (x=[0:1:icosa_steps+1]) x],
+			tri = sum(pyr),
+			soff = cumsum(pyr)
+		) [
+			for (tb=[0,1], j=[0,1], i = [0:1:4]) let(
+				base = ((((tb*2) + j) * 5) + i) * tri
+			)
+			for (k = [0:1:icosa_steps-1])
+			for (l = [0:1:k]) let(
+				v1 = base + soff[k] + l,
+				v2 = base + soff[k+1] + l,
+				v3 = base + soff[k+1] + (l + 1),
+				faces = [
+					if(l>0) [v1-1,v1,v2],
+					[v1,v3,v2],
+				],
+				faces2 = (tb+j)%2? [for (f=faces) reverse(f)] : faces
+			) each faces2
+		] : []
+	) [reorient(anchor,spin,orient, r=r, p=verts), faces];
 
 
 
@@ -1176,7 +1234,7 @@ module pie_slice(
 	anchor = get_anchor(anchor, center, BOT, BOT);
 	attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
 		difference() {
-			cylinder(r1=r1, r2=r2, h=l, center=true);
+			cyl(r1=r1, r2=r2, h=l);
 			if (ang<180) rotate(ang) back(maxd/2) cube([2*maxd, maxd, l+0.1], center=true);
 			difference() {
 				fwd(maxd/2) cube([2*maxd, maxd, l+0.2], center=true);
@@ -1330,10 +1388,10 @@ module arced_slot(
 			zrot(sa) {
 				difference() {
 					pie_slice(ang=da, l=h, r1=r+sr1, r2=r+sr2, orient=UP, anchor=CENTER);
-					cylinder(h=h+0.1, r1=r-sr1, r2=r-sr2, center=true);
+					cyl(h=h+0.1, r1=r-sr1, r2=r-sr2);
 				}
-				right(r) cylinder(h=h, r1=sr1, r2=sr2, center=true, $fn=fn_minor);
-				zrot(da) right(r) cylinder(h=h, r1=sr1, r2=sr2, center=true, $fn=fn_minor);
+				right(r) cyl(h=h, r1=sr1, r2=sr2, $fn=fn_minor);
+				zrot(da) right(r) cyl(h=h, r1=sr1, r2=sr2, $fn=fn_minor);
 			}
 		}
 		children();

@@ -729,7 +729,7 @@ function reorient(
 //
 // Example(NORENDER): Spherical Shape
 //   attachable(anchor, spin, orient, r=r) {
-//       staggered_sphere(r=r);
+//       sphere(r=r);
 //       children();
 //   }
 //
