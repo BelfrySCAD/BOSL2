@@ -508,12 +508,15 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
 		],
 		null_faces = !show_warns? [] : [
 			for (face = faces) let(
+				face = deduplicate(face,closed=true)
+			)
+			if (len(face)>=3) let(
 				faceverts = [for (k=face) varr[k]],
-				area = abs(polygon_area(faceverts))
-			) if (area < EPSILON) [
+				area = polygon_area(faceverts)
+			) if (is_num(area) && abs(area) < EPSILON) [
 				"WARNING",
 				"NULL_FACE",
-				str("Face has zero area: ",fmt_float(area,15)),
+				str("Face has zero area: ",fmt_float(abs(area),15)),
 				faceverts,
 				"brown"
 			]
@@ -541,6 +544,8 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
 		]),
 		reversals = unique([
 			for(i = idx(faces), j = idx(faces)) if(i != j)
+			if(len(deduplicate(faces[i],closed=true))>=3)
+			if(len(deduplicate(faces[j],closed=true))>=3)
 			for(edge1 = pair_wrap(faces[i]))
 			for(edge2 = pair_wrap(faces[j]))
 			if(edge1 == edge2)  // Valid adjacent faces will never have the same vertex ordering.

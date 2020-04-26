@@ -849,6 +849,7 @@ function coplanar(plane, point, eps=EPSILON) =
 //   points = The list of points to test.
 //   eps = How much variance is allowed in testing that each point is on the same plane.  Default: `EPSILON` (1e-9)
 function points_are_coplanar(points, eps=EPSILON) =
+	points_are_collinear(points, eps=eps)? true :
 	let(
 		plane = plane_from_points(points, fast=true, eps=eps)
 	) all([for (pt = points) coplanar(plane, pt, eps=eps)]);
@@ -1112,7 +1113,9 @@ function polygon_area(poly) =
 	len(poly)<3? 0 :
 	len(poly[0])==2? 0.5*sum([for(i=[0:1:len(poly)-1]) det2(select(poly,i,i+1))]) :
 	let(
-		plane = plane_from_points(poly),
+		plane = plane_from_points(poly)
+	) plane==undef? undef :
+	let(
 		n = unit(plane_normal(plane)),
 		total = sum([for (i=[0:1:len(poly)-1]) cross(poly[i], select(poly,i+1))]),
 		res = abs(total * n) / 2

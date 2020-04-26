@@ -119,7 +119,7 @@ function vceil(v) = [for (x=v) ceil(x)];
 //   unit([0,0,10]);   // Returns: [0,0,1]
 //   unit([0,-10,0]);  // Returns: [0,-1,0]
 //   unit([0,0,0]);    // Returns: [0,0,0]
-function unit(v) = norm(v)<=EPSILON? v : v/norm(v);
+function unit(v) = assert(is_vector(v),str(v)) norm(v)<=EPSILON? v : v/norm(v);
 
 
 // Function: vector_angle()

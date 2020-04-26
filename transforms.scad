@@ -668,7 +668,7 @@ function yscale(y=1, p=undef, planar=false) = (planar || (!is_undef(p) && len(p)
 //   zscale(3) sphere(r=10);
 //
 // Example: Scaling Points
-//   path = xrot(90,p=circle(d=50,$fn=12));
+//   path = xrot(90,p=path3d(circle(d=50,$fn=12)));
 //   #trace_polyline(path);
 //   trace_polyline(zscale(2,p=path));
 module zscale(z=1) scale([1,1,z]) children();

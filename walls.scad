@@ -224,7 +224,7 @@ module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut=5, wall=2
 						extrude_from_to(corner1,corner2) {
 							polygon(bracepath);
 						}
-						cube([l,thick,h],center=true);
+						prismoid([l1,thick],[l2,thick],h=h,anchor=CENTER);
 					}
 				}
 			}
