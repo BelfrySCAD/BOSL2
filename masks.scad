@@ -604,22 +604,26 @@ module rounding_angled_edge_mask(h=1.0, r=undef, r1=undef, r2=undef, ang=90, anc
 	];
 
 	sweep = 180-ang;
-	n = ceil(segs(max(r1,r2))*sweep/360);
-	x = r1*sin(90-(ang/2))/sin(ang/2);
 	r1 = get_radius(r1=r1, r=r, dflt=1);
 	r2 = get_radius(r1=r2, r=r, dflt=1);
-	attachable(anchor,spin,orient, size=[2*x,2*r1,h], size2=[2*x*r2/r1,2*r2]) {
-		if(r1<r2) {
-			zflip()
-			linear_extrude(height=h, convexity=4, center=true, scale=r1/r2) {
-				polygon(_mask_shape(r2));
+	n = ceil(segs(max(r1,r2))*sweep/360);
+	x = sin(90-(ang/2))/sin(ang/2) * (r1<r2? r2 : r1);
+	if(r1<r2) {
+		attachable(anchor,spin,orient, size=[2*x*r1/r2,2*r1,h], size2=[2*x,2*r2]) {
+			zflip() {
+				linear_extrude(height=h, convexity=4, center=true, scale=r1/r2) {
+					polygon(_mask_shape(r2));
+				}
 			}
-		} else {
+			children();
+		}
+	} else {
+		attachable(anchor,spin,orient, size=[2*x,2*r1,h], size2=[2*x*r2/r1,2*r2]) {
 			linear_extrude(height=h, convexity=4, center=true, scale=r2/r1) {
 				polygon(_mask_shape(r1));
 			}
+			children();
 		}
-		children();
 	}
 }
 
