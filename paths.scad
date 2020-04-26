@@ -914,58 +914,58 @@ module path_extrude(path, convexity=10, clipsize=100) {
 // Example(2D):
 //   circle = regular_ngon(n=64, or=10);
 //   stroke(circle,width=1,closed=true);
-//   color("green")path_spread(circle, n=7, closed=true) circle(r=1+$idx/3);
+//   color("green") path_spread(circle, n=7, closed=true) circle(r=1+$idx/3);
 // Example(2D):
 //   heptagon = regular_ngon(n=7, or=10);
 //   stroke(heptagon, width=1, closed=true);
-//   color("purple") path_spread(heptagon, n=9, closed=true) square([0.5,3],anchor=FRONT);
+//   color("purple") path_spread(heptagon, n=9, closed=true) rect([0.5,3],anchor=FRONT);
 // Example(2D): Direction at the corners is the average of the two adjacent edges
 //   heptagon = regular_ngon(n=7, or=10);
 //   stroke(heptagon, width=1, closed=true);
-//   color("purple") path_spread(heptagon, n=7, closed=true) square([0.5,3],anchor=FRONT);
+//   color("purple") path_spread(heptagon, n=7, closed=true) rect([0.5,3],anchor=FRONT);
 // Example(2D):  Don't rotate the children
 //   heptagon = regular_ngon(n=7, or=10);
 //   stroke(heptagon, width=1, closed=true);
-//   color("red") path_spread(heptagon, n=9, closed=true, rotate_children=false) square([0.5,3],anchor=FRONT);
+//   color("red") path_spread(heptagon, n=9, closed=true, rotate_children=false) rect([0.5,3],anchor=FRONT);
 // Example(2D): Open path, specify `n`
 //   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
 //   stroke(sinwav,width=.1);
-//   color("red")path_spread(sinwav, n=5) square([.2,1.5],anchor=FRONT);
+//   color("red") path_spread(sinwav, n=5) rect([.2,1.5],anchor=FRONT);
 // Example(2D)): Open path, specify `n` and `spacing`
 //   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
 //   stroke(sinwav,width=.1);
-//   color("red")path_spread(sinwav, n=5, spacing=1) square([.2,1.5],anchor=FRONT);
+//   color("red") path_spread(sinwav, n=5, spacing=1) rect([.2,1.5],anchor=FRONT);
 // Example(2D)): Closed path, specify `n` and `spacing`, copies centered around circle[0]
 //   circle = regular_ngon(n=64,or=10);
 //   stroke(circle,width=.1,closed=true);
-//   color("red")path_spread(circle, n=10, spacing=1, closed=true) square([.2,1.5],anchor=FRONT);
+//   color("red") path_spread(circle, n=10, spacing=1, closed=true) rect([.2,1.5],anchor=FRONT);
 // Example(2D): Open path, specify `spacing`
 //   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
 //   stroke(sinwav,width=.1);
-//   color("red")path_spread(sinwav, spacing=5) square([.2,1.5],anchor=FRONT);
+//   color("red") path_spread(sinwav, spacing=5) rect([.2,1.5],anchor=FRONT);
 // Example(2D): Open path, specify `sp`
 //   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
 //   stroke(sinwav,width=.1);
-//   color("red")path_spread(sinwav, n=5, sp=18) square([.2,1.5],anchor=FRONT);
+//   color("red") path_spread(sinwav, n=5, sp=18) rect([.2,1.5],anchor=FRONT);
 // Example(2D):
 //   wedge = arc(angle=[0,100], r=10, $fn=64);
 //   difference(){
 //     polygon(concat([[0,0]],wedge));
-//     path_spread(wedge,n=5,spacing=3) fwd(.1)square([1,4],anchor=FRONT);
+//     path_spread(wedge,n=5,spacing=3) fwd(.1) rect([1,4],anchor=FRONT);
 //   }
 // Example(Spin): 3d example, with children rotated into the plane of the path
 //   tilted_circle = lift_plane(regular_ngon(n=64, or=12), [0,0,0], [5,0,5], [0,2,3]);
 //   path_sweep(regular_ngon(n=16,or=.1),tilted_circle);
 //   path_spread(tilted_circle, n=15,closed=true) {
-//      color("blue")cyl(h=3,r=.2, anchor=BOTTOM);      // z-aligned cylinder
-//      color("red")xcyl(h=10,r=.2, anchor=FRONT+LEFT); // x-aligned cylinder
+//      color("blue") cyl(h=3,r=.2, anchor=BOTTOM);      // z-aligned cylinder
+//      color("red") xcyl(h=10,r=.2, anchor=FRONT+LEFT); // x-aligned cylinder
 //   }
 // Example(Spin): 3d example, with rotate_children set to false
 //   tilted_circle = lift_plane(regular_ngon(n=64, or=12), [0,0,0], [5,0,5], [0,2,3]);
 //   path_sweep(regular_ngon(n=16,or=.1),tilted_circle);
 //   path_spread(tilted_circle, n=25,rotate_children=false,closed=true) {
-//      color("blue")cyl(h=3,r=.2, anchor=BOTTOM);       // z-aligned cylinder
-//      color("red")xcyl(h=10,r=.2, anchor=FRONT+LEFT);  // x-aligned cylinder
+//      color("blue") cyl(h=3,r=.2, anchor=BOTTOM);       // z-aligned cylinder
+//      color("red") xcyl(h=10,r=.2, anchor=FRONT+LEFT);  // x-aligned cylinder
 //   }
 module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=false)
 {
