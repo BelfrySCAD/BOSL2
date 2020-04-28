@@ -1,12 +1,12 @@
 # Basic Shapes Tutorial
 
 ## Enhanced Primitives
-There are 5 built-in primitive shapes that OpenSCAD provides.  The BOSL2
-library extends these shapes so that they support more features, and more
+There are 5 built-in primitive shapes that OpenSCAD provides.  `square()`, `circle()`, `cube()`, `cylinder()`, and `sphere()`.
+The BOSL2 library extends or provides alternative to these shapes so that they support more features, and more
 ways to simply reorient them.
 
-### Enhanced 2D Square
-You can still use `square()` in the familiar ways that OpenSCAD provides:
+### 2D Square
+You still use `square()` in the familiar ways that OpenSCAD provides:
 ```openscad-example
     square(100, center=false);
 ```
@@ -16,30 +16,31 @@ You can still use `square()` in the familiar ways that OpenSCAD provides:
 ```
 
 ```openscad-example
-    square([40,50], center=true);
+    square([60,40], center=true);
 ```
 
-BOSL2's enhanced `square()` also allows you to round the corners:
+### rect()
+BOSL2 has a `rect()` command that acts an an enhanced `square()` that has extended functionality. For example, it allows you to round the corners:
 ```openscad-example
-    square([40,50], center=true, rounding=10);
+    rect([60,40], center=true, rounding=10);
 ```
 
 It also supports chamfers:
 ```openscad-example
-    square([40,50], center=true, chamfer=10);
+    rect([60,40], center=true, chamfer=10);
 ```
 
-It even allows you to specify *which* corners get rounded or chamferred:
+It allows you to specify *which* corners get rounded or chamferred:
 ```openscad-example
-    square([40,50], center=true, rounding=[0,5,10,15]);
+    rect([60,40], center=true, rounding=[0,5,10,15]);
 ```
 ```openscad-example
-    square([40,50], center=true, chamfer=[0,5,10,15]);
+    rect([60,40], center=true, chamfer=[0,5,10,15]);
 ```
 
 It will even let you mix rounding and chamferring:
 ```openscad-example
-    square([40,50], center=true, rounding=[5,0,10,0], chamfer=[0,5,0,15]);
+    rect([60,40], center=true, rounding=[5,0,10,0], chamfer=[0,5,0,15]);
 ```
 
 ### Anchors and Spin
@@ -49,17 +50,17 @@ alignment options.  It takes a vector as a value, pointing roughly towards
 the side or corner you want to align to the origin.  For example, to align
 the center of the back edge to the origin, set the anchor to `[0,1]`:
 ```openscad-example
-    square([40,50], anchor=[0,1]);
+    rect([60,40], anchor=[0,1]);
 ```
 
 To align the front right corner to the origin:
 ```openscad-example
-    square([40,50], anchor=[1,-1]);
+    rect([60,40], anchor=[1,-1]);
 ```
 
 To center:
 ```openscad-example
-    square([40,50], anchor=[0,0]);
+    rect([60,40], anchor=[0,0]);
 ```
 
 To make it clearer when giving vectors, there are several standard vector constants defined:
@@ -73,26 +74,26 @@ To make it clearer when giving vectors, there are several standard vector consta
 
 Note that even though these are 3D vectors, you can use most of them, (except `UP`/`DOWN`, of course) for anchors in 2D shapes:
 ```openscad-example
-    square([40,50], anchor=BACK);
+    rect([60,40], anchor=BACK);
 ```
 
 ```openscad-example
-    square([40,50], anchor=CENTER);
+    rect([60,40], anchor=CENTER);
 ```
 
 You can add them together to point to corners:
 ```openscad-example
-    square([40,50], anchor=FRONT+RIGHT);
+    rect([60,40], anchor=FRONT+RIGHT);
 ```
 
 Finally, the `spin` argument can rotate the shape by a given number of degrees clockwise:
 ```openscad-example
-    square([40,50], anchor=CENTER, spin=30);
+    rect([60,40], anchor=CENTER, spin=30);
 ```
 
 Anchoring or centering is performed before the spin:
 ```openscad-example
-    square([40,50], anchor=BACK, spin=30);
+    rect([60,40], anchor=BACK, spin=30);
 ```
 
 ### Enhanced 2D Circle
