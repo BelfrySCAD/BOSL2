@@ -625,7 +625,7 @@ function plane_from_normal(normal, pt=[0,0,0]) =
 //   points = The list of points to find the plane of.
 //   fast = If true, don't verify that all points in the list are coplanar.  Default: false
 //   eps = How much variance is allowed in testing that each point is on the same plane.  Default: `EPSILON` (1e-9)
-// Example:
+// Example(3D):
 //   xyzpath = rot(45, v=[-0.3,1,0], p=path3d(star(n=6,id=70,d=100), 70));
 //   plane = plane_from_points(xyzpath);
 //   #stroke(xyzpath,closed=true);
@@ -658,7 +658,7 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
 //   poly = The planar 3D polygon to find the plane of.
 //   fast = If true, don't verify that all points in the polygon are coplanar.  Default: false
 //   eps = How much variance is allowed in testing that each point is on the same plane.  Default: `EPSILON` (1e-9)
-// Example:
+// Example(3D):
 //   xyzpath = rot(45, v=[0,1,0], p=path3d(star(n=5,step=2,d=100), 70));
 //   plane = plane_from_polygon(xyzpath);
 //   #stroke(xyzpath,closed=true);
@@ -705,7 +705,7 @@ function plane_offset(plane) = plane[3];
 //   Z coordinates, so you can work with the points in 2D.
 // Arguments:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
-// Example:
+// Example(3D):
 //   xyzpath = move([10,20,30], p=yrot(25, p=path3d(circle(d=100))));
 //   plane = plane_from_points(xyzpath);
 //   mat = plane_transform(plane);
@@ -1177,7 +1177,6 @@ function closest_point(pt, points) =
 // Arguments:
 //   pt = The point to find the farthest point from.
 //   points = The list of points to search.
-// Example:
 function furthest_point(pt, points) =
 	max_index([for (p=points) norm(p-pt)]);
 
@@ -1444,7 +1443,6 @@ function reverse_polygon(poly) =
 // Description:
 //   Given a 3D planar polygon, returns a unit-length normal vector for the
 //   clockwise orientation of the polygon. 
-// Example:
 function polygon_normal(poly) =
 	let(
 		poly = path3d(cleanup_path(poly)),
