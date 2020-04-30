@@ -474,13 +474,14 @@ function _skin_core(profiles, caps) =
 
 
 // Function: subdivide_and_slice()
-// Usage: subdivide_and_slice(profiles, slices, [numpoints], [method], [closed])
-// Description: Subdivides the input profiles to have length `numpoints` where
-//   `numpoints` must be at least as big as the largest input profile.
-//   By default `numpoints` is set equal to the length of the largest profile.
-//   You can set `numpoints="lcm"` to sample to the least common multiple of
-//   all curves, which will avoid sampling artifacts but may produce a huge output.
-//   After subdivision, profiles are sliced.
+// Usage:
+//   subdivide_and_slice(profiles, slices, [numpoints], [method], [closed])
+// Description:
+//   Subdivides the input profiles to have length `numpoints` where `numpoints` must be at least as
+//   big as the largest input profile.  By default `numpoints` is set equal to the length of the
+//   largest profile.  You can set `numpoints="lcm"` to sample to the least common multiple of all
+//   curves, which will avoid sampling artifacts but may produce a huge output.  After subdivision,
+//   profiles are sliced.
 // Arguments:
 //   profiles = profiles to operate on
 //   slices = number of slices to insert between each pair of profiles.  May be a vector

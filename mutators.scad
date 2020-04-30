@@ -31,9 +31,13 @@
 //   half_of(DOWN+LEFT, s=200) sphere(d=150);
 // Example(2D):
 //   half_of([1,1], planar=true) circle(d=50);
-module half_of(v=UP, cp=[0,0,0], s=1000, planar=false)
+module half_of(v=UP, cp, s=1000, planar=false)
 {
-	cp = is_num(cp)? cp*unit(v) : cp;
+	cp = is_vector(v,4)? assert(cp==undef, "Don't use cp with plane definition.") plane_normal(v) * v[3] :
+		is_vector(cp)? cp :
+		is_num(cp)? cp*unit(v) :
+		[0,0,0];
+	v = is_vector(v,4)? plane_normal(v) : v;
 	if (cp != [0,0,0]) {
 		translate(cp) half_of(v=v, s=s, planar=planar) translate(-cp) children();
 	} else if (planar) {

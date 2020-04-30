@@ -143,15 +143,21 @@ function xy_to_polar(x,y=undef) = let(
 
 
 // Function: project_plane()
-// Usage:
-//   xy = project_plane(point, a, b, c);
-//   xy = project_plane(point, [A,B,C]];
+// Usage: With 3 Points
+//   xyz = project_plane(point, a, b, c);
+// Usage: With Pointlist
+//   xyz = project_plane(point, POINTLIST);
+// Usage: With Plane Definition [A,B,C,D] Where Ax+By+Cz=D
+//   xyz = project_plane(point, PLANE);
 // Description:
-//   Given three points defining a plane, returns the projected planar [X,Y] coordinates of the
-//   closest point to a 3D `point`.  The origin of the planar coordinate system [0,0] will be at point
-//   `a`, and the Y+ axis direction will be towards point `b`.  This coordinate system can be useful
-//   in taking a set of nearly coplanar points, and converting them to a pure XY set of coordinates
-//   for manipulation, before convering them back to the original 3D plane.
+//   Converts the given 3D point from global coordinates to the 2D planar coordinates of the closest
+//   point on the plane.  This coordinate system can be useful in taking a set of nearly coplanar
+//   points, and converting them to a pure XY set of coordinates for manipulation, before converting
+//   them back to the original 3D plane.
+//   Can be called one of three ways:
+//   - Given three points, `a`, `b`, and `c`, the planar coordinate system will have `[0,0]` at point `a`, and the Y+ axis will be towards point `b`.
+//   - Given a list of points, finds three reasonably spaced non-collinear points in the list and uses them as points `a`, `b`, and `c` as above.
+//   - Given a plane definition `[A,B,C,D]` where `Ax+By+Cz=D`, the closest point on that plane to the global origin at `[0,0,0]` will be the planar coordinate origin `[0,0]`.
 // Arguments:
 //   point = The 3D point, or list of 3D points to project into the plane's 2D coordinate system.
 //   a = A 3D point that the plane passes through.  Used to define the plane.
@@ -164,8 +170,14 @@ function xy_to_polar(x,y=undef) = let(
 //   xy2 = project_plane(pt, [a,b,c]);
 function project_plane(point, a, b, c) =
 	is_undef(b) && is_undef(c) && is_list(a)? let(
-		indices = find_noncollinear_points(a)
-	) project_plane(point, a[indices[0]], a[indices[1]], a[indices[2]]) :
+		mat = is_vector(a,4)? plane_transform(a) :
+			assert(is_path(a) && len(a)>=3)
+			plane_transform(plane_from_points(a)),
+		pts = is_vector(point)? point2d(apply(mat,point)) :
+			is_path(point)? path2d(apply(mat,point)) :
+			is_region(point)? [for (x=point) path2d(apply(mat,x))] :
+			assert(false, "point must be a 3D point, path, or region.")
+	) pts :
 	assert(is_vector(a))
 	assert(is_vector(b))
 	assert(is_vector(c))
@@ -180,13 +192,18 @@ function project_plane(point, a, b, c) =
 
 
 // Function: lift_plane()
-// Usage:
+// Usage: With 3 Points
 //   xyz = lift_plane(point, a, b, c);
-//   xyz = lift_plane(point, [A,B,C]);
+// Usage: With Pointlist
+//   xyz = lift_plane(point, POINTLIST);
+// Usage: With Plane Definition [A,B,C,D] Where Ax+By+Cz=D
+//   xyz = lift_plane(point, PLANE);
 // Description:
-//   Given three points defining a plane, converts a planar [X,Y] coordinate to the actual
-//   corresponding 3D point on the plane.  The origin of the planar coordinate system [0,0]
-//   will be at point `a`, and the Y+ axis direction will be towards point `b`.
+//   Converts the given 2D point from planar coordinates to the global 3D coordinates of the point on the plane.
+//   Can be called one of three ways:
+//   - Given three points, `a`, `b`, and `c`, the planar coordinate system will have `[0,0]` at point `a`, and the Y+ axis will be towards point `b`.
+//   - Given a list of points, finds three non-collinear points in the list and uses them as points `a`, `b`, and `c` as above.
+//   - Given a plane definition `[A,B,C,D]` where `Ax+By+Cz=D`, the closest point on that plane to the global origin at `[0,0,0]` will be the planar coordinate origin `[0,0]`.
 // Arguments:
 //   point = The 2D point, or list of 2D points in the plane's coordinate system to get the 3D position of.
 //   a = A 3D point that the plane passes through.  Used to define the plane.
@@ -194,8 +211,15 @@ function project_plane(point, a, b, c) =
 //   c = A 3D point that the plane passes through.  Used to define the plane.
 function lift_plane(point, a, b, c) =
 	is_undef(b) && is_undef(c) && is_list(a)? let(
-		indices = find_noncollinear_points(a)
-	) lift_plane(point, a[indices[0]], a[indices[1]], a[indices[2]]) :
+		mat = is_vector(a,4)? plane_transform(a) :
+			assert(is_path(a) && len(a)>=3)
+			plane_transform(plane_from_points(a)),
+		imat = matrix_inverse(mat),
+		pts = is_vector(point)? apply(imat,point3d(point)) :
+			is_path(point)? apply(imat,path3d(point)) :
+			is_region(point)? [for (x=point) apply(imat,path3d(x))] :
+			assert(false, "point must be a 2D point, path, or region.")
+	) pts :
 	assert(is_vector(a))
 	assert(is_vector(b))
 	assert(is_vector(c))

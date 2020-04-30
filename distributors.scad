@@ -998,9 +998,13 @@ module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=tr
 // Example:
 //   mirror_copy(UP+BACK, cp=[0,-5,-5]) rot(from=UP, to=BACK+UP) cylinder(d1=10, d2=0, h=20);
 //   color("blue",0.25) translate([0,-5,-5]) rot(from=UP, to=BACK+UP) cube([15,15,0.01], center=true);
-module mirror_copy(v=[0,0,1], offset=0, cp=[0,0,0])
+module mirror_copy(v=[0,0,1], offset=0, cp)
 {
-	nv = v/norm(v);
+	cp = is_vector(v,4)? plane_normal(v) * v[3] :
+		is_vector(cp)? cp :
+		is_num(cp)? cp*unit(v) :
+		[0,0,0];
+	nv = is_vector(v,4)? plane_normal(v) : unit(v);
 	off = nv*offset;
 	if (cp == [0,0,0]) {
 		translate(off) {

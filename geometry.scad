@@ -84,6 +84,23 @@ function collinear_indexed(points, a, b, c, eps=EPSILON) =
 	) collinear(p1, p2, p3, eps);
 
 
+// Function: points_are_collinear()
+// Usage:
+//   points_are_collinear(points);
+// Description:
+//   Given a list of points, returns true if all points in the list are collinear.
+// Arguments:
+//   points = The list of points to test.
+//   eps = How much variance is allowed in testing that each point is on the same line.  Default: `EPSILON` (1e-9)
+function points_are_collinear(points, eps=EPSILON) =
+	let(
+		a = furthest_point(points[0], points),
+		b = furthest_point(points[a], points),
+		pa = points[a],
+		pb = points[b]
+	) all([for (pt = points) collinear(pa, pb, pt, eps=eps)]);
+
+
 // Function: distance_from_line()
 // Usage:
 //   distance_from_line(line, pt);
@@ -584,38 +601,14 @@ function plane3pt_indexed(points, i1, i2, i3) =
 	) plane3pt(p1,p2,p3);
 
 
-// Function: plane_intersection()
-// Usage:
-//   plane_intersection(plane1, plane2, [plane3])
-// Description:
-//   Compute the point which is the intersection of the three planes, or the line intersection of two planes.
-//   If you give three planes the intersection is returned as a point.  If you give two planes the intersection
-//   is returned as a list of two points on the line of intersection.  If any of the input planes are parallel
-//   then returns undef.  
-function plane_intersection(plane1,plane2,plane3) =
-	is_def(plane3)? let(
-		matrix = [for(p=[plane1,plane2,plane3]) select(p,0,2)],
-		rhs = [for(p=[plane1,plane2,plane3]) p[3]]
-	) linear_solve(matrix,rhs) :
-	let(
-		normal = cross(plane_normal(plane1), plane_normal(plane2))
-	) approx(norm(normal),0) ? undef :
-	let(
-		matrix = [for(p=[plane1,plane2]) select(p,0,2)],
-		rhs = [for(p=[plane1,plane2]) p[3]],
-		point = linear_solve(matrix,rhs)
-	) is_undef(point)? undef :
-	[point, point+normal];
-
-
 // Function: plane_from_normal()
 // Usage:
-//   plane_from_normal(normal, pt)
+//   plane_from_normal(normal, [pt])
 // Description:
 //   Returns a plane defined by a normal vector and a point.
 // Example:
 //   plane_from_normal([0,0,1], [2,2,2]);  // Returns the xy plane passing through the point (2,2,2)
-function plane_from_normal(normal, pt) =
+function plane_from_normal(normal, pt=[0,0,0]) =
   concat(normal, [normal*pt]);
 
 
@@ -632,6 +625,12 @@ function plane_from_normal(normal, pt) =
 //   points = The list of points to find the plane of.
 //   fast = If true, don't verify that all points in the list are coplanar.  Default: false
 //   eps = How much variance is allowed in testing that each point is on the same plane.  Default: `EPSILON` (1e-9)
+// Example:
+//   xyzpath = rot(45, v=[-0.3,1,0], p=path3d(star(n=6,id=70,d=100), 70));
+//   plane = plane_from_points(xyzpath);
+//   #stroke(xyzpath,closed=true);
+//   cp = centroid(xyzpath);
+//   move(cp) rot(from=UP,to=plane_normal(plane)) anchor_arrow();
 function plane_from_points(points, fast=false, eps=EPSILON) =
 	let(
 		points = deduplicate(points),
@@ -646,12 +645,87 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
 	) all_coplanar? plane : undef;
 
 
+// Function: plane_from_polygon()
+// Usage:
+//   plane_from_polygon(points, [fast], [eps]);
+// Description:
+//   Given a 3D planar polygon, returns the cartesian equation of a plane.
+//   Returns [A,B,C,D] where Ax+By+Cz=D is the equation of the plane.
+//   If not all the points in the polygon are coplanar, then `undef` is returned.
+//   If `fast` is true, then a polygon where not all points are coplanar will
+//   result in an invalid plane value, as all coplanar checks are skipped.
+// Arguments:
+//   poly = The planar 3D polygon to find the plane of.
+//   fast = If true, don't verify that all points in the polygon are coplanar.  Default: false
+//   eps = How much variance is allowed in testing that each point is on the same plane.  Default: `EPSILON` (1e-9)
+// Example:
+//   xyzpath = rot(45, v=[0,1,0], p=path3d(star(n=5,step=2,d=100), 70));
+//   plane = plane_from_polygon(xyzpath);
+//   #stroke(xyzpath,closed=true);
+//   cp = centroid(xyzpath);
+//   move(cp) rot(from=UP,to=plane_normal(plane)) anchor_arrow();
+function plane_from_polygon(poly, fast=false, eps=EPSILON) =
+	let(
+		poly = deduplicate(poly),
+		n = polygon_normal(poly),
+		plane = [n.x, n.y, n.z, n*poly[0]]
+	) fast? plane : let(
+		all_coplanar = [
+			for (pt = poly)
+			if (!coplanar(plane,pt,eps=eps)) 1
+		] == []
+	) all_coplanar? plane :
+	undef;
+
+
 // Function: plane_normal()
 // Usage:
 //   plane_normal(plane);
 // Description:
 //   Returns the unit length normal vector for the given plane.
 function plane_normal(plane) = unit([for (i=[0:2]) plane[i]]);
+
+
+// Function: plane_offset()
+// Usage:
+//   d = plane_offset(plane);
+// Description:
+//   Returns D, or the scalar offset of the plane from the origin. This can be a negative value.
+//   The absolute value of this is the distance of the plane from the origin at its closest approach.
+function plane_offset(plane) = plane[3];
+
+
+// Function: plane_transform()
+// Usage:
+//   mat = plane_transform(plane);
+// Description:
+//   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, returns a 3D affine
+//   transformation matrix that will rotate and translate from points on that plane
+//   to points on the XY plane.  You can generally then use `path2d()` to drop the
+//   Z coordinates, so you can work with the points in 2D.
+// Arguments:
+//   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
+// Example:
+//   xyzpath = move([10,20,30], p=yrot(25, p=path3d(circle(d=100))));
+//   plane = plane_from_points(xyzpath);
+//   mat = plane_transform(plane);
+//   xypath = path2d(apply(mat, xyzpath));
+//   #stroke(xyzpath,closed=true);
+//   stroke(xypath,closed=true);
+function plane_transform(plane) =
+	let(
+		n = plane_normal(plane),
+		cp = n * plane[3]
+	) rot(from=n, to=UP) * move(-cp);
+
+
+// Function: plane_point_nearest_origin()
+// Usage:
+//   pt = plane_point_nearest_origin(plane);
+// Description:
+//   Returns the point on the plane that is closest to the origin.
+function plane_point_nearest_origin(plane) =
+	plane_normal(plane) * plane[3];
 
 
 // Function: distance_from_plane()
@@ -808,21 +882,28 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
 	res[0];
 
 
-// Function: points_are_collinear()
+// Function: plane_intersection()
 // Usage:
-//   points_are_collinear(points);
+//   plane_intersection(plane1, plane2, [plane3])
 // Description:
-//   Given a list of points, returns true if all points in the list are collinear.
-// Arguments:
-//   points = The list of points to test.
-//   eps = How much variance is allowed in testing that each point is on the same line.  Default: `EPSILON` (1e-9)
-function points_are_collinear(points, eps=EPSILON) =
+//   Compute the point which is the intersection of the three planes, or the line intersection of two planes.
+//   If you give three planes the intersection is returned as a point.  If you give two planes the intersection
+//   is returned as a list of two points on the line of intersection.  If any of the input planes are parallel
+//   then returns undef.  
+function plane_intersection(plane1,plane2,plane3) =
+	is_def(plane3)? let(
+		matrix = [for(p=[plane1,plane2,plane3]) select(p,0,2)],
+		rhs = [for(p=[plane1,plane2,plane3]) p[3]]
+	) linear_solve(matrix,rhs) :
 	let(
-		a = furthest_point(points[0], points),
-		b = furthest_point(points[a], points),
-		pa = points[a],
-		pb = points[b]
-	) all([for (pt = points) collinear(pa, pb, pt, eps=eps)]);
+		normal = cross(plane_normal(plane1), plane_normal(plane2))
+	) approx(norm(normal),0) ? undef :
+	let(
+		matrix = [for(p=[plane1,plane2]) select(p,0,2)],
+		rhs = [for(p=[plane1,plane2]) p[3]],
+		point = linear_solve(matrix,rhs)
+	) is_undef(point)? undef :
+	[point, point+normal];
 
 
 // Function: coplanar()
@@ -1289,7 +1370,7 @@ function centroid(poly) =
 // Usage:
 //   point_in_polygon(point, path, [eps])
 // Description:
-//   This function tests whether the given point is inside, outside or on the boundary of
+//   This function tests whether the given 2D point is inside, outside or on the boundary of
 //   the specified 2D polygon using the Winding Number method.
 //   The polygon is given as a list of 2D points, not including the repeated end point.
 //   Returns -1 if the point is outside the polyon.
@@ -1299,7 +1380,7 @@ function centroid(poly) =
 //   But the polygon cannot have holes (it must be simply connected).
 //   Rounding error may give mixed results for points on or near the boundary.
 // Arguments:
-//   point = The point to check position of.
+//   point = The 2D point to check position of.
 //   path = The list of 2D path points forming the perimeter of the polygon.
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 function point_in_polygon(point, path, eps=EPSILON) =
@@ -1334,7 +1415,7 @@ function polygon_is_clockwise(path) =
 // Usage:
 //   clockwise_polygon(path);
 // Description:
-//   Given a polygon path, returns the clockwise winding version of that path.
+//   Given a 2D polygon path, returns the clockwise winding version of that path.
 function clockwise_polygon(path) =
 	polygon_is_clockwise(path)? path : reverse_polygon(path);
 
@@ -1343,7 +1424,7 @@ function clockwise_polygon(path) =
 // Usage:
 //   ccw_polygon(path);
 // Description:
-//   Given a polygon path, returns the counter-clockwise winding version of that path.
+//   Given a 2D polygon path, returns the counter-clockwise winding version of that path.
 function ccw_polygon(path) =
 	polygon_is_clockwise(path)? reverse_polygon(path) : path;
 
@@ -1355,6 +1436,24 @@ function ccw_polygon(path) =
 //   Reverses a polygon's winding direction, while still using the same start point.
 function reverse_polygon(poly) =
 	let(lp=len(poly)) [for (i=idx(poly)) poly[(lp-i)%lp]];
+
+
+// Function: polygon_normal()
+// Usage:
+//   n = polygon_normal(poly);
+// Description:
+//   Given a 3D planar polygon, returns a unit-length normal vector for the
+//   clockwise orientation of the polygon. 
+// Example:
+function polygon_normal(poly) =
+	let(
+		poly = path3d(cleanup_path(poly)),
+		p0 = poly[0],
+		n = sum([
+			for (i=[1:1:len(poly)-2])
+			cross(poly[i+1]-p0, poly[i]-p0)
+		])
+	) unit(n);
 
 
 
