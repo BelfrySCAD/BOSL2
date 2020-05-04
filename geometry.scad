@@ -546,7 +546,7 @@ function adj_opp_to_ang(adj,opp) =
 //   triangle_area(a,b,c);
 // Description:
 //   Returns the area of a triangle formed between three 2D or 3D vertices.
-//   Result will be negative if the points are 2D and in in clockwise order.
+//   Result will be negative if the points are 2D and in clockwise order.
 // Examples:
 //   triangle_area([0,0], [5,10], [10,0]);  // Returns -50
 //   triangle_area([10,0], [5,10], [0,0]);  // Returns 50
