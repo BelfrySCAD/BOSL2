@@ -137,7 +137,7 @@ class ImageProcessing(object):
         if extype == "NORENDER":
             return
 
-        print("  {}".format(imgfile), end='')
+        print("  {} ({})".format(imgfile,extype), end='')
         sys.stdout.flush()
 
         scriptfile = "tmp_{0}.scad".format(imgfile.replace(".", "_").replace("/","_"))

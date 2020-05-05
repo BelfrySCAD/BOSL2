@@ -9,15 +9,15 @@ that they support more features, and more ways to simply reorient them.
 ### 2D Squares
 You can still use the built-in `square()` in the familiar ways that OpenSCAD provides:
 
-```openscad-example-2D
+```openscad-2D
     square(100, center=false);
 ```
 
-```openscad-example-2D
+```openscad-2D
     square(100, center=true);
 ```
 
-```openscad-example-2D
+```openscad-2D
     square([60,40], center=true);
 ```
 
@@ -25,13 +25,13 @@ The BOSL2 library provides an enhanced equivalent to `square()` called `rect()`.
 You can use it in the same way you use `square()`, but it also provides
 extended functionality. For example, it allows you to round the corners:
 
-```openscad-example-2D
+```openscad-2D
     rect([60,40], center=true, rounding=10);
 ```
 
 Or chamfer them:
 
-```openscad-example-2D
+```openscad-2D
     rect([60,40], center=true, chamfer=10);
 ```
 
@@ -41,7 +41,7 @@ give each corner its own size.  In order, it goes from the back-right (quadrant 
 corner, counter-clockwise around to the back-left (quadrant II) corner, to the
 forward-left (quadrant III) corner, to the forward-right (quadrant IV) corner:
 
-```openscad-example-2DImgOnly
+```openscad-2DImgOnly
     module text3d(text) text(
         text=text, font="Times", size=10,
         halign="center", valign="center"
@@ -56,11 +56,11 @@ forward-left (quadrant III) corner, to the forward-right (quadrant IV) corner:
 If a size is given as `0`, then there is no rounding and/or chamfering for
 that quadrant's corner:
 
-```openscad-example-2D
+```openscad-2D
     rect([60,40], center=true, rounding=[0,5,10,15]);
 ```
 
-```openscad-example-2D
+```openscad-2D
     rect([60,40], center=true, chamfer=[0,5,10,15]);
 ```
 
@@ -68,7 +68,7 @@ You can give both `rounding=` and `chamfer=` arguments to mix rounding and
 chamfering, but only if you specify per corner.  If you want a rounding in
 a corner, specify a 0 chamfer for that corner, and vice versa:
 
-```openscad-example-2D
+```openscad-2D
     rect([60,40], center=true, rounding=[5,0,10,0], chamfer=[0,5,0,15]);
 ```
 
@@ -81,19 +81,19 @@ alignment options.  It takes a vector as a value, pointing roughly towards
 the side or corner you want to align to the origin.  For example, to align
 the center of the back edge to the origin, set the anchor to `[0,1]`:
 
-```openscad-example-2D
+```openscad-2D
     rect([60,40], anchor=[0,1]);
 ```
 
 To align the front right corner to the origin:
 
-```openscad-example-2D
+```openscad-2D
     rect([60,40], anchor=[1,-1]);
 ```
 
 To center:
 
-```openscad-example-2D
+```openscad-2D
     rect([60,40], anchor=[0,0]);
 ```
 
@@ -113,45 +113,45 @@ Constant | Direction | Value
 Note that even though these are 3D vectors, you can use most of them,
 (except `UP`/`DOWN`, of course) for anchors in 2D shapes:
 
-```openscad-example-2D
+```openscad-2D
     rect([60,40], anchor=BACK);
 ```
 
-```openscad-example-2D
+```openscad-2D
     rect([60,40], anchor=CENTER);
 ```
 
 You can add vectors together to point to corners:
 
-```openscad-example-2D
+```openscad-2D
     rect([60,40], anchor=FRONT+RIGHT);
 ```
 
 Finally, the `spin` argument can rotate the shape by a given number of degrees
 clockwise:
 
-```openscad-example-2D
+```openscad-2D
     rect([60,40], anchor=CENTER, spin=30);
 ```
 
 Anchoring or centering is performed before the spin:
 
-```openscad-example-2D
+```openscad-2D
     rect([60,40], anchor=BACK, spin=30);
 ```
 
 ### 2D Circles
 The built-in `circle()` primitive can be used as expected:
 
-```openscad-example-2D
+```openscad-2D
     circle(r=50);
 ```
 
-```openscad-example-2D
+```openscad-2D
     circle(d=100);
 ```
 
-```openscad-example-2D
+```openscad-2D
     circle(d=100, $fn=8);
 ```
 
@@ -167,7 +167,7 @@ To counter this, the `realign=` and `circum=` arguments are also provided.
 The `realign=` argument, if set `true`, rotates the `oval()` by half the angle
 between the sides:
 
-```openscad-example-2D
+```openscad-2D
     oval(d=100, $fn=8, realign=true);
 ```
 
@@ -176,7 +176,7 @@ The `circum=` argument, if true, makes it so that the polygon forming the
 
 Inscribing the ideal circle:
 
-```openscad-example-2D
+```openscad-2D
     difference() {
         oval(d=100, $fn=360);
         oval(d=100, $fn=8);
@@ -185,7 +185,7 @@ Inscribing the ideal circle:
 
 Circumscribing the ideal circle:
 
-```openscad-example-2D
+```openscad-2D
     difference() {
         oval(d=100, $fn=8, circum=true);
         oval(d=100, $fn=360);
@@ -195,54 +195,54 @@ Circumscribing the ideal circle:
 Another way that `oval()` is enhanced over `circle()`, is that you can anchor,
 spin and attach it.
 
-```openscad-example-2D
+```openscad-2D
     oval(r=50, anchor=BACK);
 ```
 
-```openscad-example-2D
+```openscad-2D
     oval(r=50, anchor=FRONT+RIGHT);
 ```
 
 Using spin on a circle may not make initial sense, until you remember that
 anchoring is performed before spin:
 
-```openscad-example-2D
+```openscad-2D
     oval(r=50, anchor=FRONT, spin=30);
 ```
 
 ### Enhanced 3D Cube
 You can use enhanced `cube()` like the normal OpenSCAD built-in:
 
-```openscad-example
+```openscad-3D
     cube(100);
 ```
 
-```openscad-example
+```openscad-3D
     cube(100, center=true);
 ```
 
-```openscad-example
+```openscad-3D
     cube([50,40,20], center=true);
 ```
 
 You can use `anchor` similarly to `square()`, except you can anchor vertically
 too, in 3D, allowing anchoring to faces, edges, and corners:
 
-```openscad-example
+```openscad-3D
     cube([50,40,20], anchor=BOTTOM);
 ```
 
-```openscad-example
+```openscad-3D
     cube([50,40,20], anchor=TOP+BACK);
 ```
 
-```openscad-example
+```openscad-3D
     cube([50,40,20], anchor=TOP+FRONT+LEFT);
 ```
 
 You can use `spin` as well, to rotate around the Z axis:
 
-```openscad-example
+```openscad-3D
     cube([50,40,20], anchor=FRONT, spin=30);
 ```
 
@@ -250,40 +250,40 @@ You can use `spin` as well, to rotate around the Z axis:
 if you pass a list of `[X,Y,Z]` rotation angles to `spin`, it will
 rotate by the three given axis angles, similar to using `rotate()`:
 
-```openscad-example
+```openscad-3D
     cube([50,40,20], anchor=FRONT, spin=[15,0,30]);
 ```
 
 3D objects also can be given an `orient` argument that is given as a vector,
 pointing towards where the top of the shape should be rotated towards.
 
-```openscad-example
+```openscad-3D
     cube([50,40,20], orient=UP+BACK+RIGHT);
 ```
 
 If you use `anchor`, `spin`, and `orient` together, the anchor is performed
 first, then the spin, then the orient:
 
-```openscad-example
+```openscad-3D
     cube([50,40,20], anchor=FRONT, spin=45, orient=UP+FWD+RIGHT);
 ```
 
 ### Enhanced 3D Cylinder
 You can use the enhanced `cylinder()` as normal for OpenSCAD:
 
-```openscad-example
+```openscad-3D
     cylinder(r=50,h=50);
 ```
 
-```openscad-example
+```openscad-3D
     cylinder(r=50,h=50,center=true);
 ```
 
-```openscad-example
+```openscad-3D
     cylinder(d=100,h=50,center=true);
 ```
 
-```openscad-example
+```openscad-3D
     cylinder(d1=100,d2=80,h=50,center=true);
 ```
 
