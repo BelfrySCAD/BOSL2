@@ -256,29 +256,36 @@ def processFile(infile, outfile=None, imgroot=""):
         extyp = ""
         in_script = False
         imgnum = 0
+        show_script = True
         for line in f.readlines():
             line = line.rstrip("\n")
             if line.startswith("```openscad"):
-                outdata.append("```openscad")
-            else:
-                outdata.append(line)
-            if in_script:
+                in_script = True;
+                if "-" in line:
+                    extyp = line.split("-")[1]
+                else:
+                    extyp = ""
+                line = "```openscad"
+                script = []
+                show_script = "ImgOnly" not in extyp
+                imgnum = imgnum + 1
+                if show_script:
+                    outdata.append(line)
+            elif in_script:
+                if show_script:
+                    outdata.append(line)
                 if line == "```":
                     in_script = False
                     imgfile = "{}_{}.png".format(fileroot, imgnum)
                     imgprc.add_image(fileroot+".md", imgfile, script, extyp)
                     outdata.append("![Figure {}]({})".format(imgnum, imgroot + imgfile))
                     script = []
+                    show_script = True
+                    extyp = ""
                 else:
                     script.append(line)
-            if line.startswith("```openscad"):
-                in_script = True
-                if "-" in line:
-                    extyp = line.split("-")[1]
-                else:
-                    extyp = ""
-                script = []
-                imgnum = imgnum + 1
+            else:
+                outdata.append(line)
 
     if outfile == None:
         f = sys.stdout

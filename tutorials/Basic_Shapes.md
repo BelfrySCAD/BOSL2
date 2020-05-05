@@ -7,70 +7,93 @@ The BOSL2 library extends or provides alternative to these shapes so
 that they support more features, and more ways to simply reorient them.
 
 ### 2D Squares
-You still use `square()` in the familiar ways that OpenSCAD provides:
+You can still use the built-in `square()` in the familiar ways that OpenSCAD provides:
 
-```openscad-example
+```openscad-example-2D
     square(100, center=false);
 ```
 
-```openscad-example
+```openscad-example-2D
     square(100, center=true);
 ```
 
-```openscad-example
+```openscad-example-2D
     square([60,40], center=true);
 ```
 
-BOSL2 has a `rect()` command that acts an an enhanced `square()` that has
+The BOSL2 library provides an enhanced equivalent to `square()` called `rect()`.
+You can use it in the same way you use `square()`, but it also provides
 extended functionality. For example, it allows you to round the corners:
 
-```openscad-example
+```openscad-example-2D
     rect([60,40], center=true, rounding=10);
 ```
 
-It also supports chamfers:
+Or chamfer them:
 
-```openscad-example
+```openscad-example-2D
     rect([60,40], center=true, chamfer=10);
 ```
 
-It allows you to specify *which* corners get rounded or chamferred:
+You can even specify *which* corners get rounded or chamferred.  If you pass a
+list of four size numbers to the `rounding=` or `chamfer=` arguments, it will
+give each corner its own size.  In order, it goes from the back-right (quadrant I)
+corner, counter-clockwise around to the back-left (quadrant II) corner, to the
+forward-left (quadrant III) corner, to the forward-right (quadrant IV) corner:
 
-```openscad-example
+```openscad-example-2DImgOnly
+    module text3d(text) text(
+        text=text, font="Times", size=10,
+        halign="center", valign="center"
+    );
+    translate([ 50, 50]) text3d("I");
+    translate([-50, 50]) text3d("II");
+    translate([-50,-50]) text3d("III");
+    translate([ 50,-50]) text3d("IV");
+    rect([90,80], center=true);
+```
+
+If a size is given as `0`, then there is no rounding and/or chamfering for
+that quadrant's corner:
+
+```openscad-example-2D
     rect([60,40], center=true, rounding=[0,5,10,15]);
 ```
 
-```openscad-example
+```openscad-example-2D
     rect([60,40], center=true, chamfer=[0,5,10,15]);
 ```
 
-It will even let you mix rounding and chamferring:
+You can give both `rounding=` and `chamfer=` arguments to mix rounding and
+chamfering, but only if you specify per corner.  If you want a rounding in
+a corner, specify a 0 chamfer for that corner, and vice versa:
 
-```openscad-example
+```openscad-example-2D
     rect([60,40], center=true, rounding=[5,0,10,0], chamfer=[0,5,0,15]);
 ```
 
-### Anchors and Spin
+#### Anchors and Spin
 Another way that `rect()` is enhanced over `square()`, is that you can anchor,
 spin and attach it.
+
 The `anchor=` argument is an alternative to `center=`, which allows more
 alignment options.  It takes a vector as a value, pointing roughly towards
 the side or corner you want to align to the origin.  For example, to align
 the center of the back edge to the origin, set the anchor to `[0,1]`:
 
-```openscad-example
+```openscad-example-2D
     rect([60,40], anchor=[0,1]);
 ```
 
 To align the front right corner to the origin:
 
-```openscad-example
+```openscad-example-2D
     rect([60,40], anchor=[1,-1]);
 ```
 
 To center:
 
-```openscad-example
+```openscad-example-2D
     rect([60,40], anchor=[0,0]);
 ```
 
@@ -90,93 +113,101 @@ Constant | Direction | Value
 Note that even though these are 3D vectors, you can use most of them,
 (except `UP`/`DOWN`, of course) for anchors in 2D shapes:
 
-```openscad-example
+```openscad-example-2D
     rect([60,40], anchor=BACK);
 ```
 
-```openscad-example
+```openscad-example-2D
     rect([60,40], anchor=CENTER);
 ```
 
-You can add them together to point to corners:
+You can add vectors together to point to corners:
 
-```openscad-example
+```openscad-example-2D
     rect([60,40], anchor=FRONT+RIGHT);
 ```
 
 Finally, the `spin` argument can rotate the shape by a given number of degrees
 clockwise:
 
-```openscad-example
+```openscad-example-2D
     rect([60,40], anchor=CENTER, spin=30);
 ```
 
 Anchoring or centering is performed before the spin:
 
-```openscad-example
+```openscad-example-2D
     rect([60,40], anchor=BACK, spin=30);
 ```
 
-### Enhanced 2D Circle
-The enhanced `circle()` primitive can be used like the OpenSCAD built-in:
+### 2D Circles
+The built-in `circle()` primitive can be used as expected:
 
-```openscad-example
+```openscad-example-2D
     circle(r=50);
 ```
-```openscad-example
+
+```openscad-example-2D
     circle(d=100);
 ```
-```openscad-example
+
+```openscad-example-2D
     circle(d=100, $fn=8);
 ```
 
+The BOSL2 library provides an enhanced equivalent of `circle()` called `oval()`.
+You can use it in the same way you use `circle()`, but it also provides
+extended functionality. For example, it allows more control over its size and
+orientation.
+
 Since a circle in OpenSCAD can only be approximated by a regular polygon with
-a number of straight sides, this can lead to size and shape inaccuracies.  To
-counter this, the `realign` and `circum` arguments are also provided.
+a number of straight sides, this can lead to size and shape inaccuracies.
+To counter this, the `realign=` and `circum=` arguments are also provided.
 
-The `realign` argument, if set `true`, rotates the circle by half the angle
-between sides:
+The `realign=` argument, if set `true`, rotates the `oval()` by half the angle
+between the sides:
 
-```openscad-example
-    circle(d=100, $fn=8, realign=true);
+```openscad-example-2D
+    oval(d=100, $fn=8, realign=true);
 ```
 
-The `circum` argument, if true, makes the polygon describing the circle
-circumscribe the ideal circle instead of inscribing it.
+The `circum=` argument, if true, makes it so that the polygon forming the
+`oval()` circumscribes the ideal circle instead of inscribing it.
 
 Inscribing the ideal circle:
 
-```openscad-example
+```openscad-example-2D
     difference() {
-        circle(d=100, $fn=360);
-        circle(d=100, $fn=6);
+        oval(d=100, $fn=360);
+        oval(d=100, $fn=8);
     }
 ```
 
 Circumscribing the ideal circle:
 
-```openscad-example
+```openscad-example-2D
     difference() {
-        circle(d=100, $fn=6, circum=true);
-        circle(d=100, $fn=360);
+        oval(d=100, $fn=8, circum=true);
+        oval(d=100, $fn=360);
     }
 ```
 
-You can also use anchor and spin on enhanced `circle()`:
+Another way that `oval()` is enhanced over `circle()`, is that you can anchor,
+spin and attach it.
 
-```openscad-example
-    circle(r=50, anchor=BACK);
+```openscad-example-2D
+    oval(r=50, anchor=BACK);
 ```
 
-```openscad-example
-    circle(r=50, anchor=FRONT+RIGHT);
+```openscad-example-2D
+    oval(r=50, anchor=FRONT+RIGHT);
 ```
 
 Using spin on a circle may not make initial sense, until you remember that
 anchoring is performed before spin:
 
-```openscad-example
-    circle(r=50, anchor=FRONT, spin=30);
+```openscad-example-2D
+    oval(r=50, anchor=FRONT, spin=30);
 ```
 
 ### Enhanced 3D Cube
