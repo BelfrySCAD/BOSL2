@@ -819,7 +819,7 @@ module oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) {
 	sides = segs(r);
 	rr = circum? r/cos(180/sides) : r;
 	attachable(anchor,spin, two_d=true, r=rr) {
-		zrot(realign? 180/sides : 0) circle(r=r, $fn=sides);
+		zrot(realign? 180/sides : 0) circle(r=rr, $fn=sides);
 		children();
 	}
 }
