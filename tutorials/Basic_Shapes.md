@@ -494,11 +494,11 @@ BOSL2 overrides the built-in `sphere()` module.  It still can be used as you
 expect from the built-in:
 
 ```openscad-3D
-    cylinder(r=50);
+    sphere(r=50);
 ```
 
 ```openscad-3D
-    cylinder(d=100);
+    sphere(d=100);
 ```
 
 You can anchor, spin, and orient `sphere()`s, much like you can with `cylinder()`
