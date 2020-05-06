@@ -730,14 +730,17 @@ function _turtle_command(command, parm, parm2, state, index) =
 module rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) {
 	size = is_num(size)? [size,size] : point2d(size);
 	anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT);
-	attachable(anchor,spin, two_d=true, size=size) {
-		if (rounding==0 && chamfer==0) {
+	if (rounding==0 && chamfer==0) {
+		attachable(anchor,spin, two_d=true, size=size) {
 			square(size, center=true);
-		} else {
-			pts = rect(size=size, rounding=rounding, chamfer=chamfer, center=true);
-			polygon(pts);
+			children();
 		}
-		children();
+	} else {
+		pts = rect(size=size, rounding=rounding, chamfer=chamfer, center=true);
+		attachable(anchor,spin, two_d=true, path=pts) {
+			polygon(pts);
+			children();
+		}
 	}
 }
 
@@ -798,9 +801,9 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
 //   When called as a module, creates a 2D polygon that approximates a circle of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle of the given size.
 // Arguments:
-//   r = The radius of the circle to create.
-//   d = The diameter of the circle to create.
-//   realign = If true, rotates the polygon that approximates the circle by half of one size.
+//   r = Radius of the circle/oval to create.  Can be a scalar, or a list of sizes per axis.
+//   d = Diameter of the circle/oval to create.  Can be a scalar, or a list of sizes per axis.
+//   realign = If true, rotates the polygon that approximates the circle/oval by half of one size.
 //   circum = If true, the polygon that approximates the circle will be upsized slightly to circumscribe the theoretical circle.  If false, it inscribes the theoretical circle.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -816,10 +819,24 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
 //   path = oval(d=50, anchor=FRONT, spin=45);
 module oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) {
 	r = get_radius(r=r, d=d, dflt=1);
-	sides = segs(r);
-	rr = circum? r/cos(180/sides) : r;
-	attachable(anchor,spin, two_d=true, r=rr) {
-		zrot(realign? 180/sides : 0) circle(r=rr, $fn=sides);
+	sides = segs(max(r));
+	sc = circum? (1 / cos(180/sides)) : 1;
+	rx = default(r[0],r) * sc;
+	ry = default(r[1],r) * sc;
+	attachable(anchor,spin, two_d=true, r=[rx,ry]) {
+		if (rx < ry) {
+			xscale(rx/ry) {
+				zrot(realign? 180/sides : 0) {
+					circle(r=ry, $fn=sides);
+				}
+			}
+		} else {
+			yscale(ry/rx) {
+				zrot(realign? 180/sides : 0) {
+					circle(r=rx, $fn=sides);
+				}
+			}
+		}
 		children();
 	}
 }
@@ -828,11 +845,13 @@ module oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) {
 function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 	let(
 		r = get_radius(r=r, d=d, dflt=1),
-		sides = segs(r),
+		sides = segs(max(r)),
 		offset = realign? 180/sides : 0,
-		rr = r / (circum? cos(180/sides) : 1),
-		pts = [for (i=[0:1:sides-1]) let(a=360-offset-i*360/sides) rr*[cos(a),sin(a)]]
-	) reorient(anchor,spin, two_d=true, r=rr, p=pts);
+		sc = circum? (1 / cos(180/sides)) : 1,
+		rx = default(r[0],r) * sc,
+		ry = default(r[1],r) * sc,
+		pts = [for (i=[0:1:sides-1]) let(a=360-offset-i*360/sides) [rx*cos(a), ry*sin(a)]]
+	) reorient(anchor,spin, two_d=true, r=[rx,ry], p=pts);
 
 
 

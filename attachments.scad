@@ -121,12 +121,12 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 //   size = If given as a 3D vector, contains the XY size of the bottom of the cuboidal/prismoidal volume, and the Z height.  If given as a 2D vector, contains the front X width of the rectangular/trapezoidal shape, and the Y length.
 //   size2 = If given as a 2D vector, contains the XY size of the top of the prismoidal volume.  If given as a number, contains the back width of the trapezoidal shape.
 //   shift = If given as a 2D vector, shifts the top of the prismoidal or conical shape by the given amount.  If given as a number, shifts the back of the trapezoidal shape right by that amount.  Default: No shift.
-//   r = Radius of the cylindrical/conical volume.
-//   d = Diameter of the cylindrical/conical volume.
-//   r1 = Radius of the bottom of the conical volume.
-//   r2 = Radius of the top of the conical volume.
-//   d1 = Diameter of the bottom of the conical volume.
-//   d2 = Diameter of the top of the conical volume.
+//   r = Radius of the cylindrical/conical volume.  Can be a scalar, or a list of sizes per axis.
+//   d = Diameter of the cylindrical/conical volume.  Can be a scalar, or a list of sizes per axis.
+//   r1 = Radius of the bottom of the conical volume.  Can be a scalar, or a list of sizes per axis.
+//   r2 = Radius of the top of the conical volume.  Can be a scalar, or a list of sizes per axis.
+//   d1 = Diameter of the bottom of the conical volume.  Can be a scalar, a list of sizes per axis.
+//   d2 = Diameter of the top of the conical volume.  Can be a scalar, a list of sizes per axis.
 //   l = Length of the cylindrical/conical volume along axis.
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   path = The path to generate a polygon from.
@@ -220,20 +220,25 @@ function attach_geom(
 		r1 = get_radius(r1=r1,d1=d1,r=r,d=d,dflt=undef)
 	)
 	!is_undef(r1)? (
-		assert(is_num(r1))
 		let( l = default(l, h) )
 		!is_undef(l)? (
 			let(
 				shift = default(shift, [0,0]),
 				r2 = get_radius(r1=r2,d1=d2,r=r,d=d,dflt=undef)
 			)
+			assert(is_num(r1) || is_vector(r1,2))
+			assert(is_num(r2) || is_vector(r2,2))
 			assert(is_num(l))
-			assert(is_num(r2))
 			assert(is_vector(shift,2))
 			["cyl", r1, r2, l, shift, offset, anchors]
 		) : (
-			two_d? ["circle", r1, offset, anchors] :
-			["spheroid", r1, offset, anchors]
+			two_d? (
+				assert(is_num(r1) || is_vector(r1,2))
+				["circle", r1, offset, anchors]
+			) : (
+				assert(is_num(r1) || is_vector(r1,3))
+				["spheroid", r1, offset, anchors]
+			)
 		)
 	) :
 	assert(false, "Unrecognizable geometry description.");
@@ -268,10 +273,16 @@ function attach_geom_size(geom) =
 	) : type == "cyl"? ( //r1, r2, l, shift
 		let(
 			r1=geom[1], r2=geom[2], l=geom[3], shift=point2d(geom[4]),
-			maxr = max(r1,r2)
-		) [2*maxr,2*maxr,l]
+			rx1 = default(r1[0],r1),
+			ry1 = default(r1[1],r1),
+			rx2 = default(r2[0],r2),
+			ry2 = default(r2[1],r2),
+			maxxr = max(rx1,rx2),
+			maxyr = max(ry1,ry2)
+		) [2*maxxr,2*maxyr,l]
 	) : type == "spheroid"? ( //r
-		let( r=geom[1] ) [2,2,2]*r
+		let( r=geom[1] )
+		is_num(r)? [2,2,2]*r : vmul([2,2,2],r)
 	) : type == "vnf_extent" || type=="vnf_isect"? ( //vnf
 		let(
 			mm = pointlist_bounds(geom[1][0]),
@@ -283,7 +294,8 @@ function attach_geom_size(geom) =
 			maxx = max(size.x,size2)
 		) [maxx, size.y]
 	) : type == "circle"? ( //r
-		let( r=geom[1] ) [2,2]*r
+		let( r=geom[1] )
+		is_num(r)? [2,2]*r : vmul([2,2],r)
 	) : type == "path_isect" || type == "path_extent"? ( //path
 		let(
 			mm = pointlist_bounds(geom[1]),
@@ -414,11 +426,13 @@ function find_anchor(anchor, geom) =
 		) [anchor, pos, vec, oang]
 	) : type == "cyl"? ( //r1, r2, l, shift
 		let(
-			r1=geom[1], r2=geom[2], l=geom[3], shift=point2d(geom[4]),
+			rr1=geom[1], rr2=geom[2], l=geom[3], shift=point2d(geom[4]),
+			r1 = is_num(rr1)? [rr1,rr1] : rr1,
+			r2 = is_num(rr2)? [rr2,rr2] : rr2,
 			u = (anchor.z+1)/2,
 			axy = unit(point2d(anchor)),
-			bot = point3d(r1*axy,-l/2),
-			top = point3d(r2*axy+shift, l/2),
+			bot = point3d(vmul(r1,axy), -l/2),
+			top = point3d(vmul(r2,axy)+shift, l/2),
 			pos = lerp(bot,top,u)+offset,
 			sidevec = rot(from=UP, to=top-bot, p=point3d(axy)),
 			vvec = unit([0,0,anchor.z]),
@@ -429,8 +443,10 @@ function find_anchor(anchor, geom) =
 		) [anchor, pos, vec, oang]
 	) : type == "spheroid"? ( //r
 		let(
-			r=geom[1]
-		) [anchor, r*unit(anchor)+offset, unit(anchor), oang]
+			rr = geom[1],
+			r = is_num(rr)? [rr,rr,rr] : rr,
+			anchor = unit(point3d(anchor))
+		) [anchor, vmul(r,anchor)+offset, unit(vmul(r,anchor)), oang]
 	) : type == "vnf_isect"? ( //vnf
 		let(
 			vnf=geom[1],
@@ -494,9 +510,10 @@ function find_anchor(anchor, geom) =
 		) [anchor, pos, vec, 0]
 	) : type == "circle"? ( //r
 		let(
-			r=geom[1],
+			rr = geom[1],
+			r = is_num(rr)? [rr,rr] : rr,
 			anchor = unit(point2d(anchor))
-		) [anchor, r*anchor+offset, anchor, 0]
+		) [anchor, vmul(r,anchor)+offset, unit(vmul([r.y,r.x],anchor)), 0]
 	) : type == "path_isect"? ( //path
 		let(
 			path=geom[1],
@@ -590,12 +607,12 @@ function attachment_is_shown(tags) =
 //   size = If given as a 3D vector, contains the XY size of the bottom of the cuboidal/prismoidal volume, and the Z height.  If given as a 2D vector, contains the front X width of the rectangular/trapezoidal shape, and the Y length.
 //   size2 = If given as a 2D vector, contains the XY size of the top of the prismoidal volume.  If given as a number, contains the back width of the trapezoidal shape.
 //   shift = If given as a 2D vector, shifts the top of the prismoidal or conical shape by the given amount.  If given as a number, shifts the back of the trapezoidal shape right by that amount.  Default: No shift.
-//   r = Radius of the cylindrical/conical volume.
-//   d = Diameter of the cylindrical/conical volume.
-//   r1 = Radius of the bottom of the conical volume.
-//   r2 = Radius of the top of the conical volume.
-//   d1 = Diameter of the bottom of the conical volume.
-//   d2 = Diameter of the top of the conical volume.
+//   r = Radius of the cylindrical/conical volume.  Can be a scalar, or a list of sizes per axis.
+//   d = Diameter of the cylindrical/conical volume.  Can be a scalar, or a list of sizes per axis.
+//   r1 = Radius of the bottom of the conical volume.  Can be a scalar, or a list of sizes per axis.
+//   r2 = Radius of the top of the conical volume.  Can be a scalar, or a list of sizes per axis.
+//   d1 = Diameter of the bottom of the conical volume.  Can be a scalar, a list of sizes per axis.
+//   d2 = Diameter of the top of the conical volume.  Can be a scalar, a list of sizes per axis.
 //   l = Length of the cylindrical/conical volume along axis.
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   path = The path to generate a polygon from.
@@ -677,12 +694,12 @@ function reorient(
 //   size = If given as a 3D vector, contains the XY size of the bottom of the cuboidal/prismoidal volume, and the Z height.  If given as a 2D vector, contains the front X width of the rectangular/trapezoidal shape, and the Y length.
 //   size2 = If given as a 2D vector, contains the XY size of the top of the prismoidal volume.  If given as a number, contains the back width of the trapezoidal shape.
 //   shift = If given as a 2D vector, shifts the top of the prismoidal or conical shape by the given amount.  If given as a number, shifts the back of the trapezoidal shape right by that amount.  Default: No shift.
-//   r = Radius of the cylindrical/conical volume.
-//   d = Diameter of the cylindrical/conical volume.
-//   r1 = Radius of the bottom of the conical volume.
-//   r2 = Radius of the top of the conical volume.
-//   d1 = Diameter of the bottom of the conical volume.
-//   d2 = Diameter of the top of the conical volume.
+//   r = Radius of the cylindrical/conical volume.  Can be a scalar, or a list of sizes per axis.
+//   d = Diameter of the cylindrical/conical volume.  Can be a scalar, or a list of sizes per axis.
+//   r1 = Radius of the bottom of the conical volume.  Can be a scalar, or a list of sizes per axis.
+//   r2 = Radius of the top of the conical volume.  Can be a scalar, or a list of sizes per axis.
+//   d1 = Diameter of the bottom of the conical volume.  Can be a scalar, a list of sizes per axis.
+//   d2 = Diameter of the top of the conical volume.  Can be a scalar, a list of sizes per axis.
 //   l = Length of the cylindrical/conical volume along axis.
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   path = The path to generate a polygon from.

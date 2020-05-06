@@ -6,6 +6,7 @@ There are 5 built-in primitive shapes that OpenSCAD provides.
 The BOSL2 library extends or provides alternative to these shapes so
 that they support more features, and more ways to simply reorient them.
 
+
 ### 2D Squares
 You can still use the built-in `square()` in the familiar ways that OpenSCAD provides:
 
@@ -140,6 +141,7 @@ Anchoring or centering is performed before the spin:
     rect([60,40], anchor=BACK, spin=30);
 ```
 
+
 ### 2D Circles
 The built-in `circle()` primitive can be used as expected:
 
@@ -192,6 +194,18 @@ Circumscribing the ideal circle:
     }
 ```
 
+The `oval()` module, as its name suggests, can be given separate X and Y radii
+or diameters.  To do this, just give `r=` or `d=` with a list of two radii or
+diameters:
+
+```openscad-2D
+    oval(r=[30,20]);
+```
+
+```openscad-2D
+    oval(d=[60,40]);
+```
+
 Another way that `oval()` is enhanced over `circle()`, is that you can anchor,
 spin and attach it.
 
@@ -207,11 +221,13 @@ Using spin on a circle may not make initial sense, until you remember that
 anchoring is performed before spin:
 
 ```openscad-2D
-    oval(r=50, anchor=FRONT, spin=30);
+    oval(r=50, anchor=FRONT, spin=-30);
 ```
 
-### Enhanced 3D Cube
-You can use enhanced `cube()` like the normal OpenSCAD built-in:
+
+### 3D Cubes
+BOSL2 overrides the built-in `cube()` module.  It still can be used as you
+expect from the built-in:
 
 ```openscad-3D
     cube(100);
@@ -225,8 +241,11 @@ You can use enhanced `cube()` like the normal OpenSCAD built-in:
     cube([50,40,20], center=true);
 ```
 
-You can use `anchor` similarly to `square()`, except you can anchor vertically
-too, in 3D, allowing anchoring to faces, edges, and corners:
+It is also enhanced to allow you to anchor, spin, orient, and attach it.
+
+You can use `anchor=` similarly to how you use it with `square()` or `rect()`,
+except you can also anchor vertically in 3D, allowing anchoring to faces, edges,
+and corners:
 
 ```openscad-3D
     cube([50,40,20], anchor=BOTTOM);
@@ -240,36 +259,143 @@ too, in 3D, allowing anchoring to faces, edges, and corners:
     cube([50,40,20], anchor=TOP+FRONT+LEFT);
 ```
 
-You can use `spin` as well, to rotate around the Z axis:
+You can use `spin=` to rotate around the Z axis:
 
 ```openscad-3D
     cube([50,40,20], anchor=FRONT, spin=30);
 ```
 
-3D objects also gain the ability to use an extra trick with `spin`;
-if you pass a list of `[X,Y,Z]` rotation angles to `spin`, it will
+3D objects also gain the ability to use an extra trick with `spin=`;
+if you pass a list of `[X,Y,Z]` rotation angles to `spin=`, it will
 rotate by the three given axis angles, similar to using `rotate()`:
 
 ```openscad-3D
     cube([50,40,20], anchor=FRONT, spin=[15,0,30]);
 ```
 
-3D objects also can be given an `orient` argument that is given as a vector,
-pointing towards where the top of the shape should be rotated towards.
+3D objects also can be given an `orient=` argument as a vector, pointing
+to where the top of the shape should be rotated towards.
 
 ```openscad-3D
     cube([50,40,20], orient=UP+BACK+RIGHT);
 ```
 
-If you use `anchor`, `spin`, and `orient` together, the anchor is performed
+If you use `anchor=`, `spin=`, and `orient=` together, the anchor is performed
 first, then the spin, then the orient:
+
+```openscad-3D
+    cube([50,40,20], anchor=FRONT);
+```
+
+```openscad-3D
+    cube([50,40,20], anchor=FRONT, spin=45);
+```
 
 ```openscad-3D
     cube([50,40,20], anchor=FRONT, spin=45, orient=UP+FWD+RIGHT);
 ```
 
-### Enhanced 3D Cylinder
-You can use the enhanced `cylinder()` as normal for OpenSCAD:
+BOSL2 provides a `cuboid()` module that expands on `cube()`, by providing
+rounding and chamfering of edges.  You can use it similarly to `cube()`,
+except that `cuboid()` centers by default.
+
+You can round the edges with the `rounding=` argument:
+
+```openscad-3D
+    cuboid([100,80,60], rounding=20);
+```
+
+Similarly, you can chamfer the edges with the `chamfer=` argument:
+
+```openscad-3D
+    cuboid([100,80,60], chamfer=10);
+```
+
+You can round only some edges, by using the `edges=` arguments.  It can be
+given a few types of arguments. If you gave it a vector pointed at a face,
+it will only round the edges surrounding that face:
+
+```openscad-3D
+    cuboid([100,80,60], rounding=20, edges=TOP);
+```
+
+```openscad-3D
+    cuboid([100,80,60], rounding=20, edges=RIGHT);
+```
+
+If you give `edges=` a vector pointing at a corner, it will round all edges
+that meet at that corner:
+
+```openscad-3D
+    cuboid([100,80,60], rounding=20, edges=RIGHT+FRONT+TOP);
+```
+
+```openscad-3D
+    cuboid([100,80,60], rounding=20, edges=LEFT+FRONT+TOP);
+```
+
+If you give `edges=` a vector pointing at an edge, it will round only that edge:
+
+```openscad-3D
+    cuboid([100,80,60], rounding=10, edges=FRONT+TOP);
+```
+
+```openscad-3D
+    cuboid([100,80,60], rounding=10, edges=RIGHT+FRONT);
+```
+
+If you give the string "X", "Y", or "Z", then all edges aligned with the specified
+axis will be rounded:
+
+```openscad-3D
+    cuboid([100,80,60], rounding=10, edges="X");
+```
+
+```openscad-3D
+    cuboid([100,80,60], rounding=10, edges="Y");
+```
+
+```openscad-3D
+    cuboid([100,80,60], rounding=10, edges="Z");
+```
+
+If you give a list of edge specs, then all edges referenced in the list will
+be rounded:
+
+```openscad-3D
+    cuboid([100,80,60], rounding=10, edges=[TOP,"Z",BOTTOM+RIGHT]);
+```
+
+The default value for `edges=` is `EDGES_ALL`, which is all edges.  You can also
+give an `except_edges=` argument that specifies edges to NOT round:
+
+```openscad-3D
+    cuboid([100,80,60], rounding=10, except_edges=BOTTOM+RIGHT);
+```
+
+You can give the `except_edges=` argument any type of argument that you can
+give to `edges=`:
+
+```openscad-3D
+    cuboid([100,80,60], rounding=10, except_edges=[BOTTOM,"Z",TOP+RIGHT]);
+```
+
+You can give both `edges=` and `except_edges=`, to simplify edge specs:
+
+```openscad-3D
+    cuboid([100,80,60], rounding=10, edges=[TOP,FRONT], except_edges=TOP+FRONT);
+```
+
+You can specify what edges to chamfer similarly:
+
+```openscad-3D
+    cuboid([100,80,60], chamfer=10, edges=[TOP,FRONT], except_edges=TOP+FRONT);
+```
+
+
+### 3D Cylinder
+BOSL2 overrides the built-in `cylinder()` module.  It still can be used as you
+expect from the built-in:
 
 ```openscad-3D
     cylinder(r=50,h=50);
@@ -286,4 +412,145 @@ You can use the enhanced `cylinder()` as normal for OpenSCAD:
 ```openscad-3D
     cylinder(d1=100,d2=80,h=50,center=true);
 ```
+
+You can also anchor, spin, orient, and attach like the `cuboid()` module:
+
+```openscad-3D
+    cylinder(r=50, h=50, anchor=TOP+FRONT);
+```
+
+```openscad-3D
+    cylinder(r=50, h=50, anchor=BOTTOM+LEFT);
+```
+
+```openscad-3D
+    cylinder(r=50, h=50, anchor=BOTTOM+LEFT, spin=30);
+```
+
+```openscad-3D
+    cylinder(r=50, h=50, anchor=BOTTOM, orient=UP+BACK+RIGHT);
+```
+
+
+BOSL2 provides a `cyl()` module that expands on `cylinder()`, by providing
+rounding and chamfering of edges.  You can use it similarly to `cylinder()`,
+except that `cyl()` centers the cylinder by default.
+
+```openscad-3D
+    cyl(r=60, l=100);
+```
+
+```openscad-3D
+    cyl(d=100, l=100);
+```
+
+```openscad-3D
+    cyl(d=100, l=100, anchor=TOP);
+```
+
+You can round the edges with the `rounding=` argument:
+
+```openscad-3D
+    cyl(d=100, l=100, rounding=20);
+```
+
+Similarly, you can chamfer the edges with the `chamfer=` argument:
+
+```openscad-3D
+    cyl(d=100, l=100, chamfer=10);
+```
+
+You can specify rounding and chamfering for each end individually:
+
+```openscad-3D
+    cyl(d=100, l=100, rounding1=20);
+```
+
+```openscad-3D
+    cyl(d=100, l=100, rounding2=20);
+```
+
+```openscad-3D
+    cyl(d=100, l=100, chamfer1=10);
+```
+
+```openscad-3D
+    cyl(d=100, l=100, chamfer2=10);
+```
+
+You can even mix and match rounding and chamfering:
+
+```openscad-3D
+    cyl(d=100, l=100, rounding1=20, chamfer2=10);
+```
+
+```openscad-3D
+    cyl(d=100, l=100, rounding2=20, chamfer1=10);
+```
+
+
+### 3D Spheres
+BOSL2 overrides the built-in `sphere()` module.  It still can be used as you
+expect from the built-in:
+
+```openscad-3D
+    cylinder(r=50);
+```
+
+```openscad-3D
+    cylinder(d=100);
+```
+
+You can anchor, spin, and orient `sphere()`s, much like you can with `cylinder()`
+and `cube()`:
+
+```openscad-3D
+    sphere(d=100, anchor=FRONT);
+```
+
+```openscad-3D
+    sphere(d=100, anchor=FRONT, spin=30);
+```
+
+```openscad-3D
+    sphere(d=100, anchor=BOTTOM, orient=RIGHT+TOP);
+```
+
+BOSL2 also provides `spheroid()`, which enhances `sphere()` with a few features
+like the `circum=` and `style=` arguments:
+
+You can use the `circum=true` argument to force the sphere to circumscribe the
+ideal sphere, as opposed to the default inscribing:
+
+```openscad-3D
+    spheroid(d=100, circum=true);
+```
+
+The `style=` argument can choose the way that the sphere will be constructed:
+The "orig" style matches the `sphere()` built-in's construction. 
+
+```openscad-3D
+    spheroid(d=100, style="orig");
+```
+
+The "aligned" style will ensure that there is a vertex at each axis extrama,
+so long as `$fn` is a multiple of 4.
+
+```openscad-3D
+    spheroid(d=100, style="aligned");
+```
+
+The "stagger" style will stagger the triangulation of the vertical rows:
+
+```openscad-3D
+    spheroid(d=100, style="stagger");
+```
+
+The "icosa"` style will make for roughly equal-sized triangles for the entire
+sphere surface:
+
+```openscad-3D
+    spheroid(d=100, style="icosa");
+```
+
 
