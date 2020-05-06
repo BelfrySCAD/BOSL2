@@ -42,7 +42,7 @@ corner, counter-clockwise around to the back-left (quadrant II) corner, to the
 forward-left (quadrant III) corner, to the forward-right (quadrant IV) corner:
 
 ```openscad-2DImgOnly
-    module text3d(text) text(
+    module text3d(text) color("black") text(
         text=text, font="Times", size=10,
         halign="center", valign="center"
     );
@@ -178,7 +178,7 @@ Inscribing the ideal circle:
 
 ```openscad-2D
     difference() {
-        oval(d=100, $fn=360);
+        circle(d=100, $fn=360);
         oval(d=100, $fn=8);
     }
 ```
@@ -188,7 +188,7 @@ Circumscribing the ideal circle:
 ```openscad-2D
     difference() {
         oval(d=100, $fn=8, circum=true);
-        oval(d=100, $fn=360);
+        circle(d=100, $fn=360);
     }
 ```
 
