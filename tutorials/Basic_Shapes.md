@@ -530,27 +530,27 @@ The `style=` argument can choose the way that the sphere will be constructed:
 The "orig" style matches the `sphere()` built-in's construction. 
 
 ```openscad-3D
-    spheroid(d=100, style="orig");
+    spheroid(d=100, style="orig", $fn=20);
 ```
 
-The "aligned" style will ensure that there is a vertex at each axis extrama,
+The "aligned" style will ensure that there is a vertex at each axis extrema,
 so long as `$fn` is a multiple of 4.
 
 ```openscad-3D
-    spheroid(d=100, style="aligned");
+    spheroid(d=100, style="aligned", $fn=20);
 ```
 
 The "stagger" style will stagger the triangulation of the vertical rows:
 
 ```openscad-3D
-    spheroid(d=100, style="stagger");
+    spheroid(d=100, style="stagger", $fn=20);
 ```
 
 The "icosa"` style will make for roughly equal-sized triangles for the entire
 sphere surface:
 
 ```openscad-3D
-    spheroid(d=100, style="icosa");
+    spheroid(d=100, style="icosa", $fn=20);
 ```
 
 
