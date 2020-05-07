@@ -878,6 +878,8 @@ function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Extra Anchors:
+//   "side0", "side1", etc. = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
 //   regular_ngon(n=5, or=30);
 //   regular_ngon(n=5, od=60);
@@ -914,8 +916,17 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
 				maxx_idx = max_index(subindex(path2,0)),
 				path3 = polygon_shift(path2,maxx_idx)
 			) path3
-		)
-	) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
+		),
+		anchors = !is_string(anchor)? [] : [
+			for (i = [0:1:n-1]) let(
+				a1 = 360 - i*360/n - (realign? 180/n : 0),
+				a2 = a1 - 360/n,
+				p1 = polar_to_xy(r,a1),
+				p2 = polar_to_xy(r,a2),
+				pos = (p1+p2)/2
+			) anchorpt(str("side",i), pos, unit(pos), 0)
+		]
+	) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path, anchors=anchors);
 
 
 module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) {
@@ -923,7 +934,16 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 	r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n));
 	assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.");
 	path = regular_ngon(n=n, r=r, rounding=rounding, realign=realign);
-	attachable(anchor,spin, two_d=true, path=path, extent=false) {
+	anchors = [
+		for (i = [0:1:n-1]) let(
+			a1 = 360 - i*360/n - (realign? 180/n : 0),
+			a2 = a1 - 360/n,
+			p1 = polar_to_xy(r,a1),
+			p2 = polar_to_xy(r,a2),
+			pos = (p1+p2)/2
+		) anchorpt(str("side",i), pos, unit(pos), 0)
+	];
+	attachable(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors) {
 		polygon(path);
 		children();
 	}
@@ -950,6 +970,8 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Extra Anchors:
+//   "side0" ... "side4" = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
 //   pentagon(or=30);
 //   pentagon(od=60);
@@ -990,6 +1012,8 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CE
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Extra Anchors:
+//   "side0" ... "side5" = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
 //   hexagon(or=30);
 //   hexagon(od=60);
@@ -1030,6 +1054,8 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CEN
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Extra Anchors:
+//   "side0" ... "side7" = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
 //   octagon(or=30);
 //   octagon(od=60);

@@ -328,10 +328,8 @@ function attach_transform(anchor=CENTER, spin=0, orient=UP, geom, p) =
 				pos = anch[1]
 			) two_d? (
 				assert(two_d && is_num(spin))
-				let(
-					ang = vector_angle(anch[2], BACK)
-				)
-				affine3d_zrot(ang+spin) *
+				affine3d_zrot(spin) *
+				rot(to=FWD, from=point3d(anch[2])) *
 				affine3d_translate(point3d(-pos))
 			) : (
 				assert(is_num(spin) || is_vector(spin,3))
@@ -633,7 +631,7 @@ function reorient(
 	anchors=[],
 	two_d=false,
 	p=undef
-) = let(
+) = (anchor==CENTER && spin==0 && orient==UP && p!=undef)? p : let(
 	geom = attach_geom(
 		size=size, size2=size2, shift=shift,
 		r=r, r1=r1, r2=r2, h=h,
@@ -641,7 +639,8 @@ function reorient(
 		vnf=vnf, path=path, extent=extent,
 		offset=offset, anchors=anchors,
 		two_d=two_d
-	)
+	),
+	$attach_to = undef
 ) attach_transform(anchor,spin,orient,geom,p);
 
 

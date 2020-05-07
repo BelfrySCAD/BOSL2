@@ -103,13 +103,13 @@ constants defined:
 
 Constant | Direction | Value
 -------- | --------- | -----------
-`LEFT`   | X-        | `[-1,0,0]`
-`RIGHT`  | X+        | `[1,0,0]`
-`FRONT`/`FORWARD`/`FWD` | Y- | `[0,-1,0]`
-`BACK`   | Y+        | `[0,1,0]`
-`BOTTOM`/`BOT`/`BTM`/`DOWN` | Z- | `[0,0,-1]` (3D only.)
-`TOP`/`UP` | Z+      | `[0,0,1]` (3D only.)
-`CENTER`/`CTR` | Centered | `[0,0,0]`
+`LEFT`   | X-        | `[-1, 0, 0]`
+`RIGHT`  | X+        | `[ 1, 0, 0]`
+`FRONT`/`FORWARD`/`FWD` | Y- | `[ 0,-1, 0]`
+`BACK`   | Y+        | `[ 0, 1, 0]`
+`BOTTOM`/`BOT`/`BTM`/`DOWN` | Z- | `[ 0, 0,-1]` (3D only.)
+`TOP`/`UP` | Z+      | `[ 0, 0, 1]` (3D only.)
+`CENTER`/`CTR` | Centered | `[ 0, 0, 0]`
 
 Note that even though these are 3D vectors, you can use most of them,
 (except `UP`/`DOWN`, of course) for anchors in 2D shapes:
