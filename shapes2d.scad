@@ -1691,6 +1691,15 @@ module mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) {
 //       "fillet",5, "round",5,  // S-curve.
 //       "ystep",1,  "xstep",1   // Ending shoulder.
 //   ]);
+// Example: Masking by Edge Attachment
+//   diff("mask")
+//   cube([50,60,70],center=true)
+//       edge_profile(TOP)
+//           mask2d_ogee([
+//               "xstep",1,  "ystep",1,  // Starting shoulder.
+//               "fillet",5, "round",5,  // S-curve.
+//               "ystep",1,  "xstep",1   // Ending shoulder.
+//           ]);
 module mask2d_ogee(pattern, excess, anchor=CENTER,spin=0) {
 	path = mask2d_ogee(pattern, excess=excess);
 	attachable(anchor,spin, two_d=true, path=path) {
