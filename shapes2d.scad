@@ -879,6 +879,7 @@ function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Extra Anchors:
+//   "tip0", "tip1", etc. = Each tip has an anchor, pointing outwards.
 //   "side0", "side1", etc. = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
 //   regular_ngon(n=5, or=30);
@@ -901,11 +902,11 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
 	)
 	assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.")
 	let(
+		inset = opp_ang_to_hyp(rounding, (180-360/n)/2),
 		path = rounding==0? oval(r=r, realign=realign, $fn=n) : (
 			let(
 				steps = floor(segs(r)/n),
 				step = 360/n/steps,
-				inset = opp_ang_to_hyp(rounding, (180-360/n)/2),
 				path2 = [
 					for (i = [0:1:n-1]) let(
 						a = 360 - i*360/n - (realign? 180/n : 0),
@@ -923,8 +924,12 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
 				a2 = a1 - 360/n,
 				p1 = polar_to_xy(r,a1),
 				p2 = polar_to_xy(r,a2),
+				tipp = polar_to_xy(r-inset+rounding,a1),
 				pos = (p1+p2)/2
-			) anchorpt(str("side",i), pos, unit(pos), 0)
+			) each [
+				anchorpt(str("tip",i), tipp, unit(tipp), 0),
+				anchorpt(str("side",i), pos, unit(pos), 0),
+			]
 		]
 	) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path, anchors=anchors);
 
@@ -934,14 +939,19 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 	r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n));
 	assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.");
 	path = regular_ngon(n=n, r=r, rounding=rounding, realign=realign);
+	inset = opp_ang_to_hyp(rounding, (180-360/n)/2);
 	anchors = [
 		for (i = [0:1:n-1]) let(
 			a1 = 360 - i*360/n - (realign? 180/n : 0),
 			a2 = a1 - 360/n,
 			p1 = polar_to_xy(r,a1),
 			p2 = polar_to_xy(r,a2),
+			tipp = polar_to_xy(r-inset+rounding,a1),
 			pos = (p1+p2)/2
-		) anchorpt(str("side",i), pos, unit(pos), 0)
+		) each [
+			anchorpt(str("tip",i), tipp, unit(tipp), 0),
+			anchorpt(str("side",i), pos, unit(pos), 0),
+		]
 	];
 	attachable(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors) {
 		polygon(path);
@@ -971,6 +981,7 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Extra Anchors:
+//   "tip0" ... "tip4" = Each tip has an anchor, pointing outwards.
 //   "side0" ... "side4" = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
 //   pentagon(or=30);
@@ -1013,6 +1024,7 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CE
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Extra Anchors:
+//   "tip0" ... "tip5" = Each tip has an anchor, pointing outwards.
 //   "side0" ... "side5" = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
 //   hexagon(or=30);
@@ -1055,6 +1067,7 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CEN
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Extra Anchors:
+//   "tip0" ... "tip7" = Each tip has an anchor, pointing outwards.
 //   "side0" ... "side7" = The center of each side has an anchor, pointing outwards.
 // Example(2D): by Outer Size
 //   octagon(or=30);
@@ -1248,6 +1261,10 @@ module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) {
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, an inner corner is aligned with the Y+ axis.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Extra Anchors:
+//   "tip0" ... "tip4" = Each tip has an anchor, pointing outwards.
+//   "corner0" ... "corner4" = The inside corner between each tip has an anchor, pointing outwards.
+//   "midpt0" ... "midpt4" = The center-point between each pair or tips has an anchor, pointing outwards.
 // Examples(2D):
 //   star(n=5, r=50, ir=25);
 //   star(n=5, r=50, step=2);
@@ -1270,13 +1287,48 @@ function star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=
 		stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n),
 		ir = get_radius(r=ir, d=id, dflt=stepr),
 		offset = realign? 180/n : 0,
-		path = [for(i=[2*n:-1:1]) let(theta=180*i/n+offset, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]]
-	) reorient(anchor,spin, two_d=true, path=path, p=path);
+		path = [for(i=[2*n:-1:1]) let(theta=180*i/n+offset, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]],
+		anchors = !is_string(anchor)? [] : [
+			for (i = [0:1:n-1]) let(
+				a1 = 360 - i*360/n - (realign? 180/n : 0),
+				a2 = a1 - 180/n,
+				a3 = a1 - 360/n,
+				p1 = polar_to_xy(r,a1),
+				p2 = polar_to_xy(ir,a2),
+				p3 = polar_to_xy(r,a3),
+				pos = (p1+p3)/2
+			) each [
+				anchorpt(str("tip",i), p1, unit(p1), 0),
+				anchorpt(str("corner",i), p2, unit(p2), 0),
+				anchorpt(str("midpt",i), pos, unit(pos), 0),
+			]
+		]
+		,feef=echo(anchor=anchor) echo(anchors=anchors)
+	) reorient(anchor,spin, two_d=true, path=path, p=path, anchors=anchors);
 
 
 module star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0) {
-	path = star(n=n, r=r, d=d, od=od, or=or, ir=ir, id=id, step=step, realign=realign);
-	attachable(anchor,spin, two_d=true, path=path) {
+	r = get_radius(r1=or, d1=od, r=r, d=d, dflt=undef);
+	stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n);
+	ir = get_radius(r=ir, d=id, dflt=stepr);
+	path = star(n=n, r=r, ir=ir, realign=realign);
+	anchors = [
+		for (i = [0:1:n-1]) let(
+			a1 = 360 - i*360/n - (realign? 180/n : 0),
+			a2 = a1 - 180/n,
+			a3 = a1 - 360/n,
+			p1 = polar_to_xy(r,a1),
+			p2 = polar_to_xy(ir,a2),
+			p3 = polar_to_xy(r,a3),
+			pos = (p1+p3)/2
+		) each [
+			anchorpt(str("tip",i), p1, unit(p1), 0),
+			anchorpt(str("corner",i), p2, unit(p2), 0),
+			anchorpt(str("midpt",i), pos, unit(pos), 0),
+		]
+	];
+	echo(anchors=anchors);
+	attachable(anchor,spin, two_d=true, path=path, anchors=anchors) {
 		polygon(path);
 		children();
 	}
