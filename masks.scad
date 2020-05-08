@@ -259,7 +259,7 @@ module chamfer_mask_z(l=1.0, chamfer=1.0, anchor=CENTER, spin=0) {
 //     cube(size=[20,40,30], center=true);
 //   }
 // Example(FR):
-//   chamfer(chamfer=2, size=[20,40,30], edges=edges([TOP,FRONT+RIGHT], except=TOP+LEFT)) {
+//   chamfer(chamfer=2, size=[20,40,30], edges=[TOP,FRONT+RIGHT], except_edges=TOP+LEFT) {
 //     cube(size=[20,40,30], center=true);
 //   }
 module chamfer(chamfer=1, size=[1,1,1], edges=EDGES_ALL, except_edges=[])
@@ -552,7 +552,7 @@ module rounding_mask_z(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 //     cube(size=[50,100,150], center=true);
 //   }
 // Example(FR,FlatSpin):
-//   rounding(r=10, size=[50,50,75], edges=edges([TOP,FRONT+RIGHT], except=TOP+LEFT), $fn=24) {
+//   rounding(r=10, size=[50,50,75], edges=[TOP,FRONT+RIGHT], except_edges=TOP+LEFT, $fn=24) {
 //     cube(size=[50,50,75], center=true);
 //   }
 module rounding(r=1, size=[1,1,1], edges=EDGES_ALL, except_edges=[])

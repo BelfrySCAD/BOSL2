@@ -48,17 +48,17 @@
 // Example: Rounded Edges, Untrimmed Corners
 //   cuboid([30,40,50], rounding=10, trimcorners=false);
 // Example: Chamferring Selected Edges
-//   cuboid([30,40,50], chamfer=5, edges=edges([TOP+FRONT,TOP+RIGHT,FRONT+RIGHT]), $fn=24);
+//   cuboid([30,40,50], chamfer=5, edges=[TOP+FRONT,TOP+RIGHT,FRONT+RIGHT], $fn=24);
 // Example: Rounding Selected Edges
-//   cuboid([30,40,50], rounding=5, edges=edges([TOP+FRONT,TOP+RIGHT,FRONT+RIGHT]), $fn=24);
+//   cuboid([30,40,50], rounding=5, edges=[TOP+FRONT,TOP+RIGHT,FRONT+RIGHT], $fn=24);
 // Example: Negative Chamferring
-//   cuboid([30,40,50], chamfer=-5, edges=edges([TOP,BOT], RIGHT), $fn=24);
+//   cuboid([30,40,50], chamfer=-5, edges=[TOP,BOT], except_edges=RIGHT, $fn=24);
 // Example: Negative Chamferring, Untrimmed Corners
-//   cuboid([30,40,50], chamfer=-5, edges=edges([TOP,BOT], RIGHT), trimcorners=false, $fn=24);
+//   cuboid([30,40,50], chamfer=-5, edges=[TOP,BOT], except_edges=RIGHT, trimcorners=false, $fn=24);
 // Example: Negative Rounding
-//   cuboid([30,40,50], rounding=-5, edges=edges([TOP,BOT], RIGHT), $fn=24);
+//   cuboid([30,40,50], rounding=-5, edges=[TOP,BOT], except_edges=RIGHT, $fn=24);
 // Example: Negative Rounding, Untrimmed Corners
-//   cuboid([30,40,50], rounding=-5, edges=edges([TOP,BOT], RIGHT), trimcorners=false, $fn=24);
+//   cuboid([30,40,50], rounding=-5, edges=[TOP,BOT], except_edges=RIGHT, trimcorners=false, $fn=24);
 // Example: Standard Connectors
 //   cuboid(40) show_anchors();
 module cuboid(
