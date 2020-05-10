@@ -46,7 +46,7 @@ include <skin.scad>
 //   the curve, N, is one less than the number of points in `curve`.
 // Arguments:
 //   curve = The list of endpoints and control points for this bezier segment.
-//   u = The proportion of the way along the curve to find the point of.  0<=`u`<=1
+//   u = The proportion of the way along the curve to find the point of.  0<=`u`<=1  If given as a list or range, returns a list of points for each u value.
 // Example(2D): Quadratic (Degree 2) Bezier.
 //   bez = [[0,0], [30,30], [80,0]];
 //   trace_bezier(bez, N=len(bez)-1);
@@ -59,13 +59,79 @@ include <skin.scad>
 //   bez = [[0,0], [5,15], [40,20], [60,-15], [80,0]];
 //   trace_bezier(bez, N=len(bez)-1);
 //   translate(bez_point(bez, 0.8)) color("red") sphere(1);
-function bez_point(curve,u)=
-	(len(curve) <= 1) ?
-		curve[0] :
+function bez_point(curve, u)=
+	is_num(u)? (
+		(len(curve) <= 1)? curve[0] :
 		bez_point(
-			[for(i=[0:1:len(curve)-2]) curve[i]*(1-u)+curve[i+1]*u],
-			u
-		);
+			[
+				for(i=[0:1:len(curve)-2])
+				curve[i]*(1-u) + curve[i+1]*u
+			], u
+		)
+	) : [for (uu = u) bez_point(curve, uu)];
+
+
+
+// Function: bez_deriv()
+// Usage:
+//   d = bez_deriv(curve, u, [order]);
+// Description:
+//   Finds the `order`th derivative of the bezier segment at the given position `u`.
+//   The degree of the bezier segment is one less than the number of points in `curve`.
+// Arguments:
+//   curve = The list of endpoints and control points for this bezier segment.
+//   u = The proportion of the way along the curve to find the derivative of.  0<=`u`<=1  If given as a list or range, returns a list of derivatives, one for each u value.
+//   order = The order of the derivative to return.  Default: 1 (for the first derivative)
+function bez_deriv(curve, u, order=1) =
+	assert(is_int(order) && order>=0)
+	order==0? bez_point(curve, u) : let(
+		N = len(curve) - 1,
+		dpts = N * deltas(curve)
+	) order==1? bez_point(dpts, u) :
+	bez_deriv(dpts, u, order-1);
+
+
+
+// Function: bezier_tangent()
+// Usage:
+//   tanvec= bezier_tangent(curve, u);
+// Description:
+//   Returns the unit vector of the tangent at the given position `u` on the bezier segment `curve`.
+// Arguments:
+//   curve = The list of endpoints and control points for this bezier segment.
+//   u = The proportion of the way along the curve to find the tangent vector of.  0<=`u`<=1  If given as a list or range, returns a list of tangent vectors, one for each u value.
+function bezier_tangent(curve, u) =
+	let(
+		res = bez_deriv(curve, u)
+	) is_vector(res)? unit(res) :
+	[for (v=res) unit(v)];
+
+
+
+// Function: bezier_curvature()
+// Usage:
+//   crv = bezier_curvature(curve, u);
+// Description:
+//   Returns the curvature value for the given position `u` on the bezier segment `curve`.
+//   The curvature is the inverse of the radius of the tangent circle at the given point.
+//   Thus, the tighter the curve, the larger the curvature value.  Curvature will be 0 for
+//   a position with no curvature, since 1/0 is not a number.
+// Arguments:
+//   curve = The list of endpoints and control points for this bezier segment.
+//   u = The proportion of the way along the curve to find the curvature of.  0<=`u`<=1  If given as a list or range, returns a list of curvature values, one for each u value.
+function bezier_curvature(curve, u) =
+	is_num(u) ? bezier_curvature(curve,[u])[0] : 
+	let(
+		d1 = bez_deriv(curve, u, 1),
+		d2 = bez_deriv(curve, u, 2)
+	) [
+		for(i=idx(d1))
+		sqrt(
+			sqr(norm(d1[i])*norm(d2[i])) -
+			sqr(d1[i]*d2[i])
+		) / pow(norm(d1[i]),3)
+	];
+
 
 
 // Function: bezier_curve()
