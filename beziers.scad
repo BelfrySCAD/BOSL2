@@ -38,6 +38,117 @@ include <skin.scad>
 
 // Section: Segment Functions
 
+// Function: bezier_points()
+// Usage:
+//   bezier_points(curve, u)
+// Description:
+//   Computes bezier points for bezier with control points specified by `curve` at parameter values specified by `u`, which can be a scalar or a list.
+//   This function uses an optimized method which is best when `u` is a long list and the bezier degree is 10 or less. 
+
+// Ugly but speed optimized code for computing bezier curves using the matrix representation
+// See https://pomax.github.io/bezierinfo/#matrix for explanation.
+// 
+// All of the loop unrolling makes and the use of the matrix lookup table make a big difference
+// in the speed of execution.  For orders 10 and below this code is 10-20 times faster than
+// the recursive code using the de Casteljau method depending on the bezier order and the
+// number of points evaluated in one call (more points is faster).  For orders 11 and above without the
+// lookup table or hard coded powers list the code is about twice as fast as the recursive method.
+// Note that everything I tried to simplify or tidy this code made is slower, sometimes a lot slower.
+function bezier_points(curve, u) =
+    is_num(u) ? bezier_points(pts,[u])[0] : 
+    let(
+         N = len(curve)-1, 
+         M = _bezier_matrix(N)*curve
+    )
+    N==0 ? [for(uval=u)[1]*M] :
+    N==1 ? [for(uval=u)[1, uval]*M] :
+    N==2 ? [for(uval=u)[1, uval, uval*uval]*M] :
+    N==3 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval]*M] :              // It appears that pow() is as fast or faster for powers 5 or above
+    N==4 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval]*M] :
+    N==5 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5)]*M] :
+    N==6 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6)]*M] :
+    N==7 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7)]*M] :
+    N==8 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8)]*M] :
+    N==9 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8), pow(uval,9)]*M] :
+    N==10? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8), pow(uval,9), pow(uval,10)]*M] :
+ /* N>=11 */  [for(uval=u)[for (i=[0:1:N]) pow(uval,i)]*M];
+
+function _signed_pascals_triangle(N,tri=[[-1]]) =
+   len(tri)==N+1 ? tri :
+   let(last=tri[len(tri)-1])
+   _signed_pascals_triangle(N,concat(tri,[[-1, for(i=[0:1:len(tri)-2]) (i%2==1?-1:1)*(abs(last[i])+abs(last[i+1])),len(last)%2==0? -1:1]]));
+
+function _compute_bez_matrix(N) =
+   let(tri = _signed_pascals_triangle(N))
+   [for(i=[0:N]) concat(tri[N][i]*tri[i], repeat(0,N-i))];
+
+
+// The bezier matrix, which is related to Pascal's triangle, enables nonrecursive computation
+// of bezier points.  This method is much faster than the recursive de Casteljau method
+// in OpenScad, but we have to precompute the matrices to reap the full benefit.  
+
+_bezier_matrix_table = [
+    [[1]],
+    [[ 1, 0],
+     [-1, 1]],
+    [[1, 0, 0],
+     [-2, 2, 0],
+     [1, -2, 1]],
+    [[ 1, 0, 0, 0],
+     [-3, 3, 0, 0],
+     [ 3,-6, 3, 0],
+     [-1, 3,-3, 1]],
+    [[ 1,  0,  0, 0, 0],
+     [-4,  4,  0, 0, 0],
+     [ 6,-12,  6, 0, 0],
+     [-4, 12,-12, 4, 0],
+     [ 1, -4,  6,-4, 1]],
+    [[  1,  0, 0,   0, 0, 0],
+     [ -5,  5, 0,   0, 0, 0],
+     [ 10,-20, 10,  0, 0, 0],
+     [-10, 30,-30, 10, 0, 0],
+     [  5,-20, 30,-20, 5, 0],
+     [ -1,  5,-10, 10,-5, 1]],
+    [[  1,  0,  0,  0,  0, 0, 0],
+     [ -6,  6,  0,  0,  0, 0, 0],
+     [ 15,-30, 15,  0,  0, 0, 0],
+     [-20, 60,-60, 20,  0, 0, 0],
+     [ 15,-60, 90,-60, 15, 0, 0],
+     [ -6, 30,-60, 60,-30, 6, 0],
+     [  1, -6, 15,-20, 15,-6, 1]],
+    [[  1,   0,   0,   0,  0,   0, 0, 0],
+     [ -7,   7,   0,   0,  0,   0, 0, 0],
+     [ 21, -42,  21,   0,  0,   0, 0, 0],
+     [-35, 105,-105,  35,  0,   0, 0, 0],
+     [ 35,-140, 210,-140,  35,  0, 0, 0],
+     [-21, 105,-210, 210,-105, 21, 0, 0],
+     [  7, -42, 105,-140, 105,-42, 7, 0],
+     [ -1,   7, -21,  35, -35, 21,-7, 1]],
+    [[  1,   0,   0,   0,   0,   0,  0, 0, 0],
+     [ -8,   8,   0,   0,   0,   0,  0, 0, 0],
+     [ 28, -56,  28,   0,   0,   0,  0, 0, 0],
+     [-56, 168,-168,  56,   0,   0,  0, 0, 0],
+     [ 70,-280, 420,-280,  70,   0,  0, 0, 0],
+     [-56, 280,-560, 560,-280,  56,  0, 0, 0],
+     [ 28,-168, 420,-560, 420,-168, 28, 0, 0],
+     [ -8,  56,-168, 280,-280, 168,-56, 8, 0],
+     [  1,  -8,  28, -56,  70, -56, 28,-8, 1]],
+    [[1, 0, 0, 0, 0, 0, 0,  0, 0, 0], [-9, 9, 0, 0, 0, 0, 0, 0, 0, 0], [36, -72, 36, 0, 0, 0, 0, 0, 0, 0], [-84, 252, -252, 84, 0, 0, 0, 0, 0, 0],
+     [126, -504, 756, -504, 126, 0, 0, 0, 0, 0], [-126, 630, -1260, 1260, -630, 126, 0, 0, 0, 0], [84, -504, 1260, -1680, 1260, -504, 84, 0, 0, 0],
+     [-36, 252, -756, 1260, -1260, 756, -252, 36, 0, 0], [9, -72, 252, -504, 630, -504, 252, -72, 9, 0], [-1, 9, -36, 84, -126, 126, -84, 36, -9, 1]],
+    [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [-10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0], [45, -90, 45, 0, 0, 0, 0, 0, 0, 0, 0], [-120, 360, -360, 120, 0, 0, 0, 0, 0, 0, 0],
+     [210, -840, 1260, -840, 210, 0, 0, 0, 0, 0, 0], [-252, 1260, -2520, 2520, -1260, 252, 0, 0, 0, 0, 0],
+     [210, -1260, 3150, -4200, 3150, -1260, 210, 0, 0, 0, 0], [-120, 840, -2520, 4200, -4200, 2520, -840, 120, 0, 0, 0],
+     [45, -360, 1260, -2520, 3150, -2520, 1260, -360, 45, 0, 0], [-10, 90, -360, 840, -1260, 1260, -840, 360, -90, 10, 0],
+     [1, -10, 45, -120, 210, -252, 210, -120, 45, -10, 1]]
+];
+
+
+function _bezier_matrix(N) =
+  N>10 ? _compute_bez_matrix(N) 
+       : _bezier_matrix_table[N];
+
+
 // Function: bez_point()
 // Usage:
 //   bez_point(curve, u)
@@ -943,7 +1054,7 @@ function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF, style="default") =
 		],
 		pts = [
 			for(step=[0:1:splinesteps.y]) [
-				for(bezparm=bpatch)
+		              for(bezparm=bpatch)
 				bez_point(bezparm, step/splinesteps.y)
 			]
 		],
