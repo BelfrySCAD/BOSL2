@@ -43,11 +43,37 @@ include <skin.scad>
 //   bezier_points(curve, u)
 // Description:
 //   Computes bezier points for bezier with control points specified by `curve` at parameter values specified by `u`, which can be a scalar or a list.
-//   This function uses an optimized method which is best when `u` is a long list and the bezier degree is 10 or less. 
+//   This function uses an optimized method which is best when `u` is a long list and the bezier degree is 10 or less.
+//   The degree of the bezier curve given is `len(curve)-1`.
+// Arguments:
+//   curve = The list of endpoints and control points for this bezier segment.
+//   u = The proportion of the way along the curve to find the point of.  0<=`u`<=1  If given as a list or range, returns a list of point, one for each u value.
+// Example(2D): Quadratic (Degree 2) Bezier.
+//   bez = [[0,0], [30,30], [80,0]];
+//   trace_bezier(bez, N=len(bez)-1);
+//   translate(bezier_points(bez, 0.3)) color("red") sphere(1);
+// Example(2D): Cubic (Degree 3) Bezier
+//   bez = [[0,0], [5,35], [60,-25], [80,0]];
+//   trace_bezier(bez, N=len(bez)-1);
+//   translate(bezier_points(bez, 0.4)) color("red") sphere(1);
+// Example(2D): Degree 4 Bezier.
+//   bez = [[0,0], [5,15], [40,20], [60,-15], [80,0]];
+//   trace_bezier(bez, N=len(bez)-1);
+//   translate(bezier_points(bez, 0.8)) color("red") sphere(1);
+// Example(2D): Giving a List of `u`
+//   bez = [[0,0], [5,35], [60,-25], [80,0]];
+//   trace_bezier(bez, N=len(bez)-1);
+//   pts = bezier_points(bez, [0, 0.2, 0.3, 0.7, 0.8, 1]);
+//   rainbow(pts) move($item) sphere(1.5, $fn=12);
+// Example(2D): Giving a Range of `u`
+//   bez = [[0,0], [5,35], [60,-25], [80,0]];
+//   trace_bezier(bez, N=len(bez)-1);
+//   pts = bezier_points(bez, [0:0.2:1]);
+//   rainbow(pts) move($item) sphere(1.5, $fn=12);
 
 // Ugly but speed optimized code for computing bezier curves using the matrix representation
 // See https://pomax.github.io/bezierinfo/#matrix for explanation.
-// 
+//
 // All of the loop unrolling makes and the use of the matrix lookup table make a big difference
 // in the speed of execution.  For orders 10 and below this code is 10-20 times faster than
 // the recursive code using the de Casteljau method depending on the bezier order and the
@@ -55,137 +81,109 @@ include <skin.scad>
 // lookup table or hard coded powers list the code is about twice as fast as the recursive method.
 // Note that everything I tried to simplify or tidy this code made is slower, sometimes a lot slower.
 function bezier_points(curve, u) =
-    is_num(u) ? bezier_points(pts,[u])[0] : 
-    let(
-         N = len(curve)-1, 
-         M = _bezier_matrix(N)*curve
-    )
-    N==0 ? [for(uval=u)[1]*M] :
-    N==1 ? [for(uval=u)[1, uval]*M] :
-    N==2 ? [for(uval=u)[1, uval, uval*uval]*M] :
-    N==3 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval]*M] :              // It appears that pow() is as fast or faster for powers 5 or above
-    N==4 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval]*M] :
-    N==5 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5)]*M] :
-    N==6 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6)]*M] :
-    N==7 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7)]*M] :
-    N==8 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8)]*M] :
-    N==9 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8), pow(uval,9)]*M] :
-    N==10? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8), pow(uval,9), pow(uval,10)]*M] :
- /* N>=11 */  [for(uval=u)[for (i=[0:1:N]) pow(uval,i)]*M];
+	is_num(u) ? bezier_points(curve,[u])[0] :
+	let(
+		N = len(curve)-1,
+		M = _bezier_matrix(N)*curve
+	)
+	N==0 ? [for(uval=u)[1]*M] :
+	N==1 ? [for(uval=u)[1, uval]*M] :
+	N==2 ? [for(uval=u)[1, uval, uval*uval]*M] :
+	N==3 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval]*M] :              // It appears that pow() is as fast or faster for powers 5 or above
+	N==4 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval]*M] :
+	N==5 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5)]*M] :
+	N==6 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6)]*M] :
+	N==7 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7)]*M] :
+	N==8 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8)]*M] :
+	N==9 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8), pow(uval,9)]*M] :
+	N==10? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8), pow(uval,9), pow(uval,10)]*M] :
+	/* N>=11 */  [for(uval=u)[for (i=[0:1:N]) pow(uval,i)]*M];
 
+
+// Not public.
 function _signed_pascals_triangle(N,tri=[[-1]]) =
-   len(tri)==N+1 ? tri :
-   let(last=tri[len(tri)-1])
-   _signed_pascals_triangle(N,concat(tri,[[-1, for(i=[0:1:len(tri)-2]) (i%2==1?-1:1)*(abs(last[i])+abs(last[i+1])),len(last)%2==0? -1:1]]));
+	len(tri)==N+1 ? tri :
+	let(last=tri[len(tri)-1])
+	_signed_pascals_triangle(N,concat(tri,[[-1, for(i=[0:1:len(tri)-2]) (i%2==1?-1:1)*(abs(last[i])+abs(last[i+1])),len(last)%2==0? -1:1]]));
 
-function _compute_bez_matrix(N) =
-   let(tri = _signed_pascals_triangle(N))
-   [for(i=[0:N]) concat(tri[N][i]*tri[i], repeat(0,N-i))];
+
+// Not public.
+function _compute_bezier_matrix(N) =
+	let(tri = _signed_pascals_triangle(N))
+	[for(i=[0:N]) concat(tri[N][i]*tri[i], repeat(0,N-i))];
 
 
 // The bezier matrix, which is related to Pascal's triangle, enables nonrecursive computation
 // of bezier points.  This method is much faster than the recursive de Casteljau method
-// in OpenScad, but we have to precompute the matrices to reap the full benefit.  
+// in OpenScad, but we have to precompute the matrices to reap the full benefit.
 
+// Not public.
 _bezier_matrix_table = [
-    [[1]],
-    [[ 1, 0],
-     [-1, 1]],
-    [[1, 0, 0],
-     [-2, 2, 0],
-     [1, -2, 1]],
-    [[ 1, 0, 0, 0],
-     [-3, 3, 0, 0],
-     [ 3,-6, 3, 0],
-     [-1, 3,-3, 1]],
-    [[ 1,  0,  0, 0, 0],
-     [-4,  4,  0, 0, 0],
-     [ 6,-12,  6, 0, 0],
-     [-4, 12,-12, 4, 0],
-     [ 1, -4,  6,-4, 1]],
-    [[  1,  0, 0,   0, 0, 0],
-     [ -5,  5, 0,   0, 0, 0],
-     [ 10,-20, 10,  0, 0, 0],
-     [-10, 30,-30, 10, 0, 0],
-     [  5,-20, 30,-20, 5, 0],
-     [ -1,  5,-10, 10,-5, 1]],
-    [[  1,  0,  0,  0,  0, 0, 0],
-     [ -6,  6,  0,  0,  0, 0, 0],
-     [ 15,-30, 15,  0,  0, 0, 0],
-     [-20, 60,-60, 20,  0, 0, 0],
-     [ 15,-60, 90,-60, 15, 0, 0],
-     [ -6, 30,-60, 60,-30, 6, 0],
-     [  1, -6, 15,-20, 15,-6, 1]],
-    [[  1,   0,   0,   0,  0,   0, 0, 0],
-     [ -7,   7,   0,   0,  0,   0, 0, 0],
-     [ 21, -42,  21,   0,  0,   0, 0, 0],
-     [-35, 105,-105,  35,  0,   0, 0, 0],
-     [ 35,-140, 210,-140,  35,  0, 0, 0],
-     [-21, 105,-210, 210,-105, 21, 0, 0],
-     [  7, -42, 105,-140, 105,-42, 7, 0],
-     [ -1,   7, -21,  35, -35, 21,-7, 1]],
-    [[  1,   0,   0,   0,   0,   0,  0, 0, 0],
-     [ -8,   8,   0,   0,   0,   0,  0, 0, 0],
-     [ 28, -56,  28,   0,   0,   0,  0, 0, 0],
-     [-56, 168,-168,  56,   0,   0,  0, 0, 0],
-     [ 70,-280, 420,-280,  70,   0,  0, 0, 0],
-     [-56, 280,-560, 560,-280,  56,  0, 0, 0],
-     [ 28,-168, 420,-560, 420,-168, 28, 0, 0],
-     [ -8,  56,-168, 280,-280, 168,-56, 8, 0],
-     [  1,  -8,  28, -56,  70, -56, 28,-8, 1]],
-    [[1, 0, 0, 0, 0, 0, 0,  0, 0, 0], [-9, 9, 0, 0, 0, 0, 0, 0, 0, 0], [36, -72, 36, 0, 0, 0, 0, 0, 0, 0], [-84, 252, -252, 84, 0, 0, 0, 0, 0, 0],
-     [126, -504, 756, -504, 126, 0, 0, 0, 0, 0], [-126, 630, -1260, 1260, -630, 126, 0, 0, 0, 0], [84, -504, 1260, -1680, 1260, -504, 84, 0, 0, 0],
-     [-36, 252, -756, 1260, -1260, 756, -252, 36, 0, 0], [9, -72, 252, -504, 630, -504, 252, -72, 9, 0], [-1, 9, -36, 84, -126, 126, -84, 36, -9, 1]],
-    [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [-10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0], [45, -90, 45, 0, 0, 0, 0, 0, 0, 0, 0], [-120, 360, -360, 120, 0, 0, 0, 0, 0, 0, 0],
-     [210, -840, 1260, -840, 210, 0, 0, 0, 0, 0, 0], [-252, 1260, -2520, 2520, -1260, 252, 0, 0, 0, 0, 0],
-     [210, -1260, 3150, -4200, 3150, -1260, 210, 0, 0, 0, 0], [-120, 840, -2520, 4200, -4200, 2520, -840, 120, 0, 0, 0],
-     [45, -360, 1260, -2520, 3150, -2520, 1260, -360, 45, 0, 0], [-10, 90, -360, 840, -1260, 1260, -840, 360, -90, 10, 0],
-     [1, -10, 45, -120, 210, -252, 210, -120, 45, -10, 1]]
+	[[1]],
+	[[ 1, 0],
+	 [-1, 1]],
+	[[1, 0, 0],
+	 [-2, 2, 0],
+	 [1, -2, 1]],
+	[[ 1, 0, 0, 0],
+	 [-3, 3, 0, 0],
+	 [ 3,-6, 3, 0],
+	 [-1, 3,-3, 1]],
+	[[ 1,  0,  0, 0, 0],
+	 [-4,  4,  0, 0, 0],
+	 [ 6,-12,  6, 0, 0],
+	 [-4, 12,-12, 4, 0],
+	 [ 1, -4,  6,-4, 1]],
+	[[  1,  0, 0,   0, 0, 0],
+	 [ -5,  5, 0,   0, 0, 0],
+	 [ 10,-20, 10,  0, 0, 0],
+	 [-10, 30,-30, 10, 0, 0],
+	 [  5,-20, 30,-20, 5, 0],
+	 [ -1,  5,-10, 10,-5, 1]],
+	[[  1,  0,  0,  0,  0, 0, 0],
+	 [ -6,  6,  0,  0,  0, 0, 0],
+	 [ 15,-30, 15,  0,  0, 0, 0],
+	 [-20, 60,-60, 20,  0, 0, 0],
+	 [ 15,-60, 90,-60, 15, 0, 0],
+	 [ -6, 30,-60, 60,-30, 6, 0],
+	 [  1, -6, 15,-20, 15,-6, 1]],
+	[[  1,   0,   0,   0,  0,   0, 0, 0],
+	 [ -7,   7,   0,   0,  0,   0, 0, 0],
+	 [ 21, -42,  21,   0,  0,   0, 0, 0],
+	 [-35, 105,-105,  35,  0,   0, 0, 0],
+	 [ 35,-140, 210,-140,  35,  0, 0, 0],
+	 [-21, 105,-210, 210,-105, 21, 0, 0],
+	 [  7, -42, 105,-140, 105,-42, 7, 0],
+	 [ -1,   7, -21,  35, -35, 21,-7, 1]],
+	[[  1,   0,   0,   0,   0,   0,  0, 0, 0],
+	 [ -8,   8,   0,   0,   0,   0,  0, 0, 0],
+	 [ 28, -56,  28,   0,   0,   0,  0, 0, 0],
+	 [-56, 168,-168,  56,   0,   0,  0, 0, 0],
+	 [ 70,-280, 420,-280,  70,   0,  0, 0, 0],
+	 [-56, 280,-560, 560,-280,  56,  0, 0, 0],
+	 [ 28,-168, 420,-560, 420,-168, 28, 0, 0],
+	 [ -8,  56,-168, 280,-280, 168,-56, 8, 0],
+	 [  1,  -8,  28, -56,  70, -56, 28,-8, 1]],
+	[[1, 0, 0, 0, 0, 0, 0,  0, 0, 0], [-9, 9, 0, 0, 0, 0, 0, 0, 0, 0], [36, -72, 36, 0, 0, 0, 0, 0, 0, 0], [-84, 252, -252, 84, 0, 0, 0, 0, 0, 0],
+	 [126, -504, 756, -504, 126, 0, 0, 0, 0, 0], [-126, 630, -1260, 1260, -630, 126, 0, 0, 0, 0], [84, -504, 1260, -1680, 1260, -504, 84, 0, 0, 0],
+	 [-36, 252, -756, 1260, -1260, 756, -252, 36, 0, 0], [9, -72, 252, -504, 630, -504, 252, -72, 9, 0], [-1, 9, -36, 84, -126, 126, -84, 36, -9, 1]],
+	[[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [-10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0], [45, -90, 45, 0, 0, 0, 0, 0, 0, 0, 0], [-120, 360, -360, 120, 0, 0, 0, 0, 0, 0, 0],
+	 [210, -840, 1260, -840, 210, 0, 0, 0, 0, 0, 0], [-252, 1260, -2520, 2520, -1260, 252, 0, 0, 0, 0, 0],
+	 [210, -1260, 3150, -4200, 3150, -1260, 210, 0, 0, 0, 0], [-120, 840, -2520, 4200, -4200, 2520, -840, 120, 0, 0, 0],
+	 [45, -360, 1260, -2520, 3150, -2520, 1260, -360, 45, 0, 0], [-10, 90, -360, 840, -1260, 1260, -840, 360, -90, 10, 0],
+	 [1, -10, 45, -120, 210, -252, 210, -120, 45, -10, 1]]
 ];
 
 
+// Not public.
 function _bezier_matrix(N) =
-  N>10 ? _compute_bez_matrix(N) 
-       : _bezier_matrix_table[N];
+	N>10 ? _compute_bezier_matrix(N) :
+	_bezier_matrix_table[N];
 
 
-// Function: bez_point()
+// Function: bezier_derivative()
 // Usage:
-//   bez_point(curve, u)
-// Description:
-//   Formula to calculate points on a bezier curve.  The degree of
-//   the curve, N, is one less than the number of points in `curve`.
-// Arguments:
-//   curve = The list of endpoints and control points for this bezier segment.
-//   u = The proportion of the way along the curve to find the point of.  0<=`u`<=1  If given as a list or range, returns a list of points for each u value.
-// Example(2D): Quadratic (Degree 2) Bezier.
-//   bez = [[0,0], [30,30], [80,0]];
-//   trace_bezier(bez, N=len(bez)-1);
-//   translate(bez_point(bez, 0.3)) color("red") sphere(1);
-// Example(2D): Cubic (Degree 3) Bezier
-//   bez = [[0,0], [5,35], [60,-25], [80,0]];
-//   trace_bezier(bez, N=len(bez)-1);
-//   translate(bez_point(bez, 0.4)) color("red") sphere(1);
-// Example(2D): Degree 4 Bezier.
-//   bez = [[0,0], [5,15], [40,20], [60,-15], [80,0]];
-//   trace_bezier(bez, N=len(bez)-1);
-//   translate(bez_point(bez, 0.8)) color("red") sphere(1);
-function bez_point(curve, u)=
-	is_num(u)? (
-		(len(curve) <= 1)? curve[0] :
-		bez_point(
-			[
-				for(i=[0:1:len(curve)-2])
-				curve[i]*(1-u) + curve[i+1]*u
-			], u
-		)
-	) : [for (uu = u) bez_point(curve, uu)];
-
-
-
-// Function: bez_deriv()
-// Usage:
-//   d = bez_deriv(curve, u, [order]);
+//   d = bezier_derivative(curve, u, [order]);
 // Description:
 //   Finds the `order`th derivative of the bezier segment at the given position `u`.
 //   The degree of the bezier segment is one less than the number of points in `curve`.
@@ -193,13 +191,13 @@ function bez_point(curve, u)=
 //   curve = The list of endpoints and control points for this bezier segment.
 //   u = The proportion of the way along the curve to find the derivative of.  0<=`u`<=1  If given as a list or range, returns a list of derivatives, one for each u value.
 //   order = The order of the derivative to return.  Default: 1 (for the first derivative)
-function bez_deriv(curve, u, order=1) =
+function bezier_derivative(curve, u, order=1) =
 	assert(is_int(order) && order>=0)
-	order==0? bez_point(curve, u) : let(
+	order==0? bezier_points(curve, u) : let(
 		N = len(curve) - 1,
 		dpts = N * deltas(curve)
-	) order==1? bez_point(dpts, u) :
-	bez_deriv(dpts, u, order-1);
+	) order==1? bezier_points(dpts, u) :
+	bezier_derivative(dpts, u, order-1);
 
 
 
@@ -213,7 +211,7 @@ function bez_deriv(curve, u, order=1) =
 //   u = The proportion of the way along the curve to find the tangent vector of.  0<=`u`<=1  If given as a list or range, returns a list of tangent vectors, one for each u value.
 function bezier_tangent(curve, u) =
 	let(
-		res = bez_deriv(curve, u)
+		res = bezier_derivative(curve, u)
 	) is_vector(res)? unit(res) :
 	[for (v=res) unit(v)];
 
@@ -231,10 +229,10 @@ function bezier_tangent(curve, u) =
 //   curve = The list of endpoints and control points for this bezier segment.
 //   u = The proportion of the way along the curve to find the curvature of.  0<=`u`<=1  If given as a list or range, returns a list of curvature values, one for each u value.
 function bezier_curvature(curve, u) =
-	is_num(u) ? bezier_curvature(curve,[u])[0] : 
+	is_num(u) ? bezier_curvature(curve,[u])[0] :
 	let(
-		d1 = bez_deriv(curve, u, 1),
-		d2 = bez_deriv(curve, u, 2)
+		d1 = bezier_derivative(curve, u, 1),
+		d2 = bezier_derivative(curve, u, 2)
 	) [
 		for(i=idx(d1))
 		sqrt(
@@ -259,17 +257,17 @@ function bezier_curvature(curve, u) =
 //   n = The number of points to generate along the bezier curve.
 // Example(2D): Quadratic (Degree 2) Bezier.
 //   bez = [[0,0], [30,30], [80,0]];
-//   move_copies(bezier_curve(bez, 16)) sphere(r=1);
+//   move_copies(bezier_curve(bez, 8)) sphere(r=1.5, $fn=12);
 //   trace_bezier(bez, N=len(bez)-1);
 // Example(2D): Cubic (Degree 3) Bezier
 //   bez = [[0,0], [5,35], [60,-25], [80,0]];
-//   move_copies(bezier_curve(bez, 16)) sphere(r=1);
+//   move_copies(bezier_curve(bez, 8)) sphere(r=1.5, $fn=12);
 //   trace_bezier(bez, N=len(bez)-1);
 // Example(2D): Degree 4 Bezier.
 //   bez = [[0,0], [5,15], [40,20], [60,-15], [80,0]];
-//   move_copies(bezier_curve(bez, 16)) sphere(r=1);
+//   move_copies(bezier_curve(bez, 8)) sphere(r=1.5, $fn=12);
 //   trace_bezier(bez, N=len(bez)-1);
-function bezier_curve(curve,n) = [for(i=[0:1:n-1]) bez_point(curve, i/(n-1))];
+function bezier_curve(curve,n) = bezier_points(curve, [0:1/n:(n-0.5)/n]);
 
 
 // Function: bezier_segment_closest_point()
@@ -289,18 +287,18 @@ function bezier_curve(curve,n) = [for(i=[0:1:n-1]) bez_point(curve, i/(n-1))];
 //   u = bezier_segment_closest_point(bez, pt);
 //   trace_bezier(bez, N=len(bez)-1);
 //   color("red") translate(pt) sphere(r=1);
-//   color("blue") translate(bez_point(bez,u)) sphere(r=1);
-function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1) = 
+//   color("blue") translate(bezier_points(bez,u)) sphere(r=1);
+function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1) =
 	let(
 		steps = len(curve)*3,
-		path = [for (i=[0:1:steps]) let(v=(end_u-u)*(i/steps)+u) [v, bez_point(curve, v)]],
-		bracketed = concat([path[0]], path, [path[len(path)-1]]),
+		uvals = [u, for (i=[0:1:steps]) (end_u-u)*(i/steps)+u, end_u],
+		path = bezier_points(curve,uvals),
 		minima_ranges = [
-			for (pts = triplet(bracketed)) let(
-				d1=norm(pts.x.y-pt),
-				d2=norm(pts.y.y-pt),
-				d3=norm(pts.z.y-pt)
-			) if(d2<=d1 && d2<=d3) [pts.x.x,pts.z.x]
+			for (i = [1:1:len(uvals)-2]) let(
+				d1 = norm(path[i-1]-pt),
+				d2 = norm(path[i  ]-pt),
+				d3 = norm(path[i+1]-pt)
+			) if (d2<=d1 && d2<=d3) [uvals[i-1],uvals[i+1]]
 		]
 	) len(minima_ranges)>1? (
 		let(
@@ -308,16 +306,15 @@ function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1) =
 				for (minima = minima_ranges)
 					bezier_segment_closest_point(curve, pt, max_err=max_err, u=minima.x, end_u=minima.y)
 			],
-			dists = [for (v=min_us) norm(bez_point(curve,v)-pt)],
+			dists = [for (v=min_us) norm(bezier_points(curve,v)-pt)],
 			min_i = min_index(dists)
 		) min_us[min_i]
 	) : let(
 		minima = minima_ranges[0],
-		p1 = bez_point(curve, minima.x),
-		p2 = bez_point(curve, minima.y),
-		err = norm(p2-p1)
+		pp = bezier_points(curve, minima),
+		err = norm(pp[1]-pp[0])
 	) err<max_err? mean(minima) :
-	bezier_segment_closest_point(curve, pt, max_err=max_err, u=minima.x, end_u=minima.y);
+	bezier_segment_closest_point(curve, pt, max_err=max_err, u=minima[0], end_u=minima[1]);
 
 
 
@@ -338,11 +335,8 @@ function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1) =
 function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
 	let(
 		segs = len(curve) * 2,
-		path = [
-			for (i=[0:1:segs])
-			let(u=lerp(start_u, end_u, i/segs))
-			bez_point(curve,u)
-		],
+		uvals = [for (i=[0:1:segs]) lerp(start_u, end_u, i/segs)],
+		path = bezier_points(curve,uvals),
 		defl = max([
 			for (i=idx(path,end=-3)) let(
 				mp = (path[i] + path[i+2]) / 2
@@ -394,7 +388,7 @@ function fillet3pts(p0, p1, p2, r, maxerr=0.1, w=0.5, dw=0.25) = let(
 		cp0 = lerp(tp0, p1, w),
 		cp1 = lerp(tp1, p1, w),
 		cpr = norm(cp-tp0),
-		bp = bez_point([tp0, cp0, cp1, tp1], 0.5),
+		bp = bezier_points([tp0, cp0, cp1, tp1], 0.5),
 		tdist = norm(cp-bp)
 	) (abs(tdist-cpr) <= maxerr)? [tp0, tp0, cp0, cp1, tp1, tp1] :
 		(tdist<cpr)? fillet3pts(p0, p1, p2, r, maxerr=maxerr, w=w+dw, dw=dw/2) :
@@ -408,13 +402,15 @@ function fillet3pts(p0, p1, p2, r, maxerr=0.1, w=0.5, dw=0.25) = let(
 // Function: bezier_path_point()
 // Usage:
 //   bezier_path_point(path, seg, u, [N])
-// Description: Returns the coordinates of bezier path segment `seg` at position `u`.
+// Description:
+//   Returns the coordinates of bezier path segment `seg` at position `u`.
 // Arguments:
 //   path = A bezier path to approximate.
 //   seg = Segment number along the path.  Each segment is N points long.
-//   u = The proportion of the way along the segment to find the point of.  0<=`u`<=1
+//   u = The proportion of the way along the segment to find the point of.  0<=`u`<=1  If given as a list or range, returns a list of points, one for each value in `u`.
 //   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
-function bezier_path_point(path, seg, u, N=3) = bez_point(select(path,seg*N,(seg+1)*N), u);
+function bezier_path_point(path, seg, u, N=3) =
+	bezier_points(select(path,seg*N,(seg+1)*N), u);
 
 
 
@@ -450,7 +446,7 @@ function bezier_path_closest_point(path, pt, N=3, max_err=0.01, seg=0, min_seg=u
 		let(
 			curve = select(path,seg*N,(seg+1)*N),
 			u = bezier_segment_closest_point(curve, pt, max_err=0.05),
-			dist = norm(bez_point(curve, u)-pt),
+			dist = norm(bezier_points(curve, u)-pt),
 			mseg = (min_dist==undef || dist<min_dist)? seg : min_seg,
 			mdist = (min_dist==undef || dist<min_dist)? dist : min_dist,
 			mu = (min_dist==undef || dist<min_dist)? u : min_u
@@ -874,9 +870,9 @@ module trace_bezier(bez, N=3, size=1) {
 // Section: Patch Functions
 
 
-// Function: bezier_patch_point()
+// Function: bezier_patch_points()
 // Usage:
-//   bezier_patch_point(patch, u, v)
+//   bezier_patch_points(patch, u, v)
 // Description:
 //   Given a square 2-dimensional array of (N+1) by (N+1) points size,
 //   that represents a Bezier Patch of degree N, returns a point on that
@@ -885,8 +881,8 @@ module trace_bezier(bez, N=3, size=1) {
 //   its own degree.
 // Arguments:
 //   patch = The 2D array of endpoints and control points for this bezier patch.
-//   u = The proportion of the way along the first dimension of the patch to find the point of.  0<=`u`<=1
-//   v = The proportion of the way along the second dimension of the patch to find the point of.  0<=`v`<=1
+//   u = The proportion of the way along the horizontal inner list of the patch to find the point of.  0<=`u`<=1.  If given as a list or range of values, returns a list of point lists.
+//   v = The proportion of the way along the vertical outer list of the patch to find the point of.  0<=`v`<=1.  If given as a list or range of values, returns a list of point lists.
 // Example(3D):
 //   patch = [
 //       [[-50, 50,  0], [-16, 50,  20], [ 16, 50,  20], [50, 50,  0]],
@@ -895,9 +891,26 @@ module trace_bezier(bez, N=3, size=1) {
 //       [[-50,-50,  0], [-16,-50,  20], [ 16,-50,  20], [50,-50,  0]]
 //   ];
 //   trace_bezier_patches(patches=[patch], size=1, showcps=true);
-//   pt = bezier_patch_point(patch, 0.6, 0.75);
+//   pt = bezier_patch_points(patch, 0.6, 0.75);
 //   translate(pt) color("magenta") sphere(d=3, $fn=12);
-function bezier_patch_point(patch, u, v) = bez_point([for (bez = patch) bez_point(bez, u)], v);
+// Example(3D): Getting Multiple Points at Once
+//   patch = [
+//       [[-50, 50,  0], [-16, 50,  20], [ 16, 50,  20], [50, 50,  0]],
+//       [[-50, 16, 20], [-16, 16,  40], [ 16, 16,  40], [50, 16, 20]],
+//       [[-50,-16, 20], [-16,-16,  40], [ 16,-16,  40], [50,-16, 20]],
+//       [[-50,-50,  0], [-16,-50,  20], [ 16,-50,  20], [50,-50,  0]]
+//   ];
+//   trace_bezier_patches(patches=[patch], size=1, showcps=true);
+//   pts = bezier_patch_points(patch, [0:0.2:1], [0:0.2:1]);
+//   for (row=pts) move_copies(row) color("magenta") sphere(d=3, $fn=12);
+function bezier_patch_points(patch, u, v) =
+	is_num(u) && is_num(v)? bezier_points([for (bez = patch) bezier_points(bez, u)], v) :
+	assert(is_num(u) || !is_undef(u[0]))
+	assert(is_num(v) || !is_undef(v[0]))
+	let(
+		vbezes = [for (i = idx(patch[0])) bezier_points(subindex(patch,i), is_num(u)? [u] : u)]
+	)
+	[for (i = idx(vbezes[0])) bezier_points(subindex(vbezes,i), is_num(v)? [v] : v)];
 
 
 // Function: bezier_triangle_point()
@@ -967,10 +980,12 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".
 // Example(3D):
 //   patch = [
-//       [[-50, 50,  0], [-16, 50, -20], [ 16, 50,  20], [50, 50,  0]],
-//       [[-50, 16, 20], [-16, 16, -20], [ 16, 16,  20], [50, 16, 20]],
+//       // u=0,v=0                                         u=1,v=0
+//       [[-50,-50,  0], [-16,-50,  20], [ 16,-50, -20], [50,-50,  0]],
 //       [[-50,-16, 20], [-16,-16,  20], [ 16,-16, -20], [50,-16, 20]],
-//       [[-50,-50,  0], [-16,-50,  20], [ 16,-50, -20], [50,-50,  0]]
+//       [[-50, 16, 20], [-16, 16, -20], [ 16, 16,  20], [50, 16, 20]],
+//       [[-50, 50,  0], [-16, 50, -20], [ 16, 50,  20], [50, 50,  0]],
+//       // u=0,v=1                                         u=1,v=1
 //   ];
 //   vnf = bezier_patch(patch, splinesteps=16);
 //   vnf_polyhedron(vnf);
@@ -984,10 +999,12 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //   vnf_polyhedron(vnf);
 // Example(3DFlatSpin): Chaining Patches
 //   patch = [
-//   	[[0,  0,0], [33,  0,  0], [67,  0,  0], [100,  0,0]],
-//   	[[0, 33,0], [33, 33, 33], [67, 33, 33], [100, 33,0]],
-//   	[[0, 67,0], [33, 67, 33], [67, 67, 33], [100, 67,0]],
-//   	[[0,100,0], [33,100,  0], [67,100,  0], [100,100,0]],
+//       // u=0,v=0                                u=1,v=0
+//       [[0,  0,0], [33,  0,  0], [67,  0,  0], [100,  0,0]],
+//       [[0, 33,0], [33, 33, 33], [67, 33, 33], [100, 33,0]],
+//       [[0, 67,0], [33, 67, 33], [67, 67, 33], [100, 67,0]],
+//       [[0,100,0], [33,100,  0], [67,100,  0], [100,100,0]],
+//       // u=0,v=1                                u=1,v=1
 //   ];
 //   vnf1 = bezier_patch(translate(p=patch,[-50,-50,50]));
 //   vnf2 = bezier_patch(vnf=vnf1, rot(a=[90,0,0],p=translate(p=patch,[-50,-50,50])));
@@ -996,23 +1013,27 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //   vnf5 = bezier_patch(vnf=vnf4, rot(a=[0,90,0],p=translate(p=patch,[-50,-50,50])));
 //   vnf6 = bezier_patch(vnf=vnf5, rot(a=[0,-90,0],p=translate(p=patch,[-50,-50,50])));
 //   vnf_polyhedron(vnf6);
-// Example(3D): Chaining Patches with Asymmetric Splinesteps
+// Example(3D): Connecting Patches with Asymmetric Splinesteps
 //   steps = 8;
 //   edge_patch = [
+//       // u=0, v=0                    u=1,v=0
 //       [[-60, 0,-40], [0, 0,-40], [60, 0,-40]],
 //       [[-60, 0,  0], [0, 0,  0], [60, 0,  0]],
 //       [[-60,40,  0], [0,40,  0], [60,40,  0]],
+//       // u=0, v=1                    u=1,v=1
 //   ];
 //   corner_patch = [
-//       [[40,  0,-40], [ 0,  0,-40], [ 0, 40,-40]],
-//       [[40,  0,  0], [ 0,  0,  0], [ 0, 40,  0]],
-//       [[40, 40,  0], [40, 40,  0], [40, 40,  0]]
+//       // u=0, v=0                    u=1,v=0
+//       [[ 0, 40,-40], [ 0,  0,-40], [40,  0,-40]],
+//       [[ 0, 40,  0], [ 0,  0,  0], [40,  0,  0]],
+//       [[40, 40,  0], [40, 40,  0], [40, 40,  0]],
+//       // u=0, v=1                    u=1,v=1
 //   ];
 //   face_patch = bezier_patch_flat([120,120],orient=LEFT);
 //   edges = [
 //       for (axrot=[[0,0,0],[0,90,0],[0,0,90]], xang=[-90:90:180])
 //       bezier_patch(
-//           splinesteps=[1,steps],
+//           splinesteps=[steps,1],
 //           rot(a=axrot,
 //               p=rot(a=[xang,0,0],
 //                   p=translate(v=[0,-100,100],p=edge_patch)
@@ -1021,7 +1042,7 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //       )
 //   ];
 //   corners = [
-//       for (zang=[0,180], xang=[-90:90:180])
+//       for (xang=[0,180], zang=[-90:90:180])
 //       bezier_patch(
 //           splinesteps=steps,
 //           rot(a=[xang,0,zang],
@@ -1035,7 +1056,7 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //           splinesteps=1,
 //           rot(a=axrot,
 //               p=rot(a=[0,0,zang],
-//                   p=translate(v=[-100,0,0], p=face_patch)
+//                   p=move([-100,0,0], p=face_patch)
 //               )
 //           )
 //       )
@@ -1043,22 +1064,19 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //   vnf_polyhedron(concat(edges,corners,faces));
 function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF, style="default") =
 	assert(is_num(splinesteps) || is_vector(splinesteps,2))
-	is_tripatch(patch) ? _bezier_triangle(patch, splinesteps=splinesteps, vnf=vnf) :
+	is_tripatch(patch)? _bezier_triangle(patch, splinesteps=splinesteps, vnf=vnf) :
 	let(
 		splinesteps = is_list(splinesteps) ? splinesteps : [splinesteps,splinesteps],
-		bpatch = [
-			for(step=[0:1:splinesteps.x]) [
-				for(patchline=patch)
-				bez_point(patchline, step/splinesteps.x)
-			]
+		uvals = [
+			for(step=[0:1:splinesteps.x])
+			step/splinesteps.x
 		],
-		pts = [
-			for(step=[0:1:splinesteps.y]) [
-		              for(bezparm=bpatch)
-				bez_point(bezparm, step/splinesteps.y)
-			]
+		vvals = [
+			for(step=[0:1:splinesteps.y])
+			1-step/splinesteps.y
 		],
-		vnf = vnf_vertex_array(pts, style=style, vnf=vnf, reverse=true)
+		pts = bezier_patch_points(patch, uvals, vvals),
+		vnf = vnf_vertex_array(pts, style=style, vnf=vnf, reverse=false)
 	) vnf;
 
 
@@ -1147,16 +1165,16 @@ function patch_reverse(patch) = [for (row=patch) reverse(row)];
 //   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".
 // Example(3D):
 //   patch1 = [
-//   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
-//   	[[ 0,40,0], [ 0,  0,100], [100,  0, 20], [100, 40,0]],
-//   	[[ 0,60,0], [ 0,100,100], [100,100, 20], [100, 60,0]],
-//   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//       [[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
+//       [[ 0,40,0], [ 0,  0,100], [100,  0, 20], [100, 40,0]],
+//       [[ 0,60,0], [ 0,100,100], [100,100, 20], [100, 60,0]],
+//       [[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
 //   ];
 //   patch2 = [
-//   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
-//   	[[ 0,40,0], [ 0,  0,-50], [100,  0,-50], [100, 40,0]],
-//   	[[ 0,60,0], [ 0,100,-50], [100,100,-50], [100, 60,0]],
-//   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//       [[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//       [[ 0,60,0], [ 0,100,-50], [100,100,-50], [100, 60,0]],
+//       [[ 0,40,0], [ 0,  0,-50], [100,  0,-50], [100, 40,0]],
+//       [[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
 //   ];
 //   vnf = bezier_surface(patches=[patch1, patch2], splinesteps=16);
 //   polyhedron(points=vnf[0], faces=vnf[1]);
@@ -1185,16 +1203,16 @@ function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="defaul
 //   convexity = Max number of times a line could intersect a wall of the shape.
 // Example:
 //   patch1 = [
-//   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
-//   	[[ 0,40,0], [ 0,  0, 20], [100,  0, 20], [100, 40,0]],
-//   	[[ 0,60,0], [ 0,100, 20], [100,100,100], [100, 60,0]],
-//   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//       [[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
+//       [[ 0,40,0], [ 0,  0, 20], [100,  0, 20], [100, 40,0]],
+//       [[ 0,60,0], [ 0,100, 20], [100,100,100], [100, 60,0]],
+//       [[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
 //   ];
 //   patch2 = [
-//   	[[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
-//   	[[ 0,40,0], [ 0,  0,-50], [100,  0,-50], [100, 40,0]],
-//   	[[ 0,60,0], [ 0,100,-50], [100,100,-50], [100, 60,0]],
-//   	[[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//       [[18,82,0], [33,100,  0], [ 67,100,  0], [ 82, 82,0]],
+//       [[ 0,60,0], [ 0,100,-50], [100,100,-50], [100, 60,0]],
+//       [[ 0,40,0], [ 0,  0,-50], [100,  0,-50], [100, 40,0]],
+//       [[18,18,0], [33,  0,  0], [ 67,  0,  0], [ 82, 18,0]],
 //   ];
 //   bezier_polyhedron([patch1, patch2], splinesteps=8);
 module bezier_polyhedron(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="default", convexity=10)
@@ -1223,16 +1241,16 @@ module bezier_polyhedron(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="defau
 //   convexity = Max number of times a line could intersect a wall of the shape.
 // Example:
 //   patch1 = [
-//   	[[15,15,0], [33,  0,  0], [ 67,  0,  0], [ 85, 15,0]],
-//   	[[ 0,33,0], [33, 33, 50], [ 67, 33, 50], [100, 33,0]],
-//   	[[ 0,67,0], [33, 67, 50], [ 67, 67, 50], [100, 67,0]],
-//   	[[15,85,0], [33,100,  0], [ 67,100,  0], [ 85, 85,0]],
+//       [[15,15,0], [33,  0,  0], [ 67,  0,  0], [ 85, 15,0]],
+//       [[ 0,33,0], [33, 33, 50], [ 67, 33, 50], [100, 33,0]],
+//       [[ 0,67,0], [33, 67, 50], [ 67, 67, 50], [100, 67,0]],
+//       [[15,85,0], [33,100,  0], [ 67,100,  0], [ 85, 85,0]],
 //   ];
 //   patch2 = [
-//   	[[15,15,0], [33,  0,  0], [ 67,  0,  0], [ 85, 15,0]],
-//   	[[ 0,33,0], [33, 33,-50], [ 67, 33,-50], [100, 33,0]],
-//   	[[ 0,67,0], [33, 67,-50], [ 67, 67,-50], [100, 67,0]],
-//   	[[15,85,0], [33,100,  0], [ 67,100,  0], [ 85, 85,0]],
+//       [[15,85,0], [33,100,  0], [ 67,100,  0], [ 85, 85,0]],
+//       [[ 0,67,0], [33, 67,-50], [ 67, 67,-50], [100, 67,0]],
+//       [[ 0,33,0], [33, 33,-50], [ 67, 33,-50], [100, 33,0]],
+//       [[15,15,0], [33,  0,  0], [ 67,  0,  0], [ 85, 15,0]],
 //   ];
 //   trace_bezier_patches(patches=[patch1, patch2], splinesteps=8, showcps=true);
 module trace_bezier_patches(patches=[], size, splinesteps=16, showcps=true, showdots=false, showpatch=true, convexity=10, style="default")

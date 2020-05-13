@@ -1,5 +1,4 @@
 include <BOSL2/std.scad>
-include <BOSL2/beziers.scad>
 
 //$fa=2;
 //$fs=2;
