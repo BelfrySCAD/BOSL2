@@ -1454,5 +1454,146 @@ function polygon_normal(poly) =
 	) unit(n);
 
 
+function _split_polygon_at_x(poly, x) =
+	let(
+		xs = subindex(poly,0)
+	) (min(xs) >= x || max(xs) <= x)? [poly] :
+	let(
+		poly2 = [
+			for (p = pair_wrap(poly)) each [
+				p[0],
+				if(
+					(p[0].x < x && p[1].x > x) ||
+					(p[1].x < x && p[0].x > x)
+				) let(
+					u = (x - p[0].x) / (p[1].x - p[0].x)
+				) [
+					x,  // Important for later exact match tests
+					u*(p[1].y-p[0].y)+p[0].y,
+					u*(p[1].z-p[0].z)+p[0].z,
+				]
+			]
+		],
+		out1 = [for (p = poly2) if(p.x <= x) p],
+		out2 = [for (p = poly2) if(p.x >= x) p],
+		out = [
+			if (len(out1)>=3) out1,
+			if (len(out2)>=3) out2,
+		]
+	) out;
+
+
+function _split_polygon_at_y(poly, y) =
+	let(
+		ys = subindex(poly,1)
+	) (min(ys) >= y || max(ys) <= y)? [poly] :
+	let(
+		poly2 = [
+			for (p = pair_wrap(poly)) each [
+				p[0],
+				if(
+					(p[0].y < y && p[1].y > y) ||
+					(p[1].y < y && p[0].y > y)
+				) let(
+					u = (y - p[0].y) / (p[1].y - p[0].y)
+				) [
+					u*(p[1].x-p[0].x)+p[0].x,
+					y,  // Important for later exact match tests
+					u*(p[1].z-p[0].z)+p[0].z,
+				]
+			]
+		],
+		out1 = [for (p = poly2) if(p.y <= y) p],
+		out2 = [for (p = poly2) if(p.y >= y) p],
+		out = [
+			if (len(out1)>=3) out1,
+			if (len(out2)>=3) out2,
+		]
+	) out;
+
+
+function _split_polygon_at_z(poly, z) =
+	let(
+		zs = subindex(poly,1)
+	) (min(zs) >= z || max(zs) <= z)? [poly] :
+	let(
+		poly2 = [
+			for (p = pair_wrap(poly)) each [
+				p[0],
+				if(
+					(p[0].z < z && p[1].z > z) ||
+					(p[1].z < z && p[0].z > z)
+				) let(
+					u = (z - p[0].z) / (p[1].z - p[0].z)
+				) [
+					u*(p[1].x-p[0].x)+p[0].x,
+					u*(p[1].y-p[0].y)+p[0].y,
+					z,  // Important for later exact match tests
+				]
+			]
+		],
+		out1 = [for (p = poly2) if(p.z <= z) p],
+		out2 = [for (p = poly2) if(p.z >= z) p],
+		out = [
+			if (len(out1)>=3) out1,
+			if (len(out2)>=3) out2,
+		]
+	) out;
+
+
+// Function: split_polygons_at_each_x()
+// Usage:
+//   splitpolys = split_polygons_at_each_x(polys, xs);
+// Description:
+//   Given a list of 3D polygons, splits all of them wherever they cross any X value given in `xs`.
+// Arguments:
+//   polys = A list of 3D polygons to split.
+//   xs = A list of scalar X values to split at.
+function split_polygons_at_each_x(polys, xs, _i=0) =
+	_i>=len(xs)? polys :
+	split_polygons_at_each_x(
+		[
+			for (poly = polys)
+			each _split_polygon_at_x(poly, xs[_i])
+		], xs, _i=_i+1
+	);
+
+
+// Function: split_polygons_at_each_y()
+// Usage:
+//   splitpolys = split_polygons_at_each_y(polys, ys);
+// Description:
+//   Given a list of 3D polygons, splits all of them wherever they cross any Y value given in `ys`.
+// Arguments:
+//   polys = A list of 3D polygons to split.
+//   ys = A list of scalar Y values to split at.
+function split_polygons_at_each_y(polys, ys, _i=0) =
+	_i>=len(ys)? polys :
+	split_polygons_at_each_y(
+		[
+			for (poly = polys)
+			each _split_polygon_at_y(poly, ys[_i])
+		], ys, _i=_i+1
+	);
+
+
+// Function: split_polygons_at_each_z()
+// Usage:
+//   splitpolys = split_polygons_at_each_z(polys, zs);
+// Description:
+//   Given a list of 3D polygons, splits all of them wherever they cross any Z value given in `zs`.
+// Arguments:
+//   polys = A list of 3D polygons to split.
+//   zs = A list of scalar Z values to split at.
+function split_polygons_at_each_z(polys, zs, _i=0) =
+	_i>=len(zs)? polys :
+	split_polygons_at_each_z(
+		[
+			for (poly = polys)
+			each _split_polygon_at_z(poly, zs[_i])
+		], zs, _i=_i+1
+	);
+
+
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -397,6 +397,87 @@ function vnf_centroid(vnf) =
 	) val[1]/val[0]/8;
 
 
+function _triangulate_planar_convex_polygons(polys) =
+	polys==[]? [] :
+	let(
+		tris = [for (poly=polys) if (len(poly)==3) poly],
+		bigs = [for (poly=polys) if (len(poly)>3) poly],
+		newtris = [for (poly=bigs) select(poly,-2,0)],
+		newbigs = [for (poly=bigs) select(poly,0,-2)],
+		newtris2 = _triangulate_planar_convex_polygons(newbigs),
+		outtris = concat(tris, newtris, newtris2)
+	) outtris;
+
+
+// Function: vnf_bend_around_y_axis()
+// Usage:
+//   bentvnf = vnf_bend_around_y_axis(vnf);
+// Description:
+//   Given a VNF that is entirely above, or entirely below the Z=0 plane, bends the VNF around the
+//   Y axis, splitting up faces as necessary.  Returns the bent VNF.  Will error out if the VNF
+//   straddles the Z=0 plane, or if the bent VNF would wrap more than completely around.  The 1:1
+//   radius is where the curved length of the bent VNF matches the length of the original VNF.  If the
+//   `r` or `d` arguments are given, then they will specify the 1:1 radius or diameter.  If they are
+//   not given, then the 1:1 radius will be defined by the distance of the furthest vertex in the
+//   original VNF from the Z=0 plane.  You can adjust the granularity of the bend using the standard
+//   `$fa`, `$fs`, and `$fn` variables.
+// Arguments:
+//   vnf = The original VNF to bend.
+//   r = If given, the radius where the size of the original shape is the same as in the original.
+//   d = If given, the diameter where the size of the original shape is the same as in the original.
+// Example(3D):
+//   vnf0 = cube([100,40,10], center=true);
+//   vnf1 = up(35, p=vnf0);
+//   vnf2 = down(50, p=vnf0);
+//   bent1 = vnf_bend_around_y_axis(vnf1);
+//   bent2 = vnf_bend_around_y_axis(vnf2);
+//   vnf_polyhedron([bent1,bent2]);
+// Example(3D):
+//   vnf0 = linear_sweep(star(n=5,step=2,d=100), height=10);
+//   vnf1 = up(35, p=vnf0);
+//   vnf2 = down(50, p=vnf0);
+//   bent1 = vnf_bend_around_y_axis(vnf1);
+//   bent2 = vnf_bend_around_y_axis(vnf2);
+//   vnf_polyhedron([bent1,bent2]);
+// Example(3D):
+//   rgn = union(rect([100,20],center=true), rect([20,100],center=true));
+//   vnf0 = linear_sweep(zrot(45,p=rgn), height=10);
+//   vnf1 = up(35, p=vnf0);
+//   vnf2 = down(50, p=vnf0);
+//   bent1 = vnf_bend_around_y_axis(vnf1);
+//   bent2 = vnf_bend_around_y_axis(vnf2);
+//   vnf_polyhedron([bent1,bent2]);
+function vnf_bend_around_y_axis(vnf,r,d) =
+	let(
+		vnf = vnf_triangulate(vnf),
+		verts = vnf[0],
+		bounds = pointlist_bounds(verts),
+		bmin = bounds[0],
+		bmax = bounds[1],
+		r = get_radius(r=r,d=d,dflt=max(abs(bmax.z), abs(bmin.z))),
+		width = bmax.x - bmin.x
+	)
+	assert(bmin.z > 0 || bmax.z < 0, "Entire shape MUST be completely above or below z=0.")
+	assert(width <= 2*PI*r, "Shape would wrap more than completely around the cylinder.")
+	let(
+		min_ang = 180 * bmin.x / (PI * r),
+		max_ang = 180 * bmax.x / (PI * r),
+		ang_span = max_ang-min_ang,
+		steps = ceil(segs(r) * ang_span/360),
+		step = width / steps,
+		bend_at = [for(i = [1:1:steps-1]) i*step+bmin.x],
+		facepolys = [for (face=vnf[1]) select(verts,face)],
+		splits = split_polygons_at_each_x(facepolys, bend_at),
+		newtris = _triangulate_planar_convex_polygons(splits),
+		bent_faces = [
+			for (tri = newtris) [
+				for (p = tri) let(
+					a = 180*p.x/(r*PI) * sign(bmax.z)
+				) [p.z*sin(a), p.y, p.z*cos(a)]
+			]
+		]
+	) vnf_add_faces(faces=bent_faces);
+
 
 // Function&Module: vnf_validate()
 // Usage: As Function
