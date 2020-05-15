@@ -1238,5 +1238,34 @@ function path_length_fractions(path, closed=false) =
 	) partial_len / total_len;
 
 
+// Function: resample_path()
+// Usage: resample_path(path, N|spacing, [closed])
+// Description:
+//   Compute a uniform resampling of the input path.  If you specify `N` then the output path will have N
+//   points spaced uniformly (by linear interpolation along the input path segments).  The only points of the
+//   input path that are guaranteed to appear in the output path are the starting and ending points.
+//   If you specify `spacing` then the length you give will be rounded to the nearest spacing that gives
+//   a uniform sampling of the path and the resulting uniformly sampled path is returned.
+//   Note that because this function operates on a discrete input path the quality of the output depends on
+//   the sampling of the input.  If you want very accurate output, use a lot of points for the input.
+// Arguments:
+//   path = path to resample
+//   N = Number of points in output
+//   spacing = Approximate spacing desired
+//   closed = set to true if path is closed.  Default: false
+function resample_path(path, N, spacing, closed=false) =
+   assert(is_path(path))
+   assert(num_defined([N,spacing])==1,"Must define exactly one of N and spacing")
+   assert(is_bool(closed))
+   let(
+	length = path_length(path,closed),
+	N = is_def(N) ? N : round(length/spacing) + (closed?0:1), 
+        spacing = length/(closed?N:N-1),     // Note: worried about round-off error, so don't include 
+        distlist = list_range(closed?N:N-1,step=spacing),  // last point when closed=false
+	cuts = path_cut(path, distlist, closed=closed)
+   )
+   concat(subindex(cuts,0),closed?[]:[select(path,-1)]);  // Then add last point here
+
+
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
