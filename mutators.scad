@@ -314,6 +314,65 @@ module chain_hull()
 
 
 //////////////////////////////////////////////////////////////////////
+// Section: Warp Mutators
+//////////////////////////////////////////////////////////////////////
+
+// Module: cylindrical_extrude()
+// Usage:
+//   cylindrical_extrude(size, ir|id, or|od, [convexity]) ...
+// Description:
+//   Cylindrically extrudes all 2D children, curved around a cylidrical shape.
+// Arguments:
+//   or = The outer radius to extrude to.
+//   od = The outer diameter to extrude to.
+//   ir = The inner radius to extrude from.
+//   id = The inner diameter to extrude from.
+//   size = The [X,Y] size of the 2D children to extrude.  Default: [1000,1000]
+//   convexity = The max number of times a line could pass though a wall.  Default: 10
+//   spin = Amount in degrees to spin around cylindrical axis.  Default: 0
+//   orient = The orientation of the cylinder to wrap around, given as a vector.  Default: UP
+// Example:
+//   cylindrical_extrude(or=50, ir=45)
+//       text(text="Hello World!", size=10, halign="center", valign="center");
+// Example: Spin Around the Cylindrical Axis
+//   cylindrical_extrude(or=50, ir=45, spin=90)
+//       text(text="Hello World!", size=10, halign="center", valign="center");
+// Example: Orient to the Y Axis.
+//   cylindrical_extrude(or=40, ir=35, orient=BACK)
+//       text(text="Hello World!", size=10, halign="center", valign="center");
+module cylindrical_extrude(or, ir, od, id, size=1000, convexity=10, spin=0, orient=UP) {
+	assert(is_num(size) || is_vector(size,2));
+	size = is_num(size)? [size,size] : size;
+	ir = get_radius(r=ir,d=id);
+	or = get_radius(r=or,d=od);
+	index_r = or;
+	circumf = 2 * PI * index_r;
+	width = min(size.x + 1, circumf);
+	assert(width <= circumf, "Shape would more than completely wrap around.");
+	steps = ceil(segs(or) * width / circumf);
+	step = quant(width / steps, 1/32768);
+	rot(from=UP, to=orient) rot(spin) xrot(90) {
+		for (i=[0:1:steps-2]) {
+			x = (i+0.5) * step - width/2;
+			yrot(360 * x / circumf) {
+				up(or) {
+					zflip() {
+						linear_extrude(height=or-ir, scale=ir/or, center=false, convexity=convexity) {
+							intersection() {
+								left(x) children();
+								rect([step,size.y+1],center=true);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
+//////////////////////////////////////////////////////////////////////
 // Section: Offset Mutators
 //////////////////////////////////////////////////////////////////////
 
