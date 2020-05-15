@@ -1136,6 +1136,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
   assert(is_integer(symmetry) && symmetry>0, "symmetry must be a positive integer")
   assert(is_path(shape,2), "shape must be a 2d path")
   assert(is_path(path), "input path is not a path")
+  assert(!closed || !approx(path[0],select(path,-1)), "Closed path includes start point at the end")
   let(
     path = path3d(path),
     caps = is_def(caps) ? caps :
