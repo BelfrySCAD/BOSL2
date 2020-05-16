@@ -347,20 +347,22 @@ module cylindrical_extrude(or, ir, od, id, size=1000, convexity=10, spin=0, orie
 	or = get_radius(r=or,d=od);
 	index_r = or;
 	circumf = 2 * PI * index_r;
-	width = min(size.x + 1, circumf);
+	width = min(size.x, circumf);
 	assert(width <= circumf, "Shape would more than completely wrap around.");
-	steps = ceil(segs(or) * width / circumf);
-	step = quant(width / steps, 1/32768);
-	rot(from=UP, to=orient) rot(spin) xrot(90) {
+	sides = segs(or);
+	step = circumf / sides;
+	steps = ceil(width / step);
+	rot(from=UP, to=orient) rot(spin) {
 		for (i=[0:1:steps-2]) {
-			x = (i+0.5) * step - width/2;
-			yrot(360 * x / circumf) {
-				up(or) {
-					zflip() {
-						linear_extrude(height=or-ir, scale=ir/or, center=false, convexity=convexity) {
+			x = (i+0.5-steps/2) * step;
+			zrot(360 * x / circumf) {
+				fwd(or*cos(180/sides)) {
+					xrot(-90) {
+						linear_extrude(height=or-ir, scale=[ir/or,1], center=false, convexity=convexity) {
+							yflip()
 							intersection() {
 								left(x) children();
-								rect([step,size.y+1],center=true);
+								rect([step,size.y],center=true);
 							}
 						}
 					}
