@@ -428,25 +428,25 @@ function _triangulate_planar_convex_polygons(polys) =
 //   axis = The axis to wrap around.  "X", "Y", or "Z".  Default: "Z"
 // Example(3D):
 //   vnf0 = cube([100,40,10], center=true);
-//   vnf1 = up(35, p=vnf0);
+//   vnf1 = up(50, p=vnf0);
 //   vnf2 = down(50, p=vnf0);
-//   bent1 = vnf_bend(vnf1);
-//   bent2 = vnf_bend(vnf2);
+//   bent1 = vnf_bend(vnf1, axis="Y");
+//   bent2 = vnf_bend(vnf2, axis="Y");
 //   vnf_polyhedron([bent1,bent2]);
 // Example(3D):
 //   vnf0 = linear_sweep(star(n=5,step=2,d=100), height=10);
-//   vnf1 = up(35, p=vnf0);
+//   vnf1 = up(50, p=vnf0);
 //   vnf2 = down(50, p=vnf0);
-//   bent1 = vnf_bend(vnf1);
-//   bent2 = vnf_bend(vnf2);
+//   bent1 = vnf_bend(vnf1, axis="Y");
+//   bent2 = vnf_bend(vnf2, axis="Y");
 //   vnf_polyhedron([bent1,bent2]);
 // Example(3D):
 //   rgn = union(rect([100,20],center=true), rect([20,100],center=true));
 //   vnf0 = linear_sweep(zrot(45,p=rgn), height=10);
-//   vnf1 = up(35, p=vnf0);
+//   vnf1 = up(50, p=vnf0);
 //   vnf2 = down(50, p=vnf0);
-//   bent1 = vnf_bend(vnf1);
-//   bent2 = vnf_bend(vnf2);
+//   bent1 = vnf_bend(vnf1, axis="Y");
+//   bent2 = vnf_bend(vnf2, axis="Y");
 //   vnf_polyhedron([bent1,bent2]);
 // Example(3D): Bending Around X Axis.
 //   rgnr = union(
