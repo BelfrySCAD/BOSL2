@@ -1514,7 +1514,7 @@ function _split_polygon_at_y(poly, y) =
 
 function _split_polygon_at_z(poly, z) =
 	let(
-		zs = subindex(poly,1)
+		zs = subindex(poly,2)
 	) (min(zs) >= z || max(zs) <= z)? [poly] :
 	let(
 		poly2 = [
