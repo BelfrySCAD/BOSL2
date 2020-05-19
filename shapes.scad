@@ -839,7 +839,7 @@ module tube(
 	od=undef, od1=undef, od2=undef,
 	ir=undef, id=undef, ir1=undef,
 	ir2=undef, id1=undef, id2=undef,
-	anchor, spin=0, orient=UP, 
+	anchor, spin=0, orient=UP,
 	center, realign=false, l
 ) {
 	h = first_defined([h,l,1]);
@@ -857,6 +857,97 @@ module tube(
 				cyl(h=h, r1=r1, r2=r2, $fn=sides) children();
 				cyl(h=h+0.05, r1=ir1, r2=ir2);
 			}
+		}
+		children();
+	}
+}
+
+
+// Module: rect_tube()
+// Usage:
+//   rect_tube(size, wall, h, [center]);
+//   rect_tube(isize, wall, h, [center]);
+//   rect_tube(size, isize, h, [center]);
+//   rect_tube(size1, size2, wall, h, [center]);
+//   rect_tube(isize1, isize2, wall, h, [center]);
+//   rect_tube(size1, size2, isize1, isize2, h, [center]);
+// Description:
+//   Creates a rectangular tube.
+// Arguments:
+//   size = The outer [X,Y] size of the rectangular tube.
+//   isize = The inner [X,Y] size of the rectangular tube.
+//   h|l = The height or length of the rectangular tube.  Default: 1
+//   wall = The thickness of the rectangular tube wall.
+//   size1 = The [X,Y] side of the outside of the bottom of the rectangular tube.
+//   size2 = The [X,Y] side of the outside of the top of the rectangular tube.
+//   isize1 = The [X,Y] side of the inside of the bottom of the rectangular tube.
+//   isize2 = The [X,Y] side of the inside of the top of the rectangular tube.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `BOTTOM`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Examples:
+//   rect_tube(size=50, wall=5, h=30);
+//   rect_tube(size=[100,60], wall=5, h=30);
+//   rect_tube(isize=[60,80], wall=5, h=30);
+//   rect_tube(size=[100,60], isize=[90,50], h=30);
+//   rect_tube(size1=[100,60], size2=[70,40], wall=5, h=30);
+//   rect_tube(size1=[100,60], size2=[70,40], isize1=[40,20], isize2=[65,35], h=15);
+module rect_tube(
+	size, isize,
+	h, wall,
+	size1, size2,
+	isize1, isize2,
+	anchor, spin=0, orient=UP,
+	center, l
+) {
+	h = first_defined([h,l,1]);
+	assert(is_num(h), "l or h argument required.");
+	s1 = is_num(size1)? [size1, size1] :
+		is_vector(size1,2)? size1 :
+		is_num(size)? [size, size] :
+		is_vector(size,2)? size :
+		undef;
+	s2 = is_num(size2)? [size2, size2] :
+		is_vector(size2,2)? size2 :
+		is_num(size)? [size, size] :
+		is_vector(size,2)? size :
+		undef;
+	is1 = is_num(isize1)? [isize1, isize1] :
+		is_vector(isize1,2)? isize1 :
+		is_num(isize)? [isize, isize] :
+		is_vector(isize,2)? isize :
+		undef;
+	is2 = is_num(isize2)? [isize2, isize2] :
+		is_vector(isize2,2)? isize2 :
+		is_num(isize)? [isize, isize] :
+		is_vector(isize,2)? isize :
+		undef;
+	size1 = is_def(s1)? s1 :
+		(is_def(wall) && is_def(is1))? (is1+[wall,wall]) :
+		undef;
+	size2 = is_def(s2)? s2 :
+		(is_def(wall) && is_def(is2))? (is2+[wall,wall]) :
+		undef;
+	isize1 = is_def(is1)? is1 :
+		(is_def(wall) && is_def(s1))? (s1-[wall,wall]) :
+		undef;
+	isize2 = is_def(is2)? is2 :
+		(is_def(wall) && is_def(s2))? (s2-[wall,wall]) :
+		undef;
+	assert(wall==undef || is_num(wall));
+	assert(size1!=undef, "Bad size/size1 argument.");
+	assert(size2!=undef, "Bad size/size2 argument.");
+	assert(isize1!=undef, "Bad isize/isize1 argument.");
+	assert(isize2!=undef, "Bad isize/isize2 argument.");
+	assert(isize1.x < size1.x, "Inner size is larger than outer size.");
+	assert(isize1.y < size1.y, "Inner size is larger than outer size.");
+	assert(isize2.x < size2.x, "Inner size is larger than outer size.");
+	assert(isize2.y < size2.y, "Inner size is larger than outer size.");
+	anchor = get_anchor(anchor, center, BOT, BOT);
+	attachable(anchor,spin,orient, size=[each size1, h], size2=size2) {
+		difference() {
+			prismoid(size1, size2, h=h, anchor=CTR);
+			prismoid(isize1, isize2, h=h+0.05, anchor=CTR);
 		}
 		children();
 	}
