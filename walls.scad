@@ -71,10 +71,10 @@ module narrowing_strut(w=10, l=100, wall=5, ang=30, anchor=BOTTOM, spin=0, orien
 //   h = Height of wall.
 //   l = Length of wall.  If given as a vector of two numbers, specifies bottom and top lengths, respectively.
 //   thick = Thickness of wall.
-//   wall = The thickness of the thinned portion of the wall.
+//   wall = The thickness of the thinned portion of the wall.  Default: `thick/2`
 //   ang = Maximum overhang angle of diagonal brace.
 //   braces = If true, adds diagonal crossbraces for strength.
-//   strut = The width of the borders and diagonal braces.
+//   strut = The width of the borders and diagonal braces.  Default: `thick/2`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -85,10 +85,12 @@ module narrowing_strut(w=10, l=100, wall=5, ang=30, anchor=BOTTOM, spin=0, orien
 //   thinning_wall(h=50, l=[80,50], thick=4);
 // Example: Trapezoidal with Braces
 //   thinning_wall(h=50, l=[80,50], thick=4, strut=4, wall=2, braces=true);
-module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut=5, wall=2, anchor=CENTER, spin=0, orient=UP)
+module thinning_wall(h=50, l=100, thick=5, ang=30, braces=false, strut, wall, anchor=CENTER, spin=0, orient=UP)
 {
 	l1 = (l[0] == undef)? l : l[0];
 	l2 = (l[1] == undef)? l : l[1];
+	strut = is_num(strut)? strut : min(h,l1,l2,thick)/2;
+	wall = is_num(wall)? wall : thick/2;
 
 	bevel_h = strut + (thick-wall)/2/tan(ang);
 	cp1 = find_circle_2tangents([0,0,h/2], [l2/2,0,h/2], [l1/2,0,-h/2], r=strut)[0];
