@@ -882,6 +882,18 @@ module tube(
 //   size2 = The [X,Y] side of the outside of the top of the rectangular tube.
 //   isize1 = The [X,Y] side of the inside of the bottom of the rectangular tube.
 //   isize2 = The [X,Y] side of the inside of the top of the rectangular tube.
+//   rounding = The roundover radius for the outside edges of the rectangular tube.
+//   rounding1 = The roundover radius for the outside bottom corner of the rectangular tube.
+//   rounding2 = The roundover radius for the outside top corner of the rectangular tube.
+//   chamfer = The chamfer size for the outside edges of the rectangular tube.
+//   chamfer1 = The chamfer size for the outside bottom corner of the rectangular tube.
+//   chamfer2 = The chamfer size for the outside top corner of the rectangular tube.
+//   irounding = The roundover radius for the inside edges of the rectangular tube. Default: Same as `rounding`
+//   irounding1 = The roundover radius for the inside bottom corner of the rectangular tube.
+//   irounding2 = The roundover radius for the inside top corner of the rectangular tube.
+//   ichamfer = The chamfer size for the inside edges of the rectangular tube.  Default: Same as `chamfer`
+//   ichamfer1 = The chamfer size for the inside bottom corner of the rectangular tube.
+//   ichamfer2 = The chamfer size for the inside top corner of the rectangular tube.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -892,11 +904,40 @@ module tube(
 //   rect_tube(size=[100,60], isize=[90,50], h=30);
 //   rect_tube(size1=[100,60], size2=[70,40], wall=5, h=30);
 //   rect_tube(size1=[100,60], size2=[70,40], isize1=[40,20], isize2=[65,35], h=15);
+// Example: Outer Rounding Only
+//   rect_tube(size=100, wall=5, rounding=10, irounding=0, h=30);
+// Example: Outer Chamfer Only
+//   rect_tube(size=100, wall=5, chamfer=5, ichamfer=0, h=30);
+// Example: Outer Rounding, Inner Chamfer
+//   rect_tube(size=100, wall=5, rounding=10, ichamfer=8, h=30);
+// Example: Inner Rounding, Outer Chamfer
+//   rect_tube(size=100, wall=5, chamfer=10, irounding=8, h=30);
+// Example: Gradiant Rounding
+//   rect_tube(size1=100, size2=80, wall=5, rounding1=10, rounding2=0, irounding1=8, irounding2=0, h=30);
+// Example: Per Corner Rounding
+//   rect_tube(size=100, wall=10, rounding=[0,5,10,15], irounding=0, h=30);
+// Example: Per Corner Chamfer
+//   rect_tube(size=100, wall=10, chamfer=[0,5,10,15], ichamfer=0, h=30);
+// Example: Mixing Chamfer and Rounding
+//   rect_tube(size=100, wall=10, chamfer=[0,5,0,10], ichamfer=0, rounding=[5,0,10,0], irounding=0, h=30);
+// Example: Really Mixing It Up
+//   rect_tube(
+//       size1=[100,80], size2=[80,60],
+//       isize1=[50,30], isize2=[70,50], h=20,
+//       chamfer1=[0,5,0,10], ichamfer1=[0,3,0,8],
+//       chamfer2=[5,0,10,0], ichamfer2=[3,0,8,0],
+//       rounding1=[5,0,10,0], irounding1=[3,0,8,0],
+//       rounding2=[0,5,0,10], irounding2=[0,3,0,8]
+//   );
 module rect_tube(
 	size, isize,
 	h, wall,
 	size1, size2,
 	isize1, isize2,
+	rounding=0, rounding1, rounding2,
+	irounding, irounding1, irounding2,
+	chamfer=0, chamfer1, chamfer2,
+	ichamfer, ichamfer1, ichamfer2,
 	anchor, spin=0, orient=UP,
 	center, l
 ) {
@@ -923,17 +964,67 @@ module rect_tube(
 		is_vector(isize,2)? isize :
 		undef;
 	size1 = is_def(s1)? s1 :
-		(is_def(wall) && is_def(is1))? (is1+[wall,wall]) :
+		(is_def(wall) && is_def(is1))? (is1+2*[wall,wall]) :
 		undef;
 	size2 = is_def(s2)? s2 :
-		(is_def(wall) && is_def(is2))? (is2+[wall,wall]) :
+		(is_def(wall) && is_def(is2))? (is2+2*[wall,wall]) :
 		undef;
 	isize1 = is_def(is1)? is1 :
-		(is_def(wall) && is_def(s1))? (s1-[wall,wall]) :
+		(is_def(wall) && is_def(s1))? (s1-2*[wall,wall]) :
 		undef;
 	isize2 = is_def(is2)? is2 :
-		(is_def(wall) && is_def(s2))? (s2-[wall,wall]) :
+		(is_def(wall) && is_def(s2))? (s2-2*[wall,wall]) :
 		undef;
+	rounding1 = is_num(rounding1)? rounding1 :
+		is_vector(rounding1,4)? rounding1 :
+		is_num(rounding)? rounding :
+		is_vector(rounding,4)? rounding :
+		assert(false, "Bad rounding/rounding1 argument.");
+	rounding2 = is_num(rounding2)? rounding2 :
+		is_vector(rounding2,4)? rounding2 :
+		is_num(rounding)? rounding :
+		is_vector(rounding,4)? rounding :
+		assert(false, "Bad rounding/rounding2 argument.");
+	chamfer1 = is_num(chamfer1)? chamfer1 :
+		is_vector(chamfer1,4)? chamfer1 :
+		is_num(chamfer)? chamfer :
+		is_vector(chamfer,4)? chamfer :
+		assert(false, "Bad chamfer/chamfer1 argument.");
+	chamfer2 = is_num(chamfer2)? chamfer2 :
+		is_vector(chamfer2,4)? chamfer2 :
+		is_num(chamfer)? chamfer :
+		is_vector(chamfer,4)? chamfer :
+		assert(false, "Bad chamfer/chamfer2 argument.");
+	irounding1 = is_num(irounding1)? irounding1 :
+		is_vector(irounding1,4)? irounding1 :
+		is_num(irounding)? irounding :
+		is_vector(irounding,4)? irounding :
+		is_num(rounding)? rounding :
+		is_vector(rounding,4)? rounding :
+		assert(false, "Bad irounding/irounding1 argument.");
+	irounding2 = is_num(irounding2)? irounding2 :
+		is_vector(irounding2,4)? irounding2 :
+		is_num(irounding)? irounding :
+		is_vector(irounding,4)? irounding :
+		is_num(rounding)? rounding :
+		is_vector(rounding,4)? rounding :
+		assert(false, "Bad irounding/irounding2 argument.");
+	ichamfer1 = is_num(ichamfer1)? ichamfer1 :
+		is_vector(ichamfer1,4)? ichamfer1 :
+		is_num(ichamfer)? ichamfer :
+		is_vector(ichamfer,4)? ichamfer :
+		is_num(irounding1) && irounding1>0? 0 :
+		is_num(chamfer)? chamfer :
+		is_vector(chamfer,4)? chamfer :
+		assert(false, "Bad ichamfer/ichamfer1 argument.");
+	ichamfer2 = is_num(ichamfer2)? ichamfer2 :
+		is_vector(ichamfer2,4)? ichamfer2 :
+		is_num(ichamfer)? ichamfer :
+		is_vector(ichamfer,4)? ichamfer :
+		is_num(irounding2) && irounding2>0? 0 :
+		is_num(chamfer)? chamfer :
+		is_vector(chamfer,4)? chamfer :
+		assert(false, "Bad ichamfer/ichamfer2 argument.");
 	assert(wall==undef || is_num(wall));
 	assert(size1!=undef, "Bad size/size1 argument.");
 	assert(size2!=undef, "Bad size/size2 argument.");
@@ -946,8 +1037,22 @@ module rect_tube(
 	anchor = get_anchor(anchor, center, BOT, BOT);
 	attachable(anchor,spin,orient, size=[each size1, h], size2=size2) {
 		difference() {
-			prismoid(size1, size2, h=h, anchor=CTR);
-			prismoid(isize1, isize2, h=h+0.05, anchor=CTR);
+			if (chamfer1==0 && chamfer2==0 && rounding1==0 && rounding2==0) {
+				prismoid(size1, size2, h=h, anchor=CTR);
+			} else {
+				hull() {
+					up(h/2) linear_extrude(height=0.01, convexity=10) rect(size2, rounding=rounding2, chamfer=chamfer2, anchor=CTR);
+					down(h/2) linear_extrude(height=0.01, convexity=10) rect(size1, rounding=rounding1, chamfer=chamfer1, anchor=CTR);
+				}
+			}
+			if (ichamfer1==0 && ichamfer2==0 && irounding1==0 && irounding2==0) {
+				prismoid(isize1, isize2, h=h+0.05, anchor=CTR);
+			} else {
+				hull() {
+					up(h/2) linear_extrude(height=0.1, center=true, convexity=10) rect(isize2, rounding=irounding2, chamfer=ichamfer2, anchor=CTR);
+					down(h/2) linear_extrude(height=0.1, center=true, convexity=10) rect(isize1, rounding=irounding1, chamfer=ichamfer1, anchor=CTR);
+				}
+			}
 		}
 		children();
 	}
