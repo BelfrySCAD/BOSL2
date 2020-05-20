@@ -219,7 +219,7 @@ function round_corners(path, curve="circle", measure="cut", size=undef,  k=0.5, 
 		have_size = size==undef ? 0 : 1,
 		pathsize_ok = is_num(pathdim) && pathdim >= 3-have_size && pathdim <= 4-have_size,
 		size_ok = !have_size || is_num(size) ||
-			is_list(size) && ((len(size)==2 && curve=="smooth") || len(size)==len(path)-(closed?0:1))
+			is_list(size) && ((len(size)==2 && curve=="smooth") || len(size)==len(path))
 	)
 	assert(curve=="smooth" || curve=="circle" || curve=="chamfer", "Unknown 'curve' setting in round_corners")
 	assert(measureok, curve=="circle"?
@@ -1457,7 +1457,7 @@ function patch_transform(transform,patch) =
 //   debug = turn on debug mode which displays illegal polyhedra and shows the bezier corner patches for troubleshooting purposes.  Default: False
 //   convexity = convexity parameter for polyhedron(), only for module version.  Default: 10
 // Example: Uniformly rounded pentagonal prism
-//   rounded_prism(pentagon(3), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
+   rounded_prism(pentagon(3), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
 // Example: Maximum possible rounding.  
 //   rounded_prism(pentagon(3), height=3, joint_top=1.5, joint_bot=1.5, joint_sides=1.5);
 // Example: Decreasing k from the default of 0.5 to 0.3 gives a smoother round over which takes up more space, so it appears less rounded.  
@@ -1664,6 +1664,202 @@ function rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_
     debug ? [corner_patches, vnf] : vnf;
 
 
+
+
+
+// Converts a 2d path to a path on a cylinder at radius r
+function _cyl_hole(r, path) = 
+    [for(point=path) cylindrical_to_xyz(concat([r],xscale(360/(2*PI*r),p=point)))];
+
+// Mask profile of 180 deg of a circle to round an edge
+function _circle_mask(r) =
+   let(eps=0.1)
+
+   fwd(r+.01,p=
+   [
+    [r+eps,0],
+    each arc(r=r, angle=[0, 180]),
+    [-r-eps,0],
+    [-r-eps, r+3*eps],
+    [r+eps, r+3*eps]
+   ]);
+
+
+// Module: bent_cutout_mask()
+// Usage: bent_cutout_mask(r|radius,thickness,path)
+// Description:
+//   Creates a mask for cutting a round-edged hole out of a vertical cylindrical shell.  The specified radius
+//   is the center radius of the cylindrical shell.  The path needs to be sampled finely enough
+//   so that it can follow the curve of the cylinder.  The thickness may need to be slighly oversized to
+//   handle the faceting of the cylinder.  The path is wrapped around a cylinder, keeping the
+//   same dimensions that is has on the plane, with y axis mapping to the z axis and the x axis bending
+//   around the curve of the cylinder.  The angular span of the path on the cylinder must be somewhat
+//   less than 180 degrees, and the path shouldn't have closely spaced points at concave points of high curvature because
+//   this will cause self-intersection in the mask polyhedron, resulting in CGAL failures.  
+// Arguments:
+//   r|radius = center radius of the cylindrical shell to cut a hole in
+//   thickness = thickness of cylindrical shell (may need to be slighly oversized)
+//   path = 2d path that defines the hole to cut
+// Example: The mask as long pointed ends because this was the most efficient way to close off those ends.  
+//   bent_cutout_mask(10, 1, apply(xscale(3),circle(r=3)),$fn=64);
+// Example: An elliptical hole.  Note the thickness is slightly increased to 1.05 compared to the actual thickness of 1.  
+//   $fn=128;
+//   rot(-90)
+//   difference(){
+//     cyl(r=10.5, h=10);
+//     cyl(r=9.5, h=11);
+//     bent_cutout_mask(10, 1.05, apply(xscale(3),circle(r=3)),$fn=64);
+//   }
+// Example: An elliptical hole in a thick cylinder
+//   $fn=128;
+//   rot(-90)
+//   difference(){
+//     cyl(r=14.5, h=15);
+//     cyl(r=9.5, h=16);
+//     bent_cutout_mask(12, 5.1, apply(xscale(3),circle(r=3)));
+//   }
+// Example: Complex shape example
+//   rot(-90)
+//   difference(){
+//     cyl(r=10.5, h=10, $fn=128);
+//     cyl(r=9.5, h=11, $fn=128);
+//     bent_cutout_mask(10, 1.05, apply(scale(3),supershape(step=2,m1=5, n1=0.3,n2=1.7)),$fn=32);
+//   }
+// Example: this shape is invalid to to self-intersections at the inner corners
+//   $fn=128;
+//   rot(-90)
+//   difference(){
+//     cylinder(r=10.5, h=10,center=true);
+//     cylinder(r=9.5, h=11,center=true);
+//     bent_cutout_mask(10, 1.05, apply(scale(3),supershape(step=2,m1=5, n1=0.1,n2=1.7)),$fn=32);
+//   }
+// Example: this shape is invalid due to self-intersections at the inner corners
+//   $fn=128;
+//   rot(-90)
+//   difference(){
+//     cylinder(r=10.5, h=10,center=true);
+//     cylinder(r=9.5, h=11,center=true);
+//     bent_cutout_mask(10, 1.05, apply(scale(3),supershape(step=12,m1=5, n1=0.1,n2=1.7)),$fn=32);
+//   }
+// Example: increasing the step gives a valid shape, but the shape looks terrible with so few points.
+//   $fn=128;
+//   rot(-90)
+//   difference(){
+//     cylinder(r=10.5, h=10,center=true);
+//     cylinder(r=9.5, h=11,center=true);
+//     bent_cutout_mask(10, 1.05, apply(scale(3),supershape(step=12,m1=5, n1=0.1,n2=1.7)),$fn=32);
+//   }
+// Example: uniform resampling produces a somewhat better result, but room remains for improvement.  The lesson is that concave corners in your cutout cause trouble.  To get a very good result we need to non-uniformly sample the supershape with more points at the star tips and few points at the inner corners.  
+//   $fn=128;
+//   rot(-90)
+//   difference(){
+//     cylinder(r=10.5, h=10,center=true);
+//     cylinder(r=9.5, h=11,center=true);
+//     bent_cutout_mask(10, 1.05, apply(scale(3),resample_path(supershape(step=1,m1=5, n1=0.10,n2=1.7),60,closed=true)),$fn=32);     
+//   }
+// Example: The cutout spans 177 degrees.  If you decrease the tube radius to 2.5 the cutout spans over 180 degrees and the calculation fails.
+//   $fn=128;
+//   r=2.6;     // Don't make this much smaller or it will fail
+//   rot(-90)
+//   difference(){
+//     tube(or=r, wall=1, h=10, anchor=CENTER);
+//     bent_cutout_mask(r-0.5, 1.05, apply(scale(3),supershape(step=1,m1=5, n1=0.15,n2=1.7)),$fn=32);
+//   }
+// Example: A square hole is not as simple as it seems.  The model valid, but wrong, because the square didn't have enough samples to follow the curvature of the cylinder.  
+//   $fn=128;
+//   r=25;
+//   rot(-90)
+//   difference(){
+//     tube(or=r, wall=2, h=45);
+//     bent_cutout_mask(r-1, 2.1, back(5,p=square([18,18])));
+//   }
+// Example: Adding additional points fixed this problem
+//   $fn=128;
+//   r=25;
+//   rot(-90)
+//   difference(){
+//     tube(or=r, wall=2, h=45);
+//     bent_cutout_mask(r-1, 2.1, subdivide_path(back(5,p=square([18,18])),64,closed=true));
+//   }
+// Example: Rounding just the exterior corners of this star avoids the problems we had above with concave corners of the supershape, as long as we don't oversample the star.  
+//   $fn=128;
+//   r=25;
+//   rot(-90)
+//   difference(){
+//     tube(or=r, wall=2, h=45);
+//     bent_cutout_mask(r-1, 2.1, apply(back(15),subdivide_path(round_corners(star(n=7,ir=5,or=10), size=0.5*[1,0,1,0,1,0,1,0,1,0,1,0,1,0]),14*15,closed=true)));   
+//   }
+// Example(2D): Cutting a slot in a cylinder is tricky if you want rounded corners at the top.  This slot profile has slightly angled top edges to blend into the top edge of the cylinder.
+//   function slot(slotwidth, slotheight, slotradius) =
+//     let( angle = 85,
+//          slot = round_corners(
+//     		 turtle(["right",
+//     		         "move", slotwidth,
+//     		 	  "left", angle,
+//     		 	  "move", 2*slotwidth,
+//     		 	  "right", angle,
+//     		 	  "move", slotheight,
+//     		 	  "left",
+//     		 	  "move", slotwidth,
+//     		 	  "left",
+//     		 	  "move", slotheight,
+//     		 	  "right", angle,
+//     		 	  "move", 2*slotwidth,
+//     		 	  "left", angle,
+//     		   	  "move", slotwidth]),
+//     		 measure="radius", size=[0,0,each repeat(slotradius,4),0], closed=false))
+//      apply(left(max(subindex(slot,0))/2)*fwd(min(subindex(slot,1))), slot);
+//   stroke(slot(15,29,7));
+// Example: A cylindrical container with rounded edges and a rounded finger slot.
+   function slot(slotwidth, slotheight, slotradius) =
+     let( angle = 85,
+          slot = round_corners(
+     		 turtle(["right",
+     		         "move", slotwidth,
+     		 	  "left", angle,
+     		 	  "move", 2*slotwidth,
+     		 	  "right", angle,
+     		 	  "move", slotheight,
+     		 	  "left",
+     		 	  "move", slotwidth,
+     		 	  "left",
+     		 	  "move", slotheight,
+     		 	  "right", angle,
+     		 	  "move", 2*slotwidth,
+     		 	  "left", angle,
+     		   	  "move", slotwidth]),
+     		 measure="radius", size=[0,0,each repeat(slotradius,4),0,0], closed=false))
+      apply(left(max(subindex(slot,0))/2)*fwd(min(subindex(slot,1))), slot);
+   $fn=128;
+   diam = 80;
+   wall = 4;
+   height = 40;
+   rot(-90)
+   difference(){
+     cyl(d=diam, rounding=wall/2, h=height, anchor=BOTTOM);
+     up(wall)cyl(d=diam-2*wall, rounding1=wall, rounding2=-wall/2, h=height-wall+.01, anchor=BOTTOM);
+     bent_cutout_mask(diam/2-wall/2, wall+.1, subdivide_path(apply(back(10),slot(15, 29, 7)),250));
+   }  
+
+module bent_cutout_mask(r, thickness, path, convexity=10)
+{
+  assert(is_path(path,2),"Input path must be a 2d path")
+  assert(r-thickness>0, "Thickness too large for radius");
+  assert(thickness>0, "Thickness must be positive");
+  path = clockwise_polygon(path);
+  curvepoints = arc(d=thickness, angle = [-180,0]);
+  profiles = [for(pt=curvepoints) _cyl_hole(r+pt.x,apply(xscale((r+pt.x)/r), offset(path,delta=thickness/2+pt.y,check_valid=false,closed=true)))];
+  pathx = subindex(path,0);
+  minangle = (min(pathx)-thickness/2)*360/(2*PI*r);
+  maxangle = (max(pathx)+thickness/2)*360/(2*PI*r);
+  mindist = (r+thickness/2)/cos((maxangle-minangle)/2);
+  echo(maxangle,minangle, maxangle-minangle);
+  assert(maxangle-minangle<180,"Cutout angle span is too large.  Must be smaller than 180.");
+  zmean = mean(subindex(path,1));
+  innerzero = repeat([0,0,zmean], len(path));
+  outerpt = repeat( [1.5*mindist*cos((maxangle+minangle)/2),1.5*mindist*sin((maxangle+minangle)/2),zmean], len(path));  
+  vnf_polyhedron(vnf_vertex_array([innerzero, each profiles, outerpt],col_wrap=true),convexity=convexity);
+}
+
+
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
-
-
