@@ -177,7 +177,7 @@ function one_defined(vars, names, required=true) =
    let (
      ok = num_defined(vars)==1 || (!required && num_defined(vars)==0)
    )
-   assert(ok,str("Must define ",required?"exactly":"at most"," one of ",[for(i=[0:len(vars)]) if (is_def(vars[i])) names[i]]))
+   assert(ok,str("Must define ",required?"exactly":"at most"," one of ",num_defined(vars)==0?names:[for(i=[0:len(vars)]) if (is_def(vars[i])) names[i]]))
    first_defined(vars);
 
 
