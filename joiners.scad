@@ -527,8 +527,8 @@ module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, bac
 		is_def(radius) && radius>0 ? radius : 0;
 	type = is_def(chamfer) && chamfer>0 ? "chamfer" : "circle";
 
-	fullsize = round ? [0,size,size] :
-		gender == "male" ? [0,size,0] : [0,0,size];
+	fullsize = round ? [size,size] :
+		gender == "male" ? [size,0] : [0,size];
 
 	smallend_half = round_corners(
 		move(
@@ -540,7 +540,7 @@ module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, bac
 				[width/2 - front_offset + height, 0, 0]
 			]
 		),
-		curve=type, size=fullsize, closed=false
+		method=type, cut = fullsize, closed=false
 	);
 	smallend_points = concat(select(smallend_half, 1, -2), [down(extra,p=select(smallend_half, -2))]);
 	offset = is_def(taper) ? -(length+extra) * tan(taper) :
