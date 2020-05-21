@@ -151,7 +151,7 @@ include <vnf.scad>
 // Example: Vaccum connector example from list-comprehension-demos
 //   include <BOSL2/rounding.scad>
 //   $fn=32;
-//   base = round_corners(square([2,4],center=true), measure="radius", size=0.5);
+//   base = round_corners(square([2,4],center=true), radius=0.5);
 //   skin([
 //       path3d(base,0),
 //       path3d(base,2),
