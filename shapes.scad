@@ -355,18 +355,25 @@ module cuboid(
 // Example(FlatSpin): Shifting/Skewing
 //   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]);
 // Example: Rounding
-//   prismoid(100, rounding=10, h=30);
+//   include <BOSL2/hull.scad>
+//   prismoid(100, 80, rounding=10, h=30);
 // Example: Outer Chamfer Only
-//   prismoid(100, chamfer=5, h=30);
+//   include <BOSL2/hull.scad>
+//   prismoid(100, 80, chamfer=5, h=30);
 // Example: Gradiant Rounding
+//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, rounding1=10, rounding2=0, h=30);
 // Example: Per Corner Rounding
+//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, rounding=[0,5,10,15], h=30);
 // Example: Per Corner Chamfer
+//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, chamfer=[0,5,10,15], h=30);
 // Example: Mixing Chamfer and Rounding
+//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, chamfer=[0,5,0,10], rounding=[5,0,10,0], h=30);
 // Example: Really Mixing It Up
+//   include <BOSL2/hull.scad>
 //   prismoid(
 //       size1=[100,80], size2=[80,60], h=20,
 //       chamfer1=[0,5,0,10], chamfer2=[5,0,10,0],
