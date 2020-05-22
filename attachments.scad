@@ -130,7 +130,7 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 //   l = Length of the cylindrical/conical volume along axis.
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   path = The path to generate a polygon from.
-//   extent = If true, calculate anchors by extents, rather than intersection.  Default: false.
+//   extent = If true, calculate anchors by extents, rather than intersection.  Default: true.
 //   offset = If given, offsets the center of the volume.
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
