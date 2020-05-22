@@ -1164,14 +1164,14 @@ module spheroid(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orie
 		if (style=="orig") {
 			rotate_extrude(convexity=2,$fn=sides) {
 				difference() {
-					zrot(180/sides) oval(r=r, circum=circum, $fn=sides);
+					oval(r=r, circum=circum, $fn=sides);
 					left(r) square(2*r,center=true);
 				}
 			}
 		} else if (style=="aligned") {
 			rotate_extrude(convexity=2,$fn=sides) {
 				difference() {
-					oval(r=r, circum=circum, $fn=sides);
+					zrot(180/sides) oval(r=r, circum=circum, $fn=sides);
 					left(r) square(2*r,center=true);
 				}
 			}
