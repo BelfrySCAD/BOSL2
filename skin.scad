@@ -151,7 +151,7 @@ include <vnf.scad>
 // Example: Vaccum connector example from list-comprehension-demos
 //   include <BOSL2/rounding.scad>
 //   $fn=32;
-//   base = round_corners(square([2,4],center=true), measure="radius", size=0.5);
+//   base = round_corners(square([2,4],center=true), radius=0.5);
 //   skin([
 //       path3d(base,0),
 //       path3d(base,2),
@@ -351,7 +351,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
                in_list(DUPLICATOR,method_type) ? "segment" : "length" 
   )
   assert(len(refine)==len(profiles), "refine list is the wrong length")
-  assert(len(slices)==profcount, "slices list is the wrong length")
+  assert(len(slices)==profcount, str("slices list must have length ",profcount))
   assert(slicesOK==[],str("slices must be nonnegative integers"))
   assert(refineOK==[],str("refine must be postive integer"))
   assert(methodok,str("method must be one of ",legal_methods,". Got ",method))
@@ -394,7 +394,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
              resampled = [for(i=idx(profiles)) subdivide_path(profiles[i], max_list[i], method=sampling)],
              fixedprof = [for(i=idx(profiles)) 
                              i==0 || method[i-1]=="direct" ? resampled[i]
-                                                         :echo("reindexing") reindex_polygon(resampled[i-1],resampled[i])],
+                                                         : reindex_polygon(resampled[i-1],resampled[i])],
              sliced = slice_profiles(fixedprof, slices, closed)            
             )
             !closed ? sliced : concat(sliced,[sliced[0]])
@@ -415,7 +415,8 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
           )
           each subdivide_and_slice(pair,slices[i], nsamples, method=sampling)]
   )
-  _skin_core(full_list,caps=fullcaps);
+  vnf_vertex_array(full_list,cap1=fullcaps[0], col_wrap=true, cap2=fullcaps[1],style="alt");
+//  _skin_core(full_list, caps=fullcaps);
 
 
 

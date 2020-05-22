@@ -267,17 +267,18 @@ function vnf_vertex_array(
 ) =
 	assert((!caps)||(caps&&col_wrap))
 	assert(in_list(style,["default","alt","quincunx"]))
+        assert(is_consistent(points), "Non-rectangular or invalid point array")
 	let(
 		pts = flatten(points),
 		pcnt = len(pts),
 		rows = len(points),
 		cols = len(points[0]),
-		errchk = [for (row=points) assert(len(row)==cols, "All rows much have the same number of columns.") 0],
 		cap1 = first_defined([cap1,caps,false]),
 		cap2 = first_defined([cap2,caps,false]),
 		colcnt = cols - (col_wrap?0:1),
 		rowcnt = rows - (row_wrap?0:1)
 	)
+	rows<=1 || cols<=1 ? vnf : 
 	vnf_merge([
 		vnf, [
 			concat(

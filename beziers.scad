@@ -1255,49 +1255,41 @@ module bezier_polyhedron(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="defau
 //   trace_bezier_patches(patches=[patch1, patch2], splinesteps=8, showcps=true);
 module trace_bezier_patches(patches=[], size, splinesteps=16, showcps=true, showdots=false, showpatch=true, convexity=10, style="default")
 {
-	assert(is_undef(size)||is_num(size));
-	assert(is_int(splinesteps) && splinesteps>0);
-	assert(is_list(patches) && all([for (patch=patches) is_patch(patch)]));
-	assert(is_bool(showcps));
-	assert(is_bool(showdots));
-	assert(is_bool(showpatch));
-	assert(is_int(convexity) && convexity>0);
-	vnfs = [
-		for (patch = patches)
-		bezier_patch(patch, splinesteps=splinesteps, style=style)
-	];
-	if (showcps || showdots) {
-		for (patch = patches) {
-			size = is_num(size)? size :
-				let( bounds = pointlist_bounds(flatten(patch)) )
-				max(bounds[1]-bounds[0])*0.01;
-			if (showcps) {
-				move_copies(flatten(patch)) color("red") sphere(d=size*2);
-				color("cyan") {
-					if (is_tripatch(patch)) {
-						for (i=[0:1:len(patch)-2], j=[0:1:len(patch[i])-2]) {
-							extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
-							extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
-							extrude_from_to(patch[i+1][j], patch[i][j+1]) circle(d=size);
-						}
-					} else {
-						for (i=[0:1:len(patch)-1], j=[0:1:len(patch[i])-1]) {
-							if (i<len(patch)-1) extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
-							if (j<len(patch[i])-1) extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
-						}
-					}
-				}
-			}
-			if (showdots){
-				color("blue") move_copies(vnfs[i][0]) sphere(d=size);
-			}
-		}
-	}
-	if (showpatch) {
-		vnf_polyhedron(vnfs, convexity=convexity);
-	}
+    assert(is_undef(size)||is_num(size));
+    assert(is_int(splinesteps) && splinesteps>0);
+    assert(is_list(patches) && all([for (patch=patches) is_patch(patch)]));
+    assert(is_bool(showcps));
+    assert(is_bool(showdots));
+    assert(is_bool(showpatch));
+    assert(is_int(convexity) && convexity>0);
+    for (patch = patches) {
+    	size = is_num(size)? size :
+    	       let( bounds = pointlist_bounds(flatten(patch)) )
+    	       max(bounds[1]-bounds[0])*0.01;
+    	if (showcps) {
+    	    move_copies(flatten(patch)) color("red") sphere(d=size*2);
+    	    color("cyan") {
+    	            if (is_tripatch(patch)) {
+    	                    for (i=[0:1:len(patch)-2], j=[0:1:len(patch[i])-2]) {
+    	                            extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
+    	                            extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
+    	                            extrude_from_to(patch[i+1][j], patch[i][j+1]) circle(d=size);
+    	                    }
+    	            } else {
+    	                    for (i=[0:1:len(patch)-1], j=[0:1:len(patch[i])-1]) {
+    	                            if (i<len(patch)-1) extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
+    	                            if (j<len(patch[i])-1) extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
+    	                    }
+    	            }
+    	    }
+    	}
+    	if (showpatch || showdots){
+    	    vnf = bezier_patch(patch, splinesteps=splinesteps, style=style);
+    	    if (showpatch) vnf_polyhedron(vnf, convexity=convexity);
+    	    if (showdots) color("blue") move_copies(vnf[0]) sphere(d=size);
+    	}
+    }
 }
-
 
 
 // vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
