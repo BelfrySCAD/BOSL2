@@ -909,7 +909,14 @@ module tube(
 //   rect_tube(isize1, isize2, wall, h, [center]);
 //   rect_tube(size1, size2, isize1, isize2, h, [center]);
 // Description:
-//   Creates a rectangular tube.
+//   Creates a rectangular or prismoid tube with optional roundovers and/or chamfers.
+//   You can only round or chamfer the vertical(ish) edges.  For those edges, you can
+//   specify rounding and/or chamferring per-edge, and for top and bottom, inside and
+//   outside  separately.
+//   Note: if using chamfers or rounding, you **must** also include the hull.scad file:
+//   ```
+//   include <BOSL2/hull.scad>
+//   ```
 // Arguments:
 //   size = The outer [X,Y] size of the rectangular tube.
 //   isize = The inner [X,Y] size of the rectangular tube.
@@ -942,22 +949,31 @@ module tube(
 //   rect_tube(size1=[100,60], size2=[70,40], wall=5, h=30);
 //   rect_tube(size1=[100,60], size2=[70,40], isize1=[40,20], isize2=[65,35], h=15);
 // Example: Outer Rounding Only
+//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=5, rounding=10, irounding=0, h=30);
 // Example: Outer Chamfer Only
+//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=5, chamfer=5, ichamfer=0, h=30);
 // Example: Outer Rounding, Inner Chamfer
+//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=5, rounding=10, ichamfer=8, h=30);
 // Example: Inner Rounding, Outer Chamfer
+//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=5, chamfer=10, irounding=8, h=30);
 // Example: Gradiant Rounding
+//   include <BOSL2/hull.scad>
 //   rect_tube(size1=100, size2=80, wall=5, rounding1=10, rounding2=0, irounding1=8, irounding2=0, h=30);
 // Example: Per Corner Rounding
+//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=10, rounding=[0,5,10,15], irounding=0, h=30);
 // Example: Per Corner Chamfer
+//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=10, chamfer=[0,5,10,15], ichamfer=0, h=30);
 // Example: Mixing Chamfer and Rounding
+//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=10, chamfer=[0,5,0,10], ichamfer=0, rounding=[5,0,10,0], irounding=0, h=30);
 // Example: Really Mixing It Up
+//   include <BOSL2/hull.scad>
 //   rect_tube(
 //       size1=[100,80], size2=[80,60],
 //       isize1=[50,30], isize2=[70,50], h=20,
