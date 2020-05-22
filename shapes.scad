@@ -305,25 +305,41 @@ module cuboid(
 // Section: Prismoids
 
 
-// Module: prismoid()
+// Function&Module: prismoid()
+//
+// Usage: As Module
+//   prismoid(size1, size2, h|l, [shift], [rounding], [chamfer]);
+//   prismoid(size1, size2, h|l, [shift], [rounding1], [rounding2], [chamfer1], [chamfer2]);
+// Usage: As Function
+//   vnf = prismoid(size1, size2, h|l, [shift], [rounding], [chamfer]);
+//   vnf = prismoid(size1, size2, h|l, [shift], [rounding1], [rounding2], [chamfer1], [chamfer2]);
 //
 // Description:
-//   Creates a rectangular prismoid shape.
-//
-// Usage:
-//   prismoid(size1, size2, h, [shift]);
+//   Creates a rectangular prismoid shape with optional roundovers and chamfering.
+//   You can only round or chamfer the vertical(ish) edges.  For those edges, you can
+//   specify rounding and/or chamferring per-edge, and for top and bottom separately.
+//   Note: if using chamfers or rounding, you **must** also include the hull.scad file:
+//   ```
+//   include <BOSL2/hull.scad>
+//   ```
 //
 // Arguments:
 //   size1 = [width, length] of the axis-negative end of the prism.
 //   size2 = [width, length] of the axis-positive end of the prism.
-//   h = Height of the prism.
-//   shift = [x, y] amount to shift the center of the top with respect to the center of the bottom.
+//   h|l = Height of the prism.
+//   shift = [X,Y] amount to shift the center of the top with respect to the center of the bottom.
+//   rounding = The roundover radius for the edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
+//   rounding1 = The roundover radius for the bottom corners of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
+//   rounding2 = The roundover radius for the top corners of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
+//   chamfer = The chamfer size for the edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
+//   chamfer1 = The chamfer size for the bottom corners of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
+//   chamfer2 = The chamfer size for the top corners of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //
 // Example: Rectangular Pyramid
-//   prismoid(size1=[40,40], size2=[0,0], h=20);
+//   prismoid([40,40], [0,0], h=20);
 // Example: Prism
 //   prismoid(size1=[40,40], size2=[0,40], h=20);
 // Example: Truncated Pyramid
@@ -338,105 +354,119 @@ module cuboid(
 //   prismoid(size1=[30,60], size2=[0,60], shift=[-15,0], h=30);
 // Example(FlatSpin): Shifting/Skewing
 //   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]);
+// Example: Rounding
+//   prismoid(100, rounding=10, h=30);
+// Example: Outer Chamfer Only
+//   prismoid(100, chamfer=5, h=30);
+// Example: Gradiant Rounding
+//   prismoid(100, 80, rounding1=10, rounding2=0, h=30);
+// Example: Per Corner Rounding
+//   prismoid(100, 80, rounding=[0,5,10,15], h=30);
+// Example: Per Corner Chamfer
+//   prismoid(100, 80, chamfer=[0,5,10,15], h=30);
+// Example: Mixing Chamfer and Rounding
+//   prismoid(100, 80, chamfer=[0,5,0,10], rounding=[5,0,10,0], h=30);
+// Example: Really Mixing It Up
+//   prismoid(
+//       size1=[100,80], size2=[80,60], h=20,
+//       chamfer1=[0,5,0,10], chamfer2=[5,0,10,0],
+//       rounding1=[5,0,10,0], rounding2=[0,5,0,10]
+//   );
 // Example(Spin): Standard Connectors
-//   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]) show_anchors();
+//   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5])
+//       show_anchors();
 module prismoid(
-	size1=[1,1], size2=[1,1], h=1, shift=[0,0],
-	anchor=DOWN, spin=0, orient=UP
+	size1, size2, h, shift=[0,0],
+	rounding=0, rounding1, rounding2,
+	chamfer=0, chamfer1, chamfer2,
+	l, center,
+	anchor, spin=0, orient=UP
 ) {
-	eps = 0.001;
-	shiftby = point3d(point2d(shift));
+	assert(is_num(size1) || is_vector(size1,2));
+	assert(is_num(size2) || is_vector(size2,2));
+	assert(is_num(h) || is_num(l));
+	assert(is_vector(shift,2));
+	assert(is_num(rounding) || is_vector(rounding,4), "Bad rounding argument.");
+	assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "Bad rounding1 argument.");
+	assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "Bad rounding2 argument.");
+	assert(is_num(chamfer) || is_vector(chamfer,4), "Bad chamfer argument.");
+	assert(is_undef(chamfer1) || is_num(chamfer1) || is_vector(chamfer1,4), "Bad chamfer1 argument.");
+	assert(is_undef(chamfer2) || is_num(chamfer2) || is_vector(chamfer2,4), "Bad chamfer2 argument.");
+	eps = pow(2,-14);
+	size1 = is_num(size1)? [size1,size1] : size1;
+	size2 = is_num(size2)? [size2,size2] : size2;
 	s1 = [max(size1.x, eps), max(size1.y, eps)];
 	s2 = [max(size2.x, eps), max(size2.y, eps)];
+	rounding1 = default(rounding1, rounding);
+	rounding2 = default(rounding2, rounding);
+	chamfer1 = default(chamfer1, chamfer);
+	chamfer2 = default(chamfer2, chamfer);
+	anchor = get_anchor(anchor, center, BOT, BOT);
+	vnf = prismoid(
+		size1=size1, size2=size2, h=h, shift=shift,
+		rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+		chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+		l=l, center=CENTER
+	);
 	attachable(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift) {
-		polyhedron(
-			points=[
-				[+s2.x/2, +s2.y/2, +h/2] + shiftby,
-				[+s2.x/2, -s2.y/2, +h/2] + shiftby,
-				[-s2.x/2, -s2.y/2, +h/2] + shiftby,
-				[-s2.x/2, +s2.y/2, +h/2] + shiftby,
-				[+s1.x/2, +s1.y/2, -h/2],
-				[+s1.x/2, -s1.y/2, -h/2],
-				[-s1.x/2, -s1.y/2, -h/2],
-				[-s1.x/2, +s1.y/2, -h/2],
-			],
-			faces=[
-				[0, 1, 2],
-				[0, 2, 3],
-				[0, 4, 5],
-				[0, 5, 1],
-				[1, 5, 6],
-				[1, 6, 2],
-				[2, 6, 7],
-				[2, 7, 3],
-				[3, 7, 4],
-				[3, 4, 0],
-				[4, 7, 6],
-				[4, 6, 5],
-			],
-			convexity=2
-		);
+		vnf_polyhedron(vnf, convexity=4);
 		children();
 	}
 }
 
-
-// Module: rounded_prismoid()
-//
-// Description:
-//   Creates a rectangular prismoid shape with rounded vertical edges.
-//
-// Arguments:
-//   size1 = [width, length] of the bottom of the prism.
-//   size2 = [width, length] of the top of the prism.
-//   h = Height of the prism.
-//   r = radius of vertical edge rounding.
-//   r1 = radius of vertical edge rounding at bottom.
-//   r2 = radius of vertical edge rounding at top.
-//   shift = [x, y] amount to shift the center of the top with respect to the center of the bottom.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//
-// Example: Rounded Pyramid
-//   rounded_prismoid(size1=[40,40], size2=[0,0], h=25, r=5);
-// Example: Disparate Top and Bottom Radii
-//   rounded_prismoid(size1=[40,60], size2=[40,60], h=20, r1=3, r2=10, $fn=24);
-// Example(FlatSpin): Shifting/Skewing
-//   rounded_prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5], r=5);
-// Example(Spin): Standard Connectors
-//   rounded_prismoid(size1=[40,60], size2=[40,60], h=20, r1=3, r2=10, $fn=24) show_anchors();
-module rounded_prismoid(
+function prismoid(
 	size1, size2, h, shift=[0,0],
-	r=undef, r1=undef, r2=undef,
-	edges=EDGES_ALL,
-	anchor=BOTTOM, spin=0, orient=UP
-) {
-	eps = 0.001;
-	maxrad1 = min(size1.x/2, size1.y/2);
-	maxrad2 = min(size2.x/2, size2.y/2);
-	rr1 = min(maxrad1, (r1!=undef)? r1 : r);
-	rr2 = min(maxrad2, (r2!=undef)? r2 : r);
-	shiftby = point3d(shift);
-	attachable(anchor,spin,orient, size=[size1.x, size1.y, h], size2=size2, shift=shift) {
-		down(h/2) {
-			hull() {
-				linear_extrude(height=eps, center=false, convexity=2) {
-					rect(size1, rounding=rr1, center=true);
-				}
-				up(h-0.01) {
-					translate(shiftby) {
-						linear_extrude(height=eps, center=false, convexity=2) {
-							rect(size2, rounding=rr2, center=true);
-						}
-					}
-				}
-			}
-		}
-		children();
-	}
-}
-
+	rounding=0, rounding1, rounding2,
+	chamfer=0, chamfer1, chamfer2,
+	l, center,
+	anchor=DOWN, spin=0, orient=UP
+) =
+	assert(is_vector(size1,2))
+	assert(is_vector(size2,2))
+	assert(is_num(h) || is_num(l))
+	assert(is_vector(shift,2))
+	assert(is_num(rounding) || is_vector(rounding,4), "Bad rounding argument.")
+	assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "Bad rounding1 argument.")
+	assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "Bad rounding2 argument.")
+	assert(is_num(chamfer) || is_vector(chamfer,4), "Bad chamfer argument.")
+	assert(is_undef(chamfer1) || is_num(chamfer1) || is_vector(chamfer1,4), "Bad chamfer1 argument.")
+	assert(is_undef(chamfer2) || is_num(chamfer2) || is_vector(chamfer2,4), "Bad chamfer2 argument.")
+	let(
+		eps = pow(2,-14),
+		h = first_defined([h,l,1]),
+		shiftby = point3d(point2d(shift)),
+		s1 = [max(size1.x, eps), max(size1.y, eps)],
+		s2 = [max(size2.x, eps), max(size2.y, eps)],
+		rounding1 = default(rounding1, rounding),
+		rounding2 = default(rounding2, rounding),
+		chamfer1 = default(chamfer1, chamfer),
+		chamfer2 = default(chamfer2, chamfer),
+		anchor = get_anchor(anchor, center, BOT, BOT),
+		vnf = (rounding1==0 && rounding2==0 && chamfer1==0 && chamfer2==0)? (
+			let(
+				corners = [[1,1],[1,-1],[-1,-1],[-1,1]] * 0.5,
+				points = [
+					for (p=corners) point3d(vmul(s2,p), +h/2) + shiftby,
+					for (p=corners) point3d(vmul(s1,p), -h/2)
+				],
+				faces=[
+					[0,1,2], [0,2,3], [0,4,5], [0,5,1],
+					[1,5,6], [1,6,2], [2,6,7], [2,7,3],
+					[3,7,4], [3,4,0], [4,7,6], [4,6,5],
+				]
+			) [points, faces]
+		) : (
+			let(
+				path1 = rect(size1, rounding=rounding1, chamfer=chamfer1, anchor=CTR),
+				path2 = rect(size2, rounding=rounding2, chamfer=chamfer2, anchor=CTR),
+				points = [
+					each path3d(path1, -h/2),
+					each path3d(move(shiftby, p=path2), +h/2),
+				],
+				faces = hull(points)
+			) [points, faces]
+		)
+	) reorient(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift, p=vnf);
 
 
 // Module: right_triangle()
@@ -931,18 +961,19 @@ module tube(
 //   );
 module rect_tube(
 	size, isize,
-	h, wall,
+	h, shift=[0,0], wall,
 	size1, size2,
 	isize1, isize2,
 	rounding=0, rounding1, rounding2,
-	irounding, irounding1, irounding2,
+	irounding=0, irounding1, irounding2,
 	chamfer=0, chamfer1, chamfer2,
-	ichamfer, ichamfer1, ichamfer2,
+	ichamfer=0, ichamfer1, ichamfer2,
 	anchor, spin=0, orient=UP,
 	center, l
 ) {
 	h = first_defined([h,l,1]);
 	assert(is_num(h), "l or h argument required.");
+	assert(is_vector(shift,2));
 	s1 = is_num(size1)? [size1, size1] :
 		is_vector(size1,2)? size1 :
 		is_num(size)? [size, size] :
@@ -975,56 +1006,6 @@ module rect_tube(
 	isize2 = is_def(is2)? is2 :
 		(is_def(wall) && is_def(s2))? (s2-2*[wall,wall]) :
 		undef;
-	rounding1 = is_num(rounding1)? rounding1 :
-		is_vector(rounding1,4)? rounding1 :
-		is_num(rounding)? rounding :
-		is_vector(rounding,4)? rounding :
-		assert(false, "Bad rounding/rounding1 argument.");
-	rounding2 = is_num(rounding2)? rounding2 :
-		is_vector(rounding2,4)? rounding2 :
-		is_num(rounding)? rounding :
-		is_vector(rounding,4)? rounding :
-		assert(false, "Bad rounding/rounding2 argument.");
-	chamfer1 = is_num(chamfer1)? chamfer1 :
-		is_vector(chamfer1,4)? chamfer1 :
-		is_num(chamfer)? chamfer :
-		is_vector(chamfer,4)? chamfer :
-		assert(false, "Bad chamfer/chamfer1 argument.");
-	chamfer2 = is_num(chamfer2)? chamfer2 :
-		is_vector(chamfer2,4)? chamfer2 :
-		is_num(chamfer)? chamfer :
-		is_vector(chamfer,4)? chamfer :
-		assert(false, "Bad chamfer/chamfer2 argument.");
-	irounding1 = is_num(irounding1)? irounding1 :
-		is_vector(irounding1,4)? irounding1 :
-		is_num(irounding)? irounding :
-		is_vector(irounding,4)? irounding :
-		is_num(rounding)? rounding :
-		is_vector(rounding,4)? rounding :
-		assert(false, "Bad irounding/irounding1 argument.");
-	irounding2 = is_num(irounding2)? irounding2 :
-		is_vector(irounding2,4)? irounding2 :
-		is_num(irounding)? irounding :
-		is_vector(irounding,4)? irounding :
-		is_num(rounding)? rounding :
-		is_vector(rounding,4)? rounding :
-		assert(false, "Bad irounding/irounding2 argument.");
-	ichamfer1 = is_num(ichamfer1)? ichamfer1 :
-		is_vector(ichamfer1,4)? ichamfer1 :
-		is_num(ichamfer)? ichamfer :
-		is_vector(ichamfer,4)? ichamfer :
-		is_num(irounding1) && irounding1>0? 0 :
-		is_num(chamfer)? chamfer :
-		is_vector(chamfer,4)? chamfer :
-		assert(false, "Bad ichamfer/ichamfer1 argument.");
-	ichamfer2 = is_num(ichamfer2)? ichamfer2 :
-		is_vector(ichamfer2,4)? ichamfer2 :
-		is_num(ichamfer)? ichamfer :
-		is_vector(ichamfer,4)? ichamfer :
-		is_num(irounding2) && irounding2>0? 0 :
-		is_num(chamfer)? chamfer :
-		is_vector(chamfer,4)? chamfer :
-		assert(false, "Bad ichamfer/ichamfer2 argument.");
 	assert(wall==undef || is_num(wall));
 	assert(size1!=undef, "Bad size/size1 argument.");
 	assert(size2!=undef, "Bad size/size2 argument.");
@@ -1035,24 +1016,21 @@ module rect_tube(
 	assert(isize2.x < size2.x, "Inner size is larger than outer size.");
 	assert(isize2.y < size2.y, "Inner size is larger than outer size.");
 	anchor = get_anchor(anchor, center, BOT, BOT);
-	attachable(anchor,spin,orient, size=[each size1, h], size2=size2) {
-		difference() {
-			if (chamfer1==0 && chamfer2==0 && rounding1==0 && rounding2==0) {
-				prismoid(size1, size2, h=h, anchor=CTR);
-			} else {
-				hull() {
-					up(h/2) linear_extrude(height=0.01, convexity=10) rect(size2, rounding=rounding2, chamfer=chamfer2, anchor=CTR);
-					down(h/2) linear_extrude(height=0.01, convexity=10) rect(size1, rounding=rounding1, chamfer=chamfer1, anchor=CTR);
-				}
-			}
-			if (ichamfer1==0 && ichamfer2==0 && irounding1==0 && irounding2==0) {
-				prismoid(isize1, isize2, h=h+0.05, anchor=CTR);
-			} else {
-				hull() {
-					up(h/2) linear_extrude(height=0.1, center=true, convexity=10) rect(isize2, rounding=irounding2, chamfer=ichamfer2, anchor=CTR);
-					down(h/2) linear_extrude(height=0.1, center=true, convexity=10) rect(isize1, rounding=irounding1, chamfer=ichamfer1, anchor=CTR);
-				}
-			}
+	attachable(anchor,spin,orient, size=[each size1, h], size2=size2, shift=shift) {
+		diff("_H_o_L_e_")
+		prismoid(
+			size1, size2, h=h, shift=shift,
+			rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+			chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+			anchor=CTR
+		) {
+			children();
+			tags("_H_o_L_e_") prismoid(
+				isize1, isize2, h=h+0.05, shift=shift,
+				rounding=irounding, rounding1=irounding1, rounding2=irounding2,
+				chamfer=ichamfer, chamfer1=ichamfer1, chamfer2=ichamfer2,
+				anchor=CTR
+			);
 		}
 		children();
 	}
