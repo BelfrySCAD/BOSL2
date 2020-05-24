@@ -1106,6 +1106,70 @@ function find_circle_tangents(r, d, cp, pt) =
 
 
 
+// Function: circle_circle_tangents()
+// Usage: circle_circle_tangents(c1, r1|d1, c2, r2|d2)
+// Description:
+//   Computes lines tangents to a pair of circles.  Returns a list of line endpoints [p1,p2] where
+//   p2 is the tangent point on circle 1 and p2 is the tangent point on circle 2.
+//   If four tangents exist then the first one the left hand exterior tangent as regarded looking from
+//   circle 1 toward circle 2.  The second value is the right hand exterior tangent.  The third entry
+//   gives the interior tangent that starts on the left of circle 1 and crosses to the right side of
+//   circle 2.  And the fourth entry is the last interior tangent that starts on the right side of
+//   circle 1.  If the circles intersect then the interior tangents don't exist and the function
+//   returns only two entries.  If one circle is inside the other one then no tangents exist
+//   so the function returns the empty set.  When the circles are tangent a degenerate tangent line
+//   passes through the point of tangency of the two circles:  this degenerate line is NOT returned.  
+// Example(2D): Four tangents, first in green, second in black, third in blue, last in red.  
+//   $fn=32;
+//   c1 = [3,4];  r1 = 2;
+//   c2 = [7,10]; r2 = 3;
+//   pts = circle_circle_tangents(c1,r1,c2,r2);
+//   stroke(move(c1,p=circle(r=r1)),width=.1,closed=true);
+//   stroke(move(c2,p=circle(r=r2)),width=.1,closed=true);
+//   colors = ["green","black","blue","red"];
+//   for(i=[0:len(pts)-1]) color(colors[i]) stroke(pts[i],width=.1);
+// Example(2D): Circles overlap so only exterior tangents exist.
+//   $fn=32;
+//   c1 = [4,4];  r1 = 3;
+//   c2 = [7,7]; r2 = 2;
+//   pts = circle_circle_tangents(c1,r1,c2,r2);
+//   stroke(move(c1,p=circle(r=r1)),width=.1,closed=true);
+//   stroke(move(c2,p=circle(r=r2)),width=.1,closed=true);
+//   colors = ["green","black","blue","red"];
+//   for(i=[0:len(pts)-1]) color(colors[i]) stroke(pts[i],width=.1);
+// Example(2D): Circles are tangent.  Only exterior tangents are returned.  The degenerate internal tangent is not returned.  
+//   $fn=32;
+//   c1 = [4,4];  r1 = 4;
+//   c2 = [4,10]; r2 = 2;
+//   pts = circle_circle_tangents(c1,r1,c2,r2);
+//   stroke(move(c1,p=circle(r=r1)),width=.1,closed=true);
+//   stroke(move(c2,p=circle(r=r2)),width=.1,closed=true);
+//   colors = ["green","black","blue","red"];
+//   for(i=[0:1:len(pts)-1]) color(colors[i]) stroke(pts[i],width=.1);
+// Example(2D): One circle is inside the other: no tangents exist.  If the interior circle is tangent the single degenerate tangent will not be returned.  
+//   $fn=32;
+//   c1 = [4,4];  r1 = 4;
+//   c2 = [5,5];  r2 = 2;
+//   pts = circle_circle_tangents(c1,r1,c2,r2);
+//   stroke(move(c1,p=circle(r=r1)),width=.1,closed=true);
+//    stroke(move(c2,p=circle(r=r2)),width=.1,closed=true);
+//    echo(pts);   // Returns []
+function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
+   let(
+       r1 = get_radius(r1=r1,d1=d1),
+       r2 = get_radius(r1=r2,d1=d2),
+       Rvals = [r2-r1, r2-r1, -r2-r1, -r2-r1]/norm(c1-c2),
+       kvals = [-1,1,-1,1],
+       ext = [1,1,-1,-1],
+       N = 1-sqr(Rvals[2])>=0 ? 4 :
+           1-sqr(Rvals[0])>=0 ? 2 : 0,
+       coef= [for(i=[0:1:N-1]) [[Rvals[i], -kvals[i]*sqrt(1-sqr(Rvals[i]))],
+                                [kvals[i]*sqrt(1-sqr(Rvals[i])), Rvals[i]]]*unit(c2-c1)]
+      )
+   [for(i=[0:1:N-1]) let(pt=[c1-r1*coef[i], c2-ext[i]*r2*coef[i]]) if (pt[0]!=pt[1]) pt];
+
+
+
 // Section: Pointlists
 
 // Function: first_noncollinear()
