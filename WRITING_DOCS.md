@@ -19,8 +19,8 @@ LibFile blocks can be followed by multiple lines that can be added as markdown t
 //   You just need to make sure that each line is indented, with
 //   at least three spaces after the comment marker.  You can
 //   denote a paragraph break with a comment line with three
-//   trailing spaces.
-//   
+//   trailing spaces, or just a period.
+//   .
 //   The end of the block is denoted by a line without a comment.
 ```
 
@@ -33,12 +33,12 @@ Sections can also include Figures; images generated from code that is not shown 
 ```
 // Section: Foobar
 //   You can have several lines of markdown formatted text here.
-//   You just need to make sure that each line is indented with
+//   You just need to make sure that each line is indented, with
 //   at least three spaces after the comment marker.  You can
 //   denote a paragraph break with a comment line with three
-//   trailing spaces.
-//   
-//   The end of the block is denoted by a line without a comment,
+//   trailing spaces, or just a period.
+//   .
+//   The end of the block is denoted by a line without a comment.
 //   or a line that is unindented after the comment.
 // Figure: Figure description
 //   cylinder(h=100, d1=75, d2=50);
@@ -70,25 +70,28 @@ Valid sub-blocks are:
 - `Status: DEPRECATED, use blah instead.` - Optional, used to denote deprecation.
 - `Usage: Optional Usage Title` - Optional.  Multiple allowed.  Followed by an indented block of usage patterns.  Optional arguments should be in braces like `[opt]`.  Alternate args should be separated by a vertical bar like `r|d`. 
 - `Description:` - Can be single-line or a multi-line block of the description.
+- `Figure: Optional Figure Title` - Optional.  Multiple allowed.  Followed by a multi-line code block used to create a figure image.  The code will not be shown.  All figures will follow the Description block.
 - `Arguments:` - Denotes start of an indented block of argument descriptions.  Each line has the argument name, a space, an equals, another space, then the description for the argument all on one line. Like `arg = The argument description`.  If you really need to explain an argument in longer form, explain it in the Description.
 - `Side Effects:` - Denotes the start of a block describing the side effects, such as `$special_var`s that are set.
 - `Extra Anchors:` - Denotes the start of an indented block of available non-standard named anchors for a part.
 - `Example:` - Denotes the beginning of a multi-line example code block.
 - `Examples:` - Denotes the beginning of a block of examples, where each line will be shows as a separate example with a separate image if needed.
 
-Modules blocks will generate images for each example block. Function and Constant blocks will only generate images for example blocks if they have `2D` or `3D` tags.  Example blocks can have tags added by putting then inside parentheses before the colon.  Ie: `Examples(BigFlatSpin):`.
+Modules blocks will generate images for each example or figure block. Function and Constant blocks will only generate images for example blocks if they have `2D` or `3D` tags.  Example and figure blocks can have tags added by putting then inside parentheses before the colon.  Ie: `Examples(BigFlatSpin):` or `Figure(2D):`.
 
 The full set of optional example tags are:
 
 - `2D`: Orient camera in a top-down view for showing 2D objects.
 - `3D`: Orient camera in an oblique view for showing 3D objects. Used to force an Example sub-block to generate an image in Function and Constant blocks.
-- `Spin`: Animate camera orbit around the `[0,1,1]` axis to display all sides of an object.
-- `FlatSpin`: Animate camera orbit around the Z axis, above the XY plane.
-- `Edges`: Highlight face edges.
-- `FR`: Force full rendering from OpenSCAD, instead of the normal preview.
+- `NORENDER`: Don't generate an image for this example.
 - `Small`: Make the image small sized.  (The default)
 - `Med`: Make the image medium sized.
 - `Big`: Make the image big sized.
+- `Huge`: Make the image huge sized.
+- `Spin`: Animate camera orbit around the `[0,1,1]` axis to display all sides of an object.
+- `FlatSpin`: Animate camera orbit around the Z axis, above the XY plane.
+- `FR`: Force full rendering from OpenSCAD, instead of the normal preview.
+- `Edges`: Highlight face edges.
 
 Indentation is important, as it denotes the end of sub-block.
 
@@ -105,11 +108,18 @@ Indentation is important, as it denotes the end of sub-block.
 //   A longer, multi-line description.
 //   All description blocks are added together.
 //   You _can_ use *markdown* notation as well.
-//   You can have paragraph breaks by having a blank line with
-//   only enough trailing spaces to match indentation like this:
-//   
+//   You can have paragraph breaks by having a
+//   line with just a period, like this:
+//   .
 //   You can end multi-line blocks by un-indenting the next
 //   line, or by using a comment with no spaces like this:
+//
+// Figure: Figure description
+//   cylinder(h=100, d1=75, d2=50);
+//   up(100) cylinder(h=100, d1=50, d2=75);
+// Figure(Spin): Animated figure that spins to show all faces.
+//   cube([10,100,50], center=true);
+//   cube([100,10,30], center=true);
 //
 // Arguments:
 //   foo = This is the description of the foo argument.  All on one line.

@@ -82,6 +82,8 @@ def get_comment_block(lines, prefix, blanks=1):
                 break
         else:
             blankcnt = 0
+        if line == ".":
+            line == ""
         out.append(line.rstrip())
     return (lines, out)
 
@@ -233,7 +235,9 @@ class ImageProcessing(object):
         with open(scriptfile, "w") as f:
             f.write(script)
 
-        if "Big" in extype:
+        if "Huge" in extype:
+            imgsize = (800, 600)
+        elif "Big" in extype:
             imgsize = (640, 480)
         elif "Med" in extype or "distribute" in script or "show_anchors" in script:
             imgsize = (480, 360)
