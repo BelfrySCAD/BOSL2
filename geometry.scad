@@ -1124,8 +1124,8 @@ function circle_point_tangents(r, d, cp, pt) =
 //   c1 = [3,4];  r1 = 2;
 //   c2 = [7,10]; r2 = 3;
 //   pts = circle_circle_tangents(c1,r1,c2,r2);
-//   stroke(move(c1,p=circle(r=r1)),width=.1,closed=true);
-//   stroke(move(c2,p=circle(r=r2)),width=.1,closed=true);
+//   move(c1) stroke(circle(r=r1), width=.1, closed=true);
+//   move(c2) stroke(circle(r=r2), width=.1, closed=true);
 //   colors = ["green","black","blue","red"];
 //   for(i=[0:len(pts)-1]) color(colors[i]) stroke(pts[i],width=.1);
 // Example(2D): Circles overlap so only exterior tangents exist.
@@ -1133,8 +1133,8 @@ function circle_point_tangents(r, d, cp, pt) =
 //   c1 = [4,4];  r1 = 3;
 //   c2 = [7,7]; r2 = 2;
 //   pts = circle_circle_tangents(c1,r1,c2,r2);
-//   stroke(move(c1,p=circle(r=r1)),width=.1,closed=true);
-//   stroke(move(c2,p=circle(r=r2)),width=.1,closed=true);
+//   move(c1) stroke(circle(r=r1), width=.1, closed=true);
+//   move(c2) stroke(circle(r=r2), width=.1, closed=true);
 //   colors = ["green","black","blue","red"];
 //   for(i=[0:len(pts)-1]) color(colors[i]) stroke(pts[i],width=.1);
 // Example(2D): Circles are tangent.  Only exterior tangents are returned.  The degenerate internal tangent is not returned.  
@@ -1142,8 +1142,8 @@ function circle_point_tangents(r, d, cp, pt) =
 //   c1 = [4,4];  r1 = 4;
 //   c2 = [4,10]; r2 = 2;
 //   pts = circle_circle_tangents(c1,r1,c2,r2);
-//   stroke(move(c1,p=circle(r=r1)),width=.1,closed=true);
-//   stroke(move(c2,p=circle(r=r2)),width=.1,closed=true);
+//   move(c1) stroke(circle(r=r1), width=.1, closed=true);
+//   move(c2) stroke(circle(r=r2), width=.1, closed=true);
 //   colors = ["green","black","blue","red"];
 //   for(i=[0:1:len(pts)-1]) color(colors[i]) stroke(pts[i],width=.1);
 // Example(2D): One circle is inside the other: no tangents exist.  If the interior circle is tangent the single degenerate tangent will not be returned.  
@@ -1151,22 +1151,32 @@ function circle_point_tangents(r, d, cp, pt) =
 //   c1 = [4,4];  r1 = 4;
 //   c2 = [5,5];  r2 = 2;
 //   pts = circle_circle_tangents(c1,r1,c2,r2);
-//   stroke(move(c1,p=circle(r=r1)),width=.1,closed=true);
-//    stroke(move(c2,p=circle(r=r2)),width=.1,closed=true);
-//    echo(pts);   // Returns []
+//   move(c1) stroke(circle(r=r1), width=.1, closed=true);
+//   move(c2) stroke(circle(r=r2), width=.1, closed=true);
+//   echo(pts);   // Returns []
 function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
-   let(
-       r1 = get_radius(r1=r1,d1=d1),
-       r2 = get_radius(r1=r2,d1=d2),
-       Rvals = [r2-r1, r2-r1, -r2-r1, -r2-r1]/norm(c1-c2),
-       kvals = [-1,1,-1,1],
-       ext = [1,1,-1,-1],
-       N = 1-sqr(Rvals[2])>=0 ? 4 :
-           1-sqr(Rvals[0])>=0 ? 2 : 0,
-       coef= [for(i=[0:1:N-1]) [[Rvals[i], -kvals[i]*sqrt(1-sqr(Rvals[i]))],
-                                [kvals[i]*sqrt(1-sqr(Rvals[i])), Rvals[i]]]*unit(c2-c1)]
-      )
-   [for(i=[0:1:N-1]) let(pt=[c1-r1*coef[i], c2-ext[i]*r2*coef[i]]) if (pt[0]!=pt[1]) pt];
+    let(
+        r1 = get_radius(r1=r1,d1=d1),
+        r2 = get_radius(r1=r2,d1=d2),
+        Rvals = [r2-r1, r2-r1, -r2-r1, -r2-r1]/norm(c1-c2),
+        kvals = [-1,1,-1,1],
+        ext = [1,1,-1,-1],
+        N = 1-sqr(Rvals[2])>=0 ? 4 :
+            1-sqr(Rvals[0])>=0 ? 2 : 0,
+        coef= [
+            for(i=[0:1:N-1]) [
+                [Rvals[i], -kvals[i]*sqrt(1-sqr(Rvals[i]))],
+                [kvals[i]*sqrt(1-sqr(Rvals[i])), Rvals[i]]
+            ] * unit(c2-c1)
+        ]
+    ) [
+        for(i=[0:1:N-1]) let(
+            pt = [
+                c1-r1*coef[i],
+                c2-ext[i]*r2*coef[i]
+            ]
+        ) if (pt[0]!=pt[1]) pt
+    ];
 
 
 
