@@ -1070,9 +1070,9 @@ function find_circle_3points(pt1, pt2, pt3) =
 
 
 
-// Function: find_circle_tangents()
+// Function: circle_point_tangents()
 // Usage:
-//   tangents = find_circle_tangents(r|d, cp, pt);
+//   tangents = circle_point_tangents(r|d, cp, pt);
 // Description:
 //   Given a circle and a point outside that circle, finds the tangent point(s) on the circle for a
 //   line passing through the point.  Returns list of zero or more sublists of [ANG, TANGPT]
@@ -1083,12 +1083,12 @@ function find_circle_3points(pt1, pt2, pt3) =
 //   pt = The coordinates of the external point.
 // Example(2D):
 //   cp = [-10,-10];  r = 30;  pt = [30,10];
-//   tanpts = subindex(find_circle_tangents(r=r, cp=cp, pt=pt),1);
+//   tanpts = subindex(circle_point_tangents(r=r, cp=cp, pt=pt),1);
 //   color("yellow") translate(cp) circle(r=r);
 //   color("cyan") for(tp=tanpts) {stroke([tp,pt]); stroke([tp,cp]);}
 //   color("red") move_copies(tanpts) circle(d=3,$fn=12);
 //   color("blue") move_copies([cp,pt]) circle(d=3,$fn=12);
-function find_circle_tangents(r, d, cp, pt) =
+function circle_point_tangents(r, d, cp, pt) =
 	assert(is_num(r) || is_num(d))
 	assert(is_vector(cp))
 	assert(is_vector(pt))
