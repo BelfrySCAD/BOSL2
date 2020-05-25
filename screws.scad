@@ -1,8 +1,17 @@
-include<std.scad>
-include<structs.scad>
-include<threading.scad>
-include<phillips_drive.scad>
-include<torx_drive.scad>
+//////////////////////////////////////////////////////////////////////
+// LibFile: screws.scad
+//   Functions and modules for creating metric and UTS standard screws and nuts.
+//   To use, add the following lines to the beginning of your file:
+//   ```
+//   include <BOSL2/std.scad>
+//   include <BOSL2/screws.scad>
+//   ```
+//////////////////////////////////////////////////////////////////////
+
+include <structs.scad>
+include <threading.scad>
+include <phillips_drive.scad>
+include <torx_drive.scad>
 
 /*
 http://mdmetric.com/thddata.htm#idx
@@ -16,7 +25,7 @@ Torx values:  https://www.stanleyengineeredfastening.com/-/media/web/sef/resourc
 
 */
 
-function parse_screw_name(name) = 
+function _parse_screw_name(name) = 
     let( commasplit = str_split(name,","),
          length = str_num(commasplit[1]),
          xdash = str_split(commasplit[0], "-x"),
@@ -35,7 +44,7 @@ function parse_screw_name(name) =
 
 // drive can be "hex", "phillips", "slot", "torx", or "none"
 // or you can specify "ph0" up to "ph4" for phillips and "t20" for torx 20
-function parse_drive(drive=undef, drive_size=undef) =
+function _parse_drive(drive=undef, drive_size=undef) =
     is_undef(drive) ? ["none",undef] :
     let(drive = downcase(drive))
     in_list(drive,["hex","phillips", "slot", "torx", "phillips", "none"]) ? [drive, drive_size] :
@@ -43,21 +52,22 @@ function parse_drive(drive=undef, drive_size=undef) =
     substr(drive,0,2)=="ph" ? ["phillips", str_int(substr(drive,2))] :
     assert(str("Unknown screw drive type ",drive));
 
+
 // Function: screw_info()
 // Usage:
 //   info = screw_info(name, [head], [thread], [drive], [drive_size], [oversize])
 // Description:
 //   Look up screw characteristics for the specified screw type.
-//   
+//   .
 //   For metric (ISO) `name` is M<size>x<pitch>,<length>, e.g. `"M6x1,10"` specifies a 6mm diameter screw with a thread pitch of 1mm and length of 10mm.
 //   You can omit the pitch or length, e.g. `"M6x1"`, or `"M6,10"`, or just `"M6"`.  
-//   
+//   .
 //   For English (UTS) name is <size>-<threadcount>,<length>, e.g. `"#8-32,1/2"`, or `"1/4-20,1"`.  Units are in inches, including the length.
 //   Size can be a number from 0 to 12 with or without a leading '#' to specify a screw gauge size, or any other value to specify
 //   a diameter in inches, either as a float or a fraction, so `"0.5-13"` and `"1/2-13"` are equivalent.  To force interpretation of the value
 //   as inches add `''` to the end, e.g. `"1''-4"` is a one inch screw and `"1-80"` is a very small 1-gauge screw.  The pitch is specified
 //   using a thread count, the number of threads per inch.  The length is in inches.  
-//   
+//   .
 //   If you omit the pitch then a standard screw pitch will be supplied from lookup tables for the screw diameter you have chosen.
 //   For each screw diameter, multiple standard pitches are possible.  
 //   For the UTS system these the availble thread types are:
@@ -76,7 +86,7 @@ function parse_drive(drive=undef, drive_size=undef) =
 //   produce threads with a pitch of 2mm.  The final option is to specify `thread="none"` to produce an unthreaded
 //   screw either to simplify the model or to use for cutting out screw holes.  Setting the pitch to zero also produces
 //   an unthreaded screw.  If you specify a numeric thread value it will override any value given in `name`.  
-//   
+//   .
 //   The `head` parameter specifies the type of head the screw will have.  Options for the head are
 //   - "flat"
 //   - "flat small"
@@ -94,7 +104,7 @@ function parse_drive(drive=undef, drive_size=undef) =
 //   - "none"
 //   Note that different sized flat heads exist for the same screw type.  Sometimes this depends on the type of recess.  If you specify "flat" then
 //   the size will be chosen appropriately for the recess you specify.  The default is "none".
-//   
+//   .
 //   The `drive` parameter specifies the recess type.  Options for the drive are
 //   - "none"
 //   - "phillips"
@@ -104,9 +114,9 @@ function parse_drive(drive=undef, drive_size=undef) =
 //   - "ph0", up to "ph4" for phillips of the specified size
 //   - "t<size>" for torx at a specified size, e.g. "t20"
 //   The default drive is "none"
-//   
+//   .
 //   Only some combinations of head and drive type are supported.  Supported UTS (English) head and drive combinations:
-//   
+//   .
 //   Head|          Drive
 //   ---|---
 //   none         | hex, torx
@@ -119,26 +129,26 @@ function parse_drive(drive=undef, drive_size=undef) =
 //   flat small   | phillips, slot
 //   flat large   | hex, torx
 //   flat undercut| slot, phillips
-//   
+//   .
 //   Supported metric head and drive combinations:
-//   
-//   Head|          Drive
-//   ---|---
-//   none   |hex, torx
+//   .
+//   Head  | Drive
+//   ------|-----------------
+//   none  | hex, torx
 //   hex   | 
 //   socket| hex, torx
 //   pan   | slot, phillips
 //   button| hex, torx
 //   cheese| slot, phillips
 //   flat  | phillips, slot, hex, torx
-//   
+//   .
 //   The drive size is specified appropriately to the drive type: drive number for phillips or torx, and allen width in mm or inches (as appropriate) for hex.
 //   Drive size is determined automatically from the screw size, but by passing the `drive_size` parameter
 //   you can override the default, or in cases where no default exists you can specify it.
-// 
+//   .
 //   The `oversize` parameter adds the specified amount to the screw and head diameter to make an oversized screw. 
 //   This is intended for generating clearance holes, not for dealing with printer inaccuracy.  Does not affect length, thread pitch or head height.  
-//   
+//   .
 //   The output is a structure with the following fields:
 //   - system: either "UTS" or "ISO" (used for correct tolerance computation)
 //   - diameter: the nominal diameter of the screw shaft in mm
@@ -161,8 +171,8 @@ function parse_drive(drive=undef, drive_size=undef) =
 //   drive_size = size of drive recess to override computed value
 //   oversize = amount to increase screw diameter for clearance holes.  Default: 0
 function screw_info(name, head, thread="coarse", drive, drive_size=undef, oversize=0) =
-  let(type=parse_screw_name(name),
-      drive_info = parse_drive(drive, drive_size),
+  let(type=_parse_screw_name(name),
+      drive_info = _parse_drive(drive, drive_size),
       drive=drive_info[0],
     screwdata = 
       type[0] == "english" ? _screw_info_english(type[1],type[2], head, thread, drive) :
@@ -751,6 +761,7 @@ function _screw_info_metric(diam, pitch, head, thread, drive) =
             head_data
           );
 
+
 // Module: screw_head()
 // Usage:
 //    screw_head(screw_info, [details])
@@ -799,14 +810,15 @@ module screw_head(screw_info,details=false) {
      }
 }     
 
+
 // Module: screw()
 // Usage:
 //   screw([name],[head],[thread],[drive],[drive_size], [length], [shank], [oversize], [tolerance], [spec], [details], [anchor], [anchor_head], [orient], [spin])
 // Description:
 //   Create a screw.
-//   
+//   .
 //   Most of these parameters are described in the entry for `screw_info()`.
-//   
+//   .
 //   The tolerance determines the actual thread sizing based on the
 //   nominal size.  For UTS threads it is either "1A", "2A" or "3A", in
 //   order of increasing tightness.  The default tolerance is "2A", which
@@ -1016,20 +1028,20 @@ module screw(name, head, thread="coarse", drive, drive_size, oversize=0, spec, l
              if (threaded>0)
                intersection(){
                  down(unthreaded) 
-                   rod(spec, length=threaded+eps, tolerance=tolerance, $fn=sides, anchor=TOP );
+                   _rod(spec, length=threaded+eps, tolerance=tolerance, $fn=sides, anchor=TOP );
                  if (details)
                    up(.01)cyl(d=diameter, l=length+.02+eps, chamfer1 = pitch/2, chamfer2 = headless ? pitch/2 : -pitch/2, anchor=TOP, $fn=sides);
               }
            }
          }
-         driver(spec);
+         _driver(spec);
        }
      children();
    }
 }
 
 
-module driver(spec)
+module _driver(spec)
 {
   drive = struct_val(spec,"drive");
   echo(drive=drive);
@@ -1055,7 +1067,7 @@ module driver(spec)
 }
 
 
-function ISO_thread_tolerance(diameter, pitch, internal=false, tolerance=undef) =
+function _ISO_thread_tolerance(diameter, pitch, internal=false, tolerance=undef) =
   let(
     P = pitch,
     H = P*sqrt(3)/2,
@@ -1164,7 +1176,7 @@ function ISO_thread_tolerance(diameter, pitch, internal=false, tolerance=undef) 
     )
     [["pitch",P],["d_major",xdiam], ["d_pitch",pitchdiam], ["d_minor",bot],["basic",[mindiam,pdiam,diameter]]];
 
-function UTS_thread_tolerance(diam, pitch, internal=false, tolerance=undef) =
+function _UTS_thread_tolerance(diam, pitch, internal=false, tolerance=undef) =
   let(
     inch = 25.4,
     d = diam/inch,   // diameter in inches
@@ -1230,7 +1242,7 @@ function _exact_thread_tolerance(d,P) =
 // Description:
 //   Determines actual thread geometry for a given screw with specified tolerance.  If tolerance is omitted the default is used.  If tolerance
 //   is "none" or 0 then return the nominal thread geometry.
-//
+//   .
 //   The return value is a structure with the following fields:
 //   - pitch: the thread pitch
 //   - d_major: major diameter range 
@@ -1242,14 +1254,14 @@ function thread_specification(screw_spec, internal=false, tolerance=undef) =
        pitch = struct_val(screw_spec, "pitch")
      ,k=
   tolerance == 0 || tolerance=="none" ? _exact_thread_tolerance(diam, pitch) :
-  struct_val(screw_spec,"system") == "ISO" ? ISO_thread_tolerance(diam, pitch, internal, tolerance) :
-  struct_val(screw_spec,"system") == "UTS" ? UTS_thread_tolerance(diam, pitch, internal, tolerance) :
+  struct_val(screw_spec,"system") == "ISO" ? _ISO_thread_tolerance(diam, pitch, internal, tolerance) :
+  struct_val(screw_spec,"system") == "UTS" ? _UTS_thread_tolerance(diam, pitch, internal, tolerance) :
   assert(false,"Unknown screw system ",struct_val(screw_spec,"system")),
     fff=echo(k))
     k;
 
 
-function thread_profile(thread) =
+function _thread_profile(thread) =
   let(
      pitch = struct_val(thread,"pitch"),
      basicrad = struct_val(thread,"basic")/2,
@@ -1267,7 +1279,7 @@ function thread_profile(thread) =
      [crestwidth + 2*depth/sqrt(3)-1/2,-depth]
     ];
 
-function thread_profile_e(thread) =
+function _thread_profile_e(thread) =
   let(
      pitch = struct_val(thread,"pitch"),
      basicrad = struct_val(thread,"basic")/2,
@@ -1286,25 +1298,26 @@ function thread_profile_e(thread) =
     ];
 
 
-module rod(spec, length, tolerance, orient=UP, spin=0, anchor=CENTER)
+module _rod(spec, length, tolerance, orient=UP, spin=0, anchor=CENTER)
 {
       threadspec = thread_specification(spec, internal=false, tolerance=tolerance);
       echo(d_major_mean = mean(struct_val(threadspec, "d_major")));
-      echo(bolt_profile=thread_profile(threadspec));
+      echo(bolt_profile=_thread_profile(threadspec));
       
       trapezoidal_threaded_rod( d=mean(struct_val(threadspec, "d_major")),
                                 l=length,
                                 pitch = struct_val(threadspec, "pitch"),
-                                profile = thread_profile(threadspec),left_handed=false,
+                                profile = _thread_profile(threadspec),left_handed=false,
                                 bevel=false, orient=orient, anchor=anchor, spin=spin);
 }
 
 
 // Module: nut()
-// Usage: nut([name],[thread],[oversize],[spec], [diameter],[thickness], [tolerance], [details])
+// Usage:
+//   nut([name],[thread],[oversize],[spec],[diameter],[thickness],[tolerance],[details])
 // Description:
 //   The name, thread and oversize parameters are described under `screw_info()`
-//   
+//   .
 //   The tolerance determines the actual thread sizing based on the
 //   nominal size.  For UTS threads it is either "1B", "2B" or "3B", in
 //   order of increasing tightness.  The default tolerance is "2B", which
@@ -1331,7 +1344,7 @@ module nut(name, thread="coarse", oversize=0, spec, diameter, thickness, toleran
    trapezoidal_threaded_nut(
 		od=diameter, id=mean(struct_val(threadspec, "d_major")), h=thickness,
 		pitch=struct_val(threadspec, "pitch"), 
-		profile=thread_profile(threadspec),
+		profile=_thread_profile(threadspec),
 		bevel=false,anchor=anchor,spin=spin,orient=orient);
 }
 
