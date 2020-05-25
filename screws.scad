@@ -60,11 +60,11 @@ function _parse_drive(drive=undef, drive_size=undef) =
 // Description:
 //   Look up screw characteristics for the specified screw type.
 //   .
-//   For metric (ISO) the `name=` argument is formatted in a string like: "M<size>x<pitch>,<length>".
+//   For metric (ISO) the `name=` argument is formatted in a string like: "M*\<size\>*x*\<pitch\>*,*\<length\>*".
 //   e.g. `"M6x1,10"` specifies a 6mm diameter screw with a thread pitch of 1mm and length of 10mm.
 //   You can omit the pitch or length, e.g. `"M6x1"`, or `"M6,10"`, or just `"M6"`.
 //   .
-//   For English (UTS) `name=` is a string like "<size>-<threadcount>,<length>".
+//   For English (UTS) `name=` is a string like "*\<size\>*-*\<threadcount\>*,*\<length\>*".
 //   e.g. `"#8-32,1/2"`, or `"1/4-20,1"`.  Units are in inches, including the length.  Size can be a
 //   number from 0 to 12 with or without a leading '#' to specify a screw gauge size, or any other
 //   value to specify a diameter in inches, either as a float or a fraction, so `"0.5-13"` and
