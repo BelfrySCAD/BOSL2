@@ -117,30 +117,30 @@ function _parse_drive(drive=undef, drive_size=undef) =
 //   .
 //   Only some combinations of head and drive type are supported.  Supported UTS (English) head and drive combinations:
 //   .
-//   Head|          Drive
-//   ---|---
-//   none         | hex, torx
-//   hex          |
-//   socket       | hex, torx
-//   button       | hex, torx
-//   round        | slot, phillips
-//   fillister    | slot, phillips
-//   flat         | slot, phillips, hex, torx
-//   flat small   | phillips, slot
-//   flat large   | hex, torx
-//   flat undercut| slot, phillips
+//   Head          | Drive
+//   ------------- | ----------------------------
+//   none          | hex, torx
+//   hex           |
+//   socket        | hex, torx
+//   button        | hex, torx
+//   round         | slot, phillips
+//   fillister     | slot, phillips
+//   flat          | slot, phillips, hex, torx
+//   flat small    | phillips, slot
+//   flat large    | hex, torx
+//   flat undercut | slot, phillips
 //   .
 //   Supported metric head and drive combinations:
 //   .
-//   Head  | Drive
-//   ------|-----------------
-//   none  | hex, torx
-//   hex   | 
-//   socket| hex, torx
-//   pan   | slot, phillips
-//   button| hex, torx
-//   cheese| slot, phillips
-//   flat  | phillips, slot, hex, torx
+//   Head   | Drive
+//   ------ | ----------------------------
+//   none   |  hex, torx
+//   hex    |  
+//   socket |  hex, torx
+//   pan    |  slot, phillips
+//   button |  hex, torx
+//   cheese |  slot, phillips
+//   flat   |  phillips, slot, hex, torx
 //   .
 //   The drive size is specified appropriately to the drive type: drive number for phillips or torx, and allen width in mm or inches (as appropriate) for hex.
 //   Drive size is determined automatically from the screw size, but by passing the `drive_size` parameter
