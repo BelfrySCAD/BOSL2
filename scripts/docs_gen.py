@@ -82,8 +82,8 @@ def get_comment_block(lines, prefix, blanks=1):
                 break
         else:
             blankcnt = 0
-        if line == ".":
-            line == ""
+        if line.rstrip() == '.':
+            line = "\n"
         out.append(line.rstrip())
     return (lines, out)
 
