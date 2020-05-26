@@ -341,6 +341,9 @@ module stroke(
 //   angle = If a scalar, specifies the end angle in degrees.  If a vector of two scalars, specifies start and end angles.
 //   cp = Centerpoint of arc.
 //   points = Points on the arc.
+//   long = if given with cp and points takes the long arc instead of the default short arc.  Default: false
+//   cw = if given with cp and 2 points takes the arc in the clockwise direction.  Default: false
+//   ccw = if given with cp and 2 points takes the arc in the counter-clockwise direction.  Default: false
 //   width = If given with `thickness`, arc starts and ends on X axis, to make a circle segment.
 //   thickness = If given with `width`, arc starts and ends on X axis, to make a circle segment.
 //   start = Start angle of arc.
@@ -363,7 +366,7 @@ module stroke(
 // Example(FlatSpin):
 //   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
 //   trace_polyline(path, showpts=true, color="cyan");
-function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false) =
+function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false) =
 	// First try for 2D arc specified by angles
 	is_def(width) && is_def(thickness)? (
 		arc(N,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge)
@@ -384,7 +387,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false) =
 		)
 		concat(extra,arcpoints)
 	) :
-	assert(is_list(points),"Invalid parameters")
+	assert(is_path(points,[2,3]),"Point list is invalid")
 	// Arc is 3D, so transform points to 2D and make a recursive call, then remap back to 3D
 	len(points[0])==3? (
 		let(
@@ -396,15 +399,18 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false) =
 	) : is_def(cp)? (
 		// Arc defined by center plus two points, will have radius defined by center and points[0]
 		// and extent defined by direction of point[1] from the center
-		let(
+                assert(count_true([long,cw,ccw])<=1, str("Only one of `long`, `cw` and `ccw` can be true",cw,ccw,long))
+		let(    k=echo(cw=cw,ccw=ccw,long=long),
 			angle = vector_angle(points[0], cp, points[1]),
 			v1 = points[0]-cp,
 			v2 = points[1]-cp,
 			dir = sign(det2([v1,v2])),   // z component of cross product
-			r=norm(v1)
+			r=norm(v1),
+                        long = long || (ccw && dir<0) || (cw && dir>0)
+                        ,ewqe=echo(long=long,angle=dir*angle,start=atan2(v1.y,v1.x),angle=long?-dir*(360-angle):dir*angle)
 		)
 		assert(dir!=0,"Collinear inputs don't define a unique arc")
-		arc(N,cp=cp,r=r,start=atan2(v1.y,v1.x),angle=dir*angle,wedge=wedge)
+		arc(N,cp=cp,r=r,start=atan2(v1.y,v1.x),angle=long?-dir*(360-angle):dir*angle,wedge=wedge)
 	) : (
 		// Final case is arc passing through three points, starting at point[0] and ending at point[3]
 		let(col = collinear(points[0],points[1],points[2]))
