@@ -965,11 +965,12 @@ module screw_head(screw_info,details=false) {
 //     mark(3) nut("1/4-20", thickness=8, diameter=0.5*inch,tolerance="3B");
 //   }
 // Example(2D): This example shows the gap between nut and bolt at the loosest tolerance for UTS.  This gap is what enables the parts to mesh without binding and is part of the definition for standard metal hardware.
+//   $slop=0;
 //   $fn=32;
 //   inch=25.4;
-//   projection(cut=true) xrot(-90) {
-//       color("red") render() back_half() zrot(-90) screw("1/4-20,1/4", head="button",orient=UP,anchor=BOTTOM,tolerance="1A");
-//       render() back_half() down(inch*1/20*.325+inch/20*3) nut("1/4-20", thickness=8, diameter=0.5*inch,tolerance="1B");
+//   projection(cut=true)xrot(-90){
+//       screw("1/4-20,1/4", head="hex",orient=UP,anchor=BOTTOM,tolerance="1A");
+//       down(inch*1/20*2.58) nut("1/4-20", thickness=8, diameter=0.5*inch,tolerance="1B");
 //   }
 
 module screw(name, head, thread="coarse", drive, drive_size, oversize=0, spec, length, shank=0, tolerance=undef, details=true, anchor=undef,anchor_head=undef,spin=0, orient=UP)
