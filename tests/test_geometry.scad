@@ -294,8 +294,8 @@ module test_find_circle_3points() {
 test_find_circle_3points();
 
 
-module test_find_circle_tangents() {
-	tangs = find_circle_tangents(r=50,cp=[0,0],pt=[50*sqrt(2),0]);
+module test_circle_point_tangents() {
+	tangs = circle_point_tangents(r=50,cp=[0,0],pt=[50*sqrt(2),0]);
 	assert(approx(subindex(tangs,0), [45,-45]));
 	expected = [for (ang=subindex(tangs,0)) polar_to_xy(50,ang)];
 	got = subindex(tangs,1);
@@ -304,7 +304,7 @@ module test_find_circle_tangents() {
 		assert(approx(flatten(got), flatten(expected)));
 	}
 }
-test_find_circle_tangents();
+test_circle_point_tangents();
 
 
 module test_tri_calc() {
