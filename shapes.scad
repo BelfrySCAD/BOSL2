@@ -1419,7 +1419,7 @@ module noop(spin=0, orient=UP) attachable(CENTER,spin,orient, d=0.01) {nil(); ch
 //   pie_slice(ang=60, l=20, d1=50, d2=70);
 module pie_slice(
 	ang=30, l=undef,
-	r=10, r1=undef, r2=undef,
+	r=undef, r1=undef, r2=undef,
 	d=undef, d1=undef, d2=undef,
 	h=undef, center,
 	anchor, spin=0, orient=UP
