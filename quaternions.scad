@@ -65,12 +65,12 @@ function QuatZ(a=0) = Quat([0,0,1],a);
 // Arguments:
 //   a = The triplet of rotation angles, [X,Y,Z]
 function QuatXYZ(a=[0,0,0]) =
-	let(
-		qx = QuatX(a[0]),
-		qy = QuatY(a[1]),
-		qz = QuatZ(a[2])
-	)
-	Q_Mul(qz, Q_Mul(qy, qx));
+    let(
+        qx = QuatX(a[0]),
+        qy = QuatY(a[1]),
+        qz = QuatZ(a[2])
+    )
+    Q_Mul(qz, Q_Mul(qy, qx));
 
 
 // Function: Q_Ident()
@@ -125,10 +125,10 @@ function Q_Sub(a, b) = a-b;
 //   Q_Mul(a, b)
 // Description: Multiplies quaternion `a` by quaternion `b`.
 function Q_Mul(a, b) = [
-	a[3]*b.x  + a.x*b[3] + a.y*b.z  - a.z*b.y,
-	a[3]*b.y  - a.x*b.z  + a.y*b[3] + a.z*b.x,
-	a[3]*b.z  + a.x*b.y  - a.y*b.x  + a.z*b[3],
-	a[3]*b[3] - a.x*b.x  - a.y*b.y  - a.z*b.z,
+    a[3]*b.x  + a.x*b[3] + a.y*b.z  - a.z*b.y,
+    a[3]*b.y  - a.x*b.z  + a.y*b[3] + a.z*b.x,
+    a[3]*b.z  + a.x*b.y  - a.y*b.x  + a.z*b[3],
+    a[3]*b[3] - a.x*b.x  - a.y*b.y  - a.z*b.z,
 ];
 
 
@@ -140,14 +140,14 @@ function Q_Mul(a, b) = [
 //   of each cumulative Quaternion product.  It starts with the first quaternion
 //   given in the list, and applies successive quaternion rotations in list order.
 function Q_Cumulative(v, _i=0, _acc=[]) = 
-	_i==len(v) ? _acc :
-	Q_Cumulative(
-		v, _i+1,
-		concat(
-			_acc,
-			[_i==0 ? v[_i] : Q_Mul(v[_i], select(_acc,-1))]
-		)
-	);
+    _i==len(v) ? _acc :
+    Q_Cumulative(
+        v, _i+1,
+        concat(
+            _acc,
+            [_i==0 ? v[_i] : Q_Mul(v[_i], select(_acc,-1))]
+        )
+    );
 
 
 // Function: Q_Dot()
@@ -215,23 +215,23 @@ function Q_Dist(q1, q2) = norm(q2-q1);
 //       Qrot(q) right(80) cube([10,10,1]);
 //   #sphere(r=80);
 function Q_Slerp(q1, q2, u) =
-	assert(is_num(u) || is_num(u[0]))
-	!is_num(u)? [for (uu=u) Q_Slerp(q1,q2,uu)] :
+    assert(is_num(u) || is_num(u[0]))
+    !is_num(u)? [for (uu=u) Q_Slerp(q1,q2,uu)] :
     let(
-		q1 = Q_Normalize(q1),
-		q2 = Q_Normalize(q2),
-		dot = Q_Dot(q1, q2)
-	) let(
-		q2 = dot<0? Q_Neg(q2) : q2,
-		dot = dot<0? -dot : dot
-	) (dot>0.9995)? Q_Normalize(q1 + (u * (q2-q1))) :
-	let(
-		dot = constrain(dot,-1,1),
-		theta_0 = acos(dot),
-		theta = theta_0 * u,
-		q3 = Q_Normalize(q2 - q1*dot),
-		out = q1*cos(theta) + q3*sin(theta)
-	) out;
+        q1 = Q_Normalize(q1),
+        q2 = Q_Normalize(q2),
+        dot = Q_Dot(q1, q2)
+    ) let(
+        q2 = dot<0? Q_Neg(q2) : q2,
+        dot = dot<0? -dot : dot
+    ) (dot>0.9995)? Q_Normalize(q1 + (u * (q2-q1))) :
+    let(
+        dot = constrain(dot,-1,1),
+        theta_0 = acos(dot),
+        theta = theta_0 * u,
+        q3 = Q_Normalize(q2 - q1*dot),
+        out = q1*cos(theta) + q3*sin(theta)
+    ) out;
 
 
 // Function: Q_Matrix3()
@@ -240,9 +240,9 @@ function Q_Slerp(q1, q2, u) =
 // Description:
 //   Returns the 3x3 rotation matrix for the given normalized quaternion q.
 function Q_Matrix3(q) = [
-	[1-2*q[1]*q[1]-2*q[2]*q[2],   2*q[0]*q[1]-2*q[2]*q[3],   2*q[0]*q[2]+2*q[1]*q[3]],
-	[  2*q[0]*q[1]+2*q[2]*q[3], 1-2*q[0]*q[0]-2*q[2]*q[2],   2*q[1]*q[2]-2*q[0]*q[3]],
-	[  2*q[0]*q[2]-2*q[1]*q[3],   2*q[1]*q[2]+2*q[0]*q[3], 1-2*q[0]*q[0]-2*q[1]*q[1]]
+    [1-2*q[1]*q[1]-2*q[2]*q[2],   2*q[0]*q[1]-2*q[2]*q[3],   2*q[0]*q[2]+2*q[1]*q[3]],
+    [  2*q[0]*q[1]+2*q[2]*q[3], 1-2*q[0]*q[0]-2*q[2]*q[2],   2*q[1]*q[2]-2*q[0]*q[3]],
+    [  2*q[0]*q[2]-2*q[1]*q[3],   2*q[1]*q[2]+2*q[0]*q[3], 1-2*q[0]*q[0]-2*q[1]*q[1]]
 ];
 
 
@@ -252,10 +252,10 @@ function Q_Matrix3(q) = [
 // Description:
 //   Returns the 4x4 rotation matrix for the given normalized quaternion q.
 function Q_Matrix4(q) = [
-	[1-2*q[1]*q[1]-2*q[2]*q[2],   2*q[0]*q[1]-2*q[2]*q[3],   2*q[0]*q[2]+2*q[1]*q[3], 0],
-	[  2*q[0]*q[1]+2*q[2]*q[3], 1-2*q[0]*q[0]-2*q[2]*q[2],   2*q[1]*q[2]-2*q[0]*q[3], 0],
-	[  2*q[0]*q[2]-2*q[1]*q[3],   2*q[1]*q[2]+2*q[0]*q[3], 1-2*q[0]*q[0]-2*q[1]*q[1], 0],
-	[                        0,                         0,                         0, 1]
+    [1-2*q[1]*q[1]-2*q[2]*q[2],   2*q[0]*q[1]-2*q[2]*q[3],   2*q[0]*q[2]+2*q[1]*q[3], 0],
+    [  2*q[0]*q[1]+2*q[2]*q[3], 1-2*q[0]*q[0]-2*q[2]*q[2],   2*q[1]*q[2]-2*q[0]*q[3], 0],
+    [  2*q[0]*q[2]-2*q[1]*q[3],   2*q[1]*q[2]+2*q[0]*q[3], 1-2*q[0]*q[0]-2*q[1]*q[1], 0],
+    [                        0,                         0,                         0, 1]
 ];
 
 
@@ -299,15 +299,15 @@ function Q_Angle(q) = 2 * acos(q[3]);
 //   q = QuatXYZ([45,35,10]);
 //   pts = Qrot(q, p=[[2,3,4], [4,5,6], [9,2,3]]);
 module Qrot(q) {
-	multmatrix(Q_Matrix4(q)) {
-		children();
-	}
+    multmatrix(Q_Matrix4(q)) {
+        children();
+    }
 }
 
 function Qrot(q,p) =
-	is_undef(p)? Q_Matrix4(q) :
-	is_vector(p)? Qrot(q,[p])[0] :
-	apply(Q_Matrix4(q), p);
+    is_undef(p)? Q_Matrix4(q) :
+    is_vector(p)? Qrot(q,[p])[0] :
+    apply(Q_Matrix4(q), p);
 
 
 // Module: Qrot_copies()
@@ -327,4 +327,4 @@ function Qrot(q,p) =
 module Qrot_copies(quats) for (q=quats) Qrot(q) children();
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

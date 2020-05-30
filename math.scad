@@ -109,10 +109,10 @@ function factorial(n,d=1) = product([for (i=[n:-1:d]) i]);
 //   // Points colored in ROYGBIV order.
 //   rainbow(pts) translate($item) circle(d=3,$fn=8);
 function lerp(a,b,u) =
-	assert(same_shape(a,b), "Bad or inconsistent inputs to lerp")
-	is_num(u)? (1-u)*a + u*b :
-	assert(!is_undef(u)&&!is_bool(u)&&!is_string(u), "Input u to lerp must be a number, vector, or range.")
-	[for (v = u) lerp(a,b,v)];
+    assert(same_shape(a,b), "Bad or inconsistent inputs to lerp")
+    is_num(u)? (1-u)*a + u*b :
+    assert(!is_undef(u)&&!is_bool(u)&&!is_string(u), "Input u to lerp must be a number, vector, or range.")
+    [for (v = u) lerp(a,b,v)];
 
 
 
@@ -121,37 +121,37 @@ function lerp(a,b,u) =
 // Function: sinh()
 // Description: Takes a value `x`, and returns the hyperbolic sine of it.
 function sinh(x) =
-	(exp(x)-exp(-x))/2;
+    (exp(x)-exp(-x))/2;
 
 
 // Function: cosh()
 // Description: Takes a value `x`, and returns the hyperbolic cosine of it.
 function cosh(x) =
-	(exp(x)+exp(-x))/2;
+    (exp(x)+exp(-x))/2;
 
 
 // Function: tanh()
 // Description: Takes a value `x`, and returns the hyperbolic tangent of it.
 function tanh(x) =
-	sinh(x)/cosh(x);
+    sinh(x)/cosh(x);
 
 
 // Function: asinh()
 // Description: Takes a value `x`, and returns the inverse hyperbolic sine of it.
 function asinh(x) =
-	ln(x+sqrt(x*x+1));
+    ln(x+sqrt(x*x+1));
 
 
 // Function: acosh()
 // Description: Takes a value `x`, and returns the inverse hyperbolic cosine of it.
 function acosh(x) =
-	ln(x+sqrt(x*x-1));
+    ln(x+sqrt(x*x-1));
 
 
 // Function: atanh()
 // Description: Takes a value `x`, and returns the inverse hyperbolic tangent of it.
 function atanh(x) =
-	ln((1+x)/(1-x))/2;
+    ln((1+x)/(1-x))/2;
 
 
 
@@ -182,8 +182,8 @@ function atanh(x) =
 //   quant([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,12,12,12]
 //   quant([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[12,12,12]]
 function quant(x,y) =
-	is_list(x)? [for (v=x) quant(v,y)] :
-	floor(x/y+0.5)*y;
+    is_list(x)? [for (v=x) quant(v,y)] :
+    floor(x/y+0.5)*y;
 
 
 // Function: quantdn()
@@ -211,8 +211,8 @@ function quant(x,y) =
 //   quantdn([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,9,9,12]
 //   quantdn([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[9,9,12]]
 function quantdn(x,y) =
-	is_list(x)? [for (v=x) quantdn(v,y)] :
-	floor(x/y)*y;
+    is_list(x)? [for (v=x) quantdn(v,y)] :
+    floor(x/y)*y;
 
 
 // Function: quantup()
@@ -240,8 +240,8 @@ function quantdn(x,y) =
 //   quantup([9,10,10.4,10.5,11,12],3);      // Returns: [9,12,12,12,12,12]
 //   quantup([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,12,12],[12,12,12]]
 function quantup(x,y) =
-	is_list(x)? [for (v=x) quantup(v,y)] :
-	ceil(x/y)*y;
+    is_list(x)? [for (v=x) quantup(v,y)] :
+    ceil(x/y)*y;
 
 
 // Section: Constraints and Modulos
@@ -296,7 +296,7 @@ function posmod(x,m) = (x%m+m)%m;
 //   modang(270,360);   // Returns: -90
 //   modang(700,360);   // Returns: -20
 function modang(x) =
-	let(xx = posmod(x,360)) xx<180? xx : xx-360;
+    let(xx = posmod(x,360)) xx<180? xx : xx-360;
 
 
 // Function: modrange()
@@ -315,11 +315,11 @@ function modang(x) =
 //   modrange(90,270,360, step=-45);  // Returns: [90,45,0,315,270]
 //   modrange(270,90,360, step=-45);  // Returns: [270,225,180,135,90]
 function modrange(x, y, m, step=1) =
-	let(
-		a = posmod(x, m),
-		b = posmod(y, m),
-		c = step>0? (a>b? b+m : b) : (a<b? b-m : b)
-	) [for (i=[a:step:c]) (i%m+m)%m];
+    let(
+        a = posmod(x, m),
+        b = posmod(y, m),
+        c = step>0? (a>b? b+m : b) : (a<b? b-m : b)
+    ) [for (i=[a:step:c]) (i%m+m)%m];
 
 
 
@@ -339,9 +339,9 @@ function modrange(x, y, m, step=1) =
 //   ints = rand_int(0,100,3);
 //   int = rand_int(-10,10,1)[0];
 function rand_int(min, max, N, seed=undef) =
-	assert(max >= min, "Max value cannot be smaller than min")
-	let (rvect = is_def(seed) ? rands(min,max+1,N,seed) : rands(min,max+1,N))
-	[for(entry = rvect) floor(entry)];
+    assert(max >= min, "Max value cannot be smaller than min")
+    let (rvect = is_def(seed) ? rands(min,max+1,N,seed) : rands(min,max+1,N))
+    [for(entry = rvect) floor(entry)];
 
 
 // Function: gaussian_rands()
@@ -355,8 +355,8 @@ function rand_int(min, max, N, seed=undef) =
 //   N = Number of random numbers to return.  Default: 1
 //   seed = If given, sets the random number seed.
 function gaussian_rands(mean, stddev, N=1, seed=undef) =
-	let(nums = is_undef(seed)? rands(0,1,N*2) : rands(0,1,N*2,seed))
-	[for (i = list_range(N)) mean + stddev*sqrt(-2*ln(nums[i*2]))*cos(360*nums[i*2+1])];
+    let(nums = is_undef(seed)? rands(0,1,N*2) : rands(0,1,N*2,seed))
+    [for (i = list_range(N)) mean + stddev*sqrt(-2*ln(nums[i*2]))*cos(360*nums[i*2+1])];
 
 
 // Function: log_rands()
@@ -371,12 +371,12 @@ function gaussian_rands(mean, stddev, N=1, seed=undef) =
 //   N = Number of random numbers to return.  Default: 1
 //   seed = If given, sets the random number seed.
 function log_rands(minval, maxval, factor, N=1, seed=undef) =
-	assert(maxval >= minval, "maxval cannot be smaller than minval")
-	let(
-		minv = 1-1/pow(factor,minval),
-		maxv = 1-1/pow(factor,maxval),
-		nums = is_undef(seed)? rands(minv, maxv, N) : rands(minv, maxv, N, seed)
-	) [for (num=nums) -ln(1-num)/ln(factor)];
+    assert(maxval >= minval, "maxval cannot be smaller than minval")
+    let(
+        minv = 1-1/pow(factor,minval),
+        maxv = 1-1/pow(factor,maxval),
+        nums = is_undef(seed)? rands(minv, maxv, N) : rands(minv, maxv, N, seed)
+    ) [for (num=nums) -ln(1-num)/ln(factor)];
 
 
 
@@ -388,22 +388,22 @@ function log_rands(minval, maxval, factor, N=1, seed=undef) =
 // Description:
 //   Computes the Greatest Common Divisor/Factor of `a` and `b`.  
 function gcd(a,b) =
-	assert(is_int(a) && is_int(b),"Arguments to gcd must be integers")
-	b==0 ? abs(a) : gcd(b,a % b);
+    assert(is_int(a) && is_int(b),"Arguments to gcd must be integers")
+    b==0 ? abs(a) : gcd(b,a % b);
 
 
 // Computes lcm for two scalars
 function _lcm(a,b) =
-	assert(is_int(a), "Invalid non-integer parameters to lcm")
-	assert(is_int(b), "Invalid non-integer parameters to lcm")
-	assert(a!=0 && b!=0, "Arguments to lcm must be nonzero")
-	abs(a*b) / gcd(a,b);
+    assert(is_int(a), "Invalid non-integer parameters to lcm")
+    assert(is_int(b), "Invalid non-integer parameters to lcm")
+    assert(a!=0 && b!=0, "Arguments to lcm must be nonzero")
+    abs(a*b) / gcd(a,b);
 
 
 // Computes lcm for a list of values
 function _lcmlist(a) =
-	len(a)==1 ? a[0] :
-	_lcmlist(concat(slice(a,0,len(a)-2),[lcm(a[len(a)-2],a[len(a)-1])]));
+    len(a)==1 ? a[0] :
+    _lcmlist(concat(slice(a,0,len(a)-2),[lcm(a[len(a)-2],a[len(a)-1])]));
 
 
 // Function: lcm()
@@ -415,12 +415,12 @@ function _lcmlist(a) =
 //   be non-zero integers.  The output is always a positive integer.  It is an error to pass zero
 //   as an argument.  
 function lcm(a,b=[]) =
-	!is_list(a) && !is_list(b) ? _lcm(a,b) : 
-	let(
-		arglist = concat(force_list(a),force_list(b))
-	)
-	assert(len(arglist)>0,"invalid call to lcm with empty list(s)")
-	_lcmlist(arglist);
+    !is_list(a) && !is_list(b) ? _lcm(a,b) : 
+    let(
+        arglist = concat(force_list(a),force_list(b))
+    )
+    assert(len(arglist)>0,"invalid call to lcm with empty list(s)")
+    _lcmlist(arglist);
 
 
 
@@ -438,8 +438,8 @@ function lcm(a,b=[]) =
 //   sum([1,2,3]);  // returns 6.
 //   sum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [9, 12, 15]
 function sum(v, dflt=0) =
-	assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
-	len(v) == 0 ? dflt : _sum(v,v[0]*0);
+    assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
+    len(v) == 0 ? dflt : _sum(v,v[0]*0);
 
 function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
 
@@ -456,14 +456,14 @@ function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
 //   cumsum([1,2,3]);  // returns [1,3,6]
 //   cumsum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [[1,2,3], [4,6,8], [9,12,15]]
 function cumsum(v,_i=0,_acc=[]) =
-	_i==len(v) ? _acc :
-	cumsum(
-		v, _i+1,
-		concat(
-			_acc,
-			[_i==0 ? v[_i] : select(_acc,-1)+v[_i]]
-		)
-	);
+    _i==len(v) ? _acc :
+    cumsum(
+        v, _i+1,
+        concat(
+            _acc,
+            [_i==0 ? v[_i] : select(_acc,-1)+v[_i]]
+        )
+    );
 
 
 // Function: sum_of_squares()
@@ -489,12 +489,12 @@ function sum_of_squares(v, i=0, tot=0) = sum(vmul(v,v));
 // Examples:
 //   v = sum_of_sines(30, [[10,3,0], [5,5.5,60]]);
 function sum_of_sines(a, sines) =
-	sum([
-		for (s = sines) let(
-			ss=point3d(s),
-			v=ss.x*sin(a*ss.y+ss.z)
-		) v
-	]);
+    sum([
+        for (s = sines) let(
+            ss=point3d(s),
+            v=ss.x*sin(a*ss.y+ss.z)
+        ) v
+    ]);
 
 
 // Function: deltas()
@@ -541,16 +541,16 @@ function mean(v) = sum(v)/len(v);
 //   Given a list of numbers or vectors, finds the median value or midpoint.
 //   If passed a list of vectors, returns the vector of the median of each part.
 function median(v) =
-	assert(is_list(v))
-	assert(len(v)>0)
-	is_vector(v[0])? (
-		assert(is_consistent(v))
-		[
-			for (i=idx(v[0]))
-			let(vals = subindex(v,i))
-			(min(vals)+max(vals))/2
-		]
-	) : (min(v)+max(v))/2;
+    assert(is_list(v))
+    assert(len(v)>0)
+    is_vector(v[0])? (
+        assert(is_consistent(v))
+        [
+            for (i=idx(v[0]))
+            let(vals = subindex(v,i))
+            (min(vals)+max(vals))/2
+        ]
+    ) : (min(v)+max(v))/2;
 
 
 // Section: Matrix math
@@ -565,23 +565,23 @@ function median(v) =
 //   want to solve Ax=b1 and Ax=b2 that you need to form the matrix transpose([b1,b2]) for the right hand side and then
 //   transpose the returned value.  
 function linear_solve(A,b) =
-	assert(is_matrix(A))
-	let(
-		m = len(A),
-		n = len(A[0])
-	)
-	assert(is_vector(b,m) || is_matrix(b,m),"Incompatible matrix and right hand side")
-	let (
-		qr = m<n? qr_factor(transpose(A)) : qr_factor(A),
-		maxdim = max(n,m),
-		mindim = min(n,m),
-		Q = submatrix(qr[0],[0:maxdim-1], [0:mindim-1]),
-		R = submatrix(qr[1],[0:mindim-1], [0:mindim-1]),
-		zeros = [for(i=[0:mindim-1]) if (approx(R[i][i],0)) i]
-	)
-	zeros != [] ? undef :
-	m<n ? Q*back_substitute(R,b,transpose=true) :
-	back_substitute(R, transpose(Q)*b);
+    assert(is_matrix(A))
+    let(
+        m = len(A),
+        n = len(A[0])
+    )
+    assert(is_vector(b,m) || is_matrix(b,m),"Incompatible matrix and right hand side")
+    let (
+        qr = m<n? qr_factor(transpose(A)) : qr_factor(A),
+        maxdim = max(n,m),
+        mindim = min(n,m),
+        Q = submatrix(qr[0],[0:maxdim-1], [0:mindim-1]),
+        R = submatrix(qr[1],[0:mindim-1], [0:mindim-1]),
+        zeros = [for(i=[0:mindim-1]) if (approx(R[i][i],0)) i]
+    )
+    zeros != [] ? undef :
+    m<n ? Q*back_substitute(R,b,transpose=true) :
+    back_substitute(R, transpose(Q)*b);
 
 
 // Function: matrix_inverse()
@@ -593,8 +593,8 @@ function linear_solve(A,b) =
 //    use this function.  Instead use linear_solve, or use qr_factor.  The computation
 //    will be faster and more accurate.  
 function matrix_inverse(A) =
-	assert(is_matrix(A,square=true),"Input to matrix_inverse() must be a square matrix")
-	linear_solve(A,ident(len(A)));
+    assert(is_matrix(A,square=true),"Input to matrix_inverse() must be a square matrix")
+    linear_solve(A,ident(len(A)));
 
 
 // Function: submatrix()
@@ -610,32 +610,32 @@ function submatrix(M,ind1,ind2) = [for(i=ind1) [for(j=ind2) M[i][j] ] ];
 //   Calculates the QR factorization of the input matrix A and returns it as the list [Q,R].  This factorization can be
 //   used to solve linear systems of equations.  
 function qr_factor(A) =
-	assert(is_matrix(A))
-	let(
-	  m = len(A),
-	  n = len(A[0])
-	)
-	let(
-		qr =_qr_factor(A, column=0, m = m, n=n, Q=ident(m)),
-		Rzero = [
-			for(i=[0:m-1]) [
-				for(j=[0:n-1])
-				i>j ? 0 : qr[1][i][j]
-			]
-		]
-	) [qr[0],Rzero];
+    assert(is_matrix(A))
+    let(
+      m = len(A),
+      n = len(A[0])
+    )
+    let(
+        qr =_qr_factor(A, column=0, m = m, n=n, Q=ident(m)),
+        Rzero = [
+            for(i=[0:m-1]) [
+                for(j=[0:n-1])
+                i>j ? 0 : qr[1][i][j]
+            ]
+        ]
+    ) [qr[0],Rzero];
 
 function _qr_factor(A,Q, column, m, n) =
-	column >= min(m-1,n) ? [Q,A] :
-	let(
-		x = [for(i=[column:1:m-1]) A[i][column]],
-		alpha = (x[0]<=0 ? 1 : -1) * norm(x),
-		u = x - concat([alpha],repeat(0,m-1)),
-		v = u / norm(u),
-		Qc = ident(len(x)) - 2*transpose([v])*[v],
-		Qf = [for(i=[0:m-1]) [for(j=[0:m-1]) i<column || j<column ? (i==j ? 1 : 0) : Qc[i-column][j-column]]]
-	)
-	_qr_factor(Qf*A, Q*Qf, column+1, m, n);
+    column >= min(m-1,n) ? [Q,A] :
+    let(
+        x = [for(i=[column:1:m-1]) A[i][column]],
+        alpha = (x[0]<=0 ? 1 : -1) * norm(x),
+        u = x - concat([alpha],repeat(0,m-1)),
+        v = u / norm(u),
+        Qc = ident(len(x)) - 2*transpose([v])*[v],
+        Qf = [for(i=[0:m-1]) [for(j=[0:m-1]) i<column || j<column ? (i==j ? 1 : 0) : Qc[i-column][j-column]]]
+    )
+    _qr_factor(Qf*A, Q*Qf, column+1, m, n);
 
 
 // Function: back_substitute()
@@ -646,22 +646,22 @@ function _qr_factor(A,Q, column, m, n) =
 //   You can supply a compatible matrix b and it will produce the solution for every column of b.  Note that if you want to
 //   solve Rx=b1 and Rx=b2 you must set b to transpose([b1,b2]) and then take the transpose of the result. 
 function back_substitute(R, b, x=[],transpose = false) =
-	assert(is_matrix(R, square=true))
-	let(n=len(R))
-	assert(is_vector(b,n) || is_matrix(b,n),"R and b are not compatible in back_substitute")
-	!is_vector(b) ? transpose([for(i=[0:len(b[0])-1]) back_substitute(R,subindex(b,i),transpose=transpose)]) :
-	transpose?
-		reverse(back_substitute(
-			[for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]],
-			reverse(b), x, false
-		)) :
-	len(x) == n ? x :
-	let(
-		ind = n - len(x) - 1,
-		newvalue =
-			len(x)==0? b[ind]/R[ind][ind] : 
-			(b[ind]-select(R[ind],ind+1,-1) * x)/R[ind][ind]
-	) back_substitute(R, b, concat([newvalue],x));
+    assert(is_matrix(R, square=true))
+    let(n=len(R))
+    assert(is_vector(b,n) || is_matrix(b,n),"R and b are not compatible in back_substitute")
+    !is_vector(b) ? transpose([for(i=[0:len(b[0])-1]) back_substitute(R,subindex(b,i),transpose=transpose)]) :
+    transpose?
+        reverse(back_substitute(
+            [for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]],
+            reverse(b), x, false
+        )) :
+    len(x) == n ? x :
+    let(
+        ind = n - len(x) - 1,
+        newvalue =
+            len(x)==0? b[ind]/R[ind][ind] : 
+            (b[ind]-select(R[ind],ind+1,-1) * x)/R[ind][ind]
+    ) back_substitute(R, b, concat([newvalue],x));
 
 
 // Function: det2()
@@ -684,9 +684,9 @@ function det2(M) = M[0][0] * M[1][1] - M[0][1]*M[1][0];
 //   M = [ [6,4,-2], [1,-2,8], [1,5,7] ];
 //   det = det3(M);  // Returns: -334
 function det3(M) =
-	M[0][0] * (M[1][1]*M[2][2]-M[2][1]*M[1][2]) -
-	M[1][0] * (M[0][1]*M[2][2]-M[2][1]*M[0][2]) +
-	M[2][0] * (M[0][1]*M[1][2]-M[1][1]*M[0][2]);
+    M[0][0] * (M[1][1]*M[2][2]-M[2][1]*M[1][2]) -
+    M[1][0] * (M[0][1]*M[2][2]-M[2][1]*M[0][2]) +
+    M[2][0] * (M[0][1]*M[1][2]-M[1][1]*M[0][2]);
 
 
 // Function: determinant()
@@ -698,23 +698,23 @@ function det3(M) =
 //   M = [ [6,4,-2,9], [1,-2,8,3], [1,5,7,6], [4,2,5,1] ];
 //   det = determinant(M);  // Returns: 2267
 function determinant(M) =
-	assert(len(M)==len(M[0]))
-	len(M)==1? M[0][0] :
-	len(M)==2? det2(M) :
-	len(M)==3? det3(M) :
-	sum(
-		[for (col=[0:1:len(M)-1])
-			((col%2==0)? 1 : -1) *
-			M[col][0] *
-			determinant(
-				[for (r=[1:1:len(M)-1])
-					[for (c=[0:1:len(M)-1])
-						if (c!=col) M[c][r]
-					]
-				]
-			)
-		]
-	);
+    assert(len(M)==len(M[0]))
+    len(M)==1? M[0][0] :
+    len(M)==2? det2(M) :
+    len(M)==3? det3(M) :
+    sum(
+        [for (col=[0:1:len(M)-1])
+            ((col%2==0)? 1 : -1) *
+            M[col][0] *
+            determinant(
+                [for (r=[1:1:len(M)-1])
+                    [for (c=[0:1:len(M)-1])
+                        if (c!=col) M[c][r]
+                    ]
+                ]
+            )
+        ]
+    );
 
 
 // Function: is_matrix()
@@ -731,12 +731,12 @@ function determinant(M) =
 //   n = optional width of matrix
 //   square = set to true to require a square matrix.  Default: false        
 function is_matrix(A,m,n, square=false) =
-	is_list(A) && len(A)>0 &&
-	(is_undef(m) || len(A)==m) &&
-	is_vector(A[0]) &&
-	(is_undef(n) || len(A[0])==n) &&
-	(!square || n==m) &&
-	is_consistent(A);
+    is_list(A) && len(A)>0 &&
+    (is_undef(m) || len(A)==m) &&
+    is_vector(A[0]) &&
+    (is_undef(n) || len(A[0])==n) &&
+    (!square || n==m) &&
+    is_consistent(A);
 
 
 
@@ -758,18 +758,18 @@ function is_matrix(A,m,n, square=false) =
 //   approx(0.3333,1/3,eps=1e-3);  // Returns: true
 //   approx(PI,3.1415926536);     // Returns: true
 function approx(a,b,eps=EPSILON) =
-	a==b? true :
-	a*0!=b*0? false :
-	is_list(a)? ([for (i=idx(a)) if(!approx(a[i],b[i],eps=eps)) 1] == []) :
-	(abs(a-b) <= eps);
+    a==b? true :
+    a*0!=b*0? false :
+    is_list(a)? ([for (i=idx(a)) if(!approx(a[i],b[i],eps=eps)) 1] == []) :
+    (abs(a-b) <= eps);
 
 
 function _type_num(x) =
-	is_undef(x)?  0 :
-	is_bool(x)?   1 :
-	is_num(x)?    2 :
-	is_string(x)? 3 :
-	is_list(x)?   4 : 5;
+    is_undef(x)?  0 :
+    is_bool(x)?   1 :
+    is_num(x)?    2 :
+    is_string(x)? 3 :
+    is_list(x)?   4 : 5;
 
 
 // Function: compare_vals()
@@ -782,10 +782,10 @@ function _type_num(x) =
 //   a = First value to compare.
 //   b = Second value to compare.
 function compare_vals(a, b) =
-	(a==b)? 0 :
-	let(t1=_type_num(a), t2=_type_num(b)) (t1!=t2)? (t1-t2) :
-	is_list(a)? compare_lists(a,b) :
-	(a<b)? -1 : (a>b)? 1 : 0;
+    (a==b)? 0 :
+    let(t1=_type_num(a), t2=_type_num(b)) (t1!=t2)? (t1-t2) :
+    is_list(a)? compare_lists(a,b) :
+    (a<b)? -1 : (a>b)? 1 : 0;
 
 
 // Function: compare_lists()
@@ -800,13 +800,13 @@ function compare_vals(a, b) =
 //   a = First list to compare.
 //   b = Second list to compare.
 function compare_lists(a, b) =
-	a==b? 0 : let(
-		cmps = [
-			for(i=[0:1:min(len(a),len(b))-1]) let(
-				cmp = compare_vals(a[i],b[i])
-			) if(cmp!=0) cmp
-		]
-	) cmps==[]? (len(a)-len(b)) : cmps[0];
+    a==b? 0 : let(
+        cmps = [
+            for(i=[0:1:min(len(a),len(b))-1]) let(
+                cmp = compare_vals(a[i],b[i])
+            ) if(cmp!=0) cmp
+        ]
+    ) cmps==[]? (len(a)-len(b)) : cmps[0];
 
 
 // Function: any()
@@ -822,13 +822,13 @@ function compare_lists(a, b) =
 //   any([[0,0], [0,0]]);   // Returns false.
 //   any([[0,0], [1,0]]);   // Returns true.
 function any(l, i=0, succ=false) =
-	(i>=len(l) || succ)? succ :
-	any(
-		l, i=i+1, succ=(
-			is_list(l[i])? any(l[i]) :
-			!(!l[i])
-		)
-	);
+    (i>=len(l) || succ)? succ :
+    any(
+        l, i=i+1, succ=(
+            is_list(l[i])? any(l[i]) :
+            !(!l[i])
+        )
+    );
 
 
 // Function: all()
@@ -845,13 +845,13 @@ function any(l, i=0, succ=false) =
 //   all([[0,0], [1,0]]);   // Returns false.
 //   all([[1,1], [1,1]]);   // Returns true.
 function all(l, i=0, fail=false) =
-	(i>=len(l) || fail)? (!fail) :
-	all(
-		l, i=i+1, fail=(
-			is_list(l[i])? !all(l[i]) :
-			!l[i]
-		)
-	);
+    (i>=len(l) || fail)? (!fail) :
+    all(
+        l, i=i+1, fail=(
+            is_list(l[i])? !all(l[i]) :
+            !l[i]
+        )
+    );
 
 
 // Function: count_true()
@@ -875,13 +875,13 @@ function all(l, i=0, fail=false) =
 //   count_true([[1,1], [1,1]]);   // Returns 4.
 //   count_true([[1,1], [1,1]], nmax=3);  // Returns 3.
 function count_true(l, nmax=undef, i=0, cnt=0) =
-	(i>=len(l) || (nmax!=undef && cnt>=nmax))? cnt :
-	count_true(
-		l=l, nmax=nmax, i=i+1, cnt=cnt+(
-			is_list(l[i])? count_true(l[i], nmax=nmax-cnt) :
-			(l[i]? 1 : 0)
-		)
-	);
+    (i>=len(l) || (nmax!=undef && cnt>=nmax))? cnt :
+    count_true(
+        l=l, nmax=nmax, i=i+1, cnt=cnt+(
+            is_list(l[i])? count_true(l[i], nmax=nmax-cnt) :
+            (l[i]? 1 : 0)
+        )
+    );
 
 
 
@@ -897,23 +897,23 @@ function count_true(l, nmax=undef, i=0, cnt=0) =
 //   for internal points, f'(t) = (f(t+h)-f(t-h))/2h.  For the endpoints (when closed=false) the algorithm
 //   uses a two point method if sufficient points are available: f'(t) = (3*(f(t+h)-f(t)) - (f(t+2*h)-f(t+h)))/2h.
 function deriv(data, h=1, closed=false) =
-	let( L = len(data) )
-	closed? [
-		for(i=[0:1:L-1])
-		(data[(i+1)%L]-data[(L+i-1)%L])/2/h
-	] :
-	let(
-		first =
-			L<3? data[1]-data[0] : 
-			3*(data[1]-data[0]) - (data[2]-data[1]),
-		last =
-			L<3? data[L-1]-data[L-2]:
-			(data[L-3]-data[L-2])-3*(data[L-2]-data[L-1])
-	) [
-		first/2/h,
-		for(i=[1:1:L-2]) (data[i+1]-data[i-1])/2/h,
-		last/2/h
-	];
+    let( L = len(data) )
+    closed? [
+        for(i=[0:1:L-1])
+        (data[(i+1)%L]-data[(L+i-1)%L])/2/h
+    ] :
+    let(
+        first =
+            L<3? data[1]-data[0] : 
+            3*(data[1]-data[0]) - (data[2]-data[1]),
+        last =
+            L<3? data[L-1]-data[L-2]:
+            (data[L-3]-data[L-2])-3*(data[L-2]-data[L-1])
+    ) [
+        first/2/h,
+        for(i=[1:1:L-2]) (data[i+1]-data[i-1])/2/h,
+        last/2/h
+    ];
 
 
 // Function: deriv2()
@@ -928,25 +928,25 @@ function deriv(data, h=1, closed=false) =
 //   f''(t) = (2*f(t) - 5*f(t+h) + 4*f(t+2*h) - f(t+3*h))/h^2 or if five points are available
 //   f''(t) = (35*f(t) - 104*f(t+h) + 114*f(t+2*h) - 56*f(t+3*h) + 11*f(t+4*h)) / 12h^2
 function deriv2(data, h=1, closed=false) =
-	let( L = len(data) )
-	closed? [
-		for(i=[0:1:L-1])
-		(data[(i+1)%L]-2*data[i]+data[(L+i-1)%L])/h/h
-	] :
-	let(
-		first = L<3? undef : 
-			L==3? data[0] - 2*data[1] + data[2] :
-			L==4? 2*data[0] - 5*data[1] + 4*data[2] - data[3] :
-			(35*data[0] - 104*data[1] + 114*data[2] - 56*data[3] + 11*data[4])/12, 
-		last = L<3? undef :
-			L==3? data[L-1] - 2*data[L-2] + data[L-3] :
-			L==4? -2*data[L-1] + 5*data[L-2] - 4*data[L-3] + data[L-4] :
-			(35*data[L-1] - 104*data[L-2] + 114*data[L-3] - 56*data[L-4] + 11*data[L-5])/12
-	) [
-		first/h/h,
-		for(i=[1:1:L-2]) (data[i+1]-2*data[i]+data[i-1])/h/h,
-		last/h/h
-	];
+    let( L = len(data) )
+    closed? [
+        for(i=[0:1:L-1])
+        (data[(i+1)%L]-2*data[i]+data[(L+i-1)%L])/h/h
+    ] :
+    let(
+        first = L<3? undef : 
+            L==3? data[0] - 2*data[1] + data[2] :
+            L==4? 2*data[0] - 5*data[1] + 4*data[2] - data[3] :
+            (35*data[0] - 104*data[1] + 114*data[2] - 56*data[3] + 11*data[4])/12, 
+        last = L<3? undef :
+            L==3? data[L-1] - 2*data[L-2] + data[L-3] :
+            L==4? -2*data[L-1] + 5*data[L-2] - 4*data[L-3] + data[L-4] :
+            (35*data[L-1] - 104*data[L-2] + 114*data[L-3] - 56*data[L-4] + 11*data[L-5])/12
+    ) [
+        first/h/h,
+        for(i=[1:1:L-2]) (data[i+1]-2*data[i]+data[i-1])/h/h,
+        last/h/h
+    ];
 
 
 // Function: deriv3()
@@ -960,28 +960,28 @@ function deriv2(data, h=1, closed=false) =
 //   the estimates are f'''(t) = (-5*f(t)+18*f(t+h)-24*f(t+2*h)+14*f(t+3*h)-3*f(t+4*h)) / 2h^3 and
 //   f'''(t) = (-3*f(t-h)+10*f(t)-12*f(t+h)+6*f(t+2*h)-f(t+3*h)) / 2h^3.
 function deriv3(data, h=1, closed=false) =
-	let(
-		L = len(data),
-		h3 = h*h*h
-	)
-	assert(L>=5, "Need five points for 3rd derivative estimate")
-	closed? [
-		for(i=[0:1:L-1])
-		(-data[(L+i-2)%L]+2*data[(L+i-1)%L]-2*data[(i+1)%L]+data[(i+2)%L])/2/h3
-	] :
-	let(
-		first=(-5*data[0]+18*data[1]-24*data[2]+14*data[3]-3*data[4])/2,
-		second=(-3*data[0]+10*data[1]-12*data[2]+6*data[3]-data[4])/2,
-		last=(5*data[L-1]-18*data[L-2]+24*data[L-3]-14*data[L-4]+3*data[L-5])/2,
-		prelast=(3*data[L-1]-10*data[L-2]+12*data[L-3]-6*data[L-4]+data[L-5])/2
-	) [
-		first/h3,
-		second/h3,
-		for(i=[2:1:L-3]) (-data[i-2]+2*data[i-1]-2*data[i+1]+data[i+2])/2/h3,
-		prelast/h3,
-		last/h3
-	];
+    let(
+        L = len(data),
+        h3 = h*h*h
+    )
+    assert(L>=5, "Need five points for 3rd derivative estimate")
+    closed? [
+        for(i=[0:1:L-1])
+        (-data[(L+i-2)%L]+2*data[(L+i-1)%L]-2*data[(i+1)%L]+data[(i+2)%L])/2/h3
+    ] :
+    let(
+        first=(-5*data[0]+18*data[1]-24*data[2]+14*data[3]-3*data[4])/2,
+        second=(-3*data[0]+10*data[1]-12*data[2]+6*data[3]-data[4])/2,
+        last=(5*data[L-1]-18*data[L-2]+24*data[L-3]-14*data[L-4]+3*data[L-5])/2,
+        prelast=(3*data[L-1]-10*data[L-2]+12*data[L-3]-6*data[L-4]+data[L-5])/2
+    ) [
+        first/h3,
+        second/h3,
+        for(i=[2:1:L-3]) (-data[i-2]+2*data[i-1]-2*data[i+1]+data[i+2])/2/h3,
+        prelast/h3,
+        last/h3
+    ];
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -31,8 +31,8 @@
 //   is_vector([]);             // Returns false
 //   is_vector([3,undef,undef,true], fast=true);  // Returns true
 function is_vector(v,length,fast=false) =
-	(fast? (is_list(v) && is_num(v[0])) : is_list_of(v,0)) &&
-	len(v) && (is_undef(length) || length==len(v));
+    (fast? (is_list(v) && is_num(v[0])) : is_list_of(v,0)) &&
+    len(v) && (is_undef(length) || length==len(v));
 
 
 // Function: add_scalar()
@@ -58,8 +58,8 @@ function add_scalar(v,s) = [for (x=v) is_list(x)? add_scalar(x,s) : x+s];
 //   Given a 2D vector, returns the angle in degrees counter-clockwise from X+ on the XY plane.
 //   Given a 3D vector, returns [THETA,PHI] where THETA is the number of degrees counter-clockwise from X+ on the XY plane, and PHI is the number of degrees up from the X+ axis along the XZ plane.
 function vang(v) =
-	len(v)==2? atan2(v.y,v.x) :
-	let(res=xyz_to_spherical(v)) [res[1], 90-res[2]];
+    len(v)==2? atan2(v.y,v.x) :
+    let(res=xyz_to_spherical(v)) [res[1], 90-res[2]];
 
 
 // Function: vmul()
@@ -144,22 +144,22 @@ function unit(v) = assert(is_vector(v),str(v)) norm(v)<=EPSILON? v : v/norm(v);
 //   vector_angle([10,0,10], [0,0,0], [-10,10,0]);  // Returns: 120
 //   vector_angle([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: 120
 function vector_angle(v1,v2,v3) =
-	let(
-		vecs = !is_undef(v3)? [v1-v2,v3-v2] :
-			!is_undef(v2)? [v1,v2] :
-			len(v1) == 3? [v1[0]-v1[1],v1[2]-v1[1]] :
-			len(v1) == 2? v1 :
-			assert(false, "Bad arguments to vector_angle()"),
-		is_valid = is_vector(vecs[0]) && is_vector(vecs[1]) && vecs[0]*0 == vecs[1]*0
-	)
-	assert(is_valid, "Bad arguments to vector_angle()")
-	let(
-		norm0 = norm(vecs[0]),
-		norm1 = norm(vecs[1])
-	)
-	assert(norm0>0 && norm1>0,"Zero length vector given to vector_angle()")
-	// NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
-	acos(constrain((vecs[0]*vecs[1])/(norm0*norm1), -1, 1));
+    let(
+        vecs = !is_undef(v3)? [v1-v2,v3-v2] :
+            !is_undef(v2)? [v1,v2] :
+            len(v1) == 3? [v1[0]-v1[1],v1[2]-v1[1]] :
+            len(v1) == 2? v1 :
+            assert(false, "Bad arguments to vector_angle()"),
+        is_valid = is_vector(vecs[0]) && is_vector(vecs[1]) && vecs[0]*0 == vecs[1]*0
+    )
+    assert(is_valid, "Bad arguments to vector_angle()")
+    let(
+        norm0 = norm(vecs[0]),
+        norm1 = norm(vecs[1])
+    )
+    assert(norm0>0 && norm1>0,"Zero length vector given to vector_angle()")
+    // NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
+    acos(constrain((vecs[0]*vecs[1])/(norm0*norm1), -1, 1));
 
 
 // Function: vector_axis()
@@ -184,22 +184,22 @@ function vector_angle(v1,v2,v3) =
 //   vector_axis([10,0,10], [0,0,0], [-10,10,0]);  // Returns: [-0.57735, -0.57735, 0.57735]
 //   vector_axis([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: [-0.57735, -0.57735, 0.57735]
 function vector_axis(v1,v2=undef,v3=undef) =
-	(is_list(v1) && is_list(v1[0]) && is_undef(v2) && is_undef(v3))? (
-		assert(is_vector(v1.x))
-		assert(is_vector(v1.y))
-		len(v1)==3? assert(is_vector(v1.z)) vector_axis(v1.x, v1.y, v1.z) :
-		len(v1)==2? vector_axis(v1.x, v1.y) :
-		assert(false, "Bad arguments.")
-	) :
-	(is_vector(v1) && is_vector(v2) && is_vector(v3))? vector_axis(v1-v2, v3-v2) :
-	(is_vector(v1) && is_vector(v2) && is_undef(v3))? let(
-		eps = 1e-6,
-		v1 = point3d(v1/norm(v1)),
-		v2 = point3d(v2/norm(v2)),
-		v3 = (norm(v1-v2) > eps && norm(v1+v2) > eps)? v2 :
-			(norm(vabs(v2)-UP) > eps)? UP :
-			RIGHT
-	) unit(cross(v1,v3)) : assert(false, "Bad arguments.");
+    (is_list(v1) && is_list(v1[0]) && is_undef(v2) && is_undef(v3))? (
+        assert(is_vector(v1.x))
+        assert(is_vector(v1.y))
+        len(v1)==3? assert(is_vector(v1.z)) vector_axis(v1.x, v1.y, v1.z) :
+        len(v1)==2? vector_axis(v1.x, v1.y) :
+        assert(false, "Bad arguments.")
+    ) :
+    (is_vector(v1) && is_vector(v2) && is_vector(v3))? vector_axis(v1-v2, v3-v2) :
+    (is_vector(v1) && is_vector(v2) && is_undef(v3))? let(
+        eps = 1e-6,
+        v1 = point3d(v1/norm(v1)),
+        v2 = point3d(v2/norm(v2)),
+        v3 = (norm(v1-v2) > eps && norm(v1+v2) > eps)? v2 :
+            (norm(vabs(v2)-UP) > eps)? UP :
+            RIGHT
+    ) unit(cross(v1,v3)) : assert(false, "Bad arguments.");
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -10,4 +10,4 @@ metric_bolt(headtype="oval", size=10, l=15, shank=5, details=true, phillips="#2"
 show_anchors(5, std=false);
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

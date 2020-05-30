@@ -41,8 +41,8 @@ function stack_init() = [];
 //   stack2 = stack_push(stack, "foo");
 //   is_empty2 = stack_empty(stack2);  // Returns: false
 function stack_empty(stack) =
-	assert(is_list(stack))
-	len(stack)==0;
+    assert(is_list(stack))
+    len(stack)==0;
 
 
 // Function: stack_depth()
@@ -60,8 +60,8 @@ function stack_empty(stack) =
 //   stack3 = stack_push(stack2, ["bar","baz","qux"]);
 //   depth3 = stack_depth(stack3);  // Returns: 4
 function stack_depth(stack) =
-	assert(is_list(stack))
-	len(stack);
+    assert(is_list(stack))
+    len(stack);
 
 
 // Function: stack_top()
@@ -78,16 +78,16 @@ function stack_depth(stack) =
 //   item = stack_top(stack);  // Returns: 7
 //   list = stack_top(stack,n=3);  // Returns: [5,6,7]
 function stack_top(stack,n=undef) =
-	assert(is_list(stack))
-	is_undef(n)? (
-		stack[len(stack)-1]
-	) : (
-		let(stacksize = len(stack))
-		assert(is_num(n))
-		assert(n>=0)
-		assert(stacksize>=n, "stack underflow")
-		[for (i=[0:1:n-1]) stack[stacksize-n+i]]
-	);
+    assert(is_list(stack))
+    is_undef(n)? (
+        stack[len(stack)-1]
+    ) : (
+        let(stacksize = len(stack))
+        assert(is_num(n))
+        assert(n>=0)
+        assert(stacksize>=n, "stack underflow")
+        [for (i=[0:1:n-1]) stack[stacksize-n+i]]
+    );
 
 
 // Function: stack_peek()
@@ -107,19 +107,19 @@ function stack_top(stack,n=undef) =
 //   item2 = stack_peek(stack, 3);  // Returns: 7
 //   list = stack_peek(stack, 6, 4);  // Returns: [4,5,6,7]
 function stack_peek(stack,depth=0,n=undef) =
-	assert(is_list(stack))
-	assert(is_num(depth))
-	assert(depth>=0)
-	let(stacksize = len(stack))
-	assert(stacksize>=depth, "stack underflow")
-	is_undef(n)? (
-		stack[stacksize-depth-1]
-	) : (
-		assert(is_num(n))
-		assert(n>=0)
-		assert(n<=depth+1)
-		[for (i=[0:1:n-1]) stack[stacksize-1-depth+i]]
-	);
+    assert(is_list(stack))
+    assert(is_num(depth))
+    assert(depth>=0)
+    let(stacksize = len(stack))
+    assert(stacksize>=depth, "stack underflow")
+    is_undef(n)? (
+        stack[stacksize-depth-1]
+    ) : (
+        assert(is_num(n))
+        assert(n>=0)
+        assert(n<=depth+1)
+        [for (i=[0:1:n-1]) stack[stacksize-1-depth+i]]
+    );
 
 
 // Function: stack_push()
@@ -137,8 +137,8 @@ function stack_peek(stack,depth=0,n=undef) =
 //   stack4 = stack_push(stack,[[5,8]]);  // Returns: [4,9,2,3,[5,8]]
 //   stack5 = stack_push(stack,[[5,8],6,7]);  // Returns: [4,9,2,3,[5,8],6,7]
 function stack_push(stack,items) =
-	assert(is_list(stack))
-	is_list(items)? concat(stack, items) : concat(stack, [items]);
+    assert(is_list(stack))
+    is_list(items)? concat(stack, items) : concat(stack, [items]);
 
 
 // Function: stack_pop()
@@ -154,11 +154,11 @@ function stack_push(stack,items) =
 //   stack2 = stack_pop(stack);  // Returns: [4,5,6,7,8]
 //   stack3 = stack_pop(stack2,n=3);  // Returns: [4,5]
 function stack_pop(stack,n=1) =
-	assert(is_list(stack))
-	assert(is_num(n))
-	assert(n>=0)
-	assert(len(stack)>=n, "stack underflow")
-	[for (i = [0:1:len(stack)-1-n]) stack[i]];
+    assert(is_list(stack))
+    assert(is_num(n))
+    assert(n>=0)
+    assert(len(stack)>=n, "stack underflow")
+    [for (i = [0:1:len(stack)-1-n]) stack[i]];
 
 
 // Function: stack_rotate()
@@ -176,18 +176,18 @@ function stack_pop(stack,n=1) =
 //   stack2 = stack_rotate(stack,3);  // Returns: [4,5,7,8,6]
 //   stack3 = stack_rotate(stack2,-4);  // Returns: [4,6,5,7,8]
 function stack_rotate(stack,n=3) =
-	assert(is_list(stack))
-	let(stacksize = len(stack))
-	assert(stacksize>=n, "stack underflow")
-	n>=0? concat(
-		[for (i=[0:1:stacksize-1-n]) stack[i]],
-		[for (i=[0:1:n-2]) stack[stacksize-n+i+1]],
-		[stack[stacksize-n]]
-	) : concat(
-		[for (i=[0:1:stacksize-1+n]) stack[i]],
-		[stack[stacksize-1]],
-		[for (i=[0:1:-n-2]) stack[stacksize+n+i]]
-	);
+    assert(is_list(stack))
+    let(stacksize = len(stack))
+    assert(stacksize>=n, "stack underflow")
+    n>=0? concat(
+        [for (i=[0:1:stacksize-1-n]) stack[i]],
+        [for (i=[0:1:n-2]) stack[stacksize-n+i+1]],
+        [stack[stacksize-n]]
+    ) : concat(
+        [for (i=[0:1:stacksize-1+n]) stack[i]],
+        [stack[stacksize-1]],
+        [for (i=[0:1:-n-2]) stack[stacksize+n+i]]
+    );
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

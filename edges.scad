@@ -68,34 +68,34 @@ function is_edge_array(v) = is_list(v) && is_vector(v[0]) && len(v)==3 && len(v[
 
 
 function _edge_set(v) =
-	is_edge_array(v)? v : [
-	for (ax=[0:2]) [
-		for (b=[-1,1], a=[-1,1]) let(
-			v2=[[0,a,b],[a,0,b],[a,b,0]][ax]
-		) (
-			is_string(v)? (
-				v=="X"? (ax==0) :   // Return all X axis aligned edges.
-				v=="Y"? (ax==1) :   // Return all Y axis aligned edges.
-				v=="Z"? (ax==2) :   // Return all Z axis aligned edges.
-				v=="ALL"? true :    // Return all edges.
-				v=="NONE"? false :  // Return no edges.
-				let(valid_values = ["X", "Y", "Z", "ALL", "NONE"])
-				assert(
-					in_list(v, valid_values),
-					str(v, " must be a vector, edge array, or one of ", valid_values)
-				) v
-			) :
-			let(nonz = sum(vabs(v)))
-			nonz==2? (v==v2) :  // Edge: return matching edge.
-			let(
-				matches = count_true([
-					for (i=[0:2]) v[i] && (v[i]==v2[i])
-				])
-			)
-			nonz==1? (matches==1) :  // Face: return surrounding edges.
-			(matches==2)             // Corner: return touching edges.
-		)? 1 : 0
-	]
+    is_edge_array(v)? v : [
+    for (ax=[0:2]) [
+        for (b=[-1,1], a=[-1,1]) let(
+            v2=[[0,a,b],[a,0,b],[a,b,0]][ax]
+        ) (
+            is_string(v)? (
+                v=="X"? (ax==0) :   // Return all X axis aligned edges.
+                v=="Y"? (ax==1) :   // Return all Y axis aligned edges.
+                v=="Z"? (ax==2) :   // Return all Z axis aligned edges.
+                v=="ALL"? true :    // Return all edges.
+                v=="NONE"? false :  // Return no edges.
+                let(valid_values = ["X", "Y", "Z", "ALL", "NONE"])
+                assert(
+                    in_list(v, valid_values),
+                    str(v, " must be a vector, edge array, or one of ", valid_values)
+                ) v
+            ) :
+            let(nonz = sum(vabs(v)))
+            nonz==2? (v==v2) :  // Edge: return matching edge.
+            let(
+                matches = count_true([
+                    for (i=[0:2]) v[i] && (v[i]==v2[i])
+                ])
+            )
+            nonz==1? (matches==1) :  // Face: return surrounding edges.
+            (matches==2)             // Corner: return touching edges.
+        )? 1 : 0
+    ]
 ];
 
 
@@ -211,32 +211,32 @@ function normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 // Example: All edges, except Z-aligned edges on the front.
 //   edges("ALL", except=edges("Z", except=BACK))
 function edges(v, except=[]) =
-	(is_string(v) || is_vector(v) || is_edge_array(v))? edges([v], except=except) :
-	(is_string(except) || is_vector(except) || is_edge_array(except))? edges(v, except=[except]) :
-	except==[]? normalize_edges(sum([for (x=v) _edge_set(x)])) :
-	normalize_edges(
-		normalize_edges(sum([for (x=v) _edge_set(x)])) -
-		sum([for (x=except) _edge_set(x)])
-	);
+    (is_string(v) || is_vector(v) || is_edge_array(v))? edges([v], except=except) :
+    (is_string(except) || is_vector(except) || is_edge_array(except))? edges(v, except=[except]) :
+    except==[]? normalize_edges(sum([for (x=v) _edge_set(x)])) :
+    normalize_edges(
+        normalize_edges(sum([for (x=v) _edge_set(x)])) -
+        sum([for (x=except) _edge_set(x)])
+    );
 
 
 EDGE_OFFSETS = [   // Array of XYZ offsets to the center of each edge.
-	[
-		[ 0,-1,-1],
-		[ 0, 1,-1],
-		[ 0,-1, 1],
-		[ 0, 1, 1]
-	], [
-		[-1, 0,-1],
-		[ 1, 0,-1],
-		[-1, 0, 1],
-		[ 1, 0, 1]
-	], [
-		[-1,-1, 0],
-		[ 1,-1, 0],
-		[-1, 1, 0],
-		[ 1, 1, 0]
-	]
+    [
+        [ 0,-1,-1],
+        [ 0, 1,-1],
+        [ 0,-1, 1],
+        [ 0, 1, 1]
+    ], [
+        [-1, 0,-1],
+        [ 1, 0,-1],
+        [-1, 0, 1],
+        [ 1, 0, 1]
+    ], [
+        [-1,-1, 0],
+        [ 1,-1, 0],
+        [-1, 1, 0],
+        [ 1, 1, 0]
+    ]
 ];
 
 
@@ -267,21 +267,21 @@ function normalize_corners(v) = [for (x=v) x>0? 1 : 0];
 
 
 function _corner_set(v) =
-	is_corner_array(v)? v : [
-	for (i=[0:7]) let(
-		v2 = CORNER_OFFSETS[i]
-	) (
-		is_string(v)? (
-			v=="ALL"? true :    // Return all corners.
-			v=="NONE"? false :  // Return no corners.
-			let(valid_values = ["ALL", "NONE"])
-			assert(
-				in_list(v, valid_values),
-				str(v, " must be a vector, corner array, or one of ", valid_values)
-			) v
-		) :
-		all([for (i=[0:2]) !v[i] || (v[i]==v2[i])])
-	)? 1 : 0
+    is_corner_array(v)? v : [
+    for (i=[0:7]) let(
+        v2 = CORNER_OFFSETS[i]
+    ) (
+        is_string(v)? (
+            v=="ALL"? true :    // Return all corners.
+            v=="NONE"? false :  // Return no corners.
+            let(valid_values = ["ALL", "NONE"])
+            assert(
+                in_list(v, valid_values),
+                str(v, " must be a vector, corner array, or one of ", valid_values)
+            ) v
+        ) :
+        all([for (i=[0:2]) !v[i] || (v[i]==v2[i])])
+    )? 1 : 0
 ];
 
 
@@ -370,18 +370,18 @@ function _corner_set(v) =
 // Example: All corners around the bottom or front faces, except those on the bottom-front edge.
 //   corners([BOTTOM,FRONT], except=BOTTOM+FRONT)
 function corners(v, except=[]) =
-	(is_string(v) || is_vector(v) || is_corner_array(v))? corners([v], except=except) :
-	(is_string(except) || is_vector(except) || is_corner_array(except))? corners(v, except=[except]) :
-	except==[]? normalize_corners(sum([for (x=v) _corner_set(x)])) :
-	let(
-		a = normalize_corners(sum([for (x=v) _corner_set(x)])),
-		b = normalize_corners(sum([for (x=except) _corner_set(x)]))
-	) normalize_corners(a - b);
+    (is_string(v) || is_vector(v) || is_corner_array(v))? corners([v], except=except) :
+    (is_string(except) || is_vector(except) || is_corner_array(except))? corners(v, except=[except]) :
+    except==[]? normalize_corners(sum([for (x=v) _corner_set(x)])) :
+    let(
+        a = normalize_corners(sum([for (x=v) _corner_set(x)])),
+        b = normalize_corners(sum([for (x=except) _corner_set(x)]))
+    ) normalize_corners(a - b);
 
 
 CORNER_OFFSETS = [   // Array of XYZ offsets to each corner.
-	[-1,-1,-1], [ 1,-1,-1], [-1, 1,-1], [ 1, 1,-1],
-	[-1,-1, 1], [ 1,-1, 1], [-1, 1, 1], [ 1, 1, 1]
+    [-1,-1,-1], [ 1,-1,-1], [-1, 1,-1], [ 1, 1,-1],
+    [-1,-1, 1], [ 1,-1, 1], [-1, 1, 1], [ 1, 1, 1]
 ];
 
 
@@ -391,7 +391,7 @@ CORNER_OFFSETS = [   // Array of XYZ offsets to each corner.
 //   edges = Standard edges array.
 //   v = Vector pointing to the corner to count edge intersections at.
 function corner_edge_count(edges, v) =
-	let(u = (v+[1,1,1])/2) edges[0][u.y+u.z*2] + edges[1][u.x+u.z*2] + edges[2][u.x+u.y*2];
+    let(u = (v+[1,1,1])/2) edges[0][u.y+u.z*2] + edges[1][u.x+u.z*2] + edges[2][u.x+u.y*2];
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

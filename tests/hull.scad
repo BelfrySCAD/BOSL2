@@ -3,12 +3,12 @@ include <BOSL2/hull.scad>
 
 
 testpoints_on_sphere = [ for(p = 
-	[
-		[1,PHI,0], [-1,PHI,0], [1,-PHI,0], [-1,-PHI,0],
-		[0,1,PHI], [0,-1,PHI], [0,1,-PHI], [0,-1,-PHI],
-		[PHI,0,1], [-PHI,0,1], [PHI,0,-1], [-PHI,0,-1]
-	])
-	unit(p)
+    [
+        [1,PHI,0], [-1,PHI,0], [1,-PHI,0], [-1,-PHI,0],
+        [0,1,PHI], [0,-1,PHI], [0,1,-PHI], [0,-1,-PHI],
+        [PHI,0,1], [-PHI,0,1], [PHI,0,-1], [-PHI,0,-1]
+    ])
+    unit(p)
 ];
 
 testpoints_circular = [ for(a = [0:15:360-EPSILON]) [cos(a),sin(a)] ];
@@ -44,30 +44,30 @@ visualize_hull(testpoints3d);
 
 
 module visualize_hull(points) {
-	hull = hull(points);
-	
-	%if (len(hull) > 0 && is_list(hull[0]) && len(hull[0]) > 0)
-		polyhedron(points=points, faces = hull);
-	else
-		polyhedron(points=points, faces = [hull]);
-	
-	for (i = [0:len(points)-1]) {
-		p = points[i];
-		$fn = 16;
-		translate(p) {
-			if (hull_contains_index(hull,i)) {
-				color("blue") sphere(1);
-			} else {
-				color("red") sphere(1);
-			}
-		}
-	}
-	
-	function hull_contains_index(hull, index) = 
-		search(index,hull,1,0) ||
-		search(index,hull,1,1) ||
-		search(index,hull,1,2);
+    hull = hull(points);
+    
+    %if (len(hull) > 0 && is_list(hull[0]) && len(hull[0]) > 0)
+        polyhedron(points=points, faces = hull);
+    else
+        polyhedron(points=points, faces = [hull]);
+    
+    for (i = [0:len(points)-1]) {
+        p = points[i];
+        $fn = 16;
+        translate(p) {
+            if (hull_contains_index(hull,i)) {
+                color("blue") sphere(1);
+            } else {
+                color("red") sphere(1);
+            }
+        }
+    }
+    
+    function hull_contains_index(hull, index) = 
+        search(index,hull,1,0) ||
+        search(index,hull,1,1) ||
+        search(index,hull,1,2);
 }
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

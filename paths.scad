@@ -43,10 +43,10 @@ include <triangulation.scad>
 //   dim = list of allowed dimensions of the vectors in the path.  Default: [2,3]
 //   fast = set to true for fast check that only looks at first entry.  Default: false
 function is_path(list, dim=[2,3], fast=false) =
-	fast? is_list(list) && is_vector(list[0],fast=true) :
-	is_list(list) && is_list(list[0]) && len(list)>1 &&
-	(is_undef(dim) || in_list(len(list[0]), force_list(dim))) &&
-	is_list_of(list, repeat(0,len(list[0])));
+    fast? is_list(list) && is_vector(list[0],fast=true) :
+    is_list(list) && is_list(list[0]) && len(list)>1 &&
+    (is_undef(dim) || in_list(len(list[0]), force_list(dim))) &&
+    is_list_of(list, repeat(0,len(list[0])));
 
 
 // Function: is_closed_path()
@@ -88,19 +88,19 @@ function cleanup_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? select(
 //   u2 = The proportion along the ending segment, between 0.0 and 1.0, inclusive.
 //   closed = If true, treat path as a closed polygon.
 function path_subselect(path, s1, u1, s2, u2, closed=false) =
-	let(
-		lp = len(path),
-		l = lp-(closed?0:1),
-		u1 = s1<0? 0 : s1>l? 1 : u1,
-		u2 = s2<0? 0 : s2>l? 1 : u2,
-		s1 = constrain(s1,0,l),
-		s2 = constrain(s2,0,l),
-		pathout = concat(
-			(s1<l && u1<1)? [lerp(path[s1],path[(s1+1)%lp],u1)] : [],
-			[for (i=[s1+1:1:s2]) path[i]],
-			(s2<l && u2>0)? [lerp(path[s2],path[(s2+1)%lp],u2)] : []
-		)
-	) pathout;
+    let(
+        lp = len(path),
+        l = lp-(closed?0:1),
+        u1 = s1<0? 0 : s1>l? 1 : u1,
+        u2 = s2<0? 0 : s2>l? 1 : u2,
+        s1 = constrain(s1,0,l),
+        s2 = constrain(s2,0,l),
+        pathout = concat(
+            (s1<l && u1<1)? [lerp(path[s1],path[(s1+1)%lp],u1)] : [],
+            [for (i=[s1+1:1:s2]) path[i]],
+            (s2<l && u2>0)? [lerp(path[s2],path[(s2+1)%lp],u2)] : []
+        )
+    ) pathout;
 
 
 // Function: simplify_path()
@@ -112,9 +112,9 @@ function path_subselect(path, s1, u1, s2, u2, closed=false) =
 //   path = A list of 2D path points.
 //   eps = Largest positional variance allowed.  Default: `EPSILON` (1-e9)
 function simplify_path(path, eps=EPSILON) =
-	len(path)<=2? path : let(
-		indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(path, i-1, i, i+1, eps=eps)) i], [len(path)-1])
-	) [for (i = indices) path[i]];
+    len(path)<=2? path : let(
+        indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(path, i-1, i, i+1, eps=eps)) i], [len(path)-1])
+    ) [for (i = indices) path[i]];
 
 
 // Function: simplify_path_indexed()
@@ -128,9 +128,9 @@ function simplify_path(path, eps=EPSILON) =
 //   path = A list of indices into `points` that forms a path.
 //   eps = Largest angle variance allowed.  Default: EPSILON (1-e9) degrees.
 function simplify_path_indexed(points, path, eps=EPSILON) =
-	len(path)<=2? path : let(
-		indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(points, path[i-1], path[i], path[i+1], eps=eps)) i], [len(path)-1])
-	) [for (i = indices) path[i]];
+    len(path)<=2? path : let(
+        indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(points, path[i-1], path[i], path[i+1], eps=eps)) i], [len(path)-1])
+    ) [for (i = indices) path[i]];
 
 
 // Function: path_length()
@@ -145,8 +145,8 @@ function simplify_path_indexed(points, path, eps=EPSILON) =
 //   path = [[0,0], [5,35], [60,-25], [80,0]];
 //   echo(path_length(path));
 function path_length(path,closed=false) =
-	len(path)<2? 0 :
-	sum([for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i])])+(closed?norm(path[len(path)-1]-path[0]):0);
+    len(path)<2? 0 :
+    sum([for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i])])+(closed?norm(path[len(path)-1]-path[0]):0);
 
 
 // Function: path_pos_from_start()
@@ -167,11 +167,11 @@ function path_length(path,closed=false) =
 //   pt = lerp(path[pos[0]], path[(pos[0]+1)%len(path)], pos[1]);
 //   color("red") translate(pt) circle(d=2,$fn=12);
 function path_pos_from_start(path,length,closed=false,_d=0,_i=0) =
-	let (lp = len(path))
-	_i >= lp - (closed?0:1)? undef :
-	let (l = norm(path[(_i+1)%lp]-path[_i]))
-	_d+l <= length? path_pos_from_start(path,length,closed,_d+l,_i+1) :
-	[_i, (length-_d)/l];
+    let (lp = len(path))
+    _i >= lp - (closed?0:1)? undef :
+    let (l = norm(path[(_i+1)%lp]-path[_i]))
+    _d+l <= length? path_pos_from_start(path,length,closed,_d+l,_i+1) :
+    [_i, (length-_d)/l];
 
 
 // Function: path_pos_from_end()
@@ -192,14 +192,14 @@ function path_pos_from_start(path,length,closed=false,_d=0,_i=0) =
 //   pt = lerp(path[pos[0]], path[(pos[0]+1)%len(path)], pos[1]);
 //   color("red") translate(pt) circle(d=2,$fn=12);
 function path_pos_from_end(path,length,closed=false,_d=0,_i=undef) =
-	let (
-		lp = len(path),
-		_i = _i!=undef? _i : lp - (closed?1:2)
-	)
-	_i < 0? undef :
-	let (l = norm(path[(_i+1)%lp]-path[_i]))
-	_d+l <= length? path_pos_from_end(path,length,closed,_d+l,_i-1) :
-	[_i, 1-(length-_d)/l];
+    let (
+        lp = len(path),
+        _i = _i!=undef? _i : lp - (closed?1:2)
+    )
+    _i < 0? undef :
+    let (l = norm(path[(_i+1)%lp]-path[_i]))
+    _d+l <= length? path_pos_from_end(path,length,closed,_d+l,_i-1) :
+    [_i, 1-(length-_d)/l];
 
 
 // Function: path_trim_start()
@@ -218,14 +218,14 @@ function path_pos_from_end(path,length,closed=false,_d=0,_i=undef) =
 //   color("cyan") stroke(path2,width=3,endcaps=false);
 //   color("red") stroke(path,width=1,endcaps=false);
 function path_trim_start(path,trim,_d=0,_i=0) =
-	_i >= len(path)-1? [] :
-	let (l = norm(path[_i+1]-path[_i]))
-	_d+l <= trim? path_trim_start(path,trim,_d+l,_i+1) :
-	let (v = unit(path[_i+1]-path[_i]))
-	concat(
-		[path[_i+1]-v*(l-(trim-_d))],
-		[for (i=[_i+1:1:len(path)-1]) path[i]]
-	);
+    _i >= len(path)-1? [] :
+    let (l = norm(path[_i+1]-path[_i]))
+    _d+l <= trim? path_trim_start(path,trim,_d+l,_i+1) :
+    let (v = unit(path[_i+1]-path[_i]))
+    concat(
+        [path[_i+1]-v*(l-(trim-_d))],
+        [for (i=[_i+1:1:len(path)-1]) path[i]]
+    );
 
 
 // Function: path_trim_end()
@@ -244,15 +244,15 @@ function path_trim_start(path,trim,_d=0,_i=0) =
 //   color("cyan") stroke(path2,width=3,endcaps=false);
 //   color("red") stroke(path,width=1,endcaps=false);
 function path_trim_end(path,trim,_d=0,_i=undef) =
-	let (_i = _i!=undef? _i : len(path)-1)
-	_i <= 0? [] :
-	let (l = norm(path[_i]-path[_i-1]))
-	_d+l <= trim? path_trim_end(path,trim,_d+l,_i-1) :
-	let (v = unit(path[_i]-path[_i-1]))
-	concat(
-		[for (i=[0:1:_i-1]) path[i]],
-		[path[_i-1]+v*(l-(trim-_d))]
-	);
+    let (_i = _i!=undef? _i : len(path)-1)
+    _i <= 0? [] :
+    let (l = norm(path[_i]-path[_i-1]))
+    _d+l <= trim? path_trim_end(path,trim,_d+l,_i-1) :
+    let (v = unit(path[_i]-path[_i-1]))
+    concat(
+        [for (i=[0:1:_i-1]) path[i]],
+        [path[_i-1]+v*(l-(trim-_d))]
+    );
 
 
 // Function: path_closest_point()
@@ -272,11 +272,11 @@ function path_trim_end(path,trim,_d=0,_i=undef) =
 //   color("blue") translate(pt) circle(d=3, $fn=12);
 //   color("red") translate(closest[1]) circle(d=3, $fn=12);
 function path_closest_point(path, pt) =
-	let(
-		pts = [for (seg=idx(path)) segment_closest_point(select(path,seg,seg+1),pt)],
-		dists = [for (p=pts) norm(p-pt)],
-		min_seg = min_index(dists)
-	) [min_seg, pts[min_seg]];
+    let(
+        pts = [for (seg=idx(path)) segment_closest_point(select(path,seg,seg+1),pt)],
+        dists = [for (p=pts) norm(p-pt)],
+        min_seg = min_index(dists)
+    ) [min_seg, pts[min_seg]];
 
 
 // Function: path_tangents()
@@ -285,8 +285,8 @@ function path_closest_point(path, pt) =
 //   Compute the tangent vector to the input path.  The derivative approximation is described in deriv().
 //   The returns vectors will be normalized to length 1.
 function path_tangents(path, closed=false) =
-	assert(is_path(path))
-	[for(t=deriv(path,closed=closed)) unit(t)];
+    assert(is_path(path))
+    [for(t=deriv(path,closed=closed)) unit(t)];
 
 
 // Function: path_normals()
@@ -296,20 +296,20 @@ function path_tangents(path, closed=false) =
 //   path tangent and lies in the plane of the curve.  When there are collinear points,
 //   the curve does not define a unique plane and the normal is not uniquely defined.  
 function path_normals(path, tangents, closed=false) =
-	assert(is_path(path))
-	assert(is_bool(closed))
-	let( tangents = default(tangents, path_tangents(path,closed)) )
-	assert(is_path(tangents))
-	[
-		for(i=idx(path)) let(
-			pts = i==0? (closed? select(path,-1,1) : select(path,0,2)) :
-				i==len(path)-1? (closed? select(path,i-1,i+1) : select(path,i-2,i)) :
-				select(path,i-1,i+1)
-		) unit(cross(
-			cross(pts[1]-pts[0], pts[2]-pts[0]),
-			tangents[i]
-		))
-	];
+    assert(is_path(path))
+    assert(is_bool(closed))
+    let( tangents = default(tangents, path_tangents(path,closed)) )
+    assert(is_path(tangents))
+    [
+        for(i=idx(path)) let(
+            pts = i==0? (closed? select(path,-1,1) : select(path,0,2)) :
+                i==len(path)-1? (closed? select(path,i-1,i+1) : select(path,i-2,i)) :
+                select(path,i-1,i+1)
+        ) unit(cross(
+            cross(pts[1]-pts[0], pts[2]-pts[0]),
+            tangents[i]
+        ))
+    ];
 
 
 // Function: path_curvature()
@@ -317,16 +317,16 @@ function path_normals(path, tangents, closed=false) =
 // Description:
 //   Numerically estimate the curvature of the path (in any dimension). 
 function path_curvature(path, closed=false) =
-	let( 
-		d1 = deriv(path, closed=closed),
-		d2 = deriv2(path, closed=closed)
-	) [
-		for(i=idx(path))
-		sqrt(
-			sqr(norm(d1[i])*norm(d2[i])) -
-			sqr(d1[i]*d2[i])
-		) / pow(norm(d1[i]),3)
-	];
+    let( 
+        d1 = deriv(path, closed=closed),
+        d2 = deriv2(path, closed=closed)
+    ) [
+        for(i=idx(path))
+        sqrt(
+            sqr(norm(d1[i])*norm(d2[i])) -
+            sqr(d1[i]*d2[i])
+        ) / pow(norm(d1[i]),3)
+    ];
 
 
 // Function: path_torsion()
@@ -334,15 +334,15 @@ function path_curvature(path, closed=false) =
 // Description:
 //   Numerically estimate the torsion of a 3d path.  
 function path_torsion(path, closed=false) =
-	let(
-		d1 = deriv(path,closed=closed),
-		d2 = deriv2(path,closed=closed),
-		d3 = deriv3(path,closed=closed)
-	) [
-		for (i=idx(path)) let(
-			crossterm = cross(d1[i],d2[i])
-		) crossterm * d3[i] / sqr(norm(crossterm))
-	];
+    let(
+        d1 = deriv(path,closed=closed),
+        d2 = deriv2(path,closed=closed),
+        d3 = deriv3(path,closed=closed)
+    ) [
+        for (i=idx(path)) let(
+            crossterm = cross(d1[i],d2[i])
+        ) crossterm * d3[i] / sqr(norm(crossterm))
+    ];
 
 
 // Function: path3d_spiral()
@@ -361,16 +361,16 @@ function path_torsion(path, closed=false) =
 // Example(3D):
 //   trace_polyline(path3d_spiral(turns=2.5, h=100, n=24, r=50), N=1, showpts=true);
 function path3d_spiral(turns=3, h=100, n=12, r=undef, d=undef, cp=[0,0], scale=[1,1]) = let(
-		rr=get_radius(r=r, d=d, dflt=100),
-		cnt=floor(turns*n),
-		dz=h/cnt
-	) [
-		for (i=[0:1:cnt]) [
-			rr * cos(i*360/n) * scale.x + cp.x,
-			rr * sin(i*360/n) * scale.y + cp.y,
-			i*dz
-		]
-	];
+        rr=get_radius(r=r, d=d, dflt=100),
+        cnt=floor(turns*n),
+        dz=h/cnt
+    ) [
+        for (i=[0:1:cnt]) [
+            rr * cos(i*360/n) * scale.x + cp.x,
+            rr * sin(i*360/n) * scale.y + cp.y,
+            i*dz
+        ]
+    ];
 
 
 // Function: points_along_path3d()
@@ -388,25 +388,25 @@ function path3d_spiral(turns=3, h=100, n=12, r=undef, d=undef, cp=[0,0], scale=[
 //   polyline = A closed list of 2D path points.
 //   path = A list of 3D path points.
 function points_along_path3d(
-	polyline,  // The 2D polyline to drag along the 3D path.
-	path,  // The 3D polyline path to follow.
-	q=Q_Ident(),  // Used in recursion
-	n=0  // Used in recursion
+    polyline,  // The 2D polyline to drag along the 3D path.
+    path,  // The 3D polyline path to follow.
+    q=Q_Ident(),  // Used in recursion
+    n=0  // Used in recursion
 ) = let(
-	end = len(path)-1,
-	v1 = (n == 0)?  [0, 0, 1] : unit(path[n]-path[n-1]),
-	v2 = (n == end)? unit(path[n]-path[n-1]) : unit(path[n+1]-path[n]),
-	crs = cross(v1, v2),
-	axis = norm(crs) <= 0.001? [0, 0, 1] : crs,
-	ang = vector_angle(v1, v2),
-	hang = ang * (n==0? 1.0 : 0.5),
-	hrot = Quat(axis, hang),
-	arot = Quat(axis, ang),
-	roth = Q_Mul(hrot, q),
-	rotm = Q_Mul(arot, q)
+    end = len(path)-1,
+    v1 = (n == 0)?  [0, 0, 1] : unit(path[n]-path[n-1]),
+    v2 = (n == end)? unit(path[n]-path[n-1]) : unit(path[n+1]-path[n]),
+    crs = cross(v1, v2),
+    axis = norm(crs) <= 0.001? [0, 0, 1] : crs,
+    ang = vector_angle(v1, v2),
+    hang = ang * (n==0? 1.0 : 0.5),
+    hrot = Quat(axis, hang),
+    arot = Quat(axis, ang),
+    roth = Q_Mul(hrot, q),
+    rotm = Q_Mul(arot, q)
 ) concat(
-	[for (i = [0:1:len(polyline)-1]) Qrot(roth,p=point3d(polyline[i])) + path[n]],
-	(n == end)? [] : points_along_path3d(polyline, path, rotm, n+1)
+    [for (i = [0:1:len(polyline)-1]) Qrot(roth,p=point3d(polyline[i])) + path[n]],
+    (n == end)? [] : points_along_path3d(polyline, path, rotm, n+1)
 );
 
 
@@ -434,35 +434,35 @@ function points_along_path3d(
 //   stroke(path, closed=true, width=1);
 //   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
 function path_self_intersections(path, closed=true, eps=EPSILON) =
-	let(
-		path = cleanup_path(path, eps=eps),
-		plen = len(path)
-	) [
-		for (i = [0:1:plen-(closed?2:3)], j=[i+1:1:plen-(closed?1:2)]) let(
-			a1 = path[i],
-			a2 = path[(i+1)%plen],
-			b1 = path[j],
-			b2 = path[(j+1)%plen],
-			isect =
-				(max(a1.x, a2.x) < min(b1.x, b2.x))? undef :
-				(min(a1.x, a2.x) > max(b1.x, b2.x))? undef :
-				(max(a1.y, a2.y) < min(b1.y, b2.y))? undef :
-				(min(a1.y, a2.y) > max(b1.y, b2.y))? undef :
-				let(
-					c = a1-a2,
-					d = b1-b2,
-					denom = (c.x*d.y)-(c.y*d.x)
-				) abs(denom)<eps? undef : let(
-					e = a1-b1,
-					t = ((e.x*d.y)-(e.y*d.x)) / denom,
-					u = ((e.x*c.y)-(e.y*c.x)) / denom
-				) [a1+t*(a2-a1), t, u]
-		) if (
-			isect != undef &&
-			isect[1]>eps && isect[1]<=1+eps &&
-			isect[2]>eps && isect[2]<=1+eps
-		) [isect[0], i, isect[1], j, isect[2]]
-	];
+    let(
+        path = cleanup_path(path, eps=eps),
+        plen = len(path)
+    ) [
+        for (i = [0:1:plen-(closed?2:3)], j=[i+1:1:plen-(closed?1:2)]) let(
+            a1 = path[i],
+            a2 = path[(i+1)%plen],
+            b1 = path[j],
+            b2 = path[(j+1)%plen],
+            isect =
+                (max(a1.x, a2.x) < min(b1.x, b2.x))? undef :
+                (min(a1.x, a2.x) > max(b1.x, b2.x))? undef :
+                (max(a1.y, a2.y) < min(b1.y, b2.y))? undef :
+                (min(a1.y, a2.y) > max(b1.y, b2.y))? undef :
+                let(
+                    c = a1-a2,
+                    d = b1-b2,
+                    denom = (c.x*d.y)-(c.y*d.x)
+                ) abs(denom)<eps? undef : let(
+                    e = a1-b1,
+                    t = ((e.x*d.y)-(e.y*d.x)) / denom,
+                    u = ((e.x*c.y)-(e.y*c.x)) / denom
+                ) [a1+t*(a2-a1), t, u]
+        ) if (
+            isect != undef &&
+            isect[1]>eps && isect[1]<=1+eps &&
+            isect[2]>eps && isect[2]<=1+eps
+        ) [isect[0], i, isect[1], j, isect[2]]
+    ];
 
 
 // Function: split_path_at_self_crossings()
@@ -480,52 +480,52 @@ function path_self_intersections(path, closed=true, eps=EPSILON) =
 //   polylines = split_path_at_self_crossings(path);
 //   rainbow(polylines) stroke($item, closed=false, width=2);
 function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
-	let(
-		path = cleanup_path(path, eps=eps),
-		isects = deduplicate(
-			eps=eps,
-			concat(
-				[[0, 0]],
-				sort([
-					for (
-						a = path_self_intersections(path, closed=closed, eps=eps),
-						ss = [ [a[1],a[2]], [a[3],a[4]] ]
-					) if (ss[0] != undef) ss
-				]),
-				[[len(path)-(closed?1:2), 1]]
-			)
-		)
-	) [
-		for (p = pair(isects))
-			let(
-				s1 = p[0][0],
-				u1 = p[0][1],
-				s2 = p[1][0],
-				u2 = p[1][1],
-				section = path_subselect(path, s1, u1, s2, u2, closed=closed),
-				outpath = deduplicate(eps=eps, section)
-			)
-			outpath
-	];
+    let(
+        path = cleanup_path(path, eps=eps),
+        isects = deduplicate(
+            eps=eps,
+            concat(
+                [[0, 0]],
+                sort([
+                    for (
+                        a = path_self_intersections(path, closed=closed, eps=eps),
+                        ss = [ [a[1],a[2]], [a[3],a[4]] ]
+                    ) if (ss[0] != undef) ss
+                ]),
+                [[len(path)-(closed?1:2), 1]]
+            )
+        )
+    ) [
+        for (p = pair(isects))
+            let(
+                s1 = p[0][0],
+                u1 = p[0][1],
+                s2 = p[1][0],
+                u2 = p[1][1],
+                section = path_subselect(path, s1, u1, s2, u2, closed=closed),
+                outpath = deduplicate(eps=eps, section)
+            )
+            outpath
+    ];
 
 
 function _tag_self_crossing_subpaths(path, closed=true, eps=EPSILON) =
-	let(
-		subpaths = split_path_at_self_crossings(
-			path, closed=closed, eps=eps
-		)
-	) [
-		for (subpath = subpaths) let(
-			seg = select(subpath,0,1),
-			mp = mean(seg),
-			n = line_normal(seg) / 2048,
-			p1 = mp + n,
-			p2 = mp - n,
-			p1in = point_in_polygon(p1, path) >= 0,
-			p2in = point_in_polygon(p2, path) >= 0,
-			tag = (p1in && p2in)? "I" : "O"
-		) [tag, subpath]
-	];
+    let(
+        subpaths = split_path_at_self_crossings(
+            path, closed=closed, eps=eps
+        )
+    ) [
+        for (subpath = subpaths) let(
+            seg = select(subpath,0,1),
+            mp = mean(seg),
+            n = line_normal(seg) / 2048,
+            p1 = mp + n,
+            p2 = mp - n,
+            p1in = point_in_polygon(p1, path) >= 0,
+            p2in = point_in_polygon(p2, path) >= 0,
+            tag = (p1in && p2in)? "I" : "O"
+        ) [tag, subpath]
+    ];
 
 
 // Function: decompose_path()
@@ -545,74 +545,74 @@ function _tag_self_crossing_subpaths(path, closed=true, eps=EPSILON) =
 //   splitpaths = decompose_path(path, closed=true);
 //   rainbow(splitpaths) stroke($item, closed=true, width=3);
 function decompose_path(path, closed=true, eps=EPSILON) =
-	let(
-		path = cleanup_path(path, eps=eps),
-		tagged = _tag_self_crossing_subpaths(path, closed=closed, eps=eps),
-		kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
-		completed = [for (frag=kept) if(is_closed_path(frag)) frag],
-		incomplete = [for (frag=kept) if(!is_closed_path(frag)) frag],
-		defrag = _path_fast_defragment(incomplete, eps=eps),
-		completed2 = assemble_path_fragments(defrag, eps=eps)
-	) concat(completed2,completed);
+    let(
+        path = cleanup_path(path, eps=eps),
+        tagged = _tag_self_crossing_subpaths(path, closed=closed, eps=eps),
+        kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
+        completed = [for (frag=kept) if(is_closed_path(frag)) frag],
+        incomplete = [for (frag=kept) if(!is_closed_path(frag)) frag],
+        defrag = _path_fast_defragment(incomplete, eps=eps),
+        completed2 = assemble_path_fragments(defrag, eps=eps)
+    ) concat(completed2,completed);
 
 
 function _path_fast_defragment(fragments, eps=EPSILON, _done=[]) =
-	len(fragments)==0? _done :
-	let(
-		path = fragments[0],
-		endpt = select(path,-1),
-		extenders = [
-			for (i = [1:1:len(fragments)-1]) let(
-				test1 = approx(endpt,fragments[i][0],eps=eps),
-				test2 = approx(endpt,select(fragments[i],-1),eps=eps)
-			) if (test1 || test2) (test1? i : -1)
-		]
-	) len(extenders) == 1 && extenders[0] >= 0? _path_fast_defragment(
-		fragments=[
-			concat(select(path,0,-2),fragments[extenders[0]]),
-			for (i = [1:1:len(fragments)-1])
-				if (i != extenders[0]) fragments[i]
-		],
-		eps=eps,
-		_done=_done
-	) : _path_fast_defragment(
-		fragments=[for (i = [1:1:len(fragments)-1]) fragments[i]],
-		eps=eps,
-		_done=concat(_done,[deduplicate(path,closed=true,eps=eps)])
-	);
+    len(fragments)==0? _done :
+    let(
+        path = fragments[0],
+        endpt = select(path,-1),
+        extenders = [
+            for (i = [1:1:len(fragments)-1]) let(
+                test1 = approx(endpt,fragments[i][0],eps=eps),
+                test2 = approx(endpt,select(fragments[i],-1),eps=eps)
+            ) if (test1 || test2) (test1? i : -1)
+        ]
+    ) len(extenders) == 1 && extenders[0] >= 0? _path_fast_defragment(
+        fragments=[
+            concat(select(path,0,-2),fragments[extenders[0]]),
+            for (i = [1:1:len(fragments)-1])
+                if (i != extenders[0]) fragments[i]
+        ],
+        eps=eps,
+        _done=_done
+    ) : _path_fast_defragment(
+        fragments=[for (i = [1:1:len(fragments)-1]) fragments[i]],
+        eps=eps,
+        _done=concat(_done,[deduplicate(path,closed=true,eps=eps)])
+    );
 
 
 function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
-	!fragments? [undef, []] :
-	let(
-		delta = seg[1] - seg[0],
-		segang = atan2(delta.y,delta.x),
-		frags = [
-			for (i = idx(fragments)) let(
-				fragment = fragments[i],
-				fwdmatch = approx(seg[1], fragment[0], eps=eps),
-				bakmatch =  approx(seg[1], select(fragment,-1), eps=eps)
-			) [
-				fwdmatch,
-				bakmatch,
-				bakmatch? reverse(fragment) : fragment
-			]
-		],
-		angs = [
-			for (frag = frags)
-				(frag[0] || frag[1])? let(
-					delta2 = frag[2][1] - frag[2][0],
-					segang2 = atan2(delta2.y, delta2.x)
-				) modang(segang2 - segang) : (
-					rightmost? 999 : -999
-				)
-		],
-		fi = rightmost? min_index(angs) : max_index(angs)
-	) abs(angs[fi]) > 360? [undef, fragments] : let(
-		remainder = [for (i=idx(fragments)) if (i!=fi) fragments[i]],
-		frag = frags[fi],
-		foundfrag = frag[2]
-	) [foundfrag, remainder];
+    !fragments? [undef, []] :
+    let(
+        delta = seg[1] - seg[0],
+        segang = atan2(delta.y,delta.x),
+        frags = [
+            for (i = idx(fragments)) let(
+                fragment = fragments[i],
+                fwdmatch = approx(seg[1], fragment[0], eps=eps),
+                bakmatch =  approx(seg[1], select(fragment,-1), eps=eps)
+            ) [
+                fwdmatch,
+                bakmatch,
+                bakmatch? reverse(fragment) : fragment
+            ]
+        ],
+        angs = [
+            for (frag = frags)
+                (frag[0] || frag[1])? let(
+                    delta2 = frag[2][1] - frag[2][0],
+                    segang2 = atan2(delta2.y, delta2.x)
+                ) modang(segang2 - segang) : (
+                    rightmost? 999 : -999
+                )
+        ],
+        fi = rightmost? min_index(angs) : max_index(angs)
+    ) abs(angs[fi]) > 360? [undef, fragments] : let(
+        remainder = [for (i=idx(fragments)) if (i!=fi) fragments[i]],
+        frag = frags[fi],
+        foundfrag = frag[2]
+    ) [foundfrag, remainder];
 
 
 // Function: assemble_a_path_from_fragments()
@@ -628,48 +628,48 @@ function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
 //   startfrag = The fragment to start with.  Default: 0
 //   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
 function assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, eps=EPSILON) =
-	len(fragments)==0? _finished :
-	let(
-		path = fragments[startfrag],
-		newfrags = [for (i=idx(fragments)) if (i!=startfrag) fragments[i]]
-	) is_closed_path(path, eps=eps)? (
-		// starting fragment is already closed
-		[path, newfrags]
-	) : let(
-		// Find rightmost/leftmost continuation fragment
-		seg = select(path,-2,-1),
-		extrema = _extreme_angle_fragment(seg=seg, fragments=newfrags, rightmost=rightmost, eps=eps),
-		foundfrag = extrema[0],
-		remainder = extrema[1]
-	) is_undef(foundfrag)? (
-		// No remaining fragments connect!  INCOMPLETE PATH!
-		// Treat it as complete.
-		[path, remainder]
-	) : is_closed_path(foundfrag, eps=eps)? (
-		// Found fragment is already closed
-		[foundfrag, concat([path], remainder)]
-	) : let(
-		fragend = select(foundfrag,-1),
-		hits = [for (i = idx(path,end=-2)) if(approx(path[i],fragend,eps=eps)) i]
-	) hits? (
-		let(
-			// Found fragment intersects with initial path
-			hitidx = select(hits,-1),
-			newpath = slice(path,0,hitidx+1),
-			newfrags = concat(len(newpath)>1? [newpath] : [], remainder),
-			outpath = concat(slice(path,hitidx,-2), foundfrag)
-		)
-		[outpath, newfrags]
-	) : let(
-		// Path still incomplete.  Continue building it.
-		newpath = concat(path, slice(foundfrag, 1, -1)),
-		newfrags = concat([newpath], remainder)
-	)
-	assemble_a_path_from_fragments(
-		fragments=newfrags,
-		rightmost=rightmost,
-		eps=eps
-	);
+    len(fragments)==0? _finished :
+    let(
+        path = fragments[startfrag],
+        newfrags = [for (i=idx(fragments)) if (i!=startfrag) fragments[i]]
+    ) is_closed_path(path, eps=eps)? (
+        // starting fragment is already closed
+        [path, newfrags]
+    ) : let(
+        // Find rightmost/leftmost continuation fragment
+        seg = select(path,-2,-1),
+        extrema = _extreme_angle_fragment(seg=seg, fragments=newfrags, rightmost=rightmost, eps=eps),
+        foundfrag = extrema[0],
+        remainder = extrema[1]
+    ) is_undef(foundfrag)? (
+        // No remaining fragments connect!  INCOMPLETE PATH!
+        // Treat it as complete.
+        [path, remainder]
+    ) : is_closed_path(foundfrag, eps=eps)? (
+        // Found fragment is already closed
+        [foundfrag, concat([path], remainder)]
+    ) : let(
+        fragend = select(foundfrag,-1),
+        hits = [for (i = idx(path,end=-2)) if(approx(path[i],fragend,eps=eps)) i]
+    ) hits? (
+        let(
+            // Found fragment intersects with initial path
+            hitidx = select(hits,-1),
+            newpath = slice(path,0,hitidx+1),
+            newfrags = concat(len(newpath)>1? [newpath] : [], remainder),
+            outpath = concat(slice(path,hitidx,-2), foundfrag)
+        )
+        [outpath, newfrags]
+    ) : let(
+        // Path still incomplete.  Continue building it.
+        newpath = concat(path, slice(foundfrag, 1, -1)),
+        newfrags = concat([newpath], remainder)
+    )
+    assemble_a_path_from_fragments(
+        fragments=newfrags,
+        rightmost=rightmost,
+        eps=eps
+    );
 
 
 // Function: assemble_path_fragments()
@@ -681,34 +681,34 @@ function assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, 
 //   fragments = List of polylines to be assembled into complete polygons.
 //   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
 function assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
-	len(fragments)==0? _finished :
-	let(
-		minxidx = min_index([
-			for (frag=fragments) min(subindex(frag,0))
-		]),
-		result_l = assemble_a_path_from_fragments(
-			fragments=fragments,
-			startfrag=minxidx,
-			rightmost=false,
-			eps=eps
-		),
-		result_r = assemble_a_path_from_fragments(
-			fragments=fragments,
-			startfrag=minxidx,
-			rightmost=true,
-			eps=eps
-		),
-		l_area = abs(polygon_area(result_l[0])),
-		r_area = abs(polygon_area(result_r[0])),
-		result = l_area < r_area? result_l : result_r,
-		newpath = cleanup_path(result[0]),
-		remainder = result[1],
-		finished = concat(_finished, [newpath])
-	) assemble_path_fragments(
-		fragments=remainder,
-		eps=eps,
-		_finished=finished
-	);
+    len(fragments)==0? _finished :
+    let(
+        minxidx = min_index([
+            for (frag=fragments) min(subindex(frag,0))
+        ]),
+        result_l = assemble_a_path_from_fragments(
+            fragments=fragments,
+            startfrag=minxidx,
+            rightmost=false,
+            eps=eps
+        ),
+        result_r = assemble_a_path_from_fragments(
+            fragments=fragments,
+            startfrag=minxidx,
+            rightmost=true,
+            eps=eps
+        ),
+        l_area = abs(polygon_area(result_l[0])),
+        r_area = abs(polygon_area(result_r[0])),
+        result = l_area < r_area? result_l : result_r,
+        newpath = cleanup_path(result[0]),
+        remainder = result[1],
+        finished = concat(_finished, [newpath])
+    ) assemble_path_fragments(
+        fragments=remainder,
+        eps=eps,
+        _finished=finished
+    );
 
 
 
@@ -725,12 +725,12 @@ function assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
 //   modulated_circle(r=40, sines=[[3, 11], [1, 31]], $fn=6);
 module modulated_circle(r=40, sines=[10])
 {
-	freqs = len(sines)>0? [for (i=sines) i[1]] : [5];
-	points = [
-		for (a = [0 : (360/segs(r)/max(freqs)) : 360])
-			let(nr=r+sum_of_sines(a,sines)) [nr*cos(a), nr*sin(a)]
-	];
-	polygon(points);
+    freqs = len(sines)>0? [for (i=sines) i[1]] : [5];
+    points = [
+        for (a = [0 : (360/segs(r)/max(freqs)) : 360])
+            let(nr=r+sum_of_sines(a,sines)) [nr*cos(a), nr*sin(a)]
+    ];
+    polygon(points);
 }
 
 
@@ -752,14 +752,14 @@ module modulated_circle(r=40, sines=[10])
 //       xcopies(3) circle(3, $fn=32);
 //   }
 module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slices=undef) {
-	rtp = xyz_to_spherical(pt2-pt1);
-	translate(pt1) {
-		rotate([0, rtp[2], rtp[1]]) {
-			linear_extrude(height=rtp[0], convexity=convexity, center=false, slices=slices, twist=twist, scale=scale) {
-				children();
-			}
-		}
-	}
+    rtp = xyz_to_spherical(pt2-pt1);
+    translate(pt1) {
+        rotate([0, rtp[2], rtp[1]]) {
+            linear_extrude(height=rtp[0], convexity=convexity, center=false, slices=slices, twist=twist, scale=scale) {
+                children();
+            }
+        }
+    }
 }
 
 
@@ -781,53 +781,53 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   spiral_sweep(poly, h=200, r=50, twist=1080, $fn=36);
 module spiral_sweep(polyline, h, r, twist=360, center, anchor, spin=0, orient=UP) {
-	polyline = path3d(polyline);
-	pline_count = len(polyline);
-	steps = ceil(segs(r)*(twist/360));
-	anchor = get_anchor(anchor,center,BOT,BOT);
+    polyline = path3d(polyline);
+    pline_count = len(polyline);
+    steps = ceil(segs(r)*(twist/360));
+    anchor = get_anchor(anchor,center,BOT,BOT);
 
-	poly_points = [
-		for (
-			p = [0:1:steps]
-		) let (
-			a = twist * (p/steps),
-			dx = r*cos(a),
-			dy = r*sin(a),
-			dz = h * (p/steps),
-			pts = apply_list(
-				polyline, [
-					affine3d_xrot(90),
-					affine3d_zrot(a),
-					affine3d_translate([dx, dy, dz-h/2])
-				]
-			)
-		) for (pt = pts) pt
-	];
+    poly_points = [
+        for (
+            p = [0:1:steps]
+        ) let (
+            a = twist * (p/steps),
+            dx = r*cos(a),
+            dy = r*sin(a),
+            dz = h * (p/steps),
+            pts = apply_list(
+                polyline, [
+                    affine3d_xrot(90),
+                    affine3d_zrot(a),
+                    affine3d_translate([dx, dy, dz-h/2])
+                ]
+            )
+        ) for (pt = pts) pt
+    ];
 
-	poly_faces = concat(
-		[[for (b = [0:1:pline_count-1]) b]],
-		[
-			for (
-				p = [0:1:steps-1],
-				b = [0:1:pline_count-1],
-				i = [0:1]
-			) let (
-				b2 = (b == pline_count-1)? 0 : b+1,
-				p0 = p * pline_count + b,
-				p1 = p * pline_count + b2,
-				p2 = (p+1) * pline_count + b2,
-				p3 = (p+1) * pline_count + b,
-				pt = (i==0)? [p0, p2, p1] : [p0, p3, p2]
-			) pt
-		],
-		[[for (b = [pline_count-1:-1:0]) b+(steps)*pline_count]]
-	);
+    poly_faces = concat(
+        [[for (b = [0:1:pline_count-1]) b]],
+        [
+            for (
+                p = [0:1:steps-1],
+                b = [0:1:pline_count-1],
+                i = [0:1]
+            ) let (
+                b2 = (b == pline_count-1)? 0 : b+1,
+                p0 = p * pline_count + b,
+                p1 = p * pline_count + b2,
+                p2 = (p+1) * pline_count + b2,
+                p3 = (p+1) * pline_count + b,
+                pt = (i==0)? [p0, p2, p1] : [p0, p3, p2]
+            ) pt
+        ],
+        [[for (b = [pline_count-1:-1:0]) b+(steps)*pline_count]]
+    );
 
-	tri_faces = triangulate_faces(poly_points, poly_faces);
-	attachable(anchor,spin,orient, r=r, l=h) {
-		polyhedron(points=poly_points, faces=tri_faces, convexity=10);
-		children();
-	}
+    tri_faces = triangulate_faces(poly_points, poly_faces);
+    attachable(anchor,spin,orient, r=r, l=h) {
+        polyhedron(points=poly_points, faces=tri_faces, convexity=10);
+        children();
+    }
 }
 
 
@@ -843,44 +843,44 @@ module spiral_sweep(polyline, h, r, twist=360, center, anchor, spin=0, orient=UP
 //   path = [ [0, 0, 0], [33, 33, 33], [66, 33, 40], [100, 0, 0], [150,0,0] ];
 //   path_extrude(path) circle(r=10, $fn=6);
 module path_extrude(path, convexity=10, clipsize=100) {
-	function polyquats(path, q=Q_Ident(), v=[0,0,1], i=0) = let(
-			v2 = path[i+1] - path[i],
-			ang = vector_angle(v,v2),
-			axis = ang>0.001? unit(cross(v,v2)) : [0,0,1],
-			newq = Q_Mul(Quat(axis, ang), q),
-			dist = norm(v2)
-		) i < (len(path)-2)?
-			concat([[dist, newq, ang]], polyquats(path, newq, v2, i+1)) :
-			[[dist, newq, ang]];
+    function polyquats(path, q=Q_Ident(), v=[0,0,1], i=0) = let(
+            v2 = path[i+1] - path[i],
+            ang = vector_angle(v,v2),
+            axis = ang>0.001? unit(cross(v,v2)) : [0,0,1],
+            newq = Q_Mul(Quat(axis, ang), q),
+            dist = norm(v2)
+        ) i < (len(path)-2)?
+            concat([[dist, newq, ang]], polyquats(path, newq, v2, i+1)) :
+            [[dist, newq, ang]];
 
-	epsilon = 0.0001;  // Make segments ever so slightly too long so they overlap.
-	ptcount = len(path);
-	pquats = polyquats(path);
-	for (i = [0:1:ptcount-2]) {
-		pt1 = path[i];
-		pt2 = path[i+1];
-		dist = pquats[i][0];
-		q = pquats[i][1];
-		difference() {
-			translate(pt1) {
-				Qrot(q) {
-					down(clipsize/2/2) {
-						linear_extrude(height=dist+clipsize/2, convexity=convexity) {
-							children();
-						}
-					}
-				}
-			}
-			translate(pt1) {
-				hq = (i > 0)? Q_Slerp(q, pquats[i-1][1], 0.5) : q;
-				Qrot(hq) down(clipsize/2+epsilon) cube(clipsize, center=true);
-			}
-			translate(pt2) {
-				hq = (i < ptcount-2)? Q_Slerp(q, pquats[i+1][1], 0.5) : q;
-				Qrot(hq) up(clipsize/2+epsilon) cube(clipsize, center=true);
-			}
-		}
-	}
+    epsilon = 0.0001;  // Make segments ever so slightly too long so they overlap.
+    ptcount = len(path);
+    pquats = polyquats(path);
+    for (i = [0:1:ptcount-2]) {
+        pt1 = path[i];
+        pt2 = path[i+1];
+        dist = pquats[i][0];
+        q = pquats[i][1];
+        difference() {
+            translate(pt1) {
+                Qrot(q) {
+                    down(clipsize/2/2) {
+                        linear_extrude(height=dist+clipsize/2, convexity=convexity) {
+                            children();
+                        }
+                    }
+                }
+            }
+            translate(pt1) {
+                hq = (i > 0)? Q_Slerp(q, pquats[i-1][1], 0.5) : q;
+                Qrot(hq) down(clipsize/2+epsilon) cube(clipsize, center=true);
+            }
+            translate(pt2) {
+                hq = (i < ptcount-2)? Q_Slerp(q, pquats[i+1][1], 0.5) : q;
+                Qrot(hq) up(clipsize/2+epsilon) cube(clipsize, center=true);
+            }
+        }
+    }
 }
 
 
@@ -969,46 +969,46 @@ module path_extrude(path, convexity=10, clipsize=100) {
 //   }
 module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=false)
 {
-	length = path_length(path,closed);
-	distances = is_def(sp)? (
-		is_def(n) && is_def(spacing)? list_range(s=sp, step=spacing, n=n) :
-		is_def(n)? list_range(s=sp, e=length, n=n) :
-		list_range(s=sp, step=spacing, e=length)
-	) : is_def(n) && is_undef(spacing)? (
-		closed?
-			let(range=list_range(s=0,e=length, n=n+1)) slice(range,0,-2) :
-			list_range(s=0, e=length, n=n)
-	) : (
-		let(
-			n = is_def(n)? n : floor(length/spacing)+(closed?0:1),
-			ptlist = list_range(s=0,step=spacing,n=n),
-			listcenter = mean(ptlist)
-		) closed?
-			sort([for(entry=ptlist) posmod(entry-listcenter,length)]) :
-			[for(entry=ptlist) entry + length/2-listcenter ]
-	);
-	distOK = min(distances)>=0 && max(distances)<=length;
-	assert(distOK,"Cannot fit all of the copies");
-	cutlist = path_cut(path, distances, closed, direction=true);
-	planar = len(path[0])==2;
-	if (true) for(i=[0:1:len(cutlist)-1]) {
-		$pos = cutlist[i][0];
-		$idx = i;
-		$dir = rotate_children ? (planar?[1,0]:[1,0,0]) : cutlist[i][2];
-		$normal = rotate_children? (planar?[0,1]:[0,0,1]) : cutlist[i][3];
-		translate($pos) {
-			if (rotate_children) {
-				if(planar) {
-					rot(from=[0,1],to=cutlist[i][3]) children();
-				} else {
-					multmatrix(affine2d_to_3d(transpose([cutlist[i][2],cross(cutlist[i][3],cutlist[i][2]), cutlist[i][3]])))
-						children();
-				}
-			} else {
-				children();
-			}
-		}
-	}
+    length = path_length(path,closed);
+    distances = is_def(sp)? (
+        is_def(n) && is_def(spacing)? list_range(s=sp, step=spacing, n=n) :
+        is_def(n)? list_range(s=sp, e=length, n=n) :
+        list_range(s=sp, step=spacing, e=length)
+    ) : is_def(n) && is_undef(spacing)? (
+        closed?
+            let(range=list_range(s=0,e=length, n=n+1)) slice(range,0,-2) :
+            list_range(s=0, e=length, n=n)
+    ) : (
+        let(
+            n = is_def(n)? n : floor(length/spacing)+(closed?0:1),
+            ptlist = list_range(s=0,step=spacing,n=n),
+            listcenter = mean(ptlist)
+        ) closed?
+            sort([for(entry=ptlist) posmod(entry-listcenter,length)]) :
+            [for(entry=ptlist) entry + length/2-listcenter ]
+    );
+    distOK = min(distances)>=0 && max(distances)<=length;
+    assert(distOK,"Cannot fit all of the copies");
+    cutlist = path_cut(path, distances, closed, direction=true);
+    planar = len(path[0])==2;
+    if (true) for(i=[0:1:len(cutlist)-1]) {
+        $pos = cutlist[i][0];
+        $idx = i;
+        $dir = rotate_children ? (planar?[1,0]:[1,0,0]) : cutlist[i][2];
+        $normal = rotate_children? (planar?[0,1]:[0,0,1]) : cutlist[i][3];
+        translate($pos) {
+            if (rotate_children) {
+                if(planar) {
+                    rot(from=[0,1],to=cutlist[i][3]) children();
+                } else {
+                    multmatrix(affine2d_to_3d(transpose([cutlist[i][2],cross(cutlist[i][3],cutlist[i][2]), cutlist[i][3]])))
+                        children();
+                }
+            } else {
+                children();
+            }
+        }
+    }
 }
 
 
@@ -1040,76 +1040,76 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
 //   path_cut(square, [0,0.8,1.6,2.4,3.2], closed=true);  // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], [[0, 0.8], 4]]
 //   path_cut(square, [0,0.8,1.6,2.4,3.2]);               // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], undef]
 function path_cut(path, dists, closed=false, direction=false) =
-	let(long_enough = len(path) >= (closed ? 3 : 2))
-	assert(long_enough,len(path)<2 ? "Two points needed to define a path" : "Closed path must include three points")
-	!is_list(dists)? path_cut(path, [dists],closed, direction)[0] :
-	let(cuts = _path_cut(path,dists,closed))
-	!direction ? cuts : let(
-		dir = _path_cuts_dir(path, cuts, closed),
-		normals = _path_cuts_normals(path, cuts, dir, closed)
-	) zip(cuts, array_group(dir,1), array_group(normals,1));
+    let(long_enough = len(path) >= (closed ? 3 : 2))
+    assert(long_enough,len(path)<2 ? "Two points needed to define a path" : "Closed path must include three points")
+    !is_list(dists)? path_cut(path, [dists],closed, direction)[0] :
+    let(cuts = _path_cut(path,dists,closed))
+    !direction ? cuts : let(
+        dir = _path_cuts_dir(path, cuts, closed),
+        normals = _path_cuts_normals(path, cuts, dir, closed)
+    ) zip(cuts, array_group(dir,1), array_group(normals,1));
 
 // Main recursive path cut function
 function _path_cut(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[]) =
-	dind == len(dists) ? result :
-	let(
-		lastpt = len(result)>0? select(result,-1)[0] : [],
-		dpartial = len(result)==0? 0 : norm(lastpt-path[pind]),
-		nextpoint = dpartial > dists[dind]-dtotal?
-			[lerp(lastpt,path[pind], (dists[dind]-dtotal)/dpartial),pind] :
-			_path_cut_single(path, dists[dind]-dtotal-dpartial, closed, pind)
-	) is_undef(nextpoint)?
-		concat(result, repeat(undef,len(dists)-dind)) :
-		_path_cut(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
+    dind == len(dists) ? result :
+    let(
+        lastpt = len(result)>0? select(result,-1)[0] : [],
+        dpartial = len(result)==0? 0 : norm(lastpt-path[pind]),
+        nextpoint = dpartial > dists[dind]-dtotal?
+            [lerp(lastpt,path[pind], (dists[dind]-dtotal)/dpartial),pind] :
+            _path_cut_single(path, dists[dind]-dtotal-dpartial, closed, pind)
+    ) is_undef(nextpoint)?
+        concat(result, repeat(undef,len(dists)-dind)) :
+        _path_cut(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
 
 // Search for a single cut point in the path
 function _path_cut_single(path, dist, closed=false, ind=0, eps=1e-7) =
-	ind>=len(path)? undef :
-	ind==len(path)-1 && !closed? (dist<eps? [path[ind],ind+1] : undef) :
-	let(d = norm(path[ind]-select(path,ind+1))) d > dist ?
-		[lerp(path[ind],select(path,ind+1),dist/d), ind+1] :
-		_path_cut_single(path, dist-d,closed, ind+1, eps);
+    ind>=len(path)? undef :
+    ind==len(path)-1 && !closed? (dist<eps? [path[ind],ind+1] : undef) :
+    let(d = norm(path[ind]-select(path,ind+1))) d > dist ?
+        [lerp(path[ind],select(path,ind+1),dist/d), ind+1] :
+        _path_cut_single(path, dist-d,closed, ind+1, eps);
 
 // Find normal directions to the path, coplanar to local part of the path
 // Or return a vector parallel to the x-y plane if the above fails
 function _path_cuts_normals(path, cuts, dirs, closed=false) =
-	[for(i=[0:len(cuts)-1])
-		len(path[0])==2? [-dirs[i].y, dirs[i].x] : (
-			let(
-				plane = len(path)<3 ? undef :
-				let(start = max(min(cuts[i][1],len(path)-1),2)) _path_plane(path, start, start-2)
-			)
-			plane==undef?
-				unit([-dirs[i].y, dirs[i].x,0]) :
-				unit(cross(dirs[i],cross(plane[0],plane[1])))
-		)
-	];
+    [for(i=[0:len(cuts)-1])
+        len(path[0])==2? [-dirs[i].y, dirs[i].x] : (
+            let(
+                plane = len(path)<3 ? undef :
+                let(start = max(min(cuts[i][1],len(path)-1),2)) _path_plane(path, start, start-2)
+            )
+            plane==undef?
+                unit([-dirs[i].y, dirs[i].x,0]) :
+                unit(cross(dirs[i],cross(plane[0],plane[1])))
+        )
+    ];
 
 // Scan from the specified point (ind) to find a noncoplanar triple to use
 // to define the plane of the path.
 function _path_plane(path, ind, i,closed) =
-	i<(closed?-1:0) ? undef :
-	!collinear(path[ind],path[ind-1], select(path,i))?
-		[select(path,i)-path[ind-1],path[ind]-path[ind-1]] :
-		_path_plane(path, ind, i-1);
+    i<(closed?-1:0) ? undef :
+    !collinear(path[ind],path[ind-1], select(path,i))?
+        [select(path,i)-path[ind-1],path[ind]-path[ind-1]] :
+        _path_plane(path, ind, i-1);
 
 // Find the direction of the path at the cut points
 function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
-	[for(ind=[0:len(cuts)-1])
-		let(
-			nextind = cuts[ind][1],
-			nextpath = unit(select(path, nextind+1)-select(path, nextind)),
-			thispath = unit(select(path, nextind) - path[nextind-1]),
-			lastpath = unit(path[nextind-1] - select(path, nextind-2)),
-			nextdir =
-				nextind==len(path) && !closed? lastpath :
-				(nextind<=len(path)-2 || closed) && approx(cuts[ind][0], path[nextind],eps)?
-					unit(nextpath+thispath) :
-					(nextind>1 || closed) && approx(cuts[ind][0],path[nextind-1],eps)?
-						unit(thispath+lastpath) :
-						thispath
-		) nextdir
-	];
+    [for(ind=[0:len(cuts)-1])
+        let(
+            nextind = cuts[ind][1],
+            nextpath = unit(select(path, nextind+1)-select(path, nextind)),
+            thispath = unit(select(path, nextind) - path[nextind-1]),
+            lastpath = unit(path[nextind-1] - select(path, nextind-2)),
+            nextdir =
+                nextind==len(path) && !closed? lastpath :
+                (nextind<=len(path)-2 || closed) && approx(cuts[ind][0], path[nextind],eps)?
+                    unit(nextpath+thispath) :
+                    (nextind>1 || closed) && approx(cuts[ind][0],path[nextind-1],eps)?
+                        unit(thispath+lastpath) :
+                        thispath
+        ) nextdir
+    ];
 
 // Input `data` is a list that sums to an integer. 
 // Returns rounded version of input data so that every 
@@ -1118,14 +1118,14 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 // and passing the rounding error forward to the next entry.
 // This will generally distribute the error in a uniform manner. 
 function _sum_preserving_round(data, index=0) =
-	index == len(data)-1 ? list_set(data, len(data)-1, round(data[len(data)-1])) :
-	let(
-		newval = round(data[index]),
-		error = newval - data[index]
-	) _sum_preserving_round(
-		list_set(data, [index,index+1], [newval, data[index+1]-error]),
-		index+1
-	);
+    index == len(data)-1 ? list_set(data, len(data)-1, round(data[len(data)-1])) :
+    let(
+        newval = round(data[index]),
+        error = newval - data[index]
+    ) _sum_preserving_round(
+        list_set(data, [index,index+1], [newval, data[index+1]-error]),
+        index+1
+    );
 
 
 // Function: subdivide_path()
@@ -1184,37 +1184,37 @@ function _sum_preserving_round(data, index=0) =
 //   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
 //   move_copies(mypath)sphere(r=.1,$fn=32);
 function subdivide_path(path, N, closed=true, exact=true, method="length") =
-	assert(is_path(path))
-	assert(method=="length" || method=="segment")
-	assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
-	let(
-		count = len(path) - (closed?0:1), 
-		add_guess = method=="segment"? (
-				is_list(N)? (
-					assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
-					add_scalar(N,-1)
-				) : repeat((N-len(path)) / count, count)
-			) : // method=="length"
-			assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
-			let(
-				path_lens = concat(
-					[ for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i]) ],
-					closed? [norm(path[len(path)-1]-path[0])] : []
-				),
-				add_density = (N - len(path)) / sum(path_lens)
-			)
-			path_lens * add_density,
-		add = exact? _sum_preserving_round(add_guess) :
-			[for (val=add_guess) round(val)]
-	) concat(
-		[
-			for (i=[0:1:count]) each [
-				for(j=[0:1:add[i]])
-				lerp(path[i],select(path,i+1), j/(add[i]+1))
-			]
-		],
-		closed? [] : [select(path,-1)]
-	);
+    assert(is_path(path))
+    assert(method=="length" || method=="segment")
+    assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
+    let(
+        count = len(path) - (closed?0:1), 
+        add_guess = method=="segment"? (
+                is_list(N)? (
+                    assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
+                    add_scalar(N,-1)
+                ) : repeat((N-len(path)) / count, count)
+            ) : // method=="length"
+            assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
+            let(
+                path_lens = concat(
+                    [ for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i]) ],
+                    closed? [norm(path[len(path)-1]-path[0])] : []
+                ),
+                add_density = (N - len(path)) / sum(path_lens)
+            )
+            path_lens * add_density,
+        add = exact? _sum_preserving_round(add_guess) :
+            [for (val=add_guess) round(val)]
+    ) concat(
+        [
+            for (i=[0:1:count]) each [
+                for(j=[0:1:add[i]])
+                lerp(path[i],select(path,i+1), j/(add[i]+1))
+            ]
+        ],
+        closed? [] : [select(path,-1)]
+    );
 
 
 // Function: path_length_fractions()
@@ -1225,17 +1225,17 @@ function subdivide_path(path, N, closed=true, exact=true, method="length") =
 //    will have one extra point because of the final connecting segment that connects the last
 //    point of the path to the first point.
 function path_length_fractions(path, closed=false) =
-	assert(is_path(path))
-	assert(is_bool(closed))
-	let(
-		lengths = [
-			0,
-			for (i=[0:1:len(path)-(closed?1:2)])
-				norm(select(path,i+1)-path[i])
-		],
-		partial_len = cumsum(lengths),
-		total_len = select(partial_len,-1)
-	) partial_len / total_len;
+    assert(is_path(path))
+    assert(is_bool(closed))
+    let(
+        lengths = [
+            0,
+            for (i=[0:1:len(path)-(closed?1:2)])
+                norm(select(path,i+1)-path[i])
+        ],
+        partial_len = cumsum(lengths),
+        total_len = select(partial_len,-1)
+    ) partial_len / total_len;
 
 
 // Function: resample_path()
@@ -1258,14 +1258,14 @@ function resample_path(path, N, spacing, closed=false) =
    assert(num_defined([N,spacing])==1,"Must define exactly one of N and spacing")
    assert(is_bool(closed))
    let(
-	length = path_length(path,closed),
-	N = is_def(N) ? N : round(length/spacing) + (closed?0:1), 
+    length = path_length(path,closed),
+    N = is_def(N) ? N : round(length/spacing) + (closed?0:1), 
         spacing = length/(closed?N:N-1),     // Note: worried about round-off error, so don't include 
         distlist = list_range(closed?N:N-1,step=spacing),  // last point when closed=false
-	cuts = path_cut(path, distlist, closed=closed)
+    cuts = path_cut(path, distlist, closed=closed)
    )
    concat(subindex(cuts,0),closed?[]:[select(path,-1)]);  // Then add last point here
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

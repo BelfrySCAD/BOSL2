@@ -1,46 +1,46 @@
 include <BOSL2/std.scad>
 
 function _lsystem_recurse(s, rules, lev) =
-	lev<=0? s : _lsystem_recurse([
-		for (
-			i = 0,
-			slen = len(s),
-			sout = "";
+    lev<=0? s : _lsystem_recurse([
+        for (
+            i = 0,
+            slen = len(s),
+            sout = "";
 
-			i <= slen;
+            i <= slen;
 
-			ch = s[i],
-			found = search([ch], rules)[0],
-			sout = str(sout, i==slen? "" : found==[]? ch : rules[found][1]),
-			i = i + 1
-		) if (i==slen) sout
-	][0], rules, lev-1);
+            ch = s[i],
+            found = search([ch], rules)[0],
+            sout = str(sout, i==slen? "" : found==[]? ch : rules[found][1]),
+            i = i + 1
+        ) if (i==slen) sout
+    ][0], rules, lev-1);
 
 
 function _lsystem_to_turtle(s, step=1, angle=90, startang=0) =
-	concat(
-		startang? ["left", startang] : [],
-		["angle", angle, "length", step],
-		[
-			for (
-				i = 0,
-				slen = len(s);
+    concat(
+        startang? ["left", startang] : [],
+        ["angle", angle, "length", step],
+        [
+            for (
+                i = 0,
+                slen = len(s);
 
-				i <= slen;
+                i <= slen;
 
-				ch = s[i],
-				cmd = (ch=="A" || ch=="B" || ch=="F")? ["move"] :
-					(ch=="+")? ["left"] :
-					(ch=="-")? ["right"] :
-					[],
-				i=i+1
-			) if(i>0 && cmd!=[]) each cmd
-		]
-	);
+                ch = s[i],
+                cmd = (ch=="A" || ch=="B" || ch=="F")? ["move"] :
+                    (ch=="+")? ["left"] :
+                    (ch=="-")? ["right"] :
+                    [],
+                i=i+1
+            ) if(i>0 && cmd!=[]) each cmd
+        ]
+    );
 
 
 function lsystem_turtle(basis, rules, levels=5, step=1, angle=90, startang=0) =
-	turtle(_lsystem_to_turtle(_lsystem_recurse(basis, rules, levels), step=step, angle=angle, startang=startang));
+    turtle(_lsystem_to_turtle(_lsystem_recurse(basis, rules, levels), step=step, angle=angle, startang=startang));
 
 
 function dragon_curve        (levels=9,  step=1) = lsystem_turtle(levels=levels, step=step, angle=90,  "FX",        [["X", "X+YF+"], ["Y", "-FX-Y"]]);
@@ -67,4 +67,4 @@ points = hilbert_curve(levels=5, step=100/pow(2,5));
 stroke(points, width=1);
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

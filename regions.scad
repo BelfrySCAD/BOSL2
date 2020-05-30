@@ -48,13 +48,13 @@ function close_region(region, eps=EPSILON) = [for (path=region) close_path(path,
 //   region(rgn);
 module region(r)
 {
-	points = flatten(r);
-	paths = [
-		for (i=[0:1:len(r)-1]) let(
-			start = default(sum([for (j=[0:1:i-1]) len(r[j])]),0)
-		) [for (k=[0:1:len(r[i])-1]) start+k]
-	];
-	polygon(points=points, paths=paths);
+    points = flatten(r);
+    paths = [
+        for (i=[0:1:len(r)-1]) let(
+            start = default(sum([for (j=[0:1:i-1]) len(r[j])]),0)
+        ) [for (k=[0:1:len(r[i])-1]) start+k]
+    ];
+    polygon(points=points, paths=paths);
 }
 
 
@@ -70,28 +70,28 @@ module region(r)
 //   valid_dim = list of allowed dimensions for the points in the path, e.g. [2,3] to require 2 or 3 dimensional input.  If left undefined do not perform this check.  Default: undef
 //   closed = set to true if the path is closed, which enables a check for endpoint duplication
 function check_and_fix_path(path, valid_dim=undef, closed=false) =
-	let(
-		path = is_region(path)? (
-			assert(len(path)==1,"Region supplied as path does not have exactly one component")
-			path[0]
-		) : (
-			assert(is_path(path), "Input is not a path")
-			path
-		),
-		dim = array_dim(path)
-	)
-	assert(dim[0]>1,"Path must have at least 2 points")
-	assert(len(dim)==2,"Invalid path: path is either a list of scalars or a list of matrices")
-	assert(is_def(dim[1]), "Invalid path: entries in the path have variable length")
-	let(valid=is_undef(valid_dim) || in_list(dim[1],valid_dim))
-	assert(
-		valid, str(
-			"The points on the path have length ",
-			dim[1], " but length must be ",
-			len(valid_dim)==1? valid_dim[0] : str("one of ",valid_dim)
-		)
-	)
-	closed && approx(path[0],select(path,-1))? slice(path,0,-2) : path;
+    let(
+        path = is_region(path)? (
+            assert(len(path)==1,"Region supplied as path does not have exactly one component")
+            path[0]
+        ) : (
+            assert(is_path(path), "Input is not a path")
+            path
+        ),
+        dim = array_dim(path)
+    )
+    assert(dim[0]>1,"Path must have at least 2 points")
+    assert(len(dim)==2,"Invalid path: path is either a list of scalars or a list of matrices")
+    assert(is_def(dim[1]), "Invalid path: entries in the path have variable length")
+    let(valid=is_undef(valid_dim) || in_list(dim[1],valid_dim))
+    assert(
+        valid, str(
+            "The points on the path have length ",
+            dim[1], " but length must be ",
+            len(valid_dim)==1? valid_dim[0] : str("one of ",valid_dim)
+        )
+    )
+    closed && approx(path[0],select(path,-1))? slice(path,0,-2) : path;
 
 
 // Function: cleanup_region()
@@ -103,7 +103,7 @@ function check_and_fix_path(path, valid_dim=undef, closed=false) =
 //   region = The region to clean up.  Given as a list of polygon paths.
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 function cleanup_region(region, eps=EPSILON) =
-	[for (path=region) cleanup_path(path, eps=eps)];
+    [for (path=region) cleanup_path(path, eps=eps)];
 
 
 // Function: point_in_region()
@@ -119,9 +119,9 @@ function cleanup_region(region, eps=EPSILON) =
 //   region = The region to test against.  Given as a list of polygon paths.
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
-	(_i >= len(region))? ((_cnt%2==1)? 1 : -1) : let(
-		pip = point_in_polygon(point, region[_i], eps=eps)
-	) pip==0? 0 : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
+    (_i >= len(region))? ((_cnt%2==1)? 1 : -1) : let(
+        pip = point_in_polygon(point, region[_i], eps=eps)
+    ) pip==0? 0 : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
 
 
 // Function: region_path_crossings()
@@ -135,20 +135,20 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
 //   closed = If true, treat path as a closed polygon.  Default: true
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 function region_path_crossings(path, region, closed=true, eps=EPSILON) = sort([
-	let(
-		segs = pair(closed? close_path(path) : cleanup_path(path))
-	) for (
-		si = idx(segs),
-		p = close_region(region),
-		s2 = pair(p)
-	) let (
-		isect = _general_line_intersection(segs[si], s2, eps=eps)
-	) if (
-		!is_undef(isect) &&
-		isect[1] >= 0-eps && isect[1] < 1+eps &&
-		isect[2] >= 0-eps && isect[2] < 1+eps
-	)
-	[si, isect[1]]
+    let(
+        segs = pair(closed? close_path(path) : cleanup_path(path))
+    ) for (
+        si = idx(segs),
+        p = close_region(region),
+        s2 = pair(p)
+    ) let (
+        isect = _general_line_intersection(segs[si], s2, eps=eps)
+    ) if (
+        !is_undef(isect) &&
+        isect[1] >= 0-eps && isect[1] < 1+eps &&
+        isect[2] >= 0-eps && isect[2] < 1+eps
+    )
+    [si, isect[1]]
 ]);
 
 
@@ -170,22 +170,22 @@ function region_path_crossings(path, region, closed=true, eps=EPSILON) = sort([
 //   color("#aaa") region(region);
 //   rainbow(polylines) stroke($item, closed=false, width=2);
 function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) =
-	let(
-		path = deduplicate(path, eps=eps),
-		region = [for (path=region) deduplicate(path, eps=eps)],
-		xings = region_path_crossings(path, region, closed=closed, eps=eps),
-		crossings = deduplicate(
-			concat([[0,0]], xings, [[len(path)-1,1]]),
-			eps=eps
-		),
-		subpaths = [
-			for (p = pair(crossings))
-				deduplicate(eps=eps,
-					path_subselect(path, p[0][0], p[0][1], p[1][0], p[1][1], closed=closed)
-				)
-		]
-	)
-	subpaths;
+    let(
+        path = deduplicate(path, eps=eps),
+        region = [for (path=region) deduplicate(path, eps=eps)],
+        xings = region_path_crossings(path, region, closed=closed, eps=eps),
+        crossings = deduplicate(
+            concat([[0,0]], xings, [[len(path)-1,1]]),
+            eps=eps
+        ),
+        subpaths = [
+            for (p = pair(crossings))
+                deduplicate(eps=eps,
+                    path_subselect(path, p[0][0], p[0][1], p[1][0], p[1][1], closed=closed)
+                )
+        ]
+    )
+    subpaths;
 
 
 // Function: split_nested_region()
@@ -196,75 +196,75 @@ function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) 
 //   Returns a list of regions, such that each returned region has exactly one positive outline
 //   and zero or more void outlines.
 function split_nested_region(region) =
-	let(
-		paths = sort(idx=0, [
-			for(i = idx(region)) let(
-				cnt = sum([
-					for (j = idx(region)) if (i!=j)
-					let(pt = lerp(region[i][0],region[i][1],0.5))
-					point_in_polygon(pt, region[j]) >=0 ? 1 : 0
-				])
-			) [cnt, region[i]]
-		]),
-		outs = [
-			for (candout = paths) let(
-				lev = candout[0],
-				parent = candout[1]
-			) if (lev % 2 == 0) [
-				clockwise_polygon(parent),
-				for (path = paths) if (
-					path[0] == lev+1 &&
-					point_in_polygon(
-						lerp(path[1][0], path[1][1], 0.5),
-						parent
-					) >= 0
-				) ccw_polygon(path[1])
-			]
-		]
-	) outs;
+    let(
+        paths = sort(idx=0, [
+            for(i = idx(region)) let(
+                cnt = sum([
+                    for (j = idx(region)) if (i!=j)
+                    let(pt = lerp(region[i][0],region[i][1],0.5))
+                    point_in_polygon(pt, region[j]) >=0 ? 1 : 0
+                ])
+            ) [cnt, region[i]]
+        ]),
+        outs = [
+            for (candout = paths) let(
+                lev = candout[0],
+                parent = candout[1]
+            ) if (lev % 2 == 0) [
+                clockwise_polygon(parent),
+                for (path = paths) if (
+                    path[0] == lev+1 &&
+                    point_in_polygon(
+                        lerp(path[1][0], path[1][1], 0.5),
+                        parent
+                    ) >= 0
+                ) ccw_polygon(path[1])
+            ]
+        ]
+    ) outs;
 
 
 
 // Section: Region Extrusion and VNFs
 
 function _path_path_closest_vertices(path1,path2) =
-	let(
-		dists = [for (i=idx(path1)) let(j=closest_point(path1[i],path2)) [j,norm(path2[j]-path1[i])]],
-		i1 = min_index(subindex(dists,1)),
-		i2 = dists[i1][0]
-	) [dists[i1][1], i1, i2];
+    let(
+        dists = [for (i=idx(path1)) let(j=closest_point(path1[i],path2)) [j,norm(path2[j]-path1[i])]],
+        i1 = min_index(subindex(dists,1)),
+        i2 = dists[i1][0]
+    ) [dists[i1][1], i1, i2];
 
 function _join_paths_at_vertices(path1,path2,seg1,seg2) =
-	let(
-		path1 = close_path(clockwise_polygon(polygon_shift(path1, seg1))),
-		path2 = close_path(ccw_polygon(polygon_shift(path2, seg2)))
-	) cleanup_path(deduplicate([each path1, each path2]));
+    let(
+        path1 = close_path(clockwise_polygon(polygon_shift(path1, seg1))),
+        path2 = close_path(ccw_polygon(polygon_shift(path2, seg2)))
+    ) cleanup_path(deduplicate([each path1, each path2]));
 
 
 function _cleave_simple_region(region) =
-	len(region)==0? [] :
-	len(region)<=1? clockwise_polygon(region[0]) :
-	let(
-		dists = [
-			for (i=[1:1:len(region)-1])
-			_path_path_closest_vertices(region[0],region[i])
-		],
-		idxi = min_index(subindex(dists,0)),
-		newoline = _join_paths_at_vertices(
-			region[0], region[idxi+1],
-			dists[idxi][1], dists[idxi][2]
-		)
-	) len(region)==2? clockwise_polygon(newoline) :
-	let(
-		orgn = [
-			newoline,
-			for (i=idx(region))
-				if (i>0 && i!=idxi+1)
-					region[i]
-		]
-	)
-	assert(len(orgn)<len(region))
-	_cleave_simple_region(orgn);
+    len(region)==0? [] :
+    len(region)<=1? clockwise_polygon(region[0]) :
+    let(
+        dists = [
+            for (i=[1:1:len(region)-1])
+            _path_path_closest_vertices(region[0],region[i])
+        ],
+        idxi = min_index(subindex(dists,0)),
+        newoline = _join_paths_at_vertices(
+            region[0], region[idxi+1],
+            dists[idxi][1], dists[idxi][2]
+        )
+    ) len(region)==2? clockwise_polygon(newoline) :
+    let(
+        orgn = [
+            newoline,
+            for (i=idx(region))
+                if (i>0 && i!=idxi+1)
+                    region[i]
+        ]
+    )
+    assert(len(orgn)<len(region))
+    _cleave_simple_region(orgn);
 
 
 // Function: region_faces()
@@ -279,18 +279,18 @@ function _cleave_simple_region(region) =
 //   reverse = If true, reverse the normals of the faces generated from the region.  An untransformed region will have face normals pointing `UP`.  Default: false
 //   vnf = If given, the faces are added to this VNF.  Default: `EMPTY_VNF`
 function region_faces(region, transform, reverse=false, vnf=EMPTY_VNF) =
-	let (
-		regions = split_nested_region(region),
-		vnfs = [
-			if (vnf != EMPTY_VNF) vnf,
-			for (rgn = regions) let(
-				cleaved = _cleave_simple_region(rgn),
-				face = is_undef(transform)? cleaved : apply(transform,path3d(cleaved)),
-				faceidxs = reverse? [for (i=[len(face)-1:-1:0]) i] : [for (i=[0:1:len(face)-1]) i]
-			) [face, [faceidxs]]
-		],
-		outvnf = vnf_merge(vnfs)
-	) outvnf;
+    let (
+        regions = split_nested_region(region),
+        vnfs = [
+            if (vnf != EMPTY_VNF) vnf,
+            for (rgn = regions) let(
+                cleaved = _cleave_simple_region(rgn),
+                face = is_undef(transform)? cleaved : apply(transform,path3d(cleaved)),
+                faceidxs = reverse? [for (i=[len(face)-1:-1:0]) i] : [for (i=[0:1:len(face)-1]) i]
+            ) [face, [faceidxs]]
+        ],
+        outvnf = vnf_merge(vnfs)
+    ) outvnf;
 
 
 // Function&Module: linear_sweep()
@@ -338,60 +338,60 @@ function region_faces(region, transform, reverse=false, vnf=EMPTY_VNF) =
 //   orgn = difference(mrgn,rgn3);
 //   linear_sweep(orgn,height=20,convexity=16) show_anchors();
 module linear_sweep(region, height=1, center=false, twist=0, scale=1, slices, maxseg, style="default", convexity, anchor_isect=false, anchor=BOT, spin=0, orient=UP) {
-	anchor = get_anchor(anchor, center, BOT, BOT);
-	vnf = linear_sweep(
-		region, height=height,
-		twist=twist, scale=scale,
-		slices=slices, maxseg=maxseg,
-		style=style
-	);
-	attachable(anchor,spin,orient, vnf=vnf, extent=!anchor_isect) {
-		vnf_polyhedron(vnf, convexity=convexity);
-		children();
-	}
+    anchor = get_anchor(anchor, center, BOT, BOT);
+    vnf = linear_sweep(
+        region, height=height,
+        twist=twist, scale=scale,
+        slices=slices, maxseg=maxseg,
+        style=style
+    );
+    attachable(anchor,spin,orient, vnf=vnf, extent=!anchor_isect) {
+        vnf_polyhedron(vnf, convexity=convexity);
+        children();
+    }
 }
 
 
 function linear_sweep(region, height=1, twist=0, scale=1, slices, maxseg, style="default") =
-	let(
-		region = is_path(region)? [region] : region,
-		slices = default(slices, floor(twist/5+1)),
-		step = twist/slices,
-		hstep = height/slices,
-		regions = split_nested_region(region),
-		trgns = [
-			for (rgn=regions) [
-				for (path=rgn) let(
-					p = cleanup_path(path),
-					path = is_undef(maxseg)? p : [
-						for (seg=pair_wrap(p)) each
-						let(steps=ceil(norm(seg.y-seg.x)/maxseg))
-						lerp(seg.x, seg.y, [0:1/steps:1-EPSILON])
-					]
-				)
-				rot(twist, p=scale([scale,scale],p=path))
-			]
-		]
-	) vnf_merge([
-		for (rgn = regions)
-		for (pathnum = idx(rgn)) let(
-			p = cleanup_path(rgn[pathnum]),
-			path = is_undef(maxseg)? p : [
-				for (seg=pair_wrap(p)) each
-				let(steps=ceil(norm(seg.y-seg.x)/maxseg))
-				lerp(seg.x, seg.y, [0:1/steps:1-EPSILON])
-			],
-			verts = [
-				for (i=[0:1:slices]) let(
-					sc = lerp(1, scale, i/slices),
-					ang = i * step,
-					h = i * hstep - height/2
-				) scale([sc,sc,1], p=rot(ang, p=path3d(path,h)))
-			]
-		) vnf_vertex_array(verts, caps=false, col_wrap=true, style=style),
-		for (rgn = regions) region_faces(rgn, move([0,0,-height/2]), reverse=true),
-		for (rgn = trgns) region_faces(rgn, move([0,0, height/2]), reverse=false)
-	]);
+    let(
+        region = is_path(region)? [region] : region,
+        slices = default(slices, floor(twist/5+1)),
+        step = twist/slices,
+        hstep = height/slices,
+        regions = split_nested_region(region),
+        trgns = [
+            for (rgn=regions) [
+                for (path=rgn) let(
+                    p = cleanup_path(path),
+                    path = is_undef(maxseg)? p : [
+                        for (seg=pair_wrap(p)) each
+                        let(steps=ceil(norm(seg.y-seg.x)/maxseg))
+                        lerp(seg.x, seg.y, [0:1/steps:1-EPSILON])
+                    ]
+                )
+                rot(twist, p=scale([scale,scale],p=path))
+            ]
+        ]
+    ) vnf_merge([
+        for (rgn = regions)
+        for (pathnum = idx(rgn)) let(
+            p = cleanup_path(rgn[pathnum]),
+            path = is_undef(maxseg)? p : [
+                for (seg=pair_wrap(p)) each
+                let(steps=ceil(norm(seg.y-seg.x)/maxseg))
+                lerp(seg.x, seg.y, [0:1/steps:1-EPSILON])
+            ],
+            verts = [
+                for (i=[0:1:slices]) let(
+                    sc = lerp(1, scale, i/slices),
+                    ang = i * step,
+                    h = i * hstep - height/2
+                ) scale([sc,sc,1], p=rot(ang, p=path3d(path,h)))
+            ]
+        ) vnf_vertex_array(verts, caps=false, col_wrap=true, style=style),
+        for (rgn = regions) region_faces(rgn, move([0,0,-height/2]), reverse=true),
+        for (rgn = trgns) region_faces(rgn, move([0,0, height/2]), reverse=false)
+    ]);
 
 
 
@@ -399,80 +399,80 @@ function linear_sweep(region, height=1, twist=0, scale=1, slices, maxseg, style=
 
 
 function _offset_chamfer(center, points, delta) =
-	let(
-		dist = sign(delta)*norm(center-line_intersection(select(points,[0,2]), [center, points[1]])),
-		endline = _shift_segment(select(points,[0,2]), delta-dist)
-	) [
-		line_intersection(endline, select(points,[0,1])),
-		line_intersection(endline, select(points,[1,2]))
-	];
+    let(
+        dist = sign(delta)*norm(center-line_intersection(select(points,[0,2]), [center, points[1]])),
+        endline = _shift_segment(select(points,[0,2]), delta-dist)
+    ) [
+        line_intersection(endline, select(points,[0,1])),
+        line_intersection(endline, select(points,[1,2]))
+    ];
 
 
 function _shift_segment(segment, d) =
-	move(d*line_normal(segment),segment);
+    move(d*line_normal(segment),segment);
 
 
 // Extend to segments to their intersection point.  First check if the segments already have a point in common,
 // which can happen if two colinear segments are input to the path variant of `offset()`
 function _segment_extension(s1,s2) =
-	norm(s1[1]-s2[0])<1e-6 ? s1[1] : line_intersection(s1,s2);
+    norm(s1[1]-s2[0])<1e-6 ? s1[1] : line_intersection(s1,s2);
 
 
 function _makefaces(direction, startind, good, pointcount, closed) =
-	let(
-		lenlist = list_bset(good, pointcount),
-		numfirst = len(lenlist),
-		numsecond = sum(lenlist),
-		prelim_faces = _makefaces_recurse(startind, startind+len(lenlist), numfirst, numsecond, lenlist, closed)
-	)
-	direction? [for(entry=prelim_faces) reverse(entry)] : prelim_faces;
+    let(
+        lenlist = list_bset(good, pointcount),
+        numfirst = len(lenlist),
+        numsecond = sum(lenlist),
+        prelim_faces = _makefaces_recurse(startind, startind+len(lenlist), numfirst, numsecond, lenlist, closed)
+    )
+    direction? [for(entry=prelim_faces) reverse(entry)] : prelim_faces;
 
 
 function _makefaces_recurse(startind1, startind2, numfirst, numsecond, lenlist, closed, firstind=0, secondind=0, faces=[]) =
-	// We are done if *both* firstind and secondind reach their max value, which is the last point if !closed or one past
-	// the last point if closed (wrapping around).  If you don't check both you can leave a triangular gap in the output.
-	((firstind == numfirst - (closed?0:1)) && (secondind == numsecond - (closed?0:1)))? faces :
-	_makefaces_recurse(
-		startind1, startind2, numfirst, numsecond, lenlist, closed, firstind+1, secondind+lenlist[firstind],
-		lenlist[firstind]==0? (
-			// point in original path has been deleted in offset path, so it has no match.  We therefore
-			// make a triangular face using the current point from the offset (second) path
-			// (The current point in the second path can be equal to numsecond if firstind is the last point)
-			concat(faces,[[secondind%numsecond+startind2, firstind+startind1, (firstind+1)%numfirst+startind1]])
-			// in this case a point or points exist in the offset path corresponding to the original path
-		) : (
-			concat(faces,
-				// First generate triangular faces for all of the extra points (if there are any---loop may be empty)
-				[for(i=[0:1:lenlist[firstind]-2]) [firstind+startind1, secondind+i+1+startind2, secondind+i+startind2]],
-				// Finish (unconditionally) with a quadrilateral face
-				[
-					[
-						firstind+startind1,
-						(firstind+1)%numfirst+startind1,
-						(secondind+lenlist[firstind])%numsecond+startind2,
-						(secondind+lenlist[firstind]-1)%numsecond+startind2
-					]
-				]
-			)
-		)
-	);
+    // We are done if *both* firstind and secondind reach their max value, which is the last point if !closed or one past
+    // the last point if closed (wrapping around).  If you don't check both you can leave a triangular gap in the output.
+    ((firstind == numfirst - (closed?0:1)) && (secondind == numsecond - (closed?0:1)))? faces :
+    _makefaces_recurse(
+        startind1, startind2, numfirst, numsecond, lenlist, closed, firstind+1, secondind+lenlist[firstind],
+        lenlist[firstind]==0? (
+            // point in original path has been deleted in offset path, so it has no match.  We therefore
+            // make a triangular face using the current point from the offset (second) path
+            // (The current point in the second path can be equal to numsecond if firstind is the last point)
+            concat(faces,[[secondind%numsecond+startind2, firstind+startind1, (firstind+1)%numfirst+startind1]])
+            // in this case a point or points exist in the offset path corresponding to the original path
+        ) : (
+            concat(faces,
+                // First generate triangular faces for all of the extra points (if there are any---loop may be empty)
+                [for(i=[0:1:lenlist[firstind]-2]) [firstind+startind1, secondind+i+1+startind2, secondind+i+startind2]],
+                // Finish (unconditionally) with a quadrilateral face
+                [
+                    [
+                        firstind+startind1,
+                        (firstind+1)%numfirst+startind1,
+                        (secondind+lenlist[firstind])%numsecond+startind2,
+                        (secondind+lenlist[firstind]-1)%numsecond+startind2
+                    ]
+                ]
+            )
+        )
+    );
 
 
 // Determine which of the shifted segments are good
 function _good_segments(path, d, shiftsegs, closed, quality) =
-	let(
-		maxind = len(path)-(closed ? 1 : 2),
-		pathseg = [for(i=[0:maxind]) select(path,i+1)-path[i]],
-		pathseg_len =  [for(seg=pathseg) norm(seg)],
-		pathseg_unit = [for(i=[0:maxind]) pathseg[i]/pathseg_len[i]],
-		// Order matters because as soon as a valid point is found, the test stops
-		// This order works better for circular paths because they succeed in the center
-		alpha = concat([for(i=[1:1:quality]) i/(quality+1)],[0,1])
-	) [
-		for (i=[0:len(shiftsegs)-1])
-			(i>maxind)? true :
-			_segment_good(path,pathseg_unit,pathseg_len, d - 1e-7, shiftsegs[i], alpha)
-	];
+    let(
+        maxind = len(path)-(closed ? 1 : 2),
+        pathseg = [for(i=[0:maxind]) select(path,i+1)-path[i]],
+        pathseg_len =  [for(seg=pathseg) norm(seg)],
+        pathseg_unit = [for(i=[0:maxind]) pathseg[i]/pathseg_len[i]],
+        // Order matters because as soon as a valid point is found, the test stops
+        // This order works better for circular paths because they succeed in the center
+        alpha = concat([for(i=[1:1:quality]) i/(quality+1)],[0,1])
+    ) [
+        for (i=[0:len(shiftsegs)-1])
+            (i>maxind)? true :
+            _segment_good(path,pathseg_unit,pathseg_len, d - 1e-7, shiftsegs[i], alpha)
+    ];
 
 
 // Determine if a segment is good (approximately)
@@ -486,60 +486,60 @@ function _good_segments(path, d, shiftsegs, closed, quality) =
 // This test is approximate because it only samples the points listed in alpha.  Listing more points
 // will make the test more accurate, but slower.
 function _segment_good(path,pathseg_unit,pathseg_len, d, seg,alpha ,index=0) =
-	index == len(alpha) ? false :
-	_point_dist(path,pathseg_unit,pathseg_len, alpha[index]*seg[0]+(1-alpha[index])*seg[1]) > d ? true :
-	_segment_good(path,pathseg_unit,pathseg_len,d,seg,alpha,index+1);
+    index == len(alpha) ? false :
+    _point_dist(path,pathseg_unit,pathseg_len, alpha[index]*seg[0]+(1-alpha[index])*seg[1]) > d ? true :
+    _segment_good(path,pathseg_unit,pathseg_len,d,seg,alpha,index+1);
 
 
 // Input is the path, the path segments normalized to unit length, the length of each path segment
 // and a test point.  Computes the (minimum) distance from the path to the point, taking into
 // account that the minimal distance may be anywhere along a path segment, not just at the ends.
 function _point_dist(path,pathseg_unit,pathseg_len,pt) =
-	min([
-		for(i=[0:len(pathseg_unit)-1]) let(
-			v = pt-path[i],
-			projection = v*pathseg_unit[i],
-			segdist = projection < 0? norm(pt-path[i]) :
-				projection > pathseg_len[i]? norm(pt-select(path,i+1)) :
-				norm(v-projection*pathseg_unit[i])
-		) segdist
-	]);
+    min([
+        for(i=[0:len(pathseg_unit)-1]) let(
+            v = pt-path[i],
+            projection = v*pathseg_unit[i],
+            segdist = projection < 0? norm(pt-path[i]) :
+                projection > pathseg_len[i]? norm(pt-select(path,i+1)) :
+                norm(v-projection*pathseg_unit[i])
+        ) segdist
+    ]);
 
 
 function _offset_region(
-	paths, r, delta, chamfer, closed,
-	maxstep, check_valid, quality,
-	return_faces, firstface_index,
-	flip_faces, _acc=[], _i=0
+    paths, r, delta, chamfer, closed,
+    maxstep, check_valid, quality,
+    return_faces, firstface_index,
+    flip_faces, _acc=[], _i=0
 ) =
-	_i>=len(paths)? _acc :
-	_offset_region(
-		paths, _i=_i+1,
-		_acc = (paths[_i].x % 2 == 0)? (
-			union(_acc, [
-				offset(
-					paths[_i].y,
-					r=r, delta=delta, chamfer=chamfer, closed=closed,
-					maxstep=maxstep, check_valid=check_valid, quality=quality,
-					return_faces=return_faces, firstface_index=firstface_index,
-					flip_faces=flip_faces
-				)
-			])
-		) : (
-			difference(_acc, [
-				offset(
-					paths[_i].y,
-					r=-r, delta=-delta, chamfer=chamfer, closed=closed,
-					maxstep=maxstep, check_valid=check_valid, quality=quality,
-					return_faces=return_faces, firstface_index=firstface_index,
-					flip_faces=flip_faces
-				)
-			])
-		),
-		r=r, delta=delta, chamfer=chamfer, closed=closed,
-		maxstep=maxstep, check_valid=check_valid, quality=quality,
-		return_faces=return_faces, firstface_index=firstface_index, flip_faces=flip_faces
-	);
+    _i>=len(paths)? _acc :
+    _offset_region(
+        paths, _i=_i+1,
+        _acc = (paths[_i].x % 2 == 0)? (
+            union(_acc, [
+                offset(
+                    paths[_i].y,
+                    r=r, delta=delta, chamfer=chamfer, closed=closed,
+                    maxstep=maxstep, check_valid=check_valid, quality=quality,
+                    return_faces=return_faces, firstface_index=firstface_index,
+                    flip_faces=flip_faces
+                )
+            ])
+        ) : (
+            difference(_acc, [
+                offset(
+                    paths[_i].y,
+                    r=-r, delta=-delta, chamfer=chamfer, closed=closed,
+                    maxstep=maxstep, check_valid=check_valid, quality=quality,
+                    return_faces=return_faces, firstface_index=firstface_index,
+                    flip_faces=flip_faces
+                )
+            ])
+        ),
+        r=r, delta=delta, chamfer=chamfer, closed=closed,
+        maxstep=maxstep, check_valid=check_valid, quality=quality,
+        return_faces=return_faces, firstface_index=firstface_index, flip_faces=flip_faces
+    );
 
 
 // Function: offset()
@@ -635,162 +635,162 @@ function _offset_region(
 //   #linear_extrude(height=1.1) for (p=rgn) stroke(closed=true, width=0.5, p);
 //   region(offset(rgn, r=-5));
 function offset(
-	path, r=undef, delta=undef, chamfer=false,
-	maxstep=0.1, closed=false, check_valid=true,
-	quality=1, return_faces=false, firstface_index=0,
-	flip_faces=false
+    path, r=undef, delta=undef, chamfer=false,
+    maxstep=0.1, closed=false, check_valid=true,
+    quality=1, return_faces=false, firstface_index=0,
+    flip_faces=false
 ) =
-	is_region(path)? (
-		assert(!return_faces, "return_faces not supported for regions.")
-		let(
-			path = [for (p=path) polygon_is_clockwise(p)? p : reverse(p)],
-			rgn = exclusive_or([for (p = path) [p]]),
-			pathlist = sort(idx=0,[
-				for (i=[0:1:len(rgn)-1]) [
-					sum(concat([0],[
-						for (j=[0:1:len(rgn)-1]) if (i!=j)
-							point_in_polygon(rgn[i][0],rgn[j])>=0? 1 : 0
-					])),
-					rgn[i]
-				]
-			])
-		) _offset_region(
-			pathlist, r=r, delta=delta, chamfer=chamfer, closed=true,
-			maxstep=maxstep, check_valid=check_valid, quality=quality,
-			return_faces=return_faces, firstface_index=firstface_index,
-			flip_faces=flip_faces
-		)
-	) : let(rcount = num_defined([r,delta]))
-	assert(rcount==1,"Must define exactly one of 'delta' and 'r'")
-	let(
-		chamfer = is_def(r) ? false : chamfer,
-		quality = max(0,round(quality)),
-		flip_dir = closed && !polygon_is_clockwise(path)? -1 : 1,
-		d = flip_dir * (is_def(r) ? r : delta),
-		shiftsegs = [for(i=[0:len(path)-1]) _shift_segment(select(path,i,i+1), d)],
-		// good segments are ones where no point on the segment is less than distance d from any point on the path
-		good = check_valid ? _good_segments(path, abs(d), shiftsegs, closed, quality) : repeat(true,len(shiftsegs)),
-		goodsegs = bselect(shiftsegs, good),
-		goodpath = bselect(path,good)
-	)
-	assert(len(goodsegs)>0,"Offset of path is degenerate")
-	let(
-		// Extend the shifted segments to their intersection points
-		sharpcorners = [for(i=[0:len(goodsegs)-1]) _segment_extension(select(goodsegs,i-1), select(goodsegs,i))],
-		// If some segments are parallel then the extended segments are undefined.  This case is not handled
-		// Note if !closed the last corner doesn't matter, so exclude it
-		parallelcheck =
-			(len(sharpcorners)==2 && !closed) ||
-			all_defined(select(sharpcorners,closed?0:1,-1))
-	)
-	assert(parallelcheck, "Path turns back on itself (180 deg turn)")
-	let(
-		// This is a boolean array that indicates whether a corner is an outside or inside corner
-		// For outside corners, the newcorner is an extension (angle 0), for inside corners, it turns backward
-		// If either side turns back it is an inside corner---must check both.
-		// Outside corners can get rounded (if r is specified and there is space to round them)
-		outsidecorner = [
-			for(i=[0:len(goodsegs)-1]) let(
-				prevseg=select(goodsegs,i-1)
-			) (
-				(goodsegs[i][1]-goodsegs[i][0]) *
-				(goodsegs[i][0]-sharpcorners[i]) > 0
-			) && (
-				(prevseg[1]-prevseg[0]) *
-				(sharpcorners[i]-prevseg[1]) > 0
-			)
-		],
-		steps = is_def(delta) ? [] : [
-			for(i=[0:len(goodsegs)-1])
+    is_region(path)? (
+        assert(!return_faces, "return_faces not supported for regions.")
+        let(
+            path = [for (p=path) polygon_is_clockwise(p)? p : reverse(p)],
+            rgn = exclusive_or([for (p = path) [p]]),
+            pathlist = sort(idx=0,[
+                for (i=[0:1:len(rgn)-1]) [
+                    sum(concat([0],[
+                        for (j=[0:1:len(rgn)-1]) if (i!=j)
+                            point_in_polygon(rgn[i][0],rgn[j])>=0? 1 : 0
+                    ])),
+                    rgn[i]
+                ]
+            ])
+        ) _offset_region(
+            pathlist, r=r, delta=delta, chamfer=chamfer, closed=true,
+            maxstep=maxstep, check_valid=check_valid, quality=quality,
+            return_faces=return_faces, firstface_index=firstface_index,
+            flip_faces=flip_faces
+        )
+    ) : let(rcount = num_defined([r,delta]))
+    assert(rcount==1,"Must define exactly one of 'delta' and 'r'")
+    let(
+        chamfer = is_def(r) ? false : chamfer,
+        quality = max(0,round(quality)),
+        flip_dir = closed && !polygon_is_clockwise(path)? -1 : 1,
+        d = flip_dir * (is_def(r) ? r : delta),
+        shiftsegs = [for(i=[0:len(path)-1]) _shift_segment(select(path,i,i+1), d)],
+        // good segments are ones where no point on the segment is less than distance d from any point on the path
+        good = check_valid ? _good_segments(path, abs(d), shiftsegs, closed, quality) : repeat(true,len(shiftsegs)),
+        goodsegs = bselect(shiftsegs, good),
+        goodpath = bselect(path,good)
+    )
+    assert(len(goodsegs)>0,"Offset of path is degenerate")
+    let(
+        // Extend the shifted segments to their intersection points
+        sharpcorners = [for(i=[0:len(goodsegs)-1]) _segment_extension(select(goodsegs,i-1), select(goodsegs,i))],
+        // If some segments are parallel then the extended segments are undefined.  This case is not handled
+        // Note if !closed the last corner doesn't matter, so exclude it
+        parallelcheck =
+            (len(sharpcorners)==2 && !closed) ||
+            all_defined(select(sharpcorners,closed?0:1,-1))
+    )
+    assert(parallelcheck, "Path turns back on itself (180 deg turn)")
+    let(
+        // This is a boolean array that indicates whether a corner is an outside or inside corner
+        // For outside corners, the newcorner is an extension (angle 0), for inside corners, it turns backward
+        // If either side turns back it is an inside corner---must check both.
+        // Outside corners can get rounded (if r is specified and there is space to round them)
+        outsidecorner = [
+            for(i=[0:len(goodsegs)-1]) let(
+                prevseg=select(goodsegs,i-1)
+            ) (
+                (goodsegs[i][1]-goodsegs[i][0]) *
+                (goodsegs[i][0]-sharpcorners[i]) > 0
+            ) && (
+                (prevseg[1]-prevseg[0]) *
+                (sharpcorners[i]-prevseg[1]) > 0
+            )
+        ],
+        steps = is_def(delta) ? [] : [
+            for(i=[0:len(goodsegs)-1])
                         r==0 ? 0 :
-			ceil(
-				abs(r)*vector_angle(
-					select(goodsegs,i-1)[1]-goodpath[i],
-					goodsegs[i][0]-goodpath[i]
-				)*PI/180/maxstep
-			)
-		],
-		// If rounding is true then newcorners replaces sharpcorners with rounded arcs where needed
-		// Otherwise it's the same as sharpcorners
-		// If rounding is on then newcorners[i] will be the point list that replaces goodpath[i] and newcorners later
-		// gets flattened.  If rounding is off then we set it to [sharpcorners] so we can later flatten it and get
-		// plain sharpcorners back.
-		newcorners = is_def(delta) && !chamfer ? [sharpcorners] : [
-			for(i=[0:len(goodsegs)-1]) (
-				(!chamfer && steps[i] <=2)  //Chamfer all points but only round if steps is 3 or more
-				|| !outsidecorner[i]        // Don't round inside corners
-				|| (!closed && (i==0 || i==len(goodsegs)-1))  // Don't round ends of an open path
-			)? [sharpcorners[i]] : (
-				chamfer?
-					_offset_chamfer(
-						goodpath[i], [
-							select(goodsegs,i-1)[1],
-							sharpcorners[i],
-							goodsegs[i][0]
-						], d
-					) :
-				arc(
-					cp=goodpath[i],
-					points=[
-						select(goodsegs,i-1)[1],
-						goodsegs[i][0]
-					],
-					N=steps[i]
-				)
-			)
-		],
-		pointcount = (is_def(delta) && !chamfer)?
-			repeat(1,len(sharpcorners)) :
-			[for(i=[0:len(goodsegs)-1]) len(newcorners[i])],
-		start = [goodsegs[0][0]],
-		end = [goodsegs[len(goodsegs)-2][1]],
-		edges =  closed?
-			flatten(newcorners) :
-			concat(start,slice(flatten(newcorners),1,-2),end),
-		faces = !return_faces? [] :
-			_makefaces(
-				flip_faces, firstface_index, good,
-				pointcount, closed
-			)
-	) return_faces? [edges,faces] : edges;
+            ceil(
+                abs(r)*vector_angle(
+                    select(goodsegs,i-1)[1]-goodpath[i],
+                    goodsegs[i][0]-goodpath[i]
+                )*PI/180/maxstep
+            )
+        ],
+        // If rounding is true then newcorners replaces sharpcorners with rounded arcs where needed
+        // Otherwise it's the same as sharpcorners
+        // If rounding is on then newcorners[i] will be the point list that replaces goodpath[i] and newcorners later
+        // gets flattened.  If rounding is off then we set it to [sharpcorners] so we can later flatten it and get
+        // plain sharpcorners back.
+        newcorners = is_def(delta) && !chamfer ? [sharpcorners] : [
+            for(i=[0:len(goodsegs)-1]) (
+                (!chamfer && steps[i] <=2)  //Chamfer all points but only round if steps is 3 or more
+                || !outsidecorner[i]        // Don't round inside corners
+                || (!closed && (i==0 || i==len(goodsegs)-1))  // Don't round ends of an open path
+            )? [sharpcorners[i]] : (
+                chamfer?
+                    _offset_chamfer(
+                        goodpath[i], [
+                            select(goodsegs,i-1)[1],
+                            sharpcorners[i],
+                            goodsegs[i][0]
+                        ], d
+                    ) :
+                arc(
+                    cp=goodpath[i],
+                    points=[
+                        select(goodsegs,i-1)[1],
+                        goodsegs[i][0]
+                    ],
+                    N=steps[i]
+                )
+            )
+        ],
+        pointcount = (is_def(delta) && !chamfer)?
+            repeat(1,len(sharpcorners)) :
+            [for(i=[0:len(goodsegs)-1]) len(newcorners[i])],
+        start = [goodsegs[0][0]],
+        end = [goodsegs[len(goodsegs)-2][1]],
+        edges =  closed?
+            flatten(newcorners) :
+            concat(start,slice(flatten(newcorners),1,-2),end),
+        faces = !return_faces? [] :
+            _makefaces(
+                flip_faces, firstface_index, good,
+                pointcount, closed
+            )
+    ) return_faces? [edges,faces] : edges;
 
 
 function _tag_subpaths(path, region, eps=EPSILON) =
-	let(
-		subpaths = split_path_at_region_crossings(path, region, eps=eps),
-		tagged = [
-			for (sub = subpaths) let(
-				subpath = deduplicate(sub)
-			) if (len(sub)>1) let(
-				midpt = lerp(subpath[0], subpath[1], 0.5),
-				rel = point_in_region(midpt,region,eps=eps)
-			) rel<0? ["O", subpath] : rel>0? ["I", subpath] : let(
-				vec = unit(subpath[1]-subpath[0]),
-				perp = rot(90, planar=true, p=vec),
-				sidept = midpt + perp*0.01,
-				rel1 = point_in_polygon(sidept,path,eps=eps)>0,
-				rel2 = point_in_region(sidept,region,eps=eps)>0
-			) rel1==rel2? ["S", subpath] : ["U", subpath]
-		]
-	) tagged;
+    let(
+        subpaths = split_path_at_region_crossings(path, region, eps=eps),
+        tagged = [
+            for (sub = subpaths) let(
+                subpath = deduplicate(sub)
+            ) if (len(sub)>1) let(
+                midpt = lerp(subpath[0], subpath[1], 0.5),
+                rel = point_in_region(midpt,region,eps=eps)
+            ) rel<0? ["O", subpath] : rel>0? ["I", subpath] : let(
+                vec = unit(subpath[1]-subpath[0]),
+                perp = rot(90, planar=true, p=vec),
+                sidept = midpt + perp*0.01,
+                rel1 = point_in_polygon(sidept,path,eps=eps)>0,
+                rel2 = point_in_region(sidept,region,eps=eps)>0
+            ) rel1==rel2? ["S", subpath] : ["U", subpath]
+        ]
+    ) tagged;
 
 
 function _tag_region_subpaths(region1, region2, eps=EPSILON) =
-	[for (path=region1) each _tag_subpaths(path, region2, eps=eps)];
+    [for (path=region1) each _tag_subpaths(path, region2, eps=eps)];
 
 
 function _tagged_region(region1,region2,keep1,keep2,eps=EPSILON) =
-	let(
-		region1 = close_region(region1, eps=eps),
-		region2 = close_region(region2, eps=eps),
-		tagged1 = _tag_region_subpaths(region1, region2, eps=eps),
-		tagged2 = _tag_region_subpaths(region2, region1, eps=eps),
-		tagged = concat(
-			[for (tagpath = tagged1) if (in_list(tagpath[0], keep1)) tagpath[1]],
-			[for (tagpath = tagged2) if (in_list(tagpath[0], keep2)) tagpath[1]]
-		),
-		outregion = assemble_path_fragments(tagged, eps=eps)
-	) outregion;
+    let(
+        region1 = close_region(region1, eps=eps),
+        region2 = close_region(region2, eps=eps),
+        tagged1 = _tag_region_subpaths(region1, region2, eps=eps),
+        tagged2 = _tag_region_subpaths(region2, region1, eps=eps),
+        tagged = concat(
+            [for (tagpath = tagged1) if (in_list(tagpath[0], keep1)) tagpath[1]],
+            [for (tagpath = tagged2) if (in_list(tagpath[0], keep2)) tagpath[1]]
+        ),
+        outregion = assemble_path_fragments(tagged, eps=eps)
+    ) outregion;
 
 
 
@@ -812,16 +812,16 @@ function _tagged_region(region1,region2,keep1,keep2,eps=EPSILON) =
 //   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(union(shape1,shape2));
 function union(regions=[],b=undef,c=undef,eps=EPSILON) =
-	b!=undef? union(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
-	len(regions)<=1? regions[0] :
-	union(
-		let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
-		concat(
-			[_tagged_region(regions[0],regions[1],["O","S"],["O"], eps=eps)],
-			[for (i=[2:1:len(regions)-1]) regions[i]]
-		),
-		eps=eps
-	);
+    b!=undef? union(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
+    len(regions)<=1? regions[0] :
+    union(
+        let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
+        concat(
+            [_tagged_region(regions[0],regions[1],["O","S"],["O"], eps=eps)],
+            [for (i=[2:1:len(regions)-1]) regions[i]]
+        ),
+        eps=eps
+    );
 
 
 // Function&Module: difference()
@@ -843,16 +843,16 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(difference(shape1,shape2));
 function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
-	b!=undef? difference(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
-	len(regions)<=1? regions[0] :
-	difference(
-		let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
-		concat(
-			[_tagged_region(regions[0],regions[1],["O","U"],["I"], eps=eps)],
-			[for (i=[2:1:len(regions)-1]) regions[i]]
-		),
-		eps=eps
-	);
+    b!=undef? difference(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
+    len(regions)<=1? regions[0] :
+    difference(
+        let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
+        concat(
+            [_tagged_region(regions[0],regions[1],["O","U"],["I"], eps=eps)],
+            [for (i=[2:1:len(regions)-1]) regions[i]]
+        ),
+        eps=eps
+    );
 
 
 // Function&Module: intersection()
@@ -873,16 +873,16 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(intersection(shape1,shape2));
 function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
-	b!=undef? intersection(concat([regions],[b],c==undef?[]:[c]),eps=eps) :
-	len(regions)<=1? regions[0] :
-	intersection(
-		let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
-		concat(
-			[_tagged_region(regions[0],regions[1],["I","S"],["I"],eps=eps)],
-			[for (i=[2:1:len(regions)-1]) regions[i]]
-		),
-		eps=eps
-	);
+    b!=undef? intersection(concat([regions],[b],c==undef?[]:[c]),eps=eps) :
+    len(regions)<=1? regions[0] :
+    intersection(
+        let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
+        concat(
+            [_tagged_region(regions[0],regions[1],["I","S"],["I"],eps=eps)],
+            [for (i=[2:1:len(regions)-1]) regions[i]]
+        ),
+        eps=eps
+    );
 
 
 // Function&Module: exclusive_or()
@@ -909,137 +909,137 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 //       circle(d=40);
 //   }
 function exclusive_or(regions=[],b=undef,c=undef,eps=EPSILON) =
-	b!=undef? exclusive_or(concat([regions],[b],c==undef?[]:[c]),eps=eps) :
-	len(regions)<=1? regions[0] :
-	exclusive_or(
-		let(regions=[for (r=regions) is_path(r)? [r] : r])
-		concat(
-			[union([
-				difference([regions[0],regions[1]], eps=eps),
-				difference([regions[1],regions[0]], eps=eps)
-			], eps=eps)],
-			[for (i=[2:1:len(regions)-1]) regions[i]]
-		),
-		eps=eps
-	);
+    b!=undef? exclusive_or(concat([regions],[b],c==undef?[]:[c]),eps=eps) :
+    len(regions)<=1? regions[0] :
+    exclusive_or(
+        let(regions=[for (r=regions) is_path(r)? [r] : r])
+        concat(
+            [union([
+                difference([regions[0],regions[1]], eps=eps),
+                difference([regions[1],regions[0]], eps=eps)
+            ], eps=eps)],
+            [for (i=[2:1:len(regions)-1]) regions[i]]
+        ),
+        eps=eps
+    );
 
 
 module exclusive_or() {
-	if ($children==1) {
-		children();
-	} else if ($children==2) {
-		difference() {
-			children(0);
-			children(1);
-		}
-		difference() {
-			children(1);
-			children(0);
-		}
-	} else if ($children==3) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-			}
-			children(2);
-		}
-	} else if ($children==4) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-			}
-			exclusive_or() {
-				children(2);
-				children(3);
-			}
-		}
-	} else if ($children==5) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-				children(2);
-				children(3);
-			}
-			children(4);
-		}
-	} else if ($children==6) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-				children(2);
-				children(3);
-			}
-			children(4);
-			children(5);
-		}
-	} else if ($children==7) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-				children(2);
-				children(3);
-			}
-			children(4);
-			children(5);
-			children(6);
-		}
-	} else if ($children==8) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-				children(2);
-				children(3);
-			}
-			exclusive_or() {
-				children(4);
-				children(5);
-				children(6);
-				children(7);
-			}
-		}
-	} else if ($children==9) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-				children(2);
-				children(3);
-			}
-			exclusive_or() {
-				children(4);
-				children(5);
-				children(6);
-				children(7);
-			}
-			children(8);
-		}
-	} else if ($children==10) {
-		exclusive_or() {
-			exclusive_or() {
-				children(0);
-				children(1);
-				children(2);
-				children(3);
-			}
-			exclusive_or() {
-				children(4);
-				children(5);
-				children(6);
-				children(7);
-			}
-			children(8);
-			children(9);
-		}
-	} else {
-		assert($children<=10, "exclusive_or() can only handle up to 10 children.");
-	}
+    if ($children==1) {
+        children();
+    } else if ($children==2) {
+        difference() {
+            children(0);
+            children(1);
+        }
+        difference() {
+            children(1);
+            children(0);
+        }
+    } else if ($children==3) {
+        exclusive_or() {
+            exclusive_or() {
+                children(0);
+                children(1);
+            }
+            children(2);
+        }
+    } else if ($children==4) {
+        exclusive_or() {
+            exclusive_or() {
+                children(0);
+                children(1);
+            }
+            exclusive_or() {
+                children(2);
+                children(3);
+            }
+        }
+    } else if ($children==5) {
+        exclusive_or() {
+            exclusive_or() {
+                children(0);
+                children(1);
+                children(2);
+                children(3);
+            }
+            children(4);
+        }
+    } else if ($children==6) {
+        exclusive_or() {
+            exclusive_or() {
+                children(0);
+                children(1);
+                children(2);
+                children(3);
+            }
+            children(4);
+            children(5);
+        }
+    } else if ($children==7) {
+        exclusive_or() {
+            exclusive_or() {
+                children(0);
+                children(1);
+                children(2);
+                children(3);
+            }
+            children(4);
+            children(5);
+            children(6);
+        }
+    } else if ($children==8) {
+        exclusive_or() {
+            exclusive_or() {
+                children(0);
+                children(1);
+                children(2);
+                children(3);
+            }
+            exclusive_or() {
+                children(4);
+                children(5);
+                children(6);
+                children(7);
+            }
+        }
+    } else if ($children==9) {
+        exclusive_or() {
+            exclusive_or() {
+                children(0);
+                children(1);
+                children(2);
+                children(3);
+            }
+            exclusive_or() {
+                children(4);
+                children(5);
+                children(6);
+                children(7);
+            }
+            children(8);
+        }
+    } else if ($children==10) {
+        exclusive_or() {
+            exclusive_or() {
+                children(0);
+                children(1);
+                children(2);
+                children(3);
+            }
+            exclusive_or() {
+                children(4);
+                children(5);
+                children(6);
+                children(7);
+            }
+            children(8);
+            children(9);
+        }
+    } else {
+        assert($children<=10, "exclusive_or() can only handle up to 10 children.");
+    }
 }
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

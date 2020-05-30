@@ -32,20 +32,20 @@
 //   value = Value to set the keyword to.
 //   grow = Set to true to allow structure to grow, or false for new keywords to generate an error.  Default: true
 function struct_set(struct, keyword, value=undef, grow=true) =
-	!is_list(keyword)? (
-		let( ind=search([keyword],struct,1,0)[0] )
-		ind==[]? (
-			assert(grow,str("Unknown keyword \"",keyword))
-			concat(struct, [[keyword,value]])
-		) : list_set(struct, [ind], [[keyword,value]])
-	) : _parse_pairs(struct,keyword,grow);
+    !is_list(keyword)? (
+        let( ind=search([keyword],struct,1,0)[0] )
+        ind==[]? (
+            assert(grow,str("Unknown keyword \"",keyword))
+            concat(struct, [[keyword,value]])
+        ) : list_set(struct, [ind], [[keyword,value]])
+    ) : _parse_pairs(struct,keyword,grow);
 
 
 function _parse_pairs(spec, input, grow=true, index=0, result=undef) =
-	assert(len(input)%2==0,"Odd number of entries in [keyword,value] pair list")
-	let( result = result==undef ? spec : result)
-	index == len(input) ? result :
-	_parse_pairs(spec,input,grow,index+2,struct_set(result, input[index], input[index+1],grow));
+    assert(len(input)%2==0,"Odd number of entries in [keyword,value] pair list")
+    let( result = result==undef ? spec : result)
+    index == len(input) ? result :
+    _parse_pairs(spec,input,grow,index+2,struct_set(result, input[index], input[index+1],grow));
 
 
 // Function: struct_remove()
@@ -57,9 +57,9 @@ function _parse_pairs(spec, input, grow=true, index=0, result=undef) =
 //   struct = input structure
 //   keyword = a single string (keyword) or list of strings (keywords) to remove
 function struct_remove(struct, keyword) =
-	is_string(keyword)? struct_remove(struct, [keyword]) :
-	let(ind = search(keyword, struct))
-	list_remove(struct, ind);
+    is_string(keyword)? struct_remove(struct, [keyword]) :
+    let(ind = search(keyword, struct))
+    list_remove(struct, ind);
 
 
 // Function: struct_val()
@@ -71,9 +71,9 @@ function struct_remove(struct, keyword) =
 //   struct = input structure
 //   keyword = keyword whose value to return
 function struct_val(struct,keyword) =
-	assert(is_def(keyword),"keyword is missing")
-	let(ind = search([keyword],struct)[0])
-	ind == [] ? undef : struct[ind][1];
+    assert(is_def(keyword),"keyword is missing")
+    let(ind = search([keyword],struct)[0])
+    ind == [] ? undef : struct[ind][1];
 
 
 // Function: struct_keys()
@@ -84,7 +84,7 @@ function struct_val(struct,keyword) =
 // Arguments:
 //   struct = input structure
 function struct_keys(struct) =
-	[for(entry=struct) entry[0]];
+    [for(entry=struct) entry[0]];
 
 
 // Function&Module: struct_echo()
@@ -96,12 +96,12 @@ function struct_keys(struct) =
 //   struct = input structure
 //   name = optional structure name to list at the top of the output.  Default: ""
 function struct_echo(struct,name="") =
-	let( keylist = [for(entry=struct) str("&nbsp;&nbsp;",entry[0],": ",entry[1],"\n")])
-	echo(str("\nStructure ",name,"\n",str_join(keylist)))
-	undef;
+    let( keylist = [for(entry=struct) str("&nbsp;&nbsp;",entry[0],": ",entry[1],"\n")])
+    echo(str("\nStructure ",name,"\n",str_join(keylist)))
+    undef;
 
 module struct_echo(struct,name="") {
-	dummy = struct_echo(struct,name);
+    dummy = struct_echo(struct,name);
 }
 
 
@@ -111,14 +111,14 @@ module struct_echo(struct,name="") {
 // Description:
 //   Returns true if the input has the form of a structure, false otherwise.
 function is_struct(x) =
-	is_list(x) && [
-		for (xx=x) if(
-			!is_list(xx) ||
-			len(xx) != 2 ||
-			!is_string(xx[0])
-		) 1
-	] == [];
+    is_list(x) && [
+        for (xx=x) if(
+            !is_list(xx) ||
+            len(xx) != 2 ||
+            !is_string(xx[0])
+        ) 1
+    ] == [];
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

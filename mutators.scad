@@ -33,30 +33,30 @@
 //   half_of([1,1], planar=true) circle(d=50);
 module half_of(v=UP, cp, s=1000, planar=false)
 {
-	cp = is_vector(v,4)? assert(cp==undef, "Don't use cp with plane definition.") plane_normal(v) * v[3] :
-		is_vector(cp)? cp :
-		is_num(cp)? cp*unit(v) :
-		[0,0,0];
-	v = is_vector(v,4)? plane_normal(v) : v;
-	if (cp != [0,0,0]) {
-		translate(cp) half_of(v=v, s=s, planar=planar) translate(-cp) children();
-	} else if (planar) {
-		v = (v==UP)? BACK : (v==DOWN)? FWD : v;
-		ang = atan2(v.y, v.x);
-		difference() {
-			children();
-			rotate(ang+90) {
-				back(s/2) square(s, center=true);
-			}
-		}
-	} else {
-		difference() {
-			children();
-			rot(from=UP, to=-v) {
-				up(s/2) cube(s, center=true);
-			}
-		}
-	}
+    cp = is_vector(v,4)? assert(cp==undef, "Don't use cp with plane definition.") plane_normal(v) * v[3] :
+        is_vector(cp)? cp :
+        is_num(cp)? cp*unit(v) :
+        [0,0,0];
+    v = is_vector(v,4)? plane_normal(v) : v;
+    if (cp != [0,0,0]) {
+        translate(cp) half_of(v=v, s=s, planar=planar) translate(-cp) children();
+    } else if (planar) {
+        v = (v==UP)? BACK : (v==DOWN)? FWD : v;
+        ang = atan2(v.y, v.x);
+        difference() {
+            children();
+            rotate(ang+90) {
+                back(s/2) square(s, center=true);
+            }
+        }
+    } else {
+        difference() {
+            children();
+            rot(from=UP, to=-v) {
+                up(s/2) cube(s, center=true);
+            }
+        }
+    }
 }
 
 
@@ -81,17 +81,17 @@ module half_of(v=UP, cp, s=1000, planar=false)
 //   left_half(planar=true) circle(r=20);
 module left_half(s=1000, x=0, planar=false)
 {
-	dir = LEFT;
-	difference() {
-		children();
-		translate([x,0,0]-dir*s/2) {
-			if (planar) {
-				square(s, center=true);
-			} else {
-				cube(s, center=true);
-			}
-		}
-	}
+    dir = LEFT;
+    difference() {
+        children();
+        translate([x,0,0]-dir*s/2) {
+            if (planar) {
+                square(s, center=true);
+            } else {
+                cube(s, center=true);
+            }
+        }
+    }
 }
 
 
@@ -117,17 +117,17 @@ module left_half(s=1000, x=0, planar=false)
 //   right_half(planar=true) circle(r=20);
 module right_half(s=1000, x=0, planar=false)
 {
-	dir = RIGHT;
-	difference() {
-		children();
-		translate([x,0,0]-dir*s/2) {
-			if (planar) {
-				square(s, center=true);
-			} else {
-				cube(s, center=true);
-			}
-		}
-	}
+    dir = RIGHT;
+    difference() {
+        children();
+        translate([x,0,0]-dir*s/2) {
+            if (planar) {
+                square(s, center=true);
+            } else {
+                cube(s, center=true);
+            }
+        }
+    }
 }
 
 
@@ -153,17 +153,17 @@ module right_half(s=1000, x=0, planar=false)
 //   front_half(planar=true) circle(r=20);
 module front_half(s=1000, y=0, planar=false)
 {
-	dir = FWD;
-	difference() {
-		children();
-		translate([0,y,0]-dir*s/2) {
-			if (planar) {
-				square(s, center=true);
-			} else {
-				cube(s, center=true);
-			}
-		}
-	}
+    dir = FWD;
+    difference() {
+        children();
+        translate([0,y,0]-dir*s/2) {
+            if (planar) {
+                square(s, center=true);
+            } else {
+                cube(s, center=true);
+            }
+        }
+    }
 }
 
 
@@ -189,17 +189,17 @@ module front_half(s=1000, y=0, planar=false)
 //   back_half(planar=true) circle(r=20);
 module back_half(s=1000, y=0, planar=false)
 {
-	dir = BACK;
-	difference() {
-		children();
-		translate([0,y,0]-dir*s/2) {
-			if (planar) {
-				square(s, center=true);
-			} else {
-				cube(s, center=true);
-			}
-		}
-	}
+    dir = BACK;
+    difference() {
+        children();
+        translate([0,y,0]-dir*s/2) {
+            if (planar) {
+                square(s, center=true);
+            } else {
+                cube(s, center=true);
+            }
+        }
+    }
 }
 
 
@@ -221,13 +221,13 @@ module back_half(s=1000, y=0, planar=false)
 //   bottom_half(z=-10) sphere(r=20);
 module bottom_half(s=1000, z=0)
 {
-	dir = DOWN;
-	difference() {
-		children();
-		translate([0,0,z]-dir*s/2) {
-			cube(s, center=true);
-		}
-	}
+    dir = DOWN;
+    difference() {
+        children();
+        translate([0,0,z]-dir*s/2) {
+            cube(s, center=true);
+        }
+    }
 }
 
 
@@ -249,13 +249,13 @@ module bottom_half(s=1000, z=0)
 //   top_half(z=5) sphere(r=20);
 module top_half(s=1000, z=0)
 {
-	dir = UP;
-	difference() {
-		children();
-		translate([0,0,z]-dir*s/2) {
-			cube(s, center=true);
-		}
-	}
+    dir = UP;
+    difference() {
+        children();
+        translate([0,0,z]-dir*s/2) {
+            cube(s, center=true);
+        }
+    }
 }
 
 
@@ -296,19 +296,19 @@ module top_half(s=1000, z=0)
 //   }
 module chain_hull()
 {
-	union() {
-		if ($children == 1) {
-			children();
-		} else if ($children > 1) {
-			for (i =[1:1:$children-1]) {
-				$idx = i;
-				hull() {
-					let($primary=true) children(i-1);
-					let($primary=false) children(i);
-				}
-			}
-		}
-	}
+    union() {
+        if ($children == 1) {
+            children();
+        } else if ($children > 1) {
+            for (i =[1:1:$children-1]) {
+                $idx = i;
+                hull() {
+                    let($primary=true) children(i-1);
+                    let($primary=false) children(i);
+                }
+            }
+        }
+    }
 }
 
 
@@ -341,35 +341,35 @@ module chain_hull()
 //   cylindrical_extrude(or=40, ir=35, orient=BACK)
 //       text(text="Hello World!", size=10, halign="center", valign="center");
 module cylindrical_extrude(or, ir, od, id, size=1000, convexity=10, spin=0, orient=UP) {
-	assert(is_num(size) || is_vector(size,2));
-	size = is_num(size)? [size,size] : size;
-	ir = get_radius(r=ir,d=id);
-	or = get_radius(r=or,d=od);
-	index_r = or;
-	circumf = 2 * PI * index_r;
-	width = min(size.x, circumf);
-	assert(width <= circumf, "Shape would more than completely wrap around.");
-	sides = segs(or);
-	step = circumf / sides;
-	steps = ceil(width / step);
-	rot(from=UP, to=orient) rot(spin) {
-		for (i=[0:1:steps-2]) {
-			x = (i+0.5-steps/2) * step;
-			zrot(360 * x / circumf) {
-				fwd(or*cos(180/sides)) {
-					xrot(-90) {
-						linear_extrude(height=or-ir, scale=[ir/or,1], center=false, convexity=convexity) {
-							yflip()
-							intersection() {
-								left(x) children();
-								rect([quantup(step,pow(2,-15)),size.y],center=true);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+    assert(is_num(size) || is_vector(size,2));
+    size = is_num(size)? [size,size] : size;
+    ir = get_radius(r=ir,d=id);
+    or = get_radius(r=or,d=od);
+    index_r = or;
+    circumf = 2 * PI * index_r;
+    width = min(size.x, circumf);
+    assert(width <= circumf, "Shape would more than completely wrap around.");
+    sides = segs(or);
+    step = circumf / sides;
+    steps = ceil(width / step);
+    rot(from=UP, to=orient) rot(spin) {
+        for (i=[0:1:steps-2]) {
+            x = (i+0.5-steps/2) * step;
+            zrot(360 * x / circumf) {
+                fwd(or*cos(180/sides)) {
+                    xrot(-90) {
+                        linear_extrude(height=or-ir, scale=[ir/or,1], center=false, convexity=convexity) {
+                            yflip()
+                            intersection() {
+                                left(x) children();
+                                rect([quantup(step,pow(2,-15)),size.y],center=true);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 
@@ -397,12 +397,12 @@ module cylindrical_extrude(or, ir, od, id, size=1000, convexity=10, spin=0, orie
 //   ir = Radius to round only inside (concave) corners to.  Use instead of `r`.
 module round3d(r, or, ir, size=100)
 {
-	or = get_radius(r1=or, r=r, dflt=0);
-	ir = get_radius(r1=ir, r=r, dflt=0);
-	offset3d(or, size=size)
-		offset3d(-ir-or, size=size)
-			offset3d(ir, size=size)
-				children();
+    or = get_radius(r1=or, r=r, dflt=0);
+    ir = get_radius(r1=ir, r=r, dflt=0);
+    offset3d(or, size=size)
+        offset3d(-ir-or, size=size)
+            offset3d(ir, size=size)
+                children();
 }
 
 
@@ -418,30 +418,30 @@ module round3d(r, or, ir, size=100)
 //   size = Maximum size of object to be contracted, given as a scalar.  Default: 100
 //   convexity = Max number of times a line could intersect the walls of the object.  Default: 10
 module offset3d(r=1, size=100, convexity=10) {
-	n = quant(max(8,segs(abs(r))),4);
-	if (r==0) {
-		children();
-	} else if (r>0) {
-		render(convexity=convexity)
-		minkowski() {
-			children();
-			sphere(r, $fn=n);
-		}
-	} else {
-		size2 = size * [1,1,1];
-		size1 = size2 * 1.02;
-		render(convexity=convexity)
-		difference() {
-			cube(size2, center=true);
-			minkowski() {
-				difference() {
-					cube(size1, center=true);
-					children();
-				}
-				sphere(-r, $fn=n);
-			}
-		}
-	}
+    n = quant(max(8,segs(abs(r))),4);
+    if (r==0) {
+        children();
+    } else if (r>0) {
+        render(convexity=convexity)
+        minkowski() {
+            children();
+            sphere(r, $fn=n);
+        }
+    } else {
+        size2 = size * [1,1,1];
+        size1 = size2 * 1.02;
+        render(convexity=convexity)
+        difference() {
+            cube(size2, center=true);
+            minkowski() {
+                difference() {
+                    cube(size1, center=true);
+                    children();
+                }
+                sphere(-r, $fn=n);
+            }
+        }
+    }
 }
 
 
@@ -468,9 +468,9 @@ module offset3d(r=1, size=100, convexity=10) {
 //   round2d(or=16,ir=8) {square([40,100], center=true); square([100,40], center=true);}
 module round2d(r, or, ir)
 {
-	or = get_radius(r1=or, r=r, dflt=0);
-	ir = get_radius(r1=ir, r=r, dflt=0);
-	offset(or) offset(-ir-or) offset(delta=ir,chamfer=true) children();
+    or = get_radius(r1=or, r=r, dflt=0);
+    ir = get_radius(r1=ir, r=r, dflt=0);
+    offset(or) offset(-ir-or) offset(delta=ir,chamfer=true) children();
 }
 
 
@@ -496,19 +496,19 @@ module round2d(r, or, ir)
 //   shell2d(8,or=16,ir=8,round=16,fill=8) {square([40,100], center=true); square([100,40], center=true);}
 module shell2d(thickness, or=0, ir=0, fill=0, round=0)
 {
-	thickness = is_num(thickness)? (
-		thickness<0? [thickness,0] : [0,thickness]
-	) : (thickness[0]>thickness[1])? (
-		[thickness[1],thickness[0]]
-	) : thickness;
-	difference() {
-		round2d(or=or,ir=ir)
-			offset(delta=thickness[1])
-				children();
-		round2d(or=fill,ir=round)
-			offset(delta=thickness[0])
-				children();
-	}
+    thickness = is_num(thickness)? (
+        thickness<0? [thickness,0] : [0,thickness]
+    ) : (thickness[0]>thickness[1])? (
+        [thickness[1],thickness[0]]
+    ) : thickness;
+    difference() {
+        round2d(or=or,ir=ir)
+            offset(delta=thickness[1])
+                children();
+        round2d(or=fill,ir=round)
+            offset(delta=thickness[0])
+                children();
+    }
 }
 
 
@@ -534,13 +534,13 @@ module shell2d(thickness, or=0, ir=0, fill=0, round=0)
 //   rgb = HSL(h=270,s=0.75,l=0.6);
 //   color(rgb) cube(60, center=true);
 function HSL(h,s=1,l=0.5) =
-	let(
-		h=posmod(h,360)
-	) [
-		for (n=[0,8,4]) let(
-			k=(n+h/30)%12
-		) l - s*min(l,1-l)*max(min(k-3,9-k,1),-1)
-	];
+    let(
+        h=posmod(h,360)
+    ) [
+        for (n=[0,8,4]) let(
+            k=(n+h/30)%12
+        ) l - s*min(l,1-l)*max(min(k-3,9-k,1),-1)
+    ];
 
 module HSL(h,s=1,l=0.5,a=1) color(HSL(h,s,l),a) children();
 
@@ -563,13 +563,13 @@ module HSL(h,s=1,l=0.5,a=1) color(HSL(h,s,l),a) children();
 //   rgb = HSV(h=270,s=0.75,v=0.9);
 //   color(rgb) cube(60, center=true);
 function HSV(h,s=1,v=1) =
-	let(
-		h=posmod(h,360),
-		v2=v*(1-s),
-		r=lookup(h,[[0,v], [60,v], [120,v2], [240,v2], [300,v], [360,v]]),
-		g=lookup(h,[[0,v2], [60,v], [180,v], [240,v2], [360,v2]]),
-		b=lookup(h,[[0,v2], [120,v2], [180,v], [300,v], [360,v2]])
-	) [r,g,b];
+    let(
+        h=posmod(h,360),
+        v2=v*(1-s),
+        r=lookup(h,[[0,v], [60,v], [120,v2], [240,v2], [300,v], [360,v]]),
+        g=lookup(h,[[0,v2], [60,v], [180,v], [240,v2], [360,v2]]),
+        b=lookup(h,[[0,v2], [120,v2], [180,v], [300,v], [360,v2]])
+    ) [r,g,b];
 
 module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
 
@@ -594,14 +594,14 @@ module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
 //   rainbow(rgn) stroke($item, closed=true);
 module rainbow(list, stride=1)
 {
-	ll = len(list);
-	huestep = 360 / ll;
-	hues = [for (i=[0:1:ll-1]) posmod(i*huestep+i*360/stride,360)];
-	for($idx=idx(list)) {
-		$item = list[$idx];
-		HSV(h=hues[$idx]) children();
-	}
+    ll = len(list);
+    huestep = 360 / ll;
+    hues = [for (i=[0:1:ll-1]) posmod(i*huestep+i*360/stride,360)];
+    for($idx=idx(list)) {
+        $item = list[$idx];
+        HSV(h=hues[$idx]) children();
+    }
 }
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

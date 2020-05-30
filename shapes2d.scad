@@ -86,235 +86,235 @@
 //   path = rot([15,30,0], p=path3d(pentagon(d=50)));
 //   stroke(path, width=2, endcap1="arrow2", endcap2="tail", endcap_angle2=0, $fn=18);
 module stroke(
-	path, width=1, closed=false,
-	endcaps, endcap1, endcap2,
-	trim, trim1, trim2,
-	endcap_width, endcap_width1, endcap_width2,
-	endcap_length, endcap_length1, endcap_length2,
-	endcap_extent, endcap_extent1, endcap_extent2,
-	endcap_angle, endcap_angle1, endcap_angle2,
-	convexity=10, hull=true
+    path, width=1, closed=false,
+    endcaps, endcap1, endcap2,
+    trim, trim1, trim2,
+    endcap_width, endcap_width1, endcap_width2,
+    endcap_length, endcap_length1, endcap_length2,
+    endcap_extent, endcap_extent1, endcap_extent2,
+    endcap_angle, endcap_angle1, endcap_angle2,
+    convexity=10, hull=true
 ) {
-	function _endcap_shape(cap,linewidth,w,l,l2) = (
-		let(sq2=sqrt(2), l3=l-l2)
-		(cap=="round" || cap==true)? circle(d=1, $fn=max(8, segs(w/2))) :
-		cap=="chisel"? [[-0.5,0], [0,0.5], [0.5,0], [0,-0.5]] :
-		cap=="square"? [[-0.5,-0.5], [-0.5,0.5], [0.5,0.5], [0.5,-0.5]] :
-		cap=="diamond"? [[0,w/2], [w/2,0], [0,-w/2], [-w/2,0]] :
-		cap=="dot"?    circle(d=3, $fn=max(12, segs(w*3/2))) :
-		cap=="x"?      [for (a=[0:90:270]) each rot(a,p=[[w+sq2/2,w-sq2/2]/2, [w-sq2/2,w+sq2/2]/2, [0,sq2/2]]) ] :
-		cap=="cross"?  [for (a=[0:90:270]) each rot(a,p=[[1,w]/2, [-1,w]/2, [-1,1]/2]) ] :
-		cap=="line"?   [[w/2,0.5], [w/2,-0.5], [-w/2,-0.5], [-w/2,0.5]] :
-		cap=="arrow"?  [[0,0], [w/2,-l2], [w/2,-l2-l], [0,-l], [-w/2,-l2-l], [-w/2,-l2]] :
-		cap=="arrow2"? [[0,0], [w/2,-l2-l], [0,-l], [-w/2,-l2-l]] :
-		cap=="tail"?   [[0,0], [w/2,l2], [w/2,l2-l], [0,-l], [-w/2,l2-l], [-w/2,l2]] :
-		cap=="tail2"?  [[w/2,0], [w/2,-l], [0,-l-l2], [-w/2,-l], [-w/2,0]] :
-		is_path(cap)? cap :
-		[]
-	) * linewidth;
+    function _endcap_shape(cap,linewidth,w,l,l2) = (
+        let(sq2=sqrt(2), l3=l-l2)
+        (cap=="round" || cap==true)? circle(d=1, $fn=max(8, segs(w/2))) :
+        cap=="chisel"? [[-0.5,0], [0,0.5], [0.5,0], [0,-0.5]] :
+        cap=="square"? [[-0.5,-0.5], [-0.5,0.5], [0.5,0.5], [0.5,-0.5]] :
+        cap=="diamond"? [[0,w/2], [w/2,0], [0,-w/2], [-w/2,0]] :
+        cap=="dot"?    circle(d=3, $fn=max(12, segs(w*3/2))) :
+        cap=="x"?      [for (a=[0:90:270]) each rot(a,p=[[w+sq2/2,w-sq2/2]/2, [w-sq2/2,w+sq2/2]/2, [0,sq2/2]]) ] :
+        cap=="cross"?  [for (a=[0:90:270]) each rot(a,p=[[1,w]/2, [-1,w]/2, [-1,1]/2]) ] :
+        cap=="line"?   [[w/2,0.5], [w/2,-0.5], [-w/2,-0.5], [-w/2,0.5]] :
+        cap=="arrow"?  [[0,0], [w/2,-l2], [w/2,-l2-l], [0,-l], [-w/2,-l2-l], [-w/2,-l2]] :
+        cap=="arrow2"? [[0,0], [w/2,-l2-l], [0,-l], [-w/2,-l2-l]] :
+        cap=="tail"?   [[0,0], [w/2,l2], [w/2,l2-l], [0,-l], [-w/2,l2-l], [-w/2,l2]] :
+        cap=="tail2"?  [[w/2,0], [w/2,-l], [0,-l-l2], [-w/2,-l], [-w/2,0]] :
+        is_path(cap)? cap :
+        []
+    ) * linewidth;
 
-	assert(is_bool(closed));
-	assert(is_path(path,[2,3]), "The path argument must be a list of 2D or 3D points.");
-	path = deduplicate( closed? close_path(path) : path );
+    assert(is_bool(closed));
+    assert(is_path(path,[2,3]), "The path argument must be a list of 2D or 3D points.");
+    path = deduplicate( closed? close_path(path) : path );
 
-	assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
-	width = is_num(width)? [for (x=path) width] : width;
+    assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
+    width = is_num(width)? [for (x=path) width] : width;
 
-	endcap1 = first_defined([endcap1, endcaps, "round"]);
-	endcap2 = first_defined([endcap2, endcaps, "round"]);
-	assert(is_bool(endcap1) || is_string(endcap1) || is_path(endcap1));
-	assert(is_bool(endcap2) || is_string(endcap2) || is_path(endcap2));
+    endcap1 = first_defined([endcap1, endcaps, "round"]);
+    endcap2 = first_defined([endcap2, endcaps, "round"]);
+    assert(is_bool(endcap1) || is_string(endcap1) || is_path(endcap1));
+    assert(is_bool(endcap2) || is_string(endcap2) || is_path(endcap2));
 
-	endcap_width1 = first_defined([endcap_width1, endcap_width, 3.5]);
-	endcap_width2 = first_defined([endcap_width2, endcap_width, 3.5]);
-	assert(is_num(endcap_width1));
-	assert(is_num(endcap_width2));
+    endcap_width1 = first_defined([endcap_width1, endcap_width, 3.5]);
+    endcap_width2 = first_defined([endcap_width2, endcap_width, 3.5]);
+    assert(is_num(endcap_width1));
+    assert(is_num(endcap_width2));
 
-	endcap_length1 = first_defined([endcap_length1, endcap_length, endcap_width1*0.5]);
-	endcap_length2 = first_defined([endcap_length2, endcap_length, endcap_width2*0.5]);
-	assert(is_num(endcap_length1));
-	assert(is_num(endcap_length2));
+    endcap_length1 = first_defined([endcap_length1, endcap_length, endcap_width1*0.5]);
+    endcap_length2 = first_defined([endcap_length2, endcap_length, endcap_width2*0.5]);
+    assert(is_num(endcap_length1));
+    assert(is_num(endcap_length2));
 
-	endcap_extent1 = first_defined([endcap_extent1, endcap_extent, endcap_width1*0.5]);
-	endcap_extent2 = first_defined([endcap_extent2, endcap_extent, endcap_width2*0.5]);
-	assert(is_num(endcap_extent1));
-	assert(is_num(endcap_extent2));
+    endcap_extent1 = first_defined([endcap_extent1, endcap_extent, endcap_width1*0.5]);
+    endcap_extent2 = first_defined([endcap_extent2, endcap_extent, endcap_width2*0.5]);
+    assert(is_num(endcap_extent1));
+    assert(is_num(endcap_extent2));
 
-	endcap_angle1 = first_defined([endcap_angle1, endcap_angle]);
-	endcap_angle2 = first_defined([endcap_angle2, endcap_angle]);
-	assert(is_undef(endcap_angle1)||is_num(endcap_angle1));
-	assert(is_undef(endcap_angle2)||is_num(endcap_angle2));
+    endcap_angle1 = first_defined([endcap_angle1, endcap_angle]);
+    endcap_angle2 = first_defined([endcap_angle2, endcap_angle]);
+    assert(is_undef(endcap_angle1)||is_num(endcap_angle1));
+    assert(is_undef(endcap_angle2)||is_num(endcap_angle2));
 
-	endcap_shape1 = _endcap_shape(endcap1, select(width,0), endcap_width1, endcap_length1, endcap_extent1);
-	endcap_shape2 = _endcap_shape(endcap2, select(width,-1), endcap_width2, endcap_length2, endcap_extent2);
+    endcap_shape1 = _endcap_shape(endcap1, select(width,0), endcap_width1, endcap_length1, endcap_extent1);
+    endcap_shape2 = _endcap_shape(endcap2, select(width,-1), endcap_width2, endcap_length2, endcap_extent2);
 
-	trim1 = select(width,0) * first_defined([
-		trim1, trim,
-		(endcap1=="arrow")? endcap_length1-0.01 :
-		(endcap1=="arrow2")? endcap_length1*3/4 :
-		0
-	]);
-	assert(is_num(trim1));
+    trim1 = select(width,0) * first_defined([
+        trim1, trim,
+        (endcap1=="arrow")? endcap_length1-0.01 :
+        (endcap1=="arrow2")? endcap_length1*3/4 :
+        0
+    ]);
+    assert(is_num(trim1));
 
-	trim2 = select(width,-1) * first_defined([
-		trim2, trim,
-		(endcap2=="arrow")? endcap_length2-0.01 :
-		(endcap2=="arrow2")? endcap_length2*3/4 :
-		0
-	]);
-	assert(is_num(trim2));
+    trim2 = select(width,-1) * first_defined([
+        trim2, trim,
+        (endcap2=="arrow")? endcap_length2-0.01 :
+        (endcap2=="arrow2")? endcap_length2*3/4 :
+        0
+    ]);
+    assert(is_num(trim2));
 
-	spos = path_pos_from_start(path,trim1,closed=false);
-	epos = path_pos_from_end(path,trim2,closed=false);
-	path2 = path_subselect(path, spos[0], spos[1], epos[0], epos[1]);
-	widths = concat(
-		[lerp(width[spos[0]], width[(spos[0]+1)%len(width)], spos[1])],
-		[for (i = [spos[0]+1:1:epos[0]]) width[i]],
-		[lerp(width[epos[0]], width[(epos[0]+1)%len(width)], epos[1])]
-	);
+    spos = path_pos_from_start(path,trim1,closed=false);
+    epos = path_pos_from_end(path,trim2,closed=false);
+    path2 = path_subselect(path, spos[0], spos[1], epos[0], epos[1]);
+    widths = concat(
+        [lerp(width[spos[0]], width[(spos[0]+1)%len(width)], spos[1])],
+        [for (i = [spos[0]+1:1:epos[0]]) width[i]],
+        [lerp(width[epos[0]], width[(epos[0]+1)%len(width)], epos[1])]
+    );
 
-	start_vec = select(path,0) - select(path,1);
-	end_vec = select(path,-1) - select(path,-2);
-	if (len(path[0]) == 2) {
-		// Straight segments
-		for (i = idx(path2,end=-2)) {
-			seg = select(path2,i,i+1);
-			delt = seg[1] - seg[0];
-			translate(seg[0]) {
-				rot(from=BACK,to=delt) {
-					trapezoid(w1=widths[i], w2=widths[i+1], h=norm(delt), anchor=FRONT);
-				}
-			}
-		}
+    start_vec = select(path,0) - select(path,1);
+    end_vec = select(path,-1) - select(path,-2);
+    if (len(path[0]) == 2) {
+        // Straight segments
+        for (i = idx(path2,end=-2)) {
+            seg = select(path2,i,i+1);
+            delt = seg[1] - seg[0];
+            translate(seg[0]) {
+                rot(from=BACK,to=delt) {
+                    trapezoid(w1=widths[i], w2=widths[i+1], h=norm(delt), anchor=FRONT);
+                }
+            }
+        }
 
-		// Joints
-		for (i = [1:1:len(path2)-2]) {
-			$fn = quantup(segs(widths[i]/2),4);
-			if (hull) {
-				hull() {
-					translate(path2[i]) {
-						rot(from=BACK, to=path2[i]-path2[i-1])
-							circle(d=widths[i]);
-						rot(from=BACK, to=path2[i+1]-path2[i])
-							circle(d=widths[i]);
-					}
-				}
-			} else {
-				translate(path2[i]) {
-					rot(from=BACK, to=path2[i]-path2[i-1])
-						circle(d=widths[i]);
-					rot(from=BACK, to=path2[i+1]-path2[i])
-						circle(d=widths[i]);
-				}
-			}
-		}
+        // Joints
+        for (i = [1:1:len(path2)-2]) {
+            $fn = quantup(segs(widths[i]/2),4);
+            if (hull) {
+                hull() {
+                    translate(path2[i]) {
+                        rot(from=BACK, to=path2[i]-path2[i-1])
+                            circle(d=widths[i]);
+                        rot(from=BACK, to=path2[i+1]-path2[i])
+                            circle(d=widths[i]);
+                    }
+                }
+            } else {
+                translate(path2[i]) {
+                    rot(from=BACK, to=path2[i]-path2[i-1])
+                        circle(d=widths[i]);
+                    rot(from=BACK, to=path2[i+1]-path2[i])
+                        circle(d=widths[i]);
+                }
+            }
+        }
 
-		// Endcap1
-		translate(path[0]) {
-			start_vec = select(path,0) - select(path,1);
-			rot(from=BACK, to=start_vec) {
-				polygon(endcap_shape1);
-			}
-		}
+        // Endcap1
+        translate(path[0]) {
+            start_vec = select(path,0) - select(path,1);
+            rot(from=BACK, to=start_vec) {
+                polygon(endcap_shape1);
+            }
+        }
 
-		// Endcap2
-		translate(select(path,-1)) {
-			rot(from=BACK, to=end_vec) {
-				polygon(endcap_shape2);
-			}
-		}
-	} else {
-		quatsums = Q_Cumulative([
-			for (i = idx(path2,end=-2)) let(
-				vec1 = i==0? UP : unit(path2[i]-path2[i-1]),
-				vec2 = unit(path2[i+1]-path2[i]),
-				axis = vector_axis(vec1,vec2),
-				ang = vector_angle(vec1,vec2)
-			) Quat(axis,ang)
-		]);
-		rotmats = [for (q=quatsums) Q_Matrix4(q)];
-		sides = [
-			for (i = idx(path2,end=-2))
-			quantup(segs(max(widths[i],widths[i+1])/2),4)
-		];
+        // Endcap2
+        translate(select(path,-1)) {
+            rot(from=BACK, to=end_vec) {
+                polygon(endcap_shape2);
+            }
+        }
+    } else {
+        quatsums = Q_Cumulative([
+            for (i = idx(path2,end=-2)) let(
+                vec1 = i==0? UP : unit(path2[i]-path2[i-1]),
+                vec2 = unit(path2[i+1]-path2[i]),
+                axis = vector_axis(vec1,vec2),
+                ang = vector_angle(vec1,vec2)
+            ) Quat(axis,ang)
+        ]);
+        rotmats = [for (q=quatsums) Q_Matrix4(q)];
+        sides = [
+            for (i = idx(path2,end=-2))
+            quantup(segs(max(widths[i],widths[i+1])/2),4)
+        ];
 
-		// Straight segments
-		for (i = idx(path2,end=-2)) {
-			dist = norm(path2[i+1] - path2[i]);
-			w1 = widths[i]/2;
-			w2 = widths[i+1]/2;
-			$fn = sides[i];
-			translate(path2[i]) {
-				multmatrix(rotmats[i]) {
-					cylinder(r1=w1, r2=w2, h=dist, center=false);
-				}
-			}
-		}
+        // Straight segments
+        for (i = idx(path2,end=-2)) {
+            dist = norm(path2[i+1] - path2[i]);
+            w1 = widths[i]/2;
+            w2 = widths[i+1]/2;
+            $fn = sides[i];
+            translate(path2[i]) {
+                multmatrix(rotmats[i]) {
+                    cylinder(r1=w1, r2=w2, h=dist, center=false);
+                }
+            }
+        }
 
-		// Joints
-		for (i = [1:1:len(path2)-2]) {
-			$fn = sides[i];
-			translate(path2[i]) {
-				if (hull) {
-					hull(){
-						multmatrix(rotmats[i]) {
-							sphere(d=widths[i]);
-						}
-						multmatrix(rotmats[i-1]) {
-							sphere(d=widths[i]);
-						}
-					}
-				} else {
-					multmatrix(rotmats[i]) {
-						sphere(d=widths[i]);
-					}
-					multmatrix(rotmats[i-1]) {
-						sphere(d=widths[i]);
-					}
-				}
-			}
-		}
+        // Joints
+        for (i = [1:1:len(path2)-2]) {
+            $fn = sides[i];
+            translate(path2[i]) {
+                if (hull) {
+                    hull(){
+                        multmatrix(rotmats[i]) {
+                            sphere(d=widths[i]);
+                        }
+                        multmatrix(rotmats[i-1]) {
+                            sphere(d=widths[i]);
+                        }
+                    }
+                } else {
+                    multmatrix(rotmats[i]) {
+                        sphere(d=widths[i]);
+                    }
+                    multmatrix(rotmats[i-1]) {
+                        sphere(d=widths[i]);
+                    }
+                }
+            }
+        }
 
-		// Endcap1
-		translate(path[0]) {
-			multmatrix(rotmats[0]) {
-				$fn = sides[0];
-				if (is_undef(endcap_angle1)) {
-					rotate_extrude(convexity=convexity) {
-						right_half(planar=true) {
-							polygon(endcap_shape1);
-						}
-					}
-				} else {
-					rotate([90,0,endcap_angle1]) {
-						linear_extrude(height=widths[0], center=true, convexity=convexity) {
-							polygon(endcap_shape1);
-						}
-					}
-				}
-			}
-		}
+        // Endcap1
+        translate(path[0]) {
+            multmatrix(rotmats[0]) {
+                $fn = sides[0];
+                if (is_undef(endcap_angle1)) {
+                    rotate_extrude(convexity=convexity) {
+                        right_half(planar=true) {
+                            polygon(endcap_shape1);
+                        }
+                    }
+                } else {
+                    rotate([90,0,endcap_angle1]) {
+                        linear_extrude(height=widths[0], center=true, convexity=convexity) {
+                            polygon(endcap_shape1);
+                        }
+                    }
+                }
+            }
+        }
 
-		// Endcap2
-		translate(select(path,-1)) {
-			multmatrix(select(rotmats,-1)) {
-				$fn = select(sides,-1);
-				if (is_undef(endcap_angle2)) {
-					rotate_extrude(convexity=convexity) {
-						right_half(planar=true) {
-							polygon(endcap_shape2);
-						}
-					}
-				} else {
-					rotate([90,0,endcap_angle2]) {
-						linear_extrude(height=select(widths,-1), center=true, convexity=convexity) {
-							polygon(endcap_shape2);
-						}
-					}
-				}
-			}
-		}
-	}
+        // Endcap2
+        translate(select(path,-1)) {
+            multmatrix(select(rotmats,-1)) {
+                $fn = select(sides,-1);
+                if (is_undef(endcap_angle2)) {
+                    rotate_extrude(convexity=convexity) {
+                        right_half(planar=true) {
+                            polygon(endcap_shape2);
+                        }
+                    }
+                } else {
+                    rotate([90,0,endcap_angle2]) {
+                        linear_extrude(height=select(widths,-1), center=true, convexity=convexity) {
+                            polygon(endcap_shape2);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 
@@ -367,95 +367,95 @@ module stroke(
 //   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
 //   trace_polyline(path, showpts=true, color="cyan");
 function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false) =
-	// First try for 2D arc specified by width and thickness
-	is_def(width) && is_def(thickness)? (
+    // First try for 2D arc specified by width and thickness
+    is_def(width) && is_def(thickness)? (
                 assert(!any_defined([r,cp,points]) && !any([cw,ccw,long]),"Conflicting or invalid parameters to arc")
                 assert(width>0, "Width must be postive")
                 assert(thickness>0, "Thickness must be positive")
-		arc(N,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge)
-	) : is_def(angle)? (
-		let(
-			parmok = !any_defined([points,width,thickness]) &&
-				((is_vector(angle,2) && is_undef(start)) || is_num(angle))
-		)
-		assert(parmok,"Invalid parameters in arc")
-		let(
-			cp = first_defined([cp,[0,0]]),
-			start = is_def(start)? start : is_vector(angle) ? angle[0] : 0,
-			angle = is_vector(angle)? angle[1]-angle[0] : angle,
-			r = get_radius(r=r, d=d)
+        arc(N,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge)
+    ) : is_def(angle)? (
+        let(
+            parmok = !any_defined([points,width,thickness]) &&
+                ((is_vector(angle,2) && is_undef(start)) || is_num(angle))
+        )
+        assert(parmok,"Invalid parameters in arc")
+        let(
+            cp = first_defined([cp,[0,0]]),
+            start = is_def(start)? start : is_vector(angle) ? angle[0] : 0,
+            angle = is_vector(angle)? angle[1]-angle[0] : angle,
+            r = get_radius(r=r, d=d)
                 )
                 assert(is_vector(cp,2),"Centerpoint must be a 2d vector")
                 assert(angle!=0, "Arc has zero length")
                 assert(r>0, "Arc radius invalid")
                 let(
-			N = max(3, is_undef(N)? ceil(segs(r)*abs(angle)/360) : N),
-			arcpoints = [for(i=[0:N-1]) let(theta = start + i*angle/(N-1)) r*[cos(theta),sin(theta)]+cp],
-			extra = wedge? [cp] : []
-		)
-		concat(extra,arcpoints)
-	) :
-  	    assert(is_path(points,[2,3]),"Point list is invalid")
-	    // Arc is 3D, so transform points to 2D and make a recursive call, then remap back to 3D
- 	    len(points[0])==3? (
+            N = max(3, is_undef(N)? ceil(segs(r)*abs(angle)/360) : N),
+            arcpoints = [for(i=[0:N-1]) let(theta = start + i*angle/(N-1)) r*[cos(theta),sin(theta)]+cp],
+            extra = wedge? [cp] : []
+        )
+        concat(extra,arcpoints)
+    ) :
+          assert(is_path(points,[2,3]),"Point list is invalid")
+        // Arc is 3D, so transform points to 2D and make a recursive call, then remap back to 3D
+         len(points[0])==3? (
                 assert(!(cw || ccw), "(Counter)clockwise isn't meaningful in 3d, so `cw` and `ccw` must be false")
                 assert(is_undef(cp) || is_vector(cp,3),"points are 3d so cp must be 3d")
-		let(
-			thirdpoint = is_def(cp) ? cp : points[2],
-			center2d = is_def(cp) ? project_plane(cp,thirdpoint,points[0],points[1]) : undef,
-			points2d = project_plane(points,thirdpoint,points[0],points[1])
-		)
-		lift_plane(arc(N,cp=center2d,points=points2d,wedge=wedge,long=long),thirdpoint,points[0],points[1])
-	) : is_def(cp)? (
-		// Arc defined by center plus two points, will have radius defined by center and points[0]
-		// and extent defined by direction of point[1] from the center
+        let(
+            thirdpoint = is_def(cp) ? cp : points[2],
+            center2d = is_def(cp) ? project_plane(cp,thirdpoint,points[0],points[1]) : undef,
+            points2d = project_plane(points,thirdpoint,points[0],points[1])
+        )
+        lift_plane(arc(N,cp=center2d,points=points2d,wedge=wedge,long=long),thirdpoint,points[0],points[1])
+    ) : is_def(cp)? (
+        // Arc defined by center plus two points, will have radius defined by center and points[0]
+        // and extent defined by direction of point[1] from the center
                 assert(is_vector(cp,2), "Centerpoint must be a 2d vector")
                 assert(len(points)==2, "When pointlist has length 3 centerpoint is not allowed")
                 assert(points[0]!=points[1], "Arc endpoints are equal")
                 assert(cp!=points[0]&&cp!=points[1], "Centerpoint equals an arc endpoint")
                 assert(count_true([long,cw,ccw])<=1, str("Only one of `long`, `cw` and `ccw` can be true",cw,ccw,long))
-		let(    
-			angle = vector_angle(points[0], cp, points[1]),
-			v1 = points[0]-cp,
-			v2 = points[1]-cp,
-			prelim_dir = sign(det2([v1,v2])),   // z component of cross product
+        let(    
+            angle = vector_angle(points[0], cp, points[1]),
+            v1 = points[0]-cp,
+            v2 = points[1]-cp,
+            prelim_dir = sign(det2([v1,v2])),   // z component of cross product
                         dir = prelim_dir != 0
                                   ? prelim_dir
                                   : assert(cw || ccw, "Collinear inputs don't define a unique arc")
                                     1,
-			r=norm(v1),
+            r=norm(v1),
                         final_angle = long || (ccw && dir<0) || (cw && dir>0) ? -dir*(360-angle) : dir*angle
-		)
-		arc(N,cp=cp,r=r,start=atan2(v1.y,v1.x),angle=final_angle,wedge=wedge)
-	) : (
-		// Final case is arc passing through three points, starting at point[0] and ending at point[3]
-		let(col = collinear(points[0],points[1],points[2]))
-		assert(!col, "Collinear inputs do not define an arc")
-		let(
-			cp = line_intersection(_normal_segment(points[0],points[1]),_normal_segment(points[1],points[2])),
-			// select order to be counterclockwise
-			dir = det2([points[1]-points[0],points[2]-points[1]]) > 0,
-			points = dir? select(points,[0,2]) : select(points,[2,0]),
-			r = norm(points[0]-cp),
-			theta_start = atan2(points[0].y-cp.y, points[0].x-cp.x),
-			theta_end = atan2(points[1].y-cp.y, points[1].x-cp.x),
-			angle = posmod(theta_end-theta_start, 360),
-			arcpts = arc(N,cp=cp,r=r,start=theta_start,angle=angle,wedge=wedge)
-		)
-		dir ? arcpts : reverse(arcpts)
-	);
+        )
+        arc(N,cp=cp,r=r,start=atan2(v1.y,v1.x),angle=final_angle,wedge=wedge)
+    ) : (
+        // Final case is arc passing through three points, starting at point[0] and ending at point[3]
+        let(col = collinear(points[0],points[1],points[2]))
+        assert(!col, "Collinear inputs do not define an arc")
+        let(
+            cp = line_intersection(_normal_segment(points[0],points[1]),_normal_segment(points[1],points[2])),
+            // select order to be counterclockwise
+            dir = det2([points[1]-points[0],points[2]-points[1]]) > 0,
+            points = dir? select(points,[0,2]) : select(points,[2,0]),
+            r = norm(points[0]-cp),
+            theta_start = atan2(points[0].y-cp.y, points[0].x-cp.x),
+            theta_end = atan2(points[1].y-cp.y, points[1].x-cp.x),
+            angle = posmod(theta_end-theta_start, 360),
+            arcpts = arc(N,cp=cp,r=r,start=theta_start,angle=angle,wedge=wedge)
+        )
+        dir ? arcpts : reverse(arcpts)
+    );
 
 
 module arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false)
 {
-	path = arc(N=N, r=r, angle=angle, d=d, cp=cp, points=points, width=width, thickness=thickness, start=start, wedge=wedge);
-	polygon(path);
+    path = arc(N=N, r=r, angle=angle, d=d, cp=cp, points=points, width=width, thickness=thickness, start=start, wedge=wedge);
+    polygon(path);
 }
 
 
 function _normal_segment(p1,p2) =
-	let(center = (p1+p2)/2)
-	[center, center + norm(p1-p2)/2 * line_normal(p1,p2)];
+    let(center = (p1+p2)/2)
+    [center, center + norm(p1-p2)/2 * line_normal(p1,p2)];
 
 
 // Function: turtle()
@@ -574,145 +574,145 @@ function _normal_segment(p1,p2) =
 //   koch=concat(["angle",60,"repeat",3],[concat(koch_unit(3),["left","left"])]);
 //   polygon(turtle(koch));
 function turtle(commands, state=[[[0,0]],[1,0],90,0], full_state=false, repeat=1) =
-	let( state = is_vector(state) ? [[state],[1,0],90,0] : state )
-		repeat == 1?
-			_turtle(commands,state,full_state) :
-			_turtle_repeat(commands, state, full_state, repeat);
+    let( state = is_vector(state) ? [[state],[1,0],90,0] : state )
+        repeat == 1?
+            _turtle(commands,state,full_state) :
+            _turtle_repeat(commands, state, full_state, repeat);
 
 function _turtle_repeat(commands, state, full_state, repeat) =
-	repeat==1?
-		_turtle(commands,state,full_state) :
-		_turtle_repeat(commands, _turtle(commands, state, true), full_state, repeat-1);
+    repeat==1?
+        _turtle(commands,state,full_state) :
+        _turtle_repeat(commands, _turtle(commands, state, true), full_state, repeat-1);
 
 function _turtle_command_len(commands, index) =
-	let( one_or_two_arg = ["arcleft","arcright", "arcleftto", "arcrightto"] )
-	commands[index] == "repeat"? 3 :   // Repeat command requires 2 args
-	// For these, the first arg is required, second arg is present if it is not a string
-	in_list(commands[index], one_or_two_arg) && len(commands)>index+2 && !is_string(commands[index+2]) ? 3 :  
-	is_string(commands[index+1])? 1 :  // If 2nd item is a string it's must be a new command
-	2;                                 // Otherwise we have command and arg
+    let( one_or_two_arg = ["arcleft","arcright", "arcleftto", "arcrightto"] )
+    commands[index] == "repeat"? 3 :   // Repeat command requires 2 args
+    // For these, the first arg is required, second arg is present if it is not a string
+    in_list(commands[index], one_or_two_arg) && len(commands)>index+2 && !is_string(commands[index+2]) ? 3 :  
+    is_string(commands[index+1])? 1 :  // If 2nd item is a string it's must be a new command
+    2;                                 // Otherwise we have command and arg
 
 function _turtle(commands, state, full_state, index=0) =
-	index < len(commands) ?
-	_turtle(commands,
-			_turtle_command(commands[index],commands[index+1],commands[index+2],state,index),
-			full_state,
-			index+_turtle_command_len(commands,index)
-		) :
-		( full_state ? state : state[0] );
+    index < len(commands) ?
+    _turtle(commands,
+            _turtle_command(commands[index],commands[index+1],commands[index+2],state,index),
+            full_state,
+            index+_turtle_command_len(commands,index)
+        ) :
+        ( full_state ? state : state[0] );
 
 // Turtle state: state = [path, step_vector, default angle]
 
 function _turtle_command(command, parm, parm2, state, index) =
-	command == "repeat"?
-		assert(is_num(parm),str("\"repeat\" command requires a numeric repeat count at index ",index))
-		assert(is_list(parm2),str("\"repeat\" command requires a command list parameter at index ",index))
-		_turtle_repeat(parm2, state, true, parm) :
-	let(
-		path = 0,
-		step=1,
-		angle=2,
-		arcsteps=3,
-		parm = !is_string(parm) ? parm : undef,
-		parm2 = !is_string(parm2) ? parm2 : undef,
-		needvec = ["jump", "xymove"],
-		neednum = ["untilx","untily","xjump","yjump","angle","length","scale","addlength"],
-		needeither = ["setdir"],
-		chvec = !in_list(command,needvec) || is_vector(parm,2),
-		chnum = !in_list(command,neednum) || is_num(parm),
-		vec_or_num = !in_list(command,needeither) || (is_num(parm) || is_vector(parm,2)),
-		lastpt = select(state[path],-1)
-	)
-	assert(chvec,str("\"",command,"\" requires a vector parameter at index ",index))
-	assert(chnum,str("\"",command,"\" requires a numeric parameter at index ",index))
-	assert(vec_or_num,str("\"",command,"\" requires a vector or numeric parameter at index ",index))
+    command == "repeat"?
+        assert(is_num(parm),str("\"repeat\" command requires a numeric repeat count at index ",index))
+        assert(is_list(parm2),str("\"repeat\" command requires a command list parameter at index ",index))
+        _turtle_repeat(parm2, state, true, parm) :
+    let(
+        path = 0,
+        step=1,
+        angle=2,
+        arcsteps=3,
+        parm = !is_string(parm) ? parm : undef,
+        parm2 = !is_string(parm2) ? parm2 : undef,
+        needvec = ["jump", "xymove"],
+        neednum = ["untilx","untily","xjump","yjump","angle","length","scale","addlength"],
+        needeither = ["setdir"],
+        chvec = !in_list(command,needvec) || is_vector(parm,2),
+        chnum = !in_list(command,neednum) || is_num(parm),
+        vec_or_num = !in_list(command,needeither) || (is_num(parm) || is_vector(parm,2)),
+        lastpt = select(state[path],-1)
+    )
+    assert(chvec,str("\"",command,"\" requires a vector parameter at index ",index))
+    assert(chnum,str("\"",command,"\" requires a numeric parameter at index ",index))
+    assert(vec_or_num,str("\"",command,"\" requires a vector or numeric parameter at index ",index))
 
-	command=="move" ? list_set(state, path, concat(state[path],[default(parm,1)*state[step]+lastpt])) :
-	command=="untilx" ? (
-		let(
-			int = line_intersection([lastpt,lastpt+state[step]], [[parm,0],[parm,1]]),
-			xgood = sign(state[step].x) == sign(int.x-lastpt.x)
-		)
-		assert(xgood,str("\"untilx\" never reaches desired goal at index ",index))
-		list_set(state,path,concat(state[path],[int]))
-	) :
-	command=="untily" ? (
-		let(
-			int = line_intersection([lastpt,lastpt+state[step]], [[0,parm],[1,parm]]),
-			ygood = is_def(int) && sign(state[step].y) == sign(int.y-lastpt.y)
-		)
-		assert(ygood,str("\"untily\" never reaches desired goal at index ",index))
-		list_set(state,path,concat(state[path],[int]))
-	) :
-	command=="xmove" ? list_set(state, path, concat(state[path],[default(parm,1)*norm(state[step])*[1,0]+lastpt])):
-	command=="ymove" ? list_set(state, path, concat(state[path],[default(parm,1)*norm(state[step])*[0,1]+lastpt])):
+    command=="move" ? list_set(state, path, concat(state[path],[default(parm,1)*state[step]+lastpt])) :
+    command=="untilx" ? (
+        let(
+            int = line_intersection([lastpt,lastpt+state[step]], [[parm,0],[parm,1]]),
+            xgood = sign(state[step].x) == sign(int.x-lastpt.x)
+        )
+        assert(xgood,str("\"untilx\" never reaches desired goal at index ",index))
+        list_set(state,path,concat(state[path],[int]))
+    ) :
+    command=="untily" ? (
+        let(
+            int = line_intersection([lastpt,lastpt+state[step]], [[0,parm],[1,parm]]),
+            ygood = is_def(int) && sign(state[step].y) == sign(int.y-lastpt.y)
+        )
+        assert(ygood,str("\"untily\" never reaches desired goal at index ",index))
+        list_set(state,path,concat(state[path],[int]))
+    ) :
+    command=="xmove" ? list_set(state, path, concat(state[path],[default(parm,1)*norm(state[step])*[1,0]+lastpt])):
+    command=="ymove" ? list_set(state, path, concat(state[path],[default(parm,1)*norm(state[step])*[0,1]+lastpt])):
         command=="xymove" ? list_set(state, path, concat(state[path], [lastpt+parm])):
-	command=="jump" ?  list_set(state, path, concat(state[path],[parm])):
-	command=="xjump" ? list_set(state, path, concat(state[path],[[parm,lastpt.y]])):
-	command=="yjump" ? list_set(state, path, concat(state[path],[[lastpt.x,parm]])):
-	command=="turn" || command=="left" ? list_set(state, step, rot(default(parm,state[angle]),p=state[step],planar=true)) :
-	command=="right" ? list_set(state, step, rot(-default(parm,state[angle]),p=state[step],planar=true)) :
-	command=="angle" ? list_set(state, angle, parm) :
-	command=="setdir" ? (
-		is_vector(parm) ?
-			list_set(state, step, norm(state[step]) * unit(parm)) :
-			list_set(state, step, norm(state[step]) * [cos(parm),sin(parm)])
-	) :
-	command=="length" ? list_set(state, step, parm*unit(state[step])) :
-	command=="scale" ?  list_set(state, step, parm*state[step]) :
-	command=="addlength" ?  list_set(state, step, state[step]+unit(state[step])*parm) :
-	command=="arcsteps" ? list_set(state, arcsteps, parm) :
-	command=="arcleft" || command=="arcright" ?
-		assert(is_num(parm),str("\"",command,"\" command requires a numeric radius value at index ",index))  
-		let(
-			myangle = default(parm2,state[angle]),
-			lrsign = command=="arcleft" ? 1 : -1,
-			radius = parm*sign(myangle),
-			center = lastpt + lrsign*radius*line_normal([0,0],state[step]),
-			steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps], 
-			arcpath = myangle == 0 || radius == 0 ? [] : arc(
-				steps,
-				points = [
-					lastpt,
-					rot(cp=center, p=lastpt, a=sign(parm)*lrsign*myangle/2),
-					rot(cp=center, p=lastpt, a=sign(parm)*lrsign*myangle)
-				]
-			)
-		)
-		list_set(
-			state, [path,step], [
-				concat(state[path], slice(arcpath,1,-1)),
-				rot(lrsign * myangle,p=state[step],planar=true)
-			]
-		) :
-	command=="arcleftto" || command=="arcrightto" ?
-		assert(is_num(parm),str("\"",command,"\" command requires a numeric radius value at index ",index))
-		assert(is_num(parm2),str("\"",command,"\" command requires a numeric angle value at index ",index))
-		let(
-			radius = parm,
-			lrsign = command=="arcleftto" ? 1 : -1,
-			center = lastpt + lrsign*radius*line_normal([0,0],state[step]),
-			steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps],
-			start_angle = posmod(atan2(state[step].y, state[step].x),360),
-			end_angle = posmod(parm2,360),
-			delta_angle =  -start_angle + (lrsign * end_angle < lrsign*start_angle ? end_angle+lrsign*360 : end_angle),
-			arcpath = delta_angle == 0 || radius==0 ? [] : arc(
-				steps,
-				points = [
-					lastpt,
-					rot(cp=center, p=lastpt, a=sign(radius)*delta_angle/2),
-					rot(cp=center, p=lastpt, a=sign(radius)*delta_angle)
-				]
-			)
-		)
-		list_set(
-			state, [path,step], [
-				concat(state[path], slice(arcpath,1,-1)),
-				rot(delta_angle,p=state[step],planar=true)
-			]
-		) :
-	assert(false,str("Unknown turtle command \"",command,"\" at index",index))
-	[];
+    command=="jump" ?  list_set(state, path, concat(state[path],[parm])):
+    command=="xjump" ? list_set(state, path, concat(state[path],[[parm,lastpt.y]])):
+    command=="yjump" ? list_set(state, path, concat(state[path],[[lastpt.x,parm]])):
+    command=="turn" || command=="left" ? list_set(state, step, rot(default(parm,state[angle]),p=state[step],planar=true)) :
+    command=="right" ? list_set(state, step, rot(-default(parm,state[angle]),p=state[step],planar=true)) :
+    command=="angle" ? list_set(state, angle, parm) :
+    command=="setdir" ? (
+        is_vector(parm) ?
+            list_set(state, step, norm(state[step]) * unit(parm)) :
+            list_set(state, step, norm(state[step]) * [cos(parm),sin(parm)])
+    ) :
+    command=="length" ? list_set(state, step, parm*unit(state[step])) :
+    command=="scale" ?  list_set(state, step, parm*state[step]) :
+    command=="addlength" ?  list_set(state, step, state[step]+unit(state[step])*parm) :
+    command=="arcsteps" ? list_set(state, arcsteps, parm) :
+    command=="arcleft" || command=="arcright" ?
+        assert(is_num(parm),str("\"",command,"\" command requires a numeric radius value at index ",index))  
+        let(
+            myangle = default(parm2,state[angle]),
+            lrsign = command=="arcleft" ? 1 : -1,
+            radius = parm*sign(myangle),
+            center = lastpt + lrsign*radius*line_normal([0,0],state[step]),
+            steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps], 
+            arcpath = myangle == 0 || radius == 0 ? [] : arc(
+                steps,
+                points = [
+                    lastpt,
+                    rot(cp=center, p=lastpt, a=sign(parm)*lrsign*myangle/2),
+                    rot(cp=center, p=lastpt, a=sign(parm)*lrsign*myangle)
+                ]
+            )
+        )
+        list_set(
+            state, [path,step], [
+                concat(state[path], slice(arcpath,1,-1)),
+                rot(lrsign * myangle,p=state[step],planar=true)
+            ]
+        ) :
+    command=="arcleftto" || command=="arcrightto" ?
+        assert(is_num(parm),str("\"",command,"\" command requires a numeric radius value at index ",index))
+        assert(is_num(parm2),str("\"",command,"\" command requires a numeric angle value at index ",index))
+        let(
+            radius = parm,
+            lrsign = command=="arcleftto" ? 1 : -1,
+            center = lastpt + lrsign*radius*line_normal([0,0],state[step]),
+            steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps],
+            start_angle = posmod(atan2(state[step].y, state[step].x),360),
+            end_angle = posmod(parm2,360),
+            delta_angle =  -start_angle + (lrsign * end_angle < lrsign*start_angle ? end_angle+lrsign*360 : end_angle),
+            arcpath = delta_angle == 0 || radius==0 ? [] : arc(
+                steps,
+                points = [
+                    lastpt,
+                    rot(cp=center, p=lastpt, a=sign(radius)*delta_angle/2),
+                    rot(cp=center, p=lastpt, a=sign(radius)*delta_angle)
+                ]
+            )
+        )
+        list_set(
+            state, [path,step], [
+                concat(state[path], slice(arcpath,1,-1)),
+                rot(delta_angle,p=state[step],planar=true)
+            ]
+        ) :
+    assert(false,str("Unknown turtle command \"",command,"\" at index",index))
+    [];
 
 
 
@@ -750,70 +750,70 @@ function _turtle_command(command, parm, parm2, state, index) =
 //   stroke(path, closed=true);
 //   move_copies(path) color("blue") circle(d=2,$fn=8);
 module rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) {
-	size = is_num(size)? [size,size] : point2d(size);
-	anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT);
-	if (rounding==0 && chamfer==0) {
-		attachable(anchor,spin, two_d=true, size=size) {
-			square(size, center=true);
-			children();
-		}
-	} else {
-		pts = rect(size=size, rounding=rounding, chamfer=chamfer, center=true);
-		attachable(anchor,spin, two_d=true, path=pts) {
-			polygon(pts);
-			children();
-		}
-	}
+    size = is_num(size)? [size,size] : point2d(size);
+    anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT);
+    if (rounding==0 && chamfer==0) {
+        attachable(anchor,spin, two_d=true, size=size) {
+            square(size, center=true);
+            children();
+        }
+    } else {
+        pts = rect(size=size, rounding=rounding, chamfer=chamfer, center=true);
+        attachable(anchor,spin, two_d=true, path=pts) {
+            polygon(pts);
+            children();
+        }
+    }
 }
 
 
 function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
-	assert(is_num(size)     || is_vector(size))
-	assert(is_num(chamfer)  || len(chamfer)==4)
-	assert(is_num(rounding) || len(rounding)==4)
-	let(
-		size = is_num(size)? [size,size] : point2d(size),
-		anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT),
-		complex = rounding!=0 || chamfer!=0
-	)
-	(rounding==0 && chamfer==0)? let(
-		path = [
-			[ size.x/2, -size.y/2],
-			[-size.x/2, -size.y/2],
-			[-size.x/2,  size.y/2],
-			[ size.x/2,  size.y/2] 
-		]
-	) rot(spin, p=move(-vmul(anchor,size/2), p=path)) :
-	let(
-		chamfer = is_list(chamfer)? chamfer : [for (i=[0:3]) chamfer],
-		rounding = is_list(rounding)? rounding : [for (i=[0:3]) rounding],
-		quadorder = [3,2,1,0],
-		quadpos = [[1,1],[-1,1],[-1,-1],[1,-1]],
-		insets = [for (i=[0:3]) chamfer[i]>0? chamfer[i] : rounding[i]>0? rounding[i] : 0],
-		insets_x = max(insets[0]+insets[1],insets[2]+insets[3]),
-		insets_y = max(insets[0]+insets[3],insets[1]+insets[2])
-	)
-	assert(insets_x <= size.x, "Requested roundings and/or chamfers exceed the rect width.")
-	assert(insets_y <= size.y, "Requested roundings and/or chamfers exceed the rect height.")
-	let(
-		path = [
-			for(i = [0:3])
-			let(
-				quad = quadorder[i],
-				inset = insets[quad],
-				cverts = quant(segs(inset),4)/4,
-				cp = vmul(size/2-[inset,inset], quadpos[quad]),
-				step = 90/cverts,
-				angs =
-					chamfer[quad] > 0?  [0,-90]-90*[i,i] :
-					rounding[quad] > 0? [for (j=[0:1:cverts]) 360-j*step-i*90] :
-					[0]
-			)
-			each [for (a = angs) cp + inset*[cos(a),sin(a)]]
-		]
-	) complex?
-		reorient(anchor,spin, two_d=true, path=path, p=path) :
-		reorient(anchor,spin, two_d=true, size=size, p=path);
+    assert(is_num(size)     || is_vector(size))
+    assert(is_num(chamfer)  || len(chamfer)==4)
+    assert(is_num(rounding) || len(rounding)==4)
+    let(
+        size = is_num(size)? [size,size] : point2d(size),
+        anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT),
+        complex = rounding!=0 || chamfer!=0
+    )
+    (rounding==0 && chamfer==0)? let(
+        path = [
+            [ size.x/2, -size.y/2],
+            [-size.x/2, -size.y/2],
+            [-size.x/2,  size.y/2],
+            [ size.x/2,  size.y/2] 
+        ]
+    ) rot(spin, p=move(-vmul(anchor,size/2), p=path)) :
+    let(
+        chamfer = is_list(chamfer)? chamfer : [for (i=[0:3]) chamfer],
+        rounding = is_list(rounding)? rounding : [for (i=[0:3]) rounding],
+        quadorder = [3,2,1,0],
+        quadpos = [[1,1],[-1,1],[-1,-1],[1,-1]],
+        insets = [for (i=[0:3]) chamfer[i]>0? chamfer[i] : rounding[i]>0? rounding[i] : 0],
+        insets_x = max(insets[0]+insets[1],insets[2]+insets[3]),
+        insets_y = max(insets[0]+insets[3],insets[1]+insets[2])
+    )
+    assert(insets_x <= size.x, "Requested roundings and/or chamfers exceed the rect width.")
+    assert(insets_y <= size.y, "Requested roundings and/or chamfers exceed the rect height.")
+    let(
+        path = [
+            for(i = [0:3])
+            let(
+                quad = quadorder[i],
+                inset = insets[quad],
+                cverts = quant(segs(inset),4)/4,
+                cp = vmul(size/2-[inset,inset], quadpos[quad]),
+                step = 90/cverts,
+                angs =
+                    chamfer[quad] > 0?  [0,-90]-90*[i,i] :
+                    rounding[quad] > 0? [for (j=[0:1:cverts]) 360-j*step-i*90] :
+                    [0]
+            )
+            each [for (a = angs) cp + inset*[cos(a),sin(a)]]
+        ]
+    ) complex?
+        reorient(anchor,spin, two_d=true, path=path, p=path) :
+        reorient(anchor,spin, two_d=true, size=size, p=path);
 
 
 // Function&Module: oval()
@@ -840,40 +840,40 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
 // Example(NORENDER): Called as Function
 //   path = oval(d=50, anchor=FRONT, spin=45);
 module oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) {
-	r = get_radius(r=r, d=d, dflt=1);
-	sides = segs(max(r));
-	sc = circum? (1 / cos(180/sides)) : 1;
-	rx = default(r[0],r) * sc;
-	ry = default(r[1],r) * sc;
-	attachable(anchor,spin, two_d=true, r=[rx,ry]) {
-		if (rx < ry) {
-			xscale(rx/ry) {
-				zrot(realign? 180/sides : 0) {
-					circle(r=ry, $fn=sides);
-				}
-			}
-		} else {
-			yscale(ry/rx) {
-				zrot(realign? 180/sides : 0) {
-					circle(r=rx, $fn=sides);
-				}
-			}
-		}
-		children();
-	}
+    r = get_radius(r=r, d=d, dflt=1);
+    sides = segs(max(r));
+    sc = circum? (1 / cos(180/sides)) : 1;
+    rx = default(r[0],r) * sc;
+    ry = default(r[1],r) * sc;
+    attachable(anchor,spin, two_d=true, r=[rx,ry]) {
+        if (rx < ry) {
+            xscale(rx/ry) {
+                zrot(realign? 180/sides : 0) {
+                    circle(r=ry, $fn=sides);
+                }
+            }
+        } else {
+            yscale(ry/rx) {
+                zrot(realign? 180/sides : 0) {
+                    circle(r=rx, $fn=sides);
+                }
+            }
+        }
+        children();
+    }
 }
 
 
 function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
-	let(
-		r = get_radius(r=r, d=d, dflt=1),
-		sides = segs(max(r)),
-		offset = realign? 180/sides : 0,
-		sc = circum? (1 / cos(180/sides)) : 1,
-		rx = default(r[0],r) * sc,
-		ry = default(r[1],r) * sc,
-		pts = [for (i=[0:1:sides-1]) let(a=360-offset-i*360/sides) [rx*cos(a), ry*sin(a)]]
-	) reorient(anchor,spin, two_d=true, r=[rx,ry], p=pts);
+    let(
+        r = get_radius(r=r, d=d, dflt=1),
+        sides = segs(max(r)),
+        offset = realign? 180/sides : 0,
+        sc = circum? (1 / cos(180/sides)) : 1,
+        rx = default(r[0],r) * sc,
+        ry = default(r[1],r) * sc,
+        pts = [for (i=[0:1:sides-1]) let(a=360-offset-i*360/sides) [rx*cos(a), ry*sin(a)]]
+    ) reorient(anchor,spin, two_d=true, r=[rx,ry], p=pts);
 
 
 
@@ -918,67 +918,67 @@ function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 // Example(2D): Called as Function
 //   stroke(closed=true, regular_ngon(n=6, or=30));
 function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
-	let(
-		sc = 1/cos(180/n),
-		r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n))
-	)
-	assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.")
-	let(
-		inset = opp_ang_to_hyp(rounding, (180-360/n)/2),
-		path = rounding==0? oval(r=r, realign=realign, $fn=n) : (
-			let(
-				steps = floor(segs(r)/n),
-				step = 360/n/steps,
-				path2 = [
-					for (i = [0:1:n-1]) let(
-						a = 360 - i*360/n - (realign? 180/n : 0),
-						p = polar_to_xy(r-inset, a)
-					)
-					each arc(N=steps, cp=p, r=rounding, start=a+180/n, angle=-360/n)
-				],
-				maxx_idx = max_index(subindex(path2,0)),
-				path3 = polygon_shift(path2,maxx_idx)
-			) path3
-		),
-		anchors = !is_string(anchor)? [] : [
-			for (i = [0:1:n-1]) let(
-				a1 = 360 - i*360/n - (realign? 180/n : 0),
-				a2 = a1 - 360/n,
-				p1 = polar_to_xy(r,a1),
-				p2 = polar_to_xy(r,a2),
-				tipp = polar_to_xy(r-inset+rounding,a1),
-				pos = (p1+p2)/2
-			) each [
-				anchorpt(str("tip",i), tipp, unit(tipp), 0),
-				anchorpt(str("side",i), pos, unit(pos), 0),
-			]
-		]
-	) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path, anchors=anchors);
+    let(
+        sc = 1/cos(180/n),
+        r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n))
+    )
+    assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.")
+    let(
+        inset = opp_ang_to_hyp(rounding, (180-360/n)/2),
+        path = rounding==0? oval(r=r, realign=realign, $fn=n) : (
+            let(
+                steps = floor(segs(r)/n),
+                step = 360/n/steps,
+                path2 = [
+                    for (i = [0:1:n-1]) let(
+                        a = 360 - i*360/n - (realign? 180/n : 0),
+                        p = polar_to_xy(r-inset, a)
+                    )
+                    each arc(N=steps, cp=p, r=rounding, start=a+180/n, angle=-360/n)
+                ],
+                maxx_idx = max_index(subindex(path2,0)),
+                path3 = polygon_shift(path2,maxx_idx)
+            ) path3
+        ),
+        anchors = !is_string(anchor)? [] : [
+            for (i = [0:1:n-1]) let(
+                a1 = 360 - i*360/n - (realign? 180/n : 0),
+                a2 = a1 - 360/n,
+                p1 = polar_to_xy(r,a1),
+                p2 = polar_to_xy(r,a2),
+                tipp = polar_to_xy(r-inset+rounding,a1),
+                pos = (p1+p2)/2
+            ) each [
+                anchorpt(str("tip",i), tipp, unit(tipp), 0),
+                anchorpt(str("side",i), pos, unit(pos), 0),
+            ]
+        ]
+    ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path, anchors=anchors);
 
 
 module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) {
-	sc = 1/cos(180/n);
-	r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n));
-	assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.");
-	path = regular_ngon(n=n, r=r, rounding=rounding, realign=realign);
-	inset = opp_ang_to_hyp(rounding, (180-360/n)/2);
-	anchors = [
-		for (i = [0:1:n-1]) let(
-			a1 = 360 - i*360/n - (realign? 180/n : 0),
-			a2 = a1 - 360/n,
-			p1 = polar_to_xy(r,a1),
-			p2 = polar_to_xy(r,a2),
-			tipp = polar_to_xy(r-inset+rounding,a1),
-			pos = (p1+p2)/2
-		) each [
-			anchorpt(str("tip",i), tipp, unit(tipp), 0),
-			anchorpt(str("side",i), pos, unit(pos), 0),
-		]
-	];
-	attachable(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors) {
-		polygon(path);
-		children();
-	}
+    sc = 1/cos(180/n);
+    r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n));
+    assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.");
+    path = regular_ngon(n=n, r=r, rounding=rounding, realign=realign);
+    inset = opp_ang_to_hyp(rounding, (180-360/n)/2);
+    anchors = [
+        for (i = [0:1:n-1]) let(
+            a1 = 360 - i*360/n - (realign? 180/n : 0),
+            a2 = a1 - 360/n,
+            p1 = polar_to_xy(r,a1),
+            p2 = polar_to_xy(r,a2),
+            tipp = polar_to_xy(r-inset+rounding,a1),
+            pos = (p1+p2)/2
+        ) each [
+            anchorpt(str("tip",i), tipp, unit(tipp), 0),
+            anchorpt(str("side",i), pos, unit(pos), 0),
+        ]
+    ];
+    attachable(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors) {
+        polygon(path);
+        children();
+    }
 }
 
 
@@ -1020,11 +1020,11 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 // Example(2D): Called as Function
 //   stroke(closed=true, pentagon(or=30));
 function pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
-	regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin);
+    regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin);
 
 
 module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0)
-	regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin) children();
+    regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin) children();
 
 
 // Function&Module: hexagon()
@@ -1063,11 +1063,11 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CE
 // Example(2D): Called as Function
 //   stroke(closed=true, hexagon(or=30));
 function hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
-	regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin);
+    regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin);
 
 
 module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0)
-	regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin) children();
+    regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin) children();
 
 
 // Function&Module: octagon()
@@ -1106,11 +1106,11 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CEN
 // Example(2D): Called as Function
 //   stroke(closed=true, octagon(or=30));
 function octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
-	regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin);
+    regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin);
 
 
 module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0)
-	regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin) children();
+    regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin) children();
 
 
 
@@ -1136,18 +1136,18 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CEN
 // Example(2D): Called as Function
 //   stroke(closed=true, trapezoid(h=30, w1=40, w2=20));
 function trapezoid(h, w1, w2, anchor=CENTER, spin=0) =
-	let(
-		path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2]]
-	) reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, p=path);
+    let(
+        path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2]]
+    ) reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, p=path);
 
 
 
 module trapezoid(h, w1, w2, anchor=CENTER, spin=0) {
-	path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2]];
-	attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2) {
-		polygon(path);
-		children();
-	}
+    path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2]];
+    attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2) {
+        polygon(path);
+        children();
+    }
 }
 
 
@@ -1175,37 +1175,37 @@ module trapezoid(h, w1, w2, anchor=CENTER, spin=0) {
 //   teardrop2d(r=30, ang=30, cap_h=20);
 module teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0)
 {
-	path = teardrop2d(r=r, d=d, ang=ang, cap_h=cap_h);
-	attachable(anchor,spin, two_d=true, path=path) {
-		polygon(path);
-		children();
-	}
+    path = teardrop2d(r=r, d=d, ang=ang, cap_h=cap_h);
+    attachable(anchor,spin, two_d=true, path=path) {
+        polygon(path);
+        children();
+    }
 }
 
 
 function teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0) =
-	let(
-		r = get_radius(r=r, d=d, dflt=1),
-		cord = 2 * r * cos(ang),
-		cord_h = r * sin(ang),
-		tip_y = (cord/2)/tan(ang),
-		cap_h = min((!is_undef(cap_h)? cap_h : tip_y+cord_h), tip_y+cord_h),
-		cap_w = cord * (1 - (cap_h - cord_h)/tip_y),
-		ang = min(ang,asin(cap_h/r)),
-		sa = 180 - ang,
-		ea = 360 + ang,
-		steps = segs(r)*(ea-sa)/360,
-		step = (ea-sa)/steps,
-		path = deduplicate(
-			[
-				[ cap_w/2,cap_h],
-				for (i=[0:1:steps]) let(a=ea-i*step) r*[cos(a),sin(a)],
-				[-cap_w/2,cap_h]
-			], closed=true
-		),
-		maxx_idx = max_index(subindex(path,0)),
-		path2 = polygon_shift(path,maxx_idx)
-	) reorient(anchor,spin, two_d=true, path=path2, p=path2);
+    let(
+        r = get_radius(r=r, d=d, dflt=1),
+        cord = 2 * r * cos(ang),
+        cord_h = r * sin(ang),
+        tip_y = (cord/2)/tan(ang),
+        cap_h = min((!is_undef(cap_h)? cap_h : tip_y+cord_h), tip_y+cord_h),
+        cap_w = cord * (1 - (cap_h - cord_h)/tip_y),
+        ang = min(ang,asin(cap_h/r)),
+        sa = 180 - ang,
+        ea = 360 + ang,
+        steps = segs(r)*(ea-sa)/360,
+        step = (ea-sa)/steps,
+        path = deduplicate(
+            [
+                [ cap_w/2,cap_h],
+                for (i=[0:1:steps]) let(a=ea-i*step) r*[cos(a),sin(a)],
+                [-cap_w/2,cap_h]
+            ], closed=true
+        ),
+        maxx_idx = max_index(subindex(path,0)),
+        path2 = polygon_shift(path,maxx_idx)
+    ) reorient(anchor,spin, two_d=true, path=path2, p=path2);
 
 
 
@@ -1230,38 +1230,38 @@ function teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0) =
 // Example(2D): Called as Function
 //   stroke(closed=true, glued_circles(r=15, spread=40, tangent=45));
 function glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) =
-	let(
-		r = get_radius(r=r, d=d, dflt=10),
-		r2 = (spread/2 / sin(tangent)) - r,
-		cp1 = [spread/2, 0],
-		cp2 = [0, (r+r2)*cos(tangent)],
-		sa1 = 90-tangent,
-		ea1 = 270+tangent,
-		lobearc = ea1-sa1,
-		lobesegs = floor(segs(r)*lobearc/360),
-		lobestep = lobearc / lobesegs,
-		sa2 = 270-tangent,
-		ea2 = 270+tangent,
-		subarc = ea2-sa2,
-		arcsegs = ceil(segs(r2)*abs(subarc)/360),
-		arcstep = subarc / arcsegs,
-		path = concat(
-			[for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep)     r  * [cos(a),sin(a)] - cp1],
-			tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep+180)  r2 * [cos(a),sin(a)] - cp2],
-			[for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep+180) r  * [cos(a),sin(a)] + cp1],
-			tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep)      r2 * [cos(a),sin(a)] + cp2]
-		),
-		maxx_idx = max_index(subindex(path,0)),
-		path2 = reverse_polygon(polygon_shift(path,maxx_idx))
-	) reorient(anchor,spin, two_d=true, path=path2, extent=true, p=path2);
+    let(
+        r = get_radius(r=r, d=d, dflt=10),
+        r2 = (spread/2 / sin(tangent)) - r,
+        cp1 = [spread/2, 0],
+        cp2 = [0, (r+r2)*cos(tangent)],
+        sa1 = 90-tangent,
+        ea1 = 270+tangent,
+        lobearc = ea1-sa1,
+        lobesegs = floor(segs(r)*lobearc/360),
+        lobestep = lobearc / lobesegs,
+        sa2 = 270-tangent,
+        ea2 = 270+tangent,
+        subarc = ea2-sa2,
+        arcsegs = ceil(segs(r2)*abs(subarc)/360),
+        arcstep = subarc / arcsegs,
+        path = concat(
+            [for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep)     r  * [cos(a),sin(a)] - cp1],
+            tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep+180)  r2 * [cos(a),sin(a)] - cp2],
+            [for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep+180) r  * [cos(a),sin(a)] + cp1],
+            tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep)      r2 * [cos(a),sin(a)] + cp2]
+        ),
+        maxx_idx = max_index(subindex(path,0)),
+        path2 = reverse_polygon(polygon_shift(path,maxx_idx))
+    ) reorient(anchor,spin, two_d=true, path=path2, extent=true, p=path2);
 
 
 module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) {
-	path = glued_circles(r=r, d=d, spread=spread, tangent=tangent);
-	attachable(anchor,spin, two_d=true, path=path, extent=true) {
-		polygon(path);
-		children();
-	}
+    path = glued_circles(r=r, d=d, spread=spread, tangent=tangent);
+    attachable(anchor,spin, two_d=true, path=path, extent=true) {
+        polygon(path);
+        children();
+    }
 }
 
 
@@ -1297,66 +1297,66 @@ module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) {
 // Example(2D): Called as Function
 //   stroke(closed=true, star(n=5, r=50, ir=25));
 function star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0) =
-	let(
-		r = get_radius(r1=or, d1=od, r=r, d=d),
-		count = num_defined([ir,id,step]),
-		stepOK = is_undef(step) || (step>1 && step<n/2)
-	)
-	assert(is_def(n), "Must specify number of points, n")
-	assert(count==1, "Must specify exactly one of ir, id, step")
-	assert(stepOK, str("Parameter 'step' must be between 2 and ",floor(n/2)," for ",n," point star"))
-	let(
-		stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n),
-		ir = get_radius(r=ir, d=id, dflt=stepr),
-		offset = realign? 180/n : 0,
-		path = [for(i=[2*n:-1:1]) let(theta=180*i/n+offset, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]],
-		anchors = !is_string(anchor)? [] : [
-			for (i = [0:1:n-1]) let(
-				a1 = 360 - i*360/n - (realign? 180/n : 0),
-				a2 = a1 - 180/n,
-				a3 = a1 - 360/n,
-				p1 = polar_to_xy(r,a1),
-				p2 = polar_to_xy(ir,a2),
-				p3 = polar_to_xy(r,a3),
-				pos = (p1+p3)/2
-			) each [
-				anchorpt(str("tip",i), p1, unit(p1), 0),
-				anchorpt(str("corner",i), p2, unit(p2), 0),
-				anchorpt(str("midpt",i), pos, unit(pos), 0),
-			]
-		]
-	) reorient(anchor,spin, two_d=true, path=path, p=path, anchors=anchors);
+    let(
+        r = get_radius(r1=or, d1=od, r=r, d=d),
+        count = num_defined([ir,id,step]),
+        stepOK = is_undef(step) || (step>1 && step<n/2)
+    )
+    assert(is_def(n), "Must specify number of points, n")
+    assert(count==1, "Must specify exactly one of ir, id, step")
+    assert(stepOK, str("Parameter 'step' must be between 2 and ",floor(n/2)," for ",n," point star"))
+    let(
+        stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n),
+        ir = get_radius(r=ir, d=id, dflt=stepr),
+        offset = realign? 180/n : 0,
+        path = [for(i=[2*n:-1:1]) let(theta=180*i/n+offset, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]],
+        anchors = !is_string(anchor)? [] : [
+            for (i = [0:1:n-1]) let(
+                a1 = 360 - i*360/n - (realign? 180/n : 0),
+                a2 = a1 - 180/n,
+                a3 = a1 - 360/n,
+                p1 = polar_to_xy(r,a1),
+                p2 = polar_to_xy(ir,a2),
+                p3 = polar_to_xy(r,a3),
+                pos = (p1+p3)/2
+            ) each [
+                anchorpt(str("tip",i), p1, unit(p1), 0),
+                anchorpt(str("corner",i), p2, unit(p2), 0),
+                anchorpt(str("midpt",i), pos, unit(pos), 0),
+            ]
+        ]
+    ) reorient(anchor,spin, two_d=true, path=path, p=path, anchors=anchors);
 
 
 module star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0) {
-	r = get_radius(r1=or, d1=od, r=r, d=d, dflt=undef);
-	stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n);
-	ir = get_radius(r=ir, d=id, dflt=stepr);
-	path = star(n=n, r=r, ir=ir, realign=realign);
-	anchors = [
-		for (i = [0:1:n-1]) let(
-			a1 = 360 - i*360/n - (realign? 180/n : 0),
-			a2 = a1 - 180/n,
-			a3 = a1 - 360/n,
-			p1 = polar_to_xy(r,a1),
-			p2 = polar_to_xy(ir,a2),
-			p3 = polar_to_xy(r,a3),
-			pos = (p1+p3)/2
-		) each [
-			anchorpt(str("tip",i), p1, unit(p1), 0),
-			anchorpt(str("corner",i), p2, unit(p2), 0),
-			anchorpt(str("midpt",i), pos, unit(pos), 0),
-		]
-	];
-	attachable(anchor,spin, two_d=true, path=path, anchors=anchors) {
-		polygon(path);
-		children();
-	}
+    r = get_radius(r1=or, d1=od, r=r, d=d, dflt=undef);
+    stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n);
+    ir = get_radius(r=ir, d=id, dflt=stepr);
+    path = star(n=n, r=r, ir=ir, realign=realign);
+    anchors = [
+        for (i = [0:1:n-1]) let(
+            a1 = 360 - i*360/n - (realign? 180/n : 0),
+            a2 = a1 - 180/n,
+            a3 = a1 - 360/n,
+            p1 = polar_to_xy(r,a1),
+            p2 = polar_to_xy(ir,a2),
+            p3 = polar_to_xy(r,a3),
+            pos = (p1+p3)/2
+        ) each [
+            anchorpt(str("tip",i), p1, unit(p1), 0),
+            anchorpt(str("corner",i), p2, unit(p2), 0),
+            anchorpt(str("midpt",i), pos, unit(pos), 0),
+        ]
+    ];
+    attachable(anchor,spin, two_d=true, path=path, anchors=anchors) {
+        polygon(path);
+        children();
+    }
 }
 
 
 function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
-	pow(pow(abs(cos(m1*theta/4)/a),n2)+pow(abs(sin(m2*theta/4)/b),n3),-1/n1);
+    pow(pow(abs(cos(m1*theta/4)/a),n2)+pow(abs(sin(m2*theta/4)/b),n3),-1/n1);
 
 // Function&Module: supershape()
 // Usage:
@@ -1403,26 +1403,26 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   linear_extrude(height=0.3, scale=0) supershape(step=1, m1=6, n1=0.4, n2=0, n3=6);
 //   linear_extrude(height=5, scale=0) supershape(step=1, b=3, m1=6, n1=3.8, n2=16, n3=10);
 function supershape(step=0.5,m1=4,m2=undef,n1=1,n2=undef,n3=undef,a=1,b=undef,r=undef,d=undef,anchor=CENTER, spin=0) =
-	let(
-		r = get_radius(r=r, d=d, dflt=undef),
-		m2 = is_def(m2) ? m2 : m1,
-		n2 = is_def(n2) ? n2 : n1,
-		n3 = is_def(n3) ? n3 : n2,
-		b = is_def(b) ? b : a,
-		steps = ceil(360/step),
-		step = 360/steps,
-		angs = [for (i = [0:steps]) step*i],
-		rads = [for (theta = angs) _superformula(theta=theta,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b)],
-		scale = is_def(r) ? r/max(rads) : 1,
-		path = [for (i = [steps:-1:1]) let(a=angs[i]) scale*rads[i]*[cos(a), sin(a)]]
-	) reorient(anchor,spin, two_d=true, path=path, p=path);
+    let(
+        r = get_radius(r=r, d=d, dflt=undef),
+        m2 = is_def(m2) ? m2 : m1,
+        n2 = is_def(n2) ? n2 : n1,
+        n3 = is_def(n3) ? n3 : n2,
+        b = is_def(b) ? b : a,
+        steps = ceil(360/step),
+        step = 360/steps,
+        angs = [for (i = [0:steps]) step*i],
+        rads = [for (theta = angs) _superformula(theta=theta,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b)],
+        scale = is_def(r) ? r/max(rads) : 1,
+        path = [for (i = [steps:-1:1]) let(a=angs[i]) scale*rads[i]*[cos(a), sin(a)]]
+    ) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0) {
-	path = supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b,r=r,d=d);
-	attachable(anchor,spin, two_d=true, path=path) {
-		polygon(path);
-		children();
-	}
+    path = supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b,r=r,d=d);
+    attachable(anchor,spin, two_d=true, path=path) {
+        polygon(path);
+        children();
+    }
 }
 
 
@@ -1450,30 +1450,30 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_roundover(r=10, inset=2);
 module mask2d_roundover(r, d, excess, inset=0, anchor=CENTER,spin=0) {
-	path = mask2d_roundover(r=r,d=d,excess=excess,inset=inset);
-	attachable(anchor,spin, two_d=true, path=path) {
-		polygon(path);
-		children();
-	}
+    path = mask2d_roundover(r=r,d=d,excess=excess,inset=inset);
+    attachable(anchor,spin, two_d=true, path=path) {
+        polygon(path);
+        children();
+    }
 }
 
 function mask2d_roundover(r, d, excess, inset=0, anchor=CENTER,spin=0) =
-	assert(is_num(r)||is_num(d))
-	assert(is_undef(excess)||is_num(excess))
-	assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
-	let(
-		inset = is_list(inset)? inset : [inset,inset],
-		excess = default(excess,$overlap),
-		r = get_radius(r=r,d=d,dflt=1),
-		steps = quantup(segs(r),4)/4,
-		step = 90/steps,
-		path = [
-			[r+inset.x,-excess],
-			[-excess,-excess],
-			[-excess, r+inset.y],
-			for (i=[0:1:steps]) [r,r] + inset + polar_to_xy(r,180+i*step)
-		]
-	) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
+    assert(is_num(r)||is_num(d))
+    assert(is_undef(excess)||is_num(excess))
+    assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
+    let(
+        inset = is_list(inset)? inset : [inset,inset],
+        excess = default(excess,$overlap),
+        r = get_radius(r=r,d=d,dflt=1),
+        steps = quantup(segs(r),4)/4,
+        step = 90/steps,
+        path = [
+            [r+inset.x,-excess],
+            [-excess,-excess],
+            [-excess, r+inset.y],
+            for (i=[0:1:steps]) [r,r] + inset + polar_to_xy(r,180+i*step)
+        ]
+    ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
 
 
 // Function&Module: mask2d_cove()
@@ -1498,30 +1498,30 @@ function mask2d_roundover(r, d, excess, inset=0, anchor=CENTER,spin=0) =
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_cove(r=10, inset=2);
 module mask2d_cove(r, d, inset=0, excess, anchor=CENTER,spin=0) {
-	path = mask2d_cove(r=r,d=d,excess=excess,inset=inset);
-	attachable(anchor,spin, two_d=true, path=path) {
-		polygon(path);
-		children();
-	}
+    path = mask2d_cove(r=r,d=d,excess=excess,inset=inset);
+    attachable(anchor,spin, two_d=true, path=path) {
+        polygon(path);
+        children();
+    }
 }
 
 function mask2d_cove(r, d, inset=0, excess, anchor=CENTER,spin=0) =
-	assert(is_num(r)||is_num(d))
-	assert(is_undef(excess)||is_num(excess))
-	assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
-	let(
-		inset = is_list(inset)? inset : [inset,inset],
-		excess = default(excess,$overlap),
-		r = get_radius(r=r,d=d,dflt=1),
-		steps = quantup(segs(r),4)/4,
-		step = 90/steps,
-		path = [
-			[r+inset.x,-excess],
-			[-excess,-excess],
-			[-excess, r+inset.y],
-			for (i=[0:1:steps]) inset + polar_to_xy(r,90-i*step)
-		]
-	) reorient(anchor,spin, two_d=true, path=path, p=path);
+    assert(is_num(r)||is_num(d))
+    assert(is_undef(excess)||is_num(excess))
+    assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
+    let(
+        inset = is_list(inset)? inset : [inset,inset],
+        excess = default(excess,$overlap),
+        r = get_radius(r=r,d=d,dflt=1),
+        steps = quantup(segs(r),4)/4,
+        step = 90/steps,
+        path = [
+            [r+inset.x,-excess],
+            [-excess,-excess],
+            [-excess, r+inset.y],
+            for (i=[0:1:steps]) inset + polar_to_xy(r,90-i*step)
+        ]
+    ) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 
 // Function&Module: mask2d_chamfer()
@@ -1552,34 +1552,34 @@ function mask2d_cove(r, d, inset=0, excess, anchor=CENTER,spin=0) =
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_chamfer(x=10, inset=2);
 module mask2d_chamfer(x, y, edge, angle=45, excess, inset=0, anchor=CENTER,spin=0) {
-	path = mask2d_chamfer(x=x, y=y, edge=edge, angle=angle, excess=excess, inset=inset);
-	attachable(anchor,spin, two_d=true, path=path, extent=true) {
-		polygon(path);
-		children();
-	}
+    path = mask2d_chamfer(x=x, y=y, edge=edge, angle=angle, excess=excess, inset=inset);
+    attachable(anchor,spin, two_d=true, path=path, extent=true) {
+        polygon(path);
+        children();
+    }
 }
 
 function mask2d_chamfer(x, y, edge, angle=45, excess, inset=0, anchor=CENTER,spin=0) =
-	assert(num_defined([x,y,edge])==1)
-	assert(is_num(first_defined([x,y,edge])))
-	assert(is_num(angle))
-	assert(is_undef(excess)||is_num(excess))
-	assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
-	let(
-		inset = is_list(inset)? inset : [inset,inset],
-		excess = default(excess,$overlap),
-		x = !is_undef(x)? x :
-			!is_undef(y)? adj_ang_to_opp(adj=y,ang=angle) :
-			hyp_ang_to_opp(hyp=edge,ang=angle),
-		y = opp_ang_to_adj(opp=x,ang=angle),
-		path = [
-			[x+inset.x, -excess],
-			[-excess, -excess],
-			[-excess, y+inset.y],
-			[inset.x, y+inset.y],
-			[x+inset.x, inset.y]
-		]
-	) reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
+    assert(num_defined([x,y,edge])==1)
+    assert(is_num(first_defined([x,y,edge])))
+    assert(is_num(angle))
+    assert(is_undef(excess)||is_num(excess))
+    assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
+    let(
+        inset = is_list(inset)? inset : [inset,inset],
+        excess = default(excess,$overlap),
+        x = !is_undef(x)? x :
+            !is_undef(y)? adj_ang_to_opp(adj=y,ang=angle) :
+            hyp_ang_to_opp(hyp=edge,ang=angle),
+        y = opp_ang_to_adj(opp=x,ang=angle),
+        path = [
+            [x+inset.x, -excess],
+            [-excess, -excess],
+            [-excess, y+inset.y],
+            [inset.x, y+inset.y],
+            [x+inset.x, inset.y]
+        ]
+    ) reorient(anchor,spin, two_d=true, path=path, extent=true, p=path);
 
 
 // Function&Module: mask2d_rabbet()
@@ -1603,26 +1603,26 @@ function mask2d_chamfer(x, y, edge, angle=45, excess, inset=0, anchor=CENTER,spi
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_rabbet(size=10);
 module mask2d_rabbet(size, excess, anchor=CENTER,spin=0) {
-	path = mask2d_rabbet(size=size, excess=excess);
-	attachable(anchor,spin, two_d=true, path=path, extent=false) {
-		polygon(path);
-		children();
-	}
+    path = mask2d_rabbet(size=size, excess=excess);
+    attachable(anchor,spin, two_d=true, path=path, extent=false) {
+        polygon(path);
+        children();
+    }
 }
 
 function mask2d_rabbet(size, excess, anchor=CENTER,spin=0) =
-	assert(is_num(size)||(is_vector(size)&&len(size)==2))
-	assert(is_undef(excess)||is_num(excess))
-	let(
-		excess = default(excess,$overlap),
-		size = is_list(size)? size : [size,size],
-		path = [
-			[size.x, -excess],
-			[-excess, -excess],
-			[-excess, size.y],
-			size
-		]
-	) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
+    assert(is_num(size)||(is_vector(size)&&len(size)==2))
+    assert(is_undef(excess)||is_num(excess))
+    let(
+        excess = default(excess,$overlap),
+        size = is_list(size)? size : [size,size],
+        path = [
+            [size.x, -excess],
+            [-excess, -excess],
+            [-excess, size.y],
+            size
+        ]
+    ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path);
 
 
 // Function&Module: mask2d_dovetail()
@@ -1654,35 +1654,35 @@ function mask2d_rabbet(size, excess, anchor=CENTER,spin=0) =
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_dovetail(x=10, inset=2);
 module mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=CENTER, spin=0) {
-	path = mask2d_dovetail(x=x, y=y, edge=edge, angle=angle, inset=inset, shelf=shelf, excess=excess);
-	attachable(anchor,spin, two_d=true, path=path) {
-		polygon(path);
-		children();
-	}
+    path = mask2d_dovetail(x=x, y=y, edge=edge, angle=angle, inset=inset, shelf=shelf, excess=excess);
+    attachable(anchor,spin, two_d=true, path=path) {
+        polygon(path);
+        children();
+    }
 }
 
 function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=CENTER, spin=0) =
-	assert(num_defined([x,y,edge])==1)
-	assert(is_num(first_defined([x,y,edge])))
-	assert(is_num(angle))
-	assert(is_undef(excess)||is_num(excess))
-	assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
-	let(
-		inset = is_list(inset)? inset : [inset,inset],
-		excess = default(excess,$overlap),
-		x = !is_undef(x)? x :
-			!is_undef(y)? adj_ang_to_opp(adj=y,ang=angle) :
-			hyp_ang_to_opp(hyp=edge,ang=angle),
-		y = opp_ang_to_adj(opp=x,ang=angle),
-		path = [
-			[inset.x,0],
-			[-excess, 0],
-			[-excess, y+inset.y+shelf],
-			inset+[x,y+shelf],
-			inset+[x,y],
-			inset
-		]
-	) reorient(anchor,spin, two_d=true, path=path, p=path);
+    assert(num_defined([x,y,edge])==1)
+    assert(is_num(first_defined([x,y,edge])))
+    assert(is_num(angle))
+    assert(is_undef(excess)||is_num(excess))
+    assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
+    let(
+        inset = is_list(inset)? inset : [inset,inset],
+        excess = default(excess,$overlap),
+        x = !is_undef(x)? x :
+            !is_undef(y)? adj_ang_to_opp(adj=y,ang=angle) :
+            hyp_ang_to_opp(hyp=edge,ang=angle),
+        y = opp_ang_to_adj(opp=x,ang=angle),
+        path = [
+            [inset.x,0],
+            [-excess, 0],
+            [-excess, y+inset.y+shelf],
+            inset+[x,y+shelf],
+            inset+[x,y],
+            inset
+        ]
+    ) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 
 // Function&Module: mask2d_teardrop()
@@ -1708,28 +1708,28 @@ function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=
 //       edge_profile(BOT)
 //           mask2d_teardrop(r=10, angle=40);
 function mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) =  
-	assert(is_num(angle))
-	assert(angle>0 && angle<90)
-	assert(is_num(excess))
-	let(
-		r = get_radius(r=r, d=d, dflt=1),
-		n = ceil(segs(r) * angle/360),
-		cp = [r,r],
-		tp = cp + polar_to_xy(r,180+angle),
-		bp = [tp.x+adj_ang_to_opp(tp.y,angle), 0],
-		step = angle/n,
-		path = [
-			bp, bp-[0,excess], [-excess,-excess], [-excess,r],
-			for (i=[0:1:n]) cp+polar_to_xy(r,180+i*step)
-		]
-	) reorient(anchor,spin, two_d=true, path=path, p=path);
+    assert(is_num(angle))
+    assert(angle>0 && angle<90)
+    assert(is_num(excess))
+    let(
+        r = get_radius(r=r, d=d, dflt=1),
+        n = ceil(segs(r) * angle/360),
+        cp = [r,r],
+        tp = cp + polar_to_xy(r,180+angle),
+        bp = [tp.x+adj_ang_to_opp(tp.y,angle), 0],
+        step = angle/n,
+        path = [
+            bp, bp-[0,excess], [-excess,-excess], [-excess,r],
+            for (i=[0:1:n]) cp+polar_to_xy(r,180+i*step)
+        ]
+    ) reorient(anchor,spin, two_d=true, path=path, p=path);
 
 module mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) {
-	path = mask2d_teardrop(r=r, d=d, angle=angle, excess=excess);
-	attachable(anchor,spin, two_d=true, path=path) {
-		polygon(path);
-		children();
-	}
+    path = mask2d_teardrop(r=r, d=d, angle=angle, excess=excess);
+    attachable(anchor,spin, two_d=true, path=path) {
+        polygon(path);
+        children();
+    }
 }
 
 // Function&Module: mask2d_ogee()
@@ -1773,81 +1773,81 @@ module mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) {
 //               "ystep",1,  "xstep",1   // Ending shoulder.
 //           ]);
 module mask2d_ogee(pattern, excess, anchor=CENTER,spin=0) {
-	path = mask2d_ogee(pattern, excess=excess);
-	attachable(anchor,spin, two_d=true, path=path) {
-		polygon(path);
-		children();
-	}
+    path = mask2d_ogee(pattern, excess=excess);
+    attachable(anchor,spin, two_d=true, path=path) {
+        polygon(path);
+        children();
+    }
 }
 
 function mask2d_ogee(pattern, excess, anchor=CENTER, spin=0) =
-	assert(is_list(pattern))
-	assert(len(pattern)>0)
-	assert(len(pattern)%2==0,"pattern must be a list of TYPE, VAL pairs.")
-	assert(all([for (i = idx(pattern,step=2)) in_list(pattern[i],["step","xstep","ystep","round","fillet"])]))
-	let(
-		excess = default(excess,$overlap),
-		x = concat([0], cumsum([
-			for (i=idx(pattern,step=2)) let(
-				type = pattern[i],
-				val = pattern[i+1]
-			) (
-				type=="step"?   val.x :
-				type=="xstep"?  val :
-				type=="round"?  val :
-				type=="fillet"? val :
-				0
-			)
-		])),
-		y = concat([0], cumsum([
-			for (i=idx(pattern,step=2)) let(
-				type = pattern[i],
-				val = pattern[i+1]
-			) (
-				type=="step"?   val.y :
-				type=="ystep"?  val :
-				type=="round"?  val :
-				type=="fillet"? val :
-				0
-			)
-		])),
-		tot_x = select(x,-1),
-		tot_y = select(y,-1),
-		data = [
-			for (i=idx(pattern,step=2)) let(
-				type = pattern[i],
-				val = pattern[i+1],
-				pt = [x[i/2], tot_y-y[i/2]] + (
-					type=="step"?   [val.x,-val.y] :
-					type=="xstep"?  [val,0] :
-					type=="ystep"?  [0,-val] :
-					type=="round"?  [val,0] :
-					type=="fillet"? [0,-val] :
-					[0,0]
-				)
-			) [type, val, pt]
-		],
-		path = [
-			[tot_x,-excess],
-			[-excess,-excess],
-			[-excess,tot_y],
-			for (pat = data) each
-				pat[0]=="step"?  [pat[2]] :
-				pat[0]=="xstep"? [pat[2]] :
-				pat[0]=="ystep"? [pat[2]] :
-				let(
-					r = pat[1],
-					steps = segs(abs(r)),
-					step = 90/steps
-				) [
-					for (i=[0:1:steps]) let(
-						a = pat[0]=="round"? (180+i*step) : (90-i*step)
-					) pat[2] + abs(r)*[cos(a),sin(a)]
-				]
-		],
-		path2 = deduplicate(path)
-	) reorient(anchor,spin, two_d=true, path=path2, p=path2);
+    assert(is_list(pattern))
+    assert(len(pattern)>0)
+    assert(len(pattern)%2==0,"pattern must be a list of TYPE, VAL pairs.")
+    assert(all([for (i = idx(pattern,step=2)) in_list(pattern[i],["step","xstep","ystep","round","fillet"])]))
+    let(
+        excess = default(excess,$overlap),
+        x = concat([0], cumsum([
+            for (i=idx(pattern,step=2)) let(
+                type = pattern[i],
+                val = pattern[i+1]
+            ) (
+                type=="step"?   val.x :
+                type=="xstep"?  val :
+                type=="round"?  val :
+                type=="fillet"? val :
+                0
+            )
+        ])),
+        y = concat([0], cumsum([
+            for (i=idx(pattern,step=2)) let(
+                type = pattern[i],
+                val = pattern[i+1]
+            ) (
+                type=="step"?   val.y :
+                type=="ystep"?  val :
+                type=="round"?  val :
+                type=="fillet"? val :
+                0
+            )
+        ])),
+        tot_x = select(x,-1),
+        tot_y = select(y,-1),
+        data = [
+            for (i=idx(pattern,step=2)) let(
+                type = pattern[i],
+                val = pattern[i+1],
+                pt = [x[i/2], tot_y-y[i/2]] + (
+                    type=="step"?   [val.x,-val.y] :
+                    type=="xstep"?  [val,0] :
+                    type=="ystep"?  [0,-val] :
+                    type=="round"?  [val,0] :
+                    type=="fillet"? [0,-val] :
+                    [0,0]
+                )
+            ) [type, val, pt]
+        ],
+        path = [
+            [tot_x,-excess],
+            [-excess,-excess],
+            [-excess,tot_y],
+            for (pat = data) each
+                pat[0]=="step"?  [pat[2]] :
+                pat[0]=="xstep"? [pat[2]] :
+                pat[0]=="ystep"? [pat[2]] :
+                let(
+                    r = pat[1],
+                    steps = segs(abs(r)),
+                    step = 90/steps
+                ) [
+                    for (i=[0:1:steps]) let(
+                        a = pat[0]=="round"? (180+i*step) : (90-i*step)
+                    ) pat[2] + abs(r)*[cos(a),sin(a)]
+                ]
+        ],
+        path2 = deduplicate(path)
+    ) reorient(anchor,spin, two_d=true, path=path2, p=path2);
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -78,7 +78,7 @@ function adendum(pitch=5) = module_value(pitch);
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   clearance = If given, sets the clearance between meshing teeth.
 function dedendum(pitch=5, clearance=undef) =
-	(clearance==undef)? (1.25 * module_value(pitch)) : (module_value(pitch) + clearance);
+    (clearance==undef)? (1.25 * module_value(pitch)) : (module_value(pitch) + clearance);
 
 
 // Function: pitch_radius()
@@ -87,7 +87,7 @@ function dedendum(pitch=5, clearance=undef) =
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   teeth = The number of teeth on the gear.
 function pitch_radius(pitch=5, teeth=11) =
-	pitch * teeth / PI / 2;
+    pitch * teeth / PI / 2;
 
 
 // Function: outer_radius()
@@ -99,8 +99,8 @@ function pitch_radius(pitch=5, teeth=11) =
 //   clearance = If given, sets the clearance between meshing teeth.
 //   interior = If true, calculate for an interior gear.
 function outer_radius(pitch=5, teeth=11, clearance=undef, interior=false) =
-	pitch_radius(pitch, teeth) +
-	(interior? dedendum(pitch, clearance) : adendum(pitch));
+    pitch_radius(pitch, teeth) +
+    (interior? dedendum(pitch, clearance) : adendum(pitch));
 
 
 // Function: root_radius()
@@ -112,8 +112,8 @@ function outer_radius(pitch=5, teeth=11, clearance=undef, interior=false) =
 //   clearance = If given, sets the clearance between meshing teeth.
 //   interior = If true, calculate for an interior gear.
 function root_radius(pitch=5, teeth=11, clearance=undef, interior=false) =
-	pitch_radius(pitch, teeth) -
-	(interior? adendum(pitch) : dedendum(pitch, clearance));
+    pitch_radius(pitch, teeth) -
+    (interior? adendum(pitch) : dedendum(pitch, clearance));
 
 
 // Function: base_radius()
@@ -123,7 +123,7 @@ function root_radius(pitch=5, teeth=11, clearance=undef, interior=false) =
 //   teeth = The number of teeth on the gear.
 //   PA = Pressure angle in degrees.  Controls how straight or bulged the tooth sides are.
 function base_radius(pitch=5, teeth=11, PA=28) =
-	pitch_radius(pitch, teeth) * cos(PA);
+    pitch_radius(pitch, teeth) * cos(PA);
 
 
 // Function bevel_pitch_angle()
@@ -137,7 +137,7 @@ function base_radius(pitch=5, teeth=11, PA=28) =
 //   mate_teeth = Number of teeth that the matching gear has.
 //   drive_angle = Angle between the drive shafts of each gear.  Usually 90º.
 function bevel_pitch_angle(teeth, mate_teeth, drive_angle=90) =
-	atan(sin(drive_angle)/((mate_teeth/teeth)+cos(drive_angle)));
+    atan(sin(drive_angle)/((mate_teeth/teeth)+cos(drive_angle)));
 
 
 function _gear_polar(r,t) = r*[sin(t),cos(t)];
@@ -166,63 +166,63 @@ function _gear_q7(f,r,b,r2,t,s) = _gear_q6(b,s,t,(1-f)*max(b,r)+f*r2);        //
 // Example(2D):
 //   gear_tooth_profile(pitch=5, teeth=20, PA=20, valleys=true);
 function gear_tooth_profile(
-	pitch     = 3,
-	teeth     = 11,
-	PA        = 28,
-	backlash  = 0.0,
-	clearance = undef,
-	interior  = false,
-	valleys   = true
+    pitch     = 3,
+    teeth     = 11,
+    PA        = 28,
+    backlash  = 0.0,
+    clearance = undef,
+    interior  = false,
+    valleys   = true
 ) = let(
-	p = pitch_radius(pitch, teeth),
-	c = outer_radius(pitch, teeth, clearance, interior),
-	r = root_radius(pitch, teeth, clearance, interior),
-	b = base_radius(pitch, teeth, PA),
-	t  = pitch/2-backlash/2,                //tooth thickness at pitch circle
-	k  = -_gear_iang(b, p) - t/2/p/PI*180,  //angle to where involute meets base circle on each side of tooth
-	kk = r<b? k : -180/teeth,
-	isteps = 5,
-	pts = concat(
-		valleys? [
-			_gear_polar(r-1, -180.1/teeth),
-			_gear_polar(r, -180.1/teeth),
-		] : [
-		],
-		[_gear_polar(r, kk)],
-		[for (i=[0: 1:isteps]) _gear_q7(i/isteps,r,b,c,k, 1)],
-		[for (i=[isteps:-1:0]) _gear_q7(i/isteps,r,b,c,k,-1)],
-		[_gear_polar(r, -kk)],
-		valleys? [
-			_gear_polar(r, 180.1/teeth),
-			_gear_polar(r-1, 180.1/teeth),
-		] : [
-		]
-	)
+    p = pitch_radius(pitch, teeth),
+    c = outer_radius(pitch, teeth, clearance, interior),
+    r = root_radius(pitch, teeth, clearance, interior),
+    b = base_radius(pitch, teeth, PA),
+    t  = pitch/2-backlash/2,                //tooth thickness at pitch circle
+    k  = -_gear_iang(b, p) - t/2/p/PI*180,  //angle to where involute meets base circle on each side of tooth
+    kk = r<b? k : -180/teeth,
+    isteps = 5,
+    pts = concat(
+        valleys? [
+            _gear_polar(r-1, -180.1/teeth),
+            _gear_polar(r, -180.1/teeth),
+        ] : [
+        ],
+        [_gear_polar(r, kk)],
+        [for (i=[0: 1:isteps]) _gear_q7(i/isteps,r,b,c,k, 1)],
+        [for (i=[isteps:-1:0]) _gear_q7(i/isteps,r,b,c,k,-1)],
+        [_gear_polar(r, -kk)],
+        valleys? [
+            _gear_polar(r, 180.1/teeth),
+            _gear_polar(r-1, 180.1/teeth),
+        ] : [
+        ]
+    )
 ) reverse(pts);
 
 
 module gear_tooth_profile(
-	pitch     = 3,
-	teeth     = 11,
-	PA        = 28,
-	backlash  = 0.0,
-	clearance = undef,
-	interior  = false,
-	valleys   = true
+    pitch     = 3,
+    teeth     = 11,
+    PA        = 28,
+    backlash  = 0.0,
+    clearance = undef,
+    interior  = false,
+    valleys   = true
 ) {
-	r = root_radius(pitch, teeth, clearance, interior);
-	translate([0,-r,0])
-	polygon(
-		points=gear_tooth_profile(
-			pitch     = pitch,
-			teeth     = teeth,
-			PA        = PA,
-			backlash  = backlash,
-			clearance = clearance,
-			interior  = interior,
-			valleys   = valleys
-		)
-	);
+    r = root_radius(pitch, teeth, clearance, interior);
+    translate([0,-r,0])
+    polygon(
+        points=gear_tooth_profile(
+            pitch     = pitch,
+            teeth     = teeth,
+            PA        = PA,
+            backlash  = backlash,
+            clearance = clearance,
+            interior  = interior,
+            valleys   = valleys
+        )
+    );
 }
 
 
@@ -250,62 +250,62 @@ module gear_tooth_profile(
 // Example(2D): Partial Gear
 //   gear2d(pitch=5, teeth=20, hide=15, PA=20);
 function gear2d(
-	pitch     = 3,
-	teeth     = 11,
-	hide      = 0,
-	PA        = 28,
-	clearance = undef,
-	backlash  = 0.0,
-	interior  = false,
-	anchor    = CENTER,
-	spin      = 0
+    pitch     = 3,
+    teeth     = 11,
+    hide      = 0,
+    PA        = 28,
+    clearance = undef,
+    backlash  = 0.0,
+    interior  = false,
+    anchor    = CENTER,
+    spin      = 0
 ) = let(
-	pr = pitch_radius(pitch=pitch, teeth=teeth),
-	pts = concat(
-		[for (tooth = [0:1:teeth-hide-1])
-			each rot(tooth*360/teeth,
-				planar=true,
-				p=gear_tooth_profile(
-					pitch     = pitch,
-					teeth     = teeth,
-					PA        = PA,
-					clearance = clearance,
-					backlash  = backlash,
-					interior  = interior,
-					valleys   = false
-				)
-			)
-		],
-		hide>0? [[0,0]] : []
-	)
+    pr = pitch_radius(pitch=pitch, teeth=teeth),
+    pts = concat(
+        [for (tooth = [0:1:teeth-hide-1])
+            each rot(tooth*360/teeth,
+                planar=true,
+                p=gear_tooth_profile(
+                    pitch     = pitch,
+                    teeth     = teeth,
+                    PA        = PA,
+                    clearance = clearance,
+                    backlash  = backlash,
+                    interior  = interior,
+                    valleys   = false
+                )
+            )
+        ],
+        hide>0? [[0,0]] : []
+    )
 ) reorient(anchor,spin, two_d=true, r=pr, p=pts);
 
 
 module gear2d(
-	pitch     = 3,
-	teeth     = 11,
-	hide      = 0,
-	PA        = 28,
-	clearance = undef,
-	backlash  = 0.0,
-	interior  = false,
-	anchor    = CENTER,
-	spin      = 0
+    pitch     = 3,
+    teeth     = 11,
+    hide      = 0,
+    PA        = 28,
+    clearance = undef,
+    backlash  = 0.0,
+    interior  = false,
+    anchor    = CENTER,
+    spin      = 0
 ) {
-	path = gear2d(
-		pitch     = pitch,
-		teeth     = teeth,
-		hide      = hide,
-		PA        = PA,
-		clearance = clearance,
-		backlash  = backlash,
-		interior  = interior
-	);
-	pr = pitch_radius(pitch=pitch, teeth=teeth);
-	attachable(anchor,spin, two_d=true, r=pr) {
-		polygon(path);
-		children();
-	}
+    path = gear2d(
+        pitch     = pitch,
+        teeth     = teeth,
+        hide      = hide,
+        PA        = PA,
+        clearance = clearance,
+        backlash  = backlash,
+        interior  = interior
+    );
+    pr = pitch_radius(pitch=pitch, teeth=teeth);
+    attachable(anchor,spin, two_d=true, r=pr) {
+        polygon(path);
+        children();
+    }
 }
 
 
@@ -362,44 +362,44 @@ module gear2d(
 // Example: Beveled Gear
 //   gear(pitch=5, teeth=20, thickness=10, shaft_diam=5, helical=-30, slices=12, $fa=1, $fs=1);
 module gear(
-	pitch     = 3,
-	teeth     = 11,
-	PA        = 28,
-	thickness = 6,
-	hide      = 0,
-	shaft_diam = 3,
-	clearance = undef,
-	backlash  = 0.0,
-	helical   = 0,
-	slices    = 2,
-	interior  = false,
-	anchor    = CENTER,
-	spin      = 0,
-	orient    = UP
+    pitch     = 3,
+    teeth     = 11,
+    PA        = 28,
+    thickness = 6,
+    hide      = 0,
+    shaft_diam = 3,
+    clearance = undef,
+    backlash  = 0.0,
+    helical   = 0,
+    slices    = 2,
+    interior  = false,
+    anchor    = CENTER,
+    spin      = 0,
+    orient    = UP
 ) {
-	p = pitch_radius(pitch, teeth);
-	c = outer_radius(pitch, teeth, clearance, interior);
-	r = root_radius(pitch, teeth, clearance, interior);
-	twist = atan2(thickness*tan(helical),p);
-	attachable(anchor,spin,orient, r=p, l=thickness) {
-		difference() {
-			linear_extrude(height=thickness, center=true, convexity=10, twist=twist) {
-				gear2d(
-					pitch     = pitch,
-					teeth     = teeth,
-					PA        = PA,
-					hide      = hide,
-					clearance = clearance,
-					backlash  = backlash,
-					interior  = interior
-				);
-			}
-			if (shaft_diam > 0) {
-				cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
-			}
-		}
-		children();
-	}
+    p = pitch_radius(pitch, teeth);
+    c = outer_radius(pitch, teeth, clearance, interior);
+    r = root_radius(pitch, teeth, clearance, interior);
+    twist = atan2(thickness*tan(helical),p);
+    attachable(anchor,spin,orient, r=p, l=thickness) {
+        difference() {
+            linear_extrude(height=thickness, center=true, convexity=10, twist=twist) {
+                gear2d(
+                    pitch     = pitch,
+                    teeth     = teeth,
+                    PA        = PA,
+                    hide      = hide,
+                    clearance = clearance,
+                    backlash  = backlash,
+                    interior  = interior
+                );
+            }
+            if (shaft_diam > 0) {
+                cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
+            }
+        }
+        children();
+    }
 }
 
 
@@ -457,131 +457,131 @@ module gear(
 // Example: Beveled Gear
 //   bevel_gear(pitch=5, teeth=36, face_width=10, shaft_diam=5, spiral_rad=-20, spiral_ang=35, bevelang=45, slices=12, $fa=1, $fs=1);
 module bevel_gear(
-	pitch      = 3,
-	teeth      = 11,
-	PA         = 20,
-	face_width = 6,
-	bevelang   = 45,
-	hide       = 0,
-	shaft_diam = 3,
-	clearance  = undef,
-	backlash   = 0.0,
-	spiral_rad = 0,
-	spiral_ang = 0,
-	slices     = 2,
-	interior   = false,
-	anchor     = CENTER,
-	spin       = 0,
-	orient     = UP
+    pitch      = 3,
+    teeth      = 11,
+    PA         = 20,
+    face_width = 6,
+    bevelang   = 45,
+    hide       = 0,
+    shaft_diam = 3,
+    clearance  = undef,
+    backlash   = 0.0,
+    spiral_rad = 0,
+    spiral_ang = 0,
+    slices     = 2,
+    interior   = false,
+    anchor     = CENTER,
+    spin       = 0,
+    orient     = UP
 ) {
-	thickness = face_width * cos(bevelang);
-	slices = spiral_rad==0? 1 : slices;
-	spiral_rad = spiral_rad==0? 10000 : spiral_rad;
-	p1 = pitch_radius(pitch, teeth);
-	r1 = root_radius(pitch, teeth, clearance, interior);
-	c1 = outer_radius(pitch, teeth, clearance, interior);
-	dx = thickness * tan(bevelang);
-	dy = (p1-r1) * sin(bevelang);
-	scl = (p1-dx)/p1;
-	p2 = pitch_radius(pitch*scl, teeth);
-	r2 = root_radius(pitch*scl, teeth, clearance, interior);
-	c2 = outer_radius(pitch*scl, teeth, clearance, interior);
-	slice_u = 1/slices;
-	Rm = (p1+p2)/2;
-	H = spiral_rad * cos(spiral_ang);
-	V = Rm - abs(spiral_rad) * sin(spiral_ang);
-	spiral_cp = [H,V,0];
-	S = norm(spiral_cp);
-	theta_r = acos((S*S+spiral_rad*spiral_rad-p1*p1)/(2*S*spiral_rad)) - acos((S*S+spiral_rad*spiral_rad-p2*p2)/(2*S*spiral_rad));
-	theta_ro = acos((S*S+spiral_rad*spiral_rad-p1*p1)/(2*S*spiral_rad)) - acos((S*S+spiral_rad*spiral_rad-Rm*Rm)/(2*S*spiral_rad));
-	theta_ri = theta_r - theta_ro;
-	extent_u = 2*(p2-r2)*tan(bevelang) / thickness;
-	slice_us = concat(
-		[for (u = [0:slice_u:1+extent_u]) u]
-	);
-	lsus = len(slice_us);
-	vertices = concat(
-		[
-			for (u=slice_us, tooth=[0:1:teeth-1]) let(
-				p = lerp(p1,p2,u),
-				r = lerp(r1,r2,u),
-				theta = lerp(-theta_ro, theta_ri, u),
-				profile = gear_tooth_profile(
-					pitch     = pitch*(p/p1),
-					teeth     = teeth,
-					PA        = PA,
-					clearance = clearance,
-					backlash  = backlash,
-					interior  = interior,
-					valleys   = false
-				),
-				pp = rot(theta, cp=spiral_cp, p=[0,Rm,0]),
-				ang = atan2(pp.y,pp.x)-90,
-				pts = apply_list(
-					path3d(profile), [
-						move([0,-p,0]),
-						rot([0,ang,0]),
-						rot([bevelang,0,0]),
-						move(pp),
-						rot(tooth*360/teeth),
-						move([0,0,thickness*u])
-					]
-				)
-			) each pts
-		], [
-			[0,0,-dy], [0,0,thickness]
-		]
-	);
-	lcnt = (len(vertices)-2)/lsus/teeth;
-	function _gv(layer,tooth,i) = ((layer*teeth)+(tooth%teeth))*lcnt+(i%lcnt);
-	function _lv(layer,i) = layer*teeth*lcnt+(i%(teeth*lcnt));
-	faces = concat(
-		[
-			for (sl=[0:1:lsus-2], i=[0:1:lcnt*teeth-1]) each [
-				[_lv(sl,i), _lv(sl+1,i), _lv(sl,i+1)],
-				[_lv(sl+1,i), _lv(sl+1,i+1), _lv(sl,i+1)]
-			]
-		], [
-			for (tooth=[0:1:teeth-1], i=[0:1:lcnt/2-1]) each [
-				[_gv(0,tooth,i), _gv(0,tooth,i+1), _gv(0,tooth,lcnt-1-(i+1))],
-				[_gv(0,tooth,i), _gv(0,tooth,lcnt-1-(i+1)), _gv(0,tooth,lcnt-1-i)],
-				[_gv(lsus-1,tooth,i), _gv(lsus-1,tooth,lcnt-1-(i+1)), _gv(lsus-1,tooth,i+1)],
-				[_gv(lsus-1,tooth,i), _gv(lsus-1,tooth,lcnt-1-i), _gv(lsus-1,tooth,lcnt-1-(i+1))],
-			]
-		], [
-			for (tooth=[0:1:teeth-1]) each [
-				[len(vertices)-2, _gv(0,tooth,0), _gv(0,tooth,lcnt-1)],
-				[len(vertices)-2, _gv(0,tooth,lcnt-1), _gv(0,tooth+1,0)],
-				[len(vertices)-1, _gv(lsus-1,tooth,lcnt-1), _gv(lsus-1,tooth,0)],
-				[len(vertices)-1, _gv(lsus-1,tooth+1,0), _gv(lsus-1,tooth,lcnt-1)],
-			]
-		]
-	);
-	attachable(anchor,spin,orient, r1=p1, r2=p2, l=thickness) {
-		union() {
-			difference() {
-				down(thickness/2) {
-					polyhedron(points=vertices, faces=faces, convexity=floor(teeth/2));
-				}
-				if (shaft_diam > 0) {
-					cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
-				}
-				if (bevelang != 0) {
-					h = (c1-r1)/tan(45);
-					down(thickness/2+dy) {
-						difference() {
-							cube([2*c1/cos(45),2*c1/cos(45),2*h], center=true);
-							cylinder(h=h, r1=r1-0.5, r2=c1-0.5, center=false, $fn=teeth*4);
-						}
-					}
-					up(thickness/2-0.01) {
-						cylinder(h=(c2-r2)/tan(45)*5, r1=r2-0.5, r2=lerp(r2-0.5,c2-0.5,5), center=false, $fn=teeth*4);
-					}
-				}
-			}
-		}
-		children();
-	}
+    thickness = face_width * cos(bevelang);
+    slices = spiral_rad==0? 1 : slices;
+    spiral_rad = spiral_rad==0? 10000 : spiral_rad;
+    p1 = pitch_radius(pitch, teeth);
+    r1 = root_radius(pitch, teeth, clearance, interior);
+    c1 = outer_radius(pitch, teeth, clearance, interior);
+    dx = thickness * tan(bevelang);
+    dy = (p1-r1) * sin(bevelang);
+    scl = (p1-dx)/p1;
+    p2 = pitch_radius(pitch*scl, teeth);
+    r2 = root_radius(pitch*scl, teeth, clearance, interior);
+    c2 = outer_radius(pitch*scl, teeth, clearance, interior);
+    slice_u = 1/slices;
+    Rm = (p1+p2)/2;
+    H = spiral_rad * cos(spiral_ang);
+    V = Rm - abs(spiral_rad) * sin(spiral_ang);
+    spiral_cp = [H,V,0];
+    S = norm(spiral_cp);
+    theta_r = acos((S*S+spiral_rad*spiral_rad-p1*p1)/(2*S*spiral_rad)) - acos((S*S+spiral_rad*spiral_rad-p2*p2)/(2*S*spiral_rad));
+    theta_ro = acos((S*S+spiral_rad*spiral_rad-p1*p1)/(2*S*spiral_rad)) - acos((S*S+spiral_rad*spiral_rad-Rm*Rm)/(2*S*spiral_rad));
+    theta_ri = theta_r - theta_ro;
+    extent_u = 2*(p2-r2)*tan(bevelang) / thickness;
+    slice_us = concat(
+        [for (u = [0:slice_u:1+extent_u]) u]
+    );
+    lsus = len(slice_us);
+    vertices = concat(
+        [
+            for (u=slice_us, tooth=[0:1:teeth-1]) let(
+                p = lerp(p1,p2,u),
+                r = lerp(r1,r2,u),
+                theta = lerp(-theta_ro, theta_ri, u),
+                profile = gear_tooth_profile(
+                    pitch     = pitch*(p/p1),
+                    teeth     = teeth,
+                    PA        = PA,
+                    clearance = clearance,
+                    backlash  = backlash,
+                    interior  = interior,
+                    valleys   = false
+                ),
+                pp = rot(theta, cp=spiral_cp, p=[0,Rm,0]),
+                ang = atan2(pp.y,pp.x)-90,
+                pts = apply_list(
+                    path3d(profile), [
+                        move([0,-p,0]),
+                        rot([0,ang,0]),
+                        rot([bevelang,0,0]),
+                        move(pp),
+                        rot(tooth*360/teeth),
+                        move([0,0,thickness*u])
+                    ]
+                )
+            ) each pts
+        ], [
+            [0,0,-dy], [0,0,thickness]
+        ]
+    );
+    lcnt = (len(vertices)-2)/lsus/teeth;
+    function _gv(layer,tooth,i) = ((layer*teeth)+(tooth%teeth))*lcnt+(i%lcnt);
+    function _lv(layer,i) = layer*teeth*lcnt+(i%(teeth*lcnt));
+    faces = concat(
+        [
+            for (sl=[0:1:lsus-2], i=[0:1:lcnt*teeth-1]) each [
+                [_lv(sl,i), _lv(sl+1,i), _lv(sl,i+1)],
+                [_lv(sl+1,i), _lv(sl+1,i+1), _lv(sl,i+1)]
+            ]
+        ], [
+            for (tooth=[0:1:teeth-1], i=[0:1:lcnt/2-1]) each [
+                [_gv(0,tooth,i), _gv(0,tooth,i+1), _gv(0,tooth,lcnt-1-(i+1))],
+                [_gv(0,tooth,i), _gv(0,tooth,lcnt-1-(i+1)), _gv(0,tooth,lcnt-1-i)],
+                [_gv(lsus-1,tooth,i), _gv(lsus-1,tooth,lcnt-1-(i+1)), _gv(lsus-1,tooth,i+1)],
+                [_gv(lsus-1,tooth,i), _gv(lsus-1,tooth,lcnt-1-i), _gv(lsus-1,tooth,lcnt-1-(i+1))],
+            ]
+        ], [
+            for (tooth=[0:1:teeth-1]) each [
+                [len(vertices)-2, _gv(0,tooth,0), _gv(0,tooth,lcnt-1)],
+                [len(vertices)-2, _gv(0,tooth,lcnt-1), _gv(0,tooth+1,0)],
+                [len(vertices)-1, _gv(lsus-1,tooth,lcnt-1), _gv(lsus-1,tooth,0)],
+                [len(vertices)-1, _gv(lsus-1,tooth+1,0), _gv(lsus-1,tooth,lcnt-1)],
+            ]
+        ]
+    );
+    attachable(anchor,spin,orient, r1=p1, r2=p2, l=thickness) {
+        union() {
+            difference() {
+                down(thickness/2) {
+                    polyhedron(points=vertices, faces=faces, convexity=floor(teeth/2));
+                }
+                if (shaft_diam > 0) {
+                    cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
+                }
+                if (bevelang != 0) {
+                    h = (c1-r1)/tan(45);
+                    down(thickness/2+dy) {
+                        difference() {
+                            cube([2*c1/cos(45),2*c1/cos(45),2*h], center=true);
+                            cylinder(h=h, r1=r1-0.5, r2=c1-0.5, center=false, $fn=teeth*4);
+                        }
+                    }
+                    up(thickness/2-0.01) {
+                        cylinder(h=(c2-r2)/tan(45)*5, r1=r2-0.5, r2=lerp(r2-0.5,c2-0.5,5), center=false, $fn=teeth*4);
+                    }
+                }
+            }
+        }
+        children();
+    }
 }
 
 
@@ -614,57 +614,57 @@ module bevel_gear(
 // Example:
 //   rack(pitch=5, teeth=10, thickness=5, height=5, PA=20);
 module rack(
-	pitch     = 5,
-	teeth     = 20,
-	thickness = 5,
-	height    = 10,
-	PA        = 28,
-	backlash  = 0.0,
-	clearance = undef,
-	anchor    = CENTER,
-	spin      = 0,
-	orient    = UP
+    pitch     = 5,
+    teeth     = 20,
+    thickness = 5,
+    height    = 10,
+    PA        = 28,
+    backlash  = 0.0,
+    clearance = undef,
+    anchor    = CENTER,
+    spin      = 0,
+    orient    = UP
 ) {
-	a = adendum(pitch);
-	d = dedendum(pitch, clearance);
-	xa = a * sin(PA);
-	xd = d * sin(PA);
-	l = teeth * pitch;
-	anchors = [
-		anchorpt("adendum",         [0,a,0],             BACK),
-		anchorpt("adendum-left",    [-l/2,a,0],          LEFT),
-		anchorpt("adendum-right",   [l/2,a,0],           RIGHT),
-		anchorpt("adendum-top",     [0,a,thickness/2],   UP),
-		anchorpt("adendum-bottom",  [0,a,-thickness/2],  DOWN),
-		anchorpt("dedendum",        [0,-d,0],            BACK),
-		anchorpt("dedendum-left",   [-l/2,-d,0],         LEFT),
-		anchorpt("dedendum-right",  [l/2,-d,0],          RIGHT),
-		anchorpt("dedendum-top",    [0,-d,thickness/2],  UP),
-		anchorpt("dedendum-bottom", [0,-d,-thickness/2], DOWN),
-	];
-	attachable(anchor,spin,orient, size=[l, 2*abs(a-height), thickness], anchors=anchors) {
-		left((teeth-1)*pitch/2) {
-			linear_extrude(height = thickness, center = true, convexity = 10) {
-				for (i = [0:1:teeth-1] ) {
-					translate([i*pitch,0,0]) {
-						polygon(
-							points=[
-								[-1/2 * pitch - 0.01,          a-height],
-								[-1/2 * pitch,                 -d],
-								[-1/4 * pitch + backlash - xd, -d],
-								[-1/4 * pitch + backlash + xa,  a],
-								[ 1/4 * pitch - backlash - xa,  a],
-								[ 1/4 * pitch - backlash + xd, -d],
-								[ 1/2 * pitch,                 -d],
-								[ 1/2 * pitch + 0.01,          a-height],
-							]
-						);
-					}
-				}
-			}
-		}
-		children();
-	}
+    a = adendum(pitch);
+    d = dedendum(pitch, clearance);
+    xa = a * sin(PA);
+    xd = d * sin(PA);
+    l = teeth * pitch;
+    anchors = [
+        anchorpt("adendum",         [0,a,0],             BACK),
+        anchorpt("adendum-left",    [-l/2,a,0],          LEFT),
+        anchorpt("adendum-right",   [l/2,a,0],           RIGHT),
+        anchorpt("adendum-top",     [0,a,thickness/2],   UP),
+        anchorpt("adendum-bottom",  [0,a,-thickness/2],  DOWN),
+        anchorpt("dedendum",        [0,-d,0],            BACK),
+        anchorpt("dedendum-left",   [-l/2,-d,0],         LEFT),
+        anchorpt("dedendum-right",  [l/2,-d,0],          RIGHT),
+        anchorpt("dedendum-top",    [0,-d,thickness/2],  UP),
+        anchorpt("dedendum-bottom", [0,-d,-thickness/2], DOWN),
+    ];
+    attachable(anchor,spin,orient, size=[l, 2*abs(a-height), thickness], anchors=anchors) {
+        left((teeth-1)*pitch/2) {
+            linear_extrude(height = thickness, center = true, convexity = 10) {
+                for (i = [0:1:teeth-1] ) {
+                    translate([i*pitch,0,0]) {
+                        polygon(
+                            points=[
+                                [-1/2 * pitch - 0.01,          a-height],
+                                [-1/2 * pitch,                 -d],
+                                [-1/4 * pitch + backlash - xd, -d],
+                                [-1/4 * pitch + backlash + xa,  a],
+                                [ 1/4 * pitch - backlash - xa,  a],
+                                [ 1/4 * pitch - backlash + xd, -d],
+                                [ 1/2 * pitch,                 -d],
+                                [ 1/2 * pitch + 0.01,          a-height],
+                            ]
+                        );
+                    }
+                }
+            }
+        }
+        children();
+    }
 }
 
 
@@ -698,5 +698,5 @@ translate([(-floor(n5/2)-floor(n1/2)+$t+n1/2-1/2)*9, -d1+0.0, 0]) rotate([0,0,0]
 */
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
 

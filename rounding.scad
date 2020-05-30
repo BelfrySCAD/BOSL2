@@ -1548,10 +1548,10 @@ function rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_
                    if (norm(top[i]-top_patch[i][4][2]) + norm(bottom[i]-bot_patch[i][4][2]) > norm(bottom[i]-top[i])) i],
      topbad = [for(i=[0:N-1])
                    if (norm(top_patch[i][2][4]-top_patch[i][2][2]) + norm(select(top_patch,i+1)[2][0]-select(top_patch,i+1)[2][2])
-		          > norm(top_patch[i][2][2] - select(top_patch,i+1)[2][2]))   [i,(i+1)%N]],
+                  > norm(top_patch[i][2][2] - select(top_patch,i+1)[2][2]))   [i,(i+1)%N]],
      botbad = [for(i=[0:N-1])
                    if (norm(bot_patch[i][2][4]-bot_patch[i][2][2]) + norm(select(bot_patch,i+1)[2][0]-select(bot_patch,i+1)[2][2])
-		          > norm(bot_patch[i][2][2] - select(bot_patch,i+1)[2][2]))   [i,(i+1)%N]],
+                  > norm(bot_patch[i][2][2] - select(bot_patch,i+1)[2][2]))   [i,(i+1)%N]],
      topinbad = [for(i=[0:N-1])
                    if (norm(top_patch[i][0][2]-top_patch[i][0][4]) + norm(select(top_patch,i+1)[0][0]-select(top_patch,i+1)[0][2])
                           > norm(top_patch[i][0][2]-select(top_patch,i+1)[0][2])) [i,(i+1)%N]],
@@ -1619,7 +1619,7 @@ function rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_
                           each subindex(bot_samples,1),
                           for(pts=edge_points) vnf_vertex_array(pts),
                           vnf_triangulate(vnf_add_faces(EMPTY_VNF,faces))
-    	               ])
+                       ])
     )
     debug ? [concat(top_patch, bot_patch), vnf] : vnf;
 
@@ -1942,4 +1942,4 @@ module bent_cutout_mask(r, thickness, path, convexity=10)
 }
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

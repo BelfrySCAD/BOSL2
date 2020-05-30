@@ -44,20 +44,20 @@
 //   select(l, [1:3]);  // Returns [4,5,6]
 //   select(l, [1,3]);  // Returns [4,6]
 function select(list, start, end=undef) =
-	let(l=len(list))
-	end==undef? (
-		is_num(start)?
-			let(s=(start%l+l)%l) list[s] :
-			assert(is_list(start) || is_range(start), "Invalid start parameter")
-			[for (i=start) list[(i%l+l)%l]]
-	) : (
-		assert(is_num(start), "Invalid start parameter.")
-		assert(is_num(end), "Invalid end parameter.")
-		let(s=(start%l+l)%l, e=(end%l+l)%l)
-		(s<=e)?
-			[for (i = [s:1:e]) list[i]] :
-			concat([for (i = [s:1:l-1]) list[i]], [for (i = [0:1:e]) list[i]])
-	);
+    let(l=len(list))
+    end==undef? (
+        is_num(start)?
+            let(s=(start%l+l)%l) list[s] :
+            assert(is_list(start) || is_range(start), "Invalid start parameter")
+            [for (i=start) list[(i%l+l)%l]]
+    ) : (
+        assert(is_num(start), "Invalid start parameter.")
+        assert(is_num(end), "Invalid end parameter.")
+        let(s=(start%l+l)%l, e=(end%l+l)%l)
+        (s<=e)?
+            [for (i = [s:1:e]) list[i]] :
+            concat([for (i = [s:1:l-1]) list[i]], [for (i = [0:1:e]) list[i]])
+    );
 
 
 // Function: slice()
@@ -75,10 +75,10 @@ function select(list, start, end=undef) =
 //   slice([3,4,5,6,7,8,9], 6, -1);  // Returns [9]
 //   slice([3,4,5,6,7,8,9], 2, -2);  // Returns [5,6,7,8]
 function slice(arr,st,end) = let(
-		l=len(arr),
-		s=st<0?(l+st):st,
-		e=end<0?(l+end+1):end
-	) [for (i=[s:1:e-1]) if (e>s) arr[i]];
+        l=len(arr),
+        s=st<0?(l+st):st,
+        e=end<0?(l+end+1):end
+    ) [for (i=[s:1:e-1]) if (e>s) arr[i]];
 
 
 // Function: in_list()
@@ -107,7 +107,7 @@ function in_list(x,l,idx=undef) = search([x], l, num_returns_per_match=1, index_
 //   min_index([5,3,9,6,2,7,8,2,1]); // Returns: 4
 //   min_index([5,3,9,6,2,7,8,2,1],all=true); // Returns: [4,7]
 function min_index(vals, all=false) =
-	all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
+    all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
 
 
 // Function: max_index()
@@ -123,7 +123,7 @@ function min_index(vals, all=false) =
 //   max_index([5,3,9,6,2,7,8,9,1]); // Returns: 2
 //   max_index([5,3,9,6,2,7,8,9,1],all=true); // Returns: [2,7]
 function max_index(vals, all=false) =
-	all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
+    all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
 
 
 // Function: list_increasing()
@@ -136,8 +136,8 @@ function max_index(vals, all=false) =
 //   list_increasing([1,3,2,4]);  // Returns: false
 //   list_increasing([4,3,2,1]);  // Returns: false
 function list_increasing(list) =
-	assert(is_list(list)||is_string(list))
-	len([for (p=pair(list)) if(p.x>p.y) true])==0;
+    assert(is_list(list)||is_string(list))
+    len([for (p=pair(list)) if(p.x>p.y) true])==0;
 
 
 // Function: list_decreasing()
@@ -150,8 +150,8 @@ function list_increasing(list) =
 //   list_decreasing([4,2,3,1]);  // Returns: false
 //   list_decreasing([4,3,2,1]);  // Returns: true
 function list_decreasing(list) =
-	assert(is_list(list)||is_string(list))
-	len([for (p=pair(list)) if(p.x<p.y) true])==0;
+    assert(is_list(list)||is_string(list))
+    len([for (p=pair(list)) if(p.x<p.y) true])==0;
 
 
 
@@ -174,9 +174,9 @@ function list_decreasing(list) =
 //   repeat(0, [2,2,3]);  // Returns [[[0,0,0],[0,0,0]], [[0,0,0],[0,0,0]]]
 //   repeat([1,2,3],3);   // Returns [[1,2,3], [1,2,3], [1,2,3]]
 function repeat(val, n, i=0) =
-	is_num(n)? [for(j=[1:1:n]) val] :
-	(i>=len(n))? val :
-	[for (j=[1:1:n[i]]) repeat(val, n, i+1)];
+    is_num(n)? [for(j=[1:1:n]) val] :
+    (i>=len(n))? val :
+    [for (j=[1:1:n[i]]) repeat(val, n, i+1)];
 
 
 // Function: list_range()
@@ -207,13 +207,13 @@ function repeat(val, n, i=0) =
 //   list_range(s=4, e=8, step=2);   // Returns [4,6,8]
 //   list_range(n=4, s=[3,4], step=[2,3]);  // Returns [[3,4], [5,7], [7,10], [9,13]]
 function list_range(n=undef, s=0, e=undef, step=undef) =
-	(n!=undef && e!=undef)? (
-		assert(is_undef(n) || is_undef(e) || is_undef(step), "At most 2 of n, e, and step can be given.")
-		[for (i=[0:1:n-1]) s+(e-s)*i/(n-1)]
-	) : let(step = default(step,1))
-	(n!=undef)? [for (i=[0:1:n-1]) let(v=s+step*i) v] :
-	(e!=undef)? [for (v=[s:step:e]) v] :
-	assert(e!=undef||n!=undef, "Must supply one of `n` or `e`.");
+    (n!=undef && e!=undef)? (
+        assert(is_undef(n) || is_undef(e) || is_undef(step), "At most 2 of n, e, and step can be given.")
+        [for (i=[0:1:n-1]) s+(e-s)*i/(n-1)]
+    ) : let(step = default(step,1))
+    (n!=undef)? [for (i=[0:1:n-1]) let(v=s+step*i) v] :
+    (e!=undef)? [for (v=[s:step:e]) v] :
+    assert(e!=undef||n!=undef, "Must supply one of `n` or `e`.");
 
 
 
@@ -227,8 +227,8 @@ function list_range(n=undef, s=0, e=undef, step=undef) =
 // Example:
 //   reverse([3,4,5,6]);  // Returns [6,5,4,3]
 function reverse(list) =
-	assert(is_list(list)||is_string(list))
-	[ for (i = [len(list)-1 : -1 : 0]) list[i] ];
+    assert(is_list(list)||is_string(list))
+    [ for (i = [len(list)-1 : -1 : 0]) list[i] ];
 
 
 // Function: list_rotate()
@@ -251,9 +251,9 @@ function reverse(list) =
 //   l8 = list_rotate([1,2,3,4,5],5);  // Returns: [1,2,3,4,5]
 //   l9 = list_rotate([1,2,3,4,5],6);  // Returns: [2,3,4,5,1]
 function list_rotate(list,n=1) =
-	assert(is_list(list)||is_string(list))
-	assert(is_num(n))
-	select(list,n,n+len(list)-1);
+    assert(is_list(list)||is_string(list))
+    assert(is_num(n))
+    select(list,n,n+len(list)-1);
 
 
 // Function: deduplicate()
@@ -272,13 +272,13 @@ function list_rotate(list,n=1) =
 //   deduplicate("Hello");  // Returns: ["H","e","l","o"]
 //   deduplicate([[3,4],[7,2],[7,1.99],[1,4]],eps=0.1);  // Returns: [[3,4],[7,2],[1,4]]
 function deduplicate(list, closed=false, eps=EPSILON) =
-	assert(is_list(list)||is_string(list))
-	let(
-		l = len(list),
-		end = l-(closed?0:1)
-	) (is_num(list[0]) || is_vector(list[0]))?
-		[for (i=[0:1:l-1]) if (i==end || !approx(list[i], list[(i+1)%l], eps)) list[i]] :
-		[for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]];
+    assert(is_list(list)||is_string(list))
+    let(
+        l = len(list),
+        end = l-(closed?0:1)
+    ) (is_num(list[0]) || is_vector(list[0]))?
+        [for (i=[0:1:l-1]) if (i==end || !approx(list[i], list[(i+1)%l], eps)) list[i]] :
+        [for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]];
 
 
 // Function: deduplicate_indexed()
@@ -296,23 +296,23 @@ function deduplicate(list, closed=false, eps=EPSILON) =
 //   deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1]);  // Returns: [1,4,3,2,0,1]
 //   deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1], closed=true);  // Returns: [1,4,3,2,0]
 function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
-	assert(is_list(list)||is_string(list))
-	assert(indices==[] || is_vector(indices))
-	indices==[]? [] :
-	let(
-		l = len(indices),
-		end = l-(closed?0:1)
-	) [
-		for (i = [0:1:l-1]) let(
-			a = list[indices[i]],
-			b = list[indices[(i+1)%l]],
-			eq = (a == b)? true :
-				(a*0 != b*0)? false :
-				is_num(a)? approx(a, b, eps=eps) :
-				is_vector(a)? approx(a, b, eps=eps) :
-				false
-		) if (i==end || !eq) indices[i]
-	];
+    assert(is_list(list)||is_string(list))
+    assert(indices==[] || is_vector(indices))
+    indices==[]? [] :
+    let(
+        l = len(indices),
+        end = l-(closed?0:1)
+    ) [
+        for (i = [0:1:l-1]) let(
+            a = list[indices[i]],
+            b = list[indices[(i+1)%l]],
+            eq = (a == b)? true :
+                (a*0 != b*0)? false :
+                is_num(a)? approx(a, b, eps=eps) :
+                is_vector(a)? approx(a, b, eps=eps) :
+                false
+        ) if (i==end || !eq) indices[i]
+    ];
 
 
 // Function: repeat_entries()
@@ -341,17 +341,17 @@ function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
 //   echo(repeat_entries(list, 6, exact=false));  // Ouputs [0,0,1,1,2,2,3,3]
 //   echo(repeat_entries(list, [1,1,2,1], exact=false));  // Ouputs [0,1,2,2,3]
 function repeat_entries(list, N, exact = true) =
-	assert(is_list(list))
-	assert((is_num(N) && N>0) || is_vector(N),"Parameter N to repeat_entries must be postive number or vector")
-	let(
-		length = len(list),
-		reps_guess = is_list(N)?
-			assert(len(N)==len(list), "Vector parameter N to repeat_entries has the wrong length")
-			N : repeat(N/length,length),
-		reps = exact? _sum_preserving_round(reps_guess) :
-			[for (val=reps_guess) round(val)]
-	)
-	[for(i=[0:length-1]) each repeat(list[i],reps[i])];
+    assert(is_list(list))
+    assert((is_num(N) && N>0) || is_vector(N),"Parameter N to repeat_entries must be postive number or vector")
+    let(
+        length = len(list),
+        reps_guess = is_list(N)?
+            assert(len(N)==len(list), "Vector parameter N to repeat_entries has the wrong length")
+            N : repeat(N/length,length),
+        reps = exact? _sum_preserving_round(reps_guess) :
+            [for (val=reps_guess) round(val)]
+    )
+    [for(i=[0:length-1]) each repeat(list[i],reps[i])];
 
 
 // Function: list_set()
@@ -375,29 +375,29 @@ function repeat_entries(list, N, exact = true) =
 //   list_set([2,3,4,5], 2, 21);  // Returns: [2,3,21,5]
 //   list_set([2,3,4,5], [1,3], [81,47]);  // Returns: [2,81,4,47]
 function list_set(list=[],indices,values,dflt=0,minlen=0) =
-	assert(is_list(list)||is_string(list))
-	!is_list(indices)? (
-		(is_num(indices) && indices<len(list))? [for (i=idx(list)) i==indices? values : list[i]] :
-		list_set(list,[indices],[values],dflt)
-	) :
-	assert(len(indices)==len(values),"Index list and value list must have the same length")
-	let(
-		sortind = list_increasing(indices) ? list_range(len(indices)) : sortidx(indices),
-		lastind = len(indices)==0 ? -1 : indices[select(sortind,-1)]
-	)
-	concat(
-		[for(j=[0:1:indices[sortind[0]]-1]) j>=len(list) ? dflt : list[j]],
-		[values[sortind[0]]], 
-		[for(i=[1:1:len(sortind)-1]) each
-			assert(indices[sortind[i]]!=indices[sortind[i-1]],"Repeated index")
-			concat(
-				[for(j=[1+indices[sortind[i-1]]:1:indices[sortind[i]]-1]) j>=len(list) ? dflt : list[j]],
-				[values[sortind[i]]]
-			)
-		],
-		slice(list,1+lastind, len(list)),
-		repeat(dflt, minlen-lastind-1)
-	);
+    assert(is_list(list)||is_string(list))
+    !is_list(indices)? (
+        (is_num(indices) && indices<len(list))? [for (i=idx(list)) i==indices? values : list[i]] :
+        list_set(list,[indices],[values],dflt)
+    ) :
+    assert(len(indices)==len(values),"Index list and value list must have the same length")
+    let(
+        sortind = list_increasing(indices) ? list_range(len(indices)) : sortidx(indices),
+        lastind = len(indices)==0 ? -1 : indices[select(sortind,-1)]
+    )
+    concat(
+        [for(j=[0:1:indices[sortind[0]]-1]) j>=len(list) ? dflt : list[j]],
+        [values[sortind[0]]], 
+        [for(i=[1:1:len(sortind)-1]) each
+            assert(indices[sortind[i]]!=indices[sortind[i-1]],"Repeated index")
+            concat(
+                [for(j=[1+indices[sortind[i-1]]:1:indices[sortind[i]]-1]) j>=len(list) ? dflt : list[j]],
+                [values[sortind[i]]]
+            )
+        ],
+        slice(list,1+lastind, len(list)),
+        repeat(dflt, minlen-lastind-1)
+    );
 
 
 // Function: list_insert()
@@ -409,31 +409,31 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 //   list_insert([3,6,9,12],1,5);  // Returns [3,5,6,9,12]
 //   list_insert([3,6,9,12],[1,3],[5,11]);  // Returns [3,5,6,9,11,12]
 function list_insert(list, pos, elements, _i=0) =
-	assert(is_list(list)||is_string(list))
-	is_list(pos)? (
-		assert(len(pos)==len(elements))
-		let(
-			idxs = sortidx(pos),
-			lastidx = pos[idxs[len(idxs)-1]]
-		)
-		concat(
-			[
-				for(i=idx(idxs)) each concat(
-					assert(pos[idxs[i]]<=len(list), "Indices in pos must be <= len(list)")
-					[for (j=[(i==0?0:pos[idxs[i-1]]):1:pos[idxs[i]]-1]) list[j]],
-					[elements[idxs[i]]]
-				)
-			],
-			[for (j=[lastidx:1:len(list)-1]) list[j]]
-		)
-	) : (
-		assert(pos<=len(list), "Indices in pos must be <= len(list)")
-		concat(
-			slice(list,0,pos),
-			elements,
-			(pos<len(list)? slice(list,pos,-1) : [])
-		)
-	);
+    assert(is_list(list)||is_string(list))
+    is_list(pos)? (
+        assert(len(pos)==len(elements))
+        let(
+            idxs = sortidx(pos),
+            lastidx = pos[idxs[len(idxs)-1]]
+        )
+        concat(
+            [
+                for(i=idx(idxs)) each concat(
+                    assert(pos[idxs[i]]<=len(list), "Indices in pos must be <= len(list)")
+                    [for (j=[(i==0?0:pos[idxs[i-1]]):1:pos[idxs[i]]-1]) list[j]],
+                    [elements[idxs[i]]]
+                )
+            ],
+            [for (j=[lastidx:1:len(list)-1]) list[j]]
+        )
+    ) : (
+        assert(pos<=len(list), "Indices in pos must be <= len(list)")
+        concat(
+            slice(list,0,pos),
+            elements,
+            (pos<len(list)? slice(list,pos,-1) : [])
+        )
+    );
 
 
 // Function: list_remove()
@@ -448,18 +448,18 @@ function list_insert(list, pos, elements, _i=0) =
 //   list_insert([3,6,9,12],1);      // Returns: [3,9,12]
 //   list_insert([3,6,9,12],[1,3]);  // Returns: [3,9]
 function list_remove(list, elements) =
-	assert(is_list(list)||is_string(list))
-	!is_list(elements) ? list_remove(list,[elements]) :
-	len(elements)==0 ? list :
-	let(
-		sortind = list_increasing(elements) ? list_range(len(elements)) : sortidx(elements),
-		lastind = elements[select(sortind,-1)]
-	)
-	assert(lastind<len(list),"Element index beyond list end")
-	concat(slice(list, 0, elements[sortind[0]]),
-		[for(i=[1:1:len(sortind)-1]) each slice(list,1+elements[sortind[i-1]], elements[sortind[i]])],
-		slice(list,1+lastind, len(list))
-	);
+    assert(is_list(list)||is_string(list))
+    !is_list(elements) ? list_remove(list,[elements]) :
+    len(elements)==0 ? list :
+    let(
+        sortind = list_increasing(elements) ? list_range(len(elements)) : sortidx(elements),
+        lastind = elements[select(sortind,-1)]
+    )
+    assert(lastind<len(list),"Element index beyond list end")
+    concat(slice(list, 0, elements[sortind[0]]),
+        [for(i=[1:1:len(sortind)-1]) each slice(list,1+elements[sortind[i-1]], elements[sortind[i]])],
+        slice(list,1+lastind, len(list))
+    );
 
 
 // Function: list_remove_values()
@@ -480,12 +480,12 @@ function list_remove(list, elements) =
 //   domestic = list_remove_values(animals, ["bat","rat"], all=true);  // Returns: ["cat","dog"]
 //   animals4 = list_remove_values(animals, ["tucan","rat"], all=true);  // Returns: ["bat","cat","dog","bat"]
 function list_remove_values(list,values=[],all=false) =
-	assert(is_list(list)||is_string(list))
-	!is_list(values)? list_remove_values(list, values=[values], all=all) :
-	let(
-		idxs = all? flatten(search(values,list,0)) : search(values,list,1),
-		uidxs = unique(idxs)
-	) list_remove(list,uidxs);
+    assert(is_list(list)||is_string(list))
+    !is_list(values)? list_remove_values(list, values=[values], all=all) :
+    let(
+        idxs = all? flatten(search(values,list,0)) : search(values,list,1),
+        uidxs = unique(idxs)
+    ) list_remove(list,uidxs);
 
 
 // Function: bselect()
@@ -499,9 +499,9 @@ function list_remove_values(list,values=[],all=false) =
 // Example:
 //   bselect([3,4,5,6,7], [false,true,true,false,true]);  // Returns: [4,5,7]
 function bselect(array,index) =
-	assert(is_list(array)||is_string(array))
-	assert(is_list(index))
-	[for(i=[0:len(array)-1]) if (index[i]) array[i]];
+    assert(is_list(array)||is_string(array))
+    assert(is_list(index))
+    [for(i=[0:len(array)-1]) if (index[i]) array[i]];
 
 
 // Function: list_bset()
@@ -520,14 +520,14 @@ function bselect(array,index) =
 //   list_bset([false,true,false,true,false], [3,4]);  // Returns: [0,3,0,4,0]
 //   list_bset([false,true,false,true,false], [3,4],dflt=1);  // Returns: [1,3,1,4,1]
 function list_bset(indexset, valuelist, dflt=0) =
-	assert(is_list(indexset))
-	assert(is_list(valuelist))
-	let(
-		trueind = search([true], indexset,0)[0]
-	) concat(
-		list_set([],trueind, valuelist, dflt=dflt),    // Fill in all of the values
-		repeat(dflt,len(indexset)-max(trueind)-1)  // Add trailing values so length matches indexset
-	);
+    assert(is_list(indexset))
+    assert(is_list(valuelist))
+    let(
+        trueind = search([true], indexset,0)[0]
+    ) concat(
+        list_set([],trueind, valuelist, dflt=dflt),    // Fill in all of the values
+        repeat(dflt,len(indexset)-max(trueind)-1)  // Add trailing values so length matches indexset
+    );
 
 
 
@@ -539,8 +539,8 @@ function list_bset(indexset, valuelist, dflt=0) =
 // Arguments:
 //   vecs = A list of lists.
 function list_shortest(vecs) =
-	assert(is_list(vecs)||is_string(list))
-	min([for (v = vecs) len(v)]);
+    assert(is_list(vecs)||is_string(list))
+    min([for (v = vecs) len(v)]);
 
 
 // Function: list_longest()
@@ -549,8 +549,8 @@ function list_shortest(vecs) =
 // Arguments:
 //   vecs = A list of lists.
 function list_longest(vecs) =
-	assert(is_list(vecs)||is_string(list))
-	max([for (v = vecs) len(v)]);
+    assert(is_list(vecs)||is_string(list))
+    max([for (v = vecs) len(v)]);
 
 
 // Function: list_pad()
@@ -561,8 +561,8 @@ function list_longest(vecs) =
 //   minlen = The minimum length to pad the list to.
 //   fill = The value to pad the list with.
 function list_pad(v, minlen, fill=undef) =
-	assert(is_list(v)||is_string(list))
-	concat(v,repeat(fill,minlen-len(v)));
+    assert(is_list(v)||is_string(list))
+    concat(v,repeat(fill,minlen-len(v)));
 
 
 // Function: list_trim()
@@ -572,8 +572,8 @@ function list_pad(v, minlen, fill=undef) =
 //   v = A list.
 //   minlen = The minimum length to pad the list to.
 function list_trim(v, maxlen) =
-	assert(is_list(v)||is_string(list))
-	[for (i=[0:1:min(len(v),maxlen)-1]) v[i]];
+    assert(is_list(v)||is_string(list))
+    [for (i=[0:1:min(len(v),maxlen)-1]) v[i]];
 
 
 // Function: list_fit()
@@ -585,8 +585,8 @@ function list_trim(v, maxlen) =
 //   minlen = The minimum length to pad the list to.
 //   fill = The value to pad the list with.
 function list_fit(v, length, fill) =
-	assert(is_list(v)||is_string(list))
-	let(l=len(v)) (l==length)? v : (l>length)? list_trim(v,length) : list_pad(v,length,fill);
+    assert(is_list(v)||is_string(list))
+    let(l=len(v)) (l==length)? v : (l>length)? list_trim(v,length) : list_pad(v,length,fill);
 
 
 
@@ -596,148 +596,148 @@ function list_fit(v, length, fill) =
 // Description:
 //   Shuffles the input list into random order.
 function shuffle(list) =
-	assert(is_list(list)||is_string(list))
-	len(list)<=1 ? list :
-	let (
-		rval = rands(0,1,len(list)),
-		left  = [for (i=[0:len(list)-1]) if (rval[i]< 0.5) list[i]],
-		right = [for (i=[0:len(list)-1]) if (rval[i]>=0.5) list[i]]
-	) concat(shuffle(left), shuffle(right));
+    assert(is_list(list)||is_string(list))
+    len(list)<=1 ? list :
+    let (
+        rval = rands(0,1,len(list)),
+        left  = [for (i=[0:len(list)-1]) if (rval[i]< 0.5) list[i]],
+        right = [for (i=[0:len(list)-1]) if (rval[i]>=0.5) list[i]]
+    ) concat(shuffle(left), shuffle(right));
 
 
 // Sort a vector of scalar values
 function _sort_scalars(arr) =
-	len(arr)<=1 ? arr : let(
-		pivot   = arr[floor(len(arr)/2)],
-		lesser  = [ for (y = arr) if (y  < pivot) y ],
-		equal   = [ for (y = arr) if (y == pivot) y ],
-		greater = [ for (y = arr) if (y  > pivot) y ]
-	) concat( _sort_scalars(lesser), equal, _sort_scalars(greater) );
+    len(arr)<=1 ? arr : let(
+        pivot   = arr[floor(len(arr)/2)],
+        lesser  = [ for (y = arr) if (y  < pivot) y ],
+        equal   = [ for (y = arr) if (y == pivot) y ],
+        greater = [ for (y = arr) if (y  > pivot) y ]
+    ) concat( _sort_scalars(lesser), equal, _sort_scalars(greater) );
 
 
 // Sort a vector of vectors based on the first entry only of each vector
 function _sort_vectors1(arr) =
-	len(arr)<=1 ? arr :
-	!(len(arr)>0) ? [] : let(
-		pivot   = arr[floor(len(arr)/2)],
-		lesser  = [ for (y = arr) if (y[0]  < pivot[0]) y ],
-		equal   = [ for (y = arr) if (y[0] == pivot[0]) y ],
-		greater = [ for (y = arr) if (y[0]  > pivot[0]) y ]
-	) concat( _sort_vectors1(lesser), equal, _sort_vectors1(greater) );
+    len(arr)<=1 ? arr :
+    !(len(arr)>0) ? [] : let(
+        pivot   = arr[floor(len(arr)/2)],
+        lesser  = [ for (y = arr) if (y[0]  < pivot[0]) y ],
+        equal   = [ for (y = arr) if (y[0] == pivot[0]) y ],
+        greater = [ for (y = arr) if (y[0]  > pivot[0]) y ]
+    ) concat( _sort_vectors1(lesser), equal, _sort_vectors1(greater) );
 
 
 // Sort a vector of vectors based on the first two entries of each vector
 // Lexicographic order, remaining entries of vector ignored
 function _sort_vectors2(arr) =
-	len(arr)<=1 ? arr :
-	!(len(arr)>0) ? [] : let(
-		pivot   = arr[floor(len(arr)/2)],
-		lesser  = [ for (y = arr) if (y[0] < pivot[0] || (y[0]==pivot[0] && y[1]<pivot[1])) y ],
-		equal   = [ for (y = arr) if (y[0] == pivot[0] && y[1]==pivot[1]) y ],
-		greater  = [ for (y = arr) if (y[0] > pivot[0] || (y[0]==pivot[0] && y[1]>pivot[1])) y ]
-	) concat( _sort_vectors2(lesser), equal, _sort_vectors2(greater) );
+    len(arr)<=1 ? arr :
+    !(len(arr)>0) ? [] : let(
+        pivot   = arr[floor(len(arr)/2)],
+        lesser  = [ for (y = arr) if (y[0] < pivot[0] || (y[0]==pivot[0] && y[1]<pivot[1])) y ],
+        equal   = [ for (y = arr) if (y[0] == pivot[0] && y[1]==pivot[1]) y ],
+        greater  = [ for (y = arr) if (y[0] > pivot[0] || (y[0]==pivot[0] && y[1]>pivot[1])) y ]
+    ) concat( _sort_vectors2(lesser), equal, _sort_vectors2(greater) );
 
 // Sort a vector of vectors based on the first three entries of each vector
 // Lexicographic order, remaining entries of vector ignored
 function _sort_vectors3(arr) =
-	len(arr)<=1 ? arr : let(
-		pivot   = arr[floor(len(arr)/2)],
-		lesser  = [
-			for (y = arr) if (
-				y[0] < pivot[0] || (
-					y[0]==pivot[0] && (
-						y[1]<pivot[1] || (
-							y[1]==pivot[1] &&
-							y[2]<pivot[2]
-						)
-					)
-				)
-			) y
-		],
-		equal = [
-			for (y = arr) if (
-				y[0] == pivot[0] && y[1]== pivot[1] && y[2]==pivot[2]
-			) y
-		],
-		greater = [
-			for (y = arr) if (
-				y[0] > pivot[0] || (
-					y[0]==pivot[0] && (
-						y[1]>pivot[1] || (
-							y[1]==pivot[1] &&
-							y[2]>pivot[2]
-						)
-					)
-				)
-			) y
-		]
-	) concat( _sort_vectors3(lesser), equal, _sort_vectors3(greater) );
+    len(arr)<=1 ? arr : let(
+        pivot   = arr[floor(len(arr)/2)],
+        lesser  = [
+            for (y = arr) if (
+                y[0] < pivot[0] || (
+                    y[0]==pivot[0] && (
+                        y[1]<pivot[1] || (
+                            y[1]==pivot[1] &&
+                            y[2]<pivot[2]
+                        )
+                    )
+                )
+            ) y
+        ],
+        equal = [
+            for (y = arr) if (
+                y[0] == pivot[0] && y[1]== pivot[1] && y[2]==pivot[2]
+            ) y
+        ],
+        greater = [
+            for (y = arr) if (
+                y[0] > pivot[0] || (
+                    y[0]==pivot[0] && (
+                        y[1]>pivot[1] || (
+                            y[1]==pivot[1] &&
+                            y[2]>pivot[2]
+                        )
+                    )
+                )
+            ) y
+        ]
+    ) concat( _sort_vectors3(lesser), equal, _sort_vectors3(greater) );
 
 
 // Sort a vector of vectors based on the first four entries of each vector
 // Lexicographic order, remaining entries of vector ignored
 function _sort_vectors4(arr) =
-	len(arr)<=1 ? arr : let(
-		pivot = arr[floor(len(arr)/2)],
-		lesser = [
-			for (y = arr) if (
-				y[0] < pivot[0] || (
-					y[0]==pivot[0] && (
-						y[1]<pivot[1] || (
-							y[1]==pivot[1] && (
-								y[2]<pivot[2] || (
-									y[2]==pivot[2] &&
-									y[3]<pivot[3]
-								)
-							)
-						)
-					)
-				)
-			) y
-		],
-		equal = [
-			for (y = arr) if (
-				y[0] == pivot[0] &&
-				y[1] == pivot[1] &&
-				y[2] == pivot[2] &&
-				y[3] == pivot[3]
-			) y
-		],
-		greater = [
-			for (y = arr) if (
-				y[0] > pivot[0] || (
-					y[0]==pivot[0] && (
-						y[1]>pivot[1] || (
-							y[1]==pivot[1] && (
-								y[2]>pivot[2] || (
-									y[2]==pivot[2] &&
-									y[3]>pivot[3]
-								)
-							)
-						)
-					)
-				)
-			) y
-		]
-	) concat( _sort_vectors4(lesser), equal, _sort_vectors4(greater) );
+    len(arr)<=1 ? arr : let(
+        pivot = arr[floor(len(arr)/2)],
+        lesser = [
+            for (y = arr) if (
+                y[0] < pivot[0] || (
+                    y[0]==pivot[0] && (
+                        y[1]<pivot[1] || (
+                            y[1]==pivot[1] && (
+                                y[2]<pivot[2] || (
+                                    y[2]==pivot[2] &&
+                                    y[3]<pivot[3]
+                                )
+                            )
+                        )
+                    )
+                )
+            ) y
+        ],
+        equal = [
+            for (y = arr) if (
+                y[0] == pivot[0] &&
+                y[1] == pivot[1] &&
+                y[2] == pivot[2] &&
+                y[3] == pivot[3]
+            ) y
+        ],
+        greater = [
+            for (y = arr) if (
+                y[0] > pivot[0] || (
+                    y[0]==pivot[0] && (
+                        y[1]>pivot[1] || (
+                            y[1]==pivot[1] && (
+                                y[2]>pivot[2] || (
+                                    y[2]==pivot[2] &&
+                                    y[3]>pivot[3]
+                                )
+                            )
+                        )
+                    )
+                )
+            ) y
+        ]
+    ) concat( _sort_vectors4(lesser), equal, _sort_vectors4(greater) );
 
 
 function _sort_general(arr, idx=undef) =
-	(len(arr)<=1) ? arr :
-	let(
-		pivot = arr[floor(len(arr)/2)],
-		pivotval = idx==undef? pivot : [for (i=idx) pivot[i]],
-		compare = [
-			for (entry = arr) let(
-				val = idx==undef? entry : [for (i=idx) entry[i]],
-				cmp = compare_vals(val, pivotval)
-			) cmp
-		],
-		lesser  = [ for (i = [0:1:len(arr)-1]) if (compare[i] < 0) arr[i] ],
-		equal   = [ for (i = [0:1:len(arr)-1]) if (compare[i] ==0) arr[i] ],
-		greater = [ for (i = [0:1:len(arr)-1]) if (compare[i] > 0) arr[i] ]
-	)
-	concat(_sort_general(lesser,idx), equal, _sort_general(greater,idx));
+    (len(arr)<=1) ? arr :
+    let(
+        pivot = arr[floor(len(arr)/2)],
+        pivotval = idx==undef? pivot : [for (i=idx) pivot[i]],
+        compare = [
+            for (entry = arr) let(
+                val = idx==undef? entry : [for (i=idx) entry[i]],
+                cmp = compare_vals(val, pivotval)
+            ) cmp
+        ],
+        lesser  = [ for (i = [0:1:len(arr)-1]) if (compare[i] < 0) arr[i] ],
+        equal   = [ for (i = [0:1:len(arr)-1]) if (compare[i] ==0) arr[i] ],
+        greater = [ for (i = [0:1:len(arr)-1]) if (compare[i] > 0) arr[i] ]
+    )
+    concat(_sort_general(lesser,idx), equal, _sort_general(greater,idx));
 
 
 // Function: sort()
@@ -756,17 +756,17 @@ function _sort_general(arr, idx=undef) =
 //   l = [45,2,16,37,8,3,9,23,89,12,34];
 //   sorted = sort(l);  // Returns [2,3,8,9,12,16,23,34,37,45,89]
 function sort(list, idx=undef) =
-	!is_list(list) || len(list)<=1 ? list :
-	is_def(idx) ? _sort_general(list,idx) :
-	let(size = array_dim(list))
-	len(size)==1 ? _sort_scalars(list) :
-	len(size)==2 && size[1] <=4 ? (
-		size[1]==0 ? list :
-		size[1]==1 ? _sort_vectors1(list) :
-		size[1]==2 ? _sort_vectors2(list) :
-		size[1]==3 ? _sort_vectors3(list) :
-		/*size[1]==4*/ _sort_vectors4(list)
-	) : _sort_general(list);
+    !is_list(list) || len(list)<=1 ? list :
+    is_def(idx) ? _sort_general(list,idx) :
+    let(size = array_dim(list))
+    len(size)==1 ? _sort_scalars(list) :
+    len(size)==2 && size[1] <=4 ? (
+        size[1]==0 ? list :
+        size[1]==1 ? _sort_vectors1(list) :
+        size[1]==2 ? _sort_vectors2(list) :
+        size[1]==3 ? _sort_vectors3(list) :
+        /*size[1]==4*/ _sort_vectors4(list)
+    ) : _sort_general(list);
 
 
 // Function: sortidx()
@@ -782,31 +782,31 @@ function sort(list, idx=undef) =
 //   ordered = select(lst, idxs);   // Returns: ["b", "c", "d", "e"]
 // Example:
 //   lst = [
-//   	["foo", 88, [0,0,1], false],
-//   	["bar", 90, [0,1,0], true],
-//   	["baz", 89, [1,0,0], false],
-//   	["qux", 23, [1,1,1], true]
+//       ["foo", 88, [0,0,1], false],
+//       ["bar", 90, [0,1,0], true],
+//       ["baz", 89, [1,0,0], false],
+//       ["qux", 23, [1,1,1], true]
 //   ];
 //   idxs1 = sortidx(lst, idx=1); // Returns: [3,0,2,1]
 //   idxs2 = sortidx(lst, idx=0); // Returns: [1,2,0,3]
 //   idxs3 = sortidx(lst, idx=[1,3]); // Returns: [3,0,2,1]
 function sortidx(list, idx=undef) =
-	list==[] ? [] : let(
-		size = array_dim(list),
-		aug = is_undef(idx) && (len(size) == 1 || (len(size) == 2 && size[1]<=4))?
-			zip(list, list_range(len(list))) :
-			enumerate(list,idx=idx)
-	)
-	is_undef(idx) && len(size) == 1? subindex(_sort_vectors1(aug),1) :
-	is_undef(idx) && len(size) == 2 && size[1] <=4? (
-		size[1]==0? list_range(len(arr)) :
-		size[1]==1? subindex(_sort_vectors1(aug),1) :
-		size[1]==2? subindex(_sort_vectors2(aug),2) :
-		size[1]==3? subindex(_sort_vectors3(aug),3) :
-		/*size[1]==4*/ subindex(_sort_vectors4(aug),4)
-	) :
-	// general case
-	subindex(_sort_general(aug, idx=list_range(s=1,n=len(aug)-1)), 0);
+    list==[] ? [] : let(
+        size = array_dim(list),
+        aug = is_undef(idx) && (len(size) == 1 || (len(size) == 2 && size[1]<=4))?
+            zip(list, list_range(len(list))) :
+            enumerate(list,idx=idx)
+    )
+    is_undef(idx) && len(size) == 1? subindex(_sort_vectors1(aug),1) :
+    is_undef(idx) && len(size) == 2 && size[1] <=4? (
+        size[1]==0? list_range(len(arr)) :
+        size[1]==1? subindex(_sort_vectors1(aug),1) :
+        size[1]==2? subindex(_sort_vectors2(aug),2) :
+        size[1]==3? subindex(_sort_vectors3(aug),3) :
+        /*size[1]==4*/ subindex(_sort_vectors4(aug),4)
+    ) :
+    // general case
+    subindex(_sort_general(aug, idx=list_range(s=1,n=len(aug)-1)), 0);
 
 
 // Function: unique()
@@ -817,14 +817,14 @@ function sortidx(list, idx=undef) =
 // Arguments:
 //   arr = The list to uniquify.
 function unique(arr) =
-	assert(is_list(arr)||is_string(arr))
-	len(arr)<=1? arr : let(
-		sorted = sort(arr)
-	) [
-		for (i=[0:1:len(sorted)-1])
-			if (i==0 || (sorted[i] != sorted[i-1]))
-				sorted[i]
-	];
+    assert(is_list(arr)||is_string(arr))
+    len(arr)<=1? arr : let(
+        sorted = sort(arr)
+    ) [
+        for (i=[0:1:len(sorted)-1])
+            if (i==0 || (sorted[i] != sorted[i-1]))
+                sorted[i]
+    ];
 
 
 // Function: unique_count()
@@ -860,8 +860,8 @@ function unique_count(arr) =
 //   colors = ["red", "green", "blue"];
 //   for (i=idx(colors)) right(20*i) color(colors[i]) circle(d=10);
 function idx(list, step=1, end=-1,start=0) =
-	assert(is_list(list)||is_string(list))
-	[start : step : len(list)+end];
+    assert(is_list(list)||is_string(list))
+    [start : step : len(list)+end];
 
 
 // Function: enumerate()
@@ -879,10 +879,10 @@ function idx(list, step=1, end=-1,start=0) =
 //   colors = ["red", "green", "blue"];
 //   for (p=enumerate(colors)) right(20*p[0]) color(p[1]) circle(d=10);
 function enumerate(l,idx=undef) =
-	assert(is_list(l)||is_string(list))
-	(idx==undef)?
-		[for (i=[0:1:len(l)-1]) [i,l[i]]] :
-		[for (i=[0:1:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
+    assert(is_list(l)||is_string(list))
+    (idx==undef)?
+        [for (i=[0:1:len(l)-1]) [i,l[i]]] :
+        [for (i=[0:1:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
 
 
 // Function: force_list()
@@ -903,8 +903,8 @@ function force_list(value) = is_list(value) ? value : [value];
 //   l = ["A","B","C",D"];
 //   echo([for (p=pair(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC"]
 function pair(v) =
-	assert(is_list(v)||is_string(v))
-	[for (i=[0:1:len(v)-2]) [v[i],v[i+1]]];
+    assert(is_list(v)||is_string(v))
+    [for (i=[0:1:len(v)-2]) [v[i],v[i+1]]];
 
 
 // Function: pair_wrap()
@@ -916,8 +916,8 @@ function pair(v) =
 //   l = ["A","B","C","D"];
 //   echo([for (p=pair_wrap(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC", "AD"]
 function pair_wrap(v) =
-	assert(is_list(v)||is_string(v))
-	[for (i=[0:1:len(v)-1]) [v[i],v[(i+1)%len(v)]]];
+    assert(is_list(v)||is_string(v))
+    [for (i=[0:1:len(v)-1]) [v[i],v[(i+1)%len(v)]]];
 
 
 // Function: triplet()
@@ -929,8 +929,8 @@ function pair_wrap(v) =
 //   l = ["A","B","C","D","E"];
 //   echo([for (p=triplet(l)) str(p.z,p.y,p.x)]);  // Outputs: ["CBA", "DCB", "EDC"]
 function triplet(v) =
-	assert(is_list(v)||is_string(v))
-	[for (i=[0:1:len(v)-3]) [v[i],v[i+1],v[i+2]]];
+    assert(is_list(v)||is_string(v))
+    [for (i=[0:1:len(v)-3]) [v[i],v[i+1],v[i+2]]];
 
 
 // Function: triplet_wrap()
@@ -942,8 +942,8 @@ function triplet(v) =
 //   l = ["A","B","C","D"];
 //   echo([for (p=triplet_wrap(l)) str(p.z,p.y,p.x)]);  // Outputs: ["CBA", "DCB", "ADC", "BAD"]
 function triplet_wrap(v) =
-	assert(is_list(v)||is_string(v))
-	[for (i=[0:1:len(v)-1]) [v[i],v[(i+1)%len(v)],v[(i+2)%len(v)]]];
+    assert(is_list(v)||is_string(v))
+    [for (i=[0:1:len(v)-1]) [v[i],v[(i+1)%len(v)],v[(i+2)%len(v)]]];
 
 
 // Function: permute()
@@ -962,10 +962,10 @@ function triplet_wrap(v) =
 // Example(2D):
 //   for (p=permute(regular_ngon(n=7,d=100))) stroke(p);
 function permute(l,n=2,_s=0) =
-	assert(is_list(l))
-	assert(len(l)-_s >= n)
-	n==1? [for (i=[_s:1:len(l)-1]) [l[i]]] :
-	[for (i=[_s:1:len(l)-n], p=permute(l,n=n-1,_s=i+1)) concat([l[i]], p)];
+    assert(is_list(l))
+    assert(len(l)-_s >= n)
+    n==1? [for (i=[_s:1:len(l)-1]) [l[i]]] :
+    [for (i=[_s:1:len(l)-n], p=permute(l,n=n-1,_s=i+1)) concat([l[i]], p)];
 
 
 
@@ -991,25 +991,25 @@ function permute(l,n=2,_s=0) =
 //   set_v = set_union(set_a, set_b, get_indices=true);
 //   // set_v now equals [[5,0,1,2,6], [2,3,5,7,11,1,8]]
 function set_union(a, b, get_indices=false) =
-	let(
-		found1 = search(b, a),
-		found2 = search(b, b),
-		c = [
-			for (i=idx(b))
-			if (found1[i] == [] && found2[i] == i)
-			b[i]
-		],
-		nset = concat(a, c)
-	) !get_indices? nset :
-	let(
-		la = len(a),
-		found3 = search(b, c),
-		idxs = [
-			for (i=idx(b))
-			(found1[i] != [])? found1[i] :
-			la + found3[i]
-		]
-	) [idxs, nset];
+    let(
+        found1 = search(b, a),
+        found2 = search(b, b),
+        c = [
+            for (i=idx(b))
+            if (found1[i] == [] && found2[i] == i)
+            b[i]
+        ],
+        nset = concat(a, c)
+    ) !get_indices? nset :
+    let(
+        la = len(a),
+        found3 = search(b, c),
+        idxs = [
+            for (i=idx(b))
+            (found1[i] != [])? found1[i] :
+            la + found3[i]
+        ]
+    ) [idxs, nset];
 
 
 // Function: set_difference()
@@ -1026,9 +1026,9 @@ function set_union(a, b, get_indices=false) =
 //   set_d = set_difference(set_a, set_b);
 //   // set_d now equals [7,11]
 function set_difference(a, b) =
-	let(
-		found = search(a, b, num_returns_per_match=1)
-	) [ for (i=idx(a)) if(found[i]==[]) a[i] ];
+    let(
+        found = search(a, b, num_returns_per_match=1)
+    ) [ for (i=idx(a)) if(found[i]==[]) a[i] ];
 
 
 // Function: set_intersection()
@@ -1045,9 +1045,9 @@ function set_difference(a, b) =
 //   set_i = set_intersection(set_a, set_b);
 //   // set_i now equals [2,3,5]
 function set_intersection(a, b) =
-	let(
-		found = search(a, b, num_returns_per_match=1)
-	) [ for (i=idx(a)) if(found[i]!=[]) a[i] ];
+    let(
+        found = search(a, b, num_returns_per_match=1)
+    ) [ for (i=idx(a)) if(found[i]!=[]) a[i] ];
 
 
 
@@ -1068,8 +1068,8 @@ function set_intersection(a, b) =
 //   subindex(v,[2,1]);  // Returns [[3, 2], [7, 6], [11, 10], [15, 14]]
 //   subindex(v,[1:3]);  // Returns [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]
 function subindex(v, idx) = [
-	for(val=v) let(value=[for(i=idx) val[i]])
-		len(value)==1 ? value[0] : value
+    for(val=v) let(value=[for(i=idx) val[i]])
+        len(value)==1 ? value[0] : value
 ];
 
 
@@ -1100,17 +1100,17 @@ function subindex(v, idx) = [
 //   v2 = [[20,19,18], [17,16,15], [14,13,12]];
 //   zip(v1,v2);    // Returns [[1,2,3,20,19,18], [4,5,6,17,16,15], [7,8,9,14,13,12]]
 function zip(vecs, v2, v3, fit=false, fill=undef) =
-	(v3!=undef)? zip([vecs,v2,v3], fit=fit, fill=fill) :
-	(v2!=undef)? zip([vecs,v2], fit=fit, fill=fill) :
-	assert(in_list(fit, [false, "short", "long"]))
-	assert(all([for(v=vecs) is_list(v)]), "One of the inputs to zip is not a list")
-	let(
-		minlen = list_shortest(vecs),
-		maxlen = list_longest(vecs),
-		dummy = (fit==false)? assert(minlen==maxlen, "Input vectors to zip must have the same length") : 0
-	) (fit == "long")?
-		[for(i=[0:1:maxlen-1]) [for(v=vecs) for(x=(i<len(v)? v[i] : (fill==undef)? [fill] : fill)) x] ] :
-		[for(i=[0:1:minlen-1]) [for(v=vecs) for(x=v[i]) x] ];
+    (v3!=undef)? zip([vecs,v2,v3], fit=fit, fill=fill) :
+    (v2!=undef)? zip([vecs,v2], fit=fit, fill=fill) :
+    assert(in_list(fit, [false, "short", "long"]))
+    assert(all([for(v=vecs) is_list(v)]), "One of the inputs to zip is not a list")
+    let(
+        minlen = list_shortest(vecs),
+        maxlen = list_longest(vecs),
+        dummy = (fit==false)? assert(minlen==maxlen, "Input vectors to zip must have the same length") : 0
+    ) (fit == "long")?
+        [for(i=[0:1:maxlen-1]) [for(v=vecs) for(x=(i<len(v)? v[i] : (fill==undef)? [fill] : fill)) x] ] :
+        [for(i=[0:1:minlen-1]) [for(v=vecs) for(x=v[i]) x] ];
 
 
 // Function: array_group()
@@ -1140,15 +1140,15 @@ function flatten(l) = [for (a = l) each a];
 
 // Internal.  Not exposed.
 function _array_dim_recurse(v) =
-	!is_list(v[0])?  (
-		sum( [for(entry=v) is_list(entry) ? 1 : 0]) == 0 ? [] : [undef]
-	) : let(
-		firstlen = len(v[0]),
-		first = sum( [for(entry = v) len(entry) == firstlen  ? 0 : 1]   ) == 0 ? firstlen : undef,
-		leveldown = flatten(v)
-	) is_list(leveldown[0])? (
-		concat([first],_array_dim_recurse(leveldown))
-	) : [first];
+    !is_list(v[0])?  (
+        sum( [for(entry=v) is_list(entry) ? 1 : 0]) == 0 ? [] : [undef]
+    ) : let(
+        firstlen = len(v[0]),
+        first = sum( [for(entry = v) len(entry) == firstlen  ? 0 : 1]   ) == 0 ? firstlen : undef,
+        leveldown = flatten(v)
+    ) is_list(leveldown[0])? (
+        concat([first],_array_dim_recurse(leveldown))
+    ) : [first];
 
 
 // Function: array_dim()
@@ -1172,14 +1172,14 @@ function _array_dim_recurse(v) =
 //   array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 2);  // Returns 3
 //   array_dim([[[1,2,3],[4,5,6]],[[7,8,9]]]);                // Returns [2,undef,3]
 function array_dim(v, depth=undef) =
-	(depth == undef)? (
-		concat([len(v)], _array_dim_recurse(v))
-	) : (depth == 0)? (
-		len(v)
-	) : (
-		let(dimlist = _array_dim_recurse(v))
-		(depth > len(dimlist))? 0 : dimlist[depth-1]
-	);
+    (depth == undef)? (
+        concat([len(v)], _array_dim_recurse(v))
+    ) : (depth == 0)? (
+        len(v)
+    ) : (
+        let(dimlist = _array_dim_recurse(v))
+        (depth > len(dimlist))? 0 : dimlist[depth-1]
+    );
 
 
 
@@ -1213,9 +1213,9 @@ function array_dim(v, depth=undef) =
 // Example:
 //   transpose([3,4,5]);  // Returns: [3,4,5]
 function transpose(arr) =
-	is_list(arr[0])? [for (i=[0:1:len(arr[0])-1]) [for (j=[0:1:len(arr)-1]) arr[j][i]]] : arr;
+    is_list(arr[0])? [for (i=[0:1:len(arr[0])-1]) [for (j=[0:1:len(arr)-1]) arr[j][i]]] : arr;
 
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

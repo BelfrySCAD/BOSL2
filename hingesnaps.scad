@@ -29,13 +29,13 @@
 //   folding_hinge_mask(l=100, thick=3, foldangle=60);
 module folding_hinge_mask(l, thick, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
 {
-	hingegap = default(hingegap, layerheight)+2*$slop;
-	size = [l, hingegap, 2*thick];
-	size2 = [l, hingegap+2*thick*tan(foldangle/2)];
-	attachable(anchor,spin,orient, size=size, size2=size2) {
-		up(layerheight*2) prismoid([l,hingegap], [l, hingegap+2*thick/tan(foldangle/2)], h=thick, anchor=BOT);
-		children();
-	}
+    hingegap = default(hingegap, layerheight)+2*$slop;
+    size = [l, hingegap, 2*thick];
+    size2 = [l, hingegap+2*thick*tan(foldangle/2)];
+    attachable(anchor,spin,orient, size=size, size2=size2) {
+        up(layerheight*2) prismoid([l,hingegap], [l, hingegap+2*thick/tan(foldangle/2)], h=thick, anchor=BOT);
+        children();
+    }
 }
 
 
@@ -58,18 +58,18 @@ module folding_hinge_mask(l, thick, layerheight=0.2, foldangle=90, hingegap=unde
 //   snap_lock(thick=3, foldangle=60);
 module snap_lock(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
 {
-	hingegap = default(hingegap, layerheight)+2*$slop;
-	snap_x = (snapdiam/2) / tan(foldangle/2) + (thick-2*layerheight)/tan(foldangle/2) + hingegap/2;
-	size = [snaplen, snapdiam, 2*thick];
-	attachable(anchor,spin,orient, size=size) {
-		back(snap_x) {
-			cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
-				attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=16);
-				attach(TOP) xcopies(snaplen-snapdiam/4/3) xscale(0.333) sphere(d=snapdiam*0.8, $fn=12);
-			}
-		}
-		children();
-	}
+    hingegap = default(hingegap, layerheight)+2*$slop;
+    snap_x = (snapdiam/2) / tan(foldangle/2) + (thick-2*layerheight)/tan(foldangle/2) + hingegap/2;
+    size = [snaplen, snapdiam, 2*thick];
+    attachable(anchor,spin,orient, size=size) {
+        back(snap_x) {
+            cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
+                attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=16);
+                attach(TOP) xcopies(snaplen-snapdiam/4/3) xscale(0.333) sphere(d=snapdiam*0.8, $fn=12);
+            }
+        }
+        children();
+    }
 }
 
 
@@ -92,21 +92,21 @@ module snap_lock(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hi
 //   snap_socket(thick=3, foldangle=60);
 module snap_socket(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, hingegap=undef, anchor=CENTER, spin=0, orient=UP)
 {
-	hingegap = default(hingegap, layerheight)+2*$slop;
-	snap_x = (snapdiam/2) / tan(foldangle/2) + (thick-2*layerheight)/tan(foldangle/2) + hingegap/2;
-	size = [snaplen, snapdiam, 2*thick];
-	attachable(anchor,spin,orient, size=size) {
-		fwd(snap_x) {
-			zrot_copies([0,180], r=snaplen+$slop) {
-				diff("divot")
-				cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
-					attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=16);
-					attach(TOP) left((snaplen+snapdiam/4/3)/2) xscale(0.333) sphere(d=snapdiam*0.8, $fn=12, $tags="divot");
-				}
-			}
-		}
-		children();
-	}
+    hingegap = default(hingegap, layerheight)+2*$slop;
+    snap_x = (snapdiam/2) / tan(foldangle/2) + (thick-2*layerheight)/tan(foldangle/2) + hingegap/2;
+    size = [snaplen, snapdiam, 2*thick];
+    attachable(anchor,spin,orient, size=size) {
+        fwd(snap_x) {
+            zrot_copies([0,180], r=snaplen+$slop) {
+                diff("divot")
+                cube([snaplen, snapdiam, snapdiam/2+thick], anchor=BOT) {
+                    attach(TOP) xcyl(l=snaplen, d=snapdiam, $fn=16);
+                    attach(TOP) left((snaplen+snapdiam/4/3)/2) xscale(0.333) sphere(d=snapdiam*0.8, $fn=12, $tags="divot");
+                }
+            }
+        }
+        children();
+    }
 }
 
 
@@ -157,37 +157,37 @@ module snap_socket(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, 
 //   }
 module apply_folding_hinges_and_snaps(thick, foldangle=90, hinges=[], snaps=[], sockets=[], snaplen=5, snapdiam=5, hingegap=undef, layerheight=0.2)
 {
-	hingegap = default(hingegap, layerheight)+2*$slop;
-	difference() {
-		children();
-		for (hinge = hinges) {
-			translate(hinge[1]) {
-				folding_hinge_mask(
-					l=hinge[0], thick=thick, layerheight=layerheight,
-					foldangle=foldangle, hingegap=hingegap, spin=hinge[2]
-				);
-			}
-		}
-	}
-	for (snap = snaps) {
-		translate(snap[0]) {
-			snap_lock(
-				thick=thick, snaplen=snaplen, snapdiam=snapdiam,
-				layerheight=layerheight, foldangle=foldangle,
-				hingegap=hingegap, spin=snap[1]
-			);
-		}
-	}
-	for (socket = sockets) {
-		translate(socket[0]) {
-			snap_socket(
-				thick=thick, snaplen=snaplen, snapdiam=snapdiam,
-				layerheight=layerheight, foldangle=foldangle,
-				hingegap=hingegap, spin=socket[1]
-			);
-		}
-	}
+    hingegap = default(hingegap, layerheight)+2*$slop;
+    difference() {
+        children();
+        for (hinge = hinges) {
+            translate(hinge[1]) {
+                folding_hinge_mask(
+                    l=hinge[0], thick=thick, layerheight=layerheight,
+                    foldangle=foldangle, hingegap=hingegap, spin=hinge[2]
+                );
+            }
+        }
+    }
+    for (snap = snaps) {
+        translate(snap[0]) {
+            snap_lock(
+                thick=thick, snaplen=snaplen, snapdiam=snapdiam,
+                layerheight=layerheight, foldangle=foldangle,
+                hingegap=hingegap, spin=snap[1]
+            );
+        }
+    }
+    for (socket = sockets) {
+        translate(socket[0]) {
+            snap_socket(
+                thick=thick, snaplen=snaplen, snapdiam=snapdiam,
+                layerheight=layerheight, foldangle=foldangle,
+                hingegap=hingegap, spin=socket[1]
+            );
+        }
+    }
 }
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

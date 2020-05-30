@@ -20,24 +20,24 @@ include <metric_screws.scad>
 // Arguments:
 //   size = Inner size of lmXuu bearing, in mm.
 function get_lmXuu_bearing_diam(size) = lookup(size, [
-		[  4.0,   8.0],
-		[  5.0,  10.0],
-		[  6.0,  12.0],
-		[  8.0,  15.0],
-		[ 10.0,  19.0],
-		[ 12.0,  21.0],
-		[ 13.0,  23.0],
-		[ 16.0,  28.0],
-		[ 20.0,  32.0],
-		[ 25.0,  40.0],
-		[ 30.0,  45.0],
-		[ 35.0,  52.0],
-		[ 40.0,  60.0],
-		[ 50.0,  80.0],
-		[ 60.0,  90.0],
-		[ 80.0, 120.0],
-		[100.0, 150.0]
-	]);
+        [  4.0,   8.0],
+        [  5.0,  10.0],
+        [  6.0,  12.0],
+        [  8.0,  15.0],
+        [ 10.0,  19.0],
+        [ 12.0,  21.0],
+        [ 13.0,  23.0],
+        [ 16.0,  28.0],
+        [ 20.0,  32.0],
+        [ 25.0,  40.0],
+        [ 30.0,  45.0],
+        [ 35.0,  52.0],
+        [ 40.0,  60.0],
+        [ 50.0,  80.0],
+        [ 60.0,  90.0],
+        [ 80.0, 120.0],
+        [100.0, 150.0]
+    ]);
 
 
 // Function: get_lmXuu_bearing_length()
@@ -45,24 +45,24 @@ function get_lmXuu_bearing_diam(size) = lookup(size, [
 // Arguments:
 //   size = Inner size of lmXuu bearing, in mm.
 function get_lmXuu_bearing_length(size) = lookup(size, [
-		[  4.0,  12.0],
-		[  5.0,  15.0],
-		[  6.0,  19.0],
-		[  8.0,  24.0],
-		[ 10.0,  29.0],
-		[ 12.0,  30.0],
-		[ 13.0,  32.0],
-		[ 16.0,  37.0],
-		[ 20.0,  42.0],
-		[ 25.0,  59.0],
-		[ 30.0,  64.0],
-		[ 35.0,  70.0],
-		[ 40.0,  80.0],
-		[ 50.0, 100.0],
-		[ 60.0, 110.0],
-		[ 80.0, 140.0],
-		[100.0, 175.0]
-	]);
+        [  4.0,  12.0],
+        [  5.0,  15.0],
+        [  6.0,  19.0],
+        [  8.0,  24.0],
+        [ 10.0,  29.0],
+        [ 12.0,  30.0],
+        [ 13.0,  32.0],
+        [ 16.0,  37.0],
+        [ 20.0,  42.0],
+        [ 25.0,  59.0],
+        [ 30.0,  64.0],
+        [ 35.0,  70.0],
+        [ 40.0,  80.0],
+        [ 50.0, 100.0],
+        [ 60.0, 110.0],
+        [ 80.0, 140.0],
+        [100.0, 175.0]
+    ]);
 
 
 // Module: linear_bearing_housing()
@@ -83,45 +83,45 @@ function get_lmXuu_bearing_length(size) = lookup(size, [
 //   linear_bearing_housing(d=19, l=29, wall=2, tab=6, screwsize=2.5);
 module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, anchor=BOTTOM, spin=0, orient=UP)
 {
-	od = d+2*wall;
-	ogap = gap+2*tabwall;
-	tabh = tab/2+od/2*sqrt(2)-ogap/2;
-	h = od+tab/2;
-	anchors = [
-		anchorpt("axis", [0,0,-tab/2/2]),
-		anchorpt("screw", [0,2-ogap/2,tabh-tab/2/2],FWD),
-		anchorpt("nut", [0,ogap/2-2,tabh-tab/2/2],FWD)
-	];
-	attachable(anchor,spin,orient, size=[l, od, h], anchors=anchors) {
-		down(tab/2/2)
-		difference() {
-			union() {
-				// Housing
-				zrot(90) teardrop(r=od/2,h=l);
+    od = d+2*wall;
+    ogap = gap+2*tabwall;
+    tabh = tab/2+od/2*sqrt(2)-ogap/2;
+    h = od+tab/2;
+    anchors = [
+        anchorpt("axis", [0,0,-tab/2/2]),
+        anchorpt("screw", [0,2-ogap/2,tabh-tab/2/2],FWD),
+        anchorpt("nut", [0,ogap/2-2,tabh-tab/2/2],FWD)
+    ];
+    attachable(anchor,spin,orient, size=[l, od, h], anchors=anchors) {
+        down(tab/2/2)
+        difference() {
+            union() {
+                // Housing
+                zrot(90) teardrop(r=od/2,h=l);
 
-				// Base
-				cube([l,od,od/2], anchor=TOP);
+                // Base
+                cube([l,od,od/2], anchor=TOP);
 
-				// Tabs
-				cube([l,ogap,od/2+tab/2], anchor=BOTTOM);
-			}
+                // Tabs
+                cube([l,ogap,od/2+tab/2], anchor=BOTTOM);
+            }
 
-			// Clear bearing space
-			zrot(90) teardrop(r=d/2,h=l+0.05);
+            // Clear bearing space
+            zrot(90) teardrop(r=d/2,h=l+0.05);
 
-			// Clear gap
-			cube([l+0.05,gap,od], anchor=BOTTOM);
+            // Clear gap
+            cube([l+0.05,gap,od], anchor=BOTTOM);
 
-			up(tabh) {
-				// Screwhole
-				fwd(ogap/2-2+0.01) screw(screwsize=screwsize*1.06, screwlen=ogap, headsize=screwsize*2, headlen=10, orient=FWD);
+            up(tabh) {
+                // Screwhole
+                fwd(ogap/2-2+0.01) screw(screwsize=screwsize*1.06, screwlen=ogap, headsize=screwsize*2, headlen=10, orient=FWD);
 
-				// Nut holder
-				back(ogap/2-2+0.01) metric_nut(size=screwsize, hole=false, anchor=BOTTOM, orient=BACK);
-			}
-		}
-		children();
-	}
+                // Nut holder
+                back(ogap/2-2+0.01) metric_nut(size=screwsize, hole=false, anchor=BOTTOM, orient=BACK);
+            }
+        }
+        children();
+    }
 }
 
 
@@ -142,10 +142,10 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 //   lmXuu_housing(size=10, wall=2, tab=6, screwsize=2.5);
 module lmXuu_housing(size=8, tab=7, gap=5, wall=3, tabwall=5, screwsize=3, anchor=BOTTOM, spin=0, orient=UP)
 {
-	d = get_lmXuu_bearing_diam(size);
-	l = get_lmXuu_bearing_length(size);
-	linear_bearing_housing(d=d, l=l, tab=tab, gap=gap, wall=wall, tabwall=tabwall, screwsize=screwsize, orient=orient, spin=spin, anchor=anchor) children();
+    d = get_lmXuu_bearing_diam(size);
+    l = get_lmXuu_bearing_length(size);
+    linear_bearing_housing(d=d, l=l, tab=tab, gap=gap, wall=wall, tabwall=tabwall, screwsize=screwsize, orient=orient, spin=spin, anchor=anchor) children();
 }
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

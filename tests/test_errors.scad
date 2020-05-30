@@ -8,4 +8,4 @@ module test_deprecate() {}
 module test_deprecate_argument() {}
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -32,16 +32,16 @@
 //   stroke(path, closed=true);
 //   move_copies(path) color("blue") circle(d=2,$fn=8);
 function square(size=1, center, anchor, spin=0) =
-	let(
-		anchor = get_anchor(anchor, center, [-1,-1], [-1,-1]),
-		size = is_num(size)? [size,size] : point2d(size),
-		path = [
-			[ size.x,-size.y],
-			[-size.x,-size.y],
-			[-size.x, size.y],
-			[ size.x, size.y]
-		] / 2
-	) reorient(anchor,spin, two_d=true, size=size, p=path);
+    let(
+        anchor = get_anchor(anchor, center, [-1,-1], [-1,-1]),
+        size = is_num(size)? [size,size] : point2d(size),
+        path = [
+            [ size.x,-size.y],
+            [-size.x,-size.y],
+            [-size.x, size.y],
+            [ size.x, size.y]
+        ] / 2
+    ) reorient(anchor,spin, two_d=true, size=size, p=path);
 
 
 // Function&Module: circle()
@@ -62,11 +62,11 @@ function square(size=1, center, anchor, spin=0) =
 // Example(NORENDER): Called as Function
 //   path = circle(d=50, anchor=FRONT, spin=45);
 function circle(r, d, anchor=CENTER, spin=0) =
-	let(
-		r = get_radius(r=r, d=d, dflt=1),
-		sides = segs(r),
-		path = [for (i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]]
-	) reorient(anchor,spin, two_d=true, r=r, p=path);
+    let(
+        r = get_radius(r=r, d=d, dflt=1),
+        sides = segs(r),
+        path = [for (i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]]
+    ) reorient(anchor,spin, two_d=true, r=r, p=path);
 
 
 
@@ -105,36 +105,36 @@ function circle(r, d, anchor=CENTER, spin=0) =
 //   vnf_polyhedron(vnf);
 module cube(size=1, center, anchor, spin=0, orient=UP)
 {
-	anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
-	size = scalar_vec3(size);
-	attachable(anchor,spin,orient, size=size) {
-		linear_extrude(height=size.z, center=true, convexity=2) {
-			square([size.x,size.y], center=true);
-		}
-		children();
-	}
+    anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
+    size = scalar_vec3(size);
+    attachable(anchor,spin,orient, size=size) {
+        linear_extrude(height=size.z, center=true, convexity=2) {
+            square([size.x,size.y], center=true);
+        }
+        children();
+    }
 }
 
 function cube(size=1, center, anchor, spin=0, orient=UP) =
-	let(
-		siz = scalar_vec3(size),
-		anchor = get_anchor(anchor, center, ALLNEG, ALLNEG),
-		unscaled = [
-			[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
-			[-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1],
-		]/2,
-		verts = is_num(size)? unscaled * size :
-			is_vector(size,3)? [for (p=unscaled) vmul(p,size)] :
-			assert(is_num(size) || is_vector(size,3)),
-		faces = [
-			[0,1,2], [0,2,3],  //BOTTOM
-			[0,4,5], [0,5,1],  //FRONT
-			[1,5,6], [1,6,2],  //RIGHT
-			[2,6,7], [2,7,3],  //BACK
-			[3,7,4], [3,4,0],  //LEFT
-			[6,4,7], [6,5,4]   //TOP
-		]
-	) [reorient(anchor,spin,orient, size=siz, p=verts), faces];
+    let(
+        siz = scalar_vec3(size),
+        anchor = get_anchor(anchor, center, ALLNEG, ALLNEG),
+        unscaled = [
+            [-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
+            [-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1],
+        ]/2,
+        verts = is_num(size)? unscaled * size :
+            is_vector(size,3)? [for (p=unscaled) vmul(p,size)] :
+            assert(is_num(size) || is_vector(size,3)),
+        faces = [
+            [0,1,2], [0,2,3],  //BOTTOM
+            [0,4,5], [0,5,1],  //FRONT
+            [1,5,6], [1,6,2],  //RIGHT
+            [2,6,7], [2,7,3],  //BACK
+            [3,7,4], [3,4,0],  //LEFT
+            [6,4,7], [6,5,4]   //TOP
+        ]
+    ) [reorient(anchor,spin,orient, size=siz, p=verts), faces];
 
 
 // Function&Module: cylinder()
@@ -183,45 +183,45 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   }
 module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 {
-	anchor = get_anchor(anchor, center, BOTTOM, BOTTOM);
-	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
-	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
-	l = first_defined([h, l, 1]);
-	sides = segs(max(r1,r2));
-	attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
-		if(r1>r2) {
-			linear_extrude(height=l, center=true, convexity=2, scale=r2/r1) {
-				circle(r=r1);
-			}
-		} else {
-			zflip() {
-				linear_extrude(height=l, center=true, convexity=2, scale=r1/r2) {
-					circle(r=r2);
-				}
-			}
-		}
-		children();
-	}
+    anchor = get_anchor(anchor, center, BOTTOM, BOTTOM);
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
+    l = first_defined([h, l, 1]);
+    sides = segs(max(r1,r2));
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
+        if(r1>r2) {
+            linear_extrude(height=l, center=true, convexity=2, scale=r2/r1) {
+                circle(r=r1);
+            }
+        } else {
+            zflip() {
+                linear_extrude(height=l, center=true, convexity=2, scale=r1/r2) {
+                    circle(r=r2);
+                }
+            }
+        }
+        children();
+    }
 }
 
 function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP) =
-	let(
-		anchor = get_anchor(anchor, center, BOTTOM, BOTTOM),
-		r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
-		r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
-		l = first_defined([h, l, 1]),
-		sides = segs(max(r1,r2)),
-		verts = [
-			for (i=[0:1:sides-1]) let(a=360*(1-i/sides)) [r1*cos(a),r1*sin(a),-l/2],
-			for (i=[0:1:sides-1]) let(a=360*(1-i/sides)) [r2*cos(a),r2*sin(a), l/2],
-		],
-		faces = [
-			[for (i=[0:1:sides-1]) sides-1-i],
-			for (i=[0:1:sides-1]) [i, ((i+1)%sides)+sides, i+sides],
-			for (i=[0:1:sides-1]) [i, (i+1)%sides, ((i+1)%sides)+sides],
-			[for (i=[0:1:sides-1]) sides+i]
-		]
-	) [reorient(anchor,spin,orient, l=l, r1=r1, r2=r2, p=verts), faces];
+    let(
+        anchor = get_anchor(anchor, center, BOTTOM, BOTTOM),
+        r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
+        r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
+        l = first_defined([h, l, 1]),
+        sides = segs(max(r1,r2)),
+        verts = [
+            for (i=[0:1:sides-1]) let(a=360*(1-i/sides)) [r1*cos(a),r1*sin(a),-l/2],
+            for (i=[0:1:sides-1]) let(a=360*(1-i/sides)) [r2*cos(a),r2*sin(a), l/2],
+        ],
+        faces = [
+            [for (i=[0:1:sides-1]) sides-1-i],
+            for (i=[0:1:sides-1]) [i, ((i+1)%sides)+sides, i+sides],
+            for (i=[0:1:sides-1]) [i, (i+1)%sides, ((i+1)%sides)+sides],
+            [for (i=[0:1:sides-1]) sides+i]
+        ]
+    ) [reorient(anchor,spin,orient, l=l, r1=r1, r2=r2, p=verts), faces];
 
 
 
@@ -268,11 +268,11 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   vnf = sphere(d=100, style="icosa");
 //   vnf_polyhedron(vnf);
 module sphere(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orient=UP)
-	spheroid(r=r, d=d, circum=circum, style=style, anchor=anchor, spin=spin, orient=orient) children();
+    spheroid(r=r, d=d, circum=circum, style=style, anchor=anchor, spin=spin, orient=orient) children();
 
 
 function sphere(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orient=UP) =
-	spheroid(r=r, d=d, circum=circum, style=style, anchor=anchor, spin=spin, orient=orient);
+    spheroid(r=r, d=d, circum=circum, style=style, anchor=anchor, spin=spin, orient=orient);
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

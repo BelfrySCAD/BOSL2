@@ -13,39 +13,39 @@
 
 
 _partition_cutpaths = [
-	["flat",       [[0,0],[1,0]]],
-	["sawtooth",   [[0,-0.5], [0.5,0.5], [1,-0.5]]],
-	["sinewave",   [for (a=[0:5:360]) [a/360,sin(a)/2]]],
-	["comb",       let(dx=0.5*sin(2)) [[0,0],[0+dx,0.5],[0.5-dx,0.5],[0.5+dx,-0.5],[1-dx,-0.5],[1,0]]],
-	["finger",     let(dx=0.5*sin(20)) [[0,0],[0+dx,0.5],[0.5-dx,0.5],[0.5+dx,-0.5],[1-dx,-0.5],[1,0]]],
-	["dovetail",   [[0,-0.5], [0.3,-0.5], [0.2,0.5], [0.8,0.5], [0.7,-0.5], [1,-0.5]]],
-	["hammerhead", [[0,-0.5], [0.35,-0.5], [0.35,0], [0.15,0], [0.15,0.5], [0.85,0.5], [0.85,0], [0.65,0], [0.65,-0.5],[1,-0.5]]],
-	["jigsaw",     concat(
-						arc(N=6, r=5/16, cp=[0,-3/16],  start=270, angle=125),
-						arc(N=12, r=5/16, cp=[1/2,3/16], start=215, angle=-250),
-						arc(N=6, r=5/16, cp=[1,-3/16],  start=145, angle=125)
-					)
-	],
+    ["flat",       [[0,0],[1,0]]],
+    ["sawtooth",   [[0,-0.5], [0.5,0.5], [1,-0.5]]],
+    ["sinewave",   [for (a=[0:5:360]) [a/360,sin(a)/2]]],
+    ["comb",       let(dx=0.5*sin(2)) [[0,0],[0+dx,0.5],[0.5-dx,0.5],[0.5+dx,-0.5],[1-dx,-0.5],[1,0]]],
+    ["finger",     let(dx=0.5*sin(20)) [[0,0],[0+dx,0.5],[0.5-dx,0.5],[0.5+dx,-0.5],[1-dx,-0.5],[1,0]]],
+    ["dovetail",   [[0,-0.5], [0.3,-0.5], [0.2,0.5], [0.8,0.5], [0.7,-0.5], [1,-0.5]]],
+    ["hammerhead", [[0,-0.5], [0.35,-0.5], [0.35,0], [0.15,0], [0.15,0.5], [0.85,0.5], [0.85,0], [0.65,0], [0.65,-0.5],[1,-0.5]]],
+    ["jigsaw",     concat(
+                        arc(N=6, r=5/16, cp=[0,-3/16],  start=270, angle=125),
+                        arc(N=12, r=5/16, cp=[1/2,3/16], start=215, angle=-250),
+                        arc(N=6, r=5/16, cp=[1,-3/16],  start=145, angle=125)
+                    )
+    ],
 ];
 
 
 function _partition_cutpath(l, h, cutsize, cutpath, gap) =
-	let(
-		cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize],
-		cutpath = is_path(cutpath)? cutpath : (
-			assert(is_string(cutpath), "cutpath must be a 2D path or a string.")
-			let(idx = search([cutpath], _partition_cutpaths))
-			idx==[[]]? assert(in_list(cutpath,_partition_cutpaths,idx=0)) :
-			_partition_cutpaths[idx.x][1]
-		),
-		reps = ceil(l/(cutsize.x+gap)),
-		cplen = (cutsize.x+gap) * reps,
-		path = deduplicate(concat(
-			[[-l/2, cutpath[0].y*cutsize.y]],
-			[for (i=[0:1:reps-1], pt=cutpath) vmul(pt,cutsize)+[i*(cutsize.x+gap)+gap/2-cplen/2,0]],
-			[[ l/2, cutpath[len(cutpath)-1].y*cutsize.y]]
-		))
-	) path;
+    let(
+        cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize],
+        cutpath = is_path(cutpath)? cutpath : (
+            assert(is_string(cutpath), "cutpath must be a 2D path or a string.")
+            let(idx = search([cutpath], _partition_cutpaths))
+            idx==[[]]? assert(in_list(cutpath,_partition_cutpaths,idx=0)) :
+            _partition_cutpaths[idx.x][1]
+        ),
+        reps = ceil(l/(cutsize.x+gap)),
+        cplen = (cutsize.x+gap) * reps,
+        path = deduplicate(concat(
+            [[-l/2, cutpath[0].y*cutsize.y]],
+            [for (i=[0:1:reps-1], pt=cutpath) vmul(pt,cutsize)+[i*(cutsize.x+gap)+gap/2-cplen/2,0]],
+            [[ l/2, cutpath[len(cutpath)-1].y*cutsize.y]]
+        ))
+    ) path;
 
 
 // Module: partition_mask()
@@ -79,16 +79,16 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 //   partition_mask(w=20, cutpath="jigsaw");
 module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath=undef, gap=0, inverse=false, spin=0, orient=UP)
 {
-	cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
-	path = _partition_cutpath(l, h, cutsize, cutpath, gap);
-	fullpath = concat(path, [[l/2,w*(inverse?-1:1)], [-l/2,w*(inverse?-1:1)]]);
-	rot(from=UP,to=orient) {
-		rotate(spin) {
-			linear_extrude(height=h, convexity=10) {
-				offset(delta=-$slop) polygon(fullpath);
-			}
-		}
-	}
+    cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
+    path = _partition_cutpath(l, h, cutsize, cutpath, gap);
+    fullpath = concat(path, [[l/2,w*(inverse?-1:1)], [-l/2,w*(inverse?-1:1)]]);
+    rot(from=UP,to=orient) {
+        rotate(spin) {
+            linear_extrude(height=h, convexity=10) {
+                offset(delta=-$slop) polygon(fullpath);
+            }
+        }
+    }
 }
 
 
@@ -121,15 +121,15 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath=undef, gap=0, inv
 //   partition_cut_mask(cutpath="jigsaw");
 module partition_cut_mask(l=100, h=100, cutsize=10, cutpath=undef, gap=0, spin=0, orient=UP)
 {
-	cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
-	path = _partition_cutpath(l, h, cutsize, cutpath, gap);
-	rot(from=UP,to=orient) {
-		rotate(spin) {
-			linear_extrude(height=h, convexity=10) {
-				stroke(path, width=$slop*2);
-			}
-		}
-	}
+    cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
+    path = _partition_cutpath(l, h, cutsize, cutpath, gap);
+    rot(from=UP,to=orient) {
+        rotate(spin) {
+            linear_extrude(height=h, convexity=10) {
+                stroke(path, width=$slop*2);
+            }
+        }
+    }
 }
 
 
@@ -160,24 +160,24 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath=undef, gap=0, spin=0
 //   partition(cutpath="jigsaw") cylinder(h=50, d=80, center=false);
 module partition(size=100, spread=10, cutsize=10, cutpath=undef, gap=0, spin=0)
 {
-	size = is_vector(size)? size : [size,size,size];
-	cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
-	rsize = vabs(rot(spin,p=size));
-	vec = rot(spin,p=BACK)*spread/2;
-	move(vec) {
-		intersection() {
-			children();
-			partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, spin=spin);
-		}
-	}
-	move(-vec) {
-		intersection() {
-			children();
-			partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, inverse=true, spin=spin);
-		}
-	}
+    size = is_vector(size)? size : [size,size,size];
+    cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
+    rsize = vabs(rot(spin,p=size));
+    vec = rot(spin,p=BACK)*spread/2;
+    move(vec) {
+        intersection() {
+            children();
+            partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, spin=spin);
+        }
+    }
+    move(-vec) {
+        intersection() {
+            children();
+            partition_mask(l=rsize.x, w=rsize.y, h=rsize.z, cutsize=cutsize, cutpath=cutpath, gap=gap, inverse=true, spin=spin);
+        }
+    }
 }
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

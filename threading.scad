@@ -43,34 +43,34 @@
 //   stroke(profile, width=0.02);
 module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=720, profile=undef, left_handed=false, higbee=60, internal=false, anchor=CENTER, spin=0, orient=UP)
 {
-	h = pitch*twist/360;
-	r = base_d/2;
-	dz = thread_depth/pitch * tan(thread_angle);
-	cap = (1 - 2*dz)/2;
-	profile = !is_undef(profile)? profile : (
-		internal? [
-			[thread_depth/pitch, -cap/2-dz],
-			[0, -cap/2],
-			[0, +cap/2],
-			[thread_depth/pitch, +cap/2+dz],
-		] : [
-			[0, +cap/2+dz],
-			[thread_depth/pitch, +cap/2],
-			[thread_depth/pitch, -cap/2],
-			[0, -cap/2-dz],
-		]
-	);
-	pline = profile * pitch;
-	dir = left_handed? -1 : 1;
-	idir = internal? -1 : 1;
-	attachable(anchor,spin,orient, r=r, l=h) {
-		difference() {
-			spiral_sweep(pline, h=h, r=base_d/2, twist=twist*dir, $fn=segs(base_d/2), anchor=CENTER);
-			down(h/2) right(r) right(internal? thread_depth : 0) zrot(higbee*dir*idir) fwd(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
-			up(h/2) zrot(twist*dir) right(r) right(internal? thread_depth : 0) zrot(-higbee*dir*idir) back(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
-		}
-		children();
-	}
+    h = pitch*twist/360;
+    r = base_d/2;
+    dz = thread_depth/pitch * tan(thread_angle);
+    cap = (1 - 2*dz)/2;
+    profile = !is_undef(profile)? profile : (
+        internal? [
+            [thread_depth/pitch, -cap/2-dz],
+            [0, -cap/2],
+            [0, +cap/2],
+            [thread_depth/pitch, +cap/2+dz],
+        ] : [
+            [0, +cap/2+dz],
+            [thread_depth/pitch, +cap/2],
+            [thread_depth/pitch, -cap/2],
+            [0, -cap/2-dz],
+        ]
+    );
+    pline = profile * pitch;
+    dir = left_handed? -1 : 1;
+    idir = internal? -1 : 1;
+    attachable(anchor,spin,orient, r=r, l=h) {
+        difference() {
+            spiral_sweep(pline, h=h, r=base_d/2, twist=twist*dir, $fn=segs(base_d/2), anchor=CENTER);
+            down(h/2) right(r) right(internal? thread_depth : 0) zrot(higbee*dir*idir) fwd(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
+            up(h/2) zrot(twist*dir) right(r) right(internal? thread_depth : 0) zrot(-higbee*dir*idir) back(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
+        }
+        children();
+    }
 }
 
 
@@ -127,162 +127,162 @@ module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=72
 //   ];
 //   stroke(profile, width=0.02);
 module trapezoidal_threaded_rod(
-	d=10,
-	l=100,
-	pitch=2,
-	thread_angle=15,
-	thread_depth=undef,
-	left_handed=false,
-	bevel=false,
-	starts=1,
-	profile=undef,
-	internal=false,
-	center, anchor, spin=0, orient=UP
+    d=10,
+    l=100,
+    pitch=2,
+    thread_angle=15,
+    thread_depth=undef,
+    left_handed=false,
+    bevel=false,
+    starts=1,
+    profile=undef,
+    internal=false,
+    center, anchor, spin=0, orient=UP
 ) {
-	function _thread_pt(thread, threads, start, starts, astep, asteps, part, parts) =
-		astep + asteps * (thread + threads * (part + parts * start));
+    function _thread_pt(thread, threads, start, starts, astep, asteps, part, parts) =
+        astep + asteps * (thread + threads * (part + parts * start));
 
-	d = internal? (d/cos(180/segs(d/2)) + $slop*3) : d;
-	astep = 360 / quantup(segs(d/2), starts);
-	asteps = ceil(360/astep);
-	threads = ceil(l/pitch/starts)+(starts<4?4-starts:1);
-	depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
-	pa_delta = min(pitch/4-0.01,depth*tan(thread_angle)/2)/pitch;
-	dir = left_handed? -1 : 1;
-	r1 = -depth/pitch;
-	z1 = 1/4-pa_delta;
-	z2 = 1/4+pa_delta;
-	profile = profile!=undef? profile : [
-		[-z2, r1],
-		[-z1,  0],
-		[ z1,  0],
-		[ z2, r1],
-	];
-	parts = len(profile);
-	poly_points = concat(
-		[
-			for (
-				start  = [0:1:starts-1],
-				part   = [0:1:parts-1],
-				thread = [0:1:threads-1],
-				astep  = [0:1:asteps-1]
-			) let (
-				ppt = profile[part] * pitch,
-				dz = ppt.x,
-				r = ppt.y + d/2,
-				a = astep / asteps,
-				c = cos(360 * (a * dir + start/starts)),
-				s = sin(360 * (a * dir + start/starts)),
-				z = (thread + a - threads/2) * starts * pitch
-			) [r*c, r*s, z+dz]
-		],
-		[[0, 0, -threads*pitch*starts/2-pitch/4], [0, 0, threads*pitch*starts/2+pitch/4]]
-	);
-	point_count = len(poly_points);
-	poly_faces = concat(
-		// Thread surfaces
-		[
-			for (
-				start  = [0:1:starts-1],
-				part   = [0:1:parts-2],
-				thread = [0:1:threads-1],
-				astep  = [0:1:asteps-1],
-				trinum = [0, 1]
-			) let (
-				p0 = _thread_pt(thread, threads, start, starts, astep, asteps, part, parts),
-				p1 = _thread_pt(thread, threads, start, starts, astep, asteps, part+1, parts),
-				p2 = _thread_pt(thread, threads, start, starts, astep+1, asteps, part, parts),
-				p3 = _thread_pt(thread, threads, start, starts, astep+1, asteps, part+1, parts),
-				tri = trinum==0? [p0, p1, p3] : [p0, p3, p2],
-				otri = left_handed? [tri[0], tri[2], tri[1]] : tri
-			)
-			if (!(thread == threads-1 && astep == asteps-1)) otri
-		],
-		// Thread trough bottom
-		[
-			for (
-				start  = [0:1:starts-1],
-				thread = [0:1:threads-1],
-				astep  = [0:1:asteps-1],
-				trinum = [0, 1]
-			) let (
-				p0 = _thread_pt(thread, threads, start, starts, astep, asteps, parts-1, parts),
-				p1 = _thread_pt(thread, threads, (start+(left_handed?1:starts-1))%starts, starts, astep+asteps/starts, asteps, 0, parts),
-				p2 = p0 + 1,
-				p3 = p1 + 1,
-				tri = trinum==0? [p0, p1, p3] : [p0, p3, p2],
-				otri = left_handed? [tri[0], tri[2], tri[1]] : tri
-			)
-			if (
-				!(thread >= threads-1 && astep > asteps-asteps/starts-2) &&
-				!(thread >= threads-2 && starts == 1 && astep >= asteps-1)
-			) otri
-		],
-		// top and bottom thread endcap
-		[
-			for (
-				start  = [0:1:starts-1],
-				part   = [1:1:parts-2],
-				is_top = [0, 1]
-			) let (
-				astep = is_top? asteps-1 : 0,
-				thread = is_top? threads-1 : 0,
-				p0 = _thread_pt(thread, threads, start, starts, astep, asteps, 0, parts),
-				p1 = _thread_pt(thread, threads, start, starts, astep, asteps, part, parts),
-				p2 = _thread_pt(thread, threads, start, starts, astep, asteps, part+1, parts),
-				tri = is_top? [p0, p1, p2] : [p0, p2, p1],
-				otri = left_handed? [tri[0], tri[2], tri[1]] : tri
-			) otri
-		],
-		// body side triangles
-		[
-			for (
-				start  = [0:1:starts-1],
-				is_top = [false, true],
-				trinum = [0, 1]
-			) let (
-				astep = is_top? asteps-1 : 0,
-				thread = is_top? threads-1 : 0,
-				ostart = (is_top != left_handed? (start+1) : (start+starts-1))%starts,
-				ostep = is_top? astep-asteps/starts : astep+asteps/starts,
-				oparts = is_top? parts-1 : 0,
-				p0 = is_top? point_count-1 : point_count-2,
-				p1 = _thread_pt(thread, threads, start, starts, astep, asteps, 0, parts),
-				p2 = _thread_pt(thread, threads, start, starts, astep, asteps, parts-1, parts),
-				p3 = _thread_pt(thread, threads, ostart, starts, ostep, asteps, oparts, parts),
-				tri = trinum==0?
-					(is_top? [p0, p1, p2] : [p0, p2, p1]) :
-					(is_top? [p0, p3, p1] : [p0, p3, p2]),
-				otri = left_handed? [tri[0], tri[2], tri[1]] : tri
-			) otri
-		],
-		// Caps
-		[
-			for (
-				start  = [0:1:starts-1],
-				astep  = [0:1:asteps/starts-1],
-				is_top = [0, 1]
-			) let (
-				thread = is_top? threads-1 : 0,
-				part = is_top? parts-1 : 0,
-				ostep = is_top? asteps-astep-2 : astep,
-				p0 = is_top? point_count-1 : point_count-2,
-				p1 = _thread_pt(thread, threads, start, starts, ostep, asteps, part, parts),
-				p2 = _thread_pt(thread, threads, start, starts, ostep+1, asteps, part, parts),
-				tri = is_top? [p0, p2, p1] : [p0, p1, p2],
-				otri = left_handed? [tri[0], tri[2], tri[1]] : tri
-			) otri
-		]
-	);
-	anchor = get_anchor(anchor, center, BOT, CENTER);
-	attachable(anchor,spin,orient, d=d, l=l) {
-		difference() {
-			polyhedron(points=poly_points, faces=poly_faces, convexity=threads*starts*2);
-			zcopies(l+4*pitch*starts) cube([d+1, d+1, 4*pitch*starts], center=true);
-			if (bevel) cylinder_mask(d=d, l=l+0.01, chamfer=depth);
-		}
-		children();
-	}
+    d = internal? (d/cos(180/segs(d/2)) + $slop*3) : d;
+    astep = 360 / quantup(segs(d/2), starts);
+    asteps = ceil(360/astep);
+    threads = ceil(l/pitch/starts)+(starts<4?4-starts:1);
+    depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
+    pa_delta = min(pitch/4-0.01,depth*tan(thread_angle)/2)/pitch;
+    dir = left_handed? -1 : 1;
+    r1 = -depth/pitch;
+    z1 = 1/4-pa_delta;
+    z2 = 1/4+pa_delta;
+    profile = profile!=undef? profile : [
+        [-z2, r1],
+        [-z1,  0],
+        [ z1,  0],
+        [ z2, r1],
+    ];
+    parts = len(profile);
+    poly_points = concat(
+        [
+            for (
+                start  = [0:1:starts-1],
+                part   = [0:1:parts-1],
+                thread = [0:1:threads-1],
+                astep  = [0:1:asteps-1]
+            ) let (
+                ppt = profile[part] * pitch,
+                dz = ppt.x,
+                r = ppt.y + d/2,
+                a = astep / asteps,
+                c = cos(360 * (a * dir + start/starts)),
+                s = sin(360 * (a * dir + start/starts)),
+                z = (thread + a - threads/2) * starts * pitch
+            ) [r*c, r*s, z+dz]
+        ],
+        [[0, 0, -threads*pitch*starts/2-pitch/4], [0, 0, threads*pitch*starts/2+pitch/4]]
+    );
+    point_count = len(poly_points);
+    poly_faces = concat(
+        // Thread surfaces
+        [
+            for (
+                start  = [0:1:starts-1],
+                part   = [0:1:parts-2],
+                thread = [0:1:threads-1],
+                astep  = [0:1:asteps-1],
+                trinum = [0, 1]
+            ) let (
+                p0 = _thread_pt(thread, threads, start, starts, astep, asteps, part, parts),
+                p1 = _thread_pt(thread, threads, start, starts, astep, asteps, part+1, parts),
+                p2 = _thread_pt(thread, threads, start, starts, astep+1, asteps, part, parts),
+                p3 = _thread_pt(thread, threads, start, starts, astep+1, asteps, part+1, parts),
+                tri = trinum==0? [p0, p1, p3] : [p0, p3, p2],
+                otri = left_handed? [tri[0], tri[2], tri[1]] : tri
+            )
+            if (!(thread == threads-1 && astep == asteps-1)) otri
+        ],
+        // Thread trough bottom
+        [
+            for (
+                start  = [0:1:starts-1],
+                thread = [0:1:threads-1],
+                astep  = [0:1:asteps-1],
+                trinum = [0, 1]
+            ) let (
+                p0 = _thread_pt(thread, threads, start, starts, astep, asteps, parts-1, parts),
+                p1 = _thread_pt(thread, threads, (start+(left_handed?1:starts-1))%starts, starts, astep+asteps/starts, asteps, 0, parts),
+                p2 = p0 + 1,
+                p3 = p1 + 1,
+                tri = trinum==0? [p0, p1, p3] : [p0, p3, p2],
+                otri = left_handed? [tri[0], tri[2], tri[1]] : tri
+            )
+            if (
+                !(thread >= threads-1 && astep > asteps-asteps/starts-2) &&
+                !(thread >= threads-2 && starts == 1 && astep >= asteps-1)
+            ) otri
+        ],
+        // top and bottom thread endcap
+        [
+            for (
+                start  = [0:1:starts-1],
+                part   = [1:1:parts-2],
+                is_top = [0, 1]
+            ) let (
+                astep = is_top? asteps-1 : 0,
+                thread = is_top? threads-1 : 0,
+                p0 = _thread_pt(thread, threads, start, starts, astep, asteps, 0, parts),
+                p1 = _thread_pt(thread, threads, start, starts, astep, asteps, part, parts),
+                p2 = _thread_pt(thread, threads, start, starts, astep, asteps, part+1, parts),
+                tri = is_top? [p0, p1, p2] : [p0, p2, p1],
+                otri = left_handed? [tri[0], tri[2], tri[1]] : tri
+            ) otri
+        ],
+        // body side triangles
+        [
+            for (
+                start  = [0:1:starts-1],
+                is_top = [false, true],
+                trinum = [0, 1]
+            ) let (
+                astep = is_top? asteps-1 : 0,
+                thread = is_top? threads-1 : 0,
+                ostart = (is_top != left_handed? (start+1) : (start+starts-1))%starts,
+                ostep = is_top? astep-asteps/starts : astep+asteps/starts,
+                oparts = is_top? parts-1 : 0,
+                p0 = is_top? point_count-1 : point_count-2,
+                p1 = _thread_pt(thread, threads, start, starts, astep, asteps, 0, parts),
+                p2 = _thread_pt(thread, threads, start, starts, astep, asteps, parts-1, parts),
+                p3 = _thread_pt(thread, threads, ostart, starts, ostep, asteps, oparts, parts),
+                tri = trinum==0?
+                    (is_top? [p0, p1, p2] : [p0, p2, p1]) :
+                    (is_top? [p0, p3, p1] : [p0, p3, p2]),
+                otri = left_handed? [tri[0], tri[2], tri[1]] : tri
+            ) otri
+        ],
+        // Caps
+        [
+            for (
+                start  = [0:1:starts-1],
+                astep  = [0:1:asteps/starts-1],
+                is_top = [0, 1]
+            ) let (
+                thread = is_top? threads-1 : 0,
+                part = is_top? parts-1 : 0,
+                ostep = is_top? asteps-astep-2 : astep,
+                p0 = is_top? point_count-1 : point_count-2,
+                p1 = _thread_pt(thread, threads, start, starts, ostep, asteps, part, parts),
+                p2 = _thread_pt(thread, threads, start, starts, ostep+1, asteps, part, parts),
+                tri = is_top? [p0, p2, p1] : [p0, p1, p2],
+                otri = left_handed? [tri[0], tri[2], tri[1]] : tri
+            ) otri
+        ]
+    );
+    anchor = get_anchor(anchor, center, BOT, CENTER);
+    attachable(anchor,spin,orient, d=d, l=l) {
+        difference() {
+            polyhedron(points=poly_points, faces=poly_faces, convexity=threads*starts*2);
+            zcopies(l+4*pitch*starts) cube([d+1, d+1, 4*pitch*starts], center=true);
+            if (bevel) cylinder_mask(d=d, l=l+0.01, chamfer=depth);
+        }
+        children();
+    }
 }
 
 
@@ -315,45 +315,45 @@ module trapezoidal_threaded_rod(
 //   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, $slop=0.2, left_handed=true);
 //   trapezoidal_threaded_nut(od=17.4, id=10, h=10, pitch=2, thread_angle=15, starts=3, $fa=1, $fs=1);
 module trapezoidal_threaded_nut(
-	od=17.4,
-	id=10,
-	h=10,
-	pitch=2,
-	thread_depth=undef,
-	thread_angle=15,
-	profile=undef,
-	left_handed=false,
-	starts=1,
-	bevel=true,
-	anchor=CENTER,
-	spin=0,
-	orient=UP
+    od=17.4,
+    id=10,
+    h=10,
+    pitch=2,
+    thread_depth=undef,
+    thread_angle=15,
+    profile=undef,
+    left_handed=false,
+    starts=1,
+    bevel=true,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
 ) {
-	depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
-	attachable(anchor,spin,orient, size=[od/cos(30),od,h]) {
-		difference() {
-			cylinder(d=od/cos(30), h=h, center=true, $fn=6);
-			trapezoidal_threaded_rod(
-				d=id,
-				l=h+1,
-				pitch=pitch,
-				thread_depth=depth,
-				thread_angle=thread_angle,
-				profile=profile,
-				left_handed=left_handed,
-				starts=starts,
-				internal=true
-			);
-			if (bevel) {
-				zflip_copy() {
-					down(h/2+0.01) {
-						cylinder(r1=id/2+$slop, r2=id/2+$slop-depth, h=depth, center=false);
-					}
-				}
-			}
-		}
-		children();
-	}
+    depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
+    attachable(anchor,spin,orient, size=[od/cos(30),od,h]) {
+        difference() {
+            cylinder(d=od/cos(30), h=h, center=true, $fn=6);
+            trapezoidal_threaded_rod(
+                d=id,
+                l=h+1,
+                pitch=pitch,
+                thread_depth=depth,
+                thread_angle=thread_angle,
+                profile=profile,
+                left_handed=left_handed,
+                starts=starts,
+                internal=true
+            );
+            if (bevel) {
+                zflip_copy() {
+                    down(h/2+0.01) {
+                        cylinder(r1=id/2+$slop, r2=id/2+$slop-depth, h=depth, center=false);
+                    }
+                }
+            }
+        }
+        children();
+    }
 }
 
 
@@ -381,42 +381,42 @@ module trapezoidal_threaded_nut(
 //   threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
 module threaded_rod(
-	d=10, l=100, pitch=2,
-	left_handed=false,
-	bevel=false,
-	internal=false,
-	anchor=CENTER,
-	spin=0,
-	orient=UP
+    d=10, l=100, pitch=2,
+    left_handed=false,
+    bevel=false,
+    internal=false,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
 ) {
-	depth = pitch * cos(30) * 5/8;
-	profile = internal? [
-		[-6/16, -depth/pitch],
-		[-1/16,  0],
-		[-1/32,  0.02],
-		[ 1/32,  0.02],
-		[ 1/16,  0],
-		[ 6/16, -depth/pitch]
-	] : [
-		[-7/16, -depth/pitch*1.07],
-		[-6/16, -depth/pitch],
-		[-1/16,  0],
-		[ 1/16,  0],
-		[ 6/16, -depth/pitch],
-		[ 7/16, -depth/pitch*1.07]
-	];
-	trapezoidal_threaded_rod(
-		d=d, l=l, pitch=pitch,
-		thread_depth=depth,
-		thread_angle=30,
-		profile=profile,
-		left_handed=left_handed,
-		bevel=bevel,
-		internal=internal,
-		anchor=anchor,
-		spin=spin,
-		orient=orient
-	) children();
+    depth = pitch * cos(30) * 5/8;
+    profile = internal? [
+        [-6/16, -depth/pitch],
+        [-1/16,  0],
+        [-1/32,  0.02],
+        [ 1/32,  0.02],
+        [ 1/16,  0],
+        [ 6/16, -depth/pitch]
+    ] : [
+        [-7/16, -depth/pitch*1.07],
+        [-6/16, -depth/pitch],
+        [-1/16,  0],
+        [ 1/16,  0],
+        [ 6/16, -depth/pitch],
+        [ 7/16, -depth/pitch*1.07]
+    ];
+    trapezoidal_threaded_rod(
+        d=d, l=l, pitch=pitch,
+        thread_depth=depth,
+        thread_angle=30,
+        profile=profile,
+        left_handed=left_handed,
+        bevel=bevel,
+        internal=internal,
+        anchor=anchor,
+        spin=spin,
+        orient=orient
+    ) children();
 }
 
 
@@ -439,28 +439,28 @@ module threaded_rod(
 // Examples(Med):
 //   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, $slop=0.2, $fa=1, $fs=1);
 module threaded_nut(
-	od=16, id=10, h=10,
-	pitch=2, left_handed=false, bevel=false,
-	anchor=CENTER, spin=0, orient=UP
+    od=16, id=10, h=10,
+    pitch=2, left_handed=false, bevel=false,
+    anchor=CENTER, spin=0, orient=UP
 ) {
-	depth = pitch * cos(30) * 5/8;
-	profile = [
-		[-6/16, -depth/pitch],
-		[-1/16,  0],
-		[-1/32,  0.02],
-		[ 1/32,  0.02],
-		[ 1/16,  0],
-		[ 6/16, -depth/pitch]
-	];
-	trapezoidal_threaded_nut(
-		od=od, id=id, h=h,
-		pitch=pitch, thread_angle=30,
-		profile=profile,
-		left_handed=left_handed,
-		bevel=bevel,
-		anchor=anchor, spin=spin,
-		orient=orient
-	) children();
+    depth = pitch * cos(30) * 5/8;
+    profile = [
+        [-6/16, -depth/pitch],
+        [-1/16,  0],
+        [-1/32,  0.02],
+        [ 1/32,  0.02],
+        [ 1/16,  0],
+        [ 6/16, -depth/pitch]
+    ];
+    trapezoidal_threaded_nut(
+        od=od, id=id, h=h,
+        pitch=pitch, thread_angle=30,
+        profile=profile,
+        left_handed=left_handed,
+        bevel=bevel,
+        anchor=anchor, spin=spin,
+        orient=orient
+    ) children();
 }
 
 
@@ -488,34 +488,34 @@ module threaded_nut(
 //   buttress_threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   buttress_threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
 module buttress_threaded_rod(
-	d=10, l=100, pitch=2,
-	left_handed=false,
-	bevel=false,
-	internal=false,
-	anchor=CENTER,
-	spin=0,
-	orient=UP
+    d=10, l=100, pitch=2,
+    left_handed=false,
+    bevel=false,
+    internal=false,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
 ) {
-	depth = pitch * 3/4;
-	profile = [
-		[ -7/16, -0.75],
-		[  5/16,  0],
-		[  7/16,  0],
-		[  7/16, -0.75],
-		[  1/ 2, -0.77],
-	];
-	trapezoidal_threaded_rod(
-		d=d, l=l, pitch=pitch,
-		thread_depth=depth,
-		thread_angle=30,
-		profile=profile,
-		left_handed=left_handed,
-		bevel=bevel,
-		internal=internal,
-		anchor=anchor,
-		spin=spin,
-		orient=orient
-	) children();
+    depth = pitch * 3/4;
+    profile = [
+        [ -7/16, -0.75],
+        [  5/16,  0],
+        [  7/16,  0],
+        [  7/16, -0.75],
+        [  1/ 2, -0.77],
+    ];
+    trapezoidal_threaded_rod(
+        d=d, l=l, pitch=pitch,
+        thread_depth=depth,
+        thread_angle=30,
+        profile=profile,
+        left_handed=left_handed,
+        bevel=bevel,
+        internal=internal,
+        anchor=anchor,
+        spin=spin,
+        orient=orient
+    ) children();
 }
 
 
@@ -538,31 +538,31 @@ module buttress_threaded_rod(
 // Examples(Med):
 //   buttress_threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, $slop=0.2, $fa=1, $fs=1);
 module buttress_threaded_nut(
-	od=16, id=10, h=10,
-	pitch=2, left_handed=false,
-	bevel=false,
-	anchor=CENTER,
-	spin=0,
-	orient=UP
+    od=16, id=10, h=10,
+    pitch=2, left_handed=false,
+    bevel=false,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
 ) {
-	depth = pitch * 3/4;
-	profile = [
-		[ -7/16, -0.75],
-		[  5/16,  0],
-		[  7/16,  0],
-		[  7/16, -0.75],
-		[  1/ 2, -0.77],
-	];
-	trapezoidal_threaded_nut(
-		od=od, id=id, h=h,
-		pitch=pitch, thread_angle=30,
-		profile=profile,
-		thread_depth=pitch*3*sqrt(3)/8,
-		left_handed=left_handed,
-		bevel=bevel,
-		anchor=anchor, spin=spin,
-		orient=orient
-	) children();
+    depth = pitch * 3/4;
+    profile = [
+        [ -7/16, -0.75],
+        [  5/16,  0],
+        [  7/16,  0],
+        [  7/16, -0.75],
+        [  1/ 2, -0.77],
+    ];
+    trapezoidal_threaded_nut(
+        od=od, id=id, h=h,
+        pitch=pitch, thread_angle=30,
+        profile=profile,
+        thread_depth=pitch*3*sqrt(3)/8,
+        left_handed=left_handed,
+        bevel=bevel,
+        anchor=anchor, spin=spin,
+        orient=orient
+    ) children();
 }
 
 
@@ -590,27 +590,27 @@ module buttress_threaded_nut(
 // Examples(Med):
 //   metric_trapezoidal_threaded_rod(d=10, l=30, pitch=2, left_handed=true, $fa=1, $fs=1);
 module metric_trapezoidal_threaded_rod(
-	d=10, l=100, pitch=2,
-	left_handed=false,
-	starts=1,
-	bevel=false,
-	internal=false,
-	anchor=CENTER,
-	spin=0,
-	orient=UP
+    d=10, l=100, pitch=2,
+    left_handed=false,
+    starts=1,
+    bevel=false,
+    internal=false,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
 ) {
-	trapezoidal_threaded_rod(
-		d=d, l=l,
-		pitch=pitch,
-		thread_angle=15,
-		left_handed=left_handed,
-		starts=starts,
-		bevel=bevel,
-		internal=internal,
-		anchor=anchor,
-		spin=spin,
-		orient=orient
-	) children();
+    trapezoidal_threaded_rod(
+        d=d, l=l,
+        pitch=pitch,
+        thread_angle=15,
+        left_handed=left_handed,
+        starts=starts,
+        bevel=bevel,
+        internal=internal,
+        anchor=anchor,
+        spin=spin,
+        orient=orient
+    ) children();
 }
 
 
@@ -634,25 +634,25 @@ module metric_trapezoidal_threaded_rod(
 // Examples(Med):
 //   metric_trapezoidal_threaded_nut(od=16, id=10, h=10, pitch=2, left_handed=true, bevel=true, $fa=1, $fs=1);
 module metric_trapezoidal_threaded_nut(
-	od=17.4, id=10.5, h=10,
-	pitch=3.175,
-	starts=1,
-	left_handed=false,
-	bevel=false,
-	anchor=CENTER,
-	spin=0,
-	orient=UP
+    od=17.4, id=10.5, h=10,
+    pitch=3.175,
+    starts=1,
+    left_handed=false,
+    bevel=false,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
 ) {
-	trapezoidal_threaded_nut(
-		od=od, id=id, h=h,
-		pitch=pitch, thread_angle=15,
-		left_handed=left_handed,
-		starts=starts,
-		bevel=bevel,
-		anchor=anchor,
-		spin=spin,
-		orient=orient
-	) children();
+    trapezoidal_threaded_nut(
+        od=od, id=id, h=h,
+        pitch=pitch, thread_angle=15,
+        left_handed=left_handed,
+        starts=starts,
+        bevel=bevel,
+        anchor=anchor,
+        spin=spin,
+        orient=orient
+    ) children();
 }
 
 
@@ -683,29 +683,29 @@ module metric_trapezoidal_threaded_nut(
 //   acme_threaded_rod(d=3/8*25.4, l=20, pitch=1/8*25.4, $fn=32);
 //   acme_threaded_rod(d=10, l=30, pitch=2, starts=3, $fa=1, $fs=1);
 module acme_threaded_rod(
-	d=10, l=100, pitch=2,
-	thread_angle=14.5,
-	thread_depth=undef,
-	starts=1,
-	left_handed=false,
-	bevel=false,
-	internal=false,
-	anchor=CENTER,
-	spin=0,
-	orient=UP
+    d=10, l=100, pitch=2,
+    thread_angle=14.5,
+    thread_depth=undef,
+    starts=1,
+    left_handed=false,
+    bevel=false,
+    internal=false,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
 ) {
-	trapezoidal_threaded_rod(
-		d=d, l=l, pitch=pitch,
-		thread_angle=thread_angle,
-		thread_depth=thread_depth,
-		starts=starts,
-		left_handed=left_handed,
-		bevel=bevel,
-		internal=internal,
-		anchor=anchor,
-		spin=spin,
-		orient=orient
-	) children();
+    trapezoidal_threaded_rod(
+        d=d, l=l, pitch=pitch,
+        thread_angle=thread_angle,
+        thread_depth=thread_depth,
+        starts=starts,
+        left_handed=left_handed,
+        bevel=bevel,
+        internal=internal,
+        anchor=anchor,
+        spin=spin,
+        orient=orient
+    ) children();
 }
 
 
@@ -731,27 +731,27 @@ module acme_threaded_rod(
 //   acme_threaded_nut(od=16, id=3/8*25.4, h=8, pitch=1/8*25.4, $slop=0.2);
 //   acme_threaded_nut(od=16, id=10, h=10, pitch=2, starts=3, $slop=0.2, $fa=1, $fs=1);
 module acme_threaded_nut(
-	od, id, h, pitch,
-	thread_angle=14.5,
-	thread_depth=undef,
-	starts=1,
-	left_handed=false,
-	bevel=false,
-	anchor=CENTER,
-	spin=0,
-	orient=UP
+    od, id, h, pitch,
+    thread_angle=14.5,
+    thread_depth=undef,
+    starts=1,
+    left_handed=false,
+    bevel=false,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
 ) {
-	trapezoidal_threaded_nut(
-		od=od, id=id, h=h, pitch=pitch,
-		thread_depth=thread_depth,
-		thread_angle=thread_angle,
-		left_handed=left_handed,
-		bevel=bevel,
-		starts=starts,
-		anchor=anchor,
-		spin=spin,
-		orient=orient
-	) children();
+    trapezoidal_threaded_nut(
+        od=od, id=id, h=h, pitch=pitch,
+        thread_depth=thread_depth,
+        thread_angle=thread_angle,
+        left_handed=left_handed,
+        bevel=bevel,
+        starts=starts,
+        anchor=anchor,
+        spin=spin,
+        orient=orient
+    ) children();
 }
 
 
@@ -779,26 +779,26 @@ module acme_threaded_nut(
 // Examples(Med):
 //   square_threaded_rod(d=10, l=20, pitch=2, starts=2, $fn=32);
 module square_threaded_rod(
-	d=10, l=100, pitch=2,
-	left_handed=false,
-	bevel=false,
-	starts=1,
-	internal=false,
-	anchor=CENTER,
-	spin=0,
-	orient=UP
+    d=10, l=100, pitch=2,
+    left_handed=false,
+    bevel=false,
+    starts=1,
+    internal=false,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
 ) {
-	trapezoidal_threaded_rod(
-		d=d, l=l, pitch=pitch,
-		thread_angle=0,
-		left_handed=left_handed,
-		bevel=bevel,
-		starts=starts,
-		internal=internal,
-		anchor=anchor,
-		spin=spin,
-		orient=orient
-	) children();
+    trapezoidal_threaded_rod(
+        d=d, l=l, pitch=pitch,
+        thread_angle=0,
+        left_handed=left_handed,
+        bevel=bevel,
+        starts=starts,
+        internal=internal,
+        anchor=anchor,
+        spin=spin,
+        orient=orient
+    ) children();
 }
 
 
@@ -822,25 +822,25 @@ module square_threaded_rod(
 // Examples(Med):
 //   square_threaded_nut(od=16, id=10, h=10, pitch=2, starts=2, $slop=0.15, $fn=32);
 module square_threaded_nut(
-	od=17.4, id=10.5, h=10,
-	pitch=3.175,
-	left_handed=false,
-	bevel=false,
-	starts=1,
-	anchor=CENTER,
-	spin=0,
-	orient=UP
+    od=17.4, id=10.5, h=10,
+    pitch=3.175,
+    left_handed=false,
+    bevel=false,
+    starts=1,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
 ) {
-	trapezoidal_threaded_nut(
-		od=od, id=id, h=h, pitch=pitch,
-		thread_angle=0,
-		left_handed=left_handed,
-		bevel=bevel,
-		starts=starts,
-		anchor=anchor,
-		spin=spin,
-		orient=orient
-	) children();
+    trapezoidal_threaded_nut(
+        od=od, id=id, h=h, pitch=pitch,
+        thread_angle=0,
+        left_handed=left_handed,
+        bevel=bevel,
+        starts=starts,
+        anchor=anchor,
+        spin=spin,
+        orient=orient
+    ) children();
 }
 
 
@@ -874,32 +874,32 @@ module square_threaded_nut(
 //   ball_screw_rod(d=15, l=20, pitch=5, ball_diam=4, ball_arc=120, $fa=1, $fs=1);
 //   ball_screw_rod(d=15, l=20, pitch=5, ball_diam=4, ball_arc=120, left_handed=true, $fa=1, $fs=1);
 module ball_screw_rod(
-	d=10, l=100, pitch=2, starts=1,
-	ball_diam=5, ball_arc=100,
-	left_handed=false,
-	internal=false,
-	bevel=false,
-	anchor=CENTER,
-	spin=0,
-	orient=UP
+    d=10, l=100, pitch=2, starts=1,
+    ball_diam=5, ball_arc=100,
+    left_handed=false,
+    internal=false,
+    bevel=false,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
 ) {
-	depth = ball_diam * (1-cos(ball_arc/2))/2;
-	profile = arc(N=11, d=ball_diam/pitch, cp=[0,ball_diam/2/pitch*cos(ball_arc/2)], start=270-ball_arc/2, angle=ball_arc);
-	trapezoidal_threaded_rod(
-		d=d, l=l, pitch=pitch,
-		thread_depth=depth,
-		thread_angle=90-ball_arc/2,
-		profile=profile,
-		left_handed=left_handed,
-		starts=starts,
-		bevel=bevel,
-		internal=internal,
-		anchor=anchor,
-		spin=spin,
-		orient=orient
-	) children();
+    depth = ball_diam * (1-cos(ball_arc/2))/2;
+    profile = arc(N=11, d=ball_diam/pitch, cp=[0,ball_diam/2/pitch*cos(ball_arc/2)], start=270-ball_arc/2, angle=ball_arc);
+    trapezoidal_threaded_rod(
+        d=d, l=l, pitch=pitch,
+        thread_depth=depth,
+        thread_angle=90-ball_arc/2,
+        profile=profile,
+        left_handed=left_handed,
+        starts=starts,
+        bevel=bevel,
+        internal=internal,
+        anchor=anchor,
+        spin=spin,
+        orient=orient
+    ) children();
 }
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

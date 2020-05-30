@@ -20,13 +20,13 @@ function ident(n) = [for (i = [0:1:n-1]) [for (j = [0:1:n-1]) (i==j)?1:0]];
 // Function: affine2d_to_3d()
 // Description: Takes a 3x3 affine2d matrix and returns its 4x4 affine3d equivalent.
 function affine2d_to_3d(m) = concat(
-	[for (r = [0:2])
-		concat(
-			[for (c = [0:2]) m[r][c]],
-			[0]
-		)
-	],
-	[[0, 0, 0, 1]]
+    [for (r = [0:2])
+        concat(
+            [for (c = [0:2]) m[r][c]],
+            [0]
+        )
+    ],
+    [[0, 0, 0, 1]]
 );
 
 
@@ -45,9 +45,9 @@ function affine2d_identity() = ident(3);
 // Arguments:
 //   v = 2D Offset to translate by.  [X,Y]
 function affine2d_translate(v) = [
-	[1, 0, v.x],
-	[0, 1, v.y],
-	[0 ,0,   1]
+    [1, 0, v.x],
+    [0, 1, v.y],
+    [0 ,0,   1]
 ];
 
 
@@ -57,9 +57,9 @@ function affine2d_translate(v) = [
 // Arguments:
 //   v = 2D vector of scaling factors.  [X,Y]
 function affine2d_scale(v) = [
-	[v.x,   0, 0],
-	[  0, v.y, 0],
-	[  0,   0, 1]
+    [v.x,   0, 0],
+    [  0, v.y, 0],
+    [  0,   0, 1]
 ];
 
 
@@ -69,9 +69,9 @@ function affine2d_scale(v) = [
 // Arguments:
 //   ang = Number of degrees to rotate.
 function affine2d_zrot(ang) = [
-	[cos(ang), -sin(ang), 0],
-	[sin(ang),  cos(ang), 0],
-	[       0,         0, 1]
+    [cos(ang), -sin(ang), 0],
+    [sin(ang),  cos(ang), 0],
+    [       0,         0, 1]
 ];
 
 
@@ -83,12 +83,12 @@ function affine2d_zrot(ang) = [
 // Arguments:
 //   v = The normal vector of the line to reflect across.
 function affine2d_mirror(v) =
-	let(v=unit(point2d(v)), a=v.x, b=v.y)
-	[
-		[1-2*a*a, 0-2*a*b, 0],
-		[0-2*a*b, 1-2*b*b, 0],
-		[      0,       0, 1]
-	];
+    let(v=unit(point2d(v)), a=v.x, b=v.y)
+    [
+        [1-2*a*a, 0-2*a*b, 0],
+        [0-2*a*b, 1-2*b*b, 0],
+        [      0,       0, 1]
+    ];
 
 
 // Function: affine2d_skew()
@@ -100,9 +100,9 @@ function affine2d_mirror(v) =
 //   xa = Skew angle, in degrees, in the direction of the X axis.
 //   ya = Skew angle, in degrees, in the direction of the Y axis.
 function affine2d_skew(xa, ya) = [
-	[1,       tan(xa), 0],
-	[tan(ya), 1,       0],
-	[0,       0,       1]
+    [1,       tan(xa), 0],
+    [tan(ya), 1,       0],
+    [0,       0,       1]
 ];
 
 
@@ -114,8 +114,8 @@ function affine2d_skew(xa, ya) = [
 // Arguments:
 //   affines = A list of 3x3 affine2d matrices.
 function affine2d_chain(affines, _m=undef, _i=0) =
-	(_i>=len(affines))? (is_undef(_m)? ident(3) : _m) :
-	affine2d_chain(affines, _m=(is_undef(_m)? affines[_i] : affines[_i] * _m), _i=_i+1);
+    (_i>=len(affines))? (is_undef(_m)? ident(3) : _m) :
+    affine2d_chain(affines, _m=(is_undef(_m)? affines[_i] : affines[_i] * _m), _i=_i+1);
 
 
 
@@ -133,10 +133,10 @@ function affine3d_identity() = ident(4);
 // Arguments:
 //   v = 3D offset to translate by.  [X,Y,Z]
 function affine3d_translate(v) = [
-	[1, 0, 0, v.x],
-	[0, 1, 0, v.y],
-	[0, 0, 1, v.z],
-	[0 ,0, 0,   1]
+    [1, 0, 0, v.x],
+    [0, 1, 0, v.y],
+    [0, 0, 1, v.z],
+    [0 ,0, 0,   1]
 ];
 
 
@@ -146,10 +146,10 @@ function affine3d_translate(v) = [
 // Arguments:
 //   v = 3D vector of scaling factors.  [X,Y,Z]
 function affine3d_scale(v) = [
-	[v.x,   0,   0, 0],
-	[  0, v.y,   0, 0],
-	[  0,   0, v.z, 0],
-	[  0,   0,   0, 1]
+    [v.x,   0,   0, 0],
+    [  0, v.y,   0, 0],
+    [  0,   0, v.z, 0],
+    [  0,   0,   0, 1]
 ];
 
 
@@ -159,10 +159,10 @@ function affine3d_scale(v) = [
 // Arguments:
 //   ang = number of degrees to rotate.
 function affine3d_xrot(ang) = [
-	[1,        0,         0,   0],
-	[0, cos(ang), -sin(ang),   0],
-	[0, sin(ang),  cos(ang),   0],
-	[0,        0,         0,   1]
+    [1,        0,         0,   0],
+    [0, cos(ang), -sin(ang),   0],
+    [0, sin(ang),  cos(ang),   0],
+    [0,        0,         0,   1]
 ];
 
 
@@ -172,10 +172,10 @@ function affine3d_xrot(ang) = [
 // Arguments:
 //   ang = Number of degrees to rotate.
 function affine3d_yrot(ang) = [
-	[ cos(ang), 0, sin(ang),   0],
-	[        0, 1,        0,   0],
-	[-sin(ang), 0, cos(ang),   0],
-	[        0, 0,        0,   1]
+    [ cos(ang), 0, sin(ang),   0],
+    [        0, 1,        0,   0],
+    [-sin(ang), 0, cos(ang),   0],
+    [        0, 0,        0,   1]
 ];
 
 
@@ -187,10 +187,10 @@ function affine3d_yrot(ang) = [
 // Arguments:
 //   ang = number of degrees to rotate.
 function affine3d_zrot(ang) = [
-	[cos(ang), -sin(ang), 0, 0],
-	[sin(ang),  cos(ang), 0, 0],
-	[       0,         0, 1, 0],
-	[       0,         0, 0, 1]
+    [cos(ang), -sin(ang), 0, 0],
+    [sin(ang),  cos(ang), 0, 0],
+    [       0,         0, 1, 0],
+    [       0,         0, 0, 1]
 ];
 
 
@@ -203,18 +203,18 @@ function affine3d_zrot(ang) = [
 //   u = 3D axis vector to rotate around.
 //   ang = number of degrees to rotate.
 function affine3d_rot_by_axis(u, ang) =
-	approx(ang,0)? affine3d_identity() :
-	let(
-		u = unit(u),
-		c = cos(ang),
-		c2 = 1-c,
-		s = sin(ang)
-	) [
-		[u.x*u.x*c2+c    , u.x*u.y*c2-u.z*s, u.x*u.z*c2+u.y*s, 0],
-		[u.y*u.x*c2+u.z*s, u.y*u.y*c2+c    , u.y*u.z*c2-u.x*s, 0],
-		[u.z*u.x*c2-u.y*s, u.z*u.y*c2+u.x*s, u.z*u.z*c2+c    , 0],
-		[               0,                0,                0, 1]
-	];
+    approx(ang,0)? affine3d_identity() :
+    let(
+        u = unit(u),
+        c = cos(ang),
+        c2 = 1-c,
+        s = sin(ang)
+    ) [
+        [u.x*u.x*c2+c    , u.x*u.y*c2-u.z*s, u.x*u.z*c2+u.y*s, 0],
+        [u.y*u.x*c2+u.z*s, u.y*u.y*c2+c    , u.y*u.z*c2-u.x*s, 0],
+        [u.z*u.x*c2-u.y*s, u.z*u.y*c2+u.x*s, u.z*u.z*c2+c    , 0],
+        [               0,                0,                0, 1]
+    ];
 
 
 // Function: affine3d_rot_from_to()
@@ -226,22 +226,22 @@ function affine3d_rot_by_axis(u, ang) =
 //   from = 3D axis vector to rotate from.
 //   to = 3D axis vector to rotate to.
 function affine3d_rot_from_to(from, to) =
-	let(
-		from = unit(point3d(from)),
-		to = unit(point3d(to))
-	) approx(from,to)? affine3d_identity() :
-	let(
-		u = vector_axis(from,to),
-		ang = vector_angle(from,to),
-		c = cos(ang),
-		c2 = 1-c,
-		s = sin(ang)
-	) [
-		[u.x*u.x*c2+c    , u.x*u.y*c2-u.z*s, u.x*u.z*c2+u.y*s, 0],
-		[u.y*u.x*c2+u.z*s, u.y*u.y*c2+c    , u.y*u.z*c2-u.x*s, 0],
-		[u.z*u.x*c2-u.y*s, u.z*u.y*c2+u.x*s, u.z*u.z*c2+c    , 0],
-		[               0,                0,                0, 1]
-	];
+    let(
+        from = unit(point3d(from)),
+        to = unit(point3d(to))
+    ) approx(from,to)? affine3d_identity() :
+    let(
+        u = vector_axis(from,to),
+        ang = vector_angle(from,to),
+        c = cos(ang),
+        c2 = 1-c,
+        s = sin(ang)
+    ) [
+        [u.x*u.x*c2+c    , u.x*u.y*c2-u.z*s, u.x*u.z*c2+u.y*s, 0],
+        [u.y*u.x*c2+u.z*s, u.y*u.y*c2+c    , u.y*u.z*c2-u.x*s, 0],
+        [u.z*u.x*c2-u.y*s, u.z*u.y*c2+u.x*s, u.z*u.z*c2+c    , 0],
+        [               0,                0,                0, 1]
+    ];
 
 
 // Function: affine_frame_map()
@@ -266,35 +266,35 @@ function affine3d_rot_from_to(from, to) =
 //                  // The next map sends [1,1,0] to [0,1,1] and [-1,1,0] to [0,-1,1]
 //   T = affine_frame_map(x=[0,1,1], y=[0,-1,1]) * affine_frame_map(x=[1,1,0], y=[-1,1,0],reverse=true);
 function affine_frame_map(x,y,z, reverse=false) =
-	assert(num_defined([x,y,z])>=2, "Must define at least two inputs")
-	let(
-		xvalid = is_undef(x) || (is_vector(x) && len(x)==3),
-		yvalid = is_undef(y) || (is_vector(y) && len(y)==3),
-		zvalid = is_undef(z) || (is_vector(z) && len(z)==3)
-	)
-	assert(xvalid,"Input x must be a length 3 vector")
-	assert(yvalid,"Input y must be a length 3 vector")
-	assert(zvalid,"Input z must be a length 3 vector")
-	let(
-		x = is_undef(x)? undef : unit(x),
-		y = is_undef(y)? undef : unit(y),
-		z = is_undef(z)? undef : unit(z),
-		map = is_undef(x)? [cross(y,z), y, z] :
-			is_undef(y)? [x, cross(z,x), z] :
-			is_undef(z)? [x, y, cross(x,y)] :
-			[x, y, z]
-	)
-	reverse? (
-		let(
-			ocheck = (
-				approx(map[0]*map[1],0) &&
-				approx(map[0]*map[2],0) &&
-				approx(map[1]*map[2],0)
-			)
-		)
-		assert(ocheck, "Inputs must be orthogonal when reverse==true")
-		affine2d_to_3d(map)
-	) : affine2d_to_3d(transpose(map));
+    assert(num_defined([x,y,z])>=2, "Must define at least two inputs")
+    let(
+        xvalid = is_undef(x) || (is_vector(x) && len(x)==3),
+        yvalid = is_undef(y) || (is_vector(y) && len(y)==3),
+        zvalid = is_undef(z) || (is_vector(z) && len(z)==3)
+    )
+    assert(xvalid,"Input x must be a length 3 vector")
+    assert(yvalid,"Input y must be a length 3 vector")
+    assert(zvalid,"Input z must be a length 3 vector")
+    let(
+        x = is_undef(x)? undef : unit(x),
+        y = is_undef(y)? undef : unit(y),
+        z = is_undef(z)? undef : unit(z),
+        map = is_undef(x)? [cross(y,z), y, z] :
+            is_undef(y)? [x, cross(z,x), z] :
+            is_undef(z)? [x, y, cross(x,y)] :
+            [x, y, z]
+    )
+    reverse? (
+        let(
+            ocheck = (
+                approx(map[0]*map[1],0) &&
+                approx(map[0]*map[2],0) &&
+                approx(map[1]*map[2],0)
+            )
+        )
+        assert(ocheck, "Inputs must be orthogonal when reverse==true")
+        affine2d_to_3d(map)
+    ) : affine2d_to_3d(transpose(map));
 
 
 
@@ -306,15 +306,15 @@ function affine_frame_map(x,y,z, reverse=false) =
 // Arguments:
 //   v = The normal vector of the plane to reflect across.
 function affine3d_mirror(v) =
-	let(
-		v=unit(point3d(v)),
-		a=v.x, b=v.y, c=v.z
-	) [
-		[1-2*a*a,  -2*a*b,  -2*a*c, 0],
-		[ -2*b*a, 1-2*b*b,  -2*b*c, 0],
-		[ -2*c*a,  -2*c*b, 1-2*c*c, 0],
-		[      0,       0,       0, 1]
-	];
+    let(
+        v=unit(point3d(v)),
+        a=v.x, b=v.y, c=v.z
+    ) [
+        [1-2*a*a,  -2*a*b,  -2*a*c, 0],
+        [ -2*b*a, 1-2*b*b,  -2*b*c, 0],
+        [ -2*c*a,  -2*c*b, 1-2*c*c, 0],
+        [      0,       0,       0, 1]
+    ];
 
 
 // Function: affine3d_skew()
@@ -330,10 +330,10 @@ function affine3d_mirror(v) =
 //   szx = Skew factor multiplier for skewing along the Z axis as you get farther from the X axis.  Default: 0
 //   szy = Skew factor multiplier for skewing along the Z axis as you get farther from the Y axis.  Default: 0
 function affine3d_skew(sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0) = [
-	[  1, sxy, sxz, 0],
-	[syx,   1, syz, 0],
-	[szx, szy,   1, 0],
-	[  0,   0,   0, 1]
+    [  1, sxy, sxz, 0],
+    [syx,   1, syz, 0],
+    [szx, szy,   1, 0],
+    [  0,   0,   0, 1]
 ];
 
 
@@ -346,10 +346,10 @@ function affine3d_skew(sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0) = [
 //   xa = Skew angle, in degrees, in the direction of the X axis.
 //   ya = Skew angle, in degrees, in the direction of the Y axis.
 function affine3d_skew_xy(xa, ya) = [
-	[1, 0, tan(xa), 0],
-	[0, 1, tan(ya), 0],
-	[0, 0,       1, 0],
-	[0, 0,       0, 1]
+    [1, 0, tan(xa), 0],
+    [0, 1, tan(ya), 0],
+    [0, 0,       1, 0],
+    [0, 0,       0, 1]
 ];
 
 
@@ -362,10 +362,10 @@ function affine3d_skew_xy(xa, ya) = [
 //   xa = Skew angle, in degrees, in the direction of the X axis.
 //   za = Skew angle, in degrees, in the direction of the Z axis.
 function affine3d_skew_xz(xa, za) = [
-	[1, tan(xa), 0, 0],
-	[0,       1, 0, 0],
-	[0, tan(za), 1, 0],
-	[0,       0, 0, 1]
+    [1, tan(xa), 0, 0],
+    [0,       1, 0, 0],
+    [0, tan(za), 1, 0],
+    [0,       0, 0, 1]
 ];
 
 
@@ -378,10 +378,10 @@ function affine3d_skew_xz(xa, za) = [
 //   ya = Skew angle, in degrees, in the direction of the Y axis.
 //   za = Skew angle, in degrees, in the direction of the Z axis.
 function affine3d_skew_yz(ya, za) = [
-	[      1, 0, 0, 0],
-	[tan(ya), 1, 0, 0],
-	[tan(za), 0, 1, 0],
-	[      0, 0, 0, 1]
+    [      1, 0, 0, 0],
+    [tan(ya), 1, 0, 0],
+    [tan(za), 0, 1, 0],
+    [      0, 0, 0, 1]
 ];
 
 
@@ -393,8 +393,8 @@ function affine3d_skew_yz(ya, za) = [
 // Arguments:
 //   affines = A list of 4x4 affine3d matrices.
 function affine3d_chain(affines, _m=undef, _i=0) =
-	(_i>=len(affines))? (is_undef(_m)? ident(4) : _m) :
-	affine3d_chain(affines, _m=(is_undef(_m)? affines[_i] : affines[_i] * _m), _i=_i+1);
+    (_i>=len(affines))? (is_undef(_m)? ident(4) : _m) :
+    affine3d_chain(affines, _m=(is_undef(_m)? affines[_i] : affines[_i] * _m), _i=_i+1);
 
 
 // Function: apply()
@@ -464,4 +464,4 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

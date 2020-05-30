@@ -35,11 +35,11 @@ module no_children(count) {
 //   msg = The message to print.
 //   pfx = The prefix to print before `msg`.  Default: `ERROR`
 module echo_error(msg, pfx="ERROR") {
-	echo(str("<p style=\"background-color: #ffb0b0\"><b>", pfx, ":</b> ", msg, "</p>"));
+    echo(str("<p style=\"background-color: #ffb0b0\"><b>", pfx, ":</b> ", msg, "</p>"));
 }
 
 function echo_error(msg, pfx="ERROR") =
-	echo(str("<p style=\"background-color: #ffb0b0\"><b>", pfx, ":</b> ", msg, "</p>"));
+    echo(str("<p style=\"background-color: #ffb0b0\"><b>", pfx, ":</b> ", msg, "</p>"));
 
 
 // Function&Module: echo_warning()
@@ -52,11 +52,11 @@ function echo_error(msg, pfx="ERROR") =
 //   msg = The message to print.
 //   pfx = The prefix to print before `msg`.  Default: `WARNING`
 module echo_warning(msg, pfx="WARNING") {
-	echo(str("<p style=\"background-color: #ffffb0\"><b>", pfx, ":</b> ", msg, "</p>"));
+    echo(str("<p style=\"background-color: #ffffb0\"><b>", pfx, ":</b> ", msg, "</p>"));
 }
 
 function echo_warning(msg, pfx="WARNING") =
-	echo(str("<p style=\"background-color: #ffffb0\"><b>", pfx, ":</b> ", msg, "</p>"));
+    echo(str("<p style=\"background-color: #ffffb0\"><b>", pfx, ":</b> ", msg, "</p>"));
 
 
 // Function&Module: deprecate()
@@ -69,25 +69,25 @@ function echo_warning(msg, pfx="WARNING") =
 //   name = The name of the module that is deprecated.
 //   suggest = If given, the module to recommend using instead.
 module deprecate(name, suggest=undef) {
-	echo_warning(pfx="DEPRECATED",
-		str(
-			"`<code>", name, "</code>` is deprecated and should not be used.",
-			is_undef(suggest)? "" : str(
-				"  You should use `<code>", suggest, "</code>` instead."
-			)
-		)
-	);
+    echo_warning(pfx="DEPRECATED",
+        str(
+            "`<code>", name, "</code>` is deprecated and should not be used.",
+            is_undef(suggest)? "" : str(
+                "  You should use `<code>", suggest, "</code>` instead."
+            )
+        )
+    );
 }
 
 function deprecate(name, suggest=undef) =
-	echo_warning(pfx="DEPRECATED",
-		str(
-			"`<code>", name, "</code>` is deprecated and should not be used.",
-			is_undef(suggest)? "" : str(
-				"  You should use `<code>", suggest, "</code>` instead."
-			)
-		)
-	);
+    echo_warning(pfx="DEPRECATED",
+        str(
+            "`<code>", name, "</code>` is deprecated and should not be used.",
+            is_undef(suggest)? "" : str(
+                "  You should use `<code>", suggest, "</code>` instead."
+            )
+        )
+    );
 
 
 // Function&Module: deprecate_argument()
@@ -101,26 +101,26 @@ function deprecate(name, suggest=undef) =
 //   arg = The name of the deprecated argument.
 //   suggest = If given, the argument to recommend using instead.
 module deprecate_argument(name, arg, suggest=undef) {
-	echo_warning(pfx="DEPRECATED ARG", str(
-		"In `<code>", name, "</code>`, ",
-		"the argument `<code>", arg, "</code>` ",
-		"is deprecated and should not be used.",
-		is_undef(suggest)? "" : str(
-			"  You should use `<code>", suggest, "</code>` instead."
-		)
-	));
+    echo_warning(pfx="DEPRECATED ARG", str(
+        "In `<code>", name, "</code>`, ",
+        "the argument `<code>", arg, "</code>` ",
+        "is deprecated and should not be used.",
+        is_undef(suggest)? "" : str(
+            "  You should use `<code>", suggest, "</code>` instead."
+        )
+    ));
 }
 
 function deprecate_argument(name, arg, suggest=undef) =
-	echo_warning(pfx="DEPRECATED ARG", str(
-		"In `<code>", name, "</code>`, ",
-		"the argument `<code>", arg, "</code>` ",
-		"is deprecated and should not be used.",
-		is_undef(suggest)? "" : str(
-			"  You should use `<code>", suggest, "</code>` instead."
-		)
-	));
+    echo_warning(pfx="DEPRECATED ARG", str(
+        "In `<code>", name, "</code>`, ",
+        "the argument `<code>", arg, "</code>` ",
+        "is deprecated and should not be used.",
+        is_undef(suggest)? "" : str(
+            "  You should use `<code>", suggest, "</code>` instead."
+        )
+    ));
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

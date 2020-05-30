@@ -17,12 +17,12 @@
 // Description:
 //   Returns a string representing the type of the value.  One of "undef", "boolean", "number", "string", "list", or "range"
 function typeof(x) =
-	is_undef(x)? "undef" :
-	is_bool(x)? "boolean" :
-	is_num(x)? "number" :
-	is_string(x)? "string" :
-	is_list(x)? "list" :
-	"range";
+    is_undef(x)? "undef" :
+    is_bool(x)? "boolean" :
+    is_num(x)? "number" :
+    is_string(x)? "string" :
+    is_list(x)? "list" :
+    "range";
 
 
 // Function: is_type()
@@ -43,9 +43,9 @@ function typeof(x) =
 //   is_str3 = is_type(["foo"], "string");  // Returns: false
 //   is_str4 = is_type(3, "string");  // Returns: false
 function is_type(x,types) =
-	is_list(types)? in_list(typeof(x),types) :
-	is_string(types)? typeof(x) == types :
-	assert(is_list(types)||is_string(types));
+    is_list(types)? in_list(typeof(x),types) :
+    is_string(types)? typeof(x) == types :
+    assert(is_list(types)||is_string(types));
 
 
 // Function: is_def()
@@ -100,9 +100,9 @@ function is_range(x) = is_num(x[0]) && !is_list(x);
 //   is_list_of([[1,[3,4]], [4,[5,6]]], [1,[2,3]]);    // Returne true
 //   is_list_of([[1,[3,INF]], [4,[5,6]]], [1,[2,3]]);  // Returne false
 function is_list_of(list,pattern) =
-	let(pattern = 0*pattern)
-	is_list(list) &&
-	[]==[for(entry=list) if (entry*0 != pattern) entry];
+    let(pattern = 0*pattern)
+    is_list(list) &&
+    []==[for(entry=list) if (entry*0 != pattern) entry];
 
 
 // Function: is_consistent()
@@ -153,13 +153,13 @@ function default(v,dflt=undef) = is_undef(v)? dflt : v;
 //   v = The list whose items are being checked.
 //   recursive = If true, sublists are checked recursively for defined values.  The first sublist that has a defined item is returned.
 function first_defined(v,recursive=false,_i=0) =
-	_i<len(v) && (
-		is_undef(v[_i]) || (
-			recursive &&
-			is_list(v[_i]) &&
-			is_undef(first_defined(v[_i],recursive=recursive))
-		)
-	)? first_defined(v,recursive=recursive,_i=_i+1) : v[_i];
+    _i<len(v) && (
+        is_undef(v[_i]) || (
+            recursive &&
+            is_list(v[_i]) &&
+            is_undef(first_defined(v[_i],recursive=recursive))
+        )
+    )? first_defined(v,recursive=recursive,_i=_i+1) : v[_i];
 
 
 // Function: one_defined()
@@ -225,9 +225,9 @@ function all_defined(v,recursive=false) = max([for (x=v) is_undef(x)||(recursive
 //   uncentered = The value to return if `center` is not `undef` and evaluates as false.  Default: ALLNEG
 //   dflt = The default value to return if both `anchor` and `center` are `undef`.  Default: `CENTER`
 function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
-	!is_undef(center)? (center? CENTER : uncentered) :
-	!is_undef(anchor)? anchor :
-	dflt;
+    !is_undef(center)? (center? CENTER : uncentered) :
+    !is_undef(anchor)? anchor :
+    dflt;
 
 
 // Function: get_radius()
@@ -251,13 +251,13 @@ function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
 //   d = Most general diameter.
 //   dflt = Value to return if all other values given are `undef`.
 function get_radius(r1=undef, r2=undef, r=undef, d1=undef, d2=undef, d=undef, dflt=undef) = (
-	!is_undef(r1)? assert(is_undef(r2)&&is_undef(d1)&&is_undef(d2), "Conflicting or redundant radius/diameter arguments given.") r1 :
-	!is_undef(r2)? assert(is_undef(d1)&&is_undef(d2), "Conflicting or redundant radius/diameter arguments given.") r2 :
-	!is_undef(d1)? d1/2 :
-	!is_undef(d2)? d2/2 :
-	!is_undef(r)? assert(is_undef(d), "Conflicting or redundant radius/diameter arguments given.") r :
-	!is_undef(d)? d/2 :
-	dflt
+    !is_undef(r1)? assert(is_undef(r2)&&is_undef(d1)&&is_undef(d2), "Conflicting or redundant radius/diameter arguments given.") r1 :
+    !is_undef(r2)? assert(is_undef(d1)&&is_undef(d2), "Conflicting or redundant radius/diameter arguments given.") r2 :
+    !is_undef(d1)? d1/2 :
+    !is_undef(d2)? d2/2 :
+    !is_undef(r)? assert(is_undef(d), "Conflicting or redundant radius/diameter arguments given.") r :
+    !is_undef(d)? d/2 :
+    dflt
 );
 
 // Function: get_height()
@@ -289,9 +289,9 @@ function get_height(h=undef,l=undef,height=undef,dflt=undef) =
 //   v = Value to return vector from.
 //   dflt = Default value to set empty vector parts from.
 function scalar_vec3(v, dflt=undef) =
-	is_undef(v)? undef :
-	is_list(v)? [for (i=[0:2]) default(v[i], default(dflt, 0))] :
-	!is_undef(dflt)? [v,dflt,dflt] : [v,v,v];
+    is_undef(v)? undef :
+    is_list(v)? [for (i=[0:2]) default(v[i], default(dflt, 0))] :
+    !is_undef(dflt)? [v,dflt,dflt] : [v,v,v];
 
 
 // Function: segs()
@@ -302,8 +302,8 @@ function scalar_vec3(v, dflt=undef) =
 // Arguments:
 //   r = Radius of circle to get the number of segments for.
 function segs(r) =
-	$fn>0? ($fn>3? $fn : 3) :
-	ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs)));
+    $fn>0? ($fn>3? $fn : 3) :
+    ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs)));
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

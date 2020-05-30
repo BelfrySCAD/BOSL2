@@ -25,10 +25,10 @@ $cubetruss_clip_thickness = 1.6;
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 function cubetruss_dist(cubes=0, gaps=0, size=undef, strut=undef) =
-	let(
-		size = is_undef(size)? $cubetruss_size : size,
-		strut = is_undef(strut)? $cubetruss_strut_size : strut
-	) cubes*(size-strut)+gaps*strut;
+    let(
+        size = is_undef(size)? $cubetruss_size : size,
+        strut = is_undef(strut)? $cubetruss_strut_size : strut
+    ) cubes*(size-strut)+gaps*strut;
 
 
 // Module: cubetruss_segment()
@@ -49,52 +49,52 @@ function cubetruss_dist(cubes=0, gaps=0, size=undef, strut=undef) =
 //   cubetruss_segment(strut=4);
 //   cubetruss_segment(size=40);
 module cubetruss_segment(size=undef, strut=undef, bracing=undef, anchor=CENTER, spin=0, orient=UP) {
-	size = is_undef(size)? $cubetruss_size : size;
-	strut = is_undef(strut)? $cubetruss_strut_size : strut;
-	bracing = is_undef(bracing)? $cubetruss_bracing : bracing;
-	h = size;
-	crossthick = strut/sqrt(2);
-	voffset = 0.333;
-	attachable(anchor,spin,orient, size=[size,size,size]) {
-		render(convexity=10)
-		union() {
-			difference() {
-				// Start with a cube.
-				cube([size, size, h], center=true);
+    size = is_undef(size)? $cubetruss_size : size;
+    strut = is_undef(strut)? $cubetruss_strut_size : strut;
+    bracing = is_undef(bracing)? $cubetruss_bracing : bracing;
+    h = size;
+    crossthick = strut/sqrt(2);
+    voffset = 0.333;
+    attachable(anchor,spin,orient, size=[size,size,size]) {
+        render(convexity=10)
+        union() {
+            difference() {
+                // Start with a cube.
+                cube([size, size, h], center=true);
 
-				cube([size-strut*2, size-strut*2, h-strut*2], center=true);
+                cube([size-strut*2, size-strut*2, h-strut*2], center=true);
 
-				// Hollow out octogons in X and Y axes.
-				zrot_copies([0,90]) {
-					xrot(90) zrot(180/8) cylinder(h=max(h,size)+1, d=(min(h,size)-2*strut)/cos(180/8), center=true, $fn=8);
-				}
+                // Hollow out octogons in X and Y axes.
+                zrot_copies([0,90]) {
+                    xrot(90) zrot(180/8) cylinder(h=max(h,size)+1, d=(min(h,size)-2*strut)/cos(180/8), center=true, $fn=8);
+                }
 
-				// Hollow out octogon vertically.
-				zrot(180/8) cylinder(h=max(h,size)+1, d=(min(h,size)-2*strut)/cos(180/8), center=true, $fn=8);
-			}
+                // Hollow out octogon vertically.
+                zrot(180/8) cylinder(h=max(h,size)+1, d=(min(h,size)-2*strut)/cos(180/8), center=true, $fn=8);
+            }
 
-			// Interior cross-supports
-			if (bracing) {
-				for (i = [-1,1]) {
-					zrot(i*45) {
-						difference() {
-							cube([crossthick, (size-strut)*sqrt(2), h], center=true);
-							up(i*voffset) {
-								yscale(1.3) {
-									yrot(90) {
-										zrot(180/6) {
-											cylinder(h=crossthick+1, d=(min(h,size)-2*strut)/cos(180/6)-2*voffset, center=true, $fn=6);
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		children();
-	}
+            // Interior cross-supports
+            if (bracing) {
+                for (i = [-1,1]) {
+                    zrot(i*45) {
+                        difference() {
+                            cube([crossthick, (size-strut)*sqrt(2), h], center=true);
+                            up(i*voffset) {
+                                yscale(1.3) {
+                                    yrot(90) {
+                                        zrot(180/6) {
+                                            cylinder(h=crossthick+1, d=(min(h,size)-2*strut)/cos(180/6)-2*voffset, center=true, $fn=6);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        children();
+    }
 }
 
 
@@ -116,47 +116,47 @@ module cubetruss_segment(size=undef, strut=undef, bracing=undef, anchor=CENTER, 
 //   cubetruss_clip(extents=1);
 //   cubetruss_clip(clipthick=2.5);
 module cubetruss_clip(extents=1, size=undef, strut=undef, clipthick=undef, anchor=CENTER, spin=0, orient=UP) {
-	size = is_undef(size)? $cubetruss_size : size;
-	strut = is_undef(strut)? $cubetruss_strut_size : strut;
-	clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
-	cliplen = strut * 2.6;
-	clipheight = min(size+strut, size/3+2*strut*2.6);
-	clipsize = 0.5;
-	s = [extents*(size-strut)+strut+2*clipthick, strut*2, clipheight-2*strut];
-	attachable(anchor,spin,orient, size=s) {
-		xflip_copy(offset=(extents*(size-strut)+strut)/2) {
-			difference() {
-				union() {
-					difference() {
-						right(clipthick/2-0.01) {
-							back(strut) {
-								difference() {
-									xrot(90) prismoid([clipthick, clipheight], [clipthick, clipheight-cliplen*2], h=cliplen);
-									right(clipthick/2) chamfer_mask_z(l=clipheight+0.1, chamfer=clipthick);
-								}
-							}
-						}
-						fwd(strut*3/2) {
-							cube([$slop, strut*3, size], center=true);
-						}
-					}
-					right($slop/2+0.01) {
-						fwd(strut*1.25+$slop) {
-							yrot(-90) prismoid([clipheight-cliplen*2, strut/2], [clipheight-cliplen*2-2*clipsize, strut/2], h=clipsize+0.01);
-						}
-					}
-				}
-				fwd(strut*1.6) {
-					left(clipsize) {
-						yscale(1.5) chamfer_mask_z(l=size+1, chamfer=clipsize+clipthick/3);
-					}
-				}
-				zcopies(clipheight-strut) cube([clipthick*3, cliplen*2, strut], center=true);
-				zcopies(clipheight-2*strut) right(clipthick) chamfer_mask_y(l=cliplen*2, chamfer=clipthick);
-			}
-		}
-		children();
-	}
+    size = is_undef(size)? $cubetruss_size : size;
+    strut = is_undef(strut)? $cubetruss_strut_size : strut;
+    clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
+    cliplen = strut * 2.6;
+    clipheight = min(size+strut, size/3+2*strut*2.6);
+    clipsize = 0.5;
+    s = [extents*(size-strut)+strut+2*clipthick, strut*2, clipheight-2*strut];
+    attachable(anchor,spin,orient, size=s) {
+        xflip_copy(offset=(extents*(size-strut)+strut)/2) {
+            difference() {
+                union() {
+                    difference() {
+                        right(clipthick/2-0.01) {
+                            back(strut) {
+                                difference() {
+                                    xrot(90) prismoid([clipthick, clipheight], [clipthick, clipheight-cliplen*2], h=cliplen);
+                                    right(clipthick/2) chamfer_mask_z(l=clipheight+0.1, chamfer=clipthick);
+                                }
+                            }
+                        }
+                        fwd(strut*3/2) {
+                            cube([$slop, strut*3, size], center=true);
+                        }
+                    }
+                    right($slop/2+0.01) {
+                        fwd(strut*1.25+$slop) {
+                            yrot(-90) prismoid([clipheight-cliplen*2, strut/2], [clipheight-cliplen*2-2*clipsize, strut/2], h=clipsize+0.01);
+                        }
+                    }
+                }
+                fwd(strut*1.6) {
+                    left(clipsize) {
+                        yscale(1.5) chamfer_mask_z(l=size+1, chamfer=clipsize+clipthick/3);
+                    }
+                }
+                zcopies(clipheight-strut) cube([clipthick*3, cliplen*2, strut], center=true);
+                zcopies(clipheight-2*strut) right(clipthick) chamfer_mask_y(l=cliplen*2, chamfer=clipthick);
+            }
+        }
+        children();
+    }
 }
 
 
@@ -177,60 +177,60 @@ module cubetruss_clip(extents=1, size=undef, strut=undef, clipthick=undef, ancho
 //   cubetruss_foot(w=1);
 //   cubetruss_foot(w=3);
 module cubetruss_foot(w=1, size=undef, strut=undef, clipthick=undef, anchor=CENTER, spin=0, orient=UP) {
-	size = is_undef(size)? $cubetruss_size : size;
-	strut = is_undef(strut)? $cubetruss_strut_size : strut;
-	clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
-	clipsize = 0.5;
-	wall_h = strut+clipthick*1.5;
-	cyld = (size-2*strut)/cos(180/8);
-	s = [w*(size-strut)+strut+2*clipthick, size-2*strut, strut+clipthick];
-	attachable(anchor,spin,orient, size=s, offset=[0,0,(strut-clipthick)/2]) {
-		down(clipthick) {
-			// Base
-			up(clipthick/2) {
-				cuboid([w*(size-strut)+strut+2*clipthick, size-2*strut, clipthick], chamfer=strut, edges=edges("Z"));
-			}
+    size = is_undef(size)? $cubetruss_size : size;
+    strut = is_undef(strut)? $cubetruss_strut_size : strut;
+    clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
+    clipsize = 0.5;
+    wall_h = strut+clipthick*1.5;
+    cyld = (size-2*strut)/cos(180/8);
+    s = [w*(size-strut)+strut+2*clipthick, size-2*strut, strut+clipthick];
+    attachable(anchor,spin,orient, size=s, offset=[0,0,(strut-clipthick)/2]) {
+        down(clipthick) {
+            // Base
+            up(clipthick/2) {
+                cuboid([w*(size-strut)+strut+2*clipthick, size-2*strut, clipthick], chamfer=strut, edges=edges("Z"));
+            }
 
-			// Walls
-			xcopies(w*(size-strut)+strut+clipthick) {
-				up(clipthick-0.01) {
-					prismoid([clipthick, (size-4*strut)], [clipthick, size/3.5], h=wall_h, anchor=BOT);
-				}
-			}
+            // Walls
+            xcopies(w*(size-strut)+strut+clipthick) {
+                up(clipthick-0.01) {
+                    prismoid([clipthick, (size-4*strut)], [clipthick, size/3.5], h=wall_h, anchor=BOT);
+                }
+            }
 
-			// Horiz Wall Clips
-			up(clipthick+strut+$slop*2) {
-				xcopies(w*(size-strut)+strut) {
-					prismoid([clipsize*2, size/3.5], [0.1, size/3.5], h=clipsize*3, anchor=BOT);
-				}
-			}
+            // Horiz Wall Clips
+            up(clipthick+strut+$slop*2) {
+                xcopies(w*(size-strut)+strut) {
+                    prismoid([clipsize*2, size/3.5], [0.1, size/3.5], h=clipsize*3, anchor=BOT);
+                }
+            }
 
-			// Middle plugs
-			for (xcol = [0:w-1]) {
-				right((xcol-(w-1)/2)*(size-strut)) {
-					difference() {
-						// Start with octagon to fit sides.
-						up(clipthick-0.01) {
-							zrot(180/8) cylinder(h=strut, d1=cyld-4*$slop, d2=cyld-4*$slop-1, center=false, $fn=8);
-						}
+            // Middle plugs
+            for (xcol = [0:w-1]) {
+                right((xcol-(w-1)/2)*(size-strut)) {
+                    difference() {
+                        // Start with octagon to fit sides.
+                        up(clipthick-0.01) {
+                            zrot(180/8) cylinder(h=strut, d1=cyld-4*$slop, d2=cyld-4*$slop-1, center=false, $fn=8);
+                        }
 
-						// Bevel to fit.
-						up(clipthick+strut) {
-							ycopies(size-2*strut-4*$slop) {
-								chamfer_mask_x(l=size-strut, chamfer=strut*2/3);
-							}
-						}
+                        // Bevel to fit.
+                        up(clipthick+strut) {
+                            ycopies(size-2*strut-4*$slop) {
+                                chamfer_mask_x(l=size-strut, chamfer=strut*2/3);
+                            }
+                        }
 
-						// Cut out X for possible top mount.
-						zrot_copies([-45, 45]) {
-							cube([size*3, strut/sqrt(2)+2*$slop, size*3], center=true);
-						}
-					}
-				}
-			}
-		}
-		children();
-	}
+                        // Cut out X for possible top mount.
+                        zrot_copies([-45, 45]) {
+                            cube([size*3, strut/sqrt(2)+2*$slop, size*3], center=true);
+                        }
+                    }
+                }
+            }
+        }
+        children();
+    }
 }
 
 
@@ -253,49 +253,49 @@ module cubetruss_foot(w=1, size=undef, strut=undef, clipthick=undef, anchor=CENT
 //   cubetruss_joiner(w=1, vert=true);
 //   cubetruss_joiner(w=2, vert=true, anchor=BOT);
 module cubetruss_joiner(w=1, vert=true, size=undef, strut=undef, clipthick=undef, anchor=CENTER, spin=0, orient=UP) {
-	size = is_undef(size)? $cubetruss_size : size;
-	strut = is_undef(strut)? $cubetruss_strut_size : strut;
-	clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
-	clipsize = 0.5;
-	s = [cubetruss_dist(w,1)+2*clipthick, cubetruss_dist(2,0)-0.1, strut+clipthick];
-	attachable(anchor,spin,orient, size=s, offset=[0,0,-(clipthick-strut)/2]) {
-		down(clipthick) {
-			// Base
-			cube([w*(size-strut)+strut+2*clipthick, size, clipthick], anchor=BOT);
+    size = is_undef(size)? $cubetruss_size : size;
+    strut = is_undef(strut)? $cubetruss_strut_size : strut;
+    clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
+    clipsize = 0.5;
+    s = [cubetruss_dist(w,1)+2*clipthick, cubetruss_dist(2,0)-0.1, strut+clipthick];
+    attachable(anchor,spin,orient, size=s, offset=[0,0,-(clipthick-strut)/2]) {
+        down(clipthick) {
+            // Base
+            cube([w*(size-strut)+strut+2*clipthick, size, clipthick], anchor=BOT);
 
-			xcopies(w*(size-strut)+strut+clipthick) {
-				cube([clipthick, size, clipthick+strut*3/4], anchor=BOT);
-			}
+            xcopies(w*(size-strut)+strut+clipthick) {
+                cube([clipthick, size, clipthick+strut*3/4], anchor=BOT);
+            }
 
-			// Use feet
-			ycopies(size) {
-				cubetruss_foot(w=w, size=size, strut=strut, clipthick=clipthick, anchor=BOT);
-			}
+            // Use feet
+            ycopies(size) {
+                cubetruss_foot(w=w, size=size, strut=strut, clipthick=clipthick, anchor=BOT);
+            }
 
-			if (vert) {
-				// Vert Walls
-				xcopies(w*(size-strut)+strut+clipthick) {
-					up(clipthick-0.01) {
-						prismoid([clipthick, size], [clipthick, 2*strut+2*clipthick], h=size*0.6, anchor=BOT);
-					}
-				}
+            if (vert) {
+                // Vert Walls
+                xcopies(w*(size-strut)+strut+clipthick) {
+                    up(clipthick-0.01) {
+                        prismoid([clipthick, size], [clipthick, 2*strut+2*clipthick], h=size*0.6, anchor=BOT);
+                    }
+                }
 
-				// Vert Wall Clips
-				up(size/2) {
-					xflip_copy(offset=(w*(size-strut)+strut+0.02)/2) {
-						yflip_copy(offset=strut+$slop/2) {
-							yrot(-90) {
-								back_half() {
-									prismoid([size/3.5, clipthick*2], [size/3.5-4*2*clipsize, 0.1], h=2*clipsize, anchor=BOT);
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		children();
-	}
+                // Vert Wall Clips
+                up(size/2) {
+                    xflip_copy(offset=(w*(size-strut)+strut+0.02)/2) {
+                        yflip_copy(offset=strut+$slop/2) {
+                            yrot(-90) {
+                                back_half() {
+                                    prismoid([size/3.5, clipthick*2], [size/3.5-4*2*clipsize, 0.1], h=2*clipsize, anchor=BOT);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        children();
+    }
 }
 
 
@@ -314,29 +314,29 @@ module cubetruss_joiner(w=1, vert=true, size=undef, strut=undef, clipthick=undef
 //   cubetruss_uclip(dual=false);
 //   cubetruss_uclip(dual=true);
 module cubetruss_uclip(dual=true, size=undef, strut=undef, clipthick=undef, anchor=CENTER, spin=0, orient=UP) {
-	size = is_undef(size)? $cubetruss_size : size;
-	strut = is_undef(strut)? $cubetruss_strut_size : strut;
-	clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
-	clipsize = 0.5;
-	s = [(dual?2:1)*strut+2*clipthick+$slop, strut+2*clipthick, size/3.5];
-	attachable(anchor,spin,orient, size=s) {
-		union() {
-			difference() {
-				cube(s, center=true);
-				back(clipthick) cube([(dual?2:1)*strut+$slop, strut+2*clipthick, size+1], center=true);
-			}
-			back((strut+$slop)/2) {
-				xflip_copy(offset=(dual?1:0.5)*strut+$slop/2) {
-					yrot(-90) {
-						back_half() {
-							prismoid([size/3.5, clipthick*1.87], [size/3.5, 0.1], h=clipsize, anchor=BOT);
-						}
-					}
-				}
-			}
-		}
-		children();
-	}
+    size = is_undef(size)? $cubetruss_size : size;
+    strut = is_undef(strut)? $cubetruss_strut_size : strut;
+    clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
+    clipsize = 0.5;
+    s = [(dual?2:1)*strut+2*clipthick+$slop, strut+2*clipthick, size/3.5];
+    attachable(anchor,spin,orient, size=s) {
+        union() {
+            difference() {
+                cube(s, center=true);
+                back(clipthick) cube([(dual?2:1)*strut+$slop, strut+2*clipthick, size+1], center=true);
+            }
+            back((strut+$slop)/2) {
+                xflip_copy(offset=(dual?1:0.5)*strut+$slop/2) {
+                    yrot(-90) {
+                        back_half() {
+                            prismoid([size/3.5, clipthick*1.87], [size/3.5, 0.1], h=clipsize, anchor=BOT);
+                        }
+                    }
+                }
+            }
+        }
+        children();
+    }
 }
 
 
@@ -363,48 +363,48 @@ module cubetruss_uclip(dual=true, size=undef, strut=undef, clipthick=undef, anch
 //   cubetruss(extents=[1,4,2]);
 //   cubetruss(extents=[1,4,2], bracing=false);
 module cubetruss(extents=6, clips=[], bracing=undef, size=undef, strut=undef, clipthick=undef, anchor=CENTER, spin=0, orient=UP) {
-	clips = is_vector(clips)? [clips] : clips;
-	size = is_undef(size)? $cubetruss_size : size;
-	strut = is_undef(strut)? $cubetruss_strut_size : strut;
-	bracing = is_undef(bracing)? $cubetruss_bracing : bracing;
-	clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
-	extents = is_vector(extents)? point3d(extents,fill=1) : [1,extents,1];
-	w = extents[0];
-	l = extents[1];
-	h = extents[2];
-	s = [cubetruss_dist(w,1), cubetruss_dist(l,1), cubetruss_dist(h,1)];
-	attachable(anchor,spin,orient, size=s) {
-		union() {
-			for (zrow = [0:h-1]) {
-				up((zrow-(h-1)/2)*(size-strut)) {
-					for (xcol = [0:w-1]) {
-						right((xcol-(w-1)/2)*(size-strut)) {
-							for (ycol = [0:l-1]) {
-								back((ycol-(l-1)/2)*(size-strut)) {
-									cubetruss_segment(size=size, strut=strut, bracing=bracing);
-								}
-							}
-						}
-					}
-				}
-			}
-			if (clipthick > 0) {
-				for (vec = clips) {
-					exts = vabs(rot(from=FWD, to=vec, p=extents));
-					rot(from=FWD,to=vec) {
-						for (zrow = [0:1:exts.z-1]) {
-							up((zrow-(exts.z-1)/2)*(size-strut)) {
-								fwd((exts.y*(size-strut)+strut)/2) {
-									cubetruss_clip(size=size, strut=strut, extents=exts.x, clipthick=clipthick);
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		children();
-	}
+    clips = is_vector(clips)? [clips] : clips;
+    size = is_undef(size)? $cubetruss_size : size;
+    strut = is_undef(strut)? $cubetruss_strut_size : strut;
+    bracing = is_undef(bracing)? $cubetruss_bracing : bracing;
+    clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
+    extents = is_vector(extents)? point3d(extents,fill=1) : [1,extents,1];
+    w = extents[0];
+    l = extents[1];
+    h = extents[2];
+    s = [cubetruss_dist(w,1), cubetruss_dist(l,1), cubetruss_dist(h,1)];
+    attachable(anchor,spin,orient, size=s) {
+        union() {
+            for (zrow = [0:h-1]) {
+                up((zrow-(h-1)/2)*(size-strut)) {
+                    for (xcol = [0:w-1]) {
+                        right((xcol-(w-1)/2)*(size-strut)) {
+                            for (ycol = [0:l-1]) {
+                                back((ycol-(l-1)/2)*(size-strut)) {
+                                    cubetruss_segment(size=size, strut=strut, bracing=bracing);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (clipthick > 0) {
+                for (vec = clips) {
+                    exts = vabs(rot(from=FWD, to=vec, p=extents));
+                    rot(from=FWD,to=vec) {
+                        for (zrow = [0:1:exts.z-1]) {
+                            up((zrow-(exts.z-1)/2)*(size-strut)) {
+                                fwd((exts.y*(size-strut)+strut)/2) {
+                                    cubetruss_clip(size=size, strut=strut, extents=exts.x, clipthick=clipthick);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        children();
+    }
 }
 
 
@@ -430,53 +430,53 @@ module cubetruss(extents=6, clips=[], bracing=undef, size=undef, strut=undef, cl
 //   cubetruss_corner(extents=[3,0,3,0,2]);
 //   cubetruss_corner(extents=[3,3,3,3,2]);
 module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing=undef, size=undef, strut=undef, clipthick=undef, anchor=CENTER, spin=0, orient=UP) {
-	size = is_undef(size)? $cubetruss_size : size;
-	strut = is_undef(strut)? $cubetruss_strut_size : strut;
-	bracing = is_undef(bracing)? $cubetruss_bracing : bracing;
-	clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
-	exts = is_vector(extents)? list_fit(extents,5,fill=0) : [extents, extents, 0, 0, extents];
-	s = [cubetruss_dist(1+exts[0]+exts[2],1), cubetruss_dist(1+exts[1]+exts[3],1), cubetruss_dist(h+exts[4],1)];
-	offset = [cubetruss_dist(exts[0]-exts[2],0), cubetruss_dist(exts[1]-exts[3],0), cubetruss_dist(exts[4],0)]/2;
-	attachable(anchor,spin,orient, size=s, offset=offset) {
-		union() {
-			for (zcol = [0:h-1]) {
-				up((size-strut+0.01)*zcol) {
-					cubetruss_segment(size=size, strut=strut, bracing=bracing);
-				}
-			}
-			for (dir = [0:3]) {
-				if (exts[dir] != undef && exts[dir] > 0) {
-					zrot(dir*90) {
-						for (zcol = [0:h-1]) {
-							up((size-strut+0.01)*zcol) {
-								for (i = [1:exts[dir]]) {
-									right((size-strut+0.01)*i) cubetruss_segment(size=size, strut=strut, bracing=bracing);
-								}
-								if (clipthick > 0) {
-									right(exts[dir]*(size-strut)+size/2) {
-										zrot(90) cubetruss_clip(size=size, strut=strut, clipthick=clipthick);
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			if (exts[4] != undef && exts[4] > 0) {
-				for (i = [1:exts[4]]) {
-					up((size-strut+0.01)*(i+h-1)) cubetruss_segment(size=size, strut=strut, bracing=bracing);
-				}
-				if (clipthick > 0) {
-					up((exts[4]+h-1)*(size-strut)+size/2) {
-						xrot(-90) cubetruss_clip(size=size, strut=strut, clipthick=clipthick);
-					}
-				}
-			}
-		}
-		children();
-	}
+    size = is_undef(size)? $cubetruss_size : size;
+    strut = is_undef(strut)? $cubetruss_strut_size : strut;
+    bracing = is_undef(bracing)? $cubetruss_bracing : bracing;
+    clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
+    exts = is_vector(extents)? list_fit(extents,5,fill=0) : [extents, extents, 0, 0, extents];
+    s = [cubetruss_dist(1+exts[0]+exts[2],1), cubetruss_dist(1+exts[1]+exts[3],1), cubetruss_dist(h+exts[4],1)];
+    offset = [cubetruss_dist(exts[0]-exts[2],0), cubetruss_dist(exts[1]-exts[3],0), cubetruss_dist(exts[4],0)]/2;
+    attachable(anchor,spin,orient, size=s, offset=offset) {
+        union() {
+            for (zcol = [0:h-1]) {
+                up((size-strut+0.01)*zcol) {
+                    cubetruss_segment(size=size, strut=strut, bracing=bracing);
+                }
+            }
+            for (dir = [0:3]) {
+                if (exts[dir] != undef && exts[dir] > 0) {
+                    zrot(dir*90) {
+                        for (zcol = [0:h-1]) {
+                            up((size-strut+0.01)*zcol) {
+                                for (i = [1:exts[dir]]) {
+                                    right((size-strut+0.01)*i) cubetruss_segment(size=size, strut=strut, bracing=bracing);
+                                }
+                                if (clipthick > 0) {
+                                    right(exts[dir]*(size-strut)+size/2) {
+                                        zrot(90) cubetruss_clip(size=size, strut=strut, clipthick=clipthick);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (exts[4] != undef && exts[4] > 0) {
+                for (i = [1:exts[4]]) {
+                    up((size-strut+0.01)*(i+h-1)) cubetruss_segment(size=size, strut=strut, bracing=bracing);
+                }
+                if (clipthick > 0) {
+                    up((exts[4]+h-1)*(size-strut)+size/2) {
+                        xrot(-90) cubetruss_clip(size=size, strut=strut, clipthick=clipthick);
+                    }
+                }
+            }
+        }
+        children();
+    }
 }
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -81,36 +81,36 @@ include <skin.scad>
 // lookup table or hard coded powers list the code is about twice as fast as the recursive method.
 // Note that everything I tried to simplify or tidy this code made is slower, sometimes a lot slower.
 function bezier_points(curve, u) =
-	is_num(u) ? bezier_points(curve,[u])[0] :
-	let(
-		N = len(curve)-1,
-		M = _bezier_matrix(N)*curve
-	)
-	N==0 ? [for(uval=u)[1]*M] :
-	N==1 ? [for(uval=u)[1, uval]*M] :
-	N==2 ? [for(uval=u)[1, uval, uval*uval]*M] :
-	N==3 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval]*M] :              // It appears that pow() is as fast or faster for powers 5 or above
-	N==4 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval]*M] :
-	N==5 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5)]*M] :
-	N==6 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6)]*M] :
-	N==7 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7)]*M] :
-	N==8 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8)]*M] :
-	N==9 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8), pow(uval,9)]*M] :
-	N==10? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8), pow(uval,9), pow(uval,10)]*M] :
-	/* N>=11 */  [for(uval=u)[for (i=[0:1:N]) pow(uval,i)]*M];
+    is_num(u) ? bezier_points(curve,[u])[0] :
+    let(
+        N = len(curve)-1,
+        M = _bezier_matrix(N)*curve
+    )
+    N==0 ? [for(uval=u)[1]*M] :
+    N==1 ? [for(uval=u)[1, uval]*M] :
+    N==2 ? [for(uval=u)[1, uval, uval*uval]*M] :
+    N==3 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval]*M] :              // It appears that pow() is as fast or faster for powers 5 or above
+    N==4 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval]*M] :
+    N==5 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5)]*M] :
+    N==6 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6)]*M] :
+    N==7 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7)]*M] :
+    N==8 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8)]*M] :
+    N==9 ? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8), pow(uval,9)]*M] :
+    N==10? [for(uval=u)[1, uval, uval*uval, uval*uval*uval, uval*uval*uval*uval, pow(uval,5),pow(uval,6), pow(uval,7), pow(uval,8), pow(uval,9), pow(uval,10)]*M] :
+    /* N>=11 */  [for(uval=u)[for (i=[0:1:N]) pow(uval,i)]*M];
 
 
 // Not public.
 function _signed_pascals_triangle(N,tri=[[-1]]) =
-	len(tri)==N+1 ? tri :
-	let(last=tri[len(tri)-1])
-	_signed_pascals_triangle(N,concat(tri,[[-1, for(i=[0:1:len(tri)-2]) (i%2==1?-1:1)*(abs(last[i])+abs(last[i+1])),len(last)%2==0? -1:1]]));
+    len(tri)==N+1 ? tri :
+    let(last=tri[len(tri)-1])
+    _signed_pascals_triangle(N,concat(tri,[[-1, for(i=[0:1:len(tri)-2]) (i%2==1?-1:1)*(abs(last[i])+abs(last[i+1])),len(last)%2==0? -1:1]]));
 
 
 // Not public.
 function _compute_bezier_matrix(N) =
-	let(tri = _signed_pascals_triangle(N))
-	[for(i=[0:N]) concat(tri[N][i]*tri[i], repeat(0,N-i))];
+    let(tri = _signed_pascals_triangle(N))
+    [for(i=[0:N]) concat(tri[N][i]*tri[i], repeat(0,N-i))];
 
 
 // The bezier matrix, which is related to Pascal's triangle, enables nonrecursive computation
@@ -119,66 +119,66 @@ function _compute_bezier_matrix(N) =
 
 // Not public.
 _bezier_matrix_table = [
-	[[1]],
-	[[ 1, 0],
-	 [-1, 1]],
-	[[1, 0, 0],
-	 [-2, 2, 0],
-	 [1, -2, 1]],
-	[[ 1, 0, 0, 0],
-	 [-3, 3, 0, 0],
-	 [ 3,-6, 3, 0],
-	 [-1, 3,-3, 1]],
-	[[ 1,  0,  0, 0, 0],
-	 [-4,  4,  0, 0, 0],
-	 [ 6,-12,  6, 0, 0],
-	 [-4, 12,-12, 4, 0],
-	 [ 1, -4,  6,-4, 1]],
-	[[  1,  0, 0,   0, 0, 0],
-	 [ -5,  5, 0,   0, 0, 0],
-	 [ 10,-20, 10,  0, 0, 0],
-	 [-10, 30,-30, 10, 0, 0],
-	 [  5,-20, 30,-20, 5, 0],
-	 [ -1,  5,-10, 10,-5, 1]],
-	[[  1,  0,  0,  0,  0, 0, 0],
-	 [ -6,  6,  0,  0,  0, 0, 0],
-	 [ 15,-30, 15,  0,  0, 0, 0],
-	 [-20, 60,-60, 20,  0, 0, 0],
-	 [ 15,-60, 90,-60, 15, 0, 0],
-	 [ -6, 30,-60, 60,-30, 6, 0],
-	 [  1, -6, 15,-20, 15,-6, 1]],
-	[[  1,   0,   0,   0,  0,   0, 0, 0],
-	 [ -7,   7,   0,   0,  0,   0, 0, 0],
-	 [ 21, -42,  21,   0,  0,   0, 0, 0],
-	 [-35, 105,-105,  35,  0,   0, 0, 0],
-	 [ 35,-140, 210,-140,  35,  0, 0, 0],
-	 [-21, 105,-210, 210,-105, 21, 0, 0],
-	 [  7, -42, 105,-140, 105,-42, 7, 0],
-	 [ -1,   7, -21,  35, -35, 21,-7, 1]],
-	[[  1,   0,   0,   0,   0,   0,  0, 0, 0],
-	 [ -8,   8,   0,   0,   0,   0,  0, 0, 0],
-	 [ 28, -56,  28,   0,   0,   0,  0, 0, 0],
-	 [-56, 168,-168,  56,   0,   0,  0, 0, 0],
-	 [ 70,-280, 420,-280,  70,   0,  0, 0, 0],
-	 [-56, 280,-560, 560,-280,  56,  0, 0, 0],
-	 [ 28,-168, 420,-560, 420,-168, 28, 0, 0],
-	 [ -8,  56,-168, 280,-280, 168,-56, 8, 0],
-	 [  1,  -8,  28, -56,  70, -56, 28,-8, 1]],
-	[[1, 0, 0, 0, 0, 0, 0,  0, 0, 0], [-9, 9, 0, 0, 0, 0, 0, 0, 0, 0], [36, -72, 36, 0, 0, 0, 0, 0, 0, 0], [-84, 252, -252, 84, 0, 0, 0, 0, 0, 0],
-	 [126, -504, 756, -504, 126, 0, 0, 0, 0, 0], [-126, 630, -1260, 1260, -630, 126, 0, 0, 0, 0], [84, -504, 1260, -1680, 1260, -504, 84, 0, 0, 0],
-	 [-36, 252, -756, 1260, -1260, 756, -252, 36, 0, 0], [9, -72, 252, -504, 630, -504, 252, -72, 9, 0], [-1, 9, -36, 84, -126, 126, -84, 36, -9, 1]],
-	[[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [-10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0], [45, -90, 45, 0, 0, 0, 0, 0, 0, 0, 0], [-120, 360, -360, 120, 0, 0, 0, 0, 0, 0, 0],
-	 [210, -840, 1260, -840, 210, 0, 0, 0, 0, 0, 0], [-252, 1260, -2520, 2520, -1260, 252, 0, 0, 0, 0, 0],
-	 [210, -1260, 3150, -4200, 3150, -1260, 210, 0, 0, 0, 0], [-120, 840, -2520, 4200, -4200, 2520, -840, 120, 0, 0, 0],
-	 [45, -360, 1260, -2520, 3150, -2520, 1260, -360, 45, 0, 0], [-10, 90, -360, 840, -1260, 1260, -840, 360, -90, 10, 0],
-	 [1, -10, 45, -120, 210, -252, 210, -120, 45, -10, 1]]
+    [[1]],
+    [[ 1, 0],
+     [-1, 1]],
+    [[1, 0, 0],
+     [-2, 2, 0],
+     [1, -2, 1]],
+    [[ 1, 0, 0, 0],
+     [-3, 3, 0, 0],
+     [ 3,-6, 3, 0],
+     [-1, 3,-3, 1]],
+    [[ 1,  0,  0, 0, 0],
+     [-4,  4,  0, 0, 0],
+     [ 6,-12,  6, 0, 0],
+     [-4, 12,-12, 4, 0],
+     [ 1, -4,  6,-4, 1]],
+    [[  1,  0, 0,   0, 0, 0],
+     [ -5,  5, 0,   0, 0, 0],
+     [ 10,-20, 10,  0, 0, 0],
+     [-10, 30,-30, 10, 0, 0],
+     [  5,-20, 30,-20, 5, 0],
+     [ -1,  5,-10, 10,-5, 1]],
+    [[  1,  0,  0,  0,  0, 0, 0],
+     [ -6,  6,  0,  0,  0, 0, 0],
+     [ 15,-30, 15,  0,  0, 0, 0],
+     [-20, 60,-60, 20,  0, 0, 0],
+     [ 15,-60, 90,-60, 15, 0, 0],
+     [ -6, 30,-60, 60,-30, 6, 0],
+     [  1, -6, 15,-20, 15,-6, 1]],
+    [[  1,   0,   0,   0,  0,   0, 0, 0],
+     [ -7,   7,   0,   0,  0,   0, 0, 0],
+     [ 21, -42,  21,   0,  0,   0, 0, 0],
+     [-35, 105,-105,  35,  0,   0, 0, 0],
+     [ 35,-140, 210,-140,  35,  0, 0, 0],
+     [-21, 105,-210, 210,-105, 21, 0, 0],
+     [  7, -42, 105,-140, 105,-42, 7, 0],
+     [ -1,   7, -21,  35, -35, 21,-7, 1]],
+    [[  1,   0,   0,   0,   0,   0,  0, 0, 0],
+     [ -8,   8,   0,   0,   0,   0,  0, 0, 0],
+     [ 28, -56,  28,   0,   0,   0,  0, 0, 0],
+     [-56, 168,-168,  56,   0,   0,  0, 0, 0],
+     [ 70,-280, 420,-280,  70,   0,  0, 0, 0],
+     [-56, 280,-560, 560,-280,  56,  0, 0, 0],
+     [ 28,-168, 420,-560, 420,-168, 28, 0, 0],
+     [ -8,  56,-168, 280,-280, 168,-56, 8, 0],
+     [  1,  -8,  28, -56,  70, -56, 28,-8, 1]],
+    [[1, 0, 0, 0, 0, 0, 0,  0, 0, 0], [-9, 9, 0, 0, 0, 0, 0, 0, 0, 0], [36, -72, 36, 0, 0, 0, 0, 0, 0, 0], [-84, 252, -252, 84, 0, 0, 0, 0, 0, 0],
+     [126, -504, 756, -504, 126, 0, 0, 0, 0, 0], [-126, 630, -1260, 1260, -630, 126, 0, 0, 0, 0], [84, -504, 1260, -1680, 1260, -504, 84, 0, 0, 0],
+     [-36, 252, -756, 1260, -1260, 756, -252, 36, 0, 0], [9, -72, 252, -504, 630, -504, 252, -72, 9, 0], [-1, 9, -36, 84, -126, 126, -84, 36, -9, 1]],
+    [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [-10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0], [45, -90, 45, 0, 0, 0, 0, 0, 0, 0, 0], [-120, 360, -360, 120, 0, 0, 0, 0, 0, 0, 0],
+     [210, -840, 1260, -840, 210, 0, 0, 0, 0, 0, 0], [-252, 1260, -2520, 2520, -1260, 252, 0, 0, 0, 0, 0],
+     [210, -1260, 3150, -4200, 3150, -1260, 210, 0, 0, 0, 0], [-120, 840, -2520, 4200, -4200, 2520, -840, 120, 0, 0, 0],
+     [45, -360, 1260, -2520, 3150, -2520, 1260, -360, 45, 0, 0], [-10, 90, -360, 840, -1260, 1260, -840, 360, -90, 10, 0],
+     [1, -10, 45, -120, 210, -252, 210, -120, 45, -10, 1]]
 ];
 
 
 // Not public.
 function _bezier_matrix(N) =
-	N>10 ? _compute_bezier_matrix(N) :
-	_bezier_matrix_table[N];
+    N>10 ? _compute_bezier_matrix(N) :
+    _bezier_matrix_table[N];
 
 
 // Function: bezier_derivative()
@@ -192,12 +192,12 @@ function _bezier_matrix(N) =
 //   u = The proportion of the way along the curve to find the derivative of.  0<=`u`<=1  If given as a list or range, returns a list of derivatives, one for each u value.
 //   order = The order of the derivative to return.  Default: 1 (for the first derivative)
 function bezier_derivative(curve, u, order=1) =
-	assert(is_int(order) && order>=0)
-	order==0? bezier_points(curve, u) : let(
-		N = len(curve) - 1,
-		dpts = N * deltas(curve)
-	) order==1? bezier_points(dpts, u) :
-	bezier_derivative(dpts, u, order-1);
+    assert(is_int(order) && order>=0)
+    order==0? bezier_points(curve, u) : let(
+        N = len(curve) - 1,
+        dpts = N * deltas(curve)
+    ) order==1? bezier_points(dpts, u) :
+    bezier_derivative(dpts, u, order-1);
 
 
 
@@ -210,10 +210,10 @@ function bezier_derivative(curve, u, order=1) =
 //   curve = The list of endpoints and control points for this bezier segment.
 //   u = The proportion of the way along the curve to find the tangent vector of.  0<=`u`<=1  If given as a list or range, returns a list of tangent vectors, one for each u value.
 function bezier_tangent(curve, u) =
-	let(
-		res = bezier_derivative(curve, u)
-	) is_vector(res)? unit(res) :
-	[for (v=res) unit(v)];
+    let(
+        res = bezier_derivative(curve, u)
+    ) is_vector(res)? unit(res) :
+    [for (v=res) unit(v)];
 
 
 
@@ -229,17 +229,17 @@ function bezier_tangent(curve, u) =
 //   curve = The list of endpoints and control points for this bezier segment.
 //   u = The proportion of the way along the curve to find the curvature of.  0<=`u`<=1  If given as a list or range, returns a list of curvature values, one for each u value.
 function bezier_curvature(curve, u) =
-	is_num(u) ? bezier_curvature(curve,[u])[0] :
-	let(
-		d1 = bezier_derivative(curve, u, 1),
-		d2 = bezier_derivative(curve, u, 2)
-	) [
-		for(i=idx(d1))
-		sqrt(
-			sqr(norm(d1[i])*norm(d2[i])) -
-			sqr(d1[i]*d2[i])
-		) / pow(norm(d1[i]),3)
-	];
+    is_num(u) ? bezier_curvature(curve,[u])[0] :
+    let(
+        d1 = bezier_derivative(curve, u, 1),
+        d2 = bezier_derivative(curve, u, 2)
+    ) [
+        for(i=idx(d1))
+        sqrt(
+            sqr(norm(d1[i])*norm(d2[i])) -
+            sqr(d1[i]*d2[i])
+        ) / pow(norm(d1[i]),3)
+    ];
 
 
 
@@ -289,32 +289,32 @@ function bezier_curve(curve,n) = bezier_points(curve, [0:1/n:(n-0.5)/n]);
 //   color("red") translate(pt) sphere(r=1);
 //   color("blue") translate(bezier_points(bez,u)) sphere(r=1);
 function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1) =
-	let(
-		steps = len(curve)*3,
-		uvals = [u, for (i=[0:1:steps]) (end_u-u)*(i/steps)+u, end_u],
-		path = bezier_points(curve,uvals),
-		minima_ranges = [
-			for (i = [1:1:len(uvals)-2]) let(
-				d1 = norm(path[i-1]-pt),
-				d2 = norm(path[i  ]-pt),
-				d3 = norm(path[i+1]-pt)
-			) if (d2<=d1 && d2<=d3) [uvals[i-1],uvals[i+1]]
-		]
-	) len(minima_ranges)>1? (
-		let(
-			min_us = [
-				for (minima = minima_ranges)
-					bezier_segment_closest_point(curve, pt, max_err=max_err, u=minima.x, end_u=minima.y)
-			],
-			dists = [for (v=min_us) norm(bezier_points(curve,v)-pt)],
-			min_i = min_index(dists)
-		) min_us[min_i]
-	) : let(
-		minima = minima_ranges[0],
-		pp = bezier_points(curve, minima),
-		err = norm(pp[1]-pp[0])
-	) err<max_err? mean(minima) :
-	bezier_segment_closest_point(curve, pt, max_err=max_err, u=minima[0], end_u=minima[1]);
+    let(
+        steps = len(curve)*3,
+        uvals = [u, for (i=[0:1:steps]) (end_u-u)*(i/steps)+u, end_u],
+        path = bezier_points(curve,uvals),
+        minima_ranges = [
+            for (i = [1:1:len(uvals)-2]) let(
+                d1 = norm(path[i-1]-pt),
+                d2 = norm(path[i  ]-pt),
+                d3 = norm(path[i+1]-pt)
+            ) if (d2<=d1 && d2<=d3) [uvals[i-1],uvals[i+1]]
+        ]
+    ) len(minima_ranges)>1? (
+        let(
+            min_us = [
+                for (minima = minima_ranges)
+                    bezier_segment_closest_point(curve, pt, max_err=max_err, u=minima.x, end_u=minima.y)
+            ],
+            dists = [for (v=min_us) norm(bezier_points(curve,v)-pt)],
+            min_i = min_index(dists)
+        ) min_us[min_i]
+    ) : let(
+        minima = minima_ranges[0],
+        pp = bezier_points(curve, minima),
+        err = norm(pp[1]-pp[0])
+    ) err<max_err? mean(minima) :
+    bezier_segment_closest_point(curve, pt, max_err=max_err, u=minima[0], end_u=minima[1]);
 
 
 
@@ -333,24 +333,24 @@ function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1) =
 //   bez = [[0,0], [5,35], [60,-25], [80,0]];
 //   echo(bezier_segment_length(bez));
 function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
-	let(
-		segs = len(curve) * 2,
-		uvals = [for (i=[0:1:segs]) lerp(start_u, end_u, i/segs)],
-		path = bezier_points(curve,uvals),
-		defl = max([
-			for (i=idx(path,end=-3)) let(
-				mp = (path[i] + path[i+2]) / 2
-			) norm(path[i+1] - mp)
-		]),
-		mid_u = lerp(start_u, end_u, 0.5)
-	)
-	defl <= max_deflect? path_length(path) :
-	sum([
-		for (i=[0:1:segs-1]) let(
-			su = lerp(start_u, end_u, i/segs),
-			eu = lerp(start_u, end_u, (i+1)/segs)
-		) bezier_segment_length(curve, su, eu, max_deflect)
-	]);
+    let(
+        segs = len(curve) * 2,
+        uvals = [for (i=[0:1:segs]) lerp(start_u, end_u, i/segs)],
+        path = bezier_points(curve,uvals),
+        defl = max([
+            for (i=idx(path,end=-3)) let(
+                mp = (path[i] + path[i+2]) / 2
+            ) norm(path[i+1] - mp)
+        ]),
+        mid_u = lerp(start_u, end_u, 0.5)
+    )
+    defl <= max_deflect? path_length(path) :
+    sum([
+        for (i=[0:1:segs-1]) let(
+            su = lerp(start_u, end_u, i/segs),
+            eu = lerp(start_u, end_u, (i+1)/segs)
+        ) bezier_segment_length(curve, su, eu, max_deflect)
+    ]);
 
 
 
@@ -377,22 +377,22 @@ function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
 //   fbez = fillet3pts(p0,p1,p2, 10);
 //   trace_bezier(slice(fbez, 1, -2), size=1);
 function fillet3pts(p0, p1, p2, r, maxerr=0.1, w=0.5, dw=0.25) = let(
-		v0 = unit(p0-p1),
-		v1 = unit(p2-p1),
-		midv = unit((v0+v1)/2),
-		a = vector_angle(v0,v1),
-		tanr = min(r/tan(a/2), norm(p0-p1)*0.99, norm(p2-p1)*0.99),
-		tp0 = p1+v0*tanr,
-		tp1 = p1+v1*tanr,
-		cp = p1 + midv * tanr / cos(a/2),
-		cp0 = lerp(tp0, p1, w),
-		cp1 = lerp(tp1, p1, w),
-		cpr = norm(cp-tp0),
-		bp = bezier_points([tp0, cp0, cp1, tp1], 0.5),
-		tdist = norm(cp-bp)
-	) (abs(tdist-cpr) <= maxerr)? [tp0, tp0, cp0, cp1, tp1, tp1] :
-		(tdist<cpr)? fillet3pts(p0, p1, p2, r, maxerr=maxerr, w=w+dw, dw=dw/2) :
-		fillet3pts(p0, p1, p2, r, maxerr=maxerr, w=w-dw, dw=dw/2);
+        v0 = unit(p0-p1),
+        v1 = unit(p2-p1),
+        midv = unit((v0+v1)/2),
+        a = vector_angle(v0,v1),
+        tanr = min(r/tan(a/2), norm(p0-p1)*0.99, norm(p2-p1)*0.99),
+        tp0 = p1+v0*tanr,
+        tp1 = p1+v1*tanr,
+        cp = p1 + midv * tanr / cos(a/2),
+        cp0 = lerp(tp0, p1, w),
+        cp1 = lerp(tp1, p1, w),
+        cpr = norm(cp-tp0),
+        bp = bezier_points([tp0, cp0, cp1, tp1], 0.5),
+        tdist = norm(cp-bp)
+    ) (abs(tdist-cpr) <= maxerr)? [tp0, tp0, cp0, cp1, tp1, tp1] :
+        (tdist<cpr)? fillet3pts(p0, p1, p2, r, maxerr=maxerr, w=w+dw, dw=dw/2) :
+        fillet3pts(p0, p1, p2, r, maxerr=maxerr, w=w-dw, dw=dw/2);
 
 
 
@@ -410,7 +410,7 @@ function fillet3pts(p0, p1, p2, r, maxerr=0.1, w=0.5, dw=0.25) = let(
 //   u = The proportion of the way along the segment to find the point of.  0<=`u`<=1  If given as a list or range, returns a list of points, one for each value in `u`.
 //   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
 function bezier_path_point(path, seg, u, N=3) =
-	bezier_points(select(path,seg*N,(seg+1)*N), u);
+    bezier_points(select(path,seg*N,(seg+1)*N), u);
 
 
 
@@ -434,25 +434,25 @@ function bezier_path_point(path, seg, u, N=3) =
 //   color("red") translate(pt) sphere(r=1);
 //   color("blue") translate(xy) sphere(r=1);
 function bezier_path_closest_point(path, pt, N=3, max_err=0.01, seg=0, min_seg=undef, min_u=undef, min_dist=undef) =
-	assert(is_vector(pt))
-	assert(is_int(N))
-	assert(is_num(max_err))
-	assert(len(path)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
-	let(curve = select(path,seg*N,(seg+1)*N))
-	(seg*N+1 >= len(path))? (
-		let(curve = select(path, min_seg*N, (min_seg+1)*N))
-		[min_seg, bezier_segment_closest_point(curve, pt, max_err=max_err)]
-	) : (
-		let(
-			curve = select(path,seg*N,(seg+1)*N),
-			u = bezier_segment_closest_point(curve, pt, max_err=0.05),
-			dist = norm(bezier_points(curve, u)-pt),
-			mseg = (min_dist==undef || dist<min_dist)? seg : min_seg,
-			mdist = (min_dist==undef || dist<min_dist)? dist : min_dist,
-			mu = (min_dist==undef || dist<min_dist)? u : min_u
-		)
-		bezier_path_closest_point(path, pt, N, max_err, seg+1, mseg, mu, mdist)
-	);
+    assert(is_vector(pt))
+    assert(is_int(N))
+    assert(is_num(max_err))
+    assert(len(path)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
+    let(curve = select(path,seg*N,(seg+1)*N))
+    (seg*N+1 >= len(path))? (
+        let(curve = select(path, min_seg*N, (min_seg+1)*N))
+        [min_seg, bezier_segment_closest_point(curve, pt, max_err=max_err)]
+    ) : (
+        let(
+            curve = select(path,seg*N,(seg+1)*N),
+            u = bezier_segment_closest_point(curve, pt, max_err=0.05),
+            dist = norm(bezier_points(curve, u)-pt),
+            mseg = (min_dist==undef || dist<min_dist)? seg : min_seg,
+            mdist = (min_dist==undef || dist<min_dist)? dist : min_dist,
+            mu = (min_dist==undef || dist<min_dist)? u : min_u
+        )
+        bezier_path_closest_point(path, pt, N, max_err, seg+1, mseg, mu, mdist)
+    );
 
 
 
@@ -466,17 +466,17 @@ function bezier_path_closest_point(path, pt, N=3, max_err=0.01, seg=0, min_seg=u
 //   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
 //   max_deflect = The largest amount of deflection from the true curve to allow for approximation.
 function bezier_path_length(path, N=3, max_deflect=0.001) =
-	assert(is_int(N))
-	assert(is_num(max_deflect))
-	assert(len(path)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
-	sum([
-		for (seg=[0:1:(len(path)-1)/N-1]) (
-			bezier_segment_length(
-				select(path, seg*N, (seg+1)*N),
-				max_deflect=max_deflect
-			)
-		)
-	]);
+    assert(is_int(N))
+    assert(is_num(max_deflect))
+    assert(len(path)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
+    sum([
+        for (seg=[0:1:(len(path)-1)/N-1]) (
+            bezier_segment_length(
+                select(path, seg*N, (seg+1)*N),
+                max_deflect=max_deflect
+            )
+        )
+    ]);
 
 
 
@@ -499,17 +499,17 @@ function bezier_path_length(path, N=3, max_deflect=0.001) =
 //   trace_polyline(bez, size=1, N=3, showpts=true);
 //   trace_polyline(bezier_polyline(bez, N=3), size=3);
 function bezier_polyline(bezier, splinesteps=16, N=3) =
-	assert(is_path(bezier))
-	assert(is_int(N))
-	assert(is_int(splinesteps))
-	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
-	let(
-		segs = (len(bezier)-1)/N
-	) deduplicate([
-		for (seg = [0:1:segs-1], i = [0:1:splinesteps-1])
-			bezier_path_point(bezier, seg, i/splinesteps, N=N),
-		bezier_path_point(bezier, segs-1, 1, N=N)
-	]);
+    assert(is_path(bezier))
+    assert(is_int(N))
+    assert(is_int(splinesteps))
+    assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
+    let(
+        segs = (len(bezier)-1)/N
+    ) deduplicate([
+        for (seg = [0:1:segs-1], i = [0:1:splinesteps-1])
+            bezier_path_point(bezier, seg, i/splinesteps, N=N),
+        bezier_path_point(bezier, segs-1, 1, N=N)
+    ]);
 
 
 
@@ -530,27 +530,27 @@ function bezier_polyline(bezier, splinesteps=16, N=3) =
 //   k = curvature parameter, a scalar or vector to adjust curvature at each point
 //   closed = set to true for a closed path.  Default: false
 function path_to_bezier(path, tangents, k, closed=false) =
-	assert(is_path(path,dim=undef),"Input path is not a valid path")
-	assert(is_undef(tangents) || is_path(tangents,dim=len(path[0])),"Tangents must be a path of the same dimension as the input path")
-	assert(is_undef(tangents) || len(path)==len(tangents), "Input tangents must be the same length as the input path")
-	let(
-		k = is_undef(k) ? repeat(1, len(path)) :
-			is_list(k) ? k : repeat(k, len(path)),
-		k_bad = [for(entry=k) if (entry<0) entry]
-	)
-	assert(len(k)==len(path), "Curvature parameter k must have the same length as the path")
-	assert(k_bad==[], "Curvature parameter k must be a nonnegative number or list of nonnegative numbers")
-	let(
-		tangents = is_def(tangents)? tangents : deriv(path, closed=closed),
-		lastpt = len(path) - (closed?0:1)
-	) [
-		for(i=[0:lastpt-1]) each [
-			path[i],
-			path[i]+k[i]*tangents[i]/3,
-			select(path,i+1)-select(k,i+1)*select(tangents,i+1)/3
-		],
-		select(path,lastpt)
-	];
+    assert(is_path(path,dim=undef),"Input path is not a valid path")
+    assert(is_undef(tangents) || is_path(tangents,dim=len(path[0])),"Tangents must be a path of the same dimension as the input path")
+    assert(is_undef(tangents) || len(path)==len(tangents), "Input tangents must be the same length as the input path")
+    let(
+        k = is_undef(k) ? repeat(1, len(path)) :
+            is_list(k) ? k : repeat(k, len(path)),
+        k_bad = [for(entry=k) if (entry<0) entry]
+    )
+    assert(len(k)==len(path), "Curvature parameter k must have the same length as the path")
+    assert(k_bad==[], "Curvature parameter k must be a nonnegative number or list of nonnegative numbers")
+    let(
+        tangents = is_def(tangents)? tangents : deriv(path, closed=closed),
+        lastpt = len(path) - (closed?0:1)
+    ) [
+        for(i=[0:lastpt-1]) each [
+            path[i],
+            path[i]+k[i]*tangents[i]/3,
+            select(path,i+1)-select(k,i+1)*select(tangents,i+1)/3
+        ],
+        select(path,lastpt)
+    ];
 
 
 // Function: fillet_path()
@@ -568,15 +568,15 @@ function path_to_bezier(path, tangents, k, closed=false) =
 //   trace_polyline(pline, showpts=true, size=0.5, color="green");
 //   trace_bezier(bez, size=1);
 function fillet_path(pts, fillet, maxerr=0.1) = concat(
-	[pts[0], pts[0]],
-	(len(pts) < 3)? [] : [
-		for (p = [1:1:len(pts)-2]) let(
-			p1 = pts[p],
-			p0 = (pts[p-1]+p1)/2,
-			p2 = (pts[p+1]+p1)/2
-		) for (pt = fillet3pts(p0, p1, p2, fillet, maxerr=maxerr)) pt
-	],
-	[pts[len(pts)-1], pts[len(pts)-1]]
+    [pts[0], pts[0]],
+    (len(pts) < 3)? [] : [
+        for (p = [1:1:len(pts)-2]) let(
+            p1 = pts[p],
+            p0 = (pts[p-1]+p1)/2,
+            p2 = (pts[p+1]+p1)/2
+        ) for (pt = fillet3pts(p0, p1, p2, fillet, maxerr=maxerr)) pt
+    ],
+    [pts[len(pts)-1], pts[len(pts)-1]]
 );
 
 
@@ -598,26 +598,26 @@ function fillet_path(pts, fillet, maxerr=0.1) = concat(
 //   closed = bezier_close_to_axis(bez, axis="Y");
 //   trace_bezier(closed, size=1);
 function bezier_close_to_axis(bezier, N=3, axis="X") =
-	assert(is_path(bezier,2), "bezier_close_to_axis() can only work on 2D bezier paths.")
-	assert(is_int(N))
-	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
-	let(
-		bezend = len(bezier)-1,
-		sp = bezier[0],
-		ep = bezier[bezend]
-	) (axis=="X")? concat(
-		[for (i=[0:1:N-1]) lerp([sp.x,0], sp, i/N)],
-		bezier,
-		[for (i=[1:1:N]) lerp(ep, [ep.x,0], i/N)],
-		[for (i=[1:1:N]) lerp([ep.x,0], [sp.x,0], i/N)]
-	) : (axis=="Y")? concat(
-		[for (i=[0:1:N-1]) lerp([0,sp.y], sp, i/N)],
-		bezier,
-		[for (i=[1:1:N]) lerp(ep, [0,ep.y], i/N)],
-		[for (i=[1:1:N]) lerp([0,ep.y], [0,sp.y], i/N)]
-	) : (
-		assert(in_list(axis, ["X","Y"]))
-	);
+    assert(is_path(bezier,2), "bezier_close_to_axis() can only work on 2D bezier paths.")
+    assert(is_int(N))
+    assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
+    let(
+        bezend = len(bezier)-1,
+        sp = bezier[0],
+        ep = bezier[bezend]
+    ) (axis=="X")? concat(
+        [for (i=[0:1:N-1]) lerp([sp.x,0], sp, i/N)],
+        bezier,
+        [for (i=[1:1:N]) lerp(ep, [ep.x,0], i/N)],
+        [for (i=[1:1:N]) lerp([ep.x,0], [sp.x,0], i/N)]
+    ) : (axis=="Y")? concat(
+        [for (i=[0:1:N-1]) lerp([0,sp.y], sp, i/N)],
+        bezier,
+        [for (i=[1:1:N]) lerp(ep, [0,ep.y], i/N)],
+        [for (i=[1:1:N]) lerp([0,ep.y], [0,sp.y], i/N)]
+    ) : (
+        assert(in_list(axis, ["X","Y"]))
+    );
 
 
 // Function: bezier_offset()
@@ -638,19 +638,19 @@ function bezier_close_to_axis(bezier, N=3, axis="X") =
 //   closed = bezier_offset([-5,0], bez);
 //   trace_bezier(closed, size=1);
 function bezier_offset(offset, bezier, N=3) =
-	assert(is_vector(offset,2))
-	assert(is_path(bezier,2), "bezier_offset() can only work on 2D bezier paths.")
-	assert(is_int(N))
-	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
-	let(
-		backbez = reverse([ for (pt = bezier) pt+offset ]),
-		bezend = len(bezier)-1
-	) concat(
-		bezier,
-		[for (i=[1:1:N-1]) lerp(bezier[bezend], backbez[0], i/N)],
-		backbez,
-		[for (i=[1:1:N]) lerp(backbez[bezend], bezier[0], i/N)]
-	);
+    assert(is_vector(offset,2))
+    assert(is_path(bezier,2), "bezier_offset() can only work on 2D bezier paths.")
+    assert(is_int(N))
+    assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
+    let(
+        backbez = reverse([ for (pt = bezier) pt+offset ]),
+        bezend = len(bezier)-1
+    ) concat(
+        bezier,
+        [for (i=[1:1:N-1]) lerp(bezier[bezend], backbez[0], i/N)],
+        backbez,
+        [for (i=[1:1:N]) lerp(backbez[bezend], bezier[0], i/N)]
+    );
 
 
 
@@ -677,12 +677,12 @@ function bezier_offset(offset, bezier, N=3) =
 //   trace_bezier(bez, N=3, size=3);
 //   linear_extrude(height=0.1) bezier_polygon(bez, N=3);
 module bezier_polygon(bezier, splinesteps=16, N=3) {
-	assert(is_path(bezier,2), "bezier_polygon() can only work on 2D bezier paths.");
-	assert(is_int(N));
-	assert(is_int(splinesteps));
-	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
-	polypoints=bezier_polyline(bezier, splinesteps, N);
-	polygon(points=slice(polypoints, 0, -1));
+    assert(is_path(bezier,2), "bezier_polygon() can only work on 2D bezier paths.");
+    assert(is_int(N));
+    assert(is_int(splinesteps));
+    assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
+    polypoints=bezier_polyline(bezier, splinesteps, N);
+    polygon(points=slice(polypoints, 0, -1));
 }
 
 
@@ -714,20 +714,20 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 //   ];
 //   linear_sweep_bezier(bez, height=20, splinesteps=32);
 module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center, convexity, twist, slices, scale, anchor, spin=0, orient=UP) {
-	assert(is_path(bezier,2), "linear_sweep_bezier() can only work on 2D bezier paths.");
-	assert(is_num(height));
-	assert(is_int(splinesteps));
-	assert(is_int(N));
-	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
-	maxx = max([for (pt = bezier) abs(pt[0])]);
-	maxy = max([for (pt = bezier) abs(pt[1])]);
-	anchor = get_anchor(anchor,center,BOT,BOT);
-	attachable(anchor,spin,orient, size=[maxx*2,maxy*2,height]) {
-		linear_extrude(height=height, center=true, convexity=convexity, twist=twist, slices=slices, scale=scale) {
-			bezier_polygon(bezier, splinesteps=splinesteps, N=N);
-		}
-		children();
-	}
+    assert(is_path(bezier,2), "linear_sweep_bezier() can only work on 2D bezier paths.");
+    assert(is_num(height));
+    assert(is_int(splinesteps));
+    assert(is_int(N));
+    assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
+    maxx = max([for (pt = bezier) abs(pt[0])]);
+    maxy = max([for (pt = bezier) abs(pt[1])]);
+    anchor = get_anchor(anchor,center,BOT,BOT);
+    attachable(anchor,spin,orient, size=[maxx*2,maxy*2,height]) {
+        linear_extrude(height=height, center=true, convexity=convexity, twist=twist, slices=slices, scale=scale) {
+            bezier_polygon(bezier, splinesteps=splinesteps, N=N);
+        }
+        children();
+    }
 }
 
 
@@ -757,21 +757,21 @@ module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center, conv
 //   rotate_sweep_bezier(path, splinesteps=32, $fn=180);
 module rotate_sweep_bezier(bezier, splinesteps=16, N=3, convexity=undef, angle=360, anchor=CENTER, spin=0, orient=UP)
 {
-	assert(is_path(bezier,2), "rotate_sweep_bezier() can only work on 2D bezier paths.");
-	assert(is_int(splinesteps));
-	assert(is_int(N));
-	assert(is_num(angle));
-	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
-	oline = bezier_polyline(bezier, splinesteps=splinesteps, N=N);
-	maxx = max([for (pt = oline) abs(pt[0])]);
-	miny = min(subindex(oline,1));
-	maxy = max(subindex(oline,1));
-	attachable(anchor,spin,orient, r=maxx, l=max(abs(miny),abs(maxy))*2) {
-		rotate_extrude(convexity=convexity, angle=angle) {
-			polygon(oline);
-		}
-		children();
-	}
+    assert(is_path(bezier,2), "rotate_sweep_bezier() can only work on 2D bezier paths.");
+    assert(is_int(splinesteps));
+    assert(is_int(N));
+    assert(is_num(angle));
+    assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
+    oline = bezier_polyline(bezier, splinesteps=splinesteps, N=N);
+    maxx = max([for (pt = oline) abs(pt[0])]);
+    miny = min(subindex(oline,1));
+    maxy = max(subindex(oline,1));
+    attachable(anchor,spin,orient, r=maxx, l=max(abs(miny),abs(maxy))*2) {
+        rotate_extrude(convexity=convexity, angle=angle) {
+            polygon(oline);
+        }
+        children();
+    }
 }
 
 
@@ -793,13 +793,13 @@ module rotate_sweep_bezier(bezier, splinesteps=16, N=3, convexity=undef, angle=3
 //       fwd(10/2) circle(r=8);
 //   }
 module bezier_path_extrude(bezier, splinesteps=16, N=3, convexity=undef, clipsize=1000) {
-	assert(is_path(bezier));
-	assert(is_int(splinesteps));
-	assert(is_int(N));
-	assert(is_num(clipsize));
-	assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
-	path = slice(bezier_polyline(bezier, splinesteps, N), 0, -1);
-	path_extrude(path, convexity=convexity, clipsize=clipsize) children();
+    assert(is_path(bezier));
+    assert(is_int(splinesteps));
+    assert(is_int(N));
+    assert(is_num(clipsize));
+    assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
+    path = slice(bezier_polyline(bezier, splinesteps, N), 0, -1);
+    path_extrude(path, convexity=convexity, clipsize=clipsize) children();
 }
 
 
@@ -827,17 +827,17 @@ module bezier_path_extrude(bezier, splinesteps=16, N=3, convexity=undef, clipsiz
 //   path = [ [0, 0, 0], [33, 33, 33], [90, 33, -33], [100, 0, 0] ];
 //   bezier_sweep_bezier(bez, path, pathsteps=32, bezsteps=16);
 module bezier_sweep_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, pathN=3) {
-	assert(is_path(bezier,2), "Argument bezier must be a 2D bezier path.");
-	assert(is_path(path));
-	assert(is_int(pathsteps));
-	assert(is_int(bezsteps));
-	assert(is_int(bezN));
-	assert(is_int(pathN));
-	assert(len(bezier)%bezN == 1, str("For argument bezier, a degree ",bezN," bezier path shound have a multiple of ",bezN," points in it, plus 1."));
-	assert(len(path)%pathN == 1, str("For argument bezier, a degree ",pathN," bezier path shound have a multiple of ",pathN," points in it, plus 1."));
-	bez_points = simplify_path(bezier_polyline(bezier, bezsteps, bezN));
-	path_points = simplify_path(path3d(bezier_polyline(path, pathsteps, pathN)));
-	path_sweep(bez_points, path_points);
+    assert(is_path(bezier,2), "Argument bezier must be a 2D bezier path.");
+    assert(is_path(path));
+    assert(is_int(pathsteps));
+    assert(is_int(bezsteps));
+    assert(is_int(bezN));
+    assert(is_int(pathN));
+    assert(len(bezier)%bezN == 1, str("For argument bezier, a degree ",bezN," bezier path shound have a multiple of ",bezN," points in it, plus 1."));
+    assert(len(path)%pathN == 1, str("For argument bezier, a degree ",pathN," bezier path shound have a multiple of ",pathN," points in it, plus 1."));
+    bez_points = simplify_path(bezier_polyline(bezier, bezsteps, bezN));
+    path_points = simplify_path(path3d(bezier_polyline(path, pathsteps, pathN)));
+    path_sweep(bez_points, path_points);
 }
 
 
@@ -858,11 +858,11 @@ module bezier_sweep_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, path
 //   ];
 //   trace_bezier(bez, N=3, size=0.5);
 module trace_bezier(bez, N=3, size=1) {
-	assert(is_path(bez));
-	assert(is_int(N));
-	assert(len(bez)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
-	trace_polyline(bez, N=N, showpts=true, size=size, color="green");
-	trace_polyline(bezier_polyline(bez, N=N), size=size, color="cyan");
+    assert(is_path(bez));
+    assert(is_int(N));
+    assert(len(bez)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
+    trace_polyline(bez, N=N, showpts=true, size=size, color="green");
+    trace_polyline(bezier_polyline(bez, N=N), size=size, color="cyan");
 }
 
 
@@ -904,13 +904,13 @@ module trace_bezier(bez, N=3, size=1) {
 //   pts = bezier_patch_points(patch, [0:0.2:1], [0:0.2:1]);
 //   for (row=pts) move_copies(row) color("magenta") sphere(d=3, $fn=12);
 function bezier_patch_points(patch, u, v) =
-	is_num(u) && is_num(v)? bezier_points([for (bez = patch) bezier_points(bez, u)], v) :
-	assert(is_num(u) || !is_undef(u[0]))
-	assert(is_num(v) || !is_undef(v[0]))
-	let(
-		vbezes = [for (i = idx(patch[0])) bezier_points(subindex(patch,i), is_num(u)? [u] : u)]
-	)
-	[for (i = idx(vbezes[0])) bezier_points(subindex(vbezes,i), is_num(v)? [v] : v)];
+    is_num(u) && is_num(v)? bezier_points([for (bez = patch) bezier_points(bez, u)], v) :
+    assert(is_num(u) || !is_undef(u[0]))
+    assert(is_num(v) || !is_undef(v[0]))
+    let(
+        vbezes = [for (i = idx(patch[0])) bezier_points(subindex(patch,i), is_num(u)? [u] : u)]
+    )
+    [for (i = idx(vbezes[0])) bezier_points(subindex(vbezes,i), is_num(v)? [v] : v)];
 
 
 // Function: bezier_triangle_point()
@@ -936,14 +936,14 @@ function bezier_patch_points(patch, u, v) =
 //   pt = bezier_triangle_point(tri, 0.5, 0.2);
 //   translate(pt) color("magenta") sphere(d=3, $fn=12);
 function bezier_triangle_point(tri, u, v) =
-	len(tri) == 1 ? tri[0][0] :
-	let(
-		n = len(tri)-1,
-		Pu = [for(i=[0:1:n-1]) [for (j=[1:1:len(tri[i])-1]) tri[i][j]]],
-		Pv = [for(i=[0:1:n-1]) [for (j=[0:1:len(tri[i])-2]) tri[i][j]]],
-		Pw = [for(i=[1:1:len(tri)-1]) tri[i]]
-	)
-	bezier_triangle_point(u*Pu + v*Pv + (1-u-v)*Pw, u, v);
+    len(tri) == 1 ? tri[0][0] :
+    let(
+        n = len(tri)-1,
+        Pu = [for(i=[0:1:n-1]) [for (j=[1:1:len(tri[i])-1]) tri[i][j]]],
+        Pv = [for(i=[0:1:n-1]) [for (j=[0:1:len(tri[i])-2]) tri[i][j]]],
+        Pw = [for(i=[1:1:len(tri)-1]) tri[i]]
+    )
+    bezier_triangle_point(u*Pu + v*Pv + (1-u-v)*Pw, u, v);
 
 
 // Function: is_tripatch()
@@ -1063,52 +1063,52 @@ function is_patch(x) = is_tripatch(x) || is_rectpatch(x);
 //   ];
 //   vnf_polyhedron(concat(edges,corners,faces));
 function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF, style="default") =
-	assert(is_num(splinesteps) || is_vector(splinesteps,2))
-	is_tripatch(patch)? _bezier_triangle(patch, splinesteps=splinesteps, vnf=vnf) :
-	let(
-		splinesteps = is_list(splinesteps) ? splinesteps : [splinesteps,splinesteps],
-		uvals = [
-			for(step=[0:1:splinesteps.x])
-			step/splinesteps.x
-		],
-		vvals = [
-			for(step=[0:1:splinesteps.y])
-			1-step/splinesteps.y
-		],
-		pts = bezier_patch_points(patch, uvals, vvals),
-		vnf = vnf_vertex_array(pts, style=style, vnf=vnf, reverse=false)
-	) vnf;
+    assert(is_num(splinesteps) || is_vector(splinesteps,2))
+    is_tripatch(patch)? _bezier_triangle(patch, splinesteps=splinesteps, vnf=vnf) :
+    let(
+        splinesteps = is_list(splinesteps) ? splinesteps : [splinesteps,splinesteps],
+        uvals = [
+            for(step=[0:1:splinesteps.x])
+            step/splinesteps.x
+        ],
+        vvals = [
+            for(step=[0:1:splinesteps.y])
+            1-step/splinesteps.y
+        ],
+        pts = bezier_patch_points(patch, uvals, vvals),
+        vnf = vnf_vertex_array(pts, style=style, vnf=vnf, reverse=false)
+    ) vnf;
 
 
 function _tri_count(n) = (n*(1+n))/2;
 
 
 function _bezier_triangle(tri, splinesteps=16, vnf=EMPTY_VNF) =
-	assert(is_num(splinesteps))
-	let(
-		pts = [
-			for (
-				u=[0:1:splinesteps],
-				v=[0:1:splinesteps-u]
-			) bezier_triangle_point(tri, u/splinesteps, v/splinesteps)
-		],
-		tricnt = _tri_count(splinesteps+1),
-		faces = [
-			for (
-				u=[0:1:splinesteps-1],
-				v=[0:1:splinesteps-u-1]
-			) let (
-				v1 = v + (tricnt - _tri_count(splinesteps+1-u)),
-				v2 = v1 + 1,
-				v3 = v + (tricnt - _tri_count(splinesteps-u)),
-				v4 = v3 + 1,
-				allfaces = concat(
-					[[v1,v2,v3]],
-					((u<splinesteps-1 && v<splinesteps-u-1)? [[v2,v4,v3]] : [])
-				)
-			)  for (face=allfaces) face
-		]
-	) vnf_merge([vnf,[pts, faces]]);
+    assert(is_num(splinesteps))
+    let(
+        pts = [
+            for (
+                u=[0:1:splinesteps],
+                v=[0:1:splinesteps-u]
+            ) bezier_triangle_point(tri, u/splinesteps, v/splinesteps)
+        ],
+        tricnt = _tri_count(splinesteps+1),
+        faces = [
+            for (
+                u=[0:1:splinesteps-1],
+                v=[0:1:splinesteps-u-1]
+            ) let (
+                v1 = v + (tricnt - _tri_count(splinesteps+1-u)),
+                v2 = v1 + 1,
+                v3 = v + (tricnt - _tri_count(splinesteps-u)),
+                v4 = v3 + 1,
+                allfaces = concat(
+                    [[v1,v2,v3]],
+                    ((u<splinesteps-1 && v<splinesteps-u-1)? [[v2,v4,v3]] : [])
+                )
+            )  for (face=allfaces) face
+        ]
+    ) vnf_merge([vnf,[pts, faces]]);
 
 
 
@@ -1126,15 +1126,15 @@ function _bezier_triangle(tri, splinesteps=16, vnf=EMPTY_VNF) =
 //   patch = bezier_patch_flat(size=[100,100], N=3);
 //   trace_bezier_patches([patch], size=1, showcps=true);
 function bezier_patch_flat(size=[100,100], N=4, spin=0, orient=UP, trans=[0,0,0]) =
-	let(
-		patch = [
-			for (x=[0:1:N]) [
-				for (y=[0:1:N])
-				vmul(point3d(size), [x/N-0.5, 0.5-y/N, 0])
-			]
-		],
-		m = move(trans) * rot(a=spin, from=UP, to=orient)
-	) [for (row=patch) apply(m, row)];
+    let(
+        patch = [
+            for (x=[0:1:N]) [
+                for (y=[0:1:N])
+                vmul(point3d(size), [x/N-0.5, 0.5-y/N, 0])
+            ]
+        ],
+        m = move(trans) * rot(a=spin, from=UP, to=orient)
+    ) [for (row=patch) apply(m, row)];
 
 
 
@@ -1179,11 +1179,11 @@ function patch_reverse(patch) = [for (row=patch) reverse(row)];
 //   vnf = bezier_surface(patches=[patch1, patch2], splinesteps=16);
 //   polyhedron(points=vnf[0], faces=vnf[1]);
 function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="default", i=0) =
-	let(
-		vnf = (i >= len(patches))? vnf :
-			bezier_patch(patches[i], splinesteps=splinesteps, vnf=vnf, style=style)
-	) (i >= len(patches))? vnf :
-	bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf, style=style, i=i+1);
+    let(
+        vnf = (i >= len(patches))? vnf :
+            bezier_patch(patches[i], splinesteps=splinesteps, vnf=vnf, style=style)
+    ) (i >= len(patches))? vnf :
+    bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf, style=style, i=i+1);
 
 
 
@@ -1217,10 +1217,10 @@ function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="defaul
 //   bezier_polyhedron([patch1, patch2], splinesteps=8);
 module bezier_polyhedron(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="default", convexity=10)
 {
-	vnf_polyhedron(
-		bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf, style=style),
-		convexity=convexity
-	);
+    vnf_polyhedron(
+        bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf, style=style),
+        convexity=convexity
+    );
 }
 
 
@@ -1263,33 +1263,33 @@ module trace_bezier_patches(patches=[], size, splinesteps=16, showcps=true, show
     assert(is_bool(showpatch));
     assert(is_int(convexity) && convexity>0);
     for (patch = patches) {
-    	size = is_num(size)? size :
-    	       let( bounds = pointlist_bounds(flatten(patch)) )
-    	       max(bounds[1]-bounds[0])*0.01;
-    	if (showcps) {
-    	    move_copies(flatten(patch)) color("red") sphere(d=size*2);
-    	    color("cyan") {
-    	            if (is_tripatch(patch)) {
-    	                    for (i=[0:1:len(patch)-2], j=[0:1:len(patch[i])-2]) {
-    	                            extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
-    	                            extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
-    	                            extrude_from_to(patch[i+1][j], patch[i][j+1]) circle(d=size);
-    	                    }
-    	            } else {
-    	                    for (i=[0:1:len(patch)-1], j=[0:1:len(patch[i])-1]) {
-    	                            if (i<len(patch)-1) extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
-    	                            if (j<len(patch[i])-1) extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
-    	                    }
-    	            }
-    	    }
-    	}
-    	if (showpatch || showdots){
-    	    vnf = bezier_patch(patch, splinesteps=splinesteps, style=style);
-    	    if (showpatch) vnf_polyhedron(vnf, convexity=convexity);
-    	    if (showdots) color("blue") move_copies(vnf[0]) sphere(d=size);
-    	}
+        size = is_num(size)? size :
+               let( bounds = pointlist_bounds(flatten(patch)) )
+               max(bounds[1]-bounds[0])*0.01;
+        if (showcps) {
+            move_copies(flatten(patch)) color("red") sphere(d=size*2);
+            color("cyan") {
+                    if (is_tripatch(patch)) {
+                            for (i=[0:1:len(patch)-2], j=[0:1:len(patch[i])-2]) {
+                                    extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
+                                    extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
+                                    extrude_from_to(patch[i+1][j], patch[i][j+1]) circle(d=size);
+                            }
+                    } else {
+                            for (i=[0:1:len(patch)-1], j=[0:1:len(patch[i])-1]) {
+                                    if (i<len(patch)-1) extrude_from_to(patch[i][j], patch[i+1][j]) circle(d=size);
+                                    if (j<len(patch[i])-1) extrude_from_to(patch[i][j], patch[i][j+1]) circle(d=size);
+                            }
+                    }
+            }
+        }
+        if (showpatch || showdots){
+            vnf = bezier_patch(patch, splinesteps=splinesteps, style=style);
+            if (showpatch) vnf_polyhedron(vnf, convexity=convexity);
+            if (showdots) color("blue") move_copies(vnf[0]) sphere(d=size);
+        }
     }
 }
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

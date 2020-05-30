@@ -62,242 +62,242 @@
 // Example: Standard Connectors
 //   cuboid(40) show_anchors();
 module cuboid(
-	size=[1,1,1],
-	p1=undef, p2=undef,
-	chamfer=undef,
-	rounding=undef,
-	edges=EDGES_ALL,
-	except_edges=[],
-	trimcorners=true,
-	anchor=CENTER,
-	spin=0,
-	orient=UP
+    size=[1,1,1],
+    p1=undef, p2=undef,
+    chamfer=undef,
+    rounding=undef,
+    edges=EDGES_ALL,
+    except_edges=[],
+    trimcorners=true,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
 ) {
-	size = scalar_vec3(size);
-	edges = edges(edges, except=except_edges);
-	if (!is_undef(p1)) {
-		if (!is_undef(p2)) {
-			translate(pointlist_bounds([p1,p2])[0]) {
-				cuboid(size=vabs(p2-p1), chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
-			}
-		} else {
-			translate(p1) {
-				cuboid(size=size, chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
-			}
-		}
-	} else {
-		if (chamfer != undef) {
-			if (any(edges[0])) assert(chamfer <= size.y/2 && chamfer <=size.z/2, "chamfer must be smaller than half the cube length or height.");
-			if (any(edges[1])) assert(chamfer <= size.x/2 && chamfer <=size.z/2, "chamfer must be smaller than half the cube width or height.");
-			if (any(edges[2])) assert(chamfer <= size.x/2 && chamfer <=size.y/2, "chamfer must be smaller than half the cube width or length.");
-		}
-		if (rounding != undef) {
-			if (any(edges[0])) assert(rounding <= size.y/2 && rounding<=size.z/2, "rounding radius must be smaller than half the cube length or height.");
-			if (any(edges[1])) assert(rounding <= size.x/2 && rounding<=size.z/2, "rounding radius must be smaller than half the cube width or height.");
-			if (any(edges[2])) assert(rounding <= size.x/2 && rounding<=size.y/2, "rounding radius must be smaller than half the cube width or length.");
-		}
-		majrots = [[0,90,0], [90,0,0], [0,0,0]];
-		attachable(anchor,spin,orient, size=size) {
-			if (chamfer != undef) {
-				if (edges == EDGES_ALL && trimcorners) {
-					if (chamfer<0) {
-						cube(size, center=true) {
-							attach(TOP) prismoid([size.x,size.y], [size.x-2*chamfer,size.y-2*chamfer], h=-chamfer, anchor=TOP);
-							attach(BOT) prismoid([size.x,size.y], [size.x-2*chamfer,size.y-2*chamfer], h=-chamfer, anchor=TOP);
-						}
-					} else {
-						isize = [for (v = size) max(0.001, v-2*chamfer)];
-						hull() {
-							cube([size.x, isize.y, isize.z], center=true);
-							cube([isize.x, size.y, isize.z], center=true);
-							cube([isize.x, isize.y, size.z], center=true);
-						}
-					}
-				} else if (chamfer<0) {
-					ach = abs(chamfer);
-					cube(size, center=true);
+    size = scalar_vec3(size);
+    edges = edges(edges, except=except_edges);
+    if (!is_undef(p1)) {
+        if (!is_undef(p2)) {
+            translate(pointlist_bounds([p1,p2])[0]) {
+                cuboid(size=vabs(p2-p1), chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
+            }
+        } else {
+            translate(p1) {
+                cuboid(size=size, chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
+            }
+        }
+    } else {
+        if (chamfer != undef) {
+            if (any(edges[0])) assert(chamfer <= size.y/2 && chamfer <=size.z/2, "chamfer must be smaller than half the cube length or height.");
+            if (any(edges[1])) assert(chamfer <= size.x/2 && chamfer <=size.z/2, "chamfer must be smaller than half the cube width or height.");
+            if (any(edges[2])) assert(chamfer <= size.x/2 && chamfer <=size.y/2, "chamfer must be smaller than half the cube width or length.");
+        }
+        if (rounding != undef) {
+            if (any(edges[0])) assert(rounding <= size.y/2 && rounding<=size.z/2, "rounding radius must be smaller than half the cube length or height.");
+            if (any(edges[1])) assert(rounding <= size.x/2 && rounding<=size.z/2, "rounding radius must be smaller than half the cube width or height.");
+            if (any(edges[2])) assert(rounding <= size.x/2 && rounding<=size.y/2, "rounding radius must be smaller than half the cube width or length.");
+        }
+        majrots = [[0,90,0], [90,0,0], [0,0,0]];
+        attachable(anchor,spin,orient, size=size) {
+            if (chamfer != undef) {
+                if (edges == EDGES_ALL && trimcorners) {
+                    if (chamfer<0) {
+                        cube(size, center=true) {
+                            attach(TOP) prismoid([size.x,size.y], [size.x-2*chamfer,size.y-2*chamfer], h=-chamfer, anchor=TOP);
+                            attach(BOT) prismoid([size.x,size.y], [size.x-2*chamfer,size.y-2*chamfer], h=-chamfer, anchor=TOP);
+                        }
+                    } else {
+                        isize = [for (v = size) max(0.001, v-2*chamfer)];
+                        hull() {
+                            cube([size.x, isize.y, isize.z], center=true);
+                            cube([isize.x, size.y, isize.z], center=true);
+                            cube([isize.x, isize.y, size.z], center=true);
+                        }
+                    }
+                } else if (chamfer<0) {
+                    ach = abs(chamfer);
+                    cube(size, center=true);
 
-					// External-Chamfer mask edges
-					difference() {
-						union() {
-							for (i = [0:3], axis=[0:1]) {
-								if (edges[axis][i]>0) {
-									vec = EDGE_OFFSETS[axis][i];
-									translate(vmul(vec/2, size+[ach,ach,-ach])) {
-										rotate(majrots[axis]) {
-											cube([ach, ach, size[axis]], center=true);
-										}
-									}
-								}
-							}
+                    // External-Chamfer mask edges
+                    difference() {
+                        union() {
+                            for (i = [0:3], axis=[0:1]) {
+                                if (edges[axis][i]>0) {
+                                    vec = EDGE_OFFSETS[axis][i];
+                                    translate(vmul(vec/2, size+[ach,ach,-ach])) {
+                                        rotate(majrots[axis]) {
+                                            cube([ach, ach, size[axis]], center=true);
+                                        }
+                                    }
+                                }
+                            }
 
-							// Add multi-edge corners.
-							if (trimcorners) {
-								for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
-									if (corner_edge_count(edges, [xa,ya,za]) > 1) {
-										translate(vmul([xa,ya,za]/2, size+[ach-0.01,ach-0.01,-ach])) {
-											cube([ach+0.01,ach+0.01,ach], center=true);
-										}
-									}
-								}
-							}
-						}
+                            // Add multi-edge corners.
+                            if (trimcorners) {
+                                for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
+                                    if (corner_edge_count(edges, [xa,ya,za]) > 1) {
+                                        translate(vmul([xa,ya,za]/2, size+[ach-0.01,ach-0.01,-ach])) {
+                                            cube([ach+0.01,ach+0.01,ach], center=true);
+                                        }
+                                    }
+                                }
+                            }
+                        }
 
-						// Remove bevels from overhangs.
-						for (i = [0:3], axis=[0:1]) {
-							if (edges[axis][i]>0) {
-								vec = EDGE_OFFSETS[axis][i];
-								translate(vmul(vec/2, size+[2*ach,2*ach,-2*ach])) {
-									rotate(majrots[axis]) {
-										zrot(45) cube([ach*sqrt(2), ach*sqrt(2), size[axis]+2.1*ach], center=true);
-									}
-								}
-							}
-						}
-					}
-				} else {
-					difference() {
-						cube(size, center=true);
+                        // Remove bevels from overhangs.
+                        for (i = [0:3], axis=[0:1]) {
+                            if (edges[axis][i]>0) {
+                                vec = EDGE_OFFSETS[axis][i];
+                                translate(vmul(vec/2, size+[2*ach,2*ach,-2*ach])) {
+                                    rotate(majrots[axis]) {
+                                        zrot(45) cube([ach*sqrt(2), ach*sqrt(2), size[axis]+2.1*ach], center=true);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    difference() {
+                        cube(size, center=true);
 
-						// Chamfer edges
-						for (i = [0:3], axis=[0:2]) {
-							if (edges[axis][i]>0) {
-								translate(vmul(EDGE_OFFSETS[axis][i], size/2)) {
-									rotate(majrots[axis]) {
-										zrot(45) cube([chamfer*sqrt(2), chamfer*sqrt(2), size[axis]+0.01], center=true);
-									}
-								}
-							}
-						}
+                        // Chamfer edges
+                        for (i = [0:3], axis=[0:2]) {
+                            if (edges[axis][i]>0) {
+                                translate(vmul(EDGE_OFFSETS[axis][i], size/2)) {
+                                    rotate(majrots[axis]) {
+                                        zrot(45) cube([chamfer*sqrt(2), chamfer*sqrt(2), size[axis]+0.01], center=true);
+                                    }
+                                }
+                            }
+                        }
 
-						// Chamfer triple-edge corners.
-						if (trimcorners) {
-							for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
-								if (corner_edge_count(edges, [xa,ya,za]) > 2) {
-									translate(vmul([xa,ya,za]/2, size-[1,1,1]*chamfer*4/3)) {
-										rot(from=UP, to=[xa,ya,za]) {
-											cube(chamfer*3, anchor=BOTTOM);
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			} else if (rounding != undef) {
-				sides = quantup(segs(rounding),4);
-				if (edges == EDGES_ALL) {
-					if(rounding<0) {
-						cube(size, center=true);
-						zflip_copy() {
-							up(size.z/2) {
-								difference() {
-									down(-rounding/2) cube([size.x-2*rounding, size.y-2*rounding, -rounding], center=true);
-									down(-rounding) {
-										ycopies(size.y-2*rounding) xcyl(l=size.x-3*rounding, r=-rounding);
-										xcopies(size.x-2*rounding) ycyl(l=size.y-3*rounding, r=-rounding);
-									}
-								}
-							}
-						}
-					} else {
-						isize = [for (v = size) max(0.001, v-2*rounding)];
-						minkowski() {
-							cube(isize, center=true);
-							if (trimcorners) {
-								spheroid(r=rounding, $fn=sides);
-							} else {
-								intersection() {
-									cyl(r=rounding, h=rounding*2, $fn=sides);
-									rotate([90,0,0]) cyl(r=rounding, h=rounding*2, $fn=sides);
-									rotate([0,90,0]) cyl(r=rounding, h=rounding*2, $fn=sides);
-								}
-							}
-						}
-					}
-				} else if (rounding<0) {
-					ard = abs(rounding);
-					cube(size, center=true);
+                        // Chamfer triple-edge corners.
+                        if (trimcorners) {
+                            for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
+                                if (corner_edge_count(edges, [xa,ya,za]) > 2) {
+                                    translate(vmul([xa,ya,za]/2, size-[1,1,1]*chamfer*4/3)) {
+                                        rot(from=UP, to=[xa,ya,za]) {
+                                            cube(chamfer*3, anchor=BOTTOM);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if (rounding != undef) {
+                sides = quantup(segs(rounding),4);
+                if (edges == EDGES_ALL) {
+                    if(rounding<0) {
+                        cube(size, center=true);
+                        zflip_copy() {
+                            up(size.z/2) {
+                                difference() {
+                                    down(-rounding/2) cube([size.x-2*rounding, size.y-2*rounding, -rounding], center=true);
+                                    down(-rounding) {
+                                        ycopies(size.y-2*rounding) xcyl(l=size.x-3*rounding, r=-rounding);
+                                        xcopies(size.x-2*rounding) ycyl(l=size.y-3*rounding, r=-rounding);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        isize = [for (v = size) max(0.001, v-2*rounding)];
+                        minkowski() {
+                            cube(isize, center=true);
+                            if (trimcorners) {
+                                spheroid(r=rounding, $fn=sides);
+                            } else {
+                                intersection() {
+                                    cyl(r=rounding, h=rounding*2, $fn=sides);
+                                    rotate([90,0,0]) cyl(r=rounding, h=rounding*2, $fn=sides);
+                                    rotate([0,90,0]) cyl(r=rounding, h=rounding*2, $fn=sides);
+                                }
+                            }
+                        }
+                    }
+                } else if (rounding<0) {
+                    ard = abs(rounding);
+                    cube(size, center=true);
 
-					// External-Chamfer mask edges
-					difference() {
-						union() {
-							for (i = [0:3], axis=[0:1]) {
-								if (edges[axis][i]>0) {
-									vec = EDGE_OFFSETS[axis][i];
-									translate(vmul(vec/2, size+[ard,ard,-ard])) {
-										rotate(majrots[axis]) {
-											cube([ard, ard, size[axis]], center=true);
-										}
-									}
-								}
-							}
+                    // External-Chamfer mask edges
+                    difference() {
+                        union() {
+                            for (i = [0:3], axis=[0:1]) {
+                                if (edges[axis][i]>0) {
+                                    vec = EDGE_OFFSETS[axis][i];
+                                    translate(vmul(vec/2, size+[ard,ard,-ard])) {
+                                        rotate(majrots[axis]) {
+                                            cube([ard, ard, size[axis]], center=true);
+                                        }
+                                    }
+                                }
+                            }
 
-							// Add multi-edge corners.
-							if (trimcorners) {
-								for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
-									if (corner_edge_count(edges, [xa,ya,za]) > 1) {
-										translate(vmul([xa,ya,za]/2, size+[ard-0.01,ard-0.01,-ard])) {
-											cube([ard+0.01,ard+0.01,ard], center=true);
-										}
-									}
-								}
-							}
-						}
+                            // Add multi-edge corners.
+                            if (trimcorners) {
+                                for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
+                                    if (corner_edge_count(edges, [xa,ya,za]) > 1) {
+                                        translate(vmul([xa,ya,za]/2, size+[ard-0.01,ard-0.01,-ard])) {
+                                            cube([ard+0.01,ard+0.01,ard], center=true);
+                                        }
+                                    }
+                                }
+                            }
+                        }
 
-						// Remove roundings from overhangs.
-						for (i = [0:3], axis=[0:1]) {
-							if (edges[axis][i]>0) {
-								vec = EDGE_OFFSETS[axis][i];
-								translate(vmul(vec/2, size+[2*ard,2*ard,-2*ard])) {
-									rotate(majrots[axis]) {
-										cyl(l=size[axis]+2.1*ard, r=ard);
-									}
-								}
-							}
-						}
-					}
-				} else {
-					difference() {
-						cube(size, center=true);
+                        // Remove roundings from overhangs.
+                        for (i = [0:3], axis=[0:1]) {
+                            if (edges[axis][i]>0) {
+                                vec = EDGE_OFFSETS[axis][i];
+                                translate(vmul(vec/2, size+[2*ard,2*ard,-2*ard])) {
+                                    rotate(majrots[axis]) {
+                                        cyl(l=size[axis]+2.1*ard, r=ard);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    difference() {
+                        cube(size, center=true);
 
-						// Round edges.
-						for (i = [0:3], axis=[0:2]) {
-							if (edges[axis][i]>0) {
-								difference() {
-									translate(vmul(EDGE_OFFSETS[axis][i], size/2)) {
-										rotate(majrots[axis]) cube([rounding*2, rounding*2, size[axis]+0.1], center=true);
-									}
-									translate(vmul(EDGE_OFFSETS[axis][i], size/2 - [1,1,1]*rounding)) {
-										rotate(majrots[axis]) cyl(h=size[axis]+0.2, r=rounding, $fn=sides);
-									}
-								}
-							}
-						}
+                        // Round edges.
+                        for (i = [0:3], axis=[0:2]) {
+                            if (edges[axis][i]>0) {
+                                difference() {
+                                    translate(vmul(EDGE_OFFSETS[axis][i], size/2)) {
+                                        rotate(majrots[axis]) cube([rounding*2, rounding*2, size[axis]+0.1], center=true);
+                                    }
+                                    translate(vmul(EDGE_OFFSETS[axis][i], size/2 - [1,1,1]*rounding)) {
+                                        rotate(majrots[axis]) cyl(h=size[axis]+0.2, r=rounding, $fn=sides);
+                                    }
+                                }
+                            }
+                        }
 
-						// Round triple-edge corners.
-						if (trimcorners) {
-							for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
-								if (corner_edge_count(edges, [xa,ya,za]) > 2) {
-									difference() {
-										translate(vmul([xa,ya,za], size/2)) {
-											cube(rounding*2, center=true);
-										}
-										translate(vmul([xa,ya,za], size/2-[1,1,1]*rounding)) {
-											spheroid(r=rounding, $fn=sides);
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			} else {
-				cube(size=size, center=true);
-			}
-			children();
-		}
-	}
+                        // Round triple-edge corners.
+                        if (trimcorners) {
+                            for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
+                                if (corner_edge_count(edges, [xa,ya,za]) > 2) {
+                                    difference() {
+                                        translate(vmul([xa,ya,za], size/2)) {
+                                            cube(rounding*2, center=true);
+                                        }
+                                        translate(vmul([xa,ya,za], size/2-[1,1,1]*rounding)) {
+                                            spheroid(r=rounding, $fn=sides);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                cube(size=size, center=true);
+            }
+            children();
+        }
+    }
 }
 
 
@@ -383,97 +383,97 @@ module cuboid(
 //   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5])
 //       show_anchors();
 module prismoid(
-	size1, size2, h, shift=[0,0],
-	rounding=0, rounding1, rounding2,
-	chamfer=0, chamfer1, chamfer2,
-	l, center,
-	anchor, spin=0, orient=UP
+    size1, size2, h, shift=[0,0],
+    rounding=0, rounding1, rounding2,
+    chamfer=0, chamfer1, chamfer2,
+    l, center,
+    anchor, spin=0, orient=UP
 ) {
-	assert(is_num(size1) || is_vector(size1,2));
-	assert(is_num(size2) || is_vector(size2,2));
-	assert(is_num(h) || is_num(l));
-	assert(is_vector(shift,2));
-	assert(is_num(rounding) || is_vector(rounding,4), "Bad rounding argument.");
-	assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "Bad rounding1 argument.");
-	assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "Bad rounding2 argument.");
-	assert(is_num(chamfer) || is_vector(chamfer,4), "Bad chamfer argument.");
-	assert(is_undef(chamfer1) || is_num(chamfer1) || is_vector(chamfer1,4), "Bad chamfer1 argument.");
-	assert(is_undef(chamfer2) || is_num(chamfer2) || is_vector(chamfer2,4), "Bad chamfer2 argument.");
-	eps = pow(2,-14);
-	size1 = is_num(size1)? [size1,size1] : size1;
-	size2 = is_num(size2)? [size2,size2] : size2;
-	s1 = [max(size1.x, eps), max(size1.y, eps)];
-	s2 = [max(size2.x, eps), max(size2.y, eps)];
-	rounding1 = default(rounding1, rounding);
-	rounding2 = default(rounding2, rounding);
-	chamfer1 = default(chamfer1, chamfer);
-	chamfer2 = default(chamfer2, chamfer);
-	anchor = get_anchor(anchor, center, BOT, BOT);
-	vnf = prismoid(
-		size1=size1, size2=size2, h=h, shift=shift,
-		rounding=rounding, rounding1=rounding1, rounding2=rounding2,
-		chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
-		l=l, center=CENTER
-	);
-	attachable(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift) {
-		vnf_polyhedron(vnf, convexity=4);
-		children();
-	}
+    assert(is_num(size1) || is_vector(size1,2));
+    assert(is_num(size2) || is_vector(size2,2));
+    assert(is_num(h) || is_num(l));
+    assert(is_vector(shift,2));
+    assert(is_num(rounding) || is_vector(rounding,4), "Bad rounding argument.");
+    assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "Bad rounding1 argument.");
+    assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "Bad rounding2 argument.");
+    assert(is_num(chamfer) || is_vector(chamfer,4), "Bad chamfer argument.");
+    assert(is_undef(chamfer1) || is_num(chamfer1) || is_vector(chamfer1,4), "Bad chamfer1 argument.");
+    assert(is_undef(chamfer2) || is_num(chamfer2) || is_vector(chamfer2,4), "Bad chamfer2 argument.");
+    eps = pow(2,-14);
+    size1 = is_num(size1)? [size1,size1] : size1;
+    size2 = is_num(size2)? [size2,size2] : size2;
+    s1 = [max(size1.x, eps), max(size1.y, eps)];
+    s2 = [max(size2.x, eps), max(size2.y, eps)];
+    rounding1 = default(rounding1, rounding);
+    rounding2 = default(rounding2, rounding);
+    chamfer1 = default(chamfer1, chamfer);
+    chamfer2 = default(chamfer2, chamfer);
+    anchor = get_anchor(anchor, center, BOT, BOT);
+    vnf = prismoid(
+        size1=size1, size2=size2, h=h, shift=shift,
+        rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+        chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+        l=l, center=CENTER
+    );
+    attachable(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift) {
+        vnf_polyhedron(vnf, convexity=4);
+        children();
+    }
 }
 
 function prismoid(
-	size1, size2, h, shift=[0,0],
-	rounding=0, rounding1, rounding2,
-	chamfer=0, chamfer1, chamfer2,
-	l, center,
-	anchor=DOWN, spin=0, orient=UP
+    size1, size2, h, shift=[0,0],
+    rounding=0, rounding1, rounding2,
+    chamfer=0, chamfer1, chamfer2,
+    l, center,
+    anchor=DOWN, spin=0, orient=UP
 ) =
-	assert(is_vector(size1,2))
-	assert(is_vector(size2,2))
-	assert(is_num(h) || is_num(l))
-	assert(is_vector(shift,2))
-	assert(is_num(rounding) || is_vector(rounding,4), "Bad rounding argument.")
-	assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "Bad rounding1 argument.")
-	assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "Bad rounding2 argument.")
-	assert(is_num(chamfer) || is_vector(chamfer,4), "Bad chamfer argument.")
-	assert(is_undef(chamfer1) || is_num(chamfer1) || is_vector(chamfer1,4), "Bad chamfer1 argument.")
-	assert(is_undef(chamfer2) || is_num(chamfer2) || is_vector(chamfer2,4), "Bad chamfer2 argument.")
-	let(
-		eps = pow(2,-14),
-		h = first_defined([h,l,1]),
-		shiftby = point3d(point2d(shift)),
-		s1 = [max(size1.x, eps), max(size1.y, eps)],
-		s2 = [max(size2.x, eps), max(size2.y, eps)],
-		rounding1 = default(rounding1, rounding),
-		rounding2 = default(rounding2, rounding),
-		chamfer1 = default(chamfer1, chamfer),
-		chamfer2 = default(chamfer2, chamfer),
-		anchor = get_anchor(anchor, center, BOT, BOT),
-		vnf = (rounding1==0 && rounding2==0 && chamfer1==0 && chamfer2==0)? (
-			let(
-				corners = [[1,1],[1,-1],[-1,-1],[-1,1]] * 0.5,
-				points = [
-					for (p=corners) point3d(vmul(s2,p), +h/2) + shiftby,
-					for (p=corners) point3d(vmul(s1,p), -h/2)
-				],
-				faces=[
-					[0,1,2], [0,2,3], [0,4,5], [0,5,1],
-					[1,5,6], [1,6,2], [2,6,7], [2,7,3],
-					[3,7,4], [3,4,0], [4,7,6], [4,6,5],
-				]
-			) [points, faces]
-		) : (
-			let(
-				path1 = rect(size1, rounding=rounding1, chamfer=chamfer1, anchor=CTR),
-				path2 = rect(size2, rounding=rounding2, chamfer=chamfer2, anchor=CTR),
-				points = [
-					each path3d(path1, -h/2),
-					each path3d(move(shiftby, p=path2), +h/2),
-				],
-				faces = hull(points)
-			) [points, faces]
-		)
-	) reorient(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift, p=vnf);
+    assert(is_vector(size1,2))
+    assert(is_vector(size2,2))
+    assert(is_num(h) || is_num(l))
+    assert(is_vector(shift,2))
+    assert(is_num(rounding) || is_vector(rounding,4), "Bad rounding argument.")
+    assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "Bad rounding1 argument.")
+    assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "Bad rounding2 argument.")
+    assert(is_num(chamfer) || is_vector(chamfer,4), "Bad chamfer argument.")
+    assert(is_undef(chamfer1) || is_num(chamfer1) || is_vector(chamfer1,4), "Bad chamfer1 argument.")
+    assert(is_undef(chamfer2) || is_num(chamfer2) || is_vector(chamfer2,4), "Bad chamfer2 argument.")
+    let(
+        eps = pow(2,-14),
+        h = first_defined([h,l,1]),
+        shiftby = point3d(point2d(shift)),
+        s1 = [max(size1.x, eps), max(size1.y, eps)],
+        s2 = [max(size2.x, eps), max(size2.y, eps)],
+        rounding1 = default(rounding1, rounding),
+        rounding2 = default(rounding2, rounding),
+        chamfer1 = default(chamfer1, chamfer),
+        chamfer2 = default(chamfer2, chamfer),
+        anchor = get_anchor(anchor, center, BOT, BOT),
+        vnf = (rounding1==0 && rounding2==0 && chamfer1==0 && chamfer2==0)? (
+            let(
+                corners = [[1,1],[1,-1],[-1,-1],[-1,1]] * 0.5,
+                points = [
+                    for (p=corners) point3d(vmul(s2,p), +h/2) + shiftby,
+                    for (p=corners) point3d(vmul(s1,p), -h/2)
+                ],
+                faces=[
+                    [0,1,2], [0,2,3], [0,4,5], [0,5,1],
+                    [1,5,6], [1,6,2], [2,6,7], [2,7,3],
+                    [3,7,4], [3,4,0], [4,7,6], [4,6,5],
+                ]
+            ) [points, faces]
+        ) : (
+            let(
+                path1 = rect(size1, rounding=rounding1, chamfer=chamfer1, anchor=CTR),
+                path2 = rect(size2, rounding=rounding2, chamfer=chamfer2, anchor=CTR),
+                points = [
+                    each path3d(path1, -h/2),
+                    each path3d(move(shiftby, p=path2), +h/2),
+                ],
+                faces = hull(points)
+            ) [points, faces]
+        )
+    ) reorient(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift, p=vnf);
 
 
 // Module: right_triangle()
@@ -498,14 +498,14 @@ function prismoid(
 //   right_triangle([60, 40, 15]) show_anchors();
 module right_triangle(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
 {
-	size = scalar_vec3(size);
-	anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
-	attachable(anchor,spin,orient, size=size) {
-		linear_extrude(height=size.z, convexity=2, center=true) {
-			polygon([[-size.x/2,-size.y/2], [-size.x/2,size.y/2], [size.x/2,-size.y/2]]);
-		}
-		children();
-	}
+    size = scalar_vec3(size);
+    anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
+    attachable(anchor,spin,orient, size=size) {
+        linear_extrude(height=size.z, convexity=2, center=true) {
+            polygon([[-size.x/2,-size.y/2], [-size.x/2,size.y/2], [size.x/2,-size.y/2]]);
+        }
+        children();
+    }
 }
 
 
@@ -611,100 +611,100 @@ module right_triangle(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
 //   }
 //
 module cyl(
-	l=undef, h=undef,
-	r=undef, r1=undef, r2=undef,
-	d=undef, d1=undef, d2=undef,
-	chamfer=undef, chamfer1=undef, chamfer2=undef,
-	chamfang=undef, chamfang1=undef, chamfang2=undef,
-	rounding=undef, rounding1=undef, rounding2=undef,
-	circum=false, realign=false, from_end=false,
-	center, anchor, spin=0, orient=UP
+    l=undef, h=undef,
+    r=undef, r1=undef, r2=undef,
+    d=undef, d1=undef, d2=undef,
+    chamfer=undef, chamfer1=undef, chamfer2=undef,
+    chamfang=undef, chamfang1=undef, chamfang2=undef,
+    rounding=undef, rounding1=undef, rounding2=undef,
+    circum=false, realign=false, from_end=false,
+    center, anchor, spin=0, orient=UP
 ) {
-	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
-	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
-	l = first_defined([l, h, 1]);
-	sides = segs(max(r1,r2));
-	sc = circum? 1/cos(180/sides) : 1;
-	phi = atan2(l, r2-r1);
-	anchor = get_anchor(anchor,center,BOT,CENTER);
-	attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
-		zrot(realign? 180/sides : 0) {
-			if (!any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2])) {
-				cylinder(h=l, r1=r1*sc, r2=r2*sc, center=true, $fn=sides);
-			} else {
-				vang = atan2(l, r1-r2)/2;
-				chang1 = 90-first_defined([chamfang1, chamfang, vang]);
-				chang2 = 90-first_defined([chamfang2, chamfang, 90-vang]);
-				cham1 = first_defined([chamfer1, chamfer]) * (from_end? 1 : tan(chang1));
-				cham2 = first_defined([chamfer2, chamfer]) * (from_end? 1 : tan(chang2));
-				fil1 = first_defined([rounding1, rounding]);
-				fil2 = first_defined([rounding2, rounding]);
-				if (chamfer != undef) {
-					assert(chamfer <= r1,  "chamfer is larger than the r1 radius of the cylinder.");
-					assert(chamfer <= r2,  "chamfer is larger than the r2 radius of the cylinder.");
-				}
-				if (cham1 != undef) {
-					assert(cham1 <= r1,  "chamfer1 is larger than the r1 radius of the cylinder.");
-				}
-				if (cham2 != undef) {
-					assert(cham2 <= r2,  "chamfer2 is larger than the r2 radius of the cylinder.");
-				}
-				if (rounding != undef) {
-					assert(rounding <= r1,  "rounding is larger than the r1 radius of the cylinder.");
-					assert(rounding <= r2,  "rounding is larger than the r2 radius of the cylinder.");
-				}
-				if (fil1 != undef) {
-					assert(fil1 <= r1,  "rounding1 is larger than the r1 radius of the cylinder.");
-				}
-				if (fil2 != undef) {
-					assert(fil2 <= r2,  "rounding2 is larger than the r1 radius of the cylinder.");
-				}
-				dy1 = abs(first_defined([cham1, fil1, 0]));
-				dy2 = abs(first_defined([cham2, fil2, 0]));
-				assert(dy1+dy2 <= l, "Sum of fillets and chamfer sizes must be less than the length of the cylinder.");
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
+    l = first_defined([l, h, 1]);
+    sides = segs(max(r1,r2));
+    sc = circum? 1/cos(180/sides) : 1;
+    phi = atan2(l, r2-r1);
+    anchor = get_anchor(anchor,center,BOT,CENTER);
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
+        zrot(realign? 180/sides : 0) {
+            if (!any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2])) {
+                cylinder(h=l, r1=r1*sc, r2=r2*sc, center=true, $fn=sides);
+            } else {
+                vang = atan2(l, r1-r2)/2;
+                chang1 = 90-first_defined([chamfang1, chamfang, vang]);
+                chang2 = 90-first_defined([chamfang2, chamfang, 90-vang]);
+                cham1 = first_defined([chamfer1, chamfer]) * (from_end? 1 : tan(chang1));
+                cham2 = first_defined([chamfer2, chamfer]) * (from_end? 1 : tan(chang2));
+                fil1 = first_defined([rounding1, rounding]);
+                fil2 = first_defined([rounding2, rounding]);
+                if (chamfer != undef) {
+                    assert(chamfer <= r1,  "chamfer is larger than the r1 radius of the cylinder.");
+                    assert(chamfer <= r2,  "chamfer is larger than the r2 radius of the cylinder.");
+                }
+                if (cham1 != undef) {
+                    assert(cham1 <= r1,  "chamfer1 is larger than the r1 radius of the cylinder.");
+                }
+                if (cham2 != undef) {
+                    assert(cham2 <= r2,  "chamfer2 is larger than the r2 radius of the cylinder.");
+                }
+                if (rounding != undef) {
+                    assert(rounding <= r1,  "rounding is larger than the r1 radius of the cylinder.");
+                    assert(rounding <= r2,  "rounding is larger than the r2 radius of the cylinder.");
+                }
+                if (fil1 != undef) {
+                    assert(fil1 <= r1,  "rounding1 is larger than the r1 radius of the cylinder.");
+                }
+                if (fil2 != undef) {
+                    assert(fil2 <= r2,  "rounding2 is larger than the r1 radius of the cylinder.");
+                }
+                dy1 = abs(first_defined([cham1, fil1, 0]));
+                dy2 = abs(first_defined([cham2, fil2, 0]));
+                assert(dy1+dy2 <= l, "Sum of fillets and chamfer sizes must be less than the length of the cylinder.");
 
-				path = concat(
-					[[0,l/2]],
+                path = concat(
+                    [[0,l/2]],
 
-					!is_undef(cham2)? (
-						let(
-							p1 = [r2-cham2/tan(chang2),l/2],
-							p2 = lerp([r2,l/2],[r1,-l/2],abs(cham2)/l)
-						) [p1,p2]
-					) : !is_undef(fil2)? (
-						let(
-							cn = find_circle_2tangents([r2-fil2,l/2], [r2,l/2], [r1,-l/2], r=abs(fil2)),
-							ang = fil2<0? phi : phi-180,
-							steps = ceil(abs(ang)/360*segs(abs(fil2))),
-							step = ang/steps,
-							pts = [for (i=[0:1:steps]) let(a=90+i*step) cn[0]+abs(fil2)*[cos(a),sin(a)]]
-						) pts
-					) : [[r2,l/2]],
+                    !is_undef(cham2)? (
+                        let(
+                            p1 = [r2-cham2/tan(chang2),l/2],
+                            p2 = lerp([r2,l/2],[r1,-l/2],abs(cham2)/l)
+                        ) [p1,p2]
+                    ) : !is_undef(fil2)? (
+                        let(
+                            cn = find_circle_2tangents([r2-fil2,l/2], [r2,l/2], [r1,-l/2], r=abs(fil2)),
+                            ang = fil2<0? phi : phi-180,
+                            steps = ceil(abs(ang)/360*segs(abs(fil2))),
+                            step = ang/steps,
+                            pts = [for (i=[0:1:steps]) let(a=90+i*step) cn[0]+abs(fil2)*[cos(a),sin(a)]]
+                        ) pts
+                    ) : [[r2,l/2]],
 
-					!is_undef(cham1)? (
-						let(
-							p1 = lerp([r1,-l/2],[r2,l/2],abs(cham1)/l),
-							p2 = [r1-cham1/tan(chang1),-l/2]
-						) [p1,p2]
-					) : !is_undef(fil1)? (
-						let(
-							cn = find_circle_2tangents([r1-fil1,-l/2], [r1,-l/2], [r2,l/2], r=abs(fil1)),
-							ang = fil1<0? 180-phi : -phi,
-							steps = ceil(abs(ang)/360*segs(abs(fil1))),
-							step = ang/steps,
-							pts = [for (i=[0:1:steps]) let(a=(fil1<0?180:0)+(phi-90)+i*step) cn[0]+abs(fil1)*[cos(a),sin(a)]]
-						) pts
-					) : [[r1,-l/2]],
+                    !is_undef(cham1)? (
+                        let(
+                            p1 = lerp([r1,-l/2],[r2,l/2],abs(cham1)/l),
+                            p2 = [r1-cham1/tan(chang1),-l/2]
+                        ) [p1,p2]
+                    ) : !is_undef(fil1)? (
+                        let(
+                            cn = find_circle_2tangents([r1-fil1,-l/2], [r1,-l/2], [r2,l/2], r=abs(fil1)),
+                            ang = fil1<0? 180-phi : -phi,
+                            steps = ceil(abs(ang)/360*segs(abs(fil1))),
+                            step = ang/steps,
+                            pts = [for (i=[0:1:steps]) let(a=(fil1<0?180:0)+(phi-90)+i*step) cn[0]+abs(fil1)*[cos(a),sin(a)]]
+                        ) pts
+                    ) : [[r1,-l/2]],
 
-					[[0,-l/2]]
-				);
-				rotate_extrude(convexity=2) {
-					polygon(path);
-				}
-			}
-		}
-		children();
-	}
+                    [[0,-l/2]]
+                );
+                rotate_extrude(convexity=2) {
+                    polygon(path);
+                }
+            }
+        }
+        children();
+    }
 }
 
 
@@ -741,8 +741,8 @@ module cyl(
 //   }
 module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, anchor=CENTER)
 {
-	anchor = rot(from=RIGHT, to=UP, p=anchor);
-	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=RIGHT, anchor=anchor) children();
+    anchor = rot(from=RIGHT, to=UP, p=anchor);
+    cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=RIGHT, anchor=anchor) children();
 }
 
 
@@ -779,8 +779,8 @@ module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   }
 module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, anchor=CENTER)
 {
-	anchor = rot(from=BACK, to=UP, p=anchor);
-	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=BACK, anchor=anchor) children();
+    anchor = rot(from=BACK, to=UP, p=anchor);
+    cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=BACK, anchor=anchor) children();
 }
 
 
@@ -817,7 +817,7 @@ module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   }
 module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, anchor=CENTER)
 {
-	cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=UP, anchor=anchor) children();
+    cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=UP, anchor=anchor) children();
 }
 
 
@@ -869,34 +869,34 @@ module zcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 // Example: Standard Connectors
 //   tube(h=30, or=40, wall=5) show_anchors();
 module tube(
-	h, wall=undef,
-	r=undef, r1=undef, r2=undef,
-	d=undef, d1=undef, d2=undef,
-	or=undef, or1=undef, or2=undef,
-	od=undef, od1=undef, od2=undef,
-	ir=undef, id=undef, ir1=undef,
-	ir2=undef, id1=undef, id2=undef,
-	anchor, spin=0, orient=UP,
-	center, realign=false, l
+    h, wall=undef,
+    r=undef, r1=undef, r2=undef,
+    d=undef, d1=undef, d2=undef,
+    or=undef, or1=undef, or2=undef,
+    od=undef, od1=undef, od2=undef,
+    ir=undef, id=undef, ir1=undef,
+    ir2=undef, id1=undef, id2=undef,
+    anchor, spin=0, orient=UP,
+    center, realign=false, l
 ) {
-	h = first_defined([h,l,1]);
-	r1 = first_defined([or1, od1/2, r1, d1/2, or, od/2, r, d/2, ir1+wall, id1/2+wall, ir+wall, id/2+wall]);
-	r2 = first_defined([or2, od2/2, r2, d2/2, or, od/2, r, d/2, ir2+wall, id2/2+wall, ir+wall, id/2+wall]);
-	ir1 = first_defined([ir1, id1/2, ir, id/2, r1-wall, d1/2-wall, r-wall, d/2-wall]);
-	ir2 = first_defined([ir2, id2/2, ir, id/2, r2-wall, d2/2-wall, r-wall, d/2-wall]);
-	assert(ir1 <= r1, "Inner radius is larger than outer radius.");
-	assert(ir2 <= r2, "Inner radius is larger than outer radius.");
-	sides = segs(max(r1,r2));
-	anchor = get_anchor(anchor, center, BOT, BOT);
-	attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
-		zrot(realign? 180/sides : 0) {
-			difference() {
-				cyl(h=h, r1=r1, r2=r2, $fn=sides) children();
-				cyl(h=h+0.05, r1=ir1, r2=ir2);
-			}
-		}
-		children();
-	}
+    h = first_defined([h,l,1]);
+    r1 = first_defined([or1, od1/2, r1, d1/2, or, od/2, r, d/2, ir1+wall, id1/2+wall, ir+wall, id/2+wall]);
+    r2 = first_defined([or2, od2/2, r2, d2/2, or, od/2, r, d/2, ir2+wall, id2/2+wall, ir+wall, id/2+wall]);
+    ir1 = first_defined([ir1, id1/2, ir, id/2, r1-wall, d1/2-wall, r-wall, d/2-wall]);
+    ir2 = first_defined([ir2, id2/2, ir, id/2, r2-wall, d2/2-wall, r-wall, d/2-wall]);
+    assert(ir1 <= r1, "Inner radius is larger than outer radius.");
+    assert(ir2 <= r2, "Inner radius is larger than outer radius.");
+    sides = segs(max(r1,r2));
+    anchor = get_anchor(anchor, center, BOT, BOT);
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
+        zrot(realign? 180/sides : 0) {
+            difference() {
+                cyl(h=h, r1=r1, r2=r2, $fn=sides) children();
+                cyl(h=h+0.05, r1=ir1, r2=ir2);
+            }
+        }
+        children();
+    }
 }
 
 
@@ -983,80 +983,80 @@ module tube(
 //       rounding2=[0,5,0,10], irounding2=[0,3,0,8]
 //   );
 module rect_tube(
-	size, isize,
-	h, shift=[0,0], wall,
-	size1, size2,
-	isize1, isize2,
-	rounding=0, rounding1, rounding2,
-	irounding=0, irounding1, irounding2,
-	chamfer=0, chamfer1, chamfer2,
-	ichamfer=0, ichamfer1, ichamfer2,
-	anchor, spin=0, orient=UP,
-	center, l
+    size, isize,
+    h, shift=[0,0], wall,
+    size1, size2,
+    isize1, isize2,
+    rounding=0, rounding1, rounding2,
+    irounding=0, irounding1, irounding2,
+    chamfer=0, chamfer1, chamfer2,
+    ichamfer=0, ichamfer1, ichamfer2,
+    anchor, spin=0, orient=UP,
+    center, l
 ) {
-	h = first_defined([h,l,1]);
-	assert(is_num(h), "l or h argument required.");
-	assert(is_vector(shift,2));
-	s1 = is_num(size1)? [size1, size1] :
-		is_vector(size1,2)? size1 :
-		is_num(size)? [size, size] :
-		is_vector(size,2)? size :
-		undef;
-	s2 = is_num(size2)? [size2, size2] :
-		is_vector(size2,2)? size2 :
-		is_num(size)? [size, size] :
-		is_vector(size,2)? size :
-		undef;
-	is1 = is_num(isize1)? [isize1, isize1] :
-		is_vector(isize1,2)? isize1 :
-		is_num(isize)? [isize, isize] :
-		is_vector(isize,2)? isize :
-		undef;
-	is2 = is_num(isize2)? [isize2, isize2] :
-		is_vector(isize2,2)? isize2 :
-		is_num(isize)? [isize, isize] :
-		is_vector(isize,2)? isize :
-		undef;
-	size1 = is_def(s1)? s1 :
-		(is_def(wall) && is_def(is1))? (is1+2*[wall,wall]) :
-		undef;
-	size2 = is_def(s2)? s2 :
-		(is_def(wall) && is_def(is2))? (is2+2*[wall,wall]) :
-		undef;
-	isize1 = is_def(is1)? is1 :
-		(is_def(wall) && is_def(s1))? (s1-2*[wall,wall]) :
-		undef;
-	isize2 = is_def(is2)? is2 :
-		(is_def(wall) && is_def(s2))? (s2-2*[wall,wall]) :
-		undef;
-	assert(wall==undef || is_num(wall));
-	assert(size1!=undef, "Bad size/size1 argument.");
-	assert(size2!=undef, "Bad size/size2 argument.");
-	assert(isize1!=undef, "Bad isize/isize1 argument.");
-	assert(isize2!=undef, "Bad isize/isize2 argument.");
-	assert(isize1.x < size1.x, "Inner size is larger than outer size.");
-	assert(isize1.y < size1.y, "Inner size is larger than outer size.");
-	assert(isize2.x < size2.x, "Inner size is larger than outer size.");
-	assert(isize2.y < size2.y, "Inner size is larger than outer size.");
-	anchor = get_anchor(anchor, center, BOT, BOT);
-	attachable(anchor,spin,orient, size=[each size1, h], size2=size2, shift=shift) {
-		diff("_H_o_L_e_")
-		prismoid(
-			size1, size2, h=h, shift=shift,
-			rounding=rounding, rounding1=rounding1, rounding2=rounding2,
-			chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
-			anchor=CTR
-		) {
-			children();
-			tags("_H_o_L_e_") prismoid(
-				isize1, isize2, h=h+0.05, shift=shift,
-				rounding=irounding, rounding1=irounding1, rounding2=irounding2,
-				chamfer=ichamfer, chamfer1=ichamfer1, chamfer2=ichamfer2,
-				anchor=CTR
-			);
-		}
-		children();
-	}
+    h = first_defined([h,l,1]);
+    assert(is_num(h), "l or h argument required.");
+    assert(is_vector(shift,2));
+    s1 = is_num(size1)? [size1, size1] :
+        is_vector(size1,2)? size1 :
+        is_num(size)? [size, size] :
+        is_vector(size,2)? size :
+        undef;
+    s2 = is_num(size2)? [size2, size2] :
+        is_vector(size2,2)? size2 :
+        is_num(size)? [size, size] :
+        is_vector(size,2)? size :
+        undef;
+    is1 = is_num(isize1)? [isize1, isize1] :
+        is_vector(isize1,2)? isize1 :
+        is_num(isize)? [isize, isize] :
+        is_vector(isize,2)? isize :
+        undef;
+    is2 = is_num(isize2)? [isize2, isize2] :
+        is_vector(isize2,2)? isize2 :
+        is_num(isize)? [isize, isize] :
+        is_vector(isize,2)? isize :
+        undef;
+    size1 = is_def(s1)? s1 :
+        (is_def(wall) && is_def(is1))? (is1+2*[wall,wall]) :
+        undef;
+    size2 = is_def(s2)? s2 :
+        (is_def(wall) && is_def(is2))? (is2+2*[wall,wall]) :
+        undef;
+    isize1 = is_def(is1)? is1 :
+        (is_def(wall) && is_def(s1))? (s1-2*[wall,wall]) :
+        undef;
+    isize2 = is_def(is2)? is2 :
+        (is_def(wall) && is_def(s2))? (s2-2*[wall,wall]) :
+        undef;
+    assert(wall==undef || is_num(wall));
+    assert(size1!=undef, "Bad size/size1 argument.");
+    assert(size2!=undef, "Bad size/size2 argument.");
+    assert(isize1!=undef, "Bad isize/isize1 argument.");
+    assert(isize2!=undef, "Bad isize/isize2 argument.");
+    assert(isize1.x < size1.x, "Inner size is larger than outer size.");
+    assert(isize1.y < size1.y, "Inner size is larger than outer size.");
+    assert(isize2.x < size2.x, "Inner size is larger than outer size.");
+    assert(isize2.y < size2.y, "Inner size is larger than outer size.");
+    anchor = get_anchor(anchor, center, BOT, BOT);
+    attachable(anchor,spin,orient, size=[each size1, h], size2=size2, shift=shift) {
+        diff("_H_o_L_e_")
+        prismoid(
+            size1, size2, h=h, shift=shift,
+            rounding=rounding, rounding1=rounding1, rounding2=rounding2,
+            chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+            anchor=CTR
+        ) {
+            children();
+            tags("_H_o_L_e_") prismoid(
+                isize1, isize2, h=h+0.05, shift=shift,
+                rounding=irounding, rounding1=irounding1, rounding2=irounding2,
+                chamfer=ichamfer, chamfer1=ichamfer1, chamfer2=ichamfer2,
+                anchor=CTR
+            );
+        }
+        children();
+    }
 }
 
 
@@ -1090,23 +1090,23 @@ module rect_tube(
 // Example: Standard Connectors
 //   torus(od=60, id=30) show_anchors();
 module torus(
-	r=undef,  d=undef,
-	r2=undef, d2=undef,
-	or=undef, od=undef,
-	ir=undef, id=undef,
-	center, anchor, spin=0, orient=UP
+    r=undef,  d=undef,
+    r2=undef, d2=undef,
+    or=undef, od=undef,
+    ir=undef, id=undef,
+    center, anchor, spin=0, orient=UP
 ) {
-	orr = get_radius(r=or, d=od, dflt=1.0);
-	irr = get_radius(r=ir, d=id, dflt=0.5);
-	majrad = get_radius(r=r, d=d, dflt=(orr+irr)/2);
-	minrad = get_radius(r=r2, d=d2, dflt=(orr-irr)/2);
-	anchor = get_anchor(anchor, center, BOT, CENTER);
-	attachable(anchor,spin,orient, r=(majrad+minrad), l=minrad*2) {
-		rotate_extrude(convexity=4) {
-			right(majrad) circle(r=minrad);
-		}
-		children();
-	}
+    orr = get_radius(r=or, d=od, dflt=1.0);
+    irr = get_radius(r=ir, d=id, dflt=0.5);
+    majrad = get_radius(r=r, d=d, dflt=(orr+irr)/2);
+    minrad = get_radius(r=r2, d=d2, dflt=(orr-irr)/2);
+    anchor = get_anchor(anchor, center, BOT, CENTER);
+    attachable(anchor,spin,orient, r=(majrad+minrad), l=minrad*2) {
+        rotate_extrude(convexity=4) {
+            right(majrad) circle(r=minrad);
+        }
+        children();
+    }
 }
 
 
@@ -1158,124 +1158,124 @@ module torus(
 //   vnf_polyhedron(vnf);
 module spheroid(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orient=UP)
 {
-	r = get_radius(r=r, d=d, dflt=1);
-	sides = segs(r);
-	attachable(anchor,spin,orient, r=r) {
-		if (style=="orig") {
-			rotate_extrude(convexity=2,$fn=sides) {
-				difference() {
-					oval(r=r, circum=circum, $fn=sides);
-					left(r) square(2*r,center=true);
-				}
-			}
-		} else if (style=="aligned") {
-			rotate_extrude(convexity=2,$fn=sides) {
-				difference() {
-					zrot(180/sides) oval(r=r, circum=circum, $fn=sides);
-					left(r) square(2*r,center=true);
-				}
-			}
-		} else {
-			vnf = spheroid(r=r, circum=circum, style=style);
-			vnf_polyhedron(vnf, convexity=2);
-		}
-		children();
-	}
+    r = get_radius(r=r, d=d, dflt=1);
+    sides = segs(r);
+    attachable(anchor,spin,orient, r=r) {
+        if (style=="orig") {
+            rotate_extrude(convexity=2,$fn=sides) {
+                difference() {
+                    oval(r=r, circum=circum, $fn=sides);
+                    left(r) square(2*r,center=true);
+                }
+            }
+        } else if (style=="aligned") {
+            rotate_extrude(convexity=2,$fn=sides) {
+                difference() {
+                    zrot(180/sides) oval(r=r, circum=circum, $fn=sides);
+                    left(r) square(2*r,center=true);
+                }
+            }
+        } else {
+            vnf = spheroid(r=r, circum=circum, style=style);
+            vnf_polyhedron(vnf, convexity=2);
+        }
+        children();
+    }
 }
 
 
 function spheroid(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orient=UP) =
-	let(
-		r = get_radius(r=r, d=d, dflt=1),
-		hsides = segs(r),
-		vsides = max(2,ceil(hsides/2)),
-		icosa_steps = round(max(5,hsides)/5),
-		rr = circum? (r / cos(90/vsides) / cos(180/hsides)) : r,
-		stagger = style=="stagger",
-		verts = style=="orig"? [
-			for (i=[0:1:vsides-1]) let(phi = (i+0.5)*180/(vsides))
-			for (j=[0:1:hsides-1]) let(theta = j*360/hsides)
-			spherical_to_xyz(rr, theta, phi),
-		] : style=="aligned" || style=="stagger"? [
-			spherical_to_xyz(rr, 0, 0),
-			for (i=[1:1:vsides-1]) let(phi = i*180/vsides)
-				for (j=[0:1:hsides-1]) let(theta = (j+((stagger && i%2!=0)?0.5:0))*360/hsides)
-					spherical_to_xyz(rr, theta, phi),
-			spherical_to_xyz(rr, 0, 180)
-		] : style=="icosa"? [
-			for (tb=[0,1], j=[0,2], i = [0:1:4]) let(
-				theta0 = i*360/5,
-				theta1 = (i-0.5)*360/5,
-				theta2 = (i+0.5)*360/5,
-				phi0 = 180/3 * j,
-				phi1 = 180/3,
-				v0 = spherical_to_xyz(1,theta0,phi0),
-				v1 = spherical_to_xyz(1,theta1,phi1),
-				v2 = spherical_to_xyz(1,theta2,phi1),
-				ax0 = vector_axis(v0, v1),
-				ang0 = vector_angle(v0, v1),
-				ax1 = vector_axis(v0, v2),
-				ang1 = vector_angle(v0, v2)
-			)
-			for (k = [0:1:icosa_steps]) let(
-				u = k/icosa_steps,
-				vv0 = rot(ang0*u, ax0, p=v0),
-				vv1 = rot(ang1*u, ax1, p=v0),
-				ax2 = vector_axis(vv0, vv1),
-				ang2 = vector_angle(vv0, vv1)
-			)
-			for (l = [0:1:k]) let(
-				v = k? l/k : 0,
-				pt = rot(ang2*v, v=ax2, p=vv0) * rr * (tb? -1 : 1)
-			) pt
-		] : assert(in_list(style,["orig","aligned","stagger","icosa"])),
-		lv = len(verts),
-		faces = style=="orig"? [
-			[for (i=[0:1:hsides-1]) hsides-i-1],
-			[for (i=[0:1:hsides-1]) lv-hsides+i],
-			for (i=[0:1:vsides-2], j=[0:1:hsides-1]) each [
-				[(i+1)*hsides+j, i*hsides+j, i*hsides+(j+1)%hsides],
-				[(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
-			]
-		] : style=="aligned" || style=="stagger"? [
-			for (i=[0:1:hsides-1]) let(
-				b2 = lv-2-hsides
-			) each [
-				[i+1, 0, ((i+1)%hsides)+1],
-				[lv-1, b2+i+1, b2+((i+1)%hsides)+1],
-			],
-			for (i=[0:1:vsides-3], j=[0:1:hsides-1]) let(
-				base = 1 + hsides*i
-			) each (
-				(stagger && i%2!=0)? [
-					[base+j, base+hsides+j%hsides, base+hsides+(j+hsides-1)%hsides],
-					[base+j, base+(j+1)%hsides, base+hsides+j],
-				] : [
-					[base+j, base+(j+1)%hsides, base+hsides+(j+1)%hsides],
-					[base+j, base+hsides+(j+1)%hsides, base+hsides+j],
-				]
-			)
-		] : style=="icosa"? let(
-			pyr = [for (x=[0:1:icosa_steps+1]) x],
-			tri = sum(pyr),
-			soff = cumsum(pyr)
-		) [
-			for (tb=[0,1], j=[0,1], i = [0:1:4]) let(
-				base = ((((tb*2) + j) * 5) + i) * tri
-			)
-			for (k = [0:1:icosa_steps-1])
-			for (l = [0:1:k]) let(
-				v1 = base + soff[k] + l,
-				v2 = base + soff[k+1] + l,
-				v3 = base + soff[k+1] + (l + 1),
-				faces = [
-					if(l>0) [v1-1,v1,v2],
-					[v1,v3,v2],
-				],
-				faces2 = (tb+j)%2? [for (f=faces) reverse(f)] : faces
-			) each faces2
-		] : []
-	) [reorient(anchor,spin,orient, r=r, p=verts), faces];
+    let(
+        r = get_radius(r=r, d=d, dflt=1),
+        hsides = segs(r),
+        vsides = max(2,ceil(hsides/2)),
+        icosa_steps = round(max(5,hsides)/5),
+        rr = circum? (r / cos(90/vsides) / cos(180/hsides)) : r,
+        stagger = style=="stagger",
+        verts = style=="orig"? [
+            for (i=[0:1:vsides-1]) let(phi = (i+0.5)*180/(vsides))
+            for (j=[0:1:hsides-1]) let(theta = j*360/hsides)
+            spherical_to_xyz(rr, theta, phi),
+        ] : style=="aligned" || style=="stagger"? [
+            spherical_to_xyz(rr, 0, 0),
+            for (i=[1:1:vsides-1]) let(phi = i*180/vsides)
+                for (j=[0:1:hsides-1]) let(theta = (j+((stagger && i%2!=0)?0.5:0))*360/hsides)
+                    spherical_to_xyz(rr, theta, phi),
+            spherical_to_xyz(rr, 0, 180)
+        ] : style=="icosa"? [
+            for (tb=[0,1], j=[0,2], i = [0:1:4]) let(
+                theta0 = i*360/5,
+                theta1 = (i-0.5)*360/5,
+                theta2 = (i+0.5)*360/5,
+                phi0 = 180/3 * j,
+                phi1 = 180/3,
+                v0 = spherical_to_xyz(1,theta0,phi0),
+                v1 = spherical_to_xyz(1,theta1,phi1),
+                v2 = spherical_to_xyz(1,theta2,phi1),
+                ax0 = vector_axis(v0, v1),
+                ang0 = vector_angle(v0, v1),
+                ax1 = vector_axis(v0, v2),
+                ang1 = vector_angle(v0, v2)
+            )
+            for (k = [0:1:icosa_steps]) let(
+                u = k/icosa_steps,
+                vv0 = rot(ang0*u, ax0, p=v0),
+                vv1 = rot(ang1*u, ax1, p=v0),
+                ax2 = vector_axis(vv0, vv1),
+                ang2 = vector_angle(vv0, vv1)
+            )
+            for (l = [0:1:k]) let(
+                v = k? l/k : 0,
+                pt = rot(ang2*v, v=ax2, p=vv0) * rr * (tb? -1 : 1)
+            ) pt
+        ] : assert(in_list(style,["orig","aligned","stagger","icosa"])),
+        lv = len(verts),
+        faces = style=="orig"? [
+            [for (i=[0:1:hsides-1]) hsides-i-1],
+            [for (i=[0:1:hsides-1]) lv-hsides+i],
+            for (i=[0:1:vsides-2], j=[0:1:hsides-1]) each [
+                [(i+1)*hsides+j, i*hsides+j, i*hsides+(j+1)%hsides],
+                [(i+1)*hsides+j, i*hsides+(j+1)%hsides, (i+1)*hsides+(j+1)%hsides],
+            ]
+        ] : style=="aligned" || style=="stagger"? [
+            for (i=[0:1:hsides-1]) let(
+                b2 = lv-2-hsides
+            ) each [
+                [i+1, 0, ((i+1)%hsides)+1],
+                [lv-1, b2+i+1, b2+((i+1)%hsides)+1],
+            ],
+            for (i=[0:1:vsides-3], j=[0:1:hsides-1]) let(
+                base = 1 + hsides*i
+            ) each (
+                (stagger && i%2!=0)? [
+                    [base+j, base+hsides+j%hsides, base+hsides+(j+hsides-1)%hsides],
+                    [base+j, base+(j+1)%hsides, base+hsides+j],
+                ] : [
+                    [base+j, base+(j+1)%hsides, base+hsides+(j+1)%hsides],
+                    [base+j, base+hsides+(j+1)%hsides, base+hsides+j],
+                ]
+            )
+        ] : style=="icosa"? let(
+            pyr = [for (x=[0:1:icosa_steps+1]) x],
+            tri = sum(pyr),
+            soff = cumsum(pyr)
+        ) [
+            for (tb=[0,1], j=[0,1], i = [0:1:4]) let(
+                base = ((((tb*2) + j) * 5) + i) * tri
+            )
+            for (k = [0:1:icosa_steps-1])
+            for (l = [0:1:k]) let(
+                v1 = base + soff[k] + l,
+                v2 = base + soff[k+1] + l,
+                v3 = base + soff[k+1] + (l + 1),
+                faces = [
+                    if(l>0) [v1-1,v1,v2],
+                    [v1,v3,v2],
+                ],
+                faces2 = (tb+j)%2? [for (f=faces) reverse(f)] : faces
+            ) each faces2
+        ] : []
+    ) [reorient(anchor,spin,orient, r=r, p=verts), faces];
 
 
 
@@ -1308,17 +1308,17 @@ function spheroid(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, or
 //   teardrop(r=30, h=10, ang=30, cap_h=20);
 module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, anchor=CENTER, spin=0, orient=UP)
 {
-	r = get_radius(r=r, d=d, dflt=1);
-	l = first_defined([l, h, 1]);
-	size = [r*2,l,r*2];
-	attachable(anchor,spin,orient, size=size) {
-		rot(from=UP,to=FWD) {
-			linear_extrude(height=l, center=true, slices=2) {
-				teardrop2d(r=r, ang=ang, cap_h=cap_h);
-			}
-		}
-		children();
-	}
+    r = get_radius(r=r, d=d, dflt=1);
+    l = first_defined([l, h, 1]);
+    size = [r*2,l,r*2];
+    attachable(anchor,spin,orient, size=size) {
+        rot(from=UP,to=FWD) {
+            linear_extrude(height=l, center=true, slices=2) {
+                teardrop2d(r=r, ang=ang, cap_h=cap_h);
+            }
+        }
+        children();
+    }
 }
 
 
@@ -1349,21 +1349,21 @@ module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, anchor=
 //   onion(r=30, maxang=30, cap_h=40) show_anchors();
 module onion(cap_h=undef, r=undef, d=undef, maxang=45, h=undef, anchor=CENTER, spin=0, orient=UP)
 {
-	r = get_radius(r=r, d=d, dflt=1);
-	h = first_defined([cap_h, h]);
-	maxd = 3*r/tan(maxang);
-	anchors = [
-		["cap", [0,0,h], UP, 0]
-	];
-	attachable(anchor,spin,orient, r=r, anchors=anchors) {
-		rotate_extrude(convexity=2) {
-			difference() {
-				teardrop2d(r=r, ang=maxang, cap_h=h);
-				left(r) square(size=[2*r,maxd], center=true);
-			}
-		}
-		children();
-	}
+    r = get_radius(r=r, d=d, dflt=1);
+    h = first_defined([cap_h, h]);
+    maxd = 3*r/tan(maxang);
+    anchors = [
+        ["cap", [0,0,h], UP, 0]
+    ];
+    attachable(anchor,spin,orient, r=r, anchors=anchors) {
+        rotate_extrude(convexity=2) {
+            difference() {
+                teardrop2d(r=r, ang=maxang, cap_h=h);
+                left(r) square(size=[2*r,maxd], center=true);
+            }
+        }
+        children();
+    }
 }
 
 
@@ -1418,28 +1418,28 @@ module noop(spin=0, orient=UP) attachable(CENTER,spin,orient, d=0.01) {nil(); ch
 // Example: Conical Pie Slice
 //   pie_slice(ang=60, l=20, d1=50, d2=70);
 module pie_slice(
-	ang=30, l=undef,
-	r=undef, r1=undef, r2=undef,
-	d=undef, d1=undef, d2=undef,
-	h=undef, center,
-	anchor, spin=0, orient=UP
+    ang=30, l=undef,
+    r=undef, r1=undef, r2=undef,
+    d=undef, d1=undef, d2=undef,
+    h=undef, center,
+    anchor, spin=0, orient=UP
 ) {
-	l = first_defined([l, h, 1]);
-	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
-	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
-	maxd = max(r1,r2)+0.1;
-	anchor = get_anchor(anchor, center, BOT, BOT);
-	attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
-		difference() {
-			cyl(r1=r1, r2=r2, h=l);
-			if (ang<180) rotate(ang) back(maxd/2) cube([2*maxd, maxd, l+0.1], center=true);
-			difference() {
-				fwd(maxd/2) cube([2*maxd, maxd, l+0.2], center=true);
-				if (ang>180) rotate(ang-180) back(maxd/2) cube([2*maxd, maxd, l+0.1], center=true);
-			}
-		}
-		children();
-	}
+    l = first_defined([l, h, 1]);
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
+    maxd = max(r1,r2)+0.1;
+    anchor = get_anchor(anchor, center, BOT, BOT);
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
+        difference() {
+            cyl(r1=r1, r2=r2, h=l);
+            if (ang<180) rotate(ang) back(maxd/2) cube([2*maxd, maxd, l+0.1], center=true);
+            difference() {
+                fwd(maxd/2) cube([2*maxd, maxd, l+0.2], center=true);
+                if (ang>180) rotate(ang-180) back(maxd/2) cube([2*maxd, maxd, l+0.1], center=true);
+            }
+        }
+        children();
+    }
 }
 
 
@@ -1479,19 +1479,19 @@ module pie_slice(
 //       interior_fillet(l=50, r=10, spin=180, orient=RIGHT);
 //   }
 module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01, anchor=FRONT+LEFT, spin=0, orient=UP) {
-	dy = r/tan(ang/2);
-	steps = ceil(segs(r)*ang/360);
-	step = ang/steps;
-	attachable(anchor,spin,orient, size=[r,r,l]) {
-		linear_extrude(height=l, convexity=4, center=true) {
-			path = concat(
-				[[0,0]],
-				[for (i=[0:1:steps]) let(a=270-i*step) r*[cos(a),sin(a)]+[dy,r]]
-			);
-			translate(-[r,r]/2) polygon(path);
-		}
-		children();
-	}
+    dy = r/tan(ang/2);
+    steps = ceil(segs(r)*ang/360);
+    step = ang/steps;
+    attachable(anchor,spin,orient, size=[r,r,l]) {
+        linear_extrude(height=l, convexity=4, center=true) {
+            path = concat(
+                [[0,0]],
+                [for (i=[0:1:steps]) let(a=270-i*step) r*[cos(a),sin(a)]+[dy,r]]
+            );
+            translate(-[r,r]/2) polygon(path);
+        }
+        children();
+    }
 }
 
 
@@ -1524,15 +1524,15 @@ module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01, anchor=FRONT+LEFT, sp
 // Example: By Length
 //   slot(l=50, r1=5, r2=10, h=5);
 module slot(
-	p1=undef, p2=undef, h=10, l=undef,
-	r=undef, r1=undef, r2=undef,
-	d=undef, d1=undef, d2=undef
+    p1=undef, p2=undef, h=10, l=undef,
+    r=undef, r1=undef, r2=undef,
+    d=undef, d1=undef, d2=undef
 ) {
-	r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=5);
-	r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=5);
-	sides = quantup(segs(max(r1, r2)), 4);
-	// TODO: implement orient and anchors.
-	hull() line_of(p1=p1, p2=p2, l=l, n=2) cyl(l=h, r1=r1, r2=r2, center=true, $fn=sides);
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=5);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=5);
+    sides = quantup(segs(max(r1, r2)), 4);
+    // TODO: implement orient and anchors.
+    hull() line_of(p1=p1, p2=p2, l=l, n=2) cyl(l=h, r1=r1, r2=r2, center=true, $fn=sides);
 }
 
 
@@ -1568,31 +1568,31 @@ module slot(
 // Example(Med): Conical Arced Slot
 //   arced_slot(r=60, h=5, sd1=10, sd2=15, sa=45, ea=180);
 module arced_slot(
-	r=undef, d=undef, h=1.0,
-	sr=undef, sr1=undef, sr2=undef,
-	sd=undef, sd1=undef, sd2=undef,
-	sa=0, ea=90, cp=[0,0,0],
-	anchor=TOP, spin=0, orient=UP,
-	$fn2 = undef
+    r=undef, d=undef, h=1.0,
+    sr=undef, sr1=undef, sr2=undef,
+    sd=undef, sd1=undef, sd2=undef,
+    sa=0, ea=90, cp=[0,0,0],
+    anchor=TOP, spin=0, orient=UP,
+    $fn2 = undef
 ) {
-	r = get_radius(r=r, d=d, dflt=2);
-	sr1 = get_radius(r1=sr1, r=sr, d1=sd1, d=sd, dflt=2);
-	sr2 = get_radius(r1=sr2, r=sr, d1=sd2, d=sd, dflt=2);
-	fn_minor = first_defined([$fn2, $fn]);
-	da = ea - sa;
-	attachable(anchor,spin,orient, r1=r+sr1, r2=r+sr2, l=h) {
-		translate(cp) {
-			zrot(sa) {
-				difference() {
-					pie_slice(ang=da, l=h, r1=r+sr1, r2=r+sr2, orient=UP, anchor=CENTER);
-					cyl(h=h+0.1, r1=r-sr1, r2=r-sr2);
-				}
-				right(r) cyl(h=h, r1=sr1, r2=sr2, $fn=fn_minor);
-				zrot(da) right(r) cyl(h=h, r1=sr1, r2=sr2, $fn=fn_minor);
-			}
-		}
-		children();
-	}
+    r = get_radius(r=r, d=d, dflt=2);
+    sr1 = get_radius(r1=sr1, r=sr, d1=sd1, d=sd, dflt=2);
+    sr2 = get_radius(r1=sr2, r=sr, d1=sd2, d=sd, dflt=2);
+    fn_minor = first_defined([$fn2, $fn]);
+    da = ea - sa;
+    attachable(anchor,spin,orient, r1=r+sr1, r2=r+sr2, l=h) {
+        translate(cp) {
+            zrot(sa) {
+                difference() {
+                    pie_slice(ang=da, l=h, r1=r+sr1, r2=r+sr2, orient=UP, anchor=CENTER);
+                    cyl(h=h+0.1, r1=r-sr1, r2=r-sr2);
+                }
+                right(r) cyl(h=h, r1=sr1, r2=sr2, $fn=fn_minor);
+                zrot(da) right(r) cyl(h=h, r1=sr1, r2=sr2, $fn=fn_minor);
+            }
+        }
+        children();
+    }
 }
 
 
@@ -1620,88 +1620,88 @@ module arced_slot(
 //   }
 module heightfield(heightfield, size=[100,100], bottom=0, convexity=10)
 {
-	size = is_num(size)? [size,size] : point2d(size);
-	dim = array_dim(heightfield);
-	assert(dim.x!=undef);
-	assert(dim.y!=undef);
-	assert(bottom<min(flatten(heightfield)), "bottom must be less than the minimum heightfield value.");
-	spacing = vdiv(size,dim-[1,1]);
-	vertices = concat(
-		[
-			for (i=[0:1:dim.x-1], j=[0:1:dim.y-1]) let(
-				pos = [i*spacing.x-size.x/2, j*spacing.y-size.y/2, heightfield[i][j]]
-			) pos
-		], [
-			for (i=[0:1:dim.x-1]) let(
-				pos = [i*spacing.x-size.x/2, -size.y/2, bottom]
-			) pos
-		], [
-			for (i=[0:1:dim.x-1]) let(
-				pos = [i*spacing.x-size.x/2, size.y/2, bottom]
-			) pos
-		], [
-			for (j=[0:1:dim.y-1]) let(
-				pos = [-size.x/2, j*spacing.y-size.y/2, bottom]
-			) pos
-		], [
-			for (j=[0:1:dim.y-1]) let(
-				pos = [size.x/2, j*spacing.y-size.y/2, bottom]
-			) pos
-		]
-	);
-	faces = concat(
-		[
-			for (i=[0:1:dim.x-2], j=[0:1:dim.y-2]) let(
-				idx1 = (i+0)*dim.y + j+0,
-				idx2 = (i+0)*dim.y + j+1,
-				idx3 = (i+1)*dim.y + j+0,
-				idx4 = (i+1)*dim.y + j+1
-			) each [[idx1, idx2, idx4], [idx1, idx4, idx3]]
-		], [
-			for (i=[0:1:dim.x-2]) let(
-				idx1 = dim.x*dim.y,
-				idx2 = dim.x*dim.y+dim.x+i,
-				idx3 = idx2+1
-			) [idx1,idx3,idx2]
-		], [
-			for (i=[0:1:dim.y-2]) let(
-				idx1 = dim.x*dim.y,
-				idx2 = dim.x*dim.y+dim.x*2+dim.y+i,
-				idx3 = idx2+1
-			) [idx1,idx2,idx3]
-		], [
-			for (i=[0:1:dim.x-2]) let(
-				idx1 = (i+0)*dim.y+0,
-				idx2 = (i+1)*dim.y+0,
-				idx3 = dim.x*dim.y+i,
-				idx4 = idx3+1
-			) each [[idx1, idx2, idx4], [idx1, idx4, idx3]]
-		], [
-			for (i=[0:1:dim.x-2]) let(
-				idx1 = (i+0)*dim.y+dim.y-1,
-				idx2 = (i+1)*dim.y+dim.y-1,
-				idx3 = dim.x*dim.y+dim.x+i,
-				idx4 = idx3+1
-			) each [[idx1, idx4, idx2], [idx1, idx3, idx4]]
-		], [
-			for (j=[0:1:dim.y-2]) let(
-				idx1 = j,
-				idx2 = j+1,
-				idx3 = dim.x*dim.y+dim.x*2+j,
-				idx4 = idx3+1
-			) each [[idx1, idx4, idx2], [idx1, idx3, idx4]]
-		], [
-			for (j=[0:1:dim.y-2]) let(
-				idx1 = (dim.x-1)*dim.y+j,
-				idx2 = idx1+1,
-				idx3 = dim.x*dim.y+dim.x*2+dim.y+j,
-				idx4 = idx3+1
-			) each [[idx1, idx2, idx4], [idx1, idx4, idx3]]
-		]
-	);
-	polyhedron(points=vertices, faces=faces, convexity=convexity);
+    size = is_num(size)? [size,size] : point2d(size);
+    dim = array_dim(heightfield);
+    assert(dim.x!=undef);
+    assert(dim.y!=undef);
+    assert(bottom<min(flatten(heightfield)), "bottom must be less than the minimum heightfield value.");
+    spacing = vdiv(size,dim-[1,1]);
+    vertices = concat(
+        [
+            for (i=[0:1:dim.x-1], j=[0:1:dim.y-1]) let(
+                pos = [i*spacing.x-size.x/2, j*spacing.y-size.y/2, heightfield[i][j]]
+            ) pos
+        ], [
+            for (i=[0:1:dim.x-1]) let(
+                pos = [i*spacing.x-size.x/2, -size.y/2, bottom]
+            ) pos
+        ], [
+            for (i=[0:1:dim.x-1]) let(
+                pos = [i*spacing.x-size.x/2, size.y/2, bottom]
+            ) pos
+        ], [
+            for (j=[0:1:dim.y-1]) let(
+                pos = [-size.x/2, j*spacing.y-size.y/2, bottom]
+            ) pos
+        ], [
+            for (j=[0:1:dim.y-1]) let(
+                pos = [size.x/2, j*spacing.y-size.y/2, bottom]
+            ) pos
+        ]
+    );
+    faces = concat(
+        [
+            for (i=[0:1:dim.x-2], j=[0:1:dim.y-2]) let(
+                idx1 = (i+0)*dim.y + j+0,
+                idx2 = (i+0)*dim.y + j+1,
+                idx3 = (i+1)*dim.y + j+0,
+                idx4 = (i+1)*dim.y + j+1
+            ) each [[idx1, idx2, idx4], [idx1, idx4, idx3]]
+        ], [
+            for (i=[0:1:dim.x-2]) let(
+                idx1 = dim.x*dim.y,
+                idx2 = dim.x*dim.y+dim.x+i,
+                idx3 = idx2+1
+            ) [idx1,idx3,idx2]
+        ], [
+            for (i=[0:1:dim.y-2]) let(
+                idx1 = dim.x*dim.y,
+                idx2 = dim.x*dim.y+dim.x*2+dim.y+i,
+                idx3 = idx2+1
+            ) [idx1,idx2,idx3]
+        ], [
+            for (i=[0:1:dim.x-2]) let(
+                idx1 = (i+0)*dim.y+0,
+                idx2 = (i+1)*dim.y+0,
+                idx3 = dim.x*dim.y+i,
+                idx4 = idx3+1
+            ) each [[idx1, idx2, idx4], [idx1, idx4, idx3]]
+        ], [
+            for (i=[0:1:dim.x-2]) let(
+                idx1 = (i+0)*dim.y+dim.y-1,
+                idx2 = (i+1)*dim.y+dim.y-1,
+                idx3 = dim.x*dim.y+dim.x+i,
+                idx4 = idx3+1
+            ) each [[idx1, idx4, idx2], [idx1, idx3, idx4]]
+        ], [
+            for (j=[0:1:dim.y-2]) let(
+                idx1 = j,
+                idx2 = j+1,
+                idx3 = dim.x*dim.y+dim.x*2+j,
+                idx4 = idx3+1
+            ) each [[idx1, idx4, idx2], [idx1, idx3, idx4]]
+        ], [
+            for (j=[0:1:dim.y-2]) let(
+                idx1 = (dim.x-1)*dim.y+j,
+                idx2 = idx1+1,
+                idx3 = dim.x*dim.y+dim.x*2+dim.y+j,
+                idx4 = idx3+1
+            ) each [[idx1, idx2, idx4], [idx1, idx4, idx3]]
+        ]
+    );
+    polyhedron(points=vertices, faces=faces, convexity=convexity);
 }
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

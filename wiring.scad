@@ -28,15 +28,15 @@ include <beziers.scad>
 // Example:
 //   hex_offset_ring(d=1, lev=3); // Returns a hex ring of 18 points.
 function hex_offset_ring(d, lev=0) =
-	(lev == 0)? [[0,0]] : [
-		for (
-			sideang = [0:60:359.999],
-			sidenum = [1:1:lev]
-		) [
-			lev*d*cos(sideang)+sidenum*d*cos(sideang+120),
-			lev*d*sin(sideang)+sidenum*d*sin(sideang+120)
-		]
-	];
+    (lev == 0)? [[0,0]] : [
+        for (
+            sideang = [0:60:359.999],
+            sidenum = [1:1:lev]
+        ) [
+            lev*d*cos(sideang)+sidenum*d*cos(sideang+120),
+            lev*d*sin(sideang)+sidenum*d*sin(sideang+120)
+        ]
+    ];
 
 
 // Function: hex_offsets()
@@ -51,13 +51,13 @@ function hex_offset_ring(d, lev=0) =
 //   n = Number of items to bundle.
 //   d = How far to space each point away from others.
 function hex_offsets(n, d, lev=0, arr=[]) =
-	(len(arr) >= n)? arr :
-		hex_offsets(
-			n=n,
-			d=d,
-			lev=lev+1,
-			arr=concat(arr, hex_offset_ring(d, lev=lev))
-		);
+    (len(arr) >= n)? arr :
+        hex_offsets(
+            n=n,
+            d=d,
+            lev=lev+1,
+            arr=concat(arr, hex_offset_ring(d, lev=lev))
+        );
 
 
 
@@ -81,26 +81,26 @@ function hex_offsets(n, d, lev=0, arr=[]) =
 // Example:
 //   wiring([[50,0,-50], [50,50,-50], [0,50,-50], [0,0,-50], [0,0,0]], rounding=10, wires=13);
 module wiring(path, wires, wirediam=2, rounding=10, wirenum=0, bezsteps=12) {
-	colors = [
-		[0.2, 0.2, 0.2], [1.0, 0.2, 0.2], [0.0, 0.8, 0.0], [1.0, 1.0, 0.2],
-		[0.3, 0.3, 1.0], [1.0, 1.0, 1.0], [0.7, 0.5, 0.0], [0.5, 0.5, 0.5],
-		[0.2, 0.9, 0.9], [0.8, 0.0, 0.8], [0.0, 0.6, 0.6], [1.0, 0.7, 0.7],
-		[1.0, 0.5, 1.0], [0.5, 0.6, 0.0], [1.0, 0.7, 0.0], [0.7, 1.0, 0.5],
-		[0.6, 0.6, 1.0],
-	];
-	offsets = hex_offsets(wires, wirediam);
-	bezpath = fillet_path(path, rounding);
-	poly = simplify_path(path3d(bezier_polyline(bezpath, bezsteps)));
-	n = max(segs(wirediam), 8);
-	r = wirediam/2;
-	for (i = [0:1:wires-1]) {
-		extpath = [for (j = [0:1:n-1]) let(a=j*360/n) [r*cos(a)+offsets[i][0], r*sin(a)+offsets[i][1]]];
-		color(colors[(i+wirenum)%len(colors)]) {
-			path_sweep(extpath, poly);
-		}
-	}
+    colors = [
+        [0.2, 0.2, 0.2], [1.0, 0.2, 0.2], [0.0, 0.8, 0.0], [1.0, 1.0, 0.2],
+        [0.3, 0.3, 1.0], [1.0, 1.0, 1.0], [0.7, 0.5, 0.0], [0.5, 0.5, 0.5],
+        [0.2, 0.9, 0.9], [0.8, 0.0, 0.8], [0.0, 0.6, 0.6], [1.0, 0.7, 0.7],
+        [1.0, 0.5, 1.0], [0.5, 0.6, 0.0], [1.0, 0.7, 0.0], [0.7, 1.0, 0.5],
+        [0.6, 0.6, 1.0],
+    ];
+    offsets = hex_offsets(wires, wirediam);
+    bezpath = fillet_path(path, rounding);
+    poly = simplify_path(path3d(bezier_polyline(bezpath, bezsteps)));
+    n = max(segs(wirediam), 8);
+    r = wirediam/2;
+    for (i = [0:1:wires-1]) {
+        extpath = [for (j = [0:1:n-1]) let(a=j*360/n) [r*cos(a)+offsets[i][0], r*sin(a)+offsets[i][1]]];
+        color(colors[(i+wirenum)%len(colors)]) {
+            path_sweep(extpath, poly);
+        }
+    }
 }
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

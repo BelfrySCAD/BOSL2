@@ -34,29 +34,29 @@ include <skin.scad>
 //   half_joiner_clear(spin=-90);
 module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
 {
-	dmnd_height = h*1.0;
-	dmnd_width = dmnd_height*tan(a);
-	guide_size = w/3;
-	guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
+    dmnd_height = h*1.0;
+    dmnd_width = dmnd_height*tan(a);
+    guide_size = w/3;
+    guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
 
-	attachable(anchor,spin,orient, size=[w, guide_width, h]) {
-		union() {
-			ycopies(overlap, n=overlap>0? 2 : 1) {
-				difference() {
-					// Diamonds.
-					scale([w+clearance, dmnd_width/2, dmnd_height/2]) {
-						xrot(45) cube(size=[1,sqrt(2),sqrt(2)], center=true);
-					}
-					// Blunt point of tab.
-					ycopies(guide_width+4) {
-						cube(size=[(w+clearance)*1.05, 4, h*0.99], center=true);
-					}
-				}
-			}
-			if (overlap>0) cube([w+clearance, overlap+0.001, h], center=true);
-		}
-		children();
-	}
+    attachable(anchor,spin,orient, size=[w, guide_width, h]) {
+        union() {
+            ycopies(overlap, n=overlap>0? 2 : 1) {
+                difference() {
+                    // Diamonds.
+                    scale([w+clearance, dmnd_width/2, dmnd_height/2]) {
+                        xrot(45) cube(size=[1,sqrt(2),sqrt(2)], center=true);
+                    }
+                    // Blunt point of tab.
+                    ycopies(guide_width+4) {
+                        cube(size=[(w+clearance)*1.05, 4, h*0.99], center=true);
+                    }
+                }
+            }
+            if (overlap>0) cube([w+clearance, overlap+0.001, h], center=true);
+        }
+        children();
+    }
 }
 
 
@@ -81,60 +81,60 @@ module half_joiner_clear(h=20, w=10, a=30, clearance=0, overlap=0.01, anchor=CEN
 //   half_joiner(screwsize=3, spin=-90);
 module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
-	dmnd_height = h*1.0;
-	dmnd_width = dmnd_height*tan(a);
-	guide_size = w/3;
-	guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
+    dmnd_height = h*1.0;
+    dmnd_width = dmnd_height*tan(a);
+    guide_size = w/3;
+    guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
 
-	render(convexity=12)
-	attachable(anchor,spin,orient, size=[w, 2*l, h]) {
-		difference() {
-			union() {
-				// Make base.
-				difference() {
-					// Solid backing base.
-					fwd(l/2) cube(size=[w, l, h], center=true);
+    render(convexity=12)
+    attachable(anchor,spin,orient, size=[w, 2*l, h]) {
+        difference() {
+            union() {
+                // Make base.
+                difference() {
+                    // Solid backing base.
+                    fwd(l/2) cube(size=[w, l, h], center=true);
 
-					// Clear diamond for tab
-					xcopies(2*w*2/3) {
-						half_joiner_clear(h=h+0.01, w=w, clearance=$slop*2, a=a);
-					}
-				}
+                    // Clear diamond for tab
+                    xcopies(2*w*2/3) {
+                        half_joiner_clear(h=h+0.01, w=w, clearance=$slop*2, a=a);
+                    }
+                }
 
-				difference() {
-					// Make tab
-					scale([w/3-$slop*2, dmnd_width/2, dmnd_height/2]) xrot(45)
-						cube(size=[1,sqrt(2),sqrt(2)], center=true);
+                difference() {
+                    // Make tab
+                    scale([w/3-$slop*2, dmnd_width/2, dmnd_height/2]) xrot(45)
+                        cube(size=[1,sqrt(2),sqrt(2)], center=true);
 
-					// Blunt point of tab.
-					back(guide_width/2+2)
-						cube(size=[w*0.99,4,guide_size*2], center=true);
-				}
+                    // Blunt point of tab.
+                    back(guide_width/2+2)
+                        cube(size=[w*0.99,4,guide_size*2], center=true);
+                }
 
 
-				// Guide ridges.
-				if (guides == true) {
-					xcopies(w/3-$slop*2) {
-						// Guide ridge.
-						fwd(0.05/2) {
-							scale([0.75, 1, 2]) yrot(45)
-								cube(size=[guide_size/sqrt(2), guide_width+0.05, guide_size/sqrt(2)], center=true);
-						}
+                // Guide ridges.
+                if (guides == true) {
+                    xcopies(w/3-$slop*2) {
+                        // Guide ridge.
+                        fwd(0.05/2) {
+                            scale([0.75, 1, 2]) yrot(45)
+                                cube(size=[guide_size/sqrt(2), guide_width+0.05, guide_size/sqrt(2)], center=true);
+                        }
 
-						// Snap ridge.
-						scale([0.25, 0.5, 1]) zrot(45)
-							cube(size=[guide_size/sqrt(2), guide_size/sqrt(2), dmnd_width], center=true);
-					}
-				}
-			}
+                        // Snap ridge.
+                        scale([0.25, 0.5, 1]) zrot(45)
+                            cube(size=[guide_size/sqrt(2), guide_size/sqrt(2), dmnd_width], center=true);
+                    }
+                }
+            }
 
-			// Make screwholes, if needed.
-			if (screwsize != undef) {
-				yrot(90) cylinder(r=screwsize*1.1/2, h=w+1, center=true, $fn=12);
-			}
-		}
-		children();
-	}
+            // Make screwholes, if needed.
+            if (screwsize != undef) {
+                yrot(90) cylinder(r=screwsize*1.1/2, h=w+1, center=true, $fn=12);
+            }
+        }
+        children();
+    }
 }
 //half_joiner(screwsize=3);
 
@@ -159,29 +159,29 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=
 //   half_joiner2(screwsize=3, spin=-90);
 module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
-	dmnd_height = h*1.0;
-	dmnd_width = dmnd_height*tan(a);
-	guide_size = w/3;
-	guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
+    dmnd_height = h*1.0;
+    dmnd_width = dmnd_height*tan(a);
+    guide_size = w/3;
+    guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
 
-	render(convexity=12)
-	attachable(anchor,spin,orient, size=[w, 2*l, h]) {
-		difference() {
-			union () {
-				fwd(l/2) cube(size=[w, l, h], center=true);
-				cube([w, guide_width, h], center=true);
-			}
+    render(convexity=12)
+    attachable(anchor,spin,orient, size=[w, 2*l, h]) {
+        difference() {
+            union () {
+                fwd(l/2) cube(size=[w, l, h], center=true);
+                cube([w, guide_width, h], center=true);
+            }
 
-			// Subtract mated half_joiner.
-			zrot(180) half_joiner(h=h+0.01, w=w+0.01, l=guide_width+0.01, a=a, screwsize=undef, guides=guides, $slop=0.0);
+            // Subtract mated half_joiner.
+            zrot(180) half_joiner(h=h+0.01, w=w+0.01, l=guide_width+0.01, a=a, screwsize=undef, guides=guides, $slop=0.0);
 
-			// Make screwholes, if needed.
-			if (screwsize != undef) {
-				xcyl(r=screwsize*1.1/2, l=w+1, $fn=12);
-			}
-		}
-		children();
-	}
+            // Make screwholes, if needed.
+            if (screwsize != undef) {
+                xcyl(r=screwsize*1.1/2, l=w+1, $fn=12);
+            }
+        }
+        children();
+    }
 }
 
 
@@ -207,18 +207,18 @@ module half_joiner2(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor
 //   joiner_clear(spin=-90);
 module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
 {
-	dmnd_height = h*0.5;
-	dmnd_width = dmnd_height*tan(a);
-	guide_size = w/3;
-	guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
+    dmnd_height = h*0.5;
+    dmnd_width = dmnd_height*tan(a);
+    guide_size = w/3;
+    guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
 
-	attachable(anchor,spin,orient, size=[w, guide_width, h]) {
-		union() {
-			up(h/4) half_joiner_clear(h=h/2.0-0.01, w=w, a=a, overlap=overlap, clearance=clearance);
-			down(h/4) half_joiner_clear(h=h/2.0-0.01, w=w, a=a, overlap=overlap, clearance=-0.01);
-		}
-		children();
-	}
+    attachable(anchor,spin,orient, size=[w, guide_width, h]) {
+        union() {
+            up(h/4) half_joiner_clear(h=h/2.0-0.01, w=w, a=a, overlap=overlap, clearance=clearance);
+            down(h/4) half_joiner_clear(h=h/2.0-0.01, w=w, a=a, overlap=overlap, clearance=-0.01);
+        }
+        children();
+    }
 }
 
 
@@ -244,13 +244,13 @@ module joiner_clear(h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, 
 //   joiner(w=10, l=10, h=40, spin=-90) cuboid([10, 10*2, 40], anchor=RIGHT);
 module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
-	attachable(anchor,spin,orient, size=[w, 2*l, h]) {
-		union() {
-			up(h/4) half_joiner(h=h/2, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
-			down(h/4) half_joiner2(h=h/2, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
-		}
-		children();
-	}
+    attachable(anchor,spin,orient, size=[w, 2*l, h]) {
+        union() {
+            up(h/4) half_joiner(h=h/2, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
+            down(h/4) half_joiner2(h=h/2, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
+        }
+        children();
+    }
 }
 
 
@@ -279,17 +279,17 @@ module joiner(h=40, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=CENTE
 //   joiner_pair_clear(spacing=50, n=3);
 module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
 {
-	dmnd_height = h*0.5;
-	dmnd_width = dmnd_height*tan(a);
-	guide_size = w/3;
-	guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
+    dmnd_height = h*0.5;
+    dmnd_width = dmnd_height*tan(a);
+    guide_size = w/3;
+    guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
 
-	attachable(anchor,spin,orient, size=[spacing+w, guide_width, h]) {
-		xcopies(spacing, n=n) {
-			joiner_clear(h=h, w=w, a=a, clearance=clearance, overlap=overlap);
-		}
-		children();
-	}
+    attachable(anchor,spin,orient, size=[spacing+w, guide_width, h]) {
+        xcopies(spacing, n=n) {
+            joiner_clear(h=h, w=w, a=a, clearance=clearance, overlap=overlap);
+        }
+        children();
+    }
 }
 
 
@@ -321,18 +321,18 @@ module joiner_pair_clear(spacing=100, h=40, w=10, a=30, n=2, clearance=0, overla
 //   joiner_pair(spacing=50, l=10, n=3, alternate="alt", spin=-90);
 module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
-	attachable(anchor,spin,orient, size=[spacing+w, 2*l, h]) {
-		left((n-1)*spacing/2) {
-			for (i=[0:1:n-1]) {
-				right(i*spacing) {
-					yrot(180 + (alternate? (i*180+(alternate=="alt"?180:0))%360 : 0)) {
-						joiner(h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
-					}
-				}
-			}
-		}
-		children();
-	}
+    attachable(anchor,spin,orient, size=[spacing+w, 2*l, h]) {
+        left((n-1)*spacing/2) {
+            for (i=[0:1:n-1]) {
+                right(i*spacing) {
+                    yrot(180 + (alternate? (i*180+(alternate=="alt"?180:0))%360 : 0)) {
+                        joiner(h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
+                    }
+                }
+            }
+        }
+        children();
+    }
 }
 
 
@@ -362,16 +362,16 @@ module joiner_pair(spacing=100, h=40, w=10, l=10, a=30, n=2, alternate=true, scr
 //   joiner_quad_clear(spacing1=50, spacing2=50, n=3);
 module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing2=undef, n=2, h=40, w=10, a=30, clearance=0, overlap=0.01, anchor=CENTER, spin=0, orient=UP)
 {
-	spacing1 = first_defined([spacing1, xspacing, 100]);
-	spacing2 = first_defined([spacing2, yspacing, 50]);
-	attachable(anchor,spin,orient, size=[w+spacing1, spacing2, h]) {
-		zrot_copies(n=2) {
-			back(spacing2/2) {
-				joiner_pair_clear(spacing=spacing1, n=n, h=h, w=w, a=a, clearance=clearance, overlap=overlap);
-			}
-		}
-		children();
-	}
+    spacing1 = first_defined([spacing1, xspacing, 100]);
+    spacing2 = first_defined([spacing2, yspacing, 50]);
+    attachable(anchor,spin,orient, size=[w+spacing1, spacing2, h]) {
+        zrot_copies(n=2) {
+            back(spacing2/2) {
+                joiner_pair_clear(spacing=spacing1, n=n, h=h, w=w, a=a, clearance=clearance, overlap=overlap);
+            }
+        }
+        children();
+    }
 }
 
 
@@ -403,16 +403,16 @@ module joiner_quad_clear(xspacing=undef, yspacing=undef, spacing1=undef, spacing
 //   joiner_quad(spacing1=50, spacing2=50, l=10, n=3, alternate="alt", spin=-90);
 module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=undef, h=40, w=10, l=10, a=30, n=2, alternate=true, screwsize=undef, guides=true, anchor=CENTER, spin=0, orient=UP)
 {
-	spacing1 = first_defined([spacing1, xspacing, 100]);
-	spacing2 = first_defined([spacing2, yspacing, 50]);
-	attachable(anchor,spin,orient, size=[w+spacing1, spacing2, h]) {
-		zrot_copies(n=2) {
-			back(spacing2/2) {
-				joiner_pair(spacing=spacing1, n=n, h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
-			}
-		}
-		children();
-	}
+    spacing1 = first_defined([spacing1, xspacing, 100]);
+    spacing2 = first_defined([spacing2, yspacing, 50]);
+    attachable(anchor,spin,orient, size=[w+spacing1, spacing2, h]) {
+        zrot_copies(n=2) {
+            back(spacing2/2) {
+                joiner_pair(spacing=spacing1, n=n, h=h, w=w, l=l, a=a, screwsize=screwsize, guides=guides);
+            }
+        }
+        children();
+    }
 }
 
 
@@ -497,70 +497,70 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 //       position(TOP+BACK) xcopies(10,5) dovetail("female", length=10, width=7, taper=4, height=4, $tags="remove",anchor=BOTTOM+FRONT,spin=180);
 module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, back_width, chamfer, extra=0.01, r, radius, round=false, anchor=BOTTOM, spin=0, orient)
 {
-	radius = get_radius(r1=radius,r2=r);
-	lcount = num_defined([l,length]);
-	hcount = num_defined([h,height]);
-	wcount = num_defined([w,width]);
-	assert(lcount==1, "Must define exactly one of l and length");
-	assert(wcount==1, "Must define exactly one of w and width");
-	assert(hcount==1, "Must define exactly one of h and height");
-	h = first_defined([h,height]);
-	w = first_defined([w,width]);
-	length = first_defined([l,length]);
-	orient = is_def(orient) ? orient :
-		gender == "female" ? DOWN : UP;
-	count = num_defined([angle,slope]);
-	assert(count<=1, "Do not specify both angle and slope");
-	count2 = num_defined([taper,back_width]);
-	assert(count2<=1, "Do not specify both taper and back_width");
-	count3 = num_defined([chamfer, radius]);
-	assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
-	slope = is_def(slope) ? slope :
-		is_def(angle) ? 1/tan(angle) :  6;
-	width = gender == "male" ? w : w + 2*$slop;
-	height = h + (gender == "female" ? 2*$slop : 0);
+    radius = get_radius(r1=radius,r2=r);
+    lcount = num_defined([l,length]);
+    hcount = num_defined([h,height]);
+    wcount = num_defined([w,width]);
+    assert(lcount==1, "Must define exactly one of l and length");
+    assert(wcount==1, "Must define exactly one of w and width");
+    assert(hcount==1, "Must define exactly one of h and height");
+    h = first_defined([h,height]);
+    w = first_defined([w,width]);
+    length = first_defined([l,length]);
+    orient = is_def(orient) ? orient :
+        gender == "female" ? DOWN : UP;
+    count = num_defined([angle,slope]);
+    assert(count<=1, "Do not specify both angle and slope");
+    count2 = num_defined([taper,back_width]);
+    assert(count2<=1, "Do not specify both taper and back_width");
+    count3 = num_defined([chamfer, radius]);
+    assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
+    slope = is_def(slope) ? slope :
+        is_def(angle) ? 1/tan(angle) :  6;
+    width = gender == "male" ? w : w + 2*$slop;
+    height = h + (gender == "female" ? 2*$slop : 0);
 
-	front_offset = is_def(taper) ? -extra * tan(taper) :
-		is_def(back_width) ? extra * (back_width-width)/length/2 : 0;
+    front_offset = is_def(taper) ? -extra * tan(taper) :
+        is_def(back_width) ? extra * (back_width-width)/length/2 : 0;
 
-	size = is_def(chamfer) && chamfer>0 ? chamfer :
-		is_def(radius) && radius>0 ? radius : 0;
-	type = is_def(chamfer) && chamfer>0 ? "chamfer" : "circle";
+    size = is_def(chamfer) && chamfer>0 ? chamfer :
+        is_def(radius) && radius>0 ? radius : 0;
+    type = is_def(chamfer) && chamfer>0 ? "chamfer" : "circle";
 
-	fullsize = round ? [size,size] :
-		gender == "male" ? [size,0] : [0,size];
+    fullsize = round ? [size,size] :
+        gender == "male" ? [size,0] : [0,size];
 
-	smallend_half = round_corners(
-		move(
-			[0,-length/2-extra,0],
-			p=[
-				[0                     , 0, height],
-				[width/2-front_offset  , 0, height],
-				[width/2 - height/slope - front_offset, 0, 0 ],
-				[width/2 - front_offset + height, 0, 0]
-			]
-		),
-		method=type, cut = fullsize, closed=false
-	);
-	smallend_points = concat(select(smallend_half, 1, -2), [down(extra,p=select(smallend_half, -2))]);
-	offset = is_def(taper) ? -(length+extra) * tan(taper) :
-		is_def(back_width) ? (back_width-width) / 2 : 0;
-	bigend_points = move([offset,length+2*extra,0], p=smallend_points);
+    smallend_half = round_corners(
+        move(
+            [0,-length/2-extra,0],
+            p=[
+                [0                     , 0, height],
+                [width/2-front_offset  , 0, height],
+                [width/2 - height/slope - front_offset, 0, 0 ],
+                [width/2 - front_offset + height, 0, 0]
+            ]
+        ),
+        method=type, cut = fullsize, closed=false
+    );
+    smallend_points = concat(select(smallend_half, 1, -2), [down(extra,p=select(smallend_half, -2))]);
+    offset = is_def(taper) ? -(length+extra) * tan(taper) :
+        is_def(back_width) ? (back_width-width) / 2 : 0;
+    bigend_points = move([offset,length+2*extra,0], p=smallend_points);
 
-	adjustment = gender == "male" ? -0.01 : 0.01;  // Adjustment for default overlap in attach()
+    adjustment = gender == "male" ? -0.01 : 0.01;  // Adjustment for default overlap in attach()
 
-	attachable(anchor,spin,orient, size=[width+2*offset, length, height]) {
-		down(height/2+adjustment) {
-			skin(
-				[
-					reverse(concat(smallend_points, xflip(p=reverse(smallend_points)))),
-					reverse(concat(bigend_points, xflip(p=reverse(bigend_points))))
-				],
-				slices=0, convexity=4
-			);
-		}
-		children();
-	}
+    attachable(anchor,spin,orient, size=[width+2*offset, length, height]) {
+        down(height/2+adjustment) {
+            skin(
+                [
+                    reverse(concat(smallend_points, xflip(p=reverse(smallend_points)))),
+                    reverse(concat(bigend_points, xflip(p=reverse(bigend_points))))
+                ],
+                slices=0, convexity=4
+            );
+        }
+        children();
+    }
 }
 
 
@@ -781,4 +781,4 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

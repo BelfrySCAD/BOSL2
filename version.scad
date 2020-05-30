@@ -8,7 +8,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-BOSL_VERSION = [2,0,331];
+BOSL_VERSION = [2,0,332];
 
 
 // Section: BOSL Library Version Functions
@@ -49,27 +49,27 @@ function bosl_version_str() = version_to_str(BOSL_VERSION);
 // Description:
 //   Given a version as a list, number, or string, asserts that the currently installed BOSL library is at least the given version.
 module bosl_required(target) {
-	assert(
-		version_cmp(bosl_version(), target) >= 0,
-		str(
-			"BOSL ", bosl_version_str(), " is installed, but BOSL ",
-			version_to_str(target), " or better is required."  
-		)
-	);
+    assert(
+        version_cmp(bosl_version(), target) >= 0,
+        str(
+            "BOSL ", bosl_version_str(), " is installed, but BOSL ",
+            version_to_str(target), " or better is required."  
+        )
+    );
 }
 
 
 // Section: Generic Version Functions
 
 function _version_split_str(x, _i=0, _out=[], _num=0) =
-	_i>=len(x)? concat(_out,[_num]) :
-	let(
-		cval = ord(x[_i]) - ord("0"),
-		numend = cval<0 || cval>9,
-		_out = numend? concat(_out, [_num]) : _out,
-		_num = numend? 0 : (10*_num + cval)
-	)
-	_version_split_str(x, _i=_i+1, _out=_out, _num=_num);
+    _i>=len(x)? concat(_out,[_num]) :
+    let(
+        cval = ord(x[_i]) - ord("0"),
+        numend = cval<0 || cval>9,
+        _out = numend? concat(_out, [_num]) : _out,
+        _num = numend? 0 : (10*_num + cval)
+    )
+    _version_split_str(x, _i=_i+1, _out=_out, _num=_num);
 
 
 // Function: version_to_list()
@@ -83,10 +83,10 @@ function _version_split_str(x, _i=0, _out=[], _num=0) =
 //   v3 = version_to_list([2,3,4]);   // Returns: [2,3,4]
 //   v4 = version_to_list([2,3,4,5]); // Returns: [2,3,4]
 function version_to_list(x) =
-	is_list(x)? [default(x[0],0), default(x[1],0), default(x[2],0)] :
-	is_string(x)? _version_split_str(x) :
-	is_num(x)? [floor(x), floor(x*100%100), floor(x*1000000%10000+0.5)] :
-	assert(is_num(x) || is_vector(x) || is_string(x)) 0;
+    is_list(x)? [default(x[0],0), default(x[1],0), default(x[2],0)] :
+    is_string(x)? _version_split_str(x) :
+    is_num(x)? [floor(x), floor(x*100%100), floor(x*1000000%10000+0.5)] :
+    assert(is_num(x) || is_vector(x) || is_string(x)) 0;
 
 
 // Function: version_to_str()
@@ -100,8 +100,8 @@ function version_to_list(x) =
 //   v3 = version_to_str(2.340789);  // Returns: "2.34.789"
 //   v4 = version_to_str("2.3.89");  // Returns: "2.3.89"
 function version_to_str(x) =
-	let(x = version_to_list(x))
-	str(x[0],".",x[1],".",x[2]);
+    let(x = version_to_list(x))
+    str(x[0],".",x[1],".",x[2]);
 
 
 // Function: version_to_num()
@@ -115,8 +115,8 @@ function version_to_str(x) =
 //   v3 = version_to_num(2.120567);   // Returns: 2.120567
 //   v4 = version_to_num("2.6.79");   // Returns: 2.060079
 function version_to_num(x) =
-	let(x = version_to_list(x))
-	(x[0]*1000000 + x[1]*10000 + x[2])/1000000;
+    let(x = version_to_list(x))
+    (x[0]*1000000 + x[1]*10000 + x[2])/1000000;
 
 
 // Function: version_cmp()
@@ -130,11 +130,11 @@ function version_to_num(x) =
 //   cmp2 = version_cmp(2.010034, "2.1.34");  // Returns: 0
 //   cmp3 = version_cmp(2.010034, "2.1.35");  // Returns: <0
 function version_cmp(a,b) =
-	let(
-		a = version_to_list(a),
-		b = version_to_list(b),
-		cmps = [for (i=[0:1:2]) if(a[i]!=b[i]) a[i]-b[i]]
-	) cmps==[]? 0 : cmps[0];
+    let(
+        a = version_to_list(a),
+        b = version_to_list(b),
+        cmps = [for (i=[0:1:2]) if(a[i]!=b[i]) a[i]-b[i]]
+    ) cmps==[]? 0 : cmps[0];
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

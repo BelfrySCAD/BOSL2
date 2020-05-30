@@ -33,12 +33,12 @@
 //   move_copies([[-25,-25,0], [25,-25,0], [0,0,50], [0,25,0]]) sphere(r=10);
 module move_copies(a=[[0,0,0]])
 {
-	assert(is_list(a));
-	for ($idx = idx(a)) {
-		$pos = a[$idx];
-		assert(is_vector($pos));
-		translate($pos) children();
-	}
+    assert(is_list(a));
+    for ($idx = idx(a)) {
+        $pos = a[$idx];
+        assert(is_vector($pos));
+        translate($pos) children();
+    }
 }
 
 
@@ -80,30 +80,30 @@ module move_copies(a=[[0,0,0]])
 //   }
 module line_of(p1, p2, spacing, l, n)
 {
-	ll = (
-		!is_undef(l)? scalar_vec3(l, 0) :
-		(!is_undef(spacing) && !is_undef(n))? (n * scalar_vec3(spacing, 0)) :
-		(!is_undef(p1) && !is_undef(p2))? point3d(p2-p1) :
-		undef
-	);
-	cnt = (
-		!is_undef(n)? n :
-		(!is_undef(spacing) && !is_undef(ll))? floor(norm(ll) / norm(scalar_vec3(spacing, 0)) + 1.000001) :
-		2
-	);
-	spc = (
-		is_undef(spacing)? (ll/(cnt-1)) :
-		is_num(spacing) && !is_undef(ll)? (ll/(cnt-1)) :
-		scalar_vec3(spacing, 0)
-	);
-	assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `line_of()`.");
-	spos = !is_undef(p1)? point3d(p1) : -(cnt-1)/2 * spc;
-	for (i=[0:1:cnt-1]) {
-		pos = i * spc + spos;
-		$pos = pos;
-		$idx = i;
-		translate(pos) children();
-	}
+    ll = (
+        !is_undef(l)? scalar_vec3(l, 0) :
+        (!is_undef(spacing) && !is_undef(n))? (n * scalar_vec3(spacing, 0)) :
+        (!is_undef(p1) && !is_undef(p2))? point3d(p2-p1) :
+        undef
+    );
+    cnt = (
+        !is_undef(n)? n :
+        (!is_undef(spacing) && !is_undef(ll))? floor(norm(ll) / norm(scalar_vec3(spacing, 0)) + 1.000001) :
+        2
+    );
+    spc = (
+        is_undef(spacing)? (ll/(cnt-1)) :
+        is_num(spacing) && !is_undef(ll)? (ll/(cnt-1)) :
+        scalar_vec3(spacing, 0)
+    );
+    assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `line_of()`.");
+    spos = !is_undef(p1)? point3d(p1) : -(cnt-1)/2 * spc;
+    for (i=[0:1:cnt-1]) {
+        pos = i * spc + spos;
+        $pos = pos;
+        $idx = i;
+        translate(pos) children();
+    }
 }
 
 
@@ -138,7 +138,7 @@ module line_of(p1, p2, spacing, l, n)
 //   }
 module xcopies(spacing, n, l, sp)
 {
-	line_of(l=l*RIGHT, spacing=spacing*RIGHT, n=n, p1=sp) children();
+    line_of(l=l*RIGHT, spacing=spacing*RIGHT, n=n, p1=sp) children();
 }
 
 
@@ -173,7 +173,7 @@ module xcopies(spacing, n, l, sp)
 //   }
 module ycopies(spacing, n, l, sp)
 {
-	line_of(l=l*BACK, spacing=spacing*BACK, n=n, p1=sp) children();
+    line_of(l=l*BACK, spacing=spacing*BACK, n=n, p1=sp) children();
 }
 
 
@@ -208,7 +208,7 @@ module ycopies(spacing, n, l, sp)
 //   }
 module zcopies(spacing, n, l, sp)
 {
-	line_of(l=l*UP, spacing=spacing*UP, n=n, p1=sp) children();
+    line_of(l=l*UP, spacing=spacing*UP, n=n, p1=sp) children();
 }
 
 
@@ -243,18 +243,18 @@ module zcopies(spacing, n, l, sp)
 //   }
 module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
 {
-	gaps = ($children < 2)? [0] :
-		!is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
-		[for (i=[0:1:$children-2]) 0];
-	spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
-	gaps2 = [for (gap = gaps) gap+spc];
-	spos = dir * -sum(gaps2)/2;
-	for (i=[0:1:$children-1]) {
-		totspc = sum(concat([0], slice(gaps2, 0, i)));
-		$pos = spos + totspc * dir;
-		$idx = i;
-		translate($pos) children(i);
-	}
+    gaps = ($children < 2)? [0] :
+        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+        [for (i=[0:1:$children-2]) 0];
+    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
+    gaps2 = [for (gap = gaps) gap+spc];
+    spos = dir * -sum(gaps2)/2;
+    for (i=[0:1:$children-1]) {
+        totspc = sum(concat([0], slice(gaps2, 0, i)));
+        $pos = spos + totspc * dir;
+        $idx = i;
+        translate($pos) children(i);
+    }
 }
 
 
@@ -287,19 +287,19 @@ module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
 //   }
 module xdistribute(spacing=10, sizes=undef, l=undef)
 {
-	dir = RIGHT;
-	gaps = ($children < 2)? [0] :
-		!is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
-		[for (i=[0:1:$children-2]) 0];
-	spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
-	gaps2 = [for (gap = gaps) gap+spc];
-	spos = dir * -sum(gaps2)/2;
-	for (i=[0:1:$children-1]) {
-		totspc = sum(concat([0], slice(gaps2, 0, i)));
-		$pos = spos + totspc * dir;
-		$idx = i;
-		translate($pos) children(i);
-	}
+    dir = RIGHT;
+    gaps = ($children < 2)? [0] :
+        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+        [for (i=[0:1:$children-2]) 0];
+    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
+    gaps2 = [for (gap = gaps) gap+spc];
+    spos = dir * -sum(gaps2)/2;
+    for (i=[0:1:$children-1]) {
+        totspc = sum(concat([0], slice(gaps2, 0, i)));
+        $pos = spos + totspc * dir;
+        $idx = i;
+        translate($pos) children(i);
+    }
 }
 
 
@@ -332,19 +332,19 @@ module xdistribute(spacing=10, sizes=undef, l=undef)
 //   }
 module ydistribute(spacing=10, sizes=undef, l=undef)
 {
-	dir = BACK;
-	gaps = ($children < 2)? [0] :
-		!is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
-		[for (i=[0:1:$children-2]) 0];
-	spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
-	gaps2 = [for (gap = gaps) gap+spc];
-	spos = dir * -sum(gaps2)/2;
-	for (i=[0:1:$children-1]) {
-		totspc = sum(concat([0], slice(gaps2, 0, i)));
-		$pos = spos + totspc * dir;
-		$idx = i;
-		translate($pos) children(i);
-	}
+    dir = BACK;
+    gaps = ($children < 2)? [0] :
+        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+        [for (i=[0:1:$children-2]) 0];
+    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
+    gaps2 = [for (gap = gaps) gap+spc];
+    spos = dir * -sum(gaps2)/2;
+    for (i=[0:1:$children-1]) {
+        totspc = sum(concat([0], slice(gaps2, 0, i)));
+        $pos = spos + totspc * dir;
+        $idx = i;
+        translate($pos) children(i);
+    }
 }
 
 
@@ -377,19 +377,19 @@ module ydistribute(spacing=10, sizes=undef, l=undef)
 //   }
 module zdistribute(spacing=10, sizes=undef, l=undef)
 {
-	dir = UP;
-	gaps = ($children < 2)? [0] :
-		!is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
-		[for (i=[0:1:$children-2]) 0];
-	spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
-	gaps2 = [for (gap = gaps) gap+spc];
-	spos = dir * -sum(gaps2)/2;
-	for (i=[0:1:$children-1]) {
-		totspc = sum(concat([0], slice(gaps2, 0, i)));
-		$pos = spos + totspc * dir;
-		$idx = i;
-		translate($pos) children(i);
-	}
+    dir = UP;
+    gaps = ($children < 2)? [0] :
+        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+        [for (i=[0:1:$children-2]) 0];
+    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
+    gaps2 = [for (gap = gaps) gap+spc];
+    spos = dir * -sum(gaps2)/2;
+    for (i=[0:1:$children-1]) {
+        totspc = sum(concat([0], slice(gaps2, 0, i)));
+        $pos = spos + totspc * dir;
+        $idx = i;
+        translate($pos) children(i);
+    }
 }
 
 
@@ -450,73 +450,73 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
 //   }
 module grid2d(spacing, n, size, stagger=false, inside=undef)
 {
-	assert(in_list(stagger, [false, true, "alt"]));
-	bounds = is_undef(inside)? undef :
-		is_path(inside)? pointlist_bounds(inside) :
-		assert(is_region(inside))
-		pointlist_bounds(flatten(inside));
-	size = is_num(size)? [size, size] :
-		is_vector(size)? assert(len(size)==2) size :
-		bounds!=undef? [
-			for (i=[0:1]) 2*max(abs(bounds[0][i]),bounds[1][i])
-		] : undef;
-	spacing = is_num(spacing)? (
-			stagger!=false? polar_to_xy(spacing,60) :
-			[spacing,spacing]
-		) :
-		is_vector(spacing)? assert(len(spacing)==2) spacing :
-		size!=undef? (
-			is_num(n)? vdiv(size,(n-1)*[1,1]) :
-			is_vector(n)? assert(len(n)==2) vdiv(size,n-[1,1]) :
-			vdiv(size,(stagger==false? [1,1] : [2,2]))
-		) :
-		undef;
-	n = is_num(n)? [n,n] :
-		is_vector(n)? assert(len(n)==2) n :
-		size!=undef && spacing!=undef? vfloor(vdiv(size,spacing))+[1,1] :
-		[2,2];
-	offset = vmul(spacing, n-[1,1])/2;
-	if (stagger == false) {
-		for (row = [0:1:n.y-1]) {
-			for (col = [0:1:n.x-1]) {
-				pos = vmul([col,row],spacing) - offset;
-				if (
-					is_undef(inside) ||
-					(is_path(inside) && point_in_polygon(pos, inside)>=0) ||
-					(is_region(inside) && point_in_region(pos, inside)>=0)
-				) {
-					$col = col;
-					$row = row;
-					$pos = pos;
-					translate(pos) children();
-				}
-			}
-		}
-	} else {
-		// stagger == true or stagger == "alt"
-		staggermod = (stagger == "alt")? 1 : 0;
-		cols1 = ceil(n.x/2);
-		cols2 = n.x - cols1;
-		for (row = [0:1:n.y-1]) {
-			rowcols = ((row%2) == staggermod)? cols1 : cols2;
-			if (rowcols > 0) {
-				for (col = [0:1:rowcols-1]) {
-					rowdx = (row%2 != staggermod)? spacing.x : 0;
-					pos = vmul([2*col,row],spacing) + [rowdx,0] - offset;
-					if (
-						is_undef(inside) ||
-						(is_path(inside) && point_in_polygon(pos, inside)>=0) ||
-						(is_region(inside) && point_in_region(pos, inside)>=0)
-					) {
-						$col = col * 2 + ((row%2!=staggermod)? 1 : 0);
-						$row = row;
-						$pos = pos;
-						translate(pos) children();
-					}
-				}
-			}
-		}
-	}
+    assert(in_list(stagger, [false, true, "alt"]));
+    bounds = is_undef(inside)? undef :
+        is_path(inside)? pointlist_bounds(inside) :
+        assert(is_region(inside))
+        pointlist_bounds(flatten(inside));
+    size = is_num(size)? [size, size] :
+        is_vector(size)? assert(len(size)==2) size :
+        bounds!=undef? [
+            for (i=[0:1]) 2*max(abs(bounds[0][i]),bounds[1][i])
+        ] : undef;
+    spacing = is_num(spacing)? (
+            stagger!=false? polar_to_xy(spacing,60) :
+            [spacing,spacing]
+        ) :
+        is_vector(spacing)? assert(len(spacing)==2) spacing :
+        size!=undef? (
+            is_num(n)? vdiv(size,(n-1)*[1,1]) :
+            is_vector(n)? assert(len(n)==2) vdiv(size,n-[1,1]) :
+            vdiv(size,(stagger==false? [1,1] : [2,2]))
+        ) :
+        undef;
+    n = is_num(n)? [n,n] :
+        is_vector(n)? assert(len(n)==2) n :
+        size!=undef && spacing!=undef? vfloor(vdiv(size,spacing))+[1,1] :
+        [2,2];
+    offset = vmul(spacing, n-[1,1])/2;
+    if (stagger == false) {
+        for (row = [0:1:n.y-1]) {
+            for (col = [0:1:n.x-1]) {
+                pos = vmul([col,row],spacing) - offset;
+                if (
+                    is_undef(inside) ||
+                    (is_path(inside) && point_in_polygon(pos, inside)>=0) ||
+                    (is_region(inside) && point_in_region(pos, inside)>=0)
+                ) {
+                    $col = col;
+                    $row = row;
+                    $pos = pos;
+                    translate(pos) children();
+                }
+            }
+        }
+    } else {
+        // stagger == true or stagger == "alt"
+        staggermod = (stagger == "alt")? 1 : 0;
+        cols1 = ceil(n.x/2);
+        cols2 = n.x - cols1;
+        for (row = [0:1:n.y-1]) {
+            rowcols = ((row%2) == staggermod)? cols1 : cols2;
+            if (rowcols > 0) {
+                for (col = [0:1:rowcols-1]) {
+                    rowdx = (row%2 != staggermod)? spacing.x : 0;
+                    pos = vmul([2*col,row],spacing) + [rowdx,0] - offset;
+                    if (
+                        is_undef(inside) ||
+                        (is_path(inside) && point_in_polygon(pos, inside)>=0) ||
+                        (is_region(inside) && point_in_region(pos, inside)>=0)
+                    ) {
+                        $col = col * 2 + ((row%2!=staggermod)? 1 : 0);
+                        $row = row;
+                        $pos = pos;
+                        translate(pos) children();
+                    }
+                }
+            }
+        }
+    }
 }
 
 
@@ -554,24 +554,24 @@ module grid2d(spacing, n, size, stagger=false, inside=undef)
 //   grid3d(n=[10, 10, 10], spacing=50) color($idx/9) cube(50, center=true);
 module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
 {
-	n = scalar_vec3(n, 1);
-	spacing = scalar_vec3(spacing, undef);
-	if (!is_undef(n) && !is_undef(spacing)) {
-		for (xi = [0:1:n.x-1]) {
-			for (yi = [0:1:n.y-1]) {
-				for (zi = [0:1:n.z-1]) {
-					$idx = [xi,yi,zi];
-					$pos = vmul(spacing, $idx - (n-[1,1,1])/2);
-					translate($pos) children();
-				}
-			}
-		}
-	} else {
-		for (xoff = xa, yoff = ya, zoff = za) {
-			$pos = [xoff, yoff, zoff];
-			translate($pos) children();
-		}
-	}
+    n = scalar_vec3(n, 1);
+    spacing = scalar_vec3(spacing, undef);
+    if (!is_undef(n) && !is_undef(spacing)) {
+        for (xi = [0:1:n.x-1]) {
+            for (yi = [0:1:n.y-1]) {
+                for (zi = [0:1:n.z-1]) {
+                    $idx = [xi,yi,zi];
+                    $pos = vmul(spacing, $idx - (n-[1,1,1])/2);
+                    translate($pos) children();
+                }
+            }
+        }
+    } else {
+        for (xoff = xa, yoff = ya, zoff = za) {
+            $pos = [xoff, yoff, zoff];
+            translate($pos) children();
+        }
+    }
 }
 
 
@@ -642,28 +642,28 @@ module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
 //   color("red",0.333) yrot(90) cylinder(h=20, r1=5, r2=0);
 module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[0,0,0], subrot=true)
 {
-	sang = sa + offset;
-	angs = !is_undef(n)?
-		(n<=0? [] : [for (i=[0:1:n-1]) i/n*360+sang]) :
-		rots==[]? [] :
-		assert(!is_string(rots), "Argument rots must be an angle, a list of angles, or a range of angles.")
-		assert(!is_undef(rots[0]), "Argument rots must be an angle, a list of angles, or a range of angles.")
-		[for (a=rots) a];
-	for ($idx = idx(angs)) {
-		$ang = angs[$idx];
-		$axis = v;
-		translate(cp) {
-			rotate(a=$ang, v=v) {
-				translate(delta) {
-					rot(a=(subrot? sang : $ang), v=v, reverse=true) {
-						translate(-cp) {
-							children();
-						}
-					}
-				}
-			}
-		}
-	}
+    sang = sa + offset;
+    angs = !is_undef(n)?
+        (n<=0? [] : [for (i=[0:1:n-1]) i/n*360+sang]) :
+        rots==[]? [] :
+        assert(!is_string(rots), "Argument rots must be an angle, a list of angles, or a range of angles.")
+        assert(!is_undef(rots[0]), "Argument rots must be an angle, a list of angles, or a range of angles.")
+        [for (a=rots) a];
+    for ($idx = idx(angs)) {
+        $ang = angs[$idx];
+        $axis = v;
+        translate(cp) {
+            rotate(a=$ang, v=v) {
+                translate(delta) {
+                    rot(a=(subrot? sang : $ang), v=v, reverse=true) {
+                        translate(-cp) {
+                            children();
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 
@@ -720,7 +720,7 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[
 //   color("red",0.333) xrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
 module xrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 {
-	rot_copies(rots=rots, v=RIGHT, cp=cp, n=n, sa=sa, delta=[0, r, 0], subrot=subrot) children();
+    rot_copies(rots=rots, v=RIGHT, cp=cp, n=n, sa=sa, delta=[0, r, 0], subrot=subrot) children();
 }
 
 
@@ -777,7 +777,7 @@ module xrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 //   color("red",0.333) yrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
 module yrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 {
-	rot_copies(rots=rots, v=BACK, cp=cp, n=n, sa=sa, delta=[-r, 0, 0], subrot=subrot) children();
+    rot_copies(rots=rots, v=BACK, cp=cp, n=n, sa=sa, delta=[-r, 0, 0], subrot=subrot) children();
 }
 
 
@@ -834,7 +834,7 @@ module yrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 //   color("red",0.333) yrot(-90) cylinder(h=20, r1=5, r2=0, center=true);
 module zrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 {
-	rot_copies(rots=rots, v=UP, cp=cp, n=n, sa=sa, delta=[r, 0, 0], subrot=subrot) children();
+    rot_copies(rots=rots, v=UP, cp=cp, n=n, sa=sa, delta=[r, 0, 0], subrot=subrot) children();
 }
 
 
@@ -880,27 +880,27 @@ module zrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 //   #cube(size=[10,3,3],center=true);
 //   arc_of(rx=20, ry=10, n=8) cube(size=[10,3,3],center=true);
 module arc_of(
-	n=6,
-	r=undef, rx=undef, ry=undef,
-	d=undef, dx=undef, dy=undef,
-	sa=0, ea=360,
-	rot=true
+    n=6,
+    r=undef, rx=undef, ry=undef,
+    d=undef, dx=undef, dy=undef,
+    sa=0, ea=360,
+    rot=true
 ) {
-	rx = get_radius(r1=rx, r=r, d1=dx, d=d, dflt=1);
-	ry = get_radius(r1=ry, r=r, d1=dy, d=d, dflt=1);
-	sa = posmod(sa, 360);
-	ea = posmod(ea, 360);
-	n = (abs(ea-sa)<0.01)?(n+1):n;
-	delt = (((ea<=sa)?360.0:0)+ea-sa)/(n-1);
-	for ($idx = [0:1:n-1]) {
-		$ang = sa + ($idx * delt);
-		$pos =[rx*cos($ang), ry*sin($ang), 0];
-		translate($pos) {
-			zrot(rot? atan2(ry*sin($ang), rx*cos($ang)) : 0) {
-				children();
-			}
-		}
-	}
+    rx = get_radius(r1=rx, r=r, d1=dx, d=d, dflt=1);
+    ry = get_radius(r1=ry, r=r, d1=dy, d=d, dflt=1);
+    sa = posmod(sa, 360);
+    ea = posmod(ea, 360);
+    n = (abs(ea-sa)<0.01)?(n+1):n;
+    delt = (((ea<=sa)?360.0:0)+ea-sa)/(n-1);
+    for ($idx = [0:1:n-1]) {
+        $ang = sa + ($idx * delt);
+        $pos =[rx*cos($ang), ry*sin($ang), 0];
+        translate($pos) {
+            zrot(rot? atan2(ry*sin($ang), rx*cos($ang)) : 0) {
+                children();
+            }
+        }
+    }
 }
 
 
@@ -938,29 +938,29 @@ module arc_of(
 //           cylinder(d=8, h=10, center=false);
 module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=true)
 {
-	r = get_radius(r=r, d=d, dflt=50);
-	cnt = ceil(n / (cone_ang/180));
+    r = get_radius(r=r, d=d, dflt=50);
+    cnt = ceil(n / (cone_ang/180));
 
-	// Calculate an array of [theta,phi] angles for `n` number of
-	// points, almost evenly spaced across the surface of a sphere.
-	// This approximation is based on the golden spiral method.
-	theta_phis = [for (x=[0:1:n-1]) [180*(1+sqrt(5))*(x+0.5)%360, acos(1-2*(x+0.5)/cnt)]];
+    // Calculate an array of [theta,phi] angles for `n` number of
+    // points, almost evenly spaced across the surface of a sphere.
+    // This approximation is based on the golden spiral method.
+    theta_phis = [for (x=[0:1:n-1]) [180*(1+sqrt(5))*(x+0.5)%360, acos(1-2*(x+0.5)/cnt)]];
 
-	for ($idx = idx(theta_phis)) {
-		tp = theta_phis[$idx];
-		xyz = spherical_to_xyz(r, tp[0], tp[1]);
-		$pos = vmul(xyz,scale);
-		$theta = tp[0];
-		$phi = tp[1];
-		$rad = r;
-		translate($pos) {
-			if (perp) {
-				rot(from=UP, to=xyz) children();
-			} else {
-				children();
-			}
-		}
-	}
+    for ($idx = idx(theta_phis)) {
+        tp = theta_phis[$idx];
+        xyz = spherical_to_xyz(r, tp[0], tp[1]);
+        $pos = vmul(xyz,scale);
+        $theta = tp[0];
+        $phi = tp[1];
+        $rad = r;
+        translate($pos) {
+            if (perp) {
+                rot(from=UP, to=xyz) children();
+            } else {
+                children();
+            }
+        }
+    }
 }
 
 
@@ -1000,27 +1000,27 @@ module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=tr
 //   color("blue",0.25) translate([0,-5,-5]) rot(from=UP, to=BACK+UP) cube([15,15,0.01], center=true);
 module mirror_copy(v=[0,0,1], offset=0, cp)
 {
-	cp = is_vector(v,4)? plane_normal(v) * v[3] :
-		is_vector(cp)? cp :
-		is_num(cp)? cp*unit(v) :
-		[0,0,0];
-	nv = is_vector(v,4)? plane_normal(v) : unit(v);
-	off = nv*offset;
-	if (cp == [0,0,0]) {
-		translate(off) {
-			$orig = true;
-			$idx = 0;
-			children();
-		}
-		mirror(nv) translate(off) {
-			$orig = false;
-			$idx = 1;
-			children();
-		}
-	} else {
-		translate(off) children();
-		translate(cp) mirror(nv) translate(-cp) translate(off) children();
-	}
+    cp = is_vector(v,4)? plane_normal(v) * v[3] :
+        is_vector(cp)? cp :
+        is_num(cp)? cp*unit(v) :
+        [0,0,0];
+    nv = is_vector(v,4)? plane_normal(v) : unit(v);
+    off = nv*offset;
+    if (cp == [0,0,0]) {
+        translate(off) {
+            $orig = true;
+            $idx = 0;
+            children();
+        }
+        mirror(nv) translate(off) {
+            $orig = false;
+            $idx = 1;
+            children();
+        }
+    } else {
+        translate(off) children();
+        translate(cp) mirror(nv) translate(-cp) translate(off) children();
+    }
 }
 
 
@@ -1053,7 +1053,7 @@ module mirror_copy(v=[0,0,1], offset=0, cp)
 //   color("blue",0.25) left(5) cube([0.01,15,15], center=true);
 module xflip_copy(offset=0, x=0)
 {
-	mirror_copy(v=[1,0,0], offset=offset, cp=[x,0,0]) children();
+    mirror_copy(v=[1,0,0], offset=offset, cp=[x,0,0]) children();
 }
 
 
@@ -1086,7 +1086,7 @@ module xflip_copy(offset=0, x=0)
 //   color("blue",0.25) fwd(5) cube([15,0.01,15], center=true);
 module yflip_copy(offset=0, y=0)
 {
-	mirror_copy(v=[0,1,0], offset=offset, cp=[0,y,0]) children();
+    mirror_copy(v=[0,1,0], offset=offset, cp=[0,y,0]) children();
 }
 
 
@@ -1119,9 +1119,9 @@ module yflip_copy(offset=0, y=0)
 //   color("blue",0.25) down(5) cube([15,15,0.01], center=true);
 module zflip_copy(offset=0, z=0)
 {
-	mirror_copy(v=[0,0,1], offset=offset, cp=[0,0,z]) children();
+    mirror_copy(v=[0,0,1], offset=offset, cp=[0,0,z]) children();
 }
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

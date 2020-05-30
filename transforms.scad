@@ -68,20 +68,20 @@
 //   mat3d = move([2,3,4]);  // Returns: [[1,0,0,2],[0,1,0,3],[0,0,1,4],[0,0,0,1]]
 module move(v=[0,0,0], x=0, y=0, z=0)
 {
-	translate(point3d(v)+[x,y,z]) children();
+    translate(point3d(v)+[x,y,z]) children();
 }
 
 function move(v=[0,0,0], p=undef, x=0, y=0, z=0) =
-	is_undef(p)? (
-		len(v)==2? affine2d_translate(v+[x,y]) :
-		affine3d_translate(point3d(v)+[x,y,z])
-	) : (
-		assert(is_list(p))
-		let(v=v+[x,y,z])
-		is_num(p.x)? p+v :
-		is_vnf(p)? [move(v=v,p=p.x), p.y] :
-		[for (l=p) is_vector(l)? l+v : move(v=v, p=l)]
-	);
+    is_undef(p)? (
+        len(v)==2? affine2d_translate(v+[x,y]) :
+        affine3d_translate(point3d(v)+[x,y,z])
+    ) : (
+        assert(is_list(p))
+        let(v=v+[x,y,z])
+        is_num(p.x)? p+v :
+        is_vnf(p)? [move(v=v,p=p.x), p.y] :
+        [for (l=p) is_vector(l)? l+v : move(v=v, p=l)]
+    );
 
 function translate(v=[0,0,0], p=undef) = move(v=v, p=p);
 
@@ -337,57 +337,57 @@ function up(z=0,p=undef) = move([0,0,z],p=p);
 //   stroke(rot(30,p=path), closed=true);
 module rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false)
 {
-	m = rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, planar=false);
-	multmatrix(m) children();
+    m = rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, planar=false);
+    multmatrix(m) children();
 }
 
 function rot(a=0, v, cp, from, to, reverse=false, planar=false, p, _m) =
-	assert(is_undef(from)==is_undef(to), "from and to must be specified together.")
-	is_undef(p)? (
-		planar? let(
-			cp = is_undef(cp)? cp : point2d(cp),
-			m1 = is_undef(from)? affine2d_zrot(a) :
-				assert(is_vector(from))
-				assert(!approx(norm(from),0))
-				assert(approx(point3d(from).z, 0))
-				assert(is_vector(to))
-				assert(!approx(norm(to),0))
-				assert(approx(point3d(to).z, 0))
-				affine2d_zrot(
-					vang(point2d(to)) -
-					vang(point2d(from))
-				),
-			m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
-			m3 = reverse? matrix_inverse(m2) : m2
-		) m3 : let(
-			from = is_undef(from)? undef : point3d(from),
-			to = is_undef(to)? undef : point3d(to),
-			cp = is_undef(cp)? undef : point3d(cp),
-			m1 = !is_undef(from)? (
-					assert(is_vector(from))
-					assert(!approx(norm(from),0))
-					assert(is_vector(to))
-					assert(!approx(norm(to),0))
-					affine3d_rot_from_to(from,to) * affine3d_zrot(a)
-				) :
-				!is_undef(v)? affine3d_rot_by_axis(v,a) :
-				is_num(a)? affine3d_zrot(a) :
-				affine3d_zrot(a.z) * affine3d_yrot(a.y) * affine3d_xrot(a.x),
-			m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
-			m3 = reverse? matrix_inverse(m2) : m2
-		) m3
-	) : (
-		assert(is_list(p))
-		let(
-			m = !is_undef(_m)? _m :
-				rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, planar=planar),
-			res = p==[]? [] :
-				is_vector(p)? apply(m, p) :
-				is_vnf(p)? [apply(m, p[0]), p[1]] :
-				is_list(p[0])? [for (pp=p) rot(p=pp, _m=m)] :
-				assert(false, "The p argument for rot() is not a point, path, patch, matrix, or VNF.")
-		) res
-	);
+    assert(is_undef(from)==is_undef(to), "from and to must be specified together.")
+    is_undef(p)? (
+        planar? let(
+            cp = is_undef(cp)? cp : point2d(cp),
+            m1 = is_undef(from)? affine2d_zrot(a) :
+                assert(is_vector(from))
+                assert(!approx(norm(from),0))
+                assert(approx(point3d(from).z, 0))
+                assert(is_vector(to))
+                assert(!approx(norm(to),0))
+                assert(approx(point3d(to).z, 0))
+                affine2d_zrot(
+                    vang(point2d(to)) -
+                    vang(point2d(from))
+                ),
+            m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
+            m3 = reverse? matrix_inverse(m2) : m2
+        ) m3 : let(
+            from = is_undef(from)? undef : point3d(from),
+            to = is_undef(to)? undef : point3d(to),
+            cp = is_undef(cp)? undef : point3d(cp),
+            m1 = !is_undef(from)? (
+                    assert(is_vector(from))
+                    assert(!approx(norm(from),0))
+                    assert(is_vector(to))
+                    assert(!approx(norm(to),0))
+                    affine3d_rot_from_to(from,to) * affine3d_zrot(a)
+                ) :
+                !is_undef(v)? affine3d_rot_by_axis(v,a) :
+                is_num(a)? affine3d_zrot(a) :
+                affine3d_zrot(a.z) * affine3d_yrot(a.y) * affine3d_xrot(a.x),
+            m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
+            m3 = reverse? matrix_inverse(m2) : m2
+        ) m3
+    ) : (
+        assert(is_list(p))
+        let(
+            m = !is_undef(_m)? _m :
+                rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, planar=planar),
+            res = p==[]? [] :
+                is_vector(p)? apply(m, p) :
+                is_vnf(p)? [apply(m, p[0]), p[1]] :
+                is_list(p[0])? [for (pp=p) rot(p=pp, _m=m)] :
+                assert(false, "The p argument for rot() is not a point, path, patch, matrix, or VNF.")
+        ) res
+    );
 
 
 
@@ -421,13 +421,13 @@ function rot(a=0, v, cp, from, to, reverse=false, planar=false, p, _m) =
 //   xrot(90) cylinder(h=50, r=10, center=true);
 module xrot(a=0, cp=undef)
 {
-	if (a==0) {
-		children();  // May be slightly faster?
-	} else if (!is_undef(cp)) {
-		translate(cp) rotate([a, 0, 0]) translate(-cp) children();
-	} else {
-		rotate([a, 0, 0]) children();
-	}
+    if (a==0) {
+        children();  // May be slightly faster?
+    } else if (!is_undef(cp)) {
+        translate(cp) rotate([a, 0, 0]) translate(-cp) children();
+    } else {
+        rotate([a, 0, 0]) children();
+    }
 }
 
 function xrot(a=0, cp=undef, p=undef) = rot([a,0,0], cp=cp, p=p);
@@ -462,13 +462,13 @@ function xrot(a=0, cp=undef, p=undef) = rot([a,0,0], cp=cp, p=p);
 //   yrot(90) cylinder(h=50, r=10, center=true);
 module yrot(a=0, cp=undef)
 {
-	if (a==0) {
-		children();  // May be slightly faster?
-	} else if (!is_undef(cp)) {
-		translate(cp) rotate([0, a, 0]) translate(-cp) children();
-	} else {
-		rotate([0, a, 0]) children();
-	}
+    if (a==0) {
+        children();  // May be slightly faster?
+    } else if (!is_undef(cp)) {
+        translate(cp) rotate([0, a, 0]) translate(-cp) children();
+    } else {
+        rotate([0, a, 0]) children();
+    }
 }
 
 function yrot(a=0, cp=undef, p=undef) = rot([0,a,0], cp=cp, p=p);
@@ -503,13 +503,13 @@ function yrot(a=0, cp=undef, p=undef) = rot([0,a,0], cp=cp, p=p);
 //   zrot(90) cube(size=[60,20,40], center=true);
 module zrot(a=0, cp=undef)
 {
-	if (a==0) {
-		children();  // May be slightly faster?
-	} else if (!is_undef(cp)) {
-		translate(cp) rotate(a) translate(-cp) children();
-	} else {
-		rotate(a) children();
-	}
+    if (a==0) {
+        children();  // May be slightly faster?
+    } else if (!is_undef(cp)) {
+        translate(cp) rotate(a) translate(-cp) children();
+    } else {
+        rotate(a) children();
+    }
 }
 
 function zrot(a=0, cp=undef, p=undef) = rot(a, cp=cp, p=p);
@@ -551,20 +551,20 @@ function zrot(a=0, cp=undef, p=undef) = rot(a, cp=cp, p=p);
 //   #stroke(path,closed=true);
 //   stroke(scale([1.5,3],p=path),closed=true);
 function scale(v=1, p=undef) =
-	assert(is_num(v) || is_vector(v))
-	assert(is_undef(p) || is_list(p))
-	let(v = is_num(v)? [v,v,v] : v)
-	is_undef(p)? (
-		len(v)==2? affine2d_scale(v) : affine3d_scale(point3d(v))
-	) : (
-		assert(is_list(p))
-		is_num(p.x)? vmul(p,v) :
-		is_vnf(p)? let(inv=product([for (x=v) x<0? -1 : 1])) [
-			scale(v=v,p=p.x),
-			inv>=0? p.y : [for (l=p.y) reverse(l)]
-		] :
-		[for (l=p) is_vector(l)? vmul(l,v) : scale(v=v, p=l)]
-	);
+    assert(is_num(v) || is_vector(v))
+    assert(is_undef(p) || is_list(p))
+    let(v = is_num(v)? [v,v,v] : v)
+    is_undef(p)? (
+        len(v)==2? affine2d_scale(v) : affine3d_scale(point3d(v))
+    ) : (
+        assert(is_list(p))
+        is_num(p.x)? vmul(p,v) :
+        is_vnf(p)? let(inv=product([for (x=v) x<0? -1 : 1])) [
+            scale(v=v,p=p.x),
+            inv>=0? p.y : [for (l=p.y) reverse(l)]
+        ] :
+        [for (l=p) is_vector(l)? vmul(l,v) : scale(v=v, p=l)]
+    );
 
 
 // Function&Module: xscale()
@@ -737,13 +737,13 @@ function zscale(z=1, p=undef) = scale([1,1,z],p=p);
 //   #stroke(path,closed=true);
 //   stroke(mirror(n, p=path),closed=true);
 function mirror(v, p) =
-	assert(is_vector(v))
-	assert(is_undef(p) || is_list(p))
-	let(m = len(v)==2? affine2d_mirror(v) : affine3d_mirror(v))
-	is_undef(p)? m :
-	is_num(p.x)? apply(m,p) :
-	is_vnf(p)? [mirror(v=v,p=p[0]), [for (face=p[1]) reverse(face)]] :
-	[for (l=p) is_vector(l)? apply(m,l) : mirror(v=v, p=l)];
+    assert(is_vector(v))
+    assert(is_undef(p) || is_list(p))
+    let(m = len(v)==2? affine2d_mirror(v) : affine3d_mirror(v))
+    is_undef(p)? m :
+    is_num(p.x)? apply(m,p) :
+    is_vnf(p)? [mirror(v=v,p=p[0]), [for (face=p[1]) reverse(face)]] :
+    [for (l=p) is_vector(l)? apply(m,l) : mirror(v=v, p=l)];
 
 
 // Function&Module: xflip()
@@ -780,8 +780,8 @@ function mirror(v, p) =
 module xflip(x=0) translate([x,0,0]) mirror([1,0,0]) translate([-x,0,0]) children();
 
 function xflip(x=0,p) =
-	x==0? mirror([1,0,0],p=p) :
-	move([x,0,0],p=mirror([1,0,0],p=move([-x,0,0],p=p)));
+    x==0? mirror([1,0,0],p=p) :
+    move([x,0,0],p=mirror([1,0,0],p=move([-x,0,0],p=p)));
 
 
 // Function&Module: yflip()
@@ -818,8 +818,8 @@ function xflip(x=0,p) =
 module yflip(y=0) translate([0,y,0]) mirror([0,1,0]) translate([0,-y,0]) children();
 
 function yflip(y=0,p) =
-	y==0? mirror([0,1,0],p=p) :
-	move([0,y,0],p=mirror([0,1,0],p=move([0,-y,0],p=p)));
+    y==0? mirror([0,1,0],p=p) :
+    move([0,y,0],p=mirror([0,1,0],p=move([0,-y,0],p=p)));
 
 
 
@@ -857,8 +857,8 @@ function yflip(y=0,p) =
 module zflip(z=0) translate([0,0,z]) mirror([0,0,1]) translate([0,0,-z]) children();
 
 function zflip(z=0,p) =
-	z==0? mirror([0,0,1],p=p) :
-	move([0,0,z],p=mirror([0,0,1],p=move([0,0,-z],p=p)));
+    z==0? mirror([0,0,1],p=p) :
+    move([0,0,z],p=mirror([0,0,1],p=move([0,0,-z],p=p)));
 
 
 
@@ -918,29 +918,29 @@ function zflip(z=0,p) =
 //   trace_polyline(close_path(pts), showpts=true);
 module skew(sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0)
 {
-	multmatrix(
-		affine3d_skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy)
-	) children();
+    multmatrix(
+        affine3d_skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy)
+    ) children();
 }
 
 function skew(p, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0, planar=false) =
-	let(
-		planar = planar || (is_list(p) && is_num(p.x) && len(p)==2),
-		m = planar? [
-			[  1, sxy, 0],
-			[syx,   1, 0],
-			[  0,   0, 1]
-		] : affine3d_skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy)
-	)
-	is_undef(p)? m :
-	assert(is_list(p))
-	is_num(p.x)? (
-		planar?
-			point2d(m*concat(point2d(p),[1])) :
-			point3d(m*concat(point3d(p),[1]))
-	) :
-	is_vnf(p)? [skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy, planar=planar, p=p.x), p.y] :
-	[for (l=p) skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy, planar=planar, p=l)];
+    let(
+        planar = planar || (is_list(p) && is_num(p.x) && len(p)==2),
+        m = planar? [
+            [  1, sxy, 0],
+            [syx,   1, 0],
+            [  0,   0, 1]
+        ] : affine3d_skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy)
+    )
+    is_undef(p)? m :
+    assert(is_list(p))
+    is_num(p.x)? (
+        planar?
+            point2d(m*concat(point2d(p),[1])) :
+            point3d(m*concat(point3d(p),[1]))
+    ) :
+    is_vnf(p)? [skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy, planar=planar, p=p.x), p.y] :
+    [for (l=p) skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy, planar=planar, p=l)];
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

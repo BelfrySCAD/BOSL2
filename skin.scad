@@ -163,26 +163,26 @@ include <vnf.scad>
 // Example: Vaccum nozzle example from list-comprehension-demos, using "length" sampling (the default)
 //   xrot(90)down(1.5)
 //   difference() {
-//   	skin(
-//   		[square([2,.2],center=true),
-//   		 circle($fn=64,r=0.5)], z=[0,3],
-//   		slices=40,sampling="length",method="reindex");
-//   	skin(
-//   		[square([1.9,.1],center=true),
-//   		 circle($fn=64,r=0.45)], z=[-.01,3.01],
-//   		slices=40,sampling="length",method="reindex");
+//       skin(
+//           [square([2,.2],center=true),
+//            circle($fn=64,r=0.5)], z=[0,3],
+//           slices=40,sampling="length",method="reindex");
+//       skin(
+//           [square([1.9,.1],center=true),
+//            circle($fn=64,r=0.45)], z=[-.01,3.01],
+//           slices=40,sampling="length",method="reindex");
 //   }
 // Example: Same thing with "segment" sampling
 //   xrot(90)down(1.5)
 //   difference() {
-//   	skin(
-//   		[square([2,.2],center=true),
-//   		 circle($fn=64,r=0.5)], z=[0,3],
-//   		slices=40,sampling="segment",method="reindex");
-//   	skin(
-//   		[square([1.9,.1],center=true),
-//   		 circle($fn=64,r=0.45)], z=[-.01,3.01],
-//   		slices=40,sampling="segment",method="reindex");
+//       skin(
+//           [square([2,.2],center=true),
+//            circle($fn=64,r=0.5)], z=[0,3],
+//           slices=40,sampling="segment",method="reindex");
+//       skin(
+//           [square([1.9,.1],center=true),
+//            circle($fn=64,r=0.45)], z=[-.01,3.01],
+//           slices=40,sampling="segment",method="reindex");
 //   }
 // Example: Forma Candle Holder (from list-comprehension-demos)
 //   r = 50;
@@ -319,7 +319,7 @@ include <vnf.scad>
 
 module skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, convexity=10)
 {
-  	vnf_polyhedron(skin(profiles, slices, refine, method, sampling, caps, closed, z), convexity=convexity);
+      vnf_polyhedron(skin(profiles, slices, refine, method, sampling, caps, closed, z), convexity=convexity);
 }        
 
 
@@ -421,56 +421,56 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 
 
 function _skin_core(profiles, caps) =
-	let(
+    let(
                 vertices = [for (prof=profiles) each prof],
-		plens = [for (prof=profiles) len(prof)],
-		sidefaces = [
-			for(pidx=idx(profiles,end=-2))
-			let(
-				prof1 = profiles[pidx%len(profiles)],
-				prof2 = profiles[(pidx+1)%len(profiles)],
-				voff = default(sum([for (i=[0:1:pidx-1]) plens[i]]),0),
-				faces = [
-					for(
-						first = true,
-						finishing = false,
-						finished = false,
-						plen1 = len(prof1),
-						plen2 = len(prof2),
-						i=0, j=0, side=0;
+        plens = [for (prof=profiles) len(prof)],
+        sidefaces = [
+            for(pidx=idx(profiles,end=-2))
+            let(
+                prof1 = profiles[pidx%len(profiles)],
+                prof2 = profiles[(pidx+1)%len(profiles)],
+                voff = default(sum([for (i=[0:1:pidx-1]) plens[i]]),0),
+                faces = [
+                    for(
+                        first = true,
+                        finishing = false,
+                        finished = false,
+                        plen1 = len(prof1),
+                        plen2 = len(prof2),
+                        i=0, j=0, side=0;
 
-						!finished;
+                        !finished;
 
-						side =
-							let(
-								p1a = prof1[(i+0)%plen1],
-								p1b = prof1[(i+1)%plen1],
-								p2a = prof2[(j+0)%plen2],
-								p2b = prof2[(j+1)%plen2],
-								dist1 = norm(p1a-p2b),
-								dist2 = norm(p1b-p2a)
-							) (i==j) ? (dist1>dist2? 1 : 0) : (i<j ? 1 : 0) ,
-						p1 = voff + (i%plen1),
-						p2 = voff + (j%plen2) + plen1,
-						p3 = voff + (side? ((i+1)%plen1) : (((j+1)%plen2) + plen1)),
-						face = [p1, p3, p2],
-						i = i + (side? 1 : 0),
-						j = j + (side? 0 : 1),
-						first = false,
-						finished = finishing,
-						finishing = i>=plen1 && j>=plen2
-					) if (!first) face
-				]
-			) each faces
-		],
+                        side =
+                            let(
+                                p1a = prof1[(i+0)%plen1],
+                                p1b = prof1[(i+1)%plen1],
+                                p2a = prof2[(j+0)%plen2],
+                                p2b = prof2[(j+1)%plen2],
+                                dist1 = norm(p1a-p2b),
+                                dist2 = norm(p1b-p2a)
+                            ) (i==j) ? (dist1>dist2? 1 : 0) : (i<j ? 1 : 0) ,
+                        p1 = voff + (i%plen1),
+                        p2 = voff + (j%plen2) + plen1,
+                        p3 = voff + (side? ((i+1)%plen1) : (((j+1)%plen2) + plen1)),
+                        face = [p1, p3, p2],
+                        i = i + (side? 1 : 0),
+                        j = j + (side? 0 : 1),
+                        first = false,
+                        finished = finishing,
+                        finishing = i>=plen1 && j>=plen2
+                    ) if (!first) face
+                ]
+            ) each faces
+        ],
                 firstcap = !caps[0] ? [] : let(
                         prof1 = profiles[0]
                 ) [[for (i=idx(prof1)) plens[0]-1-i]],
                 secondcap = !caps[1] ? [] : let(
-			prof2 = select(profiles,-1),
-			eoff = sum(select(plens,0,-2))
-		) [[for (i=idx(prof2)) eoff+i]]
-	) [vertices, concat(sidefaces,firstcap,secondcap)];
+            prof2 = select(profiles,-1),
+            eoff = sum(select(plens,0,-2))
+        ) [[for (i=idx(prof2)) eoff+i]]
+    ) [vertices, concat(sidefaces,firstcap,secondcap)];
 
 
 
@@ -1223,4 +1223,4 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

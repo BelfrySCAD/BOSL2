@@ -30,10 +30,10 @@ function point2d(p, fill=0) = [for (i=[0:1]) (p[i]==undef)? fill : p[i]];
 //   points = A list of 2D or 3D points/vectors.
 //   fill = Value to fill missing values in vectors with.
 function path2d(points) =
-	assert(is_path(points,dim=undef,fast=true),"Input to path2d is not a path")
-	let (result = points * concat(ident(2), repeat([0,0], len(points[0])-2)))
-	assert(is_def(result), "Invalid input to path2d")
-	result;
+    assert(is_path(points,dim=undef,fast=true),"Input to path2d is not a path")
+    let (result = points * concat(ident(2), repeat([0,0], len(points[0])-2)))
+    assert(is_def(result), "Invalid input to path2d")
+    result;
 
 
 // Function: point3d()
@@ -53,16 +53,16 @@ function point3d(p, fill=0) = [for (i=[0:2]) (p[i]==undef)? fill : p[i]];
 //   points = A list of 2D, 3D or higher dimensional points/vectors.
 //   fill = Value to fill missing values in vectors with (in the 2D case)
 function path3d(points, fill=0) =
-	assert(is_num(fill))
-	assert(is_path(points, dim=undef, fast=true), "Input to path3d is not a path")
-	let (
-		change = len(points[0])-3,
-		M = change < 0? [[1,0,0],[0,1,0]] : 
-			concat(ident(3), repeat([0,0,0],change)),
-		result = points*M
-	)
-	assert(is_def(result), "Input to path3d is invalid")
-	fill == 0 || change>=0 ? result : result + repeat([0,0,fill], len(result));
+    assert(is_num(fill))
+    assert(is_path(points, dim=undef, fast=true), "Input to path3d is not a path")
+    let (
+        change = len(points[0])-3,
+        M = change < 0? [[1,0,0],[0,1,0]] : 
+            concat(ident(3), repeat([0,0,0],change)),
+        result = points*M
+    )
+    assert(is_def(result), "Input to path3d is invalid")
+    fill == 0 || change>=0 ? result : result + repeat([0,0,fill], len(result));
 
 
 // Function: point4d()
@@ -118,9 +118,9 @@ function path4d(points, fill=0) =
 //   xy = polar_to_xy(40,30);    // Returns: ~[34.6410162, 15]
 //   xy = polar_to_xy([40,30]);  // Returns: ~[34.6410162, 15]
 function polar_to_xy(r,theta=undef) = let(
-		rad = theta==undef? r[0] : r,
-		t = theta==undef? r[1] : theta
-	) rad*[cos(t), sin(t)];
+        rad = theta==undef? r[0] : r,
+        t = theta==undef? r[1] : theta
+    ) rad*[cos(t), sin(t)];
 
 
 // Function: xy_to_polar()
@@ -137,9 +137,9 @@ function polar_to_xy(r,theta=undef) = let(
 //   plr = xy_to_polar(20,30);
 //   plr = xy_to_polar([40,60]);
 function xy_to_polar(x,y=undef) = let(
-		xx = y==undef? x[0] : x,
-		yy = y==undef? x[1] : y
-	) [norm([xx,yy]), atan2(yy,xx)];
+        xx = y==undef? x[0] : x,
+        yy = y==undef? x[1] : y
+    ) [norm([xx,yy]), atan2(yy,xx)];
 
 
 // Function: project_plane()
@@ -169,26 +169,26 @@ function xy_to_polar(x,y=undef) = let(
 //   xy = project_plane(pt, a, b, c);
 //   xy2 = project_plane(pt, [a,b,c]);
 function project_plane(point, a, b, c) =
-	is_undef(b) && is_undef(c) && is_list(a)? let(
-		mat = is_vector(a,4)? plane_transform(a) :
-			assert(is_path(a) && len(a)>=3)
-			plane_transform(plane_from_points(a)),
-		pts = is_vector(point)? point2d(apply(mat,point)) :
-			is_path(point)? path2d(apply(mat,point)) :
-			is_region(point)? [for (x=point) path2d(apply(mat,x))] :
-			assert(false, "point must be a 3D point, path, or region.")
-	) pts :
-	assert(is_vector(a))
-	assert(is_vector(b))
-	assert(is_vector(c))
-	assert(is_vector(point)||is_path(point))
-	let(
-		u = unit(b-a),
-		v = unit(c-a),
-		n = unit(cross(u,v)),
-		w = unit(cross(n,u)),
-		relpoint = apply(move(-a),point)
-	) relpoint * transpose([w,u]);
+    is_undef(b) && is_undef(c) && is_list(a)? let(
+        mat = is_vector(a,4)? plane_transform(a) :
+            assert(is_path(a) && len(a)>=3)
+            plane_transform(plane_from_points(a)),
+        pts = is_vector(point)? point2d(apply(mat,point)) :
+            is_path(point)? path2d(apply(mat,point)) :
+            is_region(point)? [for (x=point) path2d(apply(mat,x))] :
+            assert(false, "point must be a 3D point, path, or region.")
+    ) pts :
+    assert(is_vector(a))
+    assert(is_vector(b))
+    assert(is_vector(c))
+    assert(is_vector(point)||is_path(point))
+    let(
+        u = unit(b-a),
+        v = unit(c-a),
+        n = unit(cross(u,v)),
+        w = unit(cross(n,u)),
+        relpoint = apply(move(-a),point)
+    ) relpoint * transpose([w,u]);
 
 
 // Function: lift_plane()
@@ -210,27 +210,27 @@ function project_plane(point, a, b, c) =
 //   b = A 3D point that the plane passes through.  Used to define the plane.
 //   c = A 3D point that the plane passes through.  Used to define the plane.
 function lift_plane(point, a, b, c) =
-	is_undef(b) && is_undef(c) && is_list(a)? let(
-		mat = is_vector(a,4)? plane_transform(a) :
-			assert(is_path(a) && len(a)>=3)
-			plane_transform(plane_from_points(a)),
-		imat = matrix_inverse(mat),
-		pts = is_vector(point)? apply(imat,point3d(point)) :
-			is_path(point)? apply(imat,path3d(point)) :
-			is_region(point)? [for (x=point) apply(imat,path3d(x))] :
-			assert(false, "point must be a 2D point, path, or region.")
-	) pts :
-	assert(is_vector(a))
-	assert(is_vector(b))
-	assert(is_vector(c))
-	assert(is_vector(point)||is_path(point))
-	let(
-		u = unit(b-a),
-		v = unit(c-a),
-		n = unit(cross(u,v)),
-		w = unit(cross(n,u)),
-		remapped = point*[w,u]
-	) apply(move(a),remapped);
+    is_undef(b) && is_undef(c) && is_list(a)? let(
+        mat = is_vector(a,4)? plane_transform(a) :
+            assert(is_path(a) && len(a)>=3)
+            plane_transform(plane_from_points(a)),
+        imat = matrix_inverse(mat),
+        pts = is_vector(point)? apply(imat,point3d(point)) :
+            is_path(point)? apply(imat,path3d(point)) :
+            is_region(point)? [for (x=point) apply(imat,path3d(x))] :
+            assert(false, "point must be a 2D point, path, or region.")
+    ) pts :
+    assert(is_vector(a))
+    assert(is_vector(b))
+    assert(is_vector(c))
+    assert(is_vector(point)||is_path(point))
+    let(
+        u = unit(b-a),
+        v = unit(c-a),
+        n = unit(cross(u,v)),
+        w = unit(cross(n,u)),
+        remapped = point*[w,u]
+    ) apply(move(a),remapped);
 
 
 // Function: cylindrical_to_xyz()
@@ -247,10 +247,10 @@ function lift_plane(point, a, b, c) =
 //   xyz = cylindrical_to_xyz(20,30,40);
 //   xyz = cylindrical_to_xyz([40,60,50]);
 function cylindrical_to_xyz(r,theta=undef,z=undef) = let(
-		rad = theta==undef? r[0] : r,
-		t = theta==undef? r[1] : theta,
-		zed = theta==undef? r[2] : z
-	) [rad*cos(t), rad*sin(t), zed];
+        rad = theta==undef? r[0] : r,
+        t = theta==undef? r[1] : theta,
+        zed = theta==undef? r[2] : z
+    ) [rad*cos(t), rad*sin(t), zed];
 
 
 // Function: xyz_to_cylindrical()
@@ -269,8 +269,8 @@ function cylindrical_to_xyz(r,theta=undef,z=undef) = let(
 //   cyl = xyz_to_cylindrical(20,30,40);
 //   cyl = xyz_to_cylindrical([40,50,70]);
 function xyz_to_cylindrical(x,y=undef,z=undef) = let(
-		p = is_num(x)? [x, default(y,0), default(z,0)] : point3d(x)
-	) [norm([p.x,p.y]), atan2(p.y,p.x), p.z];
+        p = is_num(x)? [x, default(y,0), default(z,0)] : point3d(x)
+    ) [norm([p.x,p.y]), atan2(p.y,p.x), p.z];
 
 
 // Function: spherical_to_xyz()
@@ -288,10 +288,10 @@ function xyz_to_cylindrical(x,y=undef,z=undef) = let(
 //   xyz = spherical_to_xyz(20,30,40);
 //   xyz = spherical_to_xyz([40,60,50]);
 function spherical_to_xyz(r,theta=undef,phi=undef) = let(
-		rad = theta==undef? r[0] : r,
-		t = theta==undef? r[1] : theta,
-		p = theta==undef? r[2] : phi
-	) rad*[sin(p)*cos(t), sin(p)*sin(t), cos(p)];
+        rad = theta==undef? r[0] : r,
+        t = theta==undef? r[1] : theta,
+        p = theta==undef? r[2] : phi
+    ) rad*[sin(p)*cos(t), sin(p)*sin(t), cos(p)];
 
 
 // Function: xyz_to_spherical()
@@ -310,8 +310,8 @@ function spherical_to_xyz(r,theta=undef,phi=undef) = let(
 //   sph = xyz_to_spherical(20,30,40);
 //   sph = xyz_to_spherical([40,50,70]);
 function xyz_to_spherical(x,y=undef,z=undef) = let(
-		p = is_num(x)? [x, default(y,0), default(z,0)] : point3d(x)
-	) [norm(p), atan2(p.y,p.x), atan2(norm([p.x,p.y]),p.z)];
+        p = is_num(x)? [x, default(y,0), default(z,0)] : point3d(x)
+    ) [norm(p), atan2(p.y,p.x), atan2(norm([p.x,p.y]),p.z)];
 
 
 // Function: altaz_to_xyz()
@@ -329,10 +329,10 @@ function xyz_to_spherical(x,y=undef,z=undef) = let(
 //   xyz = altaz_to_xyz(20,30,40);
 //   xyz = altaz_to_xyz([40,60,50]);
 function altaz_to_xyz(alt,az=undef,r=undef) = let(
-		p = az==undef? alt[0] : alt,
-		t = 90 - (az==undef? alt[1] : az),
-		rad = az==undef? alt[2] : r
-	) rad*[cos(p)*cos(t), cos(p)*sin(t), sin(p)];
+        p = az==undef? alt[0] : alt,
+        t = 90 - (az==undef? alt[1] : az),
+        rad = az==undef? alt[2] : r
+    ) rad*[cos(p)*cos(t), cos(p)*sin(t), sin(p)];
 
 
 // Function: xyz_to_altaz()
@@ -352,9 +352,9 @@ function altaz_to_xyz(alt,az=undef,r=undef) = let(
 //   aa = xyz_to_altaz(20,30,40);
 //   aa = xyz_to_altaz([40,50,70]);
 function xyz_to_altaz(x,y=undef,z=undef) = let(
-		p = is_num(x)? [x, default(y,0), default(z,0)] : point3d(x)
-	) [atan2(p.z,norm([p.x,p.y])), atan2(p.x,p.y), norm(p)];
+        p = is_num(x)? [x, default(y,0), default(z,0)] : point3d(x)
+    ) [atan2(p.z,norm([p.x,p.y])), atan2(p.x,p.y), norm(p)];
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

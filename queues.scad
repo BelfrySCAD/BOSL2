@@ -39,8 +39,8 @@ function queue_init() = [];
 //   queue2 = queue_add(queue, "foo");
 //   is_empty2 = queue_empty(queue2);  // Returns: false
 function queue_empty(queue) =
-	assert(is_list(queue))
-	len(queue)==0;
+    assert(is_list(queue))
+    len(queue)==0;
 
 
 // Function: queue_size()
@@ -58,8 +58,8 @@ function queue_empty(queue) =
 //   queue3 = queue_add(queue2, ["bar","baz","qux"]);
 //   depth3 = queue_size(queue3);  // Returns: 4
 function queue_size(queue) =
-	assert(is_list(queue))
-	len(queue);
+    assert(is_list(queue))
+    len(queue);
 
 
 // Function: queue_head()
@@ -76,16 +76,16 @@ function queue_size(queue) =
 //   item = queue_head(queue);  // Returns: 4
 //   list = queue_head(queue,n=3);  // Returns: [4,5,6]
 function queue_head(queue,n=undef) =
-	assert(is_list(queue))
-	is_undef(n)? (
-		queue[0]
-	) : (
-		let(queuesize = len(queue))
-		assert(is_num(n))
-		assert(n>=0)
-		assert(queuesize>=n, "queue underflow")
-		[for (i=[0:1:n-1]) queue[i]]
-	);
+    assert(is_list(queue))
+    is_undef(n)? (
+        queue[0]
+    ) : (
+        let(queuesize = len(queue))
+        assert(is_num(n))
+        assert(n>=0)
+        assert(queuesize>=n, "queue underflow")
+        [for (i=[0:1:n-1]) queue[i]]
+    );
 
 
 // Function: queue_tail()
@@ -102,16 +102,16 @@ function queue_head(queue,n=undef) =
 //   item = queue_tail(queue);  // Returns: 9
 //   list = queue_tail(queue,n=3);  // Returns: [7,8,9]
 function queue_tail(queue,n=undef) =
-	assert(is_list(queue))
-	let(queuesize = len(queue))
-	is_undef(n)? (
-		queue[queuesize-1]
-	) : (
-		assert(is_num(n))
-		assert(n>=0)
-		assert(queuesize>=n, "queue underflow")
-		[for (i=[0:1:n-1]) queue[queuesize-n+i]]
-	);
+    assert(is_list(queue))
+    let(queuesize = len(queue))
+    is_undef(n)? (
+        queue[queuesize-1]
+    ) : (
+        assert(is_num(n))
+        assert(n>=0)
+        assert(queuesize>=n, "queue underflow")
+        [for (i=[0:1:n-1]) queue[queuesize-n+i]]
+    );
 
 
 // Function: queue_peek()
@@ -131,19 +131,19 @@ function queue_tail(queue,n=undef) =
 //   item2 = queue_peek(queue, 3);  // Returns: 5
 //   list = queue_peek(queue, 4, 3);  // Returns: [6,7,8]
 function queue_peek(queue,pos=0,n=undef) =
-	assert(is_list(queue))
-	assert(is_num(pos))
-	assert(pos>=0)
-	let(queuesize = len(queue))
-	assert(queuesize>=pos, "queue underflow")
-	is_undef(n)? (
-		queue[pos]
-	) : (
-		assert(is_num(n))
-		assert(n>=0)
-		assert(n<queuesize-pos)
-		[for (i=[0:1:n-1]) queue[pos+i]]
-	);
+    assert(is_list(queue))
+    assert(is_num(pos))
+    assert(pos>=0)
+    let(queuesize = len(queue))
+    assert(queuesize>=pos, "queue underflow")
+    is_undef(n)? (
+        queue[pos]
+    ) : (
+        assert(is_num(n))
+        assert(n>=0)
+        assert(n<queuesize-pos)
+        [for (i=[0:1:n-1]) queue[pos+i]]
+    );
 
 
 // Function: queue_add()
@@ -166,8 +166,8 @@ function queue_peek(queue,pos=0,n=undef) =
 //   val = queue_head(q2);
 //   q3 = queue_pop(q2);
 function queue_add(queue,items) =
-	assert(is_list(queue))
-	is_list(items)? concat(queue, items) : concat(queue, [items]);
+    assert(is_list(queue))
+    is_list(items)? concat(queue, items) : concat(queue, [items]);
 
 
 // Function: queue_pop()
@@ -188,13 +188,13 @@ function queue_add(queue,items) =
 //   val = queue_head(q2);
 //   q3 = queue_pop(q2);
 function queue_pop(queue,n=1) =
-	assert(is_list(queue))
-	assert(is_num(n))
-	assert(n>=0)
-	let(queuesize = len(queue))
-	assert(queuesize>=n, "queue underflow")
-	[for (i = [n:1:queuesize-1]) queue[i]];
+    assert(is_list(queue))
+    assert(is_num(n))
+    assert(n>=0)
+    let(queuesize = len(queue))
+    assert(queuesize>=n, "queue underflow")
+    [for (i = [n:1:queuesize-1]) queue[i]];
 
 
 
-// vim: noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
