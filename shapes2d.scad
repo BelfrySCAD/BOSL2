@@ -328,7 +328,7 @@ module stroke(
 // Usage: 2D circle segment by `width` and `thickness`, starting and ending on the X axis.
 //   arc(N, width, thickness)
 // Usage: Shortest 2D or 3D arc around centerpoint `cp`, starting at P0 and ending on the vector pointing from `cp` to `P1`.
-//   arc(N, cp, points=[P0,P1])
+//   arc(N, cp, points=[P0,P1],[long],[cw],[ccw])
 // Usage: 2D or 3D arc, starting at `P0`, passing through `P1` and ending at `P2`.
 //   arc(N, points=[P0,P1,P2])
 // Description:
@@ -367,50 +367,66 @@ module stroke(
 //   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
 //   trace_polyline(path, showpts=true, color="cyan");
 function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false) =
-	// First try for 2D arc specified by angles
+	// First try for 2D arc specified by width and thickness
 	is_def(width) && is_def(thickness)? (
+                assert(!any_defined([r,cp,points]) && !any([cw,ccw,long]),"Conflicting or invalid parameters to arc")
+                assert(width>0, "Width must be postive")
+                assert(thickness>0, "Thickness must be positive")
 		arc(N,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge)
 	) : is_def(angle)? (
 		let(
-			parmok = is_undef(points) && is_undef(width) && is_undef(thickness) &&
-				((is_vector(angle) && len(angle)==2 && is_undef(start)) || is_num(angle))
+			parmok = !any_defined([points,width,thickness]) &&
+				((is_vector(angle,2) && is_undef(start)) || is_num(angle))
 		)
 		assert(parmok,"Invalid parameters in arc")
 		let(
-			cp = is_def(cp) ? cp : [0,0],
+			cp = first_defined([cp,[0,0]]),
 			start = is_def(start)? start : is_vector(angle) ? angle[0] : 0,
 			angle = is_vector(angle)? angle[1]-angle[0] : angle,
-			r = get_radius(r=r, d=d),
+			r = get_radius(r=r, d=d)
+                )
+                assert(is_vector(cp,2),"Centerpoint must be a 2d vector")
+                assert(angle!=0, "Arc has zero length")
+                assert(r>0, "Arc radius invalid")
+                let(
 			N = max(3, is_undef(N)? ceil(segs(r)*abs(angle)/360) : N),
 			arcpoints = [for(i=[0:N-1]) let(theta = start + i*angle/(N-1)) r*[cos(theta),sin(theta)]+cp],
 			extra = wedge? [cp] : []
 		)
 		concat(extra,arcpoints)
 	) :
-	assert(is_path(points,[2,3]),"Point list is invalid")
-	// Arc is 3D, so transform points to 2D and make a recursive call, then remap back to 3D
-	len(points[0])==3? (
+  	    assert(is_path(points,[2,3]),"Point list is invalid")
+	    // Arc is 3D, so transform points to 2D and make a recursive call, then remap back to 3D
+ 	    len(points[0])==3? (
+                assert(!(cw || ccw), "(Counter)clockwise isn't meaningful in 3d, so `cw` and `ccw` must be false")
+                assert(is_undef(cp) || is_vector(cp,3),"points are 3d so cp must be 3d")
 		let(
 			thirdpoint = is_def(cp) ? cp : points[2],
 			center2d = is_def(cp) ? project_plane(cp,thirdpoint,points[0],points[1]) : undef,
 			points2d = project_plane(points,thirdpoint,points[0],points[1])
 		)
-		lift_plane(arc(N,cp=center2d,points=points2d,wedge=wedge),thirdpoint,points[0],points[1])
+		lift_plane(arc(N,cp=center2d,points=points2d,wedge=wedge,long=long),thirdpoint,points[0],points[1])
 	) : is_def(cp)? (
 		// Arc defined by center plus two points, will have radius defined by center and points[0]
 		// and extent defined by direction of point[1] from the center
+                assert(is_vector(cp,2), "Centerpoint must be a 2d vector")
+                assert(len(points)==2, "When pointlist has length 3 centerpoint is not allowed")
+                assert(points[0]!=points[1], "Arc endpoints are equal")
+                assert(cp!=points[0]&&cp!=points[1], "Centerpoint equals an arc endpoint")
                 assert(count_true([long,cw,ccw])<=1, str("Only one of `long`, `cw` and `ccw` can be true",cw,ccw,long))
-		let(    k=echo(cw=cw,ccw=ccw,long=long),
+		let(    
 			angle = vector_angle(points[0], cp, points[1]),
 			v1 = points[0]-cp,
 			v2 = points[1]-cp,
-			dir = sign(det2([v1,v2])),   // z component of cross product
+			prelim_dir = sign(det2([v1,v2])),   // z component of cross product
+                        dir = prelim_dir != 0
+                                  ? prelim_dir
+                                  : assert(cw || ccw, "Collinear inputs don't define a unique arc")
+                                    1,
 			r=norm(v1),
-                        long = long || (ccw && dir<0) || (cw && dir>0)
-                        ,ewqe=echo(long=long,angle=dir*angle,start=atan2(v1.y,v1.x),angle=long?-dir*(360-angle):dir*angle)
+                        final_angle = long || (ccw && dir<0) || (cw && dir>0) ? -dir*(360-angle) : dir*angle
 		)
-		assert(dir!=0,"Collinear inputs don't define a unique arc")
-		arc(N,cp=cp,r=r,start=atan2(v1.y,v1.x),angle=long?-dir*(360-angle):dir*angle,wedge=wedge)
+		arc(N,cp=cp,r=r,start=atan2(v1.y,v1.x),angle=final_angle,wedge=wedge)
 	) : (
 		// Final case is arc passing through three points, starting at point[0] and ending at point[3]
 		let(col = collinear(points[0],points[1],points[2]))
@@ -1309,7 +1325,6 @@ function star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=
 				anchorpt(str("midpt",i), pos, unit(pos), 0),
 			]
 		]
-		,feef=echo(anchor=anchor) echo(anchors=anchors)
 	) reorient(anchor,spin, two_d=true, path=path, p=path, anchors=anchors);
 
 
@@ -1333,7 +1348,6 @@ module star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0)
 			anchorpt(str("midpt",i), pos, unit(pos), 0),
 		]
 	];
-	echo(anchors=anchors);
 	attachable(anchor,spin, two_d=true, path=path, anchors=anchors) {
 		polygon(path);
 		children();
