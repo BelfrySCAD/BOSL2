@@ -407,6 +407,7 @@ function affine3d_chain(affines, _m=undef, _i=0) =
 //   transformed = apply(rot(45), circle(r=3));           // Rotates 2d circle data by 45 deg
 //   transformed = apply(rot(45)*right(4)*scale(3), circle(r=3));  // Scales, translates and rotates 2d circle data
 function apply(transform,points) =
+  points==[] ? [] : 
   is_vector(points) ? apply(transform, [points])[0] :
   let(
     tdim = len(transform[0])-1,
