@@ -114,7 +114,10 @@ module stroke(
     ) * linewidth;
 
     assert(is_bool(closed));
-    assert(is_path(path,[2,3]), "The path argument must be a list of 2D or 3D points.");
+    assert(is_list(path));
+    if (len(path) > 1) {
+        assert(is_path(path,[2,3]), "The path argument must be a list of 2D or 3D points.");
+    }
     path = deduplicate( closed? close_path(path) : path );
 
     assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
@@ -164,18 +167,24 @@ module stroke(
     ]);
     assert(is_num(trim2));
 
-    spos = path_pos_from_start(path,trim1,closed=false);
-    epos = path_pos_from_end(path,trim2,closed=false);
-    path2 = path_subselect(path, spos[0], spos[1], epos[0], epos[1]);
-    widths = concat(
-        [lerp(width[spos[0]], width[(spos[0]+1)%len(width)], spos[1])],
-        [for (i = [spos[0]+1:1:epos[0]]) width[i]],
-        [lerp(width[epos[0]], width[(epos[0]+1)%len(width)], epos[1])]
-    );
+    if (len(path) == 1) {
+        if (len(path[0]) == 2) {
+            translate(path[0]) circle(d=width[0]);
+        } else {
+            translate(path[0]) sphere(d=width[0]);
+        }
+    } else if (len(path[0]) == 2) {
+        spos = path_pos_from_start(path,trim1,closed=false);
+        epos = path_pos_from_end(path,trim2,closed=false);
+        path2 = path_subselect(path, spos[0], spos[1], epos[0], epos[1]);
+        widths = concat(
+            [lerp(width[spos[0]], width[(spos[0]+1)%len(width)], spos[1])],
+            [for (i = [spos[0]+1:1:epos[0]]) width[i]],
+            [lerp(width[epos[0]], width[(epos[0]+1)%len(width)], epos[1])]
+        );
 
-    start_vec = select(path,0) - select(path,1);
-    end_vec = select(path,-1) - select(path,-2);
-    if (len(path[0]) == 2) {
+        start_vec = select(path,0) - select(path,1);
+        end_vec = select(path,-1) - select(path,-2);
         // Straight segments
         for (i = idx(path2,end=-2)) {
             seg = select(path2,i,i+1);
