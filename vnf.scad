@@ -356,16 +356,18 @@ module vnf_polyhedron(vnf, convexity=2) {
 // Description:
 //   Returns the volume enclosed by the given manifold VNF.   The VNF must describe a valid polyhedron with consistent face direction and
 //   no holes; otherwise the results are undefined.  Returns a positive volume if face direction is clockwise and a negative volume
-//   if face direction is counter-clockwise.  
+//   if face direction is counter-clockwise.
 function vnf_volume(vnf) =
-    let(
-        vnf = vnf_triangulate(vnf),
-        verts = vnf[0]
-    ) sum([
-        for(face_index=vnf[1]) let(
-            face = select(verts, face_index),
-            n = cross(face[2]-face[0],face[1]-face[0])
-        ) face[0] * n
+    let(verts = vnf[0])
+    sum([
+         for(face=vnf[1], j=[1:1:len(face)-2])
+             let(
+                 v0 = verts[face[0]],
+                 v1 = verts[face[j]],
+                 v2 = verts[face[j+1]],
+                 n = cross(v2-v0,v1-v0)
+             )
+             v0 * n
     ])/6;
 
 
@@ -379,19 +381,20 @@ function vnf_volume(vnf) =
 // Algorithm from: https://wwwf.imperial.ac.uk/~rn/centroid.pdf
 function vnf_centroid(vnf) =
     let(
-        vnf = vnf_triangulate(vnf),
         verts = vnf[0],
         val=sum([
-            for(face_index=vnf[1])
+            for(face=vnf[1], j=[1:1:len(face)-2])
             let(
-                face = select(verts, face_index),
-                n = cross(face[2]-face[0],face[1]-face[0])
+                 v0 = verts[face[0]],
+                 v1 = verts[face[j]],
+                 v2 = verts[face[j+1]],
+                 n = cross(v2-v0,v1-v0)
             ) [
-                face[0] * n,
+                v0 * n,
                 vmul(n,
-                    sqr(face[0] + face[1]) +
-                    sqr(face[0] + face[2]) +
-                    sqr(face[1] + face[2])
+                    sqr(v0 + v1) +
+                    sqr(v0 + v2) +
+                    sqr(v1 + v2)
                 )
             ]
         ])
