@@ -358,7 +358,7 @@ module vnf_polyhedron(vnf, convexity=2) {
 //   no holes; otherwise the results are undefined.  Returns a positive volume if face direction is clockwise and a negative volume
 //   if face direction is counter-clockwise.
 
-// Algorithm adapted/simplified from: https://wwwf.imperial.ac.uk/~rn/centroid.pdf
+// Divide the polyhedron into tetrahedra with the origin as one vertex and sum up the signed volume.
 function vnf_volume(vnf) =
     let(verts = vnf[0])
     sum([
@@ -374,27 +374,22 @@ function vnf_volume(vnf) =
 //   Returns the centroid of the given manifold VNF.  The VNF must describe a valid polyhedron with consistent face direction and
 //   no holes; otherwise the results are undefined.
 
-// Algorithm from: https://wwwf.imperial.ac.uk/~rn/centroid.pdf
+// Divide the solid up into tetrahedra with the origin as one vertex.  The centroid of a tetrahedron is the average of its vertices.
+// The centroid of the total is the volume weighted average.  
 function vnf_centroid(vnf) =
     let(
         verts = vnf[0],
-        val=sum([
-            for(face=vnf[1], j=[1:1:len(face)-2])
-            let(
-                 v0 = verts[face[0]],
-                 v1 = verts[face[j]],
-                 v2 = verts[face[j+1]],
-                 n = cross(v2-v0,v1-v0)
-            ) [
-                v0 * n,
-                vmul(n,
-                    sqr(v0 + v1) +
-                    sqr(v0 + v2) +
-                    sqr(v1 + v2)
-                )
-            ]
-        ])
-    ) val[1]/val[0]/8;
+        val = sum([ for(face=vnf[1], j=[1:1:len(face)-2])
+                        let(
+                            v0  = verts[face[0]],
+                            v1  = verts[face[j]],
+                            v2  = verts[face[j+1]],
+                            vol = cross(v2,v1)*v0
+                        )
+                        [ vol, (v0+v1+v2)*vol ]
+                  ])    
+    )
+    val[1]/val[0]/4;
 
 
 function _triangulate_planar_convex_polygons(polys) =
