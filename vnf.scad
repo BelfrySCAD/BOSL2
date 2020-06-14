@@ -357,17 +357,13 @@ module vnf_polyhedron(vnf, convexity=2) {
 //   Returns the volume enclosed by the given manifold VNF.   The VNF must describe a valid polyhedron with consistent face direction and
 //   no holes; otherwise the results are undefined.  Returns a positive volume if face direction is clockwise and a negative volume
 //   if face direction is counter-clockwise.
+
+// Algorithm adapted/simplified from: https://wwwf.imperial.ac.uk/~rn/centroid.pdf
 function vnf_volume(vnf) =
     let(verts = vnf[0])
     sum([
          for(face=vnf[1], j=[1:1:len(face)-2])
-             let(
-                 v0 = verts[face[0]],
-                 v1 = verts[face[j]],
-                 v2 = verts[face[j+1]],
-                 n = cross(v2-v0,v1-v0)
-             )
-             v0 * n
+             cross(verts[face[j+1]], verts[face[j]]) * verts[face[0]]
     ])/6;
 
 
