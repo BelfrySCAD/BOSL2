@@ -899,7 +899,13 @@ function count_true(l, nmax=undef, i=0, cnt=0) =
 //   data[len(data)-1].  This function uses a symetric derivative approximation
 //   for internal points, f'(t) = (f(t+h)-f(t-h))/2h.  For the endpoints (when closed=false) the algorithm
 //   uses a two point method if sufficient points are available: f'(t) = (3*(f(t+h)-f(t)) - (f(t+2*h)-f(t+h)))/2h.
+// 
+//   If `h` is a vector then it is assumed to be nonuniform, with h[i] giving the sampling distance
+//   between data[i+1] and data[i], and the data values will be linearly resampled at each corner
+//   to produce a uniform spacing for the derivative estimate.  At the endpoints a single point method
+//   is used: f'(t) = (f(t+h)-f(t))/h.  
 function deriv(data, h=1, closed=false) =
+    is_vector(h) ? _deriv_nonuniform(data, h, closed=closed) :
     let( L = len(data) )
     closed? [
         for(i=[0:1:L-1])
@@ -917,6 +923,28 @@ function deriv(data, h=1, closed=false) =
         for(i=[1:1:L-2]) (data[i+1]-data[i-1])/2/h,
         last/2/h
     ];
+
+
+function _dnu_calc(f1,fc,f2,h1,h2) =
+    let(
+        f1 = h2<h1 ? lerp(fc,f1,h2/h1) : f1 , 
+        f2 = h1<h2 ? lerp(fc,f2,h1/h2) : f2
+    )
+    (f2-f1) / 2 / min([h1,h2]);
+
+
+function _deriv_nonuniform(data, h, closed) =
+    assert(len(h) == len(data)-(closed?0:1),str("Vector valued h must be length ",len(data)-(closed?0:1)))
+    let(
+      L = len(data)
+    )
+    closed? [for(i=[0:1:L-1])
+    	        _dnu_calc(data[(L+i-1)%L], data[i], data[(i+1)%L], select(h,i-1), h[i]) ]
+    : [
+        (data[1]-data[0])/h[0],
+        for(i=[1:1:L-2]) _dnu_calc(data[i-1],data[i],data[i+1], h[i-1],h[i]),
+        (data[L-1]-data[L-2])/h[L-2]                            
+      ];
 
 
 // Function: deriv2()

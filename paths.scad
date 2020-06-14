@@ -149,6 +149,21 @@ function path_length(path,closed=false) =
     sum([for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i])])+(closed?norm(path[len(path)-1]-path[0]):0);
 
 
+// Function: path_segment_lengths()
+// Usage:
+//   path_segment_lengths(path,[closed])
+// Description:
+//   Returns list of the length of each segment in a path
+// Arguments:
+//   path = path to measure
+//   closed = true if the path is closed.  Default: false
+function path_segment_lengths(path, closed=false) =
+    [
+      for (i=[0:1:len(path)-2]) norm(path[i+1]-path[i]),
+      if (closed) norm(path[0]-path[len(path)-1])
+     ]; 
+
+
 // Function: path_pos_from_start()
 // Usage:
 //   pos = path_pos_from_start(path,length,[closed]);
@@ -280,13 +295,35 @@ function path_closest_point(path, pt) =
 
 
 // Function: path_tangents()
-// Usage: path_tangents(path, [closed])
+// Usage: path_tangents(path, [closed], [uniform])
 // Description:
 //   Compute the tangent vector to the input path.  The derivative approximation is described in deriv().
-//   The returns vectors will be normalized to length 1.
-function path_tangents(path, closed=false) =
+//   The returns vectors will be normalized to length 1.  If any derivatives are zero then
+//   the function fails with an error.  If you set `uniform` to false then the sampling is
+//   assumed to be non-uniform and the derivative is computed with adjustments to produce corrected
+//   values.
+// Arguments:
+//   path = path to find the tagent vectors for
+//   closed = set to true of the path is closed.  Default: false
+//   uniform = set to false to correct for non-uniform sampling.  Default: true
+// Example: A shape with non-uniform sampling gives distorted derivatives that may be undesirable
+//   rect = square([10,3]);
+//   tangents = path_tangents(rect,closed=true);
+//   stroke(rect,closed=true, width=0.1);
+//   color("purple")
+//       for(i=[0:len(tangents)-1])
+//           stroke([rect[i]-tangents[i], rect[i]+tangents[i]],width=.1, endcap2="arrow2");
+// Example: A shape with non-uniform sampling gives distorted derivatives that may be undesirable
+//   rect = square([10,3]);
+//   tangents = path_tangents(rect,closed=true,uniform=false);
+//   stroke(rect,closed=true, width=0.1);
+//   color("purple")
+//       for(i=[0:len(tangents)-1])
+//           stroke([rect[i]-tangents[i], rect[i]+tangents[i]],width=.1, endcap2="arrow2");
+function path_tangents(path, closed=false, uniform=true) =
     assert(is_path(path))
-    [for(t=deriv(path,closed=closed)) unit(t)];
+    !uniform ? [for(t=deriv(path,closed=closed, h=path_segment_lengths(path,closed))) unit(t)]
+             : [for(t=deriv(path,closed=closed)) unit(t)];
 
 
 // Function: path_normals()
