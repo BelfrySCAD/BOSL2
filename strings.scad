@@ -40,8 +40,13 @@ function _substr(str,pos,len,substr="") =
 // Usage:
 //   suffix(str,len)
 // Description:
-//   Returns the last `len` characters from the input string
-function suffix(str,len) = substr(str, len(str)-len,len);
+//   Returns the last `len` characters from the input string `str`.
+//   If `len` is longer than the length of `str`, then the entirety of `str` is returned.
+// Arguments:
+//   str = The string to get the suffix of.
+//   len = The number of characters of suffix to get.
+function suffix(str,len) =
+    len>=len(str)? str : substr(str, len(str)-len,len);
 
 
 // Function: str_join()
@@ -308,7 +313,7 @@ function _str_cmp_recurse(str,sindex,pattern,plen,pindex=0,) =
 //   str_find("abc123def123abc","123",last=true);  // Returns 9
 //   str_find("abc123def123abc","b",last=true);    // Returns 13
 //   str_find("abc123def123abc","1234",last=true); // Returns undef
-//   str_find("abc","",last=true);                 // Returns 2
+//   str_find("abc","",last=true);                 // Returns 3
 //   str_find("abc123def123", "123", start=8, last=true));  // Returns 3
 //   str_find("abc123def123abc","123",all=true);   // Returns [3,9]
 //   str_find("abc123def123abc","b",all=true);     // Returns [1,13]
@@ -625,7 +630,7 @@ function is_letter(s) =
 // Example(NORENDER):
 //   str_format("The value of {} is {:.14f}.", ["pi", PI]);  // Returns: "The value of pi is 3.14159265358979."
 //   str_format("The value {1:f} is known as {0}.", ["pi", PI]);  // Returns: "The value 3.141593 is known as pi."
-//   str_format("We use a very small value {1:.6g} as {0}.", ["EPSILON", EPSILON]);  // Returns: "We use a ver small value 1e-9 as EPSILON."
+//   str_format("We use a very small value {1:.6g} as {0}.", ["EPSILON", EPSILON]);  // Returns: "We use a very small value 1e-9 as EPSILON."
 //   str_format("{:-5s}{:i}{:b}", ["foo", 12e3, 5]);  // Returns: "foo  12000true"
 //   str_format("{:-10s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostamus27.440"
 //   str_format("{:-10.9s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostam 27.440"
