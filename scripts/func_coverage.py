@@ -27,10 +27,12 @@ for filename in os.listdir("tests"):
         with open(filepath, "r") as f:
             for line in f.readlines():
                 if line.startswith("module "):
-                    funcname = line[7:].strip().split("(")[0].strip().split("_",1)[1]
-                    if funcname in uncovered:
-                        covered.append(funcname)
-                        del uncovered[funcname]
+                    testmodule = line[7:].strip().split("(")[0].strip()
+                    if testmodule.startswith("test_"):
+                        funcname = testmodule.split("_",1)[1]
+                        if funcname in uncovered:
+                            covered.append(funcname)
+                            del uncovered[funcname]
 
 uncovered_by_file = {}
 for funcname in sorted(list(uncovered.keys())):
