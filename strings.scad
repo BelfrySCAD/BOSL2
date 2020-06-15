@@ -435,9 +435,9 @@ function str_strip(s,c) = str_strip_trailing(str_strip_leading(s,c),c);
 //   fmt_int(123456789012345);  // Returns "123456789012345"
 //   fmt_int(-123456789012345);  // Returns "-123456789012345"
 function fmt_int(i,mindigits=1) =
-    i<0? str("-", fmt_int(-i)) :
+    i<0? str("-", fmt_int(-i,mindigits)) :
     let(i=floor(i), e=floor(log(i)))
-    i==0? "0" :
+    i==0? str_join([for (j=[0:1:mindigits-1]) "0"]) :
     str_join(
         concat(
             [for (j=[0:1:mindigits-e-2]) "0"],
