@@ -10,17 +10,9 @@
 //////////////////////////////////////////////////////////////////////
 
 include <beziers.scad>
-include <strings.scad>
 include <structs.scad>
-include <skin.scad>
-
-
-// CommonCode:
-//   $fn=36;
-
 
 // Section: Functions
-
 
 // Function: round_corners()
 //
@@ -103,18 +95,22 @@ include <skin.scad>
 //   verbose = if true display rounding scale factors that show how close roundovers are to overlapping.  Default: false
 //
 // Example(Med2D): Standard circular roundover with radius the same at every point. Compare results at the different corners.
+//   $fn=36;
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   polygon(round_corners(shape, radius=1));
 //   color("red") down(.1) polygon(shape);
 // Example(Med2D): Circular roundover using the "cut" specification, the same at every corner.
+//   $fn=36;
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   polygon(round_corners(shape, cut=1));
 //   color("red") down(.1) polygon(shape);
 // Example(Med2D): Continous curvature roundover using "cut", still the same at every corner.  The default smoothness parameter of 0.5 was too gradual for these roundovers to fit, but 0.7 works.
+//   $fn=36;
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   polygon(round_corners(shape, method="smooth", cut=1, k=0.7));
 //   color("red") down(.1) polygon(shape);
 // Example(Med2D): Continuous curvature roundover using "joint", for the last time the same at every corner.  Notice how small the roundovers are.
+//   $fn=36;
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   polygon(round_corners(shape, method="smooth", joint=1, k=0.7));
 //   color("red") down(.1) polygon(shape);
@@ -130,10 +126,12 @@ include <skin.scad>
 //   polygon(round_corners(shape, method="smooth", cut=cuts, k=k, $fs=0.1));
 //   color("red") down(.1) polygon(shape);
 // Example(Med2D): Chamfers
+//   $fn=36;
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   polygon(round_corners(shape, method="chamfer", cut=1));
 //   color("red") down(.1) polygon(shape);
 // Example(Med3D): 3D printing test pieces to display different curvature shapes.  You can see the discontinuity in the curvature on the "C" piece in the rendered image.
+//   include<skin.scad>
 //   ten = square(50);
 //   cut = 5;
 //   linear_extrude(height=14) {
@@ -184,6 +182,8 @@ include <skin.scad>
 //     path_sweep(regular_ngon(n=36,or=.1),round_corners(list2,closed=false, method="circle", cut = 0.75));
 // Example(FlatSpin):  Rounding a spiral with increased rounding along the length
 //   // Construct a square spiral path in 3D
+//   include<skin.scad>
+//   $fn=36;
 //   square = [[0,0],[1,0],[1,1],[0,1]];
 //   spiral = flatten(repeat(concat(square,reverse(square)),5));  // Squares repeat 10 times, forward and backward
 //   squareind = [for(i=[0:9]) each [i,i,i,i]];                    // Index of the square for each point
@@ -389,50 +389,71 @@ function _rounding_offsets(edgespec,z_dir=1) =
 
 // Function: smooth_path()
 // Usage:
-//   smooth_path(path, [tangents], [k], [splinesteps], [closed]
+//   smooth_path(path, [size|relsize], [tangents], [splinesteps], [closed], [uniform])
 // Description:
 //   Smooths the input path using a cubic spline.  Every segment of the path will be replaced by a cubic curve
 //   with `splinesteps` points.  The cubic interpolation will pass through every input point on the path
 //   and will match the tangents at every point.  If you do not specify tangents they will be computed using
-//   deriv().  See also path_to_bezier().
-//   
-//   Note that the magnitude of the tangents affects the result.  If you increase it you will get a blunter
-//   corner with a larger radius of curvature.  Decreasing it will produce a sharp corner.  You can specify
-//   the curvature factor `k` to adjust the curvature.  It can be a scalar or a vector the same length as
-//   the path and is used to scale the tangent vectors.  Negative values of k create loops at the corners,
-//   so they are not allowed.  Sufficiently large k values will also produce loops.
+//   path_tangents with uniform=false by default.  Note that setting uniform to true with non-uniform
+//   sampling may be desirable in some cases but tends to produces curves that overshoot the point on the path.  
+//
+//   The size or relsize parameter determines how far the curve can bend away from
+//   the input path.  In the case where the curve has a single hump, the size specifies the exact distance
+//   between the specified path and the curve.  If you give relsize then it is relative to the segment
+//   length (e.g. 0.05 means 5% of the segment length).  In 2d when the spline may make an S-curve,
+//   in which case the size parameter specifies the sum of the deviations of the two peaks of the curve.  In 3-space
+//   the bezier curve may have three extrema: two maxima and one minimum.  In this case the size specifies
+//   the sum of the maxima minus the minimum.  At a given segment there is a maximum size: if your size
+//   value is too large it will be rounded down.  See also path_to_bezier().
 // Arguments:
 //   path = path to smooth
-//   tangents = tangent vectors of the path
-//   splinesteps = number of points to insert between the path points.  Default: 10
-//   k = curvature parameter, a scalar or vector to adjust curvature at each point
-//   closed = set to true for a closed path.  Default: false
+//   size = absolute size specification for the curve, a number or vector
+//   relsize = relative size specification for the curve, a number or vector.  Default: 0.1
+//   tangents = tangents constraining curve direction at each point
+//   uniform = set to true to compute tangents with uniform=true.  Default: false
+//   closed = true if the curve is closed.  Default: false. 
 // Example(2D): Original path in green, smoothed path in yellow:
 //   color("green")stroke(square(4), width=0.1);
-//   stroke(smooth_path(square(4)), width=0.1);
+//   stroke(smooth_path(square(4),size=0.4), width=0.1);
 // Example(2D): Closing the path changes the end tangents
-//   polygon(smooth_path(square(4), closed=true));
+//   polygon(smooth_path(square(4),size=0.4,closed=true));
+// Example(2D): Turning on uniform tangent calculation also changes the end derivatives:
+//   color("green")stroke(square(4), width=0.1);
+//   stroke(smooth_path(square(4),size=0.4,uniform=true), width=0.1);
+// Example(2D): Here's a wide rectangle.  Using size means all edges bulge the same amount, regardless of their length. 
+//   color("green")stroke(square([10,4]), closed=true, width=0.1);
+//   stroke(smooth_path(square([10,4]),size=1,closed=true),width=0.1);
+// Example(2D): Here's a wide rectangle.  With relsize the bulge is proportional to the side length. 
+//   color("green")stroke(square([10,4]), closed=true, width=0.1);
+//   stroke(smooth_path(square([10,4]),relsize=0.1,closed=true),width=0.1);
+// Example(2D): Here's a wide rectangle.  Settting uniform to true biases the tangents to aline more with the line sides
+//   color("green")stroke(square([10,4]), closed=true, width=0.1);
+//   stroke(smooth_path(square([10,4]),uniform=true,relsize=0.1,closed=true),width=0.1);
 // Example(2D): A more interesting shape:
 //   path = [[0,0], [4,0], [7,14], [-3,12]];
-//   polygon(smooth_path(path,closed=true));
-// Example(2D): Scaling the tangent data using the curvature parameter k can decrease or increase the amount of smoothing.  Note this is the same as just multiplying the deriv(square(4)) by k.
-//   polygon(smooth_path(square(4), k=0.5,closed=true));
-// Example(2D): Or you can specify your own tangent values to alter the shape of the curve
-//   polygon(smooth_path(square(4),tangents=1.25*[[-2,-1], [-2,1], [1,2], [2,-1]],closed=true));
+//   polygon(smooth_path(path,size=1,closed=true));
+// Example(2D): Here's the square again with less smoothing.
+//   polygon(smooth_path(square(4), size=.25,closed=true));
+// Example(2D): Here's the square with a size that's too big to achieve, so you get the maximum possible curve:
+//   polygon(smooth_path(square(4), size=4, closed=true));
+// Example(2D): You can alter the shape of the curve by specifying your own arbitrary tangent values
+//   polygon(smooth_path(square(4),tangents=1.25*[[-2,-1], [-4,1], [1,2], [6,-1]],size=0.4,closed=true));
+// Example(2D): Or you can give a different size for each segment
+//   polygon(smooth_path(square(4),size = [.4, .05, 1, .3],closed=true));
 // Example(FlatSpin):  Works on 3d paths as well
 //   path = [[0,0,0],[3,3,2],[6,0,1],[9,9,0]];
-//   trace_polyline(smooth_path(path),size=.3);
-// Example(2D): The curve passes through all the points, but features some unexpected wiggles.  These occur because the curvature is too low to change fast enough.
-//   path = [[0,0], [0,3], [.5,2.8], [1,2.2], [1,0]];
-//   polygon(smooth_path(path));
-//   color("red") move_copies(path)circle(r=.1,$fn=16);
-// Example(2D):  Using the k parameter is one way to fix this problem.  By allowing sharper curvature (k<1) at the two points next to the problematic point we can achieve a smoother result.  The other fix is to move your points.
-//   path = [[0,0], [0,3], [.5,2.8], [1,2.2], [1,0]];
-//   polygon(smooth_path(path,k=[1,.5,1,.5,1]));
-//   color("red") move_copies(path)circle(r=.1,$fn=16);
-function smooth_path(path, tangents, k, splinesteps=10, closed=false) =
+//   stroke(smooth_path(path,relsize=.1),width=.3);
+// Example(2D): This shows the type of overshoot that can occur with uniform=true.  You can produce overshoots like this if you supply a tangent that is difficult to connect to the adjacent points  
+//   pts = [[-3.3, 1.7], [-3.7, -2.2], [3.8, -4.8], [-0.9, -2.4]];
+//   stroke(smooth_path(pts, uniform=true, relsize=0.1),width=.1);
+//   color("red")move_copies(pts)circle(r=.15,$fn=12);
+// Example(2D): With the default of uniform false no overshoot occurs.  Note that the shape of the curve is quite different.  
+//   pts = [[-3.3, 1.7], [-3.7, -2.2], [3.8, -4.8], [-0.9, -2.4]];
+//   stroke(smooth_path(pts, uniform=false, relsize=0.1),width=.1);
+//   color("red")move_copies(pts)circle(r=.15,$fn=12);
+function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=false, closed=false) =
   let (
-     bez = path_to_bezier(path, tangents, k=k, closed=closed)
+     bez = path_to_bezier(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=closed)
   )
   bezier_polyline(bez,splinesteps=splinesteps);
 
@@ -1047,7 +1068,7 @@ function _remove_undefined_vals(list) =
 //   get the expected rounding along the path, decrease `maxstep` and if the curves created by `os_round()` are too coarse, adjust $fn or $fs.
 //
 // Arguments:
-//   path = path that defines the stroke
+//   path = 2d path that defines the stroke
 //   width = width of the stroke, a scalar or a vector of 2 values giving the offset from the path.  Default: 1
 //   rounded = set to true to use rounded offsets, false to use sharp (delta) offsets.  Default: true
 //   chamfer = set to true to use chamfers when `rounded=false`.  Default: false
@@ -1141,6 +1162,7 @@ function _remove_undefined_vals(list) =
 //   right(12)
 //     offset_stroke(path, width=1, closed=true);
 function offset_stroke(path, width=1, rounded=true, start="flat", end="flat", check_valid=true, quality=1, maxstep=0.1, chamfer=false, closed=false) =
+        assert(is_path(path,2),"path is not a 2d path")
         let(closedok = !closed || (is_undef(start) && is_undef(end)))
         assert(closedok, "Parameters `start` and `end` not allowed with closed path")
         let(

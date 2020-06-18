@@ -515,40 +515,79 @@ function bezier_polyline(bezier, splinesteps=16, N=3) =
 
 // Function: path_to_bezier()
 // Usage:
-//   path_to_bezier(path,[tangent],[k],[closed]);
+//   path_to_bezier(path, [size|relsize], [tangents], [uniform], [closed])
 // Description:
-//   Given an input path and optional path of tangent vectors, computes a cubic (degree 3) bezier path
-//   that passes through every point on the input path and matches the tangent vectors.  If you do not
-//   supply the tangent it will be computed using path_tangents.  If the path is closed specify this
-//   by setting closed=true.  If you specify the curvature parameter k it scales the tangent vectors,
-//   which will increase or decrease the curvature of the interpolated bezier.  Negative values of k
-//   create loops at the corners, so they are not allowed.  Sufficiently large k values will also
-//   produce loops.
+//   Given a 2d or 3d input path and optional list of tangent vectors, computes a cubic (dgree 3) bezier
+//   path that passes through every poin on the input path and matches the tangent vectors.  If you do
+//   not supply the tangent it will be computed using path_tangents.  If the path is closed specify this
+//   by setting closed=true.  The size or relsize parameter determines how far the curve can deviate from
+//   the input path.  In the case where the curve has a single hump, the size specifies the exact distance
+//   between the specified path and the bezier.  If you give relsize then it is relative to the segment
+//   length (e.g. 0.05 means 5% of the segment length).  In 2d when the bezier curve makes an S-curve
+//   the size parameter specifies the sum of the deviations of the two peaks of the curve.  In 3-space
+//   the bezier curve may have three extrema: two maxima and one minimum.  In this case the size specifies
+//   the sum of the maxima minus the minimum.  If you do not supply the tangents then they are
+//   computed using path_tangents with uniform=false by default.  Tangents computed on non-uniform
+//   data tend to display overshoots.  See smooth_path for examples.
 // Arguments:
-//   path = path of points to define the bezier
-//   tangents = optional list of tangent vectors at every point
-//   k = curvature parameter, a scalar or vector to adjust curvature at each point
-//   closed = set to true for a closed path.  Default: false
-function path_to_bezier(path, tangents, k, closed=false) =
-    assert(is_path(path,dim=undef),"Input path is not a valid path")
-    assert(is_undef(tangents) || is_path(tangents,dim=len(path[0])),"Tangents must be a path of the same dimension as the input path")
+//   path = 2d or 3d point list that the curve must pass through
+//   size = absolute size specification for the curve, a number or vector
+//   relsize = relative size specification for the curve, a number or vector.  Default: 0.1. 
+//   tangents = tangents constraining curve direction at each point
+//   uniform = set to true to compute tangents with uniform=true.  Default: false
+//   closed = true if the curve is closed .  Default: false
+function path_to_bezier(path, tangents, size, relsize, uniform=false, closed=false) =
+    assert(is_bool(closed))
+    assert(is_bool(uniform))
+    assert(num_defined([size,relsize])<=1, "Can't define both size and relsize")
+    assert(is_path(path,[2,3]),"Input path is not a valid 2d or 3d path")
+    assert(is_undef(tangents) || is_path(tangents,[2,3]),"Tangents must be a 2d or 3d path")
     assert(is_undef(tangents) || len(path)==len(tangents), "Input tangents must be the same length as the input path")
     let(
-        k = is_undef(k) ? repeat(1, len(path)) :
-            is_list(k) ? k : repeat(k, len(path)),
-        k_bad = [for(entry=k) if (entry<0) entry]
-    )
-    assert(len(k)==len(path), "Curvature parameter k must have the same length as the path")
-    assert(k_bad==[], "Curvature parameter k must be a nonnegative number or list of nonnegative numbers")
-    let(
-        tangents = is_def(tangents)? tangents : deriv(path, closed=closed),
+        curvesize = first_defined([size,relsize,0.1]),
+        relative = is_undef(size),
         lastpt = len(path) - (closed?0:1)
-    ) [
-        for(i=[0:lastpt-1]) each [
-            path[i],
-            path[i]+k[i]*tangents[i]/3,
-            select(path,i+1)-select(k,i+1)*select(tangents,i+1)/3
-        ],
+    )
+    assert(is_num(curvesize) || len(curvesize)==lastpt, str("Size or relsize must have length ",lastpt))
+    let(
+        sizevect = is_num(curvesize) ? repeat(curvesize, lastpt) : curvesize,
+        tangents = is_def(tangents) ? [for(t=tangents) let(n=norm(t)) assert(!approx(n,0),"Zero tangent vector") t/n] :
+                                      path_tangents(path, uniform=uniform, closed=closed)
+    )
+    assert(min(sizevect)>0, "Size and relsize must be greater than zero")
+    [
+        for(i=[0:lastpt-1])
+            let(
+                first = path[i],
+                second = select(path,i+1),
+                seglength = norm(second-first),
+                dummy = assert(seglength>0, str("Path segment has zero length from index ",i," to ",i+1)),
+                segdir = (second-first)/seglength,
+                tangent1 = tangents[i],
+                tangent2 = -select(tangents,i+1),                        // Need this to point backwards, in direction of the curve
+                parallel = abs(tangent1*segdir) + abs(tangent2*segdir), // Total component of tangents parallel to the segment
+                Lmax = seglength/parallel,    // May be infinity
+                size = relative ? sizevect[i]*seglength : sizevect[i],
+                normal1 = tangent1-(tangent1*segdir)*segdir,   // Components of the tangents orthogonal to the segment
+                normal2 = tangent2-(tangent2*segdir)*segdir,
+                p = [ [-3 ,6,-3 ],                   // polynomial in power form
+                      [ 7,-9, 2 ],
+                      [-5, 3, 0 ],
+                      [ 1, 0, 0 ] ]*[normal1*normal1, normal1*normal2, normal2*normal2],
+                uextreme = approx(norm(p),0) ? []
+                                             : [for(root = real_roots(p)) if (root>0 && root<1) root],
+                distlist = [for(d=bezier_points([normal1*0, normal1, normal2, normal2*0], uextreme)) norm(d)],
+                scale = len(distlist)==0 ? 0 :
+                        len(distlist)==1 ? distlist[0]
+                                         : sum(distlist) - 2*min(distlist),
+                Ldesired = size/scale,   // This will be infinity when the polynomial is zero
+                L = min(Lmax, Ldesired)
+            )
+            each [
+                  first, 
+                  first + L*tangent1,
+                  second + L*tangent2 
+                 ],
         select(path,lastpt)
     ];
 

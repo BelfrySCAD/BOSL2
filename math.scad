@@ -1014,5 +1014,121 @@ function deriv3(data, h=1, closed=false) =
     ];
 
 
+// Section: Complex Numbers
+
+// Function: C_times()
+// Usage: C_times(z1,z2)
+// Description:
+//   Multiplies two complex numbers.  
+function C_times(z1,z2) = [z1.x*z2.x-z1.y*z2.y,z1.x*z2.y+z1.y*z2.x];
+
+// Function: C_div()
+// Usage: C_div(z1,z2)
+// Description:
+//   Divides z1 by z2.  
+function C_div(z1,z2) = let(den = z2.x*z2.x + z2.y*z2.y)
+   [(z1.x*z2.x + z1.y*z2.y)/den, (z1.y*z2.x-z1.x*z2.y)/den];
+
+
+// Section: Polynomials
+
+// Function: polynomial()
+// Usage:
+//   polynomial(p, z)
+// Description:
+//   Evaluates specified real polynomial, p, at the complex or real input value, z.
+//   The polynomial is specified as p=[a_n, a_{n-1},...,a_1,a_0]
+//   where a_n is the z^n coefficient.  Polynomial coefficients are real.
+function polynomial(p, z, k, zk, total) =
+   is_undef(k) ? polynomial(p, z, len(p)-1, is_num(z)? 1 : [1,0], is_num(z) ? 0 : [0,0]) :
+   k==-1 ? total :
+   polynomial(p, z, k-1, is_num(z) ? zk*z : C_times(zk,z), total+zk*p[k]);
+
+
+// Function: poly_roots()
+// Usage:
+//   poly_roots(p,[tol])
+// Description:
+//   Returns all complex roots of the specified real polynomial p.
+//   The polynomial is specified as p=[a_n, a_{n-1},...,a_1,a_0]
+//   where a_n is the z^n coefficient.  The tol parameter gives
+//   the stopping tolerance for the iteration.  The polynomial
+//   must have at least one non-zero coefficient.  Convergence is poor
+//   if the polynomial has any repeated roots other than zero.  
+// Arguments:
+//   p = polynomial coefficients with higest power coefficient first
+//   tol = tolerance for iteration.  Default: 1e-14
+
+// Uses the Aberth method https://en.wikipedia.org/wiki/Aberth_method
+//
+// Dario Bini. "Numerical computation of polynomial zeros by means of Aberth's Method", Numerical Algorithms, Feb 1996.
+// https://www.researchgate.net/publication/225654837_Numerical_computation_of_polynomial_zeros_by_means_of_Aberth's_method
+
+function poly_roots(p,tol=1e-14) =
+  assert(p!=[], "Input polynomial must have a nonzero coefficient")
+  assert(is_vector(p), "Input must be a vector")
+  p[0] == 0 ? poly_roots(slice(p,1,-1)) :    // Strip leading zero coefficients
+  p[len(p)-1] == 0 ? [[0,0],                 // Strip trailing zero coefficients
+                      each poly_roots(select(p,0,-2))] :
+  len(p)==1 ? [] :                  // Nonzero constant case has no solutions
+  len(p)==2 ? [[-p[1]/p[0],0]] :    // Linear case needs special handling
+  let(
+      n = len(p)-1,   // polynomial degree
+      pderiv = [for(i=[0:n-1]) p[i]*(n-i)],
+         
+      s = [for(i=[0:1:n]) abs(p[i])*(4*(n-i)+1)],  // Error bound polynomial from Bini
+
+      // Using method from: http://www.kurims.kyoto-u.ac.jp/~kyodo/kokyuroku/contents/pdf/0915-24.pdf
+      beta = -p[1]/p[0]/n,
+      r = 1+pow(abs(polynomial(p,beta)/p[0]),1/n),
+      init = [for(i=[0:1:n-1])                // Initial guess for roots       
+               let(angle = 360*i/n+270/n/PI)
+               [beta,0]+r*[cos(angle),sin(angle)]
+             ]
+    )
+   _poly_roots(p,pderiv,s,init,tol=tol);
+
+// p = polynomial
+// pderiv = derivative polynomial of p
+// z = current guess for the roots
+// tol = root tolerance
+// i=iteration counter
+function _poly_roots(p, pderiv, s, z, tol, i=0) =
+    assert(i<45, str("Polyroot exceeded iteration limit.  Current solution:", z))
+    let(
+        n = len(z),
+        svals = [for(zk=z) tol*polynomial(s,norm(zk))],
+        p_of_z = [for(zk=z) polynomial(p,zk)],
+        done = [for(k=[0:n-1]) norm(p_of_z[k])<=svals[k]],
+        newton = [for(k=[0:n-1]) C_div(p_of_z[k], polynomial(pderiv,z[k]))],
+        zdiff = [for(k=[0:n-1]) sum([for(j=[0:n-1]) if (j!=k) C_div([1,0], z[k]-z[j])])],
+        w = [for(k=[0:n-1]) done[k] ? [0,0] : C_div( newton[k],
+                                                     [1,0] - C_times(newton[k], zdiff[k]))]
+    )
+    all(done) ? z : _poly_roots(p,pderiv,s,z-w,tol,i+1);
+
+
+// Function: real_roots()
+// Usage:
+//   real_roots(p, [eps], [tol])
+// Description:
+//   Returns the real roots of the specified real polynomial p.
+//   The polynomial is specified as p=[a_n, a_{n-1},...,a_1,a_0]
+//   where a_n is the x^n coefficient.  This function works by
+//   computing the complex roots and returning those roots where
+//   the imaginary part is closed to zero, specifically: z.y/(1+norm(z)) < eps.  Because
+//   of poor convergence and higher error for repeated roots, such roots may
+//   be missed by the algorithm because their imaginary part is large.  
+// Arguments:
+//   p = polynomial to solve as coefficient list, highest power term first
+//   eps = used to determine whether imaginary parts of roots are zero
+//   tol = tolerance for the complex polynomial root finder
+
+function real_roots(p,eps=EPSILON,tol=1e-14) =
+   let( 
+       roots = poly_roots(p)
+   )
+   [for(z=roots) if (abs(z.y)/(1+norm(z))<eps) z.x];
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
