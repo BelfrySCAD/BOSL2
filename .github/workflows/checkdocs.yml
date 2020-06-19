@@ -9,9 +9,9 @@ on: [push]
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "gendocs"
-  gendocs:
+  CheckDocs:
     # The type of runner that the job will run on
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -19,6 +19,21 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    # Runs a single command using the runners shell
+    - name: Wiki Checkout
+      run: |
+        cd $GITHUB_WORKSPACE
+        git clone https://github.com/revarbat/BOSL2.wiki.git
+
     - name: Install OpenSCAD
-      run: sudo apt-get install openscad
+      run: sudo snap install openscad
+
+    - name: Generate Index
+      run: |
+        cd $GITHUB_WORKSPACE
+        ./scripts/make_all_docs -i
+
+    - name: Generating Docs
+      run: |
+        cd $GITHUB_WORKSPACE
+        ./scripts/make_all_docs -i
+
