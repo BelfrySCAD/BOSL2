@@ -131,7 +131,7 @@ include <structs.scad>
 //   polygon(round_corners(shape, method="chamfer", cut=1));
 //   color("red") down(.1) polygon(shape);
 // Example(Med3D): 3D printing test pieces to display different curvature shapes.  You can see the discontinuity in the curvature on the "C" piece in the rendered image.
-//   include<skin.scad>
+//   include <BOSL2/skin.scad>
 //   ten = square(50);
 //   cut = 5;
 //   linear_extrude(height=14) {
@@ -182,7 +182,7 @@ include <structs.scad>
 //     path_sweep(regular_ngon(n=36,or=.1),round_corners(list2,closed=false, method="circle", cut = 0.75));
 // Example(FlatSpin):  Rounding a spiral with increased rounding along the length
 //   // Construct a square spiral path in 3D
-//   include<skin.scad>
+//   include <BOSL2/skin.scad>
 //   $fn=36;
 //   square = [[0,0],[1,0],[1,1],[0,1]];
 //   spiral = flatten(repeat(concat(square,reverse(square)),5));  // Squares repeat 10 times, forward and backward
