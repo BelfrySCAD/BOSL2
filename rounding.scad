@@ -8,7 +8,6 @@
 //   include <BOSL2/rounding.scad>
 //   ```
 //////////////////////////////////////////////////////////////////////
-
 include <beziers.scad>
 include <structs.scad>
 
@@ -117,9 +116,9 @@ include <structs.scad>
 // Example(Med2D): Circular rounding, different at every corner, some corners left unrounded
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   radii = [1.8, 0, 2, 0.3, 1.2, 0];
-//   polygon(round_corners(shape, radius = radii), $fn=128);
+//   polygon(round_corners(shape, radius = radii,$fn=64));
 //   color("red") down(.1) polygon(shape);
-// Example(Med2D): Continuous curvature rounding, different at every corner, with varying smoothness parameters as well, and `$fs` set very small
+// Example(Med2D): Continuous curvature rounding, different at every corner, with varying smoothness parameters as well, and `$fs` set very small.  Note that `$fa` is ignored here with method set to "smooth".
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   cuts = [1.5,0,2,0.3, 1.2, 0];
 //   k = [0.6, 0.5, 0.5, 0.7, 0.3, 0.5];
@@ -131,7 +130,6 @@ include <structs.scad>
 //   polygon(round_corners(shape, method="chamfer", cut=1));
 //   color("red") down(.1) polygon(shape);
 // Example(Med3D): 3D printing test pieces to display different curvature shapes.  You can see the discontinuity in the curvature on the "C" piece in the rendered image.
-//   include <BOSL2/skin.scad>
 //   ten = square(50);
 //   cut = 5;
 //   linear_extrude(height=14) {
@@ -141,7 +139,7 @@ include <structs.scad>
 //     translate([25,85,0])text("7",size=30, valign="center", halign="center");
 //   }
 //   linear_extrude(height=13) {
-//     polygon(round_corners(ten, cut=cut), $fn=96*4);
+//     polygon(round_corners(ten, cut=cut, $fn=96*4));
 //     translate([60,0,0])polygon(round_corners(ten,  method="smooth", cut=cut, $fn=96));
 //     translate([60,60,0])polygon(round_corners(ten, method="smooth", cut=cut, k=0.32, $fn=96));
 //     translate([0,60,0])polygon(round_corners(ten, method="smooth", cut=cut, k=0.7, $fn=96));
@@ -330,9 +328,8 @@ function _circlecorner(points, parm) =
                 center = r/sin(angle) * unit(prev+next)+points[1],
                         start = points[1]+prev*d,
                         end = points[1]+next*d
-        )
-        arc(max(3,angle/180*segs(norm(start-center))), cp=center, points=[start,end]);
-
+        )     // 90-angle is half the angle of the circular arc
+        arc(max(3,(90-angle)/180*segs(r)), cp=center, points=[start,end]);
 
 
 // Used by offset_sweep and convex_offset_extrude:
@@ -435,7 +432,8 @@ function _rounding_offsets(edgespec,z_dir=1) =
 // Example(2D): Here's the square again with less smoothing.
 //   polygon(smooth_path(square(4), size=.25,closed=true));
 // Example(2D): Here's the square with a size that's too big to achieve, so you get the maximum possible curve:
-//   polygon(smooth_path(square(4), size=4, closed=true));
+//   color("green")stroke(square(4), width=0.1,closed=true);
+//   stroke(smooth_path(square(4), size=4, closed=true),closed=true,width=.1);
 // Example(2D): You can alter the shape of the curve by specifying your own arbitrary tangent values
 //   polygon(smooth_path(square(4),tangents=1.25*[[-2,-1], [-4,1], [1,2], [6,-1]],size=0.4,closed=true));
 // Example(2D): Or you can give a different size for each segment
@@ -548,11 +546,11 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 //
 // Example: Rounding a star shaped prism with postive radius values
 //   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=48);
+//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
 //   offset_sweep(rounded_star, height=20, bottom=os_circle(r=4), top=os_circle(r=1), steps=15);
 // Example: Rounding a star shaped prism with negative radius values
 //   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=48);
+//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
 //   offset_sweep(rounded_star, height=20, bottom=os_circle(r=-4), top=os_circle(r=-1), steps=15);
 // Example: Unexpected corners in the result even with `offset="round"` (the default), even with offset_maxstep set small.
 //   triangle = [[0,0],[10,0],[5,10]];
@@ -565,7 +563,7 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 //   offset_sweep(triangle, height=6, bottom = os_circle(r=-2),steps=16,offset_maxstep=0.01);
 // Example: Here is the star chamfered at the top with a teardrop rounding at the bottom. Check out the rounded corners on the chamfer.  Note that a very small value of `offset_maxstep` is needed to keep these round.  Observe how the rounded star points vanish at the bottom in the teardrop: the number of vertices does not remain constant from layer to layer.
 //   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=48);
+//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
 //   offset_sweep(rounded_star, height=20, bottom=os_teardrop(r=4), top=os_chamfer(width=4,offset_maxstep=.1));
 // Example: We round a cube using the continous curvature rounding profile.  But note that the corners are not smooth because the curved square collapses into a square with corners.    When a collapse like this occurs, we cannot turn `check_valid` off.
 //   square = square(1);
@@ -615,7 +613,7 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 //     }
 // Example: Star shaped box
 //   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=48);
+//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
 //   thickness = 2;
 //   ht=20;
 //   difference(){
@@ -627,12 +625,12 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 //     }
 // Example: A profile defined by an arbitrary sequence of points.
 //   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=48);
+//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
 //   profile = os_profile(points=[[0,0],[.3,.1],[.6,.3],[.9,.9], [1.2, 2.7],[.8,2.7],[.8,3]]);
 //   offset_sweep(reverse(rounded_star), height=20, top=profile, bottom=profile);
 // Example: Parabolic rounding
 //   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=48);
+//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
 //   offset_sweep(rounded_star, height=20, top=os_profile(points=[for(r=[0:.1:2])[sqr(r),r]]),
 //                                          bottom=os_profile(points=[for(r=[0:.2:5])[-sqrt(r),r]]));
 // Example: This example uses a sine wave offset profile.  Note that because the offsets occur sequentially and the path grows incrementally the offset needs a very fine resolution to produce the proper result.  Note that we give no specification for the bottom, so it is straight.
@@ -1661,21 +1659,19 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false) =
         right_degen = select(patch[0],-1) == select(select(patch,-1),-1),
         samplepts = list_range(splinesteps+1)/splinesteps
     )
-    top_degen && bot_degen && left_degen && right_degen ?
-        echo("fully degenerate case")
+    top_degen && bot_degen && left_degen && right_degen ?   // fully degenerate case
         [repeat([patch[0][0]],4), EMPTY_VNF] :
-    top_degen && bot_degen ?
-        let(  hhdf=echo("double degenerate (top/bot)"),
+    top_degen && bot_degen ?                                // double degenerate case (top/bot)
+        let(  
             pts = bezier_points(subindex(patch,0), samplepts)
         )
         [[pts,pts,[pts[0]],[select(pts,-1)]], EMPTY_VNF] :
-    left_degen && right_degen ?
+    left_degen && right_degen ?                             // double degenerate case (sides)
        let(
-          fda=echo("double degenerate (sides)"),
           pts = bezier_points(patch[0], samplepts)
        )
        [[[pts[0]], [select(pts,-1)], pts, pts], EMPTY_VNF] :
-    !top_degen && !bot_degen ?
+    !top_degen && !bot_degen ?                             // non-degenerate case
        let(
            k=echo("non-degenerate case"),
            pts = bezier_patch_points(patch, samplepts, samplepts)
@@ -1684,7 +1680,7 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false) =
         [subindex(pts,0), subindex(pts,len(pts)-1), pts[0], select(pts,-1)],
         vnf_vertex_array(pts, reverse=reverse)
        ] :
-    bot_degen ?
+    bot_degen ?                                           // only bottom is degenerate
        let(
            result = bezier_patch_degenerate(reverse(patch), splinesteps=splinesteps, reverse=!reverse)
        )
@@ -1692,7 +1688,7 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false) =
           [reverse(result[0][0]), reverse(result[0][1]), (result[0][3]), (result[0][2])],
           result[1]
        ] :
-    // at this point top_degen is true
+    // at this point top_degen is true                   // only top is degenerate
        let(
            full_degen = patch[1][0] == select(patch[1],-1),
            rowmax = full_degen ? list_range(splinesteps+1) :
