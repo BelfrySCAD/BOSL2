@@ -116,7 +116,7 @@ include <structs.scad>
 // Example(Med2D): Circular rounding, different at every corner, some corners left unrounded
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   radii = [1.8, 0, 2, 0.3, 1.2, 0];
-//   polygon(round_corners(shape, radius = radii),$fn=64);
+//   polygon(round_corners(shape, radius = radii,$fn=64));
 //   color("red") down(.1) polygon(shape);
 // Example(Med2D): Continuous curvature rounding, different at every corner, with varying smoothness parameters as well, and `$fs` set very small.  Note that `$fa` is ignored here with method set to "smooth".
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
@@ -139,7 +139,7 @@ include <structs.scad>
 //     translate([25,85,0])text("7",size=30, valign="center", halign="center");
 //   }
 //   linear_extrude(height=13) {
-//     polygon(round_corners(ten, cut=cut), $fn=96*4);
+//     polygon(round_corners(ten, cut=cut, $fn=96*4));
 //     translate([60,0,0])polygon(round_corners(ten,  method="smooth", cut=cut, $fn=96));
 //     translate([60,60,0])polygon(round_corners(ten, method="smooth", cut=cut, k=0.32, $fn=96));
 //     translate([0,60,0])polygon(round_corners(ten, method="smooth", cut=cut, k=0.7, $fn=96));
