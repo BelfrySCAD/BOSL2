@@ -56,5 +56,6 @@ jobs:
         cd $GITHUB_WORKSPACE
         export PATH=$GITHUB_WORKSPACE:$PATH
         export OPENSCADPATH=$(basename $GITHUB_WORKSPACE)
+        echo "Using OPENSCADPATH=$OPENSCADPATH"
         ./scripts/make_all_docs.sh -i
 
