@@ -49,12 +49,12 @@ jobs:
     - name: Generate Index
       run: |
         cd $GITHUB_WORKSPACE
-        export PATH=$GITHUB_WORKSPACE:$PATH
         ./scripts/genindex.sh
 
     - name: Generating Docs
       run: |
         cd $GITHUB_WORKSPACE
         export PATH=$GITHUB_WORKSPACE:$PATH
+        export OPENSCADPATH=$(basename $GITHUB_WORKSPACE)
         ./scripts/make_all_docs.sh -i
 
