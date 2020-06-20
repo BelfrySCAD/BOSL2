@@ -36,8 +36,8 @@ test_vnf_faces();
 
 module test_vnf_get_vertex() {
     vnf = [[[-1,-1,-1],[1,-1,-1],[0,1,-1],[0,0,1]],[[0,1,2],[0,3,1],[1,3,2],[2,3,0]]];
-    assert(vnf_get_vertex(vnf,[0,1,-1]) == [2,vnf]);
-    assert(vnf_get_vertex(vnf,[0,1,2]) == [4,[concat(vnf[0],[[0,1,2]]),vnf[1]]]);
+    assert(vnf_get_vertex(vnf,[0,1,-1]) == [[2],vnf]);
+    assert(vnf_get_vertex(vnf,[0,1,2]) == [[4],[concat(vnf[0],[[0,1,2]]),vnf[1]]]);
 }
 test_vnf_get_vertex();
 

@@ -127,22 +127,29 @@ def git_checkout(filename):
     err = p.stdout.read()
 
 
-def run_openscad_script(libfile, infile, imgfile, imgsize=(320,240), eye=None, show_edges=False, render=False):
-    scadcmd = [
-        OPENSCAD,
-        "-o", imgfile,
-        "--imgsize={},{}".format(imgsize[0]*2, imgsize[1]*2),
-        "--hardwarnings",
-        "--projection=o",
-        "--autocenter",
-        "--viewall"
-    ]
-    if eye is not None:
-        scadcmd.extend(["--camera", eye+",0,0,0"])
-    if show_edges:
-        scadcmd.extend(["--view=axes,scales,edges"])
+def run_openscad_script(libfile, infile, imgfile, imgsize=(320,240), eye=None, show_edges=False, render=False, test_only=False):
+    if test_only:
+        scadcmd = [
+            OPENSCAD,
+            "-o", "foo.term",
+            "--hardwarnings"
+        ]
     else:
-        scadcmd.extend(["--view=axes,scales"])
+        scadcmd = [
+            OPENSCAD,
+            "-o", imgfile,
+            "--imgsize={},{}".format(imgsize[0]*2, imgsize[1]*2),
+            "--hardwarnings",
+            "--projection=o",
+            "--autocenter",
+            "--viewall"
+        ]
+        if eye is not None:
+            scadcmd.extend(["--camera", eye+",0,0,0"])
+        if show_edges:
+            scadcmd.extend(["--view=axes,scales,edges"])
+        else:
+            scadcmd.extend(["--view=axes,scales"])
     if render:  # Force render
         scadcmd.extend(["--render", ""])
     scadcmd.append(infile)
@@ -151,6 +158,8 @@ def run_openscad_script(libfile, infile, imgfile, imgsize=(320,240), eye=None, s
     p = subprocess.Popen(scadcmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
     (stdoutdata, stderrdata) = p.communicate(None)
     res = p.returncode
+    if test_only and os.path.isfile("foo.term"):
+        os.unlink("foo.term")
     if res != 0 or b"ERROR:" in stderrdata or b"TRACE:" in stderrdata:
         print("\n\n{}".format(stderrdata.decode('utf-8')))
         print("////////////////////////////////////////////////////")
@@ -177,6 +186,7 @@ class ImageProcessing(object):
         self.imgroot = ""
         self.keep_scripts = False
         self.force = False
+        self.test_only = False
 
     def set_keep_scripts(self, x):
         self.keep_scripts = x
@@ -187,9 +197,10 @@ class ImageProcessing(object):
     def set_commoncode(self, code):
         self.commoncode = code
 
-    def process_examples(self, imgroot, force=False):
+    def process_examples(self, imgroot, force=False, test_only=False):
         self.imgroot = imgroot
         self.force = force
+        self.test_only = test_only
         self.hashes = {}
         with dbm.gnu.open("examples_hashes.gdbm", "c") as db:
             for libfile, imgfile, code, extype in self.examples:
@@ -204,6 +215,7 @@ class ImageProcessing(object):
         print("  {}".format(imgfile), end='')
         sys.stdout.flush()
 
+        test_only = self.test_only
         scriptfile = "tmp_{0}.scad".format(imgfile.replace(".", "_"))
         targimgfile = self.imgroot + imgfile
         newimgfile = self.imgroot + "_new_" + imgfile
@@ -248,7 +260,7 @@ class ImageProcessing(object):
         render = "FR" in extype
 
         tmpimgs = []
-        if "Spin" in extype:
+        if "Spin" in extype and not test_only:
             for ang in range(0,359,10):
                 tmpimgfile = "{0}tmp_{2}_{1}.png".format(self.imgroot, ang, imgfile.replace(".", "_"))
                 arad = ang * math.pi / 180;
@@ -262,7 +274,8 @@ class ImageProcessing(object):
                     imgsize=(imgsize[0]*2,imgsize[1]*2),
                     eye=eye,
                     show_edges=show_edges,
-                    render=render
+                    render=render,
+                    test_only=test_only
                 )
                 tmpimgs.append(tmpimgfile)
                 print(".", end='')
@@ -275,39 +288,42 @@ class ImageProcessing(object):
                 imgsize=(imgsize[0]*2,imgsize[1]*2),
                 eye=eye,
                 show_edges=show_edges,
-                render=render
+                render=render,
+                test_only=test_only
             )
             tmpimgs.append(tmpimgfile)
 
         if not self.keep_scripts:
             os.unlink(scriptfile)
 
-        if len(tmpimgs) == 1:
-            image_resize(tmpimgfile, newimgfile, imgsize)
-            os.unlink(tmpimgs.pop(0))
-        else:
-            make_animated_gif(tmpimgs, newimgfile, size=imgsize)
-            for tmpimg in tmpimgs:
-                os.unlink(tmpimg)
+        if not test_only:
+            if len(tmpimgs) == 1:
+                image_resize(tmpimgfile, newimgfile, imgsize)
+                os.unlink(tmpimgs.pop(0))
+            else:
+                make_animated_gif(tmpimgs, newimgfile, size=imgsize)
+                for tmpimg in tmpimgs:
+                    os.unlink(tmpimg)
 
         print("")
 
-        # Time to compare image.
-        if not os.path.isfile(targimgfile):
-            print("    NEW IMAGE\n")
-            os.rename(newimgfile, targimgfile)
-        else:
-            if targimgfile.endswith(".gif"):
-                issame = filecmp.cmp(targimgfile, newimgfile, shallow=False)
-            else:
-                issame  = image_compare(targimgfile, newimgfile);
-            if issame:
-                os.unlink(newimgfile)
-            else:
-                print("    UPDATED IMAGE\n")
-                os.unlink(targimgfile)
+        if not test_only:
+            # Time to compare image.
+            if not os.path.isfile(targimgfile):
+                print("    NEW IMAGE\n")
                 os.rename(newimgfile, targimgfile)
-        self.hashes[key] = hash
+            else:
+                if targimgfile.endswith(".gif"):
+                    issame = filecmp.cmp(targimgfile, newimgfile, shallow=False)
+                else:
+                    issame  = image_compare(targimgfile, newimgfile);
+                if issame:
+                    os.unlink(newimgfile)
+                else:
+                    print("    UPDATED IMAGE\n")
+                    os.unlink(targimgfile)
+                    os.rename(newimgfile, targimgfile)
+            self.hashes[key] = hash
 
 
 imgprc = ImageProcessing()
@@ -772,7 +788,7 @@ class LibFile(object):
         return out
 
 
-def processFile(infile, outfile=None, gen_imgs=False, imgroot="", prefix="", force=False):
+def processFile(infile, outfile=None, gen_imgs=False, test_only=False, imgroot="", prefix="", force=False):
     if imgroot and not imgroot.endswith('/'):
         imgroot += "/"
 
@@ -792,7 +808,7 @@ def processFile(infile, outfile=None, gen_imgs=False, imgroot="", prefix="", for
         print(line, file=f)
 
     if gen_imgs:
-        imgprc.process_examples(imgroot, force=force)
+        imgprc.process_examples(imgroot, force=force, test_only=test_only)
 
     if outfile:
         f.close()
@@ -800,6 +816,8 @@ def processFile(infile, outfile=None, gen_imgs=False, imgroot="", prefix="", for
 
 def main():
     parser = argparse.ArgumentParser(prog='docs_gen')
+    parser.add_argument('-t', '--test-only', action="store_true",
+                        help="If given, don't generate images, but do try executing the scripts.")
     parser.add_argument('-k', '--keep-scripts', action="store_true",
                         help="If given, don't delete the temporary image OpenSCAD scripts.")
     parser.add_argument('-c', '--comments-only', action="store_true",
@@ -820,6 +838,7 @@ def main():
         args.infile,
         outfile=args.outfile,
         gen_imgs=args.images,
+        test_only=args.test_only,
         imgroot=args.imgroot,
         prefix="// " if args.comments_only else "",
         force=args.force

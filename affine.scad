@@ -245,13 +245,14 @@ function affine3d_rot_from_to(from, to) =
 
 
 // Function: affine_frame_map()
-// Usage: map = affine_frame_map(x=v1,y=v2);
-//        map = affine_frame_map(x=v1,z=v2);
-//        map = affine_frame_map(y=v1,y=v2);
-//        map = affine_frame_map(v1,v2,v3);
+// Usage:
+//   map = affine_frame_map(x=v1,y=v2);
+//   map = affine_frame_map(x=v1,z=v2);
+//   map = affine_frame_map(y=v1,y=v2);
+//   map = affine_frame_map(v1,v2,v3);
 // Description:
 //   Returns a transformation that maps one coordinate frame to another.  You must specify two or three of `x`, `y`, and `z`.  The specified
-//   axes are mapped to the vectors you supplied.  If you give two inputs, the third vector is mapped to the appropriate normal to maintain a right hand coordinate system.  
+//   axes are mapped to the vectors you supplied.  If you give two inputs, the third vector is mapped to the appropriate normal to maintain a right hand coordinate system.
 //   If the vectors you give are orthogonal the result will be a rotation and the `reverse` parameter will supply the inverse map, which enables you
 //   to map two arbitrary coordinate systems to each other by using the canonical coordinate system as an intermediary.  You cannot use the `reverse` option 
 //   with non-orthogonal inputs.  
@@ -261,8 +262,8 @@ function affine3d_rot_from_to(from, to) =
 //   z = Destination vector for z axis
 //   reverse = reverse direction of the map for orthogonal inputs.  Default: false
 // Examples:
-//   T = affine_frame_map(x=[1,1,0], y=[-1,1]);   // This map is just a rotation around the z axis
-//   T = affine_frame_map(x=[1,0,0], y=[1,1]);    // This map is not a rotation because x and y aren't orthogonal
+//   T = affine_frame_map(x=[1,1,0], y=[-1,1,0]);   // This map is just a rotation around the z axis
+//   T = affine_frame_map(x=[1,0,0], y=[1,1,0]);    // This map is not a rotation because x and y aren't orthogonal
 //                  // The next map sends [1,1,0] to [0,1,1] and [-1,1,0] to [0,-1,1]
 //   T = affine_frame_map(x=[0,1,1], y=[0,-1,1]) * affine_frame_map(x=[1,1,0], y=[-1,1,0],reverse=true);
 function affine_frame_map(x,y,z, reverse=false) =
@@ -319,7 +320,7 @@ function affine3d_mirror(v) =
 
 // Function: affine3d_skew()
 // Usage:
-//   mat = affine3d_skew([sxy], [sxz], [syx], [xyz], [szx], [szy]);
+//   mat = affine3d_skew([sxy], [sxz], [syx], [syz], [szx], [szy]);
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a skew transformation.
 // Arguments:
@@ -433,6 +434,7 @@ function apply(transform,points) =
 //   transformed = apply_list(path3d(circle(r=3)),[xrot(45)]);        // Rotates 3d circle data around x axis
 //   transformed = apply_list(circle(r=3), [scale(3), right(4), rot(45)]); // Scales, then translates, and then rotates 2d circle data
 function apply_list(points,transform_list) =
+  transform_list == []? points :
   is_vector(points) ? apply_list([points],transform_list)[0] :
   let(
       tdims = array_dim(transform_list),

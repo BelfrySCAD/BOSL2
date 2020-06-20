@@ -8,7 +8,34 @@ on: [push]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "gendocs"
+  Regressions:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Wiki Checkout
+      run: |
+        cd $GITHUB_WORKSPACE
+        git clone https://github.com/revarbat/BOSL2.wiki.git
+
+    - name: Install wget
+      run: sudo apt-get install wget
+
+    - name: Get OpenSCAD Appimage
+      run: |
+        cd $GITHUB_WORKSPACE
+        wget https://files.openscad.org/OpenSCAD-2019.05-x86_64.AppImage
+        sudo mv OpenSCAD-2019.05-x86_64.AppImage /usr/local/bin/openscad
+        sudo chmod +x /usr/local/bin/openscad
+
+    - name: Run Regression Tests
+      run: |
+        cd $GITHUB_WORKSPACE
+        export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
+        ./scripts/run_tests.sh
+
   CheckDocs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -36,15 +63,15 @@ jobs:
     - name: Install Pillow
       run: sudo pip3 install Pillow
 
-    - name: Install wget
-      run: sudo apt-get install wget
+    # - name: Install wget
+    #   run: sudo apt-get install wget
 
-    - name: Get OpenSCAD Appimage
+    - name: Install OpenSCAD
       run: |
         cd $GITHUB_WORKSPACE
         wget https://files.openscad.org/OpenSCAD-2019.05-x86_64.AppImage
-        mv OpenSCAD-2019.05-x86_64.AppImage openscad
-        chmod +x openscad
+        sudo mv OpenSCAD-2019.05-x86_64.AppImage /usr/local/bin/openscad
+        sudo chmod +x /usr/local/bin/openscad
 
     - name: Generate Index
       run: |
@@ -54,8 +81,6 @@ jobs:
     - name: Generating Docs
       run: |
         cd $GITHUB_WORKSPACE
-        export PATH=$GITHUB_WORKSPACE:$PATH
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
-        echo "Using OPENSCADPATH=$OPENSCADPATH"
-        ./scripts/make_all_docs.sh -i
+        ./scripts/make_all_docs.sh -t -i
 
