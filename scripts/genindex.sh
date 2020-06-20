@@ -13,7 +13,7 @@ function lcase
 
 function mkindex
 {
-    TMPFILE=$(mktemp -t $(basename $0)) || exit 1
+    TMPFILE=$(mktemp -t $(basename $0).XXXXXX) || exit 1
     sed 's/([^)]*)//g' | sed 's/[^a-zA-Z0-9_.:$]//g' | awk -F ':' '{printf "- [%s](%s#%s)\n", $3, $1, $3}' | sort -d -f -u >> $TMPFILE
     alpha="A B C D E F G H I J K L M N O P Q R S T U V W X Y Z"
     for a in $alpha; do
