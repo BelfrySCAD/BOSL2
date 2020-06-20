@@ -1,6 +1,10 @@
 #!/bin/bash
 
-OPENSCAD=/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD
+if [ "$(uname -s)" != "Darwin" ]; then
+    OPENSCAD=openscad
+else
+    OPENSCAD=/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD
+fi
 
 for testscript in tests/test_*.scad ; do
     repname="$(basename $testscript|sed 's/^test_//')"

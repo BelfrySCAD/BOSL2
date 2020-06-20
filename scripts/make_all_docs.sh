@@ -34,7 +34,7 @@ rm -f tmpscad*.scad
 for lib in $PREVIEW_LIBS; do
     lib="$(basename $lib .scad)"
     mkdir -p images/$lib
-    if [ "$IMGGEN" != ""  -a "$TESTONLY" != ""]; then
+    if [ "$IMGGEN" != "" -a "$TESTONLY" != "" ]; then
         rm -f images/$lib/*.png images/$lib/*.gif
     fi
     echo "$lib.scad"
