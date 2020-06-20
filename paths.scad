@@ -1167,7 +1167,7 @@ function _sum_preserving_round(data, index=0) =
 
 // Function: subdivide_path()
 // Usage:
-//   newpath = subdivide_path(path, N, method);
+//   newpath = subdivifde_path(path, [N|refine], method);
 // Description:
 //   Takes a path as input (closed or open) and subdivides the path to produce a more
 //   finely sampled path.  The new points can be distributed proportional to length
@@ -1220,9 +1220,11 @@ function _sum_preserving_round(data, index=0) =
 // Example(FlatSpin): Three-dimensional paths also work
 //   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
 //   move_copies(mypath)sphere(r=.1,$fn=32);
-function subdivide_path(path, N, closed=true, exact=true, method="length") =
+function subdivide_path(path, N, refine, closed=true, exact=true, method="length") =
     assert(is_path(path))
     assert(method=="length" || method=="segment")
+    assert(num_defined([N,refine]),"Must give exactly one of N and refine")
+    let(N = first_defined([N,len(path)*refine]))
     assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
     let(
         count = len(path) - (closed?0:1), 
