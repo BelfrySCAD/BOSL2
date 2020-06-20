@@ -20,9 +20,6 @@ jobs:
         cd $GITHUB_WORKSPACE
         git clone https://github.com/revarbat/BOSL2.wiki.git
 
-    - name: Install wget
-      run: sudo apt-get install wget
-
     - name: Get OpenSCAD Appimage
       run: |
         cd $GITHUB_WORKSPACE
@@ -62,9 +59,6 @@ jobs:
 
     - name: Install Pillow
       run: sudo pip3 install Pillow
-
-    # - name: Install wget
-    #   run: sudo apt-get install wget
 
     - name: Install OpenSCAD
       run: |
