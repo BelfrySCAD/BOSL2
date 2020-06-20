@@ -36,16 +36,25 @@ jobs:
     - name: Install Pillow
       run: sudo pip3 install Pillow
 
-    - name: Install OpenSCAD
-      run: sudo apt-get install openscad
+    - name: Install wget
+      run: sudo apt-get install wget
 
-    - name: Generating Docs
+    - name: Get OpenSCAD Appimage
       run: |
         cd $GITHUB_WORKSPACE
-        ./scripts/make_all_docs.sh -i
+        wget https://files.openscad.org/OpenSCAD-2019.05-x86_64.AppImage
+        mv OpenSCAD-2019.05-x86_64.AppImage openscad
+        chmod +x openscad
 
     - name: Generate Index
       run: |
         cd $GITHUB_WORKSPACE
+        export PATH=$GITHUB_WORKSPACE:$PATH
         ./scripts/genindex.sh
+
+    - name: Generating Docs
+      run: |
+        cd $GITHUB_WORKSPACE
+        export PATH=$GITHUB_WORKSPACE:$PATH
+        ./scripts/make_all_docs.sh -i
 
