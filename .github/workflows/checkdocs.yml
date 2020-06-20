@@ -27,13 +27,13 @@ jobs:
     - name: Install OpenSCAD
       run: sudo snap install openscad
 
-    - name: Generate Index
-      run: |
-        cd $GITHUB_WORKSPACE
-        ./scripts/make_all_docs -i
-
     - name: Generating Docs
       run: |
         cd $GITHUB_WORKSPACE
-        ./scripts/make_all_docs -i
+        ./scripts/make_all_docs.sh -i
+
+    - name: Generate Index
+      run: |
+        cd $GITHUB_WORKSPACE
+        ./scripts/genindex.sh
 
