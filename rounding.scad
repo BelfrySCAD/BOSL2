@@ -94,10 +94,11 @@ include <structs.scad>
 //   verbose = if true display rounding scale factors that show how close roundovers are to overlapping.  Default: false
 //
 // Example(Med2D): Standard circular roundover with radius the same at every point. Compare results at the different corners.
-//   $fn=36;
-//   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
-//   polygon(round_corners(shape, radius=1));
-//   color("red") down(.1) polygon(shape);
+include<BOSL2/std.scad>
+   $fn=36;
+   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
+   polygon(round_corners(shape, radius=1));
+   color("red") down(.1) polygon(shape);
 // Example(Med2D): Circular roundover using the "cut" specification, the same at every corner.
 //   $fn=36;
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
