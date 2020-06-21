@@ -20,6 +20,20 @@ module test_add_scalar() {
 test_add_scalar();
 
 
+module test_vfloor() {
+    assert_equal(vfloor([2.0, 3.14, 18.9, 7]), [2,3,18,7]);
+    assert_equal(vfloor([-2.0, -3.14, -18.9, -7]), [-2,-4,-19,-7]);
+}
+test_vfloor();
+
+
+module test_vceil() {
+    assert_equal(vceil([2.0, 3.14, 18.9, 7]), [2,4,19,7]);
+    assert_equal(vceil([-2.0, -3.14, -18.9, -7]), [-2,-3,-18,-7]);
+}
+test_vceil();
+
+
 module test_vmul() {
     assert(vmul([3,4,5], [8,7,6]) == [24,28,30]);
     assert(vmul([1,2,3], [4,5,6]) == [4,10,18]);
