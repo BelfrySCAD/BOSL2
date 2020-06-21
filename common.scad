@@ -15,11 +15,12 @@
 // Usage:
 //   typ = typeof(x);
 // Description:
-//   Returns a string representing the type of the value.  One of "undef", "boolean", "number", "string", "list", or "range"
+//   Returns a string representing the type of the value.  One of "undef", "boolean", "number", "nan", "string", "list", or "range"
 function typeof(x) =
     is_undef(x)? "undef" :
     is_bool(x)? "boolean" :
     is_num(x)? "number" :
+    is_nan(x)? "nan" :
     is_string(x)? "string" :
     is_list(x)? "list" :
     "range";
@@ -30,7 +31,7 @@ function typeof(x) =
 //   b = is_type(x, types);
 // Description:
 //   Returns true if the type of the value `x` is one of those given as strings in the list `types`. 
-//   Valid types are "undef", "boolean", "number", "string", "list", or "range"
+//   Valid types are "undef", "boolean", "number", "nan", "string", "list", or "range"
 // Arguments:
 //   x = The value to check the type of.
 //   types = A list of types to check 
@@ -85,6 +86,7 @@ function is_nan(x) = (x!=x);
 // Description:
 //   Returns true if its argument is a range
 function is_range(x) = is_num(x[0]) && !is_list(x);
+
 
 // Function: is_list_of()
 // Usage:
@@ -304,6 +306,70 @@ function scalar_vec3(v, dflt=undef) =
 function segs(r) =
     $fn>0? ($fn>3? $fn : 3) :
     ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs)));
+
+
+
+// Section: Testing Helpers
+
+
+function _valstr(x) =
+    is_list(x)? str("[",str_join([for (xx=x) _valstr(xx)],","),"]") :
+    is_num(x)? fmt_float(x,12) : x;
+
+
+// Module: assert_approx()
+// Usage:
+//   assert_approx(got, expected, [info]);
+// Description:
+//   Tests if the value gotten is what was expected.  If not, then
+//   the expected and received values are printed to the console and
+//   an assertion is thrown to stop execution.
+// Arguments:
+//   got = The value actually received.
+//   expected = The value that was expected.
+//   info = Extra info to print out to make the error clearer.
+module assert_approx(got, expected, info) {
+    if (!approx(got, expected)) {
+        echo();
+        echo(str("EXPECT: ", _valstr(expected)));
+        echo(str("GOT   : ", _valstr(got)));
+        if (same_shape(got, expected)) {
+            echo(str("DELTA : ", _valstr(got - expected)));
+        }
+        if (is_def(info)) {
+            echo(str("INFO  : ", _valstr(info)));
+        }
+        assert(approx(got, expected));
+    }
+}
+
+
+// Module: assert_equal()
+// Usage:
+//   assert_equal(got, expected, [info]);
+// Description:
+//   Tests if the value gotten is what was expected.  If not, then
+//   the expected and received values are printed to the console and
+//   an assertion is thrown to stop execution.
+// Arguments:
+//   got = The value actually received.
+//   expected = The value that was expected.
+//   info = Extra info to print out to make the error clearer.
+module assert_equal(got, expected, info) {
+    if (got != expected || (is_nan(got) && is_nan(expected))) {
+        echo();
+        echo(str("EXPECT: ", _valstr(expected)));
+        echo(str("GOT   : ", _valstr(got)));
+        if (same_shape(got, expected)) {
+            echo(str("DELTA : ", _valstr(got - expected)));
+        }
+        if (is_def(info)) {
+            echo(str("INFO  : ", _valstr(info)));
+        }
+        assert(got == expected);
+    }
+}
+
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

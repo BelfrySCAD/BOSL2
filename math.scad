@@ -771,8 +771,9 @@ function _type_num(x) =
     is_undef(x)?  0 :
     is_bool(x)?   1 :
     is_num(x)?    2 :
-    is_string(x)? 3 :
-    is_list(x)?   4 : 5;
+    is_nan(x)?    3 :
+    is_string(x)? 4 :
+    is_list(x)?   5 : 6;
 
 
 // Function: compare_vals()
@@ -780,6 +781,7 @@ function _type_num(x) =
 //   compare_vals(a, b);
 // Description:
 //   Compares two values.  Lists are compared recursively.
+//   Returns <0 if a<b.  Returns >0 if a>b.  Returns 0 if a==b.
 //   If types are not the same, then undef < bool < num < str < list < range.
 // Arguments:
 //   a = First value to compare.
@@ -788,6 +790,7 @@ function compare_vals(a, b) =
     (a==b)? 0 :
     let(t1=_type_num(a), t2=_type_num(b)) (t1!=t2)? (t1-t2) :
     is_list(a)? compare_lists(a,b) :
+    is_nan(a)? 0 :
     (a<b)? -1 : (a>b)? 1 : 0;
 
 
