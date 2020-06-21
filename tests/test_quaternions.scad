@@ -178,6 +178,12 @@ module test_Q_Mul() {
 test_Q_Mul();
 
 
+module test_Q_Cumulative() {
+    verify_f(Q_Cumulative([QuatZ(30),QuatX(57),QuatY(18)]),[[0, 0, 0.2588190451, 0.9659258263], [0.4608999698, -0.1234977747, 0.2274546059, 0.8488721457], [0.4908072659, 0.01081554785, 0.1525536221, 0.8577404293]]);
+}
+test_Q_Cumulative();
+
+
 module test_Q_Dot() {
     verify_f(Q_Dot(QuatZ(30),QuatX(57)),0.8488721457);
     verify_f(Q_Dot(QuatY(30),QuatZ(23)),0.94653458);
