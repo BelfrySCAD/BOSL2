@@ -337,11 +337,13 @@ test_rot();
 
 
 module test_xrot() {
-    vals = [-270,-135,-90,45,0,30,45,90,135,147];
+    vals = [-270,-135,-90,45,0,30,45,90,135,147,180];
+    path = path3d(pentagon(d=100), 50);
     for (a=vals) {
         m = [[1,0,0,0],[0,cos(a),-sin(a),0],[0,sin(a),cos(a),0],[0,0,0,1]];
         assert_equal(xrot(a), m);
-        assert_equal(xrot(a, p=[1,2,3]), apply(m,[1,2,3]));
+        assert_equal(xrot(a, p=path[0]), apply(m, path[0]));
+        assert_equal(xrot(a, p=path), apply(m, path));
         // Verify that module at least doesn't crash.
         xrot(a) nil();
     }
@@ -350,11 +352,13 @@ test_xrot();
 
 
 module test_yrot() {
-    vals = [-270,-135,-90,45,0,30,45,90,135,147];
+    vals = [-270,-135,-90,45,0,30,45,90,135,147,180];
+    path = path3d(pentagon(d=100), 50);
     for (a=vals) {
         m = [[cos(a),0,sin(a),0],[0,1,0,0],[-sin(a),0,cos(a),0],[0,0,0,1]];
         assert_equal(yrot(a), m);
-        assert_equal(yrot(a, p=[1,2,3]), apply(m,[1,2,3]));
+        assert_equal(yrot(a, p=path[0]), apply(m, path[0]));
+        assert_equal(yrot(a, p=path), apply(m, path));
         // Verify that module at least doesn't crash.
         yrot(a) nil();
     }
@@ -363,16 +367,28 @@ test_yrot();
 
 
 module test_zrot() {
-    vals = [-270,-135,-90,45,0,30,45,90,135,147];
+    vals = [-270,-135,-90,45,0,30,45,90,135,147,180];
+    path = path3d(pentagon(d=100), 50);
     for (a=vals) {
         m = [[cos(a),-sin(a),0,0],[sin(a),cos(a),0,0],[0,0,1,0],[0,0,0,1]];
         assert_equal(zrot(a), m);
-        assert_equal(zrot(a, p=[1,2,3]), apply(m,[1,2,3]));
+        assert_equal(zrot(a, p=path[0]), apply(m, path[0]));
+        assert_equal(zrot(a, p=path), apply(m, path));
         // Verify that module at least doesn't crash.
         zrot(a) nil();
     }
 }
-test_yrot();
+test_zrot();
+
+
+module test_skew() {
+    m = affine3d_skew(sxy=2, sxz=3, syx=4, syz=5, szx=6, szy=7);
+    assert_equal(skew(sxy=2, sxz=3, syx=4, syz=5, szx=6, szy=7), m);
+    assert_equal(skew(sxy=2, sxz=3, syx=4, syz=5, szx=6, szy=7, p=[1,2,3]), apply(m,[1,2,3]));
+    // Verify that module at least doesn't crash.
+    skew(2,3,4,5,6,7) nil();
+}
+test_skew();
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
