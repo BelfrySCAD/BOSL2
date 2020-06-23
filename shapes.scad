@@ -205,7 +205,7 @@ module cuboid(
                         minkowski() {
                             cube(isize, center=true);
                             if (trimcorners) {
-                                spheroid(r=rounding, $fn=sides);
+                                spheroid(r=rounding, style="octa", $fn=sides);
                             } else {
                                 intersection() {
                                     cyl(r=rounding, h=rounding*2, $fn=sides);
@@ -284,7 +284,7 @@ module cuboid(
                                             cube(rounding*2, center=true);
                                         }
                                         translate(vmul([xa,ya,za], size/2-[1,1,1]*rounding)) {
-                                            spheroid(r=rounding, $fn=sides);
+                                            spheroid(r=rounding, style="octa", $fn=sides);
                                         }
                                     }
                                 }
@@ -1127,7 +1127,7 @@ module torus(
 //   r = Radius of the spheroid.
 //   d = Diameter of the spheroid.
 //   circum = If true, the spheroid is made large enough to circumscribe the sphere of the ideal side.  Otherwise inscribes.  Default: false (inscribes)
-//   style = The style of the spheroid's construction. One of "orig", "aligned", "stagger", or "icosa".  Default: "aligned"
+//   style = The style of the spheroid's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "aligned"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -1141,7 +1141,11 @@ module torus(
 //   spheroid(d=100, style="aligned", $fn=10);
 // Example: style="stagger"
 //   spheroid(d=100, style="stagger", $fn=10);
-// Example: style="icosa"
+// Example: style="octa", octahedral based tesselation.
+//   spheroid(d=100, style="octa", $fn=10);
+//   // In "octa" style, $fn is quantized
+//   //   to the nearest multiple of 4.
+// Example: style="icosa", icosahedral based tesselation.
 //   spheroid(d=100, style="icosa", $fn=10);
 //   // In "icosa" style, $fn is quantized
 //   //   to the nearest multiple of 5.
@@ -1189,6 +1193,7 @@ function spheroid(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, or
         r = get_radius(r=r, d=d, dflt=1),
         hsides = segs(r),
         vsides = max(2,ceil(hsides/2)),
+        octa_steps = round(max(4,hsides)/4),
         icosa_steps = round(max(5,hsides)/5),
         rr = circum? (r / cos(90/vsides) / cos(180/hsides)) : r,
         stagger = style=="stagger",
@@ -1202,6 +1207,23 @@ function spheroid(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, or
                 for (j=[0:1:hsides-1]) let(theta = (j+((stagger && i%2!=0)?0.5:0))*360/hsides)
                     spherical_to_xyz(rr, theta, phi),
             spherical_to_xyz(rr, 0, 180)
+        ] : style=="octa"? [
+            for (tb=[0,1], i=[0:1:3]) let(
+                theta0 = (i+0.5)*360/4,
+                theta1 = (i+1.0)*360/4,
+                theta2 = (i+0.0)*360/4,
+                phi0 = tb? 0 : 180,
+                phi1 = 90
+            )
+            for (k = [0:1:octa_steps]) let(
+                u = k/octa_steps,
+                phi = lerp(phi0, phi1, u)
+            )
+            for (l = [0:1:k]) let(
+                v = k? l/k : 0,
+                theta = lerp(theta1, theta2, v),
+                pt = spherical_to_xyz(rr,theta,phi)
+            ) pt
         ] : style=="icosa"? [
             for (tb=[0,1], j=[0,2], i = [0:1:4]) let(
                 theta0 = i*360/5,
@@ -1255,6 +1277,25 @@ function spheroid(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, or
                     [base+j, base+hsides+(j+1)%hsides, base+hsides+j],
                 ]
             )
+        ] : style=="octa"? let(
+            pyr = [for (x=[0:1:octa_steps+1]) x],
+            tri = sum(pyr),
+            soff = cumsum(pyr)
+        ) [
+            for (tb=[0,1], j=[0,1], i = [0:1:3]) let(
+                base = ((((tb*2) + j) * 4) + i) * tri
+            )
+            for (k = [0:1:octa_steps-1])
+            for (l = [0:1:k]) let(
+                v1 = base + soff[k] + l,
+                v2 = base + soff[k+1] + l,
+                v3 = base + soff[k+1] + (l + 1),
+                faces = [
+                    if(l>0) [v1-1,v1,v2],
+                    [v1,v3,v2],
+                ],
+                faces2 = (tb+j)%2? [for (f=faces) reverse(f)] : faces
+            ) each faces2
         ] : style=="icosa"? let(
             pyr = [for (x=[0:1:icosa_steps+1]) x],
             tri = sum(pyr),
