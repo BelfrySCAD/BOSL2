@@ -1167,7 +1167,7 @@ function _sum_preserving_round(data, index=0) =
 
 // Function: subdivide_path()
 // Usage:
-//   newpath = subdivifde_path(path, [N|refine], method);
+//   newpath = subdivide_path(path, [N|refine], method);
 // Description:
 //   Takes a path as input (closed or open) and subdivides the path to produce a more
 //   finely sampled path.  The new points can be distributed proportional to length
