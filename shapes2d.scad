@@ -288,7 +288,7 @@ module stroke(
 
             // Endcap1
             translate(path[0]) {
-                multmatrix(rotmats[0]) {
+                multmatrix(rotmats[0] * xrot(180)) {
                     $fn = sides[0];
                     if (is_undef(endcap_angle1)) {
                         rotate_extrude(convexity=convexity) {
