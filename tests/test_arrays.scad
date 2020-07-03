@@ -252,13 +252,60 @@ module test_sortidx() {
 }
 test_sortidx();
 
-
 module test_unique() {
     assert(unique([]) == []);
     assert(unique([8]) == [8]);
     assert(unique([7,3,9,4,3,1,8]) == [1,3,4,7,8,9]);
 }
 test_unique();
+
+
+module test_unique_count() {
+    assert_equal(
+        unique_count([3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,6]),
+        [[1,2,3,4,5,6,7,8,9],[2,2,4,1,3,2,1,1,3]]
+    );
+    assert_equal(
+        unique_count(["A","B","R","A","C","A","D","A","B","R","A"]),
+        [["A","B","C","D","R"],[5,2,1,1,2]]
+    );
+}
+test_unique_count();
+
+
+
+// Sets
+
+module test_set_union() {
+    assert_equal(
+        set_union([2,3,5,7,11], [1,2,3,5,8]),
+        [2,3,5,7,11,1,8]
+    );
+    assert_equal(
+        set_union([2,3,5,7,11], [1,2,3,5,8], get_indices=true),
+        [[5,0,1,2,6],[2,3,5,7,11,1,8]]
+    );
+}
+test_set_union();
+
+
+module test_set_difference() {
+    assert_equal(
+        set_difference([2,3,5,7,11], [1,2,3,5,8]),
+        [7,11]
+    );
+}
+test_set_difference();
+
+
+module test_set_intersection() {
+    assert_equal(
+        set_intersection([2,3,5,7,11], [1,2,3,5,8]),
+        [2,3,5]
+    );
+}
+test_set_intersection();
+
 
 
 // Arrays
@@ -271,6 +318,15 @@ module test_subindex() {
     assert(subindex(v,[1:3]) == [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]);
 }
 test_subindex();
+
+
+module test_force_list() {
+    assert_equal(force_list([3,4,5]), [3,4,5]);
+    assert_equal(force_list(5), [5]);
+    assert_equal(force_list(7, n=3), [7,7,7]);
+    assert_equal(force_list(4, n=3, fill=1), [4,1,1]);
+}
+test_force_list();
 
 
 module test_pair() {
