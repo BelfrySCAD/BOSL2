@@ -887,11 +887,26 @@ function enumerate(l,idx=undef) =
 
 // Function: force_list()
 // Usage:
-//   list = force_list(value)
+//   list = force_list(value, [n], [fill])
 // Description:
-//   If value is a list returns value, otherwise returns [value].  Makes it easy to
-//   treat a scalar input consistently as a singleton list along with list inputs.  
-function force_list(value) = is_list(value) ? value : [value];
+//   Coerces non-list values into a list.  Makes it easy to treat a scalar input
+//   consistently as a singleton list, as well as list inputs.
+//   - If `value` is a list, then that list is returned verbatim.
+//   - If `value` is not a list, and `fill` is not given, then a list of `n` copies of `value` will be returned.
+//   - If `value` is not a list, and `fill` is given, then a list `n` items long will be returned where `value` will be the first item, and the rest will contain the value of `fill`.
+// Arguments:
+//   value = The value or list to coerce into a list.
+//   n = The number of items in the coerced list.  Default: 1
+//   fill = The value to pad the coerced list with, after the firt value.  Default: undef (pad with copies of `value`)
+// Examples:
+//   x = force_list([3,4,5]);  // Returns: [3,4,5]
+//   y = force_list(5);  // Returns: [5]
+//   z = force_list(7, n=3);  // Returns: [7,7,7]
+//   w = force_list(4, n=3, fill=1);  // Returns: [4,1,1]
+function force_list(value, n=1, fill) =
+    is_list(value) ? value :
+    is_undef(fill)? [for (i=[1:1:n]) value] :
+    [value, for (i=[2:1:n]) fill];
 
 
 // Function: pair()
@@ -899,8 +914,13 @@ function force_list(value) = is_list(value) ? value : [value];
 //   pair(v)
 // Description:
 //   Takes a list, and returns a list of adjacent pairs from it.
+// Example(2D): Note that the last point and first point do NOT get paired together.
+//   for (p = pair(circle(d=20, $fn=12)))
+//       move(p[0])
+//           rot(from=BACK, to=p[1]-p[0])
+//               trapezoid(w1=1, w2=0, h=norm(p[1]-p[0]), anchor=FRONT);
 // Example:
-//   l = ["A","B","C",D"];
+//   l = ["A","B","C","D"];
 //   echo([for (p=pair(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC"]
 function pair(v) =
     assert(is_list(v)||is_string(v))
@@ -912,6 +932,11 @@ function pair(v) =
 //   pair_wrap(v)
 // Description:
 //   Takes a list, and returns a list of adjacent pairss from it, wrapping around from the end to the start of the list.
+// Example(2D): Note that the last point and first point DO get paired together.
+//   for (p = pair_wrap(circle(d=20, $fn=12)))
+//       move(p[0])
+//           rot(from=BACK, to=p[1]-p[0])
+//               trapezoid(w1=1, w2=0, h=norm(p[1]-p[0]), anchor=FRONT);
 // Example:
 //   l = ["A","B","C","D"];
 //   echo([for (p=pair_wrap(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC", "AD"]
