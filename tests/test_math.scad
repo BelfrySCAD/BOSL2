@@ -70,6 +70,30 @@ module test_constrain() {
 test_constrain();
 
 
+module test_is_matrix() {
+    assert(is_matrix([[2,3,4],[5,6,7],[8,9,10]]));
+    assert(is_matrix([[2,3,4],[5,6,7],[8,9,10]],square=true));
+    assert(is_matrix([[2,3,4],[5,6,7],[8,9,10]],square=false));
+    assert(is_matrix([[2,3],[5,6],[8,9]],m=3,n=2));
+    assert(is_matrix([[2,3,4],[5,6,7]],m=2,n=3));
+    assert(!is_matrix([[2,3,4],[5,6,7]],m=2,n=3,square=true));
+    assert(is_matrix([[2,3,4],[5,6,7],[8,9,10]],square=false));
+    assert(!is_matrix([[2,3],[5,6],[8,9]],m=2,n=3));
+    assert(!is_matrix([[2,3,4],[5,6,7]],m=3,n=2));
+    assert(!is_matrix(undef));
+    assert(!is_matrix(NAN));
+    assert(!is_matrix(INF));
+    assert(!is_matrix(-5));
+    assert(!is_matrix(0));
+    assert(!is_matrix(5));
+    assert(!is_matrix(""));
+    assert(!is_matrix("foo"));
+    assert(!is_matrix([3,4,5]));
+    assert(!is_matrix([]));
+}
+test_is_matrix();
+
+
 module test_approx() {
     assert_equal(approx(PI, 3.141592653589793236), true);
     assert_equal(approx(PI, 3.1415926), false);
@@ -355,6 +379,19 @@ module test_mean() {
     assert_equal(mean([[1,2,3], [3,4,5], [5,6,7]]), [3,4,5]);
 }
 test_mean();
+
+
+module test_median() {
+    assert_equal(median([2,3,7]), 4.5);
+    assert_equal(median([[1,2,3], [3,4,5], [8,9,10]]), [4.5,5.5,6.5]);
+}
+test_median();
+
+
+module test_matrix_inverse() {
+    assert_approx(matrix_inverse(rot([20,30,40])), [[0.663413948169,0.556670399226,-0.5,0],[-0.47302145844,0.829769465589,0.296198132726,0],[0.579769465589,0.0400087565481,0.813797681349,0],[0,0,0,1]]);
+}
+test_matrix_inverse();
 
 
 module test_det2() {
