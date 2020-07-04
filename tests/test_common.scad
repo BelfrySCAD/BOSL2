@@ -133,6 +133,72 @@ module test_is_integer() {
 test_is_integer();
 
 
+module test_is_nan() {
+    assert(!is_nan(undef));
+    assert(!is_nan(true));
+    assert(!is_nan(false));
+    assert(!is_nan(-5));
+    assert(!is_nan(0));
+    assert(!is_nan(5));
+    assert(!is_nan(INF));
+    assert(!is_nan(-INF));
+    assert(!is_nan(""));
+    assert(!is_nan("foo"));
+    assert(!is_nan([]));
+    assert(!is_nan([3,4,5]));
+    assert(!is_nan([3:1:5]));
+    assert(is_nan(NAN));
+}
+test_is_nan();
+
+
+module test_is_range() {
+    assert(!is_range(undef));
+    assert(!is_range(true));
+    assert(!is_range(false));
+    assert(!is_range(-5));
+    assert(!is_range(0));
+    assert(!is_range(5));
+    assert(!is_range(INF));
+    assert(!is_range(-INF));
+    assert(!is_nan(NAN));
+    assert(!is_range(""));
+    assert(!is_range("foo"));
+    assert(!is_range([]));
+    assert(!is_range([3,4,5]));
+    assert(is_range([3:1:5]));
+}
+test_is_nan();
+
+
+module test_is_list_of() {
+    assert(is_list_of([3,4,5], 0));
+    assert(!is_list_of([3,4,undef], 0));
+    assert(is_list_of([[3,4],[4,5]], [1,1]));
+    assert(!is_list_of([[3,4], 6, [4,5]], [1,1]));
+    assert(is_list_of([[1,[3,4]], [4,[5,6]]], [1,[2,3]]));
+    assert(!is_list_of([[1,[3,INF]], [4,[5,6]]], [1,[2,3]]));
+}
+test_is_list_of();
+
+
+module test_is_consistent() {
+    assert(is_consistent([3,4,5]));
+    assert(is_consistent([[3,4],[4,5],[6,7]]));
+    assert(!is_consistent([[3,4,5],[3,4]]));
+    assert(is_consistent([[3,[3,4,[5]]], [5,[2,9,[9]]]]));
+    assert(!is_consistent([[3,[3,4,[5]]], [5,[2,9,9]]]));
+}
+test_is_consistent();
+
+
+module test_same_shape() {
+    assert(same_shape([3,[4,5]],[7,[3,4]]));
+    assert(!same_shape([3,4,5], [7,[3,4]]));
+}
+test_same_shape();
+
+
 module test_default() {
     assert(default(undef,23) == 23);
     assert(default(true,23) == true);
@@ -157,6 +223,15 @@ module test_first_defined() {
     assert(first_defined([[undef,undef],[undef,true],[false,undef]],recursive=true) == [undef, true]);
 }
 test_first_defined();
+
+
+module test_one_defined() {
+    assert_equal(one_defined([27,undef,undef], ["length","L","l"]) ,27);
+    assert_equal(one_defined([undef,28,undef], ["length","L","l"]) ,28);
+    assert_equal(one_defined([undef,undef,29], ["length","L","l"]) ,29);
+    assert_equal(one_defined([undef,undef,undef], ["length","L","l"], required=false), undef);
+}
+test_one_defined();
 
 
 module test_num_defined() {
@@ -208,6 +283,17 @@ module test_all_defined() {
     assert(!all_defined([undef,undef,true,false,undef]));
 }
 test_all_defined();
+
+
+module test_get_anchor() {
+    assert_equal(get_anchor(UP,true,ALLNEG,BOT),CENTER);
+    assert_equal(get_anchor(UP,false,ALLNEG,BOT),ALLNEG);
+    assert_equal(get_anchor(UP,undef,ALLNEG,BOT),UP);
+    assert_equal(get_anchor(undef,true,ALLNEG,BOT),CENTER);
+    assert_equal(get_anchor(undef,false,ALLNEG,BOT),ALLNEG);
+    assert_equal(get_anchor(undef,undef,ALLNEG,BOT),BOT);
+}
+test_get_anchor();
 
 
 module test_get_radius() {
