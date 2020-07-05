@@ -36,7 +36,7 @@ Or chamfer them:
     rect([60,40], center=true, chamfer=10);
 ```
 
-You can even specify *which* corners get rounded or chamferred.  If you pass a
+You can even specify *which* corners get rounded or chamfered.  If you pass a
 list of four size numbers to the `rounding=` or `chamfer=` arguments, it will
 give each corner its own size.  In order, it goes from the back-right (quadrant I)
 corner, counter-clockwise around to the back-left (quadrant II) corner, to the
