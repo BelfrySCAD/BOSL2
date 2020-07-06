@@ -494,11 +494,6 @@ module test_cleanup_path() {
 test_cleanup_path();
 
 
-// TODO: test path_self_intersections()
-// TODO: test decompose_path()
-// TODO: test path_subselect()
-
-
 module test_polygon_area() {
     assert(approx(polygon_area([[1,1],[-1,1],[-1,-1],[1,-1]]), 4));
     assert(approx(polygon_area(circle(r=50,$fn=1000)), -PI*50*50, eps=0.1));
@@ -569,9 +564,13 @@ module test_find_noncollinear_points() {
 test_find_noncollinear_points();
 
 
-// TODO: test centroid()
-// TODO: test assemble_a_path_from_fragments()
-// TODO: test assemble_path_fragments()
+module test_centroid() {
+    $fn = 24;
+    assert_approx(centroid(circle(d=100)), [0,0]);
+    assert_approx(centroid(rect([40,60],rounding=10,anchor=LEFT)), [20,0]);
+    assert_approx(centroid(rect([40,60],rounding=10,anchor=FWD)), [0,30]);
+}
+test_centroid();
 
 
 module test_simplify_path() {
@@ -691,21 +690,6 @@ module test_is_region() {
 }
 test_is_region();
 
-
-// TODO: test check_and_fix_path()
-// TODO: test cleanup_region()
-// TODO: test point_in_region()
-// TODO: test region_path_crossings()
-// TODO: test offset()
-// TODO: test split_path_at_self_crossings()
-// TODO: test split_path_at_region_crossings()
-// TODO: test union()
-// TODO: test difference()
-// TODO: test intersection()
-// TODO: test exclusive_or()
-
-
-cube();  // Prevents warning about no top-level geometry.
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
