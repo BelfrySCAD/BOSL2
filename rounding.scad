@@ -35,7 +35,7 @@ include <structs.scad>
 //   corner treatments that are the same size for all three methods.
 //   
 //   For circular rounding you can also use the `radius` parameter, which sets a circular rounding
-//   radius.  For chamfers and smooth rounding you can speicfy the `joint` parameter, which specifies the distance
+//   radius.  For chamfers and smooth rounding you can specify the `joint` parameter, which specifies the distance
 //   away from the corner along the path where the roundover or chamfer should start.  The figure below shows
 //   the cut and joint distances for a given roundover.
 //   
@@ -43,11 +43,11 @@ include <structs.scad>
 //   is.  This parameter, `k`, ranges from 0 to 1, with a default of 0.5.  Larger values give a more
 //   abrupt transition and smaller ones a more gradual transition.  If you set the value much higher
 //   than 0.8 the curvature changes abruptly enough that though it is theoretically continuous, it may
-//   not be continous in practice.  If you set it very small then the transition is so gradual that
+//   not be continuous in practice.  If you set it very small then the transition is so gradual that
 //   the length of the roundover may be extremely long.
 //   
 //   If you select curves that are too large to fit the function will fail with an error.  You can set `verbose=true` to
-//   get a message showing a list of scale factors you can apply to your rounding paramets so that the
+//   get a message showing a list of scale factors you can apply to your rounding parameters so that the
 //   roundovers will fit on the curve.  If the scale factors are larger than one
 //   then they indicate how much you can increase the curve sizes before collisions will occur.
 //   
@@ -94,11 +94,10 @@ include <structs.scad>
 //   verbose = if true display rounding scale factors that show how close roundovers are to overlapping.  Default: false
 //
 // Example(Med2D): Standard circular roundover with radius the same at every point. Compare results at the different corners.
-include<BOSL2/std.scad>
-   $fn=36;
-   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
-   polygon(round_corners(shape, radius=1));
-   color("red") down(.1) polygon(shape);
+//   $fn=36;
+//   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
+//   polygon(round_corners(shape, radius=1));
+//   color("red") down(.1) polygon(shape);
 // Example(Med2D): Circular roundover using the "cut" specification, the same at every corner.
 //   $fn=36;
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
@@ -476,7 +475,7 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 //   The offset profile is quantized to 1/1024 steps to avoid failures in offset() that can occur with very tiny offsets.
 //   
 //   The build-in profiles are: circular rounding, teardrop rounding, chamfer, continuous curvature rounding, and chamfer.
-//   Also note that when a rounding radius is negative the rounding will flare outwards.  The easieast way to specify
+//   Also note that when a rounding radius is negative the rounding will flare outwards.  The easiest way to specify
 //   the profile is by using the profile helper functions.  These functions take profile parameters, as well as some
 //   general settings and translate them into a profile specification, with error checking on your input.  The description below
 //   describes the helper functions and the parameters specific to each function.  Below that is a description of the generic
@@ -867,7 +866,7 @@ function os_profile(points, extra,check_valid, quality, offset_maxstep, offset) 
 //   unexpected results.
 //   
 //   The build-in profiles are: circular rounding, teardrop rounding, chamfer, continuous curvature rounding, and chamfer.
-//   Also note that when a rounding radius is negative the rounding will flare outwards.  The easieast way to specify
+//   Also note that when a rounding radius is negative the rounding will flare outwards.  The easiest way to specify
 //   the profile is by using the profile helper functions.  These functions take profile parameters, as well as some
 //   general settings and translate them into a profile specification, with error checking on your input.  The description below
 //   describes the helper functions and the parameters specific to each function.  Below that is a description of the generic
@@ -1071,8 +1070,8 @@ function _remove_undefined_vals(list) =
 //   width = width of the stroke, a scalar or a vector of 2 values giving the offset from the path.  Default: 1
 //   rounded = set to true to use rounded offsets, false to use sharp (delta) offsets.  Default: true
 //   chamfer = set to true to use chamfers when `rounded=false`.  Default: false
-//   start = end streatment for the start of the stroke.  See above for details.  Default: "flat"
-//   end = end streatment for the end of the stroke.  See above for details.  Default: "flat"
+//   start = end treatment for the start of the stroke.  See above for details.  Default: "flat"
+//   end = end treatment for the end of the stroke.  See above for details.  Default: "flat"
 //   check_valid = passed to offset().  Default: true
 //   quality = passed to offset().  Default: 1
 //   maxstep = passed to offset() to define number of points in the offset.  Default: 0.1
@@ -1411,11 +1410,11 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   vnf = rounded_prism(bottom, [top], joint_top, joint_bot, joint_sides, [k], [k_top], [k_bot], [k_sides], [splinesteps], [height|h|length|l], [debug])
 // Description:
 //   Construct a generalized prism with continuous curvature rounding.  You supply the polygons for the top and bottom of the prism.  The only
-//   limitation is that joining the edges must produce a valid polyhedron with coplaner side faces.  You specify the rounding by giving
+//   limitation is that joining the edges must produce a valid polyhedron with coplanar side faces.  You specify the rounding by giving
 //   the joint distance away from the corner for the rounding curve.  The k parameter ranges from 0 to 1 with a default of 0.5.  Larger
 //   values give a more abrupt transition and smaller ones a more gradual transition.  If you set the value much higher
 //   than 0.8 the curvature changes abruptly enough that though it is theoretically continuous, it may
-//   not be continous in practice.  A value of 0.92 is a good approximation to a circle.  If you set it very small then the transition
+//   not be continuous in practice.  A value of 0.92 is a good approximation to a circle.  If you set it very small then the transition
 //   is so gradual that the roundover may be very small.  If you want a very smooth roundover, set the joint parameter as large as possible and
 //   then adjust the k value down as low as gives a sufficiently large roundover.
 //   
