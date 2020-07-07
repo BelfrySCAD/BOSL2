@@ -478,7 +478,7 @@ function cumsum(v,_i=0,_acc=[]) =
 //   sum_of_squares([1,2,3]);  // Returns: 14.
 //   sum_of_squares([1,2,4]);  // Returns: 21
 //   sum_of_squares([-3,-2,-1]);  // Returns: 14
-function sum_of_squares(v, i=0, tot=0) = sum(vmul(v,v));
+function sum_of_squares(v) = sum(vmul(v,v));
 
 
 // Function: sum_of_sines()
@@ -634,7 +634,7 @@ function _qr_factor(A,Q, column, m, n) =
         x = [for(i=[column:1:m-1]) A[i][column]],
         alpha = (x[0]<=0 ? 1 : -1) * norm(x),
         u = x - concat([alpha],repeat(0,m-1)),
-        v = u / norm(u),
+        v = alpha==0 ? u : u / norm(u),
         Qc = ident(len(x)) - 2*transpose([v])*[v],
         Qf = [for(i=[0:m-1]) [for(j=[0:m-1]) i<column || j<column ? (i==j ? 1 : 0) : Qc[i-column][j-column]]]
     )
