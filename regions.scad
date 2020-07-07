@@ -337,15 +337,17 @@ function region_faces(region, transform, reverse=false, vnf=EMPTY_VNF) =
 //   mrgn = union(rgn1,rgn2);
 //   orgn = difference(mrgn,rgn3);
 //   linear_sweep(orgn,height=20,convexity=16) show_anchors();
-module linear_sweep(region, height=1, center=false, twist=0, scale=1, slices, maxseg, style="default", convexity, anchor_isect=false, anchor=BOT, spin=0, orient=UP) {
-    anchor = get_anchor(anchor, center, BOT, BOT);
+module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity, anchor_isect=false, anchor, spin=0, orient=UP) {
+    region = is_path(region)? [region] : region;
+    cp = median(flatten(region));
+    anchor = get_anchor(anchor, center, "origin", "origin");
     vnf = linear_sweep(
         region, height=height,
         twist=twist, scale=scale,
         slices=slices, maxseg=maxseg,
         style=style
     );
-    attachable(anchor,spin,orient, vnf=vnf, extent=!anchor_isect) {
+    attachable(anchor,spin,orient, cp=cp, vnf=vnf, extent=!anchor_isect) {
         vnf_polyhedron(vnf, convexity=convexity);
         children();
     }
@@ -355,10 +357,10 @@ module linear_sweep(region, height=1, center=false, twist=0, scale=1, slices, ma
 function linear_sweep(region, height=1, twist=0, scale=1, slices, maxseg, style="default") =
     let(
         region = is_path(region)? [region] : region,
+        regions = split_nested_region(region),
         slices = default(slices, floor(twist/5+1)),
         step = twist/slices,
         hstep = height/slices,
-        regions = split_nested_region(region),
         trgns = [
             for (rgn=regions) [
                 for (path=rgn) let(

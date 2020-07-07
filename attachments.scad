@@ -105,14 +105,14 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 // Function: attach_geom()
 //
 // Usage:
-//   geom = attach_geom(anchor, spin, [orient], two_d, size, [size2], [shift], [offset], [anchors]);
-//   geom = attach_geom(anchor, spin, [orient], two_d, r|d, [offset], [anchors]);
-//   geom = attach_geom(anchor, spin, [orient], two_d, path, [extent], [offset], [anchors]);
-//   geom = attach_geom(anchor, spin, [orient], size, [size2], [shift], [offset], [anchors]);
-//   geom = attach_geom(anchor, spin, [orient], r|d, l, [offset], [anchors]);
-//   geom = attach_geom(anchor, spin, [orient], r1|d1, r2|d2, l, [offset], [anchors]);
-//   geom = attach_geom(anchor, spin, [orient], r|d, [offset], [anchors]);
-//   geom = attach_geom(anchor, spin, [orient], vnf, [extent], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], two_d, size, [size2], [shift], [cp], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], two_d, r|d, [cp], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], two_d, path, [extent], [cp], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], size, [size2], [shift], [cp], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], r|d, l, [cp], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], r1|d1, r2|d2, l, [cp], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], r|d, [cp], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, [orient], vnf, [extent], [cp], [offset], [anchors]);
 //
 // Description:
 //   Given arguments that describe the geometry of an attachable object, returns the internal geometry description.
@@ -131,7 +131,8 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   path = The path to generate a polygon from.
 //   extent = If true, calculate anchors by extents, rather than intersection.  Default: true.
-//   offset = If given, offsets the center of the volume.
+//   cp = If given, specifies the centerpoint of the volume.  Default: `[0,0,0]`
+//   offset = If given, offsets the perimeter of the volume around the centerpoint.
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //
@@ -177,11 +178,13 @@ function attach_geom(
     r,r1,r2, d,d1,d2, l,h,
     vnf, path,
     extent=true,
+    cp=[0,0,0],
     offset=[0,0,0],
     anchors=[],
     two_d=false
 ) =
     assert(is_bool(extent))
+    assert(is_vector(cp))
     assert(is_vector(offset))
     assert(is_list(anchors))
     assert(is_bool(two_d))
@@ -194,7 +197,7 @@ function attach_geom(
             assert(is_vector(size,2))
             assert(is_num(size2))
             assert(is_num(shift))
-            ["rect", point2d(size), size2, shift, offset, anchors]
+            ["rect", point2d(size), size2, shift, cp, offset, anchors]
         ) : (
             let(
                 size2 = default(size2, point2d(size)),
@@ -203,18 +206,18 @@ function attach_geom(
             assert(is_vector(size,3))
             assert(is_vector(size2,2))
             assert(is_vector(shift,2))
-            ["cuboid", size, size2, shift, offset, anchors]
+            ["cuboid", size, size2, shift, cp, offset, anchors]
         )
     ) : !is_undef(vnf)? (
         assert(is_vnf(vnf))
         assert(two_d == false)
-        extent? ["vnf_extent", vnf, offset, anchors] :
-        ["vnf_isect", vnf, offset, anchors]
+        extent? ["vnf_extent", vnf, cp, offset, anchors] :
+        ["vnf_isect", vnf, cp, offset, anchors]
     ) : !is_undef(path)? (
         assert(is_path(path),2)
         assert(two_d == true)
-        extent? ["path_extent", path, offset, anchors] :
-        ["path_isect", path, offset, anchors]
+        extent? ["path_extent", path, cp, offset, anchors] :
+        ["path_isect", path, cp, offset, anchors]
     ) :
     let(
         r1 = get_radius(r1=r1,d1=d1,r=r,d=d,dflt=undef)
@@ -230,14 +233,14 @@ function attach_geom(
             assert(is_num(r2) || is_vector(r2,2))
             assert(is_num(l))
             assert(is_vector(shift,2))
-            ["cyl", r1, r2, l, shift, offset, anchors]
+            ["cyl", r1, r2, l, shift, cp, offset, anchors]
         ) : (
             two_d? (
                 assert(is_num(r1) || is_vector(r1,2))
-                ["circle", r1, offset, anchors]
+                ["circle", r1, cp, offset, anchors]
             ) : (
                 assert(is_num(r1) || is_vector(r1,3))
-                ["spheroid", r1, offset, anchors]
+                ["spheroid", r1, cp, offset, anchors]
             )
         )
     ) :
@@ -388,18 +391,20 @@ function attach_transform(anchor=CENTER, spin=0, orient=UP, geom, p) =
 //   geom = The geometry description of the shape.
 function find_anchor(anchor, geom) =
     let(
+        cp = select(geom,-3),
         offset = anchor==CENTER? CENTER : select(geom,-2),
         anchors = select(geom,-1),
         type = geom[0]
     )
     is_string(anchor)? (
+        anchor=="origin"? [anchor, CENTER, UP, 0] :
         let(found = search([anchor], anchors, num_returns_per_match=1)[0])
         assert(found!=[], str("Unknown anchor: ",anchor))
         anchors[found]
     ) :
     assert(is_vector(anchor),str("anchor=",anchor))
     let(anchor = point3d(anchor))
-    anchor==CENTER? [anchor, CENTER, UP, 0] :
+    anchor==CENTER? [anchor, cp, UP, 0] :
     let(
         oang = (
             approx(point2d(anchor), [0,0])? 0 :
@@ -414,9 +419,9 @@ function find_anchor(anchor, geom) =
             axy = point2d(anchor),
             bot = point3d(vmul(point2d(size)/2,axy),-h/2),
             top = point3d(vmul(point2d(size2)/2,axy)+shift,h/2),
-            pos = lerp(bot,top,u)+offset,
+            pos = point3d(cp) + lerp(bot,top,u) + offset,
             sidevec = unit(rot(from=UP, to=top-bot, p=point3d(axy))),
-            vvec = unit([0,0,anchor.z]),
+            vvec = anchor==CENTER? UP : unit([0,0,anchor.z]),
             vec = anchor==CENTER? UP :
                 approx(axy,[0,0])? unit(anchor) :
                 approx(anchor.z,0)? sidevec :
@@ -431,9 +436,9 @@ function find_anchor(anchor, geom) =
             axy = unit(point2d(anchor)),
             bot = point3d(vmul(r1,axy), -l/2),
             top = point3d(vmul(r2,axy)+shift, l/2),
-            pos = lerp(bot,top,u)+offset,
+            pos = point3d(cp) + lerp(bot,top,u) + offset,
             sidevec = rot(from=UP, to=top-bot, p=point3d(axy)),
-            vvec = unit([0,0,anchor.z]),
+            vvec = anchor==CENTER? UP : unit([0,0,anchor.z]),
             vec = anchor==CENTER? UP :
                 approx(axy,[0,0])? unit(anchor) :
                 approx(anchor.z,0)? sidevec :
@@ -443,16 +448,20 @@ function find_anchor(anchor, geom) =
         let(
             rr = geom[1],
             r = is_num(rr)? [rr,rr,rr] : rr,
-            anchor = unit(point3d(anchor))
-        ) [anchor, vmul(r,anchor)+offset, unit(vmul(r,anchor)), oang]
+            anchor = unit(point3d(anchor)),
+            pos = point3d(cp) + vmul(r,anchor) + offset,
+            vec = unit(vmul(r,anchor))
+        ) [anchor, pos, vec, oang]
     ) : type == "vnf_isect"? ( //vnf
         let(
             vnf=geom[1],
             eps = 1/2048,
-            rpts = rot(from=anchor, to=RIGHT, p=vnf[0]),
+            points = vnf[0],
+            faces = vnf[1],
+            rpts = rot(from=anchor, to=RIGHT, p=move(point3d(-cp), p=points)),
             hits = [
-                for (i = idx(vnf[1])) let(
-                    face = vnf[1][i],
+                for (i = idx(faces)) let(
+                    face = faces[i],
                     verts = select(rpts, face)
                 ) if (
                     max(subindex(verts,0)) >= -eps &&
@@ -462,22 +471,22 @@ function find_anchor(anchor, geom) =
                     min(subindex(verts,2)) <=  eps
                 ) let(
                     pt = polygon_line_intersection(
-                        select(vnf[0], face),
+                        select(points, face),
                         [CENTER,anchor], eps=eps
                     )
-                ) if (!is_undef(pt)) [norm(pt),i,pt]
+                ) if (!is_undef(pt)) [norm(pt), i, pt]
             ]
         )
         assert(len(hits)>0, "Anchor vector does not intersect with the shape.  Attachment failed.")
         let(
             furthest = max_index(subindex(hits,0)),
-            pos = hits[furthest][2],
+            pos = point3d(cp) + hits[furthest][2],
             dist = hits[furthest][0],
             nfaces = [for (hit = hits) if(approx(hit[0],dist,eps=eps)) hit[1]],
             n = unit(
                 sum([
                     for (i = nfaces) let(
-                        faceverts = select(vnf[0],vnf[1][i]),
+                        faceverts = select(points, faces[i]),
                         faceplane = plane_from_points(faceverts),
                         nrm = plane_normal(faceplane)
                     ) nrm
@@ -488,14 +497,14 @@ function find_anchor(anchor, geom) =
     ) : type == "vnf_extent"? ( //vnf
         let(
             vnf=geom[1],
-            rpts = rot(from=anchor, to=RIGHT, p=vnf[0]),
+            rpts = rot(from=anchor, to=RIGHT, p=move(point3d(-cp), p=vnf[0])),
             maxx = max(subindex(rpts,0)),
             idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
             mm = pointlist_bounds(select(rpts,idxs)),
             avgy = (mm[0].y+mm[1].y)/2,
             avgz = (mm[0].z+mm[1].z)/2,
             mpt = approx(point2d(anchor),[0,0])? [maxx,0,0] : [maxx, avgy, avgz],
-            pos = rot(from=RIGHT, to=anchor, p=mpt)
+            pos = point3d(cp) + rot(from=RIGHT, to=anchor, p=mpt)
         ) [anchor, pos, anchor, oang]
     ) : type == "rect"? ( //size, size2
         let(
@@ -503,18 +512,20 @@ function find_anchor(anchor, geom) =
             u = (anchor.y+1)/2,
             frpt = [size.x/2*anchor.x, -size.y/2],
             bkpt = [size2/2*anchor.x,  size.y/2],
-            pos = lerp(frpt, bkpt, u),
+            pos = point2d(cp) + lerp(frpt, bkpt, u) + offset,
             vec = unit(rot(from=BACK, to=bkpt-frpt, p=anchor))
         ) [anchor, pos, vec, 0]
     ) : type == "circle"? ( //r
         let(
             rr = geom[1],
             r = is_num(rr)? [rr,rr] : rr,
-            anchor = unit(point2d(anchor))
-        ) [anchor, vmul(r,anchor)+offset, unit(vmul([r.y,r.x],anchor)), 0]
+            pos = point2d(cp) + vmul(r,anchor) + offset,
+            anchor = unit(point2d(anchor)),
+            vec = unit(vmul([r.y,r.x],anchor))
+        ) [anchor, pos, vec, 0]
     ) : type == "path_isect"? ( //path
         let(
-            path=geom[1],
+            path = move(-point2d(cp), p=geom[1]),
             anchor = point2d(anchor),
             isects = [
                 for (t=triplet_wrap(path)) let(
@@ -530,20 +541,20 @@ function find_anchor(anchor, geom) =
             ],
             maxidx = max_index(subindex(isects,0)),
             isect = isects[maxidx],
-            pos = isect[1],
+            pos = point2d(cp) + isect[1],
             vec = unit(isect[2])
         ) [anchor, pos, vec, 0]
     ) : type == "path_extent"? ( //path
         let(
-            path=geom[1],
+            path = geom[1],
             anchor = point2d(anchor),
-            rpath = rot(from=anchor, to=RIGHT, p=path),
+            rpath = rot(from=anchor, to=RIGHT, p=move(point2d(-cp), p=path)),
             maxx = max(subindex(rpath,0)),
             idxs = [for (i = idx(rpath)) if (approx(rpath[i].x, maxx)) i],
             miny = min([for (i=idxs) rpath[i].y]),
             maxy = max([for (i=idxs) rpath[i].y]),
             avgy = (miny+maxy)/2,
-            pos = rot(from=RIGHT, to=anchor, p=[maxx,avgy])
+            pos = point2d(cp) + rot(from=RIGHT, to=anchor, p=[maxx,avgy])
         ) [anchor, pos, anchor, 0]
     ) :
     assert(false, "Unknown attachment geometry type.");
@@ -567,14 +578,14 @@ function attachment_is_shown(tags) =
 // Function: reorient()
 //
 // Usage:
-//   reorient(anchor, spin, [orient], two_d, size, [size2], [shift], [offset], [anchors], [p]);
-//   reorient(anchor, spin, [orient], two_d, r|d, [offset], [anchors], [p]);
-//   reorient(anchor, spin, [orient], two_d, path, [extent], [offset], [anchors], [p]);
-//   reorient(anchor, spin, [orient], size, [size2], [shift], [offset], [anchors], [p]);
-//   reorient(anchor, spin, [orient], r|d, l, [offset], [anchors], [p]);
-//   reorient(anchor, spin, [orient], r1|d1, r2|d2, l, [offset], [anchors], [p]);
-//   reorient(anchor, spin, [orient], r|d, [offset], [anchors], [p]);
-//   reorient(anchor, spin, [orient], vnf, [extent], [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], two_d, size, [size2], [shift], [cp], [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], two_d, r|d, [cp], [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], two_d, path, [extent], [cp], [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], size, [size2], [shift], [cp], [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], r|d, l, [offset], [cp], [anchors], [p]);
+//   reorient(anchor, spin, [orient], r1|d1, r2|d2, l, [cp], [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], r|d, [cp], [offset], [anchors], [p]);
+//   reorient(anchor, spin, [orient], vnf, [extent], [cp], [offset], [anchors], [p]);
 //
 // Description:
 //   Given anchor, spin, orient, and general geometry info for a managed volume, this calculates
@@ -615,7 +626,8 @@ function attachment_is_shown(tags) =
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   path = The path to generate a polygon from.
 //   extent = If true, calculate anchors by extents, rather than intersection.  Default: false.
-//   offset = If given, offsets the center of the volume.
+//   cp = If given, specifies the centerpoint of the volume.  Default: `[0,0,0]`
+//   offset = If given, offsets the perimeter of the volume around the centerpoint.
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //   p = The VNF, path, or point to transform.
@@ -628,6 +640,7 @@ function reorient(
     vnf, path,
     extent=true,
     offset=[0,0,0],
+    cp=[0,0,0],
     anchors=[],
     two_d=false,
     p=undef
@@ -637,7 +650,7 @@ function reorient(
         r=r, r1=r1, r2=r2, h=h,
         d=d, d1=d1, d2=d2, l=l,
         vnf=vnf, path=path, extent=extent,
-        offset=offset, anchors=anchors,
+        cp=cp, offset=offset, anchors=anchors,
         two_d=two_d
     ),
     $attach_to = undef
@@ -650,14 +663,14 @@ function reorient(
 // Module: attachable()
 //
 // Usage:
-//   attachable(anchor, spin, [orient], two_d, size, [size2], [shift], [offset], [anchors] ...
-//   attachable(anchor, spin, [orient], two_d, r|d, [offset], [anchors]) ...
-//   attachable(anchor, spin, [orient], two_d, path, [extent], [offset], [anchors] ...
-//   attachable(anchor, spin, [orient], size, [size2], [shift], [offset], [anchors] ...
-//   attachable(anchor, spin, [orient], r|d, l, [offset], [anchors]) ...
-//   attachable(anchor, spin, [orient], r1|d1, r2|d2, l, [offset], [anchors]) ...
-//   attachable(anchor, spin, [orient], r|d, [offset], [anchors]) ...
-//   attachable(anchor, spin, [orient], vnf, [extent], [offset], [anchors]) ...
+//   attachable(anchor, spin, [orient], two_d, size, [size2], [shift], [cp], [offset], [anchors] ...
+//   attachable(anchor, spin, [orient], two_d, r|d, [cp], [offset], [anchors]) ...
+//   attachable(anchor, spin, [orient], two_d, path, [extent], [cp], [offset], [anchors] ...
+//   attachable(anchor, spin, [orient], size, [size2], [shift], [cp], [offset], [anchors] ...
+//   attachable(anchor, spin, [orient], r|d, l, [cp], [offset], [anchors]) ...
+//   attachable(anchor, spin, [orient], r1|d1, r2|d2, l, [cp], [offset], [anchors]) ...
+//   attachable(anchor, spin, [orient], r|d, [cp], [offset], [anchors]) ...
+//   attachable(anchor, spin, [orient], vnf, [extent], [cp], [offset], [anchors]) ...
 //
 // Description:
 //   Manages the anchoring, spin, orientation, and attachments for a 3D volume or 2D area.
@@ -703,7 +716,8 @@ function reorient(
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   path = The path to generate a polygon from.
 //   extent = If true, calculate anchors by extents, rather than intersection.  Default: false.
-//   offset = If given, offsets the center of the volume.
+//   cp = If given, specifies the centerpoint of the volume.  Default: `[0,0,0]`
+//   offset = If given, offsets the perimeter of the volume around the centerpoint.
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
 //
@@ -791,6 +805,7 @@ module attachable(
     r,r1,r2, d,d1,d2, l,h,
     vnf, path,
     extent=true,
+    cp=[0,0,0],
     offset=[0,0,0],
     anchors=[],
     two_d=false
@@ -804,7 +819,7 @@ module attachable(
         r=r, r1=r1, r2=r2, h=h,
         d=d, d1=d1, d2=d2, l=l,
         vnf=vnf, path=path, extent=extent,
-        offset=offset, anchors=anchors,
+        cp=cp, offset=offset, anchors=anchors,
         two_d=two_d
     );
     m = attach_transform(anchor,spin,orient,geom);
