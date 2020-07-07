@@ -43,7 +43,7 @@ include <triangulation.scad>
 //   dim = list of allowed dimensions of the vectors in the path.  Default: [2,3]
 //   fast = set to true for fast check that only looks at first entry.  Default: false
 function is_path(list, dim=[2,3], fast=false) =
-    fast? is_list(list) && is_vector(list[0],fast=true) :
+    fast? is_list(list) && is_vector(list[0]) :
     is_list(list) && is_list(list[0]) && len(list)>1 &&
     (is_undef(dim) || in_list(len(list[0]), force_list(dim))) &&
     is_list_of(list, repeat(0,len(list[0])));

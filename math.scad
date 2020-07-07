@@ -733,14 +733,9 @@ function determinant(M) =
 //   m = optional height of matrix
 //   n = optional width of matrix
 //   square = set to true to require a square matrix.  Default: false        
-function is_matrix(A,m,n, square=false) =
-    is_list(A) && len(A)>0 &&
-    (is_undef(m) || len(A)==m) &&
-    is_vector(A[0]) &&
-    (is_undef(n) || len(A[0])==n) &&
-    (!square || n==m) &&
-    is_consistent(A);
-
+function is_matrix(A,n,m,square=false) =
+    is_vector(A[0],n) && is_vector(A*(0*A[0]),m) &&
+    (!square || len(A)==len(A[0]));
 
 
 // Section: Comparisons and Logic

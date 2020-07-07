@@ -82,6 +82,14 @@ function is_integer(n) = is_num(n) && n == round(n);
 function is_nan(x) = (x!=x);
 
 
+// Function: is_finite()
+// Usage:
+//   is_finite(x);
+// Description:
+//   Returns true if a given value `x` is a finite number.
+function is_finite(v) = is_num(0*v);
+
+
 // Function: is_range()
 // Description:
 //   Returns true if its argument is a range
