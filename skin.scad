@@ -25,7 +25,7 @@ include <vnf.scad>
 //   can be connected together.  Each profile should be roughly planar, but some variation is allowed.
 //   Each profile must rotate in the same clockwise direction.  If called as a function, returns a
 //   [VNF structure](vnf.scad) like `[VERTICES, FACES]`.  If called as a module, creates a polyhedron
-//    of the skined profiles.
+//    of the skinned profiles.
 //   
 //   The profiles can be specified either as a list of 3d curves or they can be specified as
 //   2d curves with heights given in the `z` parameter.  It is your responsibility to ensure
@@ -38,7 +38,7 @@ include <vnf.scad>
 //   Many interesting cases do not comply with this restriction.  Two basic methods can handle
 //   these cases: either add points to edges (resample) so that the profiles are compatible,
 //   or repeat vertices.  Repeating vertices allows two edges to terminate at the same point, creating
-//   triangular faces.  You can adjust non-matchines profiles yourself
+//   triangular faces.  You can adjust non-matching profiles yourself
 //   either by resampling them using `subdivide_path` or by duplicating vertices using
 //   `repeat_entries`.  It is OK to pass a profile that has the same vertex repeated, such as
 //   a square with 5 points (two of which are identical), so that it can match up to a pentagon.
@@ -47,12 +47,12 @@ include <vnf.scad>
 //   
 //   In order for skinned surfaces to look good it is usually necessary to use a fine sampling of
 //   points on all of the profiles, and a large number of extra interpolated slices between the
-//   profiles that you specify.  It is generally best if the triangules forming your polyhedron
+//   profiles that you specify.  It is generally best if the triangles forming your polyhedron
 //   are approximately equilateral.  The `slices` parameter specifies the number of slices to insert
 //   between each pair of profiles, either a scalar to insert the same number everywhere, or a vector
 //   to insert a different number between each pair.  To resample the profiles you can use set
 //   `refine=N` which will place `N` points on each edge of your profile.  This has the effect of
-//   muliplying the number of points by N, so a profile with 8 points will have 8*N points afer
+//   multiplying the number of points by N, so a profile with 8 points will have 8*N points after
 //   refinement.  Note that when dealing with continuous curves it is always better to adjust the
 //   sampling in your code to generate the desired sampling rather than using the `refine` argument.
 //   
@@ -62,7 +62,7 @@ include <vnf.scad>
 //   A uniform division may be impossible, in which case the code computes an approximation.
 //   See `subdivide_path` for more details.
 //    
-//   You can choose from four methods for specifying alignment for incomensurate profiles.
+//   You can choose from four methods for specifying alignment for incommensurate profiles.
 //   The available methods are `"distance"`, `"tangent"`, `"direct"` and `"reindex"`.
 //   It is useful to distinguish between continuous curves like a circle and discrete profiles
 //   like a hexagon or star, because the algorithms' suitability depend on this distinction.
@@ -724,8 +724,8 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
 //   Takes as input a list of polygons and duplicates specified vertices in each polygon in the list through the series so
 //   that the input can be passed to `skin()`.  This allows you to decide how the vertices are linked up rather than accepting
 //   the automatically computed minimal distance linkage.  However, the number of vertices in the polygons must not decrease in the list.
-//   The output is a list of polygons that all have the same number of vertices with some duplicates.  You specify the vertix splitting
-//   using the `split` which is a list where each entry corresponds to a polygon: split[i] is a value or list specfying which vertices in polygon i to split.
+//   The output is a list of polygons that all have the same number of vertices with some duplicates.  You specify the vertex splitting
+//   using the `split` which is a list where each entry corresponds to a polygon: split[i] is a value or list specifying which vertices in polygon i to split.
 //   Give the empty list if you don't want a split for a particular polygon.  If you list a vertex once then it will be split and mapped to
 //   two vertices in the next polygon.  If you list it N times then N copies will be created to map to N+1 vertices in the next polygon.
 //   You must ensure that each mapping produces the correct number of vertices to exactly map onto every vertex of the next polygon.
@@ -868,7 +868,7 @@ module sweep(shape, transformations, closed=false, caps, convexity=10) {
 //   the method calculates the required twist for a good match and distributes it over the whole model (as if you had specified a
 //   twist amount).  By default the end shape is required to match the starting shape exactly, but if your shape as rotational
 //   symmetry you can specify this using the `symmetry` argument, and then a smaller amount of twist is needed to make this adjustment.
-//   The symmetry argument gives the number of rotations that map the shape exatly onto itself, so a pentagon has 5-fold symmetry.
+//   The symmetry argument gives the number of rotations that map the shape exactly onto itself, so a pentagon has 5-fold symmetry.
 //   This argument is only valid for closed sweeps.  To start the algorithm, we need an initial condition.  This is supplied by
 //   using the `normal` argument to give a direction to align the Y axis of your shape.  By default the normal points UP if the path
 //   makes an angle of 45 deg or less with the xy plane and it points BACK if the path makes a higher angle with the XY plane.  You
