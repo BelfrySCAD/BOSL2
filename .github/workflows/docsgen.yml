@@ -47,6 +47,6 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
-        ./scripts/make_all_docs.sh -i && cd BOSL2.wiki && git add . && git commit -m "Wiki docs auto-regen." && git push --set-upstream https://${GH_PAT}@github.com/revarbat/BOSL2.wiki.git master
+        ./scripts/make_all_docs.sh -i && cd BOSL2.wiki && git add --all && ( git commit -m "Wiki docs auto-regen." && git push --set-upstream https://${GH_PAT}@github.com/revarbat/BOSL2.wiki.git master || true )
 
 
