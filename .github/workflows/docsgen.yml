@@ -1,0 +1,52 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push events but only for the master branch
+on:
+  push:
+    branches:
+      - master
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  GenerateDocs:
+    # The type of runner that the job will run on
+    runs-on: macos-10.15
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Wiki Checkout
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
+      run: |
+        cd $GITHUB_WORKSPACE
+        git clone https://${GH_PAT}@github.com/revarbat/BOSL2.wiki.git
+        cd BOSL2.wiki
+        git config user.name "revarbat"
+        git config user.email "revarbat@users.noreply.github.com"
+
+    - name: Install Pillow
+      run: sudo pip3 install Pillow
+
+    - name: Install OpenSCAD
+      run: |
+        curl -L -o OpenSCAD.dmg https://files.openscad.org/OpenSCAD-2019.05.dmg
+        hdiutil attach OpenSCAD.dmg
+        cp -a /Volumes/OpenSCAD/OpenSCAD.app /Applications/
+
+    - name: Generate Index
+      run: |
+        cd $GITHUB_WORKSPACE
+        ./scripts/genindex.sh
+
+    - name: Generating Docs
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
+      run: |
+        cd $GITHUB_WORKSPACE
+        export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
+        ./scripts/make_all_docs.sh -i && cd BOSL2.wiki && git add --all && ( git commit -m "Wiki docs auto-regen." && git push --set-upstream https://${GH_PAT}@github.com/revarbat/BOSL2.wiki.git master || true )
+
+
