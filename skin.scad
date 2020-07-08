@@ -415,8 +415,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
           )
           each subdivide_and_slice(pair,slices[i], nsamples, method=sampling)]
   )
-  vnf_vertex_array(full_list,cap1=fullcaps[0], col_wrap=true, cap2=fullcaps[1],style="alt");
-//  _skin_core(full_list, caps=fullcaps);
+  _skin_core(full_list, caps=fullcaps);
 
 
 
