@@ -420,12 +420,12 @@ function find_anchor(anchor, geom) =
             bot = point3d(vmul(point2d(size)/2,axy),-h/2),
             top = point3d(vmul(point2d(size2)/2,axy)+shift,h/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
-            sidevec = unit(rot(from=UP, to=top-bot, p=point3d(axy))),
+            sidevec = unit(rot(from=UP, to=top-bot, p=point3d(axy)),UP),
             vvec = anchor==CENTER? UP : unit([0,0,anchor.z]),
             vec = anchor==CENTER? UP :
-                approx(axy,[0,0])? unit(anchor) :
+                approx(axy,[0,0])? unit(anchor,UP) :
                 approx(anchor.z,0)? sidevec :
-                unit((sidevec+vvec)/2)
+                unit((sidevec+vvec)/2,UP)
         ) [anchor, pos, vec, oang]
     ) : type == "cyl"? ( //r1, r2, l, shift
         let(
@@ -433,24 +433,24 @@ function find_anchor(anchor, geom) =
             r1 = is_num(rr1)? [rr1,rr1] : rr1,
             r2 = is_num(rr2)? [rr2,rr2] : rr2,
             u = (anchor.z+1)/2,
-            axy = unit(point2d(anchor)),
+            axy = unit(point2d(anchor),[0,0]),
             bot = point3d(vmul(r1,axy), -l/2),
             top = point3d(vmul(r2,axy)+shift, l/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
             sidevec = rot(from=UP, to=top-bot, p=point3d(axy)),
-            vvec = anchor==CENTER? UP : unit([0,0,anchor.z]),
+            vvec = anchor==CENTER? UP : unit([0,0,anchor.z],UP),
             vec = anchor==CENTER? UP :
-                approx(axy,[0,0])? unit(anchor) :
+                approx(axy,[0,0])? unit(anchor,UP) :
                 approx(anchor.z,0)? sidevec :
-                unit((sidevec+vvec)/2)
+                unit((sidevec+vvec)/2,UP)
         ) [anchor, pos, vec, oang]
     ) : type == "spheroid"? ( //r
         let(
             rr = geom[1],
             r = is_num(rr)? [rr,rr,rr] : rr,
-            anchor = unit(point3d(anchor)),
+            anchor = unit(point3d(anchor),CENTER),
             pos = point3d(cp) + vmul(r,anchor) + offset,
-            vec = unit(vmul(r,anchor))
+            vec = unit(vmul(r,anchor),UP)
         ) [anchor, pos, vec, oang]
     ) : type == "vnf_isect"? ( //vnf
         let(
@@ -490,7 +490,8 @@ function find_anchor(anchor, geom) =
                         faceplane = plane_from_points(faceverts),
                         nrm = plane_normal(faceplane)
                     ) nrm
-                ]) / len(nfaces)
+                ]) / len(nfaces),
+                UP
             )
         )
         [anchor, pos, n, oang]
@@ -513,15 +514,15 @@ function find_anchor(anchor, geom) =
             frpt = [size.x/2*anchor.x, -size.y/2],
             bkpt = [size2/2*anchor.x,  size.y/2],
             pos = point2d(cp) + lerp(frpt, bkpt, u) + offset,
-            vec = unit(rot(from=BACK, to=bkpt-frpt, p=anchor))
+            vec = unit(rot(from=BACK, to=bkpt-frpt, p=anchor),[0,1])
         ) [anchor, pos, vec, 0]
     ) : type == "circle"? ( //r
         let(
             rr = geom[1],
             r = is_num(rr)? [rr,rr] : rr,
             pos = point2d(cp) + vmul(r,anchor) + offset,
-            anchor = unit(point2d(anchor)),
-            vec = unit(vmul([r.y,r.x],anchor))
+            anchor = unit(point2d(anchor),[0,0]),
+            vec = unit(vmul([r.y,r.x],anchor),[0,1])
         ) [anchor, pos, vec, 0]
     ) : type == "path_isect"? ( //path
         let(
@@ -534,7 +535,7 @@ function find_anchor(anchor, geom) =
                     isect = ray_segment_intersection([[0,0],anchor], seg1),
                     n = is_undef(isect)? [0,1] :
                         !approx(isect, t[1])? line_normal(seg1) :
-                        unit((line_normal(seg1)+line_normal(seg2))/2),
+                        unit((line_normal(seg1)+line_normal(seg2))/2,[0,1]),
                     n2 = vector_angle(anchor,n)>90? -n : n
                 )
                 if(!is_undef(isect) && !approx(isect,t[0])) [norm(isect), isect, n2]
@@ -542,7 +543,7 @@ function find_anchor(anchor, geom) =
             maxidx = max_index(subindex(isects,0)),
             isect = isects[maxidx],
             pos = point2d(cp) + isect[1],
-            vec = unit(isect[2])
+            vec = unit(isect[2],[0,1])
         ) [anchor, pos, vec, 0]
     ) : type == "path_extent"? ( //path
         let(
