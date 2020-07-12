@@ -105,18 +105,25 @@ function vceil(v) = [for (x=v) ceil(x)];
 
 
 // Function: unit()
+// Usage:
+//   unit(v, [error]);
 // Description:
-//   Returns unit length normalized version of vector v.
-//   If passed a zero-length vector, returns the unchanged vector.
+//   Returns the unit length normalized version of vector v.  If passed a zero-length vector,
+//   asserts an error unless `error` is given, in which case the value of `error` is returned.
 // Arguments:
 //   v = The vector to normalize.
+//   error = If given, and input is a zero-length vector, this value is returned.  Default: Assert error on zero-length vector.
 // Examples:
 //   unit([10,0,0]);   // Returns: [1,0,0]
 //   unit([0,10,0]);   // Returns: [0,1,0]
 //   unit([0,0,10]);   // Returns: [0,0,1]
 //   unit([0,-10,0]);  // Returns: [0,-1,0]
-//   unit([0,0,0]);    // Returns: [0,0,0]
-function unit(v) = assert(is_vector(v),str(v)) norm(v)<=EPSILON? v : v/norm(v);
+//   unit([0,0,0],[1,2,3]);    // Returns: [1,2,3]
+//   unit([0,0,0]);    // Asserts an error.
+function unit(v, error=[[["ASSERT"]]]) =
+    assert(is_vector(v), str("Expected a vector.  Got: ",v))
+    norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON) : error) :
+    v/norm(v);
 
 
 // Function: vector_angle()
