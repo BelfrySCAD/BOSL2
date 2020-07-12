@@ -106,13 +106,13 @@ function vceil(v) = [for (x=v) ceil(x)];
 
 // Function: unit()
 // Usage:
-//   unit(v, [dflt]);
+//   unit(v, [error]);
 // Description:
-//   Returns unit length normalized version of vector v.  If passed a zero-length vector,
-//   asserts an error unless `dflt` is given, in which case the value of `dflt` is returned.
+//   Returns the unit length normalized version of vector v.  If passed a zero-length vector,
+//   asserts an error unless `error` is given, in which case the value of `error` is returned.
 // Arguments:
 //   v = The vector to normalize.
-//   dflt = If given, and input is a zero-length vector, this value is returned.  Default: `undef` (assert error on zero-length vector)
+//   error = If given, and input is a zero-length vector, this value is returned.  Default: Assert error on zero-length vector.
 // Examples:
 //   unit([10,0,0]);   // Returns: [1,0,0]
 //   unit([0,10,0]);   // Returns: [0,1,0]
@@ -120,9 +120,9 @@ function vceil(v) = [for (x=v) ceil(x)];
 //   unit([0,-10,0]);  // Returns: [0,-1,0]
 //   unit([0,0,0],[1,2,3]);    // Returns: [1,2,3]
 //   unit([0,0,0]);    // Asserts an error.
-function unit(v, dflt) =
+function unit(v, error=[[["ASSERT"]]]) =
     assert(is_vector(v), str("Expected a vector.  Got: ",v))
-    norm(v)<EPSILON? (is_undef(dflt)? assert(norm(v)>=EPSILON) : dflt) :
+    norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON) : error) :
     v/norm(v);
 
 
