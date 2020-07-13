@@ -76,6 +76,12 @@ module test_is_matrix() {
     assert(is_matrix([[2,3,4],[5,6,7],[8,9,10]],square=false));
     assert(is_matrix([[2,3],[5,6],[8,9]],m=3,n=2));
     assert(is_matrix([[2,3,4],[5,6,7]],m=2,n=3));
+    assert(is_matrix([[2,3,4],[5,6,7]],2,3));
+    assert(is_matrix([[2,3,4],[5,6,7]],m=2));
+    assert(is_matrix([[2,3,4],[5,6,7]],2));
+    assert(is_matrix([[2,3,4],[5,6,7]],n=3));
+    assert(!is_matrix([[2,3,4],[5,6,7]],m=4));
+    assert(!is_matrix([[2,3,4],[5,6,7]],n=5));
     assert(!is_matrix([[2,3,4],[5,6,7]],m=2,n=3,square=true));
     assert(is_matrix([[2,3,4],[5,6,7],[8,9,10]],square=false));
     assert(!is_matrix([[2,3],[5,6],[8,9]],m=2,n=3));
@@ -181,6 +187,9 @@ module test_sqr() {
     assert_equal(sqr(2.5), 6.25);
     assert_equal(sqr(3), 9);
     assert_equal(sqr(16), 256);
+    assert_equal(sqr([2,3,4]), [4,9,16]);
+    assert_equal(sqr([[2,3,4],[3,5,7]]), [[4,9,16],[9,25,49]]);
+    assert_equal(sqr([]),[]);
 }
 test_sqr();
 
@@ -525,6 +534,9 @@ module test_any() {
     assert_equal(any([1,5,true]), true);
     assert_equal(any([[0,0], [0,0]]), false);
     assert_equal(any([[0,0], [1,0]]), true);
+    assert_equal(any([[false,false],[[false,[false],[[[true]]]],false],[false,false]]), true);
+    assert_equal(any([[false,false],[[false,[false],[[[false]]]],false],[false,false]]), false);
+    assert_equal(any([]), false);
 }
 test_any();
 
@@ -536,6 +548,9 @@ module test_all() {
     assert_equal(all([[0,0], [0,0]]), false);
     assert_equal(all([[0,0], [1,0]]), false);
     assert_equal(all([[1,1], [1,1]]), true);
+    assert_equal(all([[true,true],[[true,[true],[[[true]]]],true],[true,true]]), true);    
+    assert_equal(all([[true,true],[[true,[true],[[[false]]]],true],[true,true]]), false);
+    assert_equal(all([]), true);
 }
 test_all();
 
@@ -554,6 +569,7 @@ test_count_true();
 
 
 module test_factorial() {
+    assert_equal(factorial(0), 1);
     assert_equal(factorial(1), 1);
     assert_equal(factorial(2), 2);
     assert_equal(factorial(3), 6);
@@ -562,6 +578,8 @@ module test_factorial() {
     assert_equal(factorial(6), 720);
     assert_equal(factorial(7), 5040);
     assert_equal(factorial(8), 40320);
+    assert_equal(factorial(25,21), 303600);
+    assert_equal(factorial(25,25), 1);
 }
 test_factorial();
 
@@ -570,6 +588,11 @@ module test_gcd() {
     assert_equal(gcd(15,25), 5);
     assert_equal(gcd(15,27), 3);
     assert_equal(gcd(270,405), 135);
+    assert_equal(gcd(39, 101),1);
+    assert_equal(gcd(15,-25), 5);
+    assert_equal(gcd(-15,25), 5);
+    assert_equal(gcd(5,0),5);
+    assert_equal(gcd(0,5),5);
 }
 test_gcd();
 
@@ -578,9 +601,306 @@ module test_lcm() {
     assert_equal(lcm(15,25), 75);
     assert_equal(lcm(15,27), 135);
     assert_equal(lcm(270,405), 810);
+    assert_equal(lcm([3,5,15,25,35]),525);
 }
 test_lcm();
 
 
+module test_C_times() {
+    assert_equal(C_times([4,5],[9,-4]), [56,29]);
+    assert_equal(C_times([-7,2],[24,3]), [-174, 27]);
+}
+test_C_times();
+
+
+module test_C_div() {
+    assert_equal(C_div([56,29],[9,-4]), [4,5]);
+    assert_equal(C_div([-174,27],[-7,2]), [24,3]);
+}    
+test_C_div();
+
+
+module test_back_substitute(){
+   R = [[12,4,3,2],
+        [0,2,-4,2],
+        [0,0,4,5],
+        [0,0,0,15]];
+   assert_approx(back_substitute(R, [1,2,3,3]), [-0.675, 1.8, 0.5, 0.2]);
+   assert_approx(back_substitute(R, [6, 3, 3.5, 37], transpose=true), [0.5, 0.5, 1, 2]);
+   assert_approx(back_substitute(R, [[38,101],[-6,-16], [31, 71], [45, 105]]), [[1, 4],[2,3],[4,9],[3,7]]);
+   assert_approx(back_substitute(R, [[12,48],[8,22],[11,36],[71,164]],transpose=true), [[1, 4],[2,3],[4,9],[3,7]]);
+   assert_approx(back_substitute([[2]], [4]), [2]);
+   sing1 =[[0,4,3,2],
+         [0,3,-4,2],
+         [0,0,4,5],
+         [0,0,0,15]];
+   sing2 =[[12,4,3,2],
+         [0,0,-4,2],
+         [0,0,4,5],
+         [0,0,0,15]];
+   sing3 = [[12,4,3,2],
+        [0,2,-4,2],
+        [0,0,4,5],
+        [0,0,0,0]];
+   assert_approx(back_substitute(sing1, [1,2,3,4]), []);
+   assert_approx(back_substitute(sing2, [1,2,3,4]), []);
+   assert_approx(back_substitute(sing3, [1,2,3,4]), []);
+}
+test_back_substitute();
+
+
+
+module test_linear_solve(){
+  M = [[-2,-5,-1,3],
+       [3,7,6,2],
+       [6,5,-1,-6],
+       [-7,1,2,3]];
+  assert_approx(linear_solve(M, [-3,43,-11,13]), [1,2,3,4]);
+  assert_approx(linear_solve(M, [[-5,8],[18,-61],[4,7],[-1,-12]]), [[1,-2],[1,-3],[1,-4],[1,-5]]);
+  assert_approx(linear_solve([[2]],[4]), [2]);
+  assert_approx(linear_solve([[2]],[[4,8]]), [[2, 4]]);
+  assert_approx(linear_solve(select(M,0,2), [2,4,4]), [   2.254871220604705e+00,
+                                                         -8.378819388897780e-01,
+                                                          2.330507118860985e-01,
+                                                          8.511278195488737e-01]);
+  assert_approx(linear_solve(subindex(M,[0:2]), [2,4,4,4]),
+                 [-2.457142857142859e-01,
+                   5.200000000000000e-01,
+                   7.428571428571396e-02]);
+  assert_approx(linear_solve([[1,2,3,4]], [2]), [0.066666666666666, 0.13333333333, 0.2, 0.266666666666]);
+  assert_approx(linear_solve([[1],[2],[3],[4]], [4,3,2,1]), [2/3]);
+  rd = [[-2,-5,-1,3],
+        [3,7,6,2],
+        [3,7,6,2],
+        [-7,1,2,3]];
+  assert_equal(linear_solve(rd,[1,2,3,4]),[]);
+  assert_equal(linear_solve(select(rd,0,2), [2,4,4]), []);
+  assert_equal(linear_solve(transpose(select(rd,0,2)), [2,4,3,4]), []);
+}
+test_linear_solve();
+
+
+module test_outer_product(){
+  assert_equal(outer_product([1,2,3],[4,5,6]), [[4,5,6],[8,10,12],[12,15,18]]);
+  assert_equal(outer_product([9],[7]), [[63]]);
+}
+test_outer_product();
+
+
+module test_deriv(){
+  pent = [for(x=[0:70:359]) [cos(x), sin(x)]];
+  assert_approx(deriv(pent,closed=true), 
+        [[-0.321393804843,0.556670399226],
+         [-0.883022221559,0.321393804843],
+         [-0.604022773555,-0.719846310393],
+         [0.469846310393,-0.813797681349],
+         [0.925416578398,0.163175911167],
+         [0.413175911167,0.492403876506]]);
+  assert_approx(deriv(pent,closed=true,h=2), 
+     0.5*[[-0.321393804843,0.556670399226],
+         [-0.883022221559,0.321393804843],
+         [-0.604022773555,-0.719846310393],
+         [0.469846310393,-0.813797681349],
+         [0.925416578398,0.163175911167],
+         [0.413175911167,0.492403876506]]);
+  assert_approx(deriv(pent,closed=false),
+        [[-0.432937491789,1.55799143673],
+         [-0.883022221559,0.321393804843],
+         [-0.604022773555,-0.719846310393],
+         [0.469846310393,-0.813797681349],
+         [0.925416578398,0.163175911167],
+         [0.696902572292,1.45914323952]]);
+  spent = yscale(8,pent);
+  lens = path_segment_lengths(spent,closed=true);
+  assert_approx(deriv(spent, closed=true, h=lens),
+         [[-0.0381285841663,0.998065839726],
+          [-0.254979378104,0.0449763331253],
+          [-0.216850793938,-0.953089506601],
+          [0.123993253223,-0.982919228715],
+          [0.191478335034,0.0131898128456],
+          [0.0674850818111,0.996109041561]]);
+  assert_approx(deriv(spent, closed=false, h=select(lens,0,-2)),
+         [[-0.0871925973657,0.996191473044],
+          [-0.254979378104,0.0449763331253],
+          [-0.216850793938,-0.953089506601],
+          [0.123993253223,-0.982919228715],
+          [0.191478335034,0.0131898128456],
+          [0.124034734589,0.992277876714]]);
+}
+test_deriv();
+
+
+module test_deriv2(){
+    oct = [for(x=[0:45:359]) [cos(x), sin(x)]];
+    assert_approx(deriv2(oct),
+           [[-0.828427124746,0.0719095841794],[-0.414213562373,-0.414213562373],[0,-0.585786437627],
+            [0.414213562373,-0.414213562373],[0.585786437627,0],[0.414213562373,0.414213562373],
+            [0,0.585786437627],[-0.636634192232,0.534938683021]]);
+    assert_approx(deriv2(oct,closed=false),
+           [[-0.828427124746,0.0719095841794],[-0.414213562373,-0.414213562373],[0,-0.585786437627],
+            [0.414213562373,-0.414213562373],[0.585786437627,0],[0.414213562373,0.414213562373],
+            [0,0.585786437627],[-0.636634192232,0.534938683021]]);
+    assert_approx(deriv2(oct,closed=true),
+           [[-0.585786437627,0],[-0.414213562373,-0.414213562373],[0,-0.585786437627],
+            [0.414213562373,-0.414213562373],[0.585786437627,0],[0.414213562373,0.414213562373],
+            [0,0.585786437627],[-0.414213562373,0.414213562373]]);
+    assert_approx(deriv2(oct,closed=false,h=2),
+         0.25*[[-0.828427124746,0.0719095841794],[-0.414213562373,-0.414213562373],[0,-0.585786437627],
+            [0.414213562373,-0.414213562373],[0.585786437627,0],[0.414213562373,0.414213562373],
+            [0,0.585786437627],[-0.636634192232,0.534938683021]]);
+    assert_approx(deriv2(oct,closed=true,h=2),
+         0.25* [[-0.585786437627,0],[-0.414213562373,-0.414213562373],[0,-0.585786437627],
+            [0.414213562373,-0.414213562373],[0.585786437627,0],[0.414213562373,0.414213562373],
+            [0,0.585786437627],[-0.414213562373,0.414213562373]]);
+}
+test_deriv2();
+
+
+module test_deriv3(){
+    oct = [for(x=[0:45:359]) [cos(x), sin(x)]];
+    assert_approx(deriv3(oct),
+           [[0.414213562373,-0.686291501015],[0.414213562373,-0.343145750508],[0.414213562373,0],
+            [0.292893218813,0.292893218813],[0,0.414213562373],[-0.292893218813,0.292893218813],
+            [-0.535533905933,0.0502525316942],[-0.778174593052,-0.192388155425]]);
+    assert_approx(deriv3(oct,closed=false),
+           [[0.414213562373,-0.686291501015],[0.414213562373,-0.343145750508],[0.414213562373,0],
+            [0.292893218813,0.292893218813],[0,0.414213562373],[-0.292893218813,0.292893218813],
+            [-0.535533905933,0.0502525316942],[-0.778174593052,-0.192388155425]]);
+    assert_approx(deriv3(oct,closed=false,h=2),
+           [[0.414213562373,-0.686291501015],[0.414213562373,-0.343145750508],[0.414213562373,0],
+            [0.292893218813,0.292893218813],[0,0.414213562373],[-0.292893218813,0.292893218813],
+            [-0.535533905933,0.0502525316942],[-0.778174593052,-0.192388155425]]/8);
+    assert_approx(deriv3(oct,closed=true),
+           [[0,-0.414213562373],[0.292893218813,-0.292893218813],[0.414213562373,0],[0.292893218813,0.292893218813],
+            [0,0.414213562373],[-0.292893218813,0.292893218813],[-0.414213562373,0],[-0.292893218813,-0.292893218813]]);
+    assert_approx(deriv3(oct,closed=true,h=2),
+           [[0,-0.414213562373],[0.292893218813,-0.292893218813],[0.414213562373,0],[0.292893218813,0.292893218813],
+            [0,0.414213562373],[-0.292893218813,0.292893218813],[-0.414213562373,0],[-0.292893218813,-0.292893218813]]/8);
+}
+test_deriv3();
+  
+
+
+module test_polynomial(){
+  assert_equal(polynomial([],12),0);
+  assert_equal(polynomial([],[12,4]),[0,0]);
+  assert_equal(polynomial([1,2,3,4],3),58);
+  assert_equal(polynomial([1,2,3,4],[3,-1]),[47,-41]);
+  assert_equal(polynomial([0,0,2],4),2);
+}
+test_polynomial();
+
+
+module test_poly_roots(){
+   // Fifth roots of unity
+   assert_approx(
+        poly_roots([1,0,0,0,0,-1]),
+        [[1,0],[0.309016994375,0.951056516295],[-0.809016994375,0.587785252292],
+         [-0.809016994375,-0.587785252292],[0.309016994375,-0.951056516295]]);
+   assert_approx(poly_roots(poly_mult([[1,-2,5],[12,-24,24],[-2, -12, -20],[1,-10,50]])),
+               [[1, 1], [5, 5], [1, 2], [-3, 1], [-3, -1], [1, -1], [1, -2], [5, -5]]);
+   assert_approx(poly_roots([.124,.231,.942, -.334]),
+                 [[0.3242874219074053,0],[-1.093595323856930,2.666477428660098], [-1.093595323856930,-2.666477428660098]]);
+}
+test_poly_roots();
+
+module test_real_roots(){
+   // Wilkinson polynomial is a nasty test:
+   assert_approx(
+       sort(real_roots(poly_mult([[1,-1],[1,-2],[1,-3],[1,-4],[1,-5],[1,-6],[1,-7],[1,-8],[1,-9],[1,-10]]))),
+       list_range(n=10,s=1));
+   assert_equal(real_roots([3]), []);
+   assert_equal(real_roots(poly_mult([[1,-2,5],[12,-24,24],[-2, -12, -20],[1,-10,50]])),[]);
+   assert_equal(real_roots(poly_mult([[1,-2,5],[12,-24,24],[-2, -12, -20],[1,-10,50],[1,0,0]])),[0,0]);
+   assert_approx(real_roots(poly_mult([[1,-2,5],[12,-24,24],[-2, -12, -20],[1,-10,50],[1,4]])),[-4]);
+   assert(approx(real_roots([1,-10,25]),[5,5],eps=5e-6));
+   assert_approx(real_roots([4,-3]), [0.75]);
+   assert_approx(real_roots([0,0,0,4,-3]), [0.75]);
+}
+test_real_roots();
+
+// Need decision about behavior for out of bounds ranges, empty ranges
+module test_submatrix(){
+  M = [[1,2,3,4,5],
+       [6,7,8,9,10],
+       [11,12,13,14,15],
+       [16,17,18,19,20],
+       [21,22,23,24,25]];
+  assert_equal(submatrix(M,[1:2], [3:4]), [[9,10],[14,15]]);
+  assert_equal(submatrix(M,[1], [3,4]), [[9,10]]);
+  assert_equal(submatrix(M,1, [3,4]), [[9,10]]);
+  assert_equal(submatrix(M, [3,4],1), [[17],[22]]);
+  assert_equal(submatrix(M, [1,3],[2,4]), [[8,10],[18,20]]);
+}
+test_submatrix();
+
+
+
+module test_qr_factor() {
+  // Check that R is upper triangular
+  function is_ut(R) =
+     let(bad = [for(i=[1:1:len(R)-1], j=[0:min(i-1, len(R[0])-1)]) if (!approx(R[i][j],0)) 1])
+     bad == [];
+
+  // Test the R is upper trianglar, Q is orthogonal and qr=M
+  function qrok(qr,M) =
+     is_ut(qr[1]) && approx(qr[0]*transpose(qr[0]), ident(len(qr[0]))) && approx(qr[0]*qr[1],M);
+  
+  M = [[1,2,9,4,5],
+       [6,7,8,19,10],
+       [11,12,13,14,15],
+       [1,17,18,19,20],
+       [21,22,10,24,25]];
+  
+  assert(qrok(qr_factor(M),M));
+  assert(qrok(qr_factor(select(M,0,3)),select(M,0,3)));
+  assert(qrok(qr_factor(transpose(select(M,0,3))),transpose(select(M,0,3))));
+
+  A = [[1,2,9,4,5],
+       [6,7,8,19,10],
+       [0,0,0,0,0],
+       [1,17,18,19,20],
+       [21,22,10,24,25]];
+  assert(qrok(qr_factor(A),A));
+
+  B = [[1,2,0,4,5],
+       [6,7,0,19,10],
+       [0,0,0,0,0],
+       [1,17,0,19,20],
+       [21,22,0,24,25]];
+
+  assert(qrok(qr_factor(B),B));
+  assert(qrok(qr_factor([[7]]), [[7]]));
+  assert(qrok(qr_factor([[1,2,3]]), [[1,2,3]]));
+  assert(qrok(qr_factor([[1],[2],[3]]), [[1],[2],[3]]));
+}
+test_qr_factor();
+
+
+module test_poly_mult(){
+  assert_equal(poly_mult([3,2,1],[4,5,6,7]),[12,23,32,38,20,7]);
+  assert_equal(poly_mult([3,2,1],[]),[]);
+  assert_equal(poly_mult([[1,2],[3,4],[5,6]]), [15,68,100,48]);
+  assert_equal(poly_mult([[1,2],[],[5,6]]), []);
+  assert_equal(poly_mult([[3,4,5],[0,0,0]]),[]);
+}
+test_poly_mult();
+
+ 
+module test_poly_div(){
+  assert_equal(poly_div(poly_mult([4,3,3,2],[2,1,3]), [2,1,3]),[[4,3,3,2],[]]);
+  assert_equal(poly_div([1,2,3,4],[1,2,3,4,5]), [[], [1,2,3,4]]);
+  assert_equal(poly_div(poly_add(poly_mult([1,2,3,4],[2,0,2]), [1,1,2]), [1,2,3,4]), [[2,0,2],[1,1,2]]);
+  assert_equal(poly_div([1,2,3,4], [1,-3]), [[1,5,18],[58]]);
+}
+test_poly_div();
+
+
+module test_poly_add(){
+  assert_equal(poly_add([2,3,4],[3,4,5,6]),[3,6,8,10]);
+  assert_equal(poly_add([1,2,3,4],[-1,-2,3,4]), [6,8]);
+  assert_equal(poly_add([1,2,3],-[1,2,3]),[]);
+}
+test_poly_add();
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
