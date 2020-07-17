@@ -614,7 +614,7 @@ function Q_Squad(q1,q2,q3,q4,u) =
          "Invalid interpolation coefficient(s)" )
   is_num(u)
   ? Q_Slerp( Q_Slerp(q1,q4,u), Q_Slerp(q2,q3,u), 2*u*(1-u))
-  : [for(ui=u) Q_Slerp( Q_Slerp(q1,q4,ui), Q_Slerp(q2,q3,ui), 2*ui*(1-ui) ]);
+  : [for(ui=u) Q_Slerp( Q_Slerp(q1,q4,ui), Q_Slerp(q2,q3,ui), 2*ui*(1-ui) ) ];
 
 
 // Function: Q_exp()
