@@ -319,7 +319,7 @@ function Q_Dist(q1, q2) =
 //   #sphere(r=80);
 function Q_Slerp(q1, q2, u, _dot) =
   is_undef(_dot)
-  ? assert(is_num(u) || is_num(0*u*u), "Invalid interpolation coefficient(s)")
+  ? assert(is_num(u) || is_range(u) || is_num(0*u*u), "Invalid interpolation coefficient(s)")
     assert(Q_is_quat(q1) && Q_is_quat(q2), "Invalid quaternion(s)" )
     let(
       _dot  = q1*q2,
@@ -522,7 +522,6 @@ function Q_Rotation_path(q1, n=1, q2) =
   ? [for( i=0, dR=Q_Matrix4(q1), R=dR; i<=n; i=i+1, R=dR*R ) R]
   : let( q2 = Q_Normalize( q1*q2<0 ? -q2: q2 ) )
     let( dq = Q_pow( Q_Mul( q2, Q_Inverse(q1) ), 1/n ),
-//    let( dq = Q_Mul( Q_Slerp(q1,q2, 1/n ), Q_Inverse(q1) ),
          dR = Q_Matrix4(dq) )
     [for( i=0, R=Q_Matrix4(q1); i<=n; i=i+1, R=dR*R ) R];
 
@@ -562,7 +561,7 @@ module Q_Rotation_path(q1, n=1, q2) {
 function Q_Nlerp(q1,q2,u) =
   assert(Q_is_quat(q1) && Q_is_quat(q2), "Invalid quaternion(s)" )
   assert( ! approx(norm(q1+q2),0), "Quaternions cannot be opposed" )
-  assert(is_num(0*u) || (is_list(u) && is_num(0*u*u)) ,
+  assert(is_num(0*u) || is_range(u) || (is_list(u) && is_num(0*u*u)) ,
          "Invalid interpolation coefficient(s)" )
   let( q1  = Q_Normalize(q1),
        q2  = Q_Normalize(q2) )
@@ -611,7 +610,11 @@ function Q_Nlerp(q1,q2,u) =
 //       Qrot(q) right(80) cube([10,10,1]);
 //   #sphere(r=80);
 function Q_Squad(q1,q2,q3,q4,u) =
-  Q_Slerp( Q_Slerp(q1,q4,u), Q_Slerp(q2,q3,u), 2*u*(1-u));
+  assert(is_num(0*u) || is_range(u) || (is_list(u) && is_num(0*u*u)) ,
+         "Invalid interpolation coefficient(s)" )
+	is_num(u)
+  ? Q_Slerp( Q_Slerp(q1,q4,u), Q_Slerp(q2,q3,u), 2*u*(1-u))
+	: Q_Slerp( Q_Slerp(q1,q4,u), Q_Slerp(q2,q3,u), [for(ui=u) 2*ui*(1-ui)]);
 
 
 // Function: Q_exp()
