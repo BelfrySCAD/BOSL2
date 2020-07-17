@@ -612,9 +612,9 @@ function Q_Nlerp(q1,q2,u) =
 function Q_Squad(q1,q2,q3,q4,u) =
   assert(is_num(0*u) || is_range(u) || (is_list(u) && is_num(0*u*u)) ,
          "Invalid interpolation coefficient(s)" )
-	is_num(u)
+  is_num(u)
   ? Q_Slerp( Q_Slerp(q1,q4,u), Q_Slerp(q2,q3,u), 2*u*(1-u))
-	: Q_Slerp( Q_Slerp(q1,q4,u), Q_Slerp(q2,q3,u), [for(ui=u) 2*ui*(1-ui)]);
+  : [for(ui=u) Q_Slerp( Q_Slerp(q1,q4,ui), Q_Slerp(q2,q3,ui), 2*ui*(1-ui) ]);
 
 
 // Function: Q_exp()
