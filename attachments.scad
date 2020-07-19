@@ -421,7 +421,7 @@ function find_anchor(anchor, geom) =
             top = point3d(vmul(point2d(size2)/2,axy)+shift,h/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
             sidevec = unit(rot(from=UP, to=top-bot, p=point3d(axy)),UP),
-            vvec = anchor==CENTER? UP : unit([0,0,anchor.z]),
+            vvec = anchor==CENTER? UP : unit([0,0,anchor.z],UP),
             vec = anchor==CENTER? UP :
                 approx(axy,[0,0])? unit(anchor,UP) :
                 approx(anchor.z,0)? sidevec :
