@@ -159,6 +159,7 @@ include <structs.scad>
 //   fwd(60)            // Note how the different points are cut back by different amounts
 //     stroke(round_corners(zig,radius=1.5,closed=false),width=1);
 // Example(FlatSpin): Rounding some random 3D paths
+//   $fn=36;
 //   list1= [
 //     [2.887360, 4.03497, 6.372090],
 //     [5.682210, 9.37103, 0.783548],
@@ -926,10 +927,10 @@ function os_profile(points, extra,check_valid, quality, offset_maxstep, offset) 
 //
 // Example: Chamfered elliptical prism.  If you stretch a chamfered cylinder the chamfer will be uneven.
 //   convex_offset_extrude(bottom = os_chamfer(height=-2), top=os_chamfer(height=1), height=7)
-//   xscale(4)circle(r=6);
+//   xscale(4)circle(r=6,$fn=64);
 // Example: Elliptical prism with circular roundovers.
 //   convex_offset_extrude(bottom=os_circle(r=-2), top=os_circle(r=1), height=7,steps=10)
-//   xscale(4)circle(r=6);
+//   xscale(4)circle(r=6,$fn=64);
 // Example: If you give a non-convex input you get a convex hull output
 //   right(50) linear_extrude(height=7) star(5,r=22,ir=13);
 //   convex_offset_extrude(bottom = os_chamfer(height=-2), top=os_chamfer(height=1), height=7)
@@ -1122,6 +1123,7 @@ function _remove_undefined_vals(list) =
 //   fwd(7)
 //     offset_stroke(arc, width=2, start=os_pointed(loc=2,dist=2),end=os_pointed(loc=.5,dist=-1));
 // Example(2D):  The os_round() end treatment adds roundovers to the end corners by specifying the `cut` parameter.  In the first example, the cut parameter is the same at each corner.  The bezier smoothness parameter `k` is given to allow a larger cut.  In the second example, each corner is given a different roundover, including zero for no rounding at all.  The red shows the same strokes without the roundover.
+//   $fn=36;
 //   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
 //   path = [[0,0],[6,2],[9,7],[8,10]];
 //   offset_stroke(path, width=2, rounded=false,start=os_round(angle=-20, cut=0.4,k=.9), end=os_round(angle=-35, cut=0.4,k=.9));
@@ -1133,9 +1135,9 @@ function _remove_undefined_vals(list) =
 // Example(2D):  Negative cut values produce a flaring end.  Note how the absolute angle aligns the ends of the first example withi the axes.  In the second example positive and negative cut values are combined.  Note also that very different cuts are needed at the start end to produce a similar looking flare.
 //   arc = arc(points=[[1,1],[3,4],[6,3]],N=50);
 //   path = [[0,0],[6,2],[9,7],[8,10]];
-//   offset_stroke(path, width=2, rounded=false,start=os_round(cut=-1, abs_angle=90), end=os_round(cut=-0.5, abs_angle=0));
+//   offset_stroke(path, width=2, rounded=false,start=os_round(cut=-1, abs_angle=90), end=os_round(cut=-0.5, abs_angle=0),$fn=36);
 //   right(10)
-//      offset_stroke(arc, width=2, rounded=false, start=os_round(cut=[-.75,-.2], angle=-45), end=os_round(cut=[-.2,.2], angle=20));
+//      offset_stroke(arc, width=2, rounded=false, start=os_round(cut=[-.75,-.2], angle=-45), end=os_round(cut=[-.2,.2], angle=20),$fn=36);
 // Example(2D):  Setting the width to a vector allows generation of a set of parallel strokes
 //   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
 //   for(i=[0:.25:2])
@@ -1146,9 +1148,9 @@ function _remove_undefined_vals(list) =
 //     offset_stroke(path, rounded=true,width = [i,i+.08]);
 // Example(2D):  In this example a spurious triangle appears.  This results from overly enthusiastic validity checking.  Turning validity checking off fixes it in this case.
 //   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
-//   offset_stroke(path, check_valid=true,rounded=false,width = [1.4, 1.45]);
+//   offset_stroke(path, check_valid=true,rounded=false,width = [1.4, 1.5]);
 //   right(2)
-//     offset_stroke(path, check_valid=false,rounded=false,width = [1.4, 1.45]);
+//     offset_stroke(path, check_valid=false,rounded=false,width = [1.4, 1.5]);
 // Example(2D):  But in this case, disabling the validity check produces an invalid result.
 //   path = [[0,0],[4,4],[8,4],[2,9],[10,10]];
 //   offset_stroke(path, check_valid=true,rounded=false,width = [1.9, 2]);
@@ -1786,7 +1788,7 @@ function _circle_mask(r) =
 //   less than 180 degrees, and the path shouldn't have closely spaced points at concave points of high curvature because
 //   this will cause self-intersection in the mask polyhedron, resulting in CGAL failures.
 // Arguments:
-//   r|radius = center radius of the cylindrical shell to cut a hole in
+//   r / radius = center radius of the cylindrical shell to cut a hole in
 //   thickness = thickness of cylindrical shell (may need to be slighly oversized)
 //   path = 2d path that defines the hole to cut
 // Example: The mask as long pointed ends because this was the most efficient way to close off those ends.
