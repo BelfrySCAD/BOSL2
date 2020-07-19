@@ -47,11 +47,11 @@ function Q_is_quat(q) = is_vector(q,4) && ! approx(norm(q),0) ;
 //   ax = Vector of axis of rotation.
 //   ang = Number of degrees to rotate around the axis counter-clockwise, when facing the origin.
 function Quat(ax=[0,0,1], ang=0) = 
-  assert( is_vector(ax,3) && is_num(0*ang), "Invalid input")
-  let( n = norm(ax) )
-  approx(n,0) 
-  ? _Quat([0,0,0], sin(ang/2), cos(ang/2))
-  : _Quat(ax/n, sin(ang/2), cos(ang/2));
+    assert( is_vector(ax,3) && is_finite(ang), "Invalid input")
+    let( n = norm(ax) )
+    approx(n,0) 
+    ? _Quat([0,0,0], sin(ang/2), cos(ang/2))
+    : _Quat(ax/n, sin(ang/2), cos(ang/2));
 
 
 // Function: QuatX()
@@ -61,8 +61,8 @@ function Quat(ax=[0,0,1], ang=0) =
 // Arguments:
 //   a = Number of degrees to rotate around the axis counter-clockwise, when facing the origin.
 function QuatX(a=0) = 
-  assert( is_num(0*a), "Invalid angle" )
-  Quat([1,0,0],a);
+    assert( is_finite(a), "Invalid angle" )
+    Quat([1,0,0],a);
 
 
 // Function: QuatY()
@@ -72,8 +72,8 @@ function QuatX(a=0) =
 // Arguments:
 //   a = Number of degrees to rotate around the axis counter-clockwise, when facing the origin.
 function QuatY(a=0) =  
-  assert( is_num(0*a), "Invalid angle" )
-  Quat([0,1,0],a);
+    assert( is_finite(a), "Invalid angle" )
+    Quat([0,1,0],a);
 
 
 // Function: QuatZ()
@@ -83,8 +83,8 @@ function QuatY(a=0) =
 // Arguments:
 //   a = Number of degrees to rotate around the axis counter-clockwise, when facing the origin.
 function QuatZ(a=0) =  
-  assert( is_num(0*a), "Invalid angle" )
-  Quat([0,0,1],a);
+    assert( is_finite(a), "Invalid angle" )
+    Quat([0,0,1],a);
 
 
 // Function: QuatXYZ()
@@ -95,11 +95,11 @@ function QuatZ(a=0) =
 // Arguments:
 //   a = The triplet of rotation angles, [X,Y,Z]
 function QuatXYZ(a=[0,0,0]) =
-  assert( is_vector(a,3), "Invalid angles")
+    assert( is_vector(a,3), "Invalid angles")
     let(
-        qx = QuatX(a[0]),
-        qy = QuatY(a[1]),
-        qz = QuatZ(a[2])
+      qx = QuatX(a[0]),
+      qy = QuatY(a[1]),
+      qz = QuatZ(a[2])
     )
     Q_Mul(qz, Q_Mul(qy, qx));
 
@@ -111,14 +111,14 @@ function QuatXYZ(a=[0,0,0]) =
 //   Returns the normalized quaternion that rotates the non zero 3D vector v1 
 //   to the non zero 3D vector v2.
 function Q_From_to(v1, v2) =
-  assert( is_vector(v1,3) && is_vector(v2,3) 
-          && ! approx(norm(v1),0) && ! approx(norm(v2),0)
-          , "Invalid vector(s)")
-  let( ax = cross(v1,v2),
-       n  = norm(ax) )
-  approx(n, 0)
-  ? v1*v2>0 ? Q_Ident() : Quat([ v1.y, -v1.x, 0], 180)  
-  : Quat(ax, atan2( n , v1*v2 ));
+    assert( is_vector(v1,3) && is_vector(v2,3) 
+            && ! approx(norm(v1),0) && ! approx(norm(v2),0)
+            , "Invalid vector(s)")
+    let( ax = cross(v1,v2),
+         n  = norm(ax) )
+    approx(n, 0)
+    ? v1*v2>0 ? Q_Ident() : Quat([ v1.y, -v1.x, 0], 180)  
+    : Quat(ax, atan2( n , v1*v2 ));
 
 
 // Function: Q_Ident()
@@ -133,8 +133,8 @@ function Q_Ident() = [0, 0, 0, 1];
 //   Adds a scalar value `s` to the W part of a quaternion `q`.
 //   The returned quaternion is usually not normalized.
 function Q_Add_S(q, s) =  
-  assert( is_num(0*s), "Invalid scalar" )
-  q+[0,0,0,s];
+    assert( is_finite(s), "Invalid scalar" )
+    q+[0,0,0,s];
 
 
 // Function: Q_Sub_S()
@@ -144,8 +144,8 @@ function Q_Add_S(q, s) =
 //   Subtracts a scalar value `s` from the W part of a quaternion `q`.
 //   The returned quaternion is usually not normalized.
 function Q_Sub_S(q, s) =  
-  assert( is_num(0*s), "Invalid scalar" )
-  q-[0,0,0,s];
+    assert( is_finite(s), "Invalid scalar" )
+    q-[0,0,0,s];
 
 
 // Function: Q_Mul_S()
@@ -155,8 +155,8 @@ function Q_Sub_S(q, s) =
 //   Multiplies each part of a quaternion `q` by a scalar value `s`.
 //   The returned quaternion is usually not normalized.
 function Q_Mul_S(q, s) =  
-  assert( is_num(0*s), "Invalid scalar" )
-  q*s;
+    assert( is_finite(s), "Invalid scalar" )
+    q*s;
 
 
 // Function: Q_Div_S()
@@ -166,8 +166,8 @@ function Q_Mul_S(q, s) =
 //   Divides each part of a quaternion `q` by a scalar value `s`.
 //   The returned quaternion is usually not normalized.
 function Q_Div_S(q, s) =   
-  assert( is_num(0*s) && ! approx(s,0) , "Invalid scalar" )
-  q/s;
+    assert( is_finite(s) && ! approx(s,0) , "Invalid scalar" )
+    q/s;
 
 
 // Function: Q_Add()
@@ -177,9 +177,9 @@ function Q_Div_S(q, s) =
 //   Adds each part of two quaternions together.
 //   The returned quaternion is usually not normalized.
 function Q_Add(a, b) = 
-  assert( Q_is_quat(a) && Q_is_quat(a), "Invalid quaternion(s)") 
-  assert( ! approx(norm(a+b),0), "Quaternions cannot be opposed" )
-  a+b;
+    assert( Q_is_quat(a) && Q_is_quat(a), "Invalid quaternion(s)") 
+    assert( ! approx(norm(a+b),0), "Quaternions cannot be opposed" )
+    a+b;
 
 
 // Function: Q_Sub()
@@ -189,9 +189,9 @@ function Q_Add(a, b) =
 //   Subtracts each part of quaternion `b` from quaternion `a`.
 //   The returned quaternion is usually not normalized.
 function Q_Sub(a, b) = 
-  assert( Q_is_quat(a) && Q_is_quat(a), "Invalid quaternion(s)") 
-  assert( ! approx(a,b), "Quaternions cannot be equal" )
-  a-b;
+    assert( Q_is_quat(a) && Q_is_quat(a), "Invalid quaternion(s)") 
+    assert( ! approx(a,b), "Quaternions cannot be equal" )
+    a-b;
 
 
 // Function: Q_Mul()
@@ -201,13 +201,13 @@ function Q_Sub(a, b) =
 //   Multiplies quaternion `a` by quaternion `b`.
 //   The returned quaternion is normalized if both `a` and `b` are normalized
 function Q_Mul(a, b) = 
-  assert( Q_is_quat(a) && Q_is_quat(b), "Invalid quaternion(s)")
-  [
-    a[3]*b.x  + a.x*b[3] + a.y*b.z  - a.z*b.y,
-    a[3]*b.y  - a.x*b.z  + a.y*b[3] + a.z*b.x,
-    a[3]*b.z  + a.x*b.y  - a.y*b.x  + a.z*b[3],
-    a[3]*b[3] - a.x*b.x  - a.y*b.y  - a.z*b.z,
-  ];
+    assert( Q_is_quat(a) && Q_is_quat(b), "Invalid quaternion(s)")
+    [
+      a[3]*b.x  + a.x*b[3] + a.y*b.z  - a.z*b.y,
+      a[3]*b.y  - a.x*b.z  + a.y*b[3] + a.z*b.x,
+      a[3]*b.z  + a.x*b.y  - a.y*b.x  + a.z*b[3],
+      a[3]*b[3] - a.x*b.x  - a.y*b.y  - a.z*b.z,
+    ];
 
 
 // Function: Q_Cumulative()
@@ -235,16 +235,16 @@ function Q_Cumulative(v, _i=0, _acc=[]) =
 //   Q_Dot(a, b)
 // Description: Calculates the dot product between quaternions `a` and `b`.
 function Q_Dot(a, b) = 
-  assert( Q_is_quat(a) && Q_is_quat(b), "Invalid quaternion(s)" )
-  a*b;
+    assert( Q_is_quat(a) && Q_is_quat(b), "Invalid quaternion(s)" )
+    a*b;
 
 // Function: Q_Neg()
 // Usage:
 //   Q_Neg(q)
 // Description: Returns the negative of quaternion `q`.
 function Q_Neg(q) = 
-  assert( Q_is_quat(q), "Invalid quaternion" )
-  -q;
+    assert( Q_is_quat(q), "Invalid quaternion" )
+    -q;
 
 
 // Function: Q_Conj()
@@ -252,8 +252,8 @@ function Q_Neg(q) =
 //   Q_Conj(q)
 // Description: Returns the conjugate of quaternion `q`.
 function Q_Conj(q) = 
-  assert( Q_is_quat(q), "Invalid quaternion" )
-  [-q.x, -q.y, -q.z, q[3]];
+    assert( Q_is_quat(q), "Invalid quaternion" )
+    [-q.x, -q.y, -q.z, q[3]];
 
 
 // Function: Q_Inverse()
@@ -261,9 +261,9 @@ function Q_Conj(q) =
 //   qc = Q_Inverse(q)
 // Description: Returns the multiplication inverse of quaternion `q`  that is normalized only if `q` is normalized.
 function Q_Inverse(q) = 
-  assert( Q_is_quat(q), "Invalid quaternion" )
-  let(q = _Qnorm(q) )
-  [-q.x, -q.y, -q.z, q[3]];
+    assert( Q_is_quat(q), "Invalid quaternion" )
+    let(q = _Qnorm(q) )
+    [-q.x, -q.y, -q.z, q[3]];
 
 
 // Function: Q_Norm()
@@ -273,8 +273,8 @@ function Q_Inverse(q) =
 //   Returns the `norm()` "length" of quaternion `q`.
 //   Normalized quaternions have unitary norm. 
 function Q_Norm(q) = 
-  assert( Q_is_quat(q), "Invalid quaternion" )
-  norm(q);
+    assert( Q_is_quat(q), "Invalid quaternion" )
+    norm(q);
 
 
 // Function: Q_Normalize()
@@ -282,8 +282,8 @@ function Q_Norm(q) =
 //   Q_Normalize(q)
 // Description: Normalizes quaternion `q`, so that norm([W,X,Y,Z]) == 1.
 function Q_Normalize(q) = 
-  assert( Q_is_quat(q) , "Invalid quaternion" )
-  q/norm(q);
+    assert( Q_is_quat(q) , "Invalid quaternion" )
+    q/norm(q);
 
 
 // Function: Q_Dist()
@@ -291,8 +291,8 @@ function Q_Normalize(q) =
 //   Q_Dist(q1, q2)
 // Description: Returns the "distance" between two quaternions.
 function Q_Dist(q1, q2) =   
-  assert( Q_is_quat(q1) && Q_is_quat(q2), "Invalid quaternion(s)" )
-  norm(q2-q1);
+    assert( Q_is_quat(q1) && Q_is_quat(q2), "Invalid quaternion(s)" )
+    norm(q2-q1);
 
 
 // Function: Q_Slerp()
@@ -318,25 +318,23 @@ function Q_Dist(q1, q2) =
 //       Qrot(q) right(80) cube([10,10,1]);
 //   #sphere(r=80);
 function Q_Slerp(q1, q2, u, _dot) =
-  is_undef(_dot)
-  ? assert(is_num(u) || is_range(u) || is_num(0*u*u), "Invalid interpolation coefficient(s)")
-    assert(Q_is_quat(q1) && Q_is_quat(q2), "Invalid quaternion(s)" )
-    let(
-      _dot  = q1*q2,
-      q1   = q1/norm(q1),
-      q2   = _dot<0 ? -q2/norm(q2) : q2/norm(q2),
-      dot = abs(_dot)
-    )
-    ! is_num(u) 
-    ? [for (uu=u) Q_Slerp(q1, q2, uu, dot)]
-    : Q_Slerp(q1, q2, u, dot) 
-  : _dot>0.9995
-    ? _Qnorm(q1 + u*(q2-q1))
-    : let( 
-        theta  = u*acos(_dot),
-        q3    = _Qnorm(q2 - _dot*q1)
-      ) 
-      _Qnorm(q1*cos(theta) + q3*sin(theta));
+    is_undef(_dot) 
+    ?   assert(is_finite(u) || is_range(u) || is_vector(u), "Invalid interpolation coefficient(s)")
+        assert(Q_is_quat(q1) && Q_is_quat(q2), "Invalid quaternion(s)" )
+        let(
+          _dot = q1*q2,
+          q1   = q1/norm(q1),
+          q2   = _dot<0 ? -q2/norm(q2) : q2/norm(q2),
+          dot  = abs(_dot)
+        )
+        ! is_finite(u) ? [for (uu=u) Q_Slerp(q1, q2, uu, dot)] :
+        Q_Slerp(q1, q2, u, dot)  
+    :   _dot>0.9995 
+        ?   _Qnorm(q1 + u*(q2-q1))
+        :   let( theta = u*acos(_dot),
+                 q3    = _Qnorm(q2 - _dot*q1)
+               ) 
+            _Qnorm(q1*cos(theta) + q3*sin(theta));
 
 
 // Function: Q_Matrix3()
@@ -345,12 +343,12 @@ function Q_Slerp(q1, q2, u, _dot) =
 // Description:
 //   Returns the 3x3 rotation matrix for the given normalized quaternion q.
 function Q_Matrix3(q) =   
-  let( q = Q_Normalize(q) )
-  [
-    [1-2*q[1]*q[1]-2*q[2]*q[2],   2*q[0]*q[1]-2*q[2]*q[3],   2*q[0]*q[2]+2*q[1]*q[3]],
-    [  2*q[0]*q[1]+2*q[2]*q[3], 1-2*q[0]*q[0]-2*q[2]*q[2],   2*q[1]*q[2]-2*q[0]*q[3]],
-    [  2*q[0]*q[2]-2*q[1]*q[3],   2*q[1]*q[2]+2*q[0]*q[3], 1-2*q[0]*q[0]-2*q[1]*q[1]]
-  ];
+    let( q = Q_Normalize(q) )
+    [
+      [1-2*q[1]*q[1]-2*q[2]*q[2],   2*q[0]*q[1]-2*q[2]*q[3],   2*q[0]*q[2]+2*q[1]*q[3]],
+      [  2*q[0]*q[1]+2*q[2]*q[3], 1-2*q[0]*q[0]-2*q[2]*q[2],   2*q[1]*q[2]-2*q[0]*q[3]],
+      [  2*q[0]*q[2]-2*q[1]*q[3],   2*q[1]*q[2]+2*q[0]*q[3], 1-2*q[0]*q[0]-2*q[1]*q[1]]
+    ];
 
 
 // Function: Q_Matrix4()
@@ -359,13 +357,13 @@ function Q_Matrix3(q) =
 // Description:
 //   Returns the 4x4 rotation matrix for the given normalized quaternion q.
 function Q_Matrix4(q) =    
-  let( q = Q_Normalize(q) )
-  [
-    [1-2*q[1]*q[1]-2*q[2]*q[2],   2*q[0]*q[1]-2*q[2]*q[3],   2*q[0]*q[2]+2*q[1]*q[3], 0],
-    [  2*q[0]*q[1]+2*q[2]*q[3], 1-2*q[0]*q[0]-2*q[2]*q[2],   2*q[1]*q[2]-2*q[0]*q[3], 0],
-    [  2*q[0]*q[2]-2*q[1]*q[3],   2*q[1]*q[2]+2*q[0]*q[3], 1-2*q[0]*q[0]-2*q[1]*q[1], 0],
-    [                        0,                         0,                         0, 1]
-  ];
+    let( q = Q_Normalize(q) )
+    [
+      [1-2*q[1]*q[1]-2*q[2]*q[2],   2*q[0]*q[1]-2*q[2]*q[3],   2*q[0]*q[2]+2*q[1]*q[3], 0],
+      [  2*q[0]*q[1]+2*q[2]*q[3], 1-2*q[0]*q[0]-2*q[2]*q[2],   2*q[1]*q[2]-2*q[0]*q[3], 0],
+      [  2*q[0]*q[2]-2*q[1]*q[3],   2*q[1]*q[2]+2*q[0]*q[3], 1-2*q[0]*q[0]-2*q[1]*q[1], 0],
+      [                        0,                         0,                         0, 1]
+    ];
 
 
 // Function: Q_Axis()
@@ -375,9 +373,9 @@ function Q_Matrix4(q) =
 //   Returns the axis of rotation of a normalized quaternion `q`.
 //   The input doesn't need to be normalized.
 function Q_Axis(q) =   
-  assert( Q_is_quat(q) , "Invalid quaternion" )
-  let( d = norm(_Qvec(q)) )
-  approx(d,0)? [0,0,1] : _Qvec(q)/d;
+    assert( Q_is_quat(q) , "Invalid quaternion" )
+    let( d = norm(_Qvec(q)) )
+    approx(d,0)? [0,0,1] : _Qvec(q)/d;
 
 // Function: Q_Angle()
 // Usage:
@@ -388,12 +386,13 @@ function Q_Axis(q) =
 //   If both q1 and q2 are given, returns the angle (in degrees) between them.
 //   The input quaternions don't need to be normalized.
 function Q_Angle(q1,q2) =
-  assert(Q_is_quat(q1) && (is_undef(q2) || Q_is_quat(q2)), "Invalid quaternion(s)" )
-  let( n1 = is_undef(q2)? norm(_Qvec(q1)): norm(q1) )
-  is_undef(q2)
-  ? 2 * atan2(n1,_Qreal(q1))
-  : 2 * acos(q1*q2/n1/norm(q2)) ; 
-
+    assert(Q_is_quat(q1) && (is_undef(q2) || Q_is_quat(q2)), "Invalid quaternion(s)" )
+    let( n1 = is_undef(q2)? norm(_Qvec(q1)): norm(q1) )
+    is_undef(q2) 
+    ?   2 * atan2(n1,_Qreal(q1))
+    :   let( q1 = q1/norm(q1),
+             q2 = q2/norm(q2) )
+        4 * atan2(norm(q1 - q2), norm(q1 + q2));
 
 // Function&Module: Qrot()
 // Usage: As Module
@@ -425,9 +424,9 @@ module Qrot(q) {
 }
 
 function Qrot(q,p) =
-    is_undef(p)? Q_Matrix4(q) :
-    is_vector(p)? Qrot(q,[p])[0] :
-    apply(Q_Matrix4(q), p);
+      is_undef(p)? Q_Matrix4(q) :
+      is_vector(p)? Qrot(q,[p])[0] :
+      apply(Q_Matrix4(q), p);
 
 
 // Module: Qrot_copies()
@@ -457,24 +456,24 @@ module Qrot_copies(quats) for (q=quats) Qrot(q) children();
 //   It doesn't check whether R is in fact a rotation matrix.
 //   If R is not a rotation, the returned quaternion is an unpredictable quaternion .
 function Q_Rotation(R) =
-  assert( is_matrix(R,3,3) || is_matrix(R,4,4) , 
-                    "Matrix is neither 3x3 nor 4x4")
-  let( tr = R[0][0]+R[1][1]+R[2][2] ) // R trace
-  tr>0
-  ? let( r = 1+tr  )
-    _Qnorm( _Qset([ R[1][2]-R[2][1], R[2][0]-R[0][2], R[0][1]-R[1][0] ], -r ) )
-  : let( i = max_index([ R[0][0], R[1][1], R[2][2] ]),
-         r = 1 + 2*R[i][i] -R[0][0] -R[1][1] -R[2][2] )
-    i==0 ? _Qnorm( _Qset( [ 4*r, (R[1][0]+R[0][1]), (R[0][2]+R[2][0]) ], (R[2][1]-R[1][2])) ):
-    i==1 ? _Qnorm( _Qset( [ (R[1][0]+R[0][1]), 4*r, (R[2][1]+R[1][2]) ], (R[0][2]-R[2][0])) )
-         : _Qnorm( _Qset( [ (R[2][0]+R[0][2]), (R[1][2]+R[2][1]), 4*r ], (R[1][0]-R[0][1])) );
+    assert( is_matrix(R,3,3) || is_matrix(R,4,4) , 
+                      "Matrix is neither 3x3 nor 4x4")
+    let( tr = R[0][0]+R[1][1]+R[2][2] ) // R trace
+    tr>0 
+    ?   let( r = 1+tr  )
+        _Qnorm( _Qset([ R[1][2]-R[2][1], R[2][0]-R[0][2], R[0][1]-R[1][0] ], -r ) )
+    :   let( i = max_index([ R[0][0], R[1][1], R[2][2] ]),
+             r = 1 + 2*R[i][i] -R[0][0] -R[1][1] -R[2][2] )
+        i==0 ? _Qnorm( _Qset( [ 4*r, (R[1][0]+R[0][1]), (R[0][2]+R[2][0]) ], (R[2][1]-R[1][2])) ):
+        i==1 ? _Qnorm( _Qset( [ (R[1][0]+R[0][1]), 4*r, (R[2][1]+R[1][2]) ], (R[0][2]-R[2][0])) ):
+            _Qnorm( _Qset( [ (R[2][0]+R[0][2]), (R[1][2]+R[2][1]), 4*r ], (R[1][0]-R[0][1])) ) ;
 
 
 // Function&Module: Q_Rotation_path(q1, n, [q2])
-// Usage as a function:
+// Usage: As a function
 //   path = Q_Rotation_path(q1, n, q2);
 //   path = Q_Rotation_path(q1, n);
-// Usage as a module:
+// Usage: As a module
 //   Q_Rotation_path(q1, n, q2) ...
 // Description:
 //   If q2 is undef and it is called as a function, the path, with length n+1 (n>=1), will be the 
@@ -515,20 +514,20 @@ function Q_Rotation(R) =
 //      right(80) cube([10,10,1]);
 //   #sphere(r=80);
 function Q_Rotation_path(q1, n=1, q2) =
-  assert( Q_is_quat(q1) && (is_undef(q2) || Q_is_quat(q2) ), "Invalid quaternion(s)" )
-  assert( is_num(0*n) && n>=1 && n==floor(n), "Invalid integer" )
-  assert( is_undef(q2) || ! approx(norm(q1+q2),0), "Quaternions cannot be opposed" )
-  is_undef(q2)
-  ? [for( i=0, dR=Q_Matrix4(q1), R=dR; i<=n; i=i+1, R=dR*R ) R]
-  : let( q2 = Q_Normalize( q1*q2<0 ? -q2: q2 ) )
-    let( dq = Q_pow( Q_Mul( q2, Q_Inverse(q1) ), 1/n ),
-         dR = Q_Matrix4(dq) )
-    [for( i=0, R=Q_Matrix4(q1); i<=n; i=i+1, R=dR*R ) R];
+    assert( Q_is_quat(q1) && (is_undef(q2) || Q_is_quat(q2) ), "Invalid quaternion(s)" )
+    assert( is_finite(n) && n>=1 && n==floor(n), "Invalid integer" )
+    assert( is_undef(q2) || ! approx(norm(q1+q2),0), "Quaternions cannot be opposed" )
+    is_undef(q2) 
+    ?   [for( i=0, dR=Q_Matrix4(q1), R=dR; i<=n; i=i+1, R=dR*R ) R] 
+    :   let( q2 = Q_Normalize( q1*q2<0 ? -q2: q2 ),
+             dq = Q_pow( Q_Mul( q2, Q_Inverse(q1) ), 1/n ),
+             dR = Q_Matrix4(dq) )
+        [for( i=0, R=Q_Matrix4(q1); i<=n; i=i+1, R=dR*R ) R];
 
 module Q_Rotation_path(q1, n=1, q2) {
-  for(Mi=Q_Rotation_path(q1, n, q2))
-    multmatrix(Mi)
-      children();
+    for(Mi=Q_Rotation_path(q1, n, q2))
+        multmatrix(Mi)
+            children();
 }
 
 
@@ -559,15 +558,15 @@ module Q_Rotation_path(q1, n=1, q2) {
 //       Qrot(q) right(80) cube([10,10,1]);
 //   #sphere(r=80);
 function Q_Nlerp(q1,q2,u) =
-  assert(Q_is_quat(q1) && Q_is_quat(q2), "Invalid quaternion(s)" )
-  assert( ! approx(norm(q1+q2),0), "Quaternions cannot be opposed" )
-  assert(is_num(0*u) || is_range(u) || (is_list(u) && is_num(0*u*u)) ,
-         "Invalid interpolation coefficient(s)" )
-  let( q1  = Q_Normalize(q1),
-       q2  = Q_Normalize(q2) )
-  !is_num(u)
-  ? [for (ui=u) _Qnorm((1-ui)*q1 + ui*q2 ) ]
-  : _Qnorm((1-u)*q1 + u*q2 );
+    assert(is_finite(u) || is_range(u) || is_vector(u) ,
+           "Invalid interpolation coefficient(s)" )
+    assert(Q_is_quat(q1) && Q_is_quat(q2), "Invalid quaternion(s)" )
+    assert( ! approx(norm(q1+q2),0), "Quaternions cannot be opposed" )
+    let( q1  = Q_Normalize(q1),
+         q2  = Q_Normalize(q2) )
+    is_num(u) 
+    ? _Qnorm((1-u)*q1 + u*q2 )
+    : [for (ui=u) _Qnorm((1-ui)*q1 + ui*q2 ) ];
 
 
 // Function: Q_Squad()
@@ -610,11 +609,11 @@ function Q_Nlerp(q1,q2,u) =
 //       Qrot(q) right(80) cube([10,10,1]);
 //   #sphere(r=80);
 function Q_Squad(q1,q2,q3,q4,u) =
-  assert(is_num(0*u) || is_range(u) || (is_list(u) && is_num(0*u*u)) ,
-         "Invalid interpolation coefficient(s)" )
-  is_num(u)
-  ? Q_Slerp( Q_Slerp(q1,q4,u), Q_Slerp(q2,q3,u), 2*u*(1-u))
-  : [for(ui=u) Q_Slerp( Q_Slerp(q1,q4,ui), Q_Slerp(q2,q3,ui), 2*ui*(1-ui) ) ];
+    assert(is_finite(u) || is_range(u) || is_vector(u) ,
+           "Invalid interpolation coefficient(s)" )
+    is_num(u) 
+    ? Q_Slerp( Q_Slerp(q1,q4,u), Q_Slerp(q2,q3,u), 2*u*(1-u))
+    : [for(ui=u) Q_Slerp( Q_Slerp(q1,q4,ui), Q_Slerp(q2,q3,ui), 2*ui*(1-ui) ) ];
 
 
 // Function: Q_exp()
@@ -624,9 +623,9 @@ function Q_Squad(q1,q2,q3,q4,u) =
 //   Returns the quaternion that is the exponential of the quaternion q in base e
 //   The returned quaternion is usually not normalized.
 function Q_exp(q) =
-  assert( is_vector(q,4), "Input is not a valid quaternion")
-  let( nv = norm(_Qvec(q)) ) // q may be equal to zero!
-  exp(_Qreal(q))*Quat(_Qvec(q),2*nv);
+    assert( is_vector(q,4), "Input is not a valid quaternion")
+    let( nv = norm(_Qvec(q)) ) // q may be equal to zero here!
+    exp(_Qreal(q))*Quat(_Qvec(q),2*nv);
 
 
 // Function: Q_ln()
@@ -636,12 +635,11 @@ function Q_exp(q) =
 //   Returns the quaternion that is the natural logarithm of the quaternion q.
 //   The returned quaternion is usually not normalized and may be zero.
 function Q_ln(q) =
-  assert(Q_is_quat(q), "Input is not a valid quaternion")
-  let( nq = norm(q),
-       nv = norm(_Qvec(q)) )
-  approx(nv,0)
-  ? _Qset([0,0,0] , ln(nq) )
-  : _Qset(_Qvec(q)*atan2(nv,_Qreal(q))/nv, ln(nq));
+    assert(Q_is_quat(q), "Input is not a valid quaternion")
+    let( nq = norm(q),
+         nv = norm(_Qvec(q)) )
+    approx(nv,0) ? _Qset([0,0,0] , ln(nq) ) :
+    _Qset(_Qvec(q)*atan2(nv,_Qreal(q))/nv, ln(nq));
 
 
 // Function: Q_pow()
@@ -651,11 +649,10 @@ function Q_ln(q) =
 //   Returns the quaternion that is the power of the quaternion q to the real exponent r.
 //   The returned quaternion is normalized if `q` is normalized.
 function Q_pow(q,r=1) =
-//  Q_exp(r*Q_ln(q)); 
-  assert( Q_is_quat(q) && is_num(0*r),
-           "Invalid inputs")
-  let( theta = 2*atan2(norm(_Qvec(q)),_Qreal(q)) )
-  Quat(_Qvec(q), r*theta);
+    assert( Q_is_quat(q) && is_finite(r),
+             "Invalid inputs")
+    let( theta = 2*atan2(norm(_Qvec(q)),_Qreal(q)) )
+    Quat(_Qvec(q), r*theta); //  Q_exp(r*Q_ln(q)); 
 
 
 
