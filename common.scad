@@ -379,5 +379,41 @@ module assert_equal(got, expected, info) {
 }
 
 
+// Module: shape_compare()
+// Usage:
+//   shape_compare([eps]) {test_shape(); expected_shape();}
+// Description:
+//   Compares two child shapes, returning empty geometry if they are very nearly the same shape and size.
+//   Returns the differential geometry if they are not nearly the same shape and size.
+// Arguments:
+//   eps = The surface of the two shapes must be within this size of each other.  Default: 1/1024
+module shape_compare(eps=1/1024) {
+    union() {
+        difference() {
+            children(0);
+            if (eps==0) {
+                children(1);
+            } else {
+                minkowski() {
+                    children(1);
+                    cube(eps, center=true);
+                }
+            }
+        }
+        difference() {
+            children(1);
+            if (eps==0) {
+                children(0);
+            } else {
+                minkowski() {
+                    children(0);
+                    cube(eps, center=true);
+                }
+            }
+        }
+    }
+}
+
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
