@@ -19,6 +19,8 @@
 // Arguments:
 //   v = The value to test to see if it is a vector.
 //   length = If given, make sure the vector is `length` items long.
+//   zero = If false, require that the length of the vector is not approximately zero.  If true, require the length of the vector to be approx zero-length.  Default: `undef` (don't check vector length.)
+//   eps = The minimum vector length that is considered non-zero.  Default: `EPSILON` (`1e-9`)
 // Example:
 //   is_vector(4);              // Returns false
 //   is_vector([4,true,false]); // Returns false
@@ -28,8 +30,14 @@
 //   is_vector([3,4,5],3);      // Returns true
 //   is_vector([3,4,5],4);      // Returns true
 //   is_vector([]);             // Returns false
-function is_vector(v,length) =
-    is_list(v) && is_num(0*(v*v)) && (is_undef(length)||len(v)==length);
+//   is_vector([0,0,0],zero=true);   // Returns true
+//   is_vector([0,0,0],zero=false);  // Returns false
+//   is_vector([0,1,0],zero=true);   // Returns false
+//   is_vector([0,0,1],zero=false);  // Returns true
+function is_vector(v,length,zero,eps=EPSILON) =
+    is_list(v) && is_num(0*(v*v))
+    && (is_undef(length) || len(v)==length)
+    && (is_undef(zero) || ((norm(v) >= eps) == !zero));
 
 
 // Function: add_scalar()
@@ -188,22 +196,31 @@ function vector_angle(v1,v2,v3) =
 //   vector_axis([10,0,10], [0,0,0], [-10,10,0]);  // Returns: [-0.57735, -0.57735, 0.57735]
 //   vector_axis([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: [-0.57735, -0.57735, 0.57735]
 function vector_axis(v1,v2=undef,v3=undef) =
-    (is_list(v1) && is_list(v1[0]) && is_undef(v2) && is_undef(v3))? (
-        assert(is_vector(v1.x))
-        assert(is_vector(v1.y))
-        len(v1)==3? assert(is_vector(v1.z)) vector_axis(v1.x, v1.y, v1.z) :
-        len(v1)==2? vector_axis(v1.x, v1.y) :
-        assert(false, "Bad arguments.")
-    ) :
-    (is_vector(v1) && is_vector(v2) && is_vector(v3))? vector_axis(v1-v2, v3-v2) :
-    (is_vector(v1) && is_vector(v2) && is_undef(v3))? let(
+    is_vector(v3)
+    ?   assert(is_consistent([v3,v2,v1]), "Bad arguments.")
+        vector_axis(v1-v2, v3-v2)
+    :
+    assert( is_undef(v3), "Bad arguments.")
+    is_undef(v2)
+    ?   assert( is_list(v1), "Bad arguments.")
+        len(v1) == 2
+            ? vector_axis(v1[0],v1[1])
+            : vector_axis(v1[0],v1[1],v1[2])
+    :
+    assert(
+        is_vector(v1,zero=false) &&
+            is_vector(v2,zero=false) &&
+            is_consistent([v1,v2]),
+        "Bad arguments."
+    )
+    let(
         eps = 1e-6,
-        v1 = point3d(v1/norm(v1)),
-        v2 = point3d(v2/norm(v2)),
-        v3 = (norm(v1-v2) > eps && norm(v1+v2) > eps)? v2 :
-            (norm(vabs(v2)-UP) > eps)? UP :
-            RIGHT
-    ) unit(cross(v1,v3)) : assert(false, "Bad arguments.");
+        w1 = point3d(v1/norm(v1)),
+        w2 = point3d(v2/norm(v2)),
+        w3 = (norm(w1-w2) > eps && norm(w1+w2) > eps) ? w2
+           : (norm(vabs(w2)-UP) > eps) ? UP
+           : RIGHT
+    ) unit(cross(w1,w3));
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
