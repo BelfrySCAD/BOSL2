@@ -1,5 +1,5 @@
-include <BOSL2/std.scad>
-include <BOSL2/skin.scad>
+include <../std.scad>
+include <../skin.scad>
 
 
 module test_skin() {

@@ -91,7 +91,11 @@ function slice(arr,st,end) = let(
 //   in_list("bar", ["foo", "bar", "baz"]);  // Returns true.
 //   in_list("bee", ["foo", "bar", "baz"]);  // Returns false.
 //   in_list("bar", [[2,"foo"], [4,"bar"], [3,"baz"]], idx=1);  // Returns true.
-function in_list(x,l,idx=undef) = search([x], l, num_returns_per_match=1, index_col_num=idx) != [[]];
+function in_list(val,list,idx=undef) = 
+    let( s = search([val], list, num_returns_per_match=1, index_col_num=idx)[0] )
+    s==[] ? false
+    : is_undef(idx) ? val==list[s] 
+    : val==list[s][idx];
 
 
 // Function: min_index()

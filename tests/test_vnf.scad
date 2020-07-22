@@ -1,5 +1,5 @@
-include <BOSL2/std.scad>
-include <BOSL2/vnf.scad>
+include <../std.scad>
+include <../vnf.scad>
 
 
 module test_is_vnf() {

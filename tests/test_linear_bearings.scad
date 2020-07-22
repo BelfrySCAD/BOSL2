@@ -1,5 +1,5 @@
-include <BOSL2/std.scad>
-include <BOSL2/linear_bearings.scad>
+include <../std.scad>
+include <../linear_bearings.scad>
 
 
 module test_get_lmXuu_bearing_diam() {

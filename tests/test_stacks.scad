@@ -1,5 +1,5 @@
-include <BOSL2/std.scad>
-include <BOSL2/stacks.scad>
+include <../std.scad>
+include <../stacks.scad>
 
 
 module test_stack_init() {
