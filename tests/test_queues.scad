@@ -1,5 +1,5 @@
-include <BOSL2/std.scad>
-include <BOSL2/queues.scad>
+include <../std.scad>
+include <../queues.scad>
 
 
 module test_queue_init() {

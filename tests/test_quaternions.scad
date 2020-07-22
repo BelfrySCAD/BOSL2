@@ -1,5 +1,5 @@
-include <BOSL2/std.scad>
-include <BOSL2/strings.scad>
+include <../std.scad>
+include <../strings.scad>
 
 
 function rec_cmp(a,b,eps=1e-9) =

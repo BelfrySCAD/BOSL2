@@ -1,4 +1,4 @@
-include <BOSL2/std.scad>
+include <../std.scad>
 
 
 // Can't test echo output as yet.  Include these for coverage calculations.
