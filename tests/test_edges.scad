@@ -1,4 +1,4 @@
-include <BOSL2/std.scad>
+include <../std.scad>
 
 
 module test_is_edge_array() {

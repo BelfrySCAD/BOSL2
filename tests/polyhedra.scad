@@ -1,5 +1,5 @@
-include<BOSL2/std.scad>
-include<BOSL2/polyhedra.scad>
+include<../std.scad>
+include<../polyhedra.scad>
 
 
 $fn=96;

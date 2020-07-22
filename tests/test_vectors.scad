@@ -1,4 +1,4 @@
-include <BOSL2/std.scad>
+include <../std.scad>
 
 
 module test_is_vector() {
@@ -60,7 +60,7 @@ module test_vabs() {
 }
 test_vabs();
 
-include <BOSL2/strings.scad>
+include <../strings.scad>
 module test_vang() {
     assert(vang([1,0])==0);
     assert(vang([0,1])==90);
