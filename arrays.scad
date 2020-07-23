@@ -795,11 +795,6 @@ function _sort_vectors4(arr) =
 		concat( _sort_vectors4(lesser), equal, _sort_vectors4(greater) );
 		
 
-function _sort_eval(array, eval) =
-    let( ival  = [for(i=[0:len(array)-1]) [eval[i], i] ],
-         sival = _sort_vectors1(arr) )
-		[for(yi=sival) array[yi[1]] ];
-
 function _sort_general(arr, idx=undef) =
     (len(arr)<=1) ? arr :
     let(
