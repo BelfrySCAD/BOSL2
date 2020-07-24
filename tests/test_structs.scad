@@ -1,5 +1,5 @@
-include <BOSL2/std.scad>
-include <BOSL2/structs.scad>
+include <../std.scad>
+include <../structs.scad>
 
 
 module test_struct_set() {

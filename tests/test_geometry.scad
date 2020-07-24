@@ -1,4 +1,4 @@
-include <BOSL2/std.scad>
+include <../std.scad>
 
 
 module test_point_on_segment2d() {

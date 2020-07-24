@@ -1,5 +1,5 @@
-include <BOSL2/std.scad>
-include <BOSL2/hull.scad>
+include <../std.scad>
+include <../hull.scad>
 
 
 testpoints_on_sphere = [ for(p = 

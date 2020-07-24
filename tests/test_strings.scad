@@ -1,5 +1,5 @@
-include <BOSL2/std.scad>
-include <BOSL2/strings.scad>
+include <../std.scad>
+include <../strings.scad>
 
 
 module test_upcase() {

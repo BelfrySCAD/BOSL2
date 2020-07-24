@@ -191,16 +191,17 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
                 if (face[0] < 0 || face[1] < 0 || face[2] < 0 || face[0] >= vlen || face[1] >= vlen || face[2] >= vlen) {
                     echo("BAD FACE: ", vlen=vlen, face=face);
                 } else {
-                    v0 = vertices[face[0]];
-                    v1 = vertices[face[1]];
-                    v2 = vertices[face[2]];
-                    c = mean(select(vertices,face));
+                    verts = select(vertices,face);
+                    c = mean(verts);
+                    v0 = verts[0];
+                    v1 = verts[1];
+                    v2 = verts[2];
                     dv0 = unit(v1 - v0);
                     dv1 = unit(v2 - v0);
-                    nrm0 = unit(cross(dv0, dv1));
-                    nrm1 = [0, 0, 1];
-                    axis = unit(cross(nrm0, nrm1));
-                    ang = vector_angle(nrm0,  nrm1);
+                    nrm0 = cross(dv0, dv1);
+                    nrm1 = UP;
+                    axis = vector_axis(nrm0, nrm1);
+                    ang = vector_angle(nrm0, nrm1);
                     theta = atan2(nrm0[1], nrm0[0]);
                     translate(c) {
                         rotate(a=180-ang, v=axis) {

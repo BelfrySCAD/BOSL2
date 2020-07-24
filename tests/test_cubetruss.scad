@@ -1,5 +1,5 @@
-include <BOSL2/std.scad>
-include <BOSL2/cubetruss.scad>
+include <../std.scad>
+include <../cubetruss.scad>
 
 
 module test_cubetruss_dist() {

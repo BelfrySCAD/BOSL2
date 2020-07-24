@@ -104,21 +104,13 @@ function slice(list,start,end) =
 //   in_list("bar", ["foo", "bar", "baz"]);  // Returns true.
 //   in_list("bee", ["foo", "bar", "baz"]);  // Returns false.
 //   in_list("bar", [[2,"foo"], [4,"bar"], [3,"baz"]], idx=1);  // Returns true.
-//   in_list("bee", ["foo", "bar", ["bee",0]]);  // Returns true.
-//   in_list("bar", [[2,"foo"], [4,["bar"]], [3,"baz"]]);  // Returns false.
-// Note:
-//   When `val==NAN` the answer will be false for any list.
-//   `val` cannot be a boolean.
-//   When the some element in `list` is a list containing `val` at it first element, the return is also true. 
+
 function in_list(val,list,idx=undef) = 
     let( s = search([val], list, num_returns_per_match=1, index_col_num=idx)[0] )
-    s==[] || s[0]==[] ? false
+    s==[] ? false
     : is_undef(idx) ? val==list[s] 
     : val==list[s][idx];
-    
-//***
-// 1. for sake of consistence, the arguments were changed to val and list
-// 2. in_list(0,[ 1, [0,1],2])) was returning true
+
 
 
 // Function: min_index()

@@ -277,9 +277,9 @@ function affine_frame_map(x,y,z, reverse=false) =
     assert(yvalid,"Input y must be a length 3 vector")
     assert(zvalid,"Input z must be a length 3 vector")
     let(
-        x = is_undef(x)? undef : unit(x),
-        y = is_undef(y)? undef : unit(y),
-        z = is_undef(z)? undef : unit(z),
+        x = is_undef(x)? undef : unit(x,RIGHT),
+        y = is_undef(y)? undef : unit(y,BACK),
+        z = is_undef(z)? undef : unit(z,UP),
         map = is_undef(x)? [cross(y,z), y, z] :
             is_undef(y)? [x, cross(z,x), z] :
             is_undef(z)? [x, y, cross(x,y)] :

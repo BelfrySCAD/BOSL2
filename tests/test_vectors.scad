@@ -9,10 +9,11 @@ module test_is_vector() {
     assert(is_vector(1) == false);
     assert(is_vector("foo") == false);
     assert(is_vector(true) == false);
-    assert(is_vector([0,0],nonzero=true) == false);
-    assert(is_vector([0,1e-12,0],nonzero=true) == false);
-    assert(is_vector([0,1e-6,0],nonzero=true) == true);
-    assert(is_vector([0,1e-6,0],nonzero=true,eps=1e-4) == false);
+
+    assert(is_vector([0,0,0],zero=true) == true);
+    assert(is_vector([0,0,0],zero=false) == false);
+    assert(is_vector([0,1,0],zero=true) == false);
+    assert(is_vector([0,0,1],zero=false) == true);
 }
 test_is_vector();
 

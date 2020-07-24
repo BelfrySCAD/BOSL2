@@ -19,30 +19,29 @@
 // Arguments:
 //   v = The value to test to see if it is a vector.
 //   length = If given, make sure the vector is `length` items long.
+//   zero = If false, require that the length of the vector is not approximately zero.  If true, require the length of the vector to be approx zero-length.  Default: `undef` (don't check vector length.)
+//   eps = The minimum vector length that is considered non-zero.  Default: `EPSILON` (`1e-9`)
 // Example:
-//   is_vector(4);                          // Returns false
-//   is_vector([4,true,false]);             // Returns false
-//   is_vector([3,4,INF,5]);                // Returns false
-//   is_vector([3,4,5,6]);                  // Returns true
-//   is_vector([3,4,undef,5]);              // Returns false
-//   is_vector([3,4,5],3);                  // Returns true
-//   is_vector([3,4,5],4);                  // Returns true
-//   is_vector([]);                         // Returns false
-//   is_vector([0,4,0],3,nonzero=true);     // Returns true
-//   is_vector([0,0,0],nonzero=true);       // Returns false
-//   is_vector([0,0,1e-12],nonzero=true);   // Returns false
-//   is_vector([],nonzero=true);            // Returns false
-function is_vector(v,length, nonzero=false, eps=EPSILON) =
-    is_list(v) && is_num(0*(v*v)) 
-    && (is_undef(length)|| len(v)==length)
-    && ( ! nonzero || ([]!=[for(vi=v) if(abs(vi)>=eps) 1]) );
-
-//***
-// including non_zero option
-// extended examples
+//   is_vector(4);              // Returns false
+//   is_vector([4,true,false]); // Returns false
+//   is_vector([3,4,INF,5]);    // Returns false
+//   is_vector([3,4,5,6]);      // Returns true
+//   is_vector([3,4,undef,5]);  // Returns false
+//   is_vector([3,4,5],3);      // Returns true
+//   is_vector([3,4,5],4);      // Returns true
+//   is_vector([]);             // Returns false
+//   is_vector([0,0,0],zero=true);   // Returns true
+//   is_vector([0,0,0],zero=false);  // Returns false
+//   is_vector([0,1,0],zero=true);   // Returns false
+//   is_vector([0,0,1],zero=false);  // Returns true
+function is_vector(v,length,zero,eps=EPSILON) =
+    is_list(v) && is_num(0*(v*v))
+    && (is_undef(length) || len(v)==length)
+    && (is_undef(zero) || ((norm(v) >= eps) == !zero));
 
 //***
 // add_scalar() is an array operation: moved to array.scad 
+
 
 // Function: vang()
 // Usage:
@@ -204,26 +203,28 @@ function vector_axis(v1,v2=undef,v3=undef) =
     is_vector(v3)
     ?   assert(is_consistent([v3,v2,v1]), "Bad arguments.")
         vector_axis(v1-v2, v3-v2)
-    :   assert( is_undef(v3), "Bad arguments.")
-        is_undef(v2)
-        ?   assert( is_list(v1), "Bad arguments.")
-            len(v1) == 2 
-            ?   vector_axis(v1[0],v1[1]) 
-            :   vector_axis(v1[0],v1[1],v1[2])
-        :   assert( is_vector(v1,nonzero=true) && is_vector(v2,nonzero=true) && is_consistent([v1,v2])
-                    , "Bad arguments.")  
-            let(
-              eps = 1e-6,
-              w1 = point3d(v1/norm(v1)),
-              w2 = point3d(v2/norm(v2)),
-              w3 = (norm(w1-w2) > eps && norm(w1+w2) > eps) ? w2 
-                   : (norm(vabs(w2)-UP) > eps)? UP 
-                   : RIGHT
-            ) unit(cross(w1,w3));
+    :
+    assert( is_undef(v3), "Bad arguments.")
+    is_undef(v2)
+    ?   assert( is_list(v1), "Bad arguments.")
+        len(v1) == 2
+            ? vector_axis(v1[0],v1[1])
+            : vector_axis(v1[0],v1[1],v1[2])
+    :
+    assert(
+        is_vector(v1,zero=false) &&
+            is_vector(v2,zero=false) &&
+            is_consistent([v1,v2]),
+        "Bad arguments."
+    )
+    let(
+        eps = 1e-6,
+        w1 = point3d(v1/norm(v1)),
+        w2 = point3d(v2/norm(v2)),
+        w3 = (norm(w1-w2) > eps && norm(w1+w2) > eps) ? w2
+           : (norm(vabs(w2)-UP) > eps) ? UP
+           : RIGHT
+    ) unit(cross(w1,w3));
 
-
-//***
-// completing input data check and refactoring 
-// Note: vector_angle and vector_axis have the same kind of inputs and two code strategy alternatives
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
