@@ -217,8 +217,8 @@ function vector_axis(v1,v2=undef,v3=undef) =
               w1 = point3d(v1/norm(v1)),
               w2 = point3d(v2/norm(v2)),
               w3 = (norm(w1-w2) > eps && norm(w1+w2) > eps) ? w2 
-							     : (norm(vabs(w2)-UP) > eps)? UP 
-									 : RIGHT
+                   : (norm(vabs(w2)-UP) > eps)? UP 
+                   : RIGHT
             ) unit(cross(w1,w3));
 
 

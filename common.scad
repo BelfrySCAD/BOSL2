@@ -320,7 +320,7 @@ function scalar_vec3(v, dflt=undef) =
 function segs(r) = 
     $fn>0? ($fn>3? $fn : 3) :
     let( r = is_finite(r)? r: 0 ) 
-		ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs))) ;
+    ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs))) ;
 
 //***
 // avoids undef
