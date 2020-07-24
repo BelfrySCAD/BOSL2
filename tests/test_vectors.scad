@@ -17,13 +17,6 @@ module test_is_vector() {
 test_is_vector();
 
 
-module test_add_scalar() {
-    assert(add_scalar([1,2,3],3) == [4,5,6]);
-    assert(add_scalar([[1,2,3],[3,4,5]],3) == [[4,5,6],[6,7,8]]);
-}
-test_add_scalar();
-
-
 module test_vfloor() {
     assert_equal(vfloor([2.0, 3.14, 18.9, 7]), [2,3,18,7]);
     assert_equal(vfloor([-2.0, -3.14, -18.9, -7]), [-2,-4,-19,-7]);

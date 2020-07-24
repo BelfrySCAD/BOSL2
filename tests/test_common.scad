@@ -18,6 +18,10 @@ module test_typeof() {
     assert(typeof([0:1:5]) == "range");
     assert(typeof([-3:2:5]) == "range");
     assert(typeof([10:-2:-10]) == "range");
+    assert(typeof([0:NAN:INF]) == "invalid");
+    assert(typeof([0:"a":INF]) == "undef"); 
+    assert(typeof([0:[]:INF]) == "undef"); 
+    assert(typeof([true:1:INF]) == "undef"); 
 }
 test_typeof();
 
@@ -102,6 +106,8 @@ module test_is_int() {
     assert(!is_int(-99.1));
     assert(!is_int(99.1));
     assert(!is_int(undef));
+    assert(!is_int(INF));
+    assert(!is_int(NAN));
     assert(!is_int(false));
     assert(!is_int(true));
     assert(!is_int("foo"));
@@ -124,6 +130,8 @@ module test_is_integer() {
     assert(!is_integer(-99.1));
     assert(!is_integer(99.1));
     assert(!is_integer(undef));
+    assert(!is_integer(INF));
+    assert(!is_integer(NAN));
     assert(!is_integer(false));
     assert(!is_integer(true));
     assert(!is_integer("foo"));
@@ -166,6 +174,9 @@ module test_is_range() {
     assert(!is_range("foo"));
     assert(!is_range([]));
     assert(!is_range([3,4,5]));
+    assert(!is_range([INF:4:5]));
+    assert(!is_range([3:NAN:5]));
+    assert(!is_range([3:4:"a"]));
     assert(is_range([3:1:5]));
 }
 test_is_nan();
@@ -331,11 +342,25 @@ module test_scalar_vec3() {
     assert(scalar_vec3([3]) == [3,0,0]);
     assert(scalar_vec3([3,4]) == [3,4,0]);
     assert(scalar_vec3([3,4],dflt=1) == [3,4,1]);
+    assert(scalar_vec3([3,"a"],dflt=1) == [3,"a",1]);
+    assert(scalar_vec3([3,[2]],dflt=1) == [3,[2],1]);
     assert(scalar_vec3([3],dflt=1) == [3,1,1]);
     assert(scalar_vec3([3,4,5]) == [3,4,5]);
+    assert(scalar_vec3([3,4,5,6]) == [3,4,5]);
     assert(scalar_vec3([3,4,5,6]) == [3,4,5]);
 }
 test_scalar_vec3();
 
+
+module test_segs() {
+    assert_equal(segs(50,$fn=8), 8);
+    assert_equal(segs(50,$fa=2,$fs=2), 158);
+    assert(segs(1)==5);
+    assert(segs(11)==30);
+  //  assert(segs(1/0)==5);
+  //  assert(segs(0/0)==5);
+  //  assert(segs(undef)==5);
+}
+test_segs();
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

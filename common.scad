@@ -15,7 +15,8 @@
 // Usage:
 //   typ = typeof(x);
 // Description:
-//   Returns a string representing the type of the value.  One of "undef", "boolean", "number", "nan", "string", "list", or "range"
+//   Returns a string representing the type of the value.  One of "undef", "boolean", "number", "nan", "string", "list", "range" or "invalid".
+//   Some malformed "ranges", like '[0:NAN:INF]' and '[0:"a":INF]', may be classified as "undef" or "invalid".
 function typeof(x) =
     is_undef(x)? "undef" :
     is_bool(x)? "boolean" :
@@ -23,8 +24,11 @@ function typeof(x) =
     is_nan(x)? "nan" :
     is_string(x)? "string" :
     is_list(x)? "list" :
-    "range";
+    is_range(x) ? "range" :
+    "invalid";
 
+//***
+// included "invalid"
 
 // Function: is_type()
 // Usage:
@@ -70,8 +74,8 @@ function is_str(x) = is_string(x);
 //   is_int(n)
 // Description:
 //   Returns true if the given value is an integer (it is a number and it rounds to itself).  
-function is_int(n) = is_num(n) && n == round(n);
-function is_integer(n) = is_num(n) && n == round(n);
+function is_int(n) = is_finite(n) && n == round(n);
+function is_integer(n) = is_finite(n) && n == round(n);
 
 
 // Function: is_nan()
@@ -93,7 +97,7 @@ function is_finite(v) = is_num(0*v);
 // Function: is_range()
 // Description:
 //   Returns true if its argument is a range
-function is_range(x) = is_num(x[0]) && !is_list(x);
+function is_range(x) = !is_list(x) && is_finite(x[0]+x[1]+x[2]) ;
 
 
 // Function: is_list_of()
@@ -106,13 +110,15 @@ function is_range(x) = is_num(x[0]) && !is_list(x);
 //   is_list_of([3,4,5], 0);            // Returns true
 //   is_list_of([3,4,undef], 0);        // Returns false
 //   is_list_of([[3,4],[4,5]], [1,1]);  // Returns true
+//   is_list_of([[3,"a"],[4,true]], [1,undef]);  // Returns true
 //   is_list_of([[3,4], 6, [4,5]], [1,1]);  // Returns false
-//   is_list_of([[1,[3,4]], [4,[5,6]]], [1,[2,3]]);    // Returne true
-//   is_list_of([[1,[3,INF]], [4,[5,6]]], [1,[2,3]]);  // Returne false
+//   is_list_of([[1,[3,4]], [4,[5,6]]], [1,[2,3]]);    // Returns true
+//   is_list_of([[1,[3,INF]], [4,[5,6]]], [1,[2,3]]);  // Returns false
+//   is_list_of([], [1,[2,3]]);                        // Returns true
 function is_list_of(list,pattern) =
     let(pattern = 0*pattern)
     is_list(list) &&
-    []==[for(entry=list) if (entry*0 != pattern) entry];
+    []==[for(entry=0*list) if (entry != pattern) entry];
 
 
 // Function: is_consistent()
@@ -311,10 +317,13 @@ function scalar_vec3(v, dflt=undef) =
 //   Calculate the standard number of sides OpenSCAD would give a circle based on `$fn`, `$fa`, and `$fs`.
 // Arguments:
 //   r = Radius of circle to get the number of segments for.
-function segs(r) =
+function segs(r) = 
     $fn>0? ($fn>3? $fn : 3) :
-    ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs)));
+    let( r = is_finite(r)? r: 0 ) 
+    ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs))) ;
 
+//***
+// avoids undef
 
 
 // Section: Testing Helpers
@@ -322,7 +331,7 @@ function segs(r) =
 
 function _valstr(x) =
     is_list(x)? str("[",str_join([for (xx=x) _valstr(xx)],","),"]") :
-    is_num(x)? fmt_float(x,12) : x;
+    is_finite(x)? fmt_float(x,12) : x;
 
 
 // Module: assert_approx()
