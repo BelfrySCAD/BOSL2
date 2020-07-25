@@ -64,7 +64,13 @@ function vang(v) =
 //   vmul([3,4,5], [8,7,6]);  // Returns [24, 28, 30]
 function vmul(v1, v2) = 
 //    assert( is_vector(v1) && is_vector(v2,len(v1)), "Incompatible vectors")
+    assert( is_vector(v1) && is_vector(v2), "Invalid vector(s)")
     [for (i = [0:1:len(v1)-1]) v1[i]*v2[i]];
+    
+//***
+// some other functions seem to rely on the multiplication of vectors with different lengths
+// so, vmul assert cannot check lengths for now
+// when len(v1)>len(v2), undef will be in the output list.
 
 
 // Function: vdiv()

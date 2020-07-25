@@ -33,9 +33,12 @@ module test_in_list() {
     assert(in_list("bar", ["foo", "bar", "baz"]));
     assert(!in_list("bee", ["foo", "bar", "baz"]));
     assert(in_list("bar", [[2,"foo"], [4,"bar"], [3,"baz"]], idx=1));
-    
     assert(!in_list("bee", ["foo", "bar", ["bee"]]));
     assert(in_list(NAN, [NAN])==false);
+    assert(!in_list(undef, [3,4,5]));
+    assert(in_list(undef,[3,4,undef,5]));
+    assert(!in_list(3,[]));
+    assert(!in_list(3,[4,5,[3]]));
 }
 test_in_list();
 
