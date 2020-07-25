@@ -237,8 +237,8 @@ module stroke(
         } else {
             quatsums = Q_Cumulative([
                 for (i = idx(path2,end=-2)) let(
-                    vec1 = i==0? UP : unit(path2[i]-path2[i-1]),
-                    vec2 = unit(path2[i+1]-path2[i]),
+                    vec1 = i==0? UP : unit(path2[i]-path2[i-1], UP),
+                    vec2 = unit(path2[i+1]-path2[i], UP),
                     axis = vector_axis(vec1,vec2),
                     ang = vector_angle(vec1,vec2)
                 ) Quat(axis,ang)
@@ -961,8 +961,8 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
                 tipp = polar_to_xy(r-inset+rounding,a1),
                 pos = (p1+p2)/2
             ) each [
-                anchorpt(str("tip",i), tipp, unit(tipp), 0),
-                anchorpt(str("side",i), pos, unit(pos), 0),
+                anchorpt(str("tip",i), tipp, unit(tipp,BACK), 0),
+                anchorpt(str("side",i), pos, unit(pos,BACK), 0),
             ]
         ]
     ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path, anchors=anchors);
@@ -983,8 +983,8 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
             tipp = polar_to_xy(r-inset+rounding,a1),
             pos = (p1+p2)/2
         ) each [
-            anchorpt(str("tip",i), tipp, unit(tipp), 0),
-            anchorpt(str("side",i), pos, unit(pos), 0),
+            anchorpt(str("tip",i), tipp, unit(tipp,BACK), 0),
+            anchorpt(str("side",i), pos, unit(pos,BACK), 0),
         ]
     ];
     attachable(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors) {
@@ -1332,9 +1332,9 @@ function star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=
                 p3 = polar_to_xy(r,a3),
                 pos = (p1+p3)/2
             ) each [
-                anchorpt(str("tip",i), p1, unit(p1), 0),
-                anchorpt(str("corner",i), p2, unit(p2), 0),
-                anchorpt(str("midpt",i), pos, unit(pos), 0),
+                anchorpt(str("tip",i), p1, unit(p1,BACK), 0),
+                anchorpt(str("corner",i), p2, unit(p2,BACK), 0),
+                anchorpt(str("midpt",i), pos, unit(pos,BACK), 0),
             ]
         ]
     ) reorient(anchor,spin, two_d=true, path=path, p=path, anchors=anchors);
@@ -1355,9 +1355,9 @@ module star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0)
             p3 = polar_to_xy(r,a3),
             pos = (p1+p3)/2
         ) each [
-            anchorpt(str("tip",i), p1, unit(p1), 0),
-            anchorpt(str("corner",i), p2, unit(p2), 0),
-            anchorpt(str("midpt",i), pos, unit(pos), 0),
+            anchorpt(str("tip",i), p1, unit(p1,BACK), 0),
+            anchorpt(str("corner",i), p2, unit(p2,BACK), 0),
+            anchorpt(str("midpt",i), pos, unit(pos,BACK), 0),
         ]
     ];
     attachable(anchor,spin, two_d=true, path=path, anchors=anchors) {

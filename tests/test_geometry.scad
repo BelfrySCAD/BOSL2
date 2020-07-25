@@ -1,4 +1,4 @@
-include <BOSL2/std.scad>
+include <../std.scad>
 
 
 module test_point_on_segment2d() {
@@ -87,7 +87,7 @@ module test_line_normal() {
     assert(line_normal([[0,0],[-10,0]]) == [0,-1]);
     assert(line_normal([[0,0],[0,-10]]) == [1,0]);
     assert(approx(line_normal([[0,0],[10,10]]), [-sqrt(2)/2,sqrt(2)/2]));
-    pts = [for (i=list_range(1000)) rands(-100,100,2,seed_value=4312)];
+    pts = [for (p=pair(rands(-100,100,1000,seed_value=4312))) p];
     for (p = pair_wrap(pts)) {
         p1 = p.x;
         p2 = p.y;
@@ -351,18 +351,18 @@ module test_tri_functions() {
         opp = p.y;
         hyp = norm([opp,adj]);
         ang = atan2(opp,adj);
-        assert(approx(hyp_opp_to_adj(hyp,opp),adj));
-        assert(approx(hyp_ang_to_adj(hyp,ang),adj));
-        assert(approx(opp_ang_to_adj(opp,ang),adj));
-        assert(approx(hyp_adj_to_opp(hyp,adj),opp));
-        assert(approx(hyp_ang_to_opp(hyp,ang),opp));
-        assert(approx(adj_ang_to_opp(adj,ang),opp));
-        assert(approx(adj_opp_to_hyp(adj,opp),hyp));
-        assert(approx(adj_ang_to_hyp(adj,ang),hyp));
-        assert(approx(opp_ang_to_hyp(opp,ang),hyp));
-        assert(approx(hyp_adj_to_ang(hyp,adj),ang));
-        assert(approx(hyp_opp_to_ang(hyp,opp),ang));
-        assert(approx(adj_opp_to_ang(adj,opp),ang));
+        assert_approx(hyp_opp_to_adj(hyp,opp), adj);
+        assert_approx(hyp_ang_to_adj(hyp,ang), adj);
+        assert_approx(opp_ang_to_adj(opp,ang), adj);
+        assert_approx(hyp_adj_to_opp(hyp,adj), opp);
+        assert_approx(hyp_ang_to_opp(hyp,ang), opp);
+        assert_approx(adj_ang_to_opp(adj,ang), opp);
+        assert_approx(adj_opp_to_hyp(adj,opp), hyp);
+        assert_approx(adj_ang_to_hyp(adj,ang), hyp);
+        assert_approx(opp_ang_to_hyp(opp,ang), hyp);
+        assert_approx(hyp_adj_to_ang(hyp,adj), ang);
+        assert_approx(hyp_opp_to_ang(hyp,opp), ang);
+        assert_approx(adj_opp_to_ang(adj,opp), ang);
     }
 }
 test_tri_functions();
@@ -613,6 +613,23 @@ module test_pointlist_bounds() {
         [23,57,-42]
     ];
     assert(pointlist_bounds(pts) == [[-63,-32,-42], [84,97,42]]);
+    pts2d = [
+        [-53,12],
+        [-63,36],
+        [84,-5],
+        [63,42],
+        [23,-42] 
+    ];
+    assert(pointlist_bounds(pts2d) == [[-63,-42],[84,42]]);
+    pts5d = [
+        [-53,27,12,-53,12],
+        [-63,97,36,-63,36],
+        [84,-32,-5,84,-5], 
+        [63,-24,42,63,42], 
+        [23,57,-42,23,-42]
+    ];
+    assert(pointlist_bounds(pts5d) == [[-63,-32,-42,-63,-42],[84,97,42,84,42]]);
+    assert(pointlist_bounds([[3,4,5,6]]), [[3,4,5,6],[3,4,5,6]]);
 }
 test_pointlist_bounds();
 

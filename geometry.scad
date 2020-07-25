@@ -133,8 +133,9 @@ function distance_from_line(line, pt) =
 //   color("green") stroke([p1,p1+10*n], endcap2="arrow2");
 //   color("blue") move_copies([p1,p2]) circle(d=2, $fn=12);
 function line_normal(p1,p2) =
-    is_undef(p2)? line_normal(p1[0],p1[1]) :
-    unit([p1.y-p2.y,p2.x-p1.x]);
+    is_undef(p2)?
+        assert(is_path(p1,2)) line_normal(p1[0],p1[1]) :
+        assert(is_vector(p1,2)&&is_vector(p2,2)) unit([p1.y-p2.y,p2.x-p1.x]);
 
 
 // 2D Line intersection from two segments.
@@ -252,34 +253,192 @@ function segment_intersection(s1,s2,eps=EPSILON) =
 // Usage:
 //   line_closest_point(line,pt);
 // Description:
-//   Returns the point on the given `line` that is closest to the given point `pt`.
+//   Returns the point on the given 2D or 3D `line` that is closest to the given point `pt`.
+//   The `line` and `pt` args should either both be 2D or both 3D.
 // Arguments:
 //   line = A list of two points that are on the unbounded line.
 //   pt = The point to find the closest point on the line to.
+// Example(2D):
+//   line = [[-30,0],[30,30]];
+//   pt = [-32,-10];
+//   p2 = line_closest_point(line,pt);
+//   stroke(line, endcaps="arrow2");
+//   color("blue") translate(pt) circle(r=1,$fn=12);
+//   color("red") translate(p2) circle(r=1,$fn=12);
+// Example(2D):
+//   line = [[-30,0],[30,30]];
+//   pt = [-5,0];
+//   p2 = line_closest_point(line,pt);
+//   stroke(line, endcaps="arrow2");
+//   color("blue") translate(pt) circle(r=1,$fn=12);
+//   color("red") translate(p2) circle(r=1,$fn=12);
+// Example(2D):
+//   line = [[-30,0],[30,30]];
+//   pt = [40,25];
+//   p2 = line_closest_point(line,pt);
+//   stroke(line, endcaps="arrow2");
+//   color("blue") translate(pt) circle(r=1,$fn=12);
+//   color("red") translate(p2) circle(r=1,$fn=12);
+// Example(FlatSpin):
+//   line = [[-30,-15,0],[30,15,30]];
+//   pt = [5,5,5];
+//   p2 = line_closest_point(line,pt);
+//   stroke(line, endcaps="arrow2");
+//   color("blue") translate(pt) sphere(r=1,$fn=12);
+//   color("red") translate(p2) sphere(r=1,$fn=12);
+// Example(FlatSpin):
+//   line = [[-30,-15,0],[30,15,30]];
+//   pt = [-35,-15,0];
+//   p2 = line_closest_point(line,pt);
+//   stroke(line, endcaps="arrow2");
+//   color("blue") translate(pt) sphere(r=1,$fn=12);
+//   color("red") translate(p2) sphere(r=1,$fn=12);
+// Example(FlatSpin):
+//   line = [[-30,-15,0],[30,15,30]];
+//   pt = [40,15,25];
+//   p2 = line_closest_point(line,pt);
+//   stroke(line, endcaps="arrow2");
+//   color("blue") translate(pt) sphere(r=1,$fn=12);
+//   color("red") translate(p2) sphere(r=1,$fn=12);
 function line_closest_point(line,pt) =
+    assert(is_path(line)&&len(line)==2)
+    assert(same_shape(pt,line[0]))
+    assert(!approx(line[0],line[1]))
     let(
-        n = line_normal(line),
-        isect = _general_line_intersection(line,[pt,pt+n])
-    ) isect[0];
+        seglen = norm(line[1]-line[0]),
+        segvec = (line[1]-line[0])/seglen,
+        projection = (pt-line[0]) * segvec
+    )
+    line[0] + projection*segvec;
+
+
+// Function: ray_closest_point()
+// Usage:
+//   ray_closest_point(seg,pt);
+// Description:
+//   Returns the point on the given 2D or 3D ray `ray` that is closest to the given point `pt`.
+//   The `ray` and `pt` args should either both be 2D or both 3D.
+// Arguments:
+//   ray = The ray, given as a list `[START,POINT]` of the start-point START, and a point POINT on the ray.
+//   pt = The point to find the closest point on the ray to.
+// Example(2D):
+//   ray = [[-30,0],[30,30]];
+//   pt = [-32,-10];
+//   p2 = ray_closest_point(ray,pt);
+//   stroke(ray, endcap2="arrow2");
+//   color("blue") translate(pt) circle(r=1,$fn=12);
+//   color("red") translate(p2) circle(r=1,$fn=12);
+// Example(2D):
+//   ray = [[-30,0],[30,30]];
+//   pt = [-5,0];
+//   p2 = ray_closest_point(ray,pt);
+//   stroke(ray, endcap2="arrow2");
+//   color("blue") translate(pt) circle(r=1,$fn=12);
+//   color("red") translate(p2) circle(r=1,$fn=12);
+// Example(2D):
+//   ray = [[-30,0],[30,30]];
+//   pt = [40,25];
+//   p2 = ray_closest_point(ray,pt);
+//   stroke(ray, endcap2="arrow2");
+//   color("blue") translate(pt) circle(r=1,$fn=12);
+//   color("red") translate(p2) circle(r=1,$fn=12);
+// Example(FlatSpin):
+//   ray = [[-30,-15,0],[30,15,30]];
+//   pt = [5,5,5];
+//   p2 = ray_closest_point(ray,pt);
+//   stroke(ray, endcap2="arrow2");
+//   color("blue") translate(pt) sphere(r=1,$fn=12);
+//   color("red") translate(p2) sphere(r=1,$fn=12);
+// Example(FlatSpin):
+//   ray = [[-30,-15,0],[30,15,30]];
+//   pt = [-35,-15,0];
+//   p2 = ray_closest_point(ray,pt);
+//   stroke(ray, endcap2="arrow2");
+//   color("blue") translate(pt) sphere(r=1,$fn=12);
+//   color("red") translate(p2) sphere(r=1,$fn=12);
+// Example(FlatSpin):
+//   ray = [[-30,-15,0],[30,15,30]];
+//   pt = [40,15,25];
+//   p2 = ray_closest_point(ray,pt);
+//   stroke(ray, endcap2="arrow2");
+//   color("blue") translate(pt) sphere(r=1,$fn=12);
+//   color("red") translate(p2) sphere(r=1,$fn=12);
+function ray_closest_point(ray,pt) =
+    assert(is_path(ray)&&len(ray)==2)
+    assert(same_shape(pt,ray[0]))
+    assert(!approx(ray[0],ray[1]))
+    let(
+        seglen = norm(ray[1]-ray[0]),
+        segvec = (ray[1]-ray[0])/seglen,
+        projection = (pt-ray[0]) * segvec
+    )
+    projection<=0 ? ray[0] :
+    ray[0] + projection*segvec;
 
 
 // Function: segment_closest_point()
 // Usage:
 //   segment_closest_point(seg,pt);
 // Description:
-//   Returns the point on the given line segment `seg` that is closest to the given point `pt`.
+//   Returns the point on the given 2D or 3D line segment `seg` that is closest to the given point `pt`.
+//   The `seg` and `pt` args should either both be 2D or both 3D.
 // Arguments:
 //   seg = A list of two points that are the endpoints of the bounded line segment.
 //   pt = The point to find the closest point on the segment to.
+// Example(2D):
+//   seg = [[-30,0],[30,30]];
+//   pt = [-32,-10];
+//   p2 = segment_closest_point(seg,pt);
+//   stroke(seg);
+//   color("blue") translate(pt) circle(r=1,$fn=12);
+//   color("red") translate(p2) circle(r=1,$fn=12);
+// Example(2D):
+//   seg = [[-30,0],[30,30]];
+//   pt = [-5,0];
+//   p2 = segment_closest_point(seg,pt);
+//   stroke(seg);
+//   color("blue") translate(pt) circle(r=1,$fn=12);
+//   color("red") translate(p2) circle(r=1,$fn=12);
+// Example(2D):
+//   seg = [[-30,0],[30,30]];
+//   pt = [40,25];
+//   p2 = segment_closest_point(seg,pt);
+//   stroke(seg);
+//   color("blue") translate(pt) circle(r=1,$fn=12);
+//   color("red") translate(p2) circle(r=1,$fn=12);
+// Example(FlatSpin):
+//   seg = [[-30,-15,0],[30,15,30]];
+//   pt = [5,5,5];
+//   p2 = segment_closest_point(seg,pt);
+//   stroke(seg);
+//   color("blue") translate(pt) sphere(r=1,$fn=12);
+//   color("red") translate(p2) sphere(r=1,$fn=12);
+// Example(FlatSpin):
+//   seg = [[-30,-15,0],[30,15,30]];
+//   pt = [-35,-15,0];
+//   p2 = segment_closest_point(seg,pt);
+//   stroke(seg);
+//   color("blue") translate(pt) sphere(r=1,$fn=12);
+//   color("red") translate(p2) sphere(r=1,$fn=12);
+// Example(FlatSpin):
+//   seg = [[-30,-15,0],[30,15,30]];
+//   pt = [40,15,25];
+//   p2 = segment_closest_point(seg,pt);
+//   stroke(seg);
+//   color("blue") translate(pt) sphere(r=1,$fn=12);
+//   color("red") translate(p2) sphere(r=1,$fn=12);
 function segment_closest_point(seg,pt) =
+    assert(is_path(seg)&&len(seg)==2)
+    assert(same_shape(pt,seg[0]))
+    approx(seg[0],seg[1])? seg[0] :
     let(
-        n = line_normal(seg),
-        isect = _general_line_intersection(seg,[pt,pt+n])
+        seglen = norm(seg[1]-seg[0]),
+        segvec = (seg[1]-seg[0])/seglen,
+        projection = (pt-seg[0]) * segvec
     )
-    norm(n)==0? seg[0] :
-    isect[1]<=0? seg[0] :
-    isect[1]>=1? seg[1] :
-    isect[0];
+    projection<=0 ? seg[0] :
+    projection>=seglen ? seg[1] :
+    seg[0] + projection*segvec;
 
 
 // Section: 2D Triangles
@@ -1221,15 +1380,18 @@ function find_noncollinear_points(points) =
 // Usage:
 //   pointlist_bounds(pts);
 // Description:
-//   Finds the bounds containing all the 2D or 3D points in `pts`.
-//   Returns `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
+//   Finds the bounds containing all the points in `pts` which can be a list of points in any dimension.
+//   Returns a list of two items: a list of the minimums and a list of the maximums.  For example, with
+//   3d points `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
 // Arguments:
 //   pts = List of points.
-function pointlist_bounds(pts) = [
-    [for (a=[0:2]) min([ for (x=pts) point3d(x)[a] ]) ],
-    [for (a=[0:2]) max([ for (x=pts) point3d(x)[a] ]) ]
-];
-
+function pointlist_bounds(pts) =
+    assert(is_matrix(pts))
+    let(ptsT = transpose(pts))
+    [
+      [for(row=ptsT) min(row)],
+      [for(row=ptsT) max(row)]
+    ];
 
 // Function: closest_point()
 // Usage:

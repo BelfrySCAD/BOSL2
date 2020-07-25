@@ -67,7 +67,7 @@ function hypot(x,y,z=0) = norm([x,y,z]);
 // Usage:
 //   x = factorial(n,[d]);
 // Description:
-//   Returns the factorial of the given integer value.
+//   Returns the factorial of the given integer value, or n!/d! if d is given.  
 // Arguments:
 //   n = The integer number to get the factorial of.  (n!)
 //   d = If given, the returned value will be (n! / d!)
@@ -75,7 +75,10 @@ function hypot(x,y,z=0) = norm([x,y,z]);
 //   x = factorial(4);  // Returns: 24
 //   y = factorial(6);  // Returns: 720
 //   z = factorial(9);  // Returns: 362880
-function factorial(n,d=1) = product([for (i=[n:-1:d]) i]);
+function factorial(n,d=0) =
+    assert(n>=0 && d>=0, "Factorial is not defined for negative numbers")
+    assert(d<=n, "d cannot be larger than n")
+    product([1,for (i=[n:-1:d+1]) i]);
 
 
 // Function: lerp()
@@ -525,6 +528,17 @@ function deltas(v) = [for (p=pair(v)) p.y-p.x];
 function product(v, i=0, tot=undef) = i>=len(v)? tot : product(v, i+1, ((tot==undef)? v[i] : is_vector(v[i])? vmul(tot,v[i]) : tot*v[i]));
 
 
+// Function: outer_product()
+// Description:
+//   Compute the outer product of two vectors, a matrix.  
+// Usage:
+//   M = outer_product(u,v);
+function outer_product(u,v) =
+  assert(is_vector(u) && is_vector(v))
+  assert(len(u)==len(v))
+  [for(i=[0:len(u)-1]) [for(j=[0:len(u)-1]) u[i]*v[j]]];
+
+
 // Function: mean()
 // Description:
 //   Returns the arithmatic mean/average of all entries in the given array.
@@ -563,7 +577,7 @@ function median(v) =
 // Description:
 //   Solves the linear system Ax=b.  If A is square and non-singular the unique solution is returned.  If A is overdetermined
 //   the least squares solution is returned.  If A is underdetermined, the minimal norm solution is returned.
-//   If A is rank deficient or singular then linear_solve returns `undef`.  If b is a matrix that is compatible with A
+//   If A is rank deficient or singular then linear_solve returns [].  If b is a matrix that is compatible with A
 //   then the problem is solved for the matrix valued right hand side and a matrix is returned.  Note that if you 
 //   want to solve Ax=b1 and Ax=b2 that you need to form the matrix transpose([b1,b2]) for the right hand side and then
 //   transpose the returned value.  
@@ -582,7 +596,7 @@ function linear_solve(A,b) =
         R = submatrix(qr[1],[0:mindim-1], [0:mindim-1]),
         zeros = [for(i=[0:mindim-1]) if (approx(R[i][i],0)) i]
     )
-    zeros != [] ? undef :
+    zeros != [] ? [] :
     m<n ? Q*back_substitute(R,b,transpose=true) :
     back_substitute(R, transpose(Q)*b);
 
@@ -604,7 +618,8 @@ function matrix_inverse(A) =
 // Usage: submatrix(M, ind1, ind2)
 // Description:
 //   Returns a submatrix with the specified index ranges or index sets.  
-function submatrix(M,ind1,ind2) = [for(i=ind1) [for(j=ind2) M[i][j] ] ];
+function submatrix(M,ind1,ind2) =
+    [for(i=ind1) [for(j=ind2) M[i][j] ] ];
 
 
 // Function: qr_factor()
@@ -635,7 +650,7 @@ function _qr_factor(A,Q, column, m, n) =
         alpha = (x[0]<=0 ? 1 : -1) * norm(x),
         u = x - concat([alpha],repeat(0,m-1)),
         v = alpha==0 ? u : u / norm(u),
-        Qc = ident(len(x)) - 2*transpose([v])*[v],
+        Qc = ident(len(x)) - 2*outer_product(v,v),
         Qf = [for(i=[0:m-1]) [for(j=[0:m-1]) i<column || j<column ? (i==j ? 1 : 0) : Qc[i-column][j-column]]]
     )
     _qr_factor(Qf*A, Q*Qf, column+1, m, n);
@@ -647,11 +662,12 @@ function _qr_factor(A,Q, column, m, n) =
 //   Solves the problem Rx=b where R is an upper triangular square matrix.  No check is made that the lower triangular entries
 //   are actually zero.  If transpose==true then instead solve transpose(R)*x=b.
 //   You can supply a compatible matrix b and it will produce the solution for every column of b.  Note that if you want to
-//   solve Rx=b1 and Rx=b2 you must set b to transpose([b1,b2]) and then take the transpose of the result. 
+//   solve Rx=b1 and Rx=b2 you must set b to transpose([b1,b2]) and then take the transpose of the result.  If the matrix
+//   is singular (e.g. has a zero on the diagonal) then it returns [].  
 function back_substitute(R, b, x=[],transpose = false) =
     assert(is_matrix(R, square=true))
     let(n=len(R))
-    assert(is_vector(b,n) || is_matrix(b,n),"R and b are not compatible in back_substitute")
+    assert(is_vector(b,n) || is_matrix(b,n),str("R and b are not compatible in back_substitute ",n, len(b)))
     !is_vector(b) ? transpose([for(i=[0:len(b[0])-1]) back_substitute(R,subindex(b,i),transpose=transpose)]) :
     transpose?
         reverse(back_substitute(
@@ -660,7 +676,10 @@ function back_substitute(R, b, x=[],transpose = false) =
         )) :
     len(x) == n ? x :
     let(
-        ind = n - len(x) - 1,
+        ind = n - len(x) - 1
+    )
+    R[ind][ind] == 0 ? [] :
+    let(
         newvalue =
             len(x)==0? b[ind]/R[ind][ind] : 
             (b[ind]-select(R[ind],ind+1,-1) * x)/R[ind][ind]
@@ -733,7 +752,7 @@ function determinant(M) =
 //   m = optional height of matrix
 //   n = optional width of matrix
 //   square = set to true to require a square matrix.  Default: false        
-function is_matrix(A,n,m,square=false) =
+function is_matrix(A,m,n,square=false) =
     is_vector(A[0],n) && is_vector(A*(0*A[0]),m) &&
     (!square || len(A)==len(A[0]));
 
@@ -1037,10 +1056,80 @@ function C_div(z1,z2) = let(den = z2.x*z2.x + z2.y*z2.y)
 //   Evaluates specified real polynomial, p, at the complex or real input value, z.
 //   The polynomial is specified as p=[a_n, a_{n-1},...,a_1,a_0]
 //   where a_n is the z^n coefficient.  Polynomial coefficients are real.
+
+// Note: this should probably be recoded to use division by [1,-z], which is more accurate
+// and avoids overflow with large coefficients, but requires poly_div to support complex coefficients.  
 function polynomial(p, z, k, zk, total) =
    is_undef(k) ? polynomial(p, z, len(p)-1, is_num(z)? 1 : [1,0], is_num(z) ? 0 : [0,0]) :
    k==-1 ? total :
    polynomial(p, z, k-1, is_num(z) ? zk*z : C_times(zk,z), total+zk*p[k]);
+
+
+// Function: poly_mult()
+// Usage
+//   polymult(p,q)
+//   polymult([p1,p2,p3,...])
+// Descriptoin:
+//   Given a list of polynomials represented as real coefficient lists, with the highest degree coefficient first, 
+//   computes the coefficient list of the product polynomial.  
+function poly_mult(p,q) = 
+  is_undef(q) ?
+     assert(is_list(p) && (is_vector(p[0]) || p[0]==[]), "Invalid arguments to poly_mult")
+     len(p)==2 ? poly_mult(p[0],p[1]) 
+               : poly_mult(p[0], poly_mult(select(p,1,-1)))
+  :
+  _poly_trim(
+  [
+  for(n = [len(p)+len(q)-2:-1:0])
+      sum( [for(i=[0:1:len(p)-1])
+           let(j = len(p)+len(q)- 2 - n - i)
+           if (j>=0 && j<len(q)) p[i]*q[j]
+               ])
+   ]);        
+
+
+// Function: poly_div()
+// Usage:
+//    [quotient,remainder] = poly_div(n,d)
+// Description:
+//    Computes division of the numerator polynomial by the denominator polynomial and returns
+//    a list of two polynomials, [quotient, remainder].  If the division has no remainder then
+//    the zero polynomial [] is returned for the remainder.  Similarly if the quotient is zero
+//    the returned quotient will be [].  
+function poly_div(n,d,q=[]) =
+    assert(len(d)>0 && d[0]!=0 , "Denominator is zero or has leading zero coefficient")
+    len(n)<len(d) ? [q,_poly_trim(n)] : 
+    let(
+      t = n[0] / d[0],
+      newq = concat(q,[t]),
+      newn =  [for(i=[1:1:len(n)-1]) i<len(d) ? n[i] - t*d[i] : n[i]]
+    )  
+    poly_div(newn,d,newq);
+
+
+// Internal Function: _poly_trim()
+// Usage:
+//    _poly_trim(p,[eps])
+// Description:
+//    Removes leading zero terms of a polynomial.  By default zeros must be exact,
+//    or give epsilon for approximate zeros.  
+function _poly_trim(p,eps=0) =
+  let(  nz = [for(i=[0:1:len(p)-1]) if (!approx(p[i],0,eps)) i])
+  len(nz)==0 ? [] : select(p,nz[0],-1);
+
+
+// Function: poly_add()
+// Usage:
+//    sum = poly_add(p,q)
+// Description:
+//    Computes the sum of two polynomials.  
+function poly_add(p,q) = 
+  let(  plen = len(p),
+        qlen = len(q),
+        long = plen>qlen ? p : q,
+        short = plen>qlen ? q : p
+     )
+   _poly_trim(long + concat(repeat(0,len(long)-len(short)),short));
 
 
 // Function: poly_roots()
@@ -1062,14 +1151,18 @@ function polynomial(p, z, k, zk, total) =
 // Dario Bini. "Numerical computation of polynomial zeros by means of Aberth's Method", Numerical Algorithms, Feb 1996.
 // https://www.researchgate.net/publication/225654837_Numerical_computation_of_polynomial_zeros_by_means_of_Aberth's_method
 
-function poly_roots(p,tol=1e-14) =
+function poly_roots(p,tol=1e-14,error_bound=false) =
   assert(p!=[], "Input polynomial must have a nonzero coefficient")
   assert(is_vector(p), "Input must be a vector")
-  p[0] == 0 ? poly_roots(slice(p,1,-1)) :    // Strip leading zero coefficients
-  p[len(p)-1] == 0 ? [[0,0],                 // Strip trailing zero coefficients
-                      each poly_roots(select(p,0,-2))] :
-  len(p)==1 ? [] :                  // Nonzero constant case has no solutions
-  len(p)==2 ? [[-p[1]/p[0],0]] :    // Linear case needs special handling
+  p[0] == 0 ? poly_roots(slice(p,1,-1),tol=tol,error_bound=error_bound) :    // Strip leading zero coefficients
+  p[len(p)-1] == 0 ?                                       // Strip trailing zero coefficients
+      let( solutions = poly_roots(select(p,0,-2),tol=tol, error_bound=error_bound))
+      (error_bound ? [ [[0,0], each solutions[0]], [0, each solutions[1]]]
+                  : [[0,0], each solutions]) :
+  len(p)==1 ? (error_bound ? [[],[]] : []) :               // Nonzero constant case has no solutions
+  len(p)==2 ? let( solution = [[-p[1]/p[0],0]])            // Linear case needs special handling
+              (error_bound ? [solution,[0]] : solution)
+  : 
   let(
       n = len(p)-1,   // polynomial degree
       pderiv = [for(i=[0:n-1]) p[i]*(n-i)],
@@ -1082,9 +1175,12 @@ function poly_roots(p,tol=1e-14) =
       init = [for(i=[0:1:n-1])                // Initial guess for roots       
                let(angle = 360*i/n+270/n/PI)
                [beta,0]+r*[cos(angle),sin(angle)]
-             ]
+             ],
+      roots = _poly_roots(p,pderiv,s,init,tol=tol),
+      error = error_bound ? [for(xi=roots) n * (norm(polynomial(p,xi))+tol*polynomial(s,norm(xi))) /
+                                abs(norm(polynomial(pderiv,xi))-tol*polynomial(s,norm(xi)))] : 0
     )
-   _poly_roots(p,pderiv,s,init,tol=tol);
+    error_bound ? [roots, error] : roots;
 
 // p = polynomial
 // pderiv = derivative polynomial of p
@@ -1114,7 +1210,10 @@ function _poly_roots(p, pderiv, s, z, tol, i=0) =
 //   The polynomial is specified as p=[a_n, a_{n-1},...,a_1,a_0]
 //   where a_n is the x^n coefficient.  This function works by
 //   computing the complex roots and returning those roots where
-//   the imaginary part is closed to zero, specifically: z.y/(1+norm(z)) < eps.  Because
+//   the imaginary part is closed to zero.  By default it uses a computed
+//   error bound from the polynomial solver to decide whether imaginary
+//   parts are zero.  You can specify eps, in which case the test is
+//   z.y/(1+norm(z)) < eps.  Because
 //   of poor convergence and higher error for repeated roots, such roots may
 //   be missed by the algorithm because their imaginary part is large.  
 // Arguments:
@@ -1122,11 +1221,13 @@ function _poly_roots(p, pderiv, s, z, tol, i=0) =
 //   eps = used to determine whether imaginary parts of roots are zero
 //   tol = tolerance for the complex polynomial root finder
 
-function real_roots(p,eps=EPSILON,tol=1e-14) =
+function real_roots(p,eps=undef,tol=1e-14) =
    let( 
-       roots = poly_roots(p)
+       roots_err = poly_roots(p,error_bound=true),
+       roots = roots_err[0],
+       err = roots_err[1]
    )
-   [for(z=roots) if (abs(z.y)/(1+norm(z))<eps) z.x];
-
+   is_def(eps) ? [for(z=roots) if (abs(z.y)/(1+norm(z))<eps) z.x]
+               : [for(i=idx(roots)) if (abs(roots[i].y)<=err[i]) roots[i].x];
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

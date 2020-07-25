@@ -1,4 +1,4 @@
-include <BOSL2/std.scad>
+include <../std.scad>
 
 
 module test_is_vector() {
@@ -9,6 +9,10 @@ module test_is_vector() {
     assert(is_vector(1) == false);
     assert(is_vector("foo") == false);
     assert(is_vector(true) == false);
+    assert(is_vector([0,0,0],zero=true) == true);
+    assert(is_vector([0,0,0],zero=false) == false);
+    assert(is_vector([0,1,0],zero=true) == false);
+    assert(is_vector([0,0,1],zero=false) == true);
 }
 test_is_vector();
 
@@ -56,7 +60,7 @@ module test_vabs() {
 }
 test_vabs();
 
-include <BOSL2/strings.scad>
+include <../strings.scad>
 module test_vang() {
     assert(vang([1,0])==0);
     assert(vang([0,1])==90);

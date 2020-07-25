@@ -28,7 +28,6 @@ function point2d(p, fill=0) = [for (i=[0:1]) (p[i]==undef)? fill : p[i]];
 //   every vector has the same length.  
 // Arguments:
 //   points = A list of 2D or 3D points/vectors.
-//   fill = Value to fill missing values in vectors with.
 function path2d(points) =
     assert(is_path(points,dim=undef,fast=true),"Input to path2d is not a path")
     let (result = points * concat(ident(2), repeat([0,0], len(points[0])-2)))
