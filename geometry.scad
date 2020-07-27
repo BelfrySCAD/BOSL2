@@ -1380,15 +1380,18 @@ function find_noncollinear_points(points) =
 // Usage:
 //   pointlist_bounds(pts);
 // Description:
-//   Finds the bounds containing all the 2D or 3D points in `pts`.
-//   Returns `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
+//   Finds the bounds containing all the points in `pts` which can be a list of points in any dimension.
+//   Returns a list of two items: a list of the minimums and a list of the maximums.  For example, with
+//   3d points `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
 // Arguments:
 //   pts = List of points.
-function pointlist_bounds(pts) = [
-    [for (a=[0:2]) min([ for (x=pts) point3d(x)[a] ]) ],
-    [for (a=[0:2]) max([ for (x=pts) point3d(x)[a] ]) ]
-];
-
+function pointlist_bounds(pts) =
+    assert(is_matrix(pts))
+    let(ptsT = transpose(pts))
+    [
+      [for(row=ptsT) min(row)],
+      [for(row=ptsT) max(row)]
+    ];
 
 // Function: closest_point()
 // Usage:
