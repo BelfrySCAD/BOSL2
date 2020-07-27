@@ -231,7 +231,7 @@ module zcopies(spacing, n, l, sp)
 //   dir = Vector direction to distribute copies along.
 //   l = Length to distribute copies along.
 //
-// Side Effect:
+// Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
 //
@@ -275,7 +275,7 @@ module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
 //   sizes = Array containing how much space each child will need.
 //   l = Length to distribute copies along.
 //
-// Side Effect:
+// Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
 //
@@ -320,7 +320,7 @@ module xdistribute(spacing=10, sizes=undef, l=undef)
 //   sizes = Array containing how much space each child will need.
 //   l = Length to distribute copies along.
 //
-// Side Effect:
+// Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
 //
@@ -365,7 +365,7 @@ module ydistribute(spacing=10, sizes=undef, l=undef)
 //   sizes = Array containing how much space each child will need.
 //   l = Length to distribute copies along.
 //
-// Side Effect:
+// Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
 //
@@ -538,7 +538,7 @@ module grid2d(spacing, n, size, stagger=false, inside=undef)
 //   n = Optional number of copies to have per axis.
 //   spacing = spacing of copies per axis. Use with `n`.
 //
-// Side Effect:
+// Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the [Xidx,Yidx,Zidx] index values of each child copy, when using `count` and `n`.
 //

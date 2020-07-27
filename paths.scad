@@ -968,11 +968,11 @@ module path_extrude(path, convexity=10, clipsize=100) {
 //   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
 //   stroke(sinwav,width=.1);
 //   color("red") path_spread(sinwav, n=5) rect([.2,1.5],anchor=FRONT);
-// Example(2D)): Open path, specify `n` and `spacing`
+// Example(2D): Open path, specify `n` and `spacing`
 //   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
 //   stroke(sinwav,width=.1);
 //   color("red") path_spread(sinwav, n=5, spacing=1) rect([.2,1.5],anchor=FRONT);
-// Example(2D)): Closed path, specify `n` and `spacing`, copies centered around circle[0]
+// Example(2D): Closed path, specify `n` and `spacing`, copies centered around circle[0]
 //   circle = regular_ngon(n=64,or=10);
 //   stroke(circle,width=.1,closed=true);
 //   color("red") path_spread(circle, n=10, spacing=1, closed=true) rect([.2,1.5],anchor=FRONT);
@@ -1051,7 +1051,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
 
 // Function: path_cut()
 //
-// Usage
+// Usage:
 //   path_cut(path, dists, [closed], [direction])
 //
 // Description:
@@ -1177,7 +1177,7 @@ function _sum_preserving_round(data, index=0) =
 //   the final length is exactly as requested.  If you set it to `false` then the
 //   algorithm will favor uniformity and the output path may have a different number of
 //   points due to rounding error.
-//   
+//   .
 //   With the `"segment"` method you can also specify a vector of lengths.  This vector, 
 //   `N` specfies the desired point count on each segment: with vector input, `subdivide_path`
 //   attempts to place `N[i]-1` points on segment `i`.  The reason for the -1 is to avoid
