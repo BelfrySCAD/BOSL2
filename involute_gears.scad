@@ -1,22 +1,22 @@
 //////////////////////////////////////////////////////////////////////////////////////////////
 // LibFile: involute_gears.scad
 //   Involute Spur Gears and Racks
-//   
+//   .
 //   by Leemon Baird, 2011, Leemon@Leemon.com
 //   http://www.thingiverse.com/thing:5505
-//   
+//   .
 //   Additional fixes and improvements by Revar Desmera, 2017-2019, revarbat@gmail.com
-//   
+//   .
 //   This file is public domain.  Use it for any purpose, including commercial
 //   applications.  Attribution would be nice, but is not required.  There is
 //   no warranty of any kind, including its correctness, usefulness, or safety.
-//   
+//   .
 //   This is parameterized involute spur (or helical) gear.  It is much simpler
 //   and less powerful than others on Thingiverse.  But it is public domain.  I
 //   implemented it from scratch from the descriptions and equations on Wikipedia
 //   and the web, using Mathematica for calculations and testing, and I now
 //   release it into the public domain.
-//   
+//   .
 //   To use, add the following line to the beginning of your file:
 //   ```
 //   include <BOSL2/std.scad>

@@ -916,7 +916,7 @@ function count_true(l, nmax=undef, i=0, cnt=0) =
 //   data[len(data)-1].  This function uses a symetric derivative approximation
 //   for internal points, f'(t) = (f(t+h)-f(t-h))/2h.  For the endpoints (when closed=false) the algorithm
 //   uses a two point method if sufficient points are available: f'(t) = (3*(f(t+h)-f(t)) - (f(t+2*h)-f(t+h)))/2h.
-// 
+//   .
 //   If `h` is a vector then it is assumed to be nonuniform, with h[i] giving the sampling distance
 //   between data[i+1] and data[i], and the data values will be linearly resampled at each corner
 //   to produce a uniform spacing for the derivative estimate.  At the endpoints a single point method
@@ -1066,10 +1066,10 @@ function polynomial(p, z, k, zk, total) =
 
 
 // Function: poly_mult()
-// Usage
+// Usage:
 //   polymult(p,q)
 //   polymult([p1,p2,p3,...])
-// Descriptoin:
+// Description:
 //   Given a list of polynomials represented as real coefficient lists, with the highest degree coefficient first, 
 //   computes the coefficient list of the product polynomial.  
 function poly_mult(p,q) = 

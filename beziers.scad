@@ -13,26 +13,26 @@ include <skin.scad>
 
 // Section: Terminology
 //   **Polyline**: A series of points joined by straight line segements.
-//   
+//   .
 //   **Bezier Curve**: A mathematical curve that joins two endpoints, following a curve determined by one or more control points.
-//   
+//   .
 //   **Endpoint**: A point that is on the end of a bezier segment.  This point lies on the bezier curve.
-//   
+//   .
 //   **Control Point**: A point that influences the shape of the curve that connects two endpoints.  This is often *NOT* on the bezier curve.
-//   
+//   .
 //   **Degree**: The number of control points, plus one endpoint, needed to specify a bezier segment.  Most beziers are cubic (degree 3).
-//   
+//   .
 //   **Bezier Segment**: A list consisting of an endpoint, one or more control points, and a final endpoint.  The number of control points is one less than the degree of the bezier.  A cubic (degree 3) bezier segment looks something like:
 //       `[endpt1, cp1, cp2, endpt2]`
-//   
+//   .
 //   **Bezier Path**: A list of bezier segments flattened out into a list of points, where each segment shares the endpoint of the previous segment as a start point. A cubic Bezier Path looks something like:
 //       `[endpt1, cp1, cp2, endpt2, cp3, cp4, endpt3]`
 //   **NOTE**: A bezier path is *NOT* a polyline.  It is only the points and controls used to define the curve.
-//   
+//   .
 //   **Bezier Patch**: A surface defining grid of (N+1) by (N+1) bezier points.  If a Bezier Segment defines a curved line, a Bezier Patch defines a curved surface.
-//   
+//   .
 //   **Bezier Surface**: A surface defined by a list of one or more bezier patches.
-//   
+//   .
 //   **Spline Steps**: The number of straight-line segments to split a bezier segment into, to approximate the bezier curve.  The more spline steps, the closer the approximation will be to the curve, but the slower it will be to generate.  Usually defaults to 16.
 
 
@@ -1230,7 +1230,7 @@ function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="defaul
 
 
 // Module: bezier_polyhedron()
-// Useage:
+// Usage:
 //   bezier_polyhedron(patches, [splinesteps], [vnf], [style], [convexity])
 // Description:
 //   Takes a list of two or more bezier patches and attempts to make a complete polyhedron from them.

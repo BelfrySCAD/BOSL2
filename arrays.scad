@@ -331,7 +331,7 @@ function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
 //   that the final length is exactly as requested.  If you set it to `false` then the
 //   algorithm will favor uniformity and the output list may have a different number of
 //   entries due to rounding.
-//   
+//   .
 //   When applied to a path the output path is the same geometrical shape but has some vertices
 //   repeated.  This can be useful when you need to align paths with a different number of points.
 //   (See also subdivide_path for a different way to do that.) 
