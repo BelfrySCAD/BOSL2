@@ -1359,21 +1359,40 @@ function first_noncollinear(i1, i2, points) =
 //   find_noncollinear_points(points);
 // Description:
 //   Finds the indices of three good non-collinear points from the points list `points`.
-function find_noncollinear_points(points) =
+function find_noncollinear_points(points,error=true,eps=EPSILON) =
+    let(
+        pa = points[0],
+        b = furthest_point(pa, points),
+        n = unit(points[b]-pa),
+        relpoints = [for(pt=points) pt-pa],
+        proj = relpoints * n,
+        distlist = [for(i=[0:len(points)-1]) norm(relpoints[i]-proj[i]*n)]
+    )
+    max(distlist)<eps
+    ? assert(!error, "Cannot find three noncollinear points in pointlist.")
+      []
+    : [0,b,max_index(distlist)];
+
+function old_find_noncollinear_points(points,error=true) =
     let(
         a = 0,
         b = furthest_point(points[a], points),
         pa = points[a],
         pb = points[b],
         c = max_index([
-            for (p=points)
+            for (p=points) 
                 (approx(p,pa) || approx(p,pb))? 0 :
-                sin(vector_angle(points[a]-p,points[b]-p)) *
-                    norm(p-points[a]) * norm(p-points[b])
-        ])
-    )
-    assert(c!=a && c!=b, "Cannot find three noncollinear points in pointlist.")
-    [a, b, c];
+                let(score = 
+                      sin(vector_angle(points[a]-p,points[b]-p)) *
+                      norm(p-points[a]) * norm(p-points[b]),fff=echo(score=score))
+                approx(score,0,eps=1e-7) ? -1 : score])
+        ,foo=echo(pval = a,b,c)
+        )
+    
+    c ==a || c==b
+    ? assert(!error, "Cannot find three noncollinear points in pointlist.")
+      []
+    : [a, b, c];
 
 
 // Function: pointlist_bounds()
