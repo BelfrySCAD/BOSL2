@@ -37,8 +37,6 @@ function is_vector(v,length,zero,eps=EPSILON) =
     && (is_undef(length) || len(v)==length)
     && (is_undef(zero) || ((norm(v) >= eps) == !zero));
 
-//***
-// add_scalar() is an array operation: moved to array.scad 
 
 // Function: vang()
 // Usage:
@@ -56,21 +54,19 @@ function vang(v) =
 // Function: vmul()
 // Description:
 //   Element-wise vector multiplication.  Multiplies each element of vector `v1` by
-//   the corresponding element of vector `v2`.  Returns a vector of the products.
+//   the corresponding element of vector `v2`. The vectors should have the same dimension.
+//   Returns a vector of the products.
 // Arguments:
 //   v1 = The first vector.
 //   v2 = The second vector.
 // Example:
 //   vmul([3,4,5], [8,7,6]);  // Returns [24, 28, 30]
 function vmul(v1, v2) = 
+// this thighter check can be done yet because it would break other codes in the library
 //    assert( is_vector(v1) && is_vector(v2,len(v1)), "Incompatible vectors")
     assert( is_vector(v1) && is_vector(v2), "Invalid vector(s)")
     [for (i = [0:1:len(v1)-1]) v1[i]*v2[i]];
     
-//***
-// some other functions seem to rely on the multiplication of vectors with different lengths
-// so, vmul assert cannot check lengths for now
-// when len(v1)>len(v2), undef will be in the output list.
 
 
 // Function: vdiv()
@@ -177,8 +173,6 @@ function vector_angle(v1,v2,v3) =
     // NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
     acos(constrain((vecs[0]*vecs[1])/(norm0*norm1), -1, 1));
     
-//***
-// completing input data check
 
 // Function: vector_axis()
 // Usage:
@@ -224,8 +218,5 @@ function vector_axis(v1,v2=undef,v3=undef) =
             ) unit(cross(w1,w3));
 
 
-//***
-// completing input data check and refactoring 
-// Note: vector_angle and vector_axis have the same kind of inputs and two code strategy alternatives
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

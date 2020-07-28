@@ -18,6 +18,20 @@
 
 // Section: List Query Operations
 
+// Function: is_simple_list()
+// Description:
+//   Returns true just when all elements of `list` are simple values.
+// Usage:
+//   is_simple_list(list)
+// Arguments:
+//   list = The list to check.
+// Example:
+//   a = is_simple_list([3,4,5,6,7,8,9]);  Returns: true
+//   b = is_simple_list([3,4,5,[6],7,8]);  Returns: false
+function is_simple_list(list) =
+		is_list(list)
+		&& []==[for(e=list) if(is_list(e)) 0];
+
 
 // Function: select()
 // Description:
@@ -1287,6 +1301,17 @@ function array_group(v, cnt=2, dflt=0) = [for (i = [0:cnt:len(v)-1]) [for (j = [
 // Example:
 //   flatten([[1,2,3], [4,5,[6,7,8]]]) returns [1,2,3,4,5,[6,7,8]]
 function flatten(l) = [for (a = l) each a];
+
+
+// Function: full_flatten()
+// Description: 
+//   Collects in a list all elements recursively found in any level of the given list.
+//   The output list is ordered in depth first order.
+// Arguments:
+//   l = List to flatten.
+// Example:
+//   full_flatten([[1,2,3], [4,5,[6,7,8]]]) returns [1,2,3,4,5,6,7,8]
+function full_flatten(l) = [for(a=l) if(is_list(a)) (each full_flatten(a)) else a ];
 
 
 // Internal.  Not exposed.

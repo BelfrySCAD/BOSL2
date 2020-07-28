@@ -134,8 +134,14 @@ function is_list_of(list,pattern) =
 //   is_consistent([[3,[3,4,[5]]], [5,[2,9,[9]]]]); // Returns true
 //   is_consistent([[3,[3,4,[5]]], [5,[2,9,9]]]);   // Returns false
 function is_consistent(list) =
-  is_list(list) && is_list_of(list, list[0]);
+    is_list(list) && is_list_of(list, list[0]);
 
+
+//**
+// is_consistent doesn't ensure the list contains just numbers!
+// for instance, is_consistent([ [1,undef], [2,"a"] ]) is true
+// is_consistent ensures that if we substitute each number in the list by true and any other value by false, 
+// all list items will be equal. The same happens with same_shape().
 
 // Function: same_shape()
 // Usage:

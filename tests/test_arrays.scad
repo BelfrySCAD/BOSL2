@@ -3,6 +3,14 @@ include <../std.scad>
 
 // Section: List Query Operations
 
+module test_is_simple_list() {
+		assert(is_simple_list([1,2,3,4]));
+		assert(is_simple_list([]));
+		assert(!is_simple_list([1,2,[3,4]]));
+} 
+test_is_simple_list();
+
+
 module test_select() {
     l = [3,4,5,6,7,8,9];
     assert(select(l, 5, 6) == [8,9]);
@@ -434,8 +442,16 @@ test_array_group();
 
 module test_flatten() {
     assert(flatten([[1,2,3], [4,5,[6,7,8]]]) == [1,2,3,4,5,[6,7,8]]);
+    assert(flatten([]) == []);
 }
 test_flatten();
+
+
+module test_full_flatten() {
+    assert(full_flatten([[1,2,3], [4,5,[6,[7],8]]]) == [1,2,3,4,5,6,7,8]);
+    assert(full_flatten([]) == []);
+}
+test_full_flatten();
 
 
 module test_array_dim() {
