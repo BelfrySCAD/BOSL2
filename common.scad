@@ -27,8 +27,7 @@ function typeof(x) =
     is_range(x) ? "range" :
     "invalid";
 
-//***
-// included "invalid"
+
 
 // Function: is_type()
 // Usage:
@@ -137,11 +136,7 @@ function is_consistent(list) =
     is_list(list) && is_list_of(list, list[0]);
 
 
-//**
-// is_consistent doesn't ensure the list contains just numbers!
-// for instance, is_consistent([ [1,undef], [2,"a"] ]) is true
-// is_consistent ensures that if we substitute each number in the list by true and any other value by false, 
-// all list items will be equal. The same happens with same_shape().
+
 
 // Function: same_shape()
 // Usage:
@@ -328,8 +323,6 @@ function segs(r) =
     let( r = is_finite(r)? r: 0 ) 
     ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs))) ;
 
-//***
-// avoids undef
 
 
 // Section: Testing Helpers
