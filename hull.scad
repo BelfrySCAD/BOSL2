@@ -27,7 +27,11 @@
 //   vertex indices for the perimeter of the face.
 // Arguments:
 //   points = The set of 2D or 3D points to find the hull of.
-function hull(points) = let(two_d = len(points[0]) == 2) two_d? hull2d_path(points) : hull3d_faces(points);
+function hull(points) =
+    assert(is_path(points),"Invalid input to hull")
+    len(points[0]) == 2
+      ? hull2d_path(points)
+      : hull3d_faces(points);
 
 
 // Module: hull_points()
@@ -48,7 +52,6 @@ function hull(points) = let(two_d = len(points[0]) == 2) two_d? hull2d_path(poin
 //   pts = [for (phi = [30:60:150], theta = [0:60:359]) spherical_to_xyz(10, theta, phi)];
 //   hull_points(pts);
 module hull_points(points, fast=false) {
-    assert(is_list(points));
     if (points) {
         assert(is_list(points[0]));
         if (fast) {
@@ -78,22 +81,25 @@ module hull_points(points, fast=false) {
 // Usage:
 //   hull2d_path(points)
 // Description:
-//   Takes a list of arbitrary 2D points, and finds the minimal convex hull polygon to enclose them.
-//   Returns a path as a list of indices into `points`.
+//   Takes a list of arbitrary 2D points, and finds the convex hull polygon to enclose them.
+//   Returns a path as a list of indices into `points`.  May return extra points, that are on edges of the hull.
 // Example(2D):
 //   pts = [[-10,-10], [0,10], [10,10], [12,-10]];
 //   path = hull2d_path(pts);
 //   move_copies(pts) color("red") sphere(1);
 //   polygon(points=pts, paths=[path]);
 function hull2d_path(points) =
-    (len(points) < 3)? [] : let(
-        a=0, b=1,
-        c = first_noncollinear(a, b, points)
-    ) (c == len(points))? _hull2d_collinear(points) : let(
-        remaining = [ for (i = [2:1:len(points)-1]) if (i != c) i ],
-        ccw = triangle_area(points[a], points[b], points[c]) > 0,
-        polygon = ccw? [a,b,c] : [a,c,b]
+    assert(is_path(points,2),"Invalid input to hull2d_path")
+    len(points) < 2 ? []
+  : len(points) == 2 ? [0,1]
+  : let(tri=find_noncollinear_points(points, error=false))
+    tri == [] ? _hull_collinear(points)
+  : let(
+        remaining = [ for (i = [0:1:len(points)-1]) if (i != tri[0] && i!=tri[1] && i!=tri[2]) i ],
+        ccw = triangle_area(points[tri[0]], points[tri[1]], points[tri[2]]) > 0,
+        polygon = ccw ? [tri[0],tri[1],tri[2]] : [tri[0],tri[2],tri[1]]
     ) _hull2d_iterative(points, polygon, remaining);
+
 
 
 // Adds the remaining points one by one to the convex hull
@@ -111,7 +117,7 @@ function _hull2d_iterative(points, polygon, remaining, _i=0) =
     ) _hull2d_iterative(points, polygon, remaining, _i+1);
 
 
-function _hull2d_collinear(points) =
+function _hull_collinear(points) =
     let(
         a = points[0],
         n = points[1] - a,
@@ -149,29 +155,39 @@ function _remove_conflicts_and_insert_point(polygon, conflicts, point) =
 // Usage:
 //   hull3d_faces(points)
 // Description:
-//   Takes a list of arbitrary 3D points, and finds the minimal convex hull polyhedron to enclose
-//   them.  Returns a list of faces, where each face is a list of indexes into the given `points`
-//   list.  If all points passed to it are coplanar, then the return is the list of indices of points
-//   forming the minimal convex hull polygon.
+//   Takes a list of arbitrary 3D points, and finds the convex hull polyhedron to enclose
+//   them.  Returns a list of triangular faces, where each face is a list of indexes into the given `points`
+//   list.  The output will be valid for use with the polyhedron command, but may include vertices that are in the interior of a face of the hull, so it is not
+//   necessarily the minimal representation of the hull.  
+//   If all points passed to it are coplanar, then the return is the list of indices of points
+//   forming the convex hull polygon.
 // Example(3D):
 //   pts = [[-20,-20,0], [20,-20,0], [0,20,5], [0,0,20]];
 //   faces = hull3d_faces(pts);
 //   move_copies(pts) color("red") sphere(1);
 //   %polyhedron(points=pts, faces=faces);
-function hull3d_faces(points) = 
-    (len(points) < 3)? list_range(len(points)) : let (    
-        // start with a single non-collinear triangle
-        a = 0,
-        b = 1,
-        c = first_noncollinear(a, b, points)
-    ) (c == len(points))? _hull2d_collinear(points) : let(
+function hull3d_faces(points) =
+    assert(is_path(points,3),"Invalid input to hull3d_faces")
+    len(points) < 3 ? list_range(len(points))
+  : let ( // start with a single non-collinear triangle
+          tri = find_noncollinear_points(points, error=false)
+        )
+    tri==[] ? _hull_collinear(points)
+  : let(
+        a = tri[0],
+        b = tri[1],
+        c = tri[2],
         plane = plane3pt_indexed(points, a, b, c),
         d = _find_first_noncoplanar(plane, points, 3)
-    ) (d == len(points))? /* all coplanar*/ let (
+    )
+    d == len(points)
+  ? /* all coplanar*/
+    let (
         pts2d = [ for (p = points) project_plane(p, points[a], points[b], points[c]) ],
         hull2d = hull2d_path(pts2d)
-    ) hull2d : let(
-        remaining = [for (i = [3:1:len(points)-1]) if (i != d) i],
+    ) hull2d
+  : let(
+        remaining = [for (i = [0:1:len(points)-1]) if (i!=a && i!=b && i!=c && i!=d) i],
         // Build an initial tetrahedron.
         // Swap b, c if d is in front of triangle t.
         ifop = in_front_of_plane(plane, points[d]),
