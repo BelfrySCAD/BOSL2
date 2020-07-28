@@ -1341,18 +1341,6 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
 
 // Section: Pointlists
 
-// Function: first_noncollinear()
-// Usage:
-//   first_noncollinear(i1, i2, points);
-// Description:
-//   Returns index of the first point in `points` that is not collinear with the points indexed by `i1` and `i2`.
-// Arguments:
-//   i1 = The first point.
-//   i2 = The second point.
-//   points = The list of points to find a non-collinear point from.
-function first_noncollinear(i1, i2, points) =
-    [for (j = idx(points)) if (j!=i1 && j!=i2 && !collinear_indexed(points,i1,i2,j)) j][0];
-
 
 // Function: find_noncollinear_points()
 // Usage:
@@ -1372,27 +1360,6 @@ function find_noncollinear_points(points,error=true,eps=EPSILON) =
     ? assert(!error, "Cannot find three noncollinear points in pointlist.")
       []
     : [0,b,max_index(distlist)];
-
-function old_find_noncollinear_points(points,error=true) =
-    let(
-        a = 0,
-        b = furthest_point(points[a], points),
-        pa = points[a],
-        pb = points[b],
-        c = max_index([
-            for (p=points) 
-                (approx(p,pa) || approx(p,pb))? 0 :
-                let(score = 
-                      sin(vector_angle(points[a]-p,points[b]-p)) *
-                      norm(p-points[a]) * norm(p-points[b]),fff=echo(score=score))
-                approx(score,0,eps=1e-7) ? -1 : score])
-        ,foo=echo(pval = a,b,c)
-        )
-    
-    c ==a || c==b
-    ? assert(!error, "Cannot find three noncollinear points in pointlist.")
-      []
-    : [a, b, c];
 
 
 // Function: pointlist_bounds()
