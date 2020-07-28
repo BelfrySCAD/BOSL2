@@ -1244,7 +1244,7 @@ function C_div(z1,z2) =
 
 // Section: Polynomials
 
-// Function: polynomial()
+// Function: polynomial() 
 // Usage:
 //   polynomial(p, z)
 // Description:
