@@ -114,6 +114,11 @@ function is_list_of(list,pattern) =
     is_list(list) &&
     []==[for(entry=list) if (entry*0 != pattern) entry];
 
+function _list_pattern(list) =
+  [for(entry=list) is_list(entry) ? _list_pattern(entry) : 0];
+
+
+
 
 // Function: is_consistent()
 // Usage:
@@ -128,7 +133,7 @@ function is_list_of(list,pattern) =
 //   is_consistent([[3,[3,4,[5]]], [5,[2,9,[9]]]]); // Returns true
 //   is_consistent([[3,[3,4,[5]]], [5,[2,9,9]]]);   // Returns false
 function is_consistent(list) =
-  is_list(list) && is_list_of(list, list[0]);
+  is_list(list) && is_list_of(list, _list_pattern(list[0]));
 
 
 // Function: same_shape()
@@ -139,7 +144,7 @@ function is_consistent(list) =
 // Example:
 //   same_shape([3,[4,5]],[7,[3,4]]);   // Returns true
 //   same_shape([3,4,5], [7,[3,4]]);    // Returns false
-function same_shape(a,b) = a*0 == b*0;
+function same_shape(a,b) = _list_pattern(a) == b*0;
 
 
 // Section: Handling `undef`s.
