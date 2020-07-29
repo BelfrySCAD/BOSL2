@@ -169,7 +169,6 @@ module test_is_range() {
     assert(!is_range(5));
     assert(!is_range(INF));
     assert(!is_range(-INF));
-    assert(!is_nan(NAN));
     assert(!is_range(""));
     assert(!is_range("foo"));
     assert(!is_range([]));
@@ -179,8 +178,23 @@ module test_is_range() {
     assert(!is_range([3:4:"a"]));
     assert(is_range([3:1:5]));
 }
-test_is_nan();
+test_is_range();
 
+
+module test_valid_range() {
+    assert(valid_range([0:0]));
+    assert(valid_range([0:1:0]));
+    assert(valid_range([0:1:10]));
+    assert(valid_range([0.1:1.1:2.1]));
+    assert(valid_range([0:-1:0]));
+    assert(valid_range([10:-1:0]));
+    assert(valid_range([2.1:-1.1:0.1]));
+    assert(!valid_range([10:1:0]));
+    assert(!valid_range([2.1:1.1:0.1]));
+    assert(!valid_range([0:-1:10]));
+    assert(!valid_range([0.1:-1.1:2.1]));
+}
+test_valid_range();
 
 module test_is_list_of() {
     assert(is_list_of([3,4,5], 0));
@@ -192,10 +206,14 @@ module test_is_list_of() {
 }
 test_is_list_of();
 
-
 module test_is_consistent() {
+    assert(is_consistent([]));
+    assert(is_consistent([[],[]]));
     assert(is_consistent([3,4,5]));
     assert(is_consistent([[3,4],[4,5],[6,7]]));
+    assert(is_consistent([[[3],4],[[4],5]]));
+    assert(!is_consistent(5));
+    assert(!is_consistent(undef));
     assert(!is_consistent([[3,4,5],[3,4]]));
     assert(is_consistent([[3,[3,4,[5]]], [5,[2,9,[9]]]]));
     assert(!is_consistent([[3,[3,4,[5]]], [5,[2,9,9]]]));
