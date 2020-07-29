@@ -787,7 +787,6 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
         size = is_num(size)? [size,size] : point2d(size),
         anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT),
         complex = rounding!=0 || chamfer!=0
-				, xxx = echo(anchor=anchor)echo(size=size)
     )
     (rounding==0 && chamfer==0)? let(
         path = [
