@@ -115,8 +115,8 @@ function is_list_of(list,pattern) =
     []==[for(entry=list) if (entry*0 != pattern) entry];
 
 function _list_pattern(list) =
-  [for(entry=list) is_list(entry) ? _list_pattern(entry) : 0];
-
+  is_list(list) ? [for(entry=list) is_list(entry) ? _list_pattern(entry) : 0]
+                : 0;
 
 
 
