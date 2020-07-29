@@ -782,8 +782,8 @@ test_deriv3();
 
 
 module test_polynomial(){
-  assert_equal(polynomial([0],12),0);
-  assert_equal(polynomial([0],[12,4]),[0,0]);
+  assert_equal(polynomial([],12),0);
+  assert_equal(polynomial([],[12,4]),[0,0]);
   assert_equal(polynomial([1,2,3,4],3),58);
   assert_equal(polynomial([1,2,3,4],[3,-1]),[47,-41]);
   assert_equal(polynomial([0,0,2],4),2);
@@ -879,17 +879,17 @@ test_qr_factor();
 
 module test_poly_mult(){
   assert_equal(poly_mult([3,2,1],[4,5,6,7]),[12,23,32,38,20,7]);
-  assert_equal(poly_mult([3,2,1],[0]),[0]);
+  assert_equal(poly_mult([3,2,1],[]),[]);
   assert_equal(poly_mult([[1,2],[3,4],[5,6]]), [15,68,100,48]);
-  assert_equal(poly_mult([[1,2],[0],[5,6]]), [0]);
-  assert_equal(poly_mult([[3,4,5],[0,0,0]]),[0]);
+  assert_equal(poly_mult([[1,2],[],[5,6]]), []);
+  assert_equal(poly_mult([[3,4,5],[0,0,0]]),[]);
 }
 test_poly_mult();
 
  
 module test_poly_div(){
-  assert_equal(poly_div(poly_mult([4,3,3,2],[2,1,3]), [2,1,3]),[[4,3,3,2],[0]]);
-  assert_equal(poly_div([1,2,3,4],[1,2,3,4,5]), [[0], [1,2,3,4]]);
+  assert_equal(poly_div(poly_mult([4,3,3,2],[2,1,3]), [2,1,3]),[[4,3,3,2],[]]);
+  assert_equal(poly_div([1,2,3,4],[1,2,3,4,5]), [[], [1,2,3,4]]);
   assert_equal(poly_div(poly_add(poly_mult([1,2,3,4],[2,0,2]), [1,1,2]), [1,2,3,4]), [[2,0,2],[1,1,2]]);
   assert_equal(poly_div([1,2,3,4], [1,-3]), [[1,5,18],[58]]);
 }
@@ -899,7 +899,7 @@ test_poly_div();
 module test_poly_add(){
   assert_equal(poly_add([2,3,4],[3,4,5,6]),[3,6,8,10]);
   assert_equal(poly_add([1,2,3,4],[-1,-2,3,4]), [6,8]);
-  assert_equal(poly_add([1,2,3],-[1,2,3]),[0]);
+  assert_equal(poly_add([1,2,3],-[1,2,3]),[]);
 }
 test_poly_add();
 

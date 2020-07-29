@@ -99,14 +99,6 @@ function is_finite(v) = is_num(0*v);
 function is_range(x) = !is_list(x) && is_finite(x[0]+x[1]+x[2]) ;
 
 
-// Function: valid_range()
-// Description:
-//   Returns true if its argument is a valid range (deprecated range is excluded).
-function valid_range(ind) = 
-    is_range(ind) 
-		&& ( ( ind[1]>0 && ind[0]<=ind[2]) || (ind[1]<0 && ind[0]>=ind[2]) );
-
-
 // Function: is_list_of()
 // Usage:
 //   is_list_of(list, pattern)
@@ -141,15 +133,10 @@ function is_list_of(list,pattern) =
 //   is_consistent([[3,[3,4,[5]]], [5,[2,9,[9]]]]); // Returns true
 //   is_consistent([[3,[3,4,[5]]], [5,[2,9,9]]]);   // Returns false
 function is_consistent(list) =
-    is_list_of(list, _list_pattern(list[0]));
-		
-//Internal function
-//Creates a list with the same structure of `list` with each of its elements substituted by 0.
-// `list` must be a list
-function _list_pattern(list) = 
-    is_list(list)
-    ? [for(entry=list) is_list(entry) ? _list_pattern(entry) : 0] 
-    : 0;
+    is_list(list) && is_list_of(list, list[0]);
+
+
+
 
 // Function: same_shape()
 // Usage:
@@ -159,7 +146,7 @@ function _list_pattern(list) =
 // Example:
 //   same_shape([3,[4,5]],[7,[3,4]]);   // Returns true
 //   same_shape([3,4,5], [7,[3,4]]);    // Returns false
-function same_shape(a,b) = _list_pattern(a) == b*0;
+function same_shape(a,b) = a*0 == b*0;
 
 
 // Section: Handling `undef`s.
