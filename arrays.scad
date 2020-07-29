@@ -73,6 +73,9 @@ function select(list, start, end=undef) =
             :   concat([for (i = [s:1:l-1]) list[i]], [for (i = [0:1:e]) list[i]]) ;
 
 
+
+
+
 // Function: slice()
 // Description:
 //   Returns a slice of a list.  The first item is index 0.
@@ -98,6 +101,8 @@ function slice(list,start,end) =
         ) [for (i=[s:1:e-1]) if (e>s) list[i]];
 
 
+
+
 // Function: in_list()
 // Description: Returns true if value `val` is in list `list`. When `val==NAN` the answer will be false for any list.
 // Arguments:
@@ -113,6 +118,7 @@ function in_list(val,list,idx=undef) =
     s==[] || s[0]==[] ? false
     : is_undef(idx) ? val==list[s] 
     : val==list[s][idx];
+    
 
 
 // Function: min_index()
@@ -203,6 +209,7 @@ function repeat(val, n, i=0) =
     [for (j=[1:1:n[i]]) repeat(val, n, i+1)];
 
 
+
 // Function: list_range()
 // Usage:
 //   list_range(n, [s], [e])
@@ -239,6 +246,8 @@ function list_range(n=undef, s=0, e=undef, step=undef) =
         [for (i=[0:1:n-1]) s+step*i ]
     :   assert( is_vector([s,step,e]), "Start `s`, step `step` and end `e` must be numbers.")
         [for (v=[s:step:e]) v] ;
+    
+
 
 
 // Section: List Manipulation
@@ -306,6 +315,8 @@ function deduplicate(list, closed=false, eps=EPSILON) =
     : [for (i=[0:1:l-1]) if (i==end || !approx(list[i], list[(i+1)%l], eps)) list[i]];
 
 
+
+
 // Function: deduplicate_indexed()
 // Usage:
 //   new_idxs = deduplicate_indexed(list, indices, [closed], [eps]);
@@ -338,6 +349,8 @@ function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
         ) 
         if (i==end || !eq) indices[i]
     ];
+
+
 
 
 // Function: repeat_entries()
@@ -379,6 +392,8 @@ function repeat_entries(list, N, exact = true) =
     [for(i=[0:length-1]) each repeat(list[i],reps[i])];
     
 
+
+
 // Function: list_set()
 // Usage:
 //   list_set(list, indices, values, [dflt], [minlen])
@@ -418,6 +433,7 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
         ];
       
 
+
 // Function: list_insert()
 // Usage:
 //   list_insert(list, indices, values);
@@ -449,6 +465,8 @@ function list_insert(list, indices, values, _i=0) =
         ];
 
 
+
+
 // Function: list_remove()
 // Usage:
 //   list_remove(list, indices)
@@ -469,6 +487,8 @@ function list_remove(list, indices) =
         len(indices)==0 ? list :
         [ for(i=[0:len(list)-1])
             if ( []==search(i,indices,1) ) list[i] ]; 
+
+
 
 
 // Function: list_remove_values()
@@ -540,6 +560,8 @@ function list_bset(indexset, valuelist, dflt=0) =
     );
 
 
+
+
 // Section: List Length Manipulation
 
 // Function: list_shortest()
@@ -550,6 +572,7 @@ function list_bset(indexset, valuelist, dflt=0) =
 function list_shortest(array) =
     assert(is_list(array)||is_string(list), "Invalid input." )
     min([for (v = array) len(v)]);
+
 
 
 // Function: list_longest()
@@ -599,6 +622,7 @@ function list_fit(array, length, fill) =
     l==length ? array : 
     l> length ? list_trim(array,length) 
               : list_pad(array,length,fill);
+
 
 
 // Section: List Shuffling and Sorting
@@ -654,7 +678,6 @@ function _sort_vectors2(arr) =
         greater = [ for (y = arr) if (y[0] > pivot[0] || (y[0]==pivot[0] && y[1]>pivot[1])) y ]
     ) 
     concat( _sort_vectors2(lesser), equal, _sort_vectors2(greater) );
-
 
 // Sort a vector of vectors based on the first three entries of each vector
 // Lexicographic order, remaining entries of vector ignored
@@ -733,7 +756,6 @@ function _sort_general(arr, idx=undef) =
     )
     concat(_sort_general(lesser,idx), equal, _sort_general(greater,idx));
     
-
 function _sort_general(arr, idx=undef) =
     (len(arr)<=1) ? arr :
     let(
@@ -750,6 +772,9 @@ function _sort_general(arr, idx=undef) =
         greater = [ for (i = [0:1:len(arr)-1]) if (compare[i] > 0) arr[i] ]
     )
     concat(_sort_general(lesser,idx), equal, _sort_general(greater,idx));
+
+
+
 
 
 // Function: sort()
@@ -782,6 +807,7 @@ function sort(list, idx=undef) =
    /*size[1]==4*/  : _sort_vectors4(list)
       ) 
     : _sort_general(list);
+
 
 
 // Function: sortidx()
@@ -827,7 +853,6 @@ function sortidx(list, idx=undef) =
     :   // general case
         subindex(_sort_general(aug, idx=list_range(s=1,n=len(aug)-1)), 0);
 
-
 function sortidx(list, idx=undef) =
     list==[] ? [] : let(
         size = array_dim(list),
@@ -866,6 +891,7 @@ function unique(arr) =
     ];
 
 
+
 // Function: unique_count()
 // Usage:
 //   unique_count(arr);
@@ -880,6 +906,8 @@ function unique_count(arr) =
       let( arr=sort(arr) )
       let( ind = [0, for(i=[1:1:len(arr)-1]) if (arr[i]!=arr[i-1]) i] )
       [ select(arr,ind), deltas( concat(ind,[len(arr)]) ) ];
+
+
 
 
 // Section: List Iteration Helpers
@@ -1076,6 +1104,8 @@ function set_union(a, b, get_indices=false) =
     ) [idxs, nset];
 
 
+
+
 // Function: set_difference()
 // Usage:
 //   s = set_difference(a, b);
@@ -1093,6 +1123,7 @@ function set_difference(a, b) =
     assert( is_list(a) && is_list(b), "Invalid sets." )
     let( found = search(a, b, num_returns_per_match=1) )
     [ for (i=idx(a)) if(found[i]==[]) a[i] ];
+
 
 
 // Function: set_intersection()
@@ -1114,6 +1145,8 @@ function set_intersection(a, b) =
     [ for (i=idx(a)) if(found[i]!=[]) a[i] ];
 
 
+
+
 // Section: Array Manipulation
 
 // Function: add_scalar()
@@ -1130,6 +1163,7 @@ function set_intersection(a, b) =
 //   add_scalar([[1,2,3],[3,4,5]],3);  // Returns: [[4,5,6],[6,7,8]]
 function add_scalar(v,s) = 
     is_finite(s) ? [for (x=v) is_list(x)? add_scalar(x,s) : is_finite(x) ? x+s: x] : v;
+
 
 
 // Function: subindex()
@@ -1313,6 +1347,8 @@ function transpose(arr) =
         [for (i=[0:1:len(a0)-1]) 
           [ for (j=[0:1:len(arr)-1]) arr[j][i] ] ] 
     :  arr;
+
+
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

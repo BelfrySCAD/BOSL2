@@ -107,7 +107,6 @@ function binomial(n) =
          c = c*(n-i)/(i+1), i = i+1
         ) c ] ;
 
-
 // Function: binomial_coefficient()
 // Usage:
 //   x = binomial_coefficient(n,k);
@@ -129,7 +128,6 @@ function binomial_coefficient(n,k) =
                    c = c*(n-i)/(i+1), i = i+1
                  ) c] )
     b[len(b)-1];
-
 
 // Function: lerp()
 // Usage:
@@ -168,6 +166,7 @@ function lerp(a,b,u) =
     [for (v = u) lerp(a,b,v)];
 
 
+
 // Function: all_numeric()
 // Usage:
 //   x = all_numeric(list);
@@ -185,6 +184,22 @@ function all_numeric(list) =
         || []==[for(vi=list) if( !all_numeric(vi)) 0] ;
 
         
+// Function: is_addable()
+// Usage:
+//   x = is_addable(list);
+// Description:
+//   Returns true if `list` is both consistent and numerical. 
+// Arguments:
+//   list = The list to check
+// Example:
+//   x = is_addable([[[1],2],[[0],2]]));    // Returns: true
+//   y = is_addable([[[1],2],[[0],[]]]));   // Returns: false
+function is_addable(list) = // consistent and numerical
+    is_list_of(list,list[0])
+    &&  ( ( let(v = list*list[0]) is_num(0*(v*v)) ) 
+        || []==[for(vi=list) if( !all_numeric(vi)) 0] );
+
+          
 
 // Section: Hyperbolic Trigonometry
 
@@ -230,6 +245,7 @@ function atanh(x) =
     ln((1+x)/(1-x))/2;
 
 
+
 // Section: Quantization
 
 // Function: quant()
@@ -257,11 +273,12 @@ function atanh(x) =
 //   quant([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,12,12,12]
 //   quant([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[12,12,12]]
 function quant(x,y) =
-    assert(is_finite(y), "The multiple must be an integer.")
+    assert(is_int(y), "The multiple must be an integer.")
     is_list(x)
     ?   [for (v=x) quant(v,y)]
     :   assert( is_finite(x), "The input to quantize must be a number or a list of numbers.")
         floor(x/y+0.5)*y;
+
 
 
 // Function: quantdn()
@@ -289,7 +306,7 @@ function quant(x,y) =
 //   quantdn([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,9,9,12]
 //   quantdn([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[9,9,12]]
 function quantdn(x,y) =
-    assert(is_finite(y), "The multiple must be a finite number.")
+    assert(is_int(y), "The multiple must be an integer.")
     is_list(x)
     ?    [for (v=x) quantdn(v,y)]
     :    assert( is_finite(x), "The input to quantize must be a number or a list of numbers.")
@@ -321,7 +338,7 @@ function quantdn(x,y) =
 //   quantup([9,10,10.4,10.5,11,12],3);      // Returns: [9,12,12,12,12,12]
 //   quantup([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,12,12],[12,12,12]]
 function quantup(x,y) =
-    assert(is_finite(y), "The multiple must be a number.")
+    assert(is_int(y), "The multiple must be an integer.")
     is_list(x)
     ?    [for (v=x) quantup(v,y)]
     :    assert( is_finite(x), "The input to quantize must be a number or a list of numbers.")
@@ -367,7 +384,7 @@ function constrain(v, minval, maxval) =
 //   posmod(700,360);   // Returns: 340
 //   posmod(3,2.5);     // Returns: 0.5
 function posmod(x,m) = 
-    assert( is_finite(x) && is_finite(m), "Input must be finite numbers.")
+    assert( is_finite(x) && is_int(m), "Input must be finite numbers.")
     (x%m+m)%m;
 
 
@@ -404,7 +421,7 @@ function modang(x) =
 //   modrange(90,270,360, step=-45);  // Returns: [90,45,0,315,270]
 //   modrange(270,90,360, step=-45);  // Returns: [270,225,180,135,90]
 function modrange(x, y, m, step=1) =
-    assert( is_finite(x+y+step+m), "Input must be finite numbers.")
+    assert( is_finite(x+y+step) && is_int(m), "Input must be finite numbers.")
     let(
         a = posmod(x, m),
         b = posmod(y, m),
@@ -565,6 +582,7 @@ function cumsum(v, off) =
       ) S ];
 
 
+
 // Function: sum_of_squares()
 // Description:
 //   Returns the sum of the square of each element of a vector.
@@ -691,6 +709,7 @@ function convolve(p,q) =
     [for(i=[0:n+m-2], k1 = max(0,i-n+1), k2 = min(i,m-1) )
        [for(j=[k1:k2]) p[i-j] ] * [for(j=[k1:k2]) q[j] ] 
     ];
+     
 
 
 
@@ -880,6 +899,11 @@ function determinant(M) =
 //   m = optional height of matrix
 //   n = optional width of matrix
 //   square = set to true to require a square matrix.  Default: false        
+function is_matrix(A,m,n,square=false) =
+    is_vector(A[0],n) 
+    && is_vector(A*(0*A[0]),m)
+    && ( !square || len(A)==len(A[0]));
+    
 function is_matrix(A,m,n,square=false) =
     is_list(A[0]) 
     && ( let(v = A*A[0]) is_num(0*(v*v)) ) // a matrix of finite numbers 
@@ -1073,7 +1097,7 @@ function count_true(l, nmax) =
 //   h = the parametric sampling of the data.
 //   closed = boolean to indicate if the data set should be wrapped around from the end to the start.
 function deriv(data, h=1, closed=false) =
-    assert( is_consistent(data) , "Input list is not consistent or not numerical.") 
+    assert( is_addable(data) , "Input list is not consistent or not numerical.") 
     assert( len(data)>=2, "Input `data` should have at least 2 elements.") 
     assert( is_finite(h) || is_vector(h), "The sampling `h` must be a number or a list of numbers." )
     assert( is_num(h) || len(h) == len(data)-(closed?0:1),
@@ -1135,7 +1159,7 @@ function _deriv_nonuniform(data, h, closed) =
 //   h = the constant parametric sampling of the data.
 //   closed = boolean to indicate if the data set should be wrapped around from the end to the start.
 function deriv2(data, h=1, closed=false) =
-    assert( is_consistent(data) , "Input list is not consistent or not numerical.") 
+    assert( is_addable(data) , "Input list is not consistent or not numerical.") 
     assert( len(data)>=3, "Input list has less than 3 elements.") 
     assert( is_finite(h), "The sampling `h` must be a number." )
     let( L = len(data) )
@@ -1171,7 +1195,7 @@ function deriv2(data, h=1, closed=false) =
 //   the estimates are f'''(t) = (-5*f(t)+18*f(t+h)-24*f(t+2*h)+14*f(t+3*h)-3*f(t+4*h)) / 2h^3 and
 //   f'''(t) = (-3*f(t-h)+10*f(t)-12*f(t+h)+6*f(t+2*h)-f(t+3*h)) / 2h^3.
 function deriv3(data, h=1, closed=false) =
-    assert( is_consistent(data) , "Input list is not consistent or not numerical.") 
+    assert( is_addable(data) , "Input list is not consistent or not numerical.") 
     assert( len(data)>=5, "Input list has less than 5 elements.") 
     assert( is_finite(h), "The sampling `h` must be a number." )
     let(
@@ -1249,13 +1273,7 @@ function polynomial(p, z, _k, _zk, _total) =
                       is_num(z) ? _zk*z : C_times(_zk,z), 
                       _total+_zk*p[_k]);
 
-function newpoly(p,z,k,total) =
-     is_undef(k)
-   ?    assert( is_vector(p) || p==[], "Input polynomial coefficients must be a vector." )
-        assert( is_finite(z) || is_vector(z,2), "The value of `z` must be a real or a complex number." )
-        newpoly(p, z, 0, is_num(z) ? 0 : [0,0])
-   : k==len(p) ? total
-   : newpoly(p,z,k+1, is_num(z) ? total*z+p[k] : C_times(total,z)+[p[k],0]);
+
 
 // Function: poly_mult()
 // Usage
