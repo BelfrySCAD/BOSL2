@@ -857,7 +857,7 @@ function determinant(M) =
 // Description:
 //   Returns true if A is a numeric matrix of height m and width n.  If m or n
 //   are omitted or set to undef then true is returned for any positive dimension.
-//   If `square` is true then the matrix is required to be square.  Note if you
+//   If `square` is true then the matrix is required to be square. 
 //   specify m != n and require a square matrix then the result will always be false.
 // Arguments:
 //   A = matrix to test
@@ -1010,16 +1010,6 @@ function all(l, i=0, fail=false) =
 //   count_true([[0,0], [1,0]]);   // Returns 1.
 //   count_true([[1,1], [1,1]]);   // Returns 4.
 //   count_true([[1,1], [1,1]], nmax=3);  // Returns 3.
-function count_true(l, nmax=undef, i=0, cnt=0) =
-    (i>=len(l) || (nmax!=undef && cnt>=nmax))? cnt :
-    count_true(
-        l=l, nmax=nmax, i=i+1, cnt=cnt+(
-            is_list(l[i])? count_true(l[i], nmax=nmax-cnt) :
-            (l[i]? 1 : 0)
-        )
-    );
-
-
 function count_true(l, nmax) = 
     !is_list(l) ? !(!l) ? 1: 0 :
     let( c = [for( i = 0,
@@ -1212,27 +1202,6 @@ function C_div(z1,z2) =
 //   The polynomial is specified as p=[a_n, a_{n-1},...,a_1,a_0]
 //   where a_n is the z^n coefficient.  Polynomial coefficients are real.
 //   The result is a number if `z` is a number and a complex number otherwise.
-
-// Note: this should probably be recoded to use division by [1,-z], which is more accurate
-// and avoids overflow with large coefficients, but requires poly_div to support complex coefficients.  
-function polynomial(p, z, _k, _zk, _total) =
-    is_undef(_k)  
-    ?   assert( is_vector(p), "Input polynomial coefficients must be a vector." )
-        let(p = _poly_trim(p))
-        assert( is_finite(z) || is_vector(z,2), "The value of `z` must be a real or a complex number." )
-        polynomial( p, 
-                    z, 
-                    len(p)-1, 
-                    is_num(z)? 1 : [1,0], 
-                    is_num(z) ? 0 : [0,0]) 
-    :   _k==0 
-        ? _total + +_zk*p[0]
-        : polynomial( p, 
-                      z, 
-                      _k-1, 
-                      is_num(z) ? _zk*z : C_times(_zk,z), 
-                      _total+_zk*p[_k]);
-
 function polynomial(p,z,k,total) =
      is_undef(k)
    ?    assert( is_vector(p) , "Input polynomial coefficients must be a vector." )
@@ -1249,35 +1218,12 @@ function polynomial(p,z,k,total) =
 //   Given a list of polynomials represented as real coefficient lists, with the highest degree coefficient first, 
 //   computes the coefficient list of the product polynomial.  
 function poly_mult(p,q) = 
-    is_undef(q) ?
-       assert( is_list(p) 
-               && []==[for(pi=p) if( !is_vector(pi) && pi!=[]) 0], 
-               "Invalid arguments to poly_mult")
-       len(p)==2 ? poly_mult(p[0],p[1]) 
-                 : poly_mult(p[0], poly_mult(select(p,1,-1)))
-    :
-    _poly_trim(
-    [
-    for(n = [len(p)+len(q)-2:-1:0])
-        sum( [for(i=[0:1:len(p)-1])
-             let(j = len(p)+len(q)- 2 - n - i)
-             if (j>=0 && j<len(q)) p[i]*q[j]
-                 ])
-     ]);        
-     
-function poly_mult(p,q) = 
     is_undef(q) ?
        len(p)==2 ? poly_mult(p[0],p[1]) 
                  : poly_mult(p[0], poly_mult(select(p,1,-1)))
     :
     assert( is_vector(p) && is_vector(q),"Invalid arguments to poly_mult")
-    _poly_trim( [
-                  for(n = [len(p)+len(q)-2:-1:0])
-                      sum( [for(i=[0:1:len(p)-1])
-                           let(j = len(p)+len(q)- 2 - n - i)
-                           if (j>=0 && j<len(q)) p[i]*q[j]
-                               ])
-                   ]);
+    _poly_trim(convolve(p,q));
 
     
 // Function: poly_div()
