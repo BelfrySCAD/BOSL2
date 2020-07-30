@@ -129,6 +129,11 @@ function is_list_of(list,pattern) =
     is_list(list) &&
     []==[for(entry=0*list) if (entry != pattern) entry];
 
+function _list_pattern(list) =
+  is_list(list) ? [for(entry=list) is_list(entry) ? _list_pattern(entry) : 0]
+                : 0;
+
+
 
 // Function: is_consistent()
 // Usage:

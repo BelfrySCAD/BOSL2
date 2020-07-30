@@ -1341,39 +1341,25 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
 
 // Section: Pointlists
 
-// Function: first_noncollinear()
-// Usage:
-//   first_noncollinear(i1, i2, points);
-// Description:
-//   Returns index of the first point in `points` that is not collinear with the points indexed by `i1` and `i2`.
-// Arguments:
-//   i1 = The first point.
-//   i2 = The second point.
-//   points = The list of points to find a non-collinear point from.
-function first_noncollinear(i1, i2, points) =
-    [for (j = idx(points)) if (j!=i1 && j!=i2 && !collinear_indexed(points,i1,i2,j)) j][0];
-
 
 // Function: find_noncollinear_points()
 // Usage:
 //   find_noncollinear_points(points);
 // Description:
 //   Finds the indices of three good non-collinear points from the points list `points`.
-function find_noncollinear_points(points) =
+function find_noncollinear_points(points,error=true,eps=EPSILON) =
     let(
-        a = 0,
-        b = furthest_point(points[a], points),
-        pa = points[a],
-        pb = points[b],
-        c = max_index([
-            for (p=points)
-                (approx(p,pa) || approx(p,pb))? 0 :
-                sin(vector_angle(points[a]-p,points[b]-p)) *
-                    norm(p-points[a]) * norm(p-points[b])
-        ])
+        pa = points[0],
+        b = furthest_point(pa, points),
+        n = unit(points[b]-pa),
+        relpoints = [for(pt=points) pt-pa],
+        proj = relpoints * n,
+        distlist = [for(i=[0:len(points)-1]) norm(relpoints[i]-proj[i]*n)]
     )
-    assert(c!=a && c!=b, "Cannot find three noncollinear points in pointlist.")
-    [a, b, c];
+    max(distlist)<eps
+    ? assert(!error, "Cannot find three noncollinear points in pointlist.")
+      []
+    : [0,b,max_index(distlist)];
 
 
 // Function: pointlist_bounds()
