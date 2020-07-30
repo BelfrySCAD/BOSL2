@@ -240,7 +240,7 @@ function atanh(x) =
 //   quant([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,12,12,12]
 //   quant([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[12,12,12]]
 function quant(x,y) =
-    assert(is_finite(y) && !approx(y,0,eps=1e-24), "The multiple must be a non zero integer.")
+    assert(is_finite(y) && !approx(y,0,eps=1e-24), "The multiple must be a non zero number.")
     is_list(x)
     ?   [for (v=x) quant(v,y)]
     :   assert( is_finite(x), "The input to quantize must be a number or a list of numbers.")
@@ -272,7 +272,7 @@ function quant(x,y) =
 //   quantdn([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,9,9,12]
 //   quantdn([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[9,9,12]]
 function quantdn(x,y) =
-    assert(is_finite(y) && !approx(y,0,eps=1e-24), "The multiple must be a non zero integer.")
+    assert(is_finite(y) && !approx(y,0,eps=1e-24), "The multiple must be a non zero number.")
     is_list(x)
     ?    [for (v=x) quantdn(v,y)]
     :    assert( is_finite(x), "The input to quantize must be a number or a list of numbers.")
@@ -304,7 +304,7 @@ function quantdn(x,y) =
 //   quantup([9,10,10.4,10.5,11,12],3);      // Returns: [9,12,12,12,12,12]
 //   quantup([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,12,12],[12,12,12]]
 function quantup(x,y) =
-    assert(is_finite(y) && !approx(y,0,eps=1e-24), "The multiple must be a non zero integer.")
+    assert(is_finite(y) && !approx(y,0,eps=1e-24), "The multiple must be a non zero number.")
     is_list(x)
     ?    [for (v=x) quantup(v,y)]
     :    assert( is_finite(x), "The input to quantize must be a number or a list of numbers.")
