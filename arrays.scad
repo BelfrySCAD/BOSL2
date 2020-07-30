@@ -66,8 +66,8 @@ function select(list, start, end=undef) =
                 list[ (start%l+l)%l ]
             :   assert( is_list(start) || is_range(start), "Invalid start parameter")
                 [for (i=start) list[ (i%l+l)%l ] ]
-        :   assert(is_num(start), "Invalid start parameter.")
-            assert(is_num(end), "Invalid end parameter.")
+        :   assert(is_finite(start), "Invalid start parameter.")
+            assert(is_finite(end), "Invalid end parameter.")
             let( s = (start%l+l)%l, e = (end%l+l)%l )
             (s <= e)? [for (i = [s:1:e]) list[i]]
             :   concat([for (i = [s:1:l-1]) list[i]], [for (i = [0:1:e]) list[i]]) ;
