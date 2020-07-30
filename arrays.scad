@@ -480,13 +480,18 @@ function list_insert(list, indices, values, _i=0) =
 //   list_insert([3,6,9,12],[1,3]);  // Returns: [3,9]
 function list_remove(list, indices) =
     assert(is_list(list)||is_string(list), "Invalid list/string." )
-    is_finite(indices) 
-    ?   [  for(i=[0:1:min(indices, len(list)-1)-1]) list[i],
-           for(i=[min(indices, len(list)-1)+1:1:len(list)-1]) list[i]  ]
+    is_finite(indices) ?
+        [
+            for (i=[0:1:min(indices, len(list)-1)-1]) list[i],
+            for (i=[min(indices, len(list)-1)+1:1:len(list)-1]) list[i]
+        ]
+    :   indices==[] ? list
     :   assert( is_vector(indices), "Invalid list `indices`." )
-        len(indices)==0 ? list :
-        [ for(i=[0:len(list)-1])
-            if ( []==search(i,indices,1) ) list[i] ]; 
+        [
+            for(i=[0:len(list)-1])
+            if ( []==search(i,indices,1) )
+            list[i]
+        ]; 
 
 
 
