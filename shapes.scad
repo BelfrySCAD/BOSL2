@@ -1062,7 +1062,7 @@ module rect_tube(
 
 // Module: torus()
 //
-// Descriptiom:
+// Description:
 //   Creates a torus shape.
 //
 // Usage:

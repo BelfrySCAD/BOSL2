@@ -1,37 +1,14 @@
 include <../std.scad>
 
-// List/Array Ops
 
-module test_repeat() {
-    assert(repeat(1, 4) == [1,1,1,1]);
-    assert(repeat(8, [2,3]) == [[8,8,8], [8,8,8]]);
-    assert(repeat(0, [2,2,3]) == [[[0,0,0],[0,0,0]], [[0,0,0],[0,0,0]]]);
-    assert(repeat([1,2,3],3) == [[1,2,3], [1,2,3], [1,2,3]]);
-}
-test_repeat();
+// Section: List Query Operations
 
-
-module test_in_list() {
-    assert(in_list("bar", ["foo", "bar", "baz"]));
-    assert(!in_list("bee", ["foo", "bar", "baz"]));
-    assert(in_list("bar", [[2,"foo"], [4,"bar"], [3,"baz"]], idx=1));
-    assert(!in_list(undef, [3,4,5]));
-    assert(in_list(undef,[3,4,undef,5]));
-    assert(!in_list(3,[]));
-    assert(!in_list(3,[4,5,[3]]));
-    
-}
-test_in_list();
-
-
-module test_slice() {
-    assert(slice([3,4,5,6,7,8,9], 3, 5) == [6,7]);
-    assert(slice([3,4,5,6,7,8,9], 2, -1) == [5,6,7,8,9]);
-    assert(slice([3,4,5,6,7,8,9], 1, 1) == []);
-    assert(slice([3,4,5,6,7,8,9], 6, -1) == [9]);
-    assert(slice([3,4,5,6,7,8,9], 2, -2) == [5,6,7,8]);
-}
-test_slice();
+module test_is_simple_list() {
+		assert(is_simple_list([1,2,3,4]));
+		assert(is_simple_list([]));
+		assert(!is_simple_list([1,2,[3,4]]));
+} 
+test_is_simple_list();
 
 
 module test_select() {
@@ -47,6 +24,74 @@ module test_select() {
     assert(select(l, [1,3]) == [4,6]);
 }
 test_select();
+
+
+module test_slice() {
+    assert(slice([3,4,5,6,7,8,9], 3, 5) == [6,7]);
+    assert(slice([3,4,5,6,7,8,9], 2, -1) == [5,6,7,8,9]);
+    assert(slice([3,4,5,6,7,8,9], 1, 1) == []);
+    assert(slice([3,4,5,6,7,8,9], 6, -1) == [9]);
+    assert(slice([3,4,5,6,7,8,9], 2, -2) == [5,6,7,8]);
+    assert(slice([], 2, -2) == []);
+}
+test_slice();
+
+
+module test_in_list() {
+    assert(in_list("bar", ["foo", "bar", "baz"]));
+    assert(!in_list("bee", ["foo", "bar", "baz"]));
+    assert(in_list("bar", [[2,"foo"], [4,"bar"], [3,"baz"]], idx=1));
+    assert(!in_list("bee", ["foo", "bar", ["bee"]]));
+    assert(in_list(NAN, [NAN])==false);
+    assert(!in_list(undef, [3,4,5]));
+    assert(in_list(undef,[3,4,undef,5]));
+    assert(!in_list(3,[]));
+    assert(!in_list(3,[4,5,[3]]));
+}
+test_in_list();
+
+
+module test_min_index() {
+    assert(min_index([5,3,9,6,2,7,8,2,1])==8);
+    assert(min_index([5,3,9,6,2,7,8,2,7],all=true)==[4,7]);
+//    assert(min_index([],all=true)==[]);
+}
+test_min_index();
+
+
+module test_max_index() {
+    assert(max_index([5,3,9,6,2,7,8,9,1])==2);
+    assert(max_index([5,3,9,6,2,7,8,9,7],all=true)==[2,7]);
+//    assert(max_index([],all=true)==[]);
+}
+test_max_index();
+
+
+module test_list_increasing() {
+    assert(list_increasing([1,2,3,4]) == true);
+    assert(list_increasing([1,3,2,4]) == false);
+    assert(list_increasing([4,3,2,1]) == false);
+}
+test_list_increasing();
+
+
+module test_list_decreasing() {
+    assert(list_decreasing([1,2,3,4]) == false);
+    assert(list_decreasing([4,2,3,1]) == false);
+    assert(list_decreasing([4,3,2,1]) == true);
+}
+test_list_decreasing();
+
+// Section: Basic List Generation
+
+module test_repeat() {
+    assert(repeat(1, 4) == [1,1,1,1]);
+    assert(repeat(8, [2,3]) == [[8,8,8], [8,8,8]]);
+    assert(repeat(0, [2,2,3]) == [[[0,0,0],[0,0,0]], [[0,0,0],[0,0,0]]]);
+    assert(repeat([1,2,3],3) == [[1,2,3], [1,2,3], [1,2,3]]);
+    assert(repeat(4, [2,-1]) == [[], []]);
+}
+test_repeat();
 
 
 module test_list_range() {
@@ -66,6 +111,8 @@ test_list_range();
 
 module test_reverse() {
     assert(reverse([3,4,5,6]) == [6,5,4,3]);
+    assert(reverse("abcd") == ["d","c","b","a"]);
+    assert(reverse([]) == []);
 }
 test_reverse();
 
@@ -90,6 +137,8 @@ module test_deduplicate() {
     assert(deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]) == [8,3,4,8,2,3]);
     assert(deduplicate("Hello") == ["H","e","l","o"]);
     assert(deduplicate([[3,4],[7,1.99],[7,2],[1,4]],eps=0.1) == [[3,4],[7,2],[1,4]]);
+    assert(deduplicate([], closed=true) == []);
+    assert(deduplicate([[1,[1,[undef]]],[1,[1,[undef]]],[1,[2]],[1,[2,[0]]]])==[[1, [1,[undef]]],[1,[2]],[1,[2,[0]]]]);
 }
 test_deduplicate();
 
@@ -146,22 +195,6 @@ module test_list_bset() {
     assert(list_bset([false,true,false,true,false], [3,4], dflt=1) == [1,3,1,4,1]);
 }
 test_list_bset();
-
-
-module test_list_increasing() {
-    assert(list_increasing([1,2,3,4]) == true);
-    assert(list_increasing([1,3,2,4]) == false);
-    assert(list_increasing([4,3,2,1]) == false);
-}
-test_list_increasing();
-
-
-module test_list_decreasing() {
-    assert(list_decreasing([1,2,3,4]) == false);
-    assert(list_decreasing([4,2,3,1]) == false);
-    assert(list_decreasing([4,3,2,1]) == true);
-}
-test_list_decreasing();
 
 
 module test_list_shortest() {
@@ -315,6 +348,13 @@ test_set_intersection();
 // Arrays
 
 
+module test_add_scalar() {
+    assert(add_scalar([1,2,3],3) == [4,5,6]);
+    assert(add_scalar([[1,2,3],[3,4,5]],3) == [[4,5,6],[6,7,8]]);
+}
+test_add_scalar();
+
+
 module test_subindex() {
     v = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
     assert(subindex(v,2) == [3, 7, 11, 15]);
@@ -402,8 +442,16 @@ test_array_group();
 
 module test_flatten() {
     assert(flatten([[1,2,3], [4,5,[6,7,8]]]) == [1,2,3,4,5,[6,7,8]]);
+    assert(flatten([]) == []);
 }
 test_flatten();
+
+
+module test_full_flatten() {
+    assert(full_flatten([[1,2,3], [4,5,[6,[7],8]]]) == [1,2,3,4,5,6,7,8]);
+    assert(full_flatten([]) == []);
+}
+test_full_flatten();
 
 
 module test_array_dim() {

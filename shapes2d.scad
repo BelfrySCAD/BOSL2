@@ -480,11 +480,11 @@ function _normal_segment(p1,p2) =
 //   origin, pointed along the positive x axis with a movement distance of 1.  By default, `turtle` returns just
 //   the computed turtle path.  If you set `full_state` to true then it instead returns the full turtle state.
 //   You can invoke `turtle` again with this full state to continue the turtle path where you left off.
-//   
+//   .
 //   The turtle state is a list with three entries: the path constructed so far, the current step as a 2-vector, and the current default angle.
-//   
+//   .
 //   For the list below, `dist` is the current movement distance.
-//   
+//   .
 //   Commands     | Arguments          | What it does
 //   ------------ | ------------------ | -------------------------------
 //   "move"       | [dist]             | Move turtle scale*dist units in the turtle direction.  Default dist=1.  
@@ -1754,9 +1754,9 @@ module mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) {
 //   Since there are a number of shapes that fall under the name ogee, the shape of this mask is given as a pattern.
 //   Patterns are given as TYPE, VALUE pairs.  ie: `["fillet",10, "xstep",2, "step",[5,5], ...]`.  See Patterns below.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
-//   
+//   .
 //   ### Patterns
-//   
+//   .
 //   Type     | Argument  | Description
 //   -------- | --------- | ----------------
 //   "step"   | [x,y]     | Makes a line to a point `x` right and `y` down.

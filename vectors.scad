@@ -19,40 +19,25 @@
 // Arguments:
 //   v = The value to test to see if it is a vector.
 //   length = If given, make sure the vector is `length` items long.
-//   zero = If false, require that the length of the vector is not approximately zero.  If true, require the length of the vector to be approx zero-length.  Default: `undef` (don't check vector length.)
+//   zero = If false, require that the length of the vector is not approximately zero.  If true, require the length of the vector to be approximately zero-length.  Default: `undef` (don't check vector length.)
 //   eps = The minimum vector length that is considered non-zero.  Default: `EPSILON` (`1e-9`)
 // Example:
-//   is_vector(4);              // Returns false
-//   is_vector([4,true,false]); // Returns false
-//   is_vector([3,4,INF,5]);    // Returns false
-//   is_vector([3,4,5,6]);      // Returns true
-//   is_vector([3,4,undef,5]);  // Returns false
-//   is_vector([3,4,5],3);      // Returns true
-//   is_vector([3,4,5],4);      // Returns true
-//   is_vector([]);             // Returns false
-//   is_vector([0,0,0],zero=true);   // Returns true
-//   is_vector([0,0,0],zero=false);  // Returns false
-//   is_vector([0,1,0],zero=true);   // Returns false
-//   is_vector([0,0,1],zero=false);  // Returns true
+//   is_vector(4);                          // Returns false
+//   is_vector([4,true,false]);             // Returns false
+//   is_vector([3,4,INF,5]);                // Returns false
+//   is_vector([3,4,5,6]);                  // Returns true
+//   is_vector([3,4,undef,5]);              // Returns false
+//   is_vector([3,4,5],3);                  // Returns true
+//   is_vector([3,4,5],4);                  // Returns true
+//   is_vector([]);                         // Returns false
+//   is_vector([0,4,0],3,zero=false);     // Returns true
+//   is_vector([0,0,0],zero=false);       // Returns false
+//   is_vector([0,0,1e-12],zero=false);   // Returns false
+//   is_vector([],zero=false);            // Returns false
 function is_vector(v,length,zero,eps=EPSILON) =
     is_list(v) && is_num(0*(v*v))
     && (is_undef(length) || len(v)==length)
     && (is_undef(zero) || ((norm(v) >= eps) == !zero));
-
-
-// Function: add_scalar()
-// Usage:
-//   add_scalar(v,s);
-// Description:
-//   Given a vector and a scalar, returns the vector with the scalar added to each item in it.
-//   If given a list of vectors, recursively adds the scalar to the each vector.
-// Arguments:
-//   v = The initial list of values.
-//   s = A scalar value to add to every item in the vector.
-// Example:
-//   add_scalar([1,2,3],3);            // Returns: [4,5,6]
-//   add_scalar([[1,2,3],[3,4,5]],3);  // Returns: [[4,5,6],[6,7,8]]
-function add_scalar(v,s) = [for (x=v) is_list(x)? add_scalar(x,s) : x+s];
 
 
 // Function: vang()
@@ -63,6 +48,7 @@ function add_scalar(v,s) = [for (x=v) is_list(x)? add_scalar(x,s) : x+s];
 //   Given a 2D vector, returns the angle in degrees counter-clockwise from X+ on the XY plane.
 //   Given a 3D vector, returns [THETA,PHI] where THETA is the number of degrees counter-clockwise from X+ on the XY plane, and PHI is the number of degrees up from the X+ axis along the XZ plane.
 function vang(v) =
+    assert( is_vector(v,2) || is_vector(v,3) , "Invalid vector")
     len(v)==2? atan2(v.y,v.x) :
     let(res=xyz_to_spherical(v)) [res[1], 90-res[2]];
 
@@ -70,13 +56,19 @@ function vang(v) =
 // Function: vmul()
 // Description:
 //   Element-wise vector multiplication.  Multiplies each element of vector `v1` by
-//   the corresponding element of vector `v2`.  Returns a vector of the products.
+//   the corresponding element of vector `v2`. The vectors should have the same dimension.
+//   Returns a vector of the products.
 // Arguments:
 //   v1 = The first vector.
 //   v2 = The second vector.
 // Example:
 //   vmul([3,4,5], [8,7,6]);  // Returns [24, 28, 30]
-function vmul(v1, v2) = [for (i = [0:1:len(v1)-1]) v1[i]*v2[i]];
+function vmul(v1, v2) = 
+// this thighter check can be done yet because it would break other codes in the library
+//    assert( is_vector(v1) && is_vector(v2,len(v1)), "Incompatible vectors")
+    assert( is_vector(v1) && is_vector(v2), "Invalid vector(s)")
+    [for (i = [0:1:len(v1)-1]) v1[i]*v2[i]];
+    
 
 
 // Function: vdiv()
@@ -88,7 +80,9 @@ function vmul(v1, v2) = [for (i = [0:1:len(v1)-1]) v1[i]*v2[i]];
 //   v2 = The second vector.
 // Example:
 //   vdiv([24,28,30], [8,7,6]);  // Returns [3, 4, 5]
-function vdiv(v1, v2) = [for (i = [0:1:len(v1)-1]) v1[i]/v2[i]];
+function vdiv(v1, v2) = 
+    assert( is_vector(v1) && is_vector(v2,len(v1)), "Incompatible vectors")
+    [for (i = [0:1:len(v1)-1]) v1[i]/v2[i]];
 
 
 // Function: vabs()
@@ -97,19 +91,25 @@ function vdiv(v1, v2) = [for (i = [0:1:len(v1)-1]) v1[i]/v2[i]];
 //   v = The vector to get the absolute values of.
 // Example:
 //   vabs([-1,3,-9]);  // Returns: [1,3,9]
-function vabs(v) = [for (x=v) abs(x)];
+function vabs(v) =
+    assert( is_vector(v), "Invalid vector" ) 
+    [for (x=v) abs(x)];
 
 
 // Function: vfloor()
 // Description:
 //   Returns the given vector after performing a `floor()` on all items.
-function vfloor(v) = [for (x=v) floor(x)];
+function vfloor(v) =
+    assert( is_vector(v), "Invalid vector" ) 
+    [for (x=v) floor(x)];
 
 
 // Function: vceil()
 // Description:
 //   Returns the given vector after performing a `ceil()` on all items.
-function vceil(v) = [for (x=v) ceil(x)];
+function vceil(v) =
+    assert( is_vector(v), "Invalid vector" ) 
+    [for (x=v) ceil(x)];
 
 
 // Function: unit()
@@ -137,6 +137,7 @@ function unit(v, error=[[["ASSERT"]]]) =
 // Function: vector_angle()
 // Usage:
 //   vector_angle(v1,v2);
+//   vector_angle([v1,v2]);
 //   vector_angle(PT1,PT2,PT3);
 //   vector_angle([PT1,PT2,PT3]);
 // Description:
@@ -156,34 +157,36 @@ function unit(v, error=[[["ASSERT"]]]) =
 //   vector_angle([10,0,10], [0,0,0], [-10,10,0]);  // Returns: 120
 //   vector_angle([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: 120
 function vector_angle(v1,v2,v3) =
-    let(
-        vecs = !is_undef(v3)? [v1-v2,v3-v2] :
-            !is_undef(v2)? [v1,v2] :
-            len(v1) == 3? [v1[0]-v1[1],v1[2]-v1[1]] :
-            len(v1) == 2? v1 :
-            assert(false, "Bad arguments to vector_angle()"),
-        is_valid = is_vector(vecs[0]) && is_vector(vecs[1]) && vecs[0]*0 == vecs[1]*0
+    assert( ( is_undef(v3) && ( is_undef(v2) || same_shape(v1,v2) ) )
+            || is_consistent([v1,v2,v3]) ,
+            "Bad arguments.")
+    assert( is_vector(v1) || is_consistent(v1), "Bad arguments.") 
+    let( vecs = ! is_undef(v3) ? [v1-v2,v3-v2] :
+                ! is_undef(v2) ? [v1,v2] :
+                len(v1) == 3   ? [v1[0]-v1[1], v1[2]-v1[1]] 
+                               : v1
     )
-    assert(is_valid, "Bad arguments to vector_angle()")
+    assert(is_vector(vecs[0],2) || is_vector(vecs[0],3), "Bad arguments.")
     let(
         norm0 = norm(vecs[0]),
         norm1 = norm(vecs[1])
     )
-    assert(norm0>0 && norm1>0,"Zero length vector given to vector_angle()")
+    assert(norm0>0 && norm1>0, "Zero length vector.")
     // NOTE: constrain() corrects crazy FP rounding errors that exceed acos()'s domain.
     acos(constrain((vecs[0]*vecs[1])/(norm0*norm1), -1, 1));
-
+    
 
 // Function: vector_axis()
 // Usage:
 //   vector_axis(v1,v2);
+//   vector_axis([v1,v2]);
 //   vector_axis(PT1,PT2,PT3);
 //   vector_axis([PT1,PT2,PT3]);
 // Description:
 //   If given a single list of two vectors, like `vector_axis([V1,V2])`, returns the vector perpendicular the two vectors V1 and V2.
-//   If given a single list of three points, like `vector_axis([A,B,C])`, returns the vector perpendicular the line segments AB and BC.
-//   If given two vectors, like `vector_axis(V1,V1)`, returns the vector perpendicular the two vectors V1 and V2.
-//   If given three points, like `vector_axis(A,B,C)`, returns the vector perpendicular the line segments AB and BC.
+//   If given a single list of three points, like `vector_axis([A,B,C])`, returns the vector perpendicular to the plane through a, B and C.
+//   If given two vectors, like `vector_axis(V1,V2)`, returns the vector perpendicular to the two vectors V1 and V2.
+//   If given three points, like `vector_axis(A,B,C)`, returns the vector perpendicular to the plane through a, B and C.
 // Arguments:
 //   v1 = First vector or point.
 //   v2 = Second vector or point.
@@ -199,28 +202,23 @@ function vector_axis(v1,v2=undef,v3=undef) =
     is_vector(v3)
     ?   assert(is_consistent([v3,v2,v1]), "Bad arguments.")
         vector_axis(v1-v2, v3-v2)
-    :
-    assert( is_undef(v3), "Bad arguments.")
-    is_undef(v2)
-    ?   assert( is_list(v1), "Bad arguments.")
-        len(v1) == 2
-            ? vector_axis(v1[0],v1[1])
-            : vector_axis(v1[0],v1[1],v1[2])
-    :
-    assert(
-        is_vector(v1,zero=false) &&
-            is_vector(v2,zero=false) &&
-            is_consistent([v1,v2]),
-        "Bad arguments."
-    )
-    let(
-        eps = 1e-6,
-        w1 = point3d(v1/norm(v1)),
-        w2 = point3d(v2/norm(v2)),
-        w3 = (norm(w1-w2) > eps && norm(w1+w2) > eps) ? w2
-           : (norm(vabs(w2)-UP) > eps) ? UP
-           : RIGHT
-    ) unit(cross(w1,w3));
+    :   assert( is_undef(v3), "Bad arguments.")
+        is_undef(v2)
+        ?   assert( is_list(v1), "Bad arguments.")
+            len(v1) == 2 
+            ?   vector_axis(v1[0],v1[1]) 
+            :   vector_axis(v1[0],v1[1],v1[2])
+        :   assert( is_vector(v1,zero=false) && is_vector(v2,zero=false) && is_consistent([v1,v2])
+                    , "Bad arguments.")  
+            let(
+              eps = 1e-6,
+              w1 = point3d(v1/norm(v1)),
+              w2 = point3d(v2/norm(v2)),
+              w3 = (norm(w1-w2) > eps && norm(w1+w2) > eps) ? w2 
+                   : (norm(vabs(w2)-UP) > eps)? UP 
+                   : RIGHT
+            ) unit(cross(w1,w3));
+
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

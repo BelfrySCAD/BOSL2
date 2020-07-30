@@ -110,6 +110,8 @@ module test_approx() {
     assert_equal(approx(1/3, 0.3333333333), true);
     assert_equal(approx(-1/3, -0.3333333333), true);
     assert_equal(approx(10*[cos(30),sin(30)], 10*[sqrt(3)/2, 1/2]), true);
+    assert_equal(approx([1,[1,undef]], [1+1e-12,[1,true]]), false);
+    assert_equal(approx([1,[1,undef]], [1+1e-12,[1,undef]]), true);
 }
 test_approx();
 
@@ -389,12 +391,21 @@ module test_mean() {
 }
 test_mean();
 
-
 module test_median() {
     assert_equal(median([2,3,7]), 4.5);
     assert_equal(median([[1,2,3], [3,4,5], [8,9,10]]), [4.5,5.5,6.5]);
 }
 test_median();
+
+
+module test_convolve() {
+    assert_equal(convolve([],[1,2,1]), []);
+    assert_equal(convolve([1,1],[]), []);
+    assert_equal(convolve([1,1],[1,2,1]), [1,3,3,1]);
+    assert_equal(convolve([1,2,3],[1,2,1]), [1,4,8,8,3]);
+}
+test_convolve();
+
 
 
 module test_matrix_inverse() {
@@ -583,6 +594,24 @@ module test_factorial() {
 }
 test_factorial();
 
+module test_binomial() {
+    assert_equal(binomial(1), [1,1]);
+    assert_equal(binomial(2), [1,2,1]);
+    assert_equal(binomial(3), [1,3,3,1]);
+    assert_equal(binomial(5), [1,5,10,10,5,1]);
+}
+test_binomial();
+
+module test_binomial_coefficient() {
+    assert_equal(binomial_coefficient(2,1), 2);
+    assert_equal(binomial_coefficient(3,2), 3);
+    assert_equal(binomial_coefficient(4,2), 6);
+    assert_equal(binomial_coefficient(10,7), 120);
+    assert_equal(binomial_coefficient(10,7), binomial(10)[7]);
+    assert_equal(binomial_coefficient(15,4), binomial(15)[4]);
+}
+test_binomial_coefficient();
+
 
 module test_gcd() {
     assert_equal(gcd(15,25), 5);
@@ -682,6 +711,7 @@ test_linear_solve();
 
 module test_outer_product(){
   assert_equal(outer_product([1,2,3],[4,5,6]), [[4,5,6],[8,10,12],[12,15,18]]);
+  assert_equal(outer_product([1,2],[4,5,6]), [[4,5,6],[8,10,12]]);
   assert_equal(outer_product([9],[7]), [[63]]);
 }
 test_outer_product();
@@ -782,8 +812,10 @@ test_deriv3();
 
 
 module test_polynomial(){
-  assert_equal(polynomial([],12),0);
-  assert_equal(polynomial([],[12,4]),[0,0]);
+  assert_equal(polynomial([0],12),0);
+  assert_equal(polynomial([0],[12,4]),[0,0]);
+//  assert_equal(polynomial([],12),0);
+//  assert_equal(polynomial([],[12,4]),[0,0]);
   assert_equal(polynomial([1,2,3,4],3),58);
   assert_equal(polynomial([1,2,3,4],[3,-1]),[47,-41]);
   assert_equal(polynomial([0,0,2],4),2);
@@ -879,16 +911,20 @@ test_qr_factor();
 
 module test_poly_mult(){
   assert_equal(poly_mult([3,2,1],[4,5,6,7]),[12,23,32,38,20,7]);
-  assert_equal(poly_mult([3,2,1],[]),[]);
+  assert_equal(poly_mult([3,2,1],[0]),[0]);
+//  assert_equal(poly_mult([3,2,1],[]),[]);
   assert_equal(poly_mult([[1,2],[3,4],[5,6]]), [15,68,100,48]);
-  assert_equal(poly_mult([[1,2],[],[5,6]]), []);
-  assert_equal(poly_mult([[3,4,5],[0,0,0]]),[]);
+  assert_equal(poly_mult([[1,2],[0],[5,6]]), [0]);
+//  assert_equal(poly_mult([[1,2],[],[5,6]]), []);
+  assert_equal(poly_mult([[3,4,5],[0,0,0]]),[0]);
+//  assert_equal(poly_mult([[3,4,5],[0,0,0]]),[]);
 }
 test_poly_mult();
 
- 
+
 module test_poly_div(){
-  assert_equal(poly_div(poly_mult([4,3,3,2],[2,1,3]), [2,1,3]),[[4,3,3,2],[]]);
+  assert_equal(poly_div(poly_mult([4,3,3,2],[2,1,3]), [2,1,3]),[[4,3,3,2],[0]]);
+//  assert_equal(poly_div(poly_mult([4,3,3,2],[2,1,3]), [2,1,3]),[[4,3,3,2],[]]);
   assert_equal(poly_div([1,2,3,4],[1,2,3,4,5]), [[], [1,2,3,4]]);
   assert_equal(poly_div(poly_add(poly_mult([1,2,3,4],[2,0,2]), [1,1,2]), [1,2,3,4]), [[2,0,2],[1,1,2]]);
   assert_equal(poly_div([1,2,3,4], [1,-3]), [[1,5,18],[58]]);
@@ -899,7 +935,8 @@ test_poly_div();
 module test_poly_add(){
   assert_equal(poly_add([2,3,4],[3,4,5,6]),[3,6,8,10]);
   assert_equal(poly_add([1,2,3,4],[-1,-2,3,4]), [6,8]);
-  assert_equal(poly_add([1,2,3],-[1,2,3]),[]);
+  assert_equal(poly_add([1,2,3],-[1,2,3]),[0]);
+//  assert_equal(poly_add([1,2,3],-[1,2,3]),[]);
 }
 test_poly_add();
 

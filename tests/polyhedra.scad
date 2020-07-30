@@ -2,9 +2,9 @@ include<../std.scad>
 include<../polyhedra.scad>
 
 
-$fn=96;
-
 if (true) {
+
+   $fn=96;
 
   // Display of all solids with insphere, midsphere and circumsphere
     

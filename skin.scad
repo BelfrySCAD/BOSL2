@@ -26,13 +26,13 @@ include <vnf.scad>
 //   Each profile must rotate in the same clockwise direction.  If called as a function, returns a
 //   [VNF structure](vnf.scad) like `[VERTICES, FACES]`.  If called as a module, creates a polyhedron
 //    of the skinned profiles.
-//   
+//   .
 //   The profiles can be specified either as a list of 3d curves or they can be specified as
 //   2d curves with heights given in the `z` parameter.  It is your responsibility to ensure
 //   that the resulting polyhedron is free from self-intersections, which would make it invalid
 //   and can result in cryptic CGAL errors upon rendering, even though the polyhedron appears
 //   OK during preview.
-//   
+//   .
 //   For this operation to be well-defined, the profiles must all have the same vertex count and
 //   we must assume that profiles are aligned so that vertex `i` links to vertex `i` on all polygons.
 //   Many interesting cases do not comply with this restriction.  Two basic methods can handle
@@ -44,7 +44,7 @@ include <vnf.scad>
 //   a square with 5 points (two of which are identical), so that it can match up to a pentagon.
 //   Such a combination would create a triangular face at the location of the duplicated vertex.
 //   Alternatively, `skin` provides methods (described below) for matching up incompatible paths.
-//   
+//   .
 //   In order for skinned surfaces to look good it is usually necessary to use a fine sampling of
 //   points on all of the profiles, and a large number of extra interpolated slices between the
 //   profiles that you specify.  It is generally best if the triangles forming your polyhedron
@@ -55,7 +55,7 @@ include <vnf.scad>
 //   multiplying the number of points by N, so a profile with 8 points will have 8*N points after
 //   refinement.  Note that when dealing with continuous curves it is always better to adjust the
 //   sampling in your code to generate the desired sampling rather than using the `refine` argument.
-//   
+//   .
 //   Two methods are available for resampling, `"length"` and `"segment"`.  Specify them using
 //   the `sampling` argument.  The length resampling method resamples proportional to length.
 //   The segment method divides each segment of a profile into the same number of points.
@@ -66,7 +66,7 @@ include <vnf.scad>
 //   The available methods are `"distance"`, `"tangent"`, `"direct"` and `"reindex"`.
 //   It is useful to distinguish between continuous curves like a circle and discrete profiles
 //   like a hexagon or star, because the algorithms' suitability depend on this distinction.
-//   
+//   .
 //   The "direct" and "reindex" methods work by resampling the profiles if necessary.  As noted above,
 //   for continuous input curves, it is better to generate your curves directly at the desired sample size,
 //   but for mapping between a discrete profile like a hexagon and a circle, the hexagon must be resampled
@@ -81,7 +81,7 @@ include <vnf.scad>
 //   method which will look for the index choice that will minimize the length of all of the edges
 //   in the polyhedron---in will produce the least twisted possible result.  This algorithm has quadratic
 //   run time so it can be slow with very large profiles.
-//   
+//   .
 //   The "distance" and "tangent" methods are work by duplicating vertices to create
 //   triangular faces.  The "distance" method finds the global minimum distance method for connecting two
 //   profiles.  This algorithm generally produces a good result when both profiles are discrete ones with
@@ -98,7 +98,7 @@ include <vnf.scad>
 //   have no effect.  For best efficiency set `refine=1` and `slices=0`.  When you use refinement with either
 //   of these methods, it is always the "segment" based resampling described above.  This is necessary because
 //   sampling by length will ignore the repeated vertices and break the alignment.
-//   
+//   .
 //   It is possible to specify `method` and `refine` as arrays, but it is important to observe
 //   matching rules when you do this.  If a pair of profiles is connected using "tangent" or "distance"
 //   then the `refine` values for those two profiles must be equal.  If a profile is connected by
@@ -107,7 +107,7 @@ include <vnf.scad>
 //   used for the resampled profiles.  The best way to avoid confusion is to ensure that the
 //   profiles connected by "direct" or "realign" all have the same number of points and at the
 //   transition, the refined number of points matches.
-//   
+//   .
 // Arguments:
 //   profiles = list of 2d or 3d profiles to be skinned.  (If 2d must also give `z`.)
 //   slices = scalar or vector number of slices to insert between each pair of profiles.  Set to zero to use only the profiles you provided.  Recommend starting with a value around 10.
@@ -791,7 +791,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   If `closed=true` then the first and last transformation are linked together.
 //   The `caps` parameter controls whether the ends of the shape are closed.
 //   As a function, returns the VNF for the polyhedron.  As a module, computes the polyhedron.
-//   
+//   .
 //   Note that this is a very powerful, general framework for producing polyhedra.  It is important
 //   to ensure that your resulting polyhedron does not include any self-intersections, or it will
 //   be invalid and will generate CGAL errors.  If you get such errors, most likely you have an
@@ -851,15 +851,15 @@ module sweep(shape, transformations, closed=false, caps, convexity=10) {
 //   Takes as input a 2d shape (specified as a point list) and a 2d or 3d path and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF by default or if you set `transforms=true` then
 //   it returns a list of transformations suitable as input to `sweep`.
-//   
+//   .
 //   The sweep operation has an ambiguity: the shape can rotate around the axis defined by the path.  Several options provide
 //   methods for controlling this rotation.  You can choose from three different methods for selecting the rotation of your shape.
 //   None of these methods will produce good, or even valid, results on all inputs, so it is important to select a suitable method. 
 //   You can also add (or remove) twist to the model.  This twist adjustment is done uniformly in arc length by default, or you
 //   can set `twist_by_length=false` to distribute the twist uniformly over the path point list.
-//   
+//   .
 //   The method is set using the parameter with that name to one of the following:
-//   
+//   .
 //   The "incremental" method (the default) works by adjusting the shape at each step by the minimal rotation that makes the shape normal to the tangent
 //   at the next point.  This method is robust in that it always produces a valid result for well-behaved paths with sufficiently high
 //   sampling.  Unfortunately, it can produce a large amount of undesirable twist.  When constructing a closed shape this algorithm in
@@ -873,7 +873,7 @@ module sweep(shape, transformations, closed=false, caps, convexity=10) {
 //   makes an angle of 45 deg or less with the xy plane and it points BACK if the path makes a higher angle with the XY plane.  You
 //   can also supply `last_normal` which provides an ending orientation constraint.  Be aware that the curve may still exhibit
 //   twisting in the middle.  This method is the default because it is the most robust, not because it generally produces the best result.  
-//   
+//   .
 //   The "natural" method works by computing the Frenet frame at each point on the path.  This is defined by the tangent to the curve and
 //   the normal which lies in the plane defined by the curve at each point.  This normal points in the direction of curvature of the curve.
 //   The result is a very well behaved set of sections without any unexpected twisting---as long as the curvature never falls to zero.  At a
@@ -881,7 +881,7 @@ module sweep(shape, transformations, closed=false, caps, convexity=10) {
 //   you skip over this troublesome point so the normal is defined, it can change direction abruptly when the curvature is zero, leading to
 //   a nasty twist and an invalid model.  A simple example is a circular arc joined to another arc that curves the other direction.  Note
 //   that the X axis of the shape is aligned with the normal from the Frenet frame.
-//   
+//   .
 //   The "manual" method allows you to specify your desired normal either globally with a single vector, or locally with
 //   a list of normal vectors for every path point.  The normal you supply is projected to be orthogonal to the tangent to the
 //   path and the Y direction of your shape will be aligned with the projected normal.  (Note this is different from the "natural" method.)  
@@ -890,7 +890,7 @@ module sweep(shape, transformations, closed=false, caps, convexity=10) {
 //   uses the actual specified normal.  In this case, the tangent is projected to be orthogonal to your supplied normal to define
 //   the cross section orientation.  Specifying a list of normal vectors gives you complete control over the orientation of your
 //   cross sections and can be useful if you want to position your model to be on the surface of some solid.
-//   
+//   .
 //   For any method you can use the `twist` argument to add the specified number of degrees of twist into the model.  
 //   If the model is closed then the twist must be a multiple of 360/symmetry.  The twist is normally spread uniformly along your shape
 //   based on the path length.  If you set `twist_by_length` to false then the twist will be uniform based on the point count of your path.

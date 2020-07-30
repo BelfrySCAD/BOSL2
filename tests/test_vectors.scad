@@ -9,19 +9,13 @@ module test_is_vector() {
     assert(is_vector(1) == false);
     assert(is_vector("foo") == false);
     assert(is_vector(true) == false);
+
     assert(is_vector([0,0,0],zero=true) == true);
     assert(is_vector([0,0,0],zero=false) == false);
     assert(is_vector([0,1,0],zero=true) == false);
     assert(is_vector([0,0,1],zero=false) == true);
 }
 test_is_vector();
-
-
-module test_add_scalar() {
-    assert(add_scalar([1,2,3],3) == [4,5,6]);
-    assert(add_scalar([[1,2,3],[3,4,5]],3) == [[4,5,6],[6,7,8]]);
-}
-test_add_scalar();
 
 
 module test_vfloor() {

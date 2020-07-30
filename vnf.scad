@@ -531,7 +531,7 @@ function vnf_bend(vnf,r,d,axis="Z") =
 //   Each error has the format `[ERR_OR_WARN,CODE,MESG,POINTS,COLOR]`.
 //   When called as a module, echoes the non-manifold errors to the console, and color hilites the
 //   bad edges and vertices, overlaid on a transparent gray polyhedron of the VNF.
-//   
+//   .
 //   Currently checks for these problems:
 //   Type    | Color    | Code         | Message 
 //   ------- | -------- | ------------ | ---------------------------------
@@ -543,7 +543,7 @@ function vnf_bend(vnf,r,d,axis="Z") =
 //   ERROR   | Red      | T_JUNCTION   | Vertex is mid-edge on another Face
 //   ERROR   | Blue     | FACE_ISECT   | Faces intersect
 //   ERROR   | Magenta  | HOLE_EDGE    | Edge bounds Hole
-//   
+//   .
 //   Still to implement:
 //   - Overlapping coplanar faces.
 // Arguments:
