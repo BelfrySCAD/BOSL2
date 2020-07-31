@@ -108,16 +108,14 @@ function slice(list,start,end) =
 // Arguments:
 //   val = The simple value to search for.
 //   list = The list to search.
-//   idx = If given, searches the given subindex for matches for `val`.
+//   idx = If given, searches the given subindexes for matches for `val`.
 // Example:
 //   in_list("bar", ["foo", "bar", "baz"]);  // Returns true.
 //   in_list("bee", ["foo", "bar", "baz"]);  // Returns false.
 //   in_list("bar", [[2,"foo"], [4,"bar"], [3,"baz"]], idx=1);  // Returns true.
 function in_list(val,list,idx=undef) = 
-    assert( is_list(list) && (is_undef(idx) || is_finite(idx)),
-		        "Invalid input." )
     let( s = search([val], list, num_returns_per_match=1, index_col_num=idx)[0] )
-    s==[] || s==[[]] ? false
+    s==[] || s[0]==[] ? false
     : is_undef(idx) ? val==list[s] 
     : val==list[s][idx];
     
