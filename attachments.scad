@@ -37,16 +37,16 @@ $tags_hidden = [];
 //   * Spin is a simple rotation around the Z axis.
 //   * Orientation is rotating an object so that its top is pointed towards a given vector.
 //   An object will first be translated to its anchor position, then spun, then oriented.
-//   
+//   .
 //   ## Anchor
 //   Anchoring is specified with the `anchor` argument in most shape modules.
 //   Specifying `anchor` when creating an object will translate the object so
 //   that the anchor point is at the origin (0,0,0).  Anchoring always occurs
 //   before spin and orientation are applied.
-//   
+//   .
 //   An anchor can be referred to in one of two ways; as a directional vector,
 //   or as a named anchor string.
-//   
+//   .
 //   When given as a vector, it points, in a general way, towards the face, edge, or
 //   corner of the object that you want the anchor for, relative to the center of
 //   the object.  There are directional constants named `TOP`, `BOTTOM`, `FRONT`, `BACK`,
@@ -55,7 +55,7 @@ $tags_hidden = [];
 //    - `[0,0,1]` is the same as `TOP` and refers to the center of the top face.
 //    - `[-1,0,1]` is the same as `TOP+LEFT`, and refers to the center of the top-left edge.
 //    - `[1,1,-1]` is the same as `BOTTOM+BACK+RIGHT`, and refers to the bottom-back-right corner.
-//   
+//   .
 //   The components of the directional vector should all be `1`, `0`, or `-1`.
 //   When the object is cylindrical, conical, or spherical in nature, the anchors will be
 //   located around the surface of the cylinder, cone, or sphere, relative to the center.
@@ -64,20 +64,20 @@ $tags_hidden = [];
 //   two faces the edge is between.  The direction of a corner anchor will be the average
 //   of the anchor directions of the three faces the corner is on.  The spin of all standard
 //   anchors is 0.
-//   
+//   .
 //   Some more complex objects, like screws and stepper motors, have named anchors
 //   to refer to places on the object that are not at one of the standard faces, edges
 //   or corners.  For example, stepper motors have anchors for `"screw1"`, `"screw2"`,
 //   etc. to refer to the various screwholes on the stepper motor shape.  The names,
 //   positions, directions, and spins of these anchors will be specific to the object,
 //   and will be documented when they exist.
-//   
+//   .
 //   ## Spin
 //   Spin is specified with the `spin` argument in most shape modules.  Specifying `spin`
 //   when creating an object will rotate the object counter-clockwise around the Z axis
 //   by the given number of degrees.  Spin is always applied after anchoring, and before
 //   orientation.
-//   
+//   .
 //   ## Orient
 //   Orientation is specified with the `orient` argument in most shape modules.  Specifying
 //   `orient` when creating an object will rotate the object such that the top of the
@@ -593,17 +593,17 @@ function attachment_is_shown(tags) =
 //   the transformation matrix needed to be applied to the contents of that volume.  A managed 3D
 //   volume is assumed to be vertically (Z-axis) oriented, and centered.  A managed 2D area is just
 //   assumed to be centered.
-//   
+//   .
 //   If `p` is not given, then the transformation matrix will be returned.
 //   If `p` contains a VNF, a new VNF will be returned with the vertices transformed by the matrix.
 //   If `p` contains a path, a new path will be returned with the vertices transformed by the matrix.
 //   If `p` contains a point, a new point will be returned, transformed by the matrix.
-//   
+//   .
 //   If `$attach_to` is not defined, then the following transformations are performed in order:
 //   * Translates so the `anchor` point is at the origin (0,0,0).
 //   * Rotates around the Z axis by `spin` degrees counter-clockwise.
 //   * Rotates so the top of the part points towards the vector `orient`.
-//   
+//   .
 //   If `$attach_to` is defined, as a consequence of `attach(from,to)`, then
 //   the following transformations are performed in order:
 //   * Translates this part so it's anchor position matches the parent's anchor position.
@@ -685,13 +685,13 @@ function reorient(
 //       children();
 //   }
 //   ```
-//   
+//   .
 //   If this is *not* run as a child of `attach()` with the `to` argument
 //   given, then the following transformations are performed in order:
 //   * Translates so the `anchor` point is at the origin (0,0,0).
 //   * Rotates around the Z axis by `spin` degrees counter-clockwise.
 //   * Rotates so the top of the part points towards the vector `orient`.
-//   
+//   .
 //   If this is called as a child of `attach(from,to)`, then the info
 //   for the anchor points referred to by `from` and `to` are fetched,
 //   which will include position, direction, and spin.  With that info,

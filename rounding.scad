@@ -25,7 +25,7 @@ include <structs.scad>
 //   and continuous curvature rounding using 4th order bezier curves.  Circular rounding can produce a
 //   tactile "bump" where the curvature changes from flat to circular.
 //   See https://hackernoon.com/apples-icons-have-that-shape-for-a-very-good-reason-720d4e7c8a14
-//   
+//   .
 //   You select the type of rounding using the `method` option, which should be `"smooth"` to
 //   get continuous curvature rounding, `"circle"` to get circular rounding, or `"chamfer"` to get chamfers.  The default is circle
 //   rounding.  Each method has two options you can use to specify the amount of rounding.
@@ -33,29 +33,29 @@ include <structs.scad>
 //   much of the corner to "cut" off.  This can be easier to understand than setting a circular radius, which can be
 //   unexpectedly extreme when the corner is very sharp.  It also allows a systematic specification of
 //   corner treatments that are the same size for all three methods.
-//   
+//   .
 //   For circular rounding you can also use the `radius` parameter, which sets a circular rounding
 //   radius.  For chamfers and smooth rounding you can specify the `joint` parameter, which specifies the distance
 //   away from the corner along the path where the roundover or chamfer should start.  The figure below shows
 //   the cut and joint distances for a given roundover.
-//   
+//   .
 //   The `"smooth"` method rounding also has a parameter that specifies how smooth the curvature match
 //   is.  This parameter, `k`, ranges from 0 to 1, with a default of 0.5.  Larger values give a more
 //   abrupt transition and smaller ones a more gradual transition.  If you set the value much higher
 //   than 0.8 the curvature changes abruptly enough that though it is theoretically continuous, it may
 //   not be continuous in practice.  If you set it very small then the transition is so gradual that
 //   the length of the roundover may be extremely long.
-//   
+//   .
 //   If you select curves that are too large to fit the function will fail with an error.  You can set `verbose=true` to
 //   get a message showing a list of scale factors you can apply to your rounding parameters so that the
 //   roundovers will fit on the curve.  If the scale factors are larger than one
 //   then they indicate how much you can increase the curve sizes before collisions will occur.
-//   
+//   .
 //   The parameters `radius`, `cut`, `joint` and `k` can be numbers, which round every corner using the same parameters, or you
 //   can specify a list to round each corner with different parameters.  If the curve is not closed then the first and last points
 //   of the curve are not rounded.  In this case you can specify a full list of points anyway, and the endpoint values are ignored,
 //   or you can specify a list that has length len(path)-2, omitting the two dummy values.
-//   
+//   .
 //   Examples:
 //   * `method="circle", radius=2`:
 //       Rounds every point with circular, radius 2 roundover
@@ -63,7 +63,7 @@ include <structs.scad>
 //       Rounds every point with continuous curvature rounding with a cut of 2, and a default 0.5 smoothing parameter
 //   * `method="smooth", cut=2, k=0.3`:
 //       Rounds every point with continuous curvature rounding with a cut of 2, and a very gentle 0.3 smoothness setting
-//   
+//   .
 //   The number of segments used for roundovers is determined by `$fa`, `$fs` and `$fn` as usual for
 //   circular roundovers.  For continuous curvature roundovers `$fs` and `$fn` are used and `$fa` is
 //   ignored.  Note that $fn is interpreted as the number of points on the roundover curve, which is
@@ -394,7 +394,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   and will match the tangents at every point.  If you do not specify tangents they will be computed using
 //   path_tangents with uniform=false by default.  Note that setting uniform to true with non-uniform
 //   sampling may be desirable in some cases but tends to produces curves that overshoot the point on the path.  
-//
+//   .
 //   The size or relsize parameter determines how far the curve can bend away from
 //   the input path.  In the case where the curve has a single hump, the size specifies the exact distance
 //   between the specified path and the curve.  If you give relsize then it is relative to the segment
@@ -474,21 +474,21 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 //   disabling the validity check when it is needed can generate invalid polyhedra that will produce CGAL errors upon
 //   rendering.  Such validity errors will also occur if you specify a self-intersecting shape.
 //   The offset profile is quantized to 1/1024 steps to avoid failures in offset() that can occur with very tiny offsets.
-//   
+//   .
 //   The build-in profiles are: circular rounding, teardrop rounding, chamfer, continuous curvature rounding, and chamfer.
 //   Also note that when a rounding radius is negative the rounding will flare outwards.  The easiest way to specify
 //   the profile is by using the profile helper functions.  These functions take profile parameters, as well as some
 //   general settings and translate them into a profile specification, with error checking on your input.  The description below
 //   describes the helper functions and the parameters specific to each function.  Below that is a description of the generic
 //   settings that you can optionally use with all of the helper functions.
-//   
+//   .
 //   - profile: os_profile(points)
 //     Define the offset profile with a list of points.  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  If the y value ever decreases then you might create a self-intersecting polyhedron, which is invalid.  Such invalid polyhedra will create cryptic assertion errors when you render your model and it is your responsibility to avoid creating them.  Note that the starting point of the profile is the center of the extrusion.  If you use a profile as the top it will rise upwards.  If you use it as the bottom it will be inverted, and will go downward.
 //   - circle: os_circle(r|cut).  Define circular rounding either by specifying the radius or cut distance.
 //   - smooth: os_smooth(cut|joint).  Define continuous curvature rounding, with `cut` and `joint` as for round_corners.
 //   - teardrop: os_teardrop(r|cut).  Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
 //   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle will be ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.
-//   
+//   .
 //   The general settings that you can use with all of the helper functions are mostly used to control how offset_sweep() calls the offset() function.
 //   - extra: Add an extra vertical step of the specified height, to be used for intersections or differences.  This extra step will extend the resulting object beyond the height you specify.  Default: 0
 //   - check_valid: passed to offset().  Default: true
@@ -496,10 +496,10 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 //   - steps: Number of vertical steps to use for the profile.  (Not used by os_profile).  Default: 16
 //   - offset_maxstep: The maxstep distance for offset() calls; controls the horizontal step density.  Set smaller if you don't get the expected rounding.  Default: 1
 //   - offset: Select "round" (r=) or "delta" (delta=) offset types for offset. You can also choose "chamfer" but this leads to exponential growth in the number of vertices with the steps parameter.  Default: "round"
-//   
+//   .
 //   Many of the arguments are described as setting "default" values because they establish settings which may be overridden by
 //   the top and bottom profile specifications.
-//   
+//   .
 //   You will generally want to use the above helper functions to generate the profiles.
 //   The profile specification is a list of pairs of keywords and values, e.g. ["r",12, type, "circle"]. The keywords are
 //   - "type" - type of rounding to apply, one of "circle", "teardrop", "chamfer", "smooth", or "profile" (Default: "circle")
@@ -517,7 +517,7 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 //   - "steps" - number of vertical steps to use for the roundover.  Default: 16.
 //   - "offset_maxstep" - maxstep distance for offset() calls; controls the horizontal step density.  Set smaller if you don't get expected rounding.  Default: 1
 //   - "offset" - select "round" (r=), "delta" (delta=), or "chamfer" offset type for offset.  Default: "round"
-//   
+//   .
 //   Note that if you set the "offset" parameter to "chamfer" then every exterior corner turns from one vertex into two vertices with
 //   each offset operation.  Since the offsets are done one after another, each on the output of the previous one, this leads to
 //   exponential growth in the number of vertices.  This can lead to long run times or yield models that
@@ -865,33 +865,33 @@ function os_profile(points, extra,check_valid, quality, offset_maxstep, offset) 
 //   operates on 2d children rather than a point list.  Each offset is computed using
 //   the native `offset()` module from the input geometry.  If your geometry has internal holes or is too small for the specified offset then you may get
 //   unexpected results.
-//   
+//   .
 //   The build-in profiles are: circular rounding, teardrop rounding, chamfer, continuous curvature rounding, and chamfer.
 //   Also note that when a rounding radius is negative the rounding will flare outwards.  The easiest way to specify
 //   the profile is by using the profile helper functions.  These functions take profile parameters, as well as some
 //   general settings and translate them into a profile specification, with error checking on your input.  The description below
 //   describes the helper functions and the parameters specific to each function.  Below that is a description of the generic
 //   settings that you can optionally use with all of the helper functions.
-//
+//   .
 //   The final shape is created by combining convex hulls of small extrusions.  The thickness of these small extrusions may result
 //   your model being slightly too long (if the curvature at the end is flaring outward), so if the exact length is very important
 //   you may need to intersect with a bounding cube.  (Note that extra length can also be intentionally added with the `extra` argument.)
-//   
+//   .
 //   - profile: os_profile(points)
 //     Define the offset profile with a list of points.  The first point must be [0,0] and the roundover should rise in the positive y direction, with positive x values for inward motion (standard roundover) and negative x values for flaring outward.  If the y value ever decreases then you might create a self-intersecting polyhedron, which is invalid.  Such invalid polyhedra will create cryptic assertion errors when you render your model and it is your responsibility to avoid creating them.  Note that the starting point of the profile is the center of the extrusion.  If you use a profile as the top it will rise upwards.  If you use it as the bottom it will be inverted, and will go downward.
 //   - circle: os_circle(r|cut).  Define circular rounding either by specifying the radius or cut distance.
 //   - smooth: os_smooth(cut|joint).  Define continuous curvature rounding, with `cut` and `joint` as for round_corners.
 //   - teardrop: os_teardrop(r|cut).  Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
 //   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle will be ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.
-//   
+//   .
 //   The general settings that you can use with all of the helper functions are mostly used to control how offset_sweep() calls the offset() function.
 //   - extra: Add an extra vertical step of the specified height, to be used for intersections or differences.  This extra step will extend the resulting object beyond the height you specify.  Default: 0
 //   - steps: Number of vertical steps to use for the profile.  (Not used by os_profile).  Default: 16
 //   - offset: Select "round" (r=), "delta" (delta=), or "chamfer" offset types for offset.  Default: "round"
-//   
+//   .
 //   Many of the arguments are described as setting "default" values because they establish settings which may be overridden by
 //   the top and bottom profile specifications.
-//   
+//   .
 //   You will generally want to use the above helper functions to generate the profiles.
 //   The profile specification is a list of pairs of keywords and values, e.g. ["r",12, type, "circle"]. The keywords are
 //   - "type" - type of rounding to apply, one of "circle", "teardrop", "chamfer", "smooth", or "profile" (Default: "circle")
@@ -906,7 +906,7 @@ function os_profile(points, extra,check_valid, quality, offset_maxstep, offset) 
 //   - "extra" - extra height added for unions/differences.  This makes the shape taller than the requested height.  (Default: 0)
 //   - "steps" - number of vertical steps to use for the roundover.  Default: 16.
 //   - "offset" - select "round" (r=) or "delta" (delta=) offset type for offset.  Default: "round"
-//   
+//   .
 //   Note that unlike `offset_sweep`, because the offset operation is always performed from the base shape, using chamfered offsets does not increase the
 //   number of vertices or lead to any special complications.
 //
@@ -1031,22 +1031,22 @@ function _remove_undefined_vals(list) =
 //   Uses `offset()` to compute a stroke for the input path.  Unlike `stroke`, the result does not need to be
 //   centered on the input path.  The corners can be rounded, pointed, or chamfered, and you can make the ends
 //   rounded, flat or pointed with the `start` and `end` parameters.
-//   
+//   .
 //   The `check_valid`, `quality` and `maxstep` parameters are passed through to `offset()`
-//   
+//   .
 //   If `width` is a scalar then the output will be a centered stroke of the specified width.  If width
 //   is a list of two values then those two values will define the stroke side positions relative to the center line, where
 //   as with offset(), the shift is to the left for open paths and outward for closed paths.  For example,
 //   setting `width` to `[0,1]` will create a stroke of width 1 that extends entirely to the left of the input, and and [-4,-6]
 //   will create a stroke of width 2 offset 4 units to the right of the input path.
-//   
+//   .
 //   If closed==false then the function form will return a path.  If closed==true then it will return a region.  The `start` and
 //   `end` parameters are forbidden for closed paths.
-//   
+//   .
 //   Three simple end treatments are supported, "flat" (the default), "round" and "pointed".  The "flat" treatment
 //   cuts off the ends perpendicular to the path and the "round" treatment applies a semicircle to the end.  The
 //   "pointed" end treatment caps the stroke with a centered triangle that has 45 degree angles on each side.
-//   
+//   .
 //   More complex end treatments are available through parameter lists with helper functions to ease parameter passing.  The parameter list
 //   keywords are
 //      - "type": the type of end treatment, one of "shifted_point", "roundover", or "flat"
@@ -1054,15 +1054,15 @@ function _remove_undefined_vals(list) =
 //      - "abs_angle": absolute angle (angle relative to x-axis)
 //      - "cut": cut distance for roundovers, a single value to round both corners identically or a list of two values for the two corners.  Negative values round outward.
 //      - "k": curvature smoothness parameter for roundovers, default 0.75
-//   
+//   .
 //   Function helpers for defining ends, prefixed by "os" for offset_stroke.
-//   
+//   .
 //   os_flat(angle|absangle): specify a flat end either relative to the path or relative to the x-axis
 //   os_pointed(loc,dist): specify a pointed tip where the point is distance `loc` from the centerline (positive is the left direction as for offset), and `dist` is the distance from the path end to the point tip.  The default value for `loc` is zero (the center).  You must specify `dist` when using this option.
 //   os_round(cut,angle|absangle,k).  Rounded ends with the specified cut distance, based on the specified angle or absolute angle.  The `k` parameter is the smoothness parameter for continuous curvature rounding.
-//   
+//   .
 //   Note that `offset_stroke()` will attempt to apply roundovers and angles at the ends even when it means deleting segments of the stroke, unlike round_corners which only works on a segment adjacent to a corner.  If you specify an overly extreme angle it will fail to find an intersection with the stroke and display an error.  When you specify an angle the end segment is rotated around the center of the stroke and the last segment of the stroke one one side is extended to the corner.
-//   
+//   .
 //   The $fn and $fs variables are used to determine the number of segments for rounding, while maxstep is used to determine the segments of `offset`.  If you
 //   get the expected rounding along the path, decrease `maxstep` and if the curves created by `os_round()` are too coarse, adjust $fn or $fs.
 //
@@ -1419,11 +1419,11 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   not be continuous in practice.  A value of 0.92 is a good approximation to a circle.  If you set it very small then the transition
 //   is so gradual that the roundover may be very small.  If you want a very smooth roundover, set the joint parameter as large as possible and
 //   then adjust the k value down as low as gives a sufficiently large roundover.
-//   
+//   .
 //   You can specify the bottom and top polygons by giving two compatible 3d paths.  You can also give 2d paths and a height/length and the
 //   two shapes will be offset in the z direction from each other.  The final option is to specify just the bottom along with a height/length;
 //   in this case the top will be a copy of the bottom, offset in the z direction by the specified height.
-//   
+//   .
 //   You define rounding for all of the top edges, all of the bottom edges, and independently for each of the connecting side edges.
 //   You specify rounding the rounding by giving the joint distance for where the curved section should start.  If the joint distance is 1 then
 //   it means the curved section begins 1 unit away from the edge (in the perpendicular direction).  Typically each joint distance is a scalar
@@ -1433,11 +1433,11 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   outward.  If you give a vector value then a negative value then if joint_top[0] is negative the shape will flare outward, but if
 //   joint_top[1] is negative the shape will flare upward.  At least one value must be non-negative.  The same rules apply for joint_bot.
 //   The joint_sides parameter must be entirely nonnegative.
-//   
+//   .
 //   If you set `debug` to true the module version will display the polyhedron even when it is invalid and it will show the bezier patches at the corners.
 //   This can help troubleshoot problems with your parameters.  With the function form setting debug to true causes it to return [patches,vnf] where
 //   patches is a list of the bezier control points for the corner patches.
-//   
+//   .
 // Arguments:
 //   bottom = 2d or 3d path describing bottom polygon
 //   top = 2d or 3d path describing top polygon (must be the same dimension as bottom)
