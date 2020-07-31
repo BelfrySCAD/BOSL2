@@ -135,7 +135,7 @@ function is_list_of(list,pattern) =
 //   is_consistent(list)
 // Description:
 //   Tests whether input is a list of entries which all have the same list structure
-//   and are filled with finite numerical data.
+//   and are filled with finite numerical data. It returns `true`for the empty list. 
 // Example:
 //   is_consistent([3,4,5]);              // Returns true
 //   is_consistent([[3,4],[4,5],[6,7]]);  // Returns true
