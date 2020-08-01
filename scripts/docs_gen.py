@@ -26,68 +26,6 @@ else:
     GIT = "git"
 
 
-def get_header_link(name):
-    refpat = re.compile("[^a-z0-9_ -]")
-    return refpat.sub("", name.lower()).replace(" ", "-")
-
-
-def toc_entry(name, indent, count=None):
-    lname = "{0}{1}".format(
-        ("%d. " % count) if count else "",
-        name
-    )
-    ref = get_header_link(lname)
-    if name.endswith( (")", "}", "]") ):
-        name = "`" + name.replace("\\", "") + "`"
-    return "{0}{1} [{2}](#{3})".format(
-        indent,
-        ("%d." % count) if count else "-",
-        name,
-        ref
-    )
-
-
-def mkdn_esc(txt):
-    out = ""
-    quotpat = re.compile(r'([^`]*)(`[^`]*`)(.*$)');
-    while txt:
-        m = quotpat.match(txt)
-        if m:
-            out += m.group(1).replace(r'_', r'\_')
-            out += m.group(2)
-            txt = m.group(3)
-        else:
-            out += txt.replace(r'_', r'\_')
-            txt = ""
-    return out
-
-
-def get_comment_block(lines, prefix, blanks=1):
-    out = []
-    blankcnt = 0
-    indent = 0
-    while lines:
-        if not lines[0].startswith(prefix+" "):
-            break
-        line = lines.pop(0)[len(prefix):]
-        if not indent:
-            while line.startswith(" "):
-                line = line[1:]
-                indent += 1
-        else:
-            line = line[indent:]
-        if line == "":
-            blankcnt += 1
-            if blankcnt >= blanks:
-                break
-        else:
-            blankcnt = 0
-        if line.rstrip() == '.':
-            line = "\n"
-        out.append(line.rstrip())
-    return (lines, out)
-
-
 def image_compare(file1, file2):
     img1 = Image.open(file1)
     img2 = Image.open(file2)
@@ -329,6 +267,68 @@ class ImageProcessing(object):
 imgprc = ImageProcessing()
 
 
+def get_header_link(name):
+    refpat = re.compile("[^a-z0-9_ -]")
+    return refpat.sub("", name.lower()).replace(" ", "-")
+
+
+def toc_entry(name, indent, count=None):
+    lname = "{0}{1}".format(
+        ("%d. " % count) if count else "",
+        name
+    )
+    ref = get_header_link(lname)
+    if name.endswith( (")", "}", "]") ):
+        name = "`" + name.replace("\\", "") + "`"
+    return "{0}{1} [{2}](#{3})".format(
+        indent,
+        ("%d." % count) if count else "-",
+        name,
+        ref
+    )
+
+
+def mkdn_esc(txt):
+    out = ""
+    quotpat = re.compile(r'([^`]*)(`[^`]*`)(.*$)');
+    while txt:
+        m = quotpat.match(txt)
+        if m:
+            out += m.group(1).replace(r'_', r'\_')
+            out += m.group(2)
+            txt = m.group(3)
+        else:
+            out += txt.replace(r'_', r'\_')
+            txt = ""
+    return out
+
+
+def get_comment_block(lines, prefix, blanks=1):
+    out = []
+    blankcnt = 0
+    indent = 0
+    while lines:
+        if not lines[0].startswith(prefix+" "):
+            break
+        line = lines.pop(0)[len(prefix):]
+        if not indent:
+            while line.startswith(" "):
+                line = line[1:]
+                indent += 1
+        else:
+            line = line[indent:]
+        if line == "":
+            blankcnt += 1
+            if blankcnt >= blanks:
+                break
+        else:
+            blankcnt = 0
+        if line.rstrip() == '.':
+            line = "\n"
+        out.append(line.rstrip())
+    return (lines, out)
+
+
 class LeafNode(object):
     def __init__(self):
         self.name = ""
@@ -374,26 +374,39 @@ class LeafNode(object):
                     break
                 continue
             blankcnt = 0
+
             line = line[len(prefix):]
             if line.startswith("Constant:"):
                 leaftype, title = line.split(":", 1)
                 self.name = title.strip()
                 self.leaftype = leaftype.strip()
+                continue
             if line.startswith("Function&Module:"):
                 leaftype, title = line.split(":", 1)
                 self.name = title.strip()
                 self.leaftype = leaftype.strip()
+                continue
             if line.startswith("Function:"):
                 leaftype, title = line.split(":", 1)
                 self.name = title.strip()
                 self.leaftype = leaftype.strip()
+                continue
             if line.startswith("Module:"):
                 leaftype, title = line.split(":", 1)
                 self.name = title.strip()
                 self.leaftype = leaftype.strip()
+                continue
+
             if line.startswith("Status:"):
                 dummy, status = line.split(":", 1)
                 self.status = status.strip()
+                continue
+            if line.startswith("Usage:"):
+                dummy, title = line.split(":", 1)
+                title = title.strip()
+                lines, block = get_comment_block(lines, prefix)
+                self.usages.append([title, block])
+                continue
             if line.startswith("Description:"):
                 dummy, desc = line.split(":", 1)
                 desc = desc.strip()
@@ -401,50 +414,7 @@ class LeafNode(object):
                     self.description.append(desc)
                 lines, block = get_comment_block(lines, prefix)
                 self.description.extend(block)
-            if line.startswith("Usage:"):
-                dummy, title = line.split(":", 1)
-                title = title.strip()
-                lines, block = get_comment_block(lines, prefix)
-                self.usages.append([title, block])
-            if line.startswith("Arguments:"):
-                lines, block = get_comment_block(lines, prefix)
-                for line in block:
-                    if "=" not in line:
-                        print("Error in {}: Could not parse line in Argument block.  Missing '='.".format(self.name))
-                        print("Line read was:")
-                        print(line)
-                        sys.exit(-2)
-                    argname, argdesc = line.split("=", 1)
-                    argname = argname.strip()
-                    argdesc = argdesc.strip()
-                    self.arguments.append([argname, argdesc])
-            if line.startswith("Extra Anchors:") or line.startswith("Anchors:"):
-                lines, block = get_comment_block(lines, prefix)
-                for line in block:
-                    if "=" not in line:
-                        print("Error: bad anchor line:")
-                        print(line)
-                        sys.exit(-2)
-                    anchorname, anchordesc = line.split("=", 1)
-                    anchorname = anchorname.strip()
-                    anchordesc = anchordesc.strip()
-                    self.anchors.append([anchorname, anchordesc])
-            if line.startswith("Side Effects:"):
-                lines, block = get_comment_block(lines, prefix)
-                self.side_effects.extend(block)
-            m = expat.match(line)
-            if m:  # Example(TYPE):
-                plural = m.group(1) == "Examples"
-                extype = m.group(3)
-                title = m.group(4)
-                lines, block = get_comment_block(lines, prefix)
-                if not extype:
-                    extype = "3D" if self.leaftype in ["Module", "Function&Module"] else "NORENDER"
-                if not plural:
-                    self.add_example(title=title, code=block, extype=extype)
-                else:
-                    for line in block:
-                        self.add_example(title="", code=[line], extype=extype)
+                continue
             m = figpat.match(line)
             if m:  # Figure(TYPE):
                 plural = m.group(1) == "Figures"
@@ -458,6 +428,60 @@ class LeafNode(object):
                 else:
                     for line in block:
                         self.add_figure("", [line], figtype)
+                continue
+            if line.startswith("Arguments:"):
+                lines, block = get_comment_block(lines, prefix)
+                for line in block:
+                    if "=" not in line:
+                        print("Error in {}: Could not parse line in Argument block.  Missing '='.".format(self.name))
+                        print("Line read was:")
+                        print(line)
+                        sys.exit(-2)
+                    argname, argdesc = line.split("=", 1)
+                    argname = argname.strip()
+                    argdesc = argdesc.strip()
+                    self.arguments.append([argname, argdesc])
+                continue
+            if line.startswith("Extra Anchors:") or line.startswith("Anchors:"):
+                lines, block = get_comment_block(lines, prefix)
+                for line in block:
+                    if "=" not in line:
+                        print("Error: bad anchor line:")
+                        print(line)
+                        sys.exit(-2)
+                    anchorname, anchordesc = line.split("=", 1)
+                    anchorname = anchorname.strip()
+                    anchordesc = anchordesc.strip()
+                    self.anchors.append([anchorname, anchordesc])
+                continue
+            if line.startswith("Side Effects:"):
+                lines, block = get_comment_block(lines, prefix)
+                self.side_effects.extend(block)
+                continue
+
+            m = expat.match(line)
+            if m:  # Example(TYPE):
+                plural = m.group(1) == "Examples"
+                extype = m.group(3)
+                title = m.group(4)
+                lines, block = get_comment_block(lines, prefix)
+                if not extype:
+                    extype = "3D" if self.leaftype in ["Module", "Function&Module"] else "NORENDER"
+                if not plural:
+                    self.add_example(title=title, code=block, extype=extype)
+                else:
+                    for line in block:
+                        self.add_example(title="", code=[line], extype=extype)
+                continue
+
+            if ":" not in line:
+                print("Error in {}: Unrecognized block header.  Missing colon?".format(self.name))
+            else:
+                print("Error in {}: Unrecognized block header.".format(self.name))
+            print("Line read was:")
+            print(line)
+            sys.exit(-2)
+
         return lines
 
     def gen_md(self, fileroot, imgroot):

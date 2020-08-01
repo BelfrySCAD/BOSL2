@@ -657,10 +657,10 @@ function _pin_size(size) =
 //    be printed.  When oriented UP the shaft of the pin runs in the Z direction and the flat sides are the front and back.  The default
 //    orientation (FRONT) and anchor (FRONT) places the pin in a printable configuration, flat side down on the xy plane.
 //    The tightness of fit is determined by `preload` and `clearance`.  To make pins tighter increase `preload` and/or decrease `clearance`.  
-//    
+//    .
 //    The "large" or "standard" size pin has a length of 10.8 and diameter of 7.  The "medium" pin has a length of 8 and diameter of 4.6.  The "small" pin
 //    has a length of 6 and diameter of 3.2.  The "tiny" pin has a length of 4 and a diameter of 2.5.  
-//    
+//    .
 //    This pin is based on https://www.thingiverse.com/thing:213310 by Emmett Lalishe
 //    and a modified version at https://www.thingiverse.com/thing:3218332 by acwest
 //    and distributed under the Creative Commons - Attribution - Share Alike License
@@ -724,7 +724,7 @@ module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, 
 //   if you add a lubricant.  If `pointed` is true the socket is pointed to receive a pointed pin, otherwise it has a rounded and and
 //   will be shorter.  If `fins` is set to true then two fins are included inside the socket to act as supports (which may help when printing tip up,
 //   especially when `pointed=false`).  The default orientation is DOWN with anchor BOTTOM so that you can difference() the socket away from an object.
-//
+//   .
 //   The "large" or "standard" size pin has a length of 10.8 and diameter of 7.  The "medium" pin has a length of 8 and diameter of 4.6.  The "small" pin
 //   has a length of 6 and diameter of 3.2.  The "tiny" pin has a length of 4 and a diameter of 2.5.  
 // Arguments:

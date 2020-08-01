@@ -129,6 +129,11 @@ function is_list_of(list,pattern) =
     is_list(list) &&
     []==[for(entry=0*list) if (entry != pattern) entry];
 
+function _list_pattern(list) =
+  is_list(list) ? [for(entry=list) is_list(entry) ? _list_pattern(entry) : 0]
+                : 0;
+
+
 
 // Function: is_consistent()
 // Usage:
@@ -399,6 +404,42 @@ module assert_equal(got, expected, info) {
             echo(str("INFO  : ", _valstr(info)));
         }
         assert(got == expected);
+    }
+}
+
+
+// Module: shape_compare()
+// Usage:
+//   shape_compare([eps]) {test_shape(); expected_shape();}
+// Description:
+//   Compares two child shapes, returning empty geometry if they are very nearly the same shape and size.
+//   Returns the differential geometry if they are not nearly the same shape and size.
+// Arguments:
+//   eps = The surface of the two shapes must be within this size of each other.  Default: 1/1024
+module shape_compare(eps=1/1024) {
+    union() {
+        difference() {
+            children(0);
+            if (eps==0) {
+                children(1);
+            } else {
+                minkowski() {
+                    children(1);
+                    cube(eps, center=true);
+                }
+            }
+        }
+        difference() {
+            children(1);
+            if (eps==0) {
+                children(0);
+            } else {
+                minkowski() {
+                    children(0);
+                    cube(eps, center=true);
+                }
+            }
+        }
     }
 }
 

@@ -519,6 +519,7 @@ module test_polygon_shift_to_closest_point() {
 test_polygon_shift_to_closest_point();
 
 
+/*
 module test_first_noncollinear(){
     pts = [
         [1,1], [2,2], [3,3], [4,4], [4,5], [5,6]
@@ -555,11 +556,14 @@ module test_first_noncollinear(){
     assert(first_noncollinear(5,4,pts) == 0);
 }
 test_first_noncollinear();
+*/
 
 
 module test_find_noncollinear_points() {
     assert(find_noncollinear_points([[1,1],[2,2],[3,3],[4,4],[4,5],[5,6]]) == [0,5,3]);
     assert(find_noncollinear_points([[1,1],[2,2],[8,3],[4,4],[4,5],[5,6]]) == [0,2,5]);
+    u = unit([5,3]);
+    assert_equal(find_noncollinear_points([for(i = [2,3,4,5,7,12,15]) i * u], error=false),[]);
 }
 test_find_noncollinear_points();
 
@@ -613,6 +617,23 @@ module test_pointlist_bounds() {
         [23,57,-42]
     ];
     assert(pointlist_bounds(pts) == [[-63,-32,-42], [84,97,42]]);
+    pts2d = [
+        [-53,12],
+        [-63,36],
+        [84,-5],
+        [63,42],
+        [23,-42] 
+    ];
+    assert(pointlist_bounds(pts2d) == [[-63,-42],[84,42]]);
+    pts5d = [
+        [-53,27,12,-53,12],
+        [-63,97,36,-63,36],
+        [84,-32,-5,84,-5], 
+        [63,-24,42,63,42], 
+        [23,57,-42,23,-42]
+    ];
+    assert(pointlist_bounds(pts5d) == [[-63,-32,-42,-63,-42],[84,97,42,84,42]]);
+    assert(pointlist_bounds([[3,4,5,6]]), [[3,4,5,6],[3,4,5,6]]);
 }
 test_pointlist_bounds();
 

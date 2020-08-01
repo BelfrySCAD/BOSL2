@@ -52,8 +52,8 @@ function select(list, start, end=undef) =
                 list[ (start%l+l)%l ]
             :   assert( is_list(start) || is_range(start), "Invalid start parameter")
                 [for (i=start) list[ (i%l+l)%l ] ]
-        :   assert(is_num(start), "Invalid start parameter.")
-            assert(is_num(end), "Invalid end parameter.")
+        :   assert(is_finite(start), "Invalid start parameter.")
+            assert(is_finite(end), "Invalid end parameter.")
             let( s = (start%l+l)%l, e = (end%l+l)%l )
             (s <= e)? [for (i = [s:1:e]) list[i]]
             :   concat([for (i = [s:1:l-1]) list[i]], [for (i = [0:1:e]) list[i]]) ;
@@ -341,7 +341,7 @@ function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
 //   that the final length is exactly as requested.  If you set it to `false` then the
 //   algorithm will favor uniformity and the output list may have a different number of
 //   entries due to rounding.
-//   
+//   .
 //   When applied to a path the output path is the same geometrical shape but has some vertices
 //   repeated.  This can be useful when you need to align paths with a different number of points.
 //   (See also subdivide_path for a different way to do that.) 
@@ -451,13 +451,18 @@ function list_insert(list, indices, values, _i=0) =
 //   list_insert([3,6,9,12],[1,3]);  // Returns: [3,9]
 function list_remove(list, indices) =
     assert(is_list(list)||is_string(list), "Invalid list/string." )
-    is_finite(indices) 
-    ?   [  for(i=[0:1:min(indices, len(list)-1)-1]) list[i],
-           for(i=[min(indices, len(list)-1)+1:1:len(list)-1]) list[i]  ]
+    is_finite(indices) ?
+        [
+            for (i=[0:1:min(indices, len(list)-1)-1]) list[i],
+            for (i=[min(indices, len(list)-1)+1:1:len(list)-1]) list[i]
+        ]
+    :   indices==[] ? list
     :   assert( is_vector(indices), "Invalid list `indices`." )
-        len(indices)==0 ? list :
-        [ for(i=[0:len(list)-1])
-            if ( []==search(i,indices,1) ) list[i] ]; 
+        [
+            for(i=[0:len(list)-1])
+            if ( []==search(i,indices,1) )
+            list[i]
+        ]; 
 
 
 // Function: list_remove_values()

@@ -19,6 +19,8 @@
 // Arguments:
 //   v = The value to test to see if it is a vector.
 //   length = If given, make sure the vector is `length` items long.
+//   zero = If false, require that the length of the vector is not approximately zero.  If true, require the length of the vector to be approximately zero-length.  Default: `undef` (don't check vector length.)
+//   eps = The minimum vector length that is considered non-zero.  Default: `EPSILON` (`1e-9`)
 // Example:
 //   is_vector(4);                          // Returns false
 //   is_vector([4,true,false]);             // Returns false

@@ -234,13 +234,13 @@ function str_num(str) =
 //   Breaks an input string into substrings using a separator or list of separators.  If keep_nulls is true
 //   then two sequential separator characters produce an empty string in the output list.  If keep_nulls is false
 //   then no empty strings are included in the output list.
-//
+//   .
 //   If sep is a single string then each character in sep is treated as a delimiting character and the input string is
 //   split at every delimiting character.  Empty strings can occur whenever two delimiting characters are sequential.
 //   If sep is a list of strings then the input string is split sequentially using each string from the list in order. 
 //   If keep_nulls is true then the output will have length equal to `len(sep)+1`, possibly with trailing null strings
 //   if the string runs out before the separator list.  
-// Arguments
+// Arguments:
 //   str = String to split.
 //   sep = a string or list of strings to use for the separator
 //   keep_nulls = boolean value indicating whether to keep null strings in the output list.  Default: true
@@ -613,7 +613,7 @@ function is_letter(s) =
 //   - An optional `.` followed by an integer precision length, for specifying how many digits to display in numeric formats.  If not give, 6 digits is assumed.
 //   - An optional letter to indicate the formatting style to use.  If not given, `s` is assumed, which will do it's generic best to format any data type.
 //   - A trailing `}` character to show the end of the placeholder.
-//   
+//   .
 //   Formatting styles, and their effects are as follows:
 //   - `s`: Converts the value to a string with `str()` to display.  This is very generic.
 //   - `i` or `d`: Formats numeric values as integers.
