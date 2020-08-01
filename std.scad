@@ -14,7 +14,6 @@ include <version.scad>
 include <constants.scad>
 include <edges.scad>
 include <common.scad>
-include <errors.scad>
 include <arrays.scad>
 include <strings.scad>
 include <vnf.scad>
