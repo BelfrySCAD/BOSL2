@@ -1187,7 +1187,7 @@ function add_scalar(v,s) =
 //   subindex(M,[2]);    // Returns [[3], [7], [11], [15]]
 //   subindex(M,[2,1]);  // Returns [[3, 2], [7, 6], [11, 10], [15, 14]]
 //   subindex(M,[1:3]);  // Returns [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]
-function subindex(v, idx) =
+function subindex(M, idx) =
     is_num(idx)
       ? [for(row=M) row[idx]]
       : [for(row=M) [for(i=idx) row[i]]];
