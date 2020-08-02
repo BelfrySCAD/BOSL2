@@ -240,7 +240,7 @@ function atanh(x) =
 //   quant([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,12,12,12]
 //   quant([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[12,12,12]]
 function quant(x,y) =
-    assert(is_finite(y) && !approx(y,0,eps=1e-24), "The multiple must be a non zero integer.")
+    assert(is_finite(y) && !approx(y,0,eps=1e-24), "The multiple must be a non zero number.")
     is_list(x)
     ?   [for (v=x) quant(v,y)]
     :   assert( is_finite(x), "The input to quantize must be a number or a list of numbers.")
@@ -272,7 +272,7 @@ function quant(x,y) =
 //   quantdn([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,9,9,12]
 //   quantdn([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[9,9,12]]
 function quantdn(x,y) =
-    assert(is_finite(y) && !approx(y,0,eps=1e-24), "The multiple must be a non zero integer.")
+    assert(is_finite(y) && !approx(y,0,eps=1e-24), "The multiple must be a non zero number.")
     is_list(x)
     ?    [for (v=x) quantdn(v,y)]
     :    assert( is_finite(x), "The input to quantize must be a number or a list of numbers.")
@@ -304,7 +304,7 @@ function quantdn(x,y) =
 //   quantup([9,10,10.4,10.5,11,12],3);      // Returns: [9,12,12,12,12,12]
 //   quantup([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,12,12],[12,12,12]]
 function quantup(x,y) =
-    assert(is_finite(y) && !approx(y,0,eps=1e-24), "The multiple must be a non zero integer.")
+    assert(is_finite(y) && !approx(y,0,eps=1e-24), "The multiple must be a non zero number.")
     is_list(x)
     ?    [for (v=x) quantup(v,y)]
     :    assert( is_finite(x), "The input to quantize must be a number or a list of numbers.")
@@ -778,19 +778,22 @@ function back_substitute(R, b, x=[],transpose = false) =
     let(n=len(R))
     assert(is_vector(b,n) || is_matrix(b,n),str("R and b are not compatible in back_substitute ",n, len(b)))
     !is_vector(b) ? transpose([for(i=[0:len(b[0])-1]) back_substitute(R,subindex(b,i),transpose=transpose)]) :
-    transpose
-    ?   let( R = [for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]] )
-        reverse( back_substitute( R, reverse(b), x ) )  
-    :   len(x) == n ? x :
-        let(
-            ind = n - len(x) - 1
-        )
-        R[ind][ind] == 0 ? [] :
-        let(
-            newvalue =
-                len(x)==0? b[ind]/R[ind][ind] : 
-                (b[ind]-select(R[ind],ind+1,-1) * x)/R[ind][ind]
-        ) back_substitute(R, b, concat([newvalue],x));
+    transpose?
+        reverse(back_substitute(
+            [for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]],
+            reverse(b), x, false
+        )) :
+    len(x) == n ? x :
+    let(
+        ind = n - len(x) - 1
+    )
+    R[ind][ind] == 0 ? [] :
+    let(
+        newvalue =
+            len(x)==0? b[ind]/R[ind][ind] : 
+            (b[ind]-select(R[ind],ind+1,-1) * x)/R[ind][ind]
+    ) back_substitute(R, b, concat([newvalue],x));
+
 
 // Function: det2()
 // Description:
@@ -862,14 +865,11 @@ function determinant(M) =
 //   n = optional width of matrix
 //   square = set to true to require a square matrix.  Default: false        
 function is_matrix(A,m,n,square=false) =
-    is_list(A)
-    && len(A)>0
-    && is_vector(A[0]) 
-    && is_vector(A*A[0]) // a matrix of finite numbers 
+    is_list(A[0]) 
+    && ( let(v = A*A[0]) is_num(0*(v*v)) ) // a matrix of finite numbers 
     && (is_undef(n) || len(A[0])==n )
     && (is_undef(m) || len(A)==m )
     && ( !square || len(A)==len(A[0]));
-
 
 
 // Section: Comparisons and Logic
@@ -1037,7 +1037,7 @@ function count_true(l, nmax) =
 //   data[len(data)-1].  This function uses a symetric derivative approximation
 //   for internal points, f'(t) = (f(t+h)-f(t-h))/2h.  For the endpoints (when closed=false) the algorithm
 //   uses a two point method if sufficient points are available: f'(t) = (3*(f(t+h)-f(t)) - (f(t+2*h)-f(t+h)))/2h.
-// 
+//   .
 //   If `h` is a vector then it is assumed to be nonuniform, with h[i] giving the sampling distance
 //   between data[i+1] and data[i], and the data values will be linearly resampled at each corner
 //   to produce a uniform spacing for the derivative estimate.  At the endpoints a single point method
