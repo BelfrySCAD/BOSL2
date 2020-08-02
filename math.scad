@@ -641,17 +641,6 @@ function mean(v) =
     sum(v)/len(v);
 
 
-// Function: median()
-// Usage:
-//   x = median(v);
-// Description:
-//   Given a list of numbers or vectors, finds the median value or midpoint.
-//   If passed a list of vectors, returns the vector of the median of each component.
-function median(v) =
-    is_vector(v) ? (min(v)+max(v))/2 :
-    is_matrix(v) ? [for(ti=transpose(v))  (min(ti)+max(ti))/2 ]
-    :   assert(false , "Invalid input.");
-
 // Function: convolve()
 // Usage:
 //   x = convolve(p,q);
