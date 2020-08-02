@@ -1172,25 +1172,25 @@ function add_scalar(v,s) =
 
 
 // Function: subindex()
+// Usage:
+//   subindex(M, idx)
 // Description:
-//   For each array item, return the indexed subitem.
-//   Returns a list of the values of each vector at the specfied
-//   index list or range.  If the index list or range has
-//   only one entry the output list is flattened.  
+//   Extracts the entries listed in idx from each entry in M.  For a matrix this means
+//   selecting a specified set of columsn.  If idx is a number the return is a vector, otherwise
+//   it is a list of lists (the submatrix).  
 // Arguments:
-//   v = The given list of lists.
+//   M = The given list of lists.
 //   idx = The index, list of indices, or range of indices to fetch.
 // Example:
-//   v = [[[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
-//   subindex(v,2);      // Returns [3, 7, 11, 15]
-//   subindex(v,[2,1]);  // Returns [[3, 2], [7, 6], [11, 10], [15, 14]]
-//   subindex(v,[1:3]);  // Returns [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]
-function subindex(v, idx) = 
-    [ for(val=v) 
-        let( value=[for(i=idx) val[i]] )
-        len(value)==1 ? value[0] : value
-    ];
-
+//   M = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
+//   subindex(M,2);      // Returns [3, 7, 11, 15]
+//   subindex(M,[2]);    // Returns [[3], [7], [11], [15]]
+//   subindex(M,[2,1]);  // Returns [[3, 2], [7, 6], [11, 10], [15, 14]]
+//   subindex(M,[1:3]);  // Returns [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]
+function subindex(M, idx) =
+    is_num(idx)
+      ? [for(row=M) row[idx]]
+      : [for(row=M) [for(i=idx) row[i]]];
 
 // Function: zip()
 // Usage:
