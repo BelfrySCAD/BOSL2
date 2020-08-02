@@ -773,26 +773,26 @@ function _qr_factor(A,Q, column, m, n) =
 //   You can supply a compatible matrix b and it will produce the solution for every column of b.  Note that if you want to
 //   solve Rx=b1 and Rx=b2 you must set b to transpose([b1,b2]) and then take the transpose of the result.  If the matrix
 //   is singular (e.g. has a zero on the diagonal) then it returns [].  
-function back_substitute(R, b, x=[],transpose = false) =
+function back_substitute(R, b, transpose = false) =
     assert(is_matrix(R, square=true))
     let(n=len(R))
     assert(is_vector(b,n) || is_matrix(b,n),str("R and b are not compatible in back_substitute ",n, len(b)))
-    !is_vector(b) ? transpose([for(i=[0:len(b[0])-1]) back_substitute(R,subindex(b,i),transpose=transpose)]) :
-    transpose?
-        reverse(back_substitute(
-            [for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]],
-            reverse(b), x, false
-        )) :
-    len(x) == n ? x :
-    let(
-        ind = n - len(x) - 1
-    )
-    R[ind][ind] == 0 ? [] :
-    let(
-        newvalue =
-            len(x)==0? b[ind]/R[ind][ind] : 
-            (b[ind]-select(R[ind],ind+1,-1) * x)/R[ind][ind]
-    ) back_substitute(R, b, concat([newvalue],x));
+    transpose
+      ? reverse(_back_substitute([for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]],
+                                 reverse(b)))  
+      : _back_substitute(R,b);
+
+function _back_substitute(R, b, x=[]) =
+      let(n=len(R))
+      len(x) == n ? x
+    : let(ind = n - len(x) - 1)
+      R[ind][ind] == 0 ? []
+    : let(
+          newvalue = len(x)==0
+            ? b[ind]/R[ind][ind]
+            : (b[ind]-select(R[ind],ind+1,-1) * x)/R[ind][ind]
+      )
+      _back_substitute(R, b, concat([newvalue],x));
 
 
 // Function: det2()
@@ -865,8 +865,10 @@ function determinant(M) =
 //   n = optional width of matrix
 //   square = set to true to require a square matrix.  Default: false        
 function is_matrix(A,m,n,square=false) =
-    is_list(A[0]) 
-    && ( let(v = A*A[0]) is_num(0*(v*v)) ) // a matrix of finite numbers 
+    is_list(A) 
+		&& len(A)>0
+		&& is_vector(A[0])
+    && is_vector(A*A[0])  // a matrix of finite numbers 
     && (is_undef(n) || len(A[0])==n )
     && (is_undef(m) || len(A)==m )
     && ( !square || len(A)==len(A[0]));
