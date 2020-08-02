@@ -1182,7 +1182,7 @@ function add_scalar(v,s) =
 //   M = The given list of lists.
 //   idx = The index, list of indices, or range of indices to fetch.
 // Example:
-//   M = [[[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
+//   M = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
 //   subindex(M,2);      // Returns [3, 7, 11, 15]
 //   subindex(M,[2]);    // Returns [[3], [7], [11], [15]]
 //   subindex(M,[2,1]);  // Returns [[3, 2], [7, 6], [11, 10], [15, 14]]
