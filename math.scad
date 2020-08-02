@@ -773,11 +773,10 @@ function _qr_factor(A,Q, column, m, n) =
 //   You can supply a compatible matrix b and it will produce the solution for every column of b.  Note that if you want to
 //   solve Rx=b1 and Rx=b2 you must set b to transpose([b1,b2]) and then take the transpose of the result.  If the matrix
 //   is singular (e.g. has a zero on the diagonal) then it returns [].  
-function back_substitute(R, b, x=[],transpose = false) =
+function back_substitute(R, b, transpose = false) =
     assert(is_matrix(R, square=true))
     let(n=len(R))
     assert(is_vector(b,n) || is_matrix(b,n),str("R and b are not compatible in back_substitute ",n, len(b)))
-    !is_vector(b) ? transpose([for(i=[0:len(b[0])-1]) back_substitute(R,subindex(b,i),transpose=transpose)]) :
     transpose
     ?   let( R = [for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]] )
         reverse( back_substitute( R, reverse(b), x ) )  
@@ -791,6 +790,7 @@ function back_substitute(R, b, x=[],transpose = false) =
                 len(x)==0? b[ind]/R[ind][ind] : 
                 (b[ind]-select(R[ind],ind+1,-1) * x)/R[ind][ind]
         ) back_substitute(R, b, concat([newvalue],x));
+
 
 // Function: det2()
 // Description:
@@ -1110,19 +1110,21 @@ function _deriv_nonuniform(data, h, closed) =
 //   closed = boolean to indicate if the data set should be wrapped around from the end to the start.
 function deriv2(data, h=1, closed=false) =
     assert( is_consistent(data) , "Input list is not consistent or not numerical.") 
-    assert( len(data)>=3, "Input list has less than 3 elements.") 
     assert( is_finite(h), "The sampling `h` must be a number." )
     let( L = len(data) )
-    closed? [
+    assert( L>=3, "Input list has less than 3 elements.") 
+    closed
+    ? [
         for(i=[0:1:L-1])
         (data[(i+1)%L]-2*data[i]+data[(L+i-1)%L])/h/h
-    ] :
+      ]
+    :
     let(
-        first = L<3? undef : 
+        first = 
             L==3? data[0] - 2*data[1] + data[2] :
             L==4? 2*data[0] - 5*data[1] + 4*data[2] - data[3] :
             (35*data[0] - 104*data[1] + 114*data[2] - 56*data[3] + 11*data[4])/12, 
-        last = L<3? undef :
+        last = 
             L==3? data[L-1] - 2*data[L-2] + data[L-3] :
             L==4? -2*data[L-1] + 5*data[L-2] - 4*data[L-3] + data[L-4] :
             (35*data[L-1] - 104*data[L-2] + 114*data[L-3] - 56*data[L-4] + 11*data[L-5])/12
@@ -1203,12 +1205,12 @@ function C_div(z1,z2) =
 //   where a_n is the z^n coefficient.  Polynomial coefficients are real.
 //   The result is a number if `z` is a number and a complex number otherwise.
 function polynomial(p,z,k,total) =
-     is_undef(k)
-   ?    assert( is_vector(p) , "Input polynomial coefficients must be a vector." )
-        assert( is_finite(z) || is_vector(z,2), "The value of `z` must be a real or a complex number." )
-        polynomial( _poly_trim(p), z, 0, is_num(z) ? 0 : [0,0])
-   : k==len(p) ? total
-   : polynomial(p,z,k+1, is_num(z) ? total*z+p[k] : C_times(total,z)+[p[k],0]);
+    is_undef(k)
+    ?   assert( is_vector(p) , "Input polynomial coefficients must be a vector." )
+        assert( is_finite(z) || is_vector(z,2), "The value of `z` must be a real or a complex number." )
+        polynomial( _poly_trim(p), z, 0, is_num(z) ? 0 : [0,0])
+    : k==len(p) ? total
+    : polynomial(p,z,k+1, is_num(z) ? total*z+p[k] : C_times(total,z)+[p[k],0]);
 
 // Function: poly_mult()
 // Usage:
