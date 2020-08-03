@@ -1177,7 +1177,8 @@ function add_scalar(v,s) =
 // Description:
 //   Extracts the entries listed in idx from each entry in M.  For a matrix this means
 //   selecting a specified set of columsn.  If idx is a number the return is a vector, otherwise
-//   it is a list of lists (the submatrix).  
+//   it is a list of lists (the submatrix).  Note that unlike subindex, even if you give a number for
+//   an index the output includes all levels of list nesting.  
 // Arguments:
 //   M = The given list of lists.
 //   idx = The index, list of indices, or range of indices to fetch.
