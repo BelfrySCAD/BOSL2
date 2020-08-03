@@ -31,9 +31,13 @@ _partition_cutpaths = [
 
 function _partition_cutpath(l, h, cutsize, cutpath, gap) =
     let(
+        check = assert(is_finite(l))
+            assert(is_finite(h))
+            assert(is_finite(gap))
+            assert(is_finite(cutsize) || is_vector(cutsize,2))
+            assert(is_string(cutpath) || is_path(cutpath,2)),
         cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize],
         cutpath = is_path(cutpath)? cutpath : (
-            assert(is_string(cutpath), "cutpath must be a 2D path or a string.")
             let(idx = search([cutpath], _partition_cutpaths))
             idx==[[]]? assert(in_list(cutpath,_partition_cutpaths,idx=0)) :
             _partition_cutpaths[idx.x][1]
@@ -79,7 +83,7 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
 //   partition_mask(w=20, cutpath="jigsaw");
 module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath=undef, gap=0, inverse=false, spin=0, orient=UP)
 {
-    cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
+    cutsize = is_vector(cutsize)? point2d(cutsize) : [cutsize*2, cutsize];
     path = _partition_cutpath(l, h, cutsize, cutpath, gap);
     fullpath = concat(path, [[l/2,w*(inverse?-1:1)], [-l/2,w*(inverse?-1:1)]]);
     rot(from=UP,to=orient) {
