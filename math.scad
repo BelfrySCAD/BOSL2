@@ -784,6 +784,7 @@ function _back_substitute(R, b, x=[]) =
       _back_substitute(R, b, concat([newvalue],x));
 
 
+
 // Function: det2()
 // Description:
 //   Optimized function that returns the determinant for the given 2x2 square matrix.
