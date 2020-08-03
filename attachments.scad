@@ -285,7 +285,7 @@ function attach_geom_size(geom) =
         ) [2*maxxr,2*maxyr,l]
     ) : type == "spheroid"? ( //r
         let( r=geom[1] )
-        is_num(r)? [2,2,2]*r : vmul([2,2,2],r)
+        is_num(r)? [2,2,2]*r : vmul([2,2,2],point3d(r))
     ) : type == "vnf_extent" || type=="vnf_isect"? ( //vnf
         let(
             mm = pointlist_bounds(geom[1][0]),
@@ -298,7 +298,7 @@ function attach_geom_size(geom) =
         ) [maxx, size.y]
     ) : type == "circle"? ( //r
         let( r=geom[1] )
-        is_num(r)? [2,2]*r : vmul([2,2],r)
+        is_num(r)? [2,2]*r : vmul([2,2],point2d(r))
     ) : type == "path_isect" || type == "path_extent"? ( //path
         let(
             mm = pointlist_bounds(geom[1]),
@@ -430,8 +430,8 @@ function find_anchor(anchor, geom) =
     ) : type == "cyl"? ( //r1, r2, l, shift
         let(
             rr1=geom[1], rr2=geom[2], l=geom[3], shift=point2d(geom[4]),
-            r1 = is_num(rr1)? [rr1,rr1] : rr1,
-            r2 = is_num(rr2)? [rr2,rr2] : rr2,
+            r1 = is_num(rr1)? [rr1,rr1] : point2d(rr1),
+            r2 = is_num(rr2)? [rr2,rr2] : point2d(rr2),
             u = (anchor.z+1)/2,
             axy = unit(point2d(anchor),[0,0]),
             bot = point3d(vmul(r1,axy), -l/2),
@@ -447,9 +447,9 @@ function find_anchor(anchor, geom) =
     ) : type == "spheroid"? ( //r
         let(
             rr = geom[1],
-            r = is_num(rr)? [rr,rr,rr] : rr,
+            r = is_num(rr)? [rr,rr,rr] : point3d(rr),
             anchor = unit(point3d(anchor),CENTER),
-            pos = point3d(cp) + vmul(r,anchor) + offset,
+            pos = point3d(cp) + vmul(r,anchor) + point3d(offset),
             vec = unit(vmul(r,anchor),UP)
         ) [anchor, pos, vec, oang]
     ) : type == "vnf_isect"? ( //vnf
@@ -519,10 +519,10 @@ function find_anchor(anchor, geom) =
     ) : type == "circle"? ( //r
         let(
             rr = geom[1],
-            r = is_num(rr)? [rr,rr] : rr,
-            pos = point2d(cp) + vmul(r,anchor) + offset,
+            r = is_num(rr)? [rr,rr] : point2d(rr),
             anchor = unit(point2d(anchor),[0,0]),
-            vec = unit(vmul([r.y,r.x],anchor),[0,1])
+            pos = point2d(cp) + vmul(r,anchor) + point2d(offset),
+            vec = unit(vmul(r,anchor),[0,1])
         ) [anchor, pos, vec, 0]
     ) : type == "path_isect"? ( //path
         let(
@@ -970,7 +970,8 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
         $attach_anchor = anch;
         $attach_norot = true;
         $tags = "mask";
-        length = sum(vmul($parent_size, [for (x=vec) x?0:1]))+0.1;
+        psize = point3d($parent_size);
+        length = [for (i=[0:2]) if(!vec[i]) psize[i]][0]+0.1;
         rotang =
             vec.z<0? [90,0,180+vang(point2d(vec))] :
             vec.z==0 && sign(vec.x)==sign(vec.y)? 135+vang(point2d(vec)) :

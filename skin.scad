@@ -1202,7 +1202,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
             let (pathnormal = path_normals(path, tangents, closed))
             assert(all_defined(pathnormal),"Natural normal vanishes on your curve, select a different method")
             let( testnormals = [for(i=[0:len(pathnormal)-1-(closed?1:2)]) pathnormal[i]*select(pathnormal,i+2)],
-                 dummy = min(testnormals) < .5 ? echo_warning("abrupt change in normal direction.  Consider a different method") :0
+                 dummy = min(testnormals) < .5 ? echo("WARNING: ***** Abrupt change in normal direction.  Consider a different method *****") :0
                )
             [for(i=[0:L-(closed?0:1)]) let(
                      rotation = affine_frame_map(x=pathnormal[i%L], z=tangents[i%L])
@@ -1216,7 +1216,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
              end = reindex_polygon(start, apply(transform_list[L],path3d(shape)))
              )
              all([for(i=idx(start)) approx(start[i],end[i])]),
-      dummy = ends_match ? 0 :echo_warning("The points do not match when closing the model")
+      dummy = ends_match ? 0 : echo("WARNING: ***** The points do not match when closing the model *****")
     )
     transforms ? transform_list : sweep(shape, transform_list, closed=false, caps=fullcaps);
 

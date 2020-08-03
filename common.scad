@@ -148,7 +148,7 @@ function _list_pattern(list) =
 //   is_consistent([[3,[3,4,[5]]], [5,[2,9,[9]]]]); // Returns true
 //   is_consistent([[3,[3,4,[5]]], [5,[2,9,9]]]);   // Returns false
 function is_consistent(list) =
-  is_list(list) && is_list_of(list, _list_pattern(list[0]));
+  /*is_list(list) &&*/ is_list_of(list, _list_pattern(list[0]));
 
 
 //Internal function
@@ -344,6 +344,19 @@ function segs(r) =
     let( r = is_finite(r)? r: 0 ) 
     ceil(max(5, min(360/$fa, abs(r)*2*PI/$fs))) ;
 
+
+
+// Module: no_children()
+// Usage:
+//   no_children($children);
+// Description:
+//   Assert that the calling module does not support children.  Prints an error message to this effect and fails if children are present,
+//   as indicated by its argument.
+// Arguments:
+//   $children = number of children the module has.  
+module no_children(count) {
+  assert(count==0, str("Module ",parent_module(1),"() does not support child modules"));
+}
 
 
 // Section: Testing Helpers
