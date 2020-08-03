@@ -1192,6 +1192,36 @@ function subindex(M, idx) =
       ? [for(row=M) row[idx]]
       : [for(row=M) [for(i=idx) row[i]]];
 
+
+// Function: submatrix()
+// Usage: submatrix(M, idx1, idx2)
+// Description:
+//   The input must be a list of lists (a matrix or 2d array).  Returns a submatrix by selecting the rows listed in idx1 and columsn listed in idx2.
+// Arguments
+//   M = Given list of lists
+//   idx1 = rows index list or range
+//   idx2 = column index list or range
+// Example:
+//   M = [[ 1, 2, 3, 4, 5],
+//        [ 6, 7, 8, 9,10],
+//        [11,12,13,14,15],
+//        [16,17,18,19,20],
+//        [21,22,23,24,25]];
+//   submatrix(M,[1:2],[3:4]);  // Returns [[9, 10], [14, 15]]
+//   submatrix(M,[1], [3,4]));  // Returns [[9,10]]
+//   submatrix(M,1, [3,4]));  // Returns [[9,10]]
+//   submatrix(M,1,3));  // Returns [[9]]
+//   submatrix(M, [3,4],1); // Returns  [[17],[22]]);
+//   submatrix(M, [1,3],[2,4]); // Returns [[8,10],[18,20]]);
+//   A = [[true,    17, "test"],
+//        [[4,2],   91, false],
+//        [6,    [3,4], undef]];
+//   submatrix(A,[0,2],[1,2]);   // Returns [[17, "test"], [[3, 4], undef]]
+
+function submatrix(M,idx1,idx2) =
+    [for(i=idx1) [for(j=idx2) M[i][j] ] ];
+
+
 // Function: zip()
 // Usage:
 //   zip(v1, v2, v3, [fit], [fill]);

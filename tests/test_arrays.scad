@@ -365,6 +365,27 @@ module test_subindex() {
 test_subindex();
 
 
+// Need decision about behavior for out of bounds ranges, empty ranges
+module test_submatrix(){
+  M = [[1,2,3,4,5],
+       [6,7,8,9,10],
+       [11,12,13,14,15],
+       [16,17,18,19,20],
+       [21,22,23,24,25]];
+  assert_equal(submatrix(M,[1:2], [3:4]), [[9,10],[14,15]]);
+  assert_equal(submatrix(M,[1], [3,4]), [[9,10]]);
+  assert_equal(submatrix(M,1, [3,4]), [[9,10]]);
+  assert_equal(submatrix(M, [3,4],1), [[17],[22]]);
+  assert_equal(submatrix(M, [1,3],[2,4]), [[8,10],[18,20]]);
+  assert_equal(submatrix(M, 1,3), [[9]]);
+  A = [[true,    17, "test"],
+     [[4,2],   91, false],
+     [6,    [3,4], undef]];
+  assert_equal(submatrix(A,[0,2],[1,2]),[[17, "test"], [[3, 4], undef]]);
+}
+test_submatrix();
+
+
 module test_force_list() {
     assert_equal(force_list([3,4,5]), [3,4,5]);
     assert_equal(force_list(5), [5]);
