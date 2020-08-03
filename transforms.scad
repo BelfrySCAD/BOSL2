@@ -558,12 +558,12 @@ function scale(v=1, p=undef) =
         len(v)==2? affine2d_scale(v) : affine3d_scale(point3d(v))
     ) : (
         assert(is_list(p))
-        is_num(p.x)? vmul(p,v) :
+        is_vector(p)? ( len(p)==2? vmul(p,point2d(v)) : vmul(p,point3d(v,1)) ) :
         is_vnf(p)? let(inv=product([for (x=v) x<0? -1 : 1])) [
-            scale(v=v,p=p.x),
-            inv>=0? p.y : [for (l=p.y) reverse(l)]
+            scale(v=v, p=p[0]),
+            inv>=0? p[1] : [for (l=p[1]) reverse(l)]
         ] :
-        [for (l=p) is_vector(l)? vmul(l,v) : scale(v=v, p=l)]
+        [ for (pp=p) scale(v=v, p=pp) ]
     );
 
 

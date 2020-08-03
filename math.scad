@@ -36,7 +36,7 @@ NAN = acos(2);  // The value `nan`, useful for comparisons.
 function sqr(x) = 
     is_list(x) ? [for(val=x) sqr(val)] : 
     is_finite(x) ? x*x :
-    assert(is_finite(x) || is_vector(x), "Input is not neither a number nor a list of numbers.");
+    assert(is_finite(x) || is_vector(x), "Input is not a number nor a list of numbers.");
 
 
 // Function: log2()

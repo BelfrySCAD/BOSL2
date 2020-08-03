@@ -785,7 +785,7 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
     assert(is_num(rounding) || len(rounding)==4)
     let(
         size = is_num(size)? [size,size] : point2d(size),
-        anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT),
+        anchor = point2d(get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT)),
         complex = rounding!=0 || chamfer!=0
     )
     (rounding==0 && chamfer==0)? let(

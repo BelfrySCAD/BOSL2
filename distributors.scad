@@ -949,7 +949,7 @@ module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=tr
     for ($idx = idx(theta_phis)) {
         tp = theta_phis[$idx];
         xyz = spherical_to_xyz(r, tp[0], tp[1]);
-        $pos = vmul(xyz,scale);
+        $pos = vmul(xyz,point3d(scale,1));
         $theta = tp[0];
         $phi = tp[1];
         $rad = r;
