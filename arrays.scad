@@ -1198,7 +1198,7 @@ function subindex(M, idx) =
 // Usage: submatrix(M, idx1, idx2)
 // Description:
 //   The input must be a list of lists (a matrix or 2d array).  Returns a submatrix by selecting the rows listed in idx1 and columsn listed in idx2.
-// Arguments
+// Arguments:
 //   M = Given list of lists
 //   idx1 = rows index list or range
 //   idx2 = column index list or range
