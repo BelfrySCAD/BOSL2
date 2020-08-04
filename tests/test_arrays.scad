@@ -3,14 +3,6 @@ include <../std.scad>
 
 // Section: List Query Operations
 
-module test_is_simple_list() {
-		assert(is_simple_list([1,2,3,4]));
-		assert(is_simple_list([]));
-		assert(!is_simple_list([1,2,[3,4]]));
-} 
-test_is_simple_list();
-
-
 module test_select() {
     l = [3,4,5,6,7,8,9];
     assert(select(l, 5, 6) == [8,9]);

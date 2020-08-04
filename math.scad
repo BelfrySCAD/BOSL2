@@ -84,7 +84,7 @@ function hypot(x,y,z=0) =
 //   y = factorial(6);  // Returns: 720
 //   z = factorial(9);  // Returns: 362880
 function factorial(n,d=0) =
-    assert(is_int(n) && is_int(d) && n>=0 && d>=0, "Factorial is not defined for negative numbers")
+    assert(is_int(n) && is_int(d) && n>=0 && d>=0, "Factorial is defined only for non negative integers")
     assert(d<=n, "d cannot be larger than n")
     product([1,for (i=[n:-1:d+1]) i]);
 
@@ -164,7 +164,7 @@ function binomial_coefficient(n,k) =
 function lerp(a,b,u) =
     assert(same_shape(a,b), "Bad or inconsistent inputs to lerp")
     is_finite(u)? (1-u)*a + u*b :
-    assert(is_finite(u) || is_vector(u) || valid_range(u), "Input u to lerp must be a number, vector, or range.")
+    assert(is_finite(u) || is_vector(u) || valid_range(u), "Input u to lerp must be a number, vector, or valid range.")
     [for (v = u) (1-v)*a + v*b ];
 
 
@@ -387,12 +387,13 @@ function modang(x) =
 //   modrange(90,270,360, step=-45);  // Returns: [90,45,0,315,270]
 //   modrange(270,90,360, step=-45);  // Returns: [270,225,180,135,90]
 function modrange(x, y, m, step=1) =
-    assert( is_finite(x+y+step+m) && !approx(m,0), "Input must be finite numbers. The module value cannot be zero.")
+    assert( is_finite(x+y+step+m) && !approx(m,0), "Input must be finite numbers and the module value cannot be zero." )
     let(
         a = posmod(x, m),
         b = posmod(y, m),
-        c = step>0? (a>b? b+m : b) : (a<b? b-m : b)
-    ) [for (i=[a:step:c]) (i%m+m)%m];
+        c = step>0? (a>b? b+m : b) 
+            : (a<b? b-m : b)
+    ) [for (i=[a:step:c]) (i%m+m)%m ];
 
 
 
@@ -536,9 +537,13 @@ function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
 //   cumsum([2,2,2]);  // returns [2,4,6]
 //   cumsum([1,2,3]);  // returns [1,3,6]
 //   cumsum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [[1,2,3], [4,6,8], [9,12,15]]
-function cumsum(v,_i=0,_acc=[]) =
+function cumsum(v) =
+    assert(is_consistent(v), "The input is not consistent." )
+    _cumsum(v,_i=0,_acc=[]);
+
+function _cumsum(v,_i=0,_acc=[]) =
     _i==len(v) ? _acc :
-    cumsum(
+    _cumsum(
         v, _i+1,
         concat(
             _acc,
@@ -598,7 +603,7 @@ function deltas(v) =
 // Description:
 //   Returns the product of all entries in the given list.
 //   If passed a list of vectors of same dimension, returns a vector of products of each part.
-//   If passed a list of square matrices, returns a the resulting product matrix.
+//   If passed a list of square matrices, returns the resulting product matrix.
 // Arguments:
 //   v = The list to get the product of.
 // Example:
@@ -606,7 +611,7 @@ function deltas(v) =
 //   product([[1,2,3], [3,4,5], [5,6,7]]);  // returns [15, 48, 105]
 function product(v) = 
     assert( is_vector(v) || is_matrix(v) || ( is_matrix(v[0],square=true) && is_consistent(v)), 
-            "Invalid input.")
+    "Invalid input.")
     _product(v, 1, v[0]);
 
 function _product(v, i=0, _tot) = 
@@ -691,9 +696,12 @@ function linear_solve(A,b) =
         zeros = [for(i=[0:mindim-1]) if (approx(R[i][i],0)) i]
     )
     zeros != [] ? [] :
-    m<n ? Q*back_substitute(R,b,transpose=true) :
-    back_substitute(R, transpose(Q)*b);
-
+    m<n 
+    // avoiding input validation in back_substitute
+    ? let( n  = len(R),
+           Rt = [for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]] )
+      Q*reverse(_back_substitute(Rt,reverse(b))) 
+    : _back_substitute(R, transpose(Q)*b);
 
 // Function: matrix_inverse()
 // Usage:
@@ -793,7 +801,7 @@ function _back_substitute(R, b, x=[]) =
 //   M = [ [6,-2], [1,8] ];
 //   det = det2(M);  // Returns: 50
 function det2(M) = 
-    assert( is_matrix(M,2,2), "Matrix should be 2x2." )
+    assert( 0*M==[[0,0],[0,0]], "Matrix should be 2x2." )
     M[0][0] * M[1][1] - M[0][1]*M[1][0];
 
 
@@ -806,7 +814,7 @@ function det2(M) =
 //   M = [ [6,4,-2], [1,-2,8], [1,5,7] ];
 //   det = det3(M);  // Returns: -334
 function det3(M) =
-    assert( is_matrix(M,3,3), "Matrix should be 3x3." )
+    assert( 0*M==[[0,0,0],[0,0,0],[0,0,0]], "Matrix should be 3x3." )
     M[0][0] * (M[1][1]*M[2][2]-M[2][1]*M[1][2]) -
     M[1][0] * (M[0][1]*M[2][2]-M[2][1]*M[0][2]) +
     M[2][0] * (M[0][1]*M[1][2]-M[1][1]*M[0][2]);
@@ -846,7 +854,7 @@ function determinant(M) =
 // Description:
 //   Returns true if A is a numeric matrix of height m and width n.  If m or n
 //   are omitted or set to undef then true is returned for any positive dimension.
-//   If `square` is true then the matrix is required to be square.  Note if you
+//   If `square` is true then the matrix is required to be square. 
 //   specify m != n and require a square matrix then the result will always be false.
 // Arguments:
 //   A = matrix to test
@@ -855,10 +863,10 @@ function determinant(M) =
 //   square = set to true to require a square matrix.  Default: false        
 function is_matrix(A,m,n,square=false) =
     is_list(A[0]) 
-    && ( let(v = A*A[0]) is_num(0*(v*v)) ) // a matrix of finite numbers 
-    && (is_undef(n) || len(A[0])==n )
-    && (is_undef(m) || len(A)==m )
-    && ( !square || len(A)==len(A[0]));
+    && ( let(v = A*A[0]) is_num(0*(v*v)) ) // a matrix of finite numbers 
+    && (is_undef(n) || len(A[0])==n )
+    && (is_undef(m) || len(A)==m )
+    && ( !square || len(A)==len(A[0]));
 
 
 // Section: Comparisons and Logic
@@ -948,13 +956,16 @@ function compare_lists(a, b) =
 //   any([1,5,true]);       // Returns true.
 //   any([[0,0], [0,0]]);   // Returns false.
 //   any([[0,0], [1,0]]);   // Returns true.
-function any(l, i=0, succ=false) =
-    (i>=len(l) || succ)? succ :
-    any( l, 
-         i+1, 
-         succ = is_list(l[i]) ? any(l[i]) : !(!l[i])
-        );
+function any(l) =
+    assert(is_list(l), "The input is not a list." )
+    _any(l, i=0, succ=false);
 
+function _any(l, i=0, succ=false) =
+    (i>=len(l) || succ)? succ :
+    _any( l, 
+         i+1, 
+         succ = is_list(l[i]) ? _any(l[i]) : !(!l[i])
+        );
 
 
 // Function: all()
@@ -971,12 +982,15 @@ function any(l, i=0, succ=false) =
 //   all([[0,0], [1,0]]);   // Returns false.
 //   all([[1,1], [1,1]]);   // Returns true.
 function all(l, i=0, fail=false) =
-    (i>=len(l) || fail)? !fail :
-    all( l, 
-         i+1,
-         fail = is_list(l[i]) ? !all(l[i]) : !l[i]
-        ) ;
+    assert( is_list(l), "The input is not a list." )
+    _all(l, i=0, fail=false);
 
+function _all(l, i=0, fail=false) =
+    (i>=len(l) || fail)? !fail :
+    _all( l, 
+         i+1,
+         fail = is_list(l[i]) ? !_all(l[i]) : !l[i]
+        ) ;
 
 
 // Function: count_true()
@@ -999,16 +1013,6 @@ function all(l, i=0, fail=false) =
 //   count_true([[0,0], [1,0]]);   // Returns 1.
 //   count_true([[1,1], [1,1]]);   // Returns 4.
 //   count_true([[1,1], [1,1]], nmax=3);  // Returns 3.
-function count_true(l, nmax=undef, i=0, cnt=0) =
-    (i>=len(l) || (nmax!=undef && cnt>=nmax))? cnt :
-    count_true(
-        l=l, nmax=nmax, i=i+1, cnt=cnt+(
-            is_list(l[i])? count_true(l[i], nmax=nmax-cnt) :
-            (l[i]? 1 : 0)
-        )
-    );
-
-
 function count_true(l, nmax) = 
     !is_list(l) ? !(!l) ? 1: 0 :
     let( c = [for( i = 0,
@@ -1204,12 +1208,12 @@ function C_div(z1,z2) =
 //   where a_n is the z^n coefficient.  Polynomial coefficients are real.
 //   The result is a number if `z` is a number and a complex number otherwise.
 function polynomial(p,z,k,total) =
-    is_undef(k)
-    ?   assert( is_vector(p) , "Input polynomial coefficients must be a vector." )
-        assert( is_finite(z) || is_vector(z,2), "The value of `z` must be a real or a complex number." )
-        polynomial( _poly_trim(p), z, 0, is_num(z) ? 0 : [0,0])
-    : k==len(p) ? total
-    : polynomial(p,z,k+1, is_num(z) ? total*z+p[k] : C_times(total,z)+[p[k],0]);
+    is_undef(k)
+    ?   assert( is_vector(p) , "Input polynomial coefficients must be a vector." )
+        assert( is_finite(z) || is_vector(z,2), "The value of `z` must be a real or a complex number." )
+        polynomial( _poly_trim(p), z, 0, is_num(z) ? 0 : [0,0])
+    : k==len(p) ? total
+    : polynomial(p,z,k+1, is_num(z) ? total*z+p[k] : C_times(total,z)+[p[k],0]);
 
 // Function: poly_mult()
 // Usage:
@@ -1219,35 +1223,15 @@ function polynomial(p,z,k,total) =
 //   Given a list of polynomials represented as real coefficient lists, with the highest degree coefficient first, 
 //   computes the coefficient list of the product polynomial.  
 function poly_mult(p,q) = 
-    is_undef(q) ?
-       assert( is_list(p) 
-               && []==[for(pi=p) if( !is_vector(pi) && pi!=[]) 0], 
-               "Invalid arguments to poly_mult")
-       len(p)==2 ? poly_mult(p[0],p[1]) 
-                 : poly_mult(p[0], poly_mult(select(p,1,-1)))
-    :
-    _poly_trim(
-    [
-    for(n = [len(p)+len(q)-2:-1:0])
-        sum( [for(i=[0:1:len(p)-1])
-             let(j = len(p)+len(q)- 2 - n - i)
-             if (j>=0 && j<len(q)) p[i]*q[j]
-                 ])
-     ]);        
-     
-function poly_mult(p,q) = 
-  is_undef(q) ?
-   len(p)==2 ? poly_mult(p[0],p[1]) 
-        : poly_mult(p[0], poly_mult(select(p,1,-1)))
-  :
-  assert( is_vector(p) && is_vector(q),"Invalid arguments to poly_mult")
-    _poly_trim( [
-         for(n = [len(p)+len(q)-2:-1:0])
-           sum( [for(i=[0:1:len(p)-1])
-             let(j = len(p)+len(q)- 2 - n - i)
-             if (j>=0 && j<len(q)) p[i]*q[j]
-               ])
-         ]);
+    is_undef(q) ?
+        len(p)==2 
+        ? poly_mult(p[0],p[1]) 
+        : poly_mult(p[0], poly_mult(select(p,1,-1)))
+    :
+    assert( is_vector(p) && is_vector(q),"Invalid arguments to poly_mult")
+    p*p==0 || q*q==0
+    ? [0]
+    : _poly_trim(convolve(p,q));
 
     
 // Function: poly_div()
@@ -1258,19 +1242,23 @@ function poly_mult(p,q) =
 //    a list of two polynomials, [quotient, remainder].  If the division has no remainder then
 //    the zero polynomial [] is returned for the remainder.  Similarly if the quotient is zero
 //    the returned quotient will be [].  
-function poly_div(n,d,q) =
-    is_undef(q) 
-    ?   assert( is_vector(n) && is_vector(d) , "Invalid polynomials." )
-        let( d = _poly_trim(d) )
-        assert( d!=[0] , "Denominator cannot be a zero polynomial." )
-        poly_div(n,d,q=[])
-    :   len(n)<len(d) ? [q,_poly_trim(n)] : 
-        let(
-          t = n[0] / d[0], 
-          newq = concat(q,[t]),
-          newn = [for(i=[1:1:len(n)-1]) i<len(d) ? n[i] - t*d[i] : n[i]]
-        )  
-        poly_div(newn,d,newq);
+function poly_div(n,d) =
+    assert( is_vector(n) && is_vector(d) , "Invalid polynomials." )
+    let( d = _poly_trim(d), 
+         n = _poly_trim(n) )
+    assert( d!=[0] , "Denominator cannot be a zero polynomial." )
+    n==[0]
+    ? [[0],[0]]
+    : _poly_div(n,d,q=[]);
+
+function _poly_div(n,d,q) =
+    len(n)<len(d) ? [q,_poly_trim(n)] : 
+    let(
+      t = n[0] / d[0], 
+      newq = concat(q,[t]),
+      newn = [for(i=[1:1:len(n)-1]) i<len(d) ? n[i] - t*d[i] : n[i]]
+    )  
+    _poly_div(newn,d,newq);
 
 
 // Internal Function: _poly_trim()
