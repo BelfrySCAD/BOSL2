@@ -716,18 +716,6 @@ function matrix_inverse(A) =
     linear_solve(A,ident(len(A)));
 
 
-// Function: submatrix()
-// Usage: submatrix(M, ind1, ind2)
-// Description:
-//   Returns a submatrix with the specified index ranges or index sets.  
-function submatrix(M,ind1,ind2) =
-    assert( is_matrix(M), "Input must be a matrix." )
-    [for(i=ind1) 
-        [for(j=ind2) 
-            assert( ! is_undef(M[i][j]), "Invalid indexing." )
-            M[i][j] ] ];
-    
-
 // Function: qr_factor()
 // Usage: qr = qr_factor(A)
 // Description:
