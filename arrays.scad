@@ -709,40 +709,36 @@ function _sort_vectors4(arr) =
     ) concat( _sort_vectors4(lesser), equal, _sort_vectors4(greater) );
 
 
+// when idx==undef, returns the sorted array
+// otherwise, returns the indices of the sorted array
 function _sort_general(arr, idx=undef) =
     (len(arr)<=1) ? arr :
+    is_undef(idx) 
+    ? _sort_scalar(arr)
+    : let( arrind=[for(k=[0:len(arr)-1], ark=[arr[k]]) [ k, [for (i=idx) ark[i]] ] ] )
+      _indexed_sort(arrind);
+      
+// given a list of pairs, return the first element of each pair of the list sorted by the second element of the pair
+// the sorting is done using compare_vals()
+function _indexed_sort(arrind) = 
+    arrind==[] ? [] : len(arrind)==1? [arrind[0][0]] :
+    let( pivot = arrind[floor(len(arrind)/2)][1] )
     let(
-        pivot = arr[floor(len(arr)/2)],
-        pivotval = idx==undef? pivot : [for (i=idx) pivot[i]],
-        compare = 
-            is_undef(idx) ? [for(entry=arr) compare_vals(entry, pivotval) ] :
-            [ for (entry = arr) 
-                  let( val = [for (i=idx) entry[i] ] )
-                  compare_vals(val, pivotval) ] ,
-        lesser  = [ for (i = [0:1:len(arr)-1]) if (compare[i] < 0) arr[i] ],
-        equal   = [ for (i = [0:1:len(arr)-1]) if (compare[i] ==0) arr[i] ],
-        greater = [ for (i = [0:1:len(arr)-1]) if (compare[i] > 0) arr[i] ]
-    )
-    concat(_sort_general(lesser,idx), equal, _sort_general(greater,idx));
+        lesser  = [ for (entry=arrind) if (compare_vals(entry[1], pivot) <0 ) entry ],
+        equal   = [ for (entry=arrind) if (compare_vals(entry[1], pivot)==0 ) entry[0] ],
+        greater = [ for (entry=arrind) if (compare_vals(entry[1], pivot) >0 ) entry ]
+      )
+    concat(_indexed_sort(lesser), equal, _indexed_sort(greater));
 
 
-function _sort_general(arr, idx=undef) =
-    (len(arr)<=1) ? arr :
-    let(
-        pivot = arr[floor(len(arr)/2)],
-        pivotval = idx==undef? pivot : [for (i=idx) pivot[i]],
-        compare = [
-            for (entry = arr) let(
-                val = idx==undef? entry : [for (i=idx) entry[i]],
-                cmp = compare_vals(val, pivotval)
-            ) cmp
-        ],
-        lesser  = [ for (i = [0:1:len(arr)-1]) if (compare[i] < 0) arr[i] ],
-        equal   = [ for (i = [0:1:len(arr)-1]) if (compare[i] ==0) arr[i] ],
-        greater = [ for (i = [0:1:len(arr)-1]) if (compare[i] > 0) arr[i] ]
-    )
-    concat(_sort_general(lesser,idx), equal, _sort_general(greater,idx));
-
+// returns true for valid index specifications idx in the interval [imin, imax) 
+// note that idx can't have any value greater or EQUAL to imax
+function _valid_idx(idx,imin,imax) =
+    is_undef(idx) 
+    || ( is_finite(idx) && idx>=imin && idx< imax )
+    || ( is_list(idx) && min(idx)>=imin && max(idx)< imax )
+    || ( valid_range(idx) && idx[0]>=imin && idx[2]< imax );
+    
 
 // Function: sort()
 // Usage:
@@ -761,19 +757,21 @@ function _sort_general(arr, idx=undef) =
 //   sorted = sort(l);  // Returns [2,3,8,9,12,16,23,34,37,45,89]
 function sort(list, idx=undef) =
     !is_list(list) || len(list)<=1 ? list :
-    assert( is_undef(idx) || is_finite(idx) || is_vector(idx) || is_range(idx) , "Invalid indices.")
-    is_def(idx) ? _sort_general(list,idx) :
-    let(size = array_dim(list))
-    len(size)==1 ? _sort_scalars(list) :
-    len(size)==2 && size[1] <=4 
-    ? (
-        size[1]==0 ? list :
-        size[1]==1 ? _sort_vectors1(list) :
-        size[1]==2 ? _sort_vectors2(list) :
-        size[1]==3 ? _sort_vectors3(list)
-   /*size[1]==4*/  : _sort_vectors4(list)
-      ) 
-    : _sort_general(list);
+    is_def(idx) 
+    ?   assert( _valid_idx(idx,0,len(list)) , "Invalid indices.")
+        let( sarr = _sort_general(list,idx) )
+        [for(i=[0:len(sarr)-1]) list[sarr[i]] ] 
+    :   let(size = array_dim(list))
+        len(size)==1 ? _sort_scalars(list) :
+        len(size)==2 && size[1] <=4 
+        ? (
+            size[1]==0 ? list :
+            size[1]==1 ? _sort_vectors1(list) :
+            size[1]==2 ? _sort_vectors2(list) :
+            size[1]==3 ? _sort_vectors3(list)
+       /*size[1]==4*/  : _sort_vectors4(list)
+          ) 
+        : _sort_general(list);
 
 
 // Function: sortidx()
@@ -799,13 +797,13 @@ function sort(list, idx=undef) =
 //   idxs3 = sortidx(lst, idx=[1,3]); // Returns: [3,0,2,1]
 function sortidx(list, idx=undef) =
     assert( is_list(list) || is_string(list) , "Invalid input to sort." )
-    assert( is_undef(idx) || is_finite(idx) || is_vector(idx) , "Invalid indices.")
+    assert( _valid_idx(idx,0,len(list)) , "Invalid indices.")
     list==[] ? [] : 
     let(
         size = array_dim(list),
         aug = is_undef(idx) && (len(size) == 1 || (len(size) == 2 && size[1]<=4))
               ?  zip(list, list_range(len(list)))
-              :  enumerate(list,idx=idx)
+              :  0
     )
     is_undef(idx) && len(size) == 1? subindex(_sort_vectors1(aug),1) :
     is_undef(idx) && len(size) == 2 && size[1] <=4
@@ -817,26 +815,8 @@ function sortidx(list, idx=undef) =
     /*size[1]==4*/ : subindex(_sort_vectors4(aug),4)
       ) 
     :   // general case
-        subindex(_sort_general(aug, idx=list_range(s=1,n=len(aug)-1)), 0);
+        _sort_general(list,idx);
 
-
-function sortidx(list, idx=undef) =
-    list==[] ? [] : let(
-        size = array_dim(list),
-        aug = is_undef(idx) && (len(size) == 1 || (len(size) == 2 && size[1]<=4))?
-            zip(list, list_range(len(list))) :
-            enumerate(list,idx=idx)
-    )
-    is_undef(idx) && len(size) == 1? subindex(_sort_vectors1(aug),1) :
-    is_undef(idx) && len(size) == 2 && size[1] <=4? (
-        size[1]==0? list_range(len(arr)) :
-        size[1]==1? subindex(_sort_vectors1(aug),1) :
-        size[1]==2? subindex(_sort_vectors2(aug),2) :
-        size[1]==3? subindex(_sort_vectors3(aug),3) :
-        /*size[1]==4*/ subindex(_sort_vectors4(aug),4)
-    ) :
-    // general case
-    subindex(_sort_general(aug, idx=list_range(s=1,n=len(aug)-1)), 0);
 
 // sort() does not accept strings but sortidx does; isn't inconsistent ?
 
@@ -911,10 +891,10 @@ function idx(list, step=1, end=-1,start=0) =
 //   for (p=enumerate(colors)) right(20*p[0]) color(p[1]) circle(d=10);
 function enumerate(l,idx=undef) =
     assert(is_list(l)||is_string(list), "Invalid input." )
-    assert(is_undef(idx)||is_finite(idx)||is_vector(idx) ||is_range(idx), "Invalid index/indices." )
+    assert( _valid_idx(idx,0,len(l)), "Invalid index/indices." )
     (idx==undef)
     ?   [for (i=[0:1:len(l)-1]) [i,l[i]]]
-    :   [for (i=[0:1:len(l)-1]) concat([i], [for (j=idx) l[i][j]])];
+    :   [for (i=[0:1:len(l)-1]) [ i, for (j=idx) l[i][j]] ];
 
 
 // Function: force_list()
@@ -1130,8 +1110,9 @@ function add_scalar(v,s) =
 //   subindex(M, idx)
 // Description:
 //   Extracts the entries listed in idx from each entry in M.  For a matrix this means
-//   selecting a specified set of columsn.  If idx is a number the return is a vector, otherwise
-//   it is a list of lists (the submatrix).  
+//   selecting a specified set of columns.  If idx is a number the return is a vector, 
+//   otherwise it is a list of lists (the submatrix).  
+//   This function will return `undef` at all entry positions indexed by idx not found in the input list M.
 // Arguments:
 //   M = The given list of lists.
 //   idx = The index, list of indices, or range of indices to fetch.
@@ -1141,8 +1122,12 @@ function add_scalar(v,s) =
 //   subindex(M,[2]);    // Returns [[3], [7], [11], [15]]
 //   subindex(M,[2,1]);  // Returns [[3, 2], [7, 6], [11, 10], [15, 14]]
 //   subindex(M,[1:3]);  // Returns [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]
+//   N = [ [1,2], [3], [4,5], [6,7,8] ];
+//   subindex(N,[0,1]);  // Returns [ [1,2], [3,undef], [4,5], [6,7] ]
 function subindex(M, idx) =
-    is_num(idx)
+    assert( is_list(M), "The input is not a list." )
+    assert( !is_undef(idx) && _valid_idx(idx,0,1/0), "Invalid index input." ) 
+    is_finite(idx)
       ? [for(row=M) row[idx]]
       : [for(row=M) [for(i=idx) row[i]]];
 
