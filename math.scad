@@ -698,9 +698,8 @@ function linear_solve(A,b) =
     zeros != [] ? [] :
     m<n 
     // avoiding input validation in back_substitute
-    ? let( n  = len(R),
-           Rt = [for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]] )
-      Q*reverse(_back_substitute(Rt,reverse(b))) 
+    ? let( n  = len(R) )
+      Q*reverse(_back_substitute(transpose(R, reverse=true), reverse(b))) 
     : _back_substitute(R, transpose(Q)*b);
 
 // Function: matrix_inverse()
@@ -728,13 +727,14 @@ function qr_factor(A) =
       n = len(A[0])
     )
     let(
-        qr =_qr_factor(A, column=0, m = m, n=n, Q=ident(m)),
-        Rzero = [
-            for(i=[0:m-1]) [
-                for(j=[0:n-1])
-                i>j ? 0 : qr[1][i][j]
+        qr =_qr_factor(A, Q=ident(m), column=0, m = m, n=n),
+        Rzero = 
+          let( R = qr[1] )
+          [ for(i=[0:m-1]) [
+              let( ri = R[i] )
+              for(j=[0:n-1]) i>j ? 0 : ri[j]
             ]
-        ]
+          ]
     ) [qr[0],Rzero];
 
 function _qr_factor(A,Q, column, m, n) =
@@ -763,13 +763,12 @@ function back_substitute(R, b, transpose = false) =
     let(n=len(R))
     assert(is_vector(b,n) || is_matrix(b,n),str("R and b are not compatible in back_substitute ",n, len(b)))
     transpose
-      ? reverse(_back_substitute([for(i=[0:n-1]) [for(j=[0:n-1]) R[n-1-j][n-1-i]]],
-                                 reverse(b)))  
+      ? reverse(_back_substitute(transpose(R, reverse=true), reverse(b)))  
       : _back_substitute(R,b);
 
 function _back_substitute(R, b, x=[]) =
-      let(n=len(R))
-      len(x) == n ? x
+    let(n=len(R))
+    len(x) == n ? x
     : let(ind = n - len(x) - 1)
       R[ind][ind] == 0 ? []
     : let(

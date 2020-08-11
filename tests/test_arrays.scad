@@ -480,6 +480,7 @@ test_array_dim();
 module test_transpose() {
     assert(transpose([[1,2,3],[4,5,6],[7,8,9]]) == [[1,4,7],[2,5,8],[3,6,9]]);
     assert(transpose([[1,2,3],[4,5,6]]) == [[1,4],[2,5],[3,6]]);
+    assert(transpose([[1,2,3],[4,5,6]],reverse=true) == [[6,3], [5,2], [4,1]]);
     assert(transpose([3,4,5]) == [3,4,5]);
 }
 test_transpose();
