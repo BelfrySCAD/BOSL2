@@ -1287,6 +1287,10 @@ function array_dim(v, depth=undef) =
 
 // Function: transpose()
 // Description: Returns the transposition of the given array.
+//    When reverse=true, the transposition is done in respect to the secondary diagonal, that is:
+//    .
+//    reverse(transpose(reverse(arr))) == transpose(arr, reverse=true)
+//    By default, reverse=false.
 // Example:
 //   arr = [
 //       ["a", "b", "c"],
@@ -1313,14 +1317,30 @@ function array_dim(v, depth=undef) =
 //   //     ["c", "f"],
 //   // ]
 // Example:
+//   arr = [
+//       ["a", "b", "c"],
+//       ["d", "e", "f"],
+//       ["g", "h", "i"]
+//   ];
+//   t = transpose(arr, reverse=true);
+//   // Returns:
+//   // [
+//   //  ["i", "f", "c"],
+//   //  ["h", "e", "b"],
+//   //  ["g", "d", "a"]
+//   // ]
+// Example:
 //   transpose([3,4,5]);  // Returns: [3,4,5]
-function transpose(arr) =
+function transpose(arr, reverse=false) =
     assert( is_list(arr) && len(arr)>0, "The array is not a vector neither a matrix." )
     is_list(arr[0])
     ?   let( l0 = len(arr[0]) )
         assert([for(a=arr) if(!is_list(a) || len(a)!=l0) 1 ]==[], "The array is not a vector neither a matrix." )
-        [for (i=[0:1:l0-1]) 
-            [ for (j=[0:1:len(arr)-1]) arr[j][i] ] ] 
+        reverse
+        ? [for (i=[0:1:l0-1]) 
+              [ for (j=[0:1:len(arr)-1]) arr[len(arr)-1-j][l0-1-i] ] ] 
+        : [for (i=[0:1:l0-1]) 
+              [ for (j=[0:1:len(arr)-1]) arr[j][i] ] ] 
     :  assert( is_vector(arr), "The array is not a vector neither a matrix." )
            arr;
 
