@@ -92,7 +92,7 @@ function hull2d_path(points) =
     assert(is_path(points,2),"Invalid input to hull2d_path")
     len(points) < 2 ? []
   : len(points) == 2 ? [0,1]
-  : let(tri=find_noncollinear_points(points, error=false))
+  : let(tri=noncollinear_triple(points, error=false))
     tri == [] ? _hull_collinear(points)
   : let(
         remaining = [ for (i = [0:1:len(points)-1]) if (i != tri[0] && i!=tri[1] && i!=tri[2]) i ],
@@ -170,7 +170,7 @@ function hull3d_faces(points) =
     assert(is_path(points,3),"Invalid input to hull3d_faces")
     len(points) < 3 ? list_range(len(points))
   : let ( // start with a single non-collinear triangle
-          tri = find_noncollinear_points(points, error=false)
+          tri = noncollinear_triple(points, error=false)
         )
     tri==[] ? _hull_collinear(points)
   : let(
@@ -250,7 +250,7 @@ function _find_conflicts(point, planes) = [
 
 
 function _find_first_noncoplanar(plane, points, i) = 
-    (i >= len(points) || !coplanar(plane, points[i]))? i :
+    (i >= len(points) || !points_on_plane([points[i]],plane))? i :
     _find_first_noncoplanar(plane, points, i+1);
 
 

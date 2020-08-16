@@ -403,6 +403,16 @@ function _triangulate_planar_convex_polygons(polys) =
         outtris = concat(tris, newtris, newtris2)
     ) outtris;
 
+//**
+// this function may produce degenerate triangles:
+//    _triangulate_planar_convex_polygons([ [for(i=[0:1]) [i,i],
+//                                           [1,-1], [-1,-1],
+//                                           for(i=[-1:0]) [i,i] ] ] )
+//    == [[[-1, -1], [ 0,  0], [0,  0]]
+//        [[-1, -1], [-1, -1], [0,  0]]
+//        [[ 1, -1], [-1, -1], [0,  0]]
+//        [[ 0,  0], [ 1,  1], [1, -1]] ]
+//
 
 // Function: vnf_bend()
 // Usage:
@@ -647,7 +657,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
         nonplanars = unique([
             for (face = faces) let(
                 faceverts = [for (k=face) varr[k]]
-            ) if (!points_are_coplanar(faceverts)) [
+            ) if (!coplanar(faceverts)) [
                 "ERROR",
                 "NONPLANAR",
                 "Face vertices are not coplanar",
