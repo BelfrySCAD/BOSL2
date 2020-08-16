@@ -289,15 +289,12 @@ function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
 //   d = Most general diameter.
 //   dflt = Value to return if all other values given are `undef`.
 function get_radius(r1=undef, r2=undef, r=undef, d1=undef, d2=undef, d=undef, dflt=undef) = (
-    !is_undef(r1)? assert(is_undef(r2)&&is_undef(d1)&&is_undef(d2), "Conflicting or redundant radius/diameter arguments given.") 
-		               assert(is_finite(r1), "Invalid radius r1." ) r1 :
-    !is_undef(r2)? assert(is_undef(d1)&&is_undef(d2), "Conflicting or redundant radius/diameter arguments given.")
-                   assert(is_finite(r2), "Invalid radius r2." ) r2 :
-    !is_undef(d1)? assert(is_finite(d1), "Invalid diameter d1." ) d1/2 :
-    !is_undef(d2)? assert(is_finite(d2), "Invalid diameter d2." ) d2/2 :
-    !is_undef(r)?  assert(is_undef(d), "Conflicting or redundant radius/diameter arguments given.") 
-		               r ://assert(is_finite(r), "Invalid radius r." ) r : // this assert causes an error in shapes
-    !is_undef(d)?  assert(is_finite(d), "Invalid diameter d." ) d/2 :
+    !is_undef(r1)? assert(is_undef(r2)&&is_undef(d1)&&is_undef(d2), "Conflicting or redundant radius/diameter arguments given.") r1 :
+    !is_undef(r2)? assert(is_undef(d1)&&is_undef(d2), "Conflicting or redundant radius/diameter arguments given.") r2 :
+    !is_undef(d1)? d1/2 :
+    !is_undef(d2)? d2/2 :
+    !is_undef(r)? assert(is_undef(d), "Conflicting or redundant radius/diameter arguments given.") r :
+    !is_undef(d)? d/2 :
     dflt
 );
 
