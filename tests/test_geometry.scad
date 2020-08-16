@@ -41,7 +41,7 @@ test_plane_from_points();
 test_plane_normal();
 //test_plane_offset();
 //test_plane_transform();
-test_plane_projection();
+test_projection_on_plane();
 //test_plane_point_nearest_origin();
 test_distance_from_plane();
 
@@ -105,13 +105,13 @@ module test_points_on_plane() {
     ang     = rands(0,360,1)[0];
     normal  = rot(a=ang,p=normal0);
     plane   = [each normal, normal*dir];
-    prj_pts = plane_projection(plane,pts);
+    prj_pts = projection_on_plane(plane,pts);
     assert(points_on_plane(prj_pts,plane));
     assert(!points_on_plane(concat(pts,[normal-dir]),plane));
 }
 *test_points_on_plane();
 
-module test_plane_projection(){
+module test_projection_on_plane(){
     ang     = rands(0,360,1)[0];
     dir     = rands(-10,10,3);
     normal0 = unit([1,2,3]);
@@ -120,16 +120,16 @@ module test_plane_projection(){
     plane   = [each normal,  0];
     planem  = [each normal, normal*dir];
     pts     = [for(i=[1:10]) rands(-1,1,3)];
-    assert_approx( plane_projection(plane,pts),
-                   plane_projection(plane,plane_projection(plane,pts)));
-    assert_approx( plane_projection(plane,pts),
-                   rot(a=ang,p=plane_projection(plane0,rot(a=-ang,p=pts))));    
-    assert_approx( move((-normal*dir)*normal,p=plane_projection(planem,pts)),
-                   plane_projection(plane,pts));
-    assert_approx( move((normal*dir)*normal,p=plane_projection(plane,pts)),
-                   plane_projection(planem,pts));
+    assert_approx( projection_on_plane(plane,pts),
+                   projection_on_plane(plane,projection_on_plane(plane,pts)));
+    assert_approx( projection_on_plane(plane,pts),
+                   rot(a=ang,p=projection_on_plane(plane0,rot(a=-ang,p=pts))));    
+    assert_approx( move((-normal*dir)*normal,p=projection_on_plane(planem,pts)),
+                   projection_on_plane(plane,pts));
+    assert_approx( move((normal*dir)*normal,p=projection_on_plane(plane,pts)),
+                   projection_on_plane(planem,pts));
 }
-*test_plane_projection();
+*test_projection_on_plane();
 
 module test_line_from_points() {
     assert_approx(line_from_points([[1,0],[0,0],[-1,0]]),[[-1,0],[1,0]]);

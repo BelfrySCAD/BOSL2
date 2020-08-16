@@ -825,7 +825,7 @@ function plane3pt(p1, p2, p3) =
 //   i3 = The index into `points` of the third point on the plane.
 function plane3pt_indexed(points, i1, i2, i3) =
     assert( is_vector([i1,i2,i3]) && min(i1,i2,i3)>=0 && is_list(points) && max(i1,i2,i3)<len(points),
-		        "Invalid or out of range indices." )
+            "Invalid or out of range indices." )
     assert( is_path([points[i1], points[i2], points[i3]],dim=3),
             "Improper points or improper dimensions." )
     let(
@@ -965,9 +965,9 @@ function plane_transform(plane) =
     rot(from=n, to=UP) * move(-cp);
 
 
-// Function: plane_projection()
+// Function: projection_on_plane()
 // Usage:
-//   plane_projection(points);
+//   projection_on_plane(points);
 // Description:
 //   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 2d or 3d points, return the projection
 //   of the points on the plane.
@@ -977,8 +977,8 @@ function plane_transform(plane) =
 // Example(3D):
 //   points = move([10,20,30], p=yrot(25, p=path3d(circle(d=100))));
 //   plane = plane3pt([1,0,0],[0,1,0],[0,0,1]);
-//   proj = plane_projection(plane,points);
-function plane_projection(plane, points) =
+//   proj = projection_on_plane(plane,points);
+function projection_on_plane(plane, points) =
     assert( _valid_plane(plane), "Invalid plane." )
     assert( is_path(points), "Invalid list of points or dimension." )
     let( 
