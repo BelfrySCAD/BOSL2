@@ -458,10 +458,10 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 
 
 
-// Module: offset_sweep()
+// Function&Module: offset_sweep()
 //
 // Description:
-//   Takes a 2d path as input and extrudes it upwards and/or downward.  Each layer in the extrusion is produced using `offset()` to expand or shrink the previous layer.
+//   Takes a 2d path as input and extrudes it upwards and/or downward.  Each layer in the extrusion is produced using `offset()` to expand or shrink the previous layer.  When invoked as a function returns a VNF; when invoked as a module produces geometry.  
 //   You can specify a sequence of offsets values, or you can use several built-in offset profiles that are designed to provide end treatments such as roundovers.
 //   The path is shifted by `offset()` multiple times in sequence
 //   to produce the final shape (not multiple shifts from one parent), so coarse definition of the input path will degrade
@@ -543,8 +543,12 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 //   angle = default angle for chamfers.  Default: 45
 //   joint = default joint value for smooth roundover.
 //   k = default curvature parameter value for "smooth" roundover
-//   convexity = convexity setting for use with polyhedron.  Default: 10
-//
+//   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
+//   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
+//   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
+//   orient = Vector to rotate top towards after spin  (module only)
+//   extent = use extent method for computing anchors. (module only)  Default: false
+//   cp = set centerpoint for anchor computation.  (module only) Default: object centroid
 // Example: Rounding a star shaped prism with postive radius values
 //   star = star(5, r=22, ir=13);
 //   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
@@ -650,118 +654,118 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 //       up(1)
 //         offset_sweep(offset(rhex,r=-1), height=9.5, bottom=os_circle(r=2), top=os_teardrop(r=-4));
 //     }
-module offset_sweep(
-        path, height, h, l,
-        top=[], bottom=[],
-        offset="round", r=0, steps=16,
-        quality=1, check_valid=true,
-        offset_maxstep=1, extra=0,
-        cut=undef, chamfer_width=undef, chamfer_height=undef,
-        joint=undef, k=0.75, angle=45,
-        convexity=10
-) {
-        // This function does the actual work of repeatedly calling offset() and concatenating the resulting face and vertex lists to produce
-        // the inputs for the polyhedron module.
-        function make_polyhedron(path,offsets, offset_type, flip_faces, quality, check_valid, maxstep, offsetind=0, vertexcount=0, vertices=[], faces=[] )=
-                offsetind==len(offsets)? (
-                        let(
-                                bottom = list_range(n=len(path),s=vertexcount),
-                                oriented_bottom = !flip_faces? bottom : reverse(bottom)
-                        ) [vertices, concat(faces,[oriented_bottom])]
-                ) : (
-                        let(
-                                this_offset = offsetind==0? offsets[0][0] : offsets[offsetind][0] - offsets[offsetind-1][0],
-                                delta = offset_type=="delta" || offset_type=="chamfer" ? this_offset : undef,
-                                r = offset_type=="round"? this_offset : undef,
-                                do_chamfer = offset_type == "chamfer"
+
+
+// This function does the actual work of repeatedly calling offset() and concatenating the resulting face and vertex lists to produce
+// the inputs for the polyhedron module.
+function _make_offset_polyhedron(path,offsets, offset_type, flip_faces, quality, check_valid, maxstep, offsetind=0,
+                                 vertexcount=0, vertices=[], faces=[] )=
+        offsetind==len(offsets)? (
+                let(
+                        bottom = list_range(n=len(path),s=vertexcount),
+                        oriented_bottom = !flip_faces? bottom : reverse(bottom)
+                ) [vertices, concat(faces,[oriented_bottom])]
+        ) : (
+                let(
+                        this_offset = offsetind==0? offsets[0][0] : offsets[offsetind][0] - offsets[offsetind-1][0],
+                        delta = offset_type=="delta" || offset_type=="chamfer" ? this_offset : undef,
+                        r = offset_type=="round"? this_offset : undef,
+                        do_chamfer = offset_type == "chamfer"
+                )
+                let(
+                        vertices_faces = offset(
+                                path, r=r, delta=delta, chamfer = do_chamfer, closed=true,
+                                check_valid=check_valid, quality=quality,
+                                maxstep=maxstep, return_faces=true,
+                                firstface_index=vertexcount,
+                                flip_faces=flip_faces
                         )
-                        assert(num_defined([r,delta])==1,"Must set `offset` to \"round\" or \"delta")
-                        let(
-                                vertices_faces = offset(
-                                        path, r=r, delta=delta, chamfer = do_chamfer, closed=true,
-                                        check_valid=check_valid, quality=quality,
-                                        maxstep=maxstep, return_faces=true,
-                                        firstface_index=vertexcount,
-                                        flip_faces=flip_faces
-                                )
-                        )
-                        make_polyhedron(
-                                vertices_faces[0], offsets, offset_type,
-                                flip_faces, quality, check_valid, maxstep,
-                                offsetind+1, vertexcount+len(path),
-                                vertices=concat(
-                                        vertices,
-                                        zip(vertices_faces[0],repeat(offsets[offsetind][1],len(vertices_faces[0])))
-                                ),
-                                faces=concat(faces, vertices_faces[1])
-                        )
-                );
-
-
-        argspec = [
-                ["r",r],
-                ["extra",extra],
-                ["type","circle"],
-                ["check_valid",check_valid],
-                ["quality",quality],
-                ["offset_maxstep", offset_maxstep],
-                ["steps",steps],
-                ["offset",offset],
-                ["chamfer_width",chamfer_width],
-                ["chamfer_height",chamfer_height],
-                ["angle",angle],
-                ["cut",cut],
-                ["joint",joint],
-                ["k", k],
-                ["points", []],
-        ];
-
-        path = check_and_fix_path(path, [2], closed=true);
-        clockwise = polygon_is_clockwise(path);
-
-        top = struct_set(argspec, top, grow=false);
-        bottom = struct_set(argspec, bottom, grow=false);
-
-        //  This code does not work.  It hits the error in make_polyhedron from offset being wrong
-        //  before this code executes.  Had to move the test into make_polyhedron, which is ugly since it's in the loop
-        //offsetsok = in_list(struct_val(top, "offset"),["round","delta"]) &&
-        //      in_list(struct_val(bottom, "offset"),["round","delta"]);
-        //assert(offsetsok,"Offsets must be one of \"round\" or \"delta\"");
-
-
-        offsets_bot = _rounding_offsets(bottom, -1);
-        offsets_top = _rounding_offsets(top, 1);
-
-        if (offset == "chamfer" && (len(offsets_bot)>5 || len(offsets_top)>5)) {
-          echo("WARNING: You have selected offset=\"chamfer\", which leads to exponential growth in the vertex count and requested many layers.  This can be slow or run out of recursion depth.");
-        }
-        // "Extra" height enlarges the result beyond the requested height, so subtract it
-        bottom_height = len(offsets_bot)==0 ? 0 : abs(select(offsets_bot,-1)[1]) - struct_val(bottom,"extra");
-        top_height = len(offsets_top)==0 ? 0 : abs(select(offsets_top,-1)[1]) - struct_val(top,"extra");
-
-        height = get_height(l=l,h=h,height=height,dflt=bottom_height+top_height);
-        assert(height>=0, "Height must be nonnegative");
-
-        middle = height-bottom_height-top_height;
-        assert(
-                middle>=0, str(
-                        "Specified end treatments (bottom height = ",bottom_height,
-                        " top_height = ",top_height,") are too large for extrusion height (",height,")"
+                )
+                _make_offset_polyhedron(
+                        vertices_faces[0], offsets, offset_type,
+                        flip_faces, quality, check_valid, maxstep,
+                        offsetind+1, vertexcount+len(path),
+                        vertices=concat(
+                                vertices,
+                                zip(vertices_faces[0],repeat(offsets[offsetind][1],len(vertices_faces[0])))
+                        ),
+                        faces=concat(faces, vertices_faces[1])
                 )
         );
-        initial_vertices_bot = path3d(path);
 
-        vertices_faces_bot = make_polyhedron(
+
+function offset_sweep(
+                       path, height, h, l,
+                       top=[], bottom=[],
+                       offset="round", r=0, steps=16,
+                       quality=1, check_valid=true,
+                       offset_maxstep=1, extra=0,
+                       cut=undef, chamfer_width=undef, chamfer_height=undef,
+                       joint=undef, k=0.75, angle=45
+                      ) =
+    let(
+        argspec = [
+                   ["r",r],
+                   ["extra",extra],
+                   ["type","circle"],
+                   ["check_valid",check_valid],
+                   ["quality",quality],
+                   ["offset_maxstep", offset_maxstep],
+                   ["steps",steps],
+                   ["offset",offset],
+                   ["chamfer_width",chamfer_width],
+                   ["chamfer_height",chamfer_height],
+                   ["angle",angle],
+                   ["cut",cut],
+                   ["joint",joint],
+                   ["k", k],
+                   ["points", []],
+        ],
+        path = check_and_fix_path(path, [2], closed=true),
+        clockwise = polygon_is_clockwise(path),
+        
+        top = struct_set(argspec, top, grow=false),
+        bottom = struct_set(argspec, bottom, grow=false),
+
+        //  This code does not work.  It hits the error in _make_offset_polyhedron from offset being wrong
+        //  before this code executes.  Had to move the test into _make_offset_polyhedron, which is ugly since it's in the loop
+        offsetsok = in_list(struct_val(top, "offset"),["round","delta"])
+                    && in_list(struct_val(bottom, "offset"),["round","delta"])
+    )
+    assert(offsetsok,"Offsets must be one of \"round\" or \"delta\"")
+    let( 
+        offsets_bot = _rounding_offsets(bottom, -1),
+        offsets_top = _rounding_offsets(top, 1),
+        dummy = offset == "chamfer" && (len(offsets_bot)>5 || len(offsets_top)>5)
+                ? echo("WARNING: You have selected offset=\"chamfer\", which leads to exponential growth in the vertex count and requested more than 5 layers.  This can be slow or run out of recursion depth.")
+                : 0,
+
+        // "Extra" height enlarges the result beyond the requested height, so subtract it
+        bottom_height = len(offsets_bot)==0 ? 0 : abs(select(offsets_bot,-1)[1]) - struct_val(bottom,"extra"),
+        top_height = len(offsets_top)==0 ? 0 : abs(select(offsets_top,-1)[1]) - struct_val(top,"extra"),
+
+        height = get_height(l=l,h=h,height=height,dflt=bottom_height+top_height),
+        middle = height-bottom_height-top_height
+    )
+    assert(height>=0, "Height must be nonnegative") 
+    assert(middle>=0, str("Specified end treatments (bottom height = ",bottom_height,
+                          " top_height = ",top_height,") are too large for extrusion height (",height,")"
+                         )
+    )
+    let(
+        initial_vertices_bot = path3d(path),
+
+        vertices_faces_bot = _make_offset_polyhedron(
                 path, offsets_bot, struct_val(bottom,"offset"), clockwise,
                 struct_val(bottom,"quality"),
                 struct_val(bottom,"check_valid"),
                 struct_val(bottom,"offset_maxstep"),
                 vertices=initial_vertices_bot
-        );
+        ),
 
-        top_start_ind = len(vertices_faces_bot[0]);
-        initial_vertices_top = zip(path, repeat(middle,len(path)));
-        vertices_faces_top = make_polyhedron(
+        top_start_ind = len(vertices_faces_bot[0]),
+        initial_vertices_top = zip(path, repeat(middle,len(path))),
+        vertices_faces_top = _make_offset_polyhedron(
                 path, move(p=offsets_top,[0,middle]),
                 struct_val(top,"offset"), !clockwise,
                 struct_val(top,"quality"),
@@ -769,20 +773,39 @@ module offset_sweep(
                 struct_val(top,"offset_maxstep"),
                 vertexcount=top_start_ind,
                 vertices=initial_vertices_top
-        );
+        ),
         middle_faces = middle==0 ? [] : [
                 for(i=[0:len(path)-1]) let(
                         oneface=[i, (i+1)%len(path), top_start_ind+(i+1)%len(path), top_start_ind+i]
                 ) !clockwise ? reverse(oneface) : oneface
-        ];
-        up(bottom_height) {
-                polyhedron(
-                        concat(vertices_faces_bot[0],vertices_faces_top[0]),
-                        faces=concat(vertices_faces_bot[1], vertices_faces_top[1], middle_faces),
-                        convexity=convexity
-                );
-        }
-}
+        ]
+    )
+    [up(bottom_height, concat(vertices_faces_bot[0],vertices_faces_top[0])),  // Vertices
+     concat(vertices_faces_bot[1], vertices_faces_top[1], middle_faces)];     // Faces
+
+
+module offset_sweep(path, height, h, l,
+                    top=[], bottom=[],
+                    offset="round", r=0, steps=16,
+                    quality=1, check_valid=true,
+                    offset_maxstep=1, extra=0,
+                    cut=undef, chamfer_width=undef, chamfer_height=undef,
+                    joint=undef, k=0.75, angle=45,
+                    convexity=10,anchor="origin",cp,
+                    spin=0, orient=UP, extent=false)
+{
+    vnf = offset_sweep(path=path, height=height, h=h, l=l, top=top, bottom=bottom, offset=offset, r=0, steps=steps,
+                       quality=quality, check_valid=true, offset_maxstep=1, extra=0, cut=cut, chamfer_width=chamfer_width,
+                       chamfer_height=chamfer_height, joint=joint, k=k, angle=angle);
+  
+    attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
+    {
+        vnf_polyhedron(vnf,convexity=convexity);
+        children();
+    }   
+}   
+
+
 
 function os_circle(r,cut,extra,check_valid, quality,steps, offset_maxstep, offset) =
         assert(num_defined([r,cut])==1, "Must define exactly one of `r` and `cut`")
@@ -924,7 +947,6 @@ function os_profile(points, extra,check_valid, quality, offset_maxstep, offset) 
 //   joint = default joint value for smooth roundover.
 //   k = default curvature parameter value for "smooth" roundover
 //   convexity = convexity setting for use with polyhedron.  Default: 10
-//
 // Example: Chamfered elliptical prism.  If you stretch a chamfered cylinder the chamfer will be uneven.
 //   convex_offset_extrude(bottom = os_chamfer(height=-2), top=os_chamfer(height=1), height=7)
 //   xscale(4)circle(r=6,$fn=64);
@@ -1364,8 +1386,6 @@ module offset_stroke(path, width=1, rounded=true, start, end, check_valid=true, 
         }
 }
 
-
-
 function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
    let(
      N = len(top),
@@ -1395,8 +1415,8 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
                     let(
                        prev_corner = prev_offset + abs(rtop_in)*in_prev,
                        next_corner = next_offset + abs(rtop_in)*in_next,
-                       prev_degenerate = is_undef(ray_intersection([far_corner, far_corner+prev], [prev_offset, prev_offset+in_prev])),
-                       next_degenerate = is_undef(ray_intersection([far_corner, far_corner+next], [next_offset, next_offset+in_next]))
+                       prev_degenerate = is_undef(ray_intersection(path2d([far_corner, far_corner+prev]), path2d([prev_offset, prev_offset+in_prev]))),
+                       next_degenerate = is_undef(ray_intersection(path2d([far_corner, far_corner+next]), path2d([next_offset, next_offset+in_next])))
                     )
                     [ prev_degenerate ? far_corner : prev_corner,
                       far_corner,
@@ -1452,6 +1472,11 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   splinesteps = number of segments to use for curved patches.  Default: 16
 //   debug = turn on debug mode which displays illegal polyhedra and shows the bezier corner patches for troubleshooting purposes.  Default: False
 //   convexity = convexity parameter for polyhedron(), only for module version.  Default: 10
+//   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
+//   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
+//   orient = Vector to rotate top towards after spin  (module only)
+//   extent = use extent method for computing anchors. (module only)  Default: false
+//   cp = set centerpoint for anchor computation.  (module only) Default: object centroid
 // Example: Uniformly rounded pentagonal prism
 //   rounded_prism(pentagon(3), height=3, joint_top=0.5, joint_bot=0.5, joint_sides=0.5);
 // Example: Maximum possible rounding.
@@ -1500,15 +1525,21 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   rounded_prism(apply(yrot(95),path3d(hexagon(3))), apply(yrot(95), path3d(hexagon(3),3)), joint_top=2, joint_bot=1, joint_sides=1);
 
 module rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_top, k_sides,
-                     k=0.5, splinesteps=16, h, length, l, height, convexity=10, debug=false)
+                     k=0.5, splinesteps=16, h, length, l, height, convexity=10, debug=false,
+                     anchor="origin",cp,spin=0, orient=UP, extent=false)
 {
   result = rounded_prism(bottom=bottom, top=top, joint_bot=joint_bot, joint_top=joint_top, joint_sides=joint_sides,
                          k_bot=k_bot, k_top=k_top, k_sides=k_sides, k=k, splinesteps=splinesteps, h=h, length=length, height=height, l=l,debug=debug);
-  if (debug){
-      vnf_polyhedron(result[1], convexity=convexity);
-      trace_bezier_patches(result[0], showcps=true, splinesteps=splinesteps, $fn=16, showdots=false, showpatch=false);
+  vnf = debug ? result[1] : result;
+  attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
+  {
+    if (debug){
+        vnf_polyhedron(vnf, convexity=convexity);
+        trace_bezier_patches(result[0], showcps=true, splinesteps=splinesteps, $fn=16, showdots=false, showpatch=false);
+    }
+    else vnf_polyhedron(vnf,convexity=convexity);
+    children();
   }
-  else vnf_polyhedron(result,convexity=convexity);
 }
 
 
@@ -1880,7 +1911,7 @@ function _circle_mask(r) =
 //     $fn=128;
 //     difference(){
 //       tube(or=r, wall=2, h=45);
-//       bent_cutout_mask(r-1, 2.1, apply(back(15),subdivide_path(round_corners(star(n=7,ir=5,or=10), cut=flatten(repeat([0.5,0],7))),14*15,closed=true)));
+//       bent_cutout_mask(r-1, 2.1, apply(back(15),subdivide_path(round_corners(star(n=7,ir=5,or=10), cut=flatten(repeat([0.5,0],7)),$fn=32),14*15,closed=true)));
 //     }
 //   }
 // Example(2D): Cutting a slot in a cylinder is tricky if you want rounded corners at the top.  This slot profile has slightly angled top edges to blend into the top edge of the cylinder.
@@ -1944,6 +1975,7 @@ function _circle_mask(r) =
 
 module bent_cutout_mask(r, thickness, path, convexity=10)
 {
+  no_children($children);
   assert(is_path(path,2),"Input path must be a 2d path")
   assert(r-thickness>0, "Thickness too large for radius");
   assert(thickness>0, "Thickness must be positive");
