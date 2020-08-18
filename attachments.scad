@@ -473,7 +473,7 @@ function find_anchor(anchor, geom) =
                     pt = polygon_line_intersection(poly, [cp,cp+anchor], bounded=[true,false], eps=eps)
                 ) if (!is_undef(pt)) let(
                     plane = plane_from_polygon(poly),
-                    n = plane_normal(plane)
+                    n = unit(plane_normal(plane))
                 )
                 [norm(pt-cp), n, pt]
             ]
@@ -483,7 +483,20 @@ function find_anchor(anchor, geom) =
             furthest = max_index(subindex(hits,0)),
             dist = hits[furthest][0],
             pos = hits[furthest][2],
-            n = unit(sum([for (hit = hits) if (approx(hit[0],dist,eps=eps)) hit[1]]))
+            hitnorms = [for (hit = hits) if (approx(hit[0],dist,eps=eps)) hit[1]],
+            unorms = len(hitnorms) > 7
+              ? unique([for (nn = hitnorms) quant(nn,1e-9)])
+              : [
+                    for (i = idx(hitnorms)) let(
+                        nn = hitnorms[i],
+                        isdup = [
+                            for (j = [i+1:1:len(hitnorms)-1])
+                            if (approx(nn, hitnorms[j])) 1
+                        ] != []
+                    ) if (!isdup) nn
+                ],
+            n = unit(sum(unorms)),
+            oang = approx(point2d(n), [0,0])? 0 : atan2(n.y, n.x) + 90
         )
         [anchor, pos, n, oang]
     ) : type == "vnf_extent"? ( //vnf
