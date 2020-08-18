@@ -564,6 +564,7 @@ module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, bac
 }
 
 
+// Section: Tension Clips
 
 // h is total height above 0 of the nub
 // nub extends below xy plane by distance nub/2
@@ -776,6 +777,245 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
     }
   children();
   } 
+}
+
+
+
+// Module: rabbit_clip()
+// Usage:
+//   rabbit_clip(type, length, width, snap, thickness, depth, [compression], [clearance], [lock],
+//               [lock_clearance], [splineteps], [anchor], [orient], [spin])
+// Description:
+//   Creates a clip with two flexible ears to lock into a mating socket, or create a mask to produce the appropriate
+//   mating socket.  The clip can be made to insert and release easily, or to hold much better, or it can be
+//   created with locking flanges that will make it very hard or impossible to remove.  Unlike the snap pin, this clip
+//   is rectangular and can be made at any height, so a suitable clip could be very thin.  It's also possible to get a
+//   solid connection with a short pin.
+//   .
+//   The type parameters specifies whether to make a clip, a socket mask, or a double clip.  The length is the
+//   total nominal length of the clip.  (The actual length will be very close, but not equal to this.)  The width
+//   gives the nominal width of the clip, which is the actual width of the clip at its base.  The snap parameter
+//   gives the depth of the clip sides, which controls how easy the clip is to insert and remove.  The clip "ears" are
+//   made over-wide by the compression value.  A nonzero compression helps make the clip secure in its socket.
+//   The socket's width and length are increased by the clearance value which creates some space and can compensate
+//   for printing inaccuracy.  The socket will be slightly longer than the nominal width.  The thickness is the thickness
+//   curved line that forms the clip.  The clip depth is the amount the basic clip shape is extruded.  Be sure that you
+//   make the socket with a larger depth than the clip (try 0.4 mm) to allow ease of insertion of the clip.  The clearance
+//   value does not apply to the depth.  The splinesteps parameter increases the sampling of the clip curves.
+//   .
+//   By default clips appear with orient=UP and sockets with orient=DOWN.  
+//   .
+//   The first figure shows the dimensions of the rabbit clip.  The second figure shows the clip in red overlayed on
+//   its socket in yellow.  The left clip has a nonzero clearance, so its socket is bigger than the clip all around.
+//   The right hand locking clip has no clearance, but it has a lock clearance, which provides some space behind
+//   the lock to allow the clip to fit.  (Note that depending on your printer, this can be set to zero.)  
+//
+// Figure(2DMed):
+//   snap=1.5;
+//   comp=0.75;
+//   mid = 8.053;  // computed in rabbit_clip
+//   tip = [-4.58,18.03];
+//   translate([9,3]){
+//   back_half()
+//      rabbit_clip("pin",width=12, length=18, depth=1, thickness = 1, compression=comp, snap=snap, orient=BACK);
+//   color("blue"){
+//      stroke([[6,0],[6,18]],width=0.1);
+//      stroke([[6+comp, 12], [6+comp, 18]], width=.1);
+//   }
+//   color("red"){
+//      stroke([[6-snap,mid], [6,mid]], endcaps="arrow2",width=0.15);
+//      translate([6+.4,mid-.15])text("snap",size=1,valign="center");
+//      translate([6+comp/2,19.5])text("compression", size=1, halign="center");
+//      stroke([[6+comp/2,19.3], [6+comp/2,17.7]], endcap2="arrow2", width=.15);
+//      fwd(1.1)text("width",size=1,halign="center");
+//      xflip_copy()stroke([[2,-.7], [6,-.7]], endcap2="arrow2", width=.15);     
+//      move([-6.7,mid])rot(90)text("length", size=1, halign="center");
+//      stroke([[-7,10.3], [-7,18]], width=.15, endcap2="arrow2");
+//      stroke([[-7,0], [-7,5.8]], width=.15,endcap1="arrow2");
+//      stroke([tip, tip-[0,1]], width=.15);
+//      move([tip.x+2,19.5])text("thickness", halign="center",size=1);
+//      stroke([[tip.x+2, 19.3], tip+[.1,.1]], width=.15, endcap2="arrow2");
+//   }
+//   }
+//
+// Figure(2DMed):
+//   snap=1.5;
+//   comp=0;
+//   translate([29,3]){
+//   back_half()
+//      rabbit_clip("socket", width=12, length=18, depth=1, thickness = 1, compression=comp, snap=snap, orient=BACK,lock=true);
+//   color("red")back_half()
+//      rabbit_clip("pin",width=12, length=18, depth=1, thickness = 1, compression=comp, snap=snap,
+//               orient=BACK,lock=true,lock_clearance=1);
+//   }
+//   translate([9,3]){
+//   back_half()
+//      rabbit_clip("socket", clearance=.5,width=12, length=18, depth=1, thickness = 1,
+//                  compression=comp, snap=snap, orient=BACK,lock=false);
+//   color("red")back_half()
+//      rabbit_clip("pin",width=12, length=18, depth=1, thickness = 1, compression=comp, snap=snap,
+//               orient=BACK,lock=false,lock_clearance=1);
+//   }
+// Arguments:
+//   type = One of "pin",  "socket", "male", "female" or "double" to specify what to make.
+//   length = nominal clip length
+//   width = nominal clip width
+//   snap = depth of hollow on the side of the clip
+//   thickness = thickness of the clip "line"
+//   depth = amount to extrude clip (give extra room for the socket, about 0.4mm)
+//   compression = excess width at the "ears" to lock more tightly.  Default: 0.1
+//   clearance = extra space in the socket for easier insertion.  Default: 0.1
+//   lock = set to true to make a locking clip that may be irreversible.  Default: false
+//   lock_clearance = give clearance for the lock.  Default: 0
+//   splinesteps = number of samples in the curves of the clip.  Default: 8
+//   anchor = anchor point for clip
+//   orient = clip orientation.  Default: UP for pins, DOWN for sockets
+//   spin = spin the clip.  Default: 0
+//
+// Example:  Here are several sizes that work printed in PLA on a Prusa MK3, with default clearance of 0.1 and a depth of 5
+//   module test_pair(length, width, snap, thickness, compression, lock=false)
+//   {
+//     depth = 5;
+//     extra_depth = 10;// Change this to 0.4 for closed sockets
+//     cuboid([max(width+5,12),12, depth], chamfer=.5, edges=[FRONT,"Y"], anchor=BOTTOM)
+//         attach(BACK)
+//           rabbit_clip(type="pin",length=length, width=width,snap=snap,thickness=thickness,depth=depth,
+//                       compression=compression,lock=lock);
+//     right(width+13)
+//     diff("remove")
+//         cuboid([width+8,max(12,length+2),depth+3], chamfer=.5, edges=[FRONT,"Y"], anchor=BOTTOM)
+//             attach(BACK)
+//               rabbit_clip(type="socket",length=length, width=width,snap=snap,thickness=thickness,depth=depth+extra_depth,
+//                           lock=lock,compression=0,$tags="remove");
+//   }
+//   left(37)ydistribute(spacing=28){
+//     test_pair(length=6, width=7, snap=0.25, thickness=0.8, compression=0.1);
+//     test_pair(length=3.5, width=7, snap=0.1, thickness=0.8, compression=0.1);  // snap = 0.2 gives a firmer connection
+//     test_pair(length=3.5, width=5, snap=0.1, thickness=0.8, compression=0.1);  // hard to take apart
+//   }
+//   right(17)ydistribute(spacing=28){
+//     test_pair(length=12, width=10, snap=1, thickness=1.2, compression=0.2);
+//     test_pair(length=8, width=7, snap=0.75, thickness=0.8, compression=0.2, lock=true); // With lock, very firm and irreversible
+//     test_pair(length=8, width=7, snap=0.75, thickness=0.8, compression=0.2, lock=true); // With lock, very firm and irreversible
+//   }
+// Example: Double clip to connect two sockets
+//   rabbit_clip("double",length=8, width=7, snap=0.75, thickness=0.8, compression=0.2,depth=5);
+// Example:  A modified version of the clip that acts like a backpack strap clip, where it locks tightly but you can squeeze to release. 
+//   cuboid([25,15,5],anchor=BOTTOM)
+//       attach(BACK)rabbit_clip("pin", length=25, width=25, thickness=1.5, snap=2, compression=0, lock=true, depth=5, lock_clearance=3);
+//   left(32)
+//   diff("remove")
+//   cuboid([30,30,11],orient=BACK,anchor=BACK){
+//       attach(BACK)rabbit_clip("socket", length=25, width=25, thickness=1.5, snap=2, compression=0, lock=true, depth=5.5, lock_clearance=3,$tags="remove");
+//       xflip_copy()
+//         position(FRONT+LEFT)
+//         xscale(0.8)
+//         zcyl(l=20,r=13.5, $tags="remove",$fn=64);
+//   }
+module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1,  clearance=.1, lock=false, lock_clearance=0,
+                   splinesteps=8, anchor, orient, spin=0)
+{
+  assert(is_num(width) && width>0,"Width must be a positive value");
+  assert(is_num(length) && length>0, "Length must be a positive value");
+  assert(is_num(thickness) && thickness>0, "Thickness must be a positive value");  
+  assert(is_num(snap) && snap>=0, "Snap must be a non-negative value");
+  assert(is_num(depth) && depth>0, "Depth must be a positive value");
+  assert(is_num(compression) && compression >= 0, "Compression must be a nonnegative value");
+  assert(is_bool(lock));
+  assert(is_num(lock_clearance));
+  legal_types = ["pin","socket","male","female","double"];
+  assert(in_list(type,legal_types),str("type must be one of ",legal_types));
+  
+  if (type=="double") {
+    attachable(size=[width+2*compression, depth, 2*length], anchor=default(anchor,BACK), spin=spin, orient=default(orient,BACK)){
+      union(){
+        rabbit_clip("pin", length=length, width=width, snap=snap, thickness=thickness, depth=depth, compression=compression,
+                    lock=lock, anchor=BOTTOM, orient=UP);
+        rabbit_clip("pin", length=length, width=width, snap=snap, thickness=thickness, depth=depth, compression=compression,
+                    lock=lock, anchor=BOTTOM, orient=DOWN);
+        cuboid([width-thickness, depth, thickness]);
+      }
+      children();
+    }
+  } else {
+    anchor = default(anchor,BOTTOM);
+    is_pin = in_list(type,["pin","male"]);
+    default_overlap = 0.01 * (is_pin?1:-1);    // Shift by this much to undo default overlap
+    extra = 0.02;  // Amount of extension below nominal based position for the socket, must exceed default overlap of 0.01
+    clearance = is_pin ? 0 : clearance;
+    compression = is_pin ? compression : 0;
+    orient =  is_def(orient) ? orient
+            : is_pin ? UP
+            : DOWN;
+    earwidth = 2*thickness+snap;
+    point_length = earwidth/2.15;
+    // The adjustment is using cos(theta)*earwidth/2 and sin(theta)*point_length, but the computation
+    // is obscured because theta is atan(length/2/snap)
+    scaled_len = length - 0.5 * (earwidth * snap + point_length * length) / sqrt(sqr(snap)+sqr(length/2));
+    bottom_pt = [0,max(scaled_len*0.15+thickness, 2*thickness)];
+    ctr = [width/2,scaled_len] + line_normal([width/2-snap, scaled_len/2], [width/2, scaled_len]) * earwidth/2;
+    inside_pt = circle_circle_tangents(bottom_pt, 0, ctr, earwidth/2)[0][1];
+    sidepath =[
+               [width/2,0],
+               [width/2-snap,scaled_len/2],
+               [width/2+(is_pin?compression:0), scaled_len],
+               ctr - point_length * line_normal([width/2,scaled_len], inside_pt),
+               inside_pt
+              ];
+    fullpath = concat(
+                      sidepath,
+                      [bottom_pt], 
+                      reverse(apply(xflip(),sidepath))
+                      );
+    assert(fullpath[4].y < fullpath[3].y, "Pin is too wide for its length");
+    
+    snapmargin = -snap + select(sidepath,-1).x;// - compression;
+    if (is_pin){
+      if (snapmargin<0) echo("WARNING: The snap is too large for the clip to squeeze to fit its socket")
+      echo(snapmargin=snapmargin);
+    }
+    // Force tangent to be vertical at the outer edge of the clip to avoid overshoot
+    fulltangent = list_set(path_tangents(fullpath, uniform=false),[2,8], [[0,1],[0,-1]]);
+
+    subset = is_pin ? [0:10] : [0,1,2,3, 7,8,9,10];  // Remove internal points from the socket
+    tangent = select(fulltangent, subset);
+    path = select(fullpath, subset);
+    
+    socket_smooth = .04;
+    pin_smooth = [.075, .075, .15, .12, .06];
+    smoothing = is_pin
+                  ? concat(pin_smooth, reverse(pin_smooth))
+                  : let(side_smooth=select(pin_smooth, 0, 2))
+                    concat(side_smooth, [socket_smooth], reverse(side_smooth));
+    bez = path_to_bezier(path,relsize=smoothing,tangents=tangent);
+    rounded = bezier_polyline(bez,splinesteps=splinesteps);
+    bounds = pointlist_bounds(rounded);
+    kk = search([bounds[1].y], subindex(rounded,1));
+    echo(rounded[kk[0]]);
+    extrapt = is_pin ? [] : [rounded[0] - [0,extra]];
+    finalpath = is_pin ? rounded
+                       : let(withclearance=offset(rounded, r=-clearance))
+                         concat( [[withclearance[0].x,-extra]],
+                                 withclearance,
+                                 [[-withclearance[0].x,-extra]]);
+    attachable(size=[bounds[1].x-bounds[0].x, depth, bounds[1].y-bounds[0].y], anchor=anchor, spin=spin, orient=orient){
+      xrot(90)
+        translate([0,-(bounds[1].y-bounds[0].y)/2+default_overlap,-depth/2])
+        linear_extrude(height=depth, convexity=10) {
+            if (lock)
+              xflip_copy()
+              right(clearance)
+              polygon([sidepath[1]+[-thickness/10,lock_clearance],
+                       sidepath[2],
+                       [sidepath[2].x,sidepath[1].y+lock_clearance]]);
+            if (is_pin)
+              offset_stroke(finalpath, width=[thickness,0]);
+            else
+              polygon(finalpath);
+        }
+      children();
+    }
+  }
 }
 
 
