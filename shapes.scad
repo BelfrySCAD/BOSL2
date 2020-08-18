@@ -102,8 +102,8 @@ module cuboid(
                 if (edges == EDGES_ALL && trimcorners) {
                     if (chamfer<0) {
                         cube(size, center=true) {
-                            attach(TOP,overlap=0) prismoid([size.x,size.y], [size.x-2*chamfer,size.y-2*chamfer], h=-chamfer, anchor=TOP);
-                            attach(BOT,overlap=0) prismoid([size.x,size.y], [size.x-2*chamfer,size.y-2*chamfer], h=-chamfer, anchor=TOP);
+                            attach(TOP) prismoid([size.x,size.y], [size.x-2*chamfer,size.y-2*chamfer], h=-chamfer, anchor=TOP);
+                            attach(BOT) prismoid([size.x,size.y], [size.x-2*chamfer,size.y-2*chamfer], h=-chamfer, anchor=TOP);
                         }
                     } else {
                         isize = [for (v = size) max(0.001, v-2*chamfer)];

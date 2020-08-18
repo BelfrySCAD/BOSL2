@@ -458,9 +458,10 @@ function find_anchor(anchor, geom) =
             eps = 1/2048,
             points = vnf[0],
             faces = vnf[1],
-            rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), points),
+            rpts = rot(from=anchor, to=RIGHT, p=move(point3d(-cp), p=points)),
             hits = [
-                for (face = faces) let(
+                for (i = idx(faces)) let(
+                    face = faces[i],
                     verts = select(rpts, face)
                 ) if (
                     max(subindex(verts,0)) >= -eps &&
@@ -469,40 +470,35 @@ function find_anchor(anchor, geom) =
                     min(subindex(verts,1)) <=  eps &&
                     min(subindex(verts,2)) <=  eps
                 ) let(
-                    poly = select(points, face),
-                    pt = polygon_line_intersection(poly, [cp,cp+anchor], bounded=[true,false], eps=eps)
-                ) if (!is_undef(pt)) let(
-                    plane = plane_from_polygon(poly),
-                    n = unit(plane_normal(plane))
-                )
-                [norm(pt-cp), n, pt]
+                    pt = polygon_line_intersection(
+                        select(points, face),
+                        [CENTER,anchor], eps=eps
+                    )
+                ) if (!is_undef(pt)) [norm(pt), i, pt]
             ]
         )
         assert(len(hits)>0, "Anchor vector does not intersect with the shape.  Attachment failed.")
         let(
             furthest = max_index(subindex(hits,0)),
+            pos = point3d(cp) + hits[furthest][2],
             dist = hits[furthest][0],
-            pos = hits[furthest][2],
-            hitnorms = [for (hit = hits) if (approx(hit[0],dist,eps=eps)) hit[1]],
-            unorms = len(hitnorms) > 7
-              ? unique([for (nn = hitnorms) quant(nn,1e-9)])
-              : [
-                    for (i = idx(hitnorms)) let(
-                        nn = hitnorms[i],
-                        isdup = [
-                            for (j = [i+1:1:len(hitnorms)-1])
-                            if (approx(nn, hitnorms[j])) 1
-                        ] != []
-                    ) if (!isdup) nn
-                ],
-            n = unit(sum(unorms)),
-            oang = approx(point2d(n), [0,0])? 0 : atan2(n.y, n.x) + 90
+            nfaces = [for (hit = hits) if(approx(hit[0],dist,eps=eps)) hit[1]],
+            n = unit(
+                sum([
+                    for (i = nfaces) let(
+                        faceverts = select(points, faces[i]),
+                        faceplane = plane_from_points(faceverts),
+                        nrm = plane_normal(faceplane)
+                    ) nrm
+                ]) / len(nfaces),
+                UP
+            )
         )
         [anchor, pos, n, oang]
     ) : type == "vnf_extent"? ( //vnf
         let(
             vnf=geom[1],
-            rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), vnf[0]),
+            rpts = rot(from=anchor, to=RIGHT, p=move(point3d(-cp), p=vnf[0])),
             maxx = max(subindex(rpts,0)),
             idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
             mm = pointlist_bounds(select(rpts,idxs)),
@@ -853,7 +849,7 @@ module attachable(
 
 // Module: position()
 // Usage:
-//   position(from) ...
+//   position(from, [overlap]) ...
 // Description:
 //   Attaches children to a parent object at an anchor point.
 // Arguments:
