@@ -12,8 +12,8 @@
 
 // Module: angle_pie_mask()
 // Usage:
-//   angle_pie_mask(r|d, l, ang);
-//   angle_pie_mask(r1|d1, r2|d2, l, ang);
+//   angle_pie_mask(r|d, l, ang, [excess]);
+//   angle_pie_mask(r1|d1, r2|d2, l, ang, [excess]);
 // Description:
 //   Creates a pie wedge shape that can be used to mask other shapes.
 // Arguments:
@@ -25,6 +25,7 @@
 //   d = Diameter of circle wedge is created from. (optional)
 //   d1 = Bottom diameter of cone that wedge is created from.  (optional)
 //   d2 = Upper diameter of cone that wedge is created from. (optional)
+//   excess = The extra thickness of the mask.  Default: `0.1`.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -34,14 +35,14 @@ module angle_pie_mask(
     ang=45, l=undef,
     r=undef, r1=undef, r2=undef,
     d=undef, d1=undef, d2=undef,
-    h=undef,
+    h=undef, excess=0.1,
     anchor=CENTER, spin=0, orient=UP
 ) {
     l = first_defined([l, h, 1]);
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
-        pie_slice(ang=ang, l=l+0.1, r1=r1, r2=r2, anchor=CENTER);
+        pie_slice(ang=ang, l=l+excess, r1=r1, r2=r2, anchor=CENTER);
         children();
     }
 }
@@ -49,13 +50,13 @@ module angle_pie_mask(
 
 // Module: cylinder_mask()
 // Usage: Mask objects
-//   cylinder_mask(l, r|d, chamfer, [chamfang], [from_end], [circum], [overage], [ends_only]);
-//   cylinder_mask(l, r|d, rounding, [circum], [overage], [ends_only]);
-//   cylinder_mask(l, r|d, [chamfer1|rounding1], [chamfer2|rounding2], [chamfang1], [chamfang2], [from_end], [circum], [overage], [ends_only]);
+//   cylinder_mask(l, r|d, chamfer, [chamfang], [from_end], [circum], [excess], [ends_only]);
+//   cylinder_mask(l, r|d, rounding, [circum], [excess], [ends_only]);
+//   cylinder_mask(l, r|d, [chamfer1|rounding1], [chamfer2|rounding2], [chamfang1], [chamfang2], [from_end], [circum], [excess], [ends_only]);
 // Usage: Masking operators
-//   cylinder_mask(l, r|d, chamfer, [chamfang], [from_end], [circum], [overage], [ends_only]) ...
-//   cylinder_mask(l, r|d, rounding, [circum], [overage], [ends_only]) ...
-//   cylinder_mask(l, r|d, [chamfer1|rounding1], [chamfer2|rounding2], [chamfang1], [chamfang2], [from_end], [circum], [overage], [ends_only]) ...
+//   cylinder_mask(l, r|d, chamfer, [chamfang], [from_end], [circum], [excess], [ends_only]) ...
+//   cylinder_mask(l, r|d, rounding, [circum], [excess], [ends_only]) ...
+//   cylinder_mask(l, r|d, [chamfer1|rounding1], [chamfer2|rounding2], [chamfang1], [chamfang2], [from_end], [circum], [excess], [ends_only]) ...
 // Description:
 //   If passed children, bevels/chamfers and/or rounds one or both
 //   ends of the origin-centered cylindrical region specified.  If
@@ -83,7 +84,7 @@ module angle_pie_mask(
 //   rounding2 = The radius of the rounding on the axis-positive end of the region.
 //   circum = If true, region will circumscribe the circle of the given radius/diameter.
 //   from_end = If true, chamfer/bevel size is measured from end of region.  If false, chamfer/bevel is measured outset from the radius of the region.  (Default: false)
-//   overage = The extra thickness of the mask.  Default: `10`.
+//   excess = The extra thickness of the mask.  Default: `10`.
 //   ends_only = If true, only mask the ends and not around the middle of the cylinder.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -105,7 +106,7 @@ module cylinder_mask(
     chamfang=undef, chamfang1=undef, chamfang2=undef,
     rounding=undef, rounding1=undef, rounding2=undef,
     circum=false, from_end=false,
-    overage=10, ends_only=false,
+    excess=10, ends_only=false,
     anchor=CENTER, spin=0, orient=UP
 ) {
     r1 = get_radius(r=r, d=d, r1=r1, d1=d1, dflt=1);
@@ -132,12 +133,12 @@ module cylinder_mask(
                     chlen1 = cham1 / (from_end? 1 : tan(ang1));
                     chlen2 = cham2 / (from_end? 1 : tan(ang2));
                     if (!ends_only) {
-                        cylinder(r=maxd+overage, h=l+2*overage, center=true);
+                        cylinder(r=maxd+excess, h=l+2*excess, center=true);
                     } else {
-                        if (cham2>0) up(l/2-chlen2) cylinder(r=maxd+overage, h=chlen2+overage, center=false);
-                        if (cham1>0) down(l/2+overage) cylinder(r=maxd+overage, h=chlen1+overage, center=false);
-                        if (fil2>0) up(l/2-fil2) cylinder(r=maxd+overage, h=fil2+overage, center=false);
-                        if (fil1>0) down(l/2+overage) cylinder(r=maxd+overage, h=fil1+overage, center=false);
+                        if (cham2>0) up(l/2-chlen2) cylinder(r=maxd+excess, h=chlen2+excess, center=false);
+                        if (cham1>0) down(l/2+excess) cylinder(r=maxd+excess, h=chlen1+excess, center=false);
+                        if (fil2>0) up(l/2-fil2) cylinder(r=maxd+excess, h=fil2+excess, center=false);
+                        if (fil1>0) down(l/2+excess) cylinder(r=maxd+excess, h=fil1+excess, center=false);
                     }
                 }
                 cyl(r1=sc*r1, r2=sc*r2, l=l, chamfer1=cham1, chamfer2=cham2, chamfang1=ang1, chamfang2=ang2, from_end=from_end, rounding1=fil1, rounding2=fil2);
@@ -154,14 +155,15 @@ module cylinder_mask(
 
 // Module: chamfer_mask()
 // Usage:
-//   chamfer_mask(l, chamfer);
+//   chamfer_mask(l, chamfer, [excess]);
 // Description:
 //   Creates a shape that can be used to chamfer a 90 degree edge.
 //   Difference it from the object to be chamfered.  The center of
 //   the mask object should align exactly with the edge to be chamfered.
 // Arguments:
 //   l = Length of mask.
-//   chamfer = Size of chamfer
+//   chamfer = Size of chamfer.
+//   excess = The extra amount to add to the length of the mask so that it differences away from other shapes cleanly.  Default: `0.1`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -170,9 +172,9 @@ module cylinder_mask(
 //       cube(50, anchor=BOTTOM+FRONT);
 //       #chamfer_mask(l=50, chamfer=10, orient=RIGHT);
 //   }
-module chamfer_mask(l=1, chamfer=1, anchor=CENTER, spin=0, orient=UP) {
+module chamfer_mask(l=1, chamfer=1, excess=0.1, anchor=CENTER, spin=0, orient=UP) {
     attachable(anchor,spin,orient, size=[chamfer*2, chamfer*2, l]) {
-        cylinder(r=chamfer, h=l+0.1, center=true, $fn=4);
+        cylinder(r=chamfer, h=l+excess, center=true, $fn=4);
         children();
     }
 }
@@ -180,14 +182,15 @@ module chamfer_mask(l=1, chamfer=1, anchor=CENTER, spin=0, orient=UP) {
 
 // Module: chamfer_mask_x()
 // Usage:
-//   chamfer_mask_x(l, chamfer, [anchor]);
+//   chamfer_mask_x(l, chamfer, [excess]);
 // Description:
 //   Creates a shape that can be used to chamfer a 90 degree edge along the X axis.
 //   Difference it from the object to be chamfered.  The center of the mask
 //   object should align exactly with the edge to be chamfered.
 // Arguments:
-//   l = Height of mask
-//   chamfer = size of chamfer
+//   l = Length of mask.
+//   chamfer = Size of chamfer.
+//   excess = The extra amount to add to the length of the mask so that it differences away from other shapes cleanly.  Default: `0.1`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the X axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example:
@@ -195,21 +198,22 @@ module chamfer_mask(l=1, chamfer=1, anchor=CENTER, spin=0, orient=UP) {
 //       cube(50, anchor=BOTTOM+FRONT);
 //       #chamfer_mask_x(l=50, chamfer=10);
 //   }
-module chamfer_mask_x(l=1.0, chamfer=1.0, anchor=CENTER, spin=0) {
-    chamfer_mask(l=l, chamfer=chamfer, anchor=anchor, spin=spin, orient=RIGHT) children();
+module chamfer_mask_x(l=1.0, chamfer=1.0, excess=0.1, anchor=CENTER, spin=0) {
+    chamfer_mask(l=l, chamfer=chamfer, excess=excess, anchor=anchor, spin=spin, orient=RIGHT) children();
 }
 
 
 // Module: chamfer_mask_y()
 // Usage:
-//   chamfer_mask_y(l, chamfer, [anchor]);
+//   chamfer_mask_y(l, chamfer, [excess]);
 // Description:
 //   Creates a shape that can be used to chamfer a 90 degree edge along the Y axis.
 //   Difference it from the object to be chamfered.  The center of the mask
 //   object should align exactly with the edge to be chamfered.
 // Arguments:
-//   l = Height of mask
-//   chamfer = size of chamfer
+//   l = Length of mask.
+//   chamfer = Size of chamfer.
+//   excess = The extra amount to add to the length of the mask so that it differences away from other shapes cleanly.  Default: `0.1`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Y axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example:
@@ -217,21 +221,22 @@ module chamfer_mask_x(l=1.0, chamfer=1.0, anchor=CENTER, spin=0) {
 //       cube(50, anchor=BOTTOM+RIGHT);
 //       #chamfer_mask_y(l=50, chamfer=10);
 //   }
-module chamfer_mask_y(l=1.0, chamfer=1.0, anchor=CENTER, spin=0) {
-    chamfer_mask(l=l, chamfer=chamfer, anchor=anchor, spin=spin, orient=BACK) children();
+module chamfer_mask_y(l=1.0, chamfer=1.0, excess=0.1, anchor=CENTER, spin=0) {
+    chamfer_mask(l=l, chamfer=chamfer, excess=excess, anchor=anchor, spin=spin, orient=BACK) children();
 }
 
 
 // Module: chamfer_mask_z()
 // Usage:
-//   chamfer_mask_z(l, chamfer, [anchor]);
+//   chamfer_mask_z(l, chamfer, [excess]);
 // Description:
 //   Creates a shape that can be used to chamfer a 90 degree edge along the Z axis.
 //   Difference it from the object to be chamfered.  The center of the mask
 //   object should align exactly with the edge to be chamfered.
 // Arguments:
-//   l = Height of mask
-//   chamfer = size of chamfer
+//   l = Length of mask.
+//   chamfer = Size of chamfer.
+//   excess = The extra amount to add to the length of the mask so that it differences away from other shapes cleanly.  Default: `0.1`
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example:
@@ -239,8 +244,8 @@ module chamfer_mask_y(l=1.0, chamfer=1.0, anchor=CENTER, spin=0) {
 //       cube(50, anchor=FRONT+RIGHT);
 //       #chamfer_mask_z(l=50, chamfer=10);
 //   }
-module chamfer_mask_z(l=1.0, chamfer=1.0, anchor=CENTER, spin=0) {
-    chamfer_mask(l=l, chamfer=chamfer, anchor=anchor, spin=spin, orient=UP) children();
+module chamfer_mask_z(l=1.0, chamfer=1.0, excess=0.1, anchor=CENTER, spin=0) {
+    chamfer_mask(l=l, chamfer=chamfer, excess=excess, anchor=anchor, spin=spin, orient=UP) children();
 }
 
 
@@ -313,7 +318,7 @@ module chamfer_cylinder_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=fa
 
 // Module: chamfer_hole_mask()
 // Usage:
-//   chamfer_hole_mask(r|d, chamfer, [ang], [from_end]);
+//   chamfer_hole_mask(r|d, chamfer, [ang], [from_end], [excess]);
 // Description:
 //   Create a mask that can be used to bevel/chamfer the end of a cylindrical hole.
 //   Difference it from the hole to be chamfered.  The center of the mask object
@@ -324,7 +329,7 @@ module chamfer_cylinder_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=fa
 //   chamfer = Size of the chamfer. (Default: 0.25)
 //   ang = Angle of chamfer in degrees from vertical.  (Default: 45)
 //   from_end = If true, chamfer size is measured from end of hole.  If false, chamfer is measured outset from the radius of the hole.  (Default: false)
-//   overage = The extra thickness of the mask.  Default: `0.1`.
+//   excess = The extra thickness of the mask.  Default: `0.1`.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -341,8 +346,8 @@ module chamfer_cylinder_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=fa
 //       up(50) chamfer_hole_mask(d=50, chamfer=10);
 //   }
 // Example:
-//   chamfer_hole_mask(d=100, chamfer=25, ang=30, overage=10);
-module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false, overage=0.1, anchor=CENTER, spin=0, orient=UP)
+//   chamfer_hole_mask(d=100, chamfer=25, ang=30, excess=10);
+module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false, excess=0.1, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
     h = chamfer * (from_end? 1 : tan(90-ang));
@@ -350,7 +355,7 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
     $fn = segs(r);
     attachable(anchor,spin,orient, r1=r, r2=r2, l=h*2) {
         union() {
-            cylinder(r=r2, h=overage, center=false);
+            cylinder(r=r2, h=excess, center=false);
             down(h) cylinder(r1=r, r2=r2, h=h, center=false);
         }
         children();
@@ -735,14 +740,14 @@ module rounding_corner_mask(r=1.0, anchor=CENTER, spin=0, orient=UP)
 //   }
 module rounding_cylinder_mask(r=1.0, rounding=0.25)
 {
-    cylinder_mask(l=rounding*3, r=r, rounding2=rounding, overage=rounding, ends_only=true, anchor=TOP);
+    cylinder_mask(l=rounding*3, r=r, rounding2=rounding, excess=rounding, ends_only=true, anchor=TOP);
 }
 
 
 
 // Module: rounding_hole_mask()
 // Usage:
-//   rounding_hole_mask(r|d, rounding);
+//   rounding_hole_mask(r|d, rounding, [excess]);
 // Description:
 //   Create a mask that can be used to round the edge of a circular hole.
 //   Difference it from the hole to be rounded.  The center of the
@@ -752,7 +757,7 @@ module rounding_cylinder_mask(r=1.0, rounding=0.25)
 //   r = Radius of hole.
 //   d = Diameter of hole to rounding.
 //   rounding = Radius of the rounding. (Default: 0.25)
-//   overage = The extra thickness of the mask.  Default: `0.1`.
+//   excess = The extra thickness of the mask.  Default: `0.1`.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -770,13 +775,13 @@ module rounding_cylinder_mask(r=1.0, rounding=0.25)
 //   }
 // Example:
 //   rounding_hole_mask(r=40, rounding=20, $fa=2, $fs=2);
-module rounding_hole_mask(r=undef, d=undef, rounding=0.25, overage=0.1, anchor=CENTER, spin=0, orient=UP)
+module rounding_hole_mask(r=undef, d=undef, rounding=0.25, excess=0.1, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
     attachable(anchor,spin,orient, r=r+rounding, l=2*rounding) {
         rotate_extrude(convexity=4) {
             difference() {
-                right(r-overage) fwd(rounding) square(rounding+overage, center=false);
+                right(r-excess) fwd(rounding) square(rounding+excess, center=false);
                 right(r+rounding) fwd(rounding) circle(r=rounding);
             }
         }
