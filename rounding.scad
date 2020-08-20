@@ -1555,8 +1555,8 @@ function rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_
      k_sides_vec = is_num(k_sides) ? repeat(k_sides, N) : k_sides,
      kbad = [for(i=[0:N-1]) if (k_sides_vec[i]<0 || k_sides_vec[i]>1) i],
      joint_sides_vec = jssingleok ? repeat(joint_sides,N) : joint_sides,
-     top_collinear = [for(i=[0:N-1]) if (points_are_collinear(select(top,i-1,i+1))) i],
-     bot_collinear = [for(i=[0:N-1]) if (points_are_collinear(select(bottom,i-1,i+1))) i]
+     top_collinear = [for(i=[0:N-1]) if (collinear(select(top,i-1,i+1))) i],
+     bot_collinear = [for(i=[0:N-1]) if (collinear(select(bottom,i-1,i+1))) i]
    )
    assert(non_coplanar==[], str("Side faces are non-coplanar at edges: ",non_coplanar))
    assert(top_collinear==[], str("Top has collinear or duplicated points at indices: ",top_collinear))
@@ -1622,14 +1622,14 @@ function rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_
                vline = concat(select(subindex(top_patch[i],j),2,4),
                               select(subindex(bot_patch[i],j),2,4))
              )
-         if (!points_are_collinear(vline)) [i,j]],
+         if (!collinear(vline)) [i,j]],
      //verify horiz edges
      verify_horiz=[for(i=[0:N-1], j=[0:4])
          let(
              hline_top = concat(select(top_patch[i][j],2,4), select(select(top_patch, i+1)[j],0,2)),
              hline_bot = concat(select(bot_patch[i][j],2,4), select(select(bot_patch, i+1)[j],0,2))
          )
-         if (!points_are_collinear(hline_top) || !points_are_collinear(hline_bot)) [i,j]]
+         if (!collinear(hline_top) || !collinear(hline_bot)) [i,j]]
     )
     assert(debug || top_intersections==[],
           "Roundovers interfere with each other on top face: either input is self intersecting or top joint length is too large")
