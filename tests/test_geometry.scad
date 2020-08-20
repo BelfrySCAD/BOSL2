@@ -98,6 +98,8 @@ function standardize(v) =
     v==[]? [] :
     sign([for(vi=v) if( ! approx(vi,0)) vi,0 ][0])*v;
 
+module assert_std(vc,ve) { assert(standardize(vc)==standardize(ve)); }
+
 module test_points_on_plane() {
     pts     = [for(i=[0:40]) rands(-1,1,3) ];
     dir     = rands(-10,10,3);
@@ -487,48 +489,47 @@ module test_triangle_area() {
 
 
 module test_plane3pt() {
-    assert(plane3pt([0,0,20], [0,10,10], [0,0,0]) == [1,0,0,0]);
-    assert(plane3pt([2,0,20], [2,10,10], [2,0,0]) == [1,0,0,2]);
-    assert(plane3pt([0,0,0], [10,0,10], [0,0,20]) == [0,1,0,0]);
-    assert(plane3pt([0,2,0], [10,2,10], [0,2,20]) == [0,1,0,2]);
-    assert(plane3pt([0,0,0], [10,10,0], [20,0,0]) == [0,0,1,0]);
-    assert(plane3pt([0,0,2], [10,10,2], [20,0,2]) == [0,0,1,2]);
+    assert_std(plane3pt([0,0,20], [0,10,10], [0,0,0]), [1,0,0,0]);
+    assert_std(plane3pt([2,0,20], [2,10,10], [2,0,0]), [1,0,0,2]);
+    assert_std(plane3pt([0,0,0], [10,0,10], [0,0,20]), [0,1,0,0]);
+    assert_std(plane3pt([0,2,0], [10,2,10], [0,2,20]), [0,1,0,2]);
+    assert_std(plane3pt([0,0,0], [10,10,0], [20,0,0]), [0,0,1,0]);
+    assert_std(plane3pt([0,0,2], [10,10,2], [20,0,2]), [0,0,1,2]);
 }
 *test_plane3pt();
 
 module test_plane3pt_indexed() {
     pts = [ [0,0,0], [10,0,0], [0,10,0], [0,0,10] ];
     s13 = sqrt(1/3);
-    assert(plane3pt_indexed(pts, 0,3,2) == [1,0,0,0]);
-    assert(plane3pt_indexed(pts, 0,2,3) == [-1,0,0,0]);
-    assert(plane3pt_indexed(pts, 0,1,3) == [0,1,0,0]);
-    assert(plane3pt_indexed(pts, 0,3,1) == [0,-1,0,0]);
-    assert(plane3pt_indexed(pts, 0,2,1) == [0,0,1,0]);
+    assert_std(plane3pt_indexed(pts, 0,3,2), [1,0,0,0]);
+    assert_std(plane3pt_indexed(pts, 0,2,3), [-1,0,0,0]);
+    assert_std(plane3pt_indexed(pts, 0,1,3), [0,1,0,0]);
+    assert_std(plane3pt_indexed(pts, 0,3,1), [0,-1,0,0]);
+    assert_std(plane3pt_indexed(pts, 0,2,1), [0,0,1,0]);
     assert_approx(plane3pt_indexed(pts, 0,1,2), [0,0,-1,0]);
     assert_approx(plane3pt_indexed(pts, 3,2,1), [s13,s13,s13,10*s13]);
     assert_approx(plane3pt_indexed(pts, 1,2,3), [-s13,-s13,-s13,-10*s13]);
 }
 *test_plane3pt_indexed();
 
-
 module test_plane_from_points() {
-    assert(plane_from_points([[0,0,20], [0,10,10], [0,0,0], [0,5,3]]) == [1,0,0,0]);
-    assert(plane_from_points([[2,0,20], [2,10,10], [2,0,0], [2,3,4]]) == [1,0,0,2]);
-    assert(plane_from_points([[0,0,0], [10,0,10], [0,0,20], [5,0,7]]) == [0,1,0,0]);
-    assert(plane_from_points([[0,2,0], [10,2,10], [0,2,20], [4,2,3]]) == [0,1,0,2]);
-    assert(plane_from_points([[0,0,0], [10,10,0], [20,0,0], [8,3,0]]) == [0,0,1,0]);
-    assert(plane_from_points([[0,0,2], [10,10,2], [20,0,2], [3,4,2]]) == [0,0,1,2]);
+    assert_std(plane_from_points([[0,0,20], [0,10,10], [0,0,0], [0,5,3]]), [1,0,0,0]);
+    assert_std(plane_from_points([[2,0,20], [2,10,10], [2,0,0], [2,3,4]]), [1,0,0,2]);
+    assert_std(plane_from_points([[0,0,0], [10,0,10], [0,0,20], [5,0,7]]), [0,1,0,0]);
+    assert_std(plane_from_points([[0,2,0], [10,2,10], [0,2,20], [4,2,3]]), [0,1,0,2]);
+    assert_std(plane_from_points([[0,0,0], [10,10,0], [20,0,0], [8,3,0]]), [0,0,1,0]);
+    assert_std(plane_from_points([[0,0,2], [10,10,2], [20,0,2], [3,4,2]]), [0,0,1,2]);
 }
 *test_plane_from_points();
 
 
 module test_plane_normal() {
-    assert(plane_normal(plane3pt([0,0,20], [0,10,10], [0,0,0])) == [1,0,0]);
-    assert(plane_normal(plane3pt([2,0,20], [2,10,10], [2,0,0])) == [1,0,0]);
-    assert(plane_normal(plane3pt([0,0,0], [10,0,10], [0,0,20])) == [0,1,0]);
-    assert(plane_normal(plane3pt([0,2,0], [10,2,10], [0,2,20])) == [0,1,0]);
-    assert(plane_normal(plane3pt([0,0,0], [10,10,0], [20,0,0])) == [0,0,1]);
-    assert(plane_normal(plane3pt([0,0,2], [10,10,2], [20,0,2])) == [0,0,1]);
+    assert_std(plane_normal(plane3pt([0,0,20], [0,10,10], [0,0,0])), [1,0,0]);
+    assert_std(plane_normal(plane3pt([2,0,20], [2,10,10], [2,0,0])), [1,0,0]);
+    assert_std(plane_normal(plane3pt([0,0,0], [10,0,10], [0,0,20])), [0,1,0]);
+    assert_std(plane_normal(plane3pt([0,2,0], [10,2,10], [0,2,20])), [0,1,0]);
+    assert_std(plane_normal(plane3pt([0,0,0], [10,10,0], [20,0,0])), [0,0,1]);
+    assert_std(plane_normal(plane3pt([0,0,2], [10,10,2], [20,0,2])), [0,0,1]);
 }
 *test_plane_normal();
 
@@ -699,16 +700,22 @@ module test_simplify_path_indexed() {
 
 module test_point_in_polygon() {
     poly = [for (a=[0:30:359]) 10*[cos(a),sin(a)]];
+    poly2 = [ [-3,-3],[2,-3],[2,1],[-1,1],[-1,-1],[1,-1],[1,2],[-3,2] ];
     assert(point_in_polygon([0,0], poly) == 1);
     assert(point_in_polygon([20,0], poly) == -1);
+    assert(point_in_polygon([20,0], poly,EPSILON,nonzero=false) == -1);
     assert(point_in_polygon([5,5], poly) == 1);
     assert(point_in_polygon([-5,5], poly) == 1);
     assert(point_in_polygon([-5,-5], poly) == 1);
     assert(point_in_polygon([5,-5], poly) == 1);
+    assert(point_in_polygon([5,-5], poly,EPSILON,nonzero=false) == 1);
     assert(point_in_polygon([-10,-10], poly) == -1);
     assert(point_in_polygon([10,0], poly) == 0);
     assert(point_in_polygon([0,10], poly) == 0);
     assert(point_in_polygon([0,-10], poly) == 0);
+    assert(point_in_polygon([0,-10], poly,EPSILON,nonzero=false) == 0);
+    assert(point_in_polygon([0,0], poly2,EPSILON,nonzero=true) == 1);
+    assert(point_in_polygon([0,0], poly2,EPSILON,nonzero=false) == -1);
 }
 *test_point_in_polygon();
 
