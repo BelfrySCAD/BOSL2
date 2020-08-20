@@ -23,25 +23,36 @@
 function point_on_segment2d(point, edge, eps=EPSILON) =
     assert( is_vector(point,2), "Invalid point." )
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
-    assert( _valid_line(edge,2,eps=eps), "Invalid segment." )
+    assert( _valid_line(edge,eps=eps), "Invalid segment." )
+    approx(point,edge[0],eps=eps) 
+    || approx(point,edge[1],eps=eps) // The point is an endpoint
+    || sign(edge[0].x-point.x)==sign(point.x-edge[1].x)  // point is in between the
+    || ( sign(edge[0].y-point.y)==sign(point.y-edge[1].y)  // edge endpoints
+        && approx(point_left_of_line2d(point, edge),0,eps=eps) );  // and on the line defined by edge
+
+function point_on_segment2d(point, edge, eps=EPSILON) =
+    assert( is_vector(point,2), "Invalid point." )
+    assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
+    assert( _valid_line(edge,eps=eps), "Invalid segment." )
     let( dp = point-edge[0],
          de = edge[1]-edge[0],
          ne = norm(de) ) 
     ( dp*de >= -eps*ne ) 
-    && ( (dp-de)*de <= eps*ne )                  // point projects on the segment
-    && _dist2line(point-edge[0],unit(de))<eps;   // point is on the line 
+    && ( (dp-de)*de <= eps*ne )              // point projects on the segment
+    && _dist(point-edge[0],unit(de))<eps;   // point is on the line 
     
     
 //Internal - distance from point `d` to the line passing through the origin with unit direction n
-//_dist2line works for any dimension
-function _dist2line(d,n) = norm(d-(d * n) * n);
+//_dist works for any dimension
+function _dist(d,n) = norm(d-(d * n) * n);
 
 // Internal non-exposed function.
 function _point_above_below_segment(point, edge) =
-    let( edge = edge - [point, point] )
-    edge[0].y <= 0 
-		?   (edge[1].y >  0 && cross(edge[0], edge[1]-edge[0]) > 0) ?  1 : 0
-    :   (edge[1].y <= 0 && cross(edge[0], edge[1]-edge[0]) < 0) ? -1 : 0 ;
+    edge[0].y <= point.y? (
+        (edge[1].y > point.y && point_left_of_line2d(point, edge) > 0)? 1 : 0
+    ) : (
+        (edge[1].y <= point.y && point_left_of_line2d(point, edge) < 0)? -1 : 0
+    );
 
 //Internal
 function _valid_line(line,dim,eps=EPSILON) = 
@@ -87,6 +98,10 @@ function collinear(a, b, c, eps=EPSILON) =
     : noncollinear_triple(points,error=false,eps=eps)==[];
  
 
+//*** valid for any dimension
+
+ 
+
 // Function: distance_from_line()
 // Usage:
 //   distance_from_line(line, pt);
@@ -100,7 +115,7 @@ function collinear(a, b, c, eps=EPSILON) =
 function distance_from_line(line, pt) =
     assert( _valid_line(line) && is_vector(pt,len(line[0])), 
             "Invalid line, invalid point or incompatible dimensions." )
-    _dist2line(pt-line[0],unit(line[1]-line[0]));
+    _dist(pt-line[0],unit(line[1]-line[0]));
     
     
 // Function: line_normal()
@@ -315,6 +330,17 @@ function segment_intersection(s1,s2,eps=EPSILON) =
 //   stroke(line, endcaps="arrow2");
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
+function line_closest_point(line,pt) =
+    assert(is_path(line)&&len(line)==2)
+    assert(same_shape(pt,line[0]))
+    assert(!approx(line[0],line[1]))
+    let(
+        seglen = norm(line[1]-line[0]),
+        segvec = (line[1]-line[0])/seglen,
+        projection = (pt-line[0]) * segvec
+    )
+    line[0] + projection*segvec;
+
 function line_closest_point(line,pt) =
     assert(_valid_line(line), "Invalid line." )
     assert( is_vector(pt,len(line[0])), "Invalid point or incompatible dimensions." )
@@ -748,10 +774,14 @@ function adj_opp_to_ang(adj,opp) =
 //   triangle_area([0,0], [5,10], [10,0]);  // Returns -50
 //   triangle_area([10,0], [5,10], [0,0]);  // Returns 50
 function triangle_area(a,b,c) = 
-    assert( is_path([a,b,c]), "Invalid points or incompatible dimensions." )    
-    len(a)==3 
-		? 0.5*norm(cross(c-a,c-b)) 
-    : 0.5*cross(c-a,c-b);
+    assert( is_path([a,b,c]),
+            "Invalid points or incompatible dimensions." )    
+    len(a)==3 ? 0.5*norm(cross(c-a,c-b)) 
+    : (
+        a.x * (b.y - c.y) +
+        b.x * (c.y - a.y) +
+        c.x * (a.y - b.y)
+    ) / 2;
 
 
 
@@ -821,7 +851,7 @@ function plane_from_normal(normal, pt=[0,0,0]) =
 
 // Function: plane_from_points()
 // Usage:
-//   plane_from_points(points, <fast>, <eps>);
+//   plane_from_points(points, [fast], [eps]);
 // Description:
 //   Given a list of 3 or more coplanar 3D points, returns the coefficients of the cartesian equation of a plane,
 //   that is [A,B,C,D] where Ax+By+Cz=D is the equation of the plane.
@@ -846,6 +876,7 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
     )
     indices==[] ? undef :
     let(
+        indices = sort(indices), // why sorting?
         p1 = points[indices[0]],
         p2 = points[indices[1]],
         p3 = points[indices[2]],
@@ -882,6 +913,11 @@ function plane_from_polygon(poly, fast=false, eps=EPSILON) =
     ) 
     fast? plane: coplanar(poly,eps=eps)? plane: [];
 
+//***
+// I don't see why this function uses a criterium different from plane_from_points.
+// In practical terms, what is the difference of finding a plane from points and from polygon?
+// The docs don't clarify.
+// These functions should be consistent if they are both necessary. The docs might reflect their distinction.
 
 // Function: plane_normal()
 // Usage:
@@ -933,8 +969,8 @@ function plane_transform(plane) =
 // Usage:
 //   projection_on_plane(points);
 // Description:
-//   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 2d or 3d points, return the 3D orthogonal 
-//   projection of the points on the plane.
+//   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 2d or 3d points, return the projection
+//   of the points on the plane.
 // Arguments:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 //   points = List of points to project
@@ -1007,12 +1043,28 @@ function closest_point_on_plane(plane, point) =
 // Returns [LINE, undef] if the line is on the plane.
 // Returns undef if line is parallel to, but not on the given plane.
 function _general_plane_line_intersection(plane, line, eps=EPSILON) =
+    let(
+        p0 = line[0],
+        p1 = line[1],
+        n = plane_normal(plane),
+        u = p1 - p0,
+        d = n * u
+    ) abs(d)<eps? (
+        points_on_plane(p0,plane,eps)? [line,undef] :  // Line on plane
+        undef  // Line parallel to plane
+    ) : let(
+        v0 = closest_point_on_plane(plane, [0,0,0]),
+        w = p0 - v0,
+        s1 = (-n * w) / d,
+        pt = s1 * u + p0
+    ) [pt, s1];
+
+function _general_plane_line_intersection(plane, line, eps=EPSILON) =
     let( a = plane*[each line[0],-1],
          b = plane*[each(line[1]-line[0]),-1] )
     approx(b,0,eps) 
     ? points_on_plane(line[0],plane,eps)? [line,undef]: undef
     : [ line[0]+a/b*(line[1]-line[0]), a/b ];
-
 
 // Function: plane_line_angle()
 // Usage: plane_line_angle(plane,line)
@@ -1085,7 +1137,7 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
     )
     indices==[] ? undef :
     let(
-        indices = sort(indices),
+        indices = sort(indices), // why sorting?
         p1 = poly[indices[0]],
         p2 = poly[indices[1]],
         p3 = poly[indices[2]],
@@ -1149,7 +1201,7 @@ function plane_intersection(plane1,plane2,plane3) =
 
 // Function: coplanar()
 // Usage:
-//   coplanar(points,<eps>);
+//   coplanar(points,eps);
 // Description:
 //   Returns true if the given 3D points are non-collinear and are on a plane.
 // Arguments:
@@ -1168,7 +1220,7 @@ function coplanar(points, eps=EPSILON) =
     
 // Function: points_on_plane()
 // Usage:
-//   points_on_plane(points, plane, <eps>);
+//   points_on_plane(points, plane, eps);
 // Description:
 //   Returns true if the given 3D points are on the given plane.
 // Arguments:
@@ -1204,7 +1256,7 @@ function in_front_of_plane(plane, point) =
 
 // Function: find_circle_2tangents()
 // Usage:
-//   find_circle_2tangents(pt1, pt2, pt3, r|d, <tangents>);
+//   find_circle_2tangents(pt1, pt2, pt3, r|d, [tangents]);
 // Description:
 //   Given a pair of rays with a common origin, and a known circle radius/diameter, finds
 //   the centerpoint for the circle of that size that touches both rays tangentally.
@@ -1273,8 +1325,7 @@ function find_circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
 
 // Function: find_circle_3points()
 // Usage:
-//   find_circle_3points(pt1, pt2, pt3);
-//   find_circle_3points([pt1, pt2, pt3]);
+//   find_circle_3points(pt1, [pt2, pt3]);
 // Description:
 //   Returns the [CENTERPOINT, RADIUS, NORMAL] of the circle that passes through three non-collinear
 //   points where NORMAL is the normal vector of the plane that the circle is on (UP or DOWN if the points are 2D).
@@ -1302,6 +1353,40 @@ function find_circle_3points(pt1, pt2, pt3) =
                 "Invalid point(s)." )
         collinear(pt1,pt2,pt3)? [undef,undef,undef] :
         let(
+            v1 = pt1-pt2,
+            v2 = pt3-pt2,
+            n = vector_axis(v1,v2),
+            n2 = n.z<0? -n : n
+        ) len(pt1)+len(pt2)+len(pt3)>6? (
+            let(
+                a = project_plane(pt1, pt1, pt2, pt3),
+                b = project_plane(pt2, pt1, pt2, pt3),
+                c = project_plane(pt3, pt1, pt2, pt3),
+                res = find_circle_3points(a, b, c)
+            ) res[0]==undef? [undef,undef,undef] : let(
+                cp = lift_plane(res[0], pt1, pt2, pt3),
+                r = norm(pt2-cp)
+            ) [cp, r, n2]
+        ) : let(
+            mp1 = pt2 + v1/2,
+            mp2 = pt2 + v2/2,
+            mpv1 = rot(90, v=n, p=v1),
+            mpv2 = rot(90, v=n, p=v2),
+            l1 = [mp1, mp1+mpv1],
+            l2 = [mp2, mp2+mpv2],
+            isect = line_intersection(l1,l2)
+        ) is_undef(isect)? [undef,undef,undef] : let(
+            r = norm(pt2-isect)
+        ) [isect, r, n2];
+        
+function find_circle_3points(pt1, pt2, pt3) =
+    (is_undef(pt2) && is_undef(pt3) && is_list(pt1))
+    ? find_circle_3points(pt1[0], pt1[1], pt1[2]) 
+    :   assert( is_vector(pt1) && is_vector(pt2) && is_vector(pt3) 
+                && max(len(pt1),len(pt2),len(pt3))<=3 && min(len(pt1),len(pt2),len(pt3))>=2,
+                "Invalid point(s)." )
+        collinear(pt1,pt2,pt3)? [undef,undef,undef] :
+        let(
             v  = [ point3d(pt1), point3d(pt2), point3d(pt3) ], // triangle vertices
             ed = [for(i=[0:2]) v[(i+1)%3]-v[i] ],    // triangle edge vectors
             pm = [for(i=[0:2]) v[(i+1)%3]+v[i] ]/2,  // edge mean points
@@ -1319,6 +1404,9 @@ function find_circle_3points(pt1, pt2, pt3) =
             )
         [ cp, r, n ];
      
+     
+
+
 
 // Function: circle_point_tangents()
 // Usage:
@@ -1352,6 +1440,7 @@ function circle_point_tangents(r, d, cp, pt) =
         relang = acos(r/dist),
         angs = [baseang + relang, baseang - relang]
     ) [for (ang=angs) [ang, cp + r*[cos(ang),sin(ang)]]];
+
 
 
 // Function: circle_circle_tangents()
@@ -1452,13 +1541,12 @@ function noncollinear_triple(points,error=true,eps=EPSILON) =
         []
     :   let(
             n = (pb-pa)/nrm,
-            distlist = [for(i=[0:len(points)-1]) _dist2line(points[i]-pa, n)]   
+            distlist = [for(i=[0:len(points)-1]) _dist(points[i]-pa, n)]   
            )
         max(distlist)<eps
         ?  assert(!error, "Cannot find three noncollinear points in pointlist.")
            []
         :  [0,b,max_index(distlist)];    
-
 
 // Function: pointlist_bounds()
 // Usage:
@@ -1519,6 +1607,19 @@ function furthest_point(pt, points) =
 // Arguments:
 //   poly = polygon to compute the area of.
 //   signed = if true, a signed area is returned (default: false)
+function polygon_area(poly) =
+    assert(is_path(poly), "Invalid polygon." )
+    len(poly)<3? 0 :
+    len(poly[0])==2? 0.5*sum([for(i=[0:1:len(poly)-1]) det2(select(poly,i,i+1))]) :
+    let(
+        plane = plane_from_points(poly)
+    ) plane==undef? undef :
+    let(
+        n = unit(plane_normal(plane)),
+        total = sum([for (i=[0:1:len(poly)-1]) cross(poly[i], select(poly,i+1))]),
+        res = abs(total * n) / 2
+    ) res;
+    
 function polygon_area(poly, signed=false) =
     assert(is_path(poly), "Invalid polygon." )
     len(poly)<3 ? 0 :
@@ -1543,6 +1644,15 @@ function polygon_area(poly, signed=false) =
 // Example:
 //   spiral = [for (i=[0:36]) let(a=-i*10) (10+i)*[cos(a),sin(a)]];
 //   is_convex_polygon(spiral);  // Returns: false
+function is_convex_polygon(poly) =
+    assert(is_path(poly,dim=2), "The input should be a 2D polygon." )
+    let(
+        l = len(poly),
+        c = [for (i=idx(poly)) cross(poly[(i+1)%l]-poly[i],poly[(i+2)%l]-poly[(i+1)%l])]
+    )
+    len([for (x=c) if(x>0) 1])==0 ||
+    len([for (x=c) if(x<0) 1])==0;
+
 function is_convex_polygon(poly) =
     assert(is_path(poly,dim=2), "The input should be a 2D polygon." )
     let( l = len(poly) )
@@ -1576,15 +1686,15 @@ function polygon_shift(poly, i) =
 // Usage:
 //   polygon_shift_to_closest_point(path, pt);
 // Description:
-//   Given a polygon `poly`, rotates the point ordering so that the first point in the path is the one closest to the given point `pt`.
-function polygon_shift_to_closest_point(poly, pt) =
+//   Given a polygon `path`, rotates the point ordering so that the first point in the path is the one closest to the given point `pt`.
+function polygon_shift_to_closest_point(path, pt) =
     assert(is_vector(pt), "Invalid point." )
-    assert(is_path(poly,dim=len(pt)), "Invalid polygon or incompatible dimension with the point." )
+    assert(is_path(path,dim=len(pt)), "Invalid polygon or incompatible dimension with the point." )
     let(
-        poly = cleanup_path(poly),
-        dists = [for (p=poly) norm(p-pt)],
+        path = cleanup_path(path),
+        dists = [for (p=path) norm(p-pt)],
         closest = min_index(dists)
-    ) select(poly,closest,closest+len(poly)-1);
+    ) select(path,closest,closest+len(path)-1);
 
 
 // Function: reindex_polygon()
@@ -1624,6 +1734,33 @@ function reindex_polygon(reference, poly, return_error=false) =
         dim = len(reference[0]),
         N = len(reference),
         fixpoly = dim != 2? poly :
+            polygon_is_clockwise(reference)? clockwise_polygon(poly) :
+            ccw_polygon(poly),
+        dist = [
+            // Matrix of all pairwise distances
+            for (p1=reference) [
+                for (p2=fixpoly) norm(p1-p2)
+            ]
+        ],
+        // Compute the sum of all distance pairs for a each shift
+        sums = [
+            for(shift=[0:1:N-1]) sum([
+                for(i=[0:1:N-1]) dist[i][(i+shift)%N]
+            ])
+        ],
+        optimal_poly = polygon_shift(fixpoly,min_index(sums))
+    )
+    return_error? [optimal_poly, min(sums)] :
+    optimal_poly;
+
+function reindex_polygon(reference, poly, return_error=false) = 
+    assert(is_path(reference) && is_path(poly,dim=len(reference[0])),
+           "Invalid polygon(s) or incompatible dimensions. " )
+    assert(len(reference)==len(poly), "The polygons must have the same length.")
+    let(
+        dim = len(reference[0]),
+        N = len(reference),
+        fixpoly = dim != 2? poly :
                   polygon_is_clockwise(reference)
                   ? clockwise_polygon(poly)
                   : ccw_polygon(poly),
@@ -1637,9 +1774,10 @@ function reindex_polygon(reference, poly, return_error=false) =
     optimal_poly;
     
 
+
 // Function: align_polygon()
 // Usage:
-//   newpoly = align_polygon(reference, poly, angles, <cp>);
+//   newpoly = align_polygon(reference, poly, angles, [cp]);
 // Description:
 //   Tries the list or range of angles to find a rotation of the specified 2D polygon that best aligns
 //   with the reference 2D polygon.  For each angle, the polygon is reindexed, which is a costly operation
@@ -1682,6 +1820,26 @@ function align_polygon(reference, poly, angles, cp) =
 //   Given a simple 3D planar polygon, returns the 3D coordinates of the polygon's centroid.
 //   If the polygon is self-intersecting, the results are undefined.
 function centroid(poly) =
+    assert( is_path(poly), "The input must be a 2D or 3D polygon." )
+    len(poly[0])==2
+    ? sum([
+            for(i=[0:len(poly)-1])
+            let(segment=select(poly,i,i+1))
+            det2(segment)*sum(segment)
+          ]) / 6 / polygon_area(poly)
+    : let( plane = plane_from_points(poly, fast=true) )
+      assert( !is_undef(plane), "The polygon must be planar." )
+      let(
+        n = plane_normal(plane),
+        p1 = vector_angle(n,UP)>15? vector_axis(n,UP) : vector_axis(n,RIGHT),
+        p2 = vector_axis(n,p1),
+        cp = mean(poly),
+        proj = project_plane(poly,cp,cp+p1,cp+p2),
+        cxy = centroid(proj)
+         ) 
+      lift_plane(cxy,cp,cp+p1,cp+p2);
+
+function centroid(poly) =
     assert( is_path(poly,dim=[2,3]), "The input must be a 2D or 3D polygon." )
     len(poly[0])==2
     ? sum([
@@ -1708,11 +1866,10 @@ function centroid(poly) =
 
 // Function: point_in_polygon()
 // Usage:
-//   point_in_polygon(point, poly, <eps>)
+//   point_in_polygon(point, path, [eps])
 // Description:
 //   This function tests whether the given 2D point is inside, outside or on the boundary of
-//   the specified 2D polygon using either the Nonzero Winding rule or the Even-Odd rule.
-//   See https://en.wikipedia.org/wiki/Nonzero-rule and https://en.wikipedia.org/wiki/Even–odd_rule.
+//   the specified 2D polygon using the Winding Number method.
 //   The polygon is given as a list of 2D points, not including the repeated end point.
 //   Returns -1 if the point is outside the polyon.
 //   Returns 0 if the point is on the boundary.
@@ -1722,81 +1879,75 @@ function centroid(poly) =
 //   Rounding error may give mixed results for points on or near the boundary.
 // Arguments:
 //   point = The 2D point to check position of.
-//   poly = The list of 2D path points forming the perimeter of the polygon.
-//   nonzero = The rule to use: true for "Nonzero" rule and false for "Even-Odd" (Default: true )
+//   path = The list of 2D path points forming the perimeter of the polygon.
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function point_in_polygon(point, poly, eps=EPSILON, nonzero=true) =
-    // Original algorithms from http://geomalgorithms.com/a03-_inclusion.html
-    assert( is_vector(point,2) && is_path(poly,dim=2) && len(poly)>2,
+function point_in_polygon(point, path, eps=EPSILON) =
+    // Original algorithm from http://geomalgorithms.com/a03-_inclusion.html
+    assert( is_vector(point,2) && is_path(path,dim=2) && len(path)>2,
             "The point and polygon should be in 2D. The polygon should have more that 2 points." )
     assert( is_finite(eps) && eps>=0, "Invalid tolerance." )
     // Does the point lie on any edges?  If so return 0.
     let(
-        on_brd = [for(i=[0:1:len(poly)-1]) 
-                    let( seg = select(poly,i,i+1) ) 
-                    if( !approx(seg[0],seg[1],eps=EPSILON) ) 
+        on_brd = [for(i=[0:1:len(path)-1]) 
+                    let( seg = select(path,i,i+1) ) 
+                    if( !approx(seg[0],seg[1],eps=eps) ) 
                         point_on_segment2d(point, seg, eps=eps)? 1:0 ]
         )
-    sum(on_brd) > 0
-    ? 0 
-    :   nonzero
-        ?    // Compute winding number and return 1 for interior, -1 for exterior
-            let(
-                windchk = [for(i=[0:1:len(poly)-1]) 
-                            let(seg=select(poly,i,i+1)) 
-                            if(!approx(seg[0],seg[1],eps=eps)) 
-                                _point_above_below_segment(point, seg)
-                          ]
-                )
-            sum(windchk) != 0 ? 1 : -1
-        :   // or compute the crossings with the ray [point, point+[1,0]]
-            let( 
-              n  = len(poly),
-              cross = 
-                [for(i=[0:n-1])
-                    let( 
-                      p0 = poly[i]-point, 
-                      p1 = poly[(i+1)%n]-point
-                      )
-                    if( ( (p1.y>eps && p0.y<=0) || (p1.y<=0 && p0.y>eps) )
-                        &&  0 < p0.x - p0.y *(p1.x - p0.x)/(p1.y - p0.y) )
-                    1
-                ]
-            )
-            2*(len(cross)%2)-1;;
+    sum(on_brd) > 0? 0 :
+    // Otherwise compute winding number and return 1 for interior, -1 for exterior
+    let(
+        windchk = [for(i=[0:1:len(path)-1]) 
+                    let(seg=select(path,i,i+1)) 
+                    if(!approx(seg[0],seg[1],eps=eps)) 
+                        _point_above_below_segment(point, seg)
+                  ]
+        )
+    sum(windchk) != 0 ? 1 : -1;
 
+//**
+// this function should be optimized avoiding the call of other functions
 
 // Function: polygon_is_clockwise()
 // Usage:
-//   polygon_is_clockwise(poly);
+//   polygon_is_clockwise(path);
 // Description:
 //   Return true if the given 2D simple polygon is in clockwise order, false otherwise.
 //   Results for complex (self-intersecting) polygon are indeterminate.
 // Arguments:
-//   poly = The list of 2D path points for the perimeter of the polygon.
-function polygon_is_clockwise(poly) =
-    assert(is_path(poly,dim=2), "Input should be a 2d path")
-    polygon_area(poly, signed=true)<0;
+//   path = The list of 2D path points for the perimeter of the polygon.
+function polygon_is_clockwise(path) =
+    assert(is_path(path,dim=2), "Input should be a 2d polygon")
+    let(
+        minx = min(subindex(path,0)),
+        lowind = search(minx, path, 0, 0),
+        lowpts = select(path, lowind),
+        miny = min(subindex(lowpts, 1)),
+        extreme_sub = search(miny, lowpts, 1, 1)[0],
+        extreme = select(lowind,extreme_sub)
+    ) det2([select(path,extreme+1)-path[extreme], select(path, extreme-1)-path[extreme]])<0;
 
+function polygon_is_clockwise(path) =
+    assert(is_path(path,dim=2), "Input should be a 2d path")
+    polygon_area(path, signed=true)<0;
 
 // Function: clockwise_polygon()
 // Usage:
-//   clockwise_polygon(poly);
+//   clockwise_polygon(path);
 // Description:
 //   Given a 2D polygon path, returns the clockwise winding version of that path.
-function clockwise_polygon(poly) =
-    assert(is_path(poly,dim=2), "Input should be a 2d polygon")
-    polygon_area(poly, signed=true)<0 ? poly : reverse_polygon(poly);
+function clockwise_polygon(path) =
+    assert(is_path(path,dim=2), "Input should be a 2d polygon")
+    polygon_area(path, signed=true)<0 ? path : reverse_polygon(path);
 
 
 // Function: ccw_polygon()
 // Usage:
-//   ccw_polygon(poly);
+//   ccw_polygon(path);
 // Description:
-//   Given a 2D polygon poly, returns the counter-clockwise winding version of that poly.
-function ccw_polygon(poly) =
-    assert(is_path(poly,dim=2), "Input should be a 2d polygon")
-    polygon_area(poly, signed=true)<0 ? reverse_polygon(poly) : poly;
+//   Given a 2D polygon path, returns the counter-clockwise winding version of that path.
+function ccw_polygon(path) =
+    assert(is_path(path,dim=2), "Input should be a 2d polygon")
+    polygon_area(path, signed=true)<0 ? reverse_polygon(path) : path;
 
 
 // Function: reverse_polygon()
@@ -1818,7 +1969,7 @@ function reverse_polygon(poly) =
 function polygon_normal(poly) =
     assert(is_path(poly,dim=3), "Invalid 3D polygon." )
     let(
-        poly = cleanup_path(poly),
+        poly = path3d(cleanup_path(poly)),
         p0 = poly[0],
         n = sum([
             for (i=[1:1:len(poly)-2])
@@ -1934,6 +2085,17 @@ function split_polygons_at_each_x(polys, xs, _i=0) =
         ], xs, _i=_i+1
     );
     
+//***
+// all the functions split_polygons_at_ may generate non simple polygons even from simple polygon inputs:
+//     split_polygons_at_each_y([[[-1,1,0],[0,0,0],[1,1,0],[1,-1,0],[-1,-1,0]]],[0])
+// produces:
+//   [  [[0, 0, 0], [1, 0, 0], [1, -1, 0], [-1, -1, 0], [-1, 0, 0]]
+//      [[-1, 1, 0], [0, 0, 0], [1, 1, 0], [1, 0, 0], [-1, 0, 0]] ]
+// and the second polygon is self-intersecting
+// besides, it fails in some simple cases as triangles:
+//   split_polygons_at_each_y([ [-1,-1,0],[1,-1,0],[0,1,0]],[0])==[]
+// this last failure may be fatal for vnf_bend
+
 
 // Function: split_polygons_at_each_y()
 // Usage:
@@ -1944,9 +2106,9 @@ function split_polygons_at_each_x(polys, xs, _i=0) =
 //   polys = A list of 3D polygons to split.
 //   ys = A list of scalar Y values to split at.
 function split_polygons_at_each_y(polys, ys, _i=0) =
-//    assert( is_consistent(polys) && is_path(polys[0],dim=3) , // not all polygons should have the same length!!!
-  //          "The input list should contains only 3D polygons." )
-    assert( is_finite(ys) || is_vector(ys), "The split value list should contain only numbers." )  //***
+    assert( is_consistent(polys) && is_path(poly[0],dim=3) ,
+            "The input list should contains only 3D polygons." )
+    assert( is_finite(ys), "The split value list should contain only numbers." )  
     _i>=len(ys)? polys :
     split_polygons_at_each_y(
         [
@@ -1975,6 +2137,7 @@ function split_polygons_at_each_z(polys, zs, _i=0) =
             each _split_polygon_at_z(poly, zs[_i])
         ], zs, _i=_i+1
     );
+
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
