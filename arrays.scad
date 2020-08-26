@@ -708,108 +708,36 @@ function _sort_vectors4(arr) =
                     y ]
     ) concat( _sort_vectors4(lesser), equal, _sort_vectors4(greater) );
 
-// sort a list of vectors
-function _sort_vectors(arr, _i=0) =
-    len(arr)<=1 || _i>=len(arr[0]) ? arr :
-    let(
-        pivot   = arr[floor(len(arr)/2)][_i],
-        lesser  = [ for (entry=arr) if (entry[_i]  < pivot ) entry ],
-        equal   = [ for (entry=arr) if (entry[_i] == pivot ) entry ],
-        greater = [ for (entry=arr) if (entry[_i]  > pivot ) entry ]
-      )
-    concat(
-        _sort_vectors(lesser,  _i   ), 
-        _sort_vectors(equal,   _i+1 ), 
-        _sort_vectors(greater, _i ) );
-
-// given pairs of an index and a vector, return the list of indices of the list sorted by the vectors
-function _sort_vectors_indexed(arr, _i=0) =
-    arr==[] ? [] : 
-    len(arr)==1 || _i>=len(arr[0][1]) ? [for(ai=arr) ai[0]] :
-    let(
-        pivot   = arr[floor(len(arr)/2)][1][_i],
-        lesser  = [ for (entry=arr) if (entry[1][_i]  < pivot ) entry ],
-        equal   = [ for (entry=arr) if (entry[1][_i] == pivot ) entry ],
-        greater = [ for (entry=arr) if (entry[1][_i]  > pivot ) entry ]
-      )
-    concat(
-        _sort_vectors_indexed(lesser,  _i   ), 
-        _sort_vectors_indexed(equal,   _i+1 ), 
-        _sort_vectors_indexed(greater, _i ) );
-
 
 // when idx==undef, returns the sorted array
 // otherwise, returns the indices of the sorted array
 function _sort_general(arr, idx=undef) =
-    len(arr)<=1 ? arr :
+    (len(arr)<=1) ? arr :
     is_undef(idx) 
-		?   _simple_sort(arr) 
-//				: _lexical_sort(arr)
+    ? _sort_scalar(arr)
     : let( arrind=[for(k=[0:len(arr)-1], ark=[arr[k]]) [ k, [for (i=idx) ark[i]] ] ] )
-      _indexed_sort(arrind );
-
-// sort simple lists with compare_vals()
-function _simple_sort(arr) =
-    arr==[] || len(arr)==1 ? arr :
-    let(
-        pivot   = arr[floor(len(arr)/2)],
-        lesser  = [ for (entry=arr) if (compare_vals(entry, pivot) <0 ) entry ],
-        equal   = [ for (entry=arr) if (compare_vals(entry, pivot)==0 ) entry ],
-        greater = [ for (entry=arr) if (compare_vals(entry, pivot) >0 ) entry ]
-      )
-    concat(
-        _simple_sort(lesser), 
-        equal, 
-        _simple_sort(greater) 
-				);
-
-
+      _indexed_sort(arrind);
+      
 // given a list of pairs, return the first element of each pair of the list sorted by the second element of the pair
-// it uses compare_vals()
-function _lexical_sort(arr, _i=0) =
-    arr==[] || len(arr)==1 || _i>=len(arr[0]) ? arr :
+// the sorting is done using compare_vals()
+function _indexed_sort(arrind) = 
+    arrind==[] ? [] : len(arrind)==1? [arrind[0][0]] :
+    let( pivot = arrind[floor(len(arrind)/2)][1] )
     let(
-        pivot   = arr[floor(len(arr)/2)][_i],
-        lesser  = [ for (entry=arr) if (compare_vals(entry[_i], pivot) <0 ) entry ],
-        equal   = [ for (entry=arr) if (compare_vals(entry[_i], pivot)==0 ) entry ],
-        greater = [ for (entry=arr) if (compare_vals(entry[_i], pivot) >0 ) entry ]
+        lesser  = [ for (entry=arrind) if (compare_vals(entry[1], pivot) <0 ) entry ],
+        equal   = [ for (entry=arrind) if (compare_vals(entry[1], pivot)==0 ) entry[0] ],
+        greater = [ for (entry=arrind) if (compare_vals(entry[1], pivot) >0 ) entry ]
       )
-    concat(
-        _lexical_sort(lesser,  _i   ), 
-        _lexical_sort(equal,   _i+1 ), 
-        _lexical_sort(greater, _i   ) 
-				);
-
-
-// given a list of pairs, return the first element of each pair of the list sorted by the second element of the pair
-// it uses compare_vals()
-function _indexed_sort(arr, _i=0) =
-    arr==[] ? [] : 
-    len(arr)==1? [arr[0][0]] :
-    _i>=len(arr[0][1]) ? [for(ai=arr) ai[0]] :
-    let(
-        pivot   = arr[floor(len(arr)/2)][1][_i],
-        lesser  = [ for (entry=arr) if (compare_vals(entry[1][_i], pivot) <0 ) entry ],
-        equal   = [ for (entry=arr) if (compare_vals(entry[1][_i], pivot)==0 ) entry ],
-        greater = [ for (entry=arr) if (compare_vals(entry[1][_i], pivot) >0 ) entry ]
-      )
-    concat(
-        _indexed_sort(lesser,  _i   ), 
-        _indexed_sort(equal,   _i+1 ), 
-        _indexed_sort(greater, _i ) );
+    concat(_indexed_sort(lesser), equal, _indexed_sort(greater));
 
 
 // returns true for valid index specifications idx in the interval [imin, imax) 
 // note that idx can't have any value greater or EQUAL to imax
-// this allows imax=INF as a bound to numerical lists
 function _valid_idx(idx,imin,imax) =
     is_undef(idx) 
     || ( is_finite(idx) && idx>=imin && idx< imax )
     || ( is_list(idx) && min(idx)>=imin && max(idx)< imax )
-    || ( ! is_list(idx)                             // it implicitly is a range
-         && (idx[1]>0 && idx[0]>=imin && idx[2]< imax) 
-             || 
-            (idx[0]<imax && idx[2]>=imin) );
+    || ( valid_range(idx) && idx[0]>=imin && idx[2]< imax );
     
 
 // Function: sort()
@@ -830,7 +758,7 @@ function _valid_idx(idx,imin,imax) =
 function sort(list, idx=undef) =
     !is_list(list) || len(list)<=1 ? list :
     is_def(idx) 
-    ?   assert( _valid_idx(idx,0,len(list[0])) , "Invalid indices or out of range.")
+    ?   assert( _valid_idx(idx,0,len(list)) , "Invalid indices.")
         let( sarr = _sort_general(list,idx) )
         [for(i=[0:len(sarr)-1]) list[sarr[i]] ] 
     :   let(size = array_dim(list))
@@ -844,31 +772,6 @@ function sort(list, idx=undef) =
        /*size[1]==4*/  : _sort_vectors4(list)
           ) 
         : _sort_general(list);
-
-function sort(list, idx=undef) =
-    !is_list(list) || len(list)<=1 ? list :
-    is_vector(list) 
-		?		assert( _valid_idx(idx,0,len(list[0])) , str("Invalid indices or out of range. ",list))
-				is_def(idx)
-		    ?   sort_vector_indexed([for(i=[0:len(list)-1]) [i, [list(i)] ] ])
-        :   sort_scalar(list)				
-		:   is_matrix(list)
-		    ?   list==[] || list[0]==[] ? list :
-				    assert( _valid_idx(idx,0,len(list[0])) , "Invalid indices or out of range.")
-						is_def(idx)
-						?   sort_vector_indexed([for(i=[0:len(list)-1], li=[list[i]]) [i, [for(ind=idx) li(ind)] ] ])
-						:   sort_vector(list)
-				:   list==[] || list[0]==[] ? list :
-				    let( llen = [for(li=list) !is_list(li) || is_string(li) ? 0: len(li)],
-                 m    = min(llen),
-                 M    = max(llen) 
-								 )
-						M==0 ? _simple_sort(list) :
-				    assert( m>0 && _valid_idx(idx,m-1,M) , "Invalid indices or out of range.")
-						is_def(idx) 
-						?  _sort_general(list,idx)
-						:  let( ils = _sort_general(list, [m:M]) )
-						   [for(i=[0:len(list)-1]) list[ils[i]] ];
 
 
 // Function: sortidx()
