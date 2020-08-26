@@ -1,6 +1,80 @@
 include <../std.scad>
 include <../strings.scad>
 
+function plane_fit(points) =
+    assert( is_matrix(points,undef,3) , "Improper point list." )
+		len(points)< 2 ? [] :
+		len(points)==3 ? plane3pt(points[0],points[1],points[2]) :
+		let( 
+				A = [for(pi=points) concat(pi,-1) ],
+				qr = qr_factor(A),
+				R  = select(qr[1],0,3),
+x=[for(ri=R) echo(R=ri)0],
+//y=[for(qi=qr[0]) echo(Q=qi)0],
+				s = back_substitute
+              ( R, 
+                sum([for(qi=qr[0])[for(j=[0:3]) qi[j] ] ])
+              )
+//,       s0 = echo(ls=linear_solve(A,[for(p=points) 0]))
+,w=s==[]? echo("s == []")0:echo(s=s)0
+				)
+		s==[]
+		?   // points are collinear 
+		    []
+		:		// plane through the origin?
+        approx(norm([s.x, s.y, s.z]), 0)
+				?   let( 
+				      k = max_index([for(i=[0:2]) abs(s[i]) ]),
+							A = [[1,0,0], for(pi=points) pi ],
+							b = [1, for(i=[1:len(points)]) 0],
+							s = linear_solve(A,b)
+, y=echo(s2=s)
+							)
+						s==[]? []:
+						concat(s, 0)/norm(s)
+				:		s/norm([s.x, s.y, s.z]) ;
+
+function plane_fit(points) =
+    assert( is_matrix(points,undef,3) , "Improper point list." )
+		len(points)< 2 ? [] :
+		len(points)==3 ? plane3pt(points[0],points[1],points[2]) :
+		let( 
+				A = [for(pi=points) concat(pi,-1) ],
+				B = [ for(pi=points) [0,1] ],
+				sB = transpose(linear_solve(A,B)),
+        s = sB==[] ? []
+            : norm(sB[1])<EPSILON 
+              ? sB[0]
+              : sB[1]
+, x = echo(s=s)
+				)
+		s==[]
+		?   // points are collinear 
+		    []
+		:		// plane through the origin?
+        approx(norm([s.x, s.y, s.z]), 0)
+				?   let( 
+				      k = max_index([for(i=[0:2]) abs(s[i]) ]),
+							A = [[1,0,0], for(pi=points) pi ],
+							b = [1, for(i=[1:len(points)]) 0],
+							s = linear_solve(A,b)
+, y=echo(s2=s)
+							)
+						s==[]? []:
+						concat(s, 0)/norm(s)
+				:		s/norm([s.x, s.y, s.z]) ;
+				
+pts0 = [ //[-1,-1,-1],
+        [1,-1,-1],[1,1,-1],[-1,1,-1],
+        [-1,-1, 1],[1,-1, 1],[-1,1, 1]
+        //,[1,1, 1]
+        ];
+N = 10;
+pts = [for(i=[0:N]) i>N/2? 10*[1,1,1]: rands(-1,1,3) ];
+pf = plane_fit(pts);
+echo(pf);
+//pm = concat(sum(pts)/len(pts), -1);
+//echo(pmfit=pm*pf);
 
 function rec_cmp(a,b,eps=1e-9) =
     typeof(a)!=typeof(b)? false :
@@ -8,7 +82,18 @@ function rec_cmp(a,b,eps=1e-9) =
     is_list(a)? len(a)==len(b) && all([for (i=idx(a)) rec_cmp(a[i],b[i],eps=eps)]) :
     a == b;
 
-function Qstandard(q) = sign([for(qi=q) if( ! approx(qi,0)) qi,0 ][0])*q;
+function standardize(v) =  
+   v==[]
+   ? [] 
+   : sign(first_nonzero(v))*v;
+
+function first_nonzero(v) =  
+   v==[] ? 0
+   : is_num(v) ? v
+   : [for(vi=v) if(!is_list(vi) && ! approx(vi,0)) vi
+                else if(is_list(vi)) first_nonzero(vi), 0 ][0];
+
+module assert_std(vc,ve) { assert_approx(standardize(vc),standardize(ve)); }
 
 module verify_f(actual,expected) {
     if (!rec_cmp(actual,expected)) {
@@ -25,7 +110,7 @@ module verify_f(actual,expected) {
 
 module test_is_quat() {
     verify_f(Q_is_quat([0]),false);
-    verify_f(Q_is_quat([0,0,0,0]),false);
+    verify_f(Q_is_quat([0,0,0,0]),true);
     verify_f(Q_is_quat([1,0,2,0]),true);
     verify_f(Q_is_quat([1,0,2,0,0]),false);
 }
@@ -104,7 +189,7 @@ test_QuatXYZ();
 
 module test_Q_From_to() {
     verify_f(Q_Mul(Q_From_to([1,2,3], [4,5,2]),Q_From_to([4,5,2], [1,2,3])), Q_Ident());
-    verify_f(Q_Matrix4(Q_From_to([1,2,3], [4,5,2])), rot(from=[1,2,3],to=[4,5,2]));
+    verify_f(Q_to_matrix4(Q_From_to([1,2,3], [4,5,2])), rot(from=[1,2,3],to=[4,5,2]));
     verify_f(Qrot(Q_From_to([1,2,3], -[1,2,3]),[1,2,3]), -[1,2,3]);
     verify_f(unit(Qrot(Q_From_to([1,2,3],  [4,5,2]),[1,2,3])), unit([4,5,2]));
 }
@@ -200,7 +285,7 @@ test_Q_Mul();
 module test_Q_Cumulative() {
     verify_f(Q_Cumulative([QuatZ(30),QuatX(57),QuatY(18)]),[[0, 0, 0.2588190451, 0.9659258263], [0.4608999698, -0.1234977747, 0.2274546059, 0.8488721457], [0.4908072659, 0.01081554785, 0.1525536221, 0.8577404293]]);
 }
-test_Q_Cumulative();
+*test_Q_Cumulative();
 
 
 module test_Q_Dot() {
@@ -219,18 +304,18 @@ test_Q_Neg();
 
 
 module test_Q_Conj() {
+    ang = rands(0,360,3);
     verify_f(Q_Conj([1,0,0,1]),[-1,0,0,1]);
     verify_f(Q_Conj([0,1,1,0]),[0,-1,-1,0]);
     verify_f(Q_Conj(QuatXYZ([23,45,67])),[0.0533818345, -0.4143703268, -0.4360652669, 0.7970537592]);
+    verify_f(Q_Mul(Q_Conj(QuatXYZ(ang)),QuatXYZ(ang)),Q_Ident());
 }
 test_Q_Conj();
 
 
 module test_Q_Inverse() {
-
-    verify_f(Q_Inverse([1,0,0,1]),[-1,0,0,1]/sqrt(2));
-    verify_f(Q_Inverse([0,1,1,0]),[0,-1,-1,0]/sqrt(2));
-    verify_f(Q_Inverse(QuatXYZ([23,45,67])),Q_Conj(QuatXYZ([23,45,67])));
+    verify_f(Q_Inverse([1,0,0,1]),[-1,0,0,1]);
+    verify_f(Q_Inverse([0,1,1,0]),[0,-1,-1,0]);
     verify_f(Q_Mul(Q_Inverse(QuatXYZ([23,45,67])),QuatXYZ([23,45,67])),Q_Ident());
 }
 test_Q_Inverse();
@@ -247,7 +332,7 @@ test_Q_Norm();
 module test_Q_Normalize() {
     verify_f(Q_Normalize([1,0,0,1]),[0.7071067812, 0, 0, 0.7071067812]);
     verify_f(Q_Normalize([0,1,1,0]),[0, 0.7071067812, 0.7071067812, 0]);
-    verify_f(Q_Normalize(QuatXYZ([23,45,67])),[-0.0533818345, 0.4143703268, 0.4360652669, 0.7970537592]);
+//    verify_f(Q_Normalize(QuatXYZ([23,45,67])),[-0.0533818345, 0.4143703268, 0.4360652669, 0.7970537592]);
 }
 test_Q_Normalize();
 
@@ -260,28 +345,47 @@ test_Q_Dist();
 
 
 module test_Q_Slerp() {
-    verify_f(Q_Slerp(QuatX(45),QuatY(30),0.0),QuatX(45));
-    verify_f(Q_Slerp(QuatX(45),QuatY(30),0.5),[0.1967063121, 0.1330377423, 0, 0.9713946602]);
-    verify_f(Q_Slerp(QuatX(45),QuatY(30),1.0),QuatY(30));
+    u  = rands(0,1,1)[0]; 
+    ul = rands(0,1,5);
+    ul2 = [1,1,1,1,1]-ul;
+    a1 = rands(0,360,1)[0];
+    a2 = rands(0,360,1)[0];
+    a3 = rands(0,360,1)[0]; 
+    verify_f(standardize(Q_Slerp(QuatX(a1),QuatY(a2),0.0)),  standardize(QuatX(a1)));
+    verify_f(standardize(Q_Slerp(QuatX(45),QuatY(30),0.5)), 
+             [0.1967063121, 0.1330377423, 0, 0.9713946602]);
+    verify_f(standardize(Q_Slerp(QuatX(a1),QuatY(a2),1.0)),  standardize(QuatY(a2)));
+    verify_f(standardize(Q_Slerp(QuatXYZ([a1,a2,0]),-QuatY(a2),u)),
+             standardize(Q_Slerp(QuatXYZ([a1,a2,0]), QuatY(a2),u)));
+    verify_f(standardize(Q_Slerp(QuatX(a1),QuatX(a1),u)),    standardize(QuatX(a1)));
+    verify_f(standardize(Q_Slerp(QuatXYZ([a1,a2,0]),QuatXYZ([a2,0,a1]),u)), 
+             standardize(Q_Slerp(QuatXYZ([a2,0,a1]),QuatXYZ([a1,a2,0]),1-u)));
+    verify_f(standardize(Q_Slerp(QuatXYZ([a1,a2,0]),QuatXYZ([a2,0,a1]),ul)), 
+             standardize(Q_Slerp(QuatXYZ([a2,0,a1]),QuatXYZ([a1,a2,0]),ul2)));
 }
 test_Q_Slerp();
 
 
-module test_Q_Matrix3() {
-    verify_f(Q_Matrix3(QuatZ(37)),rot(37,planar=true));
-    verify_f(Q_Matrix3(QuatZ(-49)),rot(-49,planar=true));
+module test_Q_to_matrix3() {
+    rotZ_37 = rot(37);
+    rotZ_37_3 = [for(i=[0:2]) [for(j=[0:2]) rotZ_37[i][j] ] ];
+    angs = [12,-49,40];
+    rot4 = rot(angs);
+    rot3 = [for(i=[0:2]) [for(j=[0:2]) rot4[i][j] ] ];
+    verify_f(Q_to_matrix3(QuatZ(37)),rotZ_37_3);
+    verify_f(Q_to_matrix3(QuatXYZ(angs)),rot3);
 }
-test_Q_Matrix3();
+test_Q_to_matrix3();
 
 
-module test_Q_Matrix4() {
-    verify_f(Q_Matrix4(QuatZ(37)),rot(37));
-    verify_f(Q_Matrix4(QuatZ(-49)),rot(-49));
-    verify_f(Q_Matrix4(QuatX(37)),rot([37,0,0]));
-    verify_f(Q_Matrix4(QuatY(37)),rot([0,37,0]));
-    verify_f(Q_Matrix4(QuatXYZ([12,34,56])),rot([12,34,56]));
+module test_Q_to_matrix4() {
+    verify_f(Q_to_matrix4(QuatZ(37)),rot(37));
+    verify_f(Q_to_matrix4(QuatZ(-49)),rot(-49));
+    verify_f(Q_to_matrix4(QuatX(37)),rot([37,0,0]));
+    verify_f(Q_to_matrix4(QuatY(37)),rot([0,37,0]));
+    verify_f(Q_to_matrix4(QuatXYZ([12,34,56])),rot([12,34,56]));
 }
-test_Q_Matrix4();
+test_Q_to_matrix4();
 
 
 module test_Q_Axis() {
@@ -321,23 +425,23 @@ module test_Qrot() {
 test_Qrot();
 
 
-module test_Q_Rotation() {
-    verify_f(Qstandard(Q_Rotation(Q_Matrix3(Quat([12,34,56],33)))),Qstandard(Quat([12,34,56],33)));
-    verify_f(Q_Matrix3(Q_Rotation(Q_Matrix3(QuatXYZ([12,34,56])))),
-             Q_Matrix3(QuatXYZ([12,34,56])));
+module test_Q_from_matrix() {
+    verify_f(standardize(Q_from_matrix(Q_to_matrix3(Quat([12,34,56],33)))),standardize(Quat([12,34,56],33)));
+    verify_f(Q_to_matrix3(Q_from_matrix(Q_to_matrix3(QuatXYZ([12,34,56])))),
+             Q_to_matrix3(QuatXYZ([12,34,56])));
 }
-test_Q_Rotation();
+test_Q_from_matrix();
 
 
 module test_Q_Rotation_path() {
-    
-    verify_f(Q_Rotation_path(QuatX(135), 5, QuatY(13.5))[0] , Q_Matrix4(QuatX(135)));
-    verify_f(Q_Rotation_path(QuatX(135), 11, QuatY(13.5))[11] , yrot(13.5));
+    verify_f(Q_Rotation_path(QuatX(135),  5, QuatY(13.5))[0] , Q_to_matrix4(QuatX(135)));
+    verify_f(Q_Rotation_path(QuatX(135), 11, QuatY(13.5))[11], yrot(13.5));
     verify_f(Q_Rotation_path(QuatX(135), 16, QuatY(13.5))[8] , Q_Rotation_path(QuatX(135), 8, QuatY(13.5))[4]);
     verify_f(Q_Rotation_path(QuatX(135), 16, QuatY(13.5))[7] , 
              Q_Rotation_path(QuatY(13.5),16, QuatX(135))[9]);
 
     verify_f(Q_Rotation_path(QuatX(11), 5)[0] , xrot(11));
+    verify_f(Q_Rotation_path(QuatX(11), 5)[3] , xrot(11+(55-11)*3/4));
     verify_f(Q_Rotation_path(QuatX(11), 5)[4] , xrot(55));
 
 }
@@ -347,48 +451,54 @@ test_Q_Rotation_path();
 module test_Q_Nlerp() {
     verify_f(Q_Nlerp(QuatX(45),QuatY(30),0.0),QuatX(45));
     verify_f(Q_Nlerp(QuatX(45),QuatY(30),0.5),[0.1967063121, 0.1330377423, 0, 0.9713946602]);
-    verify_f(Q_Rotation_path(QuatX(135), 16, QuatY(13.5))[8] , Q_Matrix4(Q_Nlerp(QuatX(135), QuatY(13.5),0.5)));
+    verify_f( Q_Rotation_path(QuatX(135), 16, QuatY(13.5))[8] , 
+              Q_to_matrix4(Q_Nlerp(QuatX(135), QuatY(13.5),0.5)));
     verify_f(Q_Nlerp(QuatX(45),QuatY(30),1.0),QuatY(30));
 }
 test_Q_Nlerp();
 
 
 module test_Q_Squad() {
-    verify_f(Q_Squad(QuatX(45),QuatZ(30),QuatX(90),QuatY(30),0.0),QuatX(45));
+    u = rands(0,1,5);
+    su = [1,1,1,1,1]-u;
+    verify_f(Q_Squad(QuatX(45),QuatZ(30),QuatX(32),QuatY(30),0.0),QuatX(45));
     verify_f(Q_Squad(QuatX(45),QuatZ(30),QuatX(90),QuatY(30),1.0),QuatY(30));
-    verify_f(Q_Squad(QuatX(0),QuatX(30),QuatX(90),QuatX(120),0.5),
+    verify_f( Q_Squad(QuatX(0),QuatX(30),QuatX(90),QuatX(120),0.5),
               Q_Slerp(QuatX(0),QuatX(120),0.5));
-    verify_f(Q_Squad(QuatY(0),QuatY(0),QuatX(120),QuatX(120),0.3),
-              Q_Slerp(QuatY(0),QuatX(120),0.3));
+    verify_f( Q_Squad(QuatY(10),QuatZ(20),QuatX(32),QuatXYZ([210,120,30]),u[0] ),
+              Q_Squad(QuatXYZ([210,120,30]),QuatX(32),QuatZ(20),QuatY(10),1-u[0] ) );
+    verify_f( Q_Squad(QuatY(10),QuatZ(20),QuatX(32),QuatXYZ([210,120,30]),u ),
+              Q_Squad(QuatXYZ([210,120,30]),QuatX(32),QuatZ(20),QuatY(10),su ) );
 }
 test_Q_Squad();
 
 
 module test_Q_exp() {
+   q=QuatXYZ(rands(0,360,3));
    verify_f(Q_exp(Q_Ident()), exp(1)*Q_Ident()); 
    verify_f(Q_exp([0,0,0,33.7]), exp(33.7)*Q_Ident());
    verify_f(Q_exp(Q_ln(Q_Ident())), Q_Ident());
-   verify_f(Q_exp(Q_ln([1,2,3,0])), [1,2,3,0]);
-   verify_f(Q_exp(Q_ln(QuatXYZ([31,27,34]))), QuatXYZ([31,27,34]));
-   let(q=QuatXYZ([12,23,34])) 
-     verify_f(Q_exp(q+Q_Inverse(q)),Q_Mul(Q_exp(q),Q_exp(Q_Inverse(q))));
+   verify_f(Q_exp(Q_ln([1,2,3,4])), [1,2,3,4]);
+   verify_f(Q_exp(Q_ln(q)), q);
+   verify_f(Q_exp(q+Q_Inverse(q)),Q_Mul(Q_exp(q),Q_exp(Q_Inverse(q))));
 
 }
 test_Q_exp();
 
 
 module test_Q_ln() {
+   q = QuatXYZ(rands(0,360,3));
    verify_f(Q_ln([1,2,3,0]),  [24.0535117721, 48.1070235442, 72.1605353164, 1.31952866481]); 
    verify_f(Q_ln(Q_Ident()), [0,0,0,0]); 
    verify_f(Q_ln(5.5*Q_Ident()), [0,0,0,ln(5.5)]); 
-   verify_f(Q_ln(Q_exp(QuatXYZ([13,37,43]))), QuatXYZ([13,37,43]));
-   verify_f(Q_ln(QuatXYZ([12,23,34]))+Q_ln(Q_Inverse(QuatXYZ([12,23,34]))), [0,0,0,0]);
+   verify_f(Q_ln(Q_exp(q)), q);
+   verify_f(Q_ln(q)+Q_ln(Q_Conj(q)), [0,0,0,0]);
 } 
 test_Q_ln();
 
 
 module test_Q_pow() {
-    q = Quat([1,2,3],77);
+    q = QuatXYZ(rands(0,360,3));
     verify_f(Q_pow(q,1), q);
     verify_f(Q_pow(q,0), Q_Ident());
     verify_f(Q_pow(q,-1), Q_Inverse(q));
