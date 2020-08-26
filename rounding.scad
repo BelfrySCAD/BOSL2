@@ -1563,7 +1563,7 @@ function rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_
      // Determine which points are concave by making bottom 2d if necessary
      bot_proj = len(bottom[0])==2 ? bottom :  project_plane(bottom, select(bottom,0,2)),
      bottom_sign = polygon_is_clockwise(bot_proj) ? 1 : -1,
-     concave = [for(i=[0:N-1]) bottom_sign*sign(point_left_of_segment2d(select(bot_proj,i+1), select(bot_proj, i-1,i)))>0],
+     concave = [for(i=[0:N-1]) bottom_sign*sign(point_left_of_line2d(select(bot_proj,i+1), select(bot_proj, i-1,i)))>0],
      top = is_undef(top) ? path3d(bottom,height/2) :
            len(top[0])==2 ? path3d(top,height/2) :
            top,
@@ -1578,16 +1578,16 @@ function rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_
    assert(jsvecok || jssingleok,
           str("Argument joint_sides is invalid.  All entries must be nonnegative, and it must be a number, 2-vector, or a length ",N," list those."))
    assert(is_num(k_sides) || is_vector(k_sides,N), str("Curvature parameter k_sides must be a number or length ",N," vector"))
-   assert(points_are_coplanar(bottom))
-   assert(points_are_coplanar(top))
+   assert(coplanar(bottom))
+   assert(coplanar(top))
    assert(!is_num(k_sides) || (k_sides>=0 && k_sides<=1), "Curvature parameter k_sides must be in interval [0,1]")
    let(
-     non_coplanar=[for(i=[0:N-1]) if (!points_are_coplanar(concat(select(top,i,i+1), select(bottom,i,i+1)))) [i,(i+1)%N]],
+     non_coplanar=[for(i=[0:N-1]) if (!coplanar(concat(select(top,i,i+1), select(bottom,i,i+1)))) [i,(i+1)%N]],
      k_sides_vec = is_num(k_sides) ? repeat(k_sides, N) : k_sides,
      kbad = [for(i=[0:N-1]) if (k_sides_vec[i]<0 || k_sides_vec[i]>1) i],
      joint_sides_vec = jssingleok ? repeat(joint_sides,N) : joint_sides,
-     top_collinear = [for(i=[0:N-1]) if (points_are_collinear(select(top,i-1,i+1))) i],
-     bot_collinear = [for(i=[0:N-1]) if (points_are_collinear(select(bottom,i-1,i+1))) i]
+     top_collinear = [for(i=[0:N-1]) if (collinear(select(top,i-1,i+1))) i],
+     bot_collinear = [for(i=[0:N-1]) if (collinear(select(bottom,i-1,i+1))) i]
    )
    assert(non_coplanar==[], str("Side faces are non-coplanar at edges: ",non_coplanar))
    assert(top_collinear==[], str("Top has collinear or duplicated points at indices: ",top_collinear))
@@ -1653,14 +1653,14 @@ function rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_
                vline = concat(select(subindex(top_patch[i],j),2,4),
                               select(subindex(bot_patch[i],j),2,4))
              )
-         if (!points_are_collinear(vline)) [i,j]],
+         if (!collinear(vline)) [i,j]],
      //verify horiz edges
      verify_horiz=[for(i=[0:N-1], j=[0:4])
          let(
              hline_top = concat(select(top_patch[i][j],2,4), select(select(top_patch, i+1)[j],0,2)),
              hline_bot = concat(select(bot_patch[i][j],2,4), select(select(bot_patch, i+1)[j],0,2))
          )
-         if (!points_are_collinear(hline_top) || !points_are_collinear(hline_bot)) [i,j]]
+         if (!collinear(hline_top) || !collinear(hline_bot)) [i,j]]
     )
     assert(debug || top_intersections==[],
           "Roundovers interfere with each other on top face: either input is self intersecting or top joint length is too large")

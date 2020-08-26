@@ -675,7 +675,7 @@ function convolve(p,q) =
 // Usage: linear_solve(A,b)
 // Description:
 //   Solves the linear system Ax=b.  If A is square and non-singular the unique solution is returned.  If A is overdetermined
-//   the least squares solution is returned.  If A is underdetermined, the minimal norm solution is returned.
+//   the least squares solution is returned. If A is underdetermined, the minimal norm solution is returned.
 //   If A is rank deficient or singular then linear_solve returns [].  If b is a matrix that is compatible with A
 //   then the problem is solved for the matrix valued right hand side and a matrix is returned.  Note that if you 
 //   want to solve Ax=b1 and Ax=b2 that you need to form the matrix transpose([b1,b2]) for the right hand side and then
@@ -686,7 +686,7 @@ function linear_solve(A,b) =
         m = len(A),
         n = len(A[0])
     )
-    assert(is_vector(b,m) || is_matrix(b,m),"Incompatible matrix and right hand side")
+    assert(is_vector(b,m) || is_matrix(b,m),"Invalid right hand side or incompatible with the matrix")
     let (
         qr = m<n? qr_factor(transpose(A)) : qr_factor(A),
         maxdim = max(n,m),
@@ -727,7 +727,7 @@ function qr_factor(A) =
       n = len(A[0])
     )
     let(
-        qr =_qr_factor(A, Q=ident(m), column=0, m = m, n=n),
+        qr = _qr_factor(A, Q=ident(m), column=0, m = m, n=n),
         Rzero = 
           let( R = qr[1] )
           [ for(i=[0:m-1]) [
@@ -745,7 +745,13 @@ function _qr_factor(A,Q, column, m, n) =
         u = x - concat([alpha],repeat(0,m-1)),
         v = alpha==0 ? u : u / norm(u),
         Qc = ident(len(x)) - 2*outer_product(v,v),
-        Qf = [for(i=[0:m-1]) [for(j=[0:m-1]) i<column || j<column ? (i==j ? 1 : 0) : Qc[i-column][j-column]]]
+        Qf = [for(i=[0:m-1]) 
+                [for(j=[0:m-1]) 
+                    i<column || j<column 
+                    ? (i==j ? 1 : 0) 
+                    : Qc[i-column][j-column]
+                ]
+             ]
     )
     _qr_factor(Qf*A, Q*Qf, column+1, m, n);
 

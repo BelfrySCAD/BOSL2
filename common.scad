@@ -129,11 +129,6 @@ function is_list_of(list,pattern) =
     is_list(list) &&
     []==[for(entry=0*list) if (entry != pattern) entry];
 
-function _list_pattern(list) =
-  is_list(list) ? [for(entry=list) is_list(entry) ? _list_pattern(entry) : 0]
-                : 0;
-
-
 
 // Function: is_consistent()
 // Usage:
@@ -198,11 +193,11 @@ function first_defined(v,recursive=false,_i=0) =
             is_undef(first_defined(v[_i],recursive=recursive))
         )
     )? first_defined(v,recursive=recursive,_i=_i+1) : v[_i];
-
+    
 
 // Function: one_defined()
 // Usage:
-//   one_defined(vars, names, [required])
+//   one_defined(vars, names, <required>)
 // Description:
 //   Examines the input list `vars` and returns the entry which is not `undef`.  If more
 //   than one entry is `undef` then issues an assertion specifying "Must define exactly one of" followed
@@ -221,8 +216,7 @@ function one_defined(vars, names, required=true) =
 
 // Function: num_defined()
 // Description: Counts how many items in list `v` are not `undef`.
-function num_defined(v,_i=0,_cnt=0) = _i>=len(v)? _cnt : num_defined(v,_i+1,_cnt+(is_undef(v[_i])? 0 : 1));
-
+function num_defined(v) = len([for(vi=v) if(!is_undef(vi)) 1]);
 
 // Function: any_defined()
 // Description:
@@ -239,8 +233,8 @@ function any_defined(v,recursive=false) = first_defined(v,recursive=recursive) !
 // Arguments:
 //   v = The list whose items are being checked.
 //   recursive = If true, any sublists are evaluated recursively.
-function all_defined(v,recursive=false) = max([for (x=v) is_undef(x)||(recursive&&is_list(x)&&!all_defined(x))? 1 : 0])==0;
-
+function all_defined(v,recursive=false) = 
+    []==[for (x=v) if(is_undef(x)||(recursive && is_list(x) && !all_defined(x,recursive))) 0 ];
 
 
 
@@ -249,7 +243,7 @@ function all_defined(v,recursive=false) = max([for (x=v) is_undef(x)||(recursive
 
 // Function: get_anchor()
 // Usage:
-//   get_anchor(anchor,center,[uncentered],[dflt]);
+//   get_anchor(anchor,center,<uncentered>,<dflt>);
 // Description:
 //   Calculated the correct anchor from `anchor` and `center`.  In order:
 //   - If `center` is not `undef` and `center` evaluates as true, then `CENTER` (`[0,0,0]`) is returned.
@@ -270,7 +264,7 @@ function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
 
 // Function: get_radius()
 // Usage:
-//   get_radius([r1], [r2], [r], [d1], [d2], [d], [dflt]);
+//   get_radius(<r1>, <r2>, <r>, <d1>, <d2>, <d>, <dflt>);
 // Description:
 //   Given various radii and diameters, returns the most specific radius.
 //   If a diameter is most specific, returns half its value, giving the radius.
@@ -288,19 +282,23 @@ function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
 //   r = Most general radius.
 //   d = Most general diameter.
 //   dflt = Value to return if all other values given are `undef`.
-function get_radius(r1=undef, r2=undef, r=undef, d1=undef, d2=undef, d=undef, dflt=undef) = (
-    !is_undef(r1)? assert(is_undef(r2)&&is_undef(d1)&&is_undef(d2), "Conflicting or redundant radius/diameter arguments given.") r1 :
-    !is_undef(r2)? assert(is_undef(d1)&&is_undef(d2), "Conflicting or redundant radius/diameter arguments given.") r2 :
-    !is_undef(d1)? d1/2 :
-    !is_undef(d2)? d2/2 :
-    !is_undef(r)? assert(is_undef(d), "Conflicting or redundant radius/diameter arguments given.") r :
-    !is_undef(d)? d/2 :
-    dflt
-);
+function get_radius(r1=undef, r2=undef, r=undef, d1=undef, d2=undef, d=undef, dflt=undef) = 
+    assert(num_defined([r1,d1,r2,d2])<2, "Conflicting or redundant radius/diameter arguments given.")
+    !is_undef(r1) ?   assert(is_finite(r1), "Invalid radius r1." ) r1 
+    : !is_undef(r2) ? assert(is_finite(r2), "Invalid radius r2." ) r2
+    : !is_undef(d1) ? assert(is_finite(d1), "Invalid diameter d1." ) d1/2
+    : !is_undef(d2) ? assert(is_finite(d2), "Invalid diameter d2." ) d2/2
+    : !is_undef(r)
+      ? assert(is_undef(d), "Conflicting or redundant radius/diameter arguments given.")
+        assert(is_finite(r) || is_vector(r,1) || is_vector(r,2), "Invalid radius r." )
+        r 
+    : !is_undef(d) ? assert(is_finite(d) || is_vector(d,1) || is_vector(d,2), "Invalid diameter d." ) d/2
+    : dflt;
+
 
 // Function: get_height()
 // Usage:
-//   get_height([h],[l],[height],[dflt])
+//   get_height(<h>,<l>,<height>,<dflt>)
 // Description:
 //   Given several different parameters for height check that height is not multiply defined
 //   and return a single value.  If the three values `l`, `h`, and `height` are all undefined
@@ -317,7 +315,7 @@ function get_height(h=undef,l=undef,height=undef,dflt=undef) =
 
 // Function: scalar_vec3()
 // Usage:
-//   scalar_vec3(v, [dflt]);
+//   scalar_vec3(v, <dflt>);
 // Description:
 //   If `v` is a scalar, and `dflt==undef`, returns `[v, v, v]`.
 //   If `v` is a scalar, and `dflt!=undef`, returns `[v, dflt, dflt]`.
@@ -369,7 +367,7 @@ function _valstr(x) =
 
 // Module: assert_approx()
 // Usage:
-//   assert_approx(got, expected, [info]);
+//   assert_approx(got, expected, <info>);
 // Description:
 //   Tests if the value gotten is what was expected.  If not, then
 //   the expected and received values are printed to the console and
@@ -396,7 +394,7 @@ module assert_approx(got, expected, info) {
 
 // Module: assert_equal()
 // Usage:
-//   assert_equal(got, expected, [info]);
+//   assert_equal(got, expected, <info>);
 // Description:
 //   Tests if the value gotten is what was expected.  If not, then
 //   the expected and received values are printed to the console and
@@ -423,7 +421,7 @@ module assert_equal(got, expected, info) {
 
 // Module: shape_compare()
 // Usage:
-//   shape_compare([eps]) {test_shape(); expected_shape();}
+//   shape_compare(<eps>) {test_shape(); expected_shape();}
 // Description:
 //   Compares two child shapes, returning empty geometry if they are very nearly the same shape and size.
 //   Returns the differential geometry if they are not nearly the same shape and size.
