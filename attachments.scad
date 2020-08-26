@@ -1235,17 +1235,20 @@ module show(tags="")
 //   }
 module diff(neg, pos=undef, keep=undef)
 {
-    difference() {
-        if (pos != undef) {
-            show(pos) children();
-        } else {
-            if (keep == undef) {
-                hide(neg) children();
+    // Don't perform the operation if the current tags are hidden
+    if (attachment_is_shown($tags)) {
+        difference() {
+            if (pos != undef) {
+                show(pos) children();
             } else {
-                hide(str(neg," ",keep)) children();
+                if (keep == undef) {
+                    hide(neg) children();
+                } else {
+                    hide(str(neg," ",keep)) children();
+                }
             }
+            show(neg) children();
         }
-        show(neg) children();
     }
     if (keep!=undef) {
         show(keep) children();
@@ -1280,17 +1283,20 @@ module diff(neg, pos=undef, keep=undef)
 //   }
 module intersect(a, b=undef, keep=undef)
 {
-    intersection() {
-        if (b != undef) {
-            show(b) children();
-        } else {
-            if (keep == undef) {
-                hide(a) children();
+    // Don't perform the operation if the current tags are hidden
+    if (attachment_is_shown($tags)) {
+        intersection() {
+            if (b != undef) {
+                show(b) children();
             } else {
-                hide(str(a," ",keep)) children();
+                if (keep == undef) {
+                    hide(a) children();
+                } else {
+                    hide(str(a," ",keep)) children();
+                }
             }
+            show(a) children();
         }
-        show(a) children();
     }
     if (keep!=undef) {
         show(keep) children();
