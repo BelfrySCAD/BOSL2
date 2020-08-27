@@ -730,9 +730,10 @@ function stellate_faces(scalefactor,stellate,vertices,faces_normals) =
     ) [newfaces, normals, allpts];
 
 
-function trapezohedron(faces, r, side, longside, h) =
+function trapezohedron(faces, r, side, longside, h, d) =
     assert(faces%2==0, "Number of faces must be even")
     let(
+        r = get_radius(r=r, d=d, dflt=1),
         N = faces/2,
         parmcount = num_defined([r,side,longside,h])
     )
