@@ -368,8 +368,8 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 
 // Module: rounding_mask()
 // Usage:
-//   rounding_mask(l|h, r)
-//   rounding_mask(l|h, r1, r2)
+//   rounding_mask(l|h, r|d)
+//   rounding_mask(l|h, r1|d1, r2|d2)
 // Description:
 //   Creates a shape that can be used to round a vertical 90 degree edge.
 //   Difference it from the object to be rounded.  The center of the mask
@@ -379,6 +379,9 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 //   r = Radius of the rounding.
 //   r1 = Bottom radius of rounding.
 //   r2 = Top radius of rounding.
+//   d = Diameter of the rounding.
+//   d1 = Bottom diameter of rounding.
+//   d2 = Top diameter of rounding.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -409,11 +412,11 @@ module chamfer_hole_mask(r=undef, d=undef, chamfer=0.25, ang=45, from_end=false,
 //               rounding_mask(l=p.x, r=25, spin=45, orient=RIGHT);
 //       }
 //   }
-module rounding_mask(l=undef, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0, orient=UP, h=undef)
+module rounding_mask(l, r, r1, r2, d, d1, d2, anchor=CENTER, spin=0, orient=UP, h=undef)
 {
     l = first_defined([l, h, 1]);
-    r1 = get_radius(r1=r1, r=r, dflt=1);
-    r2 = get_radius(r1=r2, r=r, dflt=1);
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     sides = quantup(segs(max(r1,r2)),4);
     attachable(anchor,spin,orient, size=[2*r1,2*r1,l], size2=[2*r2,2*r2]) {
         if (r1<r2) {
@@ -440,8 +443,8 @@ module rounding_mask(l=undef, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 
 // Module: rounding_mask_x()
 // Usage:
-//   rounding_mask_x(l, r, [anchor])
-//   rounding_mask_x(l, r1, r2, [anchor])
+//   rounding_mask_x(l, r|d, [anchor])
+//   rounding_mask_x(l, r1|d1, r2|d2, [anchor])
 // Description:
 //   Creates a shape that can be used to round a 90 degree edge oriented
 //   along the X axis.  Difference it from the object to be rounded.
@@ -452,6 +455,9 @@ module rounding_mask(l=undef, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 //   r = Radius of the rounding.
 //   r1 = Left end radius of rounding.
 //   r2 = Right end radius of rounding.
+//   d = Diameter of the rounding.
+//   d1 = Left end diameter of rounding.
+//   d2 = Right end diameter of rounding.
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example:
 //   difference() {
@@ -463,10 +469,10 @@ module rounding_mask(l=undef, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 //       cube(size=100, center=false);
 //       #rounding_mask_x(l=100, r1=10, r2=30, anchor=LEFT);
 //   }
-module rounding_mask_x(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0)
+module rounding_mask_x(l=1.0, r, r1, r2, d, d1, d2, anchor=CENTER, spin=0)
 {
     anchor = rot(p=anchor, from=RIGHT, to=TOP);
-    rounding_mask(l=l, r=r, r1=r1, r2=r2, anchor=anchor, spin=spin, orient=RIGHT) {
+    rounding_mask(l=l, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, anchor=anchor, spin=spin, orient=RIGHT) {
         for (i=[0:1:$children-2]) children(i);
         if ($children) children($children-1);
     }
@@ -475,8 +481,8 @@ module rounding_mask_x(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 
 // Module: rounding_mask_y()
 // Usage:
-//   rounding_mask_y(l, r, [anchor])
-//   rounding_mask_y(l, r1, r2, [anchor])
+//   rounding_mask_y(l, r|d, [anchor])
+//   rounding_mask_y(l, r1|d1, r2|d2, [anchor])
 // Description:
 //   Creates a shape that can be used to round a 90 degree edge oriented
 //   along the Y axis.  Difference it from the object to be rounded.
@@ -487,6 +493,9 @@ module rounding_mask_x(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 //   r = Radius of the rounding.
 //   r1 = Front end radius of rounding.
 //   r2 = Back end radius of rounding.
+//   d = Diameter of the rounding.
+//   d1 = Front end diameter of rounding.
+//   d2 = Back end diameter of rounding.
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example:
 //   difference() {
@@ -498,10 +507,10 @@ module rounding_mask_x(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 //       cube(size=100, center=false);
 //       right(100) #rounding_mask_y(l=100, r1=10, r2=30, anchor=FRONT);
 //   }
-module rounding_mask_y(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0)
+module rounding_mask_y(l=1.0, r, r1, r2, d, d1, d2, anchor=CENTER, spin=0)
 {
     anchor = rot(p=anchor, from=BACK, to=TOP);
-    rounding_mask(l=l, r=r, r1=r1, r2=r2, anchor=anchor, spin=spin, orient=BACK) {
+    rounding_mask(l=l, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, anchor=anchor, spin=spin, orient=BACK) {
         for (i=[0:1:$children-2]) children(i);
         if ($children) children($children-1);
     }
@@ -510,8 +519,8 @@ module rounding_mask_y(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 
 // Module: rounding_mask_z()
 // Usage:
-//   rounding_mask_z(l, r, [anchor])
-//   rounding_mask_z(l, r1, r2, [anchor])
+//   rounding_mask_z(l, r|d, [anchor])
+//   rounding_mask_z(l, r1|d1, r2|d2, [anchor])
 // Description:
 //   Creates a shape that can be used to round a 90 degree edge oriented
 //   along the Z axis.  Difference it from the object to be rounded.
@@ -522,6 +531,9 @@ module rounding_mask_y(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 //   r = Radius of the rounding.
 //   r1 = Bottom radius of rounding.
 //   r2 = Top radius of rounding.
+//   d = Diameter of the rounding.
+//   d1 = Bottom diameter of rounding.
+//   d2 = Top diameter of rounding.
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example:
 //   difference() {
@@ -533,9 +545,9 @@ module rounding_mask_y(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 //       cube(size=100, center=false);
 //       #rounding_mask_z(l=100, r1=10, r2=30, anchor=BOTTOM);
 //   }
-module rounding_mask_z(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0)
+module rounding_mask_z(l=1.0, r, r1, r2, d, d1, d2, anchor=CENTER, spin=0)
 {
-    rounding_mask(l=l, r=r, r1=r1, r2=r2, anchor=anchor, spin=spin, orient=UP) {
+    rounding_mask(l=l, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, anchor=anchor, spin=spin, orient=UP) {
         for (i=[0:1:$children-2]) children(i);
         if ($children) children($children-1);
     }
@@ -544,11 +556,12 @@ module rounding_mask_z(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 
 // Module: rounding()
 // Usage:
-//   rounding(r, size, [edges]) ...
+//   rounding(r|d, size, [edges]) ...
 // Description:
 //   Rounds the edges of a cuboid region containing the given children.
 // Arguments:
 //   r = Radius of the rounding. (Default: 1)
+//   d = Diameter of the rounding. (Default: 1)
 //   size = The size of the rectangular cuboid we want to chamfer.
 //   edges = Edges to round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
 //   except_edges = Edges to explicitly NOT round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
@@ -560,8 +573,9 @@ module rounding_mask_z(l=1.0, r=undef, r1=undef, r2=undef, anchor=CENTER, spin=0
 //   rounding(r=10, size=[50,50,75], edges=[TOP,FRONT+RIGHT], except_edges=TOP+LEFT, $fn=24) {
 //     cube(size=[50,50,75], center=true);
 //   }
-module rounding(r=1, size=[1,1,1], edges=EDGES_ALL, except_edges=[])
+module rounding(r, size=[1,1,1], d, edges=EDGES_ALL, except_edges=[])
 {
+    r = get_radius(r=r, d=d, dflt=1);
     difference() {
         children();
         difference() {
@@ -574,8 +588,8 @@ module rounding(r=1, size=[1,1,1], edges=EDGES_ALL, except_edges=[])
 
 // Module: rounding_angled_edge_mask()
 // Usage:
-//   rounding_angled_edge_mask(h, r, [ang]);
-//   rounding_angled_edge_mask(h, r1, r2, [ang]);
+//   rounding_angled_edge_mask(h, r|d, [ang]);
+//   rounding_angled_edge_mask(h, r1|d1, r2|d2, [ang]);
 // Description:
 //   Creates a vertical mask that can be used to round the edge where two face meet, at any arbitrary
 //   angle.  Difference it from the object to be rounded.  The center of the mask should align exactly
@@ -585,6 +599,9 @@ module rounding(r=1, size=[1,1,1], edges=EDGES_ALL, except_edges=[])
 //   r = Radius of the rounding.
 //   r1 = Bottom radius of rounding.
 //   r2 = Top radius of rounding.
+//   d = Diameter of the rounding.
+//   d1 = Bottom diameter of rounding.
+//   d2 = Top diameter of rounding.
 //   ang = Angle that the planes meet at.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -599,7 +616,7 @@ module rounding(r=1, size=[1,1,1], edges=EDGES_ALL, except_edges=[])
 //       angle_pie_mask(ang=70, h=50, d=100);
 //       #rounding_angled_edge_mask(h=51, r1=10, r2=25, ang=70, $fn=32);
 //   }
-module rounding_angled_edge_mask(h=1.0, r=undef, r1=undef, r2=undef, ang=90, anchor=CENTER, spin=0, orient=UP)
+module rounding_angled_edge_mask(h=1.0, r, r1, r2, d, d1, d2, ang=90, anchor=CENTER, spin=0, orient=UP)
 {
     function _mask_shape(r) = [
         for (i = [0:1:n]) let (a=90+ang+i*sweep/n) [r*cos(a)+x, r*sin(a)+r],
@@ -609,8 +626,8 @@ module rounding_angled_edge_mask(h=1.0, r=undef, r1=undef, r2=undef, ang=90, anc
     ];
 
     sweep = 180-ang;
-    r1 = get_radius(r1=r1, r=r, dflt=1);
-    r2 = get_radius(r1=r2, r=r, dflt=1);
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     n = ceil(segs(max(r1,r2))*sweep/360);
     x = sin(90-(ang/2))/sin(ang/2) * (r1<r2? r2 : r1);
     if(r1<r2) {
@@ -635,13 +652,14 @@ module rounding_angled_edge_mask(h=1.0, r=undef, r1=undef, r2=undef, ang=90, anc
 
 // Module: rounding_angled_corner_mask()
 // Usage:
-//   rounding_angled_corner_mask(r, ang);
+//   rounding_angled_corner_mask(r|d, ang);
 // Description:
 //   Creates a shape that can be used to round the corner of an angle.
 //   Difference it from the object to be rounded.  The center of the mask
 //   object should align exactly with the point of the corner to be rounded.
 // Arguments:
 //   r = Radius of the rounding.
+//   d = Diameter of the rounding.
 //   ang = Angle between planes that you need to round the corner of.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -656,8 +674,9 @@ module rounding_angled_edge_mask(h=1.0, r=undef, r1=undef, r2=undef, ang=90, anc
 //       }
 //       rounding_angled_edge_mask(h=51, r=20, ang=ang);
 //   }
-module rounding_angled_corner_mask(r=1.0, ang=90, anchor=CENTER, spin=0, orient=UP)
+module rounding_angled_corner_mask(r, ang=90, d, anchor=CENTER, spin=0, orient=UP)
 {
+    r = get_radius(r=r, d=d, dflt=1);
     dx = r / tan(ang/2);
     dx2 = dx / cos(ang/2) + 1;
     fn = quantup(segs(r), 4);
@@ -683,13 +702,14 @@ module rounding_angled_corner_mask(r=1.0, ang=90, anchor=CENTER, spin=0, orient=
 
 // Module: rounding_corner_mask()
 // Usage:
-//   rounding_corner_mask(r, [anchor]);
+//   rounding_corner_mask(r|d, [anchor]);
 // Description:
 //   Creates a shape that you can use to round 90 degree corners.
 //   Difference it from the object to be rounded.  The center of the mask
 //   object should align exactly with the corner to be rounded.
 // Arguments:
 //   r = Radius of corner rounding.
+//   d = Diameter of corner rounding.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -703,8 +723,9 @@ module rounding_angled_corner_mask(r=1.0, ang=90, anchor=CENTER, spin=0, orient=
 //     translate([15, 25, 0]) rounding_mask_z(l=81, r=15);
 //     translate([15, 25, 40]) #rounding_corner_mask(r=15);
 //   }
-module rounding_corner_mask(r=1.0, anchor=CENTER, spin=0, orient=UP)
+module rounding_corner_mask(r, d, anchor=CENTER, spin=0, orient=UP)
 {
+    r = get_radius(r=r, d=d, dflt=1);
     attachable(anchor,spin,orient, size=[2,2,2]*r) {
         difference() {
             cube(size=r*2, center=true);
@@ -719,7 +740,7 @@ module rounding_corner_mask(r=1.0, anchor=CENTER, spin=0, orient=UP)
 
 // Module: rounding_cylinder_mask()
 // Usage:
-//   rounding_cylinder_mask(r, rounding);
+//   rounding_cylinder_mask(r|d, rounding);
 // Description:
 //   Create a mask that can be used to round the end of a cylinder.
 //   Difference it from the cylinder to be rounded.  The center of the
@@ -727,6 +748,7 @@ module rounding_corner_mask(r=1.0, anchor=CENTER, spin=0, orient=UP)
 //   cylinder to be rounded.
 // Arguments:
 //   r = Radius of cylinder. (Default: 1.0)
+//   d = Diameter of cylinder. (Default: 1.0)
 //   rounding = Radius of the edge rounding. (Default: 0.25)
 // Example:
 //   difference() {
@@ -738,8 +760,9 @@ module rounding_corner_mask(r=1.0, anchor=CENTER, spin=0, orient=UP)
 //     cylinder(r=50, h=50, center=false);
 //     up(50) rounding_cylinder_mask(r=50, rounding=10);
 //   }
-module rounding_cylinder_mask(r=1.0, rounding=0.25)
+module rounding_cylinder_mask(r, rounding=0.25, d)
 {
+    r = get_radius(r=r, d=d, dflt=1);
     cylinder_mask(l=rounding*3, r=r, rounding2=rounding, excess=rounding, ends_only=true, anchor=TOP);
 }
 
@@ -775,7 +798,7 @@ module rounding_cylinder_mask(r=1.0, rounding=0.25)
 //   }
 // Example:
 //   rounding_hole_mask(r=40, rounding=20, $fa=2, $fs=2);
-module rounding_hole_mask(r=undef, d=undef, rounding=0.25, excess=0.1, anchor=CENTER, spin=0, orient=UP)
+module rounding_hole_mask(r, rounding=0.25, excess=0.1, d, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
     attachable(anchor,spin,orient, r=r+rounding, l=2*rounding) {
@@ -813,7 +836,7 @@ module rounding_hole_mask(r=undef, d=undef, rounding=0.25, excess=0.1, anchor=CE
 //          corner_profile(BOT,r=10)
 //              mask2d_teardrop(r=10, angle=40);
 //   }
-module teardrop_corner_mask(r, d, angle, excess=0.1, anchor=CENTER, spin=0, orient=UP) {
+module teardrop_corner_mask(r, angle, excess=0.1, d, anchor=CENTER, spin=0, orient=UP) {
     assert(is_num(angle));
     assert(is_num(excess));
     assert(angle>0 && angle<90);

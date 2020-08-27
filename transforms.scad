@@ -306,11 +306,11 @@ function up(z=0,p=undef) = move([0,0,z],p=p);
 //   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
 //   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, and `planar` is true, returns the affine2d rotational matrix.
+//   * Called as a function without a `p` argument, and `planar` is true, returns the affine2d rotational matrix.  Requires that `a` is a finite scalar.
 //   * Called as a function without a `p` argument, and `planar` is false, returns the affine3d rotational matrix.
 //
 // Arguments:
-//   a = Scalar angle or vector of XYZ rotation angles to rotate by, in degrees.
+//   a = Scalar angle or vector of XYZ rotation angles to rotate by, in degrees.  If `planar` is true and `p` is not given, then `a` must be a finite scalar.  Default: `0`
 //   v = vector for the axis of rotation.  Default: [0,0,1] or UP
 //   cp = centerpoint to rotate around. Default: [0,0,0]
 //   from = Starting vector for vector-based rotations.
@@ -343,16 +343,21 @@ module rot(a=0, v=undef, cp=undef, from=undef, to=undef, reverse=false)
 
 function rot(a=0, v, cp, from, to, reverse=false, planar=false, p, _m) =
     assert(is_undef(from)==is_undef(to), "from and to must be specified together.")
+    assert(is_undef(from) || is_vector(from, zero=false), "'from' must be a non-zero vector.")
+    assert(is_undef(to) || is_vector(to, zero=false), "'to' must be a non-zero vector.")
+    assert(is_undef(v) || is_vector(v, zero=false), "'v' must be a non-zero vector.")
+    assert(is_undef(cp) || is_vector(cp), "'cp' must be a vector.")
+    assert(is_finite(a) || is_vector(a), "'a' must be a finite scalar or a vector.")
+    assert(is_bool(reverse))
+    assert(is_bool(planar))
     is_undef(p)? (
         planar? let(
+            check = assert(is_num(a)),
             cp = is_undef(cp)? cp : point2d(cp),
             m1 = is_undef(from)? affine2d_zrot(a) :
-                assert(is_vector(from))
-                assert(!approx(norm(from),0))
-                assert(approx(point3d(from).z, 0))
-                assert(is_vector(to))
-                assert(!approx(norm(to),0))
-                assert(approx(point3d(to).z, 0))
+                assert(a==0, "'from' and 'to' cannot be used with 'a' when 'planar' is true.")
+                assert(approx(point3d(from).z, 0), "'from' must be a 2D vector when 'planar' is true.")
+                assert(approx(point3d(to).z, 0), "'to' must be a 2D vector when 'planar' is true.")
                 affine2d_zrot(
                     vang(point2d(to)) -
                     vang(point2d(from))
@@ -364,13 +369,10 @@ function rot(a=0, v, cp, from, to, reverse=false, planar=false, p, _m) =
             to = is_undef(to)? undef : point3d(to),
             cp = is_undef(cp)? undef : point3d(cp),
             m1 = !is_undef(from)? (
-                    assert(is_vector(from))
-                    assert(!approx(norm(from),0))
-                    assert(is_vector(to))
-                    assert(!approx(norm(to),0))
+                    assert(is_num(a))
                     affine3d_rot_from_to(from,to) * affine3d_zrot(a)
                 ) :
-                !is_undef(v)? affine3d_rot_by_axis(v,a) :
+                !is_undef(v)? assert(is_num(a)) affine3d_rot_by_axis(v,a) :
                 is_num(a)? affine3d_zrot(a) :
                 affine3d_zrot(a.z) * affine3d_yrot(a.y) * affine3d_xrot(a.x),
             m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),

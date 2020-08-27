@@ -686,7 +686,7 @@ module rot_copies(rots=[], v=undef, cp=[0,0,0], n=undef, sa=0, offset=0, delta=[
 //   cp = Centerpoint to rotate around.
 //   n = Optional number of evenly distributed copies to be rotated around the ring.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from Y+, when facing the origin from X+.  First unrotated copy is placed at that angle.
-//   r = Radius to move children back, away from cp, before rotating.  Makes rings of copies.
+//   r = Radius to move children back (Y+), away from cp, before rotating.  Makes rings of copies.
 //   subrot = If false, don't sub-rotate children as they are copied around the ring.
 //
 // Side Effects:
@@ -743,7 +743,7 @@ module xrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 //   cp = Centerpoint to rotate around.
 //   n = Optional number of evenly distributed copies to be rotated around the ring.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from X-, when facing the origin from Y+.
-//   r = Radius to move children left, away from cp, before rotating.  Makes rings of copies.
+//   r = Radius to move children left (X-), away from cp, before rotating.  Makes rings of copies.
 //   subrot = If false, don't sub-rotate children as they are copied around the ring.
 //
 // Side Effects:
@@ -800,7 +800,7 @@ module yrot_copies(rots=[], cp=[0,0,0], n=undef, sa=0, r=0, subrot=true)
 //   cp = Centerpoint to rotate around.  Default: [0,0,0]
 //   n = Optional number of evenly distributed copies to be rotated around the ring.
 //   sa = Starting angle, in degrees.  For use with `n`.  Angle is in degrees counter-clockwise from X+, when facing the origin from Z+.  Default: 0
-//   r = Radius to move children right, away from cp, before rotating.  Makes rings of copies.  Default: 0
+//   r = Radius to move children right (X+), away from cp, before rotating.  Makes rings of copies.  Default: 0
 //   subrot = If false, don't sub-rotate children as they are copied around the ring.  Default: true
 //
 // Side Effects:
