@@ -418,7 +418,7 @@ function path_torsion(path, closed=false) =
 //   scale = [X,Y] scaling factors for each axis.  Default: `[1,1]`
 // Example(3D):
 //   trace_polyline(path3d_spiral(turns=2.5, h=100, n=24, r=50), N=1, showpts=true);
-function path3d_spiral(turns=3, h=100, n=12, r=undef, d=undef, cp=[0,0], scale=[1,1]) = let(
+function path3d_spiral(turns=3, h=100, n=12, r, d, cp=[0,0], scale=[1,1]) = let(
         rr=get_radius(r=r, d=d, dflt=100),
         cnt=floor(turns*n),
         dz=h/cnt
@@ -774,15 +774,19 @@ function assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
 
 
 // Module: modulated_circle()
+// Usage:
+//   modulated_circle(r|d, sines);
 // Description:
 //   Creates a 2D polygon circle, modulated by one or more superimposed sine waves.
 // Arguments:
-//   r = radius of the base circle.
+//   r = Radius of the base circle. Default: 40
+//   d = Diameter of the base circle.
 //   sines = array of [amplitude, frequency] pairs, where the frequency is the number of times the cycle repeats around the circle.
 // Example(2D):
 //   modulated_circle(r=40, sines=[[3, 11], [1, 31]], $fn=6);
-module modulated_circle(r=40, sines=[10])
+module modulated_circle(r, sines=[10], d)
 {
+    r = get_radius(r=r, d=d, dflt=40);
     freqs = len(sines)>0? [for (i=sines) i[1]] : [5];
     points = [
         for (a = [0 : (360/segs(r)/max(freqs)) : 360])
@@ -829,7 +833,8 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 // Arguments:
 //   polyline = Array of points of a polyline path, to be extruded.
 //   h = height of the spiral to extrude along.
-//   r = radius of the spiral to extrude along.
+//   r = Radius of the spiral to extrude along. Default: 50
+//   d = Diameter of the spiral to extrude along.
 //   twist = number of degrees of rotation to spiral up along height.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -838,7 +843,8 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   spiral_sweep(poly, h=200, r=50, twist=1080, $fn=36);
-module spiral_sweep(polyline, h, r, twist=360, center, anchor, spin=0, orient=UP) {
+module spiral_sweep(polyline, h, r, twist=360, center, d, anchor, spin=0, orient=UP) {
+    r = get_radius(r=r, d=d, dflt=50);
     polyline = path3d(polyline);
     pline_count = len(polyline);
     steps = ceil(segs(r)*(twist/360));

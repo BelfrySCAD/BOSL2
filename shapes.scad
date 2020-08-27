@@ -1498,13 +1498,14 @@ module pie_slice(
 //   Center this part along the concave edge to be chamfered and union it in.
 //
 // Usage:
-//   interior_fillet(l, r, [ang], [overlap]);
+//   interior_fillet(l, r|d, [ang], [overlap]);
 //
 // Arguments:
-//   l = length of edge to fillet.
-//   r = radius of fillet.
-//   ang = angle between faces to fillet.
-//   overlap = overlap size for unioning with faces.
+//   l = Length of edge to fillet.
+//   r = Radius of fillet.
+//   d = Diameter of fillet.
+//   ang = Angle between faces to fillet.
+//   overlap = Overlap size for unioning with faces.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `FRONT+LEFT`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -1526,7 +1527,8 @@ module pie_slice(
 //     position(BOT+FRONT)
 //       interior_fillet(l=50, r=10, spin=180, orient=RIGHT);
 //   }
-module interior_fillet(l=1.0, r=1.0, ang=90, overlap=0.01, anchor=FRONT+LEFT, spin=0, orient=UP) {
+module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, anchor=FRONT+LEFT, spin=0, orient=UP) {
+    r = get_radius(r=r, d=d, dflt=1);
     dy = r/tan(ang/2);
     steps = ceil(segs(r)*ang/360);
     step = ang/steps;
