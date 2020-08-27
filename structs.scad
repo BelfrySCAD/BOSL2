@@ -101,6 +101,7 @@ function struct_echo(struct,name="") =
     undef;
 
 module struct_echo(struct,name="") {
+    no_children($children);
     dummy = struct_echo(struct,name);
 }
 

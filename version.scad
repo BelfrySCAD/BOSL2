@@ -49,6 +49,7 @@ function bosl_version_str() = version_to_str(BOSL_VERSION);
 // Description:
 //   Given a version as a list, number, or string, asserts that the currently installed BOSL library is at least the given version.
 module bosl_required(target) {
+    no_children($children);
     assert(
         version_cmp(bosl_version(), target) >= 0,
         str(

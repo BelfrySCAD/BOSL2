@@ -353,6 +353,7 @@ function segs(r) =
 // Arguments:
 //   $children = number of children the module has.  
 module no_children(count) {
+  assert($children==0, "Module no_children() does not support child modules");
   assert(count==0, str("Module ",parent_module(1),"() does not support child modules"));
 }
 
@@ -377,6 +378,7 @@ function _valstr(x) =
 //   expected = The value that was expected.
 //   info = Extra info to print out to make the error clearer.
 module assert_approx(got, expected, info) {
+    no_children($children);
     if (!approx(got, expected)) {
         echo();
         echo(str("EXPECT: ", _valstr(expected)));
@@ -404,6 +406,7 @@ module assert_approx(got, expected, info) {
 //   expected = The value that was expected.
 //   info = Extra info to print out to make the error clearer.
 module assert_equal(got, expected, info) {
+    no_children($children);
     if (got != expected || (is_nan(got) && is_nan(expected))) {
         echo();
         echo(str("EXPECT: ", _valstr(expected)));

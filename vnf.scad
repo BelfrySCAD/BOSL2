@@ -341,9 +341,16 @@ function vnf_vertex_array(
 // Arguments:
 //   vnf = A VNF structure, or list of VNF structures.
 //   convexity = Max number of times a line could intersect a wall of the shape.
-module vnf_polyhedron(vnf, convexity=2) {
+module vnf_polyhedron(vnf,
+                      convexity=10,anchor="origin",cp,
+                      spin=0, orient=UP, extent=false
+)
+{
     vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf;
-    polyhedron(vnf[0], vnf[1], convexity=convexity);
+    attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf)){
+      polyhedron(vnf[0], vnf[1], convexity=convexity);
+      children();
+    }
 }
 
 
