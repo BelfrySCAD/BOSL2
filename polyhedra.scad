@@ -710,7 +710,7 @@ function regular_polyhedron_info(
     info == "center" ? translation :
     info == "type" ? entry[class] :
     info == "name" ? entry[pname] :
-    echo_warning(str("Unknown info type '",info,"' requested"));
+    assert(false, str("Unknown info type '",info,"' requested"));
 
 
 

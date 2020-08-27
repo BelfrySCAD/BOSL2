@@ -43,10 +43,12 @@ include <triangulation.scad>
 //   dim = list of allowed dimensions of the vectors in the path.  Default: [2,3]
 //   fast = set to true for fast check that only looks at first entry.  Default: false
 function is_path(list, dim=[2,3], fast=false) =
-    fast? is_list(list) && is_vector(list[0]) :
-    is_list(list) && is_list(list[0]) && len(list)>1 &&
-    (is_undef(dim) || in_list(len(list[0]), force_list(dim))) &&
-    is_list_of(list, repeat(0,len(list[0])));
+    fast
+    ?   is_list(list) && is_vector(list[0]) 
+    :   is_matrix(list) 
+        && len(list)>1 
+        && len(list[0])>0
+        && (is_undef(dim) || in_list(len(list[0]), force_list(dim)));
 
 
 // Function: is_closed_path()
@@ -105,32 +107,51 @@ function path_subselect(path, s1, u1, s2, u2, closed=false) =
 
 // Function: simplify_path()
 // Description:
-//   Takes a path and removes unnecessary collinear points.
+//   Takes a path and removes unnecessary subsequent collinear points.
 // Usage:
 //   simplify_path(path, [eps])
 // Arguments:
-//   path = A list of 2D path points.
+//   path = A list of path points of any dimension.
 //   eps = Largest positional variance allowed.  Default: `EPSILON` (1-e9)
 function simplify_path(path, eps=EPSILON) =
-    len(path)<=2? path : let(
-        indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(path, i-1, i, i+1, eps=eps)) i], [len(path)-1])
-    ) [for (i = indices) path[i]];
+    assert( is_path(path), "Invalid path." )
+    assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "Invalid tolerance." )    
+    len(path)<=2 ? path 
+    :   let(
+            indices = [ 0,
+                        for (i=[1:1:len(path)-2]) 
+                            if (!collinear(path[i-1],path[i],path[i+1], eps=eps)) i, 
+                        len(path)-1 
+                      ]
+        ) 
+        [for (i = indices) path[i] ];
 
 
 // Function: simplify_path_indexed()
 // Description:
-//   Takes a list of points, and a path as a list of indices into `points`,
-//   and removes all path points that are unecessarily collinear.
+//   Takes a list of points, and a list of indices into `points`,
+//   and removes from the list all indices of subsequent indexed points that are unecessarily collinear.
+//   Returns the list of the remained indices.
 // Usage:
-//   simplify_path_indexed(path, eps)
+//   simplify_path_indexed(points,indices, eps)
 // Arguments:
 //   points = A list of points.
-//   path = A list of indices into `points` that forms a path.
+//   indices = A list of indices into `points` that forms a path.
 //   eps = Largest angle variance allowed.  Default: EPSILON (1-e9) degrees.
-function simplify_path_indexed(points, path, eps=EPSILON) =
-    len(path)<=2? path : let(
-        indices = concat([0], [for (i=[1:1:len(path)-2]) if (!collinear_indexed(points, path[i-1], path[i], path[i+1], eps=eps)) i], [len(path)-1])
-    ) [for (i = indices) path[i]];
+function simplify_path_indexed(points, indices, eps=EPSILON) =
+    len(indices)<=2? indices 
+    : let(
+        indices = concat( indices[0], 
+                          [for (i=[1:1:len(indices)-2]) 
+                              let( 
+                                  i1 = indices[i-1],
+                                  i2 = indices[i],
+                                  i3 = indices[i+1]
+                              )
+                              if (!collinear(points[i1],points[i2],points[i3], eps=eps)) indices[i]], 
+                          indices[len(indices)-1] )
+        ) 
+        indices;
 
 
 // Function: path_length()

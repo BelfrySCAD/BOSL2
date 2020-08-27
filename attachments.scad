@@ -285,7 +285,7 @@ function attach_geom_size(geom) =
         ) [2*maxxr,2*maxyr,l]
     ) : type == "spheroid"? ( //r
         let( r=geom[1] )
-        is_num(r)? [2,2,2]*r : vmul([2,2,2],r)
+        is_num(r)? [2,2,2]*r : vmul([2,2,2],point3d(r))
     ) : type == "vnf_extent" || type=="vnf_isect"? ( //vnf
         let(
             mm = pointlist_bounds(geom[1][0]),
@@ -298,7 +298,7 @@ function attach_geom_size(geom) =
         ) [maxx, size.y]
     ) : type == "circle"? ( //r
         let( r=geom[1] )
-        is_num(r)? [2,2]*r : vmul([2,2],r)
+        is_num(r)? [2,2]*r : vmul([2,2],point2d(r))
     ) : type == "path_isect" || type == "path_extent"? ( //path
         let(
             mm = pointlist_bounds(geom[1]),
@@ -430,8 +430,8 @@ function find_anchor(anchor, geom) =
     ) : type == "cyl"? ( //r1, r2, l, shift
         let(
             rr1=geom[1], rr2=geom[2], l=geom[3], shift=point2d(geom[4]),
-            r1 = is_num(rr1)? [rr1,rr1] : rr1,
-            r2 = is_num(rr2)? [rr2,rr2] : rr2,
+            r1 = is_num(rr1)? [rr1,rr1] : point2d(rr1),
+            r2 = is_num(rr2)? [rr2,rr2] : point2d(rr2),
             u = (anchor.z+1)/2,
             axy = unit(point2d(anchor),[0,0]),
             bot = point3d(vmul(r1,axy), -l/2),
@@ -447,9 +447,9 @@ function find_anchor(anchor, geom) =
     ) : type == "spheroid"? ( //r
         let(
             rr = geom[1],
-            r = is_num(rr)? [rr,rr,rr] : rr,
+            r = is_num(rr)? [rr,rr,rr] : point3d(rr),
             anchor = unit(point3d(anchor),CENTER),
-            pos = point3d(cp) + vmul(r,anchor) + offset,
+            pos = point3d(cp) + vmul(r,anchor) + point3d(offset),
             vec = unit(vmul(r,anchor),UP)
         ) [anchor, pos, vec, oang]
     ) : type == "vnf_isect"? ( //vnf
@@ -458,10 +458,9 @@ function find_anchor(anchor, geom) =
             eps = 1/2048,
             points = vnf[0],
             faces = vnf[1],
-            rpts = rot(from=anchor, to=RIGHT, p=move(point3d(-cp), p=points)),
+            rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), points),
             hits = [
-                for (i = idx(faces)) let(
-                    face = faces[i],
+                for (face = faces) let(
                     verts = select(rpts, face)
                 ) if (
                     max(subindex(verts,0)) >= -eps &&
@@ -470,35 +469,40 @@ function find_anchor(anchor, geom) =
                     min(subindex(verts,1)) <=  eps &&
                     min(subindex(verts,2)) <=  eps
                 ) let(
-                    pt = polygon_line_intersection(
-                        select(points, face),
-                        [CENTER,anchor], eps=eps
-                    )
-                ) if (!is_undef(pt)) [norm(pt), i, pt]
+                    poly = select(points, face),
+                    pt = polygon_line_intersection(poly, [cp,cp+anchor], bounded=[true,false], eps=eps)
+                ) if (!is_undef(pt)) let(
+                    plane = plane_from_polygon(poly),
+                    n = unit(plane_normal(plane))
+                )
+                [norm(pt-cp), n, pt]
             ]
         )
         assert(len(hits)>0, "Anchor vector does not intersect with the shape.  Attachment failed.")
         let(
             furthest = max_index(subindex(hits,0)),
-            pos = point3d(cp) + hits[furthest][2],
             dist = hits[furthest][0],
-            nfaces = [for (hit = hits) if(approx(hit[0],dist,eps=eps)) hit[1]],
-            n = unit(
-                sum([
-                    for (i = nfaces) let(
-                        faceverts = select(points, faces[i]),
-                        faceplane = plane_from_points(faceverts),
-                        nrm = plane_normal(faceplane)
-                    ) nrm
-                ]) / len(nfaces),
-                UP
-            )
+            pos = hits[furthest][2],
+            hitnorms = [for (hit = hits) if (approx(hit[0],dist,eps=eps)) hit[1]],
+            unorms = len(hitnorms) > 7
+              ? unique([for (nn = hitnorms) quant(nn,1e-9)])
+              : [
+                    for (i = idx(hitnorms)) let(
+                        nn = hitnorms[i],
+                        isdup = [
+                            for (j = [i+1:1:len(hitnorms)-1])
+                            if (approx(nn, hitnorms[j])) 1
+                        ] != []
+                    ) if (!isdup) nn
+                ],
+            n = unit(sum(unorms)),
+            oang = approx(point2d(n), [0,0])? 0 : atan2(n.y, n.x) + 90
         )
         [anchor, pos, n, oang]
     ) : type == "vnf_extent"? ( //vnf
         let(
             vnf=geom[1],
-            rpts = rot(from=anchor, to=RIGHT, p=move(point3d(-cp), p=vnf[0])),
+            rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), vnf[0]),
             maxx = max(subindex(rpts,0)),
             idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
             mm = pointlist_bounds(select(rpts,idxs)),
@@ -519,10 +523,10 @@ function find_anchor(anchor, geom) =
     ) : type == "circle"? ( //r
         let(
             rr = geom[1],
-            r = is_num(rr)? [rr,rr] : rr,
-            pos = point2d(cp) + vmul(r,anchor) + offset,
+            r = is_num(rr)? [rr,rr] : point2d(rr),
             anchor = unit(point2d(anchor),[0,0]),
-            vec = unit(vmul([r.y,r.x],anchor),[0,1])
+            pos = point2d(cp) + vmul(r,anchor) + point2d(offset),
+            vec = unit(vmul(r,anchor),[0,1])
         ) [anchor, pos, vec, 0]
     ) : type == "path_isect"? ( //path
         let(
@@ -849,7 +853,7 @@ module attachable(
 
 // Module: position()
 // Usage:
-//   position(from, [overlap]) ...
+//   position(from) ...
 // Description:
 //   Attaches children to a parent object at an anchor point.
 // Arguments:
@@ -970,7 +974,8 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
         $attach_anchor = anch;
         $attach_norot = true;
         $tags = "mask";
-        length = sum(vmul($parent_size, [for (x=vec) x?0:1]))+0.1;
+        psize = point3d($parent_size);
+        length = [for (i=[0:2]) if(!vec[i]) psize[i]][0]+0.1;
         rotang =
             vec.z<0? [90,0,180+vang(point2d(vec))] :
             vec.z==0 && sign(vec.x)==sign(vec.y)? 135+vang(point2d(vec)) :
@@ -1230,17 +1235,20 @@ module show(tags="")
 //   }
 module diff(neg, pos=undef, keep=undef)
 {
-    difference() {
-        if (pos != undef) {
-            show(pos) children();
-        } else {
-            if (keep == undef) {
-                hide(neg) children();
+    // Don't perform the operation if the current tags are hidden
+    if (attachment_is_shown($tags)) {
+        difference() {
+            if (pos != undef) {
+                show(pos) children();
             } else {
-                hide(str(neg," ",keep)) children();
+                if (keep == undef) {
+                    hide(neg) children();
+                } else {
+                    hide(str(neg," ",keep)) children();
+                }
             }
+            show(neg) children();
         }
-        show(neg) children();
     }
     if (keep!=undef) {
         show(keep) children();
@@ -1275,17 +1283,20 @@ module diff(neg, pos=undef, keep=undef)
 //   }
 module intersect(a, b=undef, keep=undef)
 {
-    intersection() {
-        if (b != undef) {
-            show(b) children();
-        } else {
-            if (keep == undef) {
-                hide(a) children();
+    // Don't perform the operation if the current tags are hidden
+    if (attachment_is_shown($tags)) {
+        intersection() {
+            if (b != undef) {
+                show(b) children();
             } else {
-                hide(str(a," ",keep)) children();
+                if (keep == undef) {
+                    hide(a) children();
+                } else {
+                    hide(str(a," ",keep)) children();
+                }
             }
+            show(a) children();
         }
-        show(a) children();
     }
     if (keep!=undef) {
         show(keep) children();

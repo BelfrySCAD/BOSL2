@@ -339,7 +339,7 @@ function region_faces(region, transform, reverse=false, vnf=EMPTY_VNF) =
 //   linear_sweep(orgn,height=20,convexity=16) show_anchors();
 module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity, anchor_isect=false, anchor, spin=0, orient=UP) {
     region = is_path(region)? [region] : region;
-    cp = median(flatten(region));
+    cp = mean(pointlist_bounds(flatten(region)));
     anchor = get_anchor(anchor, center, "origin", "origin");
     vnf = linear_sweep(
         region, height=height,
