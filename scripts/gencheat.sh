@@ -77,7 +77,7 @@ CHEAT_FILES=$(grep '^include' std.scad | sed 's/^.*<\([a-zA-Z0-9.]*\)>/\1/'|grep
 (
     echo '## Belfry OpenScad Library Cheat Sheet'
     echo
-    echo '( [Alphabetic Index](Index.md) )'
+    echo '( [Alphabetic Index](Index) )'
     echo
     for f in $CHEAT_FILES ; do
         #echo "### $f"
