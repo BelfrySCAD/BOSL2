@@ -232,7 +232,7 @@ module test_rot() {
         assert_equal(rot(a,p=pts2d), pts2d, info=str("rot(",a,",p=...), 2D"));
         assert_equal(rot(a,p=pts3d), pts3d, info=str("rot(",a,",p=...), 3D"));
     }
-    assert_equal(rot(90), [[0,-1,0,0],[1,0,0,0],[0,0,1,0],[0,0,0,1]])
+    assert_equal(rot(90), [[0,-1,0,0],[1,0,0,0],[0,0,1,0],[0,0,0,1]]);
     for (a=angs) {
         assert_equal(rot(a), affine3d_zrot(a), info=str("Z angle (only) = ",a));
         assert_equal(rot([a,0,0]), affine3d_xrot(a), info=str("X angle = ",a));
