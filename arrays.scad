@@ -1286,10 +1286,12 @@ function array_dim(v, depth=undef) =
 
 
 // Function: transpose()
-// Description: Returns the transposition of the given array.
-//    When reverse=true, the transposition is done in respect to the secondary diagonal, that is:
-//    .
-//    reverse(transpose(reverse(arr))) == transpose(arr, reverse=true)
+// Usage:
+//    transpose(arr, [reverse])
+// Description:
+//    Returns the transpose of the given input array.  The input should be a list of lists that are
+//    all the same length.  If you give a vector then transpose returns it unchanged.  
+//    When reverse=true, the transpose is done across to the secondary diagonal.  (See example below.)
 //    By default, reverse=false.
 // Example:
 //   arr = [
@@ -1329,19 +1331,19 @@ function array_dim(v, depth=undef) =
 //   //  ["h", "e", "b"],
 //   //  ["g", "d", "a"]
 //   // ]
-// Example:
+// Example: Transpose on a list of numbers returns the list unchanged
 //   transpose([3,4,5]);  // Returns: [3,4,5]
 function transpose(arr, reverse=false) =
-    assert( is_list(arr) && len(arr)>0, "The array is not a vector neither a matrix." )
+    assert( is_list(arr) && len(arr)>0, "Input to transpose must be a nonempty list.")
     is_list(arr[0])
-    ?   let( l0 = len(arr[0]) )
-        assert([for(a=arr) if(!is_list(a) || len(a)!=l0) 1 ]==[], "The array is not a vector neither a matrix." )
+    ?   let( len0 = len(arr[0]) )
+        assert([for(a=arr) if(!is_list(a) || len(a)!=len0) 1 ]==[], "Input to transpose has inconsistent row lengths." )
         reverse
-        ? [for (i=[0:1:l0-1]) 
-              [ for (j=[0:1:len(arr)-1]) arr[len(arr)-1-j][l0-1-i] ] ] 
-        : [for (i=[0:1:l0-1]) 
+        ? [for (i=[0:1:len0-1]) 
+              [ for (j=[0:1:len(arr)-1]) arr[len(arr)-1-j][len0-1-i] ] ] 
+        : [for (i=[0:1:len0-1]) 
               [ for (j=[0:1:len(arr)-1]) arr[j][i] ] ] 
-    :  assert( is_vector(arr), "The array is not a vector neither a matrix." )
+    :  assert( is_vector(arr), "Input to transpose must be a vector or list of lists.")
            arr;
 
 
