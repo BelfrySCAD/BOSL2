@@ -53,7 +53,7 @@ test_tri_functions();
 //test__general_plane_line_intersection();
 //test_plane_line_angle();
 //test_plane_line_intersection();
-//test_polygon_line_intersection();
+test_polygon_line_intersection();
 //test_plane_intersection();
 test_coplanar();
 test_points_on_plane();
@@ -540,6 +540,17 @@ module test_distance_from_plane() {
     assert(distance_from_plane(plane1, [5,5,8]) == 8);
 }
 *test_distance_from_plane();
+
+
+module test_polygon_line_intersection() {
+    poly1 = [[50,50,50], [50,-50,50], [-50,-50,50]];
+    assert_approx(polygon_line_intersection(poly1, [CENTER, UP]), [0,0,50]);
+    assert_approx(polygon_line_intersection(poly1, [CENTER, UP+RIGHT]), [50,0,50]);
+    assert_approx(polygon_line_intersection(poly1, [CENTER, UP+BACK+RIGHT]), [50,50,50]);
+    assert_approx(polygon_line_intersection(poly1, [[0,0,50], [1,0,50]]), [[[0,0,50], [50,0,50]]]);
+    assert_approx(polygon_line_intersection(poly1, [[0,0,0], [1,0,0]]), undef);
+}
+*test_polygon_line_intersection();
 
 
 module test_coplanar() {

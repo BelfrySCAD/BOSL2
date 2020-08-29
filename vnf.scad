@@ -341,15 +341,17 @@ function vnf_vertex_array(
 // Arguments:
 //   vnf = A VNF structure, or list of VNF structures.
 //   convexity = Max number of times a line could intersect a wall of the shape.
-module vnf_polyhedron(vnf,
-                      convexity=10,anchor="origin",cp,
-                      spin=0, orient=UP, extent=false
-)
-{
+//   extent = If true, calculate anchors by extents, rather than intersection.  Default: true.
+//   cp = Centerpoint of VNF to use for anchoring when `extent` is false.  Default: `[0, 0, 0]`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"origin"`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin", spin=0, orient=UP) {
     vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf;
-    attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf)){
-      polyhedron(vnf[0], vnf[1], convexity=convexity);
-      children();
+    cp = is_def(cp) ? cp : vnf_centroid(vnf);
+    attachable(anchor,spin,orient, vnf=vnf, extent=extent, cp=cp) {
+        polyhedron(vnf[0], vnf[1], convexity=convexity);
+        children();
     }
 }
 

@@ -1007,11 +1007,20 @@ function closest_point_on_plane(plane, point) =
 // Returns [LINE, undef] if the line is on the plane.
 // Returns undef if line is parallel to, but not on the given plane.
 function _general_plane_line_intersection(plane, line, eps=EPSILON) =
-    let( a = plane*[each line[0],-1],
-         b = plane*[each(line[1]-line[0]),-1] )
-    approx(b,0,eps) 
-    ? points_on_plane(line[0],plane,eps)? [line,undef]: undef
-    : [ line[0]+a/b*(line[1]-line[0]), a/b ];
+    let(
+        l0 = line[0],  // Ray start point
+        u = line[1] - l0,  // Ray direction vector
+        n = plane_normal(plane),
+        p0 = n * plane[3],  // A point on the plane
+        w = l0 - p0  // Vector from plane point to ray start
+    ) approx(n*u, 0, eps=eps) ? (
+        // Line is parallel to plane.
+        approx(n*w, 0, eps=eps)
+          ? [line, undef] // Line is on the plane.
+          : undef // Line never intersects the plane.
+    ) : let(
+        t = (-n * w) / (n * u)  // Distance ratio along ray
+    ) [ l0 + u*t, t ];
 
 
 // Function: plane_line_angle()
@@ -1098,8 +1107,8 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
             linevec = unit(line[1] - line[0]),
             lp1 = line[0] + (bounded[0]? 0 : -1000000) * linevec,
             lp2 = line[1] + (bounded[1]? 0 :  1000000) * linevec,
-            poly2d = clockwise_polygon(project_plane(poly, p1, p2, p3)),
-            line2d = project_plane([lp1,lp2], p1, p2, p3),
+            poly2d = clockwise_polygon(project_plane(poly, plane)),
+            line2d = project_plane([lp1,lp2], plane),
             parts = split_path_at_region_crossings(line2d, [poly2d], closed=false),
             inside = [for (part = parts)
                           if (point_in_polygon(mean(part), poly2d)>0) part
@@ -1107,7 +1116,7 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
         ) 
         !inside? undef :
         let(
-            isegs = [for (seg = inside) lift_plane(seg, p1, p2, p3) ]
+            isegs = [for (seg = inside) lift_plane(seg, plane) ]
         ) 
         isegs
     ) 
@@ -1264,7 +1273,6 @@ function find_circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
             x = hyp * cos(a/2),
             tp1 = pt2 + x * v1,
             tp2 = pt2 + x * v2,
-//            fff=echo(tp1=tp1,cp=cp,pt2=pt2),
             dang1 = vector_angle(tp1-cp,pt2-cp),
             dang2 = vector_angle(tp2-cp,pt2-cp)
             ) 
