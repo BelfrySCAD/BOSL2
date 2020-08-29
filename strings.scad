@@ -701,7 +701,9 @@ function str_format(fmt, vals, use_nbsp=false) =
 //   echofmt("{:-10s}{:.3f}", ["plecostamus",27.43982]);  // ECHO: "plecostamus27.440"
 //   echofmt("{:-10.9s}{:.3f}", ["plecostamus",27.43982]);  // ECHO: "plecostam 27.440"
 function echofmt(fmt, vals, use_nbsp=false) = echo(str_format(fmt,vals,use_nbsp));
-module echofmt(fmt, vals, use_nbsp=false) echo(str_format(fmt,vals,use_nbsp));
-
+module echofmt(fmt, vals, use_nbsp=false) {
+   no_children($children);
+   echo(str_format(fmt,vals,use_nbsp));
+}
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

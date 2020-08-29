@@ -348,7 +348,8 @@ function vnf_vertex_array(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin", spin=0, orient=UP) {
     vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf;
-    attachable(anchor,spin,orient, vnf=vnf, cp=cp, extent=extent) {
+    cp = is_def(cp) ? cp : vnf_centroid(vnf);
+    attachable(anchor,spin,orient, vnf=vnf, extent=extent, cp=cp) {
         polyhedron(vnf[0], vnf[1], convexity=convexity);
         children();
     }
