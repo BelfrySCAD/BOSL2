@@ -488,6 +488,7 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 //   - smooth: os_smooth(cut|joint).  Define continuous curvature rounding, with `cut` and `joint` as for round_corners.
 //   - teardrop: os_teardrop(r|cut).  Rounding using a 1/8 circle that then changes to a 45 degree chamfer.  The chamfer is at the end, and enables the object to be 3d printed without support.  The radius gives the radius of the circular part.
 //   - chamfer: os_chamfer([height], [width], [cut], [angle]).  Chamfer the edge at desired angle or with desired height and width.  You can specify height and width together and the angle will be ignored, or specify just one of height and width and the angle is used to determine the shape.  Alternatively, specify "cut" along with angle to specify the cut back distance of the chamfer.
+//   - mask: os_mask(mask, [out]).  Create a profile from one of the [2d masking shapes](shapes2d.scad#5-2d-masking-shapes).  The `out` parameter specifies that the mask should flare outward (like crown molding or baseboard).  This is set false by default.  
 //   .
 //   The general settings that you can use with all of the helper functions are mostly used to control how offset_sweep() calls the offset() function.
 //   - extra: Add an extra vertical step of the specified height, to be used for intersections or differences.  This extra step will extend the resulting object beyond the height you specify.  Default: 0
@@ -654,6 +655,15 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 //       up(1)
 //         offset_sweep(offset(rhex,r=-1), height=9.5, bottom=os_circle(r=2), top=os_teardrop(r=-4));
 //     }
+// Example: Using os_mask to create ogee profiles:
+//   ogee = mask2d_ogee([
+//       "xstep",1,  "ystep",1,  // Starting shoulder.
+//       "fillet",5, "round",5,  // S-curve.
+//       "ystep",1,              // Ending shoulder.
+//   ]);
+//   star = star(5, r=220, ir=130);
+//   rounded_star = round_corners(star, cut=flatten(repeat([5,0],5)), $fn=24);
+//   offset_sweep(rounded_star, height=100, top=os_mask(ogee), bottom=os_mask(ogee,out=true));
 
 
 // This function does the actual work of repeatedly calling offset() and concatenating the resulting face and vertex lists to produce
@@ -878,6 +888,18 @@ function os_profile(points, extra,check_valid, quality, offset_maxstep, offset) 
                 "offset_maxstep", offset_maxstep,
                 "offset", offset
         ]);
+
+
+function os_mask(mask, out=false, extra,check_valid, quality, offset_maxstep, offset) =
+  let(
+      origin_index = [for(i=idx(mask)) if (mask[i].x<0 && mask[i].y<0) i],
+      xfactor = out ? -1 : 1
+  )
+  assert(len(origin_index)==1,"Cannot find origin in the mask")
+  let(
+      points = ([for(pt=polygon_shift(mask,origin_index[0])) [xfactor*max(pt.x,0),-max(pt.y,0)]])
+  )
+  os_profile(deduplicate(move(-points[1],p=select(points,1,-1))), extra,check_valid,quality,offset_maxstep,offset);
 
 
 // Module: convex_offset_extrude()
