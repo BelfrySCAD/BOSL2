@@ -26,8 +26,8 @@
 //   Returns true when the list have elements of same type up to the depth `depth`.
 //   Booleans and numbers are not distinguinshed as of distinct types. 
 // Arguments:
-//   list - the list to check
-//   depth - the lowest level the check is done
+//   list = the list to check
+//   depth = the lowest level the check is done
 // Example:
 //   is_homogeneous( [[1,["a"]], [2,["b"]]] )     // Returns true
 //   is_homogeneous( [[1,["a"]], [2,[true]]] )    // Returns false
