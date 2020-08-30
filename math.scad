@@ -1292,7 +1292,7 @@ function deriv3(data, h=1, closed=false) =
 // Description:
 //   Multiplies two complex numbers represented by 2D vectors.  
 function C_times(z1,z2) = 
-    assert( is_vector(z1+z2,2), "Complex numbers should be represented by 2D vectors." )
+    assert( is_matrix([z1,z2],2,2), "Complex numbers should be represented by 2D vectors" )
     [ z1.x*z2.x - z1.y*z2.y, z1.x*z2.y + z1.y*z2.x ];
 
 // Function: C_div()
