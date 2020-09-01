@@ -1216,6 +1216,16 @@ function block_matrix(M) =
     assert(badrows==[], "Inconsistent or invalid input")
     bigM;
 
+// Function: diagonal_matrix()
+// Usage:
+//   diagonal_matrix(diag, [offdiag])
+// Description:
+//   Creates a square matrix with the items in the list `diag` on
+//   its diagonal.  The off diagonal entries are set to offdiag,
+//   which is zero by default. 
+function diagonal_matrix(diag,offdiag=0) =
+  [for(i=[0:1:len(diag)-1]) [for(j=[0:len(diag)-1]) i==j?diag[i] : offdiag]];
+
 
 // Function: submatrix_set()
 // Usage: submatrix_set(M,A,[m],[n])

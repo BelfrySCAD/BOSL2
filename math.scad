@@ -712,6 +712,23 @@ function matrix_inverse(A) =
     assert(is_matrix(A,square=true),"Input to matrix_inverse() must be a square matrix")
     linear_solve(A,ident(len(A)));
 
+// Function: null_space()
+// Usage:
+//   null_space(A)
+// Description:
+//   Returns an orthonormal basis for the null space of A, namely the vectors {x} such that Ax=0.  If the null space
+//   is just the origin then returns an empty list. 
+function null_space(A,eps=1e-12) =
+    assert(is_matrix(A))
+    let(
+      Q_R=qr_factor(transpose(A),pivot=true),
+      R=Q_R[1],
+      zrow = [for(i=idx(R)) if (is_zero(R[i],eps)) i]
+    )
+    len(zrow)==0
+      ? []
+      : transpose(subindex(Q_R[0],zrow));
+
 
 // Function: qr_factor()
 // Usage: qr = qr_factor(A,[pivot])

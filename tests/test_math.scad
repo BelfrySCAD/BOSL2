@@ -969,6 +969,29 @@ module test_quadratic_roots(){
 }
 test_quadratic_roots();
 
+
+module test_null_space(){
+    assert_equal(null_space([[3,2,1],[3,6,3],[3,9,-3]]),[]);
+
+    function nullcheck(A,dim) =
+      let(v=null_space(A))
+        len(v)==dim && is_zero(A*transpose(v),eps=1e-12);
+    
+   A = [[-1, 2, -5, 2],[-3,-1,3,-3],[5,0,5,0],[3,-4,11,-4]];
+   assert(nullcheck(A,1));
+
+   B = [
+        [  4,    1,    8,    6,   -2,    3],
+        [ 10,    5,   10,   10,    0,    5],
+        [  8,    1,    8,    8,   -6,    1],
+        [ -8,   -8,    6,   -1,   -8,   -1],
+        [  2,    2,    0,    1,    2,    1],
+        [  2,   -3,   10,    6,   -8,    1],
+       ];
+   assert(nullcheck(B,3));
+}
+test_null_space();
+
 module test_qr_factor() {
   // Check that R is upper triangular
   function is_ut(R) =
