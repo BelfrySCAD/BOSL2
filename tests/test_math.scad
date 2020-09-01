@@ -781,6 +781,12 @@ test_back_substitute();
 
 
 
+module test_norm_fro(){
+  assert_approx(norm_fro([[2,3,4],[4,5,6]]), 10.29563014098700);
+
+} test_norm_fro();  
+
+
 module test_linear_solve(){
   M = [[-2,-5,-1,3],
        [3,7,6,2],
@@ -954,6 +960,15 @@ module test_real_roots(){
 test_real_roots();
 
 
+
+module test_quadratic_roots(){
+    assert_approx(quadratic_roots([1,4,4]),[[-2,0],[-2,0]]);
+    assert_approx(quadratic_roots([1,4,4],real=true),[-2,-2]);
+    assert_approx(quadratic_roots([1,-5,6],real=true), [2,3]);
+    assert_approx(quadratic_roots([1,-5,6]), [[2,0],[3,0]]);
+}
+test_quadratic_roots();
+
 module test_qr_factor() {
   // Check that R is upper triangular
   function is_ut(R) =
@@ -962,7 +977,15 @@ module test_qr_factor() {
 
   // Test the R is upper trianglar, Q is orthogonal and qr=M
   function qrok(qr,M) =
-     is_ut(qr[1]) && approx(qr[0]*transpose(qr[0]), ident(len(qr[0]))) && approx(qr[0]*qr[1],M);
+     is_ut(qr[1]) && approx(qr[0]*transpose(qr[0]), ident(len(qr[0]))) && approx(qr[0]*qr[1],M) && qr[2]==ident(len(qr[2]));
+
+  // Test the R is upper trianglar, Q is orthogonal, R diagonal non-increasing and qrp=M
+  function qrokpiv(qr,M) =
+       is_ut(qr[1])
+    && approx(qr[0]*transpose(qr[0]), ident(len(qr[0])))
+    && approx(qr[0]*qr[1]*transpose(qr[2]),M)
+    && list_decreasing([for(i=[0:1:min(len(qr[1]),len(qr[1][0]))-1]) abs(qr[1][i][i])]);
+
   
   M = [[1,2,9,4,5],
        [6,7,8,19,10],
@@ -991,6 +1014,15 @@ module test_qr_factor() {
   assert(qrok(qr_factor([[7]]), [[7]]));
   assert(qrok(qr_factor([[1,2,3]]), [[1,2,3]]));
   assert(qrok(qr_factor([[1],[2],[3]]), [[1],[2],[3]]));
+
+
+  assert(qrokpiv(qr_factor(M,pivot=true),M));
+  assert(qrokpiv(qr_factor(select(M,0,3),pivot=true),select(M,0,3)));
+  assert(qrokpiv(qr_factor(transpose(select(M,0,3)),pivot=true),transpose(select(M,0,3))));
+  assert(qrokpiv(qr_factor(B,pivot=true),B));
+  assert(qrokpiv(qr_factor([[7]],pivot=true), [[7]]));
+  assert(qrokpiv(qr_factor([[1,2,3]],pivot=true), [[1,2,3]]));
+  assert(qrokpiv(qr_factor([[1],[2],[3]],pivot=true), [[1],[2],[3]]));
 }
 test_qr_factor();
 
