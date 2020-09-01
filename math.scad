@@ -1350,7 +1350,9 @@ function C_div(z1,z2) =
 // Description:
 //    Computes roots of the quadratic equation a*x^2+b*x+c==0, where the
 //    coefficients are real numbers.  If real is true then returns only the
-//    real roots.  Otherwise returns a pair of complex values.
+//    real roots.  Otherwise returns a pair of complex values.  This method
+//    may be more reliable than the general root finder at distinguishing
+//    real roots from complex roots.  
 
 // https://people.csail.mit.edu/bkph/articles/Quadratics.pdf
 
