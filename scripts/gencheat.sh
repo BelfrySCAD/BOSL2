@@ -16,50 +16,52 @@ function columnize
     cols=4
     TMPFILE=$(mktemp -t $(basename $0).XXXXXX) || exit 1
     cat >>$TMPFILE
-    totcnt=$(wc -l $TMPFILE | awk '{print $1}')
-    maxrows=$((($totcnt+$cols-1)/$cols))
-    maxcols=$cols
-    if [[ $maxcols -gt $totcnt ]] ; then
-        maxcols=$totcnt
-    fi
-    cnt=0
-    hdrln1="| $(ucase $1)  "
-    hdrln2='|:-----'
-    n=1
-    while [[ $n -lt $maxcols ]] ; do
-        hdrln1+=' | &nbsp;'
-        hdrln2+=' |:------'
-        n=$(($n+1))
-    done
-    hdrln1+=' |'
-    hdrln2+=' |'
-    n=0
-    while [[ $n -lt $maxrows ]] ; do
-        lines[$n]=""
-        n=$(($n+1))
-    done
-    col=0
-    while IFS= read -r line; do
-        if [[ $col != 0 ]] ; then
-            lines[$cnt]+=" | "
+    if [[ $(wc -l $TMPFILE | awk '{print $1}') -gt 1 ]] ; then
+        totcnt=$(wc -l $TMPFILE | awk '{print $1}')
+        maxrows=$((($totcnt+$cols-1)/$cols))
+        maxcols=$cols
+        if [[ $maxcols -gt $totcnt ]] ; then
+            maxcols=$totcnt
         fi
-        lines[$cnt]+="$line"
-        cnt=$(($cnt+1))
-        if [[ $cnt = $maxrows ]] ; then
-            cnt=0
-            col=$(($col+1))
-        fi
-    done <$TMPFILE
-    rm -f $TMPFILE
+        cnt=0
+        hdrln1="| $(ucase $1)  "
+        hdrln2='|:-----'
+        n=1
+        while [[ $n -lt $maxcols ]] ; do
+            hdrln1+=' | &nbsp;'
+            hdrln2+=' |:------'
+            n=$(($n+1))
+        done
+        hdrln1+=' |'
+        hdrln2+=' |'
+        n=0
+        while [[ $n -lt $maxrows ]] ; do
+            lines[$n]=""
+            n=$(($n+1))
+        done
+        col=0
+        while IFS= read -r line; do
+            if [[ $col != 0 ]] ; then
+                lines[$cnt]+=" | "
+            fi
+            lines[$cnt]+="$line"
+            cnt=$(($cnt+1))
+            if [[ $cnt = $maxrows ]] ; then
+                cnt=0
+                col=$(($col+1))
+            fi
+        done <$TMPFILE
+        rm -f $TMPFILE
 
-    echo
-    echo $hdrln1
-    echo $hdrln2
-    n=0
-    while [[ $n -lt $maxrows ]] ; do
-        echo "| ${lines[$n]} |"
-        n=$(($n+1))
-    done
+        echo
+        echo $hdrln1
+        echo $hdrln2
+        n=0
+        while [[ $n -lt $maxrows ]] ; do
+            echo "| ${lines[$n]} |"
+            n=$(($n+1))
+        done
+    fi
 }
 
 function mkconstindex
@@ -84,14 +86,12 @@ CHEAT_FILES=$(grep '^include' std.scad | sed 's/^.*<\([a-zA-Z0-9.]*\)>/\1/'|grep
     echo
     echo '( [Alphabetic Index](Index) )'
     echo
+    (
+        grep -H '// Constant: ' $CHEAT_FILES | mkconstindex
+        grep -H '^[A-Z$][A-Z0-9_]* *=.*//' $CHEAT_FILES | mkconstindex2
+    ) | sort -u | columnize 'Constants'
     for f in $CHEAT_FILES ; do
-        (
-            (
-                grep -H 'Constant: ' $f | mkconstindex
-                grep -H '^[A-Z$][A-Z0-9_]* *=.*//' $f | mkconstindex2
-            ) | sort -u
-            egrep -H 'Function: |Function&Module: |Module: ' $f | mkotherindex
-        ) | columnize $f
+        egrep -H '// Function: |// Function&Module: |// Module: ' $f | mkotherindex | sort -u | columnize $f
         echo
     done
 ) > BOSL2.wiki/CheatSheet.md

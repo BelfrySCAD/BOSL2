@@ -41,6 +41,11 @@ jobs:
         cd $GITHUB_WORKSPACE
         ./scripts/genindex.sh
 
+    - name: Generate Cheat Sheet
+      run: |
+        cd $GITHUB_WORKSPACE
+        ./scripts/gencheat.sh
+
     - name: Generating Docs
       env:
         GH_PAT: ${{ secrets.GH_PAT }}
