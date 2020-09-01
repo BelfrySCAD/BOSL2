@@ -26,7 +26,7 @@ function columnize
     hdrln1="| $(ucase $1)  "
     hdrln2='|:-----'
     n=1
-    while [[ $n < $maxcols ]] ; do
+    while [[ $n -lt $maxcols ]] ; do
         hdrln1+=' | &nbsp;'
         hdrln2+=' |:------'
         n=$(($n+1))
@@ -34,7 +34,7 @@ function columnize
     hdrln1+=' |'
     hdrln2+=' |'
     n=0
-    while [[ $n < $maxrows ]] ; do
+    while [[ $n -lt $maxrows ]] ; do
         lines[$n]=""
         n=$(($n+1))
     done
@@ -56,7 +56,7 @@ function columnize
     echo $hdrln1
     echo $hdrln2
     n=0
-    while [[ $n < $maxrows ]] ; do
+    while [[ $n -lt $maxrows ]] ; do
         echo "| ${lines[$n]} |"
         n=$(($n+1))
     done
@@ -65,6 +65,11 @@ function columnize
 function mkconstindex
 {
     sed 's/([^)]*)//g' | sed 's/[^a-zA-Z0-9_.:$]//g' | awk -F ':' '{printf "[%s](%s#%s)\n", $3, $1, $3}'
+}
+
+function mkconstindex2
+{
+    sed 's/ *=.*$//' | sed 's/[^a-zA-Z0-9_.:$]//g' | awk -F ':' '{printf "[%s](%s#%s)\n", $2, $1, $2}'
 }
 
 function mkotherindex
@@ -80,9 +85,11 @@ CHEAT_FILES=$(grep '^include' std.scad | sed 's/^.*<\([a-zA-Z0-9.]*\)>/\1/'|grep
     echo '( [Alphabetic Index](Index) )'
     echo
     for f in $CHEAT_FILES ; do
-        #echo "### $f"
         (
-            egrep -H 'Constant: ' $f | mkconstindex
+            (
+                grep -H 'Constant: ' $f | mkconstindex
+                grep -H '^[A-Z$][A-Z0-9_]* *=.*//' $f | mkconstindex2
+            ) | sort -u
             egrep -H 'Function: |Function&Module: |Module: ' $f | mkotherindex
         ) | columnize $f
         echo
