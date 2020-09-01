@@ -13,7 +13,7 @@ function lcase
 
 function columnize
 {
-    cols=4
+    cols=$2
     TMPFILE=$(mktemp -t $(basename $0).XXXXXX) || exit 1
     cat >>$TMPFILE
     if [[ $(wc -l $TMPFILE | awk '{print $1}') -gt 1 ]] ; then
@@ -79,7 +79,7 @@ function mkotherindex
     sed 's/([^)]*)//g' | sed 's/[^a-zA-Z0-9_.:$]//g' | awk -F ':' '{printf "[%s()](%s#%s)\n", $3, $1, $3}'
 }
 
-CHEAT_FILES=$(grep '^include' std.scad | sed 's/^.*<\([a-zA-Z0-9.]*\)>/\1/'|grep -v 'version.scad')
+CHEAT_FILES=$(grep '^include' std.scad | sed 's/^.*<\([a-zA-Z0-9.]*\)>/\1/' | grep -v 'version.scad' | grep -v 'primitives.scad')
 
 (
     echo '## Belfry OpenScad Library Cheat Sheet'
@@ -89,9 +89,9 @@ CHEAT_FILES=$(grep '^include' std.scad | sed 's/^.*<\([a-zA-Z0-9.]*\)>/\1/'|grep
     (
         grep -H '// Constant: ' $CHEAT_FILES | mkconstindex
         grep -H '^[A-Z$][A-Z0-9_]* *=.*//' $CHEAT_FILES | mkconstindex2
-    ) | sort -u | columnize 'Constants'
+    ) | sort -u | columnize 'Constants' 6
     for f in $CHEAT_FILES ; do
-        egrep -H '// Function: |// Function&Module: |// Module: ' $f | mkotherindex | sort -u | columnize $f
+        egrep -H '// Function: |// Function&Module: |// Module: ' $f | mkotherindex | columnize "[$f]($f)" 4
         echo
     done
 ) > BOSL2.wiki/CheatSheet.md
