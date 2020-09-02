@@ -529,6 +529,9 @@ module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2, anchor=CENTER, spi
 //   w = Width (thickness) of the shell.
 //   l = Length of the shell.
 //   base = 3D model representing object base
+//
+// Example: Square box
+//  shell(1, 20) cube([20, 20, 1]);
 module shell(width, height) {
     union() {
         linear_extrude(height)
