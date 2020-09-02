@@ -517,6 +517,30 @@ module corrugated_wall(h=50, l=100, thick=5, strut=5, wall=2, anchor=CENTER, spi
     }
 }
 
+// Module: shell()
+//
+// Description:
+//   Operator that receives as input the base 3D model and outputs the same object augmented with shell walls.
+//
+// Usage:
+//   shell(w, l) base;
+//
+// Arguments:
+//   w = Width (thickness) of the shell.
+//   l = Length of the shell.
+//   base = 3D model representing object base
+module shell(width, height) {
+    union() {
+        linear_extrude(height)
+            difference() {
+                projection()
+                    children(0);
+                offset(-width)
+                    projection() children(0);
+            }
+        children(0);
+    }
+}
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
