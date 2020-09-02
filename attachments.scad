@@ -461,13 +461,16 @@ function find_anchor(anchor, geom) =
             rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), points),
             hits = [
                 for (face = faces) let(
-                    verts = select(rpts, face)
+                    verts = select(rpts, face),
+                    xs = subindex(verts,0),
+                    ys = subindex(verts,1),
+                    zs = subindex(verts,2)
                 ) if (
-                    max(subindex(verts,0)) >= -eps &&
-                    max(subindex(verts,1)) >= -eps &&
-                    max(subindex(verts,2)) >= -eps &&
-                    min(subindex(verts,1)) <=  eps &&
-                    min(subindex(verts,2)) <=  eps
+                    max(xs) >= -eps &&
+                    max(ys) >= -eps &&
+                    max(zs) >= -eps &&
+                    min(ys) <=  eps &&
+                    min(zs) <=  eps
                 ) let(
                     poly = select(points, face),
                     pt = polygon_line_intersection(poly, [cp,cp+anchor], bounded=[true,false], eps=eps)

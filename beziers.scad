@@ -356,7 +356,7 @@ function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
 
 // Function: fillet3pts()
 // Usage:
-//   fillet3pts(p0, p1, p2, r);
+//   fillet3pts(p0, p1, p2, r|d);
 // Description:
 //   Takes three points, defining two line segments, and works out the
 //   cubic (degree 3) bezier segment (and surrounding control points)
@@ -368,7 +368,8 @@ function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
 //   p1 = The middle point.
 //   p2 = The ending point.
 //   r = The radius of the fillet/rounding.
-//   maxerr = Max amount bezier curve should diverge from actual radius curve.  Default: 0.1
+//   d = The diameter of the fillet/rounding.
+//   maxerr = Max amount bezier curve should diverge from actual curve.  Default: 0.1
 // Example(2D):
 //   p0 = [40, 0];
 //   p1 = [0, 0];
@@ -376,7 +377,8 @@ function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
 //   trace_polyline([p0,p1,p2], showpts=true, size=0.5, color="green");
 //   fbez = fillet3pts(p0,p1,p2, 10);
 //   trace_bezier(slice(fbez, 1, -2), size=1);
-function fillet3pts(p0, p1, p2, r, maxerr=0.1, w=0.5, dw=0.25) = let(
+function fillet3pts(p0, p1, p2, r, d, maxerr=0.1, w=0.5, dw=0.25) = let(
+        r = get_radius(r=r,d=d),
         v0 = unit(p0-p1),
         v1 = unit(p2-p1),
         midv = unit((v0+v1)/2),
@@ -391,8 +393,8 @@ function fillet3pts(p0, p1, p2, r, maxerr=0.1, w=0.5, dw=0.25) = let(
         bp = bezier_points([tp0, cp0, cp1, tp1], 0.5),
         tdist = norm(cp-bp)
     ) (abs(tdist-cpr) <= maxerr)? [tp0, tp0, cp0, cp1, tp1, tp1] :
-        (tdist<cpr)? fillet3pts(p0, p1, p2, r, maxerr=maxerr, w=w+dw, dw=dw/2) :
-        fillet3pts(p0, p1, p2, r, maxerr=maxerr, w=w-dw, dw=dw/2);
+        (tdist<cpr)? fillet3pts(p0, p1, p2, r=r, maxerr=maxerr, w=w+dw, dw=dw/2) :
+        fillet3pts(p0, p1, p2, r=r, maxerr=maxerr, w=w-dw, dw=dw/2);
 
 
 
@@ -613,7 +615,7 @@ function fillet_path(pts, fillet, maxerr=0.1) = concat(
             p1 = pts[p],
             p0 = (pts[p-1]+p1)/2,
             p2 = (pts[p+1]+p1)/2
-        ) for (pt = fillet3pts(p0, p1, p2, fillet, maxerr=maxerr)) pt
+        ) for (pt = fillet3pts(p0, p1, p2, r=fillet, maxerr=maxerr)) pt
     ],
     [pts[len(pts)-1], pts[len(pts)-1]]
 );

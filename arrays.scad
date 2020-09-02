@@ -19,6 +19,32 @@
 // Section: List Query Operations
 
 
+// Function: is_homogeneous()
+// Usage:
+//   is_homogeneous(list,depth)
+// Description:
+//   Returns true when the list have elements of same type up to the depth `depth`.
+//   Booleans and numbers are not distinguinshed as of distinct types. 
+// Arguments:
+//   list = the list to check
+//   depth = the lowest level the check is done
+// Example:
+//   is_homogeneous( [[1,["a"]], [2,["b"]]] )     // Returns true
+//   is_homogeneous( [[1,["a"]], [2,[true]]] )    // Returns false
+//   is_homogeneous( [[1,["a"]], [2,[true]]], 1 ) // Returns true
+//   is_homogeneous( [[1,["a"]], [2,[true]]], 2 ) // Returns false
+//   is_homogeneous( [[1,["a"]], [true,["b"]]] )  // Returns true
+function is_homogeneous(l, depth) =
+    !is_list(l) || l==[] ? false :
+    let( l0=l[0] )
+    [] == [for(i=[1:len(l)-1]) if( ! _same_type(l[i],l0, depth+1) )  0 ];
+                 
+function _same_type(a,b, depth) = 
+    (depth==0) || (a>=b) || (a==b) || (a<=b)  
+    ||  ( is_list(a) && is_list(b) && len(a)==len(b) 
+          && []==[for(i=idx(a)) if( ! _same_type(a[i],b[i],depth-1) )0] ); 
+  
+
 // Function: select()
 // Description:
 //   Returns a portion of a list, wrapping around past the beginning, if end<start. 
@@ -597,6 +623,23 @@ function list_fit(array, length, fill) =
 
 // Section: List Shuffling and Sorting
 
+
+// returns true for valid index specifications idx in the interval [imin, imax) 
+// note that idx can't have any value greater or EQUAL to imax
+// this allows imax=INF as a bound to numerical lists
+function _valid_idx(idx,imin,imax) =
+    is_undef(idx) 
+    || ( is_finite(idx)  
+         && ( is_undef(imin) || idx>=imin ) 
+         && ( is_undef(imax) || idx< imax ) )
+    || ( is_list(idx)  
+         && ( is_undef(imin) || min(idx)>=imin ) 
+         && ( is_undef(imax) || max(idx)< imax ) )
+    || ( is_range(idx) 
+         && ( is_undef(imin) || (idx[1]>0 && idx[0]>=imin ) || (idx[1]<0 && idx[0]<=imax ) )
+         && ( is_undef(imax) || (idx[1]>0 && idx[2]<=imax ) || (idx[1]<0 && idx[2]>=imin ) ) );
+    
+
 // Function: shuffle()
 // Description:
 //   Shuffles the input list into random order.
@@ -611,7 +654,8 @@ function shuffle(list) =
     concat(shuffle(left), shuffle(right));
 
 
-// Sort a vector of scalar values
+// Sort a vector of scalar values with the native comparison operator
+// all elements should have the same type.
 function _sort_scalars(arr) =
     len(arr)<=1 ? arr : 
     let(
@@ -623,105 +667,67 @@ function _sort_scalars(arr) =
     concat( _sort_scalars(lesser), equal, _sort_scalars(greater) );
 
 
-// Sort a vector of vectors based on the first entry only of each vector
-function _sort_vectors1(arr) =
-    len(arr)<=1 ? arr :
-    !(len(arr)>0) ? [] : 
+// lexical sort of a homogeneous list of vectors 
+// uses native comparison operator
+function _sort_vectors(arr, _i=0) =
+    len(arr)<=1 || _i>=len(arr[0]) ? arr :
     let(
-        pivot   = arr[floor(len(arr)/2)],
-        lesser  = [ for (y = arr) if (y[0]  < pivot[0]) y ],
-        equal   = [ for (y = arr) if (y[0] == pivot[0]) y ],
-        greater = [ for (y = arr) if (y[0]  > pivot[0]) y ]
-    ) 
-    concat( _sort_vectors1(lesser), equal, _sort_vectors1(greater) );
+        pivot   = arr[floor(len(arr)/2)][_i],
+        lesser  = [ for (entry=arr) if (entry[_i]  < pivot ) entry ],
+        equal   = [ for (entry=arr) if (entry[_i] == pivot ) entry ],
+        greater = [ for (entry=arr) if (entry[_i]  > pivot ) entry ]
+      )
+    concat(
+        _sort_vectors(lesser,  _i   ), 
+        _sort_vectors(equal,   _i+1 ), 
+        _sort_vectors(greater, _i ) );
+        
 
-
-// Sort a vector of vectors based on the first two entries of each vector
-// Lexicographic order, remaining entries of vector ignored
-function _sort_vectors2(arr) =
-    len(arr)<=1 ? arr :
-    !(len(arr)>0) ? [] : 
+// lexical sort of a homogeneous list of vectors by the vector components with indices in idxlist
+// all idxlist indices should be in the range of the vector dimensions
+// idxlist must be undef or a simple list of numbers
+// uses native comparison operator
+function _sort_vectors(arr, idxlist, _i=0) =
+    len(arr)<=1 || ( is_list(idxlist) && _i>=len(idxlist) ) || _i>=len(arr[0])  ? arr :
     let(
-        pivot   = arr[floor(len(arr)/2)],
-        lesser  = [ for (y = arr) if (y[0] < pivot[0] || (y[0]==pivot[0] && y[1]<pivot[1])) y ],
-        equal   = [ for (y = arr) if (y[0] == pivot[0] && y[1]==pivot[1]) y ],
-        greater = [ for (y = arr) if (y[0] > pivot[0] || (y[0]==pivot[0] && y[1]>pivot[1])) y ]
-    ) 
-    concat( _sort_vectors2(lesser), equal, _sort_vectors2(greater) );
+        k = is_list(idxlist) ? idxlist[_i] : _i,
+        pivot   = arr[floor(len(arr)/2)][k],
+        lesser  = [ for (entry=arr) if (entry[k]  < pivot ) entry ],
+        equal   = [ for (entry=arr) if (entry[k] == pivot ) entry ],
+        greater = [ for (entry=arr) if (entry[k]  > pivot ) entry ]
+      )
+    concat(
+        _sort_vectors(lesser,  idxlist, _i  ), 
+        _sort_vectors(equal,   idxlist, _i+1), 
+        _sort_vectors(greater, idxlist, _i  ) );
+        
 
-
-// Sort a vector of vectors based on the first three entries of each vector
-// Lexicographic order, remaining entries of vector ignored
-function _sort_vectors3(arr) =
-    len(arr)<=1 ? arr : let(
-        pivot   = arr[floor(len(arr)/2)],
-        lesser  = [ for (y = arr) 
-                      if ( y[0] < pivot[0] 
-                           || ( y[0]==pivot[0] 
-                                && ( y[1]<pivot[1] 
-                                     || ( y[1]==pivot[1] 
-                                          && y[2]<pivot[2] ))))
-                    y ],
-        equal = [ for (y = arr) 
-                    if ( y[0] == pivot[0] 
-                         && y[1]== pivot[1] 
-                         && y[2]==pivot[2] )
-                  y ],
-        greater = [ for (y = arr) 
-                      if ( y[0] > pivot[0] 
-                           || ( y[0]==pivot[0] 
-                                && ( y[1] > pivot[1] 
-                                     || ( y[1]==pivot[1] 
-                                          && y[2] > pivot[2] )))) 
-                    y ]
-    ) concat( _sort_vectors3(lesser), equal, _sort_vectors3(greater) );
-
-
-// Sort a vector of vectors based on the first four entries of each vector
-// Lexicographic order, remaining entries of vector ignored
-function _sort_vectors4(arr) =
-    len(arr)<=1 ? arr : let(
-        pivot = arr[floor(len(arr)/2)],
-        lesser = [  for (y = arr) 
-                      if ( y[0] < pivot[0] 
-                           || ( y[0]==pivot[0] 
-                                && ( y[1]<pivot[1] 
-                                     || ( y[1]==pivot[1] 
-                                         && ( y[2]<pivot[2] 
-                                              || ( y[2]==pivot[2] 
-                                                   && y[3]<pivot[3] ))))))
-                      y ],
-        equal = [ for (y = arr) 
-                    if (  y[0] == pivot[0] 
-                          && y[1] == pivot[1] 
-                          && y[2] == pivot[2] 
-                          && y[3] == pivot[3] ) 
-                  y  ],
-        greater = [ for (y = arr) 
-                      if ( y[0] > pivot[0] 
-                           || ( y[0]==pivot[0] 
-                                && ( y[1]>pivot[1] 
-                                     || ( y[1]==pivot[1] 
-                                          && ( y[2]>pivot[2] 
-                                               || ( y[2]==pivot[2] 
-                                                    && y[3]>pivot[3] )))))) 
-                    y ]
-    ) concat( _sort_vectors4(lesser), equal, _sort_vectors4(greater) );
-
-
-// when idx==undef, returns the sorted array
-// otherwise, returns the indices of the sorted array
-function _sort_general(arr, idx=undef) =
+// sorting using compare_vals(); returns indexed list when `indexed==true`
+function _sort_general(arr, idx=undef, indexed=false) =
     (len(arr)<=1) ? arr :
-    is_undef(idx) 
-    ? _sort_scalar(arr)
-    : let( arrind=[for(k=[0:len(arr)-1], ark=[arr[k]]) [ k, [for (i=idx) ark[i]] ] ] )
-      _indexed_sort(arrind);
+    ! indexed && is_undef(idx)
+    ? _lexical_sort(arr)
+    : let( arrind = _indexed_sort(enumerate(arr,idx)) )
+      indexed 
+      ? arrind
+      : [for(i=arrind) arr[i]];
       
+// lexical sort using compare_vals()
+function _lexical_sort(arr) = 
+    arr==[] ? [] : len(arr)==1? arr : 
+    let( pivot = arr[floor(len(arr)/2)] )
+    let(
+        lesser  = [ for (entry=arr) if (compare_vals(entry, pivot) <0 ) entry ],
+        equal   = [ for (entry=arr) if (compare_vals(entry, pivot)==0 ) entry ],
+        greater = [ for (entry=arr) if (compare_vals(entry, pivot) >0 ) entry ]
+      )
+    concat(_lexical_sort(lesser), equal, _lexical_sort(greater));
+
+
 // given a list of pairs, return the first element of each pair of the list sorted by the second element of the pair
 // the sorting is done using compare_vals()
 function _indexed_sort(arrind) = 
-    arrind==[] ? [] : len(arrind)==1? [arrind[0][0]] :
+    arrind==[] ? [] : len(arrind)==1? [arrind[0][0]] : 
     let( pivot = arrind[floor(len(arrind)/2)][1] )
     let(
         lesser  = [ for (entry=arrind) if (compare_vals(entry[1], pivot) <0 ) entry ],
@@ -731,52 +737,46 @@ function _indexed_sort(arrind) =
     concat(_indexed_sort(lesser), equal, _indexed_sort(greater));
 
 
-// returns true for valid index specifications idx in the interval [imin, imax) 
-// note that idx can't have any value greater or EQUAL to imax
-function _valid_idx(idx,imin,imax) =
-    is_undef(idx) 
-    || ( is_finite(idx) && idx>=imin && idx< imax )
-    || ( is_list(idx) && min(idx)>=imin && max(idx)< imax )
-    || ( valid_range(idx) && idx[0]>=imin && idx[2]< imax );
-    
-
 // Function: sort()
 // Usage:
 //   sort(list, [idx])
 // Description:
-//   Sorts the given list using `compare_vals()`, sorting in lexicographic order, with types ordered according to
+//   Sorts the given list in lexicographic order. If the input is a homogeneous simple list or a homogeneous 
+//   list of vectors (see function is_homogeneous), the sorting method uses the native comparison operator and is faster. 
+//   When sorting non homogeneous list the elements are compared with `compare_vals`, with types ordered according to
 //   `undef < boolean < number < string < list`.  Comparison of lists is recursive. 
-//   If the list is a list of vectors whose length is from 1 to 4 and the `idx` parameter is not passed, then 
-//   `sort` uses a much more efficient method for comparisons and will run much faster.  In this case, all entries
-//   in the data are compared using the native comparison operator, so comparisons between types will fail.  
+//   When comparing vectors, homogeneous or not, the parameter `idx` may be used to select the components to compare.
+//   Note that homogeneous lists of vectors may contain mixed types provided that for any two list elements
+//   list[i] and list[j] satisfies  type(list[i][k])==type(list[j][k]) for all k. 
+//   Strings are allowed as any list element and are compared with the native operators although no substring
+//   comparison is possible.  
 // Arguments:
 //   list = The list to sort.
 //   idx = If given, do the comparison based just on the specified index, range or list of indices.  
-// Example:
-//   l = [45,2,16,37,8,3,9,23,89,12,34];
-//   sorted = sort(l);  // Returns [2,3,8,9,12,16,23,34,37,45,89]
-function sort(list, idx=undef) =
+// Example: 
+//   // Homogeneous lists
+//   l1 = [45,2,16,37,8,3,9,23,89,12,34];
+//   sorted1 = sort(l1);  // Returns [2,3,8,9,12,16,23,34,37,45,89]
+//   l2 = [["oat",0], ["cat",1], ["bat",3], ["bat",2], ["fat",3]];
+//   sorted2 = sort(l2); // Returns: [["bat",2],["bat",3],["cat",1],["fat",3],["oat",0]]
+//   // Non-homegenous list
+//   l3 = [[4,0],[7],[3,9],20,[4],[3,1],[8]];
+//   sorted3 = sort(l3); // Returns: [20,[3,1],[3,9],[4],[4,0],[7],[8]]
+function sort(list, idx=undef) = 
     !is_list(list) || len(list)<=1 ? list :
-    is_def(idx) 
-    ?   assert( _valid_idx(idx,0,len(list)) , "Invalid indices.")
-        let( sarr = _sort_general(list,idx) )
-        [for(i=[0:len(sarr)-1]) list[sarr[i]] ] 
-    :   let(size = array_dim(list))
-        len(size)==1 ? _sort_scalars(list) :
-        len(size)==2 && size[1] <=4 
-        ? (
-            size[1]==0 ? list :
-            size[1]==1 ? _sort_vectors1(list) :
-            size[1]==2 ? _sort_vectors2(list) :
-            size[1]==3 ? _sort_vectors3(list)
-       /*size[1]==4*/  : _sort_vectors4(list)
-          ) 
-        : _sort_general(list);
-
+    is_homogeneous(list,1)
+    ?   let(size = array_dim(list[0]))
+        size==0 ?         _sort_scalars(list)
+        : len(size)!=1 ?  _sort_general(list,idx)  
+        : is_undef(idx) ? _sort_vectors(list)
+        : assert( _valid_idx(idx) , "Invalid indices.")
+          _sort_vectors(list,[for(i=idx) i])        
+    : _sort_general(list,idx);
+        
 
 // Function: sortidx()
 // Description:
-//   Given a list, calculates the sort order of the list, and returns
+//   Given a list, sort it as function `sort()`, and returns
 //   a list of indexes into the original list in that sorted order.
 //   If you iterate the returned list in order, and use the list items
 //   to index into the original list, you will be iterating the original
@@ -795,31 +795,28 @@ function sort(list, idx=undef) =
 //   idxs1 = sortidx(lst, idx=1); // Returns: [3,0,2,1]
 //   idxs2 = sortidx(lst, idx=0); // Returns: [1,2,0,3]
 //   idxs3 = sortidx(lst, idx=[1,3]); // Returns: [3,0,2,1]
-function sortidx(list, idx=undef) =
-    assert( is_list(list) || is_string(list) , "Invalid input to sort." )
-    assert( _valid_idx(idx,0,len(list)) , "Invalid indices.")
-    list==[] ? [] : 
-    let(
-        size = array_dim(list),
-        aug = is_undef(idx) && (len(size) == 1 || (len(size) == 2 && size[1]<=4))
-              ?  zip(list, list_range(len(list)))
-              :  0
-    )
-    is_undef(idx) && len(size) == 1? subindex(_sort_vectors1(aug),1) :
-    is_undef(idx) && len(size) == 2 && size[1] <=4
-    ? (
-        size[1]==0 ? list_range(len(arr)) :
-        size[1]==1 ? subindex(_sort_vectors1(aug),1) :
-        size[1]==2 ? subindex(_sort_vectors2(aug),2) :
-        size[1]==3 ? subindex(_sort_vectors3(aug),3)
-    /*size[1]==4*/ : subindex(_sort_vectors4(aug),4)
-      ) 
-    :   // general case
-        _sort_general(list,idx);
-
-
-// sort() does not accept strings but sortidx does; isn't inconsistent ?
-
+function sortidx(list, idx=undef) = 
+    !is_list(list) || len(list)<=1 ? list :
+    is_homogeneous(list,1)
+    ?   let( 
+            size = array_dim(list[0]),
+            aug  = ! (size==0 || len(size)==1) ? 0 // for general sorting
+                   : [for(i=[0:len(list)-1]) concat(i,list[i])], // for scalar or vector sorting
+            lidx = size==0? [1] :                                // scalar sorting
+                   len(size)==1 
+                   ? is_undef(idx) ? [for(i=[0:len(list[0])-1]) i+1] // vector sorting
+                                   : [for(i=idx) i+1]                // vector sorting
+                   : 0   // just to signal
+            )
+        assert( ! ( size==0 && is_def(idx) ), 
+                "The specification of `idx` is incompatible with scalar sorting." ) 
+        assert( _valid_idx(idx) , "Invalid indices." ) 
+        lidx!=0
+        ?   let( lsort = _sort_vectors(aug,lidx) )
+            [for(li=lsort) li[0] ]
+        :   _sort_general(list,idx,indexed=true)
+    : _sort_general(list,idx,indexed=true);
+        
 
 // Function: unique()
 // Usage:
@@ -1202,6 +1199,52 @@ function zip(vecs, v2, v3, fit=false, fill=undef) =
     :   [for(i=[0:1:minlen-1]) [for(v=vecs) for(x=v[i]) x] ];
 
 
+// Function: block_matrix()
+// Usage:
+//    block_matrix([[M11, M12,...],[M21, M22,...], ... ])
+// Description:
+//    Create a block matrix by supplying a matrix of matrices, which will
+//    be combined into one unified matrix.  Every matrix in one row
+//    must have the same height, and the combined width of the matrices
+//    in each row must be equal.  
+function block_matrix(M) =
+    let(
+        bigM = [for(bigrow = M) each zip(bigrow)],
+        len0=len(bigM[0]),
+        badrows = [for(row=bigM) if (len(row)!=len0) 1]
+    )
+    assert(badrows==[], "Inconsistent or invalid input")
+    bigM;
+
+// Function: diagonal_matrix()
+// Usage:
+//   diagonal_matrix(diag, [offdiag])
+// Description:
+//   Creates a square matrix with the items in the list `diag` on
+//   its diagonal.  The off diagonal entries are set to offdiag,
+//   which is zero by default. 
+function diagonal_matrix(diag,offdiag=0) =
+  [for(i=[0:1:len(diag)-1]) [for(j=[0:len(diag)-1]) i==j?diag[i] : offdiag]];
+
+
+// Function: submatrix_set()
+// Usage: submatrix_set(M,A,[m],[n])
+// Description:
+//    Sets a submatrix of M equal to the matrix A.  By default the top left corner of M is set to A, but
+//    you can specify offset coordinates m and n.  If A (as adjusted by m and n) extends beyond the bounds
+//    of M then the extra entries are ignored.  You can pass in A=[[]], a null matrix, and M will be
+//    returned unchanged.  Note that the input M need not be rectangular in shape.  
+function submatrix_set(M,A,m=0,n=0) =
+    assert(is_list(M))
+    assert(is_list(A))
+    let( badrows = [for(i=idx(A)) if (!is_list(A[i])) i])
+    assert(badrows==[], str("Input submatrix malformed rows: ",badrows))
+    [for(i=[0:1:len(M)-1])
+        assert(is_list(M[i]), str("Row ",i," of input matrix is not a list"))
+        [for(j=[0:1:len(M[i])-1]) 
+            i>=m && i <len(A)+m && j>=n && j<len(A[0])+n ? A[i-m][j-n] : M[i][j]]];
+
+
 // Function: array_group()
 // Description:
 //   Takes a flat array of values, and groups items in sets of `cnt` length.
@@ -1241,15 +1284,21 @@ function full_flatten(l) = [for(a=l) if(is_list(a)) (each full_flatten(a)) else 
 // Internal.  Not exposed.
 function _array_dim_recurse(v) =
     !is_list(v[0])
-    ?   sum( [for(entry=v) is_list(entry) ? 1 : 0] ) == 0 ? [] : [undef]
+    ?   len( [for(entry=v) if(!is_list(entry)) 0] ) == 0 ? [] : [undef]
     :   let(
-          firstlen = len(v[0]),
-          first = sum( [for(entry = v) len(entry) == firstlen  ? 0 : 1]   ) == 0 ? firstlen : undef,
+          firstlen = is_list(v[0]) ? len(v[0]): undef,
+          first = len( [for(entry = v) if(! is_list(entry) || (len(entry) != firstlen)) 0  ]   ) == 0 ? firstlen : undef,
           leveldown = flatten(v)
         ) 
         is_list(leveldown[0])
         ?  concat([first],_array_dim_recurse(leveldown))
         : [first];
+
+function _array_dim_recurse(v) =
+    let( alen = [for(vi=v) is_list(vi) ? len(vi): -1] )
+    v==[] || max(alen)==-1 ? [] :
+    let( add = max(alen)!=min(alen) ? undef : alen[0] ) 
+    concat( add, _array_dim_recurse(flatten(v)));
 
 
 // Function: array_dim()
@@ -1281,15 +1330,19 @@ function array_dim(v, depth=undef) =
         ?  len(v)
         :  let( dimlist = _array_dim_recurse(v))
            (depth > len(dimlist))? 0 : dimlist[depth-1] ;
+           
+           
 
 // This function may return undef!
 
 
 // Function: transpose()
-// Description: Returns the transposition of the given array.
-//    When reverse=true, the transposition is done in respect to the secondary diagonal, that is:
-//    .
-//    reverse(transpose(reverse(arr))) == transpose(arr, reverse=true)
+// Usage:
+//    transpose(arr, [reverse])
+// Description:
+//    Returns the transpose of the given input array.  The input should be a list of lists that are
+//    all the same length.  If you give a vector then transpose returns it unchanged.  
+//    When reverse=true, the transpose is done across to the secondary diagonal.  (See example below.)
 //    By default, reverse=false.
 // Example:
 //   arr = [
@@ -1329,19 +1382,19 @@ function array_dim(v, depth=undef) =
 //   //  ["h", "e", "b"],
 //   //  ["g", "d", "a"]
 //   // ]
-// Example:
+// Example: Transpose on a list of numbers returns the list unchanged
 //   transpose([3,4,5]);  // Returns: [3,4,5]
 function transpose(arr, reverse=false) =
-    assert( is_list(arr) && len(arr)>0, "The array is not a vector neither a matrix." )
+    assert( is_list(arr) && len(arr)>0, "Input to transpose must be a nonempty list.")
     is_list(arr[0])
-    ?   let( l0 = len(arr[0]) )
-        assert([for(a=arr) if(!is_list(a) || len(a)!=l0) 1 ]==[], "The array is not a vector neither a matrix." )
+    ?   let( len0 = len(arr[0]) )
+        assert([for(a=arr) if(!is_list(a) || len(a)!=len0) 1 ]==[], "Input to transpose has inconsistent row lengths." )
         reverse
-        ? [for (i=[0:1:l0-1]) 
-              [ for (j=[0:1:len(arr)-1]) arr[len(arr)-1-j][l0-1-i] ] ] 
-        : [for (i=[0:1:l0-1]) 
+        ? [for (i=[0:1:len0-1]) 
+              [ for (j=[0:1:len(arr)-1]) arr[len(arr)-1-j][len0-1-i] ] ] 
+        : [for (i=[0:1:len0-1]) 
               [ for (j=[0:1:len(arr)-1]) arr[j][i] ] ] 
-    :  assert( is_vector(arr), "The array is not a vector neither a matrix." )
+    :  assert( is_vector(arr), "Input to transpose must be a vector or list of lists.")
            arr;
 
 

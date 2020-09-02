@@ -321,7 +321,7 @@ module chain_hull()
 // Usage:
 //   cylindrical_extrude(size, ir|id, or|od, [convexity]) ...
 // Description:
-//   Cylindrically extrudes all 2D children, curved around a cylidrical shape.
+//   Extrudes all 2D children outwards, curved around a cylindrical shape.
 // Arguments:
 //   or = The outer radius to extrude to.
 //   od = The outer diameter to extrude to.
