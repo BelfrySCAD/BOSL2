@@ -894,7 +894,8 @@ function is_matrix(A,m,n,square=false) =
 //    squares of all of the entries of the matrix.  On vectors it is the same as the usual 2-norm.
 //    This is an easily computed norm that is convenient for comparing two matrices.  
 function norm_fro(A) =
-    sqrt(sum([for(entry=A) sum_of_squares(entry)]));
+    assert(is_matrix(A) || is_vector(A))
+    norm(flatten(A));
 
 
 // Section: Comparisons and Logic
