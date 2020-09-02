@@ -680,7 +680,7 @@ function convolve(p,q) =
 //   then the problem is solved for the matrix valued right hand side and a matrix is returned.  Note that if you 
 //   want to solve Ax=b1 and Ax=b2 that you need to form the matrix transpose([b1,b2]) for the right hand side and then
 //   transpose the returned value.  
-function linear_solve(A,b) =
+function linear_solve(A,b,pivot=true) =
     assert(is_matrix(A), "Input should be a matrix.")
     let(
         m = len(A),
@@ -688,19 +688,17 @@ function linear_solve(A,b) =
     )
     assert(is_vector(b,m) || is_matrix(b,m),"Invalid right hand side or incompatible with the matrix")
     let (
-        qr = m<n? qr_factor(transpose(A)) : qr_factor(A),
+        qr = m<n? qr_factor(transpose(A),pivot) : qr_factor(A,pivot),
         maxdim = max(n,m),
         mindim = min(n,m),
         Q = submatrix(qr[0],[0:maxdim-1], [0:mindim-1]),
         R = submatrix(qr[1],[0:mindim-1], [0:mindim-1]),
+        P = qr[2],
         zeros = [for(i=[0:mindim-1]) if (approx(R[i][i],0)) i]
     )
     zeros != [] ? [] :
-    m<n 
-    // avoiding input validation in back_substitute
-    ? let( n  = len(R) )
-      Q*reverse(_back_substitute(transpose(R, reverse=true), reverse(b))) 
-    : _back_substitute(R, transpose(Q)*b);
+    m<n ? Q*back_substitute(R,transpose(P)*b,transpose=true) // Too messy to avoid input checks here
+        : P*_back_substitute(R, transpose(Q)*b);             // Calling internal version skips input checks
 
 // Function: matrix_inverse()
 // Usage:
@@ -714,20 +712,40 @@ function matrix_inverse(A) =
     assert(is_matrix(A,square=true),"Input to matrix_inverse() must be a square matrix")
     linear_solve(A,ident(len(A)));
 
+// Function: null_space()
+// Usage:
+//   null_space(A)
+// Description:
+//   Returns an orthonormal basis for the null space of A, namely the vectors {x} such that Ax=0.  If the null space
+//   is just the origin then returns an empty list. 
+function null_space(A,eps=1e-12) =
+    assert(is_matrix(A))
+    let(
+      Q_R=qr_factor(transpose(A),pivot=true),
+      R=Q_R[1],
+      zrow = [for(i=idx(R)) if (is_zero(R[i],eps)) i]
+    )
+    len(zrow)==0
+      ? []
+      : transpose(subindex(Q_R[0],zrow));
+
 
 // Function: qr_factor()
-// Usage: qr = qr_factor(A)
+// Usage: qr = qr_factor(A,[pivot])
 // Description:
-//   Calculates the QR factorization of the input matrix A and returns it as the list [Q,R].  This factorization can be
-//   used to solve linear systems of equations.  
-function qr_factor(A) =
+//   Calculates the QR factorization of the input matrix A and returns it as the list [Q,R,P].  This factorization can be
+//   used to solve linear systems of equations.  The factorization is A = Q*R*transpose(P).  If pivot is false (the default)
+//   then P is the identity matrix and A = Q*R.  If pivot is true then column pivoting results in an R matrix where the diagonal
+//   is non-decreasing.  The use of pivoting is supposed to increase accuracy for poorly conditioned problems, and is necessary
+//   for rank estimation or computation of the null space, but it may be slower.  
+function qr_factor(A, pivot=false) =
     assert(is_matrix(A), "Input must be a matrix." )
     let(
       m = len(A),
       n = len(A[0])
     )
     let(
-        qr = _qr_factor(A, Q=ident(m), column=0, m = m, n=n),
+        qr =_qr_factor(A, Q=ident(m),P=ident(n), pivot=pivot, column=0, m = m, n=n),
         Rzero = 
           let( R = qr[1] )
           [ for(i=[0:m-1]) [
@@ -735,25 +753,31 @@ function qr_factor(A) =
               for(j=[0:n-1]) i>j ? 0 : ri[j]
             ]
           ]
-    ) [qr[0],Rzero];
+    ) [qr[0],Rzero,qr[2]];
 
-function _qr_factor(A,Q, column, m, n) =
-    column >= min(m-1,n) ? [Q,A] :
+function _qr_factor(A,Q,P, pivot, column, m, n) =
+    column >= min(m-1,n) ? [Q,A,P] :
     let(
+        swap = !pivot ? 1
+             : _swap_matrix(n,column,column+max_index([for(i=[column:n-1]) sum_of_squares([for(j=[column:m-1]) A[j][i]])])),
+        A = pivot ? A*swap : A,
         x = [for(i=[column:1:m-1]) A[i][column]],
         alpha = (x[0]<=0 ? 1 : -1) * norm(x),
         u = x - concat([alpha],repeat(0,m-1)),
         v = alpha==0 ? u : u / norm(u),
         Qc = ident(len(x)) - 2*outer_product(v,v),
-        Qf = [for(i=[0:m-1]) 
-                [for(j=[0:m-1]) 
-                    i<column || j<column 
-                    ? (i==j ? 1 : 0) 
-                    : Qc[i-column][j-column]
-                ]
-             ]
+        Qf = [for(i=[0:m-1]) [for(j=[0:m-1]) i<column || j<column ? (i==j ? 1 : 0) : Qc[i-column][j-column]]]
     )
-    _qr_factor(Qf*A, Q*Qf, column+1, m, n);
+    _qr_factor(Qf*A, Q*Qf, P*swap, pivot, column+1, m, n);
+
+// Produces an n x n matrix that swaps column i and j (when multiplied on the right)
+function _swap_matrix(n,i,j) =
+  assert(i<n && j<n && i>=0 && j>=0, "Swap indices out of bounds")
+  [for(y=[0:n-1]) [for (x=[0:n-1])
+     x==i ? (y==j ? 1 : 0)
+   : x==j ? (y==i ? 1 : 0)
+   : x==y ? 1 : 0]];
+
 
 
 // Function: back_substitute()
@@ -860,6 +884,17 @@ function is_matrix(A,m,n,square=false) =
     && (is_undef(n) || len(A[0])==n )
     && (is_undef(m) || len(A)==m )
     && ( !square || len(A)==len(A[0]));
+
+
+// Function: norm_fro()
+// Usage:
+//    norm_fro(A)
+// Description:
+//    Computes frobenius norm of input matrix.  The frobenius norm is the square root of the sum of the
+//    squares of all of the entries of the matrix.  On vectors it is the same as the usual 2-norm.
+//    This is an easily computed norm that is convenient for comparing two matrices.  
+function norm_fro(A) =
+    sqrt(sum([for(entry=A) sum_of_squares(entry)]));
 
 
 // Section: Comparisons and Logic
@@ -1308,6 +1343,41 @@ function C_div(z1,z2) =
 // For the sake of consistence with Q_mul and vmul, C_times should be called C_mul
 
 // Section: Polynomials
+
+// Function: quadratic_roots()
+// Usage:
+//    roots = quadratic_roots(a,b,c,[real])
+// Description:
+//    Computes roots of the quadratic equation a*x^2+b*x+c==0, where the
+//    coefficients are real numbers.  If real is true then returns only the
+//    real roots.  Otherwise returns a pair of complex values.  This method
+//    may be more reliable than the general root finder at distinguishing
+//    real roots from complex roots.  
+
+// https://people.csail.mit.edu/bkph/articles/Quadratics.pdf
+
+function quadratic_roots(a,b,c,real=false) =
+  real ? [for(root = quadratic_roots(a,b,c,real=false)) if (root.y==0) root.x]
+  :
+  is_undef(b) && is_undef(c) && is_vector(a,3) ? quadratic_roots(a[0],a[1],a[2]) :
+  assert(is_num(a) && is_num(b) && is_num(c))
+  assert(a!=0 || b!=0 || c!=0, "Quadratic must have a nonzero coefficient")
+  a==0 && b==0 ? [] :     // No solutions
+  a==0 ? [[-c/b,0]] : 
+  let(
+      descrim = b*b-4*a*c,
+      sqrt_des = sqrt(abs(descrim))
+  )
+  descrim < 0 ?             // Complex case
+     [[-b, sqrt_des],
+      [-b, -sqrt_des]]/2/a :
+  b<0 ?                     // b positive
+     [[2*c/(-b+sqrt_des),0],
+      [(-b+sqrt_des)/a/2,0]]
+      :                     // b negative
+     [[(-b-sqrt_des)/2/a, 0],
+      [2*c/(-b-sqrt_des),0]];
+
 
 // Function: polynomial() 
 // Usage:
