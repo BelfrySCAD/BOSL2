@@ -517,8 +517,10 @@ module dovetail(gender, length, l, width, w, height, h, angle, slope, taper, bac
     assert(count3<=1 || (radius==0 && chamfer==0), "Do not specify both chamfer and radius");
     slope = is_def(slope) ? slope :
         is_def(angle) ? 1/tan(angle) :  6;
-    width = gender == "male" ? w : w + 2*$slop;
-    height = h + (gender == "female" ? 2*$slop : 0);
+    extra_slop = gender == "female" ? 2*$slop : 0;
+    width = w + extra_slop;
+    height = h + extra_slop;
+    back_width = back_width + extra_slop;
 
     front_offset = is_def(taper) ? -extra * tan(taper) :
         is_def(back_width) ? extra * (back_width-width)/length/2 : 0;
