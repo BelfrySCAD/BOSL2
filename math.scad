@@ -712,6 +712,7 @@ function matrix_inverse(A) =
     assert(is_matrix(A,square=true),"Input to matrix_inverse() must be a square matrix")
     linear_solve(A,ident(len(A)));
 
+
 // Function: null_space()
 // Usage:
 //   null_space(A)
@@ -723,7 +724,7 @@ function null_space(A,eps=1e-12) =
     let(
       Q_R=qr_factor(transpose(A),pivot=true),
       R=Q_R[1],
-      zrow = [for(i=idx(R)) if (is_zero(R[i],eps)) i]
+      zrow = [for(i=idx(R)) if (all_zero(R[i],eps)) i]
     )
     len(zrow)==0
       ? []
@@ -900,9 +901,9 @@ function norm_fro(A) =
 
 // Section: Comparisons and Logic
 
-// Function: is_zero()
+// Function: all_zero()
 // Usage:
-//   is_zero(x);
+//   all_zero(x);
 // Description:
 //   Returns true if the number passed to it is approximately zero, to within `eps`.
 //   If passed a list, recursively checks if all items in the list are approximately zero.
@@ -911,19 +912,19 @@ function norm_fro(A) =
 //   x = The value to check.
 //   eps = The maximum allowed variance.  Default: `EPSILON` (1e-9)
 // Example:
-//   is_zero(0);  // Returns: true.
-//   is_zero(1e-3);  // Returns: false.
-//   is_zero([0,0,0]);  // Returns: true.
-//   is_zero([0,0,1e-3]);  // Returns: false.
-function is_zero(x, eps=EPSILON) =
-    is_list(x)? (x != [] && [for (xx=x) if(!is_zero(xx,eps=eps)) 1] == []) :
+//   all_zero(0);  // Returns: true.
+//   all_zero(1e-3);  // Returns: false.
+//   all_zero([0,0,0]);  // Returns: true.
+//   all_zero([0,0,1e-3]);  // Returns: false.
+function all_zero(x, eps=EPSILON) =
+    is_list(x)? (x != [] && [for (xx=x) if(!all_zero(xx,eps=eps)) 1] == []) :
     is_num(x)? approx(x,eps) :
     false;
 
 
-// Function: is_positive()
+// Function: all_positive()
 // Usage:
-//   is_positive(x);
+//   all_positive(x);
 // Description:
 //   Returns true if the number passed to it is greater than zero.
 //   If passed a list, recursively checks if all items in the list are positive.
@@ -931,22 +932,22 @@ function is_zero(x, eps=EPSILON) =
 // Arguments:
 //   x = The value to check.
 // Example:
-//   is_positive(-2);  // Returns: false.
-//   is_positive(0);  // Returns: false.
-//   is_positive(2);  // Returns: true.
-//   is_positive([0,0,0]);  // Returns: false.
-//   is_positive([0,1,2]);  // Returns: false.
-//   is_positive([3,1,2]);  // Returns: true.
-//   is_positive([3,-1,2]);  // Returns: false.
-function is_positive(x) =
-    is_list(x)? (x != [] && [for (xx=x) if(!is_positive(xx)) 1] == []) :
+//   all_positive(-2);  // Returns: false.
+//   all_positive(0);  // Returns: false.
+//   all_positive(2);  // Returns: true.
+//   all_positive([0,0,0]);  // Returns: false.
+//   all_positive([0,1,2]);  // Returns: false.
+//   all_positive([3,1,2]);  // Returns: true.
+//   all_positive([3,-1,2]);  // Returns: false.
+function all_positive(x) =
+    is_list(x)? (x != [] && [for (xx=x) if(!all_positive(xx)) 1] == []) :
     is_num(x)? x>0 :
     false;
 
 
-// Function: is_negative()
+// Function: all_negative()
 // Usage:
-//   is_negative(x);
+//   all_negative(x);
 // Description:
 //   Returns true if the number passed to it is less than zero.
 //   If passed a list, recursively checks if all items in the list are negative.
@@ -954,23 +955,23 @@ function is_positive(x) =
 // Arguments:
 //   x = The value to check.
 // Example:
-//   is_negative(-2);  // Returns: true.
-//   is_negative(0);  // Returns: false.
-//   is_negative(2);  // Returns: false.
-//   is_negative([0,0,0]);  // Returns: false.
-//   is_negative([0,1,2]);  // Returns: false.
-//   is_negative([3,1,2]);  // Returns: false.
-//   is_negative([3,-1,2]);  // Returns: false.
-//   is_negative([-3,-1,-2]);  // Returns: true.
-function is_negative(x) =
-    is_list(x)? (x != [] && [for (xx=x) if(!is_negative(xx)) 1] == []) :
+//   all_negative(-2);  // Returns: true.
+//   all_negative(0);  // Returns: false.
+//   all_negative(2);  // Returns: false.
+//   all_negative([0,0,0]);  // Returns: false.
+//   all_negative([0,1,2]);  // Returns: false.
+//   all_negative([3,1,2]);  // Returns: false.
+//   all_negative([3,-1,2]);  // Returns: false.
+//   all_negative([-3,-1,-2]);  // Returns: true.
+function all_negative(x) =
+    is_list(x)? (x != [] && [for (xx=x) if(!all_negative(xx)) 1] == []) :
     is_num(x)? x<0 :
     false;
 
 
-// Function: is_nonpositive()
+// Function: all_nonpositive()
 // Usage:
-//   is_nonpositive(x);
+//   all_nonpositive(x);
 // Description:
 //   Returns true if the number passed to it is less than or equal to zero.
 //   If passed a list, recursively checks if all items in the list are nonpositive.
@@ -978,23 +979,23 @@ function is_negative(x) =
 // Arguments:
 //   x = The value to check.
 // Example:
-//   is_nonpositive(-2);  // Returns: true.
-//   is_nonpositive(0);  // Returns: true.
-//   is_nonpositive(2);  // Returns: false.
-//   is_nonpositive([0,0,0]);  // Returns: true.
-//   is_nonpositive([0,1,2]);  // Returns: false.
-//   is_nonpositive([3,1,2]);  // Returns: false.
-//   is_nonpositive([3,-1,2]);  // Returns: false.
-//   is_nonpositive([-3,-1,-2]);  // Returns: true.
-function is_nonpositive(x) =
-    is_list(x)? (x != [] && [for (xx=x) if(!is_nonpositive(xx)) 1] == []) :
+//   all_nonpositive(-2);  // Returns: true.
+//   all_nonpositive(0);  // Returns: true.
+//   all_nonpositive(2);  // Returns: false.
+//   all_nonpositive([0,0,0]);  // Returns: true.
+//   all_nonpositive([0,1,2]);  // Returns: false.
+//   all_nonpositive([3,1,2]);  // Returns: false.
+//   all_nonpositive([3,-1,2]);  // Returns: false.
+//   all_nonpositive([-3,-1,-2]);  // Returns: true.
+function all_nonpositive(x) =
+    is_list(x)? (x != [] && [for (xx=x) if(!all_nonpositive(xx)) 1] == []) :
     is_num(x)? x<=0 :
     false;
 
 
-// Function: is_nonnegative()
+// Function: all_nonnegative()
 // Usage:
-//   is_nonnegative(x);
+//   all_nonnegative(x);
 // Description:
 //   Returns true if the number passed to it is greater than or equal to zero.
 //   If passed a list, recursively checks if all items in the list are nonnegative.
@@ -1002,17 +1003,17 @@ function is_nonpositive(x) =
 // Arguments:
 //   x = The value to check.
 // Example:
-//   is_nonnegative(-2);  // Returns: false.
-//   is_nonnegative(0);  // Returns: true.
-//   is_nonnegative(2);  // Returns: true.
-//   is_nonnegative([0,0,0]);  // Returns: true.
-//   is_nonnegative([0,1,2]);  // Returns: true.
-//   is_nonnegative([0,-1,-2]);  // Returns: false.
-//   is_nonnegative([3,1,2]);  // Returns: true.
-//   is_nonnegative([3,-1,2]);  // Returns: false.
-//   is_nonnegative([-3,-1,-2]);  // Returns: false.
-function is_nonnegative(x) =
-    is_list(x)? (x != [] && [for (xx=x) if(!is_nonnegative(xx)) 1] == []) :
+//   all_nonnegative(-2);  // Returns: false.
+//   all_nonnegative(0);  // Returns: true.
+//   all_nonnegative(2);  // Returns: true.
+//   all_nonnegative([0,0,0]);  // Returns: true.
+//   all_nonnegative([0,1,2]);  // Returns: true.
+//   all_nonnegative([0,-1,-2]);  // Returns: false.
+//   all_nonnegative([3,1,2]);  // Returns: true.
+//   all_nonnegative([3,-1,2]);  // Returns: false.
+//   all_nonnegative([-3,-1,-2]);  // Returns: false.
+function all_nonnegative(x) =
+    is_list(x)? (x != [] && [for (xx=x) if(!all_nonnegative(xx)) 1] == []) :
     is_num(x)? x>=0 :
     false;
 
