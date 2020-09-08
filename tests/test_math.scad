@@ -122,6 +122,30 @@ module test_all_zero() {
 test_all_zero();
 
 
+module test_all_nonzero() {
+    assert(!all_nonzero(0));
+    assert(!all_nonzero([0,0,0]));
+    assert(!all_nonzero([[0,0,0],[0,0]]));
+    assert(!all_nonzero([EPSILON/2,EPSILON/2,EPSILON/2]));
+    assert(all_nonzero(1e-3));
+    assert(!all_nonzero([0,0,1e-3]));
+    assert(!all_nonzero([EPSILON*10,0,0]));
+    assert(!all_nonzero([0,EPSILON*10,0]));
+    assert(!all_nonzero([0,0,EPSILON*10]));
+    assert(all_nonzero([1e-3,1e-3,1e-3]));
+    assert(all_nonzero([EPSILON*10,EPSILON*10,EPSILON*10]));
+    assert(!all_nonzero(true));
+    assert(!all_nonzero(false));
+    assert(!all_nonzero(INF));
+    assert(!all_nonzero(-INF));
+    assert(!all_nonzero(NAN));
+    assert(!all_nonzero("foo"));
+    assert(!all_nonzero([]));
+    assert(!all_nonzero([0:1:2]));
+}
+test_all_nonzero();
+
+
 module test_all_positive() {
     assert(!all_positive(-2));
     assert(!all_positive(0));
