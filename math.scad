@@ -905,7 +905,7 @@ function norm_fro(A) =
 // Usage:
 //   all_zero(x);
 // Description:
-//   Returns true if the number passed to it is approximately zero, to within `eps`.
+//   Returns true if the finite number passed to it is approximately zero, to within `eps`.
 //   If passed a list, recursively checks if all items in the list are approximately zero.
 //   Otherwise, returns false.
 // Arguments:
@@ -917,8 +917,30 @@ function norm_fro(A) =
 //   all_zero([0,0,0]);  // Returns: true.
 //   all_zero([0,0,1e-3]);  // Returns: false.
 function all_zero(x, eps=EPSILON) =
+    is_finite(x)? approx(x,eps) :
     is_list(x)? (x != [] && [for (xx=x) if(!all_zero(xx,eps=eps)) 1] == []) :
-    is_num(x)? approx(x,eps) :
+    false;
+
+
+// Function: all_nonzero()
+// Usage:
+//   all_nonzero(x);
+// Description:
+//   Returns true if the finite number passed to it is not almost zero, to within `eps`.
+//   If passed a list, recursively checks if all items in the list are not almost zero.
+//   Otherwise, returns false.
+// Arguments:
+//   x = The value to check.
+//   eps = The maximum allowed variance.  Default: `EPSILON` (1e-9)
+// Example:
+//   all_nonzero(0);  // Returns: false.
+//   all_nonzero(1e-3);  // Returns: true.
+//   all_nonzero([0,0,0]);  // Returns: false.
+//   all_nonzero([0,0,1e-3]);  // Returns: false.
+//   all_nonzero([1e-3,1e-3,1e-3]);  // Returns: true.
+function all_nonzero(x, eps=EPSILON) =
+    is_finite(x)? !approx(x,eps) :
+    is_list(x)? (x != [] && [for (xx=x) if(!all_nonzero(xx,eps=eps)) 1] == []) :
     false;
 
 
@@ -926,7 +948,7 @@ function all_zero(x, eps=EPSILON) =
 // Usage:
 //   all_positive(x);
 // Description:
-//   Returns true if the number passed to it is greater than zero.
+//   Returns true if the finite number passed to it is greater than zero.
 //   If passed a list, recursively checks if all items in the list are positive.
 //   Otherwise, returns false.
 // Arguments:
@@ -940,8 +962,8 @@ function all_zero(x, eps=EPSILON) =
 //   all_positive([3,1,2]);  // Returns: true.
 //   all_positive([3,-1,2]);  // Returns: false.
 function all_positive(x) =
-    is_list(x)? (x != [] && [for (xx=x) if(!all_positive(xx)) 1] == []) :
     is_num(x)? x>0 :
+    is_list(x)? (x != [] && [for (xx=x) if(!all_positive(xx)) 1] == []) :
     false;
 
 
@@ -949,7 +971,7 @@ function all_positive(x) =
 // Usage:
 //   all_negative(x);
 // Description:
-//   Returns true if the number passed to it is less than zero.
+//   Returns true if the finite number passed to it is less than zero.
 //   If passed a list, recursively checks if all items in the list are negative.
 //   Otherwise, returns false.
 // Arguments:
@@ -964,8 +986,8 @@ function all_positive(x) =
 //   all_negative([3,-1,2]);  // Returns: false.
 //   all_negative([-3,-1,-2]);  // Returns: true.
 function all_negative(x) =
-    is_list(x)? (x != [] && [for (xx=x) if(!all_negative(xx)) 1] == []) :
     is_num(x)? x<0 :
+    is_list(x)? (x != [] && [for (xx=x) if(!all_negative(xx)) 1] == []) :
     false;
 
 
@@ -973,7 +995,7 @@ function all_negative(x) =
 // Usage:
 //   all_nonpositive(x);
 // Description:
-//   Returns true if the number passed to it is less than or equal to zero.
+//   Returns true if the finite number passed to it is less than or equal to zero.
 //   If passed a list, recursively checks if all items in the list are nonpositive.
 //   Otherwise, returns false.
 // Arguments:
@@ -988,8 +1010,8 @@ function all_negative(x) =
 //   all_nonpositive([3,-1,2]);  // Returns: false.
 //   all_nonpositive([-3,-1,-2]);  // Returns: true.
 function all_nonpositive(x) =
-    is_list(x)? (x != [] && [for (xx=x) if(!all_nonpositive(xx)) 1] == []) :
     is_num(x)? x<=0 :
+    is_list(x)? (x != [] && [for (xx=x) if(!all_nonpositive(xx)) 1] == []) :
     false;
 
 
@@ -997,7 +1019,7 @@ function all_nonpositive(x) =
 // Usage:
 //   all_nonnegative(x);
 // Description:
-//   Returns true if the number passed to it is greater than or equal to zero.
+//   Returns true if the finite number passed to it is greater than or equal to zero.
 //   If passed a list, recursively checks if all items in the list are nonnegative.
 //   Otherwise, returns false.
 // Arguments:
@@ -1013,8 +1035,8 @@ function all_nonpositive(x) =
 //   all_nonnegative([3,-1,2]);  // Returns: false.
 //   all_nonnegative([-3,-1,-2]);  // Returns: false.
 function all_nonnegative(x) =
-    is_list(x)? (x != [] && [for (xx=x) if(!all_nonnegative(xx)) 1] == []) :
     is_num(x)? x>=0 :
+    is_list(x)? (x != [] && [for (xx=x) if(!all_nonnegative(xx)) 1] == []) :
     false;
 
 

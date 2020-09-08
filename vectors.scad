@@ -19,7 +19,8 @@
 // Arguments:
 //   v = The value to test to see if it is a vector.
 //   length = If given, make sure the vector is `length` items long.
-//   zero = If false, require that the length of the vector is not approximately zero.  If true, require the length of the vector to be approximately zero-length.  Default: `undef` (don't check vector length.)
+//   zero = If false, require that the length/`norm()` of the vector is not approximately zero.  If true, require the length/`norm()` of the vector to be approximately zero-length.  Default: `undef` (don't check vector length/`norm()`.)
+//   all_nonzero = If true, requires all elements of the vector to be more than `eps` different from zero.  Default: `false`
 //   eps = The minimum vector length that is considered non-zero.  Default: `EPSILON` (`1e-9`)
 // Example:
 //   is_vector(4);                          // Returns false
@@ -30,14 +31,17 @@
 //   is_vector([3,4,5],3);                  // Returns true
 //   is_vector([3,4,5],4);                  // Returns true
 //   is_vector([]);                         // Returns false
-//   is_vector([0,4,0],3,zero=false);     // Returns true
-//   is_vector([0,0,0],zero=false);       // Returns false
-//   is_vector([0,0,1e-12],zero=false);   // Returns false
-//   is_vector([],zero=false);            // Returns false
-function is_vector(v,length,zero,eps=EPSILON) =
+//   is_vector([0,4,0],3,zero=false);       // Returns true
+//   is_vector([0,0,0],zero=false);         // Returns false
+//   is_vector([0,0,1e-12],zero=false);     // Returns false
+//   is_vector([0,1,0],all_nonzero=false);  // Returns false
+//   is_vector([1,1,1],all_nonzero=false);  // Returns true
+//   is_vector([],zero=false);              // Returns false
+function is_vector(v, length, zero, all_nonzero=false, eps=EPSILON) =
     is_list(v) && is_num(0*(v*v))
     && (is_undef(length) || len(v)==length)
-    && (is_undef(zero) || ((norm(v) >= eps) == !zero));
+    && (is_undef(zero) || ((norm(v) >= eps) == !zero))
+    && (!all_nonzero || all_nonzero(v)) ;
 
 
 // Function: vang()
