@@ -924,7 +924,7 @@ function plane_offset(plane) =
 //   stroke(xypath,closed=true);
 function plane_transform(plane) =
     let(
-		    plane = normalize_plane(plane),
+        plane = normalize_plane(plane),
         n = point3d(plane),
         cp = n * plane[3]
         ) 
@@ -1019,8 +1019,8 @@ function _general_plane_line_intersection(plane, line, eps=EPSILON) =
        ? [line,undef]                        // line is on the plane
        : undef                               // line is parallel but not on the plane
     : [ line[0]-a/b*(line[1]-line[0]), -a/b ];
-		
-		
+    
+    
 // Function: normalize_plane()
 // Usage: normalize_plane(plane)
 // Description:
