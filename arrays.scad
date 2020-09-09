@@ -1199,6 +1199,55 @@ function zip(vecs, v2, v3, fit=false, fill=undef) =
     :   [for(i=[0:1:minlen-1]) [for(v=vecs) for(x=v[i]) x] ];
 
 
+// Function: block_matrix()
+// Usage:
+//    block_matrix([[M11, M12,...],[M21, M22,...], ... ])
+// Description:
+//    Create a block matrix by supplying a matrix of matrices, which will
+//    be combined into one unified matrix.  Every matrix in one row
+//    must have the same height, and the combined width of the matrices
+//    in each row must be equal.  
+function block_matrix(M) =
+    let(
+        bigM = [for(bigrow = M) each zip(bigrow)],
+        len0=len(bigM[0]),
+        badrows = [for(row=bigM) if (len(row)!=len0) 1]
+    )
+    assert(badrows==[], "Inconsistent or invalid input")
+    bigM;
+
+// Function: diagonal_matrix()
+// Usage:
+//   diagonal_matrix(diag, [offdiag])
+// Description:
+//   Creates a square matrix with the items in the list `diag` on
+//   its diagonal.  The off diagonal entries are set to offdiag,
+//   which is zero by default. 
+function diagonal_matrix(diag,offdiag=0) =
+  assert(is_list(diag) && len(diag)>0)
+  [for(i=[0:1:len(diag)-1]) [for(j=[0:len(diag)-1]) i==j?diag[i] : offdiag]];
+
+
+// Function: submatrix_set()
+// Usage: submatrix_set(M,A,[m],[n])
+// Description:
+//    Sets a submatrix of M equal to the matrix A.  By default the top left corner of M is set to A, but
+//    you can specify offset coordinates m and n.  If A (as adjusted by m and n) extends beyond the bounds
+//    of M then the extra entries are ignored.  You can pass in A=[[]], a null matrix, and M will be
+//    returned unchanged.  Note that the input M need not be rectangular in shape.  
+function submatrix_set(M,A,m=0,n=0) =
+    assert(is_list(M))
+    assert(is_list(A))
+    assert(is_int(m))
+    assert(is_int(n))
+    let( badrows = [for(i=idx(A)) if (!is_list(A[i])) i])
+    assert(badrows==[], str("Input submatrix malformed rows: ",badrows))
+    [for(i=[0:1:len(M)-1])
+        assert(is_list(M[i]), str("Row ",i," of input matrix is not a list"))
+        [for(j=[0:1:len(M[i])-1]) 
+            i>=m && i <len(A)+m && j>=n && j<len(A[0])+n ? A[i-m][j-n] : M[i][j]]];
+
+
 // Function: array_group()
 // Description:
 //   Takes a flat array of values, and groups items in sets of `cnt` length.

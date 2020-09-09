@@ -470,6 +470,40 @@ module test_zip() {
 }
 test_zip();
 
+module test_block_matrix() {
+    A = [[1,2],[3,4]];
+    B = ident(2);
+    assert_equal(block_matrix([[A,B],[B,A],[A,B]]), [[1,2,1,0],[3,4,0,1],[1,0,1,2],[0,1,3,4],[1,2,1,0],[3,4,0,1]]);
+    assert_equal(block_matrix([[A,B],ident(4)]), [[1,2,1,0],[3,4,0,1],[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]);
+    text = [["a","b"],["c","d"]];
+    assert_equal(block_matrix([[text,B]]), [["a","b",1,0],["c","d",0,1]]);
+}
+test_block_matrix();
+
+
+module test_diagonal_matrix() {
+    assert_equal(diagonal_matrix([1,2,3]), [[1,0,0],[0,2,0],[0,0,3]]);
+    assert_equal(diagonal_matrix([1,"c",2]), [[1,0,0],[0,"c",0],[0,0,2]]);
+    assert_equal(diagonal_matrix([1,"c",2],"X"), [[1,"X","X"],["X","c","X"],["X","X",2]]);
+    assert_equal(diagonal_matrix([[1,1],[2,2],[3,3]], [0,0]), [[ [1,1],[0,0],[0,0]], [[0,0],[2,2],[0,0]], [[0,0],[0,0],[3,3]]]);
+}
+test_diagonal_matrix();
+
+module test_submatrix_set() {
+    test = [[1,2,3,4,5],[6,7,8,9,10],[11,12,13,14,15], [16,17,18,19,20]];
+    ragged = [[1,2,3,4,5],[6,7,8,9,10],[11,12], [16,17]];
+    assert_equal(submatrix_set(test,[[9,8],[7,6]]), [[9,8,3,4,5],[7,6,8,9,10],[11,12,13,14,15], [16,17,18,19,20]]);
+    assert_equal(submatrix_set(test,[[9,7],[8,6]],1),[[1,2,3,4,5],[9,7,8,9,10],[8,6,13,14,15], [16,17,18,19,20]]);
+    assert_equal(submatrix_set(test,[[9,8],[7,6]],n=1), [[1,9,8,4,5],[6,7,6,9,10],[11,12,13,14,15], [16,17,18,19,20]]);
+    assert_equal(submatrix_set(test,[[9,8],[7,6]],1,2), [[1,2,3,4,5],[6,7,9,8,10],[11,12,7,6,15], [16,17,18,19,20]]);
+    assert_equal(submatrix_set(test,[[9,8],[7,6]],-1,-1), [[6,2,3,4,5],[6,7,8,9,10],[11,12,13,14,15], [16,17,18,19,20]]);
+    assert_equal(submatrix_set(test,[[9,8],[7,6]],n=4), [[1,2,3,4,9],[6,7,8,9,7],[11,12,13,14,15], [16,17,18,19,20]]);
+    assert_equal(submatrix_set(test,[[9,8],[7,6]],7,7), [[1,2,3,4,5],[6,7,8,9,10],[11,12,13,14,15], [16,17,18,19,20]]);
+    assert_equal(submatrix_set(ragged, [["a","b"],["c","d"]], 1, 1), [[1,2,3,4,5],[6,"a","b",9,10],[11,"c"], [16,17]]);
+    assert_equal(submatrix_set(test, [[]]), test);
+}
+test_submatrix_set();
+
 
 module test_array_group() {
     v = [1,2,3,4,5,6];

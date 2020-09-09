@@ -680,7 +680,7 @@ function convolve(p,q) =
 //   then the problem is solved for the matrix valued right hand side and a matrix is returned.  Note that if you 
 //   want to solve Ax=b1 and Ax=b2 that you need to form the matrix transpose([b1,b2]) for the right hand side and then
 //   transpose the returned value.  
-function linear_solve(A,b) =
+function linear_solve(A,b,pivot=true) =
     assert(is_matrix(A), "Input should be a matrix.")
     let(
         m = len(A),
@@ -688,19 +688,17 @@ function linear_solve(A,b) =
     )
     assert(is_vector(b,m) || is_matrix(b,m),"Invalid right hand side or incompatible with the matrix")
     let (
-        qr = m<n? qr_factor(transpose(A)) : qr_factor(A),
+        qr = m<n? qr_factor(transpose(A),pivot) : qr_factor(A,pivot),
         maxdim = max(n,m),
         mindim = min(n,m),
         Q = submatrix(qr[0],[0:maxdim-1], [0:mindim-1]),
         R = submatrix(qr[1],[0:mindim-1], [0:mindim-1]),
+        P = qr[2],
         zeros = [for(i=[0:mindim-1]) if (approx(R[i][i],0)) i]
     )
     zeros != [] ? [] :
-    m<n 
-    // avoiding input validation in back_substitute
-    ? let( n  = len(R) )
-      Q*reverse(_back_substitute(transpose(R, reverse=true), reverse(b))) 
-    : _back_substitute(R, transpose(Q)*b);
+    m<n ? Q*back_substitute(R,transpose(P)*b,transpose=true) // Too messy to avoid input checks here
+        : P*_back_substitute(R, transpose(Q)*b);             // Calling internal version skips input checks
 
 // Function: matrix_inverse()
 // Usage:
@@ -715,19 +713,40 @@ function matrix_inverse(A) =
     linear_solve(A,ident(len(A)));
 
 
-// Function: qr_factor()
-// Usage: qr = qr_factor(A)
+// Function: null_space()
+// Usage:
+//   null_space(A)
 // Description:
-//   Calculates the QR factorization of the input matrix A and returns it as the list [Q,R].  This factorization can be
-//   used to solve linear systems of equations.  
-function qr_factor(A) =
+//   Returns an orthonormal basis for the null space of A, namely the vectors {x} such that Ax=0.  If the null space
+//   is just the origin then returns an empty list. 
+function null_space(A,eps=1e-12) =
+    assert(is_matrix(A))
+    let(
+      Q_R=qr_factor(transpose(A),pivot=true),
+      R=Q_R[1],
+      zrow = [for(i=idx(R)) if (all_zero(R[i],eps)) i]
+    )
+    len(zrow)==0
+      ? []
+      : transpose(subindex(Q_R[0],zrow));
+
+
+// Function: qr_factor()
+// Usage: qr = qr_factor(A,[pivot])
+// Description:
+//   Calculates the QR factorization of the input matrix A and returns it as the list [Q,R,P].  This factorization can be
+//   used to solve linear systems of equations.  The factorization is A = Q*R*transpose(P).  If pivot is false (the default)
+//   then P is the identity matrix and A = Q*R.  If pivot is true then column pivoting results in an R matrix where the diagonal
+//   is non-decreasing.  The use of pivoting is supposed to increase accuracy for poorly conditioned problems, and is necessary
+//   for rank estimation or computation of the null space, but it may be slower.  
+function qr_factor(A, pivot=false) =
     assert(is_matrix(A), "Input must be a matrix." )
     let(
       m = len(A),
       n = len(A[0])
     )
     let(
-        qr = _qr_factor(A, Q=ident(m), column=0, m = m, n=n),
+        qr =_qr_factor(A, Q=ident(m),P=ident(n), pivot=pivot, column=0, m = m, n=n),
         Rzero = 
           let( R = qr[1] )
           [ for(i=[0:m-1]) [
@@ -735,25 +754,31 @@ function qr_factor(A) =
               for(j=[0:n-1]) i>j ? 0 : ri[j]
             ]
           ]
-    ) [qr[0],Rzero];
+    ) [qr[0],Rzero,qr[2]];
 
-function _qr_factor(A,Q, column, m, n) =
-    column >= min(m-1,n) ? [Q,A] :
+function _qr_factor(A,Q,P, pivot, column, m, n) =
+    column >= min(m-1,n) ? [Q,A,P] :
     let(
+        swap = !pivot ? 1
+             : _swap_matrix(n,column,column+max_index([for(i=[column:n-1]) sum_of_squares([for(j=[column:m-1]) A[j][i]])])),
+        A = pivot ? A*swap : A,
         x = [for(i=[column:1:m-1]) A[i][column]],
         alpha = (x[0]<=0 ? 1 : -1) * norm(x),
         u = x - concat([alpha],repeat(0,m-1)),
         v = alpha==0 ? u : u / norm(u),
         Qc = ident(len(x)) - 2*outer_product(v,v),
-        Qf = [for(i=[0:m-1]) 
-                [for(j=[0:m-1]) 
-                    i<column || j<column 
-                    ? (i==j ? 1 : 0) 
-                    : Qc[i-column][j-column]
-                ]
-             ]
+        Qf = [for(i=[0:m-1]) [for(j=[0:m-1]) i<column || j<column ? (i==j ? 1 : 0) : Qc[i-column][j-column]]]
     )
-    _qr_factor(Qf*A, Q*Qf, column+1, m, n);
+    _qr_factor(Qf*A, Q*Qf, P*swap, pivot, column+1, m, n);
+
+// Produces an n x n matrix that swaps column i and j (when multiplied on the right)
+function _swap_matrix(n,i,j) =
+  assert(i<n && j<n && i>=0 && j>=0, "Swap indices out of bounds")
+  [for(y=[0:n-1]) [for (x=[0:n-1])
+     x==i ? (y==j ? 1 : 0)
+   : x==j ? (y==i ? 1 : 0)
+   : x==y ? 1 : 0]];
+
 
 
 // Function: back_substitute()
@@ -862,122 +887,156 @@ function is_matrix(A,m,n,square=false) =
     && ( !square || len(A)==len(A[0]));
 
 
+// Function: norm_fro()
+// Usage:
+//    norm_fro(A)
+// Description:
+//    Computes frobenius norm of input matrix.  The frobenius norm is the square root of the sum of the
+//    squares of all of the entries of the matrix.  On vectors it is the same as the usual 2-norm.
+//    This is an easily computed norm that is convenient for comparing two matrices.  
+function norm_fro(A) =
+    assert(is_matrix(A) || is_vector(A))
+    norm(flatten(A));
+
+
 // Section: Comparisons and Logic
 
-// Function: is_zero()
+// Function: all_zero()
 // Usage:
-//   is_zero(x);
+//   all_zero(x);
 // Description:
-//   Returns true if the number passed to it is approximately zero, to within `eps`.
+//   Returns true if the finite number passed to it is approximately zero, to within `eps`.
 //   If passed a list, recursively checks if all items in the list are approximately zero.
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
 //   eps = The maximum allowed variance.  Default: `EPSILON` (1e-9)
 // Example:
-//   is_zero(0);  // Returns: true.
-//   is_zero(1e-3);  // Returns: false.
-//   is_zero([0,0,0]);  // Returns: true.
-//   is_zero([0,0,1e-3]);  // Returns: false.
-function is_zero(x, eps=EPSILON) =
-    is_list(x)? (x != [] && [for (xx=x) if(!is_zero(xx,eps=eps)) 1] == []) :
-    is_num(x)? approx(x,eps) :
+//   all_zero(0);  // Returns: true.
+//   all_zero(1e-3);  // Returns: false.
+//   all_zero([0,0,0]);  // Returns: true.
+//   all_zero([0,0,1e-3]);  // Returns: false.
+function all_zero(x, eps=EPSILON) =
+    is_finite(x)? approx(x,eps) :
+    is_list(x)? (x != [] && [for (xx=x) if(!all_zero(xx,eps=eps)) 1] == []) :
     false;
 
 
-// Function: is_positive()
+// Function: all_nonzero()
 // Usage:
-//   is_positive(x);
+//   all_nonzero(x);
 // Description:
-//   Returns true if the number passed to it is greater than zero.
+//   Returns true if the finite number passed to it is not almost zero, to within `eps`.
+//   If passed a list, recursively checks if all items in the list are not almost zero.
+//   Otherwise, returns false.
+// Arguments:
+//   x = The value to check.
+//   eps = The maximum allowed variance.  Default: `EPSILON` (1e-9)
+// Example:
+//   all_nonzero(0);  // Returns: false.
+//   all_nonzero(1e-3);  // Returns: true.
+//   all_nonzero([0,0,0]);  // Returns: false.
+//   all_nonzero([0,0,1e-3]);  // Returns: false.
+//   all_nonzero([1e-3,1e-3,1e-3]);  // Returns: true.
+function all_nonzero(x, eps=EPSILON) =
+    is_finite(x)? !approx(x,eps) :
+    is_list(x)? (x != [] && [for (xx=x) if(!all_nonzero(xx,eps=eps)) 1] == []) :
+    false;
+
+
+// Function: all_positive()
+// Usage:
+//   all_positive(x);
+// Description:
+//   Returns true if the finite number passed to it is greater than zero.
 //   If passed a list, recursively checks if all items in the list are positive.
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
 // Example:
-//   is_positive(-2);  // Returns: false.
-//   is_positive(0);  // Returns: false.
-//   is_positive(2);  // Returns: true.
-//   is_positive([0,0,0]);  // Returns: false.
-//   is_positive([0,1,2]);  // Returns: false.
-//   is_positive([3,1,2]);  // Returns: true.
-//   is_positive([3,-1,2]);  // Returns: false.
-function is_positive(x) =
-    is_list(x)? (x != [] && [for (xx=x) if(!is_positive(xx)) 1] == []) :
+//   all_positive(-2);  // Returns: false.
+//   all_positive(0);  // Returns: false.
+//   all_positive(2);  // Returns: true.
+//   all_positive([0,0,0]);  // Returns: false.
+//   all_positive([0,1,2]);  // Returns: false.
+//   all_positive([3,1,2]);  // Returns: true.
+//   all_positive([3,-1,2]);  // Returns: false.
+function all_positive(x) =
     is_num(x)? x>0 :
+    is_list(x)? (x != [] && [for (xx=x) if(!all_positive(xx)) 1] == []) :
     false;
 
 
-// Function: is_negative()
+// Function: all_negative()
 // Usage:
-//   is_negative(x);
+//   all_negative(x);
 // Description:
-//   Returns true if the number passed to it is less than zero.
+//   Returns true if the finite number passed to it is less than zero.
 //   If passed a list, recursively checks if all items in the list are negative.
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
 // Example:
-//   is_negative(-2);  // Returns: true.
-//   is_negative(0);  // Returns: false.
-//   is_negative(2);  // Returns: false.
-//   is_negative([0,0,0]);  // Returns: false.
-//   is_negative([0,1,2]);  // Returns: false.
-//   is_negative([3,1,2]);  // Returns: false.
-//   is_negative([3,-1,2]);  // Returns: false.
-//   is_negative([-3,-1,-2]);  // Returns: true.
-function is_negative(x) =
-    is_list(x)? (x != [] && [for (xx=x) if(!is_negative(xx)) 1] == []) :
+//   all_negative(-2);  // Returns: true.
+//   all_negative(0);  // Returns: false.
+//   all_negative(2);  // Returns: false.
+//   all_negative([0,0,0]);  // Returns: false.
+//   all_negative([0,1,2]);  // Returns: false.
+//   all_negative([3,1,2]);  // Returns: false.
+//   all_negative([3,-1,2]);  // Returns: false.
+//   all_negative([-3,-1,-2]);  // Returns: true.
+function all_negative(x) =
     is_num(x)? x<0 :
+    is_list(x)? (x != [] && [for (xx=x) if(!all_negative(xx)) 1] == []) :
     false;
 
 
-// Function: is_nonpositive()
+// Function: all_nonpositive()
 // Usage:
-//   is_nonpositive(x);
+//   all_nonpositive(x);
 // Description:
-//   Returns true if the number passed to it is less than or equal to zero.
+//   Returns true if the finite number passed to it is less than or equal to zero.
 //   If passed a list, recursively checks if all items in the list are nonpositive.
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
 // Example:
-//   is_nonpositive(-2);  // Returns: true.
-//   is_nonpositive(0);  // Returns: true.
-//   is_nonpositive(2);  // Returns: false.
-//   is_nonpositive([0,0,0]);  // Returns: true.
-//   is_nonpositive([0,1,2]);  // Returns: false.
-//   is_nonpositive([3,1,2]);  // Returns: false.
-//   is_nonpositive([3,-1,2]);  // Returns: false.
-//   is_nonpositive([-3,-1,-2]);  // Returns: true.
-function is_nonpositive(x) =
-    is_list(x)? (x != [] && [for (xx=x) if(!is_nonpositive(xx)) 1] == []) :
+//   all_nonpositive(-2);  // Returns: true.
+//   all_nonpositive(0);  // Returns: true.
+//   all_nonpositive(2);  // Returns: false.
+//   all_nonpositive([0,0,0]);  // Returns: true.
+//   all_nonpositive([0,1,2]);  // Returns: false.
+//   all_nonpositive([3,1,2]);  // Returns: false.
+//   all_nonpositive([3,-1,2]);  // Returns: false.
+//   all_nonpositive([-3,-1,-2]);  // Returns: true.
+function all_nonpositive(x) =
     is_num(x)? x<=0 :
+    is_list(x)? (x != [] && [for (xx=x) if(!all_nonpositive(xx)) 1] == []) :
     false;
 
 
-// Function: is_nonnegative()
+// Function: all_nonnegative()
 // Usage:
-//   is_nonnegative(x);
+//   all_nonnegative(x);
 // Description:
-//   Returns true if the number passed to it is greater than or equal to zero.
+//   Returns true if the finite number passed to it is greater than or equal to zero.
 //   If passed a list, recursively checks if all items in the list are nonnegative.
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
 // Example:
-//   is_nonnegative(-2);  // Returns: false.
-//   is_nonnegative(0);  // Returns: true.
-//   is_nonnegative(2);  // Returns: true.
-//   is_nonnegative([0,0,0]);  // Returns: true.
-//   is_nonnegative([0,1,2]);  // Returns: true.
-//   is_nonnegative([0,-1,-2]);  // Returns: false.
-//   is_nonnegative([3,1,2]);  // Returns: true.
-//   is_nonnegative([3,-1,2]);  // Returns: false.
-//   is_nonnegative([-3,-1,-2]);  // Returns: false.
-function is_nonnegative(x) =
-    is_list(x)? (x != [] && [for (xx=x) if(!is_nonnegative(xx)) 1] == []) :
+//   all_nonnegative(-2);  // Returns: false.
+//   all_nonnegative(0);  // Returns: true.
+//   all_nonnegative(2);  // Returns: true.
+//   all_nonnegative([0,0,0]);  // Returns: true.
+//   all_nonnegative([0,1,2]);  // Returns: true.
+//   all_nonnegative([0,-1,-2]);  // Returns: false.
+//   all_nonnegative([3,1,2]);  // Returns: true.
+//   all_nonnegative([3,-1,2]);  // Returns: false.
+//   all_nonnegative([-3,-1,-2]);  // Returns: false.
+function all_nonnegative(x) =
     is_num(x)? x>=0 :
+    is_list(x)? (x != [] && [for (xx=x) if(!all_nonnegative(xx)) 1] == []) :
     false;
 
 
@@ -1308,6 +1367,41 @@ function C_div(z1,z2) =
 // For the sake of consistence with Q_mul and vmul, C_times should be called C_mul
 
 // Section: Polynomials
+
+// Function: quadratic_roots()
+// Usage:
+//    roots = quadratic_roots(a,b,c,[real])
+// Description:
+//    Computes roots of the quadratic equation a*x^2+b*x+c==0, where the
+//    coefficients are real numbers.  If real is true then returns only the
+//    real roots.  Otherwise returns a pair of complex values.  This method
+//    may be more reliable than the general root finder at distinguishing
+//    real roots from complex roots.  
+
+// https://people.csail.mit.edu/bkph/articles/Quadratics.pdf
+
+function quadratic_roots(a,b,c,real=false) =
+  real ? [for(root = quadratic_roots(a,b,c,real=false)) if (root.y==0) root.x]
+  :
+  is_undef(b) && is_undef(c) && is_vector(a,3) ? quadratic_roots(a[0],a[1],a[2]) :
+  assert(is_num(a) && is_num(b) && is_num(c))
+  assert(a!=0 || b!=0 || c!=0, "Quadratic must have a nonzero coefficient")
+  a==0 && b==0 ? [] :     // No solutions
+  a==0 ? [[-c/b,0]] : 
+  let(
+      descrim = b*b-4*a*c,
+      sqrt_des = sqrt(abs(descrim))
+  )
+  descrim < 0 ?             // Complex case
+     [[-b, sqrt_des],
+      [-b, -sqrt_des]]/2/a :
+  b<0 ?                     // b positive
+     [[2*c/(-b+sqrt_des),0],
+      [(-b+sqrt_des)/a/2,0]]
+      :                     // b negative
+     [[(-b-sqrt_des)/2/a, 0],
+      [2*c/(-b-sqrt_des),0]];
+
 
 // Function: polynomial() 
 // Usage:

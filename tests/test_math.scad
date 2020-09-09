@@ -100,104 +100,128 @@ module test_is_matrix() {
 test_is_matrix();
 
 
-module test_is_zero() {
-    assert(is_zero(0));
-    assert(is_zero([0,0,0]));
-    assert(is_zero([[0,0,0],[0,0]]));
-    assert(is_zero([EPSILON/2,EPSILON/2,EPSILON/2]));
-    assert(!is_zero(1e-3));
-    assert(!is_zero([0,0,1e-3]));
-    assert(!is_zero([EPSILON*10,0,0]));
-    assert(!is_zero([0,EPSILON*10,0]));
-    assert(!is_zero([0,0,EPSILON*10]));
-    assert(!is_zero(true));
-    assert(!is_zero(false));
-    assert(!is_zero(INF));
-    assert(!is_zero(-INF));
-    assert(!is_zero(NAN));
-    assert(!is_zero("foo"));
-    assert(!is_zero([]));
-    assert(!is_zero([0:1:2]));
+module test_all_zero() {
+    assert(all_zero(0));
+    assert(all_zero([0,0,0]));
+    assert(all_zero([[0,0,0],[0,0]]));
+    assert(all_zero([EPSILON/2,EPSILON/2,EPSILON/2]));
+    assert(!all_zero(1e-3));
+    assert(!all_zero([0,0,1e-3]));
+    assert(!all_zero([EPSILON*10,0,0]));
+    assert(!all_zero([0,EPSILON*10,0]));
+    assert(!all_zero([0,0,EPSILON*10]));
+    assert(!all_zero(true));
+    assert(!all_zero(false));
+    assert(!all_zero(INF));
+    assert(!all_zero(-INF));
+    assert(!all_zero(NAN));
+    assert(!all_zero("foo"));
+    assert(!all_zero([]));
+    assert(!all_zero([0:1:2]));
 }
-test_is_zero();
+test_all_zero();
 
 
-module test_is_positive() {
-    assert(!is_positive(-2));
-    assert(!is_positive(0));
-    assert(is_positive(2));
-    assert(!is_positive([0,0,0]));
-    assert(!is_positive([0,1,2]));
-    assert(is_positive([3,1,2]));
-    assert(!is_positive([3,-1,2]));
-    assert(!is_positive([]));
-    assert(!is_positive(true));
-    assert(!is_positive(false));
-    assert(!is_positive("foo"));
-    assert(!is_positive([0:1:2]));
+module test_all_nonzero() {
+    assert(!all_nonzero(0));
+    assert(!all_nonzero([0,0,0]));
+    assert(!all_nonzero([[0,0,0],[0,0]]));
+    assert(!all_nonzero([EPSILON/2,EPSILON/2,EPSILON/2]));
+    assert(all_nonzero(1e-3));
+    assert(!all_nonzero([0,0,1e-3]));
+    assert(!all_nonzero([EPSILON*10,0,0]));
+    assert(!all_nonzero([0,EPSILON*10,0]));
+    assert(!all_nonzero([0,0,EPSILON*10]));
+    assert(all_nonzero([1e-3,1e-3,1e-3]));
+    assert(all_nonzero([EPSILON*10,EPSILON*10,EPSILON*10]));
+    assert(!all_nonzero(true));
+    assert(!all_nonzero(false));
+    assert(!all_nonzero(INF));
+    assert(!all_nonzero(-INF));
+    assert(!all_nonzero(NAN));
+    assert(!all_nonzero("foo"));
+    assert(!all_nonzero([]));
+    assert(!all_nonzero([0:1:2]));
 }
-test_is_positive();
+test_all_nonzero();
 
 
-module test_is_negative() {
-    assert(is_negative(-2));
-    assert(!is_negative(0));
-    assert(!is_negative(2));
-    assert(!is_negative([0,0,0]));
-    assert(!is_negative([0,1,2]));
-    assert(!is_negative([3,1,2]));
-    assert(!is_negative([3,-1,2]));
-    assert(is_negative([-3,-1,-2]));
-    assert(!is_negative([-3,1,-2]));
-    assert(is_negative([[-5,-7],[-3,-1,-2]]));
-    assert(!is_negative([[-5,-7],[-3,1,-2]]));
-    assert(!is_negative([]));
-    assert(!is_negative(true));
-    assert(!is_negative(false));
-    assert(!is_negative("foo"));
-    assert(!is_negative([0:1:2]));
+module test_all_positive() {
+    assert(!all_positive(-2));
+    assert(!all_positive(0));
+    assert(all_positive(2));
+    assert(!all_positive([0,0,0]));
+    assert(!all_positive([0,1,2]));
+    assert(all_positive([3,1,2]));
+    assert(!all_positive([3,-1,2]));
+    assert(!all_positive([]));
+    assert(!all_positive(true));
+    assert(!all_positive(false));
+    assert(!all_positive("foo"));
+    assert(!all_positive([0:1:2]));
 }
-test_is_negative();
+test_all_positive();
 
 
-module test_is_nonpositive() {
-    assert(is_nonpositive(-2));
-    assert(is_nonpositive(0));
-    assert(!is_nonpositive(2));
-    assert(is_nonpositive([0,0,0]));
-    assert(!is_nonpositive([0,1,2]));
-    assert(is_nonpositive([0,-1,-2]));
-    assert(!is_nonpositive([3,1,2]));
-    assert(!is_nonpositive([3,-1,2]));
-    assert(!is_nonpositive([]));
-    assert(!is_nonpositive(true));
-    assert(!is_nonpositive(false));
-    assert(!is_nonpositive("foo"));
-    assert(!is_nonpositive([0:1:2]));
+module test_all_negative() {
+    assert(all_negative(-2));
+    assert(!all_negative(0));
+    assert(!all_negative(2));
+    assert(!all_negative([0,0,0]));
+    assert(!all_negative([0,1,2]));
+    assert(!all_negative([3,1,2]));
+    assert(!all_negative([3,-1,2]));
+    assert(all_negative([-3,-1,-2]));
+    assert(!all_negative([-3,1,-2]));
+    assert(all_negative([[-5,-7],[-3,-1,-2]]));
+    assert(!all_negative([[-5,-7],[-3,1,-2]]));
+    assert(!all_negative([]));
+    assert(!all_negative(true));
+    assert(!all_negative(false));
+    assert(!all_negative("foo"));
+    assert(!all_negative([0:1:2]));
 }
-test_is_nonpositive();
+test_all_negative();
 
 
-module test_is_nonnegative() {
-    assert(!is_nonnegative(-2));
-    assert(is_nonnegative(0));
-    assert(is_nonnegative(2));
-    assert(is_nonnegative([0,0,0]));
-    assert(is_nonnegative([0,1,2]));
-    assert(is_nonnegative([3,1,2]));
-    assert(!is_nonnegative([3,-1,2]));
-    assert(!is_nonnegative([-3,-1,-2]));
-    assert(!is_nonnegative([[-5,-7],[-3,-1,-2]]));
-    assert(!is_nonnegative([[-5,-7],[-3,1,-2]]));
-    assert(!is_nonnegative([[5,7],[3,-1,2]]));
-    assert(is_nonnegative([[5,7],[3,1,2]]));
-    assert(!is_nonnegative([]));
-    assert(!is_nonnegative(true));
-    assert(!is_nonnegative(false));
-    assert(!is_nonnegative("foo"));
-    assert(!is_nonnegative([0:1:2]));
+module test_all_nonpositive() {
+    assert(all_nonpositive(-2));
+    assert(all_nonpositive(0));
+    assert(!all_nonpositive(2));
+    assert(all_nonpositive([0,0,0]));
+    assert(!all_nonpositive([0,1,2]));
+    assert(all_nonpositive([0,-1,-2]));
+    assert(!all_nonpositive([3,1,2]));
+    assert(!all_nonpositive([3,-1,2]));
+    assert(!all_nonpositive([]));
+    assert(!all_nonpositive(true));
+    assert(!all_nonpositive(false));
+    assert(!all_nonpositive("foo"));
+    assert(!all_nonpositive([0:1:2]));
 }
-test_is_nonnegative();
+test_all_nonpositive();
+
+
+module test_all_nonnegative() {
+    assert(!all_nonnegative(-2));
+    assert(all_nonnegative(0));
+    assert(all_nonnegative(2));
+    assert(all_nonnegative([0,0,0]));
+    assert(all_nonnegative([0,1,2]));
+    assert(all_nonnegative([3,1,2]));
+    assert(!all_nonnegative([3,-1,2]));
+    assert(!all_nonnegative([-3,-1,-2]));
+    assert(!all_nonnegative([[-5,-7],[-3,-1,-2]]));
+    assert(!all_nonnegative([[-5,-7],[-3,1,-2]]));
+    assert(!all_nonnegative([[5,7],[3,-1,2]]));
+    assert(all_nonnegative([[5,7],[3,1,2]]));
+    assert(!all_nonnegative([]));
+    assert(!all_nonnegative(true));
+    assert(!all_nonnegative(false));
+    assert(!all_nonnegative("foo"));
+    assert(!all_nonnegative([0:1:2]));
+}
+test_all_nonnegative();
 
 
 module test_approx() {
@@ -781,6 +805,12 @@ test_back_substitute();
 
 
 
+module test_norm_fro(){
+  assert_approx(norm_fro([[2,3,4],[4,5,6]]), 10.29563014098700);
+
+} test_norm_fro();  
+
+
 module test_linear_solve(){
   M = [[-2,-5,-1,3],
        [3,7,6,2],
@@ -954,6 +984,38 @@ module test_real_roots(){
 test_real_roots();
 
 
+
+module test_quadratic_roots(){
+    assert_approx(quadratic_roots([1,4,4]),[[-2,0],[-2,0]]);
+    assert_approx(quadratic_roots([1,4,4],real=true),[-2,-2]);
+    assert_approx(quadratic_roots([1,-5,6],real=true), [2,3]);
+    assert_approx(quadratic_roots([1,-5,6]), [[2,0],[3,0]]);
+}
+test_quadratic_roots();
+
+
+module test_null_space(){
+    assert_equal(null_space([[3,2,1],[3,6,3],[3,9,-3]]),[]);
+
+    function nullcheck(A,dim) =
+      let(v=null_space(A))
+        len(v)==dim && all_zero(A*transpose(v),eps=1e-12);
+    
+   A = [[-1, 2, -5, 2],[-3,-1,3,-3],[5,0,5,0],[3,-4,11,-4]];
+   assert(nullcheck(A,1));
+
+   B = [
+        [  4,    1,    8,    6,   -2,    3],
+        [ 10,    5,   10,   10,    0,    5],
+        [  8,    1,    8,    8,   -6,    1],
+        [ -8,   -8,    6,   -1,   -8,   -1],
+        [  2,    2,    0,    1,    2,    1],
+        [  2,   -3,   10,    6,   -8,    1],
+       ];
+   assert(nullcheck(B,3));
+}
+test_null_space();
+
 module test_qr_factor() {
   // Check that R is upper triangular
   function is_ut(R) =
@@ -962,7 +1024,15 @@ module test_qr_factor() {
 
   // Test the R is upper trianglar, Q is orthogonal and qr=M
   function qrok(qr,M) =
-     is_ut(qr[1]) && approx(qr[0]*transpose(qr[0]), ident(len(qr[0]))) && approx(qr[0]*qr[1],M);
+     is_ut(qr[1]) && approx(qr[0]*transpose(qr[0]), ident(len(qr[0]))) && approx(qr[0]*qr[1],M) && qr[2]==ident(len(qr[2]));
+
+  // Test the R is upper trianglar, Q is orthogonal, R diagonal non-increasing and qrp=M
+  function qrokpiv(qr,M) =
+       is_ut(qr[1])
+    && approx(qr[0]*transpose(qr[0]), ident(len(qr[0])))
+    && approx(qr[0]*qr[1]*transpose(qr[2]),M)
+    && list_decreasing([for(i=[0:1:min(len(qr[1]),len(qr[1][0]))-1]) abs(qr[1][i][i])]);
+
   
   M = [[1,2,9,4,5],
        [6,7,8,19,10],
@@ -991,6 +1061,15 @@ module test_qr_factor() {
   assert(qrok(qr_factor([[7]]), [[7]]));
   assert(qrok(qr_factor([[1,2,3]]), [[1,2,3]]));
   assert(qrok(qr_factor([[1],[2],[3]]), [[1],[2],[3]]));
+
+
+  assert(qrokpiv(qr_factor(M,pivot=true),M));
+  assert(qrokpiv(qr_factor(select(M,0,3),pivot=true),select(M,0,3)));
+  assert(qrokpiv(qr_factor(transpose(select(M,0,3)),pivot=true),transpose(select(M,0,3))));
+  assert(qrokpiv(qr_factor(B,pivot=true),B));
+  assert(qrokpiv(qr_factor([[7]],pivot=true), [[7]]));
+  assert(qrokpiv(qr_factor([[1,2,3]],pivot=true), [[1,2,3]]));
+  assert(qrokpiv(qr_factor([[1],[2],[3]],pivot=true), [[1],[2],[3]]));
 }
 test_qr_factor();
 
