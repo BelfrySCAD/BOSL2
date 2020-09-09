@@ -4,6 +4,8 @@ include <../std.scad>
 //the commented lines are for tests to be written
 //the tests are ordered as they appear in geometry.scad
 
+
+
 test_point_on_segment2d();
 test_point_left_of_line2d();
 test_collinear();
@@ -35,33 +37,30 @@ test_tri_calc();
 test_triangle_area();
 test_plane3pt();
 test_plane3pt_indexed();
-//test_plane_from_normal();
+test_plane_from_normal();
 test_plane_from_points();
-//test_plane_from_polygon();
+test_plane_from_polygon();
 test_plane_normal();
-//test_plane_offset();
-//test_plane_transform();
+test_plane_offset();
+test_plane_transform();
 test_projection_on_plane();
-//test_plane_point_nearest_origin();
+test_plane_point_nearest_origin();
 test_distance_from_plane();
 
-test_find_circle_2tangents();
-test_find_circle_3points();
-test_circle_point_tangents();
-test_tri_functions();
-//test_closest_point_on_plane();
-//test__general_plane_line_intersection();
-//test_plane_line_angle();
-//test_plane_line_intersection();
+test_closest_point_on_plane();
+test__general_plane_line_intersection();
+test_plane_line_angle();
+test_normalize_plane();
+test_plane_line_intersection();
 test_polygon_line_intersection();
-//test_plane_intersection();
+test_plane_intersection();
 test_coplanar();
 test_points_on_plane();
 test_in_front_of_plane();
-//test_find_circle_2tangents();
-//test_find_circle_3points();
-//test_circle_point_tangents();
-//test_circle_circle_tangents();
+test_find_circle_2tangents();
+test_find_circle_3points();
+test_circle_point_tangents();
+
 test_noncollinear_triple();
 test_pointlist_bounds();
 test_closest_point();
@@ -92,24 +91,204 @@ test_simplify_path();
 test_simplify_path_indexed();
 test_is_region();
 
+
 // to be used when there are two alternative symmetrical outcomes 
-// from a function like a plane output.
+// from a function like a plane output; v must be a vector
 function standardize(v) = 
     v==[]? [] :
-    sign([for(vi=v) if( ! approx(vi,0)) vi,0 ][0])*v;
+    let( i = max_index([for(vi=v) abs(vi) ]),
+         s = sign(v[i]) )
+    v*s;
 
-module assert_std(vc,ve) { assert(standardize(vc)==standardize(ve)); }
+
+module assert_std(vc,ve,info) { assert_approx(standardize(vc),standardize(ve),info); }
+
+
+function info_str(list,i=0,string=chr(10)) =
+    assert(i>=len(list) || (is_list(list[i])&&len(list[i])>=2), "Invalid list for info_str." )
+    i>=len(list)
+    ? str(string)
+    : info_str(list,i+1,str(string,str(list[i][0],_valstr(list[i][1]),chr(10))));
+
+
+module test_closest_point_on_plane(){
+    plane = rands(-5,5,4)+[10,0,0,0];
+    point = rands(-1,1,3);
+    point2 = closest_point_on_plane(plane,point);
+    assert_approx(norm(point-point2), abs(distance_from_plane(plane,point)));    
+}
+*test_closest_point_on_plane();
+
+
+module test_normalize_plane(){
+    plane = rands(-5,5,4)+[10,0,0,0];
+    plane2 = normalize_plane(plane);
+    assert_approx(norm(point3d(plane2)),1);
+    assert_approx(plane*plane2[3],plane2*plane[3]);
+}
+*test_normalize_plane();
+
+module test_plane_line_intersection(){
+    line = [rands(-1,1,3),rands(-1,1,3)+[2,0,0]];
+    plane1 = plane_from_normal(line[1]-line[0],2*line[0]-line[1]); // plane disjoint from segment
+    plane2 = plane_from_normal(line[1]-line[0],(line[0]+line[1])/2); // through middle point of line
+    plane3 = plane3pt(line[1],line[0], rands(-1,1,3)+[0,3,0]); // containing line
+    plane4 = plane3pt(line[1],line[0], rands(-1,1,3)+[0,3,0])+[0,0,0,1]; // parallel to line
+    info1 = info_str([ ["line = ",line],["plane = ",plane1]]);
+    assert_approx(plane_line_intersection(plane1, line),2*line[0]-line[1],info1);
+    assert_approx(plane_line_intersection(plane1, line,[true,false]),undef,info1);
+    assert_approx(plane_line_intersection(plane1, line,[false,true]),2*line[0]-line[1],info1);
+    assert_approx(plane_line_intersection(plane1, line,[true, true]),undef,info1);
+    info2 = info_str([ ["line = ",line],["plane = ",plane2]]);
+    assert_approx(plane_line_intersection(plane2, line),(line[0]+line[1])/2,info2);
+    assert_approx(plane_line_intersection(plane2, line,[true,false]),(line[0]+line[1])/2,info2);
+    assert_approx(plane_line_intersection(plane2, line,[false,true]),(line[0]+line[1])/2,info2);
+    assert_approx(plane_line_intersection(plane2, line,[true, true]),(line[0]+line[1])/2,info2);
+    info3 = info_str([ ["line = ",line],["plane = ",plane3]]);
+    assert_approx(plane_line_intersection(plane3, line),line,info3);
+    assert_approx(plane_line_intersection(plane3, line,[true,false]),line,info3);
+    assert_approx(plane_line_intersection(plane3, line,[false,true]),line,info3);
+    assert_approx(plane_line_intersection(plane3, line,[true, true]),line,info3);
+    info4 = info_str([ ["line = ",line],["plane = ",plane4]]);
+    assert_approx(plane_line_intersection(plane4, line),undef,info4);
+    assert_approx(plane_line_intersection(plane4, line,[true,false]),undef,info4);
+    assert_approx(plane_line_intersection(plane4, line,[false,true]),undef,info4);
+    assert_approx(plane_line_intersection(plane4, line,[true, true]),undef,info4);
+}
+*test_plane_line_intersection();
+
+
+module test_plane_intersection(){
+    line = [ rands(-1,1,3), rands(-1,1,3)+[2,0,0] ]; // a valid line
+    pt0  = line[0]-[2,0,0];  // 2 points not on the line
+    pt1  = line[1]-[0,2,0]; 
+    plane01 = plane3pt(line[0],line[1],pt0);
+    plane02 = plane3pt(line[0],line[1],pt1);
+    plane03 = plane3pt(line[0],pt0,pt1);
+    info = info_str([["plane1 = ",plane01],["plane2 = ",plane02],["plane3 = ",plane03]]);
+    assert_approx(plane_intersection(plane01,plane02,plane03),line[0],info);
+    assert_approx(plane_intersection(plane01,2*plane01),undef,info);
+    lineInters = plane_intersection(plane01,plane02);
+    assert_approx(line_closest_point(lineInters,line[0]), line[0], info);
+    assert_approx(line_closest_point(lineInters,line[1]), line[1], info);
+}
+*test_plane_intersection();
+
+
+module test_plane_point_nearest_origin(){
+    point = rands(-1,1,3)+[2,0,0]; // a non zero vector
+    plane = [ each point, point*point]; // a plane containing `point`
+    info = info_str([["point = ",point],["plane = ",plane]]);
+    assert_approx(plane_point_nearest_origin(plane),point,info);
+    assert_approx(plane_point_nearest_origin([each point,5]),5*unit(point)/norm(point),info);
+}
+test_plane_point_nearest_origin();
+
+
+module test_plane_transform(){
+    normal = rands(-1,1,3)+[2,0,0];
+    offset = rands(-1,1,1)[0];
+    info = info_str([["normal = ",normal],["offset = ",offset]]);
+    assert_approx(plane_transform([0,0,1,offset]),move([0,0,-offset]),info );
+    assert_approx(plane_transform([0,1,0,offset]),xrot(90)*move([0,-offset,0]),info );
+}
+*test_plane_transform();
+
+
+module test_plane_offset(){
+    plane = rands(-1,1,4)+[2,0,0,0]; // a valid plane
+    info = info_str([["plane = ",plane]]);
+    assert_approx(plane_offset(plane), normalize_plane(plane)[3],info);
+    assert_approx(plane_offset([1,1,1,1]), 1/sqrt(3),info);
+}
+*test_plane_offset();
+
+module test_plane_from_polygon(){
+    poly1 = [ rands(-1,1,3), rands(-1,1,3)+[2,0,0], rands(-1,1,3)+[0,2,2] ];
+    poly2 = concat(poly1, [sum(poly1)/3] );
+    info = info_str([["poly1 = ",poly1],["poly2 = ",poly2]]);
+    assert_std(plane_from_polygon(poly1),plane3pt(poly1[0],poly1[1],poly1[2]),info);
+    assert_std(plane_from_polygon(poly2),plane3pt(poly1[0],poly1[1],poly1[2]),info);
+}
+*test_plane_from_polygon();
+
+module test_plane_from_normal(){
+    normal = rands(-1,1,3)+[2,0,0];
+    point = rands(-1,1,3);
+    displ = normal*point;
+    info = info_str([["normal = ",normal],["point = ",point],["displ = ",displ]]);
+    assert_approx(plane_from_normal(normal,point)*[each point,-1],0,info);
+    assert_std(plane_from_normal(normal,point),normalize_plane([each normal,displ]),info);
+    assert_std(plane_from_normal([1,1,1],[1,2,3]),[0.57735026919,0.57735026919,0.57735026919,3.46410161514]);
+}
+*test_plane_from_normal();
+
+module test_plane_line_angle() {
+    angs = rands(0,360,3);
+    displ = rands(-1,1,1)[0];
+    info = info_str([["angs = ",angs],["displ = ",displ]]);
+    assert_approx(plane_line_angle([each rot(angs,p=[0,0,1]),displ],[[0,0,0],rot(angs,p=[0,0,1])]),90,info);
+    assert_approx(plane_line_angle([each rot(angs,p=[0,0,1]),displ],[[0,0,0],rot(angs,p=[0,1,1])]),45,info);
+    assert_approx(plane_line_angle([each rot(angs,p=[0,0,1]),0],[[0,0,0],rot(angs,p=[1,1,1])]),35.2643896828);
+}
+*test_plane_line_angle();
+
+module test__general_plane_line_intersection() {
+    CRLF = chr(10);
+    // general line
+    plane1 = rands(-1,1,4)+[2,0,0,0]; // a random valid plane (normal!=0)
+    line1  = [ rands(-1,1,3), rands(-1,1,3)+[2,0,0] ]; // a random valid line (line1[0]!=line1[1])
+    inters1 = _general_plane_line_intersection(plane1, line1);
+    info1 = info_str([["line = ",line1],["plane = ",plane1]]);
+    if(inters1==undef) { // parallel to the plane ?
+        assert_approx( point3d(plane1)*(line1[1]-line1[0]), 0, info1);
+        assert( point3d(plane1)*line1[0]== plane1[3], info1); // not on the plane
+    }
+    if( inters1[1]==undef) { // on the plane ?
+        assert_approx( point3d(plane1)*(line1[1]-line1[0]), 0, info1);
+        assert_approx(point3d(plane1)*line1[0],plane1[3], info1) ;  // on the plane
+    }
+    else { 
+        interspoint = line1[0]+inters1[1]*(line1[1]-line1[0]);
+        assert_approx(inters1[0],interspoint, info1); 
+        assert_approx(point3d(plane1)*inters1[0], plane1[3], info1); // interspoint on the plane
+        assert_approx(distance_from_plane(plane1, inters1[0]), 0, info1); // inters1[0] on the plane
+    }
+
+    // line parallel to the plane
+    line2  = [ rands(-1,1,3)+[0,2,0], rands(-1,1,3)+[2,0,0] ]; // a random valid line2
+                                                                // not containing the origin
+    plane0 = plane_from_points([line2[0], line2[1], [0,0,0]]);  // plane cointaining the line
+    plane2  = plane_from_normal(plane_normal(plane0), [5,5,5]);
+    inters2 = _general_plane_line_intersection(plane2, line2);
+    info2 = info_str([["line = ",line2],["plane = ",plane2]]);
+    assert(inters2==undef, info2);
+ 
+    // line on the plane
+    line3  = [ rands(-1,1,3), rands(-1,1,3)+[2,0,0] ]; // a random valid line
+    imax  = max_index(line3[1]-line3[0]);
+    w     = [for(j=[0:2]) imax==j? 0: 3 ];
+    p3    = line3[0] + cross(line3[1]-line3[0],w); // a point not on the line
+    plane3 = plane_from_points([line3[0], line3[1], p3]); // plane containing line
+    inters3 = _general_plane_line_intersection(plane3, line3);
+    info3 = info_str([["line = ",line3],["plane = ",plane3]]);
+    assert(!is_undef(inters3) && inters3[1]==undef, info3);
+    assert_approx(inters3[0], line3, info3);
+}
+*test__general_plane_line_intersection();
+
 
 module test_points_on_plane() {
     pts     = [for(i=[0:40]) rands(-1,1,3) ];
     dir     = rands(-10,10,3);
-    normal0 = unit([1,2,3]);
+    normal0 = [1,2,3];
     ang     = rands(0,360,1)[0];
     normal  = rot(a=ang,p=normal0);
     plane   = [each normal, normal*dir];
     prj_pts = projection_on_plane(plane,pts);
-    assert(points_on_plane(prj_pts,plane));
-    assert(!points_on_plane(concat(pts,[normal-dir]),plane));
+    info = info_str([["pts = ",pts],["dir = ",dir],["ang = ",ang]]);
+    assert(points_on_plane(prj_pts,plane),info);
+    assert(!points_on_plane(concat(pts,[normal-dir]),plane),info);
 }
 *test_points_on_plane();
 
@@ -122,14 +301,15 @@ module test_projection_on_plane(){
     plane   = [each normal,  0];
     planem  = [each normal, normal*dir];
     pts     = [for(i=[1:10]) rands(-1,1,3)];
+    info = info_str([["ang = ",ang],["dir = ",dir]]);
     assert_approx( projection_on_plane(plane,pts),
-                   projection_on_plane(plane,projection_on_plane(plane,pts)));
+                   projection_on_plane(plane,projection_on_plane(plane,pts)),info);
     assert_approx( projection_on_plane(plane,pts),
-                   rot(a=ang,p=projection_on_plane(plane0,rot(a=-ang,p=pts))));    
+                   rot(a=ang,p=projection_on_plane(plane0,rot(a=-ang,p=pts))),info);    
     assert_approx( move((-normal*dir)*normal,p=projection_on_plane(planem,pts)),
-                   projection_on_plane(plane,pts));
+                   projection_on_plane(plane,pts),info);
     assert_approx( move((normal*dir)*normal,p=projection_on_plane(plane,pts)),
-                   projection_on_plane(planem,pts));
+                   projection_on_plane(planem,pts),info);
 }
 *test_projection_on_plane();
 
@@ -543,12 +723,43 @@ module test_distance_from_plane() {
 
 
 module test_polygon_line_intersection() {
-    poly1 = [[50,50,50], [50,-50,50], [-50,-50,50]];
-    assert_approx(polygon_line_intersection(poly1, [CENTER, UP]), [0,0,50]);
-    assert_approx(polygon_line_intersection(poly1, [CENTER, UP+RIGHT]), [50,0,50]);
-    assert_approx(polygon_line_intersection(poly1, [CENTER, UP+BACK+RIGHT]), [50,50,50]);
-    assert_approx(polygon_line_intersection(poly1, [[0,0,50], [1,0,50]]), [[[0,0,50], [50,0,50]]]);
-    assert_approx(polygon_line_intersection(poly1, [[0,0,0], [1,0,0]]), undef);
+    poly0 = [ [-10,-10, 0],[10,-10, 0],[10,10,0],[0,5,0],[-10,10,0] ];
+    line0 = [ [-3,7.5,0],[3,7.5,0] ]; // a segment on poly0 plane, out of poly0
+    angs  = rands(0,360,3); 
+    poly   = rot(angs,p=poly0);
+    lineon = rot(angs,p=line0);
+    info   = info_str([["angs = ",angs],["line = ",lineon],["poly = ",poly]]);
+    // line on polygon plane
+    assert_approx(polygon_line_intersection(poly,lineon,bounded=[true,true]),
+                  undef, info);
+    assert_approx(polygon_line_intersection(poly,lineon,bounded=[true,false]),
+                  [rot(angs,p=[[5,7.5,0],[10,7.5,0]])], info);
+    assert_approx(polygon_line_intersection(poly,lineon,bounded=[false,true]),
+                  [rot(angs,p=[[-10,7.5,0],[-5,7.5,0]])], info);
+    assert_approx(polygon_line_intersection(poly,lineon,bounded=[false,false]),
+                  rot(angs,p=[[[-10,7.5,0],[-5,7.5,0]],[[5,7.5,0],[10,7.5,0]]]), info);
+    // line parallel to polygon plane
+    linepll = move([0,0,1],lineon);
+    assert_approx(polygon_line_intersection(poly,linepll,bounded=[true,true]),
+                  undef, info);
+    assert_approx(polygon_line_intersection(poly,linepll,bounded=[true,false]),
+                  undef, info);
+    assert_approx(polygon_line_intersection(poly,linepll,bounded=[false,true]),
+                  undef, info);
+    assert_approx(polygon_line_intersection(poly,linepll,bounded=[false,false]),
+                  undef, info);
+    // general case
+    trnsl   = [0,0,1];
+    linegnr = move(trnsl,rot(angs,p=[[5,5,5],[3,3,3]]));
+    polygnr = move(trnsl,rot(angs,p=poly0));
+    assert_approx(polygon_line_intersection(polygnr,linegnr,bounded=[true,true]),
+                  undef, info);
+    assert_approx(polygon_line_intersection(polygnr,linegnr,bounded=[true,false]),
+                  trnsl, info);
+    assert_approx(polygon_line_intersection(polygnr,linegnr,bounded=[false,true]),
+                  undef, info);
+    assert_approx(polygon_line_intersection(polygnr,linegnr,bounded=[false,false]),
+                  trnsl, info);
 }
 *test_polygon_line_intersection();
 
@@ -576,6 +787,8 @@ module test_in_front_of_plane() {
 
 
 module test_is_path() {
+    assert(is_path([[1,2,3],[4,5,6]]));
+    assert(is_path([[1,2,3],[4,5,6],[7,8,9]]));
     assert(!is_path(123));
     assert(!is_path("foo"));
     assert(!is_path(true));
@@ -584,8 +797,6 @@ module test_is_path() {
     assert(!is_path([["foo","bar","baz"]]));
     assert(!is_path([[1,2,3]]));
     assert(!is_path([["foo","bar","baz"],["qux","quux","quuux"]]));
-    assert(is_path([[1,2,3],[4,5,6]]));
-    assert(is_path([[1,2,3],[4,5,6],[7,8,9]]));
 }
 *test_is_path();
 

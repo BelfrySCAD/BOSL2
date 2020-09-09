@@ -180,8 +180,9 @@ function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) 
         ),
         subpaths = [
             for (p = pair(crossings))
-                deduplicate(eps=eps,
-                    path_subselect(path, p[0][0], p[0][1], p[1][0], p[1][1], closed=closed)
+                deduplicate(
+                    path_subselect(path, p[0][0], p[0][1], p[1][0], p[1][1], closed=closed),
+                    eps=eps
                 )
         ]
     )
