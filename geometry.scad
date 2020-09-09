@@ -1022,7 +1022,8 @@ function _general_plane_line_intersection(plane, line, eps=EPSILON) =
     
     
 // Function: normalize_plane()
-// Usage: normalize_plane(plane)
+// Usage: 
+//   nplane = normalize_plane(plane);
 // Description:
 //   Returns a new representation [A,B,C,D] of `plane` where norm([A,B,C]) is equal to one.
 function normalize_plane(plane) =
@@ -1031,7 +1032,8 @@ function normalize_plane(plane) =
 
 
 // Function: plane_line_angle()
-// Usage: plane_line_angle(plane,line)
+// Usage: 
+//   angle = plane_line_angle(plane,line);
 // Description:
 //   Compute the angle between a plane [A, B, C, D] and a line, specified as a pair of points [p1,p2].
 //   The resulting angle is signed, with the sign positive if the vector p2-p1 lies on 
