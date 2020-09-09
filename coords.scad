@@ -142,24 +142,24 @@ function xy_to_polar(x,y=undef) = let(
 
 
 // Function: project_plane()
-// Usage: With 3 Points
+// Usage: With the plane defined by 3 Points
 //   xyz = project_plane(point, a, b, c);
-// Usage: With Pointlist
+// Usage: With the plane defined by Pointlist
 //   xyz = project_plane(point, POINTLIST);
-// Usage: With Plane Definition [A,B,C,D] Where Ax+By+Cz=D
+// Usage: With the plane defined by Plane Definition [A,B,C,D] Where Ax+By+Cz=D
 //   xyz = project_plane(point, PLANE);
 // Description:
-//   Converts the given 3D point from global coordinates to the 2D planar coordinates of the closest
-//   point on the plane.  This coordinate system can be useful in taking a set of nearly coplanar
+//   Converts the given 3D points from global coordinates to the 2D planar coordinates of the closest
+//   points on the plane.  This coordinate system can be useful in taking a set of nearly coplanar
 //   points, and converting them to a pure XY set of coordinates for manipulation, before converting
-//   them back to the original 3D plane.
-//   Can be called one of three ways:
-//   - Given three points, `a`, `b`, and `c`, the planar coordinate system will have `[0,0]` at point `a`, and the Y+ axis will be towards point `b`.
-//   - Given a list of points, finds three reasonably spaced non-collinear points in the list and uses them as points `a`, `b`, and `c` as above.
-//   - Given a plane definition `[A,B,C,D]` where `Ax+By+Cz=D`, the closest point on that plane to the global origin at `[0,0,0]` will be the planar coordinate origin `[0,0]`.
+//   them back to the original 3D plane. The parameter `point` may be a single point or a list of points
+//   The plane may be given in one of three ways:
+//   - by three points, `a`, `b`, and `c`, the planar coordinate system will have `[0,0]` at point `a`, and the Y+ axis will be towards point `b`.
+//   - by a list of points passed by `a`, finds three reasonably spaced non-collinear points in the list and uses them as points `a`, `b`, and `c` as above.
+//   - by a plane definition `[A,B,C,D]` passed by `a` where `Ax+By+Cz=D`, the closest point on that plane to the global origin at `[0,0,0]` will be the planar coordinate origin `[0,0]`.
 // Arguments:
 //   point = The 3D point, or list of 3D points to project into the plane's 2D coordinate system.
-//   a = A 3D point that the plane passes through.  Used to define the plane.
+//   a = A 3D point that the plane passes through or a list of points or a plane definition vector.
 //   b = A 3D point that the plane passes through.  Used to define the plane.
 //   c = A 3D point that the plane passes through.  Used to define the plane.
 // Example:
