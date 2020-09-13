@@ -603,5 +603,33 @@ module rainbow(list, stride=1)
     }
 }
 
+// Module: shell()
+//
+// Description:
+//   Operator that receives as input the base 3D model and outputs the same object augmented with shell walls.
+//
+// Usage:
+//   shell(w, l) base;
+//
+// Arguments:
+//   w = Width (thickness) of the shell.
+//   l = Length of the shell.
+//   base = 3D model representing object base
+//
+// Example: Square box
+//  shell(1, 20) cube([20, 20, 1]);
+module shell(width, height) {
+    union() {
+        linear_extrude(height)
+            difference() {
+                projection()
+                    children(0);
+                offset(-width)
+                    projection() children(0);
+            }
+        children(0);
+    }
+}
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
