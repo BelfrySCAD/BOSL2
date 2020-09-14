@@ -731,7 +731,6 @@ function offset_sweep(
                    ["k", k],
                    ["points", []],
         ],
-        afda=echo(extra=struct_val(argspec,"extra")),
         path = check_and_fix_path(path, [2], closed=true),
         clockwise = polygon_is_clockwise(path),
         
