@@ -1224,6 +1224,7 @@ function block_matrix(M) =
 //   its diagonal.  The off diagonal entries are set to offdiag,
 //   which is zero by default. 
 function diagonal_matrix(diag,offdiag=0) =
+  assert(is_list(diag) && len(diag)>0)
   [for(i=[0:1:len(diag)-1]) [for(j=[0:len(diag)-1]) i==j?diag[i] : offdiag]];
 
 
@@ -1237,6 +1238,8 @@ function diagonal_matrix(diag,offdiag=0) =
 function submatrix_set(M,A,m=0,n=0) =
     assert(is_list(M))
     assert(is_list(A))
+    assert(is_int(m))
+    assert(is_int(n))
     let( badrows = [for(i=idx(A)) if (!is_list(A[i])) i])
     assert(badrows==[], str("Input submatrix malformed rows: ",badrows))
     [for(i=[0:1:len(M)-1])

@@ -762,8 +762,8 @@ function triangle_area(a,b,c) =
 // Usage:
 //   plane3pt(p1, p2, p3);
 // Description:
-//   Generates the cartesian equation of a plane from three 3d points.
-//   Returns [A,B,C,D] where Ax + By + Cz = D is the equation of a plane.
+//   Generates the normalized cartesian equation of a plane from three 3d points.
+//   Returns [A,B,C,D] where Ax + By + Cz = D is the equation of a plane. 
 //   Returns [], if the points are collinear.
 // Arguments:
 //   p1 = The first point on the plane.
@@ -777,7 +777,7 @@ function plane3pt(p1, p2, p3) =
         nrm = norm(crx)
     ) 
     approx(nrm,0) ? [] :
-    concat(crx/nrm, [crx*p1]/nrm);
+    concat(crx, crx*p1)/nrm;
 
 
 // Function: plane3pt_indexed()
@@ -785,7 +785,7 @@ function plane3pt(p1, p2, p3) =
 //   plane3pt_indexed(points, i1, i2, i3);
 // Description:
 //   Given a list of 3d points, and the indices of three of those points,
-//   generates the cartesian equation of a plane that those points all
+//   generates the normalized cartesian equation of a plane that those points all
 //   lie on. If the points are not collinear, returns [A,B,C,D] where Ax+By+Cz=D is the equation of a plane.
 //   If they are collinear, returns [].
 // Arguments:
@@ -816,15 +816,15 @@ function plane3pt_indexed(points, i1, i2, i3) =
 function plane_from_normal(normal, pt=[0,0,0]) =
   assert( is_matrix([normal,pt],2,3) && !approx(norm(normal),0), 
           "Inputs `normal` and `pt` should 3d vectors/points and `normal` cannot be zero." )
-  concat(normal, [normal*pt]);
+  concat(normal, normal*pt)/norm(normal);
 
 
 // Function: plane_from_points()
 // Usage:
 //   plane_from_points(points, <fast>, <eps>);
 // Description:
-//   Given a list of 3 or more coplanar 3D points, returns the coefficients of the cartesian equation of a plane,
-//   that is [A,B,C,D] where Ax+By+Cz=D is the equation of the plane.
+//   Given a list of 3 or more coplanar 3D points, returns the coefficients of the normalized cartesian equation of a plane,
+//   that is [A,B,C,D] where Ax+By+Cz=D is the equation of the plane where norm([A,B,C])=1.
 //   If `fast` is false and the points in the list are collinear or not coplanar, then `undef` is returned.
 //   if `fast` is true, then the coplanarity test is skipped and a plane passing through 3 non-collinear arbitrary points is returned.
 // Arguments:
@@ -858,8 +858,8 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
 // Usage:
 //   plane_from_polygon(points, [fast], [eps]);
 // Description:
-//   Given a 3D planar polygon, returns the cartesian equation of its plane.
-//   Returns [A,B,C,D] where Ax+By+Cz=D is the equation of the plane.
+//   Given a 3D planar polygon, returns the normalized cartesian equation of its plane.
+//   Returns [A,B,C,D] where Ax+By+Cz=D is the equation of the plane where norm([A,B,C])=1.
 //   If not all the points in the polygon are coplanar, then [] is returned.
 //   If `fast` is true, the polygon coplanarity check is skipped and the plane may not contain all polygon points.
 // Arguments:
@@ -897,8 +897,9 @@ function plane_normal(plane) =
 // Usage:
 //   d = plane_offset(plane);
 // Description:
-//   Returns D, or the scalar offset of the plane from the origin. This can be a negative value.
-//   The absolute value of this is the distance of the plane from the origin at its closest approach.
+//   Returns coeficient D of the normalized plane equation `Ax+By+Cz=D`, or the scalar offset of the plane from the origin. 
+//   This value may be negative.
+//   The absolute value of this coefficient is the distance of the plane from the origin.
 function plane_offset(plane) =  
     assert( _valid_plane(plane), "Invalid input plane." )
     plane[3]/norm([plane.x, plane.y, plane.z]);
@@ -923,7 +924,8 @@ function plane_offset(plane) =
 //   stroke(xypath,closed=true);
 function plane_transform(plane) =
     let(
-        n = plane_normal(plane),
+        plane = normalize_plane(plane),
+        n = point3d(plane),
         cp = n * plane[3]
         ) 
     rot(from=n, to=UP) * move(-cp);
@@ -949,8 +951,8 @@ function projection_on_plane(plane, points) =
         p  = len(points[0])==2
              ? [for(pi=points) point3d(pi) ]
              : points, 
-        plane = plane/norm([plane.x,plane.y,plane.z]),
-        n = [plane.x,plane.y,plane.z]
+        plane = normalize_plane(plane),
+        n = point3d(plane)
         ) 
     [for(pi=p) pi - (pi*n - plane[3])*n];
 
@@ -961,7 +963,8 @@ function projection_on_plane(plane, points) =
 // Description:
 //   Returns the point on the plane that is closest to the origin.
 function plane_point_nearest_origin(plane) =
-    plane_normal(plane) * plane[3];
+    let( plane = normalize_plane(plane) )
+    point3d(plane) * plane[3];
 
 
 // Function: distance_from_plane()
@@ -980,8 +983,8 @@ function plane_point_nearest_origin(plane) =
 function distance_from_plane(plane, point) =
     assert( _valid_plane(plane), "Invalid input plane." )
     assert( is_vector(point,3), "The point should be a 3D point." )
-    let( nrml = [plane.x, plane.y, plane.z] )
-    ( nrml* point - plane[3])/norm(nrml);
+    let( plane = normalize_plane(plane) )
+    point3d(plane)* point - plane[3];
 
 
 // Function: closest_point_on_plane()
@@ -996,9 +999,9 @@ function distance_from_plane(plane, point) =
 function closest_point_on_plane(plane, point) =
     assert( _valid_plane(plane), "Invalid input plane." )
     assert( is_vector(point,3), "Invalid point." )
-    let(
-        n = unit([plane.x, plane.y, plane.z]),
-        d = distance_from_plane(plane, point)
+    let( plane = normalize_plane(plane),
+        n = point3d(plane),
+        d = n*point - plane[3] // distance from plane
         ) 
     point - n*d;
 
@@ -1008,23 +1011,29 @@ function closest_point_on_plane(plane, point) =
 // Returns undef if line is parallel to, but not on the given plane.
 function _general_plane_line_intersection(plane, line, eps=EPSILON) =
     let(
-        l0 = line[0],  // Ray start point
-        u = line[1] - l0,  // Ray direction vector
-        n = plane_normal(plane),
-        p0 = n * plane[3],  // A point on the plane
-        w = l0 - p0  // Vector from plane point to ray start
-    ) approx(n*u, 0, eps=eps) ? (
-        // Line is parallel to plane.
-        approx(n*w, 0, eps=eps)
-          ? [line, undef] // Line is on the plane.
-          : undef // Line never intersects the plane.
-    ) : let(
-        t = (-n * w) / (n * u)  // Distance ratio along ray
-    ) [ l0 + u*t, t ];
+        a = plane*[each line[0],-1],         //  evaluation of the plane expression at line[0] 
+        b = plane*[each(line[1]-line[0]),0]  // difference between the plane expression evaluation at line[1] and at line[0]
+    )
+    approx(b,0,eps)                          // is  (line[1]-line[0]) "parallel" to the plane ?
+    ? approx(a,0,eps)                        // is line[0] on the plane ?
+       ? [line,undef]                        // line is on the plane
+       : undef                               // line is parallel but not on the plane
+    : [ line[0]-a/b*(line[1]-line[0]), -a/b ];
+    
+    
+// Function: normalize_plane()
+// Usage: 
+//   nplane = normalize_plane(plane);
+// Description:
+//   Returns a new representation [A,B,C,D] of `plane` where norm([A,B,C]) is equal to one.
+function normalize_plane(plane) =
+    assert( _valid_plane(plane), "Invalid plane." )
+    plane/norm(point3d(plane));
 
 
 // Function: plane_line_angle()
-// Usage: plane_line_angle(plane,line)
+// Usage: 
+//   angle = plane_line_angle(plane,line);
 // Description:
 //   Compute the angle between a plane [A, B, C, D] and a line, specified as a pair of points [p1,p2].
 //   The resulting angle is signed, with the sign positive if the vector p2-p1 lies on 
@@ -1033,11 +1042,12 @@ function plane_line_angle(plane, line) =
     assert( _valid_plane(plane), "Invalid plane." )
     assert( _valid_line(line), "Invalid line." )
     let(
-        vect = line[1]-line[0],
-        zplane = plane_normal(plane),
-        sin_angle = vect*zplane/norm(zplane)/norm(vect)
+        linedir   = unit(line[1]-line[0]),
+        normal    = plane_normal(plane),
+        sin_angle = linedir*normal,
+        cos_angle = norm(cross(linedir,normal))
         ) 
-    asin(constrain(sin_angle,-1,1));
+    atan2(sin_angle,cos_angle);
 
 
 // Function: plane_line_intersection()
@@ -1085,7 +1095,7 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
     assert(is_path(poly,dim=3), "Invalid polygon." )
-    assert(is_bool(bounded) || (is_list(bounded) && len(bounded)==2), "Invalid bound condition(s).")
+    assert(!is_list(bounded) || len(bounded)==2, "Invalid bound condition(s).")
     assert(_valid_line(line,dim=3,eps=eps), "Invalid line." )
     let(
         bounded = is_list(bounded)? bounded : [bounded, bounded],
@@ -1094,7 +1104,6 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
     )
     indices==[] ? undef :
     let(
-        indices = sort(indices),
         p1 = poly[indices[0]],
         p2 = poly[indices[1]],
         p3 = poly[indices[2]],
@@ -1120,8 +1129,8 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
         ) 
         isegs
     ) 
-    :   bounded[0]&&res[1]<0? [] :
-        bounded[1]&&res[1]>1? [] :
+    :   bounded[0] && res[1]<0? undef :
+        bounded[1] && res[1]>1? undef :
         let(
             proj = clockwise_polygon(project_plane(poly, p1, p2, p3)),
             pt = project_plane(res[0], p1, p2, p3)
@@ -1142,15 +1151,15 @@ function plane_intersection(plane1,plane2,plane3) =
                 "The input must be 2 or 3 planes." )
     is_def(plane3)
     ?   let(
-          matrix = [for(p=[plane1,plane2,plane3]) select(p,0,2)],
+          matrix = [for(p=[plane1,plane2,plane3]) point3d(p)],
           rhs = [for(p=[plane1,plane2,plane3]) p[3]]
         ) 
         linear_solve(matrix,rhs)
     :   let( normal = cross(plane_normal(plane1), plane_normal(plane2)) ) 
         approx(norm(normal),0) ? undef :
         let(
-            matrix = [for(p=[plane1,plane2]) select(p,0,2)],
-            rhs = [for(p=[plane1,plane2]) p[3]],
+            matrix = [for(p=[plane1,plane2]) point3d(p)],
+            rhs = [plane1[3], plane2[3]],
             point = linear_solve(matrix,rhs)
         ) 
         point==[]? undef: [point, point+normal];

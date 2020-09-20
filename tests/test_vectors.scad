@@ -14,6 +14,14 @@ module test_is_vector() {
     assert(is_vector([0,0,0],zero=false) == false);
     assert(is_vector([0,1,0],zero=true) == false);
     assert(is_vector([0,0,1],zero=false) == true);
+    assert(is_vector([1,1,1],zero=false) == true);
+
+    assert(is_vector([0,0,0],all_nonzero=true) == false);
+    assert(is_vector([0,1,0],all_nonzero=true) == false);
+    assert(is_vector([0,0,1],all_nonzero=true) == false);
+    assert(is_vector([1,1,1],all_nonzero=true) == true);
+    assert(is_vector([-1,1,1],all_nonzero=true) == true);
+    assert(is_vector([-1,-1,-1],all_nonzero=true) == true);
 }
 test_is_vector();
 

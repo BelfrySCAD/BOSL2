@@ -9,8 +9,60 @@
 
 
 //////////////////////////////////////////////////////////////////////
-// Section: Halving Mutators
+// Section: Volume Division Mutators
 //////////////////////////////////////////////////////////////////////
+
+// Module: bounding_box()
+// Usage:
+//   bounding_box() ...
+// Description:
+//   Returns an axis-aligned cube shape that exactly contains all the 3D children given.
+// Arguments:
+//   excess = The amount that the bounding box should be larger than needed to bound the children, in each axis.
+// Example:
+//   #bounding_box() {
+//       translate([10,8,4]) cube(5);
+//       translate([3,0,12]) cube(2);
+//   }
+//   translate([10,8,4]) cube(5);
+//   translate([3,0,12]) cube(2);
+module bounding_box(excess=0) {
+    xs = excess>0? excess : 1;
+    // a 3D approx. of the children projection on X axis
+    module _xProjection()
+        linear_extrude(xs, center=true)
+            hull()
+                projection()
+                    rotate([90,0,0])
+                        linear_extrude(xs, center=true)
+                            projection()
+                                children();
+
+    // a bounding box with an offset of 1 in all axis
+    module _oversize_bbox() {
+        minkowski() {
+            _xProjection() children(); // x axis
+            rotate(-90) _xProjection() rotate(90) children(); // y axis
+            rotate([0,-90,0]) _xProjection() rotate([0,90,0]) children(); // z axis
+        }
+    }
+
+    // offset children() (a cube) by -1 in all axis
+    module _shrink_cube() {
+        intersection() {
+            translate([ 1, 1, 1]) children();
+            translate([-1,-1,-1]) children();
+        }
+    }
+
+    render(convexity=2)
+    if (excess>0) {
+        _oversize_bbox() children();
+    } else {
+        _shrink_cube() _oversize_bbox() children();
+    }
+}
+
 
 // Module: half_of()
 //
@@ -445,7 +497,6 @@ module offset3d(r=1, size=100, convexity=10) {
 }
 
 
-
 // Module: round2d()
 // Usage:
 //   round2d(r) ...
@@ -510,6 +561,39 @@ module shell2d(thickness, or=0, ir=0, fill=0, round=0)
                 children();
     }
 }
+
+
+// Module: minkowski_difference()
+// Usage:
+//   minkowski_difference() { base_shape(); diff_shape(); ... }
+// Description:
+//   Takes a 3D base shape and one or more 3D diff shapes, carves out the diff shapes from the
+//   surface of the base shape, in a way complementary to how `minkowski()` unions shapes to the
+//   surface of its base shape.
+// Example:
+//   minkowski_difference() {
+//       union() {
+//           cube([120,70,70], center=true);
+//           cube([70,120,70], center=true);
+//           cube([70,70,120], center=true);
+//       }
+//       sphere(r=10);
+//   }
+module minkowski_difference() {
+    difference() {
+        bounding_box(excess=0) children(0);
+        render(convexity=10) {
+            minkowski() {
+                difference() {
+                    bounding_box(excess=1) children(0);
+                    children(0);
+                }
+                for (i=[1,1,$children-1]) children(i);
+            }
+        }
+    }
+}
+
 
 
 //////////////////////////////////////////////////////////////////////

@@ -100,104 +100,128 @@ module test_is_matrix() {
 test_is_matrix();
 
 
-module test_is_zero() {
-    assert(is_zero(0));
-    assert(is_zero([0,0,0]));
-    assert(is_zero([[0,0,0],[0,0]]));
-    assert(is_zero([EPSILON/2,EPSILON/2,EPSILON/2]));
-    assert(!is_zero(1e-3));
-    assert(!is_zero([0,0,1e-3]));
-    assert(!is_zero([EPSILON*10,0,0]));
-    assert(!is_zero([0,EPSILON*10,0]));
-    assert(!is_zero([0,0,EPSILON*10]));
-    assert(!is_zero(true));
-    assert(!is_zero(false));
-    assert(!is_zero(INF));
-    assert(!is_zero(-INF));
-    assert(!is_zero(NAN));
-    assert(!is_zero("foo"));
-    assert(!is_zero([]));
-    assert(!is_zero([0:1:2]));
+module test_all_zero() {
+    assert(all_zero(0));
+    assert(all_zero([0,0,0]));
+    assert(all_zero([[0,0,0],[0,0]]));
+    assert(all_zero([EPSILON/2,EPSILON/2,EPSILON/2]));
+    assert(!all_zero(1e-3));
+    assert(!all_zero([0,0,1e-3]));
+    assert(!all_zero([EPSILON*10,0,0]));
+    assert(!all_zero([0,EPSILON*10,0]));
+    assert(!all_zero([0,0,EPSILON*10]));
+    assert(!all_zero(true));
+    assert(!all_zero(false));
+    assert(!all_zero(INF));
+    assert(!all_zero(-INF));
+    assert(!all_zero(NAN));
+    assert(!all_zero("foo"));
+    assert(!all_zero([]));
+    assert(!all_zero([0:1:2]));
 }
-test_is_zero();
+test_all_zero();
 
 
-module test_is_positive() {
-    assert(!is_positive(-2));
-    assert(!is_positive(0));
-    assert(is_positive(2));
-    assert(!is_positive([0,0,0]));
-    assert(!is_positive([0,1,2]));
-    assert(is_positive([3,1,2]));
-    assert(!is_positive([3,-1,2]));
-    assert(!is_positive([]));
-    assert(!is_positive(true));
-    assert(!is_positive(false));
-    assert(!is_positive("foo"));
-    assert(!is_positive([0:1:2]));
+module test_all_nonzero() {
+    assert(!all_nonzero(0));
+    assert(!all_nonzero([0,0,0]));
+    assert(!all_nonzero([[0,0,0],[0,0]]));
+    assert(!all_nonzero([EPSILON/2,EPSILON/2,EPSILON/2]));
+    assert(all_nonzero(1e-3));
+    assert(!all_nonzero([0,0,1e-3]));
+    assert(!all_nonzero([EPSILON*10,0,0]));
+    assert(!all_nonzero([0,EPSILON*10,0]));
+    assert(!all_nonzero([0,0,EPSILON*10]));
+    assert(all_nonzero([1e-3,1e-3,1e-3]));
+    assert(all_nonzero([EPSILON*10,EPSILON*10,EPSILON*10]));
+    assert(!all_nonzero(true));
+    assert(!all_nonzero(false));
+    assert(!all_nonzero(INF));
+    assert(!all_nonzero(-INF));
+    assert(!all_nonzero(NAN));
+    assert(!all_nonzero("foo"));
+    assert(!all_nonzero([]));
+    assert(!all_nonzero([0:1:2]));
 }
-test_is_positive();
+test_all_nonzero();
 
 
-module test_is_negative() {
-    assert(is_negative(-2));
-    assert(!is_negative(0));
-    assert(!is_negative(2));
-    assert(!is_negative([0,0,0]));
-    assert(!is_negative([0,1,2]));
-    assert(!is_negative([3,1,2]));
-    assert(!is_negative([3,-1,2]));
-    assert(is_negative([-3,-1,-2]));
-    assert(!is_negative([-3,1,-2]));
-    assert(is_negative([[-5,-7],[-3,-1,-2]]));
-    assert(!is_negative([[-5,-7],[-3,1,-2]]));
-    assert(!is_negative([]));
-    assert(!is_negative(true));
-    assert(!is_negative(false));
-    assert(!is_negative("foo"));
-    assert(!is_negative([0:1:2]));
+module test_all_positive() {
+    assert(!all_positive(-2));
+    assert(!all_positive(0));
+    assert(all_positive(2));
+    assert(!all_positive([0,0,0]));
+    assert(!all_positive([0,1,2]));
+    assert(all_positive([3,1,2]));
+    assert(!all_positive([3,-1,2]));
+    assert(!all_positive([]));
+    assert(!all_positive(true));
+    assert(!all_positive(false));
+    assert(!all_positive("foo"));
+    assert(!all_positive([0:1:2]));
 }
-test_is_negative();
+test_all_positive();
 
 
-module test_is_nonpositive() {
-    assert(is_nonpositive(-2));
-    assert(is_nonpositive(0));
-    assert(!is_nonpositive(2));
-    assert(is_nonpositive([0,0,0]));
-    assert(!is_nonpositive([0,1,2]));
-    assert(is_nonpositive([0,-1,-2]));
-    assert(!is_nonpositive([3,1,2]));
-    assert(!is_nonpositive([3,-1,2]));
-    assert(!is_nonpositive([]));
-    assert(!is_nonpositive(true));
-    assert(!is_nonpositive(false));
-    assert(!is_nonpositive("foo"));
-    assert(!is_nonpositive([0:1:2]));
+module test_all_negative() {
+    assert(all_negative(-2));
+    assert(!all_negative(0));
+    assert(!all_negative(2));
+    assert(!all_negative([0,0,0]));
+    assert(!all_negative([0,1,2]));
+    assert(!all_negative([3,1,2]));
+    assert(!all_negative([3,-1,2]));
+    assert(all_negative([-3,-1,-2]));
+    assert(!all_negative([-3,1,-2]));
+    assert(all_negative([[-5,-7],[-3,-1,-2]]));
+    assert(!all_negative([[-5,-7],[-3,1,-2]]));
+    assert(!all_negative([]));
+    assert(!all_negative(true));
+    assert(!all_negative(false));
+    assert(!all_negative("foo"));
+    assert(!all_negative([0:1:2]));
 }
-test_is_nonpositive();
+test_all_negative();
 
 
-module test_is_nonnegative() {
-    assert(!is_nonnegative(-2));
-    assert(is_nonnegative(0));
-    assert(is_nonnegative(2));
-    assert(is_nonnegative([0,0,0]));
-    assert(is_nonnegative([0,1,2]));
-    assert(is_nonnegative([3,1,2]));
-    assert(!is_nonnegative([3,-1,2]));
-    assert(!is_nonnegative([-3,-1,-2]));
-    assert(!is_nonnegative([[-5,-7],[-3,-1,-2]]));
-    assert(!is_nonnegative([[-5,-7],[-3,1,-2]]));
-    assert(!is_nonnegative([[5,7],[3,-1,2]]));
-    assert(is_nonnegative([[5,7],[3,1,2]]));
-    assert(!is_nonnegative([]));
-    assert(!is_nonnegative(true));
-    assert(!is_nonnegative(false));
-    assert(!is_nonnegative("foo"));
-    assert(!is_nonnegative([0:1:2]));
+module test_all_nonpositive() {
+    assert(all_nonpositive(-2));
+    assert(all_nonpositive(0));
+    assert(!all_nonpositive(2));
+    assert(all_nonpositive([0,0,0]));
+    assert(!all_nonpositive([0,1,2]));
+    assert(all_nonpositive([0,-1,-2]));
+    assert(!all_nonpositive([3,1,2]));
+    assert(!all_nonpositive([3,-1,2]));
+    assert(!all_nonpositive([]));
+    assert(!all_nonpositive(true));
+    assert(!all_nonpositive(false));
+    assert(!all_nonpositive("foo"));
+    assert(!all_nonpositive([0:1:2]));
 }
-test_is_nonnegative();
+test_all_nonpositive();
+
+
+module test_all_nonnegative() {
+    assert(!all_nonnegative(-2));
+    assert(all_nonnegative(0));
+    assert(all_nonnegative(2));
+    assert(all_nonnegative([0,0,0]));
+    assert(all_nonnegative([0,1,2]));
+    assert(all_nonnegative([3,1,2]));
+    assert(!all_nonnegative([3,-1,2]));
+    assert(!all_nonnegative([-3,-1,-2]));
+    assert(!all_nonnegative([[-5,-7],[-3,-1,-2]]));
+    assert(!all_nonnegative([[-5,-7],[-3,1,-2]]));
+    assert(!all_nonnegative([[5,7],[3,-1,2]]));
+    assert(all_nonnegative([[5,7],[3,1,2]]));
+    assert(!all_nonnegative([]));
+    assert(!all_nonnegative(true));
+    assert(!all_nonnegative(false));
+    assert(!all_nonnegative("foo"));
+    assert(!all_nonnegative([0:1:2]));
+}
+test_all_nonnegative();
 
 
 module test_approx() {
@@ -975,7 +999,7 @@ module test_null_space(){
 
     function nullcheck(A,dim) =
       let(v=null_space(A))
-        len(v)==dim && is_zero(A*transpose(v),eps=1e-12);
+        len(v)==dim && all_zero(A*transpose(v),eps=1e-12);
     
    A = [[-1, 2, -5, 2],[-3,-1,3,-3],[5,0,5,0],[3,-4,11,-4]];
    assert(nullcheck(A,1));
