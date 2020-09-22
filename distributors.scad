@@ -98,11 +98,16 @@ module line_of(p1, p2, spacing, l, n)
     );
     assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `line_of()`.");
     spos = !is_undef(p1)? point3d(p1) : -(cnt-1)/2 * spc;
-    for (i=[0:1:cnt-1]) {
-        pos = i * spc + spos;
-        $pos = pos;
-        $idx = i;
-        translate(pos) children();
+    if (cnt > 1) {
+        for (i=[0:1:cnt-1]) {
+            pos = i * spc + spos;
+            $pos = pos;
+            $idx = i;
+            translate(pos) children();
+        }
+    } else {
+        // Only one item, so let's just show it
+        children();
     }
 }
 
