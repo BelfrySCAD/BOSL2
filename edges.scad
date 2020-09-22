@@ -385,6 +385,16 @@ CORNER_OFFSETS = [   // Array of XYZ offsets to each corner.
 ];
 
 
+// Function: corner_edges()
+// Description:
+//   Returns [XCOUNT,YCOUNT,ZCOUNT] where each is the count of edges aligned with that axis that are in the edge set and touch the given corner.
+// Arguments:
+//   edges = Standard edges array.
+//   v = Vector pointing to the corner to count edge intersections at.
+function corner_edges(edges, v) =
+    let(u = (v+[1,1,1])/2) [edges[0][u.y+u.z*2], edges[1][u.x+u.z*2], edges[2][u.x+u.y*2]];
+
+
 // Function: corner_edge_count()
 // Description: Counts how many given edges intersect at a specific corner.
 // Arguments:
