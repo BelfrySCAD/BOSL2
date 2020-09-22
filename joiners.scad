@@ -785,8 +785,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 
 // Module: rabbit_clip()
 // Usage:
-//   rabbit_clip(type, length, width, snap, thickness, depth, [compression], [clearance], [lock],
-//               [lock_clearance], [splineteps], [anchor], [orient], [spin])
+//   rabbit_clip(type, length, width, snap, thickness, depth, [compression], [clearance], [lock], [lock_clearance], [splineteps], [anchor], [orient], [spin])
 // Description:
 //   Creates a clip with two flexible ears to lock into a mating socket, or create a mask to produce the appropriate
 //   mating socket.  The clip can be made to insert and release easily, or to hold much better, or it can be
@@ -992,8 +991,8 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
     bez = path_to_bezier(path,relsize=smoothing,tangents=tangent);
     rounded = bezier_polyline(bez,splinesteps=splinesteps);
     bounds = pointlist_bounds(rounded);
-    kk = search([bounds[1].y], subindex(rounded,1));
-    echo(rounded[kk[0]]);
+    //kk = search([bounds[1].y], subindex(rounded,1));
+    //echo(rounded[kk[0]]);
     extrapt = is_pin ? [] : [rounded[0] - [0,extra]];
     finalpath = is_pin ? rounded
                        : let(withclearance=offset(rounded, r=-clearance))
