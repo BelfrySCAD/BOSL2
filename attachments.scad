@@ -104,14 +104,21 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 
 // Function: attach_geom()
 //
-// Usage:
+// Usage: Square/Trapezoid Geometry
 //   geom = attach_geom(anchor, spin, [orient], two_d, size, [size2], [shift], [cp], [offset], [anchors]);
+// Usage: Circle/Oval Geometry
 //   geom = attach_geom(anchor, spin, [orient], two_d, r|d, [cp], [offset], [anchors]);
+// Usage: 2D Path/Polygon Geometry
 //   geom = attach_geom(anchor, spin, [orient], two_d, path, [extent], [cp], [offset], [anchors]);
+// Usage: Cubical/Prismoidal Geometry
 //   geom = attach_geom(anchor, spin, [orient], size, [size2], [shift], [cp], [offset], [anchors]);
-//   geom = attach_geom(anchor, spin, [orient], r|d, l, [cp], [offset], [anchors]);
-//   geom = attach_geom(anchor, spin, [orient], r1|d1, r2|d2, l, [cp], [offset], [anchors]);
+// Usage: Cylindrical Geometry
+//   geom = attach_geom(anchor, spin, [orient], r|d, l, [cp], [axis], [offset], [anchors]);
+// Usage: Conical Geometry
+//   geom = attach_geom(anchor, spin, [orient], r1|d1, r2|d2, l, [cp], [axis], [offset], [anchors]);
+// Usage: Spheroid/Ovoid Geometry
 //   geom = attach_geom(anchor, spin, [orient], r|d, [cp], [offset], [anchors]);
+// Usage: VNF Geometry
 //   geom = attach_geom(anchor, spin, [orient], vnf, [extent], [cp], [offset], [anchors]);
 //
 // Description:
@@ -135,6 +142,7 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 //   offset = If given, offsets the perimeter of the volume around the centerpoint.
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
+//   axis = The vector pointing along the axis of a cylinder geometry.  Default: UP
 //
 // Example(NORENDER): Cubical Shape
 //   geom = attach_geom(anchor, spin, orient, size=size);
@@ -146,17 +154,35 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 //       size2=topsize, shift=shift
 //   );
 //
-// Example(NORENDER): Cylindrical Shape
+// Example(NORENDER): Cylindrical Shape, Z-Axis Aligned
 //   geom = attach_geom(anchor, spin, orient, r=r, h=h);
 //
-// Example(NORENDER): Conical Shape
+// Example(NORENDER): Cylindrical Shape, Y-Axis Aligned
+//   geom = attach_geom(anchor, spin, orient, r=r, h=h, axis=BACK);
+//
+// Example(NORENDER): Cylindrical Shape, X-Axis Aligned
+//   geom = attach_geom(anchor, spin, orient, r=r, h=h, axis=RIGHT);
+//
+// Example(NORENDER): Conical Shape, Z-Axis Aligned
 //   geom = attach_geom(anchor, spin, orient, r1=r1, r2=r2, h=h);
+//
+// Example(NORENDER): Conical Shape, Y-Axis Aligned
+//   geom = attach_geom(anchor, spin, orient, r1=r1, r2=r2, h=h, axis=BACK);
+//
+// Example(NORENDER): Conical Shape, X-Axis Aligned
+//   geom = attach_geom(anchor, spin, orient, r1=r1, r2=r2, h=h, axis=RIGHT);
 //
 // Example(NORENDER): Spherical Shape
 //   geom = attach_geom(anchor, spin, orient, r=r);
 //
-// Example(NORENDER): Arbitrary VNF Shape
+// Example(NORENDER): Ovoid Shape
+//   geom = attach_geom(anchor, spin, orient, r=[r_x, r_y, r_z]);
+//
+// Example(NORENDER): Arbitrary VNF Shape, Anchored by Extents
 //   geom = attach_geom(anchor, spin, orient, vnf=vnf);
+//
+// Example(NORENDER): Arbitrary VNF Shape, Anchored by Intersection
+//   geom = attach_geom(anchor, spin, orient, vnf=vnf, extent=false);
 //
 // Example(NORENDER): 2D Rectangular Shape
 //   geom = attach_geom(anchor, spin, orient, size=size);
@@ -170,8 +196,14 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 // Example(NORENDER): 2D Circular Shape
 //   geom = attach_geom(anchor, spin, orient, two_d=true, r=r);
 //
-// Example(NORENDER): Arbitrary 2D Polygon Shape
+// Example(NORENDER): 2D Oval Shape
+//   geom = attach_geom(anchor, spin, orient, two_d=true, r=[r_x, r_y]);
+//
+// Example(NORENDER): Arbitrary 2D Polygon Shape, Anchored by Extents
 //   geom = attach_geom(anchor, spin, orient, path=path);
+//
+// Example(NORENDER): Arbitrary 2D Polygon Shape, Anchored by Intersection
+//   geom = attach_geom(anchor, spin, orient, path=path, extent=false);
 //
 function attach_geom(
     size, size2, shift,
@@ -181,13 +213,15 @@ function attach_geom(
     cp=[0,0,0],
     offset=[0,0,0],
     anchors=[],
-    two_d=false
+    two_d=false,
+    axis=UP
 ) =
     assert(is_bool(extent))
     assert(is_vector(cp))
     assert(is_vector(offset))
     assert(is_list(anchors))
     assert(is_bool(two_d))
+    assert(is_vector(axis))
     !is_undef(size)? (
         two_d? (
             let(
@@ -233,7 +267,7 @@ function attach_geom(
             assert(is_num(r2) || is_vector(r2,2))
             assert(is_num(l))
             assert(is_vector(shift,2))
-            ["cyl", r1, r2, l, shift, cp, offset, anchors]
+            ["cyl", r1, r2, l, shift, axis, cp, offset, anchors]
         ) : (
             two_d? (
                 assert(is_num(r1) || is_vector(r1,2))
@@ -275,14 +309,19 @@ function attach_geom_size(geom) =
         ) [maxx, maxy, z]
     ) : type == "cyl"? ( //r1, r2, l, shift
         let(
-            r1=geom[1], r2=geom[2], l=geom[3], shift=point2d(geom[4]),
+            r1=geom[1], r2=geom[2], l=geom[3],
+            shift=point2d(geom[4]), axis=point3d(geom[5]),
             rx1 = default(r1[0],r1),
             ry1 = default(r1[1],r1),
             rx2 = default(r2[0],r2),
             ry2 = default(r2[1],r2),
             maxxr = max(rx1,rx2),
             maxyr = max(ry1,ry2)
-        ) [2*maxxr,2*maxyr,l]
+        )
+        approx(axis,UP)? [2*maxxr,2*maxyr,l] :
+        approx(axis,RIGHT)? [l,2*maxyr,2*maxxr] :
+        approx(axis,BACK)? [2*maxxr,l,2*maxyr] :
+        [2*maxxr, 2*maxyr,l]
     ) : type == "spheroid"? ( //r
         let( r=geom[1] )
         is_num(r)? [2,2,2]*r : vmul([2,2,2],point3d(r))
@@ -429,21 +468,25 @@ function find_anchor(anchor, geom) =
         ) [anchor, pos, vec, oang]
     ) : type == "cyl"? ( //r1, r2, l, shift
         let(
-            rr1=geom[1], rr2=geom[2], l=geom[3], shift=point2d(geom[4]),
+            rr1=geom[1], rr2=geom[2], l=geom[3],
+            shift=point2d(geom[4]), axis=point3d(geom[5]),
             r1 = is_num(rr1)? [rr1,rr1] : point2d(rr1),
             r2 = is_num(rr2)? [rr2,rr2] : point2d(rr2),
-            u = (anchor.z+1)/2,
-            axy = unit(point2d(anchor),[0,0]),
+            anch = rot(from=axis, to=UP, p=anchor),
+            u = (anch.z+1)/2,
+            axy = unit(point2d(anch),[0,0]),
             bot = point3d(vmul(r1,axy), -l/2),
             top = point3d(vmul(r2,axy)+shift, l/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
             sidevec = rot(from=UP, to=top-bot, p=point3d(axy)),
-            vvec = anchor==CENTER? UP : unit([0,0,anchor.z],UP),
-            vec = anchor==CENTER? UP :
-                approx(axy,[0,0])? unit(anchor,UP) :
-                approx(anchor.z,0)? sidevec :
-                unit((sidevec+vvec)/2,UP)
-        ) [anchor, pos, vec, oang]
+            vvec = anch==CENTER? UP : unit([0,0,anch.z],UP),
+            vec = anch==CENTER? UP :
+                approx(axy,[0,0])? unit(anch,UP) :
+                approx(anch.z,0)? sidevec :
+                unit((sidevec+vvec)/2,UP),
+            pos2 = rot(from=UP, to=axis, p=pos),
+            vec2 = rot(from=UP, to=axis, p=vec)
+        ) [anchor, pos2, vec2, oang]
     ) : type == "spheroid"? ( //r
         let(
             rr = geom[1],
@@ -585,14 +628,21 @@ function attachment_is_shown(tags) =
 
 // Function: reorient()
 //
-// Usage:
+// Usage: Square/Trapezoid Geometry
 //   reorient(anchor, spin, [orient], two_d, size, [size2], [shift], [cp], [offset], [anchors], [p]);
+// Usage: Circle/Oval Geometry
 //   reorient(anchor, spin, [orient], two_d, r|d, [cp], [offset], [anchors], [p]);
+// Usage: 2D Path/Polygon Geometry
 //   reorient(anchor, spin, [orient], two_d, path, [extent], [cp], [offset], [anchors], [p]);
+// Usage: Cubical/Prismoidal Geometry
 //   reorient(anchor, spin, [orient], size, [size2], [shift], [cp], [offset], [anchors], [p]);
-//   reorient(anchor, spin, [orient], r|d, l, [offset], [cp], [anchors], [p]);
-//   reorient(anchor, spin, [orient], r1|d1, r2|d2, l, [cp], [offset], [anchors], [p]);
+// Usage: Cylindrical Geometry
+//   reorient(anchor, spin, [orient], r|d, l, [offset], [axis], [cp], [anchors], [p]);
+// Usage: Conical Geometry
+//   reorient(anchor, spin, [orient], r1|d1, r2|d2, l, [axis], [cp], [offset], [anchors], [p]);
+// Usage: Spheroid/Ovoid Geometry
 //   reorient(anchor, spin, [orient], r|d, [cp], [offset], [anchors], [p]);
+// Usage: VNF Geometry
 //   reorient(anchor, spin, [orient], vnf, [extent], [cp], [offset], [anchors], [p]);
 //
 // Description:
@@ -638,6 +688,7 @@ function attachment_is_shown(tags) =
 //   offset = If given, offsets the perimeter of the volume around the centerpoint.
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
+//   axis = The vector pointing along the axis of a cylinder geometry.  Default: UP
 //   p = The VNF, path, or point to transform.
 function reorient(
     anchor=CENTER,
@@ -651,6 +702,7 @@ function reorient(
     cp=[0,0,0],
     anchors=[],
     two_d=false,
+    axis=UP,
     p=undef
 ) = (anchor==CENTER && spin==0 && orient==UP && p!=undef)? p : let(
     geom = attach_geom(
@@ -659,7 +711,7 @@ function reorient(
         d=d, d1=d1, d2=d2, l=l,
         vnf=vnf, path=path, extent=extent,
         cp=cp, offset=offset, anchors=anchors,
-        two_d=two_d
+        two_d=two_d, axis=axis
     ),
     $attach_to = undef
 ) attach_transform(anchor,spin,orient,geom,p);
@@ -670,14 +722,21 @@ function reorient(
 
 // Module: attachable()
 //
-// Usage:
+// Usage: Square/Trapezoid Geometry
 //   attachable(anchor, spin, [orient], two_d, size, [size2], [shift], [cp], [offset], [anchors] ...
+// Usage: Circle/Oval Geometry
 //   attachable(anchor, spin, [orient], two_d, r|d, [cp], [offset], [anchors]) ...
+// Usage: 2D Path/Polygon Geometry
 //   attachable(anchor, spin, [orient], two_d, path, [extent], [cp], [offset], [anchors] ...
+// Usage: Cubical/Prismoidal Geometry
 //   attachable(anchor, spin, [orient], size, [size2], [shift], [cp], [offset], [anchors] ...
-//   attachable(anchor, spin, [orient], r|d, l, [cp], [offset], [anchors]) ...
-//   attachable(anchor, spin, [orient], r1|d1, r2|d2, l, [cp], [offset], [anchors]) ...
+// Usage: Cylindrical Geometry
+//   attachable(anchor, spin, [orient], r|d, l, [axis], [cp], [offset], [anchors]) ...
+// Usage: Conical Geometry
+//   attachable(anchor, spin, [orient], r1|d1, r2|d2, l, [axis], [cp], [offset], [anchors]) ...
+// Usage: Spheroid/Ovoid Geometry
 //   attachable(anchor, spin, [orient], r|d, [cp], [offset], [anchors]) ...
+// Usage: VNF Geometry
 //   attachable(anchor, spin, [orient], vnf, [extent], [cp], [offset], [anchors]) ...
 //
 // Description:
@@ -728,6 +787,7 @@ function reorient(
 //   offset = If given, offsets the perimeter of the volume around the centerpoint.
 //   anchors = If given as a list of anchor points, allows named anchor points.
 //   two_d = If true, the attachable shape is 2D.  If false, 3D.  Default: false (3D)
+//   axis = The vector pointing along the axis of a cylinder geometry.  Default: UP
 //
 // Side Effects:
 //   `$parent_anchor` is set to the parent object's `anchor` value.
@@ -753,14 +813,38 @@ function reorient(
 //       children();
 //   }
 //
-// Example(NORENDER): Cylindrical Shape
+// Example(NORENDER): Cylindrical Shape, Z-Axis Aligned
 //   attachable(anchor, spin, orient, r=r, l=h) {
 //       cyl(r=r, l=h);
 //       children();
 //   }
 //
-// Example(NORENDER): Conical Shape
+// Example(NORENDER): Cylindrical Shape, Y-Axis Aligned
+//   attachable(anchor, spin, orient, r=r, l=h, axis=BACK) {
+//       cyl(r=r, l=h);
+//       children();
+//   }
+//
+// Example(NORENDER): Cylindrical Shape, X-Axis Aligned
+//   attachable(anchor, spin, orient, r=r, l=h, axis=RIGHT) {
+//       cyl(r=r, l=h);
+//       children();
+//   }
+//
+// Example(NORENDER): Conical Shape, Z-Axis Aligned
 //   attachable(anchor, spin, orient, r1=r1, r2=r2, l=h) {
+//       cyl(r1=r1, r2=r2, l=h);
+//       children();
+//   }
+//
+// Example(NORENDER): Conical Shape, Y-Axis Aligned
+//   attachable(anchor, spin, orient, r1=r1, r2=r2, l=h, axis=BACK) {
+//       cyl(r1=r1, r2=r2, l=h);
+//       children();
+//   }
+//
+// Example(NORENDER): Conical Shape, X-Axis Aligned
+//   attachable(anchor, spin, orient, r1=r1, r2=r2, l=h, axis=RIGHT) {
 //       cyl(r1=r1, r2=r2, l=h);
 //       children();
 //   }
@@ -816,7 +900,8 @@ module attachable(
     cp=[0,0,0],
     offset=[0,0,0],
     anchors=[],
-    two_d=false
+    two_d=false,
+    axis=UP
 ) {
     assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.");
     assert(!is_undef(anchor), str("anchor undefined in attachable().  Did you forget to set a default value for anchor in ", parent_module(1)));
@@ -828,7 +913,7 @@ module attachable(
         d=d, d1=d1, d2=d2, l=l,
         vnf=vnf, path=path, extent=extent,
         cp=cp, offset=offset, anchors=anchors,
-        two_d=two_d
+        two_d=two_d, axis=axis
     );
     m = attach_transform(anchor,spin,orient,geom);
     multmatrix(m) {
@@ -1142,13 +1227,26 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 // Usage:
 //   tags(tags) ...
 // Description:
-//   Marks all children with the given tags.
+//   Marks all children with the given tags, so that they will `hide()`/`show()`/`diff()`  correctly.
+//   This is especially useful for working with children that are not attachment enhanced, such as:
+//   - `square()`  (or use [`rect()`](shapes2d.scad#rect))
+//   - `circle()`  (or use [`oval()`](shapes2d.scad#oval))
+//   - `polygon()`
+//   - `text()`
+//   - `projection()`
+//   - `polyhedron()`  (or use [`vnf_polyhedron()`](vnf.scad#vnf_polyhedron))
+//   - `linear_extrude()`  (or use [`linear_sweep()`](regions.scad#linear_sweep))
+//   - `rotate_extrude()`
+//   - `surface()`
+//   - `import()`
 // Arguments:
 //   tags = String containing space delimited set of tags to apply.
 module tags(tags)
 {
     $tags = tags;
-    children();
+    if(attachment_is_shown(tags)) {
+        children();
+    }
 }
 
 

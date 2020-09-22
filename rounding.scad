@@ -804,8 +804,8 @@ module offset_sweep(path, height, h, l,
                     convexity=10,anchor="origin",cp,
                     spin=0, orient=UP, extent=false)
 {
-    vnf = offset_sweep(path=path, height=height, h=h, l=l, top=top, bottom=bottom, offset=offset, r=0, steps=steps,
-                       quality=quality, check_valid=true, offset_maxstep=1, extra=0, cut=cut, chamfer_width=chamfer_width,
+    vnf = offset_sweep(path=path, height=height, h=h, l=l, top=top, bottom=bottom, offset=offset, r=r, steps=steps,
+                       quality=quality, check_valid=true, offset_maxstep=offset_maxstep, extra=extra, cut=cut, chamfer_width=chamfer_width,
                        chamfer_height=chamfer_height, joint=joint, k=k, angle=angle);
   
     attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))

@@ -219,7 +219,7 @@ module cuboid(
                     ard = abs(rounding);
                     cube(size, center=true);
 
-                    // External-Chamfer mask edges
+                    // External-Rounding mask edges
                     difference() {
                         union() {
                             for (i = [0:3], axis=[0:1]) {
@@ -741,8 +741,13 @@ module cyl(
 //   }
 module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, anchor=CENTER)
 {
-    anchor = rot(from=RIGHT, to=UP, p=anchor);
-    cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=RIGHT, anchor=anchor) children();
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
+    l = first_defined([l, h, 1]);
+    attachable(anchor,0,UP, r1=r1, r2=r2, l=l, axis=RIGHT) {
+        cyl(l=l, r1=r1, r2=r2, orient=RIGHT, anchor=CENTER);
+        children();
+    }
 }
 
 
@@ -779,8 +784,13 @@ module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //   }
 module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, anchor=CENTER)
 {
-    anchor = rot(from=BACK, to=UP, p=anchor);
-    cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=BACK, anchor=anchor) children();
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
+    l = first_defined([l, h, 1]);
+    attachable(anchor,0,UP, r1=r1, r2=r2, l=l, axis=BACK) {
+        cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=BACK, anchor=CENTER);
+        children();
+    }
 }
 
 
