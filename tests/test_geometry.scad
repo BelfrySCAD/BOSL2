@@ -660,6 +660,20 @@ module test_tri_functions() {
 *test_tri_functions();
 
 
+module test_hyp_opp_to_adj() nil();  // Covered in test_tri_functions()
+module test_hyp_ang_to_adj() nil();  // Covered in test_tri_functions()
+module test_opp_ang_to_adj() nil();  // Covered in test_tri_functions()
+module test_hyp_adj_to_opp() nil();  // Covered in test_tri_functions()
+module test_hyp_ang_to_opp() nil();  // Covered in test_tri_functions()
+module test_adj_ang_to_opp() nil();  // Covered in test_tri_functions()
+module test_adj_opp_to_hyp() nil();  // Covered in test_tri_functions()
+module test_adj_ang_to_hyp() nil();  // Covered in test_tri_functions()
+module test_opp_ang_to_hyp() nil();  // Covered in test_tri_functions()
+module test_hyp_adj_to_ang() nil();  // Covered in test_tri_functions()
+module test_hyp_opp_to_ang() nil();  // Covered in test_tri_functions()
+module test_adj_opp_to_ang() nil();  // Covered in test_tri_functions()
+
+
 module test_triangle_area() {
     assert(abs(triangle_area([0,0], [0,10], [10,0]) + 50) < EPSILON);
     assert(abs(triangle_area([0,0], [0,10], [0,15])) < EPSILON);

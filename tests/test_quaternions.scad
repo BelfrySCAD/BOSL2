@@ -23,13 +23,13 @@ module verify_f(actual,expected) {
 }
 
 
-module test_is_quat() {
+module test_Q_is_quat() {
     verify_f(Q_is_quat([0]),false);
     verify_f(Q_is_quat([0,0,0,0]),false);
     verify_f(Q_is_quat([1,0,2,0]),true);
     verify_f(Q_is_quat([1,0,2,0,0]),false);
 }
-test_is_quat();
+test_Q_is_quat();
 
 
 module test_Quat() {
