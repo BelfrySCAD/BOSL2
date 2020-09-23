@@ -160,6 +160,25 @@ module test_is_nan() {
 test_is_nan();
 
 
+module test_is_finite() {
+    assert(!is_finite(undef));
+    assert(!is_finite(true));
+    assert(!is_finite(false));
+    assert(is_finite(-5));
+    assert(is_finite(0));
+    assert(is_finite(5));
+    assert(!is_finite(INF));
+    assert(!is_finite(-INF));
+    assert(!is_finite(""));
+    assert(!is_finite("foo"));
+    assert(!is_finite([]));
+    assert(!is_finite([3,4,5]));
+    assert(!is_finite([3:1:5]));
+    assert(!is_finite(NAN));
+}
+test_is_finite();
+
+
 module test_is_range() {
     assert(!is_range(undef));
     assert(!is_range(true));
