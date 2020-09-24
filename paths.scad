@@ -1161,10 +1161,11 @@ function _path_plane(path, ind, i,closed) =
 function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
     [for(ind=[0:len(cuts)-1])
         let(
+            zeros = path[0]*0,
             nextind = cuts[ind][1],
-            nextpath = unit(select(path, nextind+1)-select(path, nextind)),
-            thispath = unit(select(path, nextind) - path[nextind-1]),
-            lastpath = unit(path[nextind-1] - select(path, nextind-2)),
+            nextpath = unit(select(path, nextind+1)-select(path, nextind),zeros),
+            thispath = unit(select(path, nextind) - path[nextind-1],zeros),
+            lastpath = unit(path[nextind-1] - select(path, nextind-2),zeros),
             nextdir =
                 nextind==len(path) && !closed? lastpath :
                 (nextind<=len(path)-2 || closed) && approx(cuts[ind][0], path[nextind],eps)?
