@@ -65,6 +65,25 @@ module test_vnf_add_faces() {
 test_vnf_add_faces();
 
 
+module test_vnf_centroid() {
+    assert_approx(vnf_centroid(cube(100, center=false)), [50,50,50]);
+    assert_approx(vnf_centroid(cube(100, center=true)), [0,0,0]);
+    assert_approx(vnf_centroid(cube(100, anchor=ALLPOS)), [-50,-50,-50]);
+    assert_approx(vnf_centroid(cube(100, anchor=BOT)), [0,0,50]);
+    assert_approx(vnf_centroid(cube(100, anchor=TOP)), [0,0,-50]);
+    assert_approx(vnf_centroid(sphere(d=100, anchor=CENTER, $fn=36)), [0,0,0]);
+    assert_approx(vnf_centroid(sphere(d=100, anchor=BOT, $fn=36)), [0,0,50]);
+}
+test_vnf_centroid();
+
+
+module test_vnf_volume() {
+    assert_approx(vnf_volume(cube(100, center=false)), 1000000);
+    assert(approx(vnf_volume(sphere(d=100, anchor=BOT, $fn=144)), 4/3*PI*pow(50,3), eps=1e3));
+}
+test_vnf_volume();
+
+
 module test_vnf_merge() {
     vnf1 = vnf_add_face(pts=[[-1,-1,-1],[1,-1,-1],[0,1,-1]]);
     vnf2 = vnf_add_face(pts=[[1,1,1],[-1,1,1],[0,1,-1]]);
