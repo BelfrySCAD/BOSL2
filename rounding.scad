@@ -458,6 +458,179 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
 
 
 
+function _scalar_to_vector(value,length,varname) = 
+  is_vector(value)
+    ? assert(len(value)==length, str(varname," must be length ",length))
+      value
+    : assert(is_num(value), str(varname, " must be a numerical value"))
+      repeat(value, length);
+
+
+// Function: path_join()
+// Usage:
+//   path_join(paths, [joint], [k], [relocate], [closed]
+// Description:
+//   Connect a sequence of paths together into a single path with optional rounding
+//   applied at the joints.  By default the first path is taken as specified and subsequent paths are
+//   translated into position so that each path starts where the previous path ended.
+//   If you set relocate to false then this relocation is skipped.
+//   You specify rounding using the `joint` parameter, which specifies the distance away from the corner
+//   where the roundover should start.  The path_join function may remove many path points to cut the path 
+//   back by the joint length.  Rounding is using continous curvature 4th order bezier splines and
+//   the parameter `k` specifies how smooth the curvature match is.  This parameter ranges from 0 to 1 with
+//   a default of 0.5.  Use a larger k value to get a curve that is bigger for the same joint value.  When
+//   k=1 the curve may be similar to a circle if your curves are symmetric.  As the path is built up, the joint
+//   parameter applies to the growing path, so if you pick a large joint parameter it may interact with the
+//   previous path sections.
+//   .
+//   The rounding is created by extending the two clipped paths to define a corner point.  If the extensions of
+//   the paths do not intersect, the function issues an error.  When closed=true the final path should actually close
+//   the shape, repeating the starting point of the shape.  If it does not, then the rounding will fill the gap.
+//   .
+//   The number of segments in the roundovers is set based on $fn and $fs.  If you use $fn it specifies the number of
+//   segments in the roundover, regardless of its angular extent.
+// Arguments:
+//   paths = list of paths to join
+//   joint = joint distance, either a number, a pair (giving the previous and next joint distance) or a list of numbers and pairs.  Default: 0
+//   k = curvature parameter, either a number or vector.  Default: 0.5
+//   relocate = set to false to prevent paths from being arranged tail to head.  Default: true
+//   closed = set to true to round the junction between the last and first paths.  Default: false
+// Example(2D): Connection of 3 simple paths.  
+//   horiz = [[0,0],[10,0]];
+//   vert = [[0,0],[0,10]];
+//   stroke(path_join([horiz, vert, -horiz]));
+// Example(2D): Adding curvature with joint of 3
+//   horiz = [[0,0],[10,0]];
+//   vert = [[0,0],[0,10]];
+//   stroke(path_join([horiz, vert, -horiz],joint=3,$fn=16));
+// Example(2D): Setting k=1 increases the amount of curvature
+//   horiz = [[0,0],[10,0]];
+//   vert = [[0,0],[0,10]];
+//   stroke(path_join([horiz, vert, -horiz],joint=3,k=1,$fn=16));
+// Example(2D): Specifying pairs of joint values at a path joint creates an asymmetric curve
+//   horiz = [[0,0],[10,0]];
+//   vert = [[0,0],[0,10]];
+//   stroke(path_join([horiz, vert, -horiz],joint=[[4,1],[1,4]],$fn=16),width=.3);
+// Example(2D): A closed square
+//   horiz = [[0,0],[10,0]];
+//   vert = [[0,0],[0,10]];
+//   stroke(path_join([horiz, vert, -horiz, -vert],joint=3,k=1,closed=true,$fn=16),closed=true);
+// Example(2D): Different curve at each corner by changing the joint size
+//   horiz = [[0,0],[10,0]];
+//   vert = [[0,0],[0,10]];
+//   stroke(path_join([horiz, vert, -horiz, -vert],joint=[3,0,1,2],k=1,closed=true,$fn=16),closed=true,width=0.4);
+// Example(2D): Different curve at each corner by changing the curvature parameter.  Note that k=0 still gives a small curve, unlike joint=0 which gives a sharp corner.
+//   horiz = [[0,0],[10,0]];
+//   vert = [[0,0],[0,10]];
+//   stroke(path_join([horiz, vert, -horiz, -vert],joint=3,k=[1,.5,0,.7],closed=true,$fn=16),closed=true,width=0.4);
+// Example(2D): Joint value of 7 is larger than half the square so curves interfere with each other, which breaks symmetry because they are computed sequentially
+//   horiz = [[0,0],[10,0]];
+//   vert = [[0,0],[0,10]];
+//   stroke(path_join([horiz, vert, -horiz, -vert],joint=7,k=.4,closed=true,$fn=16),closed=true);
+// Example(2D): Unlike round_corners, we can add curves onto curves.
+//   $fn=64;
+//   myarc = arc(width=20, thickness=5 );
+//   stroke(path_join(repeat(myarc,3), joint=4));
+// Example(2D): Here we make a closed shape from two arcs and round the sharp tips
+//   arc1 = arc(width=20, thickness=4,$fn=75);
+//   arc2 = reverse(arc(width=20, thickness=2,$fn=75));
+//   stroke(path_join([arc1,arc2]),width=.3);    // Join without rounding
+//   color("red")stroke(path_join([arc1,arc2], 3,k=1,closed=true), width=.3,closed=true,$fn=12);  // Join with rounding
+// Example(2D): Combining arcs with segments
+//   arc1 = arc(width=20, thickness=4,$fn=75);
+//   arc2 = reverse(arc(width=20, thickness=2,$fn=75));
+//   vpath = [[0,0],[0,-5]];
+//   stroke(path_join([arc1,vpath,arc2,reverse(vpath)]),width=.2);
+//   color("red")stroke(path_join([arc1,vpath,arc2,reverse(vpath)], [1,2,2,1],k=1,closed=true), width=.2,closed=true,$fn=12);
+// Example(2D): Here relocation is off.  We have three segments (in yellow) and add the curves to the segments.  Notice that joint zero still produces a curve because it refers to the endpoints of the supplied paths.  
+//   p1 = [[0,0],[2,0]];
+//   p2 = [[3,1],[1,3]];
+//   p3 = [[0,3],[-1,1]];
+//   color("red")stroke(path_join([p1,p2,p3], joint=0, relocate=false,closed=true),width=.3,$fn=12);
+//   for(x=[p1,p2,p3]) stroke(x,width=.3);
+// Example(2D): If you specify closed=true when the last path doesn't meet the first one then it is similar to using relocate=false: the function tries to close the path using a curve.  In the example below, this results in a long curve to the left, when given the unclosed three segments as input.  Note that if the segments are parallel the function fails with an error.  The extension of the curves must intersect in a corner for the rounding to be well-defined.  To get a normal rounding of the closed shape, you must include a fourth path, the last segment that closes the shape.
+//   horiz = [[0,0],[10,0]];
+//   vert = [[0,0],[0,10]];
+//   h2 = [[0,-3],[10,0]];
+//   color("red")stroke(path_join([horiz, vert, -h2],closed=true,joint=3,$fn=25),closed=true,width=.5);
+//   stroke(path_join([horiz, vert, -h2]),width=.3);
+// Example(2D): With a single path with closed=true the start and end junction is rounded.
+//   tri = regular_ngon(n=3, r=7);
+//   stroke(path_join([tri], joint=3,closed=true,$fn=12),closed=true,width=.5);
+
+function path_join(paths,joint=0,k=0.5,relocate=true,closed=false)=
+  assert(is_list(paths),"Input paths must be a list of paths")
+  let(
+      badpath = [for(j=idx(paths)) if (!is_path(paths[j])) j]
+  )
+  assert(badpath==[], str("Entries in paths are not valid paths: ",badpath))
+  len(paths)==0 ? [] :
+  len(paths)==1 && !closed ? paths[0] :
+  let(
+      paths = !closed || len(paths)>1
+            ? paths
+            : [close_path(paths[0])],
+      N = len(paths) + (closed?0:-1),
+      k = _scalar_to_vector(k,N),
+      repjoint = is_num(joint) || (is_vector(joint,2) && len(paths)!=3),
+      joint = repjoint ? repeat(joint,N) : joint
+  )
+  assert(all_nonnegative(k), "k must be nonnegative")
+  assert(len(joint)==N,str("Input joint must be scalar or length ",N))
+  let(
+      bad_j = [for(j=idx(joint)) if (!is_num(joint[j]) && !is_vector(joint[j],2)) j]
+  )
+  assert(bad_j==[], str("Invalid joint values at indices ",bad_j))
+  let(result=_path_join(paths,joint,k, relocate=relocate, closed=closed))
+  closed ? cleanup_path(result) : result;
+
+function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) =
+  let( 
+      result = result==[] ? paths[0] : result,
+      loop = i==len(paths)-1,
+      revresult = reverse(result),
+      nextpath = loop     ? result
+               : relocate ? move(revresult[0]-paths[i+1][0], p=paths[i+1])
+               : paths[i+1],
+      d_first = is_vector(joint[i]) ? joint[i][0] : joint[i],
+      d_next = is_vector(joint[i]) ? joint[i][1] : joint[i]
+  )
+  assert(d_first>=0 && d_next>=0, str("Joint value negative when adding path ",i+1))
+  let(
+      firstcut = path_cut(revresult, d_first, direction=true),
+      nextcut = path_cut(nextpath, d_next, direction=true)
+  )
+  assert(is_def(firstcut),str("Path ",i," is too short for specified cut distance ",d_first))
+  assert(is_def(nextcut),str("Path ",i+1," is too short for specified cut distance ",d_next))
+  assert(!loop || nextcut[1] < len(revresult)-1-firstcut[1], "Path is too short to close the loop")
+  let(
+     first_dir=firstcut[2],
+     next_dir=nextcut[2],
+     corner = ray_intersection([firstcut[0], firstcut[0]-first_dir], [nextcut[0], nextcut[0]-next_dir])
+  )
+  assert(is_def(corner), str("Curve directions at cut points don't intersect in a corner when ",
+                             loop?"closing the path":str("adding path ",i+1)))
+  let(
+      bezpts = _smooth_bez_fill([firstcut[0], corner, nextcut[0]],k[i]),
+      N = max(3,$fn>0 ?$fn : ceil(bezier_segment_length(bezpts)/$fs)),
+      bezpath = approx(firstcut[0],corner) && approx(corner,nextcut[0])
+                  ? []
+                  : bezier_curve(bezpts,N),
+      new_result = [each select(result,loop?nextcut[1]:0,len(revresult)-1-firstcut[1]),
+                    each bezpath,
+                    nextcut[0],
+                    if (!loop) each select(nextpath,nextcut[1],-1)
+                   ]
+  )
+  i==len(paths)-(closed?1:2)
+     ? new_result
+     : _path_join(paths,joint,k,i+1,new_result, relocate,closed);
+
+
+
+
+
+
 // Function&Module: offset_sweep()
 //
 // Description:
