@@ -57,8 +57,8 @@ test_plane_intersection();
 test_coplanar();
 test_points_on_plane();
 test_in_front_of_plane();
-test_find_circle_2tangents();
-test_find_circle_3points();
+test_circle_2tangents();
+test_circle_3points();
 test_circle_point_tangents();
 
 test_noncollinear_triple();
@@ -470,22 +470,22 @@ module test_segment_closest_point() {
 }
 *test_segment_closest_point();
 
-module test_find_circle_2tangents() {
+module test_circle_2tangents() {
 //** missing tests with arg tangent=true
-    assert(approx(find_circle_2tangents([10,10],[0,0],[10,-10],r=10/sqrt(2))[0],[10,0]));
-    assert(approx(find_circle_2tangents([-10,10],[0,0],[-10,-10],r=10/sqrt(2))[0],[-10,0]));
-    assert(approx(find_circle_2tangents([-10,10],[0,0],[10,10],r=10/sqrt(2))[0],[0,10]));
-    assert(approx(find_circle_2tangents([-10,-10],[0,0],[10,-10],r=10/sqrt(2))[0],[0,-10]));
-    assert(approx(find_circle_2tangents([0,10],[0,0],[10,0],r=10)[0],[10,10]));
-    assert(approx(find_circle_2tangents([10,0],[0,0],[0,-10],r=10)[0],[10,-10]));
-    assert(approx(find_circle_2tangents([0,-10],[0,0],[-10,0],r=10)[0],[-10,-10]));
-    assert(approx(find_circle_2tangents([-10,0],[0,0],[0,10],r=10)[0],[-10,10]));
-    assert_approx(find_circle_2tangents(polar_to_xy(10,60),[0,0],[10,0],r=10)[0],polar_to_xy(20,30));
+    assert(approx(circle_2tangents([10,10],[0,0],[10,-10],r=10/sqrt(2))[0],[10,0]));
+    assert(approx(circle_2tangents([-10,10],[0,0],[-10,-10],r=10/sqrt(2))[0],[-10,0]));
+    assert(approx(circle_2tangents([-10,10],[0,0],[10,10],r=10/sqrt(2))[0],[0,10]));
+    assert(approx(circle_2tangents([-10,-10],[0,0],[10,-10],r=10/sqrt(2))[0],[0,-10]));
+    assert(approx(circle_2tangents([0,10],[0,0],[10,0],r=10)[0],[10,10]));
+    assert(approx(circle_2tangents([10,0],[0,0],[0,-10],r=10)[0],[10,-10]));
+    assert(approx(circle_2tangents([0,-10],[0,0],[-10,0],r=10)[0],[-10,-10]));
+    assert(approx(circle_2tangents([-10,0],[0,0],[0,10],r=10)[0],[-10,10]));
+    assert_approx(circle_2tangents(polar_to_xy(10,60),[0,0],[10,0],r=10)[0],polar_to_xy(20,30));
 }
-*test_find_circle_2tangents();
+*test_circle_2tangents();
 
 
-module test_find_circle_3points() {
+module test_circle_3points() {
     count = 200;
     coords = rands(-100,100,count,seed_value=888);
     radii = rands(10,100,count,seed_value=390);
@@ -496,7 +496,7 @@ module test_find_circle_3points() {
         r = radii[i];
         angs = sort(select(angles,i,i+2));
         pts = [for (a=angs) cp+polar_to_xy(r,a)];
-        res = find_circle_3points(pts);
+        res = circle_3points(pts);
         if (!approx(res[0], cp)) {
             echo(cp=cp, r=r, angs=angs);
             echo(pts=pts);
@@ -521,7 +521,7 @@ module test_find_circle_3points() {
         r = radii[i];
         angs = sort(select(angles,i,i+2));
         pts = [for (a=angs) cp+polar_to_xy(r,a)];
-        res = find_circle_3points(pts[0], pts[1], pts[2]);
+        res = circle_3points(pts[0], pts[1], pts[2]);
         if (!approx(res[0], cp)) {
             echo(cp=cp, r=r, angs=angs);
             echo(pts=pts);
@@ -549,7 +549,7 @@ module test_find_circle_3points() {
         n = nrm.z<0? -nrm : nrm;
         angs = sort(select(angles,i,i+2));
         pts = translate(cp,p=rot(from=UP,to=n,p=[for (a=angs) point3d(polar_to_xy(r,a))]));
-        res = find_circle_3points(pts);
+        res = circle_3points(pts);
         if (!approx(res[0], cp)) {
             echo(cp=cp, r=r, angs=angs, n=n);
             echo(pts=pts);
@@ -576,7 +576,7 @@ module test_find_circle_3points() {
         n = nrm.z<0? -nrm : nrm;
         angs = sort(select(angles,i,i+2));
         pts = translate(cp,p=rot(from=UP,to=n,p=[for (a=angs) point3d(polar_to_xy(r,a))]));
-        res = find_circle_3points(pts[0], pts[1], pts[2]);
+        res = circle_3points(pts[0], pts[1], pts[2]);
         if (!approx(res[0], cp)) {
             echo(cp=cp, r=r, angs=angs, n=n);
             echo(pts=pts);
@@ -597,7 +597,7 @@ module test_find_circle_3points() {
         }
     }
 }
-*test_find_circle_3points();
+*test_circle_3points();
 
 
 module test_circle_point_tangents() {

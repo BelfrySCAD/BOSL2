@@ -1220,16 +1220,25 @@ function in_front_of_plane(plane, point) =
 
 // Section: Circle Calculations
 
-// Function: find_circle_2tangents()
-// Usage:
-//   find_circle_2tangents(pt1, pt2, pt3, r|d, <tangents>);
+// Function&Module: circle_2tangents()
+// Usage: As Function
+//   circ = circle_2tangents(pt1, pt2, pt3, r|d, <tangents>);
+// Usage: As Module
+//   circle_2tangents(pt1, pt2, pt3, r|d, <h>, <center>);
 // Description:
 //   Given a pair of rays with a common origin, and a known circle radius/diameter, finds
 //   the centerpoint for the circle of that size that touches both rays tangentally.
 //   Both rays start at `pt2`, one passing through `pt1`, and the other through `pt3`.
-//   If the rays given are collinear, `undef` is returned.  Otherwise, if `tangents` is
-//   true, then `[CP,NORMAL]` is returned.  If `tangents` is false, the more extended
-//   `[CP,NORMAL,TANPT1,TANPT2,ANG1,ANG2]` is returned
+//   .
+//   When called as a module with an `h` height argument, creates a 3D cylinder of `h`
+//   length at the found centerpoint, aligned with the found normal.
+//   .
+//   When called as a module with 2D data and no `h` argument, creates a 2D circle of
+//   the given radius/diameter, tangentially touching both rays.
+//   .
+//   When called as a function with collinear rays, returns `undef`.
+//   Otherwise, when called as a function with `tangents=false`, returns `[CP,NORMAL]`.
+//   Otherwise, when called as a function with `tangents=true`, returns `[CP,NORMAL,TANPT1,TANPT2,ANG1,ANG2]`.
 //   - CP is the centerpoint of the circle.
 //   - NORMAL is the normal vector of the plane that the circle is on (UP or DOWN if the points are 2D).
 //   - TANPT1 is the point where the circle is tangent to the ray `[pt2,pt1]`.
@@ -1242,13 +1251,15 @@ function in_front_of_plane(plane, point) =
 //   pt3 = A point that the second ray passes though.
 //   r = The radius of the circle to find.
 //   d = The diameter of the circle to find.
+//   h = Height of the cylinder to create, when called as a module.
+//   center = When called as a module, center the cylinder if true,  Default: false
 //   tangents = If true, extended information about the tangent points is calculated and returned.  Default: false
 // Example(2D):
 //   pts = [[60,40], [10,10], [65,5]];
 //   rad = 10;
 //   stroke([pts[1],pts[0]], endcap2="arrow2");
 //   stroke([pts[1],pts[2]], endcap2="arrow2");
-//   circ = find_circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad);
+//   circ = circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad);
 //   translate(circ[0]) {
 //       color("green") {
 //           stroke(circle(r=rad),closed=true);
@@ -1259,14 +1270,29 @@ function in_front_of_plane(plane, point) =
 //   translate(circ[0]) color("red") circle(d=2, $fn=12);
 //   labels = [[pts[0], "pt1"], [pts[1],"pt2"], [pts[2],"pt3"], [circ[0], "CP"], [circ[0]+[cos(315),sin(315)]*rad*0.7, "r"]];
 //   for(l=labels) translate(l[0]+[0,2]) color("black") text(text=l[1], size=2.5, halign="center");
-function find_circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
+// Example(2D):
+//   pts = [[-5,25], [5,-25], [45,15]];
+//   rad = 12;
+//   color("blue") stroke(pts, width=0.75, endcaps="arrow2");
+//   circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad);
+// Example: Non-centered Cylinder
+//   pts = [[45,15,10], [5,-25,5], [-5,25,20]];
+//   rad = 12;
+//   color("blue") stroke(pts, width=0.75, endcaps="arrow2");
+//   circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad, h=10, center=false);
+// Example: Non-centered Cylinder
+//   pts = [[45,15,10], [5,-25,5], [-5,25,20]];
+//   rad = 12;
+//   color("blue") stroke(pts, width=0.75, endcaps="arrow2");
+//   circle_2tangents(pt1=pts[0], pt2=pts[1], pt3=pts[2], r=rad, h=10, center=true);
+function circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
     let(r = get_radius(r=r, d=d, dflt=undef))
     assert(r!=undef, "Must specify either r or d.")
     assert( ( is_path(pt1) && len(pt1)==3 && is_undef(pt2) && is_undef(pt3)) 
             || (is_matrix([pt1,pt2,pt3]) && (len(pt1)==2 || len(pt1)==3) ),
             "Invalid input points." )
     is_undef(pt2) 
-    ? find_circle_2tangents(pt1[0], pt1[1], pt1[2], r=r, tangents=tangents) 
+    ? circle_2tangents(pt1[0], pt1[1], pt1[2], r=r, tangents=tangents) 
     : collinear(pt1, pt2, pt3)? undef :
         let(
             v1 = unit(pt1 - pt2),
@@ -1287,11 +1313,29 @@ function find_circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
             ) 
         [cp, n, tp1, tp2, dang1, dang2];
 
+module circle_2tangents(pt1, pt2, pt3, r, d, h, center=false) {
+    c = circle_2tangents(pt1=pt1, pt2=pt2, pt3=pt3, r=r, d=d);
+    assert(!is_undef(c), "Cannot find circle when both rays are collinear.");
+    cp = c[0]; n = c[1];
+    if (approx(point3d(cp).z,0) && approx(point2d(n),[0,0]) && is_undef(h)) {
+        translate(cp) circle(r=r, d=d);
+    } else {
+        assert(is_finite(h), "h argument required when result is not flat on the XY plane.");
+        translate(cp) {
+            rot(from=UP, to=n) {
+                cylinder(r=r, d=d, h=h, center=center);
+            }
+        }
+    }
+}
 
-// Function: find_circle_3points()
-// Usage:
-//   find_circle_3points(pt1, pt2, pt3);
-//   find_circle_3points([pt1, pt2, pt3]);
+// Function&Module: circle_3points()
+// Usage: As Function
+//   circ = circle_3points(pt1, pt2, pt3);
+//   circ = circle_3points([pt1, pt2, pt3]);
+// Usage: As Module
+//   circle_3points(pt1, pt2, pt3, <h>, <center>);
+//   circle_3points([pt1, pt2, pt3], <h>, <center>);
 // Description:
 //   Returns the [CENTERPOINT, RADIUS, NORMAL] of the circle that passes through three non-collinear
 //   points where NORMAL is the normal vector of the plane that the circle is on (UP or DOWN if the points are 2D).
@@ -1305,16 +1349,30 @@ function find_circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
 //   pt1 = The first point.
 //   pt2 = The second point.
 //   pt3 = The third point.
+//   h = Height of the cylinder to create, when called as a module.
+//   center = When called as a module, center the cylinder if true,  Default: false
 // Example(2D):
 //   pts = [[60,40], [10,10], [65,5]];
-//   circ = find_circle_3points(pts[0], pts[1], pts[2]);
+//   circ = circle_3points(pts[0], pts[1], pts[2]);
 //   translate(circ[0]) color("green") stroke(circle(r=circ[1]),closed=true,$fn=72);
 //   translate(circ[0]) color("red") circle(d=3, $fn=12);
 //   move_copies(pts) color("blue") circle(d=3, $fn=12);
-function find_circle_3points(pt1, pt2, pt3) =
+// Example(2D):
+//   pts = [[30,40], [10,20], [55,30]];
+//   circle_3points(pts[0], pts[1], pts[2]);
+//   move_copies(pts) color("blue") circle(d=3, $fn=12);
+// Example: Non-Centered Cylinder
+//   pts = [[30,15,30], [10,20,15], [55,25,25]];
+//   circle_3points(pts[0], pts[1], pts[2], h=10, center=false);
+//   move_copies(pts) color("cyan") sphere(d=3, $fn=12);
+// Example: Centered Cylinder
+//   pts = [[30,15,30], [10,20,15], [55,25,25]];
+//   circle_3points(pts[0], pts[1], pts[2], h=10, center=true);
+//   move_copies(pts) color("cyan") sphere(d=3, $fn=12);
+function circle_3points(pt1, pt2, pt3) =
     (is_undef(pt2) && is_undef(pt3) && is_list(pt1))
-    ? find_circle_3points(pt1[0], pt1[1], pt1[2]) 
-    :   assert( is_vector(pt1) && is_vector(pt2) && is_vector(pt3) 
+      ? circle_3points(pt1[0], pt1[1], pt1[2]) 
+      : assert( is_vector(pt1) && is_vector(pt2) && is_vector(pt3) 
                 && max(len(pt1),len(pt2),len(pt3))<=3 && min(len(pt1),len(pt2),len(pt3))>=2,
                 "Invalid point(s)." )
         collinear(pt1,pt2,pt3)? [undef,undef,undef] :
@@ -1330,12 +1388,25 @@ function find_circle_3points(pt1, pt2, pt3) =
             sc = plane_intersection(                 
                     [ each e1, e1*pm[es[1]] ],       // planes orthogonal to 2 edges
                     [ each e2, e2*pm[es[2]] ],
-                    [ each n,  n*v[0] ] ) ,          // triangle plane
-            cp = len(pt1)+len(pt2)+len(pt3)>6 ? sc: [sc.x, sc.y], 
+                    [ each n,  n*v[0] ]
+                ),  // triangle plane
+            cp = len(pt1)+len(pt2)+len(pt3)>6 ? sc : [sc.x, sc.y], 
             r  = norm(sc-v[0])
-            )
-        [ cp, r, n ];
-     
+        ) [ cp, r, n ];
+
+
+module circle_3points(pt1, pt2, pt3, h, center=false) {
+    c = circle_3points(pt1, pt2, pt3);
+    assert(!is_undef(c[0]), "Points cannot be collinear.");
+    cp = c[0];  r = c[1];  n = c[2];
+    if (approx(point3d(cp).z,0) && approx(point2d(n),[0,0]) && is_undef(h)) {
+        translate(cp) circle(r=r);
+    } else {
+        assert(is_finite(h));
+        translate(cp) rot(from=UP,to=n) cylinder(r=r, h=h, center=center);
+    }
+}
+
 
 // Function: circle_point_tangents()
 // Usage:
