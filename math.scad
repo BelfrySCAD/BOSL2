@@ -26,17 +26,19 @@ NAN = acos(2);  // The value `nan`, useful for comparisons.
 // Usage:
 //   sqr(x);
 // Description:
-//   Returns the square of the given number or entries in list
+//   If given a number, returns the square of that number,
+//   If given a vector, returns a vector of the squares of each element in the input vector.
+//   If given a matrix, returns the matrix multiplication of the matrix with itself.
 // Examples:
 //   sqr(3);     // Returns: 9
 //   sqr(-4);    // Returns: 16
 //   sqr([3,4]); // Returns: [9,16]
-//   sqr([[1,2],[3,4]]);  // Returns [[1,4],[9,16]]
-//   sqr([[1,2],3]);      // Returns [[1,4],9]
+//   sqr([[1,2],[3,4]]);  // Returns [[7,10],[15,22]]
 function sqr(x) = 
-    is_list(x) ? [for(val=x) sqr(val)] : 
     is_finite(x) ? x*x :
-    assert(is_finite(x) || is_vector(x), "Input is not a number nor a list of numbers.");
+    is_vector(x) ? vmul(x,x) :
+    is_matrix(x) ? x*x :
+    assert(is_finite(x) || is_vector(x) || is_matrix(x), "Input is not a number nor a list of numbers.");
 
 
 // Function: log2()
