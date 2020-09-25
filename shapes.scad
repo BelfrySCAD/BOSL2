@@ -673,7 +673,7 @@ module cyl(
                         ) [p1,p2]
                     ) : !is_undef(fil2)? (
                         let(
-                            cn = find_circle_2tangents([r2-fil2,l/2], [r2,l/2], [r1,-l/2], r=abs(fil2)),
+                            cn = circle_2tangents([r2-fil2,l/2], [r2,l/2], [r1,-l/2], r=abs(fil2)),
                             ang = fil2<0? phi : phi-180,
                             steps = ceil(abs(ang)/360*segs(abs(fil2))),
                             step = ang/steps,
@@ -688,7 +688,7 @@ module cyl(
                         ) [p1,p2]
                     ) : !is_undef(fil1)? (
                         let(
-                            cn = find_circle_2tangents([r1-fil1,-l/2], [r1,-l/2], [r2,l/2], r=abs(fil1)),
+                            cn = circle_2tangents([r1-fil1,-l/2], [r1,-l/2], [r2,l/2], r=abs(fil1)),
                             ang = fil1<0? 180-phi : -phi,
                             steps = ceil(abs(ang)/360*segs(abs(fil1))),
                             step = ang/steps,
