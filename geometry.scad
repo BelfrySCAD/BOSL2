@@ -1342,7 +1342,7 @@ function find_circle_3points(pt1, pt2, pt3) =
 //   tangents = circle_point_tangents(r|d, cp, pt);
 // Description:
 //   Given a 2d circle and a 2d point outside that circle, finds the 2d tangent point(s) on the circle for a
-//   line passing through the point.  Returns list of zero or more sublists of [ANG, TANGPT]
+//   line passing through the point.  Returns a list of zero or more 2D tangent points.
 // Arguments:
 //   r = Radius of the circle.
 //   d = Diameter of the circle.
@@ -1350,7 +1350,7 @@ function find_circle_3points(pt1, pt2, pt3) =
 //   pt = The coordinates of the 2d external point.
 // Example:
 //   cp = [-10,-10];  r = 30;  pt = [30,10];
-//   tanpts = subindex(circle_point_tangents(r=r, cp=cp, pt=pt),1);
+//   tanpts = circle_point_tangents(r=r, cp=cp, pt=pt);
 //   color("yellow") translate(cp) circle(r=r);
 //   color("cyan") for(tp=tanpts) {stroke([tp,pt]); stroke([tp,cp]);}
 //   color("red") move_copies(tanpts) circle(d=3,$fn=12);
@@ -1368,7 +1368,7 @@ function circle_point_tangents(r, d, cp, pt) =
     let(
         relang = acos(r/dist),
         angs = [baseang + relang, baseang - relang]
-    ) [for (ang=angs) [ang, cp + r*[cos(ang),sin(ang)]]];
+    ) [for (ang=angs) cp + r*[cos(ang),sin(ang)]];
 
 
 // Function: circle_circle_tangents()

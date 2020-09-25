@@ -601,13 +601,17 @@ module test_find_circle_3points() {
 
 
 module test_circle_point_tangents() {
-    tangs = circle_point_tangents(r=50,cp=[0,0],pt=[50*sqrt(2),0]);
-    assert(approx(subindex(tangs,0), [45,-45]));
-    expected = [for (ang=subindex(tangs,0)) polar_to_xy(50,ang)];
-    got = subindex(tangs,1);
-    if (!approx(flatten(got), flatten(expected))) {
-        echo("TAN_PTS:", got=got, expected=expected, delta=got-expected);
-        assert(approx(flatten(got), flatten(expected)));
+    testvals = [
+        // cp    r   pt                 expect
+        [[0,0],  50, [50*sqrt(2),0],    [polar_to_xy(50,45), polar_to_xy(50,-45)]],
+        [[5,10], 50, [5+50*sqrt(2),10], [[5,10]+polar_to_xy(50,45), [5,10]+polar_to_xy(50,-45)]],
+        [[0,0],  50, [0,50*sqrt(2)],    [polar_to_xy(50,135), polar_to_xy(50,45)]],
+        [[5,10], 50, [5,10+50*sqrt(2)], [[5,10]+polar_to_xy(50,135), [5,10]+polar_to_xy(50,45)]]
+    ];
+    for (v = testvals) {
+        cp = v[0]; r  = v[1]; pt = v[2]; expect = v[3];
+        info = str("cp=",cp, ", r=",r, ", pt=",pt);
+        assert_approx(circle_point_tangents(r=r,cp=cp,pt=pt), expect, info);
     }
 }
 *test_circle_point_tangents();
