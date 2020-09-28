@@ -472,14 +472,6 @@ module test_cumsum() {
 test_cumsum();
 
 
-module test_sum_of_squares() {
-    assert_equal(sum_of_squares([1,2,3]), 14);
-    assert_equal(sum_of_squares([1,2,4]), 21);
-    assert_equal(sum_of_squares([-3,-2,-1]), 14);
-}
-test_sum_of_squares();
-
-
 module test_sum_of_sines() {
     assert_equal(sum_of_sines(0, [[3,4,0],[2,2,0]]), 0);
     assert_equal(sum_of_sines(45, [[3,4,0],[2,2,0]]), 2);
