@@ -313,7 +313,7 @@ module test_sqr() {
     assert_equal(sqr(2.5), 6.25);
     assert_equal(sqr(3), 9);
     assert_equal(sqr(16), 256);
-    assert_equal(sqr([2,3,4]), [4,9,16]);
+    assert_equal(sqr([2,3,4]), 29);
     assert_equal(sqr([[2,3,4],[3,5,7],[3,5,1]]), [[25,41,33],[42,69,54],[24,39,48]]);
 }
 test_sqr();
