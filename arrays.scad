@@ -199,7 +199,7 @@ function list_decreasing(list) =
 // Usage:
 //   repeat(val, n)
 // Description:
-//   Generates a list or array of `n` copies of the given `list`.
+//   Generates a list or array of `n` copies of the given value `val`.
 //   If the count `n` is given as a list of counts, then this creates a
 //   multi-dimensional array, filled with `val`.
 // Arguments:
@@ -259,14 +259,15 @@ function list_range(n=undef, s=0, e=undef, step=undef) =
 // Section: List Manipulation
 
 // Function: reverse()
-// Description: Reverses a list/array.
+// Description: Reverses a list/array or string.
 // Arguments:
-//   list = The list to reverse.
+//   x = The list or string to reverse.
 // Example:
 //   reverse([3,4,5,6]);  // Returns [6,5,4,3]
-function reverse(list) =
-    assert(is_list(list)||is_string(list))
-    [ for (i = [len(list)-1 : -1 : 0]) list[i] ];
+function reverse(x) =
+    assert(is_list(x)||is_string(x))
+    let (elems = [ for (i = [len(x)-1 : -1 : 0]) x[i] ])
+    is_string(x)? str_join(elems) : elems;
 
 
 // Function: list_rotate()
@@ -275,6 +276,7 @@ function reverse(list) =
 // Description:
 //   Rotates the contents of a list by `n` positions left.
 //   If `n` is negative, then the rotation is `abs(n)` positions to the right.
+//   If `list` is a string, then a string is returned with the characters rotates within the string.
 // Arguments:
 //   list = The list to rotate.
 //   n = The number of positions to rotate by.  If negative, rotated to the right.  Positive rotates to the left.  Default: 1
@@ -291,7 +293,8 @@ function reverse(list) =
 function list_rotate(list,n=1) =
     assert(is_list(list)||is_string(list), "Invalid list or string.")
     assert(is_finite(n), "Invalid number")
-    select(list,n,n+len(list)-1);
+    let (elems = select(list,n,n+len(list)-1))
+    is_string(list)? str_join(elems) : elems;
 
 
 // Function: deduplicate()
@@ -309,16 +312,18 @@ function list_rotate(list,n=1) =
 // Examples:
 //   deduplicate([8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3,8]
 //   deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3]
-//   deduplicate("Hello");  // Returns: ["H","e","l","o"]
+//   deduplicate("Hello");  // Returns: "Helo"
 //   deduplicate([[3,4],[7,2],[7,1.99],[1,4]],eps=0.1);  // Returns: [[3,4],[7,2],[1,4]]
 //   deduplicate([[7,undef],[7,undef],[1,4],[1,4+1e-12]],eps=0);    // Returns: [[7,undef],[1,4],[1,4+1e-12]]
 function deduplicate(list, closed=false, eps=EPSILON) =
     assert(is_list(list)||is_string(list))
-    let( l = len(list),
-         end = l-(closed?0:1) )
-    is_string(list) || (eps==0)
-    ? [for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]]
-    : [for (i=[0:1:l-1]) if (i==end || !approx(list[i], list[(i+1)%l], eps)) list[i]];
+    let(
+        l = len(list),
+        end = l-(closed?0:1)
+    )
+    is_string(list) ? str_join([for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]]) :
+    eps==0 ? [for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]] :
+    [for (i=[0:1:l-1]) if (i==end || !approx(list[i], list[(i+1)%l], eps)) list[i]];
 
 
 // Function: deduplicate_indexed()
@@ -377,9 +382,9 @@ function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
 //   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform points that may not match the number of points requested.  Default: True
 // Examples:
 //   list = [0,1,2,3];
-//   echo(repeat_entries(list, 6));  // Ouputs [0,0,1,2,2,3]
-//   echo(repeat_entries(list, 6, exact=false));  // Ouputs [0,0,1,1,2,2,3,3]
-//   echo(repeat_entries(list, [1,1,2,1], exact=false));  // Ouputs [0,1,2,2,3]
+//   echo(repeat_entries(list, 6));  // Outputs [0,0,1,2,2,3]
+//   echo(repeat_entries(list, 6, exact=false));  // Outputs [0,0,1,1,2,2,3,3]
+//   echo(repeat_entries(list, [1,1,2,1], exact=false));  // Outputs [0,1,2,2,3]
 function repeat_entries(list, N, exact = true) =
     assert(is_list(list) && len(list)>0, "The list cannot be void.")
     assert((is_finite(N) && N>0) || is_vector(N,len(list)),
@@ -414,7 +419,7 @@ function repeat_entries(list, N, exact = true) =
 //   list_set([2,3,4,5], 2, 21);  // Returns: [2,3,21,5]
 //   list_set([2,3,4,5], [1,3], [81,47]);  // Returns: [2,81,4,47]
 function list_set(list=[],indices,values,dflt=0,minlen=0) = 
-    assert(is_list(list)||is_string(list))
+    assert(is_list(list))
     !is_list(indices)? (
         (is_finite(indices) && indices<len(list))? 
            [for (i=idx(list)) i==indices? values : list[i]]
@@ -442,7 +447,7 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 //   list_insert([3,6,9,12],1,5);  // Returns [3,5,6,9,12]
 //   list_insert([3,6,9,12],[1,3],[5,11]);  // Returns [3,5,6,9,11,12]
 function list_insert(list, indices, values, _i=0) = 
-    assert(is_list(list)||is_string(list))
+    assert(is_list(list))
     ! is_list(indices)? 
         assert( is_finite(indices) && is_finite(values), "Invalid indices/values." ) 
         assert( indices<=len(list), "Indices must be <= len(list) ." )
@@ -476,7 +481,7 @@ function list_insert(list, indices, values, _i=0) =
 //   list_insert([3,6,9,12],1);      // Returns: [3,9,12]
 //   list_insert([3,6,9,12],[1,3]);  // Returns: [3,9]
 function list_remove(list, indices) =
-    assert(is_list(list)||is_string(list), "Invalid list/string." )
+    assert(is_list(list))
     is_finite(indices) ?
         [
             for (i=[0:1:min(indices, len(list)-1)-1]) list[i],
@@ -509,7 +514,7 @@ function list_remove(list, indices) =
 //   domestic = list_remove_values(animals, ["bat","rat"], all=true);  // Returns: ["cat","dog"]
 //   animals4 = list_remove_values(animals, ["tucan","rat"], all=true);  // Returns: ["bat","cat","dog","bat"]
 function list_remove_values(list,values=[],all=false) =
-    assert(is_list(list)||is_string(list))
+    assert(is_list(list))
     !is_list(values)? list_remove_values(list, values=[values], all=all) :
     let(
         idxs = all? flatten(search(values,list,0)) : search(values,list,1),
@@ -530,6 +535,7 @@ function list_remove_values(list,values=[],all=false) =
 function bselect(array,index) =
     assert(is_list(array)||is_string(array), "Improper array." )
     assert(is_list(index) && len(index)>=len(array) , "Improper index list." )
+    is_string(array)? str_join(bselect( [for (x=array) x], index)) :
     [for(i=[0:len(array)-1]) if (index[i]) array[i]];
 
 
@@ -568,7 +574,7 @@ function list_bset(indexset, valuelist, dflt=0) =
 // Arguments:
 //   array = A list of lists.
 function list_shortest(array) =
-    assert(is_list(array)||is_string(list), "Invalid input." )
+    assert(is_list(array), "Invalid input." )
     min([for (v = array) len(v)]);
 
 
@@ -578,7 +584,7 @@ function list_shortest(array) =
 // Arguments:
 //   array = A list of lists.
 function list_longest(array) =
-    assert(is_list(array)||is_string(list), "Invalid input." )
+    assert(is_list(array), "Invalid input." )
     max([for (v = array) len(v)]);
 
 
@@ -590,7 +596,7 @@ function list_longest(array) =
 //   minlen = The minimum length to pad the list to.
 //   fill = The value to pad the list with.
 function list_pad(array, minlen, fill=undef) =
-    assert(is_list(array)||is_string(list), "Invalid input." )
+    assert(is_list(array), "Invalid input." )
     concat(array,repeat(fill,minlen-len(array)));
 
 
@@ -601,7 +607,7 @@ function list_pad(array, minlen, fill=undef) =
 //   array = A list.
 //   minlen = The minimum length to pad the list to.
 function list_trim(array, maxlen) =
-    assert(is_list(array)||is_string(list), "Invalid input." )
+    assert(is_list(array), "Invalid input." )
     [for (i=[0:1:min(len(array),maxlen)-1]) array[i]];
 
 
@@ -614,7 +620,7 @@ function list_trim(array, maxlen) =
 //   minlen = The minimum length to pad the list to.
 //   fill = The value to pad the list with.
 function list_fit(array, length, fill) =
-    assert(is_list(array)||is_string(list), "Invalid input." )
+    assert(is_list(array), "Invalid input." )
     let(l=len(array)) 
     l==length ? array : 
     l> length ? list_trim(array,length) 
@@ -643,8 +649,10 @@ function _valid_idx(idx,imin,imax) =
 // Function: shuffle()
 // Description:
 //   Shuffles the input list into random order.
+//   If given a string, shuffles the characters within the string.
 function shuffle(list) =
     assert(is_list(list)||is_string(list), "Invalid input." )
+    is_string(list)? str_join(shuffle([for (x = list) x])) :
     len(list)<=1 ? list :
     let (
         rval = rands(0,1,len(list)),
@@ -763,6 +771,8 @@ function _indexed_sort(arrind) =
 //   l3 = [[4,0],[7],[3,9],20,[4],[3,1],[8]];
 //   sorted3 = sort(l3); // Returns: [20,[3,1],[3,9],[4],[4,0],[7],[8]]
 function sort(list, idx=undef) = 
+    assert(is_list(list)||is_string(list), "Invalid input." )
+    is_string(list)? str_join(sort([for (x = list) x],idx)) :
     !is_list(list) || len(list)<=1 ? list :
     is_homogeneous(list,1)
     ?   let(size = array_dim(list[0]))
@@ -796,6 +806,7 @@ function sort(list, idx=undef) =
 //   idxs2 = sortidx(lst, idx=0); // Returns: [1,2,0,3]
 //   idxs3 = sortidx(lst, idx=[1,3]); // Returns: [3,0,2,1]
 function sortidx(list, idx=undef) = 
+    assert(is_list(list)||is_string(list), "Invalid input." )
     !is_list(list) || len(list)<=1 ? list :
     is_homogeneous(list,1)
     ?   let( 
@@ -820,15 +831,16 @@ function sortidx(list, idx=undef) =
 
 // Function: unique()
 // Usage:
-//   unique(arr);
+//   l = unique(list);
 // Description:
 //   Returns a sorted list with all repeated items removed.
 // Arguments:
-//   arr = The list to uniquify.
-function unique(arr) =
-    assert(is_list(arr)||is_string(arr), "Invalid input." )
-    len(arr)<=1? arr : 
-    let( sorted = sort(arr))
+//   list = The list to uniquify.
+function unique(list) =
+    assert(is_list(list)||is_string(list), "Invalid input." )
+    is_string(list)? str_join(unique([for (x = list) x])) :
+    len(list)<=1? list : 
+    let( sorted = sort(list))
     [   for (i=[0:1:len(sorted)-1])
             if (i==0 || (sorted[i] != sorted[i-1]))
                 sorted[i]
@@ -837,18 +849,18 @@ function unique(arr) =
 
 // Function: unique_count()
 // Usage:
-//   unique_count(arr);
+//   counts = unique_count(list);
 // Description:
-//   Returns `[sorted,counts]` where `sorted` is a sorted list of the unique items in `arr` and `counts` is a list such 
-//   that `count[i]` gives the number of times that `sorted[i]` appears in `arr`.  
+//   Returns `[sorted,counts]` where `sorted` is a sorted list of the unique items in `list` and `counts` is a list such 
+//   that `count[i]` gives the number of times that `sorted[i]` appears in `list`.  
 // Arguments:
-//   arr = The list to analyze. 
-function unique_count(arr) =
-      assert(is_list(arr) || is_string(arr), "Invalid input." )
-      arr == [] ? [[],[]] : 
-      let( arr=sort(arr) )
-      let( ind = [0, for(i=[1:1:len(arr)-1]) if (arr[i]!=arr[i-1]) i] )
-      [ select(arr,ind), deltas( concat(ind,[len(arr)]) ) ];
+//   list = The list to analyze. 
+function unique_count(list) =
+    assert(is_list(list) || is_string(list), "Invalid input." )
+    list == [] ? [[],[]] : 
+    let( list=sort(list) )
+    let( ind = [0, for(i=[1:1:len(list)-1]) if (list[i]!=list[i-1]) i] )
+    [ select(list,ind), deltas( concat(ind,[len(list)]) ) ];
 
 
 // Section: List Iteration Helpers
@@ -1132,7 +1144,7 @@ function subindex(M, idx) =
 // Function: submatrix()
 // Usage: submatrix(M, idx1, idx2)
 // Description:
-//   The input must be a list of lists (a matrix or 2d array).  Returns a submatrix by selecting the rows listed in idx1 and columsn listed in idx2.
+//   The input must be a list of lists (a matrix or 2d array).  Returns a submatrix by selecting the rows listed in idx1 and columns listed in idx2.
 // Arguments:
 //   M = Given list of lists
 //   idx1 = rows index list or range
@@ -1335,8 +1347,6 @@ function array_dim(v, depth=undef) =
            (depth > len(dimlist))? 0 : dimlist[depth-1] ;
            
            
-
-// This function may return undef!
 
 
 // Function: transpose()
