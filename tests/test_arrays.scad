@@ -112,7 +112,7 @@ test_list_range();
 
 module test_reverse() {
     assert(reverse([3,4,5,6]) == [6,5,4,3]);
-    assert(reverse("abcd") == ["d","c","b","a"]);
+    assert(reverse("abcd") == "dcba");
     assert(reverse([]) == []);
 }
 test_reverse();
@@ -136,7 +136,7 @@ test_list_rotate();
 module test_deduplicate() {
     assert(deduplicate([8,3,4,4,4,8,2,3,3,8,8]) == [8,3,4,8,2,3,8]);
     assert(deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]) == [8,3,4,8,2,3]);
-    assert(deduplicate("Hello") == ["H","e","l","o"]);
+    assert(deduplicate("Hello") == "Helo");
     assert(deduplicate([[3,4],[7,1.99],[7,2],[1,4]],eps=0.1) == [[3,4],[7,2],[1,4]]);
     assert(deduplicate([], closed=true) == []);
     assert(deduplicate([[1,[1,[undef]]],[1,[1,[undef]]],[1,[2]],[1,[2,[0]]]])==[[1, [1,[undef]]],[1,[2]],[1,[2,[0]]]]);
