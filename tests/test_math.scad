@@ -313,7 +313,7 @@ module test_sqr() {
     assert_equal(sqr(2.5), 6.25);
     assert_equal(sqr(3), 9);
     assert_equal(sqr(16), 256);
-    assert_equal(sqr([2,3,4]), [4,9,16]);
+    assert_equal(sqr([2,3,4]), 29);
     assert_equal(sqr([[2,3,4],[3,5,7],[3,5,1]]), [[25,41,33],[42,69,54],[24,39,48]]);
 }
 test_sqr();
@@ -470,14 +470,6 @@ module test_cumsum() {
     assert_equal(cumsum([[1,2,3], [3,4,5], [5,6,7]]), [[1,2,3],[4,6,8],[9,12,15]]);
 }
 test_cumsum();
-
-
-module test_sum_of_squares() {
-    assert_equal(sum_of_squares([1,2,3]), 14);
-    assert_equal(sum_of_squares([1,2,4]), 21);
-    assert_equal(sum_of_squares([-3,-2,-1]), 14);
-}
-test_sum_of_squares();
 
 
 module test_sum_of_sines() {

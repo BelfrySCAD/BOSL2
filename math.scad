@@ -27,18 +27,16 @@ NAN = acos(2);  // The value `nan`, useful for comparisons.
 //   sqr(x);
 // Description:
 //   If given a number, returns the square of that number,
-//   If given a vector, returns a vector of the squares of each element in the input vector.
+//   If given a vector, returns the sum-of-squares/dot product of the vector elements.
 //   If given a matrix, returns the matrix multiplication of the matrix with itself.
 // Examples:
 //   sqr(3);     // Returns: 9
 //   sqr(-4);    // Returns: 16
-//   sqr([3,4]); // Returns: [9,16]
+//   sqr([2,3,4]); // Returns: 29
 //   sqr([[1,2],[3,4]]);  // Returns [[7,10],[15,22]]
 function sqr(x) = 
-    is_finite(x) ? x*x :
-    is_vector(x) ? vmul(x,x) :
-    is_matrix(x) ? x*x :
-    assert(is_finite(x) || is_vector(x) || is_matrix(x), "Input is not a number nor a list of numbers.");
+    assert(is_finite(x) || is_vector(x) || is_matrix(x), "Input is not a number nor a list of numbers.")
+    x*x;
 
 
 // Function: log2()
@@ -554,18 +552,6 @@ function _cumsum(v,_i=0,_acc=[]) =
     );
 
 
-// Function: sum_of_squares()
-// Description:
-//   Returns the sum of the square of each element of a vector.
-// Arguments:
-//   v = The vector to get the sum of.
-// Example:
-//   sum_of_squares([1,2,3]);  // Returns: 14.
-//   sum_of_squares([1,2,4]);  // Returns: 21
-//   sum_of_squares([-3,-2,-1]);  // Returns: 14
-function sum_of_squares(v) = sum(vmul(v,v));
-
-
 // Function: sum_of_sines()
 // Usage:
 //   sum_of_sines(a,sines)
@@ -762,7 +748,7 @@ function _qr_factor(A,Q,P, pivot, column, m, n) =
     column >= min(m-1,n) ? [Q,A,P] :
     let(
         swap = !pivot ? 1
-             : _swap_matrix(n,column,column+max_index([for(i=[column:n-1]) sum_of_squares([for(j=[column:m-1]) A[j][i]])])),
+             : _swap_matrix(n,column,column+max_index([for(i=[column:n-1]) sqr([for(j=[column:m-1]) A[j][i]])])),
         A = pivot ? A*swap : A,
         x = [for(i=[column:1:m-1]) A[i][column]],
         alpha = (x[0]<=0 ? 1 : -1) * norm(x),
