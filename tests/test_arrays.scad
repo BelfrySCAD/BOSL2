@@ -8,7 +8,7 @@ module test_is_homogeneous(){
     assert(is_homogeneous([[1,["a"]], [2,[true]]])==false);
     assert(is_homogeneous([[1,["a"]], [2,[true]]],1)==true);
     assert(is_homogeneous([[1,["a"]], [2,[true]]],2)==false);
-    assert(is_homogeneous([[1,["a"]], [true,["b"]]])==true);
+    assert(is_homogeneous([[1,["a"]], [true,["b"]]])==false);
 }
 test_is_homogeneous();
 
@@ -134,12 +134,12 @@ test_list_rotate();
 
 
 module test_deduplicate() {
-    assert(deduplicate([8,3,4,4,4,8,2,3,3,8,8]) == [8,3,4,8,2,3,8]);
-    assert(deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]) == [8,3,4,8,2,3]);
-    assert(deduplicate("Hello") == "Helo");
-    assert(deduplicate([[3,4],[7,1.99],[7,2],[1,4]],eps=0.1) == [[3,4],[7,2],[1,4]]);
-    assert(deduplicate([], closed=true) == []);
-    assert(deduplicate([[1,[1,[undef]]],[1,[1,[undef]]],[1,[2]],[1,[2,[0]]]])==[[1, [1,[undef]]],[1,[2]],[1,[2,[0]]]]);
+    assert_equal(deduplicate([8,3,4,4,4,8,2,3,3,8,8]), [8,3,4,8,2,3,8]);
+    assert_equal(deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]), [8,3,4,8,2,3]);
+    assert_equal(deduplicate("Hello"), "Helo");
+    assert_equal(deduplicate([[3,4],[7,1.99],[7,2],[1,4]],eps=0.1), [[3,4],[7,2],[1,4]]);
+    assert_equal(deduplicate([], closed=true), []);
+    assert_equal(deduplicate([[1,[1,[undef]]],[1,[1,[undef]]],[1,[2]],[1,[2,[0]]]]), [[1, [1,[undef]]],[1,[2]],[1,[2,[0]]]]);
 }
 test_deduplicate();
 

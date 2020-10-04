@@ -90,13 +90,13 @@ function is_nan(x) = (x!=x);
 //   is_finite(x);
 // Description:
 //   Returns true if a given value `x` is a finite number.
-function is_finite(v) = is_num(0*v);
+function is_finite(x) = is_num(x) && !is_nan(0*x);
 
 
 // Function: is_range()
 // Description:
 //   Returns true if its argument is a range
-function is_range(x) = !is_list(x) && is_finite(x[0]+x[1]+x[2]) ;
+function is_range(x) = !is_list(x) && is_finite(x[0]) && is_finite(x[1]) && is_finite(x[2]) ;
 
 
 // Function: valid_range()
@@ -457,6 +457,11 @@ module shape_compare(eps=1/1024) {
     }
 }
 
+
+function loop_start() = 0;
+function loop_done(x) = x==1;
+function looping(x) = x<2;
+function loop_next(x,b) = x>=1? 2 : (b? 0 : 1);
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

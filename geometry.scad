@@ -177,6 +177,7 @@ function line_ray_intersection(line,ray,eps=EPSILON) =
     let(
         isect = _general_line_intersection(line,ray,eps=eps)
     ) 
+    is_undef(isect[0]) ? undef :
     (isect[2]<0-eps) ? undef : isect[0];
 
 
@@ -195,7 +196,10 @@ function line_segment_intersection(line,segment,eps=EPSILON) =
     assert( _valid_line(line,  dim=2,eps=eps) &&_valid_line(segment,dim=2,eps=eps), "Invalid line or segment." )
     let(
         isect = _general_line_intersection(line,segment,eps=eps)
-    ) isect[2]<0-eps || isect[2]>1+eps ? undef : isect[0];
+    )
+    is_undef(isect[0]) ? undef :
+    isect[2]<0-eps || isect[2]>1+eps ? undef :
+    isect[0];
 
 
 // Function: ray_intersection()
@@ -214,6 +218,7 @@ function ray_intersection(r1,r2,eps=EPSILON) =
     let(
         isect = _general_line_intersection(r1,r2,eps=eps)
     ) 
+    is_undef(isect[0]) ? undef :
     isect[1]<0-eps || isect[2]<0-eps ? undef : isect[0];
 
 
@@ -233,11 +238,9 @@ function ray_segment_intersection(ray,segment,eps=EPSILON) =
     let(
         isect = _general_line_intersection(ray,segment,eps=eps)
     ) 
-    isect[1]<0-eps 
-    || isect[2]<0-eps 
-    || isect[2]>1+eps
-    ? undef 
-    : isect[0];
+    is_undef(isect[0]) ? undef :
+    isect[1]<0-eps || isect[2]<0-eps || isect[2]>1+eps ? undef :
+    isect[0];
 
 
 // Function: segment_intersection()
@@ -256,12 +259,9 @@ function segment_intersection(s1,s2,eps=EPSILON) =
     let(
         isect = _general_line_intersection(s1,s2,eps=eps)
     ) 
-    isect[1]<0-eps 
-    || isect[1]>1+eps 
-    || isect[2]<0-eps 
-    || isect[2]>1+eps 
-    ? undef 
-    : isect[0];
+    is_undef(isect[0]) ? undef :
+    isect[1]<0-eps || isect[1]>1+eps || isect[2]<0-eps || isect[2]>1+eps ? undef :
+    isect[0];
 
 
 // Function: line_closest_point()
