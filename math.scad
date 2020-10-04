@@ -731,7 +731,8 @@ function null_space(A,eps=1e-12) =
 
 
 // Function: qr_factor()
-// Usage: qr = qr_factor(A,[pivot])
+// Usage:
+//   qr = qr_factor(A,[pivot]);
 // Description:
 //   Calculates the QR factorization of the input matrix A and returns it as the list [Q,R,P].  This factorization can be
 //   used to solve linear systems of equations.  The factorization is A = Q*R*transpose(P).  If pivot is false (the default)
@@ -780,7 +781,8 @@ function _swap_matrix(n,i,j) =
 
 
 // Function: back_substitute()
-// Usage: back_substitute(R, b, <transpose>)
+// Usage:
+//   x = back_substitute(R, b, <transpose>);
 // Description:
 //   Solves the problem Rx=b where R is an upper triangular square matrix.  The lower triangular entries of R are
 //   ignored.  If transpose==true then instead solve transpose(R)*x=b.

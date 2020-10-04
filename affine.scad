@@ -399,7 +399,8 @@ function affine3d_chain(affines, _m=undef, _i=0) =
 
 
 // Function: apply()
-// Usage: apply(transform, points)
+// Usage:
+//   pts = apply(transform, points)
 // Description:
 //   Applies the specified transformation matrix to a point list (or single point).  Both inputs can be 2d or 3d, and it is also allowed
 //   to supply 3d transformations with 2d data as long as the the only action on the z coordinate is a simple scaling.  
@@ -423,7 +424,8 @@ function apply(transform,points) =
 
 
 // Function: apply_list()
-// Usage: apply_list(points, transform_list)
+// Usage:
+//   pts = apply_list(points, transform_list)
 // Description:
 //   Transforms the specified point list (or single point) using a list of transformation matrices.  Transformations on
 //   the list are applied in the order they appear in the list (as in right multiplication of matrices).  Both inputs can be

@@ -543,7 +543,8 @@ _stellated_polyhedra_ = [
 
 // Function: regular_polyhedron_info()
 //
-// Usage: regular_polyhedron_info(info, ....)
+// Usage:
+//   x = regular_polyhedron_info(info, ....);
 //
 // Description:
 //   Calculate characteristics of regular polyhedra or the selection set for regular_polyhedron().

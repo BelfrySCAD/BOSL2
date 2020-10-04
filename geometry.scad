@@ -1443,7 +1443,8 @@ function circle_point_tangents(r, d, cp, pt) =
 
 
 // Function: circle_circle_tangents()
-// Usage: circle_circle_tangents(c1, r1|d1, c2, r2|d2)
+// Usage:
+//   segs = circle_circle_tangents(c1, r1|d1, c2, r2|d2);
 // Description:
 //   Computes 2d lines tangents to a pair of circles in 2d.  Returns a list of line endpoints [p1,p2] where
 //   p2 is the tangent point on circle 1 and p2 is the tangent point on circle 2.

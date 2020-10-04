@@ -1146,7 +1146,8 @@ function subindex(M, idx) =
 
 
 // Function: submatrix()
-// Usage: submatrix(M, idx1, idx2)
+// Usage:
+//   mat = submatrix(M, idx1, idx2)
 // Description:
 //   The input must be a list of lists (a matrix or 2d array).  Returns a submatrix by selecting the rows listed in idx1 and columns listed in idx2.
 // Arguments:
@@ -1245,7 +1246,8 @@ function diagonal_matrix(diag,offdiag=0) =
 
 
 // Function: submatrix_set()
-// Usage: submatrix_set(M,A,[m],[n])
+// Usage:
+//   mat = submatrix_set(M,A,[m],[n])
 // Description:
 //    Sets a submatrix of M equal to the matrix A.  By default the top left corner of M is set to A, but
 //    you can specify offset coordinates m and n.  If A (as adjusted by m and n) extends beyond the bounds
