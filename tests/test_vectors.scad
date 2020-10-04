@@ -4,6 +4,8 @@ include <../std.scad>
 module test_is_vector() {
     assert(is_vector([1,2,3]) == true);
     assert(is_vector([[1,2,3]]) == false);
+    assert(is_vector([[1,2,3,4],[5,6,7,8]]) == false);
+    assert(is_vector([[1,2,3,4],[5,6]]) == false);
     assert(is_vector(["foo"]) == false);
     assert(is_vector([]) == false);
     assert(is_vector(1) == false);

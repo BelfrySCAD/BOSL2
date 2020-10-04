@@ -144,7 +144,7 @@ function region_path_crossings(path, region, closed=true, eps=EPSILON) = sort([
     ) let (
         isect = _general_line_intersection(segs[si], s2, eps=eps)
     ) if (
-        !is_undef(isect) &&
+        !is_undef(isect[0]) &&
         isect[1] >= 0-eps && isect[1] < 1+eps &&
         isect[2] >= 0-eps && isect[2] < 1+eps
     )

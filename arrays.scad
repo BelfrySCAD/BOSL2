@@ -34,15 +34,19 @@
 //   is_homogeneous( [[1,["a"]], [2,[true]]], 1 ) // Returns true
 //   is_homogeneous( [[1,["a"]], [2,[true]]], 2 ) // Returns false
 //   is_homogeneous( [[1,["a"]], [true,["b"]]] )  // Returns true
-function is_homogeneous(l, depth) =
+function is_homogeneous(l, depth=10) =
     !is_list(l) || l==[] ? false :
     let( l0=l[0] )
     [] == [for(i=[1:len(l)-1]) if( ! _same_type(l[i],l0, depth+1) )  0 ];
                  
 function _same_type(a,b, depth) = 
-    (depth==0) || (a>=b) || (a==b) || (a<=b)  
-    ||  ( is_list(a) && is_list(b) && len(a)==len(b) 
-          && []==[for(i=idx(a)) if( ! _same_type(a[i],b[i],depth-1) )0] ); 
+    (depth==0) ||
+    (is_undef(a) && is_undef(b)) ||
+    (is_bool(a) && is_bool(b)) ||
+    (is_num(a) && is_num(b)) ||
+    (is_string(a) && is_string(b)) ||
+    (is_list(a) && is_list(b) && len(a)==len(b) 
+          && []==[for(i=idx(a)) if( ! _same_type(a[i],b[i],depth-1) ) 0] ); 
   
 
 // Function: select()

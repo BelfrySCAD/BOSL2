@@ -1215,6 +1215,7 @@ function _sum_preserving_round(data, index=0) =
 // Arguments:
 //   path = path to subdivide
 //   N = scalar total number of points desired or with `method="segment"` can be a vector requesting `N[i]-1` points on segment i.
+//   refine = number of points to add each segment.
 //   closed = set to false if the path is open.  Default: True
 //   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  Default: True
 //   method = One of `"length"` or `"segment"`.  If `"length"`, adds vertices evenly along the total path length.  If `"segment"`, adds points evenly among the segments.  Default: `"length"`
@@ -1252,7 +1253,11 @@ function subdivide_path(path, N, refine, closed=true, exact=true, method="length
     assert(is_path(path))
     assert(method=="length" || method=="segment")
     assert(num_defined([N,refine]),"Must give exactly one of N and refine")
-    let(N = first_defined([N,len(path)*refine]))
+    let(
+        N = !is_undef(N)? N :
+            !is_undef(refine)? len(path) * refine :
+            undef
+    )
     assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
     let(
         count = len(path) - (closed?0:1), 

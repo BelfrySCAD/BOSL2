@@ -208,10 +208,12 @@ module test_valid_range() {
     assert(valid_range([0:-1:0]));
     assert(valid_range([10:-1:0]));
     assert(valid_range([2.1:-1.1:0.1]));
-    assert(!valid_range([10:1:0]));
-    assert(!valid_range([2.1:1.1:0.1]));
-    assert(!valid_range([0:-1:10]));
-    assert(!valid_range([0.1:-1.1:2.1]));
+    if (version_num() < 20200600) {
+        assert(!valid_range([10:1:0]));
+        assert(!valid_range([2.1:1.1:0.1]));
+        assert(!valid_range([0:-1:10]));
+        assert(!valid_range([0.1:-1.1:2.1]));
+    }
 }
 test_valid_range();
 

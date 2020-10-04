@@ -932,7 +932,10 @@ function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
     let(
         sc = 1/cos(180/n),
-        r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n))
+        ir = is_finite(ir)? ir*sc : undef,
+        id = is_finite(id)? id*sc : undef,
+        side = is_finite(side)? side/2/sin(180/n) : undef,
+        r = get_radius(r1=ir, r2=or, r=r, d1=id, d2=od, d=d, dflt=side)
     )
     assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.")
     let(
@@ -970,7 +973,10 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
 
 module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) {
     sc = 1/cos(180/n);
-    r = get_radius(r1=ir*sc, r2=or, r=r, d1=id*sc, d2=od, d=d, dflt=side/2/sin(180/n));
+    ir = is_finite(ir)? ir*sc : undef;
+    id = is_finite(id)? id*sc : undef;
+    side = is_finite(side)? side/2/sin(180/n) : undef;
+    r = get_radius(r1=ir, r2=or, r=r, d1=id, d2=od, d=d, dflt=side);
     assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.");
     path = regular_ngon(n=n, r=r, rounding=rounding, realign=realign);
     inset = opp_ang_to_hyp(rounding, (180-360/n)/2);
