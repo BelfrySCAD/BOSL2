@@ -316,7 +316,8 @@ function path_closest_point(path, pt) =
 
 
 // Function: path_tangents()
-// Usage: path_tangents(path, [closed], [uniform])
+// Usage:
+//   tangs = path_tangents(path, <closed>, <uniform>);
 // Description:
 //   Compute the tangent vector to the input path.  The derivative approximation is described in deriv().
 //   The returns vectors will be normalized to length 1.  If any derivatives are zero then
@@ -348,7 +349,8 @@ function path_tangents(path, closed=false, uniform=true) =
 
 
 // Function: path_normals()
-// Usage:  path_normals(path, [tangents], [closed])
+// Usage:
+//   norms = path_normals(path, <tangents>, <closed>);
 // Description:
 //   Compute the normal vector to the input path.  This vector is perpendicular to the
 //   path tangent and lies in the plane of the curve.  When there are collinear points,
@@ -371,7 +373,8 @@ function path_normals(path, tangents, closed=false) =
 
 
 // Function: path_curvature()
-// Usage: path_curvature(path, [closed])
+// Usage:
+//   curvs = path_curvature(path, <closed>);
 // Description:
 //   Numerically estimate the curvature of the path (in any dimension). 
 function path_curvature(path, closed=false) =
@@ -388,7 +391,8 @@ function path_curvature(path, closed=false) =
 
 
 // Function: path_torsion()
-// Usage: path_torsion(path, [closed])
+// Usage:
+//   tortions = path_torsion(path, <closed>);
 // Description:
 //   Numerically estimate the torsion of a 3d path.  
 function path_torsion(path, closed=false) =
@@ -1290,7 +1294,8 @@ function subdivide_path(path, N, refine, closed=true, exact=true, method="length
 
 
 // Function: path_length_fractions()
-// Usage: path_length_fractions(path, [closed])
+// Usage:
+//   fracs = path_length_fractions(path, <closed>);
 // Description:
 //    Returns the distance fraction of each point in the path along the path, so the first
 //    point is zero and the final point is 1.  If the path is closed the length of the output
@@ -1311,7 +1316,8 @@ function path_length_fractions(path, closed=false) =
 
 
 // Function: resample_path()
-// Usage: resample_path(path, N|spacing, [closed])
+// Usage:
+//   newpath = resample_path(path, N|spacing, <closed>);
 // Description:
 //   Compute a uniform resampling of the input path.  If you specify `N` then the output path will have N
 //   points spaced uniformly (by linear interpolation along the input path segments).  The only points of the

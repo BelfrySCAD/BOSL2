@@ -512,8 +512,9 @@ function subdivide_and_slice(profiles, slices, numpoints, method="length", close
   slice_profiles(fixpoly, slices, closed);
   
 
-// Function slice_profiles()
-// Usage: slice_profiles(profiles,slices,[closed])
+// Function: slice_profiles()
+// Usage:
+//   profs = slice_profiles(profiles,slices,<closed>);
 // Description:
 //   Given an input list of profiles, linearly interpolate between each pair to produce a
 //   more finely sampled list.  The parameters `slices` specifies the number of slices to
@@ -640,7 +641,8 @@ function _dp_extract_map(map) =
      
 
 // Internal Function: _skin_distance_match(poly1,poly2)
-// Usage: _skin_distance_match(poly1,poly2)
+// Usage:
+//   polys = _skin_distance_match(poly1,poly2);
 // Description:
 //   Find a way of associating the vertices of poly1 and vertices of poly2
 //   that minimizes the sum of the length of the edges that connect the two polygons.
@@ -686,16 +688,17 @@ function _skin_distance_match(poly1,poly2) =
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Internal Function: _skin_tangent_match()
-// Usage: _skin_tangent_match(poly1, poly2)
+// Usage:
+//   x = _skin_tangent_match(poly1, poly2)
 // Description:
-//    Finds a mapping of the vertices of the larger polygon onto the smaller one.  Whichever input is the
-//    shorter path is the polygon, and the longer input is the curve.  For every edge of the polygon, the algorithm seeks a plane that contains that
-//    edge and is tangent to the curve.  There will be more than one such point.  To choose one, the algorithm centers the polygon and curve on their centroids
-//    and chooses the closer tangent point.  The algorithm works its way around the polygon, computing a series of tangent points and then maps all of the
-//    points on the curve between two tangent points into one vertex of the polygon.  This algorithm can fail if the curve has too few points or if it is concave.
+//   Finds a mapping of the vertices of the larger polygon onto the smaller one.  Whichever input is the
+//   shorter path is the polygon, and the longer input is the curve.  For every edge of the polygon, the algorithm seeks a plane that contains that
+//   edge and is tangent to the curve.  There will be more than one such point.  To choose one, the algorithm centers the polygon and curve on their centroids
+//   and chooses the closer tangent point.  The algorithm works its way around the polygon, computing a series of tangent points and then maps all of the
+//   points on the curve between two tangent points into one vertex of the polygon.  This algorithm can fail if the curve has too few points or if it is concave.
 // Arguments:
-//    poly1 = input polygon
-//    poly2 = input polygon
+//   poly1 = input polygon
+//   poly2 = input polygon
 function _skin_tangent_match(poly1, poly2) =
     let(
         swap = len(poly1)>len(poly2),
@@ -794,7 +797,10 @@ function associate_vertices(polygons, split, curpoly=0) =
 
 
 // Function&Module: sweep()
-// Usage: sweep(shape, transformations, [closed], [caps])
+// Usage: As Module
+//   sweep(shape, transformations, <closed<, <caps>)
+// Usage: As Function
+//   vnf = sweep(shape, transformations, <closed>, <caps>);
 // Description:
 //   The input `shape` must be a non-self-intersecting polygon in two dimensions, and `transformations`
 //   is a list of 4x4 transformation matrices.  The sweep algorithm applies each transformation in sequence
