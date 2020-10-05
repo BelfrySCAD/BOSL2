@@ -38,7 +38,7 @@
 //   is_vector([1,1,1],all_nonzero=false);  // Returns true
 //   is_vector([],zero=false);              // Returns false
 function is_vector(v, length, zero, all_nonzero=false, eps=EPSILON) =
-    is_list(v) && is_num(0*(v*v))
+    is_list(v) && is_num(v[0]) && is_num(0*(v*v))
     && (is_undef(length) || len(v)==length)
     && (is_undef(zero) || ((norm(v) >= eps) == !zero))
     && (!all_nonzero || all_nonzero(v)) ;
@@ -59,16 +59,15 @@ function vang(v) =
 
 // Function: vmul()
 // Description:
-//   Element-wise vector multiplication.  Multiplies each element of vector `v1` by
-//   the corresponding element of vector `v2`. The vectors should have the same dimension.
-//   Returns a vector of the products.
+//   Element-wise multiplication.  Multiplies each element of `v1` by the corresponding element of `v2`.
+//   Both `v1` and `v2` must be the same length.  Returns a vector of the products.
 // Arguments:
 //   v1 = The first vector.
 //   v2 = The second vector.
 // Example:
 //   vmul([3,4,5], [8,7,6]);  // Returns [24, 28, 30]
 function vmul(v1, v2) = 
-    assert( is_vector(v1) && is_vector(v2,len(v1)), "Incompatible vectors")
+    assert( is_list(v1) && is_list(v2) && len(v1)==len(v2), "Incompatible input")
     [for (i = [0:1:len(v1)-1]) v1[i]*v2[i]];
     
 

@@ -196,7 +196,7 @@ function str_frac(str,mixed=true,improper=true,signed=true) =
     signed && str[0]=="-" ? -str_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
     signed && str[0]=="+" ?  str_frac(substr(str,1),mixed=mixed,improper=improper,signed=false) :
     mixed ? (                      
-        str_find(str," ")>0 || is_undef(str_find(str,"/"))? (
+        !in_list(str_find(str," "), [undef,0]) || is_undef(str_find(str,"/"))? (
             let(whole = str_split(str,[" "]))
             _str_int_recurse(whole[0],10,len(whole[0])-1) + str_frac(whole[1], mixed=false, improper=improper, signed=false)
         ) : str_frac(str,mixed=false, improper=improper)
@@ -292,12 +292,12 @@ function _str_cmp_recurse(str,sindex,pattern,plen,pindex=0,) =
 // Usage:
 //   str_find(str,pattern,[last],[all],[start])
 // Description:
-//   Searches input string `str` for the string `pattern` and returns the index or indices of the matches in `str`.  
-//   By default str_find() returns the index of the first match in `str`.  If `last` is true then it returns the index of the last match.
+//   Searches input string `str` for the string `pattern` and returns the index or indices of the matches in `str`.
+//   By default `str_find()` returns the index of the first match in `str`.  If `last` is true then it returns the index of the last match.
 //   If the pattern is the empty string the first match is at zero and the last match is the last character of the `str`.
 //   If `start` is set then the search begins at index start, working either forward and backward from that position.  If you set `start`
-//   and `last` is true then the search will find the pattern if it begins at index `start`.  If no match exists, returns undef. 
-//   If you set `all` to true then all str_find() returns all of the matches in a list, or an empty list if there are no matches.  
+//   and `last` is true then the search will find the pattern if it begins at index `start`.  If no match exists, returns `undef`.
+//   If you set `all` to true then `str_find()` returns all of the matches in a list, or an empty list if there are no matches.
 // Arguments:
 //   str = String to search.
 //   pattern = string pattern to search for

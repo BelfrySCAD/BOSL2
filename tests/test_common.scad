@@ -160,6 +160,25 @@ module test_is_nan() {
 test_is_nan();
 
 
+module test_is_finite() {
+    assert(!is_finite(undef));
+    assert(!is_finite(true));
+    assert(!is_finite(false));
+    assert(is_finite(-5));
+    assert(is_finite(0));
+    assert(is_finite(5));
+    assert(!is_finite(INF));
+    assert(!is_finite(-INF));
+    assert(!is_finite(""));
+    assert(!is_finite("foo"));
+    assert(!is_finite([]));
+    assert(!is_finite([3,4,5]));
+    assert(!is_finite([3:1:5]));
+    assert(!is_finite(NAN));
+}
+test_is_finite();
+
+
 module test_is_range() {
     assert(!is_range(undef));
     assert(!is_range(true));
@@ -189,10 +208,12 @@ module test_valid_range() {
     assert(valid_range([0:-1:0]));
     assert(valid_range([10:-1:0]));
     assert(valid_range([2.1:-1.1:0.1]));
-    assert(!valid_range([10:1:0]));
-    assert(!valid_range([2.1:1.1:0.1]));
-    assert(!valid_range([0:-1:10]));
-    assert(!valid_range([0.1:-1.1:2.1]));
+    if (version_num() < 20200600) {
+        assert(!valid_range([10:1:0]));
+        assert(!valid_range([2.1:1.1:0.1]));
+        assert(!valid_range([0:-1:10]));
+        assert(!valid_range([0.1:-1.1:2.1]));
+    }
 }
 test_valid_range();
 

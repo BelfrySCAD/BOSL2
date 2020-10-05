@@ -63,9 +63,9 @@
 //   cuboid(40) show_anchors();
 module cuboid(
     size=[1,1,1],
-    p1=undef, p2=undef,
-    chamfer=undef,
-    rounding=undef,
+    p1, p2,
+    chamfer,
+    rounding,
     edges=EDGES_ALL,
     except_edges=[],
     trimcorners=true,
@@ -73,6 +73,49 @@ module cuboid(
     spin=0,
     orient=UP
 ) {
+    module corner_shape(corner) {
+        e = corner_edges(edges, corner);
+        cnt = sum(e);
+        r = first_defined([chamfer, rounding, 0]);
+        $fn = is_finite(chamfer)? 4 : segs(r);
+        translate(vmul(corner,size/2-[r,r,r])) {
+            if (cnt == 0) {
+                cube(r*2, center=true);
+            } else if (cnt == 1) {
+                if (e.x) xcyl(l=r*2, r=r);
+                if (e.y) ycyl(l=r*2, r=r);
+                if (e.z) zcyl(l=r*2, r=r);
+            } else if (cnt == 2) {
+                if (!e.x) {
+                    intersection() {
+                        ycyl(l=r*2, r=r);
+                        zcyl(l=r*2, r=r);
+                    }
+                } else if (!e.y) {
+                    intersection() {
+                        xcyl(l=r*2, r=r);
+                        zcyl(l=r*2, r=r);
+                    }
+                } else {
+                    intersection() {
+                        xcyl(l=r*2, r=r);
+                        ycyl(l=r*2, r=r);
+                    }
+                }
+            } else {
+                if (trimcorners) {
+                    spheroid(r=r, style="octa");
+                } else {
+                    intersection() {
+                        xcyl(l=r*2, r=r);
+                        ycyl(l=r*2, r=r);
+                        zcyl(l=r*2, r=r);
+                    }
+                }
+            }
+        }
+    }
+
     size = scalar_vec3(size);
     edges = edges(edges, except=except_edges);
     if (!is_undef(p1)) {
@@ -156,32 +199,15 @@ module cuboid(
                         }
                     }
                 } else {
-                    difference() {
-                        cube(size, center=true);
-
-                        // Chamfer edges
-                        for (i = [0:3], axis=[0:2]) {
-                            if (edges[axis][i]>0) {
-                                translate(vmul(EDGE_OFFSETS[axis][i], size/2)) {
-                                    rotate(majrots[axis]) {
-                                        zrot(45) cube([chamfer*sqrt(2), chamfer*sqrt(2), size[axis]+0.01], center=true);
-                                    }
-                                }
-                            }
-                        }
-
-                        // Chamfer triple-edge corners.
-                        if (trimcorners) {
-                            for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
-                                if (corner_edge_count(edges, [xa,ya,za]) > 2) {
-                                    translate(vmul([xa,ya,za]/2, size-[1,1,1]*chamfer*4/3)) {
-                                        rot(from=UP, to=[xa,ya,za]) {
-                                            cube(chamfer*3, anchor=BOTTOM);
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    hull() {
+                        corner_shape([-1,-1,-1]);
+                        corner_shape([ 1,-1,-1]);
+                        corner_shape([-1, 1,-1]);
+                        corner_shape([ 1, 1,-1]);
+                        corner_shape([-1,-1, 1]);
+                        corner_shape([ 1,-1, 1]);
+                        corner_shape([-1, 1, 1]);
+                        corner_shape([ 1, 1, 1]);
                     }
                 }
             } else if (rounding != undef) {
@@ -258,38 +284,15 @@ module cuboid(
                         }
                     }
                 } else {
-                    difference() {
-                        cube(size, center=true);
-
-                        // Round edges.
-                        for (i = [0:3], axis=[0:2]) {
-                            if (edges[axis][i]>0) {
-                                difference() {
-                                    translate(vmul(EDGE_OFFSETS[axis][i], size/2)) {
-                                        rotate(majrots[axis]) cube([rounding*2, rounding*2, size[axis]+0.1], center=true);
-                                    }
-                                    translate(vmul(EDGE_OFFSETS[axis][i], size/2 - [1,1,1]*rounding)) {
-                                        rotate(majrots[axis]) cyl(h=size[axis]+0.2, r=rounding, $fn=sides);
-                                    }
-                                }
-                            }
-                        }
-
-                        // Round triple-edge corners.
-                        if (trimcorners) {
-                            for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
-                                if (corner_edge_count(edges, [xa,ya,za]) > 2) {
-                                    difference() {
-                                        translate(vmul([xa,ya,za], size/2)) {
-                                            cube(rounding*2, center=true);
-                                        }
-                                        translate(vmul([xa,ya,za], size/2-[1,1,1]*rounding)) {
-                                            spheroid(r=rounding, style="octa", $fn=sides);
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    hull() {
+                        corner_shape([-1,-1,-1]);
+                        corner_shape([ 1,-1,-1]);
+                        corner_shape([-1, 1,-1]);
+                        corner_shape([ 1, 1,-1]);
+                        corner_shape([-1,-1, 1]);
+                        corner_shape([ 1,-1, 1]);
+                        corner_shape([-1, 1, 1]);
+                        corner_shape([ 1, 1, 1]);
                     }
                 }
             } else {
@@ -673,7 +676,7 @@ module cyl(
                         ) [p1,p2]
                     ) : !is_undef(fil2)? (
                         let(
-                            cn = find_circle_2tangents([r2-fil2,l/2], [r2,l/2], [r1,-l/2], r=abs(fil2)),
+                            cn = circle_2tangents([r2-fil2,l/2], [r2,l/2], [r1,-l/2], r=abs(fil2)),
                             ang = fil2<0? phi : phi-180,
                             steps = ceil(abs(ang)/360*segs(abs(fil2))),
                             step = ang/steps,
@@ -688,7 +691,7 @@ module cyl(
                         ) [p1,p2]
                     ) : !is_undef(fil1)? (
                         let(
-                            cn = find_circle_2tangents([r1-fil1,-l/2], [r1,-l/2], [r2,l/2], r=abs(fil1)),
+                            cn = circle_2tangents([r1-fil1,-l/2], [r1,-l/2], [r2,l/2], r=abs(fil1)),
                             ang = fil1<0? 180-phi : -phi,
                             steps = ceil(abs(ang)/360*segs(abs(fil1))),
                             step = ang/steps,

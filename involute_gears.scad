@@ -128,7 +128,7 @@ function base_radius(pitch=5, teeth=11, PA=28) =
 
 // Function bevel_pitch_angle()
 // Usage:
-//   bevel_pitch_angle(teeth, mate_teeth, [drive_angle]);
+//   x = bevel_pitch_angle(teeth, mate_teeth, [drive_angle]);
 // Description:
 //   Returns the correct pitch angle (bevelang) for a bevel gear with a given number of tooth, that is
 //   matched to another bevel gear with a (possibly different) number of teeth.
@@ -150,6 +150,10 @@ function _gear_q7(f,r,b,r2,t,s) = _gear_q6(b,s,t,(1-f)*max(b,r)+f*r2);        //
 
 
 // Function&Module: gear_tooth_profile()
+// Usage: As Module
+//   gear_tooth_profile(pitch, teeth, <PA>, <clearance>, <backlash>, <interior>, <valleys>);
+// Usage: As Function
+//   path = gear_tooth_profile(pitch, teeth, <PA>, <clearance>, <backlash>, <interior>, <valleys>);
 // Description:
 //   When called as a function, returns the 2D profile path for an individual gear tooth.
 //   When called as a module, creates the 2D profile shape for an individual gear tooth.
@@ -157,8 +161,8 @@ function _gear_q7(f,r,b,r2,t,s) = _gear_q6(b,s,t,(1-f)*max(b,r)+f*r2);        //
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   teeth = Total number of teeth along the rack
 //   PA = Controls how straight or bulged the tooth sides are. In degrees.
-//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   clearance = Gap between top of a tooth on one gear and bottom of valley on a meshing gear (in millimeters)
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   interior = If true, create a mask for difference()ing from something else.
 //   valleys = If true, add the valley bottoms on either side of the tooth.
 // Example(2D):
@@ -169,8 +173,8 @@ function gear_tooth_profile(
     pitch     = 3,
     teeth     = 11,
     PA        = 28,
-    backlash  = 0.0,
     clearance = undef,
+    backlash  = 0.0,
     interior  = false,
     valleys   = true
 ) = let(
@@ -227,6 +231,10 @@ module gear_tooth_profile(
 
 
 // Function&Module: gear2d()
+// Usage: As Module
+//   gear2d(pitch, teeth, <hide>, <PA>, <clearance>, <backlash>, <interior>);
+// Usage: As Function
+//   poly = gear2d(pitch, teeth, <hide>, <PA>, <clearance>, <backlash>, <interior>);
 // Description:
 //   When called as a module, creates a 2D involute spur gear.  When called as a function, returns a
 //   2D path for the perimeter of a 2D involute spur gear.  Normally, you should just specify the
@@ -310,37 +318,29 @@ module gear2d(
 
 
 // Module: gear()
+// Usage:
+//   gear(pitch, teeth, thickness, <shaft_diam>, <hide>, <PA>, <clearance>, <backlash>, <helical>, <slices>, <interior>);
 // Description:
-//   Creates a (potentially helical) involute spur gear.
-//   The module `gear()` gives an involute spur gear, with reasonable
-//   defaults for all the parameters.  Normally, you should just choose
-//   the first 4 parameters, and let the rest be default values.  The
-//   module `gear()` gives a gear in the XY plane, centered on the origin,
-//   with one tooth centered on the positive Y axis.  The various functions
-//   below it take the same parameters, and return various measurements
-//   for the gear.  The most important is `pitch_radius()`, which tells
-//   how far apart to space gears that are meshing, and `outer_radius()`,
-//   which gives the size of the region filled by the gear.  A gear has
-//   a "pitch circle", which is an invisible circle that cuts through
-//   the middle of each tooth (though not the exact center). In order
-//   for two gears to mesh, their pitch circles should just touch.  So
-//   the distance between their centers should be `pitch_radius()` for
-//   one, plus `pitch_radius()` for the other, which gives the radii of
-//   their pitch circles.
-//   In order for two gears to mesh, they must have the same `pitch`
-//   and `PA` parameters.  `pitch` gives the number
-//   of millimeters of arc around the pitch circle covered by one tooth
-//   and one space between teeth.  The `PA` controls how flat or
-//   bulged the sides of the teeth are.  Common values include 14.5
-//   degrees and 20 degrees, and occasionally 25.  Though I've seen 28
-//   recommended for plastic gears. Larger numbers bulge out more, giving
-//   stronger teeth, so 28 degrees is the default here.
-//   The ratio of `teeth` for two meshing gears gives how many
-//   times one will make a full revolution when the the other makes one
-//   full revolution.  If the two numbers are coprime (i.e.  are not
-//   both divisible by the same number greater than 1), then every tooth
-//   on one gear will meet every tooth on the other, for more even wear.
-//   So coprime numbers of teeth are good.
+//   Creates a (potentially helical) involute spur gear.  The module `gear()` gives an involute spur
+//   gear, with reasonable defaults for all the parameters.  Normally, you should just choose the
+//   first 4 parameters, and let the rest be default values.  The module `gear()` gives a gear in the
+//   XY plane, centered on the origin, with one tooth centered on the positive Y axis.  The various
+//   functions below it take the same parameters, and return various measurements for the gear.  The
+//   most important is `pitch_radius()`, which tells how far apart to space gears that are meshing,
+//   and `outer_radius()`, which gives the size of the region filled by the gear.  A gear has a "pitch
+//   circle", which is an invisible circle that cuts through the middle of each tooth (though not the
+//   exact center). In order for two gears to mesh, their pitch circles should just touch.  So the
+//   distance between their centers should be `pitch_radius()` for one, plus `pitch_radius()` for the
+//   other, which gives the radii of their pitch circles.  In order for two gears to mesh, they must
+//   have the same `pitch` and `PA` parameters.  `pitch` gives the number of millimeters of arc around
+//   the pitch circle covered by one tooth and one space between teeth.  The `PA` controls how flat or
+//   bulged the sides of the teeth are.  Common values include 14.5 degrees and 20 degrees, and
+//   occasionally 25.  Though I've seen 28 recommended for plastic gears. Larger numbers bulge out
+//   more, giving stronger teeth, so 28 degrees is the default here.  The ratio of `teeth` for two
+//   meshing gears gives how many times one will make a full revolution when the the other makes one
+//   full revolution.  If the two numbers are coprime (i.e.  are not both divisible by the same number
+//   greater than 1), then every tooth on one gear will meet every tooth on the other, for more even
+//   wear.  So coprime numbers of teeth are good.
 // Arguments:
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   teeth = Total number of teeth around the entire perimeter
@@ -361,13 +361,33 @@ module gear2d(
 //   gear(pitch=5, teeth=20, thickness=8, shaft_diam=5);
 // Example: Beveled Gear
 //   gear(pitch=5, teeth=20, thickness=10, shaft_diam=5, helical=-30, slices=12, $fa=1, $fs=1);
+// Example: Assembly of Gears
+//   n1 = 11; //red gear number of teeth
+//   n2 = 20; //green gear
+//   n3 = 5;  //blue gear
+//   n4 = 20; //orange gear
+//   n5 = 8;  //gray rack
+//   pitch = 9; //all meshing gears need the same `pitch` (and the same `PA`)
+//   thickness    = 6;
+//   hole         = 3;
+//   height       = 12;
+//   d1 =pitch_radius(pitch,n1);
+//   d12=pitch_radius(pitch,n1) + pitch_radius(pitch,n2);
+//   d13=pitch_radius(pitch,n1) + pitch_radius(pitch,n3);
+//   d14=pitch_radius(pitch,n1) + pitch_radius(pitch,n4);
+//   translate([ 0,    0, 0]) rotate([0,0, $t*360/n1])                 color([1.00,0.75,0.75]) gear(pitch,n1,thickness,hole);
+//   translate([ 0,  d12, 0]) rotate([0,0,-($t+n2/2-0*n1+1/2)*360/n2]) color([0.75,1.00,0.75]) gear(pitch,n2,thickness,hole);
+//   translate([ d13,  0, 0]) rotate([0,0,-($t-n3/4+n1/4+1/2)*360/n3]) color([0.75,0.75,1.00]) gear(pitch,n3,thickness,hole);
+//   translate([ d13,  0, 0]) rotate([0,0,-($t-n3/4+n1/4+1/2)*360/n3]) color([0.75,0.75,1.00]) gear(pitch,n3,thickness,hole);
+//   translate([-d14,  0, 0]) rotate([0,0,-($t-n4/4-n1/4+1/2-floor(n4/4)-3)*360/n4]) color([1.00,0.75,0.50]) gear(pitch,n4,thickness,hole,hide=n4-3);
+//   translate([(-floor(n5/2)-floor(n1/2)+$t+n1/2)*9, -d1+0.0, 0]) color([0.75,0.75,0.75]) rack(pitch=pitch,teeth=n5,thickness=thickness,height=height,anchor=CENTER);
 module gear(
     pitch     = 3,
     teeth     = 11,
-    PA        = 28,
     thickness = 6,
-    hide      = 0,
     shaft_diam = 3,
+    hide      = 0,
+    PA        = 28,
     clearance = undef,
     backlash  = 0.0,
     helical   = 0,
@@ -405,6 +425,8 @@ module gear(
 
 
 // Module: bevel_gear()
+// Usage:
+//   bevel_gear(pitch, teeth, face_width, bevelang, <shaft_diam>, <hide>, <PA>, <clearance>, <backlash>, <spiral_rad>, <spiral_ang>, <slices>, <interior>);
 // Description:
 //   Creates a (potentially spiral) bevel gear.
 //   The module `bevel_gear()` gives an bevel gear, with reasonable
@@ -459,11 +481,11 @@ module gear(
 module bevel_gear(
     pitch      = 3,
     teeth      = 11,
-    PA         = 20,
     face_width = 6,
     bevelang   = 45,
-    hide       = 0,
     shaft_diam = 3,
+    hide       = 0,
+    PA         = 20,
     clearance  = undef,
     backlash   = 0.0,
     spiral_rad = 0,
@@ -586,6 +608,8 @@ module bevel_gear(
 
 
 // Module: rack()
+// Usage:
+//   rack(pitch, teeth, thickness, height, <PA>, <backlash>);
 // Description:
 //   The module `rack()` gives a rack, which is a bar with teeth.  A
 //   rack can mesh with any gear that has the same `pitch` and
@@ -667,35 +691,6 @@ module rack(
     }
 }
 
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-//example gear train.
-//Try it with OpenSCAD View/Animate command with 20 steps and 24 FPS.
-//The gears will continue to be rotated to mesh correctly if you change the number of teeth.
-
-/*
-n1 = 11; //red gear number of teeth
-n2 = 20; //green gear
-n3 = 5;  //blue gear
-n4 = 20; //orange gear
-n5 = 8;  //gray rack
-pitch = 9; //all meshing gears need the same `pitch` (and the same `PA`)
-thickness    = 6;
-hole         = 3;
-height       = 12;
-
-d1 =pitch_radius(pitch,n1);
-d12=pitch_radius(pitch,n1) + pitch_radius(pitch,n2);
-d13=pitch_radius(pitch,n1) + pitch_radius(pitch,n3);
-d14=pitch_radius(pitch,n1) + pitch_radius(pitch,n4);
-
-translate([ 0,    0, 0]) rotate([0,0, $t*360/n1])                 color([1.00,0.75,0.75]) gear(pitch,n1,thickness,hole);
-translate([ 0,  d12, 0]) rotate([0,0,-($t+n2/2-0*n1+1/2)*360/n2]) color([0.75,1.00,0.75]) gear(pitch,n2,thickness,hole);
-translate([ d13,  0, 0]) rotate([0,0,-($t-n3/4+n1/4+1/2)*360/n3]) color([0.75,0.75,1.00]) gear(pitch,n3,thickness,hole);
-translate([ d13,  0, 0]) rotate([0,0,-($t-n3/4+n1/4+1/2)*360/n3]) color([0.75,0.75,1.00]) gear(pitch,n3,thickness,hole);
-translate([-d14,  0, 0]) rotate([0,0,-($t-n4/4-n1/4+1/2-floor(n4/4)-3)*360/n4]) color([1.00,0.75,0.50]) gear(pitch,n4,thickness,hole,hide=n4-3);
-translate([(-floor(n5/2)-floor(n1/2)+$t+n1/2-1/2)*9, -d1+0.0, 0]) rotate([0,0,0]) color([0.75,0.75,0.75]) rack(pitch,n5,thickness,height);
-*/
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

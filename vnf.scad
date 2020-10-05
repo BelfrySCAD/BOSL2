@@ -388,17 +388,24 @@ function vnf_volume(vnf) =
 function vnf_centroid(vnf) =
     let(
         verts = vnf[0],
-        val = sum([ for(face=vnf[1], j=[1:1:len(face)-2])
-                        let(
-                            v0  = verts[face[0]],
-                            v1  = verts[face[j]],
-                            v2  = verts[face[j+1]],
-                            vol = cross(v2,v1)*v0
-                        )
-                        [ vol, (v0+v1+v2)*vol ]
-                  ])    
+        vol = sum([
+            for(face=vnf[1], j=[1:1:len(face)-2]) let(
+                v0  = verts[face[0]],
+                v1  = verts[face[j]],
+                v2  = verts[face[j+1]]
+            ) cross(v2,v1)*v0
+        ]),
+        pos = sum([
+            for(face=vnf[1], j=[1:1:len(face)-2]) let(
+                v0  = verts[face[0]],
+                v1  = verts[face[j]],
+                v2  = verts[face[j+1]],
+                vol = cross(v2,v1)*v0
+            )
+            (v0+v1+v2)*vol
+        ])
     )
-    val[1]/val[0]/4;
+    pos/vol/4;
 
 
 function _triangulate_planar_convex_polygons(polys) =

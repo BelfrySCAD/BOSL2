@@ -405,6 +405,10 @@ class LeafNode(object):
                 dummy, title = line.split(":", 1)
                 title = title.strip()
                 lines, block = get_comment_block(lines, prefix)
+                if block == []:
+                    print("Error: Usage header without any usage examples.")
+                    print(line)
+                    sys.exit(-2)
                 self.usages.append([title, block])
                 continue
             if line.startswith("Description:"):

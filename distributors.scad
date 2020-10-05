@@ -44,42 +44,73 @@ module move_copies(a=[[0,0,0]])
 
 // Module: line_of()
 //
-// Description:
-//   Evenly distributes `n` copies of all children along a line.
-//   Copies every child at each position.
-//
-// Usage:
-//   line_of(l, [n], [p1]) ...
-//   line_of(l, spacing, [p1]) ...
+// Usage: Spread `n` copies by a given spacing
 //   line_of(spacing, [n], [p1]) ...
+// Usage: Spread copies every given spacing along the line
+//   line_of(spacing, l, [p1]) ...
+// Usage: Spread `n` copies along the length of the line
+//   line_of(l, [n], [p1]) ...
+// Usage: Spread `n` copies along the line from `p1` to `p2`
 //   line_of(p1, p2, [n]) ...
+// Usage: Spread copies every given spacing, centered along the line from `p1` to `p2`
 //   line_of(p1, p2, spacing) ...
 //
+// Description:
+//   Copies `children()` at one or more evenly spread positions along a line. By default, the line
+//   will be centered at the origin, unless the starting point `p1` is given.  The line will be
+//   pointed towards `RIGHT` (X+) unless otherwise given as a vector in `l`, `spacing`, or `p1`/`p2`.
+//   The spread is specified in one of several ways:
+//   .
+//   If You Know...                   | Then Use Something Like...
+//   -------------------------------- | --------------------------------
+//   Spacing distance, Count          | `line_of(spacing=10, n=5) ...` or `line_of(10, n=5) ...`
+//   Spacing vector, Count            | `line_of(spacing=[10,5], n=5) ...` or `line_of([10,5], n=5) ...`
+//   Spacing distance, Line length    | `line_of(spacing=10, l=50) ...` or `line_of(10, l=50) ...`
+//   Spacing distance, Line vector    | `line_of(spacing=10, l=[50,30]) ...` or `line_of(10, l=[50,30]) ...`
+//   Spacing vector, Line length      | `line_of(spacing=[10,5], l=50) ...` or `line_of([10,5], l=50) ...`
+//   Line length, Count               | `line_of(l=50, n=5) ...`
+//   Line vector, Count               | `line_of(l=[50,40], n=5) ...`
+//   Line endpoints, Count            | `line_of(p1=[10,10], p2=[60,-10], n=5) ...`
+//   Line endpoints, Spacing distance | `line_of(p1=[10,10], p2=[60,-10], spacing=10) ...`
+//
 // Arguments:
-//   p1 = Starting point of line.
-//   p2 = Ending point of line.
-//   l = Length to spread copies over.
-//   spacing = A 3D vector indicating which direction and distance to place each subsequent copy at.
+//   spacing = Either the scalar spacing distance along the X+ direction, or the vector giving both the direction and spacing distance between each set of copies.
 //   n = Number of copies to distribute along the line. (Default: 2)
+//   l = Either the scalar length of the line, or a vector giving both the direction and length of the line.
+//   p1 = If given, specifies the starting point of the line.
+//   p2 = If given with `p1`, specifies the ending point of line, and indirectly calculates the line length.
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the index number of each child being copied.
 //
-// Example(FlatSpin):
-//   line_of([0,0,0], [5,5,20], n=6) cube(size=[3,2,1],center=true);
 // Examples:
-//   line_of(l=40, n=6) cube(size=[3,2,1],center=true);
-//   line_of(l=[15,30], n=6) cube(size=[3,2,1],center=true);
-//   line_of(l=40, spacing=10) cube(size=[3,2,1],center=true);
-//   line_of(spacing=[5,5,0], n=5) cube(size=[3,2,1],center=true);
-// Example:
+//   line_of(10) sphere(d=1);
+//   line_of(10, n=5) sphere(d=1);
+//   line_of([10,5], n=5) sphere(d=1);
+//   line_of(spacing=10, n=6) sphere(d=1);
+//   line_of(spacing=[10,5], n=6) sphere(d=1);
+//   line_of(spacing=10, l=50) sphere(d=1);
+//   line_of(spacing=10, l=[50,30]) sphere(d=1);
+//   line_of(spacing=[10,5], l=50) sphere(d=1);
+//   line_of(l=50, n=4) sphere(d=1);
+//   line_of(l=[50,-30], n=4) sphere(d=1);
+// Example(FlatSpin):
+//   line_of(p1=[0,0,0], p2=[5,5,20], n=6) cube(size=[3,2,1],center=true);
+// Example(FlatSpin):
+//   line_of(p1=[0,0,0], p2=[5,5,20], spacing=6) cube(size=[3,2,1],center=true);
+// Example: All Children are Copied at Each Spread Position
 //   line_of(l=20, n=3) {
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
-module line_of(p1, p2, spacing, l, n)
+module line_of(spacing, n, l, p1, p2)
 {
+    assert(is_undef(spacing) || is_finite(spacing) || is_vector(spacing));
+    assert(is_undef(n) || is_finite(n));
+    assert(is_undef(l) || is_finite(l) || is_vector(l));
+    assert(is_undef(p1) || is_vector(p1));
+    assert(is_undef(p2) || is_vector(p2));
     ll = (
         !is_undef(l)? scalar_vec3(l, 0) :
         (!is_undef(spacing) && !is_undef(n))? (n * scalar_vec3(spacing, 0)) :
@@ -92,6 +123,7 @@ module line_of(p1, p2, spacing, l, n)
         2
     );
     spc = (
+        cnt<=1? [0,0,0] :
         is_undef(spacing)? (ll/(cnt-1)) :
         is_num(spacing) && !is_undef(ll)? (ll/(cnt-1)) :
         scalar_vec3(spacing, 0)

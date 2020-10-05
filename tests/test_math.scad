@@ -72,8 +72,7 @@ test_constrain();
 
 module test_is_matrix() {
     assert(is_matrix([[2,3,4],[5,6,7],[8,9,10]]));
-    assert(is_matrix([[2,3,4],[5,6,7],[8,9,10]],square=true));
-    assert(is_matrix([[2,3,4],[5,6,7],[8,9,10]],square=false));
+    assert(is_matrix([[2,3],[5,6],[8,9]],3,2));
     assert(is_matrix([[2,3],[5,6],[8,9]],m=3,n=2));
     assert(is_matrix([[2,3,4],[5,6,7]],m=2,n=3));
     assert(is_matrix([[2,3,4],[5,6,7]],2,3));
@@ -82,8 +81,6 @@ module test_is_matrix() {
     assert(is_matrix([[2,3,4],[5,6,7]],n=3));
     assert(!is_matrix([[2,3,4],[5,6,7]],m=4));
     assert(!is_matrix([[2,3,4],[5,6,7]],n=5));
-    assert(!is_matrix([[2,3,4],[5,6,7]],m=2,n=3,square=true));
-    assert(is_matrix([[2,3,4],[5,6,7],[8,9,10]],square=false));
     assert(!is_matrix([[2,3],[5,6],[8,9]],m=2,n=3));
     assert(!is_matrix([[2,3,4],[5,6,7]],m=3,n=2));
     assert(!is_matrix(undef));
@@ -313,9 +310,8 @@ module test_sqr() {
     assert_equal(sqr(2.5), 6.25);
     assert_equal(sqr(3), 9);
     assert_equal(sqr(16), 256);
-    assert_equal(sqr([2,3,4]), [4,9,16]);
-    assert_equal(sqr([[2,3,4],[3,5,7]]), [[4,9,16],[9,25,49]]);
-    assert_equal(sqr([]),[]);
+    assert_equal(sqr([2,3,4]), 29);
+    assert_equal(sqr([[2,3,4],[3,5,7],[3,5,1]]), [[25,41,33],[42,69,54],[24,39,48]]);
 }
 test_sqr();
 
@@ -471,14 +467,6 @@ module test_cumsum() {
     assert_equal(cumsum([[1,2,3], [3,4,5], [5,6,7]]), [[1,2,3],[4,6,8],[9,12,15]]);
 }
 test_cumsum();
-
-
-module test_sum_of_squares() {
-    assert_equal(sum_of_squares([1,2,3]), 14);
-    assert_equal(sum_of_squares([1,2,4]), 21);
-    assert_equal(sum_of_squares([-3,-2,-1]), 14);
-}
-test_sum_of_squares();
 
 
 module test_sum_of_sines() {
@@ -697,10 +685,10 @@ module test_count_true() {
     assert_equal(count_true([1,false,undef]), 1);
     assert_equal(count_true([1,5,false]), 2);
     assert_equal(count_true([1,5,true]), 3);
-    assert_equal(count_true([[0,0], [0,0]]), 0);
-    assert_equal(count_true([[0,0], [1,0]]), 1);
-    assert_equal(count_true([[1,1], [1,1]]), 4);
-    assert_equal(count_true([[1,1], [1,1]], nmax=3), 3);
+    assert_equal(count_true([[0,0], [0,0]]), 2);
+    assert_equal(count_true([[0,0], [1,0]]), 2);
+    assert_equal(count_true([[1,1], [1,1]]), 2);
+    assert_equal(count_true([1,1,1,1,1], nmax=3), 3);
 }
 test_count_true();
 

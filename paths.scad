@@ -316,7 +316,8 @@ function path_closest_point(path, pt) =
 
 
 // Function: path_tangents()
-// Usage: path_tangents(path, [closed], [uniform])
+// Usage:
+//   tangs = path_tangents(path, <closed>, <uniform>);
 // Description:
 //   Compute the tangent vector to the input path.  The derivative approximation is described in deriv().
 //   The returns vectors will be normalized to length 1.  If any derivatives are zero then
@@ -348,7 +349,8 @@ function path_tangents(path, closed=false, uniform=true) =
 
 
 // Function: path_normals()
-// Usage:  path_normals(path, [tangents], [closed])
+// Usage:
+//   norms = path_normals(path, <tangents>, <closed>);
 // Description:
 //   Compute the normal vector to the input path.  This vector is perpendicular to the
 //   path tangent and lies in the plane of the curve.  When there are collinear points,
@@ -371,7 +373,8 @@ function path_normals(path, tangents, closed=false) =
 
 
 // Function: path_curvature()
-// Usage: path_curvature(path, [closed])
+// Usage:
+//   curvs = path_curvature(path, <closed>);
 // Description:
 //   Numerically estimate the curvature of the path (in any dimension). 
 function path_curvature(path, closed=false) =
@@ -388,7 +391,8 @@ function path_curvature(path, closed=false) =
 
 
 // Function: path_torsion()
-// Usage: path_torsion(path, [closed])
+// Usage:
+//   tortions = path_torsion(path, <closed>);
 // Description:
 //   Numerically estimate the torsion of a 3d path.  
 function path_torsion(path, closed=false) =
@@ -1161,10 +1165,11 @@ function _path_plane(path, ind, i,closed) =
 function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
     [for(ind=[0:len(cuts)-1])
         let(
+            zeros = path[0]*0,
             nextind = cuts[ind][1],
-            nextpath = unit(select(path, nextind+1)-select(path, nextind)),
-            thispath = unit(select(path, nextind) - path[nextind-1]),
-            lastpath = unit(path[nextind-1] - select(path, nextind-2)),
+            nextpath = unit(select(path, nextind+1)-select(path, nextind),zeros),
+            thispath = unit(select(path, nextind) - path[nextind-1],zeros),
+            lastpath = unit(path[nextind-1] - select(path, nextind-2),zeros),
             nextdir =
                 nextind==len(path) && !closed? lastpath :
                 (nextind<=len(path)-2 || closed) && approx(cuts[ind][0], path[nextind],eps)?
@@ -1214,6 +1219,7 @@ function _sum_preserving_round(data, index=0) =
 // Arguments:
 //   path = path to subdivide
 //   N = scalar total number of points desired or with `method="segment"` can be a vector requesting `N[i]-1` points on segment i.
+//   refine = number of points to add each segment.
 //   closed = set to false if the path is open.  Default: True
 //   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  Default: True
 //   method = One of `"length"` or `"segment"`.  If `"length"`, adds vertices evenly along the total path length.  If `"segment"`, adds points evenly among the segments.  Default: `"length"`
@@ -1251,7 +1257,11 @@ function subdivide_path(path, N, refine, closed=true, exact=true, method="length
     assert(is_path(path))
     assert(method=="length" || method=="segment")
     assert(num_defined([N,refine]),"Must give exactly one of N and refine")
-    let(N = first_defined([N,len(path)*refine]))
+    let(
+        N = !is_undef(N)? N :
+            !is_undef(refine)? len(path) * refine :
+            undef
+    )
     assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
     let(
         count = len(path) - (closed?0:1), 
@@ -1284,7 +1294,8 @@ function subdivide_path(path, N, refine, closed=true, exact=true, method="length
 
 
 // Function: path_length_fractions()
-// Usage: path_length_fractions(path, [closed])
+// Usage:
+//   fracs = path_length_fractions(path, <closed>);
 // Description:
 //    Returns the distance fraction of each point in the path along the path, so the first
 //    point is zero and the final point is 1.  If the path is closed the length of the output
@@ -1305,7 +1316,8 @@ function path_length_fractions(path, closed=false) =
 
 
 // Function: resample_path()
-// Usage: resample_path(path, N|spacing, [closed])
+// Usage:
+//   newpath = resample_path(path, N|spacing, <closed>);
 // Description:
 //   Compute a uniform resampling of the input path.  If you specify `N` then the output path will have N
 //   points spaced uniformly (by linear interpolation along the input path segments).  The only points of the

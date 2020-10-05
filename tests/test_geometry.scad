@@ -57,8 +57,8 @@ test_plane_intersection();
 test_coplanar();
 test_points_on_plane();
 test_in_front_of_plane();
-test_find_circle_2tangents();
-test_find_circle_3points();
+test_circle_2tangents();
+test_circle_3points();
 test_circle_point_tangents();
 
 test_noncollinear_triple();
@@ -470,22 +470,22 @@ module test_segment_closest_point() {
 }
 *test_segment_closest_point();
 
-module test_find_circle_2tangents() {
+module test_circle_2tangents() {
 //** missing tests with arg tangent=true
-    assert(approx(find_circle_2tangents([10,10],[0,0],[10,-10],r=10/sqrt(2))[0],[10,0]));
-    assert(approx(find_circle_2tangents([-10,10],[0,0],[-10,-10],r=10/sqrt(2))[0],[-10,0]));
-    assert(approx(find_circle_2tangents([-10,10],[0,0],[10,10],r=10/sqrt(2))[0],[0,10]));
-    assert(approx(find_circle_2tangents([-10,-10],[0,0],[10,-10],r=10/sqrt(2))[0],[0,-10]));
-    assert(approx(find_circle_2tangents([0,10],[0,0],[10,0],r=10)[0],[10,10]));
-    assert(approx(find_circle_2tangents([10,0],[0,0],[0,-10],r=10)[0],[10,-10]));
-    assert(approx(find_circle_2tangents([0,-10],[0,0],[-10,0],r=10)[0],[-10,-10]));
-    assert(approx(find_circle_2tangents([-10,0],[0,0],[0,10],r=10)[0],[-10,10]));
-    assert_approx(find_circle_2tangents(polar_to_xy(10,60),[0,0],[10,0],r=10)[0],polar_to_xy(20,30));
+    assert(approx(circle_2tangents([10,10],[0,0],[10,-10],r=10/sqrt(2))[0],[10,0]));
+    assert(approx(circle_2tangents([-10,10],[0,0],[-10,-10],r=10/sqrt(2))[0],[-10,0]));
+    assert(approx(circle_2tangents([-10,10],[0,0],[10,10],r=10/sqrt(2))[0],[0,10]));
+    assert(approx(circle_2tangents([-10,-10],[0,0],[10,-10],r=10/sqrt(2))[0],[0,-10]));
+    assert(approx(circle_2tangents([0,10],[0,0],[10,0],r=10)[0],[10,10]));
+    assert(approx(circle_2tangents([10,0],[0,0],[0,-10],r=10)[0],[10,-10]));
+    assert(approx(circle_2tangents([0,-10],[0,0],[-10,0],r=10)[0],[-10,-10]));
+    assert(approx(circle_2tangents([-10,0],[0,0],[0,10],r=10)[0],[-10,10]));
+    assert_approx(circle_2tangents(polar_to_xy(10,60),[0,0],[10,0],r=10)[0],polar_to_xy(20,30));
 }
-*test_find_circle_2tangents();
+*test_circle_2tangents();
 
 
-module test_find_circle_3points() {
+module test_circle_3points() {
     count = 200;
     coords = rands(-100,100,count,seed_value=888);
     radii = rands(10,100,count,seed_value=390);
@@ -496,7 +496,7 @@ module test_find_circle_3points() {
         r = radii[i];
         angs = sort(select(angles,i,i+2));
         pts = [for (a=angs) cp+polar_to_xy(r,a)];
-        res = find_circle_3points(pts);
+        res = circle_3points(pts);
         if (!approx(res[0], cp)) {
             echo(cp=cp, r=r, angs=angs);
             echo(pts=pts);
@@ -521,7 +521,7 @@ module test_find_circle_3points() {
         r = radii[i];
         angs = sort(select(angles,i,i+2));
         pts = [for (a=angs) cp+polar_to_xy(r,a)];
-        res = find_circle_3points(pts[0], pts[1], pts[2]);
+        res = circle_3points(pts[0], pts[1], pts[2]);
         if (!approx(res[0], cp)) {
             echo(cp=cp, r=r, angs=angs);
             echo(pts=pts);
@@ -549,7 +549,7 @@ module test_find_circle_3points() {
         n = nrm.z<0? -nrm : nrm;
         angs = sort(select(angles,i,i+2));
         pts = translate(cp,p=rot(from=UP,to=n,p=[for (a=angs) point3d(polar_to_xy(r,a))]));
-        res = find_circle_3points(pts);
+        res = circle_3points(pts);
         if (!approx(res[0], cp)) {
             echo(cp=cp, r=r, angs=angs, n=n);
             echo(pts=pts);
@@ -576,7 +576,7 @@ module test_find_circle_3points() {
         n = nrm.z<0? -nrm : nrm;
         angs = sort(select(angles,i,i+2));
         pts = translate(cp,p=rot(from=UP,to=n,p=[for (a=angs) point3d(polar_to_xy(r,a))]));
-        res = find_circle_3points(pts[0], pts[1], pts[2]);
+        res = circle_3points(pts[0], pts[1], pts[2]);
         if (!approx(res[0], cp)) {
             echo(cp=cp, r=r, angs=angs, n=n);
             echo(pts=pts);
@@ -597,17 +597,21 @@ module test_find_circle_3points() {
         }
     }
 }
-*test_find_circle_3points();
+*test_circle_3points();
 
 
 module test_circle_point_tangents() {
-    tangs = circle_point_tangents(r=50,cp=[0,0],pt=[50*sqrt(2),0]);
-    assert(approx(subindex(tangs,0), [45,-45]));
-    expected = [for (ang=subindex(tangs,0)) polar_to_xy(50,ang)];
-    got = subindex(tangs,1);
-    if (!approx(flatten(got), flatten(expected))) {
-        echo("TAN_PTS:", got=got, expected=expected, delta=got-expected);
-        assert(approx(flatten(got), flatten(expected)));
+    testvals = [
+        // cp    r   pt                 expect
+        [[0,0],  50, [50*sqrt(2),0],    [polar_to_xy(50,45), polar_to_xy(50,-45)]],
+        [[5,10], 50, [5+50*sqrt(2),10], [[5,10]+polar_to_xy(50,45), [5,10]+polar_to_xy(50,-45)]],
+        [[0,0],  50, [0,50*sqrt(2)],    [polar_to_xy(50,135), polar_to_xy(50,45)]],
+        [[5,10], 50, [5,10+50*sqrt(2)], [[5,10]+polar_to_xy(50,135), [5,10]+polar_to_xy(50,45)]]
+    ];
+    for (v = testvals) {
+        cp = v[0]; r  = v[1]; pt = v[2]; expect = v[3];
+        info = str("cp=",cp, ", r=",r, ", pt=",pt);
+        assert_approx(circle_point_tangents(r=r,cp=cp,pt=pt), expect, info);
     }
 }
 *test_circle_point_tangents();
@@ -658,6 +662,20 @@ module test_tri_functions() {
     }
 }
 *test_tri_functions();
+
+
+module test_hyp_opp_to_adj() nil();  // Covered in test_tri_functions()
+module test_hyp_ang_to_adj() nil();  // Covered in test_tri_functions()
+module test_opp_ang_to_adj() nil();  // Covered in test_tri_functions()
+module test_hyp_adj_to_opp() nil();  // Covered in test_tri_functions()
+module test_hyp_ang_to_opp() nil();  // Covered in test_tri_functions()
+module test_adj_ang_to_opp() nil();  // Covered in test_tri_functions()
+module test_adj_opp_to_hyp() nil();  // Covered in test_tri_functions()
+module test_adj_ang_to_hyp() nil();  // Covered in test_tri_functions()
+module test_opp_ang_to_hyp() nil();  // Covered in test_tri_functions()
+module test_hyp_adj_to_ang() nil();  // Covered in test_tri_functions()
+module test_hyp_opp_to_ang() nil();  // Covered in test_tri_functions()
+module test_adj_opp_to_ang() nil();  // Covered in test_tri_functions()
 
 
 module test_triangle_area() {
