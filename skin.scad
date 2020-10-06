@@ -1190,7 +1190,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
   assert(is_undef(normal) || (is_vector(normal) && len(normal)==3) || (is_path(normal) && len(normal)==len(path) && len(normal[0])==3), "Invalid normal specified")
   assert(is_undef(tangent) || (is_path(tangent) && len(tangent)==len(path) && len(tangent[0])==3), "Invalid tangent specified")
   let(
-    tangents = is_undef(tangent) ? path_tangents(path) : [for(t=tangent) unit(t)],
+    tangents = is_undef(tangent) ? path_tangents(path,closed=closed) : [for(t=tangent) unit(t)],
     normal = is_path(normal) ? [for(n=normal) unit(n)] :
              is_def(normal) ? unit(normal) :
              method =="incremental" && abs(tangents[0].z) > 1/sqrt(2) ? BACK : UP,

@@ -472,7 +472,7 @@ function _normal_segment(p1,p2) =
 
 // Function: turtle()
 // Usage:
-//   turtle(commands, [state], [return_state])
+//   turtle(commands, [state], [full_state], [repeat])
 // Description:
 //   Use a sequence of turtle graphics commands to generate a path.  The parameter `commands` is a list of
 //   turtle commands and optional parameters for each command.  The turtle state has a position, movement direction,
@@ -481,9 +481,8 @@ function _normal_segment(p1,p2) =
 //   the computed turtle path.  If you set `full_state` to true then it instead returns the full turtle state.
 //   You can invoke `turtle` again with this full state to continue the turtle path where you left off.
 //   .
-//   The turtle state is a list with three entries: the path constructed so far, the current step as a 2-vector, and the current default angle.
-//   .
-//   For the list below, `dist` is the current movement distance.
+//   The turtle state is a list with three entries: the path constructed so far, the current step as a 2-vector, the current default angle,
+//   and the current arcsteps setting.  
 //   .
 //   Commands     | Arguments          | What it does
 //   ------------ | ------------------ | -------------------------------
@@ -613,7 +612,7 @@ function _turtle(commands, state, full_state, index=0) =
         ) :
         ( full_state ? state : state[0] );
 
-// Turtle state: state = [path, step_vector, default angle]
+// Turtle state: state = [path, step_vector, default angle, default arcsteps]
 
 function _turtle_command(command, parm, parm2, state, index) =
     command == "repeat"?
