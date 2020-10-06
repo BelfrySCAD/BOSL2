@@ -460,18 +460,20 @@ module shape_compare(eps=1/1024) {
 
 // Section: Looping Helpers
 //   You can use a list comprehension with a C-style for loop to iteratively make a calculation.
+//   .
 //   The syntax is: `[for (INIT; CONDITION; NEXT) RETVAL]` where:
 //   - INIT is zero or more `let()` style assignments that are evaluated exactly one time, before the first loop.
 //   - CONDITION is an expression evaluated at the start of each loop.  If true, continues with the loop.
 //   - RETVAL is an expression that returns a list item for each loop.
 //   - NEXT is one or more `let()` style assignments that is evaluated at the end of each loop.
+//   .
 //   Since the INIT phase is only run once, and the CONDITION and RETVAL expressions cannot update
 //   variables, that means that only the NEXT phase can be used for iterative calculations.
 //   Unfortunately, the NEXT phase runs *after* the RETVAL expression, which means that you need
 //   to run the loop one extra time to return the final value.  This tends to make the loop code
 //   look rather ugly.  The `looping()`, `loop_next()` and `loop_done()` functions
 //   can make this somewhat more legible.
-// Example(NORENDER):
+//   ```openscad
 //   function flat_sum(l) = [
 //       for (
 //           i = 0,
@@ -488,6 +490,7 @@ module shape_compare(eps=1/1024) {
 //           i = i + 1
 //       ) if (loop_done(state)) total;
 //   ].x;
+//   ```
 
 
 // Function: looping()
