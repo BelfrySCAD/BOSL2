@@ -573,7 +573,7 @@ function hyp_opp_to_adj(hyp,opp) =
 //   adj = hyp_ang_to_adj(8,60);  // Returns: 4
 function hyp_ang_to_adj(hyp,ang) =
     assert(is_finite(hyp) && hyp>=0, "Triangle side length should be a positive number." )
-    assert(is_finite(ang) && ang>0 && ang<90, "The angle should be an acute angle." )
+    assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     hyp*cos(ang);
 
 
@@ -590,7 +590,7 @@ function hyp_ang_to_adj(hyp,ang) =
 //   adj = opp_ang_to_adj(8,30);  // Returns: 4
 function opp_ang_to_adj(opp,ang) =
     assert(is_finite(opp) && opp>=0, "Triangle side length should be a positive number." )
-    assert(is_finite(ang) && ang>0 && ang<90, "The angle should be an acute angle." )
+    assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     opp/tan(ang);
 
 
@@ -622,7 +622,7 @@ function hyp_adj_to_opp(hyp,adj) =
 //   opp = hyp_ang_to_opp(8,30);  // Returns: 4
 function hyp_ang_to_opp(hyp,ang) =
     assert(is_finite(hyp)&&hyp>=0, "Triangle side length should be a positive number." )
-    assert(is_finite(ang) && ang>0 && ang<90, "The angle should be an acute angle." )
+    assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     hyp*sin(ang);
 
 
@@ -638,7 +638,7 @@ function hyp_ang_to_opp(hyp,ang) =
 //   opp = adj_ang_to_opp(8,45);  // Returns: 8
 function adj_ang_to_opp(adj,ang) =
     assert(is_finite(adj)&&adj>=0, "Triangle side length should be a positive number." )
-    assert(is_finite(ang) && ang>0 && ang<90, "The angle should be an acute angle." )
+    assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     adj*tan(ang);
 
 
@@ -670,7 +670,7 @@ function adj_opp_to_hyp(adj,opp) =
 //   hyp = adj_ang_to_hyp(4,60);  // Returns: 8
 function adj_ang_to_hyp(adj,ang) =
     assert(is_finite(adj) && adj>=0, "Triangle side length should be a positive number." )
-    assert(is_finite(ang) && ang>0 && ang<90, "The angle should be an acute angle." )
+    assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     adj/cos(ang);
 
 
@@ -686,7 +686,7 @@ function adj_ang_to_hyp(adj,ang) =
 //   hyp = opp_ang_to_hyp(4,30);  // Returns: 8
 function opp_ang_to_hyp(opp,ang) =
     assert(is_finite(opp) && opp>=0, "Triangle side length should be a positive number." )
-    assert(is_finite(ang) && ang>0 && ang<90, "The angle should be an acute angle." )
+    assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     opp/sin(ang);
 
 
