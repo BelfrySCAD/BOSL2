@@ -298,6 +298,32 @@ include <vnf.scad>
 //     for (ang = [0:5:360])
 //     rot([0,ang,0], cp=[100,0,0], p=rot(ang/2, p=path3d(square([1,30],center=true))))
 //   ], caps=false, slices=0, refine=20);
+// Example: This model of two scutoids packed together is based on https://www.thingiverse.com/thing:3024272 by mathgrrl
+//   sidelen = 10;  // Side length of scutoid
+//   height = 25;   // Height of scutoid
+//   angle = -15;   // Angle (twists the entire form)
+//   push = -5;     // Push (translates the base away from the top)
+//   flare = 1;     // Flare (the two pieces will be different unless this is 1)
+//   midpoint = .5; // Height of the extra vertex (as a fraction of total height); the two pieces will be different unless this is .5)
+//   pushvec = rot(angle/2,p=push*RIGHT);  // Push direction is the the average of the top and bottom mating edges
+//   pent = path3d(apply(move(pushvec)*rot(angle),pentagon(side=sidelen,align_side=RIGHT,anchor="side0")));
+//   hex = path3d(hexagon(side=flare*sidelen, align_side=RIGHT, anchor="side0"),height);
+//   pentmate = path3d(pentagon(side=flare*sidelen,align_side=LEFT,anchor="side0"),height);
+//             // Native index would require mapping first and last vertices together, which is not allowed, so shift
+//   hexmate = polygon_shift(  
+//                           path3d(apply(move(pushvec)*rot(angle),hexagon(side=sidelen,align_side=LEFT,anchor="side0"))),
+//                           -1);
+//   join_vertex = lerp(
+//                       mean(select(hex,1,2)),     // midpoint of "extra" hex edge
+//                       mean(select(hexmate,0,1)), // midpoint of "extra" hexmate edge
+//                       midpoint);
+//   augpent = repeat_entries(pent, [1,2,1,1,1]);         // Vertex 1 will split at the top forming a triangular face with the hexagon
+//   augpent_mate = repeat_entries(pentmate,[2,1,1,1,1]); // For mating pentagon it is vertex 0 that splits
+//              // Middle is the interpolation between top and bottom except for the join vertex, which is doubled because it splits
+//   middle = list_set(lerp(augpent,hex,midpoint),[1,2],[join_vertex,join_vertex]);  
+//   middle_mate = list_set(lerp(hexmate,augpent_mate,midpoint), [0,1], [join_vertex,join_vertex]);
+//   skin([augpent,middle,hex],  slices=10, refine=10, sampling="segment");
+//   color("green")skin([augpent_mate,middle_mate,hexmate],  slices=10,refine=10, sampling="segment");
 // Example: If you create a self-intersecting polyhedron the result is invalid.  In some cases self-intersection may be obvous.  Here is a more subtle example.
 //   skin([
 //          for (a = [0:30:180]) let(
