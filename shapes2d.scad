@@ -1208,7 +1208,7 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   trapezoid(h=30, w1=40, w2=20);
 //   trapezoid(h=25, w1=20, w2=35);
 //   trapezoid(h=20, w1=40, w2=0);
-//   trapezoid(h=20, w1=20, angle=30);
+//   trapezoid(h=20, w1=30, angle=30);
 //   trapezoid(h=20, w1=20, angle=-30);
 //   trapezoid(h=20, w2=10, angle=30);
 //   trapezoid(h=20, w2=30, angle=-30);
