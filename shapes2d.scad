@@ -1200,26 +1200,56 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   h = The Y axis height of the trapezoid.
 //   w1 = The X axis width of the front end of the trapezoid.
 //   w2 = The X axis width of the back end of the trapezoid.
+//   angle = If given in place of `h`, `w1`, or `w2`, then the missing value is calculated such that the right side has that angle away from the Y axis.
+//   shift = Scalar value to shift the back of the trapezoid along the X axis by.  Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Examples(2D):
 //   trapezoid(h=30, w1=40, w2=20);
 //   trapezoid(h=25, w1=20, w2=35);
 //   trapezoid(h=20, w1=40, w2=0);
+//   trapezoid(h=20, w1=20, angle=30);
+//   trapezoid(h=20, w1=20, angle=-30);
+//   trapezoid(h=20, w2=10, angle=30);
+//   trapezoid(h=20, w2=30, angle=-30);
+//   trapezoid(w1=30, w2=10, angle=30);
 // Example(2D): Called as Function
 //   stroke(closed=true, trapezoid(h=30, w1=40, w2=20));
-function trapezoid(h, w1, w2, anchor=CENTER, spin=0) =
+function trapezoid(h, w1, w2, angle, shift=0, anchor=CENTER, spin=0) =
+    assert(is_undef(h) || is_finite(h))
+    assert(is_undef(w1) || is_finite(w1))
+    assert(is_undef(w2) || is_finite(w2))
+    assert(is_undef(angle) || is_finite(angle))
+    assert(num_defined([h, w1, w2, angle]) == 3, "Must give exactly 3 of the arguments h, w1, w2, and angle.")
+    assert(is_finite(shift))
     let(
-        path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2]]
-    ) reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, p=path);
+        h  = !is_undef(h)?  h  : opp_ang_to_adj(abs(w2-w1)/2, abs(angle)),
+        w1 = !is_undef(w1)? w1 : w2 + 2*(adj_ang_to_opp(h, angle) + shift),
+        w2 = !is_undef(w2)? w2 : w1 - 2*(adj_ang_to_opp(h, angle) + shift),
+        path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2+shift,h/2], [w2/2+shift,h/2]]
+    )
+    assert(w1>=0 && w2>=0 && h>0, "Degenerate trapezoid geometry.")
+    reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, p=path);
 
 
 
-module trapezoid(h, w1, w2, anchor=CENTER, spin=0) {
-    path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2]];
-    attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2) {
-        polygon(path);
-        children();
+module trapezoid(h, w1, w2, angle, shift=0, anchor=CENTER, spin=0) {
+    assert(is_undef(h) || is_finite(h));
+    assert(is_undef(w1) || is_finite(w1));
+    assert(is_undef(w2) || is_finite(w2));
+    assert(is_undef(angle) || is_finite(angle));
+    assert(num_defined([h, w1, w2, angle]) == 3, "Must give exactly 3 of the arguments h, w1, w2, and angle.");
+    assert(is_finite(shift));
+    union() {
+        h  = !is_undef(h)?  h  : opp_ang_to_adj(abs(w2-w1)/2, abs(angle));
+        w1 = !is_undef(w1)? w1 : w2 + 2*(adj_ang_to_opp(h, angle) + shift);
+        w2 = !is_undef(w2)? w2 : w1 - 2*(adj_ang_to_opp(h, angle) + shift);
+        assert(w1>=0 && w2>=0 && h>0, "Degenerate trapezoid geometry.");
+        path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2+shift,h/2], [w2/2+shift,h/2]];
+        attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2) {
+            polygon(path);
+            children();
+        }
     }
 }
 
