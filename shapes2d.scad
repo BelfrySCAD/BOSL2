@@ -472,7 +472,7 @@ function _normal_segment(p1,p2) =
 
 // Function: turtle()
 // Usage:
-//   turtle(commands, [state], [return_state])
+//   turtle(commands, [state], [full_state], [repeat])
 // Description:
 //   Use a sequence of turtle graphics commands to generate a path.  The parameter `commands` is a list of
 //   turtle commands and optional parameters for each command.  The turtle state has a position, movement direction,
@@ -481,9 +481,8 @@ function _normal_segment(p1,p2) =
 //   the computed turtle path.  If you set `full_state` to true then it instead returns the full turtle state.
 //   You can invoke `turtle` again with this full state to continue the turtle path where you left off.
 //   .
-//   The turtle state is a list with three entries: the path constructed so far, the current step as a 2-vector, and the current default angle.
-//   .
-//   For the list below, `dist` is the current movement distance.
+//   The turtle state is a list with three entries: the path constructed so far, the current step as a 2-vector, the current default angle,
+//   and the current arcsteps setting.  
 //   .
 //   Commands     | Arguments          | What it does
 //   ------------ | ------------------ | -------------------------------
@@ -613,7 +612,7 @@ function _turtle(commands, state, full_state, index=0) =
         ) :
         ( full_state ? state : state[0] );
 
-// Turtle state: state = [path, step_vector, default angle]
+// Turtle state: state = [path, step_vector, default angle, default arcsteps]
 
 function _turtle_command(command, parm, parm2, state, index) =
     command == "repeat"?
@@ -910,6 +909,8 @@ function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 //   side = Length of each side.
 //   rounding = Radius of rounding for the tips of the polygon.  Default: 0 (no rounding)
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
+//   align_tip = If given as a 2D vector, rotates the whole shape so that the first vertex points in that direction.  This occurs before spin.
+//   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Extra Anchors:
@@ -925,11 +926,22 @@ function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 //   regular_ngon(n=8, side=20);
 // Example(2D): Realigned
 //   regular_ngon(n=8, side=20, realign=true);
+// Example(2D): Alignment by Tip
+//   regular_ngon(n=5, r=30, align_tip=BACK+RIGHT)
+//       attach("tip0", FWD) color("blue")
+//           stroke([[0,0],[0,7]], endcap2="arrow2");
+// Example(2D): Alignment by Side
+//   regular_ngon(n=5, r=30, align_side=BACK+RIGHT)
+//       attach("side0", FWD) color("blue")
+//           stroke([[0,0],[0,7]], endcap2="arrow2");
 // Example(2D): Rounded
 //   regular_ngon(n=5, od=100, rounding=20, $fn=20);
 // Example(2D): Called as Function
 //   stroke(closed=true, regular_ngon(n=6, or=30));
-function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
+function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip, align_side, anchor=CENTER, spin=0, _mat, _anchs) =
+    assert(is_undef(align_tip) || is_vector(align_tip))
+    assert(is_undef(align_side) || is_vector(align_side))
+    assert(is_undef(align_tip) || is_undef(align_side), "Can only specify one of align_tip and align-side")
     let(
         sc = 1/cos(180/n),
         ir = is_finite(ir)? ir*sc : undef,
@@ -940,13 +952,19 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
     assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.")
     let(
         inset = opp_ang_to_hyp(rounding, (180-360/n)/2),
-        path = rounding==0? oval(r=r, realign=realign, $fn=n) : (
+        mat = !is_undef(_mat) ? _mat :
+            ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (
+                !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip), planar=true) :
+                !is_undef(align_side)? rot(from=RIGHT, to=point2d(align_side), planar=true) * rot(180/n, planar=true) :
+                affine2d_identity()
+            ),
+        path4 = rounding==0? oval(r=r, $fn=n) : (
             let(
                 steps = floor(segs(r)/n),
                 step = 360/n/steps,
                 path2 = [
                     for (i = [0:1:n-1]) let(
-                        a = 360 - i*360/n - (realign? 180/n : 0),
+                        a = 360 - i*360/n,
                         p = polar_to_xy(r-inset, a)
                     )
                     each arc(N=steps, cp=p, r=rounding, start=a+180/n, angle=-360/n)
@@ -955,13 +973,15 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
                 path3 = polygon_shift(path2,maxx_idx)
             ) path3
         ),
-        anchors = !is_string(anchor)? [] : [
+        path = apply(mat, path4),
+        anchors = !is_undef(_anchs) ? _anchs :
+            !is_string(anchor)? [] : [
             for (i = [0:1:n-1]) let(
-                a1 = 360 - i*360/n - (realign? 180/n : 0),
+                a1 = 360 - i*360/n,
                 a2 = a1 - 360/n,
-                p1 = polar_to_xy(r,a1),
-                p2 = polar_to_xy(r,a2),
-                tipp = polar_to_xy(r-inset+rounding,a1),
+                p1 = apply(mat, polar_to_xy(r,a1)),
+                p2 = apply(mat, polar_to_xy(r,a2)),
+                tipp = apply(mat, polar_to_xy(r-inset+rounding,a1)),
                 pos = (p1+p2)/2
             ) each [
                 anchorpt(str("tip",i), tipp, unit(tipp,BACK), 0),
@@ -971,28 +991,33 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
     ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path, anchors=anchors);
 
 
-module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) {
+module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip, align_side, anchor=CENTER, spin=0) {
     sc = 1/cos(180/n);
     ir = is_finite(ir)? ir*sc : undef;
     id = is_finite(id)? id*sc : undef;
     side = is_finite(side)? side/2/sin(180/n) : undef;
     r = get_radius(r1=ir, r2=or, r=r, d1=id, d2=od, d=d, dflt=side);
     assert(!is_undef(r), "regular_ngon(): need to specify one of r, d, or, od, ir, id, side.");
-    path = regular_ngon(n=n, r=r, rounding=rounding, realign=realign);
+    mat = ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (
+            !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip), planar=true) :
+            !is_undef(align_side)? rot(from=RIGHT, to=point2d(align_side), planar=true) * rot(180/n, planar=true) :
+            affine2d_identity()
+        );
     inset = opp_ang_to_hyp(rounding, (180-360/n)/2);
     anchors = [
         for (i = [0:1:n-1]) let(
-            a1 = 360 - i*360/n - (realign? 180/n : 0),
+            a1 = 360 - i*360/n,
             a2 = a1 - 360/n,
-            p1 = polar_to_xy(r,a1),
-            p2 = polar_to_xy(r,a2),
-            tipp = polar_to_xy(r-inset+rounding,a1),
+            p1 = apply(mat, polar_to_xy(r,a1)),
+            p2 = apply(mat, polar_to_xy(r,a2)),
+            tipp = apply(mat, polar_to_xy(r-inset+rounding,a1)),
             pos = (p1+p2)/2
         ) each [
             anchorpt(str("tip",i), tipp, unit(tipp,BACK), 0),
             anchorpt(str("side",i), pos, unit(pos,BACK), 0),
         ]
     ];
+    path = regular_ngon(n=n, r=r, rounding=rounding, _mat=mat, _anchs=anchors);
     attachable(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors) {
         polygon(path);
         children();
@@ -1018,6 +1043,8 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 //   side = Length of each side.
 //   rounding = Radius of rounding for the tips of the polygon.  Default: 0 (no rounding)
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
+//   align_tip = If given as a 2D vector, rotates the whole shape so that the first vertex points in that direction.  This occurs before spin.
+//   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Extra Anchors:
@@ -1033,16 +1060,24 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 //   pentagon(side=20);
 // Example(2D): Realigned
 //   pentagon(side=20, realign=true);
+// Example(2D): Alignment by Tip
+//   pentagon(r=30, align_tip=BACK+RIGHT)
+//       attach("tip0", FWD) color("blue")
+//           stroke([[0,0],[0,7]], endcap2="arrow2");
+// Example(2D): Alignment by Side
+//   pentagon(r=30, align_side=BACK+RIGHT)
+//       attach("side0", FWD) color("blue")
+//           stroke([[0,0],[0,7]], endcap2="arrow2");
 // Example(2D): Rounded
 //   pentagon(od=100, rounding=20, $fn=20);
 // Example(2D): Called as Function
 //   stroke(closed=true, pentagon(or=30));
-function pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
-    regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin);
+function pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip, align_side, anchor=CENTER, spin=0) =
+    regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, align_tip=align_tip, align_side=align_side, anchor=anchor, spin=spin);
 
 
-module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0)
-    regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin) children();
+module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip, align_side, anchor=CENTER, spin=0)
+    regular_ngon(n=5, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, align_tip=align_tip, align_side=align_side, anchor=anchor, spin=spin) children();
 
 
 // Function&Module: hexagon()
@@ -1061,6 +1096,8 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CE
 //   side = Length of each side.
 //   rounding = Radius of rounding for the tips of the polygon.  Default: 0 (no rounding)
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
+//   align_tip = If given as a 2D vector, rotates the whole shape so that the first vertex points in that direction.  This occurs before spin.
+//   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Extra Anchors:
@@ -1076,16 +1113,24 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CE
 //   hexagon(side=20);
 // Example(2D): Realigned
 //   hexagon(side=20, realign=true);
+// Example(2D): Alignment by Tip
+//   hexagon(r=30, align_tip=BACK+RIGHT)
+//       attach("tip0", FWD) color("blue")
+//           stroke([[0,0],[0,7]], endcap2="arrow2");
+// Example(2D): Alignment by Side
+//   hexagon(r=30, align_side=BACK+RIGHT)
+//       attach("side0", FWD) color("blue")
+//           stroke([[0,0],[0,7]], endcap2="arrow2");
 // Example(2D): Rounded
 //   hexagon(od=100, rounding=20, $fn=20);
 // Example(2D): Called as Function
 //   stroke(closed=true, hexagon(or=30));
-function hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
-    regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin);
+function hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip, align_side, anchor=CENTER, spin=0) =
+    regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, align_tip=align_tip, align_side=align_side, anchor=anchor, spin=spin);
 
 
-module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0)
-    regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin) children();
+module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip, align_side, anchor=CENTER, spin=0)
+    regular_ngon(n=6, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, align_tip=align_tip, align_side=align_side, anchor=anchor, spin=spin) children();
 
 
 // Function&Module: octagon()
@@ -1104,6 +1149,8 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CEN
 //   side = Length of each side.
 //   rounding = Radius of rounding for the tips of the polygon.  Default: 0 (no rounding)
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, the midpoint of a side is aligned with the Y+ axis.  Default: false
+//   align_tip = If given as a 2D vector, rotates the whole shape so that the first vertex points in that direction.  This occurs before spin.
+//   align_side = If given as a 2D vector, rotates the whole shape so that the normal of side0 points in that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Extra Anchors:
@@ -1119,16 +1166,24 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CEN
 //   octagon(side=20);
 // Example(2D): Realigned
 //   octagon(side=20, realign=true);
+// Example(2D): Alignment by Tip
+//   octagon(r=30, align_tip=BACK+RIGHT)
+//       attach("tip0", FWD) color("blue")
+//           stroke([[0,0],[0,7]], endcap2="arrow2");
+// Example(2D): Alignment by Side
+//   octagon(r=30, align_side=BACK+RIGHT)
+//       attach("side0", FWD) color("blue")
+//           stroke([[0,0],[0,7]], endcap2="arrow2");
 // Example(2D): Rounded
 //   octagon(od=100, rounding=20, $fn=20);
 // Example(2D): Called as Function
 //   stroke(closed=true, octagon(or=30));
-function octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0) =
-    regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin);
+function octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip, align_side, anchor=CENTER, spin=0) =
+    regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, align_tip=align_tip, align_side=align_side, anchor=anchor, spin=spin);
 
 
-module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CENTER, spin=0)
-    regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, anchor=anchor, spin=spin) children();
+module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip, align_side, anchor=CENTER, spin=0)
+    regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, align_tip=align_tip, align_side=align_side, anchor=anchor, spin=spin) children();
 
 
 
@@ -1145,26 +1200,56 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, anchor=CEN
 //   h = The Y axis height of the trapezoid.
 //   w1 = The X axis width of the front end of the trapezoid.
 //   w2 = The X axis width of the back end of the trapezoid.
+//   angle = If given in place of `h`, `w1`, or `w2`, then the missing value is calculated such that the right side has that angle away from the Y axis.
+//   shift = Scalar value to shift the back of the trapezoid along the X axis by.  Default: 0
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Examples(2D):
 //   trapezoid(h=30, w1=40, w2=20);
 //   trapezoid(h=25, w1=20, w2=35);
 //   trapezoid(h=20, w1=40, w2=0);
+//   trapezoid(h=20, w1=30, angle=30);
+//   trapezoid(h=20, w1=20, angle=-30);
+//   trapezoid(h=20, w2=10, angle=30);
+//   trapezoid(h=20, w2=30, angle=-30);
+//   trapezoid(w1=30, w2=10, angle=30);
 // Example(2D): Called as Function
 //   stroke(closed=true, trapezoid(h=30, w1=40, w2=20));
-function trapezoid(h, w1, w2, anchor=CENTER, spin=0) =
+function trapezoid(h, w1, w2, angle, shift=0, anchor=CENTER, spin=0) =
+    assert(is_undef(h) || is_finite(h))
+    assert(is_undef(w1) || is_finite(w1))
+    assert(is_undef(w2) || is_finite(w2))
+    assert(is_undef(angle) || is_finite(angle))
+    assert(num_defined([h, w1, w2, angle]) == 3, "Must give exactly 3 of the arguments h, w1, w2, and angle.")
+    assert(is_finite(shift))
     let(
-        path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2]]
-    ) reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, p=path);
+        h  = !is_undef(h)?  h  : opp_ang_to_adj(abs(w2-w1)/2, abs(angle)),
+        w1 = !is_undef(w1)? w1 : w2 + 2*(adj_ang_to_opp(h, angle) + shift),
+        w2 = !is_undef(w2)? w2 : w1 - 2*(adj_ang_to_opp(h, angle) + shift),
+        path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2+shift,h/2], [w2/2+shift,h/2]]
+    )
+    assert(w1>=0 && w2>=0 && h>0, "Degenerate trapezoid geometry.")
+    reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, p=path);
 
 
 
-module trapezoid(h, w1, w2, anchor=CENTER, spin=0) {
-    path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2,h/2], [w2/2,h/2]];
-    attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2) {
-        polygon(path);
-        children();
+module trapezoid(h, w1, w2, angle, shift=0, anchor=CENTER, spin=0) {
+    assert(is_undef(h) || is_finite(h));
+    assert(is_undef(w1) || is_finite(w1));
+    assert(is_undef(w2) || is_finite(w2));
+    assert(is_undef(angle) || is_finite(angle));
+    assert(num_defined([h, w1, w2, angle]) == 3, "Must give exactly 3 of the arguments h, w1, w2, and angle.");
+    assert(is_finite(shift));
+    union() {
+        h  = !is_undef(h)?  h  : opp_ang_to_adj(abs(w2-w1)/2, abs(angle));
+        w1 = !is_undef(w1)? w1 : w2 + 2*(adj_ang_to_opp(h, angle) + shift);
+        w2 = !is_undef(w2)? w2 : w1 - 2*(adj_ang_to_opp(h, angle) + shift);
+        assert(w1>=0 && w2>=0 && h>0, "Degenerate trapezoid geometry.");
+        path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2+shift,h/2], [w2/2+shift,h/2]];
+        attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2) {
+            polygon(path);
+            children();
+        }
     }
 }
 
@@ -1299,12 +1384,14 @@ module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) {
 //   id = The diameter to the inner corners of the star.
 //   step = Calculates the radius of the inner star corners by virtually drawing a straight line `step` tips around the star.  2 <= step < n/2
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, an inner corner is aligned with the Y+ axis.  Default: false
+//   align_tip = If given as a 2D vector, rotates the whole shape so that the first star tip points in that direction.  This occurs before spin.
+//   align_pit = If given as a 2D vector, rotates the whole shape so that the first inner corner is pointed towards that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Extra Anchors:
 //   "tip0" ... "tip4" = Each tip has an anchor, pointing outwards.
-//   "corner0" ... "corner4" = The inside corner between each tip has an anchor, pointing outwards.
-//   "midpt0" ... "midpt4" = The center-point between each pair or tips has an anchor, pointing outwards.
+//   "pit0" ... "pit4" = The inside corner between each tip has an anchor, pointing outwards.
+//   "midpt0" ... "midpt4" = The center-point between each pair of tips has an anchor, pointing outwards.
 // Examples(2D):
 //   star(n=5, r=50, ir=25);
 //   star(n=5, r=50, step=2);
@@ -1312,9 +1399,20 @@ module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) {
 //   star(n=7, r=50, step=3);
 // Example(2D): Realigned
 //   star(n=7, r=50, step=3, realign=true);
+// Example(2D): Alignment by Tip
+//   star(n=5, ir=15, or=30, align_tip=BACK+RIGHT)
+//       attach("tip0", FWD) color("blue")
+//           stroke([[0,0],[0,7]], endcap2="arrow2");
+// Example(2D): Alignment by Pit
+//   star(n=5, ir=15, or=30, align_pit=BACK+RIGHT)
+//       attach("pit0", FWD) color("blue")
+//           stroke([[0,0],[0,7]], endcap2="arrow2");
 // Example(2D): Called as Function
 //   stroke(closed=true, star(n=5, r=50, ir=25));
-function star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0) =
+function star(n, r, d, or, od, ir, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0, _mat, _anchs) =
+    assert(is_undef(align_tip) || is_vector(align_tip))
+    assert(is_undef(align_pit) || is_vector(align_pit))
+    assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit")
     let(
         r = get_radius(r1=or, d1=od, r=r, d=d),
         count = num_defined([ir,id,step]),
@@ -1324,48 +1422,64 @@ function star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=
     assert(count==1, "Must specify exactly one of ir, id, step")
     assert(stepOK, str("Parameter 'step' must be between 2 and ",floor(n/2)," for ",n," point star"))
     let(
+        mat = !is_undef(_mat) ? _mat :
+            ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (
+                !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip), planar=true) :
+                !is_undef(align_pit)? rot(from=RIGHT, to=point2d(align_pit), planar=true) * rot(180/n, planar=true) :
+                affine2d_identity()
+            ),
         stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n),
         ir = get_radius(r=ir, d=id, dflt=stepr),
         offset = realign? 180/n : 0,
-        path = [for(i=[2*n:-1:1]) let(theta=180*i/n+offset, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]],
-        anchors = !is_string(anchor)? [] : [
+        path1 = [for(i=[2*n:-1:1]) let(theta=180*i/n, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]],
+        path = apply(mat, path1),
+        anchors = !is_undef(_anchs) ? _anchs :
+            !is_string(anchor)? [] : [
             for (i = [0:1:n-1]) let(
-                a1 = 360 - i*360/n - (realign? 180/n : 0),
+                a1 = 360 - i*360/n,
                 a2 = a1 - 180/n,
                 a3 = a1 - 360/n,
-                p1 = polar_to_xy(r,a1),
-                p2 = polar_to_xy(ir,a2),
-                p3 = polar_to_xy(r,a3),
+                p1 = apply(mat, polar_to_xy(r,a1)),
+                p2 = apply(mat, polar_to_xy(ir,a2)),
+                p3 = apply(mat, polar_to_xy(r,a3)),
                 pos = (p1+p3)/2
             ) each [
                 anchorpt(str("tip",i), p1, unit(p1,BACK), 0),
-                anchorpt(str("corner",i), p2, unit(p2,BACK), 0),
+                anchorpt(str("pit",i), p2, unit(p2,BACK), 0),
                 anchorpt(str("midpt",i), pos, unit(pos,BACK), 0),
             ]
         ]
     ) reorient(anchor,spin, two_d=true, path=path, p=path, anchors=anchors);
 
 
-module star(n, r, d, or, od, ir, id, step, realign=false, anchor=CENTER, spin=0) {
+module star(n, r, d, or, od, ir, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0) {
+    assert(is_undef(align_tip) || is_vector(align_tip));
+    assert(is_undef(align_pit) || is_vector(align_pit));
+    assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit");
     r = get_radius(r1=or, d1=od, r=r, d=d, dflt=undef);
     stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n);
     ir = get_radius(r=ir, d=id, dflt=stepr);
-    path = star(n=n, r=r, ir=ir, realign=realign);
+    mat = ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (
+            !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip), planar=true) :
+            !is_undef(align_pit)? rot(from=RIGHT, to=point2d(align_pit), planar=true) * rot(180/n, planar=true) :
+            affine2d_identity()
+        );
     anchors = [
         for (i = [0:1:n-1]) let(
             a1 = 360 - i*360/n - (realign? 180/n : 0),
             a2 = a1 - 180/n,
             a3 = a1 - 360/n,
-            p1 = polar_to_xy(r,a1),
-            p2 = polar_to_xy(ir,a2),
-            p3 = polar_to_xy(r,a3),
+            p1 = apply(mat, polar_to_xy(r,a1)),
+            p2 = apply(mat, polar_to_xy(ir,a2)),
+            p3 = apply(mat, polar_to_xy(r,a3)),
             pos = (p1+p3)/2
         ) each [
             anchorpt(str("tip",i), p1, unit(p1,BACK), 0),
-            anchorpt(str("corner",i), p2, unit(p2,BACK), 0),
+            anchorpt(str("pit",i), p2, unit(p2,BACK), 0),
             anchorpt(str("midpt",i), pos, unit(pos,BACK), 0),
         ]
     ];
+    path = star(n=n, r=r, ir=ir, realign=realign, _mat=mat, _anchs=anchors);
     attachable(anchor,spin, two_d=true, path=path, anchors=anchors) {
         polygon(path);
         children();

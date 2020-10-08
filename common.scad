@@ -458,10 +458,79 @@ module shape_compare(eps=1/1024) {
 }
 
 
-function loop_start() = 0;
-function loop_done(x) = x==1;
-function looping(x) = x<2;
-function loop_next(x,b) = x>=1? 2 : (b? 0 : 1);
+// Section: Looping Helpers
+//   You can use a list comprehension with a C-style for loop to iteratively make a calculation.
+//   .
+//   The syntax is: `[for (INIT; CONDITION; NEXT) RETVAL]` where:
+//   - INIT is zero or more `let()` style assignments that are evaluated exactly one time, before the first loop.
+//   - CONDITION is an expression evaluated at the start of each loop.  If true, continues with the loop.
+//   - RETVAL is an expression that returns a list item for each loop.
+//   - NEXT is one or more `let()` style assignments that is evaluated at the end of each loop.
+//   .
+//   Since the INIT phase is only run once, and the CONDITION and RETVAL expressions cannot update
+//   variables, that means that only the NEXT phase can be used for iterative calculations.
+//   Unfortunately, the NEXT phase runs *after* the RETVAL expression, which means that you need
+//   to run the loop one extra time to return the final value.  This tends to make the loop code
+//   look rather ugly.  The `looping()`, `loop_while()` and `loop_done()` functions
+//   can make this somewhat more legible.
+//   ```openscad
+//   function flat_sum(l) = [
+//       for (
+//           i = 0,
+//           total = 0,
+//           state = 0;
+//           
+//           looping(state);
+//           
+//           state = loop_while(state, i < len(l)),
+//           total = total +
+//               loop_done(state) ? 0 :
+//               let( x = l[i] )
+//               is_list(x) ? flat_sum(x) : x,
+//           i = i + 1
+//       ) if (loop_done(state)) total;
+//   ].x;
+//   ```
+
+
+// Function: looping()
+// Usage:
+//   looping(state)
+// Description:
+//   Returns true if the `state` value indicates the current loop should continue.
+//   This is useful when using C-style for loops to iteratively calculate a value.
+//   Used with `loop_while()` and `loop_done()`.  See [Looping Helpers](#5-looping-helpers) for an example.
+// Arguments:
+//   state = The loop state value.
+function looping(state) = state < 2;
+
+
+// Function: loop_while()
+// Usage:
+//   state = loop_while(state, continue)
+// Description:
+//   Given the current `state`, and a boolean `continue` that indicates if the loop should still be
+//   continuing, returns the updated state value for the the next loop.
+//   This is useful when using C-style for loops to iteratively calculate a value.
+//   Used with `looping()` and `loop_done()`.  See [Looping Helpers](#5-looping-helpers) for an example.
+// Arguments:
+//   state = The loop state value.
+//   continue = A boolean value indicating whether the current loop should progress.
+function loop_while(state, continue) =
+    state > 0 ? 2 :
+    continue ? 0 : 1;
+
+
+// Function: loop_done()
+// Usage:
+//   loop_done(state)
+// Description:
+//   Returns true if the `state` value indicates the loop is finishing.
+//   This is useful when using C-style for loops to iteratively calculate a value.
+//   Used with `looping()` and `loop_while()`.  See [Looping Helpers](#5-looping-helpers) for an example.
+// Arguments:
+//   state = The loop state value.
+function loop_done(state) = state > 0;
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
