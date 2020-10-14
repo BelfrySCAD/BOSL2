@@ -471,24 +471,21 @@ module gear(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
+//   "apex" = At the pitch cone apex for the bevel gear.
 //   "pitchbase" = At the natural height of the pitch radius of the beveled gear.
 //   "flattop" = At the top of the flat top of the bevel gear.
 // Example: Beveled Gear
 //   bevel_gear(pitch=5, teeth=36, face_width=10, shaft_diam=5, pitch_angle=45, spiral_angle=0);
 // Example: Spiral Beveled Gear and Pinion
-//   t1 = 14;
-//   t2 = 32;
-//   a1 = atan(t1/t2);
-//   a2 = atan(t2/t1);
-//   down(pitch_radius(5, t1))
-//       zrot(180/t2) bevel_gear(pitch=5, teeth=t2, face_width=10, shaft_diam=6, pitch_angle=a2, left_handed=true, slices=8, orient=UP);
-//   back(pitch_radius(5, t2))
-//       bevel_gear(pitch=5, teeth=t1, face_width=10, shaft_diam=6, pitch_angle=a1, slices=8, orient=FWD);
+//   t1 = 16; t2 = 28;
+//   bevel_gear(pitch=5, teeth=t1, mate_teeth=t2, slices=12, anchor="apex", orient=FWD);
+//   bevel_gear(pitch=5, teeth=t2, mate_teeth=t1, left_handed=true, slices=12, anchor="apex", spin=180/t2);
 module bevel_gear(
     pitch       = 3,
     teeth       = 11,
-    face_width  = 6,
+    face_width  = 10,
     pitch_angle = 45,
+    mate_teeth  = undef,
     shaft_diam  = 3,
     hide        = 0,
     PA          = 20,
@@ -504,6 +501,7 @@ module bevel_gear(
     orient      = UP
 ) {
     slices = cutter_radius==0? 1 : slices;
+    pitch_angle = is_undef(mate_teeth)? pitch_angle : atan(teeth/mate_teeth);
     pr = pitch_radius(pitch, teeth);
     rr = root_radius(pitch, teeth, clearance, interior);
     pitchoff = (pr-rr) * cos(pitch_angle);
@@ -535,7 +533,7 @@ module bevel_gear(
             let(
                 u = polar.y / ocone_rad,
                 m = up((1-u) * pr / tan(pitch_angle)) *
-                    up(2*pitchoff) *
+                    up(pitchoff) *
                     zrot(polar.x/sin(pitch_angle)) *
                     back(u * pr) *
                     xrot(pitch_angle) *
@@ -576,7 +574,8 @@ module bevel_gear(
     vnf = left_handed? vnf1 : xflip(p=vnf1);
     anchors = [
         anchorpt("pitchbase", [0,0,pitchoff-thickness/2]),
-        anchorpt("flattop", [0,0,thickness/2])
+        anchorpt("flattop", [0,0,thickness/2]),
+        anchorpt("apex", [0,0,hyp_ang_to_opp(ocone_rad,90-pitch_angle)+pitchoff-thickness/2])
     ];
     attachable(anchor,spin,orient, vnf=vnf, extent=true, anchors=anchors) {
         difference() {
