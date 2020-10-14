@@ -472,6 +472,73 @@ function line_from_points(points, fast=false, eps=EPSILON) =
 
 // Section: 2D Triangles
 
+
+// Function: law_of_cosines()
+// Usage:
+//   C = law_of_cosines(a, b, c);
+//   c = law_of_cosines(a, b, C);
+// Description:
+//   Applies the Law of Cosines for an arbitrary triangle.
+//   Given three side lengths, returns the angle in degrees for the corner opposite of the third side.
+//   Given two side lengths, and the angle between them, returns the length of the third side.
+// Figure(2D):
+//   stroke([[-50,0], [10,60], [50,0]], closed=true);
+//   color("black") {
+//       translate([ 33,35]) text(text="a", size=8, halign="center", valign="center");
+//       translate([  0,-6]) text(text="b", size=8, halign="center", valign="center");
+//       translate([-22,35]) text(text="c", size=8, halign="center", valign="center");
+//   }
+//   color("blue") {
+//       translate([-37, 6]) text(text="A", size=8, halign="center", valign="center");
+//       translate([  9,51]) text(text="B", size=8, halign="center", valign="center");
+//       translate([ 38, 6]) text(text="C", size=8, halign="center", valign="center");
+//   }
+// Arguments:
+//   a = The length of the first side.
+//   b = The length of the second side.
+//   c = The length of the third side.
+//   C = The angle in degrees of the corner opposite of the third side.
+function law_of_cosines(a, b, c, C) =
+    // Triangle Law of Cosines:
+    //   c^2 = a^2 + b^2 - 2*a*b*cos(C)
+    assert(num_defined([c,C]) == 1, "Must give exactly one of c= or C=.")
+    is_undef(c) ? sqrt(a*a + b*b - 2*a*b*cos(C)) :
+    acos(constrain((a*a + b*b - c*c) / (2*a*b), -1, 1));
+
+
+// Function: law_of_sines()
+// Usage:
+//   B = law_of_sines(a, A, b);
+//   b = law_of_sines(a, A, B);
+// Description:
+//   Applies the Law of Sines for an arbitrary triangle.
+//   Given two triangle side lengths and the angle between them, returns the angle of the corner opposite of the second side.
+//   Given a side length, the opposing angle, and a second angle, returns the length of the side opposite of the second angle.
+// Figure(2D):
+//   stroke([[-50,0], [10,60], [50,0]], closed=true);
+//   color("black") {
+//       translate([ 33,35]) text(text="a", size=8, halign="center", valign="center");
+//       translate([  0,-6]) text(text="b", size=8, halign="center", valign="center");
+//       translate([-22,35]) text(text="c", size=8, halign="center", valign="center");
+//   }
+//   color("blue") {
+//       translate([-37, 6]) text(text="A", size=8, halign="center", valign="center");
+//       translate([  9,51]) text(text="B", size=8, halign="center", valign="center");
+//       translate([ 38, 6]) text(text="C", size=8, halign="center", valign="center");
+//   }
+// Arguments:
+//   a = The length of the first side.
+//   A = The angle in degrees of the corner opposite of the first side.
+//   b = The length of the second side.
+//   B = The angle in degrees of the corner opposite of the second side.
+function law_of_sines(a, A, b, B) =
+    // Triangle Law of Sines:
+    //   a/sin(A) = b/sin(B) = c/sin(C)
+    assert(num_defined([b,B]) == 1, "Must give exactly one of b= or B=.")
+    let( r = a/sin(A) )
+    is_undef(b) ? r*sin(B) : asin(constrain(b/r, -1, 1));
+
+
 // Function: tri_calc()
 // Usage:
 //   tri_calc(ang,ang2,adj,opp,hyp);
@@ -750,8 +817,8 @@ function adj_opp_to_ang(adj,opp) =
 function triangle_area(a,b,c) = 
     assert( is_path([a,b,c]), "Invalid points or incompatible dimensions." )    
     len(a)==3 
-    ? 0.5*norm(cross(c-a,c-b)) 
-    : 0.5*cross(c-a,c-b);
+      ? 0.5*norm(cross(c-a,c-b)) 
+      : 0.5*cross(c-a,c-b);
 
 
 
@@ -816,7 +883,7 @@ function plane3pt_indexed(points, i1, i2, i3) =
 function plane_from_normal(normal, pt=[0,0,0]) =
   assert( is_matrix([normal,pt],2,3) && !approx(norm(normal),0), 
           "Inputs `normal` and `pt` should 3d vectors/points and `normal` cannot be zero." )
-  concat(normal, normal*pt)/norm(normal);
+  concat(normal, normal*pt) / norm(normal);
 
 
 // Function: plane_from_points()
