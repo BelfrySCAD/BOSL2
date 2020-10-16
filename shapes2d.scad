@@ -269,18 +269,18 @@ module stroke(
                     if (hull) {
                         hull(){
                             multmatrix(rotmats[i]) {
-                                sphere(d=widths[i]);
+                                sphere(d=widths[i],style="aligned");
                             }
                             multmatrix(rotmats[i-1]) {
-                                sphere(d=widths[i]);
+                                sphere(d=widths[i],style="aligned");
                             }
                         }
                     } else {
                         multmatrix(rotmats[i]) {
-                            sphere(d=widths[i]);
+                            sphere(d=widths[i],style="aligned");
                         }
                         multmatrix(rotmats[i-1]) {
-                            sphere(d=widths[i]);
+                            sphere(d=widths[i],style="aligned");
                         }
                     }
                 }
