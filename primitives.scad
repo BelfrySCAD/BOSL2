@@ -238,7 +238,7 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 //   r = Radius of the sphere.
 //   d = Diameter of the sphere.
 //   circum = If true, the sphere is made large enough to circumscribe the sphere of the ideal side.  Otherwise inscribes.  Default: false (inscribes)
-//   style = The style of the sphere's construction. One of "orig", "aligned", "stagger", or "icosa".  Default: "orig"
+//   style = The style of the sphere's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "orig"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -267,11 +267,11 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 // Example: Called as Function
 //   vnf = sphere(d=100, style="icosa");
 //   vnf_polyhedron(vnf);
-module sphere(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orient=UP)
+module sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP)
     spheroid(r=r, d=d, circum=circum, style=style, anchor=anchor, spin=spin, orient=orient) children();
 
 
-function sphere(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orient=UP) =
+function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP) =
     spheroid(r=r, d=d, circum=circum, style=style, anchor=anchor, spin=spin, orient=orient);
 
 
