@@ -174,16 +174,16 @@ function _gear_q7(f,r,b,r2,t,s) = _gear_q6(b,s,t,(1-f)*max(b,r)+f*r2);        //
 // Example(2D):
 //   gear_tooth_profile(pitch=5, teeth=20, pressure_angle=20, valleys=false);
 // Example(2D): As a function
-//   stroke(gear_tooth_profile(pitch=5, teeth=20, pressure_angle=20, valleys=false));
+//   stroke(gear_tooth_profile(pitch=5, teeth=20, pressure_angle=20, valleys=false), width=0.1);
 function gear_tooth_profile(
-    pitch     = 3,
-    teeth     = 11,
+    pitch = 3,
+    teeth = 11,
     pressure_angle = 28,
     clearance = undef,
-    backlash  = 0.0,
-    interior  = false,
-    valleys   = true,
-    center    = false
+    backlash = 0.0,
+    interior = false,
+    valleys = true,
+    center = false
 ) = let(
     p = pitch_radius(pitch, teeth),
     c = outer_radius(pitch, teeth, clearance, interior),
@@ -212,27 +212,27 @@ function gear_tooth_profile(
 
 
 module gear_tooth_profile(
-    pitch     = 3,
-    teeth     = 11,
+    pitch = 3,
+    teeth = 11,
     pressure_angle = 28,
     backlash  = 0.0,
     clearance = undef,
-    interior  = false,
-    valleys   = true,
-    center    = false
+    interior = false,
+    valleys = true,
+    center = false
 ) {
     r = root_radius(pitch, teeth, clearance, interior);
-    translate([0,-r,0])
+    fwd(r)
     polygon(
         points=gear_tooth_profile(
-            pitch     = pitch,
-            teeth     = teeth,
+            pitch = pitch,
+            teeth = teeth,
             pressure_angle = pressure_angle,
-            backlash  = backlash,
+            backlash = backlash,
             clearance = clearance,
-            interior  = interior,
-            valleys   = valleys,
-            center    = center
+            interior = interior,
+            valleys = valleys,
+            center = center
         )
     );
 }
@@ -269,15 +269,15 @@ module gear_tooth_profile(
 //   path = gear2d(pitch=8, teeth=16);
 //   polygon(path);
 function gear2d(
-    pitch     = 3,
-    teeth     = 11,
-    hide      = 0,
+    pitch = 3,
+    teeth = 11,
+    hide = 0,
     pressure_angle = 28,
     clearance = undef,
-    backlash  = 0.0,
-    interior  = false,
-    anchor    = CENTER,
-    spin      = 0
+    backlash = 0.0,
+    interior = false,
+    anchor = CENTER,
+    spin = 0
 ) = let(
     pr = pitch_radius(pitch=pitch, teeth=teeth),
     pts = concat(
@@ -285,13 +285,13 @@ function gear2d(
             each rot(tooth*360/teeth,
                 planar=true,
                 p=gear_tooth_profile(
-                    pitch     = pitch,
-                    teeth     = teeth,
+                    pitch = pitch,
+                    teeth = teeth,
                     pressure_angle = pressure_angle,
                     clearance = clearance,
-                    backlash  = backlash,
-                    interior  = interior,
-                    valleys   = false
+                    backlash = backlash,
+                    interior = interior,
+                    valleys = false
                 )
             )
         ],
@@ -301,24 +301,24 @@ function gear2d(
 
 
 module gear2d(
-    pitch     = 3,
-    teeth     = 11,
-    hide      = 0,
+    pitch = 3,
+    teeth = 11,
+    hide = 0,
     pressure_angle = 28,
     clearance = undef,
-    backlash  = 0.0,
-    interior  = false,
-    anchor    = CENTER,
-    spin      = 0
+    backlash = 0.0,
+    interior = false,
+    anchor = CENTER,
+    spin = 0
 ) {
     path = gear2d(
-        pitch     = pitch,
-        teeth     = teeth,
-        hide      = hide,
+        pitch = pitch,
+        teeth = teeth,
+        hide = hide,
         pressure_angle = pressure_angle,
         clearance = clearance,
-        backlash  = backlash,
-        interior  = interior
+        backlash = backlash,
+        interior = interior
     );
     pr = pitch_radius(pitch=pitch, teeth=teeth);
     attachable(anchor,spin, two_d=true, r=pr) {
@@ -330,9 +330,9 @@ module gear2d(
 
 // Function&Module: rack2d()
 // Usage: As a Function
-//   path = rack2d(pitch, teeth, base, <pressure_angle>, <backlash>);
+//   path = rack2d(pitch, teeth, height, <pressure_angle>, <backlash>);
 // Usage: As a Module
-//   rack2d(pitch, teeth, base, <pressure_angle>, <backlash>);
+//   rack2d(pitch, teeth, height, <pressure_angle>, <backlash>);
 // Description:
 //   This is used to create a 2D rack, which is a linear bar with teeth that a gear can roll along.
 //   A rack can mesh with any gear that has the same `pitch` and `pressure_angle`.
@@ -341,7 +341,7 @@ module gear2d(
 // Arguments:
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   teeth = Total number of teeth along the rack
-//   base = Height of rack in mm, from tooth top to back of rack.
+//   height = Height of rack in mm, from tooth top to back of rack.
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -350,40 +350,43 @@ module gear2d(
 //   "adendum" = At the tips of the teeth, at the center of rack.
 //   "adendum-left" = At the tips of the teeth, at the left end of the rack.
 //   "adendum-right" = At the tips of the teeth, at the right end of the rack.
-//   "dedendum" = At the base of the teeth, at the center of rack.
-//   "dedendum-left" = At the base of the teeth, at the left end of the rack.
-//   "dedendum-right" = At the base of the teeth, at the right end of the rack.
+//   "dedendum" = At the height of the teeth, at the center of rack.
+//   "dedendum-left" = At the height of the teeth, at the left end of the rack.
+//   "dedendum-right" = At the height of the teeth, at the right end of the rack.
 // Example(2D):
-//   rack2d(pitch=5, teeth=10, base=5, pressure_angle=20);
+//   rack2d(pitch=5, teeth=10, height=10, pressure_angle=20);
 // Example(2D): Called as a Function
-//   path = rack2d(pitch=8, teeth=8, base=5, pressure_angle=28);
+//   path = rack2d(pitch=8, teeth=8, height=10, pressure_angle=28);
 //   polygon(path);
 function rack2d(
-    pitch     = 5,
-    teeth     = 20,
-    base      = 10,
+    pitch = 5,
+    teeth = 20,
+    height = 10,
     pressure_angle = 28,
-    backlash  = 0.0,
+    backlash = 0.0,
     clearance = undef,
-    anchor    = CENTER,
-    spin      = 0
+    anchor = CENTER,
+    spin = 0
 ) =
     let(
         a = adendum(pitch),
-        d = dedendum(pitch, clearance),
+        d = dedendum(pitch, clearance)
+    )
+    assert(a+d < height)
+    let(
         xa = a * sin(pressure_angle),
         xd = d * sin(pressure_angle),
         l = teeth * pitch,
         anchors = [
-            anchorpt("adendum",         [0,a,0],             BACK),
-            anchorpt("adendum-left",    [-l/2,a,0],          LEFT),
-            anchorpt("adendum-right",   [l/2,a,0],           RIGHT),
-            anchorpt("dedendum",        [0,-d,0],            BACK),
-            anchorpt("dedendum-left",   [-l/2,-d,0],         LEFT),
-            anchorpt("dedendum-right",  [l/2,-d,0],          RIGHT),
+            anchorpt("adendum",         [   0, a,0],  BACK),
+            anchorpt("adendum-left",    [-l/2, a,0],  LEFT),
+            anchorpt("adendum-right",   [ l/2, a,0],  RIGHT),
+            anchorpt("dedendum",        [   0,-d,0],  BACK),
+            anchorpt("dedendum-left",   [-l/2,-d,0],  LEFT),
+            anchorpt("dedendum-right",  [ l/2,-d,0],  RIGHT),
         ],
         path = [
-            [-(teeth-1)/2 * pitch + -1/2 * pitch,  a-base],
+            [-(teeth-1)/2 * pitch + -1/2 * pitch,  a-height],
             [-(teeth-1)/2 * pitch + -1/2 * pitch,  -d],
             for (i = [0:1:teeth-1]) let(
                 off = (i-(teeth-1)/2) * pitch
@@ -394,41 +397,41 @@ function rack2d(
                 [off +  1/4 * pitch - backlash + xd, -d],
             ],
             [ (teeth-1)/2 * pitch +  1/2 * pitch,  -d],
-            [ (teeth-1)/2 * pitch +  1/2 * pitch,  a-base],
+            [ (teeth-1)/2 * pitch +  1/2 * pitch,  a-height],
         ]
-    ) reorient(anchor,spin, two_d=true, size=[l,2*abs(a-base)], anchors=anchors, p=path);
+    ) reorient(anchor,spin, two_d=true, size=[l,2*abs(a-height)], anchors=anchors, p=path);
 
 
 module rack2d(
-    pitch     = 5,
-    teeth     = 20,
-    base      = 10,
+    pitch = 5,
+    teeth = 20,
+    height = 10,
     pressure_angle = 28,
-    backlash  = 0.0,
+    backlash = 0.0,
     clearance = undef,
-    anchor    = CENTER,
-    spin      = 0
+    anchor = CENTER,
+    spin = 0
 ) {
     a = adendum(pitch);
     d = dedendum(pitch, clearance);
     l = teeth * pitch;
     anchors = [
-        anchorpt("adendum",         [0,a,0],             BACK),
-        anchorpt("adendum-left",    [-l/2,a,0],          LEFT),
-        anchorpt("adendum-right",   [l/2,a,0],           RIGHT),
-        anchorpt("dedendum",        [0,-d,0],            BACK),
-        anchorpt("dedendum-left",   [-l/2,-d,0],         LEFT),
-        anchorpt("dedendum-right",  [l/2,-d,0],          RIGHT),
+        anchorpt("adendum",         [   0, a,0],  BACK),
+        anchorpt("adendum-left",    [-l/2, a,0],  LEFT),
+        anchorpt("adendum-right",   [ l/2, a,0],  RIGHT),
+        anchorpt("dedendum",        [   0,-d,0],  BACK),
+        anchorpt("dedendum-left",   [-l/2,-d,0],  LEFT),
+        anchorpt("dedendum-right",  [ l/2,-d,0],  RIGHT),
     ];
     path = rack2d(
-        pitch     = pitch,
-        teeth     = teeth,
-        base      = base,
+        pitch = pitch,
+        teeth = teeth,
+        height = height,
         pressure_angle = pressure_angle,
         backlash  = backlash,
         clearance = clearance
     );
-    attachable(anchor,spin, two_d=true, size=[l, 2*abs(a-base)], anchors=anchors) {
+    attachable(anchor,spin, two_d=true, size=[l, 2*abs(a-height)], anchors=anchors) {
         polygon(path);
         children();
     }
@@ -503,22 +506,22 @@ module rack2d(
 //   translate([ d13,  0, 0]) rotate([0,0,-($t-n3/4+n1/4+1/2)*360/n3]) color([0.75,0.75,1.00]) gear(pitch,n3,thickness,hole);
 //   translate([ d13,  0, 0]) rotate([0,0,-($t-n3/4+n1/4+1/2)*360/n3]) color([0.75,0.75,1.00]) gear(pitch,n3,thickness,hole);
 //   translate([-d14,  0, 0]) rotate([0,0,-($t-n4/4-n1/4+1/2-floor(n4/4)-3)*360/n4]) color([1.00,0.75,0.50]) gear(pitch,n4,thickness,hole,hide=n4-3);
-//   translate([(-floor(n5/2)-floor(n1/2)+$t+n1/2)*9, -d1+0.0, 0]) color([0.75,0.75,0.75]) rack(pitch=pitch,teeth=n5,thickness=thickness,base=rack_base,anchor=CENTER,orient=BACK);
+//   translate([(-floor(n5/2)-floor(n1/2)+$t+n1/2)*9, -d1+0.0, 0]) color([0.75,0.75,0.75]) rack(pitch=pitch,teeth=n5,thickness=thickness,height=rack_base,anchor=CENTER,orient=BACK);
 function gear(
-    pitch     = 3,
-    teeth     = 11,
+    pitch = 3,
+    teeth = 11,
     thickness = 6,
     shaft_diam = 3,
-    hide      = 0,
+    hide = 0,
     pressure_angle = 28,
     clearance = undef,
-    backlash  = 0.0,
-    helical   = 0,
-    slices    = 2,
-    interior  = false,
-    anchor    = CENTER,
-    spin      = 0,
-    orient    = UP
+    backlash = 0.0,
+    helical = 0,
+    slices = 2,
+    interior = false,
+    anchor = CENTER,
+    spin = 0,
+    orient = UP
 ) =
     let(
         p = pitch_radius(pitch, teeth),
@@ -527,13 +530,13 @@ function gear(
         twist = atan2(thickness*tan(helical),p),
         rgn = [
             gear2d(
-                pitch     = pitch,
-                teeth     = teeth,
+                pitch = pitch,
+                teeth = teeth,
                 pressure_angle = pressure_angle,
-                hide      = hide,
+                hide = hide,
                 clearance = clearance,
-                backlash  = backlash,
-                interior  = interior
+                backlash = backlash,
+                interior = interior
             ),
             if (shaft_diam > 0) circle(d=shaft_diam, $fn=max(12,segs(shaft_diam/2)))
         ],
@@ -542,20 +545,20 @@ function gear(
 
 
 module gear(
-    pitch     = 3,
-    teeth     = 11,
+    pitch = 3,
+    teeth = 11,
     thickness = 6,
     shaft_diam = 3,
-    hide      = 0,
+    hide = 0,
     pressure_angle = 28,
     clearance = undef,
-    backlash  = 0.0,
-    helical   = 0,
-    slices    = 2,
-    interior  = false,
-    anchor    = CENTER,
-    spin      = 0,
-    orient    = UP
+    backlash = 0.0,
+    helical = 0,
+    slices = 2,
+    interior = false,
+    anchor = CENTER,
+    spin = 0,
+    orient = UP
 ) {
     p = pitch_radius(pitch, teeth);
     c = outer_radius(pitch, teeth, clearance, interior);
@@ -565,13 +568,13 @@ module gear(
         difference() {
             linear_extrude(height=thickness, center=true, convexity=10, twist=twist) {
                 gear2d(
-                    pitch     = pitch,
-                    teeth     = teeth,
+                    pitch = pitch,
+                    teeth = teeth,
                     pressure_angle = pressure_angle,
-                    hide      = hide,
+                    hide = hide,
                     clearance = clearance,
-                    backlash  = backlash,
-                    interior  = interior
+                    backlash = backlash,
+                    interior = interior
                 );
             }
             if (shaft_diam > 0) {
@@ -638,23 +641,23 @@ module gear(
 //   bevel_gear(pitch=5, teeth=t1, mate_teeth=t2, slices=12, anchor="apex", orient=FWD);
 //   bevel_gear(pitch=5, teeth=t2, mate_teeth=t1, left_handed=true, slices=12, anchor="apex", spin=180/t2);
 function bevel_gear(
-    pitch       = 3,
-    teeth       = 11,
-    face_width  = 10,
+    pitch = 3,
+    teeth = 11,
+    face_width = 10,
     pitch_angle = 45,
-    mate_teeth  = undef,
-    hide        = 0,
+    mate_teeth = undef,
+    hide = 0,
     pressure_angle = 20,
-    clearance   = undef,
-    backlash    = 0.0,
-    cutter_radius  = 30,
+    clearance = undef,
+    backlash = 0.0,
+    cutter_radius = 30,
     spiral_angle = 35,
     left_handed = false,
-    slices      = 1,
-    interior    = false,
-    anchor      = "pitchbase",
-    spin        = 0,
-    orient      = UP
+    slices = 1,
+    interior = false,
+    anchor = "pitchbase",
+    spin = 0,
+    orient = UP
 ) =
     let(
         slices = cutter_radius==0? 1 : slices,
@@ -676,14 +679,14 @@ function bevel_gear(
         apts = [for (u=slice_us) radcp + polar_to_xy(cutter_radius, lerp(sang,eang,u))],
         polars = [for (p=apts) [vang(p)-90, norm(p)]],
         profile = gear_tooth_profile(
-            pitch     = pitch,
-            teeth     = teeth,
+            pitch = pitch,
+            teeth = teeth,
             pressure_angle = pressure_angle,
             clearance = clearance,
-            backlash  = backlash,
-            interior  = interior,
-            valleys   = false,
-            center    = true
+            backlash = backlash,
+            interior = interior,
+            valleys = false,
+            center = true
         ),
         verts1 = [
             for (polar=polars) [
@@ -738,24 +741,24 @@ function bevel_gear(
 
 
 module bevel_gear(
-    pitch       = 3,
-    teeth       = 11,
-    face_width  = 10,
+    pitch = 3,
+    teeth = 11,
+    face_width = 10,
     pitch_angle = 45,
-    mate_teeth  = undef,
-    shaft_diam  = 3,
-    hide        = 0,
+    mate_teeth,
+    shaft_diam = 3,
+    hide = 0,
     pressure_angle = 20,
-    clearance   = undef,
-    backlash    = 0.0,
-    cutter_radius  = 30,
+    clearance = undef,
+    backlash = 0.0,
+    cutter_radius = 30,
     spiral_angle = 35,
     left_handed = false,
-    slices      = 1,
-    interior    = false,
-    anchor      = "pitchbase",
-    spin        = 0,
-    orient      = UP
+    slices = 1,
+    interior = false,
+    anchor = "pitchbase",
+    spin = 0,
+    orient = UP
 ) {
     slices = cutter_radius==0? 1 : slices;
     pitch_angle = is_undef(mate_teeth)? pitch_angle : atan(teeth/mate_teeth);
@@ -765,19 +768,19 @@ module bevel_gear(
     pitchoff = (pr-rr) * cos(pitch_angle);
     thickness = face_width * cos(pitch_angle);
     vnf = bevel_gear(
-        pitch       = pitch,
-        teeth       = teeth,
-        face_width  = face_width,
+        pitch = pitch,
+        teeth = teeth,
+        face_width = face_width,
         pitch_angle = pitch_angle,
-        hide        = hide,
+        hide = hide,
         pressure_angle = pressure_angle,
-        clearance   = clearance,
-        backlash    = backlash,
-        cutter_radius  = cutter_radius,
+        clearance = clearance,
+        backlash = backlash,
+        cutter_radius = cutter_radius,
         spiral_angle = spiral_angle,
         left_handed = left_handed,
-        slices      = slices,
-        interior    = interior,
+        slices = slices,
+        interior = interior,
         anchor=CENTER
     );
     anchors = [
@@ -799,9 +802,9 @@ module bevel_gear(
 
 // Function&Module: rack()
 // Usage: As a Module
-//   rack(pitch, teeth, thickness, base, <pressure_angle>, <backlash>);
+//   rack(pitch, teeth, thickness, height, <pressure_angle>, <backlash>);
 // Usage: As a Function
-//   vnf = rack(pitch, teeth, thickness, base, <pressure_angle>, <backlash>);
+//   vnf = rack(pitch, teeth, thickness, height, <pressure_angle>, <backlash>);
 // Description:
 //   This is used to create a 3D rack, which is a linear bar with teeth that a gear can roll along.
 //   A rack can mesh with any gear that has the same `pitch` and `pressure_angle`.
@@ -811,7 +814,7 @@ module bevel_gear(
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   teeth = Total number of teeth along the rack
 //   thickness = Thickness of rack in mm (affects each tooth)
-//   base = Height of rack in mm, from tooth top to back of rack.
+//   height = Height of rack in mm, from tooth top to back of rack.
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -829,18 +832,18 @@ module bevel_gear(
 //   "dedendum-back" = At the base of the teeth, at the back of the rack.
 //   "dedendum-front" = At the base of the teeth, at the front of the rack.
 // Example:
-//   rack(pitch=5, teeth=10, thickness=5, base=5, pressure_angle=20);
+//   rack(pitch=5, teeth=10, thickness=5, height=5, pressure_angle=20);
 module rack(
-    pitch     = 5,
-    teeth     = 20,
+    pitch = 5,
+    teeth = 20,
     thickness = 5,
-    base      = 10,
+    height = 10,
     pressure_angle = 28,
-    backlash  = 0.0,
+    backlash = 0.0,
     clearance = undef,
-    anchor    = CENTER,
-    spin      = 0,
-    orient    = UP
+    anchor = CENTER,
+    spin = 0,
+    orient = UP
 ) {
     a = adendum(pitch);
     d = dedendum(pitch, clearance);
@@ -857,15 +860,15 @@ module rack(
         anchorpt("dedendum-front",  [0,-thickness/2,-d], DOWN),
         anchorpt("dedendum-back",   [0, thickness/2,-d], UP),
     ];
-    attachable(anchor,spin,orient, size=[l, thickness, 2*abs(a-base)], anchors=anchors) {
+    attachable(anchor,spin,orient, size=[l, thickness, 2*abs(a-height)], anchors=anchors) {
         xrot(90) {
             linear_extrude(height=thickness, center=true, convexity=teeth*2) {
                 rack2d(
-                    pitch     = pitch,
-                    teeth     = teeth,
-                    base      = base,
+                    pitch = pitch,
+                    teeth = teeth,
+                    height = height,
                     pressure_angle = pressure_angle,
-                    backlash  = backlash,
+                    backlash = backlash,
                     clearance = clearance
                 );
             }
@@ -876,16 +879,16 @@ module rack(
 
 
 function rack(
-    pitch     = 5,
-    teeth     = 20,
+    pitch = 5,
+    teeth = 20,
     thickness = 5,
-    base      = 10,
+    height = 10,
     pressure_angle = 28,
-    backlash  = 0.0,
+    backlash = 0.0,
     clearance = undef,
-    anchor    = CENTER,
-    spin      = 0,
-    orient    = UP
+    anchor = CENTER,
+    spin = 0,
+    orient = UP
 ) =
     let(
         a = adendum(pitch),
@@ -904,15 +907,15 @@ function rack(
             anchorpt("dedendum-back",   [0, thickness/2,-d], UP),
         ],
         path = rack2d(
-            pitch     = pitch,
-            teeth     = teeth,
-            base      = base,
+            pitch = pitch,
+            teeth = teeth,
+            height = height,
             pressure_angle = pressure_angle,
-            backlash  = backlash,
+            backlash = backlash,
             clearance = clearance
         ),
         vnf = linear_sweep(path, height=thickness, anchor="origin", orient=FWD)
-    ) reorient(anchor,spin,orient, size=[l, thickness, 2*abs(a-base)], anchors=anchors, p=vnf);
+    ) reorient(anchor,spin,orient, size=[l, thickness, 2*abs(a-height)], anchors=anchors, p=vnf);
 
 
 

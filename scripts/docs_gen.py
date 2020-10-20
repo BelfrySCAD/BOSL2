@@ -294,11 +294,11 @@ def mkdn_esc(txt):
     while txt:
         m = quotpat.match(txt)
         if m:
-            out += m.group(1).replace(r'_', r'\_')
+            out += m.group(1).replace(r'_', r'\_').replace(r'&',r'&amp;').replace(r'<', r'&lt;').replace(r'>',r'&gt;')
             out += m.group(2)
             txt = m.group(3)
         else:
-            out += txt.replace(r'_', r'\_')
+            out += txt.replace(r'_', r'\_').replace(r'&',r'&amp;').replace(r'<', r'&lt;').replace(r'>',r'&gt;')
             txt = ""
     return out
 
