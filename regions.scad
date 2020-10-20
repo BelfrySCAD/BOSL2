@@ -296,7 +296,7 @@ function region_faces(region, transform, reverse=false, vnf=EMPTY_VNF) =
 
 // Function&Module: linear_sweep()
 // Usage:
-//   linear_sweep(path, height, [center], [slices], [twist], [scale], [style], [convexity]);
+//   linear_sweep(region, height, [center], [slices], [twist], [scale], [style], [convexity]);
 // Description:
 //   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or path.
 //   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
@@ -304,19 +304,19 @@ function region_faces(region, transform, reverse=false, vnf=EMPTY_VNF) =
 //   that you can use `anchor`, `spin`, `orient` and attachments with it.  Also, you can make more refined
 //   twisted extrusions by using `maxseg` to subsample flat faces.
 // Arguments:
-//   region = The 2D [Region](regions.scad) that is to be extruded.
-//   height = The height to extrude the path.  Default: 1
+//   region = The 2D [Region](regions.scad) or path that is to be extruded.
+//   height = The height to extrude the region.  Default: 1
 //   center = If true, the created polyhedron will be vertically centered.  If false, it will be extruded upwards from the origin.  Default: `false`
 //   slices = The number of slices to divide the shape into along the Z axis, to allow refinement of detail, especially when working with a twist.  Default: `twist/5`
 //   maxseg = If given, then any long segments of the region will be subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
 //   twist = The number of degrees to rotate the shape clockwise around the Z axis, as it rises from bottom to top.  Default: 0
-//   scale = The amound to scale the shape, from bottom to top.  Default: 1
+//   scale = The amount to scale the shape, from bottom to top.  Default: 1
 //   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
-//   convexity = Max number of surfaces any single ray could pass through.
+//   convexity = Max number of surfaces any single ray could pass through.  Module use only.
 //   anchor_isect = If true, anchoring it performed by finding where the anchor vector intersects the swept shape.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Module use only.  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Module use only.  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Module use only.  Default: `UP`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example: Extruding a Compound Region.
 //   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
 //   rgn2 = [square(30,center=false)];
@@ -355,9 +355,11 @@ module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, 
 }
 
 
-function linear_sweep(region, height=1, twist=0, scale=1, slices, maxseg, style="default") =
+function linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", anchor_isect=false, anchor, spin=0, orient=UP) =
     let(
+        anchor = get_anchor(anchor,center,BOT,BOT),
         region = is_path(region)? [region] : region,
+        cp = mean(pointlist_bounds(flatten(region))),
         regions = split_nested_region(region),
         slices = default(slices, floor(twist/5+1)),
         step = twist/slices,
@@ -374,27 +376,28 @@ function linear_sweep(region, height=1, twist=0, scale=1, slices, maxseg, style=
                 )
                 rot(twist, p=scale([scale,scale],p=path))
             ]
-        ]
-    ) vnf_merge([
-        for (rgn = regions)
-        for (pathnum = idx(rgn)) let(
-            p = cleanup_path(rgn[pathnum]),
-            path = is_undef(maxseg)? p : [
-                for (seg=pair_wrap(p)) each
-                let(steps=ceil(norm(seg.y-seg.x)/maxseg))
-                lerp(seg.x, seg.y, [0:1/steps:1-EPSILON])
-            ],
-            verts = [
-                for (i=[0:1:slices]) let(
-                    sc = lerp(1, scale, i/slices),
-                    ang = i * step,
-                    h = i * hstep - height/2
-                ) scale([sc,sc,1], p=rot(ang, p=path3d(path,h)))
-            ]
-        ) vnf_vertex_array(verts, caps=false, col_wrap=true, style=style),
-        for (rgn = regions) region_faces(rgn, move([0,0,-height/2]), reverse=true),
-        for (rgn = trgns) region_faces(rgn, move([0,0, height/2]), reverse=false)
-    ]);
+        ],
+        vnf = vnf_merge([
+            for (rgn = regions)
+            for (pathnum = idx(rgn)) let(
+                p = cleanup_path(rgn[pathnum]),
+                path = is_undef(maxseg)? p : [
+                    for (seg=pair_wrap(p)) each
+                    let(steps=ceil(norm(seg.y-seg.x)/maxseg))
+                    lerp(seg.x, seg.y, [0:1/steps:1-EPSILON])
+                ],
+                verts = [
+                    for (i=[0:1:slices]) let(
+                        sc = lerp(1, scale, i/slices),
+                        ang = i * step,
+                        h = i * hstep - height/2
+                    ) scale([sc,sc,1], p=rot(ang, p=path3d(path,h)))
+                ]
+            ) vnf_vertex_array(verts, caps=false, col_wrap=true, style=style),
+            for (rgn = regions) region_faces(rgn, move([0,0,-height/2]), reverse=true),
+            for (rgn = trgns) region_faces(rgn, move([0,0, height/2]), reverse=false)
+        ])
+    ) reorient(anchor,spin,orient, cp=cp, vnf=vnf, extent=!anchor_isect, p=vnf);
 
 
 
