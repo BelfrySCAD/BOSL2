@@ -143,6 +143,29 @@ function bevel_pitch_angle(teeth, mate_teeth, drive_angle=90) =
     atan(sin(drive_angle)/((mate_teeth/teeth)+cos(drive_angle)));
 
 
+// Function: worm_gear_thickness()
+// Usage:
+//   thick = worm_gear_thickness(pitch, teeth, worm_diam, <worm_arc>, <crowning>, <clearance>);
+// Description:
+//   Calculate the thickness of the worm gear.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.  Default: 5
+//   teeth = Total number of teeth along the rack.  Default: 30
+//   worm_diam = The pitch diameter of the worm gear to match to.  Default: 30
+//   worm_arc = The arc of the worm to mate with, in degrees. Default: 60 degrees
+//   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fir the work easier.  Default: 1
+//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
+function worm_gear_thickness(pitch=5, teeth=30, worm_diam=30, worm_arc=60, crowning=1, clearance) =
+    let(
+        r = worm_diam/2 + crowning,
+        pitch_thick = r * sin(worm_arc/2) * 2,
+        pr = pitch_radius(pitch, teeth),
+        rr = root_radius(pitch, teeth, clearance, false),
+        pitchoff = (pr-rr) * sin(worm_arc/2),
+        thickness = pitch_thick + 2*pitchoff
+    ) thickness;
+
+
 function _gear_polar(r,t) = r*[sin(t),cos(t)];
 function _gear_iang(r1,r2) = sqrt((r2/r1)*(r2/r1) - 1)/PI*180 - acos(r1/r2);  //unwind a string this many degrees to go from radius r1 to radius r2
 function _gear_q6(b,s,t,d) = _gear_polar(d,s*(_gear_iang(b,d)+t));            //point at radius d on the involute curve
@@ -471,7 +494,7 @@ module rack2d(
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   teeth = Total number of teeth around the entire perimeter
 //   thickness = Thickness of gear in mm
-//   shaft_diam = Diameter of the hole in the center, in mm
+//   shaft_diam = Diameter of the hole in the center, in mm.  Default: 0 (no shaft hole)
 //   hide = Number of teeth to delete to make this only a fraction of a circle
 //   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.
@@ -511,7 +534,7 @@ function gear(
     pitch = 3,
     teeth = 11,
     thickness = 6,
-    shaft_diam = 3,
+    shaft_diam = 0,
     hide = 0,
     pressure_angle = 28,
     clearance = undef,
@@ -548,7 +571,7 @@ module gear(
     pitch = 3,
     teeth = 11,
     thickness = 6,
-    shaft_diam = 3,
+    shaft_diam = 0,
     hide = 0,
     pressure_angle = 28,
     clearance = undef,
@@ -614,17 +637,19 @@ module gear(
 //   greater than 1), then every tooth on one gear will meet every tooth on the other, for more even
 //   wear.  So coprime numbers of teeth are good.
 // Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-//   teeth = Total number of teeth around the entire perimeter
-//   face_width = Width of the toothed surface in mm, from inside to outside.
-//   shaft_diam = Diameter of the hole in the center, in mm
-//   hide = Number of teeth to delete to make this only a fraction of a circle
-//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.  Default: 5
+//   teeth = Total number of teeth around the entire perimeter.  Default: 20
+//   face_width = Width of the toothed surface in mm, from inside to outside.  Default: 10
+//   pitch_angle = Angle of beveled gear face.  Default: 45
+//   mate_teeth = The number of teeth in the gear that this gear will mate with.  Overrides `pitch_angle` if given.
+//   shaft_diam = Diameter of the hole in the center, in mm.  Module use only.  Default: 0 (no shaft hole)
+//   hide = Number of teeth to delete to make this only a fraction of a circle.  Default: 0
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 28
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.
-//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
-//   pitch_angle = Angle of beveled gear face.
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
 //   cutter_radius = Radius of spiral arc for teeth.  If 0, then gear will not be spiral.  Default: 0
 //   spiral_angle = The base angle for spiral teeth.  Default: 0
+//   left_handed = If true, the gear returned will have a left-handed spiral.  Default: false
 //   slices = Number of vertical layers to divide gear into.  Useful for refining gears with `spiral`.  Default: 1
 //   interior = If true, create a mask for difference()ing from something else.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -641,8 +666,8 @@ module gear(
 //   bevel_gear(pitch=5, teeth=t1, mate_teeth=t2, slices=12, anchor="apex", orient=FWD);
 //   bevel_gear(pitch=5, teeth=t2, mate_teeth=t1, left_handed=true, slices=12, anchor="apex", spin=180/t2);
 function bevel_gear(
-    pitch = 3,
-    teeth = 11,
+    pitch = 5,
+    teeth = 20,
     face_width = 10,
     pitch_angle = 45,
     mate_teeth = undef,
@@ -746,7 +771,7 @@ module bevel_gear(
     face_width = 10,
     pitch_angle = 45,
     mate_teeth,
-    shaft_diam = 3,
+    shaft_diam = 0,
     hide = 0,
     pressure_angle = 20,
     clearance = undef,
@@ -811,12 +836,13 @@ module bevel_gear(
 //   When called as a function, returns a 3D [VNF](vnf.scad) for the rack.
 //   When called as a module, creates a 3D rack shape.
 // Arguments:
-//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
-//   teeth = Total number of teeth along the rack
-//   thickness = Thickness of rack in mm (affects each tooth)
-//   height = Height of rack in mm, from tooth top to back of rack.
-//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.
-//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm. Default: 5
+//   teeth = Total number of teeth along the rack.  Default: 20
+//   thickness = Thickness of rack in mm (affects each tooth).  Default: 5
+//   height = Height of rack in mm, from tooth top to back of rack.  Default: 10
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees.  Default: 28
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
+//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -885,7 +911,7 @@ function rack(
     height = 10,
     pressure_angle = 28,
     backlash = 0.0,
-    clearance = undef,
+    clearance,
     anchor = CENTER,
     spin = 0,
     orient = UP
@@ -918,6 +944,267 @@ function rack(
     ) reorient(anchor,spin,orient, size=[l, thickness, 2*abs(a-height)], anchors=anchors, p=vnf);
 
 
+
+// Function&Module: worm()
+// Usage: As a Module
+//   worm(pitch, d, l, <starts>, <left_handed>, <pressure_angle>, <backlash>, <clearance>);
+// Usage: As a Function
+//   vnf = worm(pitch, d, l, <starts>, <left_handed>, <pressure_angle>, <backlash>, <clearance>);
+// Description:
+//   Creates a worm shape that can be matched to a work gear.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.  Default: 5
+//   d = The diameter of the worm.  Default: 30
+//   l = The length of the worm.  Default: 100
+//   starts = The number of lead starts.  Default: 1
+//   left_handed = If true, the gear returned will have a left-handed spiral.  Default: false
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 28
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
+//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Example:
+//   worm(pitch=8, d=30, l=50, $fn=72);
+// Example: Multiple Starts.
+//   worm(pitch=8, d=30, l=50, starts=3, $fn=72);
+// Example: Left Handed
+//   worm(pitch=8, d=30, l=50, starts=3, left_handed=true, $fn=72);
+// Example: Called as Function
+//   vnf = worm(pitch=8, d=35, l=50, starts=2, left_handed=true, pressure_angle=20, $fn=72);
+//   vnf_polyhedron(vnf);
+function worm(
+    pitch=5,
+    d=30, l=100,
+    starts=1,
+    left_handed=false,
+    pressure_angle=28,
+    backlash=0,
+    clearance,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
+) =
+    let(
+        rack_profile = select(rack2d(
+            pitch = pitch,
+            teeth = starts,
+            height = d,
+            pressure_angle = pressure_angle,
+            backlash = backlash,
+            clearance = clearance
+        ), 1, -2),
+        polars = [
+            for (i=idx(rack_profile)) let(
+                p = rack_profile[i],
+                a = 360 * p.x / pitch / starts
+            ) [a, p.y + d/2]
+        ],
+        maxang = 360 / segs(d/2),
+        refined_polars = [
+            for (i=idx(polars,end=-2)) let(
+                delta = polars[i+1].x - polars[i].x,
+                steps = ceil(delta/maxang),
+                step = delta/steps
+            ) for (j = [0:1:steps-1])
+            [polars[i].x + j*step, lerp(polars[i].y,polars[i+1].y, j/steps)]
+        ],
+        cross_sect = [ for (p = refined_polars) polar_to_xy(p.y, p.x) ],
+        revs = l/pitch/starts,
+        zsteps = ceil(revs*360/maxang),
+        zstep = l/zsteps,
+        astep = revs*360/zsteps,
+        profiles = [
+            for (i=[0:1:zsteps]) let(
+                z = i*zstep - l/2,
+                a = i*astep
+            )
+            apply(zrot(a)*up(z), path3d(cross_sect))
+        ],
+        vnf1 = vnf_vertex_array(profiles, caps=true, col_wrap=true, reverse=true, style="alt"),
+        vnf = left_handed? xflip(p=vnf1) : vnf1
+    ) reorient(anchor,spin,orient, d=d, l=l, p=vnf);
+
+
+module worm(
+    pitch=5,
+    d=15, l=100,
+    starts=1,
+    left_handed=false,
+    pressure_angle=28,
+    backlash=0,
+    clearance,
+    anchor=CENTER,
+    spin=0,
+    orient=UP
+) {
+    vnf = worm(
+        pitch=pitch,
+        starts=starts,
+        d=d, l=l,
+        left_handed=left_handed,
+        pressure_angle=pressure_angle,
+        backlash=backlash,
+        clearance=clearance
+    );
+    attachable(anchor,spin,orient, d=d, l=l) {
+        vnf_polyhedron(vnf);
+        children();
+    }
+}
+
+
+// Function&Module: worm_gear()
+// Usage: As a Module
+//   worm_gear(pitch, teeth, worm_diam, <worm_starts>, <crowning>, <left_handed>, <pressure_angle>, <backlash>, <slices>, <clearance>, <shaft_diam>);
+// Usage: As a Function
+//   vnf = worm_gear(pitch, teeth, worm_diam, <worm_starts>, <crowning>, <left_handed>, <pressure_angle>, <backlash>, <slices>, <clearance>);
+// Description:
+//   Creates a worm gear to match with a worm.
+// Arguments:
+//   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.  Default: 5
+//   teeth = Total number of teeth along the rack.  Default: 30
+//   worm_diam = The pitch diameter of the worm gear to match to.  Default: 30
+//   worm_starts = The number of lead starts on the worm gear to match to.  Default: 1
+//   worm_arc = The arc of the worm to mate with, in degrees. Default: 60 degrees
+//   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fir the work easier.  Default: 1
+//   left_handed = If true, the gear returned will have a left-handed spiral.  Default: false
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 28
+//   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
+//   clearance = Clearance gap at the bottom of the inter-tooth valleys.
+//   slices = The number of vertical slices to refine the curve of the worm throat.  Default: 10
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Example: Right-Handed
+//   worm_gear(pitch=5, teeth=36, worm_diam=30, worm_starts=1);
+// Example: Left-Handed
+//   worm_gear(pitch=5, teeth=36, worm_diam=30, worm_starts=1, left_handed=true);
+// Example: Multiple Starts
+//   worm_gear(pitch=5, teeth=36, worm_diam=30, worm_starts=4);
+// Example: Called as Function
+//   vnf = worm_gear(pitch=8, teeth=30, worm_diam=30, worm_starts=1);
+//   vnf_polyhedron(vnf);
+function worm_gear(
+    pitch = 5,
+    teeth = 36,
+    worm_diam = 30,
+    worm_starts = 1,
+    worm_arc = 60,
+    crowning = 1,
+    left_handed = false,
+    pressure_angle = 28,
+    backlash = 0,
+    clearance,
+    slices = 10,
+    anchor = CENTER,
+    spin = 0,
+    orient = UP
+) =
+    let(
+        p = pitch_radius(pitch, teeth),
+        circ = 2 * PI * p,
+        r1 = p + worm_diam/2 + crowning,
+        r2 = worm_diam/2 + crowning,
+        lead_ang = atan2(pitch * worm_starts, PI * worm_diam),
+        tooth_profile = reverse(gear_tooth_profile(
+            pitch = pitch,
+            teeth = teeth,
+            pressure_angle = pressure_angle,
+            clearance = clearance,
+            backlash = backlash,
+            valleys = false,
+            center = true
+        )),
+        profiles = [
+            for (slice = [0:1:slices]) let(
+                u = slice/slices - 0.5,
+                zang = u * worm_arc,
+                tp = [0,r1,0] - spherical_to_xyz(r2, 90, 90+zang),
+                zang2 = 360 * tp.z * tan(lead_ang) / circ
+            ) [
+                for (i = [0:1:teeth]) each
+                apply(
+                    zrot(-i*360/teeth+zang2) *
+                        move(tp) *
+                        xrot(-zang),
+                    path3d(tooth_profile)
+                )
+            ]
+        ],
+        top_verts = select(profiles,-1),
+        bot_verts = select(profiles,0),
+        thickness = top_verts[0].z - bot_verts[0].z,
+        face_pts = len(tooth_profile),
+        gear_pts = face_pts * teeth,
+        top_faces =[
+            for (i=[0:1:teeth-1], j=[0:1:(face_pts/2)-1]) each [
+                [i*face_pts+j, (i+1)*face_pts-j-1, (i+1)*face_pts-j-2],
+                [i*face_pts+j, (i+1)*face_pts-j-2, i*face_pts+j+1]
+            ],
+            for (i=[0:1:teeth-1]) each [
+                [gear_pts, (i+1)*face_pts-1, i*face_pts],
+                [gear_pts, ((i+1)%teeth)*face_pts, (i+1)*face_pts-1]
+            ]
+        ],
+        sides_vnf = vnf_vertex_array(profiles, caps=false, col_wrap=true, style="alt"),
+        vnf1 = vnf_merge([
+            [
+                [each top_verts, [0,0,top_verts[0].z]],
+                [for (x=top_faces) reverse(x)]
+            ],
+            [
+                [each bot_verts, [0,0,bot_verts[0].z]],
+                top_faces
+            ],
+            sides_vnf
+        ]),
+        vnf = left_handed? xflip(p=vnf1) : vnf1
+    ) reorient(anchor,spin,orient, r=p, l=thickness, p=vnf);
+
+
+module worm_gear(
+    pitch = 5,
+    teeth = 36,
+    worm_diam = 30,
+    worm_starts = 1,
+    worm_arc = 60,
+    crowning = 1,
+    left_handed = false,
+    pressure_angle = 28,
+    backlash = 0,
+    slices = 10,
+    clearance,
+    shaft_diam = 0,
+    anchor = CENTER,
+    spin = 0,
+    orient = UP
+) {
+    p = pitch_radius(pitch, teeth);
+    vnf = worm_gear(
+        pitch = pitch,
+        teeth = teeth,
+        worm_diam = worm_diam,
+        worm_starts = worm_starts,
+        worm_arc = worm_arc,
+        crowning = crowning,
+        left_handed = left_handed,
+        pressure_angle = pressure_angle,
+        backlash = backlash,
+        slices = slices,
+        clearance = clearance
+    );
+    thickness = pointlist_bounds(vnf[0])[1].z;
+    attachable(anchor,spin,orient, r=p, l=thickness) {
+        difference() {
+            vnf_polyhedron(vnf);
+            if (shaft_diam > 0) {
+                cylinder(d=shaft_diam, l=worm_diam, center=true);
+            }
+        }
+        children();
+    }
+}
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
