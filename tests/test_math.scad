@@ -550,6 +550,13 @@ module test_determinant() {
 test_determinant();
 
 
+module test_matrix_trace() {
+    M = [ [6,4,-2,9], [1,-2,8,3], [1,5,7,6], [4,2,5,1] ];
+    assert_equal(matrix_trace(M), 6-2+7+1);
+}
+test_matrix_trace();
+
+
 // Logic
 
 

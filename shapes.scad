@@ -77,29 +77,30 @@ module cuboid(
         e = corner_edges(edges, corner);
         cnt = sum(e);
         r = first_defined([chamfer, rounding, 0]);
+        c = [min(r,size.x/2), min(r,size.y/2), min(r,size.z/2)];
         $fn = is_finite(chamfer)? 4 : segs(r);
-        translate(vmul(corner,size/2-[r,r,r])) {
+        translate(vmul(corner,size/2-c)) {
             if (cnt == 0) {
-                cube(r*2, center=true);
+                cube(c*2, center=true);
             } else if (cnt == 1) {
-                if (e.x) xcyl(l=r*2, r=r);
-                if (e.y) ycyl(l=r*2, r=r);
-                if (e.z) zcyl(l=r*2, r=r);
+                if (e.x) xcyl(l=c.x*2, r=r);
+                if (e.y) ycyl(l=c.y*2, r=r);
+                if (e.z) zcyl(l=c.z*2, r=r);
             } else if (cnt == 2) {
                 if (!e.x) {
                     intersection() {
-                        ycyl(l=r*2, r=r);
-                        zcyl(l=r*2, r=r);
+                        ycyl(l=c.y*2, r=r);
+                        zcyl(l=c.z*2, r=r);
                     }
                 } else if (!e.y) {
                     intersection() {
-                        xcyl(l=r*2, r=r);
-                        zcyl(l=r*2, r=r);
+                        xcyl(l=c.x*2, r=r);
+                        zcyl(l=c.z*2, r=r);
                     }
                 } else {
                     intersection() {
-                        xcyl(l=r*2, r=r);
-                        ycyl(l=r*2, r=r);
+                        xcyl(l=c.x*2, r=r);
+                        ycyl(l=c.y*2, r=r);
                     }
                 }
             } else {
@@ -107,9 +108,9 @@ module cuboid(
                     spheroid(r=r, style="octa");
                 } else {
                     intersection() {
-                        xcyl(l=r*2, r=r);
-                        ycyl(l=r*2, r=r);
-                        zcyl(l=r*2, r=r);
+                        xcyl(l=c.x*2, r=r);
+                        ycyl(l=c.y*2, r=r);
+                        zcyl(l=c.z*2, r=r);
                     }
                 }
             }
@@ -1181,14 +1182,14 @@ module spheroid(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orie
         if (style=="orig") {
             rotate_extrude(convexity=2,$fn=sides) {
                 difference() {
-                    oval(r=r, circum=circum, $fn=sides);
+                    oval(r=r, circum=circum, realign=true, $fn=sides);
                     left(r) square(2*r,center=true);
                 }
             }
         } else if (style=="aligned") {
             rotate_extrude(convexity=2,$fn=sides) {
                 difference() {
-                    zrot(180/sides) oval(r=r, circum=circum, $fn=sides);
+                    oval(r=r, circum=circum, $fn=sides);
                     left(r) square(2*r,center=true);
                 }
             }

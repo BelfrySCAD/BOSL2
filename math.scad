@@ -904,6 +904,16 @@ function norm_fro(A) =
     norm(flatten(A));
 
 
+// Function: matrix_trace()
+// Usage:
+//   matrix_trace(M)
+// Description:
+//   Computes the trace of a square matrix, the sum of the entries on the diagonal.  
+function matrix_trace(M) =
+   assert(is_matrix(M,square=true), "Input to trace must be a square matrix")
+   [for(i=[0:1:len(M)-1])1] * [for(i=[0:1:len(M)-1]) M[i][i]];
+
+
 // Section: Comparisons and Logic
 
 // Function: all_zero()

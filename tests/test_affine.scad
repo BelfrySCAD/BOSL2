@@ -252,5 +252,34 @@ module test_apply_list() {
 test_apply_list();
 
 
+module test_rot_decode() {
+   Tlist = [
+             rot(37),
+             xrot(49),
+             yrot(88),
+             rot(37,v=[1,3,3]),
+             rot(41,v=[2,-3,4]),
+             rot(180),
+             xrot(180),
+             yrot(180),
+             rot(180, v=[3,2,-5], cp=[3,5,18]),
+             rot(0.1, v=[1,2,3]),
+             rot(-47,v=[3,4,5],cp=[9,3,4]),
+             rot(197,v=[13,4,5],cp=[9,-3,4]),
+             move([3,4,5]),
+             move([3,4,5]) * rot(a=56, v=[5,3,-3], cp=[2,3,4]),
+             ident(4)
+           ];
+    errlist = [for(T = Tlist)
+                  let(
+                       parm = rot_decode(T),
+                       restore = move(parm[3])*rot(a=parm[0],v=parm[1],cp=parm[2])
+                  )
+                  norm_fro(restore-T)];
+    assert(max(errlist)<1e-13);
+}
+test_rot_decode();
+
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
