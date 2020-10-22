@@ -427,9 +427,11 @@ module gear2d(
     clearance = undef,
     backlash = 0.0,
     interior = false,
+    mod,
     anchor = CENTER,
     spin = 0
 ) {
+    pitch = is_undef(mod) ? pitch : pitch_value(mod);
     path = gear2d(
         pitch = pitch,
         teeth = teeth,
