@@ -958,7 +958,7 @@ function rack(
 //   l = The length of the worm.  Default: 100
 //   starts = The number of lead starts.  Default: 1
 //   left_handed = If true, the gear returned will have a left-handed spiral.  Default: false
-//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 28
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -978,7 +978,7 @@ function worm(
     d=30, l=100,
     starts=1,
     left_handed=false,
-    pressure_angle=28,
+    pressure_angle=20,
     backlash=0,
     clearance,
     anchor=CENTER,
@@ -1017,7 +1017,7 @@ function worm(
         profiles = [
             for (i=[0:1:zsteps]) let(
                 z = i*zstep - l/2,
-                a = i*astep
+                a = i*astep - 360*revs/2
             )
             apply(zrot(a)*up(z), path3d(cross_sect))
         ],
@@ -1031,7 +1031,7 @@ module worm(
     d=15, l=100,
     starts=1,
     left_handed=false,
-    pressure_angle=28,
+    pressure_angle=20,
     backlash=0,
     clearance,
     anchor=CENTER,
@@ -1069,7 +1069,7 @@ module worm(
 //   worm_arc = The arc of the worm to mate with, in degrees. Default: 60 degrees
 //   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fir the work easier.  Default: 1
 //   left_handed = If true, the gear returned will have a left-handed spiral.  Default: false
-//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 28
+//   pressure_angle = Controls how straight or bulged the tooth sides are. In degrees. Default: 20
 //   backlash = Gap between two meshing teeth, in the direction along the circumference of the pitch circle.  Default: 0
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.
 //   slices = The number of vertical slices to refine the curve of the worm throat.  Default: 10
@@ -1093,7 +1093,7 @@ function worm_gear(
     worm_arc = 60,
     crowning = 1,
     left_handed = false,
-    pressure_angle = 28,
+    pressure_angle = 20,
     backlash = 0,
     clearance,
     slices = 10,
@@ -1101,12 +1101,14 @@ function worm_gear(
     spin = 0,
     orient = UP
 ) =
+    assert(worm_arc >= 10 && worm_arc <= 60)
     let(
         p = pitch_radius(pitch, teeth),
         circ = 2 * PI * p,
         r1 = p + worm_diam/2 + crowning,
         r2 = worm_diam/2 + crowning,
-        lead_ang = atan2(pitch * worm_starts, PI * worm_diam),
+        thickness = worm_gear_thickness(pitch=pitch, teeth=teeth, worm_diam=worm_diam, worm_arc=worm_arc, crowning=crowning, clearance=clearance),
+        helical = pitch * worm_starts * worm_arc / 360 * 360 / circ,
         tooth_profile = reverse(gear_tooth_profile(
             pitch = pitch,
             teeth = teeth,
@@ -1121,20 +1123,20 @@ function worm_gear(
                 u = slice/slices - 0.5,
                 zang = u * worm_arc,
                 tp = [0,r1,0] - spherical_to_xyz(r2, 90, 90+zang),
-                zang2 = 360 * tp.z * tan(lead_ang) / circ
+                zang2 = u * helical
             ) [
                 for (i = [0:1:teeth]) each
                 apply(
                     zrot(-i*360/teeth+zang2) *
                         move(tp) *
-                        xrot(-zang),
+                        xrot(-zang) *
+                        scale(cos(zang)),
                     path3d(tooth_profile)
                 )
             ]
         ],
         top_verts = select(profiles,-1),
         bot_verts = select(profiles,0),
-        thickness = top_verts[0].z - bot_verts[0].z,
         face_pts = len(tooth_profile),
         gear_pts = face_pts * teeth,
         top_faces =[
@@ -1147,7 +1149,7 @@ function worm_gear(
                 [gear_pts, ((i+1)%teeth)*face_pts, (i+1)*face_pts-1]
             ]
         ],
-        sides_vnf = vnf_vertex_array(profiles, caps=false, col_wrap=true, style="alt"),
+        sides_vnf = vnf_vertex_array(profiles, caps=false, col_wrap=true, style="quincunx"),
         vnf1 = vnf_merge([
             [
                 [each top_verts, [0,0,top_verts[0].z]],
@@ -1171,7 +1173,7 @@ module worm_gear(
     worm_arc = 60,
     crowning = 1,
     left_handed = false,
-    pressure_angle = 28,
+    pressure_angle = 20,
     backlash = 0,
     slices = 10,
     clearance,
