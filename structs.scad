@@ -96,7 +96,7 @@ function struct_keys(struct) =
 //   struct = input structure
 //   name = optional structure name to list at the top of the output.  Default: ""
 function struct_echo(struct,name="") =
-    let( keylist = [for(entry=struct) str("&nbsp;&nbsp;",entry[0],": ",entry[1],"\n")])
+    let( keylist = [for(entry=struct) str("  ",entry[0],": ",entry[1],"\n")])
     echo(str("\nStructure ",name,"\n",str_join(keylist)))
     undef;
 
