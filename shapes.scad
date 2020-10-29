@@ -78,14 +78,15 @@ module cuboid(
         cnt = sum(e);
         r = first_defined([chamfer, rounding, 0]);
         c = [min(r,size.x/2), min(r,size.y/2), min(r,size.z/2)];
+        c2 = vmul(corner,c/2);
         $fn = is_finite(chamfer)? 4 : segs(r);
-        translate(vmul(corner,size/2-c)) {
+        translate(vmul(corner, size/2-c)) {
             if (cnt == 0) {
-                cube(c*2, center=true);
+                translate(c2) cube(c, center=true);
             } else if (cnt == 1) {
-                if (e.x) xcyl(l=c.x*2, r=r);
-                if (e.y) ycyl(l=c.y*2, r=r);
-                if (e.z) zcyl(l=c.z*2, r=r);
+                if (e.x) right(c2.x) xcyl(l=c.x, r=r);
+                if (e.y) back (c2.y) ycyl(l=c.y, r=r);
+                if (e.z) up   (c2.z) zcyl(l=c.z, r=r);
             } else if (cnt == 2) {
                 if (!e.x) {
                     intersection() {
@@ -152,9 +153,9 @@ module cuboid(
                     } else {
                         isize = [for (v = size) max(0.001, v-2*chamfer)];
                         hull() {
-                            cube([size.x, isize.y, isize.z], center=true);
-                            cube([isize.x, size.y, isize.z], center=true);
-                            cube([isize.x, isize.y, size.z], center=true);
+                            cube([ size.x, isize.y, isize.z], center=true);
+                            cube([isize.x,  size.y, isize.z], center=true);
+                            cube([isize.x, isize.y,  size.z], center=true);
                         }
                     }
                 } else if (chamfer<0) {
