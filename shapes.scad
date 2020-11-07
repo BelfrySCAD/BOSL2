@@ -894,11 +894,24 @@ module tube(
     anchor, spin=0, orient=UP,
     center, realign=false, l
 ) {
+    function safe_add(x,wall) = is_undef(x)? undef : x+wall;
     h = first_defined([h,l,1]);
-    r1 = first_defined([or1, od1/2, r1, d1/2, or, od/2, r, d/2, ir1+wall, id1/2+wall, ir+wall, id/2+wall]);
-    r2 = first_defined([or2, od2/2, r2, d2/2, or, od/2, r, d/2, ir2+wall, id2/2+wall, ir+wall, id/2+wall]);
-    ir1 = first_defined([ir1, id1/2, ir, id/2, r1-wall, d1/2-wall, r-wall, d/2-wall]);
-    ir2 = first_defined([ir2, id2/2, ir, id/2, r2-wall, d2/2-wall, r-wall, d/2-wall]);
+    orr1 = get_radius(
+        r=first_defined([or1, r1, or, r]),
+        d=first_defined([od1, d1, od, d]),
+        dflt=undef
+    );
+    orr2 = get_radius(
+        r=first_defined([or2, r2, or, r]),
+        d=first_defined([od2, d2, od, d]),
+        dflt=undef
+    );
+    irr1 = get_radius(r1=ir1, r=ir, d1=id1, d=id, dflt=undef);
+    irr2 = get_radius(r1=ir2, r=ir, d1=id2, d=id, dflt=undef);
+    r1 = is_num(orr1)? orr1 : is_num(irr1)? irr1+wall : undef;
+    r2 = is_num(orr2)? orr2 : is_num(irr2)? irr2+wall : undef;
+    ir1 = is_num(irr1)? irr1 : is_num(orr1)? orr1-wall : undef;
+    ir2 = is_num(irr2)? irr2 : is_num(orr2)? orr2-wall : undef;
     assert(ir1 <= r1, "Inner radius is larger than outer radius.");
     assert(ir2 <= r2, "Inner radius is larger than outer radius.");
     sides = segs(max(r1,r2));
