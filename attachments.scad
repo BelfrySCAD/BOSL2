@@ -923,7 +923,8 @@ module attachable(
         $parent_geom   = geom;
         $parent_size   = attach_geom_size(geom);
         $attach_to   = undef;
-        if (attachment_is_shown($tags)) {
+        do_show = attachment_is_shown($tags);
+        if (do_show) {
             if (is_undef($color)) {
                 children(0);
             } else color($color) {
@@ -1270,7 +1271,7 @@ module recolor(c)
 // Usage:
 //   hide(tags) ...
 // Description:
-//   Hides all children with the given tags.
+//   Hides all children with the given tags.  Overrides any previous `hide()` or `show()` calls.
 // Example:
 //   hide("A") cube(50, anchor=CENTER, $tags="Main") {
 //       attach(LEFT, BOTTOM) cylinder(d=30, l=30, $tags="A");
@@ -1279,6 +1280,7 @@ module recolor(c)
 module hide(tags="")
 {
     $tags_hidden = tags==""? [] : str_split(tags, " ");
+    $tags_shown = [];
     children();
 }
 
@@ -1287,7 +1289,7 @@ module hide(tags="")
 // Usage:
 //   show(tags) ...
 // Description:
-//   Shows only children with the given tags.
+//   Shows only children with the given tags.  Overrides any previous `hide()` or `show()` calls.
 // Example:
 //   show("A B") cube(50, anchor=CENTER, $tags="Main") {
 //       attach(LEFT, BOTTOM) cylinder(d=30, l=30, $tags="A");
@@ -1296,6 +1298,7 @@ module hide(tags="")
 module show(tags="")
 {
     $tags_shown = tags==""? [] : str_split(tags, " ");
+    $tags_hidden = [];
     children();
 }
 
