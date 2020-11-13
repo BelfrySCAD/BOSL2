@@ -486,7 +486,7 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 //   rot_decode(left(12)*xrot(-33));     // Returns [33, [-1,0,0], [0,0,0], [-12,0,0]]
 //   rot_decode(translate([3,4,5]));     // Returns [0, [0,0,1], [0,0,0], [3,4,5]]
 function rot_decode(M) =
-    assert(is_matrix(M,4,4) && M[3]==[0,0,0,1], "Input matrix must be a 4x4 matrix representing a 3d transformation")
+    assert(is_matrix(M,4,4) && approx(M[3],[0,0,0,1]), "Input matrix must be a 4x4 matrix representing a 3d transformation")
     let(R = submatrix(M,[0:2],[0:2]))
     assert(approx(det3(R),1) && approx(norm_fro(R * transpose(R)-ident(3)),0),"Input matrix is not a rotation")
     let(
