@@ -64,16 +64,17 @@ function struct_remove(struct, keyword) =
 
 // Function: struct_val()
 // Usage:
-//   struct_val(struct,keyword)
+//   struct_val(struct, keyword, default)
 // Description:
-//   Returns the value for the specified keyword in the structure, or undef if the keyword is not present
+//   Returns the value for the specified keyword in the structure, or default value if the keyword is not present
 // Arguments:
 //   struct = input structure
 //   keyword = keyword whose value to return
-function struct_val(struct,keyword) =
+//   default = default value to return if keyword is not present, defaults to undef
+function struct_val(struct, keyword, default=undef) =
     assert(is_def(keyword),"keyword is missing")
     let(ind = search([keyword],struct)[0])
-    ind == [] ? undef : struct[ind][1];
+    ind == [] ? default : struct[ind][1];
 
 
 // Function: struct_keys()
