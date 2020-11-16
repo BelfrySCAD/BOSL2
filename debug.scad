@@ -254,11 +254,19 @@ module debug_polyhedron(points, faces, convexity=10, txtsize=1, disabled=false) 
 
 
 // Function: standard_anchors()
+// Usage:
+//   anchs = standard_anchors(<two_d>);
 // Description:
 //   Return the vectors for all standard anchors.
-function standard_anchors() = [
+// Arguments:
+//   two_d = If true, returns only the anchors where the Z component is 0.  Default: false
+function standard_anchors(two_d=false) = [
     for (
-        zv = [TOP, CENTER, BOTTOM],
+        zv = [
+            if (!two_d) TOP,
+            CENTER,
+            if (!two_d) BOTTOM
+        ],
         yv = [FRONT, CENTER, BACK],
         xv = [LEFT, CENTER, RIGHT]
     ) xv+yv+zv
@@ -447,6 +455,36 @@ module ruler(length=100, width=undef, thickness=1, depth=3, labels=false, pipsca
     }
 }
 
+
+// Function: mod_indent()
+// Usage:
+//   str = mod_indent(<indent>);
+// Description:
+//   Returns a string that is the total indentation for the module level you are at.
+// Arguments:
+//   indent = The string to indent each level by.  Default: "  " (Two spaces)
+// Example:
+//   x = echo(str(mod_indent(), parent_module(0)));
+function mod_indent(indent="  ") =
+    str_join([for (i=[1:1:$parent_modules-1]) indent]);
+
+
+// Function: mod_trace()
+// Usage:
+//   str = mod_trace(<levs>, <indent>);
+// Description:
+//   Returns a string that shows the current module and its parents, indented for each unprinted parent module.
+// Arguments:
+//   levs = This is the number of levels to print the names of.  Prints the N most nested module names.  Default: 2
+//   indent = The string to indent each level by.  Default: "  " (Two spaces)
+//   modsep = Multiple module names will be separated by this string.  Default: "->"
+// Example:
+//   x = echo(mod_trace());
+function mod_trace(levs=2, indent="  ", modsep="->") =
+    str(
+        str_join([for (i=[1:1:$parent_modules+1-levs]) indent]),
+        str_join([for (i=[min(levs-1,$parent_modules-1):-1:0]) parent_module(i)], modsep)
+    );
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
