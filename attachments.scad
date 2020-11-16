@@ -1308,13 +1308,12 @@ module show(tags="")
 //   diff(neg, [keep]) ...
 //   diff(neg, pos, [keep]) ...
 // Description:
-//   If `neg` is given, takes the union of all children with tags
-//   that are in `neg`, and differences them from the union of all
-//   children with tags in `pos`.  If `pos` is not given, then all
-//   items in `neg` are differenced from all items not in `neg`.  If
-//   `keep` is given, all children with tags in `keep` are then unioned
-//   with the result.  If `keep` is not given, all children without
-//   tags in `pos` or `neg` are then unioned with the result.
+//   If `neg` is given, takes the union of all children with tags that are in `neg`, and differences
+//   them from the union of all children with tags in `pos`.  If `pos` is not given, then all items in
+//   `neg` are differenced from all items not in `neg`.  If `keep` is given, all children with tags in
+//   `keep` are then unioned with the result.  If `keep` is not given, all children without tags in
+//   `pos` or `neg` are then unioned with the result.
+//   Cannot be used in conjunction with `intersect()` or `hulling()` on the same parent object.
 // Arguments:
 //   neg = String containing space delimited set of tag names of children to difference away.
 //   pos = String containing space delimited set of tag names of children to be differenced away from.
@@ -1367,14 +1366,12 @@ module diff(neg, pos=undef, keep=undef)
 //   intersect(a, [keep]) ...
 //   intersect(a, b, [keep]) ...
 // Description:
-//   If `a` is given, takes the union of all children with tags that
-//   are in `a`, and intersection()s them with the union of all
-//   children with tags in `b`.  If `b` is not given, then the union
-//   of all items with tags in `a` are intersection()ed with the union
-//   of all items without tags in `a`.  If `keep` is given, then the
-//   result is unioned with all the children with tags in `keep`.  If
-//   `keep` is not given, all children without tags in `a` or `b` are
-//   unioned with the result.
+//   If `a` is given, takes the union of all children with tags that are in `a`, and `intersection()`s
+//   them with the union of all children with tags in `b`.  If `b` is not given, then the union of all
+//   items with tags in `a` are intersection()ed with the union of all items without tags in `a`.  If
+//   `keep` is given, then the result is unioned with all the children with tags in `keep`.  If `keep`
+//   is not given, all children without tags in `a` or `b` are unioned with the result.
+//   Cannot be used in conjunction with `diff()` or `hulling()` on the same parent object.
 // Arguments:
 //   a = String containing space delimited set of tag names of children.
 //   b = String containing space delimited set of tag names of children.
@@ -1413,15 +1410,14 @@ module intersect(a, b=undef, keep=undef)
 
 // Module: hulling()
 // Usage:
-//   hulling(a, [keep]) ...
+//   hulling(a) ...
 // Description:
-//   Takes the union of all children with tags that are in `a`, and hull()s them.
-//   If `keep` is given, then the result is unioned with all the children with
-//   tags in `keep`.  If `keep` is not given, all children without tags in `a` are
-//   unioned with the result.
+//   If `a` is not given, then all children are `hull()`ed together.
+//   If `a` is given as a string, then all children with `$tags` that are in `a` are
+//   `hull()`ed together and the result is then unioned with all the remaining children.
+//   Cannot be used in conjunction with `diff()` or `intersect()` on the same parent object.
 // Arguments:
-//   a = String containing space delimited set of tag names of children.
-//   keep = String containing space delimited set of tag names of children to keep whole.
+//   a = String containing space delimited set of tag names of children to hull.
 // Example:
 //   hulling("body")
 //   sphere(d=100, $tags="body") {
@@ -1430,8 +1426,12 @@ module intersect(a, b=undef, keep=undef)
 //   }
 module hulling(a)
 {
-    hull() show(a) children();
-    children();
+    if (is_undef(a)) {
+        hull() children();
+    } else {
+        hull() show(a) children();
+        children();
+    }
 }
 
 
