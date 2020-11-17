@@ -873,19 +873,33 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   sweep(shape, concat(outside,inside));
 
 function sweep(shape, transformations, closed=false, caps) =
-  assert(is_list_of(transformations, ident(4)), "Input transformations must be a list of numeric 4x4 matrices in sweep")
-  assert(is_path(shape,2), "Input shape must be a 2d path")
-  let(
-    caps = is_def(caps) ? caps :
-           closed ? false : true,
-    capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
-    fullcaps = is_bool(caps) ? [caps,caps] : caps
-  )
-  assert(len(transformations), "transformation must be length 2 or more")
-  assert(len(shape)>=3, "shape must be a path of at least 3 points")
-  assert(capsOK, "caps must be boolean or a list of two booleans")
-  assert(!closed || !caps, "Cannot make closed shape with caps")
-  _skin_core([for(i=[0:len(transformations)-(closed?0:1)]) apply(transformations[i%len(transformations)],path3d(shape))],caps=fullcaps);
+    assert(is_list_of(transformations, ident(4)), "Input transformations must be a list of numeric 4x4 matrices in sweep")
+    assert(is_path(shape,2) || is_region(shape), "Input shape must be a 2d path or a region.")
+    let(
+        caps = is_def(caps) ? caps :
+            closed ? false : true,
+        capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
+        fullcaps = is_bool(caps) ? [caps,caps] : caps
+    )
+    assert(len(transformations), "transformation must be length 2 or more")
+    assert(capsOK, "caps must be boolean or a list of two booleans")
+    assert(!closed || !caps, "Cannot make closed shape with caps")
+    is_region(shape)? let(
+        regions = split_nested_region(shape),
+        rtrans = reverse(transformations),
+        vnfs = [
+            for (rgn=regions) each [
+                for (path=select(rgn,0,-1))
+                    sweep(path, transformations, closed=closed, caps=false),
+                if (fullcaps[0]) region_faces(rgn, reverse=true),
+                if (fullcaps[1]) region_faces(rgn, transform=select(transformations,-1)),
+            ],
+        ],
+        vnf = vnf_merge(vnfs)
+    ) vnf :
+    assert(len(shape)>=3, "shape must be a path of at least 3 non-colinear points")
+    _skin_core([for(i=[0:len(transformations)-(closed?0:1)]) apply(transformations[i%len(transformations)],path3d(shape))],caps=fullcaps);
+
 
 module sweep(shape, transformations, closed=false, caps, convexity=10,
              anchor="origin",cp,spin=0, orient=UP, extent=false)
