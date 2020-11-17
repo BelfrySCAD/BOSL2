@@ -8,32 +8,30 @@
 //   ```
 //////////////////////////////////////////////////////////////////////
 
-include <skin.scad>
-
 
 // Section: Debugging Paths and Polygons
 
-// Module: trace_polyline()
+// Module: trace_path()
 // Description:
-//   Renders lines between each point of a polyline path.
+//   Renders lines between each point of a path.
 //   Can also optionally show the individual vertex points.
 // Arguments:
-//   pline = The array of points in the polyline.
+//   path = The list of points in the path.
 //   closed = If true, draw the segment from the last vertex to the first.  Default: false
 //   showpts = If true, draw vertices and control points.
 //   N = Mark the first and every Nth vertex after in a different color and shape.
 //   size = Diameter of the lines drawn.
 //   color = Color to draw the lines (but not vertices) in.
 // Example(FlatSpin):
-//   polyline = [for (a=[0:30:210]) 10*[cos(a), sin(a), sin(a)]];
-//   trace_polyline(polyline, showpts=true, size=0.5, color="lightgreen");
-module trace_polyline(pline, closed=false, showpts=false, N=1, size=1, color="yellow") {
-    assert(is_path(pline),"Input pline is not a path");
+//   path = [for (a=[0:30:210]) 10*[cos(a), sin(a), sin(a)]];
+//   trace_path(path, showpts=true, size=0.5, color="lightgreen");
+module trace_path(path, closed=false, showpts=false, N=1, size=1, color="yellow") {
+    assert(is_path(path),"Invalid path argument");
     sides = segs(size/2);
-    pline = closed? close_path(pline) : pline;
+    path = closed? close_path(path) : path;
     if (showpts) {
-        for (i = [0:1:len(pline)-1]) {
-            translate(pline[i]) {
+        for (i = [0:1:len(path)-1]) {
+            translate(path[i]) {
                 if (i%N == 0) {
                     color("blue") sphere(d=size*2.5, $fn=8);
                 } else {
@@ -47,11 +45,11 @@ module trace_polyline(pline, closed=false, showpts=false, N=1, size=1, color="ye
         }
     }
     if (N!=3) {
-        color(color) stroke(path3d(pline), width=size, $fn=8);
+        color(color) stroke(path3d(path), width=size, $fn=8);
     } else {
-        for (i = [0:1:len(pline)-2]) {
+        for (i = [0:1:len(path)-2]) {
             if (N!=3 || (i%N) != 1) {
-                color(color) extrude_from_to(pline[i], pline[i+1]) circle(d=size, $fn=sides);
+                color(color) extrude_from_to(path[i], path[i+1]) circle(d=size, $fn=sides);
             }
         }
     }

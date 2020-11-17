@@ -181,7 +181,6 @@ include <structs.scad>
 //     path_sweep(regular_ngon(n=36,or=.1),round_corners(list2,closed=false, method="circle", cut = 0.75));
 // Example(FlatSpin):  Rounding a spiral with increased rounding along the length
 //   // Construct a square spiral path in 3D
-//   include <BOSL2/skin.scad>
 //   $fn=36;
 //   square = [[0,0],[1,0],[1,1],[0,1]];
 //   spiral = flatten(repeat(concat(square,reverse(square)),5));  // Squares repeat 10 times, forward and backward
@@ -454,7 +453,7 @@ function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=fals
   let (
      bez = path_to_bezier(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=closed)
   )
-  bezier_polyline(bez,splinesteps=splinesteps);
+  bezier_path(bez,splinesteps=splinesteps);
 
 
 
