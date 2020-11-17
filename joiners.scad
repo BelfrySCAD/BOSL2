@@ -10,7 +10,6 @@
 
 
 include <rounding.scad>
-include <skin.scad>
 
 
 // Section: Half Joiners
@@ -989,7 +988,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
                   : let(side_smooth=select(pin_smooth, 0, 2))
                     concat(side_smooth, [socket_smooth], reverse(side_smooth));
     bez = path_to_bezier(path,relsize=smoothing,tangents=tangent);
-    rounded = bezier_polyline(bez,splinesteps=splinesteps);
+    rounded = bezier_path(bez,splinesteps=splinesteps);
     bounds = pointlist_bounds(rounded);
     //kk = search([bounds[1].y], subindex(rounded,1));
     //echo(rounded[kk[0]]);

@@ -10,7 +10,6 @@
 //   - https://github.com/openscad/list-comprehension-demos/blob/master/skin.scad
 //////////////////////////////////////////////////////////////////////
 
-include <vnf.scad>
 
 // Section: Skinning
 
@@ -824,7 +823,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 
 // Function&Module: sweep()
 // Usage: As Module
-//   sweep(shape, transformations, <closed<, <caps>)
+//   sweep(shape, transformations, <closed>, <caps>)
 // Usage: As Function
 //   vnf = sweep(shape, transformations, <closed>, <caps>);
 // Description:

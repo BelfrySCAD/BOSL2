@@ -671,8 +671,8 @@ function yscale(y=1, p=undef, planar=false) = (planar || (!is_undef(p) && len(p)
 //
 // Example: Scaling Points
 //   path = xrot(90,p=path3d(circle(d=50,$fn=12)));
-//   #trace_polyline(path);
-//   trace_polyline(zscale(2,p=path));
+//   #trace_path(path);
+//   trace_path(zscale(2,p=path));
 module zscale(z=1) scale([1,1,z]) children();
 
 function zscale(z=1, p=undef) = scale([1,1,z],p=p);
@@ -917,7 +917,7 @@ function zflip(z=0,p) =
 //   color("blue") move_copies(pts) circle(d=3, $fn=8);
 // Example(FlatSpin): Calling as a 3D Function
 //   pts = skew(p=path3d(square(40,center=true)), szx=0.5, szy=0.3);
-//   trace_polyline(close_path(pts), showpts=true);
+//   trace_path(close_path(pts), showpts=true);
 module skew(sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0)
 {
     multmatrix(

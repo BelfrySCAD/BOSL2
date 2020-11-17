@@ -377,7 +377,7 @@ module stroke(
 //   stroke(closed=true, path);
 // Example(FlatSpin):
 //   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
-//   trace_polyline(path, showpts=true, color="cyan");
+//   trace_path(path, showpts=true, color="cyan");
 function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false) =
     // First try for 2D arc specified by width and thickness
     is_def(width) && is_def(thickness)? (
