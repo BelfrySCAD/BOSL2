@@ -891,7 +891,7 @@ function sweep(shape, transforms, closed=false, caps) =
             for (rgn=regions) each [
                 for (path=select(rgn,0,-1))
                     sweep(path, transforms, closed=closed, caps=false),
-                if (fullcaps[0]) region_faces(rgn, reverse=true),
+                if (fullcaps[0]) region_faces(rgn, transform=transforms[0], reverse=true),
                 if (fullcaps[1]) region_faces(rgn, transform=select(transforms,-1)),
             ],
         ],
