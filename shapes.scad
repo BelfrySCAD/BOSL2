@@ -512,8 +512,10 @@ module right_triangle(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
     size = scalar_vec3(size);
     anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
     attachable(anchor,spin,orient, size=size) {
-        linear_extrude(height=size.z, convexity=2, center=true) {
-            polygon([[-size.x/2,-size.y/2], [-size.x/2,size.y/2], [size.x/2,-size.y/2]]);
+        if (size.z > 0) {
+            linear_extrude(height=size.z, convexity=2, center=true) {
+                polygon([[-size.x/2,-size.y/2], [-size.x/2,size.y/2], [size.x/2,-size.y/2]]);
+            }
         }
         children();
     }
@@ -1395,8 +1397,10 @@ module teardrop(r=undef, d=undef, l=undef, h=undef, ang=45, cap_h=undef, anchor=
     size = [r*2,l,r*2];
     attachable(anchor,spin,orient, size=size) {
         rot(from=UP,to=FWD) {
-            linear_extrude(height=l, center=true, slices=2) {
-                teardrop2d(r=r, ang=ang, cap_h=cap_h);
+            if (l > 0) {
+                linear_extrude(height=l, center=true, slices=2) {
+                    teardrop2d(r=r, ang=ang, cap_h=cap_h);
+                }
             }
         }
         children();
@@ -1567,12 +1571,14 @@ module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, anchor=FRONT+LEFT, spi
     steps = ceil(segs(r)*ang/360);
     step = ang/steps;
     attachable(anchor,spin,orient, size=[r,r,l]) {
-        linear_extrude(height=l, convexity=4, center=true) {
-            path = concat(
-                [[0,0]],
-                [for (i=[0:1:steps]) let(a=270-i*step) r*[cos(a),sin(a)]+[dy,r]]
-            );
-            translate(-[r,r]/2) polygon(path);
+        if (l > 0) {
+            linear_extrude(height=l, convexity=4, center=true) {
+                path = concat(
+                    [[0,0]],
+                    [for (i=[0:1:steps]) let(a=270-i*step) r*[cos(a),sin(a)]+[dy,r]]
+                );
+                translate(-[r,r]/2) polygon(path);
+            }
         }
         children();
     }
