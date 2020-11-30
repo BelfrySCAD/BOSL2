@@ -81,7 +81,7 @@ module cuboid(
         c2 = vmul(corner,c/2);
         $fn = is_finite(chamfer)? 4 : segs(r);
         translate(vmul(corner, size/2-c)) {
-            if (cnt == 0) {
+            if (cnt == 0 || approx(r,0)) {
                 translate(c2) cube(c, center=true);
             } else if (cnt == 1) {
                 if (e.x) right(c2.x) xcyl(l=c.x, r=r);
@@ -120,6 +120,12 @@ module cuboid(
 
     size = scalar_vec3(size);
     edges = edges(edges, except=except_edges);
+    assert(is_vector(size,3));
+    assert(is_undef(chamfer) || is_finite(chamfer));
+    assert(is_undef(rounding) || is_finite(rounding));
+    assert(is_undef(p1) || is_vector(p1));
+    assert(is_undef(p2) || is_vector(p2));
+    assert(is_bool(trimcorners));
     if (!is_undef(p1)) {
         if (!is_undef(p2)) {
             translate(pointlist_bounds([p1,p2])[0]) {
@@ -131,19 +137,19 @@ module cuboid(
             }
         }
     } else {
-        if (chamfer != undef) {
+        if (is_finite(chamfer)) {
             if (any(edges[0])) assert(chamfer <= size.y/2 && chamfer <=size.z/2, "chamfer must be smaller than half the cube length or height.");
             if (any(edges[1])) assert(chamfer <= size.x/2 && chamfer <=size.z/2, "chamfer must be smaller than half the cube width or height.");
             if (any(edges[2])) assert(chamfer <= size.x/2 && chamfer <=size.y/2, "chamfer must be smaller than half the cube width or length.");
         }
-        if (rounding != undef) {
+        if (is_finite(rounding)) {
             if (any(edges[0])) assert(rounding <= size.y/2 && rounding<=size.z/2, "rounding radius must be smaller than half the cube length or height.");
             if (any(edges[1])) assert(rounding <= size.x/2 && rounding<=size.z/2, "rounding radius must be smaller than half the cube width or height.");
             if (any(edges[2])) assert(rounding <= size.x/2 && rounding<=size.y/2, "rounding radius must be smaller than half the cube width or length.");
         }
         majrots = [[0,90,0], [90,0,0], [0,0,0]];
         attachable(anchor,spin,orient, size=size) {
-            if (chamfer != undef) {
+            if (is_finite(chamfer) && !approx(chamfer,0)) {
                 if (edges == EDGES_ALL && trimcorners) {
                     if (chamfer<0) {
                         cube(size, center=true) {
@@ -212,7 +218,7 @@ module cuboid(
                         corner_shape([ 1, 1, 1]);
                     }
                 }
-            } else if (rounding != undef) {
+            } else if (is_finite(rounding) && !approx(rounding,0)) {
                 sides = quantup(segs(rounding),4);
                 if (edges == EDGES_ALL) {
                     if(rounding<0) {
