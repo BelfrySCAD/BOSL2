@@ -779,12 +779,14 @@ module modulated_circle(r, sines=[10], d)
 //   extrude_from_to([0,0,0], [10,20,30], convexity=4, twist=360, scale=3.0, slices=40) {
 //       xcopies(3) circle(3, $fn=32);
 //   }
-module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slices=undef) {
+module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
     rtp = xyz_to_spherical(pt2-pt1);
     translate(pt1) {
         rotate([0, rtp[2], rtp[1]]) {
-            linear_extrude(height=rtp[0], convexity=convexity, center=false, slices=slices, twist=twist, scale=scale) {
-                children();
+            if (rtp[0] > 0) {
+                linear_extrude(height=rtp[0], convexity=convexity, center=false, slices=slices, twist=twist, scale=scale) {
+                    children();
+                }
             }
         }
     }
@@ -895,8 +897,10 @@ module path_extrude(path, convexity=10, clipsize=100) {
             translate(pt1) {
                 Qrot(q) {
                     down(clipsize/2/2) {
-                        linear_extrude(height=dist+clipsize/2, convexity=convexity) {
-                            children();
+                        if ((dist+clipsize/2) > 0) {
+                            linear_extrude(height=dist+clipsize/2, convexity=convexity) {
+                                children();
+                            }
                         }
                     }
                 }

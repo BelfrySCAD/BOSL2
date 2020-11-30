@@ -298,7 +298,7 @@ module stroke(
                         }
                     } else {
                         rotate([90,0,endcap_angle1]) {
-                            linear_extrude(height=widths[0], center=true, convexity=convexity) {
+                            linear_extrude(height=max(widths[0],0.001), center=true, convexity=convexity) {
                                 polygon(endcap_shape1);
                             }
                         }
@@ -318,7 +318,7 @@ module stroke(
                         }
                     } else {
                         rotate([90,0,endcap_angle2]) {
-                            linear_extrude(height=select(widths,-1), center=true, convexity=convexity) {
+                            linear_extrude(height=max(select(widths,-1),0.001), center=true, convexity=convexity) {
                                 polygon(endcap_shape2);
                             }
                         }

@@ -762,8 +762,10 @@ module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center, conv
     maxy = max([for (pt = bezier) abs(pt[1])]);
     anchor = get_anchor(anchor,center,BOT,BOT);
     attachable(anchor,spin,orient, size=[maxx*2,maxy*2,height]) {
-        linear_extrude(height=height, center=true, convexity=convexity, twist=twist, slices=slices, scale=scale) {
-            bezier_polygon(bezier, splinesteps=splinesteps, N=N);
+        if (height > 0) {
+            linear_extrude(height=height, center=true, convexity=convexity, twist=twist, slices=slices, scale=scale) {
+                bezier_polygon(bezier, splinesteps=splinesteps, N=N);
+            }
         }
         children();
     }

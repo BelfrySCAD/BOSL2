@@ -108,8 +108,10 @@ module cube(size=1, center, anchor, spin=0, orient=UP)
     anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
     size = scalar_vec3(size);
     attachable(anchor,spin,orient, size=size) {
-        linear_extrude(height=size.z, center=true, convexity=2) {
-            square([size.x,size.y], center=true);
+        if (size.z > 0) {
+            linear_extrude(height=size.z, center=true, convexity=2) {
+                square([size.x,size.y], center=true);
+            }
         }
         children();
     }
@@ -189,14 +191,18 @@ module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
     l = first_defined([h, l, 1]);
     sides = segs(max(r1,r2));
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
-        if(r1>r2) {
-            linear_extrude(height=l, center=true, convexity=2, scale=r2/r1) {
-                circle(r=r1);
+        if (r1 > r2) {
+            if (l > 0) {
+                linear_extrude(height=l, center=true, convexity=2, scale=r2/r1) {
+                    circle(r=r1);
+                }
             }
         } else {
             zflip() {
-                linear_extrude(height=l, center=true, convexity=2, scale=r1/r2) {
-                    circle(r=r2);
+                if (l > 0) {
+                    linear_extrude(height=l, center=true, convexity=2, scale=r1/r2) {
+                        circle(r=r2);
+                    }
                 }
             }
         }
