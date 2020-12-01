@@ -152,7 +152,7 @@ module line_of(spacing, n, l, p1, p2)
 //   spacing = spacing between copies. (Default: 1.0)
 //   n = Number of copies to spread out. (Default: 2)
 //   l = Length to spread copies over.
-//   sp = If given, copies will be spread on a line to the right of starting position `sp`.  If not given, copies will be spread along a line that is centered at [0,0,0].
+//   sp = If given as a point, copies will be spread on a line to the right of starting position `sp`.  If given as a scalar, copies will be spread on a line to the right of starting position `[sp,0,0]`.  If not given, copies will be spread along a line that is centered at [0,0,0].
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -170,6 +170,7 @@ module line_of(spacing, n, l, p1, p2)
 //   }
 module xcopies(spacing, n, l, sp)
 {
+    sp = is_finite(sp)? [sp,0,0] : sp;
     line_of(l=l*RIGHT, spacing=spacing*RIGHT, n=n, p1=sp) children();
 }
 
@@ -187,7 +188,7 @@ module xcopies(spacing, n, l, sp)
 //   spacing = spacing between copies. (Default: 1.0)
 //   n = Number of copies to spread out. (Default: 2)
 //   l = Length to spread copies over.
-//   sp = If given, copies will be spread on a line back from starting position `sp`.  If not given, copies will be spread along a line that is centered at [0,0,0].
+//   sp = If given as a point, copies will be spread on a line back from starting position `sp`.  If given as a scalar, copies will be spread on a line back from starting position `[0,sp,0]`.  If not given, copies will be spread along a line that is centered at [0,0,0].
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -205,6 +206,7 @@ module xcopies(spacing, n, l, sp)
 //   }
 module ycopies(spacing, n, l, sp)
 {
+    sp = is_finite(sp)? [0,sp,0] : sp;
     line_of(l=l*BACK, spacing=spacing*BACK, n=n, p1=sp) children();
 }
 
@@ -222,7 +224,7 @@ module ycopies(spacing, n, l, sp)
 //   spacing = spacing between copies. (Default: 1.0)
 //   n = Number of copies to spread out. (Default: 2)
 //   l = Length to spread copies over.
-//   sp = If given, copies will be spread on a line up from starting position `sp`.  If not given, copies will be spread along a line that is centered at [0,0,0].
+//   sp = If given as a point, copies will be spread on a line up from starting position `sp`.  If given as a scalar, copies will be spread on a line up from starting position `[0,0,sp]`.  If not given, copies will be spread along a line that is centered at [0,0,0].
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -240,6 +242,7 @@ module ycopies(spacing, n, l, sp)
 //   }
 module zcopies(spacing, n, l, sp)
 {
+    sp = is_finite(sp)? [0,0,sp] : sp;
     line_of(l=l*UP, spacing=spacing*UP, n=n, p1=sp) children();
 }
 

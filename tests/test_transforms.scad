@@ -106,14 +106,23 @@ test_up();
 
 
 module test_scale() {
+    cb = cube(1);
     vals = [[-1,-2,-3],[1,1,1],[3,6,2],[1,2,3],[243,75,147]];
     for (val=vals) {
+        assert_equal(scale(point2d(val)), [[val.x,0,0],[0,val.y,0],[0,0,1]]);
         assert_equal(scale(val), [[val.x,0,0,0],[0,val.y,0,0],[0,0,val.z,0],[0,0,0,1]]);
         assert_equal(scale(val, p=[1,2,3]), vmul([1,2,3], val));
         scale(val) nil();
     }
     assert_equal(scale(3), [[3,0,0,0],[0,3,0,0],[0,0,3,0],[0,0,0,1]]);
     assert_equal(scale(3, p=[1,2,3]), 3*[1,2,3]);
+    assert_equal(scale(3, p=cb), cube(3));
+    assert_equal(scale(2, p=square(1)), square(2));
+    assert_equal(scale(2, cp=[1,1], p=square(1)), square(2, center=true));
+    assert_equal(scale([2,3], p=square(1)), square([2,3]));
+    assert_equal(scale([2,2], cp=[0.5,0.5], p=square(1)), move([-0.5,-0.5], p=square([2,2])));
+    assert_equal(scale([2,3,4], p=cb), cube([2,3,4]));
+    assert_equal(scale([-2,-3,-4], p=cb), [[for (p=cb[0]) vmul(p,[-2,-3,-4])], [for (f=cb[1]) reverse(f)]]);
     // Verify that module at least doesn't crash.
     scale(-5) scale(5) nil();
 }
