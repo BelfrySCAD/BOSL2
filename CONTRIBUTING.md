@@ -24,7 +24,7 @@ If you wish to contribute bugfixes or code to the BOSL2 project, the standard wa
 	    3. Click the Clone button.
 	    4. When it asks "How are you planning to use this fork?", click on the button "To contribute to the parent project."
 	
-1. Before you edit files, always syncronize with the upstream repository:
+1. Before you edit files, always synchronize with the upstream repository:
     - If using the command-line:
         ```
         git pull upstream

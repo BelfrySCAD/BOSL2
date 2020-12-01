@@ -747,16 +747,20 @@ function assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
 // Arguments:
 //   r = Radius of the base circle. Default: 40
 //   d = Diameter of the base circle.
-//   sines = array of [amplitude, frequency] pairs, where the frequency is the number of times the cycle repeats around the circle.
+//   sines = array of [amplitude, frequency] pairs or [amplitude, frequency, phase] triples, where the frequency is the number of times the cycle repeats around the circle.
 // Example(2D):
 //   modulated_circle(r=40, sines=[[3, 11], [1, 31]], $fn=6);
-module modulated_circle(r, sines=[10], d)
+module modulated_circle(r, sines=[[1,1]], d)
 {
     r = get_radius(r=r, d=d, dflt=40);
-    freqs = len(sines)>0? [for (i=sines) i[1]] : [5];
+    assert(is_list(sines)
+        && all([for(s=sines) is_vector(s,2) || is_vector(s,3)]),
+        "sines must be given as a list of pairs or triples");
+    sines_ = [for(s=sines) [s[0], s[1], len(s)==2 ? 0 : s[2]]];
+    freqs = len(sines_)>0? [for (i=sines_) i[1]] : [5];
     points = [
         for (a = [0 : (360/segs(r)/max(freqs)) : 360])
-            let(nr=r+sum_of_sines(a,sines)) [nr*cos(a), nr*sin(a)]
+            let(nr=r+sum_of_sines(a,sines_)) [nr*cos(a), nr*sin(a)]
     ];
     polygon(points);
 }
