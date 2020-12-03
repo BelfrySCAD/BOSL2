@@ -314,12 +314,7 @@ function get_height(h=undef,l=undef,height=undef,dflt=undef) =
 
 // Function: get_named_args(positional, named, _undef)
 // Usage:
-//   function f(pos1=_undef, pos2=_undef,...,
-//              named1=_undef, named2=_undef, ...) =
-//    let(args = get_named_args([pos1, pos2, ...],
-//                              [[named1, default1], [named2, default2], ...]),
-//        named1=args[0], named2=args[1], ...)
-//        ...
+//   function f(pos1=_undef, pos2=_undef,...,named1=_undef, named2=_undef, ...) = let(args = get_named_args([pos1, pos2, ...], [[named1, default1], [named2, default2], ...]), named1=args[0], named2=args[1], ...)
 // Description:
 //   Given the values of some positional and named arguments,
 //   returns a list of the values assigned to named arguments,
@@ -331,20 +326,15 @@ function get_height(h=undef,l=undef,height=undef,dflt=undef) =
 //    these are assigned is given by the `priority` argument, while the
 //    positional assignation is done in the order of the named arguments.
 //    - Any remaining named arguments take the provided default values.
-// Arguments:
-//   positional = the list of values of positional arguments.
-//   named = the list of named arguments; each entry of the list has the
-//   form [passed-value, default-value, priority], where
-//      passed-value is the value that was passed at function call;
-//      default-value is the value that will be used if nothing is read
-//      from either named or positional arguments;
-//      priority is the priority assigned to this argument.
-//   _undef = the default value used by the calling function for all arguments (default is some random string that you will never use). (this is *not* undef, or any value that the user might purposely want to use as an argument value).
-//
 //  If only k positional arguments are used, then the k named values
 //  with lowest 'priority' value (among the unassigned ones) will get them.
 //  The arguments will be assigned in the order of the named values.
 //  By default these two orders coincide.
+// Arguments:
+//   positional = the list of values of positional arguments.
+//   named = the list of named arguments; each entry of the list has the form [passed-value, default-value, priority], where passed-value is the value that was passed at function call; default-value is the value that will be used if nothing is read from either named or positional arguments; priority is the priority assigned to this argument.
+//   _undef = the default value used by the calling function for all arguments (default is some random string that you will never use). (this is *not* undef, or any value that the user might purposely want to use as an argument value).
+//
 //
 //
 // Examples:
