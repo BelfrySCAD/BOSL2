@@ -121,16 +121,9 @@ module half_of(v=UP, cp, s=1000, planar=false)
 function half_of(_arg1=_undef, _arg2=_undef, _arg3=_undef, _arg4=_undef,
     v=_undef, cp=_undef, p=_undef, s=_undef) =
     let(args=get_named_args([_arg1, _arg2, _arg3, _arg4],
-        [[v], [cp, 0], [p], [s, 1e4]]),
+        [[v,undef,0], [cp,0,2], [p,undef,1], [s,1e4,3]]),
         v=args[0], cp0=args[1], p=args[2], s=args[3],
         cp = is_num(cp0) ? cp0*unit(v) : cp0)
-    echo("_undef=", _undef)
-    echo("v=", v)
-    echo("cp=", cp)
-    echo("p=", p)
-    echo("vnf?", is_vnf(p))
-    echo("region?", is_region(p))
-    echo("s=", s)
     assert(is_vector(v,2)||is_vector(v,3),
       "must provide a half-plane or half-space")
     let(d=len(v))
@@ -164,11 +157,15 @@ function half_of(_arg1=_undef, _arg2=_undef, _arg3=_undef, _arg4=_undef,
         :
     assert(false, "must pass either a point, a path, a region, or a VNF");
 
-// Module: left_half()
+// Function&Module: left_half()
 //
-// Usage:
+// Usage: as module
 //   left_half([s], [x]) ...
 //   left_half(planar=true, [s], [x]) ...
+// Usage: as function
+//   left_half([s], [x], path)
+//   left_half([s], [x], region)
+//   left_half([s], [x], vnf)
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is right of it.
@@ -197,10 +194,16 @@ module left_half(s=1000, x=0, planar=false)
         }
     }
 }
+function left_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
+    x=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3],
+    [[x, 0,1], [p,undef,0], [s, 1e4,2]]),
+        x=args[0], p=args[1], s=args[2])
+    half_of(v=[1,0,0], cp=x, p=p);
 
 
 
-// Module: right_half()
+// Function&Module: right_half()
 //
 // Usage:
 //   right_half([s], [x]) ...
@@ -233,10 +236,16 @@ module right_half(s=1000, x=0, planar=false)
         }
     }
 }
+function right_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
+    x=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3],
+    [[x, 0,1], [p,undef,0], [s, 1e4,2]]),
+        x=args[0], p=args[1], s=args[2])
+    half_of(v=[-1,0,0], cp=x, p=p);
 
 
 
-// Module: front_half()
+// Function&Module: front_half()
 //
 // Usage:
 //   front_half([s], [y]) ...
@@ -269,10 +278,16 @@ module front_half(s=1000, y=0, planar=false)
         }
     }
 }
+function front_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
+    x=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3],
+    [[x, 0,1], [p,undef,0], [s, 1e4,2]]),
+        x=args[0], p=args[1], s=args[2])
+    half_of(v=[0,1,0], cp=x, p=p);
 
 
 
-// Module: back_half()
+// Function&Module: back_half()
 //
 // Usage:
 //   back_half([s], [y]) ...
@@ -305,10 +320,16 @@ module back_half(s=1000, y=0, planar=false)
         }
     }
 }
+function back_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
+    x=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3],
+    [[x, 0,1], [p,undef,0], [s, 1e4,2]]),
+        x=args[0], p=args[1], s=args[2])
+    half_of(v=[0,-1,0], cp=x, p=p);
 
 
 
-// Module: bottom_half()
+// Function&Module: bottom_half()
 //
 // Usage:
 //   bottom_half([s], [z]) ...
@@ -333,10 +354,16 @@ module bottom_half(s=1000, z=0)
         }
     }
 }
+function right_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
+    x=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3],
+    [[x, 0,1], [p,undef,0], [s, 1e4,2]]),
+        x=args[0], p=args[1], s=args[2])
+    half_of(v=[0,0,-1], cp=x, p=p);
 
 
 
-// Module: top_half()
+// Function&Module: top_half()
 //
 // Usage:
 //   top_half([s], [z]) ...
@@ -361,6 +388,12 @@ module top_half(s=1000, z=0)
         }
     }
 }
+function right_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
+    x=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3],
+    [[x, 0,1], [p,undef,0], [s, 1e4,2]]),
+        x=args[0], p=args[1], s=args[2])
+    half_of(v=[0,0,1], cp=x, p=p);
 
 
 

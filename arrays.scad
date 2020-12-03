@@ -89,6 +89,18 @@ function select(list, start, end=undef) =
             :   concat([for (i = [s:1:l-1]) list[i]], [for (i = [0:1:e]) list[i]]) ;
 
 
+// Function: last()
+// Description:
+//   Returns the last element of a list, or undef if empty.
+// Usage:
+//   last(list)
+// Arguments:
+//   list = The list to get the last element of.
+// Example:
+//   l = [3,4,5,6,7,8,9];
+//   last(l);  // Returns 9.
+function last(list) = list[len(list)-1];
+
 // Function: slice()
 // Description:
 //   Returns a slice of a list.  The first item is index 0.
