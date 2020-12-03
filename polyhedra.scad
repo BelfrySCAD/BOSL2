@@ -283,7 +283,7 @@ module regular_polyhedron(
     faces=undef,
     facetype=undef,
     hasfaces=undef,
-    side=1,
+    side=undef,
     ir=undef,
     mr=undef,
     or=undef,
@@ -591,7 +591,7 @@ function regular_polyhedron_info(
     info=undef, name=undef,
     index=undef, type=undef,
     faces=undef, facetype=undef,
-    hasfaces=undef, side=1,
+    hasfaces=undef, side=undef,
     ir=undef, mr=undef, or=undef,
     r=undef, d=undef,
     anchor=[0,0,0], center=undef,
@@ -602,7 +602,7 @@ function regular_polyhedron_info(
         argcount = num_defined([ir,mr,or,r,d])
     )
     assert(argcount<=1, "You must specify only one of 'ir', 'mr', 'or', 'r', and 'd'")
-    let(
+    let(  
         //////////////////////
         //Index values into the _polyhedra_ array
         //
@@ -664,6 +664,7 @@ function regular_polyhedron_info(
     )
     assert(valid_facedown,str("'facedown' set to ",facedown," but selected polygon only has faces with size(s) ",entry[facevertices]))
     let(
+        side = default(side,1),   // This default setting must occur after _trapezohedron is called
         scalefactor = (
             name=="trapezohedron" ? 1 : (
                 argcount == 0? side :
@@ -730,7 +731,7 @@ function _stellate_faces(scalefactor,stellate,vertices,faces_normals) =
 function _trapezohedron(faces, r, side, longside, h, d) =
     assert(faces%2==0, "Must set 'faces' to an even number for trapezohedron")
     let(
-        r = get_radius(r=r, d=d, dflt=1),
+        r = get_radius(r=r, d=d),
         N = faces/2,
         parmcount = num_defined([r,side,longside,h])
     )
