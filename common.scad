@@ -312,7 +312,53 @@ function get_height(h=undef,l=undef,height=undef,dflt=undef) =
     assert(num_defined([h,l,height])<=1,"You must specify only one of `l`, `h`, and `height`")
     first_defined([h,l,height,dflt]);
 
+// Function: get_named_args(anonymous, named, _undef)
+// Usage:
+// function f(anon1=_undef, anon2=_undef,...,
+//     named1=_undef, named2=_undef, ...) =
+//     let(args = get_named_args([anon1, anon2, ...],
+//        [[named1, default1], [named2, default2], ...]))
+//        ...
+// Description:
+//   given a set of anonymous and named arguments, returns the values of
+//   named arguments, in order.
+//    - All named arguments which were provided by the user take the
+//    value provided.
+//    - All named arguments which were not provided by the user are
+//    affected from anonymous arguments, in order.
+//    - Any remaining named arguments take the provided default values.
+// Arguments:
+//   anonymous = the list of values of anonymous arguments.
+//   named = the list of [passed-value, default value] of named arguments.
+//   _undef = the default value used by the calling function for all
+//   arguments (this is *not* undef, or any value that the user might
+//   purposely want to use as an argument value).
+// Examples:
+// function f(arg1=_undef, arg2=_undef, arg3=_undef,
+//   named1=_undef, named2=_undef, named3=_undef) =
+//   let(named = get_named_args([arg1, arg2, arg3],
+//     [[named1, "default1"], [named2, "default2"], [named3, "default3"]]))
+//   named;
+// echo(f()); // ["default1", "default2", "default3"]
+// echo(f("given2", "given3", named1="given1")); // ["given1", "given2", "given3"]
+// echo(f("given1")); // ["given1", "default2", "default3"]
+// echo(f(named1="given1", "given2")); // ["given1", "given2", "default3"]
+// echo(f(undef, named1="given1", undef)); // ["given1", undef, undef]
 
+// a value that the user should never enter randomly;
+// result of `dd if=/dev/random bs=32 count=1 |base64` :
+_undef="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
+
+function get_named_args(anonymous, named,_undef=_undef) =
+    /* u: set of undefined indices in named arguments */
+    let(from_anon = [for(p=enumerate(named)) if(p[1][0]==_undef) p[0]],
+        n = len(anonymous))
+    echo("from_anon:", from_anon)
+    [ for(e = enumerate(named))
+        // if the value is defined, return it:
+        e[1][0] != _undef ? e[1][0] :
+        let(k = anonymous[search(e[0], from_anon)[0]])
+        k != _undef ? k : e[1][1] ];
 // Function: scalar_vec3()
 // Usage:
 //   scalar_vec3(v, <dflt>);

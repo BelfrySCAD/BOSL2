@@ -118,7 +118,7 @@ module half_of(v=UP, cp, s=1000, planar=false)
     }
 }
 
-function half_of(v, arg1, arg2, cp, p, s=1e4) =
+function half_of(v, arg1, arg2, s=1e4, cp, p) =
     /* may be called as either:
      *                   p=   cp=
      * 1. (v, p)         arg1 0
@@ -158,14 +158,15 @@ function half_of(v, arg1, arg2, cp, p, s=1e4) =
             // create self-intersection or whiskers:
             z[i]*z[j] >= 0 ? [] : [(z[j]*p[i]-z[i]*p[j])/(z[j]-z[i])]) ]
         :
-    assert(is_region(p), str("must provide point, path or region"))
-    assert(len(v) == 2, str("3D vector not compatible with region"))
-    let(u=unit(v), w=[-u[1], u[0]],
-        R=[[cp+s*w, cp+s*(v+v), cp+s*(v-w), cp-s*w]]) // bounding region
-    intersection(R, p);
-    // FIXME: find something intelligent to do if p is a VNF
-    // FIXME: scadlib csg.scad, csg_hspace()
-
+    is_region(p) ?
+        assert(len(v) == 2, str("3D vector not compatible with region"))
+        let(u=unit(v), w=[-u[1], u[0]],
+            R=[[cp+s*w, cp+s*(v+v), cp+s*(v-w), cp-s*w]]) // half-plane
+        intersection(R, p)
+        :
+    is_vnf(p) ?
+    vnf_halfspace(halfspace=concat(v,[-v*cp]), vnf=p) :
+    assert(false, "must pass either a point, a path, a region, or a VNF");
 
 // Module: left_half()
 //
