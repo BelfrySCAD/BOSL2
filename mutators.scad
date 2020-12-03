@@ -118,25 +118,19 @@ module half_of(v=UP, cp, s=1000, planar=false)
     }
 }
 
-function half_of(v, arg1, arg2, s=1e4, cp, p) =
-    /* may be called as either:
-     *                   p=   cp=
-     * 1. (v, p)         arg1 0
-     * 2. (v, p=p)       p    0
-     * 3. (v, cp, p)     arg2 arg1
-     * 4. (v, cp=cp, p)  arg1 p
-     * 5. (v, cp, p=p)   p    arg1
-     * 6. (v, cp=cp, p=p)p    cp
-     */
-    /* FIXME: add tests for the various argument naming schemes */
-    let(p_=p, cp_=cp, // keep names p and cp clean
-        p = !is_undef(p_) ? p_ :  // cases 2.5.6.
-            !is_undef(arg2) ? arg2 : arg1, // cases 3., 1.4.
-        cp0=!is_undef(cp_) ? cp_ : // cases 4.6.
-             is_undef(arg1) ? 0*v : // case 2.
-            !is_undef(arg2) ? arg1 : // case 3.
-             is_undef(p_) ? 0*v : arg1, // cases 1., 5.
+function half_of(_arg1=_undef, _arg2=_undef, _arg3=_undef, _arg4=_undef,
+    v=_undef, cp=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3, _arg4],
+        [[v], [cp, 0], [p], [s, 1e4]]),
+        v=args[0], cp0=args[1], p=args[2], s=args[3],
         cp = is_num(cp0) ? cp0*unit(v) : cp0)
+    echo("_undef=", _undef)
+    echo("v=", v)
+    echo("cp=", cp)
+    echo("p=", p)
+    echo("vnf?", is_vnf(p))
+    echo("region?", is_region(p))
+    echo("s=", s)
     assert(is_vector(v,2)||is_vector(v,3),
       "must provide a half-plane or half-space")
     let(d=len(v))
@@ -158,14 +152,16 @@ function half_of(v, arg1, arg2, s=1e4, cp, p) =
             // create self-intersection or whiskers:
             z[i]*z[j] >= 0 ? [] : [(z[j]*p[i]-z[i]*p[j])/(z[j]-z[i])]) ]
         :
+    is_vnf(p) ?
+    // we must put is_vnf() before is_region(), because most triangulated
+    // VNFs will pass is_region() test
+    vnf_halfspace(halfspace=concat(v,[-v*cp]), vnf=p) :
     is_region(p) ?
         assert(len(v) == 2, str("3D vector not compatible with region"))
         let(u=unit(v), w=[-u[1], u[0]],
             R=[[cp+s*w, cp+s*(v+v), cp+s*(v-w), cp-s*w]]) // half-plane
         intersection(R, p)
         :
-    is_vnf(p) ?
-    vnf_halfspace(halfspace=concat(v,[-v*cp]), vnf=p) :
     assert(false, "must pass either a point, a path, a region, or a VNF");
 
 // Module: left_half()

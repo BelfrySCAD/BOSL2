@@ -20,7 +20,8 @@
 //   is_region(x);
 // Description:
 //   Returns true if the given item looks like a region.  A region is defined as a list of zero or more paths.
-function is_region(x) = is_list(x) && is_path(x.x);
+function is_region(x) =
+  is_list(x) && all([for(y=x) is_path(y, len(x[0][0]))]);
 
 
 // Function: close_region()
