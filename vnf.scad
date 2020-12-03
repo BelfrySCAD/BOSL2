@@ -829,14 +829,14 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
 
 // Section: VNF transformations
 //
+
 // Function: vnf_halfspace(halfspace, vnf)
 // Usage:
 //   vnf_halfspace([a,b,c,d], vnf)
 // Description:
 //   returns the intersection of the VNF with the given half-space.
 // Arguments:
-//   halfspace = half-space to intersect with, given as the four
-//   coefficients of the affine inequation a*x+b*y+c*z+d ≥ 0.
+//   halfspace = half-space to intersect with, given as the four coefficients of the affine inequation a\*x+b\*y+c\*z≥ d.
 
 function _vnf_halfspace_pts(halfspace, points, faces,
   inside=undef, coords=[], map=[]) =
@@ -861,7 +861,7 @@ function _vnf_halfspace_pts(halfspace, points, faces,
     // termination test:
     i >= len(points) ? [ coords, map, inside ] :
     let(inside = !is_undef(inside) ? inside :
-        [for(x=points) halfspace*concat(x,[1]) >= 0],
+        [for(x=points) halfspace*concat(x,[-1]) >= 0],
         pi = points[i])
     // inside half-space: keep the point (and reindex)
     inside[i] ? _vnf_halfspace_pts(halfspace, points, faces, inside,
@@ -871,10 +871,10 @@ function _vnf_halfspace_pts(halfspace, points, faces,
       each if(j!=undef) [f[(j+1)%m], f[(j+m-1)%m]] ]),
     // filter those which lie in half-space:
         adj2 = [for(x=adj) if(inside[x]) x],
-        zi = halfspace*concat(pi, [1]))
+        zi = halfspace*concat(pi, [-1]))
     _vnf_halfspace_pts(halfspace, points, faces, inside,
         // new points: we append all these intersection points
-        concat(coords, [for(j=adj2) let(zj=halfspace*concat(points[j],[1]))
+        concat(coords, [for(j=adj2) let(zj=halfspace*concat(points[j],[-1]))
             (zi*points[j]-zj*pi)/(zi-zj)]),
         // map: we add the info
         concat(map, [[for(y=enumerate(adj2)) [y[1], n+y[0]]]]));
@@ -950,7 +950,4 @@ function vnf_halfspace(_arg1=_undef, _arg2=_undef,
         loops=[for(p=paths) if(p[0] == last(p)) p])
     [coords, concat(newfaces, loops)];
 
-//
-//
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
-//
