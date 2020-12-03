@@ -889,7 +889,7 @@ module test_deriv(){
          [0.469846310393,-0.813797681349],
          [0.925416578398,0.163175911167],
          [0.696902572292,1.45914323952]]);
-  spent = yscale(8,pent);
+  spent = yscale(8,p=pent);
   lens = path_segment_lengths(spent,closed=true);
   assert_approx(deriv(spent, closed=true, h=lens),
          [[-0.0381285841663,0.998065839726],
