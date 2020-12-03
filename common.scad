@@ -312,27 +312,41 @@ function get_height(h=undef,l=undef,height=undef,dflt=undef) =
     assert(num_defined([h,l,height])<=1,"You must specify only one of `l`, `h`, and `height`")
     first_defined([h,l,height,dflt]);
 
-// Function: get_named_args(anonymous, named, _undef)
+// Function: get_named_args(positional, named, _undef)
 // Usage:
-// function f(anon1=_undef, anon2=_undef,...,
+// function f(pos1=_undef, pos2=_undef,...,
 //     named1=_undef, named2=_undef, ...) =
-//     let(args = get_named_args([anon1, anon2, ...],
-//        [[named1, default1], [named2, default2], ...]))
+//     let(args = get_named_args([pos1, pos2, ...],
+//        [[named1, default1], [named2, default2], ...]),
+//        named1=args[0], named2=args[1], ...)
 //        ...
 // Description:
-//   given a set of anonymous and named arguments, returns the values of
-//   named arguments, in order.
-//    - All named arguments which were provided by the user take the
-//    value provided.
+//   Given the values of some positional and named arguments,
+//   returns a list of the values assigned to named arguments,
+//   in the following way:
+//    - All named arguments which were explicitly assigned in the
+//    function call take the value provided.
 //    - All named arguments which were not provided by the user are
-//    affected from anonymous arguments, in order.
+//    affected from positional arguments; the priority order in which
+//    these are assigned is given by the `priority` argument, while the
+//    positional assignation is done in the order of the named arguments.
 //    - Any remaining named arguments take the provided default values.
 // Arguments:
-//   anonymous = the list of values of anonymous arguments.
-//   named = the list of [passed-value, default value] of named arguments.
-//   _undef = the default value used by the calling function for all
-//   arguments (this is *not* undef, or any value that the user might
-//   purposely want to use as an argument value).
+//   positional = the list of values of positional arguments.
+//   named = the list of named arguments; each entry of the list has the
+//   form [passed-value, default-value, priority], where
+//      passed-value is the value that was passed at function call;
+//      default-value is the value that will be used if nothing is read
+//      from either named or positional arguments;
+//      priority is the priority assigned to this argument.
+//   _undef = the default value used by the calling function for all arguments (default is some random string that you will never use). (this is *not* undef, or any value that the user might purposely want to use as an argument value).
+//
+//  If only k positional arguments are used, then the k named values
+//  with lowest 'priority' value (among the unassigned ones) will get them.
+//  The arguments will be assigned in the order of the named values.
+//  By default these two orders coincide.
+//
+//
 // Examples:
 // function f(arg1=_undef, arg2=_undef, arg3=_undef,
 //   named1=_undef, named2=_undef, named3=_undef) =
@@ -349,16 +363,29 @@ function get_height(h=undef,l=undef,height=undef,dflt=undef) =
 // result of `dd if=/dev/random bs=32 count=1 |base64` :
 _undef="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 
-function get_named_args(anonymous, named,_undef=_undef) =
-    /* u: set of undefined indices in named arguments */
-    let(from_anon = [for(p=enumerate(named)) if(p[1][0]==_undef) p[0]],
-        n = len(anonymous))
-    echo("from_anon:", from_anon)
+/* Note: however tempting it might be, it is *not* possible to accept
+ * named argument as a list [named1, named2, ...] (without default
+ * values), because the values [named1, named2...] themselves might be
+ * lists, and we will not be able to distinguish the two cases. */
+function get_named_args(positional, named,_undef=_undef) =
+    let(deft = [for(p=named) p[1]], // default is undef
+        // indices of the values to fetch from positional args:
+        unknown = [for(x=enumerate(named)) if(x[1][0]==_undef) x[0]],
+        // number of values given to positional arguments:
+        n_positional = count_true([for(p=positional) p!=_undef]))
+    assert(n_positional <= len(unknown),
+      str("too many positional arguments (", n_positional, " given, ",
+          len(unknown), " required)"))
+    let(
+        // those elements which have no priority assigned go last (prio=+∞):
+        prio = sortidx([for(u=unknown) default(named[u][2], 1/0)]),
+        // list of indices of values assigned from positional arguments:
+        assigned = sort([for(i=[0:1:n_positional-1]) prio[i]]))
     [ for(e = enumerate(named))
-        // if the value is defined, return it:
-        e[1][0] != _undef ? e[1][0] :
-        let(k = anonymous[search(e[0], from_anon)[0]])
-        k != _undef ? k : e[1][1] ];
+      let(idx=e[0], val=e[1][0], ass=search(idx, assigned))
+        val != _undef ? val :
+        ass != [] ? positional[ass[0]] :
+        deft[idx] ];
 // Function: scalar_vec3()
 // Usage:
 //   scalar_vec3(v, <dflt>);

@@ -924,7 +924,7 @@ function _vnf_halfspace_paths(edges, i=0, paths=[]) =
  */
    i >= len(edges) ? paths : // termination condition
    let(e = edges[i],
-       s = [for(x=enumerate(paths)) if(x[1][len(x[1])-1] == e[0]) x[0]])
+       s = [for(x=enumerate(paths)) if(last(x[1]) == e[0]) x[0]])
    _vnf_halfspace_paths(edges, i+1,
    // if cannot attach to previous path: create a new one
        s == [] ? concat(paths, [e]) :
@@ -947,7 +947,7 @@ function vnf_halfspace(_arg1=_undef, _arg2=_undef,
         newedges=[for(x=tmp2) each x[1]],
         // generate new faces
         paths=_vnf_halfspace_paths(newedges),
-        loops=[for(p=paths) if(p[0] == p[len(p)-1]) p])
+        loops=[for(p=paths) if(p[0] == last(p)) p])
     [coords, concat(newfaces, loops)];
 
 //
