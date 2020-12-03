@@ -348,16 +348,12 @@ function get_height(h=undef,l=undef,height=undef,dflt=undef) =
 //
 //
 // Examples:
-// function f(arg1=_undef, arg2=_undef, arg3=_undef,
-//   named1=_undef, named2=_undef, named3=_undef) =
-//   let(named = get_named_args([arg1, arg2, arg3],
-//     [[named1, "default1"], [named2, "default2"], [named3, "default3"]]))
-//   named;
-// echo(f()); // ["default1", "default2", "default3"]
-// echo(f("given2", "given3", named1="given1")); // ["given1", "given2", "given3"]
-// echo(f("given1")); // ["given1", "default2", "default3"]
-// echo(f(named1="given1", "given2")); // ["given1", "given2", "default3"]
-// echo(f(undef, named1="given1", undef)); // ["given1", undef, undef]
+//   function f(arg1=_undef, arg2=_undef, arg3=_undef, named1=_undef, named2=_undef, named3=_undef) = let(named = get_named_args([arg1, arg2, arg3], [[named1, "default1"], [named2, "default2"], [named3, "default3"]])) named;
+//   echo(f()); // ["default1", "default2", "default3"]
+//   echo(f("given2", "given3", named1="given1")); // ["given1", "given2", "given3"]
+//   echo(f("given1")); // ["given1", "default2", "default3"]
+//   echo(f(named1="given1", "given2")); // ["given1", "given2", "default3"]
+//   echo(f(undef, named1="given1", undef)); // ["given1", undef, undef]
 
 // a value that the user should never enter randomly;
 // result of `dd if=/dev/random bs=32 count=1 |base64` :
