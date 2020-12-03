@@ -314,10 +314,10 @@ function get_height(h=undef,l=undef,height=undef,dflt=undef) =
 
 // Function: get_named_args(positional, named, _undef)
 // Usage:
-// function f(pos1=_undef, pos2=_undef,...,
-//     named1=_undef, named2=_undef, ...) =
-//     let(args = get_named_args([pos1, pos2, ...],
-//        [[named1, default1], [named2, default2], ...]),
+//   function f(pos1=_undef, pos2=_undef,...,
+//              named1=_undef, named2=_undef, ...) =
+//    let(args = get_named_args([pos1, pos2, ...],
+//                              [[named1, default1], [named2, default2], ...]),
 //        named1=args[0], named2=args[1], ...)
 //        ...
 // Description:
