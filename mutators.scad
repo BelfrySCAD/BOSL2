@@ -64,13 +64,20 @@ module bounding_box(excess=0) {
 }
 
 
-// Module: half_of()
+// Function&Module: half_of()
 //
-// Usage:
+// Usage: as module
 //   half_of(v, [cp], [s]) ...
+// Usage: as function
+//   half_of(v, [cp], p, [s])...
 //
 // Description:
 //   Slices an object at a cut plane, and masks away everything that is on one side.
+//   * Called as a function with a path in the `p` argument, returns the
+//   intersection of path `p` and given half-space.
+//   * Called as a function with a 2D path in the `p` argument
+//   and a 2D vector `p`, returns the intersection of path `p` and given
+//   half-plane.
 //
 // Arguments:
 //   v = Normal of plane to slice at.  Keeps everything on the side the normal points to.  Default: [0,0,1] (UP)
@@ -110,6 +117,54 @@ module half_of(v=UP, cp, s=1000, planar=false)
         }
     }
 }
+
+function half_of(v, arg1, arg2, cp, p, s=1e4) =
+    /* may be called as either:
+     *                   p=   cp=
+     * 1. (v, p)         arg1 0
+     * 2. (v, p=p)       p    0
+     * 3. (v, cp, p)     arg2 arg1
+     * 4. (v, cp=cp, p)  arg1 p
+     * 5. (v, cp, p=p)   p    arg1
+     * 6. (v, cp=cp, p=p)p    cp
+     */
+    /* FIXME: add tests for the various argument naming schemes */
+    let(p_=p, cp_=cp, // keep names p and cp clean
+        p = !is_undef(p_) ? p_ :  // cases 2.5.6.
+            !is_undef(arg2) ? arg2 : arg1, // cases 3., 1.4.
+        cp0=!is_undef(cp_) ? cp_ : // cases 4.6.
+             is_undef(arg1) ? 0*v : // case 2.
+            !is_undef(arg2) ? arg1 : // case 3.
+             is_undef(p_) ? 0*v : arg1, // cases 1., 5.
+        cp = is_num(cp0) ? cp0*unit(v) : cp0)
+    assert(is_vector(v,2)||is_vector(v,3),
+      "must provide a half-plane or half-space")
+    let(d=len(v))
+    assert(len(cp) == d, str("cp must have dimension ", d))
+    is_vector(p) ?
+        assert(len(p) == d, str("vector must have dimension ", d))
+        let(z=(p-cp)*v) (z >= 0 ? p : p - (z*v)/(v*v))
+        :
+    p == [] ? [] : // special case: empty path remains empty
+    is_path(p) ?
+        assert(len(p[0]) == d, str("path must have dimension ", d))
+        let(z = [for(x=p) (x-cp)*v])
+        [ for(i=[0:len(p)-1]) each concat(z[i] >= 0 ? [p[i]] : [],
+            // we assume a closed path here;
+            // to make this correct for an open path,
+            // just replace this by [] when i==len(p)-1:
+            let(j=(i+1)%len(p))
+            // the remaining path may have flattened sections, but this cannot
+            // create self-intersection or whiskers:
+            z[i]*z[j] >= 0 ? [] : [(z[j]*p[i]-z[i]*p[j])/(z[j]-z[i])]) ]
+        :
+    assert(is_region(p), str("must provide point, path or region"))
+    assert(len(v) == 2, str("3D vector not compatible with region"))
+    let(u=unit(v), w=[-u[1], u[0]],
+        R=[[cp+s*w, cp+s*(v+v), cp+s*(v-w), cp-s*w]]) // bounding region
+    intersection(R, p);
+    // FIXME: find something intelligent to do if p is a VNF
+    // FIXME: scadlib csg.scad, csg_hspace()
 
 
 // Module: left_half()
