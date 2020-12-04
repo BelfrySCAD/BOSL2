@@ -916,20 +916,37 @@ function _vnf_halfspace_face(face, map, inside, i=0,
             concat(newface0, [inter]),
             concat(newedge, [inter]),
             is_undef(exit) ? inside[p] : exit);
+function _vnf_halfspace_path_search_edge(edge, paths, i=0, ret=[undef,undef]) =
+/* given an oriented edge [x,y] and a set of oriented paths,
+ * returns the indices [i,j] of paths [before, after] given edge
+ */
+    // termination condition
+    i >= len(paths) ? ret:
+    _vnf_halfspace_path_search_edge(edge, paths, i+1,
+       [last(paths[i]) == edge[0] ? i : ret[0],
+        paths[i][0] == edge[1] ? i : ret[1]]);
 function _vnf_halfspace_paths(edges, i=0, paths=[]) =
 /* given a set of oriented edges [x,y],
    returns all paths [x,y,z,..] that may be formed from these edges.
    A closed path will be returned with equal first and last point.
    i: index of currently examined edge
  */
-   i >= len(edges) ? paths : // termination condition
-   let(e = edges[i],
-       s = [for(x=enumerate(paths)) if(last(x[1]) == e[0]) x[0]])
-   _vnf_halfspace_paths(edges, i+1,
-   // if cannot attach to previous path: create a new one
-       s == [] ? concat(paths, [e]) :
-   // otherwise, attach to found path
-       [for(x=enumerate(paths)) x[0]==s[0] ? concat(x[1], [e[1]]) : x[1]]);
+    i >= len(edges) ? paths : // termination condition
+    let(e=edges[i], s = _vnf_halfspace_path_search_edge(e, paths))
+        _vnf_halfspace_paths(edges, i+1,
+        // we keep all paths untouched by e[i]
+        concat([for(i=[0:1:len(paths)-1]) if(i!= s[0] && i != s[1]) paths[i]],
+        is_undef(s[0])? (
+            // fresh e: create a new path
+            is_undef(s[1]) ? [e] :
+            // e attaches to beginning of previous path
+            [concat([e[0]], paths[s[1]])]
+        ) :// edge attaches to end of previous path
+        is_undef(s[1]) ? [concat(paths[s[0]], [e[1]])] :
+        // edge merges two paths
+        s[0] != s[1] ? [concat(paths[s[0]], paths[s[1]])] :
+        // edge closes a loop
+        [concat(paths[s[0]], [e[1]])]));
 function vnf_halfspace(_arg1=_undef, _arg2=_undef,
     halfspace=_undef, vnf=_undef) =
     // here is where we wish that OpenSCAD had array lvalues...
