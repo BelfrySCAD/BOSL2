@@ -1298,8 +1298,118 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
              all([for(i=idx(start)) approx(start[i],end[i])]),
       dummy = ends_match ? 0 : echo("WARNING: ***** The points do not match when closing the model *****")
     )
-    transforms ? transform_list : sweep(shape, transform_list, closed=false, caps=fullcaps);
+    transforms ? transform_list : sweep(clockwise_polygon(shape), transform_list, closed=false, caps=fullcaps);
 
 
+// Function&Module: path_sweep2d()
+// Usage:
+//   path_sweep2d(shape, path, <closed>, <quality>)
+// Description:
+//   Takes an input 2D polygon (the shape) and a 2d path and constructs a polyhedron by sweeping the shape along the path.
+//   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF.
+//   .
+//   Unlike path_sweep(), local self-intersections (creases in the output) are allowed and do not produce CGAL errors.
+//   This is accomplished by using offset() calculations, which are more expensive than simply copying the shape along
+//   the path, so if you do not have local self-intersections, use path_sweep() instead.  Note that global self-intersections
+//   will still give rise to CGAL errors.  You should be able to handle these by partitioning your model.  The y axis of the
+//   shape is mapped to the z axis in the swept polyhedron.
+//   The quality parameter is passed to offset to determine the offset quality.
+// Arguments:
+//   shape = a 2D polygon describing the shape to be swept
+//   path = a 2D path giving the path to sweep over
+//   closed = path is a closed loop.  Default: false
+//   caps = true to create endcap faces when closed is false.  Can be a length 2 boolean array.  Default is true if closed is false.
+//   quality = quality of offset used in calculation.  Default: 1
+//   convexity = convexity parameter for polyhedron (module only)  Default: 10
+//   anchor = Translate so anchor point is at the origin.  (module only)  Default: "origin"
+//   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
+//   orient = Vector to rotate top towards after spin  (module only)
+//   extent = use extent method for computing anchors. (module only)  Default: false
+//   cp = set centerpoint for anchor computation.  (module only) Default: object centroid
+// Example: Sine wave example with self-intersections at each peak.  This would fail with path_sweep(). 
+//   sinewave = [for(i=[-30:10:360*2+30]) [i/40,3*sin(i)]];
+//   path_sweep2d(circle(r=3,$fn=15), sinewave);
+// Example: The ends can look weird if they are in a place where self intersection occurs.  This is a natural result of how offset behaves at ends of a path.  
+//   coswave = [for(i=[0:10:360*1.5]) [i/40,3*cos(i)]];
+//   zrot(-20)
+//     path_sweep2d( circle(r=3,$fn=15), coswave);
+// Example: This closed path example works ok as long as the hole in the center remains open.
+//   ellipse = yscale(3,p=circle(r=3,$fn=120));
+//   path_sweep2d(circle(r=2.5,$fn=32), reverse(ellipse), closed=true);
+// Example: When the hole is closed a global intersection renders the model invalid.  You can fix this by taking the union of the two (valid) halves.
+//   ellipse = yscale(3,p=circle(r=3,$fn=120));
+//   L = len(ellipse);
+//   path_sweep2d(circle(r=3.25, $fn=32), select(ellipse,floor(L*.2),ceil(L*.8)),closed=false);
+//   path_sweep2d(circle(r=3.25, $fn=32), select(ellipse,floor(L*.7),ceil(L*.3)),closed=false);
+
+function path_sweep2d(shape, path, closed=false, caps, quality=1) =
+   let(
+        caps = is_def(caps) ? caps
+             : closed ? false : true,
+        capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
+        fullcaps = is_bool(caps) ? [caps,caps] : caps
+   )
+   assert(capsOK, "caps must be boolean or a list of two booleans")
+   assert(!closed || !caps, "Cannot make closed shape with caps")
+   let(
+        profile = ccw_polygon(shape),
+        flip = closed && polygon_is_clockwise(path) ? -1 : 1,
+        path = flip ? reverse(path) : path,
+        proflist= transpose(
+                     [for(pt = profile)
+                        let( 
+                            ofs = offset(path, delta=-flip*pt.x, return_faces=true,closed=closed, quality=quality),
+                            map = subindex(_ofs_vmap(ofs,closed=closed),1)
+                        ) 
+                        select(path3d(ofs[0],pt.y),map)
+                      ]
+                  )
+   )
+   _skin_core([
+               each proflist,
+               if (closed) proflist[0]
+              ],caps=fullcaps);
+
+module path_sweep2d(profile, path, closed=false, caps, quality=1, convexity=10,
+                    anchor="origin", cp, spin=0, orient=UP, extent=false)
+{
+   vnf = path_sweep2d(profile, path, closed, caps, quality);
+   attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
+    {      
+        vnf_polyhedron(vnf,convexity=convexity);
+        children();
+    }
+}
+
+// Extract vertex mapping from offset face list.  The output of this function
+// is a list of pairs [i,j] where i is an index into the parent curve and j is
+// an index into the offset curve.  It would probably make sense to rewrite
+// offset() to return this instead of the face list and have offset_sweep
+// use this input to assemble the faces it needs.
+
+function _ofs_vmap(ofs,closed=false) =
+    let(   // Caclulate length of the first (parent) curve
+        firstlen = max(flatten(ofs[1]))+1-len(ofs[0])
+    )
+    [
+     for(entry=ofs[1]) _ofs_face_edge(entry,firstlen),
+     if (!closed) _ofs_face_edge(select(ofs[1],-1),firstlen,second=true)
+    ];
+
+
+// Extract first (default) or second edge that connects the parent curve to its offset.  The first input
+// face is a list of 3 or 4 vertices as indices into the two curves where the parent curve vertices are
+// numbered from 0 to firstlen-1 and the offset from firstlen and up.  The firstlen pararameter is used
+// to determine which curve the vertices belong to and to remove the offset so that the return gives
+// the index into each curve with a 0 base.  
+function _ofs_face_edge(face,firstlen,second=false) =
+   let(
+       itry = min_index(face),
+       i = select(face,itry-1)<firstlen ? itry-1:itry,
+       edge1 = select(face,[i,i-1]),
+       edge2 = select(face,i+1)<firstlen ? select(face,[i+1,i+2])
+                                         : select(face,[i,i+1])
+   )
+   (second ? edge2 : edge1)-[0,firstlen];
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
