@@ -836,6 +836,28 @@ module test_linear_solve(){
 test_linear_solve();
 
 
+module test_cumprod(){
+  assert_equal(cumprod([1,2,3,4]), [1,2,6,24]);
+  assert_equal(cumprod([4]), [4]);
+  assert_equal(cumprod([]),[]);
+  assert_equal(cumprod([[2,3],[4,5],[6,7]]), [[2,3],[8,15],[48,105]]);
+  assert_equal(cumprod([[5,6,7]]),[[5,6,7]]);
+  assert_equal(cumprod([
+                        [[1,2],[3,4]],
+                        [[-4,5],[6,4]],
+                        [[9,-3],[4,3]]
+                       ]),
+                       [
+                        [[1,2],[3,4]],
+                        [[8,13],[12,31]],
+                        [[124,15],[232,57]]
+                       ]);
+  assert_equal(cumprod([[[1,2],[3,4]]]), [[[1,2],[3,4]]]);
+}
+test_cumprod();
+                         
+
+
 module test_outer_product(){
   assert_equal(outer_product([1,2,3],[4,5,6]), [[4,5,6],[8,10,12],[12,15,18]]);
   assert_equal(outer_product([1,2],[4,5,6]), [[4,5,6],[8,10,12]]);
@@ -867,7 +889,7 @@ module test_deriv(){
          [0.469846310393,-0.813797681349],
          [0.925416578398,0.163175911167],
          [0.696902572292,1.45914323952]]);
-  spent = yscale(8,pent);
+  spent = yscale(8,p=pent);
   lens = path_segment_lengths(spent,closed=true);
   assert_approx(deriv(spent, closed=true, h=lens),
          [[-0.0381285841663,0.998065839726],

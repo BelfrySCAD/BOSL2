@@ -9,10 +9,8 @@
 //////////////////////////////////////////////////////////////////////
 
 
-include <skin.scad>
-
 // Section: Terminology
-//   **Polyline**: A series of points joined by straight line segements.
+//   **Path**: A series of points joined by straight line segements.
 //   .
 //   **Bezier Curve**: A mathematical curve that joins two endpoints, following a curve determined by one or more control points.
 //   .
@@ -27,7 +25,7 @@ include <skin.scad>
 //   .
 //   **Bezier Path**: A list of bezier segments flattened out into a list of points, where each segment shares the endpoint of the previous segment as a start point. A cubic Bezier Path looks something like:
 //       `[endpt1, cp1, cp2, endpt2, cp3, cp4, endpt3]`
-//   **NOTE**: A bezier path is *NOT* a polyline.  It is only the points and controls used to define the curve.
+//   **NOTE**: A "bezier path" is *NOT* a standard path.  It is only the points and controls used to define the curve.
 //   .
 //   **Bezier Patch**: A surface defining grid of (N+1) by (N+1) bezier points.  If a Bezier Segment defines a curved line, a Bezier Patch defines a curved surface.
 //   .
@@ -374,7 +372,7 @@ function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
 //   p0 = [40, 0];
 //   p1 = [0, 0];
 //   p2 = [30, 30];
-//   trace_polyline([p0,p1,p2], showpts=true, size=0.5, color="green");
+//   trace_path([p0,p1,p2], showpts=true, size=0.5, color="green");
 //   fbez = fillet3pts(p0,p1,p2, 10);
 //   trace_bezier(slice(fbez, 1, -2), size=1);
 function fillet3pts(p0, p1, p2, r, d, maxerr=0.1, w=0.5, dw=0.25) = let(
@@ -482,11 +480,11 @@ function bezier_path_length(path, N=3, max_deflect=0.001) =
 
 
 
-// Function: bezier_polyline()
+// Function: bezier_path()
 // Usage:
-//   bezier_polyline(bezier, [splinesteps], [N])
+//   bezier_path(bezier, [splinesteps], [N])
 // Description:
-//   Takes a bezier path and converts it into a polyline.
+//   Takes a bezier path and converts it into a path of points.
 // Arguments:
 //   bezier = A bezier path to approximate.
 //   splinesteps = Number of straight lines to split each bezier segment into. default=16
@@ -498,9 +496,9 @@ function bezier_path_length(path, N=3, max_deflect=0.001) =
 //       [60,25], [70,0], [80,-25],
 //       [80,-50], [50,-50]
 //   ];
-//   trace_polyline(bez, size=1, N=3, showpts=true);
-//   trace_polyline(bezier_polyline(bez, N=3), size=3);
-function bezier_polyline(bezier, splinesteps=16, N=3) =
+//   trace_path(bez, size=1, N=3, showpts=true);
+//   trace_path(bezier_path(bez, N=3), size=3);
+function bezier_path(bezier, splinesteps=16, N=3) =
     assert(is_path(bezier))
     assert(is_int(N))
     assert(is_int(splinesteps))
@@ -598,15 +596,15 @@ function path_to_bezier(path, tangents, size, relsize, uniform=false, closed=fal
 // Usage:
 //   fillet_path(pts, fillet, [maxerr]);
 // Description:
-//   Takes a 3D polyline path and fillets the corners, returning a 3d cubic (degree 3) bezier path.
+//   Takes a 3D path and fillets the corners, returning a 3d cubic (degree 3) bezier path.
 // Arguments:
-//   pts = 3D Polyline path to fillet.
-//   fillet = The radius to fillet/round the polyline corners by.
+//   pts = 3D path to fillet.
+//   fillet = The radius to fillet/round the path corners by.
 //   maxerr = Max amount bezier curve should diverge from actual radius curve.  Default: 0.1
 // Example(2D):
 //   pline = [[40,0], [0,0], [35,35], [0,70], [-10,60], [-5,55], [0,60]];
 //   bez = fillet_path(pline, 10);
-//   trace_polyline(pline, showpts=true, size=0.5, color="green");
+//   trace_path(pline, showpts=true, size=0.5, color="green");
 //   trace_bezier(bez, size=1);
 function fillet_path(pts, fillet, maxerr=0.1) = concat(
     [pts[0], pts[0]],
@@ -722,7 +720,7 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
     assert(is_int(N));
     assert(is_int(splinesteps));
     assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
-    polypoints=bezier_polyline(bezier, splinesteps, N);
+    polypoints=bezier_path(bezier, splinesteps, N);
     polygon(points=slice(polypoints, 0, -1));
 }
 
@@ -764,8 +762,10 @@ module linear_sweep_bezier(bezier, height=100, splinesteps=16, N=3, center, conv
     maxy = max([for (pt = bezier) abs(pt[1])]);
     anchor = get_anchor(anchor,center,BOT,BOT);
     attachable(anchor,spin,orient, size=[maxx*2,maxy*2,height]) {
-        linear_extrude(height=height, center=true, convexity=convexity, twist=twist, slices=slices, scale=scale) {
-            bezier_polygon(bezier, splinesteps=splinesteps, N=N);
+        if (height > 0) {
+            linear_extrude(height=height, center=true, convexity=convexity, twist=twist, slices=slices, scale=scale) {
+                bezier_polygon(bezier, splinesteps=splinesteps, N=N);
+            }
         }
         children();
     }
@@ -803,7 +803,7 @@ module rotate_sweep_bezier(bezier, splinesteps=16, N=3, convexity=undef, angle=3
     assert(is_int(N));
     assert(is_num(angle));
     assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
-    oline = bezier_polyline(bezier, splinesteps=splinesteps, N=N);
+    oline = bezier_path(bezier, splinesteps=splinesteps, N=N);
     maxx = max([for (pt = oline) abs(pt[0])]);
     miny = min(subindex(oline,1));
     maxy = max(subindex(oline,1));
@@ -839,7 +839,7 @@ module bezier_path_extrude(bezier, splinesteps=16, N=3, convexity=undef, clipsiz
     assert(is_int(N));
     assert(is_num(clipsize));
     assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
-    path = slice(bezier_polyline(bezier, splinesteps, N), 0, -1);
+    path = slice(bezier_path(bezier, splinesteps, N), 0, -1);
     path_extrude(path, convexity=convexity, clipsize=clipsize) children();
 }
 
@@ -876,8 +876,8 @@ module bezier_sweep_bezier(bezier, path, pathsteps=16, bezsteps=16, bezN=3, path
     assert(is_int(pathN));
     assert(len(bezier)%bezN == 1, str("For argument bezier, a degree ",bezN," bezier path shound have a multiple of ",bezN," points in it, plus 1."));
     assert(len(path)%pathN == 1, str("For argument bezier, a degree ",pathN," bezier path shound have a multiple of ",pathN," points in it, plus 1."));
-    bez_points = simplify_path(bezier_polyline(bezier, bezsteps, bezN));
-    path_points = simplify_path(path3d(bezier_polyline(path, pathsteps, pathN)));
+    bez_points = simplify_path(bezier_path(bezier, bezsteps, bezN));
+    path_points = simplify_path(path3d(bezier_path(path, pathsteps, pathN)));
     path_sweep(bez_points, path_points);
 }
 
@@ -902,8 +902,8 @@ module trace_bezier(bez, N=3, size=1) {
     assert(is_path(bez));
     assert(is_int(N));
     assert(len(bez)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
-    trace_polyline(bez, N=N, showpts=true, size=size, color="green");
-    trace_polyline(bezier_polyline(bez, N=N), size=size, color="cyan");
+    trace_path(bez, N=N, showpts=true, size=size, color="green");
+    trace_path(bezier_path(bez, N=N), size=size, color="cyan");
 }
 
 

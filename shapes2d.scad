@@ -298,7 +298,7 @@ module stroke(
                         }
                     } else {
                         rotate([90,0,endcap_angle1]) {
-                            linear_extrude(height=widths[0], center=true, convexity=convexity) {
+                            linear_extrude(height=max(widths[0],0.001), center=true, convexity=convexity) {
                                 polygon(endcap_shape1);
                             }
                         }
@@ -318,7 +318,7 @@ module stroke(
                         }
                     } else {
                         rotate([90,0,endcap_angle2]) {
-                            linear_extrude(height=select(widths,-1), center=true, convexity=convexity) {
+                            linear_extrude(height=max(select(widths,-1),0.001), center=true, convexity=convexity) {
                                 polygon(endcap_shape2);
                             }
                         }
@@ -377,7 +377,7 @@ module stroke(
 //   stroke(closed=true, path);
 // Example(FlatSpin):
 //   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
-//   trace_polyline(path, showpts=true, color="cyan");
+//   trace_path(path, showpts=true, color="cyan");
 function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false) =
     // First try for 2D arc specified by width and thickness
     is_def(width) && is_def(thickness)? (

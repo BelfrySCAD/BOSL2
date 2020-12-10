@@ -10,7 +10,6 @@
 //   - https://github.com/openscad/list-comprehension-demos/blob/master/skin.scad
 //////////////////////////////////////////////////////////////////////
 
-include <vnf.scad>
 
 // Section: Skinning
 
@@ -824,11 +823,11 @@ function associate_vertices(polygons, split, curpoly=0) =
 
 // Function&Module: sweep()
 // Usage: As Module
-//   sweep(shape, transformations, <closed<, <caps>)
+//   sweep(shape, transforms, <closed>, <caps>)
 // Usage: As Function
-//   vnf = sweep(shape, transformations, <closed>, <caps>);
+//   vnf = sweep(shape, transforms, <closed>, <caps>);
 // Description:
-//   The input `shape` must be a non-self-intersecting polygon in two dimensions, and `transformations`
+//   The input `shape` must be a non-self-intersecting 2D polygon or region, and `transforms`
 //   is a list of 4x4 transformation matrices.  The sweep algorithm applies each transformation in sequence
 //   to the shape input and links the resulting polygons together to form a polyhedron.
 //   If `closed=true` then the first and last transformation are linked together.
@@ -842,8 +841,8 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   in your model, but will arise if you add a second object to the model.  This may mislead you into
 //   thinking the second object caused a problem.  Even adding a simple cube to the model will reveal the problem.  
 // Arguments:
-//   shape = 2d path describing shape to be swept
-//   transformations = list of 4x4 matrices to apply
+//   shape = 2d path or region, describing the shape to be swept.
+//   transforms = list of 4x4 matrices to apply
 //   closed = set to true to form a closed (torus) model.  Default: false
 //   caps = true to create endcap faces when closed is false.  Can be a singe boolean to specify endcaps at both ends, or a length 2 boolean array.  Default is true if closed is false.
 //   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
@@ -873,25 +872,39 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   inside = [for(i=[24:-1:2]) up(i)*rot(i)*scale(1.2*i/24+1)];
 //   sweep(shape, concat(outside,inside));
 
-function sweep(shape, transformations, closed=false, caps) =
-  assert(is_list_of(transformations, ident(4)), "Input transformations must be a list of numeric 4x4 matrices in sweep")
-  assert(is_path(shape,2), "Input shape must be a 2d path")
-  let(
-    caps = is_def(caps) ? caps :
-           closed ? false : true,
-    capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
-    fullcaps = is_bool(caps) ? [caps,caps] : caps
-  )
-  assert(len(transformations), "transformation must be length 2 or more")
-  assert(len(shape)>=3, "shape must be a path of at least 3 points")
-  assert(capsOK, "caps must be boolean or a list of two booleans")
-  assert(!closed || !caps, "Cannot make closed shape with caps")
-  _skin_core([for(i=[0:len(transformations)-(closed?0:1)]) apply(transformations[i%len(transformations)],path3d(shape))],caps=fullcaps);
+function sweep(shape, transforms, closed=false, caps) =
+    assert(is_list_of(transforms, ident(4)), "Input transforms must be a list of numeric 4x4 matrices in sweep")
+    assert(is_path(shape,2) || is_region(shape), "Input shape must be a 2d path or a region.")
+    let(
+        caps = is_def(caps) ? caps :
+            closed ? false : true,
+        capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
+        fullcaps = is_bool(caps) ? [caps,caps] : caps
+    )
+    assert(len(transforms), "transformation must be length 2 or more")
+    assert(capsOK, "caps must be boolean or a list of two booleans")
+    assert(!closed || !caps, "Cannot make closed shape with caps")
+    is_region(shape)? let(
+        regions = split_nested_region(shape),
+        rtrans = reverse(transforms),
+        vnfs = [
+            for (rgn=regions) each [
+                for (path=select(rgn,0,-1))
+                    sweep(path, transforms, closed=closed, caps=false),
+                if (fullcaps[0]) region_faces(rgn, transform=transforms[0], reverse=true),
+                if (fullcaps[1]) region_faces(rgn, transform=select(transforms,-1)),
+            ],
+        ],
+        vnf = vnf_merge(vnfs)
+    ) vnf :
+    assert(len(shape)>=3, "shape must be a path of at least 3 non-colinear points")
+    _skin_core([for(i=[0:len(transforms)-(closed?0:1)]) apply(transforms[i%len(transforms)],path3d(shape))],caps=fullcaps);
 
-module sweep(shape, transformations, closed=false, caps, convexity=10,
+
+module sweep(shape, transforms, closed=false, caps, convexity=10,
              anchor="origin",cp,spin=0, orient=UP, extent=false)
 {
-    vnf = sweep(shape, transformations, closed, caps);
+    vnf = sweep(shape, transforms, closed, caps);
     attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
     {      
         vnf_polyhedron(vnf,convexity=convexity);
@@ -904,9 +917,9 @@ module sweep(shape, transformations, closed=false, caps, convexity=10,
 // Usage:
 //   path_sweep(shape, path, [method], [normal], [closed], [twist], [twist_by_length], [symmetry], [last_normal], [tangent], [relaxed], [caps], [convexity], [transforms])
 // Description:
-//   Takes as input a 2d shape (specified as a point list) and a 2d or 3d path and constructs a polyhedron by sweeping the shape along the path.
-//   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF by default or if you set `transforms=true` then
-//   it returns a list of transformations suitable as input to `sweep`.
+//   Takes as input a 2D polygon path or region, and a 2d or 3d path and constructs a polyhedron by sweeping the shape along the path.
+//   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF by default or if you set `transforms=true`
+//   then it returns a list of transformations suitable as input to `sweep`.
 //   .
 //   The sweep operation has an ambiguity: the shape can rotate around the axis defined by the path.  Several options provide
 //   methods for controlling this rotation.  You can choose from three different methods for selecting the rotation of your shape.
@@ -951,8 +964,8 @@ module sweep(shape, transformations, closed=false, caps, convexity=10,
 //   If the model is closed then the twist must be a multiple of 360/symmetry.  The twist is normally spread uniformly along your shape
 //   based on the path length.  If you set `twist_by_length` to false then the twist will be uniform based on the point count of your path.
 // Arguments:
-//   shape = a 2d path describing the shape to be swept
-//   path = 3d path giving the path to sweep over
+//   shape = A 2D polygon path or region describing the shape to be swept.
+//   path = 3D path giving the path to sweep over
 //   method = one of "incremental", "natural" or "manual".  Default: "incremental"
 //   normal = normal vector for initializing the incremental method, or for setting normals with method="manual".  Default: UP if the path makes an angle lower than 45 degrees to the xy plane, BACK otherwise.
 //   closed = path is a closed loop.  Default: false
@@ -1201,7 +1214,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
   assert(!closed || twist % (360/symmetry)==0, str("For a closed sweep, twist must be a multiple of 360/symmetry = ",360/symmetry))
   assert(closed || symmetry==1, "symmetry must be 1 when closed is false")
   assert(is_integer(symmetry) && symmetry>0, "symmetry must be a positive integer")
-  assert(is_path(shape,2), "shape must be a 2d path")
+  assert(is_path(shape,2) || is_region(shape), "shape must be a 2d path or region.")
   assert(is_path(path), "input path is not a path")
   assert(!closed || !approx(path[0],select(path,-1)), "Closed path includes start point at the end")
   let(
@@ -1285,8 +1298,118 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
              all([for(i=idx(start)) approx(start[i],end[i])]),
       dummy = ends_match ? 0 : echo("WARNING: ***** The points do not match when closing the model *****")
     )
-    transforms ? transform_list : sweep(shape, transform_list, closed=false, caps=fullcaps);
+    transforms ? transform_list : sweep(clockwise_polygon(shape), transform_list, closed=false, caps=fullcaps);
 
 
+// Function&Module: path_sweep2d()
+// Usage:
+//   path_sweep2d(shape, path, <closed>, <quality>)
+// Description:
+//   Takes an input 2D polygon (the shape) and a 2d path and constructs a polyhedron by sweeping the shape along the path.
+//   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF.
+//   .
+//   Unlike path_sweep(), local self-intersections (creases in the output) are allowed and do not produce CGAL errors.
+//   This is accomplished by using offset() calculations, which are more expensive than simply copying the shape along
+//   the path, so if you do not have local self-intersections, use path_sweep() instead.  Note that global self-intersections
+//   will still give rise to CGAL errors.  You should be able to handle these by partitioning your model.  The y axis of the
+//   shape is mapped to the z axis in the swept polyhedron.
+//   The quality parameter is passed to offset to determine the offset quality.
+// Arguments:
+//   shape = a 2D polygon describing the shape to be swept
+//   path = a 2D path giving the path to sweep over
+//   closed = path is a closed loop.  Default: false
+//   caps = true to create endcap faces when closed is false.  Can be a length 2 boolean array.  Default is true if closed is false.
+//   quality = quality of offset used in calculation.  Default: 1
+//   convexity = convexity parameter for polyhedron (module only)  Default: 10
+//   anchor = Translate so anchor point is at the origin.  (module only)  Default: "origin"
+//   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
+//   orient = Vector to rotate top towards after spin  (module only)
+//   extent = use extent method for computing anchors. (module only)  Default: false
+//   cp = set centerpoint for anchor computation.  (module only) Default: object centroid
+// Example: Sine wave example with self-intersections at each peak.  This would fail with path_sweep(). 
+//   sinewave = [for(i=[-30:10:360*2+30]) [i/40,3*sin(i)]];
+//   path_sweep2d(circle(r=3,$fn=15), sinewave);
+// Example: The ends can look weird if they are in a place where self intersection occurs.  This is a natural result of how offset behaves at ends of a path.  
+//   coswave = [for(i=[0:10:360*1.5]) [i/40,3*cos(i)]];
+//   zrot(-20)
+//     path_sweep2d( circle(r=3,$fn=15), coswave);
+// Example: This closed path example works ok as long as the hole in the center remains open.
+//   ellipse = yscale(3,p=circle(r=3,$fn=120));
+//   path_sweep2d(circle(r=2.5,$fn=32), reverse(ellipse), closed=true);
+// Example: When the hole is closed a global intersection renders the model invalid.  You can fix this by taking the union of the two (valid) halves.
+//   ellipse = yscale(3,p=circle(r=3,$fn=120));
+//   L = len(ellipse);
+//   path_sweep2d(circle(r=3.25, $fn=32), select(ellipse,floor(L*.2),ceil(L*.8)),closed=false);
+//   path_sweep2d(circle(r=3.25, $fn=32), select(ellipse,floor(L*.7),ceil(L*.3)),closed=false);
+
+function path_sweep2d(shape, path, closed=false, caps, quality=1) =
+   let(
+        caps = is_def(caps) ? caps
+             : closed ? false : true,
+        capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
+        fullcaps = is_bool(caps) ? [caps,caps] : caps
+   )
+   assert(capsOK, "caps must be boolean or a list of two booleans")
+   assert(!closed || !caps, "Cannot make closed shape with caps")
+   let(
+        profile = ccw_polygon(shape),
+        flip = closed && polygon_is_clockwise(path) ? -1 : 1,
+        path = flip ? reverse(path) : path,
+        proflist= transpose(
+                     [for(pt = profile)
+                        let( 
+                            ofs = offset(path, delta=-flip*pt.x, return_faces=true,closed=closed, quality=quality),
+                            map = subindex(_ofs_vmap(ofs,closed=closed),1)
+                        ) 
+                        select(path3d(ofs[0],pt.y),map)
+                      ]
+                  )
+   )
+   _skin_core([
+               each proflist,
+               if (closed) proflist[0]
+              ],caps=fullcaps);
+
+module path_sweep2d(profile, path, closed=false, caps, quality=1, convexity=10,
+                    anchor="origin", cp, spin=0, orient=UP, extent=false)
+{
+   vnf = path_sweep2d(profile, path, closed, caps, quality);
+   attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
+    {      
+        vnf_polyhedron(vnf,convexity=convexity);
+        children();
+    }
+}
+
+// Extract vertex mapping from offset face list.  The output of this function
+// is a list of pairs [i,j] where i is an index into the parent curve and j is
+// an index into the offset curve.  It would probably make sense to rewrite
+// offset() to return this instead of the face list and have offset_sweep
+// use this input to assemble the faces it needs.
+
+function _ofs_vmap(ofs,closed=false) =
+    let(   // Caclulate length of the first (parent) curve
+        firstlen = max(flatten(ofs[1]))+1-len(ofs[0])
+    )
+    [
+     for(entry=ofs[1]) _ofs_face_edge(entry,firstlen),
+     if (!closed) _ofs_face_edge(select(ofs[1],-1),firstlen,second=true)
+    ];
+
+
+// Extract first (default) or second edge that connects the parent curve to its offset.  The first input
+// face is a list of 3 or 4 vertices as indices into the two curves where the parent curve vertices are
+// numbered from 0 to firstlen-1 and the offset from firstlen and up.  The firstlen pararameter is used
+// to determine which curve the vertices belong to and to remove the offset so that the return gives
+// the index into each curve with a 0 base.  
+function _ofs_face_edge(face,firstlen,second=false) =
+   let(
+       itry = min_index(face),
+       i = select(face,itry-1)<firstlen ? itry-1:itry,
+       edge1 = select(face,[i,i-1]),
+       edge2 = select(face,i+1)<firstlen ? select(face,[i+1,i+2])
+                                         : select(face,[i,i+1])
+   )
+   (second ? edge2 : edge1)-[0,firstlen];
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -154,9 +154,9 @@ function region_path_crossings(path, region, closed=true, eps=EPSILON) = sort([
 
 // Function: split_path_at_region_crossings()
 // Usage:
-//   polylines = split_path_at_region_crossings(path, region, [eps]);
+//   paths = split_path_at_region_crossings(path, region, [eps]);
 // Description:
-//   Splits a path into polyline sections wherever the path crosses the perimeter of a region.
+//   Splits a path into sub-paths wherever the path crosses the perimeter of a region.
 //   Splits may occur mid-segment, so new vertices will be created at the intersection points.
 // Arguments:
 //   path = The path to split up.
@@ -166,9 +166,9 @@ function region_path_crossings(path, region, closed=true, eps=EPSILON) = sort([
 // Example(2D):
 //   path = square(50,center=false);
 //   region = [circle(d=80), circle(d=40)];
-//   polylines = split_path_at_region_crossings(path, region);
+//   paths = split_path_at_region_crossings(path, region);
 //   color("#aaa") region(region);
-//   rainbow(polylines) stroke($item, closed=false, width=2);
+//   rainbow(paths) stroke($item, closed=false, width=2);
 function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) =
     let(
         path = deduplicate(path, eps=eps),
@@ -285,8 +285,8 @@ function region_faces(region, transform, reverse=false, vnf=EMPTY_VNF) =
         vnfs = [
             if (vnf != EMPTY_VNF) vnf,
             for (rgn = regions) let(
-                cleaved = _cleave_simple_region(rgn),
-                face = is_undef(transform)? cleaved : apply(transform,path3d(cleaved)),
+                cleaved = path3d(_cleave_simple_region(rgn)),
+                face = is_undef(transform)? cleaved : apply(transform,cleaved),
                 faceidxs = reverse? [for (i=[len(face)-1:-1:0]) i] : [for (i=[0:1:len(face)-1]) i]
             ) [face, [faceidxs]]
         ],

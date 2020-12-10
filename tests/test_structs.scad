@@ -27,6 +27,9 @@ module test_struct_val() {
     assert(struct_val(st,"Foo") == 91);
     assert(struct_val(st,"Bar") == 28);
     assert(struct_val(st,"Baz") == 9);
+    assert(struct_val(st,"Baz",5) == 9);
+    assert(struct_val(st,"Qux") == undef);
+    assert(struct_val(st,"Qux",5) == 5);
 }
 test_struct_val();
 

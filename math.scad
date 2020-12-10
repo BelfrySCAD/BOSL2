@@ -617,6 +617,44 @@ function _product(v, i=0, _tot) =
                
 
 
+// Function: cumprod()
+// Description:
+//   Returns a list where each item is the cumulative product of all items up to and including the corresponding entry in the input list.
+//   If passed an array of vectors, returns a list of elementwise vector products.  If passed a list of square matrices returns matrix
+//   products multiplying in the order items appear in the list.  
+// Arguments:
+//   list = The list to get the product of.
+// Example:
+//   cumprod([1,3,5]);  // returns [1,3,15]
+//   cumprod([2,2,2]);  // returns [2,4,8]
+//   cumprod([[1,2,3], [3,4,5], [5,6,7]]));  // returns [[1, 2, 3], [3, 8, 15], [15, 48, 105]]
+function cumprod(list) =
+   is_vector(list) ? _cumprod(list) :
+   assert(is_consistent(list), "Input must be a consistent list of scalars, vectors or square matrices")
+   is_matrix(list[0]) ? assert(len(list[0])==len(list[0][0]), "Matrices must be square") _cumprod(list) 
+                      : _cumprod_vec(list);
+
+function _cumprod(v,_i=0,_acc=[]) =
+    _i==len(v) ? _acc :
+    _cumprod(
+        v, _i+1,
+        concat(
+            _acc,
+            [_i==0 ? v[_i] : _acc[len(_acc)-1]*v[_i]]
+        )
+    );
+
+function _cumprod_vec(v,_i=0,_acc=[]) =
+    _i==len(v) ? _acc :
+    _cumprod_vec(
+        v, _i+1,
+        concat(
+            _acc,
+            [_i==0 ? v[_i] : vmul(_acc[len(_acc)-1],v[_i])]
+        )
+    );
+
+
 // Function: outer_product()
 // Usage:
 //   x = outer_product(u,v);

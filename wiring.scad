@@ -72,7 +72,7 @@ function hex_offsets(n, d, lev=0, arr=[]) =
 // Usage:
 //   wiring(path, wires, [wirediam], [rounding], [wirenum], [bezsteps]);
 // Arguments:
-//   path = The 3D polyline path that the wire bundle should follow.
+//   path = The 3D path that the wire bundle should follow.
 //   wires = The number of wires in the wiring bundle.
 //   wirediam = The diameter of each wire in the bundle.
 //   rounding = The radius that the path corners will be rounded to.
@@ -90,7 +90,7 @@ module wiring(path, wires, wirediam=2, rounding=10, wirenum=0, bezsteps=12) {
     ];
     offsets = hex_offsets(wires, wirediam);
     bezpath = fillet_path(path, rounding);
-    poly = simplify_path(path3d(bezier_polyline(bezpath, bezsteps)));
+    poly = simplify_path(path3d(bezier_path(bezpath, bezsteps)));
     n = max(segs(wirediam), 8);
     r = wirediam/2;
     for (i = [0:1:wires-1]) {

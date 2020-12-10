@@ -64,13 +64,20 @@ module bounding_box(excess=0) {
 }
 
 
-// Module: half_of()
+// Function&Module: half_of()
 //
-// Usage:
-//   half_of(v, [cp], [s]) ...
+// Usage: as module
+//   half_of(v, <cp>, <s>) ...
+// Usage: as function
+//   half_of(v, <cp>, p, <s>)...
 //
 // Description:
 //   Slices an object at a cut plane, and masks away everything that is on one side.
+//   * Called as a function with a path in the `p` argument, returns the
+//       intersection of path `p` and given half-space.
+//   * Called as a function with a 2D path in the `p` argument
+//       and a 2D vector `p`, returns the intersection of path `p` and given
+//       half-plane.
 //
 // Arguments:
 //   v = Normal of plane to slice at.  Keeps everything on the side the normal points to.  Default: [0,0,1] (UP)
@@ -111,12 +118,54 @@ module half_of(v=UP, cp, s=1000, planar=false)
     }
 }
 
+function half_of(_arg1=_undef, _arg2=_undef, _arg3=_undef, _arg4=_undef,
+    v=_undef, cp=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3, _arg4],
+        [[v,undef,0], [cp,0,2], [p,undef,1], [s, 1e4]]),
+        v=args[0], cp0=args[1], p=args[2], s=args[3],
+        cp = is_num(cp0) ? cp0*unit(v) : cp0)
+    assert(is_vector(v,2)||is_vector(v,3),
+      "must provide a half-plane or half-space")
+    let(d=len(v))
+    assert(len(cp) == d, str("cp must have dimension ", d))
+    is_vector(p) ?
+        assert(len(p) == d, str("vector must have dimension ", d))
+        let(z=(p-cp)*v) (z >= 0 ? p : p - (z*v)/(v*v))
+        :
+    p == [] ? [] : // special case: empty path remains empty
+    is_path(p) ?
+        assert(len(p[0]) == d, str("path must have dimension ", d))
+        let(z = [for(x=p) (x-cp)*v])
+        [ for(i=[0:len(p)-1]) each concat(z[i] >= 0 ? [p[i]] : [],
+            // we assume a closed path here;
+            // to make this correct for an open path,
+            // just replace this by [] when i==len(p)-1:
+            let(j=(i+1)%len(p))
+            // the remaining path may have flattened sections, but this cannot
+            // create self-intersection or whiskers:
+            z[i]*z[j] >= 0 ? [] : [(z[j]*p[i]-z[i]*p[j])/(z[j]-z[i])]) ]
+        :
+    is_vnf(p) ?
+    // we must put is_vnf() before is_region(), because most triangulated
+    // VNFs will pass is_region() test
+    vnf_halfspace(halfspace=concat(v,[-v*cp]), vnf=p) :
+    is_region(p) ?
+        assert(len(v) == 2, str("3D vector not compatible with region"))
+        let(u=unit(v), w=[-u[1], u[0]],
+            R=[[cp+s*w, cp+s*(v+v), cp+s*(v-w), cp-s*w]]) // half-plane
+        intersection(R, p)
+        :
+    assert(false, "must pass either a point, a path, a region, or a VNF");
 
-// Module: left_half()
+// Function&Module: left_half()
 //
-// Usage:
-//   left_half([s], [x]) ...
-//   left_half(planar=true, [s], [x]) ...
+// Usage: as module
+//   left_half(<s>, <x>) ...
+//   left_half(planar=true, <s>, <x>) ...
+// Usage: as function
+//   left_half(<s>, <x>, path)
+//   left_half(<s>, <x>, region)
+//   left_half(<s>, <x>, vnf)
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is right of it.
@@ -145,14 +194,21 @@ module left_half(s=1000, x=0, planar=false)
         }
     }
 }
+function left_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
+    x=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3],
+    [[x, 0,1], [p,undef,0], [s, 1e4]]),
+        x=args[0], p=args[1], s=args[2])
+    half_of(v=[1,0,0], cp=x, p=p);
 
 
 
-// Module: right_half()
+// Function&Module: right_half()
 //
 // Usage:
 //   right_half([s], [x]) ...
 //   right_half(planar=true, [s], [x]) ...
+//
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is left of it.
@@ -181,10 +237,16 @@ module right_half(s=1000, x=0, planar=false)
         }
     }
 }
+function right_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
+    x=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3],
+    [[x, 0,1], [p,undef,0], [s, 1e4]]),
+        x=args[0], p=args[1], s=args[2])
+    half_of(v=[-1,0,0], cp=x, p=p);
 
 
 
-// Module: front_half()
+// Function&Module: front_half()
 //
 // Usage:
 //   front_half([s], [y]) ...
@@ -217,10 +279,16 @@ module front_half(s=1000, y=0, planar=false)
         }
     }
 }
+function front_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
+    x=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3],
+    [[x, 0,1], [p,undef,0], [s, 1e4]]),
+        x=args[0], p=args[1], s=args[2])
+    half_of(v=[0,1,0], cp=x, p=p);
 
 
 
-// Module: back_half()
+// Function&Module: back_half()
 //
 // Usage:
 //   back_half([s], [y]) ...
@@ -253,10 +321,16 @@ module back_half(s=1000, y=0, planar=false)
         }
     }
 }
+function back_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
+    x=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3],
+    [[x, 0,1], [p,undef,0], [s, 1e4]]),
+        x=args[0], p=args[1], s=args[2])
+    half_of(v=[0,-1,0], cp=x, p=p);
 
 
 
-// Module: bottom_half()
+// Function&Module: bottom_half()
 //
 // Usage:
 //   bottom_half([s], [z]) ...
@@ -281,10 +355,16 @@ module bottom_half(s=1000, z=0)
         }
     }
 }
+function right_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
+    x=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3],
+    [[x, 0,1], [p,undef,0], [s, 1e4]]),
+        x=args[0], p=args[1], s=args[2])
+    half_of(v=[0,0,-1], cp=x, p=p);
 
 
 
-// Module: top_half()
+// Function&Module: top_half()
 //
 // Usage:
 //   top_half([s], [z]) ...
@@ -309,6 +389,12 @@ module top_half(s=1000, z=0)
         }
     }
 }
+function right_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
+    x=_undef, p=_undef, s=_undef) =
+    let(args=get_named_args([_arg1, _arg2, _arg3],
+    [[x, 0,1], [p,undef,0], [s, 1e4]]),
+        x=args[0], p=args[1], s=args[2])
+    half_of(v=[0,0,1], cp=x, p=p);
 
 
 

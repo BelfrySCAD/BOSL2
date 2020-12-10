@@ -2005,10 +2005,11 @@ function _split_polygon_at_x(poly, x) =
         ],
         out1 = [for (p = poly2) if(p.x <= x) p],
         out2 = [for (p = poly2) if(p.x >= x) p],
-        out = [
-            if (len(out1)>=3) out1,
-            if (len(out2)>=3) out2,
-        ]
+        out3 = [
+            if (len(out1)>=3) each split_path_at_self_crossings(out1),
+            if (len(out2)>=3) each split_path_at_self_crossings(out2),
+        ],
+        out = [for (p=out3) if (len(p) > 2) cleanup_path(p)]
     ) out;
 
 
@@ -2034,10 +2035,11 @@ function _split_polygon_at_y(poly, y) =
         ],
         out1 = [for (p = poly2) if(p.y <= y) p],
         out2 = [for (p = poly2) if(p.y >= y) p],
-        out = [
-            if (len(out1)>=3) out1,
-            if (len(out2)>=3) out2,
-        ]
+        out3 = [
+            if (len(out1)>=3) each split_path_at_self_crossings(out1),
+            if (len(out2)>=3) each split_path_at_self_crossings(out2),
+        ],
+        out = [for (p=out3) if (len(p) > 2) cleanup_path(p)]
     ) out;
 
 
@@ -2063,10 +2065,11 @@ function _split_polygon_at_z(poly, z) =
         ],
         out1 = [for (p = poly2) if(p.z <= z) p],
         out2 = [for (p = poly2) if(p.z >= z) p],
-        out = [
-            if (len(out1)>=3) out1,
-            if (len(out2)>=3) out2,
-        ]
+        out3 = [
+            if (len(out1)>=3) each split_path_at_self_crossings(close_path(out1), closed=false),
+            if (len(out2)>=3) each split_path_at_self_crossings(close_path(out2), closed=false),
+        ],
+        out = [for (p=out3) if (len(p) > 2) cleanup_path(p)]
     ) out;
 
 

@@ -626,7 +626,6 @@ function is_letter(s) =
 // Arguments:
 //   fmt = The formatting string, with placeholders to format the values into.
 //   vals = The list of values to format.
-//   use_nbsp = Pad fields with HTML entity `&nbsp;` instead of spaces.
 // Example(NORENDER):
 //   str_format("The value of {} is {:.14f}.", ["pi", PI]);  // Returns: "The value of pi is 3.14159265358979."
 //   str_format("The value {1:f} is known as {0}.", ["pi", PI]);  // Returns: "The value 3.141593 is known as pi."
@@ -634,7 +633,7 @@ function is_letter(s) =
 //   str_format("{:-5s}{:i}{:b}", ["foo", 12e3, 5]);  // Returns: "foo  12000true"
 //   str_format("{:-10s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostamus27.440"
 //   str_format("{:-10.9s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostam 27.440"
-function str_format(fmt, vals, use_nbsp=false) =
+function str_format(fmt, vals) =
     let(
         parts = str_split(fmt,"{")
     ) str_join([
@@ -676,7 +675,7 @@ function str_format(fmt, vals, use_nbsp=false) =
                     typ=="G"? upcase(fmt_float(val,default(prec,6))) :
                     assert(false,str("Unknown format type: ",typ)),
                 padlen = max(0,wid-len(unpad)),
-                padfill = str_join([for (i=[0:1:padlen-1]) zero? "0" : use_nbsp? "&nbsp;" : " "]),
+                padfill = str_join([for (i=[0:1:padlen-1]) zero? "0" : " "]),
                 out = left? str(unpad, padfill) : str(padfill, unpad)
             )
             out, raw
@@ -692,7 +691,6 @@ function str_format(fmt, vals, use_nbsp=false) =
 // Arguments:
 //   fmt = The formatting string, with placeholders to format the values into.
 //   vals = The list of values to format.
-//   use_nbsp = Pad fields with HTML entity `&nbsp;` instead of spaces.
 // Example(NORENDER):
 //   echofmt("The value of {} is {:.14f}.", ["pi", PI]);  // ECHO: "The value of pi is 3.14159265358979."
 //   echofmt("The value {1:f} is known as {0}.", ["pi", PI]);  // ECHO: "The value 3.141593 is known as pi."
@@ -700,10 +698,10 @@ function str_format(fmt, vals, use_nbsp=false) =
 //   echofmt("{:-5s}{:i}{:b}", ["foo", 12e3, 5]);  // ECHO: "foo  12000true"
 //   echofmt("{:-10s}{:.3f}", ["plecostamus",27.43982]);  // ECHO: "plecostamus27.440"
 //   echofmt("{:-10.9s}{:.3f}", ["plecostamus",27.43982]);  // ECHO: "plecostam 27.440"
-function echofmt(fmt, vals, use_nbsp=false) = echo(str_format(fmt,vals,use_nbsp));
-module echofmt(fmt, vals, use_nbsp=false) {
+function echofmt(fmt, vals) = echo(str_format(fmt,vals));
+module echofmt(fmt, vals) {
    no_children($children);
-   echo(str_format(fmt,vals,use_nbsp));
+   echo(str_format(fmt,vals));
 }
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

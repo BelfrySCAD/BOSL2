@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: paths.scad
-//   Polylines, polygons and paths.
+//   Support for polygons and paths.
 //   To use, add the following lines to the beginning of your file:
 //   ```
 //   include <BOSL2/std.scad>
@@ -421,7 +421,7 @@ function path_torsion(path, closed=false) =
 //   cp = Centerpoint of spiral. Default: `[0,0]`
 //   scale = [X,Y] scaling factors for each axis.  Default: `[1,1]`
 // Example(3D):
-//   trace_polyline(path3d_spiral(turns=2.5, h=100, n=24, r=50), N=1, showpts=true);
+//   trace_path(path3d_spiral(turns=2.5, h=100, n=24, r=50), N=1, showpts=true);
 function path3d_spiral(turns=3, h=100, n=12, r, d, cp=[0,0], scale=[1,1]) = let(
         rr=get_radius(r=r, d=d, dflt=100),
         cnt=floor(turns*n),
@@ -433,44 +433,6 @@ function path3d_spiral(turns=3, h=100, n=12, r, d, cp=[0,0], scale=[1,1]) = let(
             i*dz
         ]
     ];
-
-
-// Function: points_along_path3d()
-// Usage:
-//   points_along_path3d(polyline, path);
-// Description:
-//   Calculates the vertices needed to create a `polyhedron()` of the
-//   extrusion of `polyline` along `path`.  The closed 2D path shold be
-//   centered on the XY plane. The 2D path is extruded perpendicularly
-//   along the 3D path.  Produces a list of 3D vertices.  Vertex count
-//   is `len(polyline)*len(path)`.  Gives all the reoriented vertices
-//   for `polyline` at the first point in `path`, then for the second,
-//   and so on.
-// Arguments:
-//   polyline = A closed list of 2D path points.
-//   path = A list of 3D path points.
-function points_along_path3d(
-    polyline,  // The 2D polyline to drag along the 3D path.
-    path,  // The 3D polyline path to follow.
-    q=Q_Ident(),  // Used in recursion
-    n=0  // Used in recursion
-) = let(
-    end = len(path)-1,
-    v1 = (n == 0)?  [0, 0, 1] : unit(path[n]-path[n-1]),
-    v2 = (n == end)? unit(path[n]-path[n-1]) : unit(path[n+1]-path[n]),
-    crs = cross(v1, v2),
-    axis = norm(crs) <= 0.001? [0, 0, 1] : crs,
-    ang = vector_angle(v1, v2),
-    hang = ang * (n==0? 1.0 : 0.5),
-    hrot = Quat(axis, hang),
-    arot = Quat(axis, ang),
-    roth = Q_Mul(hrot, q),
-    rotm = Q_Mul(arot, q)
-) concat(
-    [for (i = [0:1:len(polyline)-1]) Qrot(roth,p=point3d(polyline[i])) + path[n]],
-    (n == end)? [] : points_along_path3d(polyline, path, rotm, n+1)
-);
-
 
 
 // Function: path_self_intersections()
@@ -529,9 +491,9 @@ function path_self_intersections(path, closed=true, eps=EPSILON) =
 
 // Function: split_path_at_self_crossings()
 // Usage:
-//   polylines = split_path_at_self_crossings(path, [closed], [eps]);
+//   paths = split_path_at_self_crossings(path, [closed], [eps]);
 // Description:
-//   Splits a path into polyline sections wherever the path crosses itself.
+//   Splits a path into sub-paths wherever the original path crosses itself.
 //   Splits may occur mid-segment, so new vertices will be created at the intersection points.
 // Arguments:
 //   path = The path to split up.
@@ -539,8 +501,8 @@ function path_self_intersections(path, closed=true, eps=EPSILON) =
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 // Example(2D):
 //   path = [ [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100] ];
-//   polylines = split_path_at_self_crossings(path);
-//   rainbow(polylines) stroke($item, closed=false, width=2);
+//   paths = split_path_at_self_crossings(path);
+//   rainbow(paths) stroke($item, closed=false, width=2);
 function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
     let(
         path = cleanup_path(path, eps=eps),
@@ -681,11 +643,11 @@ function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
 // Usage:
 //   assemble_a_path_from_fragments(subpaths);
 // Description:
-//   Given a list of incomplete paths, assembles them together into one complete closed path, and
+//   Given a list of paths, assembles them together into one complete closed polygon path, and
 //   remainder fragments.  Returns [PATH, FRAGMENTS] where FRAGMENTS is the list of remaining
-//   polyline path fragments.
+//   unused path fragments.
 // Arguments:
-//   fragments = List of polylines to be assembled into complete polygons.
+//   fragments = List of paths to be assembled into complete polygons.
 //   rightmost = If true, assemble paths using rightmost turns. Leftmost if false.
 //   startfrag = The fragment to start with.  Default: 0
 //   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
@@ -738,9 +700,9 @@ function assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, 
 // Usage:
 //   assemble_path_fragments(subpaths);
 // Description:
-//   Given a list of incomplete paths, assembles them together into complete closed paths if it can.
+//   Given a list of paths, assembles them together into complete closed polygon paths if it can.
 // Arguments:
-//   fragments = List of polylines to be assembled into complete polygons.
+//   fragments = List of paths to be assembled into complete polygons.
 //   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
 function assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
     len(fragments)==0? _finished :
@@ -785,16 +747,20 @@ function assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
 // Arguments:
 //   r = Radius of the base circle. Default: 40
 //   d = Diameter of the base circle.
-//   sines = array of [amplitude, frequency] pairs, where the frequency is the number of times the cycle repeats around the circle.
+//   sines = array of [amplitude, frequency] pairs or [amplitude, frequency, phase] triples, where the frequency is the number of times the cycle repeats around the circle.
 // Example(2D):
 //   modulated_circle(r=40, sines=[[3, 11], [1, 31]], $fn=6);
-module modulated_circle(r, sines=[10], d)
+module modulated_circle(r, sines=[[1,1]], d)
 {
     r = get_radius(r=r, d=d, dflt=40);
-    freqs = len(sines)>0? [for (i=sines) i[1]] : [5];
+    assert(is_list(sines)
+        && all([for(s=sines) is_vector(s,2) || is_vector(s,3)]),
+        "sines must be given as a list of pairs or triples");
+    sines_ = [for(s=sines) [s[0], s[1], len(s)==2 ? 0 : s[2]]];
+    freqs = len(sines_)>0? [for (i=sines_) i[1]] : [5];
     points = [
         for (a = [0 : (360/segs(r)/max(freqs)) : 360])
-            let(nr=r+sum_of_sines(a,sines)) [nr*cos(a), nr*sin(a)]
+            let(nr=r+sum_of_sines(a,sines_)) [nr*cos(a), nr*sin(a)]
     ];
     polygon(points);
 }
@@ -817,12 +783,14 @@ module modulated_circle(r, sines=[10], d)
 //   extrude_from_to([0,0,0], [10,20,30], convexity=4, twist=360, scale=3.0, slices=40) {
 //       xcopies(3) circle(3, $fn=32);
 //   }
-module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slices=undef) {
+module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
     rtp = xyz_to_spherical(pt2-pt1);
     translate(pt1) {
         rotate([0, rtp[2], rtp[1]]) {
-            linear_extrude(height=rtp[0], convexity=convexity, center=false, slices=slices, twist=twist, scale=scale) {
-                children();
+            if (rtp[0] > 0) {
+                linear_extrude(height=rtp[0], convexity=convexity, center=false, slices=slices, twist=twist, scale=scale) {
+                    children();
+                }
             }
         }
     }
@@ -832,10 +800,10 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 
 // Module: spiral_sweep()
 // Description:
-//   Takes a closed 2D polyline path, centered on the XY plane, and
-//   extrudes it along a 3D spiral path of a given radius, height and twist.
+//   Takes a closed 2D polygon path, centered on the XY plane, and sweeps/extrudes it along a 3D spiral path
+//   of a given radius, height and twist.
 // Arguments:
-//   polyline = Array of points of a polyline path, to be extruded.
+//   path = Array of points of a polygon path, to be extruded.
 //   h = height of the spiral to extrude along.
 //   r = Radius of the spiral to extrude along. Default: 50
 //   d = Diameter of the spiral to extrude along.
@@ -847,10 +815,10 @@ module extrude_from_to(pt1, pt2, convexity=undef, twist=undef, scale=undef, slic
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   spiral_sweep(poly, h=200, r=50, twist=1080, $fn=36);
-module spiral_sweep(polyline, h, r, twist=360, center, d, anchor, spin=0, orient=UP) {
+module spiral_sweep(poly, h, r, twist=360, center, d, anchor, spin=0, orient=UP) {
     r = get_radius(r=r, d=d, dflt=50);
-    polyline = path3d(polyline);
-    pline_count = len(polyline);
+    poly = path3d(poly);
+    pline_count = len(poly);
     steps = ceil(segs(r)*(twist/360));
     anchor = get_anchor(anchor,center,BOT,BOT);
 
@@ -863,7 +831,7 @@ module spiral_sweep(polyline, h, r, twist=360, center, d, anchor, spin=0, orient
             dy = r*sin(a),
             dz = h * (p/steps),
             pts = apply_list(
-                polyline, [
+                poly, [
                     affine3d_xrot(90),
                     affine3d_zrot(a),
                     affine3d_translate([dx, dy, dz-h/2])
@@ -902,7 +870,7 @@ module spiral_sweep(polyline, h, r, twist=360, center, d, anchor, spin=0, orient
 
 // Module: path_extrude()
 // Description:
-//   Extrudes 2D children along a 3D polyline path.  This may be slow.
+//   Extrudes 2D children along a 3D path.  This may be slow.
 // Arguments:
 //   path = array of points for the bezier path to extrude along.
 //   convexity = maximum number of walls a ran can pass through.
@@ -933,8 +901,10 @@ module path_extrude(path, convexity=10, clipsize=100) {
             translate(pt1) {
                 Qrot(q) {
                     down(clipsize/2/2) {
-                        linear_extrude(height=dist+clipsize/2, convexity=convexity) {
-                            children();
+                        if ((dist+clipsize/2) > 0) {
+                            linear_extrude(height=dist+clipsize/2, convexity=convexity) {
+                                children();
+                            }
                         }
                     }
                 }
