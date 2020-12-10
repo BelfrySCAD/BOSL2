@@ -171,7 +171,11 @@ module line_of(spacing, n, l, p1, p2)
 module xcopies(spacing, n, l, sp)
 {
     sp = is_finite(sp)? [sp,0,0] : sp;
-    line_of(l=l*RIGHT, spacing=spacing*RIGHT, n=n, p1=sp) children();
+    line_of(
+        l=u_mul(l,RIGHT),
+        spacing=u_mul(spacing,RIGHT),
+        n=n, p1=sp
+    ) children();
 }
 
 
@@ -207,7 +211,11 @@ module xcopies(spacing, n, l, sp)
 module ycopies(spacing, n, l, sp)
 {
     sp = is_finite(sp)? [0,sp,0] : sp;
-    line_of(l=l*BACK, spacing=spacing*BACK, n=n, p1=sp) children();
+    line_of(
+        l=u_mul(l,BACK),
+        spacing=u_mul(spacing,BACK),
+        n=n, p1=sp
+    ) children();
 }
 
 
@@ -243,7 +251,11 @@ module ycopies(spacing, n, l, sp)
 module zcopies(spacing, n, l, sp)
 {
     sp = is_finite(sp)? [0,0,sp] : sp;
-    line_of(l=l*UP, spacing=spacing*UP, n=n, p1=sp) children();
+    line_of(
+        l=u_mul(l,UP),
+        spacing=u_mul(spacing,UP),
+        n=n, p1=sp
+    ) children();
 }
 
 
