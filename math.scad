@@ -169,6 +169,63 @@ function lerp(a,b,u) =
 
 
 
+// Section: Undef Safe Math
+
+// Function: u_add()
+// Usage:
+//   x = u_add(a, b);
+// Description:
+//   Adds `a` to `b`, returning the result, or undef if either value is `undef`.
+//   This emulates the way undefs used to be handled in versions of OpenSCAD before 2020.
+// Arguments:
+//   a = First value.
+//   b = Second value.
+function u_add(a,b) = is_undef(a) || is_undef(b)? undef : a + b;
+
+
+// Function: u_sub()
+// Usage:
+//   x = u_sub(a, b);
+// Description:
+//   Subtracts `b` from `a`, returning the result, or undef if either value is `undef`.
+//   This emulates the way undefs used to be handled in versions of OpenSCAD before 2020.
+// Arguments:
+//   a = First value.
+//   b = Second value.
+function u_sub(a,b) = is_undef(a) || is_undef(b)? undef : a - b;
+
+
+// Function: u_mul()
+// Usage:
+//   x = u_mul(a, b);
+// Description:
+//   Multiplies `a` by `b`, returning the result, or undef if either value is `undef`.
+//   This emulates the way undefs used to be handled in versions of OpenSCAD before 2020.
+// Arguments:
+//   a = First value.
+//   b = Second value.
+function u_mul(a,b) =
+    is_undef(a) || is_undef(b)? undef :
+    is_vector(a) && is_vector(b)? vmul(a,b) :
+    a * b;
+
+
+// Function: u_div()
+// Usage:
+//   x = u_div(a, b);
+// Description:
+//   Divides `a` by `b`, returning the result, or undef if either value is `undef`.
+//   This emulates the way undefs used to be handled in versions of OpenSCAD before 2020.
+// Arguments:
+//   a = First value.
+//   b = Second value.
+function u_div(a,b) =
+    is_undef(a) || is_undef(b)? undef :
+    is_vector(a) && is_vector(b)? vdiv(a,b) :
+    a / b;
+
+
+
 // Section: Hyperbolic Trigonometry
 
 // Function: sinh()
