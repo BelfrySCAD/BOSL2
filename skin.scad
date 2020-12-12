@@ -20,7 +20,7 @@
 // Usage: As function:
 //   vnf = skin(profiles, [slices], [refine], [method], [sampling], [caps], [closed], [z]);
 // Description:
-//   Given a list of two ore more path `profiles` in 3d space, produces faces to skin a surface between
+//   Given a list of two or more path `profiles` in 3d space, produces faces to skin a surface between
 //   the profiles.  Optionally the first and last profiles can have endcaps, or the first and last profiles
 //   can be connected together.  Each profile should be roughly planar, but some variation is allowed.
 //   Each profile must rotate in the same clockwise direction.  If called as a function, returns a
@@ -965,7 +965,7 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 //   based on the path length.  If you set `twist_by_length` to false then the twist will be uniform based on the point count of your path.
 // Arguments:
 //   shape = A 2D polygon path or region describing the shape to be swept.
-//   path = 3D path giving the path to sweep over
+//   path = 2D or 3D path giving the path to sweep over
 //   method = one of "incremental", "natural" or "manual".  Default: "incremental"
 //   normal = normal vector for initializing the incremental method, or for setting normals with method="manual".  Default: UP if the path makes an angle lower than 45 degrees to the xy plane, BACK otherwise.
 //   closed = path is a closed loop.  Default: false
