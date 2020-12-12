@@ -382,6 +382,74 @@ module test_lerp() {
 test_lerp();
 
 
+module test_u_add() {
+    assert_equal(u_add(1,2),3);
+    assert_equal(u_add(1,-2),-1);
+    assert_equal(u_add(-1,2),1);
+    assert_equal(u_add(-1,-2),-3);
+    assert_equal(u_add(243,-27),216);
+    assert_equal(u_add([2,3,4],[8,7,9]),[10,10,13]);
+    assert_equal(u_add(undef,27),undef);
+    assert_equal(u_add(undef,-27),undef);
+    assert_equal(u_add(243,undef),undef);
+    assert_equal(u_add(-43,undef),undef);
+    assert_equal(u_add(undef,[8,7,9]),undef);
+    assert_equal(u_add([2,3,4],undef),undef);
+}
+test_u_add();
+
+
+module test_u_sub() {
+    assert_equal(u_sub(1,2),-1);
+    assert_equal(u_sub(1,-2),3);
+    assert_equal(u_sub(-1,2),-3);
+    assert_equal(u_sub(-1,-2),1);
+    assert_equal(u_sub(243,-27),270);
+    assert_equal(u_sub([2,3,4],[8,7,9]),[-6,-4,-5]);
+    assert_equal(u_sub(undef,27),undef);
+    assert_equal(u_sub(undef,-27),undef);
+    assert_equal(u_sub(243,undef),undef);
+    assert_equal(u_sub(-43,undef),undef);
+    assert_equal(u_sub(undef,[8,7,9]),undef);
+    assert_equal(u_sub([2,3,4],undef),undef);
+}
+test_u_sub();
+
+
+module test_u_mul() {
+    assert_equal(u_mul(3,2),6);
+    assert_equal(u_mul(3,-2),-6);
+    assert_equal(u_mul(-3,2),-6);
+    assert_equal(u_mul(-3,-2),6);
+    assert_equal(u_mul(243,-27),-6561);
+    assert_equal(u_mul([2,3,4],[8,7,9]),[16,21,36]);
+    assert_equal(u_mul(undef,27),undef);
+    assert_equal(u_mul(undef,-27),undef);
+    assert_equal(u_mul(243,undef),undef);
+    assert_equal(u_mul(-43,undef),undef);
+    assert_equal(u_mul(undef,[8,7,9]),undef);
+    assert_equal(u_mul([2,3,4],undef),undef);
+}
+test_u_mul();
+
+
+module test_u_div() {
+    assert_equal(u_div(1,2),1/2);
+    assert_equal(u_div(1,-2),-1/2);
+    assert_equal(u_div(-1,2),-1/2);
+    assert_equal(u_div(-1,-2),1/2);
+    assert_equal(u_div(243,-27),-9);
+    assert_equal(u_div([8,7,9],[2,3,4]),[4,7/3,9/4]);
+    assert_equal(u_div(undef,27),undef);
+    assert_equal(u_div(undef,-27),undef);
+    assert_equal(u_div(243,undef),undef);
+    assert_equal(u_div(-43,undef),undef);
+    assert_equal(u_div(undef,[8,7,9]),undef);
+    assert_equal(u_div([2,3,4],undef),undef);
+}
+test_u_div();
+
+
 module test_hypot() {
     assert_approx(hypot(20,30), norm([20,30]));
 }
