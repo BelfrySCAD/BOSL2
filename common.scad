@@ -282,7 +282,7 @@ function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
 //   r = Most general radius.
 //   d = Most general diameter.
 //   dflt = Value to return if all other values given are `undef`.
-function get_radius(r1=undef, r2=undef, r=undef, d1=undef, d2=undef, d=undef, dflt=undef) = 
+function get_radius(r1, r2, r, d1, d2, d, dflt) = 
     assert(num_defined([r1,d1,r2,d2])<2, "Conflicting or redundant radius/diameter arguments given.")
     !is_undef(r1) ?   assert(is_finite(r1), "Invalid radius r1." ) r1 
     : !is_undef(r2) ? assert(is_finite(r2), "Invalid radius r2." ) r2
