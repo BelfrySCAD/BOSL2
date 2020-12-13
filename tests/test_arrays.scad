@@ -27,6 +27,21 @@ module test_select() {
 }
 test_select();
 
+module test_last() {
+    list = [1,2,3,4];
+    assert(last(list)==4);
+    assert(last([])==undef);
+}
+test_last();
+
+module test_delete_last() {
+    list = [1,2,3,4];
+    assert(delete_last(list) == [1,2,3]);
+    assert(delete_last([1]) == []);
+    assert(delete_last([]) == []);
+}
+test_delete_last();
+
 
 module test_slice() {
     assert(slice([3,4,5,6,7,8,9], 3, 5) == [6,7]);
