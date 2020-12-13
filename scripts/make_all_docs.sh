@@ -19,7 +19,7 @@ done
 if [[ "$FILES" != "" ]]; then
     PREVIEW_LIBS="$FILES"
 else
-    PREVIEW_LIBS="affine arrays attachments beziers bottlecaps common constants coords cubetruss debug distributors edges geometry hingesnaps hull involute_gears joiners knurling linear_bearings masks math metric_screws mutators nema_steppers partitions paths phillips_drive polyhedra primitives quaternions queues regions rounding screws shapes shapes2d skin sliders stacks strings structs threading torx_drive transforms triangulation vectors version vnf walls wiring"
+    PREVIEW_LIBS=$(git ls-files | grep '\.scad$' | grep -v / | grep -v -f .nodocsfiles)
 fi
 
 dir="$(basename $PWD)"
