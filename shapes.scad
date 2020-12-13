@@ -795,13 +795,13 @@ module xcyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h
 //       ycyl(l=35, d=20);
 //       ycyl(l=35, d1=30, d2=10);
 //   }
-module ycyl(l=undef, r=undef, d=undef, r1=undef, r2=undef, d1=undef, d2=undef, h=undef, anchor=CENTER)
+module ycyl(l, r, d, r1, r2, d1, d2, h, anchor=CENTER)
 {
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     l = first_defined([l, h, 1]);
     attachable(anchor,0,UP, r1=r1, r2=r2, l=l, axis=BACK) {
-        cyl(l=l, h=h, r=r, r1=r1, r2=r2, d=d, d1=d1, d2=d2, orient=BACK, anchor=CENTER);
+        cyl(l=l, h=h, r1=r1, r2=r2, orient=BACK, anchor=CENTER);
         children();
     }
 }
