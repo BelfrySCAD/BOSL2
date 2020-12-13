@@ -12,8 +12,8 @@ A library for OpenSCAD, filled with useful tools, shapes, masks, math and manipu
 ## Installation
 
 1. Download the .zip or .tar.gz release file for this library.
-2. Unpack it. It should create a `BOSL-v2.0` directory with the library files within it.
-3. Rename the directory to `BOSL2`.
+2. Unpack it. Make sure that you unpack the whole file structure. Some zipfile unpackers call this option "Use folder names". It should create either a `BOSL-v2.0` or `BOSL2-master` directory with the library files within it.  You should see "examples", "scripts", "tests", and other subdirectories.
+3. Rename the unpacked main directory to `BOSL2`.
 4. Move the `BOSL2` directory into the apropriate OpenSCAD library directory for your platform:
     - Windows: `My Documents\OpenSCAD\libraries\`
     - Linux: `$HOME/.local/share/OpenSCAD/libraries/`
