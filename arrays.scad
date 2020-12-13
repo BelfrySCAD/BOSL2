@@ -101,6 +101,15 @@ function select(list, start, end=undef) =
 //   last(l);  // Returns 9.
 function last(list) = list[len(list)-1];
 
+// Function: delete_last()
+// Description:
+//   Returns a list of all but the last entry.  If input is empty, returns empty list.
+// Usage:
+//   delete_last(list)
+function delete_last(list) =
+   assert(is_list(list))
+   list==[] ? [] : slice(list,0,-2);
+
 // Function: slice()
 // Description:
 //   Returns a slice of a list.  The first item is index 0.
@@ -281,7 +290,7 @@ function list_range(n=undef, s=0, e=undef, step=undef) =
 // Example:
 //   reverse([3,4,5,6]);  // Returns [6,5,4,3]
 function reverse(x) =
-    assert(is_list(x)||is_string(x))
+    assert(is_list(x)||is_string(x), "Input to reverse must be a list or string")
     let (elems = [ for (i = [len(x)-1 : -1 : 0]) x[i] ])
     is_string(x)? str_join(elems) : elems;
 
