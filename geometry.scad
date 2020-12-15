@@ -26,12 +26,12 @@ function point_on_segment2d(point, edge, eps=EPSILON) =
     assert( _valid_line(edge,2,eps=eps), "Invalid segment." )
     let( dp = point-edge[0],
          de = edge[1]-edge[0],
-         ne = norm(de) ) 
-    ( dp*de >= -eps*ne ) 
+         ne = norm(de) )
+    ( dp*de >= -eps*ne )
     && ( (dp-de)*de <= eps*ne )                  // point projects on the segment
-    && _dist2line(point-edge[0],unit(de))<eps;   // point is on the line 
-    
-    
+    && _dist2line(point-edge[0],unit(de))<eps;   // point is on the line
+
+
 //Internal - distance from point `d` to the line passing through the origin with unit direction n
 //_dist2line works for any dimension
 function _dist2line(d,n) = norm(d-(d * n) * n);
@@ -39,15 +39,15 @@ function _dist2line(d,n) = norm(d-(d * n) * n);
 // Internal non-exposed function.
 function _point_above_below_segment(point, edge) =
     let( edge = edge - [point, point] )
-    edge[0].y <= 0 
+    edge[0].y <= 0
     ?   (edge[1].y >  0 && cross(edge[0], edge[1]-edge[0]) > 0) ?  1 : 0
     :   (edge[1].y <= 0 && cross(edge[0], edge[1]-edge[0]) < 0) ? -1 : 0 ;
 
 //Internal
-function _valid_line(line,dim,eps=EPSILON) = 
-    is_matrix(line,2,dim) 
-    && ! approx(norm(line[1]-line[0]), 0, eps); 
-    
+function _valid_line(line,dim,eps=EPSILON) =
+    is_matrix(line,2,dim)
+    && ! approx(norm(line[1]-line[0]), 0, eps);
+
 //Internal
 function _valid_plane(p, eps=EPSILON) = is_vector(p,4) && ! approx(norm(p),0,eps);
 
@@ -79,13 +79,13 @@ function point_left_of_line2d(point, line) =
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 function collinear(a, b, c, eps=EPSILON) =
     assert( is_path([a,b,c],dim=undef)
-            || ( is_undef(b) && is_undef(c) && is_path(a,dim=undef) ), 
+            || ( is_undef(b) && is_undef(c) && is_path(a,dim=undef) ),
             "Input should be 3 points or a list of points with same dimension.")
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
     let( points = is_def(c) ? [a,b,c]: a )
     len(points)<3 ? true
     : noncollinear_triple(points,error=false,eps=eps)==[];
- 
+
 
 // Function: distance_from_line()
 // Usage:
@@ -98,11 +98,11 @@ function collinear(a, b, c, eps=EPSILON) =
 // Example:
 //   distance_from_line([[-10,0], [10,0]], [3,8]);  // Returns: 8
 function distance_from_line(line, pt) =
-    assert( _valid_line(line) && is_vector(pt,len(line[0])), 
+    assert( _valid_line(line) && is_vector(pt,len(line[0])),
             "Invalid line, invalid point or incompatible dimensions." )
     _dist2line(pt-line[0],unit(line[1]-line[0]));
-    
-    
+
+
 // Function: line_normal()
 // Usage:
 //   line_normal([P1,P2])
@@ -121,9 +121,9 @@ function distance_from_line(line, pt) =
 //   color("blue") move_copies([p1,p2]) circle(d=2, $fn=12);
 function line_normal(p1,p2) =
     is_undef(p2)
-    ?   assert( len(p1)==2 && !is_undef(p1[1]) , "Invalid input." ) 
-        line_normal(p1[0],p1[1]) 
-    :   assert( _valid_line([p1,p2],dim=2), "Invalid line." ) 
+    ?   assert( len(p1)==2 && !is_undef(p1[1]) , "Invalid input." )
+        line_normal(p1[0],p1[1])
+    :   assert( _valid_line([p1,p2],dim=2), "Invalid line." )
         unit([p1.y-p2.y,p2.x-p1.x]);
 
 
@@ -157,7 +157,7 @@ function _general_line_intersection(s1,s2,eps=EPSILON) =
 function line_intersection(l1,l2,eps=EPSILON) =
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
     assert( _valid_line(l1,dim=2,eps=eps) &&_valid_line(l2,dim=2,eps=eps), "Invalid line(s)." )
-    let(isect = _general_line_intersection(l1,l2,eps=eps)) 
+    let(isect = _general_line_intersection(l1,l2,eps=eps))
     isect[0];
 
 
@@ -176,7 +176,7 @@ function line_ray_intersection(line,ray,eps=EPSILON) =
     assert( _valid_line(line,dim=2,eps=eps) && _valid_line(ray,dim=2,eps=eps), "Invalid line or ray." )
     let(
         isect = _general_line_intersection(line,ray,eps=eps)
-    ) 
+    )
     is_undef(isect[0]) ? undef :
     (isect[2]<0-eps) ? undef : isect[0];
 
@@ -217,7 +217,7 @@ function ray_intersection(r1,r2,eps=EPSILON) =
     assert( _valid_line(r1,dim=2,eps=eps) && _valid_line(r2,dim=2,eps=eps), "Invalid ray(s)." )
     let(
         isect = _general_line_intersection(r1,r2,eps=eps)
-    ) 
+    )
     is_undef(isect[0]) ? undef :
     isect[1]<0-eps || isect[2]<0-eps ? undef : isect[0];
 
@@ -237,7 +237,7 @@ function ray_segment_intersection(ray,segment,eps=EPSILON) =
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
     let(
         isect = _general_line_intersection(ray,segment,eps=eps)
-    ) 
+    )
     is_undef(isect[0]) ? undef :
     isect[1]<0-eps || isect[2]<0-eps || isect[2]>1+eps ? undef :
     isect[0];
@@ -258,7 +258,7 @@ function segment_intersection(s1,s2,eps=EPSILON) =
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
     let(
         isect = _general_line_intersection(s1,s2,eps=eps)
-    ) 
+    )
     is_undef(isect[0]) ? undef :
     isect[1]<0-eps || isect[1]>1+eps || isect[2]<0-eps || isect[2]>1+eps ? undef :
     isect[0];
@@ -449,7 +449,7 @@ function segment_closest_point(seg,pt) =
     projection>=seglen ? seg[1] :
     seg[0] + projection*segvec;
 
-    
+
 // Function: line_from_points()
 // Usage:
 //   line_from_points(points, [fast], [eps]);
@@ -586,25 +586,25 @@ function tri_calc(ang,ang2,adj,opp,hyp) =
     assert(num_defined([ang,ang2,adj,opp,hyp])==2, "Exactly two arguments must be given.")
     let(
         ang   = ang!=undef
-                ? assert(ang>0&&ang<90, "The input angles should be acute angles." ) ang 
-                : ang2!=undef ? (90-ang2) 
-                : adj==undef ? asin(constrain(opp/hyp,-1,1)) 
-                : opp==undef ? acos(constrain(adj/hyp,-1,1)) 
+                ? assert(ang>0&&ang<90, "The input angles should be acute angles." ) ang
+                : ang2!=undef ? (90-ang2)
+                : adj==undef ? asin(constrain(opp/hyp,-1,1))
+                : opp==undef ? acos(constrain(adj/hyp,-1,1))
                 : atan2(opp,adj),
         ang2 =  ang2!=undef
-                ? assert(ang2>0&&ang2<90, "The input angles should be acute angles." ) ang2 
+                ? assert(ang2>0&&ang2<90, "The input angles should be acute angles." ) ang2
                 : (90-ang),
         adj  =  adj!=undef
-                ? assert(adj>0, "Triangle side lengths should be positive." ) adj 
+                ? assert(adj>0, "Triangle side lengths should be positive." ) adj
                 : (opp!=undef? (opp/tan(ang)) : (hyp*cos(ang))),
         opp  =  opp!=undef
-                ? assert(opp>0, "Triangle side lengths should be positive." )  opp 
+                ? assert(opp>0, "Triangle side lengths should be positive." )  opp
                 : (adj!=undef? (adj*tan(ang)) : (hyp*sin(ang))),
         hyp  =  hyp!=undef
-                ? assert(hyp>0, "Triangle side lengths should be positive." ) 
+                ? assert(hyp>0, "Triangle side lengths should be positive." )
                   assert(adj<hyp && opp<hyp, "Hyphotenuse length should be greater than the other sides." )
-                  hyp 
-                : (adj!=undef? (adj/cos(ang)) 
+                  hyp
+                : (adj!=undef? (adj/cos(ang))
                 : (opp/sin(ang)))
     )
     [adj, opp, hyp, ang, ang2];
@@ -622,7 +622,7 @@ function tri_calc(ang,ang2,adj,opp,hyp) =
 // Example:
 //   hyp = hyp_opp_to_adj(5,3);  // Returns: 4
 function hyp_opp_to_adj(hyp,opp) =
-    assert(is_finite(hyp+opp) && hyp>=0 && opp>=0, 
+    assert(is_finite(hyp+opp) && hyp>=0 && opp>=0,
            "Triangle side lengths should be a positive numbers." )
     sqrt(hyp*hyp-opp*opp);
 
@@ -672,7 +672,7 @@ function opp_ang_to_adj(opp,ang) =
 // Example:
 //   opp = hyp_adj_to_opp(5,4);  // Returns: 3
 function hyp_adj_to_opp(hyp,adj) =
-    assert(is_finite(hyp) && hyp>=0 && is_finite(adj) && adj>=0, 
+    assert(is_finite(hyp) && hyp>=0 && is_finite(adj) && adj>=0,
            "Triangle side lengths should be a positive numbers." )
     sqrt(hyp*hyp-adj*adj);
 
@@ -720,7 +720,7 @@ function adj_ang_to_opp(adj,ang) =
 // Example:
 //   hyp = adj_opp_to_hyp(3,4);  // Returns: 5
 function adj_opp_to_hyp(adj,opp) =
-    assert(is_finite(opp) && opp>=0 && is_finite(adj) && adj>=0, 
+    assert(is_finite(opp) && opp>=0 && is_finite(adj) && adj>=0,
            "Triangle side lengths should be a positive numbers." )
     norm([opp,adj]);
 
@@ -768,7 +768,7 @@ function opp_ang_to_hyp(opp,ang) =
 // Example:
 //   ang = hyp_adj_to_ang(8,4);  // Returns: 60 degrees
 function hyp_adj_to_ang(hyp,adj) =
-    assert(is_finite(hyp) && hyp>0 && is_finite(adj) && adj>=0, 
+    assert(is_finite(hyp) && hyp>0 && is_finite(adj) && adj>=0,
             "Triangle side lengths should be positive numbers." )
     acos(adj/hyp);
 
@@ -784,7 +784,7 @@ function hyp_adj_to_ang(hyp,adj) =
 // Example:
 //   ang = hyp_opp_to_ang(8,4);  // Returns: 30 degrees
 function hyp_opp_to_ang(hyp,opp) =
-    assert(is_finite(hyp+opp) && hyp>0 && opp>=0, 
+    assert(is_finite(hyp+opp) && hyp>0 && opp>=0,
             "Triangle side lengths should be positive numbers." )
     asin(opp/hyp);
 
@@ -800,7 +800,7 @@ function hyp_opp_to_ang(hyp,opp) =
 // Example:
 //   ang = adj_opp_to_ang(sqrt(3)/2,0.5);  // Returns: 30 degrees
 function adj_opp_to_ang(adj,opp) =
-    assert(is_finite(adj+opp) && adj>0 && opp>=0, 
+    assert(is_finite(adj+opp) && adj>0 && opp>=0,
             "Triangle side lengths should be positive numbers." )
     atan2(opp,adj);
 
@@ -814,10 +814,10 @@ function adj_opp_to_ang(adj,opp) =
 // Examples:
 //   triangle_area([0,0], [5,10], [10,0]);  // Returns -50
 //   triangle_area([10,0], [5,10], [0,0]);  // Returns 50
-function triangle_area(a,b,c) = 
-    assert( is_path([a,b,c]), "Invalid points or incompatible dimensions." )    
-    len(a)==3 
-      ? 0.5*norm(cross(c-a,c-b)) 
+function triangle_area(a,b,c) =
+    assert( is_path([a,b,c]), "Invalid points or incompatible dimensions." )
+    len(a)==3
+      ? 0.5*norm(cross(c-a,c-b))
       : 0.5*cross(c-a,c-b);
 
 
@@ -830,7 +830,7 @@ function triangle_area(a,b,c) =
 //   plane3pt(p1, p2, p3);
 // Description:
 //   Generates the normalized cartesian equation of a plane from three 3d points.
-//   Returns [A,B,C,D] where Ax + By + Cz = D is the equation of a plane. 
+//   Returns [A,B,C,D] where Ax + By + Cz = D is the equation of a plane.
 //   Returns [], if the points are collinear.
 // Arguments:
 //   p1 = The first point on the plane.
@@ -838,11 +838,11 @@ function triangle_area(a,b,c) =
 //   p3 = The third point on the plane.
 function plane3pt(p1, p2, p3) =
     assert( is_path([p1,p2,p3],dim=3) && len(p1)==3,
-            "Invalid points or incompatible dimensions." )    
+            "Invalid points or incompatible dimensions." )
     let(
         crx = cross(p3-p1, p2-p1),
         nrm = norm(crx)
-    ) 
+    )
     approx(nrm,0) ? [] :
     concat(crx, crx*p1)/nrm;
 
@@ -869,7 +869,7 @@ function plane3pt_indexed(points, i1, i2, i3) =
         p1 = points[i1],
         p2 = points[i2],
         p3 = points[i3]
-    ) 
+    )
     plane3pt(p1,p2,p3);
 
 
@@ -881,7 +881,7 @@ function plane3pt_indexed(points, i1, i2, i3) =
 // Example:
 //   plane_from_normal([0,0,1], [2,2,2]);  // Returns the xy plane passing through the point (2,2,2)
 function plane_from_normal(normal, pt=[0,0,0]) =
-  assert( is_matrix([normal,pt],2,3) && !approx(norm(normal),0), 
+  assert( is_matrix([normal,pt],2,3) && !approx(norm(normal),0),
           "Inputs `normal` and `pt` should 3d vectors/points and `normal` cannot be zero." )
   concat(normal, normal*pt) / norm(normal);
 
@@ -946,7 +946,7 @@ function plane_from_polygon(poly, fast=false, eps=EPSILON) =
         poly = deduplicate(poly),
         n = polygon_normal(poly),
         plane = [n.x, n.y, n.z, n*poly[0]]
-    ) 
+    )
     fast? plane: coplanar(poly,eps=eps)? plane: [];
 
 
@@ -955,7 +955,7 @@ function plane_from_polygon(poly, fast=false, eps=EPSILON) =
 //   plane_normal(plane);
 // Description:
 //   Returns the unit length normal vector for the given plane.
-function plane_normal(plane) = 
+function plane_normal(plane) =
     assert( _valid_plane(plane), "Invalid input plane." )
     unit([plane.x, plane.y, plane.z]);
 
@@ -964,10 +964,10 @@ function plane_normal(plane) =
 // Usage:
 //   d = plane_offset(plane);
 // Description:
-//   Returns coeficient D of the normalized plane equation `Ax+By+Cz=D`, or the scalar offset of the plane from the origin. 
+//   Returns coeficient D of the normalized plane equation `Ax+By+Cz=D`, or the scalar offset of the plane from the origin.
 //   This value may be negative.
 //   The absolute value of this coefficient is the distance of the plane from the origin.
-function plane_offset(plane) =  
+function plane_offset(plane) =
     assert( _valid_plane(plane), "Invalid input plane." )
     plane[3]/norm([plane.x, plane.y, plane.z]);
 
@@ -994,7 +994,7 @@ function plane_transform(plane) =
         plane = normalize_plane(plane),
         n = point3d(plane),
         cp = n * plane[3]
-        ) 
+        )
     rot(from=n, to=UP) * move(-cp);
 
 
@@ -1002,7 +1002,7 @@ function plane_transform(plane) =
 // Usage:
 //   projection_on_plane(points);
 // Description:
-//   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 2d or 3d points, return the 3D orthogonal 
+//   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 2d or 3d points, return the 3D orthogonal
 //   projection of the points on the plane.
 // Arguments:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
@@ -1014,13 +1014,13 @@ function plane_transform(plane) =
 function projection_on_plane(plane, points) =
     assert( _valid_plane(plane), "Invalid plane." )
     assert( is_path(points), "Invalid list of points or dimension." )
-    let( 
+    let(
         p  = len(points[0])==2
              ? [for(pi=points) point3d(pi) ]
-             : points, 
+             : points,
         plane = normalize_plane(plane),
         n = point3d(plane)
-        ) 
+    )
     [for(pi=p) pi - (pi*n - plane[3])*n];
 
 
@@ -1069,7 +1069,7 @@ function closest_point_on_plane(plane, point) =
     let( plane = normalize_plane(plane),
         n = point3d(plane),
         d = n*point - plane[3] // distance from plane
-        ) 
+    )
     point - n*d;
 
 
@@ -1078,7 +1078,7 @@ function closest_point_on_plane(plane, point) =
 // Returns undef if line is parallel to, but not on the given plane.
 function _general_plane_line_intersection(plane, line, eps=EPSILON) =
     let(
-        a = plane*[each line[0],-1],         //  evaluation of the plane expression at line[0] 
+        a = plane*[each line[0],-1],         //  evaluation of the plane expression at line[0]
         b = plane*[each(line[1]-line[0]),0]  // difference between the plane expression evaluation at line[1] and at line[0]
     )
     approx(b,0,eps)                          // is  (line[1]-line[0]) "parallel" to the plane ?
@@ -1086,10 +1086,10 @@ function _general_plane_line_intersection(plane, line, eps=EPSILON) =
        ? [line,undef]                        // line is on the plane
        : undef                               // line is parallel but not on the plane
     : [ line[0]-a/b*(line[1]-line[0]), -a/b ];
-    
-    
+
+
 // Function: normalize_plane()
-// Usage: 
+// Usage:
 //   nplane = normalize_plane(plane);
 // Description:
 //   Returns a new representation [A,B,C,D] of `plane` where norm([A,B,C]) is equal to one.
@@ -1099,12 +1099,12 @@ function normalize_plane(plane) =
 
 
 // Function: plane_line_angle()
-// Usage: 
+// Usage:
 //   angle = plane_line_angle(plane,line);
 // Description:
 //   Compute the angle between a plane [A, B, C, D] and a line, specified as a pair of points [p1,p2].
-//   The resulting angle is signed, with the sign positive if the vector p2-p1 lies on 
-//   the same side of the plane as the plane's normal vector.  
+//   The resulting angle is signed, with the sign positive if the vector p2-p1 lies on
+//   the same side of the plane as the plane's normal vector.
 function plane_line_angle(plane, line) =
     assert( _valid_plane(plane), "Invalid plane." )
     assert( _valid_line(line), "Invalid line." )
@@ -1113,7 +1113,7 @@ function plane_line_angle(plane, line) =
         normal    = plane_normal(plane),
         sin_angle = linedir*normal,
         cos_angle = norm(cross(linedir,normal))
-        ) 
+    )
     atan2(sin_angle,cos_angle);
 
 
@@ -1189,19 +1189,19 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
             inside = [for (part = parts)
                           if (point_in_polygon(mean(part), poly2d)>0) part
                      ]
-        ) 
+        )
         !inside? undef :
         let(
             isegs = [for (seg = inside) lift_plane(seg, plane) ]
-        ) 
+        )
         isegs
-    ) 
+    )
     :   bounded[0] && res[1]<0? undef :
         bounded[1] && res[1]>1? undef :
         let(
             proj = clockwise_polygon(project_plane(poly, p1, p2, p3)),
             pt = project_plane(res[0], p1, p2, p3)
-        ) 
+        )
         point_in_polygon(pt, proj) < 0 ? undef : res[0];
 
 
@@ -1212,7 +1212,7 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
 //   Compute the point which is the intersection of the three planes, or the line intersection of two planes.
 //   If you give three planes the intersection is returned as a point.  If you give two planes the intersection
 //   is returned as a list of two points on the line of intersection.  If any two input planes are parallel
-//   or coincident then returns undef.  
+//   or coincident then returns undef.
 function plane_intersection(plane1,plane2,plane3) =
     assert( _valid_plane(plane1) && _valid_plane(plane2) && (is_undef(plane3) ||_valid_plane(plane3)),
                 "The input must be 2 or 3 planes." )
@@ -1220,15 +1220,15 @@ function plane_intersection(plane1,plane2,plane3) =
     ?   let(
           matrix = [for(p=[plane1,plane2,plane3]) point3d(p)],
           rhs = [for(p=[plane1,plane2,plane3]) p[3]]
-        ) 
+        )
         linear_solve(matrix,rhs)
-    :   let( normal = cross(plane_normal(plane1), plane_normal(plane2)) ) 
+    :   let( normal = cross(plane_normal(plane1), plane_normal(plane2)) )
         approx(norm(normal),0) ? undef :
         let(
             matrix = [for(p=[plane1,plane2]) point3d(p)],
             rhs = [plane1[3], plane2[3]],
             point = linear_solve(matrix,rhs)
-        ) 
+        )
         point==[]? undef: [point, point+normal];
 
 
@@ -1244,13 +1244,13 @@ function coplanar(points, eps=EPSILON) =
     assert( is_path(points,dim=3) , "Input should be a list of 3D points." )
     assert( is_finite(eps) && eps>=0, "The tolerance should be a non-negative number." )
     len(points)<=2 ? false
-    :   let( ip = noncollinear_triple(points,error=false,eps=eps) ) 
-        ip == [] ? false : 
-        let( plane  = plane3pt(points[ip[0]],points[ip[1]],points[ip[2]]), 
+    :   let( ip = noncollinear_triple(points,error=false,eps=eps) )
+        ip == [] ? false :
+        let( plane  = plane3pt(points[ip[0]],points[ip[1]],points[ip[2]]),
              normal = point3d(plane) )
         max( points*normal ) - plane[3]< eps*norm(normal);
 
-    
+
 // Function: points_on_plane()
 // Usage:
 //   points_on_plane(points, plane, <eps>);
@@ -1355,11 +1355,11 @@ function in_front_of_plane(plane, point) =
 function circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
     let(r = get_radius(r=r, d=d, dflt=undef))
     assert(r!=undef, "Must specify either r or d.")
-    assert( ( is_path(pt1) && len(pt1)==3 && is_undef(pt2) && is_undef(pt3)) 
+    assert( ( is_path(pt1) && len(pt1)==3 && is_undef(pt2) && is_undef(pt3))
             || (is_matrix([pt1,pt2,pt3]) && (len(pt1)==2 || len(pt1)==3) ),
             "Invalid input points." )
-    is_undef(pt2) 
-    ? circle_2tangents(pt1[0], pt1[1], pt1[2], r=r, tangents=tangents) 
+    is_undef(pt2)
+    ? circle_2tangents(pt1[0], pt1[1], pt1[2], r=r, tangents=tangents)
     : collinear(pt1, pt2, pt3)? undef :
         let(
             v1 = unit(pt1 - pt2),
@@ -1369,7 +1369,7 @@ function circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
             a = vector_angle(v1, v2),
             hyp = r / sin(a/2),
             cp = pt2 + hyp * vmid
-            ) 
+        )
         !tangents ? [cp, n] :
         let(
             x = hyp * cos(a/2),
@@ -1377,7 +1377,7 @@ function circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
             tp2 = pt2 + x * v2,
             dang1 = vector_angle(tp1-cp,pt2-cp),
             dang2 = vector_angle(tp2-cp,pt2-cp)
-            ) 
+        )
         [cp, n, tp1, tp2, dang1, dang2];
 
 module circle_2tangents(pt1, pt2, pt3, r, d, h, center=false) {
@@ -1438,8 +1438,8 @@ module circle_2tangents(pt1, pt2, pt3, r, d, h, center=false) {
 //   move_copies(pts) color("cyan") sphere(d=3, $fn=12);
 function circle_3points(pt1, pt2, pt3) =
     (is_undef(pt2) && is_undef(pt3) && is_list(pt1))
-      ? circle_3points(pt1[0], pt1[1], pt1[2]) 
-      : assert( is_vector(pt1) && is_vector(pt2) && is_vector(pt3) 
+      ? circle_3points(pt1[0], pt1[1], pt1[2])
+      : assert( is_vector(pt1) && is_vector(pt2) && is_vector(pt3)
                 && max(len(pt1),len(pt2),len(pt3))<=3 && min(len(pt1),len(pt2),len(pt3))>=2,
                 "Invalid point(s)." )
         collinear(pt1,pt2,pt3)? [undef,undef,undef] :
@@ -1447,17 +1447,17 @@ function circle_3points(pt1, pt2, pt3) =
             v  = [ point3d(pt1), point3d(pt2), point3d(pt3) ], // triangle vertices
             ed = [for(i=[0:2]) v[(i+1)%3]-v[i] ],    // triangle edge vectors
             pm = [for(i=[0:2]) v[(i+1)%3]+v[i] ]/2,  // edge mean points
-            es = sortidx( [for(di=ed) norm(di) ] ),   
+            es = sortidx( [for(di=ed) norm(di) ] ),
             e1 = ed[es[1]],                          // take the 2 longest edges
             e2 = ed[es[2]],
-            n0 = vector_axis(e1,e2),                 // normal standardization 
+            n0 = vector_axis(e1,e2),                 // normal standardization
             n  = n0.z<0? -n0 : n0,
-            sc = plane_intersection(                 
+            sc = plane_intersection(
                     [ each e1, e1*pm[es[1]] ],       // planes orthogonal to 2 edges
                     [ each e2, e2*pm[es[2]] ],
                     [ each n,  n*v[0] ]
                 ),  // triangle plane
-            cp = len(pt1)+len(pt2)+len(pt3)>6 ? sc : [sc.x, sc.y], 
+            cp = len(pt1)+len(pt2)+len(pt3)>6 ? sc : [sc.x, sc.y],
             r  = norm(sc-v[0])
         ) [ cp, r, n ];
 
@@ -1522,8 +1522,8 @@ function circle_point_tangents(r, d, cp, pt) =
 //   circle 1.  If the circles intersect then the interior tangents don't exist and the function
 //   returns only two entries.  If one circle is inside the other one then no tangents exist
 //   so the function returns the empty set.  When the circles are tangent a degenerate tangent line
-//   passes through the point of tangency of the two circles:  this degenerate line is NOT returned.  
-// Example(2D): Four tangents, first in green, second in black, third in blue, last in red.  
+//   passes through the point of tangency of the two circles:  this degenerate line is NOT returned.
+// Example(2D): Four tangents, first in green, second in black, third in blue, last in red.
 //   $fn=32;
 //   c1 = [3,4];  r1 = 2;
 //   c2 = [7,10]; r2 = 3;
@@ -1541,7 +1541,7 @@ function circle_point_tangents(r, d, cp, pt) =
 //   move(c2) stroke(circle(r=r2), width=.1, closed=true);
 //   colors = ["green","black","blue","red"];
 //   for(i=[0:len(pts)-1]) color(colors[i]) stroke(pts[i],width=.1);
-// Example(2D): Circles are tangent.  Only exterior tangents are returned.  The degenerate internal tangent is not returned.  
+// Example(2D): Circles are tangent.  Only exterior tangents are returned.  The degenerate internal tangent is not returned.
 //   $fn=32;
 //   c1 = [4,4];  r1 = 4;
 //   c2 = [4,10]; r2 = 2;
@@ -1550,7 +1550,7 @@ function circle_point_tangents(r, d, cp, pt) =
 //   move(c2) stroke(circle(r=r2), width=.1, closed=true);
 //   colors = ["green","black","blue","red"];
 //   for(i=[0:1:len(pts)-1]) color(colors[i]) stroke(pts[i],width=.1);
-// Example(2D): One circle is inside the other: no tangents exist.  If the interior circle is tangent the single degenerate tangent will not be returned.  
+// Example(2D): One circle is inside the other: no tangents exist.  If the interior circle is tangent the single degenerate tangent will not be returned.
 //   $fn=32;
 //   c1 = [4,4];  r1 = 4;
 //   c2 = [5,5];  r2 = 2;
@@ -1608,12 +1608,12 @@ function noncollinear_triple(points,error=true,eps=EPSILON) =
         []
     :   let(
             n = (pb-pa)/nrm,
-            distlist = [for(i=[0:len(points)-1]) _dist2line(points[i]-pa, n)]   
+            distlist = [for(i=[0:len(points)-1]) _dist2line(points[i]-pa, n)]
            )
         max(distlist)<eps
         ?  assert(!error, "Cannot find three noncollinear points in pointlist.")
            []
-        :  [0,b,max_index(distlist)];    
+        :  [0,b,max_index(distlist)];
 
 
 // Function: pointlist_bounds()
@@ -1626,7 +1626,7 @@ function noncollinear_triple(points,error=true,eps=EPSILON) =
 // Arguments:
 //   pts = List of points.
 function pointlist_bounds(pts) =
-    assert(is_matrix(pts) && len(pts)>0 && len(pts[0])>0 , "Invalid pointlist." ) 
+    assert(is_matrix(pts) && len(pts)>0 && len(pts[0])>0 , "Invalid pointlist." )
     let(ptsT = transpose(pts))
     [
       [for(row=ptsT) min(row)],
@@ -1669,7 +1669,7 @@ function furthest_point(pt, points) =
 // Usage:
 //   area = polygon_area(poly);
 // Description:
-//   Given a 2D or 3D planar polygon, returns the area of that polygon.  
+//   Given a 2D or 3D planar polygon, returns the area of that polygon.
 //   If the polygon is self-crossing, the results are undefined. For non-planar points the result is undef.
 //   When `signed` is true, a signed area is returned; a positive area indicates a counterclockwise polygon.
 // Arguments:
@@ -1678,14 +1678,23 @@ function furthest_point(pt, points) =
 function polygon_area(poly, signed=false) =
     assert(is_path(poly), "Invalid polygon." )
     len(poly)<3 ? 0 :
+    let( cpoly = close_path(simplify_path(poly)) )
     len(poly[0])==2
-    ? sum([for(i=[1:1:len(poly)-2]) cross(poly[i]-poly[0],poly[i+1]-poly[0]) ])/2
-    : let( plane = plane_from_points(poly) )
-      plane==undef? undef :
-      let( n = unit(plane_normal(plane)), 
-           total = sum([for(i=[1:1:len(poly)-1]) cross(poly[i]-poly[0],poly[i+1]-poly[0])*n ])/2
-          )
-      signed ? total : abs(total);
+      ? sum([for(i=[1:1:len(poly)-2]) cross(poly[i]-poly[0],poly[i+1]-poly[0]) ])/2
+      : let( plane = plane_from_points(poly) )
+        plane==undef? undef :
+        let(
+            n = unit(plane_normal(plane)),
+            total = sum([
+                for(i=[1:1:len(cpoly)-2])
+                let(
+                    v1 = cpoly[i] - cpoly[0],
+                    v2 = cpoly[i+1] - cpoly[0]
+                )
+                cross(v1,v2) * n
+            ])/2
+        )
+        signed ? total : abs(total);
 
 
 // Function: is_convex_polygon()
@@ -1693,7 +1702,7 @@ function polygon_area(poly, signed=false) =
 //   is_convex_polygon(poly);
 // Description:
 //   Returns true if the given 2D polygon is convex.  The result is meaningless if the polygon is not simple (self-intersecting).
-//   If the points are collinear the result is true. 
+//   If the points are collinear the result is true.
 // Example:
 //   is_convex_polygon(circle(d=50));  // Returns: true
 // Example:
@@ -1702,14 +1711,14 @@ function polygon_area(poly, signed=false) =
 function is_convex_polygon(poly) =
     assert(is_path(poly,dim=2), "The input should be a 2D polygon." )
     let( l = len(poly) )
-    len([for( i = l-1, 
-              c = cross(poly[(i+1)%l]-poly[i], poly[(i+2)%l]-poly[(i+1)%l]), 
+    len([for( i = l-1,
+              c = cross(poly[(i+1)%l]-poly[i], poly[(i+2)%l]-poly[(i+1)%l]),
               s = sign(c);
             i>=0 && sign(c)==s;
-              i = i-1, 
-              c = i<0? 0: cross(poly[(i+1)%l]-poly[i],poly[(i+2)%l]-poly[(i+1)%l]), 
+              i = i-1,
+              c = i<0? 0: cross(poly[(i+1)%l]-poly[i],poly[(i+2)%l]-poly[(i+1)%l]),
               s = s==0 ? sign(c) : s
-            ) i 
+            ) i
         ])== l;
 
 
@@ -1748,7 +1757,7 @@ function polygon_shift_to_closest_point(poly, pt) =
 //   newpoly = reindex_polygon(reference, poly);
 // Description:
 //   Rotates and possibly reverses the point order of a 2d or 3d polygon path to optimize its pairwise point
-//   association with a reference polygon.  The two polygons must have the same number of vertices and be the same dimension. 
+//   association with a reference polygon.  The two polygons must have the same number of vertices and be the same dimension.
 //   The optimization is done by computing the distance, norm(reference[i]-poly[i]), between
 //   corresponding pairs of vertices of the two polygons and choosing the polygon point order that
 //   makes the total sum over all pairs as small as possible.  Returns the reindexed polygon.  Note
@@ -1772,7 +1781,7 @@ function polygon_shift_to_closest_point(poly, pt) =
 //   move_copies(concat(circ,pent)) circle(r=.1,$fn=32);
 //   color("red") move_copies([pent[0],circ[0]]) circle(r=.1,$fn=32);
 //   color("blue") translate(reindexed[0])circle(r=.1,$fn=32);
-function reindex_polygon(reference, poly, return_error=false) = 
+function reindex_polygon(reference, poly, return_error=false) =
     assert(is_path(reference) && is_path(poly,dim=len(reference[0])),
            "Invalid polygon(s) or incompatible dimensions. " )
     assert(len(reference)==len(poly), "The polygons must have the same length.")
@@ -1784,14 +1793,14 @@ function reindex_polygon(reference, poly, return_error=false) =
                   ? clockwise_polygon(poly)
                   : ccw_polygon(poly),
         I   = [for(i=[0:N-1]) 1],
-        val = [ for(k=[0:N-1]) 
-                  [for(i=[0:N-1]) 
+        val = [ for(k=[0:N-1])
+                  [for(i=[0:N-1])
                      (reference[i]*poly[(i+k)%N]) ] ]*I,
         optimal_poly = polygon_shift(fixpoly, max_index(val))
       )
     return_error? [optimal_poly, min(poly*(I*poly)-2*val)] :
     optimal_poly;
-    
+
 
 // Function: align_polygon()
 // Usage:
@@ -1802,11 +1811,11 @@ function reindex_polygon(reference, poly, return_error=false) =
 //   so if run time is a problem, use a smaller sampling of angles.  Returns the rotated and reindexed
 //   polygon.
 // Arguments:
-//   reference = reference polygon 
+//   reference = reference polygon
 //   poly = polygon to rotate into alignment with the reference
 //   angles = list or range of angles to test
 //   cp = centerpoint for rotations
-// Example(2D): The original hexagon in yellow is not well aligned with the pentagon.  Turning it so the faces line up gives an optimal alignment, shown in red.  
+// Example(2D): The original hexagon in yellow is not well aligned with the pentagon.  Turning it so the faces line up gives an optimal alignment, shown in red.
 //   $fn=32;
 //   pentagon = subdivide_path(pentagon(side=2),60);
 //   hexagon = subdivide_path(hexagon(side=2.7),60);
@@ -1860,7 +1869,7 @@ function centroid(poly) =
                   ] )
           )
       val[1]/val[0]/3;
-            
+
 
 // Function: point_in_polygon()
 // Usage:
@@ -1888,30 +1897,30 @@ function point_in_polygon(point, poly, eps=EPSILON, nonzero=true) =
     assert( is_finite(eps) && eps>=0, "Invalid tolerance." )
     // Does the point lie on any edges?  If so return 0.
     let(
-        on_brd = [for(i=[0:1:len(poly)-1]) 
-                    let( seg = select(poly,i,i+1) ) 
-                    if( !approx(seg[0],seg[1],eps=EPSILON) ) 
+        on_brd = [for(i=[0:1:len(poly)-1])
+                    let( seg = select(poly,i,i+1) )
+                    if( !approx(seg[0],seg[1],eps=EPSILON) )
                         point_on_segment2d(point, seg, eps=eps)? 1:0 ]
         )
     sum(on_brd) > 0
-    ? 0 
+    ? 0
     :   nonzero
         ?    // Compute winding number and return 1 for interior, -1 for exterior
             let(
-                windchk = [for(i=[0:1:len(poly)-1]) 
-                            let(seg=select(poly,i,i+1)) 
-                            if(!approx(seg[0],seg[1],eps=eps)) 
+                windchk = [for(i=[0:1:len(poly)-1])
+                            let(seg=select(poly,i,i+1))
+                            if(!approx(seg[0],seg[1],eps=eps))
                                 _point_above_below_segment(point, seg)
                           ]
                 )
             sum(windchk) != 0 ? 1 : -1
         :   // or compute the crossings with the ray [point, point+[1,0]]
-            let( 
+            let(
               n  = len(poly),
-              cross = 
+              cross =
                 [for(i=[0:n-1])
-                    let( 
-                      p0 = poly[i]-point, 
+                    let(
+                      p0 = poly[i]-point,
                       p1 = poly[(i+1)%n]-point
                       )
                     if( ( (p1.y>eps && p0.y<=0) || (p1.y<=0 && p0.y>eps) )
@@ -1970,7 +1979,7 @@ function reverse_polygon(poly) =
 //   n = polygon_normal(poly);
 // Description:
 //   Given a 3D planar polygon, returns a unit-length normal vector for the
-//   clockwise orientation of the polygon. 
+//   clockwise orientation of the polygon.
 function polygon_normal(poly) =
     assert(is_path(poly,dim=3), "Invalid 3D polygon." )
     let(
@@ -2082,9 +2091,8 @@ function _split_polygon_at_z(poly, z) =
 //   polys = A list of 3D polygons to split.
 //   xs = A list of scalar X values to split at.
 function split_polygons_at_each_x(polys, xs, _i=0) =
-    assert( is_consistent(polys) && is_path(poly[0],dim=3) ,
-            "The input list should contains only 3D polygons." )
-    assert( is_finite(xs), "The split value list should contain only numbers." )  
+    assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
+    assert( is_vector(xs), "The split value list should contain only numbers." )
     _i>=len(xs)? polys :
     split_polygons_at_each_x(
         [
@@ -2092,7 +2100,7 @@ function split_polygons_at_each_x(polys, xs, _i=0) =
             each _split_polygon_at_x(poly, xs[_i])
         ], xs, _i=_i+1
     );
-    
+
 
 // Function: split_polygons_at_each_y()
 // Usage:
@@ -2103,9 +2111,8 @@ function split_polygons_at_each_x(polys, xs, _i=0) =
 //   polys = A list of 3D polygons to split.
 //   ys = A list of scalar Y values to split at.
 function split_polygons_at_each_y(polys, ys, _i=0) =
-//    assert( is_consistent(polys) && is_path(polys[0],dim=3) , // not all polygons should have the same length!!!
-  //          "The input list should contains only 3D polygons." )
-    assert( is_finite(ys) || is_vector(ys), "The split value list should contain only numbers." )  //***
+    assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
+    assert( is_vector(ys), "The split value list should contain only numbers." )
     _i>=len(ys)? polys :
     split_polygons_at_each_y(
         [
@@ -2124,9 +2131,8 @@ function split_polygons_at_each_y(polys, ys, _i=0) =
 //   polys = A list of 3D polygons to split.
 //   zs = A list of scalar Z values to split at.
 function split_polygons_at_each_z(polys, zs, _i=0) =
-    assert( is_consistent(polys) && is_path(poly[0],dim=3) ,
-            "The input list should contains only 3D polygons." )
-    assert( is_finite(zs), "The split value list should contain only numbers." )  
+    assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
+    assert( is_vector(zs), "The split value list should contain only numbers." )
     _i>=len(zs)? polys :
     split_polygons_at_each_z(
         [
