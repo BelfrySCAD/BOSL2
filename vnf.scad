@@ -672,8 +672,11 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
         ],
         nonplanars = unique([
             for (face = faces) let(
-                faceverts = [for (k=face) varr[k]]
-            ) if (!coplanar(faceverts)) [
+                faceverts = [for (k=face) varr[k]],
+                area = polygon_area(faceverts)
+            )
+            if (is_num(area) && abs(area) > EPSILON)
+            if (!coplanar(faceverts)) [
                 "ERROR",
                 "NONPLANAR",
                 "Face vertices are not coplanar",
@@ -712,9 +715,12 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             if (v!=edge[0] && v!=edge[1]) let(
                 a = varr[edge[0]],
                 b = varr[v],
-                c = varr[edge[1]],
+                c = varr[edge[1]]
+            )
+            if (a != b && b != c && a != c) let(
                 pt = segment_closest_point([a,c],b)
-            ) if (pt == b) [
+            )
+            if (pt == b) [
                 "ERROR",
                 "T_JUNCTION",
                 "Vertex is mid-edge on another Face",
