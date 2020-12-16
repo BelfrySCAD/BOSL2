@@ -18,8 +18,9 @@ for testscript in $INFILES ; do
     testfile="tests/test_$repname"
     if [ -f "$testfile" ] ; then
         ${OPENSCAD} -o out.echo --hardwarnings --check-parameters true --check-parameter-ranges true $testfile 2>&1
+        retcode=$?
         res=$(cat out.echo)
-        if [ "$res" = "" ] ; then
+        if [ $retcode -eq 0 ] && [ "$res" = "" ] ; then
             echo "$repname: PASS"
         else
             echo "$repname: FAIL!"
