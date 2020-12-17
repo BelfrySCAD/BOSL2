@@ -350,7 +350,7 @@ module stroke(
 //   N = Number of vertices to form the arc curve from.
 //   r = Radius of the arc.
 //   d = Diameter of the arc.
-//   angle = If a scalar, specifies the end angle in degrees.  If a vector of two scalars, specifies start and end angles.
+//   angle = If a scalar, specifies the end angle in degrees (relative to start parameter).  If a vector of two scalars, specifies start and end angles.
 //   cp = Centerpoint of arc.
 //   points = Points on the arc.
 //   long = if given with cp and points takes the long arc instead of the default short arc.  Default: false
@@ -360,6 +360,7 @@ module stroke(
 //   thickness = If given with `width`, arc starts and ends on X axis, to make a circle segment.
 //   start = Start angle of arc.
 //   wedge = If true, include centerpoint `cp` in output to form pie slice shape.
+//   endpoint = If false exclude the last point (function only).  Default: true
 // Examples(2D):
 //   arc(N=4, r=30, angle=30, wedge=true);
 //   arc(r=30, angle=30, wedge=true);
@@ -378,7 +379,10 @@ module stroke(
 // Example(FlatSpin):
 //   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
 //   trace_path(path, showpts=true, color="cyan");
-function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false) =
+function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true) =
+    assert(is_bool(endpoint))
+    !endpoint ? assert(!wedge, "endpoint cannot be false if wedge is true")
+               slice(arc(N,r,angle,d,cp,points,width,thickness,start,wedge,long,cw,ccw,true),0,-2) :
     // First try for 2D arc specified by width and thickness
     is_def(width) && is_def(thickness)? (
                 assert(!any_defined([r,cp,points]) && !any([cw,ccw,long]),"Conflicting or invalid parameters to arc")
@@ -472,7 +476,7 @@ function _normal_segment(p1,p2) =
 
 // Function: turtle()
 // Usage:
-//   turtle(commands, [state], [full_state], [repeat])
+//   turtle(commands, [state], [full_state], [repeat], [endpoint])
 // Description:
 //   Use a sequence of turtle graphics commands to generate a path.  The parameter `commands` is a list of
 //   turtle commands and optional parameters for each command.  The turtle state has a position, movement direction,

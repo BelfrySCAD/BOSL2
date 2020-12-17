@@ -349,11 +349,16 @@ function _rounding_offsets(edgespec,z_dir=1) =
                 chamf_angle = struct_val(edgespec, "angle"),
                 cheight = struct_val(edgespec, "chamfer_height"),
                 cwidth = struct_val(edgespec, "chamfer_width"),
-                chamf_width = first_defined([cut/cos(chamf_angle), cwidth, cheight*tan(chamf_angle)]),
-                chamf_height = first_defined([cut/sin(chamf_angle),cheight, cwidth/tan(chamf_angle)]),
+                chamf_width = first_defined([!all_defined([cut,chamf_angle]) ? undef : cut/cos(chamf_angle),
+                                             cwidth,
+                                             !all_defined([cheight,chamf_angle]) ? undef : cheight*tan(chamf_angle)]),
+                chamf_height = first_defined([
+                                              !all_defined([cut,chamf_angle]) ? undef : cut/sin(chamf_angle),
+                                              cheight,
+                                              !all_defined([cwidth, chamf_angle]) ? undef : cwidth/tan(chamf_angle)]),
                 joint = first_defined([
                         struct_val(edgespec,"joint"),
-                        16*cut/sqrt(2)/(1+4*k)
+                        all_defined([cut,k]) ? 16*cut/sqrt(2)/(1+4*k) : undef
                 ]),
                 points = struct_val(edgespec, "points"),
                 argsOK = in_list(edgetype,["circle","teardrop"])? is_def(radius) :
@@ -365,7 +370,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
         assert(argsOK,str("Invalid specification with type ",edgetype))
         let(
                 offsets =
-                        edgetype == "profile"? scale([-1,z_dir], slice(points,1,-1)) :
+                        edgetype == "profile"? scale([-1,z_dir], p=slice(points,1,-1)) :
                         edgetype == "chamfer"?  chamf_width==0 && chamf_height==0? [] : [[-chamf_width,z_dir*abs(chamf_height)]] :
                         edgetype == "teardrop"? (
                                 radius==0? [] : concat(
@@ -380,6 +385,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
                                 1, -1
                         )
         )
+  
         quant(extra > 0? concat(offsets, [select(offsets,-1)+[0,z_dir*extra]]) : offsets, 1/1024);
 
 
@@ -915,7 +921,7 @@ function offset_sweep(
                     && in_list(struct_val(bottom, "offset"),["round","delta"])
     )
     assert(offsetsok,"Offsets must be one of \"round\" or \"delta\"")
-    let( 
+    let(
         offsets_bot = _rounding_offsets(bottom, -1),
         offsets_top = _rounding_offsets(top, 1),
         dummy = offset == "chamfer" && (len(offsets_bot)>5 || len(offsets_top)>5)

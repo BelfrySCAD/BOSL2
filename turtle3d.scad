@@ -116,10 +116,13 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   "arcrot"   |x | radius, rotation   | Draw an arc turning by the specified absolute rotation with given radius
 //   "arctodir" |x | radius, vector     | Draw an arc turning to point in the (absolute) direction of given vector
 //   "arcsteps" |x | count              | Specifies the number of segments to use for drawing arcs.  If you set it to zero then the standard `$fn`, `$fa` and `$fs` variables define the number of segments.
-//
-//   Compound commands are lists that group multiple commands to be applied simultaneously during a turtle movement.  Example: `["move", 5, "shrink", 2]`.  The subcommands that may appear are listed below.  Each command command
-//   must begin with either "move" or "arc".  The order of subcommands is not important.  Left/right turning is applied before up/down.  You cannot combine "rot" or "todir" with any other turning commands.  
-// 
+//   .
+//   Compound commands are lists that group multiple commands to be applied simultaneously during a
+//   turtle movement.  Example: `["move", 5, "shrink", 2]`.  The subcommands that may appear are
+//   listed below.  Each compound command must begin with either "move" or "arc".  The order of
+//   subcommands is not important.  Left/right turning is applied before up/down.  You cannot combine
+//   "rot" or "todir" with any other turning commands.  
+//   .
 //   Subcommands  | Arguments          | What it does
 //   ------------ | ------------------ | -------------------------------
 //   "move"       | dist               | Compound command is a forward movement operation
@@ -146,40 +149,39 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   "down", "left" or "right" alone then you can give any angle, but if you combine "up"/"down" with "left"/"right" then the specified
 //   angles must be smaller than 180 degrees.  (This is because the algorithm decodes the rotation into an angle smaller than 180, so
 //   the results are very strange if larger angles are permitted.)
-//   .
 // Arguments:
 //   commands = List of turtle3d commands
 //   state = Starting turtle direction or full turtle state (from a previous call).  Default: RIGHT
 //   transforms = If true teturn list of transformations instead of points.  Default: false
 //   full_state = If true return full turtle state for continuing the path in subsequent turtle calls.  Default: false
 //   repeat = Number of times to repeat the command list.  Default: 1
-// Example: Angled rectangle
+// Example(3D): Angled rectangle
 //   path = turtle3d(["up",25,"move","left","move",3,"left","move"]);
 //   stroke(path,closed=true, width=.2);
-// Example: Path with rounded corners.  Note first and last point of the path are duplicates.  
+// Example(3D): Path with rounded corners.  Note first and last point of the path are duplicates.  
 //   r = 0.25;
 //   path = turtle3d(["up",25,"move","arcleft",r,"move",3,"arcleft",r,"move","arcleft",r,"move",3,"arcleft",r]);
 //   stroke(path,closed=true, width=.2);
-// Example: Non-coplanar figure
+// Example(3D): Non-coplanar figure
 //   path = turtle3d(["up",25,"move","left","move",3,"up","left",0,"move"]);
 //   stroke(path,closed=true, width=.2);
-// Example: Square spiral.  Note that the core twists because the "up" and "left" turns are relative to the previous turns.
+// Example(3D): Square spiral.  Note that the core twists because the "up" and "left" turns are relative to the previous turns.
 //   include<BOSL2/skin.scad>
 //   path = turtle3d(["move",10,"left","up",15],repeat=50);
 //   path_sweep(circle(d=1, $fn=12), path);
-// Example: Square spiral, second try.  Use roll to create the spiral instead of turning up.  It still twists because the left turns are inclined.
+// Example(3D): Square spiral, second try.  Use roll to create the spiral instead of turning up.  It still twists because the left turns are inclined.
 //   include<BOSL2/skin.scad>
 //   path = turtle3d(["move",10,"left","roll",10],repeat=50);
 //   path_sweep(circle(d=1, $fn=12), path);
-// Example: Square spiral, third try.  One way to avoid the core twisting in the spiral is to use absolute turns.  Note that the vertical rise is controlled by the starting upward angle of the turtle, which is preserved as we rotate around the z axis.  
+// Example(3D): Square spiral, third try.  One way to avoid the core twisting in the spiral is to use absolute turns.  Note that the vertical rise is controlled by the starting upward angle of the turtle, which is preserved as we rotate around the z axis.  
 //   include<BOSL2/skin.scad>
 //   path = turtle3d(["up", 5, "repeat", 12, ["move",10,"zrot"]]);
 //   path_sweep(circle(d=1, $fn=12), path);
-// Example: Square spiral, rounded corners.  Careful use of rotations can work for sweep, but it may be better to round the corners.  Here we return a list of transforms and use sweep instead of path_sweep:
+// Example(3D): Square spiral, rounded corners.  Careful use of rotations can work for sweep, but it may be better to round the corners.  Here we return a list of transforms and use sweep instead of path_sweep:
 //   include<BOSL2/skin.scad>
 //   path = turtle3d(["up", 5, "repeat", 12, ["move",10,"arczrot",4]],transforms=true);
 //   sweep(circle(d=1, $fn=12), path);
-// Example:  Mixing relative and absolute commands
+// Example(3D): Mixing relative and absolute commands
 //   include<BOSL2/skin.scad>
 //   path = turtle3d(["repeat", 4, ["move",80,"arczrot",40],
 //                    "arcyrot",40,-90,
@@ -196,7 +198,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                   state=[1,0,.2],transforms=true);
 //   ushape = rot(90,p=[[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]]);
 //   sweep(ushape, path);
-// Example: Generic helix, constructed by a sequence of movements and then rotations
+// Example(3D): Generic helix, constructed by a sequence of movements and then rotations
 //   include<BOSL2/skin.scad>
 //   radius=14;       // Helix radius
 //   pitch=20;        // Distance from one turn to the next
@@ -215,7 +217,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                      ],
 //                     ], transforms=true);
 //   sweep(subdivide_path(square([5,1]),20), helix);
-// Example: Helix generated by a single command.  Note this only works for x, y, or z aligned helixes because the generic rot cannot handle multi-turn angles.  
+// Example(3D): Helix generated by a single command.  Note this only works for x, y, or z aligned helixes because the generic rot cannot handle multi-turn angles.  
 //   include<BOSL2/skin.scad>
 //   pitch=20;       // Distance from one turn to the next
 //   radius=14;      // Helix radius
@@ -231,11 +233,11 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                     ]
 //                    ], transforms=true);
 //   sweep(subdivide_path(square([5,1]),80), helix);
-// Example: Expanding helix
+// Example(3D): Expanding helix
 //   include<BOSL2/skin.scad>
 //   path = turtle3d(["length",.2,"angle",360/20,"up",5,"repeat",50,["move","zrot","addlength",0.05]]);
 //   path_sweep(circle(d=1, $fn=12), path);
-// Example: Adding some twist to the model
+// Example(3D): Adding some twist to the model
 //   include<BOSL2/skin.scad>
 //   r = 2.5;
 //   trans = turtle3d(["move",10,
@@ -248,7 +250,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                     "arcleft",r],
 //                    state=yrot(25,p=RIGHT),transforms=true);
 //   sweep(supershape(m1=4,n1=4,n2=16,n3=1.5,a=.9,b=9,step=5),trans);
-// Example: Twist does not change the turtle orientation, but roll does.  The only change from the previous example is twist was changed to roll.
+// Example(3D): Twist does not change the turtle orientation, but roll does.  The only change from the previous example is twist was changed to roll.
 //   include<BOSL2/skin.scad>
 //   r = 2;
 //   trans = turtle3d(["move",10,
@@ -261,7 +263,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                     "arcleft",r],
 //                    state=yrot(25,p=RIGHT),transforms=true);
 //   sweep(supershape(m1=4,n1=4,n2=16,n3=1.5,a=.9,b=9,step=5),trans);
-// Example: Use of shrink and grow
+// Example(3D): Use of shrink and grow
 //   include<BOSL2/skin.scad>
 //   $fn=32;
 //   T = turtle3d([
@@ -276,7 +278,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                 "untily", -1,
 //                ],state=RIGHT, transforms=true);   
 //   sweep(square(2,center=true),T);
-// Example: After several moves you may not understand the turtle orientation. An absolute reorientation with "arctodir" is helpful to head in a known direction
+// Example(3D): After several moves you may not understand the turtle orientation. An absolute reorientation with "arctodir" is helpful to head in a known direction
 //   include<BOSL2/skin.scad>
 //   trans = turtle3d([
 //                  "move",5,
@@ -293,7 +295,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                  "untilz",0
 //                  ],transforms=true);
 //   sweep(square(1,center=true),trans);
-// Example: The "grow" and "shrink" commands can take a vector giving x and y scaling
+// Example(3D): The "grow" and "shrink" commands can take a vector giving x and y scaling
 //   include<BOSL2/skin.scad>
 //   tr = turtle3d([
 //                   "move", 1.5, 
@@ -301,7 +303,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                   ["move", 5, "grow", [2,0.5],"steps", 10]
 //                  ], transforms=true);
 //   sweep(circle($fn=32,r=1), tr);
-// Example: With "twist" added the anisotropic "grow" interacts with "twist", producing a complex form
+// Example(3D): With "twist" added the anisotropic "grow" interacts with "twist", producing a complex form
 //   include<BOSL2/skin.scad>
 //   tr = turtle3d([
 //                   "move", 1.5, 
@@ -309,7 +311,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                   ["move", 5, "grow", [0.5,2],"steps", 20, "twist",90]
 //                  ], transforms=true);
 //   sweep(circle($fn=64,r=1), tr);
-// Example: Making a tube with "reverse".  Note that the move direction is the same even though the direction is reversed.  
+// Example(3D): Making a tube with "reverse".  Note that the move direction is the same even though the direction is reversed.  
 //   include<BOSL2/skin.scad>
 //   tr = turtle3d([ "move", 4,
 //                   ["move",0, "grow", .8, "reverse"],
@@ -317,7 +319,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                 ],  transforms=true);
 //   back_half(s=10)
 //     sweep(circle(r=1,$fn=16), tr, closed=true);
-// Example: To close the tube at one end we set closed to false in sweep.  
+// Example(3D): To close the tube at one end we set closed to false in sweep.  
 //   include<BOSL2/skin.scad>
 //   tr = turtle3d([ "move", 4,
 //                   ["move",0, "grow", .8, "reverse"],
@@ -325,7 +327,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                 ],  transforms=true);
 //   back_half(s=10)
 //     sweep(circle(r=1,$fn=16), tr, closed=false);
-// Example: Cookie cutter using "reverse" 
+// Example(3D): Cookie cutter using "reverse" 
 //   include<BOSL2/skin.scad>
 //   cutter = turtle3d( [ 
 //                       ["move", 10, "shrink", 1.3, ],
@@ -334,7 +336,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                      ], transforms=true,state=UP);
 //   cookie_shape = star(5, r=10, ir=5);
 //   sweep(cookie_shape, cutter, closed=true);
-// Example: angled shopvac adapter.  Shopvac tubing wedges together because the tubes are slightly tapered.  We can make this part without using any difference() operations by using "reverse" to trace out the interior portion of the part.  Note that it's "arcright" even when reversed.  
+// Example(3D): angled shopvac adapter.  Shopvac tubing wedges together because the tubes are slightly tapered.  We can make this part without using any difference() operations by using "reverse" to trace out the interior portion of the part.  Note that it's "arcright" even when reversed.  
 //   include<BOSL2/skin.scad>
 //   inch = 25.4;
 //   insert_ID = 2.3*inch;        // Size of shopvac tube at larger end of taper
@@ -360,9 +362,9 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                       ["move", seg1_len, "grow", seg1_bot_ID/seg2_bot_ID]
 //                    ],
 //                    state=UP, transforms=true);
-//   zrot(90)back_half()      // Remove this to get a usable part
+//   back_half()      // Remove this to get a usable part
 //     sweep(circle(d=seg1_bot_OD, $fn=128), trans, closed=true);
-// Example: Closed spiral
+// Example(3D): Closed spiral
 //   include<BOSL2/skin.scad>
 //   steps = 500;
 //   spiral = turtle3d([
@@ -382,11 +384,11 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //                       "grow",1.5],
 //                      ], transforms=true);
 //   sweep(fwd(25,p=circle(r=2,$fn=24)), spiral, caps=false);
-// Example: Mobius strip (square)
+// Example(3D): Mobius strip (square)
 //   include<BOSL2/skin.scad>
 //   mobius = turtle3d([["arc", 20, "zrot", 360,"steps",100,"twist",180]], transforms=true);
 //   sweep(subdivide_path(square(8,center=true),16), mobius, closed=false);
-// Example: Torus knot
+// Example(3D): Torus knot
 //   include<BOSL2/skin.scad>
 //   p = 3;      // (number of turns)*gcd(p,q)
 //   q = 10;     // (number of dives)*gcd(p,q)
