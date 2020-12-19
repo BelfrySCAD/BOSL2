@@ -301,6 +301,22 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow"
 
 
 
+// Module: anchor_arrow2d()
+// Usage:
+//   anchor_arrow2d([s], [color], [flag]);
+// Description:
+//   Show an anchor orientation arrow.
+// Arguments:
+//   s = Length of the arrows.
+//   color = Color of the arrow.
+// Example:
+//   anchor_arrow2d(s=20);
+module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tags="anchor-arrow") {
+    noop() stroke([[0,0],[0,s]], width=s/10, endcap1="butt", endcap2="arrow2");
+}
+
+
+
 // Module: show_internal_anchors()
 // Usage:
 //   show_internal_anchors() ...
