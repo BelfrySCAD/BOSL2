@@ -290,7 +290,7 @@ function list_range(n=undef, s=0, e=undef, step=undef) =
 // Example:
 //   reverse([3,4,5,6]);  // Returns [6,5,4,3]
 function reverse(x) =
-    assert(is_list(x)||is_string(x), "Input to reverse must be a list or string")
+    assert(is_list(x)||is_string(x), str("Input to reverse must be a list or string. Got: ",x))
     let (elems = [ for (i = [len(x)-1 : -1 : 0]) x[i] ])
     is_string(x)? str_join(elems) : elems;
 
