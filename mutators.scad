@@ -27,15 +27,15 @@
 //   translate([10,8,4]) cube(5);
 //   translate([3,0,12]) cube(2);
 module bounding_box(excess=0) {
-    xs = excess>0? excess : 1;
+    xs = excess>.1? excess : 1;
     // a 3D approx. of the children projection on X axis
     module _xProjection()
         linear_extrude(xs, center=true)
-            hull()
-                projection()
-                    rotate([90,0,0])
-                        linear_extrude(xs, center=true)
-                            projection()
+            projection()
+                rotate([90,0,0])
+                    linear_extrude(xs, center=true)
+                        projection()
+                            hull()
                                 children();
 
     // a bounding box with an offset of 1 in all axis
@@ -50,13 +50,13 @@ module bounding_box(excess=0) {
     // offset children() (a cube) by -1 in all axis
     module _shrink_cube() {
         intersection() {
-            translate([ 1, 1, 1]) children();
-            translate([-1,-1,-1]) children();
+            translate((1-excess)*[ 1, 1, 1]) children();
+            translate((1-excess)*[-1,-1,-1]) children();
         }
     }
 
     render(convexity=2)
-    if (excess>0) {
+    if (excess>.1) {
         _oversize_bbox() children();
     } else {
         _shrink_cube() _oversize_bbox() children();
@@ -674,7 +674,7 @@ module minkowski_difference() {
                     bounding_box(excess=1) children(0);
                     children(0);
                 }
-                for (i=[1,1,$children-1]) children(i);
+                for (i=[1:1:$children-1]) children(i);
             }
         }
     }
