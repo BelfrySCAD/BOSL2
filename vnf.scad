@@ -374,6 +374,11 @@ module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin"
 //  $fn=32;
 //  cube_oct = regular_polyhedron_info("vnf", name="cuboctahedron", or=20);
 //  vnf_wireframe(cube_oct);
+// Example: The spheres at the vertex are imperfect at aligning with the cylinders, so especially at low $fn things look prety ugly.  This is normal.  
+//  include<BOSL2/polyhedra.scad>
+//  $fn=8;
+//  octahedron = regular_polyhedron_info("vnf", name="octahedron", or=20);
+//  vnf_wireframe(octahedron,r=5);
 module vnf_wireframe(vnf, r, d)
 {
   r = get_radius(r=r,d=d,dflt=1);
