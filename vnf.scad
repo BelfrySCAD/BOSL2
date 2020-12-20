@@ -357,6 +357,38 @@ module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin"
 
 
 
+// Module: vnf_wireframe()
+// Usage:
+//   vnf_wireframe(vnf, [r|d]);
+// Description:
+//   Given a VNF, creates a wire frame ball-and-stick model of the polyhedron with a cylinder for each edge and a sphere at each vertex. 
+// Arguments:
+//   vnf = A vnf structure
+//   r|d = radius or diameter of the cylinders forming the wire frame.  Default: r=1
+// Example:
+//   $fn=32;
+//   ball = sphere(r=20, $fn=6);
+//   vnf_wireframe(ball,d=1);
+// Example: 
+//  include<BOSL2/polyhedra.scad>
+//  $fn=32;
+//  cube_oct = regular_polyhedron_info("vnf", name="cuboctahedron", or=20);
+//  vnf_wireframe(cube_oct);
+// Example: The spheres at the vertex are imperfect at aligning with the cylinders, so especially at low $fn things look prety ugly.  This is normal.  
+//  include<BOSL2/polyhedra.scad>
+//  $fn=8;
+//  octahedron = regular_polyhedron_info("vnf", name="octahedron", or=20);
+//  vnf_wireframe(octahedron,r=5);
+module vnf_wireframe(vnf, r, d)
+{
+  r = get_radius(r=r,d=d,dflt=1);
+  vertex = vnf[0];
+  edges = unique([for (face=vnf[1], i=idx(face))
+                    sort([face[i], select(face,i+1)])
+                 ]);
+  for (e=edges) extrude_from_to(vertex[e[0]],vertex[e[1]]) circle(r=r);
+  move_copies(vertex) sphere(r=r);
+}  
 
 
 // Function: vnf_volume()

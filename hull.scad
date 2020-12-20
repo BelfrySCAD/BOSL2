@@ -236,7 +236,7 @@ function _hull3d_iterative(points, triangles, planes, remaining, _i=0) =
 
 
 function _remove_internal_edges(halfedges) = [
-    for (h = halfedges)
+    for (h = halfedges)  
         if (!in_list(reverse(h), halfedges))
             h
 ];
