@@ -112,8 +112,8 @@ function info_str(list,i=0,string=chr(10)) =
 
 
 module test_closest_point_on_plane(){
-    plane = rands(-5,5,4)+[10,0,0,0];
-    point = rands(-1,1,3);
+    plane = rands(-5,5,4,seed=175)+[10,0,0,0];
+    point = rands(-1,1,3,seed=477);
     point2 = closest_point_on_plane(plane,point);
     assert_approx(norm(point-point2), abs(distance_from_plane(plane,point)));    
 }
@@ -121,7 +121,7 @@ module test_closest_point_on_plane(){
 
 
 module test_normalize_plane(){
-    plane = rands(-5,5,4)+[10,0,0,0];
+    plane = rands(-5,5,4,seed=333)+[10,0,0,0];
     plane2 = normalize_plane(plane);
     assert_approx(norm(point3d(plane2)),1);
     assert_approx(plane*plane2[3],plane2*plane[3]);
@@ -129,7 +129,7 @@ module test_normalize_plane(){
 *test_normalize_plane();
 
 module test_plane_line_intersection(){
-    line = [rands(-1,1,3),rands(-1,1,3)+[2,0,0]];
+    line = [rands(-1,1,3,seed=74),rands(-1,1,3,seed=99)+[2,0,0]];
     plane1 = plane_from_normal(line[1]-line[0],2*line[0]-line[1]); // plane disjoint from segment
     plane2 = plane_from_normal(line[1]-line[0],(line[0]+line[1])/2); // through middle point of line
     plane3 = plane3pt(line[1],line[0], rands(-1,1,3)+[0,3,0]); // containing line
