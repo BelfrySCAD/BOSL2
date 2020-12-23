@@ -672,15 +672,20 @@ function _valid_idx(idx,imin,imax) =
     
 
 // Function: shuffle()
+// Usage:
+//   shuffled = shuffle(list,[seed])
 // Description:
 //   Shuffles the input list into random order.
 //   If given a string, shuffles the characters within the string.
-function shuffle(list) =
+//   If you give a numeric seed value then the permutation
+//   will be repeatable.
+function shuffle(list,seed) =
     assert(is_list(list)||is_string(list), "Invalid input." )
-    is_string(list)? str_join(shuffle([for (x = list) x])) :
+    is_string(list)? str_join(shuffle([for (x = list) x],seed=seed)) :
     len(list)<=1 ? list :
     let (
-        rval = rands(0,1,len(list)),
+        rval = is_num(seed) ? rands(0,1,len(list),seed_value=seed)
+                            : rands(0,1,len(list)),
         left  = [for (i=[0:len(list)-1]) if (rval[i]< 0.5) list[i]],
         right = [for (i=[0:len(list)-1]) if (rval[i]>=0.5) list[i]]
     ) 

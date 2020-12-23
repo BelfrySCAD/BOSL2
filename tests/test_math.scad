@@ -238,7 +238,7 @@ test_approx();
 
 
 module test_min_index() {
-    vals = rands(-100,100,100);
+    vals = rands(-100,100,100,seed=75);
     minval = min(vals);
     minidx = min_index(vals);
     assert_equal(vals[minidx], minval);
@@ -254,7 +254,7 @@ test_min_index();
 
 
 module test_max_index() {
-    vals = rands(-100,100,100);
+    vals = rands(-100,100,100,seed=97);
     maxval = max(vals);
     maxidx = max_index(vals);
     assert_equal(vals[maxidx], maxval);

@@ -268,13 +268,16 @@ test_enumerate();
 
 module test_shuffle() {
     nums1 = [for (i=list_range(100)) i];
-    nums2 = shuffle(nums1);
-    nums3 = shuffle(nums2);
-    assert(len(nums2)==len(nums1));
-    assert(len(nums3)==len(nums2));
+    nums2 = shuffle(nums1,33);
+    nums3 = shuffle(nums2,99);
+    assert(sort(nums2)==nums1);
+    assert(sort(nums3)==nums1);
     assert(nums1!=nums2);
     assert(nums2!=nums3);
     assert(nums1!=nums3);
+    str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    shufstr = shuffle(str,12);
+    assert(shufstr != str && sort(shufstr)==str);
 }
 test_shuffle();
 
