@@ -1159,6 +1159,14 @@ module torus(
 //   Creates a spheroid object, with support for anchoring and attachments.
 //   This is a drop-in replacement for the built-in `sphere()` module.
 //   When called as a function, returns a [VNF](vnf.scad) for a spheroid.
+//   The exact triangulation of this spheroid can be controlled via the `style=`
+//   argument, where the value can be one of `"orig"`, `"aligned"`, `"stagger"`,
+//   `"octa"`, or `"icosa"`:
+//   - `style="orig"` constructs a sphere the same way that the OpenSCAD `sphere()` built-in does.
+//   - `style="aligned"` constructs a sphere where, if `$fn` is a multiple of 4, it has vertices at all axis maxima and minima.  ie: its bounding box is exactly the sphere diameter in length on all three axes.  This is the default.
+//   - `style="stagger"` forms a sphere where all faces are triangular, but the top and bottom poles have thinner triangles.
+//   - `style="octa"` forms a sphere by subdividing an octahedron (8-sided platonic solid).  This makes more uniform faces over the entirety of the sphere, and guarantees the bounding box is the sphere diameter in size on all axes.  The effective `$fn` value is quantized to a multiple of 4, though.  This is used in constructing rounded corners for various other shapes.
+//   - `style="icosa"` forms a sphere by subdividing an icosahedron (20-sided platonic solid).  This makes even more uniform faces over the entirety of the sphere.  The effective `$fn` value is quantized to a multiple of 5, though.
 // Arguments:
 //   r = Radius of the spheroid.
 //   d = Diameter of the spheroid.
@@ -1200,21 +1208,16 @@ module spheroid(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orie
 {
     r = get_radius(r=r, d=d, dflt=1);
     sides = segs(r);
+    vsides = ceil(sides/2);
     attachable(anchor,spin,orient, r=r) {
         if (style=="orig") {
-            rotate_extrude(convexity=2,$fn=sides) {
-                difference() {
-                    oval(r=r, circum=circum, realign=true, $fn=sides);
-                    left(r) square(2*r,center=true);
-                }
-            }
-        } else if (style=="aligned") {
-            rotate_extrude(convexity=2,$fn=sides) {
-                difference() {
-                    oval(r=r, circum=circum, $fn=sides);
-                    left(r) square(2*r,center=true);
-                }
-            }
+            merids = [ for (i=[0:1:vsides]) 90-(i+0.5)*180/(vsides+1) ];
+            path = [
+                let(a = merids[0]) [0, r*sin(a)],
+                for (a=merids) r * [cos(a), sin(a)],
+                let(a = select(merids,-1)) [0, r*sin(a)]
+            ];
+            rotate_extrude(convexity=2,$fn=sides) polygon(path);
         } else {
             vnf = spheroid(r=r, circum=circum, style=style);
             vnf_polyhedron(vnf, convexity=2);
