@@ -91,7 +91,7 @@ $tags_hidden = [];
 
 // Function: anchorpt()
 // Usage:
-//   anchor(name, pos, [dir], [rot])
+//   anchor(name, pos, <dir>, <rot>)
 // Description:
 //   Creates a anchor data structure.
 // Arguments:
@@ -105,21 +105,21 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 // Function: attach_geom()
 //
 // Usage: Square/Trapezoid Geometry
-//   geom = attach_geom(anchor, spin, [orient], two_d, size, [size2], [shift], [cp], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, two_d, size, <size2>, <shift>, <cp>, <offset>, <anchors>);
 // Usage: Circle/Oval Geometry
-//   geom = attach_geom(anchor, spin, [orient], two_d, r|d, [cp], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, two_d, r|d, <cp>, <offset>, <anchors>);
 // Usage: 2D Path/Polygon Geometry
-//   geom = attach_geom(anchor, spin, [orient], two_d, path, [extent], [cp], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, two_d, path, <extent>, <cp>, <offset>, <anchors>);
 // Usage: Cubical/Prismoidal Geometry
-//   geom = attach_geom(anchor, spin, [orient], size, [size2], [shift], [cp], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, <orient>, size, <size2>, <shift>, <cp>, <offset>, <anchors>);
 // Usage: Cylindrical Geometry
-//   geom = attach_geom(anchor, spin, [orient], r|d, l, [cp], [axis], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, <orient>, r|d, l, <cp>, <axis>, <offset>, <anchors>);
 // Usage: Conical Geometry
-//   geom = attach_geom(anchor, spin, [orient], r1|d1, r2|d2, l, [cp], [axis], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, <orient>, r1|d1, r2|d2, l, <cp>, <axis>, <offset>, <anchors>);
 // Usage: Spheroid/Ovoid Geometry
-//   geom = attach_geom(anchor, spin, [orient], r|d, [cp], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, <orient>, r|d, <cp>, <offset>, <anchors>);
 // Usage: VNF Geometry
-//   geom = attach_geom(anchor, spin, [orient], vnf, [extent], [cp], [offset], [anchors]);
+//   geom = attach_geom(anchor, spin, <orient>, vnf, <extent>, <cp>, <offset>, <anchors>);
 //
 // Description:
 //   Given arguments that describe the geometry of an attachable object, returns the internal geometry description.
@@ -332,8 +332,8 @@ function attach_geom_size(geom) =
         ) delt
     ) : type == "rect"? ( //size, size2
         let(
-            size=geom[1], size2=geom[2],
-            maxx = max(size.x,size2)
+            size=geom[1], size2=geom[2], shift=geom[3],
+            maxx = max(size.x,size2+abs(shift))
         ) [maxx, size.y]
     ) : type == "circle"? ( //r
         let( r=geom[1] )
@@ -349,7 +349,7 @@ function attach_geom_size(geom) =
 
 // Function: attach_transform()
 // Usage:
-//   mat = attach_transform(anchor=CENTER, spin=0, orient=UP, geom);
+//   mat = attach_transform(anchor, spin, orient, geom);
 // Description:
 //   Returns the affine3d transformation matrix needed to `anchor`, `spin`, and `orient`
 //   the given geometry `geom` shape into position.
@@ -557,12 +557,12 @@ function find_anchor(anchor, geom) =
             mpt = approx(point2d(anchor),[0,0])? [maxx,0,0] : [maxx, avgy, avgz],
             pos = point3d(cp) + rot(from=RIGHT, to=anchor, p=mpt)
         ) [anchor, pos, anchor, oang]
-    ) : type == "rect"? ( //size, size2
+    ) : type == "rect"? ( //size, size2, shift
         let(
-            size=geom[1], size2=geom[2],
+            size=geom[1], size2=geom[2], shift=geom[3],
             u = (anchor.y+1)/2,
             frpt = [size.x/2*anchor.x, -size.y/2],
-            bkpt = [size2/2*anchor.x,  size.y/2],
+            bkpt = [size2/2*anchor.x+shift,  size.y/2],
             pos = point2d(cp) + lerp(frpt, bkpt, u) + offset,
             vec = unit(rot(from=BACK, to=bkpt-frpt, p=anchor),[0,1])
         ) [anchor, pos, vec, 0]
@@ -629,21 +629,21 @@ function attachment_is_shown(tags) =
 // Function: reorient()
 //
 // Usage: Square/Trapezoid Geometry
-//   reorient(anchor, spin, [orient], two_d, size, [size2], [shift], [cp], [offset], [anchors], [p]);
+//   reorient(anchor, spin, <orient>, two_d, size, <size2>, <shift>, <cp>, <offset>, <anchors>, <p>);
 // Usage: Circle/Oval Geometry
-//   reorient(anchor, spin, [orient], two_d, r|d, [cp], [offset], [anchors], [p]);
+//   reorient(anchor, spin, <orient>, two_d, r|d, <cp>, <offset>, <anchors>, <p>);
 // Usage: 2D Path/Polygon Geometry
-//   reorient(anchor, spin, [orient], two_d, path, [extent], [cp], [offset], [anchors], [p]);
+//   reorient(anchor, spin, <orient>, two_d, path, <extent>, <cp>, <offset>, <anchors>, <p>);
 // Usage: Cubical/Prismoidal Geometry
-//   reorient(anchor, spin, [orient], size, [size2], [shift], [cp], [offset], [anchors], [p]);
+//   reorient(anchor, spin, <orient>, size, <size2>, <shift>, <cp>, <offset>, <anchors>, <p>);
 // Usage: Cylindrical Geometry
-//   reorient(anchor, spin, [orient], r|d, l, [offset], [axis], [cp], [anchors], [p]);
+//   reorient(anchor, spin, <orient>, r|d, l, <offset>, <axis>, <cp>, <anchors>, <p>);
 // Usage: Conical Geometry
-//   reorient(anchor, spin, [orient], r1|d1, r2|d2, l, [axis], [cp], [offset], [anchors], [p]);
+//   reorient(anchor, spin, <orient>, r1|d1, r2|d2, l, <axis>, <cp>, <offset>, <anchors>, <p>);
 // Usage: Spheroid/Ovoid Geometry
-//   reorient(anchor, spin, [orient], r|d, [cp], [offset], [anchors], [p]);
+//   reorient(anchor, spin, <orient>, r|d, <cp>, <offset>, <anchors>, <p>);
 // Usage: VNF Geometry
-//   reorient(anchor, spin, [orient], vnf, [extent], [cp], [offset], [anchors], [p]);
+//   reorient(anchor, spin, <orient>, vnf, <extent>, <cp>, <offset>, <anchors>, <p>);
 //
 // Description:
 //   Given anchor, spin, orient, and general geometry info for a managed volume, this calculates
@@ -723,21 +723,21 @@ function reorient(
 // Module: attachable()
 //
 // Usage: Square/Trapezoid Geometry
-//   attachable(anchor, spin, [orient], two_d, size, [size2], [shift], [cp], [offset], [anchors] ...
+//   attachable(anchor, spin, two_d, size, <size2>, <shift>, <cp>, <offset>, <anchors> ...
 // Usage: Circle/Oval Geometry
-//   attachable(anchor, spin, [orient], two_d, r|d, [cp], [offset], [anchors]) ...
+//   attachable(anchor, spin, two_d, r|d, <cp>, <offset>, <anchors>) ...
 // Usage: 2D Path/Polygon Geometry
-//   attachable(anchor, spin, [orient], two_d, path, [extent], [cp], [offset], [anchors] ...
+//   attachable(anchor, spin, two_d, path, <extent>, <cp>, <offset>, <anchors> ...
 // Usage: Cubical/Prismoidal Geometry
-//   attachable(anchor, spin, [orient], size, [size2], [shift], [cp], [offset], [anchors] ...
+//   attachable(anchor, spin, <orient>, size, <size2>, <shift>, <cp>, <offset>, <anchors> ...
 // Usage: Cylindrical Geometry
-//   attachable(anchor, spin, [orient], r|d, l, [axis], [cp], [offset], [anchors]) ...
+//   attachable(anchor, spin, <orient>, r|d, l, <axis>, <cp>, <offset>, <anchors>) ...
 // Usage: Conical Geometry
-//   attachable(anchor, spin, [orient], r1|d1, r2|d2, l, [axis], [cp], [offset], [anchors]) ...
+//   attachable(anchor, spin, <orient>, r1|d1, r2|d2, l, <axis>, <cp>, <offset>, <anchors>) ...
 // Usage: Spheroid/Ovoid Geometry
-//   attachable(anchor, spin, [orient], r|d, [cp], [offset], [anchors]) ...
+//   attachable(anchor, spin, <orient>, r|d, <cp>, <offset>, <anchors>) ...
 // Usage: VNF Geometry
-//   attachable(anchor, spin, [orient], vnf, [extent], [cp], [offset], [anchors]) ...
+//   attachable(anchor, spin, <orient>, vnf, <extent>, <cp>, <offset>, <anchors>) ...
 //
 // Description:
 //   Manages the anchoring, spin, orientation, and attachments for a 3D volume or 2D area.
@@ -969,8 +969,8 @@ module position(from)
 
 // Module: attach()
 // Usage:
-//   attach(from, [overlap]) ...
-//   attach(from, to, [overlap]) ...
+//   attach(from, <overlap>) ...
+//   attach(from, to, <overlap>) ...
 // Description:
 //   Attaches children to a parent object at an anchor point and orientation.
 //   Attached objects will be overlapped into the parent object by a little bit,
@@ -1012,7 +1012,7 @@ module attach(from, to=undef, overlap=undef, norot=false)
 
 // Module: face_profile()
 // Usage:
-//   face_profile(faces=[], convexity=10, r, d) ...
+//   face_profile(faces, r, d, <convexity>) ...
 // Description:
 //   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face.
 // Arguments:
@@ -1032,7 +1032,7 @@ module face_profile(faces=[], r, d, convexity=10) {
 
 // Module: edge_profile()
 // Usage:
-//   edge_profile([edges], [except], [convexity]) ...
+//   edge_profile(<edges>, <except>, <convexity>) ...
 // Description:
 //   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation
 //   and extruded length to be `diff()`ed away, to give the edge a matching profile.
@@ -1082,7 +1082,7 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 
 // Module: corner_profile()
 // Usage:
-//   corner_profile([corners], [except], [convexity]) ...
+//   corner_profile(<corners>, <except>, <convexity>) ...
 // Description:
 //   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
 //   to the selected corners with the appropriate orientation.  Tags it as a "mask" to allow it to be
@@ -1144,7 +1144,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 
 // Module: edge_mask()
 // Usage:
-//   edge_mask([edges], [except]) ...
+//   edge_mask(<edges>, <except>) ...
 // Description:
 //   Takes a 3D mask shape, and attaches it to the given edges, with the
 //   appropriate orientation to be `diff()`ed away.
@@ -1186,7 +1186,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 
 // Module: corner_mask()
 // Usage:
-//   corner_mask([corners], [except]) ...
+//   corner_mask(<corners>, <except>) ...
 // Description:
 //   Takes a 3D mask shape, and attaches it to the given corners, with the appropriate
 //   orientation to be `diff()`ed away.  The 3D corner mask shape should be designed to
@@ -1305,8 +1305,8 @@ module show(tags="")
 
 // Module: diff()
 // Usage:
-//   diff(neg, [keep]) ...
-//   diff(neg, pos, [keep]) ...
+//   diff(neg, <keep>) ...
+//   diff(neg, pos, <keep>) ...
 // Description:
 //   If `neg` is given, takes the union of all children with tags that are in `neg`, and differences
 //   them from the union of all children with tags in `pos`.  If `pos` is not given, then all items in
@@ -1363,8 +1363,8 @@ module diff(neg, pos=undef, keep=undef)
 
 // Module: intersect()
 // Usage:
-//   intersect(a, [keep]) ...
-//   intersect(a, b, [keep]) ...
+//   intersect(a, <keep>) ...
+//   intersect(a, b, <keep>) ...
 // Description:
 //   If `a` is given, takes the union of all children with tags that are in `a`, and `intersection()`s
 //   them with the union of all children with tags in `b`.  If `b` is not given, then the union of all

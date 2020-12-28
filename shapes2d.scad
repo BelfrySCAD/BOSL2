@@ -1250,7 +1250,7 @@ module trapezoid(h, w1, w2, angle, shift=0, anchor=CENTER, spin=0) {
         w2 = !is_undef(w2)? w2 : w1 - 2*(adj_ang_to_opp(h, angle) + shift);
         assert(w1>=0 && w2>=0 && h>0, "Degenerate trapezoid geometry.");
         path = [[w1/2,-h/2], [-w1/2,-h/2], [-w2/2+shift,h/2], [w2/2+shift,h/2]];
-        attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2) {
+        attachable(anchor,spin, two_d=true, size=[w1,h], size2=w2, shift=shift) {
             polygon(path);
             children();
         }
@@ -1325,8 +1325,8 @@ function teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0) =
 // Arguments:
 //   r = The radius of the end circles.
 //   d = The diameter of the end circles.
-//   spread = The distance between the centers of the end circles.
-//   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the Y axis.
+//   spread = The distance between the centers of the end circles.  Default: 10
+//   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the Y axis.  Default: 30
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Examples(2D):
