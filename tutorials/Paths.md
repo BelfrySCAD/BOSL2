@@ -4,8 +4,8 @@
 A number of advanced features in BOSL2 rely on paths, which are just ordered lists of points.
 
 First-off, some terminology:
-- A 2D point is a vectors of X and Y axis position values ie: `[3,4]` or `[7,-3]`.
-- A 3D point is a vectors of X, Y and Z axis position values ie: `[3,4,2]` or `[-7,5,3]`.
+- A 2D point is a vectors of X and Y axis position values.  ie: `[3,4]` or `[7,-3]`.
+- A 3D point is a vectors of X, Y and Z axis position values.  ie: `[3,4,2]` or `[-7,5,3]`.
 - A 2D path is simply a list of two or more 2D points.  ie: `[[5,7], [1,-5], [-5,6]]`
 - A 3D path is simply a list of two or more 3D points.  ie: `[[5,7,-1], [1,-5,3], [-5,6,1]]`
 - A polygon is a 2D (or planar 3D) path where the last point is assumed to connect to the first point.
@@ -298,74 +298,74 @@ To translate a path, you can just pass it to the `move()` (or up/down/left/right
 
 ```openscad-2D
     path = move([-15,-30], p=square(50,center=true));
-    stroke(path, endcap2="arrow2");
+    stroke(path, closed=true, endcap2="arrow2");
 ```
 
 ```openscad-2D
     path = fwd(30, p=square(50,center=true));
-    stroke(path, endcap2="arrow2");
+    stroke(path, closed=true, endcap2="arrow2");
 ```
 
 ```openscad-2D
     path = left(30, p=square(50,center=true));
-    stroke(path, endcap2="arrow2");
+    stroke(path, closed=true, endcap2="arrow2");
 ```
 
 To scale a path, you can just pass it to the `scale()` (or [xyz]scale) function in the `p=` argument:
 
 ```openscad-2D
     path = scale([1.5,0.75], p=square(50,center=true));
-    stroke(path, endcap2="arrow2");
+    stroke(path, closed=true, endcap2="arrow2");
 ```
 
 ```openscad-2D
     path = xscale(1.5, p=square(50,center=true));
-    stroke(path, endcap2="arrow2");
+    stroke(path, closed=true, endcap2="arrow2");
 ```
 
 ```openscad-2D
     path = yscale(1.5, p=square(50,center=true));
-    stroke(path, endcap2="arrow2");
+    stroke(path, closed=true, endcap2="arrow2");
 ```
 
 To rotate a path, just can pass it to the `rot()` (or [xyz]rot) function in the `p=` argument:
 
 ```openscad-2D
     path = rot(30, p=square(50,center=true));
-    stroke(path, endcap2="arrow2");
+    stroke(path, closed=true, endcap2="arrow2");
 ```
 
 ```openscad-2D
     path = zrot(30, p=square(50,center=true));
-    stroke(path, endcap2="arrow2");
+    stroke(path, closed=true, endcap2="arrow2");
 ```
 
 To mirror a path, just can pass it to the `mirror()` (or [xyz]flip) function in the `p=` argument:
 
 ```openscad-2D
-    path = mirror([1,1], p=trapezoid(w1=10, w2=0, h=5));
-    stroke(path, endcap2="arrow2");
+    path = mirror([1,1], p=trapezoid(w1=40, w2=10, h=25));
+    stroke(path, closed=true, endcap2="arrow2");
 ```
 
 ```openscad-2D
-    path = xflip(p=trapezoid(w1=10, w2=0, h=5));
-    stroke(path, endcap2="arrow2");
+    path = xflip(p=trapezoid(w1=40, w2=10, h=25));
+    stroke(path, closed=true, endcap2="arrow2");
 ```
 
 ```openscad-2D
-    path = yflip(p=trapezoid(w1=10, w2=0, h=5));
-    stroke(path, endcap2="arrow2");
+    path = yflip(p=trapezoid(w1=40, w2=10, h=25));
+    stroke(path, closed=true, endcap2="arrow2");
 ```
 
 You can get raw transformation matrices for various transformations by calling them like a function without a `p=` argument:
 
 ```openscad-2D
-    mat = move([5,10]);
+    mat = move([5,10,0]);
     multmatrix(mat) square(50,center=true);
 ```
 
 ```openscad-2D
-    mat = scale([1.5,0.75]);
+    mat = scale([1.5,0.75,1]);
     multmatrix(mat) square(50,center=true);
 ```
 
@@ -377,7 +377,7 @@ You can get raw transformation matrices for various transformations by calling t
 Raw transformation matrices can be multiplied together to precalculate a compound transformation.  For example, to scale a shape, then rotate it, then translate the result, you can do something like:
 
 ```openscad-2D
-    mat = move([5,10]) * rot(30, planar=true) * scale([1.5,0.75]);
+    mat = move([5,10,0]) * rot(30) * scale([1.5,0.75,1]);
     multmatrix(mat) square(50,center=true);
 ```
 
@@ -455,14 +455,14 @@ the BOSL2 library lets you perform those same operations on regions:
 ```openscad-2D
     rgn1 = [for (d=[40:-10:10]) circle(d=d)];
     rgn2 = [square([60,12], center=true)];
-    rgn = exclusive_or(rgn1, rgn2);
+    rgn = intersection(rgn1, rgn2);
     region(rgn);
 ```
 
 ```openscad-2D
     rgn1 = [for (d=[40:-10:10]) circle(d=d)];
     rgn2 = [square([60,12], center=true)];
-    rgn = intersection(rgn1, rgn2);
+    rgn = exclusive_or(rgn1, rgn2);
     region(rgn);
 ```
 
