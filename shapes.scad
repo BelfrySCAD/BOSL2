@@ -1211,13 +1211,13 @@ module spheroid(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orie
     vsides = ceil(sides/2);
     attachable(anchor,spin,orient, r=r) {
         if (style=="orig") {
-            merids = [ for (i=[0:1:vsides]) 90-(i+0.5)*180/(vsides+1) ];
+            merids = [ for (i=[0:1:vsides-1]) 90-(i+0.5)*180/vsides ];
             path = [
-                let(a = merids[0]) [0, r*sin(a)],
-                for (a=merids) r * [cos(a), sin(a)],
-                let(a = select(merids,-1)) [0, r*sin(a)]
+                let(a = merids[0]) [0, sin(a)],
+                for (a=merids) [cos(a), sin(a)],
+                let(a = select(merids,-1)) [0, sin(a)]
             ];
-            rotate_extrude(convexity=2,$fn=sides) polygon(path);
+            scale(r) rotate(180) rotate_extrude(convexity=2,$fn=sides) polygon(path);
         } else {
             vnf = spheroid(r=r, circum=circum, style=style);
             vnf_polyhedron(vnf, convexity=2);
