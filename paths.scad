@@ -432,7 +432,7 @@ function path_torsion(path, closed=false) =
 //   stroke(path2, closed=true);
 // Example(2D): Per-Corner Chamfering
 //   path = star(5, step=2, d=100);
-//   rs = [for (i=[0:1:4]) each 3*[i,i]];
+//   rs = [for (i=[0:1:4]) each 2*[i,i]];
 //   path2 = path_chamfer_and_rounding(path, closed=true, rounding=rs);
 //   stroke(path2, closed=true);
 // Example(2D): Mixing Chamfers and Roundings
