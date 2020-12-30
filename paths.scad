@@ -407,6 +407,158 @@ function path_torsion(path, closed=false) =
     ];
 
 
+// Function: path_chamfer_and_rounding()
+// Usage:
+//   path2 = path_chamfer_and_rounding(path, [closed], [chamfer], [rounding]);
+// Description:
+//   Rounds or chamfers corners in the given path.
+// Arguments:
+//   path = The path to chamfer and/or round.
+//   closed = If true, treat path like a closed polygon.  Default: true
+//   chamfer = The length of the chamfer faces at the corners.  If given as a list of numbers, gives individual chamfers for each corner, from first to last.  Default: 0 (no chamfer)
+//   rounding = The rounding radius for the corners.  If given as a list of numbers, gives individual radii for each corner, from first to last.  Default: 0 (no rounding)
+// Example(2D): Chamfering a Path
+//   path = star(5, step=2, d=100);
+//   path2 = path_chamfer_and_rounding(path, closed=true, chamfer=5);
+//   stroke(path2, closed=true);
+// Example(2D): Per-Corner Chamfering
+//   path = star(5, step=2, d=100);
+//   chamfs = [for (i=[0:1:4]) each 3*[i,i]];
+//   path2 = path_chamfer_and_rounding(path, closed=true, chamfer=chamfs);
+//   stroke(path2, closed=true);
+// Example(2D): Rounding a Path
+//   path = star(5, step=2, d=100);
+//   path2 = path_chamfer_and_rounding(path, closed=true, rounding=5);
+//   stroke(path2, closed=true);
+// Example(2D): Per-Corner Chamfering
+//   path = star(5, step=2, d=100);
+//   rs = [for (i=[0:1:4]) each 3*[i,i]];
+//   path2 = path_chamfer_and_rounding(path, closed=true, rounding=rs);
+//   stroke(path2, closed=true);
+// Example(2D): Mixing Chamfers and Roundings
+//   path = star(5, step=2, d=100);
+//   chamfs = [for (i=[0:4]) each [5,0]];
+//   rs = [for (i=[0:4]) each [0,10]];
+//   path2 = path_chamfer_and_rounding(path, closed=true, chamfer=chamfs, rounding=rs);
+//   stroke(path2, closed=true);
+function path_chamfer_and_rounding(path, closed, chamfer, rounding) =
+	let (
+		path = deduplicate(path,closed=true),
+		lp = len(path),
+		chamfer = is_undef(chamfer)? repeat(0,lp) :
+			is_vector(chamfer)? list_pad(chamfer,lp,0) :
+			is_num(chamfer)? repeat(chamfer,lp) :
+			assert(false, "Bad chamfer value."),
+		rounding = is_undef(rounding)? repeat(0,lp) :
+			is_vector(rounding)? list_pad(rounding,lp,0) :
+			is_num(rounding)? repeat(rounding,lp) :
+			assert(false, "Bad rounding value."),
+		corner_paths = [
+			for (i=(closed? [0:1:lp-1] : [1:1:lp-2])) let(
+				p1 = select(path,i-1),
+				p2 = select(path,i),
+				p3 = select(path,i+1)
+			)
+			chamfer[i]  > 0? _corner_chamfer_path(p1, p2, p3, side=chamfer[i]) :
+			rounding[i] > 0? _corner_roundover_path(p1, p2, p3, r=rounding[i]) :
+			[p2]
+		],
+		out = [
+			if (!closed) path[0],
+			for (i=(closed? [0:1:lp-1] : [1:1:lp-2])) let(
+				p1 = select(path,i-1),
+				p2 = select(path,i),
+				crn1 = select(corner_paths,i-1),
+				crn2 = corner_paths[i],
+				l1 = norm(select(crn1,-1)-p1),
+				l2 = norm(crn2[0]-p2),
+				needed = l1 + l2,
+				seglen = norm(p2-p1),
+				check = assert(seglen >= needed, str("Path segment ",i," is too short to fulfill rounding/chamfering for the adjacent corners."))
+			) each crn2,
+			if (!closed) select(path,-1)
+		]
+	) deduplicate(out);
+
+
+function _corner_chamfer_path(p1, p2, p3, dist1, dist2, side, angle) = 
+	let(
+		v1 = unit(p1 - p2),
+		v2 = unit(p3 - p2),
+		n = vector_axis(v1,v2),
+		ang = vector_angle(v1,v2),
+		path = (is_num(dist1) && is_undef(dist2) && is_undef(side))? (
+			// dist1 & optional angle
+			assert(dist1 > 0)
+			let(angle = default(angle,(180-ang)/2))
+			assert(is_num(angle))
+			assert(angle > 0 && angle < 180)
+			let(
+				pta = p2 + dist1*v1,
+				a3 = 180 - angle - ang
+			) assert(a3>0, "Angle too extreme.")
+			let(
+				side = sin(angle) * dist1/sin(a3),
+				ptb = p2 + side*v2
+			) [pta, ptb]
+		) : (is_undef(dist1) && is_num(dist2) && is_undef(side))? (
+			// dist2 & optional angle
+			assert(dist2 > 0)
+			let(angle = default(angle,(180-ang)/2))
+			assert(is_num(angle))
+			assert(angle > 0 && angle < 180)
+			let(
+				ptb = p2 + dist2*v2,
+				a3 = 180 - angle - ang
+			) assert(a3>0, "Angle too extreme.")
+			let(
+				side = sin(angle) * dist2/sin(a3),
+				pta = p2 + side*v1
+			) [pta, ptb]
+		) : (is_undef(dist1) && is_undef(dist2) && is_num(side))? (
+			// side & optional angle
+			assert(side > 0)
+			let(angle = default(angle,(180-ang)/2))
+			assert(is_num(angle))
+			assert(angle > 0 && angle < 180)
+			let(
+				a3 = 180 - angle - ang
+			) assert(a3>0, "Angle too extreme.")
+			let(
+				dist1 = sin(a3) * side/sin(ang),
+				dist2 = sin(angle) * side/sin(ang),
+				pta = p2 + dist1*v1,
+				ptb = p2 + dist2*v2
+			) [pta, ptb]
+		) : (is_num(dist1) && is_num(dist2) && is_undef(side) && is_undef(side))? (
+			// dist1 & dist2
+			assert(dist1 > 0)
+			assert(dist2 > 0)
+			let(
+				pta = p2 + dist1*v1,
+				ptb = p2 + dist2*v2
+			) [pta, ptb]
+		) : (
+			assert(false,"Bad arguments.")
+		)
+	) path;
+
+
+function _corner_roundover_path(p1, p2, p3, r, d) = 
+	let(
+		r = get_radius(r=r,d=d,dflt=undef),
+		res = circle_2tangents(p1, p2, p3, r=r, tangents=true),
+		cp = res[0],
+		n = res[1],
+		tp1 = res[2],
+		ang = res[4]+res[5],
+		steps = floor(segs(r)*ang/360+0.5),
+		step = ang / steps,
+		path = [for (i=[0:1:steps]) move(cp, p=rot(a=-i*step, v=n, p=tp1-cp))]
+	) path;
+
+
+
 // Function: path3d_spiral()
 // Description:
 //   Returns a 3D spiral path.
