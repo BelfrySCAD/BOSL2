@@ -1,4 +1,5 @@
 # BOSL2
+![BOSL2 Logo](images/BOSL2logo.png)
 
 **The Belfry OpenScad Library, v2**
 
