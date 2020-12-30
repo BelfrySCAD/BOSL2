@@ -49,11 +49,16 @@ module bounding_box(excess=0, planar=true) {
 
     // a bounding box with an offset of 1 in all axis
     module _oversize_bbox() {
-        minkowski() {
-            _xProjection() children(); // x axis
-            union() {
+        if (planar) {
+            minkowski() {
+                _xProjection() children(); // x axis
                 rotate(-90) _xProjection() rotate(90) children(); // y axis
-                if(!planar) rotate([0,-90,0]) _xProjection() rotate([0,90,0]) children(); // z axis
+            }
+        } else {
+            minkowski() {
+                _xProjection() children(); // x axis
+                rotate(-90) _xProjection() rotate(90) children(); // y axis
+                rotate([0,-90,0]) _xProjection() rotate([0,90,0]) children(); // z axis
             }
         }
     }
