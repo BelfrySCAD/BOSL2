@@ -47,7 +47,7 @@ The plane of dissection can be shifted along the axis of any of these operators:
 ```
 
 ```openscad
-    bottom_half(y=20) sphere(d=100);
+    bottom_half(z=20) sphere(d=100);
 ```
 
 ```openscad
