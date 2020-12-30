@@ -19,6 +19,7 @@
 //   Returns an axis-aligned cube shape that exactly contains all the 3D children given.
 // Arguments:
 //   excess = The amount that the bounding box should be larger than needed to bound the children, in each axis.
+//   planar = If true, creates a 2D bounding rectangle.  Is false, creates a 3D bounding cube.  Default: false
 // Example:
 //   #bounding_box() {
 //       translate([10,8,4]) cube(5);
@@ -26,32 +27,41 @@
 //   }
 //   translate([10,8,4]) cube(5);
 //   translate([3,0,12]) cube(2);
-module bounding_box(excess=0) {
+module bounding_box(excess=0, planar=true) {
     xs = excess>.1? excess : 1;
     // a 3D approx. of the children projection on X axis
     module _xProjection()
-        linear_extrude(xs, center=true)
+        if (planar) {
             projection()
                 rotate([90,0,0])
                     linear_extrude(xs, center=true)
-                        projection()
-                            hull()
-                                children();
+                        hull()
+                            children();
+        } else {
+            linear_extrude(xs, center=true)
+                projection()
+                    rotate([90,0,0])
+                        linear_extrude(xs, center=true)
+                            projection()
+                                hull()
+                                    children();
+        }
 
     // a bounding box with an offset of 1 in all axis
     module _oversize_bbox() {
         minkowski() {
             _xProjection() children(); // x axis
-            rotate(-90) _xProjection() rotate(90) children(); // y axis
-            rotate([0,-90,0]) _xProjection() rotate([0,90,0]) children(); // z axis
+            union() {
+                rotate(-90) _xProjection() rotate(90) children(); // y axis
+                if(!planar) rotate([0,-90,0]) _xProjection() rotate([0,90,0]) children(); // z axis
+            }
         }
     }
 
-    // offset children() (a cube) by -1 in all axis
     module _shrink_cube() {
         intersection() {
-            translate((1-excess)*[ 1, 1, 1]) children();
-            translate((1-excess)*[-1,-1,-1]) children();
+            translate((1-excess)*[ 1, 1, planar?0: 1]) children();
+            translate((1-excess)*[-1,-1, planar?0:-1]) children();
         }
     }
 
@@ -208,7 +218,6 @@ function left_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
 // Usage:
 //   right_half([s], [x]) ...
 //   right_half(planar=true, [s], [x]) ...
-//
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is left of it.
@@ -516,31 +525,103 @@ module cylindrical_extrude(or, ir, od, id, size=1000, convexity=10, spin=0, orie
 // Section: Offset Mutators
 //////////////////////////////////////////////////////////////////////
 
-// Module: round3d()
+// Module: minkowski_difference()
 // Usage:
-//   round3d(r) ...
-//   round3d(or) ...
-//   round3d(ir) ...
-//   round3d(or, ir) ...
+//   minkowski_difference() { base_shape(); diff_shape(); ... }
 // Description:
-//   Rounds arbitrary 3D objects.  Giving `r` rounds all concave and convex corners.  Giving just `ir`
+//   Takes a 3D base shape and one or more 3D diff shapes, carves out the diff shapes from the
+//   surface of the base shape, in a way complementary to how `minkowski()` unions shapes to the
+//   surface of its base shape.
+// Arguments:
+//   planar = If true, performs minkowski difference in 2D.  Default: false (3D)
+// Example:
+//   minkowski_difference() {
+//       union() {
+//           cube([120,70,70], center=true);
+//           cube([70,120,70], center=true);
+//           cube([70,70,120], center=true);
+//       }
+//       sphere(r=10);
+//   }
+module minkowski_difference(planar=false) {
+    difference() {
+        bounding_box(excess=0, planar=planar) children(0);
+        render(convexity=20) {
+            minkowski() {
+                difference() {
+                    bounding_box(excess=1, planar=planar) children(0);
+                    children(0);
+                }
+                for (i=[1:1:$children-1]) children(i);
+            }
+        }
+    }
+}
+
+
+// Module: round2d()
+// Usage:
+//   round2d(r) ...
+//   round2d(or) ...
+//   round2d(ir) ...
+//   round2d(or, ir) ...
+// Description:
+//   Rounds arbitrary 2D objects.  Giving `r` rounds all concave and convex corners.  Giving just `ir`
 //   rounds just concave corners.  Giving just `or` rounds convex corners.  Giving both `ir` and `or`
-//   can let you round to different radii for concave and convex corners.  The 3D object must not have
-//   any parts narrower than twice the `or` radius.  Such parts will disappear.  This is an *extremely*
-//   slow operation.  I cannot emphasize enough just how slow it is.  It uses `minkowski()` multiple times.
-//   Use this as a last resort.  This is so slow that no example images will be rendered.
+//   can let you round to different radii for concave and convex corners.  The 2D object must not have
+//   any parts narrower than twice the `or` radius.  Such parts will disappear.
 // Arguments:
 //   r = Radius to round all concave and convex corners to.
 //   or = Radius to round only outside (convex) corners to.  Use instead of `r`.
 //   ir = Radius to round only inside (concave) corners to.  Use instead of `r`.
-module round3d(r, or, ir, size=100)
+// Examples(2D):
+//   round2d(r=10) {square([40,100], center=true); square([100,40], center=true);}
+//   round2d(or=10) {square([40,100], center=true); square([100,40], center=true);}
+//   round2d(ir=10) {square([40,100], center=true); square([100,40], center=true);}
+//   round2d(or=16,ir=8) {square([40,100], center=true); square([100,40], center=true);}
+module round2d(r, or, ir)
 {
     or = get_radius(r1=or, r=r, dflt=0);
     ir = get_radius(r1=ir, r=r, dflt=0);
-    offset3d(or, size=size)
-        offset3d(-ir-or, size=size)
-            offset3d(ir, size=size)
+    offset(or) offset(-ir-or) offset(delta=ir,chamfer=true) children();
+}
+
+
+// Module: shell2d()
+// Usage:
+//   shell2d(thickness, [or], [ir], [fill], [round])
+// Description:
+//   Creates a hollow shell from 2D children, with optional rounding.
+// Arguments:
+//   thickness = Thickness of the shell.  Positive to expand outward, negative to shrink inward, or a two-element list to do both.
+//   or = Radius to round corners on the outside of the shell.  If given a list of 2 radii, [CONVEX,CONCAVE], specifies the radii for convex and concave corners separately.  Default: 0 (no outside rounding)
+//   ir = Radius to round corners on the inside of the shell.  If given a list of 2 radii, [CONVEX,CONCAVE], specifies the radii for convex and concave corners separately.  Default: 0 (no inside rounding)
+// Examples(2D):
+//   shell2d(10) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(-10) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d([-10,10]) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(10,or=10) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(10,ir=10) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(10,round=10) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(10,fill=10) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(8,or=16,ir=8,round=16,fill=8) {square([40,100], center=true); square([100,40], center=true);}
+module shell2d(thickness, or=0, ir=0)
+{
+    thickness = is_num(thickness)? (
+        thickness<0? [thickness,0] : [0,thickness]
+    ) : (thickness[0]>thickness[1])? (
+        [thickness[1],thickness[0]]
+    ) : thickness;
+    orad = is_finite(or)? [or,or] : or;
+    irad = is_finite(ir)? [ir,ir] : ir;
+    difference() {
+        round2d(or=orad[0],ir=orad[1])
+            offset(delta=thickness[1])
                 children();
+        round2d(or=irad[1],ir=irad[0])
+            offset(delta=thickness[0])
+                children();
+    }
 }
 
 
@@ -583,101 +664,31 @@ module offset3d(r=1, size=100, convexity=10) {
 }
 
 
-// Module: round2d()
+// Module: round3d()
 // Usage:
-//   round2d(r) ...
-//   round2d(or) ...
-//   round2d(ir) ...
-//   round2d(or, ir) ...
+//   round3d(r) ...
+//   round3d(or) ...
+//   round3d(ir) ...
+//   round3d(or, ir) ...
 // Description:
-//   Rounds arbitrary 2D objects.  Giving `r` rounds all concave and convex corners.  Giving just `ir`
+//   Rounds arbitrary 3D objects.  Giving `r` rounds all concave and convex corners.  Giving just `ir`
 //   rounds just concave corners.  Giving just `or` rounds convex corners.  Giving both `ir` and `or`
-//   can let you round to different radii for concave and convex corners.  The 2D object must not have
-//   any parts narrower than twice the `or` radius.  Such parts will disappear.
+//   can let you round to different radii for concave and convex corners.  The 3D object must not have
+//   any parts narrower than twice the `or` radius.  Such parts will disappear.  This is an *extremely*
+//   slow operation.  I cannot emphasize enough just how slow it is.  It uses `minkowski()` multiple times.
+//   Use this as a last resort.  This is so slow that no example images will be rendered.
 // Arguments:
 //   r = Radius to round all concave and convex corners to.
 //   or = Radius to round only outside (convex) corners to.  Use instead of `r`.
 //   ir = Radius to round only inside (concave) corners to.  Use instead of `r`.
-// Examples(2D):
-//   round2d(r=10) {square([40,100], center=true); square([100,40], center=true);}
-//   round2d(or=10) {square([40,100], center=true); square([100,40], center=true);}
-//   round2d(ir=10) {square([40,100], center=true); square([100,40], center=true);}
-//   round2d(or=16,ir=8) {square([40,100], center=true); square([100,40], center=true);}
-module round2d(r, or, ir)
+module round3d(r, or, ir, size=100)
 {
     or = get_radius(r1=or, r=r, dflt=0);
     ir = get_radius(r1=ir, r=r, dflt=0);
-    offset(or) offset(-ir-or) offset(delta=ir,chamfer=true) children();
-}
-
-
-// Module: shell2d()
-// Usage:
-//   shell2d(thickness, [or], [ir], [fill], [round])
-// Description:
-//   Creates a hollow shell from 2D children, with optional rounding.
-// Arguments:
-//   thickness = Thickness of the shell.  Positive to expand outward, negative to shrink inward, or a two-element list to do both.
-//   or = Radius to round convex corners/pointy bits on the outside of the shell.
-//   ir = Radius to round concave corners on the outside of the shell.
-//   round = Radius to round convex corners/pointy bits on the inside of the shell.
-//   fill = Radius to round concave corners on the inside of the shell.
-// Examples(2D):
-//   shell2d(10) {square([40,100], center=true); square([100,40], center=true);}
-//   shell2d(-10) {square([40,100], center=true); square([100,40], center=true);}
-//   shell2d([-10,10]) {square([40,100], center=true); square([100,40], center=true);}
-//   shell2d(10,or=10) {square([40,100], center=true); square([100,40], center=true);}
-//   shell2d(10,ir=10) {square([40,100], center=true); square([100,40], center=true);}
-//   shell2d(10,round=10) {square([40,100], center=true); square([100,40], center=true);}
-//   shell2d(10,fill=10) {square([40,100], center=true); square([100,40], center=true);}
-//   shell2d(8,or=16,ir=8,round=16,fill=8) {square([40,100], center=true); square([100,40], center=true);}
-module shell2d(thickness, or=0, ir=0, fill=0, round=0)
-{
-    thickness = is_num(thickness)? (
-        thickness<0? [thickness,0] : [0,thickness]
-    ) : (thickness[0]>thickness[1])? (
-        [thickness[1],thickness[0]]
-    ) : thickness;
-    difference() {
-        round2d(or=or,ir=ir)
-            offset(delta=thickness[1])
+    offset3d(or, size=size)
+        offset3d(-ir-or, size=size)
+            offset3d(ir, size=size)
                 children();
-        round2d(or=fill,ir=round)
-            offset(delta=thickness[0])
-                children();
-    }
-}
-
-
-// Module: minkowski_difference()
-// Usage:
-//   minkowski_difference() { base_shape(); diff_shape(); ... }
-// Description:
-//   Takes a 3D base shape and one or more 3D diff shapes, carves out the diff shapes from the
-//   surface of the base shape, in a way complementary to how `minkowski()` unions shapes to the
-//   surface of its base shape.
-// Example:
-//   minkowski_difference() {
-//       union() {
-//           cube([120,70,70], center=true);
-//           cube([70,120,70], center=true);
-//           cube([70,70,120], center=true);
-//       }
-//       sphere(r=10);
-//   }
-module minkowski_difference() {
-    difference() {
-        bounding_box(excess=0) children(0);
-        render(convexity=10) {
-            minkowski() {
-                difference() {
-                    bounding_box(excess=1) children(0);
-                    children(0);
-                }
-                for (i=[1:1:$children-1]) children(i);
-            }
-        }
-    }
 }
 
 
