@@ -241,7 +241,6 @@ function repeat(val, n, i=0) =
     (i>=len(n))? val :
     [for (j=[1:1:n[i]]) repeat(val, n, i+1)];
 
-
 // Function: list_range()
 // Usage:
 //   list_range(n, [s], [e])
@@ -447,19 +446,21 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
     assert(is_list(list))
     !is_list(indices)? (
         (is_finite(indices) && indices<len(list))? 
-           [for (i=idx(list)) i==indices? values : list[i]]
+           concat([for (i=idx(list)) i==indices? values : list[i]], repeat(dflt, minlen-len(list)))
         :  list_set(list,[indices],[values],dflt) )
-    :   assert(is_vector(indices) && is_list(values) && len(values)==len(indices) ,
+    :indices==[] && values==[] ?
+        concat(list, repeat(dflt, minlen-len(list)))
+    :assert(is_vector(indices) && is_list(values) && len(values)==len(indices) ,
                "Index list and value list must have the same length")
         let( midx = max(len(list)-1, max(indices)) )
         [ for(i=[0:midx] ) 
             let( j = search(i,indices,0),
                  k = j[0] )
-            assert( len(j)<2, "Repeated indices are not acceptable." )
+            assert( len(j)<2, "Repeated indices are not allowed." )
             k!=undef ? values[k] :
             i<len(list) ? list[i]:
                 dflt ,
-          each repeat(dflt, minlen-max(indices))
+          each repeat(dflt, minlen-max(len(list),max(indices)))
         ];
 
 
@@ -471,12 +472,16 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 // Example:
 //   list_insert([3,6,9,12],1,5);  // Returns [3,5,6,9,12]
 //   list_insert([3,6,9,12],[1,3],[5,11]);  // Returns [3,5,6,9,11,12]
-function list_insert(list, indices, values, _i=0) = 
+function list_insert(list, indices, values) = 
     assert(is_list(list))
-    ! is_list(indices)? 
+    !is_list(indices)? 
         assert( is_finite(indices) && is_finite(values), "Invalid indices/values." ) 
         assert( indices<=len(list), "Indices must be <= len(list) ." )
-        [for (i=idx(list)) each ( i==indices?  [ values, list[i] ] : [ list[i] ] ) ]
+        [
+          for (i=idx(list)) each ( i==indices?  [ values, list[i] ] : [ list[i] ] ),
+          if (indices==len(list)) values
+        ]
+    :   indices==[] && values==[] ? list
     :   assert( is_vector(indices) && is_list(values) && len(values)==len(indices) ,
                "Index list and value list must have the same length")
         assert( max(indices)<=len(list), "Indices must be <= len(list) ." )
@@ -486,7 +491,7 @@ function list_insert(list, indices, values, _i=0) =
           for(i=[minidx: min(maxidx, len(list)-1)] ) 
             let( j = search(i,indices,0),
                  k = j[0],
-                 x = assert( len(j)<2, "Repeated indices are not acceptable." )
+                 x = assert( len(j)<2, "Repeated indices are not allowed." )
               )
             each ( k != undef  ? [ values[k], list[i] ] : [ list[i] ] ),
           for(i=[min(maxidx, len(list)-1)+1:1:len(list)-1] ) list[i],

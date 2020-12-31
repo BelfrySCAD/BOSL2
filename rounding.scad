@@ -1768,7 +1768,7 @@ function rounded_prism(bottom, top, joint_bot, joint_top, joint_sides, k_bot, k_
            len(top[0])==2 ? path3d(top,height/2) :
            top,
      bottom = len(bottom[0])==2 ? path3d(bottom,-height/2) : bottom,
-     jssingleok = (is_num(joint_sides) && joint_sides > 0) || (is_vector(joint_sides,2) && joint_sides[0]>=0 && joint_sides[1]>=0),
+     jssingleok = (is_num(joint_sides) && joint_sides >= 0) || (is_vector(joint_sides,2) && joint_sides[0]>=0 && joint_sides[1]>=0),
      jsvecok = is_list(joint_sides) && len(joint_sides)==N && []==[for(entry=joint_sides) if (!(is_num(entry) || is_vector(entry,2))) entry]
    )
    assert(is_num(joint_top) || is_vector(joint_top,2))
