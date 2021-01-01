@@ -1321,21 +1321,22 @@ module teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0)
 function teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0) =
     let(
         r = get_radius(r=r, d=d, dflt=1),
-        cord = 2 * r * cos(ang),
-        cord_h = r * sin(ang),
-        tip_y = (cord/2)/tan(ang),
-        cap_h = min((!is_undef(cap_h)? cap_h : tip_y+cord_h), tip_y+cord_h),
-        cap_w = cord * (1 - (cap_h - cord_h)/tip_y),
-        ang = min(ang,asin(cap_h/r)),
-        sa = 180 - ang,
-        ea = 360 + ang,
+        tanpt = polar_to_xy(r, ang),
+        tip_y = adj_ang_to_hyp(r, 90-ang),
+        cap_h = min(default(cap_h,tip_y), tip_y),
+        cap_w = tanpt.y >= cap_h
+          ? hyp_opp_to_adj(r, cap_h)
+          : adj_ang_to_opp(tip_y-cap_h, ang),
+        ang2 = min(ang,atan2(cap_h,cap_w)),
+        sa = 180 - ang2,
+        ea = 360 + ang2,
         steps = segs(r)*(ea-sa)/360,
         step = (ea-sa)/steps,
         path = deduplicate(
             [
-                [ cap_w/2,cap_h],
+                [ cap_w,cap_h],
                 for (i=[0:1:steps]) let(a=ea-i*step) r*[cos(a),sin(a)],
-                [-cap_w/2,cap_h]
+                [-cap_w,cap_h]
             ], closed=true
         ),
         maxx_idx = max_index(subindex(path,0)),
