@@ -1711,12 +1711,12 @@ module arced_slot(
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
 //   heightfield(size=[100,100], bottom=-20, data=[
-//       for (x=[-180:4:180]) [for(y=[-180:4:180]) 10*cos(3*norm([x,y]))]
+//       for (y=[-180:4:180]) [for(x=[-180:4:180]) 10*cos(3*norm([x,y]))]
 //   ]);
 // Example:
 //   intersection() {
 //       heightfield(size=[100,100], data=[
-//           for (x=[-180:5:180]) [for(y=[-180:5:180]) 10+5*cos(3*x)*sin(3*y)]
+//           for (y=[-180:5:180]) [for(x=[-180:5:180]) 10+5*cos(3*x)*sin(3*y)]
 //       ]);
 //       cylinder(h=50,d=100);
 //   }
@@ -1748,23 +1748,24 @@ function heightfield(data, size=[100,100], xrange=[-1:0.04:1], yrange=[-1:0.04:1
           ? [for (i=idx(data)) i]
           : assert(is_list(yrange)||is_range(yrange)) [for (y=yrange) y],
         xcnt = len(xvals),
-        ycnt = len(yvals),
         minx = min(xvals),
         maxx = max(xvals),
+        ycnt = len(yvals),
         miny = min(yvals),
         maxy = max(yvals),
         verts = is_list(data) ? [
-                for (y = [0:1:yvals-1]) [
-                    for (x = [0:1:xvals-1]) [
-                        size.x * (x/(xvals-1)-0.5),
-                        size.y * (y/(yvals-1)-0.5),
+                for (y = [0:1:ycnt-1]) [
+                    for (x = [0:1:xcnt-1]) [
+                        size.x * (x/(xcnt-1)-0.5),
+                        size.y * (y/(ycnt-1)-0.5),
                         data[y][x]
                     ]
                 ]
             ] : [
-                for (x = xrange) [
-                    for (y = yrange)
-                    let( z = data(x,y) ) [
+                for (y = yrange) [
+                    for (x = xrange) let(
+                        z = data(x,y)
+                    ) [
                         size.x * ((x-minx)/(maxx-minx)-0.5),
                         size.y * ((y-miny)/(maxy-miny)-0.5),
                         min(maxz, max(bottom+0.1, default(z,0)))
@@ -1772,30 +1773,30 @@ function heightfield(data, size=[100,100], xrange=[-1:0.04:1], yrange=[-1:0.04:1
                 ]
             ],
         vnf = vnf_merge([
-            vnf_vertex_array(verts, style=style),
+            vnf_vertex_array(verts, style=style, reverse=true),
             vnf_vertex_array([
+                verts[0],
                 [for (v=verts[0]) [v.x, v.y, bottom]],
-                verts[0]
             ]),
             vnf_vertex_array([
+                [for (v=verts[ycnt-1]) [v.x, v.y, bottom]],
                 verts[ycnt-1],
-                [for (v=verts[ycnt-1]) [v.x, v.y, bottom]]
             ]),
             vnf_vertex_array([
-                [for (r=verts) let(v=r[0]) v],
                 [for (r=verts) let(v=r[0]) [v.x, v.y, bottom]],
+                [for (r=verts) let(v=r[0]) v],
             ]),
             vnf_vertex_array([
-                [for (r=verts) let(v=r[xcnt-1]) [v.x, v.y, bottom]],
                 [for (r=verts) let(v=r[xcnt-1]) v],
+                [for (r=verts) let(v=r[xcnt-1]) [v.x, v.y, bottom]],
             ]),
             vnf_vertex_array([
                 [
-                    for (r=verts) let(v=r[0]) [v.x, v.y, bottom],
-                    for (v=verts[ycnt-1]) [v.x, v.y, bottom],
-                ], [
                     for (v=verts[0]) [v.x, v.y, bottom],
                     for (r=verts) let(v=r[xcnt-1]) [v.x, v.y, bottom],
+                ], [
+                    for (r=verts) let(v=r[0]) [v.x, v.y, bottom],
+                    for (v=verts[ycnt-1]) [v.x, v.y, bottom],
                 ]
             ])
         ])
