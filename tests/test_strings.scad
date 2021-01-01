@@ -368,5 +368,23 @@ test_echofmt();
 */
 
 
+module test_str_pad() {
+   assert_equal(str_pad("abc",5,"x"), "abcxx");
+   assert_equal(str_pad("abc",5), "abc  ");
+   assert_equal(str_pad("abc",5,"x",left=true), "xxabc");
+   assert_equal(str_pad("", 5, "x"), "xxxxx");
+   assert_equal(str_pad("", 5, "x", left=true), "xxxxx");
+}   
+test_str_pad();
+
+module test_str_replace_char() {
+   assert_equal(str_replace_char("abcabc", "b", "xyz"), "axyzcaxyzc");
+   assert_equal(str_replace_char("abcabc", "b", ""), "acac");
+   assert_equal(str_replace_char("", "b", "xyz"), "");
+   assert_equal(str_replace_char("acdacd", "b", "xyz"), "acdacd");   
+}
+test_str_replace_char();
+
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
