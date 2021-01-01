@@ -1720,10 +1720,10 @@ module arced_slot(
 //       ]);
 //       cylinder(h=50,d=100);
 //   }
-// Example: Heightfield by Function
+// Example(NORENDER): Heightfield by Function
 //   fn = function (x,y) 10*sin(x*360)*cos(y*360);
 //   heightfield(size=[100,100], data=fn);
-// Example: Heightfield by Function, with Specific Ranges
+// Example(NORENDER): Heightfield by Function, with Specific Ranges
 //   fn = function (x,y) 2*cos(5*norm([x,y]));
 //   heightfield(size=[100,100], bottom=-20, data=fn, xrange=[-180:2:180], yrange=[-180:2:180]);
 module heightfield(data, size=[100,100], xrange=[-1:0.04:1], yrange=[-1:0.04:1], bottom=-20, maxz=100, style="default", convexity=10, anchor=CENTER, spin=0, orient=UP)
