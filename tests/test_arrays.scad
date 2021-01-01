@@ -167,8 +167,17 @@ test_deduplicate_indexed();
 
 
 module test_list_set() {
-    assert(list_set([2,3,4,5], 2, 21) == [2,3,21,5]);
-    assert(list_set([2,3,4,5], [1,3], [81,47]) == [2,81,4,47]);
+    assert_equal(list_set([2,3,4,5], 2, 21), [2,3,21,5]);
+    assert_equal(list_set([2,3,4,5], [1,3], [81,47]), [2,81,4,47]);
+    assert_equal(list_set([2,3,4,5], [2], [21]), [2,3,21,5]);
+    assert_equal(list_set([1,2,3], [], []), [1,2,3]);
+    assert_equal(list_set([1,2,3], [1,5], [4,4]), [1,4,3,0,0,4]);
+    assert_equal(list_set([1,2,3], [1,5], [4,4],dflt=12), [1,4,3,12,12,4]);
+    assert_equal(list_set([1,2,3], [1,2], [4,4],dflt=12, minlen=5), [1,4,4,12,12]);
+    assert_equal(list_set([1,2,3], 1, 4, dflt=12, minlen=5), [1,4,3,12,12]);
+    assert_equal(list_set([1,2,3], [],[],dflt=12, minlen=5), [1,2,3,12,12]);
+    assert_equal(list_set([1,2,3], 5,9), [1,2,3,0,0,9]);
+    assert_equal(list_set([1,2,3], 5,9,dflt=12), [1,2,3,12,12,9]);    
 }
 test_list_set();
 
@@ -176,6 +185,8 @@ test_list_set();
 module test_list_remove() {
     assert(list_remove([3,6,9,12],1) == [3,9,12]);
     assert(list_remove([3,6,9,12],[1,3]) == [3,9]);
+    assert(list_remove([3,6,9],[]) == [3,6,9]);
+    assert(list_remove([],[]) == []);
 }
 test_list_remove();
 
@@ -191,8 +202,12 @@ test_list_remove_values();
 
 
 module test_list_insert() {
-    assert(list_insert([3,6,9,12],1,5) == [3,5,6,9,12]);
-    assert(list_insert([3,6,9,12],[1,3],[5,11]) == [3,5,6,9,11,12]);
+    assert_equal(list_insert([3,6,9,12],1,5),[3,5,6,9,12]);
+    assert_equal(list_insert([3,6,9,12],[1,3],[5,11]),[3,5,6,9,11,12]);
+    assert_equal(list_insert([3],1,4), [3,4]);
+    assert_equal(list_insert([3],[0,1], [1,2]), [1,3,2]);
+    assert_equal(list_insert([1,2,3],[],[]),[1,2,3]);
+    assert_equal(list_insert([], 0, 4),[4]);
 }
 test_list_insert();
 
