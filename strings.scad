@@ -764,7 +764,7 @@ function matrix_strings(M, sig=4, eps=1e-9) =
              [for(entry=row)
                  let(
                      text = is_undef(entry) ? "und"
-                          : abs(entry) < 0 ? "0"             // Replace hyphens with figure dashes
+                          : abs(entry) < eps ? "0"             // Replace hyphens with figure dashes
                           : str_replace_char(fmt_float(entry, sig),"-",figure_dash),
                      have_dot = is_def(str_find(text, "."))
                  )
