@@ -274,7 +274,7 @@ function standard_anchors(two_d=false) = [
 
 // Module: anchor_arrow()
 // Usage:
-//   anchor_arrow([s], [color], [flag]);
+//   anchor_arrow(<s>, <color>, <flag>);
 // Description:
 //   Show an anchor orientation arrow.
 // Arguments:
@@ -303,7 +303,7 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow"
 
 // Module: anchor_arrow2d()
 // Usage:
-//   anchor_arrow2d([s], [color], [flag]);
+//   anchor_arrow2d(<s>, <color>, <flag>);
 // Description:
 //   Show an anchor orientation arrow.
 // Arguments:
@@ -312,7 +312,7 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow"
 // Example:
 //   anchor_arrow2d(s=20);
 module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tags="anchor-arrow") {
-    noop() stroke([[0,0],[0,s]], width=s/10, endcap1="butt", endcap2="arrow2");
+    noop() color(color) stroke([[0,0],[0,s]], width=s/10, endcap1="butt", endcap2="arrow2");
 }
 
 
@@ -341,18 +341,28 @@ module show_internal_anchors(opacity=0.2) {
 // Example(FlatSpin):
 //   cube(50, center=true) show_anchors();
 module show_anchors(s=10, std=true, custom=true) {
+    check = assert($parent_geom != undef) 1;
+    two_d = attach_geom_2d($parent_geom);
     if (std) {
-        for (anchor=standard_anchors()) {
-            attach(anchor) anchor_arrow(s);
+        for (anchor=standard_anchors(two_d=two_d)) {
+            if(two_d) {
+                attach(anchor) anchor_arrow2d(s);
+            } else {
+                attach(anchor) anchor_arrow(s);
+            }
         }
     }
     if (custom) {
         for (anchor=select($parent_geom,-1)) {
             attach(anchor[0]) {
-                anchor_arrow(s, color="cyan");
-                recolor("black")
+                if(two_d) {
+                    anchor_arrow2d(s, color="cyan");
+                } else {
+                    anchor_arrow(s, color="cyan");
+                }
+                color("black")
                 noop($tags="anchor-arrow") {
-                    xrot(90) {
+                    xrot(two_d? 0 : 90) {
                         up(s/10) {
                             linear_extrude(height=0.01, convexity=12, center=true) {
                                 text(text=anchor[0], size=s/4, halign="center", valign="center");

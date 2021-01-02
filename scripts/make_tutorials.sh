@@ -15,7 +15,7 @@ done
 if [[ "$FILES" != "" ]]; then
     PREVIEW_LIBS="$FILES"
 else
-    PREVIEW_LIBS="Transforms Distributors Basic_Shapes FractalTree"
+    PREVIEW_LIBS="Shapes2d Shapes3d Transforms Distributors Mutators Paths FractalTree"
 fi
 
 dir="$(basename $PWD)"

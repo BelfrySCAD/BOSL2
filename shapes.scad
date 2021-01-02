@@ -185,7 +185,8 @@ module cuboid(
                             // Add multi-edge corners.
                             if (trimcorners) {
                                 for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
-                                    if (corner_edge_count(edges, [xa,ya,za]) > 1) {
+                                    ce = corner_edges(edges, [xa,ya,za]);
+                                    if (ce.x + ce.y > 1) {
                                         translate(vmul([xa,ya,za]/2, size+[ach-0.01,ach-0.01,-ach])) {
                                             cube([ach+0.01,ach+0.01,ach], center=true);
                                         }
@@ -270,7 +271,8 @@ module cuboid(
                             // Add multi-edge corners.
                             if (trimcorners) {
                                 for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
-                                    if (corner_edge_count(edges, [xa,ya,za]) > 1) {
+                                    ce = corner_edges(edges, [xa,ya,za]);
+                                    if (ce.x + ce.y > 1) {
                                         translate(vmul([xa,ya,za]/2, size+[ard-0.01,ard-0.01,-ard])) {
                                             cube([ard+0.01,ard+0.01,ard], center=true);
                                         }
@@ -1159,6 +1161,14 @@ module torus(
 //   Creates a spheroid object, with support for anchoring and attachments.
 //   This is a drop-in replacement for the built-in `sphere()` module.
 //   When called as a function, returns a [VNF](vnf.scad) for a spheroid.
+//   The exact triangulation of this spheroid can be controlled via the `style=`
+//   argument, where the value can be one of `"orig"`, `"aligned"`, `"stagger"`,
+//   `"octa"`, or `"icosa"`:
+//   - `style="orig"` constructs a sphere the same way that the OpenSCAD `sphere()` built-in does.
+//   - `style="aligned"` constructs a sphere where, if `$fn` is a multiple of 4, it has vertices at all axis maxima and minima.  ie: its bounding box is exactly the sphere diameter in length on all three axes.  This is the default.
+//   - `style="stagger"` forms a sphere where all faces are triangular, but the top and bottom poles have thinner triangles.
+//   - `style="octa"` forms a sphere by subdividing an octahedron (8-sided platonic solid).  This makes more uniform faces over the entirety of the sphere, and guarantees the bounding box is the sphere diameter in size on all axes.  The effective `$fn` value is quantized to a multiple of 4, though.  This is used in constructing rounded corners for various other shapes.
+//   - `style="icosa"` forms a sphere by subdividing an icosahedron (20-sided platonic solid).  This makes even more uniform faces over the entirety of the sphere.  The effective `$fn` value is quantized to a multiple of 5, though.
 // Arguments:
 //   r = Radius of the spheroid.
 //   d = Diameter of the spheroid.
@@ -1200,21 +1210,16 @@ module spheroid(r, d, circum=false, style="aligned", anchor=CENTER, spin=0, orie
 {
     r = get_radius(r=r, d=d, dflt=1);
     sides = segs(r);
+    vsides = ceil(sides/2);
     attachable(anchor,spin,orient, r=r) {
         if (style=="orig") {
-            rotate_extrude(convexity=2,$fn=sides) {
-                difference() {
-                    oval(r=r, circum=circum, realign=true, $fn=sides);
-                    left(r) square(2*r,center=true);
-                }
-            }
-        } else if (style=="aligned") {
-            rotate_extrude(convexity=2,$fn=sides) {
-                difference() {
-                    oval(r=r, circum=circum, $fn=sides);
-                    left(r) square(2*r,center=true);
-                }
-            }
+            merids = [ for (i=[0:1:vsides-1]) 90-(i+0.5)*180/vsides ];
+            path = [
+                let(a = merids[0]) [0, sin(a)],
+                for (a=merids) [cos(a), sin(a)],
+                let(a = select(merids,-1)) [0, sin(a)]
+            ];
+            scale(r) rotate(180) rotate_extrude(convexity=2,$fn=sides) polygon(path);
         } else {
             vnf = spheroid(r=r, circum=circum, style=style);
             vnf_polyhedron(vnf, convexity=2);
@@ -1686,112 +1691,118 @@ module arced_slot(
 }
 
 
-// Module: heightfield()
-// Usage:
-//   heightfield(heightfield, [size], [bottom]);
+// Function&Module: heightfield()
+// Usage: As Module
+//   heightfield(data, <size>, <bottom>, <maxz>, <xrange>, <yrange>, <style>, <convexity>);
+// Usage: As Function
+//   vnf = heightfield(data, <size>, <bottom>, <maxz>, <xrange>, <yrange>, <style>);
 // Description:
-//   Given a regular rectangular 2D grid of scalar values, generates a 3D surface where the height at
-//   any given point is the scalar value for that position.
+//   Given a regular rectangular 2D grid of scalar values, or a function literal, generates a 3D
+//   surface where the height at any given point is the scalar value for that position.
 // Arguments:
-//   heightfield = The 2D rectangular array of heights.
-//   size = The [X,Y] size of the surface to create.  If given as a scalar, use it for both X and Y sizes.
-//   bottom = The Z coordinate for the bottom of the heightfield object to create.  Must be less than the minimum heightfield value.  Default: 0
-//   convexity = Max number of times a line could intersect a wall of the surface being formed.
+//   data = This is either the 2D rectangular array of heights, or a function literal that takes X and Y arguments.
+//   size = The [X,Y] size of the surface to create.  If given as a scalar, use it for both X and Y sizes. Default: `[100,100]`
+//   bottom = The Z coordinate for the bottom of the heightfield object to create.  Any heights lower than this will be truncated to very slightly above this height.  Default: -20
+//   maxz = The maximum height to model.  Truncates anything taller to this height.  Default: 99
+//   xrange = A range of values to iterate X over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
+//   yrange = A range of values to iterate Y over when calculating a surface from a function literal.  Default: [-1 : 0.01 : 1]
+//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".  Default: "default"
+//   convexity = Max number of times a line could intersect a wall of the surface being formed. Module only.  Default: 10
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
-//   heightfield(size=[100,100], bottom=-20, heightfield=[
-//       for (x=[-180:4:180]) [for(y=[-180:4:180]) 10*cos(3*norm([x,y]))]
+//   heightfield(size=[100,100], bottom=-20, data=[
+//       for (y=[-180:4:180]) [for(x=[-180:4:180]) 10*cos(3*norm([x,y]))]
 //   ]);
 // Example:
 //   intersection() {
-//       heightfield(size=[100,100], heightfield=[
-//           for (x=[-180:5:180]) [for(y=[-180:5:180]) 10+5*cos(3*x)*sin(3*y)]
+//       heightfield(size=[100,100], data=[
+//           for (y=[-180:5:180]) [for(x=[-180:5:180]) 10+5*cos(3*x)*sin(3*y)]
 //       ]);
 //       cylinder(h=50,d=100);
 //   }
-module heightfield(heightfield, size=[100,100], bottom=0, convexity=10)
+// Example(NORENDER): Heightfield by Function
+//   fn = function (x,y) 10*sin(x*360)*cos(y*360);
+//   heightfield(size=[100,100], data=fn);
+// Example(NORENDER): Heightfield by Function, with Specific Ranges
+//   fn = function (x,y) 2*cos(5*norm([x,y]));
+//   heightfield(size=[100,100], bottom=-20, data=fn, xrange=[-180:2:180], yrange=[-180:2:180]);
+module heightfield(data, size=[100,100], xrange=[-1:0.04:1], yrange=[-1:0.04:1], bottom=-20, maxz=100, style="default", convexity=10, anchor=CENTER, spin=0, orient=UP)
 {
     size = is_num(size)? [size,size] : point2d(size);
-    dim = array_dim(heightfield);
-    assert(dim.x!=undef);
-    assert(dim.y!=undef);
-    assert(bottom<min(flatten(heightfield)), "bottom must be less than the minimum heightfield value.");
-    spacing = vdiv(size,dim-[1,1]);
-    vertices = concat(
-        [
-            for (i=[0:1:dim.x-1], j=[0:1:dim.y-1]) let(
-                pos = [i*spacing.x-size.x/2, j*spacing.y-size.y/2, heightfield[i][j]]
-            ) pos
-        ], [
-            for (i=[0:1:dim.x-1]) let(
-                pos = [i*spacing.x-size.x/2, -size.y/2, bottom]
-            ) pos
-        ], [
-            for (i=[0:1:dim.x-1]) let(
-                pos = [i*spacing.x-size.x/2, size.y/2, bottom]
-            ) pos
-        ], [
-            for (j=[0:1:dim.y-1]) let(
-                pos = [-size.x/2, j*spacing.y-size.y/2, bottom]
-            ) pos
-        ], [
-            for (j=[0:1:dim.y-1]) let(
-                pos = [size.x/2, j*spacing.y-size.y/2, bottom]
-            ) pos
-        ]
-    );
-    faces = concat(
-        [
-            for (i=[0:1:dim.x-2], j=[0:1:dim.y-2]) let(
-                idx1 = (i+0)*dim.y + j+0,
-                idx2 = (i+0)*dim.y + j+1,
-                idx3 = (i+1)*dim.y + j+0,
-                idx4 = (i+1)*dim.y + j+1
-            ) each [[idx1, idx2, idx4], [idx1, idx4, idx3]]
-        ], [
-            for (i=[0:1:dim.x-2]) let(
-                idx1 = dim.x*dim.y,
-                idx2 = dim.x*dim.y+dim.x+i,
-                idx3 = idx2+1
-            ) [idx1,idx3,idx2]
-        ], [
-            for (i=[0:1:dim.y-2]) let(
-                idx1 = dim.x*dim.y,
-                idx2 = dim.x*dim.y+dim.x*2+dim.y+i,
-                idx3 = idx2+1
-            ) [idx1,idx2,idx3]
-        ], [
-            for (i=[0:1:dim.x-2]) let(
-                idx1 = (i+0)*dim.y+0,
-                idx2 = (i+1)*dim.y+0,
-                idx3 = dim.x*dim.y+i,
-                idx4 = idx3+1
-            ) each [[idx1, idx2, idx4], [idx1, idx4, idx3]]
-        ], [
-            for (i=[0:1:dim.x-2]) let(
-                idx1 = (i+0)*dim.y+dim.y-1,
-                idx2 = (i+1)*dim.y+dim.y-1,
-                idx3 = dim.x*dim.y+dim.x+i,
-                idx4 = idx3+1
-            ) each [[idx1, idx4, idx2], [idx1, idx3, idx4]]
-        ], [
-            for (j=[0:1:dim.y-2]) let(
-                idx1 = j,
-                idx2 = j+1,
-                idx3 = dim.x*dim.y+dim.x*2+j,
-                idx4 = idx3+1
-            ) each [[idx1, idx4, idx2], [idx1, idx3, idx4]]
-        ], [
-            for (j=[0:1:dim.y-2]) let(
-                idx1 = (dim.x-1)*dim.y+j,
-                idx2 = idx1+1,
-                idx3 = dim.x*dim.y+dim.x*2+dim.y+j,
-                idx4 = idx3+1
-            ) each [[idx1, idx2, idx4], [idx1, idx4, idx3]]
-        ]
-    );
-    polyhedron(points=vertices, faces=faces, convexity=convexity);
+    vnf = heightfield(data=data, size=size, xrange=xrange, yrange=yrange, bottom=bottom, maxz=maxz, style=style);
+    attachable(anchor,spin,orient, vnf=vnf) {
+        vnf_polyhedron(vnf, convexity=convexity);
+        children();
+    }
 }
 
+
+function heightfield(data, size=[100,100], xrange=[-1:0.04:1], yrange=[-1:0.04:1], bottom=-20, maxz=100, style="default", anchor=CENTER, spin=0, orient=UP) =
+    assert(is_list(data) || is_function(data))
+    let(
+        size = is_num(size)? [size,size] : point2d(size),
+        xvals = is_list(data)
+          ? [for (i=idx(data[0])) i]
+          : assert(is_list(xrange)||is_range(xrange)) [for (x=xrange) x],
+        yvals = is_list(data)
+          ? [for (i=idx(data)) i]
+          : assert(is_list(yrange)||is_range(yrange)) [for (y=yrange) y],
+        xcnt = len(xvals),
+        minx = min(xvals),
+        maxx = max(xvals),
+        ycnt = len(yvals),
+        miny = min(yvals),
+        maxy = max(yvals),
+        verts = is_list(data) ? [
+                for (y = [0:1:ycnt-1]) [
+                    for (x = [0:1:xcnt-1]) [
+                        size.x * (x/(xcnt-1)-0.5),
+                        size.y * (y/(ycnt-1)-0.5),
+                        data[y][x]
+                    ]
+                ]
+            ] : [
+                for (y = yrange) [
+                    for (x = xrange) let(
+                        z = data(x,y)
+                    ) [
+                        size.x * ((x-minx)/(maxx-minx)-0.5),
+                        size.y * ((y-miny)/(maxy-miny)-0.5),
+                        min(maxz, max(bottom+0.1, default(z,0)))
+                    ]
+                ]
+            ],
+        vnf = vnf_merge([
+            vnf_vertex_array(verts, style=style, reverse=true),
+            vnf_vertex_array([
+                verts[0],
+                [for (v=verts[0]) [v.x, v.y, bottom]],
+            ]),
+            vnf_vertex_array([
+                [for (v=verts[ycnt-1]) [v.x, v.y, bottom]],
+                verts[ycnt-1],
+            ]),
+            vnf_vertex_array([
+                [for (r=verts) let(v=r[0]) [v.x, v.y, bottom]],
+                [for (r=verts) let(v=r[0]) v],
+            ]),
+            vnf_vertex_array([
+                [for (r=verts) let(v=r[xcnt-1]) v],
+                [for (r=verts) let(v=r[xcnt-1]) [v.x, v.y, bottom]],
+            ]),
+            vnf_vertex_array([
+                [
+                    for (v=verts[0]) [v.x, v.y, bottom],
+                    for (r=verts) let(v=r[xcnt-1]) [v.x, v.y, bottom],
+                ], [
+                    for (r=verts) let(v=r[0]) [v.x, v.y, bottom],
+                    for (v=verts[ycnt-1]) [v.x, v.y, bottom],
+                ]
+            ])
+        ])
+    ) reorient(anchor,spin,orient, vnf=vnf, p=vnf);
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
