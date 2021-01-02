@@ -185,7 +185,8 @@ module cuboid(
                             // Add multi-edge corners.
                             if (trimcorners) {
                                 for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
-                                    if (corner_edge_count(edges, [xa,ya,za]) > 1) {
+                                    ce = corner_edges(edges, [xa,ya,za]);
+                                    if (ce.x + ce.y > 1) {
                                         translate(vmul([xa,ya,za]/2, size+[ach-0.01,ach-0.01,-ach])) {
                                             cube([ach+0.01,ach+0.01,ach], center=true);
                                         }
@@ -270,7 +271,8 @@ module cuboid(
                             // Add multi-edge corners.
                             if (trimcorners) {
                                 for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
-                                    if (corner_edge_count(edges, [xa,ya,za]) > 1) {
+                                    ce = corner_edges(edges, [xa,ya,za]);
+                                    if (ce.x + ce.y > 1) {
                                         translate(vmul([xa,ya,za]/2, size+[ard-0.01,ard-0.01,-ard])) {
                                             cube([ard+0.01,ard+0.01,ard], center=true);
                                         }
