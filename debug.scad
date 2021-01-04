@@ -524,8 +524,8 @@ function echo_matrix(M,description,sig=4,eps=1e-9) =
       horiz_line = chr(8213),
       matstr = matrix_strings(M,sig=sig,eps=eps),
       separator = str_join(repeat(horiz_line,10)),
-      dummy1=echo(str(separator,"  ",is_def(description) ? description : "")),
-      dummy2=[for(row=matstr) echo(row)]
+      dummy=echo(str(separator,"  ",is_def(description) ? description : ""))
+            [for(row=matstr) echo(row)]
   )
   echo(separator);
 
@@ -533,7 +533,6 @@ module echo_matrix(M,description,sig=4,eps=1e-9)
 {
   dummy = echo_matrix(M,description,sig,eps);
 }
-
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

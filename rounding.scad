@@ -192,6 +192,7 @@ include <structs.scad>
 //       // Try changing the value to see the effect.
 //   rpath = round_corners(path3d, joint=rounding, k=1, method="smooth", closed=false);
 //   path_sweep( regular_ngon(n=36, or=.1), rpath);
+module round_corners(path, method="circle", radius, cut, joint, k, closed=true, verbose=false) {no_module();}
 function round_corners(path, method="circle", radius, cut, joint, k, closed=true, verbose=false) =
     assert(in_list(method,["circle", "smooth", "chamfer"]), "method must be one of \"circle\", \"smooth\" or \"chamfer\"")
     let(
@@ -455,6 +456,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   pts = [[-3.3, 1.7], [-3.7, -2.2], [3.8, -4.8], [-0.9, -2.4]];
 //   stroke(smooth_path(pts, uniform=false, relsize=0.1),width=.1);
 //   color("red")move_copies(pts)circle(r=.15,$fn=12);
+module smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=false, closed=false) {no_module();}
 function smooth_path(path, tangents, size, relsize, splinesteps=10, uniform=false, closed=false) =
   let (
      bez = path_to_bezier(path, tangents=tangents, size=size, relsize=relsize, uniform=uniform, closed=closed)
@@ -562,7 +564,7 @@ function _scalar_to_vector(value,length,varname) =
 // Example(2D): With a single path with closed=true the start and end junction is rounded.
 //   tri = regular_ngon(n=3, r=7);
 //   stroke(path_join([tri], joint=3,closed=true,$fn=12),closed=true,width=.5);
-
+module path_join(paths,joint=0,k=0.5,relocate=true,closed=false) { no_module();}
 function path_join(paths,joint=0,k=0.5,relocate=true,closed=false)=
   assert(is_list(paths),"Input paths must be a list of paths")
   let(
@@ -1157,6 +1159,15 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset_maxstep, of
 //   right(50) linear_extrude(height=7) star(5,r=22,ir=13);
 //   convex_offset_extrude(bottom = os_chamfer(height=-2), top=os_chamfer(height=1), height=7)
 //     star(5,r=22,ir=13);
+function convex_offset_extrude(
+        height, h, l,
+        top=[], bottom=[],
+        offset="round", r=0, steps=16,
+        extra=0,
+        cut=undef, chamfer_width=undef, chamfer_height=undef,
+        joint=undef, k=0.75, angle=45,
+        convexity=10, thickness = 1/1024
+) = no_function("convex_offset_extrude");
 module convex_offset_extrude(
         height, h, l,
         top=[], bottom=[],
@@ -1247,8 +1258,11 @@ function _remove_undefined_vals(list) =
 
 
 // Function&Module: offset_stroke()
-// Usage:
+// Usage: as module
 //   offset_stroke(path, [width], [rounded], [chamfer], [start], [end], [check_valid], [quality], [maxstep], [closed])
+// Usage: as function
+//   path = offset_stroke(path, closed=false, [width], [rounded], [chamfer], [start], [end], [check_valid], [quality], [maxstep])
+//   region = offset_stroke(path, closed=true, [width], [rounded], [chamfer], [start], [end], [check_valid], [quality], [maxstep])
 // Description:
 //   Uses `offset()` to compute a stroke for the input path.  Unlike `stroke`, the result does not need to be
 //   centered on the input path.  The corners can be rounded, pointed, or chamfered, and you can make the ends
@@ -2172,7 +2186,7 @@ function _circle_mask(r) =
 //           bent_cutout_mask(diam/2-wall/2, wall+.1, subdivide_path(apply(back(10),slot(15, 29, 7)),250));
 //       }
 //   }
-
+function bent_cutout_mask(r, thickness, path, convexity=10) = no_function("bent_cutout_mask");
 module bent_cutout_mask(r, thickness, path, convexity=10)
 {
   no_children($children);

@@ -446,6 +446,26 @@ module no_children(count) {
   assert(count==0, str("Module ",parent_module(1),"() does not support child modules"));
 }
 
+// Function: no_function()
+// Usage:
+//   dummy = no_function(name)
+// Description:
+//   Asserts that the function, "name", only exists as a module.
+// Example:
+//   
+function no_function(name) =
+   assert(false,str("You called ",name,"() as a function, but it is available only as a module"));
+
+
+// Module: no_module()
+// Usage:
+//   no_module();
+// Description:
+//   Asserts that the called module exists only as a function.
+module no_module() {
+    assert(false, str("You called ",parent_module(1),"() as a module but it is available only as a function"));
+}    
+  
 
 // Section: Testing Helpers
 
