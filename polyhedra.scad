@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: polyhedra.scad
 //   Useful platonic, archimedian, and catalan polyhedra.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/polyhedra.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 

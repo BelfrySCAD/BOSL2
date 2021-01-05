@@ -120,7 +120,6 @@ def run_openscad_script(libfile, infile, imgfile, imgsize=(320,240), eye=None, s
 class ImageProcessing(object):
     def __init__(self):
         self.examples = []
-        self.commoncode = []
         self.imgroot = ""
         self.keep_scripts = False
         self.force = False
@@ -131,9 +130,6 @@ class ImageProcessing(object):
 
     def add_image(self, libfile, imgfile, code, extype):
         self.examples.append((libfile, imgfile, code, extype))
-
-    def set_commoncode(self, code):
-        self.commoncode = code
 
     def process_examples(self, imgroot, force=False, test_only=False):
         self.imgroot = imgroot
@@ -171,14 +167,7 @@ class ImageProcessing(object):
             print("")
             return
 
-        stdlibs = ["std.scad", "debug.scad"]
         script = ""
-        for lib in stdlibs:
-            script += "include <BOSL2/%s>\n" % lib
-        if libfile not in stdlibs:
-            script += "include <BOSL2/%s>\n" % libfile
-        for line in self.commoncode:
-            script += line+"\n"
         for line in code:
             script += line+"\n"
 
@@ -334,12 +323,16 @@ class LeafNode(object):
         self.name = ""
         self.leaftype = ""
         self.status = ""
-        self.description = []
+        self.topics = []
         self.usages = []
+        self.description = []
+        self.figures = []
+        self.returns = []
+        self.customs = []
         self.arguments = []
+        self.named_arguments = []
         self.anchors = []
         self.side_effects = []
-        self.figures = []
         self.examples = []
 
     @classmethod
@@ -401,6 +394,12 @@ class LeafNode(object):
                 dummy, status = line.split(":", 1)
                 self.status = status.strip()
                 continue
+            if line.startswith("Topics:"):
+                dummy, topic_line = line.split(":", 1)
+                topics = []
+                for topic in topic_line.split(","):
+                    self.topics.append(topic.strip())
+                continue
             if line.startswith("Usage:"):
                 dummy, title = line.split(":", 1)
                 title = title.strip()
@@ -419,6 +418,20 @@ class LeafNode(object):
                 lines, block = get_comment_block(lines, prefix)
                 self.description.extend(block)
                 continue
+            if line.startswith("Returns:"):
+                dummy, desc = line.split(":", 1)
+                desc = desc.strip()
+                if desc:
+                    self.returns.append(desc)
+                lines, block = get_comment_block(lines, prefix)
+                self.returns.extend(block)
+                continue
+            if line.startswith("Custom:"):
+                dummy, title = line.split(":", 1)
+                title = title.strip()
+                lines, block = get_comment_block(lines, prefix)
+                self.customs.append( (title, block) )
+                continue
             m = figpat.match(line)
             if m:  # Figure(TYPE):
                 plural = m.group(1) == "Figures"
@@ -435,7 +448,11 @@ class LeafNode(object):
                 continue
             if line.startswith("Arguments:"):
                 lines, block = get_comment_block(lines, prefix)
+                named = False
                 for line in block:
+                    if line.strip() == "---":
+                        named = True
+                        continue
                     if "=" not in line:
                         print("Error in {}: Could not parse line in Argument block.  Missing '='.".format(self.name))
                         print("Line read was:")
@@ -444,7 +461,10 @@ class LeafNode(object):
                     argname, argdesc = line.split("=", 1)
                     argname = argname.strip()
                     argdesc = argdesc.strip()
-                    self.arguments.append([argname, argdesc])
+                    if named:
+                        self.named_arguments.append([argname, argdesc])
+                    else:
+                        self.arguments.append([argname, argdesc])
                 continue
             if line.startswith("Extra Anchors:") or line.startswith("Anchors:"):
                 lines, block = get_comment_block(lines, prefix)
@@ -488,7 +508,7 @@ class LeafNode(object):
 
         return lines
 
-    def gen_md(self, fileroot, imgroot):
+    def gen_md(self, fileroot, imgroot, libnode, sectnode):
         out = []
         if self.name:
             out.append("### " + mkdn_esc(self.name))
@@ -505,14 +525,14 @@ class LeafNode(object):
                 out.append("- {0}".format(mkdn_esc(usage)))
             out.append("")
         if self.description:
-            out.append("**Description**:")
+            out.append("**Description:**")
             for line in self.description:
                 out.append(mkdn_esc(line))
             out.append("")
         fignum = 0
         for title, excode, extype in self.figures:
             fignum += 1
-            extitle = "**Figure {0}**:".format(fignum)
+            extitle = "**Figure {0}:**".format(fignum)
             if title:
                 extitle += " " + mkdn_esc(title)
             san_name = re.sub(r"[^A-Za-z0-9_]", "", self.name)
@@ -521,7 +541,17 @@ class LeafNode(object):
                 ("fig%d" % fignum),
                 "gif" if "Spin" in extype else "png"
             )
-            imgprc.add_image(fileroot+".scad", imgfile, excode, extype)
+            icode = []
+            for line in libnode.includes:
+                icode.append(line)
+            for line in libnode.commoncode:
+                icode.append(line)
+            for line in excode:
+                if line.strip().startswith("--"):
+                    icode.append(line.strip()[2:])
+                else:
+                    icode.append(line)
+            imgprc.add_image(fileroot+".scad", imgfile, icode, extype)
             out.append(extitle)
             out.append("")
             out.append(
@@ -533,9 +563,21 @@ class LeafNode(object):
                 )
             )
             out.append("")
+        if self.returns:
+            out.append("**Returns:**")
+            for line in self.returns:
+                out.append(mkdn_esc(line))
+            out.append("")
+        if self.customs:
+            for title, block in self.customs:
+                out.append("**{}:**".format(title))
+                for line in block:
+                    out.append(mkdn_esc(line))
+                out.append("")
         if self.arguments:
-            out.append("Argument        | What it does")
-            out.append("--------------- | ------------------------------")
+            out.append("**Arguments:**")
+            out.append("By&nbsp;Position | What it does")
+            out.append("---------------- | ------------------------------")
             for argname, argdesc in self.arguments:
                 argname = argname.replace(" / ", "` / `")
                 out.append(
@@ -545,8 +587,20 @@ class LeafNode(object):
                     )
                 )
             out.append("")
+        if self.named_arguments:
+            out.append("By&nbsp;Name   | What it does")
+            out.append("-------------- | ------------------------------")
+            for argname, argdesc in self.named_arguments:
+                argname = argname.replace(" / ", "` / `")
+                out.append(
+                    "{0:15s} | {1}".format(
+                        "`{0}`".format(argname),
+                        mkdn_esc(argdesc)
+                    )
+                )
+            out.append("")
         if self.side_effects:
-            out.append("**Side Effects**:")
+            out.append("**Side Effects:**")
             for sfx in self.side_effects:
                 out.append("- " + mkdn_esc(sfx))
             out.append("")
@@ -562,13 +616,19 @@ class LeafNode(object):
                     )
                 )
             out.append("")
+        if self.topics:
+            topics = []
+            for topic in self.topics:
+                topics.append("[{0}](Topics#{0})".format(mkdn_esc(topic)))
+            out.append("**Related Topics:** {}".format(", ".join(topics)))
+            out.append("")
         exnum = 0
         for title, excode, extype in self.examples:
             exnum += 1
             if len(self.examples) < 2:
-                extitle = "**Example**:"
+                extitle = "**Example:**"
             else:
-                extitle = "**Example {0}**:".format(exnum)
+                extitle = "**Example {0}:**".format(exnum)
             if title:
                 extitle += " " + mkdn_esc(title)
             san_name = re.sub(r"[^A-Za-z0-9_]", "", self.name)
@@ -578,12 +638,25 @@ class LeafNode(object):
                 "gif" if "Spin" in extype else "png"
             )
             if "NORENDER" not in extype:
-                imgprc.add_image(fileroot+".scad", imgfile, excode, extype)
+                icode = []
+                for line in libnode.includes:
+                    icode.append(line)
+                for line in libnode.commoncode:
+                    icode.append(line)
+                for line in excode:
+                    if line.strip().startswith("--"):
+                        icode.append(line.strip()[2:])
+                    else:
+                        icode.append(line)
+                imgprc.add_image(fileroot+".scad", imgfile, icode, extype)
             if "Hide" not in extype:
                 out.append(extitle)
                 out.append("")
-                for line in excode:
+                for line in libnode.includes:
                     out.append("    " + line)
+                for line in excode:
+                    if not line.strip().startswith("--"):
+                        out.append("    " + line)
                 out.append("")
                 if "NORENDER" not in extype:
                     out.append(
@@ -662,7 +735,7 @@ class Section(object):
         out.append("")
         return out
 
-    def gen_md(self, count, fileroot, imgroot):
+    def gen_md(self, count, fileroot, imgroot, libnode):
         out = []
         if self.name:
             out.append("# %d. %s" % (count, mkdn_esc(self.name)))
@@ -679,7 +752,7 @@ class Section(object):
             out.append("")
         for title, figcode, figtype in self.figures:
             Section.fignum += 1
-            figtitle = "**Figure {0}**:".format(Section.fignum)
+            figtitle = "**Figure {0}:**".format(Section.fignum)
             if title:
                 figtitle += " " + mkdn_esc(title)
             out.append(figtitle)
@@ -699,10 +772,20 @@ class Section(object):
                     )
                 )
                 out.append("")
-                imgprc.add_image(fileroot+".scad", imgfile, figcode, figtype)
+                icode = []
+                for line in libnode.includes:
+                    icode.append(line)
+                for line in libnode.commoncode:
+                    icode.append(line)
+                for line in figcode:
+                    if line.strip().startswith("--"):
+                        icode.append(line.strip()[2:])
+                    else:
+                        icode.append(line)
+                imgprc.add_image(fileroot+".scad", imgfile, icode, figtype)
         in_block = False
         for node in self.leaf_nodes:
-            out += node.gen_md(fileroot, imgroot)
+            out += node.gen_md(fileroot, imgroot, libnode, self)
         return out
 
 
@@ -710,9 +793,10 @@ class LibFile(object):
     def __init__(self):
         self.name = ""
         self.description = []
+        self.includes = []
         self.commoncode = []
         self.sections = []
-        self.dep_sect = None
+        self.deprecated_section = None
 
     def parse_lines(self, lines, prefix):
         currsect = None
@@ -739,6 +823,12 @@ class LibFile(object):
                 lines, block = get_comment_block(lines, prefix, blanks=2)
                 self.description.extend(block)
 
+            # Check for Includes header.
+            if lines and lines[0].startswith(prefix + "Includes:"):
+                lines.pop(0)
+                lines, block = get_comment_block(lines, prefix)
+                self.includes.extend(block)
+
             # Check for CommonCode header.
             if lines and lines[0].startswith(prefix + "CommonCode:"):
                 lines.pop(0)
@@ -758,10 +848,10 @@ class LibFile(object):
                 lines = node.parse_lines(lines, prefix)
                 deprecated = node.status.startswith("DEPRECATED")
                 if deprecated:
-                    if self.dep_sect == None:
-                        self.dep_sect = Section()
-                        self.dep_sect.name = "Deprecations"
-                    sect = self.dep_sect
+                    if self.deprecated_section == None:
+                        self.deprecated_section = Section()
+                        self.deprecated_section.name = "Deprecations"
+                    sect = self.deprecated_section
                 else:
                     if currsect == None:
                         currsect = Section()
@@ -773,7 +863,6 @@ class LibFile(object):
         return lines
 
     def gen_md(self, fileroot, imgroot):
-        imgprc.set_commoncode(self.commoncode)
         out = []
         if self.name:
             out.append("# Library File " + mkdn_esc(self.name))
@@ -789,30 +878,37 @@ class LibFile(object):
                     out.append(mkdn_esc(line))
             out.append("")
             in_block = False
+        if self.includes:
+            out.append("To use, add the following lines to the beginning of your file:")
+            out.append("```openscad")
+            for line in self.includes:
+                out.append("    " + line)
+            out.append("```")
+            out.append("")
         if self.name or self.description:
             out.append("---")
             out.append("")
 
-        if self.sections or self.dep_sect:
+        if self.sections or self.deprecated_section:
             out.append("# Table of Contents")
             out.append("")
             cnt = 0
             for sect in self.sections:
                 cnt += 1
                 out += sect.gen_md_toc(cnt)
-            if self.dep_sect:
+            if self.deprecated_section:
                 cnt += 1
-                out += self.dep_sect.gen_md_toc(cnt)
+                out += self.deprecated_section.gen_md_toc(cnt)
             out.append("---")
             out.append("")
 
         cnt = 0
         for sect in self.sections:
             cnt += 1
-            out += sect.gen_md(cnt, fileroot, imgroot)
-        if self.dep_sect:
+            out += sect.gen_md(cnt, fileroot, imgroot, self)
+        if self.deprecated_section:
             cnt += 1
-            out += self.dep_sect.gen_md(cnt, fileroot, imgroot)
+            out += self.deprecated_section.gen_md(cnt, fileroot, imgroot, self)
         return out
 
 

@@ -1,10 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: strings.scad
 //   String manipulation and formatting functions.
-//   To use, add the following lines to the beginning of your file:
-//   ```
-//   use <BOSL2/std.scad>
-//   ```
+// Includes:
+//   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
 

@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: threading.scad
 //   Triangular and Trapezoidal-Threaded Screw Rods and Nuts.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/threading.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 

@@ -1,13 +1,11 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: skin.scad
 //   Functions to skin arbitrary 2D profiles/paths in 3-space.
-//   To use, add the following line to the beginning of your file:
-//   ```
-//   include <BOSL2/std.scad>
-//   include <BOSL2/skin.scad>
-//   ```
 //   Inspired by list-comprehension-demos skin():
 //   - https://github.com/openscad/list-comprehension-demos/blob/master/skin.scad
+// Includes:
+//   include <BOSL2/std.scad>
+//   include <BOSL2/skin.scad>
 //////////////////////////////////////////////////////////////////////
 
 

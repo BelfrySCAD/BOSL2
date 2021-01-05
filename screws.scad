@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: screws.scad
 //   Functions and modules for creating metric and UTS standard screws and nuts.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/screws.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 include <structs.scad>

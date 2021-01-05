@@ -1,10 +1,8 @@
 //////////////////////////////////////////////////////////////////////
-// LibFile: transforms.scad
+// LibFile: mutators.scad
 //   Functions and modules to mutate children in various ways.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 
@@ -27,7 +25,7 @@
 //   }
 //   translate([10,8,4]) cube(5);
 //   translate([3,0,12]) cube(2);
-module bounding_box(excess=0, planar=true) {
+module bounding_box(excess=0, planar=false) {
     xs = excess>.1? excess : 1;
     // a 3D approx. of the children projection on X axis
     module _xProjection()
@@ -607,9 +605,11 @@ module round2d(r, or, ir)
 //   shell2d([-10,10]) {square([40,100], center=true); square([100,40], center=true);}
 //   shell2d(10,or=10) {square([40,100], center=true); square([100,40], center=true);}
 //   shell2d(10,ir=10) {square([40,100], center=true); square([100,40], center=true);}
-//   shell2d(10,round=10) {square([40,100], center=true); square([100,40], center=true);}
-//   shell2d(10,fill=10) {square([40,100], center=true); square([100,40], center=true);}
-//   shell2d(8,or=16,ir=8,round=16,fill=8) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(10,or=[10,0]) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(10,or=[0,10]) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(10,ir=[10,0]) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(10,ir=[0,10]) {square([40,100], center=true); square([100,40], center=true);}
+//   shell2d(8,or=[16,8],ir=[16,8]) {square([40,100], center=true); square([100,40], center=true);}
 module shell2d(thickness, or=0, ir=0)
 {
     thickness = is_num(thickness)? (

@@ -1,10 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: coords.scad
 //   Coordinate transformations and coordinate system conversions.
-//   To use, add the following lines to the beginning of your file:
-//   ```
-//   use <BOSL2/std.scad>
-//   ```
+// Includes:
+//   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
 

@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: partitions.scad
 //   Modules to help partition large objects into smaller parts that can be reassembled. 
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/partitions.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 

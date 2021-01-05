@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: bottlecaps.scad
 //   Bottle caps and necks for PCO18XX standard plastic beverage bottles.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/bottlecaps.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 
