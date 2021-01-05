@@ -3,6 +3,7 @@
 //   Shapes and masks for knurling cylinders.
 // Includes:
 //   include <BOSL2/std.scad>
+//   include <BOSL2/knurling.scad>
 //////////////////////////////////////////////////////////////////////
 
 
