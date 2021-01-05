@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////
-// LibFile: transforms.scad
+// LibFile: mutators.scad
 //   Functions and modules to mutate children in various ways.
 // Includes:
 //   include <BOSL2/std.scad>
