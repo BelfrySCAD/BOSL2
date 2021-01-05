@@ -120,7 +120,6 @@ def run_openscad_script(libfile, infile, imgfile, imgsize=(320,240), eye=None, s
 class ImageProcessing(object):
     def __init__(self):
         self.examples = []
-        self.commoncode = []
         self.imgroot = ""
         self.keep_scripts = False
         self.force = False
@@ -131,9 +130,6 @@ class ImageProcessing(object):
 
     def add_image(self, libfile, imgfile, code, extype):
         self.examples.append((libfile, imgfile, code, extype))
-
-    def set_commoncode(self, code):
-        self.commoncode = code
 
     def process_examples(self, imgroot, force=False, test_only=False):
         self.imgroot = imgroot
@@ -172,8 +168,6 @@ class ImageProcessing(object):
             return
 
         script = ""
-        for line in self.commoncode:
-            script += line+"\n"
         for line in code:
             script += line+"\n"
 
@@ -547,7 +541,17 @@ class LeafNode(object):
                 ("fig%d" % fignum),
                 "gif" if "Spin" in extype else "png"
             )
-            imgprc.add_image(fileroot+".scad", imgfile, excode, extype)
+            icode = []
+            for line in libnode.includes:
+                icode.append(line)
+            for line in libnode.commoncode:
+                icode.append(line)
+            for line in excode:
+                if line.strip().startswith("--"):
+                    icode.append(line.strip()[2:])
+                else:
+                    icode.append(line)
+            imgprc.add_image(fileroot+".scad", imgfile, icode, extype)
             out.append(extitle)
             out.append("")
             out.append(
@@ -768,7 +772,17 @@ class Section(object):
                     )
                 )
                 out.append("")
-                imgprc.add_image(fileroot+".scad", imgfile, figcode, figtype)
+                icode = []
+                for line in libnode.includes:
+                    icode.append(line)
+                for line in libnode.commoncode:
+                    icode.append(line)
+                for line in figcode:
+                    if line.strip().startswith("--"):
+                        icode.append(line.strip()[2:])
+                    else:
+                        icode.append(line)
+                imgprc.add_image(fileroot+".scad", imgfile, icode, figtype)
         in_block = False
         for node in self.leaf_nodes:
             out += node.gen_md(fileroot, imgroot, libnode, self)
@@ -849,7 +863,6 @@ class LibFile(object):
         return lines
 
     def gen_md(self, fileroot, imgroot):
-        imgprc.set_commoncode(self.includes + self.commoncode)
         out = []
         if self.name:
             out.append("# Library File " + mkdn_esc(self.name))
