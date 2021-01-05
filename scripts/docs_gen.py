@@ -576,7 +576,7 @@ class LeafNode(object):
                 out.append("")
         if self.arguments:
             out.append("**Arguments:**")
-            out.append("By&nbsp;Position | What it does")
+            out.append('<abbr title="These args can be used by position or by name.">By&nbsp;Position</abbr> | What it does')
             out.append("---------------- | ------------------------------")
             for argname, argdesc in self.arguments:
                 argname = argname.replace(" / ", "` / `")
@@ -588,7 +588,7 @@ class LeafNode(object):
                 )
             out.append("")
         if self.named_arguments:
-            out.append("By&nbsp;Name   | What it does")
+            out.append('<abbr title="These args must be used by name, ie: name=value">By&nbsp;Name</abbr>   | What it does')
             out.append("-------------- | ------------------------------")
             for argname, argdesc in self.named_arguments:
                 argname = argname.replace(" / ", "` / `")
