@@ -23,8 +23,8 @@ jobs:
     - name: Get OpenSCAD Appimage
       run: |
         cd $GITHUB_WORKSPACE
-        wget https://files.openscad.org/OpenSCAD-2019.05-x86_64.AppImage
-        sudo mv OpenSCAD-2019.05-x86_64.AppImage /usr/local/bin/openscad
+        wget https://files.openscad.org/snapshots/OpenSCAD-2021.01.03.ai6611-a980a3a-x86_64.AppImage
+        sudo mv OpenSCAD-2021.01.03.*-x86_64.AppImage /usr/local/bin/openscad
         sudo chmod +x /usr/local/bin/openscad
 
     - name: Run Regression Tests
@@ -63,8 +63,8 @@ jobs:
     - name: Install OpenSCAD
       run: |
         cd $GITHUB_WORKSPACE
-        wget https://files.openscad.org/OpenSCAD-2019.05-x86_64.AppImage
-        sudo mv OpenSCAD-2019.05-x86_64.AppImage /usr/local/bin/openscad
+        wget https://files.openscad.org/snapshots/OpenSCAD-2021.01.03.ai6611-a980a3a-x86_64.AppImage
+        sudo mv OpenSCAD-2021.01.03.*-x86_64.AppImage /usr/local/bin/openscad
         sudo chmod +x /usr/local/bin/openscad
 
     - name: Generate Index
