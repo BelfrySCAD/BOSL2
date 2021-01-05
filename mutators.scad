@@ -25,7 +25,7 @@
 //   }
 //   translate([10,8,4]) cube(5);
 //   translate([3,0,12]) cube(2);
-module bounding_box(excess=0, planar=true) {
+module bounding_box(excess=0, planar=false) {
     xs = excess>.1? excess : 1;
     // a 3D approx. of the children projection on X axis
     module _xProjection()
