@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: nema_steppers.scad
 //   Masks and models for NEMA stepper motors.
-//   To use, add these lines to the top of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/nema_steppers.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 

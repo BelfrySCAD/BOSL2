@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: metric_screws.scad
 //   Screws, Bolts, and Nuts.
-//   To use, include the following lines at the top of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/metric_screws.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 

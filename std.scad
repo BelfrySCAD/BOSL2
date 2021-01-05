@@ -1,13 +1,11 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: std.scad
 //   File that includes the standard BOSL include files.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
-assert(version_num()>=20190301, "BOSL2 requires OpenSCAD version 2019.03.01 or later.");
+assert(version_num()>=20190500, "BOSL2 requires OpenSCAD version 2019.05 or later.");
 
 include <version.scad>
 

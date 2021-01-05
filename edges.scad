@@ -1,10 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: edges.scad
 //   Routines to work with edge sets and edge set descriptors.
-//   To use this, add the following line to the top of your file.
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 

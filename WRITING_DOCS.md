@@ -24,6 +24,29 @@ LibFile blocks can be followed by multiple lines that can be added as markdown t
 //   The end of the block is denoted by a line without a comment.
 ```
 
+## Includes:
+
+Include blocks contain code that all examples in the file should show and use.  This is generally used for `include <file>` and `use <file>` commands.  Indentation is important.  Less than three spaces indent denotes the end of the block
+
+```
+// Includes:
+//   include <BOSL2/std.scad>
+//   use <foo.scad>
+```
+
+## CommonCode:
+
+CommonCode blocks can be used to denote code that can be shared between all of the Figure and Example blocks in the file, without being shown itself.  Indentation is important.  Less than three spaces indent denotes the end of the block
+
+```
+// CommonCode:
+//   module text3d(text, h=0.01, size=3) {
+//       linear_extrude(height=h, convexity=10) {
+//           text(text=text, size=size, valign="center", halign="center");
+//       }
+//   }
+```
+
 ## Section:
 
 Section blocks can be followed by multiple lines that can be added as markdown text after the header. Indentation is important, as it denotes the end of block.
@@ -48,19 +71,6 @@ Sections can also include Figures; images generated from code that is not shown 
 //   cube([100,10,30], center=true);
 ```
 
-## CommonCode:
-
-CommonCode blocks can be used to denote code that can be shared between all of the Figure and Example blocks in the file, without being shown itself.  Indentation is important.  Less than three spaces indent denotes the end of the block
-
-```
-// CommonCode:
-//   module text3d(text, h=0.01, size=3) {
-//       linear_extrude(height=h, convexity=10) {
-//           text(text=text, size=size, valign="center", halign="center");
-//       }
-//   }
-```
-
 ## Module:/Function:/Function&Module:/Constant:
 
 Module, Function, and Constant docs blocks all have a similar specific format.  Most sub-blocks are optional, except the Module/Function/Constant line, and the Description block.
@@ -71,9 +81,12 @@ Valid sub-blocks are:
 - `Usage: Optional Usage Title` - Optional.  Multiple allowed.  Followed by an indented block of usage patterns.  Optional arguments should be in braces like `[opt]`.  Alternate args should be separated by a vertical bar like `r|d`. 
 - `Description:` - Can be single-line or a multi-line block of the description.
 - `Figure: Optional Figure Title` - Optional.  Multiple allowed.  Followed by a multi-line code block used to create a figure image.  The code will not be shown.  All figures will follow the Description block.
-- `Arguments:` - Denotes start of an indented block of argument descriptions.  Each line has the argument name, a space, an equals, another space, then the description for the argument all on one line. Like `arg = The argument description`.  If you really need to explain an argument in longer form, explain it in the Description.
+- `Returns:` - Can be single-line or a multi-line block, describing the return value of this function.
+- `Custom: Foo` - Creates a text block labeled `Foo:` followed by the given multi-line block of text.
+- `Arguments:` - Denotes start of an indented block of argument descriptions.  Each line has the argument name, a space, an equals, another space, then the description for the argument all on one line. Like `arg = The argument description`.  If you really need to explain an argument in longer form, explain it in the Description.  If an argument line is just `---`, then the arguments table is split into two tables, with the positional arguments before the `---` and arguments that should always be passed by name after.
 - `Side Effects:` - Denotes the start of a block describing the side effects, such as `$special_var`s that are set.
 - `Extra Anchors:` - Denotes the start of an indented block of available non-standard named anchors for a part.
+- `Topics: Topic1, Topic2, Topic2, etc.` - Lets you list topics related to this fuction or module.
 - `Example:` - Denotes the beginning of a multi-line example code block.
 - `Examples:` - Denotes the beginning of a block of examples, where each line will be shows as a separate example with a separate image if needed.
 
@@ -83,7 +96,8 @@ The full set of optional example tags are:
 
 - `2D`: Orient camera in a top-down view for showing 2D objects.
 - `3D`: Orient camera in an oblique view for showing 3D objects. Used to force an Example sub-block to generate an image in Function and Constant blocks.
-- `NORENDER`: Don't generate an image for this example.
+- `NORENDER`: Don't generate an image for this example, but show the example text.
+- `Hide`: Don't show example text or image.  This can be used to generate images to be manually displayed in markdown text blocks.
 - `Small`: Make the image small sized.  (The default)
 - `Med`: Make the image medium sized.
 - `Big`: Make the image big sized.
@@ -105,11 +119,10 @@ Indentation is important, as it denotes the end of sub-block.
 //   foo(foo, flee, flie, [qux])
 // Description: Short description.
 // Description:
-//   A longer, multi-line description.
-//   All description blocks are added together.
-//   You _can_ use *markdown* notation as well.
-//   You can have paragraph breaks by having a
-//   line with just a period, like this:
+//   A longer, multi-line description.  If multiple description blocks exist,
+//   they are all are added together.  You can use most *markdown* notation
+//   as well.  You can have paragraph breaks by having a line with just a
+//   period, like this:
 //   .
 //   You can end multi-line blocks by un-indenting the next
 //   line, or by using a comment with no spaces like this:
@@ -121,22 +134,29 @@ Indentation is important, as it denotes the end of sub-block.
 //   cube([10,100,50], center=true);
 //   cube([100,10,30], center=true);
 //
+// Returns: A description of the return value.
+//
+// Custom: Custom Block Title
+//   Multi-line text to be shown in the custom block.
+//
 // Arguments:
-//   foo = This is the description of the foo argument.  All on one line.
-//   bar = This is the description of the bar argument.  All on one line.
-//   baz = This is the description of the baz argument.  All on one line.
-//   qux = This is the description of the qux argument.  All on one line.
-//   flee = This is the description of the flee argument.  All on one line.
-//   flie = This is the description of the flie argument.  All on one line.
+//   foo = This is the description of the first positional argument, foo.  All on one line.
+//   bar = This is the description of the second positional argument, bar.  All on one line.
+//   baz = This is the description of the third positional argument, baz.  All on one line.
+//   ---
+//   qux = This is the description of the named argument qux.  All on one line.
+//   flee = This is the description of the named argument flee.  All on one line.
 // Side Effects:
 //   `$floo` gets set to the floo value.
 // Extra Anchors:
 //   "blawb" = An anchor at the blawb point of the part, oriented upwards.
 //   "fewble" = An anchor at the fewble connector of the part, oriented back yowards Y+.
+// Topics: Fubar, Barbie, Bazil
 // Examples: Each line below gets its own example block and image.
 //   foo(foo="a", bar="b");
 //   foo(foo="b", baz="c");
 // Example: Multi-line example.
+//   --$vpr = [55,0,120]; // Lines starting with `--` aren't shown in docs example text.
 //   lst = [
 //       "multi-line examples",
 //       "are shown in one block",

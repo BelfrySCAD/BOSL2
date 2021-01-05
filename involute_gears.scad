@@ -16,12 +16,9 @@
 //   implemented it from scratch from the descriptions and equations on Wikipedia
 //   and the web, using Mathematica for calculations and testing, and I now
 //   release it into the public domain.
-//   .
-//   To use, add the following line to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/involute_gears.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 

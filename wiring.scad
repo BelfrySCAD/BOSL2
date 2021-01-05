@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: wiring.scad
 //   Rendering for wiring bundles
-//   To use, include the following line at the top of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/wiring.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 

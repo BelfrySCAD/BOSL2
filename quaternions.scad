@@ -1,10 +1,8 @@
 ///////////////////////////////////////////
 // LibFile: quaternions.scad
 //   Support for Quaternions.
-//   To use, add the following line to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
-//   ```
 ///////////////////////////////////////////
 
 
