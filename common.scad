@@ -1,10 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: common.scad
 //   Common functions used in argument processing.
-//   To use, include this line at the top of your file:
-//   ```
-//   use <BOSL2/std.scad>
-//   ```
+// Includes:
+//   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
 

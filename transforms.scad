@@ -1,10 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: transforms.scad
 //   Functions and modules for translation, rotation, reflection and skewing.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 

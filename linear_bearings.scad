@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: linear_bearings.scad
 //   Linear Bearing clips/holders.
-//   To use, add these lines to the top of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/linear_bearings.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 

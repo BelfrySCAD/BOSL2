@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: queues.scad
 //   Queue data structure implementation.
-//   To use, add the following lines to the beginning of your file:
-//   ```
-//   use <BOSL2/std.scad>
-//   use <BOSL2/queues.scad>
-//   ```
+// Includes:
+//   include <BOSL2/std.scad>
+//   include <BOSL2/queues.scad>
 //////////////////////////////////////////////////////////////////////
 
 

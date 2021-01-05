@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: structs.scad
 //   Struct/Dictionary manipulation functions.
-//   To use, add the following lines to the beginning of your file:
-//   ```
-//   use <BOSL2/std.scad>
-//   use <BOSL2/structs.scad>
-//   ```
+// Includes:
+//   include <BOSL2/std.scad>
+//   include <BOSL2/structs.scad>
 //////////////////////////////////////////////////////////////////////
 
 

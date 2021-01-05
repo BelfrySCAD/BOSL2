@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////////
-// Libfile: cubetruss.scad
+// LibFile: cubetruss.scad
 //   Parts for making modular open-frame cross-braced trusses and connectors.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/cubetruss.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////////
 
 $cubetruss_size = 30;
@@ -16,7 +14,7 @@ $cubetruss_clip_thickness = 1.6;
 
 // Function: cubetruss_dist()
 // Usage:
-//   cubetruss_dist(cubes, gaps, [size], [strut]);
+//   cubetruss_dist(cubes, gaps, <size>, <strut>);
 // Description:
 //   Function to calculate the length of a cubetruss truss.
 // Arguments:
@@ -24,7 +22,8 @@ $cubetruss_clip_thickness = 1.6;
 //   gaps = The number of extra strut widths to add in, corresponding to each time a truss butts up against another.
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
-function cubetruss_dist(cubes=0, gaps=0, size=undef, strut=undef) =
+// Topics: Trusses
+function cubetruss_dist(cubes=0, gaps=0, size, strut) =
     let(
         size = is_undef(size)? $cubetruss_size : size,
         strut = is_undef(strut)? $cubetruss_strut_size : strut
@@ -33,22 +32,24 @@ function cubetruss_dist(cubes=0, gaps=0, size=undef, strut=undef) =
 
 // Module: cubetruss_segment()
 // Usage:
-//   cubetruss_segment([size], [strut], [bracing]);
+//   cubetruss_segment(<size>, <strut>, <bracing>);
 // Description:
 //   Creates a single cubetruss cube segment.
 // Arguments:
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 //   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+// Topics: Attachable, Trusses
 // Examples:
 //   cubetruss_segment(bracing=false);
 //   cubetruss_segment(bracing=true);
 //   cubetruss_segment(strut=4);
 //   cubetruss_segment(size=40);
-module cubetruss_segment(size=undef, strut=undef, bracing=undef, anchor=CENTER, spin=0, orient=UP) {
+module cubetruss_segment(size, strut, bracing, anchor=CENTER, spin=0, orient=UP) {
     size = is_undef(size)? $cubetruss_size : size;
     strut = is_undef(strut)? $cubetruss_strut_size : strut;
     bracing = is_undef(bracing)? $cubetruss_bracing : bracing;
@@ -100,7 +101,7 @@ module cubetruss_segment(size=undef, strut=undef, bracing=undef, anchor=CENTER, 
 
 // Module: cubetruss_clip()
 // Usage:
-//   cubetruss_clip(extents, [size], [strut], [clipthick]);
+//   cubetruss_clip(extents, <size>, <strut>, <clipthick>);
 // Description:
 //   Creates a pair of clips to add onto the end of a truss.
 // Arguments:
@@ -108,14 +109,16 @@ module cubetruss_segment(size=undef, strut=undef, bracing=undef, anchor=CENTER, 
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 //   clipthick = The thickness of the clip.  Default: `$cubetruss_clip_thickness` (usually 1.6)
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+// Topics: Attachable, Trusses
 // Examples:
 //   cubetruss_clip(extents=2);
 //   cubetruss_clip(extents=1);
 //   cubetruss_clip(clipthick=2.5);
-module cubetruss_clip(extents=1, size=undef, strut=undef, clipthick=undef, anchor=CENTER, spin=0, orient=UP) {
+module cubetruss_clip(extents=1, size, strut, clipthick, anchor=CENTER, spin=0, orient=UP) {
     size = is_undef(size)? $cubetruss_size : size;
     strut = is_undef(strut)? $cubetruss_strut_size : strut;
     clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
@@ -162,7 +165,7 @@ module cubetruss_clip(extents=1, size=undef, strut=undef, clipthick=undef, ancho
 
 // Module: cubetruss_foot()
 // Usage:
-//   cubetruss_foot(w, [size], [strut], [clipthick]);
+//   cubetruss_foot(w, <size>, <strut>, <clipthick>);
 // Description:
 //   Creates a foot that can be clipped onto the bottom of a truss for support.
 // Arguments:
@@ -170,13 +173,15 @@ module cubetruss_clip(extents=1, size=undef, strut=undef, clipthick=undef, ancho
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+// Topics: Attachable, Trusses
 // Examples:
 //   cubetruss_foot(w=1);
 //   cubetruss_foot(w=3);
-module cubetruss_foot(w=1, size=undef, strut=undef, clipthick=undef, anchor=CENTER, spin=0, orient=UP) {
+module cubetruss_foot(w=1, size, strut, clipthick, anchor=CENTER, spin=0, orient=UP) {
     size = is_undef(size)? $cubetruss_size : size;
     strut = is_undef(strut)? $cubetruss_strut_size : strut;
     clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
@@ -236,7 +241,7 @@ module cubetruss_foot(w=1, size=undef, strut=undef, clipthick=undef, anchor=CENT
 
 // Module: cubetruss_joiner()
 // Usage:
-//   cubetruss_joiner([w], [vert], [size], [strut], [clipthick]);
+//   cubetruss_joiner(<w>, <vert>, <size>, <strut>, <clipthick>);
 // Description:
 //   Creates a part to join two cubetruss trusses end-to-end.
 // Arguments:
@@ -245,14 +250,16 @@ module cubetruss_foot(w=1, size=undef, strut=undef, clipthick=undef, anchor=CENT
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+// Topics: Attachable, Trusses
 // Examples:
 //   cubetruss_joiner(w=1, vert=false);
 //   cubetruss_joiner(w=1, vert=true);
 //   cubetruss_joiner(w=2, vert=true, anchor=BOT);
-module cubetruss_joiner(w=1, vert=true, size=undef, strut=undef, clipthick=undef, anchor=CENTER, spin=0, orient=UP) {
+module cubetruss_joiner(w=1, vert=true, size, strut, clipthick, anchor=CENTER, spin=0, orient=UP) {
     size = is_undef(size)? $cubetruss_size : size;
     strut = is_undef(strut)? $cubetruss_strut_size : strut;
     clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
@@ -301,19 +308,23 @@ module cubetruss_joiner(w=1, vert=true, size=undef, strut=undef, clipthick=undef
 
 // Module: cubetruss_uclip()
 // Usage:
-//   cubetruss_uclip(dual, [size], [strut], [clipthick]);
+//   cubetruss_uclip(dual, <size>, <strut>, <clipthick>);
 // Description:
+//   Creates a small clip that can snap around one or two adjacent struts.
 // Arguments:
+//   dual = If true, create a clip to clip around two adjacent struts.  If false, just fit around one strut.  Default: true
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+// Topics: Attachable, Trusses
 // Examples:
 //   cubetruss_uclip(dual=false);
 //   cubetruss_uclip(dual=true);
-module cubetruss_uclip(dual=true, size=undef, strut=undef, clipthick=undef, anchor=CENTER, spin=0, orient=UP) {
+module cubetruss_uclip(dual=true, size, strut, clipthick, anchor=CENTER, spin=0, orient=UP) {
     size = is_undef(size)? $cubetruss_size : size;
     strut = is_undef(strut)? $cubetruss_strut_size : strut;
     clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
@@ -342,7 +353,7 @@ module cubetruss_uclip(dual=true, size=undef, strut=undef, clipthick=undef, anch
 
 // Module: cubetruss()
 // Usage:
-//   cubetruss(extents, clips, bracing, size, strut, clipthick);
+//   cubetruss(extents, <clips>, <bracing>, <size>, <strut>, <clipthick>);
 // Description:
 //   Creates a cubetruss truss, assembled out of one or more cubical segments.
 // Arguments:
@@ -352,9 +363,11 @@ module cubetruss_uclip(dual=true, size=undef, strut=undef, clipthick=undef, anch
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 //   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+// Topics: Attachable, Trusses
 // Examples(FlatSpin):
 //   cubetruss(extents=3);
 //   cubetruss(extents=3, clips=FRONT);
@@ -362,7 +375,7 @@ module cubetruss_uclip(dual=true, size=undef, strut=undef, clipthick=undef, anch
 //   cubetruss(extents=[2,3]);
 //   cubetruss(extents=[1,4,2]);
 //   cubetruss(extents=[1,4,2], bracing=false);
-module cubetruss(extents=6, clips=[], bracing=undef, size=undef, strut=undef, clipthick=undef, anchor=CENTER, spin=0, orient=UP) {
+module cubetruss(extents=6, clips=[], bracing, size, strut, clipthick, anchor=CENTER, spin=0, orient=UP) {
     clips = is_vector(clips)? [clips] : clips;
     size = is_undef(size)? $cubetruss_size : size;
     strut = is_undef(strut)? $cubetruss_strut_size : strut;
@@ -410,7 +423,7 @@ module cubetruss(extents=6, clips=[], bracing=undef, size=undef, strut=undef, cl
 
 // Module: cubetruss_corner()
 // Usage:
-//   cubetruss_corner(h, extents, [bracing], [size], [strut], [clipthick);
+//   cubetruss_corner(h, extents, <bracing>, <size>, <strut>, <clipthick>);
 // Description:
 //   Creates a corner cubetruss with extents jutting out in one or more directions.
 // Arguments:
@@ -420,16 +433,18 @@ module cubetruss(extents=6, clips=[], bracing=undef, size=undef, strut=undef, cl
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 //   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
 //   clipthick = The thickness of the clips.  Default: `$cubetruss_clip_thickness` (usually 1.6)
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+// Topics: Attachable, Trusses
 // Examples(FlatSpin):
 //   cubetruss_corner(extents=2);
 //   cubetruss_corner(extents=2, h=2);
 //   cubetruss_corner(extents=[3,3,0,0,2]);
 //   cubetruss_corner(extents=[3,0,3,0,2]);
 //   cubetruss_corner(extents=[3,3,3,3,2]);
-module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing=undef, size=undef, strut=undef, clipthick=undef, anchor=CENTER, spin=0, orient=UP) {
+module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing, size, strut, clipthick, anchor=CENTER, spin=0, orient=UP) {
     size = is_undef(size)? $cubetruss_size : size;
     strut = is_undef(strut)? $cubetruss_strut_size : strut;
     bracing = is_undef(bracing)? $cubetruss_bracing : bracing;

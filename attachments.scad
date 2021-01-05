@@ -1,10 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: attachments.scad
 //   This is the file that handles attachments and orientation of children.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 

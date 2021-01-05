@@ -2,11 +2,9 @@
 // LibFile: turtle3d.scad
 //   Three dimensional turtle graphics to generate 3d paths or sequences
 //   of 3d transformations. 
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/turtle3d.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 include<structs.scad>
 

@@ -1,13 +1,11 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: hull.scad
 //   Functions to create 2D and 3D convex hulls.
-//   To use, add the following line to the beginning of your file:
-//   ```
-//   include <BOSL2/std.scad>
-//   include <BOSL2/hull.scad>
-//   ```
 //   Derived from Oskar Linde's Hull:
 //   - https://github.com/openscad/scad-utils
+// Includes:
+//   include <BOSL2/std.scad>
+//   include <BOSL2/hull.scad>
 //////////////////////////////////////////////////////////////////////
 
 

@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: beziers.scad
 //   Bezier functions and modules.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/beziers.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 
