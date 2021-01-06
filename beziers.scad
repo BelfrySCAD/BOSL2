@@ -238,19 +238,20 @@ function bezier_curvature(curve, u) =
     ];
 
 
-
 // Function: bezier_curve()
 // Usage:
-//   bezier_curve(curve, n);
+//   bezier_curve(curve, n, [endpoint]);
 // Description:
-//   Takes a list of bezier curve control points, and a count of path points to generate.  The points
-//   returned will be along the curve, starting at the first control point, then about every `1/n`th
-//   of the way along the curve, ending about `1/n`th of the way *before* the final control point.
-//   The distance between the points will *not* be equidistant.  The degree of the curve, N, is one
+//   Takes a list of bezier curve control points and generates n points along the bezier path.  
+//   Points start at the first control point and are sampled every `1/n`th
+//   of the way along the bezier parameter, ending *before* the final control point by default.
+//   The distance between the points will *not* be equidistant.  If you wish to add the
+//   endpoint you can set `endpoint` to true.  The degree of the bezier curve is one
 //   less than the number of points in `curve`.
 // Arguments:
 //   curve = The list of endpoints and control points for this bezier segment.
 //   n = The number of points to generate along the bezier curve.
+//   endpoint = if true then add the endpoint (an extra point, giving n+1 points output).  Default: False
 // Example(2D): Quadratic (Degree 2) Bezier.
 //   bez = [[0,0], [30,30], [80,0]];
 //   move_copies(bezier_curve(bez, 8)) sphere(r=1.5, $fn=12);
@@ -263,8 +264,9 @@ function bezier_curvature(curve, u) =
 //   bez = [[0,0], [5,15], [40,20], [60,-15], [80,0]];
 //   move_copies(bezier_curve(bez, 8)) sphere(r=1.5, $fn=12);
 //   trace_bezier(bez, N=len(bez)-1);
-function bezier_curve(curve,n) = bezier_points(curve, [0:1/n:(n-0.5)/n]);
-
+function bezier_curve(curve,n,endpoint) = [each bezier_points(curve, [0:1/n:(n-0.5)/n]),
+                                           if (endpoint) curve[len(curve)-1]
+                                          ];
 
 // Function: bezier_segment_closest_point()
 // Usage:

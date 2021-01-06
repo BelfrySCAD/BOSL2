@@ -308,7 +308,7 @@ function _bezcorner(points, parm) =
                         ] : _smooth_bez_fill(points,parm),
                 N = max(3,$fn>0 ?$fn : ceil(bezier_segment_length(P)/$fs))
         )
-        bezier_curve(P,N);
+        bezier_curve(P,N,endpoint=true);
 
 function _chamfcorner(points, parm) =
         let(
@@ -329,7 +329,7 @@ function _circlecorner(points, parm) =
                         start = points[1]+prev*d,
                         end = points[1]+next*d
         )     // 90-angle is half the angle of the circular arc
-        arc(max(3,(90-angle)/180*segs(r)), cp=center, points=[start,end]);
+        arc(max(3,ceil((90-angle)/180*segs(r))), cp=center, points=[start,end]);
 
 
 // Used by offset_sweep and convex_offset_extrude:

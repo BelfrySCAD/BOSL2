@@ -121,6 +121,7 @@ function _unique_groups(m) = [
 //
 // Arguments:
 //   name = Name of polyhedron to create.
+//   ---
 //   index = Index to select from polyhedron list.  Default: 0.
 //   type = Type of polyhedron: "platonic", "archimedean", "catalan".
 //   faces = Number of faces.
@@ -564,6 +565,7 @@ _stellated_polyhedra_ = [
 //
 // Arguments:
 //   name = Name of polyhedron to create.
+//   ---
 //   index = Index to select from polyhedron list.  Default: 0.
 //   type = Type of polyhedron: "platonic", "archimedean", "catalan".
 //   faces = Number of faces.
