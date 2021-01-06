@@ -419,7 +419,7 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 // Module: dovetail()
 //
 // Usage:
-//   dovetail(l|length, h|height, w|width, slope|angle, taper|back_width, [chamfer], [r|radius], [round], [$slop])
+//   dovetail(gender, l|length, h|height, w|width, [slope|angle], [taper|back_width], [chamfer], [r|radius], [round], [$slop])
 //
 // Description:
 //   Produces a possibly tapered dovetail joint shape to attach to or subtract from two parts you wish to join together.
@@ -427,11 +427,13 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 //   it is fully closed, and then wedges tightly.  You can chamfer or round the corners of the dovetail shape for better
 //   printing and assembly, or choose a fully rounded joint that looks more like a puzzle piece.  The dovetail appears 
 //   parallel to the Y axis and projecting upwards, so in its default orientation it will slide together with a translation
-//   in the positive Y direction.  The default anchor for dovetails is BOTTOM; the default orientation depends on the gender,
-//   with male dovetails oriented UP and female ones DOWN.  
+//   in the positive Y direction.  The gender determines whether the shape is meant to be added to your model or
+//   differenced, and it also changes the anchor and orientation.  The default anchor for dovetails is BOTTOM;
+//   the default orientation depends on the gender, with male dovetails oriented UP and female ones DOWN.  
 //
 // Arguments:
-//   gender = A string, "male" or "female", to specify the gender of the dovetail.
+//   gender = A string, "male" or "female", to specify the gender of the dovetail.  
+//   ---
 //   l / length = Length of the dovetail (amount the joint slides during assembly)
 //   h / height = Height of the dovetail
 //   w / width = Width (at the wider, top end) of the dovetail before tapering
@@ -487,9 +489,9 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 //     diff("remove")
 //       cuboid([50,30,10])
 //         attach(TOP) dovetail("female", length=50, width=18, height=4, back_width=15, spin=90,$tags="remove");
-// Example: A series of dovtails
+// Example: A series of dovtails forming a tail board, with the inside of the joint up.  A standard wood joint would have a zero taper. 
 //   cuboid([50,30,10])
-//     attach(BACK) xcopies(10,5) dovetail("male", length=10, width=7, height=4);
+//     attach(BACK) xcopies(10,5) dovetail("male", length=10, width=7, taper=4, height=4);
 // Example: Mating pin board for a right angle joint.  Note that the anchor method and use of `spin` ensures that the joint works even with a taper.
 //   diff("remove")
 //     cuboid([50,30,10])
@@ -765,8 +767,7 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
   {  
   down(lPin/2)
     intersection() {
-      if (fixed) 
-        cube([3 * (radius + snap), radius * sqrt(2), 3 * lPin + 3 * radius], center = true);
+      cube([3 * (radius + snap), fixed ? radius * sqrt(2) : 3*(radius+snap), 3 * lPin + 3 * radius], center = true);        
       union() {
         _pin_shaft(radius,lStraight,snap,1,1,nub_depth,pointed);
         if (fins) 
