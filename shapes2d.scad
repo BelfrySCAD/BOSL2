@@ -381,7 +381,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, l
     assert(is_bool(endpoint))
     !endpoint ? assert(!wedge, "endpoint cannot be false if wedge is true")
                slice(arc(N,r,angle,d,cp,points,width,thickness,start,wedge,long,cw,ccw,true),0,-2) :
-    assert(is_integer(N), "Number of points must be an integer")
+    assert(is_undef(N) || is_integer(N), "Number of points must be an integer")
     // First try for 2D arc specified by width and thickness
     is_def(width) && is_def(thickness)? (
                 assert(!any_defined([r,cp,points]) && !any([cw,ccw,long]),"Conflicting or invalid parameters to arc")
