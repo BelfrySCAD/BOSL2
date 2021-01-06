@@ -128,10 +128,8 @@ module snap_socket(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, 
 //   apply_folding_hinges_and_snaps(
 //       thick=3, foldangle=54.74,
 //       hinges=[
-//           for (a=[0,120,240]) each [
-//               [100, rot(a,p=[ size/4, 0        ]), a+90],
-//               [100, rot(a,p=[-size/2,-size/2.33]), a+90],
-//               [100, rot(a,p=[-size/2, size/2.33]), a+90]
+//           for (a=[0,120,240], b=[-size/2,size/4]) each [
+//               [200, polar_to_xy(b,a), a+90]
 //           ]
 //       ],
 //       snaps=[
@@ -147,10 +145,11 @@ module snap_socket(thick, snaplen=5, snapdiam=5, layerheight=0.2, foldangle=90, 
 //           ]
 //       ]
 //   ) {
+//       $fn=3;
 //       difference() {
-//           cylinder(r=size-1, h=3, spin=180, $fn=3);
-//           down(0.01) cylinder(r=size/4, h=3.1, spin=0, $fn=3);
-//           down(0.01) for (a=[0:120:359.9]) zrot(a) right(size/2) cylinder(r=size/4, h=3.1, spin=180, $fn=3);
+//           cylinder(r=size-1, h=3);
+//           down(0.01) cylinder(r=size/4.5, h=3.1, spin=180);
+//           down(0.01) for (a=[0:120:359.9]) zrot(a) right(size/2) cylinder(r=size/4.5, h=3.1);
 //       }
 //   }
 module apply_folding_hinges_and_snaps(thick, foldangle=90, hinges=[], snaps=[], sockets=[], snaplen=5, snapdiam=5, hingegap=undef, layerheight=0.2)

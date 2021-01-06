@@ -1006,12 +1006,13 @@ function plane_transform(plane) =
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 //   points = List of points to project
 // Example(3D,FlatSpin):
+//   points = move([10,20,30], p=yrot(25, p=path3d(circle(d=100, $fn=36))));
 //   plane = plane_from_normal([1,0,1]);
 //   proj = projection_on_plane(plane,points);
 //   color("red") move_copies(points) sphere(d=2,$fn=12);
 //   color("blue") move_copies(proj) sphere(d=2,$fn=12);
-//   rot(from=UP,to=plane_normal(plane)) {
-//       left(10) {
+//   move(centroid(proj)) {
+//       rot(from=UP,to=plane_normal(plane)) {
 //           anchor_arrow(30);
 //           %cube([120,150,0.1],center=true);
 //       }
