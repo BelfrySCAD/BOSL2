@@ -647,7 +647,7 @@ function offset(
     maxstep=0.1, closed=false, check_valid=true,
     quality=1, return_faces=false, firstface_index=0,
     flip_faces=false
-) = echo(path=path)
+) = 
     is_region(path)? (
         assert(!return_faces, "return_faces not supported for regions.")
         let(
