@@ -89,7 +89,7 @@ $tags_hidden = [];
 
 // Function: anchorpt()
 // Usage:
-//   anchor(name, pos, <dir>, <rot>)
+//   a = anchor(name, pos, <dir>, <rot>);
 // Description:
 //   Creates a anchor data structure.
 // Arguments:
@@ -103,21 +103,21 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 // Function: attach_geom()
 //
 // Usage: Square/Trapezoid Geometry
-//   geom = attach_geom(anchor, spin, two_d, size, <size2>, <shift>, <cp>, <offset>, <anchors>);
+//   geom = attach_geom(two_d, size, <size2>, <shift>, <cp>, <offset>, <anchors>);
 // Usage: Circle/Oval Geometry
-//   geom = attach_geom(anchor, spin, two_d, r|d, <cp>, <offset>, <anchors>);
+//   geom = attach_geom(two_d, r|d, <cp>, <offset>, <anchors>);
 // Usage: 2D Path/Polygon Geometry
-//   geom = attach_geom(anchor, spin, two_d, path, <extent>, <cp>, <offset>, <anchors>);
+//   geom = attach_geom(two_d, path, <extent>, <cp>, <offset>, <anchors>);
 // Usage: Cubical/Prismoidal Geometry
-//   geom = attach_geom(anchor, spin, <orient>, size, <size2>, <shift>, <cp>, <offset>, <anchors>);
+//   geom = attach_geom(size, <size2>, <shift>, <cp>, <offset>, <anchors>);
 // Usage: Cylindrical Geometry
-//   geom = attach_geom(anchor, spin, <orient>, r|d, l, <cp>, <axis>, <offset>, <anchors>);
+//   geom = attach_geom(r|d, l, <cp>, <axis>, <offset>, <anchors>);
 // Usage: Conical Geometry
-//   geom = attach_geom(anchor, spin, <orient>, r1|d1, r2|d2, l, <cp>, <axis>, <offset>, <anchors>);
+//   geom = attach_geom(r1|d1, r2|d2, l, <cp>, <axis>, <offset>, <anchors>);
 // Usage: Spheroid/Ovoid Geometry
-//   geom = attach_geom(anchor, spin, <orient>, r|d, <cp>, <offset>, <anchors>);
+//   geom = attach_geom(r|d, <cp>, <offset>, <anchors>);
 // Usage: VNF Geometry
-//   geom = attach_geom(anchor, spin, <orient>, vnf, <extent>, <cp>, <offset>, <anchors>);
+//   geom = attach_geom(vnf, <extent>, <cp>, <offset>, <anchors>);
 //
 // Description:
 //   Given arguments that describe the geometry of an attachable object, returns the internal geometry description.
@@ -143,65 +143,61 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 //   axis = The vector pointing along the axis of a cylinder geometry.  Default: UP
 //
 // Example(NORENDER): Cubical Shape
-//   geom = attach_geom(anchor, spin, orient, size=size);
+//   geom = attach_geom(size=size);
 //
 // Example(NORENDER): Prismoidal Shape
 //   geom = attach_geom(
-//       anchor, spin, orient,
 //       size=point3d(botsize,h),
 //       size2=topsize, shift=shift
 //   );
 //
 // Example(NORENDER): Cylindrical Shape, Z-Axis Aligned
-//   geom = attach_geom(anchor, spin, orient, r=r, h=h);
+//   geom = attach_geom(r=r, h=h);
 //
 // Example(NORENDER): Cylindrical Shape, Y-Axis Aligned
-//   geom = attach_geom(anchor, spin, orient, r=r, h=h, axis=BACK);
+//   geom = attach_geom(r=r, h=h, axis=BACK);
 //
 // Example(NORENDER): Cylindrical Shape, X-Axis Aligned
-//   geom = attach_geom(anchor, spin, orient, r=r, h=h, axis=RIGHT);
+//   geom = attach_geom(r=r, h=h, axis=RIGHT);
 //
 // Example(NORENDER): Conical Shape, Z-Axis Aligned
-//   geom = attach_geom(anchor, spin, orient, r1=r1, r2=r2, h=h);
+//   geom = attach_geom(r1=r1, r2=r2, h=h);
 //
 // Example(NORENDER): Conical Shape, Y-Axis Aligned
-//   geom = attach_geom(anchor, spin, orient, r1=r1, r2=r2, h=h, axis=BACK);
+//   geom = attach_geom(r1=r1, r2=r2, h=h, axis=BACK);
 //
 // Example(NORENDER): Conical Shape, X-Axis Aligned
-//   geom = attach_geom(anchor, spin, orient, r1=r1, r2=r2, h=h, axis=RIGHT);
+//   geom = attach_geom(r1=r1, r2=r2, h=h, axis=RIGHT);
 //
 // Example(NORENDER): Spherical Shape
-//   geom = attach_geom(anchor, spin, orient, r=r);
+//   geom = attach_geom(r=r);
 //
 // Example(NORENDER): Ovoid Shape
-//   geom = attach_geom(anchor, spin, orient, r=[r_x, r_y, r_z]);
+//   geom = attach_geom(r=[r_x, r_y, r_z]);
 //
 // Example(NORENDER): Arbitrary VNF Shape, Anchored by Extents
-//   geom = attach_geom(anchor, spin, orient, vnf=vnf);
+//   geom = attach_geom(vnf=vnf);
 //
 // Example(NORENDER): Arbitrary VNF Shape, Anchored by Intersection
-//   geom = attach_geom(anchor, spin, orient, vnf=vnf, extent=false);
+//   geom = attach_geom(vnf=vnf, extent=false);
 //
 // Example(NORENDER): 2D Rectangular Shape
-//   geom = attach_geom(anchor, spin, orient, size=size);
+//   geom = attach_geom(two_d=true, size=size);
 //
 // Example(NORENDER): 2D Trapezoidal Shape
-//   geom = attach_geom(
-//       anchor, spin, orient,
-//       size=[x1,y], size2=x2, shift=shift
-//   );
+//   geom = attach_geom(two_d=true, size=[x1,y], size2=x2, shift=shift);
 //
 // Example(NORENDER): 2D Circular Shape
-//   geom = attach_geom(anchor, spin, orient, two_d=true, r=r);
+//   geom = attach_geom(two_d=true, r=r);
 //
 // Example(NORENDER): 2D Oval Shape
-//   geom = attach_geom(anchor, spin, orient, two_d=true, r=[r_x, r_y]);
+//   geom = attach_geom(two_d=true, r=[r_x, r_y]);
 //
 // Example(NORENDER): Arbitrary 2D Polygon Shape, Anchored by Extents
-//   geom = attach_geom(anchor, spin, orient, path=path);
+//   geom = attach_geom(two_d=true, path=path);
 //
 // Example(NORENDER): Arbitrary 2D Polygon Shape, Anchored by Intersection
-//   geom = attach_geom(anchor, spin, orient, path=path, extent=false);
+//   geom = attach_geom(two_d=true, path=path, extent=false);
 //
 function attach_geom(
     size, size2, shift,
@@ -282,7 +278,7 @@ function attach_geom(
 
 // Function: attach_geom_2d()
 // Usage:
-//   attach_geom_2d(geom);
+//   bool = attach_geom_2d(geom);
 // Description:
 //   Returns true if the given attachment geometry description is for a 2D shape.
 function attach_geom_2d(geom) =
@@ -293,7 +289,7 @@ function attach_geom_2d(geom) =
 
 // Function: attach_geom_size()
 // Usage:
-//   attach_geom_size(geom);
+//   bounds = attach_geom_size(geom);
 // Description:
 //   Returns the `[X,Y,Z]` bounding size for the given attachment geometry description.
 function attach_geom_size(geom) =
@@ -417,7 +413,7 @@ function attach_transform(anchor=CENTER, spin=0, orient=UP, geom, p) =
 
 // Function: find_anchor()
 // Usage:
-//   find_anchor(anchor, geom);
+//   anchorinfo = find_anchor(anchor, geom);
 // Description:
 //   Calculates the anchor data for the given `anchor` vector or name, in the given attachment
 //   geometry.  Returns `[ANCHOR, POS, VEC, ANG]` where `ANCHOR` is the requested anchorname
@@ -611,7 +607,7 @@ function find_anchor(anchor, geom) =
 
 // Function: attachment_is_shown()
 // Usage:
-//   attachment_is_shown(tags);
+//   bool = attachment_is_shown(tags);
 // Description:
 //   Returns true if the given space-delimited string of tag names should currently be shown.
 function attachment_is_shown(tags) =
@@ -627,21 +623,29 @@ function attachment_is_shown(tags) =
 // Function: reorient()
 //
 // Usage: Square/Trapezoid Geometry
-//   reorient(anchor, spin, <orient>, two_d, size, <size2>, <shift>, <cp>, <offset>, <anchors>, <p>);
+//   mat = reorient(anchor, spin, <orient>, *two_d*, *size*, <*size2*>, <*shift*>, <*cp*>, <*offset*>, <*anchors*>);
+//   pts = reorient(anchor, spin, <orient>, *two_d*, *size*, <*size2*>, <*shift*>, <*cp*>, <*offset*>, <*anchors*>, *p*);
 // Usage: Circle/Oval Geometry
-//   reorient(anchor, spin, <orient>, two_d, r|d, <cp>, <offset>, <anchors>, <p>);
+//   mat = reorient(anchor, spin, <orient>, *two_d*, *r*|*d*, <*cp*>, <*offset*>, <anchors>);
+//   pts = reorient(anchor, spin, <orient>, *two_d*, *r*|*d*, <*cp*>, <*offset*>, <anchors>, *p*);
 // Usage: 2D Path/Polygon Geometry
-//   reorient(anchor, spin, <orient>, two_d, path, <extent>, <cp>, <offset>, <anchors>, <p>);
+//   mat = reorient(anchor, spin, <orient>, *two_d*, *path*, <*extent*>, <*cp*>, <*offset*>, <*anchors*>);
+//   pts = reorient(anchor, spin, <orient>, *two_d*, *path*, <*extent*>, <*cp*>, <*offset*>, <*anchors*>, *p*);
 // Usage: Cubical/Prismoidal Geometry
-//   reorient(anchor, spin, <orient>, size, <size2>, <shift>, <cp>, <offset>, <anchors>, <p>);
+//   mat = reorient(anchor, spin, <orient>, *size*, <*size2*>, <*shift*>, <*cp*>, <*offset*>, <*anchors*>);
+//   pts = reorient(anchor, spin, <orient>, *size*, <*size2*>, <*shift*>, <*cp*>, <*offset*>, <*anchors*>, *p*);
 // Usage: Cylindrical Geometry
-//   reorient(anchor, spin, <orient>, r|d, l, <offset>, <axis>, <cp>, <anchors>, <p>);
+//   mat = reorient(anchor, spin, <orient>, *r*|*d*, *l*, <*offset*>, <*axis*>, <*cp*>, <*anchors*>);
+//   pts = reorient(anchor, spin, <orient>, *r*|*d*, *l*, <*offset*>, <*axis*>, <*cp*>, <*anchors*>, *p*);
 // Usage: Conical Geometry
-//   reorient(anchor, spin, <orient>, r1|d1, r2|d2, l, <axis>, <cp>, <offset>, <anchors>, <p>);
+//   mat = reorient(anchor, spin, <orient>, *r1*|*d1*, *r2*|*d2*, *l*, <*axis*>, <*cp*>, <*offset*>, <*anchors*>);
+//   pts = reorient(anchor, spin, <orient>, *r1*|*d1*, *r2*|*d2*, *l*, <*axis*>, <*cp*>, <*offset*>, <*anchors*>, *p*);
 // Usage: Spheroid/Ovoid Geometry
-//   reorient(anchor, spin, <orient>, r|d, <cp>, <offset>, <anchors>, <p>);
+//   mat = reorient(anchor, spin, <orient>, *r*|*d*, <*cp*>, <*offset*>, <*anchors*>);
+//   pts = reorient(anchor, spin, <orient>, *r*|*d*, <*cp*>, <*offset*>, <*anchors*>, *p*);
 // Usage: VNF Geometry
-//   reorient(anchor, spin, <orient>, vnf, <extent>, <cp>, <offset>, <anchors>, <p>);
+//   mat = reorient(anchor, spin, <orient>, *vnf*, <*extent*>, <*cp*>, <*offset*>, <*anchors*>);
+//   pts = reorient(anchor, spin, <orient>, *vnf*, <*extent*>, <*cp*>, <*offset*>, <*anchors*>, *p*);
 //
 // Description:
 //   Given anchor, spin, orient, and general geometry info for a managed volume, this calculates
@@ -669,6 +673,7 @@ function attachment_is_shown(tags) =
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   ---
 //   size = If given as a 3D vector, contains the XY size of the bottom of the cuboidal/prismoidal volume, and the Z height.  If given as a 2D vector, contains the front X width of the rectangular/trapezoidal shape, and the Y length.
 //   size2 = If given as a 2D vector, contains the XY size of the top of the prismoidal volume.  If given as a number, contains the back width of the trapezoidal shape.
 //   shift = If given as a 2D vector, shifts the top of the prismoidal or conical shape by the given amount.  If given as a number, shifts the back of the trapezoidal shape right by that amount.  Default: No shift.
@@ -721,21 +726,21 @@ function reorient(
 // Module: attachable()
 //
 // Usage: Square/Trapezoid Geometry
-//   attachable(anchor, spin, two_d, size, <size2>, <shift>, <cp>, <offset>, <anchors> ...
+//   attachable(anchor, spin, *two_d*, *size*, <*size2*>, <*shift*>, <*cp*>, <*offset*>, <*anchors*> ...
 // Usage: Circle/Oval Geometry
-//   attachable(anchor, spin, two_d, r|d, <cp>, <offset>, <anchors>) ...
+//   attachable(anchor, spin, *two_d*, *r*|*d*, <*cp*>, <*offset*>, <*anchors*>) ...
 // Usage: 2D Path/Polygon Geometry
-//   attachable(anchor, spin, two_d, path, <extent>, <cp>, <offset>, <anchors> ...
+//   attachable(anchor, spin, *two_d*, *path*, <*extent*>, <*cp*>, <*offset*>, <*anchors*> ...
 // Usage: Cubical/Prismoidal Geometry
-//   attachable(anchor, spin, <orient>, size, <size2>, <shift>, <cp>, <offset>, <anchors> ...
+//   attachable(anchor, spin, <orient>, *size*, <*size2*>, <*shift*>, <*cp*>, <*offset*>, <*anchors*> ...
 // Usage: Cylindrical Geometry
-//   attachable(anchor, spin, <orient>, r|d, l, <axis>, <cp>, <offset>, <anchors>) ...
+//   attachable(anchor, spin, <orient>, *r*|*d*, *l*, <*axis*>, <*cp*>, <*offset*>, <*anchors*>) ...
 // Usage: Conical Geometry
-//   attachable(anchor, spin, <orient>, r1|d1, r2|d2, l, <axis>, <cp>, <offset>, <anchors>) ...
+//   attachable(anchor, spin, <orient>, *r1*|*d1*, *r2*|*d2*, *l*, <*axis*>, <*cp*>, <*offset*>, <*anchors*>) ...
 // Usage: Spheroid/Ovoid Geometry
-//   attachable(anchor, spin, <orient>, r|d, <cp>, <offset>, <anchors>) ...
+//   attachable(anchor, spin, <orient>, *r*|*d*, <*cp*>, <*offset*>, <*anchors*>) ...
 // Usage: VNF Geometry
-//   attachable(anchor, spin, <orient>, vnf, <extent>, <cp>, <offset>, <anchors>) ...
+//   attachable(anchor, spin, <orient>, *vnf*, <*extent*>, <*cp*>, <*offset*>, <*anchors*>) ...
 //
 // Description:
 //   Manages the anchoring, spin, orientation, and attachments for a 3D volume or 2D area.
@@ -768,6 +773,7 @@ function reorient(
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   ---
 //   size = If given as a 3D vector, contains the XY size of the bottom of the cuboidal/prismoidal volume, and the Z height.  If given as a 2D vector, contains the front X width of the rectangular/trapezoidal shape, and the Y length.
 //   size2 = If given as a 2D vector, contains the XY size of the top of the prismoidal volume.  If given as a number, contains the back width of the trapezoidal shape.
 //   shift = If given as a 2D vector, shifts the top of the prismoidal or conical shape by the given amount.  If given as a number, shifts the back of the trapezoidal shape right by that amount.  Default: No shift.
@@ -967,8 +973,8 @@ module position(from)
 
 // Module: attach()
 // Usage:
-//   attach(from, <overlap>) ...
-//   attach(from, to, <overlap>) ...
+//   attach(from, <overlap>, <norot>) ...
+//   attach(from, to, <overlap>, <norot>) ...
 // Description:
 //   Attaches children to a parent object at an anchor point and orientation.
 //   Attached objects will be overlapped into the parent object by a little bit,
@@ -987,7 +993,7 @@ module position(from)
 //       attach(RIGHT, BOTTOM) down(1.5) cyl(l=11.5, d1=10, d2=5);
 //       attach(FRONT, BOTTOM, overlap=1.5) cyl(l=11.5, d1=10, d2=5);
 //   }
-module attach(from, to=undef, overlap=undef, norot=false)
+module attach(from, to, overlap, norot=false)
 {
     assert($parent_geom != undef, "No object to attach to!");
     overlap = (overlap!=undef)? overlap : $overlap;
@@ -1010,12 +1016,13 @@ module attach(from, to=undef, overlap=undef, norot=false)
 
 // Module: face_profile()
 // Usage:
-//   face_profile(faces, r, d, <convexity>) ...
+//   face_profile(faces, r|d, <convexity>) ...
 // Description:
 //   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face.
 // Arguments:
 //   faces = Faces to mask edges and corners of.
 //   r = Radius of corner mask.
+//   ---
 //   d = Diameter of corner mask.
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 module face_profile(faces=[], r, d, convexity=10) {
@@ -1334,7 +1341,7 @@ module show(tags="")
 //               rounding_mask_z(l=p.z, r=25);
 //       }
 //   }
-module diff(neg, pos=undef, keep=undef)
+module diff(neg, pos, keep)
 {
     // Don't perform the operation if the current tags are hidden
     if (attachment_is_shown($tags)) {
