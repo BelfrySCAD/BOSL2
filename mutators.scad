@@ -14,28 +14,38 @@
 // Usage:
 //   bounding_box() ...
 // Description:
-//   Returns an axis-aligned cube shape that exactly contains all the 3D children given.
+//   Returns the smallest axis-aligned square (or cube) shape that contains all the 2D (or 3D)
+//   children given.  The module children() is supposed to be a 3d shape when planar=false and
+//   a 2d shape when planar=true otherwise the system will issue a warning of mixing dimension
+//   or scaling by 0.
 // Arguments:
 //   excess = The amount that the bounding box should be larger than needed to bound the children, in each axis.
 //   planar = If true, creates a 2D bounding rectangle.  Is false, creates a 3D bounding cube.  Default: false
-// Example:
-//   #bounding_box() {
+// Example(3D):
+//   module shapes() {
 //       translate([10,8,4]) cube(5);
 //       translate([3,0,12]) cube(2);
 //   }
-//   translate([10,8,4]) cube(5);
-//   translate([3,0,12]) cube(2);
+//   #bounding_box() shapes();
+//   shapes();
+// Example(2D):
+//   module shapes() {
+//       translate([10,8]) square(5);
+//       translate([3,0]) square(2);
+//   }
+//   #bounding_box(planar=true) shapes();
+//   shapes();
 module bounding_box(excess=0, planar=false) {
-    xs = excess>.1? excess : 1;
-    // a 3D approx. of the children projection on X axis
-    module _xProjection()
+    // a 3d (or 2d when planar=true) approx. of the children projection on X axis
+    module _xProjection() {
         if (planar) {
             projection()
                 rotate([90,0,0])
-                    linear_extrude(xs, center=true)
+                    linear_extrude(1, center=true)
                         hull()
                             children();
         } else {
+            xs = excess<.1? 1: excess;
             linear_extrude(xs, center=true)
                 projection()
                     rotate([90,0,0])
@@ -44,6 +54,7 @@ module bounding_box(excess=0, planar=false) {
                                 hull()
                                     children();
         }
+    }
 
     // a bounding box with an offset of 1 in all axis
     module _oversize_bbox() {
@@ -61,18 +72,23 @@ module bounding_box(excess=0, planar=false) {
         }
     }
 
+    // offsets a cube by `excess`
     module _shrink_cube() {
         intersection() {
-            translate((1-excess)*[ 1, 1, planar?0: 1]) children();
-            translate((1-excess)*[-1,-1, planar?0:-1]) children();
+            translate((1-excess)*[ 1, 1, 1]) children();
+            translate((1-excess)*[-1,-1,-1]) children();
         }
     }
 
-    render(convexity=2)
-    if (excess>.1) {
-        _oversize_bbox() children();
+    if(planar) {
+        offset(excess-1/2) _oversize_bbox() children();
     } else {
-        _shrink_cube() _oversize_bbox() children();
+        render(convexity=2)
+        if (excess>.1) {
+            _oversize_bbox() children();
+        } else {
+            _shrink_cube() _oversize_bbox() children();
+        }
     }
 }
 
