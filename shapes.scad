@@ -808,8 +808,8 @@ module cyl(
                 vang = atan2(l, r1-r2)/2;
                 chang1 = 90-first_defined([chamfang1, chamfang, vang]);
                 chang2 = 90-first_defined([chamfang2, chamfang, 90-vang]);
-                cham1 = first_defined([chamfer1, chamfer]) * (from_end? 1 : tan(chang1));
-                cham2 = first_defined([chamfer2, chamfer]) * (from_end? 1 : tan(chang2));
+                cham1 = u_mul(first_defined([chamfer1, chamfer]) , (from_end? 1 : tan(chang1)));
+                cham2 = u_mul(first_defined([chamfer2, chamfer]) , (from_end? 1 : tan(chang2)));
                 fil1 = first_defined([rounding1, rounding]);
                 fil2 = first_defined([rounding2, rounding]);
                 if (chamfer != undef) {

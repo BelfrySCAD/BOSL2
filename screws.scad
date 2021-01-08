@@ -37,7 +37,7 @@ function _parse_screw_name(name) =
                let(val=str_num(type))
                val == floor(val) && val>=0 && val<=12 ? str("#",type) : val
         )
-    ["english", diam, thread, 25.4*length];
+    ["english", diam, thread, u_mul(25.4,length)];
 
 
 // drive can be "hex", "phillips", "slot", "torx", or "none"
@@ -165,7 +165,7 @@ function screw_info(name, head, thread="coarse", drive, drive_size=undef, oversi
                         is_def(type[3]) ? ["length",type[3]] : [],
                         is_def(drive_info[1]) ? ["drive_size", drive_info[1]] : [],
                         ["diameter", oversize+struct_val(screwdata,"diameter"),
-                         "head_size", oversize+struct_val(screwdata,"head_size")]
+                         "head_size", u_add(oversize,struct_val(screwdata,"head_size"))]
                       )
   )
   struct_set(screwdata, over_ride);
@@ -307,7 +307,7 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
                [2,    [      3,   1.5, undef, undef, undef]],
             ],
             entry = struct_val(UTS_socket, diam),
-            hexdepth = first_defined([entry[3], diam/2]),
+            hexdepth = is_def(entry[3]) ? entry[3] : if_def(diam) ? diam/2 : undef,
             drive_size =  drive=="hex" ? [["drive_size",inch*entry[1]], ["drive_depth",inch*hexdepth]] :
                           drive=="torx" ? [["drive_size",entry[2]],["drive_depth",inch*entry[4]]] : []
             )

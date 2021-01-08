@@ -533,7 +533,7 @@ function _offset_region(
             difference(_acc, [
                 offset(
                     paths[_i].y,
-                    r=-r, delta=-delta, chamfer=chamfer, closed=closed,
+                    r=u_mul(-1,r), delta=u_mul(-1,delta), chamfer=chamfer, closed=closed,
                     maxstep=maxstep, check_valid=check_valid, quality=quality,
                     return_faces=return_faces, firstface_index=firstface_index,
                     flip_faces=flip_faces
@@ -547,11 +547,14 @@ function _offset_region(
 
 
 // Function: offset()
-//
+// Usage:
+//   offsetpath = offset(path, [r|delta], [chamfer], [closed], [check_valid], [quality])
+//   path_faces = offset(path, return_faces=true, [r|delta], [chamfer], [closed], [check_valid], [quality], [firstface_index], [flip_faces])
 // Description:
 //   Takes an input path and returns a path offset by the specified amount.  As with the built-in
 //   offset() module, you can use `r` to specify rounded offset and `delta` to specify offset with
-//   corners.  Positive offsets shift the path to the left (relative to the direction of the path).
+//   corners.  If you used `delta` you can set `chamfer` to true to get chamfers.
+//   Positive offsets shift the path to the left (relative to the direction of the path).
 //   .
 //   When offsets shrink the path, segments cross and become invalid.  By default `offset()` checks
 //   for this situation.  To test validity the code checks that segments have distance larger than (r
@@ -570,6 +573,7 @@ function _offset_region(
 //   value is a list: [offset_path, face_list].
 // Arguments:
 //   path = the path to process.  A list of 2d points.
+//   ---
 //   r = offset radius.  Distance to offset.  Will round over corners.
 //   delta = offset distance.  Distance to offset with pointed corners.
 //   chamfer = chamfer corners when you specify `delta`.  Default: false
@@ -643,7 +647,7 @@ function offset(
     maxstep=0.1, closed=false, check_valid=true,
     quality=1, return_faces=false, firstface_index=0,
     flip_faces=false
-) =
+) = 
     is_region(path)? (
         assert(!return_faces, "return_faces not supported for regions.")
         let(
@@ -687,23 +691,19 @@ function offset(
             (len(sharpcorners)==2 && !closed) ||
             all_defined(select(sharpcorners,closed?0:1,-1))
     )
-    assert(parallelcheck, "Path turns back on itself (180 deg turn)")
+    assert(parallelcheck, "Path contains sequential parallel segments (either 180 deg turn or 0 deg turn")
     let(
         // This is a boolean array that indicates whether a corner is an outside or inside corner
         // For outside corners, the newcorner is an extension (angle 0), for inside corners, it turns backward
         // If either side turns back it is an inside corner---must check both.
         // Outside corners can get rounded (if r is specified and there is space to round them)
-        outsidecorner = [
-            for(i=[0:len(goodsegs)-1]) let(
-                prevseg=select(goodsegs,i-1)
-            ) (
-                (goodsegs[i][1]-goodsegs[i][0]) *
-                (goodsegs[i][0]-sharpcorners[i]) > 0
-            ) && (
-                (prevseg[1]-prevseg[0]) *
-                (sharpcorners[i]-prevseg[1]) > 0
-            )
-        ],
+        outsidecorner = len(sharpcorners)==2 ? [false,false]
+           :
+            [for(i=[0:len(goodsegs)-1])
+                 let(prevseg=select(goodsegs,i-1))
+                (goodsegs[i][1]-goodsegs[i][0]) * (goodsegs[i][0]-sharpcorners[i]) > 0
+                 && (prevseg[1]-prevseg[0]) * (sharpcorners[i]-prevseg[1]) > 0
+            ],
         steps = is_def(delta) ? [] : [
             for(i=[0:len(goodsegs)-1])
                         r==0 ? 0 :
