@@ -487,7 +487,7 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 //     diff("remove")
 //       cuboid([50,30,10])
 //         attach(TOP) dovetail("female", length=50, width=18, height=4, back_width=15, spin=90,$tags="remove");
-// Example: A series of dovtails
+// Example: A series of dovetails
 //   cuboid([50,30,10])
 //     attach(BACK) xcopies(10,5) dovetail("male", length=10, width=7, height=4);
 // Example: Mating pin board for a right angle joint.  Note that the anchor method and use of `spin` ensures that the joint works even with a taper.
