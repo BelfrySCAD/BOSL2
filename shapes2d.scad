@@ -1590,6 +1590,64 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 }
 
 
+// Function&Module: reuleaux_polygon()
+// Usage: As Module
+//   reuleaux_polygon(N, r|d);
+// Usage: As Module
+//   path = reuleaux_polygon(N, r|d);
+// Description:
+//   Creates a 2D Reuleaux Polygon; a constant width shape that is not circular.
+// Arguments:
+//   N = Number of "sides" to the Reuleaux Polygon.  Must be an odd positive number.  Default: 3
+//   r = Radius of the shape.  Scale shape to fit in a circle of radius r.
+//   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Extra Anchors:
+//   "tip0", "tip1", etc. = Each tip has an anchor, pointing outwards.
+// Examples(2D):
+//   reuleaux_polygon(N=3, r=50);
+//   reuleaux_polygon(N=5, d=100);
+module reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) {
+    assert(N>=3 && (N%2)==1);
+    r = get_radius(r=r, d=d, dflt=1);
+    path = reuleaux_polygon(N=N, r=r);
+    anchors = [
+        for (i = [0:1:N-1]) let(
+            ca = 360 - (i+0.5) * 360/N,
+            cp = polar_to_xy(r, ca)
+        ) anchorpt(str("tip",i), cp, unit(cp,BACK), 0),
+    ];
+    attachable(anchor,spin, two_d=true, path=path, anchors=anchors) {
+        polygon(path);
+        children();
+    }
+}
+
+
+function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
+    assert(N>=3 && (N%2)==1)
+    let(
+        r = get_radius(r=r, d=d, dflt=1),
+        ssegs = max(3,ceil(segs(r)/N)),
+        slen = norm(polar_to_xy(r,0)-polar_to_xy(r,180-180/N)),
+        path = [
+            for (i = [0:1:N-1]) let(
+                ca = 180 - (i+0.5) * 360/N,
+                sa = ca + 180 + (90/N),
+                ea = ca + 180 - (90/N),
+                cp = polar_to_xy(r, ca)
+            ) each arc(N=ssegs, r=slen, cp=cp, angle=[sa,ea], endpoint=false)
+        ],
+        anchors = [
+            for (i = [0:1:N-1]) let(
+                ca = 360 - (i+0.5) * 360/N,
+                cp = polar_to_xy(r, ca)
+            ) anchorpt(str("tip",i), cp, unit(cp,BACK), 0),
+        ]
+    ) reorient(anchor,spin, two_d=true, path=path, anchors=anchors, p=path);
+
+
 // Section: 2D Masking Shapes
 
 // Function&Module: mask2d_roundover()
