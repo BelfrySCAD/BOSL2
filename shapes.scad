@@ -793,17 +793,19 @@ module cyl(
     circum=false, realign=false, from_end=false,
     center, anchor, spin=0, orient=UP
 ) {
-    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
-    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     l = first_defined([l, h, 1]);
-    sides = segs(max(r1,r2));
+    _r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
+    _r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
+    sides = segs(max(_r1,_r2));
     sc = circum? 1/cos(180/sides) : 1;
+    r1=_r1*sc;
+    r2=_r2*sc;
     phi = atan2(l, r2-r1);
     anchor = get_anchor(anchor,center,BOT,CENTER);
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
         zrot(realign? 180/sides : 0) {
             if (!any_defined([chamfer, chamfer1, chamfer2, rounding, rounding1, rounding2])) {
-                cylinder(h=l, r1=r1*sc, r2=r2*sc, center=true, $fn=sides);
+                cylinder(h=l, r1=r1, r2=r2, center=true, $fn=sides);
             } else {
                 vang = atan2(l, r1-r2)/2;
                 chang1 = 90-first_defined([chamfang1, chamfang, vang]);

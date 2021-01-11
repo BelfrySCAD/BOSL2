@@ -39,5 +39,37 @@ module test_spheroid() {
 test_spheroid();
 
 
+module test_cyl() {
+    $fn=12;
+    shape_compare() {
+        cyl(r=50,l=10,circum=true,anchor=BOTTOM);
+        cylinder(r=50/cos(180/12),l=10);
+    }
+    shape_compare() {
+        cyl(r=50,l=10,circum=false,anchor=BOTTOM);
+        cylinder(r=50,l=10);
+    }
+    shape_compare() {
+        cyl(r=50,l=10,chamfer=1,circum=true,anchor=BOTTOM);
+        union() {
+            r=50/cos(180/12);
+            cylinder(r1=r-1,r2=r,l=1);
+            up(1) cylinder(r=r,l=8);
+            up(9) cylinder(r1=r,r2=r-1,l=1);
+        }
+    }
+    shape_compare() {
+        cyl(r=50,l=10,chamfer=1,circum=false,anchor=BOTTOM);
+        union() {
+            r=50;
+            cylinder(r1=r-1,r2=r,l=1);
+            up(1) cylinder(r=r,l=8);
+            up(9) cylinder(r1=r,r2=r-1,l=1);
+        }
+    }
+}
+test_cyl();
+
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
