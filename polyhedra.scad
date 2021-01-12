@@ -689,7 +689,7 @@ function regular_polyhedron_info(
         boundtable = [bounds[0], [0,0,0], bounds[1]],
         translation = [for(i=[0:2]) -boundtable[1+anchor[i]][i]],
         face_normals = rot(p=faces_normals_vertices[1], from=down_direction, to=[0,0,-1]),
-        side_length = scalefactor * entry[edgelen]
+        radius_scale = name=="trapezohedron" ? 1 : scalefactor * entry[edgelen]
     )
     info == "fullentry" ? [
         scaled_points,
@@ -697,15 +697,15 @@ function regular_polyhedron_info(
         stellate ? faces : face_triangles,
         faces,
         face_normals,
-        side_length*entry[in_radius]
+        radius_scale*entry[in_radius]
     ] :
     info == "vnf" ? [move(translation,p=scaled_points), stellate ? faces : face_triangles] : 
     info == "vertices" ? move(translation,p=scaled_points) :
     info == "faces" ? faces :
     info == "face normals" ? face_normals :
-    info == "in_radius" ? side_length * entry[in_radius] :
-    info == "mid_radius" ? side_length * entry[mid_radius] :
-    info == "out_radius" ? side_length * entry[out_radius] :
+    info == "in_radius" ? radius_scale * entry[in_radius] :
+    info == "mid_radius" ? radius_scale * entry[mid_radius] :
+    info == "out_radius" ? radius_scale * entry[out_radius] :
     info == "index set" ? indexlist :
     info == "face vertices" ? (stellate==false? entry[facevertices] : [3]) :
     info == "edge length" ? scalefactor * entry[edgelen] :
@@ -736,8 +736,8 @@ function _trapezohedron(faces, r, side, longside, h, d) =
         parmcount = num_defined([r,side,longside,h])
     )
     assert(parmcount==2,"Must define exactly two of 'r', 'side', 'longside', and 'height'")
-    let(
-        separation = (
+    let(       
+        separation = (     // z distance between non-apex vertices that aren't in the same plane
             !is_undef(h) ? 2*h*sqr(tan(90/N)) :
             (!is_undef(r) && !is_undef(side))? sqrt(side*side+2*r*r*(cos(180/N)-1)) :
             (!is_undef(r) && !is_undef(longside))? 2 * sqrt(sqr(longside)-sqr(r)) / (1-sqr(tan(90/N))) * sqr(tan(90/N)) :
@@ -755,7 +755,7 @@ function _trapezohedron(faces, r, side, longside, h, d) =
         top = [for(i=[0:1:N-1]) [r*cos(360/N*i), r*sin(360/N*i),separation/2]],
         bot = [for(i=[0:1:N-1]) [r*cos(180/N+360/N*i), r*sin(180/N+360/N*i),-separation/2]],
         vertices = concat([[0,0,h],[0,0,-h]],top,bot)
-    ) [
+    ) [  
         "trapezohedron", "trapezohedron", faces, [4],
         !is_undef(side)? side : sqrt(sqr(separation)-2*r*(cos(180/N)-1)),  // actual side length
         h*r/sqrt(r*r+sqr(h+separation/2)),     // in_radius
