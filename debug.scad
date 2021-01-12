@@ -3,7 +3,6 @@
 //   Helpers to make debugging OpenScad code easier.
 // Includes:
 //   include <BOSL2/std.scad>
-//   include <BOSL2/debug.scad>
 //////////////////////////////////////////////////////////////////////
 
 

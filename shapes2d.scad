@@ -1608,13 +1608,17 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 // Examples(2D):
 //   reuleaux_polygon(N=3, r=50);
 //   reuleaux_polygon(N=5, d=100);
+// Examples(2D): Standard vector anchors are based on extents
+//   reuleaux_polygon(N=3, d=50) show_anchors(custom=false);
+// Examples(2D): Named anchors exist for the tips
+//   reuleaux_polygon(N=3, d=50) show_anchors(std=false);
 module reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) {
     assert(N>=3 && (N%2)==1);
     r = get_radius(r=r, d=d, dflt=1);
     path = reuleaux_polygon(N=N, r=r);
     anchors = [
         for (i = [0:1:N-1]) let(
-            ca = 360 - (i+0.5) * 360/N,
+            ca = 360 - i * 360/N,
             cp = polar_to_xy(r, ca)
         ) anchorpt(str("tip",i), cp, unit(cp,BACK), 0),
     ];
@@ -1641,7 +1645,7 @@ function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
         ],
         anchors = [
             for (i = [0:1:N-1]) let(
-                ca = 360 - (i+0.5) * 360/N,
+                ca = 360 - i * 360/N,
                 cp = polar_to_xy(r, ca)
             ) anchorpt(str("tip",i), cp, unit(cp,BACK), 0),
         ]
