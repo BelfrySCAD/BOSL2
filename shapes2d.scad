@@ -1593,7 +1593,7 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 // Function&Module: reuleaux_polygon()
 // Usage: As Module
 //   reuleaux_polygon(N, r|d);
-// Usage: As Module
+// Usage: As Function
 //   path = reuleaux_polygon(N, r|d);
 // Description:
 //   Creates a 2D Reuleaux Polygon; a constant width shape that is not circular.
