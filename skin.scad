@@ -13,16 +13,15 @@
 
 // Function&Module: skin()
 // Usage: As module:
-//   skin(profiles, [slices], [refine], [method], [sampling], [caps], [closed], [z], [convexity],
-//        [anchor],[cp],[spin],[orient],[extent]);
+//   skin(profiles, slices, <z=>, <refine=>, <method=>, <sampling=>, <caps=>, <closed=>, <convexity=>, <anchor=>,<cp=>,<spin=>,<orient=>,<extent=>) ...
 // Usage: As function:
-//   vnf = skin(profiles, [slices], [refine], [method], [sampling], [caps], [closed], [z]);
+//   vnf = skin(profiles, slices, <z=>, <refine=>, <method=>, <sampling=>, <caps=>, <closed=>);
 // Description:
 //   Given a list of two or more path `profiles` in 3d space, produces faces to skin a surface between
 //   the profiles.  Optionally the first and last profiles can have endcaps, or the first and last profiles
 //   can be connected together.  Each profile should be roughly planar, but some variation is allowed.
 //   Each profile must rotate in the same clockwise direction.  If called as a function, returns a
-//   [VNF structure](vnf.scad) like `[VERTICES, FACES]`.  If called as a module, creates a polyhedron
+//   [VNF structure](vnf.scad) `[VERTICES, FACES]`.  If called as a module, creates a polyhedron
 //    of the skinned profiles.
 //   .
 //   The profiles can be specified either as a list of 3d curves or they can be specified as
@@ -80,11 +79,11 @@
 //   in the polyhedron---in will produce the least twisted possible result.  This algorithm has quadratic
 //   run time so it can be slow with very large profiles.
 //   .
-//   The "distance" and "tangent" methods are work by duplicating vertices to create
+//   The "distance" and "tangent" methods work by duplicating vertices to create
 //   triangular faces.  The "distance" method finds the global minimum distance method for connecting two
 //   profiles.  This algorithm generally produces a good result when both profiles are discrete ones with
 //   a small number of vertices.  It is computationally intensive (O(N^3)) and may be
-//   slow on large inputs.  The resulting surfaces generally have curves faces, so be
+//   slow on large inputs.  The resulting surfaces generally have curved faces, so be
 //   sure to select a sufficiently large value for `slices` and `refine`.
 //   The `"tangent"` method generally produces good results when
 //   connecting a discrete polygon to a convex, finely sampled curve.  It works by finding
@@ -109,6 +108,7 @@
 // Arguments:
 //   profiles = list of 2d or 3d profiles to be skinned.  (If 2d must also give `z`.)
 //   slices = scalar or vector number of slices to insert between each pair of profiles.  Set to zero to use only the profiles you provided.  Recommend starting with a value around 10.
+//   ---
 //   refine = resample profiles to this number of points per edge.  Can be a list to give a refinement for each profile.  Recommend using a value above 10 when using the "distance" method.  Default: 1.
 //   sampling = sampling method to use with "direct" and "reindex" methods.  Can be "length" or "segment".  Ignored if any profile pair uses either the "distance" or "tangent" methods.  Default: "length".
 //   closed = set to true to connect first and last profile (to make a torus).  Default: false
@@ -511,7 +511,7 @@ function _skin_core(profiles, caps) =
 
 // Function: subdivide_and_slice()
 // Usage:
-//   subdivide_and_slice(profiles, slices, [numpoints], [method], [closed])
+//   newprof = subdivide_and_slice(profiles, slices, <numpoints>, <method>, <closed>);
 // Description:
 //   Subdivides the input profiles to have length `numpoints` where `numpoints` must be at least as
 //   big as the largest input profile.  By default `numpoints` is set equal to the length of the
@@ -539,7 +539,7 @@ function subdivide_and_slice(profiles, slices, numpoints, method="length", close
 
 // Function: slice_profiles()
 // Usage:
-//   profs = slice_profiles(profiles,slices,<closed>);
+//   profs = slice_profiles(profiles, slices, <closed>);
 // Description:
 //   Given an input list of profiles, linearly interpolate between each pair to produce a
 //   more finely sampled list.  The parameters `slices` specifies the number of slices to
@@ -757,7 +757,7 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
 
 // Function: associate_vertices()
 // Usage:
-//   associate_vertices(polygons, split)
+//   newpoly = associate_vertices(polygons, split);
 // Description:
 //   Takes as input a list of polygons and duplicates specified vertices in each polygon in the list through the series so
 //   that the input can be passed to `skin()`.  This allows you to decide how the vertices are linked up rather than accepting
@@ -823,7 +823,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 
 // Function&Module: sweep()
 // Usage: As Module
-//   sweep(shape, transforms, <closed>, <caps>)
+//   sweep(shape, transforms, <closed>, <caps>) ...
 // Usage: As Function
 //   vnf = sweep(shape, transforms, <closed>, <caps>);
 // Description:
@@ -914,8 +914,9 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 
 
 // Function&Module: path_sweep()
-// Usage:
-//   path_sweep(shape, path, [method], [normal], [closed], [twist], [twist_by_length], [symmetry], [last_normal], [tangent], [relaxed], [caps], [convexity], [transforms])
+// Usage: As module
+//   path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <convexity=>, <transforms=>, <anchor=>, <cp=>, <spin=>, <orient=>, <extent=>)...
+//   vnf = path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <convexity=>, <transforms=>);
 // Description:
 //   Takes as input a 2D polygon path or region, and a 2d or 3d path and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF by default or if you set `transforms=true`
@@ -967,6 +968,7 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 //   shape = A 2D polygon path or region describing the shape to be swept.
 //   path = 2D or 3D path giving the path to sweep over
 //   method = one of "incremental", "natural" or "manual".  Default: "incremental"
+//   ---
 //   normal = normal vector for initializing the incremental method, or for setting normals with method="manual".  Default: UP if the path makes an angle lower than 45 degrees to the xy plane, BACK otherwise.
 //   closed = path is a closed loop.  Default: false
 //   twist = amount of twist to add in degrees.  For closed sweeps must be a multiple of 360/symmetry.  Default: 0
@@ -1302,8 +1304,10 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
 
 
 // Function&Module: path_sweep2d()
-// Usage:
-//   path_sweep2d(shape, path, <closed>, <quality>)
+// Usage: as module
+//   path_sweep2d(shape, path, <closed>, <caps>, <quality>, <convexity=>, <anchor=>, <spin=>, <orient=>, <extent=>, <cp=>)...
+// Usage: as function
+//   vnf = path_sweep2d(shape, path, <closed>, <caps>, <quality>);
 // Description:
 //   Takes an input 2D polygon (the shape) and a 2d path and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF.
@@ -1320,6 +1324,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
 //   closed = path is a closed loop.  Default: false
 //   caps = true to create endcap faces when closed is false.  Can be a length 2 boolean array.  Default is true if closed is false.
 //   quality = quality of offset used in calculation.  Default: 1
+//   ---
 //   convexity = convexity parameter for polyhedron (module only)  Default: 10
 //   anchor = Translate so anchor point is at the origin.  (module only)  Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
