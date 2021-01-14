@@ -66,10 +66,11 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
 // Usage:
 //   vvnf = vnf_get_vertex(vnf, p);
 // Description:
-//   Finds the index number of the given vertex point `p` in the given VNF structure `vnf`.  If said
-//   point does not already exist in the VNF vertex list, it is added.  Returns: `[INDEX, VNF]` where
-//   INDEX if the index of the point, and VNF is the possibly modified new VNF structure.
-//   If `p` is given as a list of points, then INDEX will be a list of indices.
+//   Finds the index number of the given vertex point `p` in the given VNF structure `vnf`.
+//   If said point does not already exist in the VNF vertex list, it is added to the returned VNF.
+//   Returns: `[INDEX, VNF]` where INDEX is the index of the point in the returned VNF's vertex list,
+//   and VNF is the possibly modified new VNF structure.  If `p` is given as a list of points, then
+//   the returned INDEX will be a list of indices.
 // Arguments:
 //   vnf = The VNF structue to get the point index from.
 //   p = The point, or list of points to get the index of.
@@ -80,10 +81,13 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
 //   vnf4 = vnf_get_vertex(vnf3, p=[[1,3,2],[3,2,1]]);  // Returns: [[1,2], [[[3,5,8],[3,2,1],[1,3,2]],[]]]
 function vnf_get_vertex(vnf=EMPTY_VNF, p) =
     let(
-        p = is_vector(p)? [p] : p,
-        res = set_union(vnf[0], p, get_indices=true)
-    )
-    [res[0], [res[1],vnf[1]]];
+        isvec = is_vector(p),
+        pts = isvec? [p] : p,
+        res = set_union(vnf[0], pts, get_indices=true)
+    ) [
+        (isvec? res[0][0] : res[0]),
+        [ res[1], vnf[1] ]
+    ];
 
 
 // Function: vnf_add_face()
