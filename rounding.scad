@@ -24,25 +24,29 @@ include <structs.scad>
 //   tactile "bump" where the curvature changes from flat to circular.
 //   See https://hackernoon.com/apples-icons-have-that-shape-for-a-very-good-reason-720d4e7c8a14
 //   .
-//   You select the type of rounding using the `method` option, which should be `"smooth"` to
+//   You select the type of rounding using the `method` parameter, which should be `"smooth"` to
 //   get continuous curvature rounding, `"circle"` to get circular rounding, or `"chamfer"` to get chamfers.  The default is circle
-//   rounding.  Each method has two options you can use to specify the amount of rounding.
-//   All of the rounding methods accept the cut option.   This mode specifies the distance from the unrounded corner to the rounded tip, so how
+//   rounding.  Each method accepts multiple options to specify the amount of rounding.
+//   .
+//   The `cut` parameter specifies the distance from the unrounded corner to the rounded tip, so how
 //   much of the corner to "cut" off.  This can be easier to understand than setting a circular radius, which can be
 //   unexpectedly extreme when the corner is very sharp.  It also allows a systematic specification of
 //   corner treatments that are the same size for all three methods.
 //   .
-//   For circular rounding you can also use the `radius` parameter, which sets a circular rounding
-//   radius.  For chamfers and smooth rounding you can specify the `joint` parameter, which specifies the distance
+//   The `joint` parameter specifies the distance
 //   away from the corner along the path where the roundover or chamfer should start.  The figure below shows
-//   the cut and joint distances for a given roundover.
+//   the cut and joint distances for a given roundover.  This parameter is good for ensuring that your roundover will
+//   fit on the polygon, since you can easily tell whether adjacent corner treatments will interfere.  
+//   .
+//   For circular rounding you can also use the `radius` parameter, which sets a circular rounding
+//   radius.
 //   .
 //   The `"smooth"` method rounding also has a parameter that specifies how smooth the curvature match
 //   is.  This parameter, `k`, ranges from 0 to 1, with a default of 0.5.  Larger values give a more
 //   abrupt transition and smaller ones a more gradual transition.  If you set the value much higher
 //   than 0.8 the curvature changes abruptly enough that though it is theoretically continuous, it may
 //   not be continuous in practice.  If you set it very small then the transition is so gradual that
-//   the length of the roundover may be extremely long.
+//   the length of the roundover may be extremely long. 
 //   .
 //   If you select curves that are too large to fit the function will fail with an error.  You can set `verbose=true` to
 //   get a message showing a list of scale factors you can apply to your rounding parameters so that the
@@ -53,6 +57,9 @@ include <structs.scad>
 //   can specify a list to round each corner with different parameters.  If the curve is not closed then the first and last points
 //   of the curve are not rounded.  In this case you can specify a full list of points anyway, and the endpoint values are ignored,
 //   or you can specify a list that has length len(path)-2, omitting the two dummy values.
+//   .
+//   If your input path includes collinear points you must use a cut or radius value of zero for those "corners".  You can
+//   choose a nonzero joint parameter, which will cause extra points to be inserted.  
 //   .
 //   Examples:
 //   * `method="circle", radius=2`:
@@ -211,7 +218,6 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
     assert(k_ok,method=="smooth" ? str("Input k must be a number or list with length ",len(path), closed?"":str(" or ",len(path)-2)) :
                                    "Input k is only allowed with method=\"smooth\"")
     assert(method=="circle" || measure!="radius", "radius parameter allowed only with method=\"circle\"")
-    assert(method!="circle" || measure!="joint", "joint parameter not allowed with method=\"circle\"")
     let(
         parm = is_num(size) ? repeat(size, len(path)) :
                len(size)<len(path) ? [0, each size, 0] :
@@ -236,20 +242,23 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
                       angle = vector_angle(select(path,i-1,i+1))/2
                   )
                   (!closed && (i==0 || i==len(path)-1))  ? [0] :          // Force zeros at ends for non-closed
+                  parm[i]==0 ? [0]    : // If no rounding requested then don't try to compute parameters
                   (method=="chamfer" && measure=="joint")? [parm[i]] :
                   (method=="chamfer" && measure=="cut")  ? [parm[i]/cos(angle)] :
                   (method=="smooth" && measure=="joint") ? [parm[i],k[i]] :
                   (method=="smooth" && measure=="cut")   ? [8*parm[i]/cos(angle)/(1+4*k[i]),k[i]] :
                   (method=="circle" && measure=="radius")? [parm[i]/tan(angle), parm[i]] :
-                       let( circ_radius = parm[i] / (1/sin(angle) - 1))
-                       [circ_radius/tan(angle), circ_radius],
+                  (method=="circle" && measure=="joint") ? [parm[i], parm[i]*tan(angle)] : 
+                /*(method=="circle" && measure=="cut")*/   approx(angle,90) ? [INF] : 
+                                                           let( circ_radius = parm[i] / (1/sin(angle) - 1))
+                                                           [circ_radius/tan(angle), circ_radius],
         ],
         lengths = [for(i=[0:1:len(path)]) norm(select(path,i)-select(path,i-1))],
         scalefactors = [
             for(i=[0:1:len(path)-1])
                 min(
-                    lengths[i]/sum(subindex(select(dk,i-1,i),0)),
-                    lengths[i+1]/sum(subindex(select(dk,i,i+1),0))
+                    lengths[i]/(select(dk,i-1)[0]+dk[i][0]),
+                    lengths[i+1]/(dk[i][0]+select(dk,i+1)[0])
                 )
         ],
         dummy = verbose ? echo("Roundover scale factors:",scalefactors) : 0
@@ -320,14 +329,17 @@ function _chamfcorner(points, parm) =
 
 function _circlecorner(points, parm) =
         let(
-                angle = vector_angle(points)/2,
-                d = parm[0],
-                r = parm[1],
-                prev = unit(points[0]-points[1]),
-                next = unit(points[2]-points[1]),
-                center = r/sin(angle) * unit(prev+next)+points[1],
-                        start = points[1]+prev*d,
-                        end = points[1]+next*d
+            angle = vector_angle(points)/2,
+            d = parm[0],
+            r = parm[1],
+            prev = unit(points[0]-points[1]),
+            next = unit(points[2]-points[1])
+        )
+        approx(angle,90) ? [points[1]+prev*d, points[1]+next*d] :
+        let(
+            center = r/sin(angle) * unit(prev+next)+points[1],
+                    start = points[1]+prev*d,
+                    end = points[1]+next*d
         )     // 90-angle is half the angle of the circular arc
         arc(max(3,ceil((90-angle)/180*segs(r))), cp=center, points=[start,end]);
 
