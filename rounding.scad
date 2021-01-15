@@ -14,7 +14,7 @@ include <structs.scad>
 // Function: round_corners()
 //
 // Usage:
-//   rounded_path = round_corners(path, <method>, *<radius>, <cut>, <joint>, <closed>, <verbose>*);
+//   rounded_path = round_corners(path, <method>, <radius=>, <cut=>, <joint=>, <closed=>, <verbose=>);
 //
 // Description:
 //   Takes a 2D or 3D path as input and rounds each corner
@@ -404,7 +404,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 
 // Function: smooth_path()
 // Usage:
-//   smoothed = smooth_path(path, <tangents>, *<size|relsize>, <splinesteps>, <closed>, <uniform>*)
+//   smoothed = smooth_path(path, <tangents>, <size=|relsize=>, <splinesteps=>, <closed=>, <uniform=>);
 // Description:
 //   Smooths the input path using a cubic spline.  Every segment of the path will be replaced by a cubic curve
 //   with `splinesteps` points.  The cubic interpolation will pass through every input point on the path
@@ -487,7 +487,7 @@ function _scalar_to_vector(value,length,varname) =
 
 // Function: path_join()
 // Usage:
-//   joined_path = path_join(paths, <joint>, *<k>, <relocate>, <closed>*)
+//   joined_path = path_join(paths, <joint>, <k=>, <relocate=>, <closed=>);
 // Description:
 //   Connect a sequence of paths together into a single path with optional rounding
 //   applied at the joints.  By default the first path is taken as specified and subsequent paths are
@@ -649,9 +649,9 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 
 // Function&Module: offset_sweep()
 // Usage: most common module arguments.  See Arguments list below for more.
-//    offset_sweep(path, <height|h|l>, <bottom>, <top>, *<offset>, <convexity>*)
+//    offset_sweep(path, <height|h|l>, <bottom>, <top>, <offset=>, <convexity=>,...) <attachments>
 // Usage: most common function arguments.  See Arguments list below for more.
-//    vnf = offset_sweep(path, <height|h|l>, <bottom>, <top>, *<offset>*)
+//    vnf = offset_sweep(path, <height|h|l>, <bottom>, <top>, <offset=>, ...)
 // Description:
 //   Takes a 2d path as input and extrudes it upwards and/or downward.  Each layer in the extrusion is produced using `offset()` to expand or shrink the previous layer.  When invoked as a function returns a VNF; when invoked as a module produces geometry.  
 //   Using the `top` and/or `bottom` arguments you can specify a sequence of offsets values, or you can use several built-in offset profiles that
@@ -1279,10 +1279,10 @@ function _remove_undefined_vals(list) =
 
 // Function&Module: offset_stroke()
 // Usage: as module
-//   offset_stroke(path, <width>, *<rounded>, <chamfer>, <start>, <end>, <check_valid>, <quality>, <maxstep>, <closed>*)
+//   offset_stroke(path, <width>, <rounded=>, <chamfer=>, <start=>, <end=>, <check_valid=>, <quality=>, <maxstep=>, <closed=>);
 // Usage: as function
-//   path = offset_stroke(path, <width>, *closed=false, <rounded>, <chamfer>, <start>, <end>, <check_valid>, <quality>, <maxstep>*)
-//   region = offset_stroke(path, <width>, *closed=true, <rounded>, <chamfer>, <start>, <end>, <check_valid>, <quality>, <maxstep>*)
+//   path = offset_stroke(path, <width>, closed=false, <rounded=>, <chamfer=>, <start=>, <end=>, <check_valid=>, <quality=>, <maxstep=>);
+//   region = offset_stroke(path, <width>, closed=true, <rounded=>, <chamfer=>, <start=>, <end=>, <check_valid=>, <quality=>, <maxstep=>);
 // Description:
 //   Uses `offset()` to compute a stroke for the input path.  Unlike `stroke`, the result does not need to be
 //   centered on the input path.  The corners can be rounded, pointed, or chamfered, and you can make the ends
@@ -1663,9 +1663,9 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 
 // Function&Module: rounded_prism()
 // Usage: as a module
-//   rounded_prism(bottom, <top>, *<height|h|length|l>, <joint_top>, <joint_bot>, <joint_sides>, <k>, <k_top>, <k_bot>, <k_sides>, <splinesteps>, <debug>, <convexity>*);
+//   rounded_prism(bottom, <top>, <height=|h=|length=|l=>, <joint_top=>, <joint_bot=>, <joint_sides=>, <k=>, <k_top=>, <k_bot=>, <k_sides=>, <splinesteps=>, <debug=>, <convexity=>,...) <attachments>;
 // Usage: as a function
-//   vnf = rounded_prism(bottom, <top>, *<height|h|length|l>, <joint_top>, <joint_bot>, <joint_sides>, <k>, <k_top>, <k_bot>, <k_sides>, <splinesteps>, <debug>*);
+//   vnf = rounded_prism(bottom, <top>, <height=|h=|length=|l=>, <joint_top=>, <joint_bot=>, <joint_sides=>, <k=>, <k_top=>, <k_bot=>, <k_sides=>, <splinesteps=>, <debug=>);
 // Description:
 //   Construct a generalized prism with continuous curvature rounding.  You supply the polygons for the top and bottom of the prism.  The only
 //   limitation is that joining the edges must produce a valid polyhedron with coplanar side faces.  You specify the rounding by giving
@@ -2045,7 +2045,7 @@ function _circle_mask(r) =
 
 // Module: bent_cutout_mask()
 // Usage:
-//   bent_cutout_mask(r|radius, thickness, path)
+//   bent_cutout_mask(r|radius, thickness, path);
 // Description:
 //   Creates a mask for cutting a round-edged hole out of a vertical cylindrical shell.  The specified radius
 //   is the center radius of the cylindrical shell.  The path needs to be sampled finely enough

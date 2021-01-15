@@ -13,7 +13,7 @@
 
 // Function&Module: skin()
 // Usage: As module:
-//   skin(profiles, slices, <z=>, <refine=>, <method=>, <sampling=>, <caps=>, <closed=>, <convexity=>, <anchor=>,<cp=>,<spin=>,<orient=>,<extent=>) ...
+//   skin(profiles, slices, <z=>, <refine=>, <method=>, <sampling=>, <caps=>, <closed=>, <convexity=>, <anchor=>,<cp=>,<spin=>,<orient=>,<extent=>) <attachments>;
 // Usage: As function:
 //   vnf = skin(profiles, slices, <z=>, <refine=>, <method=>, <sampling=>, <caps=>, <closed=>);
 // Description:
@@ -823,7 +823,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 
 // Function&Module: sweep()
 // Usage: As Module
-//   sweep(shape, transforms, <closed>, <caps>) ...
+//   sweep(shape, transforms, <closed>, <caps>, <convexity=>, <anchor=>, <spin=>, <orient=>, <extent=>) <attachments>;
 // Usage: As Function
 //   vnf = sweep(shape, transforms, <closed>, <caps>);
 // Description:
@@ -845,6 +845,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   transforms = list of 4x4 matrices to apply
 //   closed = set to true to form a closed (torus) model.  Default: false
 //   caps = true to create endcap faces when closed is false.  Can be a singe boolean to specify endcaps at both ends, or a length 2 boolean array.  Default is true if closed is false.
+//   ---
 //   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
 //   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
 //   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
@@ -915,7 +916,7 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 
 // Function&Module: path_sweep()
 // Usage: As module
-//   path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <convexity=>, <transforms=>, <anchor=>, <cp=>, <spin=>, <orient=>, <extent=>)...
+//   path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <convexity=>, <transforms=>, <anchor=>, <cp=>, <spin=>, <orient=>, <extent=>) <attachments>;
 //   vnf = path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <convexity=>, <transforms=>);
 // Description:
 //   Takes as input a 2D polygon path or region, and a 2d or 3d path and constructs a polyhedron by sweeping the shape along the path.
@@ -1305,7 +1306,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
 
 // Function&Module: path_sweep2d()
 // Usage: as module
-//   path_sweep2d(shape, path, <closed>, <caps>, <quality>, <convexity=>, <anchor=>, <spin=>, <orient=>, <extent=>, <cp=>)...
+//   path_sweep2d(shape, path, <closed>, <caps>, <quality>, <convexity=>, <anchor=>, <spin=>, <orient=>, <extent=>, <cp=>) <attachments>;
 // Usage: as function
 //   vnf = path_sweep2d(shape, path, <closed>, <caps>, <quality>);
 // Description:
