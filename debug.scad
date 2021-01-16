@@ -72,7 +72,7 @@ module trace_path(path, closed=false, showpts=false, N=1, size=1, color="yellow"
 //   );
 module debug_polygon(points, paths=undef, convexity=2, size=1)
 {
-    pths = is_undef(paths)? [for (i=[0:1:len(points)-1]) i] : is_num(paths[0])? [paths] : paths;
+    paths = is_undef(paths)? [[for (i=[0:1:len(points)-1]) i]] : is_num(paths[0])? [paths] : paths;
     echo(points=points);
     echo(paths=paths);
     linear_extrude(height=0.01, convexity=convexity, center=true) {

@@ -198,6 +198,26 @@ include <structs.scad>
 //       // Try changing the value to see the effect.
 //   rpath = round_corners(path3d, joint=rounding, k=1, method="smooth", closed=false);
 //   path_sweep( regular_ngon(n=36, or=.1), rpath);
+// Example(2D): The rounding invocation that is commented out gives an error because the rounding parameters interfere with each other.  The error message gives a list of factors that can help you fix this: [0.852094, 0.852094, 1.85457, 10.1529]
+//   $fn=64;
+//   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
+//   debug_polygon(path);
+//   //polygon(round_corners(path,cut = [1,3,1,1], method="circle"));
+// Example(2D): The list of factors shows that the problem is in the first two rounding values, because the factors are smaller than one.  If we multiply the first two parameters by 0.85 then the roundings fit.  The verbose option gives us the same fit factors.  
+//   $fn=64;
+//   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
+//   polygon(round_corners(path,cut = [0.85,3*0.85,1,1], method="circle", verbose=true));
+// Example(2D): From the fit factors we can see that rounding at vertices 2 and 3 could be increased a lot.  Applying those factors we get this more rounded shape.  The new fit factors show that we can still further increase the rounding parameters if we wish.  
+//   $fn=64;
+//   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
+//   polygon(round_corners(path,cut = [0.85,3*0.85,2.13, 10.15], method="circle",verbose=true));
+// Example(2D): Using the `joint` parameter it's easier to understand whether your roundvers will fit.  We can guarantee a fairly large roundover on any path by picking each one to use up half the segment distance along the shorter of its two segments:
+//   $fn=64;
+//   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
+//   path_len = path_segment_lengths(path,closed=true);
+//   halflen = [for(i=idx(path)) min(select(path_len,i-1,i))/2];
+//   polygon(round_corners(path,joint = halflen, method="circle",verbose=true));
+
 module round_corners(path, method="circle", radius, cut, joint, k, closed=true, verbose=false) {no_module();}
 function round_corners(path, method="circle", radius, cut, joint, k, closed=true, verbose=false) =
     assert(in_list(method,["circle", "smooth", "chamfer"]), "method must be one of \"circle\", \"smooth\" or \"chamfer\"")
@@ -263,7 +283,7 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
         ],
         dummy = verbose ? echo("Roundover scale factors:",scalefactors) : 0
     )
-    assert(min(scalefactors)>=1,"Roundovers are too big for the path")
+    assert(min(scalefactors)>=1,str("Roundovers are too big for the path.  If you multitply them by this vector they should fit: ",scalefactors))
     [
         for(i=[0:1:len(path)-1]) each
             (dk[i][0] == 0)? [path[i]] :
