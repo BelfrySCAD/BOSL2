@@ -427,8 +427,9 @@ function right_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
 
 
 //////////////////////////////////////////////////////////////////////
-// Section: Chain Mutators
+// Section: Warp Mutators
 //////////////////////////////////////////////////////////////////////
+
 
 // Module: chain_hull()
 //
@@ -478,10 +479,74 @@ module chain_hull()
 }
 
 
+// Module: path_extrude2d()
+// Usage:
+//   path_extrude2d(path, <caps>) {...}
+// Description:
+//   Extrudes 2D children along the given 2D path, with optional rounded endcaps.
+// Arguments:
+//   path = The 2D path to extrude the geometry along.
+//   caps = If true, caps each end of the path with a `rotate_extrude()`d copy of the children.  This may interact oddly when given asymmetric profile children.
+// Example:
+//   path = [
+//       each right(50, p=arc(d=100,angle=[90,180])),
+//       each left(50, p=arc(d=100,angle=[0,-90])),
+//   ];
+//   path_extrude2d(path,caps=false) {
+//       fwd(2.5) square([5,6],center=true);
+//       fwd(6) square([10,5],center=true);
+//   }
+// Example:
+//   path_extrude2d(arc(d=100,angle=[180,270]))
+//       trapezoid(w1=10, w2=5, h=10, anchor=BACK);
+// Example:
+//   include <BOSL2/beziers.scad>
+//   path = bezier_path([
+//       [-50,0], [-25,50], [0,0], [50,0]
+//   ]);
+//   path_extrude2d(path, caps=false)
+//       trapezoid(w1=10, w2=1, h=5, anchor=BACK);
+module path_extrude2d(path, caps=true) {
+    thin = 0.01;
+    path = deduplicate(path);
+    for (p=pair(path)) {
+        delt = p[1]-p[0];
+        translate(p[0]) {
+            rot(from=BACK,to=delt) {
+                minkowski() {
+                    cube([thin,norm(delt),thin], anchor=FRONT);
+                    rotate([90,0,0]) linear_extrude(height=thin,center=true) children();
+                }
+            }
+        }
+    }
+    for (t=triplet(path)) {
+        ang = vang(t[2]-t[1]) - vang(t[1]-t[0]);
+        delt = t[2] - t[1];
+        translate(t[1]) {
+            minkowski() {
+                cube(thin,center=true);
+                if (ang >= 0) {
+                    rotate(90-ang)
+                        rot(from=LEFT,to=delt)
+                            rotate_extrude(angle=ang+0.01)
+                                right_half(planar=true) children();
+                } else {
+                    rotate(-90)
+                        rot(from=RIGHT,to=delt)
+                            rotate_extrude(angle=-ang+0.01)
+                                left_half(planar=true) children();
+                }
+            }
+        }
+    }
+    if (caps) {
+        move_copies([path[0],last(path)])
+            rotate_extrude()
+                right_half(planar=true) children();
+    }
+}
 
-//////////////////////////////////////////////////////////////////////
-// Section: Warp Mutators
-//////////////////////////////////////////////////////////////////////
 
 // Module: cylindrical_extrude()
 // Usage:
