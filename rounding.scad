@@ -14,7 +14,7 @@ include <structs.scad>
 // Function: round_corners()
 //
 // Usage:
-//   rounded_path = round_corners(path, <method>, *<radius>, <cut>, <joint>, <closed>, <verbose>*);
+//   rounded_path = round_corners(path, <method>, <radius=>, <cut=>, <joint=>, <closed=>, <verbose=>);
 //
 // Description:
 //   Takes a 2D or 3D path as input and rounds each corner
@@ -24,25 +24,29 @@ include <structs.scad>
 //   tactile "bump" where the curvature changes from flat to circular.
 //   See https://hackernoon.com/apples-icons-have-that-shape-for-a-very-good-reason-720d4e7c8a14
 //   .
-//   You select the type of rounding using the `method` option, which should be `"smooth"` to
+//   You select the type of rounding using the `method` parameter, which should be `"smooth"` to
 //   get continuous curvature rounding, `"circle"` to get circular rounding, or `"chamfer"` to get chamfers.  The default is circle
-//   rounding.  Each method has two options you can use to specify the amount of rounding.
-//   All of the rounding methods accept the cut option.   This mode specifies the distance from the unrounded corner to the rounded tip, so how
+//   rounding.  Each method accepts multiple options to specify the amount of rounding.
+//   .
+//   The `cut` parameter specifies the distance from the unrounded corner to the rounded tip, so how
 //   much of the corner to "cut" off.  This can be easier to understand than setting a circular radius, which can be
 //   unexpectedly extreme when the corner is very sharp.  It also allows a systematic specification of
 //   corner treatments that are the same size for all three methods.
 //   .
-//   For circular rounding you can also use the `radius` parameter, which sets a circular rounding
-//   radius.  For chamfers and smooth rounding you can specify the `joint` parameter, which specifies the distance
+//   The `joint` parameter specifies the distance
 //   away from the corner along the path where the roundover or chamfer should start.  The figure below shows
-//   the cut and joint distances for a given roundover.
+//   the cut and joint distances for a given roundover.  This parameter is good for ensuring that your roundover will
+//   fit on the polygon, since you can easily tell whether adjacent corner treatments will interfere.  
+//   .
+//   For circular rounding you can also use the `radius` parameter, which sets a circular rounding
+//   radius.
 //   .
 //   The `"smooth"` method rounding also has a parameter that specifies how smooth the curvature match
 //   is.  This parameter, `k`, ranges from 0 to 1, with a default of 0.5.  Larger values give a more
 //   abrupt transition and smaller ones a more gradual transition.  If you set the value much higher
 //   than 0.8 the curvature changes abruptly enough that though it is theoretically continuous, it may
 //   not be continuous in practice.  If you set it very small then the transition is so gradual that
-//   the length of the roundover may be extremely long.
+//   the length of the roundover may be extremely long. 
 //   .
 //   If you select curves that are too large to fit the function will fail with an error.  You can set `verbose=true` to
 //   get a message showing a list of scale factors you can apply to your rounding parameters so that the
@@ -53,6 +57,9 @@ include <structs.scad>
 //   can specify a list to round each corner with different parameters.  If the curve is not closed then the first and last points
 //   of the curve are not rounded.  In this case you can specify a full list of points anyway, and the endpoint values are ignored,
 //   or you can specify a list that has length len(path)-2, omitting the two dummy values.
+//   .
+//   If your input path includes collinear points you must use a cut or radius value of zero for those "corners".  You can
+//   choose a nonzero joint parameter, which will cause extra points to be inserted.  
 //   .
 //   Examples:
 //   * `method="circle", radius=2`:
@@ -191,6 +198,26 @@ include <structs.scad>
 //       // Try changing the value to see the effect.
 //   rpath = round_corners(path3d, joint=rounding, k=1, method="smooth", closed=false);
 //   path_sweep( regular_ngon(n=36, or=.1), rpath);
+// Example(2D): The rounding invocation that is commented out gives an error because the rounding parameters interfere with each other.  The error message gives a list of factors that can help you fix this: [0.852094, 0.852094, 1.85457, 10.1529]
+//   $fn=64;
+//   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
+//   debug_polygon(path);
+//   //polygon(round_corners(path,cut = [1,3,1,1], method="circle"));
+// Example(2D): The list of factors shows that the problem is in the first two rounding values, because the factors are smaller than one.  If we multiply the first two parameters by 0.85 then the roundings fit.  The verbose option gives us the same fit factors.  
+//   $fn=64;
+//   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
+//   polygon(round_corners(path,cut = [0.85,3*0.85,1,1], method="circle", verbose=true));
+// Example(2D): From the fit factors we can see that rounding at vertices 2 and 3 could be increased a lot.  Applying those factors we get this more rounded shape.  The new fit factors show that we can still further increase the rounding parameters if we wish.  
+//   $fn=64;
+//   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
+//   polygon(round_corners(path,cut = [0.85,3*0.85,2.13, 10.15], method="circle",verbose=true));
+// Example(2D): Using the `joint` parameter it's easier to understand whether your roundvers will fit.  We can guarantee a fairly large roundover on any path by picking each one to use up half the segment distance along the shorter of its two segments:
+//   $fn=64;
+//   path = [[0, 0],[10, 0],[20, 20],[30, -10]];
+//   path_len = path_segment_lengths(path,closed=true);
+//   halflen = [for(i=idx(path)) min(select(path_len,i-1,i))/2];
+//   polygon(round_corners(path,joint = halflen, method="circle",verbose=true));
+
 module round_corners(path, method="circle", radius, cut, joint, k, closed=true, verbose=false) {no_module();}
 function round_corners(path, method="circle", radius, cut, joint, k, closed=true, verbose=false) =
     assert(in_list(method,["circle", "smooth", "chamfer"]), "method must be one of \"circle\", \"smooth\" or \"chamfer\"")
@@ -211,7 +238,6 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
     assert(k_ok,method=="smooth" ? str("Input k must be a number or list with length ",len(path), closed?"":str(" or ",len(path)-2)) :
                                    "Input k is only allowed with method=\"smooth\"")
     assert(method=="circle" || measure!="radius", "radius parameter allowed only with method=\"circle\"")
-    assert(method!="circle" || measure!="joint", "joint parameter not allowed with method=\"circle\"")
     let(
         parm = is_num(size) ? repeat(size, len(path)) :
                len(size)<len(path) ? [0, each size, 0] :
@@ -236,25 +262,28 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
                       angle = vector_angle(select(path,i-1,i+1))/2
                   )
                   (!closed && (i==0 || i==len(path)-1))  ? [0] :          // Force zeros at ends for non-closed
+                  parm[i]==0 ? [0]    : // If no rounding requested then don't try to compute parameters
                   (method=="chamfer" && measure=="joint")? [parm[i]] :
                   (method=="chamfer" && measure=="cut")  ? [parm[i]/cos(angle)] :
                   (method=="smooth" && measure=="joint") ? [parm[i],k[i]] :
                   (method=="smooth" && measure=="cut")   ? [8*parm[i]/cos(angle)/(1+4*k[i]),k[i]] :
                   (method=="circle" && measure=="radius")? [parm[i]/tan(angle), parm[i]] :
-                       let( circ_radius = parm[i] / (1/sin(angle) - 1))
-                       [circ_radius/tan(angle), circ_radius],
+                  (method=="circle" && measure=="joint") ? [parm[i], parm[i]*tan(angle)] : 
+                /*(method=="circle" && measure=="cut")*/   approx(angle,90) ? [INF] : 
+                                                           let( circ_radius = parm[i] / (1/sin(angle) - 1))
+                                                           [circ_radius/tan(angle), circ_radius],
         ],
         lengths = [for(i=[0:1:len(path)]) norm(select(path,i)-select(path,i-1))],
         scalefactors = [
             for(i=[0:1:len(path)-1])
                 min(
-                    lengths[i]/sum(subindex(select(dk,i-1,i),0)),
-                    lengths[i+1]/sum(subindex(select(dk,i,i+1),0))
+                    lengths[i]/(select(dk,i-1)[0]+dk[i][0]),
+                    lengths[i+1]/(dk[i][0]+select(dk,i+1)[0])
                 )
         ],
         dummy = verbose ? echo("Roundover scale factors:",scalefactors) : 0
     )
-    assert(min(scalefactors)>=1,"Roundovers are too big for the path")
+    assert(min(scalefactors)>=1,str("Roundovers are too big for the path.  If you multitply them by this vector they should fit: ",scalefactors))
     [
         for(i=[0:1:len(path)-1]) each
             (dk[i][0] == 0)? [path[i]] :
@@ -320,14 +349,17 @@ function _chamfcorner(points, parm) =
 
 function _circlecorner(points, parm) =
         let(
-                angle = vector_angle(points)/2,
-                d = parm[0],
-                r = parm[1],
-                prev = unit(points[0]-points[1]),
-                next = unit(points[2]-points[1]),
-                center = r/sin(angle) * unit(prev+next)+points[1],
-                        start = points[1]+prev*d,
-                        end = points[1]+next*d
+            angle = vector_angle(points)/2,
+            d = parm[0],
+            r = parm[1],
+            prev = unit(points[0]-points[1]),
+            next = unit(points[2]-points[1])
+        )
+        approx(angle,90) ? [points[1]+prev*d, points[1]+next*d] :
+        let(
+            center = r/sin(angle) * unit(prev+next)+points[1],
+                    start = points[1]+prev*d,
+                    end = points[1]+next*d
         )     // 90-angle is half the angle of the circular arc
         arc(max(3,ceil((90-angle)/180*segs(r))), cp=center, points=[start,end]);
 
@@ -392,7 +424,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 
 // Function: smooth_path()
 // Usage:
-//   smoothed = smooth_path(path, <tangents>, *<size|relsize>, <splinesteps>, <closed>, <uniform>*)
+//   smoothed = smooth_path(path, <tangents>, <size=|relsize=>, <splinesteps=>, <closed=>, <uniform=>);
 // Description:
 //   Smooths the input path using a cubic spline.  Every segment of the path will be replaced by a cubic curve
 //   with `splinesteps` points.  The cubic interpolation will pass through every input point on the path
@@ -475,7 +507,7 @@ function _scalar_to_vector(value,length,varname) =
 
 // Function: path_join()
 // Usage:
-//   joined_path = path_join(paths, <joint>, *<k>, <relocate>, <closed>*)
+//   joined_path = path_join(paths, <joint>, <k=>, <relocate=>, <closed=>);
 // Description:
 //   Connect a sequence of paths together into a single path with optional rounding
 //   applied at the joints.  By default the first path is taken as specified and subsequent paths are
@@ -637,9 +669,9 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 
 // Function&Module: offset_sweep()
 // Usage: most common module arguments.  See Arguments list below for more.
-//    offset_sweep(path, <height|h|l>, <bottom>, <top>, *<offset>, <convexity>*)
+//    offset_sweep(path, <height|h|l>, <bottom>, <top>, <offset=>, <convexity=>,...) <attachments>
 // Usage: most common function arguments.  See Arguments list below for more.
-//    vnf = offset_sweep(path, <height|h|l>, <bottom>, <top>, *<offset>*)
+//    vnf = offset_sweep(path, <height|h|l>, <bottom>, <top>, <offset=>, ...)
 // Description:
 //   Takes a 2d path as input and extrudes it upwards and/or downward.  Each layer in the extrusion is produced using `offset()` to expand or shrink the previous layer.  When invoked as a function returns a VNF; when invoked as a module produces geometry.  
 //   Using the `top` and/or `bottom` arguments you can specify a sequence of offsets values, or you can use several built-in offset profiles that
@@ -1267,10 +1299,10 @@ function _remove_undefined_vals(list) =
 
 // Function&Module: offset_stroke()
 // Usage: as module
-//   offset_stroke(path, <width>, *<rounded>, <chamfer>, <start>, <end>, <check_valid>, <quality>, <maxstep>, <closed>*)
+//   offset_stroke(path, <width>, <rounded=>, <chamfer=>, <start=>, <end=>, <check_valid=>, <quality=>, <maxstep=>, <closed=>);
 // Usage: as function
-//   path = offset_stroke(path, <width>, *closed=false, <rounded>, <chamfer>, <start>, <end>, <check_valid>, <quality>, <maxstep>*)
-//   region = offset_stroke(path, <width>, *closed=true, <rounded>, <chamfer>, <start>, <end>, <check_valid>, <quality>, <maxstep>*)
+//   path = offset_stroke(path, <width>, closed=false, <rounded=>, <chamfer=>, <start=>, <end=>, <check_valid=>, <quality=>, <maxstep=>);
+//   region = offset_stroke(path, <width>, closed=true, <rounded=>, <chamfer=>, <start=>, <end=>, <check_valid=>, <quality=>, <maxstep=>);
 // Description:
 //   Uses `offset()` to compute a stroke for the input path.  Unlike `stroke`, the result does not need to be
 //   centered on the input path.  The corners can be rounded, pointed, or chamfered, and you can make the ends
@@ -1511,7 +1543,7 @@ function _stroke_end(width,left, right, spec) =
                 normal_dir = unit(normal_seg[1]-normal_seg[0]),
                 width_dir = sign(width[0]-width[1])
         )
-        type == "round"? [arc(points=[right[0],normal_pt,left[0]],N=50),1,1]  :
+        type == "round"? [arc(points=[right[0],normal_pt,left[0]],N=ceil(segs(width/2)/2)),1,1]  :
         type == "pointed"? [[normal_pt],0,0] :
         type == "shifted_point"? (
                 let(shiftedcenter = center + width_dir * parallel_dir * struct_val(spec, "loc"))
@@ -1651,9 +1683,9 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 
 // Function&Module: rounded_prism()
 // Usage: as a module
-//   rounded_prism(bottom, <top>, *<height|h|length|l>, <joint_top>, <joint_bot>, <joint_sides>, <k>, <k_top>, <k_bot>, <k_sides>, <splinesteps>, <debug>, <convexity>*);
+//   rounded_prism(bottom, <top>, <height=|h=|length=|l=>, <joint_top=>, <joint_bot=>, <joint_sides=>, <k=>, <k_top=>, <k_bot=>, <k_sides=>, <splinesteps=>, <debug=>, <convexity=>,...) <attachments>;
 // Usage: as a function
-//   vnf = rounded_prism(bottom, <top>, *<height|h|length|l>, <joint_top>, <joint_bot>, <joint_sides>, <k>, <k_top>, <k_bot>, <k_sides>, <splinesteps>, <debug>*);
+//   vnf = rounded_prism(bottom, <top>, <height=|h=|length=|l=>, <joint_top=>, <joint_bot=>, <joint_sides=>, <k=>, <k_top=>, <k_bot=>, <k_sides=>, <splinesteps=>, <debug=>);
 // Description:
 //   Construct a generalized prism with continuous curvature rounding.  You supply the polygons for the top and bottom of the prism.  The only
 //   limitation is that joining the edges must produce a valid polyhedron with coplanar side faces.  You specify the rounding by giving
@@ -2033,7 +2065,7 @@ function _circle_mask(r) =
 
 // Module: bent_cutout_mask()
 // Usage:
-//   bent_cutout_mask(r|radius, thickness, path)
+//   bent_cutout_mask(r|radius, thickness, path);
 // Description:
 //   Creates a mask for cutting a round-edged hole out of a vertical cylindrical shell.  The specified radius
 //   is the center radius of the cylindrical shell.  The path needs to be sampled finely enough
