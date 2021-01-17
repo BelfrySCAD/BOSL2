@@ -306,7 +306,7 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
 //   h = h.
 //   height = height.
 //   dflt = Value to return if other values are `undef`. 
-function get_height(h=undef,l=undef,height=undef,dflt=undef) =
+function get_height(h,l,height,dflt) =
     assert(num_defined([h,l,height])<=1,"You must specify only one of `l`, `h`, and `height`")
     first_defined([h,l,height,dflt]);
 
@@ -400,6 +400,8 @@ function get_named_args(positional, named,_undef=_undef) =
         val != _undef ? val :
         ass != [] ? positional[ass[0]] :
         deft[idx] ];
+
+
 // Function: scalar_vec3()
 // Usage:
 //   scalar_vec3(v, <dflt>);
