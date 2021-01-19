@@ -20,7 +20,7 @@ function CR_corner(size, spin=0, orient=UP, trans=[0,0,0]) =
     )
     translate(trans,
         p=rot(a=spin, from=UP, to=orient,
-            p=scale(size, patch)
+            p=scale(size, p=patch)
         )
     );
 
