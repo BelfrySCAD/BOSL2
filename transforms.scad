@@ -551,7 +551,7 @@ function zrot(a=0, cp=undef, p=undef) = rot(a, cp=cp, p=p);
 //   path = circle(d=50,$fn=12);
 //   #stroke(path,closed=true);
 //   stroke(scale([1.5,3],p=path),closed=true);
-function scale(v=1, cp=[0,0,0], p=undef) =
+function scale(v=1, cp=[0,0,0], p) =
     assert(is_num(v) || is_vector(v))
     assert(is_undef(p) || is_list(p))
     let( v = is_num(v)? [v,v,v] : v )
