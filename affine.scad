@@ -274,7 +274,7 @@ function affine3d_rot_from_to(from, to) =
 //   Returns a transformation that maps one coordinate frame to another.  You must specify two or three of `x`, `y`, and `z`.  The specified
 //   axes are mapped to the vectors you supplied.  If you give two inputs, the third vector is mapped to the appropriate normal to maintain a right hand coordinate system.
 //   If the vectors you give are orthogonal the result will be a rotation and the `reverse` parameter will supply the inverse map, which enables you
-//   to map two arbitrary coordinate systems to each other by using the canonical coordinate system as an intermediary.  You cannot use the `reverse` option 
+//   to map two arbitrary coordinate systems to each other by using the canonical coordinate system as an intermediary.  You cannot use the `reverse` option
 //   with non-orthogonal inputs.
 // Arguments:
 //   x = Destination vector for x axis
@@ -423,24 +423,28 @@ function affine3d_chain(affines, _m=undef, _i=0) =
 //   pts = apply(transform, points);
 // Description:
 //   Applies the specified transformation matrix to a point list (or single point).  Both inputs can be 2d or 3d, and it is also allowed
-//   to supply 3d transformations with 2d data as long as the the only action on the z coordinate is a simple scaling.  
+//   to supply 3d transformations with 2d data as long as the the only action on the z coordinate is a simple scaling.
 // Examples:
 //   transformed = apply(xrot(45), path3d(circle(r=3)));  // Rotates 3d circle data around x axis
 //   transformed = apply(rot(45), circle(r=3));           // Rotates 2d circle data by 45 deg
 //   transformed = apply(rot(45)*right(4)*scale(3), circle(r=3));  // Scales, translates and rotates 2d circle data
 function apply(transform,points) =
-  points==[] ? [] : 
-  is_vector(points) ? apply(transform, [points])[0] :
-  let(
-    tdim = len(transform[0])-1,
-    datadim = len(points[0])
-  )
-  tdim == 3 && datadim == 3 ? [for(p=points) point3d(transform*concat(p,[1]))] :
-  tdim == 2 && datadim == 2 ? [for(p=points) point2d(transform*concat(p,[1]))] :  
-  tdim == 3 && datadim == 2 ? 
-    assert(is_2d_transform(transform),str("Transforms is 3d but points are 2d"))
-    [for(p=points) point2d(transform*concat(p,[0,1]))] :
-  assert(false,str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
+    points==[] ? [] :
+    is_vector(points) ? apply(transform, [points])[0] :
+    is_list(points) && len(points)==2 && is_path(points[0],3) && is_list(points[1]) && is_vector(points[1][0])
+      ? [apply(transform, points[0]), points[1]] :
+    is_list(points) && is_list(points[0]) && is_vector(points[0][0])
+      ? [for (x=points) apply(transform,x)] :
+    let(
+        tdim = len(transform[0])-1,
+        datadim = len(points[0])
+    )
+    tdim == 3 && datadim == 3 ? [for(p=points) point3d(transform*concat(p,[1]))] :
+    tdim == 2 && datadim == 2 ? [for(p=points) point2d(transform*concat(p,[1]))] :
+    tdim == 3 && datadim == 2 ?
+        assert(is_2d_transform(transform), str("Transforms is 3d but points are 2d"))
+        [for(p=points) point2d(transform*concat(p,[0,1]))] :
+        assert(false, str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
 
 
 // Function: apply_list()
@@ -451,7 +455,7 @@ function apply(transform,points) =
 //   the list are applied in the order they appear in the list (as in right multiplication of matrices).  Both inputs can be
 //   2d or 3d, and it is also allowed to supply 3d transformations with 2d data as long as the the only action on the z coordinate
 //   is a simple scaling.  All transformations on `transform_list` must have the same dimension: you cannot mix 2d and 3d transformations
-//   even when acting on 2d data.  
+//   even when acting on 2d data.
 // Examples:
 //   transformed = apply_list(path3d(circle(r=3)),[xrot(45)]);        // Rotates 3d circle data around x axis
 //   transformed = apply_list(circle(r=3), [scale(3), right(4), rot(45)]); // Scales, then translates, and then rotates 2d circle data
@@ -466,21 +470,21 @@ function apply_list(points,transform_list) =
   let( tdim = tdims[1]-1 )
   tdim==2 && datadim == 2 ? apply(affine2d_chain(transform_list), points) :
   tdim==3 && datadim == 3 ? apply(affine3d_chain(transform_list), points) :
-  tdim==3 && datadim == 2 ? 
+  tdim==3 && datadim == 2 ?
     let(
         badlist = [for(i=idx(transform_list)) if (!is_2d_transform(transform_list[i])) i]
     )
     assert(badlist==[],str("Transforms with indices ",badlist," are 3d but points are 2d"))
     apply(affine3d_chain(transform_list), points) :
-  assert(false,str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));    
-    
+  assert(false,str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
+
 
 // Function: is_2d_transform()
 // Usage:
 //   x = is_2d_transform(t);
 // Description:
 //   Checks if the input is a 3d transform that does not act on the z coordinate, except
-//   possibly for a simple scaling of z.  Note that an input which is only a zscale returns false.  
+//   possibly for a simple scaling of z.  Note that an input which is only a zscale returns false.
 function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][2]!=1 so scale() works
   t[2][0]==0 && t[2][1]==0 && t[2][3]==0 && t[0][2] == 0 && t[1][2]==0 &&
   (t[2][2]==1 || !(t[0][0]==1 && t[0][1]==0 && t[1][0]==0 && t[1][1]==1));   // But rule out zscale()
@@ -499,7 +503,7 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 //   This decomposition makes it possible to perform interpolation.  If you construct a transformation using `rot`
 //   the decoding may flip the axis (if you gave an angle outside of [0,180]).  The returned axis will be a unit vector,
 //   and the centerpoint lies on the plane through the origin that is perpendicular to the axis.  It may be different
-//   than the centerpoint you used to construct the transformation.  
+//   than the centerpoint you used to construct the transformation.
 // Example:
 //   rot_decode(rot(45));                // Returns [45,[0,0,1], [0,0,0], [0,0,0]]
 //   rot_decode(rot(a=37, v=[1,2,3], cp=[4,3,-7])));  // Returns [37, [0.26, 0.53, 0.80], [4.8, 4.6, -4.6], [0,0,0]]
