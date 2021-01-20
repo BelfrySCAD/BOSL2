@@ -264,29 +264,33 @@ function affine3d_rot_from_to(from, to) =
     ];
 
 
-// Function: affine_frame_map()
+// Function: affine3d_frame_map()
 // Usage:
-//   map = affine_frame_map(v1, v2, v3);
-//   map = affine_frame_map(x=VECTOR1, y=VECTOR2, <reverse>);
-//   map = affine_frame_map(x=VECTOR1, z=VECTOR2, <reverse>);
-//   map = affine_frame_map(y=VECTOR1, y=VECTOR2, <reverse>);
+//   map = affine3d_frame_map(v1, v2, v3);
+//   map = affine3d_frame_map(x=VECTOR1, y=VECTOR2, <reverse>);
+//   map = affine3d_frame_map(x=VECTOR1, z=VECTOR2, <reverse>);
+//   map = affine3d_frame_map(y=VECTOR1, y=VECTOR2, <reverse>);
 // Description:
-//   Returns a transformation that maps one coordinate frame to another.  You must specify two or three of `x`, `y`, and `z`.  The specified
-//   axes are mapped to the vectors you supplied.  If you give two inputs, the third vector is mapped to the appropriate normal to maintain a right hand coordinate system.
-//   If the vectors you give are orthogonal the result will be a rotation and the `reverse` parameter will supply the inverse map, which enables you
-//   to map two arbitrary coordinate systems to each other by using the canonical coordinate system as an intermediary.  You cannot use the `reverse` option
-//   with non-orthogonal inputs.
+//   Returns a transformation that maps one coordinate frame to another.  You must specify two or
+//   three of `x`, `y`, and `z`.  The specified axes are mapped to the vectors you supplied.  If you
+//   give two inputs, the third vector is mapped to the appropriate normal to maintain a right hand
+//   coordinate system.  If the vectors you give are orthogonal the result will be a rotation and the
+//   `reverse` parameter will supply the inverse map, which enables you to map two arbitrary
+//   coordinate systems to each other by using the canonical coordinate system as an intermediary.
+//   You cannot use the `reverse` option with non-orthogonal inputs.
 // Arguments:
-//   x = Destination vector for x axis
-//   y = Destination vector for y axis
-//   z = Destination vector for z axis
+//   x = Destination 3D vector for x axis.
+//   y = Destination 3D vector for y axis.
+//   z = Destination 3D vector for z axis.
 //   reverse = reverse direction of the map for orthogonal inputs.  Default: false
-// Examples:
-//   T = affine_frame_map(x=[1,1,0], y=[-1,1,0]);   // This map is just a rotation around the z axis
-//   T = affine_frame_map(x=[1,0,0], y=[1,1,0]);    // This map is not a rotation because x and y aren't orthogonal
-//                  // The next map sends [1,1,0] to [0,1,1] and [-1,1,0] to [0,-1,1]
-//   T = affine_frame_map(x=[0,1,1], y=[0,-1,1]) * affine_frame_map(x=[1,1,0], y=[-1,1,0],reverse=true);
-function affine_frame_map(x,y,z, reverse=false) =
+// Example:
+//   T = affine3d_frame_map(x=[1,1,0], y=[-1,1,0]);   // This map is just a rotation around the z axis
+// Example:
+//   T = affine3d_frame_map(x=[1,0,0], y=[1,1,0]);    // This map is not a rotation because x and y aren't orthogonal
+// Example:
+//   // The next map sends [1,1,0] to [0,1,1] and [-1,1,0] to [0,-1,1]
+//   T = affine3d_frame_map(x=[0,1,1], y=[0,-1,1]) * affine3d_frame_map(x=[1,1,0], y=[-1,1,0],reverse=true);
+function affine3d_frame_map(x,y,z, reverse=false) =
     assert(num_defined([x,y,z])>=2, "Must define at least two inputs")
     let(
         xvalid = is_undef(x) || (is_vector(x) && len(x)==3),
@@ -466,43 +470,11 @@ function apply(transform,points) =
         assert(false, str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
 
 
-// Function: apply_list()
-// Usage:
-//   pts = apply_list(points, transform_list);
-// Description:
-//   Transforms the specified point list (or single point) using a list of transformation matrices.  Transformations on
-//   the list are applied in the order they appear in the list (as in right multiplication of matrices).  Both inputs can be
-//   2d or 3d, and it is also allowed to supply 3d transformations with 2d data as long as the the only action on the z coordinate
-//   is a simple scaling.  All transformations on `transform_list` must have the same dimension: you cannot mix 2d and 3d transformations
-//   even when acting on 2d data.
-// Examples:
-//   transformed = apply_list(path3d(circle(r=3)),[xrot(45)]);        // Rotates 3d circle data around x axis
-//   transformed = apply_list(circle(r=3), [scale(3), right(4), rot(45)]); // Scales, then translates, and then rotates 2d circle data
-function apply_list(points,transform_list) =
-  transform_list == []? points :
-  is_vector(points) ? apply_list([points],transform_list)[0] :
-  let(
-      tdims = array_dim(transform_list),
-      datadim = len(points[0])
-  )
-  assert(len(tdims)==3 || tdims[1]!=tdims[2], "Invalid transformation list")
-  let( tdim = tdims[1]-1 )
-  tdim==2 && datadim == 2 ? apply(affine2d_chain(transform_list), points) :
-  tdim==3 && datadim == 3 ? apply(affine3d_chain(transform_list), points) :
-  tdim==3 && datadim == 2 ?
-    let(
-        badlist = [for(i=idx(transform_list)) if (!is_2d_transform(transform_list[i])) i]
-    )
-    assert(badlist==[],str("Transforms with indices ",badlist," are 3d but points are 2d"))
-    apply(affine3d_chain(transform_list), points) :
-  assert(false,str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
-
-
 // Function: is_2d_transform()
 // Usage:
 //   x = is_2d_transform(t);
 // Description:
-//   Checks if the input is a 3d transform that does not act on the z coordinate, except
+//   Checks if the input is a 3D transform that does not act on the z coordinate, except
 //   possibly for a simple scaling of z.  Note that an input which is only a zscale returns false.
 function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][2]!=1 so scale() works
   t[2][0]==0 && t[2][1]==0 && t[2][3]==0 && t[0][2] == 0 && t[1][2]==0 &&
@@ -514,14 +486,14 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 // Usage:
 //   info = rot_decode(rotation); // Returns: [angle,axis,cp,translation]
 // Description:
-//   Given an input 3d rigid transformation operator (one composed of just rotations and translations)
-//   represented as a 4x4 matrix, compute the rotation and translation parameters of the operator.
-//   Returns a list of the four parameters, the angle, in the interval [0,180], the rotation axis
-//   as a unit vector, a centerpoint for the rotation, and a translation.  If you set `parms=rot_decode(rotation)`
-//   then the transformation can be reconstructed from parms as `move(parms[3])*rot(a=parms[0],v=parms[1],cp=parms[2])`.
-//   This decomposition makes it possible to perform interpolation.  If you construct a transformation using `rot`
-//   the decoding may flip the axis (if you gave an angle outside of [0,180]).  The returned axis will be a unit vector,
-//   and the centerpoint lies on the plane through the origin that is perpendicular to the axis.  It may be different
+//   Given an input 3D rigid transformation operator (one composed of just rotations and translations) represented
+//   as a 4x4 matrix, compute the rotation and translation parameters of the operator.  Returns a list of the
+//   four parameters, the angle, in the interval [0,180], the rotation axis as a unit vector, a centerpoint for
+//   the rotation, and a translation.  If you set `parms=rot_decode(rotation)` then the transformation can be
+//   reconstructed from parms as `move(parms[3])*rot(a=parms[0],v=parms[1],cp=parms[2])`.  This decomposition
+//   makes it possible to perform interpolation.  If you construct a transformation using `rot` the decoding
+//   may flip the axis (if you gave an angle outside of [0,180]).  The returned axis will be a unit vector, and
+//   the centerpoint lies on the plane through the origin that is perpendicular to the axis.  It may be different
 //   than the centerpoint you used to construct the transformation.
 // Example:
 //   rot_decode(rot(45));                // Returns [45,[0,0,1], [0,0,0], [0,0,0]]
