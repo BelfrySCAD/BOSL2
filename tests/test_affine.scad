@@ -221,10 +221,10 @@ test_affine3d_chain();
 
 ////////////////////////////
 
-module test_affine_frame_map() {
-    assert(approx(affine_frame_map(x=[1,1,0], y=[-1,1,0]), affine3d_zrot(45)));
+module test_affine3d_frame_map() {
+    assert(approx(affine3d_frame_map(x=[1,1,0], y=[-1,1,0]), affine3d_zrot(45)));
 }
-test_affine_frame_map();
+test_affine3d_frame_map();
 
 
 module test_apply() {
@@ -255,18 +255,6 @@ module test_apply() {
     check_patch_apply(rot([20,30,40])*scale([0.9,1.1,1])*move([10,20,30]), flat);
 }
 test_apply();
-
-
-module test_apply_list() {
-    assert(approx(apply_list(25*(BACK+UP), []), 25*(BACK+UP)));
-    assert(approx(apply_list(25*(BACK+UP), [affine3d_xrot(135)]), 25*sqrt(2)*FWD));
-    assert(approx(apply_list(25*(RIGHT+UP), [affine3d_yrot(135)]), 25*sqrt(2)*DOWN));
-    assert(approx(apply_list(25*(BACK+RIGHT), [affine3d_zrot(45)]), 25*sqrt(2)*BACK));
-    assert(approx(apply_list(25*(BACK+UP), [affine3d_xrot(135), affine3d_translate([30,40,50])]), 25*sqrt(2)*FWD+[30,40,50]));
-    assert(approx(apply_list(25*(RIGHT+UP), [affine3d_yrot(135), affine3d_translate([30,40,50])]), 25*sqrt(2)*DOWN+[30,40,50]));
-    assert(approx(apply_list(25*(BACK+RIGHT), [affine3d_zrot(45), affine3d_translate([30,40,50])]), 25*sqrt(2)*BACK+[30,40,50]));
-}
-test_apply_list();
 
 
 module test_rot_decode() {

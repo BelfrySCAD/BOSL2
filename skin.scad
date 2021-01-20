@@ -1244,7 +1244,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
         let(rotations =
                [for( i  = 0,
                      ynormal = normal - (normal * tangents[0])*tangents[0],
-                     rotation = affine_frame_map(y=ynormal, z=tangents[0]) 
+                     rotation = affine3d_frame_map(y=ynormal, z=tangents[0]) 
                        ;
                      i < len(tangents) + (closed?1:0) ;
                      rotation = i<len(tangents)-1+(closed?1:0)? rot(from=tangents[i],to=tangents[(i+1)%L])*rotation : undef,
@@ -1263,7 +1263,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
                                last_tangent = select(tangents,-1),
                                lastynormal = last_normal - (last_normal * last_tangent) * last_tangent
                            )
-                         affine_frame_map(y=lastynormal, z=last_tangent),
+                         affine3d_frame_map(y=lastynormal, z=last_tangent),
             mismatch = transpose(select(rotations,-1)) * reference_rot, 
             correction_twist = atan2(mismatch[1][0], mismatch[0][0]),
             // Spread out this extra twist over the whole sweep so that it doesn't occur
@@ -1276,7 +1276,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
             [for(i=[0:L-(closed?0:1)]) let(    
                      ynormal = relaxed ? normals[i%L] : normals[i%L] - (normals[i%L] * tangents[i%L])*tangents[i%L],
                      znormal = relaxed ? tangents[i%L] - (normals[i%L] * tangents[i%L])*normals[i%L] : tangents[i%L],
-                     rotation = affine_frame_map(y=ynormal, z=znormal)
+                     rotation = affine3d_frame_map(y=ynormal, z=znormal)
                  )
                  assert(approx(ynormal*znormal,0),str("Supplied normal is parallel to the path tangent at point ",i))
                  translate(path[i%L])*rotation*zrot(-twist*pathfrac[i]),
@@ -1288,7 +1288,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
                  dummy = min(testnormals) < .5 ? echo("WARNING: ***** Abrupt change in normal direction.  Consider a different method *****") :0
                )
             [for(i=[0:L-(closed?0:1)]) let(
-                     rotation = affine_frame_map(x=pathnormal[i%L], z=tangents[i%L])
+                     rotation = affine3d_frame_map(x=pathnormal[i%L], z=tangents[i%L])
                  )
                  translate(path[i%L])*rotation*zrot(-twist*pathfrac[i])
                ] :

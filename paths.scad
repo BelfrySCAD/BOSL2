@@ -980,13 +980,10 @@ module spiral_sweep(poly, h, r, twist=360, center, d, anchor, spin=0, orient=UP)
             dx = r*cos(a),
             dy = r*sin(a),
             dz = h * (p/steps),
-            pts = apply_list(
-                poly, [
-                    affine3d_xrot(90),
-                    affine3d_zrot(a),
-                    affine3d_translate([dx, dy, dz-h/2])
-                ]
-            )
+            mat = affine3d_translate([dx, dy, dz-h/2]) *
+                affine3d_zrot(a) *
+                affine3d_xrot(90),
+            pts = apply(mat, poly)
         ) for (pt = pts) pt
     ];
 
