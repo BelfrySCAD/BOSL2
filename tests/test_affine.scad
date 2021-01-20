@@ -236,6 +236,23 @@ module test_apply() {
     assert(approx(apply(affine3d_xrot(135),2*BACK+2*UP),2*sqrt(2)*FWD));
     assert(approx(apply(affine3d_yrot(135),2*RIGHT+2*UP),2*sqrt(2)*DOWN));
     assert(approx(apply(affine3d_zrot(45),2*BACK+2*RIGHT),2*sqrt(2)*BACK));
+
+    module check_path_apply(mat,path)
+        assert_approx(apply(mat,path),path3d([for (p=path) mat*concat(p,1)]));
+
+    check_path_apply(xrot(45), path3d(rect(100,center=true)));
+    check_path_apply(yrot(45), path3d(rect(100,center=true)));
+    check_path_apply(zrot(45), path3d(rect(100,center=true)));
+    check_path_apply(rot([20,30,40])*scale([0.9,1.1,1])*move([10,20,30]), path3d(rect(100,center=true)));
+
+    module check_patch_apply(mat,patch)
+        assert_approx(apply(mat,patch), [for (path=patch) path3d([for (p=path) mat*concat(p,1)])]);
+
+    flat = [for (x=[-50:25:50]) [for (y=[-50:25:50]) [x,y,0]]];
+    check_patch_apply(xrot(45), flat);
+    check_patch_apply(yrot(45), flat);
+    check_patch_apply(zrot(45), flat);
+    check_patch_apply(rot([20,30,40])*scale([0.9,1.1,1])*move([10,20,30]), flat);
 }
 test_apply();
 
