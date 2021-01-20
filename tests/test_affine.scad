@@ -221,10 +221,10 @@ test_affine3d_chain();
 
 ////////////////////////////
 
-module test_affine_frame_map() {
-    assert(approx(affine_frame_map(x=[1,1,0], y=[-1,1,0]), affine3d_zrot(45)));
+module test_affine3d_frame_map() {
+    assert(approx(affine3d_frame_map(x=[1,1,0], y=[-1,1,0]), affine3d_zrot(45)));
 }
-test_affine_frame_map();
+test_affine3d_frame_map();
 
 
 module test_apply() {
