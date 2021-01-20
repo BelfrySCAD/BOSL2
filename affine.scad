@@ -422,19 +422,38 @@ function affine3d_chain(affines, _m=undef, _i=0) =
 // Usage:
 //   pts = apply(transform, points);
 // Description:
-//   Applies the specified transformation matrix to a point list (or single point).  Both inputs can be 2d or 3d, and it is also allowed
-//   to supply 3d transformations with 2d data as long as the the only action on the z coordinate is a simple scaling.
-// Examples:
-//   transformed = apply(xrot(45), path3d(circle(r=3)));  // Rotates 3d circle data around x axis
-//   transformed = apply(rot(45), circle(r=3));           // Rotates 2d circle data by 45 deg
-//   transformed = apply(rot(45)*right(4)*scale(3), circle(r=3));  // Scales, translates and rotates 2d circle data
+//   Applies the specified transformation matrix to a point, pointlist, bezier patch or VNF.
+//   Both inputs can be 2D or 3D, and it is also allowed to supply 3D transformations with 2D
+//   data as long as the the only action on the z coordinate is a simple scaling.
+// Arguments:
+//   transform = The 2D or 3D transformation matrix to apply to the point/points.
+//   points = The point, pointlist, bezier patch, or VNF to apply the transformation to.
+// Example(3D):
+//   path1 = path3d(circle(r=40));
+//   tmat = xrot(45);
+//   path2 = apply(tmat, path1);
+//   #stroke(path1,closed=true);
+//   stroke(path2,closed=true);
+// Example(2D):
+//   path1 = circle(r=40);
+//   tmat = translate([10,5]);
+//   path2 = apply(tmat, path1);
+//   #stroke(path1,closed=true);
+//   stroke(path2,closed=true);
+// Example(2D):
+//   path1 = circle(r=40);
+//   tmat = rot(30) * back(15) * scale([1.5,0.5,1]);
+//   path2 = apply(tmat, path1);
+//   #stroke(path1,closed=true);
+//   stroke(path2,closed=true);
 function apply(transform,points) =
     points==[] ? [] :
-    is_vector(points) ? apply(transform, [points])[0] :
+    is_vector(points)
+      ? /* Point */ apply(transform, [points])[0] :
     is_list(points) && len(points)==2 && is_path(points[0],3) && is_list(points[1]) && is_vector(points[1][0])
-      ? [apply(transform, points[0]), points[1]] :
+      ? /* VNF */ [apply(transform, points[0]), points[1]] :
     is_list(points) && is_list(points[0]) && is_vector(points[0][0])
-      ? [for (x=points) apply(transform,x)] :
+      ? /* BezPatch */ [for (x=points) apply(transform,x)] :
     let(
         tdim = len(transform[0])-1,
         datadim = len(points[0])
