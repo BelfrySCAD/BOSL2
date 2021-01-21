@@ -459,7 +459,7 @@ function affine3d_rot_from_to(from, to) =
 
 // Function: affine3d_frame_map()
 // Usage:
-//   map = affine3d_frame_map(v1, v2, v3);
+//   map = affine3d_frame_map(v1, v2, v3, <reverse>);
 //   map = affine3d_frame_map(x=VECTOR1, y=VECTOR2, <reverse>);
 //   map = affine3d_frame_map(x=VECTOR1, z=VECTOR2, <reverse>);
 //   map = affine3d_frame_map(y=VECTOR1, z=VECTOR2, <reverse>);

@@ -1172,7 +1172,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
             sort([for(entry=ptlist) posmod(entry-listcenter,length)]) :
             [for(entry=ptlist) entry + length/2-listcenter ]
     );
-    distOK = min(distances)>=0 && max(distances)<=length;
+    distOK = is_def(n) || (min(distances)>=0 && max(distances)<=length);
     assert(distOK,"Cannot fit all of the copies");
     cutlist = path_cut(path, distances, closed, direction=true);
     planar = len(path[0])==2;
@@ -1186,7 +1186,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
                 if(planar) {
                     rot(from=[0,1],to=cutlist[i][3]) children();
                 } else {
-                    multmatrix(affine2d_to_3d(transpose([cutlist[i][2],cross(cutlist[i][3],cutlist[i][2]), cutlist[i][3]])))
+                    multmatrix(affine3d_frame_map(x=cutlist[i][2], z=cutlist[i][3]))
                         children();
                 }
             } else {
