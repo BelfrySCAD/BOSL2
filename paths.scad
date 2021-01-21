@@ -1186,7 +1186,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
                 if(planar) {
                     rot(from=[0,1],to=cutlist[i][3]) children();
                 } else {
-                    multmatrix(affine2d_to_3d(transpose([cutlist[i][2],cross(cutlist[i][3],cutlist[i][2]), cutlist[i][3]])))
+                    multmatrix(affine3d_frame_map(x=cutlist[i][2], z=cutlist[i][3]))
                         children();
                 }
             } else {
