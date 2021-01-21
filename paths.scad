@@ -1172,7 +1172,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
             sort([for(entry=ptlist) posmod(entry-listcenter,length)]) :
             [for(entry=ptlist) entry + length/2-listcenter ]
     );
-    distOK = min(distances)>=0 && max(distances)<=length;
+    distOK = is_def(n) || (min(distances)>=0 && max(distances)<=length);
     assert(distOK,"Cannot fit all of the copies");
     cutlist = path_cut(path, distances, closed, direction=true);
     planar = len(path[0])==2;
