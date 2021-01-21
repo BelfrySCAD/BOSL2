@@ -259,21 +259,13 @@ module test_rot() {
     for (xa=angs, ya=angs, za=angs) {
         assert_equal(
             rot([xa,ya,za]),
-            affine3d_chain([
-                affine3d_xrot(xa),
-                affine3d_yrot(ya),
-                affine3d_zrot(za)
-            ]),
+            affine3d_zrot(za) * affine3d_yrot(ya) * affine3d_xrot(xa),
             info=str("[X,Y,Z] = ",[xa,ya,za])
         );
         assert_equal(
             rot([xa,ya,za],p=pts3d),
             apply(
-                affine3d_chain([
-                    affine3d_xrot(xa),
-                    affine3d_yrot(ya),
-                    affine3d_zrot(za)
-                ]),
+                affine3d_zrot(za) * affine3d_yrot(ya) * affine3d_xrot(xa),
                 pts3d
             ),
             info=str("[X,Y,Z] = ",[xa,ya,za], ", p=...")
@@ -312,10 +304,7 @@ module test_rot() {
             for (a = angs) {
                 assert_equal(
                     rot(from=vec1, to=vec2, a=a),
-                    affine3d_chain([
-                        affine3d_zrot(a),
-                        affine3d_rot_from_to(vec1,vec2)
-                    ]),
+                    affine3d_rot_from_to(vec1,vec2) * affine3d_zrot(a),
                     info=str(
                         "from = ", vec1, ", ",
                         "to = ", vec2, ", ",
@@ -325,10 +314,7 @@ module test_rot() {
                 assert_equal(
                     rot(from=vec1, to=vec2, a=a, p=pts3d),
                     apply(
-                        affine3d_chain([
-                            affine3d_zrot(a),
-                            affine3d_rot_from_to(vec1,vec2)
-                        ]),
+                        affine3d_rot_from_to(vec1,vec2) * affine3d_zrot(a),
                         pts3d
                     ),
                     info=str(

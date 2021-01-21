@@ -31,8 +31,21 @@ module test_is_2d_transform() {
 test_is_2d_transform();
 
 
+module test_is_affine() {
+    assert(is_affine(affine2d_scale([2,3])));
+    assert(is_affine(affine3d_scale([2,3,4])));
+    assert(!is_affine(affine3d_scale([2,3,4]),2));
+    assert(is_affine(affine2d_scale([2,3]),2));
+    assert(is_affine(affine3d_scale([2,3,4]),3));
+    assert(!is_affine(affine2d_scale([2,3]),3));
+}
+test_is_affine();
+
+
 module test_affine2d_to_3d() {
     assert(affine2d_to_3d(affine2d_identity()) == affine3d_identity());
+    assert(affine2d_to_3d(affine2d_translate([30,40])) == affine3d_translate([30,40,0]));
+    assert(affine2d_to_3d(affine2d_scale([3,4])) == affine3d_scale([3,4,1]));
     assert(affine2d_to_3d(affine2d_zrot(30)) == affine3d_zrot(30));
 }
 test_affine2d_to_3d();
@@ -86,15 +99,6 @@ module test_affine2d_skew() {
     }
 }
 test_affine2d_skew();
-
-
-module test_affine2d_chain() {
-    t = affine2d_translate([15,30]);
-    s = affine2d_scale([1.5,2]);
-    r = affine2d_zrot(30);
-    assert(affine2d_chain([t,s,r]) == r * s * t);
-}
-test_affine2d_chain();
 
 
 // 3D
@@ -208,15 +212,6 @@ module test_affine3d_skew_yz() {
     }
 }
 test_affine3d_skew_yz();
-
-
-module test_affine3d_chain() {
-    t = affine3d_translate([15,30,23]);
-    s = affine3d_scale([1.5,2,1.8]);
-    r = affine3d_zrot(30);
-    assert(affine3d_chain([t,s,r]) == r * s * t);
-}
-test_affine3d_chain();
 
 
 ////////////////////////////
