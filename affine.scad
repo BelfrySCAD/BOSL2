@@ -108,6 +108,14 @@ function affine2d_to_3d(m) = [
 //   mat = affine3d_to_2d(m);
 // Description:
 //   Takes a 4x4 affine3d matrix and returns its 3x3 affine2d equivalent.  3D transforms that would alter the Z coordinate are disallowed.
+// Example:
+//   mat = affine2d_to_3d(affine3d_translate([10,20,0]));
+//   // Returns:
+//   //   [
+//   //     [1, 0, 10],
+//   //     [0, 1, 20],
+//   //     [0, 0,  1],
+//   //   ]
 function affine3d_to_2d(m) =
     assert(is_2d_transform(m))
     [
@@ -179,10 +187,17 @@ function apply(transform,points) =
 //   the centerpoint lies on the plane through the origin that is perpendicular to the axis.  It may be different
 //   than the centerpoint you used to construct the transformation.
 // Example:
-//   rot_decode(rot(45));                // Returns [45,[0,0,1], [0,0,0], [0,0,0]]
-//   rot_decode(rot(a=37, v=[1,2,3], cp=[4,3,-7])));  // Returns [37, [0.26, 0.53, 0.80], [4.8, 4.6, -4.6], [0,0,0]]
-//   rot_decode(left(12)*xrot(-33));     // Returns [33, [-1,0,0], [0,0,0], [-12,0,0]]
-//   rot_decode(translate([3,4,5]));     // Returns [0, [0,0,1], [0,0,0], [3,4,5]]
+//   info = rot_decode(rot(45));
+//   // Returns: [45, [0,0,1], [0,0,0], [0,0,0]]
+// Example:
+//   info = rot_decode(rot(a=37, v=[1,2,3], cp=[4,3,-7])));
+//   // Returns: [37, [0.26, 0.53, 0.80], [4.8, 4.6, -4.6], [0,0,0]]
+// Example:
+//   info = rot_decode(left(12)*xrot(-33));
+//   // Returns: [33, [-1,0,0], [0,0,0], [-12,0,0]]
+// Example:
+//   info = rot_decode(translate([3,4,5]));
+//   // Returns: [0, [0,0,1], [0,0,0], [3,4,5]]
 function rot_decode(M) =
     assert(is_matrix(M,4,4) && approx(M[3],[0,0,0,1]), "Input matrix must be a 4x4 matrix representing a 3d transformation")
     let(R = submatrix(M,[0:2],[0:2]))
@@ -215,7 +230,16 @@ function rot_decode(M) =
 // Function: affine2d_identity()
 // Usage:
 //   mat = affine2d_identify();
-// Description: Create a 3x3 affine2d identity matrix.
+// Description:
+//   Create a 3x3 affine2d identity matrix.
+// Example:
+//   mat = affine2d_identity();
+//   // Returns:
+//   //   [
+//   //     [1, 0, 0],
+//   //     [0, 1, 0],
+//   //     [0, 0, 1]
+//   //   ]
 function affine2d_identity() = ident(3);
 
 
@@ -226,6 +250,14 @@ function affine2d_identity() = ident(3);
 //   Returns the 3x3 affine2d matrix to perform a 2D translation.
 // Arguments:
 //   v = 2D Offset to translate by.  [X,Y]
+// Example:
+//   mat = affine2d_translate([30,40]);
+//   // Returns:
+//   //   [
+//   //     [1, 0, 30],
+//   //     [0, 1, 40],
+//   //     [0, 0,  1]
+//   //   ]
 function affine2d_translate(v=[0,0]) =
     assert(is_vector(v),2)
     [
@@ -242,6 +274,14 @@ function affine2d_translate(v=[0,0]) =
 //   Returns the 3x3 affine2d matrix to perform a 2D scaling transformation.
 // Arguments:
 //   v = 2D vector of scaling factors.  [X,Y]
+// Example:
+//   mat = affine2d_scale([3,4]);
+//   // Returns:
+//   //   [
+//   //     [3, 0, 0],
+//   //     [0, 4, 0],
+//   //     [0, 0, 1]
+//   //   ]
 function affine2d_scale(v=[1,1]) =
     assert(is_vector(v,2))
     [
@@ -258,6 +298,14 @@ function affine2d_scale(v=[1,1]) =
 //   Returns the 3x3 affine2d matrix to perform a rotation of a 2D vector around the Z axis.
 // Arguments:
 //   ang = Number of degrees to rotate.
+// Example:
+//   mat = affine2d_zrot(90);
+//   // Returns:
+//   //   [
+//   //     [0,-1, 0],
+//   //     [1, 0, 0],
+//   //     [0, 0, 1]
+//   //   ]
 function affine2d_zrot(ang=0) =
     assert(is_finite(ang))
     [
@@ -274,6 +322,30 @@ function affine2d_zrot(ang=0) =
 //   Returns the 3x3 affine2d matrix to perform a reflection of a 2D vector across the line given by its normal vector.
 // Arguments:
 //   v = The normal vector of the line to reflect across.
+// Example:
+//   mat = affine2d_mirror([0,1]);
+//   // Returns:
+//   //   [
+//   //     [ 1, 0, 0],
+//   //     [ 0,-1, 0],
+//   //     [ 0, 0, 1]
+//   //   ]
+// Example:
+//   mat = affine2d_mirror([1,0]);
+//   // Returns:
+//   //   [
+//   //     [-1, 0, 0],
+//   //     [ 0, 1, 0],
+//   //     [ 0, 0, 1]
+//   //   ]
+// Example:
+//   mat = affine2d_mirror([1,1]);
+//   // Returns approximately:
+//   //   [
+//   //     [ 0,-1, 0],
+//   //     [-1, 0, 0],
+//   //     [ 0, 0, 1]
+//   //   ]
 function affine2d_mirror(v) =
     assert(is_vector(v,2))
     let(v=unit(point2d(v)), a=v.x, b=v.y)
@@ -294,6 +366,14 @@ function affine2d_mirror(v) =
 // Arguments:
 //   xa = Skew angle, in degrees, in the direction of the X axis. Default: 0
 //   ya = Skew angle, in degrees, in the direction of the Y axis. Default: 0
+// Example:
+//   mat = affine2d_skew(xa=45,ya=-45);
+//   // Returns approximately:
+//   //   [
+//   //     [ 1, 1, 0],
+//   //     [-1, 1, 0],
+//   //     [ 0, 0, 1]
+//   //   ]
 function affine2d_skew(xa=0, ya=0) =
     assert(is_finite(xa))
     assert(is_finite(ya))
@@ -311,7 +391,17 @@ function affine2d_skew(xa=0, ya=0) =
 // Function: affine3d_identity()
 // Usage:
 //   mat = affine3d_identity();
-// Description: Create a 4x4 affine3d identity matrix.
+// Description:
+//   Create a 4x4 affine3d identity matrix.
+// Example:
+//   mat = affine2d_identity();
+//   // Returns:
+//   //   [
+//   //     [1, 0, 0, 0],
+//   //     [0, 1, 0, 0],
+//   //     [0, 0, 1, 0],
+//   //     [0, 0, 0, 1]
+//   //   ]
 function affine3d_identity() = ident(4);
 
 
@@ -322,6 +412,15 @@ function affine3d_identity() = ident(4);
 //   Returns the 4x4 affine3d matrix to perform a 3D translation.
 // Arguments:
 //   v = 3D offset to translate by.  [X,Y,Z]
+// Example:
+//   mat = affine2d_translate([30,40,50]);
+//   // Returns:
+//   //   [
+//   //     [1, 0, 0, 30],
+//   //     [0, 1, 0, 40],
+//   //     [0, 0, 1, 50]
+//   //     [0, 0, 0,  1]
+//   //   ]
 function affine3d_translate(v=[0,0,0]) =
     assert(is_list(v))
     let( v = [for (i=[0:2]) default(v[i],0)] )
@@ -340,6 +439,15 @@ function affine3d_translate(v=[0,0,0]) =
 //   Returns the 4x4 affine3d matrix to perform a 3D scaling transformation.
 // Arguments:
 //   v = 3D vector of scaling factors.  [X,Y,Z]
+// Example:
+//   mat = affine3d_scale([3,4,5]);
+//   // Returns:
+//   //   [
+//   //     [3, 0, 0, 0],
+//   //     [0, 4, 0, 0],
+//   //     [0, 0, 5, 0],
+//   //     [0, 0, 0, 1]
+//   //   ]
 function affine3d_scale(v=[1,1,1]) =
     assert(is_list(v))
     let( v = [for (i=[0:2]) default(v[i],1)] )
@@ -358,6 +466,15 @@ function affine3d_scale(v=[1,1,1]) =
 //   Returns the 4x4 affine3d matrix to perform a rotation of a 3D vector around the X axis.
 // Arguments:
 //   ang = number of degrees to rotate.
+// Example:
+//   mat = affine3d_xrot(90);
+//   // Returns:
+//   //   [
+//   //     [1, 0, 0, 0],
+//   //     [0, 0,-1, 0],
+//   //     [0, 1, 0, 0],
+//   //     [0, 0, 0, 1]
+//   //   ]
 function affine3d_xrot(ang=0) =
     assert(is_finite(ang))
     [
@@ -375,6 +492,15 @@ function affine3d_xrot(ang=0) =
 //   Returns the 4x4 affine3d matrix to perform a rotation of a 3D vector around the Y axis.
 // Arguments:
 //   ang = Number of degrees to rotate.
+// Example:
+//   mat = affine3d_yrot(90);
+//   // Returns:
+//   //   [
+//   //     [ 0, 0, 1, 0],
+//   //     [ 0, 1, 0, 0],
+//   //     [-1, 0, 0, 0],
+//   //     [ 0, 0, 0, 1]
+//   //   ]
 function affine3d_yrot(ang=0) =
     assert(is_finite(ang))
     [
@@ -392,6 +518,15 @@ function affine3d_yrot(ang=0) =
 //   Returns the 4x4 affine3d matrix to perform a rotation of a 3D vector around the Z axis.
 // Arguments:
 //   ang = number of degrees to rotate.
+// Example:
+//   mat = affine3d_zrot(90);
+//   // Returns:
+//   //   [
+//   //     [ 0,-1, 0, 0],
+//   //     [ 1, 0, 0, 0],
+//   //     [ 0, 0, 1, 0],
+//   //     [ 0, 0, 0, 1]
+//   //   ]
 function affine3d_zrot(ang=0) =
     assert(is_finite(ang))
     [
@@ -410,6 +545,15 @@ function affine3d_zrot(ang=0) =
 // Arguments:
 //   u = 3D axis vector to rotate around.
 //   ang = number of degrees to rotate.
+// Example:
+//   mat = affine3d_rot_by_axis([1,1,1], 120);
+//   // Returns approx:
+//   //   [
+//   //     [ 0, 0, 1, 0],
+//   //     [ 1, 0, 0, 0],
+//   //     [ 0, 1, 0, 0],
+//   //     [ 0, 0, 0, 1]
+//   //   ]
 function affine3d_rot_by_axis(u=UP, ang=0) =
     assert(is_finite(ang))
     assert(is_vector(u,3))
@@ -435,6 +579,15 @@ function affine3d_rot_by_axis(u=UP, ang=0) =
 // Arguments:
 //   from = 3D axis vector to rotate from.
 //   to = 3D axis vector to rotate to.
+// Example:
+//   mat = affine3d_rot_from_to(UP, RIGHT);
+//   // Returns:
+//   //   [
+//   //     [ 0, 0, 1, 0],
+//   //     [ 0, 1, 0, 0],
+//   //     [-1, 0, 0, 0],
+//   //     [ 0, 0, 0, 1]
+//   //   ]
 function affine3d_rot_from_to(from, to) =
     assert(is_vector(from))
     assert(is_vector(to))
@@ -523,6 +676,24 @@ function affine3d_frame_map(x,y,z, reverse=false) =
 //   Returns the 4x4 affine3d matrix to perform a reflection of a 3D vector across the plane given by its normal vector.
 // Arguments:
 //   v = The normal vector of the plane to reflect across.
+// Example:
+//   mat = affine3d_mirror([1,0,0]);
+//   // Returns:
+//   //   [
+//   //     [-1, 0, 0, 0],
+//   //     [ 0, 1, 0, 0],
+//   //     [ 0, 0, 1, 0],
+//   //     [ 0, 0, 0, 1]
+//   //   ]
+// Example:
+//   mat = affine3d_mirror([0,1,0]);
+//   // Returns:
+//   //   [
+//   //     [ 1, 0, 0, 0],
+//   //     [ 0,-1, 0, 0],
+//   //     [ 0, 0, 1, 0],
+//   //     [ 0, 0, 0, 1]
+//   //   ]
 function affine3d_mirror(v) =
     assert(is_vector(v))
     let(
@@ -548,6 +719,15 @@ function affine3d_mirror(v) =
 //   syz = Skew factor multiplier for skewing along the Y axis as you get farther from the Z axis.  Default: 0
 //   szx = Skew factor multiplier for skewing along the Z axis as you get farther from the X axis.  Default: 0
 //   szy = Skew factor multiplier for skewing along the Z axis as you get farther from the Y axis.  Default: 0
+// Example:
+//   mat = affine3d_skew(sxy=2,szx=3);
+//   // Returns:
+//   //   [
+//   //     [ 1, 2, 0, 0],
+//   //     [ 0, 1, 0, 0],
+//   //     [ 0, 0, 1, 0],
+//   //     [ 3, 0, 0, 1]
+//   //   ]
 function affine3d_skew(sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0) = [
     [  1, sxy, sxz, 0],
     [syx,   1, syz, 0],
@@ -566,6 +746,15 @@ function affine3d_skew(sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0) = [
 // Arguments:
 //   xa = Skew angle, in degrees, in the direction of the X axis.  Default: 0
 //   ya = Skew angle, in degrees, in the direction of the Y axis.  Default: 0
+// Example:
+//   mat = affine3d_skew_xy(xa=45,ya=-45);
+//   // Returns:
+//   //   [
+//   //     [ 1, 0, 1, 0],
+//   //     [ 0, 1,-1, 0],
+//   //     [ 0, 0, 1, 0],
+//   //     [ 0, 0, 0, 1]
+//   //   ]
 function affine3d_skew_xy(xa=0, ya=0) =
     assert(is_finite(xa))
     assert(is_finite(ya))
@@ -587,6 +776,15 @@ function affine3d_skew_xy(xa=0, ya=0) =
 // Arguments:
 //   xa = Skew angle, in degrees, in the direction of the X axis.  Default: 0
 //   za = Skew angle, in degrees, in the direction of the Z axis.  Default: 0
+// Example:
+//   mat = affine3d_skew_xz(xa=45,za=-45);
+//   // Returns:
+//   //   [
+//   //     [ 1, 1, 0, 0],
+//   //     [ 0, 1, 0, 0],
+//   //     [ 0,-1, 1, 0],
+//   //     [ 0, 0, 0, 1]
+//   //   ]
 function affine3d_skew_xz(xa=0, za=0) =
     assert(is_finite(xa))
     assert(is_finite(za))
@@ -608,6 +806,15 @@ function affine3d_skew_xz(xa=0, za=0) =
 // Arguments:
 //   ya = Skew angle, in degrees, in the direction of the Y axis.  Default: 0
 //   za = Skew angle, in degrees, in the direction of the Z axis.  Default: 0
+// Example:
+//   mat = affine3d_skew_yz(ya=45,za=-45);
+//   // Returns:
+//   //   [
+//   //     [ 1, 0, 0, 0],
+//   //     [ 1, 1, 0, 0],
+//   //     [-1, 0, 1, 0],
+//   //     [ 0, 0, 0, 1]
+//   //   ]
 function affine3d_skew_yz(ya=0, za=0) =
     assert(is_finite(ya))
     assert(is_finite(za))
