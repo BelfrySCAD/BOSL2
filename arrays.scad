@@ -1250,7 +1250,9 @@ function submatrix(M,idx1,idx2) =
 //   A = hstack([M1, M2, M3, ...])
 // Description:
 //   Constructs a matrix by horizontally "stacking" together compatible matrices or vectors.  Vectors are treated as columsn in the stack.
-//   This command is the inverse of subindex.  Note: strings are broken apart into lists of characters.  
+//   This command is the inverse of subindex.  Note: strings given in vectors are broken apart into lists of characters.  Strings given
+//   in matrices are preserved as strings.  If you need to combine vectors of strings use array_group as shown below to convert the
+//   vector into a column matrix.  Also note that vertical stacking can be done directly with concat.  
 // Arguments:
 //   M1 = If given with other arguments, the first matrix (or vector) to stack.  If given alone, a list of matrices/vectors to stack. 
 //   M2 = Second matrix/vector to stack
@@ -1268,6 +1270,15 @@ function submatrix(M,idx1,idx2) =
 //                          //          [0, 1, 0, 3, 0, 1, 0],
 //                          //          [0, 0, 1, 4, 0, 0, 1]]
 //   d = hstack(subindex(M,0), subindex(M,[1 2]));  // Returns M
+//   strvec = ["one","two"];
+//   strmat = [["three","four"], ["five","six"]];
+//   e = hstack(strvec,strvec); // Returns [["o", "n", "e", "o", "n", "e"],
+//                              //          ["t", "w", "o", "t", "w", "o"]]
+//   f = hstack(array_group(strvec,1), array_group(strvec,1));
+//                              // Returns [["one", "one"],
+//                              //          ["two", "two"]]
+//   g = hstack(strmat,strmat); //  Returns: [["three", "four", "three", "four"],
+//                              //            [ "five",  "six",  "five",  "six"]]
 function hstack(M1, M2, M3) =
     (M3!=undef)? hstack([M1,M2,M3]) : 
     (M2!=undef)? hstack([M1,M2]) :

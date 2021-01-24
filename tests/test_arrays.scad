@@ -516,6 +516,10 @@ module test_hstack() {
     assert_equal(b,[[2, 5, 8], [3, 6, 9], [4, 7, 10]]);
     assert_equal(c,[[1, 0, 0, 2, 1, 0, 0], [0, 1, 0, 3, 0, 1, 0], [0, 0, 1, 4, 0, 0, 1]]);
     assert_equal(d,M);
+    strmat = [["three","four"], ["five","six"]];
+    assert_equal(hstack(strmat,strmat), [["three", "four", "three", "four"], ["five", "six", "five", "six"]]);
+    strvec = ["one","two"];
+    assert_equal(hstack(strvec,strmat),[["o", "n", "e", "three", "four"], ["t", "w", "o", "five", "six"]]);
 }
 test_hstack();
 
