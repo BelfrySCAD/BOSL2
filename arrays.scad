@@ -1243,55 +1243,45 @@ function submatrix(M,idx1,idx2) =
     [for(i=idx1) [for(j=idx2) M[i][j] ] ];
 
 
-// Function: zip()
-// Usage: Zipping Two Lists
-//   pairs = zip(v1, v2, <fit>, <fill>);
-//   for (p = zip(v1, v2, <fit>, <fill>) ...
-// Usage: Zipping Three Lists
-//   triplets = zip(v1, v2, v3, <*fit*>, <*fill*>);
-//   for (t = zip(v1, v2, v3, <*fit*>, <*fill*>)) ...
-// Usage: Zipping N Lists
-//   zips = zip(LISTS, <*fit*>, <*fill*>);
-//   for (z = zip(LISTS, <*fit*>, <*fill*>)) ...
+// Function: hstack()
+// Usage: 
+//   A = hstack(M1, M2)
+//   A = hstack(M1, M2, M3)
+//   A = hstack([M1, M2, M3, ...])
 // Description:
-//   Zips together corresponding items from two or more lists. Returns a list of lists,
-//   where each sublist contains corresponding items from each of the input lists.
-//   ie: For three lists, `[[A0, B0, C0], [A1, B1, C1], [A2, B2, C2], ...]`
+//   Constructs a matrix by horizontally "stacking" together compatible matrices or vectors.  Vectors are treated as columsn in the stack.
+//   This command is the inverse of subindex.  Note: strings are broken apart into lists of characters.  
 // Arguments:
-//   v1 = The first list if given with `v1`/`v2`.  A list of two or more lists to zipper, without `v1`/`v2`.
-//   v2 = A second list.
-//   v2 = A third list.
-//   ---
-//   fit = If `fit=="short"`, the zips together up to the length of the shortest list in vecs.  If `fit=="long"`, then pads all lists to the length of the longest, using the value in `fill`.  If `fit==false`, then requires all lists to be the same length.  Default: false.
-//   fill = The default value to fill in with if one or more lists if short.  Default: undef
+//   M1 = If given with other arguments, the first matrix (or vector) to stack.  If given alone, a list of matrices/vectors to stack. 
+//   M2 = Second matrix/vector to stack
+//   M3 = Third matrix/vector to stack.
 // Example:
-//   v1 = [1,2,3,4];
+//   M = ident(3);
+//   v1 = [2,3,4];
 //   v2 = [5,6,7];
-//   v3 = [8,9,10,11];
-//   a = zip(v1,v3);                       // returns [[1,8], [2,9], [3,10], [4,11]]
-//   b = zip([v1,v3]);                     // returns [[1,8], [2,9], [3,10], [4,11]]
-//   c = zip([v1,v2], fit="short");        // returns [[1,5], [2,6], [3,7]]
-//   d = zip([v1,v2], fit="long");         // returns [[1,5], [2,6], [3,7], [4,undef]]
-//   e = zip([v1,v2], fit="long, fill=0);  // returns [[1,5], [2,6], [3,7], [4,0]]
-//   f = zip(v1,v2,v3, fit="long");        // returns [[1,5,8], [2,6,9], [3,7,10], [4,undef,11]]
-//   g = zip([v1,v2,v3], fit="long");      // returns [[1,5,8], [2,6,9], [3,7,10], [4,undef,11]]
-// Example:
-//   v1 = [[1,2,3], [4,5,6], [7,8,9]];
-//   v2 = [[20,19,18], [17,16,15], [14,13,12]];
-//   zip(v1,v2);    // Returns [[1,2,3,20,19,18], [4,5,6,17,16,15], [7,8,9,14,13,12]]
-function zip(v1, v2, v3, fit=false, fill=undef) =
-    (v3!=undef)? zip([v1,v2,v3], fit=fit, fill=fill) :
-    (v2!=undef)? zip([v1,v2], fit=fit, fill=fill) :
-    assert(in_list(fit, [false, "short", "long"]), "Invalid fit value." )
-    assert(all([for(v=v1) is_list(v)]), "One of the inputs to zip is not a list")
+//   v3 = [8,9,10];
+//   a = hstack(v1,v2);     // Returns [[2, 5], [3, 6], [4, 7]]
+//   b = hstack(v1,v2,v3);  // Returns [[2, 5,  8],
+//                          //          [3, 6,  9],
+//                          //          [4, 7, 10]]
+//   c = hstack([M,v1,M]);  // Returns [[1, 0, 0, 2, 1, 0, 0],
+//                          //          [0, 1, 0, 3, 0, 1, 0],
+//                          //          [0, 0, 1, 4, 0, 0, 1]]
+//   d = hstack(subindex(M,0), subindex(M,[1 2]));  // Returns M
+function hstack(M1, M2, M3) =
+    (M3!=undef)? hstack([M1,M2,M3]) : 
+    (M2!=undef)? hstack([M1,M2]) :
+    assert(all([for(v=M1) is_list(v)]), "One of the inputs to hstack is not a list")
     let(
-        minlen = list_shortest(v1),
-        maxlen = list_longest(v1)
+        minlen = list_shortest(M1),
+        maxlen = list_longest(M1)
     )
-    assert(fit!=false || minlen==maxlen, "Input vectors to zip must have the same length")
-    fit == "long"
-      ? [for(i=[0:1:maxlen-1]) [for(v=v1) for(x=(i<len(v)? v[i] : (fill==undef)? [fill] : fill)) x] ] 
-      : [for(i=[0:1:minlen-1]) [for(v=v1) for(x=v[i]) x] ];
+    assert(minlen==maxlen, "Input vectors to hstack must have the same length")
+    [for(row=[0:1:minlen-1])
+        [for(matrix=M1)
+           each matrix[row]
+        ]
+    ];
 
 
 // Function: block_matrix()
@@ -1301,10 +1291,35 @@ function zip(v1, v2, v3, fit=false, fill=undef) =
 //    Create a block matrix by supplying a matrix of matrices, which will
 //    be combined into one unified matrix.  Every matrix in one row
 //    must have the same height, and the combined width of the matrices
-//    in each row must be equal.  
+//    in each row must be equal. Strings will stay strings. 
+// Examples:
+//  A = [[1,2],
+//       [3,4]];
+//  B = ident(2);
+//  C = block_matrix([[A,B],[B,A],[A,B]]);
+//      // Returns:
+//      //        [[1, 2, 1, 0],
+//      //         [3, 4, 0, 1],
+//      //         [1, 0, 1, 2],
+//      //         [0, 1, 3, 4],
+//      //         [1, 2, 1, 0],
+//      //         [3, 4, 0, 1]]);
+//  D = block_matrix([[A,B], ident(4)]);
+//      // Returns:
+//      //        [[1, 2, 1, 0],
+//      //         [3, 4, 0, 1],
+//      //         [1, 0, 0, 0],
+//      //         [0, 1, 0, 0],
+//      //         [0, 0, 1, 0],
+//      //         [0, 0, 0, 1]]);
+//  E = [["one", "two"], [3,4]];
+//  F = block_matrix([[A,A]]);
+//      // Returns:
+//      //        [["one", "two", "one", "two"],
+//      //         [    3,     4,     3,     4]]
 function block_matrix(M) =
     let(
-        bigM = [for(bigrow = M) each zip(bigrow)],
+        bigM = [for(bigrow = M) each hstack(bigrow)],
         len0=len(bigM[0]),
         badrows = [for(row=bigM) if (len(row)!=len0) 1]
     )
