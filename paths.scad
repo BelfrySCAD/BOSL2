@@ -1227,12 +1227,15 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
 function path_cut(path, dists, closed=false, direction=false) =
     let(long_enough = len(path) >= (closed ? 3 : 2))
     assert(long_enough,len(path)<2 ? "Two points needed to define a path" : "Closed path must include three points")
-    !is_list(dists)? path_cut(path, [dists],closed, direction)[0] :
-    let(cuts = _path_cut(path,dists,closed))
-    !direction ? cuts : let(
-        dir = _path_cuts_dir(path, cuts, closed),
-        normals = _path_cuts_normals(path, cuts, dir, closed)
-    ) zip(cuts, array_group(dir,1), array_group(normals,1));
+    !is_list(dists)? path_cut(path, [dists],closed, direction)[0]
+    : let(cuts = _path_cut(path,dists,closed))
+    !direction
+       ? cuts
+       : let(
+             dir = _path_cuts_dir(path, cuts, closed),
+             normals = _path_cuts_normals(path, cuts, dir, closed)
+         )
+         hstack(cuts, array_group(dir,1), array_group(normals,1));
 
 // Main recursive path cut function
 function _path_cut(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[]) =

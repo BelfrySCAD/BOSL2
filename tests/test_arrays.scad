@@ -495,15 +495,36 @@ module test_zip() {
     assert(zip([v1,v2],fit="long", fill=0) == [[1,5],[2,6],[3,7],[4,0]]);
     assert(zip([v1,v2,v3],fit="long") == [[1,5,8],[2,6,9],[3,7,10],[4,undef,11]]);
 }
-test_zip();
+//test_zip();
+
+module test_hstack() {
+    M = ident(3);
+    v1 = [2,3,4];
+    v2 = [5,6,7];
+    v3 = [8,9,10];
+    a = hstack(v1,v2);   
+    b = hstack(v1,v2,v3);
+    c = hstack([M,v1,M]);
+    d = hstack(subindex(M,0), subindex(M,[1, 2]));
+    assert_equal(a,[[2, 5], [3, 6], [4, 7]]);
+    assert_equal(b,[[2, 5, 8], [3, 6, 9], [4, 7, 10]]);
+    assert_equal(c,[[1, 0, 0, 2, 1, 0, 0], [0, 1, 0, 3, 0, 1, 0], [0, 0, 1, 4, 0, 0, 1]]);
+    assert_equal(d,M);
+    strmat = [["three","four"], ["five","six"]];
+    assert_equal(hstack(strmat,strmat), [["three", "four", "three", "four"], ["five", "six", "five", "six"]]);
+    strvec = ["one","two"];
+    assert_equal(hstack(strvec,strmat),[["o", "n", "e", "three", "four"], ["t", "w", "o", "five", "six"]]);
+}
+test_hstack();
+
 
 module test_block_matrix() {
     A = [[1,2],[3,4]];
     B = ident(2);
     assert_equal(block_matrix([[A,B],[B,A],[A,B]]), [[1,2,1,0],[3,4,0,1],[1,0,1,2],[0,1,3,4],[1,2,1,0],[3,4,0,1]]);
     assert_equal(block_matrix([[A,B],ident(4)]), [[1,2,1,0],[3,4,0,1],[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]);
-    text = [["a","b"],["c","d"]];
-    assert_equal(block_matrix([[text,B]]), [["a","b",1,0],["c","d",0,1]]);
+    text = [["aa","bb"],["cc","dd"]];
+    assert_equal(block_matrix([[text,B]]), [["aa","bb",1,0],["cc","dd",0,1]]);
 }
 test_block_matrix();
 
