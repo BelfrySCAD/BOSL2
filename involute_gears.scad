@@ -1124,7 +1124,7 @@ function worm(
         ],
         maxang = 360 / segs(d/2),
         refined_polars = [
-            for (i=idx(polars,end=-2)) let(
+            for (i=idx(polars,e=-2)) let(
                 delta = polars[i+1].x - polars[i].x,
                 steps = ceil(delta/maxang),
                 step = delta/steps

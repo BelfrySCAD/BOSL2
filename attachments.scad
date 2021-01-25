@@ -573,7 +573,7 @@ function find_anchor(anchor, geom) =
             path = move(-point2d(cp), p=geom[1]),
             anchor = point2d(anchor),
             isects = [
-                for (t=triplet_wrap(path)) let(
+                for (t=triplet(path,true)) let(
                     seg1 = [t[0],t[1]],
                     seg2 = [t[1],t[2]],
                     isect = ray_segment_intersection([[0,0],anchor], seg1),

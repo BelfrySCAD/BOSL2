@@ -266,9 +266,9 @@ test_list_fit();
 module test_idx() {
     colors = ["red", "green", "blue", "cyan"];
     assert([for (i=idx(colors)) i] == [0,1,2,3]);
-    assert([for (i=idx(colors,end=-2)) i] == [0,1,2]);
-    assert([for (i=idx(colors,start=1)) i] == [1,2,3]);
-    assert([for (i=idx(colors,start=1,end=-2)) i] == [1,2]);
+    assert([for (i=idx(colors,e=-2)) i] == [0,1,2]);
+    assert([for (i=idx(colors,s=1)) i] == [1,2,3]);
+    assert([for (i=idx(colors,s=1,e=-2)) i] == [1,2]);
 }
 test_idx();
 
@@ -449,29 +449,23 @@ test_force_list();
 module test_pair() {
     assert(pair([3,4,5,6]) == [[3,4], [4,5], [5,6]]);
     assert(pair("ABCD") == [["A","B"], ["B","C"], ["C","D"]]);
+    assert(pair([3,4,5,6],true) == [[3,4], [4,5], [5,6], [6,3]]);
+    assert(pair("ABCD",true) == [["A","B"], ["B","C"], ["C","D"], ["D","A"]]);
+    assert(pair([3,4,5,6],wrap=true) == [[3,4], [4,5], [5,6], [6,3]]);
+    assert(pair("ABCD",wrap=true) == [["A","B"], ["B","C"], ["C","D"], ["D","A"]]);
 }
 test_pair();
-
-
-module test_pair_wrap() {
-    assert(pair_wrap([3,4,5,6]) == [[3,4], [4,5], [5,6], [6,3]]);
-    assert(pair_wrap("ABCD") == [["A","B"], ["B","C"], ["C","D"], ["D","A"]]);
-}
-test_pair_wrap();
 
 
 module test_triplet() {
     assert(triplet([3,4,5,6,7]) == [[3,4,5], [4,5,6], [5,6,7]]);
     assert(triplet("ABCDE") == [["A","B","C"], ["B","C","D"], ["C","D","E"]]);
+    assert(triplet([3,4,5,6],true) == [[3,4,5], [4,5,6], [5,6,3], [6,3,4]]);
+    assert(triplet("ABCD",true) == [["A","B","C"], ["B","C","D"], ["C","D","A"], ["D","A","B"]]);
+    assert(triplet([3,4,5,6],wrap=true) == [[3,4,5], [4,5,6], [5,6,3], [6,3,4]]);
+    assert(triplet("ABCD",wrap=true) == [["A","B","C"], ["B","C","D"], ["C","D","A"], ["D","A","B"]]);
 }
 test_triplet();
-
-
-module test_triplet_wrap() {
-    assert(triplet_wrap([3,4,5,6]) == [[3,4,5], [4,5,6], [5,6,3], [6,3,4]]);
-    assert(triplet_wrap("ABCD") == [["A","B","C"], ["B","C","D"], ["C","D","A"], ["D","A","B"]]);
-}
-test_triplet_wrap();
 
 
 module test_permute() {

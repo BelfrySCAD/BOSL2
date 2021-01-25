@@ -574,12 +574,13 @@ class LeafNode(object):
                 for line in block:
                     out.append(mkdn_esc(line))
                 out.append("")
-        if self.arguments:
+        if self.arguments or self.named_arguments:
             out.append("**Arguments:**")
+        if self.arguments:
             out.append('<abbr title="These args can be used by position or by name.">By&nbsp;Position</abbr> | What it does')
             out.append("---------------- | ------------------------------")
             for argname, argdesc in self.arguments:
-                argname = argname.replace(" / ", "` / `")
+                argname = " / ".join("`{}`".format(x.strip()) for x in argname.replace("|","/").split("/"))
                 out.append(
                     "{0:15s} | {1}".format(
                         "`{0}`".format(argname),
@@ -591,7 +592,7 @@ class LeafNode(object):
             out.append('<abbr title="These args must be used by name, ie: name=value">By&nbsp;Name</abbr>   | What it does')
             out.append("-------------- | ------------------------------")
             for argname, argdesc in self.named_arguments:
-                argname = argname.replace(" / ", "` / `")
+                argname = " / ".join("`{}`".format(x.strip()) for x in argname.replace("|","/").split("/"))
                 out.append(
                     "{0:15s} | {1}".format(
                         "`{0}`".format(argname),

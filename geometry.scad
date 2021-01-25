@@ -2004,7 +2004,7 @@ function _split_polygon_at_x(poly, x) =
     ) (min(xs) >= x || max(xs) <= x)? [poly] :
     let(
         poly2 = [
-            for (p = pair_wrap(poly)) each [
+            for (p = pair(poly,true)) each [
                 p[0],
                 if(
                     (p[0].x < x && p[1].x > x) ||
@@ -2034,7 +2034,7 @@ function _split_polygon_at_y(poly, y) =
     ) (min(ys) >= y || max(ys) <= y)? [poly] :
     let(
         poly2 = [
-            for (p = pair_wrap(poly)) each [
+            for (p = pair(poly,true)) each [
                 p[0],
                 if(
                     (p[0].y < y && p[1].y > y) ||
@@ -2064,7 +2064,7 @@ function _split_polygon_at_z(poly, z) =
     ) (min(zs) >= z || max(zs) <= z)? [poly] :
     let(
         poly2 = [
-            for (p = pair_wrap(poly)) each [
+            for (p = pair(poly,true)) each [
                 p[0],
                 if(
                     (p[0].z < z && p[1].z > z) ||

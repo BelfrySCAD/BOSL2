@@ -824,7 +824,7 @@ function assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, 
         [foundfrag, concat([path], remainder)]
     ) : let(
         fragend = select(foundfrag,-1),
-        hits = [for (i = idx(path,end=-2)) if(approx(path[i],fragend,eps=eps)) i]
+        hits = [for (i = idx(path,e=-2)) if(approx(path[i],fragend,eps=eps)) i]
     ) hits? (
         let(
             // Found fragment intersects with initial path
