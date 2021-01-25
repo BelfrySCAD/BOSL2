@@ -155,7 +155,7 @@ include <structs.scad>
 //   $fa=1;
 //   zigzagx = [-10, 0, 10, 20, 29, 38, 46, 52, 59, 66, 72, 78, 83, 88, 92, 96, 99, 102, 112];
 //   zigzagy = concat([0], flatten(repeat([-10,10],8)), [-10,0]);
-//   zig = zip(zigzagx,zigzagy);
+//   zig = hstack(zigzagx,zigzagy);
 //   stroke(zig,width=1);   // Original shape
 //   fwd(20)            // Smooth size corners with a cut of 4 and curvature parameter 0.6
 //     stroke(round_corners(zig,cut=4, k=0.6, method="smooth", closed=false),width=1);
@@ -190,9 +190,9 @@ include <structs.scad>
 //   $fn=36;
 //   square = [[0,0],[1,0],[1,1],[0,1]];
 //   spiral = flatten(repeat(concat(square,reverse(square)),5));  // Squares repeat 10 times, forward and backward
-//   squareind = [for(i=[0:9]) each [i,i,i,i]];                    // Index of the square for each point
+//   squareind = [for(i=[0:9]) each [i,i,i,i]];                   // Index of the square for each point
 //   z = list_range(40)*.2+squareind;
-//   path3d = zip(spiral,z);                                       // 3D spiral
+//   path3d = hstack(spiral,z);                                   // 3D spiral
 //   rounding = squareind/20;
 //       // Setting k=1 means curvature won't be continuous, but curves are as round as possible
 //       // Try changing the value to see the effect.
@@ -772,9 +772,9 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
 //   offset_sweep(rounded_star, height=20, bottom=os_circle(r=4), top=os_circle(r=1), steps=15);
 // Example: Rounding a star shaped prism with negative radius values
-//   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
-//   offset_sweep(rounded_star, height=20, bottom=os_circle(r=-4), top=os_circle(r=-1), steps=15);
+   star = star(5, r=22, ir=13);
+   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
+   offset_sweep(rounded_star, height=20, bottom=os_circle(r=-4), top=os_circle(r=-1), steps=15);
 // Example: Unexpected corners in the result even with `offset="round"` (the default), even with offset_maxstep set small.
 //   triangle = [[0,0],[10,0],[5,10]];
 //   offset_sweep(triangle, height=6, bottom = os_circle(r=-2),steps=16,offset_maxstep=0.25);
@@ -914,7 +914,7 @@ function _make_offset_polyhedron(path,offsets, offset_type, flip_faces, quality,
                         offsetind+1, vertexcount+len(path),
                         vertices=concat(
                                 vertices,
-                                zip(vertices_faces[0],repeat(offsets[offsetind][1],len(vertices_faces[0])))
+                                path3d(vertices_faces[0],offsets[offsetind][1])
                         ),
                         faces=concat(faces, vertices_faces[1])
                 )
@@ -993,7 +993,7 @@ function offset_sweep(
         ),
 
         top_start_ind = len(vertices_faces_bot[0]),
-        initial_vertices_top = zip(path, repeat(middle,len(path))),
+        initial_vertices_top = path3d(path, middle),
         vertices_faces_top = _make_offset_polyhedron(
                 path, move(p=offsets_top,[0,middle]),
                 struct_val(top,"offset"), !clockwise,
