@@ -674,7 +674,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
         varr = vnf[0],
         faces = vnf[1],
         edges = sort([
-            for (face=faces, edge=pair_wrap(face))
+            for (face=faces, edge=pair(face,true))
             edge[0]<edge[1]? edge : [edge[1],edge[0]]
         ]),
         edgecnts = unique_count(edges),
@@ -732,8 +732,8 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             for(i = idx(faces), j = idx(faces)) if(i != j)
             if(len(deduplicate(faces[i],closed=true))>=3)
             if(len(deduplicate(faces[j],closed=true))>=3)
-            for(edge1 = pair_wrap(faces[i]))
-            for(edge2 = pair_wrap(faces[j]))
+            for(edge1 = pair(faces[i],true))
+            for(edge2 = pair(faces[j],true))
             if(edge1 == edge2)  // Valid adjacent faces will never have the same vertex ordering.
             if(_edge_not_reported(edge1, varr, overpop_edges))
             [
@@ -768,7 +768,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
                 f1 = faces[i],
                 f2 = faces[j],
                 shared_edges = [
-                    for (edge1 = pair_wrap(f1), edge2 = pair_wrap(f2)) let(
+                    for (edge1 = pair(f1,true), edge2 = pair(f2,true)) let(
                         e1 = edge1[0]<edge1[1]? edge1 : [edge1[1],edge1[0]],
                         e2 = edge2[0]<edge2[1]? edge2 : [edge2[1],edge2[0]]
                     ) if (e1==e2) 1

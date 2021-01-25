@@ -460,7 +460,7 @@ function _skin_core(profiles, caps) =
                 vertices = [for (prof=profiles) each prof],
         plens = [for (prof=profiles) len(prof)],
         sidefaces = [
-            for(pidx=idx(profiles,end=-2))
+            for(pidx=idx(profiles,e=-2))
             let(
                 prof1 = profiles[pidx%len(profiles)],
                 prof2 = profiles[(pidx+1)%len(profiles)],

@@ -345,7 +345,7 @@ function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
         uvals = [for (i=[0:1:segs]) lerp(start_u, end_u, i/segs)],
         path = bezier_points(curve,uvals),
         defl = max([
-            for (i=idx(path,end=-3)) let(
+            for (i=idx(path,e=-3)) let(
                 mp = (path[i] + path[i+2]) / 2
             ) norm(path[i+1] - mp)
         ]),

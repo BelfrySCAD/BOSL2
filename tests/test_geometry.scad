@@ -394,7 +394,7 @@ module test_line_normal() {
     assert(line_normal([[0,0],[0,-10]]) == [1,0]);
     assert(approx(line_normal([[0,0],[10,10]]), [-sqrt(2)/2,sqrt(2)/2]));
     pts = [for (p=pair(rands(-100,100,1000,seed_value=4312))) p];
-    for (p = pair_wrap(pts)) {
+    for (p = pair(pts,true)) {
         p1 = p.x;
         p2 = p.y;
         n = unit(p2-p1);
@@ -619,7 +619,7 @@ module test_circle_point_tangents() {
 
 module test_tri_calc() {
     sides = rands(1,100,100,seed_value=8888);
-    for (p=pair_wrap(sides)) {
+    for (p=pair(sides,true)) {
         opp = p[0];
         adj = p[1];
         hyp = norm([opp,adj]);
@@ -642,7 +642,7 @@ module test_tri_calc() {
 
 module test_tri_functions() {
     sides = rands(1,100,100,seed_value=8181);
-    for (p = pair_wrap(sides)) {
+    for (p = pair(sides,true)) {
         adj = p.x;
         opp = p.y;
         hyp = norm([opp,adj]);

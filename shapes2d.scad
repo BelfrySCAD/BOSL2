@@ -186,7 +186,7 @@ module stroke(
 
         if (len(path[0]) == 2) {
             // Straight segments
-            for (i = idx(path2,end=-2)) {
+            for (i = idx(path2,e=-2)) {
                 seg = select(path2,i,i+1);
                 delt = seg[1] - seg[0];
                 translate(seg[0]) {
@@ -234,7 +234,7 @@ module stroke(
             }
         } else {
             quatsums = Q_Cumulative([
-                for (i = idx(path2,end=-2)) let(
+                for (i = idx(path2,e=-2)) let(
                     vec1 = i==0? UP : unit(path2[i]-path2[i-1], UP),
                     vec2 = unit(path2[i+1]-path2[i], UP),
                     axis = vector_axis(vec1,vec2),
@@ -243,12 +243,12 @@ module stroke(
             ]);
             rotmats = [for (q=quatsums) Q_Matrix4(q)];
             sides = [
-                for (i = idx(path2,end=-2))
+                for (i = idx(path2,e=-2))
                 quantup(segs(max(widths[i],widths[i+1])/2),4)
             ];
 
             // Straight segments
-            for (i = idx(path2,end=-2)) {
+            for (i = idx(path2,e=-2)) {
                 dist = norm(path2[i+1] - path2[i]);
                 w1 = widths[i]/2;
                 w2 = widths[i+1]/2;

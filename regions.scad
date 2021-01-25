@@ -367,7 +367,7 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg
                 for (path=rgn) let(
                     p = cleanup_path(path),
                     path = is_undef(maxseg)? p : [
-                        for (seg=pair_wrap(p)) each
+                        for (seg=pair(p,true)) each
                         let(steps=ceil(norm(seg.y-seg.x)/maxseg))
                         lerp(seg.x, seg.y, [0:1/steps:1-EPSILON])
                     ]
@@ -380,7 +380,7 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg
             for (pathnum = idx(rgn)) let(
                 p = cleanup_path(rgn[pathnum]),
                 path = is_undef(maxseg)? p : [
-                    for (seg=pair_wrap(p)) each
+                    for (seg=pair(p,true)) each
                     let(steps=ceil(norm(seg.y-seg.x)/maxseg))
                     lerp(seg.x, seg.y, [0:1/steps:1-EPSILON])
                 ],
