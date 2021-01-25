@@ -986,7 +986,7 @@ function unique_count(list) =
 function idx(list, s=0, e=-1, step=1) =
     assert(is_list(list)||is_string(list), "Invalid input." )
     let( ll = len(list) )
-    ll == 0 ? [0:1:-1] :
+    ll == 0 ? [0:1:ll-1] :
     let(
         _s = posmod(s,ll),
         _e = posmod(e,ll)
