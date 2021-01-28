@@ -150,9 +150,9 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 //   pco1810_cap();
 //   pco1810_cap(texture="knurled");
 //   pco1810_cap(texture="ribbed");
-// Examples: Standard Anchors
+// Example: Standard Anchors
 //   pco1810_cap(texture="ribbed") show_anchors(custom=false);
-// Examples: Custom Named Anchors
+// Example: Custom Named Anchors
 //   expose_anchors(0.3)
 //       pco1810_cap(texture="ribbed")
 //           show_anchors(std=false);
