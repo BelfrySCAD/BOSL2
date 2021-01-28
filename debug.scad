@@ -334,25 +334,27 @@ module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tags="anchor-arrow") {
 
 
 
-// Module: show_internal_anchors()
+// Module: expose_anchors()
 // Usage:
-//   show_internal_anchors(<opacity>) {...}
+//   expose_anchors(opacity) {...}
 // Description:
-//   Makes the children transparent gray, while showing any
-//   anchor arrows that may exist.
+//   Makes the children transparent gray, while showing any anchor arrows that may exist.
 // Arguments:
 //   opacity = The opacity of the arrow.  0.0 is invisible, 1.0 is opaque.  Default: 0.2
 // Example(FlatSpin):
-//   show_internal_anchors() cube(50, center=true) show_anchors();
-module show_internal_anchors(opacity=0.2) {
-    show("anchor-arrow") children() show_anchors();
-    hide("anchor-arrow") recolor(list_pad(point3d($color),4,fill=opacity)) children();
+//   expose_anchors() cube(50, center=true) show_anchors();
+module expose_anchors(opacity=0.2) {
+    show("anchor-arrow")
+        children();
+    hide("anchor-arrow")
+        color(is_string($color)? $color : point3d($color), opacity)
+            children();
 }
 
 
 // Module: show_anchors()
 // Usage:
-//   show_anchors(<s>, <std=>, <custom=>);
+//   ... show_anchors(<s>, <std=>, <custom=>);
 // Description:
 //   Show all standard anchors for the parent object.
 // Arguments:

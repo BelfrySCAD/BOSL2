@@ -379,8 +379,8 @@ function get_metric_nut_thickness(size) = lookup(size, [
 // Example(FlatSpin): Standard Anchors
 //   screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
 //       show_anchors(5, custom=false);
-// Example(FlatSpin): Standard Anchors
-//   show_internal_anchors()
+// Example(FlatSpin): Custom Named Anchors
+//   expose_anchors()
 //     screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
 //       show_anchors(5, std=false);
 module screw(
@@ -470,8 +470,8 @@ module screw(
 // Example(FlatSpin): Standard Anchors
 //   metric_bolt(headtype="oval", size=10, l=15, shank=5, details=true, phillips="#2")
 //       show_anchors(5, custom=false);
-// Example(FlatSpin): Custom Anchors
-//   show_internal_anchors(0.125)
+// Example(FlatSpin): Custom Named Anchors
+//   expose_anchors(0.125)
 //     metric_bolt(headtype="oval", size=10, l=15, shank=5, details=true, phillips="#2")
 //       show_anchors(5, std=false);
 module metric_bolt(
