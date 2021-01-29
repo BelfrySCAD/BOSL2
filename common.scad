@@ -271,21 +271,21 @@ function first_defined(v,recursive=false,_i=0) =
 // Examples:
 //   length = one_defined([length,L,l], ["length","L","l"]);
 //   length = one_defined([length,L,l], "length,L,l", dflt=1);
-function one_defined(vals, names, dflt=_undef) =
+function one_defined(vals, names, dflt=_UNDEF) =
     let(
         checkargs = is_list(names)? assert(len(vals) == len(names)) :
             is_string(names)? let(
                 name_cnt = len([for (c=names) if (c==",") 1]) + 1
             ) assert(len(vals) == name_cnt) :
             assert(is_list(names) || is_string(names)) 0,
-        ok = num_defined(vals)==1 || (dflt!=_undef && num_defined(vals)==0)
+        ok = num_defined(vals)==1 || (dflt!=_UNDEF && num_defined(vals)==0)
     ) ok? default(first_defined(vals), dflt) :
     let(
         names = is_string(names) ? str_split(names,",") : names,
         defd = [for (i=idx(vals)) if (is_def(vals[i])) names[i]],
         msg = str(
             "Must define ",
-            dflt==_undef? "exactly" : "at most",
+            dflt==_UNDEF? "exactly" : "at most",
             " one of ",
             num_defined(vals) == 0 ? names : defd
         )
@@ -420,7 +420,7 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
 
 // Function: get_named_args()
 // Usage:
-//   function f(pos1=_undef, pos2=_undef,...,named1=_undef, named2=_undef, ...) = let(args = get_named_args([pos1, pos2, ...], [[named1, default1], [named2, default2], ...]), named1=args[0], named2=args[1], ...)
+//   function f(pos1=_UNDEF, pos2=_UNDEF,...,named1=_UNDEF, named2=_UNDEF, ...) = let(args = get_named_args([pos1, pos2, ...], [[named1, default1], [named2, default2], ...]), named1=args[0], named2=args[1], ...)
 // Description:
 //   Given the values of some positional and named arguments, returns a list of the values assigned to
 //   named parameters.  in the following steps:
@@ -441,18 +441,18 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
 //   `get_named_args()` do the parsing from the whole set of arguments.  See the example below.
 //   .
 //   This supports the user explicitly passing `undef` as a function argument.  To distinguish between
-//   an intentional `undef` and the absence of an argument, we use a custom `_undef` value as a guard
-//   marking the absence of any arguments (in practice, `_undef` is a random-generated string, which
+//   an intentional `undef` and the absence of an argument, we use a custom `_UNDEF` value as a guard
+//   marking the absence of any arguments (in practice, `_UNDEF` is a random-generated string, which
 //   will never coincide with any useful user value).  This forces the author to declare all the
-//   function parameters as having `_undef` as their default value.
+//   function parameters as having `_UNDEF` as their default value.
 // Arguments:
 //   positional = The list of values of positional arguments.
 //   named = The list of named arguments; each entry of the list has the form `[passed-value, <default-value>, <priority>]`, where `passed-value` is the value that was passed at function call; `default-value` is the value that will be used if nothing is read from either named or positional arguments; `priority` is the priority assigned to this argument (lower means more priority, default value is `+inf`). Since stable sorting is used, if no priority at all is given, all arguments will be read in order.
-//   _undef = The default value used by the calling function for all arguments. The default value, `_undef`, is a random string. This value **must** be the default value of all parameters in the outer function call (see example below).
+//   _undef = The default value used by the calling function for all arguments. The default value, `_UNDEF`, is a random string. This value **must** be the default value of all parameters in the outer function call (see example below).
 //
 // Example: a function with prototype `f(named1,< <named2>, named3 >)`
-//   function f(_p1=_undef, _p2=_undef, _p3=_undef,
-//              arg1=_undef, arg2=_undef, arg3=_undef) =
+//   function f(_p1=_UNDEF, _p2=_UNDEF, _p3=_UNDEF,
+//              arg1=_UNDEF, arg2=_UNDEF, arg3=_UNDEF) =
 //      let(named = get_named_args([_p1, _p2, _p3],
 //          [[arg1, "default1",0], [arg2, "default2",2], [arg3, "default3",1]]))
 //      named;
@@ -474,13 +474,13 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
 
 // a value that the user should never enter randomly;
 // result of `dd if=/dev/random bs=32 count=1 |base64` :
-_undef="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
+_UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 
 /* Note: however tempting it might be, it is *not* possible to accept
  * named argument as a list [named1, named2, ...] (without default
  * values), because the values [named1, named2...] themselves might be
  * lists, and we will not be able to distinguish the two cases. */
-function get_named_args(positional, named,_undef=_undef) =
+function get_named_args(positional, named, _undef=_UNDEF) =
     let(deft = [for(p=named) p[1]], // default is undef
         // indices of the values to fetch from positional args:
         unknown = [for(x=enumerate(named)) if(x[1][0]==_undef) x[0]],
