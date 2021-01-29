@@ -223,7 +223,7 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
     assert(in_list(method,["circle", "smooth", "chamfer"]), "method must be one of \"circle\", \"smooth\" or \"chamfer\"")
     let(
         default_k = 0.5,
-        size=one_defined([radius, cut, joint], ["radius", "cut", "joint"]),
+        size=one_defined([radius, cut, joint], "radius,cut,joint"),
         path = is_region(path)?
                    assert(len(path)==1, "Region supplied as path does not have exactly one component")
                    path[0] : path,
@@ -972,7 +972,7 @@ function offset_sweep(
         bottom_height = len(offsets_bot)==0 ? 0 : abs(select(offsets_bot,-1)[1]) - struct_val(bottom,"extra"),
         top_height = len(offsets_top)==0 ? 0 : abs(select(offsets_top,-1)[1]) - struct_val(top,"extra"),
 
-        height = get_height(l=l,h=h,height=height,dflt=bottom_height+top_height),
+        height = one_defined([l,h,height], "l,h,height", dflt=u_add(bottom_height,top_height)),
         middle = height-bottom_height-top_height
     )
   echo(height=height)
@@ -1241,7 +1241,7 @@ module convex_offset_extrude(
         bottom_height = len(offsets_bot)==0 ? 0 : abs(select(offsets_bot,-1)[1]) - struct_val(bottom,"extra");
         top_height = len(offsets_top)==0 ? 0 : abs(select(offsets_top,-1)[1]) - struct_val(top,"extra");
 
-        height = get_height(l=l,h=h,height=height,dflt=bottom_height+top_height);
+        height = one_defined([l,h,height], "l,h,height", dflt=u_add(bottom_height,top_height));
         assert(height>=0, "Height must be nonnegative");
 
         middle = height-bottom_height-top_height;
@@ -1809,7 +1809,7 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
      k_top = default(k_top, k),
      k_bot = default(k_bot, k),
      k_sides = default(k_sides, k),
-     height = one_defined([h,l,height,length],["height","length","l","h"], required=false),
+     height = one_defined([h,l,height,length],"height,length,l,h", dflt=undef),
      shapedimok = (len(bottom[0])==3 && is_path(top,3)) || (len(bottom[0])==2 && (is_undef(top) || is_path(top,2)))
    )
    assert(is_num(k_top) && k_top>=0 && k_top<=1, "Curvature parameter k_top must be in interval [0,1]")

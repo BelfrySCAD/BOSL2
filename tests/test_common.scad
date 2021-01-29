@@ -276,10 +276,14 @@ test_first_defined();
 
 
 module test_one_defined() {
+    assert_equal(one_defined([27,undef,undef], "length,L,l") ,27);
+    assert_equal(one_defined([undef,28,undef], "length,L,l") ,28);
+    assert_equal(one_defined([undef,undef,29], "length,L,l") ,29);
+    assert_equal(one_defined([undef,undef,undef], "length,L,l", dflt=undef), undef);
     assert_equal(one_defined([27,undef,undef], ["length","L","l"]) ,27);
     assert_equal(one_defined([undef,28,undef], ["length","L","l"]) ,28);
     assert_equal(one_defined([undef,undef,29], ["length","L","l"]) ,29);
-    assert_equal(one_defined([undef,undef,undef], ["length","L","l"], required=false), undef);
+    assert_equal(one_defined([undef,undef,undef], ["length","L","l"], dflt=undef), undef);
 }
 test_one_defined();
 
@@ -359,19 +363,6 @@ module test_get_radius() {
     assert(get_radius(r1=undef,d1=undef,r=undef,d=undef,dflt=undef) == undef);
 }
 test_get_radius();
-
-
-module test_get_height() {
-    assert(get_height(h=undef, l=undef, height=undef, dflt=undef) == undef);
-    assert(get_height(h=undef, l=undef, height=undef, dflt=23) == 23);
-    assert(get_height(h=undef, l=undef, height=50, dflt=23) == 50);
-    assert(get_height(h=undef, l=50, height=undef, dflt=23) == 50);
-    assert(get_height(h=50, l=undef, height=undef, dflt=23) == 50);
-    assert(get_height(h=undef, l=undef, height=75, dflt=23) == 75);
-    assert(get_height(h=undef, l=75, height=undef, dflt=23) == 75);
-    assert(get_height(h=75, l=undef, height=undef, dflt=23) == 75);
-}
-test_get_height();
 
 
 module test_scalar_vec3() {
