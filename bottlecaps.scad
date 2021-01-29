@@ -131,6 +131,9 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
     }
 }
 
+function  pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
+    no_function("pco1810_neck");
+
 
 // Module: pco1810_cap()
 // Usage:
@@ -194,6 +197,10 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
         children();
     }
 }
+
+function pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
+    no_function("pco1810_cap");
+
 
 
 // Section: PCO-1881 Bottle Threading
@@ -316,6 +323,9 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
     }
 }
 
+function pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
+    no_function("pco1881_neck");
+
 
 // Module: pco1881_cap()
 // Usage:
@@ -371,6 +381,9 @@ module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
         children();
     }
 }
+
+function pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
+    no_function("pco1881_cap");
 
 
 
