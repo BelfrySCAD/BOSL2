@@ -554,7 +554,6 @@ function segs(r) =
 //   }
 module no_children(count) {
   assert($children==0, "Module no_children() does not support child modules");
-  echo(parents=$parent_modules);
   if ($parent_modules>0) {
       assert(count==0, str("Module ",parent_module(1),"() does not support child modules"));
   }
