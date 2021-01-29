@@ -549,7 +549,10 @@ function segs(r) =
 // Arguments:
 //   $children = number of children the module has.  
 // Example:
-//   no_children($children);
+//   module foo() {
+//       no_children($children);
+//   }
+//   foo();
 module no_children(count) {
   assert($children==0, "Module no_children() does not support child modules");
   assert(count==0, str("Module ",parent_module(1),"() does not support child modules"));
