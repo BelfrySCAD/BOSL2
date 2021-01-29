@@ -552,12 +552,13 @@ function segs(r) =
 //   module foo() {
 //       no_children($children);
 //   }
-//   foo();
 module no_children(count) {
   assert($children==0, "Module no_children() does not support child modules");
-  assert(count==0, str("Module ",parent_module(1),"() does not support child modules"));
+  echo(parents=$parent_modules);
+  if ($parent_modules>0) {
+      assert(count==0, str("Module ",parent_module(1),"() does not support child modules"));
+  }
 }
-
 
 
 // Function: no_function()
@@ -577,7 +578,7 @@ function no_function(name) =
 // Description:
 //   Asserts that the called module exists only as a function.
 // Example:
-//   no_module();
+//   function foo() = no_module();
 module no_module() {
     assert(false, str("You called ",parent_module(1),"() as a module but it is available only as a function"));
 }    
