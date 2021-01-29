@@ -276,10 +276,14 @@ test_first_defined();
 
 
 module test_one_defined() {
-    assert_equal(one_defined([27,undef,undef], "length,L,l"]) ,27);
-    assert_equal(one_defined([undef,28,undef], "length,L,l"]) ,28);
-    assert_equal(one_defined([undef,undef,29], "length,L,l"]) ,29);
-    assert_equal(one_defined([undef,undef,undef], "length,L,l"], dflt=undef), undef);
+    assert_equal(one_defined([27,undef,undef], "length,L,l") ,27);
+    assert_equal(one_defined([undef,28,undef], "length,L,l") ,28);
+    assert_equal(one_defined([undef,undef,29], "length,L,l") ,29);
+    assert_equal(one_defined([undef,undef,undef], "length,L,l", dflt=undef), undef);
+    assert_equal(one_defined([27,undef,undef], ["length","L","l"]) ,27);
+    assert_equal(one_defined([undef,28,undef], ["length","L","l"]) ,28);
+    assert_equal(one_defined([undef,undef,29], ["length","L","l"]) ,29);
+    assert_equal(one_defined([undef,undef,undef], ["length","L","l"], dflt=undef), undef);
 }
 test_one_defined();
 
