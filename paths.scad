@@ -950,14 +950,16 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 
 // Module: spiral_sweep()
 // Description:
-//   Takes a closed 2D polygon path, centered on the XY plane, and sweeps/extrudes it along a 3D spiral path
+//   Takes a closed 2D polygon path, centered on the XY plane, and sweeps/extrudes it along a 3D spiral path.
 //   of a given radius, height and twist.
 // Arguments:
-//   path = Array of points of a polygon path, to be extruded.
+//   poly = Array of points of a polygon path, to be extruded.
 //   h = height of the spiral to extrude along.
 //   r = Radius of the spiral to extrude along. Default: 50
-//   d = Diameter of the spiral to extrude along.
 //   twist = number of degrees of rotation to spiral up along height.
+//   ---
+//   d = Diameter of the spiral to extrude along.
+//   higbee = Length to taper thread ends over.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -965,50 +967,57 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 // Example:
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   spiral_sweep(poly, h=200, r=50, twist=1080, $fn=36);
-module spiral_sweep(poly, h, r, twist=360, center, d, anchor, spin=0, orient=UP) {
-    r = get_radius(r=r, d=d, dflt=50);
+module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, higbee1, higbee2, anchor, spin=0, orient=UP) {
     poly = path3d(poly);
-    pline_count = len(poly);
-    steps = ceil(segs(r)*(twist/360));
     anchor = get_anchor(anchor,center,BOT,BOT);
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=50);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=50);
+    sides = segs(max(r1,r2));
+    steps = ceil(sides*(twist/360));
+    higbee1 = first_defined([higbee1, higbee, 0]);
+    higbee2 = first_defined([higbee2, higbee, 0]);
+    higang1 = 360 * higbee1 / (2 * r1 * PI);
+    higang2 = 360 * higbee2 / (2 * r2 * PI);
+    higsteps1 = ceil(higang1/360*sides);
+    higsteps2 = ceil(higang2/360*sides);
+    assert(higang1 < twist/2);
+    assert(higang2 < twist/2);
 
-    poly_points = [
-        for (
-            p = [0:1:steps]
-        ) let (
-            a = twist * (p/steps),
-            dx = r*cos(a),
-            dy = r*sin(a),
-            dz = h * (p/steps),
-            mat = affine3d_translate([dx, dy, dz-h/2]) *
-                affine3d_zrot(a) *
-                affine3d_xrot(90),
+    function higsize(a) = lookup(a,[
+        [-0.001,        0],
+        for (x=[0.125:0.125:1]) [      x*higang1, pow(x,1/2)],
+        for (x=[0.125:0.125:1]) [twist-x*higang2, pow(x,1/2)],
+        [twist+0.001,   0]
+    ]);
+
+    us = [
+        for (i=[0:higsteps1/10:higsteps1]) i,
+        for (i=[higsteps1+1:1:steps-higsteps2-1]) i,
+        for (i=[steps-higsteps2:higsteps2/10:steps]) i,
+    ];
+    zang = atan2(r2-r1,h);
+    points = [
+        for (p = us) let (
+            u = p / steps,
+            a = twist * u,
+            hsc = higsize(a),
+            r = lerp(r1,r2,u),
+            mat = affine3d_zrot(a) *
+                affine3d_translate([r, 0, h * (u-0.5)]) *
+                affine3d_xrot(90) *
+                affine3d_skew_xz(xa=zang) * 
+                affine3d_scale([hsc,lerp(hsc,1,0.25),1]),
             pts = apply(mat, poly)
-        ) for (pt = pts) pt
+        ) pts
     ];
 
-    poly_faces = concat(
-        [[for (b = [0:1:pline_count-1]) b]],
-        [
-            for (
-                p = [0:1:steps-1],
-                b = [0:1:pline_count-1],
-                i = [0:1]
-            ) let (
-                b2 = (b == pline_count-1)? 0 : b+1,
-                p0 = p * pline_count + b,
-                p1 = p * pline_count + b2,
-                p2 = (p+1) * pline_count + b2,
-                p3 = (p+1) * pline_count + b,
-                pt = (i==0)? [p0, p2, p1] : [p0, p3, p2]
-            ) pt
-        ],
-        [[for (b = [pline_count-1:-1:0]) b+(steps)*pline_count]]
+    vnf = vnf_vertex_array(
+        points, col_wrap=true, caps=true,
+        style=(abs(higbee1)+abs(higbee2))>0? "quincunx" : "alt"
     );
 
-    tri_faces = triangulate_faces(poly_points, poly_faces);
-    attachable(anchor,spin,orient, r=r, l=h) {
-        polyhedron(points=poly_points, faces=tri_faces, convexity=10);
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
+        vnf_polyhedron(vnf, convexity=2*twist/360);
         children();
     }
 }

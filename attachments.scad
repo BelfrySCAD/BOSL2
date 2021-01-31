@@ -353,10 +353,14 @@ function attach_geom_size(geom) =
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //   geom = The geometry description of the shape.
 //   p = If given as a VNF, path, or point, applies the affine3d transformation matrix to it and returns the result.
-function attach_transform(anchor=CENTER, spin=0, orient=UP, geom, p) =
-    assert(is_string(anchor) || is_vector(anchor))
-    assert(is_vector(orient))
+function attach_transform(anchor, spin, orient, geom, p) =
+    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
+    assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
+    assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient))
     let(
+        anchor = default(anchor, CENTER),
+        spin   = default(spin,   0),
+        orient = default(orient, UP),
         two_d = attach_geom_2d(geom),
         m = ($attach_to != undef)? (
             let(
@@ -694,9 +698,7 @@ function attachment_is_shown(tags) =
 //   axis = The vector pointing along the axis of a cylinder geometry.  Default: UP
 //   p = The VNF, path, or point to transform.
 function reorient(
-    anchor=CENTER,
-    spin=0,
-    orient=UP,
+    anchor, spin, orient,
     size, size2, shift,
     r,r1,r2, d,d1,d2, l,h,
     vnf, path,
@@ -707,17 +709,26 @@ function reorient(
     two_d=false,
     axis=UP,
     p=undef
-) = (anchor==CENTER && spin==0 && orient==UP && p!=undef)? p : let(
-    geom = attach_geom(
-        size=size, size2=size2, shift=shift,
-        r=r, r1=r1, r2=r2, h=h,
-        d=d, d1=d1, d2=d2, l=l,
-        vnf=vnf, path=path, extent=extent,
-        cp=cp, offset=offset, anchors=anchors,
-        two_d=two_d, axis=axis
-    ),
-    $attach_to = undef
-) attach_transform(anchor,spin,orient,geom,p);
+) =
+    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
+    assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
+    assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient))
+    let(
+        anchor = default(anchor, CENTER),
+        spin =   default(spin,   0),
+        orient = default(orient, UP)
+    )
+    (anchor==CENTER && spin==0 && orient==UP && p!=undef)? p : let(
+        geom = attach_geom(
+            size=size, size2=size2, shift=shift,
+            r=r, r1=r1, r2=r2, h=h,
+            d=d, d1=d1, d2=d2, l=l,
+            vnf=vnf, path=path, extent=extent,
+            cp=cp, offset=offset, anchors=anchors,
+            two_d=two_d, axis=axis
+        ),
+        $attach_to = undef
+    ) attach_transform(anchor,spin,orient,geom,p);
 
 
 
@@ -894,9 +905,7 @@ function reorient(
 //       children();
 //   }
 module attachable(
-    anchor=CENTER,
-    spin=0,
-    orient=UP,
+    anchor, spin, orient,
     size, size2, shift,
     r,r1,r2, d,d1,d2, l,h,
     vnf, path,
@@ -907,10 +916,14 @@ module attachable(
     two_d=false,
     axis=UP
 ) {
-    assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.");
-    assert(!is_undef(anchor), str("anchor undefined in attachable().  Did you forget to set a default value for anchor in ", parent_module(1)));
-    assert(!is_undef(spin), str("spin undefined in attachable().  Did you forget to set a default value for spin in ", parent_module(1)));
-    assert(!is_undef(orient), str("orient undefined in attachable().  Did you forget to set a default value for orient in ", parent_module(1)));
+    dummy1 =
+        assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.")
+        assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
+        assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
+        assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient));
+    anchor = default(anchor, CENTER);
+    spin =   default(spin,   0);
+    orient = default(orient, UP);
     geom = attach_geom(
         size=size, size2=size2, shift=shift,
         r=r, r1=r1, r2=r2, h=h,
