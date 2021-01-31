@@ -772,9 +772,9 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
 //   offset_sweep(rounded_star, height=20, bottom=os_circle(r=4), top=os_circle(r=1), steps=15);
 // Example: Rounding a star shaped prism with negative radius values
-   star = star(5, r=22, ir=13);
-   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
-   offset_sweep(rounded_star, height=20, bottom=os_circle(r=-4), top=os_circle(r=-1), steps=15);
+//   star = star(5, r=22, ir=13);
+//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
+//   offset_sweep(rounded_star, height=20, bottom=os_circle(r=-4), top=os_circle(r=-1), steps=15);
 // Example: Unexpected corners in the result even with `offset="round"` (the default), even with offset_maxstep set small.
 //   triangle = [[0,0],[10,0],[5,10]];
 //   offset_sweep(triangle, height=6, bottom = os_circle(r=-2),steps=16,offset_maxstep=0.25);
