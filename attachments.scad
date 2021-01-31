@@ -354,9 +354,9 @@ function attach_geom_size(geom) =
 //   geom = The geometry description of the shape.
 //   p = If given as a VNF, path, or point, applies the affine3d transformation matrix to it and returns the result.
 function attach_transform(anchor, spin, orient, geom, p) =
-    assert(is_undef(anchor) || is_vector(anchor,3) || is_string(anchor))
-    assert(is_undef(spin)   || is_vector(spin,3)   || is_num(spin))
-    assert(is_undef(orient) || is_vector(orient,3))
+    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
+    assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
+    assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient))
     let(
         anchor = default(anchor, CENTER),
         spin   = default(spin,   0),
@@ -710,9 +710,9 @@ function reorient(
     axis=UP,
     p=undef
 ) =
-    assert(is_undef(anchor) || is_vector(anchor,3) || is_string(anchor))
-    assert(is_undef(spin)   || is_vector(spin,3)   || is_num(spin))
-    assert(is_undef(orient) || is_vector(orient,3))
+    assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
+    assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
+    assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient))
     let(
         anchor = default(anchor, CENTER),
         spin =   default(spin,   0),
@@ -918,9 +918,9 @@ module attachable(
 ) {
     dummy1 =
         assert($children==2, "attachable() expects exactly two children; the shape to manage, and the union of all attachment candidates.")
-        assert(is_undef(anchor) || is_vector(anchor,3) || is_string(anchor))
-        assert(is_undef(spin)   || is_vector(spin,3)   || is_num(spin))
-        assert(is_undef(orient) || is_vector(orient,3));
+        assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
+        assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
+        assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient));
     anchor = default(anchor, CENTER);
     spin =   default(spin,   0);
     orient = default(orient, UP);
