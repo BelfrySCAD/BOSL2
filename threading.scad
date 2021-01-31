@@ -11,19 +11,24 @@
 
 // Module: thread_helix()
 // Usage:
-//   thread_helix(base_d, pitch, thread_depth, thread_angle, twist, [profile], [left_handed], [higbee], [internal]);
+//   thread_helix(d, pitch, thread_depth, <thread_angle>, <twist>, <profile=>, <left_handed=>, <higbee=>, <internal=>);
 // Description:
 //   Creates a helical thread with optional end tapering.
 // Arguments:
-//   base_d = Inside base diameter of threads.
-//   pitch = Distance between threads.
+//   d = Inside base diameter of threads.  Default: 10
+//   pitch = Distance between threads.  Default: 2mm/thread
 //   thread_depth = Depth of threads from top to bottom.
-//   thread_angle = Angle of the thread faces.
-//   twist = Number of degrees to rotate thread around.
-//   profile = If a an asymmetrical thread profile is needed, it can be specified here.
+//   thread_angle = Angle of the thread faces.  Default: 15 degrees.
+//   twist = Number of degrees to rotate thread around.  Default: 720 degrees.
+//   ---
+//   profile = If an asymmetrical thread profile is needed, it can be specified here.
 //   left_handed = If true, thread has a left-handed winding.
-//   higbee = Angle to taper thread ends by.
 //   internal = If true, invert threads for internal threading.
+//   d1 = Bottom inside base diameter of threads.
+//   d2 = Top inside base diameter of threads.
+//   higbee = Length to taper thread ends over.  Default: 0
+//   higbee1 = Length to taper bottom thread end over.
+//   higbee2 = Length to taper top thread end over.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -31,42 +36,44 @@
 //   pitch = 2;
 //   depth = pitch * cos(30) * 5/8;
 //   profile = [
-//       [-7/16, -depth/pitch*1.07],
-//       [-6/16, -depth/pitch],
-//       [-1/16,  0],
-//       [ 1/16,  0],
-//       [ 6/16, -depth/pitch],
-//       [ 7/16, -depth/pitch*1.07]
+//       [-6/16, 0           ],
+//       [-1/16, depth/pitch ],
+//       [ 1/16, depth/pitch ],
+//       [ 6/16, 0           ],
 //   ];
 //   stroke(profile, width=0.02);
-module thread_helix(base_d, pitch, thread_depth=undef, thread_angle=15, twist=720, profile=undef, left_handed=false, higbee=60, internal=false, anchor=CENTER, spin=0, orient=UP)
-{
+// Example:
+//   thread_helix(d=10, pitch=2, thread_depth=0.75, thread_angle=15, twist=900, $fn=72);
+module thread_helix(
+    d, pitch=2, thread_depth, thread_angle=15, twist=720,
+    profile, left_handed=false, internal=false,
+    d1, d2, higbee, higbee1, higbee2,
+    anchor=CENTER, spin=0, orient=UP
+) {
     h = pitch*twist/360;
-    r = base_d/2;
-    dz = thread_depth/pitch * tan(thread_angle);
+    r1 = get_radius(d1=d1, d=d, dflt=10);
+    r2 = get_radius(d1=d2, d=d, dflt=10);
+    tdp = thread_depth / pitch;
+    dz = tdp * tan(thread_angle);
     cap = (1 - 2*dz)/2;
     profile = !is_undef(profile)? profile : (
         internal? [
-            [thread_depth/pitch, -cap/2-dz],
-            [0, -cap/2],
-            [0, +cap/2],
-            [thread_depth/pitch, +cap/2+dz],
+            [-cap/2-dz, tdp],
+            [-cap/2,    0  ],
+            [+cap/2,    0  ],
+            [+cap/2+dz, tdp],
         ] : [
-            [0, +cap/2+dz],
-            [thread_depth/pitch, +cap/2],
-            [thread_depth/pitch, -cap/2],
-            [0, -cap/2-dz],
+            [+cap/2+dz, 0  ],
+            [+cap/2,    tdp],
+            [-cap/2,    tdp],
+            [-cap/2-dz, 0  ],
         ]
     );
-    pline = profile * pitch;
+    pline = mirror([-1,1],  p = profile * pitch);
     dir = left_handed? -1 : 1;
     idir = internal? -1 : 1;
-    attachable(anchor,spin,orient, r=r, l=h) {
-        difference() {
-            spiral_sweep(pline, h=h, r=base_d/2, twist=twist*dir, $fn=segs(base_d/2), anchor=CENTER);
-            down(h/2) right(r) right(internal? thread_depth : 0) zrot(higbee*dir*idir) fwd(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
-            up(h/2) zrot(twist*dir) right(r) right(internal? thread_depth : 0) zrot(-higbee*dir*idir) back(dir*pitch/2) cube([3*thread_depth/cos(higbee), pitch, pitch], center=true);
-        }
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
+        spiral_sweep(pline, h=h, r1=r1, r2=r2, twist=twist*dir, higbee=higbee, higbee1=higbee1, higbee2=higbee2, anchor=CENTER);
         children();
     }
 }
@@ -133,7 +140,7 @@ module trapezoidal_threaded_rod(
     left_handed=false,
     bevel=false,
     starts=1,
-    profile=undef,
+    profile,
     internal=false,
     center, anchor, spin=0, orient=UP
 ) {
