@@ -48,7 +48,7 @@ module thread_helix(
     d, pitch=2, thread_depth, thread_angle=15, twist=720,
     profile, left_handed=false, internal=false,
     d1, d2, higbee, higbee1, higbee2,
-    anchor=CENTER, spin=0, orient=UP
+    anchor, spin, orient
 ) {
     h = pitch*twist/360;
     r1 = get_radius(d1=d1, d=d, dflt=10);
@@ -88,17 +88,24 @@ module thread_helix(
 //   For ACME threads, use thread_angle=14.5 and thread_depth=pitch/2.
 //   For square threads, use thread_angle=0 and thread_depth=pitch/2.
 //   For normal UTS or ISO screw threads, use the `threaded_rod()` module instead to get the correct thread profile.
+//   For NPT (National Pipe Threading) threads, use the `npt_threaded_rod() module instead.
 // Arguments:
 //   d = Outer diameter of threaded rod.
 //   l = Length of threaded rod.
 //   pitch = Length between threads.
-//   thread_depth = Depth of the threads.  Default=pitch/2
 //   thread_angle = The pressure angle profile angle of the threads.  Default = 14.5 degree ACME profile.
+//   ---
+//   thread_depth = Depth of the threads.  Default=pitch/2
 //   left_handed = If true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: true
 //   starts = The number of lead starts.  Default = 1
-//   internal = If true, make this a mask for making internal threads.
 //   profile = The shape of a thread, if not a symmetric trapezoidal form.  Given as a 2D path, where X is between -1/2 and 1/2, representing the pitch distance, and Y is 0 for the peak, and `-depth/pitch` for the valleys.  The segment between the end of one thread profile and the start of the next is automatic, so the start and end coordinates should not both be at the same Y at X = ±1/2.  This path is scaled up by the pitch size in both dimensions when making the final threading.  This overrides the `thread_angle` and `thread_depth` options.
+//   internal = If true, make this a mask for making internal threads.
+//   d1 = Bottom outside diameter of threads.
+//   d2 = Top outside diameter of threads.
+//   higbee = Length to taper thread ends over.  Default: 0
+//   higbee1 = Length to taper bottom thread end over.
+//   higbee2 = Length to taper top thread end over.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -132,9 +139,7 @@ module thread_helix(
 //   ];
 //   stroke(profile, width=0.02);
 module trapezoidal_threaded_rod(
-    d=10,
-    l=100,
-    pitch=2,
+    d, l=100, pitch=2,
     thread_angle=15,
     thread_depth=undef,
     left_handed=false,
@@ -142,18 +147,42 @@ module trapezoidal_threaded_rod(
     starts=1,
     profile,
     internal=false,
-    center, anchor, spin=0, orient=UP
+    d1, d2,
+    higbee=0, higbee1, higbee2,
+    center, anchor, spin, orient
 ) {
     function _thread_pt(thread, threads, start, starts, astep, asteps, part, parts) =
         astep + asteps * (thread + threads * (part + parts * start));
 
-    d = internal? (d/cos(180/segs(d/2)) + $slop*3) : d;
-    astep = 360 / quantup(segs(d/2), starts);
+    _r1 = get_radius(d1=d1, d=d, dflt=10);
+    _r2 = get_radius(d1=d2, d=d, dflt=10);
+    sides = segs(max(_r1,_r2));
+    rsc = internal? (1/cos(180/sides) + $slop*3) : 1;
+    astep = 360 / quantup(sides, starts);
     asteps = ceil(360/astep);
     threads = ceil(l/pitch/starts)+(starts<4?4-starts:1);
     depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
     pa_delta = min(pitch/4-0.01,depth*tan(thread_angle)/2)/pitch;
     dir = left_handed? -1 : 1;
+    twist = 360 * l / pitch / starts;
+    higbee1 = first_defined([higbee1, higbee, 0]);
+    higbee2 = first_defined([higbee2, higbee, 0]);
+    higang1 = 360 * higbee1 / (2 * _r1 * PI);
+    higang2 = 360 * higbee2 / (2 * _r2 * PI);
+    higsteps1 = ceil(higang1/360*sides);
+    higsteps2 = ceil(higang2/360*sides);
+    assert(higang1 < twist/2);
+    assert(higang2 < twist/2);
+
+    higbee_table = [
+        [-twist, 0],
+        [-twist/2-0.001, 0],
+        [-twist/2+higang1, 1],
+        [ twist/2-higang2, 1],
+        [ twist/2+0.001, 0],
+        [ twist, 0]
+    ];
+
     r1 = -depth/pitch;
     z1 = 1/4-pa_delta;
     z2 = 1/4+pa_delta;
@@ -172,13 +201,17 @@ module trapezoidal_threaded_rod(
                 thread = [0:1:threads-1],
                 astep  = [0:1:asteps-1]
             ) let (
+                a = astep / asteps,
+                z = (thread + a - threads/2) * starts * pitch,
+                u = z / l,
+                higsc = higbee1==0 && higbee2==0? 1 :
+                    let ( tot_ang = (thread+a-threads/2) * 360 )
+                    lookup(tot_ang, higbee_table),
                 ppt = profile[part] * pitch,
                 dz = ppt.x,
-                r = ppt.y + d/2,
-                a = astep / asteps,
+                r = lerp(_r1, _r2, u) - depth + higsc*(ppt.y+depth),
                 c = cos(360 * (a * dir + start/starts)),
-                s = sin(360 * (a * dir + start/starts)),
-                z = (thread + a - threads/2) * starts * pitch
+                s = sin(360 * (a * dir + start/starts))
             ) [r*c, r*s, z+dz]
         ],
         [[0, 0, -threads*pitch*starts/2-pitch/4], [0, 0, threads*pitch*starts/2+pitch/4]]
@@ -280,11 +313,11 @@ module trapezoidal_threaded_rod(
         ]
     );
     anchor = get_anchor(anchor, center, BOT, CENTER);
-    attachable(anchor,spin,orient, d=d, l=l) {
+    attachable(anchor,spin,orient, r1=_r1, r2=_r2, l=l) {
         difference() {
             polyhedron(points=poly_points, faces=poly_faces, convexity=threads*starts*2);
-            zcopies(l+4*pitch*starts) cube([d+1, d+1, 4*pitch*starts], center=true);
-            if (bevel) cylinder_mask(d=d, l=l+0.01, chamfer=depth);
+            zcopies(l+4*pitch*starts) cylinder(h=4*pitch*starts, r=2*max(_r1,_r2)+1, center=true);
+            if (bevel) cylinder_mask(r1=_r1, r2=_r2, l=l+0.01, chamfer=depth);
         }
         children();
     }
@@ -330,9 +363,7 @@ module trapezoidal_threaded_nut(
     left_handed=false,
     starts=1,
     bevel=true,
-    anchor=CENTER,
-    spin=0,
-    orient=UP
+    anchor, spin, orient
 ) {
     depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
     attachable(anchor,spin,orient, size=[od/cos(30),od,h]) {
@@ -375,6 +406,11 @@ module trapezoidal_threaded_nut(
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   internal = If true, make this a mask for making internal threads.
+//   d1 = Bottom outside diameter of threads.
+//   d2 = Top outside diameter of threads.
+//   higbee = Length to taper thread ends over.  Default: 0
+//   higbee1 = Length to taper bottom thread end over.
+//   higbee2 = Length to taper top thread end over.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -386,14 +422,16 @@ module trapezoidal_threaded_nut(
 //   threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
 module threaded_rod(
-    d=10, l=100, pitch=2,
+    d, l=100, pitch=2,
     left_handed=false,
     bevel=false,
     internal=false,
-    anchor=CENTER,
-    spin=0,
-    orient=UP
+    d1, d2,
+    higbee, higbee1, higbee2,
+    anchor, spin, orient
 ) {
+    _r1 = get_radius(d1=d1, d=d, dflt=10);
+    _r2 = get_radius(d1=d2, d=d, dflt=10);
     depth = pitch * cos(30) * 5/8;
     profile = internal? [
         [-6/16, -depth/pitch],
@@ -411,13 +449,17 @@ module threaded_rod(
         [ 7/16, -depth/pitch*1.07]
     ];
     trapezoidal_threaded_rod(
-        d=d, l=l, pitch=pitch,
+        d=d, d1=d1, d2=d2, l=l,
+        pitch=pitch,
         thread_depth=depth,
         thread_angle=30,
         profile=profile,
         left_handed=left_handed,
         bevel=bevel,
         internal=internal,
+        higbee=higbee,
+        higbee1=higbee1,
+        higbee2=higbee2,
         anchor=anchor,
         spin=spin,
         orient=orient
@@ -446,7 +488,7 @@ module threaded_rod(
 module threaded_nut(
     od=16, id=10, h=10,
     pitch=2, left_handed=false, bevel=false,
-    anchor=CENTER, spin=0, orient=UP
+    anchor, spin, orient
 ) {
     depth = pitch * cos(30) * 5/8;
     profile = [
@@ -467,6 +509,87 @@ module threaded_nut(
         orient=orient
     ) children();
 }
+
+
+// Section: Pipe Threading
+
+// Module: npt_threaded_rod()
+// Description:
+//   Constructs a standard NPT pipe threading.
+// Arguments:
+//   d = Outer diameter of threaded rod.
+//   left_handed = if true, create left-handed threads.  Default = false
+//   bevel = if true, bevel the thread ends.  Default: false
+//   internal = If true, make this a mask for making internal threads.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value to make parts fit just right.
+// Example(2D):
+//   projection(cut=true) npt_threaded_rod(size=1/4, orient=BACK);
+// Examples(Med):
+//   npt_threaded_rod(size=3/8, $fn=72);
+//   npt_threaded_rod(size=1/2, $fn=72);
+//   npt_threaded_rod(size=1/2, left_handed=true, $fn=72);
+module npt_threaded_rod(
+    size=1/2,
+    left_handed=false,
+    bevel=false,
+    internal=false,
+    anchor, spin, orient
+) {
+    info_table = [
+        // Size    OD      len    TPI
+        [ 1/16,  [ 0.3896, 0.308, 27  ]],
+        [ 1/8,   [ 0.3924, 0.401, 27  ]],
+        [ 1/4,   [ 0.5946, 0.533, 18  ]],
+        [ 3/8,   [ 0.6006, 0.668, 18  ]],
+        [ 1/2,   [ 0.7815, 0.832, 14  ]],
+        [ 3/4,   [ 0.7935, 1.043, 14  ]],
+        [ 1,     [ 0.9845, 1.305, 11.5]],
+        [ 1+1/4, [ 1.0085, 1.649, 11.5]],
+        [ 1+1/2, [ 1.0252, 1.888, 11.5]],
+        [ 2,     [ 1.0582, 2.362, 11.5]],
+    ];
+    info = [for (data=info_table) if(approx(size,data[0])) data[1]][0];
+    dummy1 = assert(is_def(info), "Unsupported NPT size.  Try one of 1/16, 1/8, 1/4, 3/8, 1/2, 3/4, 1, 1+1/4, 1+1/2, 2");
+    l = 25.4 * info[0];
+    d = 25.4 * info[1];
+    pitch = 25.4 / info[2];
+    r1 = get_radius(d=d, dflt=0.84 * 25.4 / 2);
+    r2 = r1 - l/32;
+    depth = pitch * cos(30) * 5/8;
+    profile = internal? [
+        [-6/16, -depth/pitch],
+        [-1/16,  0],
+        [-1/32,  0.02],
+        [ 1/32,  0.02],
+        [ 1/16,  0],
+        [ 6/16, -depth/pitch]
+    ] : [
+        [-7/16, -depth/pitch*1.07],
+        [-6/16, -depth/pitch],
+        [-1/16,  0],
+        [ 1/16,  0],
+        [ 6/16, -depth/pitch],
+        [ 7/16, -depth/pitch*1.07]
+    ];
+    trapezoidal_threaded_rod(
+        d1=2*r1, d2=2*r2, l=l,
+        pitch=pitch,
+        thread_depth=depth,
+        thread_angle=30,
+        profile=profile,
+        left_handed=left_handed,
+        bevel=bevel,
+        internal=internal,
+        higbee=r1*PI/2,
+        anchor=anchor,
+        spin=spin,
+        orient=orient
+    ) children();
+}
+
 
 
 // Section: Buttress Threading
@@ -497,9 +620,7 @@ module buttress_threaded_rod(
     left_handed=false,
     bevel=false,
     internal=false,
-    anchor=CENTER,
-    spin=0,
-    orient=UP
+    anchor, spin, orient
 ) {
     depth = pitch * 3/4;
     profile = [
@@ -546,9 +667,7 @@ module buttress_threaded_nut(
     od=16, id=10, h=10,
     pitch=2, left_handed=false,
     bevel=false,
-    anchor=CENTER,
-    spin=0,
-    orient=UP
+    anchor, spin, orient
 ) {
     depth = pitch * 3/4;
     profile = [
@@ -600,9 +719,7 @@ module metric_trapezoidal_threaded_rod(
     starts=1,
     bevel=false,
     internal=false,
-    anchor=CENTER,
-    spin=0,
-    orient=UP
+    anchor, spin, orient
 ) {
     trapezoidal_threaded_rod(
         d=d, l=l,
@@ -644,9 +761,7 @@ module metric_trapezoidal_threaded_nut(
     starts=1,
     left_handed=false,
     bevel=false,
-    anchor=CENTER,
-    spin=0,
-    orient=UP
+    anchor, spin, orient
 ) {
     trapezoidal_threaded_nut(
         od=od, id=id, h=h,
@@ -695,9 +810,7 @@ module acme_threaded_rod(
     left_handed=false,
     bevel=false,
     internal=false,
-    anchor=CENTER,
-    spin=0,
-    orient=UP
+    anchor, spin, orient
 ) {
     trapezoidal_threaded_rod(
         d=d, l=l, pitch=pitch,
@@ -742,9 +855,7 @@ module acme_threaded_nut(
     starts=1,
     left_handed=false,
     bevel=false,
-    anchor=CENTER,
-    spin=0,
-    orient=UP
+    anchor, spin, orient
 ) {
     trapezoidal_threaded_nut(
         od=od, id=id, h=h, pitch=pitch,
@@ -789,9 +900,7 @@ module square_threaded_rod(
     bevel=false,
     starts=1,
     internal=false,
-    anchor=CENTER,
-    spin=0,
-    orient=UP
+    anchor, spin, orient
 ) {
     trapezoidal_threaded_rod(
         d=d, l=l, pitch=pitch,
@@ -832,9 +941,7 @@ module square_threaded_nut(
     left_handed=false,
     bevel=false,
     starts=1,
-    anchor=CENTER,
-    spin=0,
-    orient=UP
+    anchor, spin, orient
 ) {
     trapezoidal_threaded_nut(
         od=od, id=id, h=h, pitch=pitch,
@@ -884,9 +991,7 @@ module ball_screw_rod(
     left_handed=false,
     internal=false,
     bevel=false,
-    anchor=CENTER,
-    spin=0,
-    orient=UP
+    anchor, spin, orient
 ) {
     depth = ball_diam * (1-cos(ball_arc/2))/2;
     profile = arc(N=11, d=ball_diam/pitch, cp=[0,ball_diam/2/pitch*cos(ball_arc/2)], start=270-ball_arc/2, angle=ball_arc);
