@@ -129,7 +129,7 @@ _hose_waist = [1.7698, 1.8251, 3.95998];
 //    amount.  On a Prusa printer with PETG clearance values around .1 work, but you
 //    will have to experiment with your machine and materials.  And note clearance values
 //    are different for the different sizes.
-// Arguments
+// Arguments:
 //    size = size of modular hose part, must be 1/4, 1/2 or 3/4.
 //    type = type of part to make, either "segment", "socket" (or "big"), or "ball" (or "small")
 //    clearance = clearance to make assembly possible.  Either a scalar to apply the same to both ends or a vector [small,large] to apply different clearances to the two ends.  Default: 0
