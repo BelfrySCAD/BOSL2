@@ -151,15 +151,10 @@ module trapezoidal_threaded_rod(
     higbee=0, higbee1, higbee2,
     center, anchor, spin, orient
 ) {
-    function _thread_pt(thread, threads, start, starts, astep, asteps, part, parts) =
-        astep + asteps * (thread + threads * (part + parts * start));
-
     _r1 = get_radius(d1=d1, d=d, dflt=10);
     _r2 = get_radius(d1=d2, d=d, dflt=10);
-    sides = segs(max(_r1,_r2));
+    sides = quantup(segs(max(_r1,_r2)), starts);
     rsc = internal? (1/cos(180/sides) + $slop*3) : 1;
-    astep = 360 / quantup(sides, starts);
-    asteps = ceil(360/astep);
     threads = ceil(l/pitch/starts)+(starts<4?4-starts:1);
     depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
     pa_delta = min(pitch/4-0.01,depth*tan(thread_angle)/2)/pitch;
@@ -175,12 +170,12 @@ module trapezoidal_threaded_rod(
     assert(higang2 < twist/2);
 
     higbee_table = [
-        [-twist, 0],
-        [-twist/2-0.001, 0],
+        [-twist,           0.01],
+        [-twist/2,         0.01],
         [-twist/2+higang1, 1],
         [ twist/2-higang2, 1],
-        [ twist/2+0.001, 0],
-        [ twist, 0]
+        [ twist/2,         0.01],
+        [ twist,           0.01]
     ];
 
     r1 = -depth/pitch;
@@ -192,132 +187,59 @@ module trapezoidal_threaded_rod(
         [ z1,  0],
         [ z2, r1],
     ];
-    parts = len(profile);
-    poly_points = concat(
-        [
-            for (
-                start  = [0:1:starts-1],
-                part   = [0:1:parts-1],
-                thread = [0:1:threads-1],
-                astep  = [0:1:asteps-1]
-            ) let (
-                a = astep / asteps,
-                z = (thread + a - threads/2) * starts * pitch,
-                u = z / l,
-                higsc = higbee1==0 && higbee2==0? 1 :
-                    let ( tot_ang = (thread+a-threads/2) * 360 )
-                    lookup(tot_ang, higbee_table),
-                ppt = profile[part] * pitch,
-                dz = ppt.x,
-                r = lerp(_r1, _r2, u) - depth + higsc*(ppt.y+depth),
-                c = cos(360 * (a * dir + start/starts)),
-                s = sin(360 * (a * dir + start/starts))
-            ) [r*c, r*s, z+dz]
-        ],
-        [[0, 0, -threads*pitch*starts/2-pitch/4], [0, 0, threads*pitch*starts/2+pitch/4]]
-    );
-    point_count = len(poly_points);
-    poly_faces = concat(
-        // Thread surfaces
-        [
-            for (
-                start  = [0:1:starts-1],
-                part   = [0:1:parts-2],
-                thread = [0:1:threads-1],
-                astep  = [0:1:asteps-1],
-                trinum = [0, 1]
-            ) let (
-                p0 = _thread_pt(thread, threads, start, starts, astep, asteps, part, parts),
-                p1 = _thread_pt(thread, threads, start, starts, astep, asteps, part+1, parts),
-                p2 = _thread_pt(thread, threads, start, starts, astep+1, asteps, part, parts),
-                p3 = _thread_pt(thread, threads, start, starts, astep+1, asteps, part+1, parts),
-                tri = trinum==0? [p0, p1, p3] : [p0, p3, p2],
-                otri = left_handed? [tri[0], tri[2], tri[1]] : tri
-            )
-            if (!(thread == threads-1 && astep == asteps-1)) otri
-        ],
-        // Thread trough bottom
-        [
-            for (
-                start  = [0:1:starts-1],
-                thread = [0:1:threads-1],
-                astep  = [0:1:asteps-1],
-                trinum = [0, 1]
-            ) let (
-                p0 = _thread_pt(thread, threads, start, starts, astep, asteps, parts-1, parts),
-                p1 = _thread_pt(thread, threads, (start+(left_handed?1:starts-1))%starts, starts, astep+asteps/starts, asteps, 0, parts),
-                p2 = p0 + 1,
-                p3 = p1 + 1,
-                tri = trinum==0? [p0, p1, p3] : [p0, p3, p2],
-                otri = left_handed? [tri[0], tri[2], tri[1]] : tri
-            )
-            if (
-                !(thread >= threads-1 && astep > asteps-asteps/starts-2) &&
-                !(thread >= threads-2 && starts == 1 && astep >= asteps-1)
-            ) otri
-        ],
-        // top and bottom thread endcap
-        [
-            for (
-                start  = [0:1:starts-1],
-                part   = [1:1:parts-2],
-                is_top = [0, 1]
-            ) let (
-                astep = is_top? asteps-1 : 0,
-                thread = is_top? threads-1 : 0,
-                p0 = _thread_pt(thread, threads, start, starts, astep, asteps, 0, parts),
-                p1 = _thread_pt(thread, threads, start, starts, astep, asteps, part, parts),
-                p2 = _thread_pt(thread, threads, start, starts, astep, asteps, part+1, parts),
-                tri = is_top? [p0, p1, p2] : [p0, p2, p1],
-                otri = left_handed? [tri[0], tri[2], tri[1]] : tri
-            ) otri
-        ],
-        // body side triangles
-        [
-            for (
-                start  = [0:1:starts-1],
-                is_top = [false, true],
-                trinum = [0, 1]
-            ) let (
-                astep = is_top? asteps-1 : 0,
-                thread = is_top? threads-1 : 0,
-                ostart = (is_top != left_handed? (start+1) : (start+starts-1))%starts,
-                ostep = is_top? astep-asteps/starts : astep+asteps/starts,
-                oparts = is_top? parts-1 : 0,
-                p0 = is_top? point_count-1 : point_count-2,
-                p1 = _thread_pt(thread, threads, start, starts, astep, asteps, 0, parts),
-                p2 = _thread_pt(thread, threads, start, starts, astep, asteps, parts-1, parts),
-                p3 = _thread_pt(thread, threads, ostart, starts, ostep, asteps, oparts, parts),
-                tri = trinum==0?
-                    (is_top? [p0, p1, p2] : [p0, p2, p1]) :
-                    (is_top? [p0, p3, p1] : [p0, p3, p2]),
-                otri = left_handed? [tri[0], tri[2], tri[1]] : tri
-            ) otri
-        ],
-        // Caps
-        [
-            for (
-                start  = [0:1:starts-1],
-                astep  = [0:1:asteps/starts-1],
-                is_top = [0, 1]
-            ) let (
-                thread = is_top? threads-1 : 0,
-                part = is_top? parts-1 : 0,
-                ostep = is_top? asteps-astep-2 : astep,
-                p0 = is_top? point_count-1 : point_count-2,
-                p1 = _thread_pt(thread, threads, start, starts, ostep, asteps, part, parts),
-                p2 = _thread_pt(thread, threads, start, starts, ostep+1, asteps, part, parts),
-                tri = is_top? [p0, p2, p1] : [p0, p1, p2],
-                otri = left_handed? [tri[0], tri[2], tri[1]] : tri
-            ) otri
-        ]
-    );
+    pdepth = -min(subindex(profile,1));
+    eprofile = [
+        [-0.5, 0],
+        each move([0,pdepth], p=profile),
+        [ 0.5, 0],
+    ] * pitch;
+    angstep = 360 / sides;
+    angsteps = ceil(twist / (360 / sides)) + sides;
+    zang = atan2(_r2-_r1,l);
+    thread_verts = [
+        [for (x = eprofile) [0,0,-l/2]],
+        for (a = [0:1:angsteps]) let (
+            u = (a-angsteps/2) / (angsteps-sides),
+            ang = u * twist,
+            r = lerp(_r1, _r2, u) * rsc,
+            hsc = higbee1==0 && higbee2==0? 1 : lookup(ang, higbee_table),
+            mat = affine3d_zrot(ang*dir) *
+                affine3d_translate([r-pdepth*pitch, 0, l*u-0*pitch]) *
+                affine3d_xrot(90) *
+                affine3d_skew_xz(xa=zang) * 
+                affine3d_mirror([-1,1]) *
+                affine3d_scale([1,hsc,1]),
+            pts = apply(mat, path3d(eprofile))
+        ) pts,
+        [for (x = eprofile) [0,0, l/2]],
+    ];
+    thread_vnf = vnf_vertex_array(thread_verts, reverse=left_handed);
+    eplen = len(eprofile);
+    vlen = len(thread_vnf[0]);
+    thread_vnf2 = [
+        concat(thread_vnf[0], [[0,0,-l/2], [0,0,l/2]]),
+        concat(thread_vnf[1], [
+            for (i = [0:1:sides/starts]) each
+            left_handed? [
+                [eplen*(i+1), eplen*i, vlen],
+                [vlen-eplen*(i+1)-1, vlen-eplen*i-1, vlen+1]
+            ] : [
+                [eplen*i,        eplen*(i+1),      vlen],
+                [vlen-eplen*i-1, vlen-eplen*(i+1)-1, vlen+1]
+            ]
+        ])
+    ];
+    thread_vnfs = vnf_merge([
+        for (start = [0:1:starts-1]) zrot(start*360/starts, p=thread_vnf2)
+    ]);
     anchor = get_anchor(anchor, center, BOT, CENTER);
     attachable(anchor,spin,orient, r1=_r1, r2=_r2, l=l) {
         difference() {
-            polyhedron(points=poly_points, faces=poly_faces, convexity=threads*starts*2);
-            zcopies(l+4*pitch*starts) cylinder(h=4*pitch*starts, r=2*max(_r1,_r2)+1, center=true);
-            if (bevel) cylinder_mask(r1=_r1, r2=_r2, l=l+0.01, chamfer=depth);
+            vnf_polyhedron(thread_vnfs, convexity=10);
+            zcopies(l+4*pitch*starts)
+                cylinder(h=4*pitch*starts, r=2*max(_r1,_r2)+1, center=true);
+            if (bevel)
+                cylinder_mask(r1=_r1, r2=_r2, l=l+0.01, chamfer=depth);
         }
         children();
     }
