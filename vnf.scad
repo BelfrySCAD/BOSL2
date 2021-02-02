@@ -52,7 +52,7 @@ function vnf_faces(vnf) = vnf[1];
 
 // Function: vnf_quantize()
 // Usage:
-//   vnf2 = vnf_quantize(vnf,[q]);
+//   vnf2 = vnf_quantize(vnf,<q>);
 // Description:
 //   Quantizes the vertex coordinates of the VNF to the given quanta `q`.
 // Arguments:
@@ -202,7 +202,7 @@ function vnf_triangulate(vnf) =
 
 // Function: vnf_vertex_array()
 // Usage:
-//   vnf = vnf_vertex_array(points, [caps], [cap1], [cap2], [reverse], [col_wrap], [row_wrap], [vnf]);
+//   vnf = vnf_vertex_array(points, <caps>, <cap1>, <cap2>, <reverse>, <col_wrap>, <row_wrap>, <vnf>);
 // Description:
 //   Creates a VNF structure from a vertex list, by dividing the vertices into columns and rows,
 //   adding faces to tile the surface.  You can optionally have faces added to wrap the last column
@@ -216,7 +216,7 @@ function vnf_triangulate(vnf) =
 //   col_wrap = If true, add faces to connect the last column to the first.
 //   row_wrap = If true, add faces to connect the last row to the first.
 //   reverse = If true, reverse all face normals.
-//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".
+//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "quincunx", and "convex".
 //   vnf = If given, add all the vertices and faces to this existing VNF structure.
 // Example(3D):
 //   vnf = vnf_vertex_array(
@@ -281,7 +281,7 @@ function vnf_vertex_array(
     vnf=EMPTY_VNF
 ) =
     assert((!caps)||(caps&&col_wrap))
-    assert(in_list(style,["default","alt","quincunx"]))
+    assert(in_list(style,["default","alt","quincunx", "convex"]))
         assert(is_consistent(points), "Non-rectangular or invalid point array")
     let(
         pts = flatten(points),
@@ -319,16 +319,26 @@ function vnf_vertex_array(
                                 i1 = ((r+0)%rows)*cols + ((c+0)%cols),
                                 i2 = ((r+1)%rows)*cols + ((c+0)%cols),
                                 i3 = ((r+1)%rows)*cols + ((c+1)%cols),
-                                i4 = ((r+0)%rows)*cols + ((c+1)%cols)
-                            )
-                            style=="quincunx"? (
-                                let(i5 = pcnt + r*colcnt + c)
-                                reverse? [[i1,i2,i5],[i2,i3,i5],[i3,i4,i5],[i4,i1,i5]] : [[i1,i5,i2],[i2,i5,i3],[i3,i5,i4],[i4,i5,i1]]
-                            ) : style=="alt"? (
-                                reverse? [[i1,i2,i4],[i2,i3,i4]] : [[i1,i4,i2],[i2,i4,i3]]
-                            ) : (
-                                reverse? [[i1,i2,i3],[i1,i3,i4]] : [[i1,i3,i2],[i1,i4,i3]]
-                            )
+                                i4 = ((r+0)%rows)*cols + ((c+1)%cols),
+                                faces = style=="quincunx"? (
+                                    let(i5 = pcnt + r*colcnt + c)
+                                    [[i1,i5,i2],[i2,i5,i3],[i3,i5,i4],[i4,i5,i1]]
+                                ) : style=="alt"? (
+                                    [[i1,i4,i2],[i2,i4,i3]]
+                                ) : style=="convex"? let(
+                                    fsets = [
+                                        [[i1,i4,i2],[i2,i4,i3]],
+                                        [[i1,i3,i2],[i1,i4,i3]]
+                                    ],
+                                    cps = [for (fset=fsets) [for (f=fset) mean(select(pts,f))]],
+                                    ns = cps + [for (fset=fsets) [for (f=fset) polygon_normal(select(pts,f))]],
+                                    dists = [for (i=idx(fsets)) norm(cps[i][1]-cps[i][0]) - norm(ns[i][1]-ns[i][0])],
+                                    test = reverse? dists[0]>dists[1] : dists[0]<dists[1]
+                                ) fsets[test?0:1] : (
+                                    [[i1,i3,i2],[i1,i4,i3]]
+                                ),
+                                rfaces = reverse? [for (face=faces) reverse(face)] : faces
+                            ) rfaces
                         )
                     )
                 ],
@@ -374,7 +384,7 @@ module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin"
 
 // Module: vnf_wireframe()
 // Usage:
-//   vnf_wireframe(vnf, [r|d]);
+//   vnf_wireframe(vnf, <r|d>);
 // Description:
 //   Given a VNF, creates a wire frame ball-and-stick model of the polyhedron with a cylinder for each edge and a sphere at each vertex. 
 // Arguments:
