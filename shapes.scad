@@ -1214,12 +1214,12 @@ module tube(
 //   }
 //
 // Arguments:
-//   r_maj = major radius of torus ring. (use with of 'r_min', or 'd_min')
-//   r_min = minor radius of torus ring. (use with of 'r_maj', or 'd_maj')
+//   r_maj = major radius of torus ring. (use with 'r_min', or 'd_min')
+//   r_min = minor radius of torus ring. (use with 'r_maj', or 'd_maj')
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.
 //   ---
-//   d_maj  = major diameter of torus ring. (use with of 'r_min', or 'd_min')
-//   d_min = minor diameter of torus ring. (use with of 'r_maj', or 'd_maj')
+//   d_maj  = major diameter of torus ring. (use with 'r_min', or 'd_min')
+//   d_min = minor diameter of torus ring. (use with 'r_maj', or 'd_maj')
 //   or = outer radius of the torus. (use with 'ir', or 'id')
 //   ir = inside radius of the torus. (use with 'or', or 'od')
 //   od = outer diameter of the torus. (use with 'ir' or 'id')
