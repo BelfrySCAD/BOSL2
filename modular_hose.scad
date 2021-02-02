@@ -126,7 +126,9 @@ _hose_waist = [1.7698, 1.8251, 3.95998];
 //    or you can make modular hose segments.  To make assembly possible with printed
 //    parts you can add clearances that make the ball end smaller and the socket end
 //    larger.  These work by simply increasing the radius of the whole end by the specified
-//    amount.  On a Prusa printer with PETG clearance values around .1 work, but you
+//    amount.  On a Prusa printer with PETG, a clearance of 0.05 allows the 3/4" hose parts to mate
+//    with standard modular hose or itself.  A clearance of 0.1 allows the 3/4" parts to mate with
+//    standard hoseclearance values around .1 work, but you
 //    will have to experiment with your machine and materials.  And note clearance values
 //    are different for the different sizes.
 // Arguments:
@@ -174,7 +176,7 @@ module modular_hose(size, type, clearance=0, waist_len, anchor=BOTTOM, spin=0,or
   center = mean(bounds);
   attachable(anchor,spin,orient,l=bounds[1].y-bounds[0].y, r=bounds[1].x)
   {
-    rotate_extrude()
+    rotate_extrude(convexity=4)
       polygon(fwd(center.y,p=shape));
     children();
   }  

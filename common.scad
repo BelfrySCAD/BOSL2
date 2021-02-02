@@ -222,6 +222,18 @@ function _list_pattern(list) =
 function same_shape(a,b) = _list_pattern(a) == b*0;
 
 
+// Function: is_bool_list()
+// Usage:
+//   check = is_bool_list(list,<length>)
+// Description:
+//   Tests whether input is a list containing only booleans, and optionally checks its length.
+// Arguments:
+//   list = list to test
+//   length = if given, list must be this length
+function is_bool_list(list, length) =
+     is_list(list) && (is_undef(length) || len(list)==length) && []==[for(entry=list) if (!is_bool(entry)) 1];
+
+
 // Section: Handling `undef`s.
 
 
