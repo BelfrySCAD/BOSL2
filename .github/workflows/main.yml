@@ -48,17 +48,8 @@ jobs:
         cd $GITHUB_WORKSPACE
         git clone https://github.com/revarbat/BOSL2.wiki.git
 
-    - name: Install Python pip
-      run: sudo apt-get install python3-pip
-
     - name: Install Python dev
-      run: sudo apt-get install python3-dev python3-setuptools
-
-    - name: Install Pillow Dependencies
-      run: sudo apt-get install libtiff5-dev libjpeg8-dev zlib1g-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.5-dev tk8.5-dev
-
-    - name: Install Pillow
-      run: sudo pip3 install Pillow
+      run: sudo apt-get install python3-pip python3-dev python3-setuptools python3-pil
 
     - name: Install OpenSCAD
       run: |
