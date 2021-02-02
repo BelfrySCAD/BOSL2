@@ -360,7 +360,7 @@ function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
 
 
 // Function: bezier_line_intersection()
-// Usages: 
+// Usage: 
 //   u = bezier_line_intersection(curve, line);
 // Description:
 //   Finds the parameter(s) of the 2d curve whose Bezier control points are `curve`
