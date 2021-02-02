@@ -1604,7 +1604,7 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
 //   line = two points defining the unbounded line
 //   bounded = false for unbounded line, true for a segment, or a vector [false,true] or [true,false] to specify a ray with the first or second end unbounded.  Default: false
 //   eps = epsilon used for identifying the case with one solution.  Default: 1e-9
-//   --
+//   ---
 //   d = diameter of circle
 function circle_line_intersection(c,r,line,d,bounded=false,eps=EPSILON) =
   let(r=get_radius(r=r,d=d,dflt=undef))
