@@ -145,18 +145,31 @@ function vnf_add_faces(vnf=EMPTY_VNF, faces) =
 
 // Function: vnf_merge()
 // Usage:
-//   vnf = vnf_merge([VNF, VNF, VNF, ...]);
+//   vnf = vnf_merge([VNF, VNF, VNF, ...], <cleanup>);
 // Description:
 //   Given a list of VNF structures, merges them all into a single VNF structure.
-function vnf_merge(vnfs=[],_i=0,_acc=EMPTY_VNF) =
-    (assert(is_vnf_list(vnfs)) _i>=len(vnfs))? _acc :
-    vnf_merge(
-        vnfs, _i=_i+1,
-        _acc = let(base=len(_acc[0])) [
-            concat(_acc[0], vnfs[_i][0]),
-            concat(_acc[1], [for (f=vnfs[_i][1]) [for (i=f) i+base]]),
+function vnf_merge(vnfs, cleanup=false) =
+    let (
+        offs = cumsum([
+            0, for (vnf = vnfs) len(vnf[0])
+        ])
+    ) [
+        [for (vnf=vnfs) each vnf[0]],
+        [
+            for (i = idx(vnfs)) let(
+                vnf = vnfs[i],
+                verts = vnf[0],
+                faces = vnf[1]
+            )
+            for (face = faces) let(
+                dface = !cleanup ? face :
+                    deduplicate_indexed(verts, face, closed=true)
+            )
+            if (len(dface) >= 3)
+            [ for (j = dface) offs[i] + j ]
         ]
-    );
+    ];
+
 
 // Function: vnf_compact()
 // Usage:
@@ -281,7 +294,7 @@ function vnf_vertex_array(
         rowcnt = rows - (row_wrap?0:1)
     )
     rows<=1 || cols<=1 ? vnf : 
-    vnf_merge([
+    vnf_merge(cleanup=true, [
         vnf, [
             concat(
                 pts,
@@ -681,13 +694,8 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
         uniq_edges = edgecnts[0],
         big_faces = !show_warns? [] : [
             for (face = faces)
-            if (len(face) > 3) [
-                "WARNING",
-                "BIG_FACE",
-                "Face has more than 3 vertices, and may confuse CGAL",
-                [for (i=face) varr[i]],
-                "yellow"
-            ]
+            if (len(face) > 3)
+            _vnf_validate_err("BIG_FACE", [for (i=face) varr[i]])
         ],
         null_faces = !show_warns? [] : [
             for (face = faces) let(
@@ -696,13 +704,9 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             if (len(face)>=3) let(
                 faceverts = [for (k=face) varr[k]],
                 area = polygon_area(faceverts)
-            ) if (is_num(area) && abs(area) < EPSILON) [
-                "WARNING",
-                "NULL_FACE",
-                str("Face has zero area: ",fmt_float(abs(area),15)),
-                faceverts,
-                "brown"
-            ]
+            )
+            if (is_num(area) && abs(area) < EPSILON)
+            _vnf_validate_err("NULL_FACE", faceverts)
         ],
         nonplanars = unique([
             for (face = faces) let(
@@ -710,23 +714,13 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
                 area = polygon_area(faceverts)
             )
             if (is_num(area) && abs(area) > EPSILON)
-            if (!coplanar(faceverts)) [
-                "ERROR",
-                "NONPLANAR",
-                "Face vertices are not coplanar",
-                faceverts,
-                "cyan"
-            ]
+            if (!coplanar(faceverts))
+            _vnf_validate_err("NONPLANAR", faceverts)
         ]),
         overpop_edges = unique([
             for (i=idx(uniq_edges))
-            if (edgecnts[1][i]>2) [
-                "ERROR",
-                "OVRPOP_EDGE",
-                "Too many faces attached at Edge",
-                [for (i=uniq_edges[i]) varr[i]],
-                "#f70"
-            ]
+            if (edgecnts[1][i]>2)
+            _vnf_validate_err("OVRPOP_EDGE", [for (i=uniq_edges[i]) varr[i]])
         ]),
         reversals = unique([
             for(i = idx(faces), j = idx(faces)) if(i != j)
@@ -736,13 +730,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             for(edge2 = pair(faces[j],true))
             if(edge1 == edge2)  // Valid adjacent faces will never have the same vertex ordering.
             if(_edge_not_reported(edge1, varr, overpop_edges))
-            [
-                "ERROR",
-                "REVERSAL",
-                "Faces Reverse Across Edge",
-                [for (i=edge1) varr[i]],
-                "violet"
-            ]
+            _vnf_validate_err("REVERSAL", [for (i=edge1) varr[i]])
         ]),
         t_juncts = unique([
             for (v=idx(varr), edge=uniq_edges)
@@ -754,13 +742,8 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             if (a != b && b != c && a != c) let(
                 pt = segment_closest_point([a,c],b)
             )
-            if (pt == b) [
-                "ERROR",
-                "T_JUNCTION",
-                "Vertex is mid-edge on another Face",
-                [b],
-                "red"
-            ]
+            if (pt == b)
+            _vnf_validate_err("T_JUNCTION", [b])
         ]),
         isect_faces = !check_isects? [] : unique([
             for (i = [0:1:len(faces)-2])
@@ -791,26 +774,15 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             )
             if (!is_undef(isects2))
             for (seg=isects2)
-            if (seg[0] != seg[1]) [
-                "ERROR",
-                "FACE_ISECT",
-                "Faces intersect",
-                seg,
-                "blue"
-            ]
+            if (seg[0] != seg[1])
+            _vnf_validate_err("FACE_ISECT", seg)
         ]),
         hole_edges = unique([
             for (i=idx(uniq_edges))
             if (edgecnts[1][i]<2)
             if (_pts_not_reported(uniq_edges[i], varr, t_juncts))
             if (_pts_not_reported(uniq_edges[i], varr, isect_faces))
-            [
-                "ERROR",
-                "HOLE_EDGE",
-                "Edge bounds Hole",
-                [for (i=uniq_edges[i]) varr[i]],
-                "magenta"
-            ]
+            _vnf_validate_err("HOLE_EDGE", [for (i=uniq_edges[i]) varr[i]])
         ])
     ) concat(
         big_faces,
@@ -822,6 +794,24 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
         isect_faces,
         hole_edges
     );
+
+
+_vnf_validate_errs = [
+    ["BIG_FACE",    "WARNING", "cyan",    "Face has more than 3 vertices, and may confuse CGAL"],
+    ["NULL_FACE",   "WARNING", "blue",    "Face has zero area."],
+    ["NONPLANAR",   "ERROR",   "yellow",  "Face vertices are not coplanar"],
+    ["OVRPOP_EDGE", "ERROR",   "orange",  "Too many faces attached at Edge"],
+    ["REVERSAL",    "ERROR",   "violet",  "Faces Reverse Across Edge"],
+    ["T_JUNCTION",  "ERROR",   "magenta", "Vertex is mid-edge on another Face"],
+    ["FACE_ISECT",  "ERROR",   "brown",   "Faces intersect"],
+    ["HOLE_EDGE",   "ERROR",   "red",     "Edge bounds Hole"]
+];
+
+
+function _vnf_validate_err(name, extra) =
+    let(
+        info = [for (x = _vnf_validate_errs) if (x[0] == name) x][0]
+    ) concat(info, [extra]);
 
 
 function _pts_not_reported(pts, varr, reports) =
@@ -847,12 +837,12 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
         check_isects=check_isects
     );
     for (fault = faults) {
-        typ = fault[0];
-        err = fault[1];
-        msg = fault[2];
-        pts = fault[3];
-        clr = fault[4];
-        echo(str(typ, " ", err, ": ", msg, " at ", pts));
+        err = fault[0];
+        typ = fault[1];
+        clr = fault[2];
+        msg = fault[3];
+        pts = fault[4];
+        echo(str(typ, " ", err, " (", clr ,"): ", msg, " at ", pts));
         color(clr) {
             if (len(pts)==2) {
                 stroke(pts, width=size);

@@ -103,7 +103,7 @@ module thread_helix(
 //   internal = If true, make this a mask for making internal threads.
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
-//   higbee = Length to taper thread ends over.  Default: 0
+//   higbee = Length to taper thread ends over.  Default: 0 (No higbee thread tapering)
 //   higbee1 = Length to taper bottom thread end over.
 //   higbee2 = Length to taper top thread end over.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
@@ -148,90 +148,92 @@ module trapezoidal_threaded_rod(
     profile,
     internal=false,
     d1, d2,
-    higbee=0, higbee1, higbee2,
+    higbee, higbee1, higbee2,
     center, anchor, spin, orient
 ) {
     _r1 = get_radius(d1=d1, d=d, dflt=10);
     _r2 = get_radius(d1=d2, d=d, dflt=10);
     sides = quantup(segs(max(_r1,_r2)), starts);
     rsc = internal? (1/cos(180/sides) + $slop*3) : 1;
-    threads = ceil(l/pitch/starts)+(starts<4?4-starts:1);
+    threads = ceil(l/pitch/starts) + 2;
+    ll = threads * pitch * starts;
     depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
     pa_delta = min(pitch/4-0.01,depth*tan(thread_angle)/2)/pitch;
     dir = left_handed? -1 : 1;
     twist = 360 * l / pitch / starts;
-    higbee1 = first_defined([higbee1, higbee, 0]);
-    higbee2 = first_defined([higbee2, higbee, 0]);
-    higang1 = 360 * higbee1 / (2 * _r1 * PI);
-    higang2 = 360 * higbee2 / (2 * _r2 * PI);
-    higsteps1 = ceil(higang1/360*sides);
-    higsteps2 = ceil(higang2/360*sides);
+    _higbee1 = first_defined([higbee1, higbee, 0]);
+    _higbee2 = first_defined([higbee2, higbee, 0]);
+    higang1 = 360 * _higbee1 / (2 * PI * _r1);
+    higang2 = 360 * _higbee2 / (2 * PI * _r2);
     assert(higang1 < twist/2);
     assert(higang2 < twist/2);
 
+    higstart = twist/2 + 360/starts/4;
     higbee_table = [
-        [-twist,           0.01],
-        [-twist/2,         0.01],
-        [-twist/2+higang1, 1],
-        [ twist/2-higang2, 1],
-        [ twist/2,         0.01],
-        [ twist,           0.01]
+        [-higstart*2,       0.01],
+        [-higstart-0.001,   0.01],
+        [-higstart+higang1, 1   ],
+        [+higstart-higang2, 1   ],
+        [+higstart+0.001,   0.01],
+        [+higstart*2,       0.01]
     ];
+    echo(higbee_table);
 
     r1 = -depth/pitch;
     z1 = 1/4-pa_delta;
     z2 = 1/4+pa_delta;
-    profile = profile!=undef? profile : [
-        [-z2, r1],
-        [-z1,  0],
-        [ z1,  0],
-        [ z2, r1],
-    ];
+    profile = pitch * (
+        profile!=undef? profile : [
+            [-z2, r1],
+            [-z1,  0],
+            [ z1,  0],
+            [ z2, r1],
+        ]
+    );
     pdepth = -min(subindex(profile,1));
     eprofile = [
-        [-0.5, 0],
         each move([0,pdepth], p=profile),
-        [ 0.5, 0],
-    ] * pitch;
+        move([pitch,pdepth], p=profile[0]),
+    ];
     angstep = 360 / sides;
-    angsteps = ceil(twist / (360 / sides)) + sides;
+    angsteps = ceil(sides * (twist / 360 + 2));
     zang = atan2(_r2-_r1,l);
     thread_verts = [
-        [for (x = eprofile) [0,0,-l/2]],
-        for (a = [0:1:angsteps]) let (
-            u = (a-angsteps/2) / (angsteps-sides),
-            ang = u * twist,
+        [for (i = idx(eprofile)) [0,0,-ll/2]],
+        for (thread = [0:1:threads-1], side=[0:1:sides-1]) let(
+            ang = ((thread - threads/2) + (side / sides)) * 360,
+            u = ang / twist,
             r = lerp(_r1, _r2, u) * rsc,
             hsc = higbee1==0 && higbee2==0? 1 : lookup(ang, higbee_table),
             mat = affine3d_zrot(ang*dir) *
-                affine3d_translate([r-pdepth*pitch, 0, l*u-0*pitch]) *
+                affine3d_translate([r-pdepth*pitch, 0, l*u]) *
                 affine3d_xrot(90) *
                 affine3d_skew_xz(xa=zang) * 
                 affine3d_mirror([-1,1]) *
                 affine3d_scale([1,hsc,1]),
             pts = apply(mat, path3d(eprofile))
         ) pts,
-        [for (x = eprofile) [0,0, l/2]],
+        [for (x = eprofile) [0,0,+ll/2]],
     ];
     thread_vnf = vnf_vertex_array(thread_verts, reverse=left_handed);
     eplen = len(eprofile);
     vlen = len(thread_vnf[0]);
     thread_vnf2 = [
-        concat(thread_vnf[0], [[0,0,-l/2], [0,0,l/2]]),
+        concat(thread_vnf[0], [[0,0,-ll/2], [0,0,+ll/2]]),
         concat(thread_vnf[1], [
             for (i = [0:1:sides/starts]) each
             left_handed? [
                 [eplen*(i+1), eplen*i, vlen],
-                [vlen-eplen*(i+1)-1, vlen-eplen*i-1, vlen+1]
+                [vlen-eplen*(i+1)-1, vlen-eplen*(i+0)-1, vlen+1]
             ] : [
-                [eplen*i,        eplen*(i+1),      vlen],
-                [vlen-eplen*i-1, vlen-eplen*(i+1)-1, vlen+1]
+                [eplen*i, eplen*(i+1), vlen],
+                [vlen-eplen*(i+0)-1, vlen-eplen*(i+1)-1, vlen+1]
             ]
         ])
     ];
     thread_vnfs = vnf_merge([
         for (start = [0:1:starts-1]) zrot(start*360/starts, p=thread_vnf2)
-    ]);
+    ], cleanup=true);
     anchor = get_anchor(anchor, center, BOT, CENTER);
     attachable(anchor,spin,orient, r1=_r1, r2=_r2, l=l) {
         difference() {
