@@ -1139,7 +1139,7 @@ function plane_line_angle(plane, line) =
 function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
     assert(_valid_plane(plane,eps=eps) && _valid_line(line,dim=3,eps=eps), "Invalid plane and/or line.")
-    assert(is_bool(bounded) || (is_list(bounded) && len(bounded)==2), "Invalid bound condition(s).")
+    assert(is_bool(bounded) || is_bool_list(bounded,2), "Invalid bound condition.")
     let(
         bounded = is_list(bounded)? bounded : [bounded, bounded],
         res = _general_plane_line_intersection(plane, line, eps=eps)
@@ -1588,6 +1588,47 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
             ]
         ) if (pt[0]!=pt[1]) pt
     ];
+
+
+
+// Function: circle_line_intersection()
+// Usage:
+//   isect = circle_line_intersection(c,r,line,<bounded>,<eps>);
+//   isect = circle_line_intersection(c,d,line,<bounded>,<eps>);
+// Description:
+//   Find intersection points between a 2d circle and a line, ray or segment specified by two points.
+//   By default the line is unbounded.
+// Arguments:
+//   c = center of circle
+//   r = radius of circle
+//   line = two points defining the unbounded line
+//   bounded = false for unbounded line, true for a segment, or a vector [false,true] or [true,false] to specify a ray with the first or second end unbounded.  Default: false
+//   eps = epsilon used for identifying the case with one solution.  Default: 1e-9
+//   ---
+//   d = diameter of circle
+function circle_line_intersection(c,r,line,d,bounded=false,eps=EPSILON) =
+  let(r=get_radius(r=r,d=d,dflt=undef))
+  assert(_valid_line(line,2), "Input 'line' is not a valid 2d line.")
+  assert(is_vector(c,2), "Circle center must be a 2-vector")
+  assert(is_num(r) && r>0, "Radius must be positive")
+  assert(is_bool(bounded) || is_bool_list(bounded,2), "Invalid bound condition")
+  let(
+      bounded = force_list(bounded,2),
+      closest = line_closest_point(line,c),
+      d = norm(closest-c)
+  )
+  d > r ? [] :
+  let(
+     isect = approx(d,r,eps) ? [closest] :
+             let( offset = sqrt(r*r-d*d),
+                  uvec=unit(line[1]-line[0])
+             ) [closest-offset*uvec, closest+offset*uvec]
+
+  )
+  [for(p=isect)
+     if ((!bounded[0] || (p-line[0])*(line[1]-line[0])>=0)
+        && (!bounded[1] || (p-line[1])*(line[0]-line[1])>=0)) p];
+
 
 
 

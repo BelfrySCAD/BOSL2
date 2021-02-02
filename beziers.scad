@@ -324,8 +324,6 @@ function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1) =
     bezier_segment_closest_point(curve, pt, max_err=max_err, u=minima[0], end_u=minima[1]);
 
 
-
-
 // Function: bezier_segment_length()
 // Usage:
 //   pathlen = bezier_segment_length(curve, <start_u>, <end_u>, <max_deflect>);
@@ -358,6 +356,28 @@ function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
             eu = lerp(start_u, end_u, (i+1)/segs)
         ) bezier_segment_length(curve, su, eu, max_deflect)
     ]);
+
+
+
+// Function: bezier_line_intersection()
+// Usage: 
+//   u = bezier_line_intersection(curve, line);
+// Description:
+//   Finds the parameter(s) of the 2d curve whose Bezier control points are `curve`
+//   corresponding to its intersection points with the line through
+//   the pair of distinct 2d points in `line`. 
+// Arguments:
+//   curve = List of 2d control points for the Bezier curve
+//   line = a list of two distinct 2d points defining a line
+function bezier_line_intersection(curve, line) =
+    assert(is_path(curve,2), "The input ´curve´ must be a 2d bezier")
+    assert(_valid_line(line,2), "The input `line` is not a valid 2d line")
+    let( 
+        a = _bezier_matrix(len(curve)-1)*curve, // curve algebraic coeffs. 
+        n = [-line[1].y+line[0].y, line[1].x-line[0].x], // line normal
+        q = [for(i=[len(a)-1:-1:1]) a[i]*n, (a[0]-line[0])*n] // curve SDF to line
+    )
+    [for(u=real_roots(q)) if (u>=0 && u<=1) u];
 
 
 
