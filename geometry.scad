@@ -1508,7 +1508,7 @@ function circle_point_tangents(r, d, cp, pt) =
         dist = norm(delta),
         baseang = atan2(delta.y,delta.x)
     ) dist < r? [] :
-    approx(dist,r)? [[baseang, pt]] :
+    approx(dist,r)? [pt] :
     let(
         relang = acos(r/dist),
         angs = [baseang + relang, baseang - relang]
