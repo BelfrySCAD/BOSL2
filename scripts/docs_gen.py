@@ -583,7 +583,7 @@ class LeafNode(object):
                 argname = " / ".join("`{}`".format(x.strip()) for x in argname.replace("|","/").split("/"))
                 out.append(
                     "{0:15s} | {1}".format(
-                        "`{0}`".format(argname),
+                        mkdn_esc(argname),
                         mkdn_esc(argdesc)
                     )
                 )
@@ -595,7 +595,7 @@ class LeafNode(object):
                 argname = " / ".join("`{}`".format(x.strip()) for x in argname.replace("|","/").split("/"))
                 out.append(
                     "{0:15s} | {1}".format(
-                        "`{0}`".format(argname),
+                        mkdn_esc(argname),
                         mkdn_esc(argdesc)
                     )
                 )
@@ -609,10 +609,10 @@ class LeafNode(object):
             out.append("Anchor Name     | Description")
             out.append("--------------- | ------------------------------")
             for anchorname, anchordesc in self.anchors:
-                anchorname = anchorname.replace(" / ", "` / `")
+                anchorname = " / ".join("`{}`".format(x.strip()) for x in anchorname.replace("|","/").split("/"))
                 out.append(
                     "{0:15s} | {1}".format(
-                        "`{0}`".format(anchorname),
+                        mkdn_esc(anchorname),
                         mkdn_esc(anchordesc)
                     )
                 )
