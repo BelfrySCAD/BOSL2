@@ -177,7 +177,6 @@ module trapezoidal_threaded_rod(
         [+higstart+0.001,   0.01],
         [+higstart*2,       0.01]
     ];
-    echo(higbee_table);
 
     r1 = -depth/pitch;
     z1 = 1/4-pa_delta;
