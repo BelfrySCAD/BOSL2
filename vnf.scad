@@ -608,7 +608,7 @@ function vnf_bend(vnf,r,d,axis="Z") =
 // Usage: As Function
 //   fails = vnf_validate(vnf);
 // Usage: As Module
-//   vnf_validate(vnf);
+//   vnf_validate(vnf, <size>);
 // Description:
 //   When called as a function, returns a list of non-manifold errors with the given VNF.
 //   Each error has the format `[ERR_OR_WARN,CODE,MESG,POINTS,COLOR]`.
@@ -855,16 +855,16 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
         echo(str(typ, " ", err, " (", clr ,"): ", msg, " at ", pts));
         color(clr) {
             if (len(pts)==2) {
-                stroke(pts, width=size);
+                stroke(pts, width=size, closed=true, endcaps="butt", hull=false, $fn=8);
             } else if (len(pts)>2) {
-                stroke(pts, width=size, closed=true);
+                stroke(pts, width=size, closed=true, hull=false, $fn=8);
                 polyhedron(pts,[[for (i=idx(pts)) i]]);
             } else {
                 move_copies(pts) sphere(d=size*3, $fn=18);
             }
         }
     }
-    color([0.5,0.5,0.5,0.5]) vnf_polyhedron(vnf);
+    color([0.5,0.5,0.5,0.67]) vnf_polyhedron(vnf);
 }
 
 // Section: VNF transformations

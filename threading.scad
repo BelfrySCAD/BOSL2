@@ -151,96 +151,105 @@ module trapezoidal_threaded_rod(
     higbee, higbee1, higbee2,
     center, anchor, spin, orient
 ) {
-    _r1 = get_radius(d1=d1, d=d, dflt=10);
-    _r2 = get_radius(d1=d2, d=d, dflt=10);
-    sides = quantup(segs(max(_r1,_r2)), starts);
-    rsc = internal? (1/cos(180/sides) + $slop*3) : 1;
-    threads = ceil(l/pitch/starts) + 2;
-    ll = threads * pitch * starts;
+    r1 = get_radius(d1=d1, d=d, dflt=10);
+    r2 = get_radius(d1=d2, d=d, dflt=10);
+    sides = quantup(segs(max(r1,r2)), starts);
+    rsc = internal? (1/cos(180/sides)) : 1;
+    islop = internal? $slop*3 : 0;
+    _r1 = r1 * rsc + islop;
+    _r2 = r2 * rsc + islop;
+    threads = quantup(l/pitch+2, 2*starts);
     depth = min((thread_depth==undef? pitch/2 : thread_depth), pitch/2/tan(thread_angle));
     pa_delta = min(pitch/4-0.01,depth*tan(thread_angle)/2)/pitch;
     dir = left_handed? -1 : 1;
     twist = 360 * l / pitch / starts;
-    _higbee1 = first_defined([higbee1, higbee, 0]);
-    _higbee2 = first_defined([higbee2, higbee, 0]);
-    higang1 = 360 * _higbee1 / (2 * PI * _r1);
-    higang2 = 360 * _higbee2 / (2 * PI * _r2);
+    higang1 = first_defined([higbee1, higbee, 0]);
+    higang2 = first_defined([higbee2, higbee, 0]);
     assert(higang1 < twist/2);
     assert(higang2 < twist/2);
 
-    higstart = twist/2 + 360/starts/4;
-    higbee_table = [
-        [-higstart*2,       0.01],
-        [-higstart-0.001,   0.01],
-        [-higstart+higang1, 1   ],
-        [+higstart-higang2, 1   ],
-        [+higstart+0.001,   0.01],
-        [+higstart*2,       0.01]
-    ];
-
-    r1 = -depth/pitch;
+    rr1 = -depth/pitch;
     z1 = 1/4-pa_delta;
     z2 = 1/4+pa_delta;
-    profile = pitch * (
+    profile = (
         profile!=undef? profile : [
-            [-z2, r1],
+            [-z2, rr1],
             [-z1,  0],
             [ z1,  0],
-            [ z2, r1],
+            [ z2, rr1],
         ]
     );
+    prof3d = path3d(profile);
+    higthr1 = ceil(higang1 / 360);
+    higthr2 = ceil(higang2 / 360);
     pdepth = -min(subindex(profile,1));
-    eprofile = [
-        each move([0,pdepth], p=profile),
-        move([pitch,pdepth], p=profile[0]),
+    dummy1 = assert(_r1>2*pdepth) assert(_r2>2*pdepth);
+    skew_mat = affine3d_skew(sxz=(_r2-_r1)/l);
+    side_mat = affine3d_xrot(90) *
+        affine3d_mirror([-1,1,0]) *
+        affine3d_scale([1,1,1] * pitch);
+    hig_table = [
+        [-twist,           0],
+        [-twist/2-0.00001, 0],
+        [-twist/2+higang1, 1],
+        [+twist/2-higang2, 1],
+        [+twist/2+0.00001, 0],
+        [+twist,           0],
     ];
-    angstep = 360 / sides;
-    angsteps = ceil(sides * (twist / 360 + 2));
-    zang = atan2(_r2-_r1,l);
+    start_steps = floor(sides / starts);
     thread_verts = [
-        [for (i = idx(eprofile)) [0,0,-ll/2]],
-        for (thread = [0:1:threads-1], side=[0:1:sides-1]) let(
-            ang = ((thread - threads/2) + (side / sides)) * 360,
-            u = ang / twist,
-            r = lerp(_r1, _r2, u) * rsc,
-            hsc = higbee1==0 && higbee2==0? 1 : lookup(ang, higbee_table),
-            mat = affine3d_zrot(ang*dir) *
-                affine3d_translate([r-pdepth*pitch, 0, l*u]) *
-                affine3d_xrot(90) *
-                affine3d_skew_xz(xa=zang) * 
-                affine3d_mirror([-1,1]) *
-                affine3d_scale([1,hsc,1]),
-            pts = apply(mat, path3d(eprofile))
-        ) pts,
-        [for (x = eprofile) [0,0,+ll/2]],
-    ];
-    thread_vnf = vnf_vertex_array(thread_verts, reverse=left_handed);
-    eplen = len(eprofile);
-    vlen = len(thread_vnf[0]);
-    thread_vnf2 = [
-        concat(thread_vnf[0], [[0,0,-ll/2], [0,0,+ll/2]]),
-        concat(thread_vnf[1], [
-            for (i = [0:1:sides/starts]) each
-            left_handed? [
-                [eplen*(i+1), eplen*i, vlen],
-                [vlen-eplen*(i+1)-1, vlen-eplen*(i+0)-1, vlen+1]
-            ] : [
-                [eplen*i, eplen*(i+1), vlen],
-                [vlen-eplen*(i+0)-1, vlen-eplen*(i+1)-1, vlen+1]
-            ]
-        ])
+        for (step = [0:1:start_steps]) let(
+            ang = 360 * step/sides,
+            dz = pitch * step / start_steps,
+            mat1 = affine3d_zrot(ang*dir),
+            mat2 = affine3d_translate([(_r1 + _r2) / 2 - pdepth*pitch, 0, 0]) *
+                skew_mat *
+                affine3d_translate([0, 0, dz]),
+            prof = apply(side_mat, [
+                for (thread = [-threads/2:1:threads/2-1]) let(
+                    tang = (thread/starts) * 360 + ang,
+                    hsc =
+                        abs(tang) > twist/2? 0 :
+                        (higang1==0 && higang2==0)? 1 :
+                        lookup(tang, hig_table),
+                    mat3 = affine3d_translate([thread, 0, 0]) *
+                        affine3d_scale([1, hsc, 1]) *
+                        affine3d_translate([0,pdepth,0])
+                ) each apply(mat3, prof3d)
+            ])
+        ) [
+            [0, 0, -l/2-pitch],
+            each apply(mat1*mat2, prof),
+            [0, 0, +l/2+pitch]
+        ]
     ];
     thread_vnfs = vnf_merge([
-        for (start = [0:1:starts-1]) zrot(start*360/starts, p=thread_vnf2)
-    ], cleanup=true);
+        for (i=[0:1:starts-1])
+            zrot(i*360/starts, p=vnf_vertex_array(thread_verts, reverse=left_handed)),
+        for (i=[0:1:starts-1]) let(
+            rmat = zrot(i*360/starts),
+            pts = deduplicate(select(thread_verts[0], 0, len(prof3d)+1)),
+            faces = [for (i=idx(pts,e=-2)) [0, i+1, i]],
+            rfaces = left_handed? [for (x=faces) reverse(x)] : faces
+        ) [apply(rmat,pts), rfaces],
+        for (i=[0:1:starts-1]) let(
+            rmat = zrot(i*360/starts),
+            pts = deduplicate(select(last(thread_verts), -len(prof3d)-2, -1)),
+            faces = [for (i=idx(pts,e=-2)) [len(pts)-1, i, i+1]],
+            rfaces = left_handed? [for (x=faces) reverse(x)] : faces
+        ) [apply(rmat,pts), rfaces]
+    ]);
+
     anchor = get_anchor(anchor, center, BOT, CENTER);
     attachable(anchor,spin,orient, r1=_r1, r2=_r2, l=l) {
-        difference() {
-            vnf_polyhedron(thread_vnfs, convexity=10);
-            zcopies(l+4*pitch*starts)
-                cylinder(h=4*pitch*starts, r=2*max(_r1,_r2)+1, center=true);
-            if (bevel)
-                cylinder_mask(r1=_r1, r2=_r2, l=l+0.01, chamfer=depth);
+        intersection() {
+            //vnf_validate(vnf_quantize(thread_vnfs), size=0.1);
+            vnf_polyhedron(vnf_quantize(thread_vnfs), convexity=10);
+            if (bevel) {
+                cyl(l=l, r1=_r1, r2=_r2, chamfer=depth);
+            } else {
+                cyl(l=l, r1=_r1, r2=_r2);
+            }
         }
         children();
     }
