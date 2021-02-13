@@ -135,7 +135,7 @@ The library files are as follows:
   - [`wiring.scad`](wiring.scad): Modules to render routed bundles of wires.
   - [`hingesnaps.scad`](hingesnaps.scad): Modules to make foldable, snap-locking parts.
   - [`bottlecaps.scad`](bottlecaps.scad): Modules to make standard beverage bottle caps and necks.
-
+  - [`modular_hose.scad`](modular_hose.scad): Modules to make module hose segments and ends.
 
 ## Documentation
 The full library docs can be found at https://github.com/revarbat/BOSL2/wiki
