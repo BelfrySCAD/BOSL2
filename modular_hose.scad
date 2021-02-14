@@ -6,7 +6,6 @@
 //   include <BOSL2/modular_hose.scad>
 //////////////////////////////////////////////////////////////////////////
 
-
 _small_end = [
              turtle([
                      "left", 90-38.5,            //   1/4" hose
@@ -45,10 +44,10 @@ _small_end = [
                      "arcsteps", 4, 
                      "arcleft", .47,90-53+30.4,
                      "move", .597,
-                     "left",
-                     "move", 9.908,
-                     "right", 30,
-                     "move",3.81,
+                     "left", 
+                     "move", 9.908-1.905/tan(25) +3.81*cos(30),  // Change to 25 deg angle
+                     "right", 25,                                // to remove narrow point in wall
+                     "move",1.905 /sin(25),
                   ],
                   state=[11.989,0])
             ];
@@ -127,10 +126,10 @@ _hose_waist = [1.7698, 1.8251, 3.95998];
 //    parts you can add clearances that make the ball end smaller and the socket end
 //    larger.  These work by simply increasing the radius of the whole end by the specified
 //    amount.  On a Prusa printer with PETG, a clearance of 0.05 allows the 3/4" hose parts to mate
-//    with standard modular hose or itself.  A clearance of 0.1 allows the 3/4" parts to mate with
-//    standard hose, and with clearance 0 the 1/4" parts will mate with standard hose.  And note clearance values
+//    with standard modular hose or itself.  A clearance of 0.05 to 0.1 allows the 1/2" parts to mate with
+//    standard hose, and with clearance 0 the 1/4" parts will mate with standard hose.  Note that clearance values
 //    are different for the different sizes.  You will have to experiment with your machine and materials.  Small
-//    adjustments will change the stiffness of the connection.  
+//    adjustments will change the stiffness of the connection.
 // Arguments:
 //    size = size of modular hose part, must be 1/4, 1/2 or 3/4.
 //    type = type of part to make, either "segment", "socket" (or "big"), or "ball" (or "small")
