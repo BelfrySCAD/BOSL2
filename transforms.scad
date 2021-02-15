@@ -547,7 +547,7 @@ module xyrot(a=0, cp)
     if (a==0) {
         children();  // May be slightly faster?
     } else {
-        mat = xyrot(a=a, p=p, cp=cp);
+        mat = xyrot(a=a, cp=cp);
         multmatrix(mat) children();
     }
 }
@@ -587,7 +587,7 @@ module xzrot(a=0, cp)
     if (a==0) {
         children();  // May be slightly faster?
     } else {
-        mat = xzrot(a=a, p=p, cp=cp);
+        mat = xzrot(a=a, cp=cp);
         multmatrix(mat) children();
     }
 }
@@ -627,7 +627,7 @@ module yzrot(a=0, cp)
     if (a==0) {
         children();  // May be slightly faster?
     } else {
-        mat = yzrot(a=a, p=p, cp=cp);
+        mat = yzrot(a=a, cp=cp);
         multmatrix(mat) children();
     }
 }
