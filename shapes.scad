@@ -561,10 +561,10 @@ function prismoid(
 //   shift = [X,Y] amount to shift the center of the top end with respect to the center of the bottom end.
 //   ---
 //   wall = The thickness of the rectangular tube wall.
-//   size1 = The [X,Y] side of the outside of the bottom of the rectangular tube.
-//   size2 = The [X,Y] side of the outside of the top of the rectangular tube.
-//   isize1 = The [X,Y] side of the inside of the bottom of the rectangular tube.
-//   isize2 = The [X,Y] side of the inside of the top of the rectangular tube.
+//   size1 = The [X,Y] size of the outside of the bottom of the rectangular tube.
+//   size2 = The [X,Y] size of the outside of the top of the rectangular tube.
+//   isize1 = The [X,Y] size of the inside of the bottom of the rectangular tube.
+//   isize2 = The [X,Y] size of the inside of the top of the rectangular tube.
 //   rounding = The roundover radius for the outside edges of the rectangular tube.
 //   rounding1 = The roundover radius for the outside bottom corner of the rectangular tube.
 //   rounding2 = The roundover radius for the outside top corner of the rectangular tube.
@@ -631,7 +631,7 @@ module rect_tube(
     anchor, spin=0, orient=UP,
     l
 ) {
-    h = first_defined([h,l,1]);
+    h = one_defined([h,l],"h,l");
     assert(is_num(h), "l or h argument required.");
     assert(is_vector(shift,2));
     s1 = is_num(size1)? [size1, size1] :

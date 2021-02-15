@@ -368,7 +368,7 @@ module cubetruss_uclip(dual=true, size, strut, clipthick, anchor=CENTER, spin=0,
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
 // Topics: Attachable, Trusses
-// Examples(FlatSpin):
+// Examples(FlatSpin,VPD=444):
 //   cubetruss(extents=3);
 //   cubetruss(extents=3, clips=FRONT);
 //   cubetruss(extents=3, clips=[FRONT,BACK]);
