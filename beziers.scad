@@ -935,7 +935,7 @@ function is_patch(x) =
 //   ];
 //   vnf = bezier_patch(tri, splinesteps=16);
 //   vnf_polyhedron(vnf);
-// Example(3DFlatSpin): Chaining Patches
+// Example(3D,FlatSpin,VPD=444): Chaining Patches
 //   patch = [
 //       // u=0,v=0                                u=1,v=0
 //       [[0,  0,0], [33,  0,  0], [67,  0,  0], [100,  0,0]],

@@ -15,6 +15,12 @@
 $slop = 0.20;
 
 
+// Constant: INCH
+// Description:
+//   The number of millimeters in an inch.
+INCH = 25.4;
+
+
 
 // Section: Directional Vectors
 //   Vectors useful for `rotate()`, `mirror()`, and `anchor` arguments for `cuboid()`, `cyl()`, etc.
