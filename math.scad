@@ -409,7 +409,7 @@ function posmod(x,m) =
     (x%m+m)%m;
 
 
-// Function: modang(x)
+// Function: modang()
 // Usage:
 //   ang = modang(x)
 // Description:
