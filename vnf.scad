@@ -870,7 +870,7 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
 // Section: VNF transformations
 //
 
-// Function: vnf_halfspace(halfspace, vnf)
+// Function: vnf_halfspace()
 // Usage:
 //   vnf_halfspace([a,b,c,d], vnf)
 // Description:

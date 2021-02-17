@@ -34,7 +34,7 @@ function _substr(str,pos,len,substr="") =
     _substr(str, pos+1, len-1, str(substr, str[pos]));
 
 
-// Function suffix()
+// Function: suffix()
 // Usage:
 //   suffix(str,len)
 // Description:
@@ -726,7 +726,7 @@ function str_pad(str,length,char=" ",left=false) =
   left ? str(padding,str) : str(str,padding);
 
 
-// Function str_replace_char()
+// Function: str_replace_char()
 // Usage:
 //   newstr = str_replace_char(str, char, replace)
 // Description:
