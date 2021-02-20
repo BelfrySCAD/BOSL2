@@ -856,47 +856,47 @@ module screw_head(screw_info,details=false) {
 //     screw("M5", head="hex", length=12);
 //   }
 // Example: Demonstration of all head types for UTS screws (using pitch zero for fast preview)
-   xdistribute(spacing=15){
-     ydistribute(spacing=15){
-        screw("1/4", thread=0,length=8, anchor=TOP, head="none", drive="hex");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="none", drive="torx");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="none");
-     }
-     screw("1/4", thread=0, length=8, anchor=TOP, head="hex");
-     ydistribute(spacing=15){
-        screw("1/4", thread=0,length=8, anchor=TOP, head="socket", drive="hex");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="socket", drive="torx");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="socket");
-     }
-     ydistribute(spacing=15){
-        screw("1/4", thread=0,length=8, anchor=TOP, head="button", drive="hex");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="button", drive="torx");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="button");
-     }
-     ydistribute(spacing=15){
-        screw("1/4", thread=0,length=8, anchor=TOP, head="round", drive="slot");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="round", drive="phillips");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="round");
-     }
-     ydistribute(spacing=15){
-        screw("1/4", thread=0,length=8, anchor=TOP, head="fillister", drive="slot");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="fillister", drive="phillips");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="fillister");
-     }
-     ydistribute(spacing=15){
-        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="slot");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="phillips");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="hex");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="torx");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="flat large");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="flat small");
-     }
-     ydistribute(spacing=15){
-        screw("1/4", thread=0,length=8, anchor=TOP, head="flat undercut", drive="slot");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="flat undercut", drive="phillips");
-        screw("1/4", thread=0,length=8, anchor=TOP, head="flat undercut");
-     }
-   }
+//   xdistribute(spacing=15){
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="none", drive="hex");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="none", drive="torx");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="none");
+//     }
+//     screw("1/4", thread=0, length=8, anchor=TOP, head="hex");
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="socket", drive="hex");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="socket", drive="torx");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="socket");
+//     }
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="button", drive="hex");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="button", drive="torx");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="button");
+//     }
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="round", drive="slot");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="round", drive="phillips");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="round");
+//     }
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="fillister", drive="slot");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="fillister", drive="phillips");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="fillister");
+//     }
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="slot");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="phillips");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="hex");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat", drive="torx");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat large");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat small");
+//     }
+//     ydistribute(spacing=15){
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat undercut", drive="slot");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat undercut", drive="phillips");
+//        screw("1/4", thread=0,length=8, anchor=TOP, head="flat undercut");
+//     }
+//   }
 // Example: Demonstration of all head types for metric screws without threading.
 //   xdistribute(spacing=15){
 //     ydistribute(spacing=15){
