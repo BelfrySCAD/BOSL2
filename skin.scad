@@ -801,8 +801,7 @@ function associate_vertices(polygons, split, curpoly=0) =
    curpoly==len(polygons)-1 ? polygons :
    let(
       polylen = len(polygons[curpoly]),
-      cursplit = force_list(split[curpoly]),
-     fdsa= echo(cursplit=cursplit)
+      cursplit = force_list(split[curpoly])
    )
     assert(len(split)==len(polygons)-1,str(split,"Split list length mismatch: it has length ", len(split)," but must have length ",len(polygons)-1))
     assert(polylen<=len(polygons[curpoly+1]),str("Polygon ",curpoly," has more vertices than the next one."))
@@ -1142,7 +1141,7 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   path_sweep(ushape, knot_path, closed=true, method="natural");
 // Example: knot with twist.  Note if you twist it the other direction the center section untwists because of the natural twist there.  Also compare to the "incremental" method which has less twist in the center.  
-//  function knot(a,b,t) =   // rolling knot 
+//   function knot(a,b,t) =   // rolling knot 
 //        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
 //          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
 //        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
@@ -1168,7 +1167,7 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 //   points = 50;       // points per loop
 //   R = 400; r = 150;  // Torus size
 //   p = 2;  q = 5;     // Knot parameters
-//   %torus(r=R,r2=r);
+//   %torus(r_maj=R,r_min=r);
 //   k = max(p,q) / gcd(p,q) * points; 
 //   knot_path   = [ for (i=[0:k-1]) knot(360*i/k/gcd(p,q),R,r,p,q) ];
 //   path_sweep(rot(90,p=ushape),knot_path,  method="natural", closed=true);
@@ -1185,7 +1184,7 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 //   points = 50;       // points per loop
 //   R = 400; r = 150;  // Torus size
 //   p = 2;  q = 5;     // Knot parameters
-//   %torus(r=R,r2=r);
+//   %torus(r_maj=R,r_min=r);
 //   k = max(p,q) / gcd(p,q) * points; 
 //   knot_path   = [ for (i=[0:k-1]) knot(360*i/k/gcd(p,q),R,r,p,q) ];
 //   normals = [ for (i=[0:k-1]) knot_normal(360*i/k/gcd(p,q),R,r,p,q) ];
