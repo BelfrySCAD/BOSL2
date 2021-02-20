@@ -292,21 +292,21 @@ function segment_intersection(s1,s2,eps=EPSILON) =
 //   stroke(line, endcaps="arrow2");
 //   color("blue") translate(pt) circle(r=1,$fn=12);
 //   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   line = [[-30,-15,0],[30,15,30]];
 //   pt = [5,5,5];
 //   p2 = line_closest_point(line,pt);
 //   stroke(line, endcaps="arrow2");
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   line = [[-30,-15,0],[30,15,30]];
 //   pt = [-35,-15,0];
 //   p2 = line_closest_point(line,pt);
 //   stroke(line, endcaps="arrow2");
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   line = [[-30,-15,0],[30,15,30]];
 //   pt = [40,15,25];
 //   p2 = line_closest_point(line,pt);
@@ -350,21 +350,21 @@ function line_closest_point(line,pt) =
 //   stroke(ray, endcap2="arrow2");
 //   color("blue") translate(pt) circle(r=1,$fn=12);
 //   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   ray = [[-30,-15,0],[30,15,30]];
 //   pt = [5,5,5];
 //   p2 = ray_closest_point(ray,pt);
 //   stroke(ray, endcap2="arrow2");
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   ray = [[-30,-15,0],[30,15,30]];
 //   pt = [-35,-15,0];
 //   p2 = ray_closest_point(ray,pt);
 //   stroke(ray, endcap2="arrow2");
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   ray = [[-30,-15,0],[30,15,30]];
 //   pt = [40,15,25];
 //   p2 = ray_closest_point(ray,pt);
@@ -413,21 +413,21 @@ function ray_closest_point(ray,pt) =
 //   stroke(seg);
 //   color("blue") translate(pt) circle(r=1,$fn=12);
 //   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   seg = [[-30,-15,0],[30,15,30]];
 //   pt = [5,5,5];
 //   p2 = segment_closest_point(seg,pt);
 //   stroke(seg);
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   seg = [[-30,-15,0],[30,15,30]];
 //   pt = [-35,-15,0];
 //   p2 = segment_closest_point(seg,pt);
 //   stroke(seg);
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   seg = [[-30,-15,0],[30,15,30]];
 //   pt = [40,15,25];
 //   p2 = segment_closest_point(seg,pt);
@@ -476,9 +476,9 @@ function line_from_points(points, fast=false, eps=EPSILON) =
 //   C = law_of_cosines(a, b, c);
 //   c = law_of_cosines(a, b, C);
 // Description:
-//   Applies the Law of Cosines for an arbitrary triangle.
-//   Given three side lengths, returns the angle in degrees for the corner opposite of the third side.
-//   Given two side lengths, and the angle between them, returns the length of the third side.
+//   Applies the Law of Cosines for an arbitrary triangle.  Given three side lengths, returns the
+//   angle in degrees for the corner opposite of the third side.  Given two side lengths, and the
+//   angle between them, returns the length of the third side.
 // Figure(2D):
 //   stroke([[-50,0], [10,60], [50,0]], closed=true);
 //   color("black") {
@@ -509,9 +509,10 @@ function law_of_cosines(a, b, c, C) =
 //   B = law_of_sines(a, A, b);
 //   b = law_of_sines(a, A, B);
 // Description:
-//   Applies the Law of Sines for an arbitrary triangle.
-//   Given two triangle side lengths and the angle between them, returns the angle of the corner opposite of the second side.
-//   Given a side length, the opposing angle, and a second angle, returns the length of the side opposite of the second angle.
+//   Applies the Law of Sines for an arbitrary triangle.  Given two triangle side lengths and the
+//   angle between them, returns the angle of the corner opposite of the second side.  Given a side
+//   length, the opposing angle, and a second angle, returns the length of the side opposite of the
+//   second angle.
 // Figure(2D):
 //   stroke([[-50,0], [10,60], [50,0]], closed=true);
 //   color("black") {
@@ -548,7 +549,7 @@ function law_of_sines(a, A, b, B) =
 //   This is certainly more verbose and slower than writing your own calculations, but has the nice
 //   benefit that you can just specify the info you have, and don't have to figure out which trig
 //   formulas you need to use.
-// Figure(2D):
+// Figure(2D,NoAxes):
 //   color("#ccc") {
 //       stroke(closed=false, width=0.5, [[45,0], [45,5], [50,5]]);
 //       stroke(closed=false, width=0.5, arc(N=6, r=15, cp=[0,0], start=0, angle=30));
@@ -1005,7 +1006,7 @@ function plane_transform(plane) =
 // Arguments:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 //   points = List of points to project
-// Example(3D,FlatSpin):
+// Example(FlatSpin,VPD=500,VPT=[2,20,10]):
 //   points = move([10,20,30], p=yrot(25, p=path3d(circle(d=100, $fn=36))));
 //   plane = plane_from_normal([1,0,1]);
 //   proj = projection_on_plane(plane,points);
@@ -1492,7 +1493,7 @@ module circle_3points(pt1, pt2, pt3, h, center=false) {
 //   d = Diameter of the circle.
 //   cp = The coordinates of the 2d circle centerpoint.
 //   pt = The coordinates of the 2d external point.
-// Example:
+// Example(3D):
 //   cp = [-10,-10];  r = 30;  pt = [30,10];
 //   tanpts = circle_point_tangents(r=r, cp=cp, pt=pt);
 //   color("yellow") translate(cp) circle(r=r);

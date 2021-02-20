@@ -29,67 +29,63 @@ $tags_hidden = [];
 // Section: Anchors, Spin, and Orientation
 //   This library adds the concept of anchoring, spin and orientation to the `cube()`, `cylinder()`
 //   and `sphere()` builtins, as well as to most of the shapes provided by this library itself.
-//   * An anchor is a place on an object which you can align the object to, or attach other objects
+//   - An anchor is a place on an object which you can align the object to, or attach other objects
 //     to using `attach()` or `position()`.  An anchor has a position, a direction, and a spin.
 //     The direction and spin are used to orient other objects to match when using `attach()`.
-//   * Spin is a simple rotation around the Z axis.
-//   * Orientation is rotating an object so that its top is pointed towards a given vector.
+//   - Spin is a simple rotation around the Z axis.
+//   - Orientation is rotating an object so that its top is pointed towards a given vector.
 //   An object will first be translated to its anchor position, then spun, then oriented.
 //   .
 //   ## Anchor
-//   Anchoring is specified with the `anchor` argument in most shape modules.
-//   Specifying `anchor` when creating an object will translate the object so
-//   that the anchor point is at the origin (0,0,0).  Anchoring always occurs
-//   before spin and orientation are applied.
+//   Anchoring is specified with the `anchor` argument in most shape modules.  Specifying `anchor`
+//   when creating an object will translate the object so that the anchor point is at the origin
+//   (0,0,0).  Anchoring always occurs before spin and orientation are applied.
 //   .
-//   An anchor can be referred to in one of two ways; as a directional vector,
-//   or as a named anchor string.
+//   An anchor can be referred to in one of two ways; as a directional vector, or as a named anchor string.
 //   .
-//   When given as a vector, it points, in a general way, towards the face, edge, or
-//   corner of the object that you want the anchor for, relative to the center of
-//   the object.  There are directional constants named `TOP`, `BOTTOM`, `FRONT`, `BACK`,
-//   `LEFT`, and `RIGHT` that you can add together to specify an anchor point.
+//   When given as a vector, it points, in a general way, towards the face, edge, or corner of the
+//   object that you want the anchor for, relative to the center of the object.  There are directional
+//   constants named `TOP`, `BOTTOM`, `FRONT`, `BACK`, `LEFT`, and `RIGHT` that you can add together
+//   to specify an anchor point.
+//   .
 //   For example:
-//    - `[0,0,1]` is the same as `TOP` and refers to the center of the top face.
-//    - `[-1,0,1]` is the same as `TOP+LEFT`, and refers to the center of the top-left edge.
-//    - `[1,1,-1]` is the same as `BOTTOM+BACK+RIGHT`, and refers to the bottom-back-right corner.
+//   - `[0,0,1]` is the same as `TOP` and refers to the center of the top face.
+//   - `[-1,0,1]` is the same as `TOP+LEFT`, and refers to the center of the top-left edge.
+//   - `[1,1,-1]` is the same as `BOTTOM+BACK+RIGHT`, and refers to the bottom-back-right corner.
 //   .
-//   The components of the directional vector should all be `1`, `0`, or `-1`.
-//   When the object is cylindrical, conical, or spherical in nature, the anchors will be
-//   located around the surface of the cylinder, cone, or sphere, relative to the center.
-//   The direction of a face anchor will be perpendicular to the face, pointing outward.
-//   The direction of a edge anchor will be the average of the anchor directions of the
-//   two faces the edge is between.  The direction of a corner anchor will be the average
-//   of the anchor directions of the three faces the corner is on.  The spin of all standard
-//   anchors is 0.
+//   When the object is cylindrical, conical, or spherical in nature, the anchors will be located
+//   around the surface of the cylinder, cone, or sphere, relative to the center.  The direction of a
+//   face anchor will be perpendicular to the face, pointing outward.  The direction of a edge anchor
+//   will be the average of the anchor directions of the two faces the edge is between.  The direction
+//   of a corner anchor will be the average of the anchor directions of the three faces the corner is
+//   on.  The spin of all standard anchors is 0.
 //   .
-//   Some more complex objects, like screws and stepper motors, have named anchors
-//   to refer to places on the object that are not at one of the standard faces, edges
-//   or corners.  For example, stepper motors have anchors for `"screw1"`, `"screw2"`,
-//   etc. to refer to the various screwholes on the stepper motor shape.  The names,
-//   positions, directions, and spins of these anchors will be specific to the object,
-//   and will be documented when they exist.
+//   Some more complex objects, like screws and stepper motors, have named anchors to refer to places
+//   on the object that are not at one of the standard faces, edges or corners.  For example, stepper
+//   motors have anchors for `"screw1"`, `"screw2"`, etc. to refer to the various screwholes on the
+//   stepper motor shape.  The names, positions, directions, and spins of these anchors will be
+//   specific to the object, and will be documented when they exist.
 //   .
 //   ## Spin
-//   Spin is specified with the `spin` argument in most shape modules.  Specifying `spin`
-//   when creating an object will rotate the object counter-clockwise around the Z axis
-//   by the given number of degrees.  Spin is always applied after anchoring, and before
-//   orientation.
+//   Spin is specified with the `spin` argume//   nt in most shape modules.  Specifying a scalar `spin`
+//   when creating an object will rotate the object counter-clockwise around the Z axis by the given
+//   number of degrees.  If given as a 3D vector, the object will be rotated around each of the X, Y, Z
+//   axes by the number of degrees in each component of the vector.  Spin is always applied after
+//   anchoring, and before orientation.
 //   .
 //   ## Orient
-//   Orientation is specified with the `orient` argument in most shape modules.  Specifying
-//   `orient` when creating an object will rotate the object such that the top of the
-//   object will be pointed at the vector direction given in the `orient` argument.
-//   Orientation is always applied after anchoring and spin.  The constants `UP`, `DOWN`,
-//   `FRONT`, `BACK`, `LEFT`, and `RIGHT` can be added together to form the directional
-//   vector for this.  ie: `LEFT+BACK`
+//   Orientation is specified with the `orient` argument in most shape modules.  Specifying `orient`
+//   when creating an object will rotate the object such that the top of the object will be pointed
+//   at the vector direction given in the `orient` argument.  Orientation is always applied after
+//   anchoring and spin.  The constants `UP`, `DOWN`, `FRONT`, `BACK`, `LEFT`, and `RIGHT` can be
+//   added together to form the directional vector for this.  ie: `LEFT+BACK`
 
 
 // Section: Functions
 
 // Function: anchorpt()
 // Usage:
-//   a = anchor(name, pos, <dir>, <rot>);
+//   a = anchorpt(name, pos, <orient>, <spin>);
 // Description:
 //   Creates a anchor data structure.
 // Arguments:
@@ -103,26 +99,27 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 // Function: attach_geom()
 //
 // Usage: Square/Trapezoid Geometry
-//   geom = attach_geom(two_d, size, <size2>, <shift>, <cp>, <offset>, <anchors>);
+//   geom = attach_geom(two_d=true, size=, <size2=>, <shift=>, ...);
 // Usage: Circle/Oval Geometry
-//   geom = attach_geom(two_d, r|d, <cp>, <offset>, <anchors>);
+//   geom = attach_geom(two_d=true, r=|d=, ...);
 // Usage: 2D Path/Polygon Geometry
-//   geom = attach_geom(two_d, path, <extent>, <cp>, <offset>, <anchors>);
+//   geom = attach_geom(two_d=true, path=, <extent=>, ...);
 // Usage: Cubical/Prismoidal Geometry
-//   geom = attach_geom(size, <size2>, <shift>, <cp>, <offset>, <anchors>);
+//   geom = attach_geom(size=, <size2=>, <shift=>, ...);
 // Usage: Cylindrical Geometry
-//   geom = attach_geom(r|d, l, <cp>, <axis>, <offset>, <anchors>);
+//   geom = attach_geom(r=|d=, l=, <axis=>, ...);
 // Usage: Conical Geometry
-//   geom = attach_geom(r1|d1, r2|d2, l, <cp>, <axis>, <offset>, <anchors>);
+//   geom = attach_geom(r1|d1=, r2=|d2=, l=, <axis=>, ...);
 // Usage: Spheroid/Ovoid Geometry
-//   geom = attach_geom(r|d, <cp>, <offset>, <anchors>);
+//   geom = attach_geom(r=|d=, ...);
 // Usage: VNF Geometry
-//   geom = attach_geom(vnf, <extent>, <cp>, <offset>, <anchors>);
+//   geom = attach_geom(vnf=, <extent=>, ...);
 //
 // Description:
 //   Given arguments that describe the geometry of an attachable object, returns the internal geometry description.
 //
 // Arguments:
+//   ---
 //   size = If given as a 3D vector, contains the XY size of the bottom of the cuboidal/prismoidal volume, and the Z height.  If given as a 2D vector, contains the front X width of the rectangular/trapezoidal shape, and the Y length.
 //   size2 = If given as a 2D vector, contains the XY size of the top of the prismoidal volume.  If given as a number, contains the back width of the trapezoidal shape.
 //   shift = If given as a 2D vector, shifts the top of the prismoidal or conical shape by the given amount.  If given as a number, shifts the back of the trapezoidal shape right by that amount.  Default: No shift.
@@ -342,8 +339,10 @@ function attach_geom_size(geom) =
 
 
 // Function: attach_transform()
-// Usage:
+// Usage: To Get a Transformation Matrix
 //   mat = attach_transform(anchor, spin, orient, geom);
+// Usage: To Transform Points, Paths, Patches, or VNFs
+//   new_p = attach_transform(anchor, spin, orient, geom, p);
 // Description:
 //   Returns the affine3d transformation matrix needed to `anchor`, `spin`, and `orient`
 //   the given geometry `geom` shape into position.
@@ -627,29 +626,29 @@ function attachment_is_shown(tags) =
 // Function: reorient()
 //
 // Usage: Square/Trapezoid Geometry
-//   mat = reorient(anchor, spin, <orient>, *two_d*, *size*, <*size2*>, <*shift*>, <*cp*>, <*offset*>, <*anchors*>);
-//   pts = reorient(anchor, spin, <orient>, *two_d*, *size*, <*size2*>, <*shift*>, <*cp*>, <*offset*>, <*anchors*>, *p*);
+//   mat = reorient(anchor, spin, <orient>, two_d=true, size=, <size2=>, <shift=>, ...);
+//   pts = reorient(anchor, spin, <orient>, two_d=true, size=, <size2=>, <shift=>, p=, ...);
 // Usage: Circle/Oval Geometry
-//   mat = reorient(anchor, spin, <orient>, *two_d*, *r*|*d*, <*cp*>, <*offset*>, <anchors>);
-//   pts = reorient(anchor, spin, <orient>, *two_d*, *r*|*d*, <*cp*>, <*offset*>, <anchors>, *p*);
+//   mat = reorient(anchor, spin, <orient>, two_d=true, r=|d=, ...);
+//   pts = reorient(anchor, spin, <orient>, two_d=true, r=|d=, p=, ...);
 // Usage: 2D Path/Polygon Geometry
-//   mat = reorient(anchor, spin, <orient>, *two_d*, *path*, <*extent*>, <*cp*>, <*offset*>, <*anchors*>);
-//   pts = reorient(anchor, spin, <orient>, *two_d*, *path*, <*extent*>, <*cp*>, <*offset*>, <*anchors*>, *p*);
+//   mat = reorient(anchor, spin, <orient>, two_d=true, path=, <extent=>, ...);
+//   pts = reorient(anchor, spin, <orient>, two_d=true, path=, <extent=>, p=, ...);
 // Usage: Cubical/Prismoidal Geometry
-//   mat = reorient(anchor, spin, <orient>, *size*, <*size2*>, <*shift*>, <*cp*>, <*offset*>, <*anchors*>);
-//   pts = reorient(anchor, spin, <orient>, *size*, <*size2*>, <*shift*>, <*cp*>, <*offset*>, <*anchors*>, *p*);
+//   mat = reorient(anchor, spin, <orient>, size=, <size2=>, <shift=>, ...);
+//   pts = reorient(anchor, spin, <orient>, size=, <size2=>, <shift=>, p=, ...);
 // Usage: Cylindrical Geometry
-//   mat = reorient(anchor, spin, <orient>, *r*|*d*, *l*, <*offset*>, <*axis*>, <*cp*>, <*anchors*>);
-//   pts = reorient(anchor, spin, <orient>, *r*|*d*, *l*, <*offset*>, <*axis*>, <*cp*>, <*anchors*>, *p*);
+//   mat = reorient(anchor, spin, <orient>, r=|d=, l=, <axis=>, ...);
+//   pts = reorient(anchor, spin, <orient>, r=|d=, l=, <axis=>, p=, ...);
 // Usage: Conical Geometry
-//   mat = reorient(anchor, spin, <orient>, *r1*|*d1*, *r2*|*d2*, *l*, <*axis*>, <*cp*>, <*offset*>, <*anchors*>);
-//   pts = reorient(anchor, spin, <orient>, *r1*|*d1*, *r2*|*d2*, *l*, <*axis*>, <*cp*>, <*offset*>, <*anchors*>, *p*);
+//   mat = reorient(anchor, spin, <orient>, r1=|d1=, r2=|d2=, l=, <axis=>, ...);
+//   pts = reorient(anchor, spin, <orient>, r1=|d1=, r2=|d2=, l=, <axis=>, p=, ...);
 // Usage: Spheroid/Ovoid Geometry
-//   mat = reorient(anchor, spin, <orient>, *r*|*d*, <*cp*>, <*offset*>, <*anchors*>);
-//   pts = reorient(anchor, spin, <orient>, *r*|*d*, <*cp*>, <*offset*>, <*anchors*>, *p*);
+//   mat = reorient(anchor, spin, <orient>, r|d=, ...);
+//   pts = reorient(anchor, spin, <orient>, r|d=, p=, ...);
 // Usage: VNF Geometry
-//   mat = reorient(anchor, spin, <orient>, *vnf*, <*extent*>, <*cp*>, <*offset*>, <*anchors*>);
-//   pts = reorient(anchor, spin, <orient>, *vnf*, <*extent*>, <*cp*>, <*offset*>, <*anchors*>, *p*);
+//   mat = reorient(anchor, spin, <orient>, vnf, <extent>, ...);
+//   pts = reorient(anchor, spin, <orient>, vnf, <extent>, p=, ...);
 //
 // Description:
 //   Given anchor, spin, orient, and general geometry info for a managed volume, this calculates
@@ -737,21 +736,21 @@ function reorient(
 // Module: attachable()
 //
 // Usage: Square/Trapezoid Geometry
-//   attachable(anchor, spin, *two_d*, *size*, <*size2*>, <*shift*>, <*cp*>, <*offset*>, <*anchors*> ...
+//   attachable(anchor, spin, two_d=true, size=, <size2=>, <shift=>, ...) {...}
 // Usage: Circle/Oval Geometry
-//   attachable(anchor, spin, *two_d*, *r*|*d*, <*cp*>, <*offset*>, <*anchors*>) ...
+//   attachable(anchor, spin, two_d=true, r=|d=, ...) {...}
 // Usage: 2D Path/Polygon Geometry
-//   attachable(anchor, spin, *two_d*, *path*, <*extent*>, <*cp*>, <*offset*>, <*anchors*> ...
+//   attachable(anchor, spin, two_d=true, path=, <extent=>, ...) {...}
 // Usage: Cubical/Prismoidal Geometry
-//   attachable(anchor, spin, <orient>, *size*, <*size2*>, <*shift*>, <*cp*>, <*offset*>, <*anchors*> ...
+//   attachable(anchor, spin, <orient>, size=, <size2=>, <shift=>, ...) {...}
 // Usage: Cylindrical Geometry
-//   attachable(anchor, spin, <orient>, *r*|*d*, *l*, <*axis*>, <*cp*>, <*offset*>, <*anchors*>) ...
+//   attachable(anchor, spin, <orient>, r=|d=, l=, <axis=>, ...) {...}
 // Usage: Conical Geometry
-//   attachable(anchor, spin, <orient>, *r1*|*d1*, *r2*|*d2*, *l*, <*axis*>, <*cp*>, <*offset*>, <*anchors*>) ...
+//   attachable(anchor, spin, <orient>, r1=|d1=, r2=|d2=, l=, <axis=>, ...) {...}
 // Usage: Spheroid/Ovoid Geometry
-//   attachable(anchor, spin, <orient>, *r*|*d*, <*cp*>, <*offset*>, <*anchors*>) ...
+//   attachable(anchor, spin, <orient>, r=|d=, ...) {...}
 // Usage: VNF Geometry
-//   attachable(anchor, spin, <orient>, *vnf*, <*extent*>, <*cp*>, <*offset*>, <*anchors*>) ...
+//   attachable(anchor, spin, <orient>, vnf=, <extent=>, ...) {...}
 //
 // Description:
 //   Manages the anchoring, spin, orientation, and attachments for a 3D volume or 2D area.
@@ -959,7 +958,7 @@ module attachable(
 
 // Module: position()
 // Usage:
-//   position(from) ...
+//   position(from) {...}
 // Description:
 //   Attaches children to a parent object at an anchor point.
 // Arguments:
@@ -986,8 +985,8 @@ module position(from)
 
 // Module: attach()
 // Usage:
-//   attach(from, <overlap>, <norot>) ...
-//   attach(from, to, <overlap>, <norot>) ...
+//   attach(from, <overlap=>, <norot=>) {...}
+//   attach(from, to, <overlap=>, <norot=>) {...}
 // Description:
 //   Attaches children to a parent object at an anchor point and orientation.
 //   Attached objects will be overlapped into the parent object by a little bit,
@@ -998,6 +997,7 @@ module position(from)
 // Arguments:
 //   from = The vector, or name of the parent anchor point to attach to.
 //   to = Optional name of the child anchor point.  If given, orients the child such that the named anchors align together rotationally.
+//   ---
 //   overlap = Amount to sink child into the parent.  Equivalent to `down(X)` after the attach.  This defaults to the value in `$overlap`, which is `0.01` by default.
 //   norot = If true, don't rotate children when attaching to the anchor point.  Only translate to the anchor point.
 // Example:
@@ -1029,7 +1029,7 @@ module attach(from, to, overlap, norot=false)
 
 // Module: face_profile()
 // Usage:
-//   face_profile(faces, r|d, <convexity>) ...
+//   face_profile(faces, r|d=, <convexity=>) {...}
 // Description:
 //   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face.
 // Arguments:
@@ -1050,7 +1050,7 @@ module face_profile(faces=[], r, d, convexity=10) {
 
 // Module: edge_profile()
 // Usage:
-//   edge_profile(<edges>, <except>, <convexity>) ...
+//   edge_profile(<edges>, <except>, <convexity>) {...}
 // Description:
 //   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation
 //   and extruded length to be `diff()`ed away, to give the edge a matching profile.
@@ -1100,7 +1100,7 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 
 // Module: corner_profile()
 // Usage:
-//   corner_profile(<corners>, <except>, <convexity>) ...
+//   corner_profile(<corners>, <except>, <r=|d=>, <convexity=>) {...}
 // Description:
 //   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
 //   to the selected corners with the appropriate orientation.  Tags it as a "mask" to allow it to be
@@ -1108,6 +1108,7 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 // Arguments:
 //   corners = Edges to mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: All corners.
 //   except = Edges to explicitly NOT mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: No corners.
+//   ---
 //   r = Radius of corner mask.
 //   d = Diameter of corner mask.
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
@@ -1162,7 +1163,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 
 // Module: edge_mask()
 // Usage:
-//   edge_mask(<edges>, <except>) ...
+//   edge_mask(<edges>, <except>) {...}
 // Description:
 //   Takes a 3D mask shape, and attaches it to the given edges, with the
 //   appropriate orientation to be `diff()`ed away.
@@ -1204,7 +1205,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 
 // Module: corner_mask()
 // Usage:
-//   corner_mask(<corners>, <except>) ...
+//   corner_mask(<corners>, <except>) {...}
 // Description:
 //   Takes a 3D mask shape, and attaches it to the given corners, with the appropriate
 //   orientation to be `diff()`ed away.  The 3D corner mask shape should be designed to
@@ -1244,7 +1245,7 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 
 // Module: tags()
 // Usage:
-//   tags(tags) ...
+//   tags(tags) {...}
 // Description:
 //   Marks all children with the given tags, so that they will `hide()`/`show()`/`diff()`  correctly.
 //   This is especially useful for working with children that are not attachment enhanced, such as:
@@ -1271,7 +1272,7 @@ module tags(tags)
 
 // Module: recolor()
 // Usage:
-//   recolor(c) ...
+//   recolor(c) {...}
 // Description:
 //   Sets the color for children that can use the $color special variable.
 // Arguments:
@@ -1287,7 +1288,7 @@ module recolor(c)
 
 // Module: hide()
 // Usage:
-//   hide(tags) ...
+//   hide(tags) {...}
 // Description:
 //   Hides all children with the given tags.  Overrides any previous `hide()` or `show()` calls.
 // Example:
@@ -1305,7 +1306,7 @@ module hide(tags="")
 
 // Module: show()
 // Usage:
-//   show(tags) ...
+//   show(tags) {...}
 // Description:
 //   Shows only children with the given tags.  Overrides any previous `hide()` or `show()` calls.
 // Example:
@@ -1323,8 +1324,8 @@ module show(tags="")
 
 // Module: diff()
 // Usage:
-//   diff(neg, <keep>) ...
-//   diff(neg, pos, <keep>) ...
+//   diff(neg, <keep>) {...}
+//   diff(neg, pos, <keep>) {...}
 // Description:
 //   If `neg` is given, takes the union of all children with tags that are in `neg`, and differences
 //   them from the union of all children with tags in `pos`.  If `pos` is not given, then all items in
@@ -1381,8 +1382,8 @@ module diff(neg, pos, keep)
 
 // Module: intersect()
 // Usage:
-//   intersect(a, <keep>) ...
-//   intersect(a, b, <keep>) ...
+//   intersect(a, <keep=>) {...}
+//   intersect(a, b, <keep=>) {...}
 // Description:
 //   If `a` is given, takes the union of all children with tags that are in `a`, and `intersection()`s
 //   them with the union of all children with tags in `b`.  If `b` is not given, then the union of all
@@ -1393,6 +1394,7 @@ module diff(neg, pos, keep)
 // Arguments:
 //   a = String containing space delimited set of tag names of children.
 //   b = String containing space delimited set of tag names of children.
+//   ---
 //   keep = String containing space delimited set of tag names of children to keep whole.
 // Example:
 //   intersect("wheel", "mask", keep="axle")
@@ -1428,7 +1430,7 @@ module intersect(a, b=undef, keep=undef)
 
 // Module: hulling()
 // Usage:
-//   hulling(a) ...
+//   hulling(a) {...}
 // Description:
 //   If `a` is not given, then all children are `hull()`ed together.
 //   If `a` is given as a string, then all children with `$tags` that are in `a` are

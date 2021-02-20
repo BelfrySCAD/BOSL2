@@ -376,10 +376,10 @@ function get_metric_nut_thickness(size) = lookup(size, [
 // Examples:
 //   screw(screwsize=3,screwlen=10,headsize=6,headlen=3, anchor="countersunk");
 //   screw(screwsize=3,screwlen=10,headsize=6,headlen=3, anchor="base");
-// Example(FlatSpin): Standard Anchors
+// Example(FlatSpin,VPD=75): Standard Anchors
 //   screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
 //       show_anchors(5, custom=false);
-// Example(FlatSpin): Custom Named Anchors
+// Example(FlatSpin,VPD=55): Custom Named Anchors
 //   expose_anchors()
 //     screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
 //       show_anchors(5, std=false);
@@ -467,10 +467,10 @@ module screw(
 //   metric_bolt(headtype="hex", size=10, l=15, phillips="#2");
 // Example: Hex Head with Torx
 //   metric_bolt(headtype="hex", size=10, l=15, torx=50);
-// Example(FlatSpin): Standard Anchors
+// Example(FlatSpin,VPD=100): Standard Anchors
 //   metric_bolt(headtype="oval", size=10, l=15, shank=5, details=true, phillips="#2")
 //       show_anchors(5, custom=false);
-// Example(FlatSpin): Custom Named Anchors
+// Example(FlatSpin,VPD=100): Custom Named Anchors
 //   expose_anchors(0.125)
 //     metric_bolt(headtype="oval", size=10, l=15, shank=5, details=true, phillips="#2")
 //       show_anchors(5, std=false);

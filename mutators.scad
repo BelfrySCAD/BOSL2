@@ -246,7 +246,7 @@ function left_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
 //   x = The X coordinate of the cut-plane.  Default: 0
 //   planar = If true, this becomes a 2D operation.
 //
-// Examples(FlatSpin):
+// Examples(FlatSpin,VPD=175):
 //   right_half() sphere(r=20);
 //   right_half(x=-5) sphere(r=20);
 // Example(2D):
@@ -288,7 +288,7 @@ function right_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
 //   y = The Y coordinate of the cut-plane.  Default: 0
 //   planar = If true, this becomes a 2D operation.
 //
-// Examples(FlatSpin):
+// Examples(FlatSpin,VPD=175):
 //   front_half() sphere(r=20);
 //   front_half(y=5) sphere(r=20);
 // Example(2D):
@@ -404,7 +404,7 @@ function right_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, OpenSCAD's preview rendering may be incorrect.  Default: 10000
 //   z = The Z coordinate of the cut-plane.  Default: 0
 //
-// Examples(Spin):
+// Examples(Spin,VPD=175):
 //   top_half() sphere(r=20);
 //   top_half(z=5) sphere(r=20);
 module top_half(s=1000, z=0)

@@ -929,7 +929,7 @@ module modulated_circle(r, sines=[[1,1]], d)
 //   twist = number of degrees to twist the 2D shape over the entire extrusion length.
 //   scale = scale multiplier for end of extrusion compared the start.
 //   slices = Number of slices along the extrusion to break the extrusion into.  Useful for refining `twist` extrusions.
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   extrude_from_to([0,0,0], [10,20,30], convexity=4, twist=360, scale=3.0, slices=40) {
 //       xcopies(3) circle(3, $fn=32);
 //   }
@@ -1031,7 +1031,7 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
 //   path = array of points for the bezier path to extrude along.
 //   convexity = maximum number of walls a ran can pass through.
 //   clipsize = increase if artifacts are left.  Default: 1000
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=600,VPT=[75,16,20]):
 //   path = [ [0, 0, 0], [33, 33, 33], [66, 33, 40], [100, 0, 0], [150,0,0] ];
 //   path_extrude(path) circle(r=10, $fn=6);
 module path_extrude(path, convexity=10, clipsize=100) {
@@ -1147,14 +1147,14 @@ module path_extrude(path, convexity=10, clipsize=100) {
 //     polygon(concat([[0,0]],wedge));
 //     path_spread(wedge,n=5,spacing=3) fwd(.1) rect([1,4],anchor=FRONT);
 //   }
-// Example(Spin): 3d example, with children rotated into the plane of the path
+// Example(Spin,VPD=115): 3d example, with children rotated into the plane of the path
 //   tilted_circle = lift_plane(regular_ngon(n=64, or=12), [0,0,0], [5,0,5], [0,2,3]);
 //   path_sweep(regular_ngon(n=16,or=.1),tilted_circle);
 //   path_spread(tilted_circle, n=15,closed=true) {
 //      color("blue") cyl(h=3,r=.2, anchor=BOTTOM);      // z-aligned cylinder
 //      color("red") xcyl(h=10,r=.2, anchor=FRONT+LEFT); // x-aligned cylinder
 //   }
-// Example(Spin): 3d example, with rotate_children set to false
+// Example(Spin,VPD=115): 3d example, with rotate_children set to false
 //   tilted_circle = lift_plane(regular_ngon(n=64, or=12), [0,0,0], [5,0,5], [0,2,3]);
 //   path_sweep(regular_ngon(n=16,or=.1),tilted_circle);
 //   path_spread(tilted_circle, n=25,rotate_children=false,closed=true) {
@@ -1379,7 +1379,7 @@ function _sum_preserving_round(data, index=0) =
 // Example(2D): With `exact=false` you can also get extra points, here 20 instead of requested 18
 //   mypath = subdivide_path(pentagon(side=2), 18, exact=false);
 //   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(FlatSpin): Three-dimensional paths also work
+// Example(FlatSpin,VPD=15,VPT=[0,0,1.5]): Three-dimensional paths also work
 //   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
 //   move_copies(mypath)sphere(r=.1,$fn=32);
 function subdivide_path(path, N, refine, closed=true, exact=true, method="length") =

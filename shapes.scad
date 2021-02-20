@@ -8,7 +8,6 @@
 
 // Section: Cuboids
 
-
 // Module: cuboid()
 //
 // Usage: Standard Cubes
@@ -396,7 +395,7 @@ function cuboid(
 //   prismoid(size1=[15,5], size2=[30,20], h=20);
 // Example: Right Prism
 //   prismoid(size1=[30,60], size2=[0,60], shift=[-15,0], h=30);
-// Example(FlatSpin): Shifting/Skewing
+// Example(FlatSpin,VPD=160,VPT=[0,0,10]): Shifting/Skewing
 //   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]);
 // Example: Rounding
 //   include <BOSL2/hull.scad>
@@ -423,7 +422,7 @@ function cuboid(
 //       chamfer1=[0,5,0,10], chamfer2=[5,0,10,0],
 //       rounding1=[5,0,10,0], rounding2=[0,5,0,10]
 //   );
-// Example(Spin): Standard Connectors
+// Example(Spin,VPD=160,VPT=[0,0,10]): Standard Connectors
 //   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5])
 //       show_anchors();
 module prismoid(

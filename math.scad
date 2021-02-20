@@ -8,13 +8,21 @@
 
 // Section: Math Constants
 
-PHI = (1+sqrt(5))/2;  // The golden ratio phi.
+// Constant: PHI
+// Description: The golden ratio phi.
+PHI = (1+sqrt(5))/2;
 
-EPSILON = 1e-9;  // A really small value useful in comparing FP numbers.  ie: abs(a-b)<EPSILON
+// Constant: EPSILON
+// Description: A really small value useful in comparing floating point numbers.  ie: abs(a-b)<EPSILON
+EPSILON = 1e-9;
 
-INF = 1/0;  // The value `inf`, useful for comparisons.
+// Constant: INF
+// Description: The value `inf`, useful for comparisons.
+INF = 1/0;
 
-NAN = acos(2);  // The value `nan`, useful for comparisons.
+// Constant: NAN
+// Description: The value `nan`, useful for comparisons.
+NAN = acos(2);
 
 
 
@@ -409,7 +417,7 @@ function posmod(x,m) =
     (x%m+m)%m;
 
 
-// Function: modang(x)
+// Function: modang()
 // Usage:
 //   ang = modang(x)
 // Description:
@@ -1584,12 +1592,12 @@ function _poly_div(n,d,q) =
     _poly_div(newn,d,newq);
 
 
-// Internal Function: _poly_trim()
-// Usage:
-//    _poly_trim(p,[eps])
-// Description:
-//    Removes leading zero terms of a polynomial.  By default zeros must be exact,
-//    or give epsilon for approximate zeros.  
+/// Internal Function: _poly_trim()
+/// Usage:
+///    _poly_trim(p,[eps])
+/// Description:
+///    Removes leading zero terms of a polynomial.  By default zeros must be exact,
+///    or give epsilon for approximate zeros.  
 function _poly_trim(p,eps=0) =
     let( nz = [for(i=[0:1:len(p)-1]) if ( !approx(p[i],0,eps)) i])
     len(nz)==0 ? [0] : select(p,nz[0],-1);

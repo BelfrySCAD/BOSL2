@@ -215,7 +215,7 @@ function _unique_groups(m) = [
 //     color("red") sphere(r=.1);
 //     color("green") sphere(r=.1);
 //   }
-// Example(FlatSpin): Difference the children from the polyhedron; children depend on $faceindex
+// Example(FlatSpin,VPD=100): Difference the children from the polyhedron; children depend on $faceindex
 //   difference(){
 //     regular_polyhedron("tetrahedron", side=25);
 //     regular_polyhedron("tetrahedron", side=25,draw=false)
@@ -227,7 +227,7 @@ function _unique_groups(m) = [
 //     cylinder(r=.1, h=.5);
 //   right(2) regular_polyhedron(name="tetrahedron", anchor=UP, rotate_children=false)
 //     cylinder(r=.1, h=.5);
-// Example(FlatSpin,Med): Using `$face` you can have full control of the construction of your children.  This example constructs the Great Icosahedron.
+// Example(FlatSpin,Med,VPD=15): Using `$face` you can have full control of the construction of your children.  This example constructs the Great Icosahedron.
 //   module makestar(pts) {    // Make a star from a point list
 //       polygon(
 //         [

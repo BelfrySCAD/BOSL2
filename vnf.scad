@@ -867,10 +867,10 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
     color([0.5,0.5,0.5,0.67]) vnf_polyhedron(vnf);
 }
 
-// Section: VNF transformations
-//
 
-// Function: vnf_halfspace(halfspace, vnf)
+// Section: VNF Transformations
+
+// Function: vnf_halfspace()
 // Usage:
 //   vnf_halfspace([a,b,c,d], vnf)
 // Description:

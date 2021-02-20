@@ -130,21 +130,21 @@
 // Example: Offsetting the starting edge connects to circles in an interesting way:
 //   circ = circle($fn=80, r=3);
 //   skin([circ, rot(110,p=circ)], z=[0,5], slices=20);
-// Example(FlatSpin): 
+// Example(FlatSpin,VPD=20): 
 //   skin([ yrot(37,p=path3d(circle($fn=128, r=4))), path3d(square(3),3)], method="reindex",slices=10);
-// Example(FlatSpin): Ellipses connected with twist
+// Example(FlatSpin,VPD=16): Ellipses connected with twist
 //   ellipse = xscale(2.5,p=circle($fn=80));
 //   skin([ellipse, rot(45,p=ellipse)], z=[0,1.5], slices=10);
-// Example(FlatSpin): Ellipses connected without a twist.  (Note ellipses stay in the same position: just the connecting edges are different.)
+// Example(FlatSpin,VPD=16): Ellipses connected without a twist.  (Note ellipses stay in the same position: just the connecting edges are different.)
 //   ellipse = xscale(2.5,p=circle($fn=80));
 //   skin([ellipse, rot(45,p=ellipse)], z=[0,1.5], slices=10, method="reindex");
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=500):
 //   $fn=24;
 //   skin([
 //         yrot(0, p=yscale(2,p=path3d(circle(d=75)))),
 //         [[40,0,100], [35,-15,100], [20,-30,100],[0,-40,100],[-40,0,100],[0,40,100],[20,30,100], [35,15,100]]
 //   ],slices=10);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=600):
 //   $fn=48;
 //   skin([
 //       for (b=[0,90]) [
@@ -198,7 +198,7 @@
 //       skin([for (i=[0:layers-1]) zrot(-30*i,p=path3d(hexagon(ir=r),i*height/layers))],slices=0);
 //       up(height/layers) cylinder(r=holeradius, h=height);
 //   }
-// Example(FlatSpin): A box that is octagonal on the outside and circular on the inside
+// Example(FlatSpin,VPD=300): A box that is octagonal on the outside and circular on the inside
 //   height = 45;
 //   sub_base = octagon(d=71, rounding=2, $fn=128);
 //   base = octagon(d=75, rounding=2, $fn=128);
@@ -216,53 +216,53 @@
 // Example: You can fix it by specifying "tangent" for the first method, but you still need "direct" for the rest.
 //   shapes = [for(i=[0:.2:1]) path3d(regular_ngon(n=4, side=4, rounding=i, $fn=32),i*5)];
 //   skin(shapes, slices=0, method=concat(["tangent"],repeat("direct",len(shapes)-2)));
-// Example(FlatSpin): Connecting square to pentagon using "direct" method.
+// Example(FlatSpin,VPD=35): Connecting square to pentagon using "direct" method.
 //   skin([regular_ngon(n=4, r=4), regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10);
-// Example(FlatSpin): Connecting square to shifted pentagon using "direct" method.
+// Example(FlatSpin,VPD=35): Connecting square to shifted pentagon using "direct" method.
 //   skin([regular_ngon(n=4, r=4), right(4,p=regular_ngon(n=5,r=5))], z=[0,4], refine=10, slices=10);
-// Example(FlatSpin): To improve the look, you can actually rotate the polygons for a more symmetric pattern of lines.   You have to resample yourself before calling `align_polygon` and you should choose a length that is a multiple of both polygon lengths.
+// Example(FlatSpin,VPD=35): To improve the look, you can actually rotate the polygons for a more symmetric pattern of lines.   You have to resample yourself before calling `align_polygon` and you should choose a length that is a multiple of both polygon lengths.
 //   sq = subdivide_path(regular_ngon(n=4, r=4),40);
 //   pent = subdivide_path(regular_ngon(n=5,r=5),40);
 //   skin([sq, align_polygon(sq,pent,[0:1:360/5])], z=[0,4], slices=10);
-// Example(FlatSpin): For the shifted pentagon we can also align, making sure to pass an appropriate centerpoint to `align_polygon`.
+// Example(FlatSpin,VPD=35): For the shifted pentagon we can also align, making sure to pass an appropriate centerpoint to `align_polygon`.
 //   sq = subdivide_path(regular_ngon(n=4, r=4),40);
 //   pent = right(4,p=subdivide_path(regular_ngon(n=5,r=5),40));
 //   skin([sq, align_polygon(sq,pent,[0:1:360/5],cp=[4,0])], z=[0,4], refine=10, slices=10);
-// Example(FlatSpin): The "distance" method is a completely different approach.
+// Example(FlatSpin,VPD=35): The "distance" method is a completely different approach.
 //   skin([regular_ngon(n=4, r=4), regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10, method="distance");
-// Example(FlatSpin): Connecting pentagon to heptagon inserts two triangular faces on each side
+// Example(FlatSpin,VPD=35,VPT=[0,0,4]): Connecting pentagon to heptagon inserts two triangular faces on each side
 //   small = path3d(circle(r=3, $fn=5));
 //   big = up(2,p=yrot( 0,p=path3d(circle(r=3, $fn=7), 6)));
 //   skin([small,big],method="distance", slices=10, refine=10);
-// Example(FlatSpin): But just a slight rotation of the top profile moves the two triangles to one end
+// Example(FlatSpin,VPD=35,VPT=[0,0,4]): But just a slight rotation of the top profile moves the two triangles to one end
 //   small = path3d(circle(r=3, $fn=5));
 //   big = up(2,p=yrot(14,p=path3d(circle(r=3, $fn=7), 6)));
 //   skin([small,big],method="distance", slices=10, refine=10);
-// Example(FlatSpin): Another "distance" example:
+// Example(FlatSpin,VPD=32,VPT=[1.2,4.3,2]): Another "distance" example:
 //   off = [0,2]; 
 //   shape = turtle(["right",45,"move", "left",45,"move", "left",45, "move", "jump", [.5+sqrt(2)/2,8]]);
 //   rshape = rot(180,cp=centroid(shape)+off, p=shape);
 //   skin([shape,rshape],z=[0,4], method="distance",slices=10,refine=15);
-// Example(FlatSpin): Slightly shifting the profile changes the optimal linkage
+// Example(FlatSpin,VPD=32,VPT=[1.2,4.3,2]): Slightly shifting the profile changes the optimal linkage
 //   off = [0,1]; 
 //   shape = turtle(["right",45,"move", "left",45,"move", "left",45, "move", "jump", [.5+sqrt(2)/2,8]]);
 //   rshape = rot(180,cp=centroid(shape)+off, p=shape);
 //   skin([shape,rshape],z=[0,4], method="distance",slices=10,refine=15);
-// Example(FlatSpin): This optimal solution doesn't look terrible:
+// Example(FlatSpin,VPD=444,VPT=[0,0,50]): This optimal solution doesn't look terrible:
 //   prof1 = path3d([[-50,-50], [-50,50], [50,50], [25,25], [50,0], [25,-25], [50,-50]]);
 //   prof2 = path3d(regular_ngon(n=7, r=50),100);
 //   skin([prof1, prof2], method="distance", slices=10, refine=10);
-// Example(FlatSpin): But this one looks better.  The "distance" method doesn't find it because it uses two more edges, so it clearly has a higher total edge distance.  We force it by doubling the first two vertices of one of the profiles.
+// Example(FlatSpin,VPD=444,VPT=[0,0,50]): But this one looks better.  The "distance" method doesn't find it because it uses two more edges, so it clearly has a higher total edge distance.  We force it by doubling the first two vertices of one of the profiles.
 //   prof1 = path3d([[-50,-50], [-50,50], [50,50], [25,25], [50,0], [25,-25], [50,-50]]);
 //   prof2 = path3d(regular_ngon(n=7, r=50),100);
 //   skin([repeat_entries(prof1,[2,2,1,1,1,1,1]),
 //         prof2],
 //        method="distance", slices=10, refine=10);
-// Example(FlatSpin): The "distance" method will often produces results similar to the "tangent" method if you use it with a polygon and a curve, but the results can also look like this:
+// Example(FlatSpin,VPD=80,VPT=[0,0,7]): The "distance" method will often produces results similar to the "tangent" method if you use it with a polygon and a curve, but the results can also look like this:
 //   skin([path3d(circle($fn=128, r=10)), xrot(39, p=path3d(square([8,10]),10))],  method="distance", slices=0);
-// Example(FlatSpin): Using the "tangent" method produces:
+// Example(FlatSpin,VPD=80,VPT=[0,0,7]): Using the "tangent" method produces:
 //   skin([path3d(circle($fn=128, r=10)), xrot(39, p=path3d(square([8,10]),10))],  method="tangent", slices=0);
-// Example(FlatSpin): Torus using hexagons and pentagons, where `closed=true`
+// Example(FlatSpin,VPD=74): Torus using hexagons and pentagons, where `closed=true`
 //   hex = right(7,p=path3d(hexagon(r=3)));
 //   pent = right(7,p=path3d(pentagon(r=3)));
 //   N=5;
@@ -285,7 +285,7 @@
 //         rot(17,p=regular_ngon(n=6, r=3)),
 //         rot(37,p=regular_ngon(n=4, r=3))],
 //        z=[0,2,4,6,9], method="distance", slices=10, refine=10);
-// Example(FlatSpin): Vertex count of the polygon changes at every profile
+// Example(FlatSpin,VPD=935,VPT=[75,0,123]): Vertex count of the polygon changes at every profile
 //   skin([
 //       for (ang = [0:10:90])
 //       rot([0,ang,0], cp=[200,0,0], p=path3d(circle(d=100,$fn=12-(ang/10))))
@@ -665,18 +665,18 @@ function _dp_extract_map(map) =
         if (i==0 && j==0) each [smallmap,bigmap]];
      
 
-// Internal Function: _skin_distance_match(poly1,poly2)
-// Usage:
-//   polys = _skin_distance_match(poly1,poly2);
-// Description:
-//   Find a way of associating the vertices of poly1 and vertices of poly2
-//   that minimizes the sum of the length of the edges that connect the two polygons.
-//   Polygons can be in 2d or 3d.  The algorithm has cubic run time, so it can be
-//   slow if you pass large polygons.  The output is a pair of polygons with vertices
-//   duplicated as appropriate to be used as input to `skin()`.
-// Arguments:
-//   poly1 = first polygon to match
-//   poly2 = second polygon to match
+/// Internal Function: _skin_distance_match(poly1,poly2)
+/// Usage:
+///   polys = _skin_distance_match(poly1,poly2);
+/// Description:
+///   Find a way of associating the vertices of poly1 and vertices of poly2
+///   that minimizes the sum of the length of the edges that connect the two polygons.
+///   Polygons can be in 2d or 3d.  The algorithm has cubic run time, so it can be
+///   slow if you pass large polygons.  The output is a pair of polygons with vertices
+///   duplicated as appropriate to be used as input to `skin()`.
+/// Arguments:
+///   poly1 = first polygon to match
+///   poly2 = second polygon to match
 function _skin_distance_match(poly1,poly2) =
    let(
       swap = len(poly1)>len(poly2),
@@ -709,21 +709,20 @@ function _skin_distance_match(poly1,poly2) =
       newbig = polygon_shift(repeat_entries(map_poly[1],unique_count(bigmap)[1]),bigshift)
       )
       swap ? [newbig, newsmall] : [newsmall,newbig];
-//
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Internal Function: _skin_tangent_match()
-// Usage:
-//   x = _skin_tangent_match(poly1, poly2)
-// Description:
-//   Finds a mapping of the vertices of the larger polygon onto the smaller one.  Whichever input is the
-//   shorter path is the polygon, and the longer input is the curve.  For every edge of the polygon, the algorithm seeks a plane that contains that
-//   edge and is tangent to the curve.  There will be more than one such point.  To choose one, the algorithm centers the polygon and curve on their centroids
-//   and chooses the closer tangent point.  The algorithm works its way around the polygon, computing a series of tangent points and then maps all of the
-//   points on the curve between two tangent points into one vertex of the polygon.  This algorithm can fail if the curve has too few points or if it is concave.
-// Arguments:
-//   poly1 = input polygon
-//   poly2 = input polygon
+/// Internal Function: _skin_tangent_match()
+/// Usage:
+///   x = _skin_tangent_match(poly1, poly2)
+/// Description:
+///   Finds a mapping of the vertices of the larger polygon onto the smaller one.  Whichever input is the
+///   shorter path is the polygon, and the longer input is the curve.  For every edge of the polygon, the algorithm seeks a plane that contains that
+///   edge and is tangent to the curve.  There will be more than one such point.  To choose one, the algorithm centers the polygon and curve on their centroids
+///   and chooses the closer tangent point.  The algorithm works its way around the polygon, computing a series of tangent points and then maps all of the
+///   points on the curve between two tangent points into one vertex of the polygon.  This algorithm can fail if the curve has too few points or if it is concave.
+/// Arguments:
+///   poly1 = input polygon
+///   poly2 = input polygon
 function _skin_tangent_match(poly1, poly2) =
     let(
         swap = len(poly1)>len(poly2),
@@ -773,15 +772,15 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
 // Arguments:
 //   polygons = list of polygons to split
 //   split = list of lists of split vertices
-// Example(FlatSpin):  If you skin together a square and hexagon using the optimal distance method you get two triangular faces on opposite sides:
+// Example(FlatSpin,VPD=17,VPT=[0,0,2]):  If you skin together a square and hexagon using the optimal distance method you get two triangular faces on opposite sides:
 //   sq = regular_ngon(4,side=2);
 //   hex = apply(rot(15),hexagon(side=2));
 //   skin([sq,hex], slices=10, refine=10, method="distance", z=[0,4]);
-// Example(FlatSpin):  Using associate_vertices you can change the location of the triangular faces.  Here they are connect to two adjacent vertices of the square:
+// Example(FlatSpin,VPD=17,VPT=[0,0,2]):  Using associate_vertices you can change the location of the triangular faces.  Here they are connect to two adjacent vertices of the square:
 //   sq = regular_ngon(4,side=2);
 //   hex = apply(rot(15),hexagon(side=2));
 //   skin(associate_vertices([sq,hex],[[1,2]]), slices=10, refine=10, sampling="segment", z=[0,4]);
-// Example(FlatSpin): Here the two triangular faces connect to a single vertex on the square.  Note that we had to rotate the hexagon to line them up because the vertices match counting forward, so in this case vertex 0 of the square matches to vertices 0, 1, and 2 of the hexagon.  
+// Example(FlatSpin,VPD=17,VPT=[0,0,2]): Here the two triangular faces connect to a single vertex on the square.  Note that we had to rotate the hexagon to line them up because the vertices match counting forward, so in this case vertex 0 of the square matches to vertices 0, 1, and 2 of the hexagon.  
 //   sq = regular_ngon(4,side=2);
 //   hex = apply(rot(60),hexagon(side=2));
 //   skin(associate_vertices([sq,hex],[[0,0]]), slices=10, refine=10, sampling="segment", z=[0,4]);

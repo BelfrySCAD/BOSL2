@@ -374,7 +374,7 @@ module stroke(
 // Example(2D):
 //   path = arc(points=[[5,30],[-10,-10],[30,5]], wedge=true);
 //   stroke(closed=true, path);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=175):
 //   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
 //   trace_path(path, showpts=true, color="cyan");
 function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true) =
