@@ -6,6 +6,7 @@
 //   include <BOSL2/hingesnaps.scad>
 //////////////////////////////////////////////////////////////////////
 
+// Section: Hinges and Snaps
 
 // Module: folding_hinge_mask()
 // Usage:

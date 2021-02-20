@@ -6,6 +6,8 @@
 //   include <BOSL2/modular_hose.scad>
 //////////////////////////////////////////////////////////////////////////
 
+// Section: Modular Hose Parts
+
 _small_end = [
              turtle([
                      "left", 90-38.5,            //   1/4" hose
@@ -114,7 +116,6 @@ _big_end = [
 
 _hose_waist = [1.7698, 1.8251, 3.95998];
 
-
 // Module: modular_hose()
 // Usage:
 //    modular_hose(size, type, <clearance>, <waist_len>, <anchor>, <spin>, <orient>) <attachments>
@@ -216,3 +217,5 @@ function modular_hose_radius(size, outer=false) =
      dd=echo(b=b)echo(s=s)
   )
   outer ? b[1][0] : b[0][0];
+
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

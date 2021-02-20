@@ -83,43 +83,47 @@ CENTER = [ 0,  0,  0];  // Centered zero vector.
 // Section: Vector Aliases
 //   Useful aliases for use with `anchor`.
 
-CTR     = CENTER;  // Zero vector, `[0,0,0]`.  Alias to `CENTER`.
+// Constant: CTR
+// Description: Zero vector.  Centered.  `[0,0,0]`.  Alias to `CENTER`.
+// Example(3D): Usage with `anchor`
+//   cuboid(20, anchor=CTR);
+CTR     = CENTER;
+
+// Constant: UP
+// Description: Vector pointing up.  [0,0,1]  Alias to `TOP`.
+// Example(3D): Usage with `anchor`
+//   cuboid(20, anchor=UP);
 UP      = TOP;     // Vector pointing up, alias to `TOP`.
+
+// Constant: DOWN
+// Description: Vector pointing down.  [0,0,-1]  Alias to `BOTTOM`.
+// Example(3D): Usage with `anchor`
+//   cuboid(20, anchor=DOWN);
 DOWN    = BOTTOM;  // Vector pointing down, alias to `BOTTOM`.
+
+// Constant: BTM
+// Description: Vector pointing down.  [0,0,-1]  Alias to `BOTTOM`.
+// Example(3D): Usage with `anchor`
+//   cuboid(20, anchor=BTM);
 BTM     = BOTTOM;  // Vector pointing down, alias to `BOTTOM`.
+
+// Constant: BOT
+// Description: Vector pointing down.  [0,0,-1]  Alias to `BOTTOM`.
+// Example(3D): Usage with `anchor`
+//   cuboid(20, anchor=BOT);
 BOT     = BOTTOM;  // Vector pointing down, alias to `BOTTOM`.
+
+// Constant: FWD
+// Description: Vector pointing forward.  [0,-1,0]  Alias to `FRONT`.
+// Example(3D): Usage with `anchor`
+//   cuboid(20, anchor=FWD);
 FWD     = FRONT;   // Vector pointing forward, alias to `FRONT`.
+
+// Constant: FORWARD
+// Description: Vector pointing forward.  [0,-1,0]  Alias to `FRONT`.
+// Example(3D): Usage with `anchor`
+//   cuboid(20, anchor=FORWARD);
 FORWARD = FRONT;   // Vector pointing forward, alias to `FRONT`.
-
-
-
-// CommonCode:
-//   orientations = [
-//       RIGHT,  BACK,    UP,
-//       LEFT,   FWD,     DOWN,
-//   ];
-//   axiscolors = ["red", "forestgreen", "dodgerblue"];
-//   module text3d(text, h=0.01, size=3) {
-//       linear_extrude(height=h, convexity=10) {
-//           text(text=text, size=size, valign="center", halign="center");
-//       }
-//   }
-//   module orient_cube(ang) {
-//       color("lightgray") cube(20, center=true);
-//       color(axiscolors.x) up  ((20-1)/2+0.01) back ((20-1)/2+0.01) cube([18,1,1], center=true);
-//       color(axiscolors.y) up  ((20-1)/2+0.01) right((20-1)/2+0.01) cube([1,18,1], center=true);
-//       color(axiscolors.z) back((20-1)/2+0.01) right((20-1)/2+0.01) cube([1,1,18], center=true);
-//       for (axis=[0:2], neg=[0:1]) {
-//           idx = axis + 3*neg;
-//           rot(ang, from=UP, to=orientations[idx]) {
-//               up(10) {
-//                   fwd(4) color("black") text3d(text=str(ang), size=4);
-//                   back(4) color(axiscolors[axis]) text3d(text=str(["X","Y","Z"][axis], ["+","NEG"][neg]), size=4);
-//               }
-//           }
-//       }
-//   }
-
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

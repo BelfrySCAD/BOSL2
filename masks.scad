@@ -27,7 +27,7 @@
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-// Example(FR):
+// Example(Render):
 //   angle_pie_mask(ang=30, d=100, l=20);
 module angle_pie_mask(
     ang=45, l=undef,
@@ -257,11 +257,11 @@ module chamfer_mask_z(l=1.0, chamfer=1.0, excess=0.1, anchor=CENTER, spin=0) {
 //   size = The size of the rectangular cuboid we want to chamfer.
 //   edges = Edges to chamfer.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
 //   except_edges = Edges to explicitly NOT chamfer.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
-// Example(FR):
+// Example(Render):
 //   chamfer(chamfer=2, size=[20,40,30]) {
 //     cube(size=[20,40,30], center=true);
 //   }
-// Example(FR):
+// Example(Render):
 //   chamfer(chamfer=2, size=[20,40,30], edges=[TOP,FRONT+RIGHT], except_edges=TOP+LEFT) {
 //     cube(size=[20,40,30], center=true);
 //   }
@@ -563,11 +563,11 @@ module rounding_mask_z(l=1.0, r, r1, r2, d, d1, d2, anchor=CENTER, spin=0)
 //   size = The size of the rectangular cuboid we want to chamfer.
 //   edges = Edges to round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
 //   except_edges = Edges to explicitly NOT round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
-// Example(FR):
+// Example(Render):
 //   rounding(r=10, size=[50,100,150], $fn=24) {
 //     cube(size=[50,100,150], center=true);
 //   }
-// Example(FR,FlatSpin):
+// Example(FlatSpin,VPD=266):
 //   rounding(r=10, size=[50,50,75], edges=[TOP,FRONT+RIGHT], except_edges=TOP+LEFT, $fn=24) {
 //     cube(size=[50,50,75], center=true);
 //   }

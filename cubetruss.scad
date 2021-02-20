@@ -12,6 +12,8 @@ $cubetruss_bracing = true;
 $cubetruss_clip_thickness = 1.6;
 
 
+// Section: Cube Trusses
+
 // Function: cubetruss_dist()
 // Usage:
 //   cubetruss_dist(cubes, gaps, <size>, <strut>);

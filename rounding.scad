@@ -9,6 +9,7 @@
 include <beziers.scad>
 include <structs.scad>
 
+
 // Section: Functions
 
 // Function: round_corners()
@@ -76,7 +77,7 @@ include <structs.scad>
 //   of a circular arc.  When doing continuous curvature rounding be sure to use lots of segments or the effect
 //   will be hidden by the discretization.
 //
-// Figure(2DMed):
+// Figure(2D,Med):
 //   h = 18;
 //   w = 12.6;
 //   example = [[0,0],[w,h],[2*w,0]];
@@ -99,38 +100,38 @@ include <structs.scad>
 //   closed = if true treat the path as a closed polygon, otherwise treat it as open.  Default: true.
 //   verbose = if true display rounding scale factors that show how close roundovers are to overlapping.  Default: false
 //
-// Example(Med2D): Standard circular roundover with radius the same at every point. Compare results at the different corners.
+// Example(2D,Med): Standard circular roundover with radius the same at every point. Compare results at the different corners.
 //   $fn=36;
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   polygon(round_corners(shape, radius=1));
 //   color("red") down(.1) polygon(shape);
-// Example(Med2D): Circular roundover using the "cut" specification, the same at every corner.
+// Example(2D,Med): Circular roundover using the "cut" specification, the same at every corner.
 //   $fn=36;
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   polygon(round_corners(shape, cut=1));
 //   color("red") down(.1) polygon(shape);
-// Example(Med2D): Continous curvature roundover using "cut", still the same at every corner.  The default smoothness parameter of 0.5 was too gradual for these roundovers to fit, but 0.7 works.
+// Example(2D,Med): Continous curvature roundover using "cut", still the same at every corner.  The default smoothness parameter of 0.5 was too gradual for these roundovers to fit, but 0.7 works.
 //   $fn=36;
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   polygon(round_corners(shape, method="smooth", cut=1, k=0.7));
 //   color("red") down(.1) polygon(shape);
-// Example(Med2D): Continuous curvature roundover using "joint", for the last time the same at every corner.  Notice how small the roundovers are.
+// Example(2D,Med): Continuous curvature roundover using "joint", for the last time the same at every corner.  Notice how small the roundovers are.
 //   $fn=36;
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   polygon(round_corners(shape, method="smooth", joint=1, k=0.7));
 //   color("red") down(.1) polygon(shape);
-// Example(Med2D): Circular rounding, different at every corner, some corners left unrounded
+// Example(2D,Med): Circular rounding, different at every corner, some corners left unrounded
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   radii = [1.8, 0, 2, 0.3, 1.2, 0];
 //   polygon(round_corners(shape, radius = radii,$fn=64));
 //   color("red") down(.1) polygon(shape);
-// Example(Med2D): Continuous curvature rounding, different at every corner, with varying smoothness parameters as well, and `$fs` set very small.  Note that `$fa` is ignored here with method set to "smooth".
+// Example(2D,Med): Continuous curvature rounding, different at every corner, with varying smoothness parameters as well, and `$fs` set very small.  Note that `$fa` is ignored here with method set to "smooth".
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   cuts = [1.5,0,2,0.3, 1.2, 0];
 //   k = [0.6, 0.5, 0.5, 0.7, 0.3, 0.5];
 //   polygon(round_corners(shape, method="smooth", cut=cuts, k=k, $fs=0.1));
 //   color("red") down(.1) polygon(shape);
-// Example(Med2D): Chamfers
+// Example(2D,Med): Chamfers
 //   $fn=36;
 //   shape = [[0,0], [10,0], [15,12], [6,6], [6, 12], [-3,7]];
 //   polygon(round_corners(shape, method="chamfer", cut=1));
@@ -150,7 +151,7 @@ include <structs.scad>
 //     translate([60,60,0])polygon(round_corners(ten, method="smooth", cut=cut, k=0.32, $fn=96));
 //     translate([0,60,0])polygon(round_corners(ten, method="smooth", cut=cut, k=0.7, $fn=96));
 //   }
-// Example(Med2D): Rounding a path that is not closed in a three different ways.
+// Example(2D,Med): Rounding a path that is not closed in a three different ways.
 //   $fs=.1;
 //   $fa=1;
 //   zigzagx = [-10, 0, 10, 20, 29, 38, 46, 52, 59, 66, 72, 78, 83, 88, 92, 96, 99, 102, 112];
@@ -164,7 +165,7 @@ include <structs.scad>
 //                      // Smooth size corners with a circular arc and radius 1.5 (close to maximum possible)
 //   fwd(60)            // Note how the different points are cut back by different amounts
 //     stroke(round_corners(zig,radius=1.5,closed=false),width=1);
-// Example(FlatSpin): Rounding some random 3D paths
+// Example(FlatSpin,VPD=42,VPT=[7.75,6.69,5.22]): Rounding some random 3D paths
 //   $fn=36;
 //   list1= [
 //     [2.887360, 4.03497, 6.372090],
@@ -185,7 +186,7 @@ include <structs.scad>
 //   path_sweep(regular_ngon(n=36,or=.1),round_corners(list1,closed=false, method="smooth", cut = 0.65));
 //   right(6)
 //     path_sweep(regular_ngon(n=36,or=.1),round_corners(list2,closed=false, method="circle", cut = 0.75));
-// Example(FlatSpin):  Rounding a spiral with increased rounding along the length
+// Example(3D,Med):  Rounding a spiral with increased rounding along the length
 //   // Construct a square spiral path in 3D
 //   $fn=36;
 //   square = [[0,0],[1,0],[1,1],[0,1]];
@@ -364,7 +365,7 @@ function _circlecorner(points, parm) =
         arc(max(3,ceil((90-angle)/180*segs(r))), cp=center, points=[start,end]);
 
 
-// Used by offset_sweep and convex_offset_extrude:
+// Used by offset_sweep and convex_offset_extrude.
 // Produce edge profile curve from the edge specification
 // z_dir is the direction multiplier (1 to build up, -1 to build down)
 function _rounding_offsets(edgespec,z_dir=1) =
@@ -477,7 +478,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
 //   polygon(smooth_path(square(4),tangents=1.25*[[-2,-1], [-4,1], [1,2], [6,-1]],size=0.4,closed=true));
 // Example(2D): Or you can give a different size for each segment
 //   polygon(smooth_path(square(4),size = [.4, .05, 1, .3],closed=true));
-// Example(FlatSpin):  Works on 3d paths as well
+// Example(FlatSpin,VPD=35,VPT=[4.5,4.5,1]):  Works on 3d paths as well
 //   path = [[0,0,0],[3,3,2],[6,0,1],[9,9,0]];
 //   stroke(smooth_path(path,relsize=.1),width=.3);
 // Example(2D): This shows the type of overshoot that can occur with uniform=true.  You can produce overshoots like this if you supply a tangent that is difficult to connect to the adjacent points  

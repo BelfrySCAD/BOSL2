@@ -22,7 +22,7 @@
 //   N = Mark the first and every Nth vertex after in a different color and shape.
 //   size = Diameter of the lines drawn.
 //   color = Color to draw the lines (but not vertices) in.
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=44.4):
 //   path = [for (a=[0:30:210]) 10*[cos(a), sin(a), sin(a)]];
 //   trace_path(path, showpts=true, size=0.5, color="lightgreen");
 module trace_path(path, closed=false, showpts=false, N=1, size=1, color="yellow") {
@@ -341,7 +341,7 @@ module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tags="anchor-arrow") {
 //   Makes the children transparent gray, while showing any anchor arrows that may exist.
 // Arguments:
 //   opacity = The opacity of the arrow.  0.0 is invisible, 1.0 is opaque.  Default: 0.2
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=333):
 //   expose_anchors() cube(50, center=true) show_anchors();
 module expose_anchors(opacity=0.2) {
     show("anchor-arrow")
@@ -362,7 +362,7 @@ module expose_anchors(opacity=0.2) {
 //   ---
 //   std = If true (default), show standard anchors.
 //   custom = If true (default), show custom anchors.
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=333):
 //   cube(50, center=true) show_anchors();
 module show_anchors(s=10, std=true, custom=true) {
     check = assert($parent_geom != undef) 1;

@@ -1,0 +1,48 @@
+DocsDirectory: BOSL2.wiki/
+IgnoreFiles:
+  foo.scad
+  std.scad
+  bosl1compat.scad
+  version.scad
+  tmp_*.scad
+PrioritizeFiles:
+  constants.scad
+  transforms.scad
+  distributors.scad
+  mutators.scad
+  attachments.scad
+  primitives.scad
+  shapes.scad
+  shapes2d.scad
+  masks.scad
+  math.scad
+  vectors.scad
+  arrays.scad
+  quaternions.scad
+  affine.scad
+  coords.scad
+  geometry.scad
+  edges.scad
+  vnf.scad
+  paths.scad
+  regions.scad
+  debug.scad
+  common.scad
+  strings.scad
+  errors.scad
+  beziers.scad
+  threading.scad
+  rounding.scad
+  knurling.scad
+  partitions.scad
+  rounding.scad
+  skin.scad
+  hull.scad
+  triangulation.scad
+  turtle3d.scad
+  stacks.scad
+  queues.scad
+  structs.scad
+DefineHeader(BulletList): Side Effects
+DefineHeader(Table:Anchor&nbsp;Name|Position): Extra Anchors
+

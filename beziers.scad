@@ -6,7 +6,6 @@
 //   include <BOSL2/beziers.scad>
 //////////////////////////////////////////////////////////////////////
 
-
 // Section: Terminology
 //   **Path**: A series of points joined by straight line segements.
 //   .

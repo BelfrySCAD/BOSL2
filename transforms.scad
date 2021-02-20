@@ -1298,13 +1298,13 @@ function yzflip(cp=0, p) =
 //   skew(szx=0.5) cube(40, center=true);
 // Example: Skew along the Z axis in 3D as a factor of Y coordinate.
 //   skew(szy=0.75) cube(40, center=true);
-// Example(FlatSpin): Skew Along Multiple Axes.
+// Example(FlatSpin,VPD=275): Skew Along Multiple Axes.
 //   skew(sxy=0.5, syx=0.3, szy=0.75) cube(40, center=true);
 // Example(2D): Calling as a 2D Function
 //   pts = skew(p=square(40,center=true), sxy=0.5);
 //   color("yellow") stroke(pts, closed=true);
 //   color("blue") move_copies(pts) circle(d=3, $fn=8);
-// Example(FlatSpin): Calling as a 3D Function
+// Example(FlatSpin,VPD=175): Calling as a 3D Function
 //   pts = skew(p=path3d(square(40,center=true)), szx=0.5, szy=0.3);
 //   trace_path(close_path(pts), showpts=true);
 module skew(sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0)
