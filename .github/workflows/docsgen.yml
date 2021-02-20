@@ -10,18 +10,12 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-      run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
 
     - name: Checkout Wiki
       uses: actions/checkout@v2
       with:
         repository: ${{github.repository}}.wiki
         path: BOSL2.wiki
-      run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
 
     - name: Install Pillow
       run: sudo pip3 install Pillow
@@ -51,6 +45,8 @@ jobs:
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
         openscad-docsgen -m -i -t -c *.scad
         cd BOSL2.wiki
+        git config user.name github-actions
+        git config user.email github-actions@github.com
         git add --all
         git commit -m "Wiki docs auto-regen."
         git push
@@ -59,6 +55,8 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         ./scripts/increment_version.sh
+        git config user.name github-actions
+        git config user.email github-actions@github.com
         git add version.scad
         git commit -m "Bump release version." 
         git push
