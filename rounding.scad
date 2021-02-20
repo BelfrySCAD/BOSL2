@@ -976,7 +976,6 @@ function offset_sweep(
         height = one_defined([l,h,height], "l,h,height", dflt=u_add(bottom_height,top_height)),
         middle = height-bottom_height-top_height
     )
-  echo(height=height)
     assert(height>0, "Height must be positive") 
     assert(middle>=0, str("Specified end treatments (bottom height = ",bottom_height,
                           " top_height = ",top_height,") are too large for extrusion height (",height,")"
