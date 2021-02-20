@@ -375,9 +375,11 @@ function _rounding_offsets(edgespec,z_dir=1) =
                 r = struct_val(edgespec,"r"),
                 cut = struct_val(edgespec,"cut"),
                 k = struct_val(edgespec,"k"),
-                radius = in_list(edgetype,["circle","teardrop"])?
-                        (is_def(cut) ? cut/(sqrt(2)-1) : r) :
-                        edgetype=="chamfer"? first_defined([sqrt(2)*cut,r]) : undef,
+                radius = in_list(edgetype,["circle","teardrop"])
+                            ? (is_def(cut) ? cut/(sqrt(2)-1) : r)
+                         :edgetype=="chamfer"
+                            ? (is_def(cut) ? sqrt(2)*cut : r)
+                         : undef,
                 chamf_angle = struct_val(edgespec, "angle"),
                 cheight = struct_val(edgespec, "chamfer_height"),
                 cwidth = struct_val(edgespec, "chamfer_width"),
@@ -785,9 +787,9 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
 //   triangle = [[0,0],[10,0],[5,10]];
 //   offset_sweep(triangle, height=6, bottom = os_circle(r=-2),steps=16,offset_maxstep=0.01);
 // Example: Here is the star chamfered at the top with a teardrop rounding at the bottom. Check out the rounded corners on the chamfer.  Note that a very small value of `offset_maxstep` is needed to keep these round.  Observe how the rounded star points vanish at the bottom in the teardrop: the number of vertices does not remain constant from layer to layer.
-//   star = star(5, r=22, ir=13);
-//   rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
-//   offset_sweep(rounded_star, height=20, bottom=os_teardrop(r=4), top=os_chamfer(width=4,offset_maxstep=.1));
+//    star = star(5, r=22, ir=13);
+//    rounded_star = round_corners(star, cut=flatten(repeat([.5,0],5)), $fn=24);
+//    offset_sweep(rounded_star, height=20, bottom=os_teardrop(r=4), top=os_chamfer(width=4,offset_maxstep=.1));
 // Example: We round a cube using the continous curvature rounding profile.  But note that the corners are not smooth because the curved square collapses into a square with corners.    When a collapse like this occurs, we cannot turn `check_valid` off.
 //   square = square(1);
 //   rsquare = round_corners(square, method="smooth", cut=0.1, k=0.7, $fn=36);

@@ -700,7 +700,9 @@ function offset(
         outsidecorner = len(sharpcorners)==2 ? [false,false]
            :
             [for(i=[0:len(goodsegs)-1])
-                 let(prevseg=select(goodsegs,i-1))
+                let(prevseg=select(goodsegs,i-1))
+                i==0 && !closed ? false  // In open case first entry is bogus
+               :  
                 (goodsegs[i][1]-goodsegs[i][0]) * (goodsegs[i][0]-sharpcorners[i]) > 0
                  && (prevseg[1]-prevseg[0]) * (sharpcorners[i]-prevseg[1]) > 0
             ],
