@@ -18,7 +18,7 @@ jobs:
         path: BOSL2.wiki
 
     - name: Install gifsicle
-      run: sudo brew install gifsicle
+      run: brew install gifsicle
 
     - name: Install Pillow
       run: sudo pip3 install Pillow
