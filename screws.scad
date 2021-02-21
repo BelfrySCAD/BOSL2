@@ -801,7 +801,7 @@ module screw_head(screw_info,details=false) {
 
 // Module: screw()
 // Usage:
-//   screw([name],[head],[thread],[drive],[drive_size], [length], [shank], [oversize], [tolerance], [spec], [details], [anchor], [anchor_head], [orient], [spin])
+//   screw([name],[head],[thread],[drive],[drive_size], [length], [shank], [oversize], [tolerance], [$slop], [spec], [details], [anchor], [anchor_head], [orient], [spin])
 // Description:
 //   Create a screw.
 //   .
@@ -819,6 +819,8 @@ module screw_head(screw_info,details=false) {
 //   tolerance "6g" specifies both pitch and crest diameter to be the same,
 //   but they can be different, with a tolerance like "5g6g" specifies a pitch diameter tolerance of "5g" and a crest diameter tolerance of "6g".
 //   Smaller numbers give a tighter tolerance.  The default ISO tolerance is "6g".
+//   .
+//   The $slop argument gives an extra gap to account for printing overextrusion. It defaults to 0.2.  
 // Arguments:
 //   name = screw specification, e.g. "M5x1" or "#8-32"
 //   head = head type (see list above).  Default: none
@@ -831,6 +833,7 @@ module screw_head(screw_info,details=false) {
 //   shank = length of unthreaded portion of screw (in mm).  Default: 0
 //   details = toggle some details in rendering.  Default: false
 //   tolerance = screw tolerance.  Determines actual screw thread geometry based on nominal sizing.  Default is "2A" for UTS and "6g" for ISO.
+//   $slop = add extra gap to account for printer overextrusion.  Default: 0.2
 //   anchor = anchor relative to the shaft of the screw
 //   anchor_head = anchor relative to the screw head
 // Example: Selected UTS (English) screws
@@ -951,21 +954,6 @@ module screw_head(screw_info,details=false) {
 //     label("1") screw("1/4-20,5/8", head="hex",orient=DOWN,anchor_head=TOP,tolerance="1A");  // Loose
 //     label("2") screw("1/4-20,5/8", head="hex",orient=DOWN,anchor_head=TOP,tolerance="2A");  // Standard
 //     label("3") screw("1/4-20,5/8", head="hex",orient=DOWN,anchor_head=TOP,tolerance="3A");  // Tight
-//   }
-// Example: The three different UTS nut tolerances
-//   inch=25.4;
-//   module mark(number)
-//   {
-//     difference(){
-//        children();
-//        ycopies(n=number, spacing=1.5)right(.25*inch-2)up(8-.35)cyl(d=1, h=1);
-//     }
-//   }
-//   $fn=64;
-//   xdistribute(spacing=17){
-//     mark(1) nut("1/4-20", thickness=8, diameter=0.5*inch,tolerance="1B");
-//     mark(2) nut("1/4-20", thickness=8, diameter=0.5*inch,tolerance="2B");
-//     mark(3) nut("1/4-20", thickness=8, diameter=0.5*inch,tolerance="3B");
 //   }
 // Example(2D): This example shows the gap between nut and bolt at the loosest tolerance for UTS.  This gap is what enables the parts to mesh without binding and is part of the definition for standard metal hardware.
 //   $slop=0;
@@ -1305,12 +1293,16 @@ module _rod(spec, length, tolerance, orient=UP, spin=0, anchor=CENTER)
 
 // Module: nut()
 // Usage:
-//   nut([name],[thread],[oversize],[spec],[diameter],[thickness],[tolerance],[details])
+//   nut([name],diameter, thickness,[thread],[oversize],[spec],[tolerance],[details],[$slop])
 // Description:
-//   The name, thread and oversize parameters are described under `screw_info()`
+//   Generates a hexagonal nut.  
+//   The name, thread and oversize parameters are described under `screw_info()`.  As for screws,
+//   you can give the specification in `spec` and then omit the name.  The diameter is the flat-to-flat
+//   size of the nut produced.  
 //   .
 //   The tolerance determines the actual thread sizing based on the
-//   nominal size.  For UTS threads it is either "1B", "2B" or "3B", in
+//   nominal size.  
+//   For UTS threads the tolerance is either "1B", "2B" or "3B", in
 //   order of increasing tightness.  The default tolerance is "2B", which
 //   is the general standard for manufactured nuts.  For ISO the tolerance
 //   has the form of a number and letter.  The letter specifies the "fundamental deviation", also called the "tolerance position", the gap
@@ -1318,16 +1310,44 @@ module _rod(spec, length, tolerance, orient=UP, spin=0, anchor=CENTER)
 //   he loosest and "H" means no gap.  The number specifies the allowed
 //   range (variability) of the thread heights.  Smaller  numbers give tigher tolerances.  It must be a value from
 //   4-8, so an allowed (loose) tolerance is "7G".  The default ISO tolerance is "6H".
+//   .
+//   The $slop parameter determines extra gaps left to account for printing overextrusion.  It defaults to 0.2.
 // Arguments:
 //   name = screw specification, e.g. "M5x1" or "#8-32"
+//   diameter = outside diameter of nut (flat to flat dimension)
+//   thickness = thickness of nut (in mm)
+//   ---
 //   thread = thread type or specification.  Default: "coarse"
 //   oversize = amount to increase screw diameter for clearance holes.  Default: 0
 //   spec = screw specification from `screw_info()`.  If you specify this you can omit all the preceeding parameters.
-//   thickness = thickness of bolt (in mm)
 //   details = toggle some details in rendering.  Default: false
 //   tolerance = nut tolerance.  Determines actual nut thread geometry based on nominal sizing.  Default is "2B" for UTS and "6H" for ISO.
-module nut(name, thread="coarse", oversize=0, spec, diameter, thickness, tolerance=undef, details=true, anchor=BOTTOM,spin=0, orient=UP)
+//   $slop = extra space left to account for printing over-extrusion.  Default: 0.2
+// Example: A metric and UTS nut
+//   inch=25.4;
+//   nut("3/8", 5/8*inch, 1/4*inch);
+//   right(25)
+//      nut("M8", 16, 6);
+// Example: The three different UTS nut tolerances
+//   inch=25.4;
+//   module mark(number)
+//   {
+//     difference(){
+//        children();
+//        ycopies(n=number, spacing=1.5)right(.25*inch-2)up(8-.35)cyl(d=1, h=1);
+//     }
+//   }
+//   $fn=64;
+//   xdistribute(spacing=17){
+//     mark(1) nut("1/4-20", thickness=8, diameter=0.5*inch,tolerance="1B");
+//     mark(2) nut("1/4-20", thickness=8, diameter=0.5*inch,tolerance="2B");
+//     mark(3) nut("1/4-20", thickness=8, diameter=0.5*inch,tolerance="3B");
+//   }
+module nut(name, diameter, thickness, thread="coarse", oversize=0, spec, tolerance=undef,
+           details=true, anchor=BOTTOM,spin=0, orient=UP)
 {
+   assert(is_num(diameter) && diameter>0);
+   assert(is_num(thickness) && thickness>0);
    spec = is_def(spec) ? spec : screw_info(name, thread=thread, oversize=oversize);
    threadspec = thread_specification(spec, internal=true, tolerance=tolerance);
    echo(threadspec=threadspec,"for nut threads");
