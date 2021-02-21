@@ -784,14 +784,14 @@ function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
 //   sq = regular_ngon(4,side=2);
 //   hex = apply(rot(60),hexagon(side=2));
 //   skin(associate_vertices([sq,hex],[[0,0]]), slices=10, refine=10, sampling="segment", z=[0,4]);
-// Example: This example shows several polygons, with only a single vertex split at each step:
+// Example(3D): This example shows several polygons, with only a single vertex split at each step:
 //   sq = regular_ngon(4,side=2);
 //   pent = pentagon(side=2);
 //   hex = hexagon(side=2);
 //   sep = regular_ngon(7,side=2);
 //   profiles = associate_vertices([sq,pent,hex,sep], [1,3,4]);
 //   skin(profiles ,slices=10, refine=10, method="distance", z=[0,2,4,6]);
-// Example: The polygons cannot shrink, so if you want to have decreasing polygons you'll need to concatenate multiple results.  Note that it is perfectly ok to duplicate a profile as shown here, where the pentagon is duplicated:
+// Example(3D): The polygons cannot shrink, so if you want to have decreasing polygons you'll need to concatenate multiple results.  Note that it is perfectly ok to duplicate a profile as shown here, where the pentagon is duplicated:
 //   sq = regular_ngon(4,side=2);
 //   pent = pentagon(side=2);
 //   grow = associate_vertices([sq,pent], [1]);
@@ -1154,10 +1154,10 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 //           [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
 //             a * sin( 3 * t) / (1 - b* sin (2 *t)), 
 //           1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
-//      a = 0.8; b = sqrt (1 - a * a); 
-//      ksteps = 400;
-//      knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
-//      path_sweep(subdivide_path(pentagon(r=12),30), knot_path, closed=true, twist=-360*8, symmetry=5, method="natural", twist_by_length=false);
+//   a = 0.8; b = sqrt (1 - a * a); 
+//   ksteps = 400;
+//   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
+//   path_sweep(subdivide_path(pentagon(r=12),30), knot_path, closed=true, twist=-360*8, symmetry=5, method="natural", twist_by_length=false);
 // Example: This torus knot example comes from list-comprehension-demos.  The knot lies on the surface of a torus.  When we use the "natural" method the swept figure is angled compared to the surface of the torus because the curve doesn't follow geodesics of the torus.  
 //   function knot(phi,R,r,p,q) = 
 //       [ (r * cos(q * phi) + R) * cos(p * phi),
