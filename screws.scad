@@ -310,7 +310,9 @@ function _screw_info_english(diam, threadcount, head, thread, drive) =
                [2,    [      3,   1.5, undef, undef, undef]],
             ],
             entry = struct_val(UTS_socket, diam),
-            hexdepth = is_def(entry[3]) ? entry[3] : if_def(diam) ? diam/2 : undef,
+            hexdepth = is_def(entry[3]) ? entry[3]
+                     : is_def(diam) ? diam/2
+                     : undef,
             drive_size =  drive=="hex" ? [["drive_size",inch*entry[1]], ["drive_depth",inch*hexdepth]] :
                           drive=="torx" ? [["drive_size",entry[2]],["drive_depth",inch*entry[4]]] : []
             )

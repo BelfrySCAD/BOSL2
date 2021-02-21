@@ -801,8 +801,7 @@ function associate_vertices(polygons, split, curpoly=0) =
    curpoly==len(polygons)-1 ? polygons :
    let(
       polylen = len(polygons[curpoly]),
-      cursplit = force_list(split[curpoly]),
-     fdsa= echo(cursplit=cursplit)
+      cursplit = force_list(split[curpoly])
    )
     assert(len(split)==len(polygons)-1,str(split,"Split list length mismatch: it has length ", len(split)," but must have length ",len(polygons)-1))
     assert(polylen<=len(polygons[curpoly+1]),str("Polygon ",curpoly," has more vertices than the next one."))
@@ -1143,9 +1142,9 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 //   path_sweep(ushape, knot_path, closed=true, method="natural");
 // Example: knot with twist.  Note if you twist it the other direction the center section untwists because of the natural twist there.  Also compare to the "incremental" method which has less twist in the center.  
 //   function knot(a,b,t) =   // rolling knot 
-//         [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
-//           a * sin( 3 * t) / (1 - b* sin (2 *t)), 
-//         1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
+//        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
+//          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
+//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
 //   a = 0.8; b = sqrt (1 - a * a); 
 //   ksteps = 400;
 //   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
