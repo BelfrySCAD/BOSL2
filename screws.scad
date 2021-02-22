@@ -833,7 +833,7 @@ module screw_head(screw_info,details=false) {
 //   tolerance = screw tolerance.  Determines actual screw thread geometry based on nominal sizing.  Default is "2A" for UTS and "6g" for ISO.
 //   anchor = anchor relative to the shaft of the screw
 //   anchor_head = anchor relative to the screw head
-// Example: Selected UTS (English) screws
+// Example(Med): Selected UTS (English) screws
 //   $fn=32;
 //   xdistribute(spacing=8){
 //     screw("#6", length=12);
@@ -846,7 +846,7 @@ module screw_head(screw_info,details=false) {
 //     screw("#6-24", head="socket",length=12);          // Non-standard threading
 //     screw("#6-32", drive="hex", drive_size=1.5, length=12);
 //   }
-// Example: A few examples of ISO (metric) screws
+// Example(Med): A few examples of ISO (metric) screws
 //   $fn=32;
 //   xdistribute(spacing=8){
 //     screw("M3", head="flat small",length=12);
@@ -858,7 +858,7 @@ module screw_head(screw_info,details=false) {
 //     screw("M3", head="socket",length=12);
 //     screw("M5", head="hex", length=12);
 //   }
-// Example: Demonstration of all head types for UTS screws (using pitch zero for fast preview)
+// Example(Med): Demonstration of all head types for UTS screws (using pitch zero for fast preview)
 //   xdistribute(spacing=15){
 //     ydistribute(spacing=15){
 //        screw("1/4", thread=0,length=8, anchor=TOP, head="none", drive="hex");
@@ -900,7 +900,7 @@ module screw_head(screw_info,details=false) {
 //        screw("1/4", thread=0,length=8, anchor=TOP, head="flat undercut");
 //     }
 //   }
-// Example: Demonstration of all head types for metric screws without threading.
+// Example(Med): Demonstration of all head types for metric screws without threading.
 //   xdistribute(spacing=15){
 //     ydistribute(spacing=15){
 //       screw("M6x0", length=8, anchor=TOP,  head="none", drive="hex");
