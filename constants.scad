@@ -85,8 +85,8 @@
 //     xflip_copy()
 //       stroke([[5.1,6.1], [6.0,7.1], [8,7.1], [10.5,10]], width=0.3, endcap1="arrow2", endcap2="butt");
 //     xcopies(21) back(10.5) {
-//         back(1.2) text("$slop", size=1, halign="center");
-//         text("gap", size=1, halign="center");
+//         back(1.8) text("$slop", size=1.5, halign="center");
+//         text("gap", size=1.5, halign="center");
 //     }
 //   }
 $slop = 0.0;
