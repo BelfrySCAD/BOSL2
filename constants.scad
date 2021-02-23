@@ -30,7 +30,7 @@
 //   The correct hole should hold the plug when the long block is turned upside-down.
 //   The number in front of that hole will indicate the `$slop` value that is ideal for your printer.
 //   Remember to set that slop value in your scripts after you include the BOSL2 library:  ie: `$slop = 0.15;`
-// Example: Slop Calibration Part.
+// Example(3D): Slop Calibration Part.
 //   min_slop = 0.00;
 //   slop_step = 0.05;
 //   holes = 8;
@@ -82,8 +82,9 @@
 //     rect([10,8],anchor=BACK);
 //   }
 //   color("#000") {
+//     arrow_path = [[5.1,6.1], [6.0,7.1], [8,7.1], [10.5,10]];
 //     xflip_copy()
-//       stroke([[5.1,6.1], [6.0,7.1], [8,7.1], [10.5,10]], width=0.3, endcap1="arrow2", endcap2="butt");
+//       stroke(arrow_path, width=0.3, endcap1="arrow2", endcap2="butt");
 //     xcopies(21) back(10.5) {
 //         back(1.8) text("$slop", size=1.5, halign="center");
 //         text("gap", size=1.5, halign="center");
