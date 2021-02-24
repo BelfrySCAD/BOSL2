@@ -3,6 +3,7 @@
 //   Useful Constants.
 // Includes:
 //   include <BOSL2/std.scad>
+// DefineHeader(Label): Aliases
 //////////////////////////////////////////////////////////////////////
 
 
@@ -115,10 +116,13 @@ LEFT  = [-1,  0,  0];
 RIGHT = [ 1,  0,  0];
 
 // Constant: FRONT
+// Aliases: FWD, FORWARD
 // Description: Vector pointing forward.  [0,-1,0]
 // Example(3D): Usage with `anchor`
 //   cuboid(20, anchor=FRONT);
 FRONT = [ 0, -1,  0];
+FWD = FRONT;
+FORWARD = FRONT;
 
 // Constant: BACK
 // Description: Vector pointing back.  [0,1,0]
@@ -127,16 +131,22 @@ FRONT = [ 0, -1,  0];
 BACK  = [ 0,  1,  0];
 
 // Constant: BOTTOM
+// Aliases: BOT, BTM, DOWN
 // Description: Vector pointing down.  [0,0,-1]
 // Example(3D): Usage with `anchor`
 //   cuboid(20, anchor=BOTTOM);
 BOTTOM  = [ 0,  0, -1];
+BOT = BOTTOM;
+BTM = BOTTOM;
+DOWN = BOTTOM;
 
 // Constant: TOP
+// Aliases: UP
 // Description: Vector pointing up.  [0,0,1]
 // Example(3D): Usage with `anchor`
 //   cuboid(20, anchor=TOP);
 TOP = [ 0,  0,  1];
+UP = TOP;
 
 // Constant: ALLPOS
 // Description: Vector pointing right, back, and up.  [1,1,1]
@@ -151,56 +161,13 @@ ALLPOS = [ 1,  1,  1];  // Vector pointing X+,Y+,Z+.
 ALLNEG = [-1, -1, -1];  // Vector pointing X-,Y-,Z-.
 
 // Constant: CENTER
+// Aliases: CTR
 // Description: Zero vector.  Centered.  [0,0,0]
 // Example(3D): Usage with `anchor`
 //   cuboid(20, anchor=CENTER);
 CENTER = [ 0,  0,  0];  // Centered zero vector.
+CTR = CENTER;
 
-
-// Section: Vector Aliases
-//   Useful aliases for use with `anchor`.
-
-// Constant: CTR
-// Description: Zero vector.  Centered.  `[0,0,0]`.  Alias to `CENTER`.
-// Example(3D): Usage with `anchor`
-//   cuboid(20, anchor=CTR);
-CTR     = CENTER;
-
-// Constant: UP
-// Description: Vector pointing up.  [0,0,1]  Alias to `TOP`.
-// Example(3D): Usage with `anchor`
-//   cuboid(20, anchor=UP);
-UP      = TOP;     // Vector pointing up, alias to `TOP`.
-
-// Constant: DOWN
-// Description: Vector pointing down.  [0,0,-1]  Alias to `BOTTOM`.
-// Example(3D): Usage with `anchor`
-//   cuboid(20, anchor=DOWN);
-DOWN    = BOTTOM;  // Vector pointing down, alias to `BOTTOM`.
-
-// Constant: BTM
-// Description: Vector pointing down.  [0,0,-1]  Alias to `BOTTOM`.
-// Example(3D): Usage with `anchor`
-//   cuboid(20, anchor=BTM);
-BTM     = BOTTOM;  // Vector pointing down, alias to `BOTTOM`.
-
-// Constant: BOT
-// Description: Vector pointing down.  [0,0,-1]  Alias to `BOTTOM`.
-// Example(3D): Usage with `anchor`
-//   cuboid(20, anchor=BOT);
-BOT     = BOTTOM;  // Vector pointing down, alias to `BOTTOM`.
-
-// Constant: FWD
-// Description: Vector pointing forward.  [0,-1,0]  Alias to `FRONT`.
-// Example(3D): Usage with `anchor`
-//   cuboid(20, anchor=FWD);
-FWD     = FRONT;   // Vector pointing forward, alias to `FRONT`.
-
-// Constant: FORWARD
-// Description: Vector pointing forward.  [0,-1,0]  Alias to `FRONT`.
-// Example(3D): Usage with `anchor`
-//   cuboid(20, anchor=FORWARD);
-FORWARD = FRONT;   // Vector pointing forward, alias to `FRONT`.
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

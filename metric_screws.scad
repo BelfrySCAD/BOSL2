@@ -357,11 +357,11 @@ function get_metric_nut_thickness(size) = lookup(size, [
 // Section: Modules
 
 
-// Module: screw()
+// Module: generic_screw()
 // Description:
 //   Makes a very simple screw model, useful for making screwholes.
 // Usage:
-//   screw(screwsize, screwlen, headsize, headlen)
+//   generic_screw(screwsize, screwlen, headsize, headlen)
 // Arguments:
 //   screwsize = diameter of threaded part of screw.
 //   screwlen = length of threaded part of screw.
@@ -374,16 +374,16 @@ function get_metric_nut_thickness(size) = lookup(size, [
 //   "base" = At the base of the head.
 //   "countersunk" = At the head height that would be just barely exposed when countersunk.
 // Examples:
-//   screw(screwsize=3,screwlen=10,headsize=6,headlen=3, anchor="countersunk");
-//   screw(screwsize=3,screwlen=10,headsize=6,headlen=3, anchor="base");
+//   generic_screw(screwsize=3,screwlen=10,headsize=6,headlen=3, anchor="countersunk");
+//   generic_screw(screwsize=3,screwlen=10,headsize=6,headlen=3, anchor="base");
 // Example(FlatSpin,VPD=75): Standard Anchors
-//   screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
+//   generic_screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
 //       show_anchors(5, custom=false);
 // Example(FlatSpin,VPD=55): Custom Named Anchors
 //   expose_anchors()
-//     screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
+//     generic_screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
 //       show_anchors(5, std=false);
-module screw(
+module generic_screw(
     screwsize=3,
     screwlen=10,
     headsize=6,
