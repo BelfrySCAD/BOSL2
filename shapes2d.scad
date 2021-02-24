@@ -108,7 +108,8 @@ module stroke(
         cap=="tail"?   [[0,0], [w/2,l2], [w/2,l2-l], [0,-l], [-w/2,l2-l], [-w/2,l2]] :
         cap=="tail2"?  [[w/2,0], [w/2,-l], [0,-l-l2], [-w/2,-l], [-w/2,0]] :
         is_path(cap)? cap :
-        []
+        is_undef(cap)? [] : 
+        assert(false, str("Invalid endcap: ",cap))
     ) * linewidth;
 
     assert(is_bool(closed));

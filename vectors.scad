@@ -128,7 +128,7 @@ function vceil(v) =
 //   unit([0,0,0]);    // Asserts an error.
 function unit(v, error=[[["ASSERT"]]]) =
     assert(is_vector(v), str("Expected a vector.  Got: ",v))
-    norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON) : error) :
+    norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON,"Tried to normalize a zero vector") : error) :
     v/norm(v);
 
 

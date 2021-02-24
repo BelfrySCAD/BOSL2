@@ -351,22 +351,32 @@ function path_tangents(path, closed=false, uniform=true) =
 //   norms = path_normals(path, <tangents>, <closed>);
 // Description:
 //   Compute the normal vector to the input path.  This vector is perpendicular to the
-//   path tangent and lies in the plane of the curve.  When there are collinear points,
-//   the curve does not define a unique plane and the normal is not uniquely defined.  
+//   path tangent and lies in the plane of the curve.  For 3d paths we define the plane of the curve
+//   at path point i to be the plane defined by point i and its two neighbors.  At the endpoints of open paths
+//   we use the three end points.  The computed normal is the one lying in this plane and pointing to the
+//   right of the direction of the path.  If points are collinear then the path does not define a unique plane
+//   and hence the (right pointing) normal is not uniquely defined.  In this case the function issues an error.
+//   For 2d paths the plane is always defined so the normal fails to exist only
+//   when the derivative is zero (in the case of repeated points).
 function path_normals(path, tangents, closed=false) =
-    assert(is_path(path))
+    assert(is_path(path,[2,3]))
     assert(is_bool(closed))
-    let( tangents = default(tangents, path_tangents(path,closed)) )
-    assert(is_path(tangents))
+    let(
+         tangents = default(tangents, path_tangents(path,closed)),
+         dim=len(path[0])
+    )
+    assert(is_path(tangents) && len(tangents[0])==dim,"Dimensions of path and tangents must match")
     [
-        for(i=idx(path)) let(
-            pts = i==0? (closed? select(path,-1,1) : select(path,0,2)) :
-                i==len(path)-1? (closed? select(path,i-1,i+1) : select(path,i-2,i)) :
-                select(path,i-1,i+1)
-        ) unit(cross(
-            cross(pts[1]-pts[0], pts[2]-pts[0]),
-            tangents[i]
-        ))
+     for(i=idx(path))
+         let(
+             pts = i==0 ? (closed? select(path,-1,1) : select(path,0,2))
+                 : i==len(path)-1 ? (closed? select(path,i-1,i+1) : select(path,i-2,i))
+                 : select(path,i-1,i+1)
+        )
+        dim == 2 ? [tangents[i].y,-tangents[i].x]
+                 : let(v=cross(cross(pts[1]-pts[0], pts[2]-pts[0]),tangents[i]))
+                   assert(norm(v)>EPSILON, "3D path contains collinear points")
+                   v
     ];
 
 
