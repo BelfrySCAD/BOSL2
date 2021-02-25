@@ -15,14 +15,14 @@
 // Topics: Paths (2D), Paths (3D), Drawing Tools
 // Description:
 //   Draws a 2D or 3D path with a given line width.  Endcaps can be specified for each end individually.
-// Figure(2D,Big): Endcap Types
+// Figure(Med,NoAxes,VPR=[0,0,0],VPD=250): Endcap Types
 //   endcaps = [
 //       ["butt", "square", "round", "chisel", "tail", "tail2"],
 //       ["line", "cross", "dot", "diamond", "x", "arrow", "arrow2"]
 //   ];
 //   for (x=idx(endcaps), y=idx(endcaps[x])) {
 //       cap = endcaps[x][y];
-//       right(x*60-60+5) fwd(y*10+15) {
+//       right(x*60-60+5) fwd(y*10-30) {
 //           right(28) color("black") text(text=cap, size=5, halign="left", valign="center");
 //           stroke([[0,0], [20,0]], width=3, endcap_width=3, endcap1=false, endcap2=cap);
 //           color("black") stroke([[0,0], [20,0]], width=0.25, endcaps=false);
