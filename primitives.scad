@@ -11,14 +11,19 @@
 
 
 // Function&Module: square()
-// Usage:
-//   square(size, [center])
+// Topics: Shapes (2D), Path Generators (2D)
+// Usage: As a Built-in Module
+//   square(size, <center>);
+// Usage: As a Function
+//   path = square(size, <center>);
+// See Also: rect()
 // Description:
 //   When called as the builtin module, creates a 2D square or rectangle of the given size.
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
 // Arguments:
 //   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
 //   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
+//   ---
 //   anchor = (Function only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = (Function only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D):
@@ -43,14 +48,19 @@ function square(size=1, center, anchor, spin=0) =
 
 
 // Function&Module: circle()
-// Usage:
-//   circle(r|d)
+// Topics: Shapes (2D), Path Generators (2D)
+// Usage: As a Built-in Module
+//   circle(r|d=, ...);
+// Usage: As a Function
+//   path = circle(r|d=, ...);
+// See Also: oval()
 // Description:
 //   When called as the builtin module, creates a 2D polygon that approximates a circle of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle of the given size.
 // Arguments:
 //   r = The radius of the circle to create.
 //   d = The diameter of the circle to create.
+//   ---
 //   anchor = (Function only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = (Function only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D): By Radius
@@ -72,10 +82,14 @@ function circle(r, d, anchor=CENTER, spin=0) =
 
 
 // Function&Module: cube()
+// Topics: Shapes (3D), Attachable, VNF Generators
 // Usage: As Module
-//   cube(size, [center]);
+//   cube(size, <center>, ...);
+// Usage: With Attachments
+//   cube(size, <center>, ...) { attachments }
 // Usage: As Function
-//   vnf = cube(size, [center]);
+//   vnf = cube(size, <center>, ...);
+// See Also: cuboid(), prismoid()
 // Description:
 //   Creates a 3D cubic object with support for anchoring and attachments.
 //   This can be used as a drop-in replacement for the built-in `cube()` module.
@@ -83,6 +97,7 @@ function circle(r, d, anchor=CENTER, spin=0) =
 // Arguments:
 //   size = The size of the cube.
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=ALLNEG`.
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -138,12 +153,16 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 
 
 // Function&Module: cylinder()
+// Topics: Shapes (3D), Attachable, VNF Generators
 // Usage: As Module
-//   cylinder(h, r|d, [center]);
-//   cylinder(h, r1/d1, r2/d2, [center]);
+//   cylinder(h, r=/d=, <center=>, ...);
+//   cylinder(h, r1/d1=, r2/d2=, <center=>, ...);
+// Usage: With Attachments
+//   cylinder(h, r=/d=, <center=>) {attachments}
 // Usage: As Function
-//   vnf = cylinder(h, r|d, [center]);
-//   vnf = cylinder(h, r1/d1, r2/d2, [center]);
+//   vnf = cylinder(h, r=/d=, <center=>, ...);
+//   vnf = cylinder(h, r1/d1=, r2/d2=, <center=>, ...);
+// See Also: cyl()
 // Description:
 //   Creates a 3D cylinder or conic object with support for anchoring and attachments.
 //   This can be used as a drop-in replacement for the built-in `cylinder()` module.
@@ -153,6 +172,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   r1 = The bottom radius of the cylinder.  (Before orientation.)
 //   r2 = The top radius of the cylinder.  (Before orientation.)
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
+//   ---
 //   d1 = The bottom diameter of the cylinder.  (Before orientation.)
 //   d2 = The top diameter of the cylinder.  (Before orientation.)
 //   r = The radius of the cylinder.
@@ -230,16 +250,21 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 
 
 // Function&Module: sphere()
+// Topics: Shapes (3D), Attachable, VNF Generators
 // Usage: As Module
-//   sphere(r|d, [circum], [style])
+//   sphere(r|d=, <circum=>, <style=>, ...);
+// Usage: With Attachments
+//   sphere(r|d=, ...) { attachments }
 // Usage: As Function
-//   vnf = sphere(r|d, [circum], [style])
+//   vnf = sphere(r|d=, <circum=>, <style=>, ...);
+// See Also: spheroid()
 // Description:
 //   Creates a sphere object, with support for anchoring and attachments.
 //   This is a drop-in replacement for the built-in `sphere()` module.
 //   When called as a function, returns a [VNF](vnf.scad) for a sphere.
 // Arguments:
 //   r = Radius of the sphere.
+//   ---
 //   d = Diameter of the sphere.
 //   circum = If true, the sphere is made large enough to circumscribe the sphere of the ideal side.  Otherwise inscribes.  Default: false (inscribes)
 //   style = The style of the sphere's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "orig"

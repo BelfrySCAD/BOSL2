@@ -1038,6 +1038,13 @@ module attach(from, to, overlap, norot=false)
 //   ---
 //   d = Diameter of corner mask.
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
+// Side Effects:
+//   Sets `$tags = "mask"` for all children.
+// Example:
+//   diff("mask")
+//   cube([50,60,70],center=true)
+//       face_profile(TOP,except=TOP+LEFT)
+//           mask2d_roundover(r=10, inset=2);
 module face_profile(faces=[], r, d, convexity=10) {
     faces = is_vector(faces)? [faces] : faces;
     assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "Vector in faces doesn't point at a face.");

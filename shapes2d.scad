@@ -10,8 +10,9 @@
 
 // Module: stroke()
 // Usage:
-//   stroke(path, [width], [closed], [endcaps], [endcap_width], [endcap_length], [endcap_extent], [trim]);
-//   stroke(path, [width], [closed], [endcap1], [endcap2], [endcap_width1], [endcap_width2], [endcap_length1], [endcap_length2], [endcap_extent1], [endcap_extent2], [trim1], [trim2]);
+//   stroke(path, <width>, <closed>, <endcaps>, <endcap_width>, <endcap_length>, <endcap_extent>, <trim>);
+//   stroke(path, <width>, <closed>, <endcap1>, <endcap2>, <endcap_width1>, <endcap_width2>, <endcap_length1>, <endcap_length2>, <endcap_extent1>, <endcap_extent2>, <trim1>, <trim2>);
+// Topics: Paths (2D), Paths (3D), Drawing Tools
 // Description:
 //   Draws a 2D or 3D path with a given line width.  Endcaps can be specified for each end individually.
 // Figure(2D,Big): Endcap Types
@@ -330,25 +331,27 @@ module stroke(
 
 // Function&Module: arc()
 // Usage: 2D arc from 0º to `angle` degrees.
-//   arc(N, r|d, angle);
+//   arc(N, r|d=, angle);
 // Usage: 2D arc from START to END degrees.
-//   arc(N, r|d, angle=[START,END])
+//   arc(N, r|d=, angle=[START,END])
 // Usage: 2D arc from `start` to `start+angle` degrees.
-//   arc(N, r|d, start, angle)
+//   arc(N, r|d=, start=, angle=)
 // Usage: 2D circle segment by `width` and `thickness`, starting and ending on the X axis.
-//   arc(N, width, thickness)
+//   arc(N, width=, thickness=)
 // Usage: Shortest 2D or 3D arc around centerpoint `cp`, starting at P0 and ending on the vector pointing from `cp` to `P1`.
-//   arc(N, cp, points=[P0,P1],[long],[cw],[ccw])
+//   arc(N, cp=, points=[P0,P1], <long=>, <cw=>, <ccw=>)
 // Usage: 2D or 3D arc, starting at `P0`, passing through `P1` and ending at `P2`.
 //   arc(N, points=[P0,P1,P2])
+// Topics: Paths (2D), Paths (3D), Shapes (2D), Path Generators
 // Description:
 //   If called as a function, returns a 2D or 3D path forming an arc.
 //   If called as a module, creates a 2D arc polygon or pie slice shape.
 // Arguments:
 //   N = Number of vertices to form the arc curve from.
 //   r = Radius of the arc.
-//   d = Diameter of the arc.
 //   angle = If a scalar, specifies the end angle in degrees (relative to start parameter).  If a vector of two scalars, specifies start and end angles.
+//   ---
+//   d = Diameter of the arc.
 //   cp = Centerpoint of arc.
 //   points = Points on the arc.
 //   long = if given with cp and points takes the long arc instead of the default short arc.  Default: false
@@ -475,7 +478,9 @@ function _normal_segment(p1,p2) =
 
 // Function: turtle()
 // Usage:
-//   turtle(commands, [state], [full_state], [repeat], [endpoint])
+//   turtle(commands, <state>, <full_state=>, <repeat=>)
+// Topics: Shapes (2D), Path Generators (2D), Mini-Language
+// See Also: turtle3d()
 // Description:
 //   Use a sequence of turtle graphics commands to generate a path.  The parameter `commands` is a list of
 //   turtle commands and optional parameters for each command.  The turtle state has a position, movement direction,
@@ -516,6 +521,7 @@ function _normal_segment(p1,p2) =
 // Arguments:
 //   commands = List of turtle commands
 //   state = Starting turtle state (from previous call) or starting point.  Default: start at the origin, pointing right.
+//   ---
 //   full_state = If true return the full turtle state for continuing the path in subsequent turtle calls.  Default: false
 //   repeat = Number of times to repeat the command list.  Default: 1
 //
@@ -733,8 +739,14 @@ function _turtle_command(command, parm, parm2, state, index) =
 // Section: 2D Primitives
 
 // Function&Module: rect()
-// Usage:
-//   rect(size, [center], [rounding], [chamfer], [anchor], [spin])
+// Usage: As Module
+//   rect(size, <center>, <rounding>, <chamfer>, ...);
+// Usage: With Attachments
+//   rect(size, <center>, ...) { attachables }
+// Usage: As Function
+//   path = rect(size, <center>, <rounding>, <chamfer>, ...);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: square()
 // Description:
 //   When called as a module, creates a 2D rectangle of the given size, with optional rounding or chamfering.
 //   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
@@ -832,12 +844,15 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
 
 // Function&Module: oval()
 // Usage:
-//   oval(r|d, [realign], [circum])
+//   oval(r|d=, <realign=>, <circum=>)
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle()
 // Description:
 //   When called as a module, creates a 2D polygon that approximates a circle of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle of the given size.
 // Arguments:
 //   r = Radius of the circle/oval to create.  Can be a scalar, or a list of sizes per axis.
+//   ---
 //   d = Diameter of the circle/oval to create.  Can be a scalar, or a list of sizes per axis.
 //   realign = If true, rotates the polygon that approximates the circle/oval by half of one size.
 //   circum = If true, the polygon that approximates the circle will be upsized slightly to circumscribe the theoretical circle.  If false, it inscribes the theoretical circle.  Default: false
@@ -895,18 +910,19 @@ function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 
 // Function&Module: regular_ngon()
 // Usage:
-//   regular_ngon(n, r|d|or|od, [realign]);
-//   regular_ngon(n, ir|id, [realign]);
-//   regular_ngon(n, side, [realign]);
+//   regular_ngon(n, r/d=/or=/od=, <realign=>);
+//   regular_ngon(n, ir=/id=, <realign=>);
+//   regular_ngon(n, side=, <realign=>);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), pentagon(), hexagon(), octagon(), oval(), star()
 // Description:
 //   When called as a function, returns a 2D path for a regular N-sided polygon.
 //   When called as a module, creates a 2D regular N-sided polygon.
 // Arguments:
 //   n = The number of sides.
-//   or = Outside radius, at points.
-//   r = Same as or
-//   od = Outside diameter, at points.
-//   d = Same as od
+//   r/or = Outside radius, at points.
+//   ---
+//   d/od = Outside diameter, at points.
 //   ir = Inside radius, at center of sides.
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
@@ -1030,17 +1046,18 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 
 // Function&Module: pentagon()
 // Usage:
-//   pentagon(or|od, [realign]);
-//   pentagon(ir|id, [realign]);
-//   pentagon(side, [realign]);
+//   pentagon(or|od=, <realign=>);
+//   pentagon(ir=|id=, <realign=>);
+//   pentagon(side=, <realign=>);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), regular_ngon(), hexagon(), octagon(), oval(), star()
 // Description:
 //   When called as a function, returns a 2D path for a regular pentagon.
 //   When called as a module, creates a 2D regular pentagon.
 // Arguments:
-//   or = Outside radius, at points.
-//   r = Same as or.
-//   od = Outside diameter, at points.
-//   d = Same as od.
+//   r/or = Outside radius, at points.
+//   ---
+//   d/od = Outside diameter, at points.
 //   ir = Inside radius, at center of sides.
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
@@ -1084,16 +1101,27 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip
 
 
 // Function&Module: hexagon()
-// Usage:
-//   hexagon(or, od, ir, id, side);
+// Usage: As Module
+//   hexagon(r/or, <realign=>, <align_tip=|align_side=>, <rounding=>, ...);
+//   hexagon(d=/od=, ...);
+//   hexagon(ir=/id=, ...);
+//   hexagon(side=, ...);
+// Usage: With Attachments
+//   hexagon(r/or, ...) { attachments }
+// Usage: As Function
+//   path = hexagon(r/or, ...);
+//   path = hexagon(d=/od=, ...);
+//   path = hexagon(ir=/id=, ...);
+//   path = hexagon(side=, ...);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), regular_ngon(), pentagon(), octagon(), oval(), star()
 // Description:
 //   When called as a function, returns a 2D path for a regular hexagon.
 //   When called as a module, creates a 2D regular hexagon.
 // Arguments:
-//   or = Outside radius, at points.
-//   r = Same as or
-//   od = Outside diameter, at points.
-//   d = Same as od
+//   r/or = Outside radius, at points.
+//   ---
+//   d/od = Outside diameter, at points.
 //   ir = Inside radius, at center of sides.
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
@@ -1137,16 +1165,26 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 
 
 // Function&Module: octagon()
-// Usage:
-//   octagon(or, od, ir, id, side);
+// Usage: As Module
+//   octagon(r/or, <realign=>, <align_tip=|align_side=>, <rounding=>, ...);
+//   octagon(d=/od=, ...);
+//   octagon(ir=/id=, ...);
+//   octagon(side=, ...);
+// Usage: With Attachments
+//   octagon(r/or, ...) { attachments }
+// Usage: As Function
+//   path = octagon(r/or, ...);
+//   path = octagon(d=/od=, ...);
+//   path = octagon(ir=/id=, ...);
+//   path = octagon(side=, ...);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), regular_ngon(), pentagon(), hexagon(), oval(), star()
 // Description:
 //   When called as a function, returns a 2D path for a regular octagon.
 //   When called as a module, creates a 2D regular octagon.
 // Arguments:
-//   or = Outside radius, at points.
-//   r = Same as or
-//   od = Outside diameter, at points.
-//   d = Same as od
+//   r/or = Outside radius, at points.
+//   d/od = Outside diameter, at points.
 //   ir = Inside radius, at center of sides.
 //   id = Inside diameter, at center of sides.
 //   side = Length of each side.
@@ -1194,8 +1232,20 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 
 
 // Function&Module: trapezoid()
-// Usage:
-//   trapezoid(h, w1, w2);
+// Usage: As Module
+//   trapezoid(h, w1, w2, <shift=>, <rounding=>, <chamfer=>, ...);
+//   trapezoid(h, w1, angle=, ...);
+//   trapezoid(h, w2, angle=, ...);
+//   trapezoid(w1, w2, angle=, ...);
+// Usage: With Attachments
+//   trapezoid(h, w1, w2, ...) { attachments }
+// Usage: As Function
+//   path = trapezoid(h, w1, w2, ...);
+//   path = trapezoid(h, w1, angle=, ...);
+//   path = trapezoid(h, w2=, angle=, ...);
+//   path = trapezoid(w1=, w2=, angle=, ...);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: rect(), square()
 // Description:
 //   When called as a function, returns a 2D path for a trapezoid with parallel front and back sides.
 //   When called as a module, creates a 2D trapezoid with parallel front and back sides.
@@ -1203,6 +1253,7 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   h = The Y axis height of the trapezoid.
 //   w1 = The X axis width of the front end of the trapezoid.
 //   w2 = The X axis width of the back end of the trapezoid.
+//   ---
 //   angle = If given in place of `h`, `w1`, or `w2`, then the missing value is calculated such that the right side has that angle away from the Y axis.
 //   shift = Scalar value to shift the back of the trapezoid along the X axis by.  Default: 0
 //   rounding = The rounding radius for the corners.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
@@ -1290,14 +1341,23 @@ module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENTER
 // Description:
 //   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.
 //
-// Usage:
-//   teardrop2d(r|d, [ang], [cap_h]);
+// Usage: As Module
+//   teardrop2d(r/d=, <ang>, <cap_h>);
+// Usage: With Attachments
+//   teardrop2d(r/d=, <ang>, <cap_h>, ...) { attachments }
+// Usage: As Function
+//   path = teardrop2d(r/d=, <ang>, <cap_h>);
+//
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+//
+// See Also: teardrop(), onion()
 //
 // Arguments:
 //   r = radius of circular part of teardrop.  (Default: 1)
-//   d = diameter of spherical portion of bottom. (Use instead of r)
 //   ang = angle of hat walls from the Y axis.  (Default: 45 degrees)
 //   cap_h = if given, height above center where the shape will be truncated.
+//   ---
+//   d = diameter of spherical portion of bottom. (Use instead of r)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //
@@ -1307,7 +1367,7 @@ module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENTER
 //   teardrop2d(r=30, ang=30, cap_h=40);
 // Example(2D): Close Crop
 //   teardrop2d(r=30, ang=30, cap_h=20);
-module teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0)
+module teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0)
 {
     path = teardrop2d(r=r, d=d, ang=ang, cap_h=cap_h);
     attachable(anchor,spin, two_d=true, path=path) {
@@ -1317,7 +1377,7 @@ module teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0)
 }
 
 
-function teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0) =
+function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
     let(
         r = get_radius(r=r, d=d, dflt=1),
         tanpt = polar_to_xy(r, ang),
@@ -1345,16 +1405,23 @@ function teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0) =
 
 
 // Function&Module: glued_circles()
-// Usage:
-//   glued_circles(r|d, spread, tangent);
+// Usage: As Module
+//   glued_circles(r/d=, <spread=>, <tangent=>, ...);
+// Usage: With Attachments
+//   glued_circles(r/d=, <spread=>, <tangent=>, ...) { attachments }
+// Usage: As Function
+//   path = glued_circles(r/d=, <spread=>, <tangent=>, ...);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), oval()
 // Description:
 //   When called as a function, returns a 2D path forming a shape of two circles joined by curved waist.
 //   When called as a module, creates a 2D shape of two circles joined by curved waist.
 // Arguments:
 //   r = The radius of the end circles.
-//   d = The diameter of the end circles.
 //   spread = The distance between the centers of the end circles.  Default: 10
 //   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the Y axis.  Default: 30
+//   ---
+//   d = The diameter of the end circles.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Examples(2D):
@@ -1364,7 +1431,7 @@ function teardrop2d(r, d, ang=45, cap_h, anchor=CENTER, spin=0) =
 //   glued_circles(d=30, spread=30, tangent=-30);
 // Example(2D): Called as Function
 //   stroke(closed=true, glued_circles(r=15, spread=40, tangent=45));
-function glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) =
+function glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) =
     let(
         r = get_radius(r=r, d=d, dflt=10),
         r2 = (spread/2 / sin(tangent)) - r,
@@ -1391,7 +1458,7 @@ function glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) =
     ) reorient(anchor,spin, two_d=true, path=path2, extent=true, p=path2);
 
 
-module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) {
+module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
     path = glued_circles(r=r, d=d, spread=spread, tangent=tangent);
     attachable(anchor,spin, two_d=true, path=path, extent=true) {
         polygon(path);
@@ -1401,18 +1468,25 @@ module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) {
 
 
 // Function&Module: star()
-// Usage:
-//   star(n, r|d|or|od, ir|id|step, [realign]);
+// Usage: As Module
+//   star(n, r/or, ir, <realign=>, <align_tip=>, <align_pit=>, ...);
+//   star(n, r/or, step=, ...);
+// Usage: With Attachments
+//   star(n, r/or, ir, ...) { attachments }
+// Usage: As Function
+//   path = star(n, r/or, ir, <realign=>, <align_tip=>, <align_pit=>, ...);
+//   path = star(n, r/or, step=, ...);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), oval()
 // Description:
 //   When called as a function, returns the path needed to create a star polygon with N points.
 //   When called as a module, creates a star polygon with N points.
 // Arguments:
 //   n = The number of stellate tips on the star.
-//   r = The radius to the tips of the star.
-//   or = Same as r
-//   d = The diameter to the tips of the star.
-//   od = Same as d
+//   r/or = The radius to the tips of the star.
 //   ir = The radius to the inner corners of the star.
+//   ---
+//   d/od = The diameter to the tips of the star.
 //   id = The diameter to the inner corners of the star.
 //   step = Calculates the radius of the inner star corners by virtually drawing a straight line `step` tips around the star.  2 <= step < n/2
 //   realign = If false, a tip is aligned with the Y+ axis.  If true, an inner corner is aligned with the Y+ axis.  Default: false
@@ -1441,7 +1515,7 @@ module glued_circles(r, d, spread=10, tangent=30, anchor=CENTER, spin=0) {
 //           stroke([[0,0],[0,7]], endcap2="arrow2");
 // Example(2D): Called as Function
 //   stroke(closed=true, star(n=5, r=50, ir=25));
-function star(n, r, d, or, od, ir, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0, _mat, _anchs) =
+function star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0, _mat, _anchs) =
     assert(is_undef(align_tip) || is_vector(align_tip))
     assert(is_undef(align_pit) || is_vector(align_pit))
     assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit")
@@ -1484,7 +1558,7 @@ function star(n, r, d, or, od, ir, id, step, realign=false, align_tip, align_pit
     ) reorient(anchor,spin, two_d=true, path=path, p=path, anchors=anchors);
 
 
-module star(n, r, d, or, od, ir, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0) {
+module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0) {
     assert(is_undef(align_tip) || is_vector(align_tip));
     assert(is_undef(align_pit) || is_vector(align_pit));
     assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit");
@@ -1523,8 +1597,14 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
     pow(pow(abs(cos(m1*theta/4)/a),n2)+pow(abs(sin(m2*theta/4)/b),n3),-1/n1);
 
 // Function&Module: supershape()
-// Usage:
-//   supershape(step,[m1],[m2],[n1],[n2],[n3],[a],[b],[r|d]);
+// Usage: As Module
+//   supershape(step, <m1=>, <m2=>, <n1=>, <n2=>, <n3=>, <a=>, <b=>, <r=/d=>);
+// Usage: With Attachments
+//   supershape(step, <m1=>, <m2=>, <n1=>, <n2=>, <n3=>, <a=>, <b=>, <r=/d=>) { attachments }
+// Usage: As Function
+//   path = supershape(step, <m1=>, <m2=>, <n1=>, <n2=>, <n3=>, <a=>, <b=>, <r=/d=>);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), oval()
 // Description:
 //   When called as a function, returns a 2D path for the outline of the [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
 //   When called as a module, creates a 2D [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
@@ -1538,6 +1618,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   a = The a argument for the superformula.  Default: 1.
 //   b = The b argument for the superformula.  Default: a.
 //   r = Radius of the shape.  Scale shape to fit in a circle of radius r.
+//   ---
 //   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -1566,7 +1647,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 // Examples:
 //   linear_extrude(height=0.3, scale=0) supershape(step=1, m1=6, n1=0.4, n2=0, n3=6);
 //   linear_extrude(height=5, scale=0) supershape(step=1, b=3, m1=6, n1=3.8, n2=16, n3=10);
-function supershape(step=0.5,m1=4,m2=undef,n1=1,n2=undef,n3=undef,a=1,b=undef,r=undef,d=undef,anchor=CENTER, spin=0) =
+function supershape(step=0.5, m1=4, m2, n1=1, n2, n3, a=1, b, r, d,anchor=CENTER, spin=0) =
     let(
         r = get_radius(r=r, d=d, dflt=undef),
         m2 = is_def(m2) ? m2 : m1,
@@ -1592,14 +1673,17 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 
 // Function&Module: reuleaux_polygon()
 // Usage: As Module
-//   reuleaux_polygon(N, r|d);
+//   reuleaux_polygon(N, r|d, ...);
 // Usage: As Function
-//   path = reuleaux_polygon(N, r|d);
+//   path = reuleaux_polygon(N, r|d, ...);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: regular_ngon(), pentagon(), hexagon(), octagon()
 // Description:
 //   Creates a 2D Reuleaux Polygon; a constant width shape that is not circular.
 // Arguments:
 //   N = Number of "sides" to the Reuleaux Polygon.  Must be an odd positive number.  Default: 3
 //   r = Radius of the shape.  Scale shape to fit in a circle of radius r.
+//   ---
 //   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -1655,17 +1739,26 @@ function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
 // Section: 2D Masking Shapes
 
 // Function&Module: mask2d_roundover()
-// Usage:
-//   mask2d_roundover(r|d, [inset], [excess]);
+// Usage: As Module
+//   mask2d_roundover(r|d, <inset>, <excess>);
+// Usage: With Attachments
+//   mask2d_roundover(r|d, <inset>, <excess>) { attachments }
+// Usage: As Module
+//   path = mask2d_roundover(r|d, <inset>, <excess>);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D roundover/bead mask shape that is useful for extruding into a 3D mask for a 90º edge.
 //   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 // Arguments:
 //   r = Radius of the roundover.
-//   d = Diameter of the roundover.
 //   inset = Optional bead inset size.  Default: 0
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   ---
+//   d = Diameter of the roundover.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D): 2D Roundover Mask
 //   mask2d_roundover(r=10);
 // Example(2D): 2D Bead Mask
@@ -1675,7 +1768,7 @@ function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_roundover(r=10, inset=2);
-module mask2d_roundover(r, d, excess, inset=0, anchor=CENTER,spin=0) {
+module mask2d_roundover(r, inset=0, excess, d, anchor=CENTER,spin=0) {
     path = mask2d_roundover(r=r,d=d,excess=excess,inset=inset);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -1683,7 +1776,7 @@ module mask2d_roundover(r, d, excess, inset=0, anchor=CENTER,spin=0) {
     }
 }
 
-function mask2d_roundover(r, d, excess, inset=0, anchor=CENTER,spin=0) =
+function mask2d_roundover(r, inset=0, excess, d, anchor=CENTER,spin=0) =
     assert(is_num(r)||is_num(d))
     assert(is_undef(excess)||is_num(excess))
     assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
@@ -1703,17 +1796,26 @@ function mask2d_roundover(r, d, excess, inset=0, anchor=CENTER,spin=0) =
 
 
 // Function&Module: mask2d_cove()
-// Usage:
-//   mask2d_cove(r|d, [inset], [excess]);
+// Usage: As Module
+//   mask2d_cove(r|d, <inset>, <excess>);
+// Usage: With Attachments
+//   mask2d_cove(r|d, <inset>, <excess>) { attachments }
+// Usage: As Function
+//   path = mask2d_cove(r|d, <inset>, <excess>);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D cove mask shape that is useful for extruding into a 3D mask for a 90º edge.
 //   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 // Arguments:
 //   r = Radius of the cove.
-//   d = Diameter of the cove.
 //   inset = Optional amount to inset code from corner.  Default: 0
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   ---
+//   d = Diameter of the cove.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D): 2D Cove Mask
 //   mask2d_cove(r=10);
 // Example(2D): 2D Inset Cove Mask
@@ -1723,7 +1825,7 @@ function mask2d_roundover(r, d, excess, inset=0, anchor=CENTER,spin=0) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_cove(r=10, inset=2);
-module mask2d_cove(r, d, inset=0, excess, anchor=CENTER,spin=0) {
+module mask2d_cove(r, inset=0, excess, d, anchor=CENTER,spin=0) {
     path = mask2d_cove(r=r,d=d,excess=excess,inset=inset);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -1731,7 +1833,7 @@ module mask2d_cove(r, d, inset=0, excess, anchor=CENTER,spin=0) {
     }
 }
 
-function mask2d_cove(r, d, inset=0, excess, anchor=CENTER,spin=0) =
+function mask2d_cove(r, inset=0, excess, d, anchor=CENTER,spin=0) =
     assert(is_num(r)||is_num(d))
     assert(is_undef(excess)||is_num(excess))
     assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
@@ -1751,19 +1853,32 @@ function mask2d_cove(r, d, inset=0, excess, anchor=CENTER,spin=0) =
 
 
 // Function&Module: mask2d_chamfer()
-// Usage:
-//   mask2d_chamfer(x|y|edge, [angle], [inset], [excess]);
+// Usage: As Module
+//   mask2d_chamfer(edge, <angle>, <inset>, <excess>);
+//   mask2d_chamfer(y, <angle>, <inset>, <excess>);
+//   mask2d_chamfer(x, <angle>, <inset>, <excess>);
+// Usage: With Attachments
+//   mask2d_chamfer(edge, <angle>, <inset>, <excess>) { attachments }
+// Usage: As Function
+//   path = mask2d_chamfer(edge, <angle>, <inset>, <excess>);
+//   path = mask2d_chamfer(y, <angle>, <inset>, <excess>);
+//   path = mask2d_chamfer(x, <angle>, <inset>, <excess>);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D chamfer mask shape that is useful for extruding into a 3D mask for a 90º edge.
 //   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 // Arguments:
-//   x = The width of the chamfer.
-//   y = The height of the chamfer.
 //   edge = The length of the edge of the chamfer.
 //   angle = The angle of the chamfer edge, away from vertical.  Default: 45.
 //   inset = Optional amount to inset code from corner.  Default: 0
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   ---
+//   x = The width of the chamfer.
+//   y = The height of the chamfer.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D): 2D Chamfer Mask
 //   mask2d_chamfer(x=10);
 // Example(2D): 2D Chamfer Mask by Width.
@@ -1777,7 +1892,7 @@ function mask2d_cove(r, d, inset=0, excess, anchor=CENTER,spin=0) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_chamfer(x=10, inset=2);
-module mask2d_chamfer(x, y, edge, angle=45, excess, inset=0, anchor=CENTER,spin=0) {
+module mask2d_chamfer(edge, angle=45, inset=0, excess, x, y, anchor=CENTER,spin=0) {
     path = mask2d_chamfer(x=x, y=y, edge=edge, angle=angle, excess=excess, inset=inset);
     attachable(anchor,spin, two_d=true, path=path, extent=true) {
         polygon(path);
@@ -1785,7 +1900,7 @@ module mask2d_chamfer(x, y, edge, angle=45, excess, inset=0, anchor=CENTER,spin=
     }
 }
 
-function mask2d_chamfer(x, y, edge, angle=45, excess, inset=0, anchor=CENTER,spin=0) =
+function mask2d_chamfer(edge, angle=45, inset=0, excess, x, y, anchor=CENTER,spin=0) =
     assert(num_defined([x,y,edge])==1)
     assert(is_num(first_defined([x,y,edge])))
     assert(is_num(angle))
@@ -1809,16 +1924,24 @@ function mask2d_chamfer(x, y, edge, angle=45, excess, inset=0, anchor=CENTER,spi
 
 
 // Function&Module: mask2d_rabbet()
-// Usage:
-//   mask2d_rabbet(size, [excess]);
+// Usage: As Module
+//   mask2d_rabbet(size, <excess>);
+// Usage: With Attachments
+//   mask2d_rabbet(size, <excess>) { attachments }
+// Usage: As Function
+//   path = mask2d_rabbet(size, <excess>);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D rabbet mask shape that is useful for extruding into a 3D mask for a 90º edge.
 //   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 // Arguments:
 //   size = The size of the rabbet, either as a scalar or an [X,Y] list.
-//   inset = Optional amount to inset code from corner.  Default: 0
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D): 2D Rabbet Mask
 //   mask2d_rabbet(size=10);
 // Example(2D): 2D Asymmetrical Rabbet Mask
@@ -1852,20 +1975,31 @@ function mask2d_rabbet(size, excess, anchor=CENTER,spin=0) =
 
 
 // Function&Module: mask2d_dovetail()
-// Usage:
-//   mask2d_dovetail(x|y|edge, [angle], [inset], [shelf], [excess]);
+// Usage: As Module
+//   mask2d_dovetail(edge, <angle>, <inset>, <shelf>, <excess>, ...);
+//   mask2d_dovetail(x=, <angle=>, <inset=>, <shelf=>, <excess=>, ...);
+//   mask2d_dovetail(y=, <angle=>, <inset=>, <shelf=>, <excess=>, ...);
+// Usage: With Attachments
+//   mask2d_dovetail(edge, <angle>, <inset>, <shelf>, ...) { attachments }
+// Usage: As Function
+//   path = mask2d_dovetail(edge, <angle>, <inset>, <shelf>, <excess>);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D dovetail mask shape that is useful for extruding into a 3D mask for a 90º edge.
 //   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 // Arguments:
-//   x = The width of the dovetail.
-//   y = The height of the dovetail.
 //   edge = The length of the edge of the dovetail.
 //   angle = The angle of the chamfer edge, away from vertical.  Default: 30.
 //   inset = Optional amount to inset code from corner.  Default: 0
 //   shelf = The extra height to add to the inside corner of the dovetail.  Default: 0
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   ---
+//   x = The width of the dovetail.
+//   y = The height of the dovetail.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D): 2D Dovetail Mask
 //   mask2d_dovetail(x=10);
 // Example(2D): 2D Dovetail Mask by Width.
@@ -1879,7 +2013,7 @@ function mask2d_rabbet(size, excess, anchor=CENTER,spin=0) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_dovetail(x=10, inset=2);
-module mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=CENTER, spin=0) {
+module mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess, x, y, anchor=CENTER, spin=0) {
     path = mask2d_dovetail(x=x, y=y, edge=edge, angle=angle, inset=inset, shelf=shelf, excess=excess);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -1887,7 +2021,7 @@ module mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=CE
     }
 }
 
-function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=CENTER, spin=0) =
+function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess, x, y, anchor=CENTER, spin=0) =
     assert(num_defined([x,y,edge])==1)
     assert(is_num(first_defined([x,y,edge])))
     assert(is_num(angle))
@@ -1912,8 +2046,14 @@ function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=
 
 
 // Function&Module: mask2d_teardrop()
-// Usage:
-//   mask2d_teardrop(r|d, [angle], [excess]);
+// Usage: As Module
+//   mask2d_teardrop(r|d, <angle>, <excess>);
+// Usage: With Attachments
+//   mask2d_teardrop(r|d, <angle>, <excess>) { attachments }
+// Usage: As Function
+//   path = mask2d_teardrop(r|d, <angle>, <excess>);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
 //   Creates a 2D teardrop mask shape that is useful for extruding into a 3D mask for a 90º edge.
 //   This 2D mask is designed to be differenced away from the edge of a shape that is in the first (X+Y+) quadrant.
@@ -1921,9 +2061,12 @@ function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=
 //   This is particularly useful to make partially rounded bottoms, that don't need support to print.
 // Arguments:
 //   r = Radius of the rounding.
-//   d = Diameter of the rounding.
 //   angle = The maximum angle from vertical.
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   ---
+//   d = Diameter of the rounding.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D): 2D Teardrop Mask
 //   mask2d_teardrop(r=10);
 // Example(2D): Using a Custom Angle
@@ -1933,7 +2076,7 @@ function mask2d_dovetail(x, y, edge, angle=30, inset=0, shelf=0, excess, anchor=
 //   cube([50,60,70],center=true)
 //       edge_profile(BOT)
 //           mask2d_teardrop(r=10, angle=40);
-function mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) =  
+function mask2d_teardrop(r, angle=45, excess=0.1, d, anchor=CENTER, spin=0) =  
     assert(is_num(angle))
     assert(angle>0 && angle<90)
     assert(is_num(excess))
@@ -1950,7 +2093,7 @@ function mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) =
         ]
     ) reorient(anchor,spin, two_d=true, path=path, p=path);
 
-module mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) {
+module mask2d_teardrop(r, angle=45, excess=0.1, d, anchor=CENTER, spin=0) {
     path = mask2d_teardrop(r=r, d=d, angle=angle, excess=excess);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -1959,8 +2102,14 @@ module mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) {
 }
 
 // Function&Module: mask2d_ogee()
-// Usage:
-//   mask2d_ogee(pattern, [excess]);
+// Usage: As Module
+//   mask2d_ogee(pattern, <excess>, ...);
+// Usage: With Attachments
+//   mask2d_ogee(pattern, <excess>, ...) { attachments }
+// Usage: As Function
+//   path = mask2d_ogee(pattern, <excess>, ...);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
+// See Also: corner_profile(), edge_profile(), face_profile()
 //
 // Description:
 //   Creates a 2D Ogee mask shape that is useful for extruding into a 3D mask for a 90º edge.
@@ -1982,6 +2131,9 @@ module mask2d_teardrop(r,d,angle=45,excess=0.1,anchor=CENTER,spin=0) {
 // Arguments:
 //   pattern = A list of pattern pieces to describe the Ogee.
 //   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //
 // Example(2D): 2D Ogee Mask
 //   mask2d_ogee([
