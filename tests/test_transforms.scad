@@ -381,7 +381,7 @@ module test_skew() {
     assert_equal(skew(sxy=2, sxz=3, syx=4, syz=5, szx=6, szy=7), m);
     assert_equal(skew(sxy=2, sxz=3, syx=4, syz=5, szx=6, szy=7, p=[1,2,3]), apply(m,[1,2,3]));
     // Verify that module at least doesn't crash.
-    skew(2,3,4,5,6,7) nil();
+    skew(undef,2,3,4,5,6,7) nil();
 }
 test_skew();
 
