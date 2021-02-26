@@ -11,6 +11,7 @@
 // Function: ident()
 // Usage:
 //   mat = ident(n);
+// Topics: Affine, Matrices
 // Description:
 //   Create an `n` by `n` square identity matrix.
 // Arguments:
@@ -42,6 +43,8 @@ function ident(n) = [
 // Function: is_affine()
 // Usage:
 //   bool = is_affine(x,<dim>);
+// Topics: Affine, Matrices, Transforms
+// See Also: is_matrix()
 // Description:
 //   Tests if the given value is an affine matrix, possibly also checking it's dimenstion.
 // Arguments:
@@ -64,6 +67,8 @@ function is_affine(x,dim=[2,3]) =
 // Function: is_2d_transform()
 // Usage:
 //   x = is_2d_transform(t);
+// Topics: Affine, Matrices, Transforms
+// See Also: is_affine(), is_matrix()
 // Description:
 //   Checks if the input is a 3D transform that does not act on the z coordinate, except possibly
 //   for a simple scaling of z.  Note that an input which is only a zscale returns false.
@@ -84,6 +89,8 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 // Function: affine2d_to_3d()
 // Usage:
 //   mat = affine2d_to_3d(m);
+// Topics: Affine, Matrices, Transforms
+// See Also: affine3d_to_2d()
 // Description:
 //   Takes a 3x3 affine2d matrix and returns its 4x4 affine3d equivalent.
 // Example:
@@ -106,6 +113,8 @@ function affine2d_to_3d(m) = [
 // Function: affine3d_to_2d()
 // Usage:
 //   mat = affine3d_to_2d(m);
+// Topics: Affine, Matrices
+// See Also: affine2d_to_3d()
 // Description:
 //   Takes a 4x4 affine3d matrix and returns its 3x3 affine2d equivalent.  3D transforms that would alter the Z coordinate are disallowed.
 // Example:
@@ -128,6 +137,7 @@ function affine3d_to_2d(m) =
 // Function: apply()
 // Usage:
 //   pts = apply(transform, points);
+// Topics: Affine, Matrices, Transforms
 // Description:
 //   Applies the specified transformation matrix to a point, pointlist, bezier patch or VNF.
 //   Both inputs can be 2D or 3D, and it is also allowed to supply 3D transformations with 2D
@@ -176,12 +186,13 @@ function apply(transform,points) =
 // Function: rot_decode()
 // Usage:
 //   info = rot_decode(rotation); // Returns: [angle,axis,cp,translation]
+// Topics: Affine, Matrices, Transforms
 // Description:
 //   Given an input 3D rigid transformation operator (one composed of just rotations and translations) represented
 //   as a 4x4 matrix, compute the rotation and translation parameters of the operator.  Returns a list of the
 //   four parameters, the angle, in the interval [0,180], the rotation axis as a unit vector, a centerpoint for
-//   the rotation, and a translation.  If you set `parms=rot_decode(rotation)` then the transformation can be
-//   reconstructed from parms as `move(parms[3])*rot(a=parms[0],v=parms[1],cp=parms[2])`.  This decomposition
+//   the rotation, and a translation.  If you set `parms = rot_decode(rotation)` then the transformation can be
+//   reconstructed from parms as `move(parms[3]) * rot(a=parms[0],v=parms[1],cp=parms[2])`.  This decomposition
 //   makes it possible to perform interpolation.  If you construct a transformation using `rot` the decoding
 //   may flip the axis (if you gave an angle outside of [0,180]).  The returned axis will be a unit vector, and
 //   the centerpoint lies on the plane through the origin that is perpendicular to the axis.  It may be different
@@ -230,6 +241,7 @@ function rot_decode(M) =
 // Function: affine2d_identity()
 // Usage:
 //   mat = affine2d_identify();
+// Topics: Affine, Matrices, Transforms
 // Description:
 //   Create a 3x3 affine2d identity matrix.
 // Example:
@@ -246,6 +258,8 @@ function affine2d_identity() = ident(3);
 // Function: affine2d_translate()
 // Usage:
 //   mat = affine2d_translate(v);
+// Topics: Affine, Matrices, Transforms, Translation
+// See Also: translate(), move(), affine3d_translate()
 // Description:
 //   Returns the 3x3 affine2d matrix to perform a 2D translation.
 // Arguments:
@@ -270,6 +284,8 @@ function affine2d_translate(v=[0,0]) =
 // Function: affine2d_scale()
 // Usage:
 //   mat = affine2d_scale(v);
+// Topics: Affine, Matrices, Transforms, Scaling
+// See Also: scale(), xscale(), yscale(), zscale(), affine3d_scale()
 // Description:
 //   Returns the 3x3 affine2d matrix to perform a 2D scaling transformation.
 // Arguments:
@@ -294,6 +310,8 @@ function affine2d_scale(v=[1,1]) =
 // Function: affine2d_zrot()
 // Usage:
 //   mat = affine2d_zrot(ang);
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: rot(), xrot(), yrot(), zrot(), affine3d_zrot()
 // Description:
 //   Returns the 3x3 affine2d matrix to perform a rotation of a 2D vector around the Z axis.
 // Arguments:
@@ -318,6 +336,8 @@ function affine2d_zrot(ang=0) =
 // Function: affine2d_mirror()
 // Usage:
 //   mat = affine2d_mirror(v);
+// Topics: Affine, Matrices, Transforms, Reflection, Mirroring
+// See Also: mirror(), xflip(), yflip(), zflip(), affine3d_mirror()
 // Description:
 //   Returns the 3x3 affine2d matrix to perform a reflection of a 2D vector across the line given by its normal vector.
 // Arguments:
@@ -361,6 +381,8 @@ function affine2d_mirror(v) =
 //   mat = affine2d_skew(xa);
 //   mat = affine2d_skew(ya=);
 //   mat = affine2d_skew(xa, ya);
+// Topics: Affine, Matrices, Transforms, Skewing
+// See Also: skew(), affine3d_skew()
 // Description:
 //   Returns the 3x3 affine2d matrix to skew a 2D vector along the XY plane.
 // Arguments:
@@ -391,6 +413,7 @@ function affine2d_skew(xa=0, ya=0) =
 // Function: affine3d_identity()
 // Usage:
 //   mat = affine3d_identity();
+// Topics: Affine, Matrices, Transforms
 // Description:
 //   Create a 4x4 affine3d identity matrix.
 // Example:
@@ -408,6 +431,8 @@ function affine3d_identity() = ident(4);
 // Function: affine3d_translate()
 // Usage:
 //   mat = affine3d_translate(v);
+// Topics: Affine, Matrices, Transforms, Translation
+// See Also: translate(), move(), affine2d_translate()
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a 3D translation.
 // Arguments:
@@ -435,6 +460,8 @@ function affine3d_translate(v=[0,0,0]) =
 // Function: affine3d_scale()
 // Usage:
 //   mat = affine3d_scale(v);
+// Topics: Affine, Matrices, Transforms, Scaling
+// See Also: scale(), affine2d_scale()
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a 3D scaling transformation.
 // Arguments:
@@ -462,6 +489,8 @@ function affine3d_scale(v=[1,1,1]) =
 // Function: affine3d_xrot()
 // Usage:
 //   mat = affine3d_xrot(ang);
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: rot(), xrot(), yrot(), zrot(), affine2d_zrot()
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a rotation of a 3D vector around the X axis.
 // Arguments:
@@ -488,6 +517,8 @@ function affine3d_xrot(ang=0) =
 // Function: affine3d_yrot()
 // Usage:
 //   mat = affine3d_yrot(ang);
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: rot(), xrot(), yrot(), zrot(), affine2d_zrot()
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a rotation of a 3D vector around the Y axis.
 // Arguments:
@@ -514,6 +545,8 @@ function affine3d_yrot(ang=0) =
 // Function: affine3d_zrot()
 // Usage:
 //   mat = affine3d_zrot(ang);
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: rot(), xrot(), yrot(), zrot(), affine2d_zrot()
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a rotation of a 3D vector around the Z axis.
 // Arguments:
@@ -540,6 +573,8 @@ function affine3d_zrot(ang=0) =
 // Function: affine3d_rot_by_axis()
 // Usage:
 //   mat = affine3d_rot_by_axis(u, ang);
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: rot(), xrot(), yrot(), zrot(), affine2d_zrot()
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a rotation of a 3D vector around an axis.
 // Arguments:
@@ -574,6 +609,8 @@ function affine3d_rot_by_axis(u=UP, ang=0) =
 // Function: affine3d_rot_from_to()
 // Usage:
 //   mat = affine3d_rot_from_to(from, to);
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: rot(), xrot(), yrot(), zrot(), affine2d_zrot()
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a rotation of a 3D vector from one vector direction to another.
 // Arguments:
@@ -616,6 +653,8 @@ function affine3d_rot_from_to(from, to) =
 //   map = affine3d_frame_map(x=VECTOR1, y=VECTOR2, <reverse>);
 //   map = affine3d_frame_map(x=VECTOR1, z=VECTOR2, <reverse>);
 //   map = affine3d_frame_map(y=VECTOR1, z=VECTOR2, <reverse>);
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: rot(), xrot(), yrot(), zrot(), affine2d_zrot()
 // Description:
 //   Returns a transformation that maps one coordinate frame to another.  You must specify two or
 //   three of `x`, `y`, and `z`.  The specified axes are mapped to the vectors you supplied.  If you
@@ -672,6 +711,8 @@ function affine3d_frame_map(x,y,z, reverse=false) =
 // Function: affine3d_mirror()
 // Usage:
 //   mat = affine3d_mirror(v);
+// Topics: Affine, Matrices, Transforms, Reflection, Mirroring
+// See Also: mirror(), xflip(), yflip(), zflip(), affine2d_mirror()
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a reflection of a 3D vector across the plane given by its normal vector.
 // Arguments:
@@ -710,6 +751,8 @@ function affine3d_mirror(v) =
 // Function: affine3d_skew()
 // Usage:
 //   mat = affine3d_skew(<sxy>, <sxz>, <syx>, <syz>, <szx>, <szy>);
+// Topics: Affine, Matrices, Transforms, Skewing
+// See Also: skew(), affine3d_skew_xy(), affine3d_skew_xz(), affine3d_skew_yz(), affine2d_skew()
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a skew transformation.
 // Arguments:
@@ -741,6 +784,8 @@ function affine3d_skew(sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0) = [
 //   mat = affine3d_skew_xy(xa);
 //   mat = affine3d_skew_xy(ya=);
 //   mat = affine3d_skew_xy(xa, ya);
+// Topics: Affine, Matrices, Transforms, Skewing
+// See Also: skew(), affine3d_skew(), affine3d_skew_xz(), affine3d_skew_yz(), affine2d_skew()
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a skew transformation along the XY plane.
 // Arguments:
@@ -771,6 +816,8 @@ function affine3d_skew_xy(xa=0, ya=0) =
 //   mat = affine3d_skew_xz(xa);
 //   mat = affine3d_skew_xz(za=);
 //   mat = affine3d_skew_xz(xa, za);
+// Topics: Affine, Matrices, Transforms, Skewing
+// See Also: skew(), affine3d_skew(), affine3d_skew_xy(), affine3d_skew_yz(), affine2d_skew()
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a skew transformation along the XZ plane.
 // Arguments:
@@ -801,6 +848,8 @@ function affine3d_skew_xz(xa=0, za=0) =
 //   mat = affine3d_skew_yz(ya);
 //   mat = affine3d_skew_yz(za=);
 //   mat = affine3d_skew_yz(ya, za);
+// Topics: Affine, Matrices, Transforms, Skewing
+// See Also: skew(), affine3d_skew(), affine3d_skew_xy(), affine3d_skew_xz(), affine2d_skew()
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a skew transformation along the YZ plane.
 // Arguments:
