@@ -259,7 +259,7 @@ function affine2d_identity() = ident(3);
 // Usage:
 //   mat = affine2d_translate(v);
 // Topics: Affine, Matrices, Transforms, Translation
-// See Also: translate(), move(), affine3d_translate()
+// See Also: move(), affine3d_translate()
 // Description:
 //   Returns the 3x3 affine2d matrix to perform a 2D translation.
 // Arguments:
@@ -432,7 +432,7 @@ function affine3d_identity() = ident(4);
 // Usage:
 //   mat = affine3d_translate(v);
 // Topics: Affine, Matrices, Transforms, Translation
-// See Also: translate(), move(), affine2d_translate()
+// See Also: move(), affine2d_translate()
 // Description:
 //   Returns the 4x4 affine3d matrix to perform a 3D translation.
 // Arguments:
