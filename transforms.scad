@@ -776,7 +776,7 @@ function xyzrot(a=0, p, cp) = rot(a=a, v=[1,1,1], cp=cp, p=p);
 // Usage: Get Scaling Matrix
 //   mat = scale(v, <cp=>);
 // Topics: Affine, Matrices, Transforms, Scaling
-// See Also: xscale(), yscale(), zscale(), affine2d_scaling(), affine3d_scaling() 
+// See Also: xscale(), yscale(), zscale(), affine2d_scale(), affine3d_scale() 
 // Description:
 //   Scales by the [X,Y,Z] scaling factors given in `v`.  If `v` is given as a scalar number, all axes are scaled uniformly by that amount.
 //   * Called as the built-in module, scales all children.
@@ -843,7 +843,7 @@ function scale(v=1, p, cp=[0,0,0]) =
 //   mat = xscale(x, <cp=>, <planar=>);
 //
 // Topics: Affine, Matrices, Transforms, Scaling
-// See Also: scale(), yscale(), zscale(), affine2d_scaling(), affine3d_scaling() 
+// See Also: scale(), yscale(), zscale(), affine2d_scale(), affine3d_scale() 
 //
 // Description:
 //   Scales along the X axis by the scaling factor `x`.
@@ -901,7 +901,7 @@ function xscale(x=1, p, cp=0, planar=false) =
 //   mat = yscale(y, <cp=>, <planar=>);
 //
 // Topics: Affine, Matrices, Transforms, Scaling
-// See Also: scale(), xscale(), zscale(), affine2d_scaling(), affine3d_scaling() 
+// See Also: scale(), xscale(), zscale(), affine2d_scale(), affine3d_scale() 
 //
 // Description:
 //   Scales along the Y axis by the scaling factor `y`.
@@ -959,7 +959,7 @@ function yscale(y=1, p, cp=0, planar=false) =
 //   mat = zscale(z, <cp=>);
 //
 // Topics: Affine, Matrices, Transforms, Scaling
-// See Also: scale(), xscale(), yscale(), affine2d_scaling(), affine3d_scaling() 
+// See Also: scale(), xscale(), yscale(), affine2d_scale(), affine3d_scale() 
 //
 // Description:
 //   Scales along the Z axis by the scaling factor `z`.
