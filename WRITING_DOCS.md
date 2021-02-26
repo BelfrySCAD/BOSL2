@@ -56,6 +56,11 @@ All files must have either a `// File:` block or a `// LibFile:` block at the st
     //   denote a paragraph break with a comment line with three
     //   trailing spaces, or just a period.
     //   .
+    //   You can have links in this text to functions, modules, or
+    //   constants in other files by putting the name in double-
+    //   braces like {{cyl()}} or {{lerp()}} or {{DOWN}}.  If you want to
+    //   link to another file, or section in another file you can use
+    //   a manual markdown link like [Section: Cuboids](shapes.scad#section-cuboids).
     //   The end of the block is denoted by a line without a comment.
 
 Which outputs Markdown code that renders like:
@@ -67,9 +72,15 @@ Which outputs Markdown code that renders like:
 > denote a paragraph break with a comment line with three
 > trailing spaces, or just a period.
 > 
+> You can have links in this text to functions, modules, or
+> constants in other files by putting the name in double-
+> braces like [cyl()](shapes.scad#functionmodule-cyl) or [lerp()](math.scad#function-lerp) or [DOWN](constants.scad-down).  If you want to
+> link to another file, or section in another file you can use
+> a manual markdown link like [Section: Cuboids](shapes.scad#section-cuboids).
 > The end of the block is denoted by a line without a comment.
 
-Or:
+You can use `// File:` instead of `// LibFile:`, if it seems more apropriate for
+your particular context::
 
     // File: Foobar.scad
     //   This file contains a collection of metasyntactical nonsense.
@@ -129,20 +140,32 @@ Section blocks take a title, and an optional body that will be shown as the desc
     //   denote a paragraph break with a comment line with three
     //   trailing spaces, or just a period.
     //   .
+    //   You can have links in this text to functions, modules, or
+    //   constants in other files by putting the name in double-
+    //   braces like {{cyl()}} or {{lerp()}} or {{DOWN}}.  If you want to
+    //   link to another file, or section in another file you can use
+    //   a manual markdown link like [Section: Cuboids](shapes.scad#section-cuboids).
+    //   .
     //   The end of the block is denoted by a line without a comment.
     //   or a line that is unindented after the comment.
 
 Which outputs Markdown code that renders like:
 
->## Section: Foobar
->You can have several lines of markdown formatted text here.
->You just need to make sure that each line is indented, with
->at least three spaces after the comment marker.  You can
->denote a paragraph break with a comment line with three
->trailing spaces, or just a period.
+> ## Section: Foobar
+> You can have several lines of markdown formatted text here.
+> You just need to make sure that each line is indented, with
+> at least three spaces after the comment marker.  You can
+> denote a paragraph break with a comment line with three
+> trailing spaces, or just a period.
 >
->The end of the block is denoted by a line without a comment.
->or a line that is unindented after the comment.
+> You can have links in this text to functions, modules, or
+> constants in other files by putting the name in double-
+> braces like [cyl()](shapes.scad#functionmodule-cyl) or [lerp()](math.scad#function-lerp) or [DOWN](constants.scad-down).  If you want to
+> link to another file, or section in another file you can use
+> a manual markdown link like [Section: Cuboids](shapes.scad#section-cuboids).
+>
+> The end of the block is denoted by a line without a comment.
+> or a line that is unindented after the comment.
 
 Sections can also include Figures; images generated from code that is not shown in a code block.
 
@@ -160,9 +183,9 @@ The `Constant` header is used to document a code constant.  It should have a Des
 
 Which outputs Markdown code that renders like:
 
->### Constant: PHI
->**Description:**
->The golden ration phi.
+> ### Constant: PHI
+> **Description:**
+> The golden ration phi.
 
 
 The `Module` header is used to document a module.  It should have a Description sub-block. It is recommended to also have Usage, Arguments, and Example/Examples sub-blocks:
@@ -183,23 +206,23 @@ The `Module` header is used to document a module.  It should have a Description 
 
 Which outputs Markdown code that renders like:
 
->### Module: cross()
->**Usage:**
->- cross(size);
->
->**Description:**
->Creates a 2D cross/plus shape.
->
->**Arguments:**
->Positional Arg | What it does
->-------------------- | -------------------
->size                   | The scalar size of the cross.
->
->**Example:**
->```openscad
->cross(size=100);
->```
->GENERATED IMAGE GOES HERE
+> ### Module: cross()
+> **Usage:**
+> - cross(size);
+> 
+> **Description:**
+> Creates a 2D cross/plus shape.
+> 
+> **Arguments:**
+> Positional Arg | What it does
+> -------------------- | -------------------
+> size                   | The scalar size of the cross.
+> 
+> **Example:**
+> ```openscad
+> cross(size=100);
+> ```
+> GENERATED IMAGE GOES HERE
 
 
 The `Function` header is used to document a function.  It should have a Description sub-block. It is recommended to also have Usage, Arguments, and Example/Examples sub-blocks.  By default, Examples will not generate images for function blocks:
@@ -222,26 +245,26 @@ The `Function` header is used to document a function.  It should have a Descript
 
 Which outputs Markdown code that renders like:
 
->### Function: vector_angle()
->**Usage:**
->- ang = vector_angle(v1, v2);
->
->**Description:**
->Calculates the angle between two vectors in degrees.
->
->**Arguments:**
->Positional Arg | What it does
->-------------------- | -------------------
->`v1`                | The first vector.
->`v2`                | The second vector.
->
->**Example:**
->```openscad
->v1 = [1,1,0];
->v2 = [1,0,0];
->angle = vector_angle(v1, v2);
->// Returns: 45
->```
+> ### Function: vector_angle()
+> **Usage:**
+> - ang = vector_angle(v1, v2);
+> 
+> **Description:**
+> Calculates the angle between two vectors in degrees.
+> 
+> **Arguments:**
+> Positional Arg | What it does
+> -------------------- | -------------------
+> `v1`                | The first vector.
+> `v2`                | The second vector.
+> 
+> **Example:**
+> ```openscad
+> v1 = [1,1,0];
+> v2 = [1,0,0];
+> angle = vector_angle(v1, v2);
+> // Returns: 45
+> ```
 
 The `Function&Module` header is used to document a function which has a related module of the same name.  It should have a Description sub-block.  It is recommended to also have Usage, Arguments, and Example/Examples sub-blocks. You should have Usage blocks for both calling as a function, and calling as a
 module:
@@ -271,50 +294,65 @@ module:
 
 Which outputs Markdown code that renders like:
 
->### Function&Module: oval()
->**Topics:** 2D Shapes, Geometry
+> ### Function&Module: oval()
+> **Topics:** 2D Shapes, Geometry
 >
->**Usage:** As a Module
+> **Usage:** As a Module
 >
->- oval(rx,ry);
+> - oval(rx,ry);
 >
->**Usage:** As a Function
+> **Usage:** As a Function
 >
->- path = oval(rx,ry);
+> - path = oval(rx,ry);
 >
->**Description:**
->When called as a function, returns the perimeter path of the oval.
->When called as a module, creates a 2D oval shape.
+> **Description:**
+> When called as a function, returns the perimeter path of the oval.
+> When called as a module, creates a 2D oval shape.
 >
->**Arguments:**
->Positional Arg | What it does
->-------------------- | -------------------
->rx | X axis radius.
->ry | Y axis radius.
+> **Arguments:**
+> Positional Arg | What it does
+> -------------------- | -------------------
+> rx | X axis radius.
+> ry | Y axis radius.
 >
->**Example:** Called as a Function
+> **Example:** Called as a Function
 >
->```openscad
->path = oval(100,60);
->polygon(path);
->```
->GENERATED IMAGE SHOWN HERE
+> ```openscad
+> path = oval(100,60);
+> polygon(path);
+> ```
+> GENERATED IMAGE SHOWN HERE
 >
->**Example:** Called as a Module
+> **Example:** Called as a Module
 >
->```openscad
->oval(80,60);
->```
->GENERATED IMAGE SHOWN HERE
+> ```openscad
+> oval(80,60);
+> ```
+> GENERATED IMAGE SHOWN HERE
 
 These Type blocks can have a number of sub-blocks.  Most sub-blocks are optional,  The available standard sub-blocks are:
+- `// Aliases: alternatename(), anothername()`
 - `// Status: DEPRECATED`
 - `// Topics: Comma, Delimited, Topic, List`
 - `// Usage:`
 - `// Description:`
 - `// Arguments:`
 - `// Figure:` or `// Figures`
+- `// See Also: otherfunc(), othermod(), OTHERCONST`
 - `// Example:` or `// Examples:`
+
+
+Aliases Block
+-------------
+
+The Aliases block is used to give alternate names for a function, module, or
+constant.  This is reflected in the indexes generated.  It looks like:
+
+    // Aliases: secondname(), thirdname()
+
+Which outputs Markdown code that renders like:
+
+> **Aliases:** secondname(), thirdname()
 
 
 Status Block
@@ -326,7 +364,7 @@ The Status block is used to mark a function, module, or constant as deprecated:
 
 Which outputs Markdown code that renders like:
 
->**Status:** DEPRECATED, use foo() instead
+> **Status:** DEPRECATED, use foo() instead
 
 
 Topics Block
@@ -338,7 +376,7 @@ The Topics block can associate various topics with the current function or modul
 
 Which outputs Markdown code that renders like:
 
->**Topics:** 2D Shapes, Geometry, Masks
+> **Topics:** 2D Shapes, Geometry, Masks
 
 
 Usage Block
@@ -353,12 +391,12 @@ The Usage block describes the various ways that the current function or module c
 
 Which outputs Markdown code that renders like:
 
->**Usage:** As a Module
->- oval(rx, ry, <spin=>);
->
->**Usage:** As a Function
->
->- path = oval(rx, ry, <spin=>);
+> **Usage:** As a Module
+> - oval(rx, ry, <spin=>);
+> 
+> **Usage:** As a Function
+> 
+> - path = oval(rx, ry, <spin=>);
 
 
 Description Block
@@ -369,15 +407,30 @@ The Description block just describes the currect function, module, or constant:
     //   It can be multiple lines long.  Markdown syntax code will be used
     //   verbatim in the output markdown file, with the exception of `_`,
     //   which will traslate to `\_`, so that underscores in function/module
-    //   names don't get butchered.
+    //   names don't get butchered.  A line with just a period (`.`) will be
+    //   treated as a blank line.
+    //   .
+    //   You can have links in this text to functions, modules, or
+    //   constants in other files by putting the name in double-
+    //   braces like {{cyl()}} or {{lerp()}} or {{DOWN}}.  If you want to
+    //   link to another file, or section in another file you can use
+    //   a manual markdown link like [Section: Cuboids](shapes.scad#section-cuboids).
 
 Which outputs Markdown code that renders like:
 
->**Description:**
->It can be multiple lines long.  Markdown syntax code will be used
->verbatim in the output markdown file, with the exception of `_`,
->which will traslate to `\_`, so that underscores in function/module
->names don't get butchered.
+> **Description:**
+> It can be multiple lines long.  Markdown syntax code will be used
+> verbatim in the output markdown file, with the exception of `_`,
+> which will traslate to `\_`, so that underscores in function/module
+> names don't get butchered.  A line with just a period (`.`) will be
+> treated as a blank line.
+> 
+> You can have links in this text to functions, modules, or
+> constants in other files by putting the name in double-
+> braces like [cyl()](shapes.scad#functionmodule-cyl) or [lerp()](math.scad#function-lerp) or [DOWN](constants.scad-down).  If you want to
+> link to another file, or section in another file you can use
+> a manual markdown link like [Section: Cuboids](shapes.scad#section-cuboids).
+
 
 Arguments Block
 ---------------
@@ -388,22 +441,36 @@ The Arguments block creates a table that describes the positional arguments for 
     //   v2 = This supplies the second vector.
     //   ---
     //   fast = Use fast, but less comprehensive calculation method.
+    //   bar = Takes an optional `bar` struct.  See {{bar()}}.
     //   dflt = Default value.
 
 Which outputs Markdown code that renders like:
 
->**Arguments:**
->Positional Arg | What it Does
->-------------------- | ---------------------------------
->`v1`                 | This supplies the first vector. 
->`v2`                 | The supplies the second vector. 
-> 
->Named Arg   | What it Does
->------------------ | ---------------------------------
->`fast`         | If true, use fast, but less accurate calculation method. 
->`dflt`         | Default value.
+> **Arguments:**
+> Positional Arg | What it Does
+> -------------- | ---------------------------------
+> `v1`           | This supplies the first vector. 
+> `v2`           | The supplies the second vector. 
+>  
+> Named Arg      | What it Does
+> -------------- | ---------------------------------
+> `fast`         | If true, use fast, but less accurate calculation method. 
+> `bar`          | Takes an optional `bar` struct.  See [bar()](foobar.scad#function-bar).
+> `dflt`         | Default value.
 
----
+
+See Also Block
+--------------
+
+The See Also block is used to give links to related functions, modules, or
+constants.  It looks like:
+
+    // See Also: relatedfunc(), similarmodule()
+
+Which outputs Markdown code that renders like:
+
+> **See Also:** [relatedfunc()](otherfile.scad#relatedfunc), [similarmodule()](otherfile.scad#similarmodule)
+
 
 Figure Block
 --------------
@@ -423,20 +490,20 @@ A Figure block generates and shows an image from a script in the multi-line body
 
 Which outputs Markdown code that renders like:
 
->**Figure 1:** Figure description
->GENERATED IMAGE SHOWN HERE
->
->**Figure 2:** Animated figure that spins to show all faces.
->GENERATED IMAGE SHOWN HERE
->
->**Figure 3:**
->GENERATED IMAGE OF CUBE SHOWN HERE
->
->**Figure 4:**
->GENERATED IMAGE OF CYLINDER SHOWN HERE
->
->**Figure 5:**
->GENERATED IMAGE OF SPHERE SHOWN HERE
+> **Figure 1:** Figure description
+> GENERATED IMAGE SHOWN HERE
+> 
+> **Figure 2:** Animated figure that spins to show all faces.
+> GENERATED IMAGE SHOWN HERE
+> 
+> **Figure 3:**
+> GENERATED IMAGE OF CUBE SHOWN HERE
+> 
+> **Figure 4:**
+> GENERATED IMAGE OF CYLINDER SHOWN HERE
+> 
+> **Figure 5:**
+> GENERATED IMAGE OF SPHERE SHOWN HERE
 
 The metadata of the Figure block can contain various directives to alter how
 the image will be generated.  These can be comma separated to give multiple
@@ -452,6 +519,7 @@ metadata directives:
 - `Spin`: Animate camera orbit around the `[0,1,1]` axis to display all sides of an object.
 - `FlatSpin`: Animate camera orbit around the Z axis, above the XY plane.
 - `Anim`: Make an animation where `$t` varies from `0.0` to almost `1.0`.
+- `Frames=36`: Number of animation frames to make.
 - `FrameMS=250`: Sets the number of milliseconds per frame for spins and animation.
 - `Small`: Make the image small sized.
 - `Med`: Make the image medium sized.
@@ -461,6 +529,7 @@ metadata directives:
 - `Render`: Force full rendering from OpenSCAD, instead of the normal preview.
 - `Edges`: Highlight face edges.
 - `NoAxes`: Hides the axes and scales.
+- `ScriptUnder`: Display script text under image, rather than beside it.
 
 
 Example Block
@@ -484,37 +553,37 @@ Any images, if generated, will be created by running it in OpenSCAD:
 
 Which outputs Markdown code that renders like:
 
->**Example 1:** Example description
->```openscad
->cylinder(h=100, d1=75, d2=50);
->up(100) cylinder(h=100, d1=50, d2=75);
->```
->GENERATED IMAGE SHOWN HERE
->
->**Example 2:** Animated shape that spins to show all faces.
->```openscad
->cube([10,100,50], center=true);
->cube([100,10,30], center=true);
->```
->GENERATED IMAGE SHOWN HERE
->
->**Example 3:**
->```openscad
->cube(100);
->```
->GENERATED IMAGE OF CUBE SHOWN HERE
->
->**Example 4:**
->```openscad
->cylinder(h=100,d=50);
->```
->GENERATED IMAGE OF CYLINDER SHOWN HERE
->
->**Example 5:**
->```openscad
->sphere(d=100);
->```
->GENERATED IMAGE OF SPHERE SHOWN HERE
+> **Example 1:** Example description
+> ```openscad
+> cylinder(h=100, d1=75, d2=50);
+> up(100) cylinder(h=100, d1=50, d2=75);
+> ```
+> GENERATED IMAGE SHOWN HERE
+> 
+> **Example 2:** Animated shape that spins to show all faces.
+> ```openscad
+> cube([10,100,50], center=true);
+> cube([100,10,30], center=true);
+> ```
+> GENERATED IMAGE SHOWN HERE
+> 
+> **Example 3:**
+> ```openscad
+> cube(100);
+> ```
+> GENERATED IMAGE OF CUBE SHOWN HERE
+> 
+> **Example 4:**
+> ```openscad
+> cylinder(h=100,d=50);
+> ```
+> GENERATED IMAGE OF CYLINDER SHOWN HERE
+> 
+> **Example 5:**
+> ```openscad
+> sphere(d=100);
+> ```
+> GENERATED IMAGE OF SPHERE SHOWN HERE
 
 The metadata of the Example block can contain various directives to alter how
 the image will be generated.  These can be comma separated to give multiple
@@ -531,6 +600,7 @@ metadata directives:
 - `FlatSpin`: Animate camera orbit around the Z axis, above the XY plane.
 - `Anim`: Make an animation where `$t` varies from `0.0` to almost `1.0`.
 - `FrameMS=250`: Sets the number of milliseconds per frame for spins and animation.
+- `Frames=36`: Number of animation frames to make.
 - `Small`: Make the image small sized.
 - `Med`: Make the image medium sized.
 - `Big`: Make the image big sized.
@@ -539,6 +609,7 @@ metadata directives:
 - `Render`: Force full rendering from OpenSCAD, instead of the normal preview.
 - `Edges`: Highlight face edges.
 - `NoAxes`: Hides the axes and scales.
+- `ScriptUnder`: Display script text under image, rather than beside it.
 
 Modules will default to generating and displaying the image as if the `3D`
 directive is given.  Functions and constants will default to not generating
@@ -586,6 +657,7 @@ The Generic block header type takes both title and body lines and generates a ma
     // Result: For Typical Cases
     //   Does typical things.
     //   Or something like that.
+    //   Refer to {{stuff()}} for more info.
     // Result: For Atypical Cases
     //   Performs an atypical thing.
 
@@ -595,6 +667,7 @@ Which outputs Markdown code that renders like:
 >
 > Does typical things.
 > Or something like that.
+> Refer to [stuff()](foobar.scad#function-stuff) for more info.
 >
 > **Result:** For Atypical Cases
 >
@@ -614,6 +687,7 @@ line blocks:
     // Reason: This is a complex reason.
     //   It is a multi-line explanation
     //   about why this does what it does.
+    //   Refer to {{nonsense()}} for more info.
 
 Which outputs Markdown code that renders like:
 
@@ -626,6 +700,7 @@ Which outputs Markdown code that renders like:
 > This is a complex reason.
 > It is a multi-line explanation
 > about why this does what it does.
+> Refer to [nonsense()](foobar.scad#function-nonsense) for more info.
 
 
 Label Block Type
@@ -652,7 +727,7 @@ numbered list block:
     // DefineHeader(NumList): Steps
     // Steps: How to handle being on fire.
     //   Stop running around and panicing.
-    //   Drop to the ground.
+    //   Drop to the ground.  Refer to {{drop()}}.
     //   Roll on the ground to smother the flames.
 
 Which outputs Markdown code that renders like:
@@ -660,7 +735,7 @@ Which outputs Markdown code that renders like:
 > **Steps:** How to handle being on fire.
 >
 > 1. Stop running around and panicing.
-> 2. Drop to the ground.
+> 2. Drop to the ground.  Refer to [drop()](foobar.scad#function-drop).
 > 3. Roll on the ground to smother the flames.
 >
 
@@ -672,14 +747,14 @@ The BulletList block header type takes both title and body lines:
 
     // DefineHeader(BulletList): Side Effects
     // Side Effects: For Typical Uses
-    //   The variable `foo` gets set.
+    //   The variable {{$foo}} gets set.
     //   The default for subsequent calls is updated.
 
 Which outputs Markdown code that renders like:
 
 > **Side Effects:** For Typical Uses
 >
-> - The variable $foo gets set.
+> - The variable [$foo](foobar.scad#function-foo) gets set.
 > - The default for subsequent calls is updated.
 >
 
@@ -698,17 +773,17 @@ separated by `=` (equals signs):
 
     // DefineHeader(Table:^Link Name|Description): Anchors
     // Anchors: by Name
-    //   "link1" = Anchor for the joiner Located at the back side of the shape.
-    //   "a"/"b" = Anchor for the joiner Located at the front side of the shape.
+    //   "link1" = Anchor for the joiner Located at the {{BACK}} side of the shape.
+    //   "a"/"b" = Anchor for the joiner Located at the {{FRONT}} side of the shape.
 
 Which outputs Markdown code that renders like:
 
 > **Anchors:** by Name
 >
-> Link Name          | Description
-> ----------------------- | --------------------
-> `"link1"`        | Anchor for the joiner at the back side of the shape.
-> `"a"` / `"b"`  | Anchor for the joiner at the front side of the shape.
+> Link Name      | Description
+> -------------- | --------------------
+> `"link1"`      | Anchor for the joiner at the [BACK](constants.scad#constant-back) side of the shape.
+> `"a"` / `"b"`  | Anchor for the joiner at the [FRONT](constants.scad#constant-front) side of the shape.
 >
 
 You can have multiple subtables, separated by a line with only three dashes: `---`:
@@ -726,14 +801,14 @@ Which outputs Markdown code that renders like:
 > **Args:**
 >
 > Pos Arg     | What it Does
-> -------------- | --------------------
+> ----------- | --------------------
 > `foo`       | The foo argument.
 > `bar`       | The bar argument.
 >
-> Named Arg     | What it Does
-> -------------------- | --------------------
-> `baz`              | The baz argument.
-> `qux`              | The qux argument.
+> Named Arg   | What it Does
+> ----------- | --------------------
+> `baz`       | The baz argument.
+> `qux`       | The qux argument.
 >
 
 Defaults Configuration
