@@ -696,7 +696,7 @@ module gear(
     twist = atan2(thickness*tan(helical),p);
     attachable(anchor,spin,orient, r=p, l=thickness) {
         difference() {
-            linear_extrude(height=thickness, center=true, convexity=10, twist=twist) {
+            linear_extrude(height=thickness, center=true, convexity=teeth/2, twist=twist) {
                 gear2d(
                     pitch = pitch,
                     teeth = teeth,
@@ -927,7 +927,7 @@ module bevel_gear(
     ];
     attachable(anchor,spin,orient, r1=pr, r2=ipr, h=thickness, anchors=anchors) {
         difference() {
-            vnf_polyhedron(vnf, convexity=teeth);
+            vnf_polyhedron(vnf, convexity=teeth/2);
             if (shaft_diam > 0) {
                 cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
             }
@@ -1172,7 +1172,7 @@ module worm(
         mod=mod
     );
     attachable(anchor,spin,orient, d=d, l=l) {
-        vnf_polyhedron(vnf);
+        vnf_polyhedron(vnf, convexity=ceil(l/pitch)*2);
         children();
     }
 }
@@ -1209,6 +1209,26 @@ module worm(
 //   worm_gear(pitch=5, teeth=36, worm_diam=30, worm_starts=4);
 // Example: Metric Worm Gear
 //   worm_gear(mod=2, teeth=32, worm_diam=30, worm_starts=1);
+// Example(Anim,Frames=4,FrameMS=125,VPD=225,VPT=[-15,0,0]): Meshing Worm and Gear
+//   $fn=36;
+//   pitch = 5; starts = 4;
+//   worm_diam = 30; worm_length = 50;
+//   gear_teeth=36;
+//   right(worm_diam/2)
+//     yrot($t*360/starts)
+//       worm(d=worm_diam, l=worm_length, pitch=pitch, starts=starts, orient=BACK);
+//   left(pitch_radius(pitch=pitch, teeth=gear_teeth))
+//     zrot(-$t*360/gear_teeth)
+//       worm_gear(pitch=pitch, teeth=gear_teeth, worm_diam=worm_diam, worm_starts=starts);
+// Example: Meshing Worm and Gear Metricly
+//   $fn = 72;
+//   modulus = 2; starts = 3;
+//   worm_diam = 30; worm_length = 50;
+//   gear_teeth=36;
+//   right(worm_diam/2)
+//       worm(d=worm_diam, l=worm_length, mod=modulus, starts=starts, orient=BACK);
+//   left(pitch_radius(mod=modulus, teeth=gear_teeth))
+//       worm_gear(mod=modulus, teeth=gear_teeth, worm_diam=worm_diam, worm_starts=starts);
 // Example: Called as Function
 //   vnf = worm_gear(pitch=8, teeth=30, worm_diam=30, worm_starts=1);
 //   vnf_polyhedron(vnf);
@@ -1330,7 +1350,7 @@ module worm_gear(
     thickness = pointlist_bounds(vnf[0])[1].z;
     attachable(anchor,spin,orient, r=p, l=thickness) {
         difference() {
-            vnf_polyhedron(vnf);
+            vnf_polyhedron(vnf, convexity=teeth/2);
             if (shaft_diam > 0) {
                 cylinder(d=shaft_diam, l=worm_diam, center=true);
             }
