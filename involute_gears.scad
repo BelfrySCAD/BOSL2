@@ -1209,7 +1209,7 @@ module worm(
 //   worm_gear(pitch=5, teeth=36, worm_diam=30, worm_starts=4);
 // Example: Metric Worm Gear
 //   worm_gear(mod=2, teeth=32, worm_diam=30, worm_starts=1);
-// Example(Anim,Frames=4,FrameMS=125,VPD=225,VPT=[-15,0,0]): Meshing Worm and Gear
+// Example(Anim,Frames=4,FrameMS=125,VPD=220,VPT=[-15,0,0]): Meshing Worm and Gear
 //   $fn=36;
 //   pitch = 5; starts = 4;
 //   worm_diam = 30; worm_length = 50;

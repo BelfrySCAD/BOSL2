@@ -41,8 +41,7 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add --all
-        git commit -m "Wiki docs auto-regen."
-        git push
+        git commit -m "Wiki docs auto-regen." && git push || true
 
     - name: Bump Release Version
       run: |
@@ -51,6 +50,5 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add version.scad
-        git commit -m "Bump release version." 
-        git push
+        git commit -m "Bump release version." && git push || true
 
