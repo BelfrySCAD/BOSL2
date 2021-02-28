@@ -279,9 +279,14 @@ function _gear_q7(f,r,b,r2,t,s) = _gear_q6(b,s,t,(1-f)*max(b,r)+f*r2);        //
 // Example(2D): Metric Gear Tooth
 //   gear_tooth_profile(mod=2, teeth=20, pressure_angle=20);
 // Example(2D):
-//   gear_tooth_profile(pitch=5, teeth=20, pressure_angle=20, valleys=false);
+//   gear_tooth_profile(
+//       pitch=5, teeth=20, pressure_angle=20, valleys=false
+//   );
 // Example(2D): As a function
-//   stroke(gear_tooth_profile(pitch=5, teeth=20, pressure_angle=20, valleys=false), width=0.1);
+//   path = gear_tooth_profile(
+//       pitch=5, teeth=20, pressure_angle=20, valleys=false
+//   );
+//   stroke(path, width=0.1);
 function gear_tooth_profile(
     pitch = 3,
     teeth = 11,
@@ -612,27 +617,36 @@ module rack2d(
 // Example: Metric Gear
 //   gear(mod=2, teeth=20, thickness=8, shaft_diam=5);
 // Example: Helical Gear
-//   gear(pitch=5, teeth=20, thickness=10, shaft_diam=5, helical=-30, slices=12, $fa=1, $fs=1);
-// Example(2D): Assembly of Gears
+//   gear(
+//       pitch=5, teeth=20, thickness=10,
+//       shaft_diam=5, helical=-30, slices=12,
+//       $fa=1, $fs=1
+//   );
+// Example(Anim,Frames=8,VPT=[0,30,0],VPR=[0,0,0],VPD=300): Assembly of Gears
 //   n1 = 11; //red gear number of teeth
 //   n2 = 20; //green gear
 //   n3 = 5;  //blue gear
-//   n4 = 20; //orange gear
-//   n5 = 8;  //gray rack
+//   n4 = 16; //orange gear
+//   n5 = 9;  //gray rack
 //   pitch = 9; //all meshing gears need the same `pitch` (and the same `pressure_angle`)
 //   thickness    = 6;
 //   hole         = 3;
 //   rack_base    = 12;
-//   d1 =pitch_radius(pitch,n1);
-//   d12=pitch_radius(pitch,n1) + pitch_radius(pitch,n2);
-//   d13=pitch_radius(pitch,n1) + pitch_radius(pitch,n3);
-//   d14=pitch_radius(pitch,n1) + pitch_radius(pitch,n4);
-//   translate([ 0,    0, 0]) rotate([0,0, $t*360/n1])                 color([1.00,0.75,0.75]) gear(pitch,n1,thickness,hole);
-//   translate([ 0,  d12, 0]) rotate([0,0,-($t+n2/2-0*n1+1/2)*360/n2]) color([0.75,1.00,0.75]) gear(pitch,n2,thickness,hole);
-//   translate([ d13,  0, 0]) rotate([0,0,-($t-n3/4+n1/4+1/2)*360/n3]) color([0.75,0.75,1.00]) gear(pitch,n3,thickness,hole);
-//   translate([ d13,  0, 0]) rotate([0,0,-($t-n3/4+n1/4+1/2)*360/n3]) color([0.75,0.75,1.00]) gear(pitch,n3,thickness,hole);
-//   translate([-d14,  0, 0]) rotate([0,0,-($t-n4/4-n1/4+1/2-floor(n4/4)-3)*360/n4]) color([1.00,0.75,0.50]) gear(pitch,n4,thickness,hole,hide=n4-3);
-//   translate([(-floor(n5/2)-floor(n1/2)+$t+n1/2)*9, -d1+0.0, 0]) color([0.75,0.75,0.75]) rack(pitch=pitch,teeth=n5,thickness=thickness,height=rack_base,anchor=CENTER,orient=BACK);
+//   r1 = pitch_radius(pitch,n1);
+//   r2 = pitch_radius(pitch,n2);
+//   r3 = pitch_radius(pitch,n3);
+//   r4 = pitch_radius(pitch,n4);
+//   r5 = pitch_radius(pitch,n5);
+//   a1 =  $t * 360 / n1;
+//   a2 = -$t * 360 / n2 + 180/n2;
+//   a3 = -$t * 360 / n3;
+//   a4 = -$t * 360 / n4 - 7.5*180/n4;
+//   color("#f77")              zrot(a1) gear(pitch,n1,thickness,hole);
+//   color("#7f7") back(r1+r2)  zrot(a2) gear(pitch,n2,thickness,hole);
+//   color("#77f") right(r1+r3) zrot(a3) gear(pitch,n3,thickness,hole);
+//   color("#fc7") left(r1+r4)  zrot(a4) gear(pitch,n4,thickness,hole,hide=n4-3);
+//   color("#ccc") fwd(r1) right(pitch*$t)
+//       rack(pitch=pitch,teeth=n5,thickness=thickness,height=rack_base,anchor=CENTER,orient=BACK);
 function gear(
     pitch = 3,
     teeth = 11,
@@ -706,6 +720,7 @@ module gear(
                     backlash = backlash,
                     interior = interior
                 );
+                circle(d=shaft_diam+4);
             }
             if (shaft_diam > 0) {
                 cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
@@ -768,11 +783,36 @@ module gear(
 //   "pitchbase" = At the natural height of the pitch radius of the beveled gear.
 //   "flattop" = At the top of the flat top of the bevel gear.
 // Example: Beveled Gear
-//   bevel_gear(pitch=5, teeth=36, face_width=10, shaft_diam=5, pitch_angle=45, spiral_angle=0);
+//   bevel_gear(
+//       pitch=5, teeth=36, face_width=10, shaft_diam=5,
+//       pitch_angle=45, spiral_angle=0
+//   );
 // Example: Spiral Beveled Gear and Pinion
 //   t1 = 16; t2 = 28;
-//   bevel_gear(pitch=5, teeth=t1, mate_teeth=t2, slices=12, anchor="apex", orient=FWD);
-//   bevel_gear(pitch=5, teeth=t2, mate_teeth=t1, left_handed=true, slices=12, anchor="apex", spin=180/t2);
+//   bevel_gear(
+//       pitch=5, teeth=t1, mate_teeth=t2,
+//       slices=12, anchor="apex", orient=FWD
+//   );
+//   bevel_gear(
+//       pitch=5, teeth=t2, mate_teeth=t1, left_handed=true,
+//       slices=12, anchor="apex", spin=180/t2
+//   );
+// Example(Anim,Frames=4,VPD=175): Manual Spacing of Pinion and Gear
+//   t1 = 14; t2 = 28; pitch=5;
+//   back(pitch_radius(pitch=pitch, teeth=t2)) {
+//     yrot($t*360/t1)
+//     bevel_gear(
+//       pitch=pitch, teeth=t1, mate_teeth=t2, shaft_diam=5,
+//       slices=12, orient=FWD
+//     );
+//   }
+//   down(pitch_radius(pitch=pitch, teeth=t1)) {
+//     zrot($t*360/t2)
+//     bevel_gear(
+//       pitch=pitch, teeth=t2, mate_teeth=t1, left_handed=true,
+//       shaft_diam=5, slices=12, spin=180/t2
+//     );
+//   }
 function bevel_gear(
     pitch = 5,
     teeth = 20,
