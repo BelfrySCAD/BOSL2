@@ -124,7 +124,7 @@ The library files are as follows:
   - [`polyhedra.scad`](polyhedra.scad): Modules to create various regular and stellated polyhedra.
   - [`walls.scad`](walls.scad): Modules to create walls and structural elements for 3D printing.
   - [`cubetruss.scad`](cubetruss.scad): Modules to create modular open-framed trusses and joiners.
-  - [`involute_gears.scad`](involute_gears.scad): Modules and functions to make involute gears and racks.
+  - [`gears.scad`](gears.scad): Modules and functions to make gears, racks, worm, and worm gears.
   - [`joiners.scad`](joiners.scad): Modules to make joiner shapes for connecting separately printed objects.
   - [`sliders.scad`](sliders.scad): Modules for creating simple sliders and rails.
   - [`metric_screws.scad`](metric_screws.scad): Functions and modules to make metric screws, nuts, and screwholes.
