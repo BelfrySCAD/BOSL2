@@ -39,6 +39,8 @@ function is_homogeneous(l, depth=10) =
     !is_list(l) || l==[] ? false :
     let( l0=l[0] )
     [] == [for(i=[1:len(l)-1]) if( ! _same_type(l[i],l0, depth+1) )  0 ];
+
+function is_homogenous(l, depth=10) = is_homogeneous(l, depth);
                  
 function _same_type(a,b, depth) = 
     (depth==0) ||
