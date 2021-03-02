@@ -6,29 +6,17 @@
 //   include <BOSL2/beziers.scad>
 //////////////////////////////////////////////////////////////////////
 
-// Section: Terminology
-//   **Path**: A series of points joined by straight line segements.
-//   .
-//   **Bezier Curve**: A mathematical curve that joins two endpoints, following a curve determined by one or more control points.
-//   .
-//   **Endpoint**: A point that is on the end of a bezier segment.  This point lies on the bezier curve.
-//   .
-//   **Control Point**: A point that influences the shape of the curve that connects two endpoints.  This is often *NOT* on the bezier curve.
-//   .
-//   **Degree**: The number of control points, plus one endpoint, needed to specify a bezier segment.  Most beziers are cubic (degree 3).
-//   .
-//   **Bezier Segment**: A list consisting of an endpoint, one or more control points, and a final endpoint.  The number of control points is one less than the degree of the bezier.  A cubic (degree 3) bezier segment looks something like:
-//       `[endpt1, cp1, cp2, endpt2]`
-//   .
-//   **Bezier Path**: A list of bezier segments flattened out into a list of points, where each segment shares the endpoint of the previous segment as a start point. A cubic Bezier Path looks something like:
-//       `[endpt1, cp1, cp2, endpt2, cp3, cp4, endpt3]`
-//   **NOTE**: A "bezier path" is *NOT* a standard path.  It is only the points and controls used to define the curve.
-//   .
-//   **Bezier Patch**: A surface defining grid of (N+1) by (N+1) bezier points.  If a Bezier Segment defines a curved line, a Bezier Patch defines a curved surface.
-//   .
-//   **Bezier Surface**: A surface defined by a list of one or more bezier patches.
-//   .
-//   **Spline Steps**: The number of straight-line segments to split a bezier segment into, to approximate the bezier curve.  The more spline steps, the closer the approximation will be to the curve, but the slower it will be to generate.  Usually defaults to 16.
+// Terminology:
+//   Path = A series of points joined by straight line segements.
+//   Bezier Curve = A mathematical curve that joins two endpoints, following a curve determined by one or more control points.
+//   Endpoint = A point that is on the end of a bezier segment.  This point lies on the bezier curve.
+//   Control Point = A point that influences the shape of the curve that connects two endpoints.  This is often *NOT* on the bezier curve.
+//   Degree = The number of control points, plus one endpoint, needed to specify a bezier segment.  Most beziers are cubic (degree 3).
+//   Bezier Segment = A list consisting of an endpoint, one or more control points, and a final endpoint.  The number of control points is one less than the degree of the bezier.  A cubic (degree 3) bezier segment looks something like: `[endpt1, cp1, cp2, endpt2]`
+//   Bezier Path = A list of bezier segments flattened out into a list of points, where each segment shares the endpoint of the previous segment as a start point. A cubic Bezier Path looks something like: `[endpt1, cp1, cp2, endpt2, cp3, cp4, endpt3]`  **NOTE:** A "bezier path" is *NOT* a standard path.  It is only the points and controls used to define the curve.
+//   Bezier Patch = A surface defining grid of (N+1) by (N+1) bezier points.  If a Bezier Segment defines a curved line, a Bezier Patch defines a curved surface.
+//   Bezier Surface = A surface defined by a list of one or more bezier patches.
+//   Spline Steps = The number of straight-line segments to split a bezier segment into, to approximate the bezier curve.  The more spline steps, the closer the approximation will be to the curve, but the slower it will be to generate.  Usually defaults to 16.
 
 
 // Section: Segment Functions
@@ -38,6 +26,7 @@
 //   pt = bezier_points(curve, u);
 //   ptlist = bezier_points(curve, RANGE);
 //   ptlist = bezier_points(curve, LIST);
+// Topics: Bezier Segments
 // Description:
 //   Computes bezier points for bezier with control points specified by `curve` at parameter values
 //   specified by `u`, which can be a scalar or a list.  This function uses an optimized method which
@@ -184,6 +173,8 @@ function _bezier_matrix(N) =
 //   deriv = bezier_derivative(curve, u, <order>);
 //   derivs = bezier_derivative(curve, LIST, <order>);
 //   derivs = bezier_derivative(curve, RANGE, <order>);
+// Topics: Bezier Segments
+// See Also: bezier_curvature(), bezier_tangent(), bezier_points()
 // Description:
 //   Finds the `order`th derivative of the bezier segment at the given position `u`.
 //   The degree of the bezier segment is one less than the number of points in `curve`.
@@ -206,6 +197,8 @@ function bezier_derivative(curve, u, order=1) =
 //   tanvec = bezier_tangent(curve, u);
 //   tanvecs = bezier_tangent(curve, LIST);
 //   tanvecs = bezier_tangent(curve, RANGE);
+// Topics: Bezier Segments
+// See Also: bezier_curvature(), bezier_derivative(), bezier_points()
 // Description:
 //   Returns the unit vector of the tangent at the given position `u` on the bezier segment `curve`.
 // Arguments:
@@ -224,6 +217,8 @@ function bezier_tangent(curve, u) =
 //   crv = bezier_curvature(curve, u);
 //   crvlist = bezier_curvature(curve, LIST);
 //   crvlist = bezier_curvature(curve, RANGE);
+// Topics: Bezier Segments
+// See Also: bezier_tangent(), bezier_derivative(), bezier_points()
 // Description:
 //   Returns the curvature value for the given position `u` on the bezier segment `curve`.
 //   The curvature is the inverse of the radius of the tangent circle at the given point.
@@ -249,6 +244,8 @@ function bezier_curvature(curve, u) =
 // Function: bezier_curve()
 // Usage:
 //   path = bezier_curve(curve, n, <endpoint>);
+// Topics: Bezier Segments
+// See Also: bezier_curvature(), bezier_tangent(), bezier_derivative(), bezier_points()
 // Description:
 //   Takes a list of bezier curve control points and generates n points along the bezier path.  
 //   Points start at the first control point and are sampled every `1/n`th
@@ -279,6 +276,8 @@ function bezier_curve(curve,n,endpoint) = [each bezier_points(curve, [0:1/n:(n-0
 // Function: bezier_segment_closest_point()
 // Usage:
 //   u = bezier_segment_closest_point(bezier, pt, <max_err>);
+// Topics: Bezier Segments
+// See Also: bezier_points()
 // Description:
 //   Finds the closest part of the given bezier segment to point `pt`.
 //   The degree of the curve, N, is one less than the number of points in `curve`.
@@ -326,6 +325,8 @@ function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1) =
 // Function: bezier_segment_length()
 // Usage:
 //   pathlen = bezier_segment_length(curve, <start_u>, <end_u>, <max_deflect>);
+// Topics: Bezier Segments
+// See Also: bezier_points()
 // Description:
 //   Approximates the length of the bezier segment between start_u and end_u.
 // Arguments:
@@ -361,6 +362,8 @@ function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
 // Function: bezier_line_intersection()
 // Usage: 
 //   u = bezier_line_intersection(curve, line);
+// Topics: Bezier Segments, Geometry, Intersection
+// See Also: bezier_points(), bezier_segment_length(), bezier_segment_closest_point()
 // Description:
 //   Finds the parameter(s) of the 2d curve whose Bezier control points are `curve`
 //   corresponding to its intersection points with the line through
@@ -384,6 +387,8 @@ function bezier_line_intersection(curve, line) =
 // Usage:
 //   bez_path_pts = fillet3pts(p0, p1, p2, r);
 //   bez_path_pts = fillet3pts(p0, p1, p2, d=);
+// Topics: Bezier Segments, Rounding
+// See Also: bezier_points(), bezier_curve()
 // Description:
 //   Takes three points, defining two line segments, and works out the cubic (degree 3) bezier segment
 //   (and surrounding control points) needed to approximate a rounding of the corner with radius `r`.
@@ -433,6 +438,8 @@ function fillet3pts(p0, p1, p2, r, d, maxerr=0.1, w=0.5, dw=0.25) = let(
 //   pt = bezier_path_point(path, seg, u, <N>);
 //   ptlist = bezier_path_point(path, seg, LIST, <N>);
 //   path = bezier_path_point(path, seg, RANGE, <N>);
+// Topics: Bezier Paths
+// See Also: bezier_points(), bezier_curve()
 // Description:
 //   Returns the coordinates of bezier path segment `seg` at position `u`.
 // Arguments:
@@ -448,6 +455,8 @@ function bezier_path_point(path, seg, u, N=3) =
 // Function: bezier_path_closest_point()
 // Usage:
 //   res = bezier_path_closest_point(bezier,pt);
+// Topics: Bezier Paths
+// See Also: bezier_points(), bezier_curve(), bezier_segment_closest_point()
 // Description:
 //   Finds the closest part of the given bezier path to point `pt`.
 //   Returns [segnum, u] for the closest position on the bezier path to the given point `pt`.
@@ -490,6 +499,8 @@ function bezier_path_closest_point(path, pt, N=3, max_err=0.01, seg=0, min_seg=u
 // Function: bezier_path_length()
 // Usage:
 //   plen = bezier_path_length(path, <N>, <max_deflect>);
+// Topics: Bezier Paths
+// See Also: bezier_points(), bezier_curve(), bezier_segment_length()
 // Description:
 //   Approximates the length of the bezier path.
 // Arguments:
@@ -514,6 +525,8 @@ function bezier_path_length(path, N=3, max_deflect=0.001) =
 // Function: bezier_path()
 // Usage:
 //   path = bezier_path(bezier, <splinesteps>, <N>)
+// Topics: Bezier Paths
+// See Also: bezier_points(), bezier_curve()
 // Description:
 //   Takes a bezier path and converts it into a path of points.
 // Arguments:
@@ -547,6 +560,8 @@ function bezier_path(bezier, splinesteps=16, N=3) =
 // Function: path_to_bezier()
 // Usage:
 //   bezpath = path_to_bezier(path, <closed>, <tangents>, <uniform>, <size=>|<relsize=>);
+// Topics: Bezier Paths, Rounding
+// See Also: path_tangents(), fillet_path()
 // Description:
 //   Given a 2d or 3d input path and optional list of tangent vectors, computes a cubic (degree 3) bezier
 //   path that passes through every point on the input path and matches the tangent vectors.  If you do
@@ -627,6 +642,8 @@ function path_to_bezier(path, closed=false, tangents, uniform=false, size, relsi
 // Function: fillet_path()
 // Usage:
 //   bezpath = fillet_path(pts, fillet, <maxerr>);
+// Topics: Bezier Paths, Rounding
+// See Also: path_to_bezier(), bezier_path()
 // Description:
 //   Takes a 3D path and fillets the corners, returning a 3d cubic (degree 3) bezier path.
 // Arguments:
@@ -654,6 +671,8 @@ function fillet_path(pts, fillet, maxerr=0.1) = concat(
 // Function: bezier_close_to_axis()
 // Usage:
 //   bezpath = bezier_close_to_axis(bezier, <axis>, <N>);
+// Topics: Bezier Paths
+// See Also: bezier_offset()
 // Description:
 //   Takes a 2D bezier path and closes it to the specified axis.
 // Arguments:
@@ -694,6 +713,8 @@ function bezier_close_to_axis(bezier, axis="X", N=3) =
 // Function: bezier_offset()
 // Usage:
 //   bezpath = bezier_offset(offset, bezier, <N>);
+// Topics: Bezier Paths
+// See Also: bezier_close_to_axis()
 // Description:
 //   Takes a 2D bezier path and closes it with a matching reversed path that is offset by the given `offset` [X,Y] distance.
 // Arguments:
@@ -731,6 +752,8 @@ function bezier_offset(offset, bezier, N=3) =
 // Module: bezier_polygon()
 // Usage:
 //   bezier_polygon(bezier, <splinesteps>, <N>) {
+// Topics: Bezier Paths
+// See Also: bezier_path()
 // Description:
 //   Takes a closed 2D bezier path, and creates a 2D polygon from it.
 // Arguments:
@@ -761,6 +784,8 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 // Module: trace_bezier()
 // Usage:
 //   trace_bezier(bez, <size>, <N=>) {
+// Topics: Bezier Paths, Debugging
+// See Also: bezier_path()
 // Description:
 //   Renders 2D or 3D bezier paths and their associated control points.
 //   Useful for debugging bezier paths.
@@ -795,6 +820,8 @@ module trace_bezier(bez, size=1, N=3) {
 //   pt = bezier_patch_points(patch, u, v);
 //   ptgrid = bezier_patch_points(patch, LIST, LIST);
 //   ptgrid = bezier_patch_points(patch, RANGE, RANGE);
+// Topics: Bezier Patches
+// See Also: bezier_points(), bezier_curve(), bezier_path(), bezier_triangle_point()
 // Description:
 //   Given a square 2-dimensional array of (N+1) by (N+1) points size, that represents a Bezier Patch
 //   of degree N, returns a point on that surface, at positions `u`, and `v`.  A cubic bezier patch
@@ -837,6 +864,8 @@ function bezier_patch_points(patch, u, v) =
 // Function: bezier_triangle_point()
 // Usage:
 //   pt = bezier_triangle_point(tri, u, v);
+// Topics: Bezier Patches
+// See Also: bezier_points(), bezier_curve(), bezier_path(), bezier_patch_points()
 // Description:
 //   Given a triangular 2-dimensional array of N+1 by (for the first row) N+1 points,
 //   that represents a Bezier triangular patch of degree N, returns a point on
@@ -870,6 +899,8 @@ function bezier_triangle_point(tri, u, v) =
 // Function: is_tripatch()
 // Usage:
 //   bool = is_tripatch(x);
+// Topics: Bezier Patches, Type Checking
+// See Also: is_rectpatch(), is_patch()
 // Description:
 //   Returns true if the given item is a triangular bezier patch.
 // Arguments:
@@ -881,6 +912,8 @@ function is_tripatch(x) =
 // Function: is_rectpatch()
 // Usage:
 //   bool = is_rectpatch(x);
+// Topics: Bezier Patches, Type Checking
+// See Also: is_tripatch(), is_patch()
 // Description:
 //   Returns true if the given item is a rectangular bezier patch.
 // Arguments:
@@ -892,6 +925,8 @@ function is_rectpatch(x) =
 // Function: is_patch()
 // Usage:
 //   bool = is_patch(x);
+// Topics: Bezier Patches, Type Checking
+// See Also: is_tripatch(), is_rectpatch()
 // Description:
 //   Returns true if the given item is a bezier patch.
 // Arguments:
@@ -903,6 +938,8 @@ function is_patch(x) =
 // Function: bezier_patch()
 // Usage:
 //   vnf = bezier_patch(patch, <splinesteps>, <vnf=>, <style=>);
+// Topics: Bezier Patches
+// See Also: bezier_points(), bezier_curve(), bezier_path(), bezier_patch_points(), bezier_triangle_point()
 // Description:
 //   Calculate vertices and faces for forming a partial polyhedron from the given bezier rectangular
 //   or triangular patch.  Returns a [VNF structure](vnf.scad): a list containing two elements.  The first is the
@@ -1052,6 +1089,8 @@ function _bezier_triangle(tri, splinesteps=16, vnf=EMPTY_VNF) =
 // Function: bezier_patch_flat()
 // Usage:
 //   patch = bezier_patch_flat(size, <N=>, <spin=>, <orient=>, <trans=>);
+// Topics: Bezier Patches
+// See Also: bezier_patch_points()
 // Description:
 //   Returns a flat rectangular bezier patch of degree `N`, centered on the XY plane.
 // Arguments:
@@ -1079,6 +1118,8 @@ function bezier_patch_flat(size=[100,100], N=4, spin=0, orient=UP, trans=[0,0,0]
 // Function: patch_reverse()
 // Usage:
 //   rpatch = patch_reverse(patch);
+// Topics: Bezier Patches
+// See Also: bezier_patch_points(), bezier_patch_flat()
 // Description:
 //   Reverses the patch, so that the faces generated from it are flipped back to front.
 // Arguments:
@@ -1093,6 +1134,8 @@ function patch_reverse(patch) =
 // Function: bezier_surface()
 // Usage:
 //   vnf = bezier_surface(patches, <splinesteps>, <vnf=>, <style=>);
+// Topics: Bezier Patches
+// See Also: bezier_patch_points(), bezier_patch_flat()
 // Description:
 //   Calculate vertices and faces for forming a (possibly partial) polyhedron from the given
 //   rectangular and/or triangular bezier patches.  Returns a [VNF structure](vnf.scad): a list
@@ -1134,6 +1177,8 @@ function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="defaul
 // Module: trace_bezier_patches()
 // Usage:
 //   trace_bezier_patches(patches, [size], [splinesteps], [showcps], [showdots], [showpatch], [convexity], [style]);
+// Topics: Bezier Patches, Debugging
+// See Also: bezier_patch_points(), bezier_patch_flat(), bezier_surface()
 // Description:
 //   Shows the surface, and optionally, control points of a list of bezier patches.
 // Arguments:

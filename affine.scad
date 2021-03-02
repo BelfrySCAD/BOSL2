@@ -43,7 +43,7 @@ function ident(n) = [
 // Function: is_affine()
 // Usage:
 //   bool = is_affine(x,<dim>);
-// Topics: Affine, Matrices, Transforms
+// Topics: Affine, Matrices, Transforms, Type Checking
 // See Also: is_matrix()
 // Description:
 //   Tests if the given value is an affine matrix, possibly also checking it's dimenstion.
@@ -67,7 +67,7 @@ function is_affine(x,dim=[2,3]) =
 // Function: is_2d_transform()
 // Usage:
 //   x = is_2d_transform(t);
-// Topics: Affine, Matrices, Transforms
+// Topics: Affine, Matrices, Transforms, Type Checking
 // See Also: is_affine(), is_matrix()
 // Description:
 //   Checks if the input is a 3D transform that does not act on the z coordinate, except possibly

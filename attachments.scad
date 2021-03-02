@@ -86,6 +86,8 @@ $tags_hidden = [];
 // Function: anchorpt()
 // Usage:
 //   a = anchorpt(name, pos, <orient>, <spin>);
+// Topics: Attachments
+// See Also: attach_geom(), reorient(), attachable()
 // Description:
 //   Creates a anchor data structure.
 // Arguments:
@@ -114,6 +116,9 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 //   geom = attach_geom(r=|d=, ...);
 // Usage: VNF Geometry
 //   geom = attach_geom(vnf=, <extent=>, ...);
+//
+// Topics: Attachments
+// See Also: reorient(), attachable()
 //
 // Description:
 //   Given arguments that describe the geometry of an attachable object, returns the internal geometry description.
@@ -276,6 +281,8 @@ function attach_geom(
 // Function: attach_geom_2d()
 // Usage:
 //   bool = attach_geom_2d(geom);
+// Topics: Attachments
+// See Also: reorient(), attachable()
 // Description:
 //   Returns true if the given attachment geometry description is for a 2D shape.
 function attach_geom_2d(geom) =
@@ -287,6 +294,8 @@ function attach_geom_2d(geom) =
 // Function: attach_geom_size()
 // Usage:
 //   bounds = attach_geom_size(geom);
+// Topics: Attachments
+// See Also: reorient(), attachable()
 // Description:
 //   Returns the `[X,Y,Z]` bounding size for the given attachment geometry description.
 function attach_geom_size(geom) =
@@ -343,6 +352,8 @@ function attach_geom_size(geom) =
 //   mat = attach_transform(anchor, spin, orient, geom);
 // Usage: To Transform Points, Paths, Patches, or VNFs
 //   new_p = attach_transform(anchor, spin, orient, geom, p);
+// Topics: Attachments
+// See Also: reorient(), attachable()
 // Description:
 //   Returns the affine3d transformation matrix needed to `anchor`, `spin`, and `orient`
 //   the given geometry `geom` shape into position.
@@ -417,6 +428,8 @@ function attach_transform(anchor, spin, orient, geom, p) =
 // Function: find_anchor()
 // Usage:
 //   anchorinfo = find_anchor(anchor, geom);
+// Topics: Attachments
+// See Also: reorient(), attachable()
 // Description:
 //   Calculates the anchor data for the given `anchor` vector or name, in the given attachment
 //   geometry.  Returns `[ANCHOR, POS, VEC, ANG]` where `ANCHOR` is the requested anchorname
@@ -611,6 +624,8 @@ function find_anchor(anchor, geom) =
 // Function: attachment_is_shown()
 // Usage:
 //   bool = attachment_is_shown(tags);
+// Topics: Attachments
+// See Also: reorient(), attachable()
 // Description:
 //   Returns true if the given space-delimited string of tag names should currently be shown.
 function attachment_is_shown(tags) =
@@ -649,6 +664,9 @@ function attachment_is_shown(tags) =
 // Usage: VNF Geometry
 //   mat = reorient(anchor, spin, <orient>, vnf, <extent>, ...);
 //   pts = reorient(anchor, spin, <orient>, vnf, <extent>, p=, ...);
+//
+// Topics: Attachments
+// See Also: reorient(), attachable()
 //
 // Description:
 //   Given anchor, spin, orient, and general geometry info for a managed volume, this calculates
@@ -751,6 +769,9 @@ function reorient(
 //   attachable(anchor, spin, <orient>, r=|d=, ...) {...}
 // Usage: VNF Geometry
 //   attachable(anchor, spin, <orient>, vnf=, <extent=>, ...) {...}
+//
+// Topics: Attachments
+// See Also: reorient()
 //
 // Description:
 //   Manages the anchoring, spin, orientation, and attachments for a 3D volume or 2D area.
@@ -959,6 +980,10 @@ module attachable(
 // Module: position()
 // Usage:
 //   position(from) {...}
+//
+// Topics: Attachments
+// See Also: attachable()
+//
 // Description:
 //   Attaches children to a parent object at an anchor point.
 // Arguments:
@@ -987,6 +1012,8 @@ module position(from)
 // Usage:
 //   attach(from, <overlap=>, <norot=>) {...}
 //   attach(from, to, <overlap=>, <norot=>) {...}
+// Topics: Attachments
+// See Also: attachable(), position(), face_profile(), edge_profile(), corner_profile()
 // Description:
 //   Attaches children to a parent object at an anchor point and orientation.
 //   Attached objects will be overlapped into the parent object by a little bit,
@@ -1030,6 +1057,8 @@ module attach(from, to, overlap, norot=false)
 // Module: face_profile()
 // Usage:
 //   face_profile(faces, r|d=, <convexity=>) {...}
+// Topics: Attachments
+// See Also: attachable(), position(), attach(), edge_profile(), corner_profile()
 // Description:
 //   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face.
 // Arguments:
@@ -1058,6 +1087,8 @@ module face_profile(faces=[], r, d, convexity=10) {
 // Module: edge_profile()
 // Usage:
 //   edge_profile(<edges>, <except>, <convexity>) {...}
+// Topics: Attachments
+// See Also: attachable(), position(), attach(), face_profile(), corner_profile()
 // Description:
 //   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation
 //   and extruded length to be `diff()`ed away, to give the edge a matching profile.
@@ -1108,6 +1139,8 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 // Module: corner_profile()
 // Usage:
 //   corner_profile(<corners>, <except>, <r=|d=>, <convexity=>) {...}
+// Topics: Attachments
+// See Also: attachable(), position(), attach(), face_profile(), edge_profile()
 // Description:
 //   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
 //   to the selected corners with the appropriate orientation.  Tags it as a "mask" to allow it to be
@@ -1171,6 +1204,8 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 // Module: edge_mask()
 // Usage:
 //   edge_mask(<edges>, <except>) {...}
+// Topics: Attachments
+// See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask()
 // Description:
 //   Takes a 3D mask shape, and attaches it to the given edges, with the
 //   appropriate orientation to be `diff()`ed away.
@@ -1213,6 +1248,8 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 // Module: corner_mask()
 // Usage:
 //   corner_mask(<corners>, <except>) {...}
+// Topics: Attachments
+// See Also: attachable(), position(), attach(), face_profile(), edge_profile(), edge_mask()
 // Description:
 //   Takes a 3D mask shape, and attaches it to the given corners, with the appropriate
 //   orientation to be `diff()`ed away.  The 3D corner mask shape should be designed to
@@ -1253,6 +1290,8 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 // Module: tags()
 // Usage:
 //   tags(tags) {...}
+// Topics: Attachments
+// See Also: recolor(), hide(), show(), diff(), intersect()
 // Description:
 //   Marks all children with the given tags, so that they will `hide()`/`show()`/`diff()`  correctly.
 //   This is especially useful for working with children that are not attachment enhanced, such as:
@@ -1280,6 +1319,8 @@ module tags(tags)
 // Module: recolor()
 // Usage:
 //   recolor(c) {...}
+// Topics: Attachments
+// See Also: tags(), hide(), show(), diff(), intersect()
 // Description:
 //   Sets the color for children that can use the $color special variable.
 // Arguments:
@@ -1296,6 +1337,8 @@ module recolor(c)
 // Module: hide()
 // Usage:
 //   hide(tags) {...}
+// Topics: Attachments
+// See Also: tags(), recolor(), show(), diff(), intersect()
 // Description:
 //   Hides all children with the given tags.  Overrides any previous `hide()` or `show()` calls.
 // Example:
@@ -1314,6 +1357,8 @@ module hide(tags="")
 // Module: show()
 // Usage:
 //   show(tags) {...}
+// Topics: Attachments
+// See Also: tags(), recolor(), hide(), diff(), intersect()
 // Description:
 //   Shows only children with the given tags.  Overrides any previous `hide()` or `show()` calls.
 // Example:
@@ -1333,6 +1378,8 @@ module show(tags="")
 // Usage:
 //   diff(neg, <keep>) {...}
 //   diff(neg, pos, <keep>) {...}
+// Topics: Attachments
+// See Also: tags(), recolor(), show(), hide(), intersect()
 // Description:
 //   If `neg` is given, takes the union of all children with tags that are in `neg`, and differences
 //   them from the union of all children with tags in `pos`.  If `pos` is not given, then all items in
@@ -1391,6 +1438,8 @@ module diff(neg, pos, keep)
 // Usage:
 //   intersect(a, <keep=>) {...}
 //   intersect(a, b, <keep=>) {...}
+// Topics: Attachments
+// See Also: tags(), recolor(), show(), hide(), diff()
 // Description:
 //   If `a` is given, takes the union of all children with tags that are in `a`, and `intersection()`s
 //   them with the union of all children with tags in `b`.  If `b` is not given, then the union of all
@@ -1438,6 +1487,8 @@ module intersect(a, b=undef, keep=undef)
 // Module: hulling()
 // Usage:
 //   hulling(a) {...}
+// Topics: Attachments
+// See Also: tags(), recolor(), show(), hide(), diff(), intersect()
 // Description:
 //   If `a` is not given, then all children are `hull()`ed together.
 //   If `a` is given as a string, then all children with `$tags` that are in `a` are
