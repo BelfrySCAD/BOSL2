@@ -18,7 +18,7 @@
 
 
 // Function: is_homogeneous()
-// Aliases: is_homogenous()
+// Alias: is_homogenous()
 // Usage:
 //   bool = is_homogeneous(list,depth);
 // Topics: List Handling, Type Checking
