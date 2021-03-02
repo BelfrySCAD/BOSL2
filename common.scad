@@ -212,7 +212,7 @@ function is_list_of(list,pattern) =
 // Usage:
 //   bool = is_consistent(list);
 // Topics: Type Checking
-// See Also: typeof(), is_type(), is_str(), is_def(), is_int(), is_range(), is_homogenous()
+// See Also: typeof(), is_type(), is_str(), is_def(), is_int(), is_range(), is_homogeneous()
 // Description:
 //   Tests whether input is a list of entries which all have the same list structure
 //   and are filled with finite numerical data. It returns `true`for the empty list. 
@@ -238,7 +238,7 @@ function _list_pattern(list) =
 // Usage:
 //   bool = same_shape(a,b);
 // Topics: Type Checking
-// See Also: is_homogenous(), is_consistent()
+// See Also: is_homogeneous(), is_consistent()
 // Description:
 //   Tests whether the inputs `a` and `b` are both numeric and are the same shaped list.
 // Example:
@@ -251,7 +251,7 @@ function same_shape(a,b) = _list_pattern(a) == b*0;
 // Usage:
 //   check = is_bool_list(list,<length>)
 // Topics: Type Checking
-// See Also: is_homogenous(), is_consistent()
+// See Also: is_homogeneous(), is_consistent()
 // Description:
 //   Tests whether input is a list containing only booleans, and optionally checks its length.
 // Arguments:
