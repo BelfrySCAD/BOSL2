@@ -45,4 +45,5 @@ PrioritizeFiles:
   structs.scad
 DefineHeader(BulletList): Side Effects
 DefineHeader(Table:Anchor&nbsp;Name|Position): Extra Anchors
+DefineHeader(Table:Name|Definition): Terminology
 

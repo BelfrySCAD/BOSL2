@@ -104,12 +104,16 @@ INCH = 25.4;
 //   Vectors useful for `rotate()`, `mirror()`, and `anchor` arguments for `cuboid()`, `cyl()`, etc.
 
 // Constant: LEFT
+// Topics: Constants, Vectors
+// See Also: RIGHT, FRONT, BACK, UP, DOWN, CENTER, ALLPOS, ALLNEG
 // Description: Vector pointing left.  [-1,0,0]
 // Example(3D): Usage with `anchor`
 //   cuboid(20, anchor=LEFT);
 LEFT  = [-1,  0,  0];
 
 // Constant: RIGHT
+// Topics: Constants, Vectors
+// See Also: LEFT, FRONT, BACK, UP, DOWN, CENTER, ALLPOS, ALLNEG
 // Description: Vector pointing right.  [1,0,0]
 // Example(3D): Usage with `anchor`
 //   cuboid(20, anchor=RIGHT);
@@ -117,6 +121,8 @@ RIGHT = [ 1,  0,  0];
 
 // Constant: FRONT
 // Aliases: FWD, FORWARD
+// Topics: Constants, Vectors
+// See Also: LEFT, RIGHT, BACK, UP, DOWN, CENTER, ALLPOS, ALLNEG
 // Description: Vector pointing forward.  [0,-1,0]
 // Example(3D): Usage with `anchor`
 //   cuboid(20, anchor=FRONT);
@@ -125,6 +131,8 @@ FWD = FRONT;
 FORWARD = FRONT;
 
 // Constant: BACK
+// Topics: Constants, Vectors
+// See Also: LEFT, RIGHT, FRONT, UP, DOWN, CENTER, ALLPOS, ALLNEG
 // Description: Vector pointing back.  [0,1,0]
 // Example(3D): Usage with `anchor`
 //   cuboid(20, anchor=BACK);
@@ -132,6 +140,8 @@ BACK  = [ 0,  1,  0];
 
 // Constant: BOTTOM
 // Aliases: BOT, BTM, DOWN
+// Topics: Constants, Vectors
+// See Also: LEFT, RIGHT, FRONT, BACK, UP, CENTER, ALLPOS, ALLNEG
 // Description: Vector pointing down.  [0,0,-1]
 // Example(3D): Usage with `anchor`
 //   cuboid(20, anchor=BOTTOM);
@@ -142,6 +152,8 @@ DOWN = BOTTOM;
 
 // Constant: TOP
 // Aliases: UP
+// Topics: Constants, Vectors
+// See Also: LEFT, RIGHT, FRONT, BACK, DOWN, CENTER, ALLPOS, ALLNEG
 // Description: Vector pointing up.  [0,0,1]
 // Example(3D): Usage with `anchor`
 //   cuboid(20, anchor=TOP);
@@ -149,12 +161,16 @@ TOP = [ 0,  0,  1];
 UP = TOP;
 
 // Constant: ALLPOS
+// Topics: Constants, Vectors
+// See Also: LEFT, RIGHT, FRONT, BACK, UP, DOWN, CENTER, ALLNEG
 // Description: Vector pointing right, back, and up.  [1,1,1]
 // Example(3D): Usage with `anchor`
 //   cuboid(20, anchor=ALLPOS);
 ALLPOS = [ 1,  1,  1];  // Vector pointing X+,Y+,Z+.
 
 // Constant: ALLNEG
+// Topics: Constants, Vectors
+// See Also: LEFT, RIGHT, FRONT, BACK, UP, DOWN, CENTER, ALLPOS
 // Description: Vector pointing left, forwards, and down.  [-1,-1,-1]
 // Example(3D): Usage with `anchor`
 //   cuboid(20, anchor=ALLNEG);
@@ -162,6 +178,8 @@ ALLNEG = [-1, -1, -1];  // Vector pointing X-,Y-,Z-.
 
 // Constant: CENTER
 // Aliases: CTR
+// Topics: Constants, Vectors
+// See Also: LEFT, RIGHT, FRONT, BACK, UP, DOWN, ALLNEG, ALLPOS
 // Description: Zero vector.  Centered.  [0,0,0]
 // Example(3D): Usage with `anchor`
 //   cuboid(20, anchor=CENTER);
