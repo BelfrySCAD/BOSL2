@@ -6,9 +6,9 @@ module test_hull() {
     assert_equal(hull([[3,4,1],[5,5,3]]), [0,1]);
 
     test_collinear_2d = let(u = unit([5,3]))    [ for(i = [9,2,3,4,5,7,12,15,13]) i * u ];
-    assert_equal(hull(test_collinear_2d), [7,1]);
+    assert_equal(sort(hull(test_collinear_2d)), [1,7]);
     test_collinear_3d = let(u = unit([5,3,2]))    [ for(i = [9,2,3,4,5,7,12,15,13]) i * u ];
-    assert_equal(hull(test_collinear_3d), [7,1]);
+    assert_equal(sort(hull(test_collinear_3d)), [1,7]);
 
     /*    // produces some extra points along edges
     test_square_2d = [for(x=[1:5], y=[2:6]) [x,y]];
@@ -105,9 +105,9 @@ module test_hull2d_path() {
     assert_equal(hull([[3,4,1],[5,5,3]]), [0,1]);
 
     test_collinear_2d = let(u = unit([5,3]))    [ for(i = [9,2,3,4,5,7,12,15,13]) i * u ];
-    assert_equal(hull(test_collinear_2d), [7,1]);
+    assert_equal(sort(hull(test_collinear_2d)), [1,7]);
     test_collinear_3d = let(u = unit([5,3,2]))    [ for(i = [9,2,3,4,5,7,12,15,13]) i * u ];
-    assert_equal(hull(test_collinear_3d), [7,1]);
+    assert_equal(sort(hull(test_collinear_3d)), [1,7]);
 
     rand10_2d = [[1.55356, -1.98965], [4.23157, -0.947788], [-4.06193, -1.55463],
                  [1.23889, -3.73133], [-1.02637, -4.0155], [4.26806, -4.61909],

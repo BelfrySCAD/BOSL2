@@ -80,7 +80,7 @@ function _backtracking(i,points,h,t,m) =
     _backtracking(i,points,h,t,m-1) ;
 
 // clockwise check (2d)
-function _is_cw(a,b,c) = cross(a-c,b-c)<=0;
+function _is_cw(a,b,c) = cross(a-c,b-c)<-EPSILON*norm(a-c)*norm(b-c);
 
 
 // Function: hull2d_path()
@@ -100,13 +100,7 @@ function _is_cw(a,b,c) = cross(a-c,b-c)<=0;
 //
 function hull2d_path(points) =
     assert(is_path(points,2),"Invalid input to hull2d_path")
-    len(points) < 2 ? []
-  : len(points) == 2 ? [0,1]
-  : let(tri=noncollinear_triple(points, error=false))
-    tri == [] ? _hull_collinear(points)
-  :
-    assert(is_path(points,2))
-    assert(len(points)>=3, "Point list must contain at least 3 points.")
+    len(points) < 2 ? [] :
     let( n  = len(points), 
          ip = sortidx(points) )
     // lower hull points
@@ -134,11 +128,17 @@ function hull2d_path(points) =
 function _hull_collinear(points) =
     let(
         a = points[0],
-        n = points[1] - a,
+        i = max_index([for(pt=points) norm(pt-a)]),
+        n = points[i] - a
+    )
+    norm(n)==0 ? [0]
+    :
+    let(
         points1d = [ for(p = points) (p-a)*n ],
         min_i = min_index(points1d),
         max_i = max_index(points1d)
     ) [min_i, max_i];
+
 
 
 // Function: hull3d_faces()
