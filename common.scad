@@ -244,7 +244,7 @@ function _list_pattern(list) =
 // Example:
 //   same_shape([3,[4,5]],[7,[3,4]]);   // Returns true
 //   same_shape([3,4,5], [7,[3,4]]);    // Returns false
-function same_shape(a,b) = _list_pattern(a) == b*0;
+function same_shape(a,b) = is_def(b) && _list_pattern(a) == b*0;
 
 
 // Function: is_bool_list()

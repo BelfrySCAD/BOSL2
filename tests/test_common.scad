@@ -245,6 +245,12 @@ test_is_consistent();
 module test_same_shape() {
     assert(same_shape([3,[4,5]],[7,[3,4]]));
     assert(!same_shape([3,4,5], [7,[3,4]]));
+    assert(!same_shape([3,4,5],undef));
+    assert(!same_shape([5,3],3));
+    assert(!same_shape(undef,[3,4]));
+    assert(same_shape(4,5));
+    assert(!same_shape(5,undef));
+           
 }
 test_same_shape();
 
