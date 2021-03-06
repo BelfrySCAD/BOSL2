@@ -1270,6 +1270,12 @@ function path_cut_segs(path,cutlens,closed=false) =
 //   vector to the path.  It tries to find a normal vector that is coplanar to the path near the cut
 //   point.  If this fails it will return a normal vector parallel to the xy plane.  The output with
 //   direction vectors will be `[point, next_index, tangent, normal]`.
+//   .
+//   If you give the very last point of the path as a cut point then the returned index will be
+//   one larger than the last index (so it will not be a valid index).  If you use the closed
+//   option then the returned index will be equal to the path length for cuts along the closing
+//   path segment, and if you give a point equal to the path length you will get an
+//   index of len(path)+1 for the index.  
 //
 // Arguments:
 //   path = path to cut
@@ -1286,8 +1292,10 @@ function path_cut_segs(path,cutlens,closed=false) =
 function path_cut_points(path, dists, closed=false, direction=false) =
     let(long_enough = len(path) >= (closed ? 3 : 2))
     assert(long_enough,len(path)<2 ? "Two points needed to define a path" : "Closed path must include three points")
-    !is_list(dists)? path_cut_points(path, [dists],closed, direction)[0]
-    : let(cuts = _path_cut_points(path,dists,closed))
+    is_num(dists) ? path_cut_points(path, [dists],closed, direction)[0] :
+    assert(is_vector(dists))
+    assert(list_increasing(dists), "Cut distances must be an increasing list")
+    let(cuts = _path_cut_points(path,dists,closed))
     !direction
        ? cuts
        : let(
@@ -1300,20 +1308,23 @@ function path_cut_points(path, dists, closed=false, direction=false) =
 function _path_cut_points(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[]) =
     dind == len(dists) ? result :
     let(
-        lastpt = len(result)>0? select(result,-1)[0] : [],
-        dpartial = len(result)==0? 0 : norm(lastpt-path[pind]),
-        nextpoint = dpartial > dists[dind]-dtotal?
-            [lerp(lastpt,path[pind], (dists[dind]-dtotal)/dpartial),pind] :
-            _path_cut_single(path, dists[dind]-dtotal-dpartial, closed, pind)
-    ) is_undef(nextpoint)?
-        concat(result, repeat(undef,len(dists)-dind)) :
-        _path_cut_points(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
+        lastpt = len(result)==0? [] : select(result,-1)[0],       // location of last cut point
+        dpartial = len(result)==0? 0 : norm(lastpt-select(path,pind)),  // remaining length in segment
+        nextpoint = dists[dind] <= dpartial+dtotal  // Do we have enough length left on the current segment?
+           ? [lerp(lastpt,select(path,pind),(dists[dind]-dtotal)/dpartial),pind] 
+           : _path_cut_single(path, dists[dind]-dtotal-dpartial, closed, pind)
+    ) 
+    _path_cut_points(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
+
 
 // Search for a single cut point in the path
 function _path_cut_single(path, dist, closed=false, ind=0, eps=1e-7) =
-    ind>=len(path)? undef :
-    ind==len(path)-1 && !closed? (dist<eps? [path[ind],ind+1] : undef) :
-    let(d = norm(path[ind]-select(path,ind+1))) d > dist ?
+    // If we get to the very end of the path (ind is last point or wraparound for closed case) then
+    // check if we are within epsilon of the final path point.  If not we're out of path, so we fail
+    ind==len(path)-(closed?0:1) ?
+       assert(dist<eps,"Path is too short for specified cut distance")
+       [select(path,ind),ind+1]
+    :let(d = norm(path[ind]-select(path,ind+1))) d > dist ?
         [lerp(path[ind],select(path,ind+1),dist/d), ind+1] :
         _path_cut_single(path, dist-d,closed, ind+1, eps);
 
@@ -1347,17 +1358,60 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
             zeros = path[0]*0,
             nextind = cuts[ind][1],
             nextpath = unit(select(path, nextind+1)-select(path, nextind),zeros),
-            thispath = unit(select(path, nextind) - path[nextind-1],zeros),
-            lastpath = unit(path[nextind-1] - select(path, nextind-2),zeros),
+            thispath = unit(select(path, nextind) - select(path,nextind-1),zeros),
+            lastpath = unit(select(path,nextind-1) - select(path, nextind-2),zeros),
             nextdir =
                 nextind==len(path) && !closed? lastpath :
-                (nextind<=len(path)-2 || closed) && approx(cuts[ind][0], path[nextind],eps)?
-                    unit(nextpath+thispath) :
-                    (nextind>1 || closed) && approx(cuts[ind][0],path[nextind-1],eps)?
-                        unit(thispath+lastpath) :
-                        thispath
+                (nextind<=len(path)-2 || closed) && approx(cuts[ind][0], path[nextind],eps)
+                   ? unit(nextpath+thispath)
+              : (nextind>1 || closed) && approx(cuts[ind][0],select(path,nextind-1),eps)
+                   ? unit(thispath+lastpath)
+              :  thispath
         ) nextdir
     ];
+
+
+// Function: path_cut_segs()
+// Usage:
+//    path_list = path_cut_segs(path, cutdist, <closed>);
+// Description:
+//    Given a list of distances in `cutdist`, cut the path into
+//    subpaths at those lengths, returning a list of paths.
+//    If the input path is closed then the final path will include the
+//    original starting point.  The list of cut distances must be
+//    in ascending order.  If you repeat a distance you will get an
+//    empty list in that position in the output.
+// Arguments:
+//    path = path to cut
+//    cutdist = distance or list of distances where path is cut
+//    closed = set to true for a closed path.  Default: false
+function path_cut_segs(path,cutdist,closed) =
+  is_num(cutdist) ? path_cut_segs(path,[cutdist],closed) :
+  assert(is_vector(cutdist))
+  assert(select(cutdist,-1)<path_length(path,closed=closed),"Cut distances must be smaller than the path length")
+  assert(cutdist[0]>0, "Cut distances must be strictly positive")
+  let(
+      cutlist = path_cut(path,cutdist,closed=closed),
+      cuts = len(cutlist)
+  )
+  [
+      [ each slice(path,0,cutlist[0][1]),
+        if (!approx(cutlist[0][0], path[cutlist[0][1]-1])) cutlist[0][0]
+      ],
+      for(i=[0:1:cuts-2])
+          cutlist[i][0]==cutlist[i+1][0] ? []
+          :
+          [ if (!approx(cutlist[i][0], select(path,cutlist[i][1]))) cutlist[i][0],
+            each slice(path,cutlist[i][1], cutlist[i+1][1]),
+            if (!approx(cutlist[i+1][0], select(path,cutlist[i+1][1]-1))) cutlist[i+1][0],
+          ],
+      [
+        if (!approx(cutlist[cuts-1][0], select(path,cutlist[cuts-1][1]))) cutlist[cuts-1][0],
+        each select(path,cutlist[cuts-1][1],closed ? 0 : -1)
+      ]
+  ];
+
+
 
 // Input `data` is a list that sums to an integer. 
 // Returns rounded version of input data so that every 
