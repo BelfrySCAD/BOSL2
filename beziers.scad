@@ -19,6 +19,172 @@
 //   Spline Steps = The number of straight-line segments to split a bezier segment into, to approximate the bezier curve.  The more spline steps, the closer the approximation will be to the curve, but the slower it will be to generate.  Usually defaults to 16.
 
 
+// Section: Bezier Path Construction
+
+// Function: bez_begin()
+// Topics: Bezier Paths
+// See Also: bez_tang(), bez_joint(), bez_end()
+// Usage:
+//   pts = bez_begin(pt,a,r,<p=>);
+//   pts = bez_begin(pt,VECTOR,<r>,<p=>);
+// Description:
+//   This is used to create the first endpoint and control point of a cubic bezier path.
+// Arguments:
+//   pt = The starting endpoint for the bezier path.
+//   a = If given a scalar, specifies the theta (XY plane) angle in degrees from X+.  If given a vector, specifies the direction and possibly distance of the first control point.
+//   r = Specifies the distance of the control point from the endpoint `pt`.
+//   p = If given, specifies the number of degrees away from the Z+ axis.
+// Example(2D): 2D Bezier Path by Angle
+//   bezpath = flatten([
+//       bez_begin([-50,  0],  45,20),
+//       bez_tang ([  0,  0],-135,20),
+//       bez_joint([ 20,-25], 135, 90, 10, 15),
+//       bez_end  ([ 50,  0], -90,20),
+//   ]);
+//   trace_bezier(bezpath);
+// Example(2D): 2D Bezier Path by Vector
+//   bezpath = flatten([
+//       bez_begin([-50,0],[0,-20]),
+//       bez_tang ([-10,0],[0,-20]),
+//       bez_joint([ 20,-25], [-10,10], [0,15]),
+//       bez_end  ([ 50,0],[0, 20]),
+//   ]);
+//   trace_bezier(bezpath);
+// Example(2D): 2D Bezier Path by Vector and Distance
+//   bezpath = flatten([
+//       bez_begin([-30,0],FWD, 30),
+//       bez_tang ([  0,0],FWD, 30),
+//       bez_joint([ 20,-25], 135, 90, 10, 15),
+//       bez_end  ([ 30,0],BACK,30),
+//   ]);
+//   trace_bezier(bezpath);
+// Example(3D,FlatSpin,VPD=200): 3D Bezier Path by Angle
+//   bezpath = flatten([
+//       bez_begin([-30,0,0],90,20,p=135),
+//       bez_tang ([  0,0,0],-90,20,p=135),
+//       bez_joint([20,-25,0], 135, 90, 15, 10, p1=135, p2=45),
+//       bez_end  ([ 30,0,0],-90,20,p=45),
+//   ]);
+//   trace_bezier(bezpath);
+// Example(3D,FlatSpin,VPD=225): 3D Bezier Path by Vector
+//   bezpath = flatten([
+//       bez_begin([-30,0,0],[0,-20, 20]),
+//       bez_tang ([  0,0,0],[0,-20,-20]),
+//       bez_joint([20,-25,0],[0,10,-10],[0,15,15]),
+//       bez_end  ([ 30,0,0],[0,-20,-20]),
+//   ]);
+//   trace_bezier(bezpath);
+// Example(3D,FlatSpin,VPD=225): 3D Bezier Path by Vector and Distance
+//   bezpath = flatten([
+//       bez_begin([-30,0,0],FWD, 20),
+//       bez_tang ([  0,0,0],DOWN,20),
+//       bez_joint([20,-25,0],LEFT,DOWN,r1=20,r2=15),
+//       bez_end  ([ 30,0,0],DOWN,20),
+//   ]);
+//   trace_bezier(bezpath);
+function bez_begin(pt,a,r,p) =
+    assert(is_finite(r) || is_vector(a))
+    assert(len(pt)==3 || is_undef(p))
+    is_vector(a)? [pt, pt+(is_undef(r)? a : r*unit(a))] :
+    is_finite(a)? [pt, pt+spherical_to_xyz(r,a,default(p,90))] :
+    assert(false, "Bad arguments.");
+
+
+// Function: bez_tang()
+// Topics: Bezier Paths
+// See Also: bez_begin(), bez_joint(), bez_end()
+// Usage:
+//   pts = bez_tang(pt,a,r1,r2,<p=>);
+//   pts = bez_tang(pt,VECTOR,<r1>,<r2>,<p=>);
+// Description:
+//   This creates a smooth joint in a cubic bezier path.  It creates three points, being the
+//   approaching control point, the fixed bezier control point, and the departing control
+//   point.  The two control points will be collinear with the fixed point, making for a
+//   smooth bezier curve at the fixed point. See {{bez_begin()}} for examples.
+// Arguments:
+//   pt = The fixed point for the bezier path.
+//   a = If given a scalar, specifies the theta (XY plane) angle in degrees from X+.  If given a vector, specifies the direction and possibly distance of the departing control point.
+//   r1 = Specifies the distance of the approching control point from the fixed point.  Overrides the distance component of the vector if `a` contains a vector.
+//   r2 = Specifies the distance of the departing control point from the fixed point.  Overrides the distance component of the vector if `a` contains a vector.  If `r1` is given and `r2` is not, uses the value of `r1` for `r2`.
+//   p = If given, specifies the number of degrees away from the Z+ axis.
+function bez_tang(pt,a,r1,r2,p) =
+    assert(is_finite(r1) || is_vector(a))
+    assert(len(pt)==3 || is_undef(p))
+    let(
+        r1 = is_num(r1)? r1 : norm(a),
+        r2 = default(r2,r1),
+        p = default(p, 90)
+    )
+    is_vector(a)? [pt-r1*unit(a), pt, pt+r2*unit(a)] :
+    is_finite(a)? [
+        pt-spherical_to_xyz(r1,a,p),
+        pt,
+        pt+spherical_to_xyz(r2,a,p)
+    ] :
+    assert(false, "Bad arguments.");
+
+
+// Function: bez_joint()
+// Topics: Bezier Paths
+// See Also: bez_begin(), bez_tang(), bez_end()
+// Usage:
+//   pts = bez_joint(pt,a1,a2,r1,r2,<p1=>,<p2=>);
+//   pts = bez_joint(pt,VEC1,VEC2,<r1=>,<r2=>,<p1=>,<p2=>);
+// Description:
+//   This creates a disjoint corner joint in a cubic bezier path.  It creates three points, being
+//   the aproaching control point, the fixed bezier control point, and the departing control point.
+//   The two control points can be directed in different arbitrary directions from the fixed bezier
+//   point. See {{bez_begin()}} for examples.
+// Arguments:
+//   pt = The fixed point for the bezier path.
+//   a1 = If given a scalar, specifies the theta (XY plane) angle in degrees from X+.  If given a vector, specifies the direction and possibly distance of the approaching control point.
+//   a2 = If given a scalar, specifies the theta (XY plane) angle in degrees from X+.  If given a vector, specifies the direction and possibly distance of the departing control point.
+//   r1 = Specifies the distance of the approching control point from the fixed point.  Overrides the distance component of the vector if `a1` contains a vector.
+//   r2 = Specifies the distance of the departing control point from the fixed point.  Overrides the distance component of the vector if `a2` contains a vector.
+//   p1 = If given, specifies the number of degrees away from the Z+ axis of the approaching control point.
+//   p2 = If given, specifies the number of degrees away from the Z+ axis of the departing control point.
+function bez_joint(pt,a1,a2,r1,r2,p1,p2) =
+    assert(is_finite(r1) || is_vector(a1))
+    assert(is_finite(r2) || is_vector(a2))
+    assert(len(pt)==3 || (is_undef(p1) && is_undef(p2)))
+    let(
+        r1 = is_num(r1)? r1 : norm(a1),
+        r2 = is_num(r2)? r2 : norm(a2),
+        p1 = default(p1, 90),
+        p2 = default(p2, 90)
+    ) [
+        if (is_vector(a1)) (pt+r1*unit(a1))
+        else if (is_finite(a1)) (pt+spherical_to_xyz(r1,a1,p1))
+        else assert(false, "Bad Arguments"),
+        pt,
+        if (is_vector(a2)) (pt+r2*unit(a2))
+        else if (is_finite(a2)) (pt+spherical_to_xyz(r2,a2,p2))
+        else assert(false, "Bad Arguments")
+    ];
+
+
+// Function: bez_end()
+// Topics: Bezier Paths
+// See Also: bez_tang(), bez_joint(), bez_end()
+// Usage:
+//   pts = bez_end(pt,a,r,<p=>);
+//   pts = bez_end(pt,VECTOR,<r>,<p=>);
+// Description:
+//   This is used to create the approaching control point, and the endpoint of a cubic bezier path.
+//   See {{bez_begin()}} for examples.
+// Arguments:
+//   pt = The starting endpoint for the bezier path.
+//   a = If given a scalar, specifies the theta (XY plane) angle in degrees from X+.  If given a vector, specifies the direction and possibly distance of the first control point.
+//   r = Specifies the distance of the control point from the endpoint `pt`.
+//   p = If given, specifies the number of degrees away from the Z+ axis.
+function bez_end(pt,a,r,p) =
+    assert(is_finite(r) || is_vector(a))
+    assert(len(pt)==3 || is_undef(p))
+    is_vector(a)? [pt+(is_undef(r)? a : r*unit(a)), pt] :
+    is_finite(a)? [pt+spherical_to_xyz(r,a,default(p,90)), pt] :
+    assert(false, "Bad arguments.");
+
+
 // Section: Segment Functions
 
 // Function: bezier_points()

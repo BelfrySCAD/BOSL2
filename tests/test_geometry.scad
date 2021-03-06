@@ -47,7 +47,6 @@ test_projection_on_plane();
 test_plane_point_nearest_origin();
 test_distance_from_plane();
 
-test_closest_point_on_plane();
 test__general_plane_line_intersection();
 test_plane_line_angle();
 test_normalize_plane();
@@ -109,15 +108,6 @@ function info_str(list,i=0,string=chr(10)) =
     i>=len(list)
     ? str(string)
     : info_str(list,i+1,str(string,str(list[i][0],_valstr(list[i][1]),chr(10))));
-
-
-module test_closest_point_on_plane(){
-    plane = rands(-5,5,4,seed=175)+[10,0,0,0];
-    point = rands(-1,1,3,seed=477);
-    point2 = closest_point_on_plane(plane,point);
-    assert_approx(norm(point-point2), abs(distance_from_plane(plane,point)));    
-}
-*test_closest_point_on_plane();
 
 
 module test_normalize_plane(){

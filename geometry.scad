@@ -999,10 +999,11 @@ function plane_transform(plane) =
 
 // Function: projection_on_plane()
 // Usage:
-//   projection_on_plane(points);
+//   pts = projection_on_plane(plane, points);
 // Description:
-//   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 2d or 3d points, return the 3D orthogonal
-//   projection of the points on the plane.
+//   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 2d or
+//   3d points, return the 3D orthogonal projection of the points on the plane.
+//   In other words, for every point given, returns the closest point to it on the plane.
 // Arguments:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 //   points = List of points to project
@@ -1060,24 +1061,6 @@ function distance_from_plane(plane, point) =
     let( plane = normalize_plane(plane) )
     point3d(plane)* point - plane[3];
 
-
-// Function: closest_point_on_plane()
-// Usage:
-//   pt = closest_point_on_plane(plane, point);
-// Description:
-//   Takes a point, and a plane [A,B,C,D] where the equation of that plane is `Ax+By+Cz=D`.
-//   Returns the coordinates of the closest point on that plane to the given `point`.
-// Arguments:
-//   plane = The [A,B,C,D] coefficients for the equation of the plane.
-//   point = The 3D point to find the closest point to.
-function closest_point_on_plane(plane, point) =
-    assert( _valid_plane(plane), "Invalid input plane." )
-    assert( is_vector(point,3), "Invalid point." )
-    let( plane = normalize_plane(plane),
-        n = point3d(plane),
-        d = n*point - plane[3] // distance from plane
-    )
-    point - n*d;
 
 
 // Returns [POINT, U] if line intersects plane at one point.

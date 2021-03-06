@@ -114,15 +114,15 @@ function path_subselect(path, s1, u1, s2, u2, closed=false) =
 function simplify_path(path, eps=EPSILON) =
     assert( is_path(path), "Invalid path." )
     assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "Invalid tolerance." )    
-    len(path)<=2 ? path 
-    :   let(
-            indices = [ 0,
-                        for (i=[1:1:len(path)-2]) 
-                            if (!collinear(path[i-1],path[i],path[i+1], eps=eps)) i, 
-                        len(path)-1 
-                      ]
-        ) 
-        [for (i = indices) path[i] ];
+    len(path)<=2 ? path :
+    let(
+        indices = [
+            0,
+            for (i=[1:1:len(path)-2]) 
+                if (!collinear(path[i-1], path[i], path[i+1], eps=eps)) i, 
+            len(path)-1 
+        ]
+    ) [for (i=indices) path[i]];
 
 
 // Function: simplify_path_indexed()
@@ -137,19 +137,21 @@ function simplify_path(path, eps=EPSILON) =
 //   indices = A list of indices into `points` that forms a path.
 //   eps = Largest angle variance allowed.  Default: EPSILON (1-e9) degrees.
 function simplify_path_indexed(points, indices, eps=EPSILON) =
-    len(indices)<=2? indices 
-    : let(
-        indices = concat( indices[0], 
-                          [for (i=[1:1:len(indices)-2]) 
-                              let( 
-                                  i1 = indices[i-1],
-                                  i2 = indices[i],
-                                  i3 = indices[i+1]
-                              )
-                              if (!collinear(points[i1],points[i2],points[i3], eps=eps)) indices[i]], 
-                          indices[len(indices)-1] )
-        ) 
-        indices;
+    len(indices)<=2? indices :
+    let(
+        indices = concat(
+            indices[0],
+            [
+                for (i=[1:1:len(indices)-2]) let( 
+                    i1 = indices[i-1],
+                    i2 = indices[i],
+                    i3 = indices[i+1]
+                ) if (!collinear(points[i1], points[i2], points[i3], eps=eps))
+                indices[i]
+            ], 
+            indices[len(indices)-1]
+        )
+    ) indices;
 
 
 // Function: path_length()
@@ -178,9 +180,9 @@ function path_length(path,closed=false) =
 //   closed = true if the path is closed.  Default: false
 function path_segment_lengths(path, closed=false) =
     [
-      for (i=[0:1:len(path)-2]) norm(path[i+1]-path[i]),
-      if (closed) norm(path[0]-path[len(path)-1])
-     ]; 
+        for (i=[0:1:len(path)-2]) norm(path[i+1]-path[i]),
+        if (closed) norm(path[0]-select(path,-1))
+    ]; 
 
 
 // Function: path_pos_from_start()
@@ -1193,7 +1195,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
     );
     distOK = is_def(n) || (min(distances)>=0 && max(distances)<=length);
     assert(distOK,"Cannot fit all of the copies");
-    cutlist = path_cut(path, distances, closed, direction=true);
+    cutlist = path_cut_points(path, distances, closed, direction=true);
     planar = len(path[0])==2;
     if (true) for(i=[0:1:len(cutlist)-1]) {
         $pos = cutlist[i][0];
@@ -1216,17 +1218,17 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
 }
 
 
-// Function: path_cut()
+// Function: path_cut_points()
 //
 // Usage:
-//   path_cut(path, dists, [closed], [direction])
+//   cuts = path_cut_points(path, dists, <closed=>, <direction=>);
 //
 // Description:
 //   Cuts a path at a list of distances from the first point in the path.  Returns a list of the cut
 //   points and indices of the next point in the path after that point.  So for example, a return
 //   value entry of [[2,3], 5] means that the cut point was [2,3] and the next point on the path after
-//   this point is path[5].  If the path is too short then path_cut fails with an error.  If you set
-//   `direction` to true then `path_cut` will also return the tangent vector to the path and a normal
+//   this point is path[5].  If the path is too short then path_cut_points returns undef.  If you set
+//   `direction` to true then `path_cut_points` will also return the tangent vector to the path and a normal
 //   vector to the path.  It tries to find a normal vector that is coplanar to the path near the cut
 //   point.  If this fails it will return a normal vector parallel to the xy plane.  The output with
 //   direction vectors will be `[point, next_index, tangent, normal]`.
@@ -1240,22 +1242,23 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
 // Arguments:
 //   path = path to cut
 //   dists = distances where the path should be cut (a list) or a scalar single distance
+//   ---
 //   closed = set to true if the curve is closed.  Default: false
 //   direction = set to true to return direction vectors.  Default: false
 //
 // Example(NORENDER):
 //   square=[[0,0],[1,0],[1,1],[0,1]];
-//   path_cut(square, [.5,1.5,2.5]);   // Returns [[[0.5, 0], 1], [[1, 0.5], 2], [[0.5, 1], 3]]
-//   path_cut(square, [0,1,2,3]);      // Returns [[[0, 0], 1], [[1, 0], 2], [[1, 1], 3], [[0, 1], 4]]
-//   path_cut(square, [0,0.8,1.6,2.4,3.2], closed=true);  // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], [[0, 0.8], 4]]
-//   path_cut(square, [0,0.8,1.6,2.4,3.2]);               // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], undef]
-function path_cut(path, dists, closed=false, direction=false) =
+//   path_cut_points(square, [.5,1.5,2.5]);   // Returns [[[0.5, 0], 1], [[1, 0.5], 2], [[0.5, 1], 3]]
+//   path_cut_points(square, [0,1,2,3]);      // Returns [[[0, 0], 1], [[1, 0], 2], [[1, 1], 3], [[0, 1], 4]]
+//   path_cut_points(square, [0,0.8,1.6,2.4,3.2], closed=true);  // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], [[0, 0.8], 4]]
+//   path_cut_points(square, [0,0.8,1.6,2.4,3.2]);               // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], undef]
+function path_cut_points(path, dists, closed=false, direction=false) =
     let(long_enough = len(path) >= (closed ? 3 : 2))
     assert(long_enough,len(path)<2 ? "Two points needed to define a path" : "Closed path must include three points")
-    is_num(dists) ? path_cut(path, [dists],closed, direction)[0] :
+    is_num(dists) ? path_cut_points(path, [dists],closed, direction)[0] :
     assert(is_vector(dists))
     assert(list_increasing(dists), "Cut distances must be an increasing list")
-    let(cuts = _path_cut(path,dists,closed))
+    let(cuts = _path_cut_points(path,dists,closed))
     !direction
        ? cuts
        : let(
@@ -1265,7 +1268,7 @@ function path_cut(path, dists, closed=false, direction=false) =
          hstack(cuts, array_group(dir,1), array_group(normals,1));
 
 // Main recursive path cut function
-function _path_cut(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[]) =
+function _path_cut_points(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[]) =
     dind == len(dists) ? result :
     let(
         lastpt = len(result)==0? [] : select(result,-1)[0],       // location of last cut point
@@ -1274,7 +1277,7 @@ function _path_cut(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[
            ? [lerp(lastpt,select(path,pind),(dists[dind]-dtotal)/dpartial),pind] 
            : _path_cut_single(path, dists[dind]-dtotal-dpartial, closed, pind)
     ) 
-    _path_cut(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
+    _path_cut_points(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
 
 
 // Search for a single cut point in the path
@@ -1332,8 +1335,10 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 
 
 // Function: path_cut_segs()
+// Topics: Paths
+// See Also: path_cut_points()
 // Usage:
-//    path_list = path_cut_segs(path, cutdist, <closed>);
+//    path_list = path_cut_segs(path, cutdist, <closed=>);
 // Description:
 //    Given a list of distances in `cutdist`, cut the path into
 //    subpaths at those lengths, returning a list of paths.
@@ -1342,9 +1347,13 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 //    in ascending order.  If you repeat a distance you will get an
 //    empty list in that position in the output.
 // Arguments:
-//    path = path to cut
-//    cutdist = distance or list of distances where path is cut
-//    closed = set to true for a closed path.  Default: false
+//   path = The original path to split.
+//   cutdist = Distance or list of distances where path is cut
+//   closed = If true, treat the path as a closed polygon.
+// Example(2D):
+//   path = circle(d=100);
+//   segs = path_cut_segs(path, [50, 200], closed=true);
+//   rainbow(segs) stroke($item);
 function path_cut_segs(path,cutdist,closed) =
   is_num(cutdist) ? path_cut_segs(path,[cutdist],closed) :
   assert(is_vector(cutdist))
@@ -1533,7 +1542,7 @@ function resample_path(path, N, spacing, closed=false) =
     N = is_def(N) ? N : round(length/spacing) + (closed?0:1), 
         spacing = length/(closed?N:N-1),     // Note: worried about round-off error, so don't include 
         distlist = list_range(closed?N:N-1,step=spacing),  // last point when closed=false
-    cuts = path_cut(path, distlist, closed=closed)
+    cuts = path_cut_points(path, distlist, closed=closed)
    )
    concat(subindex(cuts,0),closed?[]:[select(path,-1)]);  // Then add last point here
 

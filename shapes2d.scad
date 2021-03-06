@@ -16,37 +16,54 @@
 // Description:
 //   Draws a 2D or 3D path with a given line width.  Endcaps can be specified for each end individually.
 // Figure(Med,NoAxes,VPR=[0,0,0],VPD=250): Endcap Types
-//   endcaps = [
-//       ["butt", "square", "round", "chisel", "tail", "tail2"],
-//       ["line", "cross", "dot", "diamond", "x", "arrow", "arrow2"]
+//   cap_pairs = [
+//       ["butt",  "chisel" ],
+//       ["round", "square" ],
+//       ["line",  "cross"  ],
+//       ["x",     "diamond"],
+//       ["dot",   "block"  ],
+//       ["tail",  "arrow"  ],
+//       ["tail2", "arrow2" ]
 //   ];
-//   for (x=idx(endcaps), y=idx(endcaps[x])) {
-//       cap = endcaps[x][y];
-//       right(x*60-60+5) fwd(y*10-30) {
-//           right(28) color("black") text(text=cap, size=5, halign="left", valign="center");
-//           stroke([[0,0], [20,0]], width=3, endcap_width=3, endcap1=false, endcap2=cap);
-//           color("black") stroke([[0,0], [20,0]], width=0.25, endcaps=false);
+//   for (i = idx(cap_pairs)) {
+//       fwd((i-len(cap_pairs)/2+0.5)*13) {
+//           stroke([[-20,0], [20,0]], width=3, endcap1=cap_pairs[i][0], endcap2=cap_pairs[i][1]);
+//           color("black") {
+//               stroke([[-20,0], [20,0]], width=0.25, endcaps=false);
+//               left(28) text(text=cap_pairs[i][0], size=5, halign="right", valign="center");
+//               right(28) text(text=cap_pairs[i][1], size=5, halign="left", valign="center");
+//           }
 //       }
 //   }
 // Arguments:
-//   path = The 2D path to draw along.
+//   path = The path to draw along.
 //   width = The width of the line to draw.  If given as a list of widths, (one for each path point), draws the line with varying thickness to each point.
 //   closed = If true, draw an additional line from the end of the path to the start.
+//   plots = Specifies the plot point shape for every point of the line.  If a 2D path is given, use that to draw custom plot points.
+//   joints  = Specifies the joint shape for each joint of the line.  If a 2D path is given, use that to draw custom joints.
 //   endcaps = Specifies the endcap type for both ends of the line.  If a 2D path is given, use that to draw custom endcaps.
 //   endcap1 = Specifies the endcap type for the start of the line.  If a 2D path is given, use that to draw a custom endcap.
 //   endcap2 = Specifies the endcap type for the end of the line.  If a 2D path is given, use that to draw a custom endcap.
-//   endcap_width = Some endcap types are wider than the line.  This specifies the size of endcaps, in multiples of the line width.  Default: 3.5
-//   endcap_width1 = This specifies the size of starting endcap, in multiples of the line width.  Default: 3.5
-//   endcap_width2 = This specifies the size of ending endcap, in multiples of the line width.  Default: 3.5
-//   endcap_length = Length of endcaps, in multiples of the line width.  Default: `endcap_width*0.5`
-//   endcap_length1 = Length of starting endcap, in multiples of the line width.  Default: `endcap_width1*0.5`
-//   endcap_length2 = Length of ending endcap, in multiples of the line width.  Default: `endcap_width2*0.5`
-//   endcap_extent = Extents length of endcaps, in multiples of the line width.  Default: `endcap_width*0.5`
-//   endcap_extent1 = Extents length of starting endcap, in multiples of the line width.  Default: `endcap_width1*0.5`
-//   endcap_extent2 = Extents length of ending endcap, in multiples of the line width.  Default: `endcap_width2*0.5`
-//   endcap_angle = Extra axial rotation given to flat endcaps for 3D paths, in degrees.  If not given, the endcaps are fully spun.  Default: `undef` (Fully spun cap)
-//   endcap_angle1 = Extra axial rotation given to a flat starting endcap for 3D paths, in degrees.  If not given, the endcap is fully spun.  Default: `undef` (Fully spun cap)
-//   endcap_angle2 = Extra axial rotation given to a flat ending endcap for 3D paths, in degrees.  If not given, the endcap is fully spun.  Default: `undef` (Fully spun cap)
+//   plot_width = Some plot point shapes are wider than the line.  This specifies the width of the shape, in multiples of the line width.
+//   joint_width = Some joint shapes are wider than the line.  This specifies the width of the shape, in multiples of the line width.
+//   endcap_width = Some endcap types are wider than the line.  This specifies the size of endcaps, in multiples of the line width.
+//   endcap_width1 = This specifies the size of starting endcap, in multiples of the line width.
+//   endcap_width2 = This specifies the size of ending endcap, in multiples of the line width.
+//   plot_length = Length of plot point shape, in multiples of the line width.
+//   joint_length = Length of joint shape, in multiples of the line width.
+//   endcap_length = Length of endcaps, in multiples of the line width.
+//   endcap_length1 = Length of starting endcap, in multiples of the line width.
+//   endcap_length2 = Length of ending endcap, in multiples of the line width.
+//   plot_extent = Extents length of plot point shape, in multiples of the line width.
+//   joint_extent = Extents length of joint shape, in multiples of the line width.
+//   endcap_extent = Extents length of endcaps, in multiples of the line width.
+//   endcap_extent1 = Extents length of starting endcap, in multiples of the line width.
+//   endcap_extent2 = Extents length of ending endcap, in multiples of the line width.
+//   plot_angle = Extra rotation given to plot point shapes, in degrees.  If not given, the shapes are fully spun.
+//   joint_angle = Extra rotation given to joint shapes, in degrees.  If not given, the shapes are fully spun.
+//   endcap_angle = Extra rotation given to endcaps, in degrees.  If not given, the endcaps are fully spun.
+//   endcap_angle1 = Extra rotation given to a starting endcap, in degrees.  If not given, the endcap is fully spun.
+//   endcap_angle2 = Extra rotation given to a ending endcap, in degrees.  If not given, the endcap is fully spun.
 //   trim = Trim the the start and end line segments by this much, to keep them from interfering with custom endcaps.
 //   trim1 = Trim the the starting line segment by this much, to keep it from interfering with a custom endcap.
 //   trim2 = Trim the the ending line segment by this much, to keep it from interfering with a custom endcap.
@@ -67,6 +84,12 @@
 // Example(2D): Mixed Endcaps
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   stroke(path, width=10, endcap1="tail2", endcap2="arrow2");
+// Example(2D): Plotting Points
+//   path = [for (a=[0:30:360]) [a-180, 60*sin(a)]];
+//   stroke(path, width=3, joints="diamond", endcaps="arrow2", plot_angle=0, plot_width=5);
+// Example(2D): Joints and Endcaps
+//   path = [for (a=[0:30:360]) [a-180, 60*sin(a)]];
+//   stroke(path, width=3, joints="dot", endcaps="arrow2", joint_angle=0);
 // Example(2D): Custom Endcap Shapes
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   arrow = [[0,0], [2,-3], [0.5,-2.3], [2,-4], [0.5,-3.5], [-0.5,-3.5], [-2,-4], [-0.5,-2.3], [-2,-3]];
@@ -84,32 +107,56 @@
 // Example: 3D Path with Mixed Endcaps
 //   path = rot([15,30,0], p=path3d(pentagon(d=50)));
 //   stroke(path, width=2, endcap1="arrow2", endcap2="tail", endcap_angle2=0, $fn=18);
+// Example: 3D Path with Joints and Endcaps
+//   path = [for (i=[0:10:360]) [(i-180)/2,20*cos(3*i),20*sin(3*i)]];
+//   stroke(path, width=2, joints="dot", endcap1="round", endcap2="arrow2", joint_width=2.0, endcap_width2=3, $fn=18);
 module stroke(
     path, width=1, closed=false,
-    endcaps, endcap1, endcap2,
+    endcaps,       endcap1,        endcap2,        joints,       plots,
+    endcap_width,  endcap_width1,  endcap_width2,  joint_width,  plot_width,
+    endcap_length, endcap_length1, endcap_length2, joint_length, plot_length,
+    endcap_extent, endcap_extent1, endcap_extent2, joint_extent, plot_extent,
+    endcap_angle,  endcap_angle1,  endcap_angle2,  joint_angle,  plot_angle,
     trim, trim1, trim2,
-    endcap_width, endcap_width1, endcap_width2,
-    endcap_length, endcap_length1, endcap_length2,
-    endcap_extent, endcap_extent1, endcap_extent2,
-    endcap_angle, endcap_angle1, endcap_angle2,
     convexity=10, hull=true
 ) {
-    function _endcap_shape(cap,linewidth,w,l,l2) = (
-        let(sq2=sqrt(2), l3=l-l2)
-        (cap=="round" || cap==true)? circle(d=1, $fn=max(8, segs(w/2))) :
-        cap=="chisel"? [[-0.5,0], [0,0.5], [0.5,0], [0,-0.5]] :
-        cap=="square"? [[-0.5,-0.5], [-0.5,0.5], [0.5,0.5], [0.5,-0.5]] :
-        cap=="diamond"? [[0,w/2], [w/2,0], [0,-w/2], [-w/2,0]] :
-        cap=="dot"?    circle(d=3, $fn=max(12, segs(w*3/2))) :
-        cap=="x"?      [for (a=[0:90:270]) each rot(a,p=[[w+sq2/2,w-sq2/2]/2, [w-sq2/2,w+sq2/2]/2, [0,sq2/2]]) ] :
-        cap=="cross"?  [for (a=[0:90:270]) each rot(a,p=[[1,w]/2, [-1,w]/2, [-1,1]/2]) ] :
-        cap=="line"?   [[w/2,0.5], [w/2,-0.5], [-w/2,-0.5], [-w/2,0.5]] :
-        cap=="arrow"?  [[0,0], [w/2,-l2], [w/2,-l2-l], [0,-l], [-w/2,-l2-l], [-w/2,-l2]] :
-        cap=="arrow2"? [[0,0], [w/2,-l2-l], [0,-l], [-w/2,-l2-l]] :
-        cap=="tail"?   [[0,0], [w/2,l2], [w/2,l2-l], [0,-l], [-w/2,l2-l], [-w/2,l2]] :
-        cap=="tail2"?  [[w/2,0], [w/2,-l], [0,-l-l2], [-w/2,-l], [-w/2,0]] :
+    function _shape_defaults(cap) =
+        cap==undef?     [1.00, 0.00, 0.00] :
+        cap==false?     [1.00, 0.00, 0.00] :
+        cap==true?      [1.00, 1.00, 0.00] :
+        cap=="butt"?    [1.00, 0.00, 0.00] :
+        cap=="round"?   [1.00, 1.00, 0.00] :
+        cap=="chisel"?  [1.00, 1.00, 0.00] :
+        cap=="square"?  [1.00, 1.00, 0.00] :
+        cap=="block"?   [3.00, 1.00, 0.00] :
+        cap=="diamond"? [3.50, 1.00, 0.00] :
+        cap=="dot"?     [3.00, 1.00, 0.00] :
+        cap=="x"?       [3.50, 0.40, 0.00] :
+        cap=="cross"?   [4.50, 0.22, 0.00] :
+        cap=="line"?    [4.50, 0.22, 0.00] :
+        cap=="arrow"?   [3.50, 0.40, 0.50] :
+        cap=="arrow2"?  [3.50, 1.00, 0.14] :
+        cap=="tail"?    [3.50, 0.47, 0.50] :
+        cap=="tail2"?   [3.50, 0.28, 0.50] :
+        is_path(cap)?   [0.00, 0.00, 0.00] :
+        assert(false, str("Invalid cap or joint: ",cap));
+
+    function _shape_path(cap,linewidth,w,l,l2) = (
+        (cap=="butt" || cap==false || cap==undef)? [] : 
+        (cap=="round" || cap==true)? scale([w,l], p=circle(d=1, $fn=max(8, segs(w/2)))) :
+        cap=="chisel"?  scale([w,l], p=circle(d=1,$fn=4)) :
+        cap=="diamond"? circle(d=w,$fn=4) :
+        cap=="square"?  scale([w,l], p=square(1,center=true)) :
+        cap=="block"?   scale([w,l], p=square(1,center=true)) :
+        cap=="dot"?     circle(d=w, $fn=max(12, segs(w*3/2))) :
+        cap=="x"?       [for (a=[0:90:270]) each rot(a,p=[[w+l/2,w-l/2]/2, [w-l/2,w+l/2]/2, [0,l/2]]) ] :
+        cap=="cross"?   [for (a=[0:90:270]) each rot(a,p=[[l,w]/2, [-l,w]/2, [-l,l]/2]) ] :
+        cap=="line"?    scale([w,l], p=square(1,center=true)) :
+        cap=="arrow"?   [[0,0], [w/2,-l2], [w/2,-l2-l], [0,-l], [-w/2,-l2-l], [-w/2,-l2]] :
+        cap=="arrow2"?  [[0,0], [w/2,-l2-l], [0,-l], [-w/2,-l2-l]] :
+        cap=="tail"?    [[0,0], [w/2,l2], [w/2,l2-l], [0,-l], [-w/2,l2-l], [-w/2,l2]] :
+        cap=="tail2"?   [[w/2,0], [w/2,-l], [0,-l-l2], [-w/2,-l], [-w/2,0]] :
         is_path(cap)? cap :
-        is_undef(cap)? [] : 
         assert(false, str("Invalid endcap: ",cap))
     ) * linewidth;
 
@@ -123,33 +170,47 @@ module stroke(
     assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
     width = is_num(width)? [for (x=path) width] : width;
 
-    endcap1 = first_defined([endcap1, endcaps, "round"]);
-    endcap2 = first_defined([endcap2, endcaps, "round"]);
+    endcap1 = first_defined([endcap1, endcaps, if(!closed) plots, "round"]);
+    endcap2 = first_defined([endcap2, endcaps, plots, "round"]);
+    joints  = first_defined([joints, plots, "round"]);
     assert(is_bool(endcap1) || is_string(endcap1) || is_path(endcap1));
     assert(is_bool(endcap2) || is_string(endcap2) || is_path(endcap2));
+    assert(is_bool(joints)  || is_string(joints)  || is_path(joints));
 
-    endcap_width1 = first_defined([endcap_width1, endcap_width, 3.5]);
-    endcap_width2 = first_defined([endcap_width2, endcap_width, 3.5]);
+    endcap1_dflts = _shape_defaults(endcap1);
+    endcap2_dflts = _shape_defaults(endcap2);
+    joint_dflts   = _shape_defaults(joints);
+
+    endcap_width1 = first_defined([endcap_width1, endcap_width, plot_width, endcap1_dflts[0]]);
+    endcap_width2 = first_defined([endcap_width2, endcap_width, plot_width, endcap2_dflts[0]]);
+    joint_width   = first_defined([joint_width, plot_width, joint_dflts[0]]);
     assert(is_num(endcap_width1));
     assert(is_num(endcap_width2));
+    assert(is_num(joint_width));
 
-    endcap_length1 = first_defined([endcap_length1, endcap_length, endcap_width1*0.5]);
-    endcap_length2 = first_defined([endcap_length2, endcap_length, endcap_width2*0.5]);
+    endcap_length1 = first_defined([endcap_length1, endcap_length, plot_length, endcap1_dflts[1]*endcap_width1]);
+    endcap_length2 = first_defined([endcap_length2, endcap_length, plot_length, endcap2_dflts[1]*endcap_width2]);
+    joint_length   = first_defined([joint_length, plot_length, joint_dflts[1]*joint_width]);
     assert(is_num(endcap_length1));
     assert(is_num(endcap_length2));
+    assert(is_num(joint_length));
 
-    endcap_extent1 = first_defined([endcap_extent1, endcap_extent, endcap_width1*0.5]);
-    endcap_extent2 = first_defined([endcap_extent2, endcap_extent, endcap_width2*0.5]);
+    endcap_extent1 = first_defined([endcap_extent1, endcap_extent, plot_extent, endcap1_dflts[2]*endcap_width1]);
+    endcap_extent2 = first_defined([endcap_extent2, endcap_extent, plot_extent, endcap2_dflts[2]*endcap_width2]);
+    joint_extent   = first_defined([joint_extent, plot_extent, joint_dflts[2]*joint_width]);
     assert(is_num(endcap_extent1));
     assert(is_num(endcap_extent2));
+    assert(is_num(joint_extent));
 
-    endcap_angle1 = first_defined([endcap_angle1, endcap_angle]);
-    endcap_angle2 = first_defined([endcap_angle2, endcap_angle]);
+    endcap_angle1 = first_defined([endcap_angle1, endcap_angle, plot_angle]);
+    endcap_angle2 = first_defined([endcap_angle2, endcap_angle, plot_angle]);
+    joint_angle = first_defined([joint_angle, plot_angle]);
     assert(is_undef(endcap_angle1)||is_num(endcap_angle1));
     assert(is_undef(endcap_angle2)||is_num(endcap_angle2));
+    assert(is_undef(joint_angle)||is_num(joint_angle));
 
-    endcap_shape1 = _endcap_shape(endcap1, select(width,0), endcap_width1, endcap_length1, endcap_extent1);
-    endcap_shape2 = _endcap_shape(endcap2, select(width,-1), endcap_width2, endcap_length2, endcap_extent2);
+    endcap_shape1 = _shape_path(endcap1, select(width,0), endcap_width1, endcap_length1, endcap_extent1);
+    endcap_shape2 = _shape_path(endcap2, select(width,-1), endcap_width2, endcap_length2, endcap_extent2);
 
     trim1 = select(width,0) * first_defined([
         trim1, trim,
@@ -201,17 +262,29 @@ module stroke(
             // Joints
             for (i = [1:1:len(path2)-2]) {
                 $fn = quantup(segs(widths[i]/2),4);
-                if (hull) {
-                    hull() {
-                        translate(path2[i]) {
+                translate(path2[i]) {
+                    if (joints != undef) {
+                        joint_shape = _shape_path(
+                            joints, width[i],
+                            joint_width,
+                            joint_length,
+                            joint_extent
+                        );
+                        v1 = unit(path2[i] - path2[i-1]);
+                        v2 = unit(path2[i+1] - path2[i]);
+                        vec = unit((v1+v2)/2);
+                        mat = is_undef(joint_angle)
+                          ? rot(from=BACK,to=v1)
+                          : zrot(joint_angle);
+                        multmatrix(mat) polygon(joint_shape);
+                    } else if (hull) {
+                        hull() {
                             rot(from=BACK, to=path2[i]-path2[i-1])
                                 circle(d=widths[i]);
                             rot(from=BACK, to=path2[i+1]-path2[i])
                                 circle(d=widths[i]);
                         }
-                    }
-                } else {
-                    translate(path2[i]) {
+                    } else {
                         rot(from=BACK, to=path2[i]-path2[i-1])
                             circle(d=widths[i]);
                         rot(from=BACK, to=path2[i+1]-path2[i])
@@ -222,17 +295,16 @@ module stroke(
 
             // Endcap1
             translate(path[0]) {
-                start_vec = select(path,0) - select(path,1);
-                rot(from=BACK, to=start_vec) {
-                    polygon(endcap_shape1);
-                }
+                mat = is_undef(endcap_angle1)? rot(from=BACK,to=start_vec) :
+                    zrot(endcap_angle1);
+                multmatrix(mat) polygon(endcap_shape1);
             }
 
             // Endcap2
             translate(select(path,-1)) {
-                rot(from=BACK, to=end_vec) {
-                    polygon(endcap_shape2);
-                }
+                mat = is_undef(endcap_angle2)? rot(from=BACK,to=end_vec) :
+                    zrot(endcap_angle2);
+                multmatrix(mat) polygon(endcap_shape2);
             }
         } else {
             quatsums = Q_Cumulative([
@@ -266,7 +338,30 @@ module stroke(
             for (i = [1:1:len(path2)-2]) {
                 $fn = sides[i];
                 translate(path2[i]) {
-                    if (hull) {
+                    if (joints != undef) {
+                        joint_shape = _shape_path(
+                            joints, width[i],
+                            joint_width,
+                            joint_length,
+                            joint_extent
+                        );
+                        multmatrix(rotmats[i] * xrot(180)) {
+                            $fn = sides[i];
+                            if (is_undef(joint_angle)) {
+                                rotate_extrude(convexity=convexity) {
+                                    right_half(planar=true) {
+                                        polygon(joint_shape);
+                                    }
+                                }
+                            } else {
+                                rotate([90,0,joint_angle]) {
+                                    linear_extrude(height=max(widths[i],0.001), center=true, convexity=convexity) {
+                                        polygon(joint_shape);
+                                    }
+                                }
+                            }
+                        }
+                    } else if (hull) {
                         hull(){
                             multmatrix(rotmats[i]) {
                                 sphere(d=widths[i],style="aligned");
@@ -327,6 +422,60 @@ module stroke(
             }
         }
     }
+}
+
+
+// Function&Module: dashed_stroke()
+// Usage: As a Module
+//   dashed_stroke(path, dashpat, <closed=>);
+// Usage: As a Function
+//   dashes = dashed_stroke(path, dashpat, width=, <closed=>);
+// Topics: Paths, Drawing Tools
+// See Also: stroke(), path_cut_segs()
+// Description:
+//   Given a path and a dash pattern, creates a dashed line that follows that
+//   path with the given dash pattern.
+//   - When called as a function, returns a list of dash sub-paths.
+//   - When called as a module, draws all those subpaths using `stroke()`.
+// Arguments:
+//   path = The path to subdivide into dashes.
+//   dashpat = A list of alternating dash lengths and space lengths for the dash pattern.  This will be scaled by the width of the line.
+//   ---
+//   width = The width of the dashed line to draw.  Module only.  Default: 1
+//   closed = If true, treat path as a closed polygon.  Default: false
+// Example(2D): Open Path
+//   path = [for (a=[-180:10:180]) [a/3,20*sin(a)]];
+//   dashed_stroke(path, [3,2], width=1);
+// Example(2D): Closed Polygon
+//   path = circle(d=100,$fn=72);
+//   dashpat = [10,2,3,2,3,2];
+//   dashed_stroke(path, dashpat, width=1, closed=true);
+// Example(FlatSpin,VPD=250): 3D Dashed Path
+//   path = [for (a=[-180:5:180]) [a/3, 20*cos(3*a), 20*sin(3*a)]];
+//   dashed_stroke(path, [3,2], width=1);
+function dashed_stroke(path, dashpat=[3,3], closed=false) =
+    let(
+        path = closed? close_path(path) : path,
+        dashpat = len(dashpat)%2==0? dashpat : concat(dashpat,[0]),
+        plen = path_length(path),
+        dlen = sum(dashpat),
+        doff = cumsum(dashpat),
+        reps = floor(plen / dlen),
+        step = plen / reps,
+        cuts = [
+            for (i=[0:1:reps-1], off=doff)
+            let (st=i*step, x=st+off)
+            if (x>0 && x<plen) x
+        ],
+        dashes = path_cut_segs(path, cuts, closed=false),
+        evens = [for (i=idx(dashes)) if (i%2==0) dashes[i]]
+    ) evens;
+
+
+module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
+    segs = dashed_stroke(path, dashpat=dashpat*width, closed=closed);
+    for (seg = segs)
+        stroke(seg, width=width, endcaps=false);
 }
 
 
