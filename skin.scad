@@ -47,31 +47,29 @@
 //   profiles that you specify.  It is generally best if the triangles forming your polyhedron
 //   are approximately equilateral.  The `slices` parameter specifies the number of slices to insert
 //   between each pair of profiles, either a scalar to insert the same number everywhere, or a vector
-//   to insert a different number between each pair.  To resample the profiles you can use set
-//   `refine=N` which will place `N` points on each edge of your profile.  This has the effect of
-//   multiplying the number of points by N, so a profile with 8 points will have 8*N points after
-//   refinement.  Note that when dealing with continuous curves it is always better to adjust the
+//   to insert a different number between each pair.
+//   .
+//   Resampling may occur, depending on the `method` parameter, to make profiles compatible.  
+//   To force (possibly additional) resampling of the profiles to increase the point density you can set `refine=N`, which
+//   will multiply the number of points on your profile by `N`.  You can choose between two resampling
+//   schemes using the `sampling` option, which you can set to `"length"` or `"segment"`.
+//   The length resampling method resamples proportional to length.
+//   The segment method divides each segment of a profile into the same number of points.
+//   This means that if you refine a profile with the "segment" method you will get N points
+//   on each edge, but if you refine a profile with the "length" method you will get new points
+//   distributed around the profile based on length, so small segments will get fewer new points than longer ones.  
+//   A uniform division may be impossible, in which case the code computes an approximation, which may result
+//   in arbitrary distribution of extra points.  See `subdivide_path` for more details.
+//   Note that when dealing with continuous curves it is always better to adjust the
 //   sampling in your code to generate the desired sampling rather than using the `refine` argument.
 //   .
-//   Two methods are available for resampling, `"length"` and `"segment"`.  Specify them using
-//   the `sampling` argument.  The length resampling method resamples proportional to length.
-//   The segment method divides each segment of a profile into the same number of points.
-//   A uniform division may be impossible, in which case the code computes an approximation.
-//   See `subdivide_path` for more details.
-//    
 //   You can choose from four methods for specifying alignment for incommensurate profiles.
 //   The available methods are `"distance"`, `"tangent"`, `"direct"` and `"reindex"`.
 //   It is useful to distinguish between continuous curves like a circle and discrete profiles
 //   like a hexagon or star, because the algorithms' suitability depend on this distinction.
 //   .
-//   The "direct" and "reindex" methods work by resampling the profiles if necessary.  As noted above,
-//   for continuous input curves, it is better to generate your curves directly at the desired sample size,
-//   but for mapping between a discrete profile like a hexagon and a circle, the hexagon must be resampled
-//   to match the circle.  You can do this in two different ways using the `sampling` parameter.  The default
-//   of `sampling="length"` approximates a uniform length sampling of the profile.  The other option
-//   is `sampling="segment"` which attempts to place the same number of new points on each segment.
-//   If the segments are of varying length, this will produce a different result.  Note that "direct" is
-//   the default method.  If you simply supply a list of compatible profiles it will link them up
+//   The default method for aligning profiles is `method="direct"`.
+//   If you simply supply a list of compatible profiles it will link them up
 //   exactly as you have provided them.  You may find that profiles you want to connect define the
 //   right shapes but the point lists don't start from points that you want aligned in your skinned
 //   polyhedron.  You can correct this yourself using `reindex_polygon`, or you can use the "reindex"
@@ -79,12 +77,25 @@
 //   in the polyhedron---in will produce the least twisted possible result.  This algorithm has quadratic
 //   run time so it can be slow with very large profiles.
 //   .
+//   When the profiles are incommensurate, the "direct" and "reindex" resampling them to match.  As noted above,
+//   for continuous input curves, it is better to generate your curves directly at the desired sample size,
+//   but for mapping between a discrete profile like a hexagon and a circle, the hexagon must be resampled
+//   to match the circle.  When you use "direct" or "reindex" the default `sampling` value is 
+//   of `sampling="length"` to approximate a uniform length sampling of the profile.  This will generally
+//   produce the natural result for connecting two continuously sampled profiles or a continuous
+//   profile and a polygonal one.  However depending on your particular case, 
+//   `sampling="segment"` may produce a more pleasing result.  These two approaches differ only when
+//   the segments of your input profiles have unequal length.
+//   .
 //   The "distance" and "tangent" methods work by duplicating vertices to create
 //   triangular faces.  The "distance" method finds the global minimum distance method for connecting two
 //   profiles.  This algorithm generally produces a good result when both profiles are discrete ones with
 //   a small number of vertices.  It is computationally intensive (O(N^3)) and may be
 //   slow on large inputs.  The resulting surfaces generally have curved faces, so be
-//   sure to select a sufficiently large value for `slices` and `refine`.
+//   sure to select a sufficiently large value for `slices` and `refine`.  Note that for
+//   this method, `sampling` must be set to `"segment"`, and hence this is the default setting.
+//   Using sampling by length would ignore the repeated vertices and ruin the alignment.  
+//   .
 //   The `"tangent"` method generally produces good results when
 //   connecting a discrete polygon to a convex, finely sampled curve.  It works by finding
 //   a plane that passed through each edge of the polygon that is tangent to
@@ -92,9 +103,8 @@
 //   all of the tangent points from each other.  It connects all of the points of the curve to the corners of the discrete
 //   polygon using triangular faces.  Using `refine` with this method will have little effect on the model, so
 //   you should do it only for agreement with other profiles, and these models are linear, so extra slices also
-//   have no effect.  For best efficiency set `refine=1` and `slices=0`.  When you use refinement with either
-//   of these methods, it is always the "segment" based resampling described above.  This is necessary because
-//   sampling by length will ignore the repeated vertices and break the alignment.
+//   have no effect.  For best efficiency set `refine=1` and `slices=0`.  As with the "distance" method, refinement
+//   must be done using the "segment" sampling scheme to preserve alignment across duplicated points.  
 //   .
 //   It is possible to specify `method` and `refine` as arrays, but it is important to observe
 //   matching rules when you do this.  If a pair of profiles is connected using "tangent" or "distance"

@@ -60,7 +60,8 @@ include <structs.scad>
 //   or you can specify a list that has length len(path)-2, omitting the two dummy values.
 //   .
 //   If your input path includes collinear points you must use a cut or radius value of zero for those "corners".  You can
-//   choose a nonzero joint parameter, which will cause extra points to be inserted.  
+//   choose a nonzero joint parameter when the collinear points form a 180 degree angle.  This will cause extra points to be inserted. 
+//   If the collinear points form a spike (0 degree angle) then round_corners will fail. 
 //   .
 //   Examples:
 //   * `method="circle", radius=2`:
@@ -75,7 +76,8 @@ include <structs.scad>
 //   ignored.  Note that $fn is interpreted as the number of points on the roundover curve, which is
 //   not equivalent to its meaning for rounding circles because roundovers are usually small fractions
 //   of a circular arc.  When doing continuous curvature rounding be sure to use lots of segments or the effect
-//   will be hidden by the discretization.
+//   will be hidden by the discretization.  Note that if you use $fn then $fn with "smooth" then $fn points are added at each corner, even
+//   if the "corner" is flat, with collinear points, so this guarantees a specific output length.  
 //
 // Figure(2D,Med):
 //   h = 18;
@@ -260,10 +262,16 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
         dk = [
               for(i=[0:1:len(path)-1])
                   let(
-                      angle = vector_angle(select(path,i-1,i+1))/2
+                      pathbit = select(path,i-1,i+1),
+                      angle = approx(pathbit[0],pathbit[1]) || approx(pathbit[1],pathbit[2]) ? undef
+                            : vector_angle(select(path,i-1,i+1))/2,
+                            f=echo(angle=angle)
                   )
                   (!closed && (i==0 || i==len(path)-1))  ? [0] :          // Force zeros at ends for non-closed
                   parm[i]==0 ? [0]    : // If no rounding requested then don't try to compute parameters
+                  assert(is_def(angle), str("Repeated point in path at index ",i," with nonzero rounding"))
+                  assert(!approx(angle,0), closed && i==0 ? "Closing the path causes it to turn back on itself at the end" :
+                                                            str("Path turns back on itself at index ",i," with nonzero rounding"))
                   (method=="chamfer" && measure=="joint")? [parm[i]] :
                   (method=="chamfer" && measure=="cut")  ? [parm[i]/cos(angle)] :
                   (method=="smooth" && measure=="joint") ? [parm[i],k[i]] :
@@ -277,10 +285,11 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
         lengths = [for(i=[0:1:len(path)]) norm(select(path,i)-select(path,i-1))],
         scalefactors = [
             for(i=[0:1:len(path)-1])
-                min(
+                if (closed || (i!=0 && i!=len(path)-1))
+                 min(
                     lengths[i]/(select(dk,i-1)[0]+dk[i][0]),
                     lengths[i+1]/(dk[i][0]+select(dk,i+1)[0])
-                )
+                 )
         ],
         dummy = verbose ? echo("Roundover scale factors:",scalefactors) : 0
     )
@@ -639,12 +648,12 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
       d_next = is_vector(joint[i]) ? joint[i][1] : joint[i]
   )
   assert(d_first>=0 && d_next>=0, str("Joint value negative when adding path ",i+1))
+  assert(d_first<path_length(revresult),str("Path ",i," is too short for specified cut distance ",d_first))
+  assert(d_next<path_length(nextpath), str("Path ",i+1," is too short for specified cut distance ",d_next))
   let(
       firstcut = path_cut(revresult, d_first, direction=true),
       nextcut = path_cut(nextpath, d_next, direction=true)
   )
-  assert(is_def(firstcut),str("Path ",i," is too short for specified cut distance ",d_first))
-  assert(is_def(nextcut),str("Path ",i+1," is too short for specified cut distance ",d_next))
   assert(!loop || nextcut[1] < len(revresult)-1-firstcut[1], "Path is too short to close the loop")
   let(
      first_dir=firstcut[2],
