@@ -1217,49 +1217,11 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
     }
 }
 
-// Function: path_cut_segs()
-// Usage:
-//   segs = path_cut_segs(path, cutlens, <closed=>);
-// Topics: Paths
-// See Also: path_cut_points()
-// Description:
-//   Given a path and a list of path lengths at which to cut, returns a list of
-//   sub-paths cut from the original path at those path lengths.
-// Arguments:
-//   path = The original path to split.
-//   cutlens = The list of path lengths to cut at.
-//   closed = If true, treat the path as a closed polygon.
-// Example(2D):
-//   path = circle(d=100);
-//   segs = path_cut_segs(path, [50, 200], closed=true);
-//   rainbow(segs) stroke($item);
-function path_cut_segs(path,cutlens,closed=false) =
-    let(
-        path = closed? close_path(path) : path,
-        cutlist = path_cut_points(path, cutlens),
-        cuts = len(cutlist)
-    ) [
-        concat(
-            select(path,0,cutlist[0][1]-1),
-            [cutlist[0][0]]
-        ),
-        for(i=[0:cuts-2]) concat(
-            [cutlist[i][0]],
-            slice(path, cutlist[i][1], cutlist[i+1][1]),
-            [cutlist[i+1][0]]
-        ),
-        concat(
-            [cutlist[cuts-1][0]],
-            select(path, cutlist[cuts-1][1], -1)
-        )
-    ];
-
-
 
 // Function: path_cut_points()
 //
 // Usage:
-//   path_cut_points(path, dists, [closed], [direction])
+//   cuts = path_cut_points(path, dists, <closed=>, <direction=>);
 //
 // Description:
 //   Cuts a path at a list of distances from the first point in the path.  Returns a list of the cut
@@ -1280,6 +1242,7 @@ function path_cut_segs(path,cutlens,closed=false) =
 // Arguments:
 //   path = path to cut
 //   dists = distances where the path should be cut (a list) or a scalar single distance
+//   ---
 //   closed = set to true if the curve is closed.  Default: false
 //   direction = set to true to return direction vectors.  Default: false
 //
@@ -1372,8 +1335,10 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 
 
 // Function: path_cut_segs()
+// Topics: Paths
+// See Also: path_cut_points()
 // Usage:
-//    path_list = path_cut_segs(path, cutdist, <closed>);
+//    path_list = path_cut_segs(path, cutdist, <closed=>);
 // Description:
 //    Given a list of distances in `cutdist`, cut the path into
 //    subpaths at those lengths, returning a list of paths.
@@ -1382,9 +1347,13 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 //    in ascending order.  If you repeat a distance you will get an
 //    empty list in that position in the output.
 // Arguments:
-//    path = path to cut
-//    cutdist = distance or list of distances where path is cut
-//    closed = set to true for a closed path.  Default: false
+//   path = The original path to split.
+//   cutdist = Distance or list of distances where path is cut
+//   closed = If true, treat the path as a closed polygon.
+// Example(2D):
+//   path = circle(d=100);
+//   segs = path_cut_segs(path, [50, 200], closed=true);
+//   rainbow(segs) stroke($item);
 function path_cut_segs(path,cutdist,closed) =
   is_num(cutdist) ? path_cut_segs(path,[cutdist],closed) :
   assert(is_vector(cutdist))
