@@ -349,17 +349,18 @@ function up(z=0, p) = move([0,0,z],p=p);
 //   * `rot(30)` or `rot(a=30)` rotates 30 degrees around the Z axis.
 //   * `rot([20,30,40])` or `rot(a=[20,30,40])` rotates 20 degrees around the X axis, then 30 degrees around the Y axis, then 40 degrees around the Z axis.
 //   * `rot(30, [1,1,0])` or `rot(a=30, v=[1,1,0])` rotates 30 degrees around the axis vector `[1,1,0]`.
-//   * `rot(from=[0,0,1], to=[1,0,0])` rotates the top towards the right, similar to `rot(a=90,v=[0,1,0]`.
-//   * `rot(from=[0,0,1], to=[1,1,0], a=45)` rotates 45 degrees around the Z axis, then rotates the top towards the back-right.  Similar to `rot(a=90,v=[-1,1,0])`
-//   If the `cp` centerpoint argument is given, then rotations are performed around that centerpoint.
-//   If the `reverse` argument is true, then the rotations performed will be exactly reversed.
+//   * `rot(from=[0,0,1], to=[1,0,0])` rotates the `from` vector to line up with the `to` vector, in this case the top to the right and hence equivalent to `rot(a=90,v=[0,1,0]`.
+//   * `rot(from=[0,1,1], to=[1,1,0], a=45)` rotates 45 degrees around the `from` vector ([0,1,1]) and then rotates the `from` vector to align with the `to` vector.  Equivalent to `rot(from=[0,1,1],to=[1,1,0]) rot(a=45,v=[0,1,1])`.  You can also regard `a` as as post-rotation around the `to` vector.  For this form, `a` must be a scalar.  
+//   * If the `cp` centerpoint argument is given, then rotations are performed around that centerpoint.  So `rot(args...,cp=[1,2,3])` is equivalent to `move(-[1,2,3])rot(args...)move([1,2,3])`.
+//   * If the `reverse` argument is true, then the rotations performed will be exactly reversed.
+//   .
 //   The behavior and return value varies depending on how `rot()` is called:
 //   * Called as a module, rotates all children.
 //   * Called as a function with a `p` argument containing a point, returns the rotated point.
 //   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
 //   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, and `planar` is true, returns the affine2d rotational matrix.  Requires that `a` is a finite scalar.
+//   * Called as a function without a `p` argument, and `planar` is true, returns the affine2d rotational matrix.  The angle `a` must be a scalar. 
 //   * Called as a function without a `p` argument, and `planar` is false, returns the affine3d rotational matrix.
 //
 // Arguments:

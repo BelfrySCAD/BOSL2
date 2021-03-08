@@ -76,7 +76,7 @@ include <structs.scad>
 //   ignored.  Note that $fn is interpreted as the number of points on the roundover curve, which is
 //   not equivalent to its meaning for rounding circles because roundovers are usually small fractions
 //   of a circular arc.  When doing continuous curvature rounding be sure to use lots of segments or the effect
-//   will be hidden by the discretization.  Note that if you use $fn then $fn with "smooth" then $fn points are added at each corner, even
+//   will be hidden by the discretization.  Note that if you use $fn with "smooth" then $fn points are added at each corner, even
 //   if the "corner" is flat, with collinear points, so this guarantees a specific output length.  
 //
 // Figure(2D,Med):
