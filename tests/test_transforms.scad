@@ -304,7 +304,7 @@ module test_rot() {
             for (a = angs) {
                 assert_equal(
                     rot(from=vec1, to=vec2, a=a),
-                    affine3d_rot_from_to(vec1,vec2) * affine3d_zrot(a),
+                    affine3d_rot_from_to(vec1,vec2) * affine3d_rot_by_axis(vec1,a),
                     info=str(
                         "from = ", vec1, ", ",
                         "to = ", vec2, ", ",
@@ -314,7 +314,7 @@ module test_rot() {
                 assert_equal(
                     rot(from=vec1, to=vec2, a=a, p=pts3d),
                     apply(
-                        affine3d_rot_from_to(vec1,vec2) * affine3d_zrot(a),
+                        affine3d_rot_from_to(vec1,vec2) * affine3d_rot_by_axis(vec1,a),
                         pts3d
                     ),
                     info=str(

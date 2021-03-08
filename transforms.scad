@@ -425,7 +425,7 @@ function rot(a=0, v, cp, from, to, reverse=false, planar=false, p, _m) =
             cp = is_undef(cp)? undef : point3d(cp),
             m1 = !is_undef(from)? (
                     assert(is_num(a))
-                    affine3d_rot_from_to(from,to) * affine3d_zrot(a)
+                    affine3d_rot_from_to(from,to) * affine3d_rot_by_axis(from,a)
                 ) :
                 !is_undef(v)? assert(is_num(a)) affine3d_rot_by_axis(v,a) :
                 is_num(a)? affine3d_zrot(a) :
