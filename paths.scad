@@ -1334,11 +1334,11 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
     ];
 
 
-// Function: path_cut_segs()
+// Function: path_cut()
 // Topics: Paths
 // See Also: path_cut_points()
 // Usage:
-//    path_list = path_cut_segs(path, cutdist, <closed=>);
+//    path_list = path_cut(path, cutdist, <closed=>);
 // Description:
 //    Given a list of distances in `cutdist`, cut the path into
 //    subpaths at those lengths, returning a list of paths.
@@ -1352,15 +1352,15 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 //   closed = If true, treat the path as a closed polygon.
 // Example(2D):
 //   path = circle(d=100);
-//   segs = path_cut_segs(path, [50, 200], closed=true);
+//   segs = path_cut(path, [50, 200], closed=true);
 //   rainbow(segs) stroke($item);
-function path_cut_segs(path,cutdist,closed) =
-  is_num(cutdist) ? path_cut_segs(path,[cutdist],closed) :
+function path_cut(path,cutdist,closed) =
+  is_num(cutdist) ? path_cut(path,[cutdist],closed) :
   assert(is_vector(cutdist))
   assert(select(cutdist,-1)<path_length(path,closed=closed),"Cut distances must be smaller than the path length")
   assert(cutdist[0]>0, "Cut distances must be strictly positive")
   let(
-      cutlist = path_cut(path,cutdist,closed=closed),
+      cutlist = path_cut_points(path,cutdist,closed=closed),
       cuts = len(cutlist)
   )
   [
