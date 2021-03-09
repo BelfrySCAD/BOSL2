@@ -1273,7 +1273,7 @@ function _path_cut_points(path, dists, closed=false, pind=0, dtotal=0, dind=0, r
     let(
         lastpt = len(result)==0? [] : select(result,-1)[0],       // location of last cut point
         dpartial = len(result)==0? 0 : norm(lastpt-select(path,pind)),  // remaining length in segment
-        nextpoint = dists[dind] <= dpartial+dtotal  // Do we have enough length left on the current segment?
+        nextpoint = dists[dind] < dpartial+dtotal  // Do we have enough length left on the current segment?
            ? [lerp(lastpt,select(path,pind),(dists[dind]-dtotal)/dpartial),pind] 
            : _path_cut_single(path, dists[dind]-dtotal-dpartial, closed, pind)
     ) 
