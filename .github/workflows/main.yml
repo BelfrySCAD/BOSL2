@@ -8,11 +8,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Checkout Wiki
-      uses: actions/checkout@v2
-      with:
-        repository: ${{github.repository}}.wiki
-        path: BOSL2.wiki
+    - name: Clone Wiki
+      run: |
+        cd $GITHUB_WORKSPACE
+        git clone https://github.com/revarbat/BOSL2.wiki.git
 
     - name: Install OpenSCAD
       run: |
@@ -33,11 +32,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Checkout Wiki
-      uses: actions/checkout@v2
-      with:
-        repository: ${{github.repository}}.wiki
-        path: BOSL2.wiki
+    - name: Clone Wiki
+      run: |
+        cd $GITHUB_WORKSPACE
+        git clone https://github.com/revarbat/BOSL2.wiki.git
 
     - name: Install Python dev
       run: sudo apt-get install python3-pip python3-dev python3-setuptools python3-pil
@@ -56,5 +54,5 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
-        openscad-docsgen -T *.scad
+        openscad-docsgen -Tm *.scad
 
