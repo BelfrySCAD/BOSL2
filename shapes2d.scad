@@ -5,7 +5,6 @@
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
-
 // Section: 2D Drawing Helpers
 
 // Module: stroke()
@@ -15,7 +14,7 @@
 // Topics: Paths (2D), Paths (3D), Drawing Tools
 // Description:
 //   Draws a 2D or 3D path with a given line width.  Endcaps can be specified for each end individually.
-// Figure(Med,NoAxes,VPR=[0,0,0],VPD=250): Endcap Types
+// Figure(Med,NoAxes,2D,VPR=[0,0,0],VPD=250): Endcap Types
 //   cap_pairs = [
 //       ["butt",  "chisel" ],
 //       ["round", "square" ],
@@ -431,7 +430,7 @@ module stroke(
 // Usage: As a Function
 //   dashes = dashed_stroke(path, dashpat, width=, <closed=>);
 // Topics: Paths, Drawing Tools
-// See Also: stroke(), path_cut_segs()
+// See Also: stroke(), path_cut()
 // Description:
 //   Given a path and a dash pattern, creates a dashed line that follows that
 //   path with the given dash pattern.
@@ -467,7 +466,7 @@ function dashed_stroke(path, dashpat=[3,3], closed=false) =
             let (st=i*step, x=st+off)
             if (x>0 && x<plen) x
         ],
-        dashes = path_cut_segs(path, cuts, closed=false),
+        dashes = path_cut(path, cuts, closed=false),
         evens = [for (i=idx(dashes)) if (i%2==0) dashes[i]]
     ) evens;
 
