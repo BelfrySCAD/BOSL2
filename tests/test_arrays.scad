@@ -468,11 +468,11 @@ module test_triplet() {
 test_triplet();
 
 
-module test_permute() {
-    assert(permute([3,4,5,6]) ==  [[3,4],[3,5],[3,6],[4,5],[4,6],[5,6]]);
-    assert(permute([3,4,5,6],n=3) == [[3,4,5],[3,4,6],[3,5,6],[4,5,6]]);
+module test_combinations() {
+    assert(combinations([3,4,5,6]) ==  [[3,4],[3,5],[3,6],[4,5],[4,6],[5,6]]);
+    assert(combinations([3,4,5,6],n=3) == [[3,4,5],[3,4,6],[3,5,6],[4,5,6]]);
 }
-test_permute();
+test_combinations();
 
 
 module test_repeat_entries() {

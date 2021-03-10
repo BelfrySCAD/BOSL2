@@ -41,7 +41,7 @@ function is_homogeneous(l, depth=10) =
     [] == [for(i=[1:len(l)-1]) if( ! _same_type(l[i],l0, depth+1) )  0 ];
 
 function is_homogenous(l, depth=10) = is_homogeneous(l, depth);
-                 
+
 function _same_type(a,b, depth) = 
     (depth==0) ||
     (is_undef(a) && is_undef(b)) ||
@@ -50,7 +50,7 @@ function _same_type(a,b, depth) =
     (is_string(a) && is_string(b)) ||
     (is_list(a) && is_list(b) && len(a)==len(b) 
           && []==[for(i=idx(a)) if( ! _same_type(a[i],b[i],depth-1) ) 0] ); 
-  
+
 
 // Function: select()
 // Description:
@@ -1084,7 +1084,7 @@ function unique_count(list) =
 //   rng = idx(list, <s=>, <e=>, <step=>);
 //   for(i=idx(list, <s=>, <e=>, <step=>)) ...
 // Topics: List Handling, Iteration
-// See Also: enumerate(), pair(), triplet(), permute()
+// See Also: enumerate(), pair(), triplet(), combinations(), permutations()
 // Description:
 //   Returns the range of indexes for the given list.
 // Arguments:
@@ -1110,7 +1110,7 @@ function idx(list, s=0, e=-1, step=1) =
 //   arr = enumerate(l, <idx>);
 //   for (x = enumerate(l, <idx>)) ... // x[0] is the index number, x[1] is the item.
 // Topics: List Handling, Iteration
-// See Also: idx(), pair(), triplet(), permute()
+// See Also: idx(), pair(), triplet(), combinations(), permutations()
 // Description:
 //   Returns a list, with each item of the given list `l` numbered in a sublist.
 //   Something like: `[[0,l[0]], [1,l[1]], [2,l[2]], ...]`
@@ -1137,7 +1137,7 @@ function enumerate(l,idx=undef) =
 //   p = pair(list, <wrap>);
 //   for (p = pair(list, <wrap>)) ...  // On each iteration, p contains a list of two adjacent items.
 // Topics: List Handling, Iteration
-// See Also: idx(), enumerate(), triplet(), permute()
+// See Also: idx(), enumerate(), triplet(), combinations(), permutations()
 // Description:
 //   Takes a list, and returns a list of adjacent pairs from it, optionally wrapping back to the front.
 // Arguments:
@@ -1167,7 +1167,7 @@ function pair(list, wrap=false) =
 //   list = triplet(list, <wrap>);
 //   for (t = triplet(list, <wrap>)) ...
 // Topics: List Handling, Iteration
-// See Also: idx(), enumerate(), pair(), permute()
+// See Also: idx(), enumerate(), pair(), combinations(), permutations()
 // Description:
 //   Takes a list, and returns a list of adjacent triplets from it, optionally wrapping back to the front.
 // Example:
@@ -1191,12 +1191,12 @@ function triplet(list, wrap=false) =
       : [for (i=[0:1:ll-3]) [ list[i], list[i+1],      list[i+2]      ]];
 
 
-// Function: permute()
+// Function: combinations()
 // Usage:
-//   list = permute(l, <n>);
-//   for (p = permute(l, <n>)) ...
+//   list = combinations(l, <n>);
+//   for (p = combinations(l, <n>)) ...
 // Topics: List Handling, Iteration
-// See Also: idx(), enumerate(), pair(), triplet()
+// See Also: idx(), enumerate(), pair(), triplet(), permutations()
 // Description:
 //   Returns an ordered list of every unique permutation of `n` items out of the given list `l`.
 //   For the list `[1,2,3,4]`, with `n=2`, this will return `[[1,2], [1,3], [1,4], [2,3], [2,4], [3,4]]`.
@@ -1205,16 +1205,95 @@ function triplet(list, wrap=false) =
 //   l = The list to provide permutations for.
 //   n = The number of items in each permutation. Default: 2
 // Example:
-//   pairs = permute([3,4,5,6]);  // Returns: [[3,4],[3,5],[3,6],[4,5],[4,6],[5,6]]
-//   triplets = permute([3,4,5,6],n=3);  // Returns: [[3,4,5],[3,4,6],[3,5,6],[4,5,6]]
+//   pairs = combinations([3,4,5,6]);  // Returns: [[3,4],[3,5],[3,6],[4,5],[4,6],[5,6]]
+//   triplets = combinations([3,4,5,6],n=3);  // Returns: [[3,4,5],[3,4,6],[3,5,6],[4,5,6]]
 // Example(2D):
-//   for (p=permute(regular_ngon(n=7,d=100))) stroke(p);
-function permute(l,n=2,_s=0) =
+//   for (p=combinations(regular_ngon(n=7,d=100))) stroke(p);
+function combinations(l,n=2,_s=0) =
     assert(is_list(l), "Invalid list." )
     assert( is_finite(n) && n>=1 && n<=len(l), "Invalid number `n`." )
     n==1
       ? [for (i=[_s:1:len(l)-1]) [l[i]]] 
-      : [for (i=[_s:1:len(l)-n], p=permute(l,n=n-1,_s=i+1)) concat([l[i]], p)];
+      : [for (i=[_s:1:len(l)-n], p=combinations(l,n=n-1,_s=i+1)) concat([l[i]], p)];
+
+
+// Function: permutations()
+// Usage:
+//   list = permutations(l, <n>);
+//   for (p = permutations(l, <n>)) ...
+// Topics: List Handling, Iteration
+// See Also: idx(), enumerate(), pair(), triplet(), combinations()
+// Description:
+//   Returns an ordered list of every unique permutation of `n` items out of the given list `l`.
+//   For the list `[1,2,3,4]`, with `n=2`, this will return `[[1,2], [1,3], [1,4], [2,3], [2,4], [3,4]]`.
+//   For the list `[1,2,3,4]`, with `n=3`, this will return `[[1,2,3], [1,2,4], [1,3,4], [2,3,4]]`.
+// Arguments:
+//   l = The list to provide permutations for.
+//   n = The number of items in each permutation. Default: 2
+// Example:
+//   pairs = permutations([3,4,5,6]);  // Returns: [[3,4],[3,5],[3,6],[4,5],[4,6],[5,6]]
+//   triplets = permutations([3,4,5,6],n=3);  // Returns: [[3,4,5],[3,4,6],[3,5,6],[4,5,6]]
+// Example(2D):
+//   for (p=permutations(regular_ngon(n=7,d=100))) stroke(p);
+function permutations(l,n=2) =
+    assert(is_list(l), "Invalid list." )
+    assert( is_finite(n) && n>=1 && n<=len(l), "Invalid number `n`." )
+    n==1
+      ? [for (i=[0:1:len(l)-1]) [l[i]]] 
+      : [for (i=idx(l), p=permutations([for (j=idx(l)) if (i!=j) l[j]], n=n-1)) concat([l[i]], p)];
+
+
+// Function: zip()
+// Usage:
+//   pairs = zip(a,b);
+//   triples = zip(a,b,c);
+//   quads = zip([LIST1,LIST2,LIST3,LIST4]);
+// Description:
+//   Zips together two or more lists into a single list.  For example, if you have two
+//   lists [3,4,5], and [8,7,6], and zip them together, you get [[3,8],[4,7],[5,6]].
+//   The list returned will be as long as the shortest list passed to zip().
+// Arguments:
+//   a = The first list, or a list of lists if b and c are not given.
+//   b = The second list, if given.
+//   c = The third list, if given.
+// Example:
+//   a = [9,8,7,6]; b = [1,2,3];
+//   for (p=zip(a,b)) echo(p);
+//   // ECHO: [9,1]
+//   // ECHO: [8,2]
+//   // ECHO: [7,3]
+function zip(a,b,c) =
+    b!=undef? zip([a,b,if (c!=undef) c]) :
+    let(n = list_shortest(a))
+    [for (i=[0:1:n-1]) [for (x=a) x[i]]];
+
+
+// Function: zip_long()
+// Usage:
+//   pairs = zip_long(a,b);
+//   triples = zip_long(a,b,c);
+//   quads = zip_long([LIST1,LIST2,LIST3,LIST4]);
+// Description:
+//   Zips together two or more lists into a single list.  For example, if you have two
+//   lists [3,4,5], and [8,7,6], and zip them together, you get [[3,8],[4,7],[5,6]].
+//   The list returned will be as long as the longest list passed to zip_long(), with
+//   shorter lists padded by the value in `fill`.
+// Arguments:
+//   a = The first list, or a list of lists if b and c are not given.
+//   b = The second list, if given.
+//   c = The third list, if given.
+//   fill = The value to pad shorter lists with.  Default: undef
+// Example:
+//   a = [9,8,7,6]; b = [1,2,3];
+//   for (p=zip_long(a,b,fill=88)) echo(p);
+//   // ECHO: [9,1]
+//   // ECHO: [8,2]
+//   // ECHO: [7,3]
+//   // ECHO: [6,88]]
+function zip_long(a,b,c,fill) =
+    b!=undef? zip_long([a,b,if (c!=undef) c],fill=fill) :
+    let(n = list_longest(a))
+    [for (i=[0:1:n-1]) [for (x=a) i<len(x)? x[i] : fill]];
 
 
 
