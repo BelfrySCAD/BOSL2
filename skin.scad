@@ -63,8 +63,8 @@
 //   Note that when dealing with continuous curves it is always better to adjust the
 //   sampling in your code to generate the desired sampling rather than using the `refine` argument.
 //   .
-//   You can choose from four methods for specifying alignment for incommensurate profiles.
-//   The available methods are `"distance"`, `"tangent"`, `"direct"` and `"reindex"`.
+//   You can choose from five methods for specifying alignment for incommensurate profiles.
+//   The available methods are `"distance"`, `"fast_distance"`, `"tangent"`, `"direct"` and `"reindex"`.
 //   It is useful to distinguish between continuous curves like a circle and discrete profiles
 //   like a hexagon or star, because the algorithms' suitability depend on this distinction.
 //   .
@@ -87,14 +87,17 @@
 //   `sampling="segment"` may produce a more pleasing result.  These two approaches differ only when
 //   the segments of your input profiles have unequal length.
 //   .
-//   The "distance" and "tangent" methods work by duplicating vertices to create
+//   The "distance", "fast_distance" and "tangent" methods work by duplicating vertices to create
 //   triangular faces.  The "distance" method finds the global minimum distance method for connecting two
 //   profiles.  This algorithm generally produces a good result when both profiles are discrete ones with
 //   a small number of vertices.  It is computationally intensive (O(N^3)) and may be
 //   slow on large inputs.  The resulting surfaces generally have curved faces, so be
 //   sure to select a sufficiently large value for `slices` and `refine`.  Note that for
 //   this method, `sampling` must be set to `"segment"`, and hence this is the default setting.
-//   Using sampling by length would ignore the repeated vertices and ruin the alignment.  
+//   Using sampling by length would ignore the repeated vertices and ruin the alignment.
+//   The "fast_distance" method is similar to "distance", but it makes the assumption that an edge should
+//   connect the first vertices of the two polygons.  This reduces the run time to O(N^2) and makes
+//   the method usable on profiles with more points if you take care to index the inputs to match.  
 //   .
 //   The `"tangent"` method generally produces good results when
 //   connecting a discrete polygon to a convex, finely sampled curve.  It works by finding
@@ -104,7 +107,9 @@
 //   polygon using triangular faces.  Using `refine` with this method will have little effect on the model, so
 //   you should do it only for agreement with other profiles, and these models are linear, so extra slices also
 //   have no effect.  For best efficiency set `refine=1` and `slices=0`.  As with the "distance" method, refinement
-//   must be done using the "segment" sampling scheme to preserve alignment across duplicated points.  
+//   must be done using the "segment" sampling scheme to preserve alignment across duplicated points.
+//   Note that the "tangent" method produces similar results to the "distance" method on curved inputs.  If this
+//   method fails due to concavity, "fast_distance" may be a good option.  
 //   .
 //   It is possible to specify `method` and `refine` as arrays, but it is important to observe
 //   matching rules when you do this.  If a pair of profiles is connected using "tangent" or "distance"
@@ -119,11 +124,11 @@
 //   profiles = list of 2d or 3d profiles to be skinned.  (If 2d must also give `z`.)
 //   slices = scalar or vector number of slices to insert between each pair of profiles.  Set to zero to use only the profiles you provided.  Recommend starting with a value around 10.
 //   ---
-//   refine = resample profiles to this number of points per edge.  Can be a list to give a refinement for each profile.  Recommend using a value above 10 when using the "distance" method.  Default: 1.
-//   sampling = sampling method to use with "direct" and "reindex" methods.  Can be "length" or "segment".  Ignored if any profile pair uses either the "distance" or "tangent" methods.  Default: "length".
+//   refine = resample profiles to this number of points per edge.  Can be a list to give a refinement for each profile.  Recommend using a value above 10 when using the "distance" or "fast_distance" methods.  Default: 1.
+//   sampling = sampling method to use with "direct" and "reindex" methods.  Can be "length" or "segment".  Ignored if any profile pair uses either the "distance", "fast_distance", or "tangent" methods.  Default: "length".
 //   closed = set to true to connect first and last profile (to make a torus).  Default: false
 //   caps = true to create endcap faces when closed is false.  Can be a length 2 boolean array.  Default is true if closed is false.
-//   method = method for connecting profiles, one of "distance", "tangent", "direct" or "reindex".  Default: "direct".
+//   method = method for connecting profiles, one of "distance", "fast_distance", "tangent", "direct" or "reindex".  Default: "direct".
 //   z = array of height values for each profile if the profiles are 2d
 //   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
 //   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
@@ -374,7 +379,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
   assert(len(bad)==0, str("Profiles ",bad," are not a paths or have length less than 3"))
   let(
     profcount = len(profiles) - (closed?0:1),
-    legal_methods = ["direct","reindex","distance","tangent"],
+    legal_methods = ["direct","reindex","distance","fast_distance","tangent"],
     caps = is_def(caps) ? caps :
            closed ? false : true,
     capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
@@ -402,7 +407,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
   assert(methodlistok==[], str("method list contains invalid method at ",methodlistok))
   assert(len(method) == profcount,"Method list is the wrong length")
   assert(in_list(sampling,["length","segment"]), "sampling must be set to \"length\" or \"segment\"")
-  assert(sampling=="segment" || (!in_list("distance",method) && !in_list("tangent",method)), "sampling is set to \"length\" which is only allowed iwith methods \"direct\" and \"reindex\"")
+  assert(sampling=="segment" || (!in_list("distance",method) && !in_list("fast_distance") && !in_list("tangent",method)), "sampling is set to \"length\" which is only allowed with methods \"direct\" and \"reindex\"")
   assert(capsOK, "caps must be boolean or a list of two booleans")
   assert(!closed || !caps, "Cannot make closed shape with caps")
   let(
@@ -449,6 +454,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
         let(
           pair = 
             method[i]=="distance" ? _skin_distance_match(profiles[i],select(profiles,i+1)) :
+            method[i]=="fast_distance" ? _skin_aligned_distance_match(profiles[i], select(profiles,i+1)) :
             method[i]=="tangent" ? _skin_tangent_match(profiles[i],select(profiles,i+1)) :
             /*method[i]=="reindex" || method[i]=="direct" ?*/ 
                let( p1 = subdivide_path(profiles[i],max_list[i], method=sampling),
@@ -720,6 +726,23 @@ function _skin_distance_match(poly1,poly2) =
       )
       swap ? [newbig, newsmall] : [newsmall,newbig];
 
+
+// This function associates vertices but with the assumption that index 0 is associated between the
+// two inputs.  This gives only quadratic run time.  As above, output is pair of polygons with
+// vertices duplicated as suited to use as input to skin(). 
+
+function _skin_aligned_distance_match(poly1, poly2) =
+    let(
+      result = _dp_distance_array(poly1, poly2, abort_thresh=1/0),
+      map = _dp_extract_map(result[1]),
+      shift0 = len(map[0]) - max(max_index(map[0],all=true))-1,
+      shift1 = len(map[1]) - max(max_index(map[1],all=true))-1,
+      new0 = polygon_shift(repeat_entries(poly1,unique_count(map[0])[1]),shift0),
+      new1 = polygon_shift(repeat_entries(poly2,unique_count(map[1])[1]),shift1)
+  )
+  [new0,new1];
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Internal Function: _skin_tangent_match()
 /// Usage:
@@ -927,7 +950,7 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 //   path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <convexity=>, <transforms=>, <anchor=>, <cp=>, <spin=>, <orient=>, <extent=>) <attachments>;
 //   vnf = path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <convexity=>, <transforms=>);
 // Description:
-//   Takes as input a 2D polygon path or region, and a 2d or 3d path and constructs a polyhedron by sweeping the shape along the path.
+//   Takes as input a 2D polygon path, and a 2d or 3d path and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF by default or if you set `transforms=true`
 //   then it returns a list of transformations suitable as input to `sweep`.
 //   .
@@ -1206,6 +1229,18 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 //   outside = [for(i=[0:len(trans)-1]) trans[i]*scale(lerp(1,1.5,i/(len(trans)-1)))];
 //   inside = [for(i=[len(trans)-1:-1:0]) trans[i]*scale(lerp(1.1,1.4,i/(len(trans)-1)))];
 //   sweep(shape, concat(outside,inside),closed=true);
+// Example: Using path_sweep on a region
+//   rgn1 = [for (d=[10:10:60]) circle(d=d,$fn=8)];
+//   rgn2 = [square(30,center=false)];
+//   rgn3 = [for (size=[10:10:20]) move([15,15],p=square(size=size, center=true))];
+//   mrgn = union(rgn1,rgn2);
+//   orgn = difference(mrgn,rgn3);
+//   path_sweep(orgn,arc(r=40,angle=180));
+// Example: A region with a twist
+//   region = [for(i=pentagon(5)) move(i,p=circle(r=2,$fn=25))];
+//   path_sweep(region,
+//              circle(r=16,$fn=75),closed=true,
+//              twist=360/5*2,symmetry=5);
 module path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
                     symmetry=1, last_normal, tangent, relaxed=false, caps, convexity=10,
                     anchor="origin",cp,spin=0, orient=UP, extent=false)
@@ -1225,7 +1260,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
   assert(!closed || twist % (360/symmetry)==0, str("For a closed sweep, twist must be a multiple of 360/symmetry = ",360/symmetry))
   assert(closed || symmetry==1, "symmetry must be 1 when closed is false")
   assert(is_integer(symmetry) && symmetry>0, "symmetry must be a positive integer")
-  assert(is_path(shape,2) || is_region(shape), "shape must be a 2d path or region.")
+//  let(shape = check_and_fix_path(shape,valid_dim=2,closed=true,name="shape"))
   assert(is_path(path), "input path is not a path")
   assert(!closed || !approx(path[0],select(path,-1)), "Closed path includes start point at the end")
   let(
@@ -1301,15 +1336,15 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
                  translate(path[i%L])*rotation*zrot(-twist*pathfrac[i])
                ] :
       assert(false,"Unknown method or no method given")[], // unknown method
-      ends_match = !closed ? true :
-           let(
-             start = apply(transform_list[0],path3d(shape)),
-             end = reindex_polygon(start, apply(transform_list[L],path3d(shape)))
-             )
-             all([for(i=idx(start)) approx(start[i],end[i])]),
+      ends_match = !closed ? true
+                 : let( rshape = is_path(shape) ? [path3d(shape)]
+                                                : [for(s=shape) path3d(s)]
+                   )
+                   regions_equal(apply(transform_list[0], rshape),
+                                 apply(transform_list[L], rshape)),
       dummy = ends_match ? 0 : echo("WARNING: ***** The points do not match when closing the model *****")
     )
-    transforms ? transform_list : sweep(clockwise_polygon(shape), transform_list, closed=false, caps=fullcaps);
+    transforms ? transform_list : sweep(is_path(shape)?clockwise_polygon(shape):shape, transform_list, closed=false, caps=fullcaps);
 
 
 // Function&Module: path_sweep2d()
@@ -1361,7 +1396,8 @@ function path_sweep2d(shape, path, closed=false, caps, quality=1) =
         caps = is_def(caps) ? caps
              : closed ? false : true,
         capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
-        fullcaps = is_bool(caps) ? [caps,caps] : caps
+        fullcaps = is_bool(caps) ? [caps,caps] : caps,
+        shape = check_and_fix_path(shape,valid_dim=2,closed=true,name="shape")
    )
    assert(capsOK, "caps must be boolean or a list of two booleans")
    assert(!closed || !caps, "Cannot make closed shape with caps")

@@ -554,7 +554,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, l
                 )
                 assert(is_vector(cp,2),"Centerpoint must be a 2d vector")
                 assert(angle!=0, "Arc has zero length")
-                assert(r>0, "Arc radius invalid")
+                assert(is_def(r) && r>0, "Arc radius invalid")
                 let(
             N = max(3, is_undef(N)? ceil(segs(r)*abs(angle)/360) : N),
             arcpoints = [for(i=[0:N-1]) let(theta = start + i*angle/(N-1)) r*[cos(theta),sin(theta)]+cp],
