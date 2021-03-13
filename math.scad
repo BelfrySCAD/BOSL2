@@ -585,10 +585,10 @@ function lcm(a,b=[]) =
 function sum(v, dflt=0) =
     v==[]? dflt :
     assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
+    is_vector(v) ? [for(i=[1:len(v)]) 1]*v :
     _sum(v,v[0]*0);
 
 function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
-
 
 // Function: cumsum()
 // Usage:
@@ -1465,35 +1465,35 @@ function deriv3(data, h=1, closed=false) =
 
 // Section: Complex Numbers
 
-// Function: C_times()
+// Function: c_mul()
 // Usage:
-//   c = C_times(z1,z2)
+//   c = c_mul(z1,z2)
 // Description:
 //   Multiplies two complex numbers represented by 2D vectors.  
 //   Returns a complex number as a 2D vector [REAL, IMAGINARY].
 // Arguments:
 //   z1 = First complex number, given as a 2D vector [REAL, IMAGINARY]
 //   z2 = Second complex number, given as a 2D vector [REAL, IMAGINARY]
-function C_times(z1,z2) = 
+function c_mul(z1,z2) = 
     assert( is_matrix([z1,z2],2,2), "Complex numbers should be represented by 2D vectors" )
     [ z1.x*z2.x - z1.y*z2.y, z1.x*z2.y + z1.y*z2.x ];
 
-// Function: C_div()
+// Function: c_div()
 // Usage:
-//   x = C_div(z1,z2)
+//   x = c_div(z1,z2)
 // Description:
 //   Divides two complex numbers represented by 2D vectors.  
 //   Returns a complex number as a 2D vector [REAL, IMAGINARY].
 // Arguments:
 //   z1 = First complex number, given as a 2D vector [REAL, IMAGINARY]
 //   z2 = Second complex number, given as a 2D vector [REAL, IMAGINARY]
-function C_div(z1,z2) = 
+function c_div(z1,z2) = 
     assert( is_vector(z1,2) && is_vector(z2), "Complex numbers should be represented by 2D vectors." )
     assert( !approx(z2,0), "The divisor `z2` cannot be zero." ) 
     let(den = z2.x*z2.x + z2.y*z2.y)
     [(z1.x*z2.x + z1.y*z2.y)/den, (z1.y*z2.x - z1.x*z2.y)/den];
 
-// For the sake of consistence with Q_mul and vmul, C_times should be called C_mul
+// For the sake of consistence with Q_mul and vmul, c_mul should be called C_mul
 
 // Section: Polynomials
 
@@ -1544,7 +1544,7 @@ function polynomial(p,z,k,total) =
         assert( is_finite(z) || is_vector(z,2), "The value of `z` must be a real or a complex number." )
         polynomial( _poly_trim(p), z, 0, is_num(z) ? 0 : [0,0])
     : k==len(p) ? total
-    : polynomial(p,z,k+1, is_num(z) ? total*z+p[k] : C_times(total,z)+[p[k],0]);
+    : polynomial(p,z,k+1, is_num(z) ? total*z+p[k] : c_mul(total,z)+[p[k],0]);
 
 // Function: poly_mult()
 // Usage:
@@ -1680,10 +1680,10 @@ function _poly_roots(p, pderiv, s, z, tol, i=0) =
         svals = [for(zk=z) tol*polynomial(s,norm(zk))],
         p_of_z = [for(zk=z) polynomial(p,zk)],
         done = [for(k=[0:n-1]) norm(p_of_z[k])<=svals[k]],
-        newton = [for(k=[0:n-1]) C_div(p_of_z[k], polynomial(pderiv,z[k]))],
-        zdiff = [for(k=[0:n-1]) sum([for(j=[0:n-1]) if (j!=k) C_div([1,0], z[k]-z[j])])],
-        w = [for(k=[0:n-1]) done[k] ? [0,0] : C_div( newton[k],
-                                                     [1,0] - C_times(newton[k], zdiff[k]))]
+        newton = [for(k=[0:n-1]) c_div(p_of_z[k], polynomial(pderiv,z[k]))],
+        zdiff = [for(k=[0:n-1]) sum([for(j=[0:n-1]) if (j!=k) c_div([1,0], z[k]-z[j])])],
+        w = [for(k=[0:n-1]) done[k] ? [0,0] : c_div( newton[k],
+                                                     [1,0] - c_mul(newton[k], zdiff[k]))]
     )
     all(done) ? z : _poly_roots(p,pderiv,s,z-w,tol,i+1);
 
