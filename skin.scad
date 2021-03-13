@@ -407,7 +407,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
   assert(methodlistok==[], str("method list contains invalid method at ",methodlistok))
   assert(len(method) == profcount,"Method list is the wrong length")
   assert(in_list(sampling,["length","segment"]), "sampling must be set to \"length\" or \"segment\"")
-  assert(sampling=="segment" || (!in_list("distance",method) && !in_list("fast_distance") && !in_list("tangent",method)), "sampling is set to \"length\" which is only allowed with methods \"direct\" and \"reindex\"")
+  assert(sampling=="segment" || (!in_list("distance",method) && !in_list("fast_distance",method) && !in_list("tangent",method)), "sampling is set to \"length\" which is only allowed with methods \"direct\" and \"reindex\"")
   assert(capsOK, "caps must be boolean or a list of two booleans")
   assert(!closed || !caps, "Cannot make closed shape with caps")
   let(
