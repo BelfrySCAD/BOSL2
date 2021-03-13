@@ -37,6 +37,9 @@ jobs:
         cd $GITHUB_WORKSPACE
         git clone https://github.com/revarbat/BOSL2.wiki.git
 
+    - name: Apt Update
+      run: sudo apt update
+
     - name: Install Python dev
       run: sudo apt-get install python3-pip python3-dev python3-setuptools python3-pil
 
