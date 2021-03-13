@@ -1682,4 +1682,17 @@ function transpose(arr, reverse=false) =
            arr;
 
 
+// Function: is_matrix_symmetric()
+// Usage:
+//   b = is_matrix_symmetric(A,<eps>)
+// Description:
+//   Returns true if the input matrix is symmetric, meaning it equals its transpose.
+//   Matrix should have numerical entries.
+// Arguments:
+//   A = matrix to test
+//   eps = epsilon for comparing equality.  Default: 1e-12
+function is_matrix_symmetric(A,eps=1e-12) =
+    approx(A,transpose(A));
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

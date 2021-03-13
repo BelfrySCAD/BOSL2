@@ -75,7 +75,7 @@ include <structs.scad>
 //   circular roundovers.  For continuous curvature roundovers `$fs` and `$fn` are used and `$fa` is
 //   ignored.  Note that $fn is interpreted as the number of points on the roundover curve, which is
 //   not equivalent to its meaning for rounding circles because roundovers are usually small fractions
-//   of a circular arc.  When doing continuous curvature rounding be sure to use lots of segments or the effect
+//   of a circular arc.  As usual, $fn overrides $fs.  When doing continuous curvature rounding be sure to use lots of segments or the effect
 //   will be hidden by the discretization.  Note that if you use $fn with "smooth" then $fn points are added at each corner, even
 //   if the "corner" is flat, with collinear points, so this guarantees a specific output length.  
 //
@@ -264,8 +264,7 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
                   let(
                       pathbit = select(path,i-1,i+1),
                       angle = approx(pathbit[0],pathbit[1]) || approx(pathbit[1],pathbit[2]) ? undef
-                            : vector_angle(select(path,i-1,i+1))/2,
-                            f=echo(angle=angle)
+                            : vector_angle(select(path,i-1,i+1))/2
                   )
                   (!closed && (i==0 || i==len(path)-1))  ? [0] :          // Force zeros at ends for non-closed
                   parm[i]==0 ? [0]    : // If no rounding requested then don't try to compute parameters
