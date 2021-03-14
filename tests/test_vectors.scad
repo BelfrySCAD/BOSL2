@@ -11,6 +11,10 @@ module test_is_vector() {
     assert(is_vector(1) == false);
     assert(is_vector("foo") == false);
     assert(is_vector(true) == false);
+    assert(is_vector([3,4,"foo"]) == false);
+    assert(is_vector([3,4,[4,5]]) == false);
+    assert(is_vector([3,4,undef]) == false);
+    assert(is_vector(["foo","bar"]) == false);
 
     assert(is_vector([0,0,0],zero=true) == true);
     assert(is_vector([0,0,0],zero=false) == false);

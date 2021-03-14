@@ -990,6 +990,7 @@ function is_matrix(A,m,n,square=false) =
    && is_list(A[0])
    && (( is_undef(n) && len(A[0]) ) || len(A[0])==n)
    && (!square || len(A) == len(A[0]))
+   && is_vector(A[0])
    && is_consistent(A);
 
 
