@@ -221,6 +221,31 @@ function in_list(val,list,idx) =
     : val==list[s][idx];
 
 
+// Function: find_first_match()
+// Topics: List Handling
+// See Also: in_list()
+// Usage:
+//   idx = find_first_match(val, list, <start=>, <eps=>);
+//   indices = find_first_match(val, list, all=true, <start=>, <eps=>);
+// Description:
+//   Finds the first item in `list` that matches `val`, returning the index.
+// Arguments:
+//   val = The value to search for.
+//   list = The list to search through.
+//   ---
+//   start = The index to start searching from.
+//   all = If true, returns a list of all matching item indices.
+//   eps = The maximum allowed floating point rounding error for numeric comparisons.
+function find_first_match(val, list, start=0, all=false, eps=EPSILON) =
+    all? [for (i=[start:1:len(list)-1]) if(val==list[i] || approx(val, list[i], eps=eps)) i] :
+    __find_first_match(val, list, eps=eps, i=start);
+
+function __find_first_match(val, list, eps, i=0) =
+    i >= len(list)? undef :
+    approx(val, list[i], eps=eps)? i :
+    __find_first_match(val, list, eps=eps, i=i+1);
+
+
 // Function: min_index()
 // Usage:
 //   idx = min_index(vals);

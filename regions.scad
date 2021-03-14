@@ -121,6 +121,76 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
     ) pip==0? 0 : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
 
 
+// Function: polygons_equal()
+// Usage:
+//    b = polygons_equal(poly1, poly2, <eps>)
+// Description:
+//    Returns true if the components of region1 and region2 are the same polygons
+//    within given epsilon tolerance.
+// Arguments:
+//    poly1 = first polygon
+//    poly2 = second polygon
+//    eps = tolerance for comparison
+// Example(NORENDER):
+//    polygons_equal(pentagon(r=4),
+//                   rot(360/5, p=pentagon(r=4))); // returns true
+//    polygons_equal(pentagon(r=4),
+//                   rot(90, p=pentagon(r=4)));    // returns false
+function polygons_equal(poly1, poly2, eps=EPSILON) =
+    let(
+        poly1 = cleanup_path(poly1),
+        poly2 = cleanup_path(poly2),
+        l1 = len(poly1),
+        l2 = len(poly2)
+    ) l1 != l2 ? false :
+    let( maybes = find_first_match(poly1[0], poly2, eps=eps, all=true) )
+    maybes == []? false :
+    [for (i=maybes) if (__polygons_equal(poly1, poly2, eps, i)) 1] != [];
+
+function __polygons_equal(poly1, poly2, eps, st) =
+    max([for(d=poly1-select(poly2,st,st-1)) d*d])<eps*eps;
+
+
+// Function: poly_in_polygons()
+// Topics: Polygons, Comparators
+// See Also: polygons_equal(), regions_equal()
+// Usage:
+//   bool = poly_in_polygons(poly, polys);
+// Description:
+//   Returns true if one of the polygons in `polys` is equivalent to the polygon `poly`.
+// Arguments:
+//   poly = The polygon to search for.
+//   polys = The list of polygons to look for the polygon in.
+function poly_in_polygons(poly, polys) =
+    __poly_in_polygons(poly, polys, 0);
+
+function __poly_in_polygons(poly, polys, i) =
+    i >= len(polys)? false :
+    polygons_equal(poly, polys[i])? true :
+    __poly_in_polygons(poly, polys, i+1);
+
+
+// Function: regions_equal()
+// Usage:
+//    b = regions_equal(region1, region2, <eps>)
+// Description:
+//    Returns true if the components of region1 and region2 are the same polygons
+//    within given epsilon tolerance.
+// Arguments:
+//    poly1 = first polygon
+//    poly2 = second polygon
+//    eps = tolerance for comparison
+function regions_equal(region1, region2) =
+    assert(is_region(region1) && is_region(region2))
+    len(region1) != len(region2)? false :
+    __regions_equal(region1, region2, 0);
+
+function __regions_equal(region1, region2, i) =
+    i >= len(region1)? true :
+    !poly_in_polygons(region1[i], region2)? false :
+    __regions_equal(region1, region2, i+1);
+
+
 // Function: region_path_crossings()
 // Usage:
 //   region_path_crossings(path, region);
@@ -221,64 +291,6 @@ function split_nested_region(region) =
         ]
     ) outs;
 
-
-function find_first_approx(val, list, start=0, all=false, eps=EPSILON) =
-    all? [for (i=[start:1:len(list)-1]) if(approx(val, list[i], eps=eps)) i] :
-    __find_first_approx(val, list, eps=eps, i=start);
-
-function __find_first_approx(val, list, eps, i=0) =
-    i >= len(list)? undef :
-    approx(val, list[i], eps=eps)? i :
-    __find_first_approx(val, list, eps=eps, i=i+1);
-
-
-// Function: polygons_equal()
-// Usage:
-//    b = polygons_equal(poly1, poly2, <eps>)
-// Description:
-//    Returns true if the components of region1 and region2 are the same polygons
-//    within given epsilon tolerance.
-// Arguments:
-//    poly1 = first polygon
-//    poly2 = second polygon
-//    eps = tolerance for comparison
-// Example(NORENDER):
-//    polygons_equal(pentagon(r=4),
-//                   rot(360/5, p=pentagon(r=4))); // returns true
-//    polygons_equal(pentagon(r=4),
-//                   rot(90, p=pentagon(r=4)));    // returns false
-function polygons_equal(poly1, poly2, eps=EPSILON) =
-    let( l1 = len(poly1), l2 = len(poly2))
-    l1 != l2 ? false :
-    let( maybes = find_first_approx(poly1[0], poly2, eps=eps, all=true) )
-    maybes == []? false :
-    [for (i=maybes) if (__polygons_equal(poly1, poly2, eps, i)) 1] != [];
-
-function __polygons_equal(poly1, poly2, eps, st) =
-    max([for(d=poly1-select(poly2,st,st-1)) d*d])<eps*eps;
-
-// Function: regions_equal()
-// Usage:
-//    b = regions_equal(region1, region2, <eps>)
-// Description:
-//    Returns true if the components of region1 and region2 are the same polygons
-//    within given epsilon tolerance.
-// Arguments:
-//    poly1 = first polygon
-//    poly2 = second polygon
-//    eps = tolerance for comparison
-function regions_equal(region1, region2) =
-    assert(is_region(region1) && is_region(region2))
-    len(region1)==len(region2) &&
-    [
-        for (a=region1)
-          if (1!=sum(
-                     [for(b=region2)
-                         if (polygons_equal(path3d(a), path3d(b)))
-                           1]
-                    )
-             ) 1
-    ] == [];
 
 
 // Section: Region Extrusion and VNFs
