@@ -421,8 +421,8 @@ turtle state: sequence of transformations ("path") so far
 
 function _turtle3d_state_valid(state) =
     is_list(state)
-        && is_list_of(state[0],ident(4))
-        && is_list_of(state[1],ident(4))
+        && is_consistent(state[0],ident(4))
+        && is_consistent(state[1],ident(4))
         && is_num(state[2])
         && is_num(state[3])
         && is_num(state[4]);

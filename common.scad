@@ -185,49 +185,40 @@ function valid_range(x) =
          : ( x[1]<0 && x[0]>=x[2] ) );
 
 
-// Function: is_list_of()
-// Usage:
-//   bool = is_list_of(list, pattern);
-// Topics: Type Checking
-// See Also: typeof(), is_type(), is_str(), is_def(), is_int(), is_range()
-// Description:
-//   Tests whether the input is a list whose entries are all numeric lists that have the same
-//   list shape as the pattern.
-// Example:
-//   is_list_of([3,4,5], 0);            // Returns true
-//   is_list_of([3,4,undef], 0);        // Returns false
-//   is_list_of([[3,4],[4,5]], [1,1]);  // Returns true
-//   is_list_of([[3,"a"],[4,true]], [1,undef]);  // Returns true
-//   is_list_of([[3,4], 6, [4,5]], [1,1]);  // Returns false
-//   is_list_of([[1,[3,4]], [4,[5,6]]], [1,[2,3]]);    // Returns true
-//   is_list_of([[1,[3,INF]], [4,[5,6]]], [1,[2,3]]);  // Returns false
-//   is_list_of([], [1,[2,3]]);                        // Returns true
-function is_list_of(list,pattern) =
-    let(pattern = 0*pattern)
-    is_list(list) &&
-    []==[for(entry=0*list) if (entry != pattern) entry];
-
-
 // Function: is_consistent()
 // Usage:
-//   bool = is_consistent(list);
+//   bool = is_consistent(list, <pattern>);
 // Topics: Type Checking
 // See Also: typeof(), is_type(), is_str(), is_def(), is_int(), is_range(), is_homogeneous()
 // Description:
 //   Tests whether input is a list of entries which all have the same list structure
-//   and are filled with finite numerical data. It returns `true`for the empty list. 
+//   and are filled with finite numerical data.  You can optionally specify a required 
+//   list structure with the pattern argument.  It returns `true` for the empty list.
+// Arguments:
+//   list = list to check
+//   pattern = optional pattern required to match
 // Example:
 //   is_consistent([3,4,5]);              // Returns true
 //   is_consistent([[3,4],[4,5],[6,7]]);  // Returns true
 //   is_consistent([[3,4,5],[3,4]]);      // Returns false
 //   is_consistent([[3,[3,4,[5]]], [5,[2,9,[9]]]]); // Returns true
 //   is_consistent([[3,[3,4,[5]]], [5,[2,9,9]]]);   // Returns false
-function is_consistent(list) =
-  /*is_list(list) &&*/ is_list_of(list, _list_pattern(list[0]));
-
+//   is_consistent([3,4,5], 0);            // Returns true
+//   is_consistent([3,4,undef], 0);        // Returns false
+//   is_consistent([[3,4],[4,5]], [1,1]);  // Returns true
+//   is_consistent([[3,"a"],[4,true]], [1,undef]);  // Returns true
+//   is_consistent([[3,4], 6, [4,5]], [1,1]);  // Returns false
+//   is_consistent([[1,[3,4]], [4,[5,6]]], [1,[2,3]]);    // Returns true
+//   is_consistent([[1,[3,INF]], [4,[5,6]]], [1,[2,3]]);  // Returns false
+//   is_consistent([], [1,[2,3]]);                        // Returns true
+function is_consistent(list, pattern) =
+    is_list(list) 
+    && (len(list)==0 
+       || (let(pattern = is_undef(pattern) ? _list_pattern(list[0]): _list_pattern(pattern) )
+          []==[for(entry=0*list) if (entry != pattern) entry]));
 
 //Internal function
-//Creates a list with the same structure of `list` with each of its elements substituted by 0.
+//Creates a list with the same structure of `list` with each of its elements replaced by 0.
 function _list_pattern(list) =
   is_list(list) 
   ? [for(entry=list) is_list(entry) ? _list_pattern(entry) : 0]

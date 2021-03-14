@@ -236,7 +236,7 @@
 //   interior = regular_ngon(n=len(base), d=60);
 //   right_half()
 //     skin([ sub_base, base, base, sub_base, interior], z=[0,2,height, height, 2], slices=0, refine=1, method="reindex");
-// Example: Connecting a pentagon and circle with the "tangent" method produces triangular faces.
+// Example: Connecting a pentagon and circle with the "tangent" method produces large triangular faces and cone shaped corners.
 //   skin([pentagon(4), circle($fn=80,r=2)], z=[0,3], slices=10, method="tangent");
 // Example: rounding corners of a square.  Note that `$fn` makes the number of points constant, and avoiding the `rounding=0` case keeps everything simple.  In this case, the connections between profiles are linear, so there is no benefit to setting `slices` bigger than zero.
 //   shapes = [for(i=[.01:.045:2])zrot(-i*180/2,cp=[-8,0,0],p=xrot(90,p=path3d(regular_ngon(n=4, side=4, rounding=i, $fn=64))))];
@@ -921,7 +921,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   sweep(shape, concat(outside,inside));
 
 function sweep(shape, transforms, closed=false, caps) =
-    assert(is_list_of(transforms, ident(4)), "Input transforms must be a list of numeric 4x4 matrices in sweep")
+    assert(is_consistent(transforms, ident(4)), "Input transforms must be a list of numeric 4x4 matrices in sweep")
     assert(is_path(shape,2) || is_region(shape), "Input shape must be a 2d path or a region.")
     let(
         caps = is_def(caps) ? caps :
