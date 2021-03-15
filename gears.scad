@@ -1420,7 +1420,7 @@ function worm_gear(
                 tp = [0,r1,0] - spherical_to_xyz(r2, 90, 90+zang),
                 zang2 = u * helical
             ) [
-                for (i = [0:1:teeth]) each
+                for (i = [0:1:teeth-1]) each
                 apply(
                     zrot(-i*360/teeth+zang2) *
                         move(tp) *
@@ -1435,7 +1435,7 @@ function worm_gear(
         face_pts = len(tooth_profile),
         gear_pts = face_pts * teeth,
         top_faces =[
-            for (i=[0:1:teeth-1], j=[0:1:(face_pts/2)-1]) each [
+            for (i=[0:1:teeth-1], j=[0:1:(face_pts/2)-2]) each [
                 [i*face_pts+j, (i+1)*face_pts-j-1, (i+1)*face_pts-j-2],
                 [i*face_pts+j, (i+1)*face_pts-j-2, i*face_pts+j+1]
             ],
