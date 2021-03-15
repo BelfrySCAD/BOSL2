@@ -188,6 +188,15 @@ function vnf_compact(vnf) =
     ) vnf_add_faces(faces=faces);
 
 
+// Function: vnf_reverse_faces()
+// Usage:
+//   rvnf = vnf_reverse_faces(vnf);
+// Description:
+//   Reverses the facing of all the faces in the given VNF.
+function vnf_reverse_faces(vnf) =
+    [vnf[0], [for (face=vnf[1]) reverse(face)]];
+
+
 // Function: vnf_triangulate()
 // Usage:
 //   vnf2 = vnf_triangulate(vnf);
