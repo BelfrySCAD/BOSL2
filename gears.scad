@@ -1287,7 +1287,8 @@ function worm(
             )
             apply(zrot(a)*up(z), path3d(cross_sect))
         ],
-        vnf1 = vnf_vertex_array(profiles, caps=true, col_wrap=true, reverse=true, style="alt"),
+        rprofiles = [ for (prof=profiles) reverse(prof) ],
+        vnf1 = vnf_vertex_array(rprofiles, caps=true, col_wrap=true, style="quincunx"),
         vnf = left_handed? xflip(p=vnf1) : vnf1
     ) reorient(anchor,spin,orient, d=d, l=l, p=vnf);
 
