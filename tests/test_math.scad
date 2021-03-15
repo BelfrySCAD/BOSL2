@@ -83,6 +83,12 @@ module test_is_matrix() {
     assert(!is_matrix([[2,3,4],[5,6,7]],n=5));
     assert(!is_matrix([[2,3],[5,6],[8,9]],m=2,n=3));
     assert(!is_matrix([[2,3,4],[5,6,7]],m=3,n=2));
+    assert(!is_matrix([ [2,[3,4]],
+                        [4,[5,6]]]));
+    assert(!is_matrix([[3,4],[undef,3]]));
+    assert(!is_matrix([[3,4],[3,"foo"]]));
+    assert(!is_matrix([[3,4],[3,3,2]]));
+    assert(!is_matrix([ [3,4],6]));
     assert(!is_matrix(undef));
     assert(!is_matrix(NAN));
     assert(!is_matrix(INF));

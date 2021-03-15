@@ -585,7 +585,7 @@ function lcm(a,b=[]) =
 function sum(v, dflt=0) =
     v==[]? dflt :
     assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
-    is_vector(v) ? [for(i=[1:len(v)]) 1]*v :
+    is_vector(v) || is_matrix(v) ? [for(i=[1:len(v)]) 1]*v :
     _sum(v,v[0]*0);
 
 function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
@@ -990,6 +990,7 @@ function is_matrix(A,m,n,square=false) =
    && is_list(A[0])
    && (( is_undef(n) && len(A[0]) ) || len(A[0])==n)
    && (!square || len(A) == len(A[0]))
+   && is_vector(A[0])
    && is_consistent(A);
 
 

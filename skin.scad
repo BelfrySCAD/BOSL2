@@ -33,14 +33,18 @@
 //   For this operation to be well-defined, the profiles must all have the same vertex count and
 //   we must assume that profiles are aligned so that vertex `i` links to vertex `i` on all polygons.
 //   Many interesting cases do not comply with this restriction.  Two basic methods can handle
-//   these cases: either add points to edges (resample) so that the profiles are compatible,
-//   or repeat vertices.  Repeating vertices allows two edges to terminate at the same point, creating
-//   triangular faces.  You can adjust non-matching profiles yourself
+//   these cases: either subdivide edges (insert additional points along edges)
+//   or duplicate vertcies (insert edges of length 0) so that both polygons have
+//   the same number of points. 
+//   Duplicating vertices allows two distinct points in one polygon to connect to a single point
+//   in the other one, creating
+//   triangular faces.  You can adjust non-matching polygons yourself
 //   either by resampling them using `subdivide_path` or by duplicating vertices using
-//   `repeat_entries`.  It is OK to pass a profile that has the same vertex repeated, such as
+//   `repeat_entries`.  It is OK to pass a polygon that has the same vertex repeated, such as
 //   a square with 5 points (two of which are identical), so that it can match up to a pentagon.
 //   Such a combination would create a triangular face at the location of the duplicated vertex.
-//   Alternatively, `skin` provides methods (described below) for matching up incompatible paths.
+//   Alternatively, `skin` provides methods (described below) for inserting additional vertices
+//   automatically to make incompatible paths match.
 //   .
 //   In order for skinned surfaces to look good it is usually necessary to use a fine sampling of
 //   points on all of the profiles, and a large number of extra interpolated slices between the
@@ -77,7 +81,7 @@
 //   in the polyhedron---in will produce the least twisted possible result.  This algorithm has quadratic
 //   run time so it can be slow with very large profiles.
 //   .
-//   When the profiles are incommensurate, the "direct" and "reindex" resampling them to match.  As noted above,
+//   When the profiles are incommensurate, the "direct" and "reindex" resample them to match.  As noted above,
 //   for continuous input curves, it is better to generate your curves directly at the desired sample size,
 //   but for mapping between a discrete profile like a hexagon and a circle, the hexagon must be resampled
 //   to match the circle.  When you use "direct" or "reindex" the default `sampling` value is 
@@ -88,23 +92,35 @@
 //   the segments of your input profiles have unequal length.
 //   .
 //   The "distance", "fast_distance" and "tangent" methods work by duplicating vertices to create
-//   triangular faces.  The "distance" method finds the global minimum distance method for connecting two
-//   profiles.  This algorithm generally produces a good result when both profiles are discrete ones with
+//   triangular faces.  In the skined object created by two polygons, every vertex of a polygon must
+//   have an edge that connects to some vertex on the other one.  If you connect two squares this can be
+//   accomplished with four edges, but if you want to connect a square to a pentagon you must add a
+//   fifth edge for the "extra" vertex on the pentagon.  You must now decide which vertex on the square to
+//   connect the "extra" edge to.  How do you decide where to put that fifth edge?  The "distance" method answers this
+//   question by using an optimization: it minimizes the total length of all the edges connecting
+//   the two polygons.   This algorithm generally produces a good result when both profiles are discrete ones with
 //   a small number of vertices.  It is computationally intensive (O(N^3)) and may be
 //   slow on large inputs.  The resulting surfaces generally have curved faces, so be
 //   sure to select a sufficiently large value for `slices` and `refine`.  Note that for
 //   this method, `sampling` must be set to `"segment"`, and hence this is the default setting.
 //   Using sampling by length would ignore the repeated vertices and ruin the alignment.
-//   The "fast_distance" method is similar to "distance", but it makes the assumption that an edge should
-//   connect the first vertices of the two polygons.  This reduces the run time to O(N^2) and makes
+//   The "fast_distance" method restricts the optimization by assuming that an edge should connect
+//   vertex 0 of the two polygons.  This reduces the run time to O(N^2) and makes
 //   the method usable on profiles with more points if you take care to index the inputs to match.  
 //   .
 //   The `"tangent"` method generally produces good results when
-//   connecting a discrete polygon to a convex, finely sampled curve.  It works by finding
-//   a plane that passed through each edge of the polygon that is tangent to
-//   the curve.  It may fail if the curved profile is non-convex, or doesn't have enough points to distinguish
-//   all of the tangent points from each other.  It connects all of the points of the curve to the corners of the discrete
-//   polygon using triangular faces.  Using `refine` with this method will have little effect on the model, so
+//   connecting a discrete polygon to a convex, finely sampled curve.  Given a polygon and a curve, consider one edge
+//   on the polygon.  Find a plane passing through the edge that is tangent to the curve.  The endpoints of the edge and
+//   the point of tangency define a triangular face in the output polyhedron.  If you work your way around the polygon
+//   edges, you can establish a series of triangular faces in this way, with edges linking the polygon to the curve.
+//   You can then complete the edge assignment by connecting all the edges in between the triangular faces together,
+//   with many edges meeting at each polygon vertex.  The result is an alternation of flat triangular faces with conical
+//   curves joining them.  Another way to think about it is that it splits the points on the curve up into groups and
+//   connects all the points in one group to the same vertex on the polygon.
+//   .
+//   The "tangent" method may fail if the curved profile is non-convex, or doesn't have enough points to distinguish
+//   all of the tangent points from each other.    The algorithm treats whichever input profile has fewer points as the polygon
+//   and the other one as the curve.  Using `refine` with this method will have little effect on the model, so
 //   you should do it only for agreement with other profiles, and these models are linear, so extra slices also
 //   have no effect.  For best efficiency set `refine=1` and `slices=0`.  As with the "distance" method, refinement
 //   must be done using the "segment" sampling scheme to preserve alignment across duplicated points.
@@ -220,7 +236,7 @@
 //   interior = regular_ngon(n=len(base), d=60);
 //   right_half()
 //     skin([ sub_base, base, base, sub_base, interior], z=[0,2,height, height, 2], slices=0, refine=1, method="reindex");
-// Example: Connecting a pentagon and circle with the "tangent" method produces triangular faces.
+// Example: Connecting a pentagon and circle with the "tangent" method produces large triangular faces and cone shaped corners.
 //   skin([pentagon(4), circle($fn=80,r=2)], z=[0,3], slices=10, method="tangent");
 // Example: rounding corners of a square.  Note that `$fn` makes the number of points constant, and avoiding the `rounding=0` case keeps everything simple.  In this case, the connections between profiles are linear, so there is no benefit to setting `slices` bigger than zero.
 //   shapes = [for(i=[.01:.045:2])zrot(-i*180/2,cp=[-8,0,0],p=xrot(90,p=path3d(regular_ngon(n=4, side=4, rounding=i, $fn=64))))];
@@ -905,7 +921,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   sweep(shape, concat(outside,inside));
 
 function sweep(shape, transforms, closed=false, caps) =
-    assert(is_list_of(transforms, ident(4)), "Input transforms must be a list of numeric 4x4 matrices in sweep")
+    assert(is_consistent(transforms, ident(4)), "Input transforms must be a list of numeric 4x4 matrices in sweep")
     assert(is_path(shape,2) || is_region(shape), "Input shape must be a 2d path or a region.")
     let(
         caps = is_def(caps) ? caps :
