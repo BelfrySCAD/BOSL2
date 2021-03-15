@@ -291,26 +291,27 @@ function vnf_vertex_array(
         cap1 = first_defined([cap1,caps,false]),
         cap2 = first_defined([cap2,caps,false]),
         colcnt = cols - (col_wrap?0:1),
-        rowcnt = rows - (row_wrap?0:1)
+        rowcnt = rows - (row_wrap?0:1),
+        verts = [
+            each pts,
+            if (style=="quincunx") (
+                for (r = [0:1:rowcnt-1]) (
+                    for (c = [0:1:colcnt-1]) (
+                        let(
+                            i1 = ((r+0)%rows)*cols + ((c+0)%cols),
+                            i2 = ((r+1)%rows)*cols + ((c+0)%cols),
+                            i3 = ((r+1)%rows)*cols + ((c+1)%cols),
+                            i4 = ((r+0)%rows)*cols + ((c+1)%cols)
+                        ) mean([pts[i1], pts[i2], pts[i3], pts[i4]])
+                    )
+                )
+            )
+        ]
     )
     rows<=1 || cols<=1 ? vnf : 
     vnf_merge(cleanup=true, [
         vnf, [
-            concat(
-                pts,
-                style!="quincunx"? [] : [
-                    for (r = [0:1:rowcnt-1]) (
-                        for (c = [0:1:colcnt-1]) (
-                            let(
-                                i1 = ((r+0)%rows)*cols + ((c+0)%cols),
-                                i2 = ((r+1)%rows)*cols + ((c+0)%cols),
-                                i3 = ((r+1)%rows)*cols + ((c+1)%cols),
-                                i4 = ((r+0)%rows)*cols + ((c+1)%cols)
-                            ) mean([pts[i1], pts[i2], pts[i3], pts[i4]])
-                        )
-                    )
-                ]
-            ),
+            verts,
             concat(
                 [
                     for (r = [0:1:rowcnt-1]) (
@@ -337,8 +338,9 @@ function vnf_vertex_array(
                                 ) fsets[test?0:1] : (
                                     [[i1,i3,i2],[i1,i4,i3]]
                                 ),
-                                rfaces = reverse? [for (face=faces) reverse(face)] : faces
-                            ) rfaces
+                                rfaces = reverse? [for (face=faces) reverse(face)] : faces,
+                                ffaces = [for (face=rfaces) if(len(deduplicate_indexed(verts,face,closed=true))>=3) face]
+                            ) faces
                         )
                     )
                 ],
@@ -618,14 +620,15 @@ function vnf_bend(vnf,r,d,axis="Z") =
 //   Currently checks for these problems:
 //   Type    | Color    | Code         | Message 
 //   ------- | -------- | ------------ | ---------------------------------
-//   WARNING | Yellow   | BIG_FACE     | Face has more than 3 vertices, and may confuse CGAL
-//   WARNING | Brown    | NULL_FACE   | Face has zero area
-//   ERROR   | Cyan     | NONPLANAR    | Face vertices are not coplanar
-//   ERROR   | Orange   | OVRPOP_EDGE  | Too many faces attached at edge
-//   ERROR   | Violet   | REVERSAL     | Faces reverse across edge
-//   ERROR   | Red      | T_JUNCTION   | Vertex is mid-edge on another Face
-//   ERROR   | Blue     | FACE_ISECT   | Faces intersect
-//   ERROR   | Magenta  | HOLE_EDGE    | Edge bounds Hole
+//   WARNING | Yellow   | BIG_FACE     | Face has more than 3 vertices, and may confuse CGAL.
+//   WARNING | Brown    | NULL_FACE    | Face has zero area.
+//   ERROR   | Cyan     | NONPLANAR    | Face vertices are not coplanar.
+//   ERROR   | Brown    | DUP_FACE     | Multiple instances of the same face.
+//   ERROR   | Orange   | MULTCONN     | Multiply Connected Geometry. Too many faces attached at Edge.
+//   ERROR   | Violet   | REVERSAL     | Faces reverse across edge.
+//   ERROR   | Red      | T_JUNCTION   | Vertex is mid-edge on another Face.
+//   ERROR   | Blue     | FACE_ISECT   | Faces intersect.
+//   ERROR   | Magenta  | HOLE_EDGE    | Edge bounds Hole.
 //   .
 //   Still to implement:
 //   - Overlapping coplanar faces.
@@ -649,7 +652,7 @@ function vnf_bend(vnf,r,d,axis="Z") =
 //       [a, b, e], [a, c, b], [a, d, c], [a, e, d], [b, c, d, e]
 //   ]);
 //   vnf_validate(vnf);
-// Example: OVRPOP_EDGE Errors; More Than Two Faces Attached to the Same Edge.  This confuses CGAL, and can lead to failed renders.
+// Example: MULTCONN Errors; More Than Two Faces Attached to the Same Edge.  This confuses CGAL, and can lead to failed renders.
 //   vnf = vnf_triangulate(linear_sweep(union(square(50), square(50,anchor=BACK+RIGHT)), height=50));
 //   vnf_validate(vnf);
 // Example: REVERSAL Errors; Faces Reversed Across Edge
@@ -700,61 +703,95 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             for (face=faces, edge=pair(face,true))
             edge[0]<edge[1]? edge : [edge[1],edge[0]]
         ]),
+        dfaces = [
+            for (face=faces) let(
+                face=deduplicate_indexed(varr,face,closed=true)
+            ) if(len(face)>=3)
+            face
+        ],
+        face_areas = [
+            for (face = faces)
+            len(face) < 3? 0 :
+            polygon_area([for (k=face) varr[k]])
+        ],
         edgecnts = unique_count(edges),
         uniq_edges = edgecnts[0],
+        issues = []
+    )
+    let(
         big_faces = !show_warns? [] : [
             for (face = faces)
             if (len(face) > 3)
             _vnf_validate_err("BIG_FACE", [for (i=face) varr[i]])
         ],
         null_faces = !show_warns? [] : [
-            for (face = faces) let(
-                face = deduplicate(face,closed=true)
-            )
-            if (len(face)>=3) let(
-                faceverts = [for (k=face) varr[k]],
-                area = polygon_area(faceverts)
+            for (i = idx(faces)) let(
+                face = faces[i],
+                area = face_areas[i],
+                faceverts = [for (k=face) varr[k]]
             )
             if (is_num(area) && abs(area) < EPSILON)
             _vnf_validate_err("NULL_FACE", faceverts)
         ],
-        nonplanars = unique([
-            for (face = faces) let(
-                faceverts = [for (k=face) varr[k]],
-                area = polygon_area(faceverts)
-            )
-            if (is_num(area) && abs(area) > EPSILON)
-            if (!coplanar(faceverts))
-            _vnf_validate_err("NONPLANAR", faceverts)
-        ]),
-        overpop_edges = unique([
-            for (i=idx(uniq_edges))
+        issues = concat(big_faces, null_faces)
+    )
+    let(
+        repeated_faces = [
+            for (i=idx(dfaces), j=idx(dfaces))
+            if (i!=j) let(
+                face1 = dfaces[i],
+                face2 = dfaces[j]
+            ) if (min(face1) == min(face2)) let(
+                min1 = min_index(face1),
+                min2 = min_index(face2)
+            ) if (min1 == min2) let(
+                sface1 = list_rotate(face1,min1),
+                sface2 = list_rotate(face2,min2)
+            ) if (sface1 == sface2)
+            _vnf_validate_err("DUP_FACE", [for (i=sface1) varr[i]])
+        ],
+        issues = concat(issues, repeated_faces)
+    ) issues? issues :
+    let(
+        multconn_edges = unique([
+            for (i = idx(uniq_edges))
             if (edgecnts[1][i]>2)
-            _vnf_validate_err("OVRPOP_EDGE", [for (i=uniq_edges[i]) varr[i]])
+            _vnf_validate_err("MULTCONN", [for (i=uniq_edges[i]) varr[i]])
         ]),
+        issues = concat(issues, multconn_edges)
+    ) issues? issues :
+    let(
         reversals = unique([
-            for(i = idx(faces), j = idx(faces)) if(i != j)
-            if(len(deduplicate(faces[i],closed=true))>=3)
-            if(len(deduplicate(faces[j],closed=true))>=3)
+            for(i = idx(dfaces), j = idx(dfaces)) if(i != j)
             for(edge1 = pair(faces[i],true))
             for(edge2 = pair(faces[j],true))
             if(edge1 == edge2)  // Valid adjacent faces will never have the same vertex ordering.
-            if(_edge_not_reported(edge1, varr, overpop_edges))
+            if(_edge_not_reported(edge1, varr, multconn_edges))
             _vnf_validate_err("REVERSAL", [for (i=edge1) varr[i]])
         ]),
+        issues = concat(issues, reversals)
+    ) issues? issues :
+    let(
         t_juncts = unique([
-            for (v=idx(varr), edge=uniq_edges)
-            if (v!=edge[0] && v!=edge[1]) let(
-                a = varr[edge[0]],
-                b = varr[v],
-                c = varr[edge[1]]
+            for (v=idx(varr), edge=uniq_edges) let(
+                ia = edge[0],
+                ib = v,
+                ic = edge[1]
             )
-            if (a != b && b != c && a != c) let(
+            if (ia!=ib && ib!=ic && ia!=ic) let(
+                a = varr[ia],
+                b = varr[ib],
+                c = varr[ic]
+            )
+            if (!approx(a,b) && !approx(b,c) && !approx(a,c)) let(
                 pt = segment_closest_point([a,c],b)
             )
-            if (pt == b)
+            if (approx(pt,b))
             _vnf_validate_err("T_JUNCTION", [b])
         ]),
+        issues = concat(issues, t_juncts)
+    ) issues? issues :
+    let(
         isect_faces = !check_isects? [] : unique([
             for (i = [0:1:len(faces)-2])
             for (j = [i+1:1:len(faces)-1]) let(
@@ -787,30 +824,39 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             if (seg[0] != seg[1])
             _vnf_validate_err("FACE_ISECT", seg)
         ]),
+        issues = concat(issues, isect_faces)
+    ) issues? issues :
+    let(
         hole_edges = unique([
             for (i=idx(uniq_edges))
             if (edgecnts[1][i]<2)
             if (_pts_not_reported(uniq_edges[i], varr, t_juncts))
             if (_pts_not_reported(uniq_edges[i], varr, isect_faces))
             _vnf_validate_err("HOLE_EDGE", [for (i=uniq_edges[i]) varr[i]])
-        ])
-    ) concat(
-        big_faces,
-        null_faces,
-        nonplanars,
-        overpop_edges,
-        reversals,
-        t_juncts,
-        isect_faces,
-        hole_edges
-    );
+        ]),
+        issues = concat(issues, hole_edges)
+    ) issues? issues :
+    let(
+        nonplanars = unique([
+            for (i = idx(faces)) let(
+                face = faces[i],
+                area = face_areas[i],
+                faceverts = [for (k=face) varr[k]]
+            )
+            if (is_num(area) && abs(area) > EPSILON)
+            if (!coplanar(faceverts))
+            _vnf_validate_err("NONPLANAR", faceverts)
+        ]),
+        issues = concat(issues, nonplanars)
+    ) issues;
 
 
 _vnf_validate_errs = [
     ["BIG_FACE",    "WARNING", "cyan",    "Face has more than 3 vertices, and may confuse CGAL"],
     ["NULL_FACE",   "WARNING", "blue",    "Face has zero area."],
     ["NONPLANAR",   "ERROR",   "yellow",  "Face vertices are not coplanar"],
-    ["OVRPOP_EDGE", "ERROR",   "orange",  "Too many faces attached at Edge"],
+    ["DUP_FACE",    "ERROR",   "brown",   "Multiple instances of the same face."],
+    ["MULTCONN",    "ERROR",   "orange",  "Multiply Connected Geometry. Too many faces attached at Edge"],
     ["REVERSAL",    "ERROR",   "violet",  "Faces Reverse Across Edge"],
     ["T_JUNCTION",  "ERROR",   "magenta", "Vertex is mid-edge on another Face"],
     ["FACE_ISECT",  "ERROR",   "brown",   "Faces intersect"],

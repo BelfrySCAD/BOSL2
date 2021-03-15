@@ -489,12 +489,19 @@ function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
     indices==[]? [] :
     assert(is_vector(indices), "Indices must be a list of numbers.")
     let(
+        ll = len(list),
         l = len(indices),
         end = l-(closed?0:1)
     ) [
         for (i = [0:1:l-1]) let(
-           a = list[indices[i]],
-           b = list[indices[(i+1)%l]],
+           idx1 = indices[i],
+           idx2 = indices[(i+1)%l],
+           a = assert(idx1>=0,"Bad index.")
+               assert(idx1<len(list),"Bad index in indices.")
+               list[idx1],
+           b = assert(idx2>=0,"Bad index.")
+               assert(idx2<len(list),"Bad index in indices.")
+               list[idx2],
            eq = (a == b)? true :
                 (a*0 != b*0) || (eps==0)? false :
                 is_num(a) || is_vector(a) ? approx(a, b, eps=eps) 
