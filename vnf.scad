@@ -708,6 +708,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
         vnf = vnf_compact(vnf),
         varr = vnf[0],
         faces = vnf[1],
+        lvarr = len(varr),
         edges = sort([
             for (face=faces, edge=pair(face,true))
             edge[0]<edge[1]? edge : [edge[1],edge[0]]
@@ -744,6 +745,14 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
         ],
         issues = concat(big_faces, null_faces)
     )
+    let(
+        bad_indices = [
+            for (face = faces, idx = face)
+            if (idx < 0 || idx >= lvarr)
+            _vnf_validate_err("BAD_INDEX", [idx])
+        ],
+        issues = concat(issues, bad_indices)
+    ) issues? issues :
     let(
         repeated_faces = [
             for (i=idx(dfaces), j=idx(dfaces))
@@ -802,34 +811,41 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
     ) issues? issues :
     let(
         isect_faces = !check_isects? [] : unique([
-            for (i = [0:1:len(faces)-2])
-            for (j = [i+1:1:len(faces)-1]) let(
+            for (i = [0:1:len(faces)-2]) let(
                 f1 = faces[i],
+                poly1   = select(varr, faces[i]),
+                plane1  = plane3pt(poly1[0], poly1[1], poly1[2]),
+                normal1 = [plane1[0], plane1[1], plane1[2]]
+            )
+            for (j = [i+1:1:len(faces)-1]) let(
                 f2 = faces[j],
+                poly2 = select(varr, f2),
+                val = poly2 * normal1
+            )
+            if( min(val)<=plane1[3] && max(val)>=plane1[3] ) let(
+                plane2  = plane_from_polygon(poly2),
+                normal2 = [plane2[0], plane2[1], plane2[2]],
+                val = poly1 * normal2
+            )
+            if( min(val)<=plane2[3] && max(val)>=plane2[3] ) let(
                 shared_edges = [
-                    for (edge1 = pair(f1,true), edge2 = pair(f2,true)) let(
-                        e1 = edge1[0]<edge1[1]? edge1 : [edge1[1],edge1[0]],
-                        e2 = edge2[0]<edge2[1]? edge2 : [edge2[1],edge2[0]]
-                    ) if (e1==e2) 1
+                    for (edge1 = pair(f1, true), edge2 = pair(f2, true))
+                    if (edge1 == [edge2[1], edge2[0]]) 1
                 ]
             )
             if (!shared_edges) let(
-                plane1 = plane3pt_indexed(varr, f1[0], f1[1], f1[2]),
-                plane2 = plane3pt_indexed(varr, f2[0], f2[1], f2[2]),
                 line = plane_intersection(plane1, plane2)
             )
             if (!is_undef(line)) let(
-                poly1 = select(varr,f1),
-                isects = polygon_line_intersection(poly1,line)
+                isects = polygon_line_intersection(poly1, line)
             )
             if (!is_undef(isects))
-            for (isect=isects)
-            if (len(isect)>1) let(
-                poly2 = select(varr,f2),
-                isects2 = polygon_line_intersection(poly2,isect,bounded=true)
+            for (isect = isects)
+            if (len(isect) > 1) let(
+                isects2 = polygon_line_intersection(poly2, isect, bounded=true)
             )
             if (!is_undef(isects2))
-            for (seg=isects2)
+            for (seg = isects2)
             if (seg[0] != seg[1])
             _vnf_validate_err("FACE_ISECT", seg)
         ]),
@@ -863,6 +879,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
 _vnf_validate_errs = [
     ["BIG_FACE",    "WARNING", "cyan",    "Face has more than 3 vertices, and may confuse CGAL"],
     ["NULL_FACE",   "WARNING", "blue",    "Face has zero area."],
+    ["BAD_INDEX",   "ERROR",   "cyan",    "Invalid face vertex index."],
     ["NONPLANAR",   "ERROR",   "yellow",  "Face vertices are not coplanar"],
     ["DUP_FACE",    "ERROR",   "brown",   "Multiple instances of the same face."],
     ["MULTCONN",    "ERROR",   "orange",  "Multiply Connected Geometry. Too many faces attached at Edge"],
@@ -909,13 +926,15 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
         pts = fault[4];
         echo(str(typ, " ", err, " (", clr ,"): ", msg, " at ", pts));
         color(clr) {
-            if (len(pts)==2) {
-                stroke(pts, width=size, closed=true, endcaps="butt", hull=false, $fn=8);
-            } else if (len(pts)>2) {
-                stroke(pts, width=size, closed=true, hull=false, $fn=8);
-                polyhedron(pts,[[for (i=idx(pts)) i]]);
-            } else {
-                move_copies(pts) sphere(d=size*3, $fn=18);
+            if (is_vector(pts[0])) {
+                if (len(pts)==2) {
+                    stroke(pts, width=size, closed=true, endcaps="butt", hull=false, $fn=8);
+                } else if (len(pts)>2) {
+                    stroke(pts, width=size, closed=true, hull=false, $fn=8);
+                    polyhedron(pts,[[for (i=idx(pts)) i]]);
+                } else {
+                    move_copies(pts) sphere(d=size*3, $fn=18);
+                }
             }
         }
     }
