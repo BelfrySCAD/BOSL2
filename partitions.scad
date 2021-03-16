@@ -128,7 +128,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath=undef, gap=0, spin=0
     rot(from=UP,to=orient) {
         rotate(spin) {
             linear_extrude(height=h, convexity=10) {
-                stroke(path, width=$slop*2);
+                stroke(path, width=max(0.1, $slop*2));
             }
         }
     }

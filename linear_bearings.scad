@@ -112,7 +112,7 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
 
             up(tabh) {
                 // Screwhole
-                fwd(ogap/2-2+0.01) screw(screwsize=screwsize*1.06, screwlen=ogap, headsize=screwsize*2, headlen=10, orient=FWD);
+                fwd(ogap/2-2+0.01) generic_screw(screwsize=screwsize*1.06, screwlen=ogap, headsize=screwsize*2, headlen=10, orient=FWD);
 
                 // Nut holder
                 back(ogap/2-2+0.01) metric_nut(size=screwsize, hole=false, anchor=BOTTOM, orient=BACK);
