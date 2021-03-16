@@ -168,6 +168,7 @@ module stroke(
 
     assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
     width = is_num(width)? [for (x=path) width] : width;
+    assert(all([for (w=width) w>0]));
 
     endcap1 = first_defined([endcap1, endcaps, if(!closed) plots, "round"]);
     endcap2 = first_defined([endcap2, endcaps, plots, "round"]);
