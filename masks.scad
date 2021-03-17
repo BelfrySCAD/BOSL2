@@ -114,34 +114,50 @@ module cylinder_mask(
     vang = atan2(l, r1-r2)/2;
     ang1 = first_defined([chamfang1, chamfang, vang]);
     ang2 = first_defined([chamfang2, chamfang, 90-vang]);
-    cham1 = first_defined([chamfer1, chamfer, 0]);
-    cham2 = first_defined([chamfer2, chamfer, 0]);
-    fil1 = first_defined([rounding1, rounding, 0]);
-    fil2 = first_defined([rounding2, rounding, 0]);
+    cham1 = first_defined([chamfer1, chamfer]);
+    cham2 = first_defined([chamfer2, chamfer]);
+    fil1 = first_defined([rounding1, rounding]);
+    fil2 = first_defined([rounding2, rounding]);
     maxd = max(r1,r2);
     if ($children > 0) {
         difference() {
             children();
-            cylinder_mask(l=l, r1=sc*r1, r2=sc*r2, chamfer1=cham1, chamfer2=cham2, chamfang1=ang1, chamfang2=ang2, rounding1=fil1, rounding2=fil2, orient=orient, from_end=from_end);
+            cylinder_mask(
+                l=l, r1=sc*r1, r2=sc*r2,
+                chamfer1=cham1, chamfer2=cham2,
+                chamfang1=ang1, chamfang2=ang2,
+                rounding1=fil1, rounding2=fil2,
+                orient=orient, from_end=from_end
+            );
         }
     } else {
         attachable(anchor,spin,orient, r=r1, l=l) {
             difference() {
                 union() {
-                    chlen1 = cham1 / (from_end? 1 : tan(ang1));
-                    chlen2 = cham2 / (from_end? 1 : tan(ang2));
+                    chlen1 = default(cham1,0) / (from_end? 1 : tan(ang1));
+                    chlen2 = default(cham2,0) / (from_end? 1 : tan(ang2));
                     if (!ends_only) {
                         cylinder(r=maxd+excess, h=l+2*excess, center=true);
                     } else {
-                        if (cham2>0) up(l/2-chlen2) cylinder(r=maxd+excess, h=chlen2+excess, center=false);
-                        if (cham1>0) down(l/2+excess) cylinder(r=maxd+excess, h=chlen1+excess, center=false);
-                        if (fil2>0) up(l/2-fil2) cylinder(r=maxd+excess, h=fil2+excess, center=false);
-                        if (fil1>0) down(l/2+excess) cylinder(r=maxd+excess, h=fil1+excess, center=false);
+                        if (is_num(cham2) && cham2>0) up(l/2-chlen2)
+                            cylinder(r=maxd+excess, h=chlen2+excess, center=false);
+                        if (is_num(cham1) && cham1>0)
+                            down(l/2+excess) cylinder(r=maxd+excess, h=chlen1+excess, center=false);
+                        if (is_num(fil2) && fil2>0)
+                            up(l/2-fil2) cylinder(r=maxd+excess, h=fil2+excess, center=false);
+                        if (is_num(fil1) && fil1>0)
+                            down(l/2+excess) cylinder(r=maxd+excess, h=fil1+excess, center=false);
                     }
                 }
-                cyl(r1=sc*r1, r2=sc*r2, l=l, chamfer1=cham1, chamfer2=cham2, chamfang1=ang1, chamfang2=ang2, from_end=from_end, rounding1=fil1, rounding2=fil2);
+                cyl(
+                    r1=sc*r1, r2=sc*r2, l=l,
+                    chamfer1=cham1, chamfer2=cham2,
+                    chamfang1=ang1, chamfang2=ang2,
+                    from_end=from_end,
+                    rounding1=fil1, rounding2=fil2
+                );
             }
-            nil();
+            children();
         }
     }
 }
