@@ -3,7 +3,6 @@
 //   VNF structures, holding Vertices 'N' Faces for use with `polyhedron().`
 // Includes:
 //   include <BOSL2/std.scad>
-//   include <BOSL2/vnf.scad>
 //////////////////////////////////////////////////////////////////////
 
 
