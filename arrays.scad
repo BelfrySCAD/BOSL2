@@ -432,7 +432,14 @@ function reverse(x) =
 function list_rotate(list,n=1) =
     assert(is_list(list)||is_string(list), "Invalid list or string.")
     assert(is_finite(n), "Invalid number")
-    let (elems = select(list,n,n+len(list)-1))
+    let (
+        ll = len(list),
+        n = ((n % ll) + ll) % ll,
+        elems = [
+            for (i=[n:1:ll-1]) list[i],
+            for (i=[0:1:n-1]) list[i]
+        ]
+    )
     is_string(list)? str_join(elems) : elems;
 
 

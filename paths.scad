@@ -62,7 +62,8 @@ function is_closed_path(path, eps=EPSILON) = approx(path[0], path[len(path)-1], 
 //   close_path(path);
 // Description:
 //   If a path's last point does not coincide with its first point, closes the path so it does.
-function close_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? path : concat(path,[path[0]]);
+function close_path(path, eps=EPSILON) =
+    is_closed_path(path,eps=eps)? path : concat(path,[path[0]]);
 
 
 // Function: cleanup_path()
@@ -70,7 +71,8 @@ function close_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? path : co
 //   cleanup_path(path);
 // Description:
 //   If a path's last point coincides with its first point, deletes the last point in the path.
-function cleanup_path(path, eps=EPSILON) = is_closed_path(path,eps=eps)? select(path,0,-2) : path;
+function cleanup_path(path, eps=EPSILON) =
+    is_closed_path(path,eps=eps)? [for (i=[0:1:len(path)-2]) path[i]] : path;
 
 
 // Function: path_subselect()
