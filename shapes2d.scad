@@ -533,7 +533,7 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
 function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true) =
     assert(is_bool(endpoint))
     !endpoint ? assert(!wedge, "endpoint cannot be false if wedge is true")
-               slice(arc(N,r,angle,d,cp,points,width,thickness,start,wedge,long,cw,ccw,true),0,-2) :
+               list_head(arc(N,r,angle,d,cp,points,width,thickness,start,wedge,long,cw,ccw,true)) :
     assert(is_undef(N) || is_integer(N), "Number of points must be an integer")
     // First try for 2D arc specified by width and thickness
     is_def(width) && is_def(thickness)? (
@@ -851,7 +851,7 @@ function _turtle_command(command, parm, parm2, state, index) =
         )
         list_set(
             state, [path,step], [
-                concat(state[path], slice(arcpath,1,-1)),
+                concat(state[path], list_tail(arcpath)),
                 rot(lrsign * myangle,p=state[step],planar=true)
             ]
         ) :
@@ -877,7 +877,7 @@ function _turtle_command(command, parm, parm2, state, index) =
         )
         list_set(
             state, [path,step], [
-                concat(state[path], slice(arcpath,1,-1)),
+                concat(state[path], list_tail(arcpath)),
                 rot(delta_angle,p=state[step],planar=true)
             ]
         ) :
