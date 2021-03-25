@@ -878,14 +878,14 @@ function assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, 
         let(
             // Found fragment intersects with initial path
             hitidx = select(hits,-1),
-            newpath = slice(path,0,hitidx+1),
+            newpath = list_head(path,hitidx),
             newfrags = concat(len(newpath)>1? [newpath] : [], remainder),
             outpath = concat(slice(path,hitidx,-2), foundfrag)
         )
         [outpath, newfrags]
     ) : let(
         // Path still incomplete.  Continue building it.
-        newpath = concat(path, slice(foundfrag, 1, -1)),
+        newpath = concat(path, list_tail(foundfrag)),
         newfrags = concat([newpath], remainder)
     )
     assemble_a_path_from_fragments(
@@ -1244,7 +1244,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
         list_range(s=sp, step=spacing, e=length)
     ) : is_def(n) && is_undef(spacing)? (
         closed?
-            let(range=list_range(s=0,e=length, n=n+1)) slice(range,0,-2) :
+            let(range=list_range(s=0,e=length, n=n+1)) list_head(range) :
             list_range(s=0, e=length, n=n)
     ) : (
         let(
@@ -1426,14 +1426,14 @@ function path_cut(path,cutdist,closed) =
       cuts = len(cutlist)
   )
   [
-      [ each slice(path,0,cutlist[0][1]),
+      [ each list_head(path,cutlist[0][1]-1),
         if (!approx(cutlist[0][0], path[cutlist[0][1]-1])) cutlist[0][0]
       ],
       for(i=[0:1:cuts-2])
           cutlist[i][0]==cutlist[i+1][0] ? []
           :
           [ if (!approx(cutlist[i][0], select(path,cutlist[i][1]))) cutlist[i][0],
-            each slice(path,cutlist[i][1], cutlist[i+1][1]),
+            each slice(path, cutlist[i][1], cutlist[i+1][1]),
             if (!approx(cutlist[i+1][0], select(path,cutlist[i+1][1]-1))) cutlist[i+1][0],
           ],
       [

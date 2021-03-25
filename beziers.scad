@@ -574,7 +574,7 @@ function bezier_line_intersection(curve, line) =
 //   p2 = [30, 30];
 //   trace_path([p0,p1,p2], showpts=true, size=0.5, color="green");
 //   fbez = fillet3pts(p0,p1,p2, 10);
-//   trace_bezier(slice(fbez, 1, -2), size=1);
+//   trace_bezier(select(fbez,1,-2), size=1);
 function fillet3pts(p0, p1, p2, r, d, maxerr=0.1, w=0.5, dw=0.25) = let(
         r = get_radius(r=r,d=d),
         v0 = unit(p0-p1),
@@ -942,7 +942,7 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
     assert(is_int(splinesteps));
     assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
     polypoints=bezier_path(bezier, splinesteps, N);
-    polygon(points=slice(polypoints, 0, -1));
+    polygon(points=polypoints);
 }
 
 

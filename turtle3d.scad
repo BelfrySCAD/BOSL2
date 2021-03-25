@@ -540,28 +540,28 @@ function _turtle3d_command(command, parm, parm2, state, index) =
     command=="addlength" ?  list_set(state, movestep, state[movestep]+parm) :
     command=="arcsteps" ?  assert(is_int(parm) && parm>0, str("\"",command,"\" requires a postive integer argument at index ",index))
                            list_set(state, arcsteps, parm) :
-    command=="roll" ? list_set(state, trlist, concat(slice(state[trlist],0,-2), [lastT*xrot(parm)])):
+    command=="roll" ? list_set(state, trlist, concat(list_head(state[trlist]), [lastT*xrot(parm)])):
     in_list(command,["right","left","up","down"]) ? 
-        list_set(state, trlist, concat(slice(state[trlist],0,-2), [lastT*_turtle3d_rotation(command,default(parm,state[angle]))])):
+        list_set(state, trlist, concat(list_head(state[trlist]), [lastT*_turtle3d_rotation(command,default(parm,state[angle]))])):
     in_list(command,["xrot","yrot","zrot"]) ?
         let(
              Trot = _rotpart(lastT),      // Extract rotational part of lastT
              shift = _transpart(lastT)    // Translation part of lastT
         )
-        list_set(state, trlist, concat(slice(state[trlist],0,-2),
+        list_set(state, trlist, concat(list_head(state[trlist]),
                                        [move(shift)*_turtle3d_rotation(command,default(parm,state[angle])) * Trot])):
     command=="rot" ?
         let(
              Trot = _rotpart(lastT),      // Extract rotational part of lastT
              shift = _transpart(lastT)    // Translation part of lastT
         )
-        list_set(state, trlist, concat(slice(state[trlist],0,-2),[move(shift) * parm * Trot])):
+        list_set(state, trlist, concat(list_head(state[trlist]),[move(shift) * parm * Trot])):
     command=="setdir" ?
         let(
              Trot = _rotpart(lastT),
              shift = _transpart(lastT)
         )
-        list_set(state, trlist, concat(slice(state[trlist],0,-2),
+        list_set(state, trlist, concat(list_head(state[trlist]),
                                        [move(shift)*rot(from=apply(Trot,RIGHT),to=parm) * Trot ])):
     in_list(command,["arcleft","arcright","arcup","arcdown"]) ?
         assert(is_num(parm),str("\"",command,"\" command requires a numeric radius value at index ",index))

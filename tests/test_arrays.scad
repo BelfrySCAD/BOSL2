@@ -27,21 +27,6 @@ module test_select() {
 }
 test_select();
 
-module test_last() {
-    list = [1,2,3,4];
-    assert(last(list)==4);
-    assert(last([])==undef);
-}
-test_last();
-
-module test_delete_last() {
-    list = [1,2,3,4];
-    assert(delete_last(list) == [1,2,3]);
-    assert(delete_last([1]) == []);
-    assert(delete_last([]) == []);
-}
-test_delete_last();
-
 
 module test_slice() {
     assert(slice([3,4,5,6,7,8,9], 3, 5) == [6,7]);
@@ -52,6 +37,42 @@ module test_slice() {
     assert(slice([], 2, -2) == []);
 }
 test_slice();
+
+
+module test_last() {
+    list = [1,2,3,4];
+    assert(last(list)==4);
+    assert(last([])==undef);
+}
+test_last();
+
+
+module test_list_head() {
+    list = [1,2,3,4];
+    assert_equal(list_head(list), [1,2,3]);
+    assert_equal(list_head([1]), []);
+    assert_equal(list_head([]), []);
+    assert_equal(list_head(list,-3), [1,2]);
+    assert_equal(list_head(list,1), [1,2]);
+    assert_equal(list_head(list,2), [1,2,3]);
+    assert_equal(list_head(list,6), [1,2,3,4]);
+    assert_equal(list_head(list,-6), []);
+}
+test_list_head();
+
+
+module test_list_tail() {
+    list = [1,2,3,4];
+    assert_equal(list_tail(list), [2,3,4]);
+    assert_equal(list_tail([1]), []);
+    assert_equal(list_tail([]), []);
+    assert_equal(list_tail(list,-3), [2,3,4]);
+    assert_equal(list_tail(list,2), [3,4]);
+    assert_equal(list_tail(list,3), [4]);
+    assert_equal(list_tail(list,6), []);
+    assert_equal(list_tail(list,-6), [1,2,3,4]);
+}
+test_list_tail();
 
 
 module test_in_list() {
