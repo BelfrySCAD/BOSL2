@@ -1670,26 +1670,26 @@ function furthest_point(pt, points) =
 //   area = polygon_area(poly);
 // Description:
 //   Given a 2D or 3D planar polygon, returns the area of that polygon.
-//   If the polygon is self-crossing, the results are undefined. For non-planar points the result is undef.
-//   When `signed` is true, a signed area is returned; a positive area indicates a counterclockwise polygon.
+//   If the polygon is self-crossing, the results are undefined. For non-planar 3D polygon the result is undef.
+//   When `signed` is true, a signed area is returned; a positive area indicates a clockwise polygon.
 // Arguments:
 //   poly = polygon to compute the area of.
 //   signed = if true, a signed area is returned (default: false)
 function polygon_area(poly, signed=false) =
     assert(is_path(poly), "Invalid polygon." )
     len(poly)<3 ? 0 :
-    let( cpoly = close_path(simplify_path(poly)) )
     len(poly[0])==2
-      ? sum([for(i=[1:1:len(poly)-2]) cross(poly[i]-poly[0],poly[i+1]-poly[0]) ])/2
+      ? let( total = sum([for(i=[1:1:len(poly)-2]) cross(poly[i]-poly[0],poly[i+1]-poly[0]) ])/2 )
+        signed ? total : abs(total)
       : let( plane = plane_from_points(poly) )
         plane==undef? undef :
         let(
-            n = unit(plane_normal(plane)),
+            n = plane_normal(plane),
             total = sum([
-                for(i=[1:1:len(cpoly)-2])
+                for(i=[1:1:len(poly)-2])
                 let(
-                    v1 = cpoly[i] - cpoly[0],
-                    v2 = cpoly[i+1] - cpoly[0]
+                    v1 = poly[i] - poly[0],
+                    v2 = poly[i+1] - poly[0]
                 )
                 cross(v1,v2) * n
             ])/2
@@ -1853,7 +1853,9 @@ function centroid(poly) =
             for(i=[0:len(poly)-1])
             let(segment=select(poly,i,i+1))
             det2(segment)*sum(segment)
-          ]) / 6 / polygon_area(poly)
+          ]) / 6 / polygon_area(poly,signed=true)
+//            polygon_area(concat([[0,0]],segment),signed=true)*sum(segment)
+//          ]) / 3 / polygon_area(poly,signed=true)
     : let( plane = plane_from_points(poly, fast=true) )
       assert( !is_undef(plane), "The polygon must be planar." )
       let(
@@ -1879,7 +1881,7 @@ function centroid(poly) =
 //   the specified 2D polygon using either the Nonzero Winding rule or the Even-Odd rule.
 //   See https://en.wikipedia.org/wiki/Nonzero-rule and https://en.wikipedia.org/wiki/Even–odd_rule.
 //   The polygon is given as a list of 2D points, not including the repeated end point.
-//   Returns -1 if the point is outside the polyon.
+//   Returns -1 if the point is outside the polygon.
 //   Returns 0 if the point is on the boundary.
 //   Returns 1 if the point lies in the interior.
 //   The polygon does not need to be simple: it can have self-intersections.
@@ -1890,7 +1892,7 @@ function centroid(poly) =
 //   poly = The list of 2D path points forming the perimeter of the polygon.
 //   nonzero = The rule to use: true for "Nonzero" rule and false for "Even-Odd" (Default: true )
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function point_in_polygon(point, poly, eps=EPSILON, nonzero=true) =
+function point_in_polygon(point, poly, nonzero=true, eps=EPSILON) =
     // Original algorithms from http://geomalgorithms.com/a03-_inclusion.html
     assert( is_vector(point,2) && is_path(poly,dim=2) && len(poly)>2,
             "The point and polygon should be in 2D. The polygon should have more that 2 points." )
@@ -1923,12 +1925,12 @@ function point_in_polygon(point, poly, eps=EPSILON, nonzero=true) =
                       p0 = poly[i]-point,
                       p1 = poly[(i+1)%n]-point
                       )
-                    if( ( (p1.y>eps && p0.y<=0) || (p1.y<=0 && p0.y>eps) )
-                        &&  0 < p0.x - p0.y *(p1.x - p0.x)/(p1.y - p0.y) )
+                    if( ( (p1.y>eps && p0.y<=eps) || (p1.y<=eps && p0.y>eps) )
+                       &&  -eps < p0.x - p0.y *(p1.x - p0.x)/(p1.y - p0.y) )
                     1
                 ]
-            )
-            2*(len(cross)%2)-1;;
+            ) 
+            2*(len(cross)%2)-1;
 
 
 // Function: polygon_is_clockwise()
@@ -1979,7 +1981,7 @@ function reverse_polygon(poly) =
 //   n = polygon_normal(poly);
 // Description:
 //   Given a 3D planar polygon, returns a unit-length normal vector for the
-//   clockwise orientation of the polygon.
+//   clockwise orientation of the polygon. If the polygon points are collinear, returns `undef`.
 function polygon_normal(poly) =
     assert(is_path(poly,dim=3), "Invalid 3D polygon." )
     let(
@@ -1989,7 +1991,7 @@ function polygon_normal(poly) =
             for (i=[1:1:len(poly)-2])
             cross(poly[i+1]-p0, poly[i]-p0)
         ])
-    ) unit(n);
+    ) unit(n,undef);
 
 
 function _split_polygon_at_x(poly, x) =
