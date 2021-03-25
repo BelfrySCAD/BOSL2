@@ -1,13 +1,11 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: hull.scad
 //   Functions to create 2D and 3D convex hulls.
-//   To use, add the following line to the beginning of your file:
-//   ```
-//   include <BOSL2/std.scad>
-//   include <BOSL2/hull.scad>
-//   ```
 //   Derived from Oskar Linde's Hull:
 //   - https://github.com/openscad/scad-utils
+// Includes:
+//   include <BOSL2/std.scad>
+//   include <BOSL2/hull.scad>
 //////////////////////////////////////////////////////////////////////
 
 
@@ -76,6 +74,15 @@ module hull_points(points, fast=false) {
 }
 
 
+
+function _backtracking(i,points,h,t,m) =
+    m<t || _is_cw(points[i], points[h[m-1]], points[h[m-2]]) ? m :
+    _backtracking(i,points,h,t,m-1) ;
+
+// clockwise check (2d)
+function _is_cw(a,b,c) = cross(a-c,b-c)<-EPSILON*norm(a-c)*norm(b-c);
+
+
 // Function: hull2d_path()
 // Usage:
 //   hull2d_path(points)
@@ -87,66 +94,50 @@ module hull_points(points, fast=false) {
 //   path = hull2d_path(pts);
 //   move_copies(pts) color("red") sphere(1);
 //   polygon(points=pts, paths=[path]);
+
+// Code based on this method:
+// https://www.hackerearth.com/practice/math/geometry/line-sweep-technique/tutorial/
+//
 function hull2d_path(points) =
     assert(is_path(points,2),"Invalid input to hull2d_path")
-    len(points) < 2 ? []
-  : len(points) == 2 ? [0,1]
-  : let(tri=noncollinear_triple(points, error=false))
-    tri == [] ? _hull_collinear(points)
-  : let(
-        remaining = [ for (i = [0:1:len(points)-1]) if (i != tri[0] && i!=tri[1] && i!=tri[2]) i ],
-        ccw = triangle_area(points[tri[0]], points[tri[1]], points[tri[2]]) > 0,
-        polygon = ccw ? [tri[0],tri[1],tri[2]] : [tri[0],tri[2],tri[1]]
-    ) _hull2d_iterative(points, polygon, remaining);
-
-
-
-// Adds the remaining points one by one to the convex hull
-function _hull2d_iterative(points, polygon, remaining, _i=0) =
-    (_i >= len(remaining))? polygon : let (
-        // pick a point
-        i = remaining[_i],
-        // find the segments that are in conflict with the point (point not inside)
-        conflicts = _find_conflicting_segments(points, polygon, points[i])
-        // no conflicts, skip point and move on
-    ) (len(conflicts) == 0)? _hull2d_iterative(points, polygon, remaining, _i+1) : let(
-        // find the first conflicting segment and the first not conflicting
-        // conflict will be sorted, if not wrapping around, do it the easy way
-        polygon = _remove_conflicts_and_insert_point(polygon, conflicts, i)
-    ) _hull2d_iterative(points, polygon, remaining, _i+1);
-
+    len(points) < 2 ? [] :
+    let( n  = len(points), 
+         ip = sortidx(points) )
+    // lower hull points
+    let( lh = 
+            [ for( 	i = 2,
+                    k = 2, 
+                    h = [ip[0],ip[1]]; // current list of hull point indices 
+                  i <= n;
+                    k = i<n ? _backtracking(ip[i],points,h,2,k)+1 : k,
+                    h = i<n ? [for(j=[0:1:k-2]) h[j], ip[i]] : [], 
+                    i = i+1
+                 ) if( i==n ) h ][0] )
+    // concat lower hull points with upper hull ones
+    [ for( 	i = n-2,
+            k = len(lh), 
+            t = k+1,
+            h = lh; // current list of hull point indices 
+          i >= -1;
+            k = i>=0 ? _backtracking(ip[i],points,h,t,k)+1 : k,
+            h = [for(j=[0:1:k-2]) h[j], if(i>0) ip[i]],
+            i = i-1
+         ) if( i==-1 ) h ][0] ;
+			 
 
 function _hull_collinear(points) =
     let(
         a = points[0],
-        n = points[1] - a,
+        i = max_index([for(pt=points) norm(pt-a)]),
+        n = points[i] - a
+    )
+    norm(n)==0 ? [0]
+    :
+    let(
         points1d = [ for(p = points) (p-a)*n ],
         min_i = min_index(points1d),
         max_i = max_index(points1d)
     ) [min_i, max_i];
-
-
-function _find_conflicting_segments(points, polygon, point) = [
-    for (i = [0:1:len(polygon)-1]) let(
-        j = (i+1) % len(polygon),
-        p1 = points[polygon[i]],
-        p2 = points[polygon[j]],
-        area = triangle_area(p1, p2, point)
-    ) if (area < 0) i
-];
-
-
-// remove the conflicting segments from the polygon
-function _remove_conflicts_and_insert_point(polygon, conflicts, point) = 
-    (conflicts[0] == 0)? let(
-        nonconflicting = [ for(i = [0:1:len(polygon)-1]) if (!in_list(i, conflicts)) i ],
-        new_indices = concat(nonconflicting, (nonconflicting[len(nonconflicting)-1]+1) % len(polygon)),
-        polygon = concat([ for (i = new_indices) polygon[i] ], point)
-    ) polygon : let(
-        before_conflicts = [ for(i = [0:1:min(conflicts)]) polygon[i] ],
-        after_conflicts  = (max(conflicts) >= (len(polygon)-1))? [] : [ for(i = [max(conflicts)+1:1:len(polygon)-1]) polygon[i] ],
-        polygon = concat(before_conflicts, point, after_conflicts)
-    ) polygon;
 
 
 

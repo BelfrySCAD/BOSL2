@@ -31,8 +31,21 @@ module test_is_2d_transform() {
 test_is_2d_transform();
 
 
+module test_is_affine() {
+    assert(is_affine(affine2d_scale([2,3])));
+    assert(is_affine(affine3d_scale([2,3,4])));
+    assert(!is_affine(affine3d_scale([2,3,4]),2));
+    assert(is_affine(affine2d_scale([2,3]),2));
+    assert(is_affine(affine3d_scale([2,3,4]),3));
+    assert(!is_affine(affine2d_scale([2,3]),3));
+}
+test_is_affine();
+
+
 module test_affine2d_to_3d() {
     assert(affine2d_to_3d(affine2d_identity()) == affine3d_identity());
+    assert(affine2d_to_3d(affine2d_translate([30,40])) == affine3d_translate([30,40,0]));
+    assert(affine2d_to_3d(affine2d_scale([3,4])) == affine3d_scale([3,4,1]));
     assert(affine2d_to_3d(affine2d_zrot(30)) == affine3d_zrot(30));
 }
 test_affine2d_to_3d();
@@ -86,15 +99,6 @@ module test_affine2d_skew() {
     }
 }
 test_affine2d_skew();
-
-
-module test_affine2d_chain() {
-    t = affine2d_translate([15,30]);
-    s = affine2d_scale([1.5,2]);
-    r = affine2d_zrot(30);
-    assert(affine2d_chain([t,s,r]) == r * s * t);
-}
-test_affine2d_chain();
 
 
 // 3D
@@ -210,21 +214,12 @@ module test_affine3d_skew_yz() {
 test_affine3d_skew_yz();
 
 
-module test_affine3d_chain() {
-    t = affine3d_translate([15,30,23]);
-    s = affine3d_scale([1.5,2,1.8]);
-    r = affine3d_zrot(30);
-    assert(affine3d_chain([t,s,r]) == r * s * t);
-}
-test_affine3d_chain();
-
-
 ////////////////////////////
 
-module test_affine_frame_map() {
-    assert(approx(affine_frame_map(x=[1,1,0], y=[-1,1,0]), affine3d_zrot(45)));
+module test_affine3d_frame_map() {
+    assert(approx(affine3d_frame_map(x=[1,1,0], y=[-1,1,0]), affine3d_zrot(45)));
 }
-test_affine_frame_map();
+test_affine3d_frame_map();
 
 
 module test_apply() {
@@ -236,20 +231,25 @@ module test_apply() {
     assert(approx(apply(affine3d_xrot(135),2*BACK+2*UP),2*sqrt(2)*FWD));
     assert(approx(apply(affine3d_yrot(135),2*RIGHT+2*UP),2*sqrt(2)*DOWN));
     assert(approx(apply(affine3d_zrot(45),2*BACK+2*RIGHT),2*sqrt(2)*BACK));
+
+    module check_path_apply(mat,path)
+        assert_approx(apply(mat,path),path3d([for (p=path) mat*concat(p,1)]));
+
+    check_path_apply(xrot(45), path3d(rect(100,center=true)));
+    check_path_apply(yrot(45), path3d(rect(100,center=true)));
+    check_path_apply(zrot(45), path3d(rect(100,center=true)));
+    check_path_apply(rot([20,30,40])*scale([0.9,1.1,1])*move([10,20,30]), path3d(rect(100,center=true)));
+
+    module check_patch_apply(mat,patch)
+        assert_approx(apply(mat,patch), [for (path=patch) path3d([for (p=path) mat*concat(p,1)])]);
+
+    flat = [for (x=[-50:25:50]) [for (y=[-50:25:50]) [x,y,0]]];
+    check_patch_apply(xrot(45), flat);
+    check_patch_apply(yrot(45), flat);
+    check_patch_apply(zrot(45), flat);
+    check_patch_apply(rot([20,30,40])*scale([0.9,1.1,1])*move([10,20,30]), flat);
 }
 test_apply();
-
-
-module test_apply_list() {
-    assert(approx(apply_list(25*(BACK+UP), []), 25*(BACK+UP)));
-    assert(approx(apply_list(25*(BACK+UP), [affine3d_xrot(135)]), 25*sqrt(2)*FWD));
-    assert(approx(apply_list(25*(RIGHT+UP), [affine3d_yrot(135)]), 25*sqrt(2)*DOWN));
-    assert(approx(apply_list(25*(BACK+RIGHT), [affine3d_zrot(45)]), 25*sqrt(2)*BACK));
-    assert(approx(apply_list(25*(BACK+UP), [affine3d_xrot(135), affine3d_translate([30,40,50])]), 25*sqrt(2)*FWD+[30,40,50]));
-    assert(approx(apply_list(25*(RIGHT+UP), [affine3d_yrot(135), affine3d_translate([30,40,50])]), 25*sqrt(2)*DOWN+[30,40,50]));
-    assert(approx(apply_list(25*(BACK+RIGHT), [affine3d_zrot(45), affine3d_translate([30,40,50])]), 25*sqrt(2)*BACK+[30,40,50]));
-}
-test_apply_list();
 
 
 module test_rot_decode() {

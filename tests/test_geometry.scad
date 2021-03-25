@@ -47,7 +47,6 @@ test_projection_on_plane();
 test_plane_point_nearest_origin();
 test_distance_from_plane();
 
-test_closest_point_on_plane();
 test__general_plane_line_intersection();
 test_plane_line_angle();
 test_normalize_plane();
@@ -109,15 +108,6 @@ function info_str(list,i=0,string=chr(10)) =
     i>=len(list)
     ? str(string)
     : info_str(list,i+1,str(string,str(list[i][0],_valstr(list[i][1]),chr(10))));
-
-
-module test_closest_point_on_plane(){
-    plane = rands(-5,5,4,seed=175)+[10,0,0,0];
-    point = rands(-1,1,3,seed=477);
-    point2 = closest_point_on_plane(plane,point);
-    assert_approx(norm(point-point2), abs(distance_from_plane(plane,point)));    
-}
-*test_closest_point_on_plane();
 
 
 module test_normalize_plane(){
@@ -394,7 +384,7 @@ module test_line_normal() {
     assert(line_normal([[0,0],[0,-10]]) == [1,0]);
     assert(approx(line_normal([[0,0],[10,10]]), [-sqrt(2)/2,sqrt(2)/2]));
     pts = [for (p=pair(rands(-100,100,1000,seed_value=4312))) p];
-    for (p = pair_wrap(pts)) {
+    for (p = pair(pts,true)) {
         p1 = p.x;
         p2 = p.y;
         n = unit(p2-p1);
@@ -606,7 +596,10 @@ module test_circle_point_tangents() {
         [[0,0],  50, [50*sqrt(2),0],    [polar_to_xy(50,45), polar_to_xy(50,-45)]],
         [[5,10], 50, [5+50*sqrt(2),10], [[5,10]+polar_to_xy(50,45), [5,10]+polar_to_xy(50,-45)]],
         [[0,0],  50, [0,50*sqrt(2)],    [polar_to_xy(50,135), polar_to_xy(50,45)]],
-        [[5,10], 50, [5,10+50*sqrt(2)], [[5,10]+polar_to_xy(50,135), [5,10]+polar_to_xy(50,45)]]
+        [[5,10], 50, [5,10+50*sqrt(2)], [[5,10]+polar_to_xy(50,135), [5,10]+polar_to_xy(50,45)]],
+        [[5,10], 50, [5,10+50*sqrt(2)], [[5,10]+polar_to_xy(50,135), [5,10]+polar_to_xy(50,45)]],
+        [[5,10], 50, [5, 60],           [[5, 60]]],
+        [[5,10], 50, [5, 59],           []],
     ];
     for (v = testvals) {
         cp = v[0]; r  = v[1]; pt = v[2]; expect = v[3];
@@ -619,7 +612,7 @@ module test_circle_point_tangents() {
 
 module test_tri_calc() {
     sides = rands(1,100,100,seed_value=8888);
-    for (p=pair_wrap(sides)) {
+    for (p=pair(sides,true)) {
         opp = p[0];
         adj = p[1];
         hyp = norm([opp,adj]);
@@ -642,7 +635,7 @@ module test_tri_calc() {
 
 module test_tri_functions() {
     sides = rands(1,100,100,seed_value=8181);
-    for (p = pair_wrap(sides)) {
+    for (p = pair(sides,true)) {
         adj = p.x;
         opp = p.y;
         hyp = norm([opp,adj]);

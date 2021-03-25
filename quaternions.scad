@@ -1,10 +1,8 @@
 ///////////////////////////////////////////
 // LibFile: quaternions.scad
 //   Support for Quaternions.
-//   To use, add the following line to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
-//   ```
 ///////////////////////////////////////////
 
 
@@ -403,7 +401,7 @@ function Q_Angle(q1,q2) =
 //   When called as a module, rotates all children by the rotation stored in quaternion `q`.
 //   When called as a function with a `p` argument, rotates the point or list of points in `p` by the rotation stored in quaternion `q`.
 //   When called as a function without a `p` argument, returns the affine3d rotation matrix for the rotation stored in quaternion `q`.
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=225,VPT=[71,-26,16]):
 //   module shape() translate([80,0,0]) cube([10,10,1]);
 //   q = QuatXYZ([90,-15,-45]);
 //   Qrot(q) shape();
@@ -469,7 +467,7 @@ function Q_Rotation(R) =
             _Qnorm( _Qset( [ (R[2][0]+R[0][2]), (R[1][2]+R[2][1]), 4*r ], (R[1][0]-R[0][1])) ) ;
 
 
-// Function&Module: Q_Rotation_path(q1, n, [q2])
+// Function&Module: Q_Rotation_path()
 // Usage: As a function
 //   path = Q_Rotation_path(q1, n, q2);
 //   path = Q_Rotation_path(q1, n);

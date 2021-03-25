@@ -1,10 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: strings.scad
 //   String manipulation and formatting functions.
-//   To use, add the following lines to the beginning of your file:
-//   ```
-//   use <BOSL2/std.scad>
-//   ```
+// Includes:
+//   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
 
@@ -36,7 +34,7 @@ function _substr(str,pos,len,substr="") =
     _substr(str, pos+1, len-1, str(substr, str[pos]));
 
 
-// Function suffix()
+// Function: suffix()
 // Usage:
 //   suffix(str,len)
 // Description:
@@ -703,5 +701,91 @@ module echofmt(fmt, vals) {
    no_children($children);
    echo(str_format(fmt,vals));
 }
+
+
+// Function: str_pad()
+// Usage:
+//   padded = str_pad(str, length, char, [left]);
+// Description:
+//   Pad the given string `str` with to length `length` with the specified character,
+//   which must be a length 1 string.  If left is true then pad on the left, otherwise
+//   pad on the right.  If the string is longer than the specified length the full string
+//   is returned unchanged.  
+// Arguments:
+//   str = string to pad
+//   length = length to pad to
+//   char = character to pad with.  Default: " " (space)
+//   left = if true, pad on the left side.  Default: false
+function str_pad(str,length,char=" ",left=false) =
+  assert(is_str(str))
+  assert(is_str(char) && len(char)==1, "char must be a single character string")
+  assert(is_bool(left))
+  let(
+    padding = str_join(repeat(char,length-len(str)))
+  )
+  left ? str(padding,str) : str(str,padding);
+
+
+// Function: str_replace_char()
+// Usage:
+//   newstr = str_replace_char(str, char, replace)
+// Description:
+//   Replace every occurence of `char` in the input string with the string `replace` which
+//   can be any string.  
+function str_replace_char(str,char,replace) =
+   assert(is_str(str))
+   assert(is_str(char) && len(char)==1, "Search pattern 'char' must be a a single character string")
+   assert(is_str(replace))
+   str_join([for(c=str) c==char ? replace : c]);
+
+
+// Function: matrix_strings()
+// Usage:
+//   matrix_strings(M, [sig], [eps])
+// Description:
+//   Convert a numerical matrix into a matrix of strings where every column
+//   is the same width so it will display in neat columns when printed.
+//   Values below eps will display as zero.  The matrix can include nans, infs
+//   or undefs and the rows can be different lengths.  
+// Arguments:
+//   M = numerical matrix to convert
+//   sig = significant digits to display.  Default: 4
+//   eps = values smaller than this are shown as zero.  Default: 1e-9
+function matrix_strings(M, sig=4, eps=1e-9) = 
+   let(
+       columngap = 1,
+       figure_dash = chr(8210),
+       space_punc = chr(8200),
+       space_figure = chr(8199),
+       strarr=
+         [for(row=M)
+             [for(entry=row)
+                 let(
+                     text = is_undef(entry) ? "und"
+                          : abs(entry) < eps ? "0"             // Replace hyphens with figure dashes
+                          : str_replace_char(fmt_float(entry, sig),"-",figure_dash),
+                     have_dot = is_def(str_find(text, "."))
+                 )
+                 // If the text lacks a dot we add a space the same width as a dot to
+                 // maintain alignment
+                 str(have_dot ? "" : space_punc, text)
+             ]
+         ],
+       maxwidth = max([for(row=M) len(row)]),
+       // Find maximum length for each column.  Some entries in a column may be missing.  
+       maxlen = [for(i=[0:1:maxwidth-1])
+                    max(
+                         [for(j=idx(M)) i>=len(M[j]) ? 0 : len(strarr[j][i])])
+                ],
+       padded =
+         [for(row=strarr)
+            str_join([for(i=idx(row))
+                            let(
+                                extra = ends_with(row[i],"inf") ? 1 : 0
+                            )
+                            str_pad(row[i],maxlen[i]+extra+(i==0?0:columngap),space_figure,left=true)])]
+    )
+    padded;
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

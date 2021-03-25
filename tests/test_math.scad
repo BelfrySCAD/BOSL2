@@ -83,6 +83,12 @@ module test_is_matrix() {
     assert(!is_matrix([[2,3,4],[5,6,7]],n=5));
     assert(!is_matrix([[2,3],[5,6],[8,9]],m=2,n=3));
     assert(!is_matrix([[2,3,4],[5,6,7]],m=3,n=2));
+    assert(!is_matrix([ [2,[3,4]],
+                        [4,[5,6]]]));
+    assert(!is_matrix([[3,4],[undef,3]]));
+    assert(!is_matrix([[3,4],[3,"foo"]]));
+    assert(!is_matrix([[3,4],[3,3,2]]));
+    assert(!is_matrix([ [3,4],6]));
     assert(!is_matrix(undef));
     assert(!is_matrix(NAN));
     assert(!is_matrix(INF));
@@ -824,19 +830,78 @@ module test_lcm() {
 test_lcm();
 
 
-module test_C_times() {
-    assert_equal(C_times([4,5],[9,-4]), [56,29]);
-    assert_equal(C_times([-7,2],[24,3]), [-174, 27]);
+module test_c_mul() {
+    assert_equal(c_mul([4,5],[9,-4]), [56,29]);
+    assert_equal(c_mul([-7,2],[24,3]), [-174, 27]);
+    assert_equal(c_mul([3,4], [[3,-7], [4,9], [4,8]]), [[37,-9],[-24,43], [-20,40]]);
+    assert_equal(c_mul([[3,-7], [4,9], [4,8]], [[1,1],[3,4],[-3,4]]), [-58,31]);
+    M = [
+           [ [3,4], [9,-1], [4,3] ],
+           [ [2,9], [4,9], [3,-1] ]
+        ];
+    assert_equal(c_mul(M, [ [3,4], [4,4],[5,5]]), [[38,91], [-30, 97]]);
+    assert_equal(c_mul([[4,4],[9,1]], M), [[5,111],[67,117], [32,22]]);
+    assert_equal(c_mul(M,transpose(M)), [  [[80,30], [30, 117]], [[30,117], [-134, 102]]]);
+    assert_equal(c_mul(transpose(M),M), [  [[-84,60],[-42,87],[15,50]], [[-42,87],[15,54],[60,46]], [[15,50],[60,46],[15,18]]]);
 }
-test_C_times();
+test_c_mul();
 
 
-module test_C_div() {
-    assert_equal(C_div([56,29],[9,-4]), [4,5]);
-    assert_equal(C_div([-174,27],[-7,2]), [24,3]);
+module test_c_div() {
+    assert_equal(c_div([56,29],[9,-4]), [4,5]);
+    assert_equal(c_div([-174,27],[-7,2]), [24,3]);
 }    
-test_C_div();
+test_c_div();
 
+module test_c_conj(){
+    assert_equal(c_conj([3,4]), [3,-4]);
+    assert_equal(c_conj(           [ [2,9], [4,9], [3,-1] ]),            [ [2,-9], [4,-9], [3,1] ]);
+    M = [
+           [ [3,4], [9,-1], [4,3] ],
+           [ [2,9], [4,9], [3,-1] ]
+        ];
+    Mc = [
+           [ [3,-4], [9,1], [4,-3] ],
+           [ [2,-9], [4,-9], [3,1] ]
+        ];
+    assert_equal(c_conj(M), Mc);
+}
+test_c_conj();
+
+module test_c_real(){
+    M = [
+           [ [3,4], [9,-1], [4,3] ],
+           [ [2,9], [4,9], [3,-1] ]
+        ];
+    assert_equal(c_real(M), [[3,9,4],[2,4,3]]);
+    assert_equal(c_real(           [ [3,4], [9,-1], [4,3] ]), [3,9,4]);
+    assert_equal(c_real([3,4]),3);
+}
+test_c_real();
+
+
+module test_c_imag(){
+    M = [
+           [ [3,4], [9,-1], [4,3] ],
+           [ [2,9], [4,9], [3,-1] ]
+        ];
+    assert_equal(c_imag(M), [[4,-1,3],[9,9,-1]]);
+    assert_equal(c_imag(           [ [3,4], [9,-1], [4,3] ]), [4,-1,3]);
+    assert_equal(c_imag([3,4]),4);
+}
+test_c_imag();
+
+
+module test_c_ident(){
+  assert_equal(c_ident(3), [[[1, 0], [0, 0], [0, 0]], [[0, 0], [1, 0], [0, 0]], [[0, 0], [0, 0], [1, 0]]]);
+}
+test_c_ident();
+
+module test_c_norm(){
+  assert_equal(c_norm([3,4]), 5);
+  assert_approx(c_norm([[3,4],[5,6]]), 9.273618495495704);
+}
+test_c_norm();
 
 module test_back_substitute(){
    R = [[12,4,3,2],

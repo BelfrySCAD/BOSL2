@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: bottlecaps.scad
 //   Bottle caps and necks for PCO18XX standard plastic beverage bottles.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/bottlecaps.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 
@@ -18,11 +16,12 @@ include <knurling.scad>
 
 // Module: pco1810_neck()
 // Usage:
-//   pco1810_neck()
+//   pco1810_neck(<wall>)
 // Description:
 //   Creates an approximation of a standard PCO-1810 threaded beverage bottle neck.
 // Arguments:
 //   wall = Wall thickness in mm.
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -31,6 +30,12 @@ include <knurling.scad>
 //   "support-ring" = Centered at the bottom of the support ring.
 // Example:
 //   pco1810_neck();
+// Example: Standard Anchors
+//   pco1810_neck() show_anchors(custom=false);
+// Example: Custom Named Anchors
+//   expose_anchors(0.3)
+//       pco1810_neck()
+//           show_anchors(std=false);
 module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 {
     inner_d = 21.74;
@@ -64,7 +69,7 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
         anchorpt("support-ring", [0,0,neck_h-h/2]),
         anchorpt("tamper-ring", [0,0,h/2-tamper_base_h])
     ];
-    attachable(anchor,spin,orient, d=support_d, l=h, anchors=anchors) {
+    attachable(anchor,spin,orient, d1=neck_d, d2=lip_recess_d+2*lip_leadin_r, l=h, anchors=anchors) {
         down(h/2) {
             rotate_extrude(convexity=10) {
                 polygon(turtle(
@@ -105,12 +110,12 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
                 bottom_half() {
                     difference() {
                         thread_helix(
-                            base_d=threadbase_d-0.1,
+                            d=threadbase_d-0.1,
                             pitch=thread_pitch,
                             thread_depth=thread_h+0.1,
                             thread_angle=thread_angle,
                             twist=810,
-                            higbee=75,
+                            higbee=thread_h*2,
                             anchor=TOP
                         );
                         zrot_copies(rots=[90,270]) {
@@ -126,15 +131,19 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
     }
 }
 
+function  pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
+    no_function("pco1810_neck");
+
 
 // Module: pco1810_cap()
 // Usage:
-//   pco1810_cap(wall, [texture]);
+//   pco1810_cap(<wall>, <texture>);
 // Description:
 //   Creates a basic cap for a PCO1810 threaded beverage bottle.
 // Arguments:
 //   wall = Wall thickness in mm.
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -144,6 +153,12 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 //   pco1810_cap();
 //   pco1810_cap(texture="knurled");
 //   pco1810_cap(texture="ribbed");
+// Example: Standard Anchors
+//   pco1810_cap(texture="ribbed") show_anchors(custom=false);
+// Example: Custom Named Anchors
+//   expose_anchors(0.3)
+//       pco1810_cap(texture="ribbed")
+//           show_anchors(std=false);
 module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
 {
     cap_id = 28.58;
@@ -177,11 +192,15 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=cap_id, h=tamper_ring_h+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(base_d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, thread_angle=thread_angle, twist=810, higbee=45, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, thread_angle=thread_angle, twist=810, higbee=thread_depth, internal=true, anchor=BOTTOM);
         }
         children();
     }
 }
+
+function pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
+    no_function("pco1810_cap");
+
 
 
 // Section: PCO-1881 Bottle Threading
@@ -189,11 +208,12 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
 
 // Module: pco1881_neck()
 // Usage:
-//   pco1881_neck()
+//   pco1881_neck(<wall>)
 // Description:
 //   Creates an approximation of a standard PCO-1881 threaded beverage bottle neck.
 // Arguments:
 //   wall = Wall thickness in mm.
+//   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -202,6 +222,12 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
 //   "support-ring" = Centered at the bottom of the support ring.
 // Example:
 //   pco1881_neck();
+// Example:
+//   pco1881_neck() show_anchors(custom=false);
+// Example:
+//   expose_anchors(0.3)
+//       pco1881_neck()
+//           show_anchors(std=false);
 module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 {
     inner_d = 21.74;
@@ -236,7 +262,7 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
         anchorpt("support-ring", [0,0,neck_h-h/2]),
         anchorpt("tamper-ring", [0,0,h/2-tamper_base_h])
     ];
-    attachable(anchor,spin,orient, d=support_d, l=h, anchors=anchors) {
+    attachable(anchor,spin,orient, d1=neck_d, d2=lip_recess_d+2*lip_leadin_r, l=h, anchors=anchors) {
         down(h/2) {
             rotate_extrude(convexity=10) {
                 polygon(turtle(
@@ -277,12 +303,12 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
             up(h-lip_h) {
                 difference() {
                     thread_helix(
-                        base_d=threadbase_d-0.1,
+                        d=threadbase_d-0.1,
                         pitch=thread_pitch,
                         thread_depth=thread_h+0.1,
                         thread_angle=thread_angle,
                         twist=650,
-                        higbee=75,
+                        higbee=thread_h*2,
                         anchor=TOP
                     );
                     zrot_copies(rots=[90,270]) {
@@ -296,6 +322,9 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
         children();
     }
 }
+
+function pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
+    no_function("pco1881_neck");
 
 
 // Module: pco1881_cap()
@@ -315,6 +344,12 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
 //   pco1881_cap();
 //   pco1881_cap(texture="knurled");
 //   pco1881_cap(texture="ribbed");
+// Example: Standard Anchors
+//   pco1881_cap(texture="ribbed") show_anchors(custom=false);
+// Example: Custom Named Anchors
+//   expose_anchors(0.5)
+//       pco1881_cap(texture="ribbed")
+//           show_anchors(std=false);
 module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
 {
     $fn = segs(33/2);
@@ -341,11 +376,14 @@ module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=28.58, h=11.2+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(base_d=25.5, pitch=2.7, thread_depth=1.6, thread_angle=15, twist=650, higbee=45, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, thread_angle=15, twist=650, higbee=1.6, internal=true, anchor=BOTTOM);
         }
         children();
     }
 }
+
+function pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
+    no_function("pco1881_cap");
 
 
 

@@ -1,22 +1,28 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: math.scad
 //   Math helper functions.
-//   To use, add the following lines to the beginning of your file:
-//   ```
-//   use <BOSL2/std.scad>
-//   ```
+// Includes:
+//   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
 
 // Section: Math Constants
 
-PHI = (1+sqrt(5))/2;  // The golden ratio phi.
+// Constant: PHI
+// Description: The golden ratio phi.
+PHI = (1+sqrt(5))/2;
 
-EPSILON = 1e-9;  // A really small value useful in comparing FP numbers.  ie: abs(a-b)<EPSILON
+// Constant: EPSILON
+// Description: A really small value useful in comparing floating point numbers.  ie: abs(a-b)<EPSILON
+EPSILON = 1e-9;
 
-INF = 1/0;  // The value `inf`, useful for comparisons.
+// Constant: INF
+// Description: The value `inf`, useful for comparisons.
+INF = 1/0;
 
-NAN = acos(2);  // The value `nan`, useful for comparisons.
+// Constant: NAN
+// Description: The value `nan`, useful for comparisons.
+NAN = acos(2);
 
 
 
@@ -411,7 +417,7 @@ function posmod(x,m) =
     (x%m+m)%m;
 
 
-// Function: modang(x)
+// Function: modang()
 // Usage:
 //   ang = modang(x)
 // Description:
@@ -579,10 +585,10 @@ function lcm(a,b=[]) =
 function sum(v, dflt=0) =
     v==[]? dflt :
     assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
+    is_vector(v) || is_matrix(v) ? [for(i=[1:len(v)]) 1]*v :
     _sum(v,v[0]*0);
 
 function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
-
 
 // Function: cumsum()
 // Usage:
@@ -984,6 +990,7 @@ function is_matrix(A,m,n,square=false) =
    && is_list(A[0])
    && (( is_undef(n) && len(A[0]) ) || len(A[0])==n)
    && (!square || len(A) == len(A[0]))
+   && is_vector(A[0])
    && is_consistent(A);
 
 
@@ -1459,35 +1466,113 @@ function deriv3(data, h=1, closed=false) =
 
 // Section: Complex Numbers
 
-// Function: C_times()
+
+// Function: complex()
 // Usage:
-//   c = C_times(z1,z2)
+//   z = complex(list)
 // Description:
-//   Multiplies two complex numbers represented by 2D vectors.  
-//   Returns a complex number as a 2D vector [REAL, IMAGINARY].
+//   Converts a real valued number, vector or matrix into its complex analog
+//   by replacing all entries with a 2-vector that has zero imaginary part.
+function complex(list) =
+   is_num(list) ? [list,0] :
+   [for(entry=list) is_num(entry) ? [entry,0] : complex(entry)];
+
+
+// Function: c_mul()
+// Usage:
+//   c = c_mul(z1,z2)
+// Description:
+//   Multiplies two complex numbers, vectors or matrices, where complex numbers
+//   or entries are represented as vectors: [REAL, IMAGINARY].  Note that all
+//   entries in both arguments must be complex.  
 // Arguments:
-//   z1 = First complex number, given as a 2D vector [REAL, IMAGINARY]
-//   z2 = Second complex number, given as a 2D vector [REAL, IMAGINARY]
-function C_times(z1,z2) = 
-    assert( is_matrix([z1,z2],2,2), "Complex numbers should be represented by 2D vectors" )
+//   z1 = First complex number, vector or matrix
+//   z2 = Second complex number, vector or matrix
+
+function _split_complex(data) =
+   is_vector(data,2) ? data
+ : is_num(data[0][0]) ? [data*[1,0], data*[0,1]]
+ : [
+    [for(vec=data) vec * [1,0]],
+    [for(vec=data) vec * [0,1]]
+   ];
+
+function _combine_complex(data) =
+    is_vector(data,2) ? data
+  : is_num(data[0][0]) ? [for(i=[0:len(data[0])-1]) [data[0][i],data[1][i]]]
+  : [for(i=[0:1:len(data[0])-1])
+        [for(j=[0:1:len(data[0][0])-1])  
+            [data[0][i][j], data[1][i][j]]]];
+
+function _c_mul(z1,z2) = 
     [ z1.x*z2.x - z1.y*z2.y, z1.x*z2.y + z1.y*z2.x ];
 
-// Function: C_div()
+function c_mul(z1,z2) =
+  is_matrix([z1,z2],2,2) ? _c_mul(z1,z2) :
+  _combine_complex(_c_mul(_split_complex(z1), _split_complex(z2)));
+
+
+// Function: c_div()
 // Usage:
-//   x = C_div(z1,z2)
+//   x = c_div(z1,z2)
 // Description:
 //   Divides two complex numbers represented by 2D vectors.  
 //   Returns a complex number as a 2D vector [REAL, IMAGINARY].
 // Arguments:
 //   z1 = First complex number, given as a 2D vector [REAL, IMAGINARY]
 //   z2 = Second complex number, given as a 2D vector [REAL, IMAGINARY]
-function C_div(z1,z2) = 
+function c_div(z1,z2) = 
     assert( is_vector(z1,2) && is_vector(z2), "Complex numbers should be represented by 2D vectors." )
     assert( !approx(z2,0), "The divisor `z2` cannot be zero." ) 
     let(den = z2.x*z2.x + z2.y*z2.y)
     [(z1.x*z2.x + z1.y*z2.y)/den, (z1.y*z2.x - z1.x*z2.y)/den];
 
-// For the sake of consistence with Q_mul and vmul, C_times should be called C_mul
+
+// Function: c_conj()
+// Usage:
+//   w = c_conj(z)
+// Description:
+//   Computes the complex conjugate of the input, which can be a complex number,
+//   complex vector or complex matrix.  
+function c_conj(z) =
+   is_vector(z,2) ? [z.x,-z.y] :
+   [for(entry=z) c_conj(entry)];
+
+// Function: c_real()
+// Usage:
+//   x = c_real(z)
+// Description:
+//   Returns real part of a complex number, vector or matrix.
+function c_real(z) = 
+     is_vector(z,2) ? z.x
+   : is_num(z[0][0]) ? z*[1,0]
+   : [for(vec=z) vec * [1,0]];
+
+// Function: c_imag()
+// Usage:
+//   x = c_imag(z)
+// Description:
+//   Returns imaginary part of a complex number, vector or matrix.
+function c_imag(z) = 
+     is_vector(z,2) ? z.y
+   : is_num(z[0][0]) ? z*[0,1]
+   : [for(vec=z) vec * [0,1]];
+
+
+// Function: c_ident()
+// Usage:
+//   I = c_ident(n)
+// Description:
+//   Produce an n by n complex identity matrix
+function c_ident(n) = [for (i = [0:1:n-1]) [for (j = [0:1:n-1]) (i==j)?[1,0]:[0,0]]];
+
+// Function: c_norm()
+// Usage:
+//   n = c_norm(z)
+// Description:
+//   Compute the norm of a complex number or vector. 
+function c_norm(z) = norm_fro(z);
+
 
 // Section: Polynomials
 
@@ -1533,12 +1618,12 @@ function quadratic_roots(a,b,c,real=false) =
 //   where a_n is the z^n coefficient.  Polynomial coefficients are real.
 //   The result is a number if `z` is a number and a complex number otherwise.
 function polynomial(p,z,k,total) =
-    is_undef(k)
-    ?   assert( is_vector(p) , "Input polynomial coefficients must be a vector." )
-        assert( is_finite(z) || is_vector(z,2), "The value of `z` must be a real or a complex number." )
-        polynomial( _poly_trim(p), z, 0, is_num(z) ? 0 : [0,0])
-    : k==len(p) ? total
-    : polynomial(p,z,k+1, is_num(z) ? total*z+p[k] : C_times(total,z)+[p[k],0]);
+  is_undef(k)
+  ? assert( is_vector(p) , "Input polynomial coefficients must be a vector." )
+    assert( is_finite(z) || is_vector(z,2), "The value of `z` must be a real or a complex number." )
+    polynomial( _poly_trim(p), z, 0, is_num(z) ? 0 : [0,0])
+  : k==len(p) ? total
+  : polynomial(p,z,k+1, is_num(z) ? total*z+p[k] : c_mul(total,z)+[p[k],0]);
 
 // Function: poly_mult()
 // Usage:
@@ -1548,12 +1633,12 @@ function polynomial(p,z,k,total) =
 //   Given a list of polynomials represented as real coefficient lists, with the highest degree coefficient first, 
 //   computes the coefficient list of the product polynomial.  
 function poly_mult(p,q) = 
-    is_undef(q) ?
-        len(p)==2 
+  is_undef(q) ?
+    len(p)==2 
         ? poly_mult(p[0],p[1]) 
-        : poly_mult(p[0], poly_mult(select(p,1,-1)))
-    :
-    assert( is_vector(p) && is_vector(q),"Invalid arguments to poly_mult")
+    : poly_mult(p[0], poly_mult(select(p,1,-1)))
+  :
+  assert( is_vector(p) && is_vector(q),"Invalid arguments to poly_mult")
     p*p==0 || q*q==0
     ? [0]
     : _poly_trim(convolve(p,q));
@@ -1586,12 +1671,12 @@ function _poly_div(n,d,q) =
     _poly_div(newn,d,newq);
 
 
-// Internal Function: _poly_trim()
-// Usage:
-//    _poly_trim(p,[eps])
-// Description:
-//    Removes leading zero terms of a polynomial.  By default zeros must be exact,
-//    or give epsilon for approximate zeros.  
+/// Internal Function: _poly_trim()
+/// Usage:
+///    _poly_trim(p,[eps])
+/// Description:
+///    Removes leading zero terms of a polynomial.  By default zeros must be exact,
+///    or give epsilon for approximate zeros.  
 function _poly_trim(p,eps=0) =
     let( nz = [for(i=[0:1:len(p)-1]) if ( !approx(p[i],0,eps)) i])
     len(nz)==0 ? [0] : select(p,nz[0],-1);
@@ -1674,10 +1759,10 @@ function _poly_roots(p, pderiv, s, z, tol, i=0) =
         svals = [for(zk=z) tol*polynomial(s,norm(zk))],
         p_of_z = [for(zk=z) polynomial(p,zk)],
         done = [for(k=[0:n-1]) norm(p_of_z[k])<=svals[k]],
-        newton = [for(k=[0:n-1]) C_div(p_of_z[k], polynomial(pderiv,z[k]))],
-        zdiff = [for(k=[0:n-1]) sum([for(j=[0:n-1]) if (j!=k) C_div([1,0], z[k]-z[j])])],
-        w = [for(k=[0:n-1]) done[k] ? [0,0] : C_div( newton[k],
-                                                     [1,0] - C_times(newton[k], zdiff[k]))]
+        newton = [for(k=[0:n-1]) c_div(p_of_z[k], polynomial(pderiv,z[k]))],
+        zdiff = [for(k=[0:n-1]) sum([for(j=[0:n-1]) if (j!=k) c_div([1,0], z[k]-z[j])])],
+        w = [for(k=[0:n-1]) done[k] ? [0,0] : c_div( newton[k],
+                                                     [1,0] - c_mul(newton[k], zdiff[k]))]
     )
     all(done) ? z : _poly_roots(p,pderiv,s,z-w,tol,i+1);
 

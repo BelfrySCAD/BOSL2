@@ -1,10 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: regions.scad
 //   Regions and 2D boolean geometry
-//   To use, add the following lines to the beginning of your file:
-//   ```
-//   use <BOSL2/std.scad>
-//   ```
+// Includes:
+//   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
 
@@ -60,35 +58,34 @@ module region(r)
 
 // Function: check_and_fix_path()
 // Usage:
-//   check_and_fix_path(path, [valid_dim], [closed])
+//   check_and_fix_path(path, [valid_dim], [closed], [name])
 // Description:
 //   Checks that the input is a path.  If it is a region with one component, converts it to a path.
+//   Note that arbitrary paths must have at least two points, but closed paths need at least 3 points.  
 //   valid_dim specfies the allowed dimension of the points in the path.
-//   If the path is closed, removed duplicate endpoint if present.
+//   If the path is closed, removes duplicate endpoint if present.
 // Arguments:
 //   path = path to process
 //   valid_dim = list of allowed dimensions for the points in the path, e.g. [2,3] to require 2 or 3 dimensional input.  If left undefined do not perform this check.  Default: undef
 //   closed = set to true if the path is closed, which enables a check for endpoint duplication
-function check_and_fix_path(path, valid_dim=undef, closed=false) =
+//   name = parameter name to use for reporting errors.  Default: "path"
+function check_and_fix_path(path, valid_dim=undef, closed=false, name="path") =
     let(
-        path = is_region(path)? (
-            assert(len(path)==1,"Region supplied as path does not have exactly one component")
-            path[0]
-        ) : (
-            assert(is_path(path), "Input is not a path")
-            path
-        ),
-        dim = array_dim(path)
+        path =
+          is_region(path)? 
+               assert(len(path)==1,str("Region ",name," supplied as path does not have exactly one component"))
+               path[0]
+          :
+               assert(is_path(path), str("Input ",name," is not a path"))
+               path
     )
-    assert(dim[0]>1,"Path must have at least 2 points")
-    assert(len(dim)==2,"Invalid path: path is either a list of scalars or a list of matrices")
-    assert(is_def(dim[1]), "Invalid path: entries in the path have variable length")
-    let(valid=is_undef(valid_dim) || in_list(dim[1],valid_dim))
+    assert(len(path)>(closed?2:1),closed?str("Closed path ",name," must have at least 3 points")
+                                        :str("Path ",name," must have at least 2 points"))
+    let(valid=is_undef(valid_dim) || in_list(len(path[0]),force_list(valid_dim)))
     assert(
         valid, str(
-            "The points on the path have length ",
-            dim[1], " but length must be ",
-            len(valid_dim)==1? valid_dim[0] : str("one of ",valid_dim)
+            "Input ",name," must has dimension ", len(path[0])," but dimension must be ",
+            is_list(valid_dim) ? str("one of ",valid_dim) : valid_dim
         )
     )
     closed && approx(path[0],select(path,-1))? slice(path,0,-2) : path;
@@ -122,6 +119,76 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
     (_i >= len(region))? ((_cnt%2==1)? 1 : -1) : let(
         pip = point_in_polygon(point, region[_i], eps=eps)
     ) pip==0? 0 : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
+
+
+// Function: polygons_equal()
+// Usage:
+//    b = polygons_equal(poly1, poly2, <eps>)
+// Description:
+//    Returns true if the components of region1 and region2 are the same polygons
+//    within given epsilon tolerance.
+// Arguments:
+//    poly1 = first polygon
+//    poly2 = second polygon
+//    eps = tolerance for comparison
+// Example(NORENDER):
+//    polygons_equal(pentagon(r=4),
+//                   rot(360/5, p=pentagon(r=4))); // returns true
+//    polygons_equal(pentagon(r=4),
+//                   rot(90, p=pentagon(r=4)));    // returns false
+function polygons_equal(poly1, poly2, eps=EPSILON) =
+    let(
+        poly1 = cleanup_path(poly1),
+        poly2 = cleanup_path(poly2),
+        l1 = len(poly1),
+        l2 = len(poly2)
+    ) l1 != l2 ? false :
+    let( maybes = find_first_match(poly1[0], poly2, eps=eps, all=true) )
+    maybes == []? false :
+    [for (i=maybes) if (__polygons_equal(poly1, poly2, eps, i)) 1] != [];
+
+function __polygons_equal(poly1, poly2, eps, st) =
+    max([for(d=poly1-select(poly2,st,st-1)) d*d])<eps*eps;
+
+
+// Function: poly_in_polygons()
+// Topics: Polygons, Comparators
+// See Also: polygons_equal(), regions_equal()
+// Usage:
+//   bool = poly_in_polygons(poly, polys);
+// Description:
+//   Returns true if one of the polygons in `polys` is equivalent to the polygon `poly`.
+// Arguments:
+//   poly = The polygon to search for.
+//   polys = The list of polygons to look for the polygon in.
+function poly_in_polygons(poly, polys) =
+    __poly_in_polygons(poly, polys, 0);
+
+function __poly_in_polygons(poly, polys, i) =
+    i >= len(polys)? false :
+    polygons_equal(poly, polys[i])? true :
+    __poly_in_polygons(poly, polys, i+1);
+
+
+// Function: regions_equal()
+// Usage:
+//    b = regions_equal(region1, region2, <eps>)
+// Description:
+//    Returns true if the components of region1 and region2 are the same polygons
+//    within given epsilon tolerance.
+// Arguments:
+//    poly1 = first polygon
+//    poly2 = second polygon
+//    eps = tolerance for comparison
+function regions_equal(region1, region2) =
+    assert(is_region(region1) && is_region(region2))
+    len(region1) != len(region2)? false :
+    __regions_equal(region1, region2, 0);
+
+function __regions_equal(region1, region2, i) =
+    i >= len(region1)? true :
+    !poly_in_polygons(region1[i], region2)? false :
+    __regions_equal(region1, region2, i+1);
 
 
 // Function: region_path_crossings()
@@ -369,7 +436,7 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg
                 for (path=rgn) let(
                     p = cleanup_path(path),
                     path = is_undef(maxseg)? p : [
-                        for (seg=pair_wrap(p)) each
+                        for (seg=pair(p,true)) each
                         let(steps=ceil(norm(seg.y-seg.x)/maxseg))
                         lerp(seg.x, seg.y, [0:1/steps:1-EPSILON])
                     ]
@@ -382,7 +449,7 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg
             for (pathnum = idx(rgn)) let(
                 p = cleanup_path(rgn[pathnum]),
                 path = is_undef(maxseg)? p : [
-                    for (seg=pair_wrap(p)) each
+                    for (seg=pair(p,true)) each
                     let(steps=ceil(norm(seg.y-seg.x)/maxseg))
                     lerp(seg.x, seg.y, [0:1/steps:1-EPSILON])
                 ],
@@ -535,7 +602,7 @@ function _offset_region(
             difference(_acc, [
                 offset(
                     paths[_i].y,
-                    r=-r, delta=-delta, chamfer=chamfer, closed=closed,
+                    r=u_mul(-1,r), delta=u_mul(-1,delta), chamfer=chamfer, closed=closed,
                     maxstep=maxstep, check_valid=check_valid, quality=quality,
                     return_faces=return_faces, firstface_index=firstface_index,
                     flip_faces=flip_faces
@@ -549,11 +616,14 @@ function _offset_region(
 
 
 // Function: offset()
-//
+// Usage:
+//   offsetpath = offset(path, [r|delta], [chamfer], [closed], [check_valid], [quality])
+//   path_faces = offset(path, return_faces=true, [r|delta], [chamfer], [closed], [check_valid], [quality], [firstface_index], [flip_faces])
 // Description:
 //   Takes an input path and returns a path offset by the specified amount.  As with the built-in
 //   offset() module, you can use `r` to specify rounded offset and `delta` to specify offset with
-//   corners.  Positive offsets shift the path to the left (relative to the direction of the path).
+//   corners.  If you used `delta` you can set `chamfer` to true to get chamfers.
+//   Positive offsets shift the path to the left (relative to the direction of the path).
 //   .
 //   When offsets shrink the path, segments cross and become invalid.  By default `offset()` checks
 //   for this situation.  To test validity the code checks that segments have distance larger than (r
@@ -572,6 +642,7 @@ function _offset_region(
 //   value is a list: [offset_path, face_list].
 // Arguments:
 //   path = the path to process.  A list of 2d points.
+//   ---
 //   r = offset radius.  Distance to offset.  Will round over corners.
 //   delta = offset distance.  Distance to offset with pointed corners.
 //   chamfer = chamfer corners when you specify `delta`.  Default: false
@@ -645,7 +716,7 @@ function offset(
     maxstep=0.1, closed=false, check_valid=true,
     quality=1, return_faces=false, firstface_index=0,
     flip_faces=false
-) =
+) = 
     is_region(path)? (
         assert(!return_faces, "return_faces not supported for regions.")
         let(
@@ -689,23 +760,21 @@ function offset(
             (len(sharpcorners)==2 && !closed) ||
             all_defined(select(sharpcorners,closed?0:1,-1))
     )
-    assert(parallelcheck, "Path turns back on itself (180 deg turn)")
+    assert(parallelcheck, "Path contains sequential parallel segments (either 180 deg turn or 0 deg turn")
     let(
         // This is a boolean array that indicates whether a corner is an outside or inside corner
         // For outside corners, the newcorner is an extension (angle 0), for inside corners, it turns backward
         // If either side turns back it is an inside corner---must check both.
         // Outside corners can get rounded (if r is specified and there is space to round them)
-        outsidecorner = [
-            for(i=[0:len(goodsegs)-1]) let(
-                prevseg=select(goodsegs,i-1)
-            ) (
-                (goodsegs[i][1]-goodsegs[i][0]) *
-                (goodsegs[i][0]-sharpcorners[i]) > 0
-            ) && (
-                (prevseg[1]-prevseg[0]) *
-                (sharpcorners[i]-prevseg[1]) > 0
-            )
-        ],
+        outsidecorner = len(sharpcorners)==2 ? [false,false]
+           :
+            [for(i=[0:len(goodsegs)-1])
+                let(prevseg=select(goodsegs,i-1))
+                i==0 && !closed ? false  // In open case first entry is bogus
+               :  
+                (goodsegs[i][1]-goodsegs[i][0]) * (goodsegs[i][0]-sharpcorners[i]) > 0
+                 && (prevseg[1]-prevseg[0]) * (sharpcorners[i]-prevseg[1]) > 0
+            ],
         steps = is_def(delta) ? [] : [
             for(i=[0:len(goodsegs)-1])
                         r==0 ? 0 :

@@ -2,11 +2,9 @@
 // LibFile: turtle3d.scad
 //   Three dimensional turtle graphics to generate 3d paths or sequences
 //   of 3d transformations. 
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/turtle3d.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 include<structs.scad>
 
@@ -423,8 +421,8 @@ turtle state: sequence of transformations ("path") so far
 
 function _turtle3d_state_valid(state) =
     is_list(state)
-        && is_list_of(state[0],ident(4))
-        && is_list_of(state[1],ident(4))
+        && is_consistent(state[0],ident(4))
+        && is_consistent(state[1],ident(4))
         && is_num(state[2])
         && is_num(state[3])
         && is_num(state[4]);
@@ -435,7 +433,7 @@ function turtle3d(commands, state=RIGHT, transforms=false, full_state=false, rep
        state = is_matrix(state,4,4) ? [[state],[yrot(90)],1,90,0] :
                is_vector(state,3) ?
                   let( updir = UP - (UP * state) * state / (state*state) )
-                  [[affine_frame_map(x=state, z=approx(norm(updir),0) ? FWD : updir)], [yrot(90)],1, 90, 0]
+                  [[affine3d_frame_map(x=state, z=approx(norm(updir),0) ? FWD : updir)], [yrot(90)],1, 90, 0]
                 : assert(_turtle3d_state_valid(state), "Supplied state is not valid")
                   state,
        finalstate = _turtle3d_repeat(commands, state, repeat)

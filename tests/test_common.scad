@@ -217,16 +217,6 @@ module test_valid_range() {
 }
 test_valid_range();
 
-module test_is_list_of() {
-    assert(is_list_of([3,4,5], 0));
-    assert(!is_list_of([3,4,undef], 0));
-    assert(is_list_of([[3,4],[4,5]], [1,1]));
-    assert(!is_list_of([[3,4], 6, [4,5]], [1,1]));
-    assert(is_list_of([[1,[3,4]], [4,[5,6]]], [1,[2,3]]));
-    assert(!is_list_of([[1,[3,INF]], [4,[5,6]]], [1,[2,3]]));
-}
-test_is_list_of();
-
 module test_is_consistent() {
     assert(is_consistent([]));
     assert(is_consistent([[],[]]));
@@ -238,6 +228,13 @@ module test_is_consistent() {
     assert(!is_consistent([[3,4,5],[3,4]]));
     assert(is_consistent([[3,[3,4,[5]]], [5,[2,9,[9]]]]));
     assert(!is_consistent([[3,[3,4,[5]]], [5,[2,9,9]]]));
+
+    assert(is_consistent([3,4,5], 0));
+    assert(!is_consistent([3,4,undef], 0));
+    assert(is_consistent([[3,4],[4,5]], [1,1]));
+    assert(!is_consistent([[3,4], 6, [4,5]], [1,1]));
+    assert(is_consistent([[1,[3,4]], [4,[5,6]]], [1,[2,3]]));
+    assert(!is_consistent([[1,[3,INF]], [4,[5,6]]], [1,[2,3]]));
 }
 test_is_consistent();
 
@@ -245,6 +242,12 @@ test_is_consistent();
 module test_same_shape() {
     assert(same_shape([3,[4,5]],[7,[3,4]]));
     assert(!same_shape([3,4,5], [7,[3,4]]));
+    assert(!same_shape([3,4,5],undef));
+    assert(!same_shape([5,3],3));
+    assert(!same_shape(undef,[3,4]));
+    assert(same_shape(4,5));
+    assert(!same_shape(5,undef));
+           
 }
 test_same_shape();
 
@@ -276,10 +279,14 @@ test_first_defined();
 
 
 module test_one_defined() {
+    assert_equal(one_defined([27,undef,undef], "length,L,l") ,27);
+    assert_equal(one_defined([undef,28,undef], "length,L,l") ,28);
+    assert_equal(one_defined([undef,undef,29], "length,L,l") ,29);
+    assert_equal(one_defined([undef,undef,undef], "length,L,l", dflt=undef), undef);
     assert_equal(one_defined([27,undef,undef], ["length","L","l"]) ,27);
     assert_equal(one_defined([undef,28,undef], ["length","L","l"]) ,28);
     assert_equal(one_defined([undef,undef,29], ["length","L","l"]) ,29);
-    assert_equal(one_defined([undef,undef,undef], ["length","L","l"], required=false), undef);
+    assert_equal(one_defined([undef,undef,undef], ["length","L","l"], dflt=undef), undef);
 }
 test_one_defined();
 
@@ -359,19 +366,6 @@ module test_get_radius() {
     assert(get_radius(r1=undef,d1=undef,r=undef,d=undef,dflt=undef) == undef);
 }
 test_get_radius();
-
-
-module test_get_height() {
-    assert(get_height(h=undef, l=undef, height=undef, dflt=undef) == undef);
-    assert(get_height(h=undef, l=undef, height=undef, dflt=23) == 23);
-    assert(get_height(h=undef, l=undef, height=50, dflt=23) == 50);
-    assert(get_height(h=undef, l=50, height=undef, dflt=23) == 50);
-    assert(get_height(h=50, l=undef, height=undef, dflt=23) == 50);
-    assert(get_height(h=undef, l=undef, height=75, dflt=23) == 75);
-    assert(get_height(h=undef, l=75, height=undef, dflt=23) == 75);
-    assert(get_height(h=75, l=undef, height=undef, dflt=23) == 75);
-}
-test_get_height();
 
 
 module test_scalar_vec3() {

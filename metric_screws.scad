@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: metric_screws.scad
 //   Screws, Bolts, and Nuts.
-//   To use, include the following lines at the top of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/metric_screws.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 
@@ -359,11 +357,11 @@ function get_metric_nut_thickness(size) = lookup(size, [
 // Section: Modules
 
 
-// Module: screw()
+// Module: generic_screw()
 // Description:
 //   Makes a very simple screw model, useful for making screwholes.
 // Usage:
-//   screw(screwsize, screwlen, headsize, headlen)
+//   generic_screw(screwsize, screwlen, headsize, headlen)
 // Arguments:
 //   screwsize = diameter of threaded part of screw.
 //   screwlen = length of threaded part of screw.
@@ -376,16 +374,16 @@ function get_metric_nut_thickness(size) = lookup(size, [
 //   "base" = At the base of the head.
 //   "countersunk" = At the head height that would be just barely exposed when countersunk.
 // Examples:
-//   screw(screwsize=3,screwlen=10,headsize=6,headlen=3, anchor="countersunk");
-//   screw(screwsize=3,screwlen=10,headsize=6,headlen=3, anchor="base");
-// Example(FlatSpin): Standard Anchors
-//   screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
+//   generic_screw(screwsize=3,screwlen=10,headsize=6,headlen=3, anchor="countersunk");
+//   generic_screw(screwsize=3,screwlen=10,headsize=6,headlen=3, anchor="base");
+// Example(FlatSpin,VPD=75): Standard Anchors
+//   generic_screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
 //       show_anchors(5, custom=false);
-// Example(FlatSpin): Standard Anchors
-//   show_internal_anchors()
-//     screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
+// Example(FlatSpin,VPD=55): Custom Named Anchors
+//   expose_anchors()
+//     generic_screw(screwsize=3,screwlen=10,headsize=6,headlen=3)
 //       show_anchors(5, std=false);
-module screw(
+module generic_screw(
     screwsize=3,
     screwlen=10,
     headsize=6,
@@ -469,11 +467,11 @@ module screw(
 //   metric_bolt(headtype="hex", size=10, l=15, phillips="#2");
 // Example: Hex Head with Torx
 //   metric_bolt(headtype="hex", size=10, l=15, torx=50);
-// Example(FlatSpin): Standard Anchors
+// Example(FlatSpin,VPD=100): Standard Anchors
 //   metric_bolt(headtype="oval", size=10, l=15, shank=5, details=true, phillips="#2")
 //       show_anchors(5, custom=false);
-// Example(FlatSpin): Custom Anchors
-//   show_internal_anchors(0.125)
+// Example(FlatSpin,VPD=100): Custom Named Anchors
+//   expose_anchors(0.125)
 //     metric_bolt(headtype="oval", size=10, l=15, shank=5, details=true, phillips="#2")
 //       show_anchors(5, std=false);
 module metric_bolt(

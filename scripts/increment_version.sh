@@ -13,5 +13,3 @@ echo "New Version: $major.$minor.$newrev"
 
 sed -i '' 's/^BOSL_VERSION = .*$/BOSL_VERSION = ['"$major,$minor,$newrev];/g" $VERFILE
 
-exec git add version.scad
-

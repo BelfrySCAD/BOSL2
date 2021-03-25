@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: sliders.scad
 //   Simple V-groove based sliders and rails.
-//   To use, add these lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/sliders.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 

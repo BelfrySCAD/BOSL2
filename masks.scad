@@ -1,10 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: masks.scad
 //   Masking shapes.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 
@@ -29,7 +27,7 @@
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-// Example(FR):
+// Example(Render):
 //   angle_pie_mask(ang=30, d=100, l=20);
 module angle_pie_mask(
     ang=45, l=undef,
@@ -116,34 +114,50 @@ module cylinder_mask(
     vang = atan2(l, r1-r2)/2;
     ang1 = first_defined([chamfang1, chamfang, vang]);
     ang2 = first_defined([chamfang2, chamfang, 90-vang]);
-    cham1 = first_defined([chamfer1, chamfer, 0]);
-    cham2 = first_defined([chamfer2, chamfer, 0]);
-    fil1 = first_defined([rounding1, rounding, 0]);
-    fil2 = first_defined([rounding2, rounding, 0]);
+    cham1 = first_defined([chamfer1, chamfer]);
+    cham2 = first_defined([chamfer2, chamfer]);
+    fil1 = first_defined([rounding1, rounding]);
+    fil2 = first_defined([rounding2, rounding]);
     maxd = max(r1,r2);
     if ($children > 0) {
         difference() {
             children();
-            cylinder_mask(l=l, r1=sc*r1, r2=sc*r2, chamfer1=cham1, chamfer2=cham2, chamfang1=ang1, chamfang2=ang2, rounding1=fil1, rounding2=fil2, orient=orient, from_end=from_end);
+            cylinder_mask(
+                l=l, r1=sc*r1, r2=sc*r2,
+                chamfer1=cham1, chamfer2=cham2,
+                chamfang1=ang1, chamfang2=ang2,
+                rounding1=fil1, rounding2=fil2,
+                orient=orient, from_end=from_end
+            );
         }
     } else {
         attachable(anchor,spin,orient, r=r1, l=l) {
             difference() {
                 union() {
-                    chlen1 = cham1 / (from_end? 1 : tan(ang1));
-                    chlen2 = cham2 / (from_end? 1 : tan(ang2));
+                    chlen1 = default(cham1,0) / (from_end? 1 : tan(ang1));
+                    chlen2 = default(cham2,0) / (from_end? 1 : tan(ang2));
                     if (!ends_only) {
                         cylinder(r=maxd+excess, h=l+2*excess, center=true);
                     } else {
-                        if (cham2>0) up(l/2-chlen2) cylinder(r=maxd+excess, h=chlen2+excess, center=false);
-                        if (cham1>0) down(l/2+excess) cylinder(r=maxd+excess, h=chlen1+excess, center=false);
-                        if (fil2>0) up(l/2-fil2) cylinder(r=maxd+excess, h=fil2+excess, center=false);
-                        if (fil1>0) down(l/2+excess) cylinder(r=maxd+excess, h=fil1+excess, center=false);
+                        if (is_num(cham2) && cham2>0) up(l/2-chlen2)
+                            cylinder(r=maxd+excess, h=chlen2+excess, center=false);
+                        if (is_num(cham1) && cham1>0)
+                            down(l/2+excess) cylinder(r=maxd+excess, h=chlen1+excess, center=false);
+                        if (is_num(fil2) && fil2>0)
+                            up(l/2-fil2) cylinder(r=maxd+excess, h=fil2+excess, center=false);
+                        if (is_num(fil1) && fil1>0)
+                            down(l/2+excess) cylinder(r=maxd+excess, h=fil1+excess, center=false);
                     }
                 }
-                cyl(r1=sc*r1, r2=sc*r2, l=l, chamfer1=cham1, chamfer2=cham2, chamfang1=ang1, chamfang2=ang2, from_end=from_end, rounding1=fil1, rounding2=fil2);
+                cyl(
+                    r1=sc*r1, r2=sc*r2, l=l,
+                    chamfer1=cham1, chamfer2=cham2,
+                    chamfang1=ang1, chamfang2=ang2,
+                    from_end=from_end,
+                    rounding1=fil1, rounding2=fil2
+                );
             }
-            nil();
+            children();
         }
     }
 }
@@ -259,11 +273,11 @@ module chamfer_mask_z(l=1.0, chamfer=1.0, excess=0.1, anchor=CENTER, spin=0) {
 //   size = The size of the rectangular cuboid we want to chamfer.
 //   edges = Edges to chamfer.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
 //   except_edges = Edges to explicitly NOT chamfer.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
-// Example(FR):
+// Example(Render):
 //   chamfer(chamfer=2, size=[20,40,30]) {
 //     cube(size=[20,40,30], center=true);
 //   }
-// Example(FR):
+// Example(Render):
 //   chamfer(chamfer=2, size=[20,40,30], edges=[TOP,FRONT+RIGHT], except_edges=TOP+LEFT) {
 //     cube(size=[20,40,30], center=true);
 //   }
@@ -565,11 +579,11 @@ module rounding_mask_z(l=1.0, r, r1, r2, d, d1, d2, anchor=CENTER, spin=0)
 //   size = The size of the rectangular cuboid we want to chamfer.
 //   edges = Edges to round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
 //   except_edges = Edges to explicitly NOT round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
-// Example(FR):
+// Example(Render):
 //   rounding(r=10, size=[50,100,150], $fn=24) {
 //     cube(size=[50,100,150], center=true);
 //   }
-// Example(FR,FlatSpin):
+// Example(FlatSpin,VPD=266):
 //   rounding(r=10, size=[50,50,75], edges=[TOP,FRONT+RIGHT], except_edges=TOP+LEFT, $fn=24) {
 //     cube(size=[50,50,75], center=true);
 //   }
@@ -843,7 +857,7 @@ module teardrop_corner_mask(r, angle, excess=0.1, d, anchor=CENTER, spin=0, orie
     r = get_radius(r=r, d=d, dflt=1);
     difference() {
         translate(-[1,1,1]*excess) cube(r+excess, center=false);
-        translate([1,1,1]*r) onion(r=r,maxang=angle,orient=DOWN);
+        translate([1,1,1]*r) onion(r=r, ang=angle, orient=DOWN);
     }
 }
 

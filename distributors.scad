@@ -1,10 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: distributors.scad
 //   Functions and modules to distribute children or copies of children.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 
@@ -95,9 +93,9 @@ module move_copies(a=[[0,0,0]])
 //   line_of(spacing=[10,5], l=50) sphere(d=1);
 //   line_of(l=50, n=4) sphere(d=1);
 //   line_of(l=[50,-30], n=4) sphere(d=1);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=133):
 //   line_of(p1=[0,0,0], p2=[5,5,20], n=6) cube(size=[3,2,1],center=true);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=133):
 //   line_of(p1=[0,0,0], p2=[5,5,20], spacing=6) cube(size=[3,2,1],center=true);
 // Example: All Children are Copied at Each Spread Position
 //   line_of(l=20, n=3) {
@@ -589,8 +587,9 @@ module grid2d(spacing, n, size, stagger=false, inside=undef)
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
 //   `$idx` is set to the [Xidx,Yidx,Zidx] index values of each child copy, when using `count` and `n`.
 //
-// Examples(FlatSpin):
+// Examples(FlatSpin,VPD=222):
 //   grid3d(xa=[0:25:50],ya=[0,40],za=[-20:40:20]) sphere(r=5);
+// Examples(FlatSpin,VPD=800):
 //   grid3d(n=[3, 4, 2], spacing=[60, 50, 40]) sphere(r=10);
 // Examples:
 //   grid3d(ya=[-60:40:60],za=[0,70]) sphere(r=10);

@@ -1,10 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: vectors.scad
 //   Vector math functions.
-//   To use, add the following lines to the beginning of your file:
-//   ```
-//   use <BOSL2/std.scad>
-//   ```
+// Includes:
+//   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
 
@@ -38,7 +36,7 @@
 //   is_vector([1,1,1],all_nonzero=false);  // Returns true
 //   is_vector([],zero=false);              // Returns false
 function is_vector(v, length, zero, all_nonzero=false, eps=EPSILON) =
-    is_list(v) && is_num(v[0]) && is_num(0*(v*v))
+    is_list(v) && len(v)>0 && []==[for(vi=v) if(!is_num(vi)) 0] 
     && (is_undef(length) || len(v)==length)
     && (is_undef(zero) || ((norm(v) >= eps) == !zero))
     && (!all_nonzero || all_nonzero(v)) ;
@@ -130,7 +128,7 @@ function vceil(v) =
 //   unit([0,0,0]);    // Asserts an error.
 function unit(v, error=[[["ASSERT"]]]) =
     assert(is_vector(v), str("Expected a vector.  Got: ",v))
-    norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON) : error) :
+    norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON,"Tried to normalize a zero vector") : error) :
     v/norm(v);
 
 

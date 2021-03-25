@@ -1,28 +1,28 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: debug.scad
 //   Helpers to make debugging OpenScad code easier.
-//   To use, add the following lines to the beginning of your file:
-//   ```
+// Includes:
 //   include <BOSL2/std.scad>
-//   include <BOSL2/debug.scad>
-//   ```
 //////////////////////////////////////////////////////////////////////
 
 
 // Section: Debugging Paths and Polygons
 
 // Module: trace_path()
+// Usage:
+//   trace_path(path, <closed=>, <showpts=>, <N=>, <size=>, <color=>);
 // Description:
 //   Renders lines between each point of a path.
 //   Can also optionally show the individual vertex points.
 // Arguments:
 //   path = The list of points in the path.
+//   ---
 //   closed = If true, draw the segment from the last vertex to the first.  Default: false
 //   showpts = If true, draw vertices and control points.
 //   N = Mark the first and every Nth vertex after in a different color and shape.
 //   size = Diameter of the lines drawn.
 //   color = Color to draw the lines (but not vertices) in.
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=44.4):
 //   path = [for (a=[0:30:210]) 10*[cos(a), sin(a), sin(a)]];
 //   trace_path(path, showpts=true, size=0.5, color="lightgreen");
 module trace_path(path, closed=false, showpts=false, N=1, size=1, color="yellow") {
@@ -32,7 +32,7 @@ module trace_path(path, closed=false, showpts=false, N=1, size=1, color="yellow"
     if (showpts) {
         for (i = [0:1:len(path)-1]) {
             translate(path[i]) {
-                if (i%N == 0) {
+                if (i % N == 0) {
                     color("blue") sphere(d=size*2.5, $fn=8);
                 } else {
                     color("red") {
@@ -48,7 +48,7 @@ module trace_path(path, closed=false, showpts=false, N=1, size=1, color="yellow"
         color(color) stroke(path3d(path), width=size, $fn=8);
     } else {
         for (i = [0:1:len(path)-2]) {
-            if (N!=3 || (i%N) != 1) {
+            if (N != 3 || (i % N) != 1) {
                 color(color) extrude_from_to(path[i], path[i+1]) circle(d=size, $fn=sides);
             }
         }
@@ -57,11 +57,16 @@ module trace_path(path, closed=false, showpts=false, N=1, size=1, color="yellow"
 
 
 // Module: debug_polygon()
-// Description: A drop-in replacement for `polygon()` that renders and labels the path points.
+// Usage:
+//   debug_polygon(points, paths, <convexity=>, <size=>);
+// Description:
+//   A drop-in replacement for `polygon()` that renders and labels the path points.
 // Arguments:
 //   points = The array of 2D polygon vertices.
 //   paths = The path connections between the vertices.
+//   ---
 //   convexity = The max number of walls a ray can pass through the given polygon paths.
+//   size = The base size of the line and labels.
 // Example(Big2D):
 //   debug_polygon(
 //       points=concat(
@@ -73,9 +78,11 @@ module trace_path(path, closed=false, showpts=false, N=1, size=1, color="yellow"
 //           [for (i=[15:-1:8]) i]
 //       ]
 //   );
-module debug_polygon(points, paths=undef, convexity=2, size=1)
+module debug_polygon(points, paths, convexity=2, size=1)
 {
-    pths = is_undef(paths)? [for (i=[0:1:len(points)-1]) i] : is_num(paths[0])? [paths] : paths;
+    paths = is_undef(paths)? [[for (i=[0:1:len(points)-1]) i]] :
+        is_num(paths[0])? [paths] :
+        paths;
     echo(points=points);
     echo(paths=paths);
     linear_extrude(height=0.01, convexity=convexity, center=true) {
@@ -121,13 +128,16 @@ module debug_polygon(points, paths=undef, convexity=2, size=1)
 
 
 // Module: debug_vertices()
+// Usage:
+//   debug_vertices(vertices, <size>, <disabled=>);
 // Description:
 //   Draws all the vertices in an array, at their 3D position, numbered by their
 //   position in the vertex array.  Also draws any children of this module with
 //   transparency.
 // Arguments:
 //   vertices = Array of point vertices.
-//   size     = The size of the text used to label the vertices.
+//   size = The size of the text used to label the vertices.  Default: 1
+//   ---
 //   disabled = If true, don't draw numbers, and draw children without transparency.  Default = false.
 // Example:
 //   verts = [for (z=[-10,10], y=[-10,10], x=[-10,10]) [x,y,z]];
@@ -164,6 +174,8 @@ module debug_vertices(vertices, size=1, disabled=false) {
 
 
 // Module: debug_faces()
+// Usage:
+//   debug_faces(vertices, faces, <size=>, <disabled=>);
 // Description:
 //   Draws all the vertices at their 3D position, numbered in blue by their
 //   position in the vertex array.  Each face will have their face number drawn
@@ -171,9 +183,10 @@ module debug_vertices(vertices, size=1, disabled=false) {
 //   with transparency.
 // Arguments:
 //   vertices = Array of point vertices.
-//   faces    = Array of faces by vertex numbers.
-//   size     = The size of the text used to label the faces and vertices.
-//   disabled = If true, don't draw numbers, and draw children without transparency.  Default = false.
+//   faces = Array of faces by vertex numbers.
+//   ---
+//   size = The size of the text used to label the faces and vertices.  Default: 1
+//   disabled = If true, don't draw numbers, and draw children without transparency.  Default: false.
 // Example(EdgesMed):
 //   verts = [for (z=[-10,10], y=[-10,10], x=[-10,10]) [x,y,z]];
 //   faces = [[0,1,2], [1,3,2], [0,4,5], [0,5,1], [1,5,7], [1,7,3], [3,7,6], [3,6,2], [2,6,4], [2,4,0], [4,6,7], [4,7,5]];
@@ -227,6 +240,8 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 
 
 // Module: debug_polyhedron()
+// Usage:
+//   debug_polyhedron(points, faces, <convexity=>, <txtsize=>, <disabled=>);
 // Description:
 //   A drop-in module to replace `polyhedron()` and help debug vertices and faces.
 //   Draws all the vertices at their 3D position, numbered in blue by their
@@ -235,15 +250,17 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 //   transparency. All children of this module are drawn with transparency.
 //   Works best with Thrown-Together preview mode, to see reversed faces.
 // Arguments:
-//   vertices = Array of point vertices.
+//   points = Array of point vertices.
 //   faces = Array of faces by vertex numbers.
+//   ---
+//   convexity = The max number of walls a ray can pass through the given polygon paths.
 //   txtsize = The size of the text used to label the faces and vertices.
 //   disabled = If true, act exactly like `polyhedron()`.  Default = false.
 // Example(EdgesMed):
 //   verts = [for (z=[-10,10], a=[0:120:359.9]) [10*cos(a),10*sin(a),z]];
 //   faces = [[0,1,2], [5,4,3], [0,3,4], [0,4,1], [1,4,5], [1,5,2], [2,5,3], [2,3,0]];
 //   debug_polyhedron(points=verts, faces=faces, txtsize=1);
-module debug_polyhedron(points, faces, convexity=10, txtsize=1, disabled=false) {
+module debug_polyhedron(points, faces, convexity=6, txtsize=1, disabled=false) {
     debug_faces(vertices=points, faces=faces, size=txtsize, disabled=disabled) {
         polyhedron(points=points, faces=faces, convexity=convexity);
     }
@@ -276,11 +293,11 @@ function standard_anchors(two_d=false) = [
 // Usage:
 //   anchor_arrow(<s>, <color>, <flag>);
 // Description:
-//   Show an anchor orientation arrow.
+//   Show an anchor orientation arrow.  By default, tagged with the name "anchor-arrow".
 // Arguments:
-//   s = Length of the arrows.
-//   color = Color of the arrow.
-//   flag = If true, draw the orientation flag on the arrowhead.
+//   s = Length of the arrows.  Default: `10`
+//   color = Color of the arrow.  Default: `[0.333, 0.333, 1]`
+//   flag = If true, draw the orientation flag on the arrowhead.  Default: true
 // Example:
 //   anchor_arrow(s=20);
 module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow") {
@@ -317,28 +334,35 @@ module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tags="anchor-arrow") {
 
 
 
-// Module: show_internal_anchors()
+// Module: expose_anchors()
 // Usage:
-//   show_internal_anchors() ...
+//   expose_anchors(opacity) {...}
 // Description:
-//   Makes the children transparent gray, while showing any
-//   anchor arrows that may exist.
-// Example(FlatSpin):
-//   show_internal_anchors() cube(50, center=true) show_anchors();
-module show_internal_anchors(opacity=0.2) {
-    show("anchor-arrow") children() show_anchors();
-    hide("anchor-arrow") recolor(list_pad(point3d($color),4,fill=opacity)) children();
+//   Makes the children transparent gray, while showing any anchor arrows that may exist.
+// Arguments:
+//   opacity = The opacity of the arrow.  0.0 is invisible, 1.0 is opaque.  Default: 0.2
+// Example(FlatSpin,VPD=333):
+//   expose_anchors() cube(50, center=true) show_anchors();
+module expose_anchors(opacity=0.2) {
+    show("anchor-arrow")
+        children();
+    hide("anchor-arrow")
+        color(is_string($color)? $color : point3d($color), opacity)
+            children();
 }
 
 
 // Module: show_anchors()
+// Usage:
+//   ... show_anchors(<s>, <std=>, <custom=>);
 // Description:
 //   Show all standard anchors for the parent object.
 // Arguments:
 //   s = Length of anchor arrows.
+//   ---
 //   std = If true (default), show standard anchors.
 //   custom = If true (default), show custom anchors.
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=333):
 //   cube(50, center=true) show_anchors();
 module show_anchors(s=10, std=true, custom=true) {
     check = assert($parent_geom != undef) 1;
@@ -379,28 +403,35 @@ module show_anchors(s=10, std=true, custom=true) {
 
 
 // Module: frame_ref()
+// Usage:
+//   frame_ref(s, opacity);
 // Description:
 //   Displays X,Y,Z axis arrows in red, green, and blue respectively.
 // Arguments:
 //   s = Length of the arrows.
+//   opacity = The opacity of the arrows.  0.0 is invisible, 1.0 is opaque.  Default: 1.0
 // Examples:
 //   frame_ref(25);
-module frame_ref(s=15) {
+//   frame_ref(30, opacity=0.5);
+module frame_ref(s=15, opacity=1) {
     cube(0.01, center=true) {
-        attach(RIGHT) anchor_arrow(s=s, flag=false, color="red");
-        attach(BACK)  anchor_arrow(s=s, flag=false, color="green");
-        attach(TOP)   anchor_arrow(s=s, flag=false, color="blue");
+        attach([1,0,0]) anchor_arrow(s=s, flag=false, color=[1.0, 0.3, 0.3, opacity]);
+        attach([0,1,0]) anchor_arrow(s=s, flag=false, color=[0.3, 1.0, 0.3, opacity]);
+        attach([0,0,1]) anchor_arrow(s=s, flag=false, color=[0.3, 0.3, 1.0, opacity]);
         children();
     }
 }
 
 
 // Module: ruler()
+// Usage:
+//   ruler(length, width, <thickness=>, <depth=>, <labels=>, <pipscale=>, <maxscale=>, <colors=>, <alpha=>, <unit=>, <inch=>);
 // Description:
 //   Creates a ruler for checking dimensions of the model
 // Arguments:
 //   length = length of the ruler.  Default 100
 //   width = width of the ruler.  Default: size of the largest unit division
+//   ---
 //   thickness = thickness of the ruler. Default: 1
 //   depth = the depth of mark subdivisions. Default: 3
 //   labels = draw numeric labels for depths where labels are larger than 1.  Default: false
@@ -410,6 +441,9 @@ module frame_ref(s=15) {
 //   alpha = transparency value.  Default: 1.0
 //   unit = unit to mark.  Scales the ruler marks to a different length.  Default: 1
 //   inch = set to true for a ruler scaled to inches (assuming base dimension is mm).  Default: false
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `LEFT+BACK+TOP`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
 // Examples(2D,Big):
 //   ruler(100,depth=3);
 //   ruler(100,depth=3,labels=true);
@@ -420,7 +454,7 @@ module frame_ref(s=15) {
 // Example(2D,Big):  Metric vs Imperial
 //   ruler(12,width=50,inch=true,labels=true,maxscale=0);
 //   fwd(50)ruler(300,width=50,labels=true);
-module ruler(length=100, width=undef, thickness=1, depth=3, labels=false, pipscale=1/3, maxscale=undef, colors=["black","white"], alpha=1.0, unit=1, inch=false, anchor=LEFT+BACK+TOP, spin=0, orient=UP)
+module ruler(length=100, width, thickness=1, depth=3, labels=false, pipscale=1/3, maxscale, colors=["black","white"], alpha=1.0, unit=1, inch=false, anchor=LEFT+BACK+TOP, spin=0, orient=UP)
 {
     inchfactor = 25.4;
     assert(depth<=5, "Cannot render scales smaller than depth=5");
@@ -495,11 +529,12 @@ function mod_indent(indent="  ") =
 
 // Function: mod_trace()
 // Usage:
-//   str = mod_trace(<levs>, <indent>);
+//   str = mod_trace(<levs>, <indent=>, <modsep=>);
 // Description:
 //   Returns a string that shows the current module and its parents, indented for each unprinted parent module.
 // Arguments:
 //   levs = This is the number of levels to print the names of.  Prints the N most nested module names.  Default: 2
+//   ---
 //   indent = The string to indent each level by.  Default: "  " (Two spaces)
 //   modsep = Multiple module names will be separated by this string.  Default: "->"
 // Example:
@@ -509,6 +544,30 @@ function mod_trace(levs=2, indent="  ", modsep="->") =
         str_join([for (i=[1:1:$parent_modules+1-levs]) indent]),
         str_join([for (i=[min(levs-1,$parent_modules-1):-1:0]) parent_module(i)], modsep)
     );
+
+
+// Function&Module: echo_matrix()
+// Usage:
+//    echo_matrix(M, <description=>, <sig=>, <eps=>);
+//    dummy = echo_matrix(M, <description=>, <sig=>, <eps=>),
+// Description:
+//    Display a numerical matrix in a readable columnar format with `sig` significant
+//    digits.  Values smaller than eps display as zero.  If you give a description
+//    it is displayed at the top.  
+function echo_matrix(M,description,sig=4,eps=1e-9) =
+  let(
+      horiz_line = chr(8213),
+      matstr = matrix_strings(M,sig=sig,eps=eps),
+      separator = str_join(repeat(horiz_line,10)),
+      dummy=echo(str(separator,"  ",is_def(description) ? description : ""))
+            [for(row=matstr) echo(row)]
+  )
+  echo(separator);
+
+module echo_matrix(M,description,sig=4,eps=1e-9)
+{
+  dummy = echo_matrix(M,description,sig,eps);
+}
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

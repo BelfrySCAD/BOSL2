@@ -1,10 +1,8 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: geometry.scad
 //   Geometry helpers.
-//   To use, add the following lines to the beginning of your file:
-//   ```
-//   use <BOSL2/std.scad>
-//   ```
+// Includes:
+//   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
 
@@ -295,21 +293,21 @@ function segment_intersection(s1,s2,eps=EPSILON) =
 //   stroke(line, endcaps="arrow2");
 //   color("blue") translate(pt) circle(r=1,$fn=12);
 //   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   line = [[-30,-15,0],[30,15,30]];
 //   pt = [5,5,5];
 //   p2 = line_closest_point(line,pt);
 //   stroke(line, endcaps="arrow2");
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   line = [[-30,-15,0],[30,15,30]];
 //   pt = [-35,-15,0];
 //   p2 = line_closest_point(line,pt);
 //   stroke(line, endcaps="arrow2");
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   line = [[-30,-15,0],[30,15,30]];
 //   pt = [40,15,25];
 //   p2 = line_closest_point(line,pt);
@@ -353,21 +351,21 @@ function line_closest_point(line,pt) =
 //   stroke(ray, endcap2="arrow2");
 //   color("blue") translate(pt) circle(r=1,$fn=12);
 //   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   ray = [[-30,-15,0],[30,15,30]];
 //   pt = [5,5,5];
 //   p2 = ray_closest_point(ray,pt);
 //   stroke(ray, endcap2="arrow2");
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   ray = [[-30,-15,0],[30,15,30]];
 //   pt = [-35,-15,0];
 //   p2 = ray_closest_point(ray,pt);
 //   stroke(ray, endcap2="arrow2");
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   ray = [[-30,-15,0],[30,15,30]];
 //   pt = [40,15,25];
 //   p2 = ray_closest_point(ray,pt);
@@ -416,21 +414,21 @@ function ray_closest_point(ray,pt) =
 //   stroke(seg);
 //   color("blue") translate(pt) circle(r=1,$fn=12);
 //   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   seg = [[-30,-15,0],[30,15,30]];
 //   pt = [5,5,5];
 //   p2 = segment_closest_point(seg,pt);
 //   stroke(seg);
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   seg = [[-30,-15,0],[30,15,30]];
 //   pt = [-35,-15,0];
 //   p2 = segment_closest_point(seg,pt);
 //   stroke(seg);
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin):
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
 //   seg = [[-30,-15,0],[30,15,30]];
 //   pt = [40,15,25];
 //   p2 = segment_closest_point(seg,pt);
@@ -479,9 +477,9 @@ function line_from_points(points, fast=false, eps=EPSILON) =
 //   C = law_of_cosines(a, b, c);
 //   c = law_of_cosines(a, b, C);
 // Description:
-//   Applies the Law of Cosines for an arbitrary triangle.
-//   Given three side lengths, returns the angle in degrees for the corner opposite of the third side.
-//   Given two side lengths, and the angle between them, returns the length of the third side.
+//   Applies the Law of Cosines for an arbitrary triangle.  Given three side lengths, returns the
+//   angle in degrees for the corner opposite of the third side.  Given two side lengths, and the
+//   angle between them, returns the length of the third side.
 // Figure(2D):
 //   stroke([[-50,0], [10,60], [50,0]], closed=true);
 //   color("black") {
@@ -512,9 +510,10 @@ function law_of_cosines(a, b, c, C) =
 //   B = law_of_sines(a, A, b);
 //   b = law_of_sines(a, A, B);
 // Description:
-//   Applies the Law of Sines for an arbitrary triangle.
-//   Given two triangle side lengths and the angle between them, returns the angle of the corner opposite of the second side.
-//   Given a side length, the opposing angle, and a second angle, returns the length of the side opposite of the second angle.
+//   Applies the Law of Sines for an arbitrary triangle.  Given two triangle side lengths and the
+//   angle between them, returns the angle of the corner opposite of the second side.  Given a side
+//   length, the opposing angle, and a second angle, returns the length of the side opposite of the
+//   second angle.
 // Figure(2D):
 //   stroke([[-50,0], [10,60], [50,0]], closed=true);
 //   color("black") {
@@ -551,7 +550,7 @@ function law_of_sines(a, A, b, B) =
 //   This is certainly more verbose and slower than writing your own calculations, but has the nice
 //   benefit that you can just specify the info you have, and don't have to figure out which trig
 //   formulas you need to use.
-// Figure(2D):
+// Figure(2D,NoAxes):
 //   color("#ccc") {
 //       stroke(closed=false, width=0.5, [[45,0], [45,5], [50,5]]);
 //       stroke(closed=false, width=0.5, arc(N=6, r=15, cp=[0,0], start=0, angle=30));
@@ -1009,17 +1008,26 @@ function plane_transform(plane) =
 
 // Function: projection_on_plane()
 // Usage:
-//   projection_on_plane(points);
+//   pts = projection_on_plane(plane, points);
 // Description:
-//   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 2d or 3d points, return the 3D orthogonal
-//   projection of the points on the plane.
+//   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 2d or
+//   3d points, return the 3D orthogonal projection of the points on the plane.
+//   In other words, for every point given, returns the closest point to it on the plane.
 // Arguments:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 //   points = List of points to project
-// Example(3D):
-//   points = move([10,20,30], p=yrot(25, p=path3d(circle(d=100))));
-//   plane = plane3pt([1,0,0],[0,1,0],[0,0,1]);
+// Example(FlatSpin,VPD=500,VPT=[2,20,10]):
+//   points = move([10,20,30], p=yrot(25, p=path3d(circle(d=100, $fn=36))));
+//   plane = plane_from_normal([1,0,1]);
 //   proj = projection_on_plane(plane,points);
+//   color("red") move_copies(points) sphere(d=2,$fn=12);
+//   color("blue") move_copies(proj) sphere(d=2,$fn=12);
+//   move(centroid(proj)) {
+//       rot(from=UP,to=plane_normal(plane)) {
+//           anchor_arrow(30);
+//           %cube([120,150,0.1],center=true);
+//       }
+//   }
 function projection_on_plane(plane, points) =
     assert( _valid_plane(plane), "Invalid plane." )
     assert( is_path(points), "Invalid list of points or dimension." )
@@ -1063,26 +1071,6 @@ function distance_from_plane(plane, point) =
     assert( is_vector(point,3), "The point should be a 3D point." )
     let( plane = normalize_plane(plane) )
     point3d(plane)* point - plane[3];
-
-
-// Function: closest_point_on_plane()
-// Usage:
-//   pt = closest_point_on_plane(plane, point);
-// Description:
-//   Takes a point, and a plane [A,B,C,D] where the equation of that plane is `Ax+By+Cz=D`.
-//   Returns the coordinates of the closest point on that plane to the given `point`.
-// Arguments:
-//   plane = The [A,B,C,D] coefficients for the plane equation `Ax+By+Cz=D`.
-//   point = The 3D point to find the closest point to.
-function closest_point_on_plane(plane, point) =
-    assert( _valid_plane(plane), "Invalid input plane." )
-    assert( is_vector(point,3), "Invalid point." )
-    let( plane = normalize_plane(plane),
-        n = point3d(plane),
-        d = n*point - plane[3] // distance from plane
-    )
-    point - n*d;
-
 
 // Returns [POINT, U] if line intersects plane at one point.
 // Returns [LINE, undef] if the line is on the plane.
@@ -1144,7 +1132,7 @@ function plane_line_angle(plane, line) =
 function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
     assert(_valid_plane(plane,eps=eps) && _valid_line(line,dim=3,eps=eps), "Invalid plane and/or line.")
-    assert(is_bool(bounded) || (is_list(bounded) && len(bounded)==2), "Invalid bound condition(s).")
+    assert(is_bool(bounded) || is_bool_list(bounded,2), "Invalid bound condition.")
     let(
         bounded = is_list(bounded)? bounded : [bounded, bounded],
         res = _general_plane_line_intersection(plane, line, eps=eps)
@@ -1501,7 +1489,7 @@ module circle_3points(pt1, pt2, pt3, h, center=false) {
 //   d = Diameter of the circle.
 //   cp = The coordinates of the 2d circle centerpoint.
 //   pt = The coordinates of the 2d external point.
-// Example:
+// Example(3D):
 //   cp = [-10,-10];  r = 30;  pt = [30,10];
 //   tanpts = circle_point_tangents(r=r, cp=cp, pt=pt);
 //   color("yellow") translate(cp) circle(r=r);
@@ -1517,7 +1505,7 @@ function circle_point_tangents(r, d, cp, pt) =
         dist = norm(delta),
         baseang = atan2(delta.y,delta.x)
     ) dist < r? [] :
-    approx(dist,r)? [[baseang, pt]] :
+    approx(dist,r)? [pt] :
     let(
         relang = acos(r/dist),
         angs = [baseang + relang, baseang - relang]
@@ -1604,6 +1592,47 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
             ]
         ) if (pt[0]!=pt[1]) pt
     ];
+
+
+
+// Function: circle_line_intersection()
+// Usage:
+//   isect = circle_line_intersection(c,r,line,<bounded>,<eps>);
+//   isect = circle_line_intersection(c,d,line,<bounded>,<eps>);
+// Description:
+//   Find intersection points between a 2d circle and a line, ray or segment specified by two points.
+//   By default the line is unbounded.
+// Arguments:
+//   c = center of circle
+//   r = radius of circle
+//   line = two points defining the unbounded line
+//   bounded = false for unbounded line, true for a segment, or a vector [false,true] or [true,false] to specify a ray with the first or second end unbounded.  Default: false
+//   eps = epsilon used for identifying the case with one solution.  Default: 1e-9
+//   ---
+//   d = diameter of circle
+function circle_line_intersection(c,r,line,d,bounded=false,eps=EPSILON) =
+  let(r=get_radius(r=r,d=d,dflt=undef))
+  assert(_valid_line(line,2), "Input 'line' is not a valid 2d line.")
+  assert(is_vector(c,2), "Circle center must be a 2-vector")
+  assert(is_num(r) && r>0, "Radius must be positive")
+  assert(is_bool(bounded) || is_bool_list(bounded,2), "Invalid bound condition")
+  let(
+      bounded = force_list(bounded,2),
+      closest = line_closest_point(line,c),
+      d = norm(closest-c)
+  )
+  d > r ? [] :
+  let(
+     isect = approx(d,r,eps) ? [closest] :
+             let( offset = sqrt(r*r-d*d),
+                  uvec=unit(line[1]-line[0])
+             ) [closest-offset*uvec, closest+offset*uvec]
+
+  )
+  [for(p=isect)
+     if ((!bounded[0] || (p-line[0])*(line[1]-line[0])>=0)
+        && (!bounded[1] || (p-line[1])*(line[0]-line[1])>=0)) p];
+
 
 
 
@@ -2040,7 +2069,7 @@ function _split_polygon_at_x(poly, x) =
     ) (min(xs) >= x || max(xs) <= x)? [poly] :
     let(
         poly2 = [
-            for (p = pair_wrap(poly)) each [
+            for (p = pair(poly,true)) each [
                 p[0],
                 if(
                     (p[0].x < x && p[1].x > x) ||
@@ -2070,7 +2099,7 @@ function _split_polygon_at_y(poly, y) =
     ) (min(ys) >= y || max(ys) <= y)? [poly] :
     let(
         poly2 = [
-            for (p = pair_wrap(poly)) each [
+            for (p = pair(poly,true)) each [
                 p[0],
                 if(
                     (p[0].y < y && p[1].y > y) ||
@@ -2100,7 +2129,7 @@ function _split_polygon_at_z(poly, z) =
     ) (min(zs) >= z || max(zs) <= z)? [poly] :
     let(
         poly2 = [
-            for (p = pair_wrap(poly)) each [
+            for (p = pair(poly,true)) each [
                 p[0],
                 if(
                     (p[0].z < z && p[1].z > z) ||
