@@ -1854,8 +1854,6 @@ function centroid(poly) =
             let(segment=select(poly,i,i+1))
             det2(segment)*sum(segment)
           ]) / 6 / polygon_area(poly,signed=true)
-//            polygon_area(concat([[0,0]],segment),signed=true)*sum(segment)
-//          ]) / 3 / polygon_area(poly,signed=true)
     : let( plane = plane_from_points(poly, fast=true) )
       assert( !is_undef(plane), "The polygon must be planar." )
       let(
