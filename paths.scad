@@ -878,7 +878,7 @@ function assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, 
         let(
             // Found fragment intersects with initial path
             hitidx = select(hits,-1),
-            newpath = list_head(path,0,hitidx),
+            newpath = list_head(path,hitidx),
             newfrags = concat(len(newpath)>1? [newpath] : [], remainder),
             outpath = concat(slice(path,hitidx,-2), foundfrag)
         )
