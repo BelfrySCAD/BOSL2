@@ -125,7 +125,7 @@ function is_integer(n) = is_finite(n) && n == round(n);
 //   bool = is_nan("foo");  // Returns: false
 //   bool = is_nan(NAN);    // Returns: true
 function is_nan(x) = (x!=x);
- 
+
 
 // Function: is_finite()
 // Usage:
@@ -214,14 +214,7 @@ function is_consistent(list, pattern) =
     is_list(list) 
     && (len(list)==0 
        || (let(pattern = is_undef(pattern) ? _list_pattern(list[0]): _list_pattern(pattern) )
-          []==[for(entry=0*list) if (entry != pattern) 0]));
-//
-// Note: in the event that 0*list produces a warning for non numeric /list/ in a future version, 
-//       the last line above may be rewriten as:
-//          []==[for(entry=_list_pattern(list)) if (entry != pattern) entry]));
-
-/*
-*/
+          []==[for(entry=0*list) if (entry != pattern) entry]));
 
 //Internal function
 //Creates a list with the same structure of `list` with each of its elements replaced by 0.

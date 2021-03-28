@@ -6,7 +6,6 @@
 //   include <BOSL2/beziers.scad>
 //////////////////////////////////////////////////////////////////////
 
-
 // Terminology:
 //   Path = A series of points joined by straight line segements.
 //   Bezier Curve = A mathematical curve that joins two endpoints, following a curve determined by one or more control points.
@@ -378,6 +377,7 @@ function bezier_tangent(curve, u) =
     [for (v=res) unit(v)];
 
 
+
 // Function: bezier_curvature()
 // Usage:
 //   crv = bezier_curvature(curve, u);
@@ -407,7 +407,6 @@ function bezier_curvature(curve, u) =
     ];
 
 
-
 // Function: bezier_curve()
 // Usage:
 //   path = bezier_curve(curve, n, <endpoint>);
@@ -417,10 +416,9 @@ function bezier_curvature(curve, u) =
 //   Takes a list of bezier curve control points and generates n points along the bezier path.  
 //   Points start at the first control point and are sampled every `1/n`th
 //   of the way along the bezier parameter, ending *before* the final control point by default.
-//   If you wish to add the endpoint you can set `endpoint` to true.  
-//   The distance between the points will *not* be equidistant.  The points are usually more 
-//   concentrated where the curve has a greater curvature. The degree of the bezier curve is 
-//   one less than the number of points in `curve`.
+//   The distance between the points will *not* be equidistant.  If you wish to add the
+//   endpoint you can set `endpoint` to true.  The degree of the bezier curve is one
+//   less than the number of points in `curve`.
 // Arguments:
 //   curve = The list of endpoints and control points for this bezier segment.
 //   n = The number of points to generate along the bezier curve.
@@ -437,11 +435,9 @@ function bezier_curvature(curve, u) =
 //   bez = [[0,0], [5,15], [40,20], [60,-15], [80,0]];
 //   move_copies(bezier_curve(bez, 8)) sphere(r=1.5, $fn=12);
 //   trace_bezier(bez, N=len(bez)-1);
-function bezier_curve(curve,n,endpoint=false) = 
-    [each bezier_points(curve, [0:1/n:(n-0.5)/n]),
-        if (endpoint) curve[len(curve)-1]
-    ];
-
+function bezier_curve(curve,n,endpoint) = [each bezier_points(curve, [0:1/n:(n-0.5)/n]),
+                                           if (endpoint) curve[len(curve)-1]
+                                          ];
 
 // Function: bezier_segment_closest_point()
 // Usage:
@@ -528,6 +524,7 @@ function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
     ]);
 
 
+
 // Function: bezier_line_intersection()
 // Usage: 
 //   u = bezier_line_intersection(curve, line);
@@ -549,6 +546,7 @@ function bezier_line_intersection(curve, line) =
         q = [for(i=[len(a)-1:-1:1]) a[i]*n, (a[0]-line[0])*n] // curve SDF to line
     )
     [for(u=real_roots(q)) if (u>=0 && u<=1) u];
+
 
 
 // Function: fillet3pts()
@@ -661,6 +659,7 @@ function bezier_path_closest_point(path, pt, N=3, max_err=0.01, seg=0, min_seg=u
         )
         bezier_path_closest_point(path, pt, N, max_err, seg+1, mseg, mu, mdist)
     );
+
 
 
 // Function: bezier_path_length()
@@ -945,6 +944,7 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
     polypoints=bezier_path(bezier, splinesteps, N);
     polygon(points=slice(polypoints, 0, -1));
 }
+
 
 
 // Module: trace_bezier()
@@ -1294,7 +1294,6 @@ function patch_reverse(patch) =
     [for (row=patch) reverse(row)];
 
 
-
 // Section: Bezier Surface Modules
 
 
@@ -1337,6 +1336,8 @@ function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="defaul
             bezier_patch(patches[i], splinesteps=splinesteps, vnf=vnf, style=style)
     ) (i >= len(patches))? vnf :
     bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf, style=style, i=i+1);
+
+
 
 
 // Module: trace_bezier_patches()

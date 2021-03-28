@@ -1072,7 +1072,6 @@ function distance_from_plane(plane, point) =
     let( plane = normalize_plane(plane) )
     point3d(plane)* point - plane[3];
 
-
 // Returns [POINT, U] if line intersects plane at one point.
 // Returns [LINE, undef] if the line is on the plane.
 // Returns undef if line is parallel to, but not on the given plane.
@@ -1595,6 +1594,7 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
     ];
 
 
+
 // Function: circle_line_intersection()
 // Usage:
 //   isect = circle_line_intersection(c,r,line,<bounded>,<eps>);
@@ -1627,10 +1627,12 @@ function circle_line_intersection(c,r,line,d,bounded=false,eps=EPSILON) =
              let( offset = sqrt(r*r-d*d),
                   uvec=unit(line[1]-line[0])
              ) [closest-offset*uvec, closest+offset*uvec]
+
   )
   [for(p=isect)
      if ((!bounded[0] || (p-line[0])*(line[1]-line[0])>=0)
         && (!bounded[1] || (p-line[1])*(line[0]-line[1])>=0)) p];
+
 
 
 
