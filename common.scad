@@ -38,6 +38,7 @@ function typeof(x) =
     "invalid";
 
 
+
 // Function: is_type()
 // Usage:
 //   bool = is_type(x, types);
@@ -261,8 +262,6 @@ function is_bool_list(list, length) =
 // See Also: first_defined(), one_defined(), num_defined()
 // Description:
 //   Returns the value given as `v` if it is not `undef`.  Otherwise, returns the value of `dflt`.
-//   Returns the value given as `v` if it is not `undef`.
-//   Otherwise, returns the value of `dflt`.
 // Arguments:
 //   v = Value to pass through if not `undef`.
 //   dflt = Value to return if `v` *is* `undef`.
@@ -280,9 +279,6 @@ function default(v,dflt=undef) = is_undef(v)? dflt : v;
 // Arguments:
 //   v = The list whose items are being checked.
 //   recursive = If true, sublists are checked recursively for defined values.  The first sublist that has a defined item is returned.
-// Examples:
-//   list =  ***
-//   val = first_defined(list)
 function first_defined(v,recursive=false,_i=0) =
     _i<len(v) && (
         is_undef(v[_i]) || (
@@ -298,7 +294,6 @@ function first_defined(v,recursive=false,_i=0) =
 //   val = one_defined(vals, names, <dflt>)
 // Topics: Undef Handling
 // See Also: default(), first_defined(), num_defined(), any_defined(), all_defined()
-//   one_defined(vars, names, <required>)
 // Description:
 //   Examines the input list `vals` and returns the entry which is not `undef`.
 //   If more than one entry is not `undef` then an error is asserted, specifying
@@ -595,13 +590,13 @@ function segs(r) =
 
 
 // Module: no_children()
-// Usage:
-//   no_children($children);
 // Topics: Error Checking
 // See Also: no_function(), no_module()
+// Usage:
+//   no_children($children);
 // Description:
-//   Assert that the calling module does not support children. Prints an error message to this effect 
-//   and fails if children are present, as indicated by its argument.
+//   Assert that the calling module does not support children.  Prints an error message to this effect and fails if children are present,
+//   as indicated by its argument.
 // Arguments:
 //   $children = number of children the module has.  
 // Example:
@@ -643,7 +638,6 @@ module no_module() {
 }    
   
 
-
 // Section: Testing Helpers
 
 
@@ -666,7 +660,7 @@ function _valstr(x) =
 //   expected = The value that was expected.
 //   info = Extra info to print out to make the error clearer.
 // Example:
-//   assert_approx(1/3, 0.333333333333333, str("number=",1,", demon=",3));
+//   assert_approx(1/3, 0.333333333333333, str("numer=",1,", demon=",3));
 module assert_approx(got, expected, info) {
     no_children($children);
     if (!approx(got, expected)) {
@@ -765,8 +759,8 @@ module shape_compare(eps=1/1024) {
 //   The syntax is: `[for (INIT; CONDITION; NEXT) RETVAL]` where:
 //   - INIT is zero or more `let()` style assignments that are evaluated exactly one time, before the first loop.
 //   - CONDITION is an expression evaluated at the start of each loop.  If true, continues with the loop.
-//   - RETVAL is an expression that returns a list item at each loop beginning.
-//   - NEXT is one or more `let()` style assignments that is evaluated for each loop.
+//   - RETVAL is an expression that returns a list item for each loop.
+//   - NEXT is one or more `let()` style assignments that is evaluated at the end of each loop.
 //   .
 //   Since the INIT phase is only run once, and the CONDITION and RETVAL expressions cannot update
 //   variables, that means that only the NEXT phase can be used for iterative calculations.
@@ -811,7 +805,6 @@ function looping(state) = state < 2;
 
 // Function: loop_while()
 // Usage:
-//   state = loop_while(state, continue)
 //   state = loop_while(state, continue);
 // Topics: Iteration
 // See Also: looping(), loop_done()
@@ -830,7 +823,6 @@ function loop_while(state, continue) =
 
 // Function: loop_done()
 // Usage:
-//   loop_done(state)
 //   bool = loop_done(state);
 // Topics: Iteration
 // See Also: looping(), loop_while()
