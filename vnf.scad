@@ -766,6 +766,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
                 sface2 = list_rotate(face2,min2)
             ) if (sface1 == sface2)
             _vnf_validate_err("DUP_FACE", [for (i=sface1) varr[i]])
+
         ],
         issues = concat(issues, repeated_faces)
     ) issues? issues :
@@ -895,6 +896,7 @@ function _vnf_validate_err(name, extra) =
     ) concat(info, [extra]);
 
 
+
 function _pts_not_reported(pts, varr, reports) =
     [
         for (i = pts, report = reports, pt = report[3])
@@ -940,17 +942,12 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
     color([0.5,0.5,0.5,0.67]) vnf_polyhedron(vnf);
 }
 
-
+ 
+ 
 // Section: VNF Transformations
 
-// Function: vnf_halfspace()
-// Usage:
-//   vnf_halfspace([a,b,c,d], vnf)
-// Description:
-//   returns the intersection of the VNF with the given half-space.
-// Arguments:
-//   halfspace = half-space to intersect with, given as the four coefficients of the affine inequation a\*x+b\*y+c\*z≥ d.
 
+/// Internal functions
 function _vnf_halfspace_pts(halfspace, points, faces,
   inside=undef, coords=[], map=[]) =
 /* Recursive function to compute the intersection of points (and edges,
@@ -991,6 +988,8 @@ function _vnf_halfspace_pts(halfspace, points, faces,
             (zi*points[j]-zj*pi)/(zi-zj)]),
         // map: we add the info
         concat(map, [[for(y=enumerate(adj2)) [y[1], n+y[0]]]]));
+
+
 function _vnf_halfspace_face(face, map, inside, i=0,
     newface=[], newedge=[], exit) =
 /* Recursive function to intersect a face of the VNF with the half-plane.
@@ -1029,6 +1028,8 @@ function _vnf_halfspace_face(face, map, inside, i=0,
             concat(newface0, [inter]),
             concat(newedge, [inter]),
             is_undef(exit) ? inside[p] : exit);
+
+
 function _vnf_halfspace_path_search_edge(edge, paths, i=0, ret=[undef,undef]) =
 /* given an oriented edge [x,y] and a set of oriented paths,
  * returns the indices [i,j] of paths [before, after] given edge
@@ -1038,6 +1039,8 @@ function _vnf_halfspace_path_search_edge(edge, paths, i=0, ret=[undef,undef]) =
     _vnf_halfspace_path_search_edge(edge, paths, i+1,
        [last(paths[i]) == edge[0] ? i : ret[0],
         paths[i][0] == edge[1] ? i : ret[1]]);
+
+
 function _vnf_halfspace_paths(edges, i=0, paths=[]) =
 /* given a set of oriented edges [x,y],
    returns all paths [x,y,z,..] that may be formed from these edges.
@@ -1060,6 +1063,15 @@ function _vnf_halfspace_paths(edges, i=0, paths=[]) =
         s[0] != s[1] ? [concat(paths[s[0]], paths[s[1]])] :
         // edge closes a loop
         [concat(paths[s[0]], [e[1]])]));
+
+
+// Function: vnf_halfspace()
+// Usage:
+//   vnf_halfspace([a,b,c,d], vnf)
+// Description:
+//   returns the intersection of the VNF with the given half-space.
+// Arguments:
+//   halfspace = half-space to intersect with, given as the four coefficients of the affine inequation a\*x+b\*y+c\*z≥ d.
 function vnf_halfspace(_arg1=_undef, _arg2=_undef,
     halfspace=_undef, vnf=_undef) =
     // here is where we wish that OpenSCAD had array lvalues...

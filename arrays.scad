@@ -39,8 +39,10 @@ function is_homogeneous(l, depth=10) =
     !is_list(l) || l==[] ? false :
     let( l0=l[0] )
     [] == [for(i=[1:len(l)-1]) if( ! _same_type(l[i],l0, depth+1) )  0 ];
+                 
 
 function is_homogenous(l, depth=10) = is_homogeneous(l, depth);
+
 
 function _same_type(a,b, depth) = 
     (depth==0) ||
@@ -50,7 +52,7 @@ function _same_type(a,b, depth) =
     (is_string(a) && is_string(b)) ||
     (is_list(a) && is_list(b) && len(a)==len(b) 
           && []==[for(i=idx(a)) if( ! _same_type(a[i],b[i],depth-1) ) 0] ); 
-
+  
 
 // Function: select()
 // Description:
@@ -227,6 +229,8 @@ function in_list(val,list,idx) =
 // Usage:
 //   idx = find_first_match(val, list, <start=>, <eps=>);
 //   indices = find_first_match(val, list, all=true, <start=>, <eps=>);
+// Topics: List Handling
+// See Also: max_index(), list_increasing(), list_decreasing()
 // Description:
 //   Finds the first item in `list` that matches `val`, returning the index.
 // Arguments:
@@ -360,7 +364,6 @@ function repeat(val, n, i=0) =
 //   If both `n` and `e` are given, returns `n` values evenly spread from `s`
 //   to `e`, and `step` is ignored.
 // Arguments:
-//   ---
 //   n = Desired number of values in returned list, if given.
 //   s = Starting value.  Default: 0
 //   e = Ending value to stop at, if given.
@@ -488,6 +491,7 @@ function deduplicate(list, closed=false, eps=EPSILON) =
 //   closed = If true, drops trailing indices if what they index matches what the first index indexes.
 //   eps = The maximum difference to allow between numbers or vectors.
 // Examples:
+//   list = [0,1,2,3];
 //   a = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1]);  // Returns: [1,4,3,2,0,1]
 //   b = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1], closed=true);  // Returns: [1,4,3,2,0]
 //   c = deduplicate_indexed([[7,undef],[7,undef],[1,4],[1,4],[1,4+1e-12]],eps=0);    // Returns: [0,2,4]
@@ -617,7 +621,7 @@ function list_set(list=[],indices,values,dflt=0,minlen=0) =
 //   b = list_insert([3,6,9,12],[1,3],[5,11]);  // Returns [3,5,6,9,11,12]
 function list_insert(list, indices, values) = 
     assert(is_list(list))
-    !is_list(indices) ?
+    !is_list(indices) ? 
         assert( is_finite(indices) && is_finite(values), "Invalid indices/values." ) 
         assert( indices<=len(list), "Indices must be <= len(list) ." )
         [
@@ -1287,6 +1291,8 @@ function permutations(l,n=2) =
 //   pairs = zip(a,b);
 //   triples = zip(a,b,c);
 //   quads = zip([LIST1,LIST2,LIST3,LIST4]);
+// Topics: List Handling, Iteration
+// See Also: zip_long()
 // Description:
 //   Zips together two or more lists into a single list.  For example, if you have two
 //   lists [3,4,5], and [8,7,6], and zip them together, you get [[3,8],[4,7],[5,6]].
@@ -1312,6 +1318,8 @@ function zip(a,b,c) =
 //   pairs = zip_long(a,b);
 //   triples = zip_long(a,b,c);
 //   quads = zip_long([LIST1,LIST2,LIST3,LIST4]);
+// Topics: List Handling, Iteration
+// See Also: zip()
 // Description:
 //   Zips together two or more lists into a single list.  For example, if you have two
 //   lists [3,4,5], and [8,7,6], and zip them together, you get [[3,8],[4,7],[5,6]].
@@ -1333,9 +1341,9 @@ function zip_long(a,b,c,fill) =
     b!=undef? zip_long([a,b,if (c!=undef) c],fill=fill) :
     let(n = list_longest(a))
     [for (i=[0:1:n-1]) [for (x=a) i<len(x)? x[i] : fill]];
-
-
-
+    
+    
+    
 // Section: Set Manipulation
 
 // Function: set_union()
@@ -1446,6 +1454,7 @@ function set_intersection(a, b) =
 //   d = subindex(M,[1:3]);  // Returns [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]
 //   N = [ [1,2], [3], [4,5], [6,7,8] ];
 //   e = subindex(N,[0,1]);  // Returns [ [1,2], [3,undef], [4,5], [6,7] ]
+//   subindex(N,[0,1]);  // Returns [ [1,2], [3,undef], [4,5], [6,7] ]
 function subindex(M, idx) =
     assert( is_list(M), "The input is not a list." )
     assert( !is_undef(idx) && _valid_idx(idx,0,1/0), "Invalid index input." ) 
@@ -1481,7 +1490,6 @@ function subindex(M, idx) =
 //        [[4,2],   91, false],
 //        [6,    [3,4], undef]];
 //   submatrix(A,[0,2],[1,2]);   // Returns [[17, "test"], [[3, 4], undef]]
-
 function submatrix(M,idx1,idx2) =
     [for(i=idx1) [for(j=idx2) M[i][j] ] ];
 
@@ -1505,6 +1513,7 @@ function submatrix(M,idx1,idx2) =
 // Example:
 //   M = ident(3);
 //   v1 = [2,3,4];
+//   v1 = [1,2,3,4];
 //   v2 = [5,6,7];
 //   v3 = [8,9,10];
 //   a = hstack(v1,v2);     // Returns [[2, 5], [3, 6], [4, 7]]
@@ -1584,7 +1593,6 @@ function block_matrix(M) =
     assert(badrows==[], "Inconsistent or invalid input")
     bigM;
 
-
 // Function: diagonal_matrix()
 // Usage:
 //   mat = diagonal_matrix(diag, <offdiag>);
@@ -1633,11 +1641,11 @@ function submatrix_set(M,A,m=0,n=0) =
 // Function: array_group()
 // Usage:
 //   groups = array_group(v, <cnt>, <dflt>);
+// Topics: Matrices, Array Handling
+// See Also: subindex(), submatrix(), hstack(), flatten(), full_flatten()
 // Description:
 //   Takes a flat array of values, and groups items in sets of `cnt` length.
 //   The opposite of this is `flatten()`.
-// Topics: Matrices, Array Handling
-// See Also: subindex(), submatrix(), hstack(), flatten(), full_flatten()
 // Arguments:
 //   v = The list of items to group.
 //   cnt = The number of items to put in each grouping.  Default:2
@@ -1661,6 +1669,7 @@ function array_group(v, cnt=2, dflt=0) =
 // Arguments:
 //   l = List to flatten.
 // Example:
+//   flatten([[1,2,3], [4,5,[6,7,8]]]) returns [1,2,3,4,5,[6,7,8]]
 //   l = flatten([[1,2,3], [4,5,[6,7,8]]]);  // returns [1,2,3,4,5,[6,7,8]]
 function flatten(l) =
     !is_list(l)? l :
@@ -1810,7 +1819,7 @@ function transpose(arr, reverse=false) =
 //   A = matrix to test
 //   eps = epsilon for comparing equality.  Default: 1e-12
 function is_matrix_symmetric(A,eps=1e-12) =
-    approx(A,transpose(A));
-
-
+    approx(A,transpose(A), eps);
+		
+		
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

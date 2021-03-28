@@ -22,8 +22,7 @@ INF = 1/0;
 
 // Constant: NAN
 // Description: The value `nan`, useful for comparisons.
-NAN = acos(2);
-
+NAN = 0/0;
 
 
 // Section: Simple math
@@ -588,7 +587,9 @@ function sum(v, dflt=0) =
     is_vector(v) || is_matrix(v) ? [for(i=[1:len(v)]) 1]*v :
     _sum(v,v[0]*0);
 
-function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
+function _sum(v,_total,_i=0) = 
+		_i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
+
 
 // Function: cumsum()
 // Usage:
@@ -985,25 +986,34 @@ function determinant(M) =
 //   n = Is given, requires the matrix to have the given width.
 //   square = If true, requires the matrix to have a width equal to its height. Default: false
 function is_matrix(A,m,n,square=false) =
-   is_list(A)
-   && (( is_undef(m) && len(A) ) || len(A)==m)
-   && is_list(A[0])
-   && (( is_undef(n) && len(A[0]) ) || len(A[0])==n)
+	 is_consistent(A)
+	 && len(A)>0 
+	 && is_vector(A[0],n)
    && (!square || len(A) == len(A[0]))
-   && is_vector(A[0])
-   && is_consistent(A);
-
+   && ( is_undef(m)  || len(A)==m );
+	 
 
 // Function: norm_fro()
 // Usage:
 //    norm_fro(A)
 // Description:
-//    Computes frobenius norm of input matrix.  The frobenius norm is the square root of the sum of the
+//    Computes Frobenius norm of input matrix.  The Frobenius norm is the square root of the sum of the
 //    squares of all of the entries of the matrix.  On vectors it is the same as the usual 2-norm.
 //    This is an easily computed norm that is convenient for comparing two matrices.  
 function norm_fro(A) =
     assert(is_matrix(A) || is_vector(A))
     norm(flatten(A));
+
+
+// Function: norm_max()
+// Usage:
+//    norm_max(v)
+// Description:
+//    Computes maximum norm of input vector.  
+//    The maximum norm is the maximum of the absolute values of the coordinates of the vector.  
+function norm_max(v) =
+    assert(is_vector(v) && len(v)>0, "The norm_max requires a vector with length greater than 0.")
+    max(max(v),max(-v));
 
 
 // Function: matrix_trace()
@@ -1165,7 +1175,7 @@ function all_nonnegative(x) =
 // Arguments:
 //   a = First value.
 //   b = Second value.
-//   eps = The maximum allowed difference between `a` and `b` that will return true.
+//   eps = The maximum allowed difference between `a` and `b` that will return true. Default: EPSILON.
 // Example:
 //   approx(-0.3333333333,-1/3);  // Returns: true
 //   approx(0.3333333333,1/3);    // Returns: true
@@ -1175,6 +1185,7 @@ function all_nonnegative(x) =
 function approx(a,b,eps=EPSILON) = 
     (a==b && is_bool(a) == is_bool(b)) ||
     (is_num(a) && is_num(b) && abs(a-b) <= eps) ||
+    (is_vector(a) && is_vector(b,len(a)) && norm_max(a-b) <= eps ) ||
     (is_list(a) && is_list(b) && len(a) == len(b) && [] == [for (i=idx(a)) if (!approx(a[i],b[i],eps=eps)) 1]);
 
 
@@ -1485,9 +1496,15 @@ function complex(list) =
 //   Multiplies two complex numbers, vectors or matrices, where complex numbers
 //   or entries are represented as vectors: [REAL, IMAGINARY].  Note that all
 //   entries in both arguments must be complex.  
+//   Multiplies two complex numbers represented by 2D vectors.  
+//   Returns a complex number as a 2D vector [REAL, IMAGINARY].
 // Arguments:
 //   z1 = First complex number, vector or matrix
 //   z2 = Second complex number, vector or matrix
+function c_mul(z1,z2) =
+  is_matrix([z1,z2],2,2) ? _c_mul(z1,z2) :
+  _combine_complex(_c_mul(_split_complex(z1), _split_complex(z2)));
+
 
 function _split_complex(data) =
    is_vector(data,2) ? data
@@ -1497,6 +1514,7 @@ function _split_complex(data) =
     [for(vec=data) vec * [0,1]]
    ];
 
+
 function _combine_complex(data) =
     is_vector(data,2) ? data
   : is_num(data[0][0]) ? [for(i=[0:len(data[0])-1]) [data[0][i],data[1][i]]]
@@ -1504,12 +1522,9 @@ function _combine_complex(data) =
         [for(j=[0:1:len(data[0][0])-1])  
             [data[0][i][j], data[1][i][j]]]];
 
+
 function _c_mul(z1,z2) = 
     [ z1.x*z2.x - z1.y*z2.y, z1.x*z2.y + z1.y*z2.x ];
-
-function c_mul(z1,z2) =
-  is_matrix([z1,z2],2,2) ? _c_mul(z1,z2) :
-  _combine_complex(_c_mul(_split_complex(z1), _split_complex(z2)));
 
 
 // Function: c_div()
@@ -1538,6 +1553,7 @@ function c_conj(z) =
    is_vector(z,2) ? [z.x,-z.y] :
    [for(entry=z) c_conj(entry)];
 
+
 // Function: c_real()
 // Usage:
 //   x = c_real(z)
@@ -1547,6 +1563,7 @@ function c_real(z) =
      is_vector(z,2) ? z.x
    : is_num(z[0][0]) ? z*[1,0]
    : [for(vec=z) vec * [1,0]];
+
 
 // Function: c_imag()
 // Usage:
@@ -1565,6 +1582,7 @@ function c_imag(z) =
 // Description:
 //   Produce an n by n complex identity matrix
 function c_ident(n) = [for (i = [0:1:n-1]) [for (j = [0:1:n-1]) (i==j)?[1,0]:[0,0]]];
+
 
 // Function: c_norm()
 // Usage:
@@ -1618,12 +1636,12 @@ function quadratic_roots(a,b,c,real=false) =
 //   where a_n is the z^n coefficient.  Polynomial coefficients are real.
 //   The result is a number if `z` is a number and a complex number otherwise.
 function polynomial(p,z,k,total) =
-  is_undef(k)
-  ? assert( is_vector(p) , "Input polynomial coefficients must be a vector." )
-    assert( is_finite(z) || is_vector(z,2), "The value of `z` must be a real or a complex number." )
-    polynomial( _poly_trim(p), z, 0, is_num(z) ? 0 : [0,0])
-  : k==len(p) ? total
-  : polynomial(p,z,k+1, is_num(z) ? total*z+p[k] : c_mul(total,z)+[p[k],0]);
+    is_undef(k)
+    ?		assert( is_vector(p) , "Input polynomial coefficients must be a vector." )
+        assert( is_finite(z) || is_vector(z,2), "The value of `z` must be a real or a complex number." )
+        polynomial( _poly_trim(p), z, 0, is_num(z) ? 0 : [0,0])
+    : 	k==len(p) ? total
+      	: 	polynomial(p,z,k+1, is_num(z) ? total*z+p[k] : c_mul(total,z)+[p[k],0]);
 
 // Function: poly_mult()
 // Usage:
@@ -1633,15 +1651,14 @@ function polynomial(p,z,k,total) =
 //   Given a list of polynomials represented as real coefficient lists, with the highest degree coefficient first, 
 //   computes the coefficient list of the product polynomial.  
 function poly_mult(p,q) = 
-  is_undef(q) ?
-    len(p)==2 
-        ? poly_mult(p[0],p[1]) 
-    : poly_mult(p[0], poly_mult(select(p,1,-1)))
-  :
-  assert( is_vector(p) && is_vector(q),"Invalid arguments to poly_mult")
-    p*p==0 || q*q==0
-    ? [0]
-    : _poly_trim(convolve(p,q));
+    is_undef(q) ?
+        len(p)==2 
+        ? 	poly_mult(p[0],p[1]) 
+        : 	poly_mult(p[0], poly_mult(select(p,1,-1)))
+    : 	assert( is_vector(p) && is_vector(q),"Invalid arguments to poly_mult")
+				p*p==0 || q*q==0
+				? [0]
+				: _poly_trim(convolve(p,q));
 
     
 // Function: poly_div()

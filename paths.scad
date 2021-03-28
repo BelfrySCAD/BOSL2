@@ -989,7 +989,6 @@ module jittered_poly(path, dist=1/512) {
 
 
 
-
 // Section: 3D Modules
 
 
@@ -1008,18 +1007,17 @@ module jittered_poly(path, dist=1/512) {
 //       xcopies(3) circle(3, $fn=32);
 //   }
 module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
-    rtp = xyz_to_spherical(pt2-pt1);
     translate(pt1) {
-        rotate([0, rtp[2], rtp[1]]) {
-            if (rtp[0] > 0) {
-                linear_extrude(height=rtp[0], convexity=convexity, center=false, slices=slices, twist=twist, scale=scale) {
+        rot(from=[0,0,1],to=pt2-pt1) {
+				    h = norm(pt2-pt1);
+            if (h > 0) {
+                linear_extrude(height=h, convexity=convexity, center=false, slices=slices, twist=twist, scale=scale) {
                     children();
                 }
             }
         }
-    }
+		}
 }
-
 
 
 // Module: spiral_sweep()
@@ -1441,7 +1439,6 @@ function path_cut(path,cutdist,closed) =
         each select(path,cutlist[cuts-1][1],closed ? 0 : -1)
       ]
   ];
-
 
 
 // Input `data` is a list that sums to an integer. 

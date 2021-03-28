@@ -82,8 +82,8 @@ function is_affine(x,dim=[2,3]) =
 //   b = is_2d_transform(move([10,20,30]));  // Returns: false
 //   b = is_2d_transform(scale([2,3,4]));  // Returns: true
 function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][2]!=1 so scale() works
-  t[2][0]==0 && t[2][1]==0 && t[2][3]==0 && t[0][2] == 0 && t[1][2]==0 &&
-  (t[2][2]==1 || !(t[0][0]==1 && t[0][1]==0 && t[1][0]==0 && t[1][1]==1));   // But rule out zscale()
+    t[2][0]==0 && t[2][1]==0 && t[2][3]==0 && t[0][2] == 0 && t[1][2]==0 &&
+    (t[2][2]==1 || !(t[0][0]==1 && t[0][1]==0 && t[1][0]==0 && t[1][1]==1));   // But rule out zscale()
 
 
 // Function: affine2d_to_3d()
@@ -231,7 +231,6 @@ function rot_decode(M) =
         cp    = (tproj + cross(axis,tproj)*c_cos/c_sin)/2
     )
     [angle, axis, cp, (translation*axis)*axis];
-
 
 
 
@@ -632,19 +631,11 @@ function affine3d_rot_from_to(from, to) =
     let(
         from = unit(point3d(from)),
         to = unit(point3d(to))
-    ) approx(from,to)? affine3d_identity() :
-    let(
-        u = vector_axis(from,to),
-        ang = vector_angle(from,to),
-        c = cos(ang),
-        c2 = 1-c,
-        s = sin(ang)
-    ) [
-        [u.x*u.x*c2+c    , u.x*u.y*c2-u.z*s, u.x*u.z*c2+u.y*s, 0],
-        [u.y*u.x*c2+u.z*s, u.y*u.y*c2+c    , u.y*u.z*c2-u.x*s, 0],
-        [u.z*u.x*c2-u.y*s, u.z*u.y*c2+u.x*s, u.z*u.z*c2+c    , 0],
-        [               0,                0,                0, 1]
-    ];
+    ) 
+    approx(from,[0,0,0]) 
+    || approx(to,[0,0,0]) 
+    || approx(from+to,[0,0,0])? affine3d_identity() :
+    affine3d_mirror(from+to) * affine3d_mirror(from);
 
 
 // Function: affine3d_frame_map()
@@ -705,8 +696,7 @@ function affine3d_frame_map(x,y,z, reverse=false) =
         assert(ocheck, "Inputs must be orthogonal when reverse==true")
         [for (r=map) [for (c=r) c, 0], [0,0,0,1]]
     ) : [for (r=transpose(map)) [for (c=r) c, 0], [0,0,0,1]];
-
-
+    
 
 // Function: affine3d_mirror()
 // Usage:
@@ -873,7 +863,6 @@ function affine3d_skew_yz(ya=0, za=0) =
         [tan(za), 0, 1, 0],
         [      0, 0, 0, 1]
     ];
-
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -221,10 +221,13 @@ module test_is_consistent() {
     assert(is_consistent([]));
     assert(is_consistent([[],[]]));
     assert(is_consistent([3,4,5]));
+    assert(is_consistent([3,4,5], 1));
     assert(is_consistent([[3,4],[4,5],[6,7]]));
     assert(is_consistent([[[3],4],[[4],5]]));
     assert(!is_consistent(5));
     assert(!is_consistent(undef));
+    assert(!is_consistent([3,4,undef], 0));
+    assert(!is_consistent([[3,4,4],[1,2,3], [0,4,5]], [1,1]));
     assert(!is_consistent([[3,4,5],[3,4]]));
     assert(is_consistent([[3,[3,4,[5]]], [5,[2,9,[9]]]]));
     assert(!is_consistent([[3,[3,4,[5]]], [5,[2,9,9]]]));
