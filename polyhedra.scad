@@ -699,7 +699,8 @@ function regular_polyhedron_info(
         face_normals,
         radius_scale*entry[in_radius]
     ] :
-    info == "vnf" ? [move(translation,p=scaled_points), stellate ? faces : face_triangles] : 
+    // info == "vnf" ? [move(translation,p=scaled_points), stellate ? faces : face_triangles] :
+    info == "vnf" ? [move(translation,p=scaled_points), faces] :
     info == "vertices" ? move(translation,p=scaled_points) :
     info == "faces" ? faces :
     info == "face normals" ? face_normals :
