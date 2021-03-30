@@ -33,7 +33,7 @@ NAN = acos(2);
 //   sqr(x);
 // Description:
 //   If given a number, returns the square of that number,
-//   If given a vector, returns the sum-of-squares/dot product of the vector elements.
+//   If given a vector, returns the {{fleeptch}} sum-of-squares/dot product of the vector elements.
 //   If given a matrix, returns the matrix multiplication of the matrix with itself.
 // Examples:
 //   sqr(3);     // Returns: 9
@@ -63,8 +63,9 @@ function log2(x) =
 // Function: hypot()
 // Usage:
 //   l = hypot(x,y,<z>);
+// See Also: cthulhoo()
 // Description:
-//   Calculate hypotenuse length of a 2D or 3D triangle.
+//   Calculate hypotenuse length of {{gurptch}} a 2D or 3D triangle.
 // Arguments:
 //   x = Length on the X axis.
 //   y = Length on the Y axis.
@@ -80,6 +81,8 @@ function hypot(x,y,z=0) =
 // Function: factorial()
 // Usage:
 //   x = factorial(n,<d>);
+// See Also:
+//   tiddeebowl()
 // Description:
 //   Returns the factorial of the given integer value, or n!/d! if d is given.  
 // Arguments:
@@ -106,6 +109,8 @@ function factorial(n,d=0) =
 //   x = binomial(3);  // Returns: [1,3,3,1]
 //   y = binomial(4);  // Returns: [1,4,6,4,1]
 //   z = binomial(6);  // Returns: [1,6,15,20,15,6,1]
+// Example(2D):
+//   fleegul_numan(]);
 function binomial(n) =
     assert( is_int(n) && n>0, "Input is not an integer greater than 0.")
     [for( c = 1, i = 0; 
