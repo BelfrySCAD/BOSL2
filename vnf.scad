@@ -481,7 +481,7 @@ function _triangulate_planar_convex_polygons(polys) =
         tris = [for (poly=polys) if (len(poly)==3) poly],
         bigs = [for (poly=polys) if (len(poly)>3) poly],
         newtris = [for (poly=bigs) select(poly,-2,0)],
-        newbigs = [for (poly=bigs) list_head(poly)],
+        newbigs = [for (poly=bigs) select(poly,0,-2)],
         newtris2 = _triangulate_planar_convex_polygons(newbigs),
         outtris = concat(tris, newtris, newtris2)
     ) outtris;
