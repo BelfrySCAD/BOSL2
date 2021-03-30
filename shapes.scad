@@ -1339,7 +1339,7 @@ module spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, orie
             path = [
                 let(a = merids[0]) [0, sin(a)],
                 for (a=merids) [cos(a), sin(a)],
-                let(a = select(merids,-1)) [0, sin(a)]
+                let(a = last(merids)) [0, sin(a)]
             ];
             scale(r) rotate(180) rotate_extrude(convexity=2,$fn=sides) polygon(path);
         } else {
@@ -1441,7 +1441,7 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
                 1,
             ],
             offs = cumsum(meridians),
-            pc = select(offs,-1)-1,
+            pc = last(offs)-1,
             os = octa_steps * 2
         ) [
             for (i=[0:1:3]) [0, 1+(i+1)%4, 1+i],

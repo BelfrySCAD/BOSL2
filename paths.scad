@@ -183,7 +183,7 @@ function path_length(path,closed=false) =
 function path_segment_lengths(path, closed=false) =
     [
         for (i=[0:1:len(path)-2]) norm(path[i+1]-path[i]),
-        if (closed) norm(path[0]-select(path,-1))
+        if (closed) norm(path[0]-last(path))
     ]; 
 
 
@@ -482,13 +482,13 @@ function path_chamfer_and_rounding(path, closed, chamfer, rounding) =
 				p2 = select(path,i),
 				crn1 = select(corner_paths,i-1),
 				crn2 = corner_paths[i],
-				l1 = norm(select(crn1,-1)-p1),
+				l1 = norm(last(crn1)-p1),
 				l2 = norm(crn2[0]-p2),
 				needed = l1 + l2,
 				seglen = norm(p2-p1),
 				check = assert(seglen >= needed, str("Path segment ",i," is too short to fulfill rounding/chamfering for the adjacent corners."))
 			) each crn2,
-			if (!closed) select(path,-1)
+			if (!closed) last(path)
 		]
 	) deduplicate(out);
 
@@ -783,16 +783,16 @@ function _path_fast_defragment(fragments, eps=EPSILON, _done=[]) =
     len(fragments)==0? _done :
     let(
         path = fragments[0],
-        endpt = select(path,-1),
+        endpt = last(path),
         extenders = [
             for (i = [1:1:len(fragments)-1]) let(
                 test1 = approx(endpt,fragments[i][0],eps=eps),
-                test2 = approx(endpt,select(fragments[i],-1),eps=eps)
+                test2 = approx(endpt,last(fragments[i]),eps=eps)
             ) if (test1 || test2) (test1? i : -1)
         ]
     ) len(extenders) == 1 && extenders[0] >= 0? _path_fast_defragment(
         fragments=[
-            concat(select(path,0,-2),fragments[extenders[0]]),
+            concat(list_head(path),fragments[extenders[0]]),
             for (i = [1:1:len(fragments)-1])
                 if (i != extenders[0]) fragments[i]
         ],
@@ -814,7 +814,7 @@ function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
             for (i = idx(fragments)) let(
                 fragment = fragments[i],
                 fwdmatch = approx(seg[1], fragment[0], eps=eps),
-                bakmatch =  approx(seg[1], select(fragment,-1), eps=eps)
+                bakmatch =  approx(seg[1], last(fragment), eps=eps)
             ) [
                 fwdmatch,
                 bakmatch,
@@ -872,12 +872,12 @@ function assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, 
         // Found fragment is already closed
         [foundfrag, concat([path], remainder)]
     ) : let(
-        fragend = select(foundfrag,-1),
+        fragend = last(foundfrag),
         hits = [for (i = idx(path,e=-2)) if(approx(path[i],fragend,eps=eps)) i]
     ) hits? (
         let(
             // Found fragment intersects with initial path
-            hitidx = select(hits,-1),
+            hitidx = last(hits),
             newpath = list_head(path,hitidx),
             newfrags = concat(len(newpath)>1? [newpath] : [], remainder),
             outpath = concat(slice(path,hitidx,-2), foundfrag)
@@ -1239,17 +1239,17 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
 {
     length = path_length(path,closed);
     distances = is_def(sp)? (
-        is_def(n) && is_def(spacing)? list_range(s=sp, step=spacing, n=n) :
-        is_def(n)? list_range(s=sp, e=length, n=n) :
-        list_range(s=sp, step=spacing, e=length)
+        is_def(n) && is_def(spacing)? range(s=sp, step=spacing, n=n) :
+        is_def(n)? range(s=sp, e=length, n=n) :
+        range(s=sp, step=spacing, e=length)
     ) : is_def(n) && is_undef(spacing)? (
         closed?
-            let(range=list_range(s=0,e=length, n=n+1)) list_head(range) :
-            list_range(s=0, e=length, n=n)
+            let(range=range(s=0,e=length, n=n+1)) list_head(range) :
+            range(s=0, e=length, n=n)
     ) : (
         let(
             n = is_def(n)? n : floor(length/spacing)+(closed?0:1),
-            ptlist = list_range(s=0,step=spacing,n=n),
+            ptlist = range(s=0,step=spacing,n=n),
             listcenter = mean(ptlist)
         ) closed?
             sort([for(entry=ptlist) posmod(entry-listcenter,length)]) :
@@ -1333,7 +1333,7 @@ function path_cut_points(path, dists, closed=false, direction=false) =
 function _path_cut_points(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[]) =
     dind == len(dists) ? result :
     let(
-        lastpt = len(result)==0? [] : select(result,-1)[0],       // location of last cut point
+        lastpt = len(result)==0? [] : last(result)[0],       // location of last cut point
         dpartial = len(result)==0? 0 : norm(lastpt-select(path,pind)),  // remaining length in segment
         nextpoint = dists[dind] < dpartial+dtotal  // Do we have enough length left on the current segment?
            ? [lerp(lastpt,select(path,pind),(dists[dind]-dtotal)/dpartial),pind] 
@@ -1419,7 +1419,7 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 function path_cut(path,cutdist,closed) =
   is_num(cutdist) ? path_cut(path,[cutdist],closed) :
   assert(is_vector(cutdist))
-  assert(select(cutdist,-1)<path_length(path,closed=closed),"Cut distances must be smaller than the path length")
+  assert(last(cutdist)<path_length(path,closed=closed),"Cut distances must be smaller than the path length")
   assert(cutdist[0]>0, "Cut distances must be strictly positive")
   let(
       cutlist = path_cut_points(path,cutdist,closed=closed),
@@ -1433,7 +1433,7 @@ function path_cut(path,cutdist,closed) =
           cutlist[i][0]==cutlist[i+1][0] ? []
           :
           [ if (!approx(cutlist[i][0], select(path,cutlist[i][1]))) cutlist[i][0],
-            each slice(path, cutlist[i][1], cutlist[i+1][1]),
+            each slice(path, cutlist[i][1], cutlist[i+1][1]-1),
             if (!approx(cutlist[i+1][0], select(path,cutlist[i+1][1]-1))) cutlist[i+1][0],
           ],
       [
@@ -1553,7 +1553,7 @@ function subdivide_path(path, N, refine, closed=true, exact=true, method="length
                 lerp(path[i],select(path,i+1), j/(add[i]+1))
             ]
         ],
-        closed? [] : [select(path,-1)]
+        closed? [] : [last(path)]
     );
 
 
@@ -1575,7 +1575,7 @@ function path_length_fractions(path, closed=false) =
                 norm(select(path,i+1)-path[i])
         ],
         partial_len = cumsum(lengths),
-        total_len = select(partial_len,-1)
+        total_len = last(partial_len)
     ) partial_len / total_len;
 
 
@@ -1603,10 +1603,10 @@ function resample_path(path, N, spacing, closed=false) =
     length = path_length(path,closed),
     N = is_def(N) ? N : round(length/spacing) + (closed?0:1), 
         spacing = length/(closed?N:N-1),     // Note: worried about round-off error, so don't include 
-        distlist = list_range(closed?N:N-1,step=spacing),  // last point when closed=false
+        distlist = range(closed?N:N-1,step=spacing),  // last point when closed=false
     cuts = path_cut_points(path, distlist, closed=closed)
    )
-   concat(subindex(cuts,0),closed?[]:[select(path,-1)]);  // Then add last point here
+   concat(subindex(cuts,0),closed?[]:[last(path)]);  // Then add last point here
 
 
 

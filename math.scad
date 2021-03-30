@@ -495,7 +495,7 @@ function rand_int(minval, maxval, N, seed=undef) =
 function gaussian_rands(mean, stddev, N=1, seed=undef) =
     assert( is_finite(mean+stddev+N) && (is_undef(seed) || is_finite(seed) ), "Input must be finite numbers.")
     let(nums = is_undef(seed)? rands(0,1,N*2) : rands(0,1,N*2,seed))
-    [for (i = list_range(N)) mean + stddev*sqrt(-2*ln(nums[i*2]))*cos(360*nums[i*2+1])];
+    [for (i = range(N)) mean + stddev*sqrt(-2*ln(nums[i*2]))*cos(360*nums[i*2+1])];
 
 
 // Function: log_rands()
@@ -612,7 +612,7 @@ function _cumsum(v,_i=0,_acc=[]) =
         v, _i+1,
         concat(
             _acc,
-            [_i==0 ? v[_i] : select(_acc,-1)+v[_i]]
+            [_i==0 ? v[_i] : last(_acc) + v[_i]]
         )
     );
 
@@ -905,7 +905,7 @@ function _back_substitute(R, b, x=[]) =
     : let(
           newvalue = len(x)==0
             ? b[ind]/R[ind][ind]
-            : (b[ind]-select(R[ind],ind+1,-1) * x)/R[ind][ind]
+            : (b[ind]-list_tail(R[ind],ind+1) * x)/R[ind][ind]
       )
       _back_substitute(R, b, concat([newvalue],x));
 
@@ -1635,7 +1635,7 @@ function poly_mult(p,q) =
   is_undef(q) ?
     len(p)==2 
         ? poly_mult(p[0],p[1]) 
-    : poly_mult(p[0], poly_mult(select(p,1,-1)))
+    : poly_mult(p[0], poly_mult(list_tail(p)))
   :
   assert( is_vector(p) && is_vector(q),"Invalid arguments to poly_mult")
     p*p==0 || q*q==0
@@ -1678,7 +1678,7 @@ function _poly_div(n,d,q) =
 ///    or give epsilon for approximate zeros.  
 function _poly_trim(p,eps=0) =
     let( nz = [for(i=[0:1:len(p)-1]) if ( !approx(p[i],0,eps)) i])
-    len(nz)==0 ? [0] : select(p,nz[0],-1);
+    len(nz)==0 ? [0] : list_tail(p,nz[0]);
 
 
 // Function: poly_add()
@@ -1719,7 +1719,7 @@ function poly_roots(p,tol=1e-14,error_bound=false) =
     let( p = _poly_trim(p,eps=0) )
     assert( p!=[0], "Input polynomial cannot be zero." )
     p[len(p)-1] == 0 ?                                       // Strip trailing zero coefficients
-        let( solutions = poly_roots(select(p,0,-2),tol=tol, error_bound=error_bound))
+        let( solutions = poly_roots(list_head(p),tol=tol, error_bound=error_bound))
         (error_bound ? [ [[0,0], each solutions[0]], [0, each solutions[1]]]
                     : [[0,0], each solutions]) :
     len(p)==1 ? (error_bound ? [[],[]] : []) :               // Nonzero constant case has no solutions

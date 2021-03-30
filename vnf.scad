@@ -316,7 +316,7 @@ function vnf_vertex_array(
             )
         ]
     )
-    rows<=1 || cols<=1 ? vnf : 
+    rows<=1 || cols<=1 ? vnf :
     vnf_merge(cleanup=true, [
         vnf, [
             verts,
@@ -396,7 +396,7 @@ module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin"
 // Usage:
 //   vnf_wireframe(vnf, <r|d>);
 // Description:
-//   Given a VNF, creates a wire frame ball-and-stick model of the polyhedron with a cylinder for each edge and a sphere at each vertex. 
+//   Given a VNF, creates a wire frame ball-and-stick model of the polyhedron with a cylinder for each edge and a sphere at each vertex.
 // Arguments:
 //   vnf = A vnf structure
 //   r|d = radius or diameter of the cylinders forming the wire frame.  Default: r=1
@@ -404,12 +404,12 @@ module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin"
 //   $fn=32;
 //   ball = sphere(r=20, $fn=6);
 //   vnf_wireframe(ball,d=1);
-// Example: 
+// Example:
 //  include<BOSL2/polyhedra.scad>
 //  $fn=32;
 //  cube_oct = regular_polyhedron_info("vnf", name="cuboctahedron", or=20);
 //  vnf_wireframe(cube_oct);
-// Example: The spheres at the vertex are imperfect at aligning with the cylinders, so especially at low $fn things look prety ugly.  This is normal.  
+// Example: The spheres at the vertex are imperfect at aligning with the cylinders, so especially at low $fn things look prety ugly.  This is normal.
 //  include<BOSL2/polyhedra.scad>
 //  $fn=8;
 //  octahedron = regular_polyhedron_info("vnf", name="octahedron", or=20);
@@ -423,7 +423,7 @@ module vnf_wireframe(vnf, r, d)
                  ]);
   for (e=edges) extrude_from_to(vertex[e[0]],vertex[e[1]]) circle(r=r);
   move_copies(vertex) sphere(r=r);
-}  
+}
 
 
 // Function: vnf_volume()
@@ -451,7 +451,7 @@ function vnf_volume(vnf) =
 //   no holes; otherwise the results are undefined.
 
 // Divide the solid up into tetrahedra with the origin as one vertex.  The centroid of a tetrahedron is the average of its vertices.
-// The centroid of the total is the volume weighted average.  
+// The centroid of the total is the volume weighted average.
 function vnf_centroid(vnf) =
     let(
         verts = vnf[0],
@@ -481,7 +481,7 @@ function _triangulate_planar_convex_polygons(polys) =
         tris = [for (poly=polys) if (len(poly)==3) poly],
         bigs = [for (poly=polys) if (len(poly)>3) poly],
         newtris = [for (poly=bigs) select(poly,-2,0)],
-        newbigs = [for (poly=bigs) select(poly,0,-2)],
+        newbigs = [for (poly=bigs) list_head(poly)],
         newtris2 = _triangulate_planar_convex_polygons(newbigs),
         outtris = concat(tris, newtris, newtris2)
     ) outtris;
@@ -626,7 +626,7 @@ function vnf_bend(vnf,r,d,axis="Z") =
 //   bad edges and vertices, overlaid on a transparent gray polyhedron of the VNF.
 //   .
 //   Currently checks for these problems:
-//   Type    | Color    | Code         | Message 
+//   Type    | Color    | Code         | Message
 //   ------- | -------- | ------------ | ---------------------------------
 //   WARNING | Yellow   | BIG_FACE     | Face has more than 3 vertices, and may confuse CGAL.
 //   WARNING | Brown    | NULL_FACE    | Face has zero area.
@@ -695,7 +695,7 @@ function vnf_bend(vnf,r,d,axis="Z") =
 //       move([75,35,30],p=vnf_triangulate(linear_sweep(square(100,center=true), height=100)))
 //   ]);
 //   vnf_validate(vnf,size=2,check_isects=true);
-// Example: HOLE_EDGE Errors; Edges Adjacent to Holes.  
+// Example: HOLE_EDGE Errors; Edges Adjacent to Holes.
 //   vnf = skin([
 //       path3d(regular_ngon(n=4, d=100),0),
 //       path3d(regular_ngon(n=5, d=100),100)

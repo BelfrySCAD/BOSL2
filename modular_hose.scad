@@ -169,9 +169,9 @@ module modular_hose(size, type, clearance=0, waist_len, anchor=BOTTOM, spin=0,or
     type=="segment"? concat(back(midlength,p=smallend),yflip(p=bigend))
   : type=="small" || type=="ball" ?
           concat(back(midlength,p=smallend),
-                 [[select(smallend,-1).x,0],[ smallend[0].x,0]])
+                 [[last(smallend).x,0],[ smallend[0].x,0]])
   : concat( back(midlength,p=bigend), 
-                  [[select(bigend,-1).x,0],[ bigend[0].x,0]]);
+                  [[last(bigend).x,0],[ bigend[0].x,0]]);
   bounds = pointlist_bounds(shape);
   center = mean(bounds);
   attachable(anchor,spin,orient,l=bounds[1].y-bounds[0].y, r=bounds[1].x)

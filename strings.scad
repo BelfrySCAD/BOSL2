@@ -335,7 +335,7 @@ function _str_find_last(str,pattern,sindex) =
         (sindex >=0 ? sindex : undef);
 
 function _str_find_all(str,pattern) =
-    pattern == "" ? list_range(len(str)) :
+    pattern == "" ? range(len(str)) :
     [for(i=[0:1:len(str)-len(pattern)]) if (_str_cmp(str,i,pattern)) i];
 
 
