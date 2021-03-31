@@ -228,13 +228,13 @@ module trapezoidal_threaded_rod(
             zrot(i*360/starts, p=vnf_vertex_array(thread_verts, reverse=left_handed)),
         for (i=[0:1:starts-1]) let(
             rmat = zrot(i*360/starts),
-            pts = deduplicate(select(thread_verts[0], 0, len(prof3d)+1)),
+            pts = deduplicate(list_head(thread_verts[0], len(prof3d)+1)),
             faces = [for (i=idx(pts,e=-2)) [0, i+1, i]],
             rfaces = left_handed? [for (x=faces) reverse(x)] : faces
         ) [apply(rmat,pts), rfaces],
         for (i=[0:1:starts-1]) let(
             rmat = zrot(i*360/starts),
-            pts = deduplicate(select(last(thread_verts), -len(prof3d)-2, -1)),
+            pts = deduplicate(list_tail(last(thread_verts), -len(prof3d)-2)),
             faces = [for (i=idx(pts,e=-2)) [len(pts)-1, i, i+1]],
             rfaces = left_handed? [for (x=faces) reverse(x)] : faces
         ) [apply(rmat,pts), rfaces]

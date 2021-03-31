@@ -769,7 +769,7 @@ function path_to_bezier(path, closed=false, tangents, uniform=false, size, relsi
     )
     assert(min(sizevect)>0, "Size and relsize must be greater than zero")
     [
-        for(i=[0:lastpt-1])
+        for(i=[0:1:lastpt-1])
             let(
                 first = path[i],
                 second = select(path,i+1),

@@ -53,13 +53,12 @@ function _same_type(a,b, depth) =
 
 
 // Function: select()
+// Topics: List Handling
 // Description:
 //   Returns a portion of a list, wrapping around past the beginning, if end<start. 
 //   The first item is index 0. Negative indexes are counted back from the end.
 //   The last item is -1.  If only the `start` index is given, returns just the value
 //   at that position.
-// Topics: List Handling
-// See Also: slice(), subindex(), last()
 // Usage:
 //   item = select(list,start);
 //   list = select(list,start,end);
@@ -67,6 +66,7 @@ function _same_type(a,b, depth) =
 //   list = The list to get the portion of.
 //   start = The index of the first item.
 //   end = The index of the last item.
+// See Also: slice(), subindex(), last()
 // Example:
 //   l = [3,4,5,6,7,8,9];
 //   a = select(l, 5, 6);   // Returns [8,9]
@@ -97,33 +97,36 @@ function select(list, start, end) =
 
 
 // Function: slice()
-// Usage:
-//   list = slice(list,start,end);
 // Topics: List Handling
-// See Also: select(), subindex(), last()
+// Usage:
+//   list = slice(list,s,e);
 // Description:
-//   Returns a slice of a list.  The first item is index 0.
-//   Negative indexes are counted back from the end.  The last item is -1.
+//   Returns a slice of a list, from the first position `s` up to and including the last position `e`.
+//   The first item in the list is at index 0.  Negative indexes are counted back from the end.
+//   An index of -1 refers to the last list item.
 // Arguments:
-//   list = The array/list to get the slice of.
-//   start = The index of the first item to return.
-//   end = The index after the last item to return, unless negative, in which case the last item to return.
+//   list = The list to get the slice of.
+//   s = The index of the first item to return.
+//   e = The index of the last item to return.
+// See Also: select(), subindex(), last()
 // Example:
-//   a = slice([3,4,5,6,7,8,9], 3, 5);   // Returns [6,7]
+//   a = slice([3,4,5,6,7,8,9], 3, 5);   // Returns [6,7,8]
 //   b = slice([3,4,5,6,7,8,9], 2, -1);  // Returns [5,6,7,8,9]
-//   c = slice([3,4,5,6,7,8,9], 1, 1);   // Returns []
-//   d = slice([3,4,5,6,7,8,9], 6, -1);  // Returns [9]
+//   c = slice([3,4,5,6,7,8,9], 1, 1);   // Returns [4]
+//   d = slice([3,4,5,6,7,8,9], 5);      // Returns [8,9]
 //   e = slice([3,4,5,6,7,8,9], 2, -2);  // Returns [5,6,7,8]
-function slice(list,start,end) =
-    assert( is_list(list), "Invalid list" )
-    assert( is_finite(start) && is_finite(end), "Invalid number(s)" )
-    let( l = len(list) )
-    l==0
-      ? []
-      : let(
-            s = start<0? (l+start) : start,
-            e = end<0? (l+end+1) : end
-        ) [for (i=[s:1:e-1]) if (e>s) list[i]];
+//   f = slice([3,4,5,6,7,8,9], 4, 3;    // Returns []
+function slice(list,s=0,e=-1) =
+    assert(is_list(list))
+    assert(is_int(s))
+    assert(is_int(e))
+    !list? [] :
+    let(
+        l = len(list),
+        s = constrain(s + (s<0? l : 0), 0, l-1),
+        e = constrain(e + (e<0? l : 0), 0, l-1)
+    )
+    [if (e>=s) for (i=[s:1:e]) list[i]];
 
 
 // Function: last()
@@ -367,7 +370,7 @@ function list_decreasing(list) =
 // Usage:
 //   list = repeat(val, n);
 // Topics: List Handling
-// See Also: list_range()
+// See Also: range(), rangex()
 // Description:
 //   Generates a list or array of `n` copies of the given value `val`.
 //   If the count `n` is given as a list of counts, then this creates a
@@ -387,37 +390,36 @@ function repeat(val, n, i=0) =
     [for (j=[1:1:n[i]]) repeat(val, n, i+1)];
 
 
-// Function: list_range()
+// Function: range()
 // Usage:
-//   list = list_range(n=, <s=>, <e=>);
-//   list = list_range(n=, <s=>, <step=>);
-//   list = list_range(e=, <step=>);
-//   list = list_range(s=, e=, <step=>);
+//   list = range(n, <s=>, <e=>);
+//   list = range(n, <s=>, <step=>);
+//   list = range(e=, <step=>);
+//   list = range(s=, e=, <step=>);
 // Topics: List Handling
-// See Also: repeat()
 // Description:
 //   Returns a list, counting up from starting value `s`, by `step` increments,
 //   until either `n` values are in the list, or it reaches the end value `e`.
 //   If both `n` and `e` are given, returns `n` values evenly spread from `s`
 //   to `e`, and `step` is ignored.
 // Arguments:
-//   ---
 //   n = Desired number of values in returned list, if given.
+//   ---
 //   s = Starting value.  Default: 0
 //   e = Ending value to stop at, if given.
 //   step = Amount to increment each value.  Default: 1
+// See Also: repeat(), rangex()
 // Example:
-//   a = list_range(4);                  // Returns [0,1,2,3]
-//   b = list_range(n=4, step=2);        // Returns [0,2,4,6]
-//   c = list_range(n=4, s=3, step=3);   // Returns [3,6,9,12]
-//   d = list_range(n=5, s=0, e=10);     // Returns [0, 2.5, 5, 7.5, 10]
-//   e = list_range(e=3);                // Returns [0,1,2,3]
-//   f = list_range(e=7, step=2);        // Returns [0,2,4,6]
-//   g = list_range(s=3, e=5);           // Returns [3,4,5]
-//   h = list_range(s=3, e=8, step=2);   // Returns [3,5,7]
-//   i = list_range(s=4, e=8.3, step=2); // Returns [4,6,8]
-//   j = list_range(n=4, s=[3,4], step=[2,3]);  // Returns [[3,4], [5,7], [7,10], [9,13]]
-function list_range(n, s=0, e, step) =
+//   a = range(4);                  // Returns [0,1,2,3]
+//   b = range(n=4, step=2);        // Returns [0,2,4,6]
+//   c = range(n=4, s=3, step=3);   // Returns [3,6,9,12]
+//   d = range(n=5, s=0, e=10);     // Returns [0, 2.5, 5, 7.5, 10]
+//   e = range(e=3);                // Returns [0,1,2,3]
+//   f = range(e=7, step=2);        // Returns [0,2,4,6]
+//   g = range(s=3, e=5);           // Returns [3,4,5]
+//   h = range(s=3, e=8, step=2);   // Returns [3,5,7]
+//   i = range(s=4, e=8.3, step=2); // Returns [4,6,8]
+function range(n, s=0, e, step) =
     assert( is_undef(n) || is_finite(n), "Parameter `n` must be a number.")
     assert( is_undef(n) || is_undef(e) || is_undef(step), "At most 2 of n, e, and step can be given.")
     let( step = (n!=undef && e!=undef)? (e-s)/(n-1) : default(step,1) )
@@ -426,6 +428,50 @@ function list_range(n, s=0, e, step) =
         [for (i=[0:1:n-1]) s+step*i ]
       : assert( is_vector([s,step,e]), "Start `s`, step `step` and end `e` must be numbers.")
         [for (v=[s:step:e]) v] ;
+    
+
+// Function: rangex()
+// Usage:
+//   list = rangex(n, <s=>, <e=>);
+//   list = rangex(n, <s=>, <step=>);
+//   list = rangex(e=, <step=>);
+//   list = rangex(s=, e=, <step=>);
+// Topics: List Handling
+// Description:
+//   Returns a list, counting up from starting value `s`, by `step` increments, until
+//   either `n` values are in the list, or it reaches the value just before the end value `e`.
+//   If both `n` and `e` are given, returns `n` values evenly spread from `s` to the value
+//   just before `e`, and `step` is ignored.
+// Arguments:
+//   n = Desired number of values in returned list, if given.
+//   ---
+//   s = Starting value.  Default: 0
+//   e = Ending value to stop at, if given.
+//   step = Amount to increment each value.  Default: 1
+// See Also: repeat(), range()
+// Example:
+//   a = rangex(4);                  // Returns [0,1,2,3]
+//   b = rangex(5,e=1);              // Returns [0, 0.2, 0.4, 0.6, 0.8]
+//   c = rangex(n=4, step=2);        // Returns [0,2,4,6]
+//   d = rangex(n=4, step=0.25);     // Returns [0, 0.25, 0.5, 0.75]
+//   e = rangex(n=4, s=3, step=3);   // Returns [3,6,9,12]
+//   f = rangex(n=5, s=0, e=10);     // Returns [0, 2, 4, 6, 8]
+//   g = rangex(e=3);                // Returns [0,1,2]
+//   h = rangex(e=7, step=2);        // Returns [0,2,4,6]
+//   i = rangex(s=3, e=5);           // Returns [3,4]
+//   j = rangex(s=3, e=8, step=2);   // Returns [3,5,7]
+//   k = rangex(s=2, e=8, step=2);   // Returns [2,4,6]
+//   l = rangex(s=2, e=8.1, step=2); // Returns [2,4,6,8]
+function rangex(n, s=0, e, step) =
+    assert( is_undef(n) || is_finite(n), "Parameter `n` must be a number.")
+    assert( is_undef(n) || is_undef(e) || is_undef(step), "At most 2 of n, e, and step can be given.")
+    let( step = (n!=undef && e!=undef)? (e-s)/n : default(step,1) )
+    is_undef(e)
+      ? assert( is_consistent([s, step]), "Incompatible data.")
+        [for (i=[0:1:n-1]) s+step*i ]
+      : assert( is_vector([s,step,e]), "Start `s`, step `step` and end `e` must be numbers.")
+        let(steps=floor((e-s)/step+0.5))
+        [for (i=[0:1:steps-1]) s+step*i ];
     
 
 

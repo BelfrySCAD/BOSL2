@@ -968,7 +968,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
                       );
     assert(fullpath[4].y < fullpath[3].y, "Pin is too wide for its length");
     
-    snapmargin = -snap + select(sidepath,-1).x;// - compression;
+    snapmargin = -snap + last(sidepath).x;// - compression;
     if (is_pin){
       if (snapmargin<0) echo("WARNING: The snap is too large for the clip to squeeze to fit its socket")
       echo(snapmargin=snapmargin);

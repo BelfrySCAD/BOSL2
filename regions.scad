@@ -758,7 +758,7 @@ function offset(
         // Note if !closed the last corner doesn't matter, so exclude it
         parallelcheck =
             (len(sharpcorners)==2 && !closed) ||
-            all_defined(select(sharpcorners,closed?0:1,-1))
+            all_defined(closed? sharpcorners : list_tail(sharpcorners))
     )
     assert(parallelcheck, "Path contains sequential parallel segments (either 180 deg turn or 0 deg turn")
     let(

@@ -479,7 +479,7 @@ function _tupdate(state, tran, pretran) =
     [
      concat(state[0],tran),
      concat(state[1],pretran),
-     each select(state,2,-1)
+     each list_tail(state,2)
     ];
 
 function _turtle3d_command(command, parm, parm2, state, index) =
@@ -504,8 +504,8 @@ function _turtle3d_command(command, parm, parm2, state, index) =
         chnum = (!in_list(command,neednum) || is_num(parm))
                 && (!in_list(command,numornothing) || (is_undef(parm) || is_num(parm))),
         chtran = !in_list(command,needtran) || is_matrix(parm,4,4),
-        lastT = select(state[trlist],-1),
-        lastPre = select(state[prelist],-1),
+        lastT = last(state[trlist]),
+        lastPre = last(state[prelist]),
         lastpt = apply(lastT,[0,0,0])
     )
     assert(chvec,str("\"",command,"\" requires a 3d vector parameter at index ",index))

@@ -209,10 +209,10 @@ module stroke(
     assert(is_undef(endcap_angle2)||is_num(endcap_angle2));
     assert(is_undef(joint_angle)||is_num(joint_angle));
 
-    endcap_shape1 = _shape_path(endcap1, select(width,0), endcap_width1, endcap_length1, endcap_extent1);
-    endcap_shape2 = _shape_path(endcap2, select(width,-1), endcap_width2, endcap_length2, endcap_extent2);
+    endcap_shape1 = _shape_path(endcap1, width[0], endcap_width1, endcap_length1, endcap_extent1);
+    endcap_shape2 = _shape_path(endcap2, last(width), endcap_width2, endcap_length2, endcap_extent2);
 
-    trim1 = select(width,0) * first_defined([
+    trim1 = width[0] * first_defined([
         trim1, trim,
         (endcap1=="arrow")? endcap_length1-0.01 :
         (endcap1=="arrow2")? endcap_length1*3/4 :
@@ -220,7 +220,7 @@ module stroke(
     ]);
     assert(is_num(trim1));
 
-    trim2 = select(width,-1) * first_defined([
+    trim2 = last(width) * first_defined([
         trim2, trim,
         (endcap2=="arrow")? endcap_length2-0.01 :
         (endcap2=="arrow2")? endcap_length2*3/4 :
@@ -244,8 +244,8 @@ module stroke(
             [lerp(width[epos[0]], width[(epos[0]+1)%len(width)], epos[1])]
         );
 
-        start_vec = select(path,0) - select(path,1);
-        end_vec = select(path,-1) - select(path,-2);
+        start_vec = path[0] - path[1];
+        end_vec = last(path) - select(path,-2);
 
         if (len(path[0]) == 2) {
             // Straight segments
@@ -301,7 +301,7 @@ module stroke(
             }
 
             // Endcap2
-            translate(select(path,-1)) {
+            translate(last(path)) {
                 mat = is_undef(endcap_angle2)? rot(from=BACK,to=end_vec) :
                     zrot(endcap_angle2);
                 multmatrix(mat) polygon(endcap_shape2);
@@ -402,9 +402,9 @@ module stroke(
             }
 
             // Endcap2
-            translate(select(path,-1)) {
-                multmatrix(select(rotmats,-1)) {
-                    $fn = select(sides,-1);
+            translate(last(path)) {
+                multmatrix(last(rotmats)) {
+                    $fn = last(sides);
                     if (is_undef(endcap_angle2)) {
                         rotate_extrude(convexity=convexity) {
                             right_half(planar=true) {
@@ -413,7 +413,7 @@ module stroke(
                         }
                     } else {
                         rotate([90,0,endcap_angle2]) {
-                            linear_extrude(height=max(select(widths,-1),0.001), center=true, convexity=convexity) {
+                            linear_extrude(height=max(last(widths),0.001), center=true, convexity=convexity) {
                                 polygon(endcap_shape2);
                             }
                         }
@@ -791,7 +791,7 @@ function _turtle_command(command, parm, parm2, state, index) =
         chvec = !in_list(command,needvec) || is_vector(parm,2),
         chnum = !in_list(command,neednum) || is_num(parm),
         vec_or_num = !in_list(command,needeither) || (is_num(parm) || is_vector(parm,2)),
-        lastpt = select(state[path],-1)
+        lastpt = last(state[path])
     )
     assert(chvec,str("\"",command,"\" requires a vector parameter at index ",index))
     assert(chnum,str("\"",command,"\" requires a numeric parameter at index ",index))
@@ -2339,8 +2339,8 @@ function mask2d_ogee(pattern, excess, anchor=CENTER, spin=0) =
                 0
             )
         ])),
-        tot_x = select(x,-1),
-        tot_y = select(y,-1),
+        tot_x = last(x),
+        tot_y = last(y),
         data = [
             for (i=idx(pattern,step=2)) let(
                 type = pattern[i],

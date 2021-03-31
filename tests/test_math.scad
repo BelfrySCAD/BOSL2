@@ -1122,7 +1122,7 @@ module test_real_roots(){
    // Wilkinson polynomial is a nasty test:
    assert_approx(
        sort(real_roots(poly_mult([[1,-1],[1,-2],[1,-3],[1,-4],[1,-5],[1,-6],[1,-7],[1,-8],[1,-9],[1,-10]]))),
-       list_range(n=10,s=1));
+       range(n=10,s=1));
    assert_equal(real_roots([3]), []);
    assert_equal(real_roots(poly_mult([[1,-2,5],[12,-24,24],[-2, -12, -20],[1,-10,50]])),[]);
    assert_equal(real_roots(poly_mult([[1,-2,5],[12,-24,24],[-2, -12, -20],[1,-10,50],[1,0,0]])),[0,0]);

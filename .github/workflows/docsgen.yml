@@ -36,6 +36,7 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
+        echo "::add-matcher::.github/openscad_docsgen.json"
         openscad-docsgen -m -i -t -c *.scad
         cd BOSL2.wiki
         git config user.name github-actions
