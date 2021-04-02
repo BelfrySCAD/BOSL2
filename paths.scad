@@ -1238,15 +1238,17 @@ module path_extrude(path, convexity=10, clipsize=100) {
 module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=false)
 {
     length = path_length(path,closed);
-    distances = is_def(sp)? (
-        is_def(n) && is_def(spacing)? range(s=sp, step=spacing, n=n) :
-        is_def(n)? range(s=sp, e=length, n=n) :
-        range(s=sp, step=spacing, e=length)
-    ) : is_def(n) && is_undef(spacing)? (
-        closed?
-            let(range=range(s=0,e=length, n=n+1)) list_head(range) :
-            range(s=0, e=length, n=n)
-    ) : (
+    distances =
+        is_def(sp)? (   // Start point given
+            is_def(n) && is_def(spacing)? range(s=sp, step=spacing, n=n) :
+            is_def(n)? range(s=sp, e=length, n=n) :
+            range(s=sp, step=spacing, e=length)
+        )
+      : is_def(n) && is_undef(spacing)? ( let(a=echo(n=n))  // N alone given
+            closed ? rangex(s=0, e=length, n=n)
+                   : range(s=0, e=length, n=n)
+        )
+      : (      // No start point and spacing is given, N maybe given
         let(
             n = is_def(n)? n : floor(length/spacing)+(closed?0:1),
             ptlist = range(s=0,step=spacing,n=n),
@@ -1600,13 +1602,17 @@ function resample_path(path, N, spacing, closed=false) =
    assert(num_defined([N,spacing])==1,"Must define exactly one of N and spacing")
    assert(is_bool(closed))
    let(
-    length = path_length(path,closed),
-    N = is_def(N) ? N : round(length/spacing) + (closed?0:1), 
-        spacing = length/(closed?N:N-1),     // Note: worried about round-off error, so don't include 
-        distlist = range(closed?N:N-1,step=spacing),  // last point when closed=false
-    cuts = path_cut_points(path, distlist, closed=closed)
+       length = path_length(path,closed),
+       // In the open path case decrease N by 1 so that we don't try to get
+       // path_cut to return the endpoint (which might fail due to rounding)
+       // Add last point later
+       N = is_def(N) ? N-(closed?0:1) : round(length/spacing),
+       distlist = rangex(N,e=length), 
+       cuts = path_cut_points(path, distlist, closed=closed)
    )
-   concat(subindex(cuts,0),closed?[]:[last(path)]);  // Then add last point here
+   [ each subindex(cuts,0),
+     if (!closed) last(path)     // Then add last point here
+   ];
 
 
 

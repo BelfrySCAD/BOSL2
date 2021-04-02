@@ -435,9 +435,11 @@ function bezier_curvature(curve, u) =
 //   bez = [[0,0], [5,15], [40,20], [60,-15], [80,0]];
 //   move_copies(bezier_curve(bez, 8)) sphere(r=1.5, $fn=12);
 //   trace_bezier(bez, N=len(bez)-1);
-function bezier_curve(curve,n,endpoint) = [each bezier_points(curve, [0:1/n:(n-0.5)/n]),
-                                           if (endpoint) curve[len(curve)-1]
-                                          ];
+function bezier_curve(curve,n,endpoint=true) =
+      [
+         each bezier_points(curve, rangex(endpoint?n-1:n,0,1)),
+         if (endpoint) last(curve)
+      ];
 
 // Function: bezier_segment_closest_point()
 // Usage:
