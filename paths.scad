@@ -1244,7 +1244,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
             is_def(n)? range(s=sp, e=length, n=n) :
             range(s=sp, step=spacing, e=length)
         )
-      : is_def(n) && is_undef(spacing)? ( let(a=echo(n=n))  // N alone given
+      : is_def(n) && is_undef(spacing)? (            // N alone given
             closed ? rangex(s=0, e=length, n=n)
                    : range(s=0, e=length, n=n)
         )
