@@ -533,7 +533,7 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
 function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true) =
     assert(is_bool(endpoint))
     !endpoint ? assert(!wedge, "endpoint cannot be false if wedge is true")
-               list_head(arc(N,r,angle,d,cp,points,width,thickness,start,wedge,long,cw,ccw,true)) :
+               list_head(arc(N+1,r,angle,d,cp,points,width,thickness,start,wedge,long,cw,ccw,true)) :
     assert(is_undef(N) || is_integer(N), "Number of points must be an integer")
     // First try for 2D arc specified by width and thickness
     is_def(width) && is_def(thickness)? (
@@ -1875,7 +1875,7 @@ function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
                 sa = ca + 180 + (90/N),
                 ea = ca + 180 - (90/N),
                 cp = polar_to_xy(r, ca)
-            ) each arc(N=ssegs, r=slen, cp=cp, angle=[sa,ea], endpoint=false)
+            ) each arc(N=ssegs-1, r=slen, cp=cp, angle=[sa,ea], endpoint=false)
         ],
         anchors = [
             for (i = [0:1:N-1]) let(
