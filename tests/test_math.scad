@@ -830,6 +830,15 @@ module test_lcm() {
 test_lcm();
 
 
+
+module test_complex(){
+    assert_equal( complex(ident(4)), c_ident(4));
+    assert_equal( complex(3), [3,0]);
+    assert_equal( complex([1,2]), [[1,0],[2,0]]);
+    assert_equal( complex([[1,2],[3,4]]), [[ [1,0],[2,0] ], [ [3,0],[4,0]]]);
+}
+test_complex();
+
 module test_c_mul() {
     assert_equal(c_mul([4,5],[9,-4]), [56,29]);
     assert_equal(c_mul([-7,2],[24,3]), [-174, 27]);

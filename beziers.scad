@@ -413,16 +413,17 @@ function bezier_curvature(curve, u) =
 // Topics: Bezier Segments
 // See Also: bezier_curvature(), bezier_tangent(), bezier_derivative(), bezier_points()
 // Description:
-//   Takes a list of bezier curve control points and generates n points along the bezier path.  
-//   Points start at the first control point and are sampled every `1/n`th
-//   of the way along the bezier parameter, ending *before* the final control point by default.
-//   The distance between the points will *not* be equidistant.  If you wish to add the
-//   endpoint you can set `endpoint` to true.  The degree of the bezier curve is one
-//   less than the number of points in `curve`.
+//   Takes a list of bezier control points and generates n points along the bezier curve they define.
+//   Points start at the first control point and are sampled uniformly along the bezier parameter.
+//   The endpoints of the output will be *exactly* equal to the first and last bezier control points
+//   when endpoint is true.  If endpoint is false the sampling stops one step before the final point
+//   of the bezier curve, but you still get n, more tightly spaced, points.  
+//   The distance between the points will *not* be equidistant.  
+//   The degree of the bezier curve is one less than the number of points in `curve`.
 // Arguments:
 //   curve = The list of endpoints and control points for this bezier segment.
 //   n = The number of points to generate along the bezier curve.
-//   endpoint = if true then add the endpoint (an extra point, giving n+1 points output).  Default: False
+//   endpoint = if false then exclude the endpoint.  Default: True
 // Example(2D): Quadratic (Degree 2) Bezier.
 //   bez = [[0,0], [30,30], [80,0]];
 //   move_copies(bezier_curve(bez, 8)) sphere(r=1.5, $fn=12);
