@@ -1911,24 +1911,23 @@ function align_polygon(reference, poly, angles, cp) =
 function centroid(poly, eps=EPSILON) =
     assert( is_path(poly,dim=[2,3]), "The input must be a 2D or 3D polygon." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    let(
-        n = len(poly[0])==2 ? 1 :
-            let( 
-                plane = plane_from_points(poly, fast=true) )
-            assert( !is_undef(plane), "The polygon must be planar." )
-            plane_normal(plane),
-        v0 = poly[0] ,
-        val = sum([for(i=[1:len(poly)-2])
-                        let(
-                           v1 = poly[i],
-                           v2 = poly[i+1],
-                           area = cross(v2-v0,v1-v0)*n
-                           )
-                        [ area, (v0+v1+v2)*area ]
-                    ] )
-          )
-      assert(!approx(val[0],0, eps), "The polygon is self-intersecting or its points are collinear.")
-      val[1]/val[0]/3;
+    let( 
+        n = len(poly[0])==2 ? 1 : 
+            let( plane = plane_from_points(poly, fast=true) ) 
+            assert( !is_undef(plane), "The polygon must be planar." ) 
+            plane_normal(plane), 
+        v0 = poly[0] , 
+        val = sum([for(i=[1:len(poly)-2]) 
+                        let( 
+                           v1 = poly[i], 
+                           v2 = poly[i+1], 
+                           area = cross(v2-v0,v1-v0)*n 
+                           ) 
+                        [ area, (v0+v1+v2)*area ] 
+                    ] ) 
+          ) 
+      assert(!approx(val[0],0, eps), "The polygon is self-intersecting or its points are collinear.") 
+      val[1]/val[0]/3; 
 
 
 
