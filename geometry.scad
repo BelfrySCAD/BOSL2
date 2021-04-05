@@ -959,7 +959,7 @@ function plane_from_polygon(poly, fast=false, eps=EPSILON) =
 //   plane_normal(plane);
 // Description:
 //   Returns the unit length normal vector for the given plane.
-// Arguments:
+// Argument:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 function plane_normal(plane) =
     assert( _valid_plane(plane), "Invalid input plane." )
@@ -973,7 +973,7 @@ function plane_normal(plane) =
 //   Returns coeficient D of the normalized plane equation `Ax+By+Cz=D`, or the scalar offset of the plane from the origin.
 //   This value may be negative.
 //   The absolute value of this coefficient is the distance of the plane from the origin.
-// Arguments:
+// Argument:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 function plane_offset(plane) =
     assert( _valid_plane(plane), "Invalid input plane." )
@@ -1046,7 +1046,7 @@ function projection_on_plane(plane, points) =
 //   pt = plane_point_nearest_origin(plane);
 // Description:
 //   Returns the point on the plane that is closest to the origin.
-// Arguments:
+// Argument:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 function plane_point_nearest_origin(plane) =
     let( plane = normalize_plane(plane) )
@@ -1071,7 +1071,6 @@ function distance_from_plane(plane, point) =
     assert( is_vector(point,3), "The point should be a 3D point." )
     let( plane = normalize_plane(plane) )
     point3d(plane)* point - plane[3];
-
 
 // Returns [POINT, U] if line intersects plane at one point.
 // Returns [LINE, undef] if the line is on the plane.
@@ -1595,6 +1594,7 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
     ];
 
 
+
 // Function: circle_line_intersection()
 // Usage:
 //   isect = circle_line_intersection(c,r,line,<bounded>,<eps>);
@@ -1627,10 +1627,12 @@ function circle_line_intersection(c,r,line,d,bounded=false,eps=EPSILON) =
              let( offset = sqrt(r*r-d*d),
                   uvec=unit(line[1]-line[0])
              ) [closest-offset*uvec, closest+offset*uvec]
+
   )
   [for(p=isect)
      if ((!bounded[0] || (p-line[0])*(line[1]-line[0])>=0)
         && (!bounded[1] || (p-line[1])*(line[0]-line[1])>=0)) p];
+
 
 
 
@@ -1911,23 +1913,24 @@ function align_polygon(reference, poly, angles, cp) =
 function centroid(poly, eps=EPSILON) =
     assert( is_path(poly,dim=[2,3]), "The input must be a 2D or 3D polygon." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    let( 
-        n = len(poly[0])==2 ? 1 : 
-            let( plane = plane_from_points(poly, fast=true) ) 
-            assert( !is_undef(plane), "The polygon must be planar." ) 
-            plane_normal(plane), 
-        v0 = poly[0] , 
-        val = sum([for(i=[1:len(poly)-2]) 
-                        let( 
-                           v1 = poly[i], 
-                           v2 = poly[i+1], 
-                           area = cross(v2-v0,v1-v0)*n 
-                           ) 
-                        [ area, (v0+v1+v2)*area ] 
-                    ] ) 
-          ) 
-      assert(!approx(val[0],0, eps), "The polygon is self-intersecting or its points are collinear.") 
-      val[1]/val[0]/3; 
+    let(
+        n = len(poly[0])==2 ? 1 :
+            let( 
+                plane = plane_from_points(poly, fast=true) )
+            assert( !is_undef(plane), "The polygon must be planar." )
+            plane_normal(plane),
+        v0 = poly[0] ,
+        val = sum([for(i=[1:len(poly)-2])
+                        let(
+                           v1 = poly[i],
+                           v2 = poly[i+1],
+                           area = cross(v2-v0,v1-v0)*n
+                           )
+                        [ area, (v0+v1+v2)*area ]
+                    ] )
+          )
+      assert(!approx(val[0],0, eps), "The polygon is self-intersecting or its points are collinear.")
+      val[1]/val[0]/3;
 
 
 
