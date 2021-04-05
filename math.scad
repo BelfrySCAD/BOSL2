@@ -544,8 +544,9 @@ function _lcm(a,b) =
 
 // Computes lcm for a list of values
 function _lcmlist(a) =
-    len(a)==1 ? a[0] :
-    _lcmlist(concat(lcm(a[0],a[1]),list_tail(a,2)));
+    len(a)==1 
+    ?   a[0] 
+    :   _lcmlist(concat(slice(a,0,len(a)-2),[lcm(a[len(a)-2],a[len(a)-1])]));
 
 
 // Function: lcm()

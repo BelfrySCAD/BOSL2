@@ -88,7 +88,7 @@ function check_and_fix_path(path, valid_dim=undef, closed=false, name="path") =
             is_list(valid_dim) ? str("one of ",valid_dim) : valid_dim
         )
     )
-    closed && approx(path[0], last(path))? list_head(path) : path;
+    closed && approx(path[0],select(path,-1))? slice(path,0,-2) : path;
 
 
 // Function: cleanup_region()

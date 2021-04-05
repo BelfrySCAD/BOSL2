@@ -142,59 +142,18 @@ function last(list) =
     list[len(list)-1];
 
 
-// Function: list_head()
+// Function: delete_last()
 // Usage:
-//   list = list_head(list,<to>);
+//   list = delete_last(list);
 // Topics: List Handling
-// See Also: select(), slice(), list_tail(), last()
+// See Also: select(), slice(), subindex(), last()
 // Description:
-//   Returns the head of the given list, from the first item up until the `to` index, inclusive.
-//   If the `to` index is negative, then the length of the list is added to it, such that
-//   `-1` is the last list item.  `-2` is the second from last.  `-3` is third from last, etc.
-//   If the list is shorter than the given index, then the full list is returned.
-// Arguments:
-//   list = The list to get the head of.
-//   to = The last index to include.  If negative, adds the list length to it.  ie: -1 is the last list item.
-// Examples:
-//   hlist = list_head(["foo", "bar", "baz"]);  // Returns: ["foo", "bar"]
-//   hlist = list_head(["foo", "bar", "baz"], -3); // Returns: ["foo"]
-//   hlist = list_head(["foo", "bar", "baz"], 2);  // Returns: ["foo","bar"]
-//   hlist = list_head(["foo", "bar", "baz"], -5); // Returns: []
-//   hlist = list_head(["foo", "bar", "baz"], 5);  // Returns: ["foo","bar","baz"]
-function list_head(list, to=-2) =
+//   Returns a list with all but the last entry from the input list.  If input is empty, returns empty list.
+// Example:
+//   nlist = delete_last(["foo", "bar", "baz"]);  // Returns: ["foo", "bar"]
+function delete_last(list) =
    assert(is_list(list))
-   assert(is_finite(to))
-   to<0? [for (i=[0:1:len(list)+to]) list[i]] :
-   to<len(list)? [for (i=[0:1:to]) list[i]] :
-   list;
-
-
-// Function: list_tail()
-// Usage:
-//   list = list_tail(list,<from>);
-// Topics: List Handling
-// See Also: select(), slice(), list_tail(), last()
-// Description:
-//   Returns the tail of the given list, from the `from` index up until the end of the list, inclusive.
-//   If the `from` index is negative, then the length of the list is added to it, such that
-//   `-1` is the last list item.  `-2` is the second from last.  `-3` is third from last, etc.
-//   If you want it to return the last three items of the list, use `from=-3`.
-// Arguments:
-//   list = The list to get the tail of.
-//   from = The first index to include.  If negative, adds the list length to it.  ie: -1 is the last list item.
-// Examples:
-//   tlist = list_tail(["foo", "bar", "baz"]);  // Returns: ["bar", "baz"]
-//   tlist = list_tail(["foo", "bar", "baz"], -1); // Returns: ["baz"]
-//   tlist = list_tail(["foo", "bar", "baz"], 2);  // Returns: ["baz"]
-//   tlist = list_tail(["foo", "bar", "baz"], -5); // Returns: ["foo","bar","baz"]
-//   tlist = list_tail(["foo", "bar", "baz"], 5);  // Returns: []
-function list_tail(list, from=1) =
-   assert(is_list(list))
-   assert(is_finite(from))
-   from>=0? [for (i=[from:1:len(list)-1]) list[i]] :
-   let(from = from + len(list))
-   from>=0? [for (i=[from:1:len(list)-1]) list[i]] :
-   list;
+   list==[] ? [] : slice(list,0,-2);
 
 
 // Function: force_list()

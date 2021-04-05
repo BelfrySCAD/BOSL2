@@ -413,7 +413,7 @@ function _rounding_offsets(edgespec,z_dir=1) =
         assert(argsOK,str("Invalid specification with type ",edgetype))
         let(
                 offsets =
-                        edgetype == "profile"? scale([-1,z_dir], p=list_tail(points)) :
+                        edgetype == "profile"? scale([-1,z_dir], p=slice(points,1,-1)) :
                         edgetype == "chamfer"?  chamf_width==0 && chamf_height==0? [] : [[-chamf_width,z_dir*abs(chamf_height)]] :
                         edgetype == "teardrop"? (
                                 radius==0? [] : concat(
