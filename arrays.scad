@@ -200,6 +200,24 @@ function list_tail(list, from=1) =
    list;
 
 
+// Function: list()
+// Topics: List Handling, Type Conversion
+// Usage:
+//   list = list(l)
+// Description:
+//   Expands a range into a full list.  If given a list, returns it verbatim.
+//   If given a string, explodes it into a list of single letters.
+// Arguments:
+//   l = The value to expand.
+// See Also: scalar_vec3(), force_list(), range(), rangex()
+// Example:
+//   l1 = list([3:2:9]);  // Returns: [3,5,7,9]
+//   l2 = list([3,4,5]);  // Returns: [3,4,5]
+//   l3 = list("Foo");    // Returns: ["F","o","o"]
+//   l4 = list(23);       // Returns: [23]
+function list(l) = is_list(l)? l : [for (x=l) x];
+
+
 // Function: force_list()
 // Usage:
 //   list = force_list(value, <n>, <fill>);
@@ -274,20 +292,28 @@ function in_list(val,list,idx) =
 // Description:
 //   Finds the first item in `list` that matches `val`, returning the index.
 // Arguments:
-//   val = The value to search for.
+//   val = The value to search for.  If given a function literal of signature `function (x)`, uses that function to check list items.  Returns true for a match.
 //   list = The list to search through.
 //   ---
 //   start = The index to start searching from.
 //   all = If true, returns a list of all matching item indices.
 //   eps = The maximum allowed floating point rounding error for numeric comparisons.
 function find_first_match(val, list, start=0, all=false, eps=EPSILON) =
-    all? [for (i=[start:1:len(list)-1]) if(val==list[i] || approx(val, list[i], eps=eps)) i] :
+    all? [
+        for (i=[start:1:len(list)-1])
+        if (
+            (!is_func(val) && approx(val, list[i], eps=eps)) ||
+            (is_func(val) && val(list[i]))
+        ) i
+    ] :
     __find_first_match(val, list, eps=eps, i=start);
 
 function __find_first_match(val, list, eps, i=0) =
     i >= len(list)? undef :
-    approx(val, list[i], eps=eps)? i :
-    __find_first_match(val, list, eps=eps, i=i+1);
+    (
+        (!is_func(val) && approx(val, list[i], eps=eps)) ||
+        (is_func(val) && val(list[i]))
+    )? i : __find_first_match(val, list, eps=eps, i=i+1);
 
 
 // Function: min_index()
@@ -425,7 +451,7 @@ function range(n, s=0, e, step) =
     let( step = (n!=undef && e!=undef)? (e-s)/(n-1) : default(step,1) )
     is_undef(e)
       ? assert( is_consistent([s, step]), "Incompatible data.")
-        [for (i=[0:1:n-1]) s+step*i ]
+        [for (i=[0:1:n-1]) s+step*i]
       : assert( is_vector([s,step,e]), "Start `s`, step `step` and end `e` must be numbers.")
         [for (v=[s:step:e]) v] ;
     
@@ -468,10 +494,10 @@ function rangex(n, s=0, e, step) =
     let( step = (n!=undef && e!=undef)? (e-s)/n : default(step,1) )
     is_undef(e)
       ? assert( is_consistent([s, step]), "Incompatible data.")
-        [for (i=[0:1:n-1]) s+step*i ]
+        [for (i=[0:1:n-1]) s+step*i]
       : assert( is_vector([s,step,e]), "Start `s`, step `step` and end `e` must be numbers.")
         let(steps=floor((e-s)/step+0.5))
-        [for (i=[0:1:steps-1]) s+step*i ];
+        [for (i=[0:1:steps-1]) s+step*i];
     
 
 

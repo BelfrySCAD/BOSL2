@@ -174,6 +174,31 @@ function lerp(a,b,u) =
     [for (v = u) (1-v)*a + v*b ];
 
 
+// Function: lerpn()
+// Usage:
+//   x = lerpn(a, b, n);
+//   x = lerpn(a, b, n, <endpoint>);
+// Description:
+//   Returns exactly `n` values, linearly interpolated between `a` and `b`.
+//   If `endpoint` is true, then the last value will exactly equal `b`.
+//   If `endpoint` is false, then the last value will about `a+(b-a)*(1-1/n)`.
+// Arguments:
+//   a = First value or vector.
+//   b = Second value or vector.
+//   n = The number of values to return.
+//   endpoint = If true, the last value will be exactly `b`.  If false, the last value will be one step less.
+// Examples:
+//   l = lerpn(-4,4,9);        // Returns: [-4,-3,-2,-1,0,1,2,3,4]
+//   l = lerpn(-4,4,8,false);  // Returns: [-4,-3,-2,-1,0,1,2,3]
+//   l = lerpn(0,1,6);         // Returns: [0, 0.2, 0.4, 0.6, 0.8, 1]
+//   l = lerpn(0,1,5,false);   // Returns: [0, 0.2, 0.4, 0.6, 0.8]
+function lerpn(a,b,n,endpoint=true) =
+    assert(same_shape(a,b), "Bad or inconsistent inputs to lerp")
+    assert(is_int(n))
+    assert(is_bool(endpoint))
+    let( d = n - (endpoint? 1 : 0) )
+    [for (i=[0:1:n-1]) let(u=i/d) (1-u)*a + u*b];
+
 
 // Section: Undef Safe Math
 
@@ -432,32 +457,6 @@ function posmod(x,m) =
 function modang(x) =
     assert( is_finite(x), "Input must be a finite number.")
     let(xx = posmod(x,360)) xx<180? xx : xx-360;
-
-
-// Function: modrange()
-// Usage:
-//   modrange(x, y, m, <step>)
-// Description:
-//   Returns a normalized list of numbers from `x` to `y`, by `step`, modulo `m`.  Wraps if `x` > `y`.
-// Arguments:
-//   x = The start value to constrain.
-//   y = The end value to constrain.
-//   m = Modulo value.
-//   step = Step by this amount.
-// Examples:
-//   modrange(90,270,360, step=45);   // Returns: [90,135,180,225,270]
-//   modrange(270,90,360, step=45);   // Returns: [270,315,0,45,90]
-//   modrange(90,270,360, step=-45);  // Returns: [90,45,0,315,270]
-//   modrange(270,90,360, step=-45);  // Returns: [270,225,180,135,90]
-function modrange(x, y, m, step=1) =
-    assert( is_finite(x+y+step+m) && !approx(m,0), "Input must be finite numbers and the module value cannot be zero." )
-    let(
-        a = posmod(x, m),
-        b = posmod(y, m),
-        c = step>0? (a>b? b+m : b) 
-            : (a<b? b-m : b)
-    ) [for (i=[a:step:c]) (i%m+m)%m ];
-
 
 
 // Section: Random Number Generation
@@ -1216,72 +1215,85 @@ function compare_vals(a, b) =
 //   a = First list to compare.
 //   b = Second list to compare.
 function compare_lists(a, b) =
-    a==b? 0 
-    :   let(
-          cmps = [ for(i=[0:1:min(len(a),len(b))-1]) 
-                      let( cmp = compare_vals(a[i],b[i]) )
-                      if(cmp!=0) cmp 
-                 ]
-           ) 
-        cmps==[]? (len(a)-len(b)) : cmps[0];
+    a==b? 0 :
+    let(
+        cmps = [
+            for (i = [0:1:min(len(a),len(b))-1])
+            let( cmp = compare_vals(a[i],b[i]) )
+            if (cmp!=0) cmp
+        ]
+    )
+    cmps==[]? (len(a)-len(b)) : cmps[0];
 
 
 // Function: any()
 // Usage:
 //   b = any(l);
+//   b = any(l,func);
 // Description:
 //   Returns true if any item in list `l` evaluates as true.
-//   If `l` is a lists of lists, `any()` is applied recursively to each sublist.
 // Arguments:
 //   l = The list to test for true items.
+//   func = An optional function literal of signature (x), returning bool, to test each list item with.
 // Example:
 //   any([0,false,undef]);  // Returns false.
 //   any([1,false,undef]);  // Returns true.
 //   any([1,5,true]);       // Returns true.
-//   any([[0,0], [0,0]]);   // Returns false.
+//   any([[0,0], [0,0]]);   // Returns true.
 //   any([[0,0], [1,0]]);   // Returns true.
-function any(l) =
+function any(l, func) =
     assert(is_list(l), "The input is not a list." )
-    _any(l);
+    assert(func==undef || is_func(func))
+    is_func(func)
+      ? _any_func(l, func)
+      : _any_bool(l);
 
-function _any(l, i=0, succ=false) =
-    (i>=len(l) || succ)? succ :
-    _any(
-        l, i+1, 
-        succ = is_list(l[i]) ? _any(l[i]) : !(!l[i])
-    );
+function _any_func(l, func, i=0, out=false) =
+    i >= len(l) || out? out :
+    _any_func(l, func, i=i+1, out=out || func(l[i]));
+
+function _any_bool(l, i=0, out=false) =
+    i >= len(l) || out? out :
+    _any_bool(l, i=i+1, out=out || l[i]);
 
 
 // Function: all()
 // Usage:
 //   b = all(l);
+//   b = all(l,func);
 // Description:
-//   Returns true if all items in list `l` evaluate as true.
-//   If `l` is a lists of lists, `all()` is applied recursively to each sublist.
+//   Returns true if all items in list `l` evaluate as true.  If `func` is given a function liteal
+//   of signature (x), returning bool, then that function literal is evaluated for each list item.
 // Arguments:
 //   l = The list to test for true items.
+//   func = An optional function literal of signature (x), returning bool, to test each list item with.
 // Example:
 //   all([0,false,undef]);  // Returns false.
 //   all([1,false,undef]);  // Returns false.
 //   all([1,5,true]);       // Returns true.
-//   all([[0,0], [0,0]]);   // Returns false.
-//   all([[0,0], [1,0]]);   // Returns false.
+//   all([[0,0], [0,0]]);   // Returns true.
+//   all([[0,0], [1,0]]);   // Returns true.
 //   all([[1,1], [1,1]]);   // Returns true.
-function all(l) =
-    assert( is_list(l), "The input is not a list." )
-    _all(l);
+function all(l, func) =
+    assert(is_list(l), "The input is not a list.")
+    assert(func==undef || is_func(func))
+    is_func(func)
+      ? _all_func(l, func)
+      : _all_bool(l);
 
-function _all(l, i=0, fail=false) =
-    (i>=len(l) || fail)? !fail :
-    _all(
-        l, i+1,
-        fail = is_list(l[i]) ? !_all(l[i]) : !l[i]
-    ) ;
+function _all_func(l, func, i=0, out=true) =
+    i >= len(l) || !out? out :
+    _all_func(l, func, i=i+1, out=out && func(l[i]));
+
+function _all_bool(l, i=0, out=true) =
+    i >= len(l) || !out? out :
+    _all_bool(l, i=i+1, out=out && l[i]);
 
 
 // Function: count_true()
 // Usage:
-//   n = count_true(l)
+//   n = count_true(l,<nmax=>)
+//   n = count_true(l,func,<nmax=>)
 // Description:
 //   Returns the number of items in `l` that evaluate as true.
 //   If `l` is a lists of lists, this is applied recursively to each
@@ -1289,24 +1301,38 @@ function _all(l, i=0, fail=false) =
 //   in all recursive sublists.
 // Arguments:
 //   l = The list to test for true items.
-//   nmax = If given, stop counting if `nmax` items evaluate as true.
+//   func = An optional function literal of signature (x), returning bool, to test each list item with.
+//   ---
+//   nmax = Max number of true items to count.  Default: `undef` (no limit)
 // Example:
 //   count_true([0,false,undef]);  // Returns 0.
 //   count_true([1,false,undef]);  // Returns 1.
 //   count_true([1,5,false]);      // Returns 2.
 //   count_true([1,5,true]);       // Returns 3.
-//   count_true([[0,0], [0,0]]);   // Returns 0.
-//   count_true([[0,0], [1,0]]);   // Returns 1.
-//   count_true([[1,1], [1,1]]);   // Returns 4.
-//   count_true([[1,1], [1,1]], nmax=3);  // Returns 3.
-function _count_true_rec(l, nmax, _cnt=0, _i=0) =
-    _i>=len(l) || (is_num(nmax) && _cnt>=nmax)? _cnt :
-    _count_true_rec(l, nmax, _cnt=_cnt+(l[_i]?1:0), _i=_i+1);
+//   count_true([[0,0], [0,0]]);   // Returns 2.
+//   count_true([[0,0], [1,0]]);   // Returns 2.
+//   count_true([[1,1], [1,1]]);   // Returns 2.
+//   count_true([[1,1], [1,1]], nmax=1);  // Returns 1.
+function count_true(l, func, nmax) = 
+    assert(is_list(l))
+    assert(func==undef || is_func(func))
+    is_func(func)
+      ? _count_true_func(l, func, nmax)
+      : _count_true_bool(l, nmax);
 
-function count_true(l, nmax) = 
-    is_undef(nmax)? len([for (x=l) if(x) 1]) :
-    !is_list(l) ? ( l? 1: 0) :
-    _count_true_rec(l, nmax);
+function _count_true_func(l, func, nmax, i=0, out=0) =
+    i >= len(l) || (nmax!=undef && out>=nmax) ? out :
+    _count_true_func(
+        l, func, nmax, i = i + 1,
+        out = out + (func(l[i])? 1:0)
+    );
+
+function _count_true_bool(l, nmax, i=0, out=0) =
+    i >= len(l) || (nmax!=undef && out>=nmax) ? out :
+    _count_true_bool(
+        l, nmax, i = i + 1,
+        out = out + (l[i]? 1:0)
+    );
 
 
 
@@ -1573,6 +1599,7 @@ function c_ident(n) = [for (i = [0:1:n-1]) [for (j = [0:1:n-1]) (i==j)?[1,0]:[0,
 function c_norm(z) = norm_fro(z);
 
 
+
 // Section: Polynomials
 
 // Function: quadratic_roots()
@@ -1623,6 +1650,7 @@ function polynomial(p,z,k,total) =
     polynomial( _poly_trim(p), z, 0, is_num(z) ? 0 : [0,0])
   : k==len(p) ? total
   : polynomial(p,z,k+1, is_num(z) ? total*z+p[k] : c_mul(total,z)+[p[k],0]);
+
 
 // Function: poly_mult()
 // Usage:

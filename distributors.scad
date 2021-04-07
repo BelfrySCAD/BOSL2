@@ -40,24 +40,30 @@ module move_copies(a=[[0,0,0]])
 }
 
 
-// Module: line_of()
+// Function&Module: line_of()
 //
 // Usage: Spread `n` copies by a given spacing
-//   line_of(spacing, [n], [p1]) ...
+//   line_of(spacing, <n>, <p1=>) ...
 // Usage: Spread copies every given spacing along the line
-//   line_of(spacing, l, [p1]) ...
+//   line_of(spacing, <l=>, <p1=>) ...
 // Usage: Spread `n` copies along the length of the line
-//   line_of(l, [n], [p1]) ...
+//   line_of(<n=>, <l=>, <p1=>) ...
 // Usage: Spread `n` copies along the line from `p1` to `p2`
-//   line_of(p1, p2, [n]) ...
+//   line_of(<n=>, <p1=>, <p2=>) ...
 // Usage: Spread copies every given spacing, centered along the line from `p1` to `p2`
-//   line_of(p1, p2, spacing) ...
-//
+//   line_of(<spacing>, <p1=>, <p2=>) ...
+// Usage: As a function
+//   pts = line_of(<spacing>, <n>, <p1=>);
+//   pts = line_of(<spacing>, <l=>, <p1=>);
+//   pts = line_of(<n=>, <l=>, <p1=>);
+//   pts = line_of(<n=>, <p1=>, <p2=>);
+//   pts = line_of(<spacing>, <p1=>, <p2=>);
 // Description:
-//   Copies `children()` at one or more evenly spread positions along a line. By default, the line
-//   will be centered at the origin, unless the starting point `p1` is given.  The line will be
-//   pointed towards `RIGHT` (X+) unless otherwise given as a vector in `l`, `spacing`, or `p1`/`p2`.
-//   The spread is specified in one of several ways:
+//   When called as a function, returns a list of points at evenly spread positions along a line.
+//   When called as a module, copies `children()` at one or more evenly spread positions along a line.
+//   By default, the line will be centered at the origin, unless the starting point `p1` is given.
+//   The line will be pointed towards `RIGHT` (X+) unless otherwise given as a vector in `l`,
+//   `spacing`, or `p1`/`p2`.  The spread is specified in one of several ways:
 //   .
 //   If You Know...                   | Then Use Something Like...
 //   -------------------------------- | --------------------------------
@@ -74,6 +80,7 @@ module move_copies(a=[[0,0,0]])
 // Arguments:
 //   spacing = Either the scalar spacing distance along the X+ direction, or the vector giving both the direction and spacing distance between each set of copies.
 //   n = Number of copies to distribute along the line. (Default: 2)
+//   ---
 //   l = Either the scalar length of the line, or a vector giving both the direction and length of the line.
 //   p1 = If given, specifies the starting point of the line.
 //   p2 = If given with `p1`, specifies the ending point of line, and indirectly calculates the line length.
@@ -102,39 +109,41 @@ module move_copies(a=[[0,0,0]])
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
+// Example(2D):
+//   pts = line_of([10,5],n=5);
+//   move_copies(pts) circle(d=2);
 module line_of(spacing, n, l, p1, p2)
 {
-    assert(is_undef(spacing) || is_finite(spacing) || is_vector(spacing));
-    assert(is_undef(n) || is_finite(n));
-    assert(is_undef(l) || is_finite(l) || is_vector(l));
-    assert(is_undef(p1) || is_vector(p1));
-    assert(is_undef(p2) || is_vector(p2));
-    ll = (
-        !is_undef(l)? scalar_vec3(l, 0) :
-        (!is_undef(spacing) && !is_undef(n))? (n * scalar_vec3(spacing, 0)) :
-        (!is_undef(p1) && !is_undef(p2))? point3d(p2-p1) :
-        undef
-    );
-    cnt = (
-        !is_undef(n)? n :
-        (!is_undef(spacing) && !is_undef(ll))? floor(norm(ll) / norm(scalar_vec3(spacing, 0)) + 1.000001) :
-        2
-    );
-    spc = (
-        cnt<=1? [0,0,0] :
-        is_undef(spacing)? (ll/(cnt-1)) :
-        is_num(spacing) && !is_undef(ll)? (ll/(cnt-1)) :
-        scalar_vec3(spacing, 0)
-    );
-    assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `line_of()`.");
-    spos = !is_undef(p1)? point3d(p1) : -(cnt-1)/2 * spc;
-    for (i=[0:1:cnt-1]) {
-        pos = i * spc + spos;
-        $pos = pos;
+    pts = line_of(spacing=spacing, n=n, l=l, p1=p1, p2=p2);
+    for (i=idx(pts)) {
         $idx = i;
-        translate(pos) children();
+        $pos = pts[i];
+        translate($pos) children();
     }
 }
+
+function line_of(spacing, n, l, p1, p2) =
+    assert(is_undef(spacing) || is_finite(spacing) || is_vector(spacing))
+    assert(is_undef(n) || is_finite(n))
+    assert(is_undef(l) || is_finite(l) || is_vector(l))
+    assert(is_undef(p1) || is_vector(p1))
+    assert(is_undef(p2) || is_vector(p2))
+    let(
+        ll = !is_undef(l)? scalar_vec3(l, 0) :
+            (!is_undef(spacing) && !is_undef(n))? (n * scalar_vec3(spacing, 0)) :
+            (!is_undef(p1) && !is_undef(p2))? point3d(p2-p1) :
+            undef,
+        cnt = !is_undef(n)? n :
+            (!is_undef(spacing) && !is_undef(ll))? floor(norm(ll) / norm(scalar_vec3(spacing, 0)) + 1.000001) :
+            2,
+        spc = cnt<=1? [0,0,0] :
+            is_undef(spacing)? (ll/(cnt-1)) :
+            is_num(spacing) && !is_undef(ll)? (ll/(cnt-1)) :
+            scalar_vec3(spacing, 0)
+    )
+    assert(!is_undef(cnt), "Need two of `spacing`, 'l', 'n', or `p1`/`p2` arguments in `line_of()`.")
+    let( spos = !is_undef(p1)? point3d(p1) : -(cnt-1)/2 * spc )
+    [for (i=[0:1:cnt-1]) i * spc + spos];
 
 
 // Module: xcopies()
