@@ -961,7 +961,7 @@ function plane_from_polygon(poly, fast=false, eps=EPSILON) =
 //   plane_normal(plane);
 // Description:
 //   Returns the unit length normal vector for the given plane.
-// Argument:
+// Arguments:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 function plane_normal(plane) =
     assert( _valid_plane(plane), "Invalid input plane." )
@@ -975,7 +975,7 @@ function plane_normal(plane) =
 //   Returns coeficient D of the normalized plane equation `Ax+By+Cz=D`, or the scalar offset of the plane from the origin.
 //   This value may be negative.
 //   The absolute value of this coefficient is the distance of the plane from the origin.
-// Argument:
+// Arguments:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 function plane_offset(plane) =
     assert( _valid_plane(plane), "Invalid input plane." )
@@ -1048,7 +1048,7 @@ function projection_on_plane(plane, points) =
 //   pt = plane_point_nearest_origin(plane);
 // Description:
 //   Returns the point on the plane that is closest to the origin.
-// Argument:
+// Arguments:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 function plane_point_nearest_origin(plane) =
     let( plane = normalize_plane(plane) )

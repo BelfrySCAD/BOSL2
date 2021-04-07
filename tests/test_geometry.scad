@@ -908,7 +908,7 @@ module test_noncollinear_triple() {
 module test_centroid() {
     $fn = 24;
     assert_approx(centroid(circle(d=100)), [0,0]);
-    assert_approx(centroid(rect([40,60],rounding=10,anchor=LEFT)), [-20,0]);
+    assert_approx(centroid(rect([40,60],rounding=10,anchor=LEFT)), [20,0]);
     assert_approx(centroid(rect([40,60],rounding=10,anchor=FWD)), [0,30]);
     poly = move([1,2.5,3.1],p=rot([12,49,24], p=path3d(circle(10,$fn=33))));
     assert_approx(centroid(poly), [1,2.5,3.1]);
