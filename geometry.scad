@@ -1074,6 +1074,7 @@ function distance_from_plane(plane, point) =
     let( plane = normalize_plane(plane) )
     point3d(plane)* point - plane[3];
 
+
 // Returns [POINT, U] if line intersects plane at one point.
 // Returns [LINE, undef] if the line is on the plane.
 // Returns undef if line is parallel to, but not on the given plane.
@@ -1596,7 +1597,6 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
     ];
 
 
-
 // Function: circle_line_intersection()
 // Usage:
 //   isect = circle_line_intersection(c,r,line,<bounded>,<eps>);
@@ -1629,12 +1629,10 @@ function circle_line_intersection(c,r,line,d,bounded=false,eps=EPSILON) =
              let( offset = sqrt(r*r-d*d),
                   uvec=unit(line[1]-line[0])
              ) [closest-offset*uvec, closest+offset*uvec]
-
   )
   [for(p=isect)
      if ((!bounded[0] || (p-line[0])*(line[1]-line[0])>=0)
         && (!bounded[1] || (p-line[1])*(line[0]-line[1])>=0)) p];
-
 
 
 
@@ -1758,27 +1756,31 @@ function polygon_area(poly, signed=false) =
 // Usage:
 //   is_convex_polygon(poly);
 // Description:
-//   Returns true if the given 2D polygon is convex.  The result is meaningless if the polygon is not simple (self-intersecting).
-//   If the points are collinear the result is true.
+//   Returns true if the given 2D or 3D polygon is convex.  
+//   The result is meaningless if the polygon is not simple (self-intersecting) or non coplanar.
+//   If the points are collinear an error is generated.
 // Arguments:
 //   poly = Polygon to check.
 // Example:
 //   is_convex_polygon(circle(d=50));  // Returns: true
+//   is_convex_polygon(rot([50,120,30], p=path3d(circle(1,$fn=50)))); // Returns: true
 // Example:
 //   spiral = [for (i=[0:36]) let(a=-i*10) (10+i)*[cos(a),sin(a)]];
 //   is_convex_polygon(spiral);  // Returns: false
 function is_convex_polygon(poly) =
-    assert(is_path(poly,dim=2), "The input should be a 2D polygon." )
-    let( l = len(poly) )
-    len([for( i = l-1,
-              c = cross(poly[(i+1)%l]-poly[i], poly[(i+2)%l]-poly[(i+1)%l]),
-              s = sign(c);
-            i>=0 && sign(c)==s;
-              i = i-1,
-              c = i<0? 0: cross(poly[(i+1)%l]-poly[i],poly[(i+2)%l]-poly[(i+1)%l]),
-              s = s==0 ? sign(c) : s
-            ) i
-        ])== l;
+    assert(is_path(poly), "The input should be a 2D or 3D polygon." )
+    let( lp = len(poly),
+         p0 = poly[0] )
+    assert( lp>=3 , "A polygon must have at least 3 points" )
+    let( crosses = [for(i=[0:1:lp-1]) cross(poly[(i+1)%lp]-poly[i], poly[(i+2)%lp]-poly[(i+1)%lp]) ] )
+    len(p0)==2
+    ?   assert( !approx(max(crosses)) && !approx(min(crosses)), "The points are collinear" )
+        min(crosses) >=0 || max(crosses)<=0
+    :   let( prod = crosses*sum(crosses),
+             minc = min(prod),
+             maxc = max(prod) )
+        assert( !approx(maxc-minc), "The points are collinear" )
+        minc>=0 || maxc<=0;
 
 
 // Function: polygon_shift()

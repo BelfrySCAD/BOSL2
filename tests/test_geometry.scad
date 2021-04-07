@@ -844,6 +844,7 @@ module test_polygon_area() {
 module test_is_convex_polygon() {
     assert(is_convex_polygon([[1,1],[-1,1],[-1,-1],[1,-1]]));
     assert(is_convex_polygon(circle(r=50,$fn=1000)));
+    assert(is_convex_polygon(rot([50,120,30], p=path3d(circle(1,$fn=50)))));
     assert(!is_convex_polygon([[1,1],[0,0],[-1,1],[-1,-1],[1,-1]]));
 }
 *test_is_convex_polygon();
