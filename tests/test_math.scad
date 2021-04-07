@@ -299,15 +299,6 @@ module test_modang() {
 test_modang();
 
 
-module test_modrange() {
-    assert_equal(modrange(-5,5,3), [1,2]);
-    assert_equal(modrange(-1,4,3), [2,0,1]);
-    assert_equal(modrange(1,8,10,step=2), [1,3,5,7]);
-    assert_equal(modrange(5,12,10,step=2), [5,7,9,1]);
-}
-test_modrange();
-
-
 module test_sqr() {
     assert_equal(sqr(-3), 9);
     assert_equal(sqr(0), 0);
@@ -738,11 +729,14 @@ module test_any() {
     assert_equal(any([0,false,undef]), false);
     assert_equal(any([1,false,undef]), true);
     assert_equal(any([1,5,true]), true);
-    assert_equal(any([[0,0], [0,0]]), false);
+    assert_equal(any([[0,0], [0,0]]), true);
     assert_equal(any([[0,0], [1,0]]), true);
     assert_equal(any([[false,false],[[false,[false],[[[true]]]],false],[false,false]]), true);
-    assert_equal(any([[false,false],[[false,[false],[[[false]]]],false],[false,false]]), false);
+    assert_equal(any([[false,false],[[false,[false],[[[false]]]],false],[false,false]]), true);
     assert_equal(any([]), false);
+    assert_equal(any([1,3,5,7,9], function (a) a%2==0),false);
+    assert_equal(any([1,3,6,7,9], function (a) a%2==0),true);
+    assert_equal(any([1,3,5,7,9], function (a) a%2!=0),true);
 }
 test_any();
 
@@ -751,12 +745,15 @@ module test_all() {
     assert_equal(all([0,false,undef]), false);
     assert_equal(all([1,false,undef]), false);
     assert_equal(all([1,5,true]), true);
-    assert_equal(all([[0,0], [0,0]]), false);
-    assert_equal(all([[0,0], [1,0]]), false);
+    assert_equal(all([[0,0], [0,0]]), true);
+    assert_equal(all([[0,0], [1,0]]), true);
     assert_equal(all([[1,1], [1,1]]), true);
-    assert_equal(all([[true,true],[[true,[true],[[[true]]]],true],[true,true]]), true);    
-    assert_equal(all([[true,true],[[true,[true],[[[false]]]],true],[true,true]]), false);
+    assert_equal(all([[true,true],[[true,[true],[[[true]]]],true],[true,true]]), true);
+    assert_equal(all([[true,true],[[true,[true],[[[false]]]],true],[true,true]]), true);
     assert_equal(all([]), true);
+    assert_equal(all([1,3,5,7,9], function (a) a%2==0),false);
+    assert_equal(all([1,3,6,8,9], function (a) a%2==0),false);
+    assert_equal(all([1,3,5,7,9], function (a) a%2!=0),true);
 }
 test_all();
 
@@ -770,6 +767,9 @@ module test_count_true() {
     assert_equal(count_true([[0,0], [1,0]]), 2);
     assert_equal(count_true([[1,1], [1,1]]), 2);
     assert_equal(count_true([1,1,1,1,1], nmax=3), 3);
+    assert_equal(count_true([1,3,5,7,9], function (a) a%2==0),0);
+    assert_equal(count_true([1,3,6,8,9], function (a) a%2==0),2);
+    assert_equal(count_true([1,3,5,7,9], function (a) a%2!=0),5);
 }
 test_count_true();
 
@@ -789,6 +789,7 @@ module test_factorial() {
 }
 test_factorial();
 
+
 module test_binomial() {
     assert_equal(binomial(1), [1,1]);
     assert_equal(binomial(2), [1,2,1]);
@@ -796,6 +797,7 @@ module test_binomial() {
     assert_equal(binomial(5), [1,5,10,10,5,1]);
 }
 test_binomial();
+
 
 module test_binomial_coefficient() {
     assert_equal(binomial_coefficient(2,1), 2);
@@ -815,8 +817,8 @@ module test_gcd() {
     assert_equal(gcd(39, 101),1);
     assert_equal(gcd(15,-25), 5);
     assert_equal(gcd(-15,25), 5);
-    assert_equal(gcd(5,0),5);
-    assert_equal(gcd(0,5),5);
+    assert_equal(gcd(5,0), 5);
+    assert_equal(gcd(0,5), 5);
 }
 test_gcd();
 
