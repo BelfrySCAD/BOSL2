@@ -38,7 +38,6 @@ function typeof(x) =
     "invalid";
 
 
-
 // Function: is_type()
 // Usage:
 //   bool = is_type(x, types);
@@ -274,7 +273,8 @@ function is_bool_list(list, length) =
 // Topics: Undef Handling
 // See Also: first_defined(), one_defined(), num_defined()
 // Description:
-//   Returns the value given as `v` if it is not `undef`.  Otherwise, returns the value of `dflt`.
+//   Returns the value given as `v` if it is not `undef`.
+//   Otherwise, returns the value of `dflt`.
 // Arguments:
 //   v = Value to pass through if not `undef`.
 //   dflt = Value to return if `v` *is* `undef`.
@@ -292,6 +292,8 @@ function default(v,dflt=undef) = is_undef(v)? dflt : v;
 // Arguments:
 //   v = The list whose items are being checked.
 //   recursive = If true, sublists are checked recursively for defined values.  The first sublist that has a defined item is returned.
+// Examples:
+//   val = first_defined([undef,7,undef,true]);  // Returns: 1
 function first_defined(v,recursive=false,_i=0) =
     _i<len(v) && (
         is_undef(v[_i]) || (
@@ -604,7 +606,6 @@ function segs(r) =
 
 // Module: no_children()
 // Topics: Error Checking
-// See Also: no_function(), no_module()
 // Usage:
 //   no_children($children);
 // Description:
@@ -612,6 +613,7 @@ function segs(r) =
 //   as indicated by its argument.
 // Arguments:
 //   $children = number of children the module has.  
+// See Also: no_function(), no_module()
 // Example:
 //   module foo() {
 //       no_children($children);
@@ -650,6 +652,7 @@ module no_module() {
     assert(false, str("You called ",parent_module(1),"() as a module but it is available only as a function"));
 }    
   
+
 
 // Section: Testing Helpers
 

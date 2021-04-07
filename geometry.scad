@@ -17,10 +17,10 @@
 // Arguments:
 //   point = The point to test.
 //   edge = Array of two points forming the line segment to test against.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function point_on_segment2d(point, edge, eps=EPSILON) =
     assert( is_vector(point,2), "Invalid point." )
-    assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     assert( _valid_line(edge,2,eps=eps), "Invalid segment." )
     let( dp = point-edge[0],
          de = edge[1]-edge[0],
@@ -74,12 +74,12 @@ function point_left_of_line2d(point, line) =
 //   a = First point or list of points.
 //   b = Second point or undef; it should be undef if `c` is undef
 //   c = Third point or undef.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function collinear(a, b, c, eps=EPSILON) =
     assert( is_path([a,b,c],dim=undef)
             || ( is_undef(b) && is_undef(c) && is_path(a,dim=undef) ),
             "Input should be 3 points or a list of points with same dimension.")
-    assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let( points = is_def(c) ? [a,b,c]: a )
     len(points)<3 ? true
     : noncollinear_triple(points,error=false,eps=eps)==[];
@@ -151,10 +151,11 @@ function _general_line_intersection(s1,s2,eps=EPSILON) =
 // Arguments:
 //   l1 = First 2D line, given as a list of two 2D points on the line.
 //   l2 = Second 2D line, given as a list of two 2D points on the line.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function line_intersection(l1,l2,eps=EPSILON) =
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
     assert( _valid_line(l1,dim=2,eps=eps) &&_valid_line(l2,dim=2,eps=eps), "Invalid line(s)." )
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let(isect = _general_line_intersection(l1,l2,eps=eps))
     isect[0];
 
@@ -168,9 +169,9 @@ function line_intersection(l1,l2,eps=EPSILON) =
 // Arguments:
 //   line = The unbounded 2D line, defined by two 2D points on the line.
 //   ray = The 2D ray, given as a list `[START,POINT]` of the 2D start-point START, and a 2D point POINT on the ray.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function line_ray_intersection(line,ray,eps=EPSILON) =
-    assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     assert( _valid_line(line,dim=2,eps=eps) && _valid_line(ray,dim=2,eps=eps), "Invalid line or ray." )
     let(
         isect = _general_line_intersection(line,ray,eps=eps)
@@ -188,9 +189,9 @@ function line_ray_intersection(line,ray,eps=EPSILON) =
 // Arguments:
 //   line = The unbounded 2D line, defined by two 2D points on the line.
 //   segment = The bounded 2D line segment, given as a list of the two 2D endpoints of the segment.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function line_segment_intersection(line,segment,eps=EPSILON) =
-    assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     assert( _valid_line(line,  dim=2,eps=eps) &&_valid_line(segment,dim=2,eps=eps), "Invalid line or segment." )
     let(
         isect = _general_line_intersection(line,segment,eps=eps)
@@ -209,9 +210,9 @@ function line_segment_intersection(line,segment,eps=EPSILON) =
 // Arguments:
 //   r1 = First 2D ray, given as a list `[START,POINT]` of the 2D start-point START, and a 2D point POINT on the ray.
 //   r2 = Second 2D ray, given as a list `[START,POINT]` of the 2D start-point START, and a 2D point POINT on the ray.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function ray_intersection(r1,r2,eps=EPSILON) =
-    assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     assert( _valid_line(r1,dim=2,eps=eps) && _valid_line(r2,dim=2,eps=eps), "Invalid ray(s)." )
     let(
         isect = _general_line_intersection(r1,r2,eps=eps)
@@ -229,10 +230,10 @@ function ray_intersection(r1,r2,eps=EPSILON) =
 // Arguments:
 //   ray = The 2D ray, given as a list `[START,POINT]` of the 2D start-point START, and a 2D point POINT on the ray.
 //   segment = The bounded 2D line segment, given as a list of the two 2D endpoints of the segment.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function ray_segment_intersection(ray,segment,eps=EPSILON) =
     assert( _valid_line(ray,dim=2,eps=eps) && _valid_line(segment,dim=2,eps=eps), "Invalid ray or segment." )
-    assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let(
         isect = _general_line_intersection(ray,segment,eps=eps)
     )
@@ -250,10 +251,10 @@ function ray_segment_intersection(ray,segment,eps=EPSILON) =
 // Arguments:
 //   s1 = First 2D segment, given as a list of the two 2D endpoints of the line segment.
 //   s2 = Second 2D segment, given as a list of the two 2D endpoints of the line segment.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function segment_intersection(s1,s2,eps=EPSILON) =
     assert( _valid_line(s1,dim=2,eps=eps) && _valid_line(s2,dim=2,eps=eps), "Invalid segment(s)." )
-    assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let(
         isect = _general_line_intersection(s1,s2,eps=eps)
     )
@@ -461,7 +462,7 @@ function segment_closest_point(seg,pt) =
 //   eps = How much variance is allowed in testing each point against the line.  Default: `EPSILON` (1e-9)
 function line_from_points(points, fast=false, eps=EPSILON) =
     assert( is_path(points,dim=undef), "Improper point list." )
-    assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let( pb = furthest_point(points[0],points) )
     approx(norm(points[pb]-points[0]),0) ? undef :
     fast || collinear(points) ? [points[pb], points[0]] : undef;
@@ -810,6 +811,10 @@ function adj_opp_to_ang(adj,opp) =
 // Description:
 //   Returns the area of a triangle formed between three 2D or 3D vertices.
 //   Result will be negative if the points are 2D and in clockwise order.
+// Arguments:
+//   a = The first vertex of the triangle.
+//   b = The second vertex of the triangle.
+//   c = The third vertex of the triangle.
 // Examples:
 //   triangle_area([0,0], [5,10], [10,0]);  // Returns -50
 //   triangle_area([10,0], [5,10], [0,0]);  // Returns 50
@@ -877,6 +882,9 @@ function plane3pt_indexed(points, i1, i2, i3) =
 //   plane_from_normal(normal, [pt])
 // Description:
 //   Returns a plane defined by a normal vector and a point.
+// Arguments:
+//   normal = Normal vector to the plane to find.
+//   pt = Point 3D on the plane to find.
 // Example:
 //   plane_from_normal([0,0,1], [2,2,2]);  // Returns the xy plane passing through the point (2,2,2)
 function plane_from_normal(normal, pt=[0,0,0]) =
@@ -896,7 +904,7 @@ function plane_from_normal(normal, pt=[0,0,0]) =
 // Arguments:
 //   points = The list of points to find the plane of.
 //   fast = If true, don't verify that all points in the list are coplanar.  Default: false
-//   eps = How much variance is allowed in testing that each point is on the same plane.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 // Example(3D):
 //   xyzpath = rot(45, v=[-0.3,1,0], p=path3d(star(n=6,id=70,d=100), 70));
 //   plane = plane_from_points(xyzpath);
@@ -905,9 +913,8 @@ function plane_from_normal(normal, pt=[0,0,0]) =
 //   move(cp) rot(from=UP,to=plane_normal(plane)) anchor_arrow();
 function plane_from_points(points, fast=false, eps=EPSILON) =
     assert( is_path(points,dim=3), "Improper 3d point list." )
-    assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let(
-        points = deduplicate(points),
         indices = noncollinear_triple(points,error=false)
     )
     indices==[] ? undef :
@@ -931,7 +938,7 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
 // Arguments:
 //   poly = The planar 3D polygon to find the plane of.
 //   fast = If true, doesn't verify that all points in the polygon are coplanar.  Default: false
-//   eps = How much variance is allowed in testing that each point is on the same plane.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 // Example(3D):
 //   xyzpath = rot(45, v=[0,1,0], p=path3d(star(n=5,step=2,d=100), 70));
 //   plane = plane_from_polygon(xyzpath);
@@ -940,7 +947,7 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
 //   move(cp) rot(from=UP,to=plane_normal(plane)) anchor_arrow();
 function plane_from_polygon(poly, fast=false, eps=EPSILON) =
     assert( is_path(poly,dim=3), "Invalid polygon." )
-    assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let(
         poly = deduplicate(poly),
         n = polygon_normal(poly),
@@ -954,6 +961,8 @@ function plane_from_polygon(poly, fast=false, eps=EPSILON) =
 //   plane_normal(plane);
 // Description:
 //   Returns the unit length normal vector for the given plane.
+// Arguments:
+//   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 function plane_normal(plane) =
     assert( _valid_plane(plane), "Invalid input plane." )
     unit([plane.x, plane.y, plane.z]);
@@ -966,6 +975,8 @@ function plane_normal(plane) =
 //   Returns coeficient D of the normalized plane equation `Ax+By+Cz=D`, or the scalar offset of the plane from the origin.
 //   This value may be negative.
 //   The absolute value of this coefficient is the distance of the plane from the origin.
+// Arguments:
+//   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 function plane_offset(plane) =
     assert( _valid_plane(plane), "Invalid input plane." )
     plane[3]/norm([plane.x, plane.y, plane.z]);
@@ -1037,6 +1048,8 @@ function projection_on_plane(plane, points) =
 //   pt = plane_point_nearest_origin(plane);
 // Description:
 //   Returns the point on the plane that is closest to the origin.
+// Arguments:
+//   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 function plane_point_nearest_origin(plane) =
     let( plane = normalize_plane(plane) )
     point3d(plane) * plane[3];
@@ -1053,15 +1066,13 @@ function plane_point_nearest_origin(plane) =
 //   towards.  If the point is behind the plane, then the distance returned
 //   will be negative.  The normal of the plane is the same as [A,B,C].
 // Arguments:
-//   plane = The [A,B,C,D] values for the equation of the plane.
+//   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 //   point = The distance evaluation point.
 function distance_from_plane(plane, point) =
     assert( _valid_plane(plane), "Invalid input plane." )
     assert( is_vector(point,3), "The point should be a 3D point." )
     let( plane = normalize_plane(plane) )
     point3d(plane)* point - plane[3];
-
-
 
 // Returns [POINT, U] if line intersects plane at one point.
 // Returns [LINE, undef] if the line is on the plane.
@@ -1119,7 +1130,7 @@ function plane_line_angle(plane, line) =
 //   plane = The [A,B,C,D] values for the equation of the plane.
 //   line = A list of two distinct 3D points that are on the line.
 //   bounded = If false, the line is considered unbounded.  If true, it is treated as a bounded line segment.  If given as `[true, false]` or `[false, true]`, the boundedness of the points are specified individually, allowing the line to be treated as a half-bounded ray.  Default: false (unbounded)
-//   eps = The tolerance value in determining whether the line is parallel to the plane.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
     assert(_valid_plane(plane,eps=eps) && _valid_line(line,dim=3,eps=eps), "Invalid plane and/or line.")
@@ -1148,7 +1159,7 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 //   poly = The 3D planar polygon to find the intersection with.
 //   line = A list of two distinct 3D points on the line.
 //   bounded = If false, the line is considered unbounded.  If true, it is treated as a bounded line segment.  If given as `[true, false]` or `[false, true]`, the boundedness of the points are specified individually, allowing the line to be treated as a half-bounded ray.  Default: false (unbounded)
-//   eps = The tolerance value in determining whether the line is parallel to the plane.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
     assert(is_path(poly,dim=3), "Invalid polygon." )
@@ -1203,6 +1214,10 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
 //   If you give three planes the intersection is returned as a point.  If you give two planes the intersection
 //   is returned as a list of two points on the line of intersection.  If any two input planes are parallel
 //   or coincident then returns undef.
+// Arguments:
+//   plane1 = The [A,B,C,D] coefficients for the first plane equation `Ax+By+Cz=D`.
+//   plane2 = The [A,B,C,D] coefficients for the second plane equation `Ax+By+Cz=D`.
+//   plane3 = The [A,B,C,D] coefficients for the third plane equation `Ax+By+Cz=D`.
 function plane_intersection(plane1,plane2,plane3) =
     assert( _valid_plane(plane1) && _valid_plane(plane2) && (is_undef(plane3) ||_valid_plane(plane3)),
                 "The input must be 2 or 3 planes." )
@@ -1229,10 +1244,10 @@ function plane_intersection(plane1,plane2,plane3) =
 //   Returns true if the given 3D points are non-collinear and are on a plane.
 // Arguments:
 //   points = The points to test.
-//   eps = How much variance is allowed in the planarity test.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function coplanar(points, eps=EPSILON) =
     assert( is_path(points,dim=3) , "Input should be a list of 3D points." )
-    assert( is_finite(eps) && eps>=0, "The tolerance should be a non-negative number." )
+    assert( is_finite(eps) && eps>=0, "The tolerance should be a non-negative value." )
     len(points)<=2 ? false
     :   let( ip = noncollinear_triple(points,error=false,eps=eps) )
         ip == [] ? false :
@@ -1249,7 +1264,7 @@ function coplanar(points, eps=EPSILON) =
 // Arguments:
 //   plane = The plane to test the points on.
 //   points = The list of 3D points to test.
-//   eps = How much variance is allowed in the planarity testing.  Default: `EPSILON` (1e-9)
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function points_on_plane(points, plane, eps=EPSILON) =
     assert( _valid_plane(plane), "Invalid plane." )
     assert( is_matrix(points,undef,3) && len(points)>0, "Invalid pointlist." ) // using is_matrix it accepts len(points)==1
@@ -1268,7 +1283,7 @@ function points_on_plane(points, plane, eps=EPSILON) =
 //   plane that the normal points towards.  The normal of the plane is the
 //   same as [A,B,C].
 // Arguments:
-//   plane = The [A,B,C,D] coefficients for the equation of the plane.
+//   plane = The [A,B,C,D] coefficients for the first plane equation `Ax+By+Cz=D`.
 //   point = The 3D point to test.
 function in_front_of_plane(plane, point) =
     distance_from_plane(plane, point) > EPSILON;
@@ -1513,6 +1528,13 @@ function circle_point_tangents(r, d, cp, pt) =
 //   returns only two entries.  If one circle is inside the other one then no tangents exist
 //   so the function returns the empty set.  When the circles are tangent a degenerate tangent line
 //   passes through the point of tangency of the two circles:  this degenerate line is NOT returned.
+// Arguments: 
+//   c1 = Center of the first circle.
+//   r1 = Radius of the first circle.
+//   c2 = Center of the second circle.
+//   r2 = Radius of the second circle.
+//   d1 = Diameter of the first circle.
+//   d2 = Diameter of the second circle.
 // Example(2D): Four tangents, first in green, second in black, third in blue, last in red.
 //   $fn=32;
 //   c1 = [3,4];  r1 = 2;
@@ -1623,11 +1645,15 @@ function circle_line_intersection(c,r,line,d,bounded=false,eps=EPSILON) =
 // Usage:
 //   noncollinear_triple(points);
 // Description:
-//   Finds the indices of three good non-collinear points from the points list `points`.
-//   If all points are collinear, returns [].
+//   Finds the indices of three good non-collinear points from the pointlist `points`.
+//   If all points are collinear returns [] when `error=true` or an error otherwise .
+// Arguments:
+//   points = List of input points.
+//   error = Defines the behaviour for collinear input points. When `true`, produces an error, otherwise returns []. Default: `true`. 
+//   eps = Tolerance for collinearity test. Default: EPSILON.
 function noncollinear_triple(points,error=true,eps=EPSILON) =
     assert( is_path(points), "Invalid input points." )
-    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative number." )
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let(
         pa = points[0],
         b  = furthest_point(pa, points),
@@ -1701,29 +1727,29 @@ function furthest_point(pt, points) =
 //   area = polygon_area(poly);
 // Description:
 //   Given a 2D or 3D planar polygon, returns the area of that polygon.
-//   If the polygon is self-crossing, the results are undefined. For non-planar points the result is undef.
-//   When `signed` is true, a signed area is returned; a positive area indicates a counterclockwise polygon.
+//   If the polygon is self-crossing, the results are undefined. For non-planar 3D polygon the result is undef.
+//   When `signed` is true, a signed area is returned; a positive area indicates a clockwise polygon.
 // Arguments:
-//   poly = polygon to compute the area of.
-//   signed = if true, a signed area is returned (default: false)
+//   poly = Polygon to compute the area of.
+//   signed = If true, a signed area is returned. Default: false.
 function polygon_area(poly, signed=false) =
     assert(is_path(poly), "Invalid polygon." )
     len(poly)<3 ? 0 :
-    let( cpoly = close_path(simplify_path(poly)) )
     len(poly[0])==2
-      ? sum([for(i=[1:1:len(poly)-2]) cross(poly[i]-poly[0],poly[i+1]-poly[0]) ])/2
+      ? let( total = sum([for(i=[1:1:len(poly)-2]) cross(poly[i]-poly[0],poly[i+1]-poly[0]) ])/2 )
+        signed ? total : abs(total)
       : let( plane = plane_from_points(poly) )
         plane==undef? undef :
         let(
-            n = unit(plane_normal(plane)),
+            n = plane_normal(plane),
             total = sum([
-                for(i=[1:1:len(cpoly)-2])
-                let(
-                    v1 = cpoly[i] - cpoly[0],
-                    v2 = cpoly[i+1] - cpoly[0]
-                )
-                cross(v1,v2) * n
-            ])/2
+                for(i=[1:1:len(poly)-2])
+                    let(
+                        v1 = poly[i] - poly[0],
+                        v2 = poly[i+1] - poly[0]
+                    )
+                    cross(v1,v2) * n
+                ])/2
         )
         signed ? total : abs(total);
 
@@ -1734,6 +1760,8 @@ function polygon_area(poly, signed=false) =
 // Description:
 //   Returns true if the given 2D polygon is convex.  The result is meaningless if the polygon is not simple (self-intersecting).
 //   If the points are collinear the result is true.
+// Arguments:
+//   poly = Polygon to check.
 // Example:
 //   is_convex_polygon(circle(d=50));  // Returns: true
 // Example:
@@ -1773,6 +1801,9 @@ function polygon_shift(poly, i) =
 //   polygon_shift_to_closest_point(path, pt);
 // Description:
 //   Given a polygon `poly`, rotates the point ordering so that the first point in the path is the one closest to the given point `pt`.
+// Arguments:
+//   poly = The list of points in the polygon path.
+//   pt = The reference point.
 function polygon_shift_to_closest_point(poly, pt) =
     assert(is_vector(pt), "Invalid point." )
     assert(is_path(poly,dim=len(pt)), "Invalid polygon or incompatible dimension with the point." )
@@ -1876,30 +1907,33 @@ function align_polygon(reference, poly, angles, cp) =
 // Description:
 //   Given a simple 2D polygon, returns the 2D coordinates of the polygon's centroid.
 //   Given a simple 3D planar polygon, returns the 3D coordinates of the polygon's centroid.
-//   If the polygon is self-intersecting, the results are undefined.
-function centroid(poly) =
+//   Collinear points produce an error.  The results are meaningless for self-intersecting
+//   polygons or an error is produced.
+// Arguments:
+//   poly = Points of the polygon from which the centroid is calculated.
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
+function centroid(poly, eps=EPSILON) =
     assert( is_path(poly,dim=[2,3]), "The input must be a 2D or 3D polygon." )
-    len(poly[0])==2
-    ? sum([
-            for(i=[0:len(poly)-1])
-            let(segment=select(poly,i,i+1))
-            det2(segment)*sum(segment)
-          ]) / 6 / polygon_area(poly)
-    : let( plane = plane_from_points(poly, fast=true) )
-      assert( !is_undef(plane), "The polygon must be planar." )
-      let(
-        n = plane_normal(plane),
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
+    let(
+        n = len(poly[0])==2 ? 1 :
+            let( 
+                plane = plane_from_points(poly, fast=true) )
+            assert( !is_undef(plane), "The polygon must be planar." )
+            plane_normal(plane),
+        v0 = poly[0] ,
         val = sum([for(i=[1:len(poly)-2])
-                      let(
-                         v0 = poly[0],
-                         v1 = poly[i],
-                         v2 = poly[i+1],
-                         area = cross(v2-v0,v1-v0)*n
-                         )
-                      [ area, (v0+v1+v2)*area ]
-                  ] )
+                        let(
+                           v1 = poly[i],
+                           v2 = poly[i+1],
+                           area = cross(v2-v0,v1-v0)*n
+                           )
+                        [ area, (v0+v1+v2)*area ]
+                    ] )
           )
+      assert(!approx(val[0],0, eps), "The polygon is self-intersecting or its points are collinear.")
       val[1]/val[0]/3;
+
 
 
 // Function: point_in_polygon()
@@ -1910,7 +1944,7 @@ function centroid(poly) =
 //   the specified 2D polygon using either the Nonzero Winding rule or the Even-Odd rule.
 //   See https://en.wikipedia.org/wiki/Nonzero-rule and https://en.wikipedia.org/wiki/Even–odd_rule.
 //   The polygon is given as a list of 2D points, not including the repeated end point.
-//   Returns -1 if the point is outside the polyon.
+//   Returns -1 if the point is outside the polygon.
 //   Returns 0 if the point is on the boundary.
 //   Returns 1 if the point lies in the interior.
 //   The polygon does not need to be simple: it can have self-intersections.
@@ -1920,17 +1954,17 @@ function centroid(poly) =
 //   point = The 2D point to check position of.
 //   poly = The list of 2D path points forming the perimeter of the polygon.
 //   nonzero = The rule to use: true for "Nonzero" rule and false for "Even-Odd" (Default: true )
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function point_in_polygon(point, poly, eps=EPSILON, nonzero=true) =
+//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
+function point_in_polygon(point, poly, nonzero=true, eps=EPSILON) =
     // Original algorithms from http://geomalgorithms.com/a03-_inclusion.html
     assert( is_vector(point,2) && is_path(poly,dim=2) && len(poly)>2,
             "The point and polygon should be in 2D. The polygon should have more that 2 points." )
-    assert( is_finite(eps) && eps>=0, "Invalid tolerance." )
+    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     // Does the point lie on any edges?  If so return 0.
     let(
         on_brd = [for(i=[0:1:len(poly)-1])
                     let( seg = select(poly,i,i+1) )
-                    if( !approx(seg[0],seg[1],eps=EPSILON) )
+                    if( !approx(seg[0],seg[1],eps) )
                         point_on_segment2d(point, seg, eps=eps)? 1:0 ]
         )
     sum(on_brd) > 0
@@ -1954,12 +1988,12 @@ function point_in_polygon(point, poly, eps=EPSILON, nonzero=true) =
                       p0 = poly[i]-point,
                       p1 = poly[(i+1)%n]-point
                       )
-                    if( ( (p1.y>eps && p0.y<=0) || (p1.y<=0 && p0.y>eps) )
-                        &&  0 < p0.x - p0.y *(p1.x - p0.x)/(p1.y - p0.y) )
+                    if( ( (p1.y>eps && p0.y<=eps) || (p1.y<=eps && p0.y>eps) )
+                       &&  -eps < p0.x - p0.y *(p1.x - p0.x)/(p1.y - p0.y) )
                     1
                 ]
-            )
-            2*(len(cross)%2)-1;;
+            ) 
+            2*(len(cross)%2)-1;
 
 
 // Function: polygon_is_clockwise()
@@ -1980,6 +2014,8 @@ function polygon_is_clockwise(poly) =
 //   clockwise_polygon(poly);
 // Description:
 //   Given a 2D polygon path, returns the clockwise winding version of that path.
+// Arguments:
+//   poly = The list of 2D path points for the perimeter of the polygon.
 function clockwise_polygon(poly) =
     assert(is_path(poly,dim=2), "Input should be a 2d polygon")
     polygon_area(poly, signed=true)<0 ? poly : reverse_polygon(poly);
@@ -1990,6 +2026,8 @@ function clockwise_polygon(poly) =
 //   ccw_polygon(poly);
 // Description:
 //   Given a 2D polygon poly, returns the counter-clockwise winding version of that poly.
+// Arguments:
+//   poly = The list of 2D path points for the perimeter of the polygon.
 function ccw_polygon(poly) =
     assert(is_path(poly,dim=2), "Input should be a 2d polygon")
     polygon_area(poly, signed=true)<0 ? reverse_polygon(poly) : poly;
@@ -2000,6 +2038,8 @@ function ccw_polygon(poly) =
 //   reverse_polygon(poly)
 // Description:
 //   Reverses a polygon's winding direction, while still using the same start point.
+// Arguments:
+//   poly = The list of the path points for the perimeter of the polygon.
 function reverse_polygon(poly) =
     assert(is_path(poly), "Input should be a polygon")
     let(lp=len(poly)) [for (i=idx(poly)) poly[(lp-i)%lp]];
@@ -2010,7 +2050,9 @@ function reverse_polygon(poly) =
 //   n = polygon_normal(poly);
 // Description:
 //   Given a 3D planar polygon, returns a unit-length normal vector for the
-//   clockwise orientation of the polygon.
+//   clockwise orientation of the polygon. If the polygon points are collinear, returns `undef`.
+// Arguments:
+//   poly = The list of 3D path points for the perimeter of the polygon.
 function polygon_normal(poly) =
     assert(is_path(poly,dim=3), "Invalid 3D polygon." )
     let(
@@ -2020,7 +2062,7 @@ function polygon_normal(poly) =
             for (i=[1:1:len(poly)-2])
             cross(poly[i+1]-p0, poly[i]-p0)
         ])
-    ) unit(n);
+    ) unit(n,undef);
 
 
 function _split_polygon_at_x(poly, x) =
