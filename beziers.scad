@@ -945,7 +945,7 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
     assert(is_int(splinesteps));
     assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
     polypoints=bezier_path(bezier, splinesteps, N);
-    polygon(points=slice(polypoints, 0, -1));
+    polygon(points=polypoints);
 }
 
 

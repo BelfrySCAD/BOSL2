@@ -812,7 +812,9 @@ function adj_opp_to_ang(adj,opp) =
 //   Returns the area of a triangle formed between three 2D or 3D vertices.
 //   Result will be negative if the points are 2D and in clockwise order.
 // Arguments:
-//   a, b, c = The three vertices of the triangle.
+//   a = The first vertex of the triangle.
+//   b = The second vertex of the triangle.
+//   c = The third vertex of the triangle.
 // Examples:
 //   triangle_area([0,0], [5,10], [10,0]);  // Returns -50
 //   triangle_area([10,0], [5,10], [0,0]);  // Returns 50
@@ -881,7 +883,7 @@ function plane3pt_indexed(points, i1, i2, i3) =
 // Description:
 //   Returns a plane defined by a normal vector and a point.
 // Arguments:
-//   normal = Normal vector to the plane to find..
+//   normal = Normal vector to the plane to find.
 //   pt = Point 3D on the plane to find.
 // Example:
 //   plane_from_normal([0,0,1], [2,2,2]);  // Returns the xy plane passing through the point (2,2,2)
@@ -1905,8 +1907,8 @@ function align_polygon(reference, poly, angles, cp) =
 // Description:
 //   Given a simple 2D polygon, returns the 2D coordinates of the polygon's centroid.
 //   Given a simple 3D planar polygon, returns the 3D coordinates of the polygon's centroid.
-//   Collinear points produce an error.
-//   The results are meaningless for self-intersecting polygons or an error is produced.
+//   Collinear points produce an error.  The results are meaningless for self-intersecting
+//   polygons or an error is produced.
 // Arguments:
 //   poly = Points of the polygon from which the centroid is calculated.
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)

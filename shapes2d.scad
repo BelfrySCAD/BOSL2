@@ -851,7 +851,7 @@ function _turtle_command(command, parm, parm2, state, index) =
         )
         list_set(
             state, [path,step], [
-                concat(state[path], slice(arcpath,1,-1)),
+                concat(state[path], list_tail(arcpath)),
                 rot(lrsign * myangle,p=state[step],planar=true)
             ]
         ) :
@@ -877,7 +877,7 @@ function _turtle_command(command, parm, parm2, state, index) =
         )
         list_set(
             state, [path,step], [
-                concat(state[path], slice(arcpath,1,-1)),
+                concat(state[path], list_tail(arcpath)),
                 rot(delta_angle,p=state[step],planar=true)
             ]
         ) :

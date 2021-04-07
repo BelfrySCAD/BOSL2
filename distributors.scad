@@ -303,9 +303,9 @@ module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
     spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
     gaps2 = [for (gap = gaps) gap+spc];
     spos = dir * -sum(gaps2)/2;
+    spacings = cumsum([0, each gaps2]);
     for (i=[0:1:$children-1]) {
-        totspc = sum(concat([0], slice(gaps2, 0, i)));
-        $pos = spos + totspc * dir;
+        $pos = spos + spacings[i] * dir;
         $idx = i;
         translate($pos) children(i);
     }
@@ -348,9 +348,9 @@ module xdistribute(spacing=10, sizes=undef, l=undef)
     spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
     gaps2 = [for (gap = gaps) gap+spc];
     spos = dir * -sum(gaps2)/2;
+    spacings = cumsum([0, each gaps2]);
     for (i=[0:1:$children-1]) {
-        totspc = sum(concat([0], slice(gaps2, 0, i)));
-        $pos = spos + totspc * dir;
+        $pos = spos + spacings[i] * dir;
         $idx = i;
         translate($pos) children(i);
     }
@@ -393,9 +393,9 @@ module ydistribute(spacing=10, sizes=undef, l=undef)
     spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
     gaps2 = [for (gap = gaps) gap+spc];
     spos = dir * -sum(gaps2)/2;
+    spacings = cumsum([0, each gaps2]);
     for (i=[0:1:$children-1]) {
-        totspc = sum(concat([0], slice(gaps2, 0, i)));
-        $pos = spos + totspc * dir;
+        $pos = spos + spacings[i] * dir;
         $idx = i;
         translate($pos) children(i);
     }
@@ -438,9 +438,9 @@ module zdistribute(spacing=10, sizes=undef, l=undef)
     spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
     gaps2 = [for (gap = gaps) gap+spc];
     spos = dir * -sum(gaps2)/2;
+    spacings = cumsum([0, each gaps2]);
     for (i=[0:1:$children-1]) {
-        totspc = sum(concat([0], slice(gaps2, 0, i)));
-        $pos = spos + totspc * dir;
+        $pos = spos + spacings[i] * dir;
         $idx = i;
         translate($pos) children(i);
     }

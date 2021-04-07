@@ -885,7 +885,7 @@ function assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, 
         [outpath, newfrags]
     ) : let(
         // Path still incomplete.  Continue building it.
-        newpath = concat(path, slice(foundfrag, 1, -1)),
+        newpath = concat(path, list_tail(foundfrag)),
         newfrags = concat([newpath], remainder)
     )
     assemble_a_path_from_fragments(
@@ -1428,7 +1428,7 @@ function path_cut(path,cutdist,closed) =
       cuts = len(cutlist)
   )
   [
-      [ each slice(path,0,cutlist[0][1]),
+      [ each list_head(path,cutlist[0][1]-1),
         if (!approx(cutlist[0][0], path[cutlist[0][1]-1])) cutlist[0][0]
       ],
       for(i=[0:1:cuts-2])
