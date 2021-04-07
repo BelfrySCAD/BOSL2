@@ -481,7 +481,7 @@ module test_circle_3points() {
     radii = rands(10,100,count,seed_value=390);
     angles = rands(0,360,count,seed_value=699);
     // 2D tests.
-    for(i = list_range(count)) {
+    for(i = range(count)) {
         cp = select(coords,i,i+1);
         r = radii[i];
         angs = sort(select(angles,i,i+2));
@@ -506,7 +506,7 @@ module test_circle_3points() {
             assert(approx(res[2], UP));
         }
     }
-    for(i = list_range(count)) {
+    for(i = range(count)) {
         cp = select(coords,i,i+1);
         r = radii[i];
         angs = sort(select(angles,i,i+2));
@@ -532,7 +532,7 @@ module test_circle_3points() {
         }
     }
     // 3D tests.
-    for(i = list_range(count)) {
+    for(i = range(count)) {
         cp = select(coords,i,i+2);
         r = radii[i];
         nrm = unit(select(coords,i+10,i+12));
@@ -559,7 +559,7 @@ module test_circle_3points() {
             assert(approx(res[2], n));
         }
     }
-    for(i = list_range(count)) {
+    for(i = range(count)) {
         cp = select(coords,i,i+2);
         r = radii[i];
         nrm = unit(select(coords,i+10,i+12));
@@ -987,8 +987,8 @@ module test_pointlist_bounds() {
 
 
 module test_closest_point() {
-    ptlist = [for (i=list_range(100)) rands(-100,100,2,seed_value=8463)];
-    testpts = [for (i=list_range(100)) rands(-100,100,2,seed_value=6834)];
+    ptlist = [for (i=range(100)) rands(-100,100,2,seed_value=8463)];
+    testpts = [for (i=range(100)) rands(-100,100,2,seed_value=6834)];
     for (pt = testpts) {
         pidx = closest_point(pt,ptlist);
         dists = [for (p=ptlist) norm(pt-p)];
@@ -1000,8 +1000,8 @@ module test_closest_point() {
 
 
 module test_furthest_point() {
-    ptlist = [for (i=list_range(100)) rands(-100,100,2,seed_value=8463)];
-    testpts = [for (i=list_range(100)) rands(-100,100,2,seed_value=6834)];
+    ptlist = [for (i=range(100)) rands(-100,100,2,seed_value=8463)];
+    testpts = [for (i=range(100)) rands(-100,100,2,seed_value=6834)];
     for (pt = testpts) {
         pidx = furthest_point(pt,ptlist);
         dists = [for (p=ptlist) norm(pt-p)];

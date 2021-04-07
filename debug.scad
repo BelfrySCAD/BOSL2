@@ -377,7 +377,7 @@ module show_anchors(s=10, std=true, custom=true) {
         }
     }
     if (custom) {
-        for (anchor=select($parent_geom,-1)) {
+        for (anchor=last($parent_geom)) {
             attach(anchor[0]) {
                 if(two_d) {
                     anchor_arrow2d(s, color="cyan");

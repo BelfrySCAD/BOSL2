@@ -109,4 +109,5 @@ ENV/
 foo.scad
 BOSL2.wiki
 /ref/
+docsgen_report.json
 

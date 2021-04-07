@@ -194,7 +194,7 @@ include <structs.scad>
 //   square = [[0,0],[1,0],[1,1],[0,1]];
 //   spiral = flatten(repeat(concat(square,reverse(square)),5));  // Squares repeat 10 times, forward and backward
 //   squareind = [for(i=[0:9]) each [i,i,i,i]];                   // Index of the square for each point
-//   z = list_range(40)*.2+squareind;
+//   z = range(40)*.2+squareind;
 //   path3d = hstack(spiral,z);                                   // 3D spiral
 //   rounding = squareind/20;
 //       // Setting k=1 means curvature won't be continuous, but curves are as round as possible
@@ -346,7 +346,7 @@ function _bezcorner(points, parm) =
                         ] : _smooth_bez_fill(points,parm),
                 N = max(3,$fn>0 ?$fn : ceil(bezier_segment_length(P)/$fs))
         )
-        bezier_curve(P,N,endpoint=true);
+        bezier_curve(P,N+1,endpoint=true);
 
 function _chamfcorner(points, parm) =
         let(
@@ -423,13 +423,12 @@ function _rounding_offsets(edgespec,z_dir=1) =
                         ) :
                         edgetype == "circle"? radius==0? [] : [for(i=[1:N]) [radius*(cos(i*90/N)-1), z_dir*abs(radius)*sin(i*90/N)]] :
                         /* smooth */ joint==0 ? [] :
-                        select(
-                                _bezcorner([[0,0],[0,z_dir*abs(joint)],[-joint,z_dir*abs(joint)]], k, $fn=N+2),
-                                1, -1
+                        list_tail(
+                                _bezcorner([[0,0],[0,z_dir*abs(joint)],[-joint,z_dir*abs(joint)]], k, $fn=N+2)
                         )
         )
   
-        quant(extra > 0? concat(offsets, [select(offsets,-1)+[0,z_dir*extra]]) : offsets, 1/1024);
+        quant(extra > 0? concat(offsets, [last(offsets)+[0,z_dir*extra]]) : offsets, 1/1024);
 
 
 
@@ -670,7 +669,7 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
       new_result = [each select(result,loop?nextcut[1]:0,len(revresult)-1-firstcut[1]),
                     each bezpath,
                     nextcut[0],
-                    if (!loop) each select(nextpath,nextcut[1],-1)
+                    if (!loop) each list_tail(nextpath,nextcut[1])
                    ]
   )
   i==len(paths)-(closed?1:2)
@@ -900,7 +899,7 @@ function _make_offset_polyhedron(path,offsets, offset_type, flip_faces, quality,
                                  vertexcount=0, vertices=[], faces=[] )=
         offsetind==len(offsets)? (
                 let(
-                        bottom = list_range(n=len(path),s=vertexcount),
+                        bottom = range(n=len(path),s=vertexcount),
                         oriented_bottom = !flip_faces? bottom : reverse(bottom)
                 ) [vertices, concat(faces,[oriented_bottom])]
         ) : (
@@ -980,8 +979,8 @@ function offset_sweep(
                 : 0,
 
         // "Extra" height enlarges the result beyond the requested height, so subtract it
-        bottom_height = len(offsets_bot)==0 ? 0 : abs(select(offsets_bot,-1)[1]) - struct_val(bottom,"extra"),
-        top_height = len(offsets_top)==0 ? 0 : abs(select(offsets_top,-1)[1]) - struct_val(top,"extra"),
+        bottom_height = len(offsets_bot)==0 ? 0 : abs(last(offsets_bot)[1]) - struct_val(bottom,"extra"),
+        top_height = len(offsets_top)==0 ? 0 : abs(last(offsets_top)[1]) - struct_val(top,"extra"),
 
         height = one_defined([l,h,height], "l,h,height", dflt=u_add(bottom_height,top_height)),
         middle = height-bottom_height-top_height
@@ -1129,7 +1128,7 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset_maxstep, of
   let(
       points = ([for(pt=polygon_shift(mask,origin_index[0])) [xfactor*max(pt.x,0),-max(pt.y,0)]])
   )
-  os_profile(deduplicate(move(-points[1],p=select(points,1,-1))), extra,check_valid,quality,offset_maxstep,offset);
+  os_profile(deduplicate(move(-points[1],p=list_tail(points))), extra,check_valid,quality,offset_maxstep,offset);
 
 
 // Module: convex_offset_extrude()
@@ -1248,8 +1247,8 @@ module convex_offset_extrude(
         offsets_top = _rounding_offsets(top, 1);
 
         // "Extra" height enlarges the result beyond the requested height, so subtract it
-        bottom_height = len(offsets_bot)==0 ? 0 : abs(select(offsets_bot,-1)[1]) - struct_val(bottom,"extra");
-        top_height = len(offsets_top)==0 ? 0 : abs(select(offsets_top,-1)[1]) - struct_val(top,"extra");
+        bottom_height = len(offsets_bot)==0 ? 0 : abs(last(offsets_bot)[1]) - struct_val(bottom,"extra");
+        top_height = len(offsets_top)==0 ? 0 : abs(last(offsets_top)[1]) - struct_val(top,"extra");
 
         height = one_defined([l,h,height], "l,h,height", dflt=u_add(bottom_height,top_height));
         assert(height>=0, "Height must be nonnegative");
@@ -1583,11 +1582,11 @@ function _stroke_end(width,left, right, spec) =
                         cutright = cut[1],
                         // Create updated paths taking into account clipping for end rotation
                         newright = intright?
-                                concat([pathclip[0]],select(right,pathclip[1],-1)) :
-                                concat([pathextend],select(right,1,-1)),
+                                concat([pathclip[0]],list_tail(right,pathclip[1])) :
+                                concat([pathextend],list_tail(right)),
                         newleft = !intright?
-                                concat([pathclip[0]],select(left,pathclip[1],-1)) :
-                                concat([pathextend],select(left,1,-1)),
+                                concat([pathclip[0]],list_tail(left,pathclip[1])) :
+                                concat([pathextend],list_tail(left)),
                         // calculate corner angles, which are different when the cut is negative (outside corner)
                         leftangle = cutleft>=0?
                                 vector_angle([newleft[1],newleft[0],newright[0]])/2 :
@@ -1953,11 +1952,11 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
 function bezier_patch_degenerate(patch, splinesteps=16, reverse=false) =
     assert(is_num(splinesteps), "splinesteps must be a number")
     let(
-        top_degen = patch[0][0] == select(patch[0],-1),
-        bot_degen = select(patch,-1)[0] == select(select(patch,-1),-1),
-        left_degen = patch[0][0] == select(patch,-1)[0],
-        right_degen = select(patch[0],-1) == select(select(patch,-1),-1),
-        samplepts = list_range(splinesteps+1)/splinesteps
+        top_degen = patch[0][0] == last(patch[0]),
+        bot_degen = last(patch)[0] == last(last(patch)),
+        left_degen = patch[0][0] == last(patch)[0],
+        right_degen = last(patch[0]) == last(last(patch)),
+        samplepts = range(splinesteps+1)/splinesteps
     )
     top_degen && bot_degen && left_degen && right_degen ?   // fully degenerate case
         [repeat([patch[0][0]],4), EMPTY_VNF] :
@@ -1965,19 +1964,19 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false) =
         let(  
             pts = bezier_points(subindex(patch,0), samplepts)
         )
-        [[pts,pts,[pts[0]],[select(pts,-1)]], EMPTY_VNF] :
+        [[pts,pts,[pts[0]],[last(pts)]], EMPTY_VNF] :
     left_degen && right_degen ?                             // double degenerate case (sides)
        let(
           pts = bezier_points(patch[0], samplepts)
        )
-       [[[pts[0]], [select(pts,-1)], pts, pts], EMPTY_VNF] :
+       [[[pts[0]], [last(pts)], pts, pts], EMPTY_VNF] :
     !top_degen && !bot_degen ?                             // non-degenerate case
        let(
            k=echo("non-degenerate case"),
            pts = bezier_patch_points(patch, samplepts, samplepts)
        )
        [
-        [subindex(pts,0), subindex(pts,len(pts)-1), pts[0], select(pts,-1)],
+        [subindex(pts,0), subindex(pts,len(pts)-1), pts[0], last(pts)],
         vnf_vertex_array(pts, reverse=reverse)
        ] :
     bot_degen ?                                           // only bottom is degenerate
@@ -1990,22 +1989,22 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false) =
        ] :
     // at this point top_degen is true                   // only top is degenerate
        let(
-           full_degen = patch[1][0] == select(patch[1],-1),
-           rowmax = full_degen ? list_range(splinesteps+1) :
+           full_degen = patch[1][0] == last(patch[1]),
+           rowmax = full_degen ? range(splinesteps+1) :
                                  [for(j=[0:splinesteps]) j<=splinesteps/2 ? 2*j : splinesteps],
            vbb=echo("single degenerate case"),
            bpatch = [for(i=[0:1:len(patch[0])-1]) bezier_points(subindex(patch,i), samplepts)],
            pts = [
                   [bpatch[0][0]],
-                  for(j=[1:splinesteps]) bezier_points(subindex(bpatch,j), list_range(rowmax[j]+1)/rowmax[j])
+                  for(j=[1:splinesteps]) bezier_points(subindex(bpatch,j), range(rowmax[j]+1)/rowmax[j])
                  ],
            vnf = vnf_tri_array(pts, reverse=reverse)
         ) [
             [
              subindex(pts,0),
-             [for(row=pts) select(row,-1)],
+             [for(row=pts) last(row)],
              pts[0],
-             select(pts,-1),
+             last(pts),
             ],
             vnf
           ];

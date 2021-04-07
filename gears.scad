@@ -960,11 +960,11 @@ function bevel_gear(
                 each apply(xflip() * zrot(360*tooth/teeth) * m, path3d(profile))
             ]
         ],
-        thickness = abs(verts1[0][0].z - select(verts1,-1)[0].z),
+        thickness = abs(verts1[0][0].z - last(verts1)[0].z),
         vertices = [for (x=verts1) down(thickness/2, p=reverse(x))],
         sides_vnf = vnf_vertex_array(vertices, caps=false, col_wrap=true, reverse=true),
-        top_verts = select(vertices,-1),
-        bot_verts = select(vertices,0),
+        top_verts = last(vertices),
+        bot_verts = vertices[0],
         gear_pts = len(top_verts),
         face_pts = gear_pts / teeth,
         top_faces =[
@@ -1431,8 +1431,8 @@ function worm_gear(
                 )
             ]
         ],
-        top_verts = select(profiles,-1),
-        bot_verts = select(profiles,0),
+        top_verts = last(profiles),
+        bot_verts = profiles[0],
         face_pts = len(tooth_profile),
         gear_pts = face_pts * teeth,
         top_faces =[

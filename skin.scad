@@ -444,8 +444,8 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
     // Define this to be 1 if a profile is used on either side by a resampling method, zero otherwise.
     profile_resampled = [for(i=idx(profiles)) 
       1-(
-           i==0 ?  method_type[0] * (closed? select(method_type,-1) : 1) :
-           i==len(profiles)-1 ? select(method_type,-1) * (closed ? select(method_type,-2) : 1) :
+           i==0 ?  method_type[0] * (closed? last(method_type) : 1) :
+           i==len(profiles)-1 ? last(method_type) * (closed ? select(method_type,-2) : 1) :
          method_type[i] * method_type[i-1])],
     parts = search(1,[1,for(i=[0:1:len(profile_resampled)-2]) profile_resampled[i]!=profile_resampled[i+1] ? 1 : 0],0),
     plen = [for(i=idx(parts)) (i== len(parts)-1? len(refined_len) : parts[i+1]) - parts[i]],
@@ -534,8 +534,8 @@ function _skin_core(profiles, caps) =
                         prof1 = profiles[0]
                 ) [[for (i=idx(prof1)) plens[0]-1-i]],
                 secondcap = !caps[1] ? [] : let(
-            prof2 = select(profiles,-1),
-            eoff = sum(select(plens,0,-2))
+            prof2 = last(profiles),
+            eoff = sum(list_head(plens))
         ) [[for (i=idx(prof2)) eoff+i]]
     ) [vertices, concat(sidefaces,firstcap,secondcap)];
 
@@ -812,7 +812,7 @@ function _skin_tangent_match(poly1, poly2) =
         small = swap ? poly2 : poly1,
         curve_offset = centroid(small)-centroid(big),
         cutpts = [for(i=[0:len(small)-1]) _find_one_tangent(big, select(small,i,i+1),curve_offset=curve_offset)],
-        shift = select(cutpts,-1)+1,
+        shift = last(cutpts)+1,
         newbig = polygon_shift(big, shift),
         repeat_counts = [for(i=[0:len(small)-1]) posmod(cutpts[i]-select(cutpts,i-1),len(big))],
         newsmall = repeat_entries(small,repeat_counts)
@@ -894,7 +894,7 @@ function associate_vertices(polygons, split, curpoly=0) =
            str("Split ",cursplit," at polygon ",curpoly," has invalid vertices.  Must be in [0:",polylen-1,"]"))
     len(cursplit)==0 ? associate_vertices(polygons,split,curpoly+1) :
     let(
-      splitindex = sort(concat(list_range(polylen), cursplit)),
+      splitindex = sort(concat(range(polylen), cursplit)),
       newpoly = [for(i=[0:len(polygons)-1]) i<=curpoly ? select(polygons[i],splitindex) : polygons[i]]
     )
    associate_vertices(newpoly, split, curpoly+1);
@@ -970,10 +970,10 @@ function sweep(shape, transforms, closed=false, caps) =
         rtrans = reverse(transforms),
         vnfs = [
             for (rgn=regions) each [
-                for (path=select(rgn,0,-1))
+                for (path=rgn)
                     sweep(path, transforms, closed=closed, caps=false),
                 if (fullcaps[0]) region_faces(rgn, transform=transforms[0], reverse=true),
-                if (fullcaps[1]) region_faces(rgn, transform=select(transforms,-1)),
+                if (fullcaps[1]) region_faces(rgn, transform=last(transforms)),
             ],
         ],
         vnf = vnf_merge(vnfs)
@@ -1311,7 +1311,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
   assert(is_integer(symmetry) && symmetry>0, "symmetry must be a positive integer")
 //  let(shape = check_and_fix_path(shape,valid_dim=2,closed=true,name="shape"))
   assert(is_path(path), "input path is not a path")
-  assert(!closed || !approx(path[0],select(path,-1)), "Closed path includes start point at the end")
+  assert(!closed || !approx(path[0],last(path)), "Closed path includes start point at the end")
   let(
     path = path3d(path),
     caps = is_def(caps) ? caps :
@@ -1350,13 +1350,13 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
             // X axis.  Similarly, in the closed==false case the desired and actual transformations can only differ in the twist,
             // so we can need to calculate the twist angle so we can apply a correction, which we distribute uniformly over the whole path.
             reference_rot = closed ? rotations[0] :   
-                         is_undef(last_normal) ? select(rotations,-1) : 
+                         is_undef(last_normal) ? last(rotations) : 
                            let(
-                               last_tangent = select(tangents,-1),
+                               last_tangent = last(tangents),
                                lastynormal = last_normal - (last_normal * last_tangent) * last_tangent
                            )
                          affine3d_frame_map(y=lastynormal, z=last_tangent),
-            mismatch = transpose(select(rotations,-1)) * reference_rot, 
+            mismatch = transpose(last(rotations)) * reference_rot, 
             correction_twist = atan2(mismatch[1][0], mismatch[0][0]),
             // Spread out this extra twist over the whole sweep so that it doesn't occur
             // abruptly as an artifact at the last step.  
@@ -1492,7 +1492,7 @@ function _ofs_vmap(ofs,closed=false) =
     )
     [
      for(entry=ofs[1]) _ofs_face_edge(entry,firstlen),
-     if (!closed) _ofs_face_edge(select(ofs[1],-1),firstlen,second=true)
+     if (!closed) _ofs_face_edge(last(ofs[1]),firstlen,second=true)
     ];
 
 

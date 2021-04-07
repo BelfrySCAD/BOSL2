@@ -442,7 +442,7 @@ function find_anchor(anchor, geom) =
     let(
         cp = select(geom,-3),
         offset = anchor==CENTER? CENTER : select(geom,-2),
-        anchors = select(geom,-1),
+        anchors = last(geom),
         type = geom[0]
     )
     is_string(anchor)? (

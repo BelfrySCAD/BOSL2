@@ -184,6 +184,19 @@ function valid_range(x) =
          : ( x[1]<0 && x[0]>=x[2] ) );
 
 
+// Function: is_func()
+// Usage:
+//   bool = is_func(x);
+// Description:
+//   Returns true if OpenSCAD supports function literals, and the given item is one.
+// Arguments:
+//   x = The value to check against.
+// Example:
+//   f = function (a) a==2;
+//   bool = is_func(f);  // Returns: true
+function is_func(x) = version_num()>20210000 && is_function(x);
+
+
 // Function: is_consistent()
 // Usage:
 //   bool = is_consistent(list, <pattern>);

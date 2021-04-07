@@ -223,7 +223,7 @@ function Q_Cumulative(v, _i=0, _acc=[]) =
         v, _i+1,
         concat(
             _acc,
-            [_i==0 ? v[_i] : Q_Mul(v[_i], select(_acc,-1))]
+            [_i==0 ? v[_i] : Q_Mul(v[_i], last(_acc))]
         )
     );
 
