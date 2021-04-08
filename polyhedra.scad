@@ -118,6 +118,7 @@ function _unique_groups(m) = [
 //     * `"great dodecahedron"`
 //     * `"small stellated dodecahedron"`
 //     * `"great stellated dodecahedron"`
+//     * `"small triambic icosahedron"`
 //
 // Arguments:
 //   name = Name of polyhedron to create.
@@ -147,7 +148,7 @@ function _unique_groups(m) = [
 // Side Effects:
 //   `$faceindex` - Index number of the face
 //   `$face` - Coordinates of the face (2d if rotate_children==true, 3d if not)
-//   `$center` - Polyhedron center in the child coordinate system
+//   `$center` - Face center in the child coordinate system
 //
 // Examples: All of the available polyhedra by name in their native orientation
 //   regular_polyhedron("tetrahedron", facedown=false);
@@ -185,6 +186,7 @@ function _unique_groups(m) = [
 //   regular_polyhedron("great dodecahedron");
 //   regular_polyhedron("small stellated dodecahedron");
 //   regular_polyhedron("great stellated dodecahedron");
+//   regular_polyhedron("small triambic icosahedron");
 // Example: Third Archimedean solid
 //   regular_polyhedron(type="archimedean", index=2);
 // Example(Med): Solids that have 8 or 10 vertex faces
@@ -275,6 +277,10 @@ function _unique_groups(m) = [
 //     %sphere(r=.98);
 //     regular_polyhedron("pentagonal hexecontahedron", or=1,facedown=false);
 //   }
+// Example: Stellate an Archimedian solid, which has mixed faces
+//   regular_polyhedron("truncated icosahedron",stellate=1.5,or=1);
+// Example: Stellate a Catalan solid where faces are not regular
+//   regular_polyhedron("triakis tetrahedron",stellate=0.5,or=1);
 module regular_polyhedron(
     name=undef,
     index=undef,
@@ -330,20 +336,19 @@ module regular_polyhedron(
             }
         }
     }
+    translate(translation)
     if ($children>0) {
         maxrange = repeat ? len(faces)-1 : $children-1;
         for(i=[0:1:maxrange]) {
             // Would like to orient so an edge (longest edge?) is parallel to x axis
-            facepts = move(translation, p=select(scaled_points, faces[i]));
-            center = mean(facepts);
-            rotatedface = rot(from=face_normals[i], to=[0,0,1], p=move(-center, p=facepts));
-            clockwise = sortidx([for(pt=rotatedface) -atan2(pt.y,pt.x)]);
-            $face = rotate_children?
-                        path2d(select(rotatedface,clockwise)) :
-                        select(move(-center,p=facepts), clockwise);
+            facepts = select(scaled_points, faces[i]);
+            $center = -mean(facepts);
+            cfacepts = move($center, p=facepts);
+            $face = rotate_children
+                      ? path2d(rot(from=face_normals[i], to=[0,0,1], p=cfacepts))
+                      : cfacepts;
             $faceindex = i;
-            $center = -translation-center;
-            translate(center)
+            translate(-$center)
             if (rotate_children) {
                 rot(from=[0,0,1], to=face_normals[i])
                 children(i % $children);
@@ -537,6 +542,7 @@ _stellated_polyhedra_ = [
     ["great dodecahedron", "icosahedron", -sqrt(5/3-PHI)],
     ["small stellated dodecahedron", "dodecahedron", sqrt((5+2*sqrt(5))/5)],
     ["great stellated dodecahedron", "icosahedron", sqrt(2/3+PHI)],
+    ["small triambic icosahedron", "icosahedron", sqrt(3/5) - 1/sqrt(3)]
 ];
 
 
@@ -699,7 +705,7 @@ function regular_polyhedron_info(
         face_normals,
         radius_scale*entry[in_radius]
     ] :
-    info == "vnf" ? [move(translation,p=scaled_points), stellate ? faces : face_triangles] : 
+    info == "vnf" ? [move(translation,p=scaled_points), faces] :
     info == "vertices" ? move(translation,p=scaled_points) :
     info == "faces" ? faces :
     info == "face normals" ? face_normals :
@@ -770,15 +776,28 @@ function _facenormal(pts, face) = unit(cross(pts[face[2]]-pts[face[0]], pts[face
 
 // hull() function returns triangulated faces.    This function identifies the vertices that belong to each face
 // by grouping together the face triangles that share normal vectors.    The output gives the face polygon
-// point indices in arbitrary order (not usable as input to a polygon call) and a normal vector.
+// point indices in arbitrary order (not usable as input to a polygon call) and a normal vector.  Finally
+// the faces are ordered based on angle with their center (will always give a valid order for convex polygons).
+// Final return is [ordered_faces, facenormals] where the first is a list of indices into the point list
+// and the second is a list of vectors.  
 
 function _full_faces(pts,faces) =
     let(
         normals = [for(face=faces) quant(_facenormal(pts,face),1e-12)],
         groups = _unique_groups(normals),
         faces = [for(entry=groups) unique(flatten(select(faces, entry)))],
-        facenormals = [for(entry=groups) normals[entry[0]]]
-    ) [faces, facenormals];
+        facenormals = [for(entry=groups) normals[entry[0]]],
+        ordered_faces = [
+            for(i=idx(faces))
+              let(
+                  facepts = select(pts, faces[i]),
+                  center = mean(facepts),
+                  rotatedface = rot(from=facenormals[i], to=[0,0,1], p=move(-center, p=facepts)),
+                  clockwise = sortidx([for(pt=rotatedface) -atan2(pt.y,pt.x)])
+              )
+            select(faces[i],clockwise)
+        ]
+    ) [ordered_faces, facenormals];
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
