@@ -118,6 +118,7 @@ function _unique_groups(m) = [
 //     * `"great dodecahedron"`
 //     * `"small stellated dodecahedron"`
 //     * `"great stellated dodecahedron"`
+//     * `"small triambic icosahedron"`
 //
 // Arguments:
 //   name = Name of polyhedron to create.
@@ -185,6 +186,7 @@ function _unique_groups(m) = [
 //   regular_polyhedron("great dodecahedron");
 //   regular_polyhedron("small stellated dodecahedron");
 //   regular_polyhedron("great stellated dodecahedron");
+//   regular_polyhedron("small triambic icosahedron");
 // Example: Third Archimedean solid
 //   regular_polyhedron(type="archimedean", index=2);
 // Example(Med): Solids that have 8 or 10 vertex faces
@@ -540,6 +542,7 @@ _stellated_polyhedra_ = [
     ["great dodecahedron", "icosahedron", -sqrt(5/3-PHI)],
     ["small stellated dodecahedron", "dodecahedron", sqrt((5+2*sqrt(5))/5)],
     ["great stellated dodecahedron", "icosahedron", sqrt(2/3+PHI)],
+    ["small triambic icosahedron", "icosahedron", sqrt(3/5) - 1/sqrt(3)]
 ];
 
 
