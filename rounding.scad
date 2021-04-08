@@ -194,7 +194,7 @@ include <structs.scad>
 //   square = [[0,0],[1,0],[1,1],[0,1]];
 //   spiral = flatten(repeat(concat(square,reverse(square)),5));  // Squares repeat 10 times, forward and backward
 //   squareind = [for(i=[0:9]) each [i,i,i,i]];                   // Index of the square for each point
-//   z = range(40)*.2+squareind;
+//   z = count(40)*.2+squareind;
 //   path3d = hstack(spiral,z);                                   // 3D spiral
 //   rounding = squareind/20;
 //       // Setting k=1 means curvature won't be continuous, but curves are as round as possible
@@ -899,7 +899,7 @@ function _make_offset_polyhedron(path,offsets, offset_type, flip_faces, quality,
                                  vertexcount=0, vertices=[], faces=[] )=
         offsetind==len(offsets)? (
                 let(
-                        bottom = range(n=len(path),s=vertexcount),
+                        bottom = count(len(path),vertexcount),
                         oriented_bottom = !flip_faces? bottom : reverse(bottom)
                 ) [vertices, concat(faces,[oriented_bottom])]
         ) : (
@@ -1956,7 +1956,7 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false) =
         bot_degen = last(patch)[0] == last(last(patch)),
         left_degen = patch[0][0] == last(patch)[0],
         right_degen = last(patch[0]) == last(last(patch)),
-        samplepts = range(splinesteps+1)/splinesteps
+        samplepts = count(splinesteps+1)/splinesteps
     )
     top_degen && bot_degen && left_degen && right_degen ?   // fully degenerate case
         [repeat([patch[0][0]],4), EMPTY_VNF] :
@@ -1990,13 +1990,13 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false) =
     // at this point top_degen is true                   // only top is degenerate
        let(
            full_degen = patch[1][0] == last(patch[1]),
-           rowmax = full_degen ? range(splinesteps+1) :
+           rowmax = full_degen ? count(splinesteps+1) :
                                  [for(j=[0:splinesteps]) j<=splinesteps/2 ? 2*j : splinesteps],
            vbb=echo("single degenerate case"),
            bpatch = [for(i=[0:1:len(patch[0])-1]) bezier_points(subindex(patch,i), samplepts)],
            pts = [
                   [bpatch[0][0]],
-                  for(j=[1:splinesteps]) bezier_points(subindex(bpatch,j), range(rowmax[j]+1)/rowmax[j])
+                  for(j=[1:splinesteps]) bezier_points(subindex(bpatch,j), count(rowmax[j]+1)/rowmax[j])
                  ],
            vnf = vnf_tri_array(pts, reverse=reverse)
         ) [

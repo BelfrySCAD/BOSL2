@@ -209,7 +209,7 @@ function list_tail(list, from=1) =
 //   If given a string, explodes it into a list of single letters.
 // Arguments:
 //   l = The value to expand.
-// See Also: scalar_vec3(), force_list(), range(), rangex()
+// See Also: scalar_vec3(), force_list(), rangex()
 // Example:
 //   l1 = list([3:2:9]);  // Returns: [3,5,7,9]
 //   l2 = list([3,4,5]);  // Returns: [3,4,5]
@@ -396,7 +396,7 @@ function list_decreasing(list) =
 // Usage:
 //   list = repeat(val, n);
 // Topics: List Handling
-// See Also: range(), rangex()
+// See Also: count(), lerpn()
 // Description:
 //   Generates a list or array of `n` copies of the given value `val`.
 //   If the count `n` is given as a list of counts, then this creates a
@@ -416,89 +416,21 @@ function repeat(val, n, i=0) =
     [for (j=[1:1:n[i]]) repeat(val, n, i+1)];
 
 
-// Function: range()
+// Function: count()
 // Usage:
-//   list = range(n, <s=>, <e=>);
-//   list = range(n, <s=>, <step=>);
-//   list = range(e=, <step=>);
-//   list = range(s=, e=, <step=>);
-// Topics: List Handling
+//   list = count(n,<s>,<step>);
 // Description:
-//   Returns a list, counting up from starting value `s`, by `step` increments,
-//   until either `n` values are in the list, or it reaches the end value `e`.
-//   If both `n` and `e` are given, returns `n` values evenly spread from `s`
-//   to `e`, and `step` is ignored.
+//   Creates a list of `n` numbers, starting at `s`, incrementing by `step` each time.
 // Arguments:
-//   n = Desired number of values in returned list, if given.
-//   ---
-//   s = Starting value.  Default: 0
-//   e = Ending value to stop at, if given.
-//   step = Amount to increment each value.  Default: 1
-// See Also: repeat(), rangex()
+//   n = The length of the list of numbers to create.
+//   s = The starting value of the list of numbers.
+//   step = The amount to increment successive numbers in the list.
 // Example:
-//   a = range(4);                  // Returns [0,1,2,3]
-//   b = range(n=4, step=2);        // Returns [0,2,4,6]
-//   c = range(n=4, s=3, step=3);   // Returns [3,6,9,12]
-//   d = range(n=5, s=0, e=10);     // Returns [0, 2.5, 5, 7.5, 10]
-//   e = range(e=3);                // Returns [0,1,2,3]
-//   f = range(e=7, step=2);        // Returns [0,2,4,6]
-//   g = range(s=3, e=5);           // Returns [3,4,5]
-//   h = range(s=3, e=8, step=2);   // Returns [3,5,7]
-//   i = range(s=4, e=8.3, step=2); // Returns [4,6,8]
-function range(n, s=0, e, step) =
-    assert( is_undef(n) || is_finite(n), "Parameter `n` must be a number.")
-    assert( is_undef(n) || is_undef(e) || is_undef(step), "At most 2 of n, e, and step can be given.")
-    let( step = (n!=undef && e!=undef)? (e-s)/(n-1) : default(step,1) )
-    is_undef(e)
-      ? assert( is_consistent([s, step]), "Incompatible data.")
-        [for (i=[0:1:n-1]) s+step*i]
-      : assert( is_vector([s,step,e]), "Start `s`, step `step` and end `e` must be numbers.")
-        [for (v=[s:step:e]) v] ;
-    
+//   nl1 = count(5);  // Returns: [0,1,2,3,4]
+//   nl2 = count(5,3);  // Returns: [3,4,5,6,7]
+//   nl3 = count(4,3,2);  // Returns: [3,5,7,9]
+function count(n,s=0,step=1) = [for (i=[0:1:n-1]) s+i*step];
 
-// Function: rangex()
-// Usage:
-//   list = rangex(n, <s=>, <e=>);
-//   list = rangex(n, <s=>, <step=>);
-//   list = rangex(e=, <step=>);
-//   list = rangex(s=, e=, <step=>);
-// Topics: List Handling
-// Description:
-//   Returns a list, counting up from starting value `s`, by `step` increments, until
-//   either `n` values are in the list, or it reaches the value just before the end value `e`.
-//   If both `n` and `e` are given, returns `n` values evenly spread from `s` to the value
-//   just before `e`, and `step` is ignored.
-// Arguments:
-//   n = Desired number of values in returned list, if given.
-//   ---
-//   s = Starting value.  Default: 0
-//   e = Ending value to stop at, if given.
-//   step = Amount to increment each value.  Default: 1
-// See Also: repeat(), range()
-// Example:
-//   a = rangex(4);                  // Returns [0,1,2,3]
-//   b = rangex(5,e=1);              // Returns [0, 0.2, 0.4, 0.6, 0.8]
-//   c = rangex(n=4, step=2);        // Returns [0,2,4,6]
-//   d = rangex(n=4, step=0.25);     // Returns [0, 0.25, 0.5, 0.75]
-//   e = rangex(n=4, s=3, step=3);   // Returns [3,6,9,12]
-//   f = rangex(n=5, s=0, e=10);     // Returns [0, 2, 4, 6, 8]
-//   g = rangex(e=3);                // Returns [0,1,2]
-//   h = rangex(e=7, step=2);        // Returns [0,2,4,6]
-//   i = rangex(s=3, e=5);           // Returns [3,4]
-//   j = rangex(s=3, e=8, step=2);   // Returns [3,5,7]
-//   k = rangex(s=2, e=8, step=2);   // Returns [2,4,6]
-//   l = rangex(s=2, e=8.1, step=2); // Returns [2,4,6,8]
-function rangex(n, s=0, e, step) =
-    assert( is_undef(n) || is_finite(n), "Parameter `n` must be a number.")
-    assert( is_undef(n) || is_undef(e) || is_undef(step), "At most 2 of n, e, and step can be given.")
-    let( step = (n!=undef && e!=undef)? (e-s)/n : default(step,1) )
-    is_undef(e)
-      ? assert( is_consistent([s, step]), "Incompatible data.")
-        [for (i=[0:1:n-1]) s+step*i]
-      : assert( is_vector([s,step,e]), "Start `s`, step `step` and end `e` must be numbers.")
-        let(steps=floor((e-s)/step+0.5))
-        [for (i=[0:1:steps-1]) s+step*i];
-    
 
 
 // Section: List Manipulation

@@ -438,7 +438,7 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg
                     path = is_undef(maxseg)? p : [
                         for (seg=pair(p,true)) each
                         let(steps=ceil(norm(seg.y-seg.x)/maxseg))
-                        lerp(seg.x, seg.y, [0:1/steps:1-EPSILON])
+                        lerpn(seg.x, seg.y, steps, false)
                     ]
                 )
                 rot(twist, p=scale([scale,scale],p=path))
@@ -451,7 +451,7 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg
                 path = is_undef(maxseg)? p : [
                     for (seg=pair(p,true)) each
                     let(steps=ceil(norm(seg.y-seg.x)/maxseg))
-                    lerp(seg.x, seg.y, [0:1/steps:1-EPSILON])
+                    lerpn(seg.x, seg.y, steps, false)
                 ],
                 verts = [
                     for (i=[0:1:slices]) let(

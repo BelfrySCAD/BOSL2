@@ -595,7 +595,7 @@ function subdivide_long_segments(path, maxlen, closed=false) =
     [
         for (p=pair(path,closed)) let(
             steps = ceil(norm(p[1]-p[0])/maxlen)
-        ) each lerp(p[0],p[1],[0:1/steps:1-EPSILON]),
+        ) each lerpn(p[0], p[1], steps, false),
         if (!closed) last(path)
     ];
 
@@ -620,7 +620,7 @@ function slice_profiles(profiles,slices,closed=false) =
   let(
     count = is_num(slices) ? repeat(slices,len(profiles)-(closed?0:1)) : slices,
     slicelist = [for (i=[0:len(profiles)-(closed?1:2)])
-      each [for(j = [0:count[i]]) lerp(profiles[i],select(profiles,i+1),j/(count[i]+1))]
+      each lerpn(profiles[i], select(profiles,i+1), count[i]+1, false)
     ]
   )
   concat(slicelist, closed?[]:[profiles[len(profiles)-1]]);
@@ -894,7 +894,7 @@ function associate_vertices(polygons, split, curpoly=0) =
            str("Split ",cursplit," at polygon ",curpoly," has invalid vertices.  Must be in [0:",polylen-1,"]"))
     len(cursplit)==0 ? associate_vertices(polygons,split,curpoly+1) :
     let(
-      splitindex = sort(concat(range(polylen), cursplit)),
+      splitindex = sort(concat(count(polylen), cursplit)),
       newpoly = [for(i=[0:len(polygons)-1]) i<=curpoly ? select(polygons[i],splitindex) : polygons[i]]
     )
    associate_vertices(newpoly, split, curpoly+1);

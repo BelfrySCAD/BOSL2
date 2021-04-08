@@ -1240,18 +1240,15 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
     length = path_length(path,closed);
     distances =
         is_def(sp)? (   // Start point given
-            is_def(n) && is_def(spacing)? range(s=sp, step=spacing, n=n) :
-            is_def(n)? range(s=sp, e=length, n=n) :
-            range(s=sp, step=spacing, e=length)
+            is_def(n) && is_def(spacing)? count(n,sp,spacing) :
+            is_def(n)? lerpn(sp, length, n) :
+            list([sp:spacing:length])
         )
-      : is_def(n) && is_undef(spacing)? (            // N alone given
-            closed ? rangex(s=0, e=length, n=n)
-                   : range(s=0, e=length, n=n)
-        )
+      : is_def(n) && is_undef(spacing)? lerpn(0,length,n,!closed) // N alone given
       : (      // No start point and spacing is given, N maybe given
         let(
             n = is_def(n)? n : floor(length/spacing)+(closed?0:1),
-            ptlist = range(s=0,step=spacing,n=n),
+            ptlist = count(n,0,spacing),
             listcenter = mean(ptlist)
         ) closed?
             sort([for(entry=ptlist) posmod(entry-listcenter,length)]) :
@@ -1607,7 +1604,7 @@ function resample_path(path, N, spacing, closed=false) =
        // path_cut to return the endpoint (which might fail due to rounding)
        // Add last point later
        N = is_def(N) ? N-(closed?0:1) : round(length/spacing),
-       distlist = rangex(N,e=length), 
+       distlist = lerpn(0,length,N,false), 
        cuts = path_cut_points(path, distlist, closed=closed)
    )
    [ each subindex(cuts,0),
