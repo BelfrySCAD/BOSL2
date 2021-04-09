@@ -494,7 +494,7 @@ function rand_int(minval, maxval, N, seed=undef) =
 function gaussian_rands(mean, stddev, N=1, seed=undef) =
     assert( is_finite(mean+stddev+N) && (is_undef(seed) || is_finite(seed) ), "Input must be finite numbers.")
     let(nums = is_undef(seed)? rands(0,1,N*2) : rands(0,1,N*2,seed))
-    [for (i = count(N)) mean + stddev*sqrt(-2*ln(nums[i*2]))*cos(360*nums[i*2+1])];
+    [for (i = count(N,0,2)) mean + stddev*sqrt(-2*ln(nums[i]))*cos(360*nums[i+1])];
 
 
 // Function: log_rands()

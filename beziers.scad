@@ -507,7 +507,7 @@ function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1) =
 function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
     let(
         segs = len(curve) * 2,
-        uvals = lerpn(start_u, end_u, segs),
+        uvals = lerpn(start_u, end_u, segs+1),
         path = bezier_points(curve,uvals),
         defl = max([
             for (i=idx(path,e=-3)) let(
@@ -721,7 +721,7 @@ function bezier_path(bezier, splinesteps=16, N=3, endpoint=true) =
     ) [
         for (seg = [0:1:segs-1])
             each bezier_points(select(bezier, seg*N, (seg+1)*N), [0:step:1-step/2]),
-        if (endpoint) bezier_path_point(bezier, segs-1, 1, N=N)
+        if (endpoint) last(bezier)
     ];
 
 

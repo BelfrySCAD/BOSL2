@@ -1996,7 +1996,7 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false) =
            bpatch = [for(i=[0:1:len(patch[0])-1]) bezier_points(subindex(patch,i), samplepts)],
            pts = [
                   [bpatch[0][0]],
-                  for(j=[1:splinesteps]) bezier_points(subindex(bpatch,j), count(rowmax[j]+1)/rowmax[j])
+                  for(j=[1:splinesteps]) bezier_points(subindex(bpatch,j), lerpn(0,1,rowmax[j]+1))
                  ],
            vnf = vnf_tri_array(pts, reverse=reverse)
         ) [

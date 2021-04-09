@@ -209,7 +209,7 @@ function list_tail(list, from=1) =
 //   If given a string, explodes it into a list of single letters.
 // Arguments:
 //   l = The value to expand.
-// See Also: scalar_vec3(), force_list(), rangex()
+// See Also: scalar_vec3(), force_list()
 // Example:
 //   l1 = list([3:2:9]);  // Returns: [3,5,7,9]
 //   l2 = list([3,4,5]);  // Returns: [3,4,5]

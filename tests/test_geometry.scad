@@ -987,8 +987,8 @@ module test_pointlist_bounds() {
 
 
 module test_closest_point() {
-    ptlist = [for (i=count(100)) rands(-100,100,2,seed_value=8463)];
-    testpts = [for (i=count(100)) rands(-100,100,2,seed_value=6834)];
+    ptlist = [for (i=count(100)) rands(-100,100,2,seed_value=8463+i)];
+    testpts = [for (i=count(100)) rands(-100,100,2,seed_value=6834+i)];
     for (pt = testpts) {
         pidx = closest_point(pt,ptlist);
         dists = [for (p=ptlist) norm(pt-p)];
@@ -1000,8 +1000,8 @@ module test_closest_point() {
 
 
 module test_furthest_point() {
-    ptlist = [for (i=count(100)) rands(-100,100,2,seed_value=8463)];
-    testpts = [for (i=count(100)) rands(-100,100,2,seed_value=6834)];
+    ptlist = [for (i=count(100)) rands(-100,100,2,seed_value=8463+i)];
+    testpts = [for (i=count(100)) rands(-100,100,2,seed_value=6834+i)];
     for (pt = testpts) {
         pidx = furthest_point(pt,ptlist);
         dists = [for (p=ptlist) norm(pt-p)];
