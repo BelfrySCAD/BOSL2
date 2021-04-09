@@ -133,36 +133,13 @@ module test_repeat() {
 test_repeat();
 
 
-module test_range() {
-    assert(range(4) == [0,1,2,3]);
-    assert(range(n=4, step=2) == [0,2,4,6]);
-    assert(range(n=4, s=3, step=3) == [3,6,9,12]);
-    assert(range(e=3) == [0,1,2,3]);
-    assert(range(e=6, step=2) == [0,2,4,6]);
-    assert(range(s=3, e=5) == [3,4,5]);
-    assert(range(s=3, e=8, step=2) == [3,5,7]);
-    assert(range(s=4, e=8, step=2) == [4,6,8]);
-    assert(range(e=4, n=3) == [0,2,4]);
-    assert(range(n=4, s=[3,4], step=[2,3]) == [[3,4], [5,7], [7,10], [9,13]]);
+module test_count() {
+    assert_equal(count(5), [0,1,2,3,4]);
+    assert_equal(count(5,3), [3,4,5,6,7]);
+    assert_equal(count(4,3,2), [3,5,7,9]);
+    assert_equal(count(5,0,0.25), [0, 0.25, 0.5, 0.75, 1.0]);
 }
-test_range();
-
-
-module test_rangex() {
-    assert_equal(rangex(4), [0,1,2,3]);
-    assert_approx(rangex(5,e=1), [0, 0.2, 0.4, 0.6, 0.8]);
-    assert_equal(rangex(n=4, step=2), [0,2,4,6]);
-    assert_approx(rangex(n=4, step=0.25), [0,0.25,0.5,0.75]);
-    assert_equal(rangex(n=4, s=3, step=3), [3,6,9,12]);
-    assert_equal(rangex(e=3), [0,1,2]);
-    assert_equal(rangex(e=6, step=2), [0,2,4]);
-    assert_equal(rangex(s=3, e=5), [3,4]);
-    assert_equal(rangex(s=3, e=8, step=2), [3,5,7]);
-    assert_equal(rangex(s=4, e=8, step=2), [4,6]);
-    assert_equal(rangex(e=6, n=3), [0,2,4]);
-    assert_equal(rangex(n=4, s=[3,4], step=[2,3]), [[3,4], [5,7], [7,10], [9,13]]);
-}
-test_rangex();
+test_count();
 
 
 module test_reverse() {
@@ -322,7 +299,7 @@ test_enumerate();
 
 
 module test_shuffle() {
-    nums1 = [for (i=range(100)) i];
+    nums1 = count(100);
     nums2 = shuffle(nums1,33);
     nums3 = shuffle(nums2,99);
     assert(sort(nums2)==nums1);

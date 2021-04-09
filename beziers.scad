@@ -437,10 +437,8 @@ function bezier_curvature(curve, u) =
 //   move_copies(bezier_curve(bez, 8)) sphere(r=1.5, $fn=12);
 //   trace_bezier(bez, N=len(bez)-1);
 function bezier_curve(curve,n,endpoint=true) =
-      [
-         each bezier_points(curve, rangex(endpoint?n-1:n,0,1)),
-         if (endpoint) last(curve)
-      ];
+    bezier_points(curve, lerpn(0,1,n,endpoint));
+
 
 // Function: bezier_segment_closest_point()
 // Usage:
@@ -509,7 +507,7 @@ function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1) =
 function bezier_segment_length(curve, start_u=0, end_u=1, max_deflect=0.01) =
     let(
         segs = len(curve) * 2,
-        uvals = [for (i=[0:1:segs]) lerp(start_u, end_u, i/segs)],
+        uvals = lerpn(start_u, end_u, segs+1),
         path = bezier_points(curve,uvals),
         defl = max([
             for (i=idx(path,e=-3)) let(
@@ -693,7 +691,7 @@ function bezier_path_length(path, N=3, max_deflect=0.001) =
 
 // Function: bezier_path()
 // Usage:
-//   path = bezier_path(bezier, <splinesteps>, <N>)
+//   path = bezier_path(bezier, <splinesteps>, <N>, <endpoint>)
 // Topics: Bezier Paths
 // See Also: bezier_points(), bezier_curve()
 // Description:
@@ -702,6 +700,7 @@ function bezier_path_length(path, N=3, max_deflect=0.001) =
 //   bezier = A bezier path to approximate.
 //   splinesteps = Number of straight lines to split each bezier segment into. default=16
 //   N = The degree of the bezier curves.  Cubic beziers have N=3.  Default: 3
+//   endpoint = If true, include the very last point of the bezier path.  Default: true
 // Example(2D):
 //   bez = [
 //       [0,0], [-5,30],
@@ -711,18 +710,19 @@ function bezier_path_length(path, N=3, max_deflect=0.001) =
 //   ];
 //   trace_path(bez, size=1, N=3, showpts=true);
 //   trace_path(bezier_path(bez, N=3), size=3);
-function bezier_path(bezier, splinesteps=16, N=3) =
+function bezier_path(bezier, splinesteps=16, N=3, endpoint=true) =
     assert(is_path(bezier))
     assert(is_int(N))
     assert(is_int(splinesteps))
-    assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
+    assert(len(bezier)%N == 1, str("A degree ",N," bezier path should have a multiple of ",N," points in it, plus 1."))
     let(
-        segs = (len(bezier)-1)/N
-    ) deduplicate([
-        for (seg = [0:1:segs-1], i = [0:1:splinesteps-1])
-            bezier_path_point(bezier, seg, i/splinesteps, N=N),
-        bezier_path_point(bezier, segs-1, 1, N=N)
-    ]);
+        segs = (len(bezier)-1) / N,
+        step = 1 / splinesteps
+    ) [
+        for (seg = [0:1:segs-1])
+            each bezier_points(select(bezier, seg*N, (seg+1)*N), [0:step:1-step/2]),
+        if (endpoint) last(bezier)
+    ];
 
 
 
@@ -861,19 +861,18 @@ function bezier_close_to_axis(bezier, axis="X", N=3) =
     assert(is_int(N))
     assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."))
     let(
-        bezend = len(bezier)-1,
         sp = bezier[0],
-        ep = bezier[bezend]
+        ep = last(bezier)
     ) (axis=="X")? concat(
-        [for (i=[0:1:N-1]) lerp([sp.x,0], sp, i/N)],
-        bezier,
-        [for (i=[1:1:N]) lerp(ep, [ep.x,0], i/N)],
-        [for (i=[1:1:N]) lerp([ep.x,0], [sp.x,0], i/N)]
+        lerpn([sp.x,0], sp, N, false),
+        list_head(bezier),
+        lerpn(ep, [ep.x,0], N, false),
+        lerpn([ep.x,0], [sp.x,0], N+1)
     ) : (axis=="Y")? concat(
-        [for (i=[0:1:N-1]) lerp([0,sp.y], sp, i/N)],
-        bezier,
-        [for (i=[1:1:N]) lerp(ep, [0,ep.y], i/N)],
-        [for (i=[1:1:N]) lerp([0,ep.y], [0,sp.y], i/N)]
+        lerpn([0,sp.y], sp, N, false),
+        list_head(bezier),
+        lerpn(ep, [0,ep.y], N, false),
+        lerpn([0,ep.y], [0,sp.y], N+1)
     ) : (
         assert(in_list(axis, ["X","Y"]))
     );
@@ -907,10 +906,10 @@ function bezier_offset(offset, bezier, N=3) =
         backbez = reverse([ for (pt = bezier) pt+offset ]),
         bezend = len(bezier)-1
     ) concat(
-        bezier,
-        [for (i=[1:1:N-1]) lerp(bezier[bezend], backbez[0], i/N)],
-        backbez,
-        [for (i=[1:1:N]) lerp(backbez[bezend], bezier[0], i/N)]
+        list_head(bezier),
+        lerpn(bezier[bezend], backbez[0], N, false),
+        list_head(backbez),
+        lerpn(backbez[bezend], bezier[0], N+1)
     );
 
 

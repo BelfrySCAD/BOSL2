@@ -158,7 +158,7 @@ function _hull_collinear(points) =
 //   %polyhedron(points=pts, faces=faces);
 function hull3d_faces(points) =
     assert(is_path(points,3),"Invalid input to hull3d_faces")
-    len(points) < 3 ? range(len(points))
+    len(points) < 3 ? count(len(points))
   : let ( // start with a single non-collinear triangle
           tri = noncollinear_triple(points, error=false)
         )

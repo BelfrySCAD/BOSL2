@@ -1085,7 +1085,7 @@ function _ISO_thread_tolerance(diameter, pitch, internal=false, tolerance=undef)
            ],
 
     rangepts = [0.99, 1.4, 2.8, 5.6, 11.2, 22.4, 45, 90, 180, 300],
-    d_ind = floor(lookup(diameter,hstack(rangepts,range(len(rangepts))))),
+    d_ind = floor(lookup(diameter,hstack(rangepts,count(len(rangepts))))),
     avgd = sqrt(rangepts[d_ind]* rangepts[d_ind+1]),
 
     T_d2_6 = 90*pow(P, 0.4)*pow(avgd,0.1),
