@@ -41,7 +41,6 @@ function is_homogeneous(l, depth=10) =
     [] == [for(i=[1:len(l)-1]) if( ! _same_type(l[i],l0, depth+1) )  0 ];
 
 function is_homogenous(l, depth=10) = is_homogeneous(l, depth);
-                 
 
 function _same_type(a,b, depth) = 
     (depth==0) ||
@@ -51,7 +50,7 @@ function _same_type(a,b, depth) =
     (is_string(a) && is_string(b)) ||
     (is_list(a) && is_list(b) && len(a)==len(b) 
           && []==[for(i=idx(a)) if( ! _same_type(a[i],b[i],depth-1) ) 0] ); 
-  
+
 
 // Function: select()
 // Topics: List Handling
@@ -98,6 +97,7 @@ function select(list, start, end) =
 
 
 // Function: slice()
+// Topics: List Handling
 // Usage:
 //   list = slice(list,s,e);
 // Description:
@@ -476,7 +476,7 @@ function reverse(x) =
 //   l9 = list_rotate([1,2,3,4,5],6);  // Returns: [2,3,4,5,1]
 function list_rotate(list,n=1) =
     assert(is_list(list)||is_string(list), "Invalid list or string.")
-    assert(is_int(n), "The rotation number should be integer")
+    assert(is_finite(n), "Invalid number")
     let (
         ll = len(list),
         n = ((n % ll) + ll) % ll,
@@ -990,7 +990,7 @@ function _sort_vectors(arr, idxlist, _i=0) =
         _sort_vectors(equal,   idxlist, _i+1), 
         _sort_vectors(greater, idxlist, _i  ) );
         
- 
+
 // sorting using compare_vals(); returns indexed list when `indexed==true`
 function _sort_general(arr, idx=undef, indexed=false) =
     (len(arr)<=1) ? arr :
@@ -1332,8 +1332,6 @@ function permutations(l,n=2) =
 //   pairs = zip(a,b);
 //   triples = zip(a,b,c);
 //   quads = zip([LIST1,LIST2,LIST3,LIST4]);
-// Topics: List Handling, Iteration
-// See Also: zip_long()
 // Description:
 //   Zips together two or more lists into a single list.  For example, if you have two
 //   lists [3,4,5], and [8,7,6], and zip them together, you get [[3,8],[4,7],[5,6]].
@@ -1359,8 +1357,6 @@ function zip(a,b,c) =
 //   pairs = zip_long(a,b);
 //   triples = zip_long(a,b,c);
 //   quads = zip_long([LIST1,LIST2,LIST3,LIST4]);
-// Topics: List Handling, Iteration
-// See Also: zip()
 // Description:
 //   Zips together two or more lists into a single list.  For example, if you have two
 //   lists [3,4,5], and [8,7,6], and zip them together, you get [[3,8],[4,7],[5,6]].
@@ -1530,6 +1526,7 @@ function subindex(M, idx) =
 //        [[4,2],   91, false],
 //        [6,    [3,4], undef]];
 //   submatrix(A,[0,2],[1,2]);   // Returns [[17, "test"], [[3, 4], undef]]
+
 function submatrix(M,idx1,idx2) =
     [for(i=idx1) [for(j=idx2) M[i][j] ] ];
 
@@ -1631,6 +1628,7 @@ function block_matrix(M) =
     )
     assert(badrows==[], "Inconsistent or invalid input")
     bigM;
+
 
 // Function: diagonal_matrix()
 // Usage:
@@ -1857,7 +1855,7 @@ function transpose(arr, reverse=false) =
 //   A = matrix to test
 //   eps = epsilon for comparing equality.  Default: 1e-12
 function is_matrix_symmetric(A,eps=1e-12) =
-    approx(A,transpose(A), eps);
+    approx(A,transpose(A));
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

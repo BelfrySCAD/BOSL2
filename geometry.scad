@@ -888,48 +888,10 @@ function plane3pt_indexed(points, i1, i2, i3) =
 // Example:
 //   plane_from_normal([0,0,1], [2,2,2]);  // Returns the xy plane passing through the point (2,2,2)
 function plane_from_normal(normal, pt=[0,0,0]) =
-    assert( is_matrix([normal,pt],2,3) && !approx(norm(normal),0),
-            "Inputs `normal` and `pt` should be 3d vectors/points and `normal` cannot be zero." )
-    concat(normal, normal*pt) / norm(normal);
+  assert( is_matrix([normal,pt],2,3) && !approx(norm(normal),0),
+          "Inputs `normal` and `pt` should 3d vectors/points and `normal` cannot be zero." )
+  concat(normal, normal*pt) / norm(normal);
 
-
-// Eigenvalues for a 3x3 symmetrical matrix in decreasing order
-// Based on: https://en.wikipedia.org/wiki/Eigenvalue_algorithm
-function _eigenvals_symm_3(M) =
-  let( p1 = pow(M[0][1],2) + pow(M[0][2],2) + pow(M[1][2],2) )
-  (p1<EPSILON)  
-  ? -sort(-[ M[0][0], M[1][1], M[2][2] ]) //  diagonal matrix: eigenvals in decreasing order
-  : let(  q  = (M[0][0]+M[1][1]+M[2][2])/3,
-          B  = (M - q*ident(3)),
-          dB = [B[0][0], B[1][1], B[2][2]],
-          p2 = dB*dB + 2*p1,
-          p  = sqrt(p2/6),
-          r  = det3(B/p)/2,
-          ph = acos(constrain(r,-1,1))/3,
-          e1 = q + 2*p*cos(ph),
-          e3 = q + 2*p*cos(ph+120),
-          e2 = 3*q - e1 - e3 ) 
-    [ e1, e2, e3 ];
-
-
-// i-th normalized eigenvector of 3x3 symmetrical matrix M from its eigenvalues
-// using Cayley–Hamilton theorem according to:
-// https://en.wikipedia.org/wiki/Eigenvalue_algorithm 
-function _eigenvec_symm_3(M,evals,i=0) = 
-  let(  A  = (M - evals[(i+1)%3]*ident(3)) * (M - evals[(i+2)%3]*ident(3)) ,
-        k = max_index( [for(i=[0:2]) norm(A[i]) ]) 
-     )
-  norm(A[k])<EPSILON ? ident(3)[k] : A[k]/norm(A[k]);
-
-
-// eigenvalues of the covariance matrix of points
-function _covariance_evals(points) =
-    let(  pm   = sum(points)/len(points), // mean point
-          Y    = [ for(i=[0:len(points)-1]) points[i] - pm ],
-          M    = transpose(Y)*Y ,     // covariance matrix
-          evals = _eigenvals_symm_3(M) )
-    [pm, evals, M ];
-          
 
 // Function: plane_from_points()
 // Usage:
@@ -937,9 +899,11 @@ function _covariance_evals(points) =
 // Description:
 //   Given a list of 3 or more coplanar 3D points, returns the coefficients of the normalized cartesian equation of a plane,
 //   that is [A,B,C,D] where Ax+By+Cz=D is the equation of the plane where norm([A,B,C])=1.
-//   If the points in the list are collinear or not coplanar, then `undef` is returned.
+//   If `fast` is false and the points in the list are collinear or not coplanar, then `undef` is returned.
+//   if `fast` is true, then the coplanarity test is skipped and a plane passing through 3 non-collinear arbitrary points is returned.
 // Arguments:
 //   points = The list of points to find the plane of.
+//   fast = If true, don't verify that all points in the list are coplanar.  Default: false
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 // Example(3D):
 //   xyzpath = rot(45, v=[-0.3,1,0], p=path3d(star(n=6,id=70,d=100), 70));
@@ -947,21 +911,20 @@ function _covariance_evals(points) =
 //   #stroke(xyzpath,closed=true);
 //   cp = centroid(xyzpath);
 //   move(cp) rot(from=UP,to=plane_normal(plane)) anchor_arrow();
-function plane_from_points(points,fast=false, eps=EPSILON) =  
+function plane_from_points(points, fast=false, eps=EPSILON) =
     assert( is_path(points,dim=3), "Improper 3d point list." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    len(points) == 3 
-    ?   let( plane = plane3pt(points[0],points[1],points[2]) )
-        plane==[] ? undef : plane    
-    :   let(  
-            cov_evals = _covariance_evals(points),
-            pm        = cov_evals[0],
-            evals     = cov_evals[1],
-            M         = cov_evals[2],
-            evec      = _eigenvec_symm_3(M,evals,i=2) )
-// echo(error_points_plane= abs(max(points*evec)-pm*evec), limit=eps)
-        !fast && abs(max(points*evec)-pm*evec)>eps*evals[0] ? undef :
-        [ each evec, pm*evec] ;
+    let(
+        indices = noncollinear_triple(points,error=false)
+    )
+    indices==[] ? undef :
+    let(
+        p1 = points[indices[0]],
+        p2 = points[indices[1]],
+        p3 = points[indices[2]],
+        plane = plane3pt(p1,p2,p3)
+    )
+    fast || points_on_plane(points,plane,eps=eps) ? plane : undef;
 
 
 // Function: plane_from_polygon()
@@ -982,16 +945,17 @@ function plane_from_points(points,fast=false, eps=EPSILON) =
 //   #stroke(xyzpath,closed=true);
 //   cp = centroid(xyzpath);
 //   move(cp) rot(from=UP,to=plane_normal(plane)) anchor_arrow();
-function plane_from_polygon(poly, fast=false, eps=EPSILON) = 
+function plane_from_polygon(poly, fast=false, eps=EPSILON) =
     assert( is_path(poly,dim=3), "Invalid polygon." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-		len(poly)==3 ? plane3pt(poly[0],poly[1],poly[2]) :
-    let( triple = sort(noncollinear_triple(poly,error=false)) )
-    triple==[] ? [] :
-    let( plane = plane3pt(poly[triple[0]],poly[triple[1]],poly[triple[2]]))
-    fast? plane: points_on_plane(poly, plane, eps=eps)? plane: [];
- 
- 
+    let(
+        poly = deduplicate(poly),
+        n = polygon_normal(poly),
+        plane = [n.x, n.y, n.z, n*poly[0]]
+    )
+    fast? plane: coplanar(poly,eps=eps)? plane: [];
+
+
 // Function: plane_normal()
 // Usage:
 //   plane_normal(plane);
@@ -1288,11 +1252,9 @@ function coplanar(points, eps=EPSILON) =
     len(points)<=2 ? false
     :   let( ip = noncollinear_triple(points,error=false,eps=eps) )
         ip == [] ? false :
-        let( 
-						plane  = plane3pt(points[ip[0]],points[ip[1]],points[ip[2]]),
-            normal = point3d(plane),
-						pt_nrm = points*normal )
-				abs(max(max(pt_nrm)-plane[3], -min(pt_nrm)+plane[3])) < eps;
+        let( plane  = plane3pt(points[ip[0]],points[ip[1]],points[ip[2]]),
+             normal = point3d(plane) )
+        max( points*normal ) - plane[3]< eps*norm(normal);
 
 
 // Function: points_on_plane()
@@ -1703,11 +1665,11 @@ function noncollinear_triple(points,error=true,eps=EPSILON) =
             n = (pb-pa)/nrm,
             distlist = [for(i=[0:len(points)-1]) _dist2line(points[i]-pa, n)]
            )
-        max(distlist)<eps*nrm
+        max(distlist)<eps
         ?  assert(!error, "Cannot find three noncollinear points in pointlist.")
            []
         :  [0,b,max_index(distlist)];
-        
+
 
 // Function: pointlist_bounds()
 // Usage:
@@ -1784,9 +1746,9 @@ function polygon_area(poly, signed=false) =
                         v1 = poly[i] - poly[0],
                         v2 = poly[i+1] - poly[0]
                     )
-                    cross(v1,v2) 
-                ])* n/2
-        ) 
+                    cross(v1,v2) * n
+                ])/2
+        )
         signed ? total : abs(total);
 
 
@@ -1958,7 +1920,7 @@ function centroid(poly, eps=EPSILON) =
     let(
         n = len(poly[0])==2 ? 1 :
             let( 
-                plane = plane_from_points(poly) )
+                plane = plane_from_points(poly, fast=true) )
             assert( !is_undef(plane), "The polygon must be planar." )
             plane_normal(plane),
         v0 = poly[0] ,
@@ -2046,7 +2008,7 @@ function point_in_polygon(point, poly, nonzero=true, eps=EPSILON) =
 //   poly = The list of 2D path points for the perimeter of the polygon.
 function polygon_is_clockwise(poly) =
     assert(is_path(poly,dim=2), "Input should be a 2d path")
-    polygon_area(poly, signed=true)<-EPSILON;
+    polygon_area(poly, signed=true)<0;
 
 
 // Function: clockwise_polygon()
