@@ -705,11 +705,11 @@ module test_plane3pt_indexed() {
 
 module test_plane_from_points() {
     assert_std(plane_from_points([[0,0,20], [0,10,10], [0,0,0], [0,5,3]]), [1,0,0,0]);
-    assert_std(plane_from_points([[2,0,20], [2,10,10], [2,0,0], [2,3,4]]), [1,0,0,2]);
+    assert_approx(plane_from_points([[2,0,20], [2,10,10], [2,0,0], [2,3,4]]), [1,0,0,2]);
     assert_std(plane_from_points([[0,0,0], [10,0,10], [0,0,20], [5,0,7]]), [0,1,0,0]);
     assert_std(plane_from_points([[0,2,0], [10,2,10], [0,2,20], [4,2,3]]), [0,1,0,2]);
     assert_std(plane_from_points([[0,0,0], [10,10,0], [20,0,0], [8,3,0]]), [0,0,1,0]);
-    assert_std(plane_from_points([[0,0,2], [10,10,2], [20,0,2], [3,4,2]]), [0,0,1,2]);
+    assert_std(plane_from_points([[0,0,2], [10,10,2], [20,0,2], [3,4,2]]), [0,0,1,2]);  
 }
 *test_plane_from_points();
 
@@ -836,7 +836,9 @@ module test_cleanup_path() {
 module test_polygon_area() {
     assert(approx(polygon_area([[1,1],[-1,1],[-1,-1],[1,-1]]), 4));
     assert(approx(polygon_area(circle(r=50,$fn=1000),signed=true), -PI*50*50, eps=0.1));
-    assert(approx(polygon_area(rot([13,27,75],p=path3d(circle(r=50,$fn=1000),fill=23)),signed=true), PI*50*50, eps=0.1));
+    assert(approx(polygon_area(rot([13,27,75],
+                               p=path3d(circle(r=50,$fn=1000),fill=23)),
+                               signed=true), -PI*50*50, eps=0.1));
 }
 *test_polygon_area();
 
