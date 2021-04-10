@@ -197,8 +197,8 @@ module test_plane_from_polygon(){
     poly1 = [ rands(-1,1,3), rands(-1,1,3)+[2,0,0], rands(-1,1,3)+[0,2,2] ];
     poly2 = concat(poly1, [sum(poly1)/3] );
     info = info_str([["poly1 = ",poly1],["poly2 = ",poly2]]);
-    assert_std(plane_from_polygon(poly1),plane3pt(poly1[0],poly1[1],poly1[2]),info);
-    assert_std(plane_from_polygon(poly2),plane3pt(poly1[0],poly1[1],poly1[2]),info);
+    assert_approx(plane_from_polygon(poly1),plane3pt(poly1[0],poly1[1],poly1[2]),info);
+    assert_approx(plane_from_polygon(poly2),plane3pt(poly1[0],poly1[1],poly1[2]),info);
 }
 *test_plane_from_polygon();
 
@@ -208,8 +208,7 @@ module test_plane_from_normal(){
     displ = normal*point;
     info = info_str([["normal = ",normal],["point = ",point],["displ = ",displ]]);
     assert_approx(plane_from_normal(normal,point)*[each point,-1],0,info);
-    assert_std(plane_from_normal(normal,point),normalize_plane([each normal,displ]),info);
-    assert_std(plane_from_normal([1,1,1],[1,2,3]),[0.57735026919,0.57735026919,0.57735026919,3.46410161514]);
+    assert_approx(plane_from_normal([1,1,1],[1,2,3]),[0.57735026919,0.57735026919,0.57735026919,3.46410161514]);
 }
 *test_plane_from_normal();
 
@@ -680,23 +679,23 @@ module test_triangle_area() {
 
 
 module test_plane3pt() {
-    assert_std(plane3pt([0,0,20], [0,10,10], [0,0,0]), [1,0,0,0]);
-    assert_std(plane3pt([2,0,20], [2,10,10], [2,0,0]), [1,0,0,2]);
-    assert_std(plane3pt([0,0,0], [10,0,10], [0,0,20]), [0,1,0,0]);
-    assert_std(plane3pt([0,2,0], [10,2,10], [0,2,20]), [0,1,0,2]);
-    assert_std(plane3pt([0,0,0], [10,10,0], [20,0,0]), [0,0,1,0]);
-    assert_std(plane3pt([0,0,2], [10,10,2], [20,0,2]), [0,0,1,2]);
+    assert_approx(plane3pt([0,0,20], [0,10,10], [0,0,0]), [1,0,0,0]);
+    assert_approx(plane3pt([2,0,20], [2,10,10], [2,0,0]), [1,0,0,2]);
+    assert_approx(plane3pt([0,0,0], [10,0,10], [0,0,20]), [0,1,0,0]);
+    assert_approx(plane3pt([0,2,0], [10,2,10], [0,2,20]), [0,1,0,2]);
+    assert_approx(plane3pt([0,0,0], [10,10,0], [20,0,0]), [0,0,1,0]);
+    assert_approx(plane3pt([0,0,2], [10,10,2], [20,0,2]), [0,0,1,2]);
 }
 *test_plane3pt();
 
 module test_plane3pt_indexed() {
     pts = [ [0,0,0], [10,0,0], [0,10,0], [0,0,10] ];
     s13 = sqrt(1/3);
-    assert_std(plane3pt_indexed(pts, 0,3,2), [1,0,0,0]);
-    assert_std(plane3pt_indexed(pts, 0,2,3), [-1,0,0,0]);
-    assert_std(plane3pt_indexed(pts, 0,1,3), [0,1,0,0]);
-    assert_std(plane3pt_indexed(pts, 0,3,1), [0,-1,0,0]);
-    assert_std(plane3pt_indexed(pts, 0,2,1), [0,0,1,0]);
+    assert_approx(plane3pt_indexed(pts, 0,3,2), [1,0,0,0]);
+    assert_approx(plane3pt_indexed(pts, 0,2,3), [-1,0,0,0]);
+    assert_approx(plane3pt_indexed(pts, 0,1,3), [0,1,0,0]);
+    assert_approx(plane3pt_indexed(pts, 0,3,1), [0,-1,0,0]);
+    assert_approx(plane3pt_indexed(pts, 0,2,1), [0,0,1,0]);
     assert_approx(plane3pt_indexed(pts, 0,1,2), [0,0,-1,0]);
     assert_approx(plane3pt_indexed(pts, 3,2,1), [s13,s13,s13,10*s13]);
     assert_approx(plane3pt_indexed(pts, 1,2,3), [-s13,-s13,-s13,-10*s13]);
@@ -709,18 +708,18 @@ module test_plane_from_points() {
     assert_std(plane_from_points([[0,0,0], [10,0,10], [0,0,20], [5,0,7]]), [0,1,0,0]);
     assert_std(plane_from_points([[0,2,0], [10,2,10], [0,2,20], [4,2,3]]), [0,1,0,2]);
     assert_std(plane_from_points([[0,0,0], [10,10,0], [20,0,0], [8,3,0]]), [0,0,1,0]);
-    assert_std(plane_from_points([[0,0,2], [10,10,2], [20,0,2], [3,4,2]]), [0,0,1,2]);
+    assert_std(plane_from_points([[0,0,2], [10,10,2], [20,0,2], [3,4,2]]), [0,0,1,2]);  
 }
 *test_plane_from_points();
 
 
 module test_plane_normal() {
-    assert_std(plane_normal(plane3pt([0,0,20], [0,10,10], [0,0,0])), [1,0,0]);
-    assert_std(plane_normal(plane3pt([2,0,20], [2,10,10], [2,0,0])), [1,0,0]);
-    assert_std(plane_normal(plane3pt([0,0,0], [10,0,10], [0,0,20])), [0,1,0]);
-    assert_std(plane_normal(plane3pt([0,2,0], [10,2,10], [0,2,20])), [0,1,0]);
-    assert_std(plane_normal(plane3pt([0,0,0], [10,10,0], [20,0,0])), [0,0,1]);
-    assert_std(plane_normal(plane3pt([0,0,2], [10,10,2], [20,0,2])), [0,0,1]);
+    assert_approx(plane_normal(plane3pt([0,0,20], [0,10,10], [0,0,0])), [1,0,0]);
+    assert_approx(plane_normal(plane3pt([2,0,20], [2,10,10], [2,0,0])), [1,0,0]);
+    assert_approx(plane_normal(plane3pt([0,0,0], [10,0,10], [0,0,20])), [0,1,0]);
+    assert_approx(plane_normal(plane3pt([0,2,0], [10,2,10], [0,2,20])), [0,1,0]);
+    assert_approx(plane_normal(plane3pt([0,0,0], [10,10,0], [20,0,0])), [0,0,1]);
+    assert_approx(plane_normal(plane3pt([0,0,2], [10,10,2], [20,0,2])), [0,0,1]);
 }
 *test_plane_normal();
 
@@ -780,7 +779,7 @@ module test_coplanar() {
     assert(coplanar([ [5,5,1],[0,0,0],[-1,-1,1] ]) == true);
     assert(coplanar([ [0,0,0],[1,0,1],[1,1,1], [0,1,2] ]) == false);
     assert(coplanar([ [0,0,0],[1,0,1],[1,1,2], [0,1,1] ]) == true);
-}
+ }
 *test_coplanar();
 
 
@@ -836,7 +835,9 @@ module test_cleanup_path() {
 module test_polygon_area() {
     assert(approx(polygon_area([[1,1],[-1,1],[-1,-1],[1,-1]]), 4));
     assert(approx(polygon_area(circle(r=50,$fn=1000),signed=true), -PI*50*50, eps=0.1));
-    assert(approx(polygon_area(rot([13,27,75],p=path3d(circle(r=50,$fn=1000),fill=23)),signed=true), PI*50*50, eps=0.1));
+    assert(approx(polygon_area(rot([13,27,75],
+                               p=path3d(circle(r=50,$fn=1000),fill=23)),
+                               signed=true), -PI*50*50, eps=0.1));
 }
 *test_polygon_area();
 
