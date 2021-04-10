@@ -367,6 +367,87 @@ function vnf_vertex_array(
     ]);
 
 
+// Function: vnf_tri_array()
+// Usage:
+//   vnf = vnf_tri_array(points, <row_wrap>, <reverse>)
+// Description:
+//   Produces a vnf from an array of points where each row length can differ from the adjacent rows by up to 2 in length.  This enables
+//   the construction of triangular VNF patches.  The resulting VNF can be wrapped along the rows by setting `row_wrap` to true.
+// Arguments:
+//   points = List of point lists for each row
+//   row_wrap = If true then add faces connecting the first row and last row.  These rows must differ by at most 2 in length.
+//   reverse = Set this to reverse the direction of the faces
+// Examples:  Each row has one more point than the preceeding one.
+//   pts = [for(y=[1:1:10]) [for(x=[0:y-1]) [x,y,y]]];
+//   vnf = vnf_tri_array(pts);
+//   vnf_wireframe(vnf,d=.1);
+//   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
+// Examples:  Each row has one more point than the preceeding one.
+//   pts = [for(y=[0:2:10]) [for(x=[-y/2:y/2]) [x,y,y]]];
+//   vnf = vnf_tri_array(pts);
+//   vnf_wireframe(vnf,d=.1);
+//   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
+// Example: Chaining two VNFs to construct a cone with one point length change between rows.
+//   pts1 = [for(z=[0:10]) path3d(arc(3+z,r=z/2+1, angle=[0,180]),10-z)];
+//   pts2 = [for(z=[0:10]) path3d(arc(3+z,r=z/2+1, angle=[180,360]),10-z)];
+//   vnf = vnf_tri_array(pts1,
+//                       vnf=vnf_tri_array(pts2));
+//   color("green")vnf_wireframe(vnf,d=.1);
+//   vnf_polyhedron(vnf);
+// Example: Cone with length change two between rows
+//   pts1 = [for(z=[0:1:10]) path3d(arc(3+2*z,r=z/2+1, angle=[0,180]),10-z)];
+//   pts2 = [for(z=[0:1:10]) path3d(arc(3+2*z,r=z/2+1, angle=[180,360]),10-z)];
+//   vnf = vnf_tri_array(pts1,
+//                       vnf=vnf_tri_array(pts2));
+//   color("green")vnf_wireframe(vnf,d=.1);
+//   vnf_polyhedron(vnf);
+// Example: Point count can change irregularly
+//   lens = [10,9,7,5,6,8,8,10];
+//   pts = [for(y=idx(lens)) lerpn([-lens[y],y,y],[lens[y],y,y],lens[y])];
+//   vnf = vnf_tri_array(pts);
+//   vnf_wireframe(vnf,d=.1);
+//   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
+function vnf_tri_array(points, row_wrap=false, reverse=false, vnf=EMPTY_VNF) = 
+   let(
+       lens = [for(row=points) len(row)],
+       rowstarts = [0,each cumsum(lens)],
+       faces =
+          [for(i=[0:1:len(points) - 1 - (row_wrap ? 0 : 1)]) each
+            let(
+                rowstart = rowstarts[i],
+                nextrow = select(rowstarts,i+1),
+                delta = select(lens,i+1)-lens[i]
+            )
+            delta == 0 ?
+              [for(j=[0:1:lens[i]-2]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow] : [j+rowstart, j+rowstart+1, j+nextrow],
+               for(j=[0:1:lens[i]-2]) reverse ? [j+rowstart+1, j+nextrow, j+nextrow+1] : [j+rowstart+1, j+nextrow+1, j+nextrow]] :
+            delta == 1 ?
+              [for(j=[0:1:lens[i]-2]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow+1] : [j+rowstart, j+rowstart+1, j+nextrow+1],
+               for(j=[0:1:lens[i]-1]) reverse ? [j+rowstart, j+nextrow, j+nextrow+1] : [j+rowstart, j+nextrow+1, j+nextrow]] :
+            delta == -1 ?
+              [for(j=[0:1:lens[i]-3]) reverse ? [j+rowstart+1, j+nextrow, j+nextrow+1]: [j+rowstart+1, j+nextrow+1, j+nextrow],
+               for(j=[0:1:lens[i]-2]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow] : [j+rowstart, j+rowstart+1, j+nextrow]] :
+            let(count = floor((lens[i]-1)/2))
+            delta == 2 ?
+              [
+               for(j=[0:1:count-1]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow+1] : [j+rowstart, j+rowstart+1, j+nextrow+1],       // top triangles left
+               for(j=[count:1:lens[i]-2]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow+2] : [j+rowstart, j+rowstart+1, j+nextrow+2], // top triangles right
+               for(j=[0:1:count]) reverse ? [j+rowstart, j+nextrow, j+nextrow+1] : [j+rowstart, j+nextrow+1, j+nextrow],                        // bot triangles left
+               for(j=[count+1:1:select(lens,i+1)-2]) reverse ? [j+rowstart-1, j+nextrow, j+nextrow+1] : [j+rowstart-1, j+nextrow+1, j+nextrow], // bot triangles right
+              ] :
+             delta == -2 ?
+              [
+               for(j=[0:1:count-2]) reverse ? [j+nextrow, j+nextrow+1, j+rowstart+1] : [j+nextrow, j+rowstart+1, j+nextrow+1],
+               for(j=[count-1:1:lens[i]-4]) reverse ? [j+nextrow,j+nextrow+1,j+rowstart+2] : [j+nextrow,j+rowstart+2, j+nextrow+1],
+               for(j=[0:1:count-1]) reverse ? [j+nextrow, j+rowstart+1, j+rowstart] : [j+nextrow, j+rowstart, j+rowstart+1],
+               for(j=[count:1:select(lens,i+1)]) reverse ? [ j+nextrow-1, j+rowstart+1, j+rowstart]: [ j+nextrow-1, j+rowstart, j+rowstart+1],
+              ] :
+            assert(false,str("Unsupported row length difference of ",delta, " between row ",i," and ",(i+1)%len(points)))
+        ])
+    vnf_merge(cleanup=true, [vnf, [flatten(points), faces]]);
+
+
+
 // Module: vnf_polyhedron()
 // Usage:
 //   vnf_polyhedron(vnf);
