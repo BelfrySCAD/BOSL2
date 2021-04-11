@@ -912,36 +912,40 @@ function _eigenvals_symm_3(M) =
     [ e1, e2, e3 ];
 
 
-// i-th normalized eigenvector of 3x3 symmetrical matrix M from its eigenvalues
+// the i-th normalized eigenvector of a 3x3 symmetrical matrix M from its eigenvalues
 // using Cayley–Hamilton theorem according to:
 // https://en.wikipedia.org/wiki/Eigenvalue_algorithm 
 function _eigenvec_symm_3(M,evals,i=0) = 
-  let(  A  = (M - evals[(i+1)%3]*ident(3)) * (M - evals[(i+2)%3]*ident(3)) ,
-        k = max_index( [for(i=[0:2]) norm(A[i]) ]) 
-     )
-  norm(A[k])<EPSILON ? ident(3)[k] : A[k]/norm(A[k]);
+		let(  
+				I = ident(3), 
+				A = (M - evals[(i+1)%3]*I) * (M - evals[(i+2)%3]*I) ,
+				k = max_index( [for(i=[0:2]) norm(A[i]) ]) 
+			 )
+		norm(A[k])<EPSILON ? I[k] : A[k]/norm(A[k]);
 
 
-// eigenvalues of the covariance matrix of points
-function _covariance_evals(points) =
-    let(  pm   = sum(points)/len(points), // mean point
-          Y    = [ for(i=[0:len(points)-1]) points[i] - pm ],
-          M    = transpose(Y)*Y ,     // covariance matrix
-          evals = _eigenvals_symm_3(M) )
-    [pm, evals, M ];
-          
+// finds the eigenvector corresponding to the smallest eigenvalue of the covariance matrix of a pointlist
+// returns the mean of the points, the eigenvector and the greatest eigenvalue
+function _covariance_evec_eval(points) =
+    let(  pm    = sum(points)/len(points), // mean point
+          Y     = [ for(i=[0:len(points)-1]) points[i] - pm ],
+          M     = transpose(Y)*Y ,     // covariance matrix
+          evals = _eigenvals_symm_3(M), // eigenvalues in decreasing order
+          evec  = _eigenvec_symm_3(M,evals,i=2) )
+    [pm, evec, evals[0] ];
+
 
 // Function: plane_from_points()
 // Usage:
 //   plane_from_points(points, <fast>, <eps>);
 // Description:
 //   Given a list of 3 or more coplanar 3D points, returns the coefficients of the normalized cartesian equation of a plane,
-//   that is [A,B,C,D] where Ax+By+Cz=D is the equation of the plane where norm([A,B,C])=1.
+//   that is [A,B,C,D] where Ax+By+Cz=D is the equation of the plane and norm([A,B,C])=1.
 //   If `fast` is false and the points in the list are collinear or not coplanar, then `undef` is returned.
 //   If `fast` is true, the polygon coplanarity check is skipped and a best fitted plane is returned.
 // Arguments:
 //   points = The list of points to find the plane of.
-//   fast = If true, don't verify that all points in the list are coplanar.  Default: false
+//   fast = If true, don't verify the point coplanarity.  Default: false
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 // Example(3D):
 //   xyzpath = rot(45, v=[-0.3,1,0], p=path3d(star(n=6,id=70,d=100), 70));
@@ -956,14 +960,13 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
     ?   let( plane = plane3pt(points[0],points[1],points[2]) )
         plane==[] ? undef : plane    
     :   let(  
-            cov_evals = _covariance_evals(points),
-            pm        = cov_evals[0],
-            evals     = cov_evals[1],
-            M         = cov_evals[2],
-            evec      = _eigenvec_symm_3(M,evals,i=2) )
-// echo(error_points_plane= abs(max(points*evec)-pm*evec), limit=eps)
-        !fast && abs(max(points*evec)-pm*evec)>eps*evals[0] ? undef :
-        [ each evec, pm*evec] ;
+            covmix = _covariance_evec_eval(points),
+            pm     = covmix[0],
+            evec   = covmix[1],
+            eval0  = covmix[2],
+            plane  = [ each evec, pm*evec] )
+        !fast && _pointlist_greatest_distance(points,plane)>eps*eval0 ? undef :
+        plane ;
 
 
 // Function: plane_from_polygon()
@@ -1291,11 +1294,17 @@ function coplanar(points, eps=EPSILON) =
     len(points)<=2 ? false
     :   let( ip = noncollinear_triple(points,error=false,eps=eps) )
         ip == [] ? false :
-        let( 
-            plane  = plane3pt(points[ip[0]],points[ip[1]],points[ip[2]]),
-            normal = point3d(plane),
-            pt_nrm = points*normal )
-        abs(max(max(pt_nrm)-plane[3], -min(pt_nrm)+plane[3])) < eps;
+        let( plane  = plane3pt(points[ip[0]],points[ip[1]],points[ip[2]]) )
+        _pointlist_greatest_distance(points,plane) < eps;
+
+
+// the maximum distance from points to the plane 
+function _pointlist_greatest_distance(points,plane) =
+    let( 
+				normal = point3d(plane),
+				pt_nrm = points*normal
+         )
+		abs(max( max(pt_nrm) - plane[3], -min(pt_nrm)+plane[3])) / norm(normal);
 
 
 // Function: points_on_plane()
@@ -1311,9 +1320,7 @@ function points_on_plane(points, plane, eps=EPSILON) =
     assert( _valid_plane(plane), "Invalid plane." )
     assert( is_matrix(points,undef,3) && len(points)>0, "Invalid pointlist." ) // using is_matrix it accepts len(points)==1
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
-    let( normal = point3d(plane),
-         pt_nrm = points*normal )
-    abs(max( max(pt_nrm) - plane[3], -min(pt_nrm)+plane[3]))< eps*norm(normal);
+    _pointlist_greatest_distance(points,plane) < eps;
 
 
 // Function: in_front_of_plane()
