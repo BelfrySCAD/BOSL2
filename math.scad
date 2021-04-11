@@ -985,10 +985,8 @@ function determinant(M) =
 function is_matrix(A,m,n,square=false) =
    is_list(A)
    && (( is_undef(m) && len(A) ) || len(A)==m)
-   && is_list(A[0])
-   && (( is_undef(n) && len(A[0]) ) || len(A[0])==n)
    && (!square || len(A) == len(A[0]))
-   && is_vector(A[0])
+   && is_vector(A[0],n)
    && is_consistent(A);
 
 
