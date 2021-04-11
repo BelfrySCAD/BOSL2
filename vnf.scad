@@ -450,18 +450,13 @@ function vnf_volume(vnf) =
 //   Returns the centroid of the given manifold VNF.  The VNF must describe a valid polyhedron with consistent face direction and
 //   no holes; otherwise the results are undefined.
 
-// Divide the solid up into tetrahedra with the origin as one vertex.  The centroid of a tetrahedron is the average of its vertices.
+// Divide the solid up into tetrahedra with the origin as one vertex.  
+// The centroid of a tetrahedron is the average of its vertices.
 // The centroid of the total is the volume weighted average.
 function vnf_centroid(vnf) =
+    assert(is_vnf(vnf) && len(vnf[0])!=0 ) 
     let(
         verts = vnf[0],
-        vol = sum([
-            for(face=vnf[1], j=[1:1:len(face)-2]) let(
-                v0  = verts[face[0]],
-                v1  = verts[face[j]],
-                v2  = verts[face[j+1]]
-            ) cross(v2,v1)*v0
-        ]),
         pos = sum([
             for(face=vnf[1], j=[1:1:len(face)-2]) let(
                 v0  = verts[face[0]],
@@ -469,10 +464,11 @@ function vnf_centroid(vnf) =
                 v2  = verts[face[j+1]],
                 vol = cross(v2,v1)*v0
             )
-            (v0+v1+v2)*vol
+            [ vol, (v0+v1+v2)*vol ]
         ])
     )
-    pos/vol/4;
+    assert(!approx(pos[0],0, EPSILON), "The vnf has self-intersections.")
+    pos[1]/pos[0]/4;
 
 
 function _triangulate_planar_convex_polygons(polys) =
