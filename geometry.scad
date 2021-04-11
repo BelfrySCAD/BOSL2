@@ -1304,7 +1304,7 @@ function _pointlist_greatest_distance(points,plane) =
         normal = point3d(plane),
         pt_nrm = points*normal
          )
-    abs(max( max(pt_nrm) - plane[3], -min(pt_nrm)+plane[3])) / norm(normal);
+    abs(max( max(pt_nrm) - plane[3], -min(pt_nrm) + plane[3])) / norm(normal);
 
 
 // Function: points_on_plane()
@@ -1786,7 +1786,7 @@ function polygon_area(poly, signed=false) =
       : let( plane = plane_from_polygon(poly) )
         plane==[]? [] :
         let(
-            n = plane_normal(plane),	
+            n = plane_normal(plane),  
             total = sum([
                 for(i=[1:1:len(poly)-2])
                     let(
@@ -1808,25 +1808,26 @@ function polygon_area(poly, signed=false) =
 //   If the points are collinear an error is generated.
 // Arguments:
 //   poly = Polygon to check.
+//   eps = Tolerance for the collinearity test. Default: EPSILON.
 // Example:
 //   is_convex_polygon(circle(d=50));  // Returns: true
 //   is_convex_polygon(rot([50,120,30], p=path3d(circle(1,$fn=50)))); // Returns: true
 // Example:
 //   spiral = [for (i=[0:36]) let(a=-i*10) (10+i)*[cos(a),sin(a)]];
 //   is_convex_polygon(spiral);  // Returns: false
-function is_convex_polygon(poly) =
+function is_convex_polygon(poly,eps=EPSILON) =
     assert(is_path(poly), "The input should be a 2D or 3D polygon." )
     let( lp = len(poly),
          p0 = poly[0] )
     assert( lp>=3 , "A polygon must have at least 3 points" )
     let( crosses = [for(i=[0:1:lp-1]) cross(poly[(i+1)%lp]-poly[i], poly[(i+2)%lp]-poly[(i+1)%lp]) ] )
     len(p0)==2
-    ?   assert( !approx(max(crosses)) && !approx(min(crosses)), "The points are collinear" )
+    ?   assert( !approx(sqrt(max(max(crosses),-min(crosses))),eps), "The points are collinear" )
         min(crosses) >=0 || max(crosses)<=0
     :   let( prod = crosses*sum(crosses),
              minc = min(prod),
              maxc = max(prod) )
-        assert( !approx(maxc-minc), "The points are collinear" )
+        assert( !approx(sqrt(max(maxc,-minc)),eps), "The points are collinear" )
         minc>=0 || maxc<=0;
 
 

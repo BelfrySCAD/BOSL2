@@ -847,6 +847,7 @@ module test_is_convex_polygon() {
     assert(is_convex_polygon(circle(r=50,$fn=1000)));
     assert(is_convex_polygon(rot([50,120,30], p=path3d(circle(1,$fn=50)))));
     assert(!is_convex_polygon([[1,1],[0,0],[-1,1],[-1,-1],[1,-1]]));
+    assert(!is_convex_polygon([for (i=[0:36]) let(a=-i*10) (10+i)*[cos(a),sin(a)]])); //   spiral 
 }
 *test_is_convex_polygon();
 
