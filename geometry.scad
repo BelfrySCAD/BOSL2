@@ -453,7 +453,7 @@ function segment_closest_point(seg,pt) =
 // Usage:
 //   line_from_points(points, [fast], [eps]);
 // Description:
-//   Given a list of 2 or more colinear points, returns a line containing them.
+//   Given a list of 2 or more collinear points, returns a line containing them.
 //   If `fast` is false and the points are coincident, then `undef` is returned.
 //   if `fast` is true, then the collinearity test is skipped and a line passing through 2 distinct arbitrary points is returned.
 // Arguments:
@@ -916,12 +916,12 @@ function _eigenvals_symm_3(M) =
 // using Cayley–Hamilton theorem according to:
 // https://en.wikipedia.org/wiki/Eigenvalue_algorithm 
 function _eigenvec_symm_3(M,evals,i=0) = 
-		let(  
-				I = ident(3), 
-				A = (M - evals[(i+1)%3]*I) * (M - evals[(i+2)%3]*I) ,
-				k = max_index( [for(i=[0:2]) norm(A[i]) ]) 
-			 )
-		norm(A[k])<EPSILON ? I[k] : A[k]/norm(A[k]);
+    let(  
+        I = ident(3), 
+        A = (M - evals[(i+1)%3]*I) * (M - evals[(i+2)%3]*I) ,
+        k = max_index( [for(i=[0:2]) norm(A[i]) ]) 
+       )
+    norm(A[k])<EPSILON ? I[k] : A[k]/norm(A[k]);
 
 
 // finds the eigenvector corresponding to the smallest eigenvalue of the covariance matrix of a pointlist
@@ -941,7 +941,7 @@ function _covariance_evec_eval(points) =
 // Description:
 //   Given a list of 3 or more coplanar 3D points, returns the coefficients of the normalized cartesian equation of a plane,
 //   that is [A,B,C,D] where Ax+By+Cz=D is the equation of the plane and norm([A,B,C])=1.
-//   If `fast` is false and the points in the list are collinear or not coplanar, then `undef` is returned.
+//   If `fast` is false and the points in the list are collinear or not coplanar, then [] is returned.
 //   If `fast` is true, the polygon coplanarity check is skipped and a best fitted plane is returned.
 // Arguments:
 //   points = The list of points to find the plane of.
@@ -958,7 +958,7 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     len(points) == 3 
     ?   let( plane = plane3pt(points[0],points[1],points[2]) )
-        plane==[] ? undef : plane    
+        plane==[] ? [] : plane    
     :   let(  
             covmix = _covariance_evec_eval(points),
             pm     = covmix[0],
@@ -976,7 +976,7 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
 //   Given a 3D planar polygon, returns the normalized cartesian equation of its plane.
 //   Returns [A,B,C,D] where Ax+By+Cz=D is the equation of the plane where norm([A,B,C])=1.
 //   If not all the points in the polygon are coplanar, then [] is returned.
-//   If `fast` is false and the points in the list are collinear or not coplanar, then `undef` is returned.
+//   If `fast` is false and the points in the list are collinear or not coplanar, then [] is returned.
 //   if `fast` is true, then the coplanarity test is skipped and a plane passing through 3 non-collinear arbitrary points is returned.
 // Arguments:
 //   poly = The planar 3D polygon to find the plane of.
@@ -1301,10 +1301,10 @@ function coplanar(points, eps=EPSILON) =
 // the maximum distance from points to the plane 
 function _pointlist_greatest_distance(points,plane) =
     let( 
-				normal = point3d(plane),
-				pt_nrm = points*normal
+        normal = point3d(plane),
+        pt_nrm = points*normal
          )
-		abs(max( max(pt_nrm) - plane[3], -min(pt_nrm)+plane[3])) / norm(normal);
+    abs(max( max(pt_nrm) - plane[3], -min(pt_nrm)+plane[3])) / norm(normal);
 
 
 // Function: points_on_plane()
@@ -1647,20 +1647,19 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
 
 // Function: circle_line_intersection()
 // Usage:
-//   isect = circle_line_intersection(c,r,line,<bounded>,<eps>);
-//   isect = circle_line_intersection(c,d,line,<bounded>,<eps>);
+//   isect = circle_line_intersection(c,<r|d>,<line>,<bounded>,<eps>);
 // Description:
 //   Find intersection points between a 2d circle and a line, ray or segment specified by two points.
 //   By default the line is unbounded.
 // Arguments:
 //   c = center of circle
 //   r = radius of circle
+//   ---
+//   d = diameter of circle
 //   line = two points defining the unbounded line
 //   bounded = false for unbounded line, true for a segment, or a vector [false,true] or [true,false] to specify a ray with the first or second end unbounded.  Default: false
 //   eps = epsilon used for identifying the case with one solution.  Default: 1e-9
-//   ---
-//   d = diameter of circle
-function circle_line_intersection(c,r,line,d,bounded=false,eps=EPSILON) =
+function circle_line_intersection(c,r,d,line,bounded=false,eps=EPSILON) =
   let(r=get_radius(r=r,d=d,dflt=undef))
   assert(_valid_line(line,2), "Input 'line' is not a valid 2d line.")
   assert(is_vector(c,2), "Circle center must be a 2-vector")
@@ -2100,7 +2099,7 @@ function reverse_polygon(poly) =
 //   n = polygon_normal(poly);
 // Description:
 //   Given a 3D planar polygon, returns a unit-length normal vector for the
-//   clockwise orientation of the polygon. If the polygon points are collinear, returns `undef`.
+//   clockwise orientation of the polygon. If the polygon points are collinear, returns [].
 //   It doesn't check for coplanarity.
 // Arguments:
 //   poly = The list of 3D path points for the perimeter of the polygon.
@@ -2108,7 +2107,7 @@ function polygon_normal(poly) =
     assert(is_path(poly,dim=3), "Invalid 3D polygon." )
     len(poly)==3 ? point3d(plane3pt(poly[0],poly[1],poly[2])) :
     let( triple = sort(noncollinear_triple(poly,error=false)) )
-    triple==[] ? undef :
+    triple==[] ? [] :
     point3d(plane3pt(poly[triple[0]],poly[triple[1]],poly[triple[2]])) ;
 
 
