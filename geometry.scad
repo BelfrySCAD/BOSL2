@@ -1784,7 +1784,7 @@ function polygon_area(poly, signed=false) =
     len(poly[0])==2
       ? let( total = sum([for(i=[1:1:len(poly)-2]) cross(poly[i]-poly[0],poly[i+1]-poly[0]) ])/2 )
         signed ? total : abs(total)
-      : let( plane = plane_from_points(poly) )
+      : let( plane = plane_from_polygon(poly) )
         plane==undef? undef :
         let(
             n = plane_normal(plane),
@@ -2101,18 +2101,15 @@ function reverse_polygon(poly) =
 // Description:
 //   Given a 3D planar polygon, returns a unit-length normal vector for the
 //   clockwise orientation of the polygon. If the polygon points are collinear, returns `undef`.
+//   It doesn't check for coplanarity.
 // Arguments:
 //   poly = The list of 3D path points for the perimeter of the polygon.
 function polygon_normal(poly) =
     assert(is_path(poly,dim=3), "Invalid 3D polygon." )
-    let(
-        poly = cleanup_path(poly),
-        p0 = poly[0],
-        n = sum([
-            for (i=[1:1:len(poly)-2])
-            cross(poly[i+1]-p0, poly[i]-p0)
-        ])
-    ) unit(n,undef);
+    len(poly)==3 ? point3d(plane3pt(poly[0],poly[1],poly[2])) :
+    let( triple = sort(noncollinear_triple(poly,error=false)) )
+    triple==[] ? undef :
+    point3d(plane3pt(poly[triple[0]],poly[triple[1]],poly[triple[2]])) ;
 
 
 function _split_polygon_at_x(poly, x) =
