@@ -1856,10 +1856,10 @@ function reindex_polygon(reference, poly, return_error=false) =
                   polygon_is_clockwise(reference)
                   ? clockwise_polygon(poly)
                   : ccw_polygon(poly),
-        I   = [for(i=[0:N-1]) 1],
+        I   = [for(i=reference) 1],
         val = [ for(k=[0:N-1])
-                  [for(i=[0:N-1])
-                     (reference[i]*poly[(i+k)%N]) ] ]*I,
+                    [for(i=[0:N-1])
+                      (reference[i]*poly[(i+k)%N]) ] ]*I,
         optimal_poly = polygon_shift(fixpoly, max_index(val))
       )
     return_error? [optimal_poly, min(poly*(I*poly)-2*val)] :
