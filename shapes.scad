@@ -1588,7 +1588,7 @@ module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
         rotate_extrude(convexity=2) {
             difference() {
                 teardrop2d(r=r, ang=ang, cap_h=cap_h);
-                left(r) square(size=[2*r,2*cap_h], center=true);
+                left(r) square(size=[2*r,2*max(cap_h,r)+1], center=true);
             }
         }
         children();
