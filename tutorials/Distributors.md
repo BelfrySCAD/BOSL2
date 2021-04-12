@@ -1,4 +1,6 @@
-# BOSL2 Distributors Tutorial
+# Distributors Tutorial
+
+<!-- TOC -->
 
 ## Distributors
 
