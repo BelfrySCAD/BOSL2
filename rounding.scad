@@ -1779,8 +1779,8 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   M = path3d(turtle(["left", 180, "length",3,"move", "left", "move", 3, "right", "move", "right", "move", 4, "right", "move", 3, "right", "move", 2]));
 //   rounded_prism(M, apply(right(1)*scale(.75)*up(3),M), joint_top=0.5, joint_bot=0.2, joint_sides=[.2,1,1,0.5,1.5,.5,2], splinesteps=32);
 // Example: this example shows most of the different types of patches that rounded_prism creates.  Note that some of the patches are close to interfering with each other across the top of the polyhedron, which would create an invalid result.
-//   N = apply(rot(180)*yscale(.8),turtle(["length",3,"left", "move", 2, "right", 135, "move", sqrt(2), "left", "move", sqrt(2), "right", 135, "move", 2]));
-//   rounded_prism(N, height=3, joint_bot=0.5, joint_top=1.25, joint_sides=[[1,1.75],0,.5,.5,2], debug=true);
+   N = apply(rot(180)*yscale(.8),turtle(["length",3,"left", "move", 2, "right", 135, "move", sqrt(2), "left", "move", sqrt(2), "right", 135, "move", 2]));
+   rounded_prism(N, height=3, joint_bot=0.5, joint_top=1.25, joint_sides=[[1,1.75],0,.5,.5,2], debug=true);
 // Example: This object has different scales on its different axies.  Here is the largest symmetric rounding that fits.  Note that the rounding is slightly smaller than the object dimensions because of roundoff error.
 //   rounded_prism(square([100.1,30.1]), height=8.1, joint_top=4, joint_bot=4, joint_sides=15, k_sides=0.3, splinesteps=32);
 // Example: Using asymetric rounding enables a much more rounded form:
@@ -1886,8 +1886,8 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
    let(
      // Entries in the next two lists have the form [edges, vnf] where
      // edges is a list [leftedge, rightedge, topedge, botedge]
-     top_samples = [for(patch=top_patch) bezier_patch_degenerate(patch,splinesteps,reverse=true) ],
-     bot_samples = [for(patch=bot_patch) bezier_patch_degenerate(patch,splinesteps,reverse=false) ],
+     top_samples = [for(patch=top_patch) bezier_patch_degenerate(patch,splinesteps,reverse=true,return_edges=true) ],
+     bot_samples = [for(patch=bot_patch) bezier_patch_degenerate(patch,splinesteps,reverse=false,return_edges=true) ],
      leftidx=0,
      rightidx=1,
      topidx=2,
@@ -1895,14 +1895,14 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
      edge_points =
        [for(i=[0:N-1])
             let(
-               top_edge  = [ top_samples[i][0][rightidx], select(top_samples, i+1)[0][leftidx]],
-               bot_edge  = [ select(bot_samples, i+1)[0][leftidx], bot_samples[i][0][rightidx]],
-               vert_edge = [ bot_samples[i][0][botidx], top_samples[i][0][botidx]]
+               top_edge  = [ top_samples[i][1][rightidx], select(top_samples, i+1)[1][leftidx]],
+               bot_edge  = [ select(bot_samples, i+1)[1][leftidx], bot_samples[i][1][rightidx]],
+               vert_edge = [ bot_samples[i][1][botidx], top_samples[i][1][botidx]]
                )
                each [top_edge, bot_edge, vert_edge] ],
      faces = [
-              [for(i=[0:N-1]) each top_samples[i][0][topidx]],
-              [for(i=[N-1:-1:0]) each reverse(bot_samples[i][0][topidx])],
+              [for(i=[0:N-1]) each top_samples[i][1][topidx]],
+              [for(i=[N-1:-1:0]) each reverse(bot_samples[i][1][topidx])],
               for(i=[0:N-1]) [
                                  bot_patch[i][4][4],
                                  select(bot_patch,i+1)[4][0],
@@ -1934,123 +1934,13 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
           "Roundovers interfere with each other on bottom face: either input is self intersecting or top joint length is too large")
     assert(debug || (verify_vert==[] && verify_horiz==[]), "Curvature continuity failed")
     let(
-        vnf = vnf_merge([ each subindex(top_samples,1),
-                          each subindex(bot_samples,1),
+        vnf = vnf_merge([ each subindex(top_samples,0),
+                          each subindex(bot_samples,0),
                           for(pts=edge_points) vnf_vertex_array(pts),
                           vnf_triangulate(vnf_add_faces(EMPTY_VNF,faces))
                        ])
     )
     debug ? [concat(top_patch, bot_patch), vnf] : vnf;
-
-
-// This function takes a bezier patch as input and returns [edges, vnf], where
-// edges = [leftedge, rightedge, topedge, bottomedge]
-// gives the points along the edges of the patch, and the vnf is the patch vnf.
-// It checks for various types of degeneracy and uses half or full triangular
-// sampling on degenerate patches.
-
-function bezier_patch_degenerate(patch, splinesteps=16, reverse=false) =
-    assert(is_num(splinesteps), "splinesteps must be a number")
-    let(
-        top_degen = patch[0][0] == last(patch[0]),
-        bot_degen = last(patch)[0] == last(last(patch)),
-        left_degen = patch[0][0] == last(patch)[0],
-        right_degen = last(patch[0]) == last(last(patch)),
-        samplepts = count(splinesteps+1)/splinesteps
-    )
-    top_degen && bot_degen && left_degen && right_degen ?   // fully degenerate case
-        [repeat([patch[0][0]],4), EMPTY_VNF] :
-    top_degen && bot_degen ?                                // double degenerate case (top/bot)
-        let(  
-            pts = bezier_points(subindex(patch,0), samplepts)
-        )
-        [[pts,pts,[pts[0]],[last(pts)]], EMPTY_VNF] :
-    left_degen && right_degen ?                             // double degenerate case (sides)
-       let(
-          pts = bezier_points(patch[0], samplepts)
-       )
-       [[[pts[0]], [last(pts)], pts, pts], EMPTY_VNF] :
-    !top_degen && !bot_degen ?                             // non-degenerate case
-       let(
-           k=echo("non-degenerate case"),
-           pts = bezier_patch_points(patch, samplepts, samplepts)
-       )
-       [
-        [subindex(pts,0), subindex(pts,len(pts)-1), pts[0], last(pts)],
-        vnf_vertex_array(pts, reverse=reverse)
-       ] :
-    bot_degen ?                                           // only bottom is degenerate
-       let(
-           result = bezier_patch_degenerate(reverse(patch), splinesteps=splinesteps, reverse=!reverse)
-       )
-       [
-          [reverse(result[0][0]), reverse(result[0][1]), (result[0][3]), (result[0][2])],
-          result[1]
-       ] :
-    // at this point top_degen is true                   // only top is degenerate
-       let(
-           full_degen = patch[1][0] == last(patch[1]),
-           rowmax = full_degen ? count(splinesteps+1) :
-                                 [for(j=[0:splinesteps]) j<=splinesteps/2 ? 2*j : splinesteps],
-           vbb=echo("single degenerate case"),
-           bpatch = [for(i=[0:1:len(patch[0])-1]) bezier_points(subindex(patch,i), samplepts)],
-           pts = [
-                  [bpatch[0][0]],
-                  for(j=[1:splinesteps]) bezier_points(subindex(bpatch,j), lerpn(0,1,rowmax[j]+1))
-                 ],
-           vnf = vnf_tri_array(pts, reverse=reverse)
-        ) [
-            [
-             subindex(pts,0),
-             [for(row=pts) last(row)],
-             pts[0],
-             last(pts),
-            ],
-            vnf
-          ];
-
-
-// This function produces a vnf with a triangulation for a list of rows
-// where the number of points between rows differs by at most 2.
-// It's a generalization of vnf_vertex_array.
-function vnf_tri_array(points, row_wrap=false, reverse=false) =
-   let(
-       lens = [for(row=points) len(row)],
-       rowstarts = [0,each cumsum(lens)],
-       faces =
-          [for(i=[0:1:len(points) - 1 - (row_wrap ? 0 : 1)]) each
-            let(
-                rowstart = rowstarts[i],
-                nextrow = select(rowstarts,i+1),
-                delta = select(lens,i+1)-lens[i]
-            )
-            delta == 0 ?
-              [for(j=[0:1:lens[i]-2]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow] : [j+rowstart, j+rowstart+1, j+nextrow],
-               for(j=[0:1:lens[i]-2]) reverse ? [j+rowstart+1, j+nextrow, j+nextrow+1] : [j+rowstart+1, j+nextrow+1, j+nextrow]] :
-            delta == 1 ?
-              [for(j=[0:1:lens[i]-2]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow+1] : [j+rowstart, j+rowstart+1, j+nextrow+1],
-               for(j=[0:1:lens[i]-1]) reverse ? [j+rowstart, j+nextrow, j+nextrow+1] : [j+rowstart, j+nextrow+1, j+nextrow]] :
-            delta == -1 ?
-              [for(j=[0:1:lens[i]-3]) reverse ? [j+rowstart+1, j+nextrow, j+nextrow+1]: [j+rowstart+1, j+nextrow+1, j+nextrow],
-               for(j=[0:1:lens[i]-2]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow] : [j+rowstart, j+rowstart+1, j+nextrow]] :
-            let(count = floor((lens[i]-1)/2))
-            delta == 2 ?
-              [
-               for(j=[0:1:count-1]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow+1] : [j+rowstart, j+rowstart+1, j+nextrow+1],       // top triangles left
-               for(j=[count:1:lens[i]-2]) reverse ? [j+rowstart+1, j+rowstart, j+nextrow+2] : [j+rowstart, j+rowstart+1, j+nextrow+2], // top triangles right
-               for(j=[0:1:count]) reverse ? [j+rowstart, j+nextrow, j+nextrow+1] : [j+rowstart, j+nextrow+1, j+nextrow],                        // bot triangles left
-               for(j=[count+1:1:select(lens,i+1)-2]) reverse ? [j+rowstart-1, j+nextrow, j+nextrow+1] : [j+rowstart-1, j+nextrow+1, j+nextrow], // bot triangles right
-              ] :
-             delta == -2 ?
-              [
-               for(j=[0:1:count-2]) reverse ? [j+nextrow, j+nextrow+1, j+rowstart+1] : [j+nextrow, j+rowstart+1, j+nextrow+1],
-               for(j=[count-1:1:lens[i]-4]) reverse ? [j+nextrow,j+nextrow+1,j+rowstart+2] : [j+nextrow,j+rowstart+2, j+nextrow+1],
-               for(j=[0:1:count-1]) reverse ? [j+nextrow, j+rowstart+1, j+rowstart] : [j+nextrow, j+rowstart, j+rowstart+1],
-               for(j=[count:1:select(lens,i+1)]) reverse ? [ j+nextrow-1, j+rowstart+1, j+rowstart]: [ j+nextrow-1, j+rowstart, j+rowstart+1],
-              ] :
-            assert(false,str("Unsupported row length difference of ",delta, " between row ",i," and ",i+1))
-        ])
-    [flatten(points), faces];
 
 
 

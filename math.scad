@@ -583,7 +583,7 @@ function lcm(a,b=[]) =
 function sum(v, dflt=0) =
     v==[]? dflt :
     assert(is_consistent(v), "Input to sum is non-numeric or inconsistent")
-    is_vector(v) || is_matrix(v) ? [for(i=[1:len(v)]) 1]*v :
+    is_vector(v) || is_matrix(v) ? [for(i=v) 1]*v :
     _sum(v,v[0]*0);
 
 function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
@@ -985,10 +985,8 @@ function determinant(M) =
 function is_matrix(A,m,n,square=false) =
    is_list(A)
    && (( is_undef(m) && len(A) ) || len(A)==m)
-   && is_list(A[0])
-   && (( is_undef(n) && len(A[0]) ) || len(A[0])==n)
    && (!square || len(A) == len(A[0]))
-   && is_vector(A[0])
+   && is_vector(A[0],n)
    && is_consistent(A);
 
 
@@ -1154,6 +1152,18 @@ function all_nonnegative(x) =
     is_list(x)? (x != [] && [for (xx=x) if(!all_nonnegative(xx)) 1] == []) :
     false;
 
+
+// Function all_equal()
+// Usage:
+//   b = all_equal(vec,<eps>);
+// Description:
+//   Returns true if all of the entries in vec are equal to each other, or approximately equal to each other if eps is set.
+// Arguments:
+//   vec = vector to check
+//   eps = Set to tolerance for approximate equality.  Default: 0
+function all_equal(vec,eps=0) =
+   eps==0 ? [for(v=vec) if (v!=vec[0]) v] == []
+          : [for(v=vec) if (!approx(v,vec[0])) v] == [];
 
 // Function: approx()
 // Usage:

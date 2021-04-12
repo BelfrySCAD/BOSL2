@@ -205,7 +205,8 @@ function is_func(x) = version_num()>20210000 && is_function(x);
 // Description:
 //   Tests whether input is a list of entries which all have the same list structure
 //   and are filled with finite numerical data.  You can optionally specify a required 
-//   list structure with the pattern argument.  It returns `true` for the empty list.
+//   list structure with the pattern argument.  
+//   It returns `true` for the empty list regardless the value of the `pattern`.
 // Arguments:
 //   list = list to check
 //   pattern = optional pattern required to match
@@ -293,7 +294,7 @@ function default(v,dflt=undef) = is_undef(v)? dflt : v;
 //   v = The list whose items are being checked.
 //   recursive = If true, sublists are checked recursively for defined values.  The first sublist that has a defined item is returned.
 // Examples:
-//   val = first_defined([undef,7,undef,true]);  // Returns: 1
+//   val = first_defined([undef,7,undef,true]);  // Returns: 7
 function first_defined(v,recursive=false,_i=0) =
     _i<len(v) && (
         is_undef(v[_i]) || (
@@ -605,15 +606,15 @@ function segs(r) =
 
 
 // Module: no_children()
-// Topics: Error Checking
 // Usage:
 //   no_children($children);
+// Topics: Error Checking
+// See Also: no_function(), no_module()
 // Description:
 //   Assert that the calling module does not support children.  Prints an error message to this effect and fails if children are present,
 //   as indicated by its argument.
 // Arguments:
 //   $children = number of children the module has.  
-// See Also: no_function(), no_module()
 // Example:
 //   module foo() {
 //       no_children($children);
@@ -676,7 +677,7 @@ function _valstr(x) =
 //   expected = The value that was expected.
 //   info = Extra info to print out to make the error clearer.
 // Example:
-//   assert_approx(1/3, 0.333333333333333, str("numer=",1,", demon=",3));
+//   assert_approx(1/3, 0.333333333333333, str("number=",1,", demon=",3));
 module assert_approx(got, expected, info) {
     no_children($children);
     if (!approx(got, expected)) {
