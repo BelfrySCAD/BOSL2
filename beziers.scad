@@ -1222,6 +1222,193 @@ function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF, style="default") =
     ) vnf;
 
 
+
+// Function: bezier_patch_degenerate()
+// Usage:
+//   vnf = bezier_patch_degenerate(patch, <splinesteps>, <reverse>);
+//   vnf_edges = bezier_patch_degenerate(patch, <splinesteps>, <reverse>, return_edges=true);
+// Description:
+//   Returns a VNF for a degenerate rectangular bezier patch where some of the corners of the patch are
+//   equal.  If the resulting patch has no faces then returns an empty VNF.  Note that due to the degeneracy,
+//   the shape of the patch can be triangular even though the actual underlying patch is a rectangle.  This is
+//   a different method for creating triangular bezier patches than the triangular patch.
+//   If you specify return_edges then the return is a list whose first element is the vnf and whose second
+//   element lists the edges in the order [left, right, top, bottom], where each list is a list of the actual
+//   point values, but possibly only a single point if that edge is degenerate.
+//   The method checks for various types of degeneracy and uses a triangular or partly triangular array of sample points. 
+//   See examples below for the types of degeneracy detected and how the patch is sampled for those cases.
+//   Note that splinesteps is the same for both directions of the patch, so it cannot be an array. 
+// Arguments:
+//   patch = Patch to process
+//   splinesteps = Number of segments to produce on each side.  Default: 16
+//   reverse = reverse direction of faces.  Default: false
+//   return_edges = if true return the points on the four edges: [left, right, top, bottom].  Default: false
+// Example: This quartic patch is degenerate at one corner, where a row of control points are equal.  Processing this degenerate patch normally produces excess triangles near the degenerate point. 
+//   splinesteps=8;
+//   patch=[
+//         repeat([-12.5, 12.5, 15],5),
+//          [[-6.25, 11.25, 15], [-6.25, 8.75, 15], [-6.25, 6.25, 15], [-8.75, 6.25, 15], [-11.25, 6.25, 15]],
+//          [[0, 10, 15], [0, 5, 15], [0, 0, 15], [-5, 0, 15], [-10, 0, 15]],
+//          [[0, 10, 8.75], [0, 5, 8.75], [0, 0, 8.75], [-5, 0, 8.75], [-10, 0, 8.75]],
+//          [[0, 10, 2.5], [0, 5, 2.5], [0, 0, 2.5], [-5, 0, 2.5], [-10, 0, 2.5]]
+//         ];
+//   vnf_wireframe((bezier_patch(patch, splinesteps)),d=0.1);
+//   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
+// Example: With bezier_patch_degenerate the degenerate point does not have excess triangles.  The top half of the patch decreases the number of sampled points by 2 for each row.  
+//   splinesteps=8;
+//   patch=[
+//          repeat([-12.5, 12.5, 15],5),
+//          [[-6.25, 11.25, 15], [-6.25, 8.75, 15], [-6.25, 6.25, 15], [-8.75, 6.25, 15], [-11.25, 6.25, 15]],
+//          [[0, 10, 15], [0, 5, 15], [0, 0, 15], [-5, 0, 15], [-10, 0, 15]],
+//          [[0, 10, 8.75], [0, 5, 8.75], [0, 0, 8.75], [-5, 0, 8.75], [-10, 0, 8.75]],
+//          [[0, 10, 2.5], [0, 5, 2.5], [0, 0, 2.5], [-5, 0, 2.5], [-10, 0, 2.5]]
+//         ];
+//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),d=0.1);
+//   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
+// Example: With splinesteps odd you get one "odd" row where the point count decreases by 1 instead of 2.  You may prefer even values for splinesteps to avoid this. 
+//   splinesteps=7;
+//   patch=[
+//          repeat([-12.5, 12.5, 15],5),
+//          [[-6.25, 11.25, 15], [-6.25, 8.75, 15], [-6.25, 6.25, 15], [-8.75, 6.25, 15], [-11.25, 6.25, 15]],
+//          [[0, 10, 15], [0, 5, 15], [0, 0, 15], [-5, 0, 15], [-10, 0, 15]],
+//          [[0, 10, 8.75], [0, 5, 8.75], [0, 0, 8.75], [-5, 0, 8.75], [-10, 0, 8.75]],
+//          [[0, 10, 2.5], [0, 5, 2.5], [0, 0, 2.5], [-5, 0, 2.5], [-10, 0, 2.5]]
+//         ];
+//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),d=0.1);
+//   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
+// Example: A more extreme degeneracy occurs when the top half of a patch is degenerate to a line.  (For odd length patches the middle row must be degenerate to trigger this style.)  In this case the number of points in each row decreases by 1 for every row.  It doesn't matter of splinesteps is odd or even. 
+//   splinesteps=8;
+//   patch = [[[10, 0, 0], [10, -10.4, 0], [10, -20.8, 0], [1.876, -14.30, 0], [-6.24, -7.8, 0]],
+//            [[5, 0, 0], [5, -5.2, 0], [5, -10.4, 0], [0.938, -7.15, 0], [-3.12, -3.9, 0]],
+//            repeat([0,0,0],5),
+//            repeat([0,0,5],5),
+//            repeat([0,0,10],5)
+//           ];
+//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),d=0.1);
+//   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
+// Example: Here is a degenerate cubic patch.
+//   splinesteps=8;
+//   patch = [ [ [-20,0,0],  [-10,0,0],[0,10,0],[0,20,0] ],
+//             [ [-20,0,10], [-10,0,10],[0,10,10],[0,20,10]],
+//             [ [-10,0,20], [-5,0,20], [0,5,20], [0,10,20]],
+//              repeat([0,0,30],4)
+//               ];
+//   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
+//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),d=0.1);
+// Example: A more extreme degenerate cubic patch, where two rows are equal.
+//   splinesteps=8;
+//   patch = [ [ [-20,0,0], [-10,0,0],[0,10,0],[0,20,0] ],
+//             [ [-20,0,10], [-10,0,10],[0,10,10],[0,20,10] ],
+//              repeat([-10,10,20],4),
+//              repeat([-10,10,30],4)          
+//           ];
+//   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
+//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),d=0.1);
+// Example: Quadratic patch degenerate at the right side:
+//   splinesteps=8;
+//   patch = [[[0, -10, 0],[10, -5, 0],[20, 0, 0]],
+//            [[0, 0, 0],  [10, 0, 0], [20, 0, 0]],
+//            [[0, 0, 10], [10, 0, 5], [20, 0, 0]]];
+//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),d=0.1);
+//   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
+// Example: Cubic patch degenerate at both ends.  In this case the point count changes by 2 at every row.  
+//   splinesteps=8;
+//   patch = [
+//            repeat([10,-10,0],4),
+//            [ [-20,0,0], [-1,0,0],[0,10,0],[0,20,0] ],
+//            [ [-20,0,10], [-10,0,10],[0,10,10],[0,20,10] ],
+//            repeat([-10,10,20],4),
+//           ];
+//   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),d=0.1);
+//   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
+function bezier_patch_degenerate(patch, splinesteps=16, reverse=false, return_edges=false) =
+    !return_edges ? bezier_patch_degenerate(patch, splinesteps, reverse, true)[0] :
+    assert(is_rectpatch(patch), "Must supply rectangular bezier patch")
+    assert(is_int(splinesteps) && splinesteps>=3, "splinesteps must be an integer 3 or larger")
+    let(
+        row_degen = [for(row=patch) all_equal(row)],
+        col_degen = [for(col=transpose(patch)) all_equal(col)],
+        
+        top_degen = row_degen[0],
+        bot_degen = last(row_degen),
+        left_degen = col_degen[0],
+        right_degen = last(col_degen),
+        samplepts = lerpn(0,1,splinesteps+1)
+    )
+    all(row_degen) && all(col_degen) ?  // fully degenerate case
+        [EMPTY_VNF, repeat([patch[0][0]],4)] :
+    all(row_degen) ?                         // degenerate to a line (top to bottom)
+        let(pts = bezier_points(subindex(patch,0), samplepts))
+        [EMPTY_VNF, [pts,pts,[pts[0]],[last(pts)]]] :
+    all(col_degen) ?                         // degenerate to a line (left to right)
+        let(pts = bezier_points(patch[0], samplepts))
+        [EMPTY_VNF, [[pts[0]], [last(pts)], pts, pts]] :
+    !top_degen && !bot_degen && !left_degen && !right_degen ?       // non-degenerate case
+       let(pts = bezier_patch_points(patch, samplepts, samplepts))
+       [
+        vnf_vertex_array(pts, reverse=!reverse),
+        [subindex(pts,0), subindex(pts,len(pts)-1), pts[0], last(pts)]
+       ] :
+    top_degen && bot_degen ?
+       let(
+            rowcount = [
+                        each list([3:2:splinesteps]),
+                        if (splinesteps%2==0) splinesteps+1,
+                        each reverse(list([3:2:splinesteps]))
+                       ],
+            bpatch = [for(i=[0:1:len(patch[0])-1]) bezier_points(subindex(patch,i), samplepts)],
+            pts = [
+                  [bpatch[0][0]],
+                  for(j=[0:splinesteps-2]) bezier_points(subindex(bpatch,j+1), lerpn(0,1,rowcount[j])),
+                  [last(bpatch[0])]
+                  ],
+            vnf = vnf_tri_array(pts, reverse=reverse)
+         ) [
+            vnf,
+            [
+             subindex(pts,0),
+             [for(row=pts) last(row)],
+             pts[0],
+             last(pts),
+            ]
+          ]  :    
+    bot_degen ?                                           // only bottom is degenerate
+       let(
+           result = bezier_patch_degenerate(reverse(patch), splinesteps=splinesteps, reverse=!reverse, return_edges=true)
+       )
+       [
+          result[0],
+          [reverse(result[1][0]), reverse(result[1][1]), (result[1][3]), (result[1][2])]
+       ] :
+    top_degen ?                                          // only top is degenerate
+       let(
+           full_degen = len(patch)>=4 && all(select(row_degen,1,ceil(len(patch)/2-1))),
+           rowmax = full_degen ? count(splinesteps+1) :
+                                 [for(j=[0:splinesteps]) j<=splinesteps/2 ? 2*j : splinesteps],
+           bpatch = [for(i=[0:1:len(patch[0])-1]) bezier_points(subindex(patch,i), samplepts)],
+           pts = [
+                  [bpatch[0][0]],
+                  for(j=[1:splinesteps]) bezier_points(subindex(bpatch,j), lerpn(0,1,rowmax[j]+1))
+                 ],
+           vnf = vnf_tri_array(pts, reverse=reverse)
+        ) [
+            vnf,
+            [
+             subindex(pts,0),
+             [for(row=pts) last(row)],
+             pts[0],
+             last(pts),
+            ]
+          ] :
+      // must have left or right degeneracy, so transpose and recurse
+      let(
+          result = bezier_patch_degenerate(transpose(patch), splinesteps=splinesteps, reverse=!reverse, return_edges=true)
+      )
+      [result[0],
+       select(result[1],[2,3,0,1])
+      ];
+
+
 function _tri_count(n) = (n*(1+n))/2;
 
 
