@@ -204,8 +204,8 @@ cube(50, center=true) {
 }
 ```
 
-Or, if you want to attach the same shape to multiple places on the parent, you can pass the
-anchors as a list to the `attach()` or `position()` modules:
+If you want to attach the same shape to multiple places on the same parent, you can pass the
+desired anchors as a list to the `attach()` or `position()` modules:
 
 ```openscad
 cube(50, center=true)
@@ -218,7 +218,7 @@ cube(50, center=true)
 ```
 
 
-## Boolean Operations
+## Tagged Operations
 
 
 ## Masking Children
