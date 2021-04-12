@@ -1,5 +1,7 @@
 # Basic Shapes Tutorial
 
+<!-- TOC -->
+
 ## Primitives
 There are 3 built-in 3D primitive shapes that OpenSCAD provides: `cube()`, `cylinder()`,
 and `sphere()`.  The BOSL2 library extends and provides alternative to these shapes so

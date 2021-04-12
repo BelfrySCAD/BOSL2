@@ -1527,9 +1527,10 @@ module teardrop(h, r, ang=45, cap_h, d, l, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
     l = first_defined([l, h, 1]);
-    maxd = 3*r/tan(ang);
+    tip_y = adj_ang_to_hyp(r, 90-ang);
+    cap_h = min(default(cap_h,tip_y), tip_y);
     anchors = [
-        ["cap", [0,0,default(cap_h,maxd)], UP, 0]
+        ["cap", [0,0,cap_h], UP, 0]
     ];
     attachable(anchor,spin,orient, r=r, l=l, axis=BACK, anchors=anchors) {
         rot(from=UP,to=FWD) {
@@ -1578,15 +1579,16 @@ module teardrop(h, r, ang=45, cap_h, d, l, anchor=CENTER, spin=0, orient=UP)
 module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
-    maxd = 3*r/tan(ang);
+    tip_y = adj_ang_to_hyp(r, 90-ang);
+    cap_h = min(default(cap_h,tip_y), tip_y);
     anchors = [
-        ["cap", [0,0,default(cap_h,maxd)], UP, 0]
+        ["cap", [0,0,cap_h], UP, 0]
     ];
     attachable(anchor,spin,orient, r=r, anchors=anchors) {
         rotate_extrude(convexity=2) {
             difference() {
                 teardrop2d(r=r, ang=ang, cap_h=cap_h);
-                left(r) square(size=[2*r,maxd], center=true);
+                left(r) square(size=[2*r,2*cap_h], center=true);
             }
         }
         children();

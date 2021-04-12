@@ -1,4 +1,4 @@
-# BOSL2 Transforms Tutorial
+# Transforms Tutorial
 
 <!-- TOC -->
 

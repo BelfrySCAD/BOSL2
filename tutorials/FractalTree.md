@@ -1,5 +1,7 @@
 # Fractal Tree Tutorial
 
+<!-- TOC -->
+
 ### Start with a Tree Trunk
 
 Firstoff, include the BOSL2 library, then make a starting module that just has a tapered cylinder for the tree trunk.

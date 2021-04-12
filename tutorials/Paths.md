@@ -1,5 +1,7 @@
 # Paths, Polygons and Regions Tutorial
 
+<!-- TOC -->
+
 ## Paths
 A number of advanced features in BOSL2 rely on paths, which are just ordered lists of points.
 

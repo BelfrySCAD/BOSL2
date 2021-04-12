@@ -1,5 +1,7 @@
 # 2D Shapes Tutorial
 
+<!-- TOC -->
+
 ## Primitives
 There are two built-in 2D primitive shapes that OpenSCAD provides: `square()`, and `circle()`.
 The BOSL2 library provides alternative to these shapes so that they support more features,
