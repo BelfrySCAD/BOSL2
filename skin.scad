@@ -13,9 +13,9 @@
 
 // Function&Module: skin()
 // Usage: As module:
-//   skin(profiles, slices, <z=>, <refine=>, <method=>, <sampling=>, <caps=>, <closed=>, <convexity=>, <anchor=>,<cp=>,<spin=>,<orient=>,<extent=>) <attachments>;
+//   skin(profiles, slices, <z=>, <refine=>, <method=>, <sampling=>, <caps=>, <closed=>, <style=>, <convexity=>, <anchor=>,<cp=>,<spin=>,<orient=>,<extent=>) <attachments>;
 // Usage: As function:
-//   vnf = skin(profiles, slices, <z=>, <refine=>, <method=>, <sampling=>, <caps=>, <closed=>);
+//   vnf = skin(profiles, slices, <z=>, <refine=>, <method=>, <sampling=>, <caps=>, <closed=>, <style=>);
 // Description:
 //   Given a list of two or more path `profiles` in 3d space, produces faces to skin a surface between
 //   the profiles.  Optionally the first and last profiles can have endcaps, or the first and last profiles
@@ -152,6 +152,7 @@
 //   orient = Vector to rotate top towards after spin  (module only)
 //   extent = use extent method for computing anchors. (module only)  Default: false
 //   cp = set centerpoint for anchor computation.  (module only) Default: object centroid
+//   style = vnf_vertex_array style.  Default: "min_edge"
 // Example:
 //   skin([octagon(4), circle($fn=70,r=2)], z=[0,3], slices=10);
 // Example: Rotating the pentagon place the zero index at different locations, giving a twist
@@ -376,10 +377,10 @@
 //              stroke(zrot(30, p=yscale(0.5, p=circle(d=120))),width=10,closed=true);
 //          }
 //      }
-module skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, convexity=10,
+module skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, style="min_edge", convexity=10,
             anchor="origin",cp,spin=0, orient=UP, extent=false)
 {
-    vnf = skin(profiles, slices, refine, method, sampling, caps, closed, z);
+    vnf = skin(profiles, slices, refine, method, sampling, caps, closed, z, style);
     attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
     {      
         vnf_polyhedron(vnf,convexity=convexity);
@@ -388,7 +389,7 @@ module skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=
 }        
 
 
-function skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z) =
+function skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, style="min_edge") =
   assert(is_def(slices),"The slices argument must be specified.")
   assert(is_list(profiles) && len(profiles)>1, "Must provide at least two profiles")
   let( bad = [for(i=idx(profiles)) if (!(is_path(profiles[i]) && len(profiles[i])>2)) i])
@@ -483,61 +484,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
           )
           each subdivide_and_slice(pair,slices[i], nsamples, method=sampling)]
   )
-  _skin_core(full_list, caps=fullcaps);
-
-
-
-function _skin_core(profiles, caps) =
-    let(
-                vertices = [for (prof=profiles) each prof],
-        plens = [for (prof=profiles) len(prof)],
-        sidefaces = [
-            for(pidx=idx(profiles,e=-2))
-            let(
-                prof1 = profiles[pidx%len(profiles)],
-                prof2 = profiles[(pidx+1)%len(profiles)],
-                voff = default(sum([for (i=[0:1:pidx-1]) plens[i]]),0),
-                faces = [
-                    for(
-                        first = true,
-                        finishing = false,
-                        finished = false,
-                        plen1 = len(prof1),
-                        plen2 = len(prof2),
-                        i=0, j=0, side=0;
-
-                        !finished;
-
-                        side =
-                            let(
-                                p1a = prof1[(i+0)%plen1],
-                                p1b = prof1[(i+1)%plen1],
-                                p2a = prof2[(j+0)%plen2],
-                                p2b = prof2[(j+1)%plen2],
-                                dist1 = norm(p1a-p2b),
-                                dist2 = norm(p1b-p2a)
-                            ) (i==j) ? (dist1>dist2? 1 : 0) : (i<j ? 1 : 0) ,
-                        p1 = voff + (i%plen1),
-                        p2 = voff + (j%plen2) + plen1,
-                        p3 = voff + (side? ((i+1)%plen1) : (((j+1)%plen2) + plen1)),
-                        face = [p1, p3, p2],
-                        i = i + (side? 1 : 0),
-                        j = j + (side? 0 : 1),
-                        first = false,
-                        finished = finishing,
-                        finishing = i>=plen1 && j>=plen2
-                    ) if (!first) face
-                ]
-            ) each faces
-        ],
-                firstcap = !caps[0] ? [] : let(
-                        prof1 = profiles[0]
-                ) [[for (i=idx(prof1)) plens[0]-1-i]],
-                secondcap = !caps[1] ? [] : let(
-            prof2 = last(profiles),
-            eoff = sum(list_head(plens))
-        ) [[for (i=idx(prof2)) eoff+i]]
-    ) [vertices, concat(sidefaces,firstcap,secondcap)];
+  vnf_vertex_array(full_list, caps=fullcaps, col_wrap=true, style=style);
 
 
 
@@ -903,9 +850,9 @@ function associate_vertices(polygons, split, curpoly=0) =
 
 // Function&Module: sweep()
 // Usage: As Module
-//   sweep(shape, transforms, <closed>, <caps>, <convexity=>, <anchor=>, <spin=>, <orient=>, <extent=>) <attachments>;
+//   sweep(shape, transforms, <closed>, <caps>, <style>, <convexity=>, <anchor=>, <spin=>, <orient=>, <extent=>) <attachments>;
 // Usage: As Function
-//   vnf = sweep(shape, transforms, <closed>, <caps>);
+//   vnf = sweep(shape, transforms, <closed>, <caps>, <style>);
 // Description:
 //   The input `shape` must be a non-self-intersecting 2D polygon or region, and `transforms`
 //   is a list of 4x4 transformation matrices.  The sweep algorithm applies each transformation in sequence
@@ -925,6 +872,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   transforms = list of 4x4 matrices to apply
 //   closed = set to true to form a closed (torus) model.  Default: false
 //   caps = true to create endcap faces when closed is false.  Can be a singe boolean to specify endcaps at both ends, or a length 2 boolean array.  Default is true if closed is false.
+//   style = vnf_vertex_array style.  Default: "min_edge"
 //   ---
 //   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
 //   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
@@ -953,7 +901,7 @@ function associate_vertices(polygons, split, curpoly=0) =
 //   inside = [for(i=[24:-1:2]) up(i)*rot(i)*scale(1.2*i/24+1)];
 //   sweep(shape, concat(outside,inside));
 
-function sweep(shape, transforms, closed=false, caps) =
+function sweep(shape, transforms, closed=false, caps, style="min_edge") =
     assert(is_consistent(transforms, ident(4)), "Input transforms must be a list of numeric 4x4 matrices in sweep")
     assert(is_path(shape,2) || is_region(shape), "Input shape must be a 2d path or a region.")
     let(
@@ -979,13 +927,14 @@ function sweep(shape, transforms, closed=false, caps) =
         vnf = vnf_merge(vnfs)
     ) vnf :
     assert(len(shape)>=3, "shape must be a path of at least 3 non-colinear points")
-    _skin_core([for(i=[0:len(transforms)-(closed?0:1)]) apply(transforms[i%len(transforms)],path3d(shape))],caps=fullcaps);
+    vnf_vertex_array([for(i=[0:len(transforms)-(closed?0:1)]) apply(transforms[i%len(transforms)],path3d(shape))],
+                     caps=fullcaps,col_wrap=true,style=style);
 
 
-module sweep(shape, transforms, closed=false, caps, convexity=10,
+module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=10,
              anchor="origin",cp,spin=0, orient=UP, extent=false)
 {
-    vnf = sweep(shape, transforms, closed, caps);
+    vnf = sweep(shape, transforms, closed, caps, style);
     attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
     {      
         vnf_polyhedron(vnf,convexity=convexity);
@@ -996,8 +945,8 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 
 // Function&Module: path_sweep()
 // Usage: As module
-//   path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <convexity=>, <transforms=>, <anchor=>, <cp=>, <spin=>, <orient=>, <extent=>) <attachments>;
-//   vnf = path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <convexity=>, <transforms=>);
+//   path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <style=>, <convexity=>, <transforms=>, <anchor=>, <cp=>, <spin=>, <orient=>, <extent=>) <attachments>;
+//   vnf = path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <style=>, <convexity=>, <transforms=>);
 // Description:
 //   Takes as input a 2D polygon path, and a 2d or 3d path and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF by default or if you set `transforms=true`
@@ -1058,6 +1007,7 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 //   tangent = a list of tangent vectors in case you need more accuracy (particularly at the end points of your curve)
 //   relaxed = set to true with the "manual" method to relax the orthogonality requirement of cross sections to the path tangent.  Default: false
 //   caps = Can be a boolean or vector of two booleans.  Set to false to disable caps at the two ends.  Default: true
+//   style = vnf_vertex_array style.  Default: "min_edge"
 //   transforms = set to true to return transforms instead of a VNF.  These transforms can be manipulated and passed to sweep().  Default: false.
 //   convexity = convexity parameter for polyhedron().  Only accepted by the module version.  Default: 10
 //   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
@@ -1291,11 +1241,11 @@ module sweep(shape, transforms, closed=false, caps, convexity=10,
 //              circle(r=16,$fn=75),closed=true,
 //              twist=360/5*2,symmetry=5);
 module path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
-                    symmetry=1, last_normal, tangent, relaxed=false, caps, convexity=10,
+                    symmetry=1, last_normal, tangent, relaxed=false, caps, style="min_edge", convexity=10,
                     anchor="origin",cp,spin=0, orient=UP, extent=false)
 {
     vnf = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
-                    symmetry, last_normal, tangent, relaxed, caps);
+                    symmetry, last_normal, tangent, relaxed, caps, style);
     attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
     {      
         vnf_polyhedron(vnf,convexity=convexity);
@@ -1305,7 +1255,7 @@ module path_sweep(shape, path, method="incremental", normal, closed=false, twist
 
 
 function path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
-                    symmetry=1, last_normal, tangent, relaxed=false, caps, transforms=false) = 
+                    symmetry=1, last_normal, tangent, relaxed=false, caps, style="min_edge", transforms=false) = 
   assert(!closed || twist % (360/symmetry)==0, str("For a closed sweep, twist must be a multiple of 360/symmetry = ",360/symmetry))
   assert(closed || symmetry==1, "symmetry must be 1 when closed is false")
   assert(is_integer(symmetry) && symmetry>0, "symmetry must be a positive integer")
@@ -1377,6 +1327,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
             let (pathnormal = path_normals(path, tangents, closed))
             assert(all_defined(pathnormal),"Natural normal vanishes on your curve, select a different method")
             let( testnormals = [for(i=[0:len(pathnormal)-1-(closed?1:2)]) pathnormal[i]*select(pathnormal,i+2)],
+                 a=[for(i=idx(testnormals)) testnormals[i]<.5 ? echo(str("Big change at index ",i," pn=",pathnormal[i]," pn2= ",select(pathnormal,i+2))):0],
                  dummy = min(testnormals) < .5 ? echo("WARNING: ***** Abrupt change in normal direction.  Consider a different method *****") :0
                )
             [for(i=[0:L-(closed?0:1)]) let(
@@ -1393,14 +1344,14 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
                                  apply(transform_list[L], rshape)),
       dummy = ends_match ? 0 : echo("WARNING: ***** The points do not match when closing the model *****")
     )
-    transforms ? transform_list : sweep(is_path(shape)?clockwise_polygon(shape):shape, transform_list, closed=false, caps=fullcaps);
+    transforms ? transform_list : sweep(is_path(shape)?clockwise_polygon(shape):shape, transform_list, closed=false, caps=fullcaps,style=style);
 
 
 // Function&Module: path_sweep2d()
 // Usage: as module
-//   path_sweep2d(shape, path, <closed>, <caps>, <quality>, <convexity=>, <anchor=>, <spin=>, <orient=>, <extent=>, <cp=>) <attachments>;
+//   path_sweep2d(shape, path, <closed>, <caps>, <quality>, <style>, <convexity=>, <anchor=>, <spin=>, <orient=>, <extent=>, <cp=>) <attachments>;
 // Usage: as function
-//   vnf = path_sweep2d(shape, path, <closed>, <caps>, <quality>);
+//   vnf = path_sweep2d(shape, path, <closed>, <caps>, <quality>, <style>);
 // Description:
 //   Takes an input 2D polygon (the shape) and a 2d path and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF.
@@ -1417,6 +1368,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
 //   closed = path is a closed loop.  Default: false
 //   caps = true to create endcap faces when closed is false.  Can be a length 2 boolean array.  Default is true if closed is false.
 //   quality = quality of offset used in calculation.  Default: 1
+//   style = vnf_vertex_array style.  Default: "min_edge"
 //   ---
 //   convexity = convexity parameter for polyhedron (module only)  Default: 10
 //   anchor = Translate so anchor point is at the origin.  (module only)  Default: "origin"
@@ -1440,7 +1392,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
 //   path_sweep2d(circle(r=3.25, $fn=32), select(ellipse,floor(L*.2),ceil(L*.8)),closed=false);
 //   path_sweep2d(circle(r=3.25, $fn=32), select(ellipse,floor(L*.7),ceil(L*.3)),closed=false);
 
-function path_sweep2d(shape, path, closed=false, caps, quality=1) =
+function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edge") =
    let(
         caps = is_def(caps) ? caps
              : closed ? false : true,
@@ -1464,15 +1416,16 @@ function path_sweep2d(shape, path, closed=false, caps, quality=1) =
                       ]
                   )
    )
-   _skin_core([
-               each proflist,
-               if (closed) proflist[0]
-              ],caps=fullcaps);
+   vnf_vertex_array([
+                     each proflist,
+                     if (closed) proflist[0]
+                    ],caps=fullcaps,col_wrap=true,style=style);
 
-module path_sweep2d(profile, path, closed=false, caps, quality=1, convexity=10,
+
+module path_sweep2d(profile, path, closed=false, caps, quality=1, style="min_edge", convexity=10,
                     anchor="origin", cp, spin=0, orient=UP, extent=false)
 {
-   vnf = path_sweep2d(profile, path, closed, caps, quality);
+   vnf = path_sweep2d(profile, path, closed, caps, quality, style);
    attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
     {      
         vnf_polyhedron(vnf,convexity=convexity);

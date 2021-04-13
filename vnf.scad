@@ -215,7 +215,12 @@ function vnf_triangulate(vnf) =
 //   Creates a VNF structure from a vertex list, by dividing the vertices into columns and rows,
 //   adding faces to tile the surface.  You can optionally have faces added to wrap the last column
 //   back to the first column, or wrap the last row to the first.  Endcaps can be added to either
-//   the first and/or last rows.
+//   the first and/or last rows.  The style parameter determines how the quadrilaterals are divided into
+//   triangles.  The default style is an arbitrary, systematic subdivision in the same direction.  The "alt" style
+//   is the uniform subdivision in the other (alternate) direction.  The "min_edge" style picks the shorter edge to
+//   subdivide for each quadrilateral, so the division may not be uniform across the shape.  The "quincunx" style
+//   adds a vertex in the center of each quadrilateral and creates four triangles, and the "convex" style
+//   chooses the locally convex subdivision.  
 // Arguments:
 //   points = A list of vertices to divide into columns and rows.
 //   caps = If true, add endcap faces to the first AND last rows.
@@ -224,7 +229,7 @@ function vnf_triangulate(vnf) =
 //   col_wrap = If true, add faces to connect the last column to the first.
 //   row_wrap = If true, add faces to connect the last row to the first.
 //   reverse = If true, reverse all face normals.
-//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "quincunx", and "convex".
+//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "min_edge", "quincunx", and "convex".
 //   vnf = If given, add all the vertices and faces to this existing VNF structure.
 // Example(3D):
 //   vnf = vnf_vertex_array(
@@ -290,7 +295,7 @@ function vnf_vertex_array(
 ) = 
     assert(!(any([caps,cap1,cap2]) && !col_wrap), "col_wrap must be true if caps are requested")
     assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap")
-    assert(in_list(style,["default","alt","quincunx", "convex"]))
+    assert(in_list(style,["default","alt","quincunx", "convex","min_edge"]))
         assert(is_consistent(points), "Non-rectangular or invalid point array")
     let(
         pts = flatten(points),
@@ -317,8 +322,9 @@ function vnf_vertex_array(
                    mean([pts[i1], pts[i2], pts[i3], pts[i4]])
         ]
     )
-    vnf_merge(cleanup=true, [
-        vnf, [
+    vnf_merge(cleanup=false, [
+        vnf,
+        [
               verts,
               [
                for (r = [0:1:rowcnt-1], c=[0:1:colcnt-1])
@@ -334,6 +340,14 @@ function vnf_vertex_array(
                               [[i1,i5,i2],[i2,i5,i3],[i3,i5,i4],[i4,i5,i1]]
                           : style=="alt"? 
                               [[i1,i4,i2],[i2,i4,i3]]
+                          : style=="min_edge"?
+                              let(
+                                   d42=norm(pts[i4]-pts[i2]),
+                                   d13=norm(pts[i1]-pts[i3]),
+                                   shortface = d42<=d13 ? [[i1,i4,i2],[i2,i4,i3]]
+                                                        : [[i1,i3,i2],[i1,i4,i3]]
+                              )
+                              shortface
                           : style=="convex"?
                               let(
                                   fsets = [
@@ -347,17 +361,20 @@ function vnf_vertex_array(
                               )
                               fsets[test?0:1]
                           : [[i1,i3,i2],[i1,i4,i3]],
-                       rfaces = reverse? [for (face=faces) reverse(face)] : faces,
-                       dfaces = [for (face=rfaces)
-                                    let(dface = deduplicate_indexed(verts,face,closed=true))
-                                    if(len(dface)>=3) dface
-                                ]
+                       // remove degenerate faces 
+                       culled_faces= [for(face=faces)
+                           if (norm(verts[face[0]]-verts[face[1]])>EPSILON &&
+                               norm(verts[face[1]]-verts[face[2]])>EPSILON && 
+                               norm(verts[face[2]]-verts[face[0]])>EPSILON) 
+                               face
+                       ],
+                       rfaces = reverse? [for (face=culled_faces) reverse(face)] : culled_faces
                    )
-                   dfaces,
+                   rfaces,
                 if (cap1) count(cols,reverse=!reverse),
                 if (cap2) count(cols,(rows-1)*cols, reverse=reverse)
               ] 
-             ]
+        ]
     ]);
 
 
