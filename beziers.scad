@@ -1328,7 +1328,6 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false, return_ed
     let(
         row_degen = [for(row=patch) all_equal(row)],
         col_degen = [for(col=transpose(patch)) all_equal(col)],
-        
         top_degen = row_degen[0],
         bot_degen = last(row_degen),
         left_degen = col_degen[0],
@@ -1362,7 +1361,7 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false, return_ed
                   for(j=[0:splinesteps-2]) bezier_points(subindex(bpatch,j+1), lerpn(0,1,rowcount[j])),
                   [last(bpatch[0])]
                   ],
-            vnf = vnf_tri_array(pts, reverse=reverse)
+            vnf = vnf_tri_array(pts, reverse=!reverse)
          ) [
             vnf,
             [
@@ -1390,7 +1389,7 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false, return_ed
                   [bpatch[0][0]],
                   for(j=[1:splinesteps]) bezier_points(subindex(bpatch,j), lerpn(0,1,rowmax[j]+1))
                  ],
-           vnf = vnf_tri_array(pts, reverse=reverse)
+           vnf = vnf_tri_array(pts, reverse=!reverse)
         ) [
             vnf,
             [

@@ -287,83 +287,77 @@ function vnf_vertex_array(
     reverse=false,
     style="default",
     vnf=EMPTY_VNF
-) =
-    assert((!caps)||(caps&&col_wrap))
+) = 
+    assert(!(any([caps,cap1,cap2]) && !col_wrap), "col_wrap must be true if caps are requested")
+    assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap")
     assert(in_list(style,["default","alt","quincunx", "convex"]))
         assert(is_consistent(points), "Non-rectangular or invalid point array")
     let(
         pts = flatten(points),
         pcnt = len(pts),
         rows = len(points),
-        cols = len(points[0]),
+        cols = len(points[0])
+    )
+    rows<=1 || cols<=1 ? vnf :
+    let(
         cap1 = first_defined([cap1,caps,false]),
         cap2 = first_defined([cap2,caps,false]),
         colcnt = cols - (col_wrap?0:1),
         rowcnt = rows - (row_wrap?0:1),
         verts = [
             each pts,
-            if (style=="quincunx") (
-                for (r = [0:1:rowcnt-1]) (
-                    for (c = [0:1:colcnt-1]) (
-                        let(
-                            i1 = ((r+0)%rows)*cols + ((c+0)%cols),
-                            i2 = ((r+1)%rows)*cols + ((c+0)%cols),
-                            i3 = ((r+1)%rows)*cols + ((c+1)%cols),
-                            i4 = ((r+0)%rows)*cols + ((c+1)%cols)
-                        ) mean([pts[i1], pts[i2], pts[i3], pts[i4]])
-                    )
-                )
-            )
+            if (style=="quincunx") 
+                for (r = [0:1:rowcnt-1], c = [0:1:colcnt-1]) 
+                   let(
+                       i1 = ((r+0)%rows)*cols + ((c+0)%cols),
+                       i2 = ((r+1)%rows)*cols + ((c+0)%cols),
+                       i3 = ((r+1)%rows)*cols + ((c+1)%cols),
+                       i4 = ((r+0)%rows)*cols + ((c+1)%cols)
+                   )
+                   mean([pts[i1], pts[i2], pts[i3], pts[i4]])
         ]
     )
-    rows<=1 || cols<=1 ? vnf :
     vnf_merge(cleanup=true, [
         vnf, [
-            verts,
-            concat(
-                [
-                    for (r = [0:1:rowcnt-1]) (
-                        for (c = [0:1:colcnt-1]) each (
-                            let(
-                                i1 = ((r+0)%rows)*cols + ((c+0)%cols),
-                                i2 = ((r+1)%rows)*cols + ((c+0)%cols),
-                                i3 = ((r+1)%rows)*cols + ((c+1)%cols),
-                                i4 = ((r+0)%rows)*cols + ((c+1)%cols),
-                                faces = style=="quincunx"? (
-                                    let(i5 = pcnt + r*colcnt + c)
-                                    [[i1,i5,i2],[i2,i5,i3],[i3,i5,i4],[i4,i5,i1]]
-                                ) : style=="alt"? (
-                                    [[i1,i4,i2],[i2,i4,i3]]
-                                ) : style=="convex"? let(
-                                    fsets = [
-                                        [[i1,i4,i2],[i2,i4,i3]],
-                                        [[i1,i3,i2],[i1,i4,i3]]
-                                    ],
-                                    cps = [for (fset=fsets) [for (f=fset) mean(select(pts,f))]],
-                                    ns = cps + [for (fset=fsets) [for (f=fset) polygon_normal(select(pts,f))]],
-                                    dists = [for (i=idx(fsets)) norm(cps[i][1]-cps[i][0]) - norm(ns[i][1]-ns[i][0])],
-                                    test = reverse? dists[0]>dists[1] : dists[0]<dists[1]
-                                ) fsets[test?0:1] : (
-                                    [[i1,i3,i2],[i1,i4,i3]]
-                                ),
-                                rfaces = reverse? [for (face=faces) reverse(face)] : faces,
-                                ffaces = [for (face=rfaces) if(len(deduplicate_indexed(verts,face,closed=true))>=3) face]
-                            ) faces
-                        )
-                    )
-                ],
-                !cap1? [] : [
-                    reverse?
-                        [for (c = [0:1:cols-1]) c] :
-                        [for (c = [cols-1:-1:0]) c]
-                ],
-                !cap2? [] : [
-                    reverse?
-                        [for (c = [cols-1:-1:0]) (rows-1)*cols + c] :
-                        [for (c = [0:1:cols-1]) (rows-1)*cols + c]
-                ]
-            )
-        ]
+              verts,
+              [
+               for (r = [0:1:rowcnt-1], c=[0:1:colcnt-1])
+                 each
+                   let(
+                       i1 = ((r+0)%rows)*cols + ((c+0)%cols),
+                       i2 = ((r+1)%rows)*cols + ((c+0)%cols),
+                       i3 = ((r+1)%rows)*cols + ((c+1)%cols),
+                       i4 = ((r+0)%rows)*cols + ((c+1)%cols),
+                       faces =
+                            style=="quincunx"? 
+                              let(i5 = pcnt + r*colcnt + c)
+                              [[i1,i5,i2],[i2,i5,i3],[i3,i5,i4],[i4,i5,i1]]
+                          : style=="alt"? 
+                              [[i1,i4,i2],[i2,i4,i3]]
+                          : style=="convex"?
+                              let(
+                                  fsets = [
+                                           [[i1,i4,i2],[i2,i4,i3]],
+                                           [[i1,i3,i2],[i1,i4,i3]]
+                                          ],
+                                  cps = [for (fset=fsets) [for (f=fset) mean(select(pts,f))]],
+                                  ns = cps + [for (fset=fsets) [for (f=fset) polygon_normal(select(pts,f))]],
+                                  dists = [for (i=idx(fsets)) norm(cps[i][1]-cps[i][0]) - norm(ns[i][1]-ns[i][0])],
+                                  test = reverse? dists[0]>dists[1] : dists[0]<dists[1]
+                              )
+                              fsets[test?0:1]
+                          : [[i1,i3,i2],[i1,i4,i3]],
+                       rfaces = reverse? [for (face=faces) reverse(face)] : faces,
+                       dfaces = [for (face=rfaces)
+                                    let(dface = deduplicate_indexed(verts,face,closed=true))
+                                    if(len(dface)>=3) dface
+                                ]
+                   )
+                   dfaces,
+                if (cap1) count(cols,reverse=!reverse),
+                if (cap2) count(cols,(rows-1)*cols, reverse=reverse)
+              ] 
+             ]
     ]);
 
 
@@ -435,7 +429,7 @@ function vnf_tri_array(points, row_wrap=false, reverse=false, vnf=EMPTY_VNF) =
                for(j=[0:1:count]) reverse ? [j+rowstart, j+nextrow, j+nextrow+1] : [j+rowstart, j+nextrow+1, j+nextrow],                        // bot triangles left
                for(j=[count+1:1:select(lens,i+1)-2]) reverse ? [j+rowstart-1, j+nextrow, j+nextrow+1] : [j+rowstart-1, j+nextrow+1, j+nextrow], // bot triangles right
               ] :
-             delta == -2 ?
+            delta == -2 ?
               [
                for(j=[0:1:count-2]) reverse ? [j+nextrow, j+nextrow+1, j+rowstart+1] : [j+nextrow, j+rowstart+1, j+nextrow+1],
                for(j=[count-1:1:lens[i]-4]) reverse ? [j+nextrow,j+nextrow+1,j+rowstart+2] : [j+nextrow,j+rowstart+2, j+nextrow+1],
