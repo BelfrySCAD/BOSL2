@@ -36,16 +36,10 @@ A lot of the features of this library are to allow shorter, easier-to-read, inte
 [`BOSL2/shapes.scad`](https://github.com/revarbat/BOSL2/wiki/shapes.scad) Examples | Raw OpenSCAD Equivalent
 ---------------------------------- | -------------------------------
 `cube([10,20,30], anchor=BOTTOM);` | `translate([0,0,15]) cube([10,20,30], center=true);`
-`cuboid([20,20,30], fillet=5, edges=EDGES_Z_ALL);` | `minkowski() {cube([10,10,20], center=true); sphere(r=5, $fn=32);}`
+`cuboid([20,20,30], fillet=5);`    | `minkowski() {cube([10,10,20], center=true); sphere(r=5, $fn=32);}`
 `prismoid([30,40],[20,30],h=10);`  | `hull() {translate([0,0,0.005]) cube([30,40,0.01], center=true); translate([0,0,9.995]) cube([20,30,0.01],center=true);}`
 `xcyl(l=20,d=4);`                  | `rotate([0,90,0]) cylinder(h=20, d=4, center=true);`
 `cyl(l=100, d=40, fillet=5);`      | `translate([0,0,50]) minkowski() {cylinder(h=90, d=30, center=true); sphere(r=5);}`
-
-[`BOSL2/masks.scad`](https://github.com/revarbat/BOSL2/wiki/masks.scad) Examples | Raw Openscad Equivalent
------------------------------------ | -------------------------------
-`chamfer_mask_z(l=20,chamfer=5);`   | `rotate(45) cube([5*sqrt(2), 5*sqrt(2), 20], center=true);`
-`fillet_mask_z(l=20,fillet=5);`     | `difference() {cube([10,10,20], center=true); for(dx=[-5,5],dy=[-5,5]) translate([dx,dy,0]) cylinder(h=20.1, r=5, center=true);}`
-`fillet_hole_mask(r=30,fillet=5);`  | `difference() {cube([70,70,10], center=true); translate([0,0,-5]) rotate_extrude(convexity=4) translate([30,0,0]) circle(r=5);}`
 
 
 ## Documentation
