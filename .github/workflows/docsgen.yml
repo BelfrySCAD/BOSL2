@@ -28,7 +28,7 @@ jobs:
 
     - name: Install OpenSCAD
       run: |
-        curl -L -o OpenSCAD.dmg https://files.openscad.org/OpenSCAD-2021.01.dmg
+        curl -L -o OpenSCAD.dmg https://files.openscad.org/snapshots/OpenSCAD-2021.03.08.dmg
         hdiutil attach OpenSCAD.dmg
         cp -a /Volumes/OpenSCAD/OpenSCAD.app /Applications/
 
