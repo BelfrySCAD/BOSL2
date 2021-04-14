@@ -155,17 +155,19 @@ function vnf_merge(vnfs, cleanup=false) =
     ) [
         [for (vnf=vnfs) each vnf[0]],
         [
-            for (i = idx(vnfs)) let(
-                vnf = vnfs[i],
-                verts = vnf[0],
-                faces = vnf[1]
-            )
-            for (face = faces) let(
-                dface = !cleanup ? face :
-                    deduplicate_indexed(verts, face, closed=true)
-            )
-            if (len(dface) >= 3)
-            [ for (j = dface) offs[i] + j ]
+            for (i = idx(vnfs))
+              let(
+                  vnf = vnfs[i],
+                  verts = vnf[0],
+                  faces = vnf[1]
+              )
+              for (face = faces)
+                 let(
+                     dface = !cleanup ? face
+                                      : deduplicate_indexed(verts, face, closed=true)
+                 )
+                 if (len(dface) >= 3)
+                     [ for (j = dface) offs[i] + j ]
         ]
     ];
 
@@ -348,7 +350,7 @@ function vnf_vertex_array(
                                                         : [[i1,i3,i2],[i1,i4,i3]]
                               )
                               shortface
-                          : style=="convex"?
+                          : style=="convex"?   // This style bombs on degenerate faces
                               let(
                                   fsets = [
                                            [[i1,i4,i2],[i2,i4,i3]],

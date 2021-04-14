@@ -379,8 +379,8 @@
 //      }
 module skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, style="min_edge", convexity=10,
             anchor="origin",cp,spin=0, orient=UP, extent=false)
-{
-    vnf = skin(profiles, slices, refine, method, sampling, caps, closed, z, style);
+{   
+    vnf = skin(profiles, slices, refine, method, sampling, caps, closed, z, style=style);
     attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
     {      
         vnf_polyhedron(vnf,convexity=convexity);
@@ -390,6 +390,7 @@ module skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=
 
 
 function skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, style="min_edge") =
+  let(a=echo(style=style))
   assert(is_def(slices),"The slices argument must be specified.")
   assert(is_list(profiles) && len(profiles)>1, "Must provide at least two profiles")
   let( bad = [for(i=idx(profiles)) if (!(is_path(profiles[i]) && len(profiles[i])>2)) i])
@@ -484,7 +485,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
           )
           each subdivide_and_slice(pair,slices[i], nsamples, method=sampling)]
   )
-  vnf_vertex_array(full_list, caps=fullcaps, col_wrap=true, style=style);
+  vnf_vertex_array(full_list, cap1=fullcaps[0], cap2=fullcaps[1], col_wrap=true, style=style);
 
 
 
@@ -928,7 +929,7 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge") =
     ) vnf :
     assert(len(shape)>=3, "shape must be a path of at least 3 non-colinear points")
     vnf_vertex_array([for(i=[0:len(transforms)-(closed?0:1)]) apply(transforms[i%len(transforms)],path3d(shape))],
-                     caps=fullcaps,col_wrap=true,style=style);
+                     cap1=fullcaps[0],cap2=fullcaps[1],col_wrap=true,style=style);
 
 
 module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=10,
@@ -1419,7 +1420,7 @@ function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edg
    vnf_vertex_array([
                      each proflist,
                      if (closed) proflist[0]
-                    ],caps=fullcaps,col_wrap=true,style=style);
+                    ],cap1=fullcaps[0],cap1=fullcaps[1],col_wrap=true,style=style);
 
 
 module path_sweep2d(profile, path, closed=false, caps, quality=1, style="min_edge", convexity=10,
