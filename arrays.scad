@@ -425,11 +425,15 @@ function repeat(val, n, i=0) =
 //   n = The length of the list of numbers to create.
 //   s = The starting value of the list of numbers.
 //   step = The amount to increment successive numbers in the list.
+//   reverse = Reverse the list.  Default: false.
 // Example:
 //   nl1 = count(5);  // Returns: [0,1,2,3,4]
 //   nl2 = count(5,3);  // Returns: [3,4,5,6,7]
 //   nl3 = count(4,3,2);  // Returns: [3,5,7,9]
-function count(n,s=0,step=1) = [for (i=[0:1:n-1]) s+i*step];
+//   nl4 = count(5,reverse=true);    // Returns: [4,3,2,1,0]
+//   nl5 = count(5,3,reverse=true);  // Returns: [7,6,5,4,3]
+function count(n,s=0,step=1,reverse=false) = reverse? [for (i=[n-1:-1:0]) s+i*step]
+                                                    : [for (i=[0:1:n-1]) s+i*step];
 
 
 

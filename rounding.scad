@@ -1779,8 +1779,8 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   M = path3d(turtle(["left", 180, "length",3,"move", "left", "move", 3, "right", "move", "right", "move", 4, "right", "move", 3, "right", "move", 2]));
 //   rounded_prism(M, apply(right(1)*scale(.75)*up(3),M), joint_top=0.5, joint_bot=0.2, joint_sides=[.2,1,1,0.5,1.5,.5,2], splinesteps=32);
 // Example: this example shows most of the different types of patches that rounded_prism creates.  Note that some of the patches are close to interfering with each other across the top of the polyhedron, which would create an invalid result.
-   N = apply(rot(180)*yscale(.8),turtle(["length",3,"left", "move", 2, "right", 135, "move", sqrt(2), "left", "move", sqrt(2), "right", 135, "move", 2]));
-   rounded_prism(N, height=3, joint_bot=0.5, joint_top=1.25, joint_sides=[[1,1.75],0,.5,.5,2], debug=true);
+//   N = apply(rot(180)*yscale(.8),turtle(["length",3,"left", "move", 2, "right", 135, "move", sqrt(2), "left", "move", sqrt(2), "right", 135, "move", 2]));
+//   rounded_prism(N, height=3, joint_bot=0.5, joint_top=1.25, joint_sides=[[1,1.75],0,.5,.5,2], debug=true);
 // Example: This object has different scales on its different axies.  Here is the largest symmetric rounding that fits.  Note that the rounding is slightly smaller than the object dimensions because of roundoff error.
 //   rounded_prism(square([100.1,30.1]), height=8.1, joint_top=4, joint_bot=4, joint_sides=15, k_sides=0.3, splinesteps=32);
 // Example: Using asymetric rounding enables a much more rounded form:
@@ -1886,8 +1886,8 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
    let(
      // Entries in the next two lists have the form [edges, vnf] where
      // edges is a list [leftedge, rightedge, topedge, botedge]
-     top_samples = [for(patch=top_patch) bezier_patch_degenerate(patch,splinesteps,reverse=true,return_edges=true) ],
-     bot_samples = [for(patch=bot_patch) bezier_patch_degenerate(patch,splinesteps,reverse=false,return_edges=true) ],
+     top_samples = [for(patch=top_patch) bezier_patch_degenerate(patch,splinesteps,reverse=false,return_edges=true) ],
+     bot_samples = [for(patch=bot_patch) bezier_patch_degenerate(patch,splinesteps,reverse=true,return_edges=true) ],
      leftidx=0,
      rightidx=1,
      topidx=2,

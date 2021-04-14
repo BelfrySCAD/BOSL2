@@ -6,6 +6,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
+
 // Section: Type handling helpers.
 
 
@@ -323,7 +324,8 @@ function first_defined(v,recursive=false,_i=0) =
 // Examples:
 //   length = one_defined([length,L,l], ["length","L","l"]);
 //   length = one_defined([length,L,l], "length,L,l", dflt=1);
-function one_defined(vals, names, dflt=_UNDEF) =
+
+function one_defined(vals, names, dflt=_UNDEF) = 
     let(
         checkargs = is_list(names)? assert(len(vals) == len(names)) :
             is_string(names)? let(
@@ -533,10 +535,6 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
 //   // explicitly passing undef is allowed:
 //   echo(f(undef, arg1="given1", undef));
 //   // ["given1", undef, undef]
-
-// a value that the user should never enter randomly;
-// result of `dd if=/dev/random bs=32 count=1 |base64` :
-_UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 
 /* Note: however tempting it might be, it is *not* possible to accept
  * named argument as a list [named1, named2, ...] (without default

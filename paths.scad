@@ -380,7 +380,7 @@ function path_normals(path, tangents, closed=false) =
         dim == 2 ? [tangents[i].y,-tangents[i].x]
                  : let(v=cross(cross(pts[1]-pts[0], pts[2]-pts[0]),tangents[i]))
                    assert(norm(v)>EPSILON, "3D path contains collinear points")
-                   v
+                   unit(v)
     ];
 
 

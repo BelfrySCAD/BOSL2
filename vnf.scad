@@ -155,17 +155,19 @@ function vnf_merge(vnfs, cleanup=false) =
     ) [
         [for (vnf=vnfs) each vnf[0]],
         [
-            for (i = idx(vnfs)) let(
-                vnf = vnfs[i],
-                verts = vnf[0],
-                faces = vnf[1]
-            )
-            for (face = faces) let(
-                dface = !cleanup ? face :
-                    deduplicate_indexed(verts, face, closed=true)
-            )
-            if (len(dface) >= 3)
-            [ for (j = dface) offs[i] + j ]
+            for (i = idx(vnfs))
+              let(
+                  vnf = vnfs[i],
+                  verts = vnf[0],
+                  faces = vnf[1]
+              )
+              for (face = faces)
+                 let(
+                     dface = !cleanup ? face
+                                      : deduplicate_indexed(verts, face, closed=true)
+                 )
+                 if (len(dface) >= 3)
+                     [ for (j = dface) offs[i] + j ]
         ]
     ];
 
@@ -215,7 +217,12 @@ function vnf_triangulate(vnf) =
 //   Creates a VNF structure from a vertex list, by dividing the vertices into columns and rows,
 //   adding faces to tile the surface.  You can optionally have faces added to wrap the last column
 //   back to the first column, or wrap the last row to the first.  Endcaps can be added to either
-//   the first and/or last rows.
+//   the first and/or last rows.  The style parameter determines how the quadrilaterals are divided into
+//   triangles.  The default style is an arbitrary, systematic subdivision in the same direction.  The "alt" style
+//   is the uniform subdivision in the other (alternate) direction.  The "min_edge" style picks the shorter edge to
+//   subdivide for each quadrilateral, so the division may not be uniform across the shape.  The "quincunx" style
+//   adds a vertex in the center of each quadrilateral and creates four triangles, and the "convex" style
+//   chooses the locally convex subdivision.  
 // Arguments:
 //   points = A list of vertices to divide into columns and rows.
 //   caps = If true, add endcap faces to the first AND last rows.
@@ -224,7 +231,7 @@ function vnf_triangulate(vnf) =
 //   col_wrap = If true, add faces to connect the last column to the first.
 //   row_wrap = If true, add faces to connect the last row to the first.
 //   reverse = If true, reverse all face normals.
-//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "quincunx", and "convex".
+//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "min_edge", "quincunx", and "convex".
 //   vnf = If given, add all the vertices and faces to this existing VNF structure.
 // Example(3D):
 //   vnf = vnf_vertex_array(
@@ -287,82 +294,84 @@ function vnf_vertex_array(
     reverse=false,
     style="default",
     vnf=EMPTY_VNF
-) =
-    assert((!caps)||(caps&&col_wrap))
-    assert(in_list(style,["default","alt","quincunx", "convex"]))
-        assert(is_consistent(points), "Non-rectangular or invalid point array")
+) = 
+    assert(!(any([caps,cap1,cap2]) && !col_wrap), "col_wrap must be true if caps are requested")
+    assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap")
+    assert(in_list(style,["default","alt","quincunx", "convex","min_edge"]))
+    assert(is_consistent(points), "Non-rectangular or invalid point array")
     let(
         pts = flatten(points),
         pcnt = len(pts),
         rows = len(points),
-        cols = len(points[0]),
+        cols = len(points[0])
+    )
+    rows<=1 || cols<=1 ? vnf :
+    let(
         cap1 = first_defined([cap1,caps,false]),
         cap2 = first_defined([cap2,caps,false]),
         colcnt = cols - (col_wrap?0:1),
         rowcnt = rows - (row_wrap?0:1),
         verts = [
             each pts,
-            if (style=="quincunx") (
-                for (r = [0:1:rowcnt-1]) (
-                    for (c = [0:1:colcnt-1]) (
-                        let(
-                            i1 = ((r+0)%rows)*cols + ((c+0)%cols),
-                            i2 = ((r+1)%rows)*cols + ((c+0)%cols),
-                            i3 = ((r+1)%rows)*cols + ((c+1)%cols),
-                            i4 = ((r+0)%rows)*cols + ((c+1)%cols)
-                        ) mean([pts[i1], pts[i2], pts[i3], pts[i4]])
-                    )
-                )
-            )
+            if (style=="quincunx") 
+                for (r = [0:1:rowcnt-1], c = [0:1:colcnt-1]) 
+                   let(
+                       i1 = ((r+0)%rows)*cols + ((c+0)%cols),
+                       i2 = ((r+1)%rows)*cols + ((c+0)%cols),
+                       i3 = ((r+1)%rows)*cols + ((c+1)%cols),
+                       i4 = ((r+0)%rows)*cols + ((c+1)%cols)
+                   )
+                   mean([pts[i1], pts[i2], pts[i3], pts[i4]])
         ]
     )
-    rows<=1 || cols<=1 ? vnf :
-    vnf_merge(cleanup=true, [
-        vnf, [
-            verts,
-            concat(
-                [
-                    for (r = [0:1:rowcnt-1]) (
-                        for (c = [0:1:colcnt-1]) each (
-                            let(
-                                i1 = ((r+0)%rows)*cols + ((c+0)%cols),
-                                i2 = ((r+1)%rows)*cols + ((c+0)%cols),
-                                i3 = ((r+1)%rows)*cols + ((c+1)%cols),
-                                i4 = ((r+0)%rows)*cols + ((c+1)%cols),
-                                faces = style=="quincunx"? (
-                                    let(i5 = pcnt + r*colcnt + c)
-                                    [[i1,i5,i2],[i2,i5,i3],[i3,i5,i4],[i4,i5,i1]]
-                                ) : style=="alt"? (
-                                    [[i1,i4,i2],[i2,i4,i3]]
-                                ) : style=="convex"? let(
-                                    fsets = [
-                                        [[i1,i4,i2],[i2,i4,i3]],
-                                        [[i1,i3,i2],[i1,i4,i3]]
-                                    ],
-                                    cps = [for (fset=fsets) [for (f=fset) mean(select(pts,f))]],
-                                    ns = cps + [for (fset=fsets) [for (f=fset) polygon_normal(select(pts,f))]],
-                                    dists = [for (i=idx(fsets)) norm(cps[i][1]-cps[i][0]) - norm(ns[i][1]-ns[i][0])],
-                                    test = reverse? dists[0]>dists[1] : dists[0]<dists[1]
-                                ) fsets[test?0:1] : (
-                                    [[i1,i3,i2],[i1,i4,i3]]
-                                ),
-                                rfaces = reverse? [for (face=faces) reverse(face)] : faces,
-                                ffaces = [for (face=rfaces) if(len(deduplicate_indexed(verts,face,closed=true))>=3) face]
-                            ) faces
-                        )
-                    )
-                ],
-                !cap1? [] : [
-                    reverse?
-                        [for (c = [0:1:cols-1]) c] :
-                        [for (c = [cols-1:-1:0]) c]
-                ],
-                !cap2? [] : [
-                    reverse?
-                        [for (c = [cols-1:-1:0]) (rows-1)*cols + c] :
-                        [for (c = [0:1:cols-1]) (rows-1)*cols + c]
-                ]
-            )
+    vnf_merge(cleanup=false, [
+        vnf,
+        [
+              verts,
+              [
+               for (r = [0:1:rowcnt-1], c=[0:1:colcnt-1])
+                 each
+                   let(
+                       i1 = ((r+0)%rows)*cols + ((c+0)%cols),
+                       i2 = ((r+1)%rows)*cols + ((c+0)%cols),
+                       i3 = ((r+1)%rows)*cols + ((c+1)%cols),
+                       i4 = ((r+0)%rows)*cols + ((c+1)%cols),
+                       faces =
+                            style=="quincunx"? 
+                              let(i5 = pcnt + r*colcnt + c)
+                              [[i1,i5,i2],[i2,i5,i3],[i3,i5,i4],[i4,i5,i1]]
+                          : style=="alt"? 
+                              [[i1,i4,i2],[i2,i4,i3]]
+                          : style=="min_edge"?
+                              let(
+                                   d42=norm(pts[i4]-pts[i2]),
+                                   d13=norm(pts[i1]-pts[i3]),
+                                   shortedge = d42<=d13 ? [[i1,i4,i2],[i2,i4,i3]]
+                                                        : [[i1,i3,i2],[i1,i4,i3]]
+                              )
+                              shortedge
+                          : style=="convex"?  
+                              let(   // Find normal for 3 of the points.  Is the other point above or below?
+                                  n = (reverse?-1:1)*cross(pts[i2]-pts[i1],pts[i3]-pts[i1]),
+                                  convexfaces = n==0 ? [[i1,i4,i3]]
+                                              : n*pts[i4] > n*pts[i1] ? [[i1,i4,i2],[i2,i4,i3]]
+                                                                      : [[i1,i3,i2],[i1,i4,i3]]
+                              )
+                              convexfaces
+                          : [[i1,i3,i2],[i1,i4,i3]],
+                       // remove degenerate faces 
+                       culled_faces= [for(face=faces)
+                           if (norm(verts[face[0]]-verts[face[1]])>EPSILON &&
+                               norm(verts[face[1]]-verts[face[2]])>EPSILON && 
+                               norm(verts[face[2]]-verts[face[0]])>EPSILON) 
+                               face
+                       ],
+                       rfaces = reverse? [for (face=culled_faces) reverse(face)] : culled_faces
+                   )
+                   rfaces,
+                if (cap1) count(cols,reverse=!reverse),
+                if (cap2) count(cols,(rows-1)*cols, reverse=reverse)
+              ] 
         ]
     ]);
 
@@ -435,7 +444,7 @@ function vnf_tri_array(points, row_wrap=false, reverse=false, vnf=EMPTY_VNF) =
                for(j=[0:1:count]) reverse ? [j+rowstart, j+nextrow, j+nextrow+1] : [j+rowstart, j+nextrow+1, j+nextrow],                        // bot triangles left
                for(j=[count+1:1:select(lens,i+1)-2]) reverse ? [j+rowstart-1, j+nextrow, j+nextrow+1] : [j+rowstart-1, j+nextrow+1, j+nextrow], // bot triangles right
               ] :
-             delta == -2 ?
+            delta == -2 ?
               [
                for(j=[0:1:count-2]) reverse ? [j+nextrow, j+nextrow+1, j+rowstart+1] : [j+nextrow, j+rowstart+1, j+nextrow+1],
                for(j=[count-1:1:lens[i]-4]) reverse ? [j+nextrow,j+nextrow+1,j+rowstart+2] : [j+nextrow,j+rowstart+2, j+nextrow+1],
