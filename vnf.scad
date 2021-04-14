@@ -298,7 +298,7 @@ function vnf_vertex_array(
     assert(!(any([caps,cap1,cap2]) && !col_wrap), "col_wrap must be true if caps are requested")
     assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap")
     assert(in_list(style,["default","alt","quincunx", "convex","min_edge"]))
-        assert(is_consistent(points), "Non-rectangular or invalid point array")
+    assert(is_consistent(points), "Non-rectangular or invalid point array")
     let(
         pts = flatten(points),
         pcnt = len(pts),
@@ -346,22 +346,18 @@ function vnf_vertex_array(
                               let(
                                    d42=norm(pts[i4]-pts[i2]),
                                    d13=norm(pts[i1]-pts[i3]),
-                                   shortface = d42<=d13 ? [[i1,i4,i2],[i2,i4,i3]]
+                                   shortedge = d42<=d13 ? [[i1,i4,i2],[i2,i4,i3]]
                                                         : [[i1,i3,i2],[i1,i4,i3]]
                               )
-                              shortface
-                          : style=="convex"?   // This style bombs on degenerate faces
-                              let(
-                                  fsets = [
-                                           [[i1,i4,i2],[i2,i4,i3]],
-                                           [[i1,i3,i2],[i1,i4,i3]]
-                                          ],
-                                  cps = [for (fset=fsets) [for (f=fset) mean(select(pts,f))]],
-                                  ns = cps + [for (fset=fsets) [for (f=fset) polygon_normal(select(pts,f))]],
-                                  dists = [for (i=idx(fsets)) norm(cps[i][1]-cps[i][0]) - norm(ns[i][1]-ns[i][0])],
-                                  test = reverse? dists[0]>dists[1] : dists[0]<dists[1]
+                              shortedge
+                          : style=="convex"?  
+                              let(   // Find normal for 3 of the points.  Is the other point above or below?
+                                  n = (reverse?-1:1)*cross(pts[i2]-pts[i1],pts[i3]-pts[i1]),
+                                  convexfaces = n==0 ? [[i1,i4,i3]]
+                                              : n*pts[i4] > n*pts[i1] ? [[i1,i4,i2],[i2,i4,i3]]
+                                                                      : [[i1,i3,i2],[i1,i4,i3]]
                               )
-                              fsets[test?0:1]
+                              convexfaces
                           : [[i1,i3,i2],[i1,i4,i3]],
                        // remove degenerate faces 
                        culled_faces= [for(face=faces)

@@ -5,7 +5,6 @@
 //   - https://github.com/openscad/list-comprehension-demos/blob/master/skin.scad
 // Includes:
 //   include <BOSL2/std.scad>
-//   include <BOSL2/skin.scad>
 //////////////////////////////////////////////////////////////////////
 
 
@@ -465,7 +464,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
                                                          : reindex_polygon(resampled[i-1],resampled[i])],
              sliced = slice_profiles(fixedprof, slices, closed)            
             )
-            !closed ? sliced : concat(sliced,[sliced[0]])
+            [!closed ? sliced : concat(sliced,[sliced[0]])]
       :  // There are duplicators, so use approach where each pair is treated separately
       [for(i=[0:profcount-1])
         let(
@@ -482,9 +481,59 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
                                                         ".  Method ",method[i]," requires equal values"))
                refine[i] * len(pair[0])
           )
-          each subdivide_and_slice(pair,slices[i], nsamples, method=sampling)]
+          subdivide_and_slice(pair,slices[i], nsamples, method=sampling)]
   )
-  vnf_vertex_array(full_list, cap1=fullcaps[0], cap2=fullcaps[1], col_wrap=true, style=style);
+  vnf_merge(cleanup=false,
+      [for(i=idx(full_list))
+          vnf_vertex_array(full_list[i], cap1=i==0 && fullcaps[0], cap2=i==len(full_list)-1 && fullcaps[1],
+                           col_wrap=true, style=style)]);
+
+function _skin_core(profiles, caps) =
+    let(
+        vertices = flatten(profiles),
+        plen = len(profiles[0]),
+        faces = [
+            for(pidx=idx(profiles,e=-2))
+            let(
+                prof1 = profiles[pidx],
+                prof2 = profiles[pidx+1],
+                voff = pidx*plen,
+                faces = [
+                    for(
+                        first = true,
+                        finishing = false,
+                        finished = false,
+                        i=0, j=0, side=false;
+
+                        !finished;
+
+                        side =
+                            let(
+                                p1a = prof1[i%plen],
+                                p1b = prof1[(i+1)%plen],
+                                p2a = prof2[j%plen],
+                                p2b = prof2[(j+1)%plen],
+                                dist1 = norm(p1a-p2b),
+                                dist2 = norm(p1b-p2a)
+                            ) (i==j) ? dist1>dist2 : i<j,
+                        p1 = voff + (i%plen),
+                        p2 = voff + (j%plen) + plen,
+                        p3 = voff + (side? (i+1)%plen : (j+1)%plen + plen),
+                        face = [p1, p3, p2],
+                        i = i + (side? 1 : 0),
+                        j = j + (side? 0 : 1),
+                        first = false,
+                        finished = finishing,
+                        finishing = i>=plen && j>=plen
+                    ) if (!first) face
+                ]
+            ) each faces,
+            if (caps[0]) count(plen,reverse=true),
+            if (caps[1]) count(plen,plen*(len(profiles)-1))
+        ]
+    ) [vertices, faces];
+
+
 
 
 
@@ -1419,7 +1468,7 @@ function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edg
    vnf_vertex_array([
                      each proflist,
                      if (closed) proflist[0]
-                    ],cap1=fullcaps[0],cap1=fullcaps[1],col_wrap=true,style=style);
+                    ],cap1=fullcaps[0],cap2=fullcaps[1],col_wrap=true,style=style);
 
 
 module path_sweep2d(profile, path, closed=false, caps, quality=1, style="min_edge", convexity=10,

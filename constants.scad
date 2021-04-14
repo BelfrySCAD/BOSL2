@@ -5,6 +5,9 @@
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
+// a value that the user should never enter randomly;
+// result of `dd if=/dev/random bs=32 count=1 |base64` :
+_UNDEF="LRG+HX7dy89RyHvDlAKvb9Y04OTuaikpx205CTh8BSI";
 
 // Section: General Constants
 
