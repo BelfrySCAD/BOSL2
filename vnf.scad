@@ -1146,8 +1146,8 @@ function _vnf_halfspace_paths(edges, i=0, paths=[]) =
         s[0] != s[1] ? [concat(paths[s[0]], paths[s[1]])] :
         // edge closes a loop
         [concat(paths[s[0]], [e[1]])]));
-function vnf_halfspace(_arg1=_undef, _arg2=_undef,
-    halfspace=_undef, vnf=_undef) =
+function vnf_halfspace(_arg1=_UNDEF, _arg2=_UNDEF,
+    halfspace=_UNDEF, vnf=_UNDEF) =
     // here is where we wish that OpenSCAD had array lvalues...
     let(args=get_named_args([_arg1, _arg2], [[halfspace],[vnf]]),
         halfspace=args[0], vnf=args[1])
@@ -1163,7 +1163,12 @@ function vnf_halfspace(_arg1=_undef, _arg2=_undef,
         newedges=[for(x=tmp2) each x[1]],
         // generate new faces
         paths=_vnf_halfspace_paths(newedges),
-        loops=[for(p=paths) if(p[0] == last(p)) p])
-    [coords, concat(newfaces, loops)];
+        reg = [for(p=paths) project_plane(select(coords,p), halfspace)],
+        regvnf = region_faces(reg,reverse=true),
+        regvert = lift_plane(regvnf[0], halfspace)
+        //loops=[for(p=paths) if(coords[p[0]] == coords[last(p)]) reverse(p)])
+        )
+        vnf_merge([[coords, newfaces], [regvert, regvnf[1]]]);
+//    [coords, concat(newfaces, loops)];
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

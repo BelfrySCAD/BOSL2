@@ -147,8 +147,8 @@ module half_of(v=UP, cp, s=1000, planar=false)
     }
 }
 
-function half_of(_arg1=_undef, _arg2=_undef, _arg3=_undef, _arg4=_undef,
-    v=_undef, cp=_undef, p=_undef, s=_undef) =
+function half_of(_arg1=_UNDEF, _arg2=_UNDEF, _arg3=_UNDEF, _arg4=_UNDEF,
+    v=_UNDEF, cp=_UNDEF, p=_UNDEF, s=_UNDEF) =
     let(args=get_named_args([_arg1, _arg2, _arg3, _arg4],
         [[v,undef,0], [cp,0,2], [p,undef,1], [s, 1e4]]),
         v=args[0], cp0=args[1], p=args[2], s=args[3],
@@ -223,12 +223,12 @@ module left_half(s=1000, x=0, planar=false)
         }
     }
 }
-function left_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
-    x=_undef, p=_undef, s=_undef) =
+function left_half(_arg1=_UNDEF, _arg2=_UNDEF, _arg3=_UNDEF,
+    x=_UNDEF, p=_UNDEF, s=_UNDEF) =
     let(args=get_named_args([_arg1, _arg2, _arg3],
     [[x, 0,1], [p,undef,0], [s, 1e4]]),
         x=args[0], p=args[1], s=args[2])
-    half_of(v=[1,0,0], cp=x, p=p);
+    half_of(v=[-1,0,0], cp=x, p=p);
 
 
 
@@ -265,12 +265,12 @@ module right_half(s=1000, x=0, planar=false)
         }
     }
 }
-function right_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
-    x=_undef, p=_undef, s=_undef) =
+function right_half(_arg1=_UNDEF, _arg2=_UNDEF, _arg3=_UNDEF,
+    x=_UNDEF, p=_UNDEF, s=_UNDEF) =
     let(args=get_named_args([_arg1, _arg2, _arg3],
     [[x, 0,1], [p,undef,0], [s, 1e4]]),
         x=args[0], p=args[1], s=args[2])
-    half_of(v=[-1,0,0], cp=x, p=p);
+    half_of(v=[1,0,0], cp=x, p=p);
 
 
 
@@ -307,12 +307,12 @@ module front_half(s=1000, y=0, planar=false)
         }
     }
 }
-function front_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
-    x=_undef, p=_undef, s=_undef) =
+function front_half(_arg1=_UNDEF, _arg2=_UNDEF, _arg3=_UNDEF,
+    x=_UNDEF, p=_UNDEF, s=_UNDEF) =
     let(args=get_named_args([_arg1, _arg2, _arg3],
     [[x, 0,1], [p,undef,0], [s, 1e4]]),
         x=args[0], p=args[1], s=args[2])
-    half_of(v=[0,1,0], cp=x, p=p);
+    half_of(v=[0,-1,0], cp=x, p=p);
 
 
 
@@ -349,12 +349,12 @@ module back_half(s=1000, y=0, planar=false)
         }
     }
 }
-function back_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
-    x=_undef, p=_undef, s=_undef) =
+function back_half(_arg1=_UNDEF, _arg2=_UNDEF, _arg3=_UNDEF,
+    x=_UNDEF, p=_UNDEF, s=_UNDEF) =
     let(args=get_named_args([_arg1, _arg2, _arg3],
     [[x, 0,1], [p,undef,0], [s, 1e4]]),
         x=args[0], p=args[1], s=args[2])
-    half_of(v=[0,-1,0], cp=x, p=p);
+    half_of(v=[0,1,0], cp=x, p=p);
 
 
 
@@ -383,8 +383,8 @@ module bottom_half(s=1000, z=0)
         }
     }
 }
-function right_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
-    x=_undef, p=_undef, s=_undef) =
+function bottom_half(_arg1=_UNDEF, _arg2=_UNDEF, _arg3=_UNDEF,
+    x=_UNDEF, p=_UNDEF, s=_UNDEF) =
     let(args=get_named_args([_arg1, _arg2, _arg3],
     [[x, 0,1], [p,undef,0], [s, 1e4]]),
         x=args[0], p=args[1], s=args[2])
@@ -417,8 +417,8 @@ module top_half(s=1000, z=0)
         }
     }
 }
-function right_half(_arg1=_undef, _arg2=_undef, _arg3=_undef,
-    x=_undef, p=_undef, s=_undef) =
+function top_half(_arg1=_UNDEF, _arg2=_UNDEF, _arg3=_UNDEF,
+    x=_UNDEF, p=_UNDEF, s=_UNDEF) =
     let(args=get_named_args([_arg1, _arg2, _arg3],
     [[x, 0,1], [p,undef,0], [s, 1e4]]),
         x=args[0], p=args[1], s=args[2])
