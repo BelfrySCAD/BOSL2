@@ -1163,7 +1163,12 @@ function vnf_halfspace(_arg1=_UNDEF, _arg2=_UNDEF,
         newedges=[for(x=tmp2) each x[1]],
         // generate new faces
         paths=_vnf_halfspace_paths(newedges),
-        loops=[for(p=paths) if(coords[p[0]] == coords[last(p)]) reverse(p)])
-    [coords, concat(newfaces, loops)];
+        reg = [for(p=paths) project_plane(select(coords,p), halfspace)],
+        regvnf = region_faces(reg,reverse=true),
+        regvert = lift_plane(regvnf[0], halfspace)
+        //loops=[for(p=paths) if(coords[p[0]] == coords[last(p)]) reverse(p)])
+        )
+        vnf_merge([[coords, newfaces], [regvert, regvnf[1]]]);
+//    [coords, concat(newfaces, loops)];
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
