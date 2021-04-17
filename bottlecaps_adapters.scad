@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
-// LibFile: bottlecaps_custom.scad
-//   Bottle caps, necks, and threaded adapters for plastic bottles.
+// LibFile: bottlecaps_adapters.scad
+//   Adapters for various combinations of bottle necks and caps.
 // Includes:
 //   include <BOSL2/std.scad>
 //   include <BOSL2/bottlecaps_adapters.scad>
@@ -9,8 +9,6 @@
 include <BOSL2/threading.scad>
 include <BOSL2/knurling.scad>
 
-
-// Section: Modules
 
 // Module: generic_bottle_neck()
 // Usage:
