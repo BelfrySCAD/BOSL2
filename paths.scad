@@ -1086,7 +1086,7 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
     ];
 
     vnf = vnf_vertex_array(
-        points, col_wrap=true, caps=true,
+        points, col_wrap=true, caps=true, reverse=true,
         style=(abs(higbee1)+abs(higbee2))>0? "quincunx" : "alt"
     );
 
