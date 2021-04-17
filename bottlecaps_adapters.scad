@@ -3,37 +3,50 @@
 //   Bottle caps, necks, and threaded adapters for plastic bottles.
 // Includes:
 //   include <BOSL2/std.scad>
-//   include <BOSL2/bottlecaps_custom.scad>
+//   include <BOSL2/bottlecaps_adapters.scad>
 //////////////////////////////////////////////////////////////////////
 
 include <BOSL2/threading.scad>
 include <BOSL2/knurling.scad>
 
-// Module: custom_neck()
+
+// Section: Modules
+
+// Module: generic_bottle_neck()
 // Usage:
-//   custom_neck(<wall>, )
+//   generic_bottle_neck(<wall>)
 // Description:
 //   Creates a bottle neck given specifications.
 // Arguments:
-//   wall = Wall thickness in mm.
-//   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //   neckDiam = Outer diameter of neck without threads
 //   innerDiam = Inner diameter of neck
 //   threadOuterD = Outer diameter of thread
 //   height = Height of neck above support
 //   supportDiam = Outer diameter of support ring.  Set to 0 for no support.
 //   threadPitch = Thread pitch
-//   roundLowerSupport = True to round the lower edge of the support ring
 //   wall = distance between ID and any wall that may be below the support
+//   roundLowerSupport = True to round the lower edge of the support ring
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "support-ring" = Centered at the bottom of the support ring.
 // Example:
-//   custom_neck();
-module custom_neck(anchor = "support-ring", spin = 0, orient = UP, neckDiam = 25, innerDiam = 21.4, threadOuterD = 27.2, height = 17, supportDiam = 33.0, threadPitch = 3.2, roundLowerSupport = false, wall)
-{
+//   generic_bottle_neck();
+module generic_bottle_neck(
+    neckDiam = 25,
+    innerDiam = 21.4,
+    threadOuterD = 27.2,
+    height = 17,
+    supportDiam = 33.0,
+    threadPitch = 3.2,
+    roundLowerSupport = false,
+    wall,
+    anchor = "support-ring",
+    spin = 0,
+    orient = UP
+) {
     inner_d = innerDiam;
     neck_d = neckDiam;
     support_d = max(neckDiam, supportDiam);
@@ -46,7 +59,9 @@ module custom_neck(anchor = "support-ring", spin = 0, orient = UP, neckDiam = 25
 
     sup_r = 0.30 * (heightMagMult > 1 ? heightMagMult : 1);
     support_r = floor(((support_d == neck_d) ? sup_r : min(sup_r, (support_d - neck_d) / 2)) * 5000) / 10000;
-    support_rad = (wall == undef || !roundLowerSupport) ? support_r : min(support_r, floor((support_d - (inner_d + 2 * wall)) * 5000) / 10000); //Too small of a radius will cause errors with the arc, this limits granularity to .0001mm
+    support_rad = (wall == undef || !roundLowerSupport) ? support_r :
+        min(support_r, floor((support_d - (inner_d + 2 * wall)) * 5000) / 10000);
+        //Too small of a radius will cause errors with the arc, this limits granularity to .0001mm
     support_width = 1 * (heightMagMult > 1 ? heightMagMult : 1) * sign(supportDiam);
     roundover = 0.58 * diamMagMult;
     lip_roundover_r = (roundover > (neck_d - inner_d) / 2) ? 0 : roundover;
@@ -94,7 +109,13 @@ module custom_neck(anchor = "support-ring", spin = 0, orient = UP, neckDiam = 25
                     );
                     zrot_copies(rots = [90, 270]) {
                         zrot_copies(rots = [-28, 28], r = threadbase_d / 2) {
-                            prismoid([20 * heightMagMult, 1.82 * diamMagMult], [20 * heightMagMult, 1.82 * diamMagMult * .6 + 2 * sin(29) * thread_h], h = thread_h + 0.1 * diamMagMult, anchor = BOT, orient = RIGHT);
+                            prismoid(
+                                [20 * heightMagMult, 1.82 * diamMagMult],
+                                [20 * heightMagMult, 1.82 * diamMagMult * .6 + 2 * sin(29) * thread_h],
+                                h = thread_h + 0.1 * diamMagMult,
+                                anchor = BOT,
+                                orient = RIGHT
+                            );
                         }
                     }
                 }
@@ -104,34 +125,56 @@ module custom_neck(anchor = "support-ring", spin = 0, orient = UP, neckDiam = 25
     }
 }
 
-function custom_neck(anchor = "support-ring", spin = 0, orient = UP, neckDiam = 25, innerDiam = 21.4, threadOuterD = 27.2, height = 17, supportDiam = 33.0, threadPitch = 3.2, roundLowerSupport = false, wall) =
-no_function("custom_neck");
+function generic_bottle_neck(
+	neckDiam,
+    innerDiam,
+    threadOuterD,
+    height,
+    supportDiam,
+    threadPitch,
+    roundLowerSupport,
+    wall,
+    anchor, spin, orient
+) = no_function("generic_bottle_neck");
 
-// Module: custom_cap()
+
+// Module: generic_bottle_cap()
 // Usage:
-//   custom_cap(wall, [texture]);
+//   generic_bottle_cap(wall, <texture>, ...);
 // Description:
 //   Creates a basic threaded cap given specifications.
 // Arguments:
 //   wall = Wall thickness in mm.
 //   texture = The surface texture of the cap.  Valid values are "none", "knurled", or "ribbed".  Default: "none"
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   ---
 //   height = Interior height of the cap in mm.
 //   threadOuterD = Outer diameter of the threads in mm.
 //   tolerance = Extra space to add to the outer diameter of threads and neck in mm.  Applied to radius.
 //   neckOuterD = Outer diameter of neck in mm.
 //   threadAngle = Angle of taper on threads.
 //   threadPitch = Thread pitch in mm.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Extra Anchors:
 //   "inside-top" = Centered on the inside top of the cap.
 // Examples:
-//   custom_cap();
-//   custom_cap(texture="knurled");
-//   custom_cap(texture="ribbed");
-module custom_cap(wall = 2, texture = "none", anchor = BOTTOM, spin = 0, orient = UP, height = 11.2, threadOuterD = 28.58, tolerance = .2, neckOuterD = 25.5, threadAngle = 15, threadPitch = 4)
-{
+//   generic_bottle_cap();
+//   generic_bottle_cap(texture="knurled");
+//   generic_bottle_cap(texture="ribbed");
+module generic_bottle_cap(
+    wall = 2,
+    texture = "none",
+    height = 11.2,
+    threadOuterD = 28.58,
+    tolerance = .2,
+    neckOuterD = 25.5,
+    threadAngle = 15,
+    threadPitch = 4,
+    anchor = BOTTOM,
+    spin = 0,
+    orient = UP
+) {
     $fn = segs(33 / 2);
     threadOuterDTol = threadOuterD + 2 * tolerance;
     w = threadOuterDTol + 2 * wall;
@@ -148,7 +191,10 @@ module custom_cap(wall = 2, texture = "none", anchor = BOTTOM, spin = 0, orient 
     attachable(anchor, spin, orient, d = w, l = h, anchors = anchors) {
         down(h / 2) {
             difference() {
-                union() {//For the knurled and ribbed caps the PCO caps in BOSL2 cut into the wall thickness so the wall+texture are the specified wall thickness.  That seems wrong so this does specified thickness+texture
+                union() {
+                    // For the knurled and ribbed caps the PCO caps in BOSL2 cut into the wall
+                    // thickness so the wall+texture are the specified wall thickness.  That
+                    // seems wrong so this does specified thickness+texture
                     if (texture == "knurled") {
                         knurled_cylinder(d = w + 1.5 * diamMagMult, helix = 45, l = h, anchor = BOTTOM);
                         cyl(d = w, l = h, anchor = BOTTOM);
@@ -167,16 +213,19 @@ module custom_cap(wall = 2, texture = "none", anchor = BOTTOM, spin = 0, orient 
                 up(wall + threadPitch / 2) {
                     thread_helix(d = neckOuterDTol, pitch = threadPitch, thread_depth = threadDepth, thread_angle = threadAngle, twist = 360 * ((height - threadPitch) / threadPitch), higbee = threadDepth, internal = true, anchor = BOTTOM);
                 }
-                /*up(h*6){
-                    cyl(d=w,h=h*10); //thread overflow cutoff, shouldn't be needed
-                }*/
             }
         }
         children();
     }
 }
-function custom_cap(wall = 2, texture = "none", anchor = BOTTOM, spin = 0, orient = UP, height = 11.2, threadOuterD = 28.58, tolerance = .2, neckOuterD = 25.5, threadAngle = 15, threadPitch = 4) =
-no_function("custom_cap");
+
+function generic_bottle_cap(
+    wall, texture, height,
+    threadOuterD, tolerance,
+    neckOuterD, threadAngle, threadPitch,
+    anchor, spin, orient
+) = no_function("generic_bottle_cap");
+
 
 // Module: thread_adapter_NC()
 // Usage:
@@ -204,7 +253,26 @@ no_function("custom_cap");
 //   taperLeadIn = Length to leave straight before tapering on tube between neck and cap if exists.
 // Examples:
 //   thread_adapter_NC();
-module thread_adapter_NC(wall, texture = "none", capWall = 2, capHeight = 11.2, capThreadOD = 28.58, tolerance = .2, capNeckOD = 25.5, capNeckID, capThreadTaperAngle = 15, capThreadPitch = 4, neckDiam = 25, neckID = 21.4, neckThreadOD = 27.2, neckHeight = 17, neckThreadPitch = 3.2, neckSupportOD, d = 0, taperLeadIn = 0){
+module thread_adapter_NC(
+    wall,
+    texture = "none",
+    capWall = 2,
+    capHeight = 11.2,
+    capThreadOD = 28.58,
+    tolerance = .2,
+    capNeckOD = 25.5,
+    capNeckID,
+    capThreadTaperAngle = 15,
+    capThreadPitch = 4,
+    neckDiam = 25,
+    neckID = 21.4,
+    neckThreadOD = 27.2,
+    neckHeight = 17,
+    neckThreadPitch = 3.2,
+    neckSupportOD,
+    d = 0,
+    taperLeadIn = 0
+) {
     neckSupportOD = (neckSupportOD == undef || (d == 0 && neckSupportOD < capThreadOD + 2 * tolerance)) ? capThreadOD + 2 * (capWall + tolerance) : neckSupportOD;
     capNeckID = (capNeckID == undef) ? neckID : capNeckID;
     wall = (wall == undef) ? neckSupportOD + neckDiam + capThreadOD + neckID : wall;
@@ -216,7 +284,7 @@ module thread_adapter_NC(wall, texture = "none", capWall = 2, capHeight = 11.2, 
     difference(){
         union(){
             up(d / 2) {
-                custom_neck(neckDiam = neckDiam,
+                generic_bottle_neck(neckDiam = neckDiam,
                     innerDiam = neckID,
                     threadOuterD = neckThreadOD,
                     height = neckHeight,
@@ -239,7 +307,7 @@ module thread_adapter_NC(wall, texture = "none", capWall = 2, capHeight = 11.2, 
                 }
             }
             down(d / 2){
-                custom_cap(wall = capWall,
+                generic_bottle_cap(wall = capWall,
                     texture = texture,
                     height = capHeight,
                     threadOuterD = capThreadOD,
@@ -253,18 +321,24 @@ module thread_adapter_NC(wall, texture = "none", capWall = 2, capHeight = 11.2, 
         }
         rotate_extrude() {
             polygon(points = [
-                [0, d / 2],
+                [0, d / 2 + 0.1],
                 [neckID / 2, d / 2],
                 [neckID / 2, d / 2 - taperLeadIn],
                 [capNeckID / 2, taperLeadIn - d / 2],
                 [capNeckID / 2, -d / 2 - capWall],
-                [0, -d / 2 - capWall]
+                [0, -d / 2 - capWall - 0.1]
             ]);
         }
     }
 }
-function thread_adapter_NC(wall, texture = "none", capWall = 2, capHeight = 11.2, capThreadOD = 28.58, tolerance = .2, capNeckOD = 25.5, capNeckId, capThreadTaperAngle = 15, capThreadPitch = 4, neckDiam = 25, neckID = 21.4, neckThreadOD = 7.2, neckHeight = 17, neckThreadPitch = 3.2, neckSupportOD, d = 0, taperLeadIn = 0) =
-no_fuction("thread_adapter_NC");
+
+function thread_adapter_NC(
+    wall, texture, capWall, capHeight, capThreadOD,
+    tolerance, capNeckOD, capNeckId, capThreadTaperAngle,
+    capThreadPitch, neckDiam, neckID, neckThreadOD,
+    neckHeight, neckThreadPitch, neckSupportOD, d, taperLeadIn
+) = no_fuction("thread_adapter_NC");
+
 
 // Module: thread_adapter_CC()
 // Usage:
@@ -286,11 +360,25 @@ no_fuction("thread_adapter_NC");
 //   d = Distance between caps.
 //   neckID1 = Inner diameter of cutout in top cap.
 //   neckID2 = Inner diameter of cutout in bottom cap.
-//      Leave one of the neckIDs undefined to duplicate the other or leave both undefined to leave the caps solid.
 //   taperLeadIn = Length to leave straight before tapering on tube between caps if exists.
 // Examples:
 //   thread_adapter_CC();
-module thread_adapter_CC(wall = 2, texture = "none", capHeight1 = 11.2, capThreadOD1 = 28.58, tolerance = .2, capNeckOD1 = 25.5, capThreadPitch1 = 4, capHeight2, capThreadOD2, capNeckOD2, capThreadPitch2, d = 0, neckID1, neckID2, taperLeadIn = 0){
+module thread_adapter_CC(
+    wall = 2,
+    texture = "none",
+    capHeight1 = 11.2,
+    capThreadOD1 = 28.58,
+    tolerance = .2,
+    capNeckOD1 = 25.5,
+    capThreadPitch1 = 4,
+    capHeight2,
+    capThreadOD2,
+    capNeckOD2,
+    capThreadPitch2,
+    d = 0,
+    neckID1, neckID2,
+    taperLeadIn = 0
+) {
     capHeight2 = (capHeight2 == undef) ? capHeight1 : capHeight2;
     capThreadOD2 = (capThreadOD2 == undef) ? capThreadOD1 : capThreadOD2;
     capNeckOD2 = (capNeckOD2 == undef) ? capNeckOD1 : capNeckOD2;
@@ -304,7 +392,16 @@ module thread_adapter_CC(wall = 2, texture = "none", capHeight1 = 11.2, capThrea
     difference(){
         union(){
             up(d / 2){
-                custom_cap(orient = UP, wall = wall, texture = texture, height = capHeight1, threadOuterD = capThreadOD1, tolerance = tolerance, neckOuterD = capNeckOD1, threadPitch = capThreadPitch1);
+                generic_bottle_cap(
+                    orient = UP,
+                    wall = wall,
+                    texture = texture,
+                    height = capHeight1,
+                    threadOuterD = capThreadOD1,
+                    tolerance = tolerance,
+                    neckOuterD = capNeckOD1,
+                    threadPitch = capThreadPitch1
+                );
             }
             if (d != 0) {
                 rotate_extrude() {
@@ -319,7 +416,16 @@ module thread_adapter_CC(wall = 2, texture = "none", capHeight1 = 11.2, capThrea
                 }
             }
             down(d / 2){
-                custom_cap(orient = DOWN, wall = wall, texture = texture, height = capHeight2, threadOuterD = capThreadOD2, tolerance = tolerance, neckOuterD = capNeckOD2, threadPitch = capThreadPitch2);
+                generic_bottle_cap(
+                    orient = DOWN,
+                    wall = wall,
+                    texture = texture,
+                    height = capHeight2,
+                    threadOuterD = capThreadOD2,
+                    tolerance = tolerance,
+                    neckOuterD = capNeckOD2,
+                    threadPitch = capThreadPitch2
+                );
             }
         }
         if (neckID1 != undef || neckID2 != undef) {
@@ -328,19 +434,24 @@ module thread_adapter_CC(wall = 2, texture = "none", capHeight1 = 11.2, capThrea
 
             rotate_extrude() {
                 polygon(points = [
-                    [0, wall + d / 2],
+                    [0, wall + d / 2 + 0.1],
                     [neckID1 / 2, wall + d / 2],
                     [neckID1 / 2, wall + d / 2 - taperLeadIn],
                     [neckID2 / 2, taperLeadIn - d / 2 - wall],
                     [neckID2 / 2, -d / 2 - wall],
-                    [0, -d / 2 - wall]
+                    [0, -d / 2 - wall - 0.1]
                 ]);
             }
         }
     }
 }
-function thread_adapter_CC(wall = 2, texture = "none", capHeight1 = 11.2, capThreadOD1 = 28.58, tolerance = .2, capNeckOD1 = 25.5, capThreadPitch1 = 4, capHeight2, capThreadOD2, capNeckOD2, capThreadPitch2, d = 0, neckID1, neckID2, taperLeadIn = 0) =
-no_function("thread_adapter_CC");
+
+function thread_adapter_CC(
+    wall, texture, capHeight1, capThreadOD1, tolerance,
+    capNeckOD1, capThreadPitch1, capHeight2, capThreadOD2,
+    capNeckOD2, capThreadPitch2, d, neckID1, neckID2, taperLeadIn
+) = no_function("thread_adapter_CC");
+
 
 // Module: thread_adapter_NN()
 // Usage:
@@ -365,7 +476,19 @@ no_function("thread_adapter_CC");
 //   wall = Thickness of tube wall between necks.  Leave undefined to match outer diameters with the neckODs/supportODs.  
 // Examples:
 //   thread_adapter_NN();
-module thread_adapter_NN(d = 0, neckOD1 = 25, neckID1 = 21.4, threadOD1 = 27.2, height1 = 17, supportOD1 = 33.0, threadPitch1 = 3.2, neckOD2, neckID2, threadOD2, height2, supportOD2, threadPitch2, taperLeadIn = 0, wall){
+module thread_adapter_NN(
+    d = 0,
+    neckOD1 = 25,
+    neckID1 = 21.4,
+    threadOD1 = 27.2,
+    height1 = 17,
+    supportOD1 = 33.0,
+    threadPitch1 = 3.2,
+    neckOD2, neckID2,
+    threadOD2, height2,
+    supportOD2, threadPitch2,
+    taperLeadIn = 0, wall
+) {
     neckOD2 = (neckOD2 == undef) ? neckOD1 : neckOD2;
     neckID2 = (neckID2 == undef) ? neckID1 : neckID2;
     threadOD2 = (threadOD2 == undef) ? threadOD1 : threadOD2;
@@ -386,7 +509,7 @@ module thread_adapter_NN(d = 0, neckOD1 = 25, neckID1 = 21.4, threadOD1 = 27.2, 
     difference(){
         union(){
             up(d / 2){
-                custom_neck(orient = UP,
+                generic_bottle_neck(orient = UP,
                     neckDiam = neckOD1,
                     innerDiam = neckID1,
                     threadOuterD = threadOD1,
@@ -410,7 +533,7 @@ module thread_adapter_NN(d = 0, neckOD1 = 25, neckID1 = 21.4, threadOD1 = 27.2, 
                 }
             }
             down(d / 2){
-                custom_neck(orient = DOWN,
+                generic_bottle_neck(orient = DOWN,
                     neckDiam = neckOD2,
                     innerDiam = neckID2,
                     threadOuterD = threadOD2,
@@ -439,5 +562,13 @@ module thread_adapter_NN(d = 0, neckOD1 = 25, neckID1 = 21.4, threadOD1 = 27.2, 
         }
     }
 }
-function thread_adapter_NN(d = 0, neckOD1 = 25, neckID1 = 21.4, threadOD1 = 27.2, height1 = 17, supportOD1 = 33.0, threadPitch1 = 3.2, neckOD2, neckID2, threadOD2, height2, supportOD2, threadPitch2, taperLeadIn = 0, wall) =
-no_fuction("thread_adapter_NN");
+
+function thread_adapter_NN(
+    d, neckOD1, neckID1, threadOD1, height1,
+    supportOD1, threadPitch1, neckOD2, neckID2,
+    threadOD2, height2, supportOD2,
+    threadPitch2, taperLeadIn, wall
+) = no_fuction("thread_adapter_NN");
+
+
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
