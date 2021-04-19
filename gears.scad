@@ -900,7 +900,7 @@ function bevel_gear(
     teeth = 20,
     face_width = 10,
     pitch_angle = 45,
-    mate_teeth = undef,
+    mate_teeth,
     hide = 0,
     pressure_angle = 20,
     clearance = undef,
@@ -908,7 +908,7 @@ function bevel_gear(
     cutter_radius = 30,
     spiral_angle = 35,
     left_handed = false,
-    slices = 1,
+    slices = 5,
     interior = false,
     mod,
     anchor = "pitchbase",
@@ -921,7 +921,7 @@ function bevel_gear(
         pitch_angle = is_undef(mate_teeth)? pitch_angle : atan(teeth/mate_teeth),
         pr = pitch_radius(pitch, teeth),
         rr = root_radius(pitch, teeth, clearance, interior),
-        pitchoff = (pr-rr) * cos(pitch_angle),
+        pitchoff = (pr-rr) * sin(pitch_angle),
         ocone_rad = opp_ang_to_hyp(pr, pitch_angle),
         icone_rad = ocone_rad - face_width,
         cutter_radius = cutter_radius==0? 1000 : cutter_radius,
@@ -932,9 +932,6 @@ function bevel_gear(
         radcpang = vang(radcp),
         sang = radcpang - (180-angC1),
         eang = radcpang - (180-angC2),
-        slice_us = [for (i=[0:1:slices]) i/slices],
-        apts = [for (u=slice_us) radcp + polar_to_xy(cutter_radius, lerp(sang,eang,u))],
-        polars = [for (p=apts) [vang(p)-90, norm(p)]],
         profile = gear_tooth_profile(
             pitch = pitch,
             teeth = teeth,
@@ -946,12 +943,16 @@ function bevel_gear(
             center = true
         ),
         verts1 = [
-            for (polar=polars) [
+            for (v = lerpn(0,1,slices+1)) let(
+                p = radcp + polar_to_xy(cutter_radius, lerp(sang,eang,v)),
+                ang = vang(p)-90,
+                dist = norm(p)
+            ) [
                 let(
-                    u = polar.y / ocone_rad,
+                    u = dist / ocone_rad,
                     m = up((1-u) * pr / tan(pitch_angle)) *
                         up(pitchoff) *
-                        zrot(polar.x/sin(pitch_angle)) *
+                        zrot(ang/sin(pitch_angle)) *
                         back(u * pr) *
                         xrot(pitch_angle) *
                         scale(u)
@@ -960,8 +961,11 @@ function bevel_gear(
                 each apply(xflip() * zrot(360*tooth/teeth) * m, path3d(profile))
             ]
         ],
-        thickness = abs(verts1[0][0].z - last(verts1)[0].z),
-        vertices = [for (x=verts1) down(thickness/2, p=reverse(x))],
+        botz = verts1[0][0].z,
+        topz = last(verts1)[0].z,
+        thickness = abs(topz - botz),
+        cpz = (topz + botz) / 2,
+        vertices = [for (x=verts1) reverse(x)],
         sides_vnf = vnf_vertex_array(vertices, caps=false, col_wrap=true, reverse=true),
         top_verts = last(vertices),
         bot_verts = vertices[0],
@@ -988,7 +992,8 @@ function bevel_gear(
             ],
             sides_vnf
         ]),
-        vnf = left_handed? vnf1 : xflip(p=vnf1),
+        lvnf = left_handed? vnf1 : xflip(p=vnf1),
+        vnf = down(cpz, p=lvnf),
         anchors = [
             anchorpt("pitchbase", [0,0,pitchoff-thickness/2]),
             anchorpt("flattop", [0,0,thickness/2]),
@@ -998,8 +1003,8 @@ function bevel_gear(
 
 
 module bevel_gear(
-    pitch = 3,
-    teeth = 11,
+    pitch = 5,
+    teeth = 20,
     face_width = 10,
     pitch_angle = 45,
     mate_teeth,
@@ -1011,7 +1016,7 @@ module bevel_gear(
     cutter_radius = 30,
     spiral_angle = 35,
     left_handed = false,
-    slices = 1,
+    slices = 5,
     interior = false,
     mod,
     anchor = "pitchbase",
@@ -1024,8 +1029,7 @@ module bevel_gear(
     pr = pitch_radius(pitch, teeth);
     ipr = pr - face_width*sin(pitch_angle);
     rr = root_radius(pitch, teeth, clearance, interior);
-    pitchoff = (pr-rr) * cos(pitch_angle);
-    thickness = face_width * cos(pitch_angle);
+    pitchoff = (pr-rr) * sin(pitch_angle);
     vnf = bevel_gear(
         pitch = pitch,
         teeth = teeth,
@@ -1042,6 +1046,8 @@ module bevel_gear(
         interior = interior,
         anchor=CENTER
     );
+    axis_zs = [for (p=vnf[0]) if(norm(point2d(p)) < EPSILON) p.z];
+    thickness = max(axis_zs) - min(axis_zs);
     anchors = [
         anchorpt("pitchbase", [0,0,pitchoff-thickness/2]),
         anchorpt("flattop", [0,0,thickness/2]),
@@ -1288,7 +1294,7 @@ function worm(
             apply(zrot(a)*up(z), path3d(cross_sect))
         ],
         rprofiles = [ for (prof=profiles) reverse(prof) ],
-        vnf1 = vnf_vertex_array(rprofiles, caps=true, col_wrap=true, style="quincunx"),
+        vnf1 = vnf_vertex_array(rprofiles, caps=true, col_wrap=true, style="min_edge"),
         vnf = left_handed? xflip(p=vnf1) : vnf1
     ) reorient(anchor,spin,orient, d=d, l=l, p=vnf);
 
@@ -1445,7 +1451,7 @@ function worm_gear(
                 [gear_pts, ((i+1)%teeth)*face_pts, (i+1)*face_pts-1]
             ]
         ],
-        sides_vnf = vnf_vertex_array(profiles, caps=false, col_wrap=true, style="quincunx"),
+        sides_vnf = vnf_vertex_array(profiles, caps=false, col_wrap=true, style="min_edge"),
         vnf1 = vnf_merge([
             [
                 [each top_verts, [0,0,top_verts[0].z]],
