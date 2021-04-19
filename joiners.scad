@@ -83,32 +83,33 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=
     dmnd_width = dmnd_height*tan(a);
     guide_size = w/3;
     guide_width = 2*(dmnd_height/2-guide_size)*tan(a);
+    a2 = atan2(guide_width/2,h/3);
 
     render(convexity=12)
     attachable(anchor,spin,orient, size=[w, 2*l, h]) {
         difference() {
             union() {
-                // Make base.
                 difference() {
-                    // Solid backing base.
-                    fwd(l/2) cube(size=[w, l, h], center=true);
+                    // Base cube
+                    fwd(l) cube([w, l+guide_width/2, h], anchor=FRONT);
 
-                    // Clear diamond for tab
-                    xcopies(2*w*2/3) {
-                        half_joiner_clear(h=h+0.01, w=w, clearance=$slop*2, a=a);
+                    // Bevel top and bottom
+                    yrot_copies(n=2)
+                        down(h/2)
+                            xrot(-a2)
+                                down(0.1)
+                                    cube([w+1, guide_width+1, h+1], anchor=FWD+BOT);
+
+                    // Clear sides
+                    xcopies(2*w*2/3-$slop*2) {
+                        cube([w, guide_width, h/3], center=true);
+                        fwd(guide_width/2)
+                            yrot_copies(n=2)
+                                down(h/6)
+                                    xrot(a2)
+                                        cube([w, guide_width, h/2], anchor=FWD+TOP);
                     }
                 }
-
-                difference() {
-                    // Make tab
-                    scale([w/3-$slop*2, dmnd_width/2, dmnd_height/2]) xrot(45)
-                        cube(size=[1,sqrt(2),sqrt(2)], center=true);
-
-                    // Blunt point of tab.
-                    back(guide_width/2+2)
-                        cube(size=[w*0.99,4,guide_size*2], center=true);
-                }
-
 
                 // Guide ridges.
                 if (guides == true) {
@@ -134,7 +135,6 @@ module half_joiner(h=20, w=10, l=10, a=30, screwsize=undef, guides=true, anchor=
         children();
     }
 }
-
 
 
 // Module: half_joiner2()
