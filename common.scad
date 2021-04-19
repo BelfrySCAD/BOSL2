@@ -407,7 +407,7 @@ function all_defined(v,recursive=false) =
 // Usage:
 //   anchr = get_anchor(anchor,center,<uncentered>,<dflt>);
 // Topics: Argument Handling
-// See Also: get_radius(), get_named_args()
+// See Also: get_radius()
 // Description:
 //   Calculated the correct anchor from `anchor` and `center`.  In order:
 //   - If `center` is not `undef` and `center` evaluates as true, then `CENTER` (`[0,0,0]`) is returned.
@@ -437,7 +437,7 @@ function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
 // Usage:
 //   r = get_radius(<r1=>, <r2=>, <r=>, <d1=>, <d2=>, <d=>, <dflt=>);
 // Topics: Argument Handling
-// See Also: get_anchor(), get_named_args()
+// See Also: get_anchor()
 // Description:
 //   Given various radii and diameters, returns the most specific radius.  If a diameter is most
 //   specific, returns half its value, giving the radius.  If no radii or diameters are defined,
@@ -478,88 +478,6 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
         r 
     : !is_undef(d) ? assert(is_finite(d) || is_vector(d,1) || is_vector(d,2), "Invalid diameter d." ) d/2
     : dflt;
-
-
-// Function: get_named_args()
-// Usage:
-//   function f(pos1=_UNDEF, pos2=_UNDEF,...,named1=_UNDEF, named2=_UNDEF, ...) = let(args = get_named_args([pos1, pos2, ...], [[named1, default1], [named2, default2], ...]), named1=args[0], named2=args[1], ...)
-// Topics: Argument Handling
-// See Also: get_anchor(), get_radius()
-// Description:
-//   Given the values of some positional and named arguments, returns a list of the values assigned to
-//   named parameters.  in the following steps:
-//   - First, all named parameters which were explicitly assigned in the function call take their
-//     provided value.
-//   - Then, any positional arguments are assigned to remaining unassigned
-//     parameters; this is governed both by the `priority` entries (if there are `N` positional
-//     arguments, then the `N` parameters with lowest `priority` value will be assigned) and by the
-//     order of the positional arguments (matching that of the assigned named parameters).  If no
-//     priority is given, then these two ordering coincide: parameters are assigned in order, starting
-//     from the first one.
-//   - Finally, any remaining named parameters can take default values.  If no default values are
-//     given, then `undef` is used.
-//   .
-//   This allows an author to declare a function prototype with named or optional parameters, so that
-//   the user may then call this function using either positional or named parameters. In practice the
-//   author will declare the function as using *both* positional and named parameters, and let
-//   `get_named_args()` do the parsing from the whole set of arguments.  See the example below.
-//   .
-//   This supports the user explicitly passing `undef` as a function argument.  To distinguish between
-//   an intentional `undef` and the absence of an argument, we use a custom `_UNDEF` value as a guard
-//   marking the absence of any arguments (in practice, `_UNDEF` is a random-generated string, which
-//   will never coincide with any useful user value).  This forces the author to declare all the
-//   function parameters as having `_UNDEF` as their default value.
-// Arguments:
-//   positional = The list of values of positional arguments.
-//   named = The list of named arguments; each entry of the list has the form `[passed-value, <default-value>, <priority>]`, where `passed-value` is the value that was passed at function call; `default-value` is the value that will be used if nothing is read from either named or positional arguments; `priority` is the priority assigned to this argument (lower means more priority, default value is `+inf`). Since stable sorting is used, if no priority at all is given, all arguments will be read in order.
-//   _undef = The default value used by the calling function for all arguments. The default value, `_UNDEF`, is a random string. This value **must** be the default value of all parameters in the outer function call (see example below).
-//
-// Example: a function with prototype `f(named1,< <named2>, named3 >)`
-//   function f(_p1=_UNDEF, _p2=_UNDEF, _p3=_UNDEF,
-//              arg1=_UNDEF, arg2=_UNDEF, arg3=_UNDEF) =
-//      let(named = get_named_args([_p1, _p2, _p3],
-//          [[arg1, "default1",0], [arg2, "default2",2], [arg3, "default3",1]]))
-//      named;
-//   // all default values or all parameters provided:
-//   echo(f());
-//   // ["default1", "default2", "default3"]
-//   echo(f("given2", "given3", arg1="given1"));
-//   // ["given1", "given2", "given3"]
-//   
-//   // arg1 has highest priority, and arg3 is higher than arg2:
-//   echo(f("given1"));
-//   // ["given1", "default2", "default3"]
-//   echo(f("given3", arg1="given1"));
-//   // ["given1", "default2", "given3"]
-//   
-//   // explicitly passing undef is allowed:
-//   echo(f(undef, arg1="given1", undef));
-//   // ["given1", undef, undef]
-
-/* Note: however tempting it might be, it is *not* possible to accept
- * named argument as a list [named1, named2, ...] (without default
- * values), because the values [named1, named2...] themselves might be
- * lists, and we will not be able to distinguish the two cases. */
-function get_named_args(positional, named, _undef=_UNDEF) =
-    let(deft = [for(p=named) p[1]], // default is undef
-        // indices of the values to fetch from positional args:
-        unknown = [for(x=enumerate(named)) if(x[1][0]==_undef) x[0]],
-        // number of values given to positional arguments:
-        n_positional = count_true([for(p=positional) p!=_undef]))
-    assert(n_positional <= len(unknown),
-      str("too many positional arguments (", n_positional, " given, ",
-          len(unknown), " required)"))
-    let(
-        // those elements which have no priority assigned go last (prio=+∞):
-        prio = sortidx([for(u=unknown) default(named[u][2], 1/0)]),
-        // list of indices of values assigned from positional arguments:
-        assigned = [for(a=sort([for(i=[0:1:n_positional-1]) prio[i]]))
-          unknown[a]])
-    [ for(e = enumerate(named))
-      let(idx=e[0], val=e[1][0], ass=search(idx, assigned))
-        val != _undef ? val :
-        ass != [] ? positional[ass[0]] :
-        deft[idx] ];
 
 
 // Function: scalar_vec3()
