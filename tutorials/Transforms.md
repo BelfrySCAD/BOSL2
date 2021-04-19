@@ -14,124 +14,124 @@ just what axis is being moved along, and in which direction.  It's also a bit ve
 frequently used command.  For these reasons, BOSL2 provides you with shortcuts for each direction.
 These shortcuts are `up()`, `down()`, `fwd()`, `back()`, `left()`, and `right()`:
 ```openscad
-    #sphere(d=20);
-    up(30) sphere(d=20);
+#sphere(d=20);
+up(30) sphere(d=20);
 ```
 
 ```openscad
-    #sphere(d=20);
-    down(30) sphere(d=20);
+#sphere(d=20);
+down(30) sphere(d=20);
 ```
 
 ```openscad
-    #sphere(d=20);
-    fwd(30) sphere(d=20);
+#sphere(d=20);
+fwd(30) sphere(d=20);
 ```
 
 ```openscad
-    #sphere(d=20);
-    back(30) sphere(d=20);
+#sphere(d=20);
+back(30) sphere(d=20);
 ```
 
 ```openscad
-    #sphere(d=20);
-    left(30) sphere(d=20);
+#sphere(d=20);
+left(30) sphere(d=20);
 ```
 
 ```openscad
-    #sphere(d=20);
-    right(30) sphere(d=20);
+#sphere(d=20);
+right(30) sphere(d=20);
 ```
 
 There is also a more generic `move()` command that can work just like `translate()`, or you can
 specify the motion on each axis more clearly:
 ```openscad
-    #sphere(d=20);
-    move([30,-10]) sphere(d=20);
+#sphere(d=20);
+move([30,-10]) sphere(d=20);
 ```
 
 ```openscad
-    #sphere(d=20);
-    move(x=30,y=10) sphere(d=20);
+#sphere(d=20);
+move(x=30,y=10) sphere(d=20);
 ```
 
 
 ## Scaling
 The `scale()` command is also fairly simple:
 ```openscad
-    scale(2) cube(10, center=true);
+scale(2) cube(10, center=true);
 ```
 
 ```openscad
-    scale([1,2,3]) cube(10, center=true);
+scale([1,2,3]) cube(10, center=true);
 ```
 
 If you want to only change the scaling on one axis, though, BOSL2 provides clearer
 commands to do just that; `xscale()`, `yscale()`, and `zscale()`:
 ```openscad
-    xscale(2) cube(10, center=true);
+xscale(2) cube(10, center=true);
 ```
 ```openscad
-    yscale(2) cube(10, center=true);
+yscale(2) cube(10, center=true);
 ```
 ```openscad
-    zscale(2) cube(10, center=true);
+zscale(2) cube(10, center=true);
 ```
 
 
 ## Rotation
 The `rotate()` command is fairly straightforward:
 ```openscad
-    rotate([0,30,0]) cube(20, center=true);
+rotate([0,30,0]) cube(20, center=true);
 ```
 
 It is also a bit verbose, and can, at a glance, be difficult to tell just how it is rotating.
 BOSL2 provides shortcuts for rotating around each axis, for clarity; `xrot()`, `yrot()`, and `zrot()`:
 ```openscad
-    xrot(30) cube(20, center=true);
+xrot(30) cube(20, center=true);
 ```
 
 ```openscad
-    yrot(30) cube(20, center=true);
+yrot(30) cube(20, center=true);
 ```
 
 ```openscad
-    zrot(30) cube(20, center=true);
+zrot(30) cube(20, center=true);
 ```
 
 The `rot()` command is a more generic rotation command, and shorter to type than `rotate()`:
 ```openscad
-    rot([0,30,15]) cube(20, center=true);
+rot([0,30,15]) cube(20, center=true);
 ```
 
 All of the rotation shortcuts can take a `cp=` argument, that lets you specify a
 centerpoint to rotate around:
 ```openscad
-    cp = [0,0,40];
-    color("blue") move(cp) sphere(d=3);
-    #cube(20, center=true);
-    xrot(45, cp=cp) cube(20, center=true);
+cp = [0,0,40];
+color("blue") move(cp) sphere(d=3);
+#cube(20, center=true);
+xrot(45, cp=cp) cube(20, center=true);
 ```
 
 ```openscad
-    cp = [0,0,40];
-    color("blue") move(cp) sphere(d=3);
-    #cube(20, center=true);
-    yrot(45, cp=cp) cube(20, center=true);
+cp = [0,0,40];
+color("blue") move(cp) sphere(d=3);
+#cube(20, center=true);
+yrot(45, cp=cp) cube(20, center=true);
 ```
 
 ```openscad
-    cp = [0,40,0];
-    color("blue") move(cp) sphere(d=3);
-    #cube(20, center=true);
-    zrot(45, cp=cp) cube(20, center=true);
+cp = [0,40,0];
+color("blue") move(cp) sphere(d=3);
+#cube(20, center=true);
+zrot(45, cp=cp) cube(20, center=true);
 ```
 
 You can also do a new trick with it.  You can rotate from pointing in one direction, towards another.
 You give these directions using vectors:
 ```openscad
-    #cylinder(d=10, h=50);
-    rot(from=[0,0,1], to=[1,0,1]) cylinder(d=10, h=50);
+#cylinder(d=10, h=50);
+rot(from=[0,0,1], to=[1,0,1]) cylinder(d=10, h=50);
 ```
 
 There are several direction vectors constants and aliases you can use for clarity:
@@ -150,51 +150,51 @@ Constant                       | Value        | Direction
 
 This lets you rewrite the above vector rotation more clearly as:
 ```openscad
-    #cylinder(d=10, h=50);
-    rot(from=UP, to=UP+RIGHT) cylinder(d=10, h=50);
+#cylinder(d=10, h=50);
+rot(from=UP, to=UP+RIGHT) cylinder(d=10, h=50);
 ```
 
 
 ## Mirroring
 The standard `mirror()` command works like this:
 ```openscad
-    #yrot(60) cylinder(h=50, d1=20, d2=10);
-    mirror([1,0,0]) yrot(60) cylinder(h=50, d1=20, d2=10);
+#yrot(60) cylinder(h=50, d1=20, d2=10);
+mirror([1,0,0]) yrot(60) cylinder(h=50, d1=20, d2=10);
 ```
 
 BOSL2 provides shortcuts for mirroring across the standard axes; `xflip()`, `yflip()`, and `zflip()`:
 ```openscad
-    #yrot(60) cylinder(h=50, d1=20, d2=10);
-    xflip() yrot(60) cylinder(h=50, d1=20, d2=10);
+#yrot(60) cylinder(h=50, d1=20, d2=10);
+xflip() yrot(60) cylinder(h=50, d1=20, d2=10);
 ```
 
 ```openscad
-    #xrot(60) cylinder(h=50, d1=20, d2=10);
-    yflip() xrot(60) cylinder(h=50, d1=20, d2=10);
+#xrot(60) cylinder(h=50, d1=20, d2=10);
+yflip() xrot(60) cylinder(h=50, d1=20, d2=10);
 ```
 
 ```openscad
-    #cylinder(h=50, d1=20, d2=10);
-    zflip() cylinder(h=50, d1=20, d2=10);
+#cylinder(h=50, d1=20, d2=10);
+zflip() cylinder(h=50, d1=20, d2=10);
 ```
 
 All of the flip commands can offset where the mirroring is performed:
 ```openscad
-    #zrot(30) cube(20, center=true);
-    xflip(x=-20) zrot(30) cube(20, center=true);
-    color("blue",0.25) left(20) cube([0.1,50,50], center=true);
+#zrot(30) cube(20, center=true);
+xflip(x=-20) zrot(30) cube(20, center=true);
+color("blue",0.25) left(20) cube([0.1,50,50], center=true);
 ```
 
 ```openscad
-    #zrot(30) cube(20, center=true);
-    yflip(y=20) zrot(30) cube(20, center=true);
-    color("blue",0.25) back(20) cube([40,0.1,40], center=true);
+#zrot(30) cube(20, center=true);
+yflip(y=20) zrot(30) cube(20, center=true);
+color("blue",0.25) back(20) cube([40,0.1,40], center=true);
 ```
 
 ```openscad
-    #xrot(30) cube(20, center=true);
-    zflip(z=-20) xrot(30) cube(20, center=true);
-    color("blue",0.25) down(20) cube([40,40,0.1], center=true);
+#xrot(30) cube(20, center=true);
+zflip(z=-20) xrot(30) cube(20, center=true);
+color("blue",0.25) down(20) cube([40,40,0.1], center=true);
 ```
 
 

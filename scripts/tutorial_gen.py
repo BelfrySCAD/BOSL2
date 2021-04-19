@@ -14,7 +14,7 @@ imgmgr = ImageManager()
 
 
 def img_started(req):
-    print("  {}... ".format(os.path.basename(req.src_file)), end='')
+    print("  {}... ".format(os.path.basename(req.image_file)), end='')
     sys.stdout.flush()
 
 
@@ -52,7 +52,7 @@ def processFile(infile, outfile=None, imgroot=""):
 
     outdata = []
     with open(infile, "r") as f:
-        script = []
+        script = ["include <BOSL2/std.scad>"]
         extyp = ""
         in_script = False
         imgnum = 0
@@ -67,26 +67,24 @@ def processFile(infile, outfile=None, imgroot=""):
                     extyp = line.split("-")[1]
                 else:
                     extyp = ""
-                line = "```openscad"
-                script = []
                 show_script = "ImgOnly" not in extyp
+                script = ["include <BOSL2/std.scad>"]
                 imgnum = imgnum + 1
-                if show_script:
-                    outdata.append(line)
             elif in_script:
-                if show_script:
-                    outdata.append(line)
                 if line == "```":
                     in_script = False
-                    imgfile = "{}_{}.png".format(fileroot, imgnum)
+                    imgfile = os.path.join(imgroot, "{}_{}.png".format(fileroot, imgnum))
                     imgmgr.new_request(
                         fileroot+".md", linenum,
                         imgfile, script, extyp,
                         starting_cb=img_started,
                         completion_cb=img_completed
                     )
-                    outdata.append("![Figure {}]({})".format(imgnum, imgroot + imgfile))
-                    script = []
+                    if show_script:
+                        outdata.append("```openscad")
+                        outdata.extend(script)
+                        outdata.append("```")
+                    outdata.append("![Figure {}]({})".format(imgnum, imgfile))
                     show_script = True
                     extyp = ""
                 else:
