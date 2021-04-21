@@ -1031,144 +1031,111 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
 
 // Function: vnf_halfspace()
 // Usage:
-//   vnf_halfspace([a,b,c,d], vnf)
+//   newvnf = vnf_halfspace(plane, vnf, <closed>);
 // Description:
-//   returns the intersection of the VNF with the given half-space.
+//   Returns the intersection of the vnf with a half space.  The half space is defined by
+//   plane = [A,B,C,D], taking the side where the normal [A,B,C] points: Ax+By+Cz≥D.
+//   If closed is set to false then the cut face is not included in the vnf.  This could
+//   allow further extension of the vnf by merging with other vnfs.  
 // Arguments:
-//   halfspace = half-space to intersect with, given as the four coefficients of the affine inequation a\*x+b\*y+c\*z≥ d.
+//   plane = plane defining the boundary of the half space
+//   vnf = vnf to cut
+//   closed = if false do not return include cut face(s).  Default: true
+// Example:
+//   vnf = cube(10,center=true);
+//   cutvnf = vnf_halfspace([-1,1,-1,0], vnf);
+//   vnf_polyhedron(cutvnf);
+// Example:  Cut face has 2 components
+//   vnf = path_sweep(circle(r=4, $fn=16),
+//                    circle(r=20, $fn=64),closed=true);
+//   cutvnf = vnf_halfspace([-1,1,-4,0], vnf);
+//   vnf_polyhedron(cutvnf);
+// Example: Cut face is not simply connected
+//   vnf = path_sweep(circle(r=4, $fn=16),
+//                    circle(r=20, $fn=64),closed=true);
+//   cutvnf = vnf_halfspace([0,0.7,-4,0], vnf);
+//   vnf_polyhedron(cutvnf);
+// Example: Cut object has multiple components
+//   function knot(a,b,t) =   // rolling knot 
+//        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
+//          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
+//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
+//   a = 0.8; b = sqrt (1 - a * a); 
+//   ksteps = 400;
+//   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   knot=path_sweep(ushape, knot_path, closed=true, method="incremental");
+//   cut_knot = vnf_halfspace([1,0,0,0], knot);
+//   vnf_polyhedron(cut_knot);
+function vnf_halfspace(plane, vnf, closed=true) =
+    let(
+         inside = [for(x=vnf[0]) plane*[each x,-1] >= 0 ? 1 : 0],
+         vertexmap = [0,each cumsum(inside)],
+         faces_edges_vertices = _vnfcut(plane, vnf[0],vertexmap,inside, vnf[1], last(vertexmap)),
+         newvert = concat(bselect(vnf[0],inside), faces_edges_vertices[2])
+    )
+    closed==false ? [newvert, faces_edges_vertices[0]] :
+    let(
+        allpaths = _assemble_paths(newvert, faces_edges_vertices[1]),
+        newpaths = [for(p=allpaths) if (len(p)>=3) p
+                                    else assert(approx(p[0],p[1]),"Orphan edge found when assembling cut edges.")
+           ]
+    )
+    len(newpaths)<=1 ? [newvert, concat(faces_edges_vertices[0], newpaths)] 
+    :
+      let(
+           faceregion = [for(p=newpaths) project_plane(select(newvert,p), plane)],
+           facevnf = region_faces(faceregion,reverse=true),
+           faceverts = lift_plane(facevnf[0], plane)
+      )
+      vnf_merge([[newvert, faces_edges_vertices[0]], [faceverts, facevnf[1]]]);
 
-function _vnf_halfspace_pts(halfspace, points, faces,
-  inside=undef, coords=[], map=[]) =
-/* Recursive function to compute the intersection of points (and edges,
- * but not faces) with with the half-space.
- * Parameters:
- * halfspace  a vector(4)
- * points     a list of points3d
- * faces      a list of indexes in points
- * inside     a vector{bool} determining which points belong to the
- *            half-space; if undef, it is initialized at first loop.
- * coords     the coordinates of the points in the intersection
- * map        the logical map (old point) → (new point(s)):
- *   if point i is kept, then map[i] = new-index-for-i;
- *   if point i is dropped, then map[i] = [[j1, k1], [j2, k2], …],
- *      where points j1,… are kept (old index)
- *      and k1,… are the matching intersections (new index).
- * Returns the triple [coords, map, inside].
- *
- */
-    let(i=len(map), n=len(coords)) // we are currently processing point i
-    // termination test:
-    i >= len(points) ? [ coords, map, inside ] :
-    let(inside = !is_undef(inside) ? inside :
-        [for(x=points) halfspace*concat(x,[-1]) >= 0],
-        pi = points[i])
-    // inside half-space: keep the point (and reindex)
-    inside[i] ? _vnf_halfspace_pts(halfspace, points, faces, inside,
-        concat(coords, [pi]), concat(map, [n]))
-    : // else: compute adjacent vertices (adj)
-    let(adj = unique([for(f=faces) let(m=len(f), j=search(i, f)[0])
-      each if(j!=undef) [f[(j+1)%m], f[(j+m-1)%m]] ]),
-    // filter those which lie in half-space:
-        adj2 = [for(x=adj) if(inside[x]) x],
-        zi = halfspace*concat(pi, [-1]))
-    _vnf_halfspace_pts(halfspace, points, faces, inside,
-        // new points: we append all these intersection points
-        concat(coords, [for(j=adj2) let(zj=halfspace*concat(points[j],[-1]))
-            (zi*points[j]-zj*pi)/(zi-zj)]),
-        // map: we add the info
-        concat(map, [[for(y=enumerate(adj2)) [y[1], n+y[0]]]]));
-function _vnf_halfspace_face(face, map, inside, i=0,
-    newface=[], newedge=[], exit) =
-/* Recursive function to intersect a face of the VNF with the half-plane.
- * Arguments:
- *   face: the list of points of the face (old indices).
- *   map: as produced by _vnf_halfspace_pts
- *   inside: vector{bool} containing half-space info
- *   i: index for iteration
- *   exit: boolean; is first point in newedge an exit or an entrance from
- *     half-space?
- *   newface: list of (new indexes of) points on the face
- *   newedge: list of new points on the plane (even number of points)
- *  Return value: [newface, new-edges], where new-edges is a list of
- *  pairs [entrance-node, exit-node] (new indices).
- */
-// termination condition:
-    (i >= len(face)) ? [ newface,
-    // if exit==true then we return newedge[1,0], newedge[3,2], ...
-    // otherwise newedge[0,1], newedge[2,3], ...;
-    // all edges are oriented (entrance->exit), so that by following the
-    // arrows we obtain a correctly-oriented face:
-    let(k = exit ? 0 : 1)
-    [for(i=[0:2:len(newedge)-2]) [newedge[i+k], newedge[i+1-k]]] ]
-    : // recursion case: p is current point on face, q is next point
-    let(p = face[i], q = face[(i+1)%len(face)],
-        // if p is inside half-plane, keep it in the new face:
-        newface0 = inside[p] ?  concat(newface, [map[p]]) : newface)
-        // if the current segment does not intersect, this is all:
-        inside[p] == inside[q] ? _vnf_halfspace_face(face, map, inside, i+1,
-            newface0, newedge, exit)
-        : // otherwise, we must add the intersection point:
-        // rename the two points p,q as inner and outer point:
-        let(in = inside[p] ? p : q, out = p+q-in,
-            inter=[for(a=map[out]) if(a[0]==in) a[1]][0])
-        _vnf_halfspace_face(face, map, inside, i+1,
-            concat(newface0, [inter]),
-            concat(newedge, [inter]),
-            is_undef(exit) ? inside[p] : exit);
-function _vnf_halfspace_path_search_edge(edge, paths, i=0, ret=[undef,undef]) =
-/* given an oriented edge [x,y] and a set of oriented paths,
- * returns the indices [i,j] of paths [before, after] given edge
- */
-    // termination condition
-    i >= len(paths) ? ret:
-    _vnf_halfspace_path_search_edge(edge, paths, i+1,
-       [last(paths[i]) == edge[0] ? i : ret[0],
-        paths[i][0] == edge[1] ? i : ret[1]]);
-function _vnf_halfspace_paths(edges, i=0, paths=[]) =
-/* given a set of oriented edges [x,y],
-   returns all paths [x,y,z,..] that may be formed from these edges.
-   A closed path will be returned with equal first and last point.
-   i: index of currently examined edge
- */
-    i >= len(edges) ? paths : // termination condition
-    let(e=edges[i], s = _vnf_halfspace_path_search_edge(e, paths))
-        _vnf_halfspace_paths(edges, i+1,
-        // we keep all paths untouched by e[i]
-        concat([for(i=[0:1:len(paths)-1]) if(i!= s[0] && i != s[1]) paths[i]],
-        is_undef(s[0])? (
-            // fresh e: create a new path
-            is_undef(s[1]) ? [e] :
-            // e attaches to beginning of previous path
-            [concat([e[0]], paths[s[1]])]
-        ) :// edge attaches to end of previous path
-        is_undef(s[1]) ? [concat(paths[s[0]], [e[1]])] :
-        // edge merges two paths
-        s[0] != s[1] ? [concat(paths[s[0]], paths[s[1]])] :
-        // edge closes a loop
-        [concat(paths[s[0]], [e[1]])]));
-function vnf_halfspace(_arg1=_UNDEF, _arg2=_UNDEF,
-    halfspace=_UNDEF, vnf=_UNDEF) =
-    // here is where we wish that OpenSCAD had array lvalues...
-    let(args=get_named_args([_arg1, _arg2], [[halfspace],[vnf]]),
-        halfspace=args[0], vnf=args[1])
-    assert(is_vector(halfspace, 4),
-        "half-space must be passed as a length 4 affine form")
-    assert(is_vnf(vnf), "must pass a vnf")
-        // read points
-    let(tmp1=_vnf_halfspace_pts(halfspace, vnf[0], vnf[1]),
-        coords=tmp1[0], map=tmp1[1], inside=tmp1[2],
-        // cut faces and generate edges
-        tmp2= [for(f=vnf[1]) _vnf_halfspace_face(f, map, inside)],
-        newfaces=[for(x=tmp2) if(x[0]!=[]) x[0]],
-        newedges=[for(x=tmp2) each x[1]],
-        // generate new faces
-        paths=_vnf_halfspace_paths(newedges),
-        reg = [for(p=paths) project_plane(select(coords,p), halfspace)],
-        regvnf = region_faces(reg,reverse=true),
-        regvert = lift_plane(regvnf[0], halfspace)
-        //loops=[for(p=paths) if(coords[p[0]] == coords[last(p)]) reverse(p)])
-        )
-        vnf_merge([[coords, newfaces], [regvert, regvnf[1]]]);
-//    [coords, concat(newfaces, loops)];
+
+function _assemble_paths(vertices, edges, paths=[],i=0) =
+     i==len(edges) ? paths :
+     norm(vertices[edges[i][0]]-vertices[edges[i][1]])<EPSILON ? echo(degen=i)_assemble_paths(vertices,edges,paths,i+1) :
+     let(    // Find paths that connects on left side and right side of the edges (if one exists)
+         left = [for(j=idx(paths)) if (approx(vertices[last(paths[j])],vertices[edges[i][0]])) j],
+         right = [for(j=idx(paths)) if (approx(vertices[edges[i][1]],vertices[paths[j][0]])) j]
+     )
+     assert(len(left)<=1 && len(right)<=1)
+     let(              
+          keep_path = list_remove(paths,concat(left,right)),
+          update_path = left==[] && right==[] ? edges[i] 
+                      : left==[] ? concat([edges[i][0]],paths[right[0]])
+                      : right==[] ? concat(paths[left[0]],[edges[i][1]])
+                      : left != right ? concat(paths[left[0]], paths[right[0]])
+                      : paths[left[0]]
+     )
+     _assemble_paths(vertices, edges, concat(keep_path, [update_path]), i+1);
+
+
+function _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount, newfaces=[], newedges=[], newvertices=[], i=0) =
+   i==len(faces) ? [newfaces, newedges, newvertices] :
+   let(
+        pts_inside = select(inside,faces[i])
+   )
+   all(pts_inside) ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount,
+                             concat(newfaces, [select(vertexmap,faces[i])]), newedges, newvertices, i+1):
+   !any(pts_inside) ? _vnfcut(plane, vertices, vertexmap,inside, faces, vertcount, newfaces, newedges, newvertices, i+1):
+   let(
+        first = search([[1,0]],pair(pts_inside,wrap=true),0)[0],
+        second = search([[0,1]],pair(pts_inside,wrap=true),0)[0]
+   )
+   assert(len(first)==1 && len(second)==1, "Found concave face in VNF.  Run vnf_triangulate first to ensure convex faces.")
+   let(
+        newface = [each select(vertexmap,select(faces[i],second[0]+1,first[0])),vertcount, vertcount+1],
+        newvert = [plane_line_intersection(plane, select(vertices,select(faces[i],first[0],first[0]+1)),eps=0),
+                   plane_line_intersection(plane, select(vertices,select(faces[i],second[0],second[0]+1)),eps=0)]
+   )
+   true //!approx(newvert[0],newvert[1])
+       ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount+2,
+                 concat(newfaces, [newface]), concat(newedges,[[vertcount+1,vertcount]]),concat(newvertices,newvert),i+1)
+   :len(newface)>3
+       ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount+1,
+                 concat(newfaces, [list_head(newface)]), newedges,concat(newvertices,[newvert[0]]),i+1)
+   :
+   _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount,newfaces, newedges, newvert, i+1);
+ 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
