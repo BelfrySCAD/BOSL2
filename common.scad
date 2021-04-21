@@ -468,16 +468,18 @@ function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
 //   r = get_radius(r1=8, d=6, dflt=1);              // Returns: 8
 function get_radius(r1, r2, r, d1, d2, d, dflt) = 
     assert(num_defined([r1,d1,r2,d2])<2, "Conflicting or redundant radius/diameter arguments given.")
-    !is_undef(r1) ?   assert(is_finite(r1), "Invalid radius r1." ) r1 
-    : !is_undef(r2) ? assert(is_finite(r2), "Invalid radius r2." ) r2
-    : !is_undef(d1) ? assert(is_finite(d1), "Invalid diameter d1." ) d1/2
-    : !is_undef(d2) ? assert(is_finite(d2), "Invalid diameter d2." ) d2/2
-    : !is_undef(r)
-      ? assert(is_undef(d), "Conflicting or redundant radius/diameter arguments given.")
-        assert(is_finite(r) || is_vector(r,1) || is_vector(r,2), "Invalid radius r." )
-        r 
-    : !is_undef(d) ? assert(is_finite(d) || is_vector(d,1) || is_vector(d,2), "Invalid diameter d." ) d/2
-    : dflt;
+    assert(num_defined([r,d])<2, "Conflicting or redundant radius/diameter arguments given.")
+    let(
+        rad = !is_undef(r1) ?  r1 
+            : !is_undef(d1) ?  d1/2
+            : !is_undef(r2) ?  r2
+            : !is_undef(d2) ?  d2/2
+            : !is_undef(r)  ?  r
+            : !is_undef(d)  ?  d/2
+            : dflt
+    )
+    assert(is_undef(dflt) || is_finite(rad) || is_vector(rad), "Invalid radius." )
+    rad;
 
 
 // Function: get_named_args()
