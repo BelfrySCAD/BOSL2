@@ -236,7 +236,7 @@ function attach_geom(
             assert(is_vector(size,3))
             assert(is_vector(size2,2))
             assert(is_vector(shift,2))
-            ["cuboid", size, size2, shift, cp, offset, anchors]
+            ["cuboid", size, size2, shift, axis, cp, offset, anchors]
         )
     ) : !is_undef(vnf)? (
         assert(is_vnf(vnf))
@@ -462,20 +462,24 @@ function find_anchor(anchor, geom) =
     )
     type == "cuboid"? ( //size, size2, shift
         let(
-            size=geom[1], size2=geom[2], shift=point2d(geom[3]),
+            size=geom[1], size2=geom[2],
+            shift=point2d(geom[3]), axis=point3d(geom[4]),
+            anch = rot(from=axis, to=UP, p=anchor),
             h = size.z,
-            u = (anchor.z+1)/2,
-            axy = point2d(anchor),
+            u = (anch.z+1)/2,
+            axy = point2d(anch),
             bot = point3d(vmul(point2d(size)/2,axy),-h/2),
             top = point3d(vmul(point2d(size2)/2,axy)+shift,h/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
             sidevec = unit(rot(from=UP, to=top-bot, p=point3d(axy)),UP),
-            vvec = anchor==CENTER? UP : unit([0,0,anchor.z],UP),
-            vec = anchor==CENTER? UP :
-                approx(axy,[0,0])? unit(anchor,UP) :
-                approx(anchor.z,0)? sidevec :
-                unit((sidevec+vvec)/2,UP)
-        ) [anchor, pos, vec, oang]
+            vvec = anch==CENTER? UP : unit([0,0,anch.z],UP),
+            vec = anch==CENTER? UP :
+                approx(axy,[0,0])? unit(anch,UP) :
+                approx(anch.z,0)? sidevec :
+                unit((sidevec+vvec)/2,UP),
+            pos2 = rot(from=UP, to=axis, p=pos),
+            vec2 = rot(from=UP, to=axis, p=vec)
+        ) [anchor, pos2, vec2, oang]
     ) : type == "cyl"? ( //r1, r2, l, shift
         let(
             rr1=geom[1], rr2=geom[2], l=geom[3],
