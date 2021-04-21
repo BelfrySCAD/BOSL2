@@ -837,7 +837,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             _vnf_validate_err("BAD_INDEX", [idx])
         ],
         issues = concat(issues, bad_indices)
-    ) issues? issues :
+    ) bad_indices? issues :
     let(
         repeated_faces = [
             for (i=idx(dfaces), j=idx(dfaces))
@@ -854,7 +854,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             _vnf_validate_err("DUP_FACE", [for (i=sface1) varr[i]])
         ],
         issues = concat(issues, repeated_faces)
-    ) issues? issues :
+    ) repeated_faces? issues :
     let(
         multconn_edges = unique([
             for (i = idx(uniq_edges))
@@ -862,7 +862,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             _vnf_validate_err("MULTCONN", [for (i=uniq_edges[i]) varr[i]])
         ]),
         issues = concat(issues, multconn_edges)
-    ) issues? issues :
+    ) multconn_edges? issues :
     let(
         reversals = unique([
             for(i = idx(dfaces), j = idx(dfaces)) if(i != j)
@@ -873,7 +873,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             _vnf_validate_err("REVERSAL", [for (i=edge1) varr[i]])
         ]),
         issues = concat(issues, reversals)
-    ) issues? issues :
+    ) reversals? issues :
     let(
         t_juncts = unique([
             for (v=idx(varr), edge=uniq_edges) let(
@@ -893,7 +893,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             _vnf_validate_err("T_JUNCTION", [b])
         ]),
         issues = concat(issues, t_juncts)
-    ) issues? issues :
+    ) t_juncts? issues :
     let(
         isect_faces = !check_isects? [] : unique([
             for (i = [0:1:len(faces)-2]) let(
@@ -935,7 +935,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             _vnf_validate_err("FACE_ISECT", seg)
         ]),
         issues = concat(issues, isect_faces)
-    ) issues? issues :
+    ) isect_faces? issues :
     let(
         hole_edges = unique([
             for (i=idx(uniq_edges))
@@ -945,7 +945,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             _vnf_validate_err("HOLE_EDGE", [for (i=uniq_edges[i]) varr[i]])
         ]),
         issues = concat(issues, hole_edges)
-    ) issues? issues :
+    ) hole_edges? issues :
     let(
         nonplanars = unique([
             for (i = idx(faces)) let(
