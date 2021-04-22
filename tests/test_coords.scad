@@ -92,6 +92,11 @@ module test_project_plane() {
     assert_approx(project_plane([2,3,4,2], [[1,1,1],[0,0,0]]),[[0.430748825729,0.146123238594],[0,0]]);
     assert_approx(project_plane([2,3,4,2]),[[0.920855800833,-0.11871629875,-0.371390676354,0],[-0.11871629875,0.821925551875,-0.557086014531,-2.77555756156e-17],[0.371390676354,0.557086014531,0.742781352708,-0.371390676354],[0,0,0,1]]);
     assert_approx(project_plane([[1,1,1],[3,1,3],[1,1,4]]),[[-1/sqrt(2),1/sqrt(2),0,0],[0,0,1,-1],[1/sqrt(2),1/sqrt(2),0,-sqrt(2)],[0,0,0,1]]);
+
+    normal = rands(-1,1,3,seed=3)+[2,0,0];
+    offset = rands(-1,1,1,seed=4)[0];
+    assert_approx(project_plane([0,0,1,offset]),move([0,0,-offset]) );
+    assert_approx(project_plane([0,1,0,offset]),xrot(90)*move([0,-offset,0]) );
 }
 test_project_plane();
 
