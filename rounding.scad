@@ -1827,7 +1827,7 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
    assert(len(bottom[0])==3 || is_num(height),"Must give height/length with 2d polygon input")
    let(
      // Determine which points are concave by making bottom 2d if necessary
-     bot_proj = len(bottom[0])==2 ? bottom :  project_plane(bottom, select(bottom,0,2)),
+     bot_proj = len(bottom[0])==2 ? bottom :  project_plane(select(bottom,0,2),bottom),
      bottom_sign = polygon_is_clockwise(bot_proj) ? 1 : -1,
      concave = [for(i=[0:N-1]) bottom_sign*sign(point_left_of_line2d(select(bot_proj,i+1), select(bot_proj, i-1,i)))>0],
      top = is_undef(top) ? path3d(bottom,height/2) :

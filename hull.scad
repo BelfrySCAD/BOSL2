@@ -173,7 +173,7 @@ function hull3d_faces(points) =
     d == len(points)
   ? /* all coplanar*/
     let (
-        pts2d = [ for (p = points) project_plane(p, points[a], points[b], points[c]) ],
+        pts2d =  project_plane([points[a], points[b], points[c]],points),
         hull2d = hull2d_path(pts2d)
     ) hull2d
   : let(

@@ -569,11 +569,11 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, l
                 assert(!(cw || ccw), "(Counter)clockwise isn't meaningful in 3d, so `cw` and `ccw` must be false")
                 assert(is_undef(cp) || is_vector(cp,3),"points are 3d so cp must be 3d")
         let(
-            thirdpoint = is_def(cp) ? cp : points[2],
-            center2d = is_def(cp) ? project_plane(cp,thirdpoint,points[0],points[1]) : undef,
-            points2d = project_plane(points,thirdpoint,points[0],points[1])
+            plane = [is_def(cp) ? cp : points[2], points[0], points[1]],
+            center2d = is_def(cp) ? project_plane(plane,cp) : undef,
+            points2d = project_plane(plane, points)
         )
-        lift_plane(arc(N,cp=center2d,points=points2d,wedge=wedge,long=long),thirdpoint,points[0],points[1])
+        lift_plane(plane,arc(N,cp=center2d,points=points2d,wedge=wedge,long=long))
     ) : is_def(cp)? (
         // Arc defined by center plus two points, will have radius defined by center and points[0]
         // and extent defined by direction of point[1] from the center
