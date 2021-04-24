@@ -42,7 +42,6 @@ test_plane_from_points();
 test_plane_from_polygon();
 test_plane_normal();
 test_plane_offset();
-test_plane_transform();
 test_projection_on_plane();
 test_plane_point_nearest_origin();
 test_distance_from_plane();
@@ -173,16 +172,6 @@ module test_plane_point_nearest_origin(){
     assert_approx(plane_point_nearest_origin([each point,5]),5*unit(point)/norm(point),info);
 }
 test_plane_point_nearest_origin();
-
-
-module test_plane_transform(){
-    normal = rands(-1,1,3)+[2,0,0];
-    offset = rands(-1,1,1)[0];
-    info = info_str([["normal = ",normal],["offset = ",offset]]);
-    assert_approx(plane_transform([0,0,1,offset]),move([0,0,-offset]),info );
-    assert_approx(plane_transform([0,1,0,offset]),xrot(90)*move([0,-offset,0]),info );
-}
-*test_plane_transform();
 
 
 module test_plane_offset(){

@@ -1024,31 +1024,6 @@ function plane_offset(plane) =
     plane[3]/norm([plane.x, plane.y, plane.z]);
 
 
-// Function: plane_transform()
-// Usage:
-//   mat = plane_transform(plane);
-// Description:
-//   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, returns a 3D affine
-//   transformation matrix that will linear transform points on that plane
-//   into points on the XY plane.  You can generally then use `path2d()` to drop the
-//   Z coordinates, so you can work with the points in 2D.
-// Arguments:
-//   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
-// Example(3D):
-//   xyzpath = move([10,20,30], p=yrot(25, p=path3d(circle(d=100))));
-//   plane = plane_from_points(xyzpath);
-//   mat = plane_transform(plane);
-//   xypath = path2d(apply(mat, xyzpath));
-//   #stroke(xyzpath,closed=true);
-//   stroke(xypath,closed=true);
-function plane_transform(plane) =
-    let(
-        plane = normalize_plane(plane),
-        n = point3d(plane),
-        cp = n * plane[3]
-        )
-    rot(from=n, to=UP) * move(-cp);
-
 
 // Function: projection_on_plane()
 // Usage:
@@ -1227,8 +1202,8 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
             linevec = unit(line[1] - line[0]),
             lp1 = line[0] + (bounded[0]? 0 : -1000000) * linevec,
             lp2 = line[1] + (bounded[1]? 0 :  1000000) * linevec,
-            poly2d = clockwise_polygon(project_plane(poly, plane)),
-            line2d = project_plane([lp1,lp2], plane),
+            poly2d = clockwise_polygon(project_plane(plane, poly)),
+            line2d = project_plane(plane, [lp1,lp2]),
             parts = split_path_at_region_crossings(line2d, [poly2d], closed=false),
             inside = [for (part = parts)
                           if (point_in_polygon(mean(part), poly2d)>0) part
@@ -1236,15 +1211,15 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
         )
         !inside? undef :
         let(
-            isegs = [for (seg = inside) lift_plane(seg, plane) ]
+            isegs = [for (seg = inside) lift_plane(plane, seg) ]
         )
         isegs
     )
     :   bounded[0] && res[1]<0? undef :
         bounded[1] && res[1]>1? undef :
         let(
-            proj = clockwise_polygon(project_plane(poly, p1, p2, p3)),
-            pt = project_plane(res[0], p1, p2, p3)
+            proj = clockwise_polygon(project_plane([p1, p2, p3], poly)),
+            pt = project_plane([p1, p2, p3], res[0])
         )
         point_in_polygon(pt, proj) < 0 ? undef : res[0];
 

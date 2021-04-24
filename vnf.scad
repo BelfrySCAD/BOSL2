@@ -1084,11 +1084,10 @@ function vnf_halfspace(plane, vnf, closed=true) =
     len(newpaths)<=1 ? [newvert, concat(faces_edges_vertices[0], newpaths)] 
     :
       let(
-           faceregion = [for(p=newpaths) project_plane(select(newvert,p), plane)],
-           facevnf = region_faces(faceregion,reverse=true),
-           faceverts = lift_plane(facevnf[0], plane)
+           faceregion = project_plane(plane, newpaths),
+           facevnf = region_faces(faceregion,reverse=true)
       )
-      vnf_merge([[newvert, faces_edges_vertices[0]], [faceverts, facevnf[1]]]);
+      vnf_merge([[newvert, faces_edges_vertices[0]], lift_plane(plane, facevnf)]);
 
 
 function _assemble_paths(vertices, edges, paths=[],i=0) =

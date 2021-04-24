@@ -1222,14 +1222,14 @@ module path_extrude(path, convexity=10, clipsize=100) {
 //     path_spread(wedge,n=5,spacing=3) fwd(.1) rect([1,4],anchor=FRONT);
 //   }
 // Example(Spin,VPD=115): 3d example, with children rotated into the plane of the path
-//   tilted_circle = lift_plane(regular_ngon(n=64, or=12), [0,0,0], [5,0,5], [0,2,3]);
+//   tilted_circle = lift_plane([[0,0,0], [5,0,5], [0,2,3]],regular_ngon(n=64, or=12));
 //   path_sweep(regular_ngon(n=16,or=.1),tilted_circle);
 //   path_spread(tilted_circle, n=15,closed=true) {
 //      color("blue") cyl(h=3,r=.2, anchor=BOTTOM);      // z-aligned cylinder
 //      color("red") xcyl(h=10,r=.2, anchor=FRONT+LEFT); // x-aligned cylinder
 //   }
 // Example(Spin,VPD=115): 3d example, with rotate_children set to false
-//   tilted_circle = lift_plane(regular_ngon(n=64, or=12), [0,0,0], [5,0,5], [0,2,3]);
+//   tilted_circle = lift_plane([[0,0,0], [5,0,5], [0,2,3]], regular_ngon(n=64, or=12));
 //   path_sweep(regular_ngon(n=16,or=.1),tilted_circle);
 //   path_spread(tilted_circle, n=25,rotate_children=false,closed=true) {
 //      color("blue") cyl(h=3,r=.2, anchor=BOTTOM);       // z-aligned cylinder
