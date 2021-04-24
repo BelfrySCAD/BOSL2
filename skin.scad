@@ -995,6 +995,7 @@ module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=
 // Function&Module: path_sweep()
 // Usage: As module
 //   path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <style=>, <convexity=>, <transforms=>, <anchor=>, <cp=>, <spin=>, <orient=>, <extent=>) <attachments>;
+// Usage: As function   
 //   vnf = path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <style=>, <convexity=>, <transforms=>);
 // Description:
 //   Takes as input a 2D polygon path, and a 2d or 3d path and constructs a polyhedron by sweeping the shape along the path.
@@ -1289,6 +1290,19 @@ module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=
 //   path_sweep(region,
 //              circle(r=16,$fn=75),closed=true,
 //              twist=360/5*2,symmetry=5);
+// Example: Cutting a cylinder with a curved path.  Note that in this case, the incremental method produces just a slight twist but the natural method produces an extreme twist.  But manual specification produces no twist, as desired:
+//   $fn=90;
+//   r=8;
+//   thickness=1;
+//   len=21;
+//   curve = [for(theta=[0:4:359])
+//              [r*cos(theta), r*sin(theta), 10+sin(6*theta)]];
+//   difference(){
+//     cylinder(r=r, l=len);
+//     down(.5)cylinder(r=r-thickness, l=len+1);
+//     path_sweep(left(.05,square([1.1,1])), curve, closed=true,
+//                method="manual", normal=UP);
+//   }
 module path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
                     symmetry=1, last_normal, tangent, relaxed=false, caps, style="min_edge", convexity=10,
                     anchor="origin",cp,spin=0, orient=UP, extent=false)
