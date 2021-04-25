@@ -217,7 +217,49 @@ cube(50, center=true)
     position([TOP,RIGHT,FRONT]) cylinder(d1=50,d2=20,l=20);
 ```
 
+## Anchor Arrows
+One way that is useful to show the position and orientation of an anchorpoint is by attaching
+an anchor arrow to that anchor.
 
+```openscad
+cube(40, center=true)
+    attach(LEFT+TOP)
+        anchor_arrow();
+```
+
+For large objects, you chan change the size of the arrow with the `s=` argument.
+
+```openscad
+sphere(d=100)
+    attach(LEFT+TOP)
+        anchor_arrow(s=30);
+```
+
+To show all the standard cardinal anchorpoints, you can use the `show_anchors()` module.
+
+```openscad
+cube(40, center=true)
+    show_anchors();
+```
+
+```openscad
+cylinder(h=40, d=40, center=true)
+    show_anchors();
+```
+
+```openscad
+sphere(d=40)
+    show_anchors();
+```
+
+For large objects, you chan again change the size of the arrows with the `s=` argument.
+
+```openscad
+cylinder(h=100, d=100, center=true)
+    show_anchors(s=30);
+```
+
+```openscad
 ## Tagged Operations
 BOSL2 introduces the concept of tags.  Tags are names that can be given to attachables, so that
 you can refer to them when performing `diff()`, `intersect()`, and `hulling()` operations.
@@ -567,8 +609,76 @@ spikeball(r=50, scale=[0.75,1,1.5]);
 
 ### VNF Attachables
 If the shape just doesn't fit into any of the above categories, and you constructed it as a
-[VNF](vnf.scad), you can use the VNF itself to describe the geometry.
-TBW
+[VNF](vnf.scad), you can use the VNF itself to describe the geometry with the `vnf=` argument.
+
+There are two variations to how anchoring can work for VNFs. When `extents=true`, (the default)
+then a plane is projected out from the origin, perpendicularly in the direction of the anchor,
+to the furthest distance that intersects with the VNF shape.  The anchorpoint is then the
+center of the points that still intersect that plane.
+
+```openscad-FlatSpin
+module stellate_cube(s=100, anchor=CENTER, spin=0, orient=UP) {
+    s2 = 3 * s;
+    verts = [
+        [0,0,-s2*sqrt(2)/2],
+        each down(s/2, p=path3d(square(s,center=true))),
+        each zrot(45, p=path3d(square(s2,center=true))),
+        each up(s/2, p=path3d(square(s,center=true))),
+        [0,0,s2*sqrt(2)/2]
+    ];
+    faces = [
+        [0,2,1], [0,3,2], [0,4,3], [0,1,4],
+        [1,2,6], [1,6,9], [6,10,9], [2,10,6],
+        [1,5,4], [1,9,5], [9,12,5], [5,12,4],
+        [4,8,3], [4,12,8], [12,11,8], [11,3,8],
+        [2,3,7], [3,11,7], [7,11,10], [2,7,10],
+        [9,10,13], [10,11,13], [11,12,13], [12,9,13]
+    ];
+    vnf = [verts, faces];
+    attachable(anchor,spin,orient, vnf=vnf) {
+        vnf_polyhedron(vnf);
+        children();
+    }
+}
+stellate_cube(25) {
+    attach(UP+RIGHT) {
+        anchor_arrow(20);
+        %cube([100,100,0.1],center=true);
+    }
+}
+```
+
+When `extents=false`, then the anchorpoint will be the furthest intersection of the VNF with
+the anchor ray from the origin. The orientation of the anchorpoint will be the normal of the
+face at the intersection.  If the intersection is at an edge or corner, then the orientation
+will bisect the angles between the faces.
+
+```openscad
+module stellate_cube(s=100, anchor=CENTER, spin=0, orient=UP) {
+    s2 = 3 * s;
+    verts = [
+        [0,0,-s2*sqrt(2)/2],
+        each down(s/2, p=path3d(square(s,center=true))),
+        each zrot(45, p=path3d(square(s2,center=true))),
+        each up(s/2, p=path3d(square(s,center=true))),
+        [0,0,s2*sqrt(2)/2]
+    ];
+    faces = [
+        [0,2,1], [0,3,2], [0,4,3], [0,1,4],
+        [1,2,6], [1,6,9], [6,10,9], [2,10,6],
+        [1,5,4], [1,9,5], [9,12,5], [5,12,4],
+        [4,8,3], [4,12,8], [12,11,8], [11,3,8],
+        [2,3,7], [3,11,7], [7,11,10], [2,7,10],
+        [9,10,13], [10,11,13], [11,12,13], [12,9,13]
+    ];
+    vnf = [verts, faces];
+    attachable(anchor,spin,orient, vnf=vnf, extents=false) {
+        vnf_polyhedron(vnf);
+        children();
+    }
+}
+stellate_cube() show_anchors(50);
+```
 
 
 ## Making Named Anchors
