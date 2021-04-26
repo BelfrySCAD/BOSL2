@@ -611,7 +611,7 @@ spikeball(r=50, scale=[0.75,1,1.5]);
 If the shape just doesn't fit into any of the above categories, and you constructed it as a
 [VNF](vnf.scad), you can use the VNF itself to describe the geometry with the `vnf=` argument.
 
-There are two variations to how anchoring can work for VNFs. When `extents=true`, (the default)
+There are two variations to how anchoring can work for VNFs. When `extent=true`, (the default)
 then a plane is projected out from the origin, perpendicularly in the direction of the anchor,
 to the furthest distance that intersects with the VNF shape.  The anchorpoint is then the
 center of the points that still intersect that plane.
@@ -648,7 +648,7 @@ stellate_cube(25) {
 }
 ```
 
-When `extents=false`, then the anchorpoint will be the furthest intersection of the VNF with
+When `extent=false`, then the anchorpoint will be the furthest intersection of the VNF with
 the anchor ray from the origin. The orientation of the anchorpoint will be the normal of the
 face at the intersection.  If the intersection is at an edge or corner, then the orientation
 will bisect the angles between the faces.
@@ -672,7 +672,7 @@ module stellate_cube(s=100, anchor=CENTER, spin=0, orient=UP) {
         [9,10,13], [10,11,13], [11,12,13], [12,9,13]
     ];
     vnf = [verts, faces];
-    attachable(anchor,spin,orient, vnf=vnf, extents=false) {
+    attachable(anchor,spin,orient, vnf=vnf, extent=false) {
         vnf_polyhedron(vnf);
         children();
     }
