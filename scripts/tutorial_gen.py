@@ -73,7 +73,10 @@ def processFile(infile, outfile=None, imgroot=""):
             elif in_script:
                 if line == "```":
                     in_script = False
-                    imgfile = os.path.join(imgroot, "{}_{}.png".format(fileroot, imgnum))
+                    fext = "png"
+                    if any(x in extyp for x in ("Anim", "Spin")):
+                        fext = "gif"
+                    imgfile = os.path.join(imgroot, "{}_{}.{}".format(fileroot, imgnum, fext))
                     imgmgr.new_request(
                         fileroot+".md", linenum,
                         imgfile, script, extyp,
