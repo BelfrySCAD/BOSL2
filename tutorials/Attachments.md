@@ -227,7 +227,7 @@ cube(40, center=true)
         anchor_arrow();
 ```
 
-For large objects, you chan change the size of the arrow with the `s=` argument.
+For large objects, you can change the size of the arrow with the `s=` argument.
 
 ```openscad
 sphere(d=100)
@@ -252,14 +252,13 @@ sphere(d=40)
     show_anchors();
 ```
 
-For large objects, you chan again change the size of the arrows with the `s=` argument.
+For large objects, you can again change the size of the arrows with the `s=` argument.
 
 ```openscad
 cylinder(h=100, d=100, center=true)
     show_anchors(s=30);
 ```
 
-```openscad
 ## Tagged Operations
 BOSL2 introduces the concept of tags.  Tags are names that can be given to attachables, so that
 you can refer to them when performing `diff()`, `intersect()`, and `hulling()` operations.
