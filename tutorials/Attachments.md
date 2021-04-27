@@ -403,7 +403,7 @@ module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
         children();
     }
 }
-cubic_barbell(100);
+cubic_barbell(100) show_anchors(30);
 ```
 
 When the shape is prismoidal, where the top is a different size from the bottom, you can use
@@ -423,7 +423,7 @@ module prismoidal(size=[100,100,100], scale=0.5, anchor=CENTER, spin=0, orient=U
         children();
     }
 }
-prismoidal([100,60,30], scale=0.5);
+prismoidal([100,60,30], scale=0.5) show_anchors(20);
 ```
 
 When the top of the prismoid can be shifted away from directly above the bottom, you can use
@@ -443,7 +443,7 @@ module prismoidal(size=[100,100,100], scale=0.5, shift=[0,0], anchor=CENTER, spi
         children();
     }
 }
-prismoidal([100,60,30], scale=0.5, shift=[-30,20]);
+prismoidal([100,60,30], scale=0.5, shift=[-30,20]) show_anchors(20);
 ```
 
 In the case that the prismoid is not oriented vertically, you can use the `axis=` argument.
@@ -469,7 +469,7 @@ module yprismoidal(
         children();
     }
 }
-yprismoidal([100,60,30], scale=1.5, shift=[20,20]);
+yprismoidal([100,60,30], scale=1.5, shift=[20,20]) show_anchors(20);
 ```
 
 
@@ -485,7 +485,7 @@ module twistar(l,r,d, anchor=CENTER, spin=0, orient=UP) {
         children();
     }
 }
-twistar(l=100, r=40);
+twistar(l=100, r=40) show_anchors(20);
 ```
 
 If the cylinder is elipsoidal in shape, you can pass the inequal X/Y sizes as a 2-item vector
@@ -500,7 +500,7 @@ module ovalstar(l,rx,ry, anchor=CENTER, spin=0, orient=UP) {
         children();
     }
 }
-ovalstar(l=100, rx=50, ry=30);
+ovalstar(l=100, rx=50, ry=30) show_anchors(20);
 ```
 
 For cylindrical shapes that arent oriented vertically, use the `axis=` argument.
@@ -508,14 +508,14 @@ For cylindrical shapes that arent oriented vertically, use the `axis=` argument.
 ```openscad
 module ytwistar(l,r,d, anchor=CENTER, spin=0, orient=UP) {
     r = get_radius(r=r,d=d,dflt=1);
-    attachable(anchor,spin,orient, r=r, l=l) {
+    attachable(anchor,spin,orient, r=r, l=l, axis=BACK) {
         xrot(-90)
             linear_extrude(height=l, twist=90, slices=20, center=true, convexity=4)
                 star(n=20, r=r, ir=r*0.9);
         children();
     }
 }
-ytwistar(l=100, r=40);
+ytwistar(l=100, r=40) show_anchors(20);
 ```
 
 ### Conical Attachables
@@ -532,7 +532,7 @@ module twistar(l, r,r1,r2, d,d1,d2, anchor=CENTER, spin=0, orient=UP) {
         children();
     }
 }
-twistar(l=100, r1=40, r2=20);
+twistar(l=100, r1=40, r2=20) show_anchors(20);
 ```
 
 If the cone is elipsoidal in shape, you can pass the inequal X/Y sizes as a 2-item vectors
@@ -544,17 +544,15 @@ module ovalish(l,rx1,ry1,rx2,ry2, anchor=CENTER, spin=0, orient=UP) {
         hull() {
             up(l/2-0.005)
                 linear_extrude(height=0.01, center=true)
-                    scale([1,ry2/rx2,1])
-                        oval([rx2,ry2]);
+                    oval([rx2,ry2]);
             down(l/2-0.005)
                 linear_extrude(height=0.01, center=true)
-                    scale([1,ry1/rx1,1])
-                        oval([rx1,ry1]);
+                    oval([rx1,ry1]);
         }
         children();
     }
 }
-ovalish(l=100, rx1=40, ry1=30, rx2=30, ry2=40);
+ovalish(l=100, rx1=50, ry1=30, rx2=30, ry2=50) show_anchors(20);
 ```
 
 For conical shapes that are not oriented vertically, use the `axis=` argument.
@@ -570,7 +568,7 @@ module ytwistar(l, r,r1,r2, d,d1,d2, anchor=CENTER, spin=0, orient=UP) {
         children();
     }
 }
-ytwistar(l=100, r1=40, r2=20);
+ytwistar(l=100, r1=40, r2=20) show_anchors(20);
 ```
 
 ### Spherical Attachables
@@ -587,7 +585,7 @@ module spikeball(r, d, anchor=CENTER, spin=0, orient=UP) {
         children();
     }
 }
-spikeball(r=50);
+spikeball(r=50) show_anchors(20);
 ```
 
 If the shape is more of an ovoid, you can pass a 3-item vector of sizes to `r=` or `d=`.
@@ -603,7 +601,7 @@ module spikeball(r, d, scale, anchor=CENTER, spin=0, orient=UP) {
         children();
     }
 }
-spikeball(r=50, scale=[0.75,1,1.5]);
+spikeball(r=50, scale=[0.75,1,1.5]) show_anchors(20);
 ```
 
 ### VNF Attachables
@@ -615,7 +613,7 @@ then a plane is projected out from the origin, perpendicularly in the direction 
 to the furthest distance that intersects with the VNF shape.  The anchorpoint is then the
 center of the points that still intersect that plane.
 
-```openscad-FlatSpin
+```openscad-FlatSpin,VPD=500
 module stellate_cube(s=100, anchor=CENTER, spin=0, orient=UP) {
     s2 = 3 * s;
     verts = [
@@ -652,7 +650,7 @@ the anchor ray from the origin. The orientation of the anchorpoint will be the n
 face at the intersection.  If the intersection is at an edge or corner, then the orientation
 will bisect the angles between the faces.
 
-```openscad
+```openscad-VPD=1250
 module stellate_cube(s=100, anchor=CENTER, spin=0, orient=UP) {
     s2 = 3 * s;
     verts = [
