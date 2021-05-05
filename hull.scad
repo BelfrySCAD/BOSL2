@@ -168,7 +168,7 @@ function hull3d_faces(points) =
         b = tri[1],
         c = tri[2],
         plane = plane3pt_indexed(points, a, b, c),
-        d = _find_first_noncoplanar(plane, points, 3)
+        d = _find_first_noncoplanar(plane, points, 0)
     )
     d == len(points)
   ? /* all coplanar*/
