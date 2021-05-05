@@ -81,7 +81,7 @@ function _backtracking(i,points,h,t,m,all) =
 
 // clockwise check (2d)
 function _is_cw(a,b,c,all) = 
-		all ? cross(a-c,b-c)<=0 :
+		all ? cross(a-c,b-c)<=EPSILON*norm(a-c)*norm(b-c) :
 		cross(a-c,b-c)<-EPSILON*norm(a-c)*norm(b-c);
 
 
