@@ -390,7 +390,7 @@ the shape to make attachable, and the second will be `children()`, literally.
 To make a cuboidal or prismoidal shape attachable, you use the `size`, `size2`, and `offset`
 arguments of `attachable()`.
 
-In the most basic form, where the shape in fully cuboid, with top and bottom of the same size,
+In the most basic form, where the shape is fully cuboid, with top and bottom of the same size,
 and directly over one another, you can just use `size=`.
 
 ```openscad
@@ -407,7 +407,8 @@ cubic_barbell(100) show_anchors(30);
 ```
 
 When the shape is prismoidal, where the top is a different size from the bottom, you can use
-the `size2=` argument as well.
+the `size2=` argument as well. While `size=` takes all three axes sizes, the `size2=` argument
+only takes the [X,Y] sizes of the top of the shape.
 
 ```openscad
 module prismoidal(size=[100,100,100], scale=0.5, anchor=CENTER, spin=0, orient=UP) {
@@ -427,7 +428,8 @@ prismoidal([100,60,30], scale=0.5) show_anchors(20);
 ```
 
 When the top of the prismoid can be shifted away from directly above the bottom, you can use
-the `shift=` argument.
+the `shift=` argument.  The `shift=` argument takes an [X,Y] vector of the offset of the center
+of the top from the XY center of the bottom of the shape.
 
 ```openscad
 module prismoidal(size=[100,100,100], scale=0.5, shift=[0,0], anchor=CENTER, spin=0, orient=UP) {
@@ -446,7 +448,9 @@ module prismoidal(size=[100,100,100], scale=0.5, shift=[0,0], anchor=CENTER, spi
 prismoidal([100,60,30], scale=0.5, shift=[-30,20]) show_anchors(20);
 ```
 
-In the case that the prismoid is not oriented vertically, you can use the `axis=` argument.
+In the case that the prismoid is not oriented vertically, (ie, where the `shift=` or `size2=`
+arguments should refer to a plane other than XY) you can use the `axis=` argument.  This lets
+you make prismoids naturally oriented forwards/backwards or sideways.
 
 ```openscad
 module yprismoidal(
