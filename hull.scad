@@ -75,30 +75,36 @@ module hull_points(points, fast=false) {
 
 
 
-function _backtracking(i,points,h,t,m) =
-    m<t || _is_cw(points[i], points[h[m-1]], points[h[m-2]]) ? m :
-    _backtracking(i,points,h,t,m-1) ;
+function _backtracking(i,points,h,t,m,all) =
+    m<t || _is_cw(points[i], points[h[m-1]], points[h[m-2]],all) ? m :
+    _backtracking(i,points,h,t,m-1,all) ;
 
 // clockwise check (2d)
-function _is_cw(a,b,c) = cross(a-c,b-c)<-EPSILON*norm(a-c)*norm(b-c);
+function _is_cw(a,b,c,all) = 
+		all ? cross(a-c,b-c)<=EPSILON*norm(a-c)*norm(b-c) :
+		cross(a-c,b-c)<-EPSILON*norm(a-c)*norm(b-c);
 
 
 // Function: hull2d_path()
 // Usage:
-//   hull2d_path(points)
+//   hull2d_path(points,all)
 // Description:
 //   Takes a list of arbitrary 2D points, and finds the convex hull polygon to enclose them.
-//   Returns a path as a list of indices into `points`.  May return extra points, that are on edges of the hull.
+//   Returns a path as a list of indices into `points`. 
+//   When all==true, returns extra points that are on edges of the hull.
+// Arguments:
+//   points - list of 2d points to get the hull of.
+//   all - when true, includes all points on the edges of the convex hull. Default: false.
 // Example(2D):
 //   pts = [[-10,-10], [0,10], [10,10], [12,-10]];
 //   path = hull2d_path(pts);
 //   move_copies(pts) color("red") sphere(1);
 //   polygon(points=pts, paths=[path]);
-
+//
 // Code based on this method:
 // https://www.hackerearth.com/practice/math/geometry/line-sweep-technique/tutorial/
 //
-function hull2d_path(points) =
+function hull2d_path(points, all=false) =
     assert(is_path(points,2),"Invalid input to hull2d_path")
     len(points) < 2 ? [] :
     let( n  = len(points), 
@@ -109,7 +115,7 @@ function hull2d_path(points) =
                     k = 2, 
                     h = [ip[0],ip[1]]; // current list of hull point indices 
                   i <= n;
-                    k = i<n ? _backtracking(ip[i],points,h,2,k)+1 : k,
+                    k = i<n ? _backtracking(ip[i],points,h,2,k,all)+1 : k,
                     h = i<n ? [for(j=[0:1:k-2]) h[j], ip[i]] : [], 
                     i = i+1
                  ) if( i==n ) h ][0] )
@@ -119,7 +125,7 @@ function hull2d_path(points) =
             t = k+1,
             h = lh; // current list of hull point indices 
           i >= -1;
-            k = i>=0 ? _backtracking(ip[i],points,h,t,k)+1 : k,
+            k = i>=0 ? _backtracking(ip[i],points,h,t,k,all)+1 : k,
             h = [for(j=[0:1:k-2]) h[j], if(i>0) ip[i]],
             i = i-1
          ) if( i==-1 ) h ][0] ;
@@ -168,7 +174,7 @@ function hull3d_faces(points) =
         b = tri[1],
         c = tri[2],
         plane = plane3pt_indexed(points, a, b, c),
-        d = _find_first_noncoplanar(plane, points, 0)
+        d = _find_first_noncoplanar(plane, points)
     )
     d == len(points)
   ? /* all coplanar*/
@@ -239,7 +245,7 @@ function _find_conflicts(point, planes) = [
 ];
 
 
-function _find_first_noncoplanar(plane, points, i) = 
+function _find_first_noncoplanar(plane, points, i=0) = 
     (i >= len(points) || !points_on_plane([points[i]],plane))? i :
     _find_first_noncoplanar(plane, points, i+1);
 
