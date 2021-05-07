@@ -79,6 +79,8 @@ $tags_hidden = [];
 //   at the vector direction given in the `orient` argument.  Orientation is always applied after
 //   anchoring and spin.  The constants `UP`, `DOWN`, `FRONT`, `BACK`, `LEFT`, and `RIGHT` can be
 //   added together to form the directional vector for this.  ie: `LEFT+BACK`
+//   .
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 
 
 // Section: Functions
@@ -89,7 +91,8 @@ $tags_hidden = [];
 // Topics: Attachments
 // See Also: attach_geom(), reorient(), attachable()
 // Description:
-//   Creates a anchor data structure.
+//   Creates an anchor data structure.  For a more step-by-step explanation of attachments,
+//   see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   name = The string name of the anchor.  Lowercase.  Words separated by single dashes.  No spaces.
 //   pos = The [X,Y,Z] position of the anchor.
@@ -122,6 +125,7 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 //
 // Description:
 //   Given arguments that describe the geometry of an attachable object, returns the internal geometry description.
+//   This will probably not not ever need to be called by the end user.
 //
 // Arguments:
 //   ---
@@ -631,7 +635,7 @@ function find_anchor(anchor, geom) =
 // Topics: Attachments
 // See Also: reorient(), attachable()
 // Description:
-//   Returns true if the given space-delimited string of tag names should currently be shown.
+//   Returns true if shapes tagged with any of the given space-delimited string of tag names should currently be shown.
 function attachment_is_shown(tags) =
     assert(!is_undef($tags_shown))
     assert(!is_undef($tags_hidden))
@@ -693,6 +697,8 @@ function attachment_is_shown(tags) =
 //   * Translates this part so it's anchor position matches the parent's anchor position.
 //   * Rotates this part so it's anchor direction vector exactly opposes the parent's anchor direction vector.
 //   * Rotates this part so it's anchor spin matches the parent's anchor spin.
+//   .
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 //
 // Arguments:
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -803,6 +809,8 @@ function reorient(
 //   * Translates this part so it's anchor position matches the parent's anchor position.
 //   * Rotates this part so it's anchor direction vector exactly opposes the parent's anchor direction vector.
 //   * Rotates this part so it's anchor spin matches the parent's anchor spin.
+//   .
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 //
 // Arguments:
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -989,7 +997,8 @@ module attachable(
 // See Also: attachable()
 //
 // Description:
-//   Attaches children to a parent object at an anchor point.
+//   Attaches children to a parent object at an anchor point.  For a more step-by-step explanation
+//   of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   from = The vector, or name of the parent anchor point to attach to.
 // Example:
@@ -1019,12 +1028,12 @@ module position(from)
 // Topics: Attachments
 // See Also: attachable(), position(), face_profile(), edge_profile(), corner_profile()
 // Description:
-//   Attaches children to a parent object at an anchor point and orientation.
-//   Attached objects will be overlapped into the parent object by a little bit,
-//   as specified by the default `$overlap` value (0.01 by default), or by the
-//   overriding `overlap=` argument.  This is to prevent OpenSCAD from making
-//   non-manifold objects.  You can also define `$overlap=` as an argument in a
-//   parent module to set the default for all attachments to it.
+//   Attaches children to a parent object at an anchor point and orientation.  Attached objects will
+//   be overlapped into the parent object by a little bit, as specified by the default `$overlap`
+//   value (0.01 by default), or by the overriding `overlap=` argument.  This is to prevent OpenSCAD
+//   from making non-manifold objects.  You can also define `$overlap=` as an argument in a parent
+//   module to set the default for all attachments to it.  For a more step-by-step explanation of
+//   attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   from = The vector, or name of the parent anchor point to attach to.
 //   to = Optional name of the child anchor point.  If given, orients the child such that the named anchors align together rotationally.
@@ -1065,6 +1074,7 @@ module attach(from, to, overlap, norot=false)
 // See Also: attachable(), position(), attach(), edge_profile(), corner_profile()
 // Description:
 //   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face.
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   faces = Faces to mask edges and corners of.
 //   r = Radius of corner mask.
@@ -1094,8 +1104,9 @@ module face_profile(faces=[], r, d, convexity=10) {
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), corner_profile()
 // Description:
-//   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation
-//   and extruded length to be `diff()`ed away, to give the edge a matching profile.
+//   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation and
+//   extruded length to be `diff()`ed away, to give the edge a matching profile.  For a more step-by-step
+//   explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   edges = Edges to mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
 //   except = Edges to explicitly NOT mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
@@ -1148,7 +1159,8 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 // Description:
 //   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
 //   to the selected corners with the appropriate orientation.  Tags it as a "mask" to allow it to be
-//   `diff()`ed away, to give the corner a matching profile.
+//   `diff()`ed away, to give the corner a matching profile.  For a more step-by-step explanation of
+//   attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   corners = Edges to mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: All corners.
 //   except = Edges to explicitly NOT mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: No corners.
@@ -1211,8 +1223,8 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask()
 // Description:
-//   Takes a 3D mask shape, and attaches it to the given edges, with the
-//   appropriate orientation to be `diff()`ed away.
+//   Takes a 3D mask shape, and attaches it to the given edges, with the appropriate orientation to be `diff()`ed away.
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   edges = Edges to mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
 //   except = Edges to explicitly NOT mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
@@ -1255,9 +1267,9 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), edge_mask()
 // Description:
-//   Takes a 3D mask shape, and attaches it to the given corners, with the appropriate
-//   orientation to be `diff()`ed away.  The 3D corner mask shape should be designed to
-//   mask away the X+Y+Z+ octant.
+//   Takes a 3D mask shape, and attaches it to the given corners, with the appropriate orientation to
+//   be `diff()`ed away.  The 3D corner mask shape should be designed to mask away the X+Y+Z+ octant.
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   corners = Edges to mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: All corners.
 //   except = Edges to explicitly NOT mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: No corners.
@@ -1309,6 +1321,8 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 //   - `rotate_extrude()`
 //   - `surface()`
 //   - `import()`
+//   .
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   tags = String containing space delimited set of tags to apply.
 module tags(tags)
@@ -1326,7 +1340,8 @@ module tags(tags)
 // Topics: Attachments
 // See Also: tags(), hide(), show(), diff(), intersect()
 // Description:
-//   Sets the color for children that can use the $color special variable.
+//   Sets the color for children that can use the $color special variable.  For a more step-by-step
+//   explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   c = Color name or RGBA vector.
 // Example:
@@ -1345,6 +1360,7 @@ module recolor(c)
 // See Also: tags(), recolor(), show(), diff(), intersect()
 // Description:
 //   Hides all children with the given tags.  Overrides any previous `hide()` or `show()` calls.
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Example:
 //   hide("A") cube(50, anchor=CENTER, $tags="Main") {
 //       attach(LEFT, BOTTOM) cylinder(d=30, l=30, $tags="A");
@@ -1365,6 +1381,7 @@ module hide(tags="")
 // See Also: tags(), recolor(), hide(), diff(), intersect()
 // Description:
 //   Shows only children with the given tags.  Overrides any previous `hide()` or `show()` calls.
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Example:
 //   show("A B") cube(50, anchor=CENTER, $tags="Main") {
 //       attach(LEFT, BOTTOM) cylinder(d=30, l=30, $tags="A");
@@ -1391,6 +1408,8 @@ module show(tags="")
 //   `keep` are then unioned with the result.  If `keep` is not given, all children without tags in
 //   `pos` or `neg` are then unioned with the result.
 //   Cannot be used in conjunction with `intersect()` or `hulling()` on the same parent object.
+//   .
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   neg = String containing space delimited set of tag names of children to difference away.
 //   pos = String containing space delimited set of tag names of children to be differenced away from.
@@ -1451,6 +1470,8 @@ module diff(neg, pos, keep)
 //   `keep` is given, then the result is unioned with all the children with tags in `keep`.  If `keep`
 //   is not given, all children without tags in `a` or `b` are unioned with the result.
 //   Cannot be used in conjunction with `diff()` or `hulling()` on the same parent object.
+//   .
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   a = String containing space delimited set of tag names of children.
 //   b = String containing space delimited set of tag names of children.
@@ -1498,6 +1519,8 @@ module intersect(a, b=undef, keep=undef)
 //   If `a` is given as a string, then all children with `$tags` that are in `a` are
 //   `hull()`ed together and the result is then unioned with all the remaining children.
 //   Cannot be used in conjunction with `diff()` or `intersect()` on the same parent object.
+//   .
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   a = String containing space delimited set of tag names of children to hull.
 // Example:
