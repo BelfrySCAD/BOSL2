@@ -51,8 +51,21 @@
 // Section: Sets of Edges
 //   Constants for specifying edges for `cuboid()`, etc.
 
-EDGES_NONE     = [[0,0,0,0], [0,0,0,0], [0,0,0,0]];  // No edges.
-EDGES_ALL      = [[1,1,1,1], [1,1,1,1], [1,1,1,1]];  // All edges.
+
+// Constant: EDGES_NONE
+// Topics: Edges
+// See Also: EDGES_ALL, edges()
+// Description:
+//   The set of no edges.
+EDGES_NONE = [[0,0,0,0], [0,0,0,0], [0,0,0,0]];
+
+
+// Constant: EDGES_ALL
+// Topics: Edges
+// See Also: EDGES_NONE, edges()
+// Description:
+//   The set of all edges.
+EDGES_ALL = [[1,1,1,1], [1,1,1,1], [1,1,1,1]];
 
 
 // Section: Edge Helpers
@@ -218,7 +231,11 @@ function edges(v, except=[]) =
     );
 
 
-EDGE_OFFSETS = [   // Array of XYZ offsets to the center of each edge.
+// Constant: EDGES_OFFSETS
+// See Also: edges()
+// Description:
+//   Array of XYZ offsets to the center of each edge.
+EDGE_OFFSETS = [
     [
         [ 0,-1,-1],
         [ 0, 1,-1],
@@ -241,8 +258,19 @@ EDGE_OFFSETS = [   // Array of XYZ offsets to the center of each edge.
 // Section: Corner Sets
 //   Constants for specifying corners.
 
+
+// Constant: CORNERS_NONE
+// See Also: CORNERS_ALL, corners()
+// Description:
+//   The set of no corners.
 CORNERS_NONE = [0,0,0,0,0,0,0,0];  // No corners.
-CORNERS_ALL = [1,1,1,1,1,1,1,1];  // All corners.
+
+
+// Constant: CORNERS_ALL
+// See Also: CORNERS_NONE, corners()
+// Description:
+//   The set of all corners.
+CORNERS_ALL = [1,1,1,1,1,1,1,1];
 
 
 // Section: Corner Helpers
@@ -377,7 +405,11 @@ function corners(v, except=[]) =
     ) normalize_corners(a - b);
 
 
-CORNER_OFFSETS = [   // Array of XYZ offsets to each corner.
+// Constant: CORNER_OFFSETS
+// See Also: corners()
+// Description:
+//   Array of XYZ offsets to each corner.
+CORNER_OFFSETS = [
     [-1,-1,-1], [ 1,-1,-1], [-1, 1,-1], [ 1, 1,-1],
     [-1,-1, 1], [ 1,-1, 1], [-1, 1, 1], [ 1, 1, 1]
 ];
