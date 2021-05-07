@@ -174,6 +174,7 @@ module cuboid(
                         }
                     }
                 } else if (chamfer<0) {
+                    assert(edges == EDGES_ALL || edges[2] == [0,0,0,0], "Cannot use negative chamfer with Z aligned edges.");
                     ach = abs(chamfer);
                     cube(size, center=true);
 
@@ -260,6 +261,7 @@ module cuboid(
                         }
                     }
                 } else if (rounding<0) {
+                    assert(edges == EDGES_ALL || edges[2] == [0,0,0,0], "Cannot use negative rounding with Z aligned edges.");
                     ard = abs(rounding);
                     cube(size, center=true);
 
@@ -321,6 +323,7 @@ module cuboid(
         }
     }
 }
+
 
 function cuboid(
     size=[1,1,1],
