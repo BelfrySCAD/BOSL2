@@ -25,8 +25,8 @@
 // Topics: Bezier Paths
 // See Also: bez_tang(), bez_joint(), bez_end()
 // Usage:
-//   pts = bez_begin(pt,a,r,<p=>);
-//   pts = bez_begin(pt,VECTOR,<r>,<p=>);
+//   pts = bez_begin(pt, a, r, <p=>);
+//   pts = bez_begin(pt, VECTOR, <r>, <p=>);
 // Description:
 //   This is used to create the first endpoint and control point of a cubic bezier path.
 // Arguments:
@@ -94,8 +94,8 @@ function bez_begin(pt,a,r,p) =
 // Topics: Bezier Paths
 // See Also: bez_begin(), bez_joint(), bez_end()
 // Usage:
-//   pts = bez_tang(pt,a,r1,r2,<p=>);
-//   pts = bez_tang(pt,VECTOR,<r1>,<r2>,<p=>);
+//   pts = bez_tang(pt, a, r1, r2, <p=>);
+//   pts = bez_tang(pt, VECTOR, <r1>, <r2>, <p=>);
 // Description:
 //   This creates a smooth joint in a cubic bezier path.  It creates three points, being the
 //   approaching control point, the fixed bezier control point, and the departing control
@@ -128,8 +128,8 @@ function bez_tang(pt,a,r1,r2,p) =
 // Topics: Bezier Paths
 // See Also: bez_begin(), bez_tang(), bez_end()
 // Usage:
-//   pts = bez_joint(pt,a1,a2,r1,r2,<p1=>,<p2=>);
-//   pts = bez_joint(pt,VEC1,VEC2,<r1=>,<r2=>,<p1=>,<p2=>);
+//   pts = bez_joint(pt, a1, a2, r1, r2, <p1=>, <p2=>);
+//   pts = bez_joint(pt, VEC1, VEC2, <r1=>, <r2=>, <p1=>, <p2=>);
 // Description:
 //   This creates a disjoint corner joint in a cubic bezier path.  It creates three points, being
 //   the aproaching control point, the fixed bezier control point, and the departing control point.
@@ -167,8 +167,8 @@ function bez_joint(pt,a1,a2,r1,r2,p1,p2) =
 // Topics: Bezier Paths
 // See Also: bez_tang(), bez_joint(), bez_end()
 // Usage:
-//   pts = bez_end(pt,a,r,<p=>);
-//   pts = bez_end(pt,VECTOR,<r>,<p=>);
+//   pts = bez_end(pt, a, r, <p=>);
+//   pts = bez_end(pt, VECTOR, <r>, <p=>);
 // Description:
 //   This is used to create the approaching control point, and the endpoint of a cubic bezier path.
 //   See {{bez_begin()}} for examples.
@@ -621,7 +621,7 @@ function bezier_path_point(path, seg, u, N=3) =
 
 // Function: bezier_path_closest_point()
 // Usage:
-//   res = bezier_path_closest_point(bezier,pt);
+//   res = bezier_path_closest_point(bezier, pt);
 // Topics: Bezier Paths
 // See Also: bezier_points(), bezier_curve(), bezier_segment_closest_point()
 // Description:
@@ -919,7 +919,7 @@ function bezier_offset(offset, bezier, N=3) =
 
 // Module: bezier_polygon()
 // Usage:
-//   bezier_polygon(bezier, <splinesteps>, <N>) {
+//   bezier_polygon(bezier, <splinesteps>, <N>);
 // Topics: Bezier Paths
 // See Also: bezier_path()
 // Description:
@@ -951,7 +951,7 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 
 // Module: trace_bezier()
 // Usage:
-//   trace_bezier(bez, <size>, <N=>) {
+//   trace_bezier(bez, <size>, <N=>);
 // Topics: Bezier Paths, Debugging
 // See Also: bezier_path()
 // Description:
@@ -1530,13 +1530,14 @@ function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="defaul
 
 // Module: trace_bezier_patches()
 // Usage:
-//   trace_bezier_patches(patches, [size], [splinesteps], [showcps], [showdots], [showpatch], [convexity], [style]);
+//   trace_bezier_patches(patches, <size=>, <splinesteps=>, <showcps=>, <showdots=>, <showpatch=>, <convexity=>, <style=>);
 // Topics: Bezier Patches, Debugging
 // See Also: bezier_patch_points(), bezier_patch_flat(), bezier_surface()
 // Description:
 //   Shows the surface, and optionally, control points of a list of bezier patches.
 // Arguments:
 //   patches = A list of rectangular bezier patches.
+//   ---
 //   splinesteps = Number of steps to divide each bezier segment into. default=16
 //   showcps = If true, show the controlpoints as well as the surface.  Default: true.
 //   showdots = If true, shows the calculated surface vertices.  Default: false.

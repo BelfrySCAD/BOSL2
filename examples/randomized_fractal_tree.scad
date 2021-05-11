@@ -9,10 +9,8 @@ module leaf(s) {
         [-1.5,-1], [0,0]
     ];
     xrot(90)
-    linear_sweep_bezier(
-        path * s/2,
-        height=0.02
-    );
+    linear_extrude(height=0.02)
+        bezier_polygon(path*s/2);
 }
 
 module branches(minsize, s1, s2){
