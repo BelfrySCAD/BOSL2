@@ -744,6 +744,29 @@ function mean(v) =
     sum(v)/len(v);
 
 
+// Function: ninther()
+// Usage:
+//    med = ninther(v)
+// Description:
+//    Finds a value in the input list of numbers `v` that is the median of  a 
+//    sample of 9 entries of `v`.
+//    It is a much faster approximation of the true median computation.
+// Arguments:
+//    v = an array of numbers
+function ninther(v) = 
+    let( l=len(v) )
+    l<=4 ? l<=2 ? v[0] : _med3(v[0], v[1], v[2]) : 
+    l==5 ? _med3(v[0], _med3(v[1], v[2], v[3]), v[4]) :
+    _med3(_med3(v[0],v[floor(l/6)],v[floor(l/3)]),
+          _med3(v[floor(l/3)],v[floor(l/2)],v[floor(2*l/3)]),
+          _med3(v[floor(2*l/3)],v[floor((5*l/3 -1)/2)],v[l-1]) );
+
+// the median of a triple
+function _med3(a,b,c) =
+    a < c ? a < b ? min(b,c) : min(a,c) :
+    b < c ? min(a,c) : min(a,b);
+
+
 // Function: convolve()
 // Usage:
 //   x = convolve(p,q);

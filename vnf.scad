@@ -221,8 +221,8 @@ function vnf_triangulate(vnf) =
 //   triangles.  The default style is an arbitrary, systematic subdivision in the same direction.  The "alt" style
 //   is the uniform subdivision in the other (alternate) direction.  The "min_edge" style picks the shorter edge to
 //   subdivide for each quadrilateral, so the division may not be uniform across the shape.  The "quincunx" style
-//   adds a vertex in the center of each quadrilateral and creates four triangles, and the "convex" style
-//   chooses the locally convex subdivision.  
+//   adds a vertex in the center of each quadrilateral and creates four triangles, and the "convex" and "concave" styles
+//   chooses the locally convex/concave subdivision.  
 // Arguments:
 //   points = A list of vertices to divide into columns and rows.
 //   caps = If true, add endcap faces to the first AND last rows.
@@ -231,7 +231,7 @@ function vnf_triangulate(vnf) =
 //   col_wrap = If true, add faces to connect the last column to the first.
 //   row_wrap = If true, add faces to connect the last row to the first.
 //   reverse = If true, reverse all face normals.
-//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "min_edge", "quincunx", and "convex".
+//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "min_edge", "quincunx","convex" and "concave".
 //   vnf = If given, add all the vertices and faces to this existing VNF structure.
 // Example(3D):
 //   vnf = vnf_vertex_array(
@@ -297,7 +297,7 @@ function vnf_vertex_array(
 ) = 
     assert(!(any([caps,cap1,cap2]) && !col_wrap), "col_wrap must be true if caps are requested")
     assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap")
-    assert(in_list(style,["default","alt","quincunx", "convex","min_edge"]))
+    assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge"]))
     assert(is_consistent(points), "Non-rectangular or invalid point array")
     let(
         pts = flatten(points),
@@ -358,6 +358,14 @@ function vnf_vertex_array(
                                                                       : [[i1,i3,i2],[i1,i4,i3]]
                               )
                               convexfaces
+                          : style=="concave"?  
+                              let(   // Find normal for 3 of the points.  Is the other point above or below?
+                                  n = (reverse?-1:1)*cross(pts[i2]-pts[i1],pts[i3]-pts[i1]),
+                                  concavefaces = n==0 ? [[i1,i4,i3]]
+                                              : n*pts[i4] <= n*pts[i1] ? [[i1,i4,i2],[i2,i4,i3]]
+                                                                      : [[i1,i3,i2],[i1,i4,i3]]
+                              )
+                              concavefaces
                           : [[i1,i3,i2],[i1,i4,i3]],
                        // remove degenerate faces 
                        culled_faces= [for(face=faces)
