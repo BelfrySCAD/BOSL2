@@ -218,5 +218,141 @@ function vector_axis(v1,v2=undef,v3=undef) =
             ) unit(cross(w1,w3));
 
 
+// Section: Vector Searching
+
+// Function: vp_tree()
+// Usage:
+//    tree = vp_tree(points, <leafsize>)
+// Description:
+//    Organizes n-dimensional data into a Vantage Point Tree, which can be
+//    efficiently searched for for nearest matches.  The Vantage Point Tree
+//    is an effort to generalize binary search to n dimensions.  Constructing the
+//    tree should be O(n log n) and searches should be O(log n), though real life
+//    performance depends on how the data is distributed, and it will deteriorate
+//    for high data dimensions.  This data structure is useful when you will be
+//    performing many searches of the same data, so that the cost of constructing
+//    the tree is justified.  
+//    .
+//    The vantage point tree at a given level chooses vp, the
+//    "vantage point", and a radius, R, and divides the data based
+//    on distance to vp.  Points closer than R go in on branch
+//    of the tree and points farther than R go in the other branch.
+//    .
+//    The tree has the form [vp, R, inside, outside], where vp is
+//    the vantage point index, R is the radius, inside is a
+//    recursively computed tree for the inside points (distance less than
+//    or equal to R from the vantage point), and outside
+//    is a tree for the outside points (distance greater than R from the
+//    vantage point).
+//    .
+//    If the number of points is less than or equal to leafsize then
+//    vp_tree instead returns the list [ind] where ind is a list of
+//    the indices of the points.  This means the list has the form
+//    [[i0, i1, i2,...]], so tree[0] is a list of indices.  You can
+//    tell that a node is a leaf node by checking if tree[0] is a list.
+//    The leafsize parameter determines how many points can be
+//    store in the leaf nodes.  The default value of 25 was found
+//    emperically to be a reasonable option for 3d data searched with vp_search().
+//    .
+//    Vantage point tree is described here: http://web.cs.iastate.edu/~honavar/nndatastructures.pdf
+// Arguments:
+//    points = list of points to store in the tree
+//    leafsize = maximum number of points to store in the tree's leaf nodes.  Default: 25
+function vp_tree(points, leafsize=25) =
+  assert(is_matrix(points),"points must be a consistent list of data points")
+  _vp_tree(points, count(len(points)), leafsize);
+
+function _vp_tree(ptlist, ind, leafsize) =
+  len(ind)<=leafsize ? [ind] :
+  let(
+       center = mean(select(ptlist,ind)),
+       cdistances = [for(i=ind) norm(ptlist[i]-center)],
+       vpind = ind[max_index(cdistances)],
+       vp = ptlist[vpind],
+       vp_dist = [for(i=ind) norm(vp-ptlist[i])],
+       r = ninther(vp_dist),
+       inside = [for(i=idx(ind)) if (vp_dist[i]<=r && ind[i]!=vpind) ind[i]],
+       outside = [for(i=idx(ind)) if (vp_dist[i]>r) ind[i]]
+   )
+   [vpind, r, _vp_tree(ptlist,inside,leafsize),_vp_tree(ptlist,outside,leafsize)];
+
+
+// Function: vp_search()
+// Usage:
+//   indices = vp_search(points, tree, p, r);
+// Description:
+//   Search a vantage point tree for all points whose distance from p
+//   is less than or equal to r.  Returns a list of indices of the points it finds
+//   in arbitrary order.  The input points is a list of points to search and tree is the
+//   vantage point tree computed from that point list.  The search should be
+//   around O(log n).  
+// Arguments:
+//   points = points indexed by the vantage point tree
+//   tree = vantage point tree from vp_tree
+//   p = point to search for
+//   r = search radius
+function _vp_search(points, tree, p, r) =
+    is_list(tree[0]) ? [for(i=tree[0]) if (norm(points[i]-p)<=r) i]
+    :
+    let(
+        d = norm(p-points[tree[0]])  // dist to vantage point
+    )
+    [
+      if (d <= r) tree[0],
+      if (d-r <= tree[1]) each _vp_search(points, tree[2], p, r),
+      if (d+r > tree[1]) each _vp_search(points, tree[3], p, r)
+    ];
+
+function vp_search(points, tree, p, r) =
+    assert(is_list(tree) && (len(tree)==4 || (len(tree)==1 && is_list(tree[0]))), "Vantage point tree not valid")
+    assert(is_matrix(points), "Parameter points is not a consistent point list")
+    assert(is_vector(p,len(points[0])), "Query must be a vector whose length matches the point list")
+    assert(all_positive(r),"Radius r must be a positive number")
+    _vp_search(points, tree, p, r);
+  
+
+// Function: vp_nearest()
+// Usage:
+//    indices = vp_nearest(points, tree, p, k)
+// Description:
+//    Search the vantage point tree for the k points closest to point p.
+//    The input points is the list of points to search and tree is
+//    the vantage point tree computed from that point list.  The list is
+//    returned in sorted order, closest point first.  
+// Arguments:
+//    points = points indexed by the vantage point tree
+//    tree = vantage point tree from vp_tree
+//    p = point to search for
+//    k = number of neighbors to return
+function _insert_sorted(list, k, new) =
+      len(list)==k && new[1]>= last(list)[1] ? list
+    : [
+        for(entry=list) if (entry[1]<=new[1]) entry,
+        new,
+        for(i=[0:1:min(k-1,len(list))-1]) if (list[i][1]>new[1]) list[i]
+      ];
+
+function _insert_many(list, k, newlist,i=0) =
+  i==len(newlist) ? list :
+                    _insert_many(_insert_sorted(list,k,newlist[i]),k,newlist,i+1);
+
+function _vp_nearest(points, tree, p, k, answers=[]) =
+  is_list(tree[0]) ? _insert_many(answers, k, [for(entry=tree[0]) [entry, norm(points[entry]-p)]]) :
+  let(
+      d = norm(p-points[tree[0]]),
+      answers1 = _insert_sorted(answers, k, [tree[0],d]),
+      answers2 = d-last(answers1)[1] <= tree[1] ? _vp_nearest(points, tree[2], p, k, answers1) : answers1,
+      answers3 = d+last(answers2)[1] > tree[1] ? _vp_nearest(points, tree[3], p, k, answers2) : answers2
+   )
+   answers3;
+
+function vp_nearest(points, tree, p, k) =
+      assert(is_int(k) && k>0)
+      assert(k<=len(points), "You requested more results that contained in the set")
+      assert(is_matrix(points), "Parameter points is not a consistent point list")
+      assert(is_vector(p,len(points[0])), "Query must be a vector whose length matches the point list")
+      assert(is_list(tree) && (len(tree)==4 || (len(tree)==1 && is_list(tree[0]))), "Vantage point tree not valid")
+      subindex(_vp_nearest(points, tree, p, k),0);
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
