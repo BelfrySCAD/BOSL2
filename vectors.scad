@@ -260,7 +260,7 @@ function vector_axis(v1,v2=undef,v3=undef) =
 //    leafsize = maximum number of points to store in the tree's leaf nodes.  Default: 25
 function vp_tree(points, leafsize=25) =
   assert(is_matrix(points),"points must be a consistent list of data points")
-  _vp_tree(points, count(len(points)), leafsize);
+  [points,_vp_tree(points, count(len(points)), leafsize)];
 
 function _vp_tree(ptlist, ind, leafsize) =
   len(ind)<=leafsize ? [ind] :
@@ -304,11 +304,12 @@ function _vp_search(points, tree, p, r) =
     ];
 
 function vp_search(points, tree, p, r) =
-    assert(is_list(tree) && (len(tree)==4 || (len(tree)==1 && is_list(tree[0]))), "Vantage point tree not valid")
-    assert(is_matrix(points), "Parameter points is not a consistent point list")
-    assert(is_vector(p,len(points[0])), "Query must be a vector whose length matches the point list")
-    assert(all_positive(r),"Radius r must be a positive number")
-    _vp_search(points, tree, p, r);
+//    assert(is_list(tree[1]) && (len(tree[1])==4 || (len(tree[1])==1 && is_list(tree[0]))), "Vantage point tree not valid")
+//    assert(is_matrix(points), "Parameter points is not a consistent point list")
+//    assert(is_vector(p,len(points[0])), "Query must be a vector whose length matches the point list")
+//    assert(all_positive(r),"Radius r must be a positive number")
+//    _vp_search(points, tree, p, r);
+    _vp_search(tree[0], tree[1], p, r);
   
 
 // Function: vp_nearest()
@@ -353,6 +354,34 @@ function vp_nearest(points, tree, p, k) =
       assert(is_vector(p,len(points[0])), "Query must be a vector whose length matches the point list")
       assert(is_list(tree) && (len(tree)==4 || (len(tree)==1 && is_list(tree[0]))), "Vantage point tree not valid")
       subindex(_vp_nearest(points, tree, p, k),0);
+
+
+// Function: search_radius()
+// Usage:
+//    index_list = search_radius(points, queries, r, <leafsize>);
+// Description:
+//    Given a list of points and a compatible list of queries, for each query
+//    search the points list for all points whose distance from the query
+//    is less than or equal to r.  The return value index_list[i] lists the indices
+//    in points of all matches to query q[i].  This list can be in arbitrary order.  
+//    .
+//    This function is advantageous to use especially when both `points` and `queries`
+//    are large sets.  The method contructs a vantage point tree and then uses it
+//    to check all the queries.  If you use queries=points and set r to epsilon then
+//    you can find all of the approximate duplicates in a large list of vectors.
+// Example:  Finding duplicates in a list of vectors.  With exact equality the order of the output is consistent, but with small variations [2,4] could occur in one position and [4,2] in the other one.
+//    v = array_group(rands(0,10,5*3,seed=9),3);
+//    points = [v[0],v[1],v[2],v[3],v[2],v[3],v[3],v[4]];
+//    echo(search_radius(points,points,1e-9));   // Prints [[0],[1],[2,4],[3,5,6],[2,4],[3,5,6],[3,5,6],[7]]
+//    
+function search_radius(points, queries, r, leafsize=25) =
+  assert(is_matrix(points),"Invalid points list")
+  assert(is_matrix(queries),"Invalid query list")
+  assert(len(points[0])==len(queries[0]), "Query vectors don't match length of points")
+  let(
+       vptree = vp_tree(points, leafsize)
+  )
+  [for(q=queries) vp_search(points, vptree, q, r)];
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -149,12 +149,14 @@ module debug_vertices(vertices, size=1, disabled=false) {
     if (!disabled) {
         echo(vertices=vertices);
         color("blue") {
-            for (i = [0:1:len(vertices)-1]) {
-                v = vertices[i];
+            dups = search_radius(vertices, vertices, 1e-9);
+            for (ind = dups){
+                numstr = str_join([for(i=ind) str(i)],",");
+                v = vertices[ind[0]];
                 translate(v) {
                     up(size/8) zrot($vpr[2]) xrot(90) {
                         linear_extrude(height=size/10, center=true, convexity=10) {
-                            text(text=str(i), size=size, halign="center");
+                            text(text=numstr, size=size, halign="center");
                         }
                     }
                     sphere(size/10);
@@ -239,19 +241,18 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 
 
 
-// Module: debug_polyhedron()
+// Module: debug_vnf()
 // Usage:
-//   debug_polyhedron(points, faces, <convexity=>, <txtsize=>, <disabled=>);
+//   debug_vnf(vnfs, <convexity=>, <txtsize=>, <disabled=>);
 // Description:
-//   A drop-in module to replace `polyhedron()` and help debug vertices and faces.
+//   A drop-in module to replace `vnf_polyhedron()` and help debug vertices and faces.
 //   Draws all the vertices at their 3D position, numbered in blue by their
-//   position in the vertex array.  Each face will have their face number drawn
+//   position in the vertex array.  Each face will have its face number drawn
 //   in red, aligned with the center of face.  All given faces are drawn with
 //   transparency. All children of this module are drawn with transparency.
 //   Works best with Thrown-Together preview mode, to see reversed faces.
 // Arguments:
-//   points = Array of point vertices.
-//   faces = Array of faces by vertex numbers.
+//   vnf = vnf to display
 //   ---
 //   convexity = The max number of walls a ray can pass through the given polygon paths.
 //   txtsize = The size of the text used to label the faces and vertices.
@@ -259,13 +260,12 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 // Example(EdgesMed):
 //   verts = [for (z=[-10,10], a=[0:120:359.9]) [10*cos(a),10*sin(a),z]];
 //   faces = [[0,1,2], [5,4,3], [0,3,4], [0,4,1], [1,4,5], [1,5,2], [2,5,3], [2,3,0]];
-//   debug_polyhedron(points=verts, faces=faces, txtsize=1);
-module debug_polyhedron(points, faces, convexity=6, txtsize=1, disabled=false) {
-    debug_faces(vertices=points, faces=faces, size=txtsize, disabled=disabled) {
-        polyhedron(points=points, faces=faces, convexity=convexity);
+//   debug_polyhedron([verts,faces], txtsize=1);
+module debug_vnf(vnf, convexity=6, txtsize=1, disabled=false) {
+    debug_faces(vertices=vnf[0], faces=vnf[1], size=txtsize, disabled=disabled) {
+        vnf_polyhedron(vnf, convexity=convexity);
     }
 }
-
 
 
 // Function: standard_anchors()
