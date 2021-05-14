@@ -260,7 +260,7 @@ function vector_axis(v1,v2=undef,v3=undef) =
 //    leafsize = maximum number of points to store in the tree's leaf nodes.  Default: 25
 function vp_tree(points, leafsize=25) =
   assert(is_matrix(points),"points must be a consistent list of data points")
-  [points,_vp_tree(points, count(len(points)), leafsize)];
+  _vp_tree(points, count(len(points)), leafsize);
 
 function _vp_tree(ptlist, ind, leafsize) =
   len(ind)<=leafsize ? [ind] :
@@ -304,12 +304,11 @@ function _vp_search(points, tree, p, r) =
     ];
 
 function vp_search(points, tree, p, r) =
-//    assert(is_list(tree[1]) && (len(tree[1])==4 || (len(tree[1])==1 && is_list(tree[0]))), "Vantage point tree not valid")
-//    assert(is_matrix(points), "Parameter points is not a consistent point list")
-//    assert(is_vector(p,len(points[0])), "Query must be a vector whose length matches the point list")
-//    assert(all_positive(r),"Radius r must be a positive number")
-//    _vp_search(points, tree, p, r);
-    _vp_search(tree[0], tree[1], p, r);
+    assert(is_list(tree[1]) && (len(tree[1])==4 || (len(tree[1])==1 && is_list(tree[0]))), "Vantage point tree not valid")
+    assert(is_matrix(points), "Parameter points is not a consistent point list")
+    assert(is_vector(p,len(points[0])), "Query must be a vector whose length matches the point list")
+    assert(all_positive(r),"Radius r must be a positive number")
+    _vp_search(points, tree, p, r);
   
 
 // Function: vp_nearest()
@@ -370,9 +369,9 @@ function vp_nearest(points, tree, p, k) =
 //    to check all the queries.  If you use queries=points and set r to epsilon then
 //    you can find all of the approximate duplicates in a large list of vectors.
 // Example:  Finding duplicates in a list of vectors.  With exact equality the order of the output is consistent, but with small variations [2,4] could occur in one position and [4,2] in the other one.
-//    v = array_group(rands(0,10,5*3,seed=9),3);
-//    points = [v[0],v[1],v[2],v[3],v[2],v[3],v[3],v[4]];
-//    echo(search_radius(points,points,1e-9));   // Prints [[0],[1],[2,4],[3,5,6],[2,4],[3,5,6],[3,5,6],[7]]
+    v = array_group(rands(0,10,5*3,seed=9),3);
+    points = [v[0],v[1],v[2],v[3],v[2],v[3],v[3],v[4]];
+    echo(search_radius(points,points,1e-9));   // Prints [[0],[1],[2,4],[3,5,6],[2,4],[3,5,6],[3,5,6],[7]]
 //    
 function search_radius(points, queries, r, leafsize=25) =
   assert(is_matrix(points),"Invalid points list")
