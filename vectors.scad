@@ -369,9 +369,9 @@ function vp_nearest(points, tree, p, k) =
 //    to check all the queries.  If you use queries=points and set r to epsilon then
 //    you can find all of the approximate duplicates in a large list of vectors.
 // Example:  Finding duplicates in a list of vectors.  With exact equality the order of the output is consistent, but with small variations [2,4] could occur in one position and [4,2] in the other one.
-    v = array_group(rands(0,10,5*3,seed=9),3);
-    points = [v[0],v[1],v[2],v[3],v[2],v[3],v[3],v[4]];
-    echo(search_radius(points,points,1e-9));   // Prints [[0],[1],[2,4],[3,5,6],[2,4],[3,5,6],[3,5,6],[7]]
+//    v = array_group(rands(0,10,5*3,seed=9),3);
+//    points = [v[0],v[1],v[2],v[3],v[2],v[3],v[3],v[4]];
+//    echo(search_radius(points,points,1e-9));   // Prints [[0],[1],[2,4],[3,5,6],[2,4],[3,5,6],[3,5,6],[7]]
 //    
 function search_radius(points, queries, r, leafsize=25) =
   assert(is_matrix(points),"Invalid points list")
