@@ -4,11 +4,9 @@
             "owner": "docsgen",
             "pattern": [
                 {
-                    "regexp": "^!! (WARNING|ERROR) at ([^:]+):(\\d+): (.*[^:])$",
+                    "regexp": "^!! (WARNING|ERROR) at ([^:]+:\\d+: .*[^:])$",
                     "severity": 1,
-                    "file": 2,
-                    "line": 3,
-                    "message": 4
+                    "message": 2
                 }
             ]
         }
