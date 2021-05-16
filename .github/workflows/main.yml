@@ -8,11 +8,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Clone Wiki
-      run: |
-        cd $GITHUB_WORKSPACE
-        git clone https://github.com/revarbat/BOSL2.wiki.git
-
     - name: Install OpenSCAD
       run: |
         cd $GITHUB_WORKSPACE
@@ -33,9 +28,10 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Clone Wiki
-      run: |
-        cd $GITHUB_WORKSPACE
-        git clone https://github.com/revarbat/BOSL2.wiki.git
+      uses: actions/checkout@v2
+      with:
+        repository: https://github.com/revarbat/BOSL2.wiki.git
+        path: BOSL2.wiki
 
     - name: Apt Update
       run: sudo apt update
@@ -53,7 +49,7 @@ jobs:
         sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
         sudo chmod +x /usr/local/bin/openscad
 
-    - name: Generating Docs
+    - name: Checking Docs
       run: |
         cd $GITHUB_WORKSPACE
         echo "::add-matcher::.github/openscad_docsgen.json"

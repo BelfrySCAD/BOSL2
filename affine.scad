@@ -45,6 +45,7 @@ function ident(n) = [
 //   bool = is_affine(x,<dim>);
 // Topics: Affine, Matrices, Transforms, Type Checking
 // See Also: is_matrix()
+//   fleegul()
 // Description:
 //   Tests if the given value is an affine matrix, possibly also checking it's dimenstion.
 // Arguments:
