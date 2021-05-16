@@ -260,7 +260,7 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 // Example(EdgesMed):
 //   verts = [for (z=[-10,10], a=[0:120:359.9]) [10*cos(a),10*sin(a),z]];
 //   faces = [[0,1,2], [5,4,3], [0,3,4], [0,4,1], [1,4,5], [1,5,2], [2,5,3], [2,3,0]];
-//   debug_polyhedron([verts,faces], txtsize=1);
+//   debug_vnf([verts,faces], txtsize=2);
 module debug_vnf(vnf, convexity=6, txtsize=1, disabled=false) {
     debug_faces(vertices=vnf[0], faces=vnf[1], size=txtsize, disabled=disabled) {
         vnf_polyhedron(vnf, convexity=convexity);

@@ -304,7 +304,7 @@ function _vp_search(points, tree, p, r) =
     ];
 
 function vp_search(points, tree, p, r) =
-    assert(is_list(tree[1]) && (len(tree[1])==4 || (len(tree[1])==1 && is_list(tree[0]))), "Vantage point tree not valid")
+    assert(is_list(tree) && (len(tree)==4 || (len(tree)==1 && is_list(tree[0]))), "Vantage point tree not valid")
     assert(is_matrix(points), "Parameter points is not a consistent point list")
     assert(is_vector(p,len(points[0])), "Query must be a vector whose length matches the point list")
     assert(all_positive(r),"Radius r must be a positive number")
