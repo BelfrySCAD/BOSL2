@@ -14,7 +14,7 @@ jobs:
     - name: Checkout Wiki
       uses: actions/checkout@v2
       with:
-        repository: https://github.com/revarbat/BOSL2.wiki.git
+        repository: revarbat/BOSL2.wiki
         path: BOSL2.wiki
 
     - name: Install gifsicle
