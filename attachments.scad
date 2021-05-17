@@ -8,7 +8,7 @@
 
 // Default values for attachment code.
 $tags = "";
-$overlap = 0.01;
+$overlap = 0;
 $color = undef;
 
 $attach_to = undef;

@@ -419,7 +419,7 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 // Module: dovetail()
 //
 // Usage:
-//   dovetail(gender, w|width, h|height, slide, [slope|angle], [taper|back_width], [chamfer], [r|radius], [round], [$slop])
+//   dovetail(gender, w|width, h|height, slide, [slope|angle], [taper|back_width], [chamfer], [r|radius], [round], [extra], [$slop])
 //
 // Description:
 //   Produces a possibly tapered dovetail joint shape to attach to or subtract from two parts you wish to join together.
@@ -429,7 +429,9 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 //   parallel to the Y axis and projecting upwards, so in its default orientation it will slide together with a translation
 //   in the positive Y direction.  The gender determines whether the shape is meant to be added to your model or
 //   differenced, and it also changes the anchor and orientation.  The default anchor for dovetails is BOTTOM;
-//   the default orientation depends on the gender, with male dovetails oriented UP and female ones DOWN.  
+//   the default orientation depends on the gender, with male dovetails oriented UP and female ones DOWN.  The dovetails by default
+//   have extra extension of 0.01 for unions and differences.  You should ensure that attachment is done with overlap=0 to ensure that
+//   the sizing and positioning is correct.
 //
 // Arguments:
 //   gender = A string, "male" or "female", to specify the gender of the dovetail.
@@ -473,14 +475,14 @@ module joiner_quad(spacing1=undef, spacing2=undef, xspacing=undef, yspacing=unde
 //   diff("remove")
 //   cuboid([50,30,10]) {
 //       attach(BACK)  dovetail("male", slide=10, width=15, height=8, radius=1, $fn=32);
-//       attach(FRONT, overlap=-0.1) dovetail("female", slide=10, width=15, height=8, radius=1, $tags="remove", $fn=32);
+//       attach(FRONT) dovetail("female", slide=10, width=15, height=8, radius=1, $tags="remove", $fn=32);
 //   }
 // Example: Or you can make a fully rounded joint
 //   $fn=32;
 //   diff("remove")
 //   cuboid([50,30,10]){
 //       attach(BACK) dovetail("male", slide=10, width=15, height=8, radius=1.5, round=true);
-//       attach(FRONT,overlap=-0.1) dovetail("female", slide=10, width=15, height=8, radius=1.5, round=true, $tags="remove");
+//       attach(FRONT) dovetail("female", slide=10, width=15, height=8, radius=1.5, round=true, $tags="remove");
 //   }
 // Example: With a long joint like this, a taper makes the joint easy to assemble.  It will go together easily and wedge tightly if you get the tolerances right.  Specifying the taper with `back_width` may be easier than using a taper angle.    
 //   cuboid([50,30,10])
@@ -548,8 +550,9 @@ module dovetail(gender, width, height, slide, h, w, angle, slope, taper, back_wi
         is_def(back_width) ? (back_width-width) / 2 : 0;
     bigend_points = move([offset,slide+2*extra,0], p=smallend_points);
 
-    adjustment = $overlap * (gender == "male" ? -1 : 1);  // Adjustment for default overlap in attach()
-
+    //adjustment = $overlap * (gender == "male" ? -1 : 1);  // Adjustment for default overlap in attach()
+    adjustment = 0;    // Default overlap is assumed to be zero
+    
     attachable(anchor,spin,orient, size=[width+2*offset, slide, height]) {
         down(height/2+adjustment) {
             skin(
@@ -601,7 +604,8 @@ module _pin_slot(l, r, t, d, nub, depth, stretch) {
 
 module _pin_shaft(r, lStraight, nub, nubscale, stretch, d, pointed)
 {
-   extra = 0.02;
+   extra = 0.02;         // This sets the extra extension below the socket bottom
+                         // so that difference() works without issues
    rPoint = r / sqrt(2);
    down(extra) cylinder(r = r, h = lStraight + extra);
    up(lStraight) {
@@ -726,6 +730,8 @@ module snap_pin(size,r,radius,d,diameter, l,length, nub_depth, snap, thickness, 
 //   if you add a lubricant.  If `pointed` is true the socket is pointed to receive a pointed pin, otherwise it has a rounded and and
 //   will be shorter.  If `fins` is set to true then two fins are included inside the socket to act as supports (which may help when printing tip up,
 //   especially when `pointed=false`).  The default orientation is DOWN with anchor BOTTOM so that you can difference() the socket away from an object.
+//   The socket extends 0.02 extra below its bottom anchor point so that differences will work correctly.  (You must have $overlap smaller than 0.02 in 
+//   attach or the socket will be beneath the surface of the parent object.)  
 //   .
 //   The "large" or "standard" size pin has a length of 10.8 and diameter of 7.  The "medium" pin has a length of 8 and diameter of 4.6.  The "small" pin
 //   has a length of 6 and diameter of 3.2.  The "tiny" pin has a length of 4 and a diameter of 2.5.  
@@ -802,13 +808,14 @@ module snap_pin_socket(size, r, radius, l,length, d,diameter,nub_depth, snap, fi
 //   make the socket with a larger depth than the clip (try 0.4 mm) to allow ease of insertion of the clip.  The clearance
 //   value does not apply to the depth.  The splinesteps parameter increases the sampling of the clip curves.
 //   .
-//   By default clips appear with orient=UP and sockets with orient=DOWN.  
+//   By default clips appear with orient=UP and sockets with orient=DOWN.  The clips and sockets extend 0.02 units below
+//   their base so that unions and differences will work without trouble, but be sure that the attach overlap is smaller
+//   than 0.02.  
 //   .
 //   The first figure shows the dimensions of the rabbit clip.  The second figure shows the clip in red overlayed on
 //   its socket in yellow.  The left clip has a nonzero clearance, so its socket is bigger than the clip all around.
 //   The right hand locking clip has no clearance, but it has a lock clearance, which provides some space behind
-//   the lock to allow the clip to fit.  (Note that depending on your printer, this can be set to zero.)  
-//
+//   the lock to allow the clip to fit.  (Note that depending on your printer, this can be set to zero.)
 // Figure(2DMed):
 //   snap=1.5;
 //   comp=0.75;
@@ -939,7 +946,8 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
   } else {
     anchor = default(anchor,BOTTOM);
     is_pin = in_list(type,["pin","male"]);
-    default_overlap = 0.01 * (is_pin?1:-1);    // Shift by this much to undo default overlap
+    //default_overlap = 0.01 * (is_pin?1:-1);    // Shift by this much to undo default overlap
+    default_overlap = 0;
     extra = 0.02;  // Amount of extension below nominal based position for the socket, must exceed default overlap of 0.01
     clearance = is_pin ? 0 : clearance;
     compression = is_pin ? compression : 0;
@@ -989,8 +997,6 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
     bez = path_to_bezier(path,relsize=smoothing,tangents=tangent);
     rounded = bezier_path(bez,splinesteps=splinesteps);
     bounds = pointlist_bounds(rounded);
-    //kk = search([bounds[1].y], subindex(rounded,1));
-    //echo(rounded[kk[0]]);
     extrapt = is_pin ? [] : [rounded[0] - [0,extra]];
     finalpath = is_pin ? rounded
                        : let(withclearance=offset(rounded, r=-clearance))
@@ -1005,6 +1011,7 @@ module rabbit_clip(type, length, width,  snap, thickness, depth, compression=0.1
               xflip_copy()
               right(clearance)
               polygon([sidepath[1]+[-thickness/10,lock_clearance],
+                       sidepath[2]-[thickness*.75,0],
                        sidepath[2],
                        [sidepath[2].x,sidepath[1].y+lock_clearance]]);
             if (is_pin)
