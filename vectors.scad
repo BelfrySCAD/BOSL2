@@ -355,4 +355,32 @@ function vp_nearest(points, tree, p, k) =
       subindex(_vp_nearest(points, tree, p, k),0);
 
 
+// Function: search_radius()
+// Usage:
+//    index_list = search_radius(points, queries, r, <leafsize>);
+// Description:
+//    Given a list of points and a compatible list of queries, for each query
+//    search the points list for all points whose distance from the query
+//    is less than or equal to r.  The return value index_list[i] lists the indices
+//    in points of all matches to query q[i].  This list can be in arbitrary order.  
+//    .
+//    This function is advantageous to use especially when both `points` and `queries`
+//    are large sets.  The method contructs a vantage point tree and then uses it
+//    to check all the queries.  If you use queries=points and set r to epsilon then
+//    you can find all of the approximate duplicates in a large list of vectors.
+// Example:  Finding duplicates in a list of vectors.  With exact equality the order of the output is consistent, but with small variations [2,4] could occur in one position and [4,2] in the other one.
+//    v = array_group(rands(0,10,5*3,seed=9),3);
+//    points = [v[0],v[1],v[2],v[3],v[2],v[3],v[3],v[4]];
+//    echo(search_radius(points,points,1e-9));   // Prints [[0],[1],[2,4],[3,5,6],[2,4],[3,5,6],[3,5,6],[7]]
+//    
+function search_radius(points, queries, r, leafsize=25) =
+  assert(is_matrix(points),"Invalid points list")
+  assert(is_matrix(queries),"Invalid query list")
+  assert(len(points[0])==len(queries[0]), "Query vectors don't match length of points")
+  let(
+       vptree = vp_tree(points, leafsize)
+  )
+  [for(q=queries) vp_search(points, vptree, q, r)];
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
