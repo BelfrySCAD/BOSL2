@@ -156,36 +156,36 @@ function vnf_add_faces(vnf=EMPTY_VNF, faces) =
 //   cleanup - when true, consolidates the duplicate vertices of the merge. Default: false
 //   eps - the tolerance in finding duplicates when cleanup=true. Default: EPSILON
 function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
-    is_vnf(vnfs) ? vnf_merge([vnfs], cleanup) :
+    is_vnf(vnfs) ? vnf_merge([vnfs], cleanup, eps) :
     assert( is_vnf_list(vnfs) , "Improper vnf or vnf list")  
     let (
         offs  = cumsum([ 0, for (vnf = vnfs) len(vnf[0]) ]),
         verts = [for (vnf=vnfs) each vnf[0]],
         faces =
             [ for (i = idx(vnfs)) 
-								let( faces = vnfs[i][1] )
-								for (face = faces) 
-										if ( len(face) >= 3 )
-												[ for (j = face) offs[i] + j ]
+                let( faces = vnfs[i][1] )
+                for (face = faces) 
+                    if ( len(face) >= 3 )
+                        [ for (j = face) offs[i] + j ]
             ]
     )
     ! cleanup ? [verts, faces] :
     let(
-        dedup  = search_radius(verts,verts,r=eps), // collect vertex duplicates
-        map    = [for(i=idx(verts)) min(dedup[i]) ], // remap duplic vertices
+        dedup  = search_radius(verts,verts,r=eps),               // collect vertex duplicates
+        map    = [for(i=idx(verts)) min(dedup[i]) ],             // remap duplic vertices
         offset = cumsum([for(i=idx(verts)) map[i]==i ? 0 : 1 ]), // remaping face vertex offsets 
-        map2   = list(idx(verts))-offset, // map old vertex indices to new vertex indices
+        map2   = list(idx(verts))-offset,         // map old vertex indices to new vertex indices
         nverts = [for(i=idx(verts)) if(map[i]==i) verts[i] ],
         nfaces = 
-						[ for(face=faces) 
+            [ for(face=faces) 
                 let(
-										nface = [ for(vi=face) map2[map[vi]] ],
+                    nface = [ for(vi=face) map2[map[vi]] ],
                     dface = [for (i=idx(nface)) 
-																if( nface[i]!=nface[(i+1)%len(nface)]) 
-																		nface[i] ] 
-								)
+                                if( nface[i]!=nface[(i+1)%len(nface)]) 
+                                    nface[i] ] 
+                )
                 if(len(dface) >= 3) dface 
-						]
+            ]
     ) 
     [nverts, nfaces];
 
