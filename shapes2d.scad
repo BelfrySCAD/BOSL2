@@ -1904,7 +1904,7 @@ function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
 // Arguments:
 //   r = Radius of the roundover.
 //   inset = Optional bead inset size.  Default: 0
-//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.  Default: 0.01
 //   ---
 //   d = Diameter of the roundover.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -1918,7 +1918,7 @@ function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_roundover(r=10, inset=2);
-module mask2d_roundover(r, inset=0, excess, d, anchor=CENTER,spin=0) {
+module mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) {
     path = mask2d_roundover(r=r,d=d,excess=excess,inset=inset);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -1926,7 +1926,7 @@ module mask2d_roundover(r, inset=0, excess, d, anchor=CENTER,spin=0) {
     }
 }
 
-function mask2d_roundover(r, inset=0, excess, d, anchor=CENTER,spin=0) =
+function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
     assert(is_num(r)||is_num(d))
     assert(is_undef(excess)||is_num(excess))
     assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
@@ -1961,7 +1961,7 @@ function mask2d_roundover(r, inset=0, excess, d, anchor=CENTER,spin=0) =
 // Arguments:
 //   r = Radius of the cove.
 //   inset = Optional amount to inset code from corner.  Default: 0
-//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.  Default: 0.01
 //   ---
 //   d = Diameter of the cove.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -1975,7 +1975,7 @@ function mask2d_roundover(r, inset=0, excess, d, anchor=CENTER,spin=0) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_cove(r=10, inset=2);
-module mask2d_cove(r, inset=0, excess, d, anchor=CENTER,spin=0) {
+module mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) {
     path = mask2d_cove(r=r,d=d,excess=excess,inset=inset);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -1983,7 +1983,7 @@ module mask2d_cove(r, inset=0, excess, d, anchor=CENTER,spin=0) {
     }
 }
 
-function mask2d_cove(r, inset=0, excess, d, anchor=CENTER,spin=0) =
+function mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
     assert(is_num(r)||is_num(d))
     assert(is_undef(excess)||is_num(excess))
     assert(is_num(inset)||(is_vector(inset)&&len(inset)==2))
@@ -2023,7 +2023,7 @@ function mask2d_cove(r, inset=0, excess, d, anchor=CENTER,spin=0) =
 //   edge = The length of the edge of the chamfer.
 //   angle = The angle of the chamfer edge, away from vertical.  Default: 45.
 //   inset = Optional amount to inset code from corner.  Default: 0
-//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.  Default: 0.01
 //   ---
 //   x = The width of the chamfer.
 //   y = The height of the chamfer.
@@ -2042,7 +2042,7 @@ function mask2d_cove(r, inset=0, excess, d, anchor=CENTER,spin=0) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_chamfer(x=10, inset=2);
-module mask2d_chamfer(edge, angle=45, inset=0, excess, x, y, anchor=CENTER,spin=0) {
+module mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTER,spin=0) {
     path = mask2d_chamfer(x=x, y=y, edge=edge, angle=angle, excess=excess, inset=inset);
     attachable(anchor,spin, two_d=true, path=path, extent=true) {
         polygon(path);
@@ -2050,7 +2050,7 @@ module mask2d_chamfer(edge, angle=45, inset=0, excess, x, y, anchor=CENTER,spin=
     }
 }
 
-function mask2d_chamfer(edge, angle=45, inset=0, excess, x, y, anchor=CENTER,spin=0) =
+function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTER,spin=0) =
     assert(num_defined([x,y,edge])==1)
     assert(is_num(first_defined([x,y,edge])))
     assert(is_num(angle))
@@ -2088,7 +2088,7 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess, x, y, anchor=CENTER,spi
 //   If called as a function, this just returns a 2D path of the outline of the mask shape.
 // Arguments:
 //   size = The size of the rabbet, either as a scalar or an [X,Y] list.
-//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape. Default: 0.01
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -2101,7 +2101,7 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess, x, y, anchor=CENTER,spi
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_rabbet(size=10);
-module mask2d_rabbet(size, excess, anchor=CENTER,spin=0) {
+module mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) {
     path = mask2d_rabbet(size=size, excess=excess);
     attachable(anchor,spin, two_d=true, path=path, extent=false) {
         polygon(path);
@@ -2109,7 +2109,7 @@ module mask2d_rabbet(size, excess, anchor=CENTER,spin=0) {
     }
 }
 
-function mask2d_rabbet(size, excess, anchor=CENTER,spin=0) =
+function mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) =
     assert(is_num(size)||(is_vector(size)&&len(size)==2))
     assert(is_undef(excess)||is_num(excess))
     let(
@@ -2144,7 +2144,7 @@ function mask2d_rabbet(size, excess, anchor=CENTER,spin=0) =
 //   angle = The angle of the chamfer edge, away from vertical.  Default: 30.
 //   inset = Optional amount to inset code from corner.  Default: 0
 //   shelf = The extra height to add to the inside corner of the dovetail.  Default: 0
-//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.  Default: 0.01
 //   ---
 //   x = The width of the dovetail.
 //   y = The height of the dovetail.
@@ -2163,7 +2163,7 @@ function mask2d_rabbet(size, excess, anchor=CENTER,spin=0) =
 //   cube([50,60,70],center=true)
 //       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
 //           mask2d_dovetail(x=10, inset=2);
-module mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess, x, y, anchor=CENTER, spin=0) {
+module mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, anchor=CENTER, spin=0) {
     path = mask2d_dovetail(x=x, y=y, edge=edge, angle=angle, inset=inset, shelf=shelf, excess=excess);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -2171,7 +2171,7 @@ module mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess, x, y, anchor=CE
     }
 }
 
-function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess, x, y, anchor=CENTER, spin=0) =
+function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, anchor=CENTER, spin=0) =
     assert(num_defined([x,y,edge])==1)
     assert(is_num(first_defined([x,y,edge])))
     assert(is_num(angle))
@@ -2212,7 +2212,7 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess, x, y, anchor=
 // Arguments:
 //   r = Radius of the rounding.
 //   angle = The maximum angle from vertical.
-//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape. Default: 0.01
 //   ---
 //   d = Diameter of the rounding.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -2226,7 +2226,7 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess, x, y, anchor=
 //   cube([50,60,70],center=true)
 //       edge_profile(BOT)
 //           mask2d_teardrop(r=10, angle=40);
-function mask2d_teardrop(r, angle=45, excess=0.1, d, anchor=CENTER, spin=0) =  
+function mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) =  
     assert(is_num(angle))
     assert(angle>0 && angle<90)
     assert(is_num(excess))
@@ -2243,7 +2243,7 @@ function mask2d_teardrop(r, angle=45, excess=0.1, d, anchor=CENTER, spin=0) =
         ]
     ) reorient(anchor,spin, two_d=true, path=path, p=path);
 
-module mask2d_teardrop(r, angle=45, excess=0.1, d, anchor=CENTER, spin=0) {
+module mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) {
     path = mask2d_teardrop(r=r, d=d, angle=angle, excess=excess);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -2280,7 +2280,7 @@ module mask2d_teardrop(r, angle=45, excess=0.1, d, anchor=CENTER, spin=0) {
 //
 // Arguments:
 //   pattern = A list of pattern pieces to describe the Ogee.
-//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape.
+//   excess = Extra amount of mask shape to creates on the X- and Y- sides of the shape. Default: 0.01
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -2300,7 +2300,7 @@ module mask2d_teardrop(r, angle=45, excess=0.1, d, anchor=CENTER, spin=0) {
 //               "fillet",5, "round",5,  // S-curve.
 //               "ystep",1,  "xstep",1   // Ending shoulder.
 //           ]);
-module mask2d_ogee(pattern, excess, anchor=CENTER,spin=0) {
+module mask2d_ogee(pattern, excess=0.01, anchor=CENTER,spin=0) {
     path = mask2d_ogee(pattern, excess=excess);
     attachable(anchor,spin, two_d=true, path=path) {
         polygon(path);
@@ -2308,7 +2308,7 @@ module mask2d_ogee(pattern, excess, anchor=CENTER,spin=0) {
     }
 }
 
-function mask2d_ogee(pattern, excess, anchor=CENTER, spin=0) =
+function mask2d_ogee(pattern, excess=0.01, anchor=CENTER, spin=0) =
     assert(is_list(pattern))
     assert(len(pattern)>0)
     assert(len(pattern)%2==0,"pattern must be a list of TYPE, VAL pairs.")
