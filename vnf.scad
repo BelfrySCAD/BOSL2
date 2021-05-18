@@ -144,49 +144,50 @@ function vnf_add_faces(vnf=EMPTY_VNF, faces) =
 
 // Function: vnf_merge()
 // Usage:
-//   vnf = vnf_merge([VNF, VNF, VNF, ...], <cleanup>);
+//   vnf = vnf_merge([VNF, VNF, VNF, ...], <cleanup>,<eps>);
 // Description:
 //   Given a list of VNF structures, merges them all into a single VNF structure.
-function vnf_merge(vnfs, cleanup=false) =
+//   When cleanup=true, it consolidates all duplicate vertices with a tolerance `eps`,
+//   drops unreferenced vertices and any final face with less than 3 vertices. 
+//   Unreferenced vertices of the input VNFs that doesn't duplicate any other vertex 
+//   are not dropped.
+// Arguments:
+//   vnfs - a list of the VNFs to merge in one VNF.
+//   cleanup - when true, consolidates the duplicate vertices of the merge. Default: false
+//   eps - the tolerance in finding duplicates when cleanup=true. Default: EPSILON
+function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
+    is_vnf(vnfs) ? vnf_merge([vnfs], cleanup, eps) :
+    assert( is_vnf_list(vnfs) , "Improper vnf or vnf list")  
     let (
-        offs = cumsum([
-            0, for (vnf = vnfs) len(vnf[0])
-        ])
-    ) [
-        [for (vnf=vnfs) each vnf[0]],
-        [
-            for (i = idx(vnfs))
-              let(
-                  vnf = vnfs[i],
-                  verts = vnf[0],
-                  faces = vnf[1]
-              )
-              for (face = faces)
-                 let(
-                     dface = !cleanup ? face
-                                      : deduplicate_indexed(verts, face, closed=true)
-                 )
-                 if (len(dface) >= 3)
-                     [ for (j = dface) offs[i] + j ]
-        ]
-    ];
-
-
-// Function: vnf_compact()
-// Usage:
-//   cvnf = vnf_compact(vnf);
-// Description:
-//   Takes a VNF and consolidates all duplicate vertices, and drops unreferenced vertices.
-function vnf_compact(vnf) =
-    let(
-        vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf,
-        verts = vnf[0],
-        faces = [
-            for (face=vnf[1]) [
-                for (i=face) verts[i]
+        offs  = cumsum([ 0, for (vnf = vnfs) len(vnf[0]) ]),
+        verts = [for (vnf=vnfs) each vnf[0]],
+        faces =
+            [ for (i = idx(vnfs)) 
+                let( faces = vnfs[i][1] )
+                for (face = faces) 
+                    if ( len(face) >= 3 )
+                        [ for (j = face) offs[i] + j ]
             ]
-        ]
-    ) vnf_add_faces(faces=faces);
+    )
+    ! cleanup ? [verts, faces] :
+    let(
+        dedup  = search_radius(verts,verts,r=eps),               // collect vertex duplicates
+        map    = [for(i=idx(verts)) min(dedup[i]) ],             // remap duplic vertices
+        offset = cumsum([for(i=idx(verts)) map[i]==i ? 0 : 1 ]), // remaping face vertex offsets 
+        map2   = list(idx(verts))-offset,         // map old vertex indices to new vertex indices
+        nverts = [for(i=idx(verts)) if(map[i]==i) verts[i] ],
+        nfaces = 
+            [ for(face=faces) 
+                let(
+                    nface = [ for(vi=face) map2[map[vi]] ],
+                    dface = [for (i=idx(nface)) 
+                                if( nface[i]!=nface[(i+1)%len(nface)]) 
+                                    nface[i] ] 
+                )
+                if(len(dface) >= 3) dface 
+            ]
+    ) 
+    [nverts, nfaces];
 
 
 // Function: vnf_reverse_faces()
@@ -798,7 +799,7 @@ function vnf_bend(vnf,r,d,axis="Z") =
 function vnf_validate(vnf, show_warns=true, check_isects=false) =
     assert(is_path(vnf[0]))
     let(
-        vnf = vnf_compact(vnf),
+        vnf = vnf_merge(vnf, cleanup=true),
         varr = vnf[0],
         faces = vnf[1],
         lvarr = len(varr),
