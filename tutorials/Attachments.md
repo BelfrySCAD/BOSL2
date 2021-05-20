@@ -541,7 +541,7 @@ assumed to be oriented with the BACK, RIGHT (X+,Y+) quadrant as the "cutter edge
 re-oriented towards the edges of the parent shape.  A typical mask profile for chamfering an
 edge may look like:
 
-```openscad
+```openscad-2D
 mask2d_roundover(10);
 ```
 
@@ -581,6 +581,7 @@ Usually, when coloring a shape with the `color()` module, the parent color overr
 all children.  This is often not what you want:
 
 ```openscad
+$fn = 24;
 color("red") spheroid(d=3) {
     attach(CENTER,BOT) color("white") cyl(h=10, d=1) {
         attach(TOP,BOT) color("green") cyl(h=5, d1=3, d2=0);
@@ -592,6 +593,7 @@ If you use the `recolor()` module, however, the child's color overrides the colo
 This is probably easier to understand by example:
 
 ```openscad
+$fn = 24;
 recolor("red") spheroid(d=3) {
     attach(CENTER,BOT) recolor("white") cyl(h=10, d=1) {
         attach(TOP,BOT) recolor("green") cyl(h=5, d1=3, d2=0);
