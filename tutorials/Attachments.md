@@ -905,6 +905,74 @@ stellate_cube() show_anchors(50);
 
 
 ## Making Named Anchors
-TBW
+While vector anchors are often useful, sometimes there are logically extra attachment points that
+aren't on the perimeter of the shape.  This is what named string anchors are for.  For example,
+the `teardrop()` shape uses a cylindrical geometry for it's vector anchors, but it also provides
+a named anchor "cap" that is at the tip of the hat of the teardrop shape.
+
+Named anchors are passed as an array of `anchorpt()`s to the `anchors=` argument of `attachable()`.
+The `anchorpt()` call takes a name string, a positional point, an orientation vector, and a spin.
+The name is the name of the anchor.  The positional point is where the anchorpoint is at.  The
+orientation vector is the direction that a child attached at that anchorpoint should be oriented.
+The spin is the number of degrees that an attached child should be rotated counter-clockwise around
+the orientation vector.  Spin is optional, and defaults to 0.
+
+To make a simple attachable shape similar to a `teardrop()` that provides a "cap" anchor, you may
+define it like this:
+
+```openscad
+module raindrop(r, thick, anchor=CENTER, spin=0, orient=UP) {
+    anchors = [
+        anchorpt("cap", [0,r/sin(45),0], BACK, 0)
+    ];
+    attachable(anchor,spin,orient, r=r, l=thick, anchors=anchors) {
+        linear_extrude(height=thick, center=true) {
+            circle(r=r);
+            back(r*sin(45)) zrot(45) square(r, center=true);
+        }
+        children();
+    }
+}
+raindrop(r=25, thick=20, anchor="cap");
+```
+
+If you want multiple named anchors, just add them to the list of anchors:
+
+```openscad-Spin
+module raindrop(r, thick, anchor=CENTER, spin=0, orient=UP) {
+    anchors = [
+        anchorpt("captop", [0,r/sin(45), thick/2], BACK+UP,   0),
+        anchorpt("cap",    [0,r/sin(45), 0      ], BACK,      0),
+        anchorpt("capbot", [0,r/sin(45),-thick/2], BACK+DOWN, 0)
+    ];
+    attachable(anchor,spin,orient, r=r, l=thick, anchors=anchors) {
+        linear_extrude(height=thick, center=true) {
+            circle(r=r);
+            back(r*sin(45)) zrot(45) square(r, center=true);
+        }
+        children();
+    }
+}
+raindrop(r=15, thick=10) show_anchors();
+```
+
+Sometimes the named anchor you want to add may be at a point that is reached through a complicated
+set of translations and rotations.  One quick way to calculate that point is to reproduce those
+transformations in a transformation matrix chain.  This is simplified by how you can use the
+function forms of almost all the transformation modules to get the transformation matrices, and
+chain them together with matrix multiplication.  For example, if you have:
+
+```
+scale([1.1, 1.2, 1.3]) xrot(15) zrot(25) right(20) sphere(d=1);
+```
+
+and you want to calculate the centerpoint of the sphere, you can do it like:
+
+```
+sphere_pt = apply(
+    scale([1.1, 1.2, 1.3]) * xrot(15) * zrot(25) * right(20),
+    [0,0,0]
+);
+```
 
 
