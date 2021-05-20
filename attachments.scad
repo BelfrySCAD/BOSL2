@@ -1057,11 +1057,12 @@ module attach(from, to, overlap, norot=false)
         $attach_to = to;
         $attach_anchor = anch;
         $attach_norot = norot;
+        olap = two_d? [0,-overlap,0] : [0,0,-overlap];
         if (norot || (norm(anch[2]-UP)<1e-9 && anch[3]==0)) {
-            translate(anch[1]) translate([0,0,-overlap]) children();
+            translate(anch[1]) translate(olap) children();
         } else {
             fromvec = two_d? BACK : UP;
-            translate(anch[1]) rot(anch[3],from=fromvec,to=anch[2]) translate([0,0,-overlap]) children();
+            translate(anch[1]) rot(anch[3],from=fromvec,to=anch[2]) translate(olap) children();
         }
     }
 }
@@ -1223,8 +1224,18 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask()
 // Description:
-//   Takes a 3D mask shape, and attaches it to the given edges, with the appropriate orientation to be `diff()`ed away.
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   Takes a 3D mask shape, and attaches it to the given edges, with the appropriate orientation to be
+//   `diff()`ed away.  The mask shape should be vertically oriented (Z-aligned) with the back-right
+//   quadrant (X+Y+) shaped to be diffed away from the edge of parent attachable shape.  For a more
+//   step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Figure: A Typical Edge Rounding Mask
+//   module roundit(l,r) difference() {
+//       translate([-1,-1,-l/2])
+//           cube([r+1,r+1,l]);
+//       translate([r,r])
+//           cylinder(h=l+1,r=r,center=true, $fn=quantup(segs(r),4));
+//   }
+//   roundit(l=30,r=10);
 // Arguments:
 //   edges = Edges to mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
 //   except = Edges to explicitly NOT mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
