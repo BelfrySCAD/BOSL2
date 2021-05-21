@@ -938,7 +938,7 @@ raindrop(r=25, thick=20, anchor="cap");
 
 If you want multiple named anchors, just add them to the list of anchors:
 
-```openscad-Spin
+```openscad-FlatSpin,VPD=150
 module raindrop(r, thick, anchor=CENTER, spin=0, orient=UP) {
     anchors = [
         anchorpt("captop", [0,r/sin(45), thick/2], BACK+UP,   0),
