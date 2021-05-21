@@ -1,15 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
 VERFILE="version.scad"
 
-vernums=$(grep ^BOSL_VERSION "$VERFILE" | sed 's/^.*[[]\([0-9,]*\)[]].*$/\1/')
-major=$(echo "$vernums" | awk -F, '{print $1}')
-minor=$(echo "$vernums" | awk -F, '{print $2}')
-revision=$(echo "$vernums" | awk -F, '{print $3}')
+if [[ "$(cat "$VERFILE")" =~  BOSL_VERSION.*=.*\[([0-9]+),\ *([0-9]+),\ *([0-9]+)\]\; ]]; then
+  major=${BASH_REMATCH[1]} minor=${BASH_REMATCH[2]} revision=${BASH_REMATCH[3]}
+  new_revision=$(( revision+1 ))
 
-newrev=$(($revision+1))
-echo "Current Version: $major.$minor.$revision"
-echo "New Version: $major.$minor.$newrev"
+  echo "Current Version: $major.$minor.$revision"
+  echo "New Version: $major.$minor.$new_revision"
 
-sed -i '' 's/^BOSL_VERSION = .*$/BOSL_VERSION = ['"$major,$minor,$newrev];/g" $VERFILE
-
+  sed -i 's/^BOSL_VERSION = .*$/BOSL_VERSION = ['"$major,$minor,$new_revision];/g" "$VERFILE"
+else
+  echo "Could not extract version number from $VERFILE" >&2
+  exit 1
+fi
