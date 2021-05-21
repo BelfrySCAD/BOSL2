@@ -9,7 +9,8 @@ if [[ "$(cat "$VERFILE")" =~  BOSL_VERSION.*=.*\[([0-9]+),\ *([0-9]+),\ *([0-9]+
   echo "Current Version: $major.$minor.$revision"
   echo "New Version: $major.$minor.$new_revision"
 
-  sed -i 's/^BOSL_VERSION = .*$/BOSL_VERSION = ['"$major,$minor,$new_revision];/g" "$VERFILE"
+  sed -i.bak -e 's/^BOSL_VERSION = .*$/BOSL_VERSION = ['"$major,$minor,$new_revision];/g" "$VERFILE"
+  rm "$VERFILE".bak
 else
   echo "Could not extract version number from $VERFILE" >&2
   exit 1
