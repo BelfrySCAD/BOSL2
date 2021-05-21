@@ -101,6 +101,66 @@ module cubetruss_segment(size, strut, bracing, anchor=CENTER, spin=0, orient=UP)
 }
 
 
+// Module: cubetruss_support()
+// Usage:
+//   cubetruss_support(<size>, <strut>);
+// Description:
+//   Creates a single cubetruss support.
+// Arguments:
+//   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
+//   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
+//   extents = If given as an integer, specifies the number of vertical segments for the support.  If given as a list of 3 integers, specifies the number of segments in the X, Y, and Z directions.  Default: 1.
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+// Topics: Attachable, Trusses
+// Example(VPT=[0,0,0],VPD=150):
+//   cubetruss_support();
+// Example(VPT=[0,0,0],VPD=200):
+//   cubetruss_support(extents=2);
+// Example(VPT=[0,0,0],VPD=250):
+//   cubetruss_support(extents=3);
+// Example(VPT=[0,0,0],VPD=350):
+//   cubetruss_support(extents=[2,2,3]);
+// Example(VPT=[0,0,0],VPD=150):
+//   cubetruss_support(strut=4);
+// Example(VPT=[0,0,0],VPD=260):
+//   cubetruss_support(extents=2) show_anchors();
+module cubetruss_support(size, strut, extents=1, anchor=CENTER, spin=0, orient=UP) {
+    extents = is_num(extents)? [1,1,extents] : extents;
+    size = is_undef(size)? $cubetruss_size : size;
+    strut = is_undef(strut)? $cubetruss_strut_size : strut;
+    assert(is_int(extents.x) && extents.x > 0);
+    assert(is_int(extents.y) && extents.y > 0);
+    assert(is_int(extents.z) && extents.z > 0);
+    w = (size-strut) * extents.x + strut;
+    l = (size-strut) * extents.y + strut;
+    h = (size-strut) * extents.z + strut;
+    attachable(anchor,spin,orient, size=[w,l,h], size2=[l,0], shift=[0,l/2], axis=DOWN) {
+        xcopies(size-strut, n=extents.x) {
+            difference() {
+                half_of(BACK/extents.y + UP/extents.z, s=size*(max(extents)+1))
+                    cube([size,l,h], center=true);
+                half_of(BACK/extents.y + UP/extents.z, cp=strut, s=size*(max(extents)+1)) {
+                    ycopies(size-strut, n=extents.y) {
+                        zcopies(size-strut, n=extents.z) {
+                            cyl(h=size+1, d=size-2*strut, circum=true, realign=true, orient=RIGHT, $fn=8);
+                            cyl(h=size+1, d=size-2*strut, circum=true, realign=true, $fn=8);
+                            cube(size-2*strut, center=true);
+                        }
+                    }
+                }
+                zcopies(size-strut, n=extents.z) {
+                    cyl(h=extents.y*size+1, d=size-2*strut, circum=true, realign=true, orient=BACK, $fn=8);
+                }
+            }
+        }
+        children();
+    }
+}
+
+
 // Module: cubetruss_clip()
 // Usage:
 //   cubetruss_clip(extents, <size>, <strut>, <clipthick>);
