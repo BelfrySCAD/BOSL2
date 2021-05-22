@@ -1838,12 +1838,19 @@ function _poly_roots(p, pderiv, s, z, tol, i=0) =
 //   parts are zero.  You can specify eps, in which case the test is
 //   z.y/(1+norm(z)) < eps.  Because
 //   of poor convergence and higher error for repeated roots, such roots may
-//   be missed by the algorithm because their imaginary part is large.  
+//   be missed by the algorithm because their imaginary part is large.
 // Arguments:
 //   p = polynomial to solve as coefficient list, highest power term first
 //   eps = used to determine whether imaginary parts of roots are zero
 //   tol = tolerance for the complex polynomial root finder
 
+//   The algorithm is based on Brent's method and is a combination of
+//   bisection and inverse quadratic approximation, where bisection occurs
+//   at every step, with refinement using inverse quadratic approximation
+//   only when that approximation gives a good result.  The detail
+//   of how to decide when to use the quadratic came from an article
+//   by Crenshaw on "The World's Best Root Finder".
+//   https://www.embedded.com/worlds-best-root-finder/
 function real_roots(p,eps=undef,tol=1e-14) =
     assert( is_vector(p), "Invalid polynomial." )
     let( p = _poly_trim(p,eps=0) )
