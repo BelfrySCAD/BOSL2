@@ -57,17 +57,41 @@
 // Example: Rounded Edges, Untrimmed Corners
 //   cuboid([30,40,50], rounding=10, trimcorners=false);
 // Example: Chamferring Selected Edges
-//   cuboid([30,40,50], chamfer=5, edges=[TOP+FRONT,TOP+RIGHT,FRONT+RIGHT], $fn=24);
+//   cuboid(
+//       [30,40,50], chamfer=5,
+//       edges=[TOP+FRONT,TOP+RIGHT,FRONT+RIGHT],
+//       $fn=24
+//   );
 // Example: Rounding Selected Edges
-//   cuboid([30,40,50], rounding=5, edges=[TOP+FRONT,TOP+RIGHT,FRONT+RIGHT], $fn=24);
+//   cuboid(
+//       [30,40,50], rounding=5,
+//       edges=[TOP+FRONT,TOP+RIGHT,FRONT+RIGHT],
+//       $fn=24
+//   );
 // Example: Negative Chamferring
-//   cuboid([30,40,50], chamfer=-5, edges=[TOP,BOT], except_edges=RIGHT, $fn=24);
+//   cuboid(
+//       [30,40,50], chamfer=-5,
+//       edges=[TOP,BOT], except_edges=RIGHT,
+//       $fn=24
+//   );
 // Example: Negative Chamferring, Untrimmed Corners
-//   cuboid([30,40,50], chamfer=-5, edges=[TOP,BOT], except_edges=RIGHT, trimcorners=false, $fn=24);
+//   cuboid(
+//       [30,40,50], chamfer=-5,
+//       edges=[TOP,BOT], except_edges=RIGHT,
+//       trimcorners=false, $fn=24
+//   );
 // Example: Negative Rounding
-//   cuboid([30,40,50], rounding=-5, edges=[TOP,BOT], except_edges=RIGHT, $fn=24);
+//   cuboid(
+//       [30,40,50], rounding=-5,
+//       edges=[TOP,BOT], except_edges=RIGHT,
+//       $fn=24
+//   );
 // Example: Negative Rounding, Untrimmed Corners
-//   cuboid([30,40,50], rounding=-5, edges=[TOP,BOT], except_edges=RIGHT, trimcorners=false, $fn=24);
+//   cuboid(
+//       [30,40,50], rounding=-5,
+//       edges=[TOP,BOT], except_edges=RIGHT,
+//       trimcorners=false, $fn=24
+//   );
 // Example: Standard Connectors
 //   cuboid(40) show_anchors();
 module cuboid(
@@ -417,7 +441,11 @@ function cuboid(
 //   prismoid(100, 80, chamfer=[0,5,10,15], h=30);
 // Example: Mixing Chamfer and Rounding
 //   include <BOSL2/hull.scad>
-//   prismoid(100, 80, chamfer=[0,5,0,10], rounding=[5,0,10,0], h=30);
+//   prismoid(
+//       100, 80, h=30,
+//       chamfer=[0,5,0,10],
+//       rounding=[5,0,10,0]
+//   );
 // Example: Really Mixing It Up
 //   include <BOSL2/hull.scad>
 //   prismoid(
@@ -588,7 +616,11 @@ function prismoid(
 //   rect_tube(isize=[60,80], wall=5, h=30);
 //   rect_tube(size=[100,60], isize=[90,50], h=30);
 //   rect_tube(size1=[100,60], size2=[70,40], wall=5, h=30);
-//   rect_tube(size1=[100,60], size2=[70,40], isize1=[40,20], isize2=[65,35], h=15);
+// Example:
+//   rect_tube(
+//       size1=[100,60], size2=[70,40],
+//       isize1=[40,20], isize2=[65,35], h=15
+//   );
 // Example: Outer Rounding Only
 //   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=5, rounding=10, irounding=0, h=30);
@@ -603,16 +635,30 @@ function prismoid(
 //   rect_tube(size=100, wall=5, chamfer=10, irounding=8, h=30);
 // Example: Gradiant Rounding
 //   include <BOSL2/hull.scad>
-//   rect_tube(size1=100, size2=80, wall=5, rounding1=10, rounding2=0, irounding1=8, irounding2=0, h=30);
+//   rect_tube(
+//       size1=100, size2=80, wall=5, h=30,
+//       rounding1=10, rounding2=0,
+//       irounding1=8, irounding2=0
+//   );
 // Example: Per Corner Rounding
 //   include <BOSL2/hull.scad>
-//   rect_tube(size=100, wall=10, rounding=[0,5,10,15], irounding=0, h=30);
+//   rect_tube(
+//       size=100, wall=10, h=30,
+//       rounding=[0,5,10,15], irounding=0
+//   );
 // Example: Per Corner Chamfer
 //   include <BOSL2/hull.scad>
-//   rect_tube(size=100, wall=10, chamfer=[0,5,10,15], ichamfer=0, h=30);
+//   rect_tube(
+//       size=100, wall=10, h=30,
+//       chamfer=[0,5,10,15], ichamfer=0
+//   );
 // Example: Mixing Chamfer and Rounding
 //   include <BOSL2/hull.scad>
-//   rect_tube(size=100, wall=10, chamfer=[0,5,0,10], ichamfer=0, rounding=[5,0,10,0], irounding=0, h=30);
+//   rect_tube(
+//       size=100, wall=10, h=30,
+//       chamfer=[0,5,0,10], ichamfer=0,
+//       rounding=[5,0,10,0], irounding=0
+//   );
 // Example: Really Mixing It Up
 //   include <BOSL2/hull.scad>
 //   rect_tube(
@@ -838,7 +884,11 @@ function right_triangle(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 //   }
 //
 // Example: Putting it all together
-//   cyl(l=40, d1=25, d2=15, chamfer1=10, chamfang1=30, from_end=true, rounding2=5);
+//   cyl(
+//       l=40, d1=25, d2=15,
+//       chamfer1=10, chamfang1=30,
+//       from_end=true, rounding2=5
+//   );
 //
 // Example: External Chamfers
 //   cyl(l=50, r=30, chamfer=-5, chamfang=30, $fa=1, $fs=1);
@@ -1702,9 +1752,15 @@ module pie_slice(
 //
 // Example:
 //   union() {
-//       translate([0,2,-4]) cube([20, 4, 24], anchor=BOTTOM);
-//       translate([0,-10,-4]) cube([20, 20, 4], anchor=BOTTOM);
-//       color("green") interior_fillet(l=20, r=10, spin=180, orient=RIGHT);
+//       translate([0,2,-4])
+//           cube([20, 4, 24], anchor=BOTTOM);
+//       translate([0,-10,-4])
+//           cube([20, 20, 4], anchor=BOTTOM);
+//       color("green")
+//           interior_fillet(
+//               l=20, r=10,
+//               spin=180, orient=RIGHT
+//           );
 //   }
 //
 // Example:
@@ -1762,21 +1818,30 @@ module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, anchor=FRONT+LEFT, spi
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
 //   heightfield(size=[100,100], bottom=-20, data=[
-//       for (y=[-180:4:180]) [for(x=[-180:4:180]) 10*cos(3*norm([x,y]))]
+//       for (y=[-180:4:180]) [
+//           for(x=[-180:4:180])
+//           10*cos(3*norm([x,y]))
+//       ]
 //   ]);
 // Example:
 //   intersection() {
 //       heightfield(size=[100,100], data=[
-//           for (y=[-180:5:180]) [for(x=[-180:5:180]) 10+5*cos(3*x)*sin(3*y)]
+//           for (y=[-180:5:180]) [
+//               for(x=[-180:5:180])
+//               10+5*cos(3*x)*sin(3*y)
+//           ]
 //       ]);
 //       cylinder(h=50,d=100);
 //   }
-// Example(NORENDER): Heightfield by Function
+// Example: Heightfield by Function
 //   fn = function (x,y) 10*sin(x*360)*cos(y*360);
 //   heightfield(size=[100,100], data=fn);
-// Example(NORENDER): Heightfield by Function, with Specific Ranges
+// Example: Heightfield by Function, with Specific Ranges
 //   fn = function (x,y) 2*cos(5*norm([x,y]));
-//   heightfield(size=[100,100], bottom=-20, data=fn, xrange=[-180:2:180], yrange=[-180:2:180]);
+//   heightfield(
+//       size=[100,100], bottom=-20, data=fn,
+//       xrange=[-180:2:180], yrange=[-180:2:180]
+//   );
 module heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04:1], yrange=[-1:0.04:1], style="default", convexity=10, anchor=CENTER, spin=0, orient=UP)
 {
     size = is_num(size)? [size,size] : point2d(size);
