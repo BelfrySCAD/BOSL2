@@ -1,11 +1,13 @@
 name: CI
 on:
-  push:
+  pull_request:
     branches:
       - master
+    types: [closed]
 
 jobs:
   GenerateDocs:
+    if: github.event.pull_request.merged == true
     runs-on: macos-10.15
     steps:
     - name: Checkout

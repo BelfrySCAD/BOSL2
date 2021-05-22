@@ -90,7 +90,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   "xjump"    |  | x                  | Move the turtle's x position to the specified value
 //   "yjump     |  | y                  | Move the turtle's y position to the specified value
 //   "zjump     |  | y                  | Move the turtle's y position to the specified value
-//   "left"        | [angle]            | Turn turtle left by specified angle or default angle
+//   "left"     |  | [angle]            | Turn turtle left by specified angle or default angle
 //   "right"    |  | [angle]            | Turn turtle to the right by specified angle or default angle
 //   "up"       |  | [angle]            | Turn turtle up by specified angle or default angle
 //   "down"     |  | [angle]            | Turn turtle down by specified angle or default angle
