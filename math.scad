@@ -1631,8 +1631,6 @@ function c_ident(n) = [for (i = [0:1:n-1]) [for (j = [0:1:n-1]) (i==j)?[1,0]:[0,
 //   Compute the norm of a complex number or vector. 
 function c_norm(z) = norm_fro(z);
 
-
-
 // Section: Polynomials
 
 // Function: quadratic_roots()
@@ -1840,12 +1838,19 @@ function _poly_roots(p, pderiv, s, z, tol, i=0) =
 //   parts are zero.  You can specify eps, in which case the test is
 //   z.y/(1+norm(z)) < eps.  Because
 //   of poor convergence and higher error for repeated roots, such roots may
-//   be missed by the algorithm because their imaginary part is large.  
+//   be missed by the algorithm because their imaginary part is large.
 // Arguments:
 //   p = polynomial to solve as coefficient list, highest power term first
 //   eps = used to determine whether imaginary parts of roots are zero
 //   tol = tolerance for the complex polynomial root finder
 
+//   The algorithm is based on Brent's method and is a combination of
+//   bisection and inverse quadratic approximation, where bisection occurs
+//   at every step, with refinement using inverse quadratic approximation
+//   only when that approximation gives a good result.  The detail
+//   of how to decide when to use the quadratic came from an article
+//   by Crenshaw on "The World's Best Root Finder".
+//   https://www.embedded.com/worlds-best-root-finder/
 function real_roots(p,eps=undef,tol=1e-14) =
     assert( is_vector(p), "Invalid polynomial." )
     let( p = _poly_trim(p,eps=0) )
@@ -1858,5 +1863,77 @@ function real_roots(p,eps=undef,tol=1e-14) =
     is_def(eps) 
     ? [for(z=roots) if (abs(z.y)/(1+norm(z))<eps) z.x]
     : [for(i=idx(roots)) if (abs(roots[i].y)<=err[i]) roots[i].x];
+
+
+// Section: Operations on Functions
+
+// Function: root_find()
+// Usage:
+//    x = root_find(f, x0, x1, [tol])
+// Description:
+//    Find a root of the continuous function f where the sign of f(x0) is different
+//    from the sign of f(x1).  The function f is a function literal accepting one
+//    argument.  You must have a version of OpenSCAD that supports function literals
+//    (2021.01 or newer).  The tolerance (tol) specifies the accuracy of the solution:
+//    abs(f(x)) < tol * yrange, where yrange is the range of observed function values.
+//    This function can only find roots that cross the x axis:  it cannot find the
+//    the root of x^2.
+// Arguments:
+//    f = function literal for a single variable function
+//    x0 = endpoint of interval to search for root
+//    x1 = second endpoint of interval to search for root
+//    tol = tolerance for solution.  Default: 1e-15
+function root_find(f,x0,x1,tol=1e-15) =
+   let(
+        y0 = f(x0),
+        y1 = f(x1),
+        yrange = y0<y1 ? [y0,y1] : [y1,y0]
+   )
+   // Check endpoints
+   y0==0 || _rfcheck(x0, y0,yrange,tol) ? x0 :
+   y1==0 || _rfcheck(x1, y1,yrange,tol) ? x1 :
+   assert(y0*y1<0, "Sign of function must be different at the interval endpoints")
+   _rootfind(f,[x0,x1],[y0,y1],yrange,tol);
+
+function _rfcheck(x,y,range,tol) =
+   assert(is_finite(y), str("Function not finite at ",x))
+   abs(y) < tol*(range[1]-range[0]);
+
+// xpts and ypts are arrays whose first two entries contain the
+// interval bracketing the root.  Extra entries are ignored.
+// yrange is the total observed range of y values (used for the
+// tolerance test).  
+function _rootfind(f, xpts, ypts, yrange, tol, i=0) =
+    assert(i<100, "root_find did not converge to a solution")
+    let(
+         xmid = (xpts[0]+xpts[1])/2,
+         ymid = f(xmid),
+         yrange = [min(ymid, yrange[0]), max(ymid, yrange[1])]
+    )
+    _rfcheck(xmid, ymid, yrange, tol) ? xmid :
+    let(
+         // Force root to be between x0 and midpoint
+         y = ymid * ypts[0] < 0 ? [ypts[0], ymid, ypts[1]]
+                                : [ypts[1], ymid, ypts[0]],
+         x = ymid * ypts[0] < 0 ? [xpts[0], xmid, xpts[1]]
+                                : [xpts[1], xmid, xpts[0]],
+         v = y[2]*(y[2]-y[0]) - 2*y[1]*(y[1]-y[0])
+    )
+    v <= 0 ? _rootfind(f,x,y,yrange,tol,i+1)  // Root is between first two points, extra 3rd point doesn't hurt
+    :
+    let(  // Do quadratic approximation
+        B = (x[1]-x[0]) / (y[1]-y[0]),
+        C = y*[-1,2,-1] / (y[2]-y[1]) / (y[2]-y[0]),
+        newx = x[0] - B * y[0] *(1-C*y[1]),
+        newy = f(newx),
+        new_yrange = [min(yrange[0],newy), max(yrange[1], newy)],
+        // select interval that contains the root by checking sign
+        yinterval = newy*y[0] < 0 ? [y[0],newy] : [newy,y[1]],
+        xinterval = newy*y[0] < 0 ? [x[0],newx] : [newx,x[1]]
+     )
+     _rfcheck(newx, newy, new_yrange, tol)
+        ? newx
+        : _rootfind(f, xinterval, yinterval, new_yrange, tol, i+1);
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

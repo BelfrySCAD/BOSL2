@@ -1264,4 +1264,36 @@ module test_poly_add(){
 }
 test_poly_add();
 
+
+module test_root_find(){
+  flist = [
+      function(x) x*x*x-2*x-5,
+      function(x) 1-1/x/x,
+      function(x) pow(x-3,3),
+      function(x) pow(x-2,5),
+      function(x) (let(xi=0.61489) -3062*(1-xi)*exp(-x)/(xi+(1-xi)*exp(-x)) -1013 + 1628/x),
+      function(x) exp(x)-2-.01/x/x + .000002/x/x/x,
+  ];
+  fint=[
+        [0,4],
+        [1e-4, 4],
+        [0,6],
+        [0,4],
+        [1e-4,5],
+        [-1,4]
+  ];
+  answers = [2.094551481542328,
+             1,
+             3,
+             2,
+             1.037536033287040,
+             0.7032048403631350
+  ];
+  
+  roots = [for(i=idx(flist)) root_find(flist[i], fint[i][0], fint[i][1])];
+  assert_approx(roots, answers, 1e-10);
+}
+test_root_find();
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
