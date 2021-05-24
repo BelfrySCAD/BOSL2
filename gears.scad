@@ -800,7 +800,6 @@ module spur_gear(
                     backlash = backlash,
                     interior = interior
                 );
-                circle(d=shaft_diam+4);
             }
             if (shaft_diam > 0) {
                 cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
