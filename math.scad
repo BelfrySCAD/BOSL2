@@ -1261,8 +1261,10 @@ function compare_lists(a, b) =
 
 // Function: any()
 // Usage:
-//   b = any(l);
-//   b = any(l,func);
+//   bool = any(l);
+//   bool = any(l,func);   // Requires OpenSCAD 2021.01 or later.
+// Requirements:
+//   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
 // Description:
 //   Returns true if any item in list `l` evaluates as true.
 // Arguments:
@@ -1292,8 +1294,10 @@ function _any_bool(l, i=0, out=false) =
 
 // Function: all()
 // Usage:
-//   b = all(l);
-//   b = all(l,func);
+//   bool = all(l);
+//   bool = all(l,func);   // Requires OpenSCAD 2021.01 or later.
+// Requirements:
+//   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
 // Description:
 //   Returns true if all items in list `l` evaluate as true.  If `func` is given a function liteal
 //   of signature (x), returning bool, then that function literal is evaluated for each list item.
@@ -1325,8 +1329,10 @@ function _all_bool(l, i=0, out=true) =
 
 // Function: count_true()
 // Usage:
-//   n = count_true(l,<nmax=>)
-//   n = count_true(l,func,<nmax=>)
+//   n = count_true(l,<nmax=>);
+//   n = count_true(l,func,<nmax=>);  // Requires OpenSCAD 2021.01 or later.
+// Requirements:
+//   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
 // Description:
 //   Returns the number of items in `l` that evaluate as true.
 //   If `l` is a lists of lists, this is applied recursively to each

@@ -27,6 +27,7 @@ include <quaternions.scad>
 include <affine.scad>
 include <coords.scad>
 include <geometry.scad>
+include <hull.scad>
 include <regions.scad>
 include <strings.scad>
 include <skin.scad>
