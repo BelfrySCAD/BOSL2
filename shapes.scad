@@ -387,10 +387,6 @@ function cuboid(
 //   Creates a rectangular prismoid shape with optional roundovers and chamfering.
 //   You can only round or chamfer the vertical(ish) edges.  For those edges, you can
 //   specify rounding and/or chamferring per-edge, and for top and bottom separately.
-//   Note: if using chamfers or rounding, you **must** also include the hull.scad file:
-//   ```
-//   include <BOSL2/hull.scad>
-//   ```
 //
 // Arguments:
 //   size1 = [width, length] of the bottom end of the prism.
@@ -398,12 +394,12 @@ function cuboid(
 //   h|l = Height of the prism.
 //   shift = [X,Y] amount to shift the center of the top end with respect to the center of the bottom end.
 //   ---
-//   rounding = The roundover radius for the vertical-ish edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
-//   rounding1 = The roundover radius for the bottom of the vertical-ish edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
-//   rounding2 = The roundover radius for the top of the vertical-ish edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
-//   chamfer = The chamfer size for the vertical-ish edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
-//   chamfer1 = The chamfer size for the bottom of the vertical-ish edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
-//   chamfer2 = The chamfer size for the top of the vertical-ish edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
+//   rounding = The roundover radius for the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
+//   rounding1 = The roundover radius for the bottom of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
+//   rounding2 = The roundover radius for the top of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
+//   chamfer = The chamfer size for the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
+//   chamfer1 = The chamfer size for the bottom of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
+//   chamfer2 = The chamfer size for the top of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -425,29 +421,22 @@ function cuboid(
 // Example(FlatSpin,VPD=160,VPT=[0,0,10]): Shifting/Skewing
 //   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]);
 // Example: Rounding
-//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, rounding=10, h=30);
 // Example: Outer Chamfer Only
-//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, chamfer=5, h=30);
 // Example: Gradiant Rounding
-//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, rounding1=10, rounding2=0, h=30);
 // Example: Per Corner Rounding
-//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, rounding=[0,5,10,15], h=30);
 // Example: Per Corner Chamfer
-//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, chamfer=[0,5,10,15], h=30);
 // Example: Mixing Chamfer and Rounding
-//   include <BOSL2/hull.scad>
 //   prismoid(
 //       100, 80, h=30,
 //       chamfer=[0,5,0,10],
 //       rounding=[5,0,10,0]
 //   );
 // Example: Really Mixing It Up
-//   include <BOSL2/hull.scad>
 //   prismoid(
 //       size1=[100,80], size2=[80,60], h=20,
 //       chamfer1=[0,5,0,10], chamfer2=[5,0,10,0],
@@ -579,10 +568,6 @@ function prismoid(
 //   You can only round or chamfer the vertical(ish) edges.  For those edges, you can
 //   specify rounding and/or chamferring per-edge, and for top and bottom, inside and
 //   outside  separately.
-//   Note: if using chamfers or rounding, you **must** also include the hull.scad file:
-//   ```
-//   include <BOSL2/hull.scad>
-//   ```
 // Arguments:
 //   h|l = The height or length of the rectangular tube.  Default: 1
 //   size = The outer [X,Y] size of the rectangular tube.
@@ -622,45 +607,36 @@ function prismoid(
 //       isize1=[40,20], isize2=[65,35], h=15
 //   );
 // Example: Outer Rounding Only
-//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=5, rounding=10, irounding=0, h=30);
 // Example: Outer Chamfer Only
-//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=5, chamfer=5, ichamfer=0, h=30);
 // Example: Outer Rounding, Inner Chamfer
-//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=5, rounding=10, ichamfer=8, h=30);
 // Example: Inner Rounding, Outer Chamfer
-//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=5, chamfer=10, irounding=8, h=30);
 // Example: Gradiant Rounding
-//   include <BOSL2/hull.scad>
 //   rect_tube(
 //       size1=100, size2=80, wall=5, h=30,
 //       rounding1=10, rounding2=0,
 //       irounding1=8, irounding2=0
 //   );
 // Example: Per Corner Rounding
-//   include <BOSL2/hull.scad>
 //   rect_tube(
 //       size=100, wall=10, h=30,
 //       rounding=[0,5,10,15], irounding=0
 //   );
 // Example: Per Corner Chamfer
-//   include <BOSL2/hull.scad>
 //   rect_tube(
 //       size=100, wall=10, h=30,
 //       chamfer=[0,5,10,15], ichamfer=0
 //   );
 // Example: Mixing Chamfer and Rounding
-//   include <BOSL2/hull.scad>
 //   rect_tube(
 //       size=100, wall=10, h=30,
 //       chamfer=[0,5,0,10], ichamfer=0,
 //       rounding=[5,0,10,0], irounding=0
 //   );
 // Example: Really Mixing It Up
-//   include <BOSL2/hull.scad>
 //   rect_tube(
 //       size1=[100,80], size2=[80,60],
 //       isize1=[50,30], isize2=[70,50], h=20,
