@@ -331,6 +331,9 @@ function attach_geom_size(geom) =
         is_num(r)? [2,2,2]*r : vmul([2,2,2],point3d(r))
     ) : type == "vnf_extent" || type=="vnf_isect"? ( //vnf
         let(
+            vnf = geom[1]
+        ) vnf==EMPTY_VNF? [0,0,0] :
+        let(
             mm = pointlist_bounds(geom[1][0]),
             delt = mm[1]-mm[0]
         ) delt
@@ -425,7 +428,7 @@ function attach_transform(anchor, spin, orient, geom, p) =
             )
         )
     ) is_undef(p)? m :
-    is_vnf(p)? [apply(m, p[0]), p[1]] :
+    is_vnf(p)? [(p==EMPTY_VNF? p : apply(m, p[0])), p[1]] :
     apply(m, p);
 
 
@@ -515,7 +518,9 @@ function find_anchor(anchor, geom) =
         ) [anchor, pos, vec, oang]
     ) : type == "vnf_isect"? ( //vnf
         let(
-            vnf=geom[1],
+            vnf=geom[1]
+        ) vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
+        let(
             eps = 1/2048,
             points = vnf[0],
             faces = vnf[1],
@@ -565,7 +570,9 @@ function find_anchor(anchor, geom) =
         [anchor, pos, n, oang]
     ) : type == "vnf_extent"? ( //vnf
         let(
-            vnf=geom[1],
+            vnf=geom[1]
+        ) vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
+        let(
             rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), vnf[0]),
             maxx = max(subindex(rpts,0)),
             idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
