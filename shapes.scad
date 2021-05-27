@@ -154,6 +154,7 @@ module cuboid(
     size = scalar_vec3(size);
     edges = edges(edges, except=except_edges);
     assert(is_vector(size,3));
+    assert(all_positive(size));
     assert(is_undef(chamfer) || is_finite(chamfer));
     assert(is_undef(rounding) || is_finite(rounding));
     assert(is_undef(p1) || is_vector(p1));
@@ -465,6 +466,10 @@ module prismoid(
     eps = pow(2,-14);
     size1 = is_num(size1)? [size1,size1] : size1;
     size2 = is_num(size2)? [size2,size2] : size2;
+    assert(all_nonnegative(size1));
+    assert(all_nonnegative(size2));
+    assert(size1.x + size2.x > 0);
+    assert(size1.y + size2.y > 0);
     s1 = [max(size1.x, eps), max(size1.y, eps)];
     s2 = [max(size2.x, eps), max(size2.y, eps)];
     rounding1 = default(rounding1, rounding);
