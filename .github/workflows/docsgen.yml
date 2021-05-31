@@ -27,8 +27,8 @@ jobs:
     - name: Install openscad-docsgen
       run: sudo pip3 install openscad_docsgen
 
-    - name: Install gifsicle
-      run: sudo pip3 install gifsicle
+    - name: Install pygifsicle
+      run: sudo pip3 install pygifsicle
 
     - name: Install OpenSCAD
       run: |
