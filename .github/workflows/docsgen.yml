@@ -1,14 +1,17 @@
-name: CI
+name: DocsGen
 on:
   pull_request:
     branches:
       - master
     types: [closed]
+  workflow_dispatch:
+    branches:
+      - master
 
 jobs:
   GenerateDocs:
     if: github.event.pull_request.merged == true
-    runs-on: macos-10.15
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -19,27 +22,31 @@ jobs:
         repository: revarbat/BOSL2.wiki
         path: BOSL2.wiki
 
-    - name: Install gifsicle
-      run: brew install gifsicle
+    - name: Apt Update
+      run: sudo apt update
 
-    - name: Install Pillow
-      run: sudo pip3 install Pillow
+    - name: Install Packages
+      run: sudo apt-get install -y python3-pip python3-dev python3-setuptools python3-pil gifsicle
 
-    - name: Install Docsgen
+    - name: Install openscad-docsgen
       run: sudo pip3 install openscad_docsgen
+
+    - name: Install gifsicle
+      run: sudo pip3 install gifsicle
 
     - name: Install OpenSCAD
       run: |
-        curl -L -o OpenSCAD.dmg https://files.openscad.org/snapshots/OpenSCAD-2021.05.07.dmg
-        hdiutil attach OpenSCAD.dmg
-        cp -a /Volumes/OpenSCAD/OpenSCAD.app /Applications/
+        cd $GITHUB_WORKSPACE
+        wget https://files.openscad.org/OpenSCAD-2021.01-x86_64.AppImage
+        sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
+        sudo chmod +x /usr/local/bin/openscad
 
     - name: Generating Docs
       run: |
         cd $GITHUB_WORKSPACE
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
         echo "::add-matcher::.github/openscad_docsgen.json"
-        openscad-docsgen -m -i -t -c -I *.scad
+        openscad-docsgen -ticmI *.scad
         cd BOSL2.wiki
         git config user.name github-actions
         git config user.email github-actions@github.com
