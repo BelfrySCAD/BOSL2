@@ -33,10 +33,13 @@ jobs:
         sudo chmod +x /usr/local/bin/openscad
 
     - name: TestScript
-      run: |
-        cd $GITHUB_WORKSPACE
-        export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
-        echo "::add-matcher::.github/openscad_docsgen.json"
-        echo "cube(50, center=100);" > testwf.scad
-        openscad -o tmp_cube.png --imgsize=640,480 --view=axes,scales --projection=o --autocenter --viewall --preview '' --hardwarnings testwf.scad
+      uses: GabrielBB/xvfb-action@v1
+      with:
+        working-directory: $GITHUB_WORKSPACE
+        run: |
+          cd $GITHUB_WORKSPACE
+          export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
+          echo "::add-matcher::.github/openscad_docsgen.json"
+          echo "cube(50, center=100);" > testwf.scad
+          openscad -o tmp_cube.png --imgsize=640,480 --view=axes,scales --projection=o --autocenter --viewall --preview '' --hardwarnings testwf.scad
 
