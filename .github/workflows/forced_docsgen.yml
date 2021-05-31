@@ -32,13 +32,18 @@ jobs:
         sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
         sudo chmod +x /usr/local/bin/openscad
 
-    - name: Generating Docs
+    - name: Generating Docs Headless
+      uses: GabrielBB/xvfb-action@v1
+      with:
+        working-directory: $GITHUB_WORKSPACE
+        run: |
+          export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
+          echo "::add-matcher::.github/openscad_docsgen.json"
+          openscad-docsgen -ticmIf *.scad
+
+    - name: Commit Wiki Docs
       run: |
-        cd $GITHUB_WORKSPACE
-        export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
-        echo "::add-matcher::.github/openscad_docsgen.json"
-        openscad-docsgen -ticmIf *.scad
-        cd BOSL2.wiki
+        cd $GITHUB_WORKSPACE/BOSL2.wiki
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add --all
