@@ -1,12 +1,10 @@
-name: Docs
+name: FDocs
 on:
-  pull_request:
+  workflow_dispatch:
     branches: [master]
-    types: [closed]
 
 jobs:
   GenerateDocs:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -42,19 +40,10 @@ jobs:
         cd $GITHUB_WORKSPACE
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
         echo "::add-matcher::.github/openscad_docsgen.json"
-        openscad-docsgen -ticmI *.scad
+        openscad-docsgen -ticmIf *.scad
         cd BOSL2.wiki
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add --all
         git commit -m "Wiki docs auto-regen." && git push || true
-
-    - name: Bump Release Version
-      run: |
-        cd $GITHUB_WORKSPACE
-        ./scripts/increment_version.sh
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git add version.scad
-        git commit -m "Bump release version." && git push || true
 
