@@ -33,15 +33,14 @@ jobs:
         wget https://files.openscad.org/OpenSCAD-2021.01-x86_64.AppImage
         sudo mv OpenSCAD-2021.01*-x86_64.AppImage /usr/local/bin/openscad
         sudo chmod +x /usr/local/bin/openscad
+        echo "::add-matcher::.github/openscad_docsgen.json"
 
     - name: Generating Docs Headless
       uses: GabrielBB/xvfb-action@v1
       with:
         working-directory: $GITHUB_WORKSPACE
         run: |
-          export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
-          echo "::add-matcher::.github/openscad_docsgen.json"
-          openscad-docsgen -ticmI *.scad
+          OPENSCADPATH=$(dirname $GITHUB_WORKSPACE) openscad-docsgen -ticmI *.scad
 
     - name: Commit Wiki Docs
       run: |
