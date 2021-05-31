@@ -291,6 +291,18 @@ function _vp_tree(ptlist, ind, leafsize) =
 //   tree = vantage point tree from vp_tree
 //   p = point to search for
 //   r = search radius
+// Example: A set of four queries to find points within 1 unit of the query.  The circles show the search region and all have radius 1.  
+//   $fn=32;
+//   k = 2000;
+//   points = array_group(rands(0,10,k*2,seed=13333),2);
+//   vp = vp_tree(points);
+//   queries = [for(i=[3,7],j=[3,7]) [i,j]];
+//   search_ind = [for(q=queries) vp_search(points, vp, q, 1)];
+//   move_copies(points) circle(r=.08);
+//   for(i=idx(queries)){
+//     color("blue")stroke(move(queries[i],circle(r=1)), closed=true, width=.08);
+//     color("red")move_copies(select(points, search_ind[i])) circle(r=.08);
+//   }
 function _vp_search(points, tree, p, r) =
     is_list(tree[0]) ? [for(i=tree[0]) if (norm(points[i]-p)<=r) i]
     :
@@ -324,6 +336,20 @@ function vp_search(points, tree, p, r) =
 //    tree = vantage point tree from vp_tree
 //    p = point to search for
 //    k = number of neighbors to return
+// Example:  Four queries to find the 15 nearest points.  The circles show the radius defined by the most distant query result.  Note they are different for each query.  
+//    $fn=32;
+//    k = 2000;
+//    points = array_group(rands(0,10,k*2,seed=13333),2);
+//    vp = vp_tree(points);
+//    queries = [for(i=[3,7],j=[3,7]) [i,j]];
+//    search_ind = [for(q=queries) vp_nearest(points, vp, q, 15)];
+//    move_copies(points) circle(r=.08);
+//    for(i=idx(queries)){
+//      color("red")move_copies(select(points, search_ind[i])) circle(r=.08);
+//      color("blue")stroke(move(queries[i],
+//                               circle(r=norm(points[last(search_ind[i])]-queries[i]))),
+//                          closed=true, width=.08);  
+//    }
 function _insert_sorted(list, k, new) =
       len(list)==k && new[1]>= last(list)[1] ? list
     : [
