@@ -34,11 +34,11 @@ jobs:
         echo "::add-matcher::.github/openscad_docsgen.json"
 
     - name: Generating Docs Headless
-      uses: GabrielBB/xvfb-action@v1
-      with:
-        working-directory: $GITHUB_WORKSPACE
-        run: |
-          OPENSCADPATH=$(dirname $GITHUB_WORKSPACE) openscad-docsgen -ticmIf *.scad
+      env:
+        OPENSCADPATH: $GITHUB_WORKSPACE/..
+      run: |
+        xvfb-run --server-args="-screen 0, 1280x720x24" -a \
+        openscad-docsgen -ticmIf *.scad
 
     - name: Commit Wiki Docs
       run: |
