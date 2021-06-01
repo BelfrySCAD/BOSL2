@@ -36,9 +36,8 @@ jobs:
         echo "::add-matcher::.github/openscad_docsgen.json"
 
     - name: Generating Docs Headless
-      env:
-        OPENSCADPATH: $GITHUB_WORKSPACE/..
       run: |
+        export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
         xvfb-run --server-args="-screen 0, 1280x720x24" -a \
         openscad-docsgen -ticmI *.scad
 
