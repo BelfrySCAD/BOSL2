@@ -39,9 +39,9 @@ jobs:
         echo "cube(50, center=100);" > testwf.scad
 
     - name: TestScript
-      uses: GabrielBB/xvfb-action@v1
-      with:
-        working-directory: $GITHUB_WORKSPACE
-        run: |
-          OPENSCADPATH=$(dirname $GITHUB_WORKSPACE) openscad -o tmp_cube.png --imgsize=640,480 --view=axes,scales --projection=o --autocenter --viewall --preview '' --hardwarnings testwf.scad
+      env:
+        OPENSCADPATH: $GITHUB_WORKSPACE/..
+      run: |
+        xvfb-run --server-args="-screen 0, 1280x720x24" -a \
+        openscad -o tmp_cube.png --imgsize=640,480 --view=axes,scales --projection=o --autocenter --viewall --preview '' --hardwarnings testwf.scad
 
