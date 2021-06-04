@@ -208,7 +208,7 @@ function _hull3d_iterative(points, triangles, planes, remaining, _i=0) =
         // pick a point
         i = remaining[_i],
         // evaluate the triangle plane equations at point i
-//			  xx=[for(i=[0:len(planes)-1],p=[planes[i]]) if(len(p)!=4) echo(i=i,len(p))0 ],//echo([each points[i], -1]),
+//        xx=[for(i=[0:len(planes)-1],p=[planes[i]]) if(len(p)!=4) echo(i=i,len(p))0 ],//echo([each points[i], -1]),
 //        planeq_val = [for(p=planes) p*[each points[i], -1]],
         planeq_val = planes*[each points[i], -1],
         // find the triangles that are in conflict with the point (point not inside)
@@ -222,13 +222,13 @@ function _hull3d_iterative(points, triangles, planes, remaining, _i=0) =
         horizon = _remove_internal_edges(halfedges),
         // generate new triangles connecting point i to each horizon halfedge vertices
         tri2add = [ for (h = horizon) concat(h,i) ],
-//				w=[for(t=tri2add) if(collinear(points[t[0]],points[t[1]],points[t[2]])) echo(t)],
+//        w=[for(t=tri2add) if(collinear(points[t[0]],points[t[1]],points[t[2]])) echo(t)],
         // add tria2add and remove conflict triangles
         new_triangles = 
             concat( tri2add,
                     [ for (i = [0:1:len(planes)-1]) if (planeq_val[i]<=EPSILON) triangles[i] ] 
                   ),
-//				y=[for(t=tri2add) if([]==plane3pt_indexed(points,t[0],t[1],t[2])) echo(tri2add=t,pts=[for(ti=t) points[ti]])],
+//        y=[for(t=tri2add) if([]==plane3pt_indexed(points,t[0],t[1],t[2])) echo(tri2add=t,pts=[for(ti=t) points[ti]])],
         // add the plane equations of new added triangles and remove the plane equations of the conflict ones
         new_planes = 
             concat( [ for (t = tri2add) plane3pt_indexed(points, t[0], t[1], t[2]) ],
