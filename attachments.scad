@@ -448,7 +448,8 @@ function attach_transform(anchor, spin, orient, geom, p) =
 function find_anchor(anchor, geom) =
     let(
         cp = select(geom,-3),
-        offset = anchor==CENTER? CENTER : select(geom,-2),
+        offset_raw = select(geom,-2),
+        offset = [for (i=[0:2]) anchor[i]==0? 0 : offset_raw[i]],  // prevents bad centering.
         anchors = last(geom),
         type = geom[0]
     )

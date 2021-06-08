@@ -512,12 +512,12 @@ module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing, size, strut, clipthic
     bracing = is_undef(bracing)? $cubetruss_bracing : bracing;
     clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
     exts = is_vector(extents)? list_fit(extents,5,fill=0) : [extents, extents, 0, 0, extents];
-    s = [cubetruss_dist(1+exts[0]+exts[2],1), cubetruss_dist(1+exts[1]+exts[3],1), cubetruss_dist(h+exts[4],1)];
-    offset = [cubetruss_dist(exts[0]-exts[2],0), cubetruss_dist(exts[1]-exts[3],0), cubetruss_dist(exts[4],0)]/2;
+    s = [cubetruss_dist(exts[0]+1+exts[2],1), cubetruss_dist(exts[1]+1+exts[3],1), cubetruss_dist(h+exts[4],1)];
+    offset = [cubetruss_dist(exts[0]-exts[2],0), cubetruss_dist(exts[1]-exts[3],0), cubetruss_dist(h+exts[4]-1,0)]/2;
     attachable(anchor,spin,orient, size=s, offset=offset) {
         union() {
             for (zcol = [0:h-1]) {
-                up((size-strut+0.01)*zcol) {
+                up((size-strut)*zcol) {
                     cubetruss_segment(size=size, strut=strut, bracing=bracing);
                 }
             }
