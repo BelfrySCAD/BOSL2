@@ -81,8 +81,8 @@ function _backtracking(i,points,h,t,m,all) =
 
 // clockwise check (2d)
 function _is_cw(a,b,c,all) = 
-		all ? cross(a-c,b-c)<=EPSILON*norm(a-c)*norm(b-c) :
-		cross(a-c,b-c)<-EPSILON*norm(a-c)*norm(b-c);
+    all ? cross(a-c,b-c)<=EPSILON*norm(a-c)*norm(b-c) :
+    cross(a-c,b-c)<-EPSILON*norm(a-c)*norm(b-c);
 
 
 // Function: hull2d_path()
@@ -111,7 +111,7 @@ function hull2d_path(points, all=false) =
          ip = sortidx(points) )
     // lower hull points
     let( lh = 
-            [ for( 	i = 2,
+            [ for(   i = 2,
                     k = 2, 
                     h = [ip[0],ip[1]]; // current list of hull point indices 
                   i <= n;
@@ -120,7 +120,7 @@ function hull2d_path(points, all=false) =
                     i = i+1
                  ) if( i==n ) h ][0] )
     // concat lower hull points with upper hull ones
-    [ for( 	i = n-2,
+    [ for(   i = n-2,
             k = len(lh), 
             t = k+1,
             h = lh; // current list of hull point indices 
@@ -129,7 +129,7 @@ function hull2d_path(points, all=false) =
             h = [for(j=[0:1:k-2]) h[j], if(i>0) ip[i]],
             i = i-1
          ) if( i==-1 ) h ][0] ;
-			 
+       
 
 function _hull_collinear(points) =
     let(
@@ -207,25 +207,37 @@ function _hull3d_iterative(points, triangles, planes, remaining, _i=0) =
     let (
         // pick a point
         i = remaining[_i],
+        // evaluate the triangle plane equations at point i
+//        xx=[for(i=[0:len(planes)-1],p=[planes[i]]) if(len(p)!=4) echo(i=i,len(p))0 ],//echo([each points[i], -1]),
+//        planeq_val = [for(p=planes) p*[each points[i], -1]],
+        planeq_val = planes*[each points[i], -1],
         // find the triangles that are in conflict with the point (point not inside)
-        conflicts = _find_conflicts(points[i], planes),
-        // for all triangles that are in conflict, collect their halfedges
+        conflicts = [ for (i = [0:1:len(planes)-1]) if (planeq_val[i]>EPSILON) i ],
+        // collect the halfedges of all triangles that are in conflict 
         halfedges = [ 
-            for(c = conflicts, i = [0:2]) let(
-                j = (i+1)%3
-            ) [triangles[c][i], triangles[c][j]]
+            for(c = conflicts, i = [0:2])
+                [triangles[c][i], triangles[c][(i+1)%3]]
         ],
         // find the outer perimeter of the set of conflicting triangles
         horizon = _remove_internal_edges(halfedges),
-        // generate a new triangle for each horizon halfedge together with the picked point i
-        new_triangles = [ for (h = horizon) concat(h,i) ],
-        // calculate the corresponding plane equations
-        new_planes = [ for (t = new_triangles) plane3pt_indexed(points, t[0], t[1], t[2]) ]
+        // generate new triangles connecting point i to each horizon halfedge vertices
+        tri2add = [ for (h = horizon) concat(h,i) ],
+//        w=[for(t=tri2add) if(collinear(points[t[0]],points[t[1]],points[t[2]])) echo(t)],
+        // add tria2add and remove conflict triangles
+        new_triangles = 
+            concat( tri2add,
+                    [ for (i = [0:1:len(planes)-1]) if (planeq_val[i]<=EPSILON) triangles[i] ] 
+                  ),
+//        y=[for(t=tri2add) if([]==plane3pt_indexed(points,t[0],t[1],t[2])) echo(tri2add=t,pts=[for(ti=t) points[ti]])],
+        // add the plane equations of new added triangles and remove the plane equations of the conflict ones
+        new_planes = 
+            concat( [ for (t = tri2add) plane3pt_indexed(points, t[0], t[1], t[2]) ],
+                    [ for (i = [0:1:len(planes)-1]) if (planeq_val[i]<=EPSILON) planes[i] ] 
+                  )
     ) _hull3d_iterative(
         points,
-        //  remove the conflicting triangles and add the new ones
-        concat(list_remove(triangles, conflicts), new_triangles),
-        concat(list_remove(planes, conflicts), new_planes),
+        new_triangles,
+        new_planes,
         remaining,
         _i+1
     );
@@ -235,13 +247,6 @@ function _remove_internal_edges(halfedges) = [
     for (h = halfedges)  
         if (!in_list(reverse(h), halfedges))
             h
-];
-
-
-function _find_conflicts(point, planes) = [
-    for (i = [0:1:len(planes)-1])
-        if (in_front_of_plane(planes[i], point))
-            i
 ];
 
 
