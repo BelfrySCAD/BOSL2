@@ -183,7 +183,7 @@ module trapezoidal_threaded_rod(
     higthr1 = ceil(higang1 / 360);
     higthr2 = ceil(higang2 / 360);
     pdepth = -min(subindex(profile,1));
-    dummy1 = assert(_r1>2*pdepth) assert(_r2>2*pdepth);
+    dummy1 = assert(_r1>pdepth) assert(_r2>pdepth);
     skew_mat = affine3d_skew(sxz=(_r2-_r1)/l);
     side_mat = affine3d_xrot(90) *
         affine3d_mirror([-1,1,0]) *
