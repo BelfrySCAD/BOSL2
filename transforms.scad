@@ -946,8 +946,8 @@ function yscale(y=1, p, cp=0, planar=false) =
     assert(is_bool(planar))
     let( cp = is_num(cp)? [0,cp,0] : cp )
     (planar || (!is_undef(p) && len(p)==2))
-      ? scale([1,y],p=p)
-      : scale([1,y,1],p=p);
+      ? scale([1,y], cp=cp, p=p)
+      : scale([1,y,1], cp=cp, p=p);
 
 
 // Function&Module: zscale()
