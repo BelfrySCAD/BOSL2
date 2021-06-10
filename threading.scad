@@ -208,7 +208,7 @@ module trapezoidal_threaded_rod(
             prof = apply(side_mat, [
                 for (thread = [-threads/2:1:threads/2-1]) let(
                     tang = (thread/starts) * 360 + ang,
-                    hsc =
+                    hsc = internal? 1 :
                         abs(tang) > twist/2? 0 :
                         (higang1==0 && higang2==0)? 1 :
                         lookup(tang, hig_table),
@@ -225,7 +225,7 @@ module trapezoidal_threaded_rod(
     ];
     thread_vnfs = vnf_merge([
         for (i=[0:1:starts-1])
-            zrot(i*360/starts, p=vnf_vertex_array(thread_verts, reverse=left_handed)),
+            zrot(i*360/starts, p=vnf_vertex_array(thread_verts, reverse=left_handed, style="min_edge")),
         for (i=[0:1:starts-1]) let(
             rmat = zrot(i*360/starts),
             pts = deduplicate(list_head(thread_verts[0], len(prof3d)+1)),
@@ -447,11 +447,15 @@ module threaded_nut(
 
 // Module: npt_threaded_rod()
 // Description:
-//   Constructs a standard NPT pipe threading.
+//   Constructs a standard NPT pipe end threading. If `internal=true`, creates a mask for making
+//   internal pipe threads.  Tapers smaller upwards if `internal=false`.  Tapers smaller downwards
+//   if `internal=true`.  If `hollow=true` and `internal=false`, then the pipe threads will be
+//   hollowed out into a pipe with the apropriate internal diameter.
 // Arguments:
-//   d = Outer diameter of threaded rod.
-//   left_handed = if true, create left-handed threads.  Default = false
-//   bevel = if true, bevel the thread ends.  Default: false
+//   size = NPT standard pipe size in inches.  1/16", 1/8", 1/4", 3/8", 1/2", 3/4", 1", 1+1/4", 1+1/2", or 2".  Default: 1/2"
+//   left_handed = If true, create left-handed threads.  Default = false
+//   bevel = If true, bevel the thread ends.  Default: false
+//   hollow = If true, create a pipe with the correct internal diameter.
 //   internal = If true, make this a mask for making internal threads.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -467,9 +471,16 @@ module npt_threaded_rod(
     size=1/2,
     left_handed=false,
     bevel=false,
+    hollow=false,
     internal=false,
     anchor, spin, orient
 ) {
+    assert(is_finite(size));
+    assert(is_bool(left_handed));
+    assert(is_bool(bevel));
+    assert(is_bool(hollow));
+    assert(is_bool(internal));
+    assert(!(internal&&hollow), "Cannot created a hollow internal threads mask.");
     info_table = [
         // Size    OD      len    TPI
         [ 1/16,  [ 0.3896, 0.308, 27  ]],
@@ -488,8 +499,10 @@ module npt_threaded_rod(
     l = 25.4 * info[0];
     d = 25.4 * info[1];
     pitch = 25.4 / info[2];
-    r1 = get_radius(d=d, dflt=0.84 * 25.4 / 2);
-    r2 = r1 - l/32;
+    rr = get_radius(d=d, dflt=0.84 * 25.4 / 2);
+    rr2 = rr - l/32;
+    r1 = internal? rr2 : rr;
+    r2 = internal? rr : rr2;
     depth = pitch * cos(30) * 5/8;
     profile = internal? [
         [-6/16, -depth/pitch],
@@ -506,20 +519,28 @@ module npt_threaded_rod(
         [ 6/16, -depth/pitch],
         [ 7/16, -depth/pitch*1.07]
     ];
-    trapezoidal_threaded_rod(
-        d1=2*r1, d2=2*r2, l=l,
-        pitch=pitch,
-        thread_depth=depth,
-        thread_angle=30,
-        profile=profile,
-        left_handed=left_handed,
-        bevel=bevel,
-        internal=internal,
-        higbee=r1*PI/2,
-        anchor=anchor,
-        spin=spin,
-        orient=orient
-    ) children();
+    attachable(anchor,spin,orient, l=l, r1=r1, r2=r2) {
+        difference() {
+            trapezoidal_threaded_rod(
+                d1=2*r1, d2=2*r2, l=l,
+                pitch=pitch,
+                thread_depth=depth,
+                thread_angle=30,
+                profile=profile,
+                left_handed=left_handed,
+                bevel=bevel,
+                internal=internal,
+                higbee=r1*PI/2,
+                anchor=anchor,
+                spin=spin,
+                orient=orient
+            );
+            if (hollow) {
+                cylinder(l=l+1, d=size*INCH, center=true);
+            } else nil();
+        }
+        children();
+    }
 }
 
 
