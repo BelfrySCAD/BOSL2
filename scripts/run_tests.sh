@@ -22,7 +22,7 @@ for testfile in "${INFILES[@]}"; do
         else
             echo "$repname: FAIL!"
             echo "$output"
-            OUTCODE="$retcode"
+            OUTCODE=1
         fi
         rm -f out.echo
     fi
