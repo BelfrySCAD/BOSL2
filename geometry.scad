@@ -85,20 +85,78 @@ function collinear(a, b, c, eps=EPSILON) =
     : noncollinear_triple(points,error=false,eps=eps)==[];
 
 
-// Function: distance_from_line()
+// Function: point_line_distance()
 // Usage:
-//   distance_from_line(line, pt);
+//   point_line_distance(pt, line);
 // Description:
 //   Finds the perpendicular distance of a point `pt` from the line `line`.
 // Arguments:
 //   line = A list of two points, defining a line that both are on.
 //   pt = A point to find the distance of from the line.
 // Example:
-//   distance_from_line([[-10,0], [10,0]], [3,8]);  // Returns: 8
-function distance_from_line(line, pt) =
+//   dist = point_line_distance([3,8], [[-10,0], [10,0]]);  // Returns: 8
+function point_line_distance(pt, line) =
     assert( _valid_line(line) && is_vector(pt,len(line[0])),
             "Invalid line, invalid point or incompatible dimensions." )
     _dist2line(pt-line[0],unit(line[1]-line[0]));
+
+
+// Function: point_segment_distance()
+// Usage:
+//   dist = point_segment_distance(pt, seg);
+// Description:
+//   Returns the closest distance of the given point to the given line segment.
+// Arguments:
+//   pt = The point to check the distance of.
+//   seg = The two points representing the line segment to check the distance of.
+// Example:
+//   dist = point_segment_distance([3,8], [[-10,0], [10,0]]);  // Returns: 8
+//   dist2 = point_segment_distance([14,3], [[-10,0], [10,0]]);  // Returns: 5
+function point_segment_distance(pt, seg) =
+    norm(seg[0]-seg[1]) < EPSILON ? norm(pt-seg[0]) :
+    norm(pt-segment_closest_point(seg,pt));
+
+
+// Function: segment_distance()
+// Usage:
+//   dist = segment_distance(seg1, seg2);
+// Description:
+//   Returns the closest distance of the two given line segments.
+// Arguments:
+//   seg1 = The list of two points representing the first line segment to check the distance of.
+//   seg2 = The list of two points representing the second line segment to check the distance of.
+// Example:
+//   dist = segment_distance([[-14,3], [-15,9]], [[-10,0], [10,0]]);  // Returns: 5
+//   dist2 = segment_distance([[-5,5], [5,-5]], [[-10,3], [10,-3]]);  // Returns: 0
+function segment_distance(seg1, seg2) =
+    let(
+        dseg1 = seg1[1]-seg1[0],
+        dseg2 = seg2[1]-seg2[0],
+        A  = [ [dseg1*dseg1, -dseg1*dseg2],
+              [-dseg2*dseg1, dseg2*dseg2] ],
+        b  = -[ dseg1, -dseg2 ]*(seg1[0]-seg2[0]),
+        uv = linear_solve(A,b)
+    )
+    !uv ?
+        norm(dseg1)<EPSILON
+          ? norm(dseg2)<EPSILON
+              ? norm(seg1[0]-seg2[0])
+              : point_segment_distance(seg1[0],seg2)
+          : point_segment_distance(seg2[0],seg1) :
+    uv[0]>=0 && uv[0]<=1 ?
+        let( p1 = seg1[0] + uv[0]*dseg1 )
+        uv[1]>=0 && uv[1]<=1
+          ? norm(p1 - (seg2[0] + uv[1]*dseg2) )
+          : min(norm(p1-seg2[0]), norm(p1-seg2[1])) :
+        uv[1]>=0 && uv[1]<=1
+          ? let( p2 = seg2[0] + uv[1]*dseg2 )
+            min(norm(p2-seg1[0]), norm(p2-seg1[1]))
+          : min(
+                norm(seg1[0]-seg2[0]),
+                norm(seg1[0]-seg2[1]),
+                norm(seg1[1]-seg2[0]),
+                norm(seg1[1]-seg2[1])
+            );
 
 
 // Function: line_normal()
@@ -1072,9 +1130,9 @@ function plane_point_nearest_origin(plane) =
     point3d(plane) * plane[3];
 
 
-// Function: distance_from_plane()
+// Function: point_plane_distance()
 // Usage:
-//   distance_from_plane(plane, point)
+//   point_plane_distance(plane, point)
 // Description:
 //   Given a plane as [A,B,C,D] where the cartesian equation for that plane
 //   is Ax+By+Cz=D, determines how far from that plane the given point is.
@@ -1085,7 +1143,7 @@ function plane_point_nearest_origin(plane) =
 // Arguments:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 //   point = The distance evaluation point.
-function distance_from_plane(plane, point) =
+function point_plane_distance(plane, point) =
     assert( _valid_plane(plane), "Invalid input plane." )
     assert( is_vector(point,3), "The point should be a 3D point." )
     let( plane = normalize_plane(plane) )
@@ -1310,7 +1368,7 @@ function points_on_plane(points, plane, eps=EPSILON) =
 //   plane = The [A,B,C,D] coefficients for the first plane equation `Ax+By+Cz=D`.
 //   point = The 3D point to test.
 function in_front_of_plane(plane, point) =
-    distance_from_plane(plane, point) > EPSILON;
+    point_plane_distance(plane, point) > EPSILON;
 
 
 

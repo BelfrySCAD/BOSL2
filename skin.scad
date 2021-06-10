@@ -812,24 +812,30 @@ function _skin_tangent_match(poly1, poly2) =
         newbig = polygon_shift(big, shift),
         repeat_counts = [for(i=[0:len(small)-1]) posmod(cutpts[i]-select(cutpts,i-1),len(big))],
         newsmall = repeat_entries(small,repeat_counts)
-      )
-      assert(len(newsmall)==len(newbig), "Tangent alignment failed, probably because of insufficient points or a concave curve")
-      swap ? [newbig, newsmall] : [newsmall, newbig];
+    )
+    assert(len(newsmall)==len(newbig), "Tangent alignment failed, probably because of insufficient points or a concave curve")
+    swap ? [newbig, newsmall] : [newsmall, newbig];
 
 
 function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
-  let(
-   angles = 
-     [for(i=[0:len(curve)-(closed?1:2)])
-       let( 
-         plane = plane3pt( edge[0], edge[1], curve[i]),
-         tangent = [curve[i], select(curve,i+1)]
-       )
-     plane_line_angle(plane,tangent)],
-   zero_cross = [for(i=[0:len(curve)-(closed?1:2)]) if (sign(angles[i]) != sign(select(angles,i+1))) i],
-   d = [for(i=zero_cross) distance_from_line(edge, curve[i]+curve_offset)]
-  )
-  zero_cross[min_index(d)];
+    let(
+        angles = [
+            for (i = [0:len(curve)-(closed?1:2)])
+            let( 
+                plane = plane3pt( edge[0], edge[1], curve[i]),
+                tangent = [curve[i], select(curve,i+1)]
+            ) plane_line_angle(plane,tangent)
+        ],
+        zero_cross = [
+            for (i = [0:len(curve)-(closed?1:2)])
+            if (sign(angles[i]) != sign(select(angles,i+1)))
+            i
+        ],
+        d = [
+            for (i = zero_cross)
+            point_line_distance(curve[i]+curve_offset, edge)
+        ]
+    ) zero_cross[min_index(d)];
 
 
 // Function: associate_vertices()
