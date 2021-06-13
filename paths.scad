@@ -1109,11 +1109,11 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
 //   path = [ [0, 0, 0], [33, 33, 33], [66, 33, 40], [100, 0, 0], [150,0,0] ];
 //   path_extrude(path) circle(r=10, $fn=6);
 module path_extrude(path, convexity=10, clipsize=100) {
-    function polyquats(path, q=Q_Ident(), v=[0,0,1], i=0) = let(
+    function polyquats(path, q=q_ident(), v=[0,0,1], i=0) = let(
             v2 = path[i+1] - path[i],
             ang = vector_angle(v,v2),
             axis = ang>0.001? unit(cross(v,v2)) : [0,0,1],
-            newq = Q_Mul(Quat(axis, ang), q),
+            newq = q_mul(quat(axis, ang), q),
             dist = norm(v2)
         ) i < (len(path)-2)?
             concat([[dist, newq, ang]], polyquats(path, newq, v2, i+1)) :
@@ -1129,7 +1129,7 @@ module path_extrude(path, convexity=10, clipsize=100) {
         q = pquats[i][1];
         difference() {
             translate(pt1) {
-                Qrot(q) {
+                q_rot(q) {
                     down(clipsize/2/2) {
                         if ((dist+clipsize/2) > 0) {
                             linear_extrude(height=dist+clipsize/2, convexity=convexity) {
@@ -1140,12 +1140,12 @@ module path_extrude(path, convexity=10, clipsize=100) {
                 }
             }
             translate(pt1) {
-                hq = (i > 0)? Q_Slerp(q, pquats[i-1][1], 0.5) : q;
-                Qrot(hq) down(clipsize/2+epsilon) cube(clipsize, center=true);
+                hq = (i > 0)? q_slerp(q, pquats[i-1][1], 0.5) : q;
+                q_rot(hq) down(clipsize/2+epsilon) cube(clipsize, center=true);
             }
             translate(pt2) {
-                hq = (i < ptcount-2)? Q_Slerp(q, pquats[i+1][1], 0.5) : q;
-                Qrot(hq) up(clipsize/2+epsilon) cube(clipsize, center=true);
+                hq = (i < ptcount-2)? q_slerp(q, pquats[i+1][1], 0.5) : q;
+                q_rot(hq) up(clipsize/2+epsilon) cube(clipsize, center=true);
             }
         }
     }
