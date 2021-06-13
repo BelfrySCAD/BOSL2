@@ -1,403 +1,384 @@
 include <../std.scad>
-include <../strings.scad>
 
 
-function rec_cmp(a,b,eps=1e-9) =
-    typeof(a)!=typeof(b)? false :
-    is_num(a)? approx(a,b,eps=eps) :
-    is_list(a)? len(a)==len(b) && all([for (i=idx(a)) rec_cmp(a[i],b[i],eps=eps)]) :
-    a == b;
 
-function Qstandard(q) = sign([for(qi=q) if( ! approx(qi,0)) qi,0 ][0])*q;
+function _q_standard(q) = sign([for(qi=q) if( ! approx(qi,0)) qi,0 ][0])*q;
 
-module verify_f(actual,expected) {
-    if (!rec_cmp(actual,expected)) {
-        echo(str("Expected: ",fmt_float(expected,10)));
-        echo(str("        : ",expected));
-        echo(str("Actual  : ",fmt_float(actual,10)));
-        echo(str("        : ",actual));
-        echo(str("Delta   : ",fmt_float(expected-actual,10)));
-        echo(str("        : ",expected-actual));
-        assert(approx(expected,actual));
-    }
+
+module test_is_quaternion() {
+    assert_approx(is_quaternion([0]),false);
+    assert_approx(is_quaternion([0,0,0,0]),false);
+    assert_approx(is_quaternion([1,0,2,0]),true);
+    assert_approx(is_quaternion([1,0,2,0,0]),false);
 }
+test_is_quaternion();
 
 
-module test_Q_is_quat() {
-    verify_f(Q_is_quat([0]),false);
-    verify_f(Q_is_quat([0,0,0,0]),false);
-    verify_f(Q_is_quat([1,0,2,0]),true);
-    verify_f(Q_is_quat([1,0,2,0,0]),false);
+module test_quat() {
+    assert_approx(quat(UP,0),[0,0,0,1]);
+    assert_approx(quat(FWD,0),[0,0,0,1]);
+    assert_approx(quat(LEFT,0),[0,0,0,1]);
+    assert_approx(quat(UP,45),[0,0,0.3826834324,0.9238795325]);
+    assert_approx(quat(LEFT,45),[-0.3826834324, 0, 0, 0.9238795325]);
+    assert_approx(quat(BACK,45),[0,0.3826834323,0,0.9238795325]);
+    assert_approx(quat(FWD+RIGHT,30),[0.1830127019, -0.1830127019, 0, 0.9659258263]);
 }
-test_Q_is_quat();
+test_quat();
 
 
-module test_Quat() {
-    verify_f(Quat(UP,0),[0,0,0,1]);
-    verify_f(Quat(FWD,0),[0,0,0,1]);
-    verify_f(Quat(LEFT,0),[0,0,0,1]);
-    verify_f(Quat(UP,45),[0,0,0.3826834324,0.9238795325]);
-    verify_f(Quat(LEFT,45),[-0.3826834324, 0, 0, 0.9238795325]);
-    verify_f(Quat(BACK,45),[0,0.3826834323,0,0.9238795325]);
-    verify_f(Quat(FWD+RIGHT,30),[0.1830127019, -0.1830127019, 0, 0.9659258263]);
+module test_quat_x() {
+    assert_approx(quat_x(0),[0,0,0,1]);
+    assert_approx(quat_x(35),[0.3007057995,0,0,0.9537169507]);
+    assert_approx(quat_x(45),[0.3826834324,0,0,0.9238795325]);
 }
-test_Quat();
+test_quat_x();
 
 
-module test_QuatX() {
-    verify_f(QuatX(0),[0,0,0,1]);
-    verify_f(QuatX(35),[0.3007057995,0,0,0.9537169507]);
-    verify_f(QuatX(45),[0.3826834324,0,0,0.9238795325]);
+module test_quat_y() {
+    assert_approx(quat_y(0),[0,0,0,1]);
+    assert_approx(quat_y(35),[0,0.3007057995,0,0.9537169507]);
+    assert_approx(quat_y(45),[0,0.3826834323,0,0.9238795325]);
 }
-test_QuatX();
+test_quat_y();
 
 
-module test_QuatY() {
-    verify_f(QuatY(0),[0,0,0,1]);
-    verify_f(QuatY(35),[0,0.3007057995,0,0.9537169507]);
-    verify_f(QuatY(45),[0,0.3826834323,0,0.9238795325]);
+module test_quat_z() {
+    assert_approx(quat_z(0),[0,0,0,1]);
+    assert_approx(quat_z(36),[0,0,0.3090169944,0.9510565163]);
+    assert_approx(quat_z(45),[0,0,0.3826834324,0.9238795325]);
 }
-test_QuatY();
+test_quat_z();
 
 
-module test_QuatZ() {
-    verify_f(QuatZ(0),[0,0,0,1]);
-    verify_f(QuatZ(36),[0,0,0.3090169944,0.9510565163]);
-    verify_f(QuatZ(45),[0,0,0.3826834324,0.9238795325]);
+module test_quat_xyz() {
+    assert_approx(quat_xyz([0,0,0]), [0,0,0,1]);
+    assert_approx(quat_xyz([30,0,0]), [0.2588190451, 0, 0, 0.9659258263]);
+    assert_approx(quat_xyz([90,0,0]), [0.7071067812, 0, 0, 0.7071067812]);
+    assert_approx(quat_xyz([-270,0,0]), [-0.7071067812, 0, 0, -0.7071067812]);
+    assert_approx(quat_xyz([180,0,0]), [1,0,0,0]);
+    assert_approx(quat_xyz([270,0,0]), [0.7071067812, 0, 0, -0.7071067812]);
+    assert_approx(quat_xyz([-90,0,0]), [-0.7071067812, 0, 0, 0.7071067812]);
+    assert_approx(quat_xyz([360,0,0]), [0,0,0,-1]);
+
+    assert_approx(quat_xyz([0,0,0]), [0,0,0,1]);
+    assert_approx(quat_xyz([0,30,0]), [0, 0.2588190451, 0, 0.9659258263]);
+    assert_approx(quat_xyz([0,90,0]), [0, 0.7071067812, 0, 0.7071067812]);
+    assert_approx(quat_xyz([0,-270,0]), [0, -0.7071067812, 0, -0.7071067812]);
+    assert_approx(quat_xyz([0,180,0]), [0,1,0,0]);
+    assert_approx(quat_xyz([0,270,0]), [0, 0.7071067812, 0, -0.7071067812]);
+    assert_approx(quat_xyz([0,-90,0]), [0, -0.7071067812, 0, 0.7071067812]);
+    assert_approx(quat_xyz([0,360,0]), [0,0,0,-1]);
+
+    assert_approx(quat_xyz([0,0,0]), [0,0,0,1]);
+    assert_approx(quat_xyz([0,0,30]), [0, 0, 0.2588190451, 0.9659258263]);
+    assert_approx(quat_xyz([0,0,90]), [0, 0, 0.7071067812, 0.7071067812]);
+    assert_approx(quat_xyz([0,0,-270]), [0, 0, -0.7071067812, -0.7071067812]);
+    assert_approx(quat_xyz([0,0,180]), [0,0,1,0]);
+    assert_approx(quat_xyz([0,0,270]), [0, 0, 0.7071067812, -0.7071067812]);
+    assert_approx(quat_xyz([0,0,-90]), [0, 0, -0.7071067812, 0.7071067812]);
+    assert_approx(quat_xyz([0,0,360]), [0,0,0,-1]);
+
+    assert_approx(quat_xyz([30,30,30]), [0.1767766953, 0.3061862178, 0.1767766953, 0.9185586535]);
+    assert_approx(quat_xyz([12,34,56]), [-0.04824789229, 0.3036636044, 0.4195145429, 0.8540890495]);
 }
-test_QuatZ();
+test_quat_xyz();
 
 
-module test_QuatXYZ() {
-    verify_f(QuatXYZ([0,0,0]), [0,0,0,1]);
-    verify_f(QuatXYZ([30,0,0]), [0.2588190451, 0, 0, 0.9659258263]);
-    verify_f(QuatXYZ([90,0,0]), [0.7071067812, 0, 0, 0.7071067812]);
-    verify_f(QuatXYZ([-270,0,0]), [-0.7071067812, 0, 0, -0.7071067812]);
-    verify_f(QuatXYZ([180,0,0]), [1,0,0,0]);
-    verify_f(QuatXYZ([270,0,0]), [0.7071067812, 0, 0, -0.7071067812]);
-    verify_f(QuatXYZ([-90,0,0]), [-0.7071067812, 0, 0, 0.7071067812]);
-    verify_f(QuatXYZ([360,0,0]), [0,0,0,-1]);
-
-    verify_f(QuatXYZ([0,0,0]), [0,0,0,1]);
-    verify_f(QuatXYZ([0,30,0]), [0, 0.2588190451, 0, 0.9659258263]);
-    verify_f(QuatXYZ([0,90,0]), [0, 0.7071067812, 0, 0.7071067812]);
-    verify_f(QuatXYZ([0,-270,0]), [0, -0.7071067812, 0, -0.7071067812]);
-    verify_f(QuatXYZ([0,180,0]), [0,1,0,0]);
-    verify_f(QuatXYZ([0,270,0]), [0, 0.7071067812, 0, -0.7071067812]);
-    verify_f(QuatXYZ([0,-90,0]), [0, -0.7071067812, 0, 0.7071067812]);
-    verify_f(QuatXYZ([0,360,0]), [0,0,0,-1]);
-
-    verify_f(QuatXYZ([0,0,0]), [0,0,0,1]);
-    verify_f(QuatXYZ([0,0,30]), [0, 0, 0.2588190451, 0.9659258263]);
-    verify_f(QuatXYZ([0,0,90]), [0, 0, 0.7071067812, 0.7071067812]);
-    verify_f(QuatXYZ([0,0,-270]), [0, 0, -0.7071067812, -0.7071067812]);
-    verify_f(QuatXYZ([0,0,180]), [0,0,1,0]);
-    verify_f(QuatXYZ([0,0,270]), [0, 0, 0.7071067812, -0.7071067812]);
-    verify_f(QuatXYZ([0,0,-90]), [0, 0, -0.7071067812, 0.7071067812]);
-    verify_f(QuatXYZ([0,0,360]), [0,0,0,-1]);
-
-    verify_f(QuatXYZ([30,30,30]), [0.1767766953, 0.3061862178, 0.1767766953, 0.9185586535]);
-    verify_f(QuatXYZ([12,34,56]), [-0.04824789229, 0.3036636044, 0.4195145429, 0.8540890495]);
+module test_q_from_to() {
+    assert_approx(q_mul(q_from_to([1,2,3], [4,5,2]),q_from_to([4,5,2], [1,2,3])), q_ident());
+    assert_approx(q_matrix4(q_from_to([1,2,3], [4,5,2])), rot(from=[1,2,3],to=[4,5,2]));
+    assert_approx(q_rot(q_from_to([1,2,3], -[1,2,3]),[1,2,3]), -[1,2,3]);
+    assert_approx(unit(q_rot(q_from_to([1,2,3],  [4,5,2]),[1,2,3])), unit([4,5,2]));
 }
-test_QuatXYZ();
+test_q_from_to();
 
 
-module test_Q_From_to() {
-    verify_f(Q_Mul(Q_From_to([1,2,3], [4,5,2]),Q_From_to([4,5,2], [1,2,3])), Q_Ident());
-    verify_f(Q_Matrix4(Q_From_to([1,2,3], [4,5,2])), rot(from=[1,2,3],to=[4,5,2]));
-    verify_f(Qrot(Q_From_to([1,2,3], -[1,2,3]),[1,2,3]), -[1,2,3]);
-    verify_f(unit(Qrot(Q_From_to([1,2,3],  [4,5,2]),[1,2,3])), unit([4,5,2]));
+module test_q_ident() {
+    assert_approx(q_ident(), [0,0,0,1]);
 }
-test_Q_From_to();
+test_q_ident();
 
 
-module test_Q_Ident() {
-    verify_f(Q_Ident(), [0,0,0,1]);
+module test_q_add_s() {
+    assert_approx(q_add_s([0,0,0,1],3),[0,0,0,4]);
+    assert_approx(q_add_s([0,0,1,0],3),[0,0,1,3]);
+    assert_approx(q_add_s([0,1,0,0],3),[0,1,0,3]);
+    assert_approx(q_add_s([1,0,0,0],3),[1,0,0,3]);
+    assert_approx(q_add_s(quat(LEFT+FWD,23),1),[-0.1409744184, -0.1409744184, 0, 1.979924705]);
 }
-test_Q_Ident();
+test_q_add_s();
 
 
-module test_Q_Add_S() {
-    verify_f(Q_Add_S([0,0,0,1],3),[0,0,0,4]);
-    verify_f(Q_Add_S([0,0,1,0],3),[0,0,1,3]);
-    verify_f(Q_Add_S([0,1,0,0],3),[0,1,0,3]);
-    verify_f(Q_Add_S([1,0,0,0],3),[1,0,0,3]);
-    verify_f(Q_Add_S(Quat(LEFT+FWD,23),1),[-0.1409744184, -0.1409744184, 0, 1.979924705]);
+module test_q_sub_s() {
+    assert_approx(q_sub_s([0,0,0,1],3),[0,0,0,-2]);
+    assert_approx(q_sub_s([0,0,1,0],3),[0,0,1,-3]);
+    assert_approx(q_sub_s([0,1,0,0],3),[0,1,0,-3]);
+    assert_approx(q_sub_s([1,0,0,0],3),[1,0,0,-3]);
+    assert_approx(q_sub_s(quat(LEFT+FWD,23),1),[-0.1409744184, -0.1409744184, 0, -0.02007529538]);
 }
-test_Q_Add_S();
+test_q_sub_s();
 
 
-module test_Q_Sub_S() {
-    verify_f(Q_Sub_S([0,0,0,1],3),[0,0,0,-2]);
-    verify_f(Q_Sub_S([0,0,1,0],3),[0,0,1,-3]);
-    verify_f(Q_Sub_S([0,1,0,0],3),[0,1,0,-3]);
-    verify_f(Q_Sub_S([1,0,0,0],3),[1,0,0,-3]);
-    verify_f(Q_Sub_S(Quat(LEFT+FWD,23),1),[-0.1409744184, -0.1409744184, 0, -0.02007529538]);
+module test_q_mul_s() {
+    assert_approx(q_mul_s([0,0,0,1],3),[0,0,0,3]);
+    assert_approx(q_mul_s([0,0,1,0],3),[0,0,3,0]);
+    assert_approx(q_mul_s([0,1,0,0],3),[0,3,0,0]);
+    assert_approx(q_mul_s([1,0,0,0],3),[3,0,0,0]);
+    assert_approx(q_mul_s([1,0,0,1],3),[3,0,0,3]);
+    assert_approx(q_mul_s(quat(LEFT+FWD,23),4),[-0.5638976735, -0.5638976735, 0, 3.919698818]);
 }
-test_Q_Sub_S();
+test_q_mul_s();
 
 
-module test_Q_Mul_S() {
-    verify_f(Q_Mul_S([0,0,0,1],3),[0,0,0,3]);
-    verify_f(Q_Mul_S([0,0,1,0],3),[0,0,3,0]);
-    verify_f(Q_Mul_S([0,1,0,0],3),[0,3,0,0]);
-    verify_f(Q_Mul_S([1,0,0,0],3),[3,0,0,0]);
-    verify_f(Q_Mul_S([1,0,0,1],3),[3,0,0,3]);
-    verify_f(Q_Mul_S(Quat(LEFT+FWD,23),4),[-0.5638976735, -0.5638976735, 0, 3.919698818]);
+
+module test_q_div_s() {
+    assert_approx(q_div_s([0,0,0,1],3),[0,0,0,1/3]);
+    assert_approx(q_div_s([0,0,1,0],3),[0,0,1/3,0]);
+    assert_approx(q_div_s([0,1,0,0],3),[0,1/3,0,0]);
+    assert_approx(q_div_s([1,0,0,0],3),[1/3,0,0,0]);
+    assert_approx(q_div_s([1,0,0,1],3),[1/3,0,0,1/3]);
+    assert_approx(q_div_s(quat(LEFT+FWD,23),4),[-0.03524360459, -0.03524360459, 0, 0.2449811762]);
 }
-test_Q_Mul_S();
+test_q_div_s();
 
 
-
-module test_Q_Div_S() {
-    verify_f(Q_Div_S([0,0,0,1],3),[0,0,0,1/3]);
-    verify_f(Q_Div_S([0,0,1,0],3),[0,0,1/3,0]);
-    verify_f(Q_Div_S([0,1,0,0],3),[0,1/3,0,0]);
-    verify_f(Q_Div_S([1,0,0,0],3),[1/3,0,0,0]);
-    verify_f(Q_Div_S([1,0,0,1],3),[1/3,0,0,1/3]);
-    verify_f(Q_Div_S(Quat(LEFT+FWD,23),4),[-0.03524360459, -0.03524360459, 0, 0.2449811762]);
+module test_q_add() {
+    assert_approx(q_add([2,3,4,5],[-1,-1,-1,-1]),[1,2,3,4]);
+    assert_approx(q_add([2,3,4,5],[-3,-3,-3,-3]),[-1,0,1,2]);
+    assert_approx(q_add([2,3,4,5],[0,0,0,0]),[2,3,4,5]);
+    assert_approx(q_add([2,3,4,5],[1,1,1,1]),[3,4,5,6]);
+    assert_approx(q_add([2,3,4,5],[1,0,0,0]),[3,3,4,5]);
+    assert_approx(q_add([2,3,4,5],[0,1,0,0]),[2,4,4,5]);
+    assert_approx(q_add([2,3,4,5],[0,0,1,0]),[2,3,5,5]);
+    assert_approx(q_add([2,3,4,5],[0,0,0,1]),[2,3,4,6]);
+    assert_approx(q_add([2,3,4,5],[2,1,2,1]),[4,4,6,6]);
+    assert_approx(q_add([2,3,4,5],[1,2,1,2]),[3,5,5,7]);
 }
-test_Q_Div_S();
+test_q_add();
 
 
-module test_Q_Add() {
-    verify_f(Q_Add([2,3,4,5],[-1,-1,-1,-1]),[1,2,3,4]);
-    verify_f(Q_Add([2,3,4,5],[-3,-3,-3,-3]),[-1,0,1,2]);
-    verify_f(Q_Add([2,3,4,5],[0,0,0,0]),[2,3,4,5]);
-    verify_f(Q_Add([2,3,4,5],[1,1,1,1]),[3,4,5,6]);
-    verify_f(Q_Add([2,3,4,5],[1,0,0,0]),[3,3,4,5]);
-    verify_f(Q_Add([2,3,4,5],[0,1,0,0]),[2,4,4,5]);
-    verify_f(Q_Add([2,3,4,5],[0,0,1,0]),[2,3,5,5]);
-    verify_f(Q_Add([2,3,4,5],[0,0,0,1]),[2,3,4,6]);
-    verify_f(Q_Add([2,3,4,5],[2,1,2,1]),[4,4,6,6]);
-    verify_f(Q_Add([2,3,4,5],[1,2,1,2]),[3,5,5,7]);
+module test_q_sub() {
+    assert_approx(q_sub([2,3,4,5],[-1,-1,-1,-1]),[3,4,5,6]);
+    assert_approx(q_sub([2,3,4,5],[-3,-3,-3,-3]),[5,6,7,8]);
+    assert_approx(q_sub([2,3,4,5],[0,0,0,0]),[2,3,4,5]);
+    assert_approx(q_sub([2,3,4,5],[1,1,1,1]),[1,2,3,4]);
+    assert_approx(q_sub([2,3,4,5],[1,0,0,0]),[1,3,4,5]);
+    assert_approx(q_sub([2,3,4,5],[0,1,0,0]),[2,2,4,5]);
+    assert_approx(q_sub([2,3,4,5],[0,0,1,0]),[2,3,3,5]);
+    assert_approx(q_sub([2,3,4,5],[0,0,0,1]),[2,3,4,4]);
+    assert_approx(q_sub([2,3,4,5],[2,1,2,1]),[0,2,2,4]);
+    assert_approx(q_sub([2,3,4,5],[1,2,1,2]),[1,1,3,3]);
 }
-test_Q_Add();
+test_q_sub();
 
 
-module test_Q_Sub() {
-    verify_f(Q_Sub([2,3,4,5],[-1,-1,-1,-1]),[3,4,5,6]);
-    verify_f(Q_Sub([2,3,4,5],[-3,-3,-3,-3]),[5,6,7,8]);
-    verify_f(Q_Sub([2,3,4,5],[0,0,0,0]),[2,3,4,5]);
-    verify_f(Q_Sub([2,3,4,5],[1,1,1,1]),[1,2,3,4]);
-    verify_f(Q_Sub([2,3,4,5],[1,0,0,0]),[1,3,4,5]);
-    verify_f(Q_Sub([2,3,4,5],[0,1,0,0]),[2,2,4,5]);
-    verify_f(Q_Sub([2,3,4,5],[0,0,1,0]),[2,3,3,5]);
-    verify_f(Q_Sub([2,3,4,5],[0,0,0,1]),[2,3,4,4]);
-    verify_f(Q_Sub([2,3,4,5],[2,1,2,1]),[0,2,2,4]);
-    verify_f(Q_Sub([2,3,4,5],[1,2,1,2]),[1,1,3,3]);
+module test_q_mul() {
+    assert_approx(q_mul(quat_z(30),quat_x(57)),[0.4608999698, 0.1234977747, 0.2274546059, 0.8488721457]);
+    assert_approx(q_mul(quat_y(30),quat_z(23)),[0.05160021841, 0.2536231763, 0.1925746368, 0.94653458]);
 }
-test_Q_Sub();
+test_q_mul();
 
 
-module test_Q_Mul() {
-    verify_f(Q_Mul(QuatZ(30),QuatX(57)),[0.4608999698, 0.1234977747, 0.2274546059, 0.8488721457]);
-    verify_f(Q_Mul(QuatY(30),QuatZ(23)),[0.05160021841, 0.2536231763, 0.1925746368, 0.94653458]);
+module test_q_cumulative() {
+    assert_approx(q_cumulative([quat_z(30),quat_x(57),quat_y(18)]),[[0, 0, 0.2588190451, 0.9659258263], [0.4608999698, -0.1234977747, 0.2274546059, 0.8488721457], [0.4908072659, 0.01081554785, 0.1525536221, 0.8577404293]]);
 }
-test_Q_Mul();
+test_q_cumulative();
 
 
-module test_Q_Cumulative() {
-    verify_f(Q_Cumulative([QuatZ(30),QuatX(57),QuatY(18)]),[[0, 0, 0.2588190451, 0.9659258263], [0.4608999698, -0.1234977747, 0.2274546059, 0.8488721457], [0.4908072659, 0.01081554785, 0.1525536221, 0.8577404293]]);
+module test_q_dot() {
+    assert_approx(q_dot(quat_z(30),quat_x(57)),0.8488721457);
+    assert_approx(q_dot(quat_y(30),quat_z(23)),0.94653458);
 }
-test_Q_Cumulative();
+test_q_dot();
 
 
-module test_Q_Dot() {
-    verify_f(Q_Dot(QuatZ(30),QuatX(57)),0.8488721457);
-    verify_f(Q_Dot(QuatY(30),QuatZ(23)),0.94653458);
+module test_q_neg() {
+    assert_approx(q_neg([1,0,0,1]),[-1,0,0,-1]);
+    assert_approx(q_neg([0,1,1,0]),[0,-1,-1,0]);
+    assert_approx(q_neg(quat_xyz([23,45,67])),[0.0533818345,-0.4143703268,-0.4360652669,-0.7970537592]);
 }
-test_Q_Dot();
+test_q_neg();
 
 
-module test_Q_Neg() {
-    verify_f(Q_Neg([1,0,0,1]),[-1,0,0,-1]);
-    verify_f(Q_Neg([0,1,1,0]),[0,-1,-1,0]);
-    verify_f(Q_Neg(QuatXYZ([23,45,67])),[0.0533818345,-0.4143703268,-0.4360652669,-0.7970537592]);
+module test_q_conj() {
+    assert_approx(q_conj([1,0,0,1]),[-1,0,0,1]);
+    assert_approx(q_conj([0,1,1,0]),[0,-1,-1,0]);
+    assert_approx(q_conj(quat_xyz([23,45,67])),[0.0533818345, -0.4143703268, -0.4360652669, 0.7970537592]);
 }
-test_Q_Neg();
+test_q_conj();
 
 
-module test_Q_Conj() {
-    verify_f(Q_Conj([1,0,0,1]),[-1,0,0,1]);
-    verify_f(Q_Conj([0,1,1,0]),[0,-1,-1,0]);
-    verify_f(Q_Conj(QuatXYZ([23,45,67])),[0.0533818345, -0.4143703268, -0.4360652669, 0.7970537592]);
+module test_q_inverse() {
+
+    assert_approx(q_inverse([1,0,0,1]),[-1,0,0,1]/sqrt(2));
+    assert_approx(q_inverse([0,1,1,0]),[0,-1,-1,0]/sqrt(2));
+    assert_approx(q_inverse(quat_xyz([23,45,67])),q_conj(quat_xyz([23,45,67])));
+    assert_approx(q_mul(q_inverse(quat_xyz([23,45,67])),quat_xyz([23,45,67])),q_ident());
 }
-test_Q_Conj();
+test_q_inverse();
 
 
-module test_Q_Inverse() {
-
-    verify_f(Q_Inverse([1,0,0,1]),[-1,0,0,1]/sqrt(2));
-    verify_f(Q_Inverse([0,1,1,0]),[0,-1,-1,0]/sqrt(2));
-    verify_f(Q_Inverse(QuatXYZ([23,45,67])),Q_Conj(QuatXYZ([23,45,67])));
-    verify_f(Q_Mul(Q_Inverse(QuatXYZ([23,45,67])),QuatXYZ([23,45,67])),Q_Ident());
+module test_q_Norm() {
+    assert_approx(q_norm([1,0,0,1]),1.414213562);
+    assert_approx(q_norm([0,1,1,0]),1.414213562);
+    assert_approx(q_norm(quat_xyz([23,45,67])),1);
 }
-test_Q_Inverse();
+test_q_Norm();
 
 
-module test_Q_Norm() {
-    verify_f(Q_Norm([1,0,0,1]),1.414213562);
-    verify_f(Q_Norm([0,1,1,0]),1.414213562);
-    verify_f(Q_Norm(QuatXYZ([23,45,67])),1);
+module test_q_normalize() {
+    assert_approx(q_normalize([1,0,0,1]),[0.7071067812, 0, 0, 0.7071067812]);
+    assert_approx(q_normalize([0,1,1,0]),[0, 0.7071067812, 0.7071067812, 0]);
+    assert_approx(q_normalize(quat_xyz([23,45,67])),[-0.0533818345, 0.4143703268, 0.4360652669, 0.7970537592]);
 }
-test_Q_Norm();
+test_q_normalize();
 
 
-module test_Q_Normalize() {
-    verify_f(Q_Normalize([1,0,0,1]),[0.7071067812, 0, 0, 0.7071067812]);
-    verify_f(Q_Normalize([0,1,1,0]),[0, 0.7071067812, 0.7071067812, 0]);
-    verify_f(Q_Normalize(QuatXYZ([23,45,67])),[-0.0533818345, 0.4143703268, 0.4360652669, 0.7970537592]);
+module test_q_dist() {
+    assert_approx(q_dist(quat_xyz([23,45,67]),quat_xyz([23,45,67])),0);
+    assert_approx(q_dist(quat_xyz([23,45,67]),quat_xyz([12,34,56])),0.1257349854);
 }
-test_Q_Normalize();
+test_q_dist();
 
 
-module test_Q_Dist() {
-    verify_f(Q_Dist(QuatXYZ([23,45,67]),QuatXYZ([23,45,67])),0);
-    verify_f(Q_Dist(QuatXYZ([23,45,67]),QuatXYZ([12,34,56])),0.1257349854);
+module test_q_slerp() {
+    assert_approx(q_slerp(quat_x(45),quat_y(30),0.0),quat_x(45));
+    assert_approx(q_slerp(quat_x(45),quat_y(30),0.5),[0.1967063121, 0.1330377423, 0, 0.9713946602]);
+    assert_approx(q_slerp(quat_x(45),quat_y(30),1.0),quat_y(30));
 }
-test_Q_Dist();
+test_q_slerp();
 
 
-module test_Q_Slerp() {
-    verify_f(Q_Slerp(QuatX(45),QuatY(30),0.0),QuatX(45));
-    verify_f(Q_Slerp(QuatX(45),QuatY(30),0.5),[0.1967063121, 0.1330377423, 0, 0.9713946602]);
-    verify_f(Q_Slerp(QuatX(45),QuatY(30),1.0),QuatY(30));
+module test_q_matrix3() {
+    assert_approx(q_matrix3(quat_z(37)),rot(37,planar=true));
+    assert_approx(q_matrix3(quat_z(-49)),rot(-49,planar=true));
 }
-test_Q_Slerp();
+test_q_matrix3();
 
 
-module test_Q_Matrix3() {
-    verify_f(Q_Matrix3(QuatZ(37)),rot(37,planar=true));
-    verify_f(Q_Matrix3(QuatZ(-49)),rot(-49,planar=true));
+module test_q_matrix4() {
+    assert_approx(q_matrix4(quat_z(37)),rot(37));
+    assert_approx(q_matrix4(quat_z(-49)),rot(-49));
+    assert_approx(q_matrix4(quat_x(37)),rot([37,0,0]));
+    assert_approx(q_matrix4(quat_y(37)),rot([0,37,0]));
+    assert_approx(q_matrix4(quat_xyz([12,34,56])),rot([12,34,56]));
 }
-test_Q_Matrix3();
+test_q_matrix4();
 
 
-module test_Q_Matrix4() {
-    verify_f(Q_Matrix4(QuatZ(37)),rot(37));
-    verify_f(Q_Matrix4(QuatZ(-49)),rot(-49));
-    verify_f(Q_Matrix4(QuatX(37)),rot([37,0,0]));
-    verify_f(Q_Matrix4(QuatY(37)),rot([0,37,0]));
-    verify_f(Q_Matrix4(QuatXYZ([12,34,56])),rot([12,34,56]));
+module test_q_axis() {
+    assert_approx(q_axis(quat_x(37)),RIGHT);
+    assert_approx(q_axis(quat_x(-37)),LEFT);
+    assert_approx(q_axis(quat_y(37)),BACK);
+    assert_approx(q_axis(quat_y(-37)),FWD);
+    assert_approx(q_axis(quat_z(37)),UP);
+    assert_approx(q_axis(quat_z(-37)),DOWN);
 }
-test_Q_Matrix4();
+test_q_axis();
 
 
-module test_Q_Axis() {
-    verify_f(Q_Axis(QuatX(37)),RIGHT);
-    verify_f(Q_Axis(QuatX(-37)),LEFT);
-    verify_f(Q_Axis(QuatY(37)),BACK);
-    verify_f(Q_Axis(QuatY(-37)),FWD);
-    verify_f(Q_Axis(QuatZ(37)),UP);
-    verify_f(Q_Axis(QuatZ(-37)),DOWN);
+module test_q_angle() {
+    assert_approx(q_angle(quat_x(0)),0);
+    assert_approx(q_angle(quat_y(0)),0);
+    assert_approx(q_angle(quat_z(0)),0);
+    assert_approx(q_angle(quat_x(37)),37);
+    assert_approx(q_angle(quat_x(-37)),37);
+    assert_approx(q_angle(quat_y(37)),37);
+    assert_approx(q_angle(quat_y(-37)),37);
+    assert_approx(q_angle(quat_z(37)),37);
+    assert_approx(q_angle(quat_z(-37)),37);
+
+    assert_approx(q_angle(quat_z(-37),quat_z(-37)), 0);
+    assert_approx(q_angle(quat_z( 37.123),quat_z(-37.123)), 74.246);
+    assert_approx(q_angle(quat_x( 37),quat_y(-37)), 51.86293283);
 }
-test_Q_Axis();
+test_q_angle();
 
 
-module test_Q_Angle() {
-    verify_f(Q_Angle(QuatX(0)),0);
-    verify_f(Q_Angle(QuatY(0)),0);
-    verify_f(Q_Angle(QuatZ(0)),0);
-    verify_f(Q_Angle(QuatX(37)),37);
-    verify_f(Q_Angle(QuatX(-37)),37);
-    verify_f(Q_Angle(QuatY(37)),37);
-    verify_f(Q_Angle(QuatY(-37)),37);
-    verify_f(Q_Angle(QuatZ(37)),37);
-    verify_f(Q_Angle(QuatZ(-37)),37);
-
-    verify_f(Q_Angle(QuatZ(-37),QuatZ(-37)), 0);
-    verify_f(Q_Angle(QuatZ( 37.123),QuatZ(-37.123)), 74.246);
-    verify_f(Q_Angle(QuatX( 37),QuatY(-37)), 51.86293283);
+module test_q_rot() {
+    assert_approx(q_rot(quat_xyz([12,34,56])),rot([12,34,56]));
+    assert_approx(q_rot(quat_xyz([12,34,56]),p=[2,3,4]),rot([12,34,56],p=[2,3,4]));
+    assert_approx(q_rot(quat_xyz([12,34,56]),p=[[2,3,4],[4,9,6]]),rot([12,34,56],p=[[2,3,4],[4,9,6]]));
 }
-test_Q_Angle();
+test_q_rot();
 
 
-module test_Qrot() {
-    verify_f(Qrot(QuatXYZ([12,34,56])),rot([12,34,56]));
-    verify_f(Qrot(QuatXYZ([12,34,56]),p=[2,3,4]),rot([12,34,56],p=[2,3,4]));
-    verify_f(Qrot(QuatXYZ([12,34,56]),p=[[2,3,4],[4,9,6]]),rot([12,34,56],p=[[2,3,4],[4,9,6]]));
+module test_q_rotation() {
+    assert_approx(_q_standard(q_rotation(q_matrix3(quat([12,34,56],33)))),_q_standard(quat([12,34,56],33)));
+    assert_approx(q_matrix3(q_rotation(q_matrix3(quat_xyz([12,34,56])))),
+             q_matrix3(quat_xyz([12,34,56])));
 }
-test_Qrot();
+test_q_rotation();
 
 
-module test_Q_Rotation() {
-    verify_f(Qstandard(Q_Rotation(Q_Matrix3(Quat([12,34,56],33)))),Qstandard(Quat([12,34,56],33)));
-    verify_f(Q_Matrix3(Q_Rotation(Q_Matrix3(QuatXYZ([12,34,56])))),
-             Q_Matrix3(QuatXYZ([12,34,56])));
-}
-test_Q_Rotation();
+module test_q_rotation_path() {
+    assert_approx(q_rotation_path(quat_x(135), 5, quat_y(13.5))[0] , q_matrix4(quat_x(135)));
+    assert_approx(q_rotation_path(quat_x(135), 11, quat_y(13.5))[11] , yrot(13.5));
+    assert_approx(q_rotation_path(quat_x(135), 16, quat_y(13.5))[8] , q_rotation_path(quat_x(135), 8, quat_y(13.5))[4]);
+    assert_approx(q_rotation_path(quat_x(135), 16, quat_y(13.5))[7] , 
+             q_rotation_path(quat_y(13.5),16, quat_x(135))[9]);
 
-
-module test_Q_Rotation_path() {
-    
-    verify_f(Q_Rotation_path(QuatX(135), 5, QuatY(13.5))[0] , Q_Matrix4(QuatX(135)));
-    verify_f(Q_Rotation_path(QuatX(135), 11, QuatY(13.5))[11] , yrot(13.5));
-    verify_f(Q_Rotation_path(QuatX(135), 16, QuatY(13.5))[8] , Q_Rotation_path(QuatX(135), 8, QuatY(13.5))[4]);
-    verify_f(Q_Rotation_path(QuatX(135), 16, QuatY(13.5))[7] , 
-             Q_Rotation_path(QuatY(13.5),16, QuatX(135))[9]);
-
-    verify_f(Q_Rotation_path(QuatX(11), 5)[0] , xrot(11));
-    verify_f(Q_Rotation_path(QuatX(11), 5)[4] , xrot(55));
+    assert_approx(q_rotation_path(quat_x(11), 5)[0] , xrot(11));
+    assert_approx(q_rotation_path(quat_x(11), 5)[4] , xrot(55));
 
 }
-test_Q_Rotation_path();
+test_q_rotation_path();
 
 
-module test_Q_Nlerp() {
-    verify_f(Q_Nlerp(QuatX(45),QuatY(30),0.0),QuatX(45));
-    verify_f(Q_Nlerp(QuatX(45),QuatY(30),0.5),[0.1967063121, 0.1330377423, 0, 0.9713946602]);
-    verify_f(Q_Rotation_path(QuatX(135), 16, QuatY(13.5))[8] , Q_Matrix4(Q_Nlerp(QuatX(135), QuatY(13.5),0.5)));
-    verify_f(Q_Nlerp(QuatX(45),QuatY(30),1.0),QuatY(30));
+module test_q_nlerp() {
+    assert_approx(q_nlerp(quat_x(45),quat_y(30),0.0),quat_x(45));
+    assert_approx(q_nlerp(quat_x(45),quat_y(30),0.5),[0.1967063121, 0.1330377423, 0, 0.9713946602]);
+    assert_approx(q_rotation_path(quat_x(135), 16, quat_y(13.5))[8] , q_matrix4(q_nlerp(quat_x(135), quat_y(13.5),0.5)));
+    assert_approx(q_nlerp(quat_x(45),quat_y(30),1.0),quat_y(30));
 }
-test_Q_Nlerp();
+test_q_nlerp();
 
 
-module test_Q_Squad() {
-    verify_f(Q_Squad(QuatX(45),QuatZ(30),QuatX(90),QuatY(30),0.0),QuatX(45));
-    verify_f(Q_Squad(QuatX(45),QuatZ(30),QuatX(90),QuatY(30),1.0),QuatY(30));
-    verify_f(Q_Squad(QuatX(0),QuatX(30),QuatX(90),QuatX(120),0.5),
-              Q_Slerp(QuatX(0),QuatX(120),0.5));
-    verify_f(Q_Squad(QuatY(0),QuatY(0),QuatX(120),QuatX(120),0.3),
-              Q_Slerp(QuatY(0),QuatX(120),0.3));
+module test_q_squad() {
+    assert_approx(q_squad(quat_x(45),quat_z(30),quat_x(90),quat_y(30),0.0),quat_x(45));
+    assert_approx(q_squad(quat_x(45),quat_z(30),quat_x(90),quat_y(30),1.0),quat_y(30));
+    assert_approx(q_squad(quat_x(0),quat_x(30),quat_x(90),quat_x(120),0.5),
+              q_slerp(quat_x(0),quat_x(120),0.5));
+    assert_approx(q_squad(quat_y(0),quat_y(0),quat_x(120),quat_x(120),0.3),
+              q_slerp(quat_y(0),quat_x(120),0.3));
 }
-test_Q_Squad();
+test_q_squad();
 
 
-module test_Q_exp() {
-   verify_f(Q_exp(Q_Ident()), exp(1)*Q_Ident()); 
-   verify_f(Q_exp([0,0,0,33.7]), exp(33.7)*Q_Ident());
-   verify_f(Q_exp(Q_ln(Q_Ident())), Q_Ident());
-   verify_f(Q_exp(Q_ln([1,2,3,0])), [1,2,3,0]);
-   verify_f(Q_exp(Q_ln(QuatXYZ([31,27,34]))), QuatXYZ([31,27,34]));
-   let(q=QuatXYZ([12,23,34])) 
-     verify_f(Q_exp(q+Q_Inverse(q)),Q_Mul(Q_exp(q),Q_exp(Q_Inverse(q))));
+module test_q_exp() {
+   assert_approx(q_exp(q_ident()), exp(1)*q_ident()); 
+   assert_approx(q_exp([0,0,0,33.7]), exp(33.7)*q_ident());
+   assert_approx(q_exp(q_ln(q_ident())), q_ident());
+   assert_approx(q_exp(q_ln([1,2,3,0])), [1,2,3,0]);
+   assert_approx(q_exp(q_ln(quat_xyz([31,27,34]))), quat_xyz([31,27,34]));
+   let(q=quat_xyz([12,23,34])) 
+     assert_approx(q_exp(q+q_inverse(q)),q_mul(q_exp(q),q_exp(q_inverse(q))));
 
 }
-test_Q_exp();
+test_q_exp();
 
 
-module test_Q_ln() {
-   verify_f(Q_ln([1,2,3,0]),  [24.0535117721, 48.1070235442, 72.1605353164, 1.31952866481]); 
-   verify_f(Q_ln(Q_Ident()), [0,0,0,0]); 
-   verify_f(Q_ln(5.5*Q_Ident()), [0,0,0,ln(5.5)]); 
-   verify_f(Q_ln(Q_exp(QuatXYZ([13,37,43]))), QuatXYZ([13,37,43]));
-   verify_f(Q_ln(QuatXYZ([12,23,34]))+Q_ln(Q_Inverse(QuatXYZ([12,23,34]))), [0,0,0,0]);
+module test_q_ln() {
+   assert_approx(q_ln([1,2,3,0]),  [24.0535117721, 48.1070235442, 72.1605353164, 1.31952866481]); 
+   assert_approx(q_ln(q_ident()), [0,0,0,0]); 
+   assert_approx(q_ln(5.5*q_ident()), [0,0,0,ln(5.5)]); 
+   assert_approx(q_ln(q_exp(quat_xyz([13,37,43]))), quat_xyz([13,37,43]));
+   assert_approx(q_ln(quat_xyz([12,23,34]))+q_ln(q_inverse(quat_xyz([12,23,34]))), [0,0,0,0]);
 } 
-test_Q_ln();
+test_q_ln();
 
 
-module test_Q_pow() {
-    q = Quat([1,2,3],77);
-    verify_f(Q_pow(q,1), q);
-    verify_f(Q_pow(q,0), Q_Ident());
-    verify_f(Q_pow(q,-1), Q_Inverse(q));
-    verify_f(Q_pow(q,2), Q_Mul(q,q));
-    verify_f(Q_pow(q,3), Q_Mul(q,Q_pow(q,2)));
-    verify_f(Q_Mul(Q_pow(q,0.456),Q_pow(q,0.544)), q);
-    verify_f(Q_Mul(Q_pow(q,0.335),Q_Mul(Q_pow(q,.552),Q_pow(q,.113))), q);
+module test_q_pow() {
+    q = quat([1,2,3],77);
+    assert_approx(q_pow(q,1), q);
+    assert_approx(q_pow(q,0), q_ident());
+    assert_approx(q_pow(q,-1), q_inverse(q));
+    assert_approx(q_pow(q,2), q_mul(q,q));
+    assert_approx(q_pow(q,3), q_mul(q,q_pow(q,2)));
+    assert_approx(q_mul(q_pow(q,0.456),q_pow(q,0.544)), q);
+    assert_approx(q_mul(q_pow(q,0.335),q_mul(q_pow(q,.552),q_pow(q,.113))), q);
 }
-test_Q_pow();
+test_q_pow();
 
 
 
