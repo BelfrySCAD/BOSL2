@@ -1461,7 +1461,7 @@ function bezier_patch_flat(size=[100,100], N=4, spin=0, orient=UP, trans=[0,0,0]
         patch = [
             for (x=[0:1:N]) [
                 for (y=[0:1:N])
-                vmul(point3d(size), [x/N-0.5, 0.5-y/N, 0])
+                v_mul(point3d(size), [x/N-0.5, 0.5-y/N, 0])
             ]
         ],
         m = move(trans) * rot(a=spin, from=UP, to=orient)

@@ -111,7 +111,7 @@ module test_scale() {
     for (val=vals) {
         assert_equal(scale(point2d(val)), [[val.x,0,0],[0,val.y,0],[0,0,1]]);
         assert_equal(scale(val), [[val.x,0,0,0],[0,val.y,0,0],[0,0,val.z,0],[0,0,0,1]]);
-        assert_equal(scale(val, p=[1,2,3]), vmul([1,2,3], val));
+        assert_equal(scale(val, p=[1,2,3]), v_mul([1,2,3], val));
         scale(val) nil();
     }
     assert_equal(scale(3), [[3,0,0,0],[0,3,0,0],[0,0,3,0],[0,0,0,1]]);
@@ -122,7 +122,7 @@ module test_scale() {
     assert_equal(scale([2,3], p=square(1)), square([2,3]));
     assert_equal(scale([2,2], cp=[0.5,0.5], p=square(1)), move([-0.5,-0.5], p=square([2,2])));
     assert_equal(scale([2,3,4], p=cb), cube([2,3,4]));
-    assert_equal(scale([-2,-3,-4], p=cb), [[for (p=cb[0]) vmul(p,[-2,-3,-4])], [for (f=cb[1]) reverse(f)]]);
+    assert_equal(scale([-2,-3,-4], p=cb), [[for (p=cb[0]) v_mul(p,[-2,-3,-4])], [for (f=cb[1]) reverse(f)]]);
     // Verify that module at least doesn't crash.
     scale(-5) scale(5) nil();
 }
@@ -289,7 +289,7 @@ module test_rot() {
         for (vec2 = vecs2d) {
             assert_equal(
                 rot(from=vec1, to=vec2, p=pts2d, planar=true),
-                apply(affine2d_zrot(vang(vec2)-vang(vec1)), pts2d),
+                apply(affine2d_zrot(v_theta(vec2)-v_theta(vec1)), pts2d),
                 info=str(
                     "from = ", vec1, ", ",
                     "to = ", vec2, ", ",

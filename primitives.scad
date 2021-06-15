@@ -139,7 +139,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
             [-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1],
         ]/2,
         verts = is_num(size)? unscaled * size :
-            is_vector(size,3)? [for (p=unscaled) vmul(p,size)] :
+            is_vector(size,3)? [for (p=unscaled) v_mul(p,size)] :
             assert(is_num(size) || is_vector(size,3)),
         faces = [
             [0,1,2], [0,2,3],  //BOTTOM

@@ -11,7 +11,7 @@
 
 // Function: is_vector()
 // Usage:
-//   is_vector(v, [length]);
+//   is_vector(v, <length>, ...);
 // Description:
 //   Returns true if v is a list of finite numbers.
 // Arguments:
@@ -42,20 +42,17 @@ function is_vector(v, length, zero, all_nonzero=false, eps=EPSILON) =
     && (!all_nonzero || all_nonzero(v)) ;
 
 
-// Function: vang()
+// Function: v_theta()
 // Usage:
-//   theta = vang([X,Y]);
-//   theta_phi = vang([X,Y,Z]);
+//   theta = v_theta([X,Y]);
 // Description:
-//   Given a 2D vector, returns the angle in degrees counter-clockwise from X+ on the XY plane.
-//   Given a 3D vector, returns [THETA,PHI] where THETA is the number of degrees counter-clockwise from X+ on the XY plane, and PHI is the number of degrees up from the X+ axis along the XZ plane.
-function vang(v) =
+//   Given a vector, returns the angle in degrees counter-clockwise from X+ on the XY plane.
+function v_theta(v) =
     assert( is_vector(v,2) || is_vector(v,3) , "Invalid vector")
-    len(v)==2? atan2(v.y,v.x) :
-    let(res=xyz_to_spherical(v)) [res[1], 90-res[2]];
+    atan2(v.y,v.x);
 
 
-// Function: vmul()
+// Function: v_mul()
 // Description:
 //   Element-wise multiplication.  Multiplies each element of `v1` by the corresponding element of `v2`.
 //   Both `v1` and `v2` must be the same length.  Returns a vector of the products.
@@ -63,13 +60,13 @@ function vang(v) =
 //   v1 = The first vector.
 //   v2 = The second vector.
 // Example:
-//   vmul([3,4,5], [8,7,6]);  // Returns [24, 28, 30]
-function vmul(v1, v2) = 
+//   v_mul([3,4,5], [8,7,6]);  // Returns [24, 28, 30]
+function v_mul(v1, v2) = 
     assert( is_list(v1) && is_list(v2) && len(v1)==len(v2), "Incompatible input")
     [for (i = [0:1:len(v1)-1]) v1[i]*v2[i]];
     
 
-// Function: vdiv()
+// Function: v_div()
 // Description:
 //   Element-wise vector division.  Divides each element of vector `v1` by
 //   the corresponding element of vector `v2`.  Returns a vector of the quotients.
@@ -77,35 +74,35 @@ function vmul(v1, v2) =
 //   v1 = The first vector.
 //   v2 = The second vector.
 // Example:
-//   vdiv([24,28,30], [8,7,6]);  // Returns [3, 4, 5]
-function vdiv(v1, v2) = 
+//   v_div([24,28,30], [8,7,6]);  // Returns [3, 4, 5]
+function v_div(v1, v2) = 
     assert( is_vector(v1) && is_vector(v2,len(v1)), "Incompatible vectors")
     [for (i = [0:1:len(v1)-1]) v1[i]/v2[i]];
 
 
-// Function: vabs()
+// Function: v_abs()
 // Description: Returns a vector of the absolute value of each element of vector `v`.
 // Arguments:
 //   v = The vector to get the absolute values of.
 // Example:
-//   vabs([-1,3,-9]);  // Returns: [1,3,9]
-function vabs(v) =
+//   v_abs([-1,3,-9]);  // Returns: [1,3,9]
+function v_abs(v) =
     assert( is_vector(v), "Invalid vector" ) 
     [for (x=v) abs(x)];
 
 
-// Function: vfloor()
+// Function: v_floor()
 // Description:
 //   Returns the given vector after performing a `floor()` on all items.
-function vfloor(v) =
+function v_floor(v) =
     assert( is_vector(v), "Invalid vector" ) 
     [for (x=v) floor(x)];
 
 
-// Function: vceil()
+// Function: v_ceil()
 // Description:
 //   Returns the given vector after performing a `ceil()` on all items.
-function vceil(v) =
+function v_ceil(v) =
     assert( is_vector(v), "Invalid vector" ) 
     [for (x=v) ceil(x)];
 
@@ -213,7 +210,7 @@ function vector_axis(v1,v2=undef,v3=undef) =
               w1 = point3d(v1/norm(v1)),
               w2 = point3d(v2/norm(v2)),
               w3 = (norm(w1-w2) > eps && norm(w1+w2) > eps) ? w2 
-                   : (norm(vabs(w2)-UP) > eps)? UP 
+                   : (norm(v_abs(w2)-UP) > eps)? UP 
                    : RIGHT
             ) unit(cross(w1,w3));
 

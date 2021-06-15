@@ -32,66 +32,67 @@ module test_is_vector() {
 test_is_vector();
 
 
-module test_vfloor() {
-    assert_equal(vfloor([2.0, 3.14, 18.9, 7]), [2,3,18,7]);
-    assert_equal(vfloor([-2.0, -3.14, -18.9, -7]), [-2,-4,-19,-7]);
+module test_v_floor() {
+    assert_equal(v_floor([2.0, 3.14, 18.9, 7]), [2,3,18,7]);
+    assert_equal(v_floor([-2.0, -3.14, -18.9, -7]), [-2,-4,-19,-7]);
 }
-test_vfloor();
+test_v_floor();
 
 
-module test_vceil() {
-    assert_equal(vceil([2.0, 3.14, 18.9, 7]), [2,4,19,7]);
-    assert_equal(vceil([-2.0, -3.14, -18.9, -7]), [-2,-3,-18,-7]);
+module test_v_ceil() {
+    assert_equal(v_ceil([2.0, 3.14, 18.9, 7]), [2,4,19,7]);
+    assert_equal(v_ceil([-2.0, -3.14, -18.9, -7]), [-2,-3,-18,-7]);
 }
-test_vceil();
+test_v_ceil();
 
 
-module test_vmul() {
-    assert_equal(vmul([3,4,5], [8,7,6]), [24,28,30]);
-    assert_equal(vmul([1,2,3], [4,5,6]), [4,10,18]);
-    assert_equal(vmul([[1,2,3],[4,5,6],[7,8,9]], [[4,5,6],[3,2,1],[5,9,3]]), [32,28,134]);
+module test_v_mul() {
+    assert_equal(v_mul([3,4,5], [8,7,6]), [24,28,30]);
+    assert_equal(v_mul([1,2,3], [4,5,6]), [4,10,18]);
+    assert_equal(v_mul([[1,2,3],[4,5,6],[7,8,9]], [[4,5,6],[3,2,1],[5,9,3]]), [32,28,134]);
 }
-test_vmul();
+test_v_mul();
 
 
-module test_vdiv() {
-    assert(vdiv([24,28,30], [8,7,6]) == [3, 4, 5]);
+module test_v_div() {
+    assert(v_div([24,28,30], [8,7,6]) == [3, 4, 5]);
 }
-test_vdiv();
+test_v_div();
 
 
-module test_vabs() {
-    assert(vabs([2,4,8]) == [2,4,8]);
-    assert(vabs([-2,-4,-8]) == [2,4,8]);
-    assert(vabs([-2,4,8]) == [2,4,8]);
-    assert(vabs([2,-4,8]) == [2,4,8]);
-    assert(vabs([2,4,-8]) == [2,4,8]);
+module test_v_abs() {
+    assert(v_abs([2,4,8]) == [2,4,8]);
+    assert(v_abs([-2,-4,-8]) == [2,4,8]);
+    assert(v_abs([-2,4,8]) == [2,4,8]);
+    assert(v_abs([2,-4,8]) == [2,4,8]);
+    assert(v_abs([2,4,-8]) == [2,4,8]);
 }
-test_vabs();
+test_v_abs();
 
 include <../strings.scad>
-module test_vang() {
-    assert(vang([1,0])==0);
-    assert(vang([0,1])==90);
-    assert(vang([-1,0])==180);
-    assert(vang([0,-1])==-90);
-    assert(vang([1,1])==45);
-    assert(vang([-1,1])==135);
-    assert(vang([1,-1])==-45);
-    assert(vang([-1,-1])==-135);
-    assert(vang([0,0,1])==[0,90]);
-    assert(vang([0,1,1])==[90,45]);
-    assert(vang([0,1,-1])==[90,-45]);
-    assert(vang([1,0,0])==[0,0]);
-    assert(vang([0,1,0])==[90,0]);
-    assert(vang([0,-1,0])==[-90,0]);
-    assert(vang([-1,0,0])==[180,0]);
-    assert(vang([1,0,1])==[0,45]);
-    assert(vang([0,1,1])==[90,45]);
-    assert(vang([0,-1,1])==[-90,45]);
-    assert(approx(vang([1,1,1]),[45, 35.2643896828]));
+module test_v_theta() {
+    assert_approx(v_theta([0,0]), 0);
+    assert_approx(v_theta([1,0]), 0);
+    assert_approx(v_theta([0,1]), 90);
+    assert_approx(v_theta([-1,0]), 180);
+    assert_approx(v_theta([0,-1]), -90);
+    assert_approx(v_theta([1,1]), 45);
+    assert_approx(v_theta([-1,1]), 135);
+    assert_approx(v_theta([1,-1]), -45);
+    assert_approx(v_theta([-1,-1]), -135);
+    assert_approx(v_theta([0,0,1]), 0);
+    assert_approx(v_theta([0,1,1]), 90);
+    assert_approx(v_theta([0,1,-1]), 90);
+    assert_approx(v_theta([1,0,0]), 0);
+    assert_approx(v_theta([0,1,0]), 90);
+    assert_approx(v_theta([0,-1,0]), -90);
+    assert_approx(v_theta([-1,0,0]), 180);
+    assert_approx(v_theta([1,0,1]), 0);
+    assert_approx(v_theta([0,1,1]), 90);
+    assert_approx(v_theta([0,-1,1]), -90);
+    assert_approx(v_theta([1,1,1]), 45);
 }
-test_vang();
+test_v_theta();
 
 
 module test_unit() {
