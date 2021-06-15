@@ -959,7 +959,7 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
             [-size.x/2,  size.y/2],
             [ size.x/2,  size.y/2] 
         ]
-    ) rot(spin, p=move(-vmul(anchor,size/2), p=path)) :
+    ) rot(spin, p=move(-v_mul(anchor,size/2), p=path)) :
     let(
         chamfer = is_list(chamfer)? chamfer : [for (i=[0:3]) chamfer],
         rounding = is_list(rounding)? rounding : [for (i=[0:3]) rounding],
@@ -978,7 +978,7 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
                 quad = quadorder[i],
                 inset = insets[quad],
                 cverts = quant(segs(inset),4)/4,
-                cp = vmul(size/2-[inset,inset], quadpos[quad]),
+                cp = v_mul(size/2-[inset,inset], quadpos[quad]),
                 step = 90/cverts,
                 angs =
                     chamfer[quad] > 0?  [0,-90]-90*[i,i] :

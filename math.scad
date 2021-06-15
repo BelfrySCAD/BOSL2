@@ -237,7 +237,7 @@ function u_sub(a,b) = is_undef(a) || is_undef(b)? undef : a - b;
 //   b = Second value.
 function u_mul(a,b) =
     is_undef(a) || is_undef(b)? undef :
-    is_vector(a) && is_vector(b)? vmul(a,b) :
+    is_vector(a) && is_vector(b)? v_mul(a,b) :
     a * b;
 
 
@@ -252,7 +252,7 @@ function u_mul(a,b) =
 //   b = Second value.
 function u_div(a,b) =
     is_undef(a) || is_undef(b)? undef :
-    is_vector(a) && is_vector(b)? vdiv(a,b) :
+    is_vector(a) && is_vector(b)? v_div(a,b) :
     a / b;
 
 
@@ -674,7 +674,7 @@ function _product(v, i=0, _tot) =
     i>=len(v) ? _tot :
     _product( v, 
               i+1, 
-              ( is_vector(v[i])? vmul(_tot,v[i]) : _tot*v[i] ) );
+              ( is_vector(v[i])? v_mul(_tot,v[i]) : _tot*v[i] ) );
                
 
 
@@ -711,7 +711,7 @@ function _cumprod_vec(v,_i=0,_acc=[]) =
         v, _i+1,
         concat(
             _acc,
-            [_i==0 ? v[_i] : vmul(_acc[len(_acc)-1],v[_i])]
+            [_i==0 ? v[_i] : v_mul(_acc[len(_acc)-1],v[_i])]
         )
     );
 

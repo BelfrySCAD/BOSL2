@@ -328,7 +328,7 @@ function attach_geom_size(geom) =
         [2*maxxr, 2*maxyr,l]
     ) : type == "spheroid"? ( //r
         let( r=geom[1] )
-        is_num(r)? [2,2,2]*r : vmul([2,2,2],point3d(r))
+        is_num(r)? [2,2,2]*r : v_mul([2,2,2],point3d(r))
     ) : type == "vnf_extent" || type=="vnf_isect"? ( //vnf
         let(
             vnf = geom[1]
@@ -344,7 +344,7 @@ function attach_geom_size(geom) =
         ) [maxx, size.y]
     ) : type == "circle"? ( //r
         let( r=geom[1] )
-        is_num(r)? [2,2]*r : vmul([2,2],point2d(r))
+        is_num(r)? [2,2]*r : v_mul([2,2],point2d(r))
     ) : type == "path_isect" || type == "path_extent"? ( //path
         let(
             mm = pointlist_bounds(geom[1]),
@@ -476,8 +476,8 @@ function find_anchor(anchor, geom) =
             h = size.z,
             u = (anch.z+1)/2,
             axy = point2d(anch),
-            bot = point3d(vmul(point2d(size)/2,axy),-h/2),
-            top = point3d(vmul(point2d(size2)/2,axy)+shift,h/2),
+            bot = point3d(v_mul(point2d(size)/2,axy),-h/2),
+            top = point3d(v_mul(point2d(size2)/2,axy)+shift,h/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
             sidevec = unit(rot(from=UP, to=top-bot, p=point3d(axy)),UP),
             vvec = anch==CENTER? UP : unit([0,0,anch.z],UP),
@@ -497,8 +497,8 @@ function find_anchor(anchor, geom) =
             anch = rot(from=axis, to=UP, p=anchor),
             u = (anch.z+1)/2,
             axy = unit(point2d(anch),[0,0]),
-            bot = point3d(vmul(r1,axy), -l/2),
-            top = point3d(vmul(r2,axy)+shift, l/2),
+            bot = point3d(v_mul(r1,axy), -l/2),
+            top = point3d(v_mul(r2,axy)+shift, l/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
             sidevec = rot(from=UP, to=top-bot, p=point3d(axy)),
             vvec = anch==CENTER? UP : unit([0,0,anch.z],UP),
@@ -514,8 +514,8 @@ function find_anchor(anchor, geom) =
             rr = geom[1],
             r = is_num(rr)? [rr,rr,rr] : point3d(rr),
             anchor = unit(point3d(anchor),CENTER),
-            pos = point3d(cp) + vmul(r,anchor) + point3d(offset),
-            vec = unit(vmul(r,anchor),UP)
+            pos = point3d(cp) + v_mul(r,anchor) + point3d(offset),
+            vec = unit(v_mul(r,anchor),UP)
         ) [anchor, pos, vec, oang]
     ) : type == "vnf_isect"? ( //vnf
         let(
@@ -597,8 +597,8 @@ function find_anchor(anchor, geom) =
             rr = geom[1],
             r = is_num(rr)? [rr,rr] : point2d(rr),
             anchor = unit(point2d(anchor),[0,0]),
-            pos = point2d(cp) + vmul(r,anchor) + point2d(offset),
-            vec = unit(vmul(r,anchor),[0,1])
+            pos = point2d(cp) + v_mul(r,anchor) + point2d(offset),
+            vec = unit(v_mul(r,anchor),[0,1])
         ) [anchor, pos, vec, 0]
     ) : type == "path_isect"? ( //path
         let(
@@ -1232,10 +1232,10 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
         psize = point3d($parent_size);
         length = [for (i=[0:2]) if(!vec[i]) psize[i]][0]+0.1;
         rotang =
-            vec.z<0? [90,0,180+vang(point2d(vec))] :
-            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+vang(point2d(vec)) :
-            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+vang(point2d(vec))] :
-            [-90,0,180+vang(point2d(vec))];
+            vec.z<0? [90,0,180+v_theta(vec)] :
+            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
+            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+v_theta(vec)] :
+            [-90,0,180+v_theta(vec)];
         translate(anch[1]) {
             rot(rotang) {
                 linear_extrude(height=length, center=true, convexity=convexity) {
@@ -1286,8 +1286,8 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
         $attach_norot = true;
         $tags = "mask";
         rotang = vec.z<0?
-            [  0,0,180+vang(point2d(vec))-45] :
-            [180,0,-90+vang(point2d(vec))-45];
+            [  0,0,180+v_theta(vec)-45] :
+            [180,0,-90+v_theta(vec)-45];
         translate(anch[1]) {
             rot(rotang) {
                 render(convexity=convexity)
@@ -1357,10 +1357,10 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
         $attach_norot = true;
         $tags = "mask";
         rotang =
-            vec.z<0? [90,0,180+vang(point2d(vec))] :
-            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+vang(point2d(vec)) :
-            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+vang(point2d(vec))] :
-            [-90,0,180+vang(point2d(vec))];
+            vec.z<0? [90,0,180+v_theta(vec)] :
+            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
+            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+v_theta(vec)] :
+            [-90,0,180+v_theta(vec)];
         translate(anch[1]) rot(rotang) children();
     }
 }
@@ -1401,8 +1401,8 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
         $attach_norot = true;
         $tags = "mask";
         rotang = vec.z<0?
-            [  0,0,180+vang(point2d(vec))-45] :
-            [180,0,-90+vang(point2d(vec))-45];
+            [  0,0,180+v_theta(vec)-45] :
+            [180,0,-90+v_theta(vec)-45];
         translate(anch[1]) rot(rotang) children();
     }
 }

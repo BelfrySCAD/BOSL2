@@ -111,9 +111,9 @@ module cuboid(
         cnt = sum(e);
         r = first_defined([chamfer, rounding, 0]);
         c = [min(r,size.x/2), min(r,size.y/2), min(r,size.z/2)];
-        c2 = vmul(corner,c/2);
+        c2 = v_mul(corner,c/2);
         $fn = is_finite(chamfer)? 4 : segs(r);
-        translate(vmul(corner, size/2-c)) {
+        translate(v_mul(corner, size/2-c)) {
             if (cnt == 0 || approx(r,0)) {
                 translate(c2) cube(c, center=true);
             } else if (cnt == 1) {
@@ -163,7 +163,7 @@ module cuboid(
     if (!is_undef(p1)) {
         if (!is_undef(p2)) {
             translate(pointlist_bounds([p1,p2])[0]) {
-                cuboid(size=vabs(p2-p1), chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
+                cuboid(size=v_abs(p2-p1), chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
             }
         } else {
             translate(p1) {
@@ -209,7 +209,7 @@ module cuboid(
                             for (i = [0:3], axis=[0:1]) {
                                 if (edges[axis][i]>0) {
                                     vec = EDGE_OFFSETS[axis][i];
-                                    translate(vmul(vec/2, size+[ach,ach,-ach])) {
+                                    translate(v_mul(vec/2, size+[ach,ach,-ach])) {
                                         rotate(majrots[axis]) {
                                             cube([ach, ach, size[axis]], center=true);
                                         }
@@ -222,7 +222,7 @@ module cuboid(
                                 for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
                                     ce = corner_edges(edges, [xa,ya,za]);
                                     if (ce.x + ce.y > 1) {
-                                        translate(vmul([xa,ya,za]/2, size+[ach-0.01,ach-0.01,-ach])) {
+                                        translate(v_mul([xa,ya,za]/2, size+[ach-0.01,ach-0.01,-ach])) {
                                             cube([ach+0.01,ach+0.01,ach], center=true);
                                         }
                                     }
@@ -234,7 +234,7 @@ module cuboid(
                         for (i = [0:3], axis=[0:1]) {
                             if (edges[axis][i]>0) {
                                 vec = EDGE_OFFSETS[axis][i];
-                                translate(vmul(vec/2, size+[2*ach,2*ach,-2*ach])) {
+                                translate(v_mul(vec/2, size+[2*ach,2*ach,-2*ach])) {
                                     rotate(majrots[axis]) {
                                         zrot(45) cube([ach*sqrt(2), ach*sqrt(2), size[axis]+2.1*ach], center=true);
                                     }
@@ -296,7 +296,7 @@ module cuboid(
                             for (i = [0:3], axis=[0:1]) {
                                 if (edges[axis][i]>0) {
                                     vec = EDGE_OFFSETS[axis][i];
-                                    translate(vmul(vec/2, size+[ard,ard,-ard])) {
+                                    translate(v_mul(vec/2, size+[ard,ard,-ard])) {
                                         rotate(majrots[axis]) {
                                             cube([ard, ard, size[axis]], center=true);
                                         }
@@ -309,7 +309,7 @@ module cuboid(
                                 for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
                                     ce = corner_edges(edges, [xa,ya,za]);
                                     if (ce.x + ce.y > 1) {
-                                        translate(vmul([xa,ya,za]/2, size+[ard-0.01,ard-0.01,-ard])) {
+                                        translate(v_mul([xa,ya,za]/2, size+[ard-0.01,ard-0.01,-ard])) {
                                             cube([ard+0.01,ard+0.01,ard], center=true);
                                         }
                                     }
@@ -321,7 +321,7 @@ module cuboid(
                         for (i = [0:3], axis=[0:1]) {
                             if (edges[axis][i]>0) {
                                 vec = EDGE_OFFSETS[axis][i];
-                                translate(vmul(vec/2, size+[2*ard,2*ard,-2*ard])) {
+                                translate(v_mul(vec/2, size+[2*ard,2*ard,-2*ard])) {
                                     rotate(majrots[axis]) {
                                         cyl(l=size[axis]+2.1*ard, r=ard);
                                     }
@@ -521,8 +521,8 @@ function prismoid(
             let(
                 corners = [[1,1],[1,-1],[-1,-1],[-1,1]] * 0.5,
                 points = [
-                    for (p=corners) point3d(vmul(s2,p), +h/2) + shiftby,
-                    for (p=corners) point3d(vmul(s1,p), -h/2)
+                    for (p=corners) point3d(v_mul(s2,p), +h/2) + shiftby,
+                    for (p=corners) point3d(v_mul(s1,p), -h/2)
                 ],
                 faces=[
                     [0,1,2], [0,2,3], [0,4,5], [0,5,1],

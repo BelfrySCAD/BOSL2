@@ -465,7 +465,7 @@ module cubetruss(extents=6, clips=[], bracing, size, strut, clipthick, anchor=CE
             }
             if (clipthick > 0) {
                 for (vec = clips) {
-                    exts = vabs(rot(from=FWD, to=vec, p=extents));
+                    exts = v_abs(rot(from=FWD, to=vec, p=extents));
                     rot(from=FWD,to=vec) {
                         for (zrow = [0:1:exts.z-1]) {
                             up((zrow-(exts.z-1)/2)*(size-strut)) {

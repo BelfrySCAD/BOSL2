@@ -414,8 +414,8 @@ function rot(a=0, v, cp, from, to, reverse=false, planar=false, p, _m) =
                 assert(approx(point3d(from).z, 0), "'from' must be a 2D vector when 'planar' is true.")
                 assert(approx(point3d(to).z, 0), "'to' must be a 2D vector when 'planar' is true.")
                 affine2d_zrot(
-                    vang(point2d(to)) -
-                    vang(point2d(from))
+                    v_theta(to) -
+                    v_theta(from)
                 ),
             m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
             m3 = reverse? matrix_inverse(m2) : m2

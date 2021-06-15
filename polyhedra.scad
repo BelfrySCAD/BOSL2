@@ -377,7 +377,7 @@ function _point_ref(points, sign="both") =
     unique([
         for(i=[-1,1],j=[-1,1],k=[-1,1])
             if (sign=="both" || sign=="even" && i*j*k>0 || sign=="odd" && i*j*k<0)
-                each [for(point=points) vmul(point,[i,j,k])]
+                each [for(point=points) v_mul(point,[i,j,k])]
     ]);
 //
 _tribonacci=(1+4*cosh(acosh(2+3/8)/3))/3;
