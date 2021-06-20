@@ -1535,6 +1535,9 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 // Usage: Typical
 //   teardrop(h|l, r, <ang>, <cap_h>, ...);
 //   teardrop(h|l, d=, <ang=>, <cap_h=>, ...);
+// Usage: Psuedo-Conical
+//   teardrop(h|l, r1=, r2=, <ang=>, <cap_h1=>, <cap_h2=>, ...);
+//   teardrop(h|l, d1=, d2=, <ang=>, <cap_h1=>, <cap_h2=>, ...);
 // Usage: Attaching Children
 //   teardrop(h|l, r, ...) <attachments>;
 //
@@ -1544,10 +1547,21 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 //   ang = Angle of hat walls from the Z axis.  Default: 45 degrees
 //   cap_h = If given, height above center where the shape will be truncated. Default: `undef` (no truncation)
 //   ---
-//   d = Diameter of circular portion of bottom. (Use instead of r)
+//   r1 = Radius of circular portion of the front end of the teardrop shape.
+//   r2 = Radius of circular portion of the back end of the teardrop shape.
+//   d = Diameter of circular portion of the teardrop shape.
+//   d1 = Diameter of circular portion of the front end of the teardrop shape.
+//   d2 = Diameter of circular portion of the back end of the teardrop shape.
+//   cap_h1 = If given, height above center where the shape will be truncated, on the front side. Default: `undef` (no truncation)
+//   cap_h2 = If given, height above center where the shape will be truncated, on the back side. Default: `undef` (no truncation)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//
+// Extra Anchors:
+//   cap = The center of the top of the cap, oriented with the cap face normal.
+//   cap_fwd = The front edge of the cap.
+//   cap_back = The back edge of the cap.
 //
 // Example: Typical Shape
 //   teardrop(r=30, h=10, ang=30);
@@ -1555,22 +1569,50 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 //   teardrop(r=30, h=10, ang=30, cap_h=40);
 // Example: Close Crop
 //   teardrop(r=30, h=10, ang=30, cap_h=20);
-// Example: Standard Connectors
-//   teardrop(r=30, h=10, ang=30) show_anchors();
-module teardrop(h, r, ang=45, cap_h, d, l, anchor=CENTER, spin=0, orient=UP)
+// Example: Psuedo-Conical
+//   teardrop(r1=20, r2=30, h=40, cap_h1=25, cap_h2=35);
+// Example: Standard Conical Connectors
+//   teardrop(d1=20, d2=30, h=20, cap_h1=11, cap_h2=16)
+//       show_anchors(custom=false);
+// Example(Spin,VPD=275): Named Conical Connectors
+//   teardrop(d1=20, d2=30, h=20, cap_h1=11, cap_h2=16)
+//       show_anchors(std=false);
+module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, anchor=CENTER, spin=0, orient=UP)
 {
-    r = get_radius(r=r, d=d, dflt=1);
+    r1 = get_radius(r=r, r1=r1, d=d, d1=d1, dflt=1);
+    r2 = get_radius(r=r, r1=r2, d=d, d1=d2, dflt=1);
     l = first_defined([l, h, 1]);
-    tip_y = adj_ang_to_hyp(r, 90-ang);
-    cap_h = min(default(cap_h,tip_y), tip_y);
+    tip_y1 = adj_ang_to_hyp(r1, 90-ang);
+    tip_y2 = adj_ang_to_hyp(r2, 90-ang);
+    cap_h1 = min(first_defined([cap_h1, cap_h, tip_y1]), tip_y1);
+    cap_h2 = min(first_defined([cap_h2, cap_h, tip_y2]), tip_y2);
+    capvec = unit([0, cap_h1-cap_h2, l]);
     anchors = [
-        ["cap", [0,0,cap_h], UP, 0]
+        anchorpt("cap",      [0,0,(cap_h1+cap_h2)/2], capvec),
+        anchorpt("cap_fwd",  [0,-l/2,cap_h1],         unit((capvec+FWD)/2)),
+        anchorpt("cap_back", [0,+l/2,cap_h2],         unit((capvec+BACK)/2), 180),
     ];
-    attachable(anchor,spin,orient, r=r, l=l, axis=BACK, anchors=anchors) {
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=BACK, anchors=anchors) {
+        mat = geom_transform(anchor,spin,orient,$parent_geom)
         rot(from=UP,to=FWD) {
             if (l > 0) {
-                linear_extrude(height=l, center=true, slices=2) {
-                    teardrop2d(r=r, ang=ang, cap_h=cap_h);
+                if (r1 == r2) {
+                    linear_extrude(height=l, center=true, slices=2) {
+                        teardrop2d(r=r1, ang=ang, cap_h=cap_h);
+                    }
+                } else {
+                    hull() {
+                        up(l/2-0.001) {
+                            linear_extrude(height=0.001, center=false) {
+                                teardrop2d(r=r1, ang=ang, cap_h=cap_h1);
+                            }
+                        }
+                        down(l/2) {
+                            linear_extrude(height=0.001, center=false) {
+                                teardrop2d(r=r2, ang=ang, cap_h=cap_h2);
+                            }
+                        }
+                    }
                 }
             }
         }
