@@ -1593,7 +1593,6 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, ancho
         anchorpt("cap_back", [0,+l/2,cap_h2],         unit((capvec+BACK)/2), 180),
     ];
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=BACK, anchors=anchors) {
-        mat = geom_transform(anchor,spin,orient,$parent_geom)
         rot(from=UP,to=FWD) {
             if (l > 0) {
                 if (r1 == r2) {
