@@ -387,10 +387,21 @@ module show_anchors(s=10, std=true, custom=true) {
                 color("black")
                 noop($tags="anchor-arrow") {
                     xrot(two_d? 0 : 90) {
-                        up(s/10) {
-                            linear_extrude(height=0.01, convexity=12, center=true) {
-                                text(text=anchor[0], size=s/4, halign="center", valign="center");
+                        back(s/3) {
+                            yrot_copies(n=2)
+                            up(s/30) {
+                                linear_extrude(height=0.01, convexity=12, center=true) {
+                                    text(text=anchor[0], size=s/4, halign="center", valign="center");
+                                }
                             }
+                        }
+                    }
+                }
+                color([1, 1, 1, 0.4])
+                noop($tags="anchor-arrow") {
+                    xrot(two_d? 0 : 90) {
+                        back(s/3) {
+                            zcopies(s/21) cube([s/4.5*len(anchor[0]), s/3, 0.01], center=true);
                         }
                     }
                 }
