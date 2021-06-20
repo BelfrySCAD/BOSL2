@@ -661,7 +661,7 @@ function path_self_intersections(path, closed=true, eps=EPSILON) =
         path = cleanup_path(path, eps=eps),
         plen = len(path)
     ) [
-        for (i = [0:1:plen-(closed?2:3)], j=[i+1:1:plen-(closed?1:2)]) let(
+        for (i = [0:1:plen-(closed?2:3)], j=[i+2:1:plen-(closed?1:2)]) let(
             a1 = path[i],
             a2 = path[(i+1)%plen],
             b1 = path[j],
@@ -675,15 +675,16 @@ function path_self_intersections(path, closed=true, eps=EPSILON) =
                     c = a1-a2,
                     d = b1-b2,
                     denom = (c.x*d.y)-(c.y*d.x)
-                ) abs(denom)<eps? undef : let(
+                ) abs(denom)<eps? undef :
+                let(
                     e = a1-b1,
                     t = ((e.x*d.y)-(e.y*d.x)) / denom,
                     u = ((e.x*c.y)-(e.y*c.x)) / denom
                 ) [a1+t*(a2-a1), t, u]
         ) if (
             isect != undef &&
-            isect[1]>eps && isect[1]<=1+eps &&
-            isect[2]>eps && isect[2]<=1+eps
+            isect[1]>=-eps && isect[1]<=1+eps &&
+            isect[2]>=-eps && isect[2]<=1+eps
         ) [isect[0], i, isect[1], j, isect[2]]
     ];
 
