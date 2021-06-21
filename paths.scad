@@ -682,6 +682,7 @@ function path_self_intersections(path, closed=true, eps=EPSILON) =
                     u = ((e.x*c.y)-(e.y*c.x)) / denom
                 ) [a1+t*(a2-a1), t, u]
         ) if (
+            (!closed || i!=0 || j!=plen-1) &&
             isect != undef &&
             isect[1]>=-eps && isect[1]<=1+eps &&
             isect[2]>=-eps && isect[2]<=1+eps
