@@ -59,13 +59,16 @@ function _same_type(a,b, depth) =
 //   Returns a portion of a list, wrapping around past the beginning, if end<start. 
 //   The first item is index 0. Negative indexes are counted back from the end.
 //   The last item is -1.  If only the `start` index is given, returns just the value
-//   at that position.
+//   at that position when `start` is a number or the selected list of entries when `start` is
+//   a list of indices or a range.
 // Usage:
 //   item = select(list,start);
+//   item = select(list,[s:d:e]);
+//   item = select(list,[i0,i1...,ik]);
 //   list = select(list,start,end);
 // Arguments:
 //   list = The list to get the portion of.
-//   start = The index of the first item.
+//   start = The index of the first item or an index range or a list of indices.
 //   end = The index of the last item.
 // See Also: slice(), subindex(), last()
 // Example:
@@ -78,7 +81,7 @@ function _same_type(a,b, depth) =
 //   f = select(l, 4);      // Returns 7
 //   g = select(l, -2);     // Returns 8
 //   h = select(l, [1:3]);  // Returns [4,5,6]
-//   i = select(l, [1,3]);  // Returns [4,6]
+//   i = select(l, [3,1]);  // Returns [6,4]
 function select(list, start, end) =
     assert( is_list(list) || is_string(list), "Invalid list.")
     let(l=len(list))
@@ -946,6 +949,31 @@ function shuffle(list,seed) =
     ) 
     concat(shuffle(left), shuffle(right));
 
+// idx should be an index of the arrays l[i]
+function _group_sort_by_index(l,idx) =
+	len(l) == 0 ? [] :
+	len(l) == 1 ? [l] : 
+	let( pivot   = l[floor(len(l)/2)][idx],
+       equal   = [ for(li=l) if( li[idx]==pivot) li ] ,
+       lesser  = [ for(li=l) if( li[idx]< pivot) li ] ,
+       greater = [ for(li=l) if( li[idx]> pivot) li ]
+  )
+  concat( _group_sort_by_index(lesser,idx), 
+          [equal], 
+          _group_sort_by_index(greater,idx) ) ;  
+
+function _group_sort(l) =
+	len(l) == 0 ? [] : 
+	len(l) == 1 ? [l] : 
+	let( pivot   = l[floor(len(l)/2)],
+       equal   = [ for(li=l) if( li==pivot) li ] ,
+       lesser  = [ for(li=l) if( li< pivot) li ] ,
+       greater = [ for(li=l) if( li> pivot) li ]
+  )
+  concat( _group_sort(lesser), 
+          [equal], 
+          _group_sort(greater) ) ;    
+
 
 // Sort a vector of scalar values with the native comparison operator
 // all elements should have the same type.
@@ -1007,7 +1035,7 @@ function _sort_general(arr, idx=undef, indexed=false) =
       
 // lexical sort using compare_vals()
 function _lexical_sort(arr) = 
-    arr==[] ? [] : len(arr)==1? arr : 
+    len(arr)<=1? arr : 
     let( pivot = arr[floor(len(arr)/2)] )
     let(
         lesser  = [ for (entry=arr) if (compare_vals(entry, pivot) <0 ) entry ],
@@ -1123,26 +1151,69 @@ function sortidx(list, idx=undef) =
     : _sort_general(list,idx,indexed=true);
         
 
+// Function: group_sort()
+// Usage:
+//   ulist = group_sort(list);
+// Topics: List Handling
+// See Also: shuffle(), sort(), sortidx(), unique(), unique_count()
+// Description:
+//   Given a list of values, returns the sorted list with all repeated items grouped in a list.
+//   When the list entries are themselves lists, the sorting may be done based on the `idx` entry
+//   of those entries, that should be numbers. 
+//   The result is always a list of lists. 
+// Arguments:
+//   list = The list to sort.
+//   idx = If given, do the comparison based just on the specified index. Default: zero.
+// Example:
+//   sorted = group_sort([5,2,8,3,1,3,8,7,5]);  // Returns: [[1],[2],[3,3],[5,5],[7],[8,8]]
+//   sorted2 = group_sort([[5,"a"],[2,"b"], [5,"c"], [3,"d"], [2,"e"] ], idx=0);  // Returns: [[[2,"b"],[2,"e"]], [[5,"a"],[5,"c"]], [[3,"d"]] ]
+function group_sort(list, idx=undef) = 
+    assert(is_list(list), "Input should be a list." )
+    assert(is_undef(idx) || (is_finite(idx) && idx>=0) , "Invalid index." )
+    len(list)<=1 ? [list] :
+		is_vector(list)? _group_sort(list) :
+		let( idx = is_undef(idx) ? 0 : idx )
+		assert( [for(i=idx(list)) if(!is_list(list[i]) || len(list[i])>=idx || !is_num(list[idx])) 1]==[],
+            "Some entry of the list is a list shorter than `idx` or the indexed entry of it is not a number."	)
+		_group_sort_by_index(list,idx);
+        
+
 // Function: unique()
 // Usage:
 //   ulist = unique(list);
 // Topics: List Handling
 // See Also: shuffle(), sort(), sortidx(), unique_count()
 // Description:
-//   Returns a sorted list with all repeated items removed.
+//   Given a string or a list returns the sorted string or the sorted list with all repeated items removed.
+//   The sorting order of non homogeneous lists is the function `sort` order.
 // Arguments:
 //   list = The list to uniquify.
 // Example:
 //   sorted = unique([5,2,8,3,1,3,8,7,5]);  // Returns: [1,2,3,5,7,8]
+//   sorted = unique("axdbxxc");  // Returns: "abcdx"
+//   sorted = unique([true,2,"xba",[1,0],true,[0,0],3,"a",[0,0],2]); // Returns: [true,2,3,"a","xba",[0,0],[1,0]]
 function unique(list) =
     assert(is_list(list)||is_string(list), "Invalid input." )
     is_string(list)? str_join(unique([for (x = list) x])) :
     len(list)<=1? list : 
-    let( sorted = sort(list))
-    [   for (i=[0:1:len(sorted)-1])
-            if (i==0 || (sorted[i] != sorted[i-1]))
-                sorted[i]
-    ];
+    is_homogeneous(list,1) && ! is_list(list[0])
+		?   _unique_sort(list)
+    :   let( sorted = sort(list))
+				[   for (i=[0:1:len(sorted)-1])
+								if (i==0 || (sorted[i] != sorted[i-1]))
+										sorted[i]
+				];
+
+function _unique_sort(l) =
+		len(l) <= 1 ? l : 
+		let( pivot   = l[floor(len(l)/2)],
+				 equal   = [ for(li=l) if( li==pivot) li ] ,
+				 lesser  = [ for(li=l) if( li<pivot ) li ] ,
+				 greater = [ for(li=l) if( li>pivot) li ]
+		)
+		concat( _unique_sort(lesser), 
+						equal[0], 
+						_unique_sort(greater) ) ;    
 
 
 // Function: unique_count()
@@ -1160,11 +1231,14 @@ function unique(list) =
 function unique_count(list) =
     assert(is_list(list) || is_string(list), "Invalid input." )
     list == [] ? [[],[]] : 
-    let( list=sort(list) )
-    let( ind = [0, for(i=[1:1:len(list)-1]) if (list[i]!=list[i-1]) i] )
-    [ select(list,ind), deltas( concat(ind,[len(list)]) ) ];
+    is_homogeneous(list,1) && ! is_list(list[0])
+    ?		let( sorted = _group_sort_scalars(list) )
+				[ [for(s=sorted) s[0] ], [for(s=sorted) len(s) ] ]
+		:		let( list=sort(list) )
+				let( ind = [0, for(i=[1:1:len(list)-1]) if (list[i]!=list[i-1]) i] )
+				[ select(list,ind), deltas( concat(ind,[len(list)]) ) ];
 
-
+		
 // Section: List Iteration Helpers
 
 // Function: idx()
