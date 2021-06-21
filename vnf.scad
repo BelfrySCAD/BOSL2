@@ -848,6 +848,14 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
         issues = concat(issues, bad_indices)
     ) bad_indices? issues :
     let(
+        multconn_edges = unique([
+            for (i = idx(uniq_edges))
+            if (edgecnts[1][i]>2)
+            _vnf_validate_err("MULTCONN", [for (i=uniq_edges[i]) varr[i]])
+        ]),
+        issues = concat(issues, multconn_edges)
+    ) multconn_edges? issues :
+    let(
         repeated_faces = [
             for (i=idx(dfaces), j=idx(dfaces))
             if (i!=j) let(
@@ -864,14 +872,6 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
         ],
         issues = concat(issues, repeated_faces)
     ) repeated_faces? issues :
-    let(
-        multconn_edges = unique([
-            for (i = idx(uniq_edges))
-            if (edgecnts[1][i]>2)
-            _vnf_validate_err("MULTCONN", [for (i=uniq_edges[i]) varr[i]])
-        ]),
-        issues = concat(issues, multconn_edges)
-    ) multconn_edges? issues :
     let(
         reversals = unique([
             for(i = idx(dfaces), j = idx(dfaces)) if(i != j)

@@ -9,7 +9,9 @@ include <../std.scad>
 test_point_on_segment2d();
 test_point_left_of_line2d();
 test_collinear();
-test_distance_from_line();
+test_point_line_distance();
+test_point_segment_distance();
+test_segment_distance();
 test_line_normal();
 test_line_intersection();
 //test_line_ray_intersection();
@@ -44,7 +46,7 @@ test_plane_normal();
 test_plane_offset();
 test_projection_on_plane();
 test_plane_point_nearest_origin();
-test_distance_from_plane();
+test_point_plane_distance();
 
 test__general_plane_line_intersection();
 test_plane_line_angle();
@@ -88,7 +90,7 @@ test_cleanup_path();
 test_simplify_path();
 test_simplify_path_indexed();
 test_is_region();
-
+test_convex_distance();
 
 // to be used when there are two alternative symmetrical outcomes 
 // from a function like a plane output; v must be a vector
@@ -230,7 +232,7 @@ module test__general_plane_line_intersection() {
         interspoint = line1[0]+inters1[1]*(line1[1]-line1[0]);
         assert_approx(inters1[0],interspoint, info1); 
         assert_approx(point3d(plane1)*inters1[0], plane1[3], info1); // interspoint on the plane
-        assert_approx(distance_from_plane(plane1, inters1[0]), 0, info1); // inters1[0] on the plane
+        assert_approx(point_plane_distance(plane1, inters1[0]), 0, info1); // inters1[0] on the plane
     }
 
     // line parallel to the plane
@@ -351,13 +353,35 @@ module test_collinear() {
 *test_collinear();
 
 
-module test_distance_from_line() {
-    assert(abs(distance_from_line([[-10,-10,-10], [10,10,10]], [1,1,1])) < EPSILON);
-    assert(abs(distance_from_line([[-10,-10,-10], [10,10,10]], [-1,-1,-1])) < EPSILON);
-    assert(abs(distance_from_line([[-10,-10,-10], [10,10,10]], [1,-1,0]) - sqrt(2)) < EPSILON);
-    assert(abs(distance_from_line([[-10,-10,-10], [10,10,10]], [8,-8,0]) - 8*sqrt(2)) < EPSILON);
+module test_point_line_distance() {
+    assert_approx(point_line_distance([1,1,1], [[-10,-10,-10], [10,10,10]]), 0);
+    assert_approx(point_line_distance([-1,-1,-1], [[-10,-10,-10], [10,10,10]]), 0);
+    assert_approx(point_line_distance([1,-1,0], [[-10,-10,-10], [10,10,10]]), sqrt(2));
+    assert_approx(point_line_distance([8,-8,0], [[-10,-10,-10], [10,10,10]]), 8*sqrt(2));
 }
-*test_distance_from_line();
+*test_point_line_distance();
+
+
+module test_point_segment_distance() {
+    assert_approx(point_segment_distance([3,8], [[-10,0], [10,0]]), 8);
+    assert_approx(point_segment_distance([14,3], [[-10,0], [10,0]]), 5);
+}
+*test_point_segment_distance();
+
+
+module test_segment_distance() {
+    assert_approx(segment_distance([[-14,3], [-14,9]], [[-10,0], [10,0]]), 5);
+    assert_approx(segment_distance([[-14,3], [-15,9]], [[-10,0], [10,0]]), 5);
+    assert_approx(segment_distance([[14,3], [14,9]], [[-10,0], [10,0]]), 5);
+    assert_approx(segment_distance([[-14,-3], [-14,-9]], [[-10,0], [10,0]]), 5);
+    assert_approx(segment_distance([[-14,-3], [-15,-9]], [[-10,0], [10,0]]), 5);
+    assert_approx(segment_distance([[14,-3], [14,-9]], [[-10,0], [10,0]]), 5);
+    assert_approx(segment_distance([[14,3], [14,-3]], [[-10,0], [10,0]]), 4);
+    assert_approx(segment_distance([[-14,3], [-14,-3]], [[-10,0], [10,0]]), 4);
+    assert_approx(segment_distance([[-6,5], [4,-5]], [[-10,0], [10,0]]), 0);
+    assert_approx(segment_distance([[-5,5], [5,-5]], [[-10,3], [10,-3]]), 0);
+}
+*test_segment_distance();
 
 
 module test_line_normal() {
@@ -713,12 +737,12 @@ module test_plane_normal() {
 *test_plane_normal();
 
 
-module test_distance_from_plane() {
+module test_point_plane_distance() {
     plane1 = plane3pt([-10,0,0], [0,10,0], [10,0,0]);
-    assert(distance_from_plane(plane1, [0,0,5]) == 5);
-    assert(distance_from_plane(plane1, [5,5,8]) == 8);
+    assert(point_plane_distance(plane1, [0,0,5]) == 5);
+    assert(point_plane_distance(plane1, [5,5,8]) == 8);
 }
-*test_distance_from_plane();
+*test_point_plane_distance();
 
 
 module test_polygon_line_intersection() {
@@ -1051,6 +1075,20 @@ module test_is_region() {
 }
 *test_is_region();
 
-
+module test_convex_distance() {
+    c1 = circle(10,$fn=24);
+		c2 = move([15,0], p=c1);
+		assert(convex_distance(c1, c2)==0);
+		c3 = move([22,0],c1);
+		assert(abs(convex_distance(c1, c3)-2)<EPSILON);
+    s1 = sphere(10,$fn=4);
+		s2 = move([15,0], p=s1);
+		assert_approx(convex_distance(s1[0], s2[0]), 0.857864376269);
+		s3 = move([25.3,0],s1);
+		assert_approx(convex_distance(s1[0], s3[0]), 11.1578643763);
+    s4 = move([30,25],s1);		
+		assert_approx(convex_distance(s1[0], s4[0]), 28.8908729653);
+}
+*test_convex_distance();
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
