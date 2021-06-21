@@ -2257,7 +2257,7 @@ function is_convex_polygon(poly,eps=EPSILON) =
 //   convex_distance(pts1, pts2,<eps=>);
 // See also: 
 //   convex_collision
-// Descrition:
+// Description:
 //   Returns the smallest distance between a point in convex hull of `points1` 
 //   and a point in the convex hull of `points2`. All the points in the lists
 //   should have the same dimension, either 2D or 3D. 
@@ -2317,7 +2317,7 @@ function _GJK_distance(points1, points2, eps=EPSILON, lbd, d, simplex=[]) =
 //   convex_collision(pts1, pts2,<eps=>);
 // See also: 
 //   convex_distance
-// Descrition:
+// Description:
 //   Returns `true` if the convex hull of `points1` intercepts the convex hull of `points2`
 //   otherwise, `false`.
 //   All the points in the lists should have the same dimension, either 2D or 3D.
