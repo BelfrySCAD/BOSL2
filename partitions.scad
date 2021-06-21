@@ -44,7 +44,7 @@ function _partition_cutpath(l, h, cutsize, cutpath, gap) =
         cplen = (cutsize.x+gap) * reps,
         path = deduplicate(concat(
             [[-l/2, cutpath[0].y*cutsize.y]],
-            [for (i=[0:1:reps-1], pt=cutpath) vmul(pt,cutsize)+[i*(cutsize.x+gap)+gap/2-cplen/2,0]],
+            [for (i=[0:1:reps-1], pt=cutpath) v_mul(pt,cutsize)+[i*(cutsize.x+gap)+gap/2-cplen/2,0]],
             [[ l/2, cutpath[len(cutpath)-1].y*cutsize.y]]
         ))
     ) path;
@@ -164,7 +164,7 @@ module partition(size=100, spread=10, cutsize=10, cutpath=undef, gap=0, spin=0)
 {
     size = is_vector(size)? size : [size,size,size];
     cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
-    rsize = vabs(rot(spin,p=size));
+    rsize = v_abs(rot(spin,p=size));
     vec = rot(spin,p=BACK)*spread/2;
     move(vec) {
         intersection() {

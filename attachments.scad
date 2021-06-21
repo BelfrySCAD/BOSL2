@@ -328,8 +328,11 @@ function attach_geom_size(geom) =
         [2*maxxr, 2*maxyr,l]
     ) : type == "spheroid"? ( //r
         let( r=geom[1] )
-        is_num(r)? [2,2,2]*r : vmul([2,2,2],point3d(r))
+        is_num(r)? [2,2,2]*r : v_mul([2,2,2],point3d(r))
     ) : type == "vnf_extent" || type=="vnf_isect"? ( //vnf
+        let(
+            vnf = geom[1]
+        ) vnf==EMPTY_VNF? [0,0,0] :
         let(
             mm = pointlist_bounds(geom[1][0]),
             delt = mm[1]-mm[0]
@@ -341,7 +344,7 @@ function attach_geom_size(geom) =
         ) [maxx, size.y]
     ) : type == "circle"? ( //r
         let( r=geom[1] )
-        is_num(r)? [2,2]*r : vmul([2,2],point2d(r))
+        is_num(r)? [2,2]*r : v_mul([2,2],point2d(r))
     ) : type == "path_isect" || type == "path_extent"? ( //path
         let(
             mm = pointlist_bounds(geom[1]),
@@ -425,7 +428,7 @@ function attach_transform(anchor, spin, orient, geom, p) =
             )
         )
     ) is_undef(p)? m :
-    is_vnf(p)? [apply(m, p[0]), p[1]] :
+    is_vnf(p)? [(p==EMPTY_VNF? p : apply(m, p[0])), p[1]] :
     apply(m, p);
 
 
@@ -445,7 +448,8 @@ function attach_transform(anchor, spin, orient, geom, p) =
 function find_anchor(anchor, geom) =
     let(
         cp = select(geom,-3),
-        offset = anchor==CENTER? CENTER : select(geom,-2),
+        offset_raw = select(geom,-2),
+        offset = [for (i=[0:2]) anchor[i]==0? 0 : offset_raw[i]],  // prevents bad centering.
         anchors = last(geom),
         type = geom[0]
     )
@@ -472,8 +476,8 @@ function find_anchor(anchor, geom) =
             h = size.z,
             u = (anch.z+1)/2,
             axy = point2d(anch),
-            bot = point3d(vmul(point2d(size)/2,axy),-h/2),
-            top = point3d(vmul(point2d(size2)/2,axy)+shift,h/2),
+            bot = point3d(v_mul(point2d(size)/2,axy),-h/2),
+            top = point3d(v_mul(point2d(size2)/2,axy)+shift,h/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
             sidevec = unit(rot(from=UP, to=top-bot, p=point3d(axy)),UP),
             vvec = anch==CENTER? UP : unit([0,0,anch.z],UP),
@@ -493,8 +497,8 @@ function find_anchor(anchor, geom) =
             anch = rot(from=axis, to=UP, p=anchor),
             u = (anch.z+1)/2,
             axy = unit(point2d(anch),[0,0]),
-            bot = point3d(vmul(r1,axy), -l/2),
-            top = point3d(vmul(r2,axy)+shift, l/2),
+            bot = point3d(v_mul(r1,axy), -l/2),
+            top = point3d(v_mul(r2,axy)+shift, l/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
             sidevec = rot(from=UP, to=top-bot, p=point3d(axy)),
             vvec = anch==CENTER? UP : unit([0,0,anch.z],UP),
@@ -510,12 +514,14 @@ function find_anchor(anchor, geom) =
             rr = geom[1],
             r = is_num(rr)? [rr,rr,rr] : point3d(rr),
             anchor = unit(point3d(anchor),CENTER),
-            pos = point3d(cp) + vmul(r,anchor) + point3d(offset),
-            vec = unit(vmul(r,anchor),UP)
+            pos = point3d(cp) + v_mul(r,anchor) + point3d(offset),
+            vec = unit(v_mul(r,anchor),UP)
         ) [anchor, pos, vec, oang]
     ) : type == "vnf_isect"? ( //vnf
         let(
-            vnf=geom[1],
+            vnf=geom[1]
+        ) vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
+        let(
             eps = 1/2048,
             points = vnf[0],
             faces = vnf[1],
@@ -565,7 +571,9 @@ function find_anchor(anchor, geom) =
         [anchor, pos, n, oang]
     ) : type == "vnf_extent"? ( //vnf
         let(
-            vnf=geom[1],
+            vnf=geom[1]
+        ) vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
+        let(
             rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), vnf[0]),
             maxx = max(subindex(rpts,0)),
             idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
@@ -589,8 +597,8 @@ function find_anchor(anchor, geom) =
             rr = geom[1],
             r = is_num(rr)? [rr,rr] : point2d(rr),
             anchor = unit(point2d(anchor),[0,0]),
-            pos = point2d(cp) + vmul(r,anchor) + point2d(offset),
-            vec = unit(vmul(r,anchor),[0,1])
+            pos = point2d(cp) + v_mul(r,anchor) + point2d(offset),
+            vec = unit(v_mul(r,anchor),[0,1])
         ) [anchor, pos, vec, 0]
     ) : type == "path_isect"? ( //path
         let(
@@ -986,6 +994,92 @@ module attachable(
 }
 
 
+// Module: atext()
+// Topics: Attachments, Text
+// Usage:
+//   atext(text, <h>, <size>, <font>);
+// Description:
+//   Creates a 3D text block that can be attached to other attachable objects.
+//   NOTE: This cannot have children attached to it.
+// Arguments:
+//   text = The text string to instantiate as an object.
+//   h = The height to which the text should be extruded.  Default: 1
+//   size = The font size used to create the text block.  Default: 10
+//   font = The name of the font used to create the text block.  Default: "Courier"
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"baseline"`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+// See Also: attachable()
+// Extra Anchors:
+//   "baseline" = Anchors at the baseline of the text, at the start of the string.
+//   str("baseline",VECTOR) = Anchors at the baseline of the text, modified by the X and Z components of the appended vector.
+// Examples:
+//   atext("Foobar", h=3, size=10);
+//   atext("Foobar", h=2, size=12, font="Helvetica");
+//   atext("Foobar", h=2, anchor=CENTER);
+//   atext("Foobar", h=2, anchor=str("baseline",CENTER));
+//   atext("Foobar", h=2, anchor=str("baseline",BOTTOM+RIGHT));
+// Example: Using line_of() distributor
+//   txt = "This is the string.";
+//   line_of(spacing=[10,-5],n=len(txt))
+//       atext(txt[$idx], size=10, anchor=CENTER);
+// Example: Using arc_of() distributor
+//   txt = "This is the string";
+//   arc_of(r=50, n=len(txt), sa=0, ea=180)
+//       atext(select(txt,-1-$idx), size=10, anchor=str("baseline",CENTER), spin=-90);
+module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orient=UP) {
+    no_children($children);
+    dummy1 =
+        assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
+        assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
+        assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient));
+    anchor = default(anchor, CENTER);
+    spin =   default(spin,   0);
+    orient = default(orient, UP);
+    geom = attach_geom(size=[size,size,h]);
+    anch = !any([for (c=anchor) c=="["])? anchor :
+        let(
+            parts = str_split(str_split(str_split(anchor,"]")[0],"[")[1],","),
+            vec = [for (p=parts) str_float(str_strip_leading(p," "))]
+        ) vec;
+    ha = anchor=="baseline"? "left" :
+        anchor==anch && is_string(anchor)? "center" :
+        anch.x<0? "left" :
+        anch.x>0? "right" :
+        "center";
+    va = starts_with(anchor,"baseline")? "baseline" :
+        anchor==anch && is_string(anchor)? "center" :
+        anch.y<0? "bottom" :
+        anch.y>0? "top" :
+        "center";
+    base = anchor=="baseline"? CENTER :
+        anchor==anch && is_string(anchor)? CENTER :
+        anch.z<0? BOTTOM :
+        anch.z>0? TOP :
+        CENTER;
+    m = attach_transform(base,spin,orient,geom);
+    multmatrix(m) {
+        $parent_anchor = anchor;
+        $parent_spin   = spin;
+        $parent_orient = orient;
+        $parent_geom   = geom;
+        $parent_size   = attach_geom_size(geom);
+        $attach_to   = undef;
+        do_show = attachment_is_shown($tags);
+        if (do_show) {
+            if (is_undef($color)) {
+                linear_extrude(height=h, center=true)
+                    text(text=text, size=size, halign=ha, valign=va);
+            } else color($color) {
+                $color = undef;
+                linear_extrude(height=h, center=true)
+                    text(text=text, size=size, halign=ha, valign=va);
+            }
+        }
+    }
+}
+
 
 // Section: Attachment Positioning
 
@@ -1057,11 +1151,12 @@ module attach(from, to, overlap, norot=false)
         $attach_to = to;
         $attach_anchor = anch;
         $attach_norot = norot;
+        olap = two_d? [0,-overlap,0] : [0,0,-overlap];
         if (norot || (norm(anch[2]-UP)<1e-9 && anch[3]==0)) {
-            translate(anch[1]) translate([0,0,-overlap]) children();
+            translate(anch[1]) translate(olap) children();
         } else {
             fromvec = two_d? BACK : UP;
-            translate(anch[1]) rot(anch[3],from=fromvec,to=anch[2]) translate([0,0,-overlap]) children();
+            translate(anch[1]) rot(anch[3],from=fromvec,to=anch[2]) translate(olap) children();
         }
     }
 }
@@ -1137,10 +1232,10 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
         psize = point3d($parent_size);
         length = [for (i=[0:2]) if(!vec[i]) psize[i]][0]+0.1;
         rotang =
-            vec.z<0? [90,0,180+vang(point2d(vec))] :
-            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+vang(point2d(vec)) :
-            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+vang(point2d(vec))] :
-            [-90,0,180+vang(point2d(vec))];
+            vec.z<0? [90,0,180+v_theta(vec)] :
+            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
+            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+v_theta(vec)] :
+            [-90,0,180+v_theta(vec)];
         translate(anch[1]) {
             rot(rotang) {
                 linear_extrude(height=length, center=true, convexity=convexity) {
@@ -1191,8 +1286,8 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
         $attach_norot = true;
         $tags = "mask";
         rotang = vec.z<0?
-            [  0,0,180+vang(point2d(vec))-45] :
-            [180,0,-90+vang(point2d(vec))-45];
+            [  0,0,180+v_theta(vec)-45] :
+            [180,0,-90+v_theta(vec)-45];
         translate(anch[1]) {
             rot(rotang) {
                 render(convexity=convexity)
@@ -1223,8 +1318,18 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask()
 // Description:
-//   Takes a 3D mask shape, and attaches it to the given edges, with the appropriate orientation to be `diff()`ed away.
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   Takes a 3D mask shape, and attaches it to the given edges, with the appropriate orientation to be
+//   `diff()`ed away.  The mask shape should be vertically oriented (Z-aligned) with the back-right
+//   quadrant (X+Y+) shaped to be diffed away from the edge of parent attachable shape.  For a more
+//   step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Figure: A Typical Edge Rounding Mask
+//   module roundit(l,r) difference() {
+//       translate([-1,-1,-l/2])
+//           cube([r+1,r+1,l]);
+//       translate([r,r])
+//           cylinder(h=l+1,r=r,center=true, $fn=quantup(segs(r),4));
+//   }
+//   roundit(l=30,r=10);
 // Arguments:
 //   edges = Edges to mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
 //   except = Edges to explicitly NOT mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
@@ -1252,10 +1357,10 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
         $attach_norot = true;
         $tags = "mask";
         rotang =
-            vec.z<0? [90,0,180+vang(point2d(vec))] :
-            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+vang(point2d(vec)) :
-            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+vang(point2d(vec))] :
-            [-90,0,180+vang(point2d(vec))];
+            vec.z<0? [90,0,180+v_theta(vec)] :
+            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
+            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+v_theta(vec)] :
+            [-90,0,180+v_theta(vec)];
         translate(anch[1]) rot(rotang) children();
     }
 }
@@ -1296,8 +1401,8 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
         $attach_norot = true;
         $tags = "mask";
         rotang = vec.z<0?
-            [  0,0,180+vang(point2d(vec))-45] :
-            [180,0,-90+vang(point2d(vec))-45];
+            [  0,0,180+v_theta(vec)-45] :
+            [180,0,-90+v_theta(vec)-45];
         translate(anch[1]) rot(rotang) children();
     }
 }

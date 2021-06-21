@@ -414,8 +414,8 @@ function rot(a=0, v, cp, from, to, reverse=false, planar=false, p, _m) =
                 assert(approx(point3d(from).z, 0), "'from' must be a 2D vector when 'planar' is true.")
                 assert(approx(point3d(to).z, 0), "'to' must be a 2D vector when 'planar' is true.")
                 affine2d_zrot(
-                    vang(point2d(to)) -
-                    vang(point2d(from))
+                    v_theta(to) -
+                    v_theta(from)
                 ),
             m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
             m3 = reverse? matrix_inverse(m2) : m2
@@ -946,8 +946,8 @@ function yscale(y=1, p, cp=0, planar=false) =
     assert(is_bool(planar))
     let( cp = is_num(cp)? [0,cp,0] : cp )
     (planar || (!is_undef(p) && len(p)==2))
-      ? scale([1,y],p=p)
-      : scale([1,y,1],p=p);
+      ? scale([1,y], cp=cp, p=p)
+      : scale([1,y,1], cp=cp, p=p);
 
 
 // Function&Module: zscale()

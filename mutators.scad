@@ -515,7 +515,7 @@ module path_extrude2d(path, caps=true) {
         }
     }
     for (t=triplet(path)) {
-        ang = vang(t[2]-t[1]) - vang(t[1]-t[0]);
+        ang = v_theta(t[2]-t[1]) - v_theta(t[1]-t[0]);
         delt = t[2] - t[1];
         translate(t[1]) {
             minkowski() {

@@ -57,17 +57,41 @@
 // Example: Rounded Edges, Untrimmed Corners
 //   cuboid([30,40,50], rounding=10, trimcorners=false);
 // Example: Chamferring Selected Edges
-//   cuboid([30,40,50], chamfer=5, edges=[TOP+FRONT,TOP+RIGHT,FRONT+RIGHT], $fn=24);
+//   cuboid(
+//       [30,40,50], chamfer=5,
+//       edges=[TOP+FRONT,TOP+RIGHT,FRONT+RIGHT],
+//       $fn=24
+//   );
 // Example: Rounding Selected Edges
-//   cuboid([30,40,50], rounding=5, edges=[TOP+FRONT,TOP+RIGHT,FRONT+RIGHT], $fn=24);
+//   cuboid(
+//       [30,40,50], rounding=5,
+//       edges=[TOP+FRONT,TOP+RIGHT,FRONT+RIGHT],
+//       $fn=24
+//   );
 // Example: Negative Chamferring
-//   cuboid([30,40,50], chamfer=-5, edges=[TOP,BOT], except_edges=RIGHT, $fn=24);
+//   cuboid(
+//       [30,40,50], chamfer=-5,
+//       edges=[TOP,BOT], except_edges=RIGHT,
+//       $fn=24
+//   );
 // Example: Negative Chamferring, Untrimmed Corners
-//   cuboid([30,40,50], chamfer=-5, edges=[TOP,BOT], except_edges=RIGHT, trimcorners=false, $fn=24);
+//   cuboid(
+//       [30,40,50], chamfer=-5,
+//       edges=[TOP,BOT], except_edges=RIGHT,
+//       trimcorners=false, $fn=24
+//   );
 // Example: Negative Rounding
-//   cuboid([30,40,50], rounding=-5, edges=[TOP,BOT], except_edges=RIGHT, $fn=24);
+//   cuboid(
+//       [30,40,50], rounding=-5,
+//       edges=[TOP,BOT], except_edges=RIGHT,
+//       $fn=24
+//   );
 // Example: Negative Rounding, Untrimmed Corners
-//   cuboid([30,40,50], rounding=-5, edges=[TOP,BOT], except_edges=RIGHT, trimcorners=false, $fn=24);
+//   cuboid(
+//       [30,40,50], rounding=-5,
+//       edges=[TOP,BOT], except_edges=RIGHT,
+//       trimcorners=false, $fn=24
+//   );
 // Example: Standard Connectors
 //   cuboid(40) show_anchors();
 module cuboid(
@@ -87,9 +111,9 @@ module cuboid(
         cnt = sum(e);
         r = first_defined([chamfer, rounding, 0]);
         c = [min(r,size.x/2), min(r,size.y/2), min(r,size.z/2)];
-        c2 = vmul(corner,c/2);
+        c2 = v_mul(corner,c/2);
         $fn = is_finite(chamfer)? 4 : segs(r);
-        translate(vmul(corner, size/2-c)) {
+        translate(v_mul(corner, size/2-c)) {
             if (cnt == 0 || approx(r,0)) {
                 translate(c2) cube(c, center=true);
             } else if (cnt == 1) {
@@ -130,6 +154,7 @@ module cuboid(
     size = scalar_vec3(size);
     edges = edges(edges, except=except_edges);
     assert(is_vector(size,3));
+    assert(all_positive(size));
     assert(is_undef(chamfer) || is_finite(chamfer));
     assert(is_undef(rounding) || is_finite(rounding));
     assert(is_undef(p1) || is_vector(p1));
@@ -138,7 +163,7 @@ module cuboid(
     if (!is_undef(p1)) {
         if (!is_undef(p2)) {
             translate(pointlist_bounds([p1,p2])[0]) {
-                cuboid(size=vabs(p2-p1), chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
+                cuboid(size=v_abs(p2-p1), chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
             }
         } else {
             translate(p1) {
@@ -184,7 +209,7 @@ module cuboid(
                             for (i = [0:3], axis=[0:1]) {
                                 if (edges[axis][i]>0) {
                                     vec = EDGE_OFFSETS[axis][i];
-                                    translate(vmul(vec/2, size+[ach,ach,-ach])) {
+                                    translate(v_mul(vec/2, size+[ach,ach,-ach])) {
                                         rotate(majrots[axis]) {
                                             cube([ach, ach, size[axis]], center=true);
                                         }
@@ -197,7 +222,7 @@ module cuboid(
                                 for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
                                     ce = corner_edges(edges, [xa,ya,za]);
                                     if (ce.x + ce.y > 1) {
-                                        translate(vmul([xa,ya,za]/2, size+[ach-0.01,ach-0.01,-ach])) {
+                                        translate(v_mul([xa,ya,za]/2, size+[ach-0.01,ach-0.01,-ach])) {
                                             cube([ach+0.01,ach+0.01,ach], center=true);
                                         }
                                     }
@@ -209,7 +234,7 @@ module cuboid(
                         for (i = [0:3], axis=[0:1]) {
                             if (edges[axis][i]>0) {
                                 vec = EDGE_OFFSETS[axis][i];
-                                translate(vmul(vec/2, size+[2*ach,2*ach,-2*ach])) {
+                                translate(v_mul(vec/2, size+[2*ach,2*ach,-2*ach])) {
                                     rotate(majrots[axis]) {
                                         zrot(45) cube([ach*sqrt(2), ach*sqrt(2), size[axis]+2.1*ach], center=true);
                                     }
@@ -271,7 +296,7 @@ module cuboid(
                             for (i = [0:3], axis=[0:1]) {
                                 if (edges[axis][i]>0) {
                                     vec = EDGE_OFFSETS[axis][i];
-                                    translate(vmul(vec/2, size+[ard,ard,-ard])) {
+                                    translate(v_mul(vec/2, size+[ard,ard,-ard])) {
                                         rotate(majrots[axis]) {
                                             cube([ard, ard, size[axis]], center=true);
                                         }
@@ -284,7 +309,7 @@ module cuboid(
                                 for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
                                     ce = corner_edges(edges, [xa,ya,za]);
                                     if (ce.x + ce.y > 1) {
-                                        translate(vmul([xa,ya,za]/2, size+[ard-0.01,ard-0.01,-ard])) {
+                                        translate(v_mul([xa,ya,za]/2, size+[ard-0.01,ard-0.01,-ard])) {
                                             cube([ard+0.01,ard+0.01,ard], center=true);
                                         }
                                     }
@@ -296,7 +321,7 @@ module cuboid(
                         for (i = [0:3], axis=[0:1]) {
                             if (edges[axis][i]>0) {
                                 vec = EDGE_OFFSETS[axis][i];
-                                translate(vmul(vec/2, size+[2*ard,2*ard,-2*ard])) {
+                                translate(v_mul(vec/2, size+[2*ard,2*ard,-2*ard])) {
                                     rotate(majrots[axis]) {
                                         cyl(l=size[axis]+2.1*ard, r=ard);
                                     }
@@ -363,10 +388,6 @@ function cuboid(
 //   Creates a rectangular prismoid shape with optional roundovers and chamfering.
 //   You can only round or chamfer the vertical(ish) edges.  For those edges, you can
 //   specify rounding and/or chamferring per-edge, and for top and bottom separately.
-//   Note: if using chamfers or rounding, you **must** also include the hull.scad file:
-//   ```
-//   include <BOSL2/hull.scad>
-//   ```
 //
 // Arguments:
 //   size1 = [width, length] of the bottom end of the prism.
@@ -374,12 +395,12 @@ function cuboid(
 //   h|l = Height of the prism.
 //   shift = [X,Y] amount to shift the center of the top end with respect to the center of the bottom end.
 //   ---
-//   rounding = The roundover radius for the vertical-ish edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
-//   rounding1 = The roundover radius for the bottom of the vertical-ish edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
-//   rounding2 = The roundover radius for the top of the vertical-ish edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
-//   chamfer = The chamfer size for the vertical-ish edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
-//   chamfer1 = The chamfer size for the bottom of the vertical-ish edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
-//   chamfer2 = The chamfer size for the top of the vertical-ish edges of the prismoid.  Requires including hull.scad.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
+//   rounding = The roundover radius for the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-]. Default: 0 (no rounding)
+//   rounding1 = The roundover radius for the bottom of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
+//   rounding2 = The roundover radius for the top of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual radii for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
+//   chamfer = The chamfer size for the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].  Default: 0 (no chamfer)
+//   chamfer1 = The chamfer size for the bottom of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
+//   chamfer2 = The chamfer size for the top of the vertical-ish edges of the prismoid.  If given as a list of four numbers, gives individual chamfers for each corner, in the order [X+Y+,X-Y+,X-Y-,X+Y-].
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -401,25 +422,22 @@ function cuboid(
 // Example(FlatSpin,VPD=160,VPT=[0,0,10]): Shifting/Skewing
 //   prismoid(size1=[50,30], size2=[20,20], h=20, shift=[15,5]);
 // Example: Rounding
-//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, rounding=10, h=30);
 // Example: Outer Chamfer Only
-//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, chamfer=5, h=30);
 // Example: Gradiant Rounding
-//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, rounding1=10, rounding2=0, h=30);
 // Example: Per Corner Rounding
-//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, rounding=[0,5,10,15], h=30);
 // Example: Per Corner Chamfer
-//   include <BOSL2/hull.scad>
 //   prismoid(100, 80, chamfer=[0,5,10,15], h=30);
 // Example: Mixing Chamfer and Rounding
-//   include <BOSL2/hull.scad>
-//   prismoid(100, 80, chamfer=[0,5,0,10], rounding=[5,0,10,0], h=30);
+//   prismoid(
+//       100, 80, h=30,
+//       chamfer=[0,5,0,10],
+//       rounding=[5,0,10,0]
+//   );
 // Example: Really Mixing It Up
-//   include <BOSL2/hull.scad>
 //   prismoid(
 //       size1=[100,80], size2=[80,60], h=20,
 //       chamfer1=[0,5,0,10], chamfer2=[5,0,10,0],
@@ -448,6 +466,10 @@ module prismoid(
     eps = pow(2,-14);
     size1 = is_num(size1)? [size1,size1] : size1;
     size2 = is_num(size2)? [size2,size2] : size2;
+    assert(all_nonnegative(size1));
+    assert(all_nonnegative(size2));
+    assert(size1.x + size2.x > 0);
+    assert(size1.y + size2.y > 0);
     s1 = [max(size1.x, eps), max(size1.y, eps)];
     s2 = [max(size2.x, eps), max(size2.y, eps)];
     rounding1 = default(rounding1, rounding);
@@ -499,8 +521,8 @@ function prismoid(
             let(
                 corners = [[1,1],[1,-1],[-1,-1],[-1,1]] * 0.5,
                 points = [
-                    for (p=corners) point3d(vmul(s2,p), +h/2) + shiftby,
-                    for (p=corners) point3d(vmul(s1,p), -h/2)
+                    for (p=corners) point3d(v_mul(s2,p), +h/2) + shiftby,
+                    for (p=corners) point3d(v_mul(s1,p), -h/2)
                 ],
                 faces=[
                     [0,1,2], [0,2,3], [0,4,5], [0,5,1],
@@ -551,10 +573,6 @@ function prismoid(
 //   You can only round or chamfer the vertical(ish) edges.  For those edges, you can
 //   specify rounding and/or chamferring per-edge, and for top and bottom, inside and
 //   outside  separately.
-//   Note: if using chamfers or rounding, you **must** also include the hull.scad file:
-//   ```
-//   include <BOSL2/hull.scad>
-//   ```
 // Arguments:
 //   h|l = The height or length of the rectangular tube.  Default: 1
 //   size = The outer [X,Y] size of the rectangular tube.
@@ -588,33 +606,42 @@ function prismoid(
 //   rect_tube(isize=[60,80], wall=5, h=30);
 //   rect_tube(size=[100,60], isize=[90,50], h=30);
 //   rect_tube(size1=[100,60], size2=[70,40], wall=5, h=30);
-//   rect_tube(size1=[100,60], size2=[70,40], isize1=[40,20], isize2=[65,35], h=15);
+// Example:
+//   rect_tube(
+//       size1=[100,60], size2=[70,40],
+//       isize1=[40,20], isize2=[65,35], h=15
+//   );
 // Example: Outer Rounding Only
-//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=5, rounding=10, irounding=0, h=30);
 // Example: Outer Chamfer Only
-//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=5, chamfer=5, ichamfer=0, h=30);
 // Example: Outer Rounding, Inner Chamfer
-//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=5, rounding=10, ichamfer=8, h=30);
 // Example: Inner Rounding, Outer Chamfer
-//   include <BOSL2/hull.scad>
 //   rect_tube(size=100, wall=5, chamfer=10, irounding=8, h=30);
 // Example: Gradiant Rounding
-//   include <BOSL2/hull.scad>
-//   rect_tube(size1=100, size2=80, wall=5, rounding1=10, rounding2=0, irounding1=8, irounding2=0, h=30);
+//   rect_tube(
+//       size1=100, size2=80, wall=5, h=30,
+//       rounding1=10, rounding2=0,
+//       irounding1=8, irounding2=0
+//   );
 // Example: Per Corner Rounding
-//   include <BOSL2/hull.scad>
-//   rect_tube(size=100, wall=10, rounding=[0,5,10,15], irounding=0, h=30);
+//   rect_tube(
+//       size=100, wall=10, h=30,
+//       rounding=[0,5,10,15], irounding=0
+//   );
 // Example: Per Corner Chamfer
-//   include <BOSL2/hull.scad>
-//   rect_tube(size=100, wall=10, chamfer=[0,5,10,15], ichamfer=0, h=30);
+//   rect_tube(
+//       size=100, wall=10, h=30,
+//       chamfer=[0,5,10,15], ichamfer=0
+//   );
 // Example: Mixing Chamfer and Rounding
-//   include <BOSL2/hull.scad>
-//   rect_tube(size=100, wall=10, chamfer=[0,5,0,10], ichamfer=0, rounding=[5,0,10,0], irounding=0, h=30);
+//   rect_tube(
+//       size=100, wall=10, h=30,
+//       chamfer=[0,5,0,10], ichamfer=0,
+//       rounding=[5,0,10,0], irounding=0
+//   );
 // Example: Really Mixing It Up
-//   include <BOSL2/hull.scad>
 //   rect_tube(
 //       size1=[100,80], size2=[80,60],
 //       isize1=[50,30], isize2=[70,50], h=20,
@@ -838,7 +865,11 @@ function right_triangle(size=[1,1,1], center, anchor, spin=0, orient=UP) =
 //   }
 //
 // Example: Putting it all together
-//   cyl(l=40, d1=25, d2=15, chamfer1=10, chamfang1=30, from_end=true, rounding2=5);
+//   cyl(
+//       l=40, d1=25, d2=15,
+//       chamfer1=10, chamfang1=30,
+//       from_end=true, rounding2=5
+//   );
 //
 // Example: External Chamfers
 //   cyl(l=50, r=30, chamfer=-5, chamfang=30, $fa=1, $fs=1);
@@ -1504,6 +1535,9 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 // Usage: Typical
 //   teardrop(h|l, r, <ang>, <cap_h>, ...);
 //   teardrop(h|l, d=, <ang=>, <cap_h=>, ...);
+// Usage: Psuedo-Conical
+//   teardrop(h|l, r1=, r2=, <ang=>, <cap_h1=>, <cap_h2=>, ...);
+//   teardrop(h|l, d1=, d2=, <ang=>, <cap_h1=>, <cap_h2=>, ...);
 // Usage: Attaching Children
 //   teardrop(h|l, r, ...) <attachments>;
 //
@@ -1513,10 +1547,21 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 //   ang = Angle of hat walls from the Z axis.  Default: 45 degrees
 //   cap_h = If given, height above center where the shape will be truncated. Default: `undef` (no truncation)
 //   ---
-//   d = Diameter of circular portion of bottom. (Use instead of r)
+//   r1 = Radius of circular portion of the front end of the teardrop shape.
+//   r2 = Radius of circular portion of the back end of the teardrop shape.
+//   d = Diameter of circular portion of the teardrop shape.
+//   d1 = Diameter of circular portion of the front end of the teardrop shape.
+//   d2 = Diameter of circular portion of the back end of the teardrop shape.
+//   cap_h1 = If given, height above center where the shape will be truncated, on the front side. Default: `undef` (no truncation)
+//   cap_h2 = If given, height above center where the shape will be truncated, on the back side. Default: `undef` (no truncation)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//
+// Extra Anchors:
+//   cap = The center of the top of the cap, oriented with the cap face normal.
+//   cap_fwd = The front edge of the cap.
+//   cap_back = The back edge of the cap.
 //
 // Example: Typical Shape
 //   teardrop(r=30, h=10, ang=30);
@@ -1524,22 +1569,49 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 //   teardrop(r=30, h=10, ang=30, cap_h=40);
 // Example: Close Crop
 //   teardrop(r=30, h=10, ang=30, cap_h=20);
-// Example: Standard Connectors
-//   teardrop(r=30, h=10, ang=30) show_anchors();
-module teardrop(h, r, ang=45, cap_h, d, l, anchor=CENTER, spin=0, orient=UP)
+// Example: Psuedo-Conical
+//   teardrop(r1=20, r2=30, h=40, cap_h1=25, cap_h2=35);
+// Example: Standard Conical Connectors
+//   teardrop(d1=20, d2=30, h=20, cap_h1=11, cap_h2=16)
+//       show_anchors(custom=false);
+// Example(Spin,VPD=275): Named Conical Connectors
+//   teardrop(d1=20, d2=30, h=20, cap_h1=11, cap_h2=16)
+//       show_anchors(std=false);
+module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, anchor=CENTER, spin=0, orient=UP)
 {
-    r = get_radius(r=r, d=d, dflt=1);
+    r1 = get_radius(r=r, r1=r1, d=d, d1=d1, dflt=1);
+    r2 = get_radius(r=r, r1=r2, d=d, d1=d2, dflt=1);
     l = first_defined([l, h, 1]);
-    tip_y = adj_ang_to_hyp(r, 90-ang);
-    cap_h = min(default(cap_h,tip_y), tip_y);
+    tip_y1 = adj_ang_to_hyp(r1, 90-ang);
+    tip_y2 = adj_ang_to_hyp(r2, 90-ang);
+    cap_h1 = min(first_defined([cap_h1, cap_h, tip_y1]), tip_y1);
+    cap_h2 = min(first_defined([cap_h2, cap_h, tip_y2]), tip_y2);
+    capvec = unit([0, cap_h1-cap_h2, l]);
     anchors = [
-        ["cap", [0,0,cap_h], UP, 0]
+        anchorpt("cap",      [0,0,(cap_h1+cap_h2)/2], capvec),
+        anchorpt("cap_fwd",  [0,-l/2,cap_h1],         unit((capvec+FWD)/2)),
+        anchorpt("cap_back", [0,+l/2,cap_h2],         unit((capvec+BACK)/2), 180),
     ];
-    attachable(anchor,spin,orient, r=r, l=l, axis=BACK, anchors=anchors) {
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=BACK, anchors=anchors) {
         rot(from=UP,to=FWD) {
             if (l > 0) {
-                linear_extrude(height=l, center=true, slices=2) {
-                    teardrop2d(r=r, ang=ang, cap_h=cap_h);
+                if (r1 == r2) {
+                    linear_extrude(height=l, center=true, slices=2) {
+                        teardrop2d(r=r1, ang=ang, cap_h=cap_h);
+                    }
+                } else {
+                    hull() {
+                        up(l/2-0.001) {
+                            linear_extrude(height=0.001, center=false) {
+                                teardrop2d(r=r1, ang=ang, cap_h=cap_h1);
+                            }
+                        }
+                        down(l/2) {
+                            linear_extrude(height=0.001, center=false) {
+                                teardrop2d(r=r2, ang=ang, cap_h=cap_h2);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1702,9 +1774,15 @@ module pie_slice(
 //
 // Example:
 //   union() {
-//       translate([0,2,-4]) cube([20, 4, 24], anchor=BOTTOM);
-//       translate([0,-10,-4]) cube([20, 20, 4], anchor=BOTTOM);
-//       color("green") interior_fillet(l=20, r=10, spin=180, orient=RIGHT);
+//       translate([0,2,-4])
+//           cube([20, 4, 24], anchor=BOTTOM);
+//       translate([0,-10,-4])
+//           cube([20, 20, 4], anchor=BOTTOM);
+//       color("green")
+//           interior_fillet(
+//               l=20, r=10,
+//               spin=180, orient=RIGHT
+//           );
 //   }
 //
 // Example:
@@ -1762,21 +1840,30 @@ module interior_fillet(l=1.0, r, ang=90, overlap=0.01, d, anchor=FRONT+LEFT, spi
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
 //   heightfield(size=[100,100], bottom=-20, data=[
-//       for (y=[-180:4:180]) [for(x=[-180:4:180]) 10*cos(3*norm([x,y]))]
+//       for (y=[-180:4:180]) [
+//           for(x=[-180:4:180])
+//           10*cos(3*norm([x,y]))
+//       ]
 //   ]);
 // Example:
 //   intersection() {
 //       heightfield(size=[100,100], data=[
-//           for (y=[-180:5:180]) [for(x=[-180:5:180]) 10+5*cos(3*x)*sin(3*y)]
+//           for (y=[-180:5:180]) [
+//               for(x=[-180:5:180])
+//               10+5*cos(3*x)*sin(3*y)
+//           ]
 //       ]);
 //       cylinder(h=50,d=100);
 //   }
-// Example(NORENDER): Heightfield by Function
+// Example: Heightfield by Function
 //   fn = function (x,y) 10*sin(x*360)*cos(y*360);
 //   heightfield(size=[100,100], data=fn);
-// Example(NORENDER): Heightfield by Function, with Specific Ranges
+// Example: Heightfield by Function, with Specific Ranges
 //   fn = function (x,y) 2*cos(5*norm([x,y]));
-//   heightfield(size=[100,100], bottom=-20, data=fn, xrange=[-180:2:180], yrange=[-180:2:180]);
+//   heightfield(
+//       size=[100,100], bottom=-20, data=fn,
+//       xrange=[-180:2:180], yrange=[-180:2:180]
+//   );
 module heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04:1], yrange=[-1:0.04:1], style="default", convexity=10, anchor=CENTER, spin=0, orient=UP)
 {
     size = is_num(size)? [size,size] : point2d(size);

@@ -1,12 +1,10 @@
-name: Docs
+name: TestWorkflow
 on:
-  pull_request:
+  workflow_dispatch:
     branches: [master]
-    types: [closed]
 
 jobs:
-  GenerateDocs:
-    if: github.event.pull_request.merged == true
+  TestJob:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -17,6 +15,9 @@ jobs:
       with:
         repository: revarbat/BOSL2.wiki
         path: BOSL2.wiki
+
+    - name: Setup OpenGL
+      uses: openrndr/setup-opengl@v1.1
 
     - name: Apt Update
       run: sudo apt update
@@ -35,26 +36,14 @@ jobs:
         sudo chmod +x /usr/local/bin/openscad
         echo "::add-matcher::.github/openscad_docsgen.json"
 
-    - name: Generating Docs Headless
+    - name: Make SCAD File
+      run: |
+        cd $GITHUB_WORKSPACE
+        echo "cube(50, center=100);" > testwf.scad
+
+    - name: TestScript
       run: |
         export OPENSCADPATH=$(dirname $GITHUB_WORKSPACE)
         xvfb-run --server-args="-screen 0, 1280x720x24" -a \
-        openscad-docsgen -ticmI *.scad
-
-    - name: Commit Wiki Docs
-      run: |
-        cd $GITHUB_WORKSPACE/BOSL2.wiki
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git add --all
-        git commit -m "Wiki docs auto-regen." && git push || true
-
-    - name: Bump Release Version
-      run: |
-        cd $GITHUB_WORKSPACE
-        ./scripts/increment_version.sh
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git add version.scad
-        git commit -m "Bump release version." && git push || true
+        glxinfo
 

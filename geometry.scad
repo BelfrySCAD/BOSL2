@@ -80,7 +80,7 @@ function collinear(a, b, c, eps=EPSILON) =
 
 // Function: point_line_distance()
 // Usage:
-//   point_line_distance(line, pt);
+//   point_line_distance(pt, line);
 // Description:
 //   Finds the perpendicular distance of a point `pt` from the line `line`.
 // Arguments:

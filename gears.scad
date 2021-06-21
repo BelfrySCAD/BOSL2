@@ -800,7 +800,6 @@ module spur_gear(
                     backlash = backlash,
                     interior = interior
                 );
-                circle(d=shaft_diam+4);
             }
             if (shaft_diam > 0) {
                 cylinder(h=2*thickness+1, r=shaft_diam/2, center=true, $fn=max(12,segs(shaft_diam/2)));
@@ -929,7 +928,7 @@ function bevel_gear(
         radcp = [0, midpr] + polar_to_xy(cutter_radius, 180+spiral_angle),
         angC1 = law_of_cosines(a=cutter_radius, b=norm(radcp), c=ocone_rad),
         angC2 = law_of_cosines(a=cutter_radius, b=norm(radcp), c=icone_rad),
-        radcpang = vang(radcp),
+        radcpang = v_theta(radcp),
         sang = radcpang - (180-angC1),
         eang = radcpang - (180-angC2),
         profile = gear_tooth_profile(
@@ -945,7 +944,7 @@ function bevel_gear(
         verts1 = [
             for (v = lerpn(0,1,slices+1)) let(
                 p = radcp + polar_to_xy(cutter_radius, lerp(sang,eang,v)),
-                ang = vang(p)-90,
+                ang = v_theta(p)-90,
                 dist = norm(p)
             ) [
                 let(
