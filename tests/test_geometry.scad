@@ -91,6 +91,7 @@ test_simplify_path();
 test_simplify_path_indexed();
 test_is_region();
 test_convex_distance();
+test_convex_collision();
 
 // to be used when there are two alternative symmetrical outcomes 
 // from a function like a plane output; v must be a vector
@@ -1076,18 +1077,42 @@ module test_is_region() {
 *test_is_region();
 
 module test_convex_distance() {
+// 2D
     c1 = circle(10,$fn=24);
-		c2 = move([15,0], p=c1);
-		assert(convex_distance(c1, c2)==0);
-		c3 = move([22,0],c1);
-		assert(abs(convex_distance(c1, c3)-2)<EPSILON);
+    c2 = move([15,0], p=c1);
+    assert(convex_distance(c1, c2)==0);
+    c3 = move([22,0],c1);
+    assert_approx(convex_distance(c1, c3),2);
+// 3D
     s1 = sphere(10,$fn=4);
-		s2 = move([15,0], p=s1);
-		assert_approx(convex_distance(s1[0], s2[0]), 0.857864376269);
-		s3 = move([25.3,0],s1);
-		assert_approx(convex_distance(s1[0], s3[0]), 11.1578643763);
-    s4 = move([30,25],s1);		
-		assert_approx(convex_distance(s1[0], s4[0]), 28.8908729653);
+    s2 = move([15,0], p=s1);
+    assert_approx(convex_distance(s1[0], s2[0]), 0.857864376269);
+    s3 = move([25.3,0],s1);
+    assert_approx(convex_distance(s1[0], s3[0]), 11.1578643763);
+    s4 = move([30,25],s1);    
+    assert_approx(convex_distance(s1[0], s4[0]), 28.8908729653);
+    s5 = move([10*sqrt(2),0],s1);    
+    assert_approx(convex_distance(s1[0], s5[0]), 0);
+}
+*test_convex_distance();
+
+module test_convex_collision() {
+// 2D
+    c1 = circle(10,$fn=24);
+    c2 = move([15,0], p=c1);
+    assert(convex_collision(c1, c2));
+    c3 = move([22,0],c1);
+    assert(!convex_collision(c1, c3));
+// 3D
+    s1 = sphere(10,$fn=4);
+    s2 = move([15,0], p=s1);
+    assert(!convex_collision(s1[0], s2[0]));
+    s3 = move([25.3,0],s1);
+    assert(!convex_collision(s1[0], s3[0]));
+    s4 = move([5,0],s1);    
+    assert(convex_collision(s1[0], s4[0]));
+    s5 = move([10*sqrt(2),0],s1);    
+    assert(convex_collision(s1[0], s5[0]));
 }
 *test_convex_distance();
 
