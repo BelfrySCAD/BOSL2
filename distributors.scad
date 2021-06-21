@@ -520,20 +520,20 @@ module grid2d(spacing, n, size, stagger=false, inside=undef)
         ) :
         is_vector(spacing)? assert(len(spacing)==2) spacing :
         size!=undef? (
-            is_num(n)? vdiv(size,(n-1)*[1,1]) :
-            is_vector(n)? assert(len(n)==2) vdiv(size,n-[1,1]) :
-            vdiv(size,(stagger==false? [1,1] : [2,2]))
+            is_num(n)? v_div(size,(n-1)*[1,1]) :
+            is_vector(n)? assert(len(n)==2) v_div(size,n-[1,1]) :
+            v_div(size,(stagger==false? [1,1] : [2,2]))
         ) :
         undef;
     n = is_num(n)? [n,n] :
         is_vector(n)? assert(len(n)==2) n :
-        size!=undef && spacing!=undef? vfloor(vdiv(size,spacing))+[1,1] :
+        size!=undef && spacing!=undef? v_floor(v_div(size,spacing))+[1,1] :
         [2,2];
-    offset = vmul(spacing, n-[1,1])/2;
+    offset = v_mul(spacing, n-[1,1])/2;
     if (stagger == false) {
         for (row = [0:1:n.y-1]) {
             for (col = [0:1:n.x-1]) {
-                pos = vmul([col,row],spacing) - offset;
+                pos = v_mul([col,row],spacing) - offset;
                 if (
                     is_undef(inside) ||
                     (is_path(inside) && point_in_polygon(pos, inside)>=0) ||
@@ -556,7 +556,7 @@ module grid2d(spacing, n, size, stagger=false, inside=undef)
             if (rowcols > 0) {
                 for (col = [0:1:rowcols-1]) {
                     rowdx = (row%2 != staggermod)? spacing.x : 0;
-                    pos = vmul([2*col,row],spacing) + [rowdx,0] - offset;
+                    pos = v_mul([2*col,row],spacing) + [rowdx,0] - offset;
                     if (
                         is_undef(inside) ||
                         (is_path(inside) && point_in_polygon(pos, inside)>=0) ||
@@ -616,7 +616,7 @@ module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
             for (yi = [0:1:n.y-1]) {
                 for (zi = [0:1:n.z-1]) {
                     $idx = [xi,yi,zi];
-                    $pos = vmul(spacing, $idx - (n-[1,1,1])/2);
+                    $pos = v_mul(spacing, $idx - (n-[1,1,1])/2);
                     translate($pos) children();
                 }
             }
@@ -989,7 +989,7 @@ module arc_of(
 //
 // Example:
 //   ovoid_spread(n=500, d=100, cone_ang=180)
-//       color(unit(point3d(vabs($pos))))
+//       color(unit(point3d(v_abs($pos))))
 //           cylinder(d=8, h=10, center=false);
 module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=true)
 {
@@ -1004,7 +1004,7 @@ module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=tr
     for ($idx = idx(theta_phis)) {
         tp = theta_phis[$idx];
         xyz = spherical_to_xyz(r, tp[0], tp[1]);
-        $pos = vmul(xyz,point3d(scale,1));
+        $pos = v_mul(xyz,point3d(scale,1));
         $theta = tp[0];
         $phi = tp[1];
         $rad = r;

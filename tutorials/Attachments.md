@@ -91,6 +91,23 @@ overrides the `anchor=` argument.  A `center=true` argument is the same as `anch
 A `center=false` argument can mean `anchor=[-1,-1,-1]` for a cube, or `anchor=BOTTOM` for a
 cylinder.
 
+Many 2D shapes provided by BOSL2 are also anchorable.  Due to technical limitations of OpenSCAD,
+however, `square()` and `circle()` are *not*.  BOSL2 provides `rect()` and `oval()` as attachable
+and anchorable equivalents.  You can only anchor on the XY plane, of course, but you can use the
+same `FRONT`, `BACK`, `LEFT`, `RIGHT`, and `CENTER` anchor constants.
+
+```openscad-2D
+rect([40,30], anchor=BACK+LEFT);
+```
+
+```openscad-2D
+oval(d=50, anchor=FRONT);
+```
+
+```openscad-2D
+hexagon(d=50, anchor=BACK);
+```
+
 
 ## Spin
 Attachable shapes also can be spun in place as you create them.  You can do this by passing in
@@ -107,6 +124,17 @@ vector, like [Xang,Yang,Zang]:
 cube([20,20,40], center=true, spin=[10,20,30]);
 ```
 
+You can also apply spin to 2D shapes from BOSL2.  Again, you should use `rect()` and `oval()`
+instead of `square()` and `circle()`:
+
+```openscad-2D
+rect([40,30], spin=30);
+```
+
+```openscad-2D
+oval(d=[40,30], spin=30);
+```
+
 
 ## Orientation
 Another way to specify a rotation for an attachable shape, is to pass a 3D vector via the
@@ -116,6 +144,9 @@ For example, you can make a cone that is tilted up and to the right like this:
 ```openscad
 cylinder(h=100, r1=50, r2=20, orient=UP+RIGHT);
 ```
+
+You can *not* use `orient=` with 2D shapes.
+
 
 ## Mixing Anchoring, Spin, and Orientation
 When giving `anchor=`, `spin=`, and `orient=`, they are applied anchoring first, spin second,
@@ -150,8 +181,14 @@ However, since spin is applied *after* anchoring, it can actually have a signifi
 cylinder(d=50, l=40, anchor=FWD, spin=-30);
 ```
 
+For 2D shapes, you can mix `anchor=` with `spin=`, but not with `orient=`.
 
-## Attaching Children
+```openscad-2D
+rect([40,30], anchor=BACK+LEFT, spin=30);
+```
+
+
+## Attaching 3D Children
 The reason attachables are called that, is because they can be attached to each other.
 You can do that by making one attachable shape be a child of another attachable shape.
 By default, the child of an attachable is attached to the center of the parent shape.
@@ -178,13 +215,21 @@ cube(50,center=true)
     attach(TOP,TOP) cylinder(d1=50,d2=20,l=20);
 ```
 
-By default, `attach()` causes the child to overlap the parent by 0.01, to let CGAL correctly
-join the parts.  If you need the child to have no overlap, or a different overlap, you can use
-the `overlap=` argument:
+By default, `attach()` places the child exactly flush with the surface of the parent.  Sometimes
+it's useful to have the child overlap the parent by insetting a bit.  You can do this with the
+`overlap=` argument to `attach()`.  A positive value will inset the child into the parent, and
+a negative value will outset out from the parent:
 
 ```openscad
 cube(50,center=true)
-    attach(TOP,TOP,overlap=0) cylinder(d1=50,d2=20,l=20);
+    attach(TOP,overlap=10)
+        cylinder(d=20,l=20);
+```
+
+```openscad
+cube(50,center=true)
+    attach(TOP,overlap=-20)
+        cylinder(d=20,l=20);
 ```
 
 If you want to position the child at the parent's anchorpoint, without re-orienting, you can
@@ -215,6 +260,23 @@ cube(50, center=true)
 ```openscad
 cube(50, center=true)
     position([TOP,RIGHT,FRONT]) cylinder(d1=50,d2=20,l=20);
+```
+
+## Attaching 2D Children
+You can use attachments in 2D as well, but only in the XY plane.  Also, the built-in `square()`
+and `circle()` 2D modules do not support attachments.  Instead, you should use the `rect()` and
+`oval()` modules:
+
+```openscad-2D
+rect(50,center=true)
+    attach(RIGHT,FRONT)
+        trapezoid(w1=30,w2=0,h=30);
+```
+
+```openscad-2D
+oval(d=50)
+    attach(BACK,FRONT,overlap=5)
+        trapezoid(w1=30,w2=0,h=30);
 ```
 
 ## Anchor Arrows
@@ -258,6 +320,7 @@ For large objects, you can again change the size of the arrows with the `s=` arg
 cylinder(h=100, d=100, center=true)
     show_anchors(s=30);
 ```
+
 
 ## Tagged Operations
 BOSL2 introduces the concept of tags.  Tags are names that can be given to attachables, so that
@@ -372,12 +435,171 @@ cube(50, center=true, $tags="hull") {
 ```
 
 
-## Masking Children
-TBW
+## 3D Masking Attachments
+To make it easier to mask away shapes from various edges of an attachable parent shape, there
+are a few specialized alternatives to the `attach()` and `position()` modules.
+
+### `edge_mask()`
+If you have a 3D mask shape that you want to difference away from various edges, you can use
+the `edge_mask()` module.  This module will take a vertically oriented shape, and will rotate
+and move it such that the BACK, RIGHT (X+,Y+) side of the shape will be aligned with the given
+edges.  The shape will be tagged as a "mask" so that you can use `diff("mask")`.  For example,
+here's a shape for rounding an edge:
+
+```openscad
+module round_edge(l,r) difference() {
+    translate([-1,-1,-l/2])
+        cube([r+1,r+1,l]);
+    translate([r,r])
+        cylinder(h=l+1,r=r,center=true, $fn=quantup(segs(r),4));
+}
+round_edge(l=30, r=19);
+```
+
+You can use that mask to round various edges of a cube:
+
+```openscad
+module round_edge(l,r) difference() {
+    translate([-1,-1,-l/2])
+        cube([r+1,r+1,l]);
+    translate([r,r])
+        cylinder(h=l+1,r=r,center=true, $fn=quantup(segs(r),4));
+}
+diff("mask")
+cube([50,60,70],center=true)
+    edge_mask([TOP,"Z"],except=[BACK,TOP+LEFT])
+        round_edge(l=71,r=10);
+```
+
+### `corner_mask()`
+If you have a 3D mask shape that you want to difference away from various corners, you can use
+the `corner_mask()` module.  This module will take a shape and rotate and move it such that the
+BACK RIGHT TOP (X+,Y+,Z+) side of the shape will be aligned with the given corner.  The shape
+will be tagged as a "mask" so that you can use `diff("mask")`.  For example, here's a shape for
+rounding a corner:
+
+```openscad
+module round_corner(r) difference() {
+    translate(-[1,1,1])
+    	cube(r+1);
+    translate([r,r,r])
+    	sphere(r=r, style="aligned", $fn=quantup(segs(r),4));
+}
+round_corner(r=10);
+```
+
+You can use that mask to round various corners of a cube:
+
+```openscad
+module round_corner(r) difference() {
+    translate(-[1,1,1])
+    	cube(r+1);
+    translate([r,r,r])
+    	sphere(r=r, style="aligned", $fn=quantup(segs(r),4));
+}
+diff("mask")
+cube([50,60,70],center=true)
+    corner_mask([TOP,FRONT],LEFT+FRONT+TOP)
+        round_corner(r=10);
+```
+
+### Mix and Match Masks
+You can use `edge_mask()` and `corner_mask()` together as well:
+
+```openscad
+module round_corner(r) difference() {
+    translate(-[1,1,1])
+    	cube(r+1);
+    translate([r,r,r])
+    	sphere(r=r, style="aligned", $fn=quantup(segs(r),4));
+}
+module round_edge(l,r) difference() {
+    translate([-1,-1,-l/2])
+        cube([r+1,r+1,l]);
+    translate([r,r])
+        cylinder(h=l+1,r=r,center=true, $fn=quantup(segs(r),4));
+}
+diff("mask")
+cube([50,60,70],center=true) {
+    edge_mask("ALL") round_edge(l=71,r=10);
+    corner_mask("ALL") round_corner(r=10);
+}
+```
+
+## 2D Profile Mask Attachments
+While 3D mask shapes give you a great deal of control, you need to make sure they are correctly
+sized, and you need to provide separate mask shapes for corners and edges.  Often, a single 2D
+profile could be used to describe the edge mask shape (via `linear_extrude()`), and the corner
+mask shape (via `rotate_extrude()`).  This is where `edge_profile()`, `corner_profile()`, and
+`face_profile()` come in.
+
+### `edge_profile()`
+Using the `edge_profile()` module, you can provide a 2D profile shape and it will be linearly
+extruded to a mask of the apropriate length for each given edge.  The resultant mask will be
+tagged with "mask" so that you can difference it away with `diff("mask")`.  The 2D profile is
+assumed to be oriented with the BACK, RIGHT (X+,Y+) quadrant as the "cutter edge" that gets
+re-oriented towards the edges of the parent shape.  A typical mask profile for chamfering an
+edge may look like:
+
+```openscad-2D
+mask2d_roundover(10);
+```
+
+Using that mask profile, you can mask the edges of a cube like:
+
+```openscad
+diff("mask")
+cube([50,60,70],center=true)
+   edge_profile("ALL")
+       mask2d_roundover(10);
+```
+
+### `corner_profile()`
+You can use the same profile to make a rounded corner mask as well:
+
+```openscad
+diff("mask")
+cube([50,60,70],center=true)
+   corner_profile("ALL", r=10)
+       mask2d_roundover(10);
+```
+
+### `face_profile()`
+As a simple shortcut to apply a profile mask to all edges and corners of a face, you can use the
+`face_profile()` module:
+
+```openscad
+diff("mask")
+cube([50,60,70],center=true)
+   face_profile(TOP, r=10)
+       mask2d_roundover(10);
+```
 
 
 ## Coloring Attachables
-TBW
+Usually, when coloring a shape with the `color()` module, the parent color overrides the colors of
+all children.  This is often not what you want:
+
+```openscad
+$fn = 24;
+color("red") spheroid(d=3) {
+    attach(CENTER,BOT) color("white") cyl(h=10, d=1) {
+        attach(TOP,BOT) color("green") cyl(h=5, d1=3, d2=0);
+    }
+}
+```
+
+If you use the `recolor()` module, however, the child's color overrides the color of the parent.
+This is probably easier to understand by example:
+
+```openscad
+$fn = 24;
+recolor("red") spheroid(d=3) {
+    attach(CENTER,BOT) recolor("white") cyl(h=10, d=1) {
+        attach(TOP,BOT) recolor("green") cyl(h=5, d1=3, d2=0);
+    }
+}
+```
 
 
 ## Making Attachables
@@ -683,6 +905,74 @@ stellate_cube() show_anchors(50);
 
 
 ## Making Named Anchors
-TBW
+While vector anchors are often useful, sometimes there are logically extra attachment points that
+aren't on the perimeter of the shape.  This is what named string anchors are for.  For example,
+the `teardrop()` shape uses a cylindrical geometry for it's vector anchors, but it also provides
+a named anchor "cap" that is at the tip of the hat of the teardrop shape.
+
+Named anchors are passed as an array of `anchorpt()`s to the `anchors=` argument of `attachable()`.
+The `anchorpt()` call takes a name string, a positional point, an orientation vector, and a spin.
+The name is the name of the anchor.  The positional point is where the anchorpoint is at.  The
+orientation vector is the direction that a child attached at that anchorpoint should be oriented.
+The spin is the number of degrees that an attached child should be rotated counter-clockwise around
+the orientation vector.  Spin is optional, and defaults to 0.
+
+To make a simple attachable shape similar to a `teardrop()` that provides a "cap" anchor, you may
+define it like this:
+
+```openscad
+module raindrop(r, thick, anchor=CENTER, spin=0, orient=UP) {
+    anchors = [
+        anchorpt("cap", [0,r/sin(45),0], BACK, 0)
+    ];
+    attachable(anchor,spin,orient, r=r, l=thick, anchors=anchors) {
+        linear_extrude(height=thick, center=true) {
+            circle(r=r);
+            back(r*sin(45)) zrot(45) square(r, center=true);
+        }
+        children();
+    }
+}
+raindrop(r=25, thick=20, anchor="cap");
+```
+
+If you want multiple named anchors, just add them to the list of anchors:
+
+```openscad-FlatSpin,VPD=150
+module raindrop(r, thick, anchor=CENTER, spin=0, orient=UP) {
+    anchors = [
+        anchorpt("captop", [0,r/sin(45), thick/2], BACK+UP,   0),
+        anchorpt("cap",    [0,r/sin(45), 0      ], BACK,      0),
+        anchorpt("capbot", [0,r/sin(45),-thick/2], BACK+DOWN, 0)
+    ];
+    attachable(anchor,spin,orient, r=r, l=thick, anchors=anchors) {
+        linear_extrude(height=thick, center=true) {
+            circle(r=r);
+            back(r*sin(45)) zrot(45) square(r, center=true);
+        }
+        children();
+    }
+}
+raindrop(r=15, thick=10) show_anchors();
+```
+
+Sometimes the named anchor you want to add may be at a point that is reached through a complicated
+set of translations and rotations.  One quick way to calculate that point is to reproduce those
+transformations in a transformation matrix chain.  This is simplified by how you can use the
+function forms of almost all the transformation modules to get the transformation matrices, and
+chain them together with matrix multiplication.  For example, if you have:
+
+```
+scale([1.1, 1.2, 1.3]) xrot(15) zrot(25) right(20) sphere(d=1);
+```
+
+and you want to calculate the centerpoint of the sphere, you can do it like:
+
+```
+sphere_pt = apply(
+    scale([1.1, 1.2, 1.3]) * xrot(15) * zrot(25) * right(20),
+    [0,0,0]
+);
+```
 
 

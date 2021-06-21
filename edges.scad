@@ -139,7 +139,7 @@ function _edge_set(v) =
                     str(v, " must be a vector, edge array, or one of ", valid_values)
                 ) v
             ) :
-            let(nonz = sum(vabs(v)))
+            let(nonz = sum(v_abs(v)))
             nonz==2? (v==v2) :  // Edge: return matching edge.
             let(
                 matches = count_true([

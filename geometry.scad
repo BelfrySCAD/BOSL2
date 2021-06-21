@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////
+﻿//////////////////////////////////////////////////////////////////////
 // LibFile: geometry.scad
 //   Geometry helpers.
 // Includes:
@@ -2235,6 +2235,256 @@ function split_polygons_at_each_z(polys, zs, _i=0) =
             each _split_polygon_at_z(poly, zs[_i])
         ], zs, _i=_i+1
     );
+
+
+// Section: Convex Sets
+
+// Function: is_convex_polygon()
+// Usage:
+//   is_convex_polygon(poly);
+// Description:
+//   Returns true if the given 2D or 3D polygon is convex.  
+//   The result is meaningless if the polygon is not simple (self-intersecting) or non coplanar.
+//   If the points are collinear an error is generated.
+// Arguments:
+//   poly = Polygon to check.
+//   eps = Tolerance for the collinearity test. Default: EPSILON.
+// Example:
+//   is_convex_polygon(circle(d=50));  // Returns: true
+//   is_convex_polygon(rot([50,120,30], p=path3d(circle(1,$fn=50)))); // Returns: true
+// Example:
+//   spiral = [for (i=[0:36]) let(a=-i*10) (10+i)*[cos(a),sin(a)]];
+//   is_convex_polygon(spiral);  // Returns: false
+function is_convex_polygon(poly,eps=EPSILON) =
+    assert(is_path(poly), "The input should be a 2D or 3D polygon." )
+    let( lp = len(poly) )
+    assert( lp>=3 , "A polygon must have at least 3 points" )
+    let( crosses = [for(i=[0:1:lp-1]) cross(poly[(i+1)%lp]-poly[i], poly[(i+2)%lp]-poly[(i+1)%lp]) ] )
+    len(poly[0])==2
+    ?   assert( max(max(crosses),-min(crosses))>eps, "The points are collinear" )
+        min(crosses) >=0 || max(crosses)<=0
+    :   let( prod = crosses*sum(crosses),
+             minc = min(prod),
+             maxc = max(prod) )
+        assert( max(maxc,-minc)>eps, "The points are collinear" )
+        minc>=0 || maxc<=0;
+
+
+// Function: convex_distance()
+// Usage:
+//   convex_distance(pts1, pts2,<eps=>);
+// See also: 
+//   convex_collision
+// Description:
+//   Returns the smallest distance between a point in convex hull of `points1` 
+//   and a point in the convex hull of `points2`. All the points in the lists
+//   should have the same dimension, either 2D or 3D. 
+//   A zero result means the hulls intercept whithin a tolerance `eps`.
+// Arguments:
+//   points1 - first list of 2d or 3d points.
+//   points2 - second list of 2d or 3d points.
+//   eps - tolerance in distance evaluations. Default: EPSILON.
+// Example(2D):
+//    pts1 = move([-3,0], p=square(3,center=true));
+//    pts2 = rot(a=45, p=square(2,center=true));
+//    pts3 = [ [2,0], [1,2],[3,2], [3,-2], [1,-2] ];
+//    polygon(pts1);
+//    polygon(pts2);
+//    polygon(pts3);
+//    echo(convex_distance(pts1,pts2)); // Returns: 0.0857864
+//    echo(convex_distance(pts2,pts3)); // Returns: 0
+// Example(3D):
+//    sphr1 = sphere(2,$fn=10);
+//    sphr2 = move([4,0,0], p=sphr1);
+//    sphr3 = move([4.5,0,0], p=sphr1);    
+//    vnf_polyhedron(sphr1);
+//    vnf_polyhedron(sphr2);
+//    echo(convex_distance(sphr1[0], sphr2[0])); // Returns: 0
+//    echo(convex_distance(sphr1[0], sphr3[0])); // Returns: 0.5
+function convex_distance(points1, points2, eps=EPSILON) =
+    assert(is_matrix(points1) && is_matrix(points2,undef,len(points1[0])), 
+           "The input list should be a consistent non empty list of points of same dimension.")
+    assert(len(points1[0])==2 || len(points1[0])==3 ,
+           "The input points should be 2d or 3d points.")
+    let( d = points1[0]-points2[0] )
+    norm(d)<eps ? 0 :
+    let( v = _support_diff(points1,points2,-d) ) 
+    norm(_GJK_distance(points1, points2, eps, 0, v, [v]));
+
+
+// Finds the vector difference between the hulls of the two pointsets by the GJK algorithm
+// Based on:
+// http://www.dtecta.com/papers/jgt98convex.pdf
+function _GJK_distance(points1, points2, eps=EPSILON, lbd, d, simplex=[]) = 
+    let( nrd = norm(d) ) // distance upper bound
+    nrd<eps ? d :
+    let(
+        v     = _support_diff(points1,points2,-d),
+        lbd   = max(lbd, d*v/nrd), // distance lower bound
+        close = (nrd-lbd <= eps*nrd) 
+    )
+    // v already in the simplex is a degenerence due to numerical errors 
+    // and may produce a non-stopping loop
+    close || [for(nv=norm(v), s=simplex) if(norm(s-v)<=eps*nv) 1]!=[] ? d :  
+    let( newsplx = _closest_simplex(concat(simplex,[v]),eps) ) 
+    _GJK_distance(points1, points2, eps, lbd, newsplx[0], newsplx[1]);
+    
+
+// Function: convex_collision()
+// Usage:
+//   convex_collision(pts1, pts2,<eps=>);
+// See also: 
+//   convex_distance
+// Description:
+//   Returns `true` if the convex hull of `points1` intercepts the convex hull of `points2`
+//   otherwise, `false`.
+//   All the points in the lists should have the same dimension, either 2D or 3D.
+//   This function is tipically faster than `convex_distance` to find a non-collision.
+// Arguments:
+//   points1 - first list of 2d or 3d points.
+//   points2 - second list of 2d or 3d points.
+//   eps - tolerance for the intersection tests. Default: EPSILON.
+// Example(2D):
+//    pts1 = move([-3,0], p=square(3,center=true));
+//    pts2 = rot(a=45, p=square(2,center=true));
+//    pts3 = [ [2,0], [1,2],[3,2], [3,-2], [1,-2] ];
+//    polygon(pts1);
+//    polygon(pts2);
+//    polygon(pts3);
+//    echo(convex_collision(pts1,pts2)); // Returns: false
+//    echo(convex_collision(pts2,pts3)); // Returns: true
+// Example(3D):
+//    sphr1 = sphere(2,$fn=10);
+//    sphr2 = move([4,0,0], p=sphr1);
+//    sphr3 = move([4.5,0,0], p=sphr1);    
+//    vnf_polyhedron(sphr1);
+//    vnf_polyhedron(sphr2);
+//    echo(convex_collision(sphr1[0], sphr2[0])); // Returns: true
+//    echo(convex_collision(sphr1[0], sphr3[0])); // Returns: false
+//
+function convex_collision(points1, points2, eps=EPSILON) =
+    assert(is_matrix(points1) && is_matrix(points2,undef,len(points1[0])), 
+           "The input list should be a consistent non empty list of points of same dimension.")
+    assert(len(points1[0])==2 || len(points1[0])==3 ,
+           "The input points should be 2d or 3d points.")
+    let( d = points1[0]-points2[0] )
+    norm(d)<eps ? true :
+    let( v = _support_diff(points1,points2,-d) ) 
+    _GJK_collide(points1, points2, v, [v], eps);
+    
+
+// Based on the GJK collision algorithms found in:
+// http://uu.diva-portal.org/smash/get/diva2/FFULLTEXT01.pdf
+// or
+// http://www.dtecta.com/papers/jgt98convex.pdf
+function _GJK_collide(points1, points2, d, simplex, eps=EPSILON) = 
+    norm(d) < eps ? true :          // does collide 
+    let( v = _support_diff(points1,points2,-d) )
+    v*d > eps ? false : // no collision
+    let( newsplx = _closest_simplex(concat(simplex,[v]),eps) )
+    _GJK_collide(points1, points2, newsplx[0], newsplx[1], eps);
+
+
+// given a simplex s, returns a pair:
+//  - the point of the s closest to the origin
+//  - the smallest sub-simplex of s that contains that point
+function _closest_simplex(s,eps=EPSILON) =
+    assert(len(s)>=2 && len(s)<=4, "Internal error.")
+    len(s)==2 ? _closest_s1(s,eps) : 
+    len(s)==3 ? _closest_s2(s,eps)
+              : _closest_s3(s,eps);
+              
+
+// find the closest to a 1-simplex
+// Based on: http://uu.diva-portal.org/smash/get/diva2/FFULLTEXT01.pdf
+function _closest_s1(s,eps=EPSILON) =
+    norm(s[1]-s[0])<eps*(norm(s[0])+norm(s[1]))/2 ? [ s[0], [s[0]] ] :
+    let( 
+        c = s[1]-s[0],
+        t = -s[0]*c/(c*c)
+    ) 
+    t<0 ? [ s[0], [s[0]] ] :
+    t>1 ? [ s[1], [s[1]] ] :
+    [ s[0]+t*c, s ];
+    
+        
+// find the closest to a 2-simplex
+// Based on: http://uu.diva-portal.org/smash/get/diva2/FFULLTEXT01.pdf
+function _closest_s2(s,eps=EPSILON) =
+    let(
+        dim = len(s[0]),
+        a  = dim==3 ? s[0]: [ each s[0], 0] ,
+        b  = dim==3 ? s[1]: [ each s[1], 0] ,
+        c  = dim==3 ? s[2]: [ each s[2], 0] ,
+        ab = norm(a-b),
+        bc = norm(b-c),
+        ca = norm(c-a),
+        nr = cross(b-a,c-a)
+    )
+    norm(nr) <= eps*max(ab,bc,ca) // degenerate case
+    ?   let( i = max_index([ab, bc, ca]) )
+        _closest_s1([s[i],s[(i+1)%3]],eps)
+// considering that s[2] was the last inserted vertex in s,
+// the only possible outcomes are :
+//    s, [s[0],s[2]] and [s[1],s[2]]
+    :   let(
+            class =   (cross(nr,a-b)*a<0 ? 1 : 0 )
+                    + (cross(nr,c-a)*a<0 ? 2 : 0 )
+                    + (cross(nr,b-c)*b<0 ? 4 : 0 )
+        )
+        assert( class!=1, "Internal error" )  
+        class==0 ? [ nr*(nr*a)/(nr*nr), s] : // origin projects (or is) on the tri
+//        class==1 ? _closest_s1([s[0],s[1]]) :
+        class==2 ? _closest_s1([s[0],s[2]],eps) :  
+        class==4 ? _closest_s1([s[1],s[2]],eps) :
+//        class==3 ? a*(a-b)> 0 ? _closest_s1([s[0],s[1]]) : _closest_s1([s[0],s[2]]) : 
+        class==3 ? _closest_s1([s[0],s[2]],eps) : 
+//        class==5 ? b*(b-c)<=0 ? _closest_s1([s[0],s[1]]) : _closest_s1([s[1],s[2]]) :
+        class==5 ? _closest_s1([s[1],s[2]],eps) :
+        c*(c-a)>0 ? _closest_s1([s[0],s[2]],eps) : _closest_s1([s[1],s[2]],eps);
+
+
+// find the closest to a 3-simplex
+// it seems that degenerate 3-simplices are correctly manage without extra code
+function _closest_s3(s,eps=EPSILON) =
+    assert( len(s[0])==3 && len(s)==4, "Internal error." )
+    let( nr = cross(s[1]-s[0],s[2]-s[0]),
+         sz = [ norm(s[1]-s[0]), norm(s[1]-s[2]), norm(s[2]-s[0]) ] )
+    norm(nr)<eps*max(sz) 
+    ?   let( i = max_index(sz) )
+        _closest_s2([ s[i], s[(i+1)%3], s[3] ], eps) // degenerate case
+    // considering that s[3] was the last inserted vertex in s,
+    // the only possible outcomes will be:
+    //    s or some of the 3 triangles of s containing s[3]
+    :   let(
+            tris = [ [s[0], s[1], s[3]],
+                     [s[1], s[2], s[3]],
+                     [s[2], s[0], s[3]] ],
+            cntr = sum(s)/4,
+            // indicator of the tris facing the origin
+            facing = [for(i=[0:2])
+                        let( nrm = _tri_normal(tris[i]) )
+                        if( ((nrm*(s[i]-cntr))>0)==(nrm*s[i]<0) ) i ]
+        )
+        len(facing)==0 ? [ [0,0,0], s ] : // origin is inside the simplex
+        len(facing)==1 ? _closest_s2(tris[facing[0]], eps) :
+        let( // look for the origin-facing tri closest to the origin
+            closest = [for(i=facing) _closest_s2(tris[i], eps) ],
+            dist    = [for(cl=closest) norm(cl[0]) ],
+            nearest = min_index(dist)
+        )
+        closest[nearest];
+    
+
+function _tri_normal(tri) = cross(tri[1]-tri[0],tri[2]-tri[0]);
+    
+
+function _support_diff(p1,p2,d) =
+    let( p1d = p1*d, p2d = p2*d )
+    p1[search(max(p1d),p1d,1)[0]] - p2[search(min(p2d),p2d,1)[0]];
+
+
+
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

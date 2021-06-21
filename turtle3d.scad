@@ -90,7 +90,7 @@ function _rotpart(T) = [for(i=[0:3]) [for(j=[0:3]) j<3 || i==3 ? T[i][j] : 0]];
 //   "xjump"    |  | x                  | Move the turtle's x position to the specified value
 //   "yjump     |  | y                  | Move the turtle's y position to the specified value
 //   "zjump     |  | y                  | Move the turtle's y position to the specified value
-//   "left"        | [angle]            | Turn turtle left by specified angle or default angle
+//   "left"     |  | [angle]            | Turn turtle left by specified angle or default angle
 //   "right"    |  | [angle]            | Turn turtle to the right by specified angle or default angle
 //   "up"       |  | [angle]            | Turn turtle up by specified angle or default angle
 //   "down"     |  | [angle]            | Turn turtle down by specified angle or default angle
@@ -693,7 +693,7 @@ function _turtle3d_list_command(command,arcsteps,movescale, lastT,lastPre,index)
    assert(is_vector(grow,2), str("Parameter to \"grow\" must be a scalar or 2d vector at index ",index))
    assert(is_vector(shrink,2), str("Parameter to \"shrink\" must be a scalar or 2d vector at index ",index))
    let(
-       scaling = point3d(vdiv(grow,shrink),1),
+       scaling = point3d(v_div(grow,shrink),1),
        usersteps = struct_val(keys,"steps"),
        roll = struct_val(keys,"roll"),
        ////////////////////////////////////////////////////////////////////////////////////////

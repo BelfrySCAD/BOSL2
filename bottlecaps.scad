@@ -603,9 +603,9 @@ function generic_bottle_cap(
 ) = no_function("generic_bottle_cap");
 
 
-// Module: thread_adapter_NC()
+// Module: bottle_adapter_neck_to_cap()
 // Usage:
-//   thread_adapter_NC(wall, <texture>);
+//   bottle_adapter_neck_to_cap(wall, <texture>);
 // Description:
 //   Creates a threaded neck to cap adapter
 // Arguments:
@@ -628,8 +628,8 @@ function generic_bottle_cap(
 //   d = Distance between bottom of neck and top of cap
 //   taper_lead_in = Length to leave straight before tapering on tube between neck and cap if exists.
 // Examples:
-//   thread_adapter_NC();
-module thread_adapter_NC(
+//   bottle_adapter_neck_to_cap();
+module bottle_adapter_neck_to_cap(
     wall,
     texture = "none",
     cap_wall = 2,
@@ -708,17 +708,17 @@ module thread_adapter_NC(
     }
 }
 
-function thread_adapter_NC(
+function bottle_adapter_neck_to_cap(
     wall, texture, cap_wall, cap_h, cap_thread_od,
     tolerance, cap_neck_od, cap_neck_id, cap_thread_taper,
     cap_thread_pitch, neck_d, neck_id, neck_thread_od,
     neck_h, neck_thread_pitch, neck_support_od, d, taper_lead_in
-) = no_fuction("thread_adapter_NC");
+) = no_fuction("bottle_adapter_neck_to_cap");
 
 
-// Module: thread_adapter_CC()
+// Module: bottle_adapter_cap_to_cap()
 // Usage:
-//   thread_adapter_CC(wall, <texture>);
+//   bottle_adapter_cap_to_cap(wall, <texture>);
 // Description:
 //   Creates a threaded cap to cap adapter.
 // Arguments:
@@ -738,8 +738,8 @@ function thread_adapter_NC(
 //   neck_id2 = Inner diameter of cutout in bottom cap.
 //   taper_lead_in = Length to leave straight before tapering on tube between caps if exists.
 // Examples:
-//   thread_adapter_CC();
-module thread_adapter_CC(
+//   bottle_adapter_cap_to_cap();
+module bottle_adapter_cap_to_cap(
     wall = 2,
     texture = "none",
     cap_h1 = 11.2,
@@ -822,16 +822,16 @@ module thread_adapter_CC(
     }
 }
 
-function thread_adapter_CC(
+function bottle_adapter_cap_to_cap(
     wall, texture, cap_h1, cap_thread_od1, tolerance,
     cap_neck_od1, cap_thread_pitch1, cap_h2, cap_thread_od2,
     cap_neck_od2, cap_thread_pitch2, d, neck_id1, neck_id2, taper_lead_in
-) = no_function("thread_adapter_CC");
+) = no_function("bottle_adapter_cap_to_cap");
 
 
-// Module: thread_adapter_NN()
+// Module: bottle_adapter_neck_to_neck()
 // Usage:
-//   thread_adapter_NN();
+//   bottle_adapter_neck_to_neck();
 // Description:
 //   Creates a threaded neck to neck adapter.
 // Arguments:
@@ -851,8 +851,8 @@ function thread_adapter_CC(
 //   taper_lead_in = Length to leave straight before tapering on tube between necks if exists.
 //   wall = Thickness of tube wall between necks.  Leave undefined to match outer diameters with the neckODs/supportODs.  
 // Examples:
-//   thread_adapter_NN();
-module thread_adapter_NN(
+//   bottle_adapter_neck_to_neck();
+module bottle_adapter_neck_to_neck(
     d = 0,
     neck_od1 = 25,
     neck_id1 = 21.4,
@@ -939,12 +939,12 @@ module thread_adapter_NN(
     }
 }
 
-function thread_adapter_NN(
+function bottle_adapter_neck_to_neck(
     d, neck_od1, neck_id1, thread_od1, height1,
     support_od1, thread_pitch1, neck_od2, neck_id2,
     thread_od2, height2, support_od2,
     pitch2, taper_lead_in, wall
-) = no_fuction("thread_adapter_NN");
+) = no_fuction("bottle_adapter_neck_to_neck");
 
 
 
