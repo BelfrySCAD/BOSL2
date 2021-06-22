@@ -68,8 +68,8 @@ function _same_type(a,b, depth) =
 //   list = select(list,start,end);
 // Arguments:
 //   list = The list to get the portion of.
-//   start = The index of the first item or an index range or a list of indices.
-//   end = The index of the last item.
+//   start = Either the index of the first item or an index range or a list of indices.
+//   end = The index of the last item when `start` is a number. When `start` is a list or a range, `end` should not be given.
 // See Also: slice(), subindex(), last()
 // Example:
 //   l = [3,4,5,6,7,8,9];
@@ -92,7 +92,7 @@ function select(list, start, end) =
               ? list[ (start%l+l)%l ]
               : assert( is_list(start) || is_range(start), "Invalid start parameter")
                 [for (i=start) list[ (i%l+l)%l ] ]
-          : assert(is_finite(start), "Invalid start parameter.")
+          : assert(is_finite(start), "When `end` is given, `start` parameter should be a number.")
             assert(is_finite(end), "Invalid end parameter.")
             let( s = (start%l+l)%l, e = (end%l+l)%l )
             (s <= e)
@@ -1062,7 +1062,7 @@ function _indexed_sort(arrind) =
 // Usage:
 //   slist = sort(list, <idx>);
 // Topics: List Handling
-// See Also: shuffle(), sortidx(), unique(), unique_count()
+// See Also: shuffle(), sortidx(), unique(), unique_count(), group_sort()
 // Description:
 //   Sorts the given list in lexicographic order. If the input is a homogeneous simple list or a homogeneous 
 //   list of vectors (see function is_homogeneous), the sorting method uses the native comparison operator and is faster. 
@@ -1103,7 +1103,7 @@ function sort(list, idx=undef) =
 // Usage:
 //   idxlist = sortidx(list, <idx>);
 // Topics: List Handling
-// See Also: shuffle(), sort(), unique(), unique_count()
+// See Also: shuffle(), sort(), group_sort(), unique(), unique_count()
 // Description:
 //   Given a list, sort it as function `sort()`, and returns
 //   a list of indexes into the original list in that sorted order.
@@ -1167,13 +1167,13 @@ function sortidx(list, idx=undef) =
 // Example:
 //   sorted = group_sort([5,2,8,3,1,3,8,7,5]);  // Returns: [[1],[2],[3,3],[5,5],[7],[8,8]]
 //   sorted2 = group_sort([[5,"a"],[2,"b"], [5,"c"], [3,"d"], [2,"e"] ], idx=0);  // Returns: [[[2,"b"],[2,"e"]], [[5,"a"],[5,"c"]], [[3,"d"]] ]
-function group_sort(list, idx=undef) = 
+function group_sort(list, idx) = 
     assert(is_list(list), "Input should be a list." )
     assert(is_undef(idx) || (is_finite(idx) && idx>=0) , "Invalid index." )
     len(list)<=1 ? [list] :
 		is_vector(list)? _group_sort(list) :
 		let( idx = is_undef(idx) ? 0 : idx )
-		assert( [for(i=idx(list)) if(!is_list(list[i]) || len(list[i])>=idx || !is_num(list[idx])) 1]==[],
+		assert( [for(entry=list) if(!is_list(entry) || len(entry)<idx || !is_num(entry[idx]) ) 1]==[],
             "Some entry of the list is a list shorter than `idx` or the indexed entry of it is not a number."	)
 		_group_sort_by_index(list,idx);
         
@@ -1232,7 +1232,7 @@ function unique_count(list) =
     assert(is_list(list) || is_string(list), "Invalid input." )
     list == [] ? [[],[]] : 
     is_homogeneous(list,1) && ! is_list(list[0])
-    ?		let( sorted = _group_sort_scalars(list) )
+    ?		let( sorted = _group_sort(list) )
 				[ [for(s=sorted) s[0] ], [for(s=sorted) len(s) ] ]
 		:		let( list=sort(list) )
 				let( ind = [0, for(i=[1:1:len(list)-1]) if (list[i]!=list[i-1]) i] )
@@ -1766,7 +1766,7 @@ function submatrix_set(M,A,m=0,n=0) =
 // Arguments:
 //   v = The list of items to group.
 //   cnt = The number of items to put in each grouping.  Default:2
-//   dflt = The default value to fill in with is the list is not a multiple of `cnt` items long.  Default: 0
+//   dflt = The default value to fill in with if the list is not a multiple of `cnt` items long.  Default: 0
 // Example:
 //   v = [1,2,3,4,5,6];
 //   a = array_group(v,2) returns [[1,2], [3,4], [5,6]]
