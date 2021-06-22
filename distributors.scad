@@ -34,7 +34,7 @@ module move_copies(a=[[0,0,0]])
     assert(is_list(a));
     for ($idx = idx(a)) {
         $pos = a[$idx];
-        assert(is_vector($pos));
+        assert(is_vector($pos),"move_copies offsets should be a 2d or 3d vector.");
         translate($pos) children();
     }
 }

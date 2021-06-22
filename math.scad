@@ -640,17 +640,19 @@ function sum_of_sines(a, sines) =
 // Usage:
 //   delts = deltas(v);
 // Description:
-//   Returns a list with the deltas of adjacent entries in the given list.
+//   Returns a list with the deltas of adjacent entries in the given list, optionally wrapping back to the front.
 //   The list should be a consistent list of numeric components (numbers, vectors, matrix, etc).
 //   Given [a,b,c,d], returns [b-a,c-b,d-c].
+//   
 // Arguments:
 //   v = The list to get the deltas of.
+//   wrap = If true, wrap back to the start from the end.  ie: return the difference between the last and first items as the last delta.  Default: false
 // Example:
 //   deltas([2,5,9,17]);  // returns [3,4,8].
 //   deltas([[1,2,3], [3,6,8], [4,8,11]]);  // returns [[2,4,5], [1,2,3]]
-function deltas(v) = 
+function deltas(v, wrap=false) = 
     assert( is_consistent(v) && len(v)>1 , "Inconsistent list or with length<=1.")
-    [for (p=pair(v)) p[1]-p[0]] ;
+    [for (p=pair(v,wrap)) p[1]-p[0]] ;
 
 
 // Function: product()
@@ -771,21 +773,31 @@ function _med3(a,b,c) =
 // Usage:
 //   x = convolve(p,q);
 // Description:
-//   Given two vectors, finds the convolution of them.
-//   The length of the returned vector is len(p)+len(q)-1 .
+//   Given two vectors, or one vector and a path or
+//   two paths of the same dimension, finds the convolution of them.
+//   If both parameter are vectors, returns the vector convolution.
+//   If one parameter is a vector and the other a path,
+//   convolves using products by scalars and returns a path. 
+//   If both parameters are paths, convolve using scalar products
+//   and returns a vector.
+//   The returned vector or path has length len(p)+len(q)-1.
 // Arguments:
-//   p = The first vector.
-//   q = The second vector.
+//   p = The first vector or path.
+//   q = The second vector or path.
 // Example:
 //   a = convolve([1,1],[1,2,1]); // Returns: [1,3,3,1]
 //   b = convolve([1,2,3],[1,2,1])); // Returns: [1,4,8,8,3]
+//   c = convolve([[1,1],[2,2],[3,1]],[1,2,1])); // Returns: [[1,1],[4,4],[8,6],[8,4],[3,1]]
+//   d = convolve([[1,1],[2,2],[3,1]],[[1,2],[2,1]])); // Returns:  [3,9,11,7]
 function convolve(p,q) =
     p==[] || q==[] ? [] :
-    assert( is_vector(p) && is_vector(q), "The inputs should be vectors.")
+    assert( (is_vector(p) || is_matrix(p))
+		        && ( is_vector(q) || (is_matrix(q) && ( !is_vector(p[0]) || (len(p[0])==len(q[0])) ) ) ) ,
+		        "The inputs should be vectors or paths all of the same dimension.")
     let( n = len(p),
          m = len(q))
     [for(i=[0:n+m-2], k1 = max(0,i-n+1), k2 = min(i,m-1) )
-       [for(j=[k1:k2]) p[i-j] ] * [for(j=[k1:k2]) q[j] ] 
+       sum([for(j=[k1:k2]) p[i-j]*q[j] ]) 
     ];
 
 
@@ -1694,7 +1706,7 @@ function polynomial(p,z,k,total) =
 //   x = polymult(p,q)
 //   x = polymult([p1,p2,p3,...])
 // Description:
-//   Given a list of polynomials represented as real coefficient lists, with the highest degree coefficient first, 
+//   Given a list of polynomials represented as real algebraic coefficient lists, with the highest degree coefficient first, 
 //   computes the coefficient list of the product polynomial.  
 function poly_mult(p,q) = 
   is_undef(q) ?
@@ -1714,8 +1726,8 @@ function poly_mult(p,q) =
 // Description:
 //    Computes division of the numerator polynomial by the denominator polynomial and returns
 //    a list of two polynomials, [quotient, remainder].  If the division has no remainder then
-//    the zero polynomial [] is returned for the remainder.  Similarly if the quotient is zero
-//    the returned quotient will be [].  
+//    the zero polynomial [0] is returned for the remainder.  Similarly if the quotient is zero
+//    the returned quotient will be [0].  
 function poly_div(n,d) =
     assert( is_vector(n) && is_vector(d) , "Invalid polynomials." )
     let( d = _poly_trim(d), 
@@ -1740,7 +1752,7 @@ function _poly_div(n,d,q) =
 ///    _poly_trim(p,[eps])
 /// Description:
 ///    Removes leading zero terms of a polynomial.  By default zeros must be exact,
-///    or give epsilon for approximate zeros.  
+///    or give epsilon for approximate zeros. Returns [0] for a zero polynomial.
 function _poly_trim(p,eps=0) =
     let( nz = [for(i=[0:1:len(p)-1]) if ( !approx(p[i],0,eps)) i])
     len(nz)==0 ? [0] : list_tail(p,nz[0]);
