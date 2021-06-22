@@ -546,7 +546,9 @@ test_sum_of_sines();
 
 module test_deltas() {
     assert_equal(deltas([2,5,9,17]), [3,4,8]);
+    assert_equal(deltas([2,5,9,17],wrap=true), [3,4,8,-15]);
     assert_equal(deltas([[1,2,3], [3,6,8], [4,8,11]]), [[2,4,5], [1,2,3]]);
+    assert_equal(deltas([[1,2,3], [3,6,8], [4,8,11]],wrap=true), [[2,4,5], [1,2,3], [-3,-6,-8]]);
 }
 test_deltas();
 
@@ -582,6 +584,10 @@ module test_convolve() {
     assert_equal(convolve([1,1],[]), []);
     assert_equal(convolve([1,1],[1,2,1]), [1,3,3,1]);
     assert_equal(convolve([1,2,3],[1,2,1]), [1,4,8,8,3]);
+    assert_equal(convolve([1,2,3],[[1],[2],[1]]),  [[1], [4], [8], [8], [3]]);
+    assert_equal(convolve([[1],[2],[3]],[[1],[2],[1]]), [1,4,8,8,3]);
+    assert_equal(convolve([[1,0],[2,1],[3,2]],[[1,0],[2,1],[1,2]]), [1,4,9,12,7]);
+    assert_equal(convolve([1,2,3],[[1,0],[2,1],[1,2]]), [[1,0],[4,1],[8,4],[8,7],[3,6]]);
 }
 test_convolve();
 

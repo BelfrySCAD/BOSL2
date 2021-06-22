@@ -358,11 +358,21 @@ module test_sortidx() {
 }
 test_sortidx();
 
+module test_group_sort() {
+    assert_equal(group_sort([]), [[]]);
+    assert_equal(group_sort([8]), [[8]]);
+    assert_equal(group_sort([7,3,9,4,3,1,8]), [[1], [3, 3], [4], [7], [8], [9]]);
+    assert_equal(group_sort([[5,"a"],[2,"b"], [5,"c"], [3,"d"], [2,"e"] ], idx=0), [[[2, "b"], [2, "e"]], [[3, "d"]], [[5, "a"], [5, "c"]]]);
+    assert_equal(group_sort([["a",5],["b",6], ["c",1], ["d",2], ["e",6] ], idx=1), [[["c", 1]], [["d", 2]], [["a", 5]], [["b", 6], ["e", 6]]] );
+}
+test_group_sort();
+
 
 module test_unique() {
-    assert(unique([]) == []);
-    assert(unique([8]) == [8]);
-    assert(unique([7,3,9,4,3,1,8]) == [1,3,4,7,8,9]);
+    assert_equal(unique([]), []);
+    assert_equal(unique([8]), [8]);
+    assert_equal(unique([7,3,9,4,3,1,8]), [1,3,4,7,8,9]);
+    assert_equal(unique(["A","B","R","A","C","A","D","A","B","R","A"]), ["A", "B", "C", "D", "R"]);
 }
 test_unique();
 

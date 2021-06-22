@@ -237,7 +237,7 @@ function project_plane(plane,p) =
           let(plane = plane_from_points(plane))
           assert(is_def(plane), "Point list is not coplanar")
           project_plane(plane)
-    : assert(is_def(p), str("Invalid plane specification",plane))
+    : assert(is_def(p), str("Invalid plane specification: ",plane))
       is_vnf(p) ? [project_plane(plane,p[0]), p[1]] 
     : is_list(p) && is_list(p[0]) && is_vector(p[0][0],3) ?  // bezier patch or region
            [for(plist=p) project_plane(plane,plist)]
