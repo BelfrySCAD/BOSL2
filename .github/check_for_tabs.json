@@ -1,0 +1,15 @@
+{
+    "problemMatcher": [
+        {
+            "owner": "check_for_tabs",
+            "pattern": [
+                {
+                    "regexp": "^([^:]+):(\\d+):(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "message": 3
+                }
+            ]
+        }
+    ]
+}

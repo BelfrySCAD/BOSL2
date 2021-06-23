@@ -405,6 +405,8 @@ function cuboid(
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //
+// See Also: rounded_prism()
+//
 // Example: Rectangular Pyramid
 //   prismoid([40,40], [0,0], h=20);
 // Example: Prism
@@ -479,8 +481,8 @@ module prismoid(
     anchor = get_anchor(anchor, center, BOT, BOT);
     vnf = prismoid(
         size1=size1, size2=size2, h=h, shift=shift,
-        rounding=rounding, rounding1=rounding1, rounding2=rounding2,
-        chamfer=chamfer, chamfer1=chamfer1, chamfer2=chamfer2,
+        rounding1=rounding1, rounding2=rounding2,
+        chamfer1=chamfer1, chamfer2=chamfer2,
         l=l, center=CENTER
     );
     attachable(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift) {
@@ -500,12 +502,36 @@ function prismoid(
     assert(is_vector(size2,2))
     assert(is_num(h) || is_num(l))
     assert(is_vector(shift,2))
-    assert(is_num(rounding) || is_vector(rounding,4), "Bad rounding argument.")
-    assert(is_undef(rounding1) || is_num(rounding1) || is_vector(rounding1,4), "Bad rounding1 argument.")
-    assert(is_undef(rounding2) || is_num(rounding2) || is_vector(rounding2,4), "Bad rounding2 argument.")
-    assert(is_num(chamfer) || is_vector(chamfer,4), "Bad chamfer argument.")
-    assert(is_undef(chamfer1) || is_num(chamfer1) || is_vector(chamfer1,4), "Bad chamfer1 argument.")
-    assert(is_undef(chamfer2) || is_num(chamfer2) || is_vector(chamfer2,4), "Bad chamfer2 argument.")
+    assert(
+        (is_num(rounding) && rounding>=0) ||
+        (is_vector(rounding,4) && all_nonnegative(rounding)),
+        "Bad rounding argument."
+    )
+    assert(
+        is_undef(rounding1) || (is_num(rounding1) && rounding1>=0) ||
+        (is_vector(rounding1,4) && all_nonnegative(rounding1)),
+        "Bad rounding1 argument."
+    )
+    assert(
+        is_undef(rounding2) || (is_num(rounding2) && rounding2>=0) ||
+        (is_vector(rounding2,4) && all_nonnegative(rounding2)),
+        "Bad rounding2 argument."
+    )
+    assert(
+        (is_num(chamfer) && chamfer>=0) ||
+        (is_vector(chamfer,4) && all_nonnegative(chamfer)),
+        "Bad chamfer argument."
+    )
+    assert(
+        is_undef(chamfer1) || (is_num(chamfer1) && chamfer1>=0) ||
+        (is_vector(chamfer1,4) && all_nonnegative(chamfer1)),
+        "Bad chamfer1 argument."
+    )
+    assert(
+        is_undef(chamfer2) || (is_num(chamfer2) && chamfer2>=0) ||
+        (is_vector(chamfer2,4) && all_nonnegative(chamfer2)),
+        "Bad chamfer2 argument."
+    )
     let(
         eps = pow(2,-14),
         h = first_defined([h,l,1]),

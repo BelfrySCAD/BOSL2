@@ -1434,10 +1434,10 @@ function trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENT
     assert(is_undef(angle) || is_finite(angle))
     assert(num_defined([h, w1, w2, angle]) == 3, "Must give exactly 3 of the arguments h, w1, w2, and angle.")
     assert(is_finite(shift))
-	assert(is_finite(chamfer)  || is_vector(chamfer,4))
-	assert(is_finite(rounding) || is_vector(rounding,4))
+    assert(is_finite(chamfer)  || is_vector(chamfer,4))
+    assert(is_finite(rounding) || is_vector(rounding,4))
     let(
-		simple = chamfer==0 && rounding==0,
+        simple = chamfer==0 && rounding==0,
         h  = !is_undef(h)?  h  : opp_ang_to_adj(abs(w2-w1)/2, abs(angle)),
         w1 = !is_undef(w1)? w1 : w2 + 2*(adj_ang_to_opp(h, angle) + shift),
         w2 = !is_undef(w2)? w2 : w1 - 2*(adj_ang_to_opp(h, angle) + shift)
@@ -1451,23 +1451,23 @@ function trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENT
             [-w1/2,-h/2],
             [w1/2,-h/2],
         ],
-		cpath = simple? base_path :
-			path_chamfer_and_rounding(
-				base_path, closed=true,
-				chamfer=chamfer,
-				rounding=rounding
-			),
-		path = reverse(cpath)
-	) simple?
-		reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, shift=shift, p=path) :
-		reorient(anchor,spin, two_d=true, path=path, p=path);
+        cpath = simple? base_path :
+            path_chamfer_and_rounding(
+                base_path, closed=true,
+                chamfer=chamfer,
+                rounding=rounding
+            ),
+        path = reverse(cpath)
+    ) simple
+      ? reorient(anchor,spin, two_d=true, size=[w1,h], size2=w2, shift=shift, p=path)
+      : reorient(anchor,spin, two_d=true, path=path, p=path);
 
 
 
 module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENTER, spin=0) {
-	path = trapezoid(h=h, w1=w1, w2=w2, angle=angle, shift=shift, chamfer=chamfer, rounding=rounding);
+    path = trapezoid(h=h, w1=w1, w2=w2, angle=angle, shift=shift, chamfer=chamfer, rounding=rounding);
     union() {
-		simple = chamfer==0 && rounding==0;
+        simple = chamfer==0 && rounding==0;
         h  = !is_undef(h)?  h  : opp_ang_to_adj(abs(w2-w1)/2, abs(angle));
         w1 = !is_undef(w1)? w1 : w2 + 2*(adj_ang_to_opp(h, angle) + shift);
         w2 = !is_undef(w2)? w2 : w1 - 2*(adj_ang_to_opp(h, angle) + shift);

@@ -502,7 +502,7 @@ module generic_bottle_neck(
 }
 
 function generic_bottle_neck(
-	neck_d,
+    neck_d,
     id,
     thread_od,
     height,
