@@ -2538,7 +2538,7 @@ function _closest_s3(s,eps=EPSILON) =
         let( // look for the origin-facing tri closest to the origin
             closest = [for(i=facing) _closest_s2(tris[i], eps) ],
             dist    = [for(cl=closest) norm(cl[0]) ],
-            nearest = min_index(dist)
+            nearest = min_index(dist) 
         )
         closest[nearest];
 
