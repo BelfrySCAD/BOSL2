@@ -1110,7 +1110,7 @@ function plane_offset(plane) =
 //   }
 function projection_on_plane(plane, points) =
     assert( _valid_plane(plane), "Invalid plane." )
-    assert( is_path(points), "Invalid list of points or dimension." )
+    assert( is_matrix(points,undef,3), "Invalid list of points or dimension." )
     let(
         p  = len(points[0])==2
              ? [for(pi=points) point3d(pi) ]
@@ -1752,6 +1752,7 @@ function circle_line_intersection(c,r,d,line,bounded=false,eps=EPSILON) =
 function noncollinear_triple(points,error=true,eps=EPSILON) =
     assert( is_path(points), "Invalid input points." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
+		len(pts)<3 ? [] :
     let(
         pa = points[0],
         b  = furthest_point(pa, points),
@@ -2092,6 +2093,7 @@ function polygon_is_clockwise(poly) =
 // Usage:
 //   newpoly = clockwise_polygon(poly);
 // Topics: Geometry, Polygons, Clockwise
+// See Also: polygon_is_clockwise(), ccw_polygon(), reverse_polygon()
 // Description:
 //   Given a 2D polygon path, returns the clockwise winding version of that path.
 // Arguments:
@@ -2104,6 +2106,7 @@ function clockwise_polygon(poly) =
 // Function: ccw_polygon()
 // Usage:
 //   newpoly = ccw_polygon(poly);
+// See Also: polygon_is_clockwise(), clockwise_polygon(), reverse_polygon()
 // Topics: Geometry, Polygons, Clockwise
 // Description:
 //   Given a 2D polygon poly, returns the counter-clockwise winding version of that poly.
@@ -2118,6 +2121,7 @@ function ccw_polygon(poly) =
 // Usage:
 //   newpoly = reverse_polygon(poly)
 // Topics: Geometry, Polygons, Clockwise
+// See Also: polygon_is_clockwise(), ccw_polygon(), clockwise_polygon()
 // Description:
 //   Reverses a polygon's winding direction, while still using the same start point.
 // Arguments:
@@ -2369,7 +2373,7 @@ function is_convex_polygon(poly,eps=EPSILON) =
 //    echo(convex_distance(sphr1[0], sphr3[0])); // Returns: 0.5
 function convex_distance(points1, points2, eps=EPSILON) =
     assert(is_matrix(points1) && is_matrix(points2,undef,len(points1[0])), 
-           "The input list should be a consistent non empty list of points of same dimension.")
+           "The input lists should be compatible consistent non empty lists of points.")
     assert(len(points1[0])==2 || len(points1[0])==3 ,
            "The input points should be 2d or 3d points.")
     let( d = points1[0]-points2[0] )
@@ -2431,7 +2435,7 @@ function _GJK_distance(points1, points2, eps=EPSILON, lbd, d, simplex=[]) =
 //
 function convex_collision(points1, points2, eps=EPSILON) =
     assert(is_matrix(points1) && is_matrix(points2,undef,len(points1[0])), 
-           "The input list should be a consistent non empty list of points of same dimension.")
+           "The input lists should be compatible consistent non empty lists of points.")
     assert(len(points1[0])==2 || len(points1[0])==3 ,
            "The input points should be 2d or 3d points.")
     let( d = points1[0]-points2[0] )
