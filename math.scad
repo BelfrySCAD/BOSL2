@@ -791,13 +791,17 @@ function _med3(a,b,c) =
 //   d = convolve([[1,1],[2,2],[3,1]],[[1,2],[2,1]])); // Returns:  [3,9,11,7]
 function convolve(p,q) =
     p==[] || q==[] ? [] :
-    assert( (is_vector(p) || is_matrix(p))
-		        && ( is_vector(q) || (is_matrix(q) && ( !is_vector(p[0]) || (len(p[0])==len(q[0])) ) ) ) ,
-		        "The inputs should be vectors or paths all of the same dimension.")
-    let( n = len(p),
-         m = len(q))
-    [for(i=[0:n+m-2], k1 = max(0,i-n+1), k2 = min(i,m-1) )
-       sum([for(j=[k1:k2]) p[i-j]*q[j] ]) 
+    assert(
+        (is_vector(p) || is_matrix(p))
+            && ( is_vector(q) || (is_matrix(q) && ( !is_vector(p[0]) || (len(p[0])==len(q[0])) ) ) ) ,
+        "The inputs should be vectors or paths all of the same dimension."
+    )
+    let(
+        n = len(p),
+        m = len(q)
+    ) [
+        for (i=[0:n+m-2], k1 = max(0,i-n+1), k2 = min(i,m-1) )
+        sum([for(j=[k1:k2]) p[i-j]*q[j] ]) 
     ];
 
 
