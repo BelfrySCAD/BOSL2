@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////
+﻿//////////////////////////////////////////////////////////////////////
 // LibFile: geometry.scad
 //   Geometry helpers.
 // Includes:
@@ -21,7 +21,7 @@
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function point_on_segment2d(point, edge, eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    point_segment_distance(point, edge)<eps;   
+    point_segment_distance(point, edge)<eps;
 
 
 //Internal - distance from point `d` to the line passing through the origin with unit direction n
@@ -32,8 +32,8 @@ function _dist2line(d,n) = norm(d-(d * n) * n);
 function _point_above_below_segment(point, edge) =
     let( edge = edge - [point, point] )
     edge[0].y <= 0
-    ?   (edge[1].y >  0 && cross(edge[0], edge[1]-edge[0]) > 0) ?  1 : 0
-    :   (edge[1].y <= 0 && cross(edge[0], edge[1]-edge[0]) < 0) ? -1 : 0 ;
+      ? (edge[1].y >  0 && cross(edge[0], edge[1]-edge[0]) > 0) ?  1 : 0
+      : (edge[1].y <= 0 && cross(edge[0], edge[1]-edge[0]) < 0) ? -1 : 0;
 
 //Internal
 function _valid_line(line,dim,eps=EPSILON) =
@@ -77,8 +77,8 @@ function collinear(a, b, c, eps=EPSILON) =
             "Input should be 3 points or a list of points with same dimension.")
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let( points = is_def(c) ? [a,b,c]: a )
-    len(points)<3 ? true
-    : noncollinear_triple(points,error=false,eps=eps)==[];
+    len(points)<3 ? true :
+    noncollinear_triple(points,error=false,eps=eps) == [];
 
 
 // Function: point_line_distance()
@@ -131,8 +131,7 @@ function point_segment_distance(pt, seg) =
 //   dist = segment_distance([[-14,3], [-15,9]], [[-10,0], [10,0]]);  // Returns: 5
 //   dist2 = segment_distance([[-5,5], [5,-5]], [[-10,3], [10,-3]]);  // Returns: 0
 function segment_distance(seg1, seg2) =
-    assert( is_matrix(concat(seg1,seg2),4),
-            "Inputs should be two valid segments." )
+    assert( is_matrix(concat(seg1,seg2),4), "Inputs should be two valid segments." )
     convex_distance(seg1,seg2);
 
 
@@ -155,9 +154,9 @@ function segment_distance(seg1, seg2) =
 //   color("blue") move_copies([p1,p2]) circle(d=2, $fn=12);
 function line_normal(p1,p2) =
     is_undef(p2)
-    ?   assert( len(p1)==2 && !is_undef(p1[1]) , "Invalid input." )
+      ? assert( len(p1)==2 && !is_undef(p1[1]) , "Invalid input." )
         line_normal(p1[0],p1[1])
-    :   assert( _valid_line([p1,p2],dim=2), "Invalid line." )
+      : assert( _valid_line([p1,p2],dim=2), "Invalid line." )
         unit([p1.y-p2.y,p2.x-p1.x]);
 
 
@@ -172,7 +171,8 @@ function line_normal(p1,p2) =
 function _general_line_intersection(s1,s2,eps=EPSILON) =
     let(
         denominator = det2([s1[0],s2[0]]-[s1[1],s2[1]])
-    ) approx(denominator,0,eps=eps)? [undef,undef,undef] : let(
+    ) approx(denominator,0,eps=eps)? [undef,undef,undef] :
+    let(
         t = det2([s1[0],s2[0]]-s2) / denominator,
         u = det2([s1[0],s1[0]]-[s2[0],s1[1]]) / denominator
     ) [s1[0]+t*(s1[1]-s1[0]), t, u];
@@ -211,11 +211,10 @@ function line_intersection(l1,l2,eps=EPSILON) =
 function line_ray_intersection(line,ray,eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     assert( _valid_line(line,dim=2,eps=eps) && _valid_line(ray,dim=2,eps=eps), "Invalid line or ray." )
-    let(
-        isect = _general_line_intersection(line,ray,eps=eps)
-    )
+    let( isect = _general_line_intersection(line,ray,eps=eps) )
     is_undef(isect[0]) ? undef :
-    (isect[2]<0-eps) ? undef : isect[0];
+    (isect[2]<0-eps) ? undef :
+    isect[0];
 
 
 // Function: line_segment_intersection()
@@ -232,9 +231,7 @@ function line_ray_intersection(line,ray,eps=EPSILON) =
 function line_segment_intersection(line,segment,eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     assert( _valid_line(line,  dim=2,eps=eps) &&_valid_line(segment,dim=2,eps=eps), "Invalid line or segment." )
-    let(
-        isect = _general_line_intersection(line,segment,eps=eps)
-    )
+    let( isect = _general_line_intersection(line,segment,eps=eps) )
     is_undef(isect[0]) ? undef :
     isect[2]<0-eps || isect[2]>1+eps ? undef :
     isect[0];
@@ -254,11 +251,10 @@ function line_segment_intersection(line,segment,eps=EPSILON) =
 function ray_intersection(r1,r2,eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     assert( _valid_line(r1,dim=2,eps=eps) && _valid_line(r2,dim=2,eps=eps), "Invalid ray(s)." )
-    let(
-        isect = _general_line_intersection(r1,r2,eps=eps)
-    )
+    let( isect = _general_line_intersection(r1,r2,eps=eps) )
     is_undef(isect[0]) ? undef :
-    isect[1]<0-eps || isect[2]<0-eps ? undef : isect[0];
+    isect[1]<0-eps || isect[2]<0-eps ? undef :
+    isect[0];
 
 
 // Function: ray_segment_intersection()
@@ -275,9 +271,7 @@ function ray_intersection(r1,r2,eps=EPSILON) =
 function ray_segment_intersection(ray,segment,eps=EPSILON) =
     assert( _valid_line(ray,dim=2,eps=eps) && _valid_line(segment,dim=2,eps=eps), "Invalid ray or segment." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    let(
-        isect = _general_line_intersection(ray,segment,eps=eps)
-    )
+    let( isect = _general_line_intersection(ray,segment,eps=eps) )
     is_undef(isect[0]) ? undef :
     isect[1]<0-eps || isect[2]<0-eps || isect[2]>1+eps ? undef :
     isect[0];
@@ -297,9 +291,7 @@ function ray_segment_intersection(ray,segment,eps=EPSILON) =
 function segment_intersection(s1,s2,eps=EPSILON) =
     assert( _valid_line(s1,dim=2,eps=eps) && _valid_line(s2,dim=2,eps=eps), "Invalid segment(s)." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    let(
-        isect = _general_line_intersection(s1,s2,eps=eps)
-    )
+    let( isect = _general_line_intersection(s1,s2,eps=eps) )
     is_undef(isect[0]) ? undef :
     isect[1]<0-eps || isect[1]>1+eps || isect[2]<0-eps || isect[2]>1+eps ? undef :
     isect[0];
@@ -361,7 +353,7 @@ function line_closest_point(line,pt) =
     assert(_valid_line(line), "Invalid line." )
     assert( is_vector(pt,len(line[0])), "Invalid point or incompatible dimensions." )
     let( n = unit( line[0]- line[1]) )
-    line[1]+((pt- line[1]) * n) * n;
+    line[1] + ((pt- line[1]) * n) * n;
 
 
 // Function: ray_closest_point()
@@ -503,7 +495,9 @@ function line_from_points(points, fast=false, eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let( pb = furthest_point(points[0],points) )
     norm(points[pb]-points[0])<eps*max(norm(points[pb]),norm(points[0])) ? undef :
-    fast || collinear(points) ? [points[pb], points[0]] : undef;
+    fast || collinear(points)
+      ? [points[pb], points[0]]
+      : undef;
 
 
 
@@ -576,7 +570,8 @@ function law_of_sines(a, A, b, B) =
     //   a/sin(A) = b/sin(B) = c/sin(C)
     assert(num_defined([b,B]) == 1, "Must give exactly one of b= or B=.")
     let( r = a/sin(A) )
-    is_undef(b) ? r*sin(B) : asin(constrain(b/r, -1, 1));
+    is_undef(b) ? r*sin(B) :
+    asin(constrain(b/r, -1, 1));
 
 
 // Function: tri_calc()
@@ -647,11 +642,11 @@ function tri_calc(ang,ang2,adj,opp,hyp) =
                   hyp
                 : (adj!=undef? (adj/cos(ang))
                 : (opp/sin(ang)))
-    )
-    [adj, opp, hyp, ang, ang2];
+    ) [adj, opp, hyp, ang, ang2];
 
 
 // Function: hyp_opp_to_adj()
+// Alias: opp_hyp_to_adj()
 // Usage:
 //   adj = hyp_opp_to_adj(hyp,opp);
 // Topics: Geometry, Triangles
@@ -668,8 +663,11 @@ function hyp_opp_to_adj(hyp,opp) =
            "Triangle side lengths should be a positive numbers." )
     sqrt(hyp*hyp-opp*opp);
 
+function opp_hyp_to_adj(opp,hyp) = hyp_opp_to_adj(hyp,opp);
+
 
 // Function: hyp_ang_to_adj()
+// Alias: ang_hyp_to_adj()
 // Usage:
 //   adj = hyp_ang_to_adj(hyp,ang);
 // Topics: Geometry, Triangles
@@ -686,8 +684,11 @@ function hyp_ang_to_adj(hyp,ang) =
     assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     hyp*cos(ang);
 
+function ang_hyp_to_adj(ang,hyp) = hyp_ang_to_adj(hyp, ang);
+
 
 // Function: opp_ang_to_adj()
+// Alias: ang_opp_to_adj()
 // Usage:
 //   adj = opp_ang_to_adj(opp,ang);
 // Topics: Geometry, Triangles
@@ -704,8 +705,11 @@ function opp_ang_to_adj(opp,ang) =
     assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     opp/tan(ang);
 
+function ang_opp_to_adj(ang,opp) = opp_ang_to_adj(opp,ang);
+
 
 // Function: hyp_adj_to_opp()
+// Alias: adj_hyp_to_opp()
 // Usage:
 //   opp = hyp_adj_to_opp(hyp,adj);
 // Topics: Geometry, Triangles
@@ -721,8 +725,11 @@ function hyp_adj_to_opp(hyp,adj) =
            "Triangle side lengths should be a positive numbers." )
     sqrt(hyp*hyp-adj*adj);
 
+function adj_hyp_to_opp(adj,hyp) = hyp_adj_to_opp(hyp,adj);
+
 
 // Function: hyp_ang_to_opp()
+// Alias: ang_hyp_to_opp()
 // Usage:
 //   opp = hyp_ang_to_opp(hyp,adj);
 // Topics: Geometry, Triangles
@@ -738,8 +745,11 @@ function hyp_ang_to_opp(hyp,ang) =
     assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     hyp*sin(ang);
 
+function ang_hyp_to_opp(ang,hyp) = hyp_ang_to_opp(hyp,ang);
+
 
 // Function: adj_ang_to_opp()
+// Alias: ang_adj_to_opp()
 // Usage:
 //   opp = adj_ang_to_opp(adj,ang);
 // Topics: Geometry, Triangles
@@ -755,8 +765,11 @@ function adj_ang_to_opp(adj,ang) =
     assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     adj*tan(ang);
 
+function ang_adj_to_opp(ang,adj) = adj_ang_to_opp(adj,ang);
+
 
 // Function: adj_opp_to_hyp()
+// Alias: opp_adj_to_hyp()
 // Usage:
 //   hyp = adj_opp_to_hyp(adj,opp);
 // Topics: Geometry, Triangles
@@ -772,8 +785,11 @@ function adj_opp_to_hyp(adj,opp) =
            "Triangle side lengths should be a positive numbers." )
     norm([opp,adj]);
 
+function opp_adj_to_hyp(opp,adj) = adj_opp_to_hyp(adj,opp);
+
 
 // Function: adj_ang_to_hyp()
+// Alias: ang_adj_to_hyp()
 // Usage:
 //   hyp = adj_ang_to_hyp(adj,ang);
 // Topics: Geometry, Triangles
@@ -789,8 +805,11 @@ function adj_ang_to_hyp(adj,ang) =
     assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     adj/cos(ang);
 
+function ang_adj_to_hyp(ang,adj) = adj_ang_to_hyp(adj,ang);
+
 
 // Function: opp_ang_to_hyp()
+// Alias: ang_opp_to_hyp()
 // Usage:
 //   hyp = opp_ang_to_hyp(opp,ang);
 // Topics: Geometry, Triangles
@@ -806,8 +825,11 @@ function opp_ang_to_hyp(opp,ang) =
     assert(is_finite(ang) && ang>-90 && ang<90, "The angle should be an acute angle." )
     opp/sin(ang);
 
+function ang_opp_to_hyp(ang,opp) = opp_ang_to_hyp(opp,ang);
+
 
 // Function: hyp_adj_to_ang()
+// Alias: adj_hyp_to_ang()
 // Usage:
 //   ang = hyp_adj_to_ang(hyp,adj);
 // Description:
@@ -822,8 +844,11 @@ function hyp_adj_to_ang(hyp,adj) =
             "Triangle side lengths should be positive numbers." )
     acos(adj/hyp);
 
+function adj_hyp_to_ang(adj,hyp) = hyp_adj_to_ang(hyp,adj);
+
 
 // Function: hyp_opp_to_ang()
+// Alias: opp_hyp_to_ang()
 // Usage:
 //   ang = hyp_opp_to_ang(hyp,opp);
 // Topics: Geometry, Triangles
@@ -839,8 +864,11 @@ function hyp_opp_to_ang(hyp,opp) =
             "Triangle side lengths should be positive numbers." )
     asin(opp/hyp);
 
+function opp_hyp_to_ang(opp,hyp) = hyp_opp_to_ang(hyp,opp);
+
 
 // Function: adj_opp_to_ang()
+// Alias: opp_adj_to_ang()
 // Usage:
 //   ang = adj_opp_to_ang(adj,opp);
 // Topics: Geometry, Triangles
@@ -855,6 +883,8 @@ function adj_opp_to_ang(adj,opp) =
     assert(is_finite(adj+opp) && adj>0 && opp>=0,
             "Triangle side lengths should be positive numbers." )
     atan2(opp,adj);
+
+function opp_adj_to_ang(opp,adj) = adj_opp_to_ang(adj,opp);
 
 
 // Function: triangle_area()
@@ -900,8 +930,7 @@ function plane3pt(p1, p2, p3) =
     let(
         crx = cross(p3-p1, p2-p1),
         nrm = norm(crx)
-    )
-    approx(nrm,0) ? [] :
+    ) approx(nrm,0) ? [] :
     concat(crx, crx*p1)/nrm;
 
 
@@ -928,8 +957,7 @@ function plane3pt_indexed(points, i1, i2, i3) =
         p1 = points[i1],
         p2 = points[i2],
         p3 = points[i3]
-    )
-    plane3pt(p1,p2,p3);
+    ) plane3pt(p1,p2,p3);
 
 
 // Function: plane_from_normal()
@@ -953,7 +981,7 @@ function plane_from_normal(normal, pt=[0,0,0]) =
 // Based on: https://en.wikipedia.org/wiki/Eigenvalue_algorithm
 function _eigenvals_symm_3(M) =
   let( p1 = pow(M[0][1],2) + pow(M[0][2],2) + pow(M[1][2],2) )
-  (p1<EPSILON)  
+  (p1<EPSILON)
   ? -sort(-[ M[0][0], M[1][1], M[2][2] ]) //  diagonal matrix: eigenvals in decreasing order
   : let(  q  = (M[0][0]+M[1][1]+M[2][2])/3,
           B  = (M - q*ident(3)),
@@ -964,19 +992,19 @@ function _eigenvals_symm_3(M) =
           ph = acos(constrain(r,-1,1))/3,
           e1 = q + 2*p*cos(ph),
           e3 = q + 2*p*cos(ph+120),
-          e2 = 3*q - e1 - e3 ) 
+          e2 = 3*q - e1 - e3 )
     [ e1, e2, e3 ];
 
 
 // the i-th normalized eigenvector of a 3x3 symmetrical matrix M from its eigenvalues
 // using Cayley–Hamilton theorem according to:
-// https://en.wikipedia.org/wiki/Eigenvalue_algorithm 
-function _eigenvec_symm_3(M,evals,i=0) = 
-    let(  
-        I = ident(3), 
+// https://en.wikipedia.org/wiki/Eigenvalue_algorithm
+function _eigenvec_symm_3(M,evals,i=0) =
+    let(
+        I = ident(3),
         A = (M - evals[(i+1)%3]*I) * (M - evals[(i+2)%3]*I) ,
-        k = max_index( [for(i=[0:2]) norm(A[i]) ]) 
-       )
+        k = max_index( [for(i=[0:2]) norm(A[i]) ])
+    )
     norm(A[k])<EPSILON ? I[k] : A[k]/norm(A[k]);
 
 
@@ -1013,15 +1041,16 @@ function _covariance_evec_eval(points) =
 function plane_from_points(points, fast=false, eps=EPSILON) =
     assert( is_path(points,dim=3), "Improper 3d point list." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    len(points) == 3 
-    ?   let( plane = plane3pt(points[0],points[1],points[2]) )
-        plane==[] ? [] : plane    
-    :   let(  
+    len(points) == 3
+      ? let( plane = plane3pt(points[0],points[1],points[2]) )
+        plane==[] ? [] : plane
+      : let(
             covmix = _covariance_evec_eval(points),
             pm     = covmix[0],
             evec   = covmix[1],
             eval0  = covmix[2],
-            plane  = [ each evec, pm*evec] )
+            plane  = [ each evec, pm*evec]
+        )
         !fast && _pointlist_greatest_distance(points,plane)>eps*eval0 ? undef :
         plane ;
 
@@ -1054,8 +1083,8 @@ function plane_from_polygon(poly, fast=false, eps=EPSILON) =
     triple==[] ? [] :
     let( plane = plane3pt(poly[triple[0]],poly[triple[1]],poly[triple[2]]))
     fast? plane: points_on_plane(poly, plane, eps=eps)? plane: [];
- 
- 
+
+
 // Function: plane_normal()
 // Usage:
 //   vec = plane_normal(plane);
@@ -1164,10 +1193,10 @@ function _general_plane_line_intersection(plane, line, eps=EPSILON) =
         b = plane*[each(line[1]-line[0]),0]  // difference between the plane expression evaluation at line[1] and at line[0]
     )
     approx(b,0,eps)                          // is  (line[1]-line[0]) "parallel" to the plane ?
-    ? approx(a,0,eps)                        // is line[0] on the plane ?
-       ? [line,undef]                        // line is on the plane
-       : undef                               // line is parallel but not on the plane
-    : [ line[0]-a/b*(line[1]-line[0]), -a/b ];
+      ? approx(a,0,eps)                      // is line[0] on the plane ?
+        ? [line,undef]                       // line is on the plane
+        : undef                              // line is parallel but not on the plane
+      : [ line[0]-a/b*(line[1]-line[0]), -a/b ];
 
 
 // Function: normalize_plane()
@@ -1197,8 +1226,7 @@ function plane_line_angle(plane, line) =
         normal    = plane_normal(plane),
         sin_angle = linedir*normal,
         cos_angle = norm(cross(linedir,normal))
-    )
-    atan2(sin_angle,cos_angle);
+    ) atan2(sin_angle,cos_angle);
 
 
 // Function: plane_line_intersection()
@@ -1222,8 +1250,7 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
     let(
         bounded = is_list(bounded)? bounded : [bounded, bounded],
         res = _general_plane_line_intersection(plane, line, eps=eps)
-    )
-    is_undef(res) ? undef :
+    ) is_undef(res) ? undef :
     is_undef(res[1]) ? res[0] :
     bounded[0] && res[1]<0 ? undef :
     bounded[1] && res[1]>1 ? undef :
@@ -1254,41 +1281,37 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
         bounded = is_list(bounded)? bounded : [bounded, bounded],
         poly = deduplicate(poly),
         indices = noncollinear_triple(poly)
-    )
-    indices==[] ? undef :
+    ) indices==[] ? undef :
     let(
         p1 = poly[indices[0]],
         p2 = poly[indices[1]],
         p3 = poly[indices[2]],
         plane = plane3pt(p1,p2,p3),
         res = _general_plane_line_intersection(plane, line, eps=eps)
-    )
-    is_undef(res)? undef :
-    is_undef(res[1])
-    ? ( let(// Line is on polygon plane.
+    ) is_undef(res)? undef :
+    is_undef(res[1]) ? (
+        let(// Line is on polygon plane.
             linevec = unit(line[1] - line[0]),
             lp1 = line[0] + (bounded[0]? 0 : -1000000) * linevec,
             lp2 = line[1] + (bounded[1]? 0 :  1000000) * linevec,
             poly2d = clockwise_polygon(project_plane(plane, poly)),
             line2d = project_plane(plane, [lp1,lp2]),
             parts = split_path_at_region_crossings(line2d, [poly2d], closed=false),
-            inside = [for (part = parts)
-                          if (point_in_polygon(mean(part), poly2d)>0) part
-                     ]
-        )
-        !inside? undef :
-        let(
-            isegs = [for (seg = inside) lift_plane(plane, seg) ]
-        )
+            inside = [
+                for (part = parts)
+                if (point_in_polygon(mean(part), poly2d)>0) part
+            ]
+        ) !inside? undef :
+        let( isegs = [for (seg = inside) lift_plane(plane, seg) ] )
         isegs
-    )
-    :   bounded[0] && res[1]<0? undef :
-        bounded[1] && res[1]>1? undef :
-        let(
-            proj = clockwise_polygon(project_plane([p1, p2, p3], poly)),
-            pt = project_plane([p1, p2, p3], res[0])
-        )
-        point_in_polygon(pt, proj) < 0 ? undef : res[0];
+    ) :
+    bounded[0] && res[1]<0? undef :
+    bounded[1] && res[1]>1? undef :
+    let(
+        proj = clockwise_polygon(project_plane([p1, p2, p3], poly)),
+        pt = project_plane([p1, p2, p3], res[0])
+    ) point_in_polygon(pt, proj) < 0 ? undef :
+    res[0];
 
 
 // Function: plane_intersection()
@@ -1309,19 +1332,20 @@ function plane_intersection(plane1,plane2,plane3) =
     assert( _valid_plane(plane1) && _valid_plane(plane2) && (is_undef(plane3) ||_valid_plane(plane3)),
                 "The input must be 2 or 3 planes." )
     is_def(plane3)
-    ?   let(
-          matrix = [for(p=[plane1,plane2,plane3]) point3d(p)],
-          rhs = [for(p=[plane1,plane2,plane3]) p[3]]
+      ? let(
+            matrix = [for(p=[plane1,plane2,plane3]) point3d(p)],
+            rhs = [for(p=[plane1,plane2,plane3]) p[3]]
         )
         linear_solve(matrix,rhs)
-    :   let( normal = cross(plane_normal(plane1), plane_normal(plane2)) )
+      : let( normal = cross(plane_normal(plane1), plane_normal(plane2)) )
         approx(norm(normal),0) ? undef :
         let(
             matrix = [for(p=[plane1,plane2]) point3d(p)],
             rhs = [plane1[3], plane2[3]],
             point = linear_solve(matrix,rhs)
         )
-        point==[]? undef: [point, point+normal];
+        point==[]? undef:
+        [point, point+normal];
 
 
 // Function: coplanar()
@@ -1337,18 +1361,18 @@ function coplanar(points, eps=EPSILON) =
     assert( is_path(points,dim=3) , "Input should be a list of 3D points." )
     assert( is_finite(eps) && eps>=0, "The tolerance should be a non-negative value." )
     len(points)<=2 ? false
-    :   let( ip = noncollinear_triple(points,error=false,eps=eps) )
+      : let( ip = noncollinear_triple(points,error=false,eps=eps) )
         ip == [] ? false :
         let( plane  = plane3pt(points[ip[0]],points[ip[1]],points[ip[2]]) )
         _pointlist_greatest_distance(points,plane) < eps;
 
 
-// the maximum distance from points to the plane 
+// the maximum distance from points to the plane
 function _pointlist_greatest_distance(points,plane) =
-    let( 
+    let(
         normal = point3d(plane),
         pt_nrm = points*normal
-         )
+    )
     abs(max( max(pt_nrm) - plane[3], -min(pt_nrm) + plane[3])) / norm(normal);
 
 
@@ -1482,6 +1506,7 @@ function circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
         )
         [cp, n, tp1, tp2, dang1, dang2];
 
+
 module circle_2tangents(pt1, pt2, pt3, r, d, h, center=false) {
     c = circle_2tangents(pt1=pt1, pt2=pt2, pt3=pt3, r=r, d=d);
     assert(!is_undef(c), "Cannot find circle when both rays are collinear.");
@@ -1497,6 +1522,7 @@ module circle_2tangents(pt1, pt2, pt3, r, d, h, center=false) {
         }
     }
 }
+
 
 // Function&Module: circle_3points()
 // Usage: As Function
@@ -1628,7 +1654,7 @@ function circle_point_tangents(r, d, cp, pt) =
 //   returns only two entries.  If one circle is inside the other one then no tangents exist
 //   so the function returns the empty set.  When the circles are tangent a degenerate tangent line
 //   passes through the point of tangency of the two circles:  this degenerate line is NOT returned.
-// Arguments: 
+// Arguments:
 //   c1 = Center of the first circle.
 //   r1 = Radius of the first circle.
 //   c2 = Center of the second circle.
@@ -1747,7 +1773,7 @@ function circle_line_intersection(c,r,d,line,bounded=false,eps=EPSILON) =
 //   If all points are collinear returns [] when `error=true` or an error otherwise .
 // Arguments:
 //   points = List of input points.
-//   error = Defines the behaviour for collinear input points. When `true`, produces an error, otherwise returns []. Default: `true`. 
+//   error = Defines the behaviour for collinear input points. When `true`, produces an error, otherwise returns []. Default: `true`.
 //   eps = Tolerance for collinearity test. Default: EPSILON.
 function noncollinear_triple(points,error=true,eps=EPSILON) =
     assert( is_path(points), "Invalid input points." )
@@ -1758,19 +1784,17 @@ function noncollinear_triple(points,error=true,eps=EPSILON) =
         b  = furthest_point(pa, points),
         pb = points[b],
         nrm = norm(pa-pb)
-        )
-    nrm <= eps*max(norm(pa),norm(pb))
-    ? assert(!error, "Cannot find three noncollinear points in pointlist.")
-        []
-    :   let(
-            n = (pb-pa)/nrm,
-            distlist = [for(i=[0:len(points)-1]) _dist2line(points[i]-pa, n)]
-           )
-        max(distlist) < eps*nrm
-        ?  assert(!error, "Cannot find three noncollinear points in pointlist.")
-           []
-        :  [0,b,max_index(distlist)];
-        
+    )
+    nrm <= eps*max(norm(pa),norm(pb)) ?
+        assert(!error, "Cannot find three noncollinear points in pointlist.") [] :
+    let(
+        n = (pb-pa)/nrm,
+        distlist = [for(i=[0:len(points)-1]) _dist2line(points[i]-pa, n)]
+    )
+    max(distlist) < eps*nrm ?
+        assert(!error, "Cannot find three noncollinear points in pointlist.") [] :
+    [0, b, max_index(distlist)];
+
 
 // Function: pointlist_bounds()
 // Usage:
@@ -1784,12 +1808,14 @@ function noncollinear_triple(points,error=true,eps=EPSILON) =
 //   pts = List of points.
 function pointlist_bounds(pts) =
     assert(is_path(pts,dim=undef,fast=true) , "Invalid pointlist." )
-    let( 
+    let(
         select = ident(len(pts[0])),
-        spread = [for(i=[0:len(pts[0])-1])
-                      let( spreadi = pts*select[i] ) 
-                      [min(spreadi), max(spreadi)] ] )
-    transpose(spread);
+        spread = [
+            for(i=[0:len(pts[0])-1])
+            let( spreadi = pts*select[i] )
+            [ min(spreadi), max(spreadi) ]
+        ]
+    ) transpose(spread);
 
 
 // Function: closest_point()
@@ -1935,7 +1961,7 @@ function reindex_polygon(reference, poly, return_error=false) =
                     [for(i=[0:N-1])
                       (reference[i]*poly[(i+k)%N]) ] ]*I,
         optimal_poly = polygon_shift(fixpoly, max_index(val))
-      )
+    )
     return_error? [optimal_poly, min(poly*(I*poly)-2*val)] :
     optimal_poly;
 
@@ -1968,7 +1994,8 @@ function align_polygon(reference, poly, angles, cp) =
             "The `angle` parameter must be a range or a non void list of numbers.")
     let(     // alignments is a vector of entries of the form: [polygon, error]
         alignments = [
-            for(angle=angles) reindex_polygon(
+            for(angle=angles)
+            reindex_polygon(
                 reference,
                 zrot(angle,p=poly,cp=cp),
                 return_error=true
@@ -1995,22 +2022,21 @@ function centroid(poly, eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let(
         n = len(poly[0])==2 ? 1 :
-            let( 
-                plane = plane_from_points(poly, fast=true) )
+            let( plane = plane_from_points(poly, fast=true) )
             assert( !is_undef(plane), "The polygon must be planar." )
             plane_normal(plane),
         v0 = poly[0] ,
-        val = sum([for(i=[1:len(poly)-2])
-                        let(
-                           v1 = poly[i],
-                           v2 = poly[i+1],
-                           area = cross(v2-v0,v1-v0)*n
-                           )
-                        [ area, (v0+v1+v2)*area ]
-                    ] )
-          )
-      assert(!approx(val[0],0, eps), "The polygon is self-intersecting or its points are collinear.")
-      val[1]/val[0]/3;
+        val = sum([
+            for(i=[1:len(poly)-2])
+            let(
+                v1 = poly[i],
+                v2 = poly[i+1],
+                area = cross(v2-v0,v1-v0)*n
+            ) [ area, (v0+v1+v2)*area ]
+        ])
+    )
+    assert(!approx(val[0],0, eps), "The polygon is self-intersecting or its points are collinear.")
+    val[1]/val[0]/3;
 
 
 
@@ -2041,38 +2067,39 @@ function point_in_polygon(point, poly, nonzero=true, eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     // Does the point lie on any edges?  If so return 0.
     let(
-        on_brd = [for(i=[0:1:len(poly)-1])
-                    let( seg = select(poly,i,i+1) )
-                    if( !approx(seg[0],seg[1],eps) )
-                        point_on_segment2d(point, seg, eps=eps)? 1:0 ]
-        )
-    sum(on_brd) > 0
-    ? 0
-    :   nonzero
-        ?    // Compute winding number and return 1 for interior, -1 for exterior
-            let(
-                windchk = [for(i=[0:1:len(poly)-1])
-                            let(seg=select(poly,i,i+1))
-                            if(!approx(seg[0],seg[1],eps=eps))
-                                _point_above_below_segment(point, seg)
-                          ]
+        on_brd = [
+            for (i = [0:1:len(poly)-1])
+            let( seg = select(poly,i,i+1) )
+            if (!approx(seg[0],seg[1],eps) )
+            point_on_segment2d(point, seg, eps=eps)? 1:0
+        ]
+    )
+    sum(on_brd) > 0? 0 :
+    nonzero
+      ?  // Compute winding number and return 1 for interior, -1 for exterior
+        let(
+            windchk = [
+                for(i=[0:1:len(poly)-1])
+                let( seg=select(poly,i,i+1) )
+                if (!approx(seg[0],seg[1],eps=eps))
+                _point_above_below_segment(point, seg)
+            ]
+        ) sum(windchk) != 0 ? 1 : -1
+      : // or compute the crossings with the ray [point, point+[1,0]]
+        let(
+            n  = len(poly),
+            cross = [
+                for(i=[0:n-1])
+                let(
+                    p0 = poly[i]-point,
+                    p1 = poly[(i+1)%n]-point
                 )
-            sum(windchk) != 0 ? 1 : -1
-        :   // or compute the crossings with the ray [point, point+[1,0]]
-            let(
-              n  = len(poly),
-              cross =
-                [for(i=[0:n-1])
-                    let(
-                      p0 = poly[i]-point,
-                      p1 = poly[(i+1)%n]-point
-                      )
-                    if( ( (p1.y>eps && p0.y<=eps) || (p1.y<=eps && p0.y>eps) )
-                       &&  -eps < p0.x - p0.y *(p1.x - p0.x)/(p1.y - p0.y) )
-                    1
-                ]
-            ) 
-            2*(len(cross)%2)-1;
+                if (
+                    ( (p1.y>eps && p0.y<=eps) || (p1.y<=eps && p0.y>eps) )
+                    &&  -eps < p0.x - p0.y *(p1.x - p0.x)/(p1.y - p0.y)
+                ) 1
+            ]
+        ) 2*(len(cross)%2)-1;
 
 
 // Function: polygon_is_clockwise()
@@ -2128,7 +2155,7 @@ function ccw_polygon(poly) =
 //   poly = The list of the path points for the perimeter of the polygon.
 function reverse_polygon(poly) =
     assert(is_path(poly), "Input should be a polygon")
-   [poly[0], for(i=[len(poly)-1:-1:1]) poly[i] ]; 
+    [ poly[0], for(i=[len(poly)-1:-1:1]) poly[i] ];
 
 
 // Function: polygon_normal()
@@ -2311,7 +2338,7 @@ function split_polygons_at_each_z(polys, zs, _i=0) =
 //   test = is_convex_polygon(poly);
 // Topics: Geometry, Convexity, Test
 // Description:
-//   Returns true if the given 2D or 3D polygon is convex.  
+//   Returns true if the given 2D or 3D polygon is convex.
 //   The result is meaningless if the polygon is not simple (self-intersecting) or non coplanar.
 //   If the points are collinear an error is generated.
 // Arguments:
@@ -2325,14 +2352,16 @@ function split_polygons_at_each_z(polys, zs, _i=0) =
 //   test = is_convex_polygon(spiral);  // Returns: false
 function is_convex_polygon(poly,eps=EPSILON) =
     assert(is_path(poly), "The input should be a 2D or 3D polygon." )
-    let( lp = len(poly),
-         p0 = poly[0] )
+    let(
+        lp = len(poly),
+        p0 = poly[0]
+    )
     assert( lp>=3 , "A polygon must have at least 3 points" )
     let( crosses = [for(i=[0:1:lp-1]) cross(poly[(i+1)%lp]-poly[i], poly[(i+2)%lp]-poly[(i+1)%lp]) ] )
     len(p0)==2
-    ?   assert( !approx(sqrt(max(max(crosses),-min(crosses))),eps), "The points are collinear" )
+      ? assert( !approx(sqrt(max(max(crosses),-min(crosses))),eps), "The points are collinear" )
         min(crosses) >=0 || max(crosses)<=0
-    :   let( prod = crosses*sum(crosses),
+      : let( prod = crosses*sum(crosses),
              minc = min(prod),
              maxc = max(prod) )
         assert( !approx(sqrt(max(maxc,-minc)),eps), "The points are collinear" )
@@ -2346,9 +2375,9 @@ function is_convex_polygon(poly,eps=EPSILON) =
 // See also: 
 //   convex_collision(), hull()
 // Description:
-//   Returns the smallest distance between a point in convex hull of `points1` 
+//   Returns the smallest distance between a point in convex hull of `points1`
 //   and a point in the convex hull of `points2`. All the points in the lists
-//   should have the same dimension, either 2D or 3D. 
+//   should have the same dimension, either 2D or 3D.
 //   A zero result means the hulls intercept whithin a tolerance `eps`.
 // Arguments:
 //   points1 - first list of 2d or 3d points.
@@ -2366,7 +2395,7 @@ function is_convex_polygon(poly,eps=EPSILON) =
 // Example(3D):
 //    sphr1 = sphere(2,$fn=10);
 //    sphr2 = move([4,0,0], p=sphr1);
-//    sphr3 = move([4.5,0,0], p=sphr1);    
+//    sphr3 = move([4.5,0,0], p=sphr1);
 //    vnf_polyhedron(sphr1);
 //    vnf_polyhedron(sphr2);
 //    echo(convex_distance(sphr1[0], sphr2[0])); // Returns: 0
@@ -2378,25 +2407,25 @@ function convex_distance(points1, points2, eps=EPSILON) =
            "The input points should be 2d or 3d points.")
     let( d = points1[0]-points2[0] )
     norm(d)<eps ? 0 :
-    let( v = _support_diff(points1,points2,-d) ) 
+    let( v = _support_diff(points1,points2,-d) )
     norm(_GJK_distance(points1, points2, eps, 0, v, [v]));
 
 
 // Finds the vector difference between the hulls of the two pointsets by the GJK algorithm
 // Based on:
 // http://www.dtecta.com/papers/jgt98convex.pdf
-function _GJK_distance(points1, points2, eps=EPSILON, lbd, d, simplex=[]) = 
+function _GJK_distance(points1, points2, eps=EPSILON, lbd, d, simplex=[]) =
     let( nrd = norm(d) ) // distance upper bound
     nrd<eps ? d :
     let(
         v     = _support_diff(points1,points2,-d),
         lbd   = max(lbd, d*v/nrd), // distance lower bound
-        close = (nrd-lbd <= eps*nrd) 
+        close = (nrd-lbd <= eps*nrd)
     )
-    // v already in the simplex is a degenerence due to numerical errors 
+    // v already in the simplex is a degenerence due to numerical errors
     // and may produce a non-stopping loop
-    close || [for(nv=norm(v), s=simplex) if(norm(s-v)<=eps*nv) 1]!=[] ? d :  
-    let( newsplx = _closest_simplex(concat(simplex,[v]),eps) ) 
+    close || [for(nv=norm(v), s=simplex) if(norm(s-v)<=eps*nv) 1]!=[] ? d :
+    let( newsplx = _closest_simplex(concat(simplex,[v]),eps) )
     _GJK_distance(points1, points2, eps, lbd, newsplx[0], newsplx[1]);
 
 
@@ -2427,7 +2456,7 @@ function _GJK_distance(points1, points2, eps=EPSILON, lbd, d, simplex=[]) =
 // Example(3D):
 //    sphr1 = sphere(2,$fn=10);
 //    sphr2 = move([4,0,0], p=sphr1);
-//    sphr3 = move([4.5,0,0], p=sphr1);    
+//    sphr3 = move([4.5,0,0], p=sphr1);
 //    vnf_polyhedron(sphr1);
 //    vnf_polyhedron(sphr2);
 //    echo(convex_collision(sphr1[0], sphr2[0])); // Returns: true
@@ -2440,7 +2469,7 @@ function convex_collision(points1, points2, eps=EPSILON) =
            "The input points should be 2d or 3d points.")
     let( d = points1[0]-points2[0] )
     norm(d)<eps ? true :
-    let( v = _support_diff(points1,points2,-d) ) 
+    let( v = _support_diff(points1,points2,-d) )
     _GJK_collide(points1, points2, v, [v], eps);
 
 
@@ -2448,8 +2477,8 @@ function convex_collision(points1, points2, eps=EPSILON) =
 // http://uu.diva-portal.org/smash/get/diva2/FFULLTEXT01.pdf
 // or
 // http://www.dtecta.com/papers/jgt98convex.pdf
-function _GJK_collide(points1, points2, d, simplex, eps=EPSILON) = 
-    norm(d) < eps ? true :          // does collide 
+function _GJK_collide(points1, points2, d, simplex, eps=EPSILON) =
+    norm(d) < eps ? true :          // does collide
     let( v = _support_diff(points1,points2,-d) )
     v*d > eps ? false : // no collision
     let( newsplx = _closest_simplex(concat(simplex,[v]),eps) )
@@ -2461,7 +2490,7 @@ function _GJK_collide(points1, points2, d, simplex, eps=EPSILON) =
 //  - the smallest sub-simplex of s that contains that point
 function _closest_simplex(s,eps=EPSILON) =
     assert(len(s)>=2 && len(s)<=4, "Internal error.")
-    len(s)==2 ? _closest_s1(s,eps) : 
+    len(s)==2 ? _closest_s1(s,eps) :
     len(s)==3 ? _closest_s2(s,eps)
               : _closest_s3(s,eps);
 
@@ -2470,10 +2499,10 @@ function _closest_simplex(s,eps=EPSILON) =
 // Based on: http://uu.diva-portal.org/smash/get/diva2/FFULLTEXT01.pdf
 function _closest_s1(s,eps=EPSILON) =
     norm(s[1]-s[0])<eps*(norm(s[0])+norm(s[1]))/2 ? [ s[0], [s[0]] ] :
-    let( 
+    let(
         c = s[1]-s[0],
         t = -s[0]*c/(c*c)
-    ) 
+    )
     t<0 ? [ s[0], [s[0]] ] :
     t>1 ? [ s[1], [s[1]] ] :
     [ s[0]+t*c, s ];
@@ -2503,13 +2532,13 @@ function _closest_s2(s,eps=EPSILON) =
                     + (cross(nr,c-a)*a<0 ? 2 : 0 )
                     + (cross(nr,b-c)*b<0 ? 4 : 0 )
         )
-        assert( class!=1, "Internal error" )  
+        assert( class!=1, "Internal error" )
         class==0 ? [ nr*(nr*a)/(nr*nr), s] : // origin projects (or is) on the tri
 //        class==1 ? _closest_s1([s[0],s[1]]) :
-        class==2 ? _closest_s1([s[0],s[2]],eps) :  
+        class==2 ? _closest_s1([s[0],s[2]],eps) :
         class==4 ? _closest_s1([s[1],s[2]],eps) :
-//        class==3 ? a*(a-b)> 0 ? _closest_s1([s[0],s[1]]) : _closest_s1([s[0],s[2]]) : 
-        class==3 ? _closest_s1([s[0],s[2]],eps) : 
+//        class==3 ? a*(a-b)> 0 ? _closest_s1([s[0],s[1]]) : _closest_s1([s[0],s[2]]) :
+        class==3 ? _closest_s1([s[0],s[2]],eps) :
 //        class==5 ? b*(b-c)<=0 ? _closest_s1([s[0],s[1]]) : _closest_s1([s[1],s[2]]) :
         class==5 ? _closest_s1([s[1],s[2]],eps) :
         c*(c-a)>0 ? _closest_s1([s[0],s[2]],eps) : _closest_s1([s[1],s[2]],eps);
@@ -2521,13 +2550,13 @@ function _closest_s3(s,eps=EPSILON) =
     assert( len(s[0])==3 && len(s)==4, "Internal error." )
     let( nr = cross(s[1]-s[0],s[2]-s[0]),
          sz = [ norm(s[1]-s[0]), norm(s[1]-s[2]), norm(s[2]-s[0]) ] )
-    norm(nr)<eps*max(sz) 
-    ?   let( i = max_index(sz) )
+    norm(nr)<eps*max(sz)
+      ? let( i = max_index(sz) )
         _closest_s2([ s[i], s[(i+1)%3], s[3] ], eps) // degenerate case
-    // considering that s[3] was the last inserted vertex in s,
-    // the only possible outcomes will be:
-    //    s or some of the 3 triangles of s containing s[3]
-    :   let(
+        // considering that s[3] was the last inserted vertex in s,
+        // the only possible outcomes will be:
+        //    s or some of the 3 triangles of s containing s[3]
+      : let(
             tris = [ [s[0], s[1], s[3]],
                      [s[1], s[2], s[3]],
                      [s[2], s[0], s[3]] ],
