@@ -10,7 +10,8 @@
 
 // Function: point_on_segment2d()
 // Usage:
-//   point_on_segment2d(point, edge);
+//   pt = point_on_segment2d(point, edge);
+// Topics: Geometry, Points, Segments
 // Description:
 //   Determine if the point is on the line segment between two points.
 //   Returns true if yes, and false if not.
@@ -45,7 +46,8 @@ function _valid_plane(p, eps=EPSILON) = is_vector(p,4) && ! approx(norm(p),0,eps
 
 // Function: point_left_of_line2d()
 // Usage:
-//   point_left_of_line2d(point, line);
+//   pt = point_left_of_line2d(point, line);
+// Topics: Geometry, Points, Lines
 // Description:
 //   Return >0 if point is left of the line defined by `line`.
 //   Return =0 if point is on the line.
@@ -60,7 +62,8 @@ function point_left_of_line2d(point, line) =
 
 // Function: collinear()
 // Usage:
-//   collinear(a, [b, c], [eps]);
+//   test = collinear(a, [b, c], [eps]);
+// Topics: Geometry, Points, Collinearity
 // Description:
 //   Returns true if the points `a`, `b` and `c` are co-linear or if the list of points `a` is collinear.
 // Arguments:
@@ -80,7 +83,8 @@ function collinear(a, b, c, eps=EPSILON) =
 
 // Function: point_line_distance()
 // Usage:
-//   point_line_distance(line, pt);
+//   pt = point_line_distance(line, pt);
+// Topics: Geometry, Points, Lines, Distance
 // Description:
 //   Finds the perpendicular distance of a point `pt` from the line `line`.
 // Arguments:
@@ -97,6 +101,7 @@ function point_line_distance(pt, line) =
 // Function: point_segment_distance()
 // Usage:
 //   dist = point_segment_distance(pt, seg);
+// Topics: Geometry, Points, Segments, Distance
 // Description:
 //   Returns the closest distance of the given point to the given line segment.
 // Arguments:
@@ -115,6 +120,8 @@ function point_segment_distance(pt, seg) =
 // Function: segment_distance()
 // Usage:
 //   dist = segment_distance(seg1, seg2);
+// Topics: Geometry, Segments, Distance
+// See Also: convex_collision(), convex_distance()
 // Description:
 //   Returns the closest distance of the two given line segments.
 // Arguments:
@@ -130,8 +137,9 @@ function segment_distance(seg1, seg2) =
 
 // Function: line_normal()
 // Usage:
-//   line_normal([P1,P2])
-//   line_normal(p1,p2)
+//   vec = line_normal([P1,P2])
+//   vec = line_normal(p1,p2)
+// Topics: Geometry, Lines
 // Description:
 //   Returns the 2D normal vector to the given 2D line. This is otherwise known as the perpendicular vector counter-clockwise to the given ray.
 // Arguments:
@@ -172,7 +180,8 @@ function _general_line_intersection(s1,s2,eps=EPSILON) =
 
 // Function: line_intersection()
 // Usage:
-//   line_intersection(l1, l2);
+//   pt = line_intersection(l1, l2);
+// Topics: Geometry, Lines, Intersections
 // Description:
 //   Returns the 2D intersection point of two unbounded 2D lines.
 //   Returns `undef` if the lines are parallel.
@@ -190,7 +199,8 @@ function line_intersection(l1,l2,eps=EPSILON) =
 
 // Function: line_ray_intersection()
 // Usage:
-//   line_ray_intersection(line, ray);
+//   pt = line_ray_intersection(line, ray);
+// Topics: Geometry, Lines, Rays, Intersections
 // Description:
 //   Returns the 2D intersection point of an unbounded 2D line, and a half-bounded 2D ray.
 //   Returns `undef` if they do not intersect.
@@ -209,7 +219,8 @@ function line_ray_intersection(line,ray,eps=EPSILON) =
 
 // Function: line_segment_intersection()
 // Usage:
-//   line_segment_intersection(line, segment);
+//   pt = line_segment_intersection(line, segment);
+// Topics: Geometry, Lines, Segments, Intersections
 // Description:
 //   Returns the 2D intersection point of an unbounded 2D line, and a bounded 2D line segment.
 //   Returns `undef` if they do not intersect.
@@ -228,7 +239,8 @@ function line_segment_intersection(line,segment,eps=EPSILON) =
 
 // Function: ray_intersection()
 // Usage:
-//   ray_intersection(s1, s2);
+//   pt = ray_intersection(s1, s2);
+// Topics: Geometry, Lines, Rays, Intersections
 // Description:
 //   Returns the 2D intersection point of two 2D line rays.
 //   Returns `undef` if they do not intersect.
@@ -247,7 +259,8 @@ function ray_intersection(r1,r2,eps=EPSILON) =
 
 // Function: ray_segment_intersection()
 // Usage:
-//   ray_segment_intersection(ray, segment);
+//   pt = ray_segment_intersection(ray, segment);
+// Topics: Geometry, Rays, Segments, Intersections
 // Description:
 //   Returns the 2D intersection point of a half-bounded 2D ray, and a bounded 2D line segment.
 //   Returns `undef` if they do not intersect.
@@ -266,7 +279,8 @@ function ray_segment_intersection(ray,segment,eps=EPSILON) =
 
 // Function: segment_intersection()
 // Usage:
-//   segment_intersection(s1, s2);
+//   pt = segment_intersection(s1, s2);
+// Topics: Geometry, Segments, Intersections
 // Description:
 //   Returns the 2D intersection point of two 2D line segments.
 //   Returns `undef` if they do not intersect.
@@ -285,7 +299,8 @@ function segment_intersection(s1,s2,eps=EPSILON) =
 
 // Function: line_closest_point()
 // Usage:
-//   line_closest_point(line,pt);
+//   pt = line_closest_point(line,pt);
+// Topics: Geometry, Lines, Distance
 // Description:
 //   Returns the point on the given 2D or 3D `line` that is closest to the given point `pt`.
 //   The `line` and `pt` args should either both be 2D or both 3D.
@@ -343,7 +358,8 @@ function line_closest_point(line,pt) =
 
 // Function: ray_closest_point()
 // Usage:
-//   ray_closest_point(seg,pt);
+//   pt = ray_closest_point(seg,pt);
+// Topics: Geometry, Rays, Distance
 // Description:
 //   Returns the point on the given 2D or 3D ray `ray` that is closest to the given point `pt`.
 //   The `ray` and `pt` args should either both be 2D or both 3D.
@@ -406,7 +422,8 @@ function ray_closest_point(ray,pt) =
 
 // Function: segment_closest_point()
 // Usage:
-//   segment_closest_point(seg,pt);
+//   pt = segment_closest_point(seg,pt);
+// Topics: Geometry, Segments, Distance
 // Description:
 //   Returns the point on the given 2D or 3D line segment `seg` that is closest to the given point `pt`.
 //   The `seg` and `pt` args should either both be 2D or both 3D.
@@ -463,7 +480,8 @@ function segment_closest_point(seg,pt) =
 
 // Function: line_from_points()
 // Usage:
-//   line_from_points(points, [fast], [eps]);
+//   line = line_from_points(points, [fast], [eps]);
+// Topics: Geometry, Lines, Points
 // Description:
 //   Given a list of 2 or more collinear points, returns a line containing them.
 //   If `fast` is false and the points are coincident or non-collinear, then `undef` is returned.
@@ -490,6 +508,7 @@ function line_from_points(points, fast=false, eps=EPSILON) =
 // Usage:
 //   C = law_of_cosines(a, b, c);
 //   c = law_of_cosines(a, b, C);
+// Topics: Geometry, Triangles
 // Description:
 //   Applies the Law of Cosines for an arbitrary triangle.  Given three side lengths, returns the
 //   angle in degrees for the corner opposite of the third side.  Given two side lengths, and the
@@ -523,6 +542,7 @@ function law_of_cosines(a, b, c, C) =
 // Usage:
 //   B = law_of_sines(a, A, b);
 //   b = law_of_sines(a, A, B);
+// Topics: Geometry, Triangles
 // Description:
 //   Applies the Law of Sines for an arbitrary triangle.  Given two triangle side lengths and the
 //   angle between them, returns the angle of the corner opposite of the second side.  Given a side
@@ -556,7 +576,8 @@ function law_of_sines(a, A, b, B) =
 
 // Function: tri_calc()
 // Usage:
-//   tri_calc(ang,ang2,adj,opp,hyp);
+//   triangle = tri_calc(ang,ang2,adj,opp,hyp);
+// Topics: Geometry, Triangles
 // Description:
 //   Given a side length and an angle, or two side lengths, calculates the rest of the side lengths
 //   and angles of a right triangle.  Returns [ADJACENT, OPPOSITE, HYPOTENUSE, ANGLE, ANGLE2] where
@@ -628,6 +649,7 @@ function tri_calc(ang,ang2,adj,opp,hyp) =
 // Alias: opp_hyp_to_adj()
 // Usage:
 //   adj = hyp_opp_to_adj(hyp,opp);
+// Topics: Geometry, Triangles
 // Description:
 //   Given the lengths of the hypotenuse and opposite side of a right triangle, returns the length
 //   of the adjacent side.
@@ -648,6 +670,7 @@ function opp_hyp_to_adj(opp,hyp) = hyp_opp_to_adj(hyp,opp);
 // Alias: ang_hyp_to_adj()
 // Usage:
 //   adj = hyp_ang_to_adj(hyp,ang);
+// Topics: Geometry, Triangles
 // Description:
 //   Given the length of the hypotenuse and the angle of the primary corner of a right triangle,
 //   returns the length of the adjacent side.
@@ -668,6 +691,7 @@ function ang_hyp_to_adj(ang,hyp) = hyp_ang_to_adj(hyp, ang);
 // Alias: ang_opp_to_adj()
 // Usage:
 //   adj = opp_ang_to_adj(opp,ang);
+// Topics: Geometry, Triangles
 // Description:
 //   Given the angle of the primary corner of a right triangle, and the length of the side opposite of it,
 //   returns the length of the adjacent side.
@@ -688,6 +712,7 @@ function ang_opp_to_adj(ang,opp) = opp_ang_to_adj(opp,ang);
 // Alias: adj_hyp_to_opp()
 // Usage:
 //   opp = hyp_adj_to_opp(hyp,adj);
+// Topics: Geometry, Triangles
 // Description:
 //   Given the length of the hypotenuse and the adjacent side, returns the length of the opposite side.
 // Arguments:
@@ -707,6 +732,7 @@ function adj_hyp_to_opp(adj,hyp) = hyp_adj_to_opp(hyp,adj);
 // Alias: ang_hyp_to_opp()
 // Usage:
 //   opp = hyp_ang_to_opp(hyp,adj);
+// Topics: Geometry, Triangles
 // Description:
 //   Given the length of the hypotenuse of a right triangle, and the angle of the corner, returns the length of the opposite side.
 // Arguments:
@@ -726,6 +752,7 @@ function ang_hyp_to_opp(ang,hyp) = hyp_ang_to_opp(hyp,ang);
 // Alias: ang_adj_to_opp()
 // Usage:
 //   opp = adj_ang_to_opp(adj,ang);
+// Topics: Geometry, Triangles
 // Description:
 //   Given the length of the adjacent side of a right triangle, and the angle of the corner, returns the length of the opposite side.
 // Arguments:
@@ -745,6 +772,7 @@ function ang_adj_to_opp(ang,adj) = adj_ang_to_opp(adj,ang);
 // Alias: opp_adj_to_hyp()
 // Usage:
 //   hyp = adj_opp_to_hyp(adj,opp);
+// Topics: Geometry, Triangles
 // Description:
 //   Given the length of the adjacent and opposite sides of a right triangle, returns the length of thee hypotenuse.
 // Arguments:
@@ -764,6 +792,7 @@ function opp_adj_to_hyp(opp,adj) = adj_opp_to_hyp(adj,opp);
 // Alias: ang_adj_to_hyp()
 // Usage:
 //   hyp = adj_ang_to_hyp(adj,ang);
+// Topics: Geometry, Triangles
 // Description:
 //   For a right triangle, given the length of the adjacent side, and the corner angle, returns the length of the hypotenuse.
 // Arguments:
@@ -783,6 +812,7 @@ function ang_adj_to_hyp(ang,adj) = adj_ang_to_hyp(adj,ang);
 // Alias: ang_opp_to_hyp()
 // Usage:
 //   hyp = opp_ang_to_hyp(opp,ang);
+// Topics: Geometry, Triangles
 // Description:
 //   For a right triangle, given the length of the opposite side, and the corner angle, returns the length of the hypotenuse.
 // Arguments:
@@ -821,6 +851,7 @@ function adj_hyp_to_ang(adj,hyp) = hyp_adj_to_ang(hyp,adj);
 // Alias: opp_hyp_to_ang()
 // Usage:
 //   ang = hyp_opp_to_ang(hyp,opp);
+// Topics: Geometry, Triangles
 // Description:
 //   For a right triangle, given the lengths of the hypotenuse and the opposite sides, returns the angle of the corner.
 // Arguments:
@@ -840,6 +871,7 @@ function opp_hyp_to_ang(opp,hyp) = hyp_opp_to_ang(hyp,opp);
 // Alias: opp_adj_to_ang()
 // Usage:
 //   ang = adj_opp_to_ang(adj,opp);
+// Topics: Geometry, Triangles
 // Description:
 //   For a right triangle, given the lengths of the adjacent and opposite sides, returns the angle of the corner.
 // Arguments:
@@ -857,7 +889,8 @@ function opp_adj_to_ang(opp,adj) = adj_opp_to_ang(adj,opp);
 
 // Function: triangle_area()
 // Usage:
-//   triangle_area(a,b,c);
+//   area = triangle_area(a,b,c);
+// Topics: Geometry, Triangles, Area
 // Description:
 //   Returns the area of a triangle formed between three 2D or 3D vertices.
 //   Result will be negative if the points are 2D and in clockwise order.
@@ -881,7 +914,8 @@ function triangle_area(a,b,c) =
 
 // Function: plane3pt()
 // Usage:
-//   plane3pt(p1, p2, p3);
+//   plane = plane3pt(p1, p2, p3);
+// Topics: Geometry, Planes
 // Description:
 //   Generates the normalized cartesian equation of a plane from three 3d points.
 //   Returns [A,B,C,D] where Ax + By + Cz = D is the equation of a plane.
@@ -902,7 +936,8 @@ function plane3pt(p1, p2, p3) =
 
 // Function: plane3pt_indexed()
 // Usage:
-//   plane3pt_indexed(points, i1, i2, i3);
+//   plane = plane3pt_indexed(points, i1, i2, i3);
+// Topics: Geometry, Planes
 // Description:
 //   Given a list of 3d points, and the indices of three of those points,
 //   generates the normalized cartesian equation of a plane that those points all
@@ -927,7 +962,8 @@ function plane3pt_indexed(points, i1, i2, i3) =
 
 // Function: plane_from_normal()
 // Usage:
-//   plane_from_normal(normal, [pt])
+//   plane = plane_from_normal(normal, [pt])
+// Topics: Geometry, Planes
 // Description:
 //   Returns a plane defined by a normal vector and a point.
 // Arguments:
@@ -985,7 +1021,8 @@ function _covariance_evec_eval(points) =
 
 // Function: plane_from_points()
 // Usage:
-//   plane_from_points(points, <fast>, <eps>);
+//   plane = plane_from_points(points, <fast>, <eps>);
+// Topics: Geometry, Planes, Points
 // Description:
 //   Given a list of 3 or more coplanar 3D points, returns the coefficients of the normalized cartesian equation of a plane,
 //   that is [A,B,C,D] where Ax+By+Cz=D is the equation of the plane and norm([A,B,C])=1.
@@ -1020,7 +1057,8 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
 
 // Function: plane_from_polygon()
 // Usage:
-//   plane_from_polygon(points, [fast], [eps]);
+//   plane = plane_from_polygon(points, [fast], [eps]);
+// Topics: Geometry, Planes, Polygons
 // Description:
 //   Given a 3D planar polygon, returns the normalized cartesian equation of its plane.
 //   Returns [A,B,C,D] where Ax+By+Cz=D is the equation of the plane where norm([A,B,C])=1.
@@ -1049,7 +1087,8 @@ function plane_from_polygon(poly, fast=false, eps=EPSILON) =
 
 // Function: plane_normal()
 // Usage:
-//   plane_normal(plane);
+//   vec = plane_normal(plane);
+// Topics: Geometry, Planes
 // Description:
 //   Returns the unit length normal vector for the given plane.
 // Arguments:
@@ -1062,6 +1101,7 @@ function plane_normal(plane) =
 // Function: plane_offset()
 // Usage:
 //   d = plane_offset(plane);
+// Topics: Geometry, Planes
 // Description:
 //   Returns coeficient D of the normalized plane equation `Ax+By+Cz=D`, or the scalar offset of the plane from the origin.
 //   This value may be negative.
@@ -1077,6 +1117,7 @@ function plane_offset(plane) =
 // Function: projection_on_plane()
 // Usage:
 //   pts = projection_on_plane(plane, points);
+// Topics: Geometry, Planes, Projection
 // Description:
 //   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 2d or
 //   3d points, return the 3D orthogonal projection of the points on the plane.
@@ -1112,6 +1153,7 @@ function projection_on_plane(plane, points) =
 // Function: plane_point_nearest_origin()
 // Usage:
 //   pt = plane_point_nearest_origin(plane);
+// Topics: Geometry, Planes, Distance
 // Description:
 //   Returns the point on the plane that is closest to the origin.
 // Arguments:
@@ -1123,7 +1165,8 @@ function plane_point_nearest_origin(plane) =
 
 // Function: point_plane_distance()
 // Usage:
-//   point_plane_distance(plane, point)
+//   dist = point_plane_distance(plane, point)
+// Topics: Geometry, Planes, Distance
 // Description:
 //   Given a plane as [A,B,C,D] where the cartesian equation for that plane
 //   is Ax+By+Cz=D, determines how far from that plane the given point is.
@@ -1159,6 +1202,7 @@ function _general_plane_line_intersection(plane, line, eps=EPSILON) =
 // Function: normalize_plane()
 // Usage:
 //   nplane = normalize_plane(plane);
+// Topics: Geometry, Planes
 // Description:
 //   Returns a new representation [A,B,C,D] of `plane` where norm([A,B,C]) is equal to one.
 function normalize_plane(plane) =
@@ -1169,6 +1213,7 @@ function normalize_plane(plane) =
 // Function: plane_line_angle()
 // Usage:
 //   angle = plane_line_angle(plane,line);
+// Topics: Geometry, Planes, Lines, Angle
 // Description:
 //   Compute the angle between a plane [A, B, C, D] and a 3d line, specified as a pair of 3d points [p1,p2].
 //   The resulting angle is signed, with the sign positive if the vector p2-p1 lies on
@@ -1187,6 +1232,7 @@ function plane_line_angle(plane, line) =
 // Function: plane_line_intersection()
 // Usage:
 //   pt = plane_line_intersection(plane, line, [bounded], [eps]);
+// Topics: Geometry, Planes, Lines, Intersection
 // Description:
 //   Takes a line, and a plane [A,B,C,D] where the equation of that plane is `Ax+By+Cz=D`.
 //   If `line` intersects `plane` at one point, then that intersection point is returned.
@@ -1214,6 +1260,7 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 // Function: polygon_line_intersection()
 // Usage:
 //   pt = polygon_line_intersection(poly, line, [bounded], [eps]);
+// Topics: Geometry, Polygons, Lines, Intersection
 // Description:
 //   Takes a possibly bounded line, and a 3D planar polygon, and finds their intersection point.
 //   If the line and the polygon are on the same plane then returns a list, possibly empty, of 3D line
@@ -1269,7 +1316,9 @@ function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
 
 // Function: plane_intersection()
 // Usage:
-//   plane_intersection(plane1, plane2, [plane3])
+//   line = plane_intersection(plane1, plane2)
+//   pt = plane_intersection(plane1, plane2, plane3)
+// Topics: Geometry, Planes, Intersection
 // Description:
 //   Compute the point which is the intersection of the three planes, or the line intersection of two planes.
 //   If you give three planes the intersection is returned as a point.  If you give two planes the intersection
@@ -1301,7 +1350,8 @@ function plane_intersection(plane1,plane2,plane3) =
 
 // Function: coplanar()
 // Usage:
-//   coplanar(points,<eps>);
+//   test = coplanar(points,<eps>);
+// Topics: Geometry, Coplanarity
 // Description:
 //   Returns true if the given 3D points are non-collinear and are on a plane.
 // Arguments:
@@ -1328,7 +1378,8 @@ function _pointlist_greatest_distance(points,plane) =
 
 // Function: points_on_plane()
 // Usage:
-//   points_on_plane(points, plane, <eps>);
+//   test = points_on_plane(points, plane, <eps>);
+// Topics: Geometry, Planes, Points
 // Description:
 //   Returns true if the given 3D points are on the given plane.
 // Arguments:
@@ -1344,7 +1395,8 @@ function points_on_plane(points, plane, eps=EPSILON) =
 
 // Function: in_front_of_plane()
 // Usage:
-//   in_front_of_plane(plane, point);
+//   test = in_front_of_plane(plane, point);
+// Topics: Geometry, Planes
 // Description:
 //   Given a plane as [A,B,C,D] where the cartesian equation for that plane
 //   is Ax+By+Cz=D, determines if the given 3D point is on the side of that
@@ -1363,6 +1415,7 @@ function in_front_of_plane(plane, point) =
 // Function&Module: circle_2tangents()
 // Usage: As Function
 //   circ = circle_2tangents(pt1, pt2, pt3, r|d, <tangents>);
+// Topics: Geometry, Circles, Tangents
 // Usage: As Module
 //   circle_2tangents(pt1, pt2, pt3, r|d, <h>, <center>);
 // Description:
@@ -1475,6 +1528,7 @@ module circle_2tangents(pt1, pt2, pt3, r, d, h, center=false) {
 // Usage: As Function
 //   circ = circle_3points(pt1, pt2, pt3);
 //   circ = circle_3points([pt1, pt2, pt3]);
+// Topics: Geometry, Circles
 // Usage: As Module
 //   circle_3points(pt1, pt2, pt3, <h>, <center>);
 //   circle_3points([pt1, pt2, pt3], <h>, <center>);
@@ -1553,6 +1607,7 @@ module circle_3points(pt1, pt2, pt3, h, center=false) {
 // Function: circle_point_tangents()
 // Usage:
 //   tangents = circle_point_tangents(r|d, cp, pt);
+// Topics: Geometry, Circles, Tangents
 // Description:
 //   Given a 2d circle and a 2d point outside that circle, finds the 2d tangent point(s) on the circle for a
 //   line passing through the point.  Returns a list of zero or more 2D tangent points.
@@ -1587,6 +1642,7 @@ function circle_point_tangents(r, d, cp, pt) =
 // Function: circle_circle_tangents()
 // Usage:
 //   segs = circle_circle_tangents(c1, r1|d1, c2, r2|d2);
+// Topics: Geometry, Circles, Tangents
 // Description:
 //   Computes 2d lines tangents to a pair of circles in 2d.  Returns a list of line endpoints [p1,p2] where
 //   p2 is the tangent point on circle 1 and p2 is the tangent point on circle 2.
@@ -1669,6 +1725,7 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
 // Function: circle_line_intersection()
 // Usage:
 //   isect = circle_line_intersection(c,<r|d>,<line>,<bounded>,<eps>);
+// Topics: Geometry, Circles, Lines, Intersection
 // Description:
 //   Find intersection points between a 2d circle and a line, ray or segment specified by two points.
 //   By default the line is unbounded.
@@ -1709,7 +1766,8 @@ function circle_line_intersection(c,r,d,line,bounded=false,eps=EPSILON) =
 
 // Function: noncollinear_triple()
 // Usage:
-//   noncollinear_triple(points);
+//   test = noncollinear_triple(points);
+// Topics: Geometry, Noncollinearity
 // Description:
 //   Finds the indices of three good non-collinear points from the pointlist `points`.
 //   If all points are collinear returns [] when `error=true` or an error otherwise .
@@ -1739,7 +1797,8 @@ function noncollinear_triple(points,error=true,eps=EPSILON) =
 
 // Function: pointlist_bounds()
 // Usage:
-//   pointlist_bounds(pts);
+//   pt_pair = pointlist_bounds(pts);
+// Topics: Geometry, Bounding Boxes, Bounds
 // Description:
 //   Finds the bounds containing all the points in `pts` which can be a list of points in any dimension.
 //   Returns a list of two items: a list of the minimums and a list of the maximums.  For example, with
@@ -1760,7 +1819,8 @@ function pointlist_bounds(pts) =
 
 // Function: closest_point()
 // Usage:
-//   closest_point(pt, points);
+//   index = closest_point(pt, points);
+// Topics: Geometry, Points, Distance
 // Description:
 //   Given a list of `points`, finds the index of the closest point to `pt`.
 // Arguments:
@@ -1774,7 +1834,8 @@ function closest_point(pt, points) =
 
 // Function: furthest_point()
 // Usage:
-//   furthest_point(pt, points);
+//   index = furthest_point(pt, points);
+// Topics: Geometry, Points, Distance
 // Description:
 //   Given a list of `points`, finds the index of the furthest point from `pt`.
 // Arguments:
@@ -1792,6 +1853,7 @@ function furthest_point(pt, points) =
 // Function: polygon_area()
 // Usage:
 //   area = polygon_area(poly);
+// Topics: Geometry, Polygons, Area
 // Description:
 //   Given a 2D or 3D planar polygon, returns the area of that polygon.
 //   If the polygon is self-crossing, the results are undefined. For non-planar 3D polygon the result is `undef`.
@@ -1808,18 +1870,19 @@ function polygon_area(poly, signed=false) =
       : let( plane = plane_from_polygon(poly) )
         plane==[]? undef :
         let(
-            n = plane_normal(plane),
-            total = sum([
-                for(i=[1:1:len(poly)-2])
-                cross(poly[i]-poly[0], poly[i+1]-poly[0])
-            ]) * n/2
-        )
+            n = plane_normal(plane),  
+            total = 
+                sum([ for(i=[1:1:len(poly)-2])
+                        cross(poly[i]-poly[0], poly[i+1]-poly[0]) 
+                    ]) * n/2
+        ) 
         signed ? total : abs(total);
 
 
 // Function: polygon_shift()
 // Usage:
-//   polygon_shift(poly, i);
+//   newpoly = polygon_shift(poly, i);
+// Topics: Geometry, Polygons
 // Description:
 //   Given a polygon `poly`, rotates the point ordering so that the first point in the polygon path is the one at index `i`.
 // Arguments:
@@ -1834,7 +1897,8 @@ function polygon_shift(poly, i) =
 
 // Function: polygon_shift_to_closest_point()
 // Usage:
-//   polygon_shift_to_closest_point(path, pt);
+//   newpoly = polygon_shift_to_closest_point(path, pt);
+// Topics: Geometry, Polygons
 // Description:
 //   Given a polygon `poly`, rotates the point ordering so that the first point in the path is the one closest to the given point `pt`.
 // Arguments:
@@ -1853,6 +1917,7 @@ function polygon_shift_to_closest_point(poly, pt) =
 // Function: reindex_polygon()
 // Usage:
 //   newpoly = reindex_polygon(reference, poly);
+// Topics: Geometry, Polygons
 // Description:
 //   Rotates and possibly reverses the point order of a 2d or 3d polygon path to optimize its pairwise point
 //   association with a reference polygon.  The two polygons must have the same number of vertices and be the same dimension.
@@ -1903,6 +1968,7 @@ function reindex_polygon(reference, poly, return_error=false) =
 // Function: align_polygon()
 // Usage:
 //   newpoly = align_polygon(reference, poly, angles, <cp>);
+// Topics: Geometry, Polygons
 // Description:
 //   Tries the list or range of angles to find a rotation of the specified 2D polygon that best aligns
 //   with the reference 2D polygon.  For each angle, the polygon is reindexed, which is a costly operation
@@ -1940,7 +2006,8 @@ function align_polygon(reference, poly, angles, cp) =
 
 // Function: centroid()
 // Usage:
-//   cp = centroid(poly);
+//   cpt = centroid(poly);
+// Topics: Geometry, Polygons, Centroid
 // Description:
 //   Given a simple 2D polygon, returns the 2D coordinates of the polygon's centroid.
 //   Given a simple 3D planar polygon, returns the 3D coordinates of the polygon's centroid.
@@ -1974,7 +2041,8 @@ function centroid(poly, eps=EPSILON) =
 
 // Function: point_in_polygon()
 // Usage:
-//   point_in_polygon(point, poly, <eps>)
+//   test = point_in_polygon(point, poly, <eps>)
+// Topics: Geometry, Polygons
 // Description:
 //   This function tests whether the given 2D point is inside, outside or on the boundary of
 //   the specified 2D polygon using either the Nonzero Winding rule or the Even-Odd rule.
@@ -2035,7 +2103,8 @@ function point_in_polygon(point, poly, nonzero=true, eps=EPSILON) =
 
 // Function: polygon_is_clockwise()
 // Usage:
-//   polygon_is_clockwise(poly);
+//   test = polygon_is_clockwise(poly);
+// Topics: Geometry, Polygons, Clockwise
 // Description:
 //   Return true if the given 2D simple polygon is in clockwise order, false otherwise.
 //   Results for complex (self-intersecting) polygon are indeterminate.
@@ -2048,7 +2117,8 @@ function polygon_is_clockwise(poly) =
 
 // Function: clockwise_polygon()
 // Usage:
-//   clockwise_polygon(poly);
+//   newpoly = clockwise_polygon(poly);
+// Topics: Geometry, Polygons, Clockwise
 // Description:
 //   Given a 2D polygon path, returns the clockwise winding version of that path.
 // Arguments:
@@ -2060,7 +2130,8 @@ function clockwise_polygon(poly) =
 
 // Function: ccw_polygon()
 // Usage:
-//   ccw_polygon(poly);
+//   newpoly = ccw_polygon(poly);
+// Topics: Geometry, Polygons, Clockwise
 // Description:
 //   Given a 2D polygon poly, returns the counter-clockwise winding version of that poly.
 // Arguments:
@@ -2072,7 +2143,8 @@ function ccw_polygon(poly) =
 
 // Function: reverse_polygon()
 // Usage:
-//   reverse_polygon(poly)
+//   newpoly = reverse_polygon(poly)
+// Topics: Geometry, Polygons, Clockwise
 // Description:
 //   Reverses a polygon's winding direction, while still using the same start point.
 // Arguments:
@@ -2084,7 +2156,8 @@ function reverse_polygon(poly) =
 
 // Function: polygon_normal()
 // Usage:
-//   n = polygon_normal(poly);
+//   vec = polygon_normal(poly);
+// Topics: Geometry, Polygons
 // Description:
 //   Given a 3D planar polygon, returns a unit-length normal vector for the
 //   clockwise orientation of the polygon. If the polygon points are collinear, returns `undef`.
@@ -2192,6 +2265,7 @@ function _split_polygon_at_z(poly, z) =
 // Function: split_polygons_at_each_x()
 // Usage:
 //   splitpolys = split_polygons_at_each_x(polys, xs);
+// Topics: Geometry, Polygons, Intersections
 // Description:
 //   Given a list of 3D polygons, splits all of them wherever they cross any X value given in `xs`.
 // Arguments:
@@ -2212,6 +2286,7 @@ function split_polygons_at_each_x(polys, xs, _i=0) =
 // Function: split_polygons_at_each_y()
 // Usage:
 //   splitpolys = split_polygons_at_each_y(polys, ys);
+// Topics: Geometry, Polygons, Intersections
 // Description:
 //   Given a list of 3D polygons, splits all of them wherever they cross any Y value given in `ys`.
 // Arguments:
@@ -2232,6 +2307,7 @@ function split_polygons_at_each_y(polys, ys, _i=0) =
 // Function: split_polygons_at_each_z()
 // Usage:
 //   splitpolys = split_polygons_at_each_z(polys, zs);
+// Topics: Geometry, Polygons, Intersections
 // Description:
 //   Given a list of 3D polygons, splits all of them wherever they cross any Z value given in `zs`.
 // Arguments:
@@ -2255,7 +2331,8 @@ function split_polygons_at_each_z(polys, zs, _i=0) =
 
 // Function: is_convex_polygon()
 // Usage:
-//   is_convex_polygon(poly);
+//   test = is_convex_polygon(poly);
+// Topics: Geometry, Convexity, Test
 // Description:
 //   Returns true if the given 2D or 3D polygon is convex.
 //   The result is meaningless if the polygon is not simple (self-intersecting) or non coplanar.
@@ -2264,11 +2341,11 @@ function split_polygons_at_each_z(polys, zs, _i=0) =
 //   poly = Polygon to check.
 //   eps = Tolerance for the collinearity test. Default: EPSILON.
 // Example:
-//   is_convex_polygon(circle(d=50));  // Returns: true
-//   is_convex_polygon(rot([50,120,30], p=path3d(circle(1,$fn=50)))); // Returns: true
+//   test1 = is_convex_polygon(circle(d=50));  // Returns: true
+//   test2 = is_convex_polygon(rot([50,120,30], p=path3d(circle(1,$fn=50)))); // Returns: true
 // Example:
 //   spiral = [for (i=[0:36]) let(a=-i*10) (10+i)*[cos(a),sin(a)]];
-//   is_convex_polygon(spiral);  // Returns: false
+//   test = is_convex_polygon(spiral);  // Returns: false
 function is_convex_polygon(poly,eps=EPSILON) =
     assert(is_path(poly), "The input should be a 2D or 3D polygon." )
     let(
@@ -2289,9 +2366,10 @@ function is_convex_polygon(poly,eps=EPSILON) =
 
 // Function: convex_distance()
 // Usage:
-//   convex_distance(pts1, pts2,<eps=>);
-// See also:
-//   convex_collision
+//   dist = convex_distance(pts1, pts2,<eps=>);
+// Topics: Geometry, Convexity, Distance
+// See also: 
+//   convex_collision(), hull()
 // Description:
 //   Returns the smallest distance between a point in convex hull of `points1`
 //   and a point in the convex hull of `points2`. All the points in the lists
@@ -2349,9 +2427,10 @@ function _GJK_distance(points1, points2, eps=EPSILON, lbd, d, simplex=[]) =
 
 // Function: convex_collision()
 // Usage:
-//   convex_collision(pts1, pts2,<eps=>);
-// See also:
-//   convex_distance
+//   test = convex_collision(pts1, pts2,<eps=>);
+// Topics: Geometry, Convexity, Collision, Intersection
+// See also: 
+//   convex_distance(), hull()
 // Description:
 //   Returns `true` if the convex hull of `points1` intercepts the convex hull of `points2`
 //   otherwise, `false`.
@@ -2412,7 +2491,7 @@ function _closest_simplex(s,eps=EPSILON) =
               : _closest_s3(s,eps);
 
 
-// find the closest to a 1-simplex
+// find the point of a 1-simplex closest to the origin
 // Based on: http://uu.diva-portal.org/smash/get/diva2/FFULLTEXT01.pdf
 function _closest_s1(s,eps=EPSILON) =
     norm(s[1]-s[0])<eps*(norm(s[0])+norm(s[1]))/2 ? [ s[0], [s[0]] ] :
@@ -2425,7 +2504,7 @@ function _closest_s1(s,eps=EPSILON) =
     [ s[0]+t*c, s ];
 
 
-// find the closest to a 2-simplex
+// find the point of a 2-simplex closest to the origin
 // Based on: http://uu.diva-portal.org/smash/get/diva2/FFULLTEXT01.pdf
 function _closest_s2(s,eps=EPSILON) =
     let(
@@ -2461,7 +2540,7 @@ function _closest_s2(s,eps=EPSILON) =
         c*(c-a)>0 ? _closest_s1([s[0],s[2]],eps) : _closest_s1([s[1],s[2]],eps);
 
 
-// find the closest to a 3-simplex
+// find the point of a 3-simplex closest to the origin
 // it seems that degenerate 3-simplices are correctly manage without extra code
 function _closest_s3(s,eps=EPSILON) =
     assert( len(s[0])==3 && len(s)==4, "Internal error." )
@@ -2488,7 +2567,7 @@ function _closest_s3(s,eps=EPSILON) =
         let( // look for the origin-facing tri closest to the origin
             closest = [for(i=facing) _closest_s2(tris[i], eps) ],
             dist    = [for(cl=closest) norm(cl[0]) ],
-            nearest = min_index(dist)
+            nearest = min_index(dist) 
         )
         closest[nearest];
 
