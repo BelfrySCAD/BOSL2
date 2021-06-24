@@ -22,6 +22,7 @@
 //   twist = Number of degrees to rotate thread around.  Default: 720 degrees.
 //   ---
 //   profile = If an asymmetrical thread profile is needed, it can be specified here.
+//   starts = The number of thread starts.  Default: 1
 //   left_handed = If true, thread has a left-handed winding.
 //   internal = If true, invert threads for internal threading.
 //   d1 = Bottom inside base diameter of threads.
@@ -46,11 +47,11 @@
 //   thread_helix(d=10, pitch=2, thread_depth=0.75, thread_angle=15, twist=900, $fn=72);
 module thread_helix(
     d, pitch=2, thread_depth, thread_angle=15, twist=720,
-    profile, left_handed=false, internal=false,
+    profile, starts=1, left_handed=false, internal=false,
     d1, d2, higbee, higbee1, higbee2,
     anchor, spin, orient
 ) {
-    h = pitch*twist/360;
+    h = pitch*starts*twist/360;
     r1 = get_radius(d1=d1, d=d, dflt=10);
     r2 = get_radius(d1=d2, d=d, dflt=10);
     tdp = thread_depth / pitch;
@@ -73,7 +74,9 @@ module thread_helix(
     dir = left_handed? -1 : 1;
     idir = internal? -1 : 1;
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
-        spiral_sweep(pline, h=h, r1=r1, r2=r2, twist=twist*dir, higbee=higbee, higbee1=higbee1, higbee2=higbee2, anchor=CENTER);
+        zrot_copies(n=starts) {
+            spiral_sweep(pline, h=h, r1=r1, r2=r2, twist=twist*dir, higbee=higbee, higbee1=higbee1, higbee2=higbee2, anchor=CENTER);
+        }
         children();
     }
 }
