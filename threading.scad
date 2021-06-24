@@ -533,10 +533,7 @@ module npt_threaded_rod(
                 left_handed=left_handed,
                 bevel=bevel,
                 internal=internal,
-                higbee=r1*PI/2,
-                anchor=anchor,
-                spin=spin,
-                orient=orient
+                higbee=r1*PI/2
             );
             if (hollow) {
                 cylinder(l=l+1, d=size*INCH, center=true);
