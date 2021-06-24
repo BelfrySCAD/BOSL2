@@ -860,7 +860,7 @@ module square_threaded_rod(
 ) {
     trapezoidal_threaded_rod(
         d=d, l=l, pitch=pitch,
-        thread_angle=0,
+        thread_angle=0.1,
         left_handed=left_handed,
         bevel=bevel,
         starts=starts,
