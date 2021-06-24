@@ -212,8 +212,8 @@ module trapezoidal_threaded_rod(
                 for (thread = [-threads/2:1:threads/2-1]) let(
                     tang = (thread/starts) * 360 + ang,
                     hsc = internal? 1 :
-                        abs(tang) > twist/2? 0 :
-                        (higang1==0 && higang2==0)? 1 :
+                        (higang1==0 && tang<=0)? 1 :
+                        (higang2==0 && tang>=0)? 1 :
                         lookup(tang, hig_table),
                     mat3 = affine3d_translate([thread, 0, 0]) *
                         affine3d_scale([1, hsc, 1]) *
@@ -949,8 +949,13 @@ module ball_screw_rod(
     bevel=false,
     anchor, spin, orient
 ) {
+    n = ceil(segs(ball_diam/2)*ball_arc/2/360);
     depth = ball_diam * (1-cos(ball_arc/2))/2;
-    profile = arc(N=11, d=ball_diam/pitch, cp=[0,ball_diam/2/pitch*cos(ball_arc/2)], start=270-ball_arc/2, angle=ball_arc);
+    cpy = ball_diam/2/pitch*cos(ball_arc/2);
+    profile = [
+        each arc(N=n, d=ball_diam/pitch, cp=[-0.5,cpy], start=270, angle=ball_arc/2),
+        each arc(N=n, d=ball_diam/pitch, cp=[+0.5,cpy], start=270-ball_arc/2, angle=ball_arc/2)
+    ];
     trapezoidal_threaded_rod(
         d=d, l=l, pitch=pitch,
         thread_depth=depth,
@@ -960,6 +965,7 @@ module ball_screw_rod(
         starts=starts,
         bevel=bevel,
         internal=internal,
+        higbee=0,
         anchor=anchor,
         spin=spin,
         orient=orient
