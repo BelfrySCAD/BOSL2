@@ -1,4 +1,4 @@
-﻿//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 // LibFile: geometry.scad
 //   Geometry helpers.
 // Includes:
@@ -1778,7 +1778,7 @@ function circle_line_intersection(c,r,d,line,bounded=false,eps=EPSILON) =
 function noncollinear_triple(points,error=true,eps=EPSILON) =
     assert( is_path(points), "Invalid input points." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-		len(pts)<3 ? [] :
+    len(pts)<3 ? [] :
     let(
         pa = points[0],
         b  = furthest_point(pa, points),
@@ -2106,6 +2106,7 @@ function point_in_polygon(point, poly, nonzero=true, eps=EPSILON) =
 // Usage:
 //   test = polygon_is_clockwise(poly);
 // Topics: Geometry, Polygons, Clockwise
+// See Also: clockwise_polygon(), ccw_polygon(), reverse_polygon()
 // Description:
 //   Return true if the given 2D simple polygon is in clockwise order, false otherwise.
 //   Results for complex (self-intersecting) polygon are indeterminate.
@@ -2489,16 +2490,15 @@ function _GJK_collide(points1, points2, d, simplex, eps=EPSILON) =
 //  - the point of the s closest to the origin
 //  - the smallest sub-simplex of s that contains that point
 function _closest_simplex(s,eps=EPSILON) =
-    assert(len(s)>=2 && len(s)<=4, "Internal error.")
     len(s)==2 ? _closest_s1(s,eps) :
-    len(s)==3 ? _closest_s2(s,eps)
-              : _closest_s3(s,eps);
+    len(s)==3 ? _closest_s2(s,eps) :
+    len(s)==4 ? _closest_s3(s,eps) :
+		assert(false, "Internal error.");
 
 
 // find the point of a 1-simplex closest to the origin
-// Based on: http://uu.diva-portal.org/smash/get/diva2/FFULLTEXT01.pdf
 function _closest_s1(s,eps=EPSILON) =
-    norm(s[1]-s[0])<eps*(norm(s[0])+norm(s[1]))/2 ? [ s[0], [s[0]] ] :
+    norm(s[1]-s[0])<=eps*(norm(s[0])+norm(s[1]))/2 ? [ s[0], [s[0]] ] :
     let(
         c = s[1]-s[0],
         t = -s[0]*c/(c*c)
@@ -2509,54 +2509,47 @@ function _closest_s1(s,eps=EPSILON) =
 
 
 // find the point of a 2-simplex closest to the origin
-// Based on: http://uu.diva-portal.org/smash/get/diva2/FFULLTEXT01.pdf
-function _closest_s2(s,eps=EPSILON) =
+function _closest_s2(s, eps=EPSILON) =
+    // considering that s[2] was the last inserted vertex in s by GJK, 
+    // the plane orthogonal to the triangle [ origin, s[0], s[1] ] that 
+    // contains [s[0],s[1]] have the origin and s[2] on the same side;
+    // that reduces the cases to test and the only possible simplex
+    // outcomes are s, [s[0],s[2]] and [s[1],s[2]] 
     let(
-        dim = len(s[0]),
-        a  = dim==3 ? s[0]: [ each s[0], 0] ,
-        b  = dim==3 ? s[1]: [ each s[1], 0] ,
-        c  = dim==3 ? s[2]: [ each s[2], 0] ,
-        ab = norm(a-b),
-        bc = norm(b-c),
-        ca = norm(c-a),
-        nr = cross(b-a,c-a)
+        area  = cross(s[2]-s[0], s[1]-s[0]), 
+        area2 = area*area										 // tri area squared
     )
-    norm(nr) <= eps*max(ab,bc,ca) // degenerate case
-    ?   let( i = max_index([ab, bc, ca]) )
-        _closest_s1([s[i],s[(i+1)%3]],eps)
-// considering that s[2] was the last inserted vertex in s,
-// the only possible outcomes are :
-//    s, [s[0],s[2]] and [s[1],s[2]]
+    area2<=eps*max([for(si=s) pow(si*si,2)]) // degenerate tri
+    ?   norm(s[2]-s[0]) < norm(s[2]-s[1]) 
+        ? _closest_s1([s[1],s[2]])
+        : _closest_s1([s[0],s[2]])
     :   let(
-            class =   (cross(nr,a-b)*a<0 ? 1 : 0 )
-                    + (cross(nr,c-a)*a<0 ? 2 : 0 )
-                    + (cross(nr,b-c)*b<0 ? 4 : 0 )
+            crx1  = cross(s[0], s[2])*area,
+            crx2  = cross(s[1], s[0])*area,
+            crx0  = cross(s[2], s[1])*area
         )
-        assert( class!=1, "Internal error" )
-        class==0 ? [ nr*(nr*a)/(nr*nr), s] : // origin projects (or is) on the tri
-//        class==1 ? _closest_s1([s[0],s[1]]) :
-        class==2 ? _closest_s1([s[0],s[2]],eps) :
-        class==4 ? _closest_s1([s[1],s[2]],eps) :
-//        class==3 ? a*(a-b)> 0 ? _closest_s1([s[0],s[1]]) : _closest_s1([s[0],s[2]]) :
-        class==3 ? _closest_s1([s[0],s[2]],eps) :
-//        class==5 ? b*(b-c)<=0 ? _closest_s1([s[0],s[1]]) : _closest_s1([s[1],s[2]]) :
-        class==5 ? _closest_s1([s[1],s[2]],eps) :
-        c*(c-a)>0 ? _closest_s1([s[0],s[2]],eps) : _closest_s1([s[1],s[2]],eps);
-
+        // all have the same signal -> origin projects inside the tri 
+        max(crx1, crx0, crx2) < 0  || min(crx1, crx0, crx2) > 0
+        ?   // baricentric coords of projection   
+            [ [abs(crx0),abs(crx1),abs(crx2)]*s/area2, s ] 
+       :   let( 
+               cl12 = _closest_s1([s[1],s[2]]),
+               cl02 = _closest_s1([s[0],s[2]])
+            )
+            norm(cl12[0])<norm(cl02[0]) ? cl12 : cl02;
+        
 
 // find the point of a 3-simplex closest to the origin
-// it seems that degenerate 3-simplices are correctly manage without extra code
 function _closest_s3(s,eps=EPSILON) =
-    assert( len(s[0])==3 && len(s)==4, "Internal error." )
     let( nr = cross(s[1]-s[0],s[2]-s[0]),
-         sz = [ norm(s[1]-s[0]), norm(s[1]-s[2]), norm(s[2]-s[0]) ] )
-    norm(nr)<eps*max(sz)
-      ? let( i = max_index(sz) )
+         sz = [ norm(s[0]-s[1]), norm(s[1]-s[2]), norm(s[2]-s[0]) ] )
+    norm(nr)<=eps*pow(max(sz),2)
+    ?   let( i = max_index(sz) )
         _closest_s2([ s[i], s[(i+1)%3], s[3] ], eps) // degenerate case
-        // considering that s[3] was the last inserted vertex in s,
+    :   // considering that s[3] was the last inserted vertex in s by GJK,
         // the only possible outcomes will be:
-        //    s or some of the 3 triangles of s containing s[3]
-      : let(
+        //    s or some of the 3 faces of s containing s[3]
+        let(
             tris = [ [s[0], s[1], s[3]],
                      [s[1], s[2], s[3]],
                      [s[2], s[0], s[3]] ],
