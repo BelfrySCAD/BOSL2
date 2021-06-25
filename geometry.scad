@@ -2423,9 +2423,7 @@ function _GJK_distance(points1, points2, eps=EPSILON, lbd, d, simplex=[]) =
         lbd   = max(lbd, d*v/nrd), // distance lower bound
         close = (nrd-lbd <= eps*nrd)
     )
-    // v already in the simplex is a degenerence due to numerical errors
-    // and may produce a non-stopping loop
-    close || [for(nv=norm(v), s=simplex) if(norm(s-v)<=eps*nv) 1]!=[] ? d :
+    close ? d :
     let( newsplx = _closest_simplex(concat(simplex,[v]),eps) )
     _GJK_distance(points1, points2, eps, lbd, newsplx[0], newsplx[1]);
 
@@ -2480,9 +2478,10 @@ function convex_collision(points1, points2, eps=EPSILON) =
 // http://www.dtecta.com/papers/jgt98convex.pdf
 function _GJK_collide(points1, points2, d, simplex, eps=EPSILON) =
     norm(d) < eps ? true :          // does collide
-    let( v = _support_diff(points1,points2,-d) )
-    v*d > eps ? false : // no collision
+    let( v = _support_diff(points1,points2,-d) ) 
+    v*d > eps*eps ? false : // no collision
     let( newsplx = _closest_simplex(concat(simplex,[v]),eps) )
+    norm(v-newsplx[0])<eps ? norm(v)<eps :
     _GJK_collide(points1, points2, newsplx[0], newsplx[1], eps);
 
 
