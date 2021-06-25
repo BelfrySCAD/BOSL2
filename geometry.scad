@@ -1778,7 +1778,7 @@ function circle_line_intersection(c,r,d,line,bounded=false,eps=EPSILON) =
 function noncollinear_triple(points,error=true,eps=EPSILON) =
     assert( is_path(points), "Invalid input points." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    len(pts)<3 ? [] :
+    len(points)<3 ? [] :
     let(
         pa = points[0],
         b  = furthest_point(pa, points),
@@ -2493,7 +2493,7 @@ function _closest_simplex(s,eps=EPSILON) =
     len(s)==2 ? _closest_s1(s,eps) :
     len(s)==3 ? _closest_s2(s,eps) :
     len(s)==4 ? _closest_s3(s,eps) :
-		assert(false, "Internal error.");
+    assert(false, "Internal error.");
 
 
 // find the point of a 1-simplex closest to the origin
@@ -2517,7 +2517,7 @@ function _closest_s2(s, eps=EPSILON) =
     // outcomes are s, [s[0],s[2]] and [s[1],s[2]] 
     let(
         area  = cross(s[2]-s[0], s[1]-s[0]), 
-        area2 = area*area										 // tri area squared
+        area2 = area*area                     // tri area squared
     )
     area2<=eps*max([for(si=s) pow(si*si,2)]) // degenerate tri
     ?   norm(s[2]-s[0]) < norm(s[2]-s[1]) 
