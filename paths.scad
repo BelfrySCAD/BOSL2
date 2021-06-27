@@ -1010,7 +1010,10 @@ module jittered_poly(path, dist=1/512) {
 //       xcopies(3) circle(3, $fn=32);
 //   }
 module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
-    assert( is_path([pt1,pt2],3), "The points should be 3d points");
+    assert(is_vector(pt1));
+    assert(is_vector(pt2));
+    pt1 = point3d(pt1);
+    pt2 = point3d(pt2);
     rtp = xyz_to_spherical(pt2-pt1);
     translate(pt1) {
         rotate([0, rtp[2], rtp[1]]) {
