@@ -77,7 +77,7 @@ function filter(func, list) =
 // Function: reduce()
 // Topics: Function Literals, Looping
 // Usage:
-//   res = reduce(func, list, <init>);
+//   res = reduce(func, list, [init]);
 //   res = reduce(function (a,b) a+b, list, <init=);
 // Description:
 //   First the accumulator is set to the value in `init`.  Then, for each item in `list`, the function
@@ -119,8 +119,8 @@ function reduce(func, list, init=0) =
 // Function: accumulate()
 // Topics: Function Literals, Looping
 // Usage:
-//   res = accumulate(func, list, <init>);
-//   res = accumulate(function (a,b) a+b, list, <init=>);
+//   res = accumulate(func, list, [init]);
+//   res = accumulate(function (a,b) a+b, list, [init=]);
 // Description:
 //   First the accumulator is set to the value in `init`.  Then, for each item in `list`, the function
 //   in `func` is called with the accumulator and that list item, and the result is stored in the
@@ -234,7 +234,7 @@ function for_n(n,init,func) =
 // Function: find_first()
 // Topics: Function Literals, Searching
 // Usage:
-//   idx = find_first(val, list, <start=>, <func=>);
+//   idx = find_first(val, list, [start=], [func=]);
 // Description:
 //   Finds the first item in `list` which, when compared against `val` using the function literal
 //   `func` gets a true result.  By default, `func` just calls `approx()`.  The signature of the
@@ -265,7 +265,7 @@ function find_first(val, list, start=0, func=f_approx()) =
 // Function: binsearch()
 // Topics: Function Literals, Data Structures, Searching
 // Usage:
-//   idx = binsearch(key,list, <cmp>);
+//   idx = binsearch(key,list, [cmp]);
 // Description:
 //   Searches a sorted list for an entry with the given key, using a binary search strategy.
 //   Returns the index of the matching item found.  If none found, returns undef.
@@ -326,9 +326,9 @@ function simple_hash(x) =
 // Function: hashmap()
 // Topics: Function Literals, Data Structures, Hashing
 // Usage: Creating an Empty HashMap.
-//   hm = hashmap(<hashsize=>);
+//   hm = hashmap([hashsize=]);
 // Usage: Creating a Populated HashMap.
-//   hm = hashmap(items=KEYVAL_LIST, <hashsize=>);
+//   hm = hashmap(items=KEYVAL_LIST, [hashsize=]);
 // Usage: Adding an Entry
 //   hm2 = hm(key, val);
 // Usage: Adding Multiple Entries

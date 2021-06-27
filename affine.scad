@@ -42,7 +42,7 @@ function ident(n) = [
 
 // Function: is_affine()
 // Usage:
-//   bool = is_affine(x,<dim>);
+//   bool = is_affine(x, [dim]);
 // Topics: Affine, Matrices, Transforms, Type Checking
 // See Also: is_matrix()
 // Description:
@@ -649,10 +649,10 @@ function affine3d_rot_from_to(from, to) =
 
 // Function: affine3d_frame_map()
 // Usage:
-//   map = affine3d_frame_map(v1, v2, v3, <reverse>);
-//   map = affine3d_frame_map(x=VECTOR1, y=VECTOR2, <reverse>);
-//   map = affine3d_frame_map(x=VECTOR1, z=VECTOR2, <reverse>);
-//   map = affine3d_frame_map(y=VECTOR1, z=VECTOR2, <reverse>);
+//   map = affine3d_frame_map(v1, v2, v3, [reverse=]);
+//   map = affine3d_frame_map(x=VECTOR1, y=VECTOR2, [reverse=]);
+//   map = affine3d_frame_map(x=VECTOR1, z=VECTOR2, [reverse=]);
+//   map = affine3d_frame_map(y=VECTOR1, z=VECTOR2, [reverse=]);
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: rot(), xrot(), yrot(), zrot(), affine2d_zrot()
 // Description:
@@ -750,7 +750,7 @@ function affine3d_mirror(v) =
 
 // Function: affine3d_skew()
 // Usage:
-//   mat = affine3d_skew(<sxy>, <sxz>, <syx>, <syz>, <szx>, <szy>);
+//   mat = affine3d_skew([sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]);
 // Topics: Affine, Matrices, Transforms, Skewing
 // See Also: skew(), affine3d_skew_xy(), affine3d_skew_xz(), affine3d_skew_yz(), affine2d_skew()
 // Description:

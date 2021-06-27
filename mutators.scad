@@ -96,9 +96,9 @@ module bounding_box(excess=0, planar=false) {
 // Function&Module: half_of()
 //
 // Usage: as module
-//   half_of(v, <cp>, <s>, <planar>) ...
+//   half_of(v, [cp], [s], [planar]) ...
 // Usage: as function
-//   result = half_of(p,v,<cp>);
+//   result = half_of(p,v,[cp]);
 //
 // Description:
 //   Slices an object at a cut plane, and masks away everything that is on one side.  The v parameter is either a plane specification or
@@ -200,10 +200,10 @@ function half_of(p, v=UP, cp) =
 // Function&Module: left_half()
 //
 // Usage: as module
-//   left_half(<s>, <x>) ...
-//   left_half(planar=true, <s>, <x>) ...
+//   left_half([s], [x]) ...
+//   left_half(planar=true, [s], [x]) ...
 // Usage: as function
-//   result = left_half(p, <x>);
+//   result = left_half(p, [x]);
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is right of it.
@@ -243,7 +243,7 @@ function left_half(p,x=0) = half_of(p, LEFT, [x,0,0]);
 //   right_half([s], [x]) ...
 //   right_half(planar=true, [s], [x]) ...
 // Usage: as function
-//   result = right_half(p, <x>);
+//   result = right_half(p, [x]);
 //
 // Description:
 //   Slices an object at a vertical Y-Z cut plane, and masks away everything that is left of it.
@@ -280,10 +280,10 @@ function right_half(p,x=0) = half_of(p, RIGHT, [x,0,0]);
 // Function&Module: front_half()
 //
 // Usage:
-//   front_half(<s>, <y>) ...
-//   front_half(planar=true, <s>, <y>) ...
+//   front_half([s], [y]) ...
+//   front_half(planar=true, [s], [y]) ...
 // Usage: as function
-//   result = front_half(p, <y>);
+//   result = front_half(p, [y]);
 //
 // Description:
 //   Slices an object at a vertical X-Z cut plane, and masks away everything that is behind it.
@@ -320,10 +320,10 @@ function front_half(p,y=0) = half_of(p, FRONT, [0,y,0]);
 // Function&Module: back_half()
 //
 // Usage:
-//   back_half(<s>, <y>) ...
-//   back_half(planar=true, <s>, <y>) ...
+//   back_half([s], [y]) ...
+//   back_half(planar=true, [s], [y]) ...
 // Usage: as function
-//   result = back_half(p, <y>);
+//   result = back_half(p, [y]);
 //
 // Description:
 //   Slices an object at a vertical X-Z cut plane, and masks away everything that is in front of it.
@@ -360,9 +360,9 @@ function back_half(p,y=0) = half_of(p, BACK, [0,y,0]);
 // Function&Module: bottom_half()
 //
 // Usage:
-//   bottom_half(<s>, <z>) ...
+//   bottom_half([s], [z]) ...
 // Usage: as function
-//   result = bottom_half(p, <z>);
+//   result = bottom_half(p, [z]);
 //
 // Description:
 //   Slices an object at a horizontal X-Y cut plane, and masks away everything that is above it.
@@ -392,8 +392,8 @@ function bottom_half(p,z=0) = half_of(p,BOTTOM,[0,0,z]);
 // Function&Module: top_half()
 //
 // Usage:
-//   top_half(<s>, <z>) ...
-//   result = top_half(p, <z>);
+//   top_half([s], [z]) ...
+//   result = top_half(p, [z]);
 //
 // Description:
 //   Slices an object at a horizontal X-Y cut plane, and masks away everything that is below it.
@@ -475,7 +475,7 @@ module chain_hull()
 
 // Module: path_extrude2d()
 // Usage:
-//   path_extrude2d(path, <caps>) {...}
+//   path_extrude2d(path, [caps]) {...}
 // Description:
 //   Extrudes 2D children along the given 2D path, with optional rounded endcaps.
 // Arguments:

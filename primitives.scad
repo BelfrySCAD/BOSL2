@@ -13,9 +13,9 @@
 // Function&Module: square()
 // Topics: Shapes (2D), Path Generators (2D)
 // Usage: As a Built-in Module
-//   square(size, <center>);
+//   square(size, [center]);
 // Usage: As a Function
-//   path = square(size, <center>);
+//   path = square(size, [center]);
 // See Also: rect()
 // Description:
 //   When called as the builtin module, creates a 2D square or rectangle of the given size.
@@ -84,11 +84,11 @@ function circle(r, d, anchor=CENTER, spin=0) =
 // Function&Module: cube()
 // Topics: Shapes (3D), Attachable, VNF Generators
 // Usage: As Module
-//   cube(size, <center>, ...);
+//   cube(size, [center], ...);
 // Usage: With Attachments
-//   cube(size, <center>, ...) { attachments }
+//   cube(size, [center], ...) { attachments }
 // Usage: As Function
-//   vnf = cube(size, <center>, ...);
+//   vnf = cube(size, [center], ...);
 // See Also: cuboid(), prismoid()
 // Description:
 //   Creates a 3D cubic object with support for anchoring and attachments.
@@ -155,13 +155,13 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 // Function&Module: cylinder()
 // Topics: Shapes (3D), Attachable, VNF Generators
 // Usage: As Module
-//   cylinder(h, r=/d=, <center=>, ...);
-//   cylinder(h, r1/d1=, r2/d2=, <center=>, ...);
+//   cylinder(h, r=/d=, [center=], ...);
+//   cylinder(h, r1/d1=, r2/d2=, [center=], ...);
 // Usage: With Attachments
-//   cylinder(h, r=/d=, <center=>) {attachments}
+//   cylinder(h, r=/d=, [center=]) {attachments}
 // Usage: As Function
-//   vnf = cylinder(h, r=/d=, <center=>, ...);
-//   vnf = cylinder(h, r1/d1=, r2/d2=, <center=>, ...);
+//   vnf = cylinder(h, r=/d=, [center=], ...);
+//   vnf = cylinder(h, r1/d1=, r2/d2=, [center=], ...);
 // See Also: cyl()
 // Description:
 //   Creates a 3D cylinder or conic object with support for anchoring and attachments.
@@ -252,11 +252,11 @@ function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
 // Function&Module: sphere()
 // Topics: Shapes (3D), Attachable, VNF Generators
 // Usage: As Module
-//   sphere(r|d=, <circum=>, <style=>, ...);
+//   sphere(r|d=, [circum=], [style=], ...);
 // Usage: With Attachments
 //   sphere(r|d=, ...) { attachments }
 // Usage: As Function
-//   vnf = sphere(r|d=, <circum=>, <style=>, ...);
+//   vnf = sphere(r|d=, [circum=], [style=], ...);
 // See Also: spheroid()
 // Description:
 //   Creates a sphere object, with support for anchoring and attachments.

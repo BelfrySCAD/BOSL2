@@ -16,7 +16,7 @@ include <knurling.scad>
 
 // Module: pco1810_neck()
 // Usage:
-//   pco1810_neck(<wall>)
+//   pco1810_neck([wall])
 // Description:
 //   Creates an approximation of a standard PCO-1810 threaded beverage bottle neck.
 // Arguments:
@@ -137,7 +137,7 @@ function  pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 
 // Module: pco1810_cap()
 // Usage:
-//   pco1810_cap(<wall>, <texture>);
+//   pco1810_cap([wall], [texture]);
 // Description:
 //   Creates a basic cap for a PCO1810 threaded beverage bottle.
 // Arguments:
@@ -208,7 +208,7 @@ function pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
 
 // Module: pco1881_neck()
 // Usage:
-//   pco1881_neck(<wall>)
+//   pco1881_neck([wall])
 // Description:
 //   Creates an approximation of a standard PCO-1881 threaded beverage bottle neck.
 // Arguments:
@@ -329,7 +329,7 @@ function pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP) =
 
 // Module: pco1881_cap()
 // Usage:
-//   pco1881_cap(wall, <texture>);
+//   pco1881_cap(wall, [texture]);
 // Description:
 //   Creates a basic cap for a PCO1881 threaded beverage bottle.
 // Arguments:
@@ -391,7 +391,7 @@ function pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP) =
 
 // Module: generic_bottle_neck()
 // Usage:
-//   generic_bottle_neck(<wall>, ...)
+//   generic_bottle_neck([wall], ...)
 // Description:
 //   Creates a bottle neck given specifications.
 // Arguments:
@@ -516,7 +516,7 @@ function generic_bottle_neck(
 
 // Module: generic_bottle_cap()
 // Usage:
-//   generic_bottle_cap(wall, <texture>, ...);
+//   generic_bottle_cap(wall, [texture], ...);
 // Description:
 //   Creates a basic threaded cap given specifications.
 // Arguments:
@@ -605,7 +605,7 @@ function generic_bottle_cap(
 
 // Module: bottle_adapter_neck_to_cap()
 // Usage:
-//   bottle_adapter_neck_to_cap(wall, <texture>);
+//   bottle_adapter_neck_to_cap(wall, [texture]);
 // Description:
 //   Creates a threaded neck to cap adapter
 // Arguments:
@@ -718,7 +718,7 @@ function bottle_adapter_neck_to_cap(
 
 // Module: bottle_adapter_cap_to_cap()
 // Usage:
-//   bottle_adapter_cap_to_cap(wall, <texture>);
+//   bottle_adapter_cap_to_cap(wall, [texture]);
 // Description:
 //   Creates a threaded cap to cap adapter.
 // Arguments:

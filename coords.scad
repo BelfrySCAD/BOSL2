@@ -10,7 +10,7 @@
 
 // Function: point2d()
 // Usage:
-//   pt = point2d(p, <fill>);
+//   pt = point2d(p, [fill]);
 // Topics: Coordinates, Points
 // See Also: path2d(), point3d(), path3d()
 // Description:
@@ -41,7 +41,7 @@ function path2d(points) =
 
 // Function: point3d()
 // Usage:
-//   pt = point3d(p, <fill>);
+//   pt = point3d(p, [fill]);
 // Topics: Coordinates, Points
 // See Also: path2d(), point2d(), path3d()
 // Description:
@@ -54,7 +54,7 @@ function point3d(p, fill=0) = [for (i=[0:2]) (p[i]==undef)? fill : p[i]];
 
 // Function: path3d()
 // Usage:
-//   pts = path3d(points, <fill>);
+//   pts = path3d(points, [fill]);
 // Topics: Coordinates, Points, Paths
 // See Also: point2d(), path2d(), point3d()
 // Description:
@@ -78,7 +78,7 @@ function path3d(points, fill=0) =
 
 // Function: point4d()
 // Usage:
-//   pt = point4d(p, <fill>);
+//   pt = point4d(p, [fill]);
 // Topics: Coordinates, Points
 // See Also: point2d(), path2d(), point3d(), path3d(), path4d()
 // Description:
@@ -91,7 +91,7 @@ function point4d(p, fill=0) = [for (i=[0:3]) (p[i]==undef)? fill : p[i]];
 
 // Function: path4d()
 // Usage:
-//   pt = path4d(points, <fill>);
+//   pt = path4d(points, [fill]);
 // Topics: Coordinates, Points, Paths
 // See Also: point2d(), path2d(), point3d(), path3d(), point4d()
 // Description:

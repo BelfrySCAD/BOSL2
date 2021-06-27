@@ -51,7 +51,7 @@ function vnf_faces(vnf) = vnf[1];
 
 // Function: vnf_quantize()
 // Usage:
-//   vnf2 = vnf_quantize(vnf,<q>);
+//   vnf2 = vnf_quantize(vnf,[q]);
 // Description:
 //   Quantizes the vertex coordinates of the VNF to the given quanta `q`.
 // Arguments:
@@ -144,7 +144,7 @@ function vnf_add_faces(vnf=EMPTY_VNF, faces) =
 
 // Function: vnf_merge()
 // Usage:
-//   vnf = vnf_merge([VNF, VNF, VNF, ...], <cleanup>,<eps>);
+//   vnf = vnf_merge([VNF, VNF, VNF, ...], [cleanup],[eps]);
 // Description:
 //   Given a list of VNF structures, merges them all into a single VNF structure.
 //   When cleanup=true, it consolidates all duplicate vertices with a tolerance `eps`,
@@ -213,7 +213,7 @@ function vnf_triangulate(vnf) =
 
 // Function: vnf_vertex_array()
 // Usage:
-//   vnf = vnf_vertex_array(points, <caps>, <cap1>, <cap2>, <reverse>, <col_wrap>, <row_wrap>, <vnf>);
+//   vnf = vnf_vertex_array(points, [caps], [cap1], [cap2], [reverse], [col_wrap], [row_wrap], [vnf]);
 // Description:
 //   Creates a VNF structure from a vertex list, by dividing the vertices into columns and rows,
 //   adding faces to tile the surface.  You can optionally have faces added to wrap the last column
@@ -387,7 +387,7 @@ function vnf_vertex_array(
 
 // Function: vnf_tri_array()
 // Usage:
-//   vnf = vnf_tri_array(points, <row_wrap>, <reverse>)
+//   vnf = vnf_tri_array(points, [row_wrap], [reverse])
 // Description:
 //   Produces a vnf from an array of points where each row length can differ from the adjacent rows by up to 2 in length.  This enables
 //   the construction of triangular VNF patches.  The resulting VNF can be wrapped along the rows by setting `row_wrap` to true.
@@ -713,7 +713,7 @@ function vnf_bend(vnf,r,d,axis="Z") =
 // Usage: As Function
 //   fails = vnf_validate(vnf);
 // Usage: As Module
-//   vnf_validate(vnf, <size>);
+//   vnf_validate(vnf, [size]);
 // Description:
 //   When called as a function, returns a list of non-manifold errors with the given VNF.
 //   Each error has the format `[ERR_OR_WARN,CODE,MESG,POINTS,COLOR]`.
@@ -1040,7 +1040,7 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
 
 // Function: vnf_halfspace()
 // Usage:
-//   newvnf = vnf_halfspace(plane, vnf, <closed>);
+//   newvnf = vnf_halfspace(plane, vnf, [closed]);
 // Description:
 //   Returns the intersection of the vnf with a half space.  The half space is defined by
 //   plane = [A,B,C,D], taking the side where the normal [A,B,C] points: Ax+By+Cz≥D.

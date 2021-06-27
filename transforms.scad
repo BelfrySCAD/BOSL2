@@ -15,14 +15,14 @@
 // Aliases: translate()
 //
 // Usage: As Module
-//   move(<x=>, <y=>, <z=>) ...
+//   move([x=], [y=], [z=]) ...
 //   move(v) ...
 // Usage: Translate Points
 //   pts = move(v, p);
-//   pts = move(<x=>, <y=>, <z=>, p=);
+//   pts = move([x=], [y=], [z=], p=);
 // Usage: Get Translation Matrix
 //   mat = move(v);
-//   mat = move(<x=>, <y=>, <z=>);
+//   mat = move([x=], [y=], [z=]);
 //
 // Topics: Affine, Matrices, Transforms, Translation
 // See Also: left(), right(), fwd(), back(), down(), up(), affine2d_translate(), affine3d_translate()
@@ -325,20 +325,20 @@ function up(z=0, p) = move([0,0,z],p=p);
 // Function&Module: rot()
 //
 // Usage: As a Module
-//   rot(a, <cp>, <reverse>) {...}
-//   rot([X,Y,Z], <cp>, <reverse>) {...}
-//   rot(a, v, <cp>, <reverse>) {...}
-//   rot(from, to, <a>, <reverse>) {...}
+//   rot(a, [cp], [reverse]) {...}
+//   rot([X,Y,Z], [cp], [reverse]) {...}
+//   rot(a, v, [cp], [reverse]) {...}
+//   rot(from, to, [a], [reverse]) {...}
 // Usage: As a Function to transform data in `p`
-//   pts = rot(a, p=, <cp=>, <reverse=>);
-//   pts = rot([X,Y,Z], p=, <cp=>, <reverse=>);
-//   pts = rot(a, v, p=, <cp=>, <reverse=>);
-//   pts = rot(<a>, from=, to=, p=, <reverse=>);
+//   pts = rot(a, p=, [cp=], [reverse=]);
+//   pts = rot([X,Y,Z], p=, [cp=], [reverse=]);
+//   pts = rot(a, v, p=, [cp=], [reverse=]);
+//   pts = rot([a], from=, to=, p=, [reverse=]);
 // Usage: As a Function to return a transform matrix
-//   M = rot(a, <cp=>, <reverse=>, <planar=>);
-//   M = rot([X,Y,Z], <cp=>, <reverse=>, <planar=>);
-//   M = rot(a, v, <cp=>, <reverse=>, <planar=>);
-//   M = rot(from=, to=, <a=>, <reverse=>, <planar=>);
+//   M = rot(a, [cp=], [reverse=], [planar=]);
+//   M = rot([X,Y,Z], [cp=], [reverse=], [planar=]);
+//   M = rot(a, v, [cp=], [reverse=], [planar=]);
+//   M = rot(from=, to=, [a=], [reverse=], [planar=]);
 //
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: xrot(), yrot(), zrot(), affine2d_zrot(), affine3d_xrot(), affine3d_yrot(), affine3d_zrot(), affine3d_rot_by_axis(), affine3d_rot_from_to()
@@ -452,11 +452,11 @@ function rot(a=0, v, cp, from, to, reverse=false, planar=false, p, _m) =
 // Function&Module: xrot()
 //
 // Usage: As Module
-//   xrot(a, <cp=>) ...
+//   xrot(a, [cp=]) ...
 // Usage: As a function to rotate points
-//   rotated = xrot(a, p, <cp=>);
+//   rotated = xrot(a, p, [cp=]);
 // Usage: As a function to return rotation matrix
-//   mat = xrot(a, <cp=>);
+//   mat = xrot(a, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: rot(), yrot(), zrot(), affine2d_zrot(), affine3d_xrot(), affine3d_yrot(), affine3d_zrot() 
@@ -498,11 +498,11 @@ function xrot(a=0, p, cp) = rot([a,0,0], cp=cp, p=p);
 // Function&Module: yrot()
 //
 // Usage: As Module
-//   yrot(a, <cp=>) ...
+//   yrot(a, [cp=]) ...
 // Usage: Rotate Points
-//   rotated = yrot(a, p, <cp=>);
+//   rotated = yrot(a, p, [cp=]);
 // Usage: Get Rotation Matrix
-//   mat = yrot(a, <cp=>);
+//   mat = yrot(a, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: rot(), xrot(), zrot(), affine2d_zrot(), affine3d_xrot(), affine3d_yrot(), affine3d_zrot() 
@@ -544,11 +544,11 @@ function yrot(a=0, p, cp) = rot([0,a,0], cp=cp, p=p);
 // Function&Module: zrot()
 //
 // Usage: As Module
-//   zrot(a, <cp=>) ...
+//   zrot(a, [cp=]) ...
 // Usage: As Function to rotate points
-//   rotated = zrot(a, p, <cp=>);
+//   rotated = zrot(a, p, [cp=]);
 // Usage: As Function to return rotation matrix
-//   mat = zrot(a, <cp=>);
+//   mat = zrot(a, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: rot(), xrot(), yrot(), affine2d_zrot(), affine3d_xrot(), affine3d_yrot(), affine3d_zrot() 
@@ -590,11 +590,11 @@ function zrot(a=0, p, cp) = rot(a, cp=cp, p=p);
 // Function&Module: xyrot()
 //
 // Usage: As Module
-//   xyrot(a, <cp=>) ...
+//   xyrot(a, [cp=]) ...
 // Usage: As a Function to rotate points
-//   rotated = xyrot(a, p, <cp=>);
+//   rotated = xyrot(a, p, [cp=]);
 // Usage: As a Function to get rotation matrix
-//   mat = xyrot(a, <cp=>);
+//   mat = xyrot(a, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: rot(), xrot(), yrot(), zrot(), xzrot(), yzrot(), xyzrot(), affine3d_rot_by_axis() 
@@ -634,11 +634,11 @@ function xyrot(a=0, p, cp) = rot(a=a, v=[1,1,0], cp=cp, p=p);
 // Function&Module: xzrot()
 //
 // Usage: As Module
-//   xzrot(a, <cp=>) ...
+//   xzrot(a, [cp=]) ...
 // Usage: As Function to rotate points
-//   rotated = xzrot(a, p, <cp=>);
+//   rotated = xzrot(a, p, [cp=]);
 // Usage: As Function to return rotation matrix
-//   mat = xzrot(a, <cp=>);
+//   mat = xzrot(a, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: rot(), xrot(), yrot(), zrot(), xyrot(), yzrot(), xyzrot(), affine3d_rot_by_axis() 
@@ -678,11 +678,11 @@ function xzrot(a=0, p, cp) = rot(a=a, v=[1,0,1], cp=cp, p=p);
 // Function&Module: yzrot()
 //
 // Usage: As Module
-//   yzrot(a, <cp=>) ...
+//   yzrot(a, [cp=]) ...
 // Usage: As Function to rotate points
-//   rotated = yzrot(a, p, <cp=>);
+//   rotated = yzrot(a, p, [cp=]);
 // Usage: As Function to return rotation matrix
-//   mat = yzrot(a, <cp=>);
+//   mat = yzrot(a, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: rot(), xrot(), yrot(), zrot(), xyrot(), xzrot(), xyzrot(), affine3d_rot_by_axis() 
@@ -722,11 +722,11 @@ function yzrot(a=0, p, cp) = rot(a=a, v=[0,1,1], cp=cp, p=p);
 // Function&Module: xyzrot()
 //
 // Usage: As Module
-//   xyzrot(a, <cp=>) ...
+//   xyzrot(a, [cp=]) ...
 // Usage: As Function to rotate points
-//   rotated = xyzrot(a, p, <cp=>);
+//   rotated = xyzrot(a, p, [cp=]);
 // Usage: As Function to return rotation matrix
-//   mat = xyzrot(a, <cp=>);
+//   mat = xyzrot(a, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Rotation
 // See Also: rot(), xrot(), yrot(), zrot(), xyrot(), xzrot(), yzrot(), affine3d_rot_by_axis() 
@@ -773,9 +773,9 @@ function xyzrot(a=0, p, cp) = rot(a=a, v=[1,1,1], cp=cp, p=p);
 //   scale(SCALAR) ...
 //   scale([X,Y,Z]) ...
 // Usage: Scale Points
-//   pts = scale(v, p, <cp=>);
+//   pts = scale(v, p, [cp=]);
 // Usage: Get Scaling Matrix
-//   mat = scale(v, <cp=>);
+//   mat = scale(v, [cp=]);
 // Topics: Affine, Matrices, Transforms, Scaling
 // See Also: xscale(), yscale(), zscale(), affine2d_scale(), affine3d_scale() 
 // Description:
@@ -837,11 +837,11 @@ function scale(v=1, p, cp=[0,0,0]) =
 //
 //
 // Usage: As Module
-//   xscale(x, <cp=>) ...
+//   xscale(x, [cp=]) ...
 // Usage: Scale Points
-//   scaled = xscale(x, p, <cp=>);
+//   scaled = xscale(x, p, [cp=]);
 // Usage: Get Affine Matrix
-//   mat = xscale(x, <cp=>, <planar=>);
+//   mat = xscale(x, [cp=], [planar=]);
 //
 // Topics: Affine, Matrices, Transforms, Scaling
 // See Also: scale(), yscale(), zscale(), affine2d_scale(), affine3d_scale() 
@@ -895,11 +895,11 @@ function xscale(x=1, p, cp=0, planar=false) =
 // Function&Module: yscale()
 //
 // Usage: As Module
-//   yscale(y, <cp=>) ...
+//   yscale(y, [cp=]) ...
 // Usage: Scale Points
-//   scaled = yscale(y, p, <cp=>);
+//   scaled = yscale(y, p, [cp=]);
 // Usage: Get Affine Matrix
-//   mat = yscale(y, <cp=>, <planar=>);
+//   mat = yscale(y, [cp=], [planar=]);
 //
 // Topics: Affine, Matrices, Transforms, Scaling
 // See Also: scale(), xscale(), zscale(), affine2d_scale(), affine3d_scale() 
@@ -953,11 +953,11 @@ function yscale(y=1, p, cp=0, planar=false) =
 // Function&Module: zscale()
 //
 // Usage: As Module
-//   zscale(z, <cp=>) ...
+//   zscale(z, [cp=]) ...
 // Usage: Scale Points
-//   scaled = zscale(z, p, <cp=>);
+//   scaled = zscale(z, p, [cp=]);
 // Usage: Get Affine Matrix
-//   mat = zscale(z, <cp=>);
+//   mat = zscale(z, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Scaling
 // See Also: scale(), xscale(), yscale(), affine2d_scale(), affine3d_scale() 
@@ -1078,11 +1078,11 @@ function mirror(v, p) =
 // Function&Module: xflip()
 //
 // Usage: As Module
-//   xflip(<x>) ...
+//   xflip([x]) ...
 // Usage: As Function
-//   pt = xflip(p, <x>);
+//   pt = xflip(p, [x]);
 // Usage: Get Affine Matrix
-//   pt = xflip(<x>, <planar=>);
+//   pt = xflip([x], [planar=]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), yflip(), zflip(), affine2d_mirror(), affine3d_mirror() 
@@ -1138,11 +1138,11 @@ function xflip(p, x=0, planar=false) =
 // Function&Module: yflip()
 //
 // Usage: As Module
-//   yflip(<y>) ...
+//   yflip([y]) ...
 // Usage: As Function
-//   pt = yflip(p, <y>);
+//   pt = yflip(p, [y]);
 // Usage: Get Affine Matrix
-//   pt = yflip(<y>, <planar=>);
+//   pt = yflip([y], [planar=]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), xflip(), zflip(), affine2d_mirror(), affine3d_mirror() 
@@ -1198,11 +1198,11 @@ function yflip(p, y=0, planar=false) =
 // Function&Module: zflip()
 //
 // Usage: As Module
-//   zflip(<z>) ...
+//   zflip([z]) ...
 // Usage: As Function
-//   pt = zflip(p, <z>);
+//   pt = zflip(p, [z]);
 // Usage: Get Affine Matrix
-//   pt = zflip(<z>);
+//   pt = zflip([z]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), xflip(), yflip(), affine2d_mirror(), affine3d_mirror() 
@@ -1246,11 +1246,11 @@ function zflip(p, z=0) =
 // Function&Module: xyflip()
 //
 // Usage: As Module
-//   xyflip(<cp>) ...
+//   xyflip([cp]) ...
 // Usage: As Function
-//   pt = xyflip(p, <cp>);
+//   pt = xyflip(p, [cp]);
 // Usage: Get Affine Matrix
-//   pt = xyflip(<cp>, <planar=>);
+//   pt = xyflip([cp], [planar=]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), xflip(), yflip(), zflip(), xzflip(), yzflip(), affine2d_mirror(), affine3d_mirror() 
@@ -1316,11 +1316,11 @@ function xyflip(p, cp=0, planar=false) =
 // Function&Module: xzflip()
 //
 // Usage: As Module
-//   xzflip(<cp>) ...
+//   xzflip([cp]) ...
 // Usage: As Function
-//   pt = xzflip(<cp>, p);
+//   pt = xzflip([cp], p);
 // Usage: Get Affine Matrix
-//   pt = xzflip(<cp>);
+//   pt = xzflip([cp]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), xflip(), yflip(), zflip(), xyflip(), yzflip(), affine2d_mirror(), affine3d_mirror() 
@@ -1372,11 +1372,11 @@ function xzflip(p, cp=0) =
 // Function&Module: yzflip()
 //
 // Usage: As Module
-//   yzflip(<x=>) ...
+//   yzflip([x=]) ...
 // Usage: As Function
-//   pt = yzflip(p, <x=>);
+//   pt = yzflip(p, [x=]);
 // Usage: Get Affine Matrix
-//   pt = yzflip(<x=>);
+//   pt = yzflip([x=]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
 // See Also: mirror(), xflip(), yflip(), zflip(), xyflip(), xzflip(), affine2d_mirror(), affine3d_mirror() 
@@ -1433,11 +1433,11 @@ function yzflip(p, cp=0) =
 
 // Function&Module: skew()
 // Usage: As Module
-//   skew(<sxy=>, <sxz=>, <syx=>, <syz=>, <szx=>, <szy=>) ...
+//   skew([sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]) ...
 // Usage: As Function
-//   pts = skew(p, <sxy=>, <sxz=>, <syx=>, <syz=>, <szx=>, <szy=>);
+//   pts = skew(p, [sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=]);
 // Usage: Get Affine Matrix
-//   mat = skew(<sxy=>, <sxz=>, <syx=>, <syz=>, <szx=>, <szy=>, <planar=>);
+//   mat = skew([sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=], [planar=]);
 // Topics: Affine, Matrices, Transforms, Skewing
 // See Also: affine2d_skew(), affine3d_skew(), affine3d_skew_xy(), affine3d_skew_xz(), affine3d_skew_yz() 
 //

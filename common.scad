@@ -200,7 +200,7 @@ function is_func(x) = version_num()>20210000 && is_function(x);
 
 // Function: is_consistent()
 // Usage:
-//   bool = is_consistent(list, <pattern>);
+//   bool = is_consistent(list, [pattern]);
 // Topics: Type Checking
 // See Also: typeof(), is_type(), is_str(), is_def(), is_int(), is_range(), is_homogeneous()
 // Description:
@@ -254,7 +254,7 @@ function same_shape(a,b) = is_def(b) && _list_pattern(a) == b*0;
 
 // Function: is_bool_list()
 // Usage:
-//   check = is_bool_list(list,<length>)
+//   check = is_bool_list(list,[length])
 // Topics: Type Checking
 // See Also: is_homogeneous(), is_consistent()
 // Description:
@@ -285,7 +285,7 @@ function default(v,dflt=undef) = is_undef(v)? dflt : v;
 
 // Function: first_defined()
 // Usage:
-//   val = first_defined(v, <recursive>);
+//   val = first_defined(v, [recursive]);
 // Topics: Undef Handling
 // See Also: default(), one_defined(), num_defined(), any_defined(), all_defined()
 // Description:
@@ -308,7 +308,7 @@ function first_defined(v,recursive=false,_i=0) =
 
 // Function: one_defined()
 // Usage:
-//   val = one_defined(vals, names, <dflt>)
+//   val = one_defined(vals, names, [dflt])
 // Topics: Undef Handling
 // See Also: default(), first_defined(), num_defined(), any_defined(), all_defined()
 // Description:
@@ -361,7 +361,7 @@ function num_defined(v) =
 
 // Function: any_defined()
 // Usage:
-//   bool = any_defined(v, <recursive>);
+//   bool = any_defined(v, [recursive]);
 // Topics: Undef Handling
 // See Also: default(), first_defined(), one_defined(), num_defined(), all_defined()
 // Description:
@@ -382,7 +382,7 @@ function any_defined(v,recursive=false) =
 
 // Function: all_defined()
 // Usage:
-//   bool = all_defined(v, <recursive>);
+//   bool = all_defined(v, [recursive]);
 // Description:
 //   Returns true if all items in the given array are not `undef`.
 // Arguments:
@@ -405,7 +405,7 @@ function all_defined(v,recursive=false) =
 
 // Function: get_anchor()
 // Usage:
-//   anchr = get_anchor(anchor,center,<uncentered>,<dflt>);
+//   anchr = get_anchor(anchor,center,[uncentered],[dflt]);
 // Topics: Argument Handling
 // See Also: get_radius()
 // Description:
@@ -435,7 +435,7 @@ function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
 
 // Function: get_radius()
 // Usage:
-//   r = get_radius(<r1=>, <r2=>, <r=>, <d1=>, <d2=>, <d=>, <dflt=>);
+//   r = get_radius([r1=], [r2=], [r=], [d1=], [d2=], [d=], [dflt=]);
 // Topics: Argument Handling
 // See Also: get_anchor()
 // Description:
@@ -484,7 +484,7 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
 
 // Function: scalar_vec3()
 // Usage:
-//   vec = scalar_vec3(v, <dflt>);
+//   vec = scalar_vec3(v, [dflt]);
 // Topics: Argument Handling
 // See Also: get_anchor(), get_radius(), force_list()
 // Description:
@@ -583,7 +583,7 @@ function _valstr(x) =
 
 // Module: assert_approx()
 // Usage:
-//   assert_approx(got, expected, <info>);
+//   assert_approx(got, expected, [info]);
 // Topics: Error Checking, Debugging
 // See Also: no_children(), no_function(), no_module(), assert_equal()
 // Description:
@@ -615,7 +615,7 @@ module assert_approx(got, expected, info) {
 
 // Module: assert_equal()
 // Usage:
-//   assert_equal(got, expected, <info>);
+//   assert_equal(got, expected, [info]);
 // Topics: Error Checking, Debugging
 // See Also: no_children(), no_function(), no_module(), assert_approx()
 // Description:
@@ -646,7 +646,7 @@ module assert_equal(got, expected, info) {
 
 // Module: shape_compare()
 // Usage:
-//   shape_compare(<eps>) {test_shape(); expected_shape();}
+//   shape_compare([eps]) {test_shape(); expected_shape();}
 // Topics: Error Checking, Debugging, Testing
 // See Also: assert_approx(), assert_equal()
 // Description:

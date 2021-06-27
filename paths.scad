@@ -319,7 +319,7 @@ function path_closest_point(path, pt) =
 
 // Function: path_tangents()
 // Usage:
-//   tangs = path_tangents(path, <closed>, <uniform>);
+//   tangs = path_tangents(path, [closed], [uniform]);
 // Description:
 //   Compute the tangent vector to the input path.  The derivative approximation is described in deriv().
 //   The returns vectors will be normalized to length 1.  If any derivatives are zero then
@@ -352,7 +352,7 @@ function path_tangents(path, closed=false, uniform=true) =
 
 // Function: path_normals()
 // Usage:
-//   norms = path_normals(path, <tangents>, <closed>);
+//   norms = path_normals(path, [tangents], [closed]);
 // Description:
 //   Compute the normal vector to the input path.  This vector is perpendicular to the
 //   path tangent and lies in the plane of the curve.  For 3d paths we define the plane of the curve
@@ -386,7 +386,7 @@ function path_normals(path, tangents, closed=false) =
 
 // Function: path_curvature()
 // Usage:
-//   curvs = path_curvature(path, <closed>);
+//   curvs = path_curvature(path, [closed]);
 // Description:
 //   Numerically estimate the curvature of the path (in any dimension). 
 function path_curvature(path, closed=false) =
@@ -404,7 +404,7 @@ function path_curvature(path, closed=false) =
 
 // Function: path_torsion()
 // Usage:
-//   tortions = path_torsion(path, <closed>);
+//   tortions = path_torsion(path, [closed]);
 // Description:
 //   Numerically estimate the torsion of a 3d path.  
 function path_torsion(path, closed=false) =
@@ -575,7 +575,7 @@ function _corner_roundover_path(p1, p2, p3, r, d) =
 // Topics: Paths
 // See Also: jittered_poly(), subdivide_long_segments()
 // Usage:
-//   jpath = path_add_jitter(path, <dist>, <closed=>);
+//   jpath = path_add_jitter(path, [dist], [closed=]);
 // Description:
 //   Adds tiny jitter offsets to collinear points in the given path so that they
 //   are no longer collinear.  This is useful for preserving subdivision on long
@@ -971,7 +971,7 @@ module modulated_circle(r, sines=[[1,1]], d)
 // Topics: Extrusions
 // See Also: path_add_jitter(), subdivide_long_segments()
 // Usage:
-//   jittered_poly(path, <dist>);
+//   jittered_poly(path, [dist]);
 // Description:
 //   Creates a 2D polygon shape from the given path in such a way that any extra
 //   collinear points are not stripped out in the way that `polygon()` normally does.
@@ -1285,7 +1285,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
 // Function: path_cut_points()
 //
 // Usage:
-//   cuts = path_cut_points(path, dists, <closed=>, <direction=>);
+//   cuts = path_cut_points(path, dists, [closed=], [direction=]);
 //
 // Description:
 //   Cuts a path at a list of distances from the first point in the path.  Returns a list of the cut
@@ -1402,7 +1402,7 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 // Topics: Paths
 // See Also: path_cut_points()
 // Usage:
-//    path_list = path_cut(path, cutdist, <closed=>);
+//    path_list = path_cut(path, cutdist, [closed=]);
 // Description:
 //    Given a list of distances in `cutdist`, cut the path into
 //    subpaths at those lengths, returning a list of paths.
@@ -1561,7 +1561,7 @@ function subdivide_path(path, N, refine, closed=true, exact=true, method="length
 
 // Function: path_length_fractions()
 // Usage:
-//   fracs = path_length_fractions(path, <closed>);
+//   fracs = path_length_fractions(path, [closed]);
 // Description:
 //    Returns the distance fraction of each point in the path along the path, so the first
 //    point is zero and the final point is 1.  If the path is closed the length of the output
@@ -1583,7 +1583,7 @@ function path_length_fractions(path, closed=false) =
 
 // Function: resample_path()
 // Usage:
-//   newpath = resample_path(path, N|spacing, <closed>);
+//   newpath = resample_path(path, N|spacing, [closed]);
 // Description:
 //   Compute a uniform resampling of the input path.  If you specify `N` then the output path will have N
 //   points spaced uniformly (by linear interpolation along the input path segments).  The only points of the

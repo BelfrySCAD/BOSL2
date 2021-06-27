@@ -1021,7 +1021,7 @@ function _covariance_evec_eval(points) =
 
 // Function: plane_from_points()
 // Usage:
-//   plane = plane_from_points(points, <fast>, <eps>);
+//   plane = plane_from_points(points, [fast], [eps]);
 // Topics: Geometry, Planes, Points
 // Description:
 //   Given a list of 3 or more coplanar 3D points, returns the coefficients of the normalized cartesian equation of a plane,
@@ -1350,7 +1350,7 @@ function plane_intersection(plane1,plane2,plane3) =
 
 // Function: coplanar()
 // Usage:
-//   test = coplanar(points,<eps>);
+//   test = coplanar(points,[eps]);
 // Topics: Geometry, Coplanarity
 // Description:
 //   Returns true if the given 3D points are non-collinear and are on a plane.
@@ -1378,7 +1378,7 @@ function _pointlist_greatest_distance(points,plane) =
 
 // Function: points_on_plane()
 // Usage:
-//   test = points_on_plane(points, plane, <eps>);
+//   test = points_on_plane(points, plane, [eps]);
 // Topics: Geometry, Planes, Points
 // Description:
 //   Returns true if the given 3D points are on the given plane.
@@ -1414,10 +1414,10 @@ function in_front_of_plane(plane, point) =
 
 // Function&Module: circle_2tangents()
 // Usage: As Function
-//   circ = circle_2tangents(pt1, pt2, pt3, r|d, <tangents>);
+//   circ = circle_2tangents(pt1, pt2, pt3, r|d, [tangents]);
 // Topics: Geometry, Circles, Tangents
 // Usage: As Module
-//   circle_2tangents(pt1, pt2, pt3, r|d, <h>, <center>);
+//   circle_2tangents(pt1, pt2, pt3, r|d, [h], [center]);
 // Description:
 //   Given a pair of rays with a common origin, and a known circle radius/diameter, finds
 //   the centerpoint for the circle of that size that touches both rays tangentally.
@@ -1530,8 +1530,8 @@ module circle_2tangents(pt1, pt2, pt3, r, d, h, center=false) {
 //   circ = circle_3points([pt1, pt2, pt3]);
 // Topics: Geometry, Circles
 // Usage: As Module
-//   circle_3points(pt1, pt2, pt3, <h>, <center>);
-//   circle_3points([pt1, pt2, pt3], <h>, <center>);
+//   circle_3points(pt1, pt2, pt3, [h], [center]);
+//   circle_3points([pt1, pt2, pt3], [h], [center]);
 // Description:
 //   Returns the [CENTERPOINT, RADIUS, NORMAL] of the circle that passes through three non-collinear
 //   points where NORMAL is the normal vector of the plane that the circle is on (UP or DOWN if the points are 2D).
@@ -1724,7 +1724,7 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
 
 // Function: circle_line_intersection()
 // Usage:
-//   isect = circle_line_intersection(c,<r|d>,<line>,<bounded>,<eps>);
+//   isect = circle_line_intersection(c,<r|d>,[line],[bounded],[eps]);
 // Topics: Geometry, Circles, Lines, Intersection
 // Description:
 //   Find intersection points between a 2d circle and a line, ray or segment specified by two points.
@@ -1968,7 +1968,7 @@ function reindex_polygon(reference, poly, return_error=false) =
 
 // Function: align_polygon()
 // Usage:
-//   newpoly = align_polygon(reference, poly, angles, <cp>);
+//   newpoly = align_polygon(reference, poly, angles, [cp]);
 // Topics: Geometry, Polygons
 // Description:
 //   Tries the list or range of angles to find a rotation of the specified 2D polygon that best aligns
@@ -2042,7 +2042,7 @@ function centroid(poly, eps=EPSILON) =
 
 // Function: point_in_polygon()
 // Usage:
-//   test = point_in_polygon(point, poly, <eps>)
+//   test = point_in_polygon(point, poly, [eps])
 // Topics: Geometry, Polygons
 // Description:
 //   This function tests whether the given 2D point is inside, outside or on the boundary of
@@ -2371,7 +2371,7 @@ function is_convex_polygon(poly,eps=EPSILON) =
 
 // Function: convex_distance()
 // Usage:
-//   dist = convex_distance(pts1, pts2,<eps=>);
+//   dist = convex_distance(pts1, pts2,[eps=]);
 // Topics: Geometry, Convexity, Distance
 // See also: 
 //   convex_collision(), hull()
@@ -2430,7 +2430,7 @@ function _GJK_distance(points1, points2, eps=EPSILON, lbd, d, simplex=[]) =
 
 // Function: convex_collision()
 // Usage:
-//   test = convex_collision(pts1, pts2,<eps=>);
+//   test = convex_collision(pts1, pts2, [eps=]);
 // Topics: Geometry, Convexity, Collision, Intersection
 // See also: 
 //   convex_distance(), hull()

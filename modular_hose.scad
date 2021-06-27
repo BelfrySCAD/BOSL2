@@ -118,7 +118,7 @@ _hose_waist = [1.7698, 1.8251, 3.95998];
 
 // Module: modular_hose()
 // Usage:
-//    modular_hose(size, type, <clearance>, <waist_len>, <anchor>, <spin>, <orient>) <attachments>
+//    modular_hose(size, type, [clearance], [waist_len], [anchor], [spin], [orient]) [attachments]
 // Description:
 //    Construct moduler hose segments or modular hose ends for connection to standard
 //    modular hose systems.  The 1/4", 1/2" and 3/4" sizes are supported and you can
@@ -185,7 +185,7 @@ module modular_hose(size, type, clearance=0, waist_len, anchor=BOTTOM, spin=0,or
 
 // Function: modular_hose_radius()
 // Usage:
-//   r = modular_hose_radius(size, <outer>);
+//   r = modular_hose_radius(size, [outer]);
 // Description:
 //   Returns the inner (or outer) diameter of the waist section
 //   of the modular hose to enable hollowing out connecting channels.

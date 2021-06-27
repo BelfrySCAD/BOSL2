@@ -9,8 +9,8 @@
 
 // Module: stroke()
 // Usage:
-//   stroke(path, <width>, <closed>, <endcaps>, <endcap_width>, <endcap_length>, <endcap_extent>, <trim>);
-//   stroke(path, <width>, <closed>, <endcap1>, <endcap2>, <endcap_width1>, <endcap_width2>, <endcap_length1>, <endcap_length2>, <endcap_extent1>, <endcap_extent2>, <trim1>, <trim2>);
+//   stroke(path, [width], [closed], [endcaps], [endcap_width], [endcap_length], [endcap_extent], [trim]);
+//   stroke(path, [width], [closed], [endcap1], [endcap2], [endcap_width1], [endcap_width2], [endcap_length1], [endcap_length2], [endcap_extent1], [endcap_extent2], [trim1], [trim2]);
 // Topics: Paths (2D), Paths (3D), Drawing Tools
 // Description:
 //   Draws a 2D or 3D path with a given line width.  Endcaps can be specified for each end individually.
@@ -427,9 +427,9 @@ module stroke(
 
 // Function&Module: dashed_stroke()
 // Usage: As a Module
-//   dashed_stroke(path, dashpat, <closed=>);
+//   dashed_stroke(path, dashpat, [closed=]);
 // Usage: As a Function
-//   dashes = dashed_stroke(path, dashpat, width=, <closed=>);
+//   dashes = dashed_stroke(path, dashpat, width=, [closed=]);
 // Topics: Paths, Drawing Tools
 // See Also: stroke(), path_cut()
 // Description:
@@ -489,7 +489,7 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
 // Usage: 2D circle segment by `width` and `thickness`, starting and ending on the X axis.
 //   arc(N, width=, thickness=)
 // Usage: Shortest 2D or 3D arc around centerpoint `cp`, starting at P0 and ending on the vector pointing from `cp` to `P1`.
-//   arc(N, cp=, points=[P0,P1], <long=>, <cw=>, <ccw=>)
+//   arc(N, cp=, points=[P0,P1], [long=], [cw=], [ccw=])
 // Usage: 2D or 3D arc, starting at `P0`, passing through `P1` and ending at `P2`.
 //   arc(N, points=[P0,P1,P2])
 // Topics: Paths (2D), Paths (3D), Shapes (2D), Path Generators
@@ -628,7 +628,7 @@ function _normal_segment(p1,p2) =
 
 // Function: turtle()
 // Usage:
-//   turtle(commands, <state>, <full_state=>, <repeat=>)
+//   turtle(commands, [state], [full_state=], [repeat=])
 // Topics: Shapes (2D), Path Generators (2D), Mini-Language
 // See Also: turtle3d()
 // Description:
@@ -890,11 +890,11 @@ function _turtle_command(command, parm, parm2, state, index) =
 
 // Function&Module: rect()
 // Usage: As Module
-//   rect(size, <center>, <rounding>, <chamfer>, ...);
+//   rect(size, [center], [rounding], [chamfer], ...);
 // Usage: With Attachments
-//   rect(size, <center>, ...) { attachables }
+//   rect(size, [center], ...) { attachables }
 // Usage: As Function
-//   path = rect(size, <center>, <rounding>, <chamfer>, ...);
+//   path = rect(size, [center], [rounding], [chamfer], ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: square()
 // Description:
@@ -994,7 +994,7 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
 
 // Function&Module: oval()
 // Usage:
-//   oval(r|d=, <realign=>, <circum=>)
+//   oval(r|d=, [realign=], [circum=])
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle()
 // Description:
@@ -1060,9 +1060,9 @@ function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 
 // Function&Module: regular_ngon()
 // Usage:
-//   regular_ngon(n, r/d=/or=/od=, <realign=>);
-//   regular_ngon(n, ir=/id=, <realign=>);
-//   regular_ngon(n, side=, <realign=>);
+//   regular_ngon(n, r/d=/or=/od=, [realign=]);
+//   regular_ngon(n, ir=/id=, [realign=]);
+//   regular_ngon(n, side=, [realign=]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), pentagon(), hexagon(), octagon(), oval(), star()
 // Description:
@@ -1196,9 +1196,9 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 
 // Function&Module: pentagon()
 // Usage:
-//   pentagon(or|od=, <realign=>);
-//   pentagon(ir=|id=, <realign=>);
-//   pentagon(side=, <realign=>);
+//   pentagon(or|od=, [realign=]);
+//   pentagon(ir=|id=, [realign=]);
+//   pentagon(side=, [realign=]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), regular_ngon(), hexagon(), octagon(), oval(), star()
 // Description:
@@ -1252,7 +1252,7 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip
 
 // Function&Module: hexagon()
 // Usage: As Module
-//   hexagon(r/or, <realign=>, <align_tip=|align_side=>, <rounding=>, ...);
+//   hexagon(r/or, [realign=], <align_tip=|align_side=>, [rounding=], ...);
 //   hexagon(d=/od=, ...);
 //   hexagon(ir=/id=, ...);
 //   hexagon(side=, ...);
@@ -1316,7 +1316,7 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 
 // Function&Module: octagon()
 // Usage: As Module
-//   octagon(r/or, <realign=>, <align_tip=|align_side=>, <rounding=>, ...);
+//   octagon(r/or, [realign=], <align_tip=|align_side=>, [rounding=], ...);
 //   octagon(d=/od=, ...);
 //   octagon(ir=/id=, ...);
 //   octagon(side=, ...);
@@ -1383,7 +1383,7 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 
 // Function&Module: trapezoid()
 // Usage: As Module
-//   trapezoid(h, w1, w2, <shift=>, <rounding=>, <chamfer=>, ...);
+//   trapezoid(h, w1, w2, [shift=], [rounding=], [chamfer=], ...);
 //   trapezoid(h, w1, angle=, ...);
 //   trapezoid(h, w2, angle=, ...);
 //   trapezoid(w1, w2, angle=, ...);
@@ -1492,11 +1492,11 @@ module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENTER
 //   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.
 //
 // Usage: As Module
-//   teardrop2d(r/d=, <ang>, <cap_h>);
+//   teardrop2d(r/d=, [ang], [cap_h]);
 // Usage: With Attachments
-//   teardrop2d(r/d=, <ang>, <cap_h>, ...) { attachments }
+//   teardrop2d(r/d=, [ang], [cap_h], ...) { attachments }
 // Usage: As Function
-//   path = teardrop2d(r/d=, <ang>, <cap_h>);
+//   path = teardrop2d(r/d=, [ang], [cap_h]);
 //
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 //
@@ -1556,11 +1556,11 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
 
 // Function&Module: glued_circles()
 // Usage: As Module
-//   glued_circles(r/d=, <spread=>, <tangent=>, ...);
+//   glued_circles(r/d=, [spread=], [tangent=], ...);
 // Usage: With Attachments
-//   glued_circles(r/d=, <spread=>, <tangent=>, ...) { attachments }
+//   glued_circles(r/d=, [spread=], [tangent=], ...) { attachments }
 // Usage: As Function
-//   path = glued_circles(r/d=, <spread=>, <tangent=>, ...);
+//   path = glued_circles(r/d=, [spread=], [tangent=], ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), oval()
 // Description:
@@ -1619,12 +1619,12 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
 
 // Function&Module: star()
 // Usage: As Module
-//   star(n, r/or, ir, <realign=>, <align_tip=>, <align_pit=>, ...);
+//   star(n, r/or, ir, [realign=], [align_tip=], [align_pit=], ...);
 //   star(n, r/or, step=, ...);
 // Usage: With Attachments
 //   star(n, r/or, ir, ...) { attachments }
 // Usage: As Function
-//   path = star(n, r/or, ir, <realign=>, <align_tip=>, <align_pit=>, ...);
+//   path = star(n, r/or, ir, [realign=], [align_tip=], [align_pit=], ...);
 //   path = star(n, r/or, step=, ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), oval()
@@ -1748,11 +1748,11 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 
 // Function&Module: supershape()
 // Usage: As Module
-//   supershape(step, <m1=>, <m2=>, <n1=>, <n2=>, <n3=>, <a=>, <b=>, <r=/d=>);
+//   supershape(step, [m1=], [m2=], [n1=], [n2=], [n3=], [a=], [b=], <r=/d=>);
 // Usage: With Attachments
-//   supershape(step, <m1=>, <m2=>, <n1=>, <n2=>, <n3=>, <a=>, <b=>, <r=/d=>) { attachments }
+//   supershape(step, [m1=], [m2=], [n1=], [n2=], [n3=], [a=], [b=], <r=/d=>) { attachments }
 // Usage: As Function
-//   path = supershape(step, <m1=>, <m2=>, <n1=>, <n2=>, <n3=>, <a=>, <b=>, <r=/d=>);
+//   path = supershape(step, [m1=], [m2=], [n1=], [n2=], [n3=], [a=], [b=], <r=/d=>);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle(), oval()
 // Description:
@@ -1890,11 +1890,11 @@ function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
 
 // Function&Module: mask2d_roundover()
 // Usage: As Module
-//   mask2d_roundover(r|d, <inset>, <excess>);
+//   mask2d_roundover(r|d, [inset], [excess]);
 // Usage: With Attachments
-//   mask2d_roundover(r|d, <inset>, <excess>) { attachments }
+//   mask2d_roundover(r|d, [inset], [excess]) { attachments }
 // Usage: As Module
-//   path = mask2d_roundover(r|d, <inset>, <excess>);
+//   path = mask2d_roundover(r|d, [inset], [excess]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
@@ -1947,11 +1947,11 @@ function mask2d_roundover(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 
 // Function&Module: mask2d_cove()
 // Usage: As Module
-//   mask2d_cove(r|d, <inset>, <excess>);
+//   mask2d_cove(r|d, [inset], [excess]);
 // Usage: With Attachments
-//   mask2d_cove(r|d, <inset>, <excess>) { attachments }
+//   mask2d_cove(r|d, [inset], [excess]) { attachments }
 // Usage: As Function
-//   path = mask2d_cove(r|d, <inset>, <excess>);
+//   path = mask2d_cove(r|d, [inset], [excess]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
@@ -2004,15 +2004,15 @@ function mask2d_cove(r, inset=0, excess=0.01, d, anchor=CENTER,spin=0) =
 
 // Function&Module: mask2d_chamfer()
 // Usage: As Module
-//   mask2d_chamfer(edge, <angle>, <inset>, <excess>);
-//   mask2d_chamfer(y, <angle>, <inset>, <excess>);
-//   mask2d_chamfer(x, <angle>, <inset>, <excess>);
+//   mask2d_chamfer(edge, [angle], [inset], [excess]);
+//   mask2d_chamfer(y, [angle], [inset], [excess]);
+//   mask2d_chamfer(x, [angle], [inset], [excess]);
 // Usage: With Attachments
-//   mask2d_chamfer(edge, <angle>, <inset>, <excess>) { attachments }
+//   mask2d_chamfer(edge, [angle], [inset], [excess]) { attachments }
 // Usage: As Function
-//   path = mask2d_chamfer(edge, <angle>, <inset>, <excess>);
-//   path = mask2d_chamfer(y, <angle>, <inset>, <excess>);
-//   path = mask2d_chamfer(x, <angle>, <inset>, <excess>);
+//   path = mask2d_chamfer(edge, [angle], [inset], [excess]);
+//   path = mask2d_chamfer(y, [angle], [inset], [excess]);
+//   path = mask2d_chamfer(x, [angle], [inset], [excess]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
@@ -2075,11 +2075,11 @@ function mask2d_chamfer(edge, angle=45, inset=0, excess=0.01, x, y, anchor=CENTE
 
 // Function&Module: mask2d_rabbet()
 // Usage: As Module
-//   mask2d_rabbet(size, <excess>);
+//   mask2d_rabbet(size, [excess]);
 // Usage: With Attachments
-//   mask2d_rabbet(size, <excess>) { attachments }
+//   mask2d_rabbet(size, [excess]) { attachments }
 // Usage: As Function
-//   path = mask2d_rabbet(size, <excess>);
+//   path = mask2d_rabbet(size, [excess]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
@@ -2126,13 +2126,13 @@ function mask2d_rabbet(size, excess=0.01, anchor=CENTER,spin=0) =
 
 // Function&Module: mask2d_dovetail()
 // Usage: As Module
-//   mask2d_dovetail(edge, <angle>, <inset>, <shelf>, <excess>, ...);
-//   mask2d_dovetail(x=, <angle=>, <inset=>, <shelf=>, <excess=>, ...);
-//   mask2d_dovetail(y=, <angle=>, <inset=>, <shelf=>, <excess=>, ...);
+//   mask2d_dovetail(edge, [angle], [inset], [shelf], [excess], ...);
+//   mask2d_dovetail(x=, [angle=], [inset=], [shelf=], [excess=], ...);
+//   mask2d_dovetail(y=, [angle=], [inset=], [shelf=], [excess=], ...);
 // Usage: With Attachments
-//   mask2d_dovetail(edge, <angle>, <inset>, <shelf>, ...) { attachments }
+//   mask2d_dovetail(edge, [angle], [inset], [shelf], ...) { attachments }
 // Usage: As Function
-//   path = mask2d_dovetail(edge, <angle>, <inset>, <shelf>, <excess>);
+//   path = mask2d_dovetail(edge, [angle], [inset], [shelf], [excess]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
@@ -2197,11 +2197,11 @@ function mask2d_dovetail(edge, angle=30, inset=0, shelf=0, excess=0.01, x, y, an
 
 // Function&Module: mask2d_teardrop()
 // Usage: As Module
-//   mask2d_teardrop(r|d, <angle>, <excess>);
+//   mask2d_teardrop(r|d, [angle], [excess]);
 // Usage: With Attachments
-//   mask2d_teardrop(r|d, <angle>, <excess>) { attachments }
+//   mask2d_teardrop(r|d, [angle], [excess]) { attachments }
 // Usage: As Function
-//   path = mask2d_teardrop(r|d, <angle>, <excess>);
+//   path = mask2d_teardrop(r|d, [angle], [excess]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 // Description:
@@ -2253,11 +2253,11 @@ module mask2d_teardrop(r, angle=45, excess=0.01, d, anchor=CENTER, spin=0) {
 
 // Function&Module: mask2d_ogee()
 // Usage: As Module
-//   mask2d_ogee(pattern, <excess>, ...);
+//   mask2d_ogee(pattern, [excess], ...);
 // Usage: With Attachments
-//   mask2d_ogee(pattern, <excess>, ...) { attachments }
+//   mask2d_ogee(pattern, [excess], ...) { attachments }
 // Usage: As Function
-//   path = mask2d_ogee(pattern, <excess>, ...);
+//   path = mask2d_ogee(pattern, [excess], ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable, Masks (2D)
 // See Also: corner_profile(), edge_profile(), face_profile()
 //

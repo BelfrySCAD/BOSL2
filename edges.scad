@@ -295,7 +295,7 @@ function edges(v, except=[]) =
 // Module: show_edges()
 // Topics: Edges, Debugging
 // Usage:
-//   show_edges(edges, <size=>, <text=>, <txtsize=>);
+//   show_edges(edges, [size=], [text=], [txtsize=]);
 // Description:
 //   Draws a semi-transparent cube with the given edges highlighted in red.
 // Arguments:
@@ -555,7 +555,7 @@ function _corners_text(corners) =
 // Module: show_corners()
 // Topics: Corners, Debugging
 // Usage:
-//   show_corners(corners, <size=>, <text=>, <txtsize=>);
+//   show_corners(corners, [size=], [text=], [txtsize=]);
 // Description:
 //   Draws a semi-transparent cube with the given corners highlighted in red.
 // Arguments:
