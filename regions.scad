@@ -123,7 +123,7 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
 
 // Function: polygons_equal()
 // Usage:
-//    b = polygons_equal(poly1, poly2, <eps>)
+//    b = polygons_equal(poly1, poly2, [eps])
 // Description:
 //    Returns true if the components of region1 and region2 are the same polygons
 //    within given epsilon tolerance.
@@ -172,7 +172,7 @@ function __poly_in_polygons(poly, polys, i) =
 
 // Function: regions_equal()
 // Usage:
-//    b = regions_equal(region1, region2, <eps>)
+//    b = regions_equal(region1, region2, [eps])
 // Description:
 //    Returns true if the components of region1 and region2 are the same polygons
 //    within given epsilon tolerance.

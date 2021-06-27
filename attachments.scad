@@ -87,7 +87,7 @@ $tags_hidden = [];
 
 // Function: anchorpt()
 // Usage:
-//   a = anchorpt(name, pos, <orient>, <spin>);
+//   a = anchorpt(name, pos, [orient], [spin]);
 // Topics: Attachments
 // See Also: attach_geom(), reorient(), attachable()
 // Description:
@@ -104,21 +104,21 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 // Function: attach_geom()
 //
 // Usage: Square/Trapezoid Geometry
-//   geom = attach_geom(two_d=true, size=, <size2=>, <shift=>, ...);
+//   geom = attach_geom(two_d=true, size=, [size2=], [shift=], ...);
 // Usage: Circle/Oval Geometry
 //   geom = attach_geom(two_d=true, r=|d=, ...);
 // Usage: 2D Path/Polygon Geometry
-//   geom = attach_geom(two_d=true, path=, <extent=>, ...);
+//   geom = attach_geom(two_d=true, path=, [extent=], ...);
 // Usage: Cubical/Prismoidal Geometry
-//   geom = attach_geom(size=, <size2=>, <shift=>, ...);
+//   geom = attach_geom(size=, [size2=], [shift=], ...);
 // Usage: Cylindrical Geometry
-//   geom = attach_geom(r=|d=, l=, <axis=>, ...);
+//   geom = attach_geom(r=|d=, l=, [axis=], ...);
 // Usage: Conical Geometry
-//   geom = attach_geom(r1|d1=, r2=|d2=, l=, <axis=>, ...);
+//   geom = attach_geom(r1|d1=, r2=|d2=, l=, [axis=], ...);
 // Usage: Spheroid/Ovoid Geometry
 //   geom = attach_geom(r=|d=, ...);
 // Usage: VNF Geometry
-//   geom = attach_geom(vnf=, <extent=>, ...);
+//   geom = attach_geom(vnf=, [extent=], ...);
 //
 // Topics: Attachments
 // See Also: reorient(), attachable()
@@ -657,29 +657,29 @@ function attachment_is_shown(tags) =
 // Function: reorient()
 //
 // Usage: Square/Trapezoid Geometry
-//   mat = reorient(anchor, spin, <orient>, two_d=true, size=, <size2=>, <shift=>, ...);
-//   pts = reorient(anchor, spin, <orient>, two_d=true, size=, <size2=>, <shift=>, p=, ...);
+//   mat = reorient(anchor, spin, [orient], two_d=true, size=, [size2=], [shift=], ...);
+//   pts = reorient(anchor, spin, [orient], two_d=true, size=, [size2=], [shift=], p=, ...);
 // Usage: Circle/Oval Geometry
-//   mat = reorient(anchor, spin, <orient>, two_d=true, r=|d=, ...);
-//   pts = reorient(anchor, spin, <orient>, two_d=true, r=|d=, p=, ...);
+//   mat = reorient(anchor, spin, [orient], two_d=true, r=|d=, ...);
+//   pts = reorient(anchor, spin, [orient], two_d=true, r=|d=, p=, ...);
 // Usage: 2D Path/Polygon Geometry
-//   mat = reorient(anchor, spin, <orient>, two_d=true, path=, <extent=>, ...);
-//   pts = reorient(anchor, spin, <orient>, two_d=true, path=, <extent=>, p=, ...);
+//   mat = reorient(anchor, spin, [orient], two_d=true, path=, [extent=], ...);
+//   pts = reorient(anchor, spin, [orient], two_d=true, path=, [extent=], p=, ...);
 // Usage: Cubical/Prismoidal Geometry
-//   mat = reorient(anchor, spin, <orient>, size=, <size2=>, <shift=>, ...);
-//   pts = reorient(anchor, spin, <orient>, size=, <size2=>, <shift=>, p=, ...);
+//   mat = reorient(anchor, spin, [orient], size=, [size2=], [shift=], ...);
+//   pts = reorient(anchor, spin, [orient], size=, [size2=], [shift=], p=, ...);
 // Usage: Cylindrical Geometry
-//   mat = reorient(anchor, spin, <orient>, r=|d=, l=, <axis=>, ...);
-//   pts = reorient(anchor, spin, <orient>, r=|d=, l=, <axis=>, p=, ...);
+//   mat = reorient(anchor, spin, [orient], r=|d=, l=, [axis=], ...);
+//   pts = reorient(anchor, spin, [orient], r=|d=, l=, [axis=], p=, ...);
 // Usage: Conical Geometry
-//   mat = reorient(anchor, spin, <orient>, r1=|d1=, r2=|d2=, l=, <axis=>, ...);
-//   pts = reorient(anchor, spin, <orient>, r1=|d1=, r2=|d2=, l=, <axis=>, p=, ...);
+//   mat = reorient(anchor, spin, [orient], r1=|d1=, r2=|d2=, l=, [axis=], ...);
+//   pts = reorient(anchor, spin, [orient], r1=|d1=, r2=|d2=, l=, [axis=], p=, ...);
 // Usage: Spheroid/Ovoid Geometry
-//   mat = reorient(anchor, spin, <orient>, r|d=, ...);
-//   pts = reorient(anchor, spin, <orient>, r|d=, p=, ...);
+//   mat = reorient(anchor, spin, [orient], r|d=, ...);
+//   pts = reorient(anchor, spin, [orient], r|d=, p=, ...);
 // Usage: VNF Geometry
-//   mat = reorient(anchor, spin, <orient>, vnf, <extent>, ...);
-//   pts = reorient(anchor, spin, <orient>, vnf, <extent>, p=, ...);
+//   mat = reorient(anchor, spin, [orient], vnf, [extent], ...);
+//   pts = reorient(anchor, spin, [orient], vnf, [extent], p=, ...);
 //
 // Topics: Attachments
 // See Also: reorient(), attachable()
@@ -772,21 +772,21 @@ function reorient(
 // Module: attachable()
 //
 // Usage: Square/Trapezoid Geometry
-//   attachable(anchor, spin, two_d=true, size=, <size2=>, <shift=>, ...) {...}
+//   attachable(anchor, spin, two_d=true, size=, [size2=], [shift=], ...) {...}
 // Usage: Circle/Oval Geometry
 //   attachable(anchor, spin, two_d=true, r=|d=, ...) {...}
 // Usage: 2D Path/Polygon Geometry
-//   attachable(anchor, spin, two_d=true, path=, <extent=>, ...) {...}
+//   attachable(anchor, spin, two_d=true, path=, [extent=], ...) {...}
 // Usage: Cubical/Prismoidal Geometry
-//   attachable(anchor, spin, <orient>, size=, <size2=>, <shift=>, ...) {...}
+//   attachable(anchor, spin, [orient], size=, [size2=], [shift=], ...) {...}
 // Usage: Cylindrical Geometry
-//   attachable(anchor, spin, <orient>, r=|d=, l=, <axis=>, ...) {...}
+//   attachable(anchor, spin, [orient], r=|d=, l=, [axis=], ...) {...}
 // Usage: Conical Geometry
-//   attachable(anchor, spin, <orient>, r1=|d1=, r2=|d2=, l=, <axis=>, ...) {...}
+//   attachable(anchor, spin, [orient], r1=|d1=, r2=|d2=, l=, [axis=], ...) {...}
 // Usage: Spheroid/Ovoid Geometry
-//   attachable(anchor, spin, <orient>, r=|d=, ...) {...}
+//   attachable(anchor, spin, [orient], r=|d=, ...) {...}
 // Usage: VNF Geometry
-//   attachable(anchor, spin, <orient>, vnf=, <extent=>, ...) {...}
+//   attachable(anchor, spin, [orient], vnf=, [extent=], ...) {...}
 //
 // Topics: Attachments
 // See Also: reorient()
@@ -997,7 +997,7 @@ module attachable(
 // Module: atext()
 // Topics: Attachments, Text
 // Usage:
-//   atext(text, <h>, <size>, <font>);
+//   atext(text, [h], [size], [font]);
 // Description:
 //   Creates a 3D text block that can be attached to other attachable objects.
 //   NOTE: This cannot have children attached to it.
@@ -1117,8 +1117,8 @@ module position(from)
 
 // Module: attach()
 // Usage:
-//   attach(from, <overlap=>, <norot=>) {...}
-//   attach(from, to, <overlap=>, <norot=>) {...}
+//   attach(from, [overlap=], [norot=]) {...}
+//   attach(from, to, [overlap=], [norot=]) {...}
 // Topics: Attachments
 // See Also: attachable(), position(), face_profile(), edge_profile(), corner_profile()
 // Description:
@@ -1164,7 +1164,7 @@ module attach(from, to, overlap, norot=false)
 
 // Module: face_profile()
 // Usage:
-//   face_profile(faces, r|d=, <convexity=>) {...}
+//   face_profile(faces, r|d=, [convexity=]) {...}
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), edge_profile(), corner_profile()
 // Description:
@@ -1195,7 +1195,7 @@ module face_profile(faces=[], r, d, convexity=10) {
 
 // Module: edge_profile()
 // Usage:
-//   edge_profile(<edges>, <except>, <convexity>) {...}
+//   edge_profile([edges], [except], [convexity]) {...}
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), corner_profile()
 // Description:
@@ -1248,7 +1248,7 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 
 // Module: corner_profile()
 // Usage:
-//   corner_profile(<corners>, <except>, <r=|d=>, <convexity=>) {...}
+//   corner_profile([corners], [except], <r=|d=>, [convexity=]) {...}
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile()
 // Description:
@@ -1314,7 +1314,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 
 // Module: edge_mask()
 // Usage:
-//   edge_mask(<edges>, <except>) {...}
+//   edge_mask([edges], [except]) {...}
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask()
 // Description:
@@ -1368,7 +1368,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 
 // Module: corner_mask()
 // Usage:
-//   corner_mask(<corners>, <except>) {...}
+//   corner_mask([corners], [except]) {...}
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), edge_mask()
 // Description:
@@ -1502,8 +1502,8 @@ module show(tags="")
 
 // Module: diff()
 // Usage:
-//   diff(neg, <keep>) {...}
-//   diff(neg, pos, <keep>) {...}
+//   diff(neg, [keep]) {...}
+//   diff(neg, pos, [keep]) {...}
 // Topics: Attachments
 // See Also: tags(), recolor(), show(), hide(), intersect()
 // Description:
@@ -1564,8 +1564,8 @@ module diff(neg, pos, keep)
 
 // Module: intersect()
 // Usage:
-//   intersect(a, <keep=>) {...}
-//   intersect(a, b, <keep=>) {...}
+//   intersect(a, [keep=]) {...}
+//   intersect(a, b, [keep=]) {...}
 // Topics: Attachments
 // See Also: tags(), recolor(), show(), hide(), diff()
 // Description:

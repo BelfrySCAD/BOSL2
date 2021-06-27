@@ -115,7 +115,7 @@ function adendum(pitch=5, mod) =
 
 // Function: dedendum()
 // Usage:
-//   ddn = dedendum(pitch|mod, <clearance>);
+//   ddn = dedendum(pitch|mod, [clearance]);
 // Topics: Gears
 // Description:
 //   The depth of the gear tooth valley, below the pitch radius.
@@ -167,7 +167,7 @@ function pitch_radius(pitch=5, teeth=11, mod) =
 
 // Function: outer_radius()
 // Usage:
-//   or = outer_radius(pitch|mod, teeth, <clearance>, <interior>);
+//   or = outer_radius(pitch|mod, teeth, [clearance], [interior]);
 // Topics: Gears
 // Description:
 //   Calculates the outer radius for the gear. The gear fits entirely within a cylinder of this radius.
@@ -193,7 +193,7 @@ function outer_radius(pitch=5, teeth=11, clearance, interior=false, mod) =
 
 // Function: root_radius()
 // Usage:
-//   rr = root_radius(pitch|mod, teeth, <clearance>, <interior>);
+//   rr = root_radius(pitch|mod, teeth, [clearance], [interior]);
 // Topics: Gears
 // Description:
 //   Calculates the root radius for the gear, at the base of the dedendum.
@@ -219,7 +219,7 @@ function root_radius(pitch=5, teeth=11, clearance, interior=false, mod) =
 
 // Function: base_radius()
 // Usage:
-//   br = base_radius(pitch|mod, teeth, <pressure_angle>);
+//   br = base_radius(pitch|mod, teeth, [pressure_angle]);
 // Topics: Gears
 // Description:
 //   Get the base circle for involute teeth, at the base of the teeth.
@@ -243,7 +243,7 @@ function base_radius(pitch=5, teeth=11, pressure_angle=28, mod) =
 
 // Function: bevel_pitch_angle()
 // Usage:
-//   ang = bevel_pitch_angle(teeth, mate_teeth, <drive_angle>);
+//   ang = bevel_pitch_angle(teeth, mate_teeth, [drive_angle]);
 // Topics: Gears
 // See Also: bevel_gear()
 // Description:
@@ -274,7 +274,7 @@ function bevel_pitch_angle(teeth, mate_teeth, drive_angle=90) =
 
 // Function: worm_gear_thickness()
 // Usage:
-//   thick = worm_gear_thickness(pitch|mod, teeth, worm_diam, <worm_arc>, <crowning>, <clearance>);
+//   thick = worm_gear_thickness(pitch|mod, teeth, worm_diam, [worm_arc], [crowning], [clearance]);
 // Topics: Gears
 // See Also: worm(), worm_gear()
 // Description:
@@ -327,9 +327,9 @@ function _gear_q7(f,r,b,r2,t,s) = _gear_q6(b,s,t,(1-f)*max(b,r)+f*r2);        //
 
 // Function&Module: gear_tooth_profile()
 // Usage: As Module
-//   gear_tooth_profile(pitch|mod, teeth, <pressure_angle>, <clearance>, <backlash>, <interior>, <valleys>);
+//   gear_tooth_profile(pitch|mod, teeth, [pressure_angle], [clearance], [backlash], [interior], [valleys]);
 // Usage: As Function
-//   path = gear_tooth_profile(pitch|mod, teeth, <pressure_angle>, <clearance>, <backlash>, <interior>, <valleys>);
+//   path = gear_tooth_profile(pitch|mod, teeth, [pressure_angle], [clearance], [backlash], [interior], [valleys]);
 // Topics: Gears
 // See Also: spur_gear2d()
 // Description:
@@ -427,9 +427,9 @@ module gear_tooth_profile(
 
 // Function&Module: spur_gear2d()
 // Usage: As Module
-//   spur_gear2d(pitch|mod, teeth, <hide>, <pressure_angle>, <clearance>, <backlash>, <interior>);
+//   spur_gear2d(pitch|mod, teeth, [hide], [pressure_angle], [clearance], [backlash], [interior]);
 // Usage: As Function
-//   poly = spur_gear2d(pitch|mod, teeth, <hide>, <pressure_angle>, <clearance>, <backlash>, <interior>);
+//   poly = spur_gear2d(pitch|mod, teeth, [hide], [pressure_angle], [clearance], [backlash], [interior]);
 // Topics: Gears
 // See Also: spur_gear()
 // Description:
@@ -526,9 +526,9 @@ module spur_gear2d(
 
 // Function&Module: rack2d()
 // Usage: As a Function
-//   path = rack2d(pitch|mod, teeth, height, <pressure_angle>, <backlash>);
+//   path = rack2d(pitch|mod, teeth, height, [pressure_angle], [backlash]);
 // Usage: As a Module
-//   rack2d(pitch|mod, teeth, height, <pressure_angle>, <backlash>);
+//   rack2d(pitch|mod, teeth, height, [pressure_angle], [backlash]);
 // Topics: Gears
 // See Also: spur_gear2d()
 // Description:
@@ -647,11 +647,11 @@ module rack2d(
 
 // Function&Module: spur_gear()
 // Usage: As a Module
-//   spur_gear(pitch, teeth, thickness, <shaft_diam=>, <hide>, <pressure_angle>, <clearance>, <backlash>, <helical>, <slices>, <interior>);
-//   spur_gear(mod=, teeth=, thickness=, <shaft_diam=>, ...);
+//   spur_gear(pitch, teeth, thickness, [shaft_diam=], [hide], [pressure_angle], [clearance], [backlash], [helical], [slices], [interior]);
+//   spur_gear(mod=, teeth=, thickness=, [shaft_diam=], ...);
 // Usage: As a Function
-//   vnf = spur_gear(pitch, teeth, thickness, <shaft_diam>, ...);
-//   vnf = spur_gear(mod=, teeth=, thickness=, <shaft_diam>, ...);
+//   vnf = spur_gear(pitch, teeth, thickness, [shaft_diam], ...);
+//   vnf = spur_gear(mod=, teeth=, thickness=, [shaft_diam], ...);
 // Topics: Gears
 // See Also: rack()
 // Description:
@@ -813,9 +813,9 @@ module spur_gear(
 
 // Function&Module: bevel_gear()
 // Usage: As a Module
-//   bevel_gear(pitch|mod, teeth, face_width, pitch_angle, <shaft_diam>, <hide>, <pressure_angle>, <clearance>, <backlash>, <cutter_radius>, <spiral_angle>, <slices>, <interior>);
+//   bevel_gear(pitch|mod, teeth, face_width, pitch_angle, [shaft_diam], [hide], [pressure_angle], [clearance], [backlash], [cutter_radius], [spiral_angle], [slices], [interior]);
 // Usage: As a Function
-//   vnf = bevel_gear(pitch|mod, teeth, face_width, pitch_angle, <hide>, <pressure_angle>, <clearance>, <backlash>, <cutter_radius>, <spiral_angle>, <slices>, <interior>);
+//   vnf = bevel_gear(pitch|mod, teeth, face_width, pitch_angle, [hide], [pressure_angle], [clearance], [backlash], [cutter_radius], [spiral_angle], [slices], [interior]);
 // Topics: Gears
 // See Also: bevel_pitch_angle()
 // Description:
@@ -1066,11 +1066,11 @@ module bevel_gear(
 
 // Function&Module: rack()
 // Usage: As a Module
-//   rack(pitch, teeth, thickness, height, <pressure_angle=>, <backlash=>);
-//   rack(mod=, teeth=, thickness=, height=, <pressure_angle=>, <backlash>=);
+//   rack(pitch, teeth, thickness, height, [pressure_angle=], [backlash=]);
+//   rack(mod=, teeth=, thickness=, height=, [pressure_angle=], [backlash]=);
 // Usage: As a Function
-//   vnf = rack(pitch, teeth, thickness, height, <pressure_angle=>, <backlash=>);
-//   vnf = rack(mod=, teeth=, thickness=, height=, <pressure_angle=>, <backlash=>);
+//   vnf = rack(pitch, teeth, thickness, height, [pressure_angle=], [backlash=]);
+//   vnf = rack(mod=, teeth=, thickness=, height=, [pressure_angle=], [backlash=]);
 // Topics: Gears
 // See Also: spur_gear()
 // Description:
@@ -1213,9 +1213,9 @@ function rack(
 
 // Function&Module: worm()
 // Usage: As a Module
-//   worm(pitch|mod, d, l, <starts>, <left_handed>, <pressure_angle>, <backlash>, <clearance>);
+//   worm(pitch|mod, d, l, [starts], [left_handed], [pressure_angle], [backlash], [clearance]);
 // Usage: As a Function
-//   vnf = worm(pitch|mod, d, l, <starts>, <left_handed>, <pressure_angle>, <backlash>, <clearance>);
+//   vnf = worm(pitch|mod, d, l, [starts], [left_handed], [pressure_angle], [backlash], [clearance]);
 // Topics: Gears
 // See Also: worm_gear()
 // Description:
@@ -1330,9 +1330,9 @@ module worm(
 
 // Function&Module: worm_gear()
 // Usage: As a Module
-//   worm_gear(pitch|mod, teeth, worm_diam, <worm_starts>, <crowning>, <left_handed>, <pressure_angle>, <backlash>, <slices>, <clearance>, <shaft_diam>);
+//   worm_gear(pitch|mod, teeth, worm_diam, [worm_starts], [crowning], [left_handed], [pressure_angle], [backlash], [slices], [clearance], [shaft_diam]);
 // Usage: As a Function
-//   vnf = worm_gear(pitch|mod, teeth, worm_diam, <worm_starts>, <crowning>, <left_handed>, <pressure_angle>, <backlash>, <slices>, <clearance>);
+//   vnf = worm_gear(pitch|mod, teeth, worm_diam, [worm_starts], [crowning], [left_handed], [pressure_angle], [backlash], [slices], [clearance]);
 // Topics: Gears
 // See Also: worm()
 // Description:

@@ -62,7 +62,7 @@ function log2(x) =
 
 // Function: hypot()
 // Usage:
-//   l = hypot(x,y,<z>);
+//   l = hypot(x,y,[z]);
 // Description:
 //   Calculate hypotenuse length of a 2D or 3D triangle.
 // Arguments:
@@ -79,7 +79,7 @@ function hypot(x,y,z=0) =
 
 // Function: factorial()
 // Usage:
-//   x = factorial(n,<d>);
+//   x = factorial(n,[d]);
 // Description:
 //   Returns the factorial of the given integer value, or n!/d! if d is given.  
 // Arguments:
@@ -177,7 +177,7 @@ function lerp(a,b,u) =
 // Function: lerpn()
 // Usage:
 //   x = lerpn(a, b, n);
-//   x = lerpn(a, b, n, <endpoint>);
+//   x = lerpn(a, b, n, [endpoint]);
 // Description:
 //   Returns exactly `n` values, linearly interpolated between `a` and `b`.
 //   If `endpoint` is true, then the last value will exactly equal `b`.
@@ -463,7 +463,7 @@ function modang(x) =
 
 // Function: rand_int()
 // Usage:
-//   rand_int(minval,maxval,N,<seed>);
+//   rand_int(minval,maxval,N,[seed]);
 // Description:
 //   Return a list of random integers in the range of minval to maxval, inclusive.
 // Arguments:
@@ -483,7 +483,7 @@ function rand_int(minval, maxval, N, seed=undef) =
 
 // Function: gaussian_rands()
 // Usage:
-//   gaussian_rands(mean, stddev, <N>, <seed>)
+//   gaussian_rands(mean, stddev, [N], [seed])
 // Description:
 //   Returns a random number with a gaussian/normal distribution.
 // Arguments:
@@ -499,7 +499,7 @@ function gaussian_rands(mean, stddev, N=1, seed=undef) =
 
 // Function: log_rands()
 // Usage:
-//   log_rands(minval, maxval, factor, <N>, <seed>);
+//   log_rands(minval, maxval, factor, [N], [seed]);
 // Description:
 //   Returns a single random number, with a logarithmic distribution.
 // Arguments:
@@ -568,7 +568,7 @@ function lcm(a,b=[]) =
 
 // Function: sum()
 // Usage:
-//   x = sum(v, <dflt>);
+//   x = sum(v, [dflt]);
 // Description:
 //   Returns the sum of all entries in the given consistent list.
 //   If passed an array of vectors, returns the sum the vectors.
@@ -920,7 +920,7 @@ function _swap_matrix(n,i,j) =
 
 // Function: back_substitute()
 // Usage:
-//   x = back_substitute(R, b, <transpose>);
+//   x = back_substitute(R, b, [transpose]);
 // Description:
 //   Solves the problem Rx=b where R is an upper triangular square matrix.  The lower triangular entries of R are
 //   ignored.  If transpose==true then instead solve transpose(R)*x=b.
@@ -1012,7 +1012,7 @@ function determinant(M) =
 
 // Function: is_matrix()
 // Usage:
-//   is_matrix(A,<m>,<n>,<square>)
+//   is_matrix(A,[m],[n],[square])
 // Description:
 //   Returns true if A is a numeric matrix of height m and width n.  If m or n
 //   are omitted or set to undef then true is returned for any positive dimension.
@@ -1055,7 +1055,7 @@ function matrix_trace(M) =
 
 // Function: all_zero()
 // Usage:
-//   x = all_zero(x, <eps>);
+//   x = all_zero(x, [eps]);
 // Description:
 //   Returns true if the finite number passed to it is approximately zero, to within `eps`.
 //   If passed a list, recursively checks if all items in the list are approximately zero.
@@ -1076,7 +1076,7 @@ function all_zero(x, eps=EPSILON) =
 
 // Function: all_nonzero()
 // Usage:
-//   x = all_nonzero(x, <eps>);
+//   x = all_nonzero(x, [eps]);
 // Description:
 //   Returns true if the finite number passed to it is not almost zero, to within `eps`.
 //   If passed a list, recursively checks if all items in the list are not almost zero.
@@ -1194,7 +1194,7 @@ function all_nonnegative(x) =
 
 // Function all_equal()
 // Usage:
-//   b = all_equal(vec,<eps>);
+//   b = all_equal(vec,[eps]);
 // Description:
 //   Returns true if all of the entries in vec are equal to each other, or approximately equal to each other if eps is set.
 // Arguments:
@@ -1206,7 +1206,7 @@ function all_equal(vec,eps=0) =
 
 // Function: approx()
 // Usage:
-//   b = approx(a,b,<eps>)
+//   b = approx(a,b,[eps])
 // Description:
 //   Compares two numbers or vectors, and returns true if they are closer than `eps` to each other.
 // Arguments:
@@ -1345,8 +1345,8 @@ function _all_bool(l, i=0, out=true) =
 
 // Function: count_true()
 // Usage:
-//   n = count_true(l,<nmax=>);
-//   n = count_true(l,func,<nmax=>);  // Requires OpenSCAD 2021.01 or later.
+//   n = count_true(l,[nmax=]);
+//   n = count_true(l,func,[nmax=]);  // Requires OpenSCAD 2021.01 or later.
 // Requirements:
 //   Requires OpenSCAD 2021.01 or later to use the `func=` argument.
 // Description:
@@ -1460,7 +1460,7 @@ function _deriv_nonuniform(data, h, closed) =
 
 // Function: deriv2()
 // Usage:
-//   x = deriv2(data, <h>, <closed>)
+//   x = deriv2(data, [h], [closed])
 // Description:
 //   Computes a numerical estimate of the second derivative of the data, which may be scalar or vector valued.
 //   The `h` parameter gives the step size of your sampling so the derivative can be scaled correctly. 
@@ -1504,7 +1504,7 @@ function deriv2(data, h=1, closed=false) =
 
 // Function: deriv3()
 // Usage:
-//   x = deriv3(data, <h>, <closed>)
+//   x = deriv3(data, [h], [closed])
 // Description:
 //   Computes a numerical third derivative estimate of the data, which may be scalar or vector valued.
 //   The `h` parameter gives the step size of your sampling so the derivative can be scaled correctly. 
@@ -1657,7 +1657,7 @@ function c_norm(z) = norm_fro(z);
 
 // Function: quadratic_roots()
 // Usage:
-//    roots = quadratic_roots(a,b,c,<real>)
+//    roots = quadratic_roots(a,b,c,[real])
 // Description:
 //    Computes roots of the quadratic equation a*x^2+b*x+c==0, where the
 //    coefficients are real numbers.  If real is true then returns only the
@@ -1779,7 +1779,7 @@ function poly_add(p,q) =
 
 // Function: poly_roots()
 // Usage:
-//   poly_roots(p,<tol>)
+//   poly_roots(p,[tol])
 // Description:
 //   Returns all complex roots of the specified real polynomial p.
 //   The polynomial is specified as p=[a_n, a_{n-1},...,a_1,a_0]
@@ -1849,7 +1849,7 @@ function _poly_roots(p, pderiv, s, z, tol, i=0) =
 
 // Function: real_roots()
 // Usage:
-//   real_roots(p, <eps>, <tol>)
+//   real_roots(p, [eps], [tol])
 // Description:
 //   Returns the real roots of the specified real polynomial p.
 //   The polynomial is specified as p=[a_n, a_{n-1},...,a_1,a_0]

@@ -10,7 +10,7 @@
 
 // Module: trace_path()
 // Usage:
-//   trace_path(path, <closed=>, <showpts=>, <N=>, <size=>, <color=>);
+//   trace_path(path, [closed=], [showpts=], [N=], [size=], [color=]);
 // Description:
 //   Renders lines between each point of a path.
 //   Can also optionally show the individual vertex points.
@@ -58,7 +58,7 @@ module trace_path(path, closed=false, showpts=false, N=1, size=1, color="yellow"
 
 // Module: debug_polygon()
 // Usage:
-//   debug_polygon(points, paths, <convexity=>, <size=>);
+//   debug_polygon(points, paths, [convexity=], [size=]);
 // Description:
 //   A drop-in replacement for `polygon()` that renders and labels the path points.
 // Arguments:
@@ -129,7 +129,7 @@ module debug_polygon(points, paths, convexity=2, size=1)
 
 // Module: debug_vertices()
 // Usage:
-//   debug_vertices(vertices, <size>, <disabled=>);
+//   debug_vertices(vertices, [size], [disabled=]);
 // Description:
 //   Draws all the vertices in an array, at their 3D position, numbered by their
 //   position in the vertex array.  Also draws any children of this module with
@@ -177,7 +177,7 @@ module debug_vertices(vertices, size=1, disabled=false) {
 
 // Module: debug_faces()
 // Usage:
-//   debug_faces(vertices, faces, <size=>, <disabled=>);
+//   debug_faces(vertices, faces, [size=], [disabled=]);
 // Description:
 //   Draws all the vertices at their 3D position, numbered in blue by their
 //   position in the vertex array.  Each face will have their face number drawn
@@ -243,7 +243,7 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
 
 // Module: debug_vnf()
 // Usage:
-//   debug_vnf(vnfs, <convexity=>, <txtsize=>, <disabled=>);
+//   debug_vnf(vnfs, [convexity=], [txtsize=], [disabled=]);
 // Description:
 //   A drop-in module to replace `vnf_polyhedron()` and help debug vertices and faces.
 //   Draws all the vertices at their 3D position, numbered in blue by their
@@ -270,7 +270,7 @@ module debug_vnf(vnf, convexity=6, txtsize=1, disabled=false) {
 
 // Function: standard_anchors()
 // Usage:
-//   anchs = standard_anchors(<two_d>);
+//   anchs = standard_anchors([two_d]);
 // Description:
 //   Return the vectors for all standard anchors.
 // Arguments:
@@ -291,7 +291,7 @@ function standard_anchors(two_d=false) = [
 
 // Module: anchor_arrow()
 // Usage:
-//   anchor_arrow(<s>, <color>, <flag>);
+//   anchor_arrow([s], [color], [flag]);
 // Description:
 //   Show an anchor orientation arrow.  By default, tagged with the name "anchor-arrow".
 // Arguments:
@@ -320,7 +320,7 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow"
 
 // Module: anchor_arrow2d()
 // Usage:
-//   anchor_arrow2d(<s>, <color>, <flag>);
+//   anchor_arrow2d([s], [color], [flag]);
 // Description:
 //   Show an anchor orientation arrow.
 // Arguments:
@@ -354,7 +354,7 @@ module expose_anchors(opacity=0.2) {
 
 // Module: show_anchors()
 // Usage:
-//   ... show_anchors(<s>, <std=>, <custom=>);
+//   ... show_anchors([s], [std=], [custom=]);
 // Description:
 //   Show all standard anchors for the parent object.
 // Arguments:
@@ -436,7 +436,7 @@ module frame_ref(s=15, opacity=1) {
 
 // Module: ruler()
 // Usage:
-//   ruler(length, width, <thickness=>, <depth=>, <labels=>, <pipscale=>, <maxscale=>, <colors=>, <alpha=>, <unit=>, <inch=>);
+//   ruler(length, width, [thickness=], [depth=], [labels=], [pipscale=], [maxscale=], [colors=], [alpha=], [unit=], [inch=]);
 // Description:
 //   Creates a ruler for checking dimensions of the model
 // Arguments:
@@ -527,7 +527,7 @@ module ruler(length=100, width, thickness=1, depth=3, labels=false, pipscale=1/3
 
 // Function: mod_indent()
 // Usage:
-//   str = mod_indent(<indent>);
+//   str = mod_indent([indent]);
 // Description:
 //   Returns a string that is the total indentation for the module level you are at.
 // Arguments:
@@ -540,7 +540,7 @@ function mod_indent(indent="  ") =
 
 // Function: mod_trace()
 // Usage:
-//   str = mod_trace(<levs>, <indent=>, <modsep=>);
+//   str = mod_trace([levs], [indent=], [modsep=]);
 // Description:
 //   Returns a string that shows the current module and its parents, indented for each unprinted parent module.
 // Arguments:
@@ -559,8 +559,8 @@ function mod_trace(levs=2, indent="  ", modsep="->") =
 
 // Function&Module: echo_matrix()
 // Usage:
-//    echo_matrix(M, <description=>, <sig=>, <eps=>);
-//    dummy = echo_matrix(M, <description=>, <sig=>, <eps=>),
+//    echo_matrix(M, [description=], [sig=], [eps=]);
+//    dummy = echo_matrix(M, [description=], [sig=], [eps=]),
 // Description:
 //    Display a numerical matrix in a readable columnar format with `sig` significant
 //    digits.  Values smaller than eps display as zero.  If you give a description

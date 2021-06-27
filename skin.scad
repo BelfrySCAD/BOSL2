@@ -12,9 +12,9 @@
 
 // Function&Module: skin()
 // Usage: As module:
-//   skin(profiles, slices, <z=>, <refine=>, <method=>, <sampling=>, <caps=>, <closed=>, <style=>, <convexity=>, <anchor=>,<cp=>,<spin=>,<orient=>,<extent=>) <attachments>;
+//   skin(profiles, slices, [z=], [refine=], [method=], [sampling=], [caps=], [closed=], [style=], [convexity=], [anchor=],[cp=],[spin=],[orient=],[extent=]) [attachments];
 // Usage: As function:
-//   vnf = skin(profiles, slices, <z=>, <refine=>, <method=>, <sampling=>, <caps=>, <closed=>, <style=>);
+//   vnf = skin(profiles, slices, [z=], [refine=], [method=], [sampling=], [caps=], [closed=], [style=]);
 // Description:
 //   Given a list of two or more path `profiles` in 3d space, produces faces to skin a surface between
 //   the profiles.  Optionally the first and last profiles can have endcaps, or the first and last profiles
@@ -540,7 +540,7 @@ function _skin_core(profiles, caps) =
 // Function: subdivide_and_slice()
 // Topics: Paths, Path Subdivision
 // Usage:
-//   newprof = subdivide_and_slice(profiles, slices, <numpoints>, <method>, <closed>);
+//   newprof = subdivide_and_slice(profiles, slices, [numpoints], [method], [closed]);
 // Description:
 //   Subdivides the input profiles to have length `numpoints` where `numpoints` must be at least as
 //   big as the largest input profile.  By default `numpoints` is set equal to the length of the
@@ -570,7 +570,7 @@ function subdivide_and_slice(profiles, slices, numpoints, method="length", close
 // Topics: Paths, Path Subdivision
 // See Also: subdivide_path(), subdivide_and_slice(), path_add_jitter(), jittered_poly()
 // Usage:
-//   spath = subdivide_long_segments(path, maxlen, <closed=>);
+//   spath = subdivide_long_segments(path, maxlen, [closed=]);
 // Description:
 //   Evenly subdivides long `path` segments until they are all shorter than `maxlen`.
 // Arguments:
@@ -600,7 +600,7 @@ function subdivide_long_segments(path, maxlen, closed=false) =
 // Function: slice_profiles()
 // Topics: Paths, Path Subdivision
 // Usage:
-//   profs = slice_profiles(profiles, slices, <closed>);
+//   profs = slice_profiles(profiles, slices, [closed]);
 // Description:
 //   Given an input list of profiles, linearly interpolate between each pair to produce a
 //   more finely sampled list.  The parameters `slices` specifies the number of slices to
@@ -905,9 +905,9 @@ function associate_vertices(polygons, split, curpoly=0) =
 
 // Function&Module: sweep()
 // Usage: As Module
-//   sweep(shape, transforms, <closed>, <caps>, <style>, <convexity=>, <anchor=>, <spin=>, <orient=>, <extent=>) <attachments>;
+//   sweep(shape, transforms, [closed], [caps], [style], [convexity=], [anchor=], [spin=], [orient=], [extent=]) [attachments];
 // Usage: As Function
-//   vnf = sweep(shape, transforms, <closed>, <caps>, <style>);
+//   vnf = sweep(shape, transforms, [closed], [caps], [style]);
 // Description:
 //   The input `shape` must be a non-self-intersecting 2D polygon or region, and `transforms`
 //   is a list of 4x4 transformation matrices.  The sweep algorithm applies each transformation in sequence
@@ -1000,9 +1000,9 @@ module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=
 
 // Function&Module: path_sweep()
 // Usage: As module
-//   path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <style=>, <convexity=>, <transforms=>, <anchor=>, <cp=>, <spin=>, <orient=>, <extent=>) <attachments>;
+//   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [relaxed=], [caps=], [style=], [convexity=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [extent=]) [attachments];
 // Usage: As function   
-//   vnf = path_sweep(shape, path, <method>, <normal=>, <closed=>, <twist=>, <twist_by_length=>, <symmetry=>, <last_normal=>, <tangent=>, <relaxed=>, <caps=>, <style=>, <convexity=>, <transforms=>);
+//   vnf = path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [relaxed=], [caps=], [style=], [convexity=], [transforms=]);
 // Description:
 //   Takes as input a 2D polygon path, and a 2d or 3d path and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF by default or if you set `transforms=true`
@@ -1418,9 +1418,9 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
 
 // Function&Module: path_sweep2d()
 // Usage: as module
-//   path_sweep2d(shape, path, <closed>, <caps>, <quality>, <style>, <convexity=>, <anchor=>, <spin=>, <orient=>, <extent=>, <cp=>) <attachments>;
+//   path_sweep2d(shape, path, [closed], [caps], [quality], [style], [convexity=], [anchor=], [spin=], [orient=], [extent=], [cp=]) [attachments];
 // Usage: as function
-//   vnf = path_sweep2d(shape, path, <closed>, <caps>, <quality>, <style>);
+//   vnf = path_sweep2d(shape, path, [closed], [caps], [quality], [style]);
 // Description:
 //   Takes an input 2D polygon (the shape) and a 2d path and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF.

@@ -25,8 +25,8 @@
 // Topics: Bezier Paths
 // See Also: bez_tang(), bez_joint(), bez_end()
 // Usage:
-//   pts = bez_begin(pt, a, r, <p=>);
-//   pts = bez_begin(pt, VECTOR, <r>, <p=>);
+//   pts = bez_begin(pt, a, r, [p=]);
+//   pts = bez_begin(pt, VECTOR, [r], [p=]);
 // Description:
 //   This is used to create the first endpoint and control point of a cubic bezier path.
 // Arguments:
@@ -94,8 +94,8 @@ function bez_begin(pt,a,r,p) =
 // Topics: Bezier Paths
 // See Also: bez_begin(), bez_joint(), bez_end()
 // Usage:
-//   pts = bez_tang(pt, a, r1, r2, <p=>);
-//   pts = bez_tang(pt, VECTOR, <r1>, <r2>, <p=>);
+//   pts = bez_tang(pt, a, r1, r2, [p=]);
+//   pts = bez_tang(pt, VECTOR, [r1], [r2], [p=]);
 // Description:
 //   This creates a smooth joint in a cubic bezier path.  It creates three points, being the
 //   approaching control point, the fixed bezier control point, and the departing control
@@ -128,8 +128,8 @@ function bez_tang(pt,a,r1,r2,p) =
 // Topics: Bezier Paths
 // See Also: bez_begin(), bez_tang(), bez_end()
 // Usage:
-//   pts = bez_joint(pt, a1, a2, r1, r2, <p1=>, <p2=>);
-//   pts = bez_joint(pt, VEC1, VEC2, <r1=>, <r2=>, <p1=>, <p2=>);
+//   pts = bez_joint(pt, a1, a2, r1, r2, [p1=], [p2=]);
+//   pts = bez_joint(pt, VEC1, VEC2, [r1=], [r2=], [p1=], [p2=]);
 // Description:
 //   This creates a disjoint corner joint in a cubic bezier path.  It creates three points, being
 //   the aproaching control point, the fixed bezier control point, and the departing control point.
@@ -167,8 +167,8 @@ function bez_joint(pt,a1,a2,r1,r2,p1,p2) =
 // Topics: Bezier Paths
 // See Also: bez_tang(), bez_joint(), bez_end()
 // Usage:
-//   pts = bez_end(pt, a, r, <p=>);
-//   pts = bez_end(pt, VECTOR, <r>, <p=>);
+//   pts = bez_end(pt, a, r, [p=]);
+//   pts = bez_end(pt, VECTOR, [r], [p=]);
 // Description:
 //   This is used to create the approaching control point, and the endpoint of a cubic bezier path.
 //   See {{bez_begin()}} for examples.
@@ -336,9 +336,9 @@ function _bezier_matrix(N) =
 
 // Function: bezier_derivative()
 // Usage:
-//   deriv = bezier_derivative(curve, u, <order>);
-//   derivs = bezier_derivative(curve, LIST, <order>);
-//   derivs = bezier_derivative(curve, RANGE, <order>);
+//   deriv = bezier_derivative(curve, u, [order]);
+//   derivs = bezier_derivative(curve, LIST, [order]);
+//   derivs = bezier_derivative(curve, RANGE, [order]);
 // Topics: Bezier Segments
 // See Also: bezier_curvature(), bezier_tangent(), bezier_points()
 // Description:
@@ -409,7 +409,7 @@ function bezier_curvature(curve, u) =
 
 // Function: bezier_curve()
 // Usage:
-//   path = bezier_curve(curve, n, <endpoint>);
+//   path = bezier_curve(curve, n, [endpoint]);
 // Topics: Bezier Segments
 // See Also: bezier_curvature(), bezier_tangent(), bezier_derivative(), bezier_points()
 // Description:
@@ -442,7 +442,7 @@ function bezier_curve(curve,n,endpoint=true) =
 
 // Function: bezier_segment_closest_point()
 // Usage:
-//   u = bezier_segment_closest_point(bezier, pt, <max_err>);
+//   u = bezier_segment_closest_point(bezier, pt, [max_err]);
 // Topics: Bezier Segments
 // See Also: bezier_points()
 // Description:
@@ -491,7 +491,7 @@ function bezier_segment_closest_point(curve, pt, max_err=0.01, u=0, end_u=1) =
 
 // Function: bezier_segment_length()
 // Usage:
-//   pathlen = bezier_segment_length(curve, <start_u>, <end_u>, <max_deflect>);
+//   pathlen = bezier_segment_length(curve, [start_u], [end_u], [max_deflect]);
 // Topics: Bezier Segments
 // See Also: bezier_points()
 // Description:
@@ -602,9 +602,9 @@ function fillet3pts(p0, p1, p2, r, d, maxerr=0.1, w=0.5, dw=0.25) = let(
 
 // Function: bezier_path_point()
 // Usage:
-//   pt = bezier_path_point(path, seg, u, <N>);
-//   ptlist = bezier_path_point(path, seg, LIST, <N>);
-//   path = bezier_path_point(path, seg, RANGE, <N>);
+//   pt = bezier_path_point(path, seg, u, [N]);
+//   ptlist = bezier_path_point(path, seg, LIST, [N]);
+//   path = bezier_path_point(path, seg, RANGE, [N]);
 // Topics: Bezier Paths
 // See Also: bezier_points(), bezier_curve()
 // Description:
@@ -665,7 +665,7 @@ function bezier_path_closest_point(path, pt, N=3, max_err=0.01, seg=0, min_seg=u
 
 // Function: bezier_path_length()
 // Usage:
-//   plen = bezier_path_length(path, <N>, <max_deflect>);
+//   plen = bezier_path_length(path, [N], [max_deflect]);
 // Topics: Bezier Paths
 // See Also: bezier_points(), bezier_curve(), bezier_segment_length()
 // Description:
@@ -691,7 +691,7 @@ function bezier_path_length(path, N=3, max_deflect=0.001) =
 
 // Function: bezier_path()
 // Usage:
-//   path = bezier_path(bezier, <splinesteps>, <N>, <endpoint>)
+//   path = bezier_path(bezier, [splinesteps], [N], [endpoint])
 // Topics: Bezier Paths
 // See Also: bezier_points(), bezier_curve()
 // Description:
@@ -728,7 +728,7 @@ function bezier_path(bezier, splinesteps=16, N=3, endpoint=true) =
 
 // Function: path_to_bezier()
 // Usage:
-//   bezpath = path_to_bezier(path, <closed>, <tangents>, <uniform>, <size=>|<relsize=>);
+//   bezpath = path_to_bezier(path, [closed], [tangents], [uniform], [size=]|[relsize=]);
 // Topics: Bezier Paths, Rounding
 // See Also: path_tangents(), fillet_path()
 // Description:
@@ -810,7 +810,7 @@ function path_to_bezier(path, closed=false, tangents, uniform=false, size, relsi
 
 // Function: fillet_path()
 // Usage:
-//   bezpath = fillet_path(pts, fillet, <maxerr>);
+//   bezpath = fillet_path(pts, fillet, [maxerr]);
 // Topics: Bezier Paths, Rounding
 // See Also: path_to_bezier(), bezier_path()
 // Description:
@@ -839,7 +839,7 @@ function fillet_path(pts, fillet, maxerr=0.1) = concat(
 
 // Function: bezier_close_to_axis()
 // Usage:
-//   bezpath = bezier_close_to_axis(bezier, <axis>, <N>);
+//   bezpath = bezier_close_to_axis(bezier, [axis], [N]);
 // Topics: Bezier Paths
 // See Also: bezier_offset()
 // Description:
@@ -880,7 +880,7 @@ function bezier_close_to_axis(bezier, axis="X", N=3) =
 
 // Function: bezier_offset()
 // Usage:
-//   bezpath = bezier_offset(offset, bezier, <N>);
+//   bezpath = bezier_offset(offset, bezier, [N]);
 // Topics: Bezier Paths
 // See Also: bezier_close_to_axis()
 // Description:
@@ -919,7 +919,7 @@ function bezier_offset(offset, bezier, N=3) =
 
 // Module: bezier_polygon()
 // Usage:
-//   bezier_polygon(bezier, <splinesteps>, <N>);
+//   bezier_polygon(bezier, [splinesteps], [N]);
 // Topics: Bezier Paths
 // See Also: bezier_path()
 // Description:
@@ -951,7 +951,7 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 
 // Module: trace_bezier()
 // Usage:
-//   trace_bezier(bez, <size>, <N=>);
+//   trace_bezier(bez, [size], [N=]);
 // Topics: Bezier Paths, Debugging
 // See Also: bezier_path()
 // Description:
@@ -1105,7 +1105,7 @@ function is_patch(x) =
 
 // Function: bezier_patch()
 // Usage:
-//   vnf = bezier_patch(patch, <splinesteps>, <vnf=>, <style=>);
+//   vnf = bezier_patch(patch, [splinesteps], [vnf=], [style=]);
 // Topics: Bezier Patches
 // See Also: bezier_points(), bezier_curve(), bezier_path(), bezier_patch_points(), bezier_triangle_point()
 // Description:
@@ -1225,8 +1225,8 @@ function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF, style="default") =
 
 // Function: bezier_patch_degenerate()
 // Usage:
-//   vnf = bezier_patch_degenerate(patch, <splinesteps>, <reverse>);
-//   vnf_edges = bezier_patch_degenerate(patch, <splinesteps>, <reverse>, return_edges=true);
+//   vnf = bezier_patch_degenerate(patch, [splinesteps], [reverse]);
+//   vnf_edges = bezier_patch_degenerate(patch, [splinesteps], [reverse], return_edges=true);
 // Description:
 //   Returns a VNF for a degenerate rectangular bezier patch where some of the corners of the patch are
 //   equal.  If the resulting patch has no faces then returns an empty VNF.  Note that due to the degeneracy,
@@ -1442,7 +1442,7 @@ function _bezier_triangle(tri, splinesteps=16, vnf=EMPTY_VNF) =
 
 // Function: bezier_patch_flat()
 // Usage:
-//   patch = bezier_patch_flat(size, <N=>, <spin=>, <orient=>, <trans=>);
+//   patch = bezier_patch_flat(size, [N=], [spin=], [orient=], [trans=]);
 // Topics: Bezier Patches
 // See Also: bezier_patch_points()
 // Description:
@@ -1487,7 +1487,7 @@ function patch_reverse(patch) =
 
 // Function: bezier_surface()
 // Usage:
-//   vnf = bezier_surface(patches, <splinesteps>, <vnf=>, <style=>);
+//   vnf = bezier_surface(patches, [splinesteps], [vnf=], [style=]);
 // Topics: Bezier Patches
 // See Also: bezier_patch_points(), bezier_patch_flat()
 // Description:
@@ -1530,7 +1530,7 @@ function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="defaul
 
 // Module: trace_bezier_patches()
 // Usage:
-//   trace_bezier_patches(patches, <size=>, <splinesteps=>, <showcps=>, <showdots=>, <showpatch=>, <convexity=>, <style=>);
+//   trace_bezier_patches(patches, [size=], [splinesteps=], [showcps=], [showdots=], [showpatch=], [convexity=], [style=]);
 // Topics: Bezier Patches, Debugging
 // See Also: bezier_patch_points(), bezier_patch_flat(), bezier_surface()
 // Description:

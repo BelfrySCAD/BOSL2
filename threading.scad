@@ -11,7 +11,7 @@
 
 // Module: thread_helix()
 // Usage:
-//   thread_helix(d, pitch, thread_depth, <thread_angle>, <twist>, <profile=>, <left_handed=>, <higbee=>, <internal=>);
+//   thread_helix(d, pitch, thread_depth, [thread_angle], [twist], [profile=], [left_handed=], [higbee=], [internal=]);
 // Description:
 //   Creates a helical thread with optional end tapering.
 // Arguments:

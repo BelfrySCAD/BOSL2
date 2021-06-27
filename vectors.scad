@@ -11,7 +11,7 @@
 
 // Function: is_vector()
 // Usage:
-//   is_vector(v, <length>, ...);
+//   is_vector(v, [length], ...);
 // Description:
 //   Returns true if v is a list of finite numbers.
 // Arguments:
@@ -219,7 +219,7 @@ function vector_axis(v1,v2=undef,v3=undef) =
 
 // Function: vp_tree()
 // Usage:
-//    tree = vp_tree(points, <leafsize>)
+//    tree = vp_tree(points, [leafsize])
 // Description:
 //    Organizes n-dimensional data into a Vantage Point Tree, which can be
 //    efficiently searched for for nearest matches.  The Vantage Point Tree
@@ -380,7 +380,7 @@ function vp_nearest(points, tree, p, k) =
 
 // Function: search_radius()
 // Usage:
-//    index_list = search_radius(points, queries, r, <leafsize>);
+//    index_list = search_radius(points, queries, r, [leafsize]);
 // Description:
 //    Given a list of points and a compatible list of queries, for each query
 //    search the points list for all points whose distance from the query

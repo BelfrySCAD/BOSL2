@@ -16,7 +16,7 @@ $cubetruss_clip_thickness = 1.6;
 
 // Function: cubetruss_dist()
 // Usage:
-//   cubetruss_dist(cubes, gaps, <size>, <strut>);
+//   cubetruss_dist(cubes, gaps, [size], [strut]);
 // Description:
 //   Function to calculate the length of a cubetruss truss.
 // Arguments:
@@ -34,7 +34,7 @@ function cubetruss_dist(cubes=0, gaps=0, size, strut) =
 
 // Module: cubetruss_segment()
 // Usage:
-//   cubetruss_segment(<size>, <strut>, <bracing>);
+//   cubetruss_segment([size], [strut], [bracing]);
 // Description:
 //   Creates a single cubetruss cube segment.
 // Arguments:
@@ -103,7 +103,7 @@ module cubetruss_segment(size, strut, bracing, anchor=CENTER, spin=0, orient=UP)
 
 // Module: cubetruss_support()
 // Usage:
-//   cubetruss_support(<size>, <strut>);
+//   cubetruss_support([size], [strut]);
 // Description:
 //   Creates a single cubetruss support.
 // Arguments:
@@ -163,7 +163,7 @@ module cubetruss_support(size, strut, extents=1, anchor=CENTER, spin=0, orient=U
 
 // Module: cubetruss_clip()
 // Usage:
-//   cubetruss_clip(extents, <size>, <strut>, <clipthick>);
+//   cubetruss_clip(extents, [size], [strut], [clipthick]);
 // Description:
 //   Creates a pair of clips to add onto the end of a truss.
 // Arguments:
@@ -227,7 +227,7 @@ module cubetruss_clip(extents=1, size, strut, clipthick, anchor=CENTER, spin=0, 
 
 // Module: cubetruss_foot()
 // Usage:
-//   cubetruss_foot(w, <size>, <strut>, <clipthick>);
+//   cubetruss_foot(w, [size], [strut], [clipthick]);
 // Description:
 //   Creates a foot that can be clipped onto the bottom of a truss for support.
 // Arguments:
@@ -303,7 +303,7 @@ module cubetruss_foot(w=1, size, strut, clipthick, anchor=CENTER, spin=0, orient
 
 // Module: cubetruss_joiner()
 // Usage:
-//   cubetruss_joiner(<w>, <vert>, <size>, <strut>, <clipthick>);
+//   cubetruss_joiner([w], [vert], [size], [strut], [clipthick]);
 // Description:
 //   Creates a part to join two cubetruss trusses end-to-end.
 // Arguments:
@@ -370,7 +370,7 @@ module cubetruss_joiner(w=1, vert=true, size, strut, clipthick, anchor=CENTER, s
 
 // Module: cubetruss_uclip()
 // Usage:
-//   cubetruss_uclip(dual, <size>, <strut>, <clipthick>);
+//   cubetruss_uclip(dual, [size], [strut], [clipthick]);
 // Description:
 //   Creates a small clip that can snap around one or two adjacent struts.
 // Arguments:
@@ -415,7 +415,7 @@ module cubetruss_uclip(dual=true, size, strut, clipthick, anchor=CENTER, spin=0,
 
 // Module: cubetruss()
 // Usage:
-//   cubetruss(extents, <clips>, <bracing>, <size>, <strut>, <clipthick>);
+//   cubetruss(extents, [clips], [bracing], [size], [strut], [clipthick]);
 // Description:
 //   Creates a cubetruss truss, assembled out of one or more cubical segments.
 // Arguments:
@@ -485,7 +485,7 @@ module cubetruss(extents=6, clips=[], bracing, size, strut, clipthick, anchor=CE
 
 // Module: cubetruss_corner()
 // Usage:
-//   cubetruss_corner(h, extents, <bracing>, <size>, <strut>, <clipthick>);
+//   cubetruss_corner(h, extents, [bracing], [size], [strut], [clipthick]);
 // Description:
 //   Creates a corner cubetruss with extents jutting out in one or more directions.
 // Arguments:
