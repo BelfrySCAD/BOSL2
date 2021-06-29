@@ -191,8 +191,8 @@ test_mirror();
 
 
 module test_xflip() {
-    assert_equal(xflip(), [[-1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]);
-    assert_equal(xflip(p=[1,2,3]), [-1,2,3]);
+    assert_approx(xflip(), [[-1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]);
+    assert_approx(xflip(p=[1,2,3]), [-1,2,3]);
     // Verify that module at least doesn't crash.
     xflip() nil();
 }
@@ -200,8 +200,8 @@ test_xflip();
 
 
 module test_yflip() {
-    assert_equal(yflip(), [[1,0,0,0],[0,-1,0,0],[0,0,1,0],[0,0,0,1]]);
-    assert_equal(yflip(p=[1,2,3]), [1,-2,3]);
+    assert_approx(yflip(), [[1,0,0,0],[0,-1,0,0],[0,0,1,0],[0,0,0,1]]);
+    assert_approx(yflip(p=[1,2,3]), [1,-2,3]);
     // Verify that module at least doesn't crash.
     yflip() nil();
 }
@@ -209,12 +209,39 @@ test_yflip();
 
 
 module test_zflip() {
-    assert_equal(zflip(), [[1,0,0,0],[0,1,0,0],[0,0,-1,0],[0,0,0,1]]);
-    assert_equal(zflip(p=[1,2,3]), [1,2,-3]);
+    assert_approx(zflip(), [[1,0,0,0],[0,1,0,0],[0,0,-1,0],[0,0,0,1]]);
+    assert_approx(zflip(p=[1,2,3]), [1,2,-3]);
     // Verify that module at least doesn't crash.
     zflip() nil();
 }
 test_zflip();
+
+
+module test_xyflip() {
+    assert_approx(xyflip(), [[0,1,0,0],[1,0,0,0],[0,0,1,0],[0,0,0,1]]);
+    assert_approx(xyflip(p=[1,2,3]), [2,1,3]);
+    // Verify that module at least doesn't crash.
+    xyflip() nil();
+}
+test_xyflip();
+
+
+module test_xzflip() {
+    assert_approx(xzflip(), [[0,0,1,0],[0,1,0,0],[1,0,0,0],[0,0,0,1]]);
+    assert_approx(xzflip(p=[1,2,3]), [3,2,1]);
+    // Verify that module at least doesn't crash.
+    xzflip() nil();
+}
+test_xzflip();
+
+
+module test_yzflip() {
+    assert_approx(yzflip(), [[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]]);
+    assert_approx(yzflip(p=[1,2,3]), [1,3,2]);
+    // Verify that module at least doesn't crash.
+    yzflip() nil();
+}
+test_yzflip();
 
 
 module test_rot() {
@@ -237,32 +264,32 @@ module test_rot() {
     ];
     angs = [-180, -90, 0, 30, 45, 90];
     for (a = [-360*3:360:360*3]) {
-        assert_equal(rot(a), affine3d_identity(), info=str("rot(",a,") != identity"));
-        assert_equal(rot(a,p=pts2d), pts2d, info=str("rot(",a,",p=...), 2D"));
-        assert_equal(rot(a,p=pts3d), pts3d, info=str("rot(",a,",p=...), 3D"));
+        assert_approx(rot(a), affine3d_identity(), info=str("rot(",a,") != identity"));
+        assert_approx(rot(a,p=pts2d), pts2d, info=str("rot(",a,",p=...), 2D"));
+        assert_approx(rot(a,p=pts3d), pts3d, info=str("rot(",a,",p=...), 3D"));
     }
-    assert_equal(rot(90), [[0,-1,0,0],[1,0,0,0],[0,0,1,0],[0,0,0,1]]);
+    assert_approx(rot(90), [[0,-1,0,0],[1,0,0,0],[0,0,1,0],[0,0,0,1]]);
     for (a=angs) {
-        assert_equal(rot(a), affine3d_zrot(a), info=str("Z angle (only) = ",a));
-        assert_equal(rot([a,0,0]), affine3d_xrot(a), info=str("X angle = ",a));
-        assert_equal(rot([0,a,0]), affine3d_yrot(a), info=str("Y angle = ",a));
-        assert_equal(rot([0,0,a]), affine3d_zrot(a), info=str("Z angle = ",a));
+        assert_approx(rot(a), affine3d_zrot(a), info=str("Z angle (only) = ",a));
+        assert_approx(rot([a,0,0]), affine3d_xrot(a), info=str("X angle = ",a));
+        assert_approx(rot([0,a,0]), affine3d_yrot(a), info=str("Y angle = ",a));
+        assert_approx(rot([0,0,a]), affine3d_zrot(a), info=str("Z angle = ",a));
 
-        assert_equal(rot(a,p=pts2d), apply(affine3d_zrot(a),pts2d), info=str("Z angle (only) = ",a, ", p=..., 2D"));
-        assert_equal(rot([0,0,a],p=pts2d), apply(affine3d_zrot(a),pts2d), info=str("Z angle = ",a, ", p=..., 2D"));
+        assert_approx(rot(a,p=pts2d), apply(affine3d_zrot(a),pts2d), info=str("Z angle (only) = ",a, ", p=..., 2D"));
+        assert_approx(rot([0,0,a],p=pts2d), apply(affine3d_zrot(a),pts2d), info=str("Z angle = ",a, ", p=..., 2D"));
 
-        assert_equal(rot(a,p=pts3d), apply(affine3d_zrot(a),pts3d), info=str("Z angle (only) = ",a, ", p=..., 3D"));
-        assert_equal(rot([a,0,0],p=pts3d), apply(affine3d_xrot(a),pts3d), info=str("X angle = ",a, ", p=..., 3D"));
-        assert_equal(rot([0,a,0],p=pts3d), apply(affine3d_yrot(a),pts3d), info=str("Y angle = ",a, ", p=..., 3D"));
-        assert_equal(rot([0,0,a],p=pts3d), apply(affine3d_zrot(a),pts3d), info=str("Z angle = ",a, ", p=..., 3D"));
+        assert_approx(rot(a,p=pts3d), apply(affine3d_zrot(a),pts3d), info=str("Z angle (only) = ",a, ", p=..., 3D"));
+        assert_approx(rot([a,0,0],p=pts3d), apply(affine3d_xrot(a),pts3d), info=str("X angle = ",a, ", p=..., 3D"));
+        assert_approx(rot([0,a,0],p=pts3d), apply(affine3d_yrot(a),pts3d), info=str("Y angle = ",a, ", p=..., 3D"));
+        assert_approx(rot([0,0,a],p=pts3d), apply(affine3d_zrot(a),pts3d), info=str("Z angle = ",a, ", p=..., 3D"));
     }
     for (xa=angs, ya=angs, za=angs) {
-        assert_equal(
+        assert_approx(
             rot([xa,ya,za]),
             affine3d_zrot(za) * affine3d_yrot(ya) * affine3d_xrot(xa),
             info=str("[X,Y,Z] = ",[xa,ya,za])
         );
-        assert_equal(
+        assert_approx(
             rot([xa,ya,za],p=pts3d),
             apply(
                 affine3d_zrot(za) * affine3d_yrot(ya) * affine3d_xrot(xa),
@@ -273,12 +300,12 @@ module test_rot() {
     }
     for (vec1 = vecs3d) {
         for (ang = angs) {
-            assert_equal(
+            assert_approx(
                 rot(a=ang, v=vec1),
                 affine3d_rot_by_axis(vec1,ang),
                 info=str("a = ",ang,", v = ", vec1)
             );
-            assert_equal(
+            assert_approx(
                 rot(a=ang, v=vec1, p=pts3d),
                 apply(affine3d_rot_by_axis(vec1,ang), pts3d),
                 info=str("a = ",ang,", v = ", vec1, ", p=...")
@@ -287,7 +314,7 @@ module test_rot() {
     }
     for (vec1 = vecs2d) {
         for (vec2 = vecs2d) {
-            assert_equal(
+            assert_approx(
                 rot(from=vec1, to=vec2, p=pts2d, planar=true),
                 apply(affine2d_zrot(v_theta(vec2)-v_theta(vec1)), pts2d),
                 info=str(
@@ -302,7 +329,7 @@ module test_rot() {
     for (vec1 = vecs3d) {
         for (vec2 = vecs3d) {
             for (a = angs) {
-                assert_equal(
+                assert_approx(
                     rot(from=vec1, to=vec2, a=a),
                     affine3d_rot_from_to(vec1,vec2) * affine3d_rot_by_axis(vec1,a),
                     info=str(
@@ -311,7 +338,7 @@ module test_rot() {
                         "a = ", a
                     )
                 );
-                assert_equal(
+                assert_approx(
                     rot(from=vec1, to=vec2, a=a, p=pts3d),
                     apply(
                         affine3d_rot_from_to(vec1,vec2) * affine3d_rot_by_axis(vec1,a),
@@ -336,9 +363,9 @@ module test_xrot() {
     path = path3d(pentagon(d=100), 50);
     for (a=vals) {
         m = [[1,0,0,0],[0,cos(a),-sin(a),0],[0,sin(a),cos(a),0],[0,0,0,1]];
-        assert_equal(xrot(a), m);
-        assert_equal(xrot(a, p=path[0]), apply(m, path[0]));
-        assert_equal(xrot(a, p=path), apply(m, path));
+        assert_approx(xrot(a), m);
+        assert_approx(xrot(a, p=path[0]), apply(m, path[0]));
+        assert_approx(xrot(a, p=path), apply(m, path));
         // Verify that module at least doesn't crash.
         xrot(a) nil();
     }
@@ -351,9 +378,9 @@ module test_yrot() {
     path = path3d(pentagon(d=100), 50);
     for (a=vals) {
         m = [[cos(a),0,sin(a),0],[0,1,0,0],[-sin(a),0,cos(a),0],[0,0,0,1]];
-        assert_equal(yrot(a), m);
-        assert_equal(yrot(a, p=path[0]), apply(m, path[0]));
-        assert_equal(yrot(a, p=path), apply(m, path));
+        assert_approx(yrot(a), m);
+        assert_approx(yrot(a, p=path[0]), apply(m, path[0]));
+        assert_approx(yrot(a, p=path), apply(m, path));
         // Verify that module at least doesn't crash.
         yrot(a) nil();
     }
@@ -366,9 +393,9 @@ module test_zrot() {
     path = path3d(pentagon(d=100), 50);
     for (a=vals) {
         m = [[cos(a),-sin(a),0,0],[sin(a),cos(a),0,0],[0,0,1,0],[0,0,0,1]];
-        assert_equal(zrot(a), m);
-        assert_equal(zrot(a, p=path[0]), apply(m, path[0]));
-        assert_equal(zrot(a, p=path), apply(m, path));
+        assert_approx(zrot(a), m);
+        assert_approx(zrot(a, p=path[0]), apply(m, path[0]));
+        assert_approx(zrot(a, p=path), apply(m, path));
         // Verify that module at least doesn't crash.
         zrot(a) nil();
     }
@@ -376,10 +403,70 @@ module test_zrot() {
 test_zrot();
 
 
+module test_xyrot() {
+    vals = [-270,-135,-90,45,0,30,45,90,135,147,180];
+    path = path3d(pentagon(d=100), 50);
+    for (a=vals) {
+        m = affine3d_rot_by_axis(RIGHT+BACK,a);
+        assert_approx(xyrot(a), m);
+        assert_approx(xyrot(a, p=path[0]), apply(m, path[0]));
+        assert_approx(xyrot(a, p=path), apply(m, path));
+        // Verify that module at least doesn't crash.
+        xyrot(a) nil();
+    }
+}
+test_xyrot();
+
+
+module test_xzrot() {
+    vals = [-270,-135,-90,45,0,30,45,90,135,147,180];
+    path = path3d(pentagon(d=100), 50);
+    for (a=vals) {
+        m = affine3d_rot_by_axis(RIGHT+UP,a);
+        assert_approx(xzrot(a), m);
+        assert_approx(xzrot(a, p=path[0]), apply(m, path[0]));
+        assert_approx(xzrot(a, p=path), apply(m, path));
+        // Verify that module at least doesn't crash.
+        xzrot(a) nil();
+    }
+}
+test_xzrot();
+
+
+module test_yzrot() {
+    vals = [-270,-135,-90,45,0,30,45,90,135,147,180];
+    path = path3d(pentagon(d=100), 50);
+    for (a=vals) {
+        m = affine3d_rot_by_axis(BACK+UP,a);
+        assert_approx(yzrot(a), m);
+        assert_approx(yzrot(a, p=path[0]), apply(m, path[0]));
+        assert_approx(yzrot(a, p=path), apply(m, path));
+        // Verify that module at least doesn't crash.
+        yzrot(a) nil();
+    }
+}
+test_yzrot();
+
+
+module test_xyzrot() {
+    vals = [-270,-135,-90,45,0,30,45,90,135,147,180];
+    path = path3d(pentagon(d=100), 50);
+    for (a=vals) {
+        m = affine3d_rot_by_axis(RIGHT+BACK+UP,a);
+        assert_approx(xyzrot(a), m);
+        assert_approx(xyzrot(a, p=path[0]), apply(m, path[0]));
+        assert_approx(xyzrot(a, p=path), apply(m, path));
+        // Verify that module at least doesn't crash.
+        xyzrot(a) nil();
+    }
+}
+test_xyzrot();
+
+
 module test_skew() {
     m = affine3d_skew(sxy=2, sxz=3, syx=4, syz=5, szx=6, szy=7);
-    assert_equal(skew(sxy=2, sxz=3, syx=4, syz=5, szx=6, szy=7), m);
-    assert_equal(skew(sxy=2, sxz=3, syx=4, syz=5, szx=6, szy=7, p=[1,2,3]), apply(m,[1,2,3]));
+    assert_approx(skew(sxy=2, sxz=3, syx=4, syz=5, szx=6, szy=7), m);
+    assert_approx(skew(sxy=2, sxz=3, syx=4, syz=5, szx=6, szy=7, p=[1,2,3]), apply(m,[1,2,3]));
     // Verify that module at least doesn't crash.
     skew(undef,2,3,4,5,6,7) nil();
 }
