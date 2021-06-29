@@ -112,11 +112,13 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 // Usage: Cubical/Prismoidal Geometry
 //   geom = attach_geom(size=, [size2=], [shift=], ...);
 // Usage: Cylindrical Geometry
-//   geom = attach_geom(r=|d=, l=, [axis=], ...);
+//   geom = attach_geom(r=|d=, l=|h=, [axis=], ...);
 // Usage: Conical Geometry
 //   geom = attach_geom(r1|d1=, r2=|d2=, l=, [axis=], ...);
 // Usage: Spheroid/Ovoid Geometry
 //   geom = attach_geom(r=|d=, ...);
+// Usage: Extruded 2D Path/Polygon Geometry
+//   geom = attach_geom(path=, l=|h=, [extent=], ...);
 // Usage: VNF Geometry
 //   geom = attach_geom(vnf=, [extent=], ...);
 //
@@ -138,7 +140,7 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 //   r2 = Radius of the top of the conical volume.  Can be a scalar, or a list of sizes per axis.
 //   d1 = Diameter of the bottom of the conical volume.  Can be a scalar, a list of sizes per axis.
 //   d2 = Diameter of the top of the conical volume.  Can be a scalar, a list of sizes per axis.
-//   l = Length of the cylindrical/conical volume along axis.
+//   l/h = Length of the cylindrical, conical or extruded path volume along axis.
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   path = The path to generate a polygon from.
 //   extent = If true, calculate anchors by extents, rather than intersection.  Default: true.
@@ -205,6 +207,12 @@ function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, sp
 // Example(NORENDER): Arbitrary 2D Polygon Shape, Anchored by Intersection
 //   geom = attach_geom(two_d=true, path=path, extent=false);
 //
+// Example(NORENDER): Extruded Polygon Shape, Anchored by Extents
+//   geom = attach_geom(path=path, l=height);
+//
+// Example(NORENDER): Extruded Polygon Shape, Anchored by Intersection
+//   geom = attach_geom(path=path, l=length, extent=false);
+//
 function attach_geom(
     size, size2, shift,
     r,r1,r2, d,d1,d2, l,h,
@@ -249,9 +257,16 @@ function attach_geom(
         ["vnf_isect", vnf, cp, offset, anchors]
     ) : !is_undef(path)? (
         assert(is_path(path),2)
-        assert(two_d == true)
-        extent? ["path_extent", path, cp, offset, anchors] :
-        ["path_isect", path, cp, offset, anchors]
+        let( l = default(l, h) )
+        two_d==true
+          ? assert(is_undef(l))
+            extent==true
+              ? ["path_extent", path, cp, offset, anchors]
+              : ["path_isect",  path, cp, offset, anchors]
+          : assert(is_finite(l))
+            extent==true
+              ? ["xpath_extent", path, l, cp, offset, anchors]
+              : ["xpath_isect",  path, l, cp, offset, anchors]
     ) :
     let(
         r1 = get_radius(r1=r1,d1=d1,r=r,d=d,dflt=undef)
@@ -325,7 +340,7 @@ function attach_geom_size(geom) =
         approx(axis,UP)? [2*maxxr,2*maxyr,l] :
         approx(axis,RIGHT)? [l,2*maxyr,2*maxxr] :
         approx(axis,BACK)? [2*maxxr,l,2*maxyr] :
-        [2*maxxr, 2*maxyr,l]
+        [2*maxxr, 2*maxyr, l]
     ) : type == "spheroid"? ( //r
         let( r=geom[1] )
         is_num(r)? [2,2,2]*r : v_mul([2,2,2],point3d(r))
@@ -337,6 +352,11 @@ function attach_geom_size(geom) =
             mm = pointlist_bounds(geom[1][0]),
             delt = mm[1]-mm[0]
         ) delt
+    ) : type == "xpath_isect" || type == "xpath_extent"? ( //path, l
+        let(
+            mm = pointlist_bounds(geom[1]),
+            delt = mm[1]-mm[0]
+        ) [delt.x, delt.y, geom[2]]
     ) : type == "rect"? ( //size, size2
         let(
             size=geom[1], size2=geom[2], shift=geom[3],
@@ -633,6 +653,46 @@ function find_anchor(anchor, geom) =
             avgy = (miny+maxy)/2,
             pos = point2d(cp) + rot(from=RIGHT, to=anchor, p=[maxx,avgy])
         ) [anchor, pos, anchor, 0]
+    ) : type == "xpath_isect"? ( //path
+        let(
+            path = move(-point2d(cp), p=geom[1]),
+            l = geom[2],
+            anchor = point3d(anchor),
+            xyanch = point2d(anchor),
+            isects = [
+                for (t=triplet(path,true)) let(
+                    seg1 = [t[0],t[1]],
+                    seg2 = [t[1],t[2]],
+                    isect = ray_segment_intersection([[0,0],xyanch], seg1),
+                    n = is_undef(isect)? [0,1] :
+                        !approx(isect, t[1])? line_normal(seg1) :
+                        unit((line_normal(seg1)+line_normal(seg2))/2,[0,1]),
+                    n2 = vector_angle(xyanch,n)>90? -n : n
+                )
+                if(!is_undef(isect) && !approx(isect,t[0]))
+                [norm(isect), isect, n2]
+            ],
+            maxidx = max_index(subindex(isects,0)),
+            isect = isects[maxidx],
+            pos = point3d(cp) + point3d(isect[1]) + unit([0,0,anchor.z],CENTER)*l/2,
+            xyvec = unit(isect[2],[0,1]),
+            vec = unit((point3d(xyvec)+UP)/2,UP),
+            oang = approx(xyvec, [0,0])? 0 : atan2(xyvec.y, xyvec.x) + 90
+        ) [anchor, pos, vec, oang]
+    ) : type == "xpath_extent"? ( //path
+        let(
+            path = geom[1], l = geom[2],
+            anchor = point3d(anchor),
+            xyanch = point2d(anchor),
+            rpath = rot(from=xyanch, to=RIGHT, p=move(point2d(-cp), p=path)),
+            maxx = max(subindex(rpath,0)),
+            idxs = [for (i = idx(rpath)) if (approx(rpath[i].x, maxx)) i],
+            ys = [for (i=idxs) rpath[i].y],
+            avgy = (min(ys)+max(ys))/2,
+            xypos = point2d(cp) + rot(from=RIGHT, to=xyanch, p=[maxx,avgy]),
+            pos = point3d(xypos) + unit([0,0,anchor.z],CENTER)*l/2,
+            vec = unit((point3d(xyanch)+UP)/2,UP)
+        ) [anchor, pos, vec, oang]
     ) :
     assert(false, "Unknown attachment geometry type.");
 
@@ -677,6 +737,9 @@ function attachment_is_shown(tags) =
 // Usage: Spheroid/Ovoid Geometry
 //   mat = reorient(anchor, spin, [orient], r|d=, ...);
 //   pts = reorient(anchor, spin, [orient], r|d=, p=, ...);
+// Usage: Extruded Path/Polygon Geometry
+//   mat = reorient(anchor, spin, [orient], path=, l=|h=, [extent=], ...);
+//   pts = reorient(anchor, spin, [orient], path=, l=|h=, [extent=], p=, ...);
 // Usage: VNF Geometry
 //   mat = reorient(anchor, spin, [orient], vnf, [extent], ...);
 //   pts = reorient(anchor, spin, [orient], vnf, [extent], p=, ...);
@@ -722,7 +785,7 @@ function attachment_is_shown(tags) =
 //   r2 = Radius of the top of the conical volume.  Can be a scalar, or a list of sizes per axis.
 //   d1 = Diameter of the bottom of the conical volume.  Can be a scalar, a list of sizes per axis.
 //   d2 = Diameter of the top of the conical volume.  Can be a scalar, a list of sizes per axis.
-//   l = Length of the cylindrical/conical volume along axis.
+//   l/h = Length of the cylindrical, conical, or extruded path volume along axis.
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   path = The path to generate a polygon from.
 //   extent = If true, calculate anchors by extents, rather than intersection.  Default: false.
@@ -785,6 +848,8 @@ function reorient(
 //   attachable(anchor, spin, [orient], r1=|d1=, r2=|d2=, l=, [axis=], ...) {...}
 // Usage: Spheroid/Ovoid Geometry
 //   attachable(anchor, spin, [orient], r=|d=, ...) {...}
+// Usage: Extruded Path/Polygon Geometry
+//   attachable(anchor, spin, path=, l=|h=, [extent=], ...) {...}
 // Usage: VNF Geometry
 //   attachable(anchor, spin, [orient], vnf=, [extent=], ...) {...}
 //
@@ -834,10 +899,10 @@ function reorient(
 //   r2 = Radius of the top of the conical volume.  Can be a scalar, or a list of sizes per axis.
 //   d1 = Diameter of the bottom of the conical volume.  Can be a scalar, a list of sizes per axis.
 //   d2 = Diameter of the top of the conical volume.  Can be a scalar, a list of sizes per axis.
-//   l = Length of the cylindrical/conical volume along axis.
+//   l/h = Length of the cylindrical, conical, or extruded path volume along axis.
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   path = The path to generate a polygon from.
-//   extent = If true, calculate anchors by extents, rather than intersection.  Default: false.
+//   extent = If true, calculate anchors by extents, rather than intersection, for VNFs and paths.  Default: true.
 //   cp = If given, specifies the centerpoint of the volume.  Default: `[0,0,0]`
 //   offset = If given, offsets the perimeter of the volume around the centerpoint.
 //   anchors = If given as a list of anchor points, allows named anchor points.
@@ -910,14 +975,34 @@ function reorient(
 //       children();
 //   }
 //
-// Example(NORENDER): Arbitrary VNF Shape
+// Example(NORENDER): Extruded Polygon Shape, by Extents
+//   attachable(anchor, spin, orient, path=path, l=length) {
+//       linear_extrude(height=length, center=true)
+//           polygon(path);
+//       children();
+//   }
+//
+// Example(NORENDER): Extruded Polygon Shape, by Intersection
+//   attachable(anchor, spin, orient, path=path, l=length, extent=false) {
+//       linear_extrude(height=length, center=true)
+//           polygon(path);
+//       children();
+//   }
+//
+// Example(NORENDER): Arbitrary VNF Shape, by Extents
 //   attachable(anchor, spin, orient, vnf=vnf) {
 //       vnf_polyhedron(vnf);
 //       children();
 //   }
 //
+// Example(NORENDER): Arbitrary VNF Shape, by Intersection
+//   attachable(anchor, spin, orient, vnf=vnf, extent=false) {
+//       vnf_polyhedron(vnf);
+//       children();
+//   }
+//
 // Example(NORENDER): 2D Rectangular Shape
-//   attachable(anchor, spin, orient, size=size) {
+//   attachable(anchor, spin, orient, two_d=true, size=size) {
 //       square(size, center=true);
 //       children();
 //   }
@@ -925,6 +1010,7 @@ function reorient(
 // Example(NORENDER): 2D Trapezoidal Shape
 //   attachable(
 //       anchor, spin, orient,
+//       two_d=true,
 //       size=[x1,y],
 //       size2=x2,
 //       shift=shift
@@ -939,8 +1025,14 @@ function reorient(
 //       children();
 //   }
 //
-// Example(NORENDER): Arbitrary 2D Polygon Shape
-//   attachable(anchor, spin, orient, path=path) {
+// Example(NORENDER): Arbitrary 2D Polygon Shape, by Extents
+//   attachable(anchor, spin, orient, two_d=true, path=path) {
+//       polygon(path);
+//       children();
+//   }
+//
+// Example(NORENDER): Arbitrary 2D Polygon Shape, by Intersection
+//   attachable(anchor, spin, orient, two_d=true, path=path, extent=false) {
 //       polygon(path);
 //       children();
 //   }
