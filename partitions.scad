@@ -137,6 +137,7 @@ module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anc
         linear_extrude(height=h, center=true, convexity=10) {
             stroke(path, width=max(0.1, $slop*2));
         }
+        children();
     }
 }
 
