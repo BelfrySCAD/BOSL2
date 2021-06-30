@@ -147,9 +147,8 @@ module debug_polygon(points, paths, convexity=2, size=1)
 //   }
 module debug_vertices(vertices, size=1, disabled=false) {
     if (!disabled) {
-        echo(vertices=vertices);
         color("blue") {
-            dups = search_radius(vertices, vertices, 1e-9);
+            dups = vector_search(vertices, EPSILON, vertices);
             for (ind = dups){
                 numstr = str_join([for(i=ind) str(i)],",");
                 v = vertices[ind[0]];
@@ -579,6 +578,98 @@ module echo_matrix(M,description,sig=4,eps=1e-9)
 {
   dummy = echo_matrix(M,description,sig,eps);
 }
+
+// Function: random_polygon()
+// Usage:
+//    points = random_polygon(n, size, [seed]);
+// See Also: random_points(), gaussian_random_points(), spherical_random_points()
+// Topics: Random, Polygon
+// Description:
+//    Generate the `n` vertices of a random counter-clockwise simple 2d polygon 
+//    inside a circle centered at the origin with radius `size`.
+// Arguments:
+//    n = number of vertices of the polygon. Default: 3
+//    size = the radius of a circle centered at the origin containing the polygon. Default: 1
+//    seed = an optional seed for the random generation.
+function random_polygon(n=3,size=1, seed) =
+    assert( is_int(n) && n>2, "Improper number of polygon vertices.")
+    assert( is_num(size) && size>0, "Improper size.")
+    let( 
+        seed = is_undef(seed) ? rands(0,1,1)[0] : seed,
+        cumm = cumsum(rands(0.1,10,n+1,seed)),
+        angs = 360*cumm/cumm[n-1],
+        rads = rands(.01,size,n,seed+cumm[0])
+      )
+    [for(i=count(n)) rads[i]*[cos(angs[i]), sin(angs[i])] ];
+
+
+// Function: random_points()
+// Usage:
+//    points = random_points(n, dim, scale, [seed]);
+// See Also: random_polygon(), gaussian_random_points(), spherical_random_points()
+// Topics: Random, Points
+// Description:
+//    Generate `n` random points of dimension `dim` with coordinates absolute value less than `scale`.
+//    The `scale` may be a number or a vector with dimension `dim`.
+// Arguments:
+//    n = number of points to generate. 
+//    dim = dimension of the points. Default: 2
+//    scale = the scale of the point coordinates. Default: 1
+//    seed = an optional seed for the random generation.
+function random_points(n, dim=2, scale=1, seed) =
+    assert( is_int(n) && n>=0, "The number of points should be a non-negative integer.")
+    assert( is_int(dim) && dim>=1, "The point dimensions should be an integer greater than 1.")
+    assert( is_finite(scale) || is_vector(scale,dim), "The scale should be a number or a vector with length equal to d.")
+    let( 
+        rnds =   is_undef(seed) 
+                ? rands(-1,1,n*dim)
+                : rands(-1,1,n*dim, seed) )
+    is_num(scale) 
+    ? scale*[for(i=[0:1:n-1]) [for(j=[0:dim-1]) rnds[i*dim+j] ] ]
+    : [for(i=[0:1:n-1]) [for(j=[0:dim-1]) scale[j]*rnds[i*dim+j] ] ];
+
+
+// Function: gaussian_random_points()
+// Usage:
+//    points = gaussian_random_points(n, dim, mean, stddev, [seed]);
+// See Also: random_polygon(), random_points(), spherical_random_points()
+// Topics: Random, Points
+// Description:
+//    Generate `n` random points of dimension `dim` with coordinates absolute value less than `scale`.
+//    The gaussian distribution of all the coordinates of the points will have a mean `mean` and 
+//    standard deviation `stddev` 
+// Arguments:
+//    n = number of points to generate. 
+//    dim = dimension of the points. Default: 2
+//    mean = the gaussian mean of the point coordinates. Default: 0
+//    stddev = the gaussian standard deviation of the point coordinates. Default: 0
+//    seed = an optional seed for the random generation.
+function gaussian_random_points(n, dim=2, mean=0, stddev=1, seed) =
+    assert( is_int(n) && n>=0, "The number of points should be a non-negative integer.")
+    assert( is_int(dim) && dim>=1, "The point dimensions should be an integer greater than 1.")
+    let( rnds = gaussian_rands(mean, stddev, n*dim, seed=seed) )
+    [for(i=[0:1:n-1]) [for(j=[0:dim-1]) rnds[i*dim+j] ] ];
+
+
+// Function: spherical_random_points()
+// Usage:
+//    points = spherical_random_points(n, radius, [seed]);
+// See Also: random_polygon(), random_points(), gaussian_random_points()
+// Topics: Random, Points
+// Description:
+//    Generate `n` 3D random points lying on a sphere centered at the origin with radius equal to `radius`.
+// Arguments:
+//    n = number of points to generate. 
+//    radius = the sphere radius. Default: 1
+//    seed = an optional seed for the random generation.
+function spherical_random_points(n, radius=1, seed) =
+    assert( is_int(n) && n>=1, "The number of points should be an integer greater than zero.")
+    assert( is_num(radius) && radius>0, "The radius should be a non-negative number.")
+    let( rnds = is_undef(seed) 
+                ? rands(-1,1,n*2)
+                : rands(-1,1,n*2, seed) )
+    [for(i=[0:1:n-1]) spherical_to_xyz(radius, theta=180*rnds[2*i], phi=180*rnds[2*i+1])  ];
+
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
