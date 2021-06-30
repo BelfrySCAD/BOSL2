@@ -166,16 +166,19 @@ function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
                 let( faces = vnfs[i][1] )
                 for (face = faces) 
                     if ( len(face) >= 3 )
-                        [ for (j = face) offs[i] + j ]
+                        [ for (j = face) 
+                            assert( j>=0 && j<len(vnfs[i][0]), 
+                                    str("VNF number ", i, " has a face indexing an nonexistent vertex") )
+                            offs[i] + j ]
             ]
     )
     ! cleanup ? [verts, faces] :
     let(
-        dedup  = search_radius(verts,verts,r=eps),               // collect vertex duplicates
+        dedup  = vector_search(verts,eps,verts),                 // collect vertex duplicates
         map    = [for(i=idx(verts)) min(dedup[i]) ],             // remap duplic vertices
         offset = cumsum([for(i=idx(verts)) map[i]==i ? 0 : 1 ]), // remaping face vertex offsets 
-        map2   = list(idx(verts))-offset,         // map old vertex indices to new vertex indices
-        nverts = [for(i=idx(verts)) if(map[i]==i) verts[i] ],
+        map2   = list(idx(verts))-offset,                        // map old vertex indices to new indices
+        nverts = [for(i=idx(verts)) if(map[i]==i) verts[i] ],    // eliminates all unreferenced vertices
         nfaces = 
             [ for(face=faces) 
                 let(
@@ -594,7 +597,7 @@ function _triangulate_planar_convex_polygons(polys) =
 
 // Function: vnf_bend()
 // Usage:
-//   bentvnf = vnf_bend(vnf);
+//   bentvnf = vnf_bend(vnf,r,d,[axis]);
 // Description:
 //   Given a VNF that is entirely above, or entirely below the Z=0 plane, bends the VNF around the
 //   Y axis, splitting up faces as necessary.  Returns the bent VNF.  Will error out if the VNF
