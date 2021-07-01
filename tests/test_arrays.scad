@@ -589,6 +589,15 @@ module test_array_group() {
 test_array_group();
 
 
+module test_group_data() {
+    assert_equal(group_data([1,2,0], ["A","B","C"]), [["C"],["A"],["B"]]);
+    assert_equal(group_data([1,3,0], ["A","B","C"]), [["C"],["A"],[],["B"]]);
+    assert_equal(group_data([5,3,1], ["A","B","C"]), [[],["C"],[],["B"],[],["A"]]);
+    assert_equal(group_data([1,3,1], ["A","B","C"]), [[],["A","C"],[],["B"]]);
+}
+test_group_data();
+
+
 module test_flatten() {
     assert(flatten([[1,2,3], [4,5,[6,7,8]]]) == [1,2,3,4,5,[6,7,8]]);
     assert(flatten([]) == []);
