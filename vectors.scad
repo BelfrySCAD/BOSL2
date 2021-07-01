@@ -222,7 +222,7 @@ function vector_axis(v1,v2=undef,v3=undef) =
 // Function: vector_search()
 // Usage:
 //   indices = vector_search(query, r, target);
-// See Also: vector_tree_search(), vector_nearest()
+// See Also: vector_search_tree(), vector_nearest()
 // Topics: Search, Points, Closest
 // Description:
 //   Given a list of query points `query` and a `target` to search, 
