@@ -1816,16 +1816,22 @@ function array_group(v, cnt=2, dflt=0) =
 // Example:
 //   groups = group_data([1,3,1], ["A","B","C"]);  // Returns [[],["A","C"],[],["B"]]
 function group_data(groups, values) =
-    assert(all_integer(groups) && all_nonnegative(groups));
-    assert(is_list(values));
+    assert(all_integer(groups) && all_nonnegative(groups))
+    assert(is_list(values))
     assert(len(groups)==len(values),
            "The groups and values arguments should be lists of matching length.")
     let( sorted = _group_sort_by_index(zip(groups,values),0) )
     // retrieve values and insert []
-    [for(i=idx(sorted))
-       let( a  = i==0? 0 : sorted[i-1][0][0]+1,
-            g0 = sorted[i] )
-       each [ for(j=[a:1:g0[0][0]-1]) [], [for(g1=g0) g1[1]] ]
+    [
+        for (i = idx(sorted))
+        let(
+            a  = i==0? 0 : sorted[i-1][0][0]+1,
+            g0 = sorted[i]
+        )
+        each [
+            for (j = [a:1:g0[0][0]-1]) [],
+            [for (g1 = g0) g1[1]]
+        ]
     ];
 
 
