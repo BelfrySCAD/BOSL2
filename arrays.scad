@@ -1796,6 +1796,45 @@ function array_group(v, cnt=2, dflt=0) =
     [for (i = [0:cnt:len(v)-1]) [for (j = [0:1:cnt-1]) default(v[i+j], dflt)]];
 
 
+// Function: group_data()
+// Usage:
+//   groupings = group_data(groups, values);
+// Topics: Array Handling
+// See Also: zip(), zip_long(), array_group()
+// Description:
+//   Given a list of integer group numbers, and an equal-length list of values,
+//   returns a list of groups with the values sorted into the corresponding groups.
+//   Ie: if you have a groups index list of [2,3,2] and values of ["A","B","C"], then
+//   the values "A" and "C" will be put in group 2, and "B" will be in group 3.
+//   Groups that have no values grouped into them will be an empty list.  So the
+//   above would return [[], [], ["A","C"], ["B"]]
+// Arguments:
+//   groups = A list of integer group index numbers.
+//   values = A list of values to sort into groups.
+// Example:
+//   groups = group_data([1,2,0], ["A","B","C"]);  // Returns [["B"],["C"],["A"]]
+// Example:
+//   groups = group_data([1,3,1], ["A","B","C"]);  // Returns [[],["A","C"],[],["B"]]
+function group_data(groups, values) =
+    assert(all_integer(groups) && all_nonnegative(groups))
+    assert(is_list(values))
+    assert(len(groups)==len(values),
+           "The groups and values arguments should be lists of matching length.")
+    let( sorted = _group_sort_by_index(zip(groups,values),0) )
+    // retrieve values and insert []
+    [
+        for (i = idx(sorted))
+        let(
+            a  = i==0? 0 : sorted[i-1][0][0]+1,
+            g0 = sorted[i]
+        )
+        each [
+            for (j = [a:1:g0[0][0]-1]) [],
+            [for (g1 = g0) g1[1]]
+        ]
+    ];
+
+
 // Function: flatten()
 // Usage:
 //   list = flatten(l);
