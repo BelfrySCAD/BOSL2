@@ -734,7 +734,7 @@ function str_pad(str,length,char=" ",left=false) =
 //   can be any string.  
 function str_replace_char(str,char,replace) =
    assert(is_str(str))
-   assert(is_str(char) && len(char)==1, "Search pattern 'char' must be a a single character string")
+   assert(is_str(char) && len(char)==1, "Search pattern 'char' must be a single character string")
    assert(is_str(replace))
    str_join([for(c=str) c==char ? replace : c]);
 
