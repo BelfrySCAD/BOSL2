@@ -1,5 +1,6 @@
 include <../std.scad>
 
+seed = floor(rands(0,10000,1)[0]);
 
 module test_is_vector() {
     assert(is_vector([1,2,3]) == true);
@@ -148,6 +149,46 @@ module test_vector_axis() {
 }
 test_vector_axis();
 
+module test_vector_search(){
+    points = [for(i=[0:9], j=[0:9], k=[1:5]) [i,j,k] ];
+    ind = vector_search([5,5,1],1,points);
+    assert(ind== [225, 270, 275, 276, 280, 325]);
+    assert([for(i=ind) if(norm(points[i]-[5,5,1])>1) i ]==[]);
+    assert([for(i=idx(points)) if(norm(points[i]-[5,5,1])<=1) i]==sort(ind));
+}
+test_vector_search();
+
+module test_vector_search_tree(){
+    points1 = [ [0,1,2], [1,2,3], [2,3,4] ];
+    tree1 = vector_search_tree(points1);
+    assert(tree1 == [ points1, [[0,1,2]] ]);
+    points2 = [for(i=[0:9], j=[0:9], k=[1:5]) [i,j,k] ];
+    tree2 = vector_search_tree(points2);
+    assert(tree2[0]==points2);
+    ind = vector_search([5,5,1],1,tree2);
+    assert(ind== [225, 270, 275, 276, 280, 325]);
+    rpts = array_group(rands(0,10,50*3,seed=seed),3);
+    rtree = vector_search_tree(rpts);
+    radius = 3;
+    found0 = vector_search([0,0,0],radius,rpts);
+    found1 = vector_search([0,0,0],radius,rtree);
+    found2 = [for(i=idx(rpts)) if(norm(rpts[i])<=radius) i];
+    assert(sort(found0)==sort(found1), str("Seed = ",seed));
+    assert(sort(found1)==sort(found2), str("Seed = ",seed));
+}
+test_vector_search_tree();
+
+module test_vector_nearest(){
+    points = [for(i=[0:9], j=[0:9], k=[1:5]) [i,j,k] ];
+    ind1 = vector_nearest([5,5,1], 4, points);
+    assert(ind1==[275, 225, 270, 276]);
+    pts = array_group(rands(0,10,50*3,seed=seed),3);
+    tree = vector_search_tree(pts);
+    nearest = vector_nearest([0,0,0], 4, tree);
+    closest = select(sortidx([for(p=pts) norm(p)]), [0:3]);
+    assert(closest==nearest,str("Seed = ",seed));
+}
+test_vector_nearest();
 
 cube();
 

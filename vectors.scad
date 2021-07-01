@@ -215,195 +215,243 @@ function vector_axis(v1,v2=undef,v3=undef) =
             ) unit(cross(w1,w3));
 
 
+
 // Section: Vector Searching
 
-// Function: vp_tree()
+
+// Function: vector_search()
 // Usage:
-//    tree = vp_tree(points, [leafsize])
+//   indices = vector_search(query, r, target);
+// See Also: vector_tree_search(), vector_nearest()
+// Topics: Search, Points, Closest
 // Description:
-//    Organizes n-dimensional data into a Vantage Point Tree, which can be
-//    efficiently searched for for nearest matches.  The Vantage Point Tree
-//    is an effort to generalize binary search to n dimensions.  Constructing the
-//    tree should be O(n log n) and searches should be O(log n), though real life
-//    performance depends on how the data is distributed, and it will deteriorate
-//    for high data dimensions.  This data structure is useful when you will be
-//    performing many searches of the same data, so that the cost of constructing
-//    the tree is justified.  
-//    .
-//    The vantage point tree at a given level chooses vp, the
-//    "vantage point", and a radius, R, and divides the data based
-//    on distance to vp.  Points closer than R go in on branch
-//    of the tree and points farther than R go in the other branch.
-//    .
-//    The tree has the form [vp, R, inside, outside], where vp is
-//    the vantage point index, R is the radius, inside is a
-//    recursively computed tree for the inside points (distance less than
-//    or equal to R from the vantage point), and outside
-//    is a tree for the outside points (distance greater than R from the
-//    vantage point).
-//    .
-//    If the number of points is less than or equal to leafsize then
-//    vp_tree instead returns the list [ind] where ind is a list of
-//    the indices of the points.  This means the list has the form
-//    [[i0, i1, i2,...]], so tree[0] is a list of indices.  You can
-//    tell that a node is a leaf node by checking if tree[0] is a list.
-//    The leafsize parameter determines how many points can be
-//    store in the leaf nodes.  The default value of 25 was found
-//    emperically to be a reasonable option for 3d data searched with vp_search().
-//    .
-//    Vantage point tree is described here: http://web.cs.iastate.edu/~honavar/nndatastructures.pdf
+//   Given a list of query points `query` and a `target` to search, 
+//   finds the points in `target` that match each query point. A match holds when the 
+//   distance between a point in `target` and a query point is less than or equal to `r`. 
+//   The returned list will have a list for each query point containing, in arbitrary 
+//   order, the indices of all points that match that query point. 
+//   The `target` may be a simple list of points or a search tree.
+//   When `target` is a large list of points, a search tree is constructed to 
+//   speed up the search with an order around O(log n) per query point. 
+//   For small point lists, a direct search is done dispensing a tree construction. 
+//   Alternatively, `target` may be a search tree built with `vector_tree_search()`.
+//   In that case, that tree is parsed looking for matches.
 // Arguments:
-//    points = list of points to store in the tree
-//    leafsize = maximum number of points to store in the tree's leaf nodes.  Default: 25
-function vp_tree(points, leafsize=25) =
-  assert(is_matrix(points),"points must be a consistent list of data points")
-  _vp_tree(points, count(len(points)), leafsize);
-
-function _vp_tree(ptlist, ind, leafsize) =
-  len(ind)<=leafsize ? [ind] :
-  let(
-       center = mean(select(ptlist,ind)),
-       cdistances = [for(i=ind) norm(ptlist[i]-center)],
-       vpind = ind[max_index(cdistances)],
-       vp = ptlist[vpind],
-       vp_dist = [for(i=ind) norm(vp-ptlist[i])],
-       r = ninther(vp_dist),
-       inside = [for(i=idx(ind)) if (vp_dist[i]<=r && ind[i]!=vpind) ind[i]],
-       outside = [for(i=idx(ind)) if (vp_dist[i]>r) ind[i]]
-   )
-   [vpind, r, _vp_tree(ptlist,inside,leafsize),_vp_tree(ptlist,outside,leafsize)];
-
-
-// Function: vp_search()
-// Usage:
-//   indices = vp_search(points, tree, p, r);
-// Description:
-//   Search a vantage point tree for all points whose distance from p
-//   is less than or equal to r.  Returns a list of indices of the points it finds
-//   in arbitrary order.  The input points is a list of points to search and tree is the
-//   vantage point tree computed from that point list.  The search should be
-//   around O(log n).  
-// Arguments:
-//   points = points indexed by the vantage point tree
-//   tree = vantage point tree from vp_tree
-//   p = point to search for
-//   r = search radius
+//   query = list of points to find matches for.
+//   r = the search radius.
+//   target = list of the points to search for matches or a search tree.
 // Example: A set of four queries to find points within 1 unit of the query.  The circles show the search region and all have radius 1.  
 //   $fn=32;
 //   k = 2000;
 //   points = array_group(rands(0,10,k*2,seed=13333),2);
-//   vp = vp_tree(points);
 //   queries = [for(i=[3,7],j=[3,7]) [i,j]];
-//   search_ind = [for(q=queries) vp_search(points, vp, q, 1)];
+//   search_ind = vector_search(queries, points, 1);
 //   move_copies(points) circle(r=.08);
 //   for(i=idx(queries)){
-//     color("blue")stroke(move(queries[i],circle(r=1)), closed=true, width=.08);
-//     color("red")move_copies(select(points, search_ind[i])) circle(r=.08);
+//       color("blue")stroke(move(queries[i],circle(r=1)), closed=true, width=.08);
+//       color("red") move_copies(select(points, search_ind[i])) circle(r=.08);
 //   }
-function _vp_search(points, tree, p, r) =
-    is_list(tree[0]) ? [for(i=tree[0]) if (norm(points[i]-p)<=r) i]
-    :
+// Example: when a series of search with different radius are needed, its is faster to pre-compute the tree
+//   $fn=32;
+//   k = 2000;
+//   points = array_group(rands(0,10,k*2),2,seed=13333);
+//   queries1 = [for(i=[3,7]) [i,i]];
+//   queries2 = [for(i=[3,7]) [10-i,i]];
+//   r1 = 1;
+//   r2 = .7;
+//   search_tree = vector_search_tree(points);
+//   search_1 = vector_search(queries1, r1, search_tree);
+//   search_2 = vector_search(queries2, r2, search_tree);
+//   move_copies(points) circle(r=.08);
+//   for(i=idx(queries1)){
+//       color("blue")stroke(move(queries1[i],circle(r=r1)), closed=true, width=.08);
+//       color("red") move_copies(select(points, search_1[i])) circle(r=.08);
+//   }
+//   for(i=idx(queries2)){
+//       color("green")stroke(move(queries2[i],circle(r=r2)), closed=true, width=.08);
+//       color("red") move_copies(select(points, search_2[i])) circle(r=.08);
+//   }
+function vector_search(query, r, target) =
+    assert( is_finite(r) && r>=0, 
+            "The query radius should be a positive number." )
     let(
-        d = norm(p-points[tree[0]])  // dist to vantage point
+        tgpts  = is_matrix(target),   // target is a point list
+        tgtree = is_list(target)      // target is a tree
+                 && (len(target)==2)
+                 && is_matrix(target[0])
+                 && is_list(target[1])
+                 && (len(target[1])==4 || (len(target[1])==1 && is_list(target[1][0])) )
     )
-    [
-      if (d <= r) tree[0],
-      if (d-r <= tree[1]) each _vp_search(points, tree[2], p, r),
-      if (d+r > tree[1]) each _vp_search(points, tree[3], p, r)
-    ];
+    assert( tgpts || tgtree, 
+            "The target should be a list of points or a search tree compatible with the query." )
+    let( 
+        dim    = tgpts ? len(target[0]) : len(target[0][0]),
+        simple = is_vector(query, dim),
+        mult   = !simple && is_matrix(query,undef,dim)
+    )
+    assert( simple || mult, 
+            "The query points should be a list of points compatible with the target point list.")
+    tgpts 
+    ?   len(target)<200
+        ?   simple ? [for(i=idx(target)) if(norm(target[i]-query)<r) i ] :
+            [for(q=query) [for(i=idx(target)) if(norm(target[i]-q)<r) i ] ]
+        :   let( tree = _bt_tree(target, count(len(target)), leafsize=25) )
+            simple ? _bt_search(query, r, target, tree) :
+            [for(q=query) _bt_search(q, r, target, tree)]
+    :   simple ?  _bt_search(query, r, target[0], target[1]) :
+        [for(q=query) _bt_search(q, r, target[0], target[1])];
 
-function vp_search(points, tree, p, r) =
-    assert(is_list(tree) && (len(tree)==4 || (len(tree)==1 && is_list(tree[0]))), "Vantage point tree not valid")
-    assert(is_matrix(points), "Parameter points is not a consistent point list")
-    assert(is_vector(p,len(points[0])), "Query must be a vector whose length matches the point list")
-    assert(all_positive(r),"Radius r must be a positive number")
-    _vp_search(points, tree, p, r);
-  
 
-// Function: vp_nearest()
+//Ball tree search
+function _bt_search(query, r, points, tree) = //echo(tree)
+    assert( is_list(tree) 
+            && (   ( len(tree)==1 && is_list(tree[0]) )
+                || ( len(tree)==4 && is_num(tree[0]) && is_num(tree[1]) ) ), 
+            "The tree is invalid.")
+    len(tree)==1 
+    ?   assert( tree[0]==[] || is_vector(tree[0]), "The tree is invalid." )
+        [for(i=tree[0]) if(norm(points[i]-query)<=r) i ]
+    :   norm(query-points[tree[0]]) > r+tree[1] ? [] :
+        concat( 
+            [ if(norm(query-points[tree[0]])<=r) tree[0] ],
+            _bt_search(query, r, points, tree[2]),
+            _bt_search(query, r, points, tree[3]) ) ;
+     
+
+// Function: vector_search_tree()
 // Usage:
-//    indices = vp_nearest(points, tree, p, k)
+//    tree = vector_search_tree(points,leafsize);
+// See Also: vector_nearest(), vector_search()
+// Topics: Search, Points, Closest
 // Description:
-//    Search the vantage point tree for the k points closest to point p.
-//    The input points is the list of points to search and tree is
-//    the vantage point tree computed from that point list.  The list is
-//    returned in sorted order, closest point first.  
+//    Construct a search tree for the given list of points to be used as input
+//    to the function `vector_search()`. The use of a tree speeds up the
+//    search process. The tree construction stops branching when 
+//    a tree node represents a number of points less or equal to `leafsize`.
+//    Search trees are ball trees. Constructing the
+//    tree should be O(n log n) and searches should be O(log n), though real life
+//    performance depends on how the data is distributed, and it will deteriorate
+//    for high data dimensions.  This data structure is useful when you will be
+//    performing many searches of the same data, so that the cost of constructing 
+//    the tree is justified. (See https://en.wikipedia.org/wiki/Ball_tree)
 // Arguments:
-//    points = points indexed by the vantage point tree
-//    tree = vantage point tree from vp_tree
-//    p = point to search for
+//    points = list of points to store in the search tree.
+//    leafsize = the size of the tree leaves. Default: 25
+// Example: A set of four queries to find points within 1 unit of the query.  The circles show the search region and all have radius 1.  
+//   $fn=32;
+//   k = 2000;
+//   points = array_group(rands(0,10,k*2,seed=13333),2);
+//   queries = [for(i=[3,7],j=[3,7]) [i,j]];
+//   search_tree = vector_search_tree(points);
+//   search_ind = vector_tree_search(search_tree, queries, 1);
+//   move_copies(points) circle(r=.08);
+//   for(i=idx(queries)){
+//       color("blue") stroke(move(queries[i],circle(r=1)), closed=true, width=.08);
+//       color("red")  move_copies(select(points, search_ind[i])) circle(r=.08); }
+//   }
+function vector_search_tree(points, leafsize=25) =
+    assert( is_matrix(points), "The input list entries should be points." )
+    assert( is_int(leafsize) && leafsize>=1,
+            "The tree leaf size should be an integer greater than zero.")
+    [ points, _bt_tree(points, count(len(points)), leafsize) ];
+
+
+//Ball tree construction
+function _bt_tree(points, ind, leafsize=25) =
+    len(ind)<=leafsize ? [ind] :
+    let( 
+        bounds = pointlist_bounds(select(points,ind)),
+        coord  = max_index(bounds[1]-bounds[0]), 
+        projc  = [for(i=ind) points[i][coord] ],
+        pmc    = mean(projc), 
+        pivot  = min_index([for(p=projc) abs(p-pmc)]),
+        radius = max([for(i=ind) norm(points[ind[pivot]]-points[i]) ]),
+        median = ninther(projc),
+        Lind   = [for(i=idx(ind)) if(projc[i]<=median && i!=pivot) ind[i] ],
+        Rind   = [for(i=idx(ind)) if(projc[i] >median && i!=pivot) ind[i] ]
+      )
+    [ ind[pivot], radius, _bt_tree(points, Lind, leafsize), _bt_tree(points, Rind, leafsize) ];
+
+
+// Function: vector_nearest()
+// Usage:
+//    indices = vector_nearest(query, k, target)
+// See Also: vector_search(), vector_search_tree()
+// Description:
+//    Search `target` for the `k` points closest to point `query`.
+//    The input `target` is either a list of points to search or a search tree
+//    pre-computed by `vector_search_tree(). A list is returned containing the indices
+//    of the points found in sorted order, closest point first.  
+// Arguments:
+//    query = point to search for
 //    k = number of neighbors to return
+//    target = a list of points or a search tree to search in
 // Example:  Four queries to find the 15 nearest points.  The circles show the radius defined by the most distant query result.  Note they are different for each query.  
 //    $fn=32;
-//    k = 2000;
+//    k = 1000;
 //    points = array_group(rands(0,10,k*2,seed=13333),2);
-//    vp = vp_tree(points);
+//    tree = vector_search_tree(points);
 //    queries = [for(i=[3,7],j=[3,7]) [i,j]];
-//    search_ind = [for(q=queries) vp_nearest(points, vp, q, 15)];
+//    search_ind = [for(q=queries) vector_nearest(q, 15, tree)];
 //    move_copies(points) circle(r=.08);
 //    for(i=idx(queries)){
-//      color("red")move_copies(select(points, search_ind[i])) circle(r=.08);
-//      color("blue")stroke(move(queries[i],
-//                               circle(r=norm(points[last(search_ind[i])]-queries[i]))),
-//                          closed=true, width=.08);  
+//        circle = circle(r=norm(points[last(search_ind[i])]-queries[i]));
+//        color("red")  move_copies(select(points, search_ind[i])) circle(r=.08);
+//        color("blue") stroke(move(queries[i], circle), closed=true, width=.08);  
 //    }
+function vector_nearest(query, k, target) =
+    assert(is_int(k) && k>0)
+    assert(is_vector(query), "Query must be a vector.")
+    let(
+        tgpts  = is_matrix(target,undef,len(query)), // target is a point list
+        tgtree = is_list(target)      // target is a tree
+                 && (len(target)==2)
+                 && is_matrix(target[0],undef,len(query))
+                 && (len(target[1])==4 || (len(target[1])==1 && is_list(target[1][0])) )
+    )
+    assert( tgpts || tgtree, 
+            "The target should be a list of points or a search tree compatible with the query." )
+    assert((tgpts && (k<=len(target))) || (tgtree && (k<=len(target[0]))), 
+            "More results are requested than the number of points.")
+    tgpts
+    ?   let( tree = _bt_tree(target, count(len(target))) )
+        subindex(_bt_nearest( query, k, target,  tree),0)
+    :   subindex(_bt_nearest( query, k, target[0], target[1]),0);
+
+
+//Ball tree nearest
+function _bt_nearest(p, k, points, tree, answers=[]) =
+    assert( is_list(tree) 
+            && (   ( len(tree)==1 && is_list(tree[0]) )
+                || ( len(tree)==4 && is_num(tree[0]) && is_num(tree[1]) ) ), 
+            "The tree is invalid.")
+    len(tree)==1
+    ?   _insert_many(answers, k, [for(entry=tree[0]) [entry, norm(points[entry]-p)]])
+    :   let( d = norm(p-points[tree[0]]) )
+        len(answers)==k && ( d > last(answers)[1]+tree[1] ) ? answers :
+        let(
+            answers1 = _insert_sorted(answers, k, [tree[0],d]),
+            answers2 = _bt_nearest(p, k, points, tree[2], answers1),
+            answers3 = _bt_nearest(p, k, points, tree[3], answers2)
+         )
+         answers3;
+
+
 function _insert_sorted(list, k, new) =
-      len(list)==k && new[1]>= last(list)[1] ? list
+    (len(list)==k && new[1]>= last(list)[1]) ? list
     : [
         for(entry=list) if (entry[1]<=new[1]) entry,
         new,
         for(i=[0:1:min(k-1,len(list))-1]) if (list[i][1]>new[1]) list[i]
       ];
 
+
 function _insert_many(list, k, newlist,i=0) =
-  i==len(newlist) ? list :
-                    _insert_many(_insert_sorted(list,k,newlist[i]),k,newlist,i+1);
+  i==len(newlist) 
+  ?   list
+  :   assert(is_vector(newlist[i],2), "The tree is invalid.")
+      _insert_many(_insert_sorted(list,k,newlist[i]),k,newlist,i+1);
 
-function _vp_nearest(points, tree, p, k, answers=[]) =
-  is_list(tree[0]) ? _insert_many(answers, k, [for(entry=tree[0]) [entry, norm(points[entry]-p)]]) :
-  let(
-      d = norm(p-points[tree[0]]),
-      answers1 = _insert_sorted(answers, k, [tree[0],d]),
-      answers2 = d-last(answers1)[1] <= tree[1] ? _vp_nearest(points, tree[2], p, k, answers1) : answers1,
-      answers3 = d+last(answers2)[1] > tree[1] ? _vp_nearest(points, tree[3], p, k, answers2) : answers2
-   )
-   answers3;
-
-function vp_nearest(points, tree, p, k) =
-      assert(is_int(k) && k>0)
-      assert(k<=len(points), "You requested more results that contained in the set")
-      assert(is_matrix(points), "Parameter points is not a consistent point list")
-      assert(is_vector(p,len(points[0])), "Query must be a vector whose length matches the point list")
-      assert(is_list(tree) && (len(tree)==4 || (len(tree)==1 && is_list(tree[0]))), "Vantage point tree not valid")
-      subindex(_vp_nearest(points, tree, p, k),0);
-
-
-// Function: search_radius()
-// Usage:
-//    index_list = search_radius(points, queries, r, [leafsize]);
-// Description:
-//    Given a list of points and a compatible list of queries, for each query
-//    search the points list for all points whose distance from the query
-//    is less than or equal to r.  The return value index_list[i] lists the indices
-//    in points of all matches to query q[i].  This list can be in arbitrary order.  
-//    .
-//    This function is advantageous to use especially when both `points` and `queries`
-//    are large sets.  The method contructs a vantage point tree and then uses it
-//    to check all the queries.  If you use queries=points and set r to epsilon then
-//    you can find all of the approximate duplicates in a large list of vectors.
-// Example:  Finding duplicates in a list of vectors.  With exact equality the order of the output is consistent, but with small variations [2,4] could occur in one position and [4,2] in the other one.
-//    v = array_group(rands(0,10,5*3,seed=9),3);
-//    points = [v[0],v[1],v[2],v[3],v[2],v[3],v[3],v[4]];
-//    echo(search_radius(points,points,1e-9));   // Prints [[0],[1],[2,4],[3,5,6],[2,4],[3,5,6],[3,5,6],[7]]
-//    
-function search_radius(points, queries, r, leafsize=25) =
-  assert(is_matrix(points),"Invalid points list")
-  assert(is_matrix(queries),"Invalid query list")
-  assert(len(points[0])==len(queries[0]), "Query vectors don't match length of points")
-  let(
-       vptree = vp_tree(points, leafsize)
-  )
-  [for(q=queries) vp_search(points, vptree, q, r)];
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
