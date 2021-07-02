@@ -227,6 +227,26 @@ module test_all_nonnegative() {
 test_all_nonnegative();
 
 
+module test_all_integer() {
+    assert(!all_integer(undef));
+    assert(!all_integer(true));
+    assert(!all_integer(false));
+    assert(!all_integer(4.3));
+    assert(!all_integer("foo"));
+    assert(!all_integer([]));
+    assert(!all_integer([3,4.1,5,7]));
+    assert(!all_integer([[1,2,3],[4,5,6],[7,8]]));
+    assert(all_integer(-4));
+    assert(all_integer(0));
+    assert(all_integer(5));
+    assert(all_integer([-3]));
+    assert(all_integer([0]));
+    assert(all_integer([3]));
+    assert(all_integer([2,-4,0,5,7,9876543210]));
+}
+test_all_integer();
+
+
 module test_approx() {
     assert_equal(approx(PI, 3.141592653589793236), true);
     assert_equal(approx(PI, 3.1415926), false);

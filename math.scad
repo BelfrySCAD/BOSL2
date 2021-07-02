@@ -1206,6 +1206,31 @@ function all_equal(vec,eps=0) =
    eps==0 ? [for(v=vec) if (v!=vec[0]) v] == []
           : [for(v=vec) if (!approx(v,vec[0])) v] == [];
 
+
+// Function: all_integer()
+// Usage:
+//   bool = all_integer(x);
+// Description:
+//   If given a number, returns true if the number is a finite integer.
+//   If given an empty list, returns false.  If given a non-empty list, returns
+//   true if every item of the list is an integer.  Otherwise, returns false.
+// Arguments:
+//   x = The value to check.
+// Examples:
+//   b = all_integer(true);  // Returns: false
+//   b = all_integer("foo"); // Returns: false
+//   b = all_integer(4);     // Returns: true
+//   b = all_integer(4.5);   // Returns: false
+//   b = all_integer([]);    // Returns: false
+//   b = all_integer([3,4,5]);   // Returns: true
+//   b = all_integer([3,4.2,5]); // Returns: false
+//   b = all_integer([3,[4,7],5]); // Returns: false
+function all_integer(x) =
+    is_num(x)? is_int(x) :
+    is_list(x)? (x != [] && [for (xx=x) if(!is_int(xx)) 1] == []) :
+    false;
+
+
 // Function: approx()
 // Usage:
 //   test = approx(a, b, [eps])

@@ -183,6 +183,12 @@ function accumulate(func, list, init=0) =
 //   cond = A function literal with signature `function (i,x)`, called to determine if the loop should continue.  Returns true if the loop should continue.
 //   func = A function literal with signature `function (i,x)`, called on each iteration.  The returned value is passed as `x` on the next iteration.
 // See Also: map(), filter(), reduce(), accumulate(), while(), for_n()
+// Example:
+//   fibs = while(
+//       init = [1,1],
+//       cond = function (i,x) select(x,-1)<25,
+//       func = function (i,x) concat(x, [sum(select(x,-2,-1))])
+//   );  // Returns: [1,1,2,3,5,8,13,21]
 function while(init, cond, func) =
     assert(is_function(cond))
     assert(is_function(func))
@@ -238,9 +244,9 @@ function for_n(n,init,func) =
 // Description:
 //   Finds the first item in `list` which, when compared against `val` using the function literal
 //   `func` gets a true result.  By default, `func` just calls `approx()`.  The signature of the
-//   function literal in `func` is `function (a,b)`, and it is expected to return true when the
+//   function literal in `func` is `function (val,x)`, and it is expected to return true when the
 //   two values compare as matching.  It should return false otherwise.
-//   If you need to find *all* matching items in the list, you should probably use {{filter()]] instead.
+//   If you need to find *all* matching items in the list, you should probably use {{filter()}} instead.
 // See Also: map(), filter(), reduce(), accumulate(), while(), for_n(), binsearch()
 // Arguments:
 //   val = The value to look for.
@@ -415,7 +421,7 @@ function hashmap(hashsize=127,items,table) =
 //   fn_str3 = f_str(3); // = function() str(3);
 function f_1arg(func) =
     function(a)
-        a==undef? func :
+        a==undef? function(x) func(x) :
         function() func(a);
 
 
@@ -430,13 +436,14 @@ function f_1arg(func) =
 //   with a constant.
 // Example:
 //   f_lt = f_2arg(function(a,b) a<b);
-//   fn_lt = f_lt();    // = function(a,b) a<b;
-//   fn_lt3 = f_lt(3);    // = function(a) a<3;
-//   fn_3lt = f_lt(a=3);    // = function(b) 3<b;
-//   fn_3lt4 = f_lt(a=3,b=4); // = function() 3<4;
+//   fn_lt = f_lt();      // = function(a,b) a<b;
+//   fn_3lt = f_lt(3);    // = function(b) 3<b;
+//   fn_3lt = f_lt(a=3);  // = function(b) 3<b;
+//   fn_lt3 = f_lt(b=3);  // = function(a) a<3;
+//   fn_3lt4 = f_lt(3,4); // = function() 3<4;
 function f_2arg(func) =
-    function(b,a)
-        a==undef && b==undef? func :
+    function(a,b)
+        a==undef && b==undef? function(x,y) func(x,y) :
         a==undef? function(x) func(x,b) :
         b==undef? function(x) func(a,x) :
         function() func(a,b);
