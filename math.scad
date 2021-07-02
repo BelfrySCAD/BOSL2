@@ -536,7 +536,7 @@ function log_rands(minval, maxval, factor, N=1, seed=undef) =
 // Description:
 //   Computes the Greatest Common Divisor/Factor of `a` and `b`.  
 function gcd(a,b) =
-    assert(is_int(a) && is_int(b) && b!=0,"Arguments to gcd must be integers with a non zero divisor")
+    assert(is_int(a) && is_int(b),"Arguments to gcd must be integers")
     b==0 ? abs(a) : gcd(b,a % b);
 
 
