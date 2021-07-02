@@ -38,7 +38,7 @@
 function is_homogeneous(l, depth=10) =
     !is_list(l) || l==[] ? false :
     let( l0=l[0] )
-    [] == [for(i=[1:len(l)-1]) if( ! _same_type(l[i],l0, depth+1) )  0 ];
+    [] == [for(i=[1:1:len(l)-1]) if( ! _same_type(l[i],l0, depth+1) )  0 ];
 
 function is_homogenous(l, depth=10) = is_homogeneous(l, depth);
                  
@@ -63,8 +63,8 @@ function _same_type(a,b, depth) =
 //   a list of indices or a range.
 // Usage:
 //   item = select(list, start);
-//   item = select(list, RANGE);
-//   item = select(list, INDEXLIST);
+//   item = select(list, [s:d:e]);
+//   item = select(list, [i0,i1...,ik]);
 //   list = select(list, start, end);
 // Arguments:
 //   list = The list to get the portion of.
@@ -342,7 +342,7 @@ function min_index(vals, all=false) =
 // Function: max_index()
 // Usage:
 //   idx = max_index(vals);
-//   idxlist = max_index(vals,all=true);
+//   idxlist = max_index(vals, all=true);
 // Topics: List Handling
 // See Also: min_index(), list_increasing(), list_decreasing()
 // Description:
@@ -964,14 +964,15 @@ function _group_sort_by_index(l,idx) =
         [equal], 
         _group_sort_by_index(greater,idx)
     );  
+            
 
 function _group_sort(l) =
     len(l) == 0 ? [] : 
     len(l) == 1 ? [l] : 
     let(
         pivot   = l[floor(len(l)/2)],
-        equal   = [ for(li=l) if( li==pivot) li ] ,
-        lesser  = [ for(li=l) if( li< pivot) li ] ,
+        equal   = [ for(li=l) if( li==pivot) li ],
+        lesser  = [ for(li=l) if( li< pivot) li ],
         greater = [ for(li=l) if( li> pivot) li ]
     )
     concat(
@@ -1207,16 +1208,16 @@ function unique(list) =
     :   let( sorted = sort(list))
         [
             for (i=[0:1:len(sorted)-1])
-            if (i==0 || (sorted[i] != sorted[i-1]))
-            sorted[i]
+                if (i==0 || (sorted[i] != sorted[i-1]))
+                    sorted[i]
         ];
 
 function _unique_sort(l) =
     len(l) <= 1 ? l : 
     let(
         pivot   = l[floor(len(l)/2)],
-        equal   = [ for(li=l) if( li==pivot) li ] ,
-        lesser  = [ for(li=l) if( li<pivot ) li ] ,
+        equal   = [ for(li=l) if( li==pivot) li ],
+        lesser  = [ for(li=l) if( li<pivot ) li ],
         greater = [ for(li=l) if( li>pivot) li ]
     )
     concat(
@@ -1242,23 +1243,15 @@ function unique_count(list) =
     assert(is_list(list) || is_string(list), "Invalid input." )
     list == [] ? [[],[]] : 
     is_homogeneous(list,1) && ! is_list(list[0])
-      ? let( sorted = _group_sort(list) ) [
-            [for(s=sorted) s[0] ],
-            [for(s=sorted) len(s) ]
-        ]
-      : let(
-            list=sort(list),
-            ind = [
-                0,
-                for(i=[1:1:len(list)-1])
-                    if (list[i]!=list[i-1]) i
-            ]
-        ) [
-            select(list,ind),
-            deltas( concat(ind,[len(list)]) )
-        ];
+    ?    let( sorted = _group_sort(list) )
+        [ [for(s=sorted) s[0] ], [for(s=sorted) len(s) ] ]
+    :   let( 
+            list = sort(list),
+            ind = [0, for(i=[1:1:len(list)-1]) if (list[i]!=list[i-1]) i] 
+        )
+        [ select(list,ind), deltas( concat(ind,[len(list)]) ) ];
 
-
+    
 // Section: List Iteration Helpers
 
 // Function: idx()
