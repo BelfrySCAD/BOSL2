@@ -185,7 +185,7 @@ function apply(transform,points) =
 
 // Function: rot_decode()
 // Usage:
-//   info = rot_decode(rotation); // Returns: [angle,axis,cp,translation]
+//   info = rot_decode(rotation,[long]); // Returns: [angle,axis,cp,translation]
 // Topics: Affine, Matrices, Transforms
 // Description:
 //   Given an input 3D rigid transformation operator (one composed of just rotations and translations) represented
@@ -197,6 +197,11 @@ function apply(transform,points) =
 //   may flip the axis (if you gave an angle outside of [0,180]).  The returned axis will be a unit vector, and
 //   the centerpoint lies on the plane through the origin that is perpendicular to the axis.  It may be different
 //   than the centerpoint you used to construct the transformation.
+//   .
+//   If you set `long` to true then return the reversed rotation, with the angle in [180,360].
+// Arguments:
+//   rotation = rigid transformation to decode
+//   long = if true return the "long way" around, with the angle in [180,360].  Default: false
 // Example:
 //   info = rot_decode(rot(45));
 //   // Returns: [45, [0,0,1], [0,0,0], [0,0,0]]
@@ -209,7 +214,7 @@ function apply(transform,points) =
 // Example:
 //   info = rot_decode(translate([3,4,5]));
 //   // Returns: [0, [0,0,1], [0,0,0], [3,4,5]]
-function rot_decode(M) =
+function rot_decode(M,long=false) =
     assert(is_matrix(M,4,4) && approx(M[3],[0,0,0,1]), "Input matrix must be a 4x4 matrix representing a 3d transformation")
     let(R = submatrix(M,[0:2],[0:2]))
     assert(approx(det3(R),1) && approx(norm_fro(R * transpose(R)-ident(3)),0),"Input matrix is not a rotation")
@@ -230,8 +235,238 @@ function rot_decode(M) =
         tproj = translation - (translation*axis)*axis,    // Translation perpendicular to axis determines centerpoint
         cp    = (tproj + cross(axis,tproj)*c_cos/c_sin)/2
     )
-    [angle, axis, cp, (translation*axis)*axis];
+    [long ? 360-angle:angle,
+     long? -axis : axis,
+     cp,
+     (translation*axis)*axis];
 
+
+// Function: rot_inverse()
+// Usage:
+//   B = rot_inverse(A)
+// Description:
+//   Inverts a 2d or 3d rotation matrix.  The matrix can be a rotation around any center,
+//   so it may include a translation.
+function rot_inverse(T) =
+    assert(is_matrix(T,square=true),"Matrix must be square")
+    let( n = len(T))
+    assert(n==3 || n==4, "Matrix must be 3x3 or 4x4")
+    let(
+        rotpart =  [for(i=[0:n-2]) [for(j=[0:n-2]) T[j][i]]],
+        transpart = [for(row=[0:n-2]) T[row][n-1]]
+    )
+    assert(approx(determinant(T),1),"Matrix is not a rotation")
+    concat(hstack(rotpart, -rotpart*transpart),[[for(i=[2:n]) 0, 1]]);
+
+
+function _closest_angle(alpha,beta) =
+    is_vector(beta) ? [for(entry=beta) _closest_angle(alpha,entry)]
+  : beta-alpha > 180 ? beta - ceil((beta-alpha-180)/360) * 360 
+  : beta-alpha < -180 ? beta + ceil((alpha-beta-180)/360) * 360
+  : beta;
+
+
+// Smooth data with N point moving average.  If angle=true handles data as angles.
+// If closed=true assumes last point is adjacent to the first one.
+// If closed=false pads data with left/right value (probably wrong behavior...should do linear interp)
+function _smooth(data,len,closed=false,angle=false) =
+  let(  halfwidth = floor(len/2),
+        result = closed ? [for(i=idx(data))
+                           let(
+                             window = angle ? _closest_angle(data[i],select(data,i-halfwidth,i+halfwidth))
+                                            : select(data,i-halfwidth,i+halfwidth)
+                           )
+                           mean(window)]
+               : [for(i=idx(data))
+                   let(
+                       window = select(data,max(i-halfwidth,0),min(i+halfwidth,len(data)-1)),
+                       left = i-halfwidth<0,
+                       pad = left ? data[0] : last(data)
+                   )
+                   sum(window)+pad*(len-len(window))] / len
+   )
+   result;
+
+// Function: rot_resample()
+// Usage:
+//   rlist = rot_resample(rotlist, N, [method], [twist], [scale], [smoothlen], [long], [turns], [closed])
+// Description:
+//   Takes as input a list of rotation matrices in 3d.  Produces as output a resampled
+//   list of rotation operators (4x4 matrixes) suitable for use with sweep().  You can optionally apply twist to
+//   the output with the twist parameter, which is either a scalar to apply a uniform
+//   overall twist, or a vector to apply twist non-uniformly.  Similarly you can apply
+//   scaling either overall or with a vector.  The smoothlen parameter applies smoothing
+//   to the twist and scaling to prevent abrupt changes.  This is done by a moving average
+//   of the smoothing or scaling values.  The default of 1 means no smoothing.  The long parameter causes
+//   the interpolation to be done the "long" way around the rotation instead of the short way.
+//   Note that the rotation matrix cannot distinguish which way you rotate, only the place you
+//   end after rotation.  Another ambiguity arises if your rotation is more than 360 degrees.
+//   You can add turns with the turns parameter, so giving turns=1 will add 360 degrees to the
+//   rotation so it completes one full turn plus the additional rotation given my the transform.
+//   You can give long as a scalar or as a vector.  Finally if closed is true then the
+//   resampling will connect back to the beginning.
+//   .
+//   The default is to resample based on the length of the arc defined by each rotation operator.  This produces
+//   uniform sampling over all of the transformations.  It requires that each rotation has nonzero length.
+//   In this case N specifies the total number of samples.  If you set method to "count" then N you get
+//   N samples for each transform.  You can set N to a vector to vary the samples at each step.  
+// Arguments:
+//   rotlist = list of rotation operators in 3d to resample
+//   N = Number of rotations to produce as output when method is "length" or number for each transformation if method is "count".  Can be a vector when method is "count"
+//   --
+//   method = sampling method, either "length" or "count"
+//   twist = scalar or vector giving twist to add overall or at each rotation.  Default: none
+//   scale = scalar or vector giving scale factor to add overall or at each rotation.  Default: none
+//   smoothlen = amount of smoothing to apply to scaling and twist.  Should be an odd integer.  Default: 1
+//   long = resample the "long way" around the rotation, a boolean or list of booleans.  Default: false
+//   turns = add extra turns.  If a scalar adds the turns to every rotation, or give a vector.  Default: 0
+//   closed = if true then the rotation list is treated as closed.  Default: false
+// Example: Resampling the arc from a compound rotation with translations thrown in.  
+//   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], N=25);
+//   sweep(circle(r=1,$fn=3), tran);
+// Example: Applying a scale factor
+//   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], N=25, scale=2);
+//   sweep(circle(r=1,$fn=3), tran);
+// Example: Applying twist
+//   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], N=25, twist=60);
+//   sweep(circle(r=1,$fn=3), tran);
+// Example: Going the long way
+//   tran = rot_resample([ident(4), back(5)*up(4)*xrot(-10)*zrot(-20)*yrot(117,cp=[10,0,0])], N=25, long=true);
+//   sweep(circle(r=1,$fn=3), tran);
+// Example: Getting transformations from turtle3d
+//   include<BOSL2/turtle3d.scad>
+//   tran=turtle3d(["arcsteps",1,"up", 10, "arczrot", 10,170],transforms=true);
+//   sweep(circle(r=1,$fn=3),rot_resample(tran, N=40));
+// Example: If you specify a larger angle in turtle you need to use the long argument
+//   include<BOSL2/turtle3d.scad>
+//   tran=turtle3d(["arcsteps",1,"up", 10, "arczrot", 10,270],transforms=true);
+//   sweep(circle(r=1,$fn=3),rot_resample(tran, N=40,long=true));
+// Example: And if the angle is over 360 you need to add turns to get the right result.  Note long is false when the remaining angle after subtracting full turns is below 180:
+//   include<BOSL2/turtle3d.scad>
+//   tran=turtle3d(["arcsteps",1,"up", 10, "arczrot", 10,90+360],transforms=true);
+//   sweep(circle(r=1,$fn=3),rot_resample(tran, N=40,long=false,turns=1));
+// Example: Here the remaining angle is 270, so long must be set to true
+//   include<BOSL2/turtle3d.scad>
+//   tran=turtle3d(["arcsteps",1,"up", 10, "arczrot", 10,270+360],transforms=true);
+//   sweep(circle(r=1,$fn=3),rot_resample(tran, N=40,long=true,turns=1));
+// Example: Note the visible line at the scale transition
+//   include<BOSL2/turtle3d.scad>
+//   tran = turtle3d(["arcsteps",1,"arcup", 10, 90, "arcdown", 10, 90], transforms=true);
+//   rtran = rot_resample(tran,200,scale=[1,6]);
+//   sweep(circle(1,$fn=32),rtran);
+// Example: Observe how using a large smoothlen value eases that transition
+//   include<BOSL2/turtle3d.scad>
+//   tran = turtle3d(["arcsteps",1,"arcup", 10, 90, "arcdown", 10, 90], transforms=true);
+//   rtran = rot_resample(tran,200,scale=[1,6],smoothlen=17);
+//   sweep(circle(1,$fn=32),rtran);
+// Example: A similar issues can arise with twist, where a "line" is visible at the transition
+//   include<BOSL2/turtle3d.scad>
+//   tran = turtle3d(["arcsteps", 1, "arcup", 10, 90, "move", 10], transforms=true,state=[1,-.5,0]);
+//   rtran = rot_resample(tran,100,twist=[0,60],smoothlen=1);
+//   sweep(subdivide_path(rect([3,3]),40),rtran);
+// Example: Here's the smoothed twist transition
+//   include<BOSL2/turtle3d.scad>
+//   tran = turtle3d(["arcsteps", 1, "arcup", 10, 90, "move", 10], transforms=true,state=[1,-.5,0]);
+//   rtran = rot_resample(tran,100,twist=[0,60],smoothlen=17);
+//   sweep(subdivide_path(rect([3,3]),40),rtran);
+// Example: toothed belt based on list-comprehension-demos example.  This version has a smoothed twist transition.  Try changing smoothlen to 1 to see the more abrupt transition that occurs without smoothing.  
+//   include<BOSL2/turtle3d.scad>
+//   r_small = 19;       // radius of small curve
+//   r_large = 46;       // radius of large curve
+//   flat_length = 100;  // length of flat belt section
+//   teeth=42;           // number of teeth
+//   belt_width = 12;
+//   tooth_height = 9;
+//   belt_thickness = 3;
+//   angle = 180 - 2*atan((r_large-r_small)/flat_length);
+//   beltprofile = path3d(subdivide_path(
+//                   square([belt_width, belt_thickness],anchor=FWD),
+//                   20));
+//   beltrots =
+//     turtle3d(["arcsteps",1,          
+//               "move", flat_length,
+//               "arcleft", r_small, angle,
+//               "move", flat_length,
+//     // Closing path will be interpolated            
+//     //        "arcleft", r_large, 360-angle    
+//              ],transforms=true);
+//   beltpath = rot_resample(beltrots,teeth*4,
+//                           twist=[180,0,-180,0],
+//                           long=[false,false,false,true],
+//                           smoothlen=15,closed=true);
+//   belt = [for(i=idx(beltpath))
+//             let(tooth = floor((i+$t*4)/2)%2)
+//             apply(beltpath[i]*
+//                     yscale(tooth
+//                            ? tooth_height/belt_thickness
+//                            : 1),
+//                   beltprofile)
+//          ];
+//   skin(belt,slices=0,closed=true);
+function rot_resample(rotlist,N,twist,scale,smoothlen=1,long=false,turns=0,closed=false,method="length") =
+    assert(is_int(smoothlen) && smoothlen>0 && smoothlen%2==1, "smoothlen must be a positive odd integer")
+    assert(method=="length" || method=="count")
+    let(tcount = len(rotlist) + (closed?0:-1))
+    assert(method=="count" || is_int(N), "N must be an integer when method is \"length\"")
+    assert(is_int(N) || is_vector(N,tcount), str("N must be scalar or vector with length ",tcount))
+    let(
+          count = method=="length" ? (closed ? N+1 : N)
+                                   : (is_vector(N) ? sum(N) : tcount*N)+1  //(closed?0:1)
+    )
+    assert(is_bool(long) || len(long)==tcount,str("Input long must be a scalar or have length ",tcount))
+    let(      
+        long = force_list(long,tcount),
+        turns = force_list(turns,tcount),
+        T = [for(i=[0:1:tcount-1]) rot_inverse(rotlist[i])*select(rotlist,i+1)],
+        parms = [for(i=idx(T))
+                    let(tparm = rot_decode(T[i],long[i]))
+                    [tparm[0]+turns[i]*360,tparm[1],tparm[2],tparm[3]]
+                ],
+        radius = [for(i=idx(parms)) norm(parms[i][2])],
+        length = [for(i=idx(parms)) norm([norm(parms[i][3]), parms[i][0]/360*2*PI*radius[i]])]
+    )
+    assert(method=="count" || all_positive(length),
+           "Rotation list includes a repeated entry or a rotation around the origin, not allowed when method=\"length\"")
+    let(   
+        cumlen = [0, each cumsum(length)],
+        totlen = last(cumlen),
+        stepsize = totlen/(count-1),
+        samples = method=="count"
+                  ? let( N = force_list(N,tcount))
+                    [for(n=N) lerpn(0,1,n,endpoint=false)]
+                  :[for(i=idx(parms))
+                    let(
+                        remainder = cumlen[i] % stepsize,
+                        offset = remainder==0 ? 0
+                                              : stepsize-remainder,
+                        num = ceil((length[i]-offset)/stepsize)
+                    )
+                    count(num,offset,stepsize)/length[i]],
+         twist = first_defined([twist,0]),
+         scale = first_defined([scale,1]),
+         needlast = !approx(last(last(samples)),1),
+         sampletwist = is_num(twist) ? lerpn(0,twist,count)
+                     : let(
+                          cumtwist = [0,each cumsum(twist)]
+                      )
+                      [for(i=idx(parms)) each lerp(cumtwist[i],cumtwist[i+1],samples[i]),
+                      if (needlast) last(cumtwist)
+                      ],
+         samplescale = is_num(scale) ? lerp(1,scale,lerpn(0,1,count))
+                     : let(
+                          cumscale = [1,each cumprod(scale)]
+                      )
+                      [for(i=idx(parms)) each lerp(cumscale[i],cumscale[i+1],samples[i]),
+                       if (needlast) last(cumscale)],
+         smoothtwist = _smooth(closed?select(sampletwist,0,-2):sampletwist,smoothlen,closed=closed,angle=true),
+         smoothscale = _smooth(samplescale,smoothlen,closed=closed),
+         interpolated = [
+           for(i=idx(parms))
+             each [for(u=samples[i]) rotlist[i] * move(u*parms[i][3]) * rot(a=u*parms[i][0],v=parms[i][1],cp=parms[i][2])],
+           if (needlast) last(rotlist)
+         ]
+     )
+     [for(i=idx(interpolated,e=closed?-2:-1)) interpolated[i]*zrot(smoothtwist[i])*scale(smoothscale[i])];
 
 
 

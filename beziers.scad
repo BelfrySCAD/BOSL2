@@ -713,7 +713,7 @@ function bezier_path_length(path, N=3, max_deflect=0.001) =
 function bezier_path(bezier, splinesteps=16, N=3, endpoint=true) =
     assert(is_path(bezier))
     assert(is_int(N))
-    assert(is_int(splinesteps))
+    assert(is_int(splinesteps) && splinesteps>0)
     assert(len(bezier)%N == 1, str("A degree ",N," bezier path should have a multiple of ",N," points in it, plus 1."))
     let(
         segs = (len(bezier)-1) / N,
@@ -941,7 +941,7 @@ function bezier_offset(offset, bezier, N=3) =
 module bezier_polygon(bezier, splinesteps=16, N=3) {
     assert(is_path(bezier,2), "bezier_polygon() can only work on 2D bezier paths.");
     assert(is_int(N));
-    assert(is_int(splinesteps));
+    assert(is_int(splinesteps) && splinesteps>0);
     assert(len(bezier)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
     polypoints=bezier_path(bezier, splinesteps, N);
     polygon(points=polypoints);
@@ -1206,6 +1206,7 @@ function is_patch(x) =
 //   vnf_polyhedron(concat(edges,corners,faces));
 function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF, style="default") =
     assert(is_num(splinesteps) || is_vector(splinesteps,2))
+    assert(all_positive(splinesteps))
     is_tripatch(patch)? _bezier_triangle(patch, splinesteps=splinesteps, vnf=vnf) :
     let(
         splinesteps = is_list(splinesteps) ? splinesteps : [splinesteps,splinesteps],
@@ -1324,7 +1325,7 @@ function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF, style="default") =
 function bezier_patch_degenerate(patch, splinesteps=16, reverse=false, return_edges=false) =
     !return_edges ? bezier_patch_degenerate(patch, splinesteps, reverse, true)[0] :
     assert(is_rectpatch(patch), "Must supply rectangular bezier patch")
-    assert(is_int(splinesteps) && splinesteps>=3, "splinesteps must be an integer 3 or larger")
+    assert(is_int(splinesteps) && splinesteps>0, "splinesteps must be a positive integer")
     let(
         row_degen = [for(row=patch) all_equal(row)],
         col_degen = [for(col=transpose(patch)) all_equal(col)],
@@ -1524,7 +1525,6 @@ function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="defaul
             bezier_patch(patches[i], splinesteps=splinesteps, vnf=vnf, style=style)
     ) (i >= len(patches))? vnf :
     bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf, style=style, i=i+1);
-
 
 
 
