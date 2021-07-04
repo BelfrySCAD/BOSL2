@@ -2381,9 +2381,9 @@ function is_convex_polygon(poly,eps=EPSILON) =
 //   should have the same dimension, either 2D or 3D.
 //   A zero result means the hulls intercept whithin a tolerance `eps`.
 // Arguments:
-//   points1 - first list of 2d or 3d points.
-//   points2 - second list of 2d or 3d points.
-//   eps - tolerance in distance evaluations. Default: EPSILON.
+//   points1 = first list of 2d or 3d points.
+//   points2 = second list of 2d or 3d points.
+//   eps = tolerance in distance evaluations. Default: EPSILON.
 // Example(2D):
 //    pts1 = move([-3,0], p=square(3,center=true));
 //    pts2 = rot(a=45, p=square(2,center=true));
@@ -2440,8 +2440,8 @@ function _GJK_distance(points1, points2, eps=EPSILON, lbd, d, simplex=[]) =
 //   All the points in the lists should have the same dimension, either 2D or 3D.
 //   This function is tipically faster than `convex_distance` to find a non-collision.
 // Arguments:
-//   points1 - first list of 2d or 3d points.
-//   points2 - second list of 2d or 3d points.
+//   points1 = first list of 2d or 3d points.
+//   points2 = second list of 2d or 3d points.
 //   eps - tolerance for the intersection tests. Default: EPSILON.
 // Example(2D):
 //    pts1 = move([-3,0], p=square(3,center=true));
