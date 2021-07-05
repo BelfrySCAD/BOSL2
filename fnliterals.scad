@@ -467,7 +467,7 @@ function f_2arg(func) =
 //   fn_va4 = f_lt(a=p1,c=p2); // = function() vector_angle(p1,b,p2);
 function f_3arg(func) =
     function(a,b,c)
-        a==undef && b==undef && c==undef? func :
+        a==undef && b==undef && c==undef? function(x,y,z) func(x,y,z) :
         a==undef && b==undef? function(x,y) func(x,y,c) :
         a==undef && c==undef? function(x,y) func(x,b,y) :
         b==undef && c==undef? function(x,y) func(a,x,y) :
@@ -1440,6 +1440,201 @@ function f_norm(a)  = f_1arg(function(a) norm(a))(a);
 //   b = If given, replaces the second argument.
 // See Also: f_norm(), f_abs(), f_sign(), f_cross()
 function f_cross(a,b) = f_2arg(function(a,b) cross(a,b))(a,b);
+
+
+// Section: Type Queries
+
+// Function: f_is_def()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_def();
+// Description:
+//   A factory that returns function literals equivalent to `is_def(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_string(), f_is_list()
+function f_is_def(x) = f_1arg(function (x) is_def(x));
+
+
+// Function: f_is_undef()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_undef();
+// Description:
+//   A factory that returns function literals equivalent to `is_undef(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_bool(), f_is_num(), f_is_string(), f_is_list()
+function f_is_undef(x) = f_1arg(function (x) is_undef(x));
+
+
+// Function: f_is_bool()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_bool();
+// Description:
+//   A factory that returns function literals equivalent to `is_bool(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_num(), f_is_string(), f_is_list()
+function f_is_bool(x) = f_1arg(function (x) is_bool(x));
+
+
+// Function: f_is_num()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_num();
+// Description:
+//   A factory that returns function literals equivalent to `is_num(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_string(), f_is_list()
+function f_is_num(x) = f_1arg(function (x) is_num(x));
+
+
+// Function: f_is_int()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_int();
+// Description:
+//   A factory that returns function literals equivalent to `is_int(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_string(), f_is_list()
+function f_is_int(x) = f_1arg(function (x) is_int(x));
+
+
+// Function: f_is_nan()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_nan();
+// Description:
+//   A factory that returns function literals equivalent to `is_nan(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_int(), f_is_string(), f_is_list()
+function f_is_nan(x) = f_1arg(function (x) is_nan(x));
+
+
+// Function: f_is_finite()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_finite();
+// Description:
+//   A factory that returns function literals equivalent to `is_finite(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_int(), f_is_string(), f_is_list()
+function f_is_finite(x) = f_1arg(function (x) is_finite(x));
+
+
+// Function: f_is_string()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_string();
+// Description:
+//   A factory that returns function literals equivalent to `is_string(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_int(), f_is_list()
+function f_is_string(x) = f_1arg(function (x) is_string(x));
+
+
+// Function: f_is_list()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_list();
+// Description:
+//   A factory that returns function literals equivalent to `is_list(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_int(), f_is_string(), f_is_list()
+function f_is_list(x) = f_1arg(function (x) is_list(x));
+
+
+// Function: f_is_range()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_range();
+// Description:
+//   A factory that returns function literals equivalent to `is_range(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_int(), f_is_string(), f_is_list()
+function f_is_range(x) = f_1arg(function (x) is_range(x));
+
+
+// Function: f_is_function()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_function();
+// Description:
+//   A factory that returns function literals equivalent to `is_function(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_int(), f_is_string(), f_is_list()
+function f_is_function(x) = f_1arg(function (x) is_function(x));
+
+
+// Function: f_is_vector()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_vector();
+// Description:
+//   A factory that returns function literals equivalent to `is_vector(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_int(), f_is_string(), f_is_list()
+function f_is_vector(a,b) = f_2arg(function (a,b) is_vector(a,b));
+
+
+// Function: f_is_path()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_path();
+// Description:
+//   A factory that returns function literals equivalent to `is_path(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_int(), f_is_string(), f_is_list()
+function f_is_path(a,b) = f_2arg(function (a,b) is_path(a,b));
+
+
+// Function: f_is_region()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_region();
+// Description:
+//   A factory that returns function literals equivalent to `is_region(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_int(), f_is_string(), f_is_list()
+function f_is_region(a) = f_1arg(function (a) is_region(a));
+
+
+// Function: f_is_vnf()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_vnf();
+// Description:
+//   A factory that returns function literals equivalent to `is_vnf(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_int(), f_is_string(), f_is_list()
+function f_is_vnf(a) = f_1arg(function (a) is_vnf(a));
+
+
+// Function: f_is_patch()
+// Topics: Function Literals, Type Queries
+// Usage:
+//   fn = f_is_patch();
+// Description:
+//   A factory that returns function literals equivalent to `is_patch(a)`.
+// Arguments:
+//   a = If given, replaces the argument.
+// See Also: f_is_undef(), f_is_bool(), f_is_num(), f_is_int(), f_is_string(), f_is_list()
+function f_is_patch(a) = f_1arg(function (a) is_patch(a));
+
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
