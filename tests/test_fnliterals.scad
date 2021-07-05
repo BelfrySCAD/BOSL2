@@ -150,7 +150,7 @@ test_f_2arg();
 
 
 module test_f_3arg() {
-    assert_equal(str(f_3arg(function (a,b,c) a+b+c)), "function(a, b, c) ((((a == undef) && (b == undef)) && (c == undef)) ? func : (((a == undef) && (b == undef)) ? function(x, y) func(x, y, c) : (((a == undef) && (c == undef)) ? function(x, y) func(x, b, y) : (((b == undef) && (c == undef)) ? function(x, y) func(a, x, y) : ((a == undef) ? function(x) func(x, b, c) : ((b == undef) ? function(x) func(a, x, c) : ((c == undef) ? function(x) func(a, b, x) : function() func(a, b, c))))))))");
+    assert_equal(str(f_3arg(function (a,b,c) a+b+c)), "function(a, b, c) ((((a == undef) && (b == undef)) && (c == undef)) ? function(x, y, z) func(x, y, z) : (((a == undef) && (b == undef)) ? function(x, y) func(x, y, c) : (((a == undef) && (c == undef)) ? function(x, y) func(x, b, y) : (((b == undef) && (c == undef)) ? function(x, y) func(a, x, y) : ((a == undef) ? function(x) func(x, b, c) : ((b == undef) ? function(x) func(a, x, c) : ((c == undef) ? function(x) func(a, b, x) : function() func(a, b, c))))))))");
     assert_equal(str(f_3arg(function (a,b,c) a+b+c)(3)), "function(x, y) func(a, x, y)");
     assert_equal(str(f_3arg(function (a,b,c) a+b+c)(3,4)), "function(x) func(a, b, x)");
     assert_equal(str(f_3arg(function (a,b,c) a+b+c)(3,4,1)), "function() func(a, b, c)");
@@ -206,6 +206,36 @@ module _test_fn2arg(dafunc,tests) {
         assert_equal(dafunc(a=a)(b), r);
         assert_equal(dafunc(b=b)(a), r);
         assert_equal(dafunc()(a,b), r);
+    }
+}
+
+
+module _test_fn3arg(dafunc,tests) {
+    assert_equal(str(dafunc()),    "function(x, y, z) func(x, y, z)");
+    assert_equal(str(dafunc(3)),   "function(x, y) func(a, x, y)");
+    assert_equal(str(dafunc(a=3)), "function(x, y) func(a, x, y)");
+    assert_equal(str(dafunc(b=3)), "function(x, y) func(x, b, y)");
+    assert_equal(str(dafunc(c=3)), "function(x, y) func(x, y, c)");
+    assert_equal(str(dafunc(3,4)), "function(x) func(a, b, x)");
+    assert_equal(str(dafunc(a=3,b=4)), "function(x) func(a, b, x)");
+    assert_equal(str(dafunc(a=3,c=4)), "function(x) func(a, x, c)");
+    assert_equal(str(dafunc(b=3,c=4)), "function(x) func(x, b, c)");
+    assert_equal(str(dafunc(3,4,5)), "function() func(a, b, c)");
+    for (test = tests) {
+        a = test[0];
+        b = test[1];
+        c = test[2];
+        r = test[3];
+        assert_equal(dafunc(a=a,b=b,c=c)(), r);
+        assert_equal(dafunc(a,b,c)(), r);
+        assert_equal(dafunc(a)(b,c), r);
+        assert_equal(dafunc(b=b,c=c)(a), r);
+        assert_equal(dafunc(a=a,c=c)(b), r);
+        assert_equal(dafunc(a=a,b=b)(c), r);
+        assert_equal(dafunc(a=a)(b,c), r);
+        assert_equal(dafunc(b=b)(a,c), r);
+        assert_equal(dafunc(c=c)(a,b), r);
+        assert_equal(dafunc()(a,b,c), r);
     }
 }
 
@@ -459,6 +489,510 @@ module test_f_pow() {
     );
 }
 test_f_pow();
+
+
+module test_f_sin() {
+    _test_fn1arg(
+        function (a) f_sin(a),
+        [[-270,1],[-180,0],[-90,-1],[0,0],[90,1],[180,0],[270,-1],[360,0]]
+    );
+}
+test_f_sin();
+
+
+module test_f_cos() {
+    _test_fn1arg(
+        function (a) f_cos(a),
+        [[-270,0],[-180,-1],[-90,0],[0,1],[90,0],[180,-1],[270,0],[360,1]]
+    );
+}
+test_f_cos();
+
+
+module test_f_tan() {
+    _test_fn1arg(
+        function (a) f_tan(a),
+        [[-135,1],[-45,-1],[0,0],[45,1],[135,-1]]
+    );
+}
+test_f_tan();
+
+
+module test_f_asin() {
+    _test_fn1arg(
+        function (a) f_asin(a),
+        [[-1,-90],[0,0],[1,90]]
+    );
+}
+test_f_asin();
+
+
+module test_f_acos() {
+    _test_fn1arg(
+        function (a) f_acos(a),
+        [[-1,180],[-0.5,120],[0,90],[0.5,60],[1,0]]
+    );
+}
+test_f_acos();
+
+
+module test_f_atan() {
+    _test_fn1arg(
+        function (a) f_atan(a),
+        [[-1,-45],[0,0],[1,45]]
+    );
+}
+test_f_atan();
+
+
+module test_f_atan2() {
+    _test_fn2arg(
+        function (a,b) f_atan2(a,b),
+        [[-1,0,-90],[-1,1,-45],[0,1,0],[1,0,90],[1,1,45]]
+    );
+}
+test_f_atan();
+
+
+module test_f_exp() {
+    _test_fn1arg(
+        function (a) f_exp(a),
+        [[-1,exp(-1)],[0,1],[1,exp(1)]]
+    );
+}
+test_f_exp();
+
+
+module test_f_ln() {
+    _test_fn1arg(
+        function (a) f_ln(a),
+        [[1,0],[1,ln(1)],[10,ln(10)]]
+    );
+}
+test_f_ln();
+
+
+module test_f_log() {
+    _test_fn1arg(
+        function (a) f_log(a),
+        [[1,0],[100,2],[10000,4]]
+    );
+}
+test_f_log();
+
+
+module test_f_sqr() {
+    _test_fn1arg(
+        function (a) f_sqr(a),
+        [[-5,25],[5,25],[9,81]]
+    );
+}
+test_f_sqr();
+
+
+module test_f_sqrt() {
+    _test_fn1arg(
+        function (a) f_sqrt(a),
+        [[25,5],[16,4],[81,9]]
+    );
+}
+test_f_sqrt();
+
+
+module test_f_sign() {
+    _test_fn1arg(
+        function (a) f_sign(a),
+        [[-99,-1],[-1,-1],[0,0],[1,1],[99,1]]
+    );
+}
+test_f_sign();
+
+
+module test_f_abs() {
+    _test_fn1arg(
+        function (a) f_abs(a),
+        [[-99,99],[-1,1],[0,0],[1,1],[99,99]]
+    );
+}
+test_f_abs();
+
+
+module test_f_neg() {
+    _test_fn1arg(
+        function (a) f_neg(a),
+        [[-99,99],[-1,1],[0,0],[1,-1],[99,-99]]
+    );
+}
+test_f_neg();
+
+
+module test_f_ceil() {
+    _test_fn1arg(
+        function (a) f_ceil(a),
+        [[-9.9,-9],[-9.1,-9],[-1,-1],[0,0],[1,1],[1.1,2],[1.9,2],[9.1,10],[9.9,10]]
+    );
+}
+test_f_ceil();
+
+
+module test_f_floor() {
+    _test_fn1arg(
+        function (a) f_floor(a),
+        [[-9.9,-10],[-9.1,-10],[-1,-1],[0,0],[1,1],[1.1,1],[1.9,1],[9.1,9],[9.9,9]]
+    );
+}
+test_f_floor();
+
+
+module test_f_round() {
+    _test_fn1arg(
+        function (a) f_round(a),
+        [[-9.9,-10],[-9.5,-10],[-9.1,-9],[-1,-1],[0,0],[1,1],[1.1,1],[1.9,2],[9.1,9],[9.5,10],[9.9,10]]
+    );
+}
+test_f_round();
+
+
+module test_f_cross() {
+    _test_fn2arg(
+        function (a,b) f_cross(a,b),
+        [[UP,LEFT,FWD], [BACK+RIGHT,FWD,DOWN]]
+    );
+}
+test_f_cross();
+
+
+module test_f_norm() {
+    _test_fn1arg(
+        function (a) f_norm(a),
+        [[UP,1], [BACK+RIGHT,sqrt(2)], [[3,4],5]]
+    );
+}
+test_f_norm();
+
+
+module test_f_chr() {
+    _test_fn1arg(
+        function (a) f_chr(a),
+        [[65,"A"],[97,"a"],[70,"F"],[102,"f"],[48,"0"],[57,"9"]]
+    );
+}
+test_f_chr();
+
+
+module test_f_ord() {
+    _test_fn1arg(
+        function (a) f_ord(a),
+        [["A",65],["a",97],["F",70],["f",102],["0",48],["9",57]]
+    );
+}
+test_f_ord();
+
+
+module test_f_len() {
+    _test_fn1arg(
+        function (a) f_len(a),
+        [["A",1],["abc",3],["foobar",6],["freeb",5],["",0],["9",1]]
+    );
+}
+test_f_len();
+
+
+module test_f_str() {
+    _test_fn1arg(
+        function (a) f_str(a),
+        [[123,"123"],[true,"true"],[false,"false"],[undef,"undef"],[3.14159,"3.14159"],[[3,4,5,true],"[3, 4, 5, true]"]]
+    );
+}
+test_f_str();
+
+
+module test_f_str2() {
+    _test_fn2arg(
+        function (a,b) f_str2(a,b),
+        [[12,34,"1234"], [[3,4,5,true],"foo","[3, 4, 5, true]foo"], ["foo","bar","foobar"]]
+    );
+}
+test_f_str2();
+
+
+module test_f_str3() {
+    _test_fn3arg(
+        function (a,b,c) f_str3(a,b,c),
+        [[12,34,56,"123456"], [[3,4,5,true],"foo","bar","[3, 4, 5, true]foobar"], ["foo",88,"baz","foo88baz"]]
+    );
+}
+test_f_str3();
+
+
+module test_f_min() {
+    _test_fn1arg(
+        function (a) f_min(a),
+        [[[8,3,7,4],3], [[-4,-5,-6,-7],-7], [[4,8,2,-3,3,8,0,-5,9,6],-5]]
+    );
+}
+test_f_min();
+
+
+module test_f_max() {
+    _test_fn1arg(
+        function (a) f_max(a),
+        [[[8,3,7,4],8], [[-4,-5,-6,-7],-4], [[4,8,2,-3,3,8,0,-5,9,6],9]]
+    );
+}
+test_f_max();
+
+
+module test_f_min2() {
+    _test_fn2arg(
+        function (a,b) f_min2(a,b),
+        [[8,3,3], [-6,-7,-7], [-4,13,-4]]
+    );
+}
+test_f_min2();
+
+
+module test_f_max2() {
+    _test_fn2arg(
+        function (a,b) f_max2(a,b),
+        [[8,3,8], [-4,-5,-4], [-3,7,7]]
+    );
+}
+test_f_max2();
+
+
+module test_f_min3() {
+    _test_fn3arg(
+        function (a,b,c) f_min3(a,b,c),
+        [[8,3,5,3], [-6,-7,5,-7], [-4,13,5,-4]]
+    );
+}
+test_f_min3();
+
+
+module test_f_max3() {
+    _test_fn3arg(
+        function (a,b,c) f_max3(a,b,c),
+        [[8,3,5,8], [-4,-5,4,4], [-3,7,4,7]]
+    );
+}
+test_f_max3();
+
+
+module test_f_is_bool() {
+    testfn = f_is_bool();
+    for (test = [
+        [undef,   false],
+        [false,   true],
+        [true,    true],
+        [0,       false],
+        [3,       false],
+        ["foo",   false],
+        [[4,5,6], false]
+    ]) {
+        assert(testfn(test[0]), test[1]);
+    }
+}
+test_f_is_bool();
+
+
+module test_f_is_def() {
+    testfn = f_is_def();
+    for (test = [
+        [undef,   false],
+        [false,   true],
+        [true,    true],
+        [0,       true],
+        [3,       true],
+        ["foo",   true],
+        [[4,5,6], true]
+    ]) {
+        assert(testfn(test[0]), test[1]);
+    }
+}
+test_f_is_def();
+
+
+module test_f_is_undef() {
+    testfn = f_is_undef();
+    for (test = [
+        [undef,   true],
+        [false,   false],
+        [true,    false],
+        [0,       false],
+        [3,       false],
+        ["foo",   false],
+        [[4,5,6], false]
+    ]) {
+        assert(testfn(test[0]), test[1]);
+    }
+}
+test_f_is_undef();
+
+
+module test_f_is_num() {
+    testfn = f_is_num();
+    for (test = [
+        [undef,   false],
+        [false,   false],
+        [true,    false],
+        [-4.5,    true],
+        [-4,      true],
+        [0,       true],
+        [1.5,     true],
+        [3,       true],
+        [INF,     true],
+        [-INF,    true],
+        [NAN,     false],
+        ["foo",   false],
+        [[4,5,6], false]
+    ]) {
+        assert(testfn(test[0]), test[1]);
+    }
+}
+test_f_is_num();
+
+
+module test_f_is_int() {
+    testfn = f_is_int();
+    for (test = [
+        [undef,   false],
+        [false,   false],
+        [true,    false],
+        [-4,      true],
+        [-4.5,    false],
+        [0,       true],
+        [1.5,     false],
+        [3,       true],
+        [INF,     false],
+        [-INF,    false],
+        [NAN,     false],
+        ["foo",   false],
+        [[4,5,6], false]
+    ]) {
+        assert(testfn(test[0]), test[1]);
+    }
+}
+test_f_is_int();
+
+
+module test_f_is_nan() {
+    testfn = f_is_nan();
+    for (test = [
+        [undef,   false],
+        [false,   false],
+        [true,    false],
+        [-4,      false],
+        [-4.5,    false],
+        [0,       false],
+        [1.5,     false],
+        [3,       false],
+        [INF,     false],
+        [-INF,    false],
+        [NAN,     true],
+        ["foo",   false],
+        [[4,5,6], false]
+    ]) {
+        assert(testfn(test[0]), test[1]);
+    }
+}
+test_f_is_nan();
+
+
+module test_f_is_finite() {
+    testfn = f_is_finite();
+    for (test = [
+        [undef,   false],
+        [false,   false],
+        [true,    false],
+        [-4,      true],
+        [0,       true],
+        [1.5,     true],
+        [3,       true],
+        [INF,     false],
+        [-INF,    false],
+        [NAN,     false],
+        ["foo",   false],
+        [[4,5,6], false]
+    ]) {
+        assert(testfn(test[0]), test[1]);
+    }
+}
+test_f_is_finite();
+
+
+module test_f_is_string() {
+    testfn = f_is_string();
+    for (test = [
+        [undef,   false],
+        [false,   false],
+        [true,    false],
+        [-4,      false],
+        [0,       false],
+        [1.5,     false],
+        [3,       false],
+        [INF,     false],
+        [-INF,    false],
+        [NAN,     false],
+        ["",      true],
+        ["foo",   true],
+        [[4,5,6], false],
+        [[4:1:6], false]
+    ]) {
+        assert(testfn(test[0]), test[1]);
+    }
+}
+test_f_is_string();
+
+
+module test_f_is_list() {
+    testfn = f_is_list();
+    for (test = [
+        [undef,   false],
+        [false,   false],
+        [true,    false],
+        [-4,      false],
+        [0,       false],
+        [1.5,     false],
+        [3,       false],
+        [INF,     false],
+        [-INF,    false],
+        [NAN,     false],
+        ["",      false],
+        ["foo",   false],
+        [[4,5,6], true],
+        [[4:1:6], false]
+    ]) {
+        assert(testfn(test[0]), test[1]);
+    }
+}
+test_f_is_list();
+
+
+module test_f_is_path() {
+    testfn = f_is_path();
+    for (test = [
+        [undef,   false],
+        [false,   false],
+        [true,    false],
+        [-4,      false],
+        [0,       false],
+        [1.5,     false],
+        [3,       false],
+        [INF,     false],
+        [-INF,    false],
+        [NAN,     false],
+        ["",      false],
+        ["foo",   false],
+        [[4,5,6], false],
+        [[4:1:6], false],
+        [square(100), true],
+        [circle(100), true]
+    ]) {
+        assert(testfn(test[0]), test[1]);
+    }
+}
+test_f_is_path();
 
 
 
