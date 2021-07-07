@@ -130,7 +130,7 @@ function line_of(spacing, n, l, p1, p2) =
     assert(is_undef(p2) || is_vector(p2))
     let(
         ll = !is_undef(l)? scalar_vec3(l, 0) :
-            (!is_undef(spacing) && !is_undef(n))? (n * scalar_vec3(spacing, 0)) :
+            (!is_undef(spacing) && !is_undef(n))? ((n-1) * scalar_vec3(spacing, 0)) :
             (!is_undef(p1) && !is_undef(p2))? point3d(p2-p1) :
             undef,
         cnt = !is_undef(n)? n :

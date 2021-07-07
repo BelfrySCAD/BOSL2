@@ -1789,6 +1789,10 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
 //   rounded_prism(pentagon(3), height=3, joint_top=[1,-1], joint_bot=[-0.5,2], joint_sides=0.5);
 // Example: Sideways polygons:
 //   rounded_prism(apply(yrot(95),path3d(hexagon(3))), apply(yrot(95), path3d(hexagon(3),3)), joint_top=2, joint_bot=1, joint_sides=1);
+// Example: Chamfer a polyhedron by setting splinesteps to 1
+//   N = apply(rot(180)*yscale(.8),turtle(["length",3,"left", "move", 2, "right", 135, "move", sqrt(2), "left", "move", sqrt(2), "right", 135, "move", 2]));
+//   rounded_prism(N, height=3, joint_bot=-0.3, joint_top=.4, joint_sides=[.75,0,.2,.2,.7], splinesteps=1);
+
 
 module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot, k_top, k_sides,
                      k=0.5, splinesteps=16, h, length, l, height, convexity=10, debug=false,

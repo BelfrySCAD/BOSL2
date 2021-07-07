@@ -330,7 +330,7 @@ function atanh(x) =
 //   o = quant([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,12,12,12]
 //   p = quant([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[12,12,12]]
 function quant(x,y) =
-    assert( is_int(y) && y>0, "The quantum `y` must be a non zero integer.")
+    assert( is_finite(y) && y>0, "The quantum `y` must be a non zero integer.")
     is_list(x)
     ?   [for (v=x) quant(v,y)]
     :   assert( is_finite(x), "The input to quantize is not a number nor a list of numbers.")
@@ -364,7 +364,7 @@ function quant(x,y) =
 //   o = quantdn([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,9,9,12]
 //   p = quantdn([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[9,9,12]]
 function quantdn(x,y) =
-    assert( is_int(y) && y>0, "The quantum `y` must be a non zero integer.")
+    assert( is_finite(y) && y>0, "The quantum `y` must be a non zero integer.")
     is_list(x)
     ?   [for (v=x) quantdn(v,y)]
     :   assert( is_finite(x), "The input to quantize must be a number or a list of numbers.")
@@ -398,7 +398,7 @@ function quantdn(x,y) =
 //   p = quantup([9,10,10.4,10.5,11,12],3);      // Returns: [9,12,12,12,12,12]
 //   quantup([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,12,12],[12,12,12]]
 function quantup(x,y) =
-    assert( is_int(y) && y>0, "The quantum `y` must be a non zero integer.")
+    assert( is_finite(y) && y>0, "The quantum `y` must be a non zero integer.")
     is_list(x)
     ?   [for (v=x) quantup(v,y)]
     :   assert( is_finite(x), "The input to quantize must be a number or a list of numbers.")
