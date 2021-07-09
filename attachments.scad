@@ -1162,11 +1162,11 @@ module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orien
         if (do_show) {
             if (is_undef($color)) {
                 linear_extrude(height=h, center=true)
-                    text(text=text, size=size, halign=ha, valign=va);
+                    text(text=text, size=size, halign=ha, valign=va, font=font);
             } else color($color) {
                 $color = undef;
                 linear_extrude(height=h, center=true)
-                    text(text=text, size=size, halign=ha, valign=va);
+                    text(text=text, size=size, halign=ha, valign=va, font=font);
             }
         }
     }
