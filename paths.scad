@@ -453,7 +453,7 @@ function path_torsion(path, closed=false) =
 //   rs = [for (i=[0:4]) each [0,10]];
 //   path2 = path_chamfer_and_rounding(path, closed=true, chamfer=chamfs, rounding=rs);
 //   stroke(path2, closed=true);
-function path_chamfer_and_rounding(path, closed, chamfer, rounding) =
+function path_chamfer_and_rounding(path, closed=true, chamfer, rounding) =
   let (
     path = deduplicate(path,closed=true),
     lp = len(path),
