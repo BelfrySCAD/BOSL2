@@ -234,7 +234,7 @@ function fwd(y=0, p) = move([0,-y,0],p=p);
 //   pt2 = back(20, p=[15,23,42]);        // Returns: [15,43,42]
 //   pt3 = back(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[1,5,3], [4,8,6]]
 //   mat3d = back(4);  // Returns: [[1,0,0,0],[0,1,0,4],[0,0,1,0],[0,0,0,1]]
-module back(y=0, ) {
+module back(y=0, p) {
     assert(is_undef(p), "Module form `back()` does not accept p= argument.");
     translate([0,y,0]) children();
 }
