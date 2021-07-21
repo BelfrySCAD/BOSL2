@@ -25,7 +25,7 @@
 //   mat = move([x=], [y=], [z=]);
 //
 // Topics: Affine, Matrices, Transforms, Translation
-// See Also: left(), right(), fwd(), back(), down(), up(), affine2d_translate(), affine3d_translate()
+// See Also: left(), right(), fwd(), back(), down(), up(), spherical_to_xyz(), altaz_to_xyz(), cylindrical_to_xyz(), polar_to_xy(), affine2d_translate(), affine3d_translate()
 //
 // Description:
 //   Translates position by the given amount.
@@ -57,6 +57,14 @@
 // Example:
 //   #sphere(d=10);
 //   move(x=-10, y=-5) sphere(d=10);
+//
+// Example(FlatSpin): Using Altitude-Azimuth Coordinates
+//   #sphere(d=10);
+//   move(altaz_to_xyz(30,90,20)) sphere(d=10);
+//
+// Example(FlatSpin): Using Spherical Coordinates
+//   #sphere(d=10);
+//   move(spherical_to_xyz(20,45,30)) sphere(d=10);
 //
 // Example(2D):
 //   path = square([50,30], center=true);
