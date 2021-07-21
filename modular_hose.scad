@@ -199,9 +199,9 @@ module modular_hose(size, type, clearance=0, waist_len, anchor=BOTTOM, spin=0,or
 //      diff("remove")
 //        cuboid(50){
 //          attach(TOP) modular_hose(1/2, "ball");
-//          position(TOP+RIGHT) y
-//            rot(181)
-//            xrot(90)
+//          up(0.01)position(TOP+RIGHT) 
+//            rot(180)
+//            xrot(-90)
 //            rotate_extrude(angle=135)
 //            right(25)
 //            circle(r=modular_hose_radius(1/2));
