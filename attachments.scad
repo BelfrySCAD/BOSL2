@@ -1629,6 +1629,20 @@ module show(tags="")
 //               rounding_mask_z(l=p.z, r=25);
 //       }
 //   }
+// Example: Working with Non-Attachables Like rotate_extrude()
+//   back_half()
+//     diff("remove")
+//       cuboid(40) {
+//         attach(TOP)
+//           recolor("lightgreen")
+//             cyl(l=10,d=30);
+//         position(TOP+RIGHT)
+//           tags("remove")
+//             xrot(90)
+//               rotate_extrude()
+//                 right(20)
+//                   circle(5);
+//       }
 module diff(neg, pos, keep)
 {
     // Don't perform the operation if the current tags are hidden
@@ -1679,6 +1693,19 @@ module diff(neg, pos, keep)
 //   sphere(d=100, $tags="wheel") {
 //       attach(CENTER) cube([40,100,100], anchor=CENTER, $tags="mask");
 //       attach(CENTER) xcyl(d=40, l=100, $tags="axle");
+//   }
+// Example: Working with Non-Attachables
+//   intersect("A", "B")
+//   cuboid(50, $tags="A") {
+//       tags("B")
+//         hull() {
+//           down(25)
+//             linear_extrude(height=0.01)
+//               square(55,center=true);
+//           up(25)
+//             linear_extrude(height=0.01)
+//               circle(d=45);
+//         }
 //   }
 module intersect(a, b=undef, keep=undef)
 {
