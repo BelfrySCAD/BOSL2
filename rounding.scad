@@ -1340,11 +1340,10 @@ function _remove_undefined_vals(list) =
 //      - "cut": cut distance for roundovers, a single value to round both corners identically or a list of two values for the two corners.  Negative values round outward.
 //      - "k": curvature smoothness parameter for roundovers, default 0.75
 //   .
-//   Function helpers for defining ends, prefixed by "os" for offset_stroke.
-//   .
-//   os_flat(angle|absangle): specify a flat end either relative to the path or relative to the x-axis
-//   os_pointed(loc,dist): specify a pointed tip where the point is distance `loc` from the centerline (positive is the left direction as for offset), and `dist` is the distance from the path end to the point tip.  The default value for `loc` is zero (the center).  You must specify `dist` when using this option.
-//   os_round(cut,angle|absangle,k).  Rounded ends with the specified cut distance, based on the specified angle or absolute angle.  The `k` parameter is the smoothness parameter for continuous curvature rounding.
+//   Function helpers for defining ends, prefixed by "os" for offset_stroke, are:
+//      - os_flat(angle|absangle): specify a flat end either relative to the path or relative to the x-axis
+//      - os_pointed(loc,dist): specify a pointed tip where the point is distance `loc` from the centerline (positive is the left direction as for offset), and `dist` is the distance from the path end to the point tip.  The default value for `loc` is zero (the center).  You must specify `dist` when using this option.
+//      - os_round(cut,angle|absangle,k).  Rounded ends with the specified cut distance, based on the specified angle or absolute angle.  The `k` parameter is the smoothness parameter for continuous curvature rounding.
 //   .
 //   Note that `offset_stroke()` will attempt to apply roundovers and angles at the ends even when it means deleting segments of the stroke, unlike round_corners which only works on a segment adjacent to a corner.  If you specify an overly extreme angle it will fail to find an intersection with the stroke and display an error.  When you specify an angle the end segment is rotated around the center of the stroke and the last segment of the stroke one one side is extended to the corner.
 //   .
