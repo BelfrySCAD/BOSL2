@@ -47,6 +47,23 @@ module test_v_ceil() {
 test_v_ceil();
 
 
+module test_v_lookup() {
+    lup = [[4, [3,4,5]], [5, [5,6,7]], [6, [4,5,6]]];
+    assert_equal(v_lookup(3,lup), [3,4,5]);
+    assert_equal(v_lookup(3.5,lup), [3,4,5]);
+    assert_equal(v_lookup(4,lup), [3,4,5]);
+    assert_approx(v_lookup(4.2,lup), [3.4,4.4,5.4]);
+    assert_equal(v_lookup(4.5,lup), [4,5,6]);
+    assert_equal(v_lookup(5,lup), [5,6,7]);
+    assert_approx(v_lookup(5.2,lup), [4.8,5.8,6.8]);
+    assert_equal(v_lookup(5.5,lup), [4.5,5.5,6.5]);
+    assert_equal(v_lookup(6,lup), [4,5,6]);
+    assert_equal(v_lookup(6.5,lup), [4,5,6]);
+    assert_equal(v_lookup(7,lup), [4,5,6]);
+}
+test_v_lookup();
+
+
 module test_v_mul() {
     assert_equal(v_mul([3,4,5], [8,7,6]), [24,28,30]);
     assert_equal(v_mul([1,2,3], [4,5,6]), [4,10,18]);
