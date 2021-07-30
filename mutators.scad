@@ -105,7 +105,7 @@ module bounding_box(excess=0, planar=false) {
 //   a normal vector.  The s parameter is needed for the module
 //   version to control the size of the masking cube, which affects preview display.
 //   When called as a function, you must supply a vnf, path or region in p.  If planar is set to true for the module version the operation
-//   is performed in  and UP and DOWN are treated as equivalent to BACK and FWD respectively.  
+//   is performed in  and UP and DOWN are treated as equivalent to BACK and FWD respectively.
 //
 // Arguments:
 //   p = path, region or VNF to slice.  (Function version)
@@ -163,7 +163,7 @@ function half_of(p, v=UP, cp) =
       let(
           v = (v==UP)? BACK : (v==DOWN)? FWD : v,
           cp = is_undef(cp) ? [0,0]
-             : is_num(cp) ? v*cp 
+             : is_num(cp) ? v*cp
              : assert(is_vector(cp,2) || (is_vector(cp,3) && cp.z==0),"Centerpoint must be 2-vector")
                cp
       )
@@ -179,7 +179,7 @@ function half_of(p, v=UP, cp) =
       intersection(box,p)
    : assert(false, "Input must be a region, path or VNF");
 
-          
+
 
 /*  This code cut 3d paths but leaves behind connecting line segments
     is_path(p) ?
@@ -824,13 +824,23 @@ module HSL(h,s=1,l=0.5,a=1) color(HSL(h,s,l),a) children();
 //   rgb = HSV(h=270,s=0.75,v=0.9);
 //   color(rgb) cube(60, center=true);
 function HSV(h,s=1,v=1) =
+    assert(s>=0 && s<=1)
+    assert(v>=0 && v<=1)
     let(
-        h=posmod(h,360),
-        v2=v*(1-s),
-        r=lookup(h,[[0,v], [60,v], [120,v2], [240,v2], [300,v], [360,v]]),
-        g=lookup(h,[[0,v2], [60,v], [180,v], [240,v2], [360,v2]]),
-        b=lookup(h,[[0,v2], [120,v2], [180,v], [300,v], [360,v2]])
-    ) [r,g,b];
+        h = posmod(h,360),
+        c = v * s,
+        hprime = h/60,
+        x = c * (1- abs(hprime % 2 - 1)),
+        rgbprime = hprime <=1 ? [c,x,0]
+                 : hprime <=2 ? [x,c,0]
+                 : hprime <=3 ? [0,c,x]
+                 : hprime <=4 ? [0,x,c]
+                 : hprime <=5 ? [x,0,c]
+                 : hprime <=6 ? [c,0,x]
+                 : [0,0,0],
+        m=v-c
+    )
+    rgbprime+[m,m,m];
 
 module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
 
