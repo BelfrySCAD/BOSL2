@@ -107,6 +107,31 @@ function v_ceil(v) =
     [for (x=v) ceil(x)];
 
 
+// Function: v_lookup()
+// Description:
+//   Works just like the built-in function [`lookup()`](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Mathematical_Functions#lookup), except that it can also interpolate between vector result values of the same length.
+// Arguments:
+//   x = The scalar value to look up.
+//   v = A list of [KEY,VAL] pairs. KEYs are scalars.  VALs should either all be scalar, or all be vectors of the same length.
+// Example:
+//   x = v_lookup(4.5, [[4, [3,4,5]], [5, [5,6,7]]]);  // Returns: [4,5,6]
+function v_lookup(x, v) =
+    is_num(v[0][1])? lookup(x,v) :
+    let(
+        i = lookup(x, [for (i=idx(v)) [v[i].x,i]]),
+        vlo = v[floor(i)],
+        vhi = v[ceil(i)],
+        lo = vlo[1],
+        hi = vhi[1]
+    )
+    assert(is_vector(lo) && is_vector(hi),
+        "Result values must all be numbers, or all be vectors.")
+    assert(len(lo) == len(hi), "Vector result values must be the same length")
+    vlo.x == vhi.x? vlo[1] :
+    let( u = (x - vlo.x) / (vhi.x - vlo.x) )
+    lerp(lo,hi,u);
+
+
 // Function: unit()
 // Usage:
 //   unit(v, [error]);
