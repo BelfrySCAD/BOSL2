@@ -1175,12 +1175,75 @@ module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orien
 
 // Section: Attachment Positioning
 
+// Module: orient()
+// Usage:
+//   orient(dir, <spin=>) ...
+//   orient(anchor=, <spin=>) ...
+// Topics: Attachments
+// Description:
+//   Orients children such that their top is tilted towards the given direction, or towards the
+//   direction of a given anchor point on the parent.  For a more step-by-step explanation of
+//   attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Arguments:
+//   dir = The direction to orient towards.
+//   ---
+//   anchor = The anchor on the parent which you want to match the orientation of.  Use instead of `dir`.
+//   spin = The spin to add to the children.  (Overrides anchor spin.)
+// See Also: attachable(), attach(), orient()
+// Example: Orienting by Vector
+//   prismoid([50,50],[30,30],h=40) {
+//       position(TOP+RIGHT)
+//           orient(RIGHT)
+//               prismoid([30,30],[0,5],h=20,anchor=BOT+LEFT);
+//   }
+// Example: When orienting to an anchor, the spin of the anchor may cause confusion:
+//   prismoid([50,50],[30,30],h=40) {
+//       position(TOP+RIGHT)
+//           orient(anchor=RIGHT)
+//               prismoid([30,30],[0,5],h=20,anchor=BOT+LEFT);
+//   }
+// Example: You can override anchor spin with `spin=`.
+//   prismoid([50,50],[30,30],h=40) {
+//       position(TOP+RIGHT)
+//           orient(anchor=RIGHT,spin=0)
+//               prismoid([30,30],[0,5],h=20,anchor=BOT+LEFT);
+//   }
+// Example: Or you can anchor the child from the back
+//   prismoid([50,50],[30,30],h=40) {
+//       position(TOP+RIGHT)
+//           orient(anchor=RIGHT)
+//               prismoid([30,30],[0,5],h=20,anchor=BOT+BACK);
+//   }
+module orient(dir, anchor, spin) {
+    if (!is_undef(dir)) {
+        assert(anchor==undef, "Only one of dir= or anchor= may be given to orient()");
+        assert(is_vector(dir));
+        spin = default(spin, 0);
+        assert(is_finite(spin));
+        rot(spin, from=UP, to=dir) children();
+    } else {
+        assert(dir==undef, "Only one of dir= or anchor= may be given to orient()");
+        assert($parent_geom != undef, "No parent to orient from!");
+        assert(is_string(anchor) || is_vector(anchor));
+        anch = find_anchor(anchor, $parent_geom);
+        two_d = attach_geom_2d($parent_geom);
+        fromvec = two_d? BACK : UP;
+        $attach_to = undef;
+        $attach_anchor = anch;
+        $attach_norot = true;
+        spin = default(spin, anch[3]);
+        assert(is_finite(spin));
+        rot(spin, from=fromvec, to=anch[2]) children();
+    }
+}
+
+
 // Module: position()
 // Usage:
 //   position(from) {...}
 //
 // Topics: Attachments
-// See Also: attachable()
+// See Also: attachable(), attach(), orient()
 //
 // Description:
 //   Attaches children to a parent object at an anchor point.  For a more step-by-step explanation
