@@ -1184,8 +1184,8 @@ module ball_screw_rod(
 //   Changed slop to 4 * $slop.  I got good results printing with $slop=0.05 with this setting.
 //   Don't generate excess threads when starts>1, and don't force threads to be even
 //
-//    Fixed higbee in spiral_sweep for properly centered scaling and for staying on the internal/external base of threads
-//    Fixed bug in spiral_sweep where two segments were missing if higbee is zero
+//   Fixed higbee in spiral_sweep for properly centered scaling and for staying on the internal/external base of threads
+//   Fixed bug in spiral_sweep where two segments were missing if higbee is zero
 //   
 
 // Questions:
