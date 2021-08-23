@@ -220,6 +220,8 @@ module trapezoidal_threaded_rod(
                         affine3d_translate([0,pdepth,0])
                 ) each apply(mat3, prof3d)
             ])
+
+            
         ) [
             [0, 0, -l/2-pitch],
             each apply(mat1*mat2, prof),
