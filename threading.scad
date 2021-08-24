@@ -7,366 +7,142 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Section: Generic Threading
+// Section: Standard (UTS/ISO) Threading
 
-// Module: generic_threaded_rod()
+// Module: threaded_rod()
 // Description:
-//   Constructs a generic threaded rod using an arbitrary thread profile that you supply.  The rod can be tapered (e.g. for pipe threads).
-//   For specific thread types use other modules that supply the appropriate profile.
-//   .
-//   You give the profile as a 2D path that will be scaled by the pitch to produce the final thread shape.  The profile X values
-//   must be between -1/2 and 1/2.  The Y=0 point will align with the specified rod diameter, so generally you want a Y value of zero at the peak (which
-//   makes your specified diameter the outer diameter of the threads).  
-//   The value in the valleys of the thread should then be `-depth/pitch` due to the scaling by the thread pitch.  The segment between the end
-//   of one thread and the start of the next is added automatically, so you should not have the path start and end at equivalent points (X = ±1/2 with the same Y value).
-//   Generally you should center the profile horizontally in the interval [-1/2, 1/2].
-//   .
-//   If internal is true then produce a thread mask to difference from an object.
-//   When internal is true the rod diameter is enlarged to correct for the polygonal nature of circles to ensure that the internal diameter is the specified size.
-//   The diameter is also increased by `4 * $slop` to create clearance for threading by allowing a `2 * $slop` gap on each side. 
-//   If bevel is set to true and internal is false then the ends of the rod will be beveled.  When bevel is true and internal is true the ends of the rod will
-//   be filled in so that the rod mask will create a bevel when subtracted from an object.  The bevel is at 45 deg and is the depth of the threads.
-//   .
-//   Higbee specifies tapering of the thread ends to make screws easier to start.  Specify the number of degrees for the taper.  Higbee
-//   only works for external threads.  It is ignored if internal is true.
+//   Constructs a standard ISO (metric) or UTS (English) threaded rod.  These threads are close to triangular,
+//   with a 60 degree thread angle.  You can give the outer diameter and get the "basic form" or you can
+//   set d to a triplet [d_min, d_pitch, d_major] where are parameters determined by the ISO and UTS specifications
+//   that define clearance sizing for the threading.  See screws.scad for how to make screws
+//   using the specification parameters.  
 // Arguments:
-//   d = Outer diameter of threaded rod.
-//   l = Length of threaded rod.
-//   pitch = Thread spacing.
-//   profile = A 2D path giving the shape of a thread
-//   ---
-//   left_handed = If true, create left-handed threads.  Default: false
+//   d = Outer diameter of threaded rod, or a triplet of [d_min, d_pitch, d_major]. 
+//   l = length of threaded rod.
+//   pitch = Length between threads.
+//   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   bevel1 = if true bevel the bottom end.
 //   bevel2 = if true bevel the top end. 
-//   starts = The number of lead starts.  Default: 1
-//   internal = If true, make this a mask for making internal threads.  Default: false
+//   internal = If true, make this a mask for making internal threads.
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
-//   higbee = Angle to taper thread ends over.  Default: 0 (No higbee thread tapering)
-//   higbee1 = Angle to taper bottom thread end over.
-//   higbee2 = Angle to taper top thread end over.
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
-// Example(2DMed): Example Tooth Profile
-//   pitch = 2;
-//   depth = pitch * cos(30) * 5/8;
-//   profile = [
-//       [-7/16, -depth/pitch*1.07],
-//       [-6/16, -depth/pitch],
-//       [-1/16,  0],
-//       [ 1/16,  0],
-//       [ 6/16, -depth/pitch],
-//       [ 7/16, -depth/pitch*1.07]
-//   ];
-//   stroke(profile, width=0.02);
-// Example:
-//   pitch = 2;
-//   depth = pitch * cos(30) * 5/8;
-//   profile = [
-//       [-7/16, -depth/pitch*1.07],
-//       [-6/16, -depth/pitch],
-//       [-1/16,  0],
-//       [ 1/16,  0],
-//       [ 6/16, -depth/pitch],
-//       [ 7/16, -depth/pitch*1.07]
-//   ];
-//   generic_threaded_rod(d=10, l=40, pitch=2, profile=profile);
-module generic_threaded_rod(
-    d, l, pitch, profile,
-    left_handed=false,
-    bevel,
-    bevel1, bevel2, 
-    starts=1,
-    internal=false,
-    d1, d2,
-    higbee, higbee1, higbee2,
-    center, anchor, spin, orient
-) {
-    dummy0 = 
-      assert(all_positive(pitch))
-      assert(all_positive(l))
-      assert(is_path(profile))
-      assert(is_bool(left_handed));
-    bevel1 = first_defined([bevel1,bevel,false]);
-    bevel2 = first_defined([bevel2,bevel,false]);
-    r1 = get_radius(d1=d1, d=d);
-    r2 = get_radius(d1=d2, d=d);
-    sides = quantup(segs(max(r1,r2)), starts);
-    rsc = internal? (1/cos(180/sides)) : 1;
-    islop = internal? 2*$slop : 0;
-    _r1 = r1 * rsc + islop;
-    _r2 = r2 * rsc + islop;
-    threads = quantup(l/pitch+2,1); // Was quantup(1/pitch+2,2*starts);
-    dir = left_handed? -1 : 1;
-    twist = 360 * l / pitch / starts;
-    higang1 = first_defined([higbee1, higbee, 0]);
-    higang2 = first_defined([higbee2, higbee, 0]);
-    assert(higang1 < twist/2);
-    assert(higang2 < twist/2);
-    prof3d = path3d(profile);
-    pdepth = -min(subindex(profile,1));
-    pmax = pitch * max(subindex(profile,1));
-    rmax = max(_r1,_r2)+pmax;
-    depth = pdepth * pitch;
-    dummy1 = assert(_r1>depth && _r2>depth, "Screw profile deeper than rod radius");
-    skew_mat = affine3d_skew(sxz=(_r2-_r1)/l);
-    map3d_and_scale = affine3d_frame_map(x=[0,0,1], y=[1,0,0])  // Map profile to 3d, parallel to z axis
-                      * scale(pitch);                           // scale profile by pitch
-    hig_table = [
-        [-twist,           0],
-        [-twist/2-0.00001, 0],
-        [-twist/2+higang1, 1],
-        [+twist/2-higang2, 1],
-        [+twist/2+0.00001, 0],
-        [+twist,           0],
-    ];
-    start_steps = floor(sides / starts);
-    thread_verts = [
-         // Outer loop constructs a vertical column of the screw at each angle
-         for (step = [0:1:start_steps]) let(
-             ang = 360 * step/sides,
-             dz = step / start_steps,    // z offset for threads at this angle
-             rot_prof = zrot(ang*dir)            // Rotate profile to correct angular location
-                        * right((_r1 + _r2) / 2) // Shift profile out to thread radius
-                        * skew_mat               // Skew correction for tapered threads
-                        * map3d_and_scale,       // Map profile into 3d
-             full_profile =  [   // profile for the entire rod
-                 for (thread = [-threads/2:1:threads/2-1]) let(
-                     tang = (thread/starts) * 360 + ang,
-                     hsc = internal? 1
-                         : (higang1==0 && tang<=0)? 1
-                         : (higang2==0 && tang>=0)? 1
-                         : lookup(tang, hig_table),
-                     higscale = yscale(hsc,cp = -pdepth)  // Scale for higbee
-                 )
-                 // The right movement finds the position of the thread along
-                 // what will be the z axis after the profile is mapped to 3d                                           
-                 each apply(right(dz + thread) * higscale, prof3d)
-             ]
-         ) [
-             [0, 0, -l/2-pitch],
-             each apply(rot_prof , full_profile),
-             [0, 0, +l/2+pitch]
-         ]
-    ];
-
-    style = higang1>0 || higang2>0 ? "quincunx" : "min_edge";
-    
-    thread_vnfs = vnf_merge([
-        for (i=[0:1:starts-1])
-            zrot(i*360/starts, p=vnf_vertex_array(thread_verts, reverse=left_handed, style=style)),
-        for (i=[0:1:starts-1]) let(
-            rmat = zrot(i*360/starts),
-            pts = deduplicate(list_head(thread_verts[0], len(prof3d)+1)),
-            faces = [for (i=idx(pts,e=-2)) [0, i+1, i]],
-            rfaces = left_handed? [for (x=faces) reverse(x)] : faces
-        ) [apply(rmat,pts), rfaces],
-        for (i=[0:1:starts-1]) let(
-            rmat = zrot(i*360/starts),
-            pts = deduplicate(list_tail(last(thread_verts), -len(prof3d)-2)),
-            faces = [for (i=idx(pts,e=-2)) [len(pts)-1, i, i+1]],
-            rfaces = left_handed? [for (x=faces) reverse(x)] : faces
-        ) [apply(rmat,pts), rfaces]
-    ]);
-
-    slope = (_r1-_r2)/l;
-    maxlen = 2*pitch;
-
-    anchor = get_anchor(anchor, center, BOT, CENTER);
-    attachable(anchor,spin,orient, r1=_r1, r2=_r2, l=l) {
-        union(){
-
-          // This method is faster but more complex code and it produces green tops
-          difference() {
-              //vnf_validate(vnf_quantize(thread_vnfs), size=0.1);
-              vnf_polyhedron(vnf_quantize(thread_vnfs), convexity=10);
-
-              if (!internal){
-                  if (bevel1 || bevel2)
-                      rotate_extrude(){
-                         if (bevel2) polygon([[0,l/2], [_r2+pmax-depth, l/2], [_r2+pmax+slope*depth,l/2-depth], [rmax+1, l/2-depth], [rmax+1,l/2+maxlen], [0,l/2+maxlen]]);
-                         if (bevel1) polygon([[0,-l/2], [_r1+pmax-depth, -l/2], [_r1+pmax-slope*depth,-l/2+depth], [rmax+1, -l/2+depth], [rmax+1,-l/2-maxlen], [0,-l/2-maxlen]]);
-                      }
-                  if (!bevel1)
-                    down(l/2) cuboid([2*rmax+1,2*rmax+1, maxlen], anchor=TOP);                     
-                  if (!bevel2)
-                    up(l/2) cuboid([2*rmax+1,2*rmax+1, maxlen], anchor=BOTTOM);
-                  
-              }
-          }
-
-
-/*          intersection(){
-              //vnf_validate(vnf_quantize(thread_vnfs), size=0.1);
-              vnf_polyhedron(vnf_quantize(thread_vnfs), convexity=10);
-              cyl(l=l, r1=_r1+pmax, r2=_r2+pmax, chamfer1=bevel1?depth:undef, chamfer2=bevel2?depth:undef);                  
-          }*/
-
-          // Add bevel for internal threads
-          if (internal) {
-            if (bevel1)
-              down(l/2)cyl(l=depth, r1=_r1+pmax, r2=_r1+pmax-slope*depth-depth,anchor=BOTTOM);
-            if (bevel2)
-              up(l/2)cyl(l=depth, r2=_r2+pmax, r1=_r2+pmax+slope*depth-depth,anchor=TOP);
-          }
-        }
-        children();
-    }
-}
-
-
-
-// Module: generic_threaded_nut()
-// Description:
-//   Constructs a hexagonal nut for an generic threaded rod using a user-supplied thread profile.
-//   See generic_threaded_rod for details on the profile specification.  
-// Arguments:
-//   od = diameter of the nut.
-//   id = diameter of threaded rod to screw onto.
-//   h = height/thickness of nut.
-//   pitch = Thread spacing.
-//   profile = Thread profile.
-//   ---
-//   left_handed = if true, create left-handed threads.  Default = false
-//   starts = The number of lead starts.  Default = 1
-//   bevel = if true, bevel the thread ends.  Default: false
-//   bevel1 = if true bevel the bottom end.
-//   bevel2 = if true bevel the top end.
-//   id1 = inner diameter at the bottom
-//   id2 = inner diameter at the top
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
-module generic_threaded_nut(
-    od,
-    id,
-    h,
-    pitch,
-    profile,
-    left_handed=false,
-    starts=1,
-    bevel,bevel1,bevel2,
-    id1,id2,
-    anchor, spin, orient
-) {
-    extra = 0.01;
-    id1 = first_defined([id1,id]);
-    id2 = first_defined([id2,id]);
-    assert(is_def(id1) && is_def(id2), "Must specify inner diameter of nut");
-    slope = (id2-id1)/h;
-    full_id1 = id1-slope*extra/2;
-    full_id2 = id2+slope*extra/2;
-    bevel1 = first_defined([bevel1,bevel,false]);
-    bevel2 = first_defined([bevel2,bevel,false]);
-    dummy1 = assert(is_num(pitch) && pitch>0);
-    depth = -pitch*min(subindex(profile,1));
-    attachable(anchor,spin,orient, size=[od/cos(30),od,h]) {
-        difference() {
-            cyl(d=od/cos(30), h=h, center=true, $fn=6,chamfer1=bevel1?depth:undef,chamfer2=bevel2?depth:undef);
-            generic_threaded_rod(
-                d1=full_id1,d2=full_id2,
-                l=h+extra,
-                pitch=pitch,
-                profile=profile,
-                left_handed=left_handed,
-                starts=starts,
-                internal=true,
-                bevel1=bevel1,bevel2=bevel2
-            );
-        }
-        children();
-    }
-}
-
-
-
-// Module: thread_helix()
-// Usage:
-//   thread_helix(d, pitch, [thread_depth], [flank_angle], [twist], [profile=], [left_handed=], [higbee=], [internal=]);
-// Description:
-//   Creates a right-handed helical thread with optional end tapering.  You can specify a thread_depth and flank_angle, in which
-//   case you get a symmetric trapezoidal thread, whose base is at the diameter (so the total diameter will be d + thread_depth).  
-//   Atlernatively you can give a profile, following the same rules as for general_threaded_rod.
-//   The Y=0 point will align with the specified diameter, and the profile should 
-//   range in X from -1/2 to 1/2.  You cannot specify both the profile and the thread_depth or flank_angle.  
-//   .
-//   Higbee specifies tapering applied to the ends of the extrusion and is given as the linear distance
-//   over which to taper.  
-// Arguments:
-//   d = Inside base diameter of threads.  Default: 10
-//   pitch = Distance between threads.  Default: 2mm/thread
-//   thread_depth = Depth of threads from top to bottom.
-//   flank_angle = Angle of thread faces to plane perpendicular to screw.  Default: 15 degrees.
-//   twist = Number of degrees to rotate thread around.  Default: 720 degrees.
-//   ---
-//   profile = If an asymmetrical thread profile is needed, it can be specified here.
-//   starts = The number of thread starts.  Default: 1
-//   left_handed = If true, thread has a left-handed winding.
-//   internal = If true, invert threads for internal threading.
-//   d1 = Bottom inside base diameter of threads.
-//   d2 = Top inside base diameter of threads.
 //   higbee = Length to taper thread ends over.  Default: 0
 //   higbee1 = Length to taper bottom thread end over.
 //   higbee2 = Length to taper top thread end over.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-// Example(2DMed): Typical Tooth Profile
-//   pitch = 2;
-//   depth = pitch * cos(30) * 5/8;
-//   profile = [
-//       [-6/16, 0           ],
-//       [-1/16, depth/pitch ],
-//       [ 1/16, depth/pitch ],
-//       [ 6/16, 0           ],
-//   ];
-//   stroke(profile, width=0.02);
-// Example:
-//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=900, $fn=72);
-module thread_helix(
-    d, pitch, thread_depth, flank_angle, twist=720,
-    profile, starts=1, left_handed=false, internal=false,
-    d1, d2, higbee, higbee1, higbee2,
+//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+// Example(2D):
+//   projection(cut=true)
+//       threaded_rod(d=10, l=15, pitch=1.5, orient=BACK);
+// Examples(Med):
+//   threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
+//   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
+module threaded_rod(
+    d, l, pitch,
+    left_handed=false,
+    bevel,bevel1,bevel2,
+    internal=false,
+    d1, d2,
+    higbee, higbee1, higbee2,
     anchor, spin, orient
 ) {
-    dummy1=assert(is_undef(profile) || !any_defined([thread_depth, flank_angle]),"Cannot give thread_depth or flank_angle with a profile");
-    h = pitch*starts*twist/360;
-    r1 = get_radius(d1=d1, d=d, dflt=10);
-    r2 = get_radius(d1=d2, d=d, dflt=10);
-    profile = is_def(profile) ? profile :
-        let(
-            tdp = thread_depth / pitch,
-            dz = tdp * tan(flank_angle),
-            cap = (1 - 2*dz)/2
-        )
-        internal?
-          [
-            [-cap/2-dz, tdp],
-            [-cap/2,    0  ],
-            [+cap/2,    0  ],
-            [+cap/2+dz, tdp],
-          ]
-        :
-          [
-            [+cap/2+dz, 0  ],
-            [+cap/2,    tdp],
-            [-cap/2,    tdp],
-            [-cap/2-dz, 0  ],
-          ];
-    pline = mirror([-1,1],  p = profile * pitch);
-    dir = left_handed? -1 : 1;
-    attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
-        zrot_copies(n=starts) {
-            spiral_sweep(pline, h=h, r1=r1, r2=r2, twist=twist*dir, higbee=higbee, higbee1=higbee1, higbee2=higbee2, internal=internal, anchor=CENTER);
-        }
-        children();
-    }
+    dummy1=
+      assert(all_positive(pitch))
+      assert(all_positive(d))
+      assert(all_positive(l));
+    basic = is_num(d) || is_undef(d) || is_def(d1) || is_def(d2);
+    dummy2 = assert(basic || is_vector(d,3));
+    depth = basic ? cos(30) * 5/8
+                  : (d[2] - d[0])/2/pitch;
+    crestwidth = basic ? 1/8 : 1/2 - (d[2]-d[1])/sqrt(3)/pitch;
+    profile =    [
+                  [-depth/sqrt(3)-crestwidth/2, -depth],
+                  [              -crestwidth/2,      0],
+                  [               crestwidth/2,      0],
+                  [ depth/sqrt(3)+crestwidth/2, -depth]
+                 ];
+    oprofile = internal? [
+        [-6/16, -depth],
+        [-1/16,  0],
+        [-1/32,  0.02],
+        [ 1/32,  0.02],
+        [ 1/16,  0],
+        [ 6/16, -depth]
+    ] : [
+        [-7/16, -depth*1.07],
+        [-6/16, -depth],
+        [-1/16,  0],
+        [ 1/16,  0],
+        [ 6/16, -depth],
+        [ 7/16, -depth*1.07]
+    ];
+    generic_threaded_rod(
+        d=basic ? d : d[2], d1=d1, d2=d2, l=l,
+        pitch=pitch,
+        profile=profile,
+        left_handed=left_handed,
+        bevel=bevel,bevel1=bevel1,bevel2=bevel2,
+        internal=internal,
+        higbee=higbee,
+        higbee1=higbee1,
+        higbee2=higbee2,
+        anchor=anchor,
+        spin=spin,
+        orient=orient
+    ) children();
 }
+
+
+
+// Module: threaded_nut()
+// Description:
+//   Constructs a hex nut for an ISO (metric) or UTS (English) threaded rod. 
+// Arguments:
+//   od = diameter of the nut.
+//   id = diameter of threaded rod to screw onto.
+//   h = height/thickness of nut.
+//   pitch = Length between threads.
+//   ---
+//   left_handed = if true, create left-handed threads.  Default = false
+//   bevel = if true, bevel the thread ends.  Default: false
+//   bevel1 = if true bevel the bottom end.
+//   bevel2 = if true bevel the top end. 
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+// Examples(Med):
+//   threaded_nut(od=16, id=8, h=8, pitch=1.25, $slop=0.05, $fa=1, $fs=1);
+//   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, bevel=true, $slop=0.1, $fa=1, $fs=1);
+module threaded_nut(
+    od, id, h,
+    pitch, left_handed=false, bevel, bevel1, bevel2, 
+    anchor, spin, orient
+) {
+    depth = pitch * cos(30) * 5/8;
+    profile = [
+        [-6/16, -depth/pitch],
+        [-1/16,  0],
+        [-1/32,  0.02],
+        [ 1/32,  0.02],
+        [ 1/16,  0],
+        [ 6/16, -depth/pitch]
+    ];
+    generic_threaded_nut(
+        od=od, id=id, h=h,
+        pitch=pitch,
+        profile=profile,
+        left_handed=left_handed,
+        bevel=bevel,bevel1=bevel1,bevel2=bevel2,
+        anchor=anchor, spin=spin,
+        orient=orient
+    ) children();
+}
+
+// Section: Trapezoidal Threading
 
 
 // Module: trapezoidal_threaded_rod()
@@ -539,10 +315,6 @@ module trapezoidal_threaded_nut(
 }
 
 
-
-
-// Section: ACME Trapezoidal Threading
-
 // Module: acme_threaded_rod()
 // Description:
 //   Constructs an ACME trapezoidal threaded screw rod.  This form has a 29 degree thread angle with a
@@ -644,141 +416,6 @@ module acme_threaded_nut(
 }
 
 
-
-// Section: Standard (UTS/ISO) Threading
-
-// Module: threaded_rod()
-// Description:
-//   Constructs a standard ISO (metric) or UTS (English) threaded rod.  These threads are close to triangular,
-//   with a 60 degree thread angle.  You can give the outer diameter and get the "basic form" or you can
-//   set d to a triplet [d_min, d_pitch, d_major] where are parameters determined by the ISO and UTS specifications
-//   that define clearance sizing for the threading.  See screws.scad for how to make screws
-//   using the specification parameters.  
-// Arguments:
-//   d = Outer diameter of threaded rod, or a triplet of [d_min, d_pitch, d_major]. 
-//   l = length of threaded rod.
-//   pitch = Length between threads.
-//   left_handed = if true, create left-handed threads.  Default = false
-//   bevel = if true, bevel the thread ends.  Default: false
-//   bevel1 = if true bevel the bottom end.
-//   bevel2 = if true bevel the top end. 
-//   internal = If true, make this a mask for making internal threads.
-//   d1 = Bottom outside diameter of threads.
-//   d2 = Top outside diameter of threads.
-//   higbee = Length to taper thread ends over.  Default: 0
-//   higbee1 = Length to taper bottom thread end over.
-//   higbee2 = Length to taper top thread end over.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
-// Example(2D):
-//   projection(cut=true)
-//       threaded_rod(d=10, l=15, pitch=1.5, orient=BACK);
-// Examples(Med):
-//   threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
-//   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
-module threaded_rod(
-    d, l, pitch,
-    left_handed=false,
-    bevel,bevel1,bevel2,
-    internal=false,
-    d1, d2,
-    higbee, higbee1, higbee2,
-    anchor, spin, orient
-) {
-    dummy1=
-      assert(all_positive(pitch))
-      assert(all_positive(d))
-      assert(all_positive(l));
-    basic = is_num(d) || is_undef(d) || is_def(d1) || is_def(d2);
-    dummy2 = assert(basic || is_vector(d,3));
-    depth = basic ? cos(30) * 5/8
-                  : (d[2] - d[0])/2/pitch;
-    crestwidth = basic ? 1/8 : 1/2 - (d[2]-d[1])/sqrt(3)/pitch;
-    profile =    [
-                  [-depth/sqrt(3)-crestwidth/2, -depth],
-                  [              -crestwidth/2,      0],
-                  [               crestwidth/2,      0],
-                  [ depth/sqrt(3)+crestwidth/2, -depth]
-                 ];
-    oprofile = internal? [
-        [-6/16, -depth],
-        [-1/16,  0],
-        [-1/32,  0.02],
-        [ 1/32,  0.02],
-        [ 1/16,  0],
-        [ 6/16, -depth]
-    ] : [
-        [-7/16, -depth*1.07],
-        [-6/16, -depth],
-        [-1/16,  0],
-        [ 1/16,  0],
-        [ 6/16, -depth],
-        [ 7/16, -depth*1.07]
-    ];
-    generic_threaded_rod(
-        d=basic ? d : d[2], d1=d1, d2=d2, l=l,
-        pitch=pitch,
-        profile=profile,
-        left_handed=left_handed,
-        bevel=bevel,bevel1=bevel1,bevel2=bevel2,
-        internal=internal,
-        higbee=higbee,
-        higbee1=higbee1,
-        higbee2=higbee2,
-        anchor=anchor,
-        spin=spin,
-        orient=orient
-    ) children();
-}
-
-
-
-// Module: threaded_nut()
-// Description:
-//   Constructs a hex nut for an ISO (metric) or UTS (English) threaded rod. 
-// Arguments:
-//   od = diameter of the nut.
-//   id = diameter of threaded rod to screw onto.
-//   h = height/thickness of nut.
-//   pitch = Length between threads.
-//   ---
-//   left_handed = if true, create left-handed threads.  Default = false
-//   bevel = if true, bevel the thread ends.  Default: false
-//   bevel1 = if true bevel the bottom end.
-//   bevel2 = if true bevel the top end. 
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
-// Examples(Med):
-//   threaded_nut(od=16, id=8, h=8, pitch=1.25, $slop=0.05, $fa=1, $fs=1);
-//   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, bevel=true, $slop=0.1, $fa=1, $fs=1);
-module threaded_nut(
-    od, id, h,
-    pitch, left_handed=false, bevel, bevel1, bevel2, 
-    anchor, spin, orient
-) {
-    depth = pitch * cos(30) * 5/8;
-    profile = [
-        [-6/16, -depth/pitch],
-        [-1/16,  0],
-        [-1/32,  0.02],
-        [ 1/32,  0.02],
-        [ 1/16,  0],
-        [ 6/16, -depth/pitch]
-    ];
-    generic_threaded_nut(
-        od=od, id=id, h=h,
-        pitch=pitch,
-        profile=profile,
-        left_handed=left_handed,
-        bevel=bevel,bevel1=bevel1,bevel2=bevel2,
-        anchor=anchor, spin=spin,
-        orient=orient
-    ) children();
-}
 
 
 // Section: Pipe Threading
@@ -1169,6 +806,369 @@ module ball_screw_rod(
         spin=spin,
         orient=orient
     ) children();
+}
+
+
+
+// Section: Generic Threading
+
+// Module: generic_threaded_rod()
+// Description:
+//   Constructs a generic threaded rod using an arbitrary thread profile that you supply.  The rod can be tapered (e.g. for pipe threads).
+//   For specific thread types use other modules that supply the appropriate profile.
+//   .
+//   You give the profile as a 2D path that will be scaled by the pitch to produce the final thread shape.  The profile X values
+//   must be between -1/2 and 1/2.  The Y=0 point will align with the specified rod diameter, so generally you want a Y value of zero at the peak (which
+//   makes your specified diameter the outer diameter of the threads).  
+//   The value in the valleys of the thread should then be `-depth/pitch` due to the scaling by the thread pitch.  The segment between the end
+//   of one thread and the start of the next is added automatically, so you should not have the path start and end at equivalent points (X = ±1/2 with the same Y value).
+//   Generally you should center the profile horizontally in the interval [-1/2, 1/2].
+//   .
+//   If internal is true then produce a thread mask to difference from an object.
+//   When internal is true the rod diameter is enlarged to correct for the polygonal nature of circles to ensure that the internal diameter is the specified size.
+//   The diameter is also increased by `4 * $slop` to create clearance for threading by allowing a `2 * $slop` gap on each side. 
+//   If bevel is set to true and internal is false then the ends of the rod will be beveled.  When bevel is true and internal is true the ends of the rod will
+//   be filled in so that the rod mask will create a bevel when subtracted from an object.  The bevel is at 45 deg and is the depth of the threads.
+//   .
+//   Higbee specifies tapering of the thread ends to make screws easier to start.  Specify the number of degrees for the taper.  Higbee
+//   only works for external threads.  It is ignored if internal is true.
+// Arguments:
+//   d = Outer diameter of threaded rod.
+//   l = Length of threaded rod.
+//   pitch = Thread spacing.
+//   profile = A 2D path giving the shape of a thread
+//   ---
+//   left_handed = If true, create left-handed threads.  Default: false
+//   bevel = if true, bevel the thread ends.  Default: false
+//   bevel1 = if true bevel the bottom end.
+//   bevel2 = if true bevel the top end. 
+//   starts = The number of lead starts.  Default: 1
+//   internal = If true, make this a mask for making internal threads.  Default: false
+//   d1 = Bottom outside diameter of threads.
+//   d2 = Top outside diameter of threads.
+//   higbee = Angle to taper thread ends over.  Default: 0 (No higbee thread tapering)
+//   higbee1 = Angle to taper bottom thread end over.
+//   higbee2 = Angle to taper top thread end over.
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+// Example(2DMed): Example Tooth Profile
+//   pitch = 2;
+//   depth = pitch * cos(30) * 5/8;
+//   profile = [
+//       [-7/16, -depth/pitch*1.07],
+//       [-6/16, -depth/pitch],
+//       [-1/16,  0],
+//       [ 1/16,  0],
+//       [ 6/16, -depth/pitch],
+//       [ 7/16, -depth/pitch*1.07]
+//   ];
+//   stroke(profile, width=0.02);
+// Example:
+//   pitch = 2;
+//   depth = pitch * cos(30) * 5/8;
+//   profile = [
+//       [-7/16, -depth/pitch*1.07],
+//       [-6/16, -depth/pitch],
+//       [-1/16,  0],
+//       [ 1/16,  0],
+//       [ 6/16, -depth/pitch],
+//       [ 7/16, -depth/pitch*1.07]
+//   ];
+//   generic_threaded_rod(d=10, l=40, pitch=2, profile=profile);
+module generic_threaded_rod(
+    d, l, pitch, profile,
+    left_handed=false,
+    bevel,
+    bevel1, bevel2, 
+    starts=1,
+    internal=false,
+    d1, d2,
+    higbee, higbee1, higbee2,
+    center, anchor, spin, orient
+) {
+    dummy0 = 
+      assert(all_positive(pitch))
+      assert(all_positive(l))
+      assert(is_path(profile))
+      assert(is_bool(left_handed));
+    bevel1 = first_defined([bevel1,bevel,false]);
+    bevel2 = first_defined([bevel2,bevel,false]);
+    r1 = get_radius(d1=d1, d=d);
+    r2 = get_radius(d1=d2, d=d);
+    sides = quantup(segs(max(r1,r2)), starts);
+    rsc = internal? (1/cos(180/sides)) : 1;
+    islop = internal? 2*$slop : 0;
+    _r1 = r1 * rsc + islop;
+    _r2 = r2 * rsc + islop;
+    threads = quantup(l/pitch+2,1); // Was quantup(1/pitch+2,2*starts);
+    dir = left_handed? -1 : 1;
+    twist = 360 * l / pitch / starts;
+    higang1 = first_defined([higbee1, higbee, 0]);
+    higang2 = first_defined([higbee2, higbee, 0]);
+    assert(higang1 < twist/2);
+    assert(higang2 < twist/2);
+    prof3d = path3d(profile);
+    pdepth = -min(subindex(profile,1));
+    pmax = pitch * max(subindex(profile,1));
+    rmax = max(_r1,_r2)+pmax;
+    depth = pdepth * pitch;
+    dummy1 = assert(_r1>depth && _r2>depth, "Screw profile deeper than rod radius");
+    skew_mat = affine3d_skew(sxz=(_r2-_r1)/l);
+    map3d_and_scale = affine3d_frame_map(x=[0,0,1], y=[1,0,0])  // Map profile to 3d, parallel to z axis
+                      * scale(pitch);                           // scale profile by pitch
+    hig_table = [
+        [-twist,           0],
+        [-twist/2-0.00001, 0],
+        [-twist/2+higang1, 1],
+        [+twist/2-higang2, 1],
+        [+twist/2+0.00001, 0],
+        [+twist,           0],
+    ];
+    start_steps = floor(sides / starts);
+    thread_verts = [
+         // Outer loop constructs a vertical column of the screw at each angle
+         for (step = [0:1:start_steps]) let(
+             ang = 360 * step/sides,
+             dz = step / start_steps,    // z offset for threads at this angle
+             rot_prof = zrot(ang*dir)            // Rotate profile to correct angular location
+                        * right((_r1 + _r2) / 2) // Shift profile out to thread radius
+                        * skew_mat               // Skew correction for tapered threads
+                        * map3d_and_scale,       // Map profile into 3d
+             full_profile =  [   // profile for the entire rod
+                 for (thread = [-threads/2:1:threads/2-1]) let(
+                     tang = (thread/starts) * 360 + ang,
+                     hsc = internal? 1
+                         : (higang1==0 && tang<=0)? 1
+                         : (higang2==0 && tang>=0)? 1
+                         : lookup(tang, hig_table),
+                     higscale = yscale(hsc,cp = -pdepth)  // Scale for higbee
+                 )
+                 // The right movement finds the position of the thread along
+                 // what will be the z axis after the profile is mapped to 3d                                           
+                 each apply(right(dz + thread) * higscale, prof3d)
+             ]
+         ) [
+             [0, 0, -l/2-pitch],
+             each apply(rot_prof , full_profile),
+             [0, 0, +l/2+pitch]
+         ]
+    ];
+
+    style = higang1>0 || higang2>0 ? "quincunx" : "min_edge";
+    
+    thread_vnfs = vnf_merge([
+        for (i=[0:1:starts-1])
+            zrot(i*360/starts, p=vnf_vertex_array(thread_verts, reverse=left_handed, style=style)),
+        for (i=[0:1:starts-1]) let(
+            rmat = zrot(i*360/starts),
+            pts = deduplicate(list_head(thread_verts[0], len(prof3d)+1)),
+            faces = [for (i=idx(pts,e=-2)) [0, i+1, i]],
+            rfaces = left_handed? [for (x=faces) reverse(x)] : faces
+        ) [apply(rmat,pts), rfaces],
+        for (i=[0:1:starts-1]) let(
+            rmat = zrot(i*360/starts),
+            pts = deduplicate(list_tail(last(thread_verts), -len(prof3d)-2)),
+            faces = [for (i=idx(pts,e=-2)) [len(pts)-1, i, i+1]],
+            rfaces = left_handed? [for (x=faces) reverse(x)] : faces
+        ) [apply(rmat,pts), rfaces]
+    ]);
+
+    slope = (_r1-_r2)/l;
+    maxlen = 2*pitch;
+
+    anchor = get_anchor(anchor, center, BOT, CENTER);
+    attachable(anchor,spin,orient, r1=_r1, r2=_r2, l=l) {
+        union(){
+
+          // This method is faster but more complex code and it produces green tops
+          difference() {
+              //vnf_validate(vnf_quantize(thread_vnfs), size=0.1);
+              vnf_polyhedron(vnf_quantize(thread_vnfs), convexity=10);
+
+              if (!internal){
+                  if (bevel1 || bevel2)
+                      rotate_extrude(){
+                         if (bevel2) polygon([[0,l/2], [_r2+pmax-depth, l/2], [_r2+pmax+slope*depth,l/2-depth], [rmax+1, l/2-depth], [rmax+1,l/2+maxlen], [0,l/2+maxlen]]);
+                         if (bevel1) polygon([[0,-l/2], [_r1+pmax-depth, -l/2], [_r1+pmax-slope*depth,-l/2+depth], [rmax+1, -l/2+depth], [rmax+1,-l/2-maxlen], [0,-l/2-maxlen]]);
+                      }
+                  if (!bevel1)
+                    down(l/2) cuboid([2*rmax+1,2*rmax+1, maxlen], anchor=TOP);                     
+                  if (!bevel2)
+                    up(l/2) cuboid([2*rmax+1,2*rmax+1, maxlen], anchor=BOTTOM);
+                  
+              }
+          }
+
+
+/*          intersection(){
+              //vnf_validate(vnf_quantize(thread_vnfs), size=0.1);
+              vnf_polyhedron(vnf_quantize(thread_vnfs), convexity=10);
+              cyl(l=l, r1=_r1+pmax, r2=_r2+pmax, chamfer1=bevel1?depth:undef, chamfer2=bevel2?depth:undef);                  
+          }*/
+
+          // Add bevel for internal threads
+          if (internal) {
+            if (bevel1)
+              down(l/2)cyl(l=depth, r1=_r1+pmax, r2=_r1+pmax-slope*depth-depth,anchor=BOTTOM);
+            if (bevel2)
+              up(l/2)cyl(l=depth, r2=_r2+pmax, r1=_r2+pmax+slope*depth-depth,anchor=TOP);
+          }
+        }
+        children();
+    }
+}
+
+
+
+// Module: generic_threaded_nut()
+// Description:
+//   Constructs a hexagonal nut for an generic threaded rod using a user-supplied thread profile.
+//   See generic_threaded_rod for details on the profile specification.  
+// Arguments:
+//   od = diameter of the nut.
+//   id = diameter of threaded rod to screw onto.
+//   h = height/thickness of nut.
+//   pitch = Thread spacing.
+//   profile = Thread profile.
+//   ---
+//   left_handed = if true, create left-handed threads.  Default = false
+//   starts = The number of lead starts.  Default = 1
+//   bevel = if true, bevel the thread ends.  Default: false
+//   bevel1 = if true bevel the bottom end.
+//   bevel2 = if true bevel the top end.
+//   id1 = inner diameter at the bottom
+//   id2 = inner diameter at the top
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
+module generic_threaded_nut(
+    od,
+    id,
+    h,
+    pitch,
+    profile,
+    left_handed=false,
+    starts=1,
+    bevel,bevel1,bevel2,
+    id1,id2,
+    anchor, spin, orient
+) {
+    extra = 0.01;
+    id1 = first_defined([id1,id]);
+    id2 = first_defined([id2,id]);
+    assert(is_def(id1) && is_def(id2), "Must specify inner diameter of nut");
+    slope = (id2-id1)/h;
+    full_id1 = id1-slope*extra/2;
+    full_id2 = id2+slope*extra/2;
+    bevel1 = first_defined([bevel1,bevel,false]);
+    bevel2 = first_defined([bevel2,bevel,false]);
+    dummy1 = assert(is_num(pitch) && pitch>0);
+    depth = -pitch*min(subindex(profile,1));
+    attachable(anchor,spin,orient, size=[od/cos(30),od,h]) {
+        difference() {
+            cyl(d=od/cos(30), h=h, center=true, $fn=6,chamfer1=bevel1?depth:undef,chamfer2=bevel2?depth:undef);
+            generic_threaded_rod(
+                d1=full_id1,d2=full_id2,
+                l=h+extra,
+                pitch=pitch,
+                profile=profile,
+                left_handed=left_handed,
+                starts=starts,
+                internal=true,
+                bevel1=bevel1,bevel2=bevel2
+            );
+        }
+        children();
+    }
+}
+
+
+
+// Module: thread_helix()
+// Usage:
+//   thread_helix(d, pitch, [thread_depth], [flank_angle], [twist], [profile=], [left_handed=], [higbee=], [internal=]);
+// Description:
+//   Creates a right-handed helical thread with optional end tapering.  You can specify a thread_depth and flank_angle, in which
+//   case you get a symmetric trapezoidal thread, whose base is at the diameter (so the total diameter will be d + thread_depth).  
+//   Atlernatively you can give a profile, following the same rules as for general_threaded_rod.
+//   The Y=0 point will align with the specified diameter, and the profile should 
+//   range in X from -1/2 to 1/2.  You cannot specify both the profile and the thread_depth or flank_angle.  
+//   .
+//   Higbee specifies tapering applied to the ends of the extrusion and is given as the linear distance
+//   over which to taper.  
+// Arguments:
+//   d = Inside base diameter of threads.  Default: 10
+//   pitch = Distance between threads.  Default: 2mm/thread
+//   thread_depth = Depth of threads from top to bottom.
+//   flank_angle = Angle of thread faces to plane perpendicular to screw.  Default: 15 degrees.
+//   twist = Number of degrees to rotate thread around.  Default: 720 degrees.
+//   ---
+//   profile = If an asymmetrical thread profile is needed, it can be specified here.
+//   starts = The number of thread starts.  Default: 1
+//   left_handed = If true, thread has a left-handed winding.
+//   internal = If true, invert threads for internal threading.
+//   d1 = Bottom inside base diameter of threads.
+//   d2 = Top inside base diameter of threads.
+//   higbee = Length to taper thread ends over.  Default: 0
+//   higbee1 = Length to taper bottom thread end over.
+//   higbee2 = Length to taper top thread end over.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Example(2DMed): Typical Tooth Profile
+//   pitch = 2;
+//   depth = pitch * cos(30) * 5/8;
+//   profile = [
+//       [-6/16, 0           ],
+//       [-1/16, depth/pitch ],
+//       [ 1/16, depth/pitch ],
+//       [ 6/16, 0           ],
+//   ];
+//   stroke(profile, width=0.02);
+// Example:
+//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=900, $fn=72);
+module thread_helix(
+    d, pitch, thread_depth, flank_angle, twist=720,
+    profile, starts=1, left_handed=false, internal=false,
+    d1, d2, higbee, higbee1, higbee2,
+    anchor, spin, orient
+) {
+    dummy1=assert(is_undef(profile) || !any_defined([thread_depth, flank_angle]),"Cannot give thread_depth or flank_angle with a profile");
+    h = pitch*starts*twist/360;
+    r1 = get_radius(d1=d1, d=d, dflt=10);
+    r2 = get_radius(d1=d2, d=d, dflt=10);
+    profile = is_def(profile) ? profile :
+        let(
+            tdp = thread_depth / pitch,
+            dz = tdp * tan(flank_angle),
+            cap = (1 - 2*dz)/2
+        )
+        internal?
+          [
+            [-cap/2-dz, tdp],
+            [-cap/2,    0  ],
+            [+cap/2,    0  ],
+            [+cap/2+dz, tdp],
+          ]
+        :
+          [
+            [+cap/2+dz, 0  ],
+            [+cap/2,    tdp],
+            [-cap/2,    tdp],
+            [-cap/2-dz, 0  ],
+          ];
+    pline = mirror([-1,1],  p = profile * pitch);
+    dir = left_handed? -1 : 1;
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
+        zrot_copies(n=starts) {
+            spiral_sweep(pline, h=h, r1=r1, r2=r2, twist=twist*dir, higbee=higbee, higbee1=higbee1, higbee2=higbee2, internal=internal, anchor=CENTER);
+        }
+        children();
+    }
 }
 
 
