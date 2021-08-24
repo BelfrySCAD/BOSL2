@@ -15,7 +15,9 @@
 //   For specific thread types use other modules that supply the appropriate profile.
 //   .
 //   You give the profile as a 2D path that will be scaled by the pitch to produce the final thread shape.  The profile X values
-//   must be between -1/2 and 1/2.  The Y value is 0 at the peak and, due to scaling by the pitch, `-depth/pitch` in the valleys.  The segment between the end
+//   must be between -1/2 and 1/2.  The Y=0 point will align with the specified rod diameter, so generally you want a Y value of zero at the peak (which
+//   makes your specified diameter the outer diameter of the threads).  
+//   The value in the valleys of the thread should then be `-depth/pitch` due to the scaling by the thread pitch.  The segment between the end
 //   of one thread and the start of the next is added automatically, so you should not have the path start and end at equivalent points (X = ±1/2 with the same Y value).
 //   Generally you should center the profile horizontally in the interval [-1/2, 1/2].
 //   .
@@ -99,7 +101,6 @@ module generic_threaded_rod(
     _r1 = r1 * rsc + islop;
     _r2 = r2 * rsc + islop;
     threads = quantup(l/pitch+2,1); // Was quantup(1/pitch+2,2*starts);
-    echo(threads=threads);
     dir = left_handed? -1 : 1;
     twist = 360 * l / pitch / starts;
     higang1 = first_defined([higbee1, higbee, 0]);
@@ -141,7 +142,6 @@ module generic_threaded_rod(
                          : (higang2==0 && tang>=0)? 1
                          : lookup(tang, hig_table),
                      higscale = yscale(hsc,cp = -pdepth)  // Scale for higbee
-                     //,eff=echo(tang=tang, twist=twist)
                  )
                  // The right movement finds the position of the thread along
                  // what will be the z axis after the profile is mapped to 3d                                           
@@ -261,7 +261,6 @@ module generic_threaded_nut(
     slope = (id2-id1)/h;
     full_id1 = id1-slope*extra/2;
     full_id2 = id2+slope*extra/2;
-    echo(id1=full_id1,id2=full_id2);
     bevel1 = first_defined([bevel1,bevel,false]);
     bevel2 = first_defined([bevel2,bevel,false]);
     dummy1 = assert(is_num(pitch) && pitch>0);
@@ -288,14 +287,21 @@ module generic_threaded_nut(
 
 // Module: thread_helix()
 // Usage:
-//   thread_helix(d, pitch, thread_depth, [thread_angle], [twist], [profile=], [left_handed=], [higbee=], [internal=]);
+//   thread_helix(d, pitch, [thread_depth], [flank_angle], [twist], [profile=], [left_handed=], [higbee=], [internal=]);
 // Description:
-//   Creates a helical thread with optional end tapering.
+//   Creates a right-handed helical thread with optional end tapering.  You can specify a thread_depth and flank_angle, in which
+//   case you get a symmetric trapezoidal thread, whose base is at the diameter (so the total diameter will be d + thread_depth).  
+//   Atlernatively you can give a profile, following the same rules as for general_threaded_rod.
+//   The Y=0 point will align with the specified diameter, and the profile should 
+//   range in X from -1/2 to 1/2.  You cannot specify both the profile and the thread_depth or flank_angle.  
+//   .
+//   Higbee specifies tapering applied to the ends of the extrusion and is given as the linear distance
+//   over which to taper.  
 // Arguments:
 //   d = Inside base diameter of threads.  Default: 10
 //   pitch = Distance between threads.  Default: 2mm/thread
 //   thread_depth = Depth of threads from top to bottom.
-//   thread_angle = Angle of the thread faces.  Default: 15 degrees.
+//   flank_angle = Angle of thread faces to plane perpendicular to screw.  Default: 15 degrees.
 //   twist = Number of degrees to rotate thread around.  Default: 720 degrees.
 //   ---
 //   profile = If an asymmetrical thread profile is needed, it can be specified here.
@@ -321,35 +327,39 @@ module generic_threaded_nut(
 //   ];
 //   stroke(profile, width=0.02);
 // Example:
-//   thread_helix(d=10, pitch=2, thread_depth=0.75, thread_angle=15, twist=900, $fn=72);
+//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=900, $fn=72);
 module thread_helix(
-    d, pitch=2, thread_depth, thread_angle=15, twist=720,
+    d, pitch, thread_depth, flank_angle, twist=720,
     profile, starts=1, left_handed=false, internal=false,
     d1, d2, higbee, higbee1, higbee2,
     anchor, spin, orient
 ) {
+    dummy1=assert(is_undef(profile) || !any_defined([thread_depth, flank_angle]),"Cannot give thread_depth or flank_angle with a profile");
     h = pitch*starts*twist/360;
     r1 = get_radius(d1=d1, d=d, dflt=10);
     r2 = get_radius(d1=d2, d=d, dflt=10);
-    tdp = thread_depth / pitch;
-    dz = tdp * tan(thread_angle);
-    cap = (1 - 2*dz)/2;
-    profile = !is_undef(profile)? profile : (
-        internal? [
+    profile = is_def(profile) ? profile :
+        let(
+            tdp = thread_depth / pitch,
+            dz = tdp * tan(flank_angle),
+            cap = (1 - 2*dz)/2
+        )
+        internal?
+          [
             [-cap/2-dz, tdp],
             [-cap/2,    0  ],
             [+cap/2,    0  ],
             [+cap/2+dz, tdp],
-        ] : [
+          ]
+        :
+          [
             [+cap/2+dz, 0  ],
             [+cap/2,    tdp],
             [-cap/2,    tdp],
             [-cap/2-dz, 0  ],
-        ]
-    );
+          ];
     pline = mirror([-1,1],  p = profile * pitch);
     dir = left_handed? -1 : 1;
-    idir = internal? -1 : 1;
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
         zrot_copies(n=starts) {
             spiral_sweep(pline, h=h, r1=r1, r2=r2, twist=twist*dir, higbee=higbee, higbee1=higbee1, higbee2=higbee2, internal=internal, anchor=CENTER);

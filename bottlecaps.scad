@@ -53,7 +53,7 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
     tamper_base_h = 14.10;
     threadbase_d = 24.51;
     thread_pitch = 3.18;
-    thread_angle = 20;
+    flank_angle = 20;
     thread_od = 27.43;
     lip_d = 25.07;
     lip_h = 1.70;
@@ -113,7 +113,7 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
                             d=threadbase_d-0.1,
                             pitch=thread_pitch,
                             thread_depth=thread_h+0.1,
-                            thread_angle=thread_angle,
+                            flank_angle=flank_angle,
                             twist=810,
                             higbee=thread_h*2,
                             anchor=TOP
@@ -164,7 +164,7 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
     cap_id = 28.58;
     tamper_ring_h = 14.10;
     thread_pitch = 3.18;
-    thread_angle = 20;
+    flank_angle = 20;
     thread_od = cap_id;
     thread_depth = 1.6;
 
@@ -192,7 +192,7 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=cap_id, h=tamper_ring_h+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, thread_angle=thread_angle, twist=810, higbee=thread_depth, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, flank_angle=flank_angle, twist=810, higbee=thread_depth, internal=true, anchor=BOTTOM);
         }
         children();
     }
@@ -246,7 +246,7 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
     tamper_divot_r = 1.08;
     threadbase_d = 24.20;
     thread_pitch = 2.70;
-    thread_angle = 15;
+    flank_angle = 15;
     thread_od = 27.4;
     lip_d = 25.07;
     lip_h = 1.70;
@@ -306,7 +306,7 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
                         d=threadbase_d-0.1,
                         pitch=thread_pitch,
                         thread_depth=thread_h+0.1,
-                        thread_angle=thread_angle,
+                        flank_angle=flank_angle,
                         twist=650,
                         higbee=thread_h*2,
                         anchor=TOP
@@ -376,7 +376,7 @@ module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=28.58, h=11.2+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, thread_angle=15, twist=650, higbee=1.6, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, flank_angle=15, twist=650, higbee=1.6, internal=true, anchor=BOTTOM);
         }
         children();
     }
@@ -428,7 +428,7 @@ module generic_bottle_neck(
     neck_d = neck_d;
     supp_d = max(neck_d, support_d);
     thread_pitch = pitch;
-    thread_angle = 15;
+    flank_angle = 15;
 
     diamMagMult = neck_d / 26.19;
     heightMagMult = height / 17.00;
@@ -478,7 +478,7 @@ module generic_bottle_neck(
                         d = threadbase_d - 0.1 * diamMagMult,
                         pitch = thread_pitch,
                         thread_depth = thread_h + 0.1 * diamMagMult,
-                        thread_angle = thread_angle,
+                        flank_angle = flank_angle,
                         twist = 360 * (height - pitch - lip_roundover_r) * .6167 / pitch,
                         higbee = thread_h * 2,
                         anchor = TOP
@@ -527,7 +527,7 @@ function generic_bottle_neck(
 //   thread_od = Outer diameter of the threads in mm.
 //   tolerance = Extra space to add to the outer diameter of threads and neck in mm.  Applied to radius.
 //   neck_od = Outer diameter of neck in mm.
-//   thread_angle = Angle of taper on threads.
+//   flank_angle = Angle of taper on threads.
 //   pitch = Thread pitch in mm.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -545,7 +545,7 @@ module generic_bottle_cap(
     thread_od = 28.58,
     tolerance = .2,
     neck_od = 25.5,
-    thread_angle = 15,
+    flank_angle = 15,
     pitch = 4,
     anchor = BOTTOM,
     spin = 0,
@@ -587,7 +587,7 @@ module generic_bottle_cap(
             }
             difference(){
                 up(wall + pitch / 2) {
-                    thread_helix(d = neckOuterDTol, pitch = pitch, thread_depth = threadDepth, thread_angle = thread_angle, twist = 360 * ((height - pitch) / pitch), higbee = threadDepth, internal = true, anchor = BOTTOM);
+                    thread_helix(d = neckOuterDTol, pitch = pitch, thread_depth = threadDepth, flank_angle = flank_angle, twist = 360 * ((height - pitch) / pitch), higbee = threadDepth, internal = true, anchor = BOTTOM);
                 }
             }
         }
@@ -598,7 +598,7 @@ module generic_bottle_cap(
 function generic_bottle_cap(
     wall, texture, height,
     thread_od, tolerance,
-    neck_od, thread_angle, pitch,
+    neck_od, flank_angle, pitch,
     anchor, spin, orient
 ) = no_function("generic_bottle_cap");
 
@@ -689,7 +689,7 @@ module bottle_adapter_neck_to_cap(
                     thread_od = cap_thread_od,
                     tolerance = tolerance,
                     neck_od = cap_neck_od,
-                    thread_angle = cap_thread_taper,
+                    flank_angle = cap_thread_taper,
                     orient = DOWN,
                     pitch = cap_thread_pitch
                 );

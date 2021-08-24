@@ -1030,8 +1030,11 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 
 // Module: spiral_sweep()
 // Description:
-//   Takes a closed 2D polygon path, centered on the XY plane, and sweeps/extrudes it along a 3D spiral path.
-//   of a given radius, height and twist.
+//   Takes a closed 2D polygon path, centered on the XY plane, and sweeps/extrudes it along a right-handed 3D spiral path
+//   of a given radius, height and twist.  The origin in the profile traces out the helix of the specified radius.  
+//   .
+//   Higbee specifies tapering applied to the ends of the extrusion and is given as the linear distance
+//   over which to taper.  
 // Arguments:
 //   poly = Array of points of a polygon path, to be extruded.
 //   h = height of the spiral to extrude along.
@@ -1055,7 +1058,7 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
     yctr = (bounds[0].y+bounds[1].y)/2;
     xmin = bounds[0].x;
     xmax = bounds[1].x;
-    poly = path3d(poly);
+    poly = path3d(clockwise_polygon(poly));
     anchor = get_anchor(anchor,center,BOT,BOT);
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=50);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=50);
@@ -1063,17 +1066,19 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
     steps = ceil(sides*(twist/360));
     higbee1 = first_defined([higbee1, higbee, 0]);
     higbee2 = first_defined([higbee2, higbee, 0]);
+    assert(higbee1>=0 && higbee2>=0);
     higang1 = 360 * higbee1 / (2 * r1 * PI);
     higang2 = 360 * higbee2 / (2 * r2 * PI);
     higsteps1 = ceil(higang1/360*sides);
     higsteps2 = ceil(higang2/360*sides);
+    assert(twist>0);
     assert(higang1 < twist/2);
     assert(higang2 < twist/2);
     function higsize(a) = lookup(a,[
-        [-0.001,        0],
-        for (x=[0.125:0.125:1]) [      x*higang1, pow(x,1/2)],
-        for (x=[0.125:0.125:1]) [twist-x*higang2, pow(x,1/2)],
-        [twist+0.001,   0]
+        [-0.001,  higang1>0?0:1],
+        if (higang1>0) for (x=[0.125:0.125:1]) [      x*higang1, pow(x,1/2)],
+        if (higang2>0) for (x=[0.125:0.125:1]) [twist-x*higang2, pow(x,1/2)],
+        [twist+0.001,   higang2>0?0:1]
     ]);
 
     us = [
@@ -1089,11 +1094,13 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
             u = p / steps,
             a = twist * u,
             hsc = higsize(a),
+            
             r = lerp(r1,r2,u),
+            
             mat = affine3d_zrot(a) *
                 affine3d_translate([r, 0, h * (u-0.5)]) *
                 affine3d_xrot(90) *
-                affine3d_skew_xz(xa=zang) * 
+                affine3d_skew_xz(xa=zang) *
                 //affine3d_scale([hsc,lerp(hsc,1,0.25),1]),
                 scale([hsc,lerp(hsc,1,0.25),1], cp=[internal ? xmax : xmin, yctr, 0]),
             pts = apply(mat, poly)
@@ -1101,12 +1108,12 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
     ];
 
     vnf = vnf_vertex_array(
-        points, col_wrap=true, caps=true, reverse=true,
-        style=(abs(higbee1)+abs(higbee2))>0? "quincunx" : "alt"
+        points, col_wrap=true, caps=true, reverse=true, 
+        style=higbee1>0 || higbee2>0 ? "quincunx" : "alt"
     );
 
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
-        vnf_polyhedron(vnf, convexity=2*twist/360);
+        vnf_polyhedron(vnf, convexity=ceil(2*twist/360));
         children();
     }
 }
