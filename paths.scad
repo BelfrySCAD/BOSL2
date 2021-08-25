@@ -1093,7 +1093,6 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
                                  endpoint=false),
                   last(anglist)
                  ];
-    echo(interp_ang=interp_ang,twist=twist);
     skewmat = affine3d_skew_xz(xa=atan2(r2-r1,h));
     points = [
         for (a = interp_ang) let (
