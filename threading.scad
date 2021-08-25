@@ -1087,7 +1087,6 @@ module generic_threaded_nut(
 }
 
 
-
 // Module: thread_helix()
 // Usage:
 //   thread_helix(d, pitch, [thread_depth], [flank_angle], [twist], [profile=], [left_handed=], [higbee=], [internal=]);
@@ -1196,16 +1195,11 @@ module thread_helix(
 //
 //   Fixed higbee in spiral_sweep for properly centered scaling and for staying on the internal/external base of threads
 //   Fixed bug in spiral_sweep where two segments were missing if higbee is zero
-//   
-
+//   Fixed faceting bugs in spiral_sweep where segments weren't aligned with requested number of segments, and higbee
+//      would pull away from the cylinder by using a higher count and following a true circle
+//
 // Questions:
-//   Existing code intersection with cylinder, so any profile over 0 gets removed.  Also---exact match intersection?  Better
-//      to intersect with a cube that is larger than the screw?  Cheaper....
-//   higbee can look bad due to edge issues in the VNF.  Possibly "convex" style is better.  "quincunx" may be best, but costly.
-//      buttress_threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1,higbee=15, $fn=32);
-//      Use quincunx when higbee is requested but min_edge otherwise?  
 //   Should nut modules take d1/d2 for tapered nuts?
-
-// Run time checks.  No difference for preview, but switching intersection to cube reduced render in the test from 11s to 8s.
-// Switching to doing the intersection with vnf_halfspace made preview slower, 3.8s instead of 1.6s but render faster (4s instead of 8s)
-// Using custom masks for beveling reduces render to 8s.  
+//
+// Need explanation of what exactly the diff is between threaded_rod and helix_threads.
+// Higbee is different, angle in one and length in another.  Need to reconcile

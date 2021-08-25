@@ -1054,6 +1054,8 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 //   poly = [[-10,0], [-3,-5], [3,-5], [10,0], [0,-30]];
 //   spiral_sweep(poly, h=200, r=50, twist=1080, $fn=36);
 module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, higbee1, higbee2, internal=false, anchor, spin=0, orient=UP) {
+    higsample = 10;         // Oversample factor for higbee tapering
+    dummy1=assert(twist>0);
     bounds = pointlist_bounds(poly);
     yctr = (bounds[0].y+bounds[1].y)/2;
     xmin = bounds[0].x;
@@ -1063,17 +1065,19 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=50);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=50);
     sides = segs(max(r1,r2));
-    steps = ceil(sides*(twist/360));
+    ang_step = 360/sides;
+    anglist = [for(ang = [0:ang_step:twist-EPSILON]) ang,
+               twist];
     higbee1 = first_defined([higbee1, higbee, 0]);
     higbee2 = first_defined([higbee2, higbee, 0]);
-    assert(higbee1>=0 && higbee2>=0);
     higang1 = 360 * higbee1 / (2 * r1 * PI);
     higang2 = 360 * higbee2 / (2 * r2 * PI);
-    higsteps1 = ceil(higang1/360*sides);
-    higsteps2 = ceil(higang2/360*sides);
-    assert(twist>0);
-    assert(higang1 < twist/2);
-    assert(higang2 < twist/2);
+    dummy2=assert(higbee1>=0 && higbee2>=0)
+           assert(higang1 < twist/2)
+           assert(higang2 < twist/2);
+    function polygon_r(N,theta) =
+        let( alpha = 360/N )
+        cos(alpha/2)/(cos(posmod(theta,alpha)-alpha/2));
     function higsize(a) = lookup(a,[
         [-0.001,  higang1>0?0:1],
         if (higang1>0) for (x=[0.125:0.125:1]) [      x*higang1, pow(x,1/2)],
@@ -1081,26 +1085,25 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
         [twist+0.001,   higang2>0?0:1]
     ]);
 
-    us = [
-        0, 
-        for (i=[higsteps1/10:higsteps1/10:higsteps1]) i,
-        for (i=[higsteps1+1:1:steps-higsteps2-1]) i,
-        for (i=[steps-higsteps2:higsteps2/10:steps-higsteps2/10]) i,
-        steps                                               
-    ];
-    zang = atan2(r2-r1,h);
+    interp_ang = [
+                  for(i=idx(anglist,e=-2))
+                      each lerpn(anglist[i],anglist[i+1],
+                                 (higang1<anglist[i+1] || (twist-higang2>anglist[i])) ? ceil((anglist[i+1]-anglist[i])/ang_step*higsample)
+                                                                                      : 1,
+                                 endpoint=false),
+                  last(anglist)
+                 ];
+    echo(interp_ang=interp_ang,twist=twist);
+    skewmat = affine3d_skew_xz(xa=atan2(r2-r1,h));
     points = [
-        for (p = us) let (
-            u = p / steps,
-            a = twist * u,
+        for (a = interp_ang) let (
             hsc = higsize(a),
-            
+            u = a/twist,
             r = lerp(r1,r2,u),
-            
             mat = affine3d_zrot(a) *
-                affine3d_translate([r, 0, h * (u-0.5)]) *
+                affine3d_translate([polygon_r(sides,a)*r, 0, h * (u-0.5)]) *
                 affine3d_xrot(90) *
-                affine3d_skew_xz(xa=zang) *
+                skewmat *
                 //affine3d_scale([hsc,lerp(hsc,1,0.25),1]),
                 scale([hsc,lerp(hsc,1,0.25),1], cp=[internal ? xmax : xmin, yctr, 0]),
             pts = apply(mat, poly)
