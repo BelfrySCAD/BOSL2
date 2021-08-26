@@ -927,9 +927,10 @@ module generic_threaded_rod(
         [+twist/2+0.00001, 0],
         [+twist,           0],
     ];
-    start_steps = floor(sides / starts);
+    start_steps = sides / starts;
     thread_verts = [
          // Outer loop constructs a vertical column of the screw at each angle
+         // covering 1/starts * 360 degrees of the cylinder.  
          for (step = [0:1:start_steps]) let(
              ang = 360 * step/sides,
              dz = step / start_steps,    // z offset for threads at this angle
@@ -998,7 +999,6 @@ module generic_threaded_rod(
                     down(l/2) cuboid([2*rmax+1,2*rmax+1, maxlen], anchor=TOP);                     
                   if (!bevel2)
                     up(l/2) cuboid([2*rmax+1,2*rmax+1, maxlen], anchor=BOTTOM);
-                  
               }
           }
 
@@ -1091,13 +1091,17 @@ module generic_threaded_nut(
 // Usage:
 //   thread_helix(d, pitch, [thread_depth], [flank_angle], [twist], [profile=], [left_handed=], [higbee=], [internal=]);
 // Description:
-//   Creates a right-handed helical thread with optional end tapering.  You can specify a thread_depth and flank_angle, in which
+//   Creates a right-handed helical thread with optional end tapering.  Unlike generic_threaded_rod, this module just generates the thread, and
+//   you specify the angle of thread you want, which makes it easy to put complete threads onto a longer shaft.  It also makes a more finely
+//   divided taper at the thread ends.  However, if you use it for large length of thread it is much slower than generic_threaded_rod.
+//   .
+//   You can specify a thread_depth and flank_angle, in which
 //   case you get a symmetric trapezoidal thread, whose base is at the diameter (so the total diameter will be d + thread_depth).  
 //   Atlernatively you can give a profile, following the same rules as for general_threaded_rod.
 //   The Y=0 point will align with the specified diameter, and the profile should 
 //   range in X from -1/2 to 1/2.  You cannot specify both the profile and the thread_depth or flank_angle.  
 //   .
-//   Higbee specifies tapering applied to the ends of the extrusion and is given as the linear distance
+//   Higbee specifies tapering applied to the ends of the threads and is given as the linear distance
 //   over which to taper.  
 // Arguments:
 //   d = Inside base diameter of threads.  Default: 10
