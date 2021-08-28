@@ -1074,18 +1074,14 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
     higang1 = 360 * higbee1 / (2 * r1 * PI);
     higang2 = 360 * higbee2 / (2 * r2 * PI);
     dummy2=assert(higbee1>=0 && higbee2>=0)
-           assert(higang1 < dir*twist/2)
-           assert(higang2 < dir*twist/2);
+           assert(higang1 < dir*twist/2,"Higbee1 is more than half the threads")
+           assert(higang2 < dir*twist/2,"Higbee2 is more than half the threads");
     function polygon_r(N,theta) =
         let( alpha = 360/N )
         cos(alpha/2)/(cos(posmod(theta,alpha)-alpha/2));
-    function higsize(a) = lookup(a,[
-        [-0.001*dir,  higang1>0?0:1],
-        if (higang1>0) for (x=[0.125:0.125:1]) [      dir*x*higang1, pow(x,1/2)],
-        if (higang2>0) for (x=[0.125:0.125:1]) [twist-dir*x*higang2, pow(x,1/2)],
-        [twist+dir*0.001,   higang2>0?0:1]
-    ]);
-    
+
+    higofs = pow(0.05,2);   // Smallest hig scale is the square root of this value
+    function taperfunc(x) = sqrt((1-higofs)*x+higofs);
     interp_ang = [
                   for(i=idx(anglist,e=-2))
                       each lerpn(anglist[i],anglist[i+1],
@@ -1098,15 +1094,16 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
     skewmat = affine3d_skew_xz(xa=atan2(r2-r1,h));
     points = [
         for (a = interp_ang) let (
-            hsc = higsize(a),
+            hsc = dir*a<higang1 ? taperfunc(dir*a/higang1)
+                : dir*(twist-a)<higang2 ? taperfunc(dir*(twist-a)/higang2)
+                : 1,
             u = a/twist,
             r = lerp(r1,r2,u),
-            mat = affine3d_zrot(a) *
-                affine3d_translate([polygon_r(sides,a)*r, 0, h * (u-0.5)]) *
-                affine3d_xrot(90) *
-                skewmat *
-                //affine3d_scale([hsc,lerp(hsc,1,0.25),1]),
-                scale([hsc,lerp(hsc,1,0.25),1], cp=[internal ? xmax : xmin, yctr, 0]),
+            mat = affine3d_zrot(a)
+                * affine3d_translate([polygon_r(sides,a)*r, 0, h * (u-0.5)])
+                * affine3d_xrot(90)
+                * skewmat
+                * scale([hsc,lerp(hsc,1,0.25),1], cp=[internal ? xmax : xmin, yctr, 0]),
             pts = apply(mat, poly)
         ) pts
     ];
