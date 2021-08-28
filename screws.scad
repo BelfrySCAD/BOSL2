@@ -839,7 +839,7 @@ module screw_head(screw_info,details=false) {
 // Example(Med): Selected UTS (English) screws
 //   $fn=32;
 //   xdistribute(spacing=8){
-//     screw("#6", length=12);
+     screw("#6", length=12);
 //     screw("#6-32", head="button", drive="torx",length=12);
 //     screw("#6-32,3/4", head="hex");
 //     screw("#6", thread="fine", head="fillister",length=12, drive="phillips");
