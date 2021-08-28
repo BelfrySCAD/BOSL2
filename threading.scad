@@ -166,19 +166,19 @@ module threaded_nut(
 //               [ z1,  0],
 //               [ z2, rr1],
 //             ];
-//  fullprofile = 50*left(1/2,p=concat(profile, right(1, p=profile)));
-//  stroke(fullprofile,width=1);
-//  dir = fullprofile[2]-fullprofile[3];
-//  dir2 = fullprofile[5]-fullprofile[4];
-//  curve = arc(32,angle=[75,105],r=67.5);
-//  avgpt = mean([fullprofile[5]+.1*dir2, fullprofile[5]+.4*dir2]);
-//  color("red"){
+//   fullprofile = 50*left(1/2,p=concat(profile, right(1, p=profile)));
+//   stroke(fullprofile,width=1);
+//   dir = fullprofile[2]-fullprofile[3];
+//   dir2 = fullprofile[5]-fullprofile[4];
+//   curve = arc(32,angle=[75,105],r=67.5);
+//   avgpt = mean([fullprofile[5]+.1*dir2, fullprofile[5]+.4*dir2]);
+//   color("red"){
 //    stroke([fullprofile[2]+.1*dir, fullprofile[2]+.4*dir], width=1);
 //    stroke([fullprofile[5]+.1*dir2, fullprofile[5]+.4*dir2], width=1);
 //    stroke(move(-curve[0]+avgpt,p=curve), width=1,endcaps="arrow2");
 //    back(10)text("thread",size=4,halign="center");
 //    back(3)text("angle",size=4,halign="center");
-//  }
+//   }
 // Arguments:
 //   d = Outer diameter of threaded rod.
 //   l = Length of threaded rod.
