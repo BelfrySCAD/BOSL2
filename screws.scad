@@ -837,18 +837,18 @@ module screw_head(screw_info,details=false) {
 //   anchor = anchor relative to the shaft of the screw
 //   anchor_head = anchor relative to the screw head
 // Example(Med): Selected UTS (English) screws
-//   $fn=32;
-//   xdistribute(spacing=8){
+   $fn=32;
+   xdistribute(spacing=8){
      screw("#6", length=12);
-//     screw("#6-32", head="button", drive="torx",length=12);
-//     screw("#6-32,3/4", head="hex");
-//     screw("#6", thread="fine", head="fillister",length=12, drive="phillips");
-//     screw("#6", head="flat small",length=12,drive="slot");
-//     screw("#6-32", head="flat large", length=12, drive="torx");
-//     screw("#6-32", head="flat undercut",length=12);
-//     screw("#6-24", head="socket",length=12);          // Non-standard threading
-//     screw("#6-32", drive="hex", drive_size=1.5, length=12);
-//   }
+     screw("#6-32", head="button", drive="torx",length=12);
+     screw("#6-32,3/4", head="hex");
+     screw("#6", thread="fine", head="fillister",length=12, drive="phillips");
+     screw("#6", head="flat small",length=12,drive="slot");
+     screw("#6-32", head="flat large", length=12, drive="torx");
+     screw("#6-32", head="flat undercut",length=12);
+     screw("#6-24", head="socket",length=12);          // Non-standard threading
+     screw("#6-32", drive="hex", drive_size=1.5, length=12);
+   }
 // Example(Med): A few examples of ISO (metric) screws
 //   $fn=32;
 //   xdistribute(spacing=8){
