@@ -916,16 +916,15 @@ module generic_threaded_rod(
     rmax = max(_r1,_r2)+pmax;
     depth = pdepth * pitch;
     dummy1 = assert(_r1>depth && _r2>depth, "Screw profile deeper than rod radius");
-    skew_mat = affine3d_skew(sxz=(_r2-_r1)/l);
-    map3d_and_scale = affine3d_frame_map(x=[0,0,1], y=[1,0,0])  // Map profile to 3d, parallel to z axis
-                      * scale(pitch);                           // scale profile by pitch
+    map_threads = right((_r1 + _r2) / 2)                   // Shift profile out to thread radius
+                * affine3d_skew(sxz=(_r2-_r1)/l)           // Skew correction for tapered threads
+                * affine3d_frame_map(x=[0,0,1], y=[1,0,0]) // Map profile to 3d, parallel to z axis
+                * scale(pitch);                            // scale profile by pitch
     hig_table = [
-        [-twist,           0],
-        [-twist/2-0.00001, 0],
+        [-twist/2-0.0001, 0],
         [-twist/2+higang1, 1],
-        [+twist/2-higang2, 1],
-        [+twist/2+0.00001, 0],
-        [+twist,           0],
+        [ twist/2-higang2, 1],
+        [ twist/2+0.0001, 0],
     ];
     start_steps = sides / starts;
     thread_verts = [
@@ -934,10 +933,7 @@ module generic_threaded_rod(
          for (step = [0:1:start_steps]) let(
              ang = 360 * step/sides,
              dz = step / start_steps,    // z offset for threads at this angle
-             rot_prof = zrot(ang*dir)            // Rotate profile to correct angular location
-                        * right((_r1 + _r2) / 2) // Shift profile out to thread radius
-                        * skew_mat               // Skew correction for tapered threads
-                        * map3d_and_scale,       // Map profile into 3d
+             rot_prof = zrot(ang*dir)*map_threads,   // Rotate profile to correct angular location
              full_profile =  [   // profile for the entire rod
                  for (thread = [-threads/2:1:threads/2-1]) let(
                      tang = (thread/starts) * 360 + ang,
@@ -961,20 +957,21 @@ module generic_threaded_rod(
     style = higang1>0 || higang2>0 ? "quincunx" : "min_edge";
     
     thread_vnfs = vnf_merge([
+        // Main thread faces
         for (i=[0:1:starts-1])
             zrot(i*360/starts, p=vnf_vertex_array(thread_verts, reverse=left_handed, style=style)),
+        // Top closing face(s) of thread                                 
         for (i=[0:1:starts-1]) let(
             rmat = zrot(i*360/starts),
             pts = deduplicate(list_head(thread_verts[0], len(prof3d)+1)),
-            faces = [for (i=idx(pts,e=-2)) [0, i+1, i]],
-            rfaces = left_handed? [for (x=faces) reverse(x)] : faces
-        ) [apply(rmat,pts), rfaces],
+            faces = [for (i=idx(pts,e=-2)) left_handed ? [0, i, i+1] : [0, i+1, i]]
+        ) [apply(rmat,pts), faces],
+        // Bottom closing face(s) of thread                                 
         for (i=[0:1:starts-1]) let(
             rmat = zrot(i*360/starts),
             pts = deduplicate(list_tail(last(thread_verts), -len(prof3d)-2)),
-            faces = [for (i=idx(pts,e=-2)) [len(pts)-1, i, i+1]],
-            rfaces = left_handed? [for (x=faces) reverse(x)] : faces
-        ) [apply(rmat,pts), rfaces]
+            faces = [for (i=idx(pts,e=-2)) left_handed ? [len(pts)-1, i+1, i] : [len(pts)-1, i, i+1]]
+        ) [apply(rmat,pts), faces]
     ]);
 
     slope = (_r1-_r2)/l;
@@ -986,22 +983,30 @@ module generic_threaded_rod(
 
           // This method is faster but more complex code and it produces green tops
           difference() {
-              //vnf_validate(vnf_quantize(thread_vnfs), size=0.1);
-              vnf_polyhedron(vnf_quantize(thread_vnfs), convexity=10);
+              vnf_polyhedron(vnf_quantize(thread_vnfs),convexity=10);
 
               if (!internal){
                   if (bevel1 || bevel2)
                       rotate_extrude(){
-                         if (bevel2) polygon([[0,l/2], [_r2+pmax-depth, l/2], [_r2+pmax+slope*depth,l/2-depth], [rmax+1, l/2-depth], [rmax+1,l/2+maxlen], [0,l/2+maxlen]]);
-                         if (bevel1) polygon([[0,-l/2], [_r1+pmax-depth, -l/2], [_r1+pmax-slope*depth,-l/2+depth], [rmax+1, -l/2+depth], [rmax+1,-l/2-maxlen], [0,-l/2-maxlen]]);
+                         if (bevel2) polygon([[             0, l/2],
+                                              [_r2+pmax-depth, l/2],
+                                              [_r2+pmax+slope*depth, l/2-depth],
+                                              [              rmax+1, l/2-depth],
+                                              [rmax+1, l/2+maxlen],
+                                              [     0, l/2+maxlen]]);
+                         if (bevel1) polygon([[             0,-l/2],
+                                              [_r1+pmax-depth, -l/2],
+                                              [_r1+pmax-slope*depth, -l/2+depth],
+                                              [              rmax+1, -l/2+depth],
+                                              [rmax+1, -l/2-maxlen],
+                                              [     0, -l/2-maxlen]]);
                       }
-                  if (!bevel1)
-                    down(l/2) cuboid([2*rmax+1,2*rmax+1, maxlen], anchor=TOP);                     
-                  if (!bevel2)
-                    up(l/2) cuboid([2*rmax+1,2*rmax+1, maxlen], anchor=BOTTOM);
               }
+              if (!bevel1 || internal)
+                  down(l/2) cuboid([2*rmax+1,2*rmax+1, maxlen], anchor=TOP);                     
+              if (!bevel2 || internal)
+                  up(l/2) cuboid([2*rmax+1,2*rmax+1, maxlen], anchor=BOTTOM);
           }
-
 
 /*          intersection(){
               //vnf_validate(vnf_quantize(thread_vnfs), size=0.1);
@@ -1009,12 +1014,12 @@ module generic_threaded_rod(
               cyl(l=l, r1=_r1+pmax, r2=_r2+pmax, chamfer1=bevel1?depth:undef, chamfer2=bevel2?depth:undef);                  
           }*/
 
-          // Add bevel for internal threads
+          // Add bevel for internal thread mask
           if (internal) {
             if (bevel1)
-              down(l/2)cyl(l=depth, r1=_r1+pmax, r2=_r1+pmax-slope*depth-depth,anchor=BOTTOM);
+              down(l/2+.001)cyl(l=depth, r1=_r1+pmax, r2=_r1+pmax-slope*depth-depth,anchor=BOTTOM);
             if (bevel2)
-              up(l/2)cyl(l=depth, r2=_r2+pmax, r1=_r2+pmax+slope*depth-depth,anchor=TOP);
+              up(l/2+.001)cyl(l=depth, r2=_r2+pmax, r1=_r2+pmax+slope*depth-depth,anchor=TOP);
           }
         }
         children();
@@ -1111,7 +1116,7 @@ module generic_threaded_nut(
 //   subtract any $slop for clearance.  
 //   .
 //   Higbee specifies tapering applied to the ends of the threads and is given as the linear distance
-//   over which to taper.  
+//   over which to taper.  Tapering works on both internal and external threads.  
 // Arguments:
 //   d = Inside base diameter of threads.  Default: 10
 //   pitch = Distance between threads.  Default: 2mm/thread
@@ -1141,6 +1146,30 @@ module generic_threaded_nut(
 //       [ 6/16, 0           ],
 //   ];
 //   stroke(profile, width=0.02);
+// Figure(2D,Med):
+//   pa_delta = tan(15)/4;
+//      rr1 = -1/2;
+//      z1 = 1/4-pa_delta;
+//      z2 = 1/4+pa_delta;
+//      profile = [
+//                  [-z2, rr1],
+//                  [-z1,  0],
+//                  [ z1,  0],
+//                  [ z2, rr1],
+//                ];
+//      fullprofile = 50*left(1/2,p=concat(profile, right(1, p=profile)));
+//      stroke(fullprofile,width=1);
+//      dir = fullprofile[2]-fullprofile[3];
+//      dir2 = fullprofile[5]-fullprofile[4];
+//      curve = arc(15,angle=[75,87],r=40 /*67.5*/);
+//      avgpt = mean([fullprofile[5]+.1*dir2, fullprofile[5]+.4*dir2]);
+//      color("red"){
+//       stroke([fullprofile[4]+[0,1], fullprofile[4]+[0,37]], width=1);
+//       stroke([fullprofile[5]+.1*dir2, fullprofile[5]+.4*dir2], width=1);
+//       stroke(move(-curve[0]+avgpt,p=curve), width=0.71,endcaps="arrow2");
+//       right(14)back(19)text("flank",size=4,halign="center");
+//       right(14)back(14)text("angle",size=4,halign="center");
+//      }
 // Example:
 //   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=900, $fn=72);
 //   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=900, higbee=1, $fn=72);
