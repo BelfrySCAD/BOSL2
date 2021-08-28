@@ -1093,13 +1093,22 @@ module generic_threaded_nut(
 // Description:
 //   Creates a right-handed helical thread with optional end tapering.  Unlike generic_threaded_rod, this module just generates the thread, and
 //   you specify the angle of thread you want, which makes it easy to put complete threads onto a longer shaft.  It also makes a more finely
-//   divided taper at the thread ends.  However, if you use it for large length of thread it is much slower than generic_threaded_rod.
+//   divided taper at the thread ends.  However, it takes about twice as long to render compared to generic_threaded_rod.
 //   .
 //   You can specify a thread_depth and flank_angle, in which
-//   case you get a symmetric trapezoidal thread, whose base is at the diameter (so the total diameter will be d + thread_depth).  
-//   Atlernatively you can give a profile, following the same rules as for general_threaded_rod.
+//   case you get a symmetric trapezoidal thread, whose inner diameter (the base of the threads for external threading)
+//   is d (so the total diameter will be d + thread_depth).  This differs from the threaded_rod modules, where the specified
+//   diameter is the outer diameter.  
+//   Alternatively you can give a profile, following the same rules as for general_threaded_rod.
 //   The Y=0 point will align with the specified diameter, and the profile should 
 //   range in X from -1/2 to 1/2.  You cannot specify both the profile and the thread_depth or flank_angle.  
+//   .
+//   Unlike generic_threaded_rod, when internal=true this module generates the threads, not a thread mask.
+//   The profile needs to be inverted to produce the proper thread form.  If you use the built-in trapezoidal
+//   thread you get the inverted thread, designed so that the inner diameter is d.  With adequate clearance
+//   this thread will mate with the thread that uses the same parameters but has internal=false.  Note that
+//   unlike the threaded_rod modules, thread_helix does not adjust the diameter for faceting, nor does it
+//   subtract any $slop for clearance.  
 //   .
 //   Higbee specifies tapering applied to the ends of the threads and is given as the linear distance
 //   over which to taper.  
@@ -1134,6 +1143,9 @@ module generic_threaded_nut(
 //   stroke(profile, width=0.02);
 // Example:
 //   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=900, $fn=72);
+//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=900, higbee=1, $fn=72);
+//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=720, higbee=2, internal=true, $fn=72);
+//   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=360, left_handed=true, higbee=1, $fn=36);
 module thread_helix(
     d, pitch, thread_depth, flank_angle, twist=720,
     profile, starts=1, left_handed=false, internal=false,

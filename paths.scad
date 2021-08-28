@@ -1055,7 +1055,7 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 //   spiral_sweep(poly, h=200, r=50, twist=1080, $fn=36);
 module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, higbee1, higbee2, internal=false, anchor, spin=0, orient=UP) {
     higsample = 10;         // Oversample factor for higbee tapering
-    dummy1=assert(twist>0);
+//    dummy1=assert(twist>0);
     bounds = pointlist_bounds(poly);
     yctr = (bounds[0].y+bounds[1].y)/2;
     xmin = bounds[0].x;
@@ -1065,7 +1065,8 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=50);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=50);
     sides = segs(max(r1,r2));
-    ang_step = 360/sides;
+    dir = sign(twist);
+    ang_step = 360/sides*dir;
     anglist = [for(ang = [0:ang_step:twist-EPSILON]) ang,
                twist];
     higbee1 = first_defined([higbee1, higbee, 0]);
@@ -1073,23 +1074,24 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
     higang1 = 360 * higbee1 / (2 * r1 * PI);
     higang2 = 360 * higbee2 / (2 * r2 * PI);
     dummy2=assert(higbee1>=0 && higbee2>=0)
-           assert(higang1 < twist/2)
-           assert(higang2 < twist/2);
+           assert(higang1 < dir*twist/2)
+           assert(higang2 < dir*twist/2);
     function polygon_r(N,theta) =
         let( alpha = 360/N )
         cos(alpha/2)/(cos(posmod(theta,alpha)-alpha/2));
     function higsize(a) = lookup(a,[
-        [-0.001,  higang1>0?0:1],
-        if (higang1>0) for (x=[0.125:0.125:1]) [      x*higang1, pow(x,1/2)],
-        if (higang2>0) for (x=[0.125:0.125:1]) [twist-x*higang2, pow(x,1/2)],
-        [twist+0.001,   higang2>0?0:1]
+        [-0.001*dir,  higang1>0?0:1],
+        if (higang1>0) for (x=[0.125:0.125:1]) [      dir*x*higang1, pow(x,1/2)],
+        if (higang2>0) for (x=[0.125:0.125:1]) [twist-dir*x*higang2, pow(x,1/2)],
+        [twist+dir*0.001,   higang2>0?0:1]
     ]);
-
+    
     interp_ang = [
                   for(i=idx(anglist,e=-2))
                       each lerpn(anglist[i],anglist[i+1],
-                                 (higang1<anglist[i+1] || (twist-higang2>anglist[i])) ? ceil((anglist[i+1]-anglist[i])/ang_step*higsample)
-                                                                                      : 1,
+                                 (higang1>0 && higang1>dir*anglist[i+1]
+                                  || (higang2>0 && higang2>dir*(twist-anglist[i]))) ? ceil((anglist[i+1]-anglist[i])/ang_step*higsample)
+                                                                                    : 1,
                                  endpoint=false),
                   last(anglist)
                  ];
@@ -1110,12 +1112,12 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
     ];
 
     vnf = vnf_vertex_array(
-        points, col_wrap=true, caps=true, reverse=true, 
+        points, col_wrap=true, caps=true, reverse=dir>0?true:false, 
         style=higbee1>0 || higbee2>0 ? "quincunx" : "alt"
     );
 
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=h) {
-        vnf_polyhedron(vnf, convexity=ceil(2*twist/360));
+        vnf_polyhedron(vnf, convexity=ceil(2*dir*twist/360));
         children();
     }
 }
