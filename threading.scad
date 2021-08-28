@@ -559,7 +559,7 @@ module npt_threaded_rod(
 //       buttress_threaded_rod(d=10, l=15, pitch=2, orient=BACK);
 // Examples(Med):
 //   buttress_threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
-//   buttress_threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
+   buttress_threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
 module buttress_threaded_rod(
     d=10, l=100, pitch=2,
     left_handed=false,
@@ -583,7 +583,7 @@ module buttress_threaded_rod(
         d=d, l=l, pitch=pitch,
         profile=profile, 
         left_handed=left_handed,
-        bevel=bevel,beve1=bevel1,bevel2=bevel2,
+        bevel=bevel,bevel1=bevel1,bevel2=bevel2,
         internal=internal,
         higbee=higbee,
         higbee1=higbee1,
@@ -1202,7 +1202,7 @@ module thread_helix(
 //   Fixed faceting bugs in spiral_sweep where segments weren't aligned with requested number of segments, and higbee
 //      would pull away from the cylinder by using a higher count and following a true circle
 //
-// Questions:
+// Questions
 //   Should nut modules take d1/d2 for tapered nuts?
 //
 // Need explanation of what exactly the diff is between threaded_rod and helix_threads.
