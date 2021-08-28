@@ -241,16 +241,90 @@ module trapezoidal_threaded_rod(
     rr1 = -depth/pitch;
     z1 = 1/4-pa_delta;
     z2 = 1/4+pa_delta;
-    profile = [
-               [-z2, rr1],
-               [-z1,  0],
-               [ z1,  0],
-               [ z2, rr1],
-              ];
-    generic_threaded_rod(d=d,l=l,pitch=pitch,profile=profile,
-                         left_handed=left_handed,bevel=bevel,bevel1=bevel1,bevel2=bevel2,starts=starts,internal=internal,d1=d1,d2=d2,
-                         higbee=higbee,higbee1=higbee1,higbee2=higbee2,center=center,anchor=anchor,spin=spin,orient=orient)
-      children();
+    profile = (
+        profile!=undef? profile : [
+            [-z2, rr1],
+            [-z1,  0],
+            [ z1,  0],
+            [ z2, rr1],
+        ]
+    );
+    prof3d = path3d(profile);
+    higthr1 = ceil(higang1 / 360);
+    higthr2 = ceil(higang2 / 360);
+    pdepth = -min(subindex(profile,1));
+    dummy1 = assert(_r1>pdepth) assert(_r2>pdepth);
+    skew_mat = affine3d_skew(sxz=(_r2-_r1)/l);
+    side_mat = affine3d_xrot(90) *
+        affine3d_mirror([-1,1,0]) *
+        affine3d_scale([1,1,1] * pitch);
+    hig_table = [
+        [-twist,           0],
+        [-twist/2-0.00001, 0],
+        [-twist/2+higang1, 1],
+        [+twist/2-higang2, 1],
+        [+twist/2+0.00001, 0],
+        [+twist,           0],
+    ];
+    start_steps = floor(sides / starts);
+    thread_verts = [
+        for (step = [0:1:start_steps]) let(
+            ang = 360 * step/sides,
+            dz = pitch * step / start_steps,
+            mat1 = affine3d_zrot(ang*dir),
+            mat2 = affine3d_translate([(_r1 + _r2) / 2 - pdepth*pitch, 0, 0]) *
+                skew_mat *
+                affine3d_translate([0, 0, dz]),
+            prof = apply(side_mat, [
+                for (thread = [-threads/2:1:threads/2-1]) let(
+                    tang = (thread/starts) * 360 + ang,
+                    hsc = internal? 1 :
+                        (higang1==0 && tang<=0)? 1 :
+                        (higang2==0 && tang>=0)? 1 :
+                        lookup(tang, hig_table),
+                    mat3 = affine3d_translate([thread, 0, 0]) *
+                        affine3d_scale([1, hsc, 1]) *
+                        affine3d_translate([0,pdepth,0])
+                ) each apply(mat3, prof3d)
+            ])
+
+            
+        ) [
+            [0, 0, -l/2-pitch],
+            each apply(mat1*mat2, prof),
+            [0, 0, +l/2+pitch]
+        ]
+    ];
+    thread_vnfs = vnf_merge([
+        for (i=[0:1:starts-1])
+            zrot(i*360/starts, p=vnf_vertex_array(thread_verts, reverse=left_handed, style="min_edge")),
+        for (i=[0:1:starts-1]) let(
+            rmat = zrot(i*360/starts),
+            pts = deduplicate(list_head(thread_verts[0], len(prof3d)+1)),
+            faces = [for (i=idx(pts,e=-2)) [0, i+1, i]],
+            rfaces = left_handed? [for (x=faces) reverse(x)] : faces
+        ) [apply(rmat,pts), rfaces],
+        for (i=[0:1:starts-1]) let(
+            rmat = zrot(i*360/starts),
+            pts = deduplicate(list_tail(last(thread_verts), -len(prof3d)-2)),
+            faces = [for (i=idx(pts,e=-2)) [len(pts)-1, i, i+1]],
+            rfaces = left_handed? [for (x=faces) reverse(x)] : faces
+        ) [apply(rmat,pts), rfaces]
+    ]);
+
+    anchor = get_anchor(anchor, center, BOT, CENTER);
+    attachable(anchor,spin,orient, r1=_r1, r2=_r2, l=l) {
+        intersection() {
+            //vnf_validate(vnf_quantize(thread_vnfs), size=0.1);
+            vnf_polyhedron(vnf_quantize(thread_vnfs), convexity=10);
+            if (bevel) {
+                cyl(l=l, r1=_r1, r2=_r2, chamfer=depth);
+            } else {
+                cyl(l=l, r1=_r1, r2=_r2);
+            }
+        }
+        children();
+    }
 }
 
 
