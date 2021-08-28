@@ -1030,8 +1030,9 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 
 // Module: spiral_sweep()
 // Description:
-//   Takes a closed 2D polygon path, centered on the XY plane, and sweeps/extrudes it along a right-handed 3D spiral path
-//   of a given radius, height and twist.  The origin in the profile traces out the helix of the specified radius.  
+//   Takes a closed 2D polygon path, centered on the XY plane, and sweeps/extrudes it along a 3D spiral path
+//   of a given radius, height and twist.  The origin in the profile traces out the helix of the specified radius.
+//   If twist is positive the path will be right-handed;  if twist is negative the path will be left-handed.
 //   .
 //   Higbee specifies tapering applied to the ends of the extrusion and is given as the linear distance
 //   over which to taper.  
@@ -1045,7 +1046,7 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 //   higbee = Length to taper thread ends over.
 //   higbee1 = Taper length at start
 //   higbee2 = Taper length at end
-//   internal = direction to taper the threads with higbee.  Default: false
+//   internal = direction to taper the threads with higbee.  If true threads taper outward; if false they taper inward.   Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -1055,7 +1056,7 @@ module extrude_from_to(pt1, pt2, convexity, twist, scale, slices) {
 //   spiral_sweep(poly, h=200, r=50, twist=1080, $fn=36);
 module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, higbee1, higbee2, internal=false, anchor, spin=0, orient=UP) {
     higsample = 10;         // Oversample factor for higbee tapering
-//    dummy1=assert(twist>0);
+    dummy1=assert(is_num(twist) && twist != 0);
     bounds = pointlist_bounds(poly);
     yctr = (bounds[0].y+bounds[1].y)/2;
     xmin = bounds[0].x;
@@ -1079,7 +1080,6 @@ module spiral_sweep(poly, h, r, twist=360, higbee, center, r1, r2, d, d1, d2, hi
     function polygon_r(N,theta) =
         let( alpha = 360/N )
         cos(alpha/2)/(cos(posmod(theta,alpha)-alpha/2));
-
     higofs = pow(0.05,2);   // Smallest hig scale is the square root of this value
     function taperfunc(x) = sqrt((1-higofs)*x+higofs);
     interp_ang = [
