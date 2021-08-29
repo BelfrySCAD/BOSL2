@@ -9,7 +9,8 @@
 
 include <threading.scad>
 include <knurling.scad>
-
+include <structs.scad>
+include <rounding.scad>
 
 // Section: PCO-1810 Bottle Threading
 
@@ -53,7 +54,7 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
     tamper_base_h = 14.10;
     threadbase_d = 24.51;
     thread_pitch = 3.18;
-    thread_angle = 20;
+    flank_angle = 20;
     thread_od = 27.43;
     lip_d = 25.07;
     lip_h = 1.70;
@@ -113,7 +114,7 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
                             d=threadbase_d-0.1,
                             pitch=thread_pitch,
                             thread_depth=thread_h+0.1,
-                            thread_angle=thread_angle,
+                            flank_angle=flank_angle,
                             twist=810,
                             higbee=thread_h*2,
                             anchor=TOP
@@ -164,7 +165,7 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
     cap_id = 28.58;
     tamper_ring_h = 14.10;
     thread_pitch = 3.18;
-    thread_angle = 20;
+    flank_angle = 20;
     thread_od = cap_id;
     thread_depth = 1.6;
 
@@ -192,7 +193,7 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=cap_id, h=tamper_ring_h+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, thread_angle=thread_angle, twist=810, higbee=thread_depth, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=thread_od-thread_depth*2, pitch=thread_pitch, thread_depth=thread_depth, flank_angle=flank_angle, twist=810, higbee=thread_depth, internal=true, anchor=BOTTOM);
         }
         children();
     }
@@ -246,7 +247,7 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
     tamper_divot_r = 1.08;
     threadbase_d = 24.20;
     thread_pitch = 2.70;
-    thread_angle = 15;
+    flank_angle = 15;
     thread_od = 27.4;
     lip_d = 25.07;
     lip_h = 1.70;
@@ -306,7 +307,7 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
                         d=threadbase_d-0.1,
                         pitch=thread_pitch,
                         thread_depth=thread_h+0.1,
-                        thread_angle=thread_angle,
+                        flank_angle=flank_angle,
                         twist=650,
                         higbee=thread_h*2,
                         anchor=TOP
@@ -376,7 +377,7 @@ module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
                 }
                 up(wall) cyl(d=28.58, h=11.2+wall, anchor=BOTTOM);
             }
-            up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, thread_angle=15, twist=650, higbee=1.6, internal=true, anchor=BOTTOM);
+            up(wall+2) thread_helix(d=25.5, pitch=2.7, thread_depth=1.6, flank_angle=15, twist=650, higbee=1.6, internal=true, anchor=BOTTOM);
         }
         children();
     }
@@ -428,7 +429,7 @@ module generic_bottle_neck(
     neck_d = neck_d;
     supp_d = max(neck_d, support_d);
     thread_pitch = pitch;
-    thread_angle = 15;
+    flank_angle = 15;
 
     diamMagMult = neck_d / 26.19;
     heightMagMult = height / 17.00;
@@ -478,7 +479,7 @@ module generic_bottle_neck(
                         d = threadbase_d - 0.1 * diamMagMult,
                         pitch = thread_pitch,
                         thread_depth = thread_h + 0.1 * diamMagMult,
-                        thread_angle = thread_angle,
+                        flank_angle = flank_angle,
                         twist = 360 * (height - pitch - lip_roundover_r) * .6167 / pitch,
                         higbee = thread_h * 2,
                         anchor = TOP
@@ -527,7 +528,7 @@ function generic_bottle_neck(
 //   thread_od = Outer diameter of the threads in mm.
 //   tolerance = Extra space to add to the outer diameter of threads and neck in mm.  Applied to radius.
 //   neck_od = Outer diameter of neck in mm.
-//   thread_angle = Angle of taper on threads.
+//   flank_angle = Angle of taper on threads.
 //   pitch = Thread pitch in mm.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -545,7 +546,7 @@ module generic_bottle_cap(
     thread_od = 28.58,
     tolerance = .2,
     neck_od = 25.5,
-    thread_angle = 15,
+    flank_angle = 15,
     pitch = 4,
     anchor = BOTTOM,
     spin = 0,
@@ -587,7 +588,7 @@ module generic_bottle_cap(
             }
             difference(){
                 up(wall + pitch / 2) {
-                    thread_helix(d = neckOuterDTol, pitch = pitch, thread_depth = threadDepth, thread_angle = thread_angle, twist = 360 * ((height - pitch) / pitch), higbee = threadDepth, internal = true, anchor = BOTTOM);
+                    thread_helix(d = neckOuterDTol, pitch = pitch, thread_depth = threadDepth, flank_angle = flank_angle, twist = 360 * ((height - pitch) / pitch), higbee = threadDepth, internal = true, anchor = BOTTOM);
                 }
             }
         }
@@ -598,7 +599,7 @@ module generic_bottle_cap(
 function generic_bottle_cap(
     wall, texture, height,
     thread_od, tolerance,
-    neck_od, thread_angle, pitch,
+    neck_od, flank_angle, pitch,
     anchor, spin, orient
 ) = no_function("generic_bottle_cap");
 
@@ -689,7 +690,7 @@ module bottle_adapter_neck_to_cap(
                     thread_od = cap_thread_od,
                     tolerance = tolerance,
                     neck_od = cap_neck_od,
-                    thread_angle = cap_thread_taper,
+                    flank_angle = cap_thread_taper,
                     orient = DOWN,
                     pitch = cap_thread_pitch
                 );
@@ -945,6 +946,218 @@ function bottle_adapter_neck_to_neck(
     thread_od2, height2, support_od2,
     pitch2, taper_lead_in, wall
 ) = no_fuction("bottle_adapter_neck_to_neck");
+
+
+
+// Section: SPI Bottle Threading
+
+
+// Module: sp_neck()
+// Usage:
+//   sp_neck(diam, type, wall|id, [style], [bead], [anchor], [spin], [orient])
+// Description:
+//   Make a SPI (Society of Plastics Industry) threaded bottle neck.  You must
+//   supply the nominal outer diameter of the threads and the thread type, one of
+//   400, 410 and 415.  The 400 type neck has 360 degrees of thread, the 410
+//   neck has 540 degrees of thread, and the 415 neck has 720 degrees of thread.
+//   You can also choose between the L style thread, which is symmetric and
+//   the M style thread, which is an asymmetric buttress thread.  You can
+//   specify the wall thickness (measured from the base of the threads) or
+//   the inner diameter, and you can specify an optional bead at the base of the threads.
+// Arguments:
+//   diam = nominal outer diameter of threads
+//   type = thread type, one of 400, 410 and 415
+//   wall = wall thickness
+//   ---
+//   id = inner diameter
+//   style = Either "L" or "M" to specify the thread style.  Default: "L"
+//   bead = if true apply a bad to the neck.  Default: false
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Examples:
+//   sp_neck(48,400,2);
+//   sp_neck(48,400,2,bead=true);
+//   sp_neck(22,410,2);
+//   sp_neck(22,410,2,bead=true);
+//   sp_neck(28,415,id=20,style="M");
+//   sp_neck(13,415,wall=1,style="M",bead=true);
+
+
+// Thread specs from https://www.isbt.com/threadspecs-downloads.asp
+
+_sp_specs = [
+  [400, //diam     T      I      H     S    tpi
+        [[ 18, [ 17.68,  8.26,  9.42, 0.94, 8]],
+         [ 20, [ 19.69, 10.26,  9.42, 0.94, 8]],
+         [ 22, [ 21.69, 12.27,  9.42, 0.94, 8]],
+         [ 24, [ 23.67, 13.11, 10.16, 1.17, 8]],
+         [ 28, [ 27.38, 15.60, 10.16, 1.17, 6]],
+         [ 30, [ 28.37, 16.59, 10.24, 1.17, 6]],
+         [ 33, [ 31.83, 20.09, 10.24, 1.17, 6]],
+         [ 35, [ 34.34, 22.23, 10.24, 1.17, 6]],
+         [ 38, [ 37.19, 25.07, 10.24, 1.17, 6]],
+         [ 40, [ 39.75, 27.71, 10.24, 1.17, 6]],
+         [ 43, [ 41.63, 29.59, 10.24, 1.17, 6]],
+         [ 45, [ 43.82, 31.78, 10.24, 1.17, 6]],
+         [ 48, [ 47.12, 35.08, 10.24, 1.17, 6]],
+         [ 51, [ 49.56, 37.57, 10.36, 1.17, 6]],
+         [ 53, [ 52.07, 40.08, 10.36, 1.17, 6]],
+         [ 58, [ 56.06, 44.07, 10.36, 1.17, 6]],
+         [ 60, [ 59.06, 47.07, 10.36, 1.17, 6]],
+         [ 63, [ 62.08, 50.09, 10.36, 1.17, 6]],
+         [ 66, [ 65.07, 53.09, 10.36, 1.17, 6]],
+         [ 70, [ 69.06, 57.07, 10.36, 1.17, 6]],
+         [ 75, [ 73.56, 61.57, 10.36, 1.17, 6]],
+         [ 77, [ 76.66, 64.67, 12.37, 1.52, 6]],
+         [ 83, [ 82.58, 69.93, 12.37, 1.52, 5]],
+         [ 89, [ 88.75, 74.12, 13.59, 1.52, 5]],
+         [100, [ 99.57, 84.94, 15.16, 1.52, 5]],
+         [110, [109.58, 94.92, 15.16, 1.52, 5]],
+         [120, [119.56,104.93, 17.40, 1.52, 5]],
+        ]],
+  [410, //diam     T      I      H     S    tpi  L      W
+        [[ 18, [ 17.68,  8.26, 13.28, 0.94, 8,  9.17, 2.13]],
+         [ 20, [ 19.59, 10.26, 14.07, 0.94, 8,  9.17, 2.13]],
+         [ 22, [ 21.69, 12.27, 14.86, 0.94, 8,  9.55, 2.13]],
+         [ 24, [ 23.67, 13.11, 16.41, 1.17, 8, 11.10, 2.13]],
+         [ 28, [ 27.38, 15.60, 17.98, 1.17, 6, 11.76, 2.39]],
+         ]],
+  [415, //diam     T      I      H     S    tpi  L      W
+        [[ 13, [ 12.90,  5.54, 11.48, 0.94,12,  7.77, 1.14]],
+         [ 15, [ 14.61,  6.55, 14.15, 0.94,12,  8.84, 1.14]],
+         [ 18, [ 17.68,  8.26, 15.67, 0.94, 8, 10.90, 2.13]],
+         [ 20, [ 19.69, 10.26, 18.85, 0.94, 8, 11.58, 2.13]],
+         [ 22, [ 21.69, 12.27, 21.26, 0.94, 8, 13.87, 2.13]],
+         [ 24, [ 23.67, 13.11, 24.31, 1.17, 8, 14.25, 2.13]],
+         [ 28, [ 27.38, 15.60, 27.48, 1.17, 6, 16.64, 2.39]],
+         [ 33, [ 31.83, 20.09, 32.36, 1.17, 6, 19.61, 2.39]],
+         ]]
+];
+
+_sp_twist = [ [400, 360],
+              [410, 540],
+              [415, 720]
+            ];
+
+
+// profile data: tpi, total width, depth, 
+_sp_thread_width= [
+                [5, 3.05],
+                [6, 2.39],
+                [8, 2.13],
+                [12, 1.14],  // But note style M is different
+               ];
+
+
+function _sp_thread_profile(tpi, a, S, style) = 
+    let(
+        pitch = 1/tpi*INCH,
+        cL = a*(1-1/sqrt(3)),
+        cM = (1-tan(10))*a/2,
+        // SP specified roundings for the thread profile have special case for tpi=12
+        roundings = style=="L" && tpi < 12 ? 0.5 
+                  : style=="M" && tpi < 12 ? [0.25, 0.25, 0.75, 0.75]
+                  : style=="L" ? [0.38, 0.13, 0.13, 0.38]
+                  : /* style=="M" */  [0.25, 0.25, 0.2, 0.5],
+        path = style=="L"
+                  ? round_corners([[-1/2*pitch,-a/2],
+                                   [-a/2,-a/2],
+                                   [-cL/2,0],
+                                   [cL/2,0],
+                                   [a/2,-a/2],
+                                   [1/2*pitch,-a/2]], radius=roundings, closed=false,$fn=24)
+                  : round_corners(
+                       [[-1/2*pitch,-a/2],
+                                   [-a/2, -a/2],
+                                   [-cM, 0],
+                                   [0,0],
+                                   [a/2,-a/2],
+                                   [1/2*pitch,-a/2]], radius=roundings, closed=false, $fn=24)
+   )
+   // Shift so that the profile is S mm from the right end to create proper length S top gap
+   select(right(-a/2+1/2-S,p=path),1,-2)/pitch;
+
+
+function sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient) = no_function("sp_neck");
+module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
+{
+    assert(num_defined([wall,id])==1, "Must define exactly one of wall and id");
+    
+    table = struct_val(_sp_specs,type);
+    dum1=assert(is_def(table),"Unknown SP closure type.  Type must be one of 400, 410, or 415");
+    entry = struct_val(table, diam);
+    dum2=assert(is_def(entry), str("Unknown closure nominal diameter.  Allowed diameters for SP",type,": ",struct_keys(table)))
+         assert(style=="L" || style=="M", "style must be \"L\" or \"M\"");
+
+    T = entry[0];
+    I = entry[1];
+    H = entry[2];
+    S = entry[3];
+    tpi = entry[4];
+    a = (style=="M" && tpi==12) ? 1.3 : struct_val(_sp_thread_width,tpi);
+
+    twist = struct_val(_sp_twist, type);
+
+    profile = _sp_thread_profile(tpi,a,S,style);
+
+    depth = a/2;
+    higlen = 2*a;
+    higang = higlen / ((T-2*depth)*PI) * 360;
+
+    beadmax = type==400 ? (T/2-depth)+depth*1.25
+            : diam <=15 ? (T-.15)/2 : (T-.05)/2;
+    
+    W = type==400 ? a*1.5      // arbitrary decision for type 400
+                  : entry[6];  // specified width for 410 and 415
+
+    beadpts = [
+                [0,-W/2],
+                each arc(16, points = [[T/2-depth, -W/2],
+                                       [beadmax, 0],
+                                       [T/2-depth, W/2]]),
+                [0,W/2]
+              ];
+
+    isect400 = [for(seg=pair(beadpts)) let(segisect = line_segment_intersection([[T/2,0],[T/2,1]] , seg)) if (is_def(segisect)) segisect.y];
+
+    extra_bot = type==400 && bead ? -min(subindex(beadpts,1))+max(isect400) : 0;
+    bead_shift = type==400 ? H+max(isect400) : entry[5]+W/2;  // entry[5] is L
+    
+    attachable(anchor,spin,orient,r=bead ? beadmax : T/2, l=H+extra_bot){
+        up((H+extra_bot)/2){
+            difference(){
+                union(){
+                    thread_helix(d=T-.01, profile=profile, pitch = INCH/tpi, twist=twist+2*higang, higbee=higlen, anchor=TOP);
+                    cylinder(d=T-depth*2,l=H,anchor=TOP);
+                    if (bead)
+                      down(bead_shift)
+                         rotate_extrude()
+                            polygon(beadpts);
+                }
+                up(.5)cyl(d=is_def(id) ? id : T-a-2*wall, l=H-extra_bot+1, anchor=TOP);
+            }
+        }
+        children();
+    }
+}  
+
+
+// Function: sp_diameter()
+// Usage:
+//   true_diam = sp_diameter(diam,type)
+// Description:
+//   Returns the actual base diameter (root of the threads) for a SPI plastic bottle neck given the nominal diameter and type number (400, 410, 415). 
+function sp_diameter(diam,type) =
+  let(
+      table = struct_val(_sp_specs,type)
+  )
+  assert(is_def(table),"Unknown SP closure type.  Type must be one of 400, 410, or 415")
+  let(
+      entry = struct_val(table, diam)
+  )
+  assert(is_def(entry), str("Unknown closure nominal diameter.  Allowed diameters for SP",type,": ",struct_keys(table)))
+  entry[0];
 
 
 

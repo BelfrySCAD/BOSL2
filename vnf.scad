@@ -216,7 +216,7 @@ function vnf_triangulate(vnf) =
 
 // Function: vnf_vertex_array()
 // Usage:
-//   vnf = vnf_vertex_array(points, [caps], [cap1], [cap2], [reverse], [col_wrap], [row_wrap], [vnf]);
+//   vnf = vnf_vertex_array(points, [caps], [cap1], [cap2], [style], [reverse], [col_wrap], [row_wrap], [vnf]);
 // Description:
 //   Creates a VNF structure from a vertex list, by dividing the vertices into columns and rows,
 //   adding faces to tile the surface.  You can optionally have faces added to wrap the last column
