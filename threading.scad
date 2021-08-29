@@ -1170,7 +1170,7 @@ module generic_threaded_nut(
 //       right(14)back(19)text("flank",size=4,halign="center");
 //       right(14)back(14)text("angle",size=4,halign="center");
 //      }
-// Example:
+// Examples:
 //   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=900, $fn=72);
 //   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=900, higbee=1, $fn=72);
 //   thread_helix(d=10, pitch=2, thread_depth=0.75, flank_angle=15, twist=720, higbee=2, internal=true, $fn=72);
