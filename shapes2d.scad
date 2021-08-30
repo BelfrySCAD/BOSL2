@@ -534,7 +534,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, l
     assert(is_bool(endpoint))
     !endpoint ? assert(!wedge, "endpoint cannot be false if wedge is true")
                list_head(arc(N+1,r,angle,d,cp,points,width,thickness,start,wedge,long,cw,ccw,true)) :
-    assert(is_undef(N) || is_integer(N), "Number of points must be an integer")
+    assert(is_undef(N) || (is_integer(N) && N>=2), "Number of points must be an integer 2 or larger")
     // First try for 2D arc specified by width and thickness
     is_def(width) && is_def(thickness)? (
                 assert(!any_defined([r,cp,points]) && !any([cw,ccw,long]),"Conflicting or invalid parameters to arc")
@@ -557,7 +557,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, l
                 assert(angle!=0, "Arc has zero length")
                 assert(is_def(r) && r>0, "Arc radius invalid")
                 let(
-            N = max(3, is_undef(N)? ceil(segs(r)*abs(angle)/360) : N),
+            N = is_def(N) ? N : max(3, ceil(segs(r)*abs(angle)/360))
             arcpoints = [for(i=[0:N-1]) let(theta = start + i*angle/(N-1)) r*[cos(theta),sin(theta)]+cp],
             extra = wedge? [cp] : []
         )
