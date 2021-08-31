@@ -581,7 +581,7 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 
 function _offset_region(
     paths, r, delta, chamfer, closed,
-    maxstep, check_valid, quality,
+    check_valid, quality,
     return_faces, firstface_index,
     flip_faces, _acc=[], _i=0
 ) =
@@ -593,7 +593,7 @@ function _offset_region(
                 offset(
                     paths[_i].y,
                     r=r, delta=delta, chamfer=chamfer, closed=closed,
-                    maxstep=maxstep, check_valid=check_valid, quality=quality,
+                    check_valid=check_valid, quality=quality,
                     return_faces=return_faces, firstface_index=firstface_index,
                     flip_faces=flip_faces
                 )
@@ -603,14 +603,14 @@ function _offset_region(
                 offset(
                     paths[_i].y,
                     r=u_mul(-1,r), delta=u_mul(-1,delta), chamfer=chamfer, closed=closed,
-                    maxstep=maxstep, check_valid=check_valid, quality=quality,
+                    check_valid=check_valid, quality=quality,
                     return_faces=return_faces, firstface_index=firstface_index,
                     flip_faces=flip_faces
                 )
             ])
         ),
         r=r, delta=delta, chamfer=chamfer, closed=closed,
-        maxstep=maxstep, check_valid=check_valid, quality=quality,
+        check_valid=check_valid, quality=quality,
         return_faces=return_faces, firstface_index=firstface_index, flip_faces=flip_faces
     );
 
@@ -675,7 +675,7 @@ function _offset_region(
 // Example(2D):
 //   star = star(5, r=100, ir=30);
 //   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, r=-10, closed=true));
+//   stroke(closed=true, offset(star, r=-10, closed=true, $fn=20));
 // Example(2D):  This case needs `quality=2` for success
 //   test = [[0,0],[10,0],[10,7],[0,7], [-1,-3]];
 //   polygon(offset(test,r=-1.9, closed=true, quality=2));
@@ -713,7 +713,7 @@ function _offset_region(
 //   region(offset(rgn, r=-5));
 function offset(
     path, r=undef, delta=undef, chamfer=false,
-    maxstep=0.1, closed=false, check_valid=true,
+    closed=false, check_valid=true,
     quality=1, return_faces=false, firstface_index=0,
     flip_faces=false
 ) = 
@@ -733,7 +733,7 @@ function offset(
             ])
         ) _offset_region(
             pathlist, r=r, delta=delta, chamfer=chamfer, closed=true,
-            maxstep=maxstep, check_valid=check_valid, quality=quality,
+            check_valid=check_valid, quality=quality,
             return_faces=return_faces, firstface_index=firstface_index,
             flip_faces=flip_faces
         )
@@ -777,43 +777,39 @@ function offset(
             ],
         steps = is_def(delta) ? [] : [
             for(i=[0:len(goodsegs)-1])
-                        r==0 ? 0 :
-            ceil(
-                abs(r)*vector_angle(
-                    select(goodsegs,i-1)[1]-goodpath[i],
-                    goodsegs[i][0]-goodpath[i]
-                )*PI/180/maxstep
-            )
+                r==0 ? 0
+                // floor is important here to ensure we don't generate extra segments when nearly straight paths expand outward
+              : 1+floor(segs(r)*vector_angle(   
+                                             select(goodsegs,i-1)[1]-goodpath[i],
+                                             goodsegs[i][0]-goodpath[i])
+                        /360)
         ],
         // If rounding is true then newcorners replaces sharpcorners with rounded arcs where needed
         // Otherwise it's the same as sharpcorners
         // If rounding is on then newcorners[i] will be the point list that replaces goodpath[i] and newcorners later
         // gets flattened.  If rounding is off then we set it to [sharpcorners] so we can later flatten it and get
         // plain sharpcorners back.
-        newcorners = is_def(delta) && !chamfer ? [sharpcorners] : [
-            for(i=[0:len(goodsegs)-1]) (
-                (!chamfer && steps[i] <=2)  //Chamfer all points but only round if steps is 3 or more
-                || !outsidecorner[i]        // Don't round inside corners
-                || (!closed && (i==0 || i==len(goodsegs)-1))  // Don't round ends of an open path
-            )? [sharpcorners[i]] : (
-                chamfer?
-                    _offset_chamfer(
-                        goodpath[i], [
-                            select(goodsegs,i-1)[1],
-                            sharpcorners[i],
-                            goodsegs[i][0]
-                        ], d
-                    ) :
-                arc(
-                    cp=goodpath[i],
-                    points=[
-                        select(goodsegs,i-1)[1],
-                        goodsegs[i][0]
-                    ],
-                    N=steps[i]
-                )
-            )
-        ],
+        newcorners = is_def(delta) && !chamfer ? [sharpcorners]
+            : [for(i=[0:len(goodsegs)-1])
+                  (!chamfer && steps[i] <=1)  // Don't round if steps is smaller than 2
+                  || !outsidecorner[i]        // Don't round inside corners
+                  || (!closed && (i==0 || i==len(goodsegs)-1))  // Don't round ends of an open path
+                ? [sharpcorners[i]]
+                : chamfer ? _offset_chamfer(
+                                  goodpath[i], [
+                                      select(goodsegs,i-1)[1],
+                                      sharpcorners[i],
+                                      goodsegs[i][0]
+                                  ], d
+                              )     
+                : // rounded case
+                  arc(cp=goodpath[i],
+                      points=[
+                          select(goodsegs,i-1)[1],
+                          goodsegs[i][0]
+                      ],
+                      N=steps[i])
+              ],
         pointcount = (is_def(delta) && !chamfer)?
             repeat(1,len(sharpcorners)) :
             [for(i=[0:len(goodsegs)-1]) len(newcorners[i])],

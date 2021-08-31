@@ -552,12 +552,12 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, l
             start = is_def(start)? start : is_vector(angle) ? angle[0] : 0,
             angle = is_vector(angle)? angle[1]-angle[0] : angle,
             r = get_radius(r=r, d=d)
-                )
-                assert(is_vector(cp,2),"Centerpoint must be a 2d vector")
-                assert(angle!=0, "Arc has zero length")
-                assert(is_def(r) && r>0, "Arc radius invalid")
-                let(
-            N = is_def(N) ? N : max(3, ceil(segs(r)*abs(angle)/360))
+        )
+        assert(is_vector(cp,2),"Centerpoint must be a 2d vector")
+        assert(angle!=0, "Arc has zero length")
+        assert(is_def(r) && r>0, "Arc radius invalid")
+        let(
+            N = is_def(N) ? N : max(3, ceil(segs(r)*abs(angle)/360)),
             arcpoints = [for(i=[0:N-1]) let(theta = start + i*angle/(N-1)) r*[cos(theta),sin(theta)]+cp],
             extra = wedge? [cp] : []
         )
@@ -1539,12 +1539,11 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
         ang2 = min(ang,atan2(cap_h,cap_w)),
         sa = 180 - ang2,
         ea = 360 + ang2,
-        steps = segs(r)*(ea-sa)/360,
-        step = (ea-sa)/steps,
+        steps = ceil(segs(r)*(ea-sa)/360),
         path = deduplicate(
             [
                 [ cap_w,cap_h],
-                for (i=[0:1:steps]) let(a=ea-i*step) r*[cos(a),sin(a)],
+                for (a=lerpn(ea,sa,steps+1)) r*[cos(a),sin(a)],           
                 [-cap_w,cap_h]
             ], closed=true
         ),
@@ -1590,7 +1589,7 @@ function glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) =
         sa1 = 90-tangent,
         ea1 = 270+tangent,
         lobearc = ea1-sa1,
-        lobesegs = floor(segs(r)*lobearc/360),
+        lobesegs = ceil(segs(r)*lobearc/360),
         lobestep = lobearc / lobesegs,
         sa2 = 270-tangent,
         ea2 = 270+tangent,
