@@ -769,11 +769,11 @@ module square_threaded_nut(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //   $slop = The printer-specific slop value, which adds clearance (`4*$slop`) to internal threads.
 // Example(2D): Thread Profile, ball_diam=4, ball_arc=100
-//   projection(cut=true) ball_screw_rod(d=10, l=15, pitch=5, ball_diam=4, ball_arc=100, orient=BACK);
+//   projection(cut=true) ball_screw_rod(d=10, l=15, pitch=5, ball_diam=4, ball_arc=100, orient=BACK, $fn=24);
 // Example(2D): Thread Profile, ball_diam=4, ball_arc=120
-//   projection(cut=true) ball_screw_rod(d=10, l=15, pitch=5, ball_diam=4, ball_arc=120, orient=BACK);
+//   projection(cut=true) ball_screw_rod(d=10, l=15, pitch=5, ball_diam=4, ball_arc=120, orient=BACK, $fn=24);
 // Example(2D): Thread Profile, ball_diam=3, ball_arc=120
-//   projection(cut=true) ball_screw_rod(d=10, l=15, pitch=5, ball_diam=3, ball_arc=120, orient=BACK);
+//   projection(cut=true) ball_screw_rod(d=10, l=15, pitch=5, ball_diam=3, ball_arc=120, orient=BACK, $fn=24);
 // Examples(Med):
 //   ball_screw_rod(d=15, l=20, pitch=8, ball_diam=5, ball_arc=120, $fa=1, $fs=1);
 //   ball_screw_rod(d=15, l=20, pitch=5, ball_diam=4, ball_arc=120, $fa=1, $fs=1);
@@ -787,7 +787,7 @@ module ball_screw_rod(
     bevel,bevel1,bevel2,
     anchor, spin, orient
 ) {
-    n = ceil(segs(ball_diam/2)*ball_arc/2/360);
+    n = max(3,ceil(segs(ball_diam/2)*ball_arc/2/360));
     depth = ball_diam * (1-cos(ball_arc/2))/2;
     cpy = ball_diam/2/pitch*cos(ball_arc/2);
     profile = [
