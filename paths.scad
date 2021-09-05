@@ -357,9 +357,11 @@ function path_tangents(path, closed=false, uniform=true) =
 //   Compute the normal vector to the input path.  This vector is perpendicular to the
 //   path tangent and lies in the plane of the curve.  For 3d paths we define the plane of the curve
 //   at path point i to be the plane defined by point i and its two neighbors.  At the endpoints of open paths
-//   we use the three end points.  The computed normal is the one lying in this plane and pointing to the
-//   right of the direction of the path.  If points are collinear then the path does not define a unique plane
-//   and hence the (right pointing) normal is not uniquely defined.  In this case the function issues an error.
+//   we use the three end points.  For 3d paths the computed normal is the one lying in this plane that points
+//   towards the center of curvature at that path point.  For 2d paths, which lie in the xy plane, the normal
+//   is the path pointing to the right of the direction the path is traveling.  If points are collinear then
+//   a 3d path has no center of curvature, and hence the 
+//   normal is not uniquely defined.  In this case the function issues an error.
 //   For 2d paths the plane is always defined so the normal fails to exist only
 //   when the derivative is zero (in the case of repeated points).
 function path_normals(path, tangents, closed=false) =
@@ -378,7 +380,8 @@ function path_normals(path, tangents, closed=false) =
                  : select(path,i-1,i+1)
         )
         dim == 2 ? [tangents[i].y,-tangents[i].x]
-                 : let(v=cross(cross(pts[1]-pts[0], pts[2]-pts[0]),tangents[i]))
+                 : let( fff=i==10?echo(pts=pts, tangent=tangents[10],cp=cross(pts[1]-pts[0], pts[2]-pts[0])):0,
+                        v=cross(cross(pts[1]-pts[0], pts[2]-pts[0]),tangents[i]))
                    assert(norm(v)>EPSILON, "3D path contains collinear points")
                    unit(v)
     ];
@@ -937,6 +940,342 @@ function assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
 
 
 
+// Function: path_cut_points()
+//
+// Usage:
+//   cuts = path_cut_points(path, dists, [closed=], [direction=]);
+//
+// Description:
+//   Cuts a path at a list of distances from the first point in the path.  Returns a list of the cut
+//   points and indices of the next point in the path after that point.  So for example, a return
+//   value entry of [[2,3], 5] means that the cut point was [2,3] and the next point on the path after
+//   this point is path[5].  If the path is too short then path_cut_points returns undef.  If you set
+//   `direction` to true then `path_cut_points` will also return the tangent vector to the path and a normal
+//   vector to the path.  It tries to find a normal vector that is coplanar to the path near the cut
+//   point.  If this fails it will return a normal vector parallel to the xy plane.  The output with
+//   direction vectors will be `[point, next_index, tangent, normal]`.
+//   .
+//   If you give the very last point of the path as a cut point then the returned index will be
+//   one larger than the last index (so it will not be a valid index).  If you use the closed
+//   option then the returned index will be equal to the path length for cuts along the closing
+//   path segment, and if you give a point equal to the path length you will get an
+//   index of len(path)+1 for the index.  
+//
+// Arguments:
+//   path = path to cut
+//   dists = distances where the path should be cut (a list) or a scalar single distance
+//   ---
+//   closed = set to true if the curve is closed.  Default: false
+//   direction = set to true to return direction vectors.  Default: false
+//
+// Example(NORENDER):
+//   square=[[0,0],[1,0],[1,1],[0,1]];
+//   path_cut_points(square, [.5,1.5,2.5]);   // Returns [[[0.5, 0], 1], [[1, 0.5], 2], [[0.5, 1], 3]]
+//   path_cut_points(square, [0,1,2,3]);      // Returns [[[0, 0], 1], [[1, 0], 2], [[1, 1], 3], [[0, 1], 4]]
+//   path_cut_points(square, [0,0.8,1.6,2.4,3.2], closed=true);  // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], [[0, 0.8], 4]]
+//   path_cut_points(square, [0,0.8,1.6,2.4,3.2]);               // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], undef]
+function path_cut_points(path, dists, closed=false, direction=false) =
+    let(long_enough = len(path) >= (closed ? 3 : 2))
+    assert(long_enough,len(path)<2 ? "Two points needed to define a path" : "Closed path must include three points")
+    is_num(dists) ? path_cut_points(path, [dists],closed, direction)[0] :
+    assert(is_vector(dists))
+    assert(list_increasing(dists), "Cut distances must be an increasing list")
+    let(cuts = _path_cut_points(path,dists,closed))
+    !direction
+       ? cuts
+       : let(
+             dir = _path_cuts_dir(path, cuts, closed),
+             normals = _path_cuts_normals(path, cuts, dir, closed)
+         )
+         hstack(cuts, array_group(dir,1), array_group(normals,1));
+
+// Main recursive path cut function
+function _path_cut_points(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[]) =
+    dind == len(dists) ? result :
+    let(
+        lastpt = len(result)==0? [] : last(result)[0],       // location of last cut point
+        dpartial = len(result)==0? 0 : norm(lastpt-select(path,pind)),  // remaining length in segment
+        nextpoint = dists[dind] < dpartial+dtotal  // Do we have enough length left on the current segment?
+           ? [lerp(lastpt,select(path,pind),(dists[dind]-dtotal)/dpartial),pind] 
+           : _path_cut_single(path, dists[dind]-dtotal-dpartial, closed, pind)
+    ) 
+    _path_cut_points(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
+
+
+// Search for a single cut point in the path
+function _path_cut_single(path, dist, closed=false, ind=0, eps=1e-7) =
+    // If we get to the very end of the path (ind is last point or wraparound for closed case) then
+    // check if we are within epsilon of the final path point.  If not we're out of path, so we fail
+    ind==len(path)-(closed?0:1) ?
+       assert(dist<eps,"Path is too short for specified cut distance")
+       [select(path,ind),ind+1]
+    :let(d = norm(path[ind]-select(path,ind+1))) d > dist ?
+        [lerp(path[ind],select(path,ind+1),dist/d), ind+1] :
+        _path_cut_single(path, dist-d,closed, ind+1, eps);
+
+// Find normal directions to the path, coplanar to local part of the path
+// Or return a vector parallel to the x-y plane if the above fails
+function _path_cuts_normals(path, cuts, dirs, closed=false) =
+    [for(i=[0:len(cuts)-1])
+        len(path[0])==2? [-dirs[i].y, dirs[i].x]
+          : 
+            let(
+                plane = len(path)<3 ? undef :
+                let(start = max(min(cuts[i][1],len(path)-1),2)) _path_plane(path, start, start-2)
+            )
+            plane==undef?
+                ( dirs[i].x==0 && dirs[i].y==0 ? [1,0,0]  // If it's z direction return x vector
+                                               : unit([-dirs[i].y, dirs[i].x,0])) // otherwise perpendicular to projection
+                : unit(cross(dirs[i],cross(plane[0],plane[1])))
+    ];
+
+// Scan from the specified point (ind) to find a noncoplanar triple to use
+// to define the plane of the path.
+function _path_plane(path, ind, i,closed) =
+    i<(closed?-1:0) ? undef :
+    !collinear(path[ind],path[ind-1], select(path,i))?
+        [select(path,i)-path[ind-1],path[ind]-path[ind-1]] :
+        _path_plane(path, ind, i-1);
+
+// Find the direction of the path at the cut points
+function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
+    [for(ind=[0:len(cuts)-1])
+        let(
+            zeros = path[0]*0,
+            nextind = cuts[ind][1],
+            nextpath = unit(select(path, nextind+1)-select(path, nextind),zeros),
+            thispath = unit(select(path, nextind) - select(path,nextind-1),zeros),
+            lastpath = unit(select(path,nextind-1) - select(path, nextind-2),zeros),
+            nextdir =
+                nextind==len(path) && !closed? lastpath :
+                (nextind<=len(path)-2 || closed) && approx(cuts[ind][0], path[nextind],eps)
+                   ? unit(nextpath+thispath)
+              : (nextind>1 || closed) && approx(cuts[ind][0],select(path,nextind-1),eps)
+                   ? unit(thispath+lastpath)
+              :  thispath
+        ) nextdir
+    ];
+
+
+// Function: path_cut()
+// Topics: Paths
+// See Also: path_cut_points()
+// Usage:
+//    path_list = path_cut(path, cutdist, [closed=]);
+// Description:
+//    Given a list of distances in `cutdist`, cut the path into
+//    subpaths at those lengths, returning a list of paths.
+//    If the input path is closed then the final path will include the
+//    original starting point.  The list of cut distances must be
+//    in ascending order.  If you repeat a distance you will get an
+//    empty list in that position in the output.
+// Arguments:
+//   path = The original path to split.
+//   cutdist = Distance or list of distances where path is cut
+//   closed = If true, treat the path as a closed polygon.
+// Example(2D):
+//   path = circle(d=100);
+//   segs = path_cut(path, [50, 200], closed=true);
+//   rainbow(segs) stroke($item);
+function path_cut(path,cutdist,closed) =
+  is_num(cutdist) ? path_cut(path,[cutdist],closed) :
+  assert(is_vector(cutdist))
+  assert(last(cutdist)<path_length(path,closed=closed),"Cut distances must be smaller than the path length")
+  assert(cutdist[0]>0, "Cut distances must be strictly positive")
+  let(
+      cutlist = path_cut_points(path,cutdist,closed=closed),
+      cuts = len(cutlist)
+  )
+  [
+      [ each list_head(path,cutlist[0][1]-1),
+        if (!approx(cutlist[0][0], path[cutlist[0][1]-1])) cutlist[0][0]
+      ],
+      for(i=[0:1:cuts-2])
+          cutlist[i][0]==cutlist[i+1][0] ? []
+          :
+          [ if (!approx(cutlist[i][0], select(path,cutlist[i][1]))) cutlist[i][0],
+            each slice(path, cutlist[i][1], cutlist[i+1][1]-1),
+            if (!approx(cutlist[i+1][0], select(path,cutlist[i+1][1]-1))) cutlist[i+1][0],
+          ],
+      [
+        if (!approx(cutlist[cuts-1][0], select(path,cutlist[cuts-1][1]))) cutlist[cuts-1][0],
+        each select(path,cutlist[cuts-1][1],closed ? 0 : -1)
+      ]
+  ];
+
+
+
+// Input `data` is a list that sums to an integer. 
+// Returns rounded version of input data so that every 
+// entry is rounded to an integer and the sum is the same as
+// that of the input.  Works by rounding an entry in the list
+// and passing the rounding error forward to the next entry.
+// This will generally distribute the error in a uniform manner. 
+function _sum_preserving_round(data, index=0) =
+    index == len(data)-1 ? list_set(data, len(data)-1, round(data[len(data)-1])) :
+    let(
+        newval = round(data[index]),
+        error = newval - data[index]
+    ) _sum_preserving_round(
+        list_set(data, [index,index+1], [newval, data[index+1]-error]),
+        index+1
+    );
+
+
+// Function: subdivide_path()
+// Usage:
+//   newpath = subdivide_path(path, [N|refine], method);
+// Description:
+//   Takes a path as input (closed or open) and subdivides the path to produce a more
+//   finely sampled path.  The new points can be distributed proportional to length
+//   (`method="length"`) or they can be divided up evenly among all the path segments
+//   (`method="segment"`).  If the extra points don't fit evenly on the path then the
+//   algorithm attempts to distribute them uniformly.  The `exact` option requires that
+//   the final length is exactly as requested.  If you set it to `false` then the
+//   algorithm will favor uniformity and the output path may have a different number of
+//   points due to rounding error.
+//   .
+//   With the `"segment"` method you can also specify a vector of lengths.  This vector, 
+//   `N` specfies the desired point count on each segment: with vector input, `subdivide_path`
+//   attempts to place `N[i]-1` points on segment `i`.  The reason for the -1 is to avoid
+//   double counting the endpoints, which are shared by pairs of segments, so that for
+//   a closed polygon the total number of points will be sum(N).  Note that with an open
+//   path there is an extra point at the end, so the number of points will be sum(N)+1. 
+// Arguments:
+//   path = path to subdivide
+//   N = scalar total number of points desired or with `method="segment"` can be a vector requesting `N[i]-1` points on segment i.
+//   refine = number of points to add each segment.
+//   closed = set to false if the path is open.  Default: True
+//   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  Default: True
+//   method = One of `"length"` or `"segment"`.  If `"length"`, adds vertices evenly along the total path length.  If `"segment"`, adds points evenly among the segments.  Default: `"length"`
+// Example(2D):
+//   mypath = subdivide_path(square([2,2],center=true), 12);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D):
+//   mypath = subdivide_path(square([8,2],center=true), 12);
+//   move_copies(mypath)circle(r=.2,$fn=32);
+// Example(2D):
+//   mypath = subdivide_path(square([8,2],center=true), 12, method="segment");
+//   move_copies(mypath)circle(r=.2,$fn=32);
+// Example(2D):
+//   mypath = subdivide_path(square([2,2],center=true), 17, closed=false);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): Specifying different numbers of points on each segment
+//   mypath = subdivide_path(hexagon(side=2), [2,3,4,5,6,7], method="segment");
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): Requested point total is 14 but 15 points output due to extra end point
+//   mypath = subdivide_path(pentagon(side=2), [3,4,3,4], method="segment", closed=false);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): Since 17 is not divisible by 5, a completely uniform distribution is not possible. 
+//   mypath = subdivide_path(pentagon(side=2), 17);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): With `exact=false` a uniform distribution, but only 15 points
+//   mypath = subdivide_path(pentagon(side=2), 17, exact=false);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): With `exact=false` you can also get extra points, here 20 instead of requested 18
+//   mypath = subdivide_path(pentagon(side=2), 18, exact=false);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(FlatSpin,VPD=15,VPT=[0,0,1.5]): Three-dimensional paths also work
+//   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
+//   move_copies(mypath)sphere(r=.1,$fn=32);
+function subdivide_path(path, N, refine, closed=true, exact=true, method="length") =
+    assert(is_path(path))
+    assert(method=="length" || method=="segment")
+    assert(num_defined([N,refine]),"Must give exactly one of N and refine")
+    let(
+        N = !is_undef(N)? N :
+            !is_undef(refine)? len(path) * refine :
+            undef
+    )
+    assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
+    let(
+        count = len(path) - (closed?0:1), 
+        add_guess = method=="segment"? (
+                is_list(N)? (
+                    assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
+                    add_scalar(N,-1)
+                ) : repeat((N-len(path)) / count, count)
+            ) : // method=="length"
+            assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
+            let(
+                path_lens = concat(
+                    [ for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i]) ],
+                    closed? [norm(path[len(path)-1]-path[0])] : []
+                ),
+                add_density = (N - len(path)) / sum(path_lens)
+            )
+            path_lens * add_density,
+        add = exact? _sum_preserving_round(add_guess) :
+            [for (val=add_guess) round(val)]
+    ) concat(
+        [
+            for (i=[0:1:count]) each [
+                for(j=[0:1:add[i]])
+                lerp(path[i],select(path,i+1), j/(add[i]+1))
+            ]
+        ],
+        closed? [] : [last(path)]
+    );
+
+
+// Function: path_length_fractions()
+// Usage:
+//   fracs = path_length_fractions(path, [closed]);
+// Description:
+//    Returns the distance fraction of each point in the path along the path, so the first
+//    point is zero and the final point is 1.  If the path is closed the length of the output
+//    will have one extra point because of the final connecting segment that connects the last
+//    point of the path to the first point.
+function path_length_fractions(path, closed=false) =
+    assert(is_path(path))
+    assert(is_bool(closed))
+    let(
+        lengths = [
+            0,
+            for (i=[0:1:len(path)-(closed?1:2)])
+                norm(select(path,i+1)-path[i])
+        ],
+        partial_len = cumsum(lengths),
+        total_len = last(partial_len)
+    ) partial_len / total_len;
+
+
+// Function: resample_path()
+// Usage:
+//   newpath = resample_path(path, N|spacing, [closed]);
+// Description:
+//   Compute a uniform resampling of the input path.  If you specify `N` then the output path will have N
+//   points spaced uniformly (by linear interpolation along the input path segments).  The only points of the
+//   input path that are guaranteed to appear in the output path are the starting and ending points.
+//   If you specify `spacing` then the length you give will be rounded to the nearest spacing that gives
+//   a uniform sampling of the path and the resulting uniformly sampled path is returned.
+//   Note that because this function operates on a discrete input path the quality of the output depends on
+//   the sampling of the input.  If you want very accurate output, use a lot of points for the input.
+// Arguments:
+//   path = path to resample
+//   N = Number of points in output
+//   spacing = Approximate spacing desired
+//   closed = set to true if path is closed.  Default: false
+function resample_path(path, N, spacing, closed=false) =
+   assert(is_path(path))
+   assert(num_defined([N,spacing])==1,"Must define exactly one of N and spacing")
+   assert(is_bool(closed))
+   let(
+       length = path_length(path,closed),
+       // In the open path case decrease N by 1 so that we don't try to get
+       // path_cut to return the endpoint (which might fail due to rounding)
+       // Add last point later
+       N = is_def(N) ? N-(closed?0:1) : round(length/spacing),
+       distlist = lerpn(0,length,N,false), 
+       cuts = path_cut_points(path, distlist, closed=closed)
+   )
+   [ each subindex(cuts,0),
+     if (!closed) last(path)     // Then add last point here
+   ];
+
+
+
+
 // Section: 2D Modules
 
 
@@ -1302,337 +1641,149 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
 }
 
 
-// Function: path_cut_points()
-//
-// Usage:
-//   cuts = path_cut_points(path, dists, [closed=], [direction=]);
-//
-// Description:
-//   Cuts a path at a list of distances from the first point in the path.  Returns a list of the cut
-//   points and indices of the next point in the path after that point.  So for example, a return
-//   value entry of [[2,3], 5] means that the cut point was [2,3] and the next point on the path after
-//   this point is path[5].  If the path is too short then path_cut_points returns undef.  If you set
-//   `direction` to true then `path_cut_points` will also return the tangent vector to the path and a normal
-//   vector to the path.  It tries to find a normal vector that is coplanar to the path near the cut
-//   point.  If this fails it will return a normal vector parallel to the xy plane.  The output with
-//   direction vectors will be `[point, next_index, tangent, normal]`.
-//   .
-//   If you give the very last point of the path as a cut point then the returned index will be
-//   one larger than the last index (so it will not be a valid index).  If you use the closed
-//   option then the returned index will be equal to the path length for cuts along the closing
-//   path segment, and if you give a point equal to the path length you will get an
-//   index of len(path)+1 for the index.  
-//
-// Arguments:
-//   path = path to cut
-//   dists = distances where the path should be cut (a list) or a scalar single distance
-//   ---
-//   closed = set to true if the curve is closed.  Default: false
-//   direction = set to true to return direction vectors.  Default: false
-//
-// Example(NORENDER):
-//   square=[[0,0],[1,0],[1,1],[0,1]];
-//   path_cut_points(square, [.5,1.5,2.5]);   // Returns [[[0.5, 0], 1], [[1, 0.5], 2], [[0.5, 1], 3]]
-//   path_cut_points(square, [0,1,2,3]);      // Returns [[[0, 0], 1], [[1, 0], 2], [[1, 1], 3], [[0, 1], 4]]
-//   path_cut_points(square, [0,0.8,1.6,2.4,3.2], closed=true);  // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], [[0, 0.8], 4]]
-//   path_cut_points(square, [0,0.8,1.6,2.4,3.2]);               // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], undef]
-function path_cut_points(path, dists, closed=false, direction=false) =
-    let(long_enough = len(path) >= (closed ? 3 : 2))
-    assert(long_enough,len(path)<2 ? "Two points needed to define a path" : "Closed path must include three points")
-    is_num(dists) ? path_cut_points(path, [dists],closed, direction)[0] :
-    assert(is_vector(dists))
-    assert(list_increasing(dists), "Cut distances must be an increasing list")
-    let(cuts = _path_cut_points(path,dists,closed))
-    !direction
-       ? cuts
-       : let(
-             dir = _path_cuts_dir(path, cuts, closed),
-             normals = _path_cuts_normals(path, cuts, dir, closed)
-         )
-         hstack(cuts, array_group(dir,1), array_group(normals,1));
-
-// Main recursive path cut function
-function _path_cut_points(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[]) =
-    dind == len(dists) ? result :
+function _cut_interp(pathcut, path, data) =
+  [for(entry=pathcut)
     let(
-        lastpt = len(result)==0? [] : last(result)[0],       // location of last cut point
-        dpartial = len(result)==0? 0 : norm(lastpt-select(path,pind)),  // remaining length in segment
-        nextpoint = dists[dind] < dpartial+dtotal  // Do we have enough length left on the current segment?
-           ? [lerp(lastpt,select(path,pind),(dists[dind]-dtotal)/dpartial),pind] 
-           : _path_cut_single(path, dists[dind]-dtotal-dpartial, closed, pind)
-    ) 
-    _path_cut_points(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
-
-
-// Search for a single cut point in the path
-function _path_cut_single(path, dist, closed=false, ind=0, eps=1e-7) =
-    // If we get to the very end of the path (ind is last point or wraparound for closed case) then
-    // check if we are within epsilon of the final path point.  If not we're out of path, so we fail
-    ind==len(path)-(closed?0:1) ?
-       assert(dist<eps,"Path is too short for specified cut distance")
-       [select(path,ind),ind+1]
-    :let(d = norm(path[ind]-select(path,ind+1))) d > dist ?
-        [lerp(path[ind],select(path,ind+1),dist/d), ind+1] :
-        _path_cut_single(path, dist-d,closed, ind+1, eps);
-
-// Find normal directions to the path, coplanar to local part of the path
-// Or return a vector parallel to the x-y plane if the above fails
-function _path_cuts_normals(path, cuts, dirs, closed=false) =
-    [for(i=[0:len(cuts)-1])
-        len(path[0])==2? [-dirs[i].y, dirs[i].x] : (
-            let(
-                plane = len(path)<3 ? undef :
-                let(start = max(min(cuts[i][1],len(path)-1),2)) _path_plane(path, start, start-2)
-            )
-            plane==undef?
-                unit([-dirs[i].y, dirs[i].x,0]) :
-                unit(cross(dirs[i],cross(plane[0],plane[1])))
-        )
-    ];
-
-// Scan from the specified point (ind) to find a noncoplanar triple to use
-// to define the plane of the path.
-function _path_plane(path, ind, i,closed) =
-    i<(closed?-1:0) ? undef :
-    !collinear(path[ind],path[ind-1], select(path,i))?
-        [select(path,i)-path[ind-1],path[ind]-path[ind-1]] :
-        _path_plane(path, ind, i-1);
-
-// Find the direction of the path at the cut points
-function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
-    [for(ind=[0:len(cuts)-1])
-        let(
-            zeros = path[0]*0,
-            nextind = cuts[ind][1],
-            nextpath = unit(select(path, nextind+1)-select(path, nextind),zeros),
-            thispath = unit(select(path, nextind) - select(path,nextind-1),zeros),
-            lastpath = unit(select(path,nextind-1) - select(path, nextind-2),zeros),
-            nextdir =
-                nextind==len(path) && !closed? lastpath :
-                (nextind<=len(path)-2 || closed) && approx(cuts[ind][0], path[nextind],eps)
-                   ? unit(nextpath+thispath)
-              : (nextind>1 || closed) && approx(cuts[ind][0],select(path,nextind-1),eps)
-                   ? unit(thispath+lastpath)
-              :  thispath
-        ) nextdir
-    ];
-
-
-// Function: path_cut()
-// Topics: Paths
-// See Also: path_cut_points()
-// Usage:
-//    path_list = path_cut(path, cutdist, [closed=]);
-// Description:
-//    Given a list of distances in `cutdist`, cut the path into
-//    subpaths at those lengths, returning a list of paths.
-//    If the input path is closed then the final path will include the
-//    original starting point.  The list of cut distances must be
-//    in ascending order.  If you repeat a distance you will get an
-//    empty list in that position in the output.
-// Arguments:
-//   path = The original path to split.
-//   cutdist = Distance or list of distances where path is cut
-//   closed = If true, treat the path as a closed polygon.
-// Example(2D):
-//   path = circle(d=100);
-//   segs = path_cut(path, [50, 200], closed=true);
-//   rainbow(segs) stroke($item);
-function path_cut(path,cutdist,closed) =
-  is_num(cutdist) ? path_cut(path,[cutdist],closed) :
-  assert(is_vector(cutdist))
-  assert(last(cutdist)<path_length(path,closed=closed),"Cut distances must be smaller than the path length")
-  assert(cutdist[0]>0, "Cut distances must be strictly positive")
-  let(
-      cutlist = path_cut_points(path,cutdist,closed=closed),
-      cuts = len(cutlist)
-  )
-  [
-      [ each list_head(path,cutlist[0][1]-1),
-        if (!approx(cutlist[0][0], path[cutlist[0][1]-1])) cutlist[0][0]
-      ],
-      for(i=[0:1:cuts-2])
-          cutlist[i][0]==cutlist[i+1][0] ? []
-          :
-          [ if (!approx(cutlist[i][0], select(path,cutlist[i][1]))) cutlist[i][0],
-            each slice(path, cutlist[i][1], cutlist[i+1][1]-1),
-            if (!approx(cutlist[i+1][0], select(path,cutlist[i+1][1]-1))) cutlist[i+1][0],
-          ],
-      [
-        if (!approx(cutlist[cuts-1][0], select(path,cutlist[cuts-1][1]))) cutlist[cuts-1][0],
-        each select(path,cutlist[cuts-1][1],closed ? 0 : -1)
-      ]
+       a = path[entry[1]-1],
+        b = path[entry[1]],
+        c = entry[0],
+        i = max_index(v_abs(b-a)),
+        factor = (c[i]-a[i])/(b[i]-a[i])
+    )
+    (1-factor)*data[entry[1]-1]+ factor * data[entry[1]]
   ];
 
 
-
-// Input `data` is a list that sums to an integer. 
-// Returns rounded version of input data so that every 
-// entry is rounded to an integer and the sum is the same as
-// that of the input.  Works by rounding an entry in the list
-// and passing the rounding error forward to the next entry.
-// This will generally distribute the error in a uniform manner. 
-function _sum_preserving_round(data, index=0) =
-    index == len(data)-1 ? list_set(data, len(data)-1, round(data[len(data)-1])) :
-    let(
-        newval = round(data[index]),
-        error = newval - data[index]
-    ) _sum_preserving_round(
-        list_set(data, [index,index+1], [newval, data[index+1]-error]),
-        index+1
-    );
-
-
-// Function: subdivide_path()
+// Module: path_text()
 // Usage:
-//   newpath = subdivide_path(path, [N|refine], method);
+//   path_text(path, text, [size], [thickness], [font], [lettersize], [offset], [reverse], [normal], [top], [textmetrics])
 // Description:
-//   Takes a path as input (closed or open) and subdivides the path to produce a more
-//   finely sampled path.  The new points can be distributed proportional to length
-//   (`method="length"`) or they can be divided up evenly among all the path segments
-//   (`method="segment"`).  If the extra points don't fit evenly on the path then the
-//   algorithm attempts to distribute them uniformly.  The `exact` option requires that
-//   the final length is exactly as requested.  If you set it to `false` then the
-//   algorithm will favor uniformity and the output path may have a different number of
-//   points due to rounding error.
+//   Place the text letter by letter onto the specified path using textmetrics (if available and requested)
+//   or user specified letter spacing.  By default letters are positioned on the tangent line to the path with the path normal
+//   pointing toward the reader.  The path normal points away from the center of curvature (the opposite of the normal produced
+//   by path_normals()).  Note that this means that if the center of curvature switches sides the text will flip upside down.
+//   If you want text on such a path you must supply your own normal or top vector.  
+//   . 
+//   Text appears starting at the beginning of the path, so if the path moves right to left
+//   then a left-to-right reading language will display in the wrong order.  The text appears positioned to be
+//   read from "outside" of the curve (from a point on the other side of the curve from the center of curvature).
+//   If you need the text to read properly from the inside, you can set reverse to true to flip the text, or supply
+//   your own normal.  
 //   .
-//   With the `"segment"` method you can also specify a vector of lengths.  This vector, 
-//   `N` specfies the desired point count on each segment: with vector input, `subdivide_path`
-//   attempts to place `N[i]-1` points on segment `i`.  The reason for the -1 is to avoid
-//   double counting the endpoints, which are shared by pairs of segments, so that for
-//   a closed polygon the total number of points will be sum(N).  Note that with an open
-//   path there is an extra point at the end, so the number of points will be sum(N)+1. 
+//   If you do not have the experimental textmetrics feature enabled then you must specify the space for the letters
+//   using lettersize, which can be a scalar or array.  You will have the easiest time getting good results by using
+//   a monospace font such as Courier.  Note that even with text metrics, spacing may be different because path_text()
+//   doesn't do kerning to adjust positions of individual glyphs.  Also if your font has ligatures they won't be used.  
+//   .
+//   By default letters appear centered on the path.  The offset can be specified to shift letters toward the reader (in
+//   the direction of the normal).  
+//   .
+//   You can specify your own normal by setting `normal` to a direction or a list of directions.  Your normal vector should
+//   point toward the reader.  You can also specify
+//   top, which directs the top of the letters in a desired direction.  If you specify your own directions and they
+//   are not perpendicular to the path then the direction you specify will take priority and the
+//   letters will not rest on the tangent line of the path.  Note that the normal or top directions that you
+//   specify must not be parallel to the path.  
 // Arguments:
-//   path = path to subdivide
-//   N = scalar total number of points desired or with `method="segment"` can be a vector requesting `N[i]-1` points on segment i.
-//   refine = number of points to add each segment.
-//   closed = set to false if the path is open.  Default: True
-//   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  Default: True
-//   method = One of `"length"` or `"segment"`.  If `"length"`, adds vertices evenly along the total path length.  If `"segment"`, adds points evenly among the segments.  Default: `"length"`
-// Example(2D):
-//   mypath = subdivide_path(square([2,2],center=true), 12);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D):
-//   mypath = subdivide_path(square([8,2],center=true), 12);
-//   move_copies(mypath)circle(r=.2,$fn=32);
-// Example(2D):
-//   mypath = subdivide_path(square([8,2],center=true), 12, method="segment");
-//   move_copies(mypath)circle(r=.2,$fn=32);
-// Example(2D):
-//   mypath = subdivide_path(square([2,2],center=true), 17, closed=false);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): Specifying different numbers of points on each segment
-//   mypath = subdivide_path(hexagon(side=2), [2,3,4,5,6,7], method="segment");
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): Requested point total is 14 but 15 points output due to extra end point
-//   mypath = subdivide_path(pentagon(side=2), [3,4,3,4], method="segment", closed=false);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): Since 17 is not divisible by 5, a completely uniform distribution is not possible. 
-//   mypath = subdivide_path(pentagon(side=2), 17);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): With `exact=false` a uniform distribution, but only 15 points
-//   mypath = subdivide_path(pentagon(side=2), 17, exact=false);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): With `exact=false` you can also get extra points, here 20 instead of requested 18
-//   mypath = subdivide_path(pentagon(side=2), 18, exact=false);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(FlatSpin,VPD=15,VPT=[0,0,1.5]): Three-dimensional paths also work
-//   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
-//   move_copies(mypath)sphere(r=.1,$fn=32);
-function subdivide_path(path, N, refine, closed=true, exact=true, method="length") =
-    assert(is_path(path))
-    assert(method=="length" || method=="segment")
-    assert(num_defined([N,refine]),"Must give exactly one of N and refine")
-    let(
-        N = !is_undef(N)? N :
-            !is_undef(refine)? len(path) * refine :
-            undef
-    )
-    assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
-    let(
-        count = len(path) - (closed?0:1), 
-        add_guess = method=="segment"? (
-                is_list(N)? (
-                    assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
-                    add_scalar(N,-1)
-                ) : repeat((N-len(path)) / count, count)
-            ) : // method=="length"
-            assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
-            let(
-                path_lens = concat(
-                    [ for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i]) ],
-                    closed? [norm(path[len(path)-1]-path[0])] : []
-                ),
-                add_density = (N - len(path)) / sum(path_lens)
-            )
-            path_lens * add_density,
-        add = exact? _sum_preserving_round(add_guess) :
-            [for (val=add_guess) round(val)]
-    ) concat(
-        [
-            for (i=[0:1:count]) each [
-                for(j=[0:1:add[i]])
-                lerp(path[i],select(path,i+1), j/(add[i]+1))
-            ]
-        ],
-        closed? [] : [last(path)]
-    );
+//   path = path to place the text on
+//   text = text to create
+//   size = font size
+//   thickness = thickness of letters
+//   font = font to use
+//   ---
+//   lettersize = scalar or array giving size of letters
+//   offset = distance to shift letters "up" (towards the reader).  Default: 0
+//   normal = direction or list of directions pointing towards the reader of the text
+//   top = direction or list of directions pointing toward the top of the text
+//   reverse = reverse the letters if true.  Default: false
+//   textmetrics = if set to true and lettersize is not given then use the experimental textmetrics feature.  You must be running a dev snapshot that includes this feature and have the feature turned on in your preferences.  Default: false
+// Example:  The examples use Courier, a monospaced font.  The width is 1/1.2 times the specified size for this font.  This text could wrap around a cylinder. 
+//   path = path3d(arc(100, r=25, angle=[245, 370]));
+//   color("red")stroke(path, width=.3);
+//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2);
+// Example: By setting the normal to UP we can get text that lies flat, for writing around the edge of a disk:
+//   path = path3d(arc(100, r=25, angle=[245, 370]));
+//   color("red")stroke(path, width=.3);
+//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, normal=UP);
+// Example:  If we want text that reads from the other side we can use reverse.  Note we have to reverse the direction of the path and also set the reverse option.  
+//   path = reverse(path3d(arc(100, r=25, angle=[65, 190])));
+//   color("red")stroke(path, width=.3);
+//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, reverse=true);
+// Example: text debossed onto a cylinder in a spiral.  The text is 1 unit deep because it is half in, half out. 
+//   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
+//   L = 5*len(text);
+//   maxang = 360*L/(PI*50);
+//   spiral = [for(a=[0:1:maxang]) [25*cos(a), 25*sin(a), 10-30/maxang*a]];
+//   difference(){
+//     cyl(d=50, l=50, $fn=120);
+//     path_text(spiral, text, size=5, lettersize=5/1.2, font="Courier", thickness=2);
+//   }
+// Example: Same example but text embossed.  Make sure you have enough depth for the letters to fully overlap the object. 
+//   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
+//   L = 5*len(text);
+//   maxang = 360*L/(PI*50);
+//   spiral = [for(a=[0:1:maxang]) [25*cos(a), 25*sin(a), 10-30/maxang*a]];
+//   cyl(d=50, l=50, $fn=120);
+//   path_text(spiral, text, size=5, lettersize=5/1.2, font="Courier", thickness=2);
+// Example: Here the text baseline sits on the path.  (Note the default orientation makes text readable from below, so we specify the normal.)
+//   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
+//   color("red")stroke(path,width=.2);
+//   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Courier", normal=FRONT);
+// Example: If we use top to orient the text upward, the text baseline is no longer aligned with the path. 
+//   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
+//   color("red")stroke(path,width=.2);
+//   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Courier", top=UP);
+// Example: The path center of curvature changes, and the text flips.  
+//   path =  zrot(-120,p=path3d( concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180])))));
+//   color("red")stroke(path,width=.2);
+//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier", thickness=2);
+// Example: We can fix it with top:
+//   path =  zrot(-120,p=path3d( concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180])))));
+//   color("red")stroke(path,width=.2);
+//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier", thickness=2, top=UP);
+module path_text(path, text, font, size, thickness=1, lettersize, offset=0, reverse=false, normal, top, textmetrics=false)
+{
+  dummy2=assert(num_defined([normal,top])<=1, "Cannot define both normal and top");
+  normal = is_def(normal) && len(normal)==3 ? repeat(normal, len(path))
+         : is_def(normal) ? normal
+         : undef;
 
+  top = is_def(top) && len(top)==3 ? repeat(top, len(path))
+         : is_def(top) ? top
+         : undef;
 
-// Function: path_length_fractions()
-// Usage:
-//   fracs = path_length_fractions(path, [closed]);
-// Description:
-//    Returns the distance fraction of each point in the path along the path, so the first
-//    point is zero and the final point is 1.  If the path is closed the length of the output
-//    will have one extra point because of the final connecting segment that connects the last
-//    point of the path to the first point.
-function path_length_fractions(path, closed=false) =
-    assert(is_path(path))
-    assert(is_bool(closed))
-    let(
-        lengths = [
-            0,
-            for (i=[0:1:len(path)-(closed?1:2)])
-                norm(select(path,i+1)-path[i])
-        ],
-        partial_len = cumsum(lengths),
-        total_len = last(partial_len)
-    ) partial_len / total_len;
+  lsize = is_def(lettersize) ? force_list(lettersize, len(text))
+        : textmetrics ? [for(letter=text) let(t=textmetrics(letter, font=font, size=size)) t.advance[0]]
+        : assert(false, "textmetrics disabled: Must specify letter size");
 
+  dummy1 = assert(sum(lsize)<=path_length(path),"Path is too short for the text");
+   
+  pts = path_cut_points(path, add_scalar([0, each cumsum(lsize)],lsize[0]/2), direction=true);
 
-// Function: resample_path()
-// Usage:
-//   newpath = resample_path(path, N|spacing, [closed]);
-// Description:
-//   Compute a uniform resampling of the input path.  If you specify `N` then the output path will have N
-//   points spaced uniformly (by linear interpolation along the input path segments).  The only points of the
-//   input path that are guaranteed to appear in the output path are the starting and ending points.
-//   If you specify `spacing` then the length you give will be rounded to the nearest spacing that gives
-//   a uniform sampling of the path and the resulting uniformly sampled path is returned.
-//   Note that because this function operates on a discrete input path the quality of the output depends on
-//   the sampling of the input.  If you want very accurate output, use a lot of points for the input.
-// Arguments:
-//   path = path to resample
-//   N = Number of points in output
-//   spacing = Approximate spacing desired
-//   closed = set to true if path is closed.  Default: false
-function resample_path(path, N, spacing, closed=false) =
-   assert(is_path(path))
-   assert(num_defined([N,spacing])==1,"Must define exactly one of N and spacing")
-   assert(is_bool(closed))
-   let(
-       length = path_length(path,closed),
-       // In the open path case decrease N by 1 so that we don't try to get
-       // path_cut to return the endpoint (which might fail due to rounding)
-       // Add last point later
-       N = is_def(N) ? N-(closed?0:1) : round(length/spacing),
-       distlist = lerpn(0,length,N,false), 
-       cuts = path_cut_points(path, distlist, closed=closed)
-   )
-   [ each subindex(cuts,0),
-     if (!closed) last(path)     // Then add last point here
-   ];
+  usernorm = is_def(normal);
+  usetop = is_def(top);
+  
+  normpts = is_undef(normal) ? (reverse?1:-1)*subindex(pts,3) : _cut_interp(pts,path, normal);
+  toppts = is_undef(top) ? undef : _cut_interp(pts,path,top);
+  for(i=idx(text))
+      assert(!usetop || !approx(pts[i][2]*toppts[i],norm(top[i])*norm(pts[i][2])),
+             str("Specified top direction parallel to path at character ",i))
+      assert(usetop || !approx(pts[i][2]*normpts[i],norm(normpts[i])*norm(pts[i][2])),
+             str("Specified normal direction parallel to path at character ",i))
+      let(
+          adjustment = usetop ?  (pts[i][2]*toppts[i])*toppts[i]/(toppts[i]*toppts[i])
+                     : usernorm ?  (pts[i][2]*normpts[i])*normpts[i]/(normpts[i]*normpts[i])
+                     : [0,0,0]
+          
+      )
+      move(pts[i][0])
+      multmatrix(affine3d_frame_map(x=pts[i][2]-adjustment,
+                                    z=usetop ? undef : normpts[i],
+                                    y=usetop ? toppts[i] : undef))
+      up(offset-thickness/2)
+      linear_extrude(height=thickness)
+      left(lsize[0]/2)text(text[i], font=font, size=size);
+}
 
 
 
