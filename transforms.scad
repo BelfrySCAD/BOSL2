@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: transforms.scad
-//   Functions and modules for translation, rotation, reflection and skewing.
+//   Functions and modules that provide shortcuts for translation, rotation, mirror and skew operations. The shortcuts can act on geometry, like the usual OpenSCAD rotate() and translate(). They also work as functions that operate on lists of points in various forms: paths, VNFS and bezier patches. Lastly, the function form of the shortcuts can return a matrix representing the operation the shortcut performs. The rotation and scaling shortcuts accept an optional centerpoint for the rotation or scaling operation. 
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
@@ -1010,6 +1010,10 @@ function zscale(z=1, p, cp=0) =
     let( cp = is_num(cp)? [0,0,cp] : cp )
     scale([1,1,z], cp=cp, p=p);
 
+
+//////////////////////////////////////////////////////////////////////
+// Section: Reflection (Mirroring)
+//////////////////////////////////////////////////////////////////////
 
 // Function&Module: mirror()
 // Usage: As Module
