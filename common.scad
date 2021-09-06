@@ -566,7 +566,7 @@ function no_function(name) =
 // Description:
 //   Asserts that the called module exists only as a function.
 // Example:
-//   function foo() = no_module();
+//   module foo() { no_module(); }
 module no_module() {
     assert(false, str("You called ",parent_module(1),"() as a module but it is available only as a function"));
 }    

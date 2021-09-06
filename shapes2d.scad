@@ -1,16 +1,17 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: shapes2d.scad
-//   This file includes stroke(), which converts a path
-//   into a geometric object, like drawing with a pen.  You
-//   can make a dashed line or add arrow heads.  The turtle() function
-//   provides a turtle graphics style approach for producing paths.
-//   You can create regular polygons with optional rounded corners and
-//   alignment features not available with circle().  The file also
-//   provides teardrop2d, which is useful for 3d printable holes.
-//   Lastly you can use the masks to produce edge treatments common in
-//   furniture from the simple roundover or cove molding to the more
-//   elaborate ogee.  Many of the commands have module forms that
-//   produce geometry and function forms that produce a path.
+//   This file includes stroke(), which converts a path into a
+//   geometric object, like drawing with a pen.  It even works on
+//   three-dimensional paths.  You can make a dashed line or add arrow
+//   heads.  The turtle() function provides a turtle graphics style
+//   approach for producing paths.  You can create regular polygons
+//   with optional rounded corners and alignment features not
+//   available with circle().  The file also provides teardrop2d,
+//   which is useful for 3d printable holes.  Lastly you can use the
+//   masks to produce edge treatments common in furniture from the
+//   simple roundover or cove molding to the more elaborate ogee.
+//   Many of the commands have module forms that produce geometry and
+//   function forms that produce a path.
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
@@ -119,6 +120,16 @@
 // Example: 3D Path with Joints and Endcaps
 //   path = [for (i=[0:10:360]) [(i-180)/2,20*cos(3*i),20*sin(3*i)]];
 //   stroke(path, width=2, joints="dot", endcap1="round", endcap2="arrow2", joint_width=2.0, endcap_width2=3, $fn=18);
+function stroke(
+    path, width=1, closed=false,
+    endcaps,       endcap1,        endcap2,        joints,       plots,
+    endcap_width,  endcap_width1,  endcap_width2,  joint_width,  plot_width,
+    endcap_length, endcap_length1, endcap_length2, joint_length, plot_length,
+    endcap_extent, endcap_extent1, endcap_extent2, joint_extent, plot_extent,
+    endcap_angle,  endcap_angle1,  endcap_angle2,  joint_angle,  plot_angle,
+    trim, trim1, trim2,
+    convexity=10, hull=true
+) = no_function("stroke");
 module stroke(
     path, width=1, closed=false,
     endcaps,       endcap1,        endcap2,        joints,       plots,
@@ -753,6 +764,7 @@ function _normal_segment(p1,p2) =
 //       );
 //   koch=concat(["angle",60,"repeat",3],[concat(koch_unit(3),["left","left"])]);
 //   polygon(turtle(koch));
+module turtle(commands, state=[[[0,0]],[1,0],90,0], full_state=false, repeat=1) {no_module();}
 function turtle(commands, state=[[[0,0]],[1,0],90,0], full_state=false, repeat=1) =
     let( state = is_vector(state) ? [[state],[1,0],90,0] : state )
         repeat == 1?
