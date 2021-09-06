@@ -918,7 +918,7 @@ module generic_threaded_rod(
     dummy1 = assert(_r1>depth && _r2>depth, "Screw profile deeper than rod radius");
     map_threads = right((_r1 + _r2) / 2)                   // Shift profile out to thread radius
                 * affine3d_skew(sxz=(_r2-_r1)/l)           // Skew correction for tapered threads
-                * affine3d_frame_map(x=[0,0,1], y=[1,0,0]) // Map profile to 3d, parallel to z axis
+                * frame_map(x=[0,0,1], y=[1,0,0])          // Map profile to 3d, parallel to z axis
                 * scale(pitch);                            // scale profile by pitch
     hig_table = [
         [-twist/2-0.0001, 0],

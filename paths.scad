@@ -1630,7 +1630,7 @@ module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=fals
                 if(planar) {
                     rot(from=[0,1],to=cutlist[i][3]) children();
                 } else {
-                    multmatrix(affine3d_frame_map(x=cutlist[i][2], z=cutlist[i][3]))
+                    frame_map(x=cutlist[i][2], z=cutlist[i][3])
                         children();
                 }
             } else {
@@ -1777,9 +1777,9 @@ module path_text(path, text, font, size, thickness=1, lettersize, offset=0, reve
           
       )
       move(pts[i][0])
-      multmatrix(affine3d_frame_map(x=pts[i][2]-adjustment,
-                                    z=usetop ? undef : normpts[i],
-                                    y=usetop ? toppts[i] : undef))
+      frame_map(x=pts[i][2]-adjustment,
+                z=usetop ? undef : normpts[i],
+                y=usetop ? toppts[i] : undef)
       up(offset-thickness/2)
       linear_extrude(height=thickness)
       left(lsize[0]/2)text(text[i], font=font, size=size);
