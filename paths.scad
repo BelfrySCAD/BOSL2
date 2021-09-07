@@ -330,14 +330,14 @@ function path_closest_point(path, pt) =
 //   path = path to find the tagent vectors for
 //   closed = set to true of the path is closed.  Default: false
 //   uniform = set to false to correct for non-uniform sampling.  Default: true
-// Example: A shape with non-uniform sampling gives distorted derivatives that may be undesirable
+// Example(3D): A shape with non-uniform sampling gives distorted derivatives that may be undesirable
 //   rect = square([10,3]);
 //   tangents = path_tangents(rect,closed=true);
 //   stroke(rect,closed=true, width=0.1);
 //   color("purple")
 //       for(i=[0:len(tangents)-1])
 //           stroke([rect[i]-tangents[i], rect[i]+tangents[i]],width=.1, endcap2="arrow2");
-// Example: A shape with non-uniform sampling gives distorted derivatives that may be undesirable
+// Example(3D): A shape with non-uniform sampling gives distorted derivatives that may be undesirable
 //   rect = square([10,3]);
 //   tangents = path_tangents(rect,closed=true,uniform=false);
 //   stroke(rect,closed=true, width=0.1);
@@ -589,7 +589,7 @@ function _corner_roundover_path(p1, p2, p3, r, d) =
 //   dist = The amount to jitter points by.  Default: 1/512 (0.00195)
 //   ---
 //   closed = If true, treat path like a closed polygon.  Default: true
-// Example:
+// Example(3D):
 //   d = 100; h = 75; quadsize = 5;
 //   path = pentagon(d=d);
 //   spath = subdivide_long_segments(path, quadsize, closed=true);
@@ -1272,62 +1272,6 @@ function resample_path(path, N, spacing, closed=false) =
    [ each subindex(cuts,0),
      if (!closed) last(path)     // Then add last point here
    ];
-
-
-
-
-// Section: 2D Modules
-
-
-// Module: modulated_circle()
-// Usage:
-//   modulated_circle(r|d, sines);
-// Description:
-//   Creates a 2D polygon circle, modulated by one or more superimposed sine waves.
-// Arguments:
-//   r = Radius of the base circle. Default: 40
-//   d = Diameter of the base circle.
-//   sines = array of [amplitude, frequency] pairs or [amplitude, frequency, phase] triples, where the frequency is the number of times the cycle repeats around the circle.
-// Example(2D):
-//   modulated_circle(r=40, sines=[[3, 11], [1, 31]], $fn=6);
-module modulated_circle(r, sines=[[1,1]], d)
-{
-    r = get_radius(r=r, d=d, dflt=40);
-    assert(is_list(sines)
-        && all([for(s=sines) is_vector(s,2) || is_vector(s,3)]),
-        "sines must be given as a list of pairs or triples");
-    sines_ = [for(s=sines) [s[0], s[1], len(s)==2 ? 0 : s[2]]];
-    freqs = len(sines_)>0? [for (i=sines_) i[1]] : [5];
-    points = [
-        for (a = [0 : (360/segs(r)/max(freqs)) : 360])
-            let(nr=r+sum_of_sines(a,sines_)) [nr*cos(a), nr*sin(a)]
-    ];
-    polygon(points);
-}
-
-
-// Module: jittered_poly()
-// Topics: Extrusions
-// See Also: path_add_jitter(), subdivide_long_segments()
-// Usage:
-//   jittered_poly(path, [dist]);
-// Description:
-//   Creates a 2D polygon shape from the given path in such a way that any extra
-//   collinear points are not stripped out in the way that `polygon()` normally does.
-//   This is useful for refining the mesh of a `linear_extrude()` with twist.
-// Arguments:
-//   path = The path to add jitter to.
-//   dist = The amount to jitter points by.  Default: 1/512 (0.00195)
-// Example:
-//   d = 100; h = 75; quadsize = 5;
-//   path = pentagon(d=d);
-//   spath = subdivide_long_segments(path, quadsize, closed=true);
-//   linear_extrude(height=h, twist=72, slices=h/quadsize)
-//      jittered_poly(spath);
-module jittered_poly(path, dist=1/512) {
-    polygon(path_add_jitter(path, dist, closed=true));
-}
-
 
 
 

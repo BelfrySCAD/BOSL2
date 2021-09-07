@@ -1,14 +1,18 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: skin.scad
-//   Functions to skin arbitrary 2D profiles/paths in 3-space.
-//   Inspired by list-comprehension-demos skin():
+//   This file provides functions and modules that construct shapes from a list of cross sections.
+//   In the case of skin() you specify each cross sectional shape yourself, and the number of
+//   points can vary.  The various forms of sweep use a fixed shape, which may follow a path, or
+//   be transformed in other ways to produce the list of cross sections.  In all cases it is the
+//   user's responsibility to avoid creating a self-intersecting shape, which will produce
+//   cryptic CGAL errors.  This file was inspired by list-comprehension-demos skin():
 //   - https://github.com/openscad/list-comprehension-demos/blob/master/skin.scad
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
 
-// Section: Skinning
+// Section: Skin and sweep
 
 // Function&Module: skin()
 // Usage: As module:
@@ -488,514 +492,6 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
           vnf_vertex_array(full_list[i], cap1=i==0 && fullcaps[0], cap2=i==len(full_list)-1 && fullcaps[1],
                            col_wrap=true, style=style)]);
 
-function _skin_core(profiles, caps) =
-    let(
-        vertices = flatten(profiles),
-        plen = len(profiles[0]),
-        faces = [
-            for(pidx=idx(profiles,e=-2))
-            let(
-                prof1 = profiles[pidx],
-                prof2 = profiles[pidx+1],
-                voff = pidx*plen,
-                faces = [
-                    for(
-                        first = true,
-                        finishing = false,
-                        finished = false,
-                        i=0, j=0, side=false;
-
-                        !finished;
-
-                        side =
-                            let(
-                                p1a = prof1[i%plen],
-                                p1b = prof1[(i+1)%plen],
-                                p2a = prof2[j%plen],
-                                p2b = prof2[(j+1)%plen],
-                                dist1 = norm(p1a-p2b),
-                                dist2 = norm(p1b-p2a)
-                            ) (i==j) ? dist1>dist2 : i<j,
-                        p1 = voff + (i%plen),
-                        p2 = voff + (j%plen) + plen,
-                        p3 = voff + (side? (i+1)%plen : (j+1)%plen + plen),
-                        face = [p1, p3, p2],
-                        i = i + (side? 1 : 0),
-                        j = j + (side? 0 : 1),
-                        first = false,
-                        finished = finishing,
-                        finishing = i>=plen && j>=plen
-                    ) if (!first) face
-                ]
-            ) each faces,
-            if (caps[0]) count(plen,reverse=true),
-            if (caps[1]) count(plen,plen*(len(profiles)-1))
-        ]
-    ) [vertices, faces];
-
-
-
-
-
-// Function: subdivide_and_slice()
-// Topics: Paths, Path Subdivision
-// Usage:
-//   newprof = subdivide_and_slice(profiles, slices, [numpoints], [method], [closed]);
-// Description:
-//   Subdivides the input profiles to have length `numpoints` where `numpoints` must be at least as
-//   big as the largest input profile.  By default `numpoints` is set equal to the length of the
-//   largest profile.  You can set `numpoints="lcm"` to sample to the least common multiple of all
-//   curves, which will avoid sampling artifacts but may produce a huge output.  After subdivision,
-//   profiles are sliced.
-// Arguments:
-//   profiles = profiles to operate on
-//   slices = number of slices to insert between each pair of profiles.  May be a vector
-//   numpoints = number of points after sampling.
-//   method = method used for calling `subdivide_path`, either `"length"` or `"segment"`.  Default: `"length"`
-//   closed = the first and last profile are connected.  Default: false
-function subdivide_and_slice(profiles, slices, numpoints, method="length", closed=false) =
-  let(
-    maxsize = list_longest(profiles),
-    numpoints = is_undef(numpoints) ? maxsize :
-                numpoints == "lcm" ? lcmlist([for(p=profiles) len(p)]) :
-                is_num(numpoints) ? round(numpoints) : undef
-  )
-  assert(is_def(numpoints), "Parameter numpoints must be \"max\", \"lcm\" or a positive number")
-  assert(numpoints>=maxsize, "Number of points requested is smaller than largest profile")
-  let(fixpoly = [for(poly=profiles) subdivide_path(poly, numpoints,method=method)])
-  slice_profiles(fixpoly, slices, closed);
-  
-
-// Function: subdivide_long_segments()
-// Topics: Paths, Path Subdivision
-// See Also: subdivide_path(), subdivide_and_slice(), path_add_jitter(), jittered_poly()
-// Usage:
-//   spath = subdivide_long_segments(path, maxlen, [closed=]);
-// Description:
-//   Evenly subdivides long `path` segments until they are all shorter than `maxlen`.
-// Arguments:
-//   path = The path to subdivide.
-//   maxlen = The maximum allowed path segment length.
-//   ---
-//   closed = If true, treat path like a closed polygon.  Default: true
-// Example:
-//   path = pentagon(d=100);
-//   spath = subdivide_long_segments(path, 10, closed=true);
-//   stroke(path);
-//   color("lightgreen") move_copies(path) circle(d=5,$fn=12);
-//   color("blue") move_copies(spath) circle(d=3,$fn=12);
-function subdivide_long_segments(path, maxlen, closed=false) =
-    assert(is_path(path))
-    assert(is_finite(maxlen))
-    assert(is_bool(closed))
-    [
-        for (p=pair(path,closed)) let(
-            steps = ceil(norm(p[1]-p[0])/maxlen)
-        ) each lerpn(p[0], p[1], steps, false),
-        if (!closed) last(path)
-    ];
-
-
-
-// Function: slice_profiles()
-// Topics: Paths, Path Subdivision
-// Usage:
-//   profs = slice_profiles(profiles, slices, [closed]);
-// Description:
-//   Given an input list of profiles, linearly interpolate between each pair to produce a
-//   more finely sampled list.  The parameters `slices` specifies the number of slices to
-//   be inserted between each pair of profiles and can be a number or a list.
-// Arguments:
-//   profiles = list of paths to operate on.  They must be lists of the same shape and length.
-//   slices = number of slices to insert between each pair, or a list to vary the number inserted.
-//   closed = set to true if last profile connects to first one.  Default: false
-function slice_profiles(profiles,slices,closed=false) =
-  assert(is_num(slices) || is_list(slices))
-  let(listok = !is_list(slices) || len(slices)==len(profiles)-(closed?0:1))
-  assert(listok, "Input slices to slice_profiles is a list with the wrong length")
-  let(
-    count = is_num(slices) ? repeat(slices,len(profiles)-(closed?0:1)) : slices,
-    slicelist = [for (i=[0:len(profiles)-(closed?1:2)])
-      each lerpn(profiles[i], select(profiles,i+1), count[i]+1, false)
-    ]
-  )
-  concat(slicelist, closed?[]:[profiles[len(profiles)-1]]);
-
-
-//////////////////////////////////////////////////////////////////
-//
-// Minimum Distance Mapping using Dynamic Programming
-//
-// Given inputs of a two polygons, computes a mapping between their vertices that minimizes the sum the sum of
-// the distances between every matched pair of vertices.  The algorithm uses dynamic programming to calculate
-// the optimal mapping under the assumption that poly1[0] <-> poly2[0].  We then rotate through all the
-// possible indexings of the longer polygon.  The theoretical run time is quadratic in the longer polygon and
-// linear in the shorter one.
-//
-// The top level function, _skin_distance_match(), cycles through all the of the indexings of the larger
-// polygon, computes the optimal value for each indexing, and chooses the overall best result.  It uses
-// _dp_extract_map() to thread back through the dynamic programming array to determine the actual mapping, and
-// then converts the result to an index repetition count list, which is passed to repeat_entries().
-// 
-// The function _dp_distance_array builds up the rows of the dynamic programming matrix with reference
-// to the previous rows, where `tdist` holds the total distance for a given mapping, and `map`
-// holds the information about which path was optimal for each position.
-//
-// The function _dp_distance_row constructs each row of the dynamic programming matrix in the usual
-// way where entries fill in based on the three entries above and to the left.  Note that we duplicate
-// entry zero so account for wrap-around at the ends, and we initialize the distance to zero to avoid
-// double counting the length of the 0-0 pair.
-//
-// This function builds up the dynamic programming distance array where each entry in the
-// array gives the optimal distance for aligning the corresponding subparts of the two inputs.
-// When the array is fully populated, the bottom right corner gives the minimum distance
-// for matching the full input lists.  The `map` array contains a the three key values for the three
-// directions, where _MAP_DIAG means you map the next vertex of `big` to the next vertex of `small`,
-// _MAP_LEFT means you map the next vertex of `big` to the current vertex of `small`, and _MAP_UP
-// means you map the next vertex of `small` to the current vertex of `big`.
-//
-// Return value is [min_distance, map], where map is the array that is used to extract the actual
-// vertex map.
-
-_MAP_DIAG = 0;
-_MAP_LEFT = 1;
-_MAP_UP = 2;
-
-/*
-function _dp_distance_array(small, big, abort_thresh=1/0, small_ind=0, tdist=[], map=[]) =
-   small_ind == len(small)+1 ? [tdist[len(tdist)-1][len(big)-1], map] :
-   let( newrow = _dp_distance_row(small, big, small_ind, tdist) )
-   min(newrow[0]) > abort_thresh ? [tdist[len(tdist)-1][len(big)-1],map] :
-   _dp_distance_array(small, big, abort_thresh, small_ind+1, concat(tdist, [newrow[0]]), concat(map, [newrow[1]]));
-*/
-
-
-function _dp_distance_array(small, big, abort_thresh=1/0) =
-   [for(
-        small_ind = 0,
-        tdist = [],
-        map = []
-           ;
-        small_ind<=len(small)+1
-           ;
-        newrow =small_ind==len(small)+1 ? [0,0,0] :  // dummy end case
-                           _dp_distance_row(small,big,small_ind,tdist),
-        tdist = concat(tdist, [newrow[0]]),
-        map = concat(map, [newrow[1]]),
-        small_ind = min(newrow[0])>abort_thresh ? len(small)+1 : small_ind+1
-       )
-     if (small_ind==len(small)+1) each [tdist[len(tdist)-1][len(big)], map]];
-                                     //[tdist,map]];
-
-
-function _dp_distance_row(small, big, small_ind, tdist) =
-                    // Top left corner is zero because it gets counted at the end in bottom right corner
-   small_ind == 0 ? [cumsum([0,for(i=[1:len(big)]) norm(big[i%len(big)]-small[0])]), repeat(_MAP_LEFT,len(big)+1)] :
-   [for(big_ind=1,
-       newrow=[ norm(big[0] - small[small_ind%len(small)]) + tdist[small_ind-1][0] ],
-       newmap = [_MAP_UP]
-         ;
-       big_ind<=len(big)+1
-         ;
-       costs = big_ind == len(big)+1 ? [0] :    // handle extra iteration
-                             [tdist[small_ind-1][big_ind-1],  // diag
-                              newrow[big_ind-1],              // left
-                              tdist[small_ind-1][big_ind]],   // up
-       newrow = concat(newrow, [min(costs)+norm(big[big_ind%len(big)]-small[small_ind%len(small)])]),
-       newmap = concat(newmap, [min_index(costs)]),
-       big_ind = big_ind+1
-   ) if (big_ind==len(big)+1) each [newrow,newmap]];
-
-
-function _dp_extract_map(map) =  
-      [for(
-           i=len(map)-1,
-           j=len(map[0])-1,
-           smallmap=[],
-           bigmap = []
-              ;
-           j >= 0
-              ;
-           advance_i = map[i][j]==_MAP_UP || map[i][j]==_MAP_DIAG,
-           advance_j = map[i][j]==_MAP_LEFT || map[i][j]==_MAP_DIAG,
-           i = i - (advance_i ? 1 : 0),
-           j = j - (advance_j ? 1 : 0),
-           bigmap = concat( [j%(len(map[0])-1)] ,  bigmap),
-           smallmap = concat( [i%(len(map)-1)]  , smallmap)
-          )
-        if (i==0 && j==0) each [smallmap,bigmap]];
-     
-
-/// Internal Function: _skin_distance_match(poly1,poly2)
-/// Usage:
-///   polys = _skin_distance_match(poly1,poly2);
-/// Description:
-///   Find a way of associating the vertices of poly1 and vertices of poly2
-///   that minimizes the sum of the length of the edges that connect the two polygons.
-///   Polygons can be in 2d or 3d.  The algorithm has cubic run time, so it can be
-///   slow if you pass large polygons.  The output is a pair of polygons with vertices
-///   duplicated as appropriate to be used as input to `skin()`.
-/// Arguments:
-///   poly1 = first polygon to match
-///   poly2 = second polygon to match
-function _skin_distance_match(poly1,poly2) =
-   let(
-      swap = len(poly1)>len(poly2),
-      big = swap ? poly1 : poly2,
-      small = swap ? poly2 : poly1,
-      map_poly = [ for(
-              i=0,
-              bestcost = 1/0,
-              bestmap = -1,
-              bestpoly = -1
-              ;
-              i<=len(big)
-              ;
-              shifted = polygon_shift(big,i),
-              result =_dp_distance_array(small, shifted, abort_thresh = bestcost),
-              bestmap = result[0]<bestcost ? result[1] : bestmap,
-              bestpoly = result[0]<bestcost ? shifted : bestpoly,
-              best_i = result[0]<bestcost ? i : best_i,
-              bestcost = min(result[0], bestcost),
-              i=i+1
-              )
-              if (i==len(big)) each [bestmap,bestpoly,best_i]],
-      map = _dp_extract_map(map_poly[0]),
-      smallmap = map[0],
-      bigmap = map[1],
-      // These shifts are needed to handle the case when points from both ends of one curve map to a single point on the other
-      bigshift =  len(bigmap) - max(max_index(bigmap,all=true))-1,
-      smallshift = len(smallmap) - max(max_index(smallmap,all=true))-1,
-      newsmall = polygon_shift(repeat_entries(small,unique_count(smallmap)[1]),smallshift),
-      newbig = polygon_shift(repeat_entries(map_poly[1],unique_count(bigmap)[1]),bigshift)
-      )
-      swap ? [newbig, newsmall] : [newsmall,newbig];
-
-
-// This function associates vertices but with the assumption that index 0 is associated between the
-// two inputs.  This gives only quadratic run time.  As above, output is pair of polygons with
-// vertices duplicated as suited to use as input to skin(). 
-
-function _skin_aligned_distance_match(poly1, poly2) =
-    let(
-      result = _dp_distance_array(poly1, poly2, abort_thresh=1/0),
-      map = _dp_extract_map(result[1]),
-      shift0 = len(map[0]) - max(max_index(map[0],all=true))-1,
-      shift1 = len(map[1]) - max(max_index(map[1],all=true))-1,
-      new0 = polygon_shift(repeat_entries(poly1,unique_count(map[0])[1]),shift0),
-      new1 = polygon_shift(repeat_entries(poly2,unique_count(map[1])[1]),shift1)
-  )
-  [new0,new1];
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/// Internal Function: _skin_tangent_match()
-/// Usage:
-///   x = _skin_tangent_match(poly1, poly2)
-/// Description:
-///   Finds a mapping of the vertices of the larger polygon onto the smaller one.  Whichever input is the
-///   shorter path is the polygon, and the longer input is the curve.  For every edge of the polygon, the algorithm seeks a plane that contains that
-///   edge and is tangent to the curve.  There will be more than one such point.  To choose one, the algorithm centers the polygon and curve on their centroids
-///   and chooses the closer tangent point.  The algorithm works its way around the polygon, computing a series of tangent points and then maps all of the
-///   points on the curve between two tangent points into one vertex of the polygon.  This algorithm can fail if the curve has too few points or if it is concave.
-/// Arguments:
-///   poly1 = input polygon
-///   poly2 = input polygon
-function _skin_tangent_match(poly1, poly2) =
-    let(
-        swap = len(poly1)>len(poly2),
-        big = swap ? poly1 : poly2,
-        small = swap ? poly2 : poly1,
-        curve_offset = centroid(small)-centroid(big),
-        cutpts = [for(i=[0:len(small)-1]) _find_one_tangent(big, select(small,i,i+1),curve_offset=curve_offset)],
-        shift = last(cutpts)+1,
-        newbig = polygon_shift(big, shift),
-        repeat_counts = [for(i=[0:len(small)-1]) posmod(cutpts[i]-select(cutpts,i-1),len(big))],
-        newsmall = repeat_entries(small,repeat_counts)
-    )
-    assert(len(newsmall)==len(newbig), "Tangent alignment failed, probably because of insufficient points or a concave curve")
-    swap ? [newbig, newsmall] : [newsmall, newbig];
-
-
-function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
-    let(
-        angles = [
-            for (i = [0:len(curve)-(closed?1:2)])
-            let( 
-                plane = plane3pt( edge[0], edge[1], curve[i]),
-                tangent = [curve[i], select(curve,i+1)]
-            ) plane_line_angle(plane,tangent)
-        ],
-        zero_cross = [
-            for (i = [0:len(curve)-(closed?1:2)])
-            if (sign(angles[i]) != sign(select(angles,i+1)))
-            i
-        ],
-        d = [
-            for (i = zero_cross)
-            point_line_distance(curve[i]+curve_offset, edge)
-        ]
-    ) zero_cross[min_index(d)];
-
-
-// Function: associate_vertices()
-// Usage:
-//   newpoly = associate_vertices(polygons, split);
-// Description:
-//   Takes as input a list of polygons and duplicates specified vertices in each polygon in the list through the series so
-//   that the input can be passed to `skin()`.  This allows you to decide how the vertices are linked up rather than accepting
-//   the automatically computed minimal distance linkage.  However, the number of vertices in the polygons must not decrease in the list.
-//   The output is a list of polygons that all have the same number of vertices with some duplicates.  You specify the vertex splitting
-//   using the `split` which is a list where each entry corresponds to a polygon: split[i] is a value or list specifying which vertices in polygon i to split.
-//   Give the empty list if you don't want a split for a particular polygon.  If you list a vertex once then it will be split and mapped to
-//   two vertices in the next polygon.  If you list it N times then N copies will be created to map to N+1 vertices in the next polygon.
-//   You must ensure that each mapping produces the correct number of vertices to exactly map onto every vertex of the next polygon.
-//   Note that if you split (only) vertex i of a polygon that means it will map to vertices i and i+1 of the next polygon.  Vertex 0 will always
-//   map to vertex 0 and the last vertices will always map to each other, so if you want something different than that you'll need to reindex
-//   your polygons.  
-// Arguments:
-//   polygons = list of polygons to split
-//   split = list of lists of split vertices
-// Example(FlatSpin,VPD=17,VPT=[0,0,2]):  If you skin together a square and hexagon using the optimal distance method you get two triangular faces on opposite sides:
-//   sq = regular_ngon(4,side=2);
-//   hex = apply(rot(15),hexagon(side=2));
-//   skin([sq,hex], slices=10, refine=10, method="distance", z=[0,4]);
-// Example(FlatSpin,VPD=17,VPT=[0,0,2]):  Using associate_vertices you can change the location of the triangular faces.  Here they are connect to two adjacent vertices of the square:
-//   sq = regular_ngon(4,side=2);
-//   hex = apply(rot(15),hexagon(side=2));
-//   skin(associate_vertices([sq,hex],[[1,2]]), slices=10, refine=10, sampling="segment", z=[0,4]);
-// Example(FlatSpin,VPD=17,VPT=[0,0,2]): Here the two triangular faces connect to a single vertex on the square.  Note that we had to rotate the hexagon to line them up because the vertices match counting forward, so in this case vertex 0 of the square matches to vertices 0, 1, and 2 of the hexagon.  
-//   sq = regular_ngon(4,side=2);
-//   hex = apply(rot(60),hexagon(side=2));
-//   skin(associate_vertices([sq,hex],[[0,0]]), slices=10, refine=10, sampling="segment", z=[0,4]);
-// Example(3D): This example shows several polygons, with only a single vertex split at each step:
-//   sq = regular_ngon(4,side=2);
-//   pent = pentagon(side=2);
-//   hex = hexagon(side=2);
-//   sep = regular_ngon(7,side=2);
-//   profiles = associate_vertices([sq,pent,hex,sep], [1,3,4]);
-//   skin(profiles ,slices=10, refine=10, method="distance", z=[0,2,4,6]);
-// Example(3D): The polygons cannot shrink, so if you want to have decreasing polygons you'll need to concatenate multiple results.  Note that it is perfectly ok to duplicate a profile as shown here, where the pentagon is duplicated:
-//   sq = regular_ngon(4,side=2);
-//   pent = pentagon(side=2);
-//   grow = associate_vertices([sq,pent], [1]);
-//   shrink = associate_vertices([sq,pent], [2]);
-//   skin(concat(grow, reverse(shrink)), slices=10, refine=10, method="distance", z=[0,2,2,4]);
-function associate_vertices(polygons, split, curpoly=0) =
-   curpoly==len(polygons)-1 ? polygons :
-   let(
-      polylen = len(polygons[curpoly]),
-      cursplit = force_list(split[curpoly])
-   )
-    assert(len(split)==len(polygons)-1,str(split,"Split list length mismatch: it has length ", len(split)," but must have length ",len(polygons)-1))
-    assert(polylen<=len(polygons[curpoly+1]),str("Polygon ",curpoly," has more vertices than the next one."))
-    assert(len(cursplit)+polylen == len(polygons[curpoly+1]),
-           str("Polygon ", curpoly, " has ", polylen, " vertices.  Next polygon has ", len(polygons[curpoly+1]),
-                  " vertices.  Split list has length ", len(cursplit), " but must have length ", len(polygons[curpoly+1])-polylen))
-    assert(max(cursplit)<polylen && min(curpoly)>=0,
-           str("Split ",cursplit," at polygon ",curpoly," has invalid vertices.  Must be in [0:",polylen-1,"]"))
-    len(cursplit)==0 ? associate_vertices(polygons,split,curpoly+1) :
-    let(
-      splitindex = sort(concat(count(polylen), cursplit)),
-      newpoly = [for(i=[0:len(polygons)-1]) i<=curpoly ? select(polygons[i],splitindex) : polygons[i]]
-    )
-   associate_vertices(newpoly, split, curpoly+1);
-
-
-
-// Function&Module: sweep()
-// Usage: As Module
-//   sweep(shape, transforms, [closed], [caps], [style], [convexity=], [anchor=], [spin=], [orient=], [extent=]) [attachments];
-// Usage: As Function
-//   vnf = sweep(shape, transforms, [closed], [caps], [style]);
-// Description:
-//   The input `shape` must be a non-self-intersecting 2D polygon or region, and `transforms`
-//   is a list of 4x4 transformation matrices.  The sweep algorithm applies each transformation in sequence
-//   to the shape input and links the resulting polygons together to form a polyhedron.
-//   If `closed=true` then the first and last transformation are linked together.
-//   The `caps` parameter controls whether the ends of the shape are closed.
-//   As a function, returns the VNF for the polyhedron.  As a module, computes the polyhedron.
-//   .
-//   Note that this is a very powerful, general framework for producing polyhedra.  It is important
-//   to ensure that your resulting polyhedron does not include any self-intersections, or it will
-//   be invalid and will generate CGAL errors.  If you get such errors, most likely you have an
-//   overlooked self-intersection.  Note also that the errors will not occur when your shape is alone
-//   in your model, but will arise if you add a second object to the model.  This may mislead you into
-//   thinking the second object caused a problem.  Even adding a simple cube to the model will reveal the problem.  
-// Arguments:
-//   shape = 2d path or region, describing the shape to be swept.
-//   transforms = list of 4x4 matrices to apply
-//   closed = set to true to form a closed (torus) model.  Default: false
-//   caps = true to create endcap faces when closed is false.  Can be a singe boolean to specify endcaps at both ends, or a length 2 boolean array.  Default is true if closed is false.
-//   style = vnf_vertex_array style.  Default: "min_edge"
-//   ---
-//   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
-//   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
-//   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
-//   orient = Vector to rotate top towards after spin  (module only)
-//   extent = use extent method for computing anchors. (module only)  Default: false
-//   cp = set centerpoint for anchor computation.  (module only) Default: object centroid
-// Example: This is the "sweep-drop" example from list-comprehension-demos.
-//   function drop(t) = 100 * 0.5 * (1 - cos(180 * t)) * sin(180 * t) + 1;
-//   function path(t) = [0, 0, 80 + 80 * cos(180 * t)];
-//   function rotate(t) = 180 * pow((1 - t), 3);
-//   step = 0.01;
-//   path_transforms = [for (t=[0:step:1-step]) translate(path(t)) * zrot(rotate(t)) * scale([drop(t), drop(t), 1])];
-//   sweep(circle(1, $fn=12), path_transforms);
-// Example: Another example from list-comprehension-demos
-//   function f(x) = 3 - 2.5 * x;
-//   function r(x) = 2 * 180 * x * x * x;
-//   pathstep = 1;
-//   height = 100;
-//   shape_points = subdivide_path(square(10),40,closed=true);
-//   path_transforms = [for (i=[0:pathstep:height]) let(t=i/height) up(i) * scale([f(t),f(t),i]) * zrot(r(t))];
-//   sweep(shape_points, path_transforms);
-// Example: Twisted container.  Note that this technique doesn't create a fixed container wall thickness.  
-//   shape = subdivide_path(square(30,center=true), 40, closed=true);
-//   outside = [for(i=[0:24]) up(i)*rot(i)*scale(1.25*i/24+1)];
-//   inside = [for(i=[24:-1:2]) up(i)*rot(i)*scale(1.2*i/24+1)];
-//   sweep(shape, concat(outside,inside));
-
-function sweep(shape, transforms, closed=false, caps, style="min_edge") =
-    assert(is_consistent(transforms, ident(4)), "Input transforms must be a list of numeric 4x4 matrices in sweep")
-    assert(is_path(shape,2) || is_region(shape), "Input shape must be a 2d path or a region.")
-    let(
-        caps = is_def(caps) ? caps :
-            closed ? false : true,
-        capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
-        fullcaps = is_bool(caps) ? [caps,caps] : caps
-    )
-    assert(len(transforms), "transformation must be length 2 or more")
-    assert(capsOK, "caps must be boolean or a list of two booleans")
-    assert(!closed || !caps, "Cannot make closed shape with caps")
-    is_region(shape)? let(
-        regions = split_nested_region(shape),
-        rtrans = reverse(transforms),
-        vnfs = [
-            for (rgn=regions) each [
-                for (path=rgn)
-                    sweep(path, transforms, closed=closed, caps=false),
-                if (fullcaps[0]) region_faces(rgn, transform=transforms[0], reverse=true),
-                if (fullcaps[1]) region_faces(rgn, transform=last(transforms)),
-            ],
-        ],
-        vnf = vnf_merge(vnfs)
-    ) vnf :
-    assert(len(shape)>=3, "shape must be a path of at least 3 non-colinear points")
-    vnf_vertex_array([for(i=[0:len(transforms)-(closed?0:1)]) apply(transforms[i%len(transforms)],path3d(shape))],
-                     cap1=fullcaps[0],cap2=fullcaps[1],col_wrap=true,style=style);
-
-
-module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=10,
-             anchor="origin",cp,spin=0, orient=UP, extent=false)
-{
-    vnf = sweep(shape, transforms, closed, caps, style);
-    attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
-    {      
-        vnf_polyhedron(vnf,convexity=convexity);
-        children();
-    }
-}        
 
 
 // Function&Module: path_sweep()
@@ -1532,5 +1028,472 @@ function _ofs_face_edge(face,firstlen,second=false) =
                                          : select(face,[i,i+1])
    )
    (second ? edge2 : edge1)-[0,firstlen];
+
+
+
+// Function&Module: sweep()
+// Usage: As Module
+//   sweep(shape, transforms, [closed], [caps], [style], [convexity=], [anchor=], [spin=], [orient=], [extent=]) [attachments];
+// Usage: As Function
+//   vnf = sweep(shape, transforms, [closed], [caps], [style]);
+// Description:
+//   The input `shape` must be a non-self-intersecting 2D polygon or region, and `transforms`
+//   is a list of 4x4 transformation matrices.  The sweep algorithm applies each transformation in sequence
+//   to the shape input and links the resulting polygons together to form a polyhedron.
+//   If `closed=true` then the first and last transformation are linked together.
+//   The `caps` parameter controls whether the ends of the shape are closed.
+//   As a function, returns the VNF for the polyhedron.  As a module, computes the polyhedron.
+//   .
+//   Note that this is a very powerful, general framework for producing polyhedra.  It is important
+//   to ensure that your resulting polyhedron does not include any self-intersections, or it will
+//   be invalid and will generate CGAL errors.  If you get such errors, most likely you have an
+//   overlooked self-intersection.  Note also that the errors will not occur when your shape is alone
+//   in your model, but will arise if you add a second object to the model.  This may mislead you into
+//   thinking the second object caused a problem.  Even adding a simple cube to the model will reveal the problem.  
+// Arguments:
+//   shape = 2d path or region, describing the shape to be swept.
+//   transforms = list of 4x4 matrices to apply
+//   closed = set to true to form a closed (torus) model.  Default: false
+//   caps = true to create endcap faces when closed is false.  Can be a singe boolean to specify endcaps at both ends, or a length 2 boolean array.  Default is true if closed is false.
+//   style = vnf_vertex_array style.  Default: "min_edge"
+//   ---
+//   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
+//   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
+//   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
+//   orient = Vector to rotate top towards after spin  (module only)
+//   extent = use extent method for computing anchors. (module only)  Default: false
+//   cp = set centerpoint for anchor computation.  (module only) Default: object centroid
+// Example: This is the "sweep-drop" example from list-comprehension-demos.
+//   function drop(t) = 100 * 0.5 * (1 - cos(180 * t)) * sin(180 * t) + 1;
+//   function path(t) = [0, 0, 80 + 80 * cos(180 * t)];
+//   function rotate(t) = 180 * pow((1 - t), 3);
+//   step = 0.01;
+//   path_transforms = [for (t=[0:step:1-step]) translate(path(t)) * zrot(rotate(t)) * scale([drop(t), drop(t), 1])];
+//   sweep(circle(1, $fn=12), path_transforms);
+// Example: Another example from list-comprehension-demos
+//   function f(x) = 3 - 2.5 * x;
+//   function r(x) = 2 * 180 * x * x * x;
+//   pathstep = 1;
+//   height = 100;
+//   shape_points = subdivide_path(square(10),40,closed=true);
+//   path_transforms = [for (i=[0:pathstep:height]) let(t=i/height) up(i) * scale([f(t),f(t),i]) * zrot(r(t))];
+//   sweep(shape_points, path_transforms);
+// Example: Twisted container.  Note that this technique doesn't create a fixed container wall thickness.  
+//   shape = subdivide_path(square(30,center=true), 40, closed=true);
+//   outside = [for(i=[0:24]) up(i)*rot(i)*scale(1.25*i/24+1)];
+//   inside = [for(i=[24:-1:2]) up(i)*rot(i)*scale(1.2*i/24+1)];
+//   sweep(shape, concat(outside,inside));
+
+function sweep(shape, transforms, closed=false, caps, style="min_edge") =
+    assert(is_consistent(transforms, ident(4)), "Input transforms must be a list of numeric 4x4 matrices in sweep")
+    assert(is_path(shape,2) || is_region(shape), "Input shape must be a 2d path or a region.")
+    let(
+        caps = is_def(caps) ? caps :
+            closed ? false : true,
+        capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
+        fullcaps = is_bool(caps) ? [caps,caps] : caps
+    )
+    assert(len(transforms), "transformation must be length 2 or more")
+    assert(capsOK, "caps must be boolean or a list of two booleans")
+    assert(!closed || !caps, "Cannot make closed shape with caps")
+    is_region(shape)? let(
+        regions = split_nested_region(shape),
+        rtrans = reverse(transforms),
+        vnfs = [
+            for (rgn=regions) each [
+                for (path=rgn)
+                    sweep(path, transforms, closed=closed, caps=false),
+                if (fullcaps[0]) region_faces(rgn, transform=transforms[0], reverse=true),
+                if (fullcaps[1]) region_faces(rgn, transform=last(transforms)),
+            ],
+        ],
+        vnf = vnf_merge(vnfs)
+    ) vnf :
+    assert(len(shape)>=3, "shape must be a path of at least 3 non-colinear points")
+    vnf_vertex_array([for(i=[0:len(transforms)-(closed?0:1)]) apply(transforms[i%len(transforms)],path3d(shape))],
+                     cap1=fullcaps[0],cap2=fullcaps[1],col_wrap=true,style=style);
+
+
+module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=10,
+             anchor="origin",cp,spin=0, orient=UP, extent=false)
+{
+    vnf = sweep(shape, transforms, closed, caps, style);
+    attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
+    {      
+        vnf_polyhedron(vnf,convexity=convexity);
+        children();
+    }
+}        
+
+
+// Section: Functions for resampling and slicing profile lists
+
+// Function: subdivide_and_slice()
+// Topics: Paths, Path Subdivision
+// Usage:
+//   newprof = subdivide_and_slice(profiles, slices, [numpoints], [method], [closed]);
+// Description:
+//   Subdivides the input profiles to have length `numpoints` where `numpoints` must be at least as
+//   big as the largest input profile.  By default `numpoints` is set equal to the length of the
+//   largest profile.  You can set `numpoints="lcm"` to sample to the least common multiple of all
+//   curves, which will avoid sampling artifacts but may produce a huge output.  After subdivision,
+//   profiles are sliced.
+// Arguments:
+//   profiles = profiles to operate on
+//   slices = number of slices to insert between each pair of profiles.  May be a vector
+//   numpoints = number of points after sampling.
+//   method = method used for calling `subdivide_path`, either `"length"` or `"segment"`.  Default: `"length"`
+//   closed = the first and last profile are connected.  Default: false
+function subdivide_and_slice(profiles, slices, numpoints, method="length", closed=false) =
+  let(
+    maxsize = list_longest(profiles),
+    numpoints = is_undef(numpoints) ? maxsize :
+                numpoints == "lcm" ? lcmlist([for(p=profiles) len(p)]) :
+                is_num(numpoints) ? round(numpoints) : undef
+  )
+  assert(is_def(numpoints), "Parameter numpoints must be \"max\", \"lcm\" or a positive number")
+  assert(numpoints>=maxsize, "Number of points requested is smaller than largest profile")
+  let(fixpoly = [for(poly=profiles) subdivide_path(poly, numpoints,method=method)])
+  slice_profiles(fixpoly, slices, closed);
+  
+
+
+// Function: subdivide_long_segments()
+// Topics: Paths, Path Subdivision
+// See Also: subdivide_path(), subdivide_and_slice(), path_add_jitter(), jittered_poly()
+// Usage:
+//   spath = subdivide_long_segments(path, maxlen, [closed=]);
+// Description:
+//   Evenly subdivides long `path` segments until they are all shorter than `maxlen`.
+// Arguments:
+//   path = The path to subdivide.
+//   maxlen = The maximum allowed path segment length.
+//   ---
+//   closed = If true, treat path like a closed polygon.  Default: true
+// Example:
+//   path = pentagon(d=100);
+//   spath = subdivide_long_segments(path, 10, closed=true);
+//   stroke(path);
+//   color("lightgreen") move_copies(path) circle(d=5,$fn=12);
+//   color("blue") move_copies(spath) circle(d=3,$fn=12);
+function subdivide_long_segments(path, maxlen, closed=false) =
+    assert(is_path(path))
+    assert(is_finite(maxlen))
+    assert(is_bool(closed))
+    [
+        for (p=pair(path,closed)) let(
+            steps = ceil(norm(p[1]-p[0])/maxlen)
+        ) each lerpn(p[0], p[1], steps, false),
+        if (!closed) last(path)
+    ];
+
+
+
+// Function: slice_profiles()
+// Topics: Paths, Path Subdivision
+// Usage:
+//   profs = slice_profiles(profiles, slices, [closed]);
+// Description:
+//   Given an input list of profiles, linearly interpolate between each pair to produce a
+//   more finely sampled list.  The parameters `slices` specifies the number of slices to
+//   be inserted between each pair of profiles and can be a number or a list.
+// Arguments:
+//   profiles = list of paths to operate on.  They must be lists of the same shape and length.
+//   slices = number of slices to insert between each pair, or a list to vary the number inserted.
+//   closed = set to true if last profile connects to first one.  Default: false
+function slice_profiles(profiles,slices,closed=false) =
+  assert(is_num(slices) || is_list(slices))
+  let(listok = !is_list(slices) || len(slices)==len(profiles)-(closed?0:1))
+  assert(listok, "Input slices to slice_profiles is a list with the wrong length")
+  let(
+    count = is_num(slices) ? repeat(slices,len(profiles)-(closed?0:1)) : slices,
+    slicelist = [for (i=[0:len(profiles)-(closed?1:2)])
+      each lerpn(profiles[i], select(profiles,i+1), count[i]+1, false)
+    ]
+  )
+  concat(slicelist, closed?[]:[profiles[len(profiles)-1]]);
+
+
+//////////////////////////////////////////////////////////////////
+//
+// Minimum Distance Mapping using Dynamic Programming
+//
+// Given inputs of a two polygons, computes a mapping between their vertices that minimizes the sum the sum of
+// the distances between every matched pair of vertices.  The algorithm uses dynamic programming to calculate
+// the optimal mapping under the assumption that poly1[0] <-> poly2[0].  We then rotate through all the
+// possible indexings of the longer polygon.  The theoretical run time is quadratic in the longer polygon and
+// linear in the shorter one.
+//
+// The top level function, _skin_distance_match(), cycles through all the of the indexings of the larger
+// polygon, computes the optimal value for each indexing, and chooses the overall best result.  It uses
+// _dp_extract_map() to thread back through the dynamic programming array to determine the actual mapping, and
+// then converts the result to an index repetition count list, which is passed to repeat_entries().
+// 
+// The function _dp_distance_array builds up the rows of the dynamic programming matrix with reference
+// to the previous rows, where `tdist` holds the total distance for a given mapping, and `map`
+// holds the information about which path was optimal for each position.
+//
+// The function _dp_distance_row constructs each row of the dynamic programming matrix in the usual
+// way where entries fill in based on the three entries above and to the left.  Note that we duplicate
+// entry zero so account for wrap-around at the ends, and we initialize the distance to zero to avoid
+// double counting the length of the 0-0 pair.
+//
+// This function builds up the dynamic programming distance array where each entry in the
+// array gives the optimal distance for aligning the corresponding subparts of the two inputs.
+// When the array is fully populated, the bottom right corner gives the minimum distance
+// for matching the full input lists.  The `map` array contains a the three key values for the three
+// directions, where _MAP_DIAG means you map the next vertex of `big` to the next vertex of `small`,
+// _MAP_LEFT means you map the next vertex of `big` to the current vertex of `small`, and _MAP_UP
+// means you map the next vertex of `small` to the current vertex of `big`.
+//
+// Return value is [min_distance, map], where map is the array that is used to extract the actual
+// vertex map.
+
+_MAP_DIAG = 0;
+_MAP_LEFT = 1;
+_MAP_UP = 2;
+
+/*
+function _dp_distance_array(small, big, abort_thresh=1/0, small_ind=0, tdist=[], map=[]) =
+   small_ind == len(small)+1 ? [tdist[len(tdist)-1][len(big)-1], map] :
+   let( newrow = _dp_distance_row(small, big, small_ind, tdist) )
+   min(newrow[0]) > abort_thresh ? [tdist[len(tdist)-1][len(big)-1],map] :
+   _dp_distance_array(small, big, abort_thresh, small_ind+1, concat(tdist, [newrow[0]]), concat(map, [newrow[1]]));
+*/
+
+
+function _dp_distance_array(small, big, abort_thresh=1/0) =
+   [for(
+        small_ind = 0,
+        tdist = [],
+        map = []
+           ;
+        small_ind<=len(small)+1
+           ;
+        newrow =small_ind==len(small)+1 ? [0,0,0] :  // dummy end case
+                           _dp_distance_row(small,big,small_ind,tdist),
+        tdist = concat(tdist, [newrow[0]]),
+        map = concat(map, [newrow[1]]),
+        small_ind = min(newrow[0])>abort_thresh ? len(small)+1 : small_ind+1
+       )
+     if (small_ind==len(small)+1) each [tdist[len(tdist)-1][len(big)], map]];
+                                     //[tdist,map]];
+
+
+function _dp_distance_row(small, big, small_ind, tdist) =
+                    // Top left corner is zero because it gets counted at the end in bottom right corner
+   small_ind == 0 ? [cumsum([0,for(i=[1:len(big)]) norm(big[i%len(big)]-small[0])]), repeat(_MAP_LEFT,len(big)+1)] :
+   [for(big_ind=1,
+       newrow=[ norm(big[0] - small[small_ind%len(small)]) + tdist[small_ind-1][0] ],
+       newmap = [_MAP_UP]
+         ;
+       big_ind<=len(big)+1
+         ;
+       costs = big_ind == len(big)+1 ? [0] :    // handle extra iteration
+                             [tdist[small_ind-1][big_ind-1],  // diag
+                              newrow[big_ind-1],              // left
+                              tdist[small_ind-1][big_ind]],   // up
+       newrow = concat(newrow, [min(costs)+norm(big[big_ind%len(big)]-small[small_ind%len(small)])]),
+       newmap = concat(newmap, [min_index(costs)]),
+       big_ind = big_ind+1
+   ) if (big_ind==len(big)+1) each [newrow,newmap]];
+
+
+function _dp_extract_map(map) =  
+      [for(
+           i=len(map)-1,
+           j=len(map[0])-1,
+           smallmap=[],
+           bigmap = []
+              ;
+           j >= 0
+              ;
+           advance_i = map[i][j]==_MAP_UP || map[i][j]==_MAP_DIAG,
+           advance_j = map[i][j]==_MAP_LEFT || map[i][j]==_MAP_DIAG,
+           i = i - (advance_i ? 1 : 0),
+           j = j - (advance_j ? 1 : 0),
+           bigmap = concat( [j%(len(map[0])-1)] ,  bigmap),
+           smallmap = concat( [i%(len(map)-1)]  , smallmap)
+          )
+        if (i==0 && j==0) each [smallmap,bigmap]];
+     
+
+/// Internal Function: _skin_distance_match(poly1,poly2)
+/// Usage:
+///   polys = _skin_distance_match(poly1,poly2);
+/// Description:
+///   Find a way of associating the vertices of poly1 and vertices of poly2
+///   that minimizes the sum of the length of the edges that connect the two polygons.
+///   Polygons can be in 2d or 3d.  The algorithm has cubic run time, so it can be
+///   slow if you pass large polygons.  The output is a pair of polygons with vertices
+///   duplicated as appropriate to be used as input to `skin()`.
+/// Arguments:
+///   poly1 = first polygon to match
+///   poly2 = second polygon to match
+function _skin_distance_match(poly1,poly2) =
+   let(
+      swap = len(poly1)>len(poly2),
+      big = swap ? poly1 : poly2,
+      small = swap ? poly2 : poly1,
+      map_poly = [ for(
+              i=0,
+              bestcost = 1/0,
+              bestmap = -1,
+              bestpoly = -1
+              ;
+              i<=len(big)
+              ;
+              shifted = polygon_shift(big,i),
+              result =_dp_distance_array(small, shifted, abort_thresh = bestcost),
+              bestmap = result[0]<bestcost ? result[1] : bestmap,
+              bestpoly = result[0]<bestcost ? shifted : bestpoly,
+              best_i = result[0]<bestcost ? i : best_i,
+              bestcost = min(result[0], bestcost),
+              i=i+1
+              )
+              if (i==len(big)) each [bestmap,bestpoly,best_i]],
+      map = _dp_extract_map(map_poly[0]),
+      smallmap = map[0],
+      bigmap = map[1],
+      // These shifts are needed to handle the case when points from both ends of one curve map to a single point on the other
+      bigshift =  len(bigmap) - max(max_index(bigmap,all=true))-1,
+      smallshift = len(smallmap) - max(max_index(smallmap,all=true))-1,
+      newsmall = polygon_shift(repeat_entries(small,unique_count(smallmap)[1]),smallshift),
+      newbig = polygon_shift(repeat_entries(map_poly[1],unique_count(bigmap)[1]),bigshift)
+      )
+      swap ? [newbig, newsmall] : [newsmall,newbig];
+
+
+// This function associates vertices but with the assumption that index 0 is associated between the
+// two inputs.  This gives only quadratic run time.  As above, output is pair of polygons with
+// vertices duplicated as suited to use as input to skin(). 
+
+function _skin_aligned_distance_match(poly1, poly2) =
+    let(
+      result = _dp_distance_array(poly1, poly2, abort_thresh=1/0),
+      map = _dp_extract_map(result[1]),
+      shift0 = len(map[0]) - max(max_index(map[0],all=true))-1,
+      shift1 = len(map[1]) - max(max_index(map[1],all=true))-1,
+      new0 = polygon_shift(repeat_entries(poly1,unique_count(map[0])[1]),shift0),
+      new1 = polygon_shift(repeat_entries(poly2,unique_count(map[1])[1]),shift1)
+  )
+  [new0,new1];
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Internal Function: _skin_tangent_match()
+/// Usage:
+///   x = _skin_tangent_match(poly1, poly2)
+/// Description:
+///   Finds a mapping of the vertices of the larger polygon onto the smaller one.  Whichever input is the
+///   shorter path is the polygon, and the longer input is the curve.  For every edge of the polygon, the algorithm seeks a plane that contains that
+///   edge and is tangent to the curve.  There will be more than one such point.  To choose one, the algorithm centers the polygon and curve on their centroids
+///   and chooses the closer tangent point.  The algorithm works its way around the polygon, computing a series of tangent points and then maps all of the
+///   points on the curve between two tangent points into one vertex of the polygon.  This algorithm can fail if the curve has too few points or if it is concave.
+/// Arguments:
+///   poly1 = input polygon
+///   poly2 = input polygon
+function _skin_tangent_match(poly1, poly2) =
+    let(
+        swap = len(poly1)>len(poly2),
+        big = swap ? poly1 : poly2,
+        small = swap ? poly2 : poly1,
+        curve_offset = centroid(small)-centroid(big),
+        cutpts = [for(i=[0:len(small)-1]) _find_one_tangent(big, select(small,i,i+1),curve_offset=curve_offset)],
+        shift = last(cutpts)+1,
+        newbig = polygon_shift(big, shift),
+        repeat_counts = [for(i=[0:len(small)-1]) posmod(cutpts[i]-select(cutpts,i-1),len(big))],
+        newsmall = repeat_entries(small,repeat_counts)
+    )
+    assert(len(newsmall)==len(newbig), "Tangent alignment failed, probably because of insufficient points or a concave curve")
+    swap ? [newbig, newsmall] : [newsmall, newbig];
+
+
+function _find_one_tangent(curve, edge, curve_offset=[0,0,0], closed=true) =
+    let(
+        angles = [
+            for (i = [0:len(curve)-(closed?1:2)])
+            let( 
+                plane = plane3pt( edge[0], edge[1], curve[i]),
+                tangent = [curve[i], select(curve,i+1)]
+            ) plane_line_angle(plane,tangent)
+        ],
+        zero_cross = [
+            for (i = [0:len(curve)-(closed?1:2)])
+            if (sign(angles[i]) != sign(select(angles,i+1)))
+            i
+        ],
+        d = [
+            for (i = zero_cross)
+            point_line_distance(curve[i]+curve_offset, edge)
+        ]
+    ) zero_cross[min_index(d)];
+
+
+// Function: associate_vertices()
+// Usage:
+//   newpoly = associate_vertices(polygons, split);
+// Description:
+//   Takes as input a list of polygons and duplicates specified vertices in each polygon in the list through the series so
+//   that the input can be passed to `skin()`.  This allows you to decide how the vertices are linked up rather than accepting
+//   the automatically computed minimal distance linkage.  However, the number of vertices in the polygons must not decrease in the list.
+//   The output is a list of polygons that all have the same number of vertices with some duplicates.  You specify the vertex splitting
+//   using the `split` which is a list where each entry corresponds to a polygon: split[i] is a value or list specifying which vertices in polygon i to split.
+//   Give the empty list if you don't want a split for a particular polygon.  If you list a vertex once then it will be split and mapped to
+//   two vertices in the next polygon.  If you list it N times then N copies will be created to map to N+1 vertices in the next polygon.
+//   You must ensure that each mapping produces the correct number of vertices to exactly map onto every vertex of the next polygon.
+//   Note that if you split (only) vertex i of a polygon that means it will map to vertices i and i+1 of the next polygon.  Vertex 0 will always
+//   map to vertex 0 and the last vertices will always map to each other, so if you want something different than that you'll need to reindex
+//   your polygons.  
+// Arguments:
+//   polygons = list of polygons to split
+//   split = list of lists of split vertices
+// Example(FlatSpin,VPD=17,VPT=[0,0,2]):  If you skin together a square and hexagon using the optimal distance method you get two triangular faces on opposite sides:
+//   sq = regular_ngon(4,side=2);
+//   hex = apply(rot(15),hexagon(side=2));
+//   skin([sq,hex], slices=10, refine=10, method="distance", z=[0,4]);
+// Example(FlatSpin,VPD=17,VPT=[0,0,2]):  Using associate_vertices you can change the location of the triangular faces.  Here they are connect to two adjacent vertices of the square:
+//   sq = regular_ngon(4,side=2);
+//   hex = apply(rot(15),hexagon(side=2));
+//   skin(associate_vertices([sq,hex],[[1,2]]), slices=10, refine=10, sampling="segment", z=[0,4]);
+// Example(FlatSpin,VPD=17,VPT=[0,0,2]): Here the two triangular faces connect to a single vertex on the square.  Note that we had to rotate the hexagon to line them up because the vertices match counting forward, so in this case vertex 0 of the square matches to vertices 0, 1, and 2 of the hexagon.  
+//   sq = regular_ngon(4,side=2);
+//   hex = apply(rot(60),hexagon(side=2));
+//   skin(associate_vertices([sq,hex],[[0,0]]), slices=10, refine=10, sampling="segment", z=[0,4]);
+// Example(3D): This example shows several polygons, with only a single vertex split at each step:
+//   sq = regular_ngon(4,side=2);
+//   pent = pentagon(side=2);
+//   hex = hexagon(side=2);
+//   sep = regular_ngon(7,side=2);
+//   profiles = associate_vertices([sq,pent,hex,sep], [1,3,4]);
+//   skin(profiles ,slices=10, refine=10, method="distance", z=[0,2,4,6]);
+// Example(3D): The polygons cannot shrink, so if you want to have decreasing polygons you'll need to concatenate multiple results.  Note that it is perfectly ok to duplicate a profile as shown here, where the pentagon is duplicated:
+//   sq = regular_ngon(4,side=2);
+//   pent = pentagon(side=2);
+//   grow = associate_vertices([sq,pent], [1]);
+//   shrink = associate_vertices([sq,pent], [2]);
+//   skin(concat(grow, reverse(shrink)), slices=10, refine=10, method="distance", z=[0,2,2,4]);
+function associate_vertices(polygons, split, curpoly=0) =
+   curpoly==len(polygons)-1 ? polygons :
+   let(
+      polylen = len(polygons[curpoly]),
+      cursplit = force_list(split[curpoly])
+   )
+    assert(len(split)==len(polygons)-1,str(split,"Split list length mismatch: it has length ", len(split)," but must have length ",len(polygons)-1))
+    assert(polylen<=len(polygons[curpoly+1]),str("Polygon ",curpoly," has more vertices than the next one."))
+    assert(len(cursplit)+polylen == len(polygons[curpoly+1]),
+           str("Polygon ", curpoly, " has ", polylen, " vertices.  Next polygon has ", len(polygons[curpoly+1]),
+                  " vertices.  Split list has length ", len(cursplit), " but must have length ", len(polygons[curpoly+1])-polylen))
+    assert(max(cursplit)<polylen && min(curpoly)>=0,
+           str("Split ",cursplit," at polygon ",curpoly," has invalid vertices.  Must be in [0:",polylen-1,"]"))
+    len(cursplit)==0 ? associate_vertices(polygons,split,curpoly+1) :
+    let(
+      splitindex = sort(concat(count(polylen), cursplit)),
+      newpoly = [for(i=[0:len(polygons)-1]) i<=curpoly ? select(polygons[i],splitindex) : polygons[i]]
+    )
+   associate_vertices(newpoly, split, curpoly+1);
+
+
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
