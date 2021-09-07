@@ -1630,6 +1630,31 @@ module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, 
 }
 
 
+
+// Module: jittered_poly()
+// Topics: Extrusions
+// See Also: path_add_jitter(), subdivide_long_segments()
+// Usage:
+//   jittered_poly(path, [dist]);
+// Description:
+//   Creates a 2D polygon shape from the given path in such a way that any extra
+//   collinear points are not stripped out in the way that `polygon()` normally does.
+//   This is useful for refining the mesh of a `linear_extrude()` with twist.
+// Arguments:
+//   path = The path to add jitter to.
+//   dist = The amount to jitter points by.  Default: 1/512 (0.00195)
+// Example:
+//   d = 100; h = 75; quadsize = 5;
+//   path = pentagon(d=d);
+//   spath = subdivide_long_segments(path, quadsize, closed=true);
+//   linear_extrude(height=h, twist=72, slices=h/quadsize)
+//      jittered_poly(spath);
+module jittered_poly(path, dist=1/512) {
+    polygon(path_add_jitter(path, dist, closed=true));
+}
+
+
+
 // Section: Curved 2D Shapes
 
 

@@ -330,14 +330,14 @@ function path_closest_point(path, pt) =
 //   path = path to find the tagent vectors for
 //   closed = set to true of the path is closed.  Default: false
 //   uniform = set to false to correct for non-uniform sampling.  Default: true
-// Example: A shape with non-uniform sampling gives distorted derivatives that may be undesirable
+// Example(3D): A shape with non-uniform sampling gives distorted derivatives that may be undesirable
 //   rect = square([10,3]);
 //   tangents = path_tangents(rect,closed=true);
 //   stroke(rect,closed=true, width=0.1);
 //   color("purple")
 //       for(i=[0:len(tangents)-1])
 //           stroke([rect[i]-tangents[i], rect[i]+tangents[i]],width=.1, endcap2="arrow2");
-// Example: A shape with non-uniform sampling gives distorted derivatives that may be undesirable
+// Example(3D): A shape with non-uniform sampling gives distorted derivatives that may be undesirable
 //   rect = square([10,3]);
 //   tangents = path_tangents(rect,closed=true,uniform=false);
 //   stroke(rect,closed=true, width=0.1);
@@ -589,7 +589,7 @@ function _corner_roundover_path(p1, p2, p3, r, d) =
 //   dist = The amount to jitter points by.  Default: 1/512 (0.00195)
 //   ---
 //   closed = If true, treat path like a closed polygon.  Default: true
-// Example:
+// Example(3D):
 //   d = 100; h = 75; quadsize = 5;
 //   path = pentagon(d=d);
 //   spath = subdivide_long_segments(path, quadsize, closed=true);
@@ -1275,62 +1275,6 @@ function resample_path(path, N, spacing, closed=false) =
 
 
 
-
-// Section: 2D Modules
-
-
-// Module: modulated_circle()
-// Usage:
-//   modulated_circle(r|d, sines);
-// Description:
-//   Creates a 2D polygon circle, modulated by one or more superimposed sine waves.
-// Arguments:
-//   r = Radius of the base circle. Default: 40
-//   d = Diameter of the base circle.
-//   sines = array of [amplitude, frequency] pairs or [amplitude, frequency, phase] triples, where the frequency is the number of times the cycle repeats around the circle.
-// Example(2D):
-//   modulated_circle(r=40, sines=[[3, 11], [1, 31]], $fn=6);
-module modulated_circle(r, sines=[[1,1]], d)
-{
-    r = get_radius(r=r, d=d, dflt=40);
-    assert(is_list(sines)
-        && all([for(s=sines) is_vector(s,2) || is_vector(s,3)]),
-        "sines must be given as a list of pairs or triples");
-    sines_ = [for(s=sines) [s[0], s[1], len(s)==2 ? 0 : s[2]]];
-    freqs = len(sines_)>0? [for (i=sines_) i[1]] : [5];
-    points = [
-        for (a = [0 : (360/segs(r)/max(freqs)) : 360])
-            let(nr=r+sum_of_sines(a,sines_)) [nr*cos(a), nr*sin(a)]
-    ];
-    polygon(points);
-}
-
-
-// Module: jittered_poly()
-// Topics: Extrusions
-// See Also: path_add_jitter(), subdivide_long_segments()
-// Usage:
-//   jittered_poly(path, [dist]);
-// Description:
-//   Creates a 2D polygon shape from the given path in such a way that any extra
-//   collinear points are not stripped out in the way that `polygon()` normally does.
-//   This is useful for refining the mesh of a `linear_extrude()` with twist.
-// Arguments:
-//   path = The path to add jitter to.
-//   dist = The amount to jitter points by.  Default: 1/512 (0.00195)
-// Example:
-//   d = 100; h = 75; quadsize = 5;
-//   path = pentagon(d=d);
-//   spath = subdivide_long_segments(path, quadsize, closed=true);
-//   linear_extrude(height=h, twist=72, slices=h/quadsize)
-//      jittered_poly(spath);
-module jittered_poly(path, dist=1/512) {
-    polygon(path_add_jitter(path, dist, closed=true));
-}
-
-
-
-
 // Section: 3D Modules
 
 
@@ -1508,133 +1452,6 @@ module path_extrude(path, convexity=10, clipsize=100) {
             translate(pt2) {
                 hq = (i < ptcount-2)? q_slerp(q, pquats[i+1][1], 0.5) : q;
                 q_rot(hq) up(clipsize/2+epsilon) cube(clipsize, center=true);
-            }
-        }
-    }
-}
-
-
-// Module: path_spread()
-//
-// Description:
-//   Uniformly spreads out copies of children along a path.  Copies are located based on path length.  If you specify `n` but not spacing then `n` copies will be placed
-//   with one at path[0] of `closed` is true, or spanning the entire path from start to end if `closed` is false.
-//   If you specify `spacing` but not `n` then copies will spread out starting from one at path[0] for `closed=true` or at the path center for open paths.
-//   If you specify `sp` then the copies will start at `sp`.
-//
-// Usage:
-//   path_spread(path), [n], [spacing], [sp], [rotate_children], [closed]) ...
-//
-// Arguments:
-//   path = the path where children are placed
-//   n = number of copies
-//   spacing = space between copies
-//   sp = if given, copies will start distance sp from the path start and spread beyond that point
-//
-// Side Effects:
-//   `$pos` is set to the center of each copy
-//   `$idx` is set to the index number of each copy.  In the case of closed paths the first copy is at `path[0]` unless you give `sp`.
-//   `$dir` is set to the direction vector of the path at the point where the copy is placed.
-//   `$normal` is set to the direction of the normal vector to the path direction that is coplanar with the path at this point
-//
-// Example(2D):
-//   spiral = [for(theta=[0:360*8]) theta * [cos(theta), sin(theta)]]/100;
-//   stroke(spiral,width=.25);
-//   color("red") path_spread(spiral, n=100) circle(r=1);
-// Example(2D):
-//   circle = regular_ngon(n=64, or=10);
-//   stroke(circle,width=1,closed=true);
-//   color("green") path_spread(circle, n=7, closed=true) circle(r=1+$idx/3);
-// Example(2D):
-//   heptagon = regular_ngon(n=7, or=10);
-//   stroke(heptagon, width=1, closed=true);
-//   color("purple") path_spread(heptagon, n=9, closed=true) rect([0.5,3],anchor=FRONT);
-// Example(2D): Direction at the corners is the average of the two adjacent edges
-//   heptagon = regular_ngon(n=7, or=10);
-//   stroke(heptagon, width=1, closed=true);
-//   color("purple") path_spread(heptagon, n=7, closed=true) rect([0.5,3],anchor=FRONT);
-// Example(2D):  Don't rotate the children
-//   heptagon = regular_ngon(n=7, or=10);
-//   stroke(heptagon, width=1, closed=true);
-//   color("red") path_spread(heptagon, n=9, closed=true, rotate_children=false) rect([0.5,3],anchor=FRONT);
-// Example(2D): Open path, specify `n`
-//   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
-//   stroke(sinwav,width=.1);
-//   color("red") path_spread(sinwav, n=5) rect([.2,1.5],anchor=FRONT);
-// Example(2D): Open path, specify `n` and `spacing`
-//   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
-//   stroke(sinwav,width=.1);
-//   color("red") path_spread(sinwav, n=5, spacing=1) rect([.2,1.5],anchor=FRONT);
-// Example(2D): Closed path, specify `n` and `spacing`, copies centered around circle[0]
-//   circle = regular_ngon(n=64,or=10);
-//   stroke(circle,width=.1,closed=true);
-//   color("red") path_spread(circle, n=10, spacing=1, closed=true) rect([.2,1.5],anchor=FRONT);
-// Example(2D): Open path, specify `spacing`
-//   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
-//   stroke(sinwav,width=.1);
-//   color("red") path_spread(sinwav, spacing=5) rect([.2,1.5],anchor=FRONT);
-// Example(2D): Open path, specify `sp`
-//   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
-//   stroke(sinwav,width=.1);
-//   color("red") path_spread(sinwav, n=5, sp=18) rect([.2,1.5],anchor=FRONT);
-// Example(2D):
-//   wedge = arc(angle=[0,100], r=10, $fn=64);
-//   difference(){
-//     polygon(concat([[0,0]],wedge));
-//     path_spread(wedge,n=5,spacing=3) fwd(.1) rect([1,4],anchor=FRONT);
-//   }
-// Example(Spin,VPD=115): 3d example, with children rotated into the plane of the path
-//   tilted_circle = lift_plane([[0,0,0], [5,0,5], [0,2,3]],regular_ngon(n=64, or=12));
-//   path_sweep(regular_ngon(n=16,or=.1),tilted_circle);
-//   path_spread(tilted_circle, n=15,closed=true) {
-//      color("blue") cyl(h=3,r=.2, anchor=BOTTOM);      // z-aligned cylinder
-//      color("red") xcyl(h=10,r=.2, anchor=FRONT+LEFT); // x-aligned cylinder
-//   }
-// Example(Spin,VPD=115): 3d example, with rotate_children set to false
-//   tilted_circle = lift_plane([[0,0,0], [5,0,5], [0,2,3]], regular_ngon(n=64, or=12));
-//   path_sweep(regular_ngon(n=16,or=.1),tilted_circle);
-//   path_spread(tilted_circle, n=25,rotate_children=false,closed=true) {
-//      color("blue") cyl(h=3,r=.2, anchor=BOTTOM);       // z-aligned cylinder
-//      color("red") xcyl(h=10,r=.2, anchor=FRONT+LEFT);  // x-aligned cylinder
-//   }
-module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=false)
-{
-    length = path_length(path,closed);
-    distances =
-        is_def(sp)? (   // Start point given
-            is_def(n) && is_def(spacing)? count(n,sp,spacing) :
-            is_def(n)? lerpn(sp, length, n) :
-            list([sp:spacing:length])
-        )
-      : is_def(n) && is_undef(spacing)? lerpn(0,length,n,!closed) // N alone given
-      : (      // No start point and spacing is given, N maybe given
-        let(
-            n = is_def(n)? n : floor(length/spacing)+(closed?0:1),
-            ptlist = count(n,0,spacing),
-            listcenter = mean(ptlist)
-        ) closed?
-            sort([for(entry=ptlist) posmod(entry-listcenter,length)]) :
-            [for(entry=ptlist) entry + length/2-listcenter ]
-    );
-    distOK = is_def(n) || (min(distances)>=0 && max(distances)<=length);
-    assert(distOK,"Cannot fit all of the copies");
-    cutlist = path_cut_points(path, distances, closed, direction=true);
-    planar = len(path[0])==2;
-    if (true) for(i=[0:1:len(cutlist)-1]) {
-        $pos = cutlist[i][0];
-        $idx = i;
-        $dir = rotate_children ? (planar?[1,0]:[1,0,0]) : cutlist[i][2];
-        $normal = rotate_children? (planar?[0,1]:[0,0,1]) : cutlist[i][3];
-        translate($pos) {
-            if (rotate_children) {
-                if(planar) {
-                    rot(from=[0,1],to=cutlist[i][3]) children();
-                } else {
-                    frame_map(x=cutlist[i][2], z=cutlist[i][3])
-                        children();
-                }
-            } else {
-                children();
             }
         }
     }
