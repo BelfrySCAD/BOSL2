@@ -1,11 +1,22 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: shapes2d.scad
-//   Common useful 2D shapes.
+//   This file includes stroke(), which converts a path into a
+//   geometric object, like drawing with a pen.  It even works on
+//   three-dimensional paths.  You can make a dashed line or add arrow
+//   heads.  The turtle() function provides a turtle graphics style
+//   approach for producing paths.  You can create regular polygons
+//   with optional rounded corners and alignment features not
+//   available with circle().  The file also provides teardrop2d,
+//   which is useful for 3d printable holes.  Lastly you can use the
+//   masks to produce edge treatments common in furniture from the
+//   simple roundover or cove molding to the more elaborate ogee.
+//   Many of the commands have module forms that produce geometry and
+//   function forms that produce a path.
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
-// Section: 2D Drawing Helpers
+// Section: Line Drawing
 
 // Module: stroke()
 // Usage:
@@ -109,6 +120,16 @@
 // Example: 3D Path with Joints and Endcaps
 //   path = [for (i=[0:10:360]) [(i-180)/2,20*cos(3*i),20*sin(3*i)]];
 //   stroke(path, width=2, joints="dot", endcap1="round", endcap2="arrow2", joint_width=2.0, endcap_width2=3, $fn=18);
+function stroke(
+    path, width=1, closed=false,
+    endcaps,       endcap1,        endcap2,        joints,       plots,
+    endcap_width,  endcap_width1,  endcap_width2,  joint_width,  plot_width,
+    endcap_length, endcap_length1, endcap_length2, joint_length, plot_length,
+    endcap_extent, endcap_extent1, endcap_extent2, joint_extent, plot_extent,
+    endcap_angle,  endcap_angle1,  endcap_angle2,  joint_angle,  plot_angle,
+    trim, trim1, trim2,
+    convexity=10, hull=true
+) = no_function("stroke");
 module stroke(
     path, width=1, closed=false,
     endcaps,       endcap1,        endcap2,        joints,       plots,
@@ -743,6 +764,7 @@ function _normal_segment(p1,p2) =
 //       );
 //   koch=concat(["angle",60,"repeat",3],[concat(koch_unit(3),["left","left"])]);
 //   polygon(turtle(koch));
+module turtle(commands, state=[[[0,0]],[1,0],90,0], full_state=false, repeat=1) {no_module();}
 function turtle(commands, state=[[[0,0]],[1,0],90,0], full_state=false, repeat=1) =
     let( state = is_vector(state) ? [[state],[1,0],90,0] : state )
         repeat == 1?
@@ -1055,8 +1077,7 @@ function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
     ) reorient(anchor,spin, two_d=true, r=[rx,ry], p=pts);
 
 
-
-// Section: 2D N-Gons
+// Section: Polygons
 
 // Function&Module: regular_ngon()
 // Usage:
@@ -1377,10 +1398,6 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
     regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, align_tip=align_tip, align_side=align_side, anchor=anchor, spin=spin) children();
 
 
-
-// Section: Other 2D Shapes
-
-
 // Function&Module: trapezoid()
 // Usage: As Module
 //   trapezoid(h, w1, w2, [shift=], [rounding=], [chamfer=], ...);
@@ -1484,6 +1501,136 @@ module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENTER
         }
     }
 }
+
+
+
+// Function&Module: star()
+// Usage: As Module
+//   star(n, r/or, ir, [realign=], [align_tip=], [align_pit=], ...);
+//   star(n, r/or, step=, ...);
+// Usage: With Attachments
+//   star(n, r/or, ir, ...) { attachments }
+// Usage: As Function
+//   path = star(n, r/or, ir, [realign=], [align_tip=], [align_pit=], ...);
+//   path = star(n, r/or, step=, ...);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), oval()
+// Description:
+//   When called as a function, returns the path needed to create a star polygon with N points.
+//   When called as a module, creates a star polygon with N points.
+// Arguments:
+//   n = The number of stellate tips on the star.
+//   r/or = The radius to the tips of the star.
+//   ir = The radius to the inner corners of the star.
+//   ---
+//   d/od = The diameter to the tips of the star.
+//   id = The diameter to the inner corners of the star.
+//   step = Calculates the radius of the inner star corners by virtually drawing a straight line `step` tips around the star.  2 <= step < n/2
+//   realign = If false, a tip is aligned with the Y+ axis.  If true, an inner corner is aligned with the Y+ axis.  Default: false
+//   align_tip = If given as a 2D vector, rotates the whole shape so that the first star tip points in that direction.  This occurs before spin.
+//   align_pit = If given as a 2D vector, rotates the whole shape so that the first inner corner is pointed towards that direction.  This occurs before spin.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Extra Anchors:
+//   "tip0" ... "tip4" = Each tip has an anchor, pointing outwards.
+//   "pit0" ... "pit4" = The inside corner between each tip has an anchor, pointing outwards.
+//   "midpt0" ... "midpt4" = The center-point between each pair of tips has an anchor, pointing outwards.
+// Examples(2D):
+//   star(n=5, r=50, ir=25);
+//   star(n=5, r=50, step=2);
+//   star(n=7, r=50, step=2);
+//   star(n=7, r=50, step=3);
+// Example(2D): Realigned
+//   star(n=7, r=50, step=3, realign=true);
+// Example(2D): Alignment by Tip
+//   star(n=5, ir=15, or=30, align_tip=BACK+RIGHT)
+//       attach("tip0", FWD) color("blue")
+//           stroke([[0,0],[0,7]], endcap2="arrow2");
+// Example(2D): Alignment by Pit
+//   star(n=5, ir=15, or=30, align_pit=BACK+RIGHT)
+//       attach("pit0", FWD) color("blue")
+//           stroke([[0,0],[0,7]], endcap2="arrow2");
+// Example(2D): Called as Function
+//   stroke(closed=true, star(n=5, r=50, ir=25));
+function star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0, _mat, _anchs) =
+    assert(is_undef(align_tip) || is_vector(align_tip))
+    assert(is_undef(align_pit) || is_vector(align_pit))
+    assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit")
+    let(
+        r = get_radius(r1=or, d1=od, r=r, d=d),
+        count = num_defined([ir,id,step]),
+        stepOK = is_undef(step) || (step>1 && step<n/2)
+    )
+    assert(is_def(n), "Must specify number of points, n")
+    assert(count==1, "Must specify exactly one of ir, id, step")
+    assert(stepOK, str("Parameter 'step' must be between 2 and ",floor(n/2)," for ",n," point star"))
+    let(
+        mat = !is_undef(_mat) ? _mat :
+            ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (
+                !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip), planar=true) :
+                !is_undef(align_pit)? rot(from=RIGHT, to=point2d(align_pit), planar=true) * rot(180/n, planar=true) :
+                affine2d_identity()
+            ),
+        stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n),
+        ir = get_radius(r=ir, d=id, dflt=stepr),
+        offset = realign? 180/n : 0,
+        path1 = [for(i=[2*n:-1:1]) let(theta=180*i/n, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]],
+        path = apply(mat, path1),
+        anchors = !is_undef(_anchs) ? _anchs :
+            !is_string(anchor)? [] : [
+            for (i = [0:1:n-1]) let(
+                a1 = 360 - i*360/n,
+                a2 = a1 - 180/n,
+                a3 = a1 - 360/n,
+                p1 = apply(mat, polar_to_xy(r,a1)),
+                p2 = apply(mat, polar_to_xy(ir,a2)),
+                p3 = apply(mat, polar_to_xy(r,a3)),
+                pos = (p1+p3)/2
+            ) each [
+                anchorpt(str("tip",i), p1, unit(p1,BACK), 0),
+                anchorpt(str("pit",i), p2, unit(p2,BACK), 0),
+                anchorpt(str("midpt",i), pos, unit(pos,BACK), 0),
+            ]
+        ]
+    ) reorient(anchor,spin, two_d=true, path=path, p=path, anchors=anchors);
+
+
+module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0) {
+    assert(is_undef(align_tip) || is_vector(align_tip));
+    assert(is_undef(align_pit) || is_vector(align_pit));
+    assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit");
+    r = get_radius(r1=or, d1=od, r=r, d=d, dflt=undef);
+    stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n);
+    ir = get_radius(r=ir, d=id, dflt=stepr);
+    mat = ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (
+            !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip), planar=true) :
+            !is_undef(align_pit)? rot(from=RIGHT, to=point2d(align_pit), planar=true) * rot(180/n, planar=true) :
+            affine2d_identity()
+        );
+    anchors = [
+        for (i = [0:1:n-1]) let(
+            a1 = 360 - i*360/n - (realign? 180/n : 0),
+            a2 = a1 - 180/n,
+            a3 = a1 - 360/n,
+            p1 = apply(mat, polar_to_xy(r,a1)),
+            p2 = apply(mat, polar_to_xy(ir,a2)),
+            p3 = apply(mat, polar_to_xy(r,a3)),
+            pos = (p1+p3)/2
+        ) each [
+            anchorpt(str("tip",i), p1, unit(p1,BACK), 0),
+            anchorpt(str("pit",i), p2, unit(p2,BACK), 0),
+            anchorpt(str("midpt",i), pos, unit(pos,BACK), 0),
+        ]
+    ];
+    path = star(n=n, r=r, ir=ir, realign=realign, _mat=mat, _anchs=anchors);
+    attachable(anchor,spin, two_d=true, path=path, anchors=anchors) {
+        polygon(path);
+        children();
+    }
+}
+
+
+// Section: Curved 2D Shapes
 
 
 // Function&Module: teardrop2d()
@@ -1615,131 +1762,6 @@ module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
     }
 }
 
-
-// Function&Module: star()
-// Usage: As Module
-//   star(n, r/or, ir, [realign=], [align_tip=], [align_pit=], ...);
-//   star(n, r/or, step=, ...);
-// Usage: With Attachments
-//   star(n, r/or, ir, ...) { attachments }
-// Usage: As Function
-//   path = star(n, r/or, ir, [realign=], [align_tip=], [align_pit=], ...);
-//   path = star(n, r/or, step=, ...);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), oval()
-// Description:
-//   When called as a function, returns the path needed to create a star polygon with N points.
-//   When called as a module, creates a star polygon with N points.
-// Arguments:
-//   n = The number of stellate tips on the star.
-//   r/or = The radius to the tips of the star.
-//   ir = The radius to the inner corners of the star.
-//   ---
-//   d/od = The diameter to the tips of the star.
-//   id = The diameter to the inner corners of the star.
-//   step = Calculates the radius of the inner star corners by virtually drawing a straight line `step` tips around the star.  2 <= step < n/2
-//   realign = If false, a tip is aligned with the Y+ axis.  If true, an inner corner is aligned with the Y+ axis.  Default: false
-//   align_tip = If given as a 2D vector, rotates the whole shape so that the first star tip points in that direction.  This occurs before spin.
-//   align_pit = If given as a 2D vector, rotates the whole shape so that the first inner corner is pointed towards that direction.  This occurs before spin.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-// Extra Anchors:
-//   "tip0" ... "tip4" = Each tip has an anchor, pointing outwards.
-//   "pit0" ... "pit4" = The inside corner between each tip has an anchor, pointing outwards.
-//   "midpt0" ... "midpt4" = The center-point between each pair of tips has an anchor, pointing outwards.
-// Examples(2D):
-//   star(n=5, r=50, ir=25);
-//   star(n=5, r=50, step=2);
-//   star(n=7, r=50, step=2);
-//   star(n=7, r=50, step=3);
-// Example(2D): Realigned
-//   star(n=7, r=50, step=3, realign=true);
-// Example(2D): Alignment by Tip
-//   star(n=5, ir=15, or=30, align_tip=BACK+RIGHT)
-//       attach("tip0", FWD) color("blue")
-//           stroke([[0,0],[0,7]], endcap2="arrow2");
-// Example(2D): Alignment by Pit
-//   star(n=5, ir=15, or=30, align_pit=BACK+RIGHT)
-//       attach("pit0", FWD) color("blue")
-//           stroke([[0,0],[0,7]], endcap2="arrow2");
-// Example(2D): Called as Function
-//   stroke(closed=true, star(n=5, r=50, ir=25));
-function star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0, _mat, _anchs) =
-    assert(is_undef(align_tip) || is_vector(align_tip))
-    assert(is_undef(align_pit) || is_vector(align_pit))
-    assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit")
-    let(
-        r = get_radius(r1=or, d1=od, r=r, d=d),
-        count = num_defined([ir,id,step]),
-        stepOK = is_undef(step) || (step>1 && step<n/2)
-    )
-    assert(is_def(n), "Must specify number of points, n")
-    assert(count==1, "Must specify exactly one of ir, id, step")
-    assert(stepOK, str("Parameter 'step' must be between 2 and ",floor(n/2)," for ",n," point star"))
-    let(
-        mat = !is_undef(_mat) ? _mat :
-            ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (
-                !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip), planar=true) :
-                !is_undef(align_pit)? rot(from=RIGHT, to=point2d(align_pit), planar=true) * rot(180/n, planar=true) :
-                affine2d_identity()
-            ),
-        stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n),
-        ir = get_radius(r=ir, d=id, dflt=stepr),
-        offset = realign? 180/n : 0,
-        path1 = [for(i=[2*n:-1:1]) let(theta=180*i/n, radius=(i%2)?ir:r) radius*[cos(theta), sin(theta)]],
-        path = apply(mat, path1),
-        anchors = !is_undef(_anchs) ? _anchs :
-            !is_string(anchor)? [] : [
-            for (i = [0:1:n-1]) let(
-                a1 = 360 - i*360/n,
-                a2 = a1 - 180/n,
-                a3 = a1 - 360/n,
-                p1 = apply(mat, polar_to_xy(r,a1)),
-                p2 = apply(mat, polar_to_xy(ir,a2)),
-                p3 = apply(mat, polar_to_xy(r,a3)),
-                pos = (p1+p3)/2
-            ) each [
-                anchorpt(str("tip",i), p1, unit(p1,BACK), 0),
-                anchorpt(str("pit",i), p2, unit(p2,BACK), 0),
-                anchorpt(str("midpt",i), pos, unit(pos,BACK), 0),
-            ]
-        ]
-    ) reorient(anchor,spin, two_d=true, path=path, p=path, anchors=anchors);
-
-
-module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0) {
-    assert(is_undef(align_tip) || is_vector(align_tip));
-    assert(is_undef(align_pit) || is_vector(align_pit));
-    assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit");
-    r = get_radius(r1=or, d1=od, r=r, d=d, dflt=undef);
-    stepr = is_undef(step)? r : r*cos(180*step/n)/cos(180*(step-1)/n);
-    ir = get_radius(r=ir, d=id, dflt=stepr);
-    mat = ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (
-            !is_undef(align_tip)? rot(from=RIGHT, to=point2d(align_tip), planar=true) :
-            !is_undef(align_pit)? rot(from=RIGHT, to=point2d(align_pit), planar=true) * rot(180/n, planar=true) :
-            affine2d_identity()
-        );
-    anchors = [
-        for (i = [0:1:n-1]) let(
-            a1 = 360 - i*360/n - (realign? 180/n : 0),
-            a2 = a1 - 180/n,
-            a3 = a1 - 360/n,
-            p1 = apply(mat, polar_to_xy(r,a1)),
-            p2 = apply(mat, polar_to_xy(ir,a2)),
-            p3 = apply(mat, polar_to_xy(r,a3)),
-            pos = (p1+p3)/2
-        ) each [
-            anchorpt(str("tip",i), p1, unit(p1,BACK), 0),
-            anchorpt(str("pit",i), p2, unit(p2,BACK), 0),
-            anchorpt(str("midpt",i), pos, unit(pos,BACK), 0),
-        ]
-    ];
-    path = star(n=n, r=r, ir=ir, realign=realign, _mat=mat, _anchs=anchors);
-    attachable(anchor,spin, two_d=true, path=path, anchors=anchors) {
-        polygon(path);
-        children();
-    }
-}
 
 
 function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =

@@ -224,7 +224,7 @@ function project_plane(plane,p) =
               y = unit(plane[1]-plane[0]),        // y axis goes to point b
               x = unit(v-(v*y)*y)   // x axis 
           )            
-          affine3d_frame_map(x,y) * move(-plane[0])
+          frame_map(x,y) * move(-plane[0])
     : is_vector(plane,4) && is_undef(p) ?            // no data, plane given in "plane"
           assert(_valid_plane(plane), "Plane is not valid")
           let(
@@ -280,7 +280,7 @@ function lift_plane(plane, p) =
               y = unit(plane[1]-plane[0]),        // y axis goes to point b
               x = unit(v-(v*y)*y)   // x axis 
           )            
-          move(plane[0]) * affine3d_frame_map(x,y,reverse=true)
+          move(plane[0]) * frame_map(x,y,reverse=true)
     : is_vector(plane,4) && is_undef(p) ?            // no data, plane given in "plane"
           assert(_valid_plane(plane), "Plane is not valid")
           let(

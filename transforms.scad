@@ -1,6 +1,14 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: transforms.scad
-//   Functions and modules for translation, rotation, reflection and skewing.
+//   Functions and modules that provide shortcuts for translation,
+//   rotation and mirror operations.  Also provided are skew and frame_map
+//   which remaps the coordinate axes.  The shortcuts can act on
+//   geometry, like the usual OpenSCAD rotate() and translate(). They
+//   also work as functions that operate on lists of points in various
+//   forms: paths, VNFS and bezier patches. Lastly, the function form
+//   of the shortcuts can return a matrix representing the operation
+//   the shortcut performs. The rotation and scaling shortcuts accept
+//   an optional centerpoint for the rotation or scaling operation.
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
@@ -771,6 +779,8 @@ module xyzrot(a=0, p, cp)
 function xyzrot(a=0, p, cp) = rot(a=a, v=[1,1,1], cp=cp, p=p);
 
 
+
+
 //////////////////////////////////////////////////////////////////////
 // Section: Scaling and Mirroring
 //////////////////////////////////////////////////////////////////////
@@ -1010,6 +1020,10 @@ function zscale(z=1, p, cp=0) =
     let( cp = is_num(cp)? [0,0,cp] : cp )
     scale([1,1,z], cp=cp, p=p);
 
+
+//////////////////////////////////////////////////////////////////////
+// Section: Reflection (Mirroring)
+//////////////////////////////////////////////////////////////////////
 
 // Function&Module: mirror()
 // Usage: As Module
@@ -1435,8 +1449,86 @@ function yzflip(p, cp=0) =
 
 
 //////////////////////////////////////////////////////////////////////
-// Section: Skewing
+// Section: Other Transformations
 //////////////////////////////////////////////////////////////////////
+
+// Function&Module: frame_map()
+// Usage: As module
+//   frame_map(v1, v2, v3, [reverse=]) { ... }
+// Usage: As function to remap points
+//   transformed = frame_map(v1, v2, v3, p=points, [reverse=]);
+// Usage: As function to return a transformation matrix:
+//   map = frame_map(v1, v2, v3, [reverse=]);
+//   map = frame_map(x=VECTOR1, y=VECTOR2, [reverse=]);
+//   map = frame_map(x=VECTOR1, z=VECTOR2, [reverse=]);
+//   map = frame_map(y=VECTOR1, z=VECTOR2, [reverse=]);
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: rot(), xrot(), yrot(), zrot(), affine2d_zrot()
+// Description:
+//   Maps one coordinate frame to another.  You must specify two or
+//   three of `x`, `y`, and `z`.  The specified axes are mapped to the vectors you supplied, so if you
+//   specify x=[1,1] then the x axis will be mapped to the line y=x.  If you
+//   give two inputs, the third vector is mapped to the appropriate normal to maintain a right hand
+//   coordinate system.  If the vectors you give are orthogonal the result will be a rotation and the
+//   `reverse` parameter will supply the inverse map, which enables you to map two arbitrary
+//   coordinate systems to each other by using the canonical coordinate system as an intermediary.
+//   You cannot use the `reverse` option with non-orthogonal inputs.  Note that only the direction
+//   of the specified vectors matters: the transformation will not apply scaling, though it can
+//   skew if your provide non-orthogonal axes.  
+// Arguments:
+//   x = Destination 3D vector for x axis.
+//   y = Destination 3D vector for y axis.
+//   z = Destination 3D vector for z axis.
+//   reverse = reverse direction of the map for orthogonal inputs.  Default: false
+// Example:  Remap axes after linear extrusion
+//   frame_map(x=[0,1,0], y=[0,0,1]) linear_extrude(height=10) square(3);
+// Example: This map is just a rotation around the z axis
+//   mat = frame_map(x=[1,1,0], y=[-1,1,0]); 
+// Example:  This map is not a rotation because x and y aren't orthogonal
+//   mat = frame_map(x=[1,0,0], y=[1,1,0]); 
+// Example:  This sends [1,1,0] to [0,1,1] and [-1,1,0] to [0,-1,1]
+//   mat = frame_map(x=[0,1,1], y=[0,-1,1]) * frame_map(x=[1,1,0], y=[-1,1,0],reverse=true);
+function frame_map(x,y,z, p, reverse=false) =
+    is_def(p)
+    ? apply(frame_map(x,y,z,reverse=reverse), p)
+    :
+    assert(num_defined([x,y,z])>=2, "Must define at least two inputs")
+    let(
+        xvalid = is_undef(x) || (is_vector(x) && len(x)==3),
+        yvalid = is_undef(y) || (is_vector(y) && len(y)==3),
+        zvalid = is_undef(z) || (is_vector(z) && len(z)==3)
+    )
+    assert(xvalid,"Input x must be a length 3 vector")
+    assert(yvalid,"Input y must be a length 3 vector")
+    assert(zvalid,"Input z must be a length 3 vector")
+    let(
+        x = is_undef(x)? undef : unit(x,RIGHT),
+        y = is_undef(y)? undef : unit(y,BACK),
+        z = is_undef(z)? undef : unit(z,UP),
+        map = is_undef(x)? [cross(y,z), y, z] :
+            is_undef(y)? [x, cross(z,x), z] :
+            is_undef(z)? [x, y, cross(x,y)] :
+            [x, y, z]
+    )
+    reverse? (
+        let(
+            ocheck = (
+                approx(map[0]*map[1],0) &&
+                approx(map[0]*map[2],0) &&
+                approx(map[1]*map[2],0)
+            )
+        )
+        assert(ocheck, "Inputs must be orthogonal when reverse==true")
+        [for (r=map) [for (c=r) c, 0], [0,0,0,1]]
+    ) : [for (r=transpose(map)) [for (c=r) c, 0], [0,0,0,1]];
+
+
+module frame_map(x,y,z,p,reverse=false)
+{
+   assert(is_undef(p), "Module form `frame_map()` does not accept p= argument.");
+   multmatrix(frame_map(x,y,z,reverse=reverse))
+       children();
+}
 
 
 // Function&Module: skew()

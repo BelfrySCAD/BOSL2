@@ -482,6 +482,7 @@ function _offset_chamfer(center, points, delta) =
 
 
 function _shift_segment(segment, d) =
+    assert(!approx(segment[0],segment[1]),"Path has repeated points")
     move(d*line_normal(segment),segment);
 
 

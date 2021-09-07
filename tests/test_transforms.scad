@@ -462,6 +462,11 @@ module test_xyzrot() {
 }
 test_xyzrot();
 
+module test_frame_map() {
+    assert(approx(frame_map(x=[1,1,0], y=[-1,1,0]), affine3d_zrot(45)));
+}
+test_frame_map();
+
 
 module test_skew() {
     m = affine3d_skew(sxy=2, sxz=3, syx=4, syz=5, szx=6, szy=7);

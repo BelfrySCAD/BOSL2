@@ -216,12 +216,6 @@ test_affine3d_skew_yz();
 
 ////////////////////////////
 
-module test_affine3d_frame_map() {
-    assert(approx(affine3d_frame_map(x=[1,1,0], y=[-1,1,0]), affine3d_zrot(45)));
-}
-test_affine3d_frame_map();
-
-
 module test_apply() {
     assert(approx(apply(affine3d_xrot(90),2*UP),2*FRONT));
     assert(approx(apply(affine3d_yrot(90),2*UP),2*RIGHT));
