@@ -894,7 +894,7 @@ function reorient(
 // Attachment internal functions
 
 
-// Internal Function: _attach_geom()
+/// Internal Function: _attach_geom()
 //
 // Usage: Square/Trapezoid Geometry
 //   geom = _attach_geom(two_d=true, size=, [size2=], [shift=], ...);
@@ -1090,7 +1090,7 @@ function _attach_geom(
 
 
 
-// Internal Function: _attach_geom_2d()
+/// Internal Function: _attach_geom_2d()
 // Usage:
 //   bool = _attach_geom_2d(geom);
 // Topics: Attachments
@@ -1103,7 +1103,7 @@ function _attach_geom_2d(geom) =
     type == "path_isect" || type == "path_extent";
 
 
-// Internal Function: _attach_geom_size()
+/// Internal Function: _attach_geom_size()
 // Usage:
 //   bounds = _attach_geom_size(geom);
 // Topics: Attachments
@@ -1167,7 +1167,7 @@ function _attach_geom_size(geom) =
     assert(false, "Unknown attachment geometry type.");
 
 
-// Internal Function: _attach_transform()
+/// Internal Function: _attach_transform()
 // Usage: To Get a Transformation Matrix
 //   mat = _attach_transform(anchor, spin, orient, geom);
 // Usage: To Transform Points, Paths, Patches, or VNFs
@@ -1495,7 +1495,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 }
 
 
-// Internal Function: _find_anchor()
+/// Internal Function: _find_anchor()
 // Usage:
 //   anchorinfo = _find_anchor(anchor, geom);
 // Topics: Attachments
@@ -1740,7 +1740,7 @@ function _find_anchor(anchor, geom) =
     assert(false, "Unknown attachment geometry type.");
 
 
-// Internal Function: _attachment_is_shown()
+/// Internal Function: _attachment_is_shown()
 // Usage:
 //   bool = _attachment_is_shown(tags);
 // Topics: Attachments
