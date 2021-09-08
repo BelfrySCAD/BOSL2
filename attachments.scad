@@ -1757,6 +1757,8 @@ function _attachment_is_shown(tags) =
     ) shown && !hidden;
 
 
+// Section: Attachable Text
+
 // Module: atext()
 // Topics: Attachments, Text
 // Usage:
