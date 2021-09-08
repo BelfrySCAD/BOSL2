@@ -365,7 +365,7 @@ module expose_anchors(opacity=0.2) {
 //   cube(50, center=true) show_anchors();
 module show_anchors(s=10, std=true, custom=true) {
     check = assert($parent_geom != undef) 1;
-    two_d = attach_geom_2d($parent_geom);
+    two_d = _attach_geom_2d($parent_geom);
     if (std) {
         for (anchor=standard_anchors(two_d=two_d)) {
             if(two_d) {
