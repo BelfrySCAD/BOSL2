@@ -497,6 +497,257 @@ module hulling(a)
     }
 }
 
+
+
+// Section: Attachable Masks
+
+
+// Module: edge_mask()
+// Usage:
+//   edge_mask([edges], [except]) {...}
+// Topics: Attachments
+// See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask()
+// Description:
+//   Takes a 3D mask shape, and attaches it to the given edges, with the appropriate orientation to be
+//   `diff()`ed away.  The mask shape should be vertically oriented (Z-aligned) with the back-right
+//   quadrant (X+Y+) shaped to be diffed away from the edge of parent attachable shape.  For a more
+//   step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Figure: A Typical Edge Rounding Mask
+//   module roundit(l,r) difference() {
+//       translate([-1,-1,-l/2])
+//           cube([r+1,r+1,l]);
+//       translate([r,r])
+//           cylinder(h=l+1,r=r,center=true, $fn=quantup(segs(r),4));
+//   }
+//   roundit(l=30,r=10);
+// Arguments:
+//   edges = Edges to mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
+//   except = Edges to explicitly NOT mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
+// Side Effects:
+//   Sets `$tags = "mask"` for all children.
+// Example:
+//   diff("mask")
+//   cube([50,60,70],center=true)
+//       edge_mask([TOP,"Z"],except=[BACK,TOP+LEFT])
+//           rounding_mask_z(l=71,r=10);
+module edge_mask(edges=EDGES_ALL, except=[]) {
+    assert($parent_geom != undef, "No object to attach to!");
+    edges = edges(edges, except=except);
+    vecs = [
+        for (i = [0:3], axis=[0:2])
+        if (edges[axis][i]>0)
+        EDGE_OFFSETS[axis][i]
+    ];
+    for (vec = vecs) {
+        vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
+        assert(vcount == 2, "Not an edge vector!");
+        anch = _find_anchor(vec, $parent_geom);
+        $attach_to = undef;
+        $attach_anchor = anch;
+        $attach_norot = true;
+        $tags = "mask";
+        rotang =
+            vec.z<0? [90,0,180+v_theta(vec)] :
+            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
+            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+v_theta(vec)] :
+            [-90,0,180+v_theta(vec)];
+        translate(anch[1]) rot(rotang) children();
+    }
+}
+
+
+// Module: corner_mask()
+// Usage:
+//   corner_mask([corners], [except]) {...}
+// Topics: Attachments
+// See Also: attachable(), position(), attach(), face_profile(), edge_profile(), edge_mask()
+// Description:
+//   Takes a 3D mask shape, and attaches it to the given corners, with the appropriate orientation to
+//   be `diff()`ed away.  The 3D corner mask shape should be designed to mask away the X+Y+Z+ octant.
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Arguments:
+//   corners = Edges to mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: All corners.
+//   except = Edges to explicitly NOT mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: No corners.
+// Side Effects:
+//   Sets `$tags = "mask"` for all children.
+// Example:
+//   diff("mask")
+//   cube(100, center=true)
+//       corner_mask([TOP,FRONT],LEFT+FRONT+TOP)
+//           difference() {
+//               translate(-0.01*[1,1,1]) cube(20);
+//               translate([20,20,20]) sphere(r=20);
+//           }
+module corner_mask(corners=CORNERS_ALL, except=[]) {
+    assert($parent_geom != undef, "No object to attach to!");
+    corners = corners(corners, except=except);
+    vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
+    for (vec = vecs) {
+        vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
+        assert(vcount == 3, "Not an edge vector!");
+        anch = _find_anchor(vec, $parent_geom);
+        $attach_to = undef;
+        $attach_anchor = anch;
+        $attach_norot = true;
+        $tags = "mask";
+        rotang = vec.z<0?
+            [  0,0,180+v_theta(vec)-45] :
+            [180,0,-90+v_theta(vec)-45];
+        translate(anch[1]) rot(rotang) children();
+    }
+}
+
+
+// Module: face_profile()
+// Usage:
+//   face_profile(faces, r|d=, [convexity=]) {...}
+// Topics: Attachments
+// See Also: attachable(), position(), attach(), edge_profile(), corner_profile()
+// Description:
+//   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face.
+//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Arguments:
+//   faces = Faces to mask edges and corners of.
+//   r = Radius of corner mask.
+//   ---
+//   d = Diameter of corner mask.
+//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
+// Side Effects:
+//   Sets `$tags = "mask"` for all children.
+// Example:
+//   diff("mask")
+//   cube([50,60,70],center=true)
+//       face_profile(TOP,r=10)
+//           mask2d_roundover(r=10);
+module face_profile(faces=[], r, d, convexity=10) {
+    faces = is_vector(faces)? [faces] : faces;
+    assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "Vector in faces doesn't point at a face.");
+    r = get_radius(r=r, d=d, dflt=undef);
+    assert(is_num(r) && r>0);
+    edge_profile(faces) children();
+    corner_profile(faces, convexity=convexity, r=r) children();
+}
+
+
+// Module: edge_profile()
+// Usage:
+//   edge_profile([edges], [except], [convexity]) {...}
+// Topics: Attachments
+// See Also: attachable(), position(), attach(), face_profile(), corner_profile()
+// Description:
+//   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation and
+//   extruded length to be `diff()`ed away, to give the edge a matching profile.  For a more step-by-step
+//   explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Arguments:
+//   edges = Edges to mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
+//   except = Edges to explicitly NOT mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
+//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
+// Side Effects:
+//   Sets `$tags = "mask"` for all children.
+// Example:
+//   diff("mask")
+//   cube([50,60,70],center=true)
+//       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
+//           mask2d_roundover(r=10, inset=2);
+module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
+    assert($parent_geom != undef, "No object to attach to!");
+    edges = edges(edges, except=except);
+    vecs = [
+        for (i = [0:3], axis=[0:2])
+        if (edges[axis][i]>0)
+        EDGE_OFFSETS[axis][i]
+    ];
+    for (vec = vecs) {
+        vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
+        assert(vcount == 2, "Not an edge vector!");
+        anch = _find_anchor(vec, $parent_geom);
+        $attach_to = undef;
+        $attach_anchor = anch;
+        $attach_norot = true;
+        $tags = "mask";
+        psize = point3d($parent_size);
+        length = [for (i=[0:2]) if(!vec[i]) psize[i]][0]+0.1;
+        rotang =
+            vec.z<0? [90,0,180+v_theta(vec)] :
+            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
+            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+v_theta(vec)] :
+            [-90,0,180+v_theta(vec)];
+        translate(anch[1]) {
+            rot(rotang) {
+                linear_extrude(height=length, center=true, convexity=convexity) {
+                    children();
+                }
+            }
+        }
+    }
+}
+
+// Module: corner_profile()
+// Usage:
+//   corner_profile([corners], [except], <r=|d=>, [convexity=]) {...}
+// Topics: Attachments
+// See Also: attachable(), position(), attach(), face_profile(), edge_profile()
+// Description:
+//   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
+//   to the selected corners with the appropriate orientation.  Tags it as a "mask" to allow it to be
+//   `diff()`ed away, to give the corner a matching profile.  For a more step-by-step explanation of
+//   attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+// Arguments:
+//   corners = Edges to mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: All corners.
+//   except = Edges to explicitly NOT mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: No corners.
+//   ---
+//   r = Radius of corner mask.
+//   d = Diameter of corner mask.
+//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
+// Side Effects:
+//   Sets `$tags = "mask"` for all children.
+// Example:
+//   diff("mask")
+//   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
+//       corner_profile(BOT,r=10)
+//           mask2d_teardrop(r=10, angle=40);
+//   }
+module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
+    assert($parent_geom != undef, "No object to attach to!");
+    r = get_radius(r=r, d=d, dflt=undef);
+    assert(is_num(r));
+    corners = corners(corners, except=except);
+    vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
+    for (vec = vecs) {
+        vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
+        assert(vcount == 3, "Not an edge vector!");
+        anch = _find_anchor(vec, $parent_geom);
+        $attach_to = undef;
+        $attach_anchor = anch;
+        $attach_norot = true;
+        $tags = "mask";
+        rotang = vec.z<0?
+            [  0,0,180+v_theta(vec)-45] :
+            [180,0,-90+v_theta(vec)-45];
+        translate(anch[1]) {
+            rot(rotang) {
+                render(convexity=convexity)
+                difference() {
+                    translate(-0.1*[1,1,1]) cube(r+0.1, center=false);
+                    right(r) back(r) zrot(180) {
+                        rotate_extrude(angle=90, convexity=convexity) {
+                            xflip() left(r) {
+                                difference() {
+                                    square(r,center=false);
+                                    children();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+
 // Section: Making your objects attachable
 
 
@@ -915,8 +1166,8 @@ function reorient(
 // Usage: VNF Geometry
 //   geom = _attach_geom(vnf=, [extent=], ...);
 //
-// Topics: Attachments
-// See Also: reorient(), attachable()
+/// Topics: Attachments
+/// See Also: reorient(), attachable()
 //
 // Description:
 //   Given arguments that describe the geometry of an attachable object, returns the internal geometry description.
@@ -1093,8 +1344,8 @@ function _attach_geom(
 /// Internal Function: _attach_geom_2d()
 // Usage:
 //   bool = _attach_geom_2d(geom);
-// Topics: Attachments
-// See Also: reorient(), attachable()
+/// Topics: Attachments
+/// See Also: reorient(), attachable()
 // Description:
 //   Returns true if the given attachment geometry description is for a 2D shape.
 function _attach_geom_2d(geom) =
@@ -1106,8 +1357,8 @@ function _attach_geom_2d(geom) =
 /// Internal Function: _attach_geom_size()
 // Usage:
 //   bounds = _attach_geom_size(geom);
-// Topics: Attachments
-// See Also: reorient(), attachable()
+/// Topics: Attachments
+/// See Also: reorient(), attachable()
 // Description:
 //   Returns the `[X,Y,Z]` bounding size for the given attachment geometry description.
 function _attach_geom_size(geom) =
@@ -1172,8 +1423,8 @@ function _attach_geom_size(geom) =
 //   mat = _attach_transform(anchor, spin, orient, geom);
 // Usage: To Transform Points, Paths, Patches, or VNFs
 //   new_p = _attach_transform(anchor, spin, orient, geom, p);
-// Topics: Attachments
-// See Also: reorient(), attachable()
+/// Topics: Attachments
+/// See Also: reorient(), attachable()
 // Description:
 //   Returns the affine3d transformation matrix needed to `anchor`, `spin`, and `orient`
 //   the given geometry `geom` shape into position.
@@ -1245,261 +1496,12 @@ function _attach_transform(anchor, spin, orient, geom, p) =
     apply(m, p);
 
 
-// Section: Attachable Masks
-
-
-
-
-
-// Module: edge_mask()
-// Usage:
-//   edge_mask([edges], [except]) {...}
-// Topics: Attachments
-// See Also: attachable(), position(), attach(), face_profile(), edge_profile(), corner_mask()
-// Description:
-//   Takes a 3D mask shape, and attaches it to the given edges, with the appropriate orientation to be
-//   `diff()`ed away.  The mask shape should be vertically oriented (Z-aligned) with the back-right
-//   quadrant (X+Y+) shaped to be diffed away from the edge of parent attachable shape.  For a more
-//   step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
-// Figure: A Typical Edge Rounding Mask
-//   module roundit(l,r) difference() {
-//       translate([-1,-1,-l/2])
-//           cube([r+1,r+1,l]);
-//       translate([r,r])
-//           cylinder(h=l+1,r=r,center=true, $fn=quantup(segs(r),4));
-//   }
-//   roundit(l=30,r=10);
-// Arguments:
-//   edges = Edges to mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
-//   except = Edges to explicitly NOT mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
-// Side Effects:
-//   Sets `$tags = "mask"` for all children.
-// Example:
-//   diff("mask")
-//   cube([50,60,70],center=true)
-//       edge_mask([TOP,"Z"],except=[BACK,TOP+LEFT])
-//           rounding_mask_z(l=71,r=10);
-module edge_mask(edges=EDGES_ALL, except=[]) {
-    assert($parent_geom != undef, "No object to attach to!");
-    edges = edges(edges, except=except);
-    vecs = [
-        for (i = [0:3], axis=[0:2])
-        if (edges[axis][i]>0)
-        EDGE_OFFSETS[axis][i]
-    ];
-    for (vec = vecs) {
-        vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        assert(vcount == 2, "Not an edge vector!");
-        anch = _find_anchor(vec, $parent_geom);
-        $attach_to = undef;
-        $attach_anchor = anch;
-        $attach_norot = true;
-        $tags = "mask";
-        rotang =
-            vec.z<0? [90,0,180+v_theta(vec)] :
-            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
-            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+v_theta(vec)] :
-            [-90,0,180+v_theta(vec)];
-        translate(anch[1]) rot(rotang) children();
-    }
-}
-
-
-// Module: corner_mask()
-// Usage:
-//   corner_mask([corners], [except]) {...}
-// Topics: Attachments
-// See Also: attachable(), position(), attach(), face_profile(), edge_profile(), edge_mask()
-// Description:
-//   Takes a 3D mask shape, and attaches it to the given corners, with the appropriate orientation to
-//   be `diff()`ed away.  The 3D corner mask shape should be designed to mask away the X+Y+Z+ octant.
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
-// Arguments:
-//   corners = Edges to mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: All corners.
-//   except = Edges to explicitly NOT mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: No corners.
-// Side Effects:
-//   Sets `$tags = "mask"` for all children.
-// Example:
-//   diff("mask")
-//   cube(100, center=true)
-//       corner_mask([TOP,FRONT],LEFT+FRONT+TOP)
-//           difference() {
-//               translate(-0.01*[1,1,1]) cube(20);
-//               translate([20,20,20]) sphere(r=20);
-//           }
-module corner_mask(corners=CORNERS_ALL, except=[]) {
-    assert($parent_geom != undef, "No object to attach to!");
-    corners = corners(corners, except=except);
-    vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
-    for (vec = vecs) {
-        vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        assert(vcount == 3, "Not an edge vector!");
-        anch = _find_anchor(vec, $parent_geom);
-        $attach_to = undef;
-        $attach_anchor = anch;
-        $attach_norot = true;
-        $tags = "mask";
-        rotang = vec.z<0?
-            [  0,0,180+v_theta(vec)-45] :
-            [180,0,-90+v_theta(vec)-45];
-        translate(anch[1]) rot(rotang) children();
-    }
-}
-
-
-// Module: face_profile()
-// Usage:
-//   face_profile(faces, r|d=, [convexity=]) {...}
-// Topics: Attachments
-// See Also: attachable(), position(), attach(), edge_profile(), corner_profile()
-// Description:
-//   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face.
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
-// Arguments:
-//   faces = Faces to mask edges and corners of.
-//   r = Radius of corner mask.
-//   ---
-//   d = Diameter of corner mask.
-//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
-// Side Effects:
-//   Sets `$tags = "mask"` for all children.
-// Example:
-//   diff("mask")
-//   cube([50,60,70],center=true)
-//       face_profile(TOP,r=10)
-//           mask2d_roundover(r=10);
-module face_profile(faces=[], r, d, convexity=10) {
-    faces = is_vector(faces)? [faces] : faces;
-    assert(all([for (face=faces) is_vector(face) && sum([for (x=face) x!=0? 1 : 0])==1]), "Vector in faces doesn't point at a face.");
-    r = get_radius(r=r, d=d, dflt=undef);
-    assert(is_num(r) && r>0);
-    edge_profile(faces) children();
-    corner_profile(faces, convexity=convexity, r=r) children();
-}
-
-
-// Module: edge_profile()
-// Usage:
-//   edge_profile([edges], [except], [convexity]) {...}
-// Topics: Attachments
-// See Also: attachable(), position(), attach(), face_profile(), corner_profile()
-// Description:
-//   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation and
-//   extruded length to be `diff()`ed away, to give the edge a matching profile.  For a more step-by-step
-//   explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
-// Arguments:
-//   edges = Edges to mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
-//   except = Edges to explicitly NOT mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
-//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
-// Side Effects:
-//   Sets `$tags = "mask"` for all children.
-// Example:
-//   diff("mask")
-//   cube([50,60,70],center=true)
-//       edge_profile([TOP,"Z"],except=[BACK,TOP+LEFT])
-//           mask2d_roundover(r=10, inset=2);
-module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
-    assert($parent_geom != undef, "No object to attach to!");
-    edges = edges(edges, except=except);
-    vecs = [
-        for (i = [0:3], axis=[0:2])
-        if (edges[axis][i]>0)
-        EDGE_OFFSETS[axis][i]
-    ];
-    for (vec = vecs) {
-        vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        assert(vcount == 2, "Not an edge vector!");
-        anch = _find_anchor(vec, $parent_geom);
-        $attach_to = undef;
-        $attach_anchor = anch;
-        $attach_norot = true;
-        $tags = "mask";
-        psize = point3d($parent_size);
-        length = [for (i=[0:2]) if(!vec[i]) psize[i]][0]+0.1;
-        rotang =
-            vec.z<0? [90,0,180+v_theta(vec)] :
-            vec.z==0 && sign(vec.x)==sign(vec.y)? 135+v_theta(vec) :
-            vec.z==0 && sign(vec.x)!=sign(vec.y)? [0,180,45+v_theta(vec)] :
-            [-90,0,180+v_theta(vec)];
-        translate(anch[1]) {
-            rot(rotang) {
-                linear_extrude(height=length, center=true, convexity=convexity) {
-                    children();
-                }
-            }
-        }
-    }
-}
-
-// Module: corner_profile()
-// Usage:
-//   corner_profile([corners], [except], <r=|d=>, [convexity=]) {...}
-// Topics: Attachments
-// See Also: attachable(), position(), attach(), face_profile(), edge_profile()
-// Description:
-//   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
-//   to the selected corners with the appropriate orientation.  Tags it as a "mask" to allow it to be
-//   `diff()`ed away, to give the corner a matching profile.  For a more step-by-step explanation of
-//   attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
-// Arguments:
-//   corners = Edges to mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: All corners.
-//   except = Edges to explicitly NOT mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: No corners.
-//   ---
-//   r = Radius of corner mask.
-//   d = Diameter of corner mask.
-//   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
-// Side Effects:
-//   Sets `$tags = "mask"` for all children.
-// Example:
-//   diff("mask")
-//   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
-//       corner_profile(BOT,r=10)
-//           mask2d_teardrop(r=10, angle=40);
-//   }
-module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
-    assert($parent_geom != undef, "No object to attach to!");
-    r = get_radius(r=r, d=d, dflt=undef);
-    assert(is_num(r));
-    corners = corners(corners, except=except);
-    vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
-    for (vec = vecs) {
-        vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
-        assert(vcount == 3, "Not an edge vector!");
-        anch = _find_anchor(vec, $parent_geom);
-        $attach_to = undef;
-        $attach_anchor = anch;
-        $attach_norot = true;
-        $tags = "mask";
-        rotang = vec.z<0?
-            [  0,0,180+v_theta(vec)-45] :
-            [180,0,-90+v_theta(vec)-45];
-        translate(anch[1]) {
-            rot(rotang) {
-                render(convexity=convexity)
-                difference() {
-                    translate(-0.1*[1,1,1]) cube(r+0.1, center=false);
-                    right(r) back(r) zrot(180) {
-                        rotate_extrude(angle=90, convexity=convexity) {
-                            xflip() left(r) {
-                                difference() {
-                                    square(r,center=false);
-                                    children();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 
 /// Internal Function: _find_anchor()
 // Usage:
 //   anchorinfo = _find_anchor(anchor, geom);
-// Topics: Attachments
-// See Also: reorient(), attachable()
+/// Topics: Attachments
+/// See Also: reorient(), attachable()
 // Description:
 //   Calculates the anchor data for the given `anchor` vector or name, in the given attachment
 //   geometry.  Returns `[ANCHOR, POS, VEC, ANG]` where `ANCHOR` is the requested anchorname
@@ -1743,8 +1745,8 @@ function _find_anchor(anchor, geom) =
 /// Internal Function: _attachment_is_shown()
 // Usage:
 //   bool = _attachment_is_shown(tags);
-// Topics: Attachments
-// See Also: reorient(), attachable()
+/// Topics: Attachments
+/// See Also: reorient(), attachable()
 // Description:
 //   Returns true if shapes tagged with any of the given space-delimited string of tag names should currently be shown.
 function _attachment_is_shown(tags) =
