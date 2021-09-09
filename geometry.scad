@@ -8,9 +8,9 @@
 
 // Section: Lines, Rays, and Segments
 
-// Function: point_on_segment2d()
+// Function: point_on_segment()
 // Usage:
-//   pt = point_on_segment2d(point, edge);
+//   pt = point_on_segment(point, edge);
 // Topics: Geometry, Points, Segments
 // Description:
 //   Determine if the point is on the line segment between two points.
@@ -19,9 +19,9 @@
 //   point = The point to test.
 //   edge = Array of two points forming the line segment to test against.
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function point_on_segment2d(point, edge, eps=EPSILON) =
+function point_on_segment(point, edge, eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    point_segment_distance(point, edge)<eps;
+    point_line_distance(point, edge, SEGMENT)<eps;
 
 
 //Internal - distance from point `d` to the line passing through the origin with unit direction n
@@ -83,40 +83,28 @@ function collinear(a, b, c, eps=EPSILON) =
 
 // Function: point_line_distance()
 // Usage:
-//   pt = point_line_distance(line, pt);
+//   pt = point_line_distance(line, pt, bounded);
 // Topics: Geometry, Points, Lines, Distance
 // Description:
-//   Finds the perpendicular distance of a point `pt` from the line `line`.
+//   Finds the shortest distance from the point `pt` to the specified line, segment or ray.
+//   The bounded parameter specifies the whether the endpoints give a ray or segment.
+//   By default assumes an unbounded line.  
 // Arguments:
-//   line = A list of two points, defining a line that both are on.
+//   line = A list of two points defining a line.
 //   pt = A point to find the distance of from the line.
+//   bounded = a boolean or list of two booleans specifiying whether each end is bounded.  Default: false
 // Example:
-//   dist = point_line_distance([3,8], [[-10,0], [10,0]]);  // Returns: 8
-function point_line_distance(pt, line) =
+//   dist1 = point_line_distance([3,8], [[-10,0], [10,0]]);  // Returns: 8
+//   dist2 = point_line_distance([3,8], [[-10,0], [10,0]],SEGMENT);  // Returns: 8
+//   dist3 = point_line_distance([14,3], [[-10,0], [10,0]],SEGMENT);  // Returns: 5
+function point_line_distance(pt, line, bounded=false) =
+    assert(is_bool(bounded) || is_bool_list(bounded,2), "\"bounded\" is invalid")
     assert( _valid_line(line) && is_vector(pt,len(line[0])),
             "Invalid line, invalid point or incompatible dimensions." )
-    _dist2line(pt-line[0],unit(line[1]-line[0]));
+    bounded == LINE ? _dist2line(pt-line[0],unit(line[1]-line[0]))
+                    : norm(pt-line_closest_point(line,pt,bounded));
 
-
-// Function: point_segment_distance()
-// Usage:
-//   dist = point_segment_distance(pt, seg);
-// Topics: Geometry, Points, Segments, Distance
-// Description:
-//   Returns the closest distance of the given point to the given line segment.
-// Arguments:
-//   pt = The point to check the distance of.
-//   seg = The two points representing the line segment to check the distance of.
-// Example:
-//   dist = point_segment_distance([3,8], [[-10,0], [10,0]]);  // Returns: 8
-//   dist2 = point_segment_distance([14,3], [[-10,0], [10,0]]);  // Returns: 5
-function point_segment_distance(pt, seg) =
-    assert( is_matrix(concat([pt],seg),3),
-            "Input should be a point and a valid segment with the dimension equal to the point." )
-    norm(seg[0]-seg[1]) < EPSILON ? norm(pt-seg[0]) :
-    norm(pt-segment_closest_point(seg,pt));
-
-
+                           
 // Function: segment_distance()
 // Usage:
 //   dist = segment_distance(seg1, seg2);
@@ -178,135 +166,79 @@ function _general_line_intersection(s1,s2,eps=EPSILON) =
     ) [s1[0]+t*(s1[1]-s1[0]), t, u];
 
 
+
 // Function: line_intersection()
 // Usage:
-//   pt = line_intersection(l1, l2);
-// Topics: Geometry, Lines, Intersections
+//    pt = line_intersection(line1, line2, [bounded1], [bounded2], [bounded=], [eps=]);
 // Description:
-//   Returns the 2D intersection point of two unbounded 2D lines.
-//   Returns `undef` if the lines are parallel.
+//    Returns the intersection point of any two 2D lines, segments or rays.  Returns undef
+//    if they do not intersect.  You specify a line by giving two distinct points on the
+//    line.  You specify rays or segments by giving a pair of points and indicating
+//    bounded[0]=true to bound the line at the first point, creating rays based at l1[0] and l2[0],
+//    or bounded[1]=true to bound the line at the second point, creating the reverse rays bounded
+//    at l1[1] and l2[1].  If bounded=[true, true] then you have segments defined by their two
+//    endpoints.  By using bounded1 and bounded2 you can mix segments, rays, and lines as needed.
+//    You can set the bounds parameters to true as a shorthand for [true,true] to sepcify segments.
 // Arguments:
-//   l1 = First 2D line, given as a list of two 2D points on the line.
-//   l2 = Second 2D line, given as a list of two 2D points on the line.
-//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function line_intersection(l1,l2,eps=EPSILON) =
-    assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
-    assert( _valid_line(l1,dim=2,eps=eps) &&_valid_line(l2,dim=2,eps=eps), "Invalid line(s)." )
+//    line1 = List of two points in 2D defining the first line, segment or ray
+//    line2 = List of two points in 2D defining the second line, segment or ray
+//    bounded1 = boolean or list of two booleans defining which ends are bounded for line1.  Default: [false,false]
+//    bounded2 = boolean or list of two booleans defining which ends are bounded for line2.  Default: [false,false]
+//    ---
+//    bounded = boolean or list of two booleans defining which ends are bounded for both lines.  The bounded1 and bounded2 parameters override this if both are given.
+//    eps = tolerance for geometric comparisons.  Default: `EPSILON` (1e-9)
+// Example(2D):  The segments do not intersect but the lines do in this example. 
+//    line1 = 10*[[9, 4], [5, 7]];
+//    line2 = 10*[[2, 3], [6, 5]];
+//    stroke(line1, endcaps="arrow2");
+//    stroke(line2, endcaps="arrow2");
+//    isect = line_intersection(line1, line2);
+//    color("red") translate(isect) circle(r=1,$fn=12);
+// Example(2D): Specifying a ray and segment using the shorthand variables.
+//    line1 = 10*[[0, 2], [4, 7]];
+//    line2 = 10*[[10, 4], [3, 4]];
+//    stroke(line1);
+//    stroke(line2, endcap2="arrow2");
+//    isect = line_intersection(line1, line2, SEGMENT, RAY);
+//    color("red") translate(isect) circle(r=1,$fn=12);
+// Example(2D): Here we use the same example as above, but specify two segments using the bounded argument.
+//    line1 = 10*[[0, 2], [4, 7]];
+//    line2 = 10*[[10, 4], [3, 4]];
+//    stroke(line1);
+//    stroke(line2);
+//    isect = line_intersection(line1, line2, bounded=true);  // Returns undef
+function line_intersection(line1, line2, bounded1, bounded2, bounded, eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    let(isect = _general_line_intersection(l1,l2,eps=eps))
-    isect[0];
-
-
-// Function: line_ray_intersection()
-// Usage:
-//   pt = line_ray_intersection(line, ray);
-// Topics: Geometry, Lines, Rays, Intersections
-// Description:
-//   Returns the 2D intersection point of an unbounded 2D line, and a half-bounded 2D ray.
-//   Returns `undef` if they do not intersect.
-// Arguments:
-//   line = The unbounded 2D line, defined by two 2D points on the line.
-//   ray = The 2D ray, given as a list `[START,POINT]` of the 2D start-point START, and a 2D point POINT on the ray.
-//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function line_ray_intersection(line,ray,eps=EPSILON) =
-    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    assert( _valid_line(line,dim=2,eps=eps) && _valid_line(ray,dim=2,eps=eps), "Invalid line or ray." )
-    let( isect = _general_line_intersection(line,ray,eps=eps) )
+    assert( _valid_line(line1,dim=2,eps=eps), "First line invalid")
+    assert( _valid_line(line2,dim=2,eps=eps), "Second line invalid")
+    assert( is_undef(bounded) || is_bool(bounded) || is_bool_list(bounded,2), "Invalid value for \"bounded\"")
+    assert( is_undef(bounded1) || is_bool(bounded1) || is_bool_list(bounded1,2), "Invalid value for \"bounded1\"")
+    assert( is_undef(bounded2) || is_bool(bounded2) || is_bool_list(bounded2,2), "Invalid value for \"bounded2\"")
+    let(isect = _general_line_intersection(line1,line2,eps=eps))
     is_undef(isect[0]) ? undef :
-    (isect[2]<0-eps) ? undef :
-    isect[0];
-
-
-// Function: line_segment_intersection()
-// Usage:
-//   pt = line_segment_intersection(line, segment);
-// Topics: Geometry, Lines, Segments, Intersections
-// Description:
-//   Returns the 2D intersection point of an unbounded 2D line, and a bounded 2D line segment.
-//   Returns `undef` if they do not intersect.
-// Arguments:
-//   line = The unbounded 2D line, defined by two 2D points on the line.
-//   segment = The bounded 2D line segment, given as a list of the two 2D endpoints of the segment.
-//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function line_segment_intersection(line,segment,eps=EPSILON) =
-    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    assert( _valid_line(line,  dim=2,eps=eps) &&_valid_line(segment,dim=2,eps=eps), "Invalid line or segment." )
-    let( isect = _general_line_intersection(line,segment,eps=eps) )
-    is_undef(isect[0]) ? undef :
-    isect[2]<0-eps || isect[2]>1+eps ? undef :
-    isect[0];
-
-
-// Function: ray_intersection()
-// Usage:
-//   pt = ray_intersection(s1, s2);
-// Topics: Geometry, Lines, Rays, Intersections
-// Description:
-//   Returns the 2D intersection point of two 2D line rays.
-//   Returns `undef` if they do not intersect.
-// Arguments:
-//   r1 = First 2D ray, given as a list `[START,POINT]` of the 2D start-point START, and a 2D point POINT on the ray.
-//   r2 = Second 2D ray, given as a list `[START,POINT]` of the 2D start-point START, and a 2D point POINT on the ray.
-//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function ray_intersection(r1,r2,eps=EPSILON) =
-    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    assert( _valid_line(r1,dim=2,eps=eps) && _valid_line(r2,dim=2,eps=eps), "Invalid ray(s)." )
-    let( isect = _general_line_intersection(r1,r2,eps=eps) )
-    is_undef(isect[0]) ? undef :
-    isect[1]<0-eps || isect[2]<0-eps ? undef :
-    isect[0];
-
-
-// Function: ray_segment_intersection()
-// Usage:
-//   pt = ray_segment_intersection(ray, segment);
-// Topics: Geometry, Rays, Segments, Intersections
-// Description:
-//   Returns the 2D intersection point of a half-bounded 2D ray, and a bounded 2D line segment.
-//   Returns `undef` if they do not intersect.
-// Arguments:
-//   ray = The 2D ray, given as a list `[START,POINT]` of the 2D start-point START, and a 2D point POINT on the ray.
-//   segment = The bounded 2D line segment, given as a list of the two 2D endpoints of the segment.
-//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function ray_segment_intersection(ray,segment,eps=EPSILON) =
-    assert( _valid_line(ray,dim=2,eps=eps) && _valid_line(segment,dim=2,eps=eps), "Invalid ray or segment." )
-    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    let( isect = _general_line_intersection(ray,segment,eps=eps) )
-    is_undef(isect[0]) ? undef :
-    isect[1]<0-eps || isect[2]<0-eps || isect[2]>1+eps ? undef :
-    isect[0];
-
-
-// Function: segment_intersection()
-// Usage:
-//   pt = segment_intersection(s1, s2);
-// Topics: Geometry, Segments, Intersections
-// Description:
-//   Returns the 2D intersection point of two 2D line segments.
-//   Returns `undef` if they do not intersect.
-// Arguments:
-//   s1 = First 2D segment, given as a list of the two 2D endpoints of the line segment.
-//   s2 = Second 2D segment, given as a list of the two 2D endpoints of the line segment.
-//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function segment_intersection(s1,s2,eps=EPSILON) =
-    assert( _valid_line(s1,dim=2,eps=eps) && _valid_line(s2,dim=2,eps=eps), "Invalid segment(s)." )
-    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    let( isect = _general_line_intersection(s1,s2,eps=eps) )
-    is_undef(isect[0]) ? undef :
-    isect[1]<0-eps || isect[1]>1+eps || isect[2]<0-eps || isect[2]>1+eps ? undef :
-    isect[0];
-
+    let(
+        bounded1 = force_list(first_defined([bounded1,bounded,false]),2),
+        bounded2 = force_list(first_defined([bounded2,bounded,false]),2),
+        good =  (!bounded1[0] || isect[1]>=0-eps)
+             && (!bounded1[1] || isect[1]<=1+eps)
+             && (!bounded2[0] || isect[2]>=0-eps)
+             && (!bounded2[1] || isect[2]<=1+eps)
+    )
+    good ? isect[0] : undef;
+    
 
 // Function: line_closest_point()
 // Usage:
-//   pt = line_closest_point(line,pt);
+//   pt = line_closest_point(line, pt, [bounded]);
 // Topics: Geometry, Lines, Distance
 // Description:
-//   Returns the point on the given 2D or 3D `line` that is closest to the given point `pt`.
-//   The `line` and `pt` args should either both be 2D or both 3D.
+//   Returns the point on the given 2D or 3D line, segment or ray that is closest to the given point `pt`.
+//   The inputs `line` and `pt` args should either both be 2D or both 3D.  The parameter bounded indicates
+//   whether the points of `line` should be treated as endpoints. 
 // Arguments:
 //   line = A list of two points that are on the unbounded line.
 //   pt = The point to find the closest point on the line to.
+//   bounded = boolean or list of two booleans indicating that the line is bounded at that end.  Default: [false,false]
 // Example(2D):
 //   line = [[-30,0],[30,30]];
 //   pt = [-32,-10];
@@ -314,169 +246,70 @@ function segment_intersection(s1,s2,eps=EPSILON) =
 //   stroke(line, endcaps="arrow2");
 //   color("blue") translate(pt) circle(r=1,$fn=12);
 //   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(2D):
+// Example(2D):  If the line is bounded on the left you get the endpoint instead
 //   line = [[-30,0],[30,30]];
-//   pt = [-5,0];
-//   p2 = line_closest_point(line,pt);
-//   stroke(line, endcaps="arrow2");
-//   color("blue") translate(pt) circle(r=1,$fn=12);
-//   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(2D):
-//   line = [[-30,0],[30,30]];
-//   pt = [40,25];
-//   p2 = line_closest_point(line,pt);
-//   stroke(line, endcaps="arrow2");
-//   color("blue") translate(pt) circle(r=1,$fn=12);
-//   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
-//   line = [[-30,-15,0],[30,15,30]];
-//   pt = [5,5,5];
-//   p2 = line_closest_point(line,pt);
-//   stroke(line, endcaps="arrow2");
-//   color("blue") translate(pt) sphere(r=1,$fn=12);
-//   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
-//   line = [[-30,-15,0],[30,15,30]];
-//   pt = [-35,-15,0];
-//   p2 = line_closest_point(line,pt);
-//   stroke(line, endcaps="arrow2");
-//   color("blue") translate(pt) sphere(r=1,$fn=12);
-//   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
-//   line = [[-30,-15,0],[30,15,30]];
-//   pt = [40,15,25];
-//   p2 = line_closest_point(line,pt);
-//   stroke(line, endcaps="arrow2");
-//   color("blue") translate(pt) sphere(r=1,$fn=12);
-//   color("red") translate(p2) sphere(r=1,$fn=12);
-function line_closest_point(line,pt) =
-    assert(_valid_line(line), "Invalid line." )
-    assert( is_vector(pt,len(line[0])), "Invalid point or incompatible dimensions." )
-    let( n = unit( line[0]- line[1]) )
-    line[1] + ((pt- line[1]) * n) * n;
-
-
-// Function: ray_closest_point()
-// Usage:
-//   pt = ray_closest_point(seg,pt);
-// Topics: Geometry, Rays, Distance
-// Description:
-//   Returns the point on the given 2D or 3D ray `ray` that is closest to the given point `pt`.
-//   The `ray` and `pt` args should either both be 2D or both 3D.
-// Arguments:
-//   ray = The ray, given as a list `[START,POINT]` of the start-point START, and a point POINT on the ray.
-//   pt = The point to find the closest point on the ray to.
-// Example(2D):
-//   ray = [[-30,0],[30,30]];
 //   pt = [-32,-10];
-//   p2 = ray_closest_point(ray,pt);
-//   stroke(ray, endcap2="arrow2");
+//   p2 = line_closest_point(line,pt,bounded=[true,false]);
+//   stroke(line, endcap2="arrow2");
 //   color("blue") translate(pt) circle(r=1,$fn=12);
 //   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(2D):
-//   ray = [[-30,0],[30,30]];
+// Example(2D):  In this case it doesn't matter how bounded is set.  Using SEGMENT is the most restrictive option. 
+//   line = [[-30,0],[30,30]];
 //   pt = [-5,0];
-//   p2 = ray_closest_point(ray,pt);
-//   stroke(ray, endcap2="arrow2");
+//   p2 = line_closest_point(line,pt,SEGMENT);
+//   stroke(line);
 //   color("blue") translate(pt) circle(r=1,$fn=12);
 //   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(2D):
-//   ray = [[-30,0],[30,30]];
+// Example(2D):  The result here is the same for a line or a ray. 
+//   line = [[-30,0],[30,30]];
 //   pt = [40,25];
-//   p2 = ray_closest_point(ray,pt);
-//   stroke(ray, endcap2="arrow2");
+//   p2 = line_closest_point(line,pt,RAY);
+//   stroke(line, endcap2="arrow2");
 //   color("blue") translate(pt) circle(r=1,$fn=12);
 //   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
-//   ray = [[-30,-15,0],[30,15,30]];
+// Example(2D):  But with a segment we get a different result
+//   line = [[-30,0],[30,30]];
+//   pt = [40,25];
+//   p2 = line_closest_point(line,pt,SEGMENT);
+//   stroke(line);
+//   color("blue") translate(pt) circle(r=1,$fn=12);
+//   color("red") translate(p2) circle(r=1,$fn=12);
+// Example(2D): The shorthand RAY uses the first point as the base of the ray.  But you can specify a reversed ray directly, and in this case the result is the same as the result above for the segment.
+//   line = [[-30,0],[30,30]];
+//   pt = [40,25];
+//   p2 = line_closest_point(line,pt,[false,true]);
+//   stroke(line,endcap1="arrow2");
+//   color("blue") translate(pt) circle(r=1,$fn=12);
+//   color("red") translate(p2) circle(r=1,$fn=12);
+// Example(FlatSpin,VPD=200,VPT=[0,0,15]): A 3D example
+//   line = [[-30,-15,0],[30,15,30]];
 //   pt = [5,5,5];
-//   p2 = ray_closest_point(ray,pt);
-//   stroke(ray, endcap2="arrow2");
+//   p2 = line_closest_point(line,pt);
+//   stroke(line, endcaps="arrow2");
 //   color("blue") translate(pt) sphere(r=1,$fn=12);
 //   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
-//   ray = [[-30,-15,0],[30,15,30]];
-//   pt = [-35,-15,0];
-//   p2 = ray_closest_point(ray,pt);
-//   stroke(ray, endcap2="arrow2");
-//   color("blue") translate(pt) sphere(r=1,$fn=12);
-//   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
-//   ray = [[-30,-15,0],[30,15,30]];
-//   pt = [40,15,25];
-//   p2 = ray_closest_point(ray,pt);
-//   stroke(ray, endcap2="arrow2");
-//   color("blue") translate(pt) sphere(r=1,$fn=12);
-//   color("red") translate(p2) sphere(r=1,$fn=12);
-function ray_closest_point(ray,pt) =
-    assert( _valid_line(ray), "Invalid ray." )
-    assert(is_vector(pt,len(ray[0])), "Invalid point or incompatible dimensions." )
+function line_closest_point(line, pt, bounded=false) =
+    assert(_valid_line(line), "Invalid line")
+    assert(is_vector(pt, len(line[0])), "Invalid point or incompatible dimensions.")
+    assert(is_bool(bounded) || is_bool_list(bounded,2), "Invalid value for \"bounded\"")
     let(
-        seglen = norm(ray[1]-ray[0]),
-        segvec = (ray[1]-ray[0])/seglen,
-        projection = (pt-ray[0]) * segvec
+        bounded = force_list(bounded,2)
     )
-    projection<=0 ? ray[0] :
-    ray[0] + projection*segvec;
-
-
-// Function: segment_closest_point()
-// Usage:
-//   pt = segment_closest_point(seg,pt);
-// Topics: Geometry, Segments, Distance
-// Description:
-//   Returns the point on the given 2D or 3D line segment `seg` that is closest to the given point `pt`.
-//   The `seg` and `pt` args should either both be 2D or both 3D.
-// Arguments:
-//   seg = A list of two points that are the endpoints of the bounded line segment.
-//   pt = The point to find the closest point on the segment to.
-// Example(2D):
-//   seg = [[-30,0],[30,30]];
-//   pt = [-32,-10];
-//   p2 = segment_closest_point(seg,pt);
-//   stroke(seg);
-//   color("blue") translate(pt) circle(r=1,$fn=12);
-//   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(2D):
-//   seg = [[-30,0],[30,30]];
-//   pt = [-5,0];
-//   p2 = segment_closest_point(seg,pt);
-//   stroke(seg);
-//   color("blue") translate(pt) circle(r=1,$fn=12);
-//   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(2D):
-//   seg = [[-30,0],[30,30]];
-//   pt = [40,25];
-//   p2 = segment_closest_point(seg,pt);
-//   stroke(seg);
-//   color("blue") translate(pt) circle(r=1,$fn=12);
-//   color("red") translate(p2) circle(r=1,$fn=12);
-// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
-//   seg = [[-30,-15,0],[30,15,30]];
-//   pt = [5,5,5];
-//   p2 = segment_closest_point(seg,pt);
-//   stroke(seg);
-//   color("blue") translate(pt) sphere(r=1,$fn=12);
-//   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
-//   seg = [[-30,-15,0],[30,15,30]];
-//   pt = [-35,-15,0];
-//   p2 = segment_closest_point(seg,pt);
-//   stroke(seg);
-//   color("blue") translate(pt) sphere(r=1,$fn=12);
-//   color("red") translate(p2) sphere(r=1,$fn=12);
-// Example(FlatSpin,VPD=200,VPT=[0,0,15]):
-//   seg = [[-30,-15,0],[30,15,30]];
-//   pt = [40,15,25];
-//   p2 = segment_closest_point(seg,pt);
-//   stroke(seg);
-//   color("blue") translate(pt) sphere(r=1,$fn=12);
-//   color("red") translate(p2) sphere(r=1,$fn=12);
-function segment_closest_point(seg,pt) =
-    assert( is_matrix(concat([pt],seg),3) ,
-            "Invalid point or segment or incompatible dimensions." )
-    pt + _closest_s1([seg[0]-pt, seg[1]-pt])[0];
-
+    bounded==[false,false] ?
+          let( n = unit( line[0]- line[1]) )
+          line[1] + ((pt- line[1]) * n) * n
+    : bounded == [true,true] ?
+          pt + _closest_s1([line[0]-pt, line[1]-pt])[0]
+    : 
+          let(
+               ray = bounded==[true,false] ? line : reverse(line),
+               seglen = norm(ray[1]-ray[0]),
+               segvec = (ray[1]-ray[0])/seglen,
+               projection = (pt-ray[0]) * segvec
+          )
+          projection<=0 ? ray[0] :
+                          ray[0] + projection*segvec;
+            
 
 // Function: line_from_points()
 // Usage:
@@ -2071,7 +1904,7 @@ function point_in_polygon(point, poly, nonzero=true, eps=EPSILON) =
             for (i = [0:1:len(poly)-1])
             let( seg = select(poly,i,i+1) )
             if (!approx(seg[0],seg[1],eps) )
-            point_on_segment2d(point, seg, eps=eps)? 1:0
+            point_on_segment(point, seg, eps=eps)? 1:0
         ]
     )
     sum(on_brd) > 0? 0 :

@@ -1369,11 +1369,10 @@ function triplet(list, wrap=false) =
 // Function: combinations()
 // Usage:
 //   list = combinations(l, [n]);
-//   for (p = combinations(l, [n])) ...
 // Topics: List Handling, Iteration
 // See Also: idx(), enumerate(), pair(), triplet(), permutations()
 // Description:
-//   Returns an ordered list of every unique permutation of `n` items out of the given list `l`.
+//   Returns a list of all of the (unordered) combinations of `n` items out of the given list `l`.
 //   For the list `[1,2,3,4]`, with `n=2`, this will return `[[1,2], [1,3], [1,4], [2,3], [2,4], [3,4]]`.
 //   For the list `[1,2,3,4]`, with `n=3`, this will return `[[1,2,3], [1,2,4], [1,3,4], [2,3,4]]`.
 // Arguments:
@@ -1395,21 +1394,17 @@ function combinations(l,n=2,_s=0) =
 // Function: permutations()
 // Usage:
 //   list = permutations(l, [n]);
-//   for (p = permutations(l, [n])) ...
 // Topics: List Handling, Iteration
 // See Also: idx(), enumerate(), pair(), triplet(), combinations()
 // Description:
-//   Returns an ordered list of every unique permutation of `n` items out of the given list `l`.
-//   For the list `[1,2,3,4]`, with `n=2`, this will return `[[1,2], [1,3], [1,4], [2,3], [2,4], [3,4]]`.
-//   For the list `[1,2,3,4]`, with `n=3`, this will return `[[1,2,3], [1,2,4], [1,3,4], [2,3,4]]`.
+//   Returns a list of all of the (ordered) permutation `n` items out of the given list `l`.  
+//   For the list `[1,2,3]`, with `n=2`, this will return `[[1,2],[1,3],[2,1],[2,3],[3,1],[3,2]]`
+//   For the list `[1,2,3]`, with `n=3`, this will return `[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]`
 // Arguments:
 //   l = The list to provide permutations for.
 //   n = The number of items in each permutation. Default: 2
 // Example:
-//   pairs = permutations([3,4,5,6]);  // Returns: [[3,4],[3,5],[3,6],[4,5],[4,6],[5,6]]
-//   triplets = permutations([3,4,5,6],n=3);  // Returns: [[3,4,5],[3,4,6],[3,5,6],[4,5,6]]
-// Example(2D):
-//   for (p=permutations(regular_ngon(n=7,d=100))) stroke(p);
+//   pairs = permutations([3,4,5,6]);  // // Returns: [[3,4],[3,5],[3,6],[4,3],[4,5],[4,6],[5,3],[5,4],[5,6],[6,3],[6,4],[6,5]]
 function permutations(l,n=2) =
     assert(is_list(l), "Invalid list." )
     assert( is_finite(n) && n>=1 && n<=len(l), "Invalid number `n`." )

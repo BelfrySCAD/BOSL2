@@ -899,7 +899,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
                 c = varr[ic]
             )
             if (!approx(a,b) && !approx(b,c) && !approx(a,c)) let(
-                pt = segment_closest_point([a,c],b)
+                pt = line_closest_point([a,c],b,SEGMENT)
             )
             if (approx(pt,b))
             _vnf_validate_err("T_JUNCTION", [b])
