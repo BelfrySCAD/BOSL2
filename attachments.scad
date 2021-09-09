@@ -232,7 +232,7 @@ module attach(from, to, overlap, norot=false)
     }
 }
 
-// Attachment Modifiers
+// Section: Attachment Modifiers
 
 // Module: tags()
 // Usage:
