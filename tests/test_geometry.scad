@@ -6,22 +6,18 @@ include <../std.scad>
 
 
 
-test_point_on_segment2d();
+test_point_on_segment();
 test_point_left_of_line2d();
 test_collinear();
 test_point_line_distance();
-test_point_segment_distance();
 test_segment_distance();
 test_line_normal();
 test_line_intersection();
-//test_line_ray_intersection();
-test_line_segment_intersection();
-//test_ray_intersection();
-//test_ray_segment_intersection();
-test_segment_intersection();
+//test_line_ray_intersection();   // should add this typ eof case
+//test_ray_intersection();    // should add this type of case
+//test_ray_segment_intersection();  // should add this type of case
 test_line_closest_point();
-//test_ray_closest_point();
-test_segment_closest_point();
+//test_ray_closest_point();   // should add this type of case
 test_line_from_points();
 test_tri_calc();
 //test_hyp_opp_to_adj();
@@ -302,35 +298,35 @@ module test_line_from_points() {
 }
 *test_line_from_points();
 
-module test_point_on_segment2d() { 
-    assert(point_on_segment2d([-15,0], [[-10,0], [10,0]]) == false);
-    assert(point_on_segment2d([-10,0], [[-10,0], [10,0]]) == true);
-    assert(point_on_segment2d([-5,0], [[-10,0], [10,0]]) == true);
-    assert(point_on_segment2d([0,0], [[-10,0], [10,0]]) == true);
-    assert(point_on_segment2d([3,3], [[-10,0], [10,0]]) == false);
-    assert(point_on_segment2d([5,0], [[-10,0], [10,0]]) == true);
-    assert(point_on_segment2d([10,0], [[-10,0], [10,0]]) == true);
-    assert(point_on_segment2d([15,0], [[-10,0], [10,0]]) == false);
+module test_point_on_segment() { 
+    assert(point_on_segment([-15,0], [[-10,0], [10,0]]) == false);
+    assert(point_on_segment([-10,0], [[-10,0], [10,0]]) == true);
+    assert(point_on_segment([-5,0], [[-10,0], [10,0]]) == true);
+    assert(point_on_segment([0,0], [[-10,0], [10,0]]) == true);
+    assert(point_on_segment([3,3], [[-10,0], [10,0]]) == false);
+    assert(point_on_segment([5,0], [[-10,0], [10,0]]) == true);
+    assert(point_on_segment([10,0], [[-10,0], [10,0]]) == true);
+    assert(point_on_segment([15,0], [[-10,0], [10,0]]) == false);
 
-    assert(point_on_segment2d([0,-15], [[0,-10], [0,10]]) == false);
-    assert(point_on_segment2d([0,-10], [[0,-10], [0,10]]) == true);
-    assert(point_on_segment2d([0, -5], [[0,-10], [0,10]]) == true);
-    assert(point_on_segment2d([0,  0], [[0,-10], [0,10]]) == true);
-    assert(point_on_segment2d([3,  3], [[0,-10], [0,10]]) == false);
-    assert(point_on_segment2d([0,  5], [[0,-10], [0,10]]) == true);
-    assert(point_on_segment2d([0, 10], [[0,-10], [0,10]]) == true);
-    assert(point_on_segment2d([0, 15], [[0,-10], [0,10]]) == false);
+    assert(point_on_segment([0,-15], [[0,-10], [0,10]]) == false);
+    assert(point_on_segment([0,-10], [[0,-10], [0,10]]) == true);
+    assert(point_on_segment([0, -5], [[0,-10], [0,10]]) == true);
+    assert(point_on_segment([0,  0], [[0,-10], [0,10]]) == true);
+    assert(point_on_segment([3,  3], [[0,-10], [0,10]]) == false);
+    assert(point_on_segment([0,  5], [[0,-10], [0,10]]) == true);
+    assert(point_on_segment([0, 10], [[0,-10], [0,10]]) == true);
+    assert(point_on_segment([0, 15], [[0,-10], [0,10]]) == false);
 
-    assert(point_on_segment2d([-15,-15], [[-10,-10], [10,10]]) == false);
-    assert(point_on_segment2d([-10,-10], [[-10,-10], [10,10]]) == true);
-    assert(point_on_segment2d([ -5, -5], [[-10,-10], [10,10]]) == true);
-    assert(point_on_segment2d([  0,  0], [[-10,-10], [10,10]]) == true);
-    assert(point_on_segment2d([  0,  3], [[-10,-10], [10,10]]) == false);
-    assert(point_on_segment2d([  5,  5], [[-10,-10], [10,10]]) == true);
-    assert(point_on_segment2d([ 10, 10], [[-10,-10], [10,10]]) == true);
-    assert(point_on_segment2d([ 15, 15], [[-10,-10], [10,10]]) == false);
+    assert(point_on_segment([-15,-15], [[-10,-10], [10,10]]) == false);
+    assert(point_on_segment([-10,-10], [[-10,-10], [10,10]]) == true);
+    assert(point_on_segment([ -5, -5], [[-10,-10], [10,10]]) == true);
+    assert(point_on_segment([  0,  0], [[-10,-10], [10,10]]) == true);
+    assert(point_on_segment([  0,  3], [[-10,-10], [10,10]]) == false);
+    assert(point_on_segment([  5,  5], [[-10,-10], [10,10]]) == true);
+    assert(point_on_segment([ 10, 10], [[-10,-10], [10,10]]) == true);
+    assert(point_on_segment([ 15, 15], [[-10,-10], [10,10]]) == false);
 }
-*test_point_on_segment2d();
+*test_point_on_segment();
 
 
 module test_point_left_of_line2d() {
@@ -359,15 +355,10 @@ module test_point_line_distance() {
     assert_approx(point_line_distance([-1,-1,-1], [[-10,-10,-10], [10,10,10]]), 0);
     assert_approx(point_line_distance([1,-1,0], [[-10,-10,-10], [10,10,10]]), sqrt(2));
     assert_approx(point_line_distance([8,-8,0], [[-10,-10,-10], [10,10,10]]), 8*sqrt(2));
+    assert_approx(point_line_distance([3,8], [[-10,0], [10,0]],SEGMENT), 8);
+    assert_approx(point_line_distance([14,3], [[-10,0], [10,0]],SEGMENT), 5);
 }
 *test_point_line_distance();
-
-
-module test_point_segment_distance() {
-    assert_approx(point_segment_distance([3,8], [[-10,0], [10,0]]), 8);
-    assert_approx(point_segment_distance([14,3], [[-10,0], [10,0]]), 5);
-}
-*test_point_segment_distance();
 
 
 module test_segment_distance() {
@@ -418,39 +409,18 @@ module test_line_intersection() {
     assert(line_intersection([[-10,-10], [ -1, -1]], [[ 10,-10], [  1, -1]]) == [0,0]);
     assert(line_intersection([[-10,-10], [ 10, 10]], [[ 10,-10], [-10, 10]]) == [0,0]);
     assert(line_intersection([[ -8,  0], [ 12,  4]], [[ 12,  0], [ -8,  4]]) == [2,2]);
+    assert(line_intersection([[-10,-10], [ -1,-10]], [[ 10,-10], [  1,-10]],LINE,SEGMENT) == undef);
+    assert(line_intersection([[-10,  0], [ -1,  0]], [[ 10,  0], [  1,  0]],LINE,SEGMENT) == undef);
+    assert(line_intersection([[-10,  0], [ -1,  0]], [[  1,  0], [ 10,  0]],LINE,SEGMENT) == undef);
+    assert(line_intersection([[-10,  0], [ 10,  0]], [[-10,  0], [ 10,  0]],LINE,SEGMENT) == undef);
+    assert(line_intersection([[-10, 10], [ 10, 10]], [[-10,-10], [ 10,-10]],LINE,SEGMENT) == undef);
+    assert(line_intersection([[-10,-10], [ -1, -1]], [[ 10,-10], [  1, -1]],LINE,SEGMENT) == undef);
+    assert(line_intersection([[-10,-10], [ 10, 10]], [[ 10,-10], [-10, 10]],LINE,SEGMENT) == [0,0]);
+    assert(line_intersection([[ -8,  0], [ 12,  4]], [[ 12,  0], [ -8,  4]],LINE,SEGMENT) == [2,2]);
+    assert(line_intersection([[-10,-10], [ 10, 10]], [[ 10,-10], [  1, -1]],LINE,SEGMENT) == undef);
+    assert(line_intersection([[-10,-10], [ 10, 10]], [[ 10,-10], [ -1,  1]],LINE,SEGMENT) == [0,0]);
 }
 *test_line_intersection();
-
-
-module test_segment_intersection() {
-    assert(segment_intersection([[-10,-10], [ -1, -1]], [[ 10,-10], [  1, -1]]) == undef);
-    assert(segment_intersection([[-10,-10], [ -1,-10]], [[ 10,-10], [  1,-10]]) == undef);
-    assert(segment_intersection([[-10,  0], [ -1,  0]], [[ 10,  0], [  1,  0]]) == undef);
-    assert(segment_intersection([[-10,  0], [ -1,  0]], [[  1,  0], [ 10,  0]]) == undef);
-    assert(segment_intersection([[-10, 10], [ -1,  1]], [[ 10, 10], [  1,  1]]) == undef);
-    assert(segment_intersection([[-10,  0], [ 10,  0]], [[-10,  0], [ 10,  0]]) == undef);
-    assert(segment_intersection([[-10, 10], [ 10, 10]], [[-10,-10], [ 10,-10]]) == undef);
-    assert(segment_intersection([[-10,  0], [  0, 10]], [[  0, 10], [ 10,  0]]) == [0,10]);
-    assert(segment_intersection([[-10,  0], [  0, 10]], [[-10, 20], [ 10,  0]]) == [0,10]);
-    assert(segment_intersection([[-10,-10], [ 10, 10]], [[ 10,-10], [-10, 10]]) == [0,0]);
-    assert(segment_intersection([[ -8,  0], [ 12,  4]], [[ 12,  0], [ -8,  4]]) == [2,2]);
-}
-*test_segment_intersection();
-
-
-module test_line_segment_intersection() {
-    assert(line_segment_intersection([[-10,-10], [ -1,-10]], [[ 10,-10], [  1,-10]]) == undef);
-    assert(line_segment_intersection([[-10,  0], [ -1,  0]], [[ 10,  0], [  1,  0]]) == undef);
-    assert(line_segment_intersection([[-10,  0], [ -1,  0]], [[  1,  0], [ 10,  0]]) == undef);
-    assert(line_segment_intersection([[-10,  0], [ 10,  0]], [[-10,  0], [ 10,  0]]) == undef);
-    assert(line_segment_intersection([[-10, 10], [ 10, 10]], [[-10,-10], [ 10,-10]]) == undef);
-    assert(line_segment_intersection([[-10,-10], [ -1, -1]], [[ 10,-10], [  1, -1]]) == undef);
-    assert(line_segment_intersection([[-10,-10], [ 10, 10]], [[ 10,-10], [-10, 10]]) == [0,0]);
-    assert(line_segment_intersection([[ -8,  0], [ 12,  4]], [[ 12,  0], [ -8,  4]]) == [2,2]);
-    assert(line_segment_intersection([[-10,-10], [ 10, 10]], [[ 10,-10], [  1, -1]]) == undef);
-    assert(line_segment_intersection([[-10,-10], [ 10, 10]], [[ 10,-10], [ -1,  1]]) == [0,0]);
-}
-*test_line_segment_intersection();
 
 
 module test_line_closest_point() {
@@ -459,19 +429,14 @@ module test_line_closest_point() {
     assert(approx(line_closest_point([[-10,-20], [10,20]], [1,2]+[-2,1]), [1,2]));
     assert(approx(line_closest_point([[-10,-20], [10,20]], [1,2]+[2,-1]), [1,2]));
     assert(approx(line_closest_point([[-10,-20], [10,20]], [13,31]), [15,30]));
+    assert(approx(line_closest_point([[-10,-10], [10,10]], [1,-1],SEGMENT), [0,0]));
+    assert(approx(line_closest_point([[-10,-10], [10,10]], [-1,1],SEGMENT), [0,0]));
+    assert(approx(line_closest_point([[-10,-20], [10,20]], [1,2]+[-2,1],SEGMENT), [1,2]));
+    assert(approx(line_closest_point([[-10,-20], [10,20]], [1,2]+[2,-1],SEGMENT), [1,2]));
+    assert(approx(line_closest_point([[-10,-20], [10,20]], [13,31],SEGMENT), [10,20]));
+    assert(approx(line_closest_point([[-10,-20], [10,20]], [15,25],SEGMENT), [10,20]));
 }
 *test_line_closest_point();
-
-
-module test_segment_closest_point() {
-    assert(approx(segment_closest_point([[-10,-10], [10,10]], [1,-1]), [0,0]));
-    assert(approx(segment_closest_point([[-10,-10], [10,10]], [-1,1]), [0,0]));
-    assert(approx(segment_closest_point([[-10,-20], [10,20]], [1,2]+[-2,1]), [1,2]));
-    assert(approx(segment_closest_point([[-10,-20], [10,20]], [1,2]+[2,-1]), [1,2]));
-    assert(approx(segment_closest_point([[-10,-20], [10,20]], [13,31]), [10,20]));
-    assert(approx(segment_closest_point([[-10,-20], [10,20]], [15,25]), [10,20]));
-}
-*test_segment_closest_point();
 
 module test_circle_2tangents() {
 //** missing tests with arg tangent=true
