@@ -1689,9 +1689,10 @@ function furthest_point(pt, points) =
 //   area = polygon_area(poly);
 // Topics: Geometry, Polygons, Area
 // Description:
-//   Given a 2D or 3D planar polygon, returns the area of that polygon.
-//   If the polygon is self-crossing, the results are undefined. For non-planar 3D polygon the result is `undef`.
-//   When `signed` is true, a signed area is returned; a positive area indicates a clockwise polygon.
+//   Given a 2D or 3D simple planar polygon, returns the area of that polygon.
+//   If the polygon is self-intersecting or non-planar, the result is `undef.` 
+//   When `signed` is true and the polygon is 2d, a signed area is returned: a positive area indicates a counter-clockwise polygon.
+//   The area of 3d polygons is always nonnegative.  
 // Arguments:
 //   poly = Polygon to compute the area of.
 //   signed = If true, a signed area is returned. Default: false.
@@ -1706,7 +1707,7 @@ function polygon_area(poly, signed=false) =
         let(
             n = plane_normal(plane),  
             total = 
-                sum([ for(i=[1:1:len(poly)-2])
+                -sum([ for(i=[1:1:len(poly)-2])
                         cross(poly[i]-poly[0], poly[i+1]-poly[0]) 
                     ]) * n/2
         ) 

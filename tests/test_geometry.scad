@@ -32,7 +32,6 @@ test_tri_calc();
 //test_hyp_adj_to_ang();
 //test_hyp_opp_to_ang();
 //test_adj_opp_to_ang();
-test_triangle_area();
 test_plane3pt();
 test_plane3pt_indexed();
 test_plane_from_normal();
@@ -649,13 +648,6 @@ module test_hyp_opp_to_ang() nil();  // Covered in test_tri_functions()
 module test_adj_opp_to_ang() nil();  // Covered in test_tri_functions()
 
 
-module test_triangle_area() {
-    assert(abs(triangle_area([0,0], [0,10], [10,0]) + 50) < EPSILON);
-    assert(abs(triangle_area([0,0], [0,10], [0,15])) < EPSILON);
-    assert(abs(triangle_area([0,0], [10,0], [0,10]) - 50) < EPSILON);
-}
-*test_triangle_area();
-
 
 module test_plane3pt() {
     assert_approx(plane3pt([0,0,20], [0,10,10], [0,0,0]), [1,0,0,0]);
@@ -817,6 +809,10 @@ module test_polygon_area() {
     assert(approx(polygon_area(rot([13,27,75],
                                p=path3d(circle(r=50,$fn=1000),fill=23)),
                                signed=true), -PI*50*50, eps=0.1));
+    assert(abs(triangle_area([0,0], [0,10], [10,0]) + 50) < EPSILON);
+    assert(abs(triangle_area([0,0], [0,10], [0,15])) < EPSILON);
+    assert(abs(triangle_area([0,0], [10,0], [0,10]) - 50) < EPSILON);
+    
 }
 *test_polygon_area();
 
