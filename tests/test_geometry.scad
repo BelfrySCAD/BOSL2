@@ -51,7 +51,7 @@ test_polygon_line_intersection();
 test_plane_intersection();
 test_coplanar();
 test_points_on_plane();
-test_in_front_of_plane();
+test_above_plane();
 test_circle_2tangents();
 test_circle_3points();
 test_circle_point_tangents();
@@ -754,17 +754,17 @@ module test_coplanar() {
 *test_coplanar();
 
 
-module test_in_front_of_plane() {
+module test_above_plane() {
     plane = plane3pt([0,0,0], [0,10,10], [10,0,10]);
-    assert(in_front_of_plane(plane, [5,5,10]) == false);
-    assert(in_front_of_plane(plane, [-5,0,0]) == true);
-    assert(in_front_of_plane(plane, [5,0,0]) == false);
-    assert(in_front_of_plane(plane, [0,-5,0]) == true);
-    assert(in_front_of_plane(plane, [0,5,0]) == false);
-    assert(in_front_of_plane(plane, [0,0,5]) == true);
-    assert(in_front_of_plane(plane, [0,0,-5]) == false);
+    assert(above_plane(plane, [5,5,10]) == false);
+    assert(above_plane(plane, [-5,0,0]) == true);
+    assert(above_plane(plane, [5,0,0]) == false);
+    assert(above_plane(plane, [0,-5,0]) == true);
+    assert(above_plane(plane, [0,5,0]) == false);
+    assert(above_plane(plane, [0,0,5]) == true);
+    assert(above_plane(plane, [0,0,-5]) == false);
 }
-*test_in_front_of_plane();
+*test_above_plane();
 
 
 module test_is_path() {
@@ -808,7 +808,7 @@ module test_polygon_area() {
     assert(approx(polygon_area(circle(r=50,$fn=1000),signed=true), -PI*50*50, eps=0.1));
     assert(approx(polygon_area(rot([13,27,75],
                                p=path3d(circle(r=50,$fn=1000),fill=23)),
-                               signed=true), -PI*50*50, eps=0.1));
+                               signed=true), PI*50*50, eps=0.1));
     assert(abs(triangle_area([0,0], [0,10], [10,0]) + 50) < EPSILON);
     assert(abs(triangle_area([0,0], [0,10], [0,15])) < EPSILON);
     assert(abs(triangle_area([0,0], [10,0], [0,10]) - 50) < EPSILON);

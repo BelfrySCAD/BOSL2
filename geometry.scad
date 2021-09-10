@@ -1003,10 +1003,10 @@ function plane_point_nearest_origin(plane) =
 // Description:
 //   Given a plane as [A,B,C,D] where the cartesian equation for that plane
 //   is Ax+By+Cz=D, determines how far from that plane the given point is.
-//   The returned distance will be positive if the point is in front of the
-//   plane; on the same side of the plane as the normal of that plane points
-//   towards.  If the point is behind the plane, then the distance returned
-//   will be negative.  The normal of the plane is the same as [A,B,C].
+//   The returned distance will be positive if the point is above the
+//   plane, meaning on the side where the plane normal points.  
+//   If the point is below the plane, then the distance returned
+//   will be negative.  The normal of the plane is [A,B,C].
 // Arguments:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
 //   point = The distance evaluation point.
@@ -1049,7 +1049,7 @@ function normalize_plane(plane) =
 // Topics: Geometry, Planes, Lines, Angle
 // Description:
 //   Compute the angle between a plane [A, B, C, D] and a 3d line, specified as a pair of 3d points [p1,p2].
-//   The resulting angle is signed, with the sign positive if the vector p2-p1 lies on
+//   The resulting angle is signed, with the sign positive if the vector p2-p1 lies above the plane, on
 //   the same side of the plane as the plane's normal vector.
 function plane_line_angle(plane, line) =
     assert( _valid_plane(plane), "Invalid plane." )
@@ -1226,7 +1226,7 @@ function points_on_plane(points, plane, eps=EPSILON) =
     _pointlist_greatest_distance(points,plane) < eps;
 
 
-// Function: in_front_of_plane()
+// Function: above_plane()
 // Usage:
 //   test = in_front_of_plane(plane, point);
 // Topics: Geometry, Planes
@@ -1238,7 +1238,7 @@ function points_on_plane(points, plane, eps=EPSILON) =
 // Arguments:
 //   plane = The [A,B,C,D] coefficients for the first plane equation `Ax+By+Cz=D`.
 //   point = The 3D point to test.
-function in_front_of_plane(plane, point) =
+function above_plane(plane, point) =
     point_plane_distance(plane, point) > EPSILON;
 
 
