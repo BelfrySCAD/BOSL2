@@ -773,35 +773,6 @@ function _split_polygon_at_y(poly, y) =
     ) out;
 
 
-function _split_polygon_at_z(poly, z) =
-    let(
-        zs = subindex(poly,2)
-    ) (min(zs) >= z || max(zs) <= z)? [poly] :
-    let(
-        poly2 = [
-            for (p = pair(poly,true)) each [
-                p[0],
-                if(
-                    (p[0].z < z && p[1].z > z) ||
-                    (p[1].z < z && p[0].z > z)
-                ) let(
-                    u = (z - p[0].z) / (p[1].z - p[0].z)
-                ) [
-                    u*(p[1].x-p[0].x)+p[0].x,
-                    u*(p[1].y-p[0].y)+p[0].y,
-                    z,  // Important for later exact match tests
-                ]
-            ]
-        ],
-        out1 = [for (p = poly2) if(p.z <= z) p],
-        out2 = [for (p = poly2) if(p.z >= z) p],
-        out3 = [
-            if (len(out1)>=3) each split_path_at_self_crossings(close_path(out1), closed=false),
-            if (len(out2)>=3) each split_path_at_self_crossings(close_path(out2), closed=false),
-        ],
-        out = [for (p=out3) if (len(p) > 2) cleanup_path(p)]
-    ) out;
-
 
 /// Function: _split_polygons_at_each_x()
 // Usage:
@@ -844,26 +815,6 @@ function _split_polygons_at_each_y(polys, ys, _i=0) =
         ], ys, _i=_i+1
     );
 
-
-/// Internal Function: _split_polygons_at_each_z()
-// Usage:
-//   splitpolys = split_polygons_at_each_z(polys, zs);
-/// Topics: Geometry, Polygons, Intersections
-// Description:
-//   Given a list of 3D polygons, splits all of them wherever they cross any Z value given in `zs`.
-// Arguments:
-//   polys = A list of 3D polygons to split.
-//   zs = A list of scalar Z values to split at.
-function split_polygons_at_each_z(polys, zs, _i=0) =
-    assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
-    assert( is_vector(zs), "The split value list should contain only numbers." )
-    _i>=len(zs)? polys :
-    split_polygons_at_each_z(
-        [
-            for (poly = polys)
-            each _split_polygon_at_z(poly, zs[_i])
-        ], zs, _i=_i+1
-    );
 
 
 // Function&Module: vnf_validate()

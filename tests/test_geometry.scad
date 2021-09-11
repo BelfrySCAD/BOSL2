@@ -7,7 +7,6 @@ include <../std.scad>
 
 
 test_point_on_segment();
-test_point_left_of_line2d();
 test_collinear();
 test_point_line_distance();
 test_segment_distance();
@@ -31,7 +30,6 @@ test_point_plane_distance();
 
 test__general_plane_line_intersection();
 test_plane_line_angle();
-test_normalize_plane();
 test_plane_line_intersection();
 test_polygon_line_intersection();
 test_plane_intersection();
@@ -90,13 +88,13 @@ function info_str(list,i=0,string=chr(10)) =
     : info_str(list,i+1,str(string,str(list[i][0],_valstr(list[i][1]),chr(10))));
 
 
-module test_normalize_plane(){
+module test__normalize_plane(){
     plane = rands(-5,5,4,seed=333)+[10,0,0,0];
-    plane2 = normalize_plane(plane);
+    plane2 = _normalize_plane(plane);
     assert_approx(norm(point3d(plane2)),1);
     assert_approx(plane*plane2[3],plane2*plane[3]);
 }
-*test_normalize_plane();
+test__normalize_plane();
 
 module test_plane_line_intersection(){
     line = [rands(-1,1,3,seed=74),rands(-1,1,3,seed=99)+[2,0,0]];
@@ -148,7 +146,7 @@ module test_plane_intersection(){
 module test_plane_offset(){
     plane = rands(-1,1,4)+[2,0,0,0]; // a valid plane
     info = info_str([["plane = ",plane]]);
-    assert_approx(plane_offset(plane), normalize_plane(plane)[3],info);
+    assert_approx(plane_offset(plane), _normalize_plane(plane)[3],info);
     assert_approx(plane_offset([1,1,1,1]), 1/sqrt(3),info);
 }
 *test_plane_offset();
@@ -301,12 +299,12 @@ module test_point_on_segment() {
 *test_point_on_segment();
 
 
-module test_point_left_of_line2d() {
-    assert(point_left_of_line2d([ -3,  0], [[-10,-10], [10,10]]) > 0);
-    assert(point_left_of_line2d([  0,  0], [[-10,-10], [10,10]]) == 0);
-    assert(point_left_of_line2d([  3,  0], [[-10,-10], [10,10]]) < 0);
+module test__point_left_of_line2d() {
+    assert(_point_left_of_line2d([ -3,  0], [[-10,-10], [10,10]]) > 0);
+    assert(_point_left_of_line2d([  0,  0], [[-10,-10], [10,10]]) == 0);
+    assert(_point_left_of_line2d([  3,  0], [[-10,-10], [10,10]]) < 0);
 }
-*test_point_left_of_line2d();
+test__point_left_of_line2d();
 
 module test_collinear() {
     assert(collinear([-10,-10], [-15, -16], [10,10]) == false);
