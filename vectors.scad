@@ -132,6 +132,28 @@ function v_lookup(x, v) =
     lerp(lo,hi,u);
 
 
+// Function: pointlist_bounds()
+// Usage:
+//   pt_pair = pointlist_bounds(pts);
+// Topics: Geometry, Bounding Boxes, Bounds
+// Description:
+//   Finds the bounds containing all the points in `pts` which can be a list of points in any dimension.
+//   Returns a list of two items: a list of the minimums and a list of the maximums.  For example, with
+//   3d points `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
+// Arguments:
+//   pts = List of points.
+function pointlist_bounds(pts) =
+    assert(is_path(pts,dim=undef,fast=true) , "Invalid pointlist." )
+    let(
+        select = ident(len(pts[0])),
+        spread = [
+            for(i=[0:len(pts[0])-1])
+            let( spreadi = pts*select[i] )
+            [ min(spreadi), max(spreadi) ]
+        ]
+    ) transpose(spread);
+
+
 // Function: unit()
 // Usage:
 //   unit(v, [error]);
@@ -241,7 +263,39 @@ function vector_axis(v1,v2=undef,v3=undef) =
 
 
 
+
 // Section: Vector Searching
+
+
+
+// Function: closest_point()
+// Usage:
+//   index = closest_point(pt, points);
+// Topics: Geometry, Points, Distance
+// Description:
+//   Given a list of `points`, finds the index of the closest point to `pt`.
+// Arguments:
+//   pt = The point to find the closest point to.
+//   points = The list of points to search.
+function closest_point(pt, points) =
+    assert( is_vector(pt), "Invalid point." )
+    assert(is_path(points,dim=len(pt)), "Invalid pointlist or incompatible dimensions." )
+    min_index([for (p=points) norm(p-pt)]);
+
+
+// Function: furthest_point()
+// Usage:
+//   index = furthest_point(pt, points);
+// Topics: Geometry, Points, Distance
+// Description:
+//   Given a list of `points`, finds the index of the furthest point from `pt`.
+// Arguments:
+//   pt = The point to find the farthest point from.
+//   points = The list of points to search.
+function furthest_point(pt, points) =
+    assert( is_vector(pt), "Invalid point." )
+    assert(is_path(points,dim=len(pt)), "Invalid pointlist or incompatible dimensions." )
+    max_index([for (p=points) norm(p-pt)]);
 
 
 // Function: vector_search()

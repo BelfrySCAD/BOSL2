@@ -969,7 +969,7 @@ function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edg
    assert(!closed || !caps, "Cannot make closed shape with caps")
    let(
         profile = ccw_polygon(shape),
-        flip = closed && polygon_is_clockwise(path) ? -1 : 1,
+        flip = closed && is_polygon_clockwise(path) ? -1 : 1,
         path = flip ? reverse(path) : path,
         proflist= transpose(
                      [for(pt = profile)

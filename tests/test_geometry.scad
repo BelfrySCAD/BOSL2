@@ -43,9 +43,6 @@ test_circle_3points();
 test_circle_point_tangents();
 
 test_noncollinear_triple();
-test_pointlist_bounds();
-test_closest_point();
-test_furthest_point();
 test_polygon_area();
 test_is_convex_polygon();
 test_polygon_shift();
@@ -54,7 +51,7 @@ test_reindex_polygon();
 test_align_polygon();
 test_centroid();
 test_point_in_polygon();
-test_polygon_is_clockwise();
+test_is_polygon_clockwise();
 test_clockwise_polygon();
 test_ccw_polygon();
 test_reverse_polygon();
@@ -848,69 +845,14 @@ module test_point_in_polygon() {
 *test_point_in_polygon();
 
 
-module test_pointlist_bounds() {
-    pts = [
-        [-53,27,12],
-        [-63,97,36],
-        [84,-32,-5],
-        [63,-24,42],
-        [23,57,-42]
-    ];
-    assert(pointlist_bounds(pts) == [[-63,-32,-42], [84,97,42]]);
-    pts2d = [
-        [-53,12],
-        [-63,36],
-        [84,-5],
-        [63,42],
-        [23,-42] 
-    ];
-    assert(pointlist_bounds(pts2d) == [[-63,-42],[84,42]]);
-    pts5d = [
-        [-53, 27, 12,-53, 12],
-        [-63, 97, 36,-63, 36],
-        [ 84,-32, -5, 84, -5], 
-        [ 63,-24, 42, 63, 42], 
-        [ 23, 57,-42, 23,-42]
-    ];
-    assert(pointlist_bounds(pts5d) == [[-63,-32,-42,-63,-42],[84,97,42,84,42]]);
-    assert(pointlist_bounds([[3,4,5,6]]), [[3,4,5,6],[3,4,5,6]]);
+
+module test_is_polygon_clockwise() {
+    assert(is_polygon_clockwise([[-1,1],[1,1],[1,-1],[-1,-1]]));
+    assert(!is_polygon_clockwise([[1,1],[-1,1],[-1,-1],[1,-1]]));
+    assert(is_polygon_clockwise(circle(d=100)));
+    assert(is_polygon_clockwise(square(100)));
 }
-*test_pointlist_bounds();
-
-
-module test_closest_point() {
-    ptlist = [for (i=count(100)) rands(-100,100,2,seed_value=8463+i)];
-    testpts = [for (i=count(100)) rands(-100,100,2,seed_value=6834+i)];
-    for (pt = testpts) {
-        pidx = closest_point(pt,ptlist);
-        dists = [for (p=ptlist) norm(pt-p)];
-        mindist = min(dists);
-        assert(mindist == dists[pidx]);
-    }
-}
-*test_closest_point();
-
-
-module test_furthest_point() {
-    ptlist = [for (i=count(100)) rands(-100,100,2,seed_value=8463+i)];
-    testpts = [for (i=count(100)) rands(-100,100,2,seed_value=6834+i)];
-    for (pt = testpts) {
-        pidx = furthest_point(pt,ptlist);
-        dists = [for (p=ptlist) norm(pt-p)];
-        mindist = max(dists);
-        assert(mindist == dists[pidx]);
-    }
-}
-*test_furthest_point();
-
-
-module test_polygon_is_clockwise() {
-    assert(polygon_is_clockwise([[-1,1],[1,1],[1,-1],[-1,-1]]));
-    assert(!polygon_is_clockwise([[1,1],[-1,1],[-1,-1],[1,-1]]));
-    assert(polygon_is_clockwise(circle(d=100)));
-    assert(polygon_is_clockwise(square(100)));
-}
-*test_polygon_is_clockwise();
+*test_is_polygon_clockwise();
 
 
 module test_clockwise_polygon() {

@@ -721,7 +721,7 @@ function offset(
     is_region(path)? (
         assert(!return_faces, "return_faces not supported for regions.")
         let(
-            path = [for (p=path) polygon_is_clockwise(p)? p : reverse(p)],
+            path = [for (p=path) clockwise_polygon(p)],
             rgn = exclusive_or([for (p = path) [p]]),
             pathlist = sort(idx=0,[
                 for (i=[0:1:len(rgn)-1]) [
@@ -743,7 +743,7 @@ function offset(
     let(
         chamfer = is_def(r) ? false : chamfer,
         quality = max(0,round(quality)),
-        flip_dir = closed && !polygon_is_clockwise(path)? -1 : 1,
+        flip_dir = closed && !is_polygon_clockwise(path)? -1 : 1,
         d = flip_dir * (is_def(r) ? r : delta),
         shiftsegs = [for(i=[0:len(path)-1]) _shift_segment(select(path,i,i+1), d)],
         // good segments are ones where no point on the segment is less than distance d from any point on the path
