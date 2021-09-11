@@ -26,8 +26,7 @@ test_plane_from_points();
 test_plane_from_polygon();
 test_plane_normal();
 test_plane_offset();
-test_projection_on_plane();
-test_plane_point_nearest_origin();
+test_plane_closest_point();
 test_point_plane_distance();
 
 test__general_plane_line_intersection();
@@ -149,16 +148,6 @@ module test_plane_intersection(){
 *test_plane_intersection();
 
 
-module test_plane_point_nearest_origin(){
-    point = rands(-1,1,3)+[2,0,0]; // a non zero vector
-    plane = [ each point, point*point]; // a plane containing `point`
-    info = info_str([["point = ",point],["plane = ",plane]]);
-    assert_approx(plane_point_nearest_origin(plane),point,info);
-    assert_approx(plane_point_nearest_origin([each point,5]),5*unit(point)/norm(point),info);
-}
-test_plane_point_nearest_origin();
-
-
 module test_plane_offset(){
     plane = rands(-1,1,4)+[2,0,0,0]; // a valid plane
     info = info_str([["plane = ",plane]]);
@@ -248,14 +237,14 @@ module test_points_on_plane() {
     ang     = rands(0,360,1)[0];
     normal  = rot(a=ang,p=normal0);
     plane   = [each normal, normal*dir];
-    prj_pts = projection_on_plane(plane,pts);
+    prj_pts = plane_closest_point(plane,pts);
     info = info_str([["pts = ",pts],["dir = ",dir],["ang = ",ang]]);
     assert(points_on_plane(prj_pts,plane),info);
     assert(!points_on_plane(concat(pts,[normal-dir]),plane),info);
 }
 *test_points_on_plane();
 
-module test_projection_on_plane(){
+module test_plane_closest_point(){
     ang     = rands(0,360,1)[0];
     dir     = rands(-10,10,3);
     normal0 = unit([1,2,3]);
@@ -265,16 +254,16 @@ module test_projection_on_plane(){
     planem  = [each normal, normal*dir];
     pts     = [for(i=[1:10]) rands(-1,1,3)];
     info = info_str([["ang = ",ang],["dir = ",dir]]);
-    assert_approx( projection_on_plane(plane,pts),
-                   projection_on_plane(plane,projection_on_plane(plane,pts)),info);
-    assert_approx( projection_on_plane(plane,pts),
-                   rot(a=ang,p=projection_on_plane(plane0,rot(a=-ang,p=pts))),info);    
-    assert_approx( move((-normal*dir)*normal,p=projection_on_plane(planem,pts)),
-                   projection_on_plane(plane,pts),info);
-    assert_approx( move((normal*dir)*normal,p=projection_on_plane(plane,pts)),
-                   projection_on_plane(planem,pts),info);
+    assert_approx( plane_closest_point(plane,pts),
+                   plane_closest_point(plane,plane_closest_point(plane,pts)),info);
+    assert_approx( plane_closest_point(plane,pts),
+                   rot(a=ang,p=plane_closest_point(plane0,rot(a=-ang,p=pts))),info);    
+    assert_approx( move((-normal*dir)*normal,p=plane_closest_point(planem,pts)),
+                   plane_closest_point(plane,pts),info);
+    assert_approx( move((normal*dir)*normal,p=plane_closest_point(plane,pts)),
+                   plane_closest_point(planem,pts),info);
 }
-*test_projection_on_plane();
+*test_plane_closest_point();
 
 module test_line_from_points() {
     assert_approx(line_from_points([[1,0],[0,0],[-1,0]]),[[-1,0],[1,0]]);

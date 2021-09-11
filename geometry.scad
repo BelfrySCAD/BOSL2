@@ -155,15 +155,18 @@ function line_normal(p1,p2) =
 // of the intersection point along s2.  The proportional values run over
 // the range of 0 to 1 for each segment, so if it is in this range, then
 // the intersection lies on the segment.  Otherwise it lies somewhere on
-// the extension of the segment.  Result is undef for coincident lines.
+// the extension of the segment.  If lines are parallel or coincident then
+// it returns undef.
 function _general_line_intersection(s1,s2,eps=EPSILON) =
     let(
         denominator = det2([s1[0],s2[0]]-[s1[1],s2[1]])
-    ) approx(denominator,0,eps=eps)? [undef,undef,undef] :
+    )
+    approx(denominator,0,eps=eps) ? undef :
     let(
         t = det2([s1[0],s2[0]]-s2) / denominator,
         u = det2([s1[0],s1[0]]-[s2[0],s1[1]]) / denominator
-    ) [s1[0]+t*(s1[1]-s1[0]), t, u];
+    )
+    [s1[0]+t*(s1[1]-s1[0]), t, u];
 
 
 
@@ -215,7 +218,7 @@ function line_intersection(line1, line2, bounded1, bounded2, bounded, eps=EPSILO
     assert( is_undef(bounded1) || is_bool(bounded1) || is_bool_list(bounded1,2), "Invalid value for \"bounded1\"")
     assert( is_undef(bounded2) || is_bool(bounded2) || is_bool_list(bounded2,2), "Invalid value for \"bounded2\"")
     let(isect = _general_line_intersection(line1,line2,eps=eps))
-    is_undef(isect[0]) ? undef :
+    is_undef(isect) ? undef :
     let(
         bounded1 = force_list(first_defined([bounded1,bounded,false]),2),
         bounded2 = force_list(first_defined([bounded2,bounded,false]),2),
@@ -390,7 +393,8 @@ function plane3pt_indexed(points, i1, i2, i3) =
 //   plane = plane_from_normal(normal, [pt])
 // Topics: Geometry, Planes
 // Description:
-//   Returns a plane defined by a normal vector and a point.
+//   Returns a plane defined by a normal vector and a point.  If you omit `pt` you will get a plane
+//   passing through the origin.  
 // Arguments:
 //   normal = Normal vector to the plane to find.
 //   pt = Point 3D on the plane to find.
@@ -503,10 +507,13 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
 function plane_from_polygon(poly, fast=false, eps=EPSILON) =
     assert( is_path(poly,dim=3), "Invalid polygon." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    len(poly)==3 ? plane3pt(poly[0],poly[1],poly[2]) :
-    let( triple = sort(noncollinear_triple(poly,error=false)) )
-    triple==[] ? [] :
-    let( plane = plane3pt(poly[triple[0]],poly[triple[1]],poly[triple[2]]))
+    let(
+        poly_normal = polygon_normal(poly)
+    )
+    is_undef(poly_normal) ? [] :
+    let(
+        plane = plane_from_normal(poly_normal, poly[0])
+    )
     fast? plane: points_on_plane(poly, plane, eps=eps)? plane: [];
 
 
@@ -539,13 +546,13 @@ function plane_offset(plane) =
 
 
 
-// Function: projection_on_plane()
+// Function: plane_closest_point()
 // Usage:
-//   pts = projection_on_plane(plane, points);
+//   pts = plane_closest_point(plane, points);
 // Topics: Geometry, Planes, Projection
 // Description:
 //   Given a plane definition `[A,B,C,D]`, where `Ax+By+Cz=D`, and a list of 2d or
-//   3d points, return the 3D orthogonal projection of the points on the plane.
+//   3d points, return the closest 3D orthogonal projection of the points on the plane.
 //   In other words, for every point given, returns the closest point to it on the plane.
 // Arguments:
 //   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
@@ -553,7 +560,7 @@ function plane_offset(plane) =
 // Example(FlatSpin,VPD=500,VPT=[2,20,10]):
 //   points = move([10,20,30], p=yrot(25, p=path3d(circle(d=100, $fn=36))));
 //   plane = plane_from_normal([1,0,1]);
-//   proj = projection_on_plane(plane,points);
+//   proj = plane_closest_point(plane,points);
 //   color("red") move_copies(points) sphere(d=2,$fn=12);
 //   color("blue") move_copies(proj) sphere(d=2,$fn=12);
 //   move(centroid(proj)) {
@@ -562,30 +569,15 @@ function plane_offset(plane) =
 //           %cube([120,150,0.1],center=true);
 //       }
 //   }
-function projection_on_plane(plane, points) =
+function plane_closest_point(plane, points) =
+    is_vector(points,3) ? plane_closest_point(plane,[points])[0] :
     assert( _valid_plane(plane), "Invalid plane." )
-    assert( is_matrix(points,undef,3), "Invalid list of points or dimension." )
+    assert( is_matrix(points,undef,3), "Must supply 3D points.")
     let(
-        p  = len(points[0])==2
-             ? [for(pi=points) point3d(pi) ]
-             : points,
         plane = normalize_plane(plane),
         n = point3d(plane)
     )
-    [for(pi=p) pi - (pi*n - plane[3])*n];
-
-
-// Function: plane_point_nearest_origin()
-// Usage:
-//   pt = plane_point_nearest_origin(plane);
-// Topics: Geometry, Planes, Distance
-// Description:
-//   Returns the point on the plane that is closest to the origin.
-// Arguments:
-//   plane = The `[A,B,C,D]` plane definition where `Ax+By+Cz=D` is the formula of the plane.
-function plane_point_nearest_origin(plane) =
-    let( plane = normalize_plane(plane) )
-    point3d(plane) * plane[3];
+    [for(pi=points) pi - (pi*n - plane[3])*n];
 
 
 // Function: point_plane_distance()
@@ -609,7 +601,7 @@ function point_plane_distance(plane, point) =
     point3d(plane)* point - plane[3];
 
 
-// Returns [POINT, U] if line intersects plane at one point.
+// Returns [POINT, U] if line intersects plane at one point, where U is zero at line[0] and 1 at line[1]
 // Returns [LINE, undef] if the line is on the plane.
 // Returns undef if line is parallel to, but not on the given plane.
 function _general_plane_line_intersection(plane, line, eps=EPSILON) =
@@ -700,10 +692,10 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
     assert(is_path(poly,dim=3), "Invalid polygon." )
-    assert(!is_list(bounded) || len(bounded)==2, "Invalid bound condition(s).")
+    assert(is_bool(bounded) || is_bool_list(bounded,2), "Invalid bound condition.")
     assert(_valid_line(line,dim=3,eps=eps), "Invalid 3D line." )
     let(
-        bounded = is_list(bounded)? bounded : [bounded, bounded],
+        bounded = force_list(bounded,2),
         poly = deduplicate(poly),
         indices = noncollinear_triple(poly)
     ) indices==[] ? undef :
@@ -1194,7 +1186,11 @@ function circle_line_intersection(c,r,d,line,bounded=false,eps=EPSILON) =
 //   test = noncollinear_triple(points);
 // Topics: Geometry, Noncollinearity
 // Description:
-//   Finds the indices of three good non-collinear points from the pointlist `points`.
+//   Finds the indices of three non-collinear points from the pointlist `points`.
+//   It selects two well separated points to define a line and chooses the third point
+//   to be the point farthest off the line.  The points do not necessarily having the
+//   same winding direction as the polygon so they cannot be used to determine the
+//   winding direction or the direction of the normal.  
 //   If all points are collinear returns [] when `error=true` or an error otherwise .
 // Arguments:
 //   points = List of input points.
@@ -1590,17 +1586,21 @@ function reverse_polygon(poly) =
 //   vec = polygon_normal(poly);
 // Topics: Geometry, Polygons
 // Description:
-//   Given a 3D planar polygon, returns a unit-length normal vector for the
-//   clockwise orientation of the polygon. If the polygon points are collinear, returns `undef`.
-//   It doesn't check for coplanarity.
+//   Given a 3D simple planar polygon, returns a unit normal vector for the polygon.  The vector
+//   is oriented so that if the normal points towards the viewer, the polygon winds in the clockwise
+//   direction.  If the polygon has zero area, returns `undef`.  If the polygon is self-intersecting
+//   the the result is undefined.  It doesn't check for coplanarity.
 // Arguments:
 //   poly = The list of 3D path points for the perimeter of the polygon.
 function polygon_normal(poly) =
     assert(is_path(poly,dim=3), "Invalid 3D polygon." )
-    len(poly)==3 ? point3d(plane3pt(poly[0],poly[1],poly[2])) :
-    let( triple = sort(noncollinear_triple(poly,error=false)) )
-    triple==[] ? undef :
-    point3d(plane3pt(poly[triple[0]],poly[triple[1]],poly[triple[2]])) ;
+    let(
+        L=len(poly),
+        area_vec = sum([for(i=idx(poly))
+                           cross(poly[(i+1)%L]-poly[0],
+                                 poly[(i+2)%L]-poly[(i+1)%L])])
+    )
+    area_vec==0 ? undef : unit(-area_vec);
 
 
 function _split_polygon_at_x(poly, x) =
