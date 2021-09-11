@@ -1012,7 +1012,7 @@ module attachable(
 // Usage:
 //   a = anchorpt(name, pos, [orient], [spin]);
 // Topics: Attachments
-// See Also: _attach_geom(), reorient(), attachable()
+// See Also: reorient(), attachable()
 // Description:
 //   Creates an anchor data structure.  For a more step-by-step explanation of attachments,
 //   see the [[Attachments Tutorial|Tutorial-Attachments]].
