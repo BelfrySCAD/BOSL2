@@ -110,10 +110,11 @@ function triangle_area(p1,p2,p3) =
 // Section: 2D Right Triangle Functions
 //   This is a set of functions to make it easier to perform trig calculations on right triangles.
 //   In general, all these functions are named using these abbreviations:
-//   - *hyp*: The length of the Hypotenuse.
-//   - *adj*: The length of the side adjacent to the angle.
-//   - *opp*: The length of the side opposite to the angle.
-//   - *ang*: The angle size in degrees.
+//   - **hyp**: The length of the Hypotenuse.
+//   - **adj**: The length of the side adjacent to the angle.
+//   - **opp**: The length of the side opposite to the angle.
+//   - **ang**: The angle size in degrees.
+//   .
 //   If you know two of those, and want to know the value of a third, you will need to call a
 //   function named like `AAA_BBB_to_CCC()`.  For example, if you know the length of the hypotenuse,
 //   and the length of the side adjacent to the angle, and want to learn the length of the side
