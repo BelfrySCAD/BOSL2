@@ -232,7 +232,7 @@ module attach(from, to, overlap, norot=false)
     }
 }
 
-// Attachment Modifiers
+// Section: Attachment Modifiers
 
 // Module: tags()
 // Usage:
@@ -1673,7 +1673,7 @@ function _find_anchor(anchor, geom) =
                 for (t=triplet(path,true)) let(
                     seg1 = [t[0],t[1]],
                     seg2 = [t[1],t[2]],
-                    isect = ray_segment_intersection([[0,0],anchor], seg1),
+                    isect = line_intersection([[0,0],anchor], seg1,RAY,SEGMENT),
                     n = is_undef(isect)? [0,1] :
                         !approx(isect, t[1])? line_normal(seg1) :
                         unit((line_normal(seg1)+line_normal(seg2))/2,[0,1]),
@@ -1708,7 +1708,7 @@ function _find_anchor(anchor, geom) =
                 for (t=triplet(path,true)) let(
                     seg1 = [t[0],t[1]],
                     seg2 = [t[1],t[2]],
-                    isect = ray_segment_intersection([[0,0],xyanch], seg1),
+                    isect = line_intersection([[0,0],xyanch], seg1, RAY, SEGMENT),
                     n = is_undef(isect)? [0,1] :
                         !approx(isect, t[1])? line_normal(seg1) :
                         unit((line_normal(seg1)+line_normal(seg2))/2,[0,1]),

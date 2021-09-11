@@ -656,7 +656,7 @@ function _path_join(paths,joint,k=0.5,i=0,result=[],relocate=true,closed=false) 
   let(
      first_dir=firstcut[2],
      next_dir=nextcut[2],
-     corner = ray_intersection([firstcut[0], firstcut[0]-first_dir], [nextcut[0], nextcut[0]-next_dir])
+     corner = line_intersection([firstcut[0], firstcut[0]-first_dir], [nextcut[0], nextcut[0]-next_dir],RAY,RAY)
   )
   assert(is_def(corner), str("Curve directions at cut points don't intersect in a corner when ",
                              loop?"closing the path":str("adding path ",i+1)))
@@ -1641,7 +1641,7 @@ function _stroke_end(width,left, right, spec) =
 // returns [intersection_pt, index of first point in path after the intersection]
 function _path_line_intersection(path, line, ind=0) =
         ind==len(path)-1 ? undef :
-        let(intersect=line_segment_intersection(line, select(path,ind,ind+1)))
+        let(intersect=line_intersection(line, select(path,ind,ind+1),LINE,SEGMENT))
         // If it intersects the segment excluding it's final point, then we're done
         // The final point is treated as part of the next segment
         is_def(intersect) && intersect != path[ind+1]?
@@ -1694,8 +1694,10 @@ function _rp_compute_patches(top, bot, rtop, rsides, ktop, ksides, concave) =
                     let(
                        prev_corner = prev_offset + abs(rtop_in)*in_prev,
                        next_corner = next_offset + abs(rtop_in)*in_next,
-                       prev_degenerate = is_undef(ray_intersection(path2d([far_corner, far_corner+prev]), path2d([prev_offset, prev_offset+in_prev]))),
-                       next_degenerate = is_undef(ray_intersection(path2d([far_corner, far_corner+next]), path2d([next_offset, next_offset+in_next])))
+                       prev_degenerate = is_undef(line_intersection(path2d([far_corner, far_corner+prev]),
+                                                                   path2d([prev_offset, prev_offset+in_prev]),RAY,RAY)),
+                       next_degenerate = is_undef(line_intersection(path2d([far_corner, far_corner+next]),
+                                                                   path2d([next_offset, next_offset+in_next]),RAY,RAY))
                     )
                     [ prev_degenerate ? far_corner : prev_corner,
                       far_corner,

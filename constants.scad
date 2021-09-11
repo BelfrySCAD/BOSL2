@@ -190,4 +190,37 @@ CTR = CENTER;
 
 
 
+// Constant: SEGMENT
+// Topics: Constants, Lines
+// See Also: RAY, LINE
+// Description: Treat a line as a segment.  [true, true]
+// Example: Usage with line_intersection:
+//    line1 = 10*[[9, 4], [5, 7]];
+//    line2 = 10*[[2, 3], [6, 5]];
+//    isect = line_intersection(line1, line2, SEGMENT, SEGMENT);
+SEGMENT = [true,true];
+
+
+// Constant: RAY
+// Topics: Constants, Lines
+// See Also: SEGMENT, LINE
+// Description: Treat a line as a ray, based at the first point.  [true, false]
+// Example: Usage with line_intersection:
+//    line = [[-30,0],[30,30]];
+//    pt = [40,25];
+//    closest = line_closest_point(line,pt,RAY);
+RAY = [true, false];
+
+
+// Constant: LINE
+// Topics: Constants, Lines
+// See Also: RAY, SEGMENT
+// Description: Treat a line as an unbounded line.  [false, false]
+// Example: Usage with line_intersection:
+//    line1 = 10*[[9, 4], [5, 7]];
+//    line2 = 10*[[2, 3], [6, 5]];
+//    isect = line_intersection(line1, line2, LINE, SEGMENT);
+LINE = [false, false];
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

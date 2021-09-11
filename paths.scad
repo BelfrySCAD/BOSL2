@@ -311,7 +311,7 @@ function path_trim_end(path,trim,_d=0,_i=undef) =
 //   color("red") translate(closest[1]) circle(d=3, $fn=12);
 function path_closest_point(path, pt) =
     let(
-        pts = [for (seg=idx(path)) segment_closest_point(select(path,seg,seg+1),pt)],
+        pts = [for (seg=idx(path)) line_closest_point(select(path,seg,seg+1),pt,SEGMENT)],
         dists = [for (p=pts) norm(p-pt)],
         min_seg = min_index(dists)
     ) [min_seg, pts[min_seg]];
