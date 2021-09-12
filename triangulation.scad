@@ -130,6 +130,7 @@ function is_only_noncolinear_vertex(points, facelist, vertex) =
 //   face = The face, given as a list of indices into the vertex array `points`.
 function triangulate_face(points, face) =
     let(
+        points = path3d(points),
         face = deduplicate_indexed(points,face),
         count = len(face)
     )
@@ -158,21 +159,21 @@ function triangulate_face(points, face) =
     (clipable_ear)? // There is no point inside the ear.
         is_only_noncolinear_vertex(points, face, cv)?
             // In the point&line degeneracy clip to somewhere in the middle of the line.
-            flatten([
-                triangulate_face(points, select(face, cv, (cv+2)%count)),
-                triangulate_face(points, select(face, (cv+2)%count, cv))
-            ])
+            concat(
+               triangulate_face(points, select(face, cv, (cv+2)%count)),
+               triangulate_face(points, select(face, (cv+2)%count, cv))
+            )
         :
             // Otherwise the ear is safe to clip.
-            flatten([
-                [select(face, pv, nv)],
-                triangulate_face(points, select(face, nv, pv))
-            ])
+            [
+                select(face, pv, nv),
+                each triangulate_face(points, select(face, nv, pv))
+            ]
     : // If there is a point inside the ear, make a diagonal and clip along that.
-        flatten([
+        concat(
             triangulate_face(points, select(face, cv, diagonal_point)),
             triangulate_face(points, select(face, diagonal_point, cv))
-        ]);
+        );
 
 
 // Function: triangulate_faces()

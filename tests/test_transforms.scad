@@ -217,32 +217,6 @@ module test_zflip() {
 test_zflip();
 
 
-module test_xyflip() {
-    assert_approx(xyflip(), [[0,1,0,0],[1,0,0,0],[0,0,1,0],[0,0,0,1]]);
-    assert_approx(xyflip(p=[1,2,3]), [2,1,3]);
-    // Verify that module at least doesn't crash.
-    xyflip() nil();
-}
-test_xyflip();
-
-
-module test_xzflip() {
-    assert_approx(xzflip(), [[0,0,1,0],[0,1,0,0],[1,0,0,0],[0,0,0,1]]);
-    assert_approx(xzflip(p=[1,2,3]), [3,2,1]);
-    // Verify that module at least doesn't crash.
-    xzflip() nil();
-}
-test_xzflip();
-
-
-module test_yzflip() {
-    assert_approx(yzflip(), [[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]]);
-    assert_approx(yzflip(p=[1,2,3]), [1,3,2]);
-    // Verify that module at least doesn't crash.
-    yzflip() nil();
-}
-test_yzflip();
-
 
 module test_rot() {
     pts2d = 50 * [for (x=[-1,0,1],y=[-1,0,1]) [x,y]];
@@ -403,67 +377,10 @@ module test_zrot() {
 test_zrot();
 
 
-module test_xyrot() {
-    vals = [-270,-135,-90,45,0,30,45,90,135,147,180];
-    path = path3d(pentagon(d=100), 50);
-    for (a=vals) {
-        m = affine3d_rot_by_axis(RIGHT+BACK,a);
-        assert_approx(xyrot(a), m);
-        assert_approx(xyrot(a, p=path[0]), apply(m, path[0]));
-        assert_approx(xyrot(a, p=path), apply(m, path));
-        // Verify that module at least doesn't crash.
-        xyrot(a) nil();
-    }
-}
-test_xyrot();
-
-
-module test_xzrot() {
-    vals = [-270,-135,-90,45,0,30,45,90,135,147,180];
-    path = path3d(pentagon(d=100), 50);
-    for (a=vals) {
-        m = affine3d_rot_by_axis(RIGHT+UP,a);
-        assert_approx(xzrot(a), m);
-        assert_approx(xzrot(a, p=path[0]), apply(m, path[0]));
-        assert_approx(xzrot(a, p=path), apply(m, path));
-        // Verify that module at least doesn't crash.
-        xzrot(a) nil();
-    }
-}
-test_xzrot();
-
-
-module test_yzrot() {
-    vals = [-270,-135,-90,45,0,30,45,90,135,147,180];
-    path = path3d(pentagon(d=100), 50);
-    for (a=vals) {
-        m = affine3d_rot_by_axis(BACK+UP,a);
-        assert_approx(yzrot(a), m);
-        assert_approx(yzrot(a, p=path[0]), apply(m, path[0]));
-        assert_approx(yzrot(a, p=path), apply(m, path));
-        // Verify that module at least doesn't crash.
-        yzrot(a) nil();
-    }
-}
-test_yzrot();
-
-
-module test_xyzrot() {
-    vals = [-270,-135,-90,45,0,30,45,90,135,147,180];
-    path = path3d(pentagon(d=100), 50);
-    for (a=vals) {
-        m = affine3d_rot_by_axis(RIGHT+BACK+UP,a);
-        assert_approx(xyzrot(a), m);
-        assert_approx(xyzrot(a, p=path[0]), apply(m, path[0]));
-        assert_approx(xyzrot(a, p=path), apply(m, path));
-        // Verify that module at least doesn't crash.
-        xyzrot(a) nil();
-    }
-}
-test_xyzrot();
 
 module test_frame_map() {
     assert(approx(frame_map(x=[1,1,0], y=[-1,1,0]), affine3d_zrot(45)));
+    assert(approx(frame_map(x=[0,1,0], y=[0,0,1]), rot(v=[1,1,1],a=120)));
 }
 test_frame_map();
 

@@ -694,8 +694,8 @@ function vnf_bend(vnf,r,d,axis="Z") =
             [for(i = [1:1:steps-1]) i*step+bmin.x],
         facepolys = [for (face=vnf[1]) select(verts,face)],
         splits = axis=="X"?
-            split_polygons_at_each_y(facepolys, bend_at) :
-            split_polygons_at_each_x(facepolys, bend_at),
+            _split_polygons_at_each_y(facepolys, bend_at) :
+            _split_polygons_at_each_x(facepolys, bend_at),
         newtris = _triangulate_planar_convex_polygons(splits),
         bent_faces = [
             for (tri = newtris) [
@@ -710,6 +710,111 @@ function vnf_bend(vnf,r,d,axis="Z") =
             ]
         ]
     ) vnf_add_faces(faces=bent_faces);
+
+
+
+function _split_polygon_at_x(poly, x) =
+    let(
+        xs = subindex(poly,0)
+    ) (min(xs) >= x || max(xs) <= x)? [poly] :
+    let(
+        poly2 = [
+            for (p = pair(poly,true)) each [
+                p[0],
+                if(
+                    (p[0].x < x && p[1].x > x) ||
+                    (p[1].x < x && p[0].x > x)
+                ) let(
+                    u = (x - p[0].x) / (p[1].x - p[0].x)
+                ) [
+                    x,  // Important for later exact match tests
+                    u*(p[1].y-p[0].y)+p[0].y,
+                    u*(p[1].z-p[0].z)+p[0].z,
+                ]
+            ]
+        ],
+        out1 = [for (p = poly2) if(p.x <= x) p],
+        out2 = [for (p = poly2) if(p.x >= x) p],
+        out3 = [
+            if (len(out1)>=3) each split_path_at_self_crossings(out1),
+            if (len(out2)>=3) each split_path_at_self_crossings(out2),
+        ],
+        out = [for (p=out3) if (len(p) > 2) cleanup_path(p)]
+    ) out;
+
+
+function _split_polygon_at_y(poly, y) =
+    let(
+        ys = subindex(poly,1)
+    ) (min(ys) >= y || max(ys) <= y)? [poly] :
+    let(
+        poly2 = [
+            for (p = pair(poly,true)) each [
+                p[0],
+                if(
+                    (p[0].y < y && p[1].y > y) ||
+                    (p[1].y < y && p[0].y > y)
+                ) let(
+                    u = (y - p[0].y) / (p[1].y - p[0].y)
+                ) [
+                    u*(p[1].x-p[0].x)+p[0].x,
+                    y,  // Important for later exact match tests
+                    u*(p[1].z-p[0].z)+p[0].z,
+                ]
+            ]
+        ],
+        out1 = [for (p = poly2) if(p.y <= y) p],
+        out2 = [for (p = poly2) if(p.y >= y) p],
+        out3 = [
+            if (len(out1)>=3) each split_path_at_self_crossings(out1),
+            if (len(out2)>=3) each split_path_at_self_crossings(out2),
+        ],
+        out = [for (p=out3) if (len(p) > 2) cleanup_path(p)]
+    ) out;
+
+
+
+/// Function: _split_polygons_at_each_x()
+// Usage:
+//   splitpolys = split_polygons_at_each_x(polys, xs);
+/// Topics: Geometry, Polygons, Intersections
+// Description:
+//   Given a list of 3D polygons, splits all of them wherever they cross any X value given in `xs`.
+// Arguments:
+//   polys = A list of 3D polygons to split.
+//   xs = A list of scalar X values to split at.
+function _split_polygons_at_each_x(polys, xs, _i=0) =
+    assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
+    assert( is_vector(xs), "The split value list should contain only numbers." )
+    _i>=len(xs)? polys :
+    _split_polygons_at_each_x(
+        [
+            for (poly = polys)
+            each _split_polygon_at_x(poly, xs[_i])
+        ], xs, _i=_i+1
+    );
+
+
+///Internal Function: _split_polygons_at_each_y()
+// Usage:
+//   splitpolys = _split_polygons_at_each_y(polys, ys);
+/// Topics: Geometry, Polygons, Intersections
+// Description:
+//   Given a list of 3D polygons, splits all of them wherever they cross any Y value given in `ys`.
+// Arguments:
+//   polys = A list of 3D polygons to split.
+//   ys = A list of scalar Y values to split at.
+function _split_polygons_at_each_y(polys, ys, _i=0) =
+    assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
+    assert( is_vector(ys), "The split value list should contain only numbers." )
+    _i>=len(ys)? polys :
+    _split_polygons_at_each_y(
+        [
+            for (poly = polys)
+            each _split_polygon_at_y(poly, ys[_i])
+        ], ys, _i=_i+1
+    );
+
 
 
 // Function&Module: vnf_validate()

@@ -7,7 +7,6 @@ include <../std.scad>
 
 
 test_point_on_segment();
-test_point_left_of_line2d();
 test_collinear();
 test_point_line_distance();
 test_segment_distance();
@@ -26,13 +25,11 @@ test_plane_from_points();
 test_plane_from_polygon();
 test_plane_normal();
 test_plane_offset();
-test_projection_on_plane();
-test_plane_point_nearest_origin();
+test_plane_closest_point();
 test_point_plane_distance();
 
 test__general_plane_line_intersection();
 test_plane_line_angle();
-test_normalize_plane();
 test_plane_line_intersection();
 test_polygon_line_intersection();
 test_plane_intersection();
@@ -44,9 +41,6 @@ test_circle_3points();
 test_circle_point_tangents();
 
 test_noncollinear_triple();
-test_pointlist_bounds();
-test_closest_point();
-test_furthest_point();
 test_polygon_area();
 test_is_convex_polygon();
 test_polygon_shift();
@@ -55,7 +49,7 @@ test_reindex_polygon();
 test_align_polygon();
 test_centroid();
 test_point_in_polygon();
-test_polygon_is_clockwise();
+test_is_polygon_clockwise();
 test_clockwise_polygon();
 test_ccw_polygon();
 test_reverse_polygon();
@@ -94,13 +88,13 @@ function info_str(list,i=0,string=chr(10)) =
     : info_str(list,i+1,str(string,str(list[i][0],_valstr(list[i][1]),chr(10))));
 
 
-module test_normalize_plane(){
+module test__normalize_plane(){
     plane = rands(-5,5,4,seed=333)+[10,0,0,0];
-    plane2 = normalize_plane(plane);
+    plane2 = _normalize_plane(plane);
     assert_approx(norm(point3d(plane2)),1);
     assert_approx(plane*plane2[3],plane2*plane[3]);
 }
-*test_normalize_plane();
+test__normalize_plane();
 
 module test_plane_line_intersection(){
     line = [rands(-1,1,3,seed=74),rands(-1,1,3,seed=99)+[2,0,0]];
@@ -149,20 +143,10 @@ module test_plane_intersection(){
 *test_plane_intersection();
 
 
-module test_plane_point_nearest_origin(){
-    point = rands(-1,1,3)+[2,0,0]; // a non zero vector
-    plane = [ each point, point*point]; // a plane containing `point`
-    info = info_str([["point = ",point],["plane = ",plane]]);
-    assert_approx(plane_point_nearest_origin(plane),point,info);
-    assert_approx(plane_point_nearest_origin([each point,5]),5*unit(point)/norm(point),info);
-}
-test_plane_point_nearest_origin();
-
-
 module test_plane_offset(){
     plane = rands(-1,1,4)+[2,0,0,0]; // a valid plane
     info = info_str([["plane = ",plane]]);
-    assert_approx(plane_offset(plane), normalize_plane(plane)[3],info);
+    assert_approx(plane_offset(plane), _normalize_plane(plane)[3],info);
     assert_approx(plane_offset([1,1,1,1]), 1/sqrt(3),info);
 }
 *test_plane_offset();
@@ -248,14 +232,14 @@ module test_points_on_plane() {
     ang     = rands(0,360,1)[0];
     normal  = rot(a=ang,p=normal0);
     plane   = [each normal, normal*dir];
-    prj_pts = projection_on_plane(plane,pts);
+    prj_pts = plane_closest_point(plane,pts);
     info = info_str([["pts = ",pts],["dir = ",dir],["ang = ",ang]]);
     assert(points_on_plane(prj_pts,plane),info);
     assert(!points_on_plane(concat(pts,[normal-dir]),plane),info);
 }
 *test_points_on_plane();
 
-module test_projection_on_plane(){
+module test_plane_closest_point(){
     ang     = rands(0,360,1)[0];
     dir     = rands(-10,10,3);
     normal0 = unit([1,2,3]);
@@ -265,16 +249,16 @@ module test_projection_on_plane(){
     planem  = [each normal, normal*dir];
     pts     = [for(i=[1:10]) rands(-1,1,3)];
     info = info_str([["ang = ",ang],["dir = ",dir]]);
-    assert_approx( projection_on_plane(plane,pts),
-                   projection_on_plane(plane,projection_on_plane(plane,pts)),info);
-    assert_approx( projection_on_plane(plane,pts),
-                   rot(a=ang,p=projection_on_plane(plane0,rot(a=-ang,p=pts))),info);    
-    assert_approx( move((-normal*dir)*normal,p=projection_on_plane(planem,pts)),
-                   projection_on_plane(plane,pts),info);
-    assert_approx( move((normal*dir)*normal,p=projection_on_plane(plane,pts)),
-                   projection_on_plane(planem,pts),info);
+    assert_approx( plane_closest_point(plane,pts),
+                   plane_closest_point(plane,plane_closest_point(plane,pts)),info);
+    assert_approx( plane_closest_point(plane,pts),
+                   rot(a=ang,p=plane_closest_point(plane0,rot(a=-ang,p=pts))),info);    
+    assert_approx( move((-normal*dir)*normal,p=plane_closest_point(planem,pts)),
+                   plane_closest_point(plane,pts),info);
+    assert_approx( move((normal*dir)*normal,p=plane_closest_point(plane,pts)),
+                   plane_closest_point(planem,pts),info);
 }
-*test_projection_on_plane();
+*test_plane_closest_point();
 
 module test_line_from_points() {
     assert_approx(line_from_points([[1,0],[0,0],[-1,0]]),[[-1,0],[1,0]]);
@@ -315,12 +299,12 @@ module test_point_on_segment() {
 *test_point_on_segment();
 
 
-module test_point_left_of_line2d() {
-    assert(point_left_of_line2d([ -3,  0], [[-10,-10], [10,10]]) > 0);
-    assert(point_left_of_line2d([  0,  0], [[-10,-10], [10,10]]) == 0);
-    assert(point_left_of_line2d([  3,  0], [[-10,-10], [10,10]]) < 0);
+module test__point_left_of_line2d() {
+    assert(_point_left_of_line2d([ -3,  0], [[-10,-10], [10,10]]) > 0);
+    assert(_point_left_of_line2d([  0,  0], [[-10,-10], [10,10]]) == 0);
+    assert(_point_left_of_line2d([  3,  0], [[-10,-10], [10,10]]) < 0);
 }
-*test_point_left_of_line2d();
+test__point_left_of_line2d();
 
 module test_collinear() {
     assert(collinear([-10,-10], [-15, -16], [10,10]) == false);
@@ -859,69 +843,14 @@ module test_point_in_polygon() {
 *test_point_in_polygon();
 
 
-module test_pointlist_bounds() {
-    pts = [
-        [-53,27,12],
-        [-63,97,36],
-        [84,-32,-5],
-        [63,-24,42],
-        [23,57,-42]
-    ];
-    assert(pointlist_bounds(pts) == [[-63,-32,-42], [84,97,42]]);
-    pts2d = [
-        [-53,12],
-        [-63,36],
-        [84,-5],
-        [63,42],
-        [23,-42] 
-    ];
-    assert(pointlist_bounds(pts2d) == [[-63,-42],[84,42]]);
-    pts5d = [
-        [-53, 27, 12,-53, 12],
-        [-63, 97, 36,-63, 36],
-        [ 84,-32, -5, 84, -5], 
-        [ 63,-24, 42, 63, 42], 
-        [ 23, 57,-42, 23,-42]
-    ];
-    assert(pointlist_bounds(pts5d) == [[-63,-32,-42,-63,-42],[84,97,42,84,42]]);
-    assert(pointlist_bounds([[3,4,5,6]]), [[3,4,5,6],[3,4,5,6]]);
+
+module test_is_polygon_clockwise() {
+    assert(is_polygon_clockwise([[-1,1],[1,1],[1,-1],[-1,-1]]));
+    assert(!is_polygon_clockwise([[1,1],[-1,1],[-1,-1],[1,-1]]));
+    assert(is_polygon_clockwise(circle(d=100)));
+    assert(is_polygon_clockwise(square(100)));
 }
-*test_pointlist_bounds();
-
-
-module test_closest_point() {
-    ptlist = [for (i=count(100)) rands(-100,100,2,seed_value=8463+i)];
-    testpts = [for (i=count(100)) rands(-100,100,2,seed_value=6834+i)];
-    for (pt = testpts) {
-        pidx = closest_point(pt,ptlist);
-        dists = [for (p=ptlist) norm(pt-p)];
-        mindist = min(dists);
-        assert(mindist == dists[pidx]);
-    }
-}
-*test_closest_point();
-
-
-module test_furthest_point() {
-    ptlist = [for (i=count(100)) rands(-100,100,2,seed_value=8463+i)];
-    testpts = [for (i=count(100)) rands(-100,100,2,seed_value=6834+i)];
-    for (pt = testpts) {
-        pidx = furthest_point(pt,ptlist);
-        dists = [for (p=ptlist) norm(pt-p)];
-        mindist = max(dists);
-        assert(mindist == dists[pidx]);
-    }
-}
-*test_furthest_point();
-
-
-module test_polygon_is_clockwise() {
-    assert(polygon_is_clockwise([[-1,1],[1,1],[1,-1],[-1,-1]]));
-    assert(!polygon_is_clockwise([[1,1],[-1,1],[-1,-1],[1,-1]]));
-    assert(polygon_is_clockwise(circle(d=100)));
-    assert(polygon_is_clockwise(square(100)));
-}
-*test_polygon_is_clockwise();
+*test_is_polygon_clockwise();
 
 
 module test_clockwise_polygon() {

@@ -964,7 +964,7 @@ function offset_sweep(
                    ["points", []],
         ],
         path = check_and_fix_path(path, [2], closed=true),
-        clockwise = polygon_is_clockwise(path),
+        clockwise = is_polygon_clockwise(path),
         dummy1 = _struct_valid(top,"offset_sweep","top"),
         dummy2 = _struct_valid(bottom,"offset_sweep","bottom"),
         top = struct_set(argspec, top, grow=false),
@@ -1849,8 +1849,8 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
    let(
      // Determine which points are concave by making bottom 2d if necessary
      bot_proj = len(bottom[0])==2 ? bottom :  project_plane(select(bottom,0,2),bottom),
-     bottom_sign = polygon_is_clockwise(bot_proj) ? 1 : -1,
-     concave = [for(i=[0:N-1]) bottom_sign*sign(point_left_of_line2d(select(bot_proj,i+1), select(bot_proj, i-1,i)))>0],
+     bottom_sign = is_polygon_clockwise(bot_proj) ? 1 : -1,
+     concave = [for(i=[0:N-1]) bottom_sign*sign(_point_left_of_line2d(select(bot_proj,i+1), select(bot_proj, i-1,i)))>0],
      top = is_undef(top) ? path3d(bottom,height/2) :
            len(top[0])==2 ? path3d(top,height/2) :
            top,
