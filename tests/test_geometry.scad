@@ -42,7 +42,7 @@ test_circle_point_tangents();
 
 test_noncollinear_triple();
 test_polygon_area();
-test_is_convex_polygon();
+test_is_polygon_convex();
 test_polygon_shift();
 test_polygon_shift_to_closest_point();
 test_reindex_polygon();
@@ -726,14 +726,14 @@ module test_polygon_area() {
 *test_polygon_area();
 
 
-module test_is_convex_polygon() {
-    assert(is_convex_polygon([[1,1],[-1,1],[-1,-1],[1,-1]]));
-    assert(is_convex_polygon(circle(r=50,$fn=1000)));
-    assert(is_convex_polygon(rot([50,120,30], p=path3d(circle(1,$fn=50)))));
-    assert(!is_convex_polygon([[1,1],[0,0],[-1,1],[-1,-1],[1,-1]]));
-    assert(!is_convex_polygon([for (i=[0:36]) let(a=-i*10) (10+i)*[cos(a),sin(a)]])); //   spiral 
+module test_is_polygon_convex() {
+    assert(is_polygon_convex([[1,1],[-1,1],[-1,-1],[1,-1]]));
+    assert(is_polygon_convex(circle(r=50,$fn=1000)));
+    assert(is_polygon_convex(rot([50,120,30], p=path3d(circle(1,$fn=50)))));
+    assert(!is_polygon_convex([[1,1],[0,0],[-1,1],[-1,-1],[1,-1]]));
+    assert(!is_polygon_convex([for (i=[0:36]) let(a=-i*10) (10+i)*[cos(a),sin(a)]])); //   spiral 
 }
-*test_is_convex_polygon();
+*test_is_polygon_convex();
 
 
 module test_polygon_shift() {
