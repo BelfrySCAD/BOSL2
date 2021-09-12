@@ -1359,7 +1359,7 @@ function polygon_normal(poly) =
 //   poly = The list of 2D path points forming the perimeter of the polygon.
 //   nonzero = The rule to use: true for "Nonzero" rule and false for "Even-Odd" (Default: true )
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-// Example: With nonzero set to true, we get this result. Green dots are inside the polygon and red are outside:
+// Example(2D): With nonzero set to true, we get this result. Green dots are inside the polygon and red are outside:
 //   a=20*2/3;
 //   b=30*2/3;
 //   ofs = 17*2/3;
@@ -1375,7 +1375,7 @@ function polygon_normal(poly) =
 //     color(point_in_polygon(p,path)==1 ? "green" : "red")
 //     move(p)circle(r=1, $fn=12);
 //   }
-// Example: With nonzero set to false, one dot changes color:
+// Example(2D): With nonzero set to false, one dot changes color:
 //   a=20*2/3;
 //   b=30*2/3;
 //   ofs = 17*2/3;
