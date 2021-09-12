@@ -787,7 +787,7 @@ function _split_polygons_at_each_x(polys, xs, _i=0) =
     assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
     assert( is_vector(xs), "The split value list should contain only numbers." )
     _i>=len(xs)? polys :
-    split_polygons_at_each_x(
+    _split_polygons_at_each_x(
         [
             for (poly = polys)
             each _split_polygon_at_x(poly, xs[_i])
@@ -808,7 +808,7 @@ function _split_polygons_at_each_y(polys, ys, _i=0) =
     assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
     assert( is_vector(ys), "The split value list should contain only numbers." )
     _i>=len(ys)? polys :
-    split_polygons_at_each_y(
+    _split_polygons_at_each_y(
         [
             for (poly = polys)
             each _split_polygon_at_y(poly, ys[_i])
