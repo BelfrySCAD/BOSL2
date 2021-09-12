@@ -197,7 +197,6 @@ function xy_to_polar(x,y=undef) = let(
 //   If you omit the point specification then `project_plane()` returns a rotation matrix that maps the specified plane to the XY plane.
 //   Note that if you apply this transformation to data lying on the plane it will produce 3D points with the Z coordinate of zero.
 // Topics: Coordinates, Points, Paths
-// See Also: project_plane(), projection_on_plane()
 // Arguments:
 //   plane = plane specification or point list defining the plane
 //   p = 3D point, path, region, VNF or bezier patch to project
