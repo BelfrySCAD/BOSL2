@@ -155,7 +155,7 @@ module threaded_nut(
 //   By default produces the nominal dimensions
 //   for metric trapezoidal threads: a thread angle of 30 degrees and a depth set to half the pitch.
 //   You can also specify your own trapezoid parameters.  For ACME threads see acme_threaded_rod().
-// Figure(2D,Med):
+// Figure(2D,Med,NoAxes):
 //   pa_delta = tan(15)/4;
 //   rr1 = -1/2;
 //   z1 = 1/4-pa_delta;
