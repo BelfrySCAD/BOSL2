@@ -1317,8 +1317,7 @@ function polygon_normal(poly) =
 // Topics: Geometry, Polygons
 // Description:
 //   This function tests whether the given 2D point is inside, outside or on the boundary of
-//   the specified 2D polygon using either the Nonzero Winding rule or the Even-Odd rule.
-//   See https://en.wikipedia.org/wiki/Nonzero-rule and https://en.wikipedia.org/wiki/Even–odd_rule.
+//   the specified 2D polygon.  
 //   The polygon is given as a list of 2D points, not including the repeated end point.
 //   Returns -1 if the point is outside the polygon.
 //   Returns 0 if the point is on the boundary.
@@ -1326,11 +1325,72 @@ function polygon_normal(poly) =
 //   The polygon does not need to be simple: it may have self-intersections.
 //   But the polygon cannot have holes (it must be simply connected).
 //   Rounding errors may give mixed results for points on or near the boundary.
+//   .
+//   When polygons intersect themselves different definitions exist for determining which points
+//   are inside the polygon.  The figure below shows the difference.
+//   OpenSCAD uses the Even-Odd rule when creating polygons, where membership in overlapping regions
+//   depends on how many times they overlap.  The Nonzero rule considers point inside the polygon if
+//   the polygon overlaps them any number of times.  For more information see
+//   https://en.wikipedia.org/wiki/Nonzero-rule and https://en.wikipedia.org/wiki/Even–odd_rule.
+// Figure(2D,Med):
+//   a=20*2/3;
+//   b=30*2/3;
+//   ofs = 17*2/3;
+//   curve = [for(theta=[0:10:140])  [a * theta/360*2*PI - b*sin(theta), a-b*cos(theta)-20*2/3]];
+//   path = deduplicate(concat( reverse(offset(curve,r=ofs)),
+//                  xflip(offset(curve,r=ofs)),
+//                  xflip(reverse(curve)),
+//                  curve
+//                ));
+//   left(30){
+//     polygon(path);
+//     color("red")stroke(path, width=1, closed=true);
+//     color("red")back(28)text("Even-Odd", size=5, halign="center");
+//   }
+//   right(30){
+//      dp = decompose_path(path,closed=true);
+//      region(dp);
+//      color("red"){stroke(path,width=1,closed=true);
+//                   back(28)text("Nonzero", size=5, halign="center");
+//                   }
+//   }  
 // Arguments:
 //   point = The 2D point to check position of.
 //   poly = The list of 2D path points forming the perimeter of the polygon.
 //   nonzero = The rule to use: true for "Nonzero" rule and false for "Even-Odd" (Default: true )
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
+// Example: With nonzero set to true, we get this result. Green dots are inside the polygon and red are outside:
+//   a=20*2/3;
+//   b=30*2/3;
+//   ofs = 17*2/3;
+//   curve = [for(theta=[0:10:140])  [a * theta/360*2*PI - b*sin(theta), a-b*cos(theta)]];
+//   path = deduplicate(concat( reverse(offset(curve,r=ofs)),
+//                  xflip(offset(curve,r=ofs)),
+//                  xflip(reverse(curve)),
+//                  curve
+//                ));
+//   stroke(path);
+//   pts = [[0,0],[10,0],[0,20]];
+//   for(p=pts){
+//     color(point_in_polygon(p,path)==1 ? "green" : "red")
+//     move(p)circle(r=1, $fn=12);
+//   }
+// Example: With nonzero set to false, one dot changes color:
+//   a=20*2/3;
+//   b=30*2/3;
+//   ofs = 17*2/3;
+//   curve = [for(theta=[0:10:140])  [a * theta/360*2*PI - b*sin(theta), a-b*cos(theta)]];
+//   path = deduplicate(concat( reverse(offset(curve,r=ofs)),
+//                  xflip(offset(curve,r=ofs)),
+//                  xflip(reverse(curve)),
+//                  curve
+//                ));
+//   stroke(path);
+//   pts = [[0,0],[10,0],[0,20]];
+//   for(p=pts){
+//     color(point_in_polygon(p,path,nonzero=false)==1 ? "green" : "red")
+//     move(p)circle(r=1, $fn=12);
+//   }
 function point_in_polygon(point, poly, nonzero=true, eps=EPSILON) =
     // Original algorithms from http://geomalgorithms.com/a03-_inclusion.html
     assert( is_vector(point,2) && is_path(poly,dim=2) && len(poly)>2,
@@ -1561,9 +1621,9 @@ function align_polygon(reference, poly, angles, cp) =
 // Section: Convex Sets
 
 
-// Function: is_convex_polygon()
+// Function: is_polygon_convex()
 // Usage:
-//   test = is_convex_polygon(poly);
+//   test = is_polygon_convex(poly);
 // Topics: Geometry, Convexity, Test
 // Description:
 //   Returns true if the given 2D or 3D polygon is convex.
@@ -1573,12 +1633,12 @@ function align_polygon(reference, poly, angles, cp) =
 //   poly = Polygon to check.
 //   eps = Tolerance for the collinearity test. Default: EPSILON.
 // Example:
-//   test1 = is_convex_polygon(circle(d=50));  // Returns: true
-//   test2 = is_convex_polygon(rot([50,120,30], p=path3d(circle(1,$fn=50)))); // Returns: true
+//   test1 = is_polygon_convex(circle(d=50));  // Returns: true
+//   test2 = is_polygon_convex(rot([50,120,30], p=path3d(circle(1,$fn=50)))); // Returns: true
 // Example:
 //   spiral = [for (i=[0:36]) let(a=-i*10) (10+i)*[cos(a),sin(a)]];
-//   test = is_convex_polygon(spiral);  // Returns: false
-function is_convex_polygon(poly,eps=EPSILON) =
+//   test = is_polygon_convex(spiral);  // Returns: false
+function is_polygon_convex(poly,eps=EPSILON) =
     assert(is_path(poly), "The input should be a 2D or 3D polygon." )
     let(
         lp = len(poly),
