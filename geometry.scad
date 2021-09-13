@@ -159,16 +159,15 @@ function line_normal(p1,p2) =
 // it returns undef.
 function _general_line_intersection(s1,s2,eps=EPSILON) =
     let(
-        denominator = det2([s1[0],s2[0]]-[s1[1],s2[1]])
+        denominator = cross(s1[0]-s1[1],s2[0]-s2[1])
     )
     approx(denominator,0,eps=eps) ? undef :
     let(
-        t = det2([s1[0],s2[0]]-s2) / denominator,
-        u = det2([s1[0],s1[0]]-[s2[0],s1[1]]) / denominator
+        t = cross(s1[0]-s2[0],s2[0]-s2[1]) / denominator,
+        u = cross(s1[0]-s2[0],s1[0]-s1[1]) / denominator
     )
     [s1[0]+t*(s1[1]-s1[0]), t, u];
-
-
+                  
 
 // Function: line_intersection()
 // Usage:
@@ -1308,7 +1307,7 @@ function polygon_normal(poly) =
                            cross(poly[(i+1)%L]-poly[0],
                                  poly[(i+2)%L]-poly[(i+1)%L])])
     )
-    area_vec==0 ? undef : unit(-area_vec);
+    norm(area_vec)<EPSILON ? undef : -unit(area_vec);
 
 
 // Function: point_in_polygon()
@@ -1332,31 +1331,31 @@ function polygon_normal(poly) =
 //   depends on how many times they overlap.  The Nonzero rule considers point inside the polygon if
 //   the polygon overlaps them any number of times.  For more information see
 //   https://en.wikipedia.org/wiki/Nonzero-rule and https://en.wikipedia.org/wiki/Even–odd_rule.
-// Figure(2D,Med):
-//   a=20*2/3;
-//   b=30*2/3;
-//   ofs = 17*2/3;
-//   curve = [for(theta=[0:10:140])  [a * theta/360*2*PI - b*sin(theta), a-b*cos(theta)-20*2/3]];
+// Figure(2D,Med,NoAxes):
+//   a=20;
+//   b=30;
+//   ofs = 17;
+//   curve = [for(theta=[0:10:140])  [a * theta/360*2*PI - b*sin(theta), a-b*cos(theta)-20]];
 //   path = deduplicate(concat( reverse(offset(curve,r=ofs)),
 //                  xflip(offset(curve,r=ofs)),
 //                  xflip(reverse(curve)),
 //                  curve
 //                ));
-//   left(30){
+//   left(40){
 //     polygon(path);
 //     color("red")stroke(path, width=1, closed=true);
-//     color("red")back(28)text("Even-Odd", size=5, halign="center");
+//     color("red")back(28/(2/3))text("Even-Odd", size=5/(2/3), halign="center");
 //   }
-//   right(30){
+//   right(40){
 //      dp = decompose_path(path,closed=true);
 //      region(dp);
 //      color("red"){stroke(path,width=1,closed=true);
-//                   back(28)text("Nonzero", size=5, halign="center");
+//                   back(28/(2/3))text("Nonzero", size=5/(2/3), halign="center");
 //                   }
 //   }  
 // Arguments:
-//   point = The 2D point to check position of.
-//   poly = The list of 2D path points forming the perimeter of the polygon.
+//   point = The 2D point to check
+//   poly = The list of 2D points forming the perimeter of the polygon.
 //   nonzero = The rule to use: true for "Nonzero" rule and false for "Even-Odd" (Default: true )
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 // Example(2D): With nonzero set to true, we get this result. Green dots are inside the polygon and red are outside:
@@ -1369,7 +1368,7 @@ function polygon_normal(poly) =
 //                  xflip(reverse(curve)),
 //                  curve
 //                ));
-//   stroke(path);
+//   stroke(path,closed=true);
 //   pts = [[0,0],[10,0],[0,20]];
 //   for(p=pts){
 //     color(point_in_polygon(p,path)==1 ? "green" : "red")
@@ -1385,7 +1384,7 @@ function polygon_normal(poly) =
 //                  xflip(reverse(curve)),
 //                  curve
 //                ));
-//   stroke(path);
+//   stroke(path,closed=true);
 //   pts = [[0,0],[10,0],[0,20]];
 //   for(p=pts){
 //     color(point_in_polygon(p,path,nonzero=false)==1 ? "green" : "red")
@@ -1443,9 +1442,20 @@ function point_in_polygon(point, poly, nonzero=true, eps=EPSILON) =
 //   Results for complex (self-intersecting) polygon are indeterminate.
 // Arguments:
 //   poly = The list of 2D path points for the perimeter of the polygon.
+
+// For algorithm see 2.07 here: http://www.faqs.org/faqs/graphics/algorithms-faq/
 function is_polygon_clockwise(poly) =
     assert(is_path(poly,dim=2), "Input should be a 2d path")
-    polygon_area(poly, signed=true)<-EPSILON;
+    let(
+        minx = min(poly*[1,0]),
+        lowind = search(minx, poly, 0, 0),
+        lowpts = select(poly,lowind),
+        miny = min(lowpts*[0,1]),
+        extreme_sub = search(miny, lowpts, 1, 1)[0],
+        extreme = lowind[extreme_sub]
+    )
+    cross(select(poly,extreme+1)-poly[extreme],
+          select(poly,extreme-1)-poly[extreme])<0;
 
 
 // Function: clockwise_polygon()
