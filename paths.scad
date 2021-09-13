@@ -777,37 +777,8 @@ function decompose_path(path, closed=true, eps=EPSILON) =
         path = cleanup_path(path, eps=eps),
         tagged = _tag_self_crossing_subpaths(path, closed=closed, eps=eps),
         kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
-        completed = [for (frag=kept) if(is_closed_path(frag)) frag],
-        incomplete = [for (frag=kept) if(!is_closed_path(frag)) frag],
-        defrag = _path_fast_defragment(incomplete, eps=eps),
-        completed2 = assemble_path_fragments(defrag, eps=eps)
-    ) concat(completed2,completed);
-
-
-function _path_fast_defragment(fragments, eps=EPSILON, _done=[]) =
-    len(fragments)==0? _done :
-    let(
-        path = fragments[0],
-        endpt = last(path),
-        extenders = [
-            for (i = [1:1:len(fragments)-1]) let(
-                test1 = approx(endpt,fragments[i][0],eps=eps),
-                test2 = approx(endpt,last(fragments[i]),eps=eps)
-            ) if (test1 || test2) (test1? i : -1)
-        ]
-    ) len(extenders) == 1 && extenders[0] >= 0? _path_fast_defragment(
-        fragments=[
-            concat(list_head(path),fragments[extenders[0]]),
-            for (i = [1:1:len(fragments)-1])
-                if (i != extenders[0]) fragments[i]
-        ],
-        eps=eps,
-        _done=_done
-    ) : _path_fast_defragment(
-        fragments=[for (i = [1:1:len(fragments)-1]) fragments[i]],
-        eps=eps,
-        _done=concat(_done,[deduplicate(path,closed=true,eps=eps)])
-    );
+        outregion = assemble_path_fragments(kept, eps=eps)
+    ) outregion;
 
 
 function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
