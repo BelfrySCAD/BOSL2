@@ -778,7 +778,7 @@ function decompose_path(path, closed=true, eps=EPSILON) =
         tagged = _tag_self_crossing_subpaths(path, closed=closed, eps=eps),
         kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
         outregion = assemble_path_fragments(kept, eps=eps)
- 	) outregion;
+    ) outregion;
 
 
 function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
