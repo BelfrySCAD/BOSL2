@@ -8,20 +8,23 @@
 
 // Section: Lines, Rays, and Segments
 
-// Function: point_on_segment()
+// Function: point_on_line()
 // Usage:
-//   pt = point_on_segment(point, edge);
+//   pt = point_on_line(point, line, [bounded], [eps]);
 // Topics: Geometry, Points, Segments
 // Description:
-//   Determine if the point is on the line segment between two points.
-//   Returns true if yes, and false if not.
+//   Determine if the point is on the line segment, ray or segment defined by the two between two points.
+//   Returns true if yes, and false if not.  If bounded is set to true it specifies a segment, with
+//   both lines bounded at the ends.  Set bounded to `[true,false]` to get a ray.  You can use
+//   the shorthands RAY and SEGMENT to set bounded.  
 // Arguments:
 //   point = The point to test.
-//   edge = Array of two points forming the line segment to test against.
+//   line = Array of two points defining the line, ray, or segment to test against.
+//   bounded = boolean or list of two booleans defining endpoint conditions for the line. If false treat the line as an unbounded line.  If true treat it as a segment.  If [true,false] treat as a ray, based at the first endpoint.  Default: false
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function point_on_segment(point, edge, eps=EPSILON) =
+function point_on_line(point, line, bounded=false, eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
-    point_line_distance(point, edge, SEGMENT)<eps;
+    point_line_distance(point, line, bounded)<eps;
 
 
 //Internal - distance from point `d` to the line passing through the origin with unit direction n
@@ -621,60 +624,69 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 
 // Function: polygon_line_intersection()
 // Usage:
-//   pt = polygon_line_intersection(poly, line, [bounded], [eps]);
+//   pt = polygon_line_intersection(poly, line, [bounded], [nonzero], [eps]);
 // Topics: Geometry, Polygons, Lines, Intersection
 // Description:
-//   Takes a possibly bounded line, and a 3D planar polygon, and finds their intersection point.
-//   If the line and the polygon are on the same plane then returns a list, possibly empty, of 3D line
-//   segments, one for each section of the line that is inside the polygon.
-//   If the line is not on the plane of the polygon, but intersects it, then returns the 3D intersection
-//   point.  If the line does not intersect the polygon, then `undef` is returned.
+//   Takes a possibly bounded line, and a 2D or 3D planar polygon, and finds their intersection.
+//   If the line does not intersect the polygon then `undef` returns `undef`.  
+//   In 3D if the line is not on the plane of the polygon but intersects it then you get a single intersection point.
+//   Otherwise the polygon and line are in the same plane and you will get a list of segments.
+//   Use `is_vector` to distinguish these two cases.   
 // Arguments:
 //   poly = The 3D planar polygon to find the intersection with.
 //   line = A list of two distinct 3D points on the line.
 //   bounded = If false, the line is considered unbounded.  If true, it is treated as a bounded line segment.  If given as `[true, false]` or `[false, true]`, the boundedness of the points are specified individually, allowing the line to be treated as a half-bounded ray.  Default: false (unbounded)
+//   nonzero = set to true to use the nonzero rule for determining it points are in a polygon.  See point_in_polygon.  Default: false.
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function polygon_line_intersection(poly, line, bounded=false, eps=EPSILON) =
+function polygon_line_intersection(poly, line, bounded=false, nonzero=false, eps=EPSILON) =
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
-    assert(is_path(poly,dim=3), "Invalid polygon." )
+    assert(is_path(poly,dim=[2,3]), "Invalid polygon." )
     assert(is_bool(bounded) || is_bool_list(bounded,2), "Invalid bound condition.")
-    assert(_valid_line(line,dim=3,eps=eps), "Invalid 3D line." )
+    assert(_valid_line(line,dim=len(poly[0]),eps=eps), "Line invalid or does not match polygon dimension." )
     let(
         bounded = force_list(bounded,2),
-        poly = deduplicate(poly),
-        indices = noncollinear_triple(poly)
-    ) indices==[] ? undef :
-    let(
-        p1 = poly[indices[0]],
-        p2 = poly[indices[1]],
-        p3 = poly[indices[2]],
-        plane = plane3pt(p1,p2,p3),
-        res = _general_plane_line_intersection(plane, line, eps=eps)
-    ) is_undef(res)? undef :
-    is_undef(res[1]) ? (
-        let(// Line is on polygon plane.
+        poly = deduplicate(poly)
+    )
+    len(poly[0])==2 ?  // planar case
+       let(
             linevec = unit(line[1] - line[0]),
-            lp1 = line[0] + (bounded[0]? 0 : -1000000) * linevec,
-            lp2 = line[1] + (bounded[1]? 0 :  1000000) * linevec,
-            poly2d = clockwise_polygon(project_plane(plane, poly)),
-            line2d = project_plane(plane, [lp1,lp2]),
-            parts = split_path_at_region_crossings(line2d, [poly2d], closed=false),
-            inside = [
-                for (part = parts)
-                if (point_in_polygon(mean(part), poly2d)>0) part
-            ]
-        ) !inside? undef :
-        let( isegs = [for (seg = inside) lift_plane(plane, seg) ] )
-        isegs
-    ) :
-    bounded[0] && res[1]<0? undef :
-    bounded[1] && res[1]>1? undef :
-    let(
-        proj = clockwise_polygon(project_plane([p1, p2, p3], poly)),
-        pt = project_plane([p1, p2, p3], res[0])
-    ) point_in_polygon(pt, proj) < 0 ? undef :
-    res[0];
+            bound = 100*max(flatten(pointlist_bounds(poly))),
+            boundedline = [line[0] + (bounded[0]? 0 : -bound) * linevec,
+                           line[1] + (bounded[1]? 0 :  bound) * linevec],
+            parts = split_path_at_region_crossings(boundedline, [poly], closed=false),
+            inside = [for (part = parts)
+                        if (point_in_polygon(mean(part), poly,nonzero=nonzero,eps=eps)>=0) part
+                     ]
+        )
+        len(inside)==0? undef : _merge_segments(inside, [inside[0]], eps)
+    : // 3d case
+       let(indices = noncollinear_triple(poly))
+       indices==[] ? undef :   // Polygon is collinear
+       let(
+           plane = plane3pt(poly[indices[0]], poly[indices[1]], poly[indices[2]]),
+           plane_isect = plane_line_intersection(plane, line, bounded, eps)
+       )
+       is_undef(plane_isect) ? undef :  
+       is_vector(plane_isect,3) ?  
+           let(
+               poly2d = project_plane(plane,poly),
+               pt2d = project_plane(plane, plane_isect)
+           )
+           (point_in_polygon(pt2d, poly2d, nonzero=nonzero, eps=eps) < 0 ? undef : plane_isect)
+       : // Case where line is on the polygon plane
+           let(
+               poly2d = project_plane(plane, poly),
+               line2d = project_plane(plane, line),
+               segments = polygon_line_intersection(poly2d, line2d, bounded=bounded, nonzero=nonzero, eps=eps)
+           )
+           segments==undef ? undef : [for(seg=segments) lift_plane(plane,seg)];
 
+
+function _merge_segments(insegs,outsegs, eps, i=1) = //let(f=echo(insegs=insegs, outsegs=outsegs,lo=last(outsegs[1]), fi=insegs[i][0]))
+    i==len(insegs) ? outsegs : 
+    approx(last(outsegs)[1], insegs[i][0], eps) ? _merge_segments(insegs, [each list_head(outsegs),[last(outsegs)[0],insegs[i][1]]], eps, i+1)
+                                                : _merge_segments(insegs, [each outsegs, insegs[i]], eps, i+1);
+    
 
 // Function: plane_intersection()
 // Usage:
@@ -1302,17 +1314,16 @@ function centroid(poly, eps=EPSILON) =
 function polygon_normal(poly) =
     assert(is_path(poly,dim=3), "Invalid 3D polygon." )
     let(
-        L=len(poly),
-        area_vec = sum([for(i=idx(poly))
-                           cross(poly[(i+1)%L]-poly[0],
-                                 poly[(i+2)%L]-poly[(i+1)%L])])
+        area_vec = sum([for(i=[1:len(poly)-2])
+                           cross(poly[i]-poly[0],
+                                 poly[i+1]-poly[i])])
     )
-    norm(area_vec)<EPSILON ? undef : -unit(area_vec);
+    unit(-area_vec, error=undef);
 
 
 // Function: point_in_polygon()
 // Usage:
-//   test = point_in_polygon(point, poly, [eps])
+//   test = point_in_polygon(point, poly, [nonzero], [eps])
 // Topics: Geometry, Polygons
 // Description:
 //   This function tests whether the given 2D point is inside, outside or on the boundary of
@@ -1356,7 +1367,7 @@ function polygon_normal(poly) =
 // Arguments:
 //   point = The 2D point to check
 //   poly = The list of 2D points forming the perimeter of the polygon.
-//   nonzero = The rule to use: true for "Nonzero" rule and false for "Even-Odd" (Default: true )
+//   nonzero = The rule to use: true for "Nonzero" rule and false for "Even-Odd". Default: false (Even-Odd)
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 // Example(2D): With nonzero set to true, we get this result. Green dots are inside the polygon and red are outside:
 //   a=20*2/3;
@@ -1390,7 +1401,7 @@ function polygon_normal(poly) =
 //     color(point_in_polygon(p,path,nonzero=false)==1 ? "green" : "red")
 //     move(p)circle(r=1, $fn=12);
 //   }
-function point_in_polygon(point, poly, nonzero=true, eps=EPSILON) =
+function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
     // Original algorithms from http://geomalgorithms.com/a03-_inclusion.html
     assert( is_vector(point,2) && is_path(poly,dim=2) && len(poly)>2,
             "The point and polygon should be in 2D. The polygon should have more that 2 points." )
@@ -1401,7 +1412,7 @@ function point_in_polygon(point, poly, nonzero=true, eps=EPSILON) =
             for (i = [0:1:len(poly)-1])
             let( seg = select(poly,i,i+1) )
             if (!approx(seg[0],seg[1],eps) )
-            point_on_segment(point, seg, eps=eps)? 1:0
+            point_on_line(point, seg, SEGMENT, eps=eps)? 1:0
         ]
     )
     sum(on_brd) > 0? 0 :
@@ -1430,6 +1441,122 @@ function point_in_polygon(point, poly, nonzero=true, eps=EPSILON) =
                 ) 1
             ]
         ) 2*(len(cross)%2)-1;
+
+
+// Function: polygon_triangulation(poly, [ind], [eps])
+// Usage:
+//   triangles = polygon_triangulation(poly)
+//   triangles = polygon_triangulation(poly, ind)
+// Description:
+//   Given a simple polygon in 2D or 3D, triangulates it and returns a list 
+//   of triples indexing into the polygon vertices. When the optional argument `ind` is 
+//   given, the it is used as an index list into `poly` to define the polygon. In that case, 
+//   `poly` may have a length greater than `ind`. Otherwise, all points in `poly` 
+//   are considered as vertices of the polygon.
+//   .
+//   The function may issue an error if it finds that the polygon is not simple
+//   (self-intersecting) or its vertices are collinear. An error may also be issued
+//   for 3d non planar polygons.
+//   For 2d polygons, the output triangles will have the same winding (CW or CCW) of
+//   the input polygon. For 3d polygons, the triangle windings will induce a normal
+//   vector with the same direction of the polygon normal.
+// Arguments:
+//   poly = Array of vertices for the polygon.
+//   ind = A list indexing the vertices of the polygon in `poly`.
+//   eps = A maximum tolerance in geometrical tests. Default: EPSILON
+// Example:
+//   poly = star(id=10, od=15,n=11);
+//   tris =  polygon_triangulation(poly);
+//   polygon(poly);
+//   up(1)
+//   color("blue");
+//   for(tri=tris) trace_path(select(poly,tri), size=.1, closed=true);
+//
+// Example: 
+//   include<BOSL2/polyhedra.scad>
+//   vnf = regular_polyhedron_info(name="dodecahedron",side=5,info="vnf");
+//   %vnf_polyhedron(vnf);
+//   vnf_tri = [vnf[0], [for(face=vnf[1]) each polygon_triangulation(vnf[0], face) ] ];
+//   color("blue")
+//   vnf_wireframe(vnf_tri, d=.15);
+
+function polygon_triangulation(poly, ind, eps=EPSILON) =
+    assert(is_path(poly), "Polygon `poly` should be a list of 2d or 3d points")
+    assert(is_undef(ind) 
+           || (is_vector(ind) && min(ind)>=0 && max(ind)<len(poly) ),
+           "Improper or out of bounds list of indices")
+    let( ind = is_undef(ind) ? count(len(poly)) : ind )
+    len(poly[ind[0]]) == 3 
+      ? // represents the polygon projection on its plane as a 2d polygon 
+        let( 
+            pts = select(poly,ind),
+            nrm = polygon_normal(pts)
+        )
+        // here, instead of an error, it might return [] or undef
+        assert( nrm!=undef, 
+                "The polygon has self-intersections or its vertices are collinear or non coplanar.") 
+        let(
+            imax  = max_index([for(p=pts) norm(p-pts[0]) ]),
+            v1    = unit( pts[imax] - pts[0] ),
+            v2    = cross(v1,nrm),
+            prpts = pts*transpose([v1,v2])
+        )
+        [for(tri=_triangulate(prpts, count(len(ind)), eps)) select(ind,tri) ]
+      : let( cw = polygon_is_clockwise(select(poly, ind)) )
+        cw 
+          ? [for(tri=_triangulate( poly, reverse(ind), eps )) reverse(tri) ]
+          : _triangulate( poly, ind, eps );
+
+
+
+// requires ccw 2d polygons
+// returns ccw triangles
+function _triangulate(poly, ind, eps=EPSILON, tris=[]) =
+    len(ind)==3 ? concat(tris,[ind]) :
+    let( ear = _get_ear(poly,ind,eps) )
+    assert( ear!=undef, 
+            "The polygon has self-intersections or its vertices are collinear or non coplanar.") 
+    let(
+        ear_tri = select(ind,ear,ear+2),
+        indr    = select(ind,ear+2, ear) // indices of the remaining points
+    )
+    _triangulate(poly, indr, eps, concat(tris,[ear_tri]));
+
+// search a valid ear from the remaining polygon
+function _get_ear(poly, ind, eps, _i=0) =
+    _i>=len(ind) ? undef : // poly has no ears
+    let( // the _i-th ear candidate
+        p0 = poly[ind[_i]],
+        p1 = poly[ind[(_i+1)%len(ind)]],
+        p2 = poly[ind[(_i+2)%len(ind)]]
+    )
+    // if it is not a convex vertex, try the next one
+    _is_cw2(p0,p1,p2,eps) ? _get_ear(poly,ind,eps, _i=_i+1) : 
+    let( // vertex p1 is convex; check if the triangle contains any other point
+        to_tst = select(ind,_i+3, _i-1),
+        pt2tst = select(poly,to_tst),     // points other than p0, p1 and p2
+        q      = [(p0-p2).y, (p2-p0).x],  // orthogonal to ray [p0,p2] pointing right
+        q0     = q*p0,
+        atleft = [for(p=pt2tst) if(p*q<=q0) p ]
+    )
+    atleft==[] ? _i : // no point inside -> an ear
+    let( 
+        q  = [(p2-p1).y, (p1-p2).x],      // orthogonal to ray [p1,p2] pointing right
+        q0 = q*p2,
+        atleft = [for(p=atleft) if(p*q<=q0) p ]
+    )
+    atleft==[] ? _i : // no point inside -> an ear
+    let( 
+        q  = [(p1-p0).y, (p0-p1).x],      // orthogonal to ray [p1,p0] pointing right
+        q0 = q*p1,
+        atleft = [for(p=atleft) if(p*q<=q0) p ]
+    )
+    atleft==[] ? _i : // no point inside -> an ear
+    // check the next ear candidate
+    _get_ear(poly, ind, eps, _i=_i+1);
+
+function _is_cw2(a,b,c,eps=EPSILON) = cross(a-c,b-c)<eps*norm(a-c)*norm(b-c);
+
 
 
 // Function: is_polygon_clockwise()

@@ -1563,7 +1563,7 @@ function star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit
     )
     assert(is_def(n), "Must specify number of points, n")
     assert(count==1, "Must specify exactly one of ir, id, step")
-    assert(stepOK, str("Parameter 'step' must be between 2 and ",floor(n/2)," for ",n," point star"))
+    assert(stepOK, str("Parameter 'step' must be between 2 and ",floor(n/2-1/2)," for ",n," point star"))
     let(
         mat = !is_undef(_mat) ? _mat :
             ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (

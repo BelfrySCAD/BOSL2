@@ -210,8 +210,9 @@ function vnf_reverse_faces(vnf) =
 function vnf_triangulate(vnf) =
     let(
         vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf,
-        verts = vnf[0]
-    ) [verts, triangulate_faces(verts, vnf[1])];
+        verts = vnf[0],
+        faces = [for (face=vnf[1]) polygon_triangulation(verts, face)]
+    ) [verts, faces]; 
 
 
 // Function: vnf_vertex_array()
