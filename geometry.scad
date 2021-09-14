@@ -1455,8 +1455,9 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   are considered as vertices of the polygon.
 //   .
 //   The function may issue an error if it finds that the polygon is not simple
-//   (self-intersecting) or its vertices are collinear. An error may also be issued
-//   for 3d non planar polygons.
+//   (self-intersecting) or its vertices are collinear.  It can work for 3d non-planar polygons
+//   if they are close enough to planar but may otherwise issue an error for this case.
+//   .
 //   For 2d polygons, the output triangles will have the same winding (CW or CCW) of
 //   the input polygon. For 3d polygons, the triangle windings will induce a normal
 //   vector with the same direction of the polygon normal.
@@ -1485,7 +1486,7 @@ function polygon_triangulation(poly, ind, eps=EPSILON) =
     assert(is_undef(ind) 
            || (is_vector(ind) && min(ind)>=0 && max(ind)<len(poly) ),
            "Improper or out of bounds list of indices")
-    let( ind = is_undef(ind) ? count(len(poly)) : ind )
+    let( ind = deduplicate_indexed(poly,is_undef(ind) ? count(len(poly)) : ind) )
     len(poly[ind[0]]) == 3 
       ? // represents the polygon projection on its plane as a 2d polygon 
         let( 
@@ -1502,7 +1503,7 @@ function polygon_triangulation(poly, ind, eps=EPSILON) =
             prpts = pts*transpose([v1,v2])
         )
         [for(tri=_triangulate(prpts, count(len(ind)), eps)) select(ind,tri) ]
-      : let( cw = polygon_is_clockwise(select(poly, ind)) )
+      : let( cw = is_polygon_clockwise(select(poly, ind)) )
         cw 
           ? [for(tri=_triangulate( poly, reverse(ind), eps )) reverse(tri) ]
           : _triangulate( poly, ind, eps );
