@@ -211,7 +211,7 @@ function vnf_triangulate(vnf) =
     let(
         vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf,
         verts = vnf[0],
-        faces = [for (face=vnf[1]) polygon_triangulation(verts, face)]
+        faces = [for (face=vnf[1]) each polygon_triangulate(verts, face)]
     ) [verts, faces]; 
 
 
@@ -544,6 +544,11 @@ function vnf_volume(vnf) =
          for(face=vnf[1], j=[1:1:len(face)-2])
              cross(verts[face[j+1]], verts[face[j]]) * verts[face[0]]
     ])/6;
+
+
+function vnf_area(vnf) =
+    let(verts=vnf[0])
+    sum([for(face=vnf[1]) polygon_area(select(verts,face))]);
 
 
 // Function: vnf_centroid()

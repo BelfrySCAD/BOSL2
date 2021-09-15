@@ -654,11 +654,24 @@ function polygon_line_intersection(poly, line, bounded=false, nonzero=false, eps
             boundedline = [line[0] + (bounded[0]? 0 : -bound) * linevec,
                            line[1] + (bounded[1]? 0 :  bound) * linevec],
             parts = split_path_at_region_crossings(boundedline, [poly], closed=false),
-            inside = [for (part = parts)
-                        if (point_in_polygon(mean(part), poly,nonzero=nonzero,eps=eps)>=0) part
+            inside = [
+                      if(point_in_polygon(parts[0][0], poly, nonzero=nonzero, eps=eps) == 0)
+                         [parts[0][0]],   // Add starting point if it is on the polygon
+                      for(part = parts)
+                         if (point_in_polygon(mean(part), poly, nonzero=nonzero, eps=eps) >=0 )
+                             part
+                         else if(len(part)==2 && point_in_polygon(part[1], poly, nonzero=nonzero, eps=eps) == 0)
+                             [part[1]]   // Add segment end if it is on the polygon
                      ]
         )
-        len(inside)==0? undef : _merge_segments(inside, [inside[0]], eps)
+        (
+            len(inside)==0 ? undef :
+            let(
+                seglist = [for (entry=_merge_segments(inside, [inside[0]], eps))
+                              same_shape(entry,[[0,0]]) ? entry[0]:entry]
+            )
+            len(seglist)==1 && is_vector(seglist[0]) ? seglist[0] : seglist
+        )
     : // 3d case
        let(indices = noncollinear_triple(poly))
        indices==[] ? undef :   // Polygon is collinear
@@ -681,11 +694,12 @@ function polygon_line_intersection(poly, line, bounded=false, nonzero=false, eps
            )
            segments==undef ? undef : [for(seg=segments) lift_plane(plane,seg)];
 
-
-function _merge_segments(insegs,outsegs, eps, i=1) = //let(f=echo(insegs=insegs, outsegs=outsegs,lo=last(outsegs[1]), fi=insegs[i][0]))
+function _merge_segments(insegs,outsegs, eps, i=1) = 
     i==len(insegs) ? outsegs : 
-    approx(last(outsegs)[1], insegs[i][0], eps) ? _merge_segments(insegs, [each list_head(outsegs),[last(outsegs)[0],insegs[i][1]]], eps, i+1)
-                                                : _merge_segments(insegs, [each outsegs, insegs[i]], eps, i+1);
+    approx(last(last(outsegs)), insegs[i][0], eps) 
+        ? _merge_segments(insegs, [each list_head(outsegs),[last(outsegs)[0],last(insegs[i])]], eps, i+1)
+        : _merge_segments(insegs, [each outsegs, insegs[i]], eps, i+1);
+
     
 
 // Function: plane_intersection()
@@ -1443,10 +1457,10 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
         ) 2*(len(cross)%2)-1;
 
 
-// Function: polygon_triangulation(poly, [ind], [eps])
+// Function: polygon_triangulate(poly, [ind], [eps])
 // Usage:
-//   triangles = polygon_triangulation(poly)
-//   triangles = polygon_triangulation(poly, ind)
+//   triangles = polygon_triangulate(poly)
+//   triangles = polygon_triangulate(poly, ind)
 // Description:
 //   Given a simple polygon in 2D or 3D, triangulates it and returns a list 
 //   of triples indexing into the polygon vertices. When the optional argument `ind` is 
@@ -1467,7 +1481,7 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   eps = A maximum tolerance in geometrical tests. Default: EPSILON
 // Example:
 //   poly = star(id=10, od=15,n=11);
-//   tris =  polygon_triangulation(poly);
+//   tris =  polygon_triangulate(poly);
 //   polygon(poly);
 //   up(1)
 //   color("blue");
@@ -1477,11 +1491,11 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   include<BOSL2/polyhedra.scad>
 //   vnf = regular_polyhedron_info(name="dodecahedron",side=5,info="vnf");
 //   %vnf_polyhedron(vnf);
-//   vnf_tri = [vnf[0], [for(face=vnf[1]) each polygon_triangulation(vnf[0], face) ] ];
+//   vnf_tri = [vnf[0], [for(face=vnf[1]) each polygon_triangulate(vnf[0], face) ] ];
 //   color("blue")
 //   vnf_wireframe(vnf_tri, d=.15);
 
-function polygon_triangulation(poly, ind, eps=EPSILON) =
+function polygon_triangulate(poly, ind, eps=EPSILON) =
     assert(is_path(poly), "Polygon `poly` should be a list of 2d or 3d points")
     assert(is_undef(ind) 
            || (is_vector(ind) && min(ind)>=0 && max(ind)<len(poly) ),
