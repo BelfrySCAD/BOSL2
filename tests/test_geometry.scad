@@ -697,6 +697,35 @@ module test_polygon_line_intersection() {
                                 [[[-3.31370849898, 3], [-2.24264068712, 3]],
                                 [[-0.828427124746, 3], [0.828427124746, 3]],
                                  [[2.24264068712, 3], [3.31370849898, 3]]]);
+
+    tran = skew(sxy=1.2)*scale([.9,1,1.2])*yrot(14)*zrot(37)*xrot(9);
+
+    // assemble multiple edges into one edge
+    assert_approx(polygon_line_intersection(star(r=15,n=8,step=2), [[20,-5],[-5,20]]), [[[15,0],[0,15]]]);
+    assert_approx(polygon_line_intersection(apply(tran,path3d(star(r=15,n=8,step=2))), apply(tran,[[20,-5,0],[-5,20,0]])), apply(tran,[[[15,0,0],[0,15,0]]]));
+    // line going the other direction
+    assert_approx(polygon_line_intersection(star(r=15,n=8,step=2), [[-5,20],[20,-5]]), [[[0,15],[15,0]]]);
+    assert_approx(polygon_line_intersection(apply(tran,path3d(star(r=15,n=8,step=2))), apply(tran,[[-5,20,0],[20,-5,0]])),apply(tran, [[[0,15,0],[15,0,0]]]));
+    // single point
+    assert_approx(polygon_line_intersection(hexagon(r=15), [[15,-10],[15,13]], RAY), [[[15,0]]]);
+    assert_approx(polygon_line_intersection(apply(tran,path3d(hexagon(r=15))), apply(tran,[[15,-10,0],[15,13,0]]), RAY),
+                  [[apply(tran,[15,0,0])]]);
+    // two points
+    assert_approx(polygon_line_intersection(star(r=15,n=8,step=3), rot(22.5,p=[[15,-10],[15,20]],cp=[15,0])), 
+                    [[[15,0]], [[10.6066017178, 10.6066017178]]]);
+    assert_approx(polygon_line_intersection(apply(tran,path3d(star(r=15,n=8,step=3))), apply(tran,rot(22.5,p=[[15,-10,0],[15,20,0]],cp=[15,0,0]))), 
+                    [[apply(tran,[15,0,0])], [apply(tran,[10.6066017178, 10.6066017178,0])]]);
+    // two segments and one point
+    star7 = star(r=25,ir=9,n=7);
+    assert_approx(polygon_line_intersection(star7, [left(10,p=star7[8]), right(50,p=star7[8])]),
+                  [[[-22.5242216976, 10.8470934779]],
+                   [[-5.60077322195, 10.8470934779], [0.997372374838, 10.8470934779]],
+                   [[4.61675816681, 10.8470934779], [11.4280421589, 10.8470934779]]]);
+    assert_approx(polygon_line_intersection(apply(tran,path3d(star7)),
+                        apply(tran, path3d([left(10,p=star7[8]), right(50,p=star7[8])]))),
+                  [[apply(tran,[-22.5242216976, 10.8470934779,0])],
+                   apply(tran,[[-5.60077322195, 10.8470934779,0], [0.997372374838, 10.8470934779,0]]),
+                   apply(tran,[[4.61675816681, 10.8470934779,0], [11.4280421589, 10.8470934779,0]])]);
 }
 *test_polygon_line_intersection();
 

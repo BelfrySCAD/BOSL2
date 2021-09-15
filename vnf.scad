@@ -1178,7 +1178,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
             )
             if (!is_undef(isects))
             for (isect = isects)
-            if (len(isect) > 1)
+            if (len(isect) > 1) let(
                 isects2 = polygon_line_intersection(poly2, isect, bounded=true)
             )
             if (!is_undef(isects2))
