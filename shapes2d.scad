@@ -1556,12 +1556,12 @@ function star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit
     assert(is_undef(align_tip) || is_vector(align_tip))
     assert(is_undef(align_pit) || is_vector(align_pit))
     assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit")
+    assert(is_def(n), "Must specify number of points, n")
     let(
         r = get_radius(r1=or, d1=od, r=r, d=d),
         count = num_defined([ir,id,step]),
         stepOK = is_undef(step) || (step>1 && step<n/2)
     )
-    assert(is_def(n), "Must specify number of points, n")
     assert(count==1, "Must specify exactly one of ir, id, step")
     assert(stepOK,  n==4 ? "Parameter 'step' not allowed for 4 point stars"
                   : n==5 || n==6 ? str("Parameter 'step' must be 2 for ",n," point stars")
