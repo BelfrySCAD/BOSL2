@@ -11,9 +11,9 @@
 
 // Section: Lines, Rays, and Segments
 
-// Function: point_on_line()
+// Function: is_point_on_line()
 // Usage:
-//   pt = point_on_line(point, line, [bounded], [eps]);
+//   pt = is_point_on_line(point, line, [bounded], [eps]);
 // Topics: Geometry, Points, Segments
 // Description:
 //   Determine if the point is on the line segment, ray or segment defined by the two between two points.
@@ -25,7 +25,7 @@
 //   line = Array of two points defining the line, ray, or segment to test against.
 //   bounded = boolean or list of two booleans defining endpoint conditions for the line. If false treat the line as an unbounded line.  If true treat it as a segment.  If [true,false] treat as a ray, based at the first endpoint.  Default: false
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function point_on_line(point, line, bounded=false, eps=EPSILON) =
+function is_point_on_line(point, line, bounded=false, eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     point_line_distance(point, line, bounded)<eps;
 
@@ -66,9 +66,9 @@ function _point_left_of_line2d(point, line) =
     cross(line[0]-point, line[1]-line[0]);
 
 
-// Function: collinear()
+// Function: is_collinear()
 // Usage:
-//   test = collinear(a, [b, c], [eps]);
+//   test = is_collinear(a, [b, c], [eps]);
 // Topics: Geometry, Points, Collinearity
 // Description:
 //   Returns true if the points `a`, `b` and `c` are co-linear or if the list of points `a` is collinear.
@@ -77,7 +77,7 @@ function _point_left_of_line2d(point, line) =
 //   b = Second point or undef; it should be undef if `c` is undef
 //   c = Third point or undef.
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function collinear(a, b, c, eps=EPSILON) =
+function is_collinear(a, b, c, eps=EPSILON) =
     assert( is_path([a,b,c],dim=undef)
             || ( is_undef(b) && is_undef(c) && is_path(a,dim=undef) ),
             "Input should be 3 points or a list of points with same dimension.")
@@ -336,7 +336,7 @@ function line_from_points(points, fast=false, eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let( pb = furthest_point(points[0],points) )
     norm(points[pb]-points[0])<eps*max(norm(points[pb]),norm(points[0])) ? undef :
-    fast || collinear(points)
+    fast || is_collinear(points)
       ? [points[pb], points[0]]
       : undef;
 
@@ -345,16 +345,16 @@ function line_from_points(points, fast=false, eps=EPSILON) =
 // Section: Planes
 
 
-// Function: coplanar()
+// Function: is_coplanar()
 // Usage:
-//   test = coplanar(points,[eps]);
+//   test = is_coplanar(points,[eps]);
 // Topics: Geometry, Coplanarity
 // Description:
 //   Returns true if the given 3D points are non-collinear and are on a plane.
 // Arguments:
 //   points = The points to test.
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function coplanar(points, eps=EPSILON) =
+function is_coplanar(points, eps=EPSILON) =
     assert( is_path(points,dim=3) , "Input should be a list of 3D points." )
     assert( is_finite(eps) && eps>=0, "The tolerance should be a non-negative value." )
     len(points)<=2 ? false
@@ -539,7 +539,7 @@ function plane_from_polygon(poly, fast=false, eps=EPSILON) =
     let(
         plane = plane_from_normal(poly_normal, poly[0])
     )
-    fast? plane: points_on_plane(poly, plane, eps=eps)? plane: [];
+    fast? plane: are_points_on_plane(poly, plane, eps=eps)? plane: [];
 
 
 // Function: plane_normal()
@@ -926,9 +926,9 @@ function _pointlist_greatest_distance(points,plane) =
     abs(max( max(pt_nrm) - plane[3], -min(pt_nrm) + plane[3])) / norm(normal);
 
 
-// Function: points_on_plane()
+// Function: are_points_on_plane()
 // Usage:
-//   test = points_on_plane(points, plane, [eps]);
+//   test = are_points_on_plane(points, plane, [eps]);
 // Topics: Geometry, Planes, Points
 // Description:
 //   Returns true if the given 3D points are on the given plane.
@@ -936,14 +936,14 @@ function _pointlist_greatest_distance(points,plane) =
 //   plane = The plane to test the points on.
 //   points = The list of 3D points to test.
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function points_on_plane(points, plane, eps=EPSILON) =
+function are_points_on_plane(points, plane, eps=EPSILON) =
     assert( _valid_plane(plane), "Invalid plane." )
     assert( is_matrix(points,undef,3) && len(points)>0, "Invalid pointlist." ) // using is_matrix it accepts len(points)==1
     assert( is_finite(eps) && eps>=0, "The tolerance should be a positive number." )
     _pointlist_greatest_distance(points,plane) < eps;
 
 
-// Function: above_plane()
+// Function: is_above_plane()
 // Usage:
 //   test = in_front_of_plane(plane, point);
 // Topics: Geometry, Planes
@@ -955,7 +955,7 @@ function points_on_plane(points, plane, eps=EPSILON) =
 // Arguments:
 //   plane = The [A,B,C,D] coefficients for the first plane equation `Ax+By+Cz=D`.
 //   point = The 3D point to test.
-function above_plane(plane, point) =
+function is_above_plane(plane, point) =
     point_plane_distance(plane, point) > EPSILON;
 
 
@@ -1074,7 +1074,7 @@ function circle_2tangents(pt1, pt2, pt3, r, d, tangents=false) =
             "Invalid input points." )
     is_undef(pt2)
     ? circle_2tangents(pt1[0], pt1[1], pt1[2], r=r, tangents=tangents)
-    : collinear(pt1, pt2, pt3)? undef :
+    : is_collinear(pt1, pt2, pt3)? undef :
         let(
             v1 = unit(pt1 - pt2),
             v2 = unit(pt3 - pt2),
@@ -1159,7 +1159,7 @@ function circle_3points(pt1, pt2, pt3) =
       : assert( is_vector(pt1) && is_vector(pt2) && is_vector(pt3)
                 && max(len(pt1),len(pt2),len(pt3))<=3 && min(len(pt1),len(pt2),len(pt3))>=2,
                 "Invalid point(s)." )
-        collinear(pt1,pt2,pt3)? [undef,undef,undef] :
+        is_collinear(pt1,pt2,pt3)? [undef,undef,undef] :
         let(
             v  = [ point3d(pt1), point3d(pt2), point3d(pt3) ], // triangle vertices
             ed = [for(i=[0:2]) v[(i+1)%3]-v[i] ],    // triangle edge vectors
@@ -1530,7 +1530,7 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
             for (i = [0:1:len(poly)-1])
             let( seg = select(poly,i,i+1) )
             if (!approx(seg[0],seg[1],eps) )
-            point_on_line(point, seg, SEGMENT, eps=eps)? 1:0
+            is_point_on_line(point, seg, SEGMENT, eps=eps)? 1:0
         ]
     )
     sum(on_brd) > 0? 0 :
@@ -1752,6 +1752,7 @@ function reverse_polygon(poly) =
 // Topics: Geometry, Polygons
 // Description:
 //   Given a polygon `poly`, rotates the point ordering so that the first point in the polygon path is the one at index `i`.
+//   This is identical to `list_rotate` except that it checks for doubled endpoints and removed them if present.  
 // Arguments:
 //   poly = The list of points in the polygon path.
 //   i = The index of the point to shift to the front of the path.
@@ -1761,24 +1762,6 @@ function polygon_shift(poly, i) =
     assert(is_path(poly), "Invalid polygon." )
     list_rotate(cleanup_path(poly), i);
 
-
-// Function: polygon_shift_to_closest_point()
-// Usage:
-//   newpoly = polygon_shift_to_closest_point(path, pt);
-// Topics: Geometry, Polygons
-// Description:
-//   Given a polygon `poly`, rotates the point ordering so that the first point in the path is the one closest to the given point `pt`.
-// Arguments:
-//   poly = The list of points in the polygon path.
-//   pt = The reference point.
-function polygon_shift_to_closest_point(poly, pt) =
-    assert(is_vector(pt), "Invalid point." )
-    assert(is_path(poly,dim=len(pt)), "Invalid polygon or incompatible dimension with the point." )
-    let(
-        poly = cleanup_path(poly),
-        dists = [for (p=poly) norm(p-pt)],
-        closest = min_index(dists)
-    ) select(poly,closest,closest+len(poly)-1);
 
 
 // Function: reindex_polygon()

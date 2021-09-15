@@ -618,7 +618,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, l
         arc(N,cp=cp,r=r,start=atan2(v1.y,v1.x),angle=final_angle,wedge=wedge)
     ) : (
         // Final case is arc passing through three points, starting at point[0] and ending at point[3]
-        let(col = collinear(points[0],points[1],points[2]))
+        let(col = is_collinear(points[0],points[1],points[2]))
         assert(!col, "Collinear inputs do not define an arc")
         let(
             cp = line_intersection(_normal_segment(points[0],points[1]),_normal_segment(points[1],points[2])),

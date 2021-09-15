@@ -121,7 +121,7 @@ function simplify_path(path, eps=EPSILON) =
         indices = [
             0,
             for (i=[1:1:len(path)-2]) 
-                if (!collinear(path[i-1], path[i], path[i+1], eps=eps)) i, 
+                if (!is_collinear(path[i-1], path[i], path[i+1], eps=eps)) i, 
             len(path)-1 
         ]
     ) [for (i=indices) path[i]];
@@ -148,7 +148,7 @@ function simplify_path_indexed(points, indices, eps=EPSILON) =
                     i1 = indices[i-1],
                     i2 = indices[i],
                     i3 = indices[i+1]
-                ) if (!collinear(points[i1], points[i2], points[i3], eps=eps))
+                ) if (!is_collinear(points[i1], points[i2], points[i3], eps=eps))
                 indices[i]
             ], 
             indices[len(indices)-1]
@@ -604,7 +604,7 @@ function path_add_jitter(path, dist=1/512, closed=true) =
         path[0],
         for (i=idx(path,s=1,e=closed?-1:-2)) let(
             n = line_normal([path[i-1],path[i]])
-        ) path[i] + n * (collinear(select(path,i-1,i+1))? (dist * ((i%2)*2-1)) : 0),
+        ) path[i] + n * (is_collinear(select(path,i-1,i+1))? (dist * ((i%2)*2-1)) : 0),
         if (!closed) last(path)
     ];
 
@@ -1004,7 +1004,7 @@ function _path_cuts_normals(path, cuts, dirs, closed=false) =
 // to define the plane of the path.
 function _path_plane(path, ind, i,closed) =
     i<(closed?-1:0) ? undef :
-    !collinear(path[ind],path[ind-1], select(path,i))?
+    !is_collinear(path[ind],path[ind-1], select(path,i))?
         [select(path,i)-path[ind-1],path[ind]-path[ind-1]] :
         _path_plane(path, ind, i-1);
 

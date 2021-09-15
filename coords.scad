@@ -217,7 +217,7 @@ function xy_to_polar(x,y=undef) = let(
 //   stroke(xypath,closed=true);
 function project_plane(plane,p) =
       is_matrix(plane,3,3) && is_undef(p) ? // no data, 3 points given
-          assert(!collinear(plane),"Points defining the plane must not be collinear")
+          assert(!is_collinear(plane),"Points defining the plane must not be collinear")
           let(
               v = plane[2]-plane[0],
               y = unit(plane[1]-plane[0]),        // y axis goes to point b
@@ -242,7 +242,7 @@ function project_plane(plane,p) =
            [for(plist=p) project_plane(plane,plist)]
     : assert(is_vector(p,3) || is_path(p,3),str("Data must be a 3d point, path, region, vnf or bezier patch",p))
       is_matrix(plane,3,3) ?
-          assert(!collinear(plane),"Points defining the plane must not be collinear")
+          assert(!is_collinear(plane),"Points defining the plane must not be collinear")
           let(
               v = plane[2]-plane[0],
               y = unit(plane[1]-plane[0]),        // y axis goes to point b

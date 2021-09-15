@@ -186,7 +186,7 @@ function hull3d_faces(points) =
         remaining = [for (i = [0:1:len(points)-1]) if (i!=a && i!=b && i!=c && i!=d) i],
         // Build an initial tetrahedron.
         // Swap b, c if d is in front of triangle t.
-        ifop = above_plane(plane, points[d]),
+        ifop = is_above_plane(plane, points[d]),
         bc = ifop? [c,b] : [b,c],
         b = bc[0],
         c = bc[1],
@@ -245,7 +245,7 @@ function _remove_internal_edges(halfedges) = [
 ];
 
 function _find_first_noncoplanar(plane, points, i=0) = 
-    (i >= len(points) || !points_on_plane([points[i]],plane))? i :
+    (i >= len(points) || !are_points_on_plane([points[i]],plane))? i :
     _find_first_noncoplanar(plane, points, i+1);
 
 

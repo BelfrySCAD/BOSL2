@@ -1206,7 +1206,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
                 faceverts = [for (k=face) varr[k]]
             )
             if (is_num(area) && abs(area) > EPSILON)
-            if (!coplanar(faceverts))
+            if (!is_coplanar(faceverts))
             _vnf_validate_err("NONPLANAR", faceverts)
         ]),
         issues = concat(issues, nonplanars)
