@@ -1561,10 +1561,9 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
         ) 2*(len(cross)%2)-1;
 
 
-// Function: polygon_triangulate(poly, [ind], [eps])
+// Function: polygon_triangulate()
 // Usage:
-//   triangles = polygon_triangulate(poly)
-//   triangles = polygon_triangulate(poly, ind)
+//   triangles = polygon_triangulate(poly, [ind], [eps])
 // Description:
 //   Given a simple polygon in 2D or 3D, triangulates it and returns a list 
 //   of triples indexing into the polygon vertices. When the optional argument `ind` is 
