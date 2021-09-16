@@ -1958,7 +1958,8 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
         vnf = vnf_merge([ each subindex(top_samples,0),
                           each subindex(bot_samples,0),
                           for(pts=edge_points) vnf_vertex_array(pts),
-                          vnf_triangulate(vnf_add_faces(EMPTY_VNF,faces))
+                          debug ? vnf_add_faces(EMPTY_VNF,faces) 
+                                : vnf_triangulate(vnf_add_faces(EMPTY_VNF,faces))
                        ])
     )
     debug ? [concat(top_patch, bot_patch), vnf] : vnf;
