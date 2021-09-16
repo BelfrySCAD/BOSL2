@@ -395,8 +395,8 @@ module generic_screw(
 ) {
     sides = max(12, segs(screwsize/2));
     anchors = [
-        anchorpt("countersunk", [0,0,(headlen+screwlen)/2-0.01]),
-        anchorpt("base", [0,0,-headlen/2+screwlen/2])
+        named_anchor("countersunk", [0,0,(headlen+screwlen)/2-0.01]),
+        named_anchor("base", [0,0,-headlen/2+screwlen/2])
     ];
     attachable(anchor,spin,orient, d=screwsize, l=headlen+screwlen, anchors=anchors) {
         down(headlen/2-screwlen/2) {
@@ -517,9 +517,9 @@ module metric_bolt(
     );
 
     anchors = [
-        anchorpt("countersunk", [0,0,base+sunklen]),
-        anchorpt("base",   [0,0,base]),
-        anchorpt("shank",  [0,0,base-shank])
+        named_anchor("countersunk", [0,0,base+sunklen]),
+        named_anchor("base",   [0,0,base]),
+        named_anchor("shank",  [0,0,base-shank])
     ];
 
     //color("silver")

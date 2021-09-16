@@ -279,8 +279,8 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
                 tipp = apply(mat, polar_to_xy(r-inset+rounding,a1)),
                 pos = (p1+p2)/2
             ) each [
-                anchorpt(str("tip",i), tipp, unit(tipp,BACK), 0),
-                anchorpt(str("side",i), pos, unit(pos,BACK), 0),
+                named_anchor(str("tip",i), tipp, unit(tipp,BACK), 0),
+                named_anchor(str("side",i), pos, unit(pos,BACK), 0),
             ]
         ]
     ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path, anchors=anchors);
@@ -308,8 +308,8 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
             tipp = apply(mat, polar_to_xy(r-inset+rounding,a1)),
             pos = (p1+p2)/2
         ) each [
-            anchorpt(str("tip",i), tipp, unit(tipp,BACK), 0),
-            anchorpt(str("side",i), pos, unit(pos,BACK), 0),
+            named_anchor(str("tip",i), tipp, unit(tipp,BACK), 0),
+            named_anchor(str("side",i), pos, unit(pos,BACK), 0),
         ]
     ];
     path = regular_ngon(n=n, r=r, rounding=rounding, _mat=mat, _anchs=anchors);
@@ -694,9 +694,9 @@ function star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit
                 p3 = apply(mat, polar_to_xy(r,a3)),
                 pos = (p1+p3)/2
             ) each [
-                anchorpt(str("tip",i), p1, unit(p1,BACK), 0),
-                anchorpt(str("pit",i), p2, unit(p2,BACK), 0),
-                anchorpt(str("midpt",i), pos, unit(pos,BACK), 0),
+                named_anchor(str("tip",i), p1, unit(p1,BACK), 0),
+                named_anchor(str("pit",i), p2, unit(p2,BACK), 0),
+                named_anchor(str("midpt",i), pos, unit(pos,BACK), 0),
             ]
         ]
     ) reorient(anchor,spin, two_d=true, path=path, p=path, anchors=anchors);
@@ -724,9 +724,9 @@ module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, 
             p3 = apply(mat, polar_to_xy(r,a3)),
             pos = (p1+p3)/2
         ) each [
-            anchorpt(str("tip",i), p1, unit(p1,BACK), 0),
-            anchorpt(str("pit",i), p2, unit(p2,BACK), 0),
-            anchorpt(str("midpt",i), pos, unit(pos,BACK), 0),
+            named_anchor(str("tip",i), p1, unit(p1,BACK), 0),
+            named_anchor(str("pit",i), p2, unit(p2,BACK), 0),
+            named_anchor(str("midpt",i), pos, unit(pos,BACK), 0),
         ]
     ];
     path = star(n=n, r=r, ir=ir, realign=realign, _mat=mat, _anchs=anchors);
@@ -1007,7 +1007,7 @@ module reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) {
         for (i = [0:1:N-1]) let(
             ca = 360 - i * 360/N,
             cp = polar_to_xy(r, ca)
-        ) anchorpt(str("tip",i), cp, unit(cp,BACK), 0),
+        ) named_anchor(str("tip",i), cp, unit(cp,BACK), 0),
     ];
     attachable(anchor,spin, two_d=true, path=path, anchors=anchors) {
         polygon(path);
@@ -1034,7 +1034,7 @@ function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
             for (i = [0:1:N-1]) let(
                 ca = 360 - i * 360/N,
                 cp = polar_to_xy(r, ca)
-            ) anchorpt(str("tip",i), cp, unit(cp,BACK), 0),
+            ) named_anchor(str("tip",i), cp, unit(cp,BACK), 0),
         ]
     ) reorient(anchor,spin, two_d=true, path=path, anchors=anchors, p=path);
 
