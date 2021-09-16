@@ -133,7 +133,7 @@ function path4d(points, fill=0) =
 // Arguments:
 //   r = distance from the origin.
 //   theta = angle in degrees, counter-clockwise of X+.
-// Examples:
+// Example:
 //   xy = polar_to_xy(20,45);    // Returns: ~[14.1421365, 14.1421365]
 //   xy = polar_to_xy(40,30);    // Returns: ~[34.6410162, 15]
 //   xy = polar_to_xy([40,30]);  // Returns: ~[34.6410162, 15]
@@ -162,7 +162,7 @@ function polar_to_xy(r,theta=undef) = let(
 // Arguments:
 //   x = X coordinate.
 //   y = Y coordinate.
-// Examples:
+// Example:
 //   plr = xy_to_polar(20,30);
 //   plr = xy_to_polar([40,60]);
 // Example(2D):
@@ -317,7 +317,7 @@ function lift_plane(plane, p) =
 //   r = distance from the Z axis.
 //   theta = angle in degrees, counter-clockwise of X+ on the XY plane.
 //   z = Height above XY plane.
-// Examples:
+// Example:
 //   xyz = cylindrical_to_xyz(20,30,40);
 //   xyz = cylindrical_to_xyz([40,60,50]);
 function cylindrical_to_xyz(r,theta=undef,z=undef) = let(
@@ -340,7 +340,7 @@ function cylindrical_to_xyz(r,theta=undef,z=undef) = let(
 //   x = X coordinate.
 //   y = Y coordinate.
 //   z = Z coordinate.
-// Examples:
+// Example:
 //   cyl = xyz_to_cylindrical(20,30,40);
 //   cyl = xyz_to_cylindrical([40,50,70]);
 function xyz_to_cylindrical(x,y=undef,z=undef) = let(
@@ -360,7 +360,7 @@ function xyz_to_cylindrical(x,y=undef,z=undef) = let(
 //   r = distance from origin.
 //   theta = angle in degrees, counter-clockwise of X+ on the XY plane.
 //   phi = angle in degrees from the vertical Z+ axis.
-// Examples:
+// Example:
 //   xyz = spherical_to_xyz(20,30,40);
 //   xyz = spherical_to_xyz([40,60,50]);
 function spherical_to_xyz(r,theta=undef,phi=undef) = let(
@@ -383,7 +383,7 @@ function spherical_to_xyz(r,theta=undef,phi=undef) = let(
 //   x = X coordinate.
 //   y = Y coordinate.
 //   z = Z coordinate.
-// Examples:
+// Example:
 //   sph = xyz_to_spherical(20,30,40);
 //   sph = xyz_to_spherical([40,50,70]);
 function xyz_to_spherical(x,y=undef,z=undef) = let(
@@ -404,7 +404,7 @@ function xyz_to_spherical(x,y=undef,z=undef) = let(
 //   alt = altitude angle in degrees above the XY plane.
 //   az = azimuth angle in degrees clockwise of Y+ on the XY plane.
 //   r = distance from origin.
-// Examples:
+// Example:
 //   xyz = altaz_to_xyz(20,30,40);
 //   xyz = altaz_to_xyz([40,60,50]);
 function altaz_to_xyz(alt,az=undef,r=undef) = let(
@@ -429,7 +429,7 @@ function altaz_to_xyz(alt,az=undef,r=undef) = let(
 //   x = X coordinate.
 //   y = Y coordinate.
 //   z = Z coordinate.
-// Examples:
+// Example:
 //   aa = xyz_to_altaz(20,30,40);
 //   aa = xyz_to_altaz([40,50,70]);
 function xyz_to_altaz(x,y=undef,z=undef) = let(

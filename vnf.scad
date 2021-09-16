@@ -963,6 +963,7 @@ function _split_polygons_at_each_y(polys, ys, _i=0) =
 //   bad edges and vertices, overlaid on a transparent gray polyhedron of the VNF.
 //   .
 //   Currently checks for these problems:
+//   .
 //   Type    | Color    | Code         | Message
 //   ------- | -------- | ------------ | ---------------------------------
 //   WARNING | Yellow   | BIG_FACE     | Face has more than 3 vertices, and may confuse CGAL.

@@ -163,13 +163,13 @@ function pointlist_bounds(pts) =
 // Arguments:
 //   v = The vector to normalize.
 //   error = If given, and input is a zero-length vector, this value is returned.  Default: Assert error on zero-length vector.
-// Examples:
-//   unit([10,0,0]);   // Returns: [1,0,0]
-//   unit([0,10,0]);   // Returns: [0,1,0]
-//   unit([0,0,10]);   // Returns: [0,0,1]
-//   unit([0,-10,0]);  // Returns: [0,-1,0]
-//   unit([0,0,0],[1,2,3]);    // Returns: [1,2,3]
-//   unit([0,0,0]);    // Asserts an error.
+// Example:
+//   v1 = unit([10,0,0]);   // Returns: [1,0,0]
+//   v2 = unit([0,10,0]);   // Returns: [0,1,0]
+//   v3 = unit([0,0,10]);   // Returns: [0,0,1]
+//   v4 = unit([0,-10,0]);  // Returns: [0,-1,0]
+//   v5 = unit([0,0,0],[1,2,3]);    // Returns: [1,2,3]
+//   v6 = unit([0,0,0]);    // Asserts an error.
 function unit(v, error=[[["ASSERT"]]]) =
     assert(is_vector(v), str("Expected a vector.  Got: ",v))
     norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON,"Tried to normalize a zero vector") : error) :
@@ -191,13 +191,13 @@ function unit(v, error=[[["ASSERT"]]]) =
 //   v1 = First vector or point.
 //   v2 = Second vector or point.
 //   v3 = Third point in three point mode.
-// Examples:
-//   vector_angle(UP,LEFT);     // Returns: 90
-//   vector_angle(RIGHT,LEFT);  // Returns: 180
-//   vector_angle(UP+RIGHT,RIGHT);  // Returns: 45
-//   vector_angle([10,10], [0,0], [10,-10]);  // Returns: 90
-//   vector_angle([10,0,10], [0,0,0], [-10,10,0]);  // Returns: 120
-//   vector_angle([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: 120
+// Example:
+//   ang1 = vector_angle(UP,LEFT);     // Returns: 90
+//   ang2 = vector_angle(RIGHT,LEFT);  // Returns: 180
+//   ang3 = vector_angle(UP+RIGHT,RIGHT);  // Returns: 45
+//   ang4 = vector_angle([10,10], [0,0], [10,-10]);  // Returns: 90
+//   ang5 = vector_angle([10,0,10], [0,0,0], [-10,10,0]);  // Returns: 120
+//   ang6 = vector_angle([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: 120
 function vector_angle(v1,v2,v3) =
     assert( ( is_undef(v3) && ( is_undef(v2) || same_shape(v1,v2) ) )
             || is_consistent([v1,v2,v3]) ,
@@ -233,13 +233,13 @@ function vector_angle(v1,v2,v3) =
 //   v1 = First vector or point.
 //   v2 = Second vector or point.
 //   v3 = Third point in three point mode.
-// Examples:
-//   vector_axis(UP,LEFT);     // Returns: [0,-1,0] (FWD)
-//   vector_axis(RIGHT,LEFT);  // Returns: [0,-1,0] (FWD)
-//   vector_axis(UP+RIGHT,RIGHT);  // Returns: [0,1,0] (BACK)
-//   vector_axis([10,10], [0,0], [10,-10]);  // Returns: [0,0,-1] (DOWN)
-//   vector_axis([10,0,10], [0,0,0], [-10,10,0]);  // Returns: [-0.57735, -0.57735, 0.57735]
-//   vector_axis([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: [-0.57735, -0.57735, 0.57735]
+// Example:
+//   axis1 = vector_axis(UP,LEFT);     // Returns: [0,-1,0] (FWD)
+//   axis2 = vector_axis(RIGHT,LEFT);  // Returns: [0,-1,0] (FWD)
+//   axis3 = vector_axis(UP+RIGHT,RIGHT);  // Returns: [0,1,0] (BACK)
+//   axis4 = vector_axis([10,10], [0,0], [10,-10]);  // Returns: [0,0,-1] (DOWN)
+//   axis5 = vector_axis([10,0,10], [0,0,0], [-10,10,0]);  // Returns: [-0.57735, -0.57735, 0.57735]
+//   axis6 = vector_axis([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: [-0.57735, -0.57735, 0.57735]
 function vector_axis(v1,v2=undef,v3=undef) =
     is_vector(v3)
     ?   assert(is_consistent([v3,v2,v1]), "Bad arguments.")
