@@ -1,21 +1,22 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: vnf.scad
-//   VNF structures, holding Vertices 'N' Faces for use with `polyhedron().`
+//   The Vertices'N'Faces structure (VNF) holds the data used by polyhedron() to construct objects: a vertex
+//   list and a list of faces.  This library makes it easier to construct polyhedra by providing
+//   functions to construct, merge, and modify VNF data, while avoiding common pitfalls such as
+//   reversed faces.  
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
 
-include <triangulation.scad>
+// Creating Polyhedrons with VNF Structures
 
-
-// Section: Creating Polyhedrons with VNF Structures
+// Section: VNF Testing and Access
 //   VNF stands for "Vertices'N'Faces".  VNF structures are 2-item lists, `[VERTICES,FACES]` where the
 //   first item is a list of vertex points, and the second is a list of face indices into the vertex
 //   list.  Each VNF is self contained, with face indices referring only to its own vertex list.
 //   You can construct a `polyhedron()` in parts by describing each part in a self-contained VNF, then
 //   merge the various VNFs to get the completed polyhedron vertex list and faces.
-
 
 EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 
@@ -49,18 +50,6 @@ function vnf_vertices(vnf) = vnf[0];
 function vnf_faces(vnf) = vnf[1];
 
 
-// Function: vnf_quantize()
-// Usage:
-//   vnf2 = vnf_quantize(vnf,[q]);
-// Description:
-//   Quantizes the vertex coordinates of the VNF to the given quanta `q`.
-// Arguments:
-//   vnf = The VNF to quantize.
-//   q = The quanta to quantize the VNF coordinates to.
-function vnf_quantize(vnf,q=pow(2,-12)) =
-    [[for (pt = vnf[0]) quant(pt,q)], vnf[1]];
-
-
 // Function: vnf_get_vertex()
 // Usage:
 //   vvnf = vnf_get_vertex(vnf, p);
@@ -89,130 +78,7 @@ function vnf_get_vertex(vnf=EMPTY_VNF, p) =
     ];
 
 
-// Function: vnf_add_face()
-// Usage:
-//   vnf_add_face(vnf, pts);
-// Description:
-//   Given a VNF structure and a list of face vertex points, adds the face to the VNF structure.
-//   Returns the modified VNF structure `[VERTICES, FACES]`.  It is up to the caller to make
-//   sure that the points are in the correct order to make the face normal point outwards.
-// Arguments:
-//   vnf = The VNF structure to add a face to.
-//   pts = The vertex points for the face.
-function vnf_add_face(vnf=EMPTY_VNF, pts) =
-    assert(is_vnf(vnf))
-    assert(is_path(pts))
-    let(
-        res = set_union(vnf[0], pts, get_indices=true),
-        face = deduplicate(res[0], closed=true)
-    ) [
-        res[1],
-        concat(vnf[1], len(face)>2? [face] : [])
-    ];
-
-
-// Function: vnf_add_faces()
-// Usage:
-//   vnf_add_faces(vnf, faces);
-// Description:
-//   Given a VNF structure and a list of faces, where each face is given as a list of vertex points,
-//   adds the faces to the VNF structure.  Returns the modified VNF structure `[VERTICES, FACES]`.
-//   It is up to the caller to make sure that the points are in the correct order to make the face
-//   normals point outwards.
-// Arguments:
-//   vnf = The VNF structure to add a face to.
-//   faces = The list of faces, where each face is given as a list of vertex points.
-function vnf_add_faces(vnf=EMPTY_VNF, faces) =
-    assert(is_vnf(vnf))
-    assert(is_list(faces))
-    let(
-        res = set_union(vnf[0], flatten(faces), get_indices=true),
-        idxs = res[0],
-        nverts = res[1],
-        offs = cumsum([0, for (face=faces) len(face)]),
-        ifaces = [
-            for (i=idx(faces)) [
-                for (j=idx(faces[i]))
-                idxs[offs[i]+j]
-            ]
-        ]
-    ) [
-        nverts,
-        concat(vnf[1],ifaces)
-    ];
-
-
-// Function: vnf_merge()
-// Usage:
-//   vnf = vnf_merge([VNF, VNF, VNF, ...], [cleanup],[eps]);
-// Description:
-//   Given a list of VNF structures, merges them all into a single VNF structure.
-//   When cleanup=true, it consolidates all duplicate vertices with a tolerance `eps`,
-//   drops unreferenced vertices and any final face with less than 3 vertices. 
-//   Unreferenced vertices of the input VNFs that doesn't duplicate any other vertex 
-//   are not dropped.
-// Arguments:
-//   vnfs - a list of the VNFs to merge in one VNF.
-//   cleanup - when true, consolidates the duplicate vertices of the merge. Default: false
-//   eps - the tolerance in finding duplicates when cleanup=true. Default: EPSILON
-function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
-    is_vnf(vnfs) ? vnf_merge([vnfs], cleanup, eps) :
-    assert( is_vnf_list(vnfs) , "Improper vnf or vnf list")  
-    let (
-        offs  = cumsum([ 0, for (vnf = vnfs) len(vnf[0]) ]),
-        verts = [for (vnf=vnfs) each vnf[0]],
-        faces =
-            [ for (i = idx(vnfs)) 
-                let( faces = vnfs[i][1] )
-                for (face = faces) 
-                    if ( len(face) >= 3 )
-                        [ for (j = face) 
-                            assert( j>=0 && j<len(vnfs[i][0]), 
-                                    str("VNF number ", i, " has a face indexing an nonexistent vertex") )
-                            offs[i] + j ]
-            ]
-    )
-    ! cleanup ? [verts, faces] :
-    let(
-        dedup  = vector_search(verts,eps,verts),                 // collect vertex duplicates
-        map    = [for(i=idx(verts)) min(dedup[i]) ],             // remap duplic vertices
-        offset = cumsum([for(i=idx(verts)) map[i]==i ? 0 : 1 ]), // remaping face vertex offsets 
-        map2   = list(idx(verts))-offset,                        // map old vertex indices to new indices
-        nverts = [for(i=idx(verts)) if(map[i]==i) verts[i] ],    // eliminates all unreferenced vertices
-        nfaces = 
-            [ for(face=faces) 
-                let(
-                    nface = [ for(vi=face) map2[map[vi]] ],
-                    dface = [for (i=idx(nface)) 
-                                if( nface[i]!=nface[(i+1)%len(nface)]) 
-                                    nface[i] ] 
-                )
-                if(len(dface) >= 3) dface 
-            ]
-    ) 
-    [nverts, nfaces];
-
-
-// Function: vnf_reverse_faces()
-// Usage:
-//   rvnf = vnf_reverse_faces(vnf);
-// Description:
-//   Reverses the facing of all the faces in the given VNF.
-function vnf_reverse_faces(vnf) =
-    [vnf[0], [for (face=vnf[1]) reverse(face)]];
-
-
-// Function: vnf_triangulate()
-// Usage:
-//   vnf2 = vnf_triangulate(vnf);
-// Description:
-//   Forces triangulation of faces in the VNF that have more than 3 vertices.
-function vnf_triangulate(vnf) =
-    let(
-        vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf,
-        verts = vnf[0]
-    ) [verts, triangulate_faces(verts, vnf[1])];
-
+// Section: Constructing VNFs
 
 // Function: vnf_vertex_array()
 // Usage:
@@ -468,6 +334,152 @@ function vnf_tri_array(points, row_wrap=false, reverse=false, vnf=EMPTY_VNF) =
     vnf_merge(cleanup=true, [vnf, [flatten(points), faces]]);
 
 
+// Function: vnf_add_face()
+// Usage:
+//   vnf_add_face(vnf, pts);
+// Description:
+//   Given a VNF structure and a list of face vertex points, adds the face to the VNF structure.
+//   Returns the modified VNF structure `[VERTICES, FACES]`.  It is up to the caller to make
+//   sure that the points are in the correct order to make the face normal point outwards.
+// Arguments:
+//   vnf = The VNF structure to add a face to.
+//   pts = The vertex points for the face.
+function vnf_add_face(vnf=EMPTY_VNF, pts) =
+    assert(is_vnf(vnf))
+    assert(is_path(pts))
+    let(
+        res = set_union(vnf[0], pts, get_indices=true),
+        face = deduplicate(res[0], closed=true)
+    ) [
+        res[1],
+        concat(vnf[1], len(face)>2? [face] : [])
+    ];
+
+
+// Function: vnf_add_faces()
+// Usage:
+//   vnf_add_faces(vnf, faces);
+// Description:
+//   Given a VNF structure and a list of faces, where each face is given as a list of vertex points,
+//   adds the faces to the VNF structure.  Returns the modified VNF structure `[VERTICES, FACES]`.
+//   It is up to the caller to make sure that the points are in the correct order to make the face
+//   normals point outwards.
+// Arguments:
+//   vnf = The VNF structure to add a face to.
+//   faces = The list of faces, where each face is given as a list of vertex points.
+function vnf_add_faces(vnf=EMPTY_VNF, faces) =
+    assert(is_vnf(vnf))
+    assert(is_list(faces))
+    let(
+        res = set_union(vnf[0], flatten(faces), get_indices=true),
+        idxs = res[0],
+        nverts = res[1],
+        offs = cumsum([0, for (face=faces) len(face)]),
+        ifaces = [
+            for (i=idx(faces)) [
+                for (j=idx(faces[i]))
+                idxs[offs[i]+j]
+            ]
+        ]
+    ) [
+        nverts,
+        concat(vnf[1],ifaces)
+    ];
+
+
+// Function: vnf_merge()
+// Usage:
+//   vnf = vnf_merge([VNF, VNF, VNF, ...], [cleanup],[eps]);
+// Description:
+//   Given a list of VNF structures, merges them all into a single VNF structure.
+//   When cleanup=true, it consolidates all duplicate vertices with a tolerance `eps`,
+//   drops unreferenced vertices and any final face with less than 3 vertices. 
+//   Unreferenced vertices of the input VNFs that doesn't duplicate any other vertex 
+//   are not dropped.
+// Arguments:
+//   vnfs - a list of the VNFs to merge in one VNF.
+//   cleanup - when true, consolidates the duplicate vertices of the merge. Default: false
+//   eps - the tolerance in finding duplicates when cleanup=true. Default: EPSILON
+function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
+    is_vnf(vnfs) ? vnf_merge([vnfs], cleanup, eps) :
+    assert( is_vnf_list(vnfs) , "Improper vnf or vnf list")  
+    let (
+        offs  = cumsum([ 0, for (vnf = vnfs) len(vnf[0]) ]),
+        verts = [for (vnf=vnfs) each vnf[0]],
+        faces =
+            [ for (i = idx(vnfs)) 
+                let( faces = vnfs[i][1] )
+                for (face = faces) 
+                    if ( len(face) >= 3 )
+                        [ for (j = face) 
+                            assert( j>=0 && j<len(vnfs[i][0]), 
+                                    str("VNF number ", i, " has a face indexing an nonexistent vertex") )
+                            offs[i] + j ]
+            ]
+    )
+    ! cleanup ? [verts, faces] :
+    let(
+        dedup  = vector_search(verts,eps,verts),                 // collect vertex duplicates
+        map    = [for(i=idx(verts)) min(dedup[i]) ],             // remap duplic vertices
+        offset = cumsum([for(i=idx(verts)) map[i]==i ? 0 : 1 ]), // remaping face vertex offsets 
+        map2   = list(idx(verts))-offset,                        // map old vertex indices to new indices
+        nverts = [for(i=idx(verts)) if(map[i]==i) verts[i] ],    // eliminates all unreferenced vertices
+        nfaces = 
+            [ for(face=faces) 
+                let(
+                    nface = [ for(vi=face) map2[map[vi]] ],
+                    dface = [for (i=idx(nface)) 
+                                if( nface[i]!=nface[(i+1)%len(nface)]) 
+                                    nface[i] ] 
+                )
+                if(len(dface) >= 3) dface 
+            ]
+    ) 
+    [nverts, nfaces];
+
+
+
+// Section: Altering the VNF Internals
+
+
+// Function: vnf_reverse_faces()
+// Usage:
+//   rvnf = vnf_reverse_faces(vnf);
+// Description:
+//   Reverses the facing of all the faces in the given VNF.
+function vnf_reverse_faces(vnf) =
+    [vnf[0], [for (face=vnf[1]) reverse(face)]];
+
+
+// Function: vnf_quantize()
+// Usage:
+//   vnf2 = vnf_quantize(vnf,[q]);
+// Description:
+//   Quantizes the vertex coordinates of the VNF to the given quanta `q`.
+// Arguments:
+//   vnf = The VNF to quantize.
+//   q = The quanta to quantize the VNF coordinates to.
+function vnf_quantize(vnf,q=pow(2,-12)) =
+    [[for (pt = vnf[0]) quant(pt,q)], vnf[1]];
+
+
+// Function: vnf_triangulate()
+// Usage:
+//   vnf2 = vnf_triangulate(vnf);
+// Description:
+//   Triangulates faces in the VNF that have more than 3 vertices.  
+function vnf_triangulate(vnf) =
+    let(
+        vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf,
+        verts = vnf[0],
+        faces = [for (face=vnf[1]) each len(face)==3 ? [face] : 
+                                         polygon_triangulate(verts, face)]
+    ) [verts, faces]; 
+
+
+
+// Section: Turning a VNF into geometry
+
 
 // Module: vnf_polyhedron()
 // Usage:
@@ -491,7 +503,6 @@ module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin"
         children();
     }
 }
-
 
 
 // Module: vnf_wireframe()
@@ -528,6 +539,8 @@ module vnf_wireframe(vnf, r, d)
 }
 
 
+// Section: Operations on VNFs
+
 // Function: vnf_volume()
 // Usage:
 //   vol = vnf_volume(vnf);
@@ -543,6 +556,16 @@ function vnf_volume(vnf) =
          for(face=vnf[1], j=[1:1:len(face)-2])
              cross(verts[face[j+1]], verts[face[j]]) * verts[face[0]]
     ])/6;
+
+
+// Function: vnf_area()
+// Usage:
+//   area = vnf_area(vnf);
+// Description:
+//   Returns the surface area in any VNF by adding up the area of all its faces.  The VNF need not be a manifold.  
+function vnf_area(vnf) =
+    let(verts=vnf[0])
+    sum([for(face=vnf[1]) polygon_area(select(verts,face))]);
 
 
 // Function: vnf_centroid()
@@ -571,6 +594,115 @@ function vnf_centroid(vnf) =
     )
     assert(!approx(pos[0],0, EPSILON), "The vnf has self-intersections.")
     pos[1]/pos[0]/4;
+
+
+// Function: vnf_halfspace()
+// Usage:
+//   newvnf = vnf_halfspace(plane, vnf, [closed]);
+// Description:
+//   Returns the intersection of the vnf with a half space.  The half space is defined by
+//   plane = [A,B,C,D], taking the side where the normal [A,B,C] points: Ax+By+Cz≥D.
+//   If closed is set to false then the cut face is not included in the vnf.  This could
+//   allow further extension of the vnf by merging with other vnfs.  
+// Arguments:
+//   plane = plane defining the boundary of the half space
+//   vnf = vnf to cut
+//   closed = if false do not return include cut face(s).  Default: true
+// Example:
+//   vnf = cube(10,center=true);
+//   cutvnf = vnf_halfspace([-1,1,-1,0], vnf);
+//   vnf_polyhedron(cutvnf);
+// Example:  Cut face has 2 components
+//   vnf = path_sweep(circle(r=4, $fn=16),
+//                    circle(r=20, $fn=64),closed=true);
+//   cutvnf = vnf_halfspace([-1,1,-4,0], vnf);
+//   vnf_polyhedron(cutvnf);
+// Example: Cut face is not simply connected
+//   vnf = path_sweep(circle(r=4, $fn=16),
+//                    circle(r=20, $fn=64),closed=true);
+//   cutvnf = vnf_halfspace([0,0.7,-4,0], vnf);
+//   vnf_polyhedron(cutvnf);
+// Example: Cut object has multiple components
+//   function knot(a,b,t) =   // rolling knot 
+//        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
+//          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
+//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
+//   a = 0.8; b = sqrt (1 - a * a); 
+//   ksteps = 400;
+//   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   knot=path_sweep(ushape, knot_path, closed=true, method="incremental");
+//   cut_knot = vnf_halfspace([1,0,0,0], knot);
+//   vnf_polyhedron(cut_knot);
+function vnf_halfspace(plane, vnf, closed=true) =
+    let(
+         inside = [for(x=vnf[0]) plane*[each x,-1] >= 0 ? 1 : 0],
+         vertexmap = [0,each cumsum(inside)],
+         faces_edges_vertices = _vnfcut(plane, vnf[0],vertexmap,inside, vnf[1], last(vertexmap)),
+         newvert = concat(bselect(vnf[0],inside), faces_edges_vertices[2])
+    )
+    closed==false ? [newvert, faces_edges_vertices[0]] :
+    let(
+        allpaths = _assemble_paths(newvert, faces_edges_vertices[1]),
+        newpaths = [for(p=allpaths) if (len(p)>=3) p
+                                    else assert(approx(p[0],p[1]),"Orphan edge found when assembling cut edges.")
+           ]
+    )
+    len(newpaths)<=1 ? [newvert, concat(faces_edges_vertices[0], newpaths)] 
+    :
+      let(
+           faceregion = project_plane(plane, newpaths),
+           facevnf = region_faces(faceregion,reverse=true)
+      )
+      vnf_merge([[newvert, faces_edges_vertices[0]], lift_plane(plane, facevnf)]);
+
+
+function _assemble_paths(vertices, edges, paths=[],i=0) =
+     i==len(edges) ? paths :
+     norm(vertices[edges[i][0]]-vertices[edges[i][1]])<EPSILON ? echo(degen=i)_assemble_paths(vertices,edges,paths,i+1) :
+     let(    // Find paths that connects on left side and right side of the edges (if one exists)
+         left = [for(j=idx(paths)) if (approx(vertices[last(paths[j])],vertices[edges[i][0]])) j],
+         right = [for(j=idx(paths)) if (approx(vertices[edges[i][1]],vertices[paths[j][0]])) j]
+     )
+     assert(len(left)<=1 && len(right)<=1)
+     let(              
+          keep_path = list_remove(paths,concat(left,right)),
+          update_path = left==[] && right==[] ? edges[i] 
+                      : left==[] ? concat([edges[i][0]],paths[right[0]])
+                      : right==[] ? concat(paths[left[0]],[edges[i][1]])
+                      : left != right ? concat(paths[left[0]], paths[right[0]])
+                      : paths[left[0]]
+     )
+     _assemble_paths(vertices, edges, concat(keep_path, [update_path]), i+1);
+
+
+function _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount, newfaces=[], newedges=[], newvertices=[], i=0) =
+   i==len(faces) ? [newfaces, newedges, newvertices] :
+   let(
+        pts_inside = select(inside,faces[i])
+   )
+   all(pts_inside) ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount,
+                             concat(newfaces, [select(vertexmap,faces[i])]), newedges, newvertices, i+1):
+   !any(pts_inside) ? _vnfcut(plane, vertices, vertexmap,inside, faces, vertcount, newfaces, newedges, newvertices, i+1):
+   let(
+        first = search([[1,0]],pair(pts_inside,wrap=true),0)[0],
+        second = search([[0,1]],pair(pts_inside,wrap=true),0)[0]
+   )
+   assert(len(first)==1 && len(second)==1, "Found concave face in VNF.  Run vnf_triangulate first to ensure convex faces.")
+   let(
+        newface = [each select(vertexmap,select(faces[i],second[0]+1,first[0])),vertcount, vertcount+1],
+        newvert = [plane_line_intersection(plane, select(vertices,select(faces[i],first[0],first[0]+1)),eps=0),
+                   plane_line_intersection(plane, select(vertices,select(faces[i],second[0],second[0]+1)),eps=0)]
+   )
+   true //!approx(newvert[0],newvert[1])
+       ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount+2,
+                 concat(newfaces, [newface]), concat(newedges,[[vertcount+1,vertcount]]),concat(newvertices,newvert),i+1)
+   :len(newface)>3
+       ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount+1,
+                 concat(newfaces, [list_head(newface)]), newedges,concat(newvertices,[newvert[0]]),i+1)
+   :
+   _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount,newfaces, newedges, newvert, i+1);
+ 
 
 
 function _triangulate_planar_convex_polygons(polys) =
@@ -816,6 +948,8 @@ function _split_polygons_at_each_y(polys, ys, _i=0) =
     );
 
 
+
+// Section: Debugging VNFs
 
 // Function&Module: vnf_validate()
 // Usage: As Function
@@ -1071,7 +1205,7 @@ function vnf_validate(vnf, show_warns=true, check_isects=false) =
                 faceverts = [for (k=face) varr[k]]
             )
             if (is_num(area) && abs(area) > EPSILON)
-            if (!coplanar(faceverts))
+            if (!is_coplanar(faceverts))
             _vnf_validate_err("NONPLANAR", faceverts)
         ]),
         issues = concat(issues, nonplanars)
@@ -1144,114 +1278,5 @@ module vnf_validate(vnf, size=1, show_warns=true, check_isects=false) {
 }
 
 
-// Section: VNF Transformations
-
-// Function: vnf_halfspace()
-// Usage:
-//   newvnf = vnf_halfspace(plane, vnf, [closed]);
-// Description:
-//   Returns the intersection of the vnf with a half space.  The half space is defined by
-//   plane = [A,B,C,D], taking the side where the normal [A,B,C] points: Ax+By+Cz≥D.
-//   If closed is set to false then the cut face is not included in the vnf.  This could
-//   allow further extension of the vnf by merging with other vnfs.  
-// Arguments:
-//   plane = plane defining the boundary of the half space
-//   vnf = vnf to cut
-//   closed = if false do not return include cut face(s).  Default: true
-// Example:
-//   vnf = cube(10,center=true);
-//   cutvnf = vnf_halfspace([-1,1,-1,0], vnf);
-//   vnf_polyhedron(cutvnf);
-// Example:  Cut face has 2 components
-//   vnf = path_sweep(circle(r=4, $fn=16),
-//                    circle(r=20, $fn=64),closed=true);
-//   cutvnf = vnf_halfspace([-1,1,-4,0], vnf);
-//   vnf_polyhedron(cutvnf);
-// Example: Cut face is not simply connected
-//   vnf = path_sweep(circle(r=4, $fn=16),
-//                    circle(r=20, $fn=64),closed=true);
-//   cutvnf = vnf_halfspace([0,0.7,-4,0], vnf);
-//   vnf_polyhedron(cutvnf);
-// Example: Cut object has multiple components
-//   function knot(a,b,t) =   // rolling knot 
-//        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
-//          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
-//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
-//   a = 0.8; b = sqrt (1 - a * a); 
-//   ksteps = 400;
-//   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
-//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
-//   knot=path_sweep(ushape, knot_path, closed=true, method="incremental");
-//   cut_knot = vnf_halfspace([1,0,0,0], knot);
-//   vnf_polyhedron(cut_knot);
-function vnf_halfspace(plane, vnf, closed=true) =
-    let(
-         inside = [for(x=vnf[0]) plane*[each x,-1] >= 0 ? 1 : 0],
-         vertexmap = [0,each cumsum(inside)],
-         faces_edges_vertices = _vnfcut(plane, vnf[0],vertexmap,inside, vnf[1], last(vertexmap)),
-         newvert = concat(bselect(vnf[0],inside), faces_edges_vertices[2])
-    )
-    closed==false ? [newvert, faces_edges_vertices[0]] :
-    let(
-        allpaths = _assemble_paths(newvert, faces_edges_vertices[1]),
-        newpaths = [for(p=allpaths) if (len(p)>=3) p
-                                    else assert(approx(p[0],p[1]),"Orphan edge found when assembling cut edges.")
-           ]
-    )
-    len(newpaths)<=1 ? [newvert, concat(faces_edges_vertices[0], newpaths)] 
-    :
-      let(
-           faceregion = project_plane(plane, newpaths),
-           facevnf = region_faces(faceregion,reverse=true)
-      )
-      vnf_merge([[newvert, faces_edges_vertices[0]], lift_plane(plane, facevnf)]);
-
-
-function _assemble_paths(vertices, edges, paths=[],i=0) =
-     i==len(edges) ? paths :
-     norm(vertices[edges[i][0]]-vertices[edges[i][1]])<EPSILON ? echo(degen=i)_assemble_paths(vertices,edges,paths,i+1) :
-     let(    // Find paths that connects on left side and right side of the edges (if one exists)
-         left = [for(j=idx(paths)) if (approx(vertices[last(paths[j])],vertices[edges[i][0]])) j],
-         right = [for(j=idx(paths)) if (approx(vertices[edges[i][1]],vertices[paths[j][0]])) j]
-     )
-     assert(len(left)<=1 && len(right)<=1)
-     let(              
-          keep_path = list_remove(paths,concat(left,right)),
-          update_path = left==[] && right==[] ? edges[i] 
-                      : left==[] ? concat([edges[i][0]],paths[right[0]])
-                      : right==[] ? concat(paths[left[0]],[edges[i][1]])
-                      : left != right ? concat(paths[left[0]], paths[right[0]])
-                      : paths[left[0]]
-     )
-     _assemble_paths(vertices, edges, concat(keep_path, [update_path]), i+1);
-
-
-function _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount, newfaces=[], newedges=[], newvertices=[], i=0) =
-   i==len(faces) ? [newfaces, newedges, newvertices] :
-   let(
-        pts_inside = select(inside,faces[i])
-   )
-   all(pts_inside) ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount,
-                             concat(newfaces, [select(vertexmap,faces[i])]), newedges, newvertices, i+1):
-   !any(pts_inside) ? _vnfcut(plane, vertices, vertexmap,inside, faces, vertcount, newfaces, newedges, newvertices, i+1):
-   let(
-        first = search([[1,0]],pair(pts_inside,wrap=true),0)[0],
-        second = search([[0,1]],pair(pts_inside,wrap=true),0)[0]
-   )
-   assert(len(first)==1 && len(second)==1, "Found concave face in VNF.  Run vnf_triangulate first to ensure convex faces.")
-   let(
-        newface = [each select(vertexmap,select(faces[i],second[0]+1,first[0])),vertcount, vertcount+1],
-        newvert = [plane_line_intersection(plane, select(vertices,select(faces[i],first[0],first[0]+1)),eps=0),
-                   plane_line_intersection(plane, select(vertices,select(faces[i],second[0],second[0]+1)),eps=0)]
-   )
-   true //!approx(newvert[0],newvert[1])
-       ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount+2,
-                 concat(newfaces, [newface]), concat(newedges,[[vertcount+1,vertcount]]),concat(newvertices,newvert),i+1)
-   :len(newface)>3
-       ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount+1,
-                 concat(newfaces, [list_head(newface)]), newedges,concat(newvertices,[newvert[0]]),i+1)
-   :
-   _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount,newfaces, newedges, newvert, i+1);
- 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

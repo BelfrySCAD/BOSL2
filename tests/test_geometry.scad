@@ -6,8 +6,8 @@ include <../std.scad>
 
 
 
-test_point_on_segment();
-test_collinear();
+test_is_point_on_line();
+test_is_collinear();
 test_point_line_distance();
 test_segment_distance();
 test_line_normal();
@@ -33,9 +33,9 @@ test_plane_line_angle();
 test_plane_line_intersection();
 test_polygon_line_intersection();
 test_plane_intersection();
-test_coplanar();
-test_points_on_plane();
-test_above_plane();
+test_is_coplanar();
+test_are_points_on_plane();
+test_is_above_plane();
 test_circle_2tangents();
 test_circle_3points();
 test_circle_point_tangents();
@@ -44,7 +44,6 @@ test_noncollinear_triple();
 test_polygon_area();
 test_is_polygon_convex();
 test_polygon_shift();
-test_polygon_shift_to_closest_point();
 test_reindex_polygon();
 test_align_polygon();
 test_centroid();
@@ -53,10 +52,8 @@ test_is_polygon_clockwise();
 test_clockwise_polygon();
 test_ccw_polygon();
 test_reverse_polygon();
-//test_polygon_normal();
-//test_split_polygons_at_each_x();
-//test_split_polygons_at_each_y();
-//test_split_polygons_at_each_z();
+
+test_polygon_normal();
 
 //tests to migrate to other files
 test_is_path();
@@ -225,7 +222,7 @@ module test__general_plane_line_intersection() {
 *test__general_plane_line_intersection();
 
 
-module test_points_on_plane() {
+module test_are_points_on_plane() {
     pts     = [for(i=[0:40]) rands(-1,1,3) ];
     dir     = rands(-10,10,3);
     normal0 = [1,2,3];
@@ -234,10 +231,10 @@ module test_points_on_plane() {
     plane   = [each normal, normal*dir];
     prj_pts = plane_closest_point(plane,pts);
     info = info_str([["pts = ",pts],["dir = ",dir],["ang = ",ang]]);
-    assert(points_on_plane(prj_pts,plane),info);
-    assert(!points_on_plane(concat(pts,[normal-dir]),plane),info);
+    assert(are_points_on_plane(prj_pts,plane),info);
+    assert(!are_points_on_plane(concat(pts,[normal-dir]),plane),info);
 }
-*test_points_on_plane();
+*test_are_points_on_plane();
 
 module test_plane_closest_point(){
     ang     = rands(0,360,1)[0];
@@ -268,35 +265,43 @@ module test_line_from_points() {
 }
 *test_line_from_points();
 
-module test_point_on_segment() { 
-    assert(point_on_segment([-15,0], [[-10,0], [10,0]]) == false);
-    assert(point_on_segment([-10,0], [[-10,0], [10,0]]) == true);
-    assert(point_on_segment([-5,0], [[-10,0], [10,0]]) == true);
-    assert(point_on_segment([0,0], [[-10,0], [10,0]]) == true);
-    assert(point_on_segment([3,3], [[-10,0], [10,0]]) == false);
-    assert(point_on_segment([5,0], [[-10,0], [10,0]]) == true);
-    assert(point_on_segment([10,0], [[-10,0], [10,0]]) == true);
-    assert(point_on_segment([15,0], [[-10,0], [10,0]]) == false);
+module test_is_point_on_line() { 
+    assert(is_point_on_line([-15,0], [[-10,0], [10,0]],SEGMENT) == false);
+    assert(is_point_on_line([-10,0], [[-10,0], [10,0]],SEGMENT) == true);
+    assert(is_point_on_line([-5,0], [[-10,0], [10,0]],SEGMENT) == true);
+    assert(is_point_on_line([0,0], [[-10,0], [10,0]],SEGMENT) == true);
+    assert(is_point_on_line([3,3], [[-10,0], [10,0]],SEGMENT) == false);
+    assert(is_point_on_line([5,0], [[-10,0], [10,0]],SEGMENT) == true);
+    assert(is_point_on_line([10,0], [[-10,0], [10,0]],SEGMENT) == true);
+    assert(is_point_on_line([15,0], [[-10,0], [10,0]],SEGMENT) == false);
 
-    assert(point_on_segment([0,-15], [[0,-10], [0,10]]) == false);
-    assert(point_on_segment([0,-10], [[0,-10], [0,10]]) == true);
-    assert(point_on_segment([0, -5], [[0,-10], [0,10]]) == true);
-    assert(point_on_segment([0,  0], [[0,-10], [0,10]]) == true);
-    assert(point_on_segment([3,  3], [[0,-10], [0,10]]) == false);
-    assert(point_on_segment([0,  5], [[0,-10], [0,10]]) == true);
-    assert(point_on_segment([0, 10], [[0,-10], [0,10]]) == true);
-    assert(point_on_segment([0, 15], [[0,-10], [0,10]]) == false);
+    assert(is_point_on_line([0,-15], [[0,-10], [0,10]],SEGMENT) == false);
+    assert(is_point_on_line([0,-10], [[0,-10], [0,10]],SEGMENT) == true);
+    assert(is_point_on_line([0, -5], [[0,-10], [0,10]],SEGMENT) == true);
+    assert(is_point_on_line([0,  0], [[0,-10], [0,10]],SEGMENT) == true);
+    assert(is_point_on_line([3,  3], [[0,-10], [0,10]],SEGMENT) == false);
+    assert(is_point_on_line([0,  5], [[0,-10], [0,10]],SEGMENT) == true);
+    assert(is_point_on_line([0, 10], [[0,-10], [0,10]],SEGMENT) == true);
+    assert(is_point_on_line([0, 15], [[0,-10], [0,10]],SEGMENT) == false);
 
-    assert(point_on_segment([-15,-15], [[-10,-10], [10,10]]) == false);
-    assert(point_on_segment([-10,-10], [[-10,-10], [10,10]]) == true);
-    assert(point_on_segment([ -5, -5], [[-10,-10], [10,10]]) == true);
-    assert(point_on_segment([  0,  0], [[-10,-10], [10,10]]) == true);
-    assert(point_on_segment([  0,  3], [[-10,-10], [10,10]]) == false);
-    assert(point_on_segment([  5,  5], [[-10,-10], [10,10]]) == true);
-    assert(point_on_segment([ 10, 10], [[-10,-10], [10,10]]) == true);
-    assert(point_on_segment([ 15, 15], [[-10,-10], [10,10]]) == false);
+    assert(is_point_on_line([-15,-15], [[-10,-10], [10,10]],SEGMENT) == false);
+    assert(is_point_on_line([-10,-10], [[-10,-10], [10,10]],SEGMENT) == true);
+    assert(is_point_on_line([ -5, -5], [[-10,-10], [10,10]],SEGMENT) == true);
+    assert(is_point_on_line([  0,  0], [[-10,-10], [10,10]],SEGMENT) == true);
+    assert(is_point_on_line([  0,  3], [[-10,-10], [10,10]],SEGMENT) == false);
+    assert(is_point_on_line([  5,  5], [[-10,-10], [10,10]],SEGMENT) == true);
+    assert(is_point_on_line([ 10, 10], [[-10,-10], [10,10]],SEGMENT) == true);
+    assert(is_point_on_line([ 15, 15], [[-10,-10], [10,10]],SEGMENT) == false);
+
+    assert(is_point_on_line([10,10], [[0,0],[5,5]]) == true);
+    assert(is_point_on_line([4,4], [[0,0],[5,5]]) == true);
+    assert(is_point_on_line([-2,-2], [[0,0],[5,5]]) == true);
+    assert(is_point_on_line([5,5], [[0,0],[5,5]]) == true);
+    assert(is_point_on_line([10,10], [[0,0],[5,5]],RAY) == true);
+    assert(is_point_on_line([0,0], [[0,0],[5,5]],RAY) == true);
+    assert(is_point_on_line([3,3], [[0,0],[5,5]],RAY) == true);
 }
-*test_point_on_segment();
+*test_is_point_on_line();
 
 
 module test__point_left_of_line2d() {
@@ -306,18 +311,18 @@ module test__point_left_of_line2d() {
 }
 test__point_left_of_line2d();
 
-module test_collinear() {
-    assert(collinear([-10,-10], [-15, -16], [10,10]) == false);
-    assert(collinear([[-10,-10], [-15, -16], [10,10]]) == false);
-    assert(collinear([-10,-10], [-15, -15], [10,10]) == true);
-    assert(collinear([[-10,-10], [-15, -15], [10,10]]) == true);
-    assert(collinear([-10,-10], [ -3,   0], [10,10]) == false);
-    assert(collinear([-10,-10], [  0,   0], [10,10]) == true);
-    assert(collinear([-10,-10], [  3,   0], [10,10]) == false);
-    assert(collinear([-10,-10], [ 15,  15], [10,10]) == true);
-    assert(collinear([-10,-10], [ 15,  16], [10,10]) == false);
+module test_is_collinear() {
+    assert(is_collinear([-10,-10], [-15, -16], [10,10]) == false);
+    assert(is_collinear([[-10,-10], [-15, -16], [10,10]]) == false);
+    assert(is_collinear([-10,-10], [-15, -15], [10,10]) == true);
+    assert(is_collinear([[-10,-10], [-15, -15], [10,10]]) == true);
+    assert(is_collinear([-10,-10], [ -3,   0], [10,10]) == false);
+    assert(is_collinear([-10,-10], [  0,   0], [10,10]) == true);
+    assert(is_collinear([-10,-10], [  3,   0], [10,10]) == false);
+    assert(is_collinear([-10,-10], [ 15,  15], [10,10]) == true);
+    assert(is_collinear([-10,-10], [ 15,  16], [10,10]) == false);
 }
-*test_collinear();
+*test_is_collinear();
 
 
 module test_point_line_distance() {
@@ -593,6 +598,16 @@ module test_plane_from_points() {
 *test_plane_from_points();
 
 
+module test_polygon_normal() {
+   circ = path3d(circle($fn=37, r=3));
+
+   assert_approx(polygon_normal(circ), UP);
+   assert_approx(polygon_normal(rot(from=UP,to=[1,2,3],p=circ)), unit([1,2,3]));
+   assert_approx(polygon_normal(rot(from=UP,to=[4,-2,3],p=reverse(circ))), -unit([4,-2,3]));
+   assert_approx(polygon_normal(path3d([[0,0], [10,10], [11,10], [0,-1], [-1,1]])), UP);
+}
+*test_polygon_normal();
+
 module test_plane_normal() {
     assert_approx(plane_normal(plane3pt([0,0,20], [0,10,10], [0,0,0])), [1,0,0]);
     assert_approx(plane_normal(plane3pt([2,0,20], [2,10,10], [2,0,0])), [1,0,0]);
@@ -650,30 +665,90 @@ module test_polygon_line_intersection() {
                   undef, info);
     assert_approx(polygon_line_intersection(polygnr,linegnr,bounded=[false,false]),
                   trnsl, info);
+
+    sq = path3d(square(10));
+    pentagram = 10*path3d(turtle(["move",10,"left",144], repeat=4));
+    for (tran = [ident(4), skew(sxy=1.2)*scale([.9,1,1.2])*yrot(14)*zrot(37)*xrot(9)])
+    {
+        assert_approx(polygon_line_intersection(apply(tran,sq),apply(tran,[[5,5,-1], [5,5,10]])), apply(tran, [5,5,0]));
+        assert_approx(polygon_line_intersection(apply(tran,sq),apply(tran,[[5,5,1], [5,5,10]])), apply(tran, [5,5,0]));
+        assert(undef==polygon_line_intersection(apply(tran,sq),apply(tran,[[5,5,1], [5,5,10]]),RAY));
+        assert(undef==polygon_line_intersection(apply(tran,sq),apply(tran,[[11,11,-1],[11,11,1]])));
+        assert_approx(polygon_line_intersection(apply(tran,sq),apply(tran,[[5,0,-10], [5,0,10]])), apply(tran, [5,0,0]));
+        assert_equal(polygon_line_intersection(apply(tran,sq),apply(tran,[[5,0,1], [5,0,10]]),RAY), undef);
+        assert_approx(polygon_line_intersection(apply(tran,sq),apply(tran,[[10,0,1],[10,0,10]])), apply(tran, [10,0,0]));
+        assert_approx(polygon_line_intersection(apply(tran,sq),apply(tran,[[1,5,0],[9,6,0]])), apply(tran, [[[0,4.875,0],[10,6.125,0]]]));
+        assert_approx(polygon_line_intersection(apply(tran,sq),apply(tran,[[1,5,0],[9,6,0]]),SEGMENT), apply(tran, [[[1,5,0],[9,6,0]]]));
+        assert_approx(polygon_line_intersection(apply(tran,sq),apply(tran,[[-1,-1,0],[8,8,0]])), apply(tran, [[[0,0,0],[10,10,0]]]));
+        assert_approx(polygon_line_intersection(apply(tran,sq),apply(tran,[[-1,-1,0],[8,8,0]]),SEGMENT), apply(tran, [[[0,0,0],[8,8,0]]]));
+        assert_approx(polygon_line_intersection(apply(tran,sq),apply(tran,[[-1,-1,0],[8,8,0]]),RAY), apply(tran, [[[0,0,0],[10,10,0]]]));
+        assert_approx(polygon_line_intersection(apply(tran,sq),apply(tran,[[-2,4,0], [12,11,0]]),RAY), apply(tran, [[[0,5,0],[10,10,0]]]));
+        assert_equal(polygon_line_intersection(apply(tran,sq),apply(tran,[[-20,0,0],[20,40,0]]),RAY), undef);
+        assert_approx(polygon_line_intersection(apply(tran,sq),apply(tran,[[-1,0,0],[11,0,0]])), apply(tran, [[[0,0,0],[10,0,0]]]));
+    }
+    assert_approx(polygon_line_intersection(path2d(sq),[[1,5],[9,6]],SEGMENT), [[[1,5],[9,6]]]);
+    assert_approx(polygon_line_intersection(path2d(sq),[[1,5],[9,6]],LINE), [[[0,4.875],[10,6.125]]]);
+    assert_approx(polygon_line_intersection(pentagram,[[50,10,-4],[54,12,4]], nonzero=true), [52,11,0]);
+    assert_equal(polygon_line_intersection(pentagram,[[50,10,-4],[54,12,4]], nonzero=false), undef);
+    assert_approx(polygon_line_intersection(pentagram,[[50,-10,-4],[54,-12,4]], nonzero=true), [52,-11,0]);
+    assert_approx(polygon_line_intersection(pentagram,[[50,-10,-4],[54,-12,4]], nonzero=false), [52,-11,0]);
+    assert_approx(polygon_line_intersection(star(8,step=3,od=10), [[-5,3], [5,3]]),
+                                [[[-3.31370849898, 3], [-2.24264068712, 3]],
+                                [[-0.828427124746, 3], [0.828427124746, 3]],
+                                 [[2.24264068712, 3], [3.31370849898, 3]]]);
+
+    tran = skew(sxy=1.2)*scale([.9,1,1.2])*yrot(14)*zrot(37)*xrot(9);
+
+    // assemble multiple edges into one edge
+    assert_approx(polygon_line_intersection(star(r=15,n=8,step=2), [[20,-5],[-5,20]]), [[[15,0],[0,15]]]);
+    assert_approx(polygon_line_intersection(apply(tran,path3d(star(r=15,n=8,step=2))), apply(tran,[[20,-5,0],[-5,20,0]])), apply(tran,[[[15,0,0],[0,15,0]]]));
+    // line going the other direction
+    assert_approx(polygon_line_intersection(star(r=15,n=8,step=2), [[-5,20],[20,-5]]), [[[0,15],[15,0]]]);
+    assert_approx(polygon_line_intersection(apply(tran,path3d(star(r=15,n=8,step=2))), apply(tran,[[-5,20,0],[20,-5,0]])),apply(tran, [[[0,15,0],[15,0,0]]]));
+    // single point
+    assert_approx(polygon_line_intersection(hexagon(r=15), [[15,-10],[15,13]], RAY), [[[15,0]]]);
+    assert_approx(polygon_line_intersection(apply(tran,path3d(hexagon(r=15))), apply(tran,[[15,-10,0],[15,13,0]]), RAY),
+                  [[apply(tran,[15,0,0])]]);
+    // two points
+    assert_approx(polygon_line_intersection(star(r=15,n=8,step=3), rot(22.5,p=[[15,-10],[15,20]],cp=[15,0])), 
+                    [[[15,0]], [[10.6066017178, 10.6066017178]]]);
+    assert_approx(polygon_line_intersection(apply(tran,path3d(star(r=15,n=8,step=3))), apply(tran,rot(22.5,p=[[15,-10,0],[15,20,0]],cp=[15,0,0]))), 
+                    [[apply(tran,[15,0,0])], [apply(tran,[10.6066017178, 10.6066017178,0])]]);
+    // two segments and one point
+    star7 = star(r=25,ir=9,n=7);
+    assert_approx(polygon_line_intersection(star7, [left(10,p=star7[8]), right(50,p=star7[8])]),
+                  [[[-22.5242216976, 10.8470934779]],
+                   [[-5.60077322195, 10.8470934779], [0.997372374838, 10.8470934779]],
+                   [[4.61675816681, 10.8470934779], [11.4280421589, 10.8470934779]]]);
+    assert_approx(polygon_line_intersection(apply(tran,path3d(star7)),
+                        apply(tran, path3d([left(10,p=star7[8]), right(50,p=star7[8])]))),
+                  [[apply(tran,[-22.5242216976, 10.8470934779,0])],
+                   apply(tran,[[-5.60077322195, 10.8470934779,0], [0.997372374838, 10.8470934779,0]]),
+                   apply(tran,[[4.61675816681, 10.8470934779,0], [11.4280421589, 10.8470934779,0]])]);
 }
 *test_polygon_line_intersection();
 
 
-module test_coplanar() {
-    assert(coplanar([ [5,5,1],[0,0,1],[-1,-1,1] ]) == false);
-    assert(coplanar([ [5,5,1],[0,0,0],[-1,-1,1] ]) == true);
-    assert(coplanar([ [0,0,0],[1,0,1],[1,1,1], [0,1,2] ]) == false);
-    assert(coplanar([ [0,0,0],[1,0,1],[1,1,2], [0,1,1] ]) == true);
+module test_is_coplanar() {
+    assert(is_coplanar([ [5,5,1],[0,0,1],[-1,-1,1] ]) == false);
+    assert(is_coplanar([ [5,5,1],[0,0,0],[-1,-1,1] ]) == true);
+    assert(is_coplanar([ [0,0,0],[1,0,1],[1,1,1], [0,1,2] ]) == false);
+    assert(is_coplanar([ [0,0,0],[1,0,1],[1,1,2], [0,1,1] ]) == true);
  }
-*test_coplanar();
+*test_is_coplanar();
 
 
-module test_above_plane() {
+module test_is_above_plane() {
     plane = plane3pt([0,0,0], [0,10,10], [10,0,10]);
-    assert(above_plane(plane, [5,5,10]) == false);
-    assert(above_plane(plane, [-5,0,0]) == true);
-    assert(above_plane(plane, [5,0,0]) == false);
-    assert(above_plane(plane, [0,-5,0]) == true);
-    assert(above_plane(plane, [0,5,0]) == false);
-    assert(above_plane(plane, [0,0,5]) == true);
-    assert(above_plane(plane, [0,0,-5]) == false);
+    assert(is_above_plane(plane, [5,5,10]) == false);
+    assert(is_above_plane(plane, [-5,0,0]) == true);
+    assert(is_above_plane(plane, [5,0,0]) == false);
+    assert(is_above_plane(plane, [0,-5,0]) == true);
+    assert(is_above_plane(plane, [0,5,0]) == false);
+    assert(is_above_plane(plane, [0,0,5]) == true);
+    assert(is_above_plane(plane, [0,0,-5]) == false);
 }
-*test_above_plane();
+*test_is_above_plane();
 
 
 module test_is_path() {
@@ -743,15 +818,6 @@ module test_polygon_shift() {
 }
 *test_polygon_shift();
 
-
-module test_polygon_shift_to_closest_point() {
-    path = [[1,1],[-1,1],[-1,-1],[1,-1]];
-    assert(polygon_shift_to_closest_point(path,[1.1,1.1]) == [[1,1],[-1,1],[-1,-1],[1,-1]]);
-    assert(polygon_shift_to_closest_point(path,[-1.1,1.1]) == [[-1,1],[-1,-1],[1,-1],[1,1]]);
-    assert(polygon_shift_to_closest_point(path,[-1.1,-1.1]) == [[-1,-1],[1,-1],[1,1],[-1,1]]);
-    assert(polygon_shift_to_closest_point(path,[1.1,-1.1]) == [[1,-1],[1,1],[-1,1],[-1,-1]]);
-}
-*test_polygon_shift_to_closest_point();
 
 
 module test_reindex_polygon() {

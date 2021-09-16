@@ -142,6 +142,9 @@ function affine3d_to_2d(m) =
 //   Applies the specified transformation matrix to a point, pointlist, bezier patch or VNF.
 //   Both inputs can be 2D or 3D, and it is also allowed to supply 3D transformations with 2D
 //   data as long as the the only action on the z coordinate is a simple scaling.
+//   .
+//   If you construct your own matrices you can also use a transform that acts like a projection
+//   with fewer rows to produce lower dimensional output.  
 // Arguments:
 //   transform = The 2D or 3D transformation matrix to apply to the point/points.
 //   points = The point, pointlist, bezier patch, or VNF to apply the transformation to.
@@ -173,14 +176,15 @@ function apply(transform,points) =
       ? /* BezPatch */ [for (x=points) apply(transform,x)] :
     let(
         tdim = len(transform[0])-1,
-        datadim = len(points[0])
+        datadim = len(points[0]),
+        outdim = min(datadim,len(transform)),
+        matrix = [for(i=[0:1:tdim]) [for(j=[0:1:outdim-1]) transform[j][i]]]
     )
-    tdim == 3 && datadim == 3 ? [for(p=points) point3d(transform*concat(p,[1]))] :
-    tdim == 2 && datadim == 2 ? [for(p=points) point2d(transform*concat(p,[1]))] :
-    tdim == 3 && datadim == 2 ?
+    tdim==datadim && (datadim==3 || datadim==2) ? [for(p=points) concat(p,1)] * matrix
+  : tdim == 3 && datadim == 2 ?
         assert(is_2d_transform(transform), str("Transforms is 3d but points are 2d"))
-        [for(p=points) point2d(transform*concat(p,[0,1]))] :
-        assert(false, str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
+        [for(p=points) concat(p,[0,1])]*matrix 
+  : assert(false, str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
 
 
 // Function: rot_decode()
