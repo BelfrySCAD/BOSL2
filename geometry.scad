@@ -1599,7 +1599,6 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   vnf_wireframe(vnf_tri, d=.15);
 
 function polygon_triangulate(poly, ind, eps=EPSILON) =
-    let(a=echo(poly=poly)echo(ind=ind))
     assert(is_path(poly), "Polygon `poly` should be a list of 2d or 3d points")
     assert(is_undef(ind) 
            || (is_vector(ind) && min(ind)>=0 && max(ind)<len(poly) ),
@@ -1611,8 +1610,7 @@ function polygon_triangulate(poly, ind, eps=EPSILON) =
       ? // represents the polygon projection on its plane as a 2d polygon 
         let( 
             pts = select(poly,ind),
-            nrm = polygon_normal(pts),
-            a=echo(pts=pts)echo(nrm=nrm)
+            nrm = polygon_normal(pts)
         )
         // here, instead of an error, it might return [] or undef
         assert( nrm!=undef, 
