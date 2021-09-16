@@ -21,63 +21,6 @@
 EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 
 
-// Function: is_vnf()
-// Usage:
-//   bool = is_vnf(x);
-// Description:
-//   Returns true if the given value looks like a VNF structure.
-function is_vnf(x) =
-    is_list(x) &&
-    len(x)==2 &&
-    is_list(x[0]) &&
-    is_list(x[1]) &&
-    (x[0]==[] || (len(x[0])>=3 && is_vector(x[0][0]))) &&
-    (x[1]==[] || is_vector(x[1][0]));
-
-
-// Function: is_vnf_list()
-// Description: Returns true if the given value looks passingly like a list of VNF structures.
-function is_vnf_list(x) = is_list(x) && all([for (v=x) is_vnf(v)]);
-
-
-// Function: vnf_vertices()
-// Description: Given a VNF structure, returns the list of vertex points.
-function vnf_vertices(vnf) = vnf[0];
-
-
-// Function: vnf_faces()
-// Description: Given a VNF structure, returns the list of faces, where each face is a list of indices into the VNF vertex list.
-function vnf_faces(vnf) = vnf[1];
-
-
-// Function: vnf_get_vertex()
-// Usage:
-//   vvnf = vnf_get_vertex(vnf, p);
-// Description:
-//   Finds the index number of the given vertex point `p` in the given VNF structure `vnf`.
-//   If said point does not already exist in the VNF vertex list, it is added to the returned VNF.
-//   Returns: `[INDEX, VNF]` where INDEX is the index of the point in the returned VNF's vertex list,
-//   and VNF is the possibly modified new VNF structure.  If `p` is given as a list of points, then
-//   the returned INDEX will be a list of indices.
-// Arguments:
-//   vnf = The VNF structue to get the point index from.
-//   p = The point, or list of points to get the index of.
-// Example:
-//   vnf1 = vnf_get_vertex(p=[3,5,8]);  // Returns: [0, [[[3,5,8]],[]]]
-//   vnf2 = vnf_get_vertex(vnf1, p=[3,2,1]);  // Returns: [1, [[[3,5,8],[3,2,1]],[]]]
-//   vnf3 = vnf_get_vertex(vnf2, p=[3,5,8]);  // Returns: [0, [[[3,5,8],[3,2,1]],[]]]
-//   vnf4 = vnf_get_vertex(vnf3, p=[[1,3,2],[3,2,1]]);  // Returns: [[1,2], [[[3,5,8],[3,2,1],[1,3,2]],[]]]
-function vnf_get_vertex(vnf=EMPTY_VNF, p) =
-    let(
-        isvec = is_vector(p),
-        pts = isvec? [p] : p,
-        res = set_union(vnf[0], pts, get_indices=true)
-    ) [
-        (isvec? res[0][0] : res[0]),
-        [ res[1], vnf[1] ]
-    ];
-
-
 // Section: Constructing VNFs
 
 // Function: vnf_vertex_array()
@@ -436,6 +379,63 @@ function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
             ]
     ) 
     [nverts, nfaces];
+
+
+// Function: is_vnf()
+// Usage:
+//   bool = is_vnf(x);
+// Description:
+//   Returns true if the given value looks like a VNF structure.
+function is_vnf(x) =
+    is_list(x) &&
+    len(x)==2 &&
+    is_list(x[0]) &&
+    is_list(x[1]) &&
+    (x[0]==[] || (len(x[0])>=3 && is_vector(x[0][0]))) &&
+    (x[1]==[] || is_vector(x[1][0]));
+
+
+// Function: is_vnf_list()
+// Description: Returns true if the given value looks passingly like a list of VNF structures.
+function is_vnf_list(x) = is_list(x) && all([for (v=x) is_vnf(v)]);
+
+
+// Function: vnf_vertices()
+// Description: Given a VNF structure, returns the list of vertex points.
+function vnf_vertices(vnf) = vnf[0];
+
+
+// Function: vnf_faces()
+// Description: Given a VNF structure, returns the list of faces, where each face is a list of indices into the VNF vertex list.
+function vnf_faces(vnf) = vnf[1];
+
+
+// Function: vnf_get_vertex()
+// Usage:
+//   vvnf = vnf_get_vertex(vnf, p);
+// Description:
+//   Finds the index number of the given vertex point `p` in the given VNF structure `vnf`.
+//   If said point does not already exist in the VNF vertex list, it is added to the returned VNF.
+//   Returns: `[INDEX, VNF]` where INDEX is the index of the point in the returned VNF's vertex list,
+//   and VNF is the possibly modified new VNF structure.  If `p` is given as a list of points, then
+//   the returned INDEX will be a list of indices.
+// Arguments:
+//   vnf = The VNF structue to get the point index from.
+//   p = The point, or list of points to get the index of.
+// Example:
+//   vnf1 = vnf_get_vertex(p=[3,5,8]);  // Returns: [0, [[[3,5,8]],[]]]
+//   vnf2 = vnf_get_vertex(vnf1, p=[3,2,1]);  // Returns: [1, [[[3,5,8],[3,2,1]],[]]]
+//   vnf3 = vnf_get_vertex(vnf2, p=[3,5,8]);  // Returns: [0, [[[3,5,8],[3,2,1]],[]]]
+//   vnf4 = vnf_get_vertex(vnf3, p=[[1,3,2],[3,2,1]]);  // Returns: [[1,2], [[[3,5,8],[3,2,1],[1,3,2]],[]]]
+function vnf_get_vertex(vnf=EMPTY_VNF, p) =
+    let(
+        isvec = is_vector(p),
+        pts = isvec? [p] : p,
+        res = set_union(vnf[0], pts, get_indices=true)
+    ) [
+        (isvec? res[0][0] : res[0]),
+        [ res[1], vnf[1] ]
+    ];
 
 
 
