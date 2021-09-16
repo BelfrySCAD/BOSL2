@@ -9,8 +9,6 @@
 //////////////////////////////////////////////////////////////////////
 
 
-include <triangulation.scad>
-
 // Creating Polyhedrons with VNF Structures
 
 // Section: VNF Testing and Access
@@ -474,7 +472,8 @@ function vnf_triangulate(vnf) =
     let(
         vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf,
         verts = vnf[0],
-        faces = [for (face=vnf[1]) each polygon_triangulate(verts, face)]
+        faces = [for (face=vnf[1]) each len(face)==3 ? [face] : 
+                                         polygon_triangulate(verts, face)]
     ) [verts, faces]; 
 
 

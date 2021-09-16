@@ -15,8 +15,9 @@ include <distributors.scad>
 include <mutators.scad>
 include <attachments.scad>
 include <primitives.scad>
-include <shapes.scad>
+include <shapes3d.scad>
 include <shapes2d.scad>
+include <drawing.scad>
 include <masks.scad>
 include <paths.scad>
 include <edges.scad>

@@ -6,9 +6,6 @@
 //////////////////////////////////////////////////////////////////////
 
 
-include <triangulation.scad>
-
-
 // Section: Functions
 
 
@@ -608,33 +605,6 @@ function path_add_jitter(path, dist=1/512, closed=true) =
         if (!closed) last(path)
     ];
 
-
-// Function: path3d_spiral()
-// Description:
-//   Returns a 3D spiral path.
-// Usage:
-//   path3d_spiral(turns, h, n, r|d, [cp], [scale]);
-// Arguments:
-//   h = Height of spiral.
-//   turns = Number of turns in spiral.
-//   n = Number of spiral sides.
-//   r = Radius of spiral.
-//   d = Radius of spiral.
-//   cp = Centerpoint of spiral. Default: `[0,0]`
-//   scale = [X,Y] scaling factors for each axis.  Default: `[1,1]`
-// Example(3D):
-//   trace_path(path3d_spiral(turns=2.5, h=100, n=24, r=50), N=1, showpts=true);
-function path3d_spiral(turns=3, h=100, n=12, r, d, cp=[0,0], scale=[1,1]) = let(
-        rr=get_radius(r=r, d=d, dflt=100),
-        cnt=floor(turns*n),
-        dz=h/cnt
-    ) [
-        for (i=[0:1:cnt]) [
-            rr * cos(i*360/n) * scale.x + cp.x,
-            rr * sin(i*360/n) * scale.y + cp.y,
-            i*dz
-        ]
-    ];
 
 
 // Function: path_self_intersections()

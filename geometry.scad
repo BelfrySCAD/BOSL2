@@ -1604,8 +1604,8 @@ function polygon_triangulate(poly, ind, eps=EPSILON) =
            || (is_vector(ind) && min(ind)>=0 && max(ind)<len(poly) ),
            "Improper or out of bounds list of indices")
     let( ind = deduplicate_indexed(poly,is_undef(ind) ? count(len(poly)) : ind) )
-    len(ind) < 3 ? [] :
     len(ind) == 3 ? [ind] :
+    len(ind) < 3 ? [] :
     len(poly[ind[0]]) == 3 
       ? // represents the polygon projection on its plane as a 2d polygon 
         let( 
