@@ -13,7 +13,7 @@
 // Default values for attachment code.
 $tags = "";
 $overlap = 0;
-$color = undef;
+$color = "yellow";
 
 $attach_to = undef;
 $attach_anchor = [CENTER, CENTER, UP, 0];
