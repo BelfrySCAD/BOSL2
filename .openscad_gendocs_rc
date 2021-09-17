@@ -3,6 +3,7 @@ IgnoreFiles:
   foo.scad
   std.scad
   bosl1compat.scad
+  builtins.scad
   version.scad
   tmp_*.scad
 PrioritizeFiles:
@@ -14,6 +15,7 @@ PrioritizeFiles:
   primitives.scad
   shapes.scad
   shapes2d.scad
+  drawing.scad
   masks.scad
   math.scad
   vectors.scad
@@ -29,7 +31,6 @@ PrioritizeFiles:
   debug.scad
   common.scad
   strings.scad
-  errors.scad
   beziers.scad
   threading.scad
   rounding.scad
@@ -40,8 +41,6 @@ PrioritizeFiles:
   hull.scad
   triangulation.scad
   turtle3d.scad
-  stacks.scad
-  queues.scad
   structs.scad
 DefineHeader(BulletList): Side Effects
 DefineHeader(Table:Anchor&nbsp;Name|Position): Extra Anchors
