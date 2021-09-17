@@ -106,6 +106,8 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, 
 //   partition_cut_mask(l, w, h, [cutsize], [cutpath], [gap], [inverse], [spin], [orient]);
 // Description:
 //   Creates a mask that you can use to difference with an object to cut it into two sub-parts that can be assembled.
+//   The `$slop` value is important to get the proper fit and should probably be smaller than 0.2.  The examples below
+//   use larger values to make the mask easier to see.  
 // Arguments:
 //   l = The length of the cut axis.
 //   w = The width of the part to be masked, back from the cut plane.
@@ -115,20 +117,20 @@ module partition_mask(l=100, w=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, 
 //   gap = Empty gaps between cutpath iterations.  Default: 0
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
-//   $slop = The width of the cut mask, to correct for printer-specific fitting.  Min: 0.1.
+//   $slop = The width of the cut mask, to correct for printer-specific fitting.  Min: 0.05.
 // Examples:
 //   partition_cut_mask(gap=0, cutpath="dovetail");
 //   partition_cut_mask(gap=30, cutpath="dovetail");
 //   partition_cut_mask(gap=30, cutsize=15, cutpath="dovetail");
 //   partition_cut_mask(gap=30, cutsize=[20,20], cutpath="dovetail");
 // Examples(2DMed):
-//   partition_cut_mask(cutpath="sawtooth");
-//   partition_cut_mask(cutpath="sinewave");
-//   partition_cut_mask(cutpath="comb");
-//   partition_cut_mask(cutpath="finger");
-//   partition_cut_mask(cutpath="dovetail");
-//   partition_cut_mask(cutpath="hammerhead");
-//   partition_cut_mask(cutpath="jigsaw");
+//   partition_cut_mask(cutpath="sawtooth",$slop=0.5);
+//   partition_cut_mask(cutpath="sinewave",$slop=0.5);
+//   partition_cut_mask(cutpath="comb",$slop=0.5);
+//   partition_cut_mask(cutpath="finger",$slop=0.5);
+//   partition_cut_mask(cutpath="dovetail",$slop=1);
+//   partition_cut_mask(cutpath="hammerhead",$slop=1);
+//   partition_cut_mask(cutpath="jigsaw",$slop=0.5);
 module partition_cut_mask(l=100, h=100, cutsize=10, cutpath="jigsaw", gap=0, anchor=CENTER, spin=0, orient=UP)
 {
     cutsize = is_vector(cutsize)? cutsize : [cutsize*2, cutsize];
