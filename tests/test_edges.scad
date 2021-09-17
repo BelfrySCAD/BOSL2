@@ -1,19 +1,19 @@
 include <../std.scad>
 
 
-module test_is_edge_array() {
-    assert(is_edge_array([[0,0,0,0],[0,0,0,0],[0,0,0,0]]));
-    assert(is_edge_array([[1,1,1,1],[1,1,1,1],[1,1,1,1]]));
-    assert(!is_edge_array([[1,1,1],[1,1,1],[1,1,1]]));
-    assert(!is_edge_array([[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]));
-    assert(!is_edge_array([[1,1,1,1],[1,1,1,1]]));
-    assert(!is_edge_array([1,1,1,1]));
-    assert(!is_edge_array("foo"));
-    assert(!is_edge_array(42));
-    assert(!is_edge_array(true));
-    assert(is_edge_array(edges(["X","Y"])));
+module test__is_edge_array() {
+    assert(_is_edge_array([[0,0,0,0],[0,0,0,0],[0,0,0,0]]));
+    assert(_is_edge_array([[1,1,1,1],[1,1,1,1],[1,1,1,1]]));
+    assert(!_is_edge_array([[1,1,1],[1,1,1],[1,1,1]]));
+    assert(!_is_edge_array([[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]));
+    assert(!_is_edge_array([[1,1,1,1],[1,1,1,1]]));
+    assert(!_is_edge_array([1,1,1,1]));
+    assert(!_is_edge_array("foo"));
+    assert(!_is_edge_array(42));
+    assert(!_is_edge_array(true));
+    assert(_is_edge_array(edges(["X","Y"])));
 }
-test_is_edge_array();
+test__is_edge_array();
 
 
 module test__edge_set() {
@@ -62,14 +62,14 @@ module test__edge_set() {
 test__edge_set();
 
 
-module test_normalize_edges() {
-    assert(normalize_edges([[-2,-2,-2,-2],[-2,-2,-2,-2],[-2,-2,-2,-2]]) == [[0,0,0,0],[0,0,0,0],[0,0,0,0]]);
-    assert(normalize_edges([[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1]]) == [[0,0,0,0],[0,0,0,0],[0,0,0,0]]);
-    assert(normalize_edges([[0,0,0,0],[0,0,0,0],[0,0,0,0]]) == [[0,0,0,0],[0,0,0,0],[0,0,0,0]]);
-    assert(normalize_edges([[1,1,1,1],[1,1,1,1],[1,1,1,1]]) == [[1,1,1,1],[1,1,1,1],[1,1,1,1]]);
-    assert(normalize_edges([[2,2,2,2],[2,2,2,2],[2,2,2,2]]) == [[1,1,1,1],[1,1,1,1],[1,1,1,1]]);
+module test__normalize_edges() {
+    assert(_normalize_edges([[-2,-2,-2,-2],[-2,-2,-2,-2],[-2,-2,-2,-2]]) == [[0,0,0,0],[0,0,0,0],[0,0,0,0]]);
+    assert(_normalize_edges([[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1]]) == [[0,0,0,0],[0,0,0,0],[0,0,0,0]]);
+    assert(_normalize_edges([[0,0,0,0],[0,0,0,0],[0,0,0,0]]) == [[0,0,0,0],[0,0,0,0],[0,0,0,0]]);
+    assert(_normalize_edges([[1,1,1,1],[1,1,1,1],[1,1,1,1]]) == [[1,1,1,1],[1,1,1,1],[1,1,1,1]]);
+    assert(_normalize_edges([[2,2,2,2],[2,2,2,2],[2,2,2,2]]) == [[1,1,1,1],[1,1,1,1],[1,1,1,1]]);
 }
-test_normalize_edges();
+test__normalize_edges();
 
 
 module test_edges() {
@@ -90,24 +90,24 @@ module test_edges() {
 test_edges();
 
 
-module test_corner_edge_count() {
+module test__corner_edge_count() {
     edges = edges([TOP,FRONT+RIGHT]);
-    assert(corner_edge_count(edges,TOP+FRONT+RIGHT) == 3);
-    assert(corner_edge_count(edges,TOP+FRONT+LEFT) == 2);
-    assert(corner_edge_count(edges,BOTTOM+FRONT+RIGHT) == 1);
-    assert(corner_edge_count(edges,BOTTOM+FRONT+LEFT) == 0);
+    assert(_corner_edge_count(edges,TOP+FRONT+RIGHT) == 3);
+    assert(_corner_edge_count(edges,TOP+FRONT+LEFT) == 2);
+    assert(_corner_edge_count(edges,BOTTOM+FRONT+RIGHT) == 1);
+    assert(_corner_edge_count(edges,BOTTOM+FRONT+LEFT) == 0);
 }
-test_corner_edge_count();
+test__corner_edge_count();
 
 
-module test_corner_edges() {
+module test__corner_edges() {
     edges = edges([TOP,FRONT+RIGHT]);
-    assert_equal(corner_edges(edges,TOP+FRONT+RIGHT), [1,1,1]);
-    assert_equal(corner_edges(edges,TOP+FRONT+LEFT), [1,1,0]);
-    assert_equal(corner_edges(edges,BOTTOM+FRONT+RIGHT), [0,0,1]);
-    assert_equal(corner_edges(edges,BOTTOM+FRONT+LEFT), [0,0,0]);
+    assert_equal(_corner_edges(edges,TOP+FRONT+RIGHT), [1,1,1]);
+    assert_equal(_corner_edges(edges,TOP+FRONT+LEFT), [1,1,0]);
+    assert_equal(_corner_edges(edges,BOTTOM+FRONT+RIGHT), [0,0,1]);
+    assert_equal(_corner_edges(edges,BOTTOM+FRONT+LEFT), [0,0,0]);
 }
-test_corner_edges();
+test__corner_edges();
 
 
 module test_corners() {
@@ -174,36 +174,36 @@ module test_corners() {
 test_corners();
 
 
-module test_is_corner_array() {
+module test__is_corner_array() {
     edges = edges([TOP,FRONT+RIGHT]);
     corners = corners([TOP,FRONT+RIGHT]);
-    assert(!is_corner_array(undef));
-    assert(!is_corner_array(true));
-    assert(!is_corner_array(false));
-    assert(!is_corner_array(INF));
-    assert(!is_corner_array(-INF));
-    assert(!is_corner_array(NAN));
-    assert(!is_corner_array(-4));
-    assert(!is_corner_array(0));
-    assert(!is_corner_array(4));
-    assert(!is_corner_array("foo"));
-    assert(!is_corner_array([]));
-    assert(!is_corner_array([4,5,6]));
-    assert(!is_corner_array([2:3:9]));
-    assert(!is_corner_array(edges));
-    assert(is_corner_array(corners));
+    assert(!_is_corner_array(undef));
+    assert(!_is_corner_array(true));
+    assert(!_is_corner_array(false));
+    assert(!_is_corner_array(INF));
+    assert(!_is_corner_array(-INF));
+    assert(!_is_corner_array(NAN));
+    assert(!_is_corner_array(-4));
+    assert(!_is_corner_array(0));
+    assert(!_is_corner_array(4));
+    assert(!_is_corner_array("foo"));
+    assert(!_is_corner_array([]));
+    assert(!_is_corner_array([4,5,6]));
+    assert(!_is_corner_array([2:3:9]));
+    assert(!_is_corner_array(edges));
+    assert(_is_corner_array(corners));
 }
-test_is_corner_array();
+test__is_corner_array();
 
 
-module test_normalize_corners() {
-    assert_equal(normalize_corners([-2,-2,-2,-2,-2,-2,-2,-2]), [0,0,0,0,0,0,0,0]);
-    assert_equal(normalize_corners([-1,-1,-1,-1,-1,-1,-1,-1]), [0,0,0,0,0,0,0,0]);
-    assert_equal(normalize_corners([0,0,0,0,0,0,0,0]), [0,0,0,0,0,0,0,0]);
-    assert_equal(normalize_corners([1,1,1,1,1,1,1,1]), [1,1,1,1,1,1,1,1]);
-    assert_equal(normalize_corners([2,2,2,2,2,2,2,2]), [1,1,1,1,1,1,1,1]);
+module test__normalize_corners() {
+    assert_equal(_normalize_corners([-2,-2,-2,-2,-2,-2,-2,-2]), [0,0,0,0,0,0,0,0]);
+    assert_equal(_normalize_corners([-1,-1,-1,-1,-1,-1,-1,-1]), [0,0,0,0,0,0,0,0]);
+    assert_equal(_normalize_corners([0,0,0,0,0,0,0,0]), [0,0,0,0,0,0,0,0]);
+    assert_equal(_normalize_corners([1,1,1,1,1,1,1,1]), [1,1,1,1,1,1,1,1]);
+    assert_equal(_normalize_corners([2,2,2,2,2,2,2,2]), [1,1,1,1,1,1,1,1]);
 }
-test_normalize_corners();
+test__normalize_corners();
 
 
 
