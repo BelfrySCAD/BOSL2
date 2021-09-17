@@ -35,7 +35,7 @@ test_polygon_line_intersection();
 test_plane_intersection();
 test_is_coplanar();
 test_are_points_on_plane();
-test_is_above_plane();
+test__is_point_above_plane();
 test_circle_2tangents();
 test_circle_3points();
 test_circle_point_tangents();
@@ -731,17 +731,17 @@ module test_is_coplanar() {
 *test_is_coplanar();
 
 
-module test_is_above_plane() {
+module test__is_point_above_plane() {
     plane = plane3pt([0,0,0], [0,10,10], [10,0,10]);
-    assert(is_above_plane(plane, [5,5,10]) == false);
-    assert(is_above_plane(plane, [-5,0,0]) == true);
-    assert(is_above_plane(plane, [5,0,0]) == false);
-    assert(is_above_plane(plane, [0,-5,0]) == true);
-    assert(is_above_plane(plane, [0,5,0]) == false);
-    assert(is_above_plane(plane, [0,0,5]) == true);
-    assert(is_above_plane(plane, [0,0,-5]) == false);
+    assert(_is_point_above_plane(plane, [5,5,10]) == false);
+    assert(_is_point_above_plane(plane, [-5,0,0]) == true);
+    assert(_is_point_above_plane(plane, [5,0,0]) == false);
+    assert(_is_point_above_plane(plane, [0,-5,0]) == true);
+    assert(_is_point_above_plane(plane, [0,5,0]) == false);
+    assert(_is_point_above_plane(plane, [0,0,5]) == true);
+    assert(_is_point_above_plane(plane, [0,0,-5]) == false);
 }
-*test_is_above_plane();
+*test__is_point_above_plane();
 
 
 

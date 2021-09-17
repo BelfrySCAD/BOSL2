@@ -18,7 +18,7 @@
 // Arguments:
 //   p = The coordinates to force into a 2D vector/point.
 //   fill = Value to fill missing values in vector with.
-function point2d(p, fill=0) = [for (i=[0:1]) (p[i]==undef)? fill : p[i]];
+function point2d(p, fill=0) = assert(is_list(p)) [for (i=[0:1]) (p[i]==undef)? fill : p[i]];
 
 
 // Function: path2d()
@@ -49,7 +49,9 @@ function path2d(points) =
 // Arguments:
 //   p = The coordinates to force into a 3D vector/point.
 //   fill = Value to fill missing values in vector with.
-function point3d(p, fill=0) = [for (i=[0:2]) (p[i]==undef)? fill : p[i]];
+function point3d(p, fill=0) =
+    assert(is_list(p)) 
+    [for (i=[0:2]) (p[i]==undef)? fill : p[i]];
 
 
 // Function: path3d()
@@ -86,7 +88,8 @@ function path3d(points, fill=0) =
 // Arguments:
 //   p = The coordinates to force into a 4D vector/point.
 //   fill = Value to fill missing values in vector with.
-function point4d(p, fill=0) = [for (i=[0:3]) (p[i]==undef)? fill : p[i]];
+function point4d(p, fill=0) = assert(is_list(p))
+                              [for (i=[0:3]) (p[i]==undef)? fill : p[i]];
 
 
 // Function: path4d()

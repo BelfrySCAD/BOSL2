@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
-// LibFile: common.scad
-//   Common functions used in argument processing.
+// LibFile: utility.scad
+//   Utility functions used in argument processing.
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
@@ -488,6 +488,8 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
 // Topics: Argument Handling
 // See Also: get_anchor(), get_radius(), force_list()
 // Description:
+//   This is expands a scalar or a list with length less than 3 to a length 3 vector in the
+//   same way that OpenSCAD expands short vectors in some contexts, e.g. cube(10) or rotate([45,90]).  
 //   If `v` is a scalar, and `dflt==undef`, returns `[v, v, v]`.
 //   If `v` is a scalar, and `dflt!=undef`, returns `[v, dflt, dflt]`.
 //   If `v` is a vector, returns the first 3 items, with any missing values replaced by `dflt`.

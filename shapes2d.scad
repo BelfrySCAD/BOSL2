@@ -1,19 +1,59 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: shapes2d.scad
-//   This file lets you create regular polygons
+//   This file includes redefinitions of the core modules to
+//   work with attachment.  You can also create regular polygons
 //   with optional rounded corners and alignment features not
 //   available with circle().  The file also provides teardrop2d,
 //   which is useful for 3d printable holes.  Lastly you can use the
 //   masks to produce edge treatments common in furniture from the
 //   simple roundover or cove molding to the more elaborate ogee.
 //   Many of the commands have module forms that produce geometry and
-//   function forms that produce a path.
+//   function forms that produce a path.  This file defines function
+//   forms of the core OpenSCAD modules that produce paths.
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
 
 // Section: 2D Primitives
+
+// Function&Module: square()
+// Topics: Shapes (2D), Path Generators (2D)
+// Usage: As a Built-in Module
+//   square(size, [center]);
+// Usage: As a Function
+//   path = square(size, [center]);
+// See Also: rect()
+// Description:
+//   When called as the builtin module, creates a 2D square or rectangle of the given size.
+//   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
+// Arguments:
+//   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
+//   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
+//   ---
+//   anchor = (Function only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = (Function only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Example(2D):
+//   square(40);
+// Example(2D): Centered
+//   square([40,30], center=true);
+// Example(2D): Called as Function
+//   path = square([40,30], anchor=FRONT, spin=30);
+//   stroke(path, closed=true);
+//   move_copies(path) color("blue") circle(d=2,$fn=8);
+function square(size=1, center, anchor, spin=0) =
+    let(
+        anchor = get_anchor(anchor, center, [-1,-1], [-1,-1]),
+        size = is_num(size)? [size,size] : point2d(size),
+        path = [
+            [ size.x,-size.y],
+            [-size.x,-size.y],
+            [-size.x, size.y],
+            [ size.x, size.y]
+        ] / 2
+    ) reorient(anchor,spin, two_d=true, size=size, p=path);
+
+
 
 // Function&Module: rect()
 // Usage: As Module
@@ -117,6 +157,38 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
     ) complex?
         reorient(anchor,spin, two_d=true, path=path, p=path) :
         reorient(anchor,spin, two_d=true, size=size, p=path);
+
+
+// Function&Module: circle()
+// Topics: Shapes (2D), Path Generators (2D)
+// Usage: As a Built-in Module
+//   circle(r|d=, ...);
+// Usage: As a Function
+//   path = circle(r|d=, ...);
+// See Also: oval()
+// Description:
+//   When called as the builtin module, creates a 2D polygon that approximates a circle of the given size.
+//   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle of the given size.
+// Arguments:
+//   r = The radius of the circle to create.
+//   d = The diameter of the circle to create.
+//   ---
+//   anchor = (Function only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = (Function only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Example(2D): By Radius
+//   circle(r=25);
+// Example(2D): By Diameter
+//   circle(d=50);
+// Example(NORENDER): Called as Function
+//   path = circle(d=50, anchor=FRONT, spin=45);
+function circle(r, d, anchor=CENTER, spin=0) =
+    let(
+        r = get_radius(r=r, d=d, dflt=1),
+        sides = segs(r),
+        path = [for (i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]]
+    ) reorient(anchor,spin, two_d=true, r=r, p=path);
+
+
 
 
 // Function&Module: oval()

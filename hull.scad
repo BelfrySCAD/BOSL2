@@ -186,7 +186,7 @@ function hull3d_faces(points) =
         remaining = [for (i = [0:1:len(points)-1]) if (i!=a && i!=b && i!=c && i!=d) i],
         // Build an initial tetrahedron.
         // Swap b, c if d is in front of triangle t.
-        ifop = is_above_plane(plane, points[d]),
+        ifop = _is_point_above_plane(plane, points[d]),
         bc = ifop? [c,b] : [b,c],
         b = bc[0],
         c = bc[1],
