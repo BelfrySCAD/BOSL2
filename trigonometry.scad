@@ -96,7 +96,7 @@ function law_of_sines(a, A, b, B) =
 //   p1 = The first vertex of the triangle.
 //   p2 = The second vertex of the triangle.
 //   p3 = The third vertex of the triangle.
-// Examples:
+// Example:
 //   triangle_area([0,0], [5,10], [10,0]);  // Returns -50
 //   triangle_area([10,0], [5,10], [0,0]);  // Returns 50
 function triangle_area(p1,p2,p3) =

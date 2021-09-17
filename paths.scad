@@ -17,22 +17,22 @@
 //   All vectors must of the same size, and may only contain numbers that are not inf or nan.
 //   By default the vectors in a path must be 2d or 3d.  Set the `dim` parameter to specify a list
 //   of allowed dimensions, or set it to `undef` to allow any dimension.  
-// Examples:
-//   is_path([[3,4],[5,6]]);    // Returns true
-//   is_path([[3,4]]);          // Returns false
-//   is_path([[3,4],[4,5]],2);  // Returns true
-//   is_path([[3,4,3],[5,4,5]],2);  // Returns false
-//   is_path([[3,4,3],[5,4,5]],2);  // Returns false
-//   is_path([[3,4,5],undef,[4,5,6]]);  // Returns false
-//   is_path([[3,5],[undef,undef],[4,5]]);  // Returns false
-//   is_path([[3,4],[5,6],[5,3]]);     // Returns true
-//   is_path([3,4,5,6,7,8]);           // Returns false
-//   is_path([[3,4],[5,6]], dim=[2,3]);// Returns true
-//   is_path([[3,4],[5,6]], dim=[1,3]);// Returns false
-//   is_path([[3,4],"hello"], fast=true); // Returns true
-//   is_path([[3,4],[3,4,5]]);            // Returns false
-//   is_path([[1,2,3,4],[2,3,4,5]]);      // Returns false
-//   is_path([[1,2,3,4],[2,3,4,5]],undef);// Returns true
+// Example:
+//   bool1 = is_path([[3,4],[5,6]]);    // Returns true
+//   bool2 = is_path([[3,4]]);          // Returns false
+//   bool3 = is_path([[3,4],[4,5]],2);  // Returns true
+//   bool4 = is_path([[3,4,3],[5,4,5]],2);  // Returns false
+//   bool5 = is_path([[3,4,3],[5,4,5]],2);  // Returns false
+//   bool6 = is_path([[3,4,5],undef,[4,5,6]]);  // Returns false
+//   bool7 = is_path([[3,5],[undef,undef],[4,5]]);  // Returns false
+//   bool8 = is_path([[3,4],[5,6],[5,3]]);     // Returns true
+//   bool9 = is_path([3,4,5,6,7,8]);           // Returns false
+//   bool10 = is_path([[3,4],[5,6]], dim=[2,3]);// Returns true
+//   bool11 = is_path([[3,4],[5,6]], dim=[1,3]);// Returns false
+//   bool12 = is_path([[3,4],"hello"], fast=true); // Returns true
+//   bool13 = is_path([[3,4],[3,4,5]]);            // Returns false
+//   bool14 = is_path([[1,2,3,4],[2,3,4,5]]);      // Returns false
+//   bool15 = is_path([[1,2,3,4],[2,3,4,5]],undef);// Returns true
 // Arguments:
 //   list = list to check
 //   dim = list of allowed dimensions of the vectors in the path.  Default: [2,3]
@@ -1397,182 +1397,6 @@ module path_extrude(path, convexity=10, clipsize=100) {
         }
     }
 }
-
-
-function _cut_interp(pathcut, path, data) =
-  [for(entry=pathcut)
-    let(
-       a = path[entry[1]-1],
-        b = path[entry[1]],
-        c = entry[0],
-        i = max_index(v_abs(b-a)),
-        factor = (c[i]-a[i])/(b[i]-a[i])
-    )
-    (1-factor)*data[entry[1]-1]+ factor * data[entry[1]]
-  ];
-
-
-// Module: path_text()
-// Usage:
-//   path_text(path, text, [size], [thickness], [font], [lettersize], [offset], [reverse], [normal], [top], [textmetrics])
-// Description:
-//   Place the text letter by letter onto the specified path using textmetrics (if available and requested)
-//   or user specified letter spacing.  The path can be 2D or 3D.  In 2D the text appears along the path with letters upright
-//   as determined by the path direction.  In 3D by default letters are positioned on the tangent line to the path with the path normal
-//   pointing toward the reader.  The path normal points away from the center of curvature (the opposite of the normal produced
-//   by path_normals()).  Note that this means that if the center of curvature switches sides the text will flip upside down.
-//   If you want text on such a path you must supply your own normal or top vector. 
-//   . 
-//   Text appears starting at the beginning of the path, so if the 3D path moves right to left
-//   then a left-to-right reading language will display in the wrong order. (For a 2D path text will appear upside down.)
-//   The text for a 3D path appears positioned to be read from "outside" of the curve (from a point on the other side of the
-//   curve from the center of curvature).  If you need the text to read properly from the inside, you can set reverse to
-//   true to flip the text, or supply your own normal.  
-//   .
-//   If you do not have the experimental textmetrics feature enabled then you must specify the space for the letters
-//   using lettersize, which can be a scalar or array.  You will have the easiest time getting good results by using
-//   a monospace font such as Courier.  Note that even with text metrics, spacing may be different because path_text()
-//   doesn't do kerning to adjust positions of individual glyphs.  Also if your font has ligatures they won't be used.  
-//   .
-//   By default letters appear centered on the path.  The offset can be specified to shift letters toward the reader (in
-//   the direction of the normal).  
-//   .
-//   You can specify your own normal by setting `normal` to a direction or a list of directions.  Your normal vector should
-//   point toward the reader.  You can also specify
-//   top, which directs the top of the letters in a desired direction.  If you specify your own directions and they
-//   are not perpendicular to the path then the direction you specify will take priority and the
-//   letters will not rest on the tangent line of the path.  Note that the normal or top directions that you
-//   specify must not be parallel to the path.  
-// Arguments:
-//   path = path to place the text on
-//   text = text to create
-//   size = font size
-//   thickness = thickness of letters (not allowed for 2D path)
-//   font = font to use
-//   ---
-//   lettersize = scalar or array giving size of letters
-//   offset = distance to shift letters "up" (towards the reader).  Not allowed for 2D path.  Default: 0
-//   normal = direction or list of directions pointing towards the reader of the text.  Not allowed for 2D path.
-//   top = direction or list of directions pointing toward the top of the text
-//   reverse = reverse the letters if true.  Not allowed for 2D path.  Default: false
-//   textmetrics = if set to true and lettersize is not given then use the experimental textmetrics feature.  You must be running a dev snapshot that includes this feature and have the feature turned on in your preferences.  Default: false
-// Example:  The examples use Courier, a monospaced font.  The width is 1/1.2 times the specified size for this font.  This text could wrap around a cylinder. 
-//   path = path3d(arc(100, r=25, angle=[245, 370]));
-//   color("red")stroke(path, width=.3);
-//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2);
-// Example: By setting the normal to UP we can get text that lies flat, for writing around the edge of a disk:
-//   path = path3d(arc(100, r=25, angle=[245, 370]));
-//   color("red")stroke(path, width=.3);
-//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, normal=UP);
-// Example:  If we want text that reads from the other side we can use reverse.  Note we have to reverse the direction of the path and also set the reverse option.  
-//   path = reverse(path3d(arc(100, r=25, angle=[65, 190])));
-//   color("red")stroke(path, width=.3);
-//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, reverse=true);
-// Example: text debossed onto a cylinder in a spiral.  The text is 1 unit deep because it is half in, half out. 
-//   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
-//   L = 5*len(text);
-//   maxang = 360*L/(PI*50);
-//   spiral = [for(a=[0:1:maxang]) [25*cos(a), 25*sin(a), 10-30/maxang*a]];
-//   difference(){
-//     cyl(d=50, l=50, $fn=120);
-//     path_text(spiral, text, size=5, lettersize=5/1.2, font="Courier", thickness=2);
-//   }
-// Example: Same example but text embossed.  Make sure you have enough depth for the letters to fully overlap the object. 
-//   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
-//   L = 5*len(text);
-//   maxang = 360*L/(PI*50);
-//   spiral = [for(a=[0:1:maxang]) [25*cos(a), 25*sin(a), 10-30/maxang*a]];
-//   cyl(d=50, l=50, $fn=120);
-//   path_text(spiral, text, size=5, lettersize=5/1.2, font="Courier", thickness=2);
-// Example: Here the text baseline sits on the path.  (Note the default orientation makes text readable from below, so we specify the normal.)
-//   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
-//   color("red")stroke(path,width=.2);
-//   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Courier", normal=FRONT);
-// Example: If we use top to orient the text upward, the text baseline is no longer aligned with the path. 
-//   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
-//   color("red")stroke(path,width=.2);
-//   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Courier", top=UP);
-// Example: This sine wave wrapped around the cylinder has a twisting normal that produces wild letter layout.  We fix it with a custom normal which is different at every path point. 
-//   path = [for(theta = [0:360]) [25*cos(theta), 25*sin(theta), 4*cos(theta*4)]];
-//   normal = [for(theta = [0:360]) [cos(theta), sin(theta),0]];
-//   zrot(-120)
-//   difference(){
-//     cyl(r=25, h=20, $fn=120);
-//     path_text(path, "A sine wave wiggles", font="Courier", lettersize=5/1.2, size=5, normal=normal);
-//   }
-// Example: The path center of curvature changes, and the text flips.  
-//   path =  zrot(-120,p=path3d( concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180])))));
-//   color("red")stroke(path,width=.2);
-//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier", thickness=2);
-// Example: We can fix it with top:
-//   path =  zrot(-120,p=path3d( concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180])))));
-//   color("red")stroke(path,width=.2);
-//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier", thickness=2, top=UP);
-// Example(2D): With a 2D path instead of 3D there's no ambiguity about direction and it works by default:
-//   path =  zrot(-120,p=concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180]))));
-//   color("red")stroke(path,width=.2);
-//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier");
-module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, textmetrics=false)
-{
-  dummy2=assert(is_path(path,[2,3]),"Must supply a 2d or 3d path")
-         assert(num_defined([normal,top])<=1, "Cannot define both \"normal\" and \"top\"");
-  dim = len(path[0]);
-  normalok = is_undef(normal) || is_vector(normal,3) || (is_path(normal,3) && len(normal)==len(path));
-  topok = is_undef(top) || is_vector(top,dim) || (dim==2 && is_vector(top,3) && top[2]==0)
-                        || (is_path(top,dim) && len(top)==len(path));
-  dummy4 = assert(dim==3 || is_undef(thickness), "Cannot give a thickness with 2d path")
-           assert(dim==3 || !reverse, "Reverse not allowed with 2d path")
-           assert(dim==3 || offset==0, "Cannot give offset with 2d path")
-           assert(dim==3 || is_undef(normal), "Cannot define \"normal\" for a 2d path, only \"top\"")
-           assert(normalok,"\"normal\" must be a vector or path compatible with the given path")
-           assert(topok,"\"top\" must be a vector or path compatible with the given path");
-  thickness = first_defined([thickness,1]);
-  normal = is_vector(normal) ? repeat(normal, len(path))
-         : is_def(normal) ? normal
-         : undef;
-
-  top = is_vector(top) ? repeat(dim==2?point2d(top):top, len(path))
-         : is_def(top) ? top
-         : undef;
-
-  lsize = is_def(lettersize) ? force_list(lettersize, len(text))
-        : textmetrics ? [for(letter=text) let(t=textmetrics(letter, font=font, size=size)) t.advance[0]]
-        : assert(false, "textmetrics disabled: Must specify letter size");
-
-  dummy1 = assert(sum(lsize)<=path_length(path),"Path is too short for the text");
-   
-  pts = path_cut_points(path, add_scalar([0, each cumsum(lsize)],lsize[0]/2), direction=true);
-
-  usernorm = is_def(normal);
-  usetop = is_def(top);
-  
-  normpts = is_undef(normal) ? (reverse?1:-1)*subindex(pts,3) : _cut_interp(pts,path, normal);
-  toppts = is_undef(top) ? undef : _cut_interp(pts,path,top);
-  for(i=idx(text))
-      let( tangent = pts[i][2] )
-      assert(!usetop || !approx(tangent*toppts[i],norm(top[i])*norm(tangent)),
-             str("Specified top direction parallel to path at character ",i))
-      assert(usetop || !approx(tangent*normpts[i],norm(normpts[i])*norm(tangent)),
-             str("Specified normal direction parallel to path at character ",i))
-      let(
-          adjustment = usetop ?  (tangent*toppts[i])*toppts[i]/(toppts[i]*toppts[i])
-                     : usernorm ?  (tangent*normpts[i])*normpts[i]/(normpts[i]*normpts[i])
-                     : [0,0,0]
-      )
-      move(pts[i][0])
-      if(dim==3){
-          frame_map(x=tangent-adjustment,
-                    z=usetop ? undef : normpts[i],
-                    y=usetop ? toppts[i] : undef)
-          up(offset-thickness/2)
-          linear_extrude(height=thickness)
-          left(lsize[0]/2)text(text[i], font=font, size=size);
-     } else {
-          frame_map(x=point3d(tangent-adjustment), y=point3d(usetop ? toppts[i] : -normpts[i]))
-          left(lsize[0]/2)text(text[i], font=font, size=size);
-     }
-}
-
 
 
 

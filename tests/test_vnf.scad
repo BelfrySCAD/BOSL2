@@ -81,9 +81,16 @@ test_vnf_centroid();
 
 module test_vnf_volume() {
     assert_approx(vnf_volume(cube(100, center=false)), 1000000);
-    assert(approx(vnf_volume(sphere(d=100, anchor=BOT, $fn=144)), 4/3*PI*pow(50,3), eps=1e3));
+    assert(approx(vnf_volume(sphere(d=100, anchor=BOT, $fn=144)) / (4/3*PI*pow(50,3)),1, eps=.001));
 }
 test_vnf_volume();
+
+
+
+module test_vnf_area(){
+    assert(approx(vnf_area(sphere(d=100, $fn=144)) / (4*PI*50*50),1, eps=1e-3));
+}
+test_vnf_area();
 
 
 module test_vnf_merge() {

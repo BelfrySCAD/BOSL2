@@ -943,10 +943,10 @@ function are_points_on_plane(points, plane, eps=EPSILON) =
     _pointlist_greatest_distance(points,plane) < eps;
 
 
-// Function: is_above_plane()
+/// Internal Function: is_point_above_plane()
 // Usage:
-//   test = in_front_of_plane(plane, point);
-// Topics: Geometry, Planes
+//   test = _is_point_above_plane(plane, point);
+/// Topics: Geometry, Planes
 // Description:
 //   Given a plane as [A,B,C,D] where the cartesian equation for that plane
 //   is Ax+By+Cz=D, determines if the given 3D point is on the side of that
@@ -955,7 +955,7 @@ function are_points_on_plane(points, plane, eps=EPSILON) =
 // Arguments:
 //   plane = The [A,B,C,D] coefficients for the first plane equation `Ax+By+Cz=D`.
 //   point = The 3D point to test.
-function is_above_plane(plane, point) =
+function _is_point_above_plane(plane, point) =
     point_plane_distance(plane, point) > EPSILON;
 
 

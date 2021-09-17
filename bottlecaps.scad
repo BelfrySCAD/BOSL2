@@ -67,8 +67,8 @@ module pco1810_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
     h = support_h+neck_h;
     thread_h = (thread_od-threadbase_d)/2;
     anchors = [
-        anchorpt("support-ring", [0,0,neck_h-h/2]),
-        anchorpt("tamper-ring", [0,0,h/2-tamper_base_h])
+        named_anchor("support-ring", [0,0,neck_h-h/2]),
+        named_anchor("tamper-ring", [0,0,h/2-tamper_base_h])
     ];
     attachable(anchor,spin,orient, d1=neck_d, d2=lip_recess_d+2*lip_leadin_r, l=h, anchors=anchors) {
         down(h/2) {
@@ -173,7 +173,7 @@ module pco1810_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
     w = cap_id + 2*wall;
     h = tamper_ring_h + wall;
     anchors = [
-        anchorpt("inside-top", [0,0,-(h/2-wall)])
+        named_anchor("inside-top", [0,0,-(h/2-wall)])
     ];
     attachable(anchor,spin,orient, d=w, l=h, anchors=anchors) {
         down(h/2) zrot(45) {
@@ -260,8 +260,8 @@ module pco1881_neck(wall=2, anchor="support-ring", spin=0, orient=UP)
     h = support_h+neck_h;
     thread_h = (thread_od-threadbase_d)/2;
     anchors = [
-        anchorpt("support-ring", [0,0,neck_h-h/2]),
-        anchorpt("tamper-ring", [0,0,h/2-tamper_base_h])
+        named_anchor("support-ring", [0,0,neck_h-h/2]),
+        named_anchor("tamper-ring", [0,0,h/2-tamper_base_h])
     ];
     attachable(anchor,spin,orient, d1=neck_d, d2=lip_recess_d+2*lip_leadin_r, l=h, anchors=anchors) {
         down(h/2) {
@@ -357,7 +357,7 @@ module pco1881_cap(wall=2, texture="none", anchor=BOTTOM, spin=0, orient=UP)
     w = 28.58 + 2*wall;
     h = 11.2 + wall;
     anchors = [
-        anchorpt("inside-top", [0,0,-(h/2-wall)])
+        named_anchor("inside-top", [0,0,-(h/2-wall)])
     ];
     attachable(anchor,spin,orient, d=w, l=h, anchors=anchors) {
         down(h/2) zrot(45) {
@@ -448,7 +448,7 @@ module generic_bottle_neck(
     $fn = segs(33 / 2);
     thread_h = (thread_od - threadbase_d) / 2;
     anchors = [
-        anchorpt("support-ring", [0, 0, 0 - h / 2])
+        named_anchor("support-ring", [0, 0, 0 - h / 2])
     ];
     attachable(anchor, spin, orient, d1 = neck_d, d2 = 0, l = h, anchors = anchors) {
         down(h / 2) {
@@ -563,7 +563,7 @@ module generic_bottle_cap(
     heightMagMult = (height > 11.2) ? height / 11.2 : 1;
 
     anchors = [
-        anchorpt("inside-top", [0, 0, -(h / 2 - wall)])
+        named_anchor("inside-top", [0, 0, -(h / 2 - wall)])
     ];
     attachable(anchor, spin, orient, d = w, l = h, anchors = anchors) {
         down(h / 2) {

@@ -579,12 +579,12 @@ function rack2d(
         xd = d * sin(pressure_angle),
         l = teeth * pitch,
         anchors = [
-            anchorpt("adendum",         [   0, a,0],  BACK),
-            anchorpt("adendum-left",    [-l/2, a,0],  LEFT),
-            anchorpt("adendum-right",   [ l/2, a,0],  RIGHT),
-            anchorpt("dedendum",        [   0,-d,0],  BACK),
-            anchorpt("dedendum-left",   [-l/2,-d,0],  LEFT),
-            anchorpt("dedendum-right",  [ l/2,-d,0],  RIGHT),
+            named_anchor("adendum",         [   0, a,0],  BACK),
+            named_anchor("adendum-left",    [-l/2, a,0],  LEFT),
+            named_anchor("adendum-right",   [ l/2, a,0],  RIGHT),
+            named_anchor("dedendum",        [   0,-d,0],  BACK),
+            named_anchor("dedendum-left",   [-l/2,-d,0],  LEFT),
+            named_anchor("dedendum-right",  [ l/2,-d,0],  RIGHT),
         ],
         path = [
             [-(teeth-1)/2 * pitch + -1/2 * pitch,  a-height],
@@ -619,12 +619,12 @@ module rack2d(
     d = dedendum(pitch, clearance);
     l = teeth * pitch;
     anchors = [
-        anchorpt("adendum",         [   0, a,0],  BACK),
-        anchorpt("adendum-left",    [-l/2, a,0],  LEFT),
-        anchorpt("adendum-right",   [ l/2, a,0],  RIGHT),
-        anchorpt("dedendum",        [   0,-d,0],  BACK),
-        anchorpt("dedendum-left",   [-l/2,-d,0],  LEFT),
-        anchorpt("dedendum-right",  [ l/2,-d,0],  RIGHT),
+        named_anchor("adendum",         [   0, a,0],  BACK),
+        named_anchor("adendum-left",    [-l/2, a,0],  LEFT),
+        named_anchor("adendum-right",   [ l/2, a,0],  RIGHT),
+        named_anchor("dedendum",        [   0,-d,0],  BACK),
+        named_anchor("dedendum-left",   [-l/2,-d,0],  LEFT),
+        named_anchor("dedendum-right",  [ l/2,-d,0],  RIGHT),
     ];
     path = rack2d(
         pitch = pitch,
@@ -994,9 +994,9 @@ function bevel_gear(
         lvnf = left_handed? vnf1 : xflip(p=vnf1),
         vnf = down(cpz, p=lvnf),
         anchors = [
-            anchorpt("pitchbase", [0,0,pitchoff-thickness/2]),
-            anchorpt("flattop", [0,0,thickness/2]),
-            anchorpt("apex", [0,0,hyp_ang_to_opp(ocone_rad,90-pitch_angle)+pitchoff-thickness/2])
+            named_anchor("pitchbase", [0,0,pitchoff-thickness/2]),
+            named_anchor("flattop", [0,0,thickness/2]),
+            named_anchor("apex", [0,0,hyp_ang_to_opp(ocone_rad,90-pitch_angle)+pitchoff-thickness/2])
         ]
     ) reorient(anchor,spin,orient, vnf=vnf, extent=true, anchors=anchors, p=vnf);
 
@@ -1048,9 +1048,9 @@ module bevel_gear(
     axis_zs = [for (p=vnf[0]) if(norm(point2d(p)) < EPSILON) p.z];
     thickness = max(axis_zs) - min(axis_zs);
     anchors = [
-        anchorpt("pitchbase", [0,0,pitchoff-thickness/2]),
-        anchorpt("flattop", [0,0,thickness/2]),
-        anchorpt("apex", [0,0,adj_ang_to_opp(pr,90-pitch_angle)+pitchoff-thickness/2])
+        named_anchor("pitchbase", [0,0,pitchoff-thickness/2]),
+        named_anchor("flattop", [0,0,thickness/2]),
+        named_anchor("apex", [0,0,adj_ang_to_opp(pr,90-pitch_angle)+pitchoff-thickness/2])
     ];
     attachable(anchor,spin,orient, r1=pr, r2=ipr, h=thickness, anchors=anchors) {
         difference() {
@@ -1137,16 +1137,16 @@ module rack(
     d = dedendum(pitch, clearance);
     l = teeth * pitch;
     anchors = [
-        anchorpt("adendum",         [0,0,a],             BACK),
-        anchorpt("adendum-left",    [-l/2,0,a],          LEFT),
-        anchorpt("adendum-right",   [ l/2,0,a],          RIGHT),
-        anchorpt("adendum-front",   [0,-thickness/2,a],  DOWN),
-        anchorpt("adendum-back",    [0, thickness/2,a],  UP),
-        anchorpt("dedendum",        [0,0,-d],            BACK),
-        anchorpt("dedendum-left",   [-l/2,0,-d],         LEFT),
-        anchorpt("dedendum-right",  [ l/2,0,-d],         RIGHT),
-        anchorpt("dedendum-front",  [0,-thickness/2,-d], DOWN),
-        anchorpt("dedendum-back",   [0, thickness/2,-d], UP),
+        named_anchor("adendum",         [0,0,a],             BACK),
+        named_anchor("adendum-left",    [-l/2,0,a],          LEFT),
+        named_anchor("adendum-right",   [ l/2,0,a],          RIGHT),
+        named_anchor("adendum-front",   [0,-thickness/2,a],  DOWN),
+        named_anchor("adendum-back",    [0, thickness/2,a],  UP),
+        named_anchor("dedendum",        [0,0,-d],            BACK),
+        named_anchor("dedendum-left",   [-l/2,0,-d],         LEFT),
+        named_anchor("dedendum-right",  [ l/2,0,-d],         RIGHT),
+        named_anchor("dedendum-front",  [0,-thickness/2,-d], DOWN),
+        named_anchor("dedendum-back",   [0, thickness/2,-d], UP),
     ];
     attachable(anchor,spin,orient, size=[l, thickness, 2*abs(a-height)], anchors=anchors) {
         skew(sxy=tan(helical)) xrot(90) {
@@ -1186,16 +1186,16 @@ function rack(
         d = dedendum(pitch, clearance),
         l = teeth * pitch,
         anchors = [
-            anchorpt("adendum",         [0,0,a],             BACK),
-            anchorpt("adendum-left",    [-l/2,0,a],          LEFT),
-            anchorpt("adendum-right",   [ l/2,0,a],          RIGHT),
-            anchorpt("adendum-front",   [0,-thickness/2,a],  DOWN),
-            anchorpt("adendum-back",    [0, thickness/2,a],  UP),
-            anchorpt("dedendum",        [0,0,-d],            BACK),
-            anchorpt("dedendum-left",   [-l/2,0,-d],         LEFT),
-            anchorpt("dedendum-right",  [ l/2,0,-d],         RIGHT),
-            anchorpt("dedendum-front",  [0,-thickness/2,-d], DOWN),
-            anchorpt("dedendum-back",   [0, thickness/2,-d], UP),
+            named_anchor("adendum",         [0,0,a],             BACK),
+            named_anchor("adendum-left",    [-l/2,0,a],          LEFT),
+            named_anchor("adendum-right",   [ l/2,0,a],          RIGHT),
+            named_anchor("adendum-front",   [0,-thickness/2,a],  DOWN),
+            named_anchor("adendum-back",    [0, thickness/2,a],  UP),
+            named_anchor("dedendum",        [0,0,-d],            BACK),
+            named_anchor("dedendum-left",   [-l/2,0,-d],         LEFT),
+            named_anchor("dedendum-right",  [ l/2,0,-d],         RIGHT),
+            named_anchor("dedendum-front",  [0,-thickness/2,-d], DOWN),
+            named_anchor("dedendum-back",   [0, thickness/2,-d], UP),
         ],
         path = rack2d(
             pitch = pitch,

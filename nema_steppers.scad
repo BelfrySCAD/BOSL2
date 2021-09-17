@@ -122,14 +122,14 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, anchor=TOP, spin=0, orient=UP
     screw_depth = nema_motor_screw_depth(size);
 
     anchors = [
-        anchorpt("shaft-top", [0,0,h/2+shaft_len]),
-        anchorpt("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
-        anchorpt("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
-        anchorpt("plinth-top", [0,0,h/2+plinth_height]),
-        anchorpt("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
-        anchorpt("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
-        anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
-        anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
+        named_anchor("shaft-top", [0,0,h/2+shaft_len]),
+        named_anchor("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
+        named_anchor("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
+        named_anchor("plinth-top", [0,0,h/2+plinth_height]),
+        named_anchor("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
+        named_anchor("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
+        named_anchor("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
+        named_anchor("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
     ];
     attachable(anchor,spin,orient, size=[motor_width, motor_width, h], anchors=anchors) {
         up(h/2)
@@ -187,14 +187,14 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, anchor=TOP, spin=0, orient=UP
     screw_depth = nema_motor_screw_depth(size);
 
     anchors = [
-        anchorpt("shaft-top", [0,0,h/2+shaft_len]),
-        anchorpt("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
-        anchorpt("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
-        anchorpt("plinth-top", [0,0,h/2+plinth_height]),
-        anchorpt("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
-        anchorpt("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
-        anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
-        anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
+        named_anchor("shaft-top", [0,0,h/2+shaft_len]),
+        named_anchor("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
+        named_anchor("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
+        named_anchor("plinth-top", [0,0,h/2+plinth_height]),
+        named_anchor("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
+        named_anchor("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
+        named_anchor("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
+        named_anchor("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
     ];
     attachable(anchor,spin,orient, size=[motor_width, motor_width, h], anchors=anchors) {
         up(h/2)
@@ -252,14 +252,14 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, anchor=TOP, spin=0, orient=UP
     screw_depth = nema_motor_screw_depth(size);
 
     anchors = [
-        anchorpt("shaft-top", [0,0,h/2+shaft_len]),
-        anchorpt("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
-        anchorpt("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
-        anchorpt("plinth-top", [0,0,h/2+plinth_height]),
-        anchorpt("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
-        anchorpt("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
-        anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
-        anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
+        named_anchor("shaft-top", [0,0,h/2+shaft_len]),
+        named_anchor("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
+        named_anchor("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
+        named_anchor("plinth-top", [0,0,h/2+plinth_height]),
+        named_anchor("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
+        named_anchor("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
+        named_anchor("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
+        named_anchor("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
     ];
     attachable(anchor,spin,orient, size=[motor_width, motor_width, h], anchors=anchors) {
         up(h/2)
@@ -337,14 +337,14 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, anchor=TOP, spin=0, orient
 
     screw_inset = motor_width - screw_spacing + 1;
     anchors = [
-        anchorpt("shaft-top", [0,0,h/2+shaft_len]),
-        anchorpt("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
-        anchorpt("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
-        anchorpt("plinth-top", [0,0,h/2+plinth_height]),
-        anchorpt("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
-        anchorpt("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
-        anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
-        anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
+        named_anchor("shaft-top", [0,0,h/2+shaft_len]),
+        named_anchor("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
+        named_anchor("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
+        named_anchor("plinth-top", [0,0,h/2+plinth_height]),
+        named_anchor("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
+        named_anchor("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
+        named_anchor("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
+        named_anchor("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
     ];
     attachable(anchor,spin,orient, size=[motor_width, motor_width, h], anchors=anchors) {
         up(h/2)
@@ -404,14 +404,14 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, anchor=TOP, spin=0, orient
 
     screw_inset = motor_width - screw_spacing + 1;
     anchors = [
-        anchorpt("shaft-top", [0,0,h/2+shaft_len]),
-        anchorpt("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
-        anchorpt("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
-        anchorpt("plinth-top", [0,0,h/2+plinth_height]),
-        anchorpt("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
-        anchorpt("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
-        anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
-        anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
+        named_anchor("shaft-top", [0,0,h/2+shaft_len]),
+        named_anchor("shaft-middle", [0,0,h/2+plinth_height+(shaft_len-plinth_height)/2]),
+        named_anchor("shaft-bottom", [0,0,h/2+plinth_height+0.1]),
+        named_anchor("plinth-top", [0,0,h/2+plinth_height]),
+        named_anchor("screw1", [+screw_spacing/2, +screw_spacing/2, h/2]),
+        named_anchor("screw2", [-screw_spacing/2, +screw_spacing/2, h/2]),
+        named_anchor("screw3", [-screw_spacing/2, -screw_spacing/2, h/2]),
+        named_anchor("screw4", [+screw_spacing/2, -screw_spacing/2, h/2]),
     ];
     attachable(anchor,spin,orient, size=[motor_width, motor_width, h], anchors=anchors) {
         up(h/2)
@@ -472,10 +472,10 @@ module nema_mount_holes(size=17, depth=5, l=5, anchor=CENTER, spin=0, orient=UP)
     screw_size = nema_motor_screw_size(size)+$slop;
 
     anchors = [
-        anchorpt("screw1", [+screw_spacing/2, +screw_spacing/2, depth/2]),
-        anchorpt("screw2", [-screw_spacing/2, +screw_spacing/2, depth/2]),
-        anchorpt("screw3", [-screw_spacing/2, -screw_spacing/2, depth/2]),
-        anchorpt("screw4", [+screw_spacing/2, -screw_spacing/2, depth/2]),
+        named_anchor("screw1", [+screw_spacing/2, +screw_spacing/2, depth/2]),
+        named_anchor("screw2", [-screw_spacing/2, +screw_spacing/2, depth/2]),
+        named_anchor("screw3", [-screw_spacing/2, -screw_spacing/2, depth/2]),
+        named_anchor("screw4", [+screw_spacing/2, -screw_spacing/2, depth/2]),
     ];
     screwfn = quantup(max(8,segs(screw_size/2)),4);
     plinthfn = quantup(max(8,segs(plinth_diam/2)),4);

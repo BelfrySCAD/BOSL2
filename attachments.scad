@@ -13,7 +13,7 @@
 // Default values for attachment code.
 $tags = "";
 $overlap = 0;
-$color = undef;
+$color = "yellow";
 
 $attach_to = undef;
 $attach_anchor = [CENTER, CENTER, UP, 0];
@@ -1008,9 +1008,9 @@ module attachable(
 
 
 
-// Function: anchorpt()
+// Function: named_anchor()
 // Usage:
-//   a = anchorpt(name, pos, [orient], [spin]);
+//   a = named_anchor(name, pos, [orient], [spin]);
 // Topics: Attachments
 // See Also: reorient(), attachable()
 // Description:
@@ -1021,7 +1021,7 @@ module attachable(
 //   pos = The [X,Y,Z] position of the anchor.
 //   orient = A vector pointing in the direction parts should project from the anchor position.
 //   spin = If needed, the angle to rotate the part around the direction vector.
-function anchorpt(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, spin];
+function named_anchor(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient, spin];
 
 
 // Function: reorient()
@@ -1757,95 +1757,6 @@ function _attachment_is_shown(tags) =
         shown  = !$tags_shown || any([for (tag=tags) in_list(tag, $tags_shown)]),
         hidden = any([for (tag=tags) in_list(tag, $tags_hidden)])
     ) shown && !hidden;
-
-
-// Section: Attachable Text
-
-// Module: atext()
-// Topics: Attachments, Text
-// Usage:
-//   atext(text, [h], [size], [font]);
-// Description:
-//   Creates a 3D text block that can be attached to other attachable objects.
-//   NOTE: This cannot have children attached to it.
-// Arguments:
-//   text = The text string to instantiate as an object.
-//   h = The height to which the text should be extruded.  Default: 1
-//   size = The font size used to create the text block.  Default: 10
-//   font = The name of the font used to create the text block.  Default: "Courier"
-//   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"baseline"`
-//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
-// See Also: attachable()
-// Extra Anchors:
-//   "baseline" = Anchors at the baseline of the text, at the start of the string.
-//   str("baseline",VECTOR) = Anchors at the baseline of the text, modified by the X and Z components of the appended vector.
-// Examples:
-//   atext("Foobar", h=3, size=10);
-//   atext("Foobar", h=2, size=12, font="Helvetica");
-//   atext("Foobar", h=2, anchor=CENTER);
-//   atext("Foobar", h=2, anchor=str("baseline",CENTER));
-//   atext("Foobar", h=2, anchor=str("baseline",BOTTOM+RIGHT));
-// Example: Using line_of() distributor
-//   txt = "This is the string.";
-//   line_of(spacing=[10,-5],n=len(txt))
-//       atext(txt[$idx], size=10, anchor=CENTER);
-// Example: Using arc_of() distributor
-//   txt = "This is the string";
-//   arc_of(r=50, n=len(txt), sa=0, ea=180)
-//       atext(select(txt,-1-$idx), size=10, anchor=str("baseline",CENTER), spin=-90);
-module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orient=UP) {
-    no_children($children);
-    dummy1 =
-        assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
-        assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
-        assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient));
-    anchor = default(anchor, CENTER);
-    spin =   default(spin,   0);
-    orient = default(orient, UP);
-    geom = _attach_geom(size=[size,size,h]);
-    anch = !any([for (c=anchor) c=="["])? anchor :
-        let(
-            parts = str_split(str_split(str_split(anchor,"]")[0],"[")[1],","),
-            vec = [for (p=parts) str_float(str_strip_leading(p," "))]
-        ) vec;
-    ha = anchor=="baseline"? "left" :
-        anchor==anch && is_string(anchor)? "center" :
-        anch.x<0? "left" :
-        anch.x>0? "right" :
-        "center";
-    va = starts_with(anchor,"baseline")? "baseline" :
-        anchor==anch && is_string(anchor)? "center" :
-        anch.y<0? "bottom" :
-        anch.y>0? "top" :
-        "center";
-    base = anchor=="baseline"? CENTER :
-        anchor==anch && is_string(anchor)? CENTER :
-        anch.z<0? BOTTOM :
-        anch.z>0? TOP :
-        CENTER;
-    m = _attach_transform(base,spin,orient,geom);
-    multmatrix(m) {
-        $parent_anchor = anchor;
-        $parent_spin   = spin;
-        $parent_orient = orient;
-        $parent_geom   = geom;
-        $parent_size   = _attach_geom_size(geom);
-        $attach_to   = undef;
-        do_show = _attachment_is_shown($tags);
-        if (do_show) {
-            if (is_undef($color)) {
-                linear_extrude(height=h, center=true)
-                    text(text=text, size=size, halign=ha, valign=va, font=font);
-            } else color($color) {
-                $color = undef;
-                linear_extrude(height=h, center=true)
-                    text(text=text, size=size, halign=ha, valign=va, font=font);
-            }
-        }
-    }
-}
 
 
 

@@ -6,7 +6,79 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Section: Cuboids
+// Section: Cuboids, Prismoids and Pyramids
+
+// Function&Module: cube()
+// Topics: Shapes (3D), Attachable, VNF Generators
+// Usage: As Module
+//   cube(size, [center], ...);
+// Usage: With Attachments
+//   cube(size, [center], ...) { attachments }
+// Usage: As Function
+//   vnf = cube(size, [center], ...);
+// See Also: cuboid(), prismoid()
+// Description:
+//   Creates a 3D cubic object with support for anchoring and attachments.
+//   This can be used as a drop-in replacement for the built-in `cube()` module.
+//   When called as a function, returns a [VNF](vnf.scad) for a cube.
+// Arguments:
+//   size = The size of the cube.
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=ALLNEG`.
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Example: Simple cube.
+//   cube(40);
+// Example: Rectangular cube.
+//   cube([20,40,50]);
+// Example: Anchoring.
+//   cube([20,40,50], anchor=BOTTOM+FRONT);
+// Example: Spin.
+//   cube([20,40,50], anchor=BOTTOM+FRONT, spin=30);
+// Example: Orientation.
+//   cube([20,40,50], anchor=BOTTOM+FRONT, spin=30, orient=FWD);
+// Example: Standard Connectors.
+//   cube(40, center=true) show_anchors();
+// Example: Called as Function
+//   vnf = cube([20,40,50]);
+//   vnf_polyhedron(vnf);
+module cube(size=1, center, anchor, spin=0, orient=UP)
+{
+    anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
+    size = scalar_vec3(size);
+    attachable(anchor,spin,orient, size=size) {
+        if (size.z > 0) {
+            linear_extrude(height=size.z, center=true, convexity=2) {
+                square([size.x,size.y], center=true);
+            }
+        }
+        children();
+    }
+}
+
+function cube(size=1, center, anchor, spin=0, orient=UP) =
+    let(
+        siz = scalar_vec3(size),
+        anchor = get_anchor(anchor, center, ALLNEG, ALLNEG),
+        unscaled = [
+            [-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
+            [-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1],
+        ]/2,
+        verts = is_num(size)? unscaled * size :
+            is_vector(size,3)? [for (p=unscaled) v_mul(p,size)] :
+            assert(is_num(size) || is_vector(size,3)),
+        faces = [
+            [0,1,2], [0,2,3],  //BOTTOM
+            [0,4,5], [0,5,1],  //FRONT
+            [1,5,6], [1,6,2],  //RIGHT
+            [2,6,7], [2,7,3],  //BACK
+            [3,7,4], [3,4,0],  //LEFT
+            [6,4,7], [6,5,4]   //TOP
+        ]
+    ) [reorient(anchor,spin,orient, size=siz, p=verts), faces];
+
+
 
 // Module: cuboid()
 //
@@ -363,9 +435,6 @@ function cuboid(
     orient=UP
 ) = no_function("cuboid");
 
-
-
-// Section: Prismoids
 
 
 // Function&Module: prismoid()
@@ -804,7 +873,104 @@ function right_triangle(size=[1,1,1], center, anchor, spin=0, orient=UP) =
     no_function("right_triangle");
 
 
-// Section: Cylindroids
+// Section: Cylinders
+
+
+// Function&Module: cylinder()
+// Topics: Shapes (3D), Attachable, VNF Generators
+// Usage: As Module
+//   cylinder(h, r=/d=, [center=], ...);
+//   cylinder(h, r1/d1=, r2/d2=, [center=], ...);
+// Usage: With Attachments
+//   cylinder(h, r=/d=, [center=]) {attachments}
+// Usage: As Function
+//   vnf = cylinder(h, r=/d=, [center=], ...);
+//   vnf = cylinder(h, r1/d1=, r2/d2=, [center=], ...);
+// See Also: cyl()
+// Description:
+//   Creates a 3D cylinder or conic object with support for anchoring and attachments.
+//   This can be used as a drop-in replacement for the built-in `cylinder()` module.
+//   When called as a function, returns a [VNF](vnf.scad) for a cylinder.
+// Arguments:
+//   l / h = The height of the cylinder.
+//   r1 = The bottom radius of the cylinder.  (Before orientation.)
+//   r2 = The top radius of the cylinder.  (Before orientation.)
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=BOTTOM`.
+//   ---
+//   d1 = The bottom diameter of the cylinder.  (Before orientation.)
+//   d2 = The top diameter of the cylinder.  (Before orientation.)
+//   r = The radius of the cylinder.
+//   d = The diameter of the cylinder.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Example: By Radius
+//   xdistribute(30) {
+//       cylinder(h=40, r=10);
+//       cylinder(h=40, r1=10, r2=5);
+//   }
+// Example: By Diameter
+//   xdistribute(30) {
+//       cylinder(h=40, d=25);
+//       cylinder(h=40, d1=25, d2=10);
+//   }
+// Example(Med): Anchoring
+//   cylinder(h=40, r1=10, r2=5, anchor=BOTTOM+FRONT);
+// Example(Med): Spin
+//   cylinder(h=40, r1=10, r2=5, anchor=BOTTOM+FRONT, spin=45);
+// Example(Med): Orient
+//   cylinder(h=40, r1=10, r2=5, anchor=BOTTOM+FRONT, spin=45, orient=FWD);
+// Example(Big): Standard Connectors
+//   xdistribute(40) {
+//       cylinder(h=30, d=25) show_anchors();
+//       cylinder(h=30, d1=25, d2=10) show_anchors();
+//   }
+module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
+{
+    anchor = get_anchor(anchor, center, BOTTOM, BOTTOM);
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
+    l = first_defined([h, l, 1]);
+    sides = segs(max(r1,r2));
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
+        if (r1 > r2) {
+            if (l > 0) {
+                linear_extrude(height=l, center=true, convexity=2, scale=r2/r1) {
+                    circle(r=r1);
+                }
+            }
+        } else {
+            zflip() {
+                if (l > 0) {
+                    linear_extrude(height=l, center=true, convexity=2, scale=r1/r2) {
+                        circle(r=r2);
+                    }
+                }
+            }
+        }
+        children();
+    }
+}
+
+function cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP) =
+    let(
+        anchor = get_anchor(anchor, center, BOTTOM, BOTTOM),
+        r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1),
+        r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1),
+        l = first_defined([h, l, 1]),
+        sides = segs(max(r1,r2)),
+        verts = [
+            for (i=[0:1:sides-1]) let(a=360*(1-i/sides)) [r1*cos(a),r1*sin(a),-l/2],
+            for (i=[0:1:sides-1]) let(a=360*(1-i/sides)) [r2*cos(a),r2*sin(a), l/2],
+        ],
+        faces = [
+            [for (i=[0:1:sides-1]) sides-1-i],
+            for (i=[0:1:sides-1]) [i, ((i+1)%sides)+sides, i+sides],
+            for (i=[0:1:sides-1]) [i, (i+1)%sides, ((i+1)%sides)+sides],
+            [for (i=[0:1:sides-1]) sides+i]
+        ]
+    ) [reorient(anchor,spin,orient, l=l, r1=r1, r2=r2, p=verts), faces];
+
 
 
 // Module: cyl()
@@ -1229,106 +1395,64 @@ module tube(
 }
 
 
-// Module: torus()
-//
-// Usage: Typical
-//   torus(r_maj|d_maj, r_min|d_min, [center], ...);
-//   torus(or|od, ir|id, ...);
-//   torus(r_maj|d_maj, or|od, ...);
-//   torus(r_maj|d_maj, ir|id, ...);
-//   torus(r_min|d_min, or|od, ...);
-//   torus(r_min|d_min, ir|id, ...);
-// Usage: Attaching Children
-//   torus(or|od, ir|id, ...) [attachments];
-//
+
+
+// Section: Other Round Objects
+
+
+// Function&Module: sphere()
+// Topics: Shapes (3D), Attachable, VNF Generators
+// Usage: As Module
+//   sphere(r|d=, [circum=], [style=], ...);
+// Usage: With Attachments
+//   sphere(r|d=, ...) { attachments }
+// Usage: As Function
+//   vnf = sphere(r|d=, [circum=], [style=], ...);
+// See Also: spheroid()
 // Description:
-//   Creates a torus shape.
-//
-// Figure(2D,Med):
-//   module text3d(t,size=8) text(text=t,size=size,font="Helvetica", halign="center",valign="center");
-//   module dashcirc(r,start=0,angle=359.9,dashlen=5) let(step=360*dashlen/(2*r*PI)) for(a=[start:step:start+angle]) stroke(arc(r=r,start=a,angle=step/2));
-//   r = 75; r2 = 30;
-//   down(r2+0.1) #torus(r_maj=r, r_min=r2, $fn=72);
-//   color("blue") linear_extrude(height=0.01) {
-//       dashcirc(r=r,start=15,angle=45);
-//       dashcirc(r=r-r2, start=90+15, angle=60);
-//       dashcirc(r=r+r2, start=180+45, angle=30);
-//       dashcirc(r=r+r2, start=15, angle=30);
-//   }
-//   rot(240) color("blue") linear_extrude(height=0.01) {
-//       stroke([[0,0],[r+r2,0]], endcaps="arrow2",width=2);
-//       right(r) fwd(9) rot(-240) text3d("or",size=10);
-//   }
-//   rot(135) color("blue") linear_extrude(height=0.01) {
-//       stroke([[0,0],[r-r2,0]], endcaps="arrow2",width=2);
-//       right((r-r2)/2) back(8) rot(-135) text3d("ir",size=10);
-//   }
-//   rot(45) color("blue") linear_extrude(height=0.01) {
-//       stroke([[0,0],[r,0]], endcaps="arrow2",width=2);
-//       right(r/2) back(8) text3d("r_maj",size=9);
-//   }
-//   rot(30) color("blue") linear_extrude(height=0.01) {
-//       stroke([[r,0],[r+r2,0]], endcaps="arrow2",width=2);
-//       right(r+r2/2) fwd(8) text3d("r_min",size=7);
-//   }
-//
+//   Creates a sphere object, with support for anchoring and attachments.
+//   This is a drop-in replacement for the built-in `sphere()` module.
+//   When called as a function, returns a [VNF](vnf.scad) for a sphere.
 // Arguments:
-//   r_maj = major radius of torus ring. (use with 'r_min', or 'd_min')
-//   r_min = minor radius of torus ring. (use with 'r_maj', or 'd_maj')
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.
+//   r = Radius of the sphere.
 //   ---
-//   d_maj  = major diameter of torus ring. (use with 'r_min', or 'd_min')
-//   d_min = minor diameter of torus ring. (use with 'r_maj', or 'd_maj')
-//   or = outer radius of the torus. (use with 'ir', or 'id')
-//   ir = inside radius of the torus. (use with 'or', or 'od')
-//   od = outer diameter of the torus. (use with 'ir' or 'id')
-//   id = inside diameter of the torus. (use with 'or' or 'od')
+//   d = Diameter of the sphere.
+//   circum = If true, the sphere is made large enough to circumscribe the sphere of the ideal side.  Otherwise inscribes.  Default: false (inscribes)
+//   style = The style of the sphere's construction. One of "orig", "aligned", "stagger", "octa", or "icosa".  Default: "orig"
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//
-// Example:
-//   // These all produce the same torus.
-//   torus(r_maj=22.5, r_min=7.5);
-//   torus(d_maj=45, d_min=15);
-//   torus(or=30, ir=15);
-//   torus(od=60, id=30);
-//   torus(d_maj=45, id=30);
-//   torus(d_maj=45, od=60);
-//   torus(d_min=15, id=30);
-//   torus(d_min=15, od=60);
+// Example: By Radius
+//   sphere(r=50);
+// Example: By Diameter
+//   sphere(d=100);
+// Example: style="orig"
+//   sphere(d=100, style="orig", $fn=10);
+// Example: style="aligned"
+//   sphere(d=100, style="aligned", $fn=10);
+// Example: style="stagger"
+//   sphere(d=100, style="stagger", $fn=10);
+// Example: style="icosa"
+//   sphere(d=100, style="icosa", $fn=10);
+//   // In "icosa" style, $fn is quantized
+//   //   to the nearest multiple of 5.
+// Example: Anchoring
+//   sphere(d=100, anchor=FRONT);
+// Example: Spin
+//   sphere(d=100, anchor=FRONT, spin=45);
+// Example: Orientation
+//   sphere(d=100, anchor=FRONT, spin=45, orient=FWD);
 // Example: Standard Connectors
-//   torus(od=60, id=30) show_anchors();
-module torus(
-    r_maj, r_min, center,
-    d_maj, d_min,
-    or, od, ir, id,
-    anchor, spin=0, orient=UP
-) {
-    _or = get_radius(r=or, d=od, dflt=undef);
-    _ir = get_radius(r=ir, d=id, dflt=undef);
-    _r_maj = get_radius(r=r_maj, d=d_maj, dflt=undef);
-    _r_min = get_radius(r=r_min, d=d_min, dflt=undef);
-    majrad = is_finite(_r_maj)? _r_maj :
-        is_finite(_ir) && is_finite(_or)? (_or + _ir)/2 :
-        is_finite(_ir) && is_finite(_r_min)? (_ir + _r_min) :
-        is_finite(_or) && is_finite(_r_min)? (_or - _r_min) :
-        assert(false, "Bad Parameters");
-    minrad = is_finite(_r_min)? _r_min :
-        is_finite(_ir)? (majrad - _ir) :
-        is_finite(_or)? (_or - majrad) :
-        assert(false, "Bad Parameters");
-    anchor = get_anchor(anchor, center, BOT, CENTER);
-    attachable(anchor,spin,orient, r=(majrad+minrad), l=minrad*2) {
-        rotate_extrude(convexity=4) {
-            right(majrad) circle(r=minrad);
-        }
-        children();
-    }
-}
+//   sphere(d=50) show_anchors();
+// Example: Called as Function
+//   vnf = sphere(d=100, style="icosa");
+//   vnf_polyhedron(vnf);
+module sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP)
+    spheroid(r=r, d=d, circum=circum, style=style, anchor=anchor, spin=spin, orient=orient) children();
 
 
-
-// Section: Spheroid
+function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP) =
+    spheroid(r=r, d=d, circum=circum, style=style, anchor=anchor, spin=spin, orient=orient);
 
 
 // Function&Module: spheroid()
@@ -1550,7 +1674,102 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 
 
 
-// Section: 3D Printing Shapes
+// Module: torus()
+//
+// Usage: Typical
+//   torus(r_maj|d_maj, r_min|d_min, [center], ...);
+//   torus(or|od, ir|id, ...);
+//   torus(r_maj|d_maj, or|od, ...);
+//   torus(r_maj|d_maj, ir|id, ...);
+//   torus(r_min|d_min, or|od, ...);
+//   torus(r_min|d_min, ir|id, ...);
+// Usage: Attaching Children
+//   torus(or|od, ir|id, ...) [attachments];
+//
+// Description:
+//   Creates a torus shape.
+//
+// Figure(2D,Med):
+//   module text3d(t,size=8) text(text=t,size=size,font="Helvetica", halign="center",valign="center");
+//   module dashcirc(r,start=0,angle=359.9,dashlen=5) let(step=360*dashlen/(2*r*PI)) for(a=[start:step:start+angle]) stroke(arc(r=r,start=a,angle=step/2));
+//   r = 75; r2 = 30;
+//   down(r2+0.1) #torus(r_maj=r, r_min=r2, $fn=72);
+//   color("blue") linear_extrude(height=0.01) {
+//       dashcirc(r=r,start=15,angle=45);
+//       dashcirc(r=r-r2, start=90+15, angle=60);
+//       dashcirc(r=r+r2, start=180+45, angle=30);
+//       dashcirc(r=r+r2, start=15, angle=30);
+//   }
+//   rot(240) color("blue") linear_extrude(height=0.01) {
+//       stroke([[0,0],[r+r2,0]], endcaps="arrow2",width=2);
+//       right(r) fwd(9) rot(-240) text3d("or",size=10);
+//   }
+//   rot(135) color("blue") linear_extrude(height=0.01) {
+//       stroke([[0,0],[r-r2,0]], endcaps="arrow2",width=2);
+//       right((r-r2)/2) back(8) rot(-135) text3d("ir",size=10);
+//   }
+//   rot(45) color("blue") linear_extrude(height=0.01) {
+//       stroke([[0,0],[r,0]], endcaps="arrow2",width=2);
+//       right(r/2) back(8) text3d("r_maj",size=9);
+//   }
+//   rot(30) color("blue") linear_extrude(height=0.01) {
+//       stroke([[r,0],[r+r2,0]], endcaps="arrow2",width=2);
+//       right(r+r2/2) fwd(8) text3d("r_min",size=7);
+//   }
+//
+// Arguments:
+//   r_maj = major radius of torus ring. (use with 'r_min', or 'd_min')
+//   r_min = minor radius of torus ring. (use with 'r_maj', or 'd_maj')
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.
+//   ---
+//   d_maj  = major diameter of torus ring. (use with 'r_min', or 'd_min')
+//   d_min = minor diameter of torus ring. (use with 'r_maj', or 'd_maj')
+//   or = outer radius of the torus. (use with 'ir', or 'id')
+//   ir = inside radius of the torus. (use with 'or', or 'od')
+//   od = outer diameter of the torus. (use with 'ir' or 'id')
+//   id = inside diameter of the torus. (use with 'or' or 'od')
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//
+// Example:
+//   // These all produce the same torus.
+//   torus(r_maj=22.5, r_min=7.5);
+//   torus(d_maj=45, d_min=15);
+//   torus(or=30, ir=15);
+//   torus(od=60, id=30);
+//   torus(d_maj=45, id=30);
+//   torus(d_maj=45, od=60);
+//   torus(d_min=15, id=30);
+//   torus(d_min=15, od=60);
+// Example: Standard Connectors
+//   torus(od=60, id=30) show_anchors();
+module torus(
+    r_maj, r_min, center,
+    d_maj, d_min,
+    or, od, ir, id,
+    anchor, spin=0, orient=UP
+) {
+    _or = get_radius(r=or, d=od, dflt=undef);
+    _ir = get_radius(r=ir, d=id, dflt=undef);
+    _r_maj = get_radius(r=r_maj, d=d_maj, dflt=undef);
+    _r_min = get_radius(r=r_min, d=d_min, dflt=undef);
+    majrad = is_finite(_r_maj)? _r_maj :
+        is_finite(_ir) && is_finite(_or)? (_or + _ir)/2 :
+        is_finite(_ir) && is_finite(_r_min)? (_ir + _r_min) :
+        is_finite(_or) && is_finite(_r_min)? (_or - _r_min) :
+        assert(false, "Bad Parameters");
+    minrad = is_finite(_r_min)? _r_min :
+        is_finite(_ir)? (majrad - _ir) :
+        is_finite(_or)? (_or - majrad) :
+        assert(false, "Bad Parameters");
+    anchor = get_anchor(anchor, center, BOT, CENTER);
+    attachable(anchor,spin,orient, r=(majrad+minrad), l=minrad*2) {
+        rotate_extrude(convexity=4) {
+            right(majrad) circle(r=minrad);
+        }
+        children();
+    }
+}
 
 
 // Module: teardrop()
@@ -1614,9 +1833,9 @@ module teardrop(h, r, ang=45, cap_h, r1, r2, d, d1, d2, cap_h1, cap_h2, l, ancho
     cap_h2 = min(first_defined([cap_h2, cap_h, tip_y2]), tip_y2);
     capvec = unit([0, cap_h1-cap_h2, l]);
     anchors = [
-        anchorpt("cap",      [0,0,(cap_h1+cap_h2)/2], capvec),
-        anchorpt("cap_fwd",  [0,-l/2,cap_h1],         unit((capvec+FWD)/2)),
-        anchorpt("cap_back", [0,+l/2,cap_h2],         unit((capvec+BACK)/2), 180),
+        named_anchor("cap",      [0,0,(cap_h1+cap_h2)/2], capvec),
+        named_anchor("cap_fwd",  [0,-l/2,cap_h1],         unit((capvec+FWD)/2)),
+        named_anchor("cap_back", [0,+l/2,cap_h2],         unit((capvec+BACK)/2), 180),
     ];
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l, axis=BACK, anchors=anchors) {
         rot(from=UP,to=FWD) {
@@ -1694,6 +1913,273 @@ module onion(r, ang=45, cap_h, d, anchor=CENTER, spin=0, orient=UP)
         }
         children();
     }
+}
+
+
+// Section: Text
+
+// Module: atext()
+// Topics: Attachments, Text
+// Usage:
+//   atext(text, [h], [size], [font]);
+// Description:
+//   Creates a 3D text block that can be attached to other attachable objects.
+//   NOTE: This cannot have children attached to it.
+// Arguments:
+//   text = The text string to instantiate as an object.
+//   h = The height to which the text should be extruded.  Default: 1
+//   size = The font size used to create the text block.  Default: 10
+//   font = The name of the font used to create the text block.  Default: "Courier"
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"baseline"`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+// See Also: attachable()
+// Extra Anchors:
+//   "baseline" = Anchors at the baseline of the text, at the start of the string.
+//   str("baseline",VECTOR) = Anchors at the baseline of the text, modified by the X and Z components of the appended vector.
+// Examples:
+//   atext("Foobar", h=3, size=10);
+//   atext("Foobar", h=2, size=12, font="Helvetica");
+//   atext("Foobar", h=2, anchor=CENTER);
+//   atext("Foobar", h=2, anchor=str("baseline",CENTER));
+//   atext("Foobar", h=2, anchor=str("baseline",BOTTOM+RIGHT));
+// Example: Using line_of() distributor
+//   txt = "This is the string.";
+//   line_of(spacing=[10,-5],n=len(txt))
+//       atext(txt[$idx], size=10, anchor=CENTER);
+// Example: Using arc_of() distributor
+//   txt = "This is the string";
+//   arc_of(r=50, n=len(txt), sa=0, ea=180)
+//       atext(select(txt,-1-$idx), size=10, anchor=str("baseline",CENTER), spin=-90);
+module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orient=UP) {
+    no_children($children);
+    dummy1 =
+        assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
+        assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
+        assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient));
+    anchor = default(anchor, CENTER);
+    spin =   default(spin,   0);
+    orient = default(orient, UP);
+    geom = _attach_geom(size=[size,size,h]);
+    anch = !any([for (c=anchor) c=="["])? anchor :
+        let(
+            parts = str_split(str_split(str_split(anchor,"]")[0],"[")[1],","),
+            vec = [for (p=parts) str_float(str_strip_leading(p," "))]
+        ) vec;
+    ha = anchor=="baseline"? "left" :
+        anchor==anch && is_string(anchor)? "center" :
+        anch.x<0? "left" :
+        anch.x>0? "right" :
+        "center";
+    va = starts_with(anchor,"baseline")? "baseline" :
+        anchor==anch && is_string(anchor)? "center" :
+        anch.y<0? "bottom" :
+        anch.y>0? "top" :
+        "center";
+    base = anchor=="baseline"? CENTER :
+        anchor==anch && is_string(anchor)? CENTER :
+        anch.z<0? BOTTOM :
+        anch.z>0? TOP :
+        CENTER;
+    m = _attach_transform(base,spin,orient,geom);
+    multmatrix(m) {
+        $parent_anchor = anchor;
+        $parent_spin   = spin;
+        $parent_orient = orient;
+        $parent_geom   = geom;
+        $parent_size   = _attach_geom_size(geom);
+        $attach_to   = undef;
+        do_show = _attachment_is_shown($tags);
+        if (do_show) {
+            if (is_undef($color)) {
+                linear_extrude(height=h, center=true)
+                    text(text=text, size=size, halign=ha, valign=va, font=font);
+            } else color($color) {
+                $color = undef;
+                linear_extrude(height=h, center=true)
+                    text(text=text, size=size, halign=ha, valign=va, font=font);
+            }
+        }
+    }
+}
+
+
+
+
+
+function _cut_interp(pathcut, path, data) =
+  [for(entry=pathcut)
+    let(
+       a = path[entry[1]-1],
+        b = path[entry[1]],
+        c = entry[0],
+        i = max_index(v_abs(b-a)),
+        factor = (c[i]-a[i])/(b[i]-a[i])
+    )
+    (1-factor)*data[entry[1]-1]+ factor * data[entry[1]]
+  ];
+
+
+// Module: path_text()
+// Usage:
+//   path_text(path, text, [size], [thickness], [font], [lettersize], [offset], [reverse], [normal], [top], [textmetrics])
+// Description:
+//   Place the text letter by letter onto the specified path using textmetrics (if available and requested)
+//   or user specified letter spacing.  The path can be 2D or 3D.  In 2D the text appears along the path with letters upright
+//   as determined by the path direction.  In 3D by default letters are positioned on the tangent line to the path with the path normal
+//   pointing toward the reader.  The path normal points away from the center of curvature (the opposite of the normal produced
+//   by path_normals()).  Note that this means that if the center of curvature switches sides the text will flip upside down.
+//   If you want text on such a path you must supply your own normal or top vector. 
+//   . 
+//   Text appears starting at the beginning of the path, so if the 3D path moves right to left
+//   then a left-to-right reading language will display in the wrong order. (For a 2D path text will appear upside down.)
+//   The text for a 3D path appears positioned to be read from "outside" of the curve (from a point on the other side of the
+//   curve from the center of curvature).  If you need the text to read properly from the inside, you can set reverse to
+//   true to flip the text, or supply your own normal.  
+//   .
+//   If you do not have the experimental textmetrics feature enabled then you must specify the space for the letters
+//   using lettersize, which can be a scalar or array.  You will have the easiest time getting good results by using
+//   a monospace font such as Courier.  Note that even with text metrics, spacing may be different because path_text()
+//   doesn't do kerning to adjust positions of individual glyphs.  Also if your font has ligatures they won't be used.  
+//   .
+//   By default letters appear centered on the path.  The offset can be specified to shift letters toward the reader (in
+//   the direction of the normal).  
+//   .
+//   You can specify your own normal by setting `normal` to a direction or a list of directions.  Your normal vector should
+//   point toward the reader.  You can also specify
+//   top, which directs the top of the letters in a desired direction.  If you specify your own directions and they
+//   are not perpendicular to the path then the direction you specify will take priority and the
+//   letters will not rest on the tangent line of the path.  Note that the normal or top directions that you
+//   specify must not be parallel to the path.  
+// Arguments:
+//   path = path to place the text on
+//   text = text to create
+//   size = font size
+//   thickness = thickness of letters (not allowed for 2D path)
+//   font = font to use
+//   ---
+//   lettersize = scalar or array giving size of letters
+//   offset = distance to shift letters "up" (towards the reader).  Not allowed for 2D path.  Default: 0
+//   normal = direction or list of directions pointing towards the reader of the text.  Not allowed for 2D path.
+//   top = direction or list of directions pointing toward the top of the text
+//   reverse = reverse the letters if true.  Not allowed for 2D path.  Default: false
+//   textmetrics = if set to true and lettersize is not given then use the experimental textmetrics feature.  You must be running a dev snapshot that includes this feature and have the feature turned on in your preferences.  Default: false
+// Example:  The examples use Courier, a monospaced font.  The width is 1/1.2 times the specified size for this font.  This text could wrap around a cylinder. 
+//   path = path3d(arc(100, r=25, angle=[245, 370]));
+//   color("red")stroke(path, width=.3);
+//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2);
+// Example: By setting the normal to UP we can get text that lies flat, for writing around the edge of a disk:
+//   path = path3d(arc(100, r=25, angle=[245, 370]));
+//   color("red")stroke(path, width=.3);
+//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, normal=UP);
+// Example:  If we want text that reads from the other side we can use reverse.  Note we have to reverse the direction of the path and also set the reverse option.  
+//   path = reverse(path3d(arc(100, r=25, angle=[65, 190])));
+//   color("red")stroke(path, width=.3);
+//   path_text(path, "Example text", font="Courier", size=5, lettersize = 5/1.2, reverse=true);
+// Example: text debossed onto a cylinder in a spiral.  The text is 1 unit deep because it is half in, half out. 
+//   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
+//   L = 5*len(text);
+//   maxang = 360*L/(PI*50);
+//   spiral = [for(a=[0:1:maxang]) [25*cos(a), 25*sin(a), 10-30/maxang*a]];
+//   difference(){
+//     cyl(d=50, l=50, $fn=120);
+//     path_text(spiral, text, size=5, lettersize=5/1.2, font="Courier", thickness=2);
+//   }
+// Example: Same example but text embossed.  Make sure you have enough depth for the letters to fully overlap the object. 
+//   text = ("A long text example to wrap around a cylinder, possibly for a few times.");
+//   L = 5*len(text);
+//   maxang = 360*L/(PI*50);
+//   spiral = [for(a=[0:1:maxang]) [25*cos(a), 25*sin(a), 10-30/maxang*a]];
+//   cyl(d=50, l=50, $fn=120);
+//   path_text(spiral, text, size=5, lettersize=5/1.2, font="Courier", thickness=2);
+// Example: Here the text baseline sits on the path.  (Note the default orientation makes text readable from below, so we specify the normal.)
+//   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
+//   color("red")stroke(path,width=.2);
+//   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Courier", normal=FRONT);
+// Example: If we use top to orient the text upward, the text baseline is no longer aligned with the path. 
+//   path = arc(100, points = [[-20, 0, 20], [0,0,5], [20,0,20]]);
+//   color("red")stroke(path,width=.2);
+//   path_text(path, "Example Text", size=5, lettersize=5/1.2, font="Courier", top=UP);
+// Example: This sine wave wrapped around the cylinder has a twisting normal that produces wild letter layout.  We fix it with a custom normal which is different at every path point. 
+//   path = [for(theta = [0:360]) [25*cos(theta), 25*sin(theta), 4*cos(theta*4)]];
+//   normal = [for(theta = [0:360]) [cos(theta), sin(theta),0]];
+//   zrot(-120)
+//   difference(){
+//     cyl(r=25, h=20, $fn=120);
+//     path_text(path, "A sine wave wiggles", font="Courier", lettersize=5/1.2, size=5, normal=normal);
+//   }
+// Example: The path center of curvature changes, and the text flips.  
+//   path =  zrot(-120,p=path3d( concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180])))));
+//   color("red")stroke(path,width=.2);
+//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier", thickness=2);
+// Example: We can fix it with top:
+//   path =  zrot(-120,p=path3d( concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180])))));
+//   color("red")stroke(path,width=.2);
+//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier", thickness=2, top=UP);
+// Example(2D): With a 2D path instead of 3D there's no ambiguity about direction and it works by default:
+//   path =  zrot(-120,p=concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180]))));
+//   color("red")stroke(path,width=.2);
+//   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier");
+module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, textmetrics=false)
+{
+  dummy2=assert(is_path(path,[2,3]),"Must supply a 2d or 3d path")
+         assert(num_defined([normal,top])<=1, "Cannot define both \"normal\" and \"top\"");
+  dim = len(path[0]);
+  normalok = is_undef(normal) || is_vector(normal,3) || (is_path(normal,3) && len(normal)==len(path));
+  topok = is_undef(top) || is_vector(top,dim) || (dim==2 && is_vector(top,3) && top[2]==0)
+                        || (is_path(top,dim) && len(top)==len(path));
+  dummy4 = assert(dim==3 || is_undef(thickness), "Cannot give a thickness with 2d path")
+           assert(dim==3 || !reverse, "Reverse not allowed with 2d path")
+           assert(dim==3 || offset==0, "Cannot give offset with 2d path")
+           assert(dim==3 || is_undef(normal), "Cannot define \"normal\" for a 2d path, only \"top\"")
+           assert(normalok,"\"normal\" must be a vector or path compatible with the given path")
+           assert(topok,"\"top\" must be a vector or path compatible with the given path");
+  thickness = first_defined([thickness,1]);
+  normal = is_vector(normal) ? repeat(normal, len(path))
+         : is_def(normal) ? normal
+         : undef;
+
+  top = is_vector(top) ? repeat(dim==2?point2d(top):top, len(path))
+         : is_def(top) ? top
+         : undef;
+
+  lsize = is_def(lettersize) ? force_list(lettersize, len(text))
+        : textmetrics ? [for(letter=text) let(t=textmetrics(letter, font=font, size=size)) t.advance[0]]
+        : assert(false, "textmetrics disabled: Must specify letter size");
+
+  dummy1 = assert(sum(lsize)<=path_length(path),"Path is too short for the text");
+   
+  pts = path_cut_points(path, add_scalar([0, each cumsum(lsize)],lsize[0]/2), direction=true);
+
+  usernorm = is_def(normal);
+  usetop = is_def(top);
+  
+  normpts = is_undef(normal) ? (reverse?1:-1)*subindex(pts,3) : _cut_interp(pts,path, normal);
+  toppts = is_undef(top) ? undef : _cut_interp(pts,path,top);
+  for(i=idx(text))
+      let( tangent = pts[i][2] )
+      assert(!usetop || !approx(tangent*toppts[i],norm(top[i])*norm(tangent)),
+             str("Specified top direction parallel to path at character ",i))
+      assert(usetop || !approx(tangent*normpts[i],norm(normpts[i])*norm(tangent)),
+             str("Specified normal direction parallel to path at character ",i))
+      let(
+          adjustment = usetop ?  (tangent*toppts[i])*toppts[i]/(toppts[i]*toppts[i])
+                     : usernorm ?  (tangent*normpts[i])*normpts[i]/(normpts[i]*normpts[i])
+                     : [0,0,0]
+      )
+      move(pts[i][0])
+      if(dim==3){
+          frame_map(x=tangent-adjustment,
+                    z=usetop ? undef : normpts[i],
+                    y=usetop ? toppts[i] : undef)
+          up(offset-thickness/2)
+          linear_extrude(height=thickness)
+          left(lsize[0]/2)text(text[i], font=font, size=size);
+     } else {
+          frame_map(x=point3d(tangent-adjustment), y=point3d(usetop ? toppts[i] : -normpts[i]))
+          left(lsize[0]/2)text(text[i], font=font, size=size);
+     }
 }
 
 

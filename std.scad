@@ -14,7 +14,6 @@ include <transforms.scad>
 include <distributors.scad>
 include <mutators.scad>
 include <attachments.scad>
-include <primitives.scad>
 include <shapes3d.scad>
 include <shapes2d.scad>
 include <drawing.scad>
@@ -34,7 +33,7 @@ include <regions.scad>
 include <strings.scad>
 include <skin.scad>
 include <vnf.scad>
-include <common.scad>
+include <utility.scad>
 include <debug.scad>
 
 

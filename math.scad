@@ -35,7 +35,7 @@ NAN = acos(2);
 //   If given a number, returns the square of that number,
 //   If given a vector, returns the sum-of-squares/dot product of the vector elements.
 //   If given a matrix, returns the matrix multiplication of the matrix with itself.
-// Examples:
+// Example:
 //   sqr(3);     // Returns: 9
 //   sqr(-4);    // Returns: 16
 //   sqr([2,3,4]); // Returns: 29
@@ -50,7 +50,7 @@ function sqr(x) =
 //   foo = log2(x);
 // Description:
 //   Returns the logarithm base 2 of the value given.
-// Examples:
+// Example:
 //   log2(0.125);  // Returns: -3
 //   log2(16);     // Returns: 4
 //   log2(256);    // Returns: 8
@@ -187,7 +187,7 @@ function lerp(a,b,u) =
 //   b = Second value or vector.
 //   n = The number of values to return.
 //   endpoint = If true, the last value will be exactly `b`.  If false, the last value will be one step less.
-// Examples:
+// Example:
 //   l = lerpn(-4,4,9);        // Returns: [-4,-3,-2,-1,0,1,2,3,4]
 //   l = lerpn(-4,4,8,false);  // Returns: [-4,-3,-2,-1,0,1,2,3]
 //   l = lerpn(0,1,6);         // Returns: [0, 0.2, 0.4, 0.6, 0.8, 1]
@@ -350,7 +350,7 @@ function quant(x,y) =
 // Arguments:
 //   x = The value to quantize.
 //   y = The non-zero integer quantum of the quantization.
-// Examples:
+// Example:
 //   a = quantdn(12,4);    // Returns: 12
 //   b = quantdn(13,4);    // Returns: 12
 //   c = quantdn(13.1,4);  // Returns: 12
@@ -387,7 +387,7 @@ function quantdn(x,y) =
 // Arguments:
 //   x = The value to quantize.
 //   y = The non-zero integer quantum of the quantization.
-// Examples:
+// Example:
 //   a = quantup(12,4);    // Returns: 12
 //   b = quantup(13,4);    // Returns: 16
 //   c = quantup(13.1,4);  // Returns: 16
@@ -639,7 +639,7 @@ function _cumsum(v,_i=0,_acc=[]) =
 // Arguments:
 //   a = Angle to get the value for.
 //   sines = List of [amplitude, frequency, offset] items, where the frequency is the number of times the cycle repeats around the circle.
-// Examples:
+// Example:
 //   v = sum_of_sines(30, [[10,3,0], [5,5.5,60]]);
 function sum_of_sines(a, sines) =
     assert( is_finite(a) && is_matrix(sines,undef,3), "Invalid input.")
@@ -1225,7 +1225,7 @@ function all_equal(vec,eps=0) =
 //   true if every item of the list is an integer.  Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
-// Examples:
+// Example:
 //   b = all_integer(true);  // Returns: false
 //   b = all_integer("foo"); // Returns: false
 //   b = all_integer(4);     // Returns: true
