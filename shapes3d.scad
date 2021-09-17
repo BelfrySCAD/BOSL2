@@ -6,7 +6,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Section: Cuboids
+// Section: Cuboids, Prismoids and Pyramids
 
 // Function&Module: cube()
 // Topics: Shapes (3D), Attachable, VNF Generators
@@ -435,9 +435,6 @@ function cuboid(
     orient=UP
 ) = no_function("cuboid");
 
-
-
-// Section: Prismoids
 
 
 // Function&Module: prismoid()
@@ -876,9 +873,7 @@ function right_triangle(size=[1,1,1], center, anchor, spin=0, orient=UP) =
     no_function("right_triangle");
 
 
-// Section: Cylindroids
-
-
+// Section: Cylinders
 
 
 // Function&Module: cylinder()
@@ -1400,106 +1395,9 @@ module tube(
 }
 
 
-// Module: torus()
-//
-// Usage: Typical
-//   torus(r_maj|d_maj, r_min|d_min, [center], ...);
-//   torus(or|od, ir|id, ...);
-//   torus(r_maj|d_maj, or|od, ...);
-//   torus(r_maj|d_maj, ir|id, ...);
-//   torus(r_min|d_min, or|od, ...);
-//   torus(r_min|d_min, ir|id, ...);
-// Usage: Attaching Children
-//   torus(or|od, ir|id, ...) [attachments];
-//
-// Description:
-//   Creates a torus shape.
-//
-// Figure(2D,Med):
-//   module text3d(t,size=8) text(text=t,size=size,font="Helvetica", halign="center",valign="center");
-//   module dashcirc(r,start=0,angle=359.9,dashlen=5) let(step=360*dashlen/(2*r*PI)) for(a=[start:step:start+angle]) stroke(arc(r=r,start=a,angle=step/2));
-//   r = 75; r2 = 30;
-//   down(r2+0.1) #torus(r_maj=r, r_min=r2, $fn=72);
-//   color("blue") linear_extrude(height=0.01) {
-//       dashcirc(r=r,start=15,angle=45);
-//       dashcirc(r=r-r2, start=90+15, angle=60);
-//       dashcirc(r=r+r2, start=180+45, angle=30);
-//       dashcirc(r=r+r2, start=15, angle=30);
-//   }
-//   rot(240) color("blue") linear_extrude(height=0.01) {
-//       stroke([[0,0],[r+r2,0]], endcaps="arrow2",width=2);
-//       right(r) fwd(9) rot(-240) text3d("or",size=10);
-//   }
-//   rot(135) color("blue") linear_extrude(height=0.01) {
-//       stroke([[0,0],[r-r2,0]], endcaps="arrow2",width=2);
-//       right((r-r2)/2) back(8) rot(-135) text3d("ir",size=10);
-//   }
-//   rot(45) color("blue") linear_extrude(height=0.01) {
-//       stroke([[0,0],[r,0]], endcaps="arrow2",width=2);
-//       right(r/2) back(8) text3d("r_maj",size=9);
-//   }
-//   rot(30) color("blue") linear_extrude(height=0.01) {
-//       stroke([[r,0],[r+r2,0]], endcaps="arrow2",width=2);
-//       right(r+r2/2) fwd(8) text3d("r_min",size=7);
-//   }
-//
-// Arguments:
-//   r_maj = major radius of torus ring. (use with 'r_min', or 'd_min')
-//   r_min = minor radius of torus ring. (use with 'r_maj', or 'd_maj')
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.
-//   ---
-//   d_maj  = major diameter of torus ring. (use with 'r_min', or 'd_min')
-//   d_min = minor diameter of torus ring. (use with 'r_maj', or 'd_maj')
-//   or = outer radius of the torus. (use with 'ir', or 'id')
-//   ir = inside radius of the torus. (use with 'or', or 'od')
-//   od = outer diameter of the torus. (use with 'ir' or 'id')
-//   id = inside diameter of the torus. (use with 'or' or 'od')
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//
-// Example:
-//   // These all produce the same torus.
-//   torus(r_maj=22.5, r_min=7.5);
-//   torus(d_maj=45, d_min=15);
-//   torus(or=30, ir=15);
-//   torus(od=60, id=30);
-//   torus(d_maj=45, id=30);
-//   torus(d_maj=45, od=60);
-//   torus(d_min=15, id=30);
-//   torus(d_min=15, od=60);
-// Example: Standard Connectors
-//   torus(od=60, id=30) show_anchors();
-module torus(
-    r_maj, r_min, center,
-    d_maj, d_min,
-    or, od, ir, id,
-    anchor, spin=0, orient=UP
-) {
-    _or = get_radius(r=or, d=od, dflt=undef);
-    _ir = get_radius(r=ir, d=id, dflt=undef);
-    _r_maj = get_radius(r=r_maj, d=d_maj, dflt=undef);
-    _r_min = get_radius(r=r_min, d=d_min, dflt=undef);
-    majrad = is_finite(_r_maj)? _r_maj :
-        is_finite(_ir) && is_finite(_or)? (_or + _ir)/2 :
-        is_finite(_ir) && is_finite(_r_min)? (_ir + _r_min) :
-        is_finite(_or) && is_finite(_r_min)? (_or - _r_min) :
-        assert(false, "Bad Parameters");
-    minrad = is_finite(_r_min)? _r_min :
-        is_finite(_ir)? (majrad - _ir) :
-        is_finite(_or)? (_or - majrad) :
-        assert(false, "Bad Parameters");
-    anchor = get_anchor(anchor, center, BOT, CENTER);
-    attachable(anchor,spin,orient, r=(majrad+minrad), l=minrad*2) {
-        rotate_extrude(convexity=4) {
-            right(majrad) circle(r=minrad);
-        }
-        children();
-    }
-}
 
 
-
-// Section: Spheroid
+// Section: Other Round Objects
 
 
 // Function&Module: sphere()
@@ -1776,7 +1674,102 @@ function spheroid(r, style="aligned", d, circum=false, anchor=CENTER, spin=0, or
 
 
 
-// Section: 3D Printing Shapes
+// Module: torus()
+//
+// Usage: Typical
+//   torus(r_maj|d_maj, r_min|d_min, [center], ...);
+//   torus(or|od, ir|id, ...);
+//   torus(r_maj|d_maj, or|od, ...);
+//   torus(r_maj|d_maj, ir|id, ...);
+//   torus(r_min|d_min, or|od, ...);
+//   torus(r_min|d_min, ir|id, ...);
+// Usage: Attaching Children
+//   torus(or|od, ir|id, ...) [attachments];
+//
+// Description:
+//   Creates a torus shape.
+//
+// Figure(2D,Med):
+//   module text3d(t,size=8) text(text=t,size=size,font="Helvetica", halign="center",valign="center");
+//   module dashcirc(r,start=0,angle=359.9,dashlen=5) let(step=360*dashlen/(2*r*PI)) for(a=[start:step:start+angle]) stroke(arc(r=r,start=a,angle=step/2));
+//   r = 75; r2 = 30;
+//   down(r2+0.1) #torus(r_maj=r, r_min=r2, $fn=72);
+//   color("blue") linear_extrude(height=0.01) {
+//       dashcirc(r=r,start=15,angle=45);
+//       dashcirc(r=r-r2, start=90+15, angle=60);
+//       dashcirc(r=r+r2, start=180+45, angle=30);
+//       dashcirc(r=r+r2, start=15, angle=30);
+//   }
+//   rot(240) color("blue") linear_extrude(height=0.01) {
+//       stroke([[0,0],[r+r2,0]], endcaps="arrow2",width=2);
+//       right(r) fwd(9) rot(-240) text3d("or",size=10);
+//   }
+//   rot(135) color("blue") linear_extrude(height=0.01) {
+//       stroke([[0,0],[r-r2,0]], endcaps="arrow2",width=2);
+//       right((r-r2)/2) back(8) rot(-135) text3d("ir",size=10);
+//   }
+//   rot(45) color("blue") linear_extrude(height=0.01) {
+//       stroke([[0,0],[r,0]], endcaps="arrow2",width=2);
+//       right(r/2) back(8) text3d("r_maj",size=9);
+//   }
+//   rot(30) color("blue") linear_extrude(height=0.01) {
+//       stroke([[r,0],[r+r2,0]], endcaps="arrow2",width=2);
+//       right(r+r2/2) fwd(8) text3d("r_min",size=7);
+//   }
+//
+// Arguments:
+//   r_maj = major radius of torus ring. (use with 'r_min', or 'd_min')
+//   r_min = minor radius of torus ring. (use with 'r_maj', or 'd_maj')
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=DOWN`.
+//   ---
+//   d_maj  = major diameter of torus ring. (use with 'r_min', or 'd_min')
+//   d_min = minor diameter of torus ring. (use with 'r_maj', or 'd_maj')
+//   or = outer radius of the torus. (use with 'ir', or 'id')
+//   ir = inside radius of the torus. (use with 'or', or 'od')
+//   od = outer diameter of the torus. (use with 'ir' or 'id')
+//   id = inside diameter of the torus. (use with 'or' or 'od')
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//
+// Example:
+//   // These all produce the same torus.
+//   torus(r_maj=22.5, r_min=7.5);
+//   torus(d_maj=45, d_min=15);
+//   torus(or=30, ir=15);
+//   torus(od=60, id=30);
+//   torus(d_maj=45, id=30);
+//   torus(d_maj=45, od=60);
+//   torus(d_min=15, id=30);
+//   torus(d_min=15, od=60);
+// Example: Standard Connectors
+//   torus(od=60, id=30) show_anchors();
+module torus(
+    r_maj, r_min, center,
+    d_maj, d_min,
+    or, od, ir, id,
+    anchor, spin=0, orient=UP
+) {
+    _or = get_radius(r=or, d=od, dflt=undef);
+    _ir = get_radius(r=ir, d=id, dflt=undef);
+    _r_maj = get_radius(r=r_maj, d=d_maj, dflt=undef);
+    _r_min = get_radius(r=r_min, d=d_min, dflt=undef);
+    majrad = is_finite(_r_maj)? _r_maj :
+        is_finite(_ir) && is_finite(_or)? (_or + _ir)/2 :
+        is_finite(_ir) && is_finite(_r_min)? (_ir + _r_min) :
+        is_finite(_or) && is_finite(_r_min)? (_or - _r_min) :
+        assert(false, "Bad Parameters");
+    minrad = is_finite(_r_min)? _r_min :
+        is_finite(_ir)? (majrad - _ir) :
+        is_finite(_or)? (_or - majrad) :
+        assert(false, "Bad Parameters");
+    anchor = get_anchor(anchor, center, BOT, CENTER);
+    attachable(anchor,spin,orient, r=(majrad+minrad), l=minrad*2) {
+        rotate_extrude(convexity=4) {
+            right(majrad) circle(r=minrad);
+        }
+        children();
+    }
+}
 
 
 // Module: teardrop()
