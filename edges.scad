@@ -111,12 +111,12 @@ EDGE_OFFSETS = [
 
 /// Internal Function: _is_edge_array()
 /// Topics: Edges, Type Checking
-// Usage:
-//   bool = _is_edge_array(x);
-// Description:
-//   Returns true if the given value has the form of an edge array.
+/// Usage:
+///   bool = _is_edge_array(x);
+/// Description:
+///   Returns true if the given value has the form of an edge array.
 /// Arguments:
-//   x = The item to check the type of.
+///   x = The item to check the type of.
 /// See Also: edges(), EDGES_NONE, EDGES_ALL
 function _is_edge_array(x) = is_list(x) && is_vector(x[0]) && len(x)==3 && len(x[0])==4;
 
@@ -508,25 +508,25 @@ function corners(v, except=[]) =
 
 /// Internal Function: _corner_edges()
 /// Topics: Corners
-// Description:
-//   Returns [XCOUNT,YCOUNT,ZCOUNT] where each is the count of edges aligned with that
-//   axis that are in the edge set and touch the given corner.
-// Arguments:
-//   edges = Standard edges array.
-//   v = Vector pointing to the corner to count edge intersections at.
-// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+/// Description:
+///   Returns [XCOUNT,YCOUNT,ZCOUNT] where each is the count of edges aligned with that
+///   axis that are in the edge set and touch the given corner.
+/// Arguments:
+///   edges = Standard edges array.
+///   v = Vector pointing to the corner to count edge intersections at.
+/// See Also: CORNERS_NONE, CORNERS_ALL, corners()
 function _corner_edges(edges, v) =
     let(u = (v+[1,1,1])/2) [edges[0][u.y+u.z*2], edges[1][u.x+u.z*2], edges[2][u.x+u.y*2]];
 
 
 /// InternalFunction: _corner_edge_count()
 /// Topics: Corners
-// Description:
-//   Counts how many given edges intersect at a specific corner.
-// Arguments:
-//   edges = Standard edges array.
-//   v = Vector pointing to the corner to count edge intersections at.
-// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+/// Description:
+///   Counts how many given edges intersect at a specific corner.
+/// Arguments:
+///   edges = Standard edges array.
+///   v = Vector pointing to the corner to count edge intersections at.
+/// See Also: CORNERS_NONE, CORNERS_ALL, corners()
 function _corner_edge_count(edges, v) =
     let(u = (v+[1,1,1])/2) edges[0][u.y+u.z*2] + edges[1][u.x+u.z*2] + edges[2][u.x+u.y*2];
 
