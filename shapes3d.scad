@@ -2004,10 +2004,7 @@ module atext(text, h=1, size=9, font="Courier", anchor="baseline", spin=0, orien
     }
 }
 
-
-
-
-
+// This could be replaced with _cut_to_seg_u_form
 function _cut_interp(pathcut, path, data) =
   [for(entry=pathcut)
     let(
@@ -2019,6 +2016,7 @@ function _cut_interp(pathcut, path, data) =
     )
     (1-factor)*data[entry[1]-1]+ factor * data[entry[1]]
   ];
+
 
 
 // Module: path_text()

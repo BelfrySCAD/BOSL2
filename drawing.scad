@@ -251,14 +251,10 @@ module stroke(
             translate(path[0]) sphere(d=width[0]);
         }
     } else {
-        spos = path_pos_from_start(path,trim1,closed=false);
-        epos = path_pos_from_end(path,trim2,closed=false);
-        path2 = path_subselect(path, spos[0], spos[1], epos[0], epos[1]);
-        widths = concat(
-            [lerp(width[spos[0]], width[(spos[0]+1)%len(width)], spos[1])],
-            [for (i = [spos[0]+1:1:epos[0]]) width[i]],
-            [lerp(width[epos[0]], width[(epos[0]+1)%len(width)], epos[1])]
-        );
+        pathcut = path_cut_points(path, [trim1, path_length(path)-trim2], closed=false);
+        pathcut_su = _cut_to_seg_u_form(pathcut,path);
+        path2 = _path_cut_getpaths(path, pathcut, closed=false)[1];
+        widths = _path_select(width, pathcut_su[0][0], pathcut_su[0][1], pathcut_su[1][0], pathcut_su[1][1]);
 
         start_vec = path[0] - path[1];
         end_vec = last(path) - select(path,-2);
