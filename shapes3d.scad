@@ -179,7 +179,7 @@ module cuboid(
     orient=UP
 ) {
     module corner_shape(corner) {
-        e = corner_edges(edges, corner);
+        e = _corner_edges(edges, corner);
         cnt = sum(e);
         r = first_defined([chamfer, rounding, 0]);
         c = [min(r,size.x/2), min(r,size.y/2), min(r,size.z/2)];
@@ -292,7 +292,7 @@ module cuboid(
                             // Add multi-edge corners.
                             if (trimcorners) {
                                 for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
-                                    ce = corner_edges(edges, [xa,ya,za]);
+                                    ce = _corner_edges(edges, [xa,ya,za]);
                                     if (ce.x + ce.y > 1) {
                                         translate(v_mul([xa,ya,za]/2, size+[ach-0.01,ach-0.01,-ach])) {
                                             cube([ach+0.01,ach+0.01,ach], center=true);
@@ -379,7 +379,7 @@ module cuboid(
                             // Add multi-edge corners.
                             if (trimcorners) {
                                 for (za=[-1,1], ya=[-1,1], xa=[-1,1]) {
-                                    ce = corner_edges(edges, [xa,ya,za]);
+                                    ce = _corner_edges(edges, [xa,ya,za]);
                                     if (ce.x + ce.y > 1) {
                                         translate(v_mul([xa,ya,za]/2, size+[ard-0.01,ard-0.01,-ard])) {
                                             cube([ard+0.01,ard+0.01,ard], center=true);
