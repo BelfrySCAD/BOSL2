@@ -110,14 +110,14 @@ EDGE_OFFSETS = [
 // Section: Edge Helpers
 
 /// Internal Function: _is_edge_array()
-// Topics: Edges, Type Checking
+/// Topics: Edges, Type Checking
 // Usage:
 //   bool = _is_edge_array(x);
 // Description:
 //   Returns true if the given value has the form of an edge array.
-// Arguments:
+/// Arguments:
 //   x = The item to check the type of.
-// See Also: edges(), EDGES_NONE, EDGES_ALL
+/// See Also: edges(), EDGES_NONE, EDGES_ALL
 function _is_edge_array(x) = is_list(x) && is_vector(x[0]) && len(x)==3 && len(x[0])==4;
 
 
@@ -367,22 +367,22 @@ CORNER_OFFSETS = [
 
 /// Internal Function: _is_corner_array()
 /// Topics: Corners, Type Checking
-// Usage:
-//   bool = _is_corner_array(x)
-// Description:
-//   Returns true if the given value has the form of a corner array.
-// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+/// Usage:
+///   bool = _is_corner_array(x)
+/// Description:
+///   Returns true if the given value has the form of a corner array.
+/// See Also: CORNERS_NONE, CORNERS_ALL, corners()
 function _is_corner_array(x) = is_vector(x) && len(x)==8 && all([for (xx=x) xx==1||xx==0]);
 
 
 /// Internal Function: _normalize_corners()
 /// Topics: Corners
-// Usage:
-//   corns = _normalize_corners(v);
-// Description:
-//   Normalizes all values in a corner array to be `1`, if it was originally greater than `0`,
-//   or `0`, if it was originally less than or equal to `0`.
-// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+/// Usage:
+///   corns = _normalize_corners(v);
+/// Description:
+///   Normalizes all values in a corner array to be `1`, if it was originally greater than `0`,
+///   or `0`, if it was originally less than or equal to `0`.
+/// See Also: CORNERS_NONE, CORNERS_ALL, corners()
 function _normalize_corners(v) = [for (x=v) x>0? 1 : 0];
 
 
