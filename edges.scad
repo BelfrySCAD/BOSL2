@@ -155,12 +155,12 @@ function _edge_set(v) =
 
 /// Internal Function: _normalize_edges()
 /// Topics: Edges
-// Usage:
-//   edges = _normalize_edges(v);
-// Description:
-//   Normalizes all values in an edge array to be `1`, if it was originally greater than `0`,
-//   or `0`, if it was originally less than or equal to `0`.
-// See Also:  edges(), EDGES_NONE, EDGES_ALL
+/// Usage:
+///   edges = _normalize_edges(v);
+/// Description:
+///   Normalizes all values in an edge array to be `1`, if it was originally greater than `0`,
+///   or `0`, if it was originally less than or equal to `0`.
+/// See Also:  edges(), EDGES_NONE, EDGES_ALL
 function _normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 
 

@@ -1021,7 +1021,11 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 function path_cut(path,cutdist,closed) =
   is_num(cutdist) ? path_cut(path,[cutdist],closed) :
   assert(is_vector(cutdist))
-  assert(last(cutdist)<path_length(path,closed=closed),"Cut distances must be smaller than the path length")
+  
+  assert(last(cutdist)<path_length(path,closed=closed),
+           approx(last(cutdist),path_length(path,closed=closed)) ?
+                "Last cut distance is the full path: don't include the final end as a cut" :
+                "Cut distances must be smaller than the path length")
   assert(cutdist[0]>0, "Cut distances must be strictly positive")
   let(
       cutlist = path_cut_points(path,cutdist,closed=closed),
