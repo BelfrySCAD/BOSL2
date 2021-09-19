@@ -244,6 +244,7 @@ module stroke(
     ]);
     assert(is_num(trim2));
 
+
     if (len(path) == 1) {
         if (len(path[0]) == 2) {
             translate(path[0]) circle(d=width[0]);
@@ -255,7 +256,6 @@ module stroke(
         pathcut_su = _cut_to_seg_u_form(pathcut,path);
         path2 = _path_cut_getpaths(path, pathcut, closed=false)[1];
         widths = _path_select(width, pathcut_su[0][0], pathcut_su[0][1], pathcut_su[1][0], pathcut_su[1][1]);
-
         start_vec = path[0] - path[1];
         end_vec = last(path) - select(path,-2);
 
