@@ -2148,7 +2148,7 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 
   dummy1 = assert(sum(lsize)<=path_length(path),"Path is too short for the text");
    
-  pts = path_cut_points(path, add_scalar([0, each cumsum(lsize)],lsize[0]/2), direction=true);
+  pts = _path_cut_points(path, add_scalar([0, each cumsum(lsize)],lsize[0]/2), direction=true);
 
   usernorm = is_def(normal);
   usetop = is_def(top);

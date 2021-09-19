@@ -251,7 +251,7 @@ module stroke(
             translate(path[0]) sphere(d=width[0]);
         }
     } else {
-        pathcut = path_cut_points(path, [trim1, path_length(path)-trim2], closed=false);
+        pathcut = _path_cut_points(path, [trim1, path_length(path)-trim2], closed=false);
         pathcut_su = _cut_to_seg_u_form(pathcut,path);
         path2 = _path_cut_getpaths(path, pathcut, closed=false)[1];
         widths = _path_select(width, pathcut_su[0][0], pathcut_su[0][1], pathcut_su[1][0], pathcut_su[1][1]);
