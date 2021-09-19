@@ -867,7 +867,6 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 
 // Function: path_cut()
 // Topics: Paths
-// See Also: _path_cut_points()
 // Usage:
 //    path_list = path_cut(path, cutdist, [closed=]);
 // Description:
