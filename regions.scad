@@ -248,7 +248,7 @@ function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) 
         subpaths = [
             for (p = pair(crossings))
                 deduplicate(
-                    path_subselect(path, p[0][0], p[0][1], p[1][0], p[1][1], closed=closed),
+                    _path_select(path, p[0][0], p[0][1], p[1][0], p[1][1], closed=closed),
                     eps=eps
                 )
         ]
@@ -861,7 +861,7 @@ function _tagged_region(region1,region2,keep1,keep2,eps=EPSILON) =
             [for (tagpath = tagged1) if (in_list(tagpath[0], keep1)) tagpath[1]],
             [for (tagpath = tagged2) if (in_list(tagpath[0], keep2)) tagpath[1]]
         ),
-        outregion = assemble_path_fragments(tagged, eps=eps)
+        outregion = _assemble_path_fragments(tagged, eps=eps)
     ) outregion;
 
 

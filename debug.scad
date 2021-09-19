@@ -346,7 +346,9 @@ module expose_anchors(opacity=0.2) {
     show("anchor-arrow")
         children();
     hide("anchor-arrow")
-        color(is_string($color)? $color : point3d($color), opacity)
+        color(is_undef($color)? [0,0,0] :
+              is_string($color)? $color :
+                                 point3d($color), opacity)
             children();
 }
 

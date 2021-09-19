@@ -72,21 +72,21 @@ function cleanup_path(path, eps=EPSILON) =
     is_closed_path(path,eps=eps)? [for (i=[0:1:len(path)-2]) path[i]] : path;
 
 
-// Function: path_subselect()
-// Usage:
-//   path_subselect(path,s1,u1,s2,u2,[closed]):
-// Description:
-//   Returns a portion of a path, from between the `u1` part of segment `s1`, to the `u2` part of
-//   segment `s2`.  Both `u1` and `u2` are values between 0.0 and 1.0, inclusive, where 0 is the start
-//   of the segment, and 1 is the end.  Both `s1` and `s2` are integers, where 0 is the first segment.
-// Arguments:
-//   path = The path to get a section of.
-//   s1 = The number of the starting segment.
-//   u1 = The proportion along the starting segment, between 0.0 and 1.0, inclusive.
-//   s2 = The number of the ending segment.
-//   u2 = The proportion along the ending segment, between 0.0 and 1.0, inclusive.
-//   closed = If true, treat path as a closed polygon.
-function path_subselect(path, s1, u1, s2, u2, closed=false) =
+/// internal Function: _path_select()
+/// Usage:
+///   _path_select(path,s1,u1,s2,u2,[closed]):
+/// Description:
+///   Returns a portion of a path, from between the `u1` part of segment `s1`, to the `u2` part of
+///   segment `s2`.  Both `u1` and `u2` are values between 0.0 and 1.0, inclusive, where 0 is the start
+///   of the segment, and 1 is the end.  Both `s1` and `s2` are integers, where 0 is the first segment.
+/// Arguments:
+///   path = The path to get a section of.
+///   s1 = The number of the starting segment.
+///   u1 = The proportion along the starting segment, between 0.0 and 1.0, inclusive.
+///   s2 = The number of the ending segment.
+///   u2 = The proportion along the ending segment, between 0.0 and 1.0, inclusive.
+///   closed = If true, treat path as a closed polygon.
+function _path_select(path, s1, u1, s2, u2, closed=false) =
     let(
         lp = len(path),
         l = lp-(closed?0:1),
@@ -102,15 +102,15 @@ function path_subselect(path, s1, u1, s2, u2, closed=false) =
     ) pathout;
 
 
-// Function: simplify_path()
+// Function: path_merge_collinear()
 // Description:
-//   Takes a path and removes unnecessary subsequent collinear points.
+//   Takes a path and removes unnecessary sequential collinear points.
 // Usage:
-//   simplify_path(path, [eps])
+//   path_merge_collinear(path, [eps])
 // Arguments:
 //   path = A list of path points of any dimension.
 //   eps = Largest positional variance allowed.  Default: `EPSILON` (1-e9)
-function simplify_path(path, eps=EPSILON) =
+function path_merge_collinear(path, eps=EPSILON) =
     assert( is_path(path), "Invalid path." )
     assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "Invalid tolerance." )    
     len(path)<=2 ? path :
@@ -123,34 +123,6 @@ function simplify_path(path, eps=EPSILON) =
         ]
     ) [for (i=indices) path[i]];
 
-
-// Function: simplify_path_indexed()
-// Description:
-//   Takes a list of points, and a list of indices into `points`,
-//   and removes from the list all indices of subsequent indexed points that are unecessarily collinear.
-//   Returns the list of the remained indices.
-// Usage:
-//   simplify_path_indexed(points,indices, eps)
-// Arguments:
-//   points = A list of points.
-//   indices = A list of indices into `points` that forms a path.
-//   eps = Largest angle variance allowed.  Default: EPSILON (1-e9) degrees.
-function simplify_path_indexed(points, indices, eps=EPSILON) =
-    len(indices)<=2? indices :
-    let(
-        indices = concat(
-            indices[0],
-            [
-                for (i=[1:1:len(indices)-2]) let( 
-                    i1 = indices[i-1],
-                    i2 = indices[i],
-                    i3 = indices[i+1]
-                ) if (!is_collinear(points[i1], points[i2], points[i3], eps=eps))
-                indices[i]
-            ], 
-            indices[len(indices)-1]
-        )
-    ) indices;
 
 
 // Function: path_length()
@@ -183,111 +155,6 @@ function path_segment_lengths(path, closed=false) =
         if (closed) norm(path[0]-last(path))
     ]; 
 
-
-// Function: path_pos_from_start()
-// Usage:
-//   pos = path_pos_from_start(path,length,[closed]);
-// Description:
-//   Finds the segment and relative position along that segment that is `length` distance from the
-//   front of the given `path`.  Returned as [SEGNUM, U] where SEGNUM is the segment number, and U is
-//   the relative distance along that segment, a number from 0 to 1.  If the path is shorter than the
-//   asked for length, this returns `undef`.
-// Arguments:
-//   path = The path to find the position on.
-//   length = The length from the start of the path to find the segment and position of.
-// Example(2D):
-//   path = circle(d=50,$fn=18);
-//   pos = path_pos_from_start(path,20,closed=false);
-//   stroke(path,width=1,endcaps=false);
-//   pt = lerp(path[pos[0]], path[(pos[0]+1)%len(path)], pos[1]);
-//   color("red") translate(pt) circle(d=2,$fn=12);
-function path_pos_from_start(path,length,closed=false,_d=0,_i=0) =
-    let (lp = len(path))
-    _i >= lp - (closed?0:1)? undef :
-    let (l = norm(path[(_i+1)%lp]-path[_i]))
-    _d+l <= length? path_pos_from_start(path,length,closed,_d+l,_i+1) :
-    [_i, (length-_d)/l];
-
-
-// Function: path_pos_from_end()
-// Usage:
-//   pos = path_pos_from_end(path,length,[closed]);
-// Description:
-//   Finds the segment and relative position along that segment that is `length` distance from the
-//   end of the given `path`.  Returned as [SEGNUM, U] where SEGNUM is the segment number, and U is
-//   the relative distance along that segment, a number from 0 to 1.  If the path is shorter than the
-//   asked for length, this returns `undef`.
-// Arguments:
-//   path = The path to find the position on.
-//   length = The length from the end of the path to find the segment and position of.
-// Example(2D):
-//   path = circle(d=50,$fn=18);
-//   pos = path_pos_from_end(path,20,closed=false);
-//   stroke(path,width=1,endcaps=false);
-//   pt = lerp(path[pos[0]], path[(pos[0]+1)%len(path)], pos[1]);
-//   color("red") translate(pt) circle(d=2,$fn=12);
-function path_pos_from_end(path,length,closed=false,_d=0,_i=undef) =
-    let (
-        lp = len(path),
-        _i = _i!=undef? _i : lp - (closed?1:2)
-    )
-    _i < 0? undef :
-    let (l = norm(path[(_i+1)%lp]-path[_i]))
-    _d+l <= length? path_pos_from_end(path,length,closed,_d+l,_i-1) :
-    [_i, 1-(length-_d)/l];
-
-
-// Function: path_trim_start()
-// Usage:
-//   path_trim_start(path,trim);
-// Description:
-//   Returns the `path`, with the start shortened by the length `trim`.
-// Arguments:
-//   path = The path to trim.
-//   trim = The length to trim from the start.
-// Example(2D):
-//   path = circle(d=50,$fn=18);
-//   path2 = path_trim_start(path,5);
-//   path3 = path_trim_start(path,20);
-//   color("blue") stroke(path3,width=5,endcaps=false);
-//   color("cyan") stroke(path2,width=3,endcaps=false);
-//   color("red") stroke(path,width=1,endcaps=false);
-function path_trim_start(path,trim,_d=0,_i=0) =
-    _i >= len(path)-1? [] :
-    let (l = norm(path[_i+1]-path[_i]))
-    _d+l <= trim? path_trim_start(path,trim,_d+l,_i+1) :
-    let (v = unit(path[_i+1]-path[_i]))
-    concat(
-        [path[_i+1]-v*(l-(trim-_d))],
-        [for (i=[_i+1:1:len(path)-1]) path[i]]
-    );
-
-
-// Function: path_trim_end()
-// Usage:
-//   path_trim_end(path,trim);
-// Description:
-//   Returns the `path`, with the end shortened by the length `trim`.
-// Arguments:
-//   path = The path to trim.
-//   trim = The length to trim from the end.
-// Example(2D):
-//   path = circle(d=50,$fn=18);
-//   path2 = path_trim_end(path,5);
-//   path3 = path_trim_end(path,20);
-//   color("blue") stroke(path3,width=5,endcaps=false);
-//   color("cyan") stroke(path2,width=3,endcaps=false);
-//   color("red") stroke(path,width=1,endcaps=false);
-function path_trim_end(path,trim,_d=0,_i=undef) =
-    let (_i = _i!=undef? _i : len(path)-1)
-    _i <= 0? [] :
-    let (l = norm(path[_i]-path[_i-1]))
-    _d+l <= trim? path_trim_end(path,trim,_d+l,_i-1) :
-    let (v = unit(path[_i]-path[_i-1]))
-    concat(
-        [for (i=[0:1:_i-1]) path[i]],
-        [path[_i-1]+v*(l-(trim-_d))]
-    );
 
 
 // Function: path_closest_point()
@@ -700,7 +567,7 @@ function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
                 u1 = p[0][1],
                 s2 = p[1][0],
                 u2 = p[1][1],
-                section = path_subselect(path, s1, u1, s2, u2, closed=closed),
+                section = _path_select(path, s1, u1, s2, u2, closed=closed),
                 outpath = deduplicate(eps=eps, section)
             )
             outpath
@@ -747,7 +614,7 @@ function decompose_path(path, closed=true, eps=EPSILON) =
         path = cleanup_path(path, eps=eps),
         tagged = _tag_self_crossing_subpaths(path, closed=closed, eps=eps),
         kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
-        outregion = assemble_path_fragments(kept, eps=eps)
+        outregion = _assemble_path_fragments(kept, eps=eps)
     ) outregion;
 
 
@@ -784,19 +651,19 @@ function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
     ) [foundfrag, remainder];
 
 
-// Function: assemble_a_path_from_fragments()
-// Usage:
-//   assemble_a_path_from_fragments(subpaths);
-// Description:
-//   Given a list of paths, assembles them together into one complete closed polygon path, and
-//   remainder fragments.  Returns [PATH, FRAGMENTS] where FRAGMENTS is the list of remaining
-//   unused path fragments.
-// Arguments:
-//   fragments = List of paths to be assembled into complete polygons.
-//   rightmost = If true, assemble paths using rightmost turns. Leftmost if false.
-//   startfrag = The fragment to start with.  Default: 0
-//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-function assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, eps=EPSILON) =
+/// Internal Function: _assemble_a_path_from_fragments()
+/// Usage:
+///   _assemble_a_path_from_fragments(subpaths);
+/// Description:
+///   Given a list of paths, assembles them together into one complete closed polygon path, and
+///   remainder fragments.  Returns [PATH, FRAGMENTS] where FRAGMENTS is the list of remaining
+///   unused path fragments.
+/// Arguments:
+///   fragments = List of paths to be assembled into complete polygons.
+///   rightmost = If true, assemble paths using rightmost turns. Leftmost if false.
+///   startfrag = The fragment to start with.  Default: 0
+///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, eps=EPSILON) =
     len(fragments)==0? _finished :
     let(
         path = fragments[startfrag],
@@ -834,34 +701,34 @@ function assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, 
         newpath = concat(path, list_tail(foundfrag)),
         newfrags = concat([newpath], remainder)
     )
-    assemble_a_path_from_fragments(
+    _assemble_a_path_from_fragments(
         fragments=newfrags,
         rightmost=rightmost,
         eps=eps
     );
 
 
-// Function: assemble_path_fragments()
-// Usage:
-//   assemble_path_fragments(subpaths);
-// Description:
-//   Given a list of paths, assembles them together into complete closed polygon paths if it can.
-// Arguments:
-//   fragments = List of paths to be assembled into complete polygons.
-//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-function assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
+/// Internal Function: _assemble_path_fragments()
+/// Usage:
+///   _assemble_path_fragments(subpaths);
+/// Description:
+///   Given a list of paths, assembles them together into complete closed polygon paths if it can.
+/// Arguments:
+///   fragments = List of paths to be assembled into complete polygons.
+///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+function _assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
     len(fragments)==0? _finished :
     let(
         minxidx = min_index([
             for (frag=fragments) min(subindex(frag,0))
         ]),
-        result_l = assemble_a_path_from_fragments(
+        result_l = _assemble_a_path_from_fragments(
             fragments=fragments,
             startfrag=minxidx,
             rightmost=false,
             eps=eps
         ),
-        result_r = assemble_a_path_from_fragments(
+        result_r = _assemble_a_path_from_fragments(
             fragments=fragments,
             startfrag=minxidx,
             rightmost=true,
@@ -873,7 +740,7 @@ function assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
         newpath = cleanup_path(result[0]),
         remainder = result[1],
         finished = concat(_finished, [newpath])
-    ) assemble_path_fragments(
+    ) _assemble_path_fragments(
         fragments=remainder,
         eps=eps,
         _finished=finished
@@ -881,47 +748,47 @@ function assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
 
 
 
-// Function: path_cut_points()
-//
-// Usage:
-//   cuts = path_cut_points(path, dists, [closed=], [direction=]);
-//
-// Description:
-//   Cuts a path at a list of distances from the first point in the path.  Returns a list of the cut
-//   points and indices of the next point in the path after that point.  So for example, a return
-//   value entry of [[2,3], 5] means that the cut point was [2,3] and the next point on the path after
-//   this point is path[5].  If the path is too short then path_cut_points returns undef.  If you set
-//   `direction` to true then `path_cut_points` will also return the tangent vector to the path and a normal
-//   vector to the path.  It tries to find a normal vector that is coplanar to the path near the cut
-//   point.  If this fails it will return a normal vector parallel to the xy plane.  The output with
-//   direction vectors will be `[point, next_index, tangent, normal]`.
-//   .
-//   If you give the very last point of the path as a cut point then the returned index will be
-//   one larger than the last index (so it will not be a valid index).  If you use the closed
-//   option then the returned index will be equal to the path length for cuts along the closing
-//   path segment, and if you give a point equal to the path length you will get an
-//   index of len(path)+1 for the index.  
-//
-// Arguments:
-//   path = path to cut
-//   dists = distances where the path should be cut (a list) or a scalar single distance
-//   ---
-//   closed = set to true if the curve is closed.  Default: false
-//   direction = set to true to return direction vectors.  Default: false
-//
-// Example(NORENDER):
-//   square=[[0,0],[1,0],[1,1],[0,1]];
-//   path_cut_points(square, [.5,1.5,2.5]);   // Returns [[[0.5, 0], 1], [[1, 0.5], 2], [[0.5, 1], 3]]
-//   path_cut_points(square, [0,1,2,3]);      // Returns [[[0, 0], 1], [[1, 0], 2], [[1, 1], 3], [[0, 1], 4]]
-//   path_cut_points(square, [0,0.8,1.6,2.4,3.2], closed=true);  // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], [[0, 0.8], 4]]
-//   path_cut_points(square, [0,0.8,1.6,2.4,3.2]);               // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], undef]
-function path_cut_points(path, dists, closed=false, direction=false) =
+/// Internal Function: _path_cut_points()
+///
+/// Usage:
+///   cuts = _path_cut_points(path, dists, [closed=], [direction=]);
+///
+/// Description:
+///   Cuts a path at a list of distances from the first point in the path.  Returns a list of the cut
+///   points and indices of the next point in the path after that point.  So for example, a return
+///   value entry of [[2,3], 5] means that the cut point was [2,3] and the next point on the path after
+///   this point is path[5].  If the path is too short then path_cut_points returns undef.  If you set
+///   `direction` to true then `path_cut_points` will also return the tangent vector to the path and a normal
+///   vector to the path.  It tries to find a normal vector that is coplanar to the path near the cut
+///   point.  If this fails it will return a normal vector parallel to the xy plane.  The output with
+///   direction vectors will be `[point, next_index, tangent, normal]`.
+///   .
+///   If you give the very last point of the path as a cut point then the returned index will be
+///   one larger than the last index (so it will not be a valid index).  If you use the closed
+///   option then the returned index will be equal to the path length for cuts along the closing
+///   path segment, and if you give a point equal to the path length you will get an
+///   index of len(path)+1 for the index.  
+///
+/// Arguments:
+///   path = path to cut
+///   dists = distances where the path should be cut (a list) or a scalar single distance
+///   ---
+///   closed = set to true if the curve is closed.  Default: false
+///   direction = set to true to return direction vectors.  Default: false
+///
+/// Example(NORENDER):
+///   square=[[0,0],[1,0],[1,1],[0,1]];
+///   _path_cut_points(square, [.5,1.5,2.5]);   // Returns [[[0.5, 0], 1], [[1, 0.5], 2], [[0.5, 1], 3]]
+///   _path_cut_points(square, [0,1,2,3]);      // Returns [[[0, 0], 1], [[1, 0], 2], [[1, 1], 3], [[0, 1], 4]]
+///   _path_cut_points(square, [0,0.8,1.6,2.4,3.2], closed=true);  // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], [[0, 0.8], 4]]
+///   _path_cut_points(square, [0,0.8,1.6,2.4,3.2]);               // Returns [[[0, 0], 1], [[0.8, 0], 1], [[1, 0.6], 2], [[0.6, 1], 3], undef]
+function _path_cut_points(path, dists, closed=false, direction=false) =
     let(long_enough = len(path) >= (closed ? 3 : 2))
     assert(long_enough,len(path)<2 ? "Two points needed to define a path" : "Closed path must include three points")
-    is_num(dists) ? path_cut_points(path, [dists],closed, direction)[0] :
+    is_num(dists) ? _path_cut_points(path, [dists],closed, direction)[0] :
     assert(is_vector(dists))
     assert(list_increasing(dists), "Cut distances must be an increasing list")
-    let(cuts = _path_cut_points(path,dists,closed))
+    let(cuts = _path_cut_points_recurse(path,dists,closed))
     !direction
        ? cuts
        : let(
@@ -931,7 +798,7 @@ function path_cut_points(path, dists, closed=false, direction=false) =
          hstack(cuts, array_group(dir,1), array_group(normals,1));
 
 // Main recursive path cut function
-function _path_cut_points(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[]) =
+function _path_cut_points_recurse(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[]) =
     dind == len(dists) ? result :
     let(
         lastpt = len(result)==0? [] : last(result)[0],       // location of last cut point
@@ -940,7 +807,7 @@ function _path_cut_points(path, dists, closed=false, pind=0, dtotal=0, dind=0, r
            ? [lerp(lastpt,select(path,pind),(dists[dind]-dtotal)/dpartial),pind] 
            : _path_cut_single(path, dists[dind]-dtotal-dpartial, closed, pind)
     ) 
-    _path_cut_points(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
+    _path_cut_points_recurse(path, dists, closed, nextpoint[1], dists[dind],dind+1, concat(result, [nextpoint]));
 
 
 // Search for a single cut point in the path
@@ -1000,7 +867,7 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 
 // Function: path_cut()
 // Topics: Paths
-// See Also: path_cut_points()
+// See Also: _path_cut_points()
 // Usage:
 //    path_list = path_cut(path, cutdist, [closed=]);
 // Description:
@@ -1008,8 +875,11 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 //    subpaths at those lengths, returning a list of paths.
 //    If the input path is closed then the final path will include the
 //    original starting point.  The list of cut distances must be
-//    in ascending order.  If you repeat a distance you will get an
-//    empty list in that position in the output.
+//    in ascending order and should not include the endpoints: 0 
+//    or len(path).  If you repeat a distance you will get an
+//    empty list in that position in the output.  If you give an
+//    empty cutdist array you will get the input path as output
+//    (without the final vertex doubled in the case of a closed path).
 // Arguments:
 //   path = The original path to split.
 //   cutdist = Distance or list of distances where path is cut
@@ -1021,14 +891,16 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 function path_cut(path,cutdist,closed) =
   is_num(cutdist) ? path_cut(path,[cutdist],closed) :
   assert(is_vector(cutdist))
-  
-  assert(last(cutdist)<path_length(path,closed=closed),
-           approx(last(cutdist),path_length(path,closed=closed)) ?
-                "Last cut distance is the full path: don't include the final end as a cut" :
-                "Cut distances must be smaller than the path length")
+  assert(last(cutdist)<path_length(path,closed=closed),"Cut distances must be smaller than the path length")
   assert(cutdist[0]>0, "Cut distances must be strictly positive")
   let(
-      cutlist = path_cut_points(path,cutdist,closed=closed),
+      cutlist = _path_cut_points(path,cutdist,closed=closed)
+  )
+  _path_cut_getpaths(path, cutlist, closed);
+
+
+function _path_cut_getpaths(path, cutlist, closed) =
+  let(
       cuts = len(cutlist)
   )
   [
@@ -1046,6 +918,24 @@ function path_cut(path,cutdist,closed) =
         if (!approx(cutlist[cuts-1][0], select(path,cutlist[cuts-1][1]))) cutlist[cuts-1][0],
         each select(path,cutlist[cuts-1][1],closed ? 0 : -1)
       ]
+  ];
+
+
+// internal function
+// converts pathcut output form to a [segment, u]
+// form list that works withi path_select
+function _cut_to_seg_u_form(pathcut, path, closed) =
+  let(lastind = len(path) - (closed?0:1))
+  [for(entry=pathcut)
+    entry[1] > lastind ? [lastind,0] :
+    let(
+        a = path[entry[1]-1],
+        b = path[entry[1]],
+        c = entry[0],
+        i = max_index(v_abs(b-a)),
+        factor = (c[i]-a[i])/(b[i]-a[i])
+    )
+    [entry[1]-1,factor]
   ];
 
 
@@ -1212,7 +1102,7 @@ function resample_path(path, N, spacing, closed=false) =
        // Add last point later
        N = is_def(N) ? N-(closed?0:1) : round(length/spacing),
        distlist = lerpn(0,length,N,false), 
-       cuts = path_cut_points(path, distlist, closed=closed)
+       cuts = _path_cut_points(path, distlist, closed=closed)
    )
    [ each subindex(cuts,0),
      if (!closed) last(path)     // Then add last point here

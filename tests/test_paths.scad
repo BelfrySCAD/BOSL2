@@ -36,16 +36,10 @@ module test_cleanup_path() {
 test_cleanup_path();
 
 
-module test_simplify_path() {
+module test_path_merge_collinear() {
     path = [[-20,-20], [-10,-20], [0,-10], [10,0], [20,10], [20,20], [15,30]];
-    assert(simplify_path(path) == [[-20,-20], [-10,-20], [20,10], [20,20], [15,30]]);
+    assert(path_merge_collinear(path) == [[-20,-20], [-10,-20], [20,10], [20,20], [15,30]]);
 }
-test_simplify_path();
+test_path_merge_collinear();
 
 
-module test_simplify_path_indexed() {
-    pts = [[10,0], [0,-10], [20,20], [20,10], [-20,-20], [15,30], [-10,-20]];
-    path = [4,6,1,0,3,2,5];
-    assert(simplify_path_indexed(pts, path) == [4,6,3,2,5]);
-}
-test_simplify_path_indexed();
