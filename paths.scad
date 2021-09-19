@@ -908,7 +908,7 @@ function _path_cut_getpaths(path, cutlist, closed) =
         if (!approx(cutlist[0][0], path[cutlist[0][1]-1])) cutlist[0][0]
       ],
       for(i=[0:1:cuts-2])
-          cutlist[i][0]==cutlist[i+1][0] ? []
+          cutlist[i][0]==cutlist[i+1][0] && cutlist[i][1]==cutlist[i+1][1] ? []
           :
           [ if (!approx(cutlist[i][0], select(path,cutlist[i][1]))) cutlist[i][0],
             each slice(path, cutlist[i][1], cutlist[i+1][1]-1),
