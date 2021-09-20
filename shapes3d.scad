@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////
-// LibFile: shapes.scad
+// LibFile: shapes3d.scad
 //   Common useful shapes and structured objects.
 // Includes:
 //   include <BOSL2/std.scad>

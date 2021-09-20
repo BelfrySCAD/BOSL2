@@ -757,8 +757,8 @@ function _assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
 ///   Cuts a path at a list of distances from the first point in the path.  Returns a list of the cut
 ///   points and indices of the next point in the path after that point.  So for example, a return
 ///   value entry of [[2,3], 5] means that the cut point was [2,3] and the next point on the path after
-///   this point is path[5].  If the path is too short then path_cut_points returns undef.  If you set
-///   `direction` to true then `path_cut_points` will also return the tangent vector to the path and a normal
+///   this point is path[5].  If the path is too short then _path_cut_points returns undef.  If you set
+///   `direction` to true then `_path_cut_points` will also return the tangent vector to the path and a normal
 ///   vector to the path.  It tries to find a normal vector that is coplanar to the path near the cut
 ///   point.  If this fails it will return a normal vector parallel to the xy plane.  The output with
 ///   direction vectors will be `[point, next_index, tangent, normal]`.
