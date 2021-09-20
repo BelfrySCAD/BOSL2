@@ -142,6 +142,9 @@ function affine3d_to_2d(m) =
 //   Applies the specified transformation matrix to a point, pointlist, bezier patch or VNF.
 //   Both inputs can be 2D or 3D, and it is also allowed to supply 3D transformations with 2D
 //   data as long as the the only action on the z coordinate is a simple scaling.
+//   .
+//   If you construct your own matrices you can also use a transform that acts like a projection
+//   with fewer rows to produce lower dimensional output.  
 // Arguments:
 //   transform = The 2D or 3D transformation matrix to apply to the point/points.
 //   points = The point, pointlist, bezier patch, or VNF to apply the transformation to.
@@ -173,14 +176,15 @@ function apply(transform,points) =
       ? /* BezPatch */ [for (x=points) apply(transform,x)] :
     let(
         tdim = len(transform[0])-1,
-        datadim = len(points[0])
+        datadim = len(points[0]),
+        outdim = min(datadim,len(transform)),
+        matrix = [for(i=[0:1:tdim]) [for(j=[0:1:outdim-1]) transform[j][i]]]
     )
-    tdim == 3 && datadim == 3 ? [for(p=points) point3d(transform*concat(p,[1]))] :
-    tdim == 2 && datadim == 2 ? [for(p=points) point2d(transform*concat(p,[1]))] :
-    tdim == 3 && datadim == 2 ?
+    tdim==datadim && (datadim==3 || datadim==2) ? [for(p=points) concat(p,1)] * matrix
+  : tdim == 3 && datadim == 2 ?
         assert(is_2d_transform(transform), str("Transforms is 3d but points are 2d"))
-        [for(p=points) point2d(transform*concat(p,[0,1]))] :
-        assert(false, str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
+        [for(p=points) concat(p,[0,1])]*matrix 
+  : assert(false, str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
 
 
 // Function: rot_decode()
@@ -882,64 +886,6 @@ function affine3d_rot_from_to(from, to) =
     ];
 
 
-// Function: affine3d_frame_map()
-// Usage:
-//   map = affine3d_frame_map(v1, v2, v3, [reverse=]);
-//   map = affine3d_frame_map(x=VECTOR1, y=VECTOR2, [reverse=]);
-//   map = affine3d_frame_map(x=VECTOR1, z=VECTOR2, [reverse=]);
-//   map = affine3d_frame_map(y=VECTOR1, z=VECTOR2, [reverse=]);
-// Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), xrot(), yrot(), zrot(), affine2d_zrot()
-// Description:
-//   Returns a transformation that maps one coordinate frame to another.  You must specify two or
-//   three of `x`, `y`, and `z`.  The specified axes are mapped to the vectors you supplied.  If you
-//   give two inputs, the third vector is mapped to the appropriate normal to maintain a right hand
-//   coordinate system.  If the vectors you give are orthogonal the result will be a rotation and the
-//   `reverse` parameter will supply the inverse map, which enables you to map two arbitrary
-//   coordinate systems to each other by using the canonical coordinate system as an intermediary.
-//   You cannot use the `reverse` option with non-orthogonal inputs.
-// Arguments:
-//   x = Destination 3D vector for x axis.
-//   y = Destination 3D vector for y axis.
-//   z = Destination 3D vector for z axis.
-//   reverse = reverse direction of the map for orthogonal inputs.  Default: false
-// Example:
-//   T = affine3d_frame_map(x=[1,1,0], y=[-1,1,0]);   // This map is just a rotation around the z axis
-// Example:
-//   T = affine3d_frame_map(x=[1,0,0], y=[1,1,0]);    // This map is not a rotation because x and y aren't orthogonal
-// Example:
-//   // The next map sends [1,1,0] to [0,1,1] and [-1,1,0] to [0,-1,1]
-//   T = affine3d_frame_map(x=[0,1,1], y=[0,-1,1]) * affine3d_frame_map(x=[1,1,0], y=[-1,1,0],reverse=true);
-function affine3d_frame_map(x,y,z, reverse=false) =
-    assert(num_defined([x,y,z])>=2, "Must define at least two inputs")
-    let(
-        xvalid = is_undef(x) || (is_vector(x) && len(x)==3),
-        yvalid = is_undef(y) || (is_vector(y) && len(y)==3),
-        zvalid = is_undef(z) || (is_vector(z) && len(z)==3)
-    )
-    assert(xvalid,"Input x must be a length 3 vector")
-    assert(yvalid,"Input y must be a length 3 vector")
-    assert(zvalid,"Input z must be a length 3 vector")
-    let(
-        x = is_undef(x)? undef : unit(x,RIGHT),
-        y = is_undef(y)? undef : unit(y,BACK),
-        z = is_undef(z)? undef : unit(z,UP),
-        map = is_undef(x)? [cross(y,z), y, z] :
-            is_undef(y)? [x, cross(z,x), z] :
-            is_undef(z)? [x, y, cross(x,y)] :
-            [x, y, z]
-    )
-    reverse? (
-        let(
-            ocheck = (
-                approx(map[0]*map[1],0) &&
-                approx(map[0]*map[2],0) &&
-                approx(map[1]*map[2],0)
-            )
-        )
-        assert(ocheck, "Inputs must be orthogonal when reverse==true")
-        [for (r=map) [for (c=r) c, 0], [0,0,0,1]]
-    ) : [for (r=transpose(map)) [for (c=r) c, 0], [0,0,0,1]];
 
 
 

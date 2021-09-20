@@ -387,6 +387,25 @@ cube([20,11,45], center=true, $tags="hole")
     cube([40,10,90], center=true, $tags="body");
 ```
 
+Tags (and therefore tag-based operations like `diff()`) only work correctly with attachable children.
+However, a number of built-in modules for making shapes are *not* attachable.  Some notable
+non-attachable modules are `circle()`, `square()`, `text()`, `linear_extrude()`, `rotate_extrude()`,
+`polygon()`, `polyhedron()`, `import()`, `surface()`, `union()`, `difference()`, `intersection()`,
+`offset()`, `hull()`, and `minkowski()`.
+
+To allow you to use tags-based operations with non-attachable shapes, you can wrap them with the
+`tags()` module to specify their tags.  For example:
+
+```openscad
+diff("hole")
+cuboid(50)
+  attach(TOP)
+    tags("hole")
+      rotate_extrude()
+        right(15)
+          square(10,center=true);
+```
+
 ### `intersect(a, <b>, <keep>)`
 
 To perform an intersection of attachables, you can use the `intersect()` module.  If given one
@@ -481,9 +500,9 @@ rounding a corner:
 ```openscad
 module round_corner(r) difference() {
     translate(-[1,1,1])
-    	cube(r+1);
+        cube(r+1);
     translate([r,r,r])
-    	sphere(r=r, style="aligned", $fn=quantup(segs(r),4));
+        sphere(r=r, style="aligned", $fn=quantup(segs(r),4));
 }
 round_corner(r=10);
 ```
@@ -493,9 +512,9 @@ You can use that mask to round various corners of a cube:
 ```openscad
 module round_corner(r) difference() {
     translate(-[1,1,1])
-    	cube(r+1);
+        cube(r+1);
     translate([r,r,r])
-    	sphere(r=r, style="aligned", $fn=quantup(segs(r),4));
+        sphere(r=r, style="aligned", $fn=quantup(segs(r),4));
 }
 diff("mask")
 cube([50,60,70],center=true)
@@ -509,9 +528,9 @@ You can use `edge_mask()` and `corner_mask()` together as well:
 ```openscad
 module round_corner(r) difference() {
     translate(-[1,1,1])
-    	cube(r+1);
+        cube(r+1);
     translate([r,r,r])
-    	sphere(r=r, style="aligned", $fn=quantup(segs(r),4));
+        sphere(r=r, style="aligned", $fn=quantup(segs(r),4));
 }
 module round_edge(l,r) difference() {
     translate([-1,-1,-l/2])

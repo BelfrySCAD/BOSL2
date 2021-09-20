@@ -7,7 +7,7 @@
 
 
 //////////////////////////////////////////////////////////////////////
-// Section: Translational Distributors
+// Section: Translating copies of all the children
 //////////////////////////////////////////////////////////////////////
 
 
@@ -267,185 +267,6 @@ module zcopies(spacing, n, l, sp)
 
 
 
-// Module: distribute()
-//
-// Description:
-//   Spreads out each individual child along the direction `dir`.
-//   Every child is placed at a different position, in order.
-//   This is useful for laying out groups of disparate objects
-//   where you only really care about the spacing between them.
-//
-// Usage:
-//   distribute(spacing, dir, [sizes]) ...
-//   distribute(l, dir, [sizes]) ...
-//
-// Arguments:
-//   spacing = Spacing to add between each child. (Default: 10.0)
-//   sizes = Array containing how much space each child will need.
-//   dir = Vector direction to distribute copies along.
-//   l = Length to distribute copies along.
-//
-// Side Effects:
-//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
-//   `$idx` is set to the index number of each child being copied.
-//
-// Example:
-//   distribute(sizes=[100, 30, 50], dir=UP) {
-//       sphere(r=50);
-//       cube([10,20,30], center=true);
-//       cylinder(d=30, h=50, center=true);
-//   }
-module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
-{
-    gaps = ($children < 2)? [0] :
-        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
-        [for (i=[0:1:$children-2]) 0];
-    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
-    gaps2 = [for (gap = gaps) gap+spc];
-    spos = dir * -sum(gaps2)/2;
-    spacings = cumsum([0, each gaps2]);
-    for (i=[0:1:$children-1]) {
-        $pos = spos + spacings[i] * dir;
-        $idx = i;
-        translate($pos) children(i);
-    }
-}
-
-
-// Module: xdistribute()
-//
-// Description:
-//   Spreads out each individual child along the X axis.
-//   Every child is placed at a different position, in order.
-//   This is useful for laying out groups of disparate objects
-//   where you only really care about the spacing between them.
-//
-// Usage:
-//   xdistribute(spacing, [sizes]) ...
-//   xdistribute(l, [sizes]) ...
-//
-// Arguments:
-//   spacing = spacing between each child. (Default: 10.0)
-//   sizes = Array containing how much space each child will need.
-//   l = Length to distribute copies along.
-//
-// Side Effects:
-//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
-//   `$idx` is set to the index number of each child being copied.
-//
-// Example:
-//   xdistribute(sizes=[100, 10, 30], spacing=40) {
-//       sphere(r=50);
-//       cube([10,20,30], center=true);
-//       cylinder(d=30, h=50, center=true);
-//   }
-module xdistribute(spacing=10, sizes=undef, l=undef)
-{
-    dir = RIGHT;
-    gaps = ($children < 2)? [0] :
-        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
-        [for (i=[0:1:$children-2]) 0];
-    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
-    gaps2 = [for (gap = gaps) gap+spc];
-    spos = dir * -sum(gaps2)/2;
-    spacings = cumsum([0, each gaps2]);
-    for (i=[0:1:$children-1]) {
-        $pos = spos + spacings[i] * dir;
-        $idx = i;
-        translate($pos) children(i);
-    }
-}
-
-
-// Module: ydistribute()
-//
-// Description:
-//   Spreads out each individual child along the Y axis.
-//   Every child is placed at a different position, in order.
-//   This is useful for laying out groups of disparate objects
-//   where you only really care about the spacing between them.
-//
-// Usage:
-//   ydistribute(spacing, [sizes])
-//   ydistribute(l, [sizes])
-//
-// Arguments:
-//   spacing = spacing between each child. (Default: 10.0)
-//   sizes = Array containing how much space each child will need.
-//   l = Length to distribute copies along.
-//
-// Side Effects:
-//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
-//   `$idx` is set to the index number of each child being copied.
-//
-// Example:
-//   ydistribute(sizes=[30, 20, 100], spacing=40) {
-//       cylinder(d=30, h=50, center=true);
-//       cube([10,20,30], center=true);
-//       sphere(r=50);
-//   }
-module ydistribute(spacing=10, sizes=undef, l=undef)
-{
-    dir = BACK;
-    gaps = ($children < 2)? [0] :
-        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
-        [for (i=[0:1:$children-2]) 0];
-    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
-    gaps2 = [for (gap = gaps) gap+spc];
-    spos = dir * -sum(gaps2)/2;
-    spacings = cumsum([0, each gaps2]);
-    for (i=[0:1:$children-1]) {
-        $pos = spos + spacings[i] * dir;
-        $idx = i;
-        translate($pos) children(i);
-    }
-}
-
-
-// Module: zdistribute()
-//
-// Description:
-//   Spreads out each individual child along the Z axis.
-//   Every child is placed at a different position, in order.
-//   This is useful for laying out groups of disparate objects
-//   where you only really care about the spacing between them.
-//
-// Usage:
-//   zdistribute(spacing, [sizes])
-//   zdistribute(l, [sizes])
-//
-// Arguments:
-//   spacing = spacing between each child. (Default: 10.0)
-//   sizes = Array containing how much space each child will need.
-//   l = Length to distribute copies along.
-//
-// Side Effects:
-//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
-//   `$idx` is set to the index number of each child being copied.
-//
-// Example:
-//   zdistribute(sizes=[30, 20, 100], spacing=40) {
-//       cylinder(d=30, h=50, center=true);
-//       cube([10,20,30], center=true);
-//       sphere(r=50);
-//   }
-module zdistribute(spacing=10, sizes=undef, l=undef)
-{
-    dir = UP;
-    gaps = ($children < 2)? [0] :
-        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
-        [for (i=[0:1:$children-2]) 0];
-    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
-    gaps2 = [for (gap = gaps) gap+spc];
-    spos = dir * -sum(gaps2)/2;
-    spacings = cumsum([0, each gaps2]);
-    for (i=[0:1:$children-1]) {
-        $pos = spos + spacings[i] * dir;
-        $idx = i;
-        translate($pos) children(i);
-    }
-}
-
 
 
 // Module: grid2d()
@@ -632,7 +453,7 @@ module grid3d(xa=[0], ya=[0], za=[0], n=undef, spacing=undef)
 
 
 //////////////////////////////////////////////////////////////////////
-// Section: Rotational Distributors
+// Section: Rotating copies of all children
 //////////////////////////////////////////////////////////////////////
 
 
@@ -1018,10 +839,139 @@ module ovoid_spread(r=undef, d=undef, n=100, cone_ang=90, scale=[1,1,1], perp=tr
     }
 }
 
+// Section: Placing copies of all children on a path
+
+
+// Module: path_spread()
+//
+// Description:
+//   Uniformly spreads out copies of children along a path.  Copies are located based on path length.  If you specify `n` but not spacing then `n` copies will be placed
+//   with one at path[0] of `closed` is true, or spanning the entire path from start to end if `closed` is false.
+//   If you specify `spacing` but not `n` then copies will spread out starting from one at path[0] for `closed=true` or at the path center for open paths.
+//   If you specify `sp` then the copies will start at `sp`.
+//
+// Usage:
+//   path_spread(path), [n], [spacing], [sp], [rotate_children], [closed]) ...
+//
+// Arguments:
+//   path = the path where children are placed
+//   n = number of copies
+//   spacing = space between copies
+//   sp = if given, copies will start distance sp from the path start and spread beyond that point
+//
+// Side Effects:
+//   `$pos` is set to the center of each copy
+//   `$idx` is set to the index number of each copy.  In the case of closed paths the first copy is at `path[0]` unless you give `sp`.
+//   `$dir` is set to the direction vector of the path at the point where the copy is placed.
+//   `$normal` is set to the direction of the normal vector to the path direction that is coplanar with the path at this point
+//
+// Example(2D):
+//   spiral = [for(theta=[0:360*8]) theta * [cos(theta), sin(theta)]]/100;
+//   stroke(spiral,width=.25);
+//   color("red") path_spread(spiral, n=100) circle(r=1);
+// Example(2D):
+//   circle = regular_ngon(n=64, or=10);
+//   stroke(circle,width=1,closed=true);
+//   color("green") path_spread(circle, n=7, closed=true) circle(r=1+$idx/3);
+// Example(2D):
+//   heptagon = regular_ngon(n=7, or=10);
+//   stroke(heptagon, width=1, closed=true);
+//   color("purple") path_spread(heptagon, n=9, closed=true) rect([0.5,3],anchor=FRONT);
+// Example(2D): Direction at the corners is the average of the two adjacent edges
+//   heptagon = regular_ngon(n=7, or=10);
+//   stroke(heptagon, width=1, closed=true);
+//   color("purple") path_spread(heptagon, n=7, closed=true) rect([0.5,3],anchor=FRONT);
+// Example(2D):  Don't rotate the children
+//   heptagon = regular_ngon(n=7, or=10);
+//   stroke(heptagon, width=1, closed=true);
+//   color("red") path_spread(heptagon, n=9, closed=true, rotate_children=false) rect([0.5,3],anchor=FRONT);
+// Example(2D): Open path, specify `n`
+//   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
+//   stroke(sinwav,width=.1);
+//   color("red") path_spread(sinwav, n=5) rect([.2,1.5],anchor=FRONT);
+// Example(2D): Open path, specify `n` and `spacing`
+//   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
+//   stroke(sinwav,width=.1);
+//   color("red") path_spread(sinwav, n=5, spacing=1) rect([.2,1.5],anchor=FRONT);
+// Example(2D): Closed path, specify `n` and `spacing`, copies centered around circle[0]
+//   circle = regular_ngon(n=64,or=10);
+//   stroke(circle,width=.1,closed=true);
+//   color("red") path_spread(circle, n=10, spacing=1, closed=true) rect([.2,1.5],anchor=FRONT);
+// Example(2D): Open path, specify `spacing`
+//   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
+//   stroke(sinwav,width=.1);
+//   color("red") path_spread(sinwav, spacing=5) rect([.2,1.5],anchor=FRONT);
+// Example(2D): Open path, specify `sp`
+//   sinwav = [for(theta=[0:360]) 5*[theta/180, sin(theta)]];
+//   stroke(sinwav,width=.1);
+//   color("red") path_spread(sinwav, n=5, sp=18) rect([.2,1.5],anchor=FRONT);
+// Example(2D):
+//   wedge = arc(angle=[0,100], r=10, $fn=64);
+//   difference(){
+//     polygon(concat([[0,0]],wedge));
+//     path_spread(wedge,n=5,spacing=3) fwd(.1) rect([1,4],anchor=FRONT);
+//   }
+// Example(Spin,VPD=115): 3d example, with children rotated into the plane of the path
+//   tilted_circle = lift_plane([[0,0,0], [5,0,5], [0,2,3]],regular_ngon(n=64, or=12));
+//   path_sweep(regular_ngon(n=16,or=.1),tilted_circle);
+//   path_spread(tilted_circle, n=15,closed=true) {
+//      color("blue") cyl(h=3,r=.2, anchor=BOTTOM);      // z-aligned cylinder
+//      color("red") xcyl(h=10,r=.2, anchor=FRONT+LEFT); // x-aligned cylinder
+//   }
+// Example(Spin,VPD=115): 3d example, with rotate_children set to false
+//   tilted_circle = lift_plane([[0,0,0], [5,0,5], [0,2,3]], regular_ngon(n=64, or=12));
+//   path_sweep(regular_ngon(n=16,or=.1),tilted_circle);
+//   path_spread(tilted_circle, n=25,rotate_children=false,closed=true) {
+//      color("blue") cyl(h=3,r=.2, anchor=BOTTOM);       // z-aligned cylinder
+//      color("red") xcyl(h=10,r=.2, anchor=FRONT+LEFT);  // x-aligned cylinder
+//   }
+module path_spread(path, n, spacing, sp=undef, rotate_children=true, closed=false)
+{
+    length = path_length(path,closed);
+    distances =
+        is_def(sp)? (   // Start point given
+            is_def(n) && is_def(spacing)? count(n,sp,spacing) :
+            is_def(n)? lerpn(sp, length, n) :
+            list([sp:spacing:length])
+        )
+      : is_def(n) && is_undef(spacing)? lerpn(0,length,n,!closed) // N alone given
+      : (      // No start point and spacing is given, N maybe given
+        let(
+            n = is_def(n)? n : floor(length/spacing)+(closed?0:1),
+            ptlist = count(n,0,spacing),
+            listcenter = mean(ptlist)
+        ) closed?
+            sort([for(entry=ptlist) posmod(entry-listcenter,length)]) :
+            [for(entry=ptlist) entry + length/2-listcenter ]
+    );
+    distOK = is_def(n) || (min(distances)>=0 && max(distances)<=length);
+    assert(distOK,"Cannot fit all of the copies");
+    cutlist = _path_cut_points(path, distances, closed, direction=true);
+    planar = len(path[0])==2;
+    if (true) for(i=[0:1:len(cutlist)-1]) {
+        $pos = cutlist[i][0];
+        $idx = i;
+        $dir = rotate_children ? (planar?[1,0]:[1,0,0]) : cutlist[i][2];
+        $normal = rotate_children? (planar?[0,1]:[0,0,1]) : cutlist[i][3];
+        translate($pos) {
+            if (rotate_children) {
+                if(planar) {
+                    rot(from=[0,1],to=cutlist[i][3]) children();
+                } else {
+                    frame_map(x=cutlist[i][2], z=cutlist[i][3])
+                        children();
+                }
+            } else {
+                children();
+            }
+        }
+    }
+}
+
 
 
 //////////////////////////////////////////////////////////////////////
-// Section: Reflectional Distributors
+// Section: Making a copy of all children with reflection
 //////////////////////////////////////////////////////////////////////
 
 
@@ -1176,6 +1126,190 @@ module zflip_copy(offset=0, z=0)
 {
     mirror_copy(v=[0,0,1], offset=offset, cp=[0,0,z]) children();
 }
+
+////////////////////
+// Section: Distributing children individually along a line
+///////////////////
+
+// Module: distribute()
+//
+// Description:
+//   Spreads out each individual child along the direction `dir`.
+//   Every child is placed at a different position, in order.
+//   This is useful for laying out groups of disparate objects
+//   where you only really care about the spacing between them.
+//
+// Usage:
+//   distribute(spacing, dir, [sizes]) ...
+//   distribute(l, dir, [sizes]) ...
+//
+// Arguments:
+//   spacing = Spacing to add between each child. (Default: 10.0)
+//   sizes = Array containing how much space each child will need.
+//   dir = Vector direction to distribute copies along.
+//   l = Length to distribute copies along.
+//
+// Side Effects:
+//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
+//   `$idx` is set to the index number of each child being copied.
+//
+// Example:
+//   distribute(sizes=[100, 30, 50], dir=UP) {
+//       sphere(r=50);
+//       cube([10,20,30], center=true);
+//       cylinder(d=30, h=50, center=true);
+//   }
+module distribute(spacing=undef, sizes=undef, dir=RIGHT, l=undef)
+{
+    gaps = ($children < 2)? [0] :
+        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+        [for (i=[0:1:$children-2]) 0];
+    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
+    gaps2 = [for (gap = gaps) gap+spc];
+    spos = dir * -sum(gaps2)/2;
+    spacings = cumsum([0, each gaps2]);
+    for (i=[0:1:$children-1]) {
+        $pos = spos + spacings[i] * dir;
+        $idx = i;
+        translate($pos) children(i);
+    }
+}
+
+
+// Module: xdistribute()
+//
+// Description:
+//   Spreads out each individual child along the X axis.
+//   Every child is placed at a different position, in order.
+//   This is useful for laying out groups of disparate objects
+//   where you only really care about the spacing between them.
+//
+// Usage:
+//   xdistribute(spacing, [sizes]) ...
+//   xdistribute(l, [sizes]) ...
+//
+// Arguments:
+//   spacing = spacing between each child. (Default: 10.0)
+//   sizes = Array containing how much space each child will need.
+//   l = Length to distribute copies along.
+//
+// Side Effects:
+//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
+//   `$idx` is set to the index number of each child being copied.
+//
+// Example:
+//   xdistribute(sizes=[100, 10, 30], spacing=40) {
+//       sphere(r=50);
+//       cube([10,20,30], center=true);
+//       cylinder(d=30, h=50, center=true);
+//   }
+module xdistribute(spacing=10, sizes=undef, l=undef)
+{
+    dir = RIGHT;
+    gaps = ($children < 2)? [0] :
+        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+        [for (i=[0:1:$children-2]) 0];
+    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
+    gaps2 = [for (gap = gaps) gap+spc];
+    spos = dir * -sum(gaps2)/2;
+    spacings = cumsum([0, each gaps2]);
+    for (i=[0:1:$children-1]) {
+        $pos = spos + spacings[i] * dir;
+        $idx = i;
+        translate($pos) children(i);
+    }
+}
+
+
+// Module: ydistribute()
+//
+// Description:
+//   Spreads out each individual child along the Y axis.
+//   Every child is placed at a different position, in order.
+//   This is useful for laying out groups of disparate objects
+//   where you only really care about the spacing between them.
+//
+// Usage:
+//   ydistribute(spacing, [sizes])
+//   ydistribute(l, [sizes])
+//
+// Arguments:
+//   spacing = spacing between each child. (Default: 10.0)
+//   sizes = Array containing how much space each child will need.
+//   l = Length to distribute copies along.
+//
+// Side Effects:
+//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
+//   `$idx` is set to the index number of each child being copied.
+//
+// Example:
+//   ydistribute(sizes=[30, 20, 100], spacing=40) {
+//       cylinder(d=30, h=50, center=true);
+//       cube([10,20,30], center=true);
+//       sphere(r=50);
+//   }
+module ydistribute(spacing=10, sizes=undef, l=undef)
+{
+    dir = BACK;
+    gaps = ($children < 2)? [0] :
+        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+        [for (i=[0:1:$children-2]) 0];
+    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
+    gaps2 = [for (gap = gaps) gap+spc];
+    spos = dir * -sum(gaps2)/2;
+    spacings = cumsum([0, each gaps2]);
+    for (i=[0:1:$children-1]) {
+        $pos = spos + spacings[i] * dir;
+        $idx = i;
+        translate($pos) children(i);
+    }
+}
+
+
+// Module: zdistribute()
+//
+// Description:
+//   Spreads out each individual child along the Z axis.
+//   Every child is placed at a different position, in order.
+//   This is useful for laying out groups of disparate objects
+//   where you only really care about the spacing between them.
+//
+// Usage:
+//   zdistribute(spacing, [sizes])
+//   zdistribute(l, [sizes])
+//
+// Arguments:
+//   spacing = spacing between each child. (Default: 10.0)
+//   sizes = Array containing how much space each child will need.
+//   l = Length to distribute copies along.
+//
+// Side Effects:
+//   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
+//   `$idx` is set to the index number of each child being copied.
+//
+// Example:
+//   zdistribute(sizes=[30, 20, 100], spacing=40) {
+//       cylinder(d=30, h=50, center=true);
+//       cube([10,20,30], center=true);
+//       sphere(r=50);
+//   }
+module zdistribute(spacing=10, sizes=undef, l=undef)
+{
+    dir = UP;
+    gaps = ($children < 2)? [0] :
+        !is_undef(sizes)? [for (i=[0:1:$children-2]) sizes[i]/2 + sizes[i+1]/2] :
+        [for (i=[0:1:$children-2]) 0];
+    spc = !is_undef(l)? ((l - sum(gaps)) / ($children-1)) : default(spacing, 10);
+    gaps2 = [for (gap = gaps) gap+spc];
+    spos = dir * -sum(gaps2)/2;
+    spacings = cumsum([0, each gaps2]);
+    for (i=[0:1:$children-1]) {
+        $pos = spos + spacings[i] * dir;
+        $idx = i;
+        translate($pos) children(i);
+    }
+}
+
 
 
 

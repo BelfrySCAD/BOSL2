@@ -253,9 +253,11 @@ easier to select colors using other color schemes.  You can use the HSL or Hue-S
 color scheme with the `HSL()` module:
 
 ```openscad
-for (h=[0:0.1:1], s=[0:0.1:1], l=[0:0.1:1]) {
-    translate(100*[h,s,l]) {
-        HSL(h*360,1-s,l) cube(10,center=true);
+n = 10; size = 100/n;
+for (a=count(n), b=count(n), c=count(n)) {
+    let( h=360*a/n, s=1-b/(n-1), l=c/(n-1))
+    translate(size*[a,b,c]) {
+        HSL(h,s,l) cube(size);
     }
 }
 ```
@@ -263,9 +265,11 @@ for (h=[0:0.1:1], s=[0:0.1:1], l=[0:0.1:1]) {
 You can use the HSV or Hue-Saturation-Value color scheme with the `HSV()` module:
 
 ```openscad
-for (h=[0:0.1:1], s=[0:0.1:1], v=[0:0.1:1]) {
-    translate(100*[h,s,v]) {
-        HSV(h*360,1-s,v) cube(10,center=true);
+n = 10; size = 100/n;
+for (a=count(n), b=count(n), c=count(n)) {
+    let( h=360*a/n, s=1-b/(n-1), v=c/(n-1))
+    translate(size*[a,b,c]) {
+        HSV(h,s,v) cube(size);
     }
 }
 ```

@@ -161,12 +161,12 @@ function last(list) =
 // Arguments:
 //   list = The list to get the head of.
 //   to = The last index to include.  If negative, adds the list length to it.  ie: -1 is the last list item.
-// Examples:
-//   hlist = list_head(["foo", "bar", "baz"]);  // Returns: ["foo", "bar"]
-//   hlist = list_head(["foo", "bar", "baz"], -3); // Returns: ["foo"]
-//   hlist = list_head(["foo", "bar", "baz"], 2);  // Returns: ["foo","bar"]
-//   hlist = list_head(["foo", "bar", "baz"], -5); // Returns: []
-//   hlist = list_head(["foo", "bar", "baz"], 5);  // Returns: ["foo","bar","baz"]
+// Example:
+//   hlist1 = list_head(["foo", "bar", "baz"]);  // Returns: ["foo", "bar"]
+//   hlist2 = list_head(["foo", "bar", "baz"], -3); // Returns: ["foo"]
+//   hlist3 = list_head(["foo", "bar", "baz"], 2);  // Returns: ["foo","bar"]
+//   hlist4 = list_head(["foo", "bar", "baz"], -5); // Returns: []
+//   hlist5 = list_head(["foo", "bar", "baz"], 5);  // Returns: ["foo","bar","baz"]
 function list_head(list, to=-2) =
    assert(is_list(list))
    assert(is_finite(to))
@@ -188,12 +188,12 @@ function list_head(list, to=-2) =
 // Arguments:
 //   list = The list to get the tail of.
 //   from = The first index to include.  If negative, adds the list length to it.  ie: -1 is the last list item.
-// Examples:
-//   tlist = list_tail(["foo", "bar", "baz"]);  // Returns: ["bar", "baz"]
-//   tlist = list_tail(["foo", "bar", "baz"], -1); // Returns: ["baz"]
-//   tlist = list_tail(["foo", "bar", "baz"], 2);  // Returns: ["baz"]
-//   tlist = list_tail(["foo", "bar", "baz"], -5); // Returns: ["foo","bar","baz"]
-//   tlist = list_tail(["foo", "bar", "baz"], 5);  // Returns: []
+// Example:
+//   tlist1 = list_tail(["foo", "bar", "baz"]);  // Returns: ["bar", "baz"]
+//   tlist2 = list_tail(["foo", "bar", "baz"], -1); // Returns: ["baz"]
+//   tlist3 = list_tail(["foo", "bar", "baz"], 2);  // Returns: ["baz"]
+//   tlist4 = list_tail(["foo", "bar", "baz"], -5); // Returns: ["foo","bar","baz"]
+//   tlist5 = list_tail(["foo", "bar", "baz"], 5);  // Returns: []
 function list_tail(list, from=1) =
    assert(is_list(list))
    assert(is_finite(from))
@@ -236,7 +236,7 @@ function list(l) = is_list(l)? l : [for (x=l) x];
 //   value = The value or list to coerce into a list.
 //   n = The number of items in the coerced list.  Default: 1
 //   fill = The value to pad the coerced list with, after the firt value.  Default: undef (pad with copies of `value`)
-// Examples:
+// Example:
 //   x = force_list([3,4,5]);  // Returns: [3,4,5]
 //   y = force_list(5);  // Returns: [5]
 //   z = force_list(7, n=3);  // Returns: [7,7,7]
@@ -509,7 +509,7 @@ function list_rotate(list,n=1) =
 //   list = The list to deduplicate.
 //   closed = If true, drops trailing items if they match the first list item.
 //   eps = The maximum tolerance between items.
-// Examples:
+// Example:
 //   a = deduplicate([8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3,8]
 //   b = deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3]
 //   c = deduplicate("Hello");  // Returns: "Helo"
@@ -539,7 +539,7 @@ function deduplicate(list, closed=false, eps=EPSILON) =
 //   indices = The list of indices to deduplicate.
 //   closed = If true, drops trailing indices if what they index matches what the first index indexes.
 //   eps = The maximum difference to allow between numbers or vectors.
-// Examples:
+// Example:
 //   a = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1]);  // Returns: [1,4,3,2,0,1]
 //   b = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1], closed=true);  // Returns: [1,4,3,2,0]
 //   c = deduplicate_indexed([[7,undef],[7,undef],[1,4],[1,4],[1,4+1e-12]],eps=0);    // Returns: [0,2,4]
@@ -592,7 +592,7 @@ function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
 //   list = list whose entries will be repeated
 //   N = scalar total number of points desired or vector requesting N[i] copies of vertex i.  
 //   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform points that may not match the number of points requested.  Default: True
-// Examples:
+// Example:
 //   list = [0,1,2,3];
 //   a = repeat_entries(list, 6);  // Returns: [0,0,1,2,2,3]
 //   b = repeat_entries(list, 6, exact=false);  // Returns: [0,0,1,1,2,2,3,3]
@@ -629,7 +629,7 @@ function repeat_entries(list, N, exact=true) =
 //   values = List of values to set.
 //   dflt = Default value to store in sparse skipped indices.
 //   minlen = Minimum length to expand list to.
-// Examples:
+// Example:
 //   a = list_set([2,3,4,5], 2, 21);  // Returns: [2,3,21,5]
 //   b = list_set([2,3,4,5], [1,3], [81,47]);  // Returns: [2,81,4,47]
 function list_set(list=[],indices,values,dflt=0,minlen=0) = 
@@ -1369,11 +1369,10 @@ function triplet(list, wrap=false) =
 // Function: combinations()
 // Usage:
 //   list = combinations(l, [n]);
-//   for (p = combinations(l, [n])) ...
 // Topics: List Handling, Iteration
 // See Also: idx(), enumerate(), pair(), triplet(), permutations()
 // Description:
-//   Returns an ordered list of every unique permutation of `n` items out of the given list `l`.
+//   Returns a list of all of the (unordered) combinations of `n` items out of the given list `l`.
 //   For the list `[1,2,3,4]`, with `n=2`, this will return `[[1,2], [1,3], [1,4], [2,3], [2,4], [3,4]]`.
 //   For the list `[1,2,3,4]`, with `n=3`, this will return `[[1,2,3], [1,2,4], [1,3,4], [2,3,4]]`.
 // Arguments:
@@ -1395,21 +1394,17 @@ function combinations(l,n=2,_s=0) =
 // Function: permutations()
 // Usage:
 //   list = permutations(l, [n]);
-//   for (p = permutations(l, [n])) ...
 // Topics: List Handling, Iteration
 // See Also: idx(), enumerate(), pair(), triplet(), combinations()
 // Description:
-//   Returns an ordered list of every unique permutation of `n` items out of the given list `l`.
-//   For the list `[1,2,3,4]`, with `n=2`, this will return `[[1,2], [1,3], [1,4], [2,3], [2,4], [3,4]]`.
-//   For the list `[1,2,3,4]`, with `n=3`, this will return `[[1,2,3], [1,2,4], [1,3,4], [2,3,4]]`.
+//   Returns a list of all of the (ordered) permutation `n` items out of the given list `l`.  
+//   For the list `[1,2,3]`, with `n=2`, this will return `[[1,2],[1,3],[2,1],[2,3],[3,1],[3,2]]`
+//   For the list `[1,2,3]`, with `n=3`, this will return `[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]`
 // Arguments:
 //   l = The list to provide permutations for.
 //   n = The number of items in each permutation. Default: 2
 // Example:
-//   pairs = permutations([3,4,5,6]);  // Returns: [[3,4],[3,5],[3,6],[4,5],[4,6],[5,6]]
-//   triplets = permutations([3,4,5,6],n=3);  // Returns: [[3,4,5],[3,4,6],[3,5,6],[4,5,6]]
-// Example(2D):
-//   for (p=permutations(regular_ngon(n=7,d=100))) stroke(p);
+//   pairs = permutations([3,4,5,6]);  // // Returns: [[3,4],[3,5],[3,6],[4,3],[4,5],[4,6],[5,3],[5,4],[5,6],[6,3],[6,4],[6,5]]
 function permutations(l,n=2) =
     assert(is_list(l), "Invalid list." )
     assert( is_finite(n) && n>=1 && n<=len(l), "Invalid number `n`." )
@@ -1895,7 +1890,7 @@ function _array_dim_recurse(v) =
 // Arguments:
 //   v = Array to get dimensions of.
 //   depth = Dimension to get size of.  If not given, returns a list of dimension lengths.
-// Examples:
+// Example:
 //   a = array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]]);     // Returns [2,2,3]
 //   b = array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 0);  // Returns 2
 //   c = array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 2);  // Returns 3

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
-// LibFile: common.scad
-//   Common functions used in argument processing.
+// LibFile: utility.scad
+//   Utility functions used in argument processing.
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
@@ -18,7 +18,7 @@
 // Description:
 //   Returns a string representing the type of the value.  One of "undef", "boolean", "number", "nan", "string", "list", "range", "function" or "invalid".
 //   Some malformed "ranges", like '[0:NAN:INF]' and '[0:"a":INF]', may be classified as "undef" or "invalid".
-// Examples:
+// Example:
 //   typ = typeof(undef);  // Returns: "undef"
 //   typ = typeof(true);  // Returns: "boolean"
 //   typ = typeof(42);  // Returns: "number"
@@ -294,7 +294,7 @@ function default(v,dflt=undef) = is_undef(v)? dflt : v;
 // Arguments:
 //   v = The list whose items are being checked.
 //   recursive = If true, sublists are checked recursively for defined values.  The first sublist that has a defined item is returned.
-// Examples:
+// Example:
 //   val = first_defined([undef,7,undef,true]);  // Returns: 7
 function first_defined(v,recursive=false,_i=0) =
     _i<len(v) && (
@@ -321,9 +321,9 @@ function first_defined(v,recursive=false,_i=0) =
 //   vals = The values to return the first one which is not `undef`.
 //   names = A string with comma-separated names for the arguments whose values are passed in `vals`.
 //   dflt = If given, the value returned if all `vals` are `undef`.
-// Examples:
-//   length = one_defined([length,L,l], ["length","L","l"]);
-//   length = one_defined([length,L,l], "length,L,l", dflt=1);
+// Example:
+//   length1 = one_defined([length,L,l], ["length","L","l"]);
+//   length2 = one_defined([length,L,l], "length,L,l", dflt=1);
 
 function one_defined(vals, names, dflt=_UNDEF) = 
     let(
@@ -420,13 +420,13 @@ function all_defined(v,recursive=false) =
 //   center = If not `undef`, this overrides the value of `anchor`.
 //   uncentered = The value to return if `center` is not `undef` and evaluates as false.  Default: ALLNEG
 //   dflt = The default value to return if both `anchor` and `center` are `undef`.  Default: `CENTER`
-// Examples:
-//   anchr = get_anchor(undef, undef, BOTTOM, TOP);  // Returns: [0, 0, 1] (TOP)
-//   anchr = get_anchor(RIGHT, undef, BOTTOM, TOP);  // Returns: [1, 0, 0] (RIGHT)
-//   anchr = get_anchor(undef, false, BOTTOM, TOP);  // Returns: [0, 0,-1] (BOTTOM)
-//   anchr = get_anchor(RIGHT, false, BOTTOM, TOP);  // Returns: [0, 0,-1] (BOTTOM)
-//   anchr = get_anchor(undef, true,  BOTTOM, TOP);  // Returns: [0, 0, 0] (CENTER)
-//   anchr = get_anchor(RIGHT, true,  BOTTOM, TOP);  // Returns: [0, 0, 0] (CENTER)
+// Example:
+//   anchr1 = get_anchor(undef, undef, BOTTOM, TOP);  // Returns: [0, 0, 1] (TOP)
+//   anchr2 = get_anchor(RIGHT, undef, BOTTOM, TOP);  // Returns: [1, 0, 0] (RIGHT)
+//   anchr3 = get_anchor(undef, false, BOTTOM, TOP);  // Returns: [0, 0,-1] (BOTTOM)
+//   anchr4 = get_anchor(RIGHT, false, BOTTOM, TOP);  // Returns: [0, 0,-1] (BOTTOM)
+//   anchr5 = get_anchor(undef, true,  BOTTOM, TOP);  // Returns: [0, 0, 0] (CENTER)
+//   anchr6 = get_anchor(RIGHT, true,  BOTTOM, TOP);  // Returns: [0, 0, 0] (CENTER)
 function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
     !is_undef(center)? (center? CENTER : uncentered) :
     !is_undef(anchor)? anchor :
@@ -454,7 +454,7 @@ function get_anchor(anchor,center,uncentered=BOT,dflt=CENTER) =
 //   d2 = Second most specific diameter.
 //   d = Most general diameter.
 //   dflt = Value to return if all other values given are `undef`.
-// Examples:
+// Example:
 //   r = get_radius(r1=undef, r=undef, dflt=undef);  // Returns: undef
 //   r = get_radius(r1=undef, r=undef, dflt=1);      // Returns: 1
 //   r = get_radius(r1=undef, r=6, dflt=1);          // Returns: 6
@@ -488,6 +488,8 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
 // Topics: Argument Handling
 // See Also: get_anchor(), get_radius(), force_list()
 // Description:
+//   This is expands a scalar or a list with length less than 3 to a length 3 vector in the
+//   same way that OpenSCAD expands short vectors in some contexts, e.g. cube(10) or rotate([45,90]).  
 //   If `v` is a scalar, and `dflt==undef`, returns `[v, v, v]`.
 //   If `v` is a scalar, and `dflt!=undef`, returns `[v, dflt, dflt]`.
 //   If `v` is a vector, returns the first 3 items, with any missing values replaced by `dflt`.
@@ -495,7 +497,7 @@ function get_radius(r1, r2, r, d1, d2, d, dflt) =
 // Arguments:
 //   v = Value to return vector from.
 //   dflt = Default value to set empty vector parts from.
-// Examples:
+// Example:
 //   vec = scalar_vec3(undef);      // Returns: undef
 //   vec = scalar_vec3(10);         // Returns: [10,10,10]
 //   vec = scalar_vec3(10,1);       // Returns: [10,1,1]
@@ -514,7 +516,7 @@ function scalar_vec3(v, dflt) =
 //   Calculate the standard number of sides OpenSCAD would give a circle based on `$fn`, `$fa`, and `$fs`.
 // Arguments:
 //   r = Radius of circle to get the number of segments for.
-// Examples:
+// Example:
 //   $fn=12; sides=segs(10);  // Returns: 12
 //   $fa=2; $fs=3, sides=segs(10);  // Returns: 21
 function segs(r) = 
@@ -566,7 +568,7 @@ function no_function(name) =
 // Description:
 //   Asserts that the called module exists only as a function.
 // Example:
-//   function foo() = no_module();
+//   module foo() { no_module(); }
 module no_module() {
     assert(false, str("You called ",parent_module(1),"() as a module but it is available only as a function"));
 }    

@@ -107,6 +107,53 @@ function v_ceil(v) =
     [for (x=v) ceil(x)];
 
 
+// Function: v_lookup()
+// Description:
+//   Works just like the built-in function [`lookup()`](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Mathematical_Functions#lookup), except that it can also interpolate between vector result values of the same length.
+// Arguments:
+//   x = The scalar value to look up.
+//   v = A list of [KEY,VAL] pairs. KEYs are scalars.  VALs should either all be scalar, or all be vectors of the same length.
+// Example:
+//   x = v_lookup(4.5, [[4, [3,4,5]], [5, [5,6,7]]]);  // Returns: [4,5,6]
+function v_lookup(x, v) =
+    is_num(v[0][1])? lookup(x,v) :
+    let(
+        i = lookup(x, [for (i=idx(v)) [v[i].x,i]]),
+        vlo = v[floor(i)],
+        vhi = v[ceil(i)],
+        lo = vlo[1],
+        hi = vhi[1]
+    )
+    assert(is_vector(lo) && is_vector(hi),
+        "Result values must all be numbers, or all be vectors.")
+    assert(len(lo) == len(hi), "Vector result values must be the same length")
+    vlo.x == vhi.x? vlo[1] :
+    let( u = (x - vlo.x) / (vhi.x - vlo.x) )
+    lerp(lo,hi,u);
+
+
+// Function: pointlist_bounds()
+// Usage:
+//   pt_pair = pointlist_bounds(pts);
+// Topics: Geometry, Bounding Boxes, Bounds
+// Description:
+//   Finds the bounds containing all the points in `pts` which can be a list of points in any dimension.
+//   Returns a list of two items: a list of the minimums and a list of the maximums.  For example, with
+//   3d points `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
+// Arguments:
+//   pts = List of points.
+function pointlist_bounds(pts) =
+    assert(is_path(pts,dim=undef,fast=true) , "Invalid pointlist." )
+    let(
+        select = ident(len(pts[0])),
+        spread = [
+            for(i=[0:len(pts[0])-1])
+            let( spreadi = pts*select[i] )
+            [ min(spreadi), max(spreadi) ]
+        ]
+    ) transpose(spread);
+
+
 // Function: unit()
 // Usage:
 //   unit(v, [error]);
@@ -116,13 +163,13 @@ function v_ceil(v) =
 // Arguments:
 //   v = The vector to normalize.
 //   error = If given, and input is a zero-length vector, this value is returned.  Default: Assert error on zero-length vector.
-// Examples:
-//   unit([10,0,0]);   // Returns: [1,0,0]
-//   unit([0,10,0]);   // Returns: [0,1,0]
-//   unit([0,0,10]);   // Returns: [0,0,1]
-//   unit([0,-10,0]);  // Returns: [0,-1,0]
-//   unit([0,0,0],[1,2,3]);    // Returns: [1,2,3]
-//   unit([0,0,0]);    // Asserts an error.
+// Example:
+//   v1 = unit([10,0,0]);   // Returns: [1,0,0]
+//   v2 = unit([0,10,0]);   // Returns: [0,1,0]
+//   v3 = unit([0,0,10]);   // Returns: [0,0,1]
+//   v4 = unit([0,-10,0]);  // Returns: [0,-1,0]
+//   v5 = unit([0,0,0],[1,2,3]);    // Returns: [1,2,3]
+//   v6 = unit([0,0,0]);    // Asserts an error.
 function unit(v, error=[[["ASSERT"]]]) =
     assert(is_vector(v), str("Expected a vector.  Got: ",v))
     norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON,"Tried to normalize a zero vector") : error) :
@@ -144,13 +191,13 @@ function unit(v, error=[[["ASSERT"]]]) =
 //   v1 = First vector or point.
 //   v2 = Second vector or point.
 //   v3 = Third point in three point mode.
-// Examples:
-//   vector_angle(UP,LEFT);     // Returns: 90
-//   vector_angle(RIGHT,LEFT);  // Returns: 180
-//   vector_angle(UP+RIGHT,RIGHT);  // Returns: 45
-//   vector_angle([10,10], [0,0], [10,-10]);  // Returns: 90
-//   vector_angle([10,0,10], [0,0,0], [-10,10,0]);  // Returns: 120
-//   vector_angle([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: 120
+// Example:
+//   ang1 = vector_angle(UP,LEFT);     // Returns: 90
+//   ang2 = vector_angle(RIGHT,LEFT);  // Returns: 180
+//   ang3 = vector_angle(UP+RIGHT,RIGHT);  // Returns: 45
+//   ang4 = vector_angle([10,10], [0,0], [10,-10]);  // Returns: 90
+//   ang5 = vector_angle([10,0,10], [0,0,0], [-10,10,0]);  // Returns: 120
+//   ang6 = vector_angle([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: 120
 function vector_angle(v1,v2,v3) =
     assert( ( is_undef(v3) && ( is_undef(v2) || same_shape(v1,v2) ) )
             || is_consistent([v1,v2,v3]) ,
@@ -186,13 +233,13 @@ function vector_angle(v1,v2,v3) =
 //   v1 = First vector or point.
 //   v2 = Second vector or point.
 //   v3 = Third point in three point mode.
-// Examples:
-//   vector_axis(UP,LEFT);     // Returns: [0,-1,0] (FWD)
-//   vector_axis(RIGHT,LEFT);  // Returns: [0,-1,0] (FWD)
-//   vector_axis(UP+RIGHT,RIGHT);  // Returns: [0,1,0] (BACK)
-//   vector_axis([10,10], [0,0], [10,-10]);  // Returns: [0,0,-1] (DOWN)
-//   vector_axis([10,0,10], [0,0,0], [-10,10,0]);  // Returns: [-0.57735, -0.57735, 0.57735]
-//   vector_axis([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: [-0.57735, -0.57735, 0.57735]
+// Example:
+//   axis1 = vector_axis(UP,LEFT);     // Returns: [0,-1,0] (FWD)
+//   axis2 = vector_axis(RIGHT,LEFT);  // Returns: [0,-1,0] (FWD)
+//   axis3 = vector_axis(UP+RIGHT,RIGHT);  // Returns: [0,1,0] (BACK)
+//   axis4 = vector_axis([10,10], [0,0], [10,-10]);  // Returns: [0,0,-1] (DOWN)
+//   axis5 = vector_axis([10,0,10], [0,0,0], [-10,10,0]);  // Returns: [-0.57735, -0.57735, 0.57735]
+//   axis6 = vector_axis([[10,0,10], [0,0,0], [-10,10,0]]);  // Returns: [-0.57735, -0.57735, 0.57735]
 function vector_axis(v1,v2=undef,v3=undef) =
     is_vector(v3)
     ?   assert(is_consistent([v3,v2,v1]), "Bad arguments.")
@@ -216,7 +263,39 @@ function vector_axis(v1,v2=undef,v3=undef) =
 
 
 
+
 // Section: Vector Searching
+
+
+
+// Function: closest_point()
+// Usage:
+//   index = closest_point(pt, points);
+// Topics: Geometry, Points, Distance
+// Description:
+//   Given a list of `points`, finds the index of the closest point to `pt`.
+// Arguments:
+//   pt = The point to find the closest point to.
+//   points = The list of points to search.
+function closest_point(pt, points) =
+    assert( is_vector(pt), "Invalid point." )
+    assert(is_path(points,dim=len(pt)), "Invalid pointlist or incompatible dimensions." )
+    min_index([for (p=points) norm(p-pt)]);
+
+
+// Function: furthest_point()
+// Usage:
+//   index = furthest_point(pt, points);
+// Topics: Geometry, Points, Distance
+// Description:
+//   Given a list of `points`, finds the index of the furthest point from `pt`.
+// Arguments:
+//   pt = The point to find the farthest point from.
+//   points = The list of points to search.
+function furthest_point(pt, points) =
+    assert( is_vector(pt), "Invalid point." )
+    assert(is_path(points,dim=len(pt)), "Invalid pointlist or incompatible dimensions." )
+    max_index([for (p=points) norm(p-pt)]);
 
 
 // Function: vector_search()

@@ -433,7 +433,7 @@ function turtle3d(commands, state=RIGHT, transforms=false, full_state=false, rep
        state = is_matrix(state,4,4) ? [[state],[yrot(90)],1,90,0] :
                is_vector(state,3) ?
                   let( updir = UP - (UP * state) * state / (state*state) )
-                  [[affine3d_frame_map(x=state, z=approx(norm(updir),0) ? FWD : updir)], [yrot(90)],1, 90, 0]
+                  [[frame_map(x=state, z=approx(norm(updir),0) ? FWD : updir)], [yrot(90)],1, 90, 0]
                 : assert(_turtle3d_state_valid(state), "Supplied state is not valid")
                   state,
        finalstate = _turtle3d_repeat(commands, state, repeat)

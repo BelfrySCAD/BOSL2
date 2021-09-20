@@ -14,14 +14,15 @@ include <transforms.scad>
 include <distributors.scad>
 include <mutators.scad>
 include <attachments.scad>
-include <primitives.scad>
-include <shapes.scad>
+include <shapes3d.scad>
 include <shapes2d.scad>
+include <drawing.scad>
 include <masks.scad>
 include <paths.scad>
 include <edges.scad>
 include <arrays.scad>
 include <math.scad>
+include <trigonometry.scad>
 include <vectors.scad>
 include <quaternions.scad>
 include <affine.scad>
@@ -32,7 +33,7 @@ include <regions.scad>
 include <strings.scad>
 include <skin.scad>
 include <vnf.scad>
-include <common.scad>
+include <utility.scad>
 include <debug.scad>
 
 

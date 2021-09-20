@@ -193,15 +193,15 @@ module modular_hose(size, type, clearance=0, waist_len, anchor=BOTTOM, spin=0,or
 // Arguments:
 //   size = size of hose part, must be 1/4, 1/2 or 3/4
 //   outer = set to true to get the outer diameter. 
-// Example:
+// Example(3D):
 //   $fn=64;
 //   back_half()
 //      diff("remove")
 //        cuboid(50){
 //          attach(TOP) modular_hose(1/2, "ball");
-//          position(TOP+RIGHT) y
-//            rot(181)
-//            xrot(90)
+//          up(0.01)position(TOP+RIGHT)tags("remove")
+//            rot(180)
+//            xrot(-90)
 //            rotate_extrude(angle=135)
 //            right(25)
 //            circle(r=modular_hose_radius(1/2));
@@ -213,8 +213,7 @@ function modular_hose_radius(size, outer=false) =
   assert(ind!=[], "Must specify size as 1/4, 1/2 or 3/4")
   let(
      b = select(_big_end[ind], [0,-1]),
-     s = select(_small_end[ind], [0,-1]),
-     dd=echo(b=b)echo(s=s)
+     s = select(_small_end[ind], [0,-1])
   )
   outer ? b[1][0] : b[0][0];
 

@@ -13,6 +13,8 @@ module test_quant() {
     assert_equal(quant(3,3), 3);
     assert_equal(quant(4,3), 3);
     assert_equal(quant(7,3), 6);
+    assert_equal(quant(12,2.5), 12.5);
+    assert_equal(quant(11,2.5), 10.0);
     assert_equal(quant([12,13,13.1,14,14.1,15,16],4), [12,12,12,16,16,16,16]);
     assert_equal(quant([9,10,10.4,10.5,11,12],3), [9,9,9,12,12,12]);
     assert_equal(quant([[9,10,10.4],[10.5,11,12]],3), [[9,9,9],[12,12,12]]);
@@ -31,6 +33,8 @@ module test_quantdn() {
     assert_equal(quantdn(3,3), 3);
     assert_equal(quantdn(4,3), 3);
     assert_equal(quantdn(7,3), 6);
+    assert_equal(quantdn(12,2.5), 10.0);
+    assert_equal(quantdn(11,2.5), 10.0);
     assert_equal(quantdn([12,13,13.1,14,14.1,15,16],4), [12,12,12,12,12,12,16]);
     assert_equal(quantdn([9,10,10.4,10.5,11,12],3), [9,9,9,9,9,12]);
     assert_equal(quantdn([[9,10,10.4],[10.5,11,12]],3), [[9,9,9],[9,9,12]]);
@@ -49,6 +53,8 @@ module test_quantup() {
     assert_equal(quantup(3,3), 3);
     assert_equal(quantup(4,3), 6);
     assert_equal(quantup(7,3), 9);
+    assert_equal(quantup(12,2.5), 12.5);
+    assert_equal(quantup(11,2.5), 12.5);
     assert_equal(quantup([12,13,13.1,14,14.1,15,16],4), [12,16,16,16,16,16,16]);
     assert_equal(quantup([9,10,10.4,10.5,11,12],3), [9,12,12,12,12,12]);
     assert_equal(quantup([[9,10,10.4],[10.5,11,12]],3), [[9,12,12],[12,12,12]]);

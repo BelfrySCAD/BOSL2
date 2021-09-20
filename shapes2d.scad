@@ -1,892 +1,59 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: shapes2d.scad
-//   Common useful 2D shapes.
+//   This file includes redefinitions of the core modules to
+//   work with attachment.  You can also create regular polygons
+//   with optional rounded corners and alignment features not
+//   available with circle().  The file also provides teardrop2d,
+//   which is useful for 3d printable holes.  Lastly you can use the
+//   masks to produce edge treatments common in furniture from the
+//   simple roundover or cove molding to the more elaborate ogee.
+//   Many of the commands have module forms that produce geometry and
+//   function forms that produce a path.  This file defines function
+//   forms of the core OpenSCAD modules that produce paths.
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
-// Section: 2D Drawing Helpers
-
-// Module: stroke()
-// Usage:
-//   stroke(path, [width], [closed], [endcaps], [endcap_width], [endcap_length], [endcap_extent], [trim]);
-//   stroke(path, [width], [closed], [endcap1], [endcap2], [endcap_width1], [endcap_width2], [endcap_length1], [endcap_length2], [endcap_extent1], [endcap_extent2], [trim1], [trim2]);
-// Topics: Paths (2D), Paths (3D), Drawing Tools
-// Description:
-//   Draws a 2D or 3D path with a given line width.  Endcaps can be specified for each end individually.
-// Figure(Med,NoAxes,2D,VPR=[0,0,0],VPD=250): Endcap Types
-//   cap_pairs = [
-//       ["butt",  "chisel" ],
-//       ["round", "square" ],
-//       ["line",  "cross"  ],
-//       ["x",     "diamond"],
-//       ["dot",   "block"  ],
-//       ["tail",  "arrow"  ],
-//       ["tail2", "arrow2" ]
-//   ];
-//   for (i = idx(cap_pairs)) {
-//       fwd((i-len(cap_pairs)/2+0.5)*13) {
-//           stroke([[-20,0], [20,0]], width=3, endcap1=cap_pairs[i][0], endcap2=cap_pairs[i][1]);
-//           color("black") {
-//               stroke([[-20,0], [20,0]], width=0.25, endcaps=false);
-//               left(28) text(text=cap_pairs[i][0], size=5, halign="right", valign="center");
-//               right(28) text(text=cap_pairs[i][1], size=5, halign="left", valign="center");
-//           }
-//       }
-//   }
-// Arguments:
-//   path = The path to draw along.
-//   width = The width of the line to draw.  If given as a list of widths, (one for each path point), draws the line with varying thickness to each point.
-//   closed = If true, draw an additional line from the end of the path to the start.
-//   plots = Specifies the plot point shape for every point of the line.  If a 2D path is given, use that to draw custom plot points.
-//   joints  = Specifies the joint shape for each joint of the line.  If a 2D path is given, use that to draw custom joints.
-//   endcaps = Specifies the endcap type for both ends of the line.  If a 2D path is given, use that to draw custom endcaps.
-//   endcap1 = Specifies the endcap type for the start of the line.  If a 2D path is given, use that to draw a custom endcap.
-//   endcap2 = Specifies the endcap type for the end of the line.  If a 2D path is given, use that to draw a custom endcap.
-//   plot_width = Some plot point shapes are wider than the line.  This specifies the width of the shape, in multiples of the line width.
-//   joint_width = Some joint shapes are wider than the line.  This specifies the width of the shape, in multiples of the line width.
-//   endcap_width = Some endcap types are wider than the line.  This specifies the size of endcaps, in multiples of the line width.
-//   endcap_width1 = This specifies the size of starting endcap, in multiples of the line width.
-//   endcap_width2 = This specifies the size of ending endcap, in multiples of the line width.
-//   plot_length = Length of plot point shape, in multiples of the line width.
-//   joint_length = Length of joint shape, in multiples of the line width.
-//   endcap_length = Length of endcaps, in multiples of the line width.
-//   endcap_length1 = Length of starting endcap, in multiples of the line width.
-//   endcap_length2 = Length of ending endcap, in multiples of the line width.
-//   plot_extent = Extents length of plot point shape, in multiples of the line width.
-//   joint_extent = Extents length of joint shape, in multiples of the line width.
-//   endcap_extent = Extents length of endcaps, in multiples of the line width.
-//   endcap_extent1 = Extents length of starting endcap, in multiples of the line width.
-//   endcap_extent2 = Extents length of ending endcap, in multiples of the line width.
-//   plot_angle = Extra rotation given to plot point shapes, in degrees.  If not given, the shapes are fully spun.
-//   joint_angle = Extra rotation given to joint shapes, in degrees.  If not given, the shapes are fully spun.
-//   endcap_angle = Extra rotation given to endcaps, in degrees.  If not given, the endcaps are fully spun.
-//   endcap_angle1 = Extra rotation given to a starting endcap, in degrees.  If not given, the endcap is fully spun.
-//   endcap_angle2 = Extra rotation given to a ending endcap, in degrees.  If not given, the endcap is fully spun.
-//   trim = Trim the the start and end line segments by this much, to keep them from interfering with custom endcaps.
-//   trim1 = Trim the the starting line segment by this much, to keep it from interfering with a custom endcap.
-//   trim2 = Trim the the ending line segment by this much, to keep it from interfering with a custom endcap.
-//   convexity = Max number of times a line could intersect a wall of an endcap.
-//   hull = If true, use `hull()` to make higher quality joints between segments, at the cost of being much slower.  Default: true
-// Example(2D): Drawing a Path
-//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=20);
-// Example(2D): Closing a Path
-//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=20, endcaps=true, closed=true);
-// Example(2D): Fancy Arrow Endcaps
-//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=10, endcaps="arrow2");
-// Example(2D): Modified Fancy Arrow Endcaps
-//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=10, endcaps="arrow2", endcap_width=6, endcap_length=3, endcap_extent=2);
-// Example(2D): Mixed Endcaps
-//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   stroke(path, width=10, endcap1="tail2", endcap2="arrow2");
-// Example(2D): Plotting Points
-//   path = [for (a=[0:30:360]) [a-180, 60*sin(a)]];
-//   stroke(path, width=3, joints="diamond", endcaps="arrow2", plot_angle=0, plot_width=5);
-// Example(2D): Joints and Endcaps
-//   path = [for (a=[0:30:360]) [a-180, 60*sin(a)]];
-//   stroke(path, width=3, joints="dot", endcaps="arrow2", joint_angle=0);
-// Example(2D): Custom Endcap Shapes
-//   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
-//   arrow = [[0,0], [2,-3], [0.5,-2.3], [2,-4], [0.5,-3.5], [-0.5,-3.5], [-2,-4], [-0.5,-2.3], [-2,-3]];
-//   stroke(path, width=10, trim=3.5, endcaps=arrow);
-// Example(2D): Variable Line Width
-//   path = circle(d=50,$fn=18);
-//   widths = [for (i=idx(path)) 10*i/len(path)+2];
-//   stroke(path,width=widths,$fa=1,$fs=1);
-// Example: 3D Path with Endcaps
-//   path = rot([15,30,0], p=path3d(pentagon(d=50)));
-//   stroke(path, width=2, endcaps="arrow2", $fn=18);
-// Example: 3D Path with Flat Endcaps
-//   path = rot([15,30,0], p=path3d(pentagon(d=50)));
-//   stroke(path, width=2, endcaps="arrow2", endcap_angle=0, $fn=18);
-// Example: 3D Path with Mixed Endcaps
-//   path = rot([15,30,0], p=path3d(pentagon(d=50)));
-//   stroke(path, width=2, endcap1="arrow2", endcap2="tail", endcap_angle2=0, $fn=18);
-// Example: 3D Path with Joints and Endcaps
-//   path = [for (i=[0:10:360]) [(i-180)/2,20*cos(3*i),20*sin(3*i)]];
-//   stroke(path, width=2, joints="dot", endcap1="round", endcap2="arrow2", joint_width=2.0, endcap_width2=3, $fn=18);
-module stroke(
-    path, width=1, closed=false,
-    endcaps,       endcap1,        endcap2,        joints,       plots,
-    endcap_width,  endcap_width1,  endcap_width2,  joint_width,  plot_width,
-    endcap_length, endcap_length1, endcap_length2, joint_length, plot_length,
-    endcap_extent, endcap_extent1, endcap_extent2, joint_extent, plot_extent,
-    endcap_angle,  endcap_angle1,  endcap_angle2,  joint_angle,  plot_angle,
-    trim, trim1, trim2,
-    convexity=10, hull=true
-) {
-    function _shape_defaults(cap) =
-        cap==undef?     [1.00, 0.00, 0.00] :
-        cap==false?     [1.00, 0.00, 0.00] :
-        cap==true?      [1.00, 1.00, 0.00] :
-        cap=="butt"?    [1.00, 0.00, 0.00] :
-        cap=="round"?   [1.00, 1.00, 0.00] :
-        cap=="chisel"?  [1.00, 1.00, 0.00] :
-        cap=="square"?  [1.00, 1.00, 0.00] :
-        cap=="block"?   [3.00, 1.00, 0.00] :
-        cap=="diamond"? [3.50, 1.00, 0.00] :
-        cap=="dot"?     [3.00, 1.00, 0.00] :
-        cap=="x"?       [3.50, 0.40, 0.00] :
-        cap=="cross"?   [4.50, 0.22, 0.00] :
-        cap=="line"?    [4.50, 0.22, 0.00] :
-        cap=="arrow"?   [3.50, 0.40, 0.50] :
-        cap=="arrow2"?  [3.50, 1.00, 0.14] :
-        cap=="tail"?    [3.50, 0.47, 0.50] :
-        cap=="tail2"?   [3.50, 0.28, 0.50] :
-        is_path(cap)?   [0.00, 0.00, 0.00] :
-        assert(false, str("Invalid cap or joint: ",cap));
-
-    function _shape_path(cap,linewidth,w,l,l2) = (
-        (cap=="butt" || cap==false || cap==undef)? [] : 
-        (cap=="round" || cap==true)? scale([w,l], p=circle(d=1, $fn=max(8, segs(w/2)))) :
-        cap=="chisel"?  scale([w,l], p=circle(d=1,$fn=4)) :
-        cap=="diamond"? circle(d=w,$fn=4) :
-        cap=="square"?  scale([w,l], p=square(1,center=true)) :
-        cap=="block"?   scale([w,l], p=square(1,center=true)) :
-        cap=="dot"?     circle(d=w, $fn=max(12, segs(w*3/2))) :
-        cap=="x"?       [for (a=[0:90:270]) each rot(a,p=[[w+l/2,w-l/2]/2, [w-l/2,w+l/2]/2, [0,l/2]]) ] :
-        cap=="cross"?   [for (a=[0:90:270]) each rot(a,p=[[l,w]/2, [-l,w]/2, [-l,l]/2]) ] :
-        cap=="line"?    scale([w,l], p=square(1,center=true)) :
-        cap=="arrow"?   [[0,0], [w/2,-l2], [w/2,-l2-l], [0,-l], [-w/2,-l2-l], [-w/2,-l2]] :
-        cap=="arrow2"?  [[0,0], [w/2,-l2-l], [0,-l], [-w/2,-l2-l]] :
-        cap=="tail"?    [[0,0], [w/2,l2], [w/2,l2-l], [0,-l], [-w/2,l2-l], [-w/2,l2]] :
-        cap=="tail2"?   [[w/2,0], [w/2,-l], [0,-l-l2], [-w/2,-l], [-w/2,0]] :
-        is_path(cap)? cap :
-        assert(false, str("Invalid endcap: ",cap))
-    ) * linewidth;
-
-    assert(is_bool(closed));
-    assert(is_list(path));
-    if (len(path) > 1) {
-        assert(is_path(path,[2,3]), "The path argument must be a list of 2D or 3D points.");
-    }
-    path = deduplicate( closed? close_path(path) : path );
-
-    assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
-    width = is_num(width)? [for (x=path) width] : width;
-    assert(all([for (w=width) w>0]));
-
-    endcap1 = first_defined([endcap1, endcaps, if(!closed) plots, "round"]);
-    endcap2 = first_defined([endcap2, endcaps, plots, "round"]);
-    joints  = first_defined([joints, plots, "round"]);
-    assert(is_bool(endcap1) || is_string(endcap1) || is_path(endcap1));
-    assert(is_bool(endcap2) || is_string(endcap2) || is_path(endcap2));
-    assert(is_bool(joints)  || is_string(joints)  || is_path(joints));
-
-    endcap1_dflts = _shape_defaults(endcap1);
-    endcap2_dflts = _shape_defaults(endcap2);
-    joint_dflts   = _shape_defaults(joints);
-
-    endcap_width1 = first_defined([endcap_width1, endcap_width, plot_width, endcap1_dflts[0]]);
-    endcap_width2 = first_defined([endcap_width2, endcap_width, plot_width, endcap2_dflts[0]]);
-    joint_width   = first_defined([joint_width, plot_width, joint_dflts[0]]);
-    assert(is_num(endcap_width1));
-    assert(is_num(endcap_width2));
-    assert(is_num(joint_width));
-
-    endcap_length1 = first_defined([endcap_length1, endcap_length, plot_length, endcap1_dflts[1]*endcap_width1]);
-    endcap_length2 = first_defined([endcap_length2, endcap_length, plot_length, endcap2_dflts[1]*endcap_width2]);
-    joint_length   = first_defined([joint_length, plot_length, joint_dflts[1]*joint_width]);
-    assert(is_num(endcap_length1));
-    assert(is_num(endcap_length2));
-    assert(is_num(joint_length));
-
-    endcap_extent1 = first_defined([endcap_extent1, endcap_extent, plot_extent, endcap1_dflts[2]*endcap_width1]);
-    endcap_extent2 = first_defined([endcap_extent2, endcap_extent, plot_extent, endcap2_dflts[2]*endcap_width2]);
-    joint_extent   = first_defined([joint_extent, plot_extent, joint_dflts[2]*joint_width]);
-    assert(is_num(endcap_extent1));
-    assert(is_num(endcap_extent2));
-    assert(is_num(joint_extent));
-
-    endcap_angle1 = first_defined([endcap_angle1, endcap_angle, plot_angle]);
-    endcap_angle2 = first_defined([endcap_angle2, endcap_angle, plot_angle]);
-    joint_angle = first_defined([joint_angle, plot_angle]);
-    assert(is_undef(endcap_angle1)||is_num(endcap_angle1));
-    assert(is_undef(endcap_angle2)||is_num(endcap_angle2));
-    assert(is_undef(joint_angle)||is_num(joint_angle));
-
-    endcap_shape1 = _shape_path(endcap1, width[0], endcap_width1, endcap_length1, endcap_extent1);
-    endcap_shape2 = _shape_path(endcap2, last(width), endcap_width2, endcap_length2, endcap_extent2);
-
-    trim1 = width[0] * first_defined([
-        trim1, trim,
-        (endcap1=="arrow")? endcap_length1-0.01 :
-        (endcap1=="arrow2")? endcap_length1*3/4 :
-        0
-    ]);
-    assert(is_num(trim1));
-
-    trim2 = last(width) * first_defined([
-        trim2, trim,
-        (endcap2=="arrow")? endcap_length2-0.01 :
-        (endcap2=="arrow2")? endcap_length2*3/4 :
-        0
-    ]);
-    assert(is_num(trim2));
-
-    if (len(path) == 1) {
-        if (len(path[0]) == 2) {
-            translate(path[0]) circle(d=width[0]);
-        } else {
-            translate(path[0]) sphere(d=width[0]);
-        }
-    } else {
-        spos = path_pos_from_start(path,trim1,closed=false);
-        epos = path_pos_from_end(path,trim2,closed=false);
-        path2 = path_subselect(path, spos[0], spos[1], epos[0], epos[1]);
-        widths = concat(
-            [lerp(width[spos[0]], width[(spos[0]+1)%len(width)], spos[1])],
-            [for (i = [spos[0]+1:1:epos[0]]) width[i]],
-            [lerp(width[epos[0]], width[(epos[0]+1)%len(width)], epos[1])]
-        );
-
-        start_vec = path[0] - path[1];
-        end_vec = last(path) - select(path,-2);
-
-        if (len(path[0]) == 2) {
-            // Straight segments
-            for (i = idx(path2,e=-2)) {
-                seg = select(path2,i,i+1);
-                delt = seg[1] - seg[0];
-                translate(seg[0]) {
-                    rot(from=BACK,to=delt) {
-                        trapezoid(w1=widths[i], w2=widths[i+1], h=norm(delt), anchor=FRONT);
-                    }
-                }
-            }
-
-            // Joints
-            for (i = [1:1:len(path2)-2]) {
-                $fn = quantup(segs(widths[i]/2),4);
-                translate(path2[i]) {
-                    if (joints != undef) {
-                        joint_shape = _shape_path(
-                            joints, width[i],
-                            joint_width,
-                            joint_length,
-                            joint_extent
-                        );
-                        v1 = unit(path2[i] - path2[i-1]);
-                        v2 = unit(path2[i+1] - path2[i]);
-                        vec = unit((v1+v2)/2);
-                        mat = is_undef(joint_angle)
-                          ? rot(from=BACK,to=v1)
-                          : zrot(joint_angle);
-                        multmatrix(mat) polygon(joint_shape);
-                    } else if (hull) {
-                        hull() {
-                            rot(from=BACK, to=path2[i]-path2[i-1])
-                                circle(d=widths[i]);
-                            rot(from=BACK, to=path2[i+1]-path2[i])
-                                circle(d=widths[i]);
-                        }
-                    } else {
-                        rot(from=BACK, to=path2[i]-path2[i-1])
-                            circle(d=widths[i]);
-                        rot(from=BACK, to=path2[i+1]-path2[i])
-                            circle(d=widths[i]);
-                    }
-                }
-            }
-
-            // Endcap1
-            translate(path[0]) {
-                mat = is_undef(endcap_angle1)? rot(from=BACK,to=start_vec) :
-                    zrot(endcap_angle1);
-                multmatrix(mat) polygon(endcap_shape1);
-            }
-
-            // Endcap2
-            translate(last(path)) {
-                mat = is_undef(endcap_angle2)? rot(from=BACK,to=end_vec) :
-                    zrot(endcap_angle2);
-                multmatrix(mat) polygon(endcap_shape2);
-            }
-        } else {
-            quatsums = q_cumulative([
-                for (i = idx(path2,e=-2)) let(
-                    vec1 = i==0? UP : unit(path2[i]-path2[i-1], UP),
-                    vec2 = unit(path2[i+1]-path2[i], UP),
-                    axis = vector_axis(vec1,vec2),
-                    ang = vector_angle(vec1,vec2)
-                ) quat(axis,ang)
-            ]);
-            rotmats = [for (q=quatsums) q_matrix4(q)];
-            sides = [
-                for (i = idx(path2,e=-2))
-                quantup(segs(max(widths[i],widths[i+1])/2),4)
-            ];
-
-            // Straight segments
-            for (i = idx(path2,e=-2)) {
-                dist = norm(path2[i+1] - path2[i]);
-                w1 = widths[i]/2;
-                w2 = widths[i+1]/2;
-                $fn = sides[i];
-                translate(path2[i]) {
-                    multmatrix(rotmats[i]) {
-                        cylinder(r1=w1, r2=w2, h=dist, center=false);
-                    }
-                }
-            }
-
-            // Joints
-            for (i = [1:1:len(path2)-2]) {
-                $fn = sides[i];
-                translate(path2[i]) {
-                    if (joints != undef) {
-                        joint_shape = _shape_path(
-                            joints, width[i],
-                            joint_width,
-                            joint_length,
-                            joint_extent
-                        );
-                        multmatrix(rotmats[i] * xrot(180)) {
-                            $fn = sides[i];
-                            if (is_undef(joint_angle)) {
-                                rotate_extrude(convexity=convexity) {
-                                    right_half(planar=true) {
-                                        polygon(joint_shape);
-                                    }
-                                }
-                            } else {
-                                rotate([90,0,joint_angle]) {
-                                    linear_extrude(height=max(widths[i],0.001), center=true, convexity=convexity) {
-                                        polygon(joint_shape);
-                                    }
-                                }
-                            }
-                        }
-                    } else if (hull) {
-                        hull(){
-                            multmatrix(rotmats[i]) {
-                                sphere(d=widths[i],style="aligned");
-                            }
-                            multmatrix(rotmats[i-1]) {
-                                sphere(d=widths[i],style="aligned");
-                            }
-                        }
-                    } else {
-                        multmatrix(rotmats[i]) {
-                            sphere(d=widths[i],style="aligned");
-                        }
-                        multmatrix(rotmats[i-1]) {
-                            sphere(d=widths[i],style="aligned");
-                        }
-                    }
-                }
-            }
-
-            // Endcap1
-            translate(path[0]) {
-                multmatrix(rotmats[0] * xrot(180)) {
-                    $fn = sides[0];
-                    if (is_undef(endcap_angle1)) {
-                        rotate_extrude(convexity=convexity) {
-                            right_half(planar=true) {
-                                polygon(endcap_shape1);
-                            }
-                        }
-                    } else {
-                        rotate([90,0,endcap_angle1]) {
-                            linear_extrude(height=max(widths[0],0.001), center=true, convexity=convexity) {
-                                polygon(endcap_shape1);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Endcap2
-            translate(last(path)) {
-                multmatrix(last(rotmats)) {
-                    $fn = last(sides);
-                    if (is_undef(endcap_angle2)) {
-                        rotate_extrude(convexity=convexity) {
-                            right_half(planar=true) {
-                                polygon(endcap_shape2);
-                            }
-                        }
-                    } else {
-                        rotate([90,0,endcap_angle2]) {
-                            linear_extrude(height=max(last(widths),0.001), center=true, convexity=convexity) {
-                                polygon(endcap_shape2);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-// Function&Module: dashed_stroke()
-// Usage: As a Module
-//   dashed_stroke(path, dashpat, [closed=]);
-// Usage: As a Function
-//   dashes = dashed_stroke(path, dashpat, width=, [closed=]);
-// Topics: Paths, Drawing Tools
-// See Also: stroke(), path_cut()
-// Description:
-//   Given a path and a dash pattern, creates a dashed line that follows that
-//   path with the given dash pattern.
-//   - When called as a function, returns a list of dash sub-paths.
-//   - When called as a module, draws all those subpaths using `stroke()`.
-// Arguments:
-//   path = The path to subdivide into dashes.
-//   dashpat = A list of alternating dash lengths and space lengths for the dash pattern.  This will be scaled by the width of the line.
-//   ---
-//   width = The width of the dashed line to draw.  Module only.  Default: 1
-//   closed = If true, treat path as a closed polygon.  Default: false
-// Example(2D): Open Path
-//   path = [for (a=[-180:10:180]) [a/3,20*sin(a)]];
-//   dashed_stroke(path, [3,2], width=1);
-// Example(2D): Closed Polygon
-//   path = circle(d=100,$fn=72);
-//   dashpat = [10,2,3,2,3,2];
-//   dashed_stroke(path, dashpat, width=1, closed=true);
-// Example(FlatSpin,VPD=250): 3D Dashed Path
-//   path = [for (a=[-180:5:180]) [a/3, 20*cos(3*a), 20*sin(3*a)]];
-//   dashed_stroke(path, [3,2], width=1);
-function dashed_stroke(path, dashpat=[3,3], closed=false) =
-    let(
-        path = closed? close_path(path) : path,
-        dashpat = len(dashpat)%2==0? dashpat : concat(dashpat,[0]),
-        plen = path_length(path),
-        dlen = sum(dashpat),
-        doff = cumsum(dashpat),
-        reps = floor(plen / dlen),
-        step = plen / reps,
-        cuts = [
-            for (i=[0:1:reps-1], off=doff)
-            let (st=i*step, x=st+off)
-            if (x>0 && x<plen) x
-        ],
-        dashes = path_cut(path, cuts, closed=false),
-        evens = [for (i=idx(dashes)) if (i%2==0) dashes[i]]
-    ) evens;
-
-
-module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
-    segs = dashed_stroke(path, dashpat=dashpat*width, closed=closed);
-    for (seg = segs)
-        stroke(seg, width=width, endcaps=false);
-}
-
-
-// Function&Module: arc()
-// Usage: 2D arc from 0º to `angle` degrees.
-//   arc(N, r|d=, angle);
-// Usage: 2D arc from START to END degrees.
-//   arc(N, r|d=, angle=[START,END])
-// Usage: 2D arc from `start` to `start+angle` degrees.
-//   arc(N, r|d=, start=, angle=)
-// Usage: 2D circle segment by `width` and `thickness`, starting and ending on the X axis.
-//   arc(N, width=, thickness=)
-// Usage: Shortest 2D or 3D arc around centerpoint `cp`, starting at P0 and ending on the vector pointing from `cp` to `P1`.
-//   arc(N, cp=, points=[P0,P1], [long=], [cw=], [ccw=])
-// Usage: 2D or 3D arc, starting at `P0`, passing through `P1` and ending at `P2`.
-//   arc(N, points=[P0,P1,P2])
-// Topics: Paths (2D), Paths (3D), Shapes (2D), Path Generators
-// Description:
-//   If called as a function, returns a 2D or 3D path forming an arc.
-//   If called as a module, creates a 2D arc polygon or pie slice shape.
-// Arguments:
-//   N = Number of vertices to form the arc curve from.
-//   r = Radius of the arc.
-//   angle = If a scalar, specifies the end angle in degrees (relative to start parameter).  If a vector of two scalars, specifies start and end angles.
-//   ---
-//   d = Diameter of the arc.
-//   cp = Centerpoint of arc.
-//   points = Points on the arc.
-//   long = if given with cp and points takes the long arc instead of the default short arc.  Default: false
-//   cw = if given with cp and 2 points takes the arc in the clockwise direction.  Default: false
-//   ccw = if given with cp and 2 points takes the arc in the counter-clockwise direction.  Default: false
-//   width = If given with `thickness`, arc starts and ends on X axis, to make a circle segment.
-//   thickness = If given with `width`, arc starts and ends on X axis, to make a circle segment.
-//   start = Start angle of arc.
-//   wedge = If true, include centerpoint `cp` in output to form pie slice shape.
-//   endpoint = If false exclude the last point (function only).  Default: true
-// Examples(2D):
-//   arc(N=4, r=30, angle=30, wedge=true);
-//   arc(r=30, angle=30, wedge=true);
-//   arc(d=60, angle=30, wedge=true);
-//   arc(d=60, angle=120);
-//   arc(d=60, angle=120, wedge=true);
-//   arc(r=30, angle=[75,135], wedge=true);
-//   arc(r=30, start=45, angle=75, wedge=true);
-//   arc(width=60, thickness=20);
-//   arc(cp=[-10,5], points=[[20,10],[0,35]], wedge=true);
-//   arc(points=[[30,-5],[20,10],[-10,20]], wedge=true);
-//   arc(points=[[5,30],[-10,-10],[30,5]], wedge=true);
-// Example(2D):
-//   path = arc(points=[[5,30],[-10,-10],[30,5]], wedge=true);
-//   stroke(closed=true, path);
-// Example(FlatSpin,VPD=175):
-//   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
-//   trace_path(path, showpts=true, color="cyan");
-function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true) =
-    assert(is_bool(endpoint))
-    !endpoint ? assert(!wedge, "endpoint cannot be false if wedge is true")
-               list_head(arc(N+1,r,angle,d,cp,points,width,thickness,start,wedge,long,cw,ccw,true)) :
-    assert(is_undef(N) || is_integer(N), "Number of points must be an integer")
-    // First try for 2D arc specified by width and thickness
-    is_def(width) && is_def(thickness)? (
-                assert(!any_defined([r,cp,points]) && !any([cw,ccw,long]),"Conflicting or invalid parameters to arc")
-                assert(width>0, "Width must be postive")
-                assert(thickness>0, "Thickness must be positive")
-        arc(N,points=[[width/2,0], [0,thickness], [-width/2,0]],wedge=wedge)
-    ) : is_def(angle)? (
-        let(
-            parmok = !any_defined([points,width,thickness]) &&
-                ((is_vector(angle,2) && is_undef(start)) || is_num(angle))
-        )
-        assert(parmok,"Invalid parameters in arc")
-        let(
-            cp = first_defined([cp,[0,0]]),
-            start = is_def(start)? start : is_vector(angle) ? angle[0] : 0,
-            angle = is_vector(angle)? angle[1]-angle[0] : angle,
-            r = get_radius(r=r, d=d)
-                )
-                assert(is_vector(cp,2),"Centerpoint must be a 2d vector")
-                assert(angle!=0, "Arc has zero length")
-                assert(is_def(r) && r>0, "Arc radius invalid")
-                let(
-            N = max(3, is_undef(N)? ceil(segs(r)*abs(angle)/360) : N),
-            arcpoints = [for(i=[0:N-1]) let(theta = start + i*angle/(N-1)) r*[cos(theta),sin(theta)]+cp],
-            extra = wedge? [cp] : []
-        )
-        concat(extra,arcpoints)
-    ) :
-          assert(is_path(points,[2,3]),"Point list is invalid")
-        // Arc is 3D, so transform points to 2D and make a recursive call, then remap back to 3D
-         len(points[0])==3? (
-                assert(!(cw || ccw), "(Counter)clockwise isn't meaningful in 3d, so `cw` and `ccw` must be false")
-                assert(is_undef(cp) || is_vector(cp,3),"points are 3d so cp must be 3d")
-        let(
-            plane = [is_def(cp) ? cp : points[2], points[0], points[1]],
-            center2d = is_def(cp) ? project_plane(plane,cp) : undef,
-            points2d = project_plane(plane, points)
-        )
-        lift_plane(plane,arc(N,cp=center2d,points=points2d,wedge=wedge,long=long))
-    ) : is_def(cp)? (
-        // Arc defined by center plus two points, will have radius defined by center and points[0]
-        // and extent defined by direction of point[1] from the center
-                assert(is_vector(cp,2), "Centerpoint must be a 2d vector")
-                assert(len(points)==2, "When pointlist has length 3 centerpoint is not allowed")
-                assert(points[0]!=points[1], "Arc endpoints are equal")
-                assert(cp!=points[0]&&cp!=points[1], "Centerpoint equals an arc endpoint")
-                assert(count_true([long,cw,ccw])<=1, str("Only one of `long`, `cw` and `ccw` can be true",cw,ccw,long))
-        let(    
-            angle = vector_angle(points[0], cp, points[1]),
-            v1 = points[0]-cp,
-            v2 = points[1]-cp,
-            prelim_dir = sign(det2([v1,v2])),   // z component of cross product
-                        dir = prelim_dir != 0
-                                  ? prelim_dir
-                                  : assert(cw || ccw, "Collinear inputs don't define a unique arc")
-                                    1,
-            r=norm(v1),
-                        final_angle = long || (ccw && dir<0) || (cw && dir>0) ? -dir*(360-angle) : dir*angle
-        )
-        arc(N,cp=cp,r=r,start=atan2(v1.y,v1.x),angle=final_angle,wedge=wedge)
-    ) : (
-        // Final case is arc passing through three points, starting at point[0] and ending at point[3]
-        let(col = collinear(points[0],points[1],points[2]))
-        assert(!col, "Collinear inputs do not define an arc")
-        let(
-            cp = line_intersection(_normal_segment(points[0],points[1]),_normal_segment(points[1],points[2])),
-            // select order to be counterclockwise
-            dir = det2([points[1]-points[0],points[2]-points[1]]) > 0,
-            points = dir? select(points,[0,2]) : select(points,[2,0]),
-            r = norm(points[0]-cp),
-            theta_start = atan2(points[0].y-cp.y, points[0].x-cp.x),
-            theta_end = atan2(points[1].y-cp.y, points[1].x-cp.x),
-            angle = posmod(theta_end-theta_start, 360),
-            arcpts = arc(N,cp=cp,r=r,start=theta_start,angle=angle,wedge=wedge)
-        )
-        dir ? arcpts : reverse(arcpts)
-    );
-
-
-module arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false)
-{
-    path = arc(N=N, r=r, angle=angle, d=d, cp=cp, points=points, width=width, thickness=thickness, start=start, wedge=wedge);
-    polygon(path);
-}
-
-
-function _normal_segment(p1,p2) =
-    let(center = (p1+p2)/2)
-    [center, center + norm(p1-p2)/2 * line_normal(p1,p2)];
-
-
-// Function: turtle()
-// Usage:
-//   turtle(commands, [state], [full_state=], [repeat=])
-// Topics: Shapes (2D), Path Generators (2D), Mini-Language
-// See Also: turtle3d()
-// Description:
-//   Use a sequence of turtle graphics commands to generate a path.  The parameter `commands` is a list of
-//   turtle commands and optional parameters for each command.  The turtle state has a position, movement direction,
-//   movement distance, and default turn angle.  If you do not give `state` as input then the turtle starts at the
-//   origin, pointed along the positive x axis with a movement distance of 1.  By default, `turtle` returns just
-//   the computed turtle path.  If you set `full_state` to true then it instead returns the full turtle state.
-//   You can invoke `turtle` again with this full state to continue the turtle path where you left off.
-//   .
-//   The turtle state is a list with three entries: the path constructed so far, the current step as a 2-vector, the current default angle,
-//   and the current arcsteps setting.  
-//   .
-//   Commands     | Arguments          | What it does
-//   ------------ | ------------------ | -------------------------------
-//   "move"       | [dist]             | Move turtle scale*dist units in the turtle direction.  Default dist=1.  
-//   "xmove"      | [dist]             | Move turtle scale*dist units in the x direction. Default dist=1.  Does not change turtle direction.
-//   "ymove"      | [dist]             | Move turtle scale*dist units in the y direction. Default dist=1.  Does not change turtle direction.
-//   "xymove"     | vector             | Move turtle by the specified vector.  Does not change turtle direction. 
-//   "untilx"     | xtarget            | Move turtle in turtle direction until x==xtarget.  Produces an error if xtarget is not reachable.
-//   "untily"     | ytarget            | Move turtle in turtle direction until y==ytarget.  Produces an error if xtarget is not reachable.
-//   "jump"       | point              | Move the turtle to the specified point
-//   "xjump"      | x                  | Move the turtle's x position to the specified value
-//   "yjump       | y                  | Move the turtle's y position to the specified value
-//   "turn"       | [angle]            | Turn turtle direction by specified angle, or the turtle's default turn angle.  The default angle starts at 90.
-//   "left"       | [angle]            | Same as "turn"
-//   "right"      | [angle]            | Same as "turn", -angle
-//   "angle"      | angle              | Set the default turn angle.
-//   "setdir"     | dir                | Set turtle direction.  The parameter `dir` can be an angle or a vector.
-//   "length"     | length             | Change the turtle move distance to `length`
-//   "scale"      | factor             | Multiply turtle move distance by `factor`
-//   "addlength"  | length             | Add `length` to the turtle move distance
-//   "repeat"     | count, commands    | Repeats a list of commands `count` times.
-//   "arcleft"    | radius, [angle]    | Draw an arc from the current position toward the left at the specified radius and angle.  The turtle turns by `angle`.  A negative angle draws the arc to the right instead of the left, and leaves the turtle facing right.  A negative radius draws the arc to the right but leaves the turtle facing left.  
-//   "arcright"   | radius, [angle]    | Draw an arc from the current position toward the right at the specified radius and angle
-//   "arcleftto"  | radius, angle      | Draw an arc at the given radius turning toward the left until reaching the specified absolute angle.  
-//   "arcrightto" | radius, angle      | Draw an arc at the given radius turning toward the right until reaching the specified absolute angle.  
-//   "arcsteps"   | count              | Specifies the number of segments to use for drawing arcs.  If you set it to zero then the standard `$fn`, `$fa` and `$fs` variables define the number of segments.  
-//
-// Arguments:
-//   commands = List of turtle commands
-//   state = Starting turtle state (from previous call) or starting point.  Default: start at the origin, pointing right.
-//   ---
-//   full_state = If true return the full turtle state for continuing the path in subsequent turtle calls.  Default: false
-//   repeat = Number of times to repeat the command list.  Default: 1
-//
-// Example(2D): Simple rectangle
-//   path = turtle(["xmove",3, "ymove", "xmove",-3, "ymove",-1]);
-//   stroke(path,width=.1);
-// Example(2D): Pentagon
-//   path=turtle(["angle",360/5,"move","turn","move","turn","move","turn","move"]);
-//   stroke(path,width=.1,closed=true);
-// Example(2D): Pentagon using the repeat argument
-//   path=turtle(["move","turn",360/5],repeat=5);
-//   stroke(path,width=.1,closed=true);
-// Example(2D): Pentagon using the repeat turtle command, setting the turn angle
-//   path=turtle(["angle",360/5,"repeat",5,["move","turn"]]);
-//   stroke(path,width=.1,closed=true);
-// Example(2D): Pentagram
-//   path = turtle(["move","left",144], repeat=4);
-//   stroke(path,width=.05,closed=true);
-// Example(2D): Sawtooth path
-//   path = turtle([
-//       "turn", 55,
-//       "untily", 2,
-//       "turn", -55-90,
-//       "untily", 0,
-//       "turn", 55+90,
-//       "untily", 2.5,
-//       "turn", -55-90,
-//       "untily", 0,
-//       "turn", 55+90,
-//       "untily", 3,
-//       "turn", -55-90,
-//       "untily", 0
-//   ]);
-//   stroke(path, width=.1);
-// Example(2D): Simpler way to draw the sawtooth.  The direction of the turtle is preserved when executing "yjump".
-//   path = turtle([
-//       "turn", 55,
-//       "untily", 2,
-//       "yjump", 0,
-//       "untily", 2.5,
-//       "yjump", 0,
-//       "untily", 3,
-//       "yjump", 0,
-//   ]);
-//   stroke(path, width=.1);
-// Example(2DMed): square spiral
-//   path = turtle(["move","left","addlength",1],repeat=50);
-//   stroke(path,width=.2);
-// Example(2DMed): pentagonal spiral
-//   path = turtle(["move","left",360/5,"addlength",1],repeat=50);
-//   stroke(path,width=.2);
-// Example(2DMed): yet another spiral, without using `repeat`
-//   path = turtle(concat(["angle",71],flatten(repeat(["move","left","addlength",1],50))));
-//   stroke(path,width=.2);
-// Example(2DMed): The previous spiral grows linearly and eventually intersects itself.  This one grows geometrically and does not.
-//   path = turtle(["move","left",71,"scale",1.05],repeat=50);
-//   stroke(path,width=.05);
-// Example(2D): Koch Snowflake
-//   function koch_unit(depth) =
-//       depth==0 ? ["move"] :
-//       concat(
-//           koch_unit(depth-1),
-//           ["right"],
-//           koch_unit(depth-1),
-//           ["left","left"],
-//           koch_unit(depth-1),
-//           ["right"],
-//           koch_unit(depth-1)
-//       );
-//   koch=concat(["angle",60,"repeat",3],[concat(koch_unit(3),["left","left"])]);
-//   polygon(turtle(koch));
-function turtle(commands, state=[[[0,0]],[1,0],90,0], full_state=false, repeat=1) =
-    let( state = is_vector(state) ? [[state],[1,0],90,0] : state )
-        repeat == 1?
-            _turtle(commands,state,full_state) :
-            _turtle_repeat(commands, state, full_state, repeat);
-
-function _turtle_repeat(commands, state, full_state, repeat) =
-    repeat==1?
-        _turtle(commands,state,full_state) :
-        _turtle_repeat(commands, _turtle(commands, state, true), full_state, repeat-1);
-
-function _turtle_command_len(commands, index) =
-    let( one_or_two_arg = ["arcleft","arcright", "arcleftto", "arcrightto"] )
-    commands[index] == "repeat"? 3 :   // Repeat command requires 2 args
-    // For these, the first arg is required, second arg is present if it is not a string
-    in_list(commands[index], one_or_two_arg) && len(commands)>index+2 && !is_string(commands[index+2]) ? 3 :  
-    is_string(commands[index+1])? 1 :  // If 2nd item is a string it's must be a new command
-    2;                                 // Otherwise we have command and arg
-
-function _turtle(commands, state, full_state, index=0) =
-    index < len(commands) ?
-    _turtle(commands,
-            _turtle_command(commands[index],commands[index+1],commands[index+2],state,index),
-            full_state,
-            index+_turtle_command_len(commands,index)
-        ) :
-        ( full_state ? state : state[0] );
-
-// Turtle state: state = [path, step_vector, default angle, default arcsteps]
-
-function _turtle_command(command, parm, parm2, state, index) =
-    command == "repeat"?
-        assert(is_num(parm),str("\"repeat\" command requires a numeric repeat count at index ",index))
-        assert(is_list(parm2),str("\"repeat\" command requires a command list parameter at index ",index))
-        _turtle_repeat(parm2, state, true, parm) :
-    let(
-        path = 0,
-        step=1,
-        angle=2,
-        arcsteps=3,
-        parm = !is_string(parm) ? parm : undef,
-        parm2 = !is_string(parm2) ? parm2 : undef,
-        needvec = ["jump", "xymove"],
-        neednum = ["untilx","untily","xjump","yjump","angle","length","scale","addlength"],
-        needeither = ["setdir"],
-        chvec = !in_list(command,needvec) || is_vector(parm,2),
-        chnum = !in_list(command,neednum) || is_num(parm),
-        vec_or_num = !in_list(command,needeither) || (is_num(parm) || is_vector(parm,2)),
-        lastpt = last(state[path])
-    )
-    assert(chvec,str("\"",command,"\" requires a vector parameter at index ",index))
-    assert(chnum,str("\"",command,"\" requires a numeric parameter at index ",index))
-    assert(vec_or_num,str("\"",command,"\" requires a vector or numeric parameter at index ",index))
-
-    command=="move" ? list_set(state, path, concat(state[path],[default(parm,1)*state[step]+lastpt])) :
-    command=="untilx" ? (
-        let(
-            int = line_intersection([lastpt,lastpt+state[step]], [[parm,0],[parm,1]]),
-            xgood = sign(state[step].x) == sign(int.x-lastpt.x)
-        )
-        assert(xgood,str("\"untilx\" never reaches desired goal at index ",index))
-        list_set(state,path,concat(state[path],[int]))
-    ) :
-    command=="untily" ? (
-        let(
-            int = line_intersection([lastpt,lastpt+state[step]], [[0,parm],[1,parm]]),
-            ygood = is_def(int) && sign(state[step].y) == sign(int.y-lastpt.y)
-        )
-        assert(ygood,str("\"untily\" never reaches desired goal at index ",index))
-        list_set(state,path,concat(state[path],[int]))
-    ) :
-    command=="xmove" ? list_set(state, path, concat(state[path],[default(parm,1)*norm(state[step])*[1,0]+lastpt])):
-    command=="ymove" ? list_set(state, path, concat(state[path],[default(parm,1)*norm(state[step])*[0,1]+lastpt])):
-        command=="xymove" ? list_set(state, path, concat(state[path], [lastpt+parm])):
-    command=="jump" ?  list_set(state, path, concat(state[path],[parm])):
-    command=="xjump" ? list_set(state, path, concat(state[path],[[parm,lastpt.y]])):
-    command=="yjump" ? list_set(state, path, concat(state[path],[[lastpt.x,parm]])):
-    command=="turn" || command=="left" ? list_set(state, step, rot(default(parm,state[angle]),p=state[step],planar=true)) :
-    command=="right" ? list_set(state, step, rot(-default(parm,state[angle]),p=state[step],planar=true)) :
-    command=="angle" ? list_set(state, angle, parm) :
-    command=="setdir" ? (
-        is_vector(parm) ?
-            list_set(state, step, norm(state[step]) * unit(parm)) :
-            list_set(state, step, norm(state[step]) * [cos(parm),sin(parm)])
-    ) :
-    command=="length" ? list_set(state, step, parm*unit(state[step])) :
-    command=="scale" ?  list_set(state, step, parm*state[step]) :
-    command=="addlength" ?  list_set(state, step, state[step]+unit(state[step])*parm) :
-    command=="arcsteps" ? list_set(state, arcsteps, parm) :
-    command=="arcleft" || command=="arcright" ?
-        assert(is_num(parm),str("\"",command,"\" command requires a numeric radius value at index ",index))  
-        let(
-            myangle = default(parm2,state[angle]),
-            lrsign = command=="arcleft" ? 1 : -1,
-            radius = parm*sign(myangle),
-            center = lastpt + lrsign*radius*line_normal([0,0],state[step]),
-            steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps], 
-            arcpath = myangle == 0 || radius == 0 ? [] : arc(
-                steps,
-                points = [
-                    lastpt,
-                    rot(cp=center, p=lastpt, a=sign(parm)*lrsign*myangle/2),
-                    rot(cp=center, p=lastpt, a=sign(parm)*lrsign*myangle)
-                ]
-            )
-        )
-        list_set(
-            state, [path,step], [
-                concat(state[path], list_tail(arcpath)),
-                rot(lrsign * myangle,p=state[step],planar=true)
-            ]
-        ) :
-    command=="arcleftto" || command=="arcrightto" ?
-        assert(is_num(parm),str("\"",command,"\" command requires a numeric radius value at index ",index))
-        assert(is_num(parm2),str("\"",command,"\" command requires a numeric angle value at index ",index))
-        let(
-            radius = parm,
-            lrsign = command=="arcleftto" ? 1 : -1,
-            center = lastpt + lrsign*radius*line_normal([0,0],state[step]),
-            steps = state[arcsteps]==0 ? segs(abs(radius)) : state[arcsteps],
-            start_angle = posmod(atan2(state[step].y, state[step].x),360),
-            end_angle = posmod(parm2,360),
-            delta_angle =  -start_angle + (lrsign * end_angle < lrsign*start_angle ? end_angle+lrsign*360 : end_angle),
-            arcpath = delta_angle == 0 || radius==0 ? [] : arc(
-                steps,
-                points = [
-                    lastpt,
-                    rot(cp=center, p=lastpt, a=sign(radius)*delta_angle/2),
-                    rot(cp=center, p=lastpt, a=sign(radius)*delta_angle)
-                ]
-            )
-        )
-        list_set(
-            state, [path,step], [
-                concat(state[path], list_tail(arcpath)),
-                rot(delta_angle,p=state[step],planar=true)
-            ]
-        ) :
-    assert(false,str("Unknown turtle command \"",command,"\" at index",index))
-    [];
-
-
 
 // Section: 2D Primitives
+
+// Function&Module: square()
+// Topics: Shapes (2D), Path Generators (2D)
+// Usage: As a Built-in Module
+//   square(size, [center]);
+// Usage: As a Function
+//   path = square(size, [center]);
+// See Also: rect()
+// Description:
+//   When called as the builtin module, creates a 2D square or rectangle of the given size.
+//   When called as a function, returns a 2D path/list of points for a square/rectangle of the given size.
+// Arguments:
+//   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
+//   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
+//   ---
+//   anchor = (Function only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = (Function only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Example(2D):
+//   square(40);
+// Example(2D): Centered
+//   square([40,30], center=true);
+// Example(2D): Called as Function
+//   path = square([40,30], anchor=FRONT, spin=30);
+//   stroke(path, closed=true);
+//   move_copies(path) color("blue") circle(d=2,$fn=8);
+function square(size=1, center, anchor, spin=0) =
+    let(
+        anchor = get_anchor(anchor, center, [-1,-1], [-1,-1]),
+        size = is_num(size)? [size,size] : point2d(size),
+        path = [
+            [ size.x,-size.y],
+            [-size.x,-size.y],
+            [-size.x, size.y],
+            [ size.x, size.y]
+        ] / 2
+    ) reorient(anchor,spin, two_d=true, size=size, p=path);
+
+
 
 // Function&Module: rect()
 // Usage: As Module
@@ -992,6 +159,38 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
         reorient(anchor,spin, two_d=true, size=size, p=path);
 
 
+// Function&Module: circle()
+// Topics: Shapes (2D), Path Generators (2D)
+// Usage: As a Built-in Module
+//   circle(r|d=, ...);
+// Usage: As a Function
+//   path = circle(r|d=, ...);
+// See Also: oval()
+// Description:
+//   When called as the builtin module, creates a 2D polygon that approximates a circle of the given size.
+//   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle of the given size.
+// Arguments:
+//   r = The radius of the circle to create.
+//   d = The diameter of the circle to create.
+//   ---
+//   anchor = (Function only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = (Function only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Example(2D): By Radius
+//   circle(r=25);
+// Example(2D): By Diameter
+//   circle(d=50);
+// Example(NORENDER): Called as Function
+//   path = circle(d=50, anchor=FRONT, spin=45);
+function circle(r, d, anchor=CENTER, spin=0) =
+    let(
+        r = get_radius(r=r, d=d, dflt=1),
+        sides = segs(r),
+        path = [for (i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]]
+    ) reorient(anchor,spin, two_d=true, r=r, p=path);
+
+
+
+
 // Function&Module: oval()
 // Usage:
 //   oval(r|d=, [realign=], [circum=])
@@ -1055,8 +254,7 @@ function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
     ) reorient(anchor,spin, two_d=true, r=[rx,ry], p=pts);
 
 
-
-// Section: 2D N-Gons
+// Section: Polygons
 
 // Function&Module: regular_ngon()
 // Usage:
@@ -1153,8 +351,8 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
                 tipp = apply(mat, polar_to_xy(r-inset+rounding,a1)),
                 pos = (p1+p2)/2
             ) each [
-                anchorpt(str("tip",i), tipp, unit(tipp,BACK), 0),
-                anchorpt(str("side",i), pos, unit(pos,BACK), 0),
+                named_anchor(str("tip",i), tipp, unit(tipp,BACK), 0),
+                named_anchor(str("side",i), pos, unit(pos,BACK), 0),
             ]
         ]
     ) reorient(anchor,spin, two_d=true, path=path, extent=false, p=path, anchors=anchors);
@@ -1182,8 +380,8 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
             tipp = apply(mat, polar_to_xy(r-inset+rounding,a1)),
             pos = (p1+p2)/2
         ) each [
-            anchorpt(str("tip",i), tipp, unit(tipp,BACK), 0),
-            anchorpt(str("side",i), pos, unit(pos,BACK), 0),
+            named_anchor(str("tip",i), tipp, unit(tipp,BACK), 0),
+            named_anchor(str("side",i), pos, unit(pos,BACK), 0),
         ]
     ];
     path = regular_ngon(n=n, r=r, rounding=rounding, _mat=mat, _anchs=anchors);
@@ -1377,10 +575,6 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
     regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, align_tip=align_tip, align_side=align_side, anchor=anchor, spin=spin) children();
 
 
-
-// Section: Other 2D Shapes
-
-
 // Function&Module: trapezoid()
 // Usage: As Module
 //   trapezoid(h, w1, w2, [shift=], [rounding=], [chamfer=], ...);
@@ -1486,136 +680,6 @@ module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENTER
 }
 
 
-// Function&Module: teardrop2d()
-//
-// Description:
-//   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.
-//
-// Usage: As Module
-//   teardrop2d(r/d=, [ang], [cap_h]);
-// Usage: With Attachments
-//   teardrop2d(r/d=, [ang], [cap_h], ...) { attachments }
-// Usage: As Function
-//   path = teardrop2d(r/d=, [ang], [cap_h]);
-//
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-//
-// See Also: teardrop(), onion()
-//
-// Arguments:
-//   r = radius of circular part of teardrop.  (Default: 1)
-//   ang = angle of hat walls from the Y axis.  (Default: 45 degrees)
-//   cap_h = if given, height above center where the shape will be truncated.
-//   ---
-//   d = diameter of spherical portion of bottom. (Use instead of r)
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//
-// Example(2D): Typical Shape
-//   teardrop2d(r=30, ang=30);
-// Example(2D): Crop Cap
-//   teardrop2d(r=30, ang=30, cap_h=40);
-// Example(2D): Close Crop
-//   teardrop2d(r=30, ang=30, cap_h=20);
-module teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0)
-{
-    path = teardrop2d(r=r, d=d, ang=ang, cap_h=cap_h);
-    attachable(anchor,spin, two_d=true, path=path) {
-        polygon(path);
-        children();
-    }
-}
-
-
-function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
-    let(
-        r = get_radius(r=r, d=d, dflt=1),
-        tanpt = polar_to_xy(r, ang),
-        tip_y = adj_ang_to_hyp(r, 90-ang),
-        cap_h = min(default(cap_h,tip_y), tip_y),
-        cap_w = tanpt.y >= cap_h
-          ? hyp_opp_to_adj(r, cap_h)
-          : adj_ang_to_opp(tip_y-cap_h, ang),
-        ang2 = min(ang,atan2(cap_h,cap_w)),
-        sa = 180 - ang2,
-        ea = 360 + ang2,
-        steps = segs(r)*(ea-sa)/360,
-        step = (ea-sa)/steps,
-        path = deduplicate(
-            [
-                [ cap_w,cap_h],
-                for (i=[0:1:steps]) let(a=ea-i*step) r*[cos(a),sin(a)],
-                [-cap_w,cap_h]
-            ], closed=true
-        ),
-        maxx_idx = max_index(subindex(path,0)),
-        path2 = polygon_shift(path,maxx_idx)
-    ) reorient(anchor,spin, two_d=true, path=path2, p=path2);
-
-
-
-// Function&Module: glued_circles()
-// Usage: As Module
-//   glued_circles(r/d=, [spread=], [tangent=], ...);
-// Usage: With Attachments
-//   glued_circles(r/d=, [spread=], [tangent=], ...) { attachments }
-// Usage: As Function
-//   path = glued_circles(r/d=, [spread=], [tangent=], ...);
-// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), oval()
-// Description:
-//   When called as a function, returns a 2D path forming a shape of two circles joined by curved waist.
-//   When called as a module, creates a 2D shape of two circles joined by curved waist.
-// Arguments:
-//   r = The radius of the end circles.
-//   spread = The distance between the centers of the end circles.  Default: 10
-//   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the Y axis.  Default: 30
-//   ---
-//   d = The diameter of the end circles.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-// Examples(2D):
-//   glued_circles(r=15, spread=40, tangent=45);
-//   glued_circles(d=30, spread=30, tangent=30);
-//   glued_circles(d=30, spread=30, tangent=15);
-//   glued_circles(d=30, spread=30, tangent=-30);
-// Example(2D): Called as Function
-//   stroke(closed=true, glued_circles(r=15, spread=40, tangent=45));
-function glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) =
-    let(
-        r = get_radius(r=r, d=d, dflt=10),
-        r2 = (spread/2 / sin(tangent)) - r,
-        cp1 = [spread/2, 0],
-        cp2 = [0, (r+r2)*cos(tangent)],
-        sa1 = 90-tangent,
-        ea1 = 270+tangent,
-        lobearc = ea1-sa1,
-        lobesegs = floor(segs(r)*lobearc/360),
-        lobestep = lobearc / lobesegs,
-        sa2 = 270-tangent,
-        ea2 = 270+tangent,
-        subarc = ea2-sa2,
-        arcsegs = ceil(segs(r2)*abs(subarc)/360),
-        arcstep = subarc / arcsegs,
-        path = concat(
-            [for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep)     r  * [cos(a),sin(a)] - cp1],
-            tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep+180)  r2 * [cos(a),sin(a)] - cp2],
-            [for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep+180) r  * [cos(a),sin(a)] + cp1],
-            tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep)      r2 * [cos(a),sin(a)] + cp2]
-        ),
-        maxx_idx = max_index(subindex(path,0)),
-        path2 = reverse_polygon(polygon_shift(path,maxx_idx))
-    ) reorient(anchor,spin, two_d=true, path=path2, extent=true, p=path2);
-
-
-module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
-    path = glued_circles(r=r, d=d, spread=spread, tangent=tangent);
-    attachable(anchor,spin, two_d=true, path=path, extent=true) {
-        polygon(path);
-        children();
-    }
-}
-
 
 // Function&Module: star()
 // Usage: As Module
@@ -1669,14 +733,16 @@ function star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit
     assert(is_undef(align_tip) || is_vector(align_tip))
     assert(is_undef(align_pit) || is_vector(align_pit))
     assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit")
+    assert(is_def(n), "Must specify number of points, n")
     let(
         r = get_radius(r1=or, d1=od, r=r, d=d),
         count = num_defined([ir,id,step]),
         stepOK = is_undef(step) || (step>1 && step<n/2)
     )
-    assert(is_def(n), "Must specify number of points, n")
     assert(count==1, "Must specify exactly one of ir, id, step")
-    assert(stepOK, str("Parameter 'step' must be between 2 and ",floor(n/2)," for ",n," point star"))
+    assert(stepOK,  n==4 ? "Parameter 'step' not allowed for 4 point stars"
+                  : n==5 || n==6 ? str("Parameter 'step' must be 2 for ",n," point stars")
+                  : str("Parameter 'step' must be between 2 and ",floor(n/2-1/2)," for ",n," point stars"))
     let(
         mat = !is_undef(_mat) ? _mat :
             ( realign? rot(-180/n, planar=true) : affine2d_identity() ) * (
@@ -1700,9 +766,9 @@ function star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit
                 p3 = apply(mat, polar_to_xy(r,a3)),
                 pos = (p1+p3)/2
             ) each [
-                anchorpt(str("tip",i), p1, unit(p1,BACK), 0),
-                anchorpt(str("pit",i), p2, unit(p2,BACK), 0),
-                anchorpt(str("midpt",i), pos, unit(pos,BACK), 0),
+                named_anchor(str("tip",i), p1, unit(p1,BACK), 0),
+                named_anchor(str("pit",i), p2, unit(p2,BACK), 0),
+                named_anchor(str("midpt",i), pos, unit(pos,BACK), 0),
             ]
         ]
     ) reorient(anchor,spin, two_d=true, path=path, p=path, anchors=anchors);
@@ -1730,9 +796,9 @@ module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, 
             p3 = apply(mat, polar_to_xy(r,a3)),
             pos = (p1+p3)/2
         ) each [
-            anchorpt(str("tip",i), p1, unit(p1,BACK), 0),
-            anchorpt(str("pit",i), p2, unit(p2,BACK), 0),
-            anchorpt(str("midpt",i), pos, unit(pos,BACK), 0),
+            named_anchor(str("tip",i), p1, unit(p1,BACK), 0),
+            named_anchor(str("pit",i), p2, unit(p2,BACK), 0),
+            named_anchor(str("midpt",i), pos, unit(pos,BACK), 0),
         ]
     ];
     path = star(n=n, r=r, ir=ir, realign=realign, _mat=mat, _anchs=anchors);
@@ -1741,6 +807,165 @@ module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, 
         children();
     }
 }
+
+
+
+// Module: jittered_poly()
+// Topics: Extrusions
+// See Also: path_add_jitter(), subdivide_long_segments()
+// Usage:
+//   jittered_poly(path, [dist]);
+// Description:
+//   Creates a 2D polygon shape from the given path in such a way that any extra
+//   collinear points are not stripped out in the way that `polygon()` normally does.
+//   This is useful for refining the mesh of a `linear_extrude()` with twist.
+// Arguments:
+//   path = The path to add jitter to.
+//   dist = The amount to jitter points by.  Default: 1/512 (0.00195)
+// Example:
+//   d = 100; h = 75; quadsize = 5;
+//   path = pentagon(d=d);
+//   spath = subdivide_long_segments(path, quadsize, closed=true);
+//   linear_extrude(height=h, twist=72, slices=h/quadsize)
+//      jittered_poly(spath);
+module jittered_poly(path, dist=1/512) {
+    polygon(path_add_jitter(path, dist, closed=true));
+}
+
+
+
+// Section: Curved 2D Shapes
+
+
+// Function&Module: teardrop2d()
+//
+// Description:
+//   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.
+//
+// Usage: As Module
+//   teardrop2d(r/d=, [ang], [cap_h]);
+// Usage: With Attachments
+//   teardrop2d(r/d=, [ang], [cap_h], ...) { attachments }
+// Usage: As Function
+//   path = teardrop2d(r/d=, [ang], [cap_h]);
+//
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+//
+// See Also: teardrop(), onion()
+//
+// Arguments:
+//   r = radius of circular part of teardrop.  (Default: 1)
+//   ang = angle of hat walls from the Y axis.  (Default: 45 degrees)
+//   cap_h = if given, height above center where the shape will be truncated.
+//   ---
+//   d = diameter of spherical portion of bottom. (Use instead of r)
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//
+// Example(2D): Typical Shape
+//   teardrop2d(r=30, ang=30);
+// Example(2D): Crop Cap
+//   teardrop2d(r=30, ang=30, cap_h=40);
+// Example(2D): Close Crop
+//   teardrop2d(r=30, ang=30, cap_h=20);
+module teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0)
+{
+    path = teardrop2d(r=r, d=d, ang=ang, cap_h=cap_h);
+    attachable(anchor,spin, two_d=true, path=path) {
+        polygon(path);
+        children();
+    }
+}
+
+
+function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
+    let(
+        r = get_radius(r=r, d=d, dflt=1),
+        tanpt = polar_to_xy(r, ang),
+        tip_y = adj_ang_to_hyp(r, 90-ang),
+        cap_h = min(default(cap_h,tip_y), tip_y),
+        cap_w = tanpt.y >= cap_h
+          ? hyp_opp_to_adj(r, cap_h)
+          : adj_ang_to_opp(tip_y-cap_h, ang),
+        ang2 = min(ang,atan2(cap_h,cap_w)),
+        sa = 180 - ang2,
+        ea = 360 + ang2,
+        steps = ceil(segs(r)*(ea-sa)/360),
+        path = deduplicate(
+            [
+                [ cap_w,cap_h],
+                for (a=lerpn(ea,sa,steps+1)) r*[cos(a),sin(a)],           
+                [-cap_w,cap_h]
+            ], closed=true
+        ),
+        maxx_idx = max_index(subindex(path,0)),
+        path2 = polygon_shift(path,maxx_idx)
+    ) reorient(anchor,spin, two_d=true, path=path2, p=path2);
+
+
+
+// Function&Module: glued_circles()
+// Usage: As Module
+//   glued_circles(r/d=, [spread=], [tangent=], ...);
+// Usage: With Attachments
+//   glued_circles(r/d=, [spread=], [tangent=], ...) { attachments }
+// Usage: As Function
+//   path = glued_circles(r/d=, [spread=], [tangent=], ...);
+// Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
+// See Also: circle(), oval()
+// Description:
+//   When called as a function, returns a 2D path forming a shape of two circles joined by curved waist.
+//   When called as a module, creates a 2D shape of two circles joined by curved waist.
+// Arguments:
+//   r = The radius of the end circles.
+//   spread = The distance between the centers of the end circles.  Default: 10
+//   tangent = The angle in degrees of the tangent point for the joining arcs, measured away from the Y axis.  Default: 30
+//   ---
+//   d = The diameter of the end circles.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Examples(2D):
+//   glued_circles(r=15, spread=40, tangent=45);
+//   glued_circles(d=30, spread=30, tangent=30);
+//   glued_circles(d=30, spread=30, tangent=15);
+//   glued_circles(d=30, spread=30, tangent=-30);
+// Example(2D): Called as Function
+//   stroke(closed=true, glued_circles(r=15, spread=40, tangent=45));
+function glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) =
+    let(
+        r = get_radius(r=r, d=d, dflt=10),
+        r2 = (spread/2 / sin(tangent)) - r,
+        cp1 = [spread/2, 0],
+        cp2 = [0, (r+r2)*cos(tangent)],
+        sa1 = 90-tangent,
+        ea1 = 270+tangent,
+        lobearc = ea1-sa1,
+        lobesegs = ceil(segs(r)*lobearc/360),
+        lobestep = lobearc / lobesegs,
+        sa2 = 270-tangent,
+        ea2 = 270+tangent,
+        subarc = ea2-sa2,
+        arcsegs = ceil(segs(r2)*abs(subarc)/360),
+        arcstep = subarc / arcsegs,
+        path = concat(
+            [for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep)     r  * [cos(a),sin(a)] - cp1],
+            tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep+180)  r2 * [cos(a),sin(a)] - cp2],
+            [for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep+180) r  * [cos(a),sin(a)] + cp1],
+            tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep)      r2 * [cos(a),sin(a)] + cp2]
+        ),
+        maxx_idx = max_index(subindex(path,0)),
+        path2 = reverse_polygon(polygon_shift(path,maxx_idx))
+    ) reorient(anchor,spin, two_d=true, path=path2, extent=true, p=path2);
+
+
+module glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) {
+    path = glued_circles(r=r, d=d, spread=spread, tangent=tangent);
+    attachable(anchor,spin, two_d=true, path=path, extent=true) {
+        polygon(path);
+        children();
+    }
+}
+
 
 
 function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
@@ -1854,7 +1079,7 @@ module reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) {
         for (i = [0:1:N-1]) let(
             ca = 360 - i * 360/N,
             cp = polar_to_xy(r, ca)
-        ) anchorpt(str("tip",i), cp, unit(cp,BACK), 0),
+        ) named_anchor(str("tip",i), cp, unit(cp,BACK), 0),
     ];
     attachable(anchor,spin, two_d=true, path=path, anchors=anchors) {
         polygon(path);
@@ -1881,7 +1106,7 @@ function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
             for (i = [0:1:N-1]) let(
                 ca = 360 - i * 360/N,
                 cp = polar_to_xy(r, ca)
-            ) anchorpt(str("tip",i), cp, unit(cp,BACK), 0),
+            ) named_anchor(str("tip",i), cp, unit(cp,BACK), 0),
         ]
     ) reorient(anchor,spin, two_d=true, path=path, anchors=anchors, p=path);
 

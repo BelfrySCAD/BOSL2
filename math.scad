@@ -35,7 +35,7 @@ NAN = acos(2);
 //   If given a number, returns the square of that number,
 //   If given a vector, returns the sum-of-squares/dot product of the vector elements.
 //   If given a matrix, returns the matrix multiplication of the matrix with itself.
-// Examples:
+// Example:
 //   sqr(3);     // Returns: 9
 //   sqr(-4);    // Returns: 16
 //   sqr([2,3,4]); // Returns: 29
@@ -50,7 +50,7 @@ function sqr(x) =
 //   foo = log2(x);
 // Description:
 //   Returns the logarithm base 2 of the value given.
-// Examples:
+// Example:
 //   log2(0.125);  // Returns: -3
 //   log2(16);     // Returns: 4
 //   log2(256);    // Returns: 8
@@ -187,7 +187,7 @@ function lerp(a,b,u) =
 //   b = Second value or vector.
 //   n = The number of values to return.
 //   endpoint = If true, the last value will be exactly `b`.  If false, the last value will be one step less.
-// Examples:
+// Example:
 //   l = lerpn(-4,4,9);        // Returns: [-4,-3,-2,-1,0,1,2,3,4]
 //   l = lerpn(-4,4,8,false);  // Returns: [-4,-3,-2,-1,0,1,2,3]
 //   l = lerpn(0,1,6);         // Returns: [0, 0.2, 0.4, 0.6, 0.8, 1]
@@ -308,7 +308,8 @@ function atanh(x) =
 //   num = quant(x, y);
 // Description:
 //   Quantize a value `x` to an integer multiple of `y`, rounding to the nearest multiple.
-//   If `x` is a list, then every item in that list will be recursively quantized.
+//   The value of `y` does NOT have to be an integer.  If `x` is a list, then every item
+//   in that list will be recursively quantized.
 // Arguments:
 //   x = The value to quantize.
 //   y = The non-zero integer quantum of the quantization.
@@ -326,9 +327,11 @@ function atanh(x) =
 //   k = quant(10.5,3);  // Returns: 12
 //   l = quant(11,3);    // Returns: 12
 //   m = quant(12,3);    // Returns: 12
-//   n = quant([12,13,13.1,14,14.1,15,16],4);  // Returns: [12,12,12,16,16,16,16]
-//   o = quant([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,12,12,12]
-//   p = quant([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[12,12,12]]
+//   n = quant(11,2.5);  // Returns: 10
+//   o = quant(12,2.5);  // Returns: 12.5
+//   p = quant([12,13,13.1,14,14.1,15,16],4);  // Returns: [12,12,12,16,16,16,16]
+//   q = quant([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,12,12,12]
+//   r = quant([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[12,12,12]]
 function quant(x,y) =
     assert( is_finite(y) && y>0, "The quantum `y` must be a non zero integer.")
     is_list(x)
@@ -342,11 +345,12 @@ function quant(x,y) =
 //   num = quantdn(x, y);
 // Description:
 //   Quantize a value `x` to an integer multiple of `y`, rounding down to the previous multiple.
-//   If `x` is a list, then every item in that list will be recursively quantized down.
+//   The value of `y` does NOT have to be an integer.  If `x` is a list, then every item in that
+//   list will be recursively quantized down.
 // Arguments:
 //   x = The value to quantize.
 //   y = The non-zero integer quantum of the quantization.
-// Examples:
+// Example:
 //   a = quantdn(12,4);    // Returns: 12
 //   b = quantdn(13,4);    // Returns: 12
 //   c = quantdn(13.1,4);  // Returns: 12
@@ -360,9 +364,11 @@ function quant(x,y) =
 //   k = quantdn(10.5,3);  // Returns: 9
 //   l = quantdn(11,3);    // Returns: 9
 //   m = quantdn(12,3);    // Returns: 12
-//   n = quantdn([12,13,13.1,14,14.1,15,16],4);  // Returns: [12,12,12,12,12,12,16]
-//   o = quantdn([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,9,9,12]
-//   p = quantdn([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[9,9,12]]
+//   n = quantdn(11,2.5);  // Returns: 10
+//   o = quantdn(12,2.5);  // Returns: 10
+//   p = quantdn([12,13,13.1,14,14.1,15,16],4);  // Returns: [12,12,12,12,12,12,16]
+//   q = quantdn([9,10,10.4,10.5,11,12],3);      // Returns: [9,9,9,9,9,12]
+//   r = quantdn([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,9,9],[9,9,12]]
 function quantdn(x,y) =
     assert( is_finite(y) && y>0, "The quantum `y` must be a non zero integer.")
     is_list(x)
@@ -376,11 +382,12 @@ function quantdn(x,y) =
 //   num = quantup(x, y);
 // Description:
 //   Quantize a value `x` to an integer multiple of `y`, rounding up to the next multiple.
-//   If `x` is a list, then every item in that list will be recursively quantized up.
+//   The value of `y` does NOT have to be an integer.  If `x` is a list, then every item in
+//   that list will be recursively quantized up.
 // Arguments:
 //   x = The value to quantize.
 //   y = The non-zero integer quantum of the quantization.
-// Examples:
+// Example:
 //   a = quantup(12,4);    // Returns: 12
 //   b = quantup(13,4);    // Returns: 16
 //   c = quantup(13.1,4);  // Returns: 16
@@ -394,9 +401,11 @@ function quantdn(x,y) =
 //   k = quantup(10.5,3);  // Returns: 12
 //   l = quantup(11,3);    // Returns: 12
 //   m = quantup(12,3);    // Returns: 12
-//   o = quantup([12,13,13.1,14,14.1,15,16],4);  // Returns: [12,16,16,16,16,16,16]
-//   p = quantup([9,10,10.4,10.5,11,12],3);      // Returns: [9,12,12,12,12,12]
-//   quantup([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,12,12],[12,12,12]]
+//   n = quantdn(11,2.5);  // Returns: 12.5
+//   o = quantdn(12,2.5);  // Returns: 12.5
+//   p = quantup([12,13,13.1,14,14.1,15,16],4);  // Returns: [12,16,16,16,16,16,16]
+//   q = quantup([9,10,10.4,10.5,11,12],3);      // Returns: [9,12,12,12,12,12]
+//   r = quantup([[9,10,10.4],[10.5,11,12]],3);  // Returns: [[9,12,12],[12,12,12]]
 function quantup(x,y) =
     assert( is_finite(y) && y>0, "The quantum `y` must be a non zero integer.")
     is_list(x)
@@ -630,7 +639,7 @@ function _cumsum(v,_i=0,_acc=[]) =
 // Arguments:
 //   a = Angle to get the value for.
 //   sines = List of [amplitude, frequency, offset] items, where the frequency is the number of times the cycle repeats around the circle.
-// Examples:
+// Example:
 //   v = sum_of_sines(30, [[10,3,0], [5,5.5,60]]);
 function sum_of_sines(a, sines) =
     assert( is_finite(a) && is_matrix(sines,undef,3), "Invalid input.")
@@ -1216,7 +1225,7 @@ function all_equal(vec,eps=0) =
 //   true if every item of the list is an integer.  Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
-// Examples:
+// Example:
 //   b = all_integer(true);  // Returns: false
 //   b = all_integer("foo"); // Returns: false
 //   b = all_integer(4);     // Returns: true

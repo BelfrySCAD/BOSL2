@@ -837,18 +837,18 @@ module screw_head(screw_info,details=false) {
 //   anchor = anchor relative to the shaft of the screw
 //   anchor_head = anchor relative to the screw head
 // Example(Med): Selected UTS (English) screws
-//   $fn=32;
-//   xdistribute(spacing=8){
-//     screw("#6", length=12);
-//     screw("#6-32", head="button", drive="torx",length=12);
-//     screw("#6-32,3/4", head="hex");
-//     screw("#6", thread="fine", head="fillister",length=12, drive="phillips");
-//     screw("#6", head="flat small",length=12,drive="slot");
-//     screw("#6-32", head="flat large", length=12, drive="torx");
-//     screw("#6-32", head="flat undercut",length=12);
-//     screw("#6-24", head="socket",length=12);          // Non-standard threading
-//     screw("#6-32", drive="hex", drive_size=1.5, length=12);
-//   }
+   $fn=32;
+   xdistribute(spacing=8){
+     screw("#6", length=12);
+     screw("#6-32", head="button", drive="torx",length=12);
+     screw("#6-32,3/4", head="hex");
+     screw("#6", thread="fine", head="fillister",length=12, drive="phillips");
+     screw("#6", head="flat small",length=12,drive="slot");
+     screw("#6-32", head="flat large", length=12, drive="torx");
+     screw("#6-32", head="flat undercut",length=12);
+     screw("#6-24", head="socket",length=12);          // Non-standard threading
+     screw("#6-32", drive="hex", drive_size=1.5, length=12);
+   }
 // Example(Med): A few examples of ISO (metric) screws
 //   $fn=32;
 //   xdistribute(spacing=8){
@@ -1243,38 +1243,30 @@ function thread_specification(screw_spec, internal=false, tolerance=undef) =
 function _thread_profile(thread) =
   let(
      pitch = struct_val(thread,"pitch"),
-     basicrad = struct_val(thread,"basic")/2,
      meanpitchrad = mean(struct_val(thread,"d_pitch"))/2,
      meanminorrad = mean(struct_val(thread,"d_minor"))/2,
      meanmajorrad = mean(struct_val(thread,"d_major"))/2,
-     depth = (meanmajorrad-meanminorrad)/pitch,
-     crestwidth = (pitch/2 - 2*(meanmajorrad-meanpitchrad)/sqrt(3))/pitch
-
+     depth = meanmajorrad-meanminorrad,
+     crestwidth = pitch/2 - 2*(meanmajorrad-meanpitchrad)/sqrt(3)
   )
+   [
+    [-depth/sqrt(3)-crestwidth/2, -depth],
+    [              -crestwidth/2,      0],
+    [               crestwidth/2,      0],
+    [ depth/sqrt(3)+crestwidth/2, -depth]
+   ]/pitch;
+
+
+/* Old non-centered profile
+  
     [
      [-1/2,-depth],
      [depth/sqrt(3)-1/2,0],
      [depth/sqrt(3)+crestwidth-1/2, 0],
      [crestwidth + 2*depth/sqrt(3)-1/2,-depth]
-    ];
-
-function _thread_profile_e(thread) =
-  let(
-     pitch = struct_val(thread,"pitch"),
-     basicrad = struct_val(thread,"basic")/2,
-     meanpitchrad = mean(struct_val(thread,"d_pitch"))/2,
-     meanminorrad = mean(struct_val(thread,"d_minor"))/2,
-     meanmajorrad = mean(struct_val(thread,"d_major"))/2,
-     depth = (meanmajorrad-meanminorrad)/pitch,
-     crestwidth = (pitch/2 - 2*(meanmajorrad-meanpitchrad)/sqrt(3))/pitch
-
-  )
-    [
-     [-1/2,-1],  // -1 instead of -depth?
-     [depth/sqrt(3)-1/2,0],
-     [depth/sqrt(3)+crestwidth-1/2, 0],
-     [crestwidth + 2*depth/sqrt(3)-1/2,-1]
-    ];
+    ]
+   ;
+*/
 
 
 module _rod(spec, length, tolerance, orient=UP, spin=0, anchor=CENTER)
@@ -1283,11 +1275,19 @@ module _rod(spec, length, tolerance, orient=UP, spin=0, anchor=CENTER)
       echo(d_major_mean = mean(struct_val(threadspec, "d_major")));
       echo(bolt_profile=_thread_profile(threadspec));
 
-      trapezoidal_threaded_rod( d=mean(struct_val(threadspec, "d_major")),
+      threaded_rod([mean(struct_val(threadspec, "d_minor")),
+                    mean(struct_val(threadspec, "d_pitch")),
+                    mean(struct_val(threadspec, "d_major"))],
+                   pitch = struct_val(threadspec, "pitch"),
+                   l=length, left_handed=false,
+                   bevel=false, orient=orient, anchor=anchor, spin=spin);
+      /*
+      generic_threaded_rod( d=mean(struct_val(threadspec, "d_major")),
                                 l=length,
                                 pitch = struct_val(threadspec, "pitch"),
                                 profile = _thread_profile(threadspec),left_handed=false,
                                 bevel=false, orient=orient, anchor=anchor, spin=spin);
+                                */
 }
 
 
@@ -1352,7 +1352,7 @@ module nut(name, diameter, thickness, thread="coarse", oversize=0, spec, toleran
    threadspec = thread_specification(spec, internal=true, tolerance=tolerance);
    echo(threadspec=threadspec,"for nut threads");
    echo(nut_minor_diam = mean(struct_val(threadspec,"d_minor")));
-   trapezoidal_threaded_nut(
+   generic_threaded_nut(
         od=diameter, id=mean(struct_val(threadspec, "d_major")), h=thickness,
         pitch=struct_val(threadspec, "pitch"),
         profile=_thread_profile(threadspec),

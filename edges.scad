@@ -41,7 +41,7 @@ function _edges_text(edges) =
     is_string(edges) ? [str("\"",edges,"\"")] :
     edges==EDGES_NONE ? ["EDGES_NONE"] :
     edges==EDGES_ALL ? ["EDGES_ALL"] :
-    is_edge_array(edges) ? [""] :
+    _is_edge_array(edges) ? [""] :
     is_vector(edges,3) ? _edges_vec_txt(edges) :
     is_list(edges) ? let(
         lst = [for (x=edges) each _edges_text(x)],
@@ -109,20 +109,20 @@ EDGE_OFFSETS = [
 
 // Section: Edge Helpers
 
-// Function: is_edge_array()
-// Topics: Edges, Type Checking
-// Usage:
-//   bool = is_edge_array(x);
-// Description:
-//   Returns true if the given value has the form of an edge array.
-// Arguments:
-//   x = The item to check the type of.
-// See Also: edges(), EDGES_NONE, EDGES_ALL
-function is_edge_array(x) = is_list(x) && is_vector(x[0]) && len(x)==3 && len(x[0])==4;
+/// Internal Function: _is_edge_array()
+/// Topics: Edges, Type Checking
+/// Usage:
+///   bool = _is_edge_array(x);
+/// Description:
+///   Returns true if the given value has the form of an edge array.
+/// Arguments:
+///   x = The item to check the type of.
+/// See Also: edges(), EDGES_NONE, EDGES_ALL
+function _is_edge_array(x) = is_list(x) && is_vector(x[0]) && len(x)==3 && len(x[0])==4;
 
 
 function _edge_set(v) =
-    is_edge_array(v)? v : [
+    _is_edge_array(v)? v : [
     for (ax=[0:2]) [
         for (b=[-1,1], a=[-1,1]) let(
             v2=[[0,a,b],[a,0,b],[a,b,0]][ax]
@@ -153,15 +153,15 @@ function _edge_set(v) =
 ];
 
 
-// Function: normalize_edges()
-// Topics: Edges
-// Usage:
-//   edges = normalize_edges(v);
-// Description:
-//   Normalizes all values in an edge array to be `1`, if it was originally greater than `0`,
-//   or `0`, if it was originally less than or equal to `0`.
-// See Also: is_edge_array(), edges(), EDGES_NONE, EDGES_ALL
-function normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
+/// Internal Function: _normalize_edges()
+/// Topics: Edges
+/// Usage:
+///   edges = _normalize_edges(v);
+/// Description:
+///   Normalizes all values in an edge array to be `1`, if it was originally greater than `0`,
+///   or `0`, if it was originally less than or equal to `0`.
+/// See Also:  edges(), EDGES_NONE, EDGES_ALL
+function _normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 
 
 // Function: edges()
@@ -259,7 +259,7 @@ function normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 //   v = The edge set to include.
 //   except = The edge set to specifically exclude, even if they are in `v`.
 //
-// See Also: is_edge_array(), normalize_edges(), EDGES_NONE, EDGES_ALL
+// See Also:  EDGES_NONE, EDGES_ALL
 //
 // Example(3D): Just the front-top edge
 //   edg = edges(FRONT+TOP);
@@ -283,11 +283,11 @@ function normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 //   edg = edges("ALL", except=edges("Z", except=BACK));
 //   show_edges(edges=edg);
 function edges(v, except=[]) =
-    (is_string(v) || is_vector(v) || is_edge_array(v))? edges([v], except=except) :
-    (is_string(except) || is_vector(except) || is_edge_array(except))? edges(v, except=[except]) :
-    except==[]? normalize_edges(sum([for (x=v) _edge_set(x)])) :
-    normalize_edges(
-        normalize_edges(sum([for (x=v) _edge_set(x)])) -
+    (is_string(v) || is_vector(v) || _is_edge_array(v))? edges([v], except=except) :
+    (is_string(except) || is_vector(except) || _is_edge_array(except))? edges(v, except=[except]) :
+    except==[]? _normalize_edges(sum([for (x=v) _edge_set(x)])) :
+    _normalize_edges(
+        _normalize_edges(sum([for (x=v) _edge_set(x)])) -
         sum([for (x=except) _edge_set(x)])
     );
 
@@ -303,7 +303,7 @@ function edges(v, except=[]) =
 //   size = The scalar size of the cube.
 //   text = The text to show on the front of the cube.
 //   txtsize = The size of the text.
-// See Also: is_edge_array(), edges(), EDGES_NONE, EDGES_ALL
+// See Also: edges(), EDGES_NONE, EDGES_ALL
 // Example:
 //   show_edges(size=30, edges=["X","Y"]);
 module show_edges(edges="ALL", size=20, text, txtsize=3) {
@@ -365,29 +365,29 @@ CORNER_OFFSETS = [
 
 // Section: Corner Helpers
 
-// Function: is_corner_array()
-// Topics: Corners, Type Checking
-// Usage:
-//   bool = is_corner_array(x)
-// Description:
-//   Returns true if the given value has the form of a corner array.
-// See Also: CORNERS_NONE, CORNERS_ALL, corners()
-function is_corner_array(x) = is_vector(x) && len(x)==8 && all([for (xx=x) xx==1||xx==0]);
+/// Internal Function: _is_corner_array()
+/// Topics: Corners, Type Checking
+/// Usage:
+///   bool = _is_corner_array(x)
+/// Description:
+///   Returns true if the given value has the form of a corner array.
+/// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+function _is_corner_array(x) = is_vector(x) && len(x)==8 && all([for (xx=x) xx==1||xx==0]);
 
 
-// Function: normalize_corners()
-// Topics: Corners
-// Usage:
-//   corns = normalize_corners(v);
-// Description:
-//   Normalizes all values in a corner array to be `1`, if it was originally greater than `0`,
-//   or `0`, if it was originally less than or equal to `0`.
-// See Also: CORNERS_NONE, CORNERS_ALL, is_corner_array(), corners()
-function normalize_corners(v) = [for (x=v) x>0? 1 : 0];
+/// Internal Function: _normalize_corners()
+/// Topics: Corners
+/// Usage:
+///   corns = _normalize_corners(v);
+/// Description:
+///   Normalizes all values in a corner array to be `1`, if it was originally greater than `0`,
+///   or `0`, if it was originally less than or equal to `0`.
+/// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+function _normalize_corners(v) = [for (x=v) x>0? 1 : 0];
 
 
 function _corner_set(v) =
-    is_corner_array(v)? v : [
+    _is_corner_array(v)? v : [
     for (i=[0:7]) let(
         v2 = CORNER_OFFSETS[i]
     ) (
@@ -480,7 +480,7 @@ function _corner_set(v) =
 //       show_corners(corners="ALL");
 //       show_corners(corners="NONE");
 //   }
-// See Also: CORNERS_NONE, CORNERS_ALL, is_corner_array(), normalize_corners()
+// See Also: CORNERS_NONE, CORNERS_ALL 
 // Example(3D): Just the front-top-right corner
 //   crn = corners(FRONT+TOP+RIGHT);
 //   show_corners(corners=crn);
@@ -497,37 +497,37 @@ function _corner_set(v) =
 //   crn = corners([BOTTOM,FRONT], except=BOTTOM+FRONT);
 //   show_corners(corners=crn);
 function corners(v, except=[]) =
-    (is_string(v) || is_vector(v) || is_corner_array(v))? corners([v], except=except) :
-    (is_string(except) || is_vector(except) || is_corner_array(except))? corners(v, except=[except]) :
-    except==[]? normalize_corners(sum([for (x=v) _corner_set(x)])) :
+    (is_string(v) || is_vector(v) || _is_corner_array(v))? corners([v], except=except) :
+    (is_string(except) || is_vector(except) || _is_corner_array(except))? corners(v, except=[except]) :
+    except==[]? _normalize_corners(sum([for (x=v) _corner_set(x)])) :
     let(
-        a = normalize_corners(sum([for (x=v) _corner_set(x)])),
-        b = normalize_corners(sum([for (x=except) _corner_set(x)]))
-    ) normalize_corners(a - b);
+        a = _normalize_corners(sum([for (x=v) _corner_set(x)])),
+        b = _normalize_corners(sum([for (x=except) _corner_set(x)]))
+    ) _normalize_corners(a - b);
 
 
-// Function: corner_edges()
-// Topics: Corners
-// Description:
-//   Returns [XCOUNT,YCOUNT,ZCOUNT] where each is the count of edges aligned with that
-//   axis that are in the edge set and touch the given corner.
-// Arguments:
-//   edges = Standard edges array.
-//   v = Vector pointing to the corner to count edge intersections at.
-// See Also: CORNERS_NONE, CORNERS_ALL, is_corner_array(), corners(), corner_edge_count()
-function corner_edges(edges, v) =
+/// Internal Function: _corner_edges()
+/// Topics: Corners
+/// Description:
+///   Returns [XCOUNT,YCOUNT,ZCOUNT] where each is the count of edges aligned with that
+///   axis that are in the edge set and touch the given corner.
+/// Arguments:
+///   edges = Standard edges array.
+///   v = Vector pointing to the corner to count edge intersections at.
+/// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+function _corner_edges(edges, v) =
     let(u = (v+[1,1,1])/2) [edges[0][u.y+u.z*2], edges[1][u.x+u.z*2], edges[2][u.x+u.y*2]];
 
 
-// Function: corner_edge_count()
-// Topics: Corners
-// Description:
-//   Counts how many given edges intersect at a specific corner.
-// Arguments:
-//   edges = Standard edges array.
-//   v = Vector pointing to the corner to count edge intersections at.
-// See Also: CORNERS_NONE, CORNERS_ALL, is_corner_array(), corners(), corner_edges()
-function corner_edge_count(edges, v) =
+/// InternalFunction: _corner_edge_count()
+/// Topics: Corners
+/// Description:
+///   Counts how many given edges intersect at a specific corner.
+/// Arguments:
+///   edges = Standard edges array.
+///   v = Vector pointing to the corner to count edge intersections at.
+/// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+function _corner_edge_count(edges, v) =
     let(u = (v+[1,1,1])/2) edges[0][u.y+u.z*2] + edges[1][u.x+u.z*2] + edges[2][u.x+u.y*2];
 
 
@@ -535,7 +535,7 @@ function _corners_text(corners) =
     is_string(corners) ? [str("\"",corners,"\"")] :
     corners==CORNERS_NONE ? ["CORNERS_NONE"] :
     corners==CORNERS_ALL ? ["CORNERS_ALL"] :
-    is_corner_array(corners) ? [""] :
+    _is_corner_array(corners) ? [""] :
     is_vector(corners,3) ? _edges_vec_txt(corners) :
     is_list(corners) ? let(
         lst = [for (x=corners) each _corners_text(x)],
@@ -563,7 +563,7 @@ function _corners_text(corners) =
 //   size = The scalar size of the cube.
 //   text = If given, overrides the text to be shown on the front of the cube.
 //   txtsize = The size of the text.
-// See Also: CORNERS_NONE, CORNERS_ALL, is_corner_array(), corners()
+// See Also: CORNERS_NONE, CORNERS_ALL, corners()
 // Example:
 //   show_corners(corners=FWD+RIGHT, size=30);
 module show_corners(corners="ALL", size=20, text, txtsize=3) {

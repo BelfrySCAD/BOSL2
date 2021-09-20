@@ -86,9 +86,9 @@ module linear_bearing_housing(d=15, l=24, tab=7, gap=5, wall=3, tabwall=5, screw
     tabh = tab/2+od/2*sqrt(2)-ogap/2;
     h = od+tab/2;
     anchors = [
-        anchorpt("axis", [0,0,-tab/2/2]),
-        anchorpt("screw", [0,2-ogap/2,tabh-tab/2/2],FWD),
-        anchorpt("nut", [0,ogap/2-2,tabh-tab/2/2],FWD)
+        named_anchor("axis", [0,0,-tab/2/2]),
+        named_anchor("screw", [0,2-ogap/2,tabh-tab/2/2],FWD),
+        named_anchor("nut", [0,ogap/2-2,tabh-tab/2/2],FWD)
     ];
     attachable(anchor,spin,orient, size=[l, od, h], anchors=anchors) {
         down(tab/2/2)

@@ -47,6 +47,23 @@ module test_v_ceil() {
 test_v_ceil();
 
 
+module test_v_lookup() {
+    lup = [[4, [3,4,5]], [5, [5,6,7]], [6, [4,5,6]]];
+    assert_equal(v_lookup(3,lup), [3,4,5]);
+    assert_equal(v_lookup(3.5,lup), [3,4,5]);
+    assert_equal(v_lookup(4,lup), [3,4,5]);
+    assert_approx(v_lookup(4.2,lup), [3.4,4.4,5.4]);
+    assert_equal(v_lookup(4.5,lup), [4,5,6]);
+    assert_equal(v_lookup(5,lup), [5,6,7]);
+    assert_approx(v_lookup(5.2,lup), [4.8,5.8,6.8]);
+    assert_equal(v_lookup(5.5,lup), [4.5,5.5,6.5]);
+    assert_equal(v_lookup(6,lup), [4,5,6]);
+    assert_equal(v_lookup(6.5,lup), [4,5,6]);
+    assert_equal(v_lookup(7,lup), [4,5,6]);
+}
+test_v_lookup();
+
+
 module test_v_mul() {
     assert_equal(v_mul([3,4,5], [8,7,6]), [24,28,30]);
     assert_equal(v_mul([1,2,3], [4,5,6]), [4,10,18]);
@@ -190,7 +207,61 @@ module test_vector_nearest(){
 }
 test_vector_nearest();
 
-cube();
+
+module test_pointlist_bounds() {
+    pts = [
+        [-53,27,12],
+        [-63,97,36],
+        [84,-32,-5],
+        [63,-24,42],
+        [23,57,-42]
+    ];
+    assert(pointlist_bounds(pts) == [[-63,-32,-42], [84,97,42]]);
+    pts2d = [
+        [-53,12],
+        [-63,36],
+        [84,-5],
+        [63,42],
+        [23,-42] 
+    ];
+    assert(pointlist_bounds(pts2d) == [[-63,-42],[84,42]]);
+    pts5d = [
+        [-53, 27, 12,-53, 12],
+        [-63, 97, 36,-63, 36],
+        [ 84,-32, -5, 84, -5], 
+        [ 63,-24, 42, 63, 42], 
+        [ 23, 57,-42, 23,-42]
+    ];
+    assert(pointlist_bounds(pts5d) == [[-63,-32,-42,-63,-42],[84,97,42,84,42]]);
+    assert(pointlist_bounds([[3,4,5,6]]), [[3,4,5,6],[3,4,5,6]]);
+}
+test_pointlist_bounds();
+
+
+module test_closest_point() {
+    ptlist = [for (i=count(100)) rands(-100,100,2,seed_value=8463+i)];
+    testpts = [for (i=count(100)) rands(-100,100,2,seed_value=6834+i)];
+    for (pt = testpts) {
+        pidx = closest_point(pt,ptlist);
+        dists = [for (p=ptlist) norm(pt-p)];
+        mindist = min(dists);
+        assert(mindist == dists[pidx]);
+    }
+}
+test_closest_point();
+
+
+module test_furthest_point() {
+    ptlist = [for (i=count(100)) rands(-100,100,2,seed_value=8463+i)];
+    testpts = [for (i=count(100)) rands(-100,100,2,seed_value=6834+i)];
+    for (pt = testpts) {
+        pidx = furthest_point(pt,ptlist);
+        dists = [for (p=ptlist) norm(pt-p)];
+        mindist = max(dists);
+        assert(mindist == dists[pidx]);
+    }
+}
+test_furthest_point();
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

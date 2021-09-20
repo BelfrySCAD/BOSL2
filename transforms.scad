@@ -1,6 +1,14 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: transforms.scad
-//   Functions and modules for translation, rotation, reflection and skewing.
+//   Functions and modules that provide shortcuts for translation,
+//   rotation and mirror operations.  Also provided are skew and frame_map
+//   which remaps the coordinate axes.  The shortcuts can act on
+//   geometry, like the usual OpenSCAD rotate() and translate(). They
+//   also work as functions that operate on lists of points in various
+//   forms: paths, VNFS and bezier patches. Lastly, the function form
+//   of the shortcuts can return a matrix representing the operation
+//   the shortcut performs. The rotation and scaling shortcuts accept
+//   an optional centerpoint for the rotation or scaling operation.
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
@@ -25,7 +33,7 @@
 //   mat = move([x=], [y=], [z=]);
 //
 // Topics: Affine, Matrices, Transforms, Translation
-// See Also: left(), right(), fwd(), back(), down(), up(), affine2d_translate(), affine3d_translate()
+// See Also: left(), right(), fwd(), back(), down(), up(), spherical_to_xyz(), altaz_to_xyz(), cylindrical_to_xyz(), polar_to_xy(), affine2d_translate(), affine3d_translate()
 //
 // Description:
 //   Translates position by the given amount.
@@ -57,6 +65,14 @@
 // Example:
 //   #sphere(d=10);
 //   move(x=-10, y=-5) sphere(d=10);
+//
+// Example(FlatSpin): Using Altitude-Azimuth Coordinates
+//   #sphere(d=10);
+//   move(altaz_to_xyz(30,90,20)) sphere(d=10);
+//
+// Example(FlatSpin): Using Spherical Coordinates
+//   #sphere(d=10);
+//   move(spherical_to_xyz(20,45,30)) sphere(d=10);
 //
 // Example(2D):
 //   path = square([50,30], center=true);
@@ -234,7 +250,7 @@ function fwd(y=0, p) = move([0,-y,0],p=p);
 //   pt2 = back(20, p=[15,23,42]);        // Returns: [15,43,42]
 //   pt3 = back(3, p=[[1,2,3],[4,5,6]]);  // Returns: [[1,5,3], [4,8,6]]
 //   mat3d = back(4);  // Returns: [[1,0,0,0],[0,1,0,4],[0,0,1,0],[0,0,0,1]]
-module back(y=0, ) {
+module back(y=0, p) {
     assert(is_undef(p), "Module form `back()` does not accept p= argument.");
     translate([0,y,0]) children();
 }
@@ -587,184 +603,9 @@ module zrot(a=0, p, cp)
 function zrot(a=0, p, cp) = rot(a, cp=cp, p=p);
 
 
-// Function&Module: xyrot()
-//
-// Usage: As Module
-//   xyrot(a, [cp=]) ...
-// Usage: As a Function to rotate points
-//   rotated = xyrot(a, p, [cp=]);
-// Usage: As a Function to get rotation matrix
-//   mat = xyrot(a, [cp=]);
-//
-// Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), xrot(), yrot(), zrot(), xzrot(), yzrot(), xyzrot(), affine3d_rot_by_axis() 
-//
-// Description:
-//   Rotates around the [1,1,0] vector axis by the given number of degrees.  If `cp` is given, rotations are performed around that centerpoint.
-//   * Called as a module, rotates all children.
-//   * Called as a function with a `p` argument containing a point, returns the rotated point.
-//   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, returns the affine3d rotational matrix.
-//
-// Arguments:
-//   a = angle to rotate by in degrees.
-//   p = If called as a function, this contains data to rotate: a point, list of points, bezier patch or VNF.
-//   ---
-//   cp = centerpoint to rotate around. Default: [0,0,0]
-//
-// Example:
-//   #cylinder(h=50, r=10, center=true);
-//   xyrot(90) cylinder(h=50, r=10, center=true);
-module xyrot(a=0, p, cp)
-{
-    assert(is_undef(p), "Module form `xyrot()` does not accept p= argument.");
-    if (a==0) {
-        children();  // May be slightly faster?
-    } else {
-        mat = xyrot(a=a, cp=cp);
-        multmatrix(mat) children();
-    }
-}
-
-function xyrot(a=0, p, cp) = rot(a=a, v=[1,1,0], cp=cp, p=p);
-
-
-// Function&Module: xzrot()
-//
-// Usage: As Module
-//   xzrot(a, [cp=]) ...
-// Usage: As Function to rotate points
-//   rotated = xzrot(a, p, [cp=]);
-// Usage: As Function to return rotation matrix
-//   mat = xzrot(a, [cp=]);
-//
-// Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), xrot(), yrot(), zrot(), xyrot(), yzrot(), xyzrot(), affine3d_rot_by_axis() 
-//
-// Description:
-//   Rotates around the [1,0,1] vector axis by the given number of degrees.  If `cp` is given, rotations are performed around that centerpoint.
-//   * Called as a module, rotates all children.
-//   * Called as a function with a `p` argument containing a point, returns the rotated point.
-//   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, returns the affine3d rotational matrix.
-//
-// Arguments:
-//   a = angle to rotate by in degrees.
-//   p = If called as a function, this contains data to rotate: a point, list of points, bezier patch or VNF.
-//   ---
-//   cp = centerpoint to rotate around. Default: [0,0,0]
-//
-// Example:
-//   #cylinder(h=50, r=10, center=true);
-//   xzrot(90) cylinder(h=50, r=10, center=true);
-module xzrot(a=0, p, cp)
-{
-    assert(is_undef(p), "Module form `xzrot()` does not accept p= argument.");
-    if (a==0) {
-        children();  // May be slightly faster?
-    } else {
-        mat = xzrot(a=a, cp=cp);
-        multmatrix(mat) children();
-    }
-}
-
-function xzrot(a=0, p, cp) = rot(a=a, v=[1,0,1], cp=cp, p=p);
-
-
-// Function&Module: yzrot()
-//
-// Usage: As Module
-//   yzrot(a, [cp=]) ...
-// Usage: As Function to rotate points
-//   rotated = yzrot(a, p, [cp=]);
-// Usage: As Function to return rotation matrix
-//   mat = yzrot(a, [cp=]);
-//
-// Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), xrot(), yrot(), zrot(), xyrot(), xzrot(), xyzrot(), affine3d_rot_by_axis() 
-//
-// Description:
-//   Rotates around the [0,1,1] vector axis by the given number of degrees.  If `cp` is given, rotations are performed around that centerpoint.
-//   * Called as a module, rotates all children.
-//   * Called as a function with a `p` argument containing a point, returns the rotated point.
-//   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, returns the affine3d rotational matrix.
-//
-// Arguments:
-//   a = angle to rotate by in degrees.
-//   p = If called as a function, this contains data to rotate: a point, list of points, bezier patch or VNF.
-//   ---
-//   cp = centerpoint to rotate around. Default: [0,0,0]
-//
-// Example:
-//   #cylinder(h=50, r=10, center=true);
-//   yzrot(90) cylinder(h=50, r=10, center=true);
-module yzrot(a=0, p, cp)
-{
-    assert(is_undef(p), "Module form `yzrot()` does not accept p= argument.");
-    if (a==0) {
-        children();  // May be slightly faster?
-    } else {
-        mat = yzrot(a=a, cp=cp);
-        multmatrix(mat) children();
-    }
-}
-
-function yzrot(a=0, p, cp) = rot(a=a, v=[0,1,1], cp=cp, p=p);
-
-
-// Function&Module: xyzrot()
-//
-// Usage: As Module
-//   xyzrot(a, [cp=]) ...
-// Usage: As Function to rotate points
-//   rotated = xyzrot(a, p, [cp=]);
-// Usage: As Function to return rotation matrix
-//   mat = xyzrot(a, [cp=]);
-//
-// Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), xrot(), yrot(), zrot(), xyrot(), xzrot(), yzrot(), affine3d_rot_by_axis() 
-//
-// Description:
-//   Rotates around the [1,1,1] vector axis by the given number of degrees.  If `cp` is given, rotations are performed around that centerpoint.
-//   * Called as a module, rotates all children.
-//   * Called as a function with a `p` argument containing a point, returns the rotated point.
-//   * Called as a function with a `p` argument containing a list of points, returns the list of rotated points.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the rotated patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
-//   * Called as a function without a `p` argument, returns the affine3d rotational matrix.
-//
-// Arguments:
-//   a = angle to rotate by in degrees.
-//   p = If called as a function, this contains data to rotate: a point, list of points, bezier patch or VNF.
-//   ---
-//   cp = centerpoint to rotate around. Default: [0,0,0]
-//
-// Example:
-//   #cylinder(h=50, r=10, center=true);
-//   xyzrot(90) cylinder(h=50, r=10, center=true);
-module xyzrot(a=0, p, cp)
-{
-    assert(is_undef(p), "Module form `xyzrot()` does not accept p= argument.");
-    if (a==0) {
-        children();  // May be slightly faster?
-    } else {
-        mat = xyzrot(a=a, cp=cp);
-        multmatrix(mat) children();
-    }
-}
-
-function xyzrot(a=0, p, cp) = rot(a=a, v=[1,1,1], cp=cp, p=p);
-
 
 //////////////////////////////////////////////////////////////////////
-// Section: Scaling and Mirroring
+// Section: Scaling
 //////////////////////////////////////////////////////////////////////
 
 
@@ -1002,6 +843,10 @@ function zscale(z=1, p, cp=0) =
     let( cp = is_num(cp)? [0,0,cp] : cp )
     scale([1,1,z], cp=cp, p=p);
 
+
+//////////////////////////////////////////////////////////////////////
+// Section: Reflection (Mirroring)
+//////////////////////////////////////////////////////////////////////
 
 // Function&Module: mirror()
 // Usage: As Module
@@ -1243,192 +1088,87 @@ function zflip(p, z=0) =
     move([0,0,z],p=mirror([0,0,1],p=move([0,0,-z],p=p)));
 
 
-// Function&Module: xyflip()
-//
-// Usage: As Module
-//   xyflip([cp]) ...
-// Usage: As Function
-//   pt = xyflip(p, [cp]);
-// Usage: Get Affine Matrix
-//   pt = xyflip([cp], [planar=]);
-//
-// Topics: Affine, Matrices, Transforms, Reflection, Mirroring
-// See Also: mirror(), xflip(), yflip(), zflip(), xzflip(), yzflip(), affine2d_mirror(), affine3d_mirror() 
-//
-// Description:
-//   Mirrors/reflects across the origin [0,0,0], along the reflection plane where X=Y.  If `cp` is given, the reflection plane passes through that point
-//   * Called as the built-in module, mirrors all children across the line/plane.
-//   * Called as a function with a point in the `p` argument, returns the point mirrored across the line/plane.
-//   * Called as a function with a list of points in the `p` argument, returns the list of points, with each one mirrored across the line/plane.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the mirrored patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the mirrored VNF.
-//   * Called as a function without a `p` argument, and `planer=true`, returns the affine2d 3x3 mirror matrix.
-//   * Called as a function without a `p` argument, and `planar=false`, returns the affine3d 4x4 mirror matrix.
-//
-// Arguments:
-//   p = If given, the point, path, patch, or VNF to mirror.  Function use only.
-//   cp = The centerpoint of the plane of reflection, given either as a point, or as a scalar distance away from the origin.
-//   ---
-//   planar = If true, and p is not given, returns a 2D affine transformation matrix.  Function use only.  Default: False
-//
-// Example(2D):
-//   xyflip() text("Foobar", size=20, halign="center");
-//
-// Example:
-//   left(10) frame_ref();
-//   right(10) xyflip() frame_ref();
-//
-// Example:
-//   xyflip(cp=-15) frame_ref();
-//
-// Example:
-//   xyflip(cp=[10,10,10]) frame_ref();
-//
-// Example: Called as Function for a 3D matrix
-//   mat = xyflip();
-//   multmatrix(mat) frame_ref();
-//
-// Example(2D): Called as Function for a 2D matrix
-//   mat = xyflip(planar=true);
-//   multmatrix(mat) text("Foobar", size=20, halign="center");
-module xyflip(p, cp=0, planar) {
-    assert(is_undef(p), "Module form `xyflip()` does not accept p= argument.");
-    assert(is_undef(planar), "Module form `xyflip()` does not accept planar= argument.");
-    mat = xyflip(cp=cp);
-    multmatrix(mat) children();
-}
+//////////////////////////////////////////////////////////////////////
+// Section: Other Transformations
+//////////////////////////////////////////////////////////////////////
 
-function xyflip(p, cp=0, planar=false) =
-    assert(is_finite(cp) || is_vector(cp))
+// Function&Module: frame_map()
+// Usage: As module
+//   frame_map(v1, v2, v3, [reverse=]) { ... }
+// Usage: As function to remap points
+//   transformed = frame_map(v1, v2, v3, p=points, [reverse=]);
+// Usage: As function to return a transformation matrix:
+//   map = frame_map(v1, v2, v3, [reverse=]);
+//   map = frame_map(x=VECTOR1, y=VECTOR2, [reverse=]);
+//   map = frame_map(x=VECTOR1, z=VECTOR2, [reverse=]);
+//   map = frame_map(y=VECTOR1, z=VECTOR2, [reverse=]);
+// Topics: Affine, Matrices, Transforms, Rotation
+// See Also: rot(), xrot(), yrot(), zrot(), affine2d_zrot()
+// Description:
+//   Maps one coordinate frame to another.  You must specify two or
+//   three of `x`, `y`, and `z`.  The specified axes are mapped to the vectors you supplied, so if you
+//   specify x=[1,1] then the x axis will be mapped to the line y=x.  If you
+//   give two inputs, the third vector is mapped to the appropriate normal to maintain a right hand
+//   coordinate system.  If the vectors you give are orthogonal the result will be a rotation and the
+//   `reverse` parameter will supply the inverse map, which enables you to map two arbitrary
+//   coordinate systems to each other by using the canonical coordinate system as an intermediary.
+//   You cannot use the `reverse` option with non-orthogonal inputs.  Note that only the direction
+//   of the specified vectors matters: the transformation will not apply scaling, though it can
+//   skew if your provide non-orthogonal axes.  
+// Arguments:
+//   x = Destination 3D vector for x axis.
+//   y = Destination 3D vector for y axis.
+//   z = Destination 3D vector for z axis.
+//   reverse = reverse direction of the map for orthogonal inputs.  Default: false
+// Example:  Remap axes after linear extrusion
+//   frame_map(x=[0,1,0], y=[0,0,1]) linear_extrude(height=10) square(3);
+// Example: This map is just a rotation around the z axis
+//   mat = frame_map(x=[1,1,0], y=[-1,1,0]); 
+// Example:  This map is not a rotation because x and y aren't orthogonal
+//   mat = frame_map(x=[1,0,0], y=[1,1,0]); 
+// Example:  This sends [1,1,0] to [0,1,1] and [-1,1,0] to [0,-1,1]
+//   mat = frame_map(x=[0,1,1], y=[0,-1,1]) * frame_map(x=[1,1,0], y=[-1,1,0],reverse=true);
+function frame_map(x,y,z, p, reverse=false) =
+    is_def(p)
+    ? apply(frame_map(x,y,z,reverse=reverse), p)
+    :
+    assert(num_defined([x,y,z])>=2, "Must define at least two inputs")
     let(
-        v = unit([-1,1,0]),
-        n = planar? point2d(v) : v
+        xvalid = is_undef(x) || (is_vector(x) && len(x)==3),
+        yvalid = is_undef(y) || (is_vector(y) && len(y)==3),
+        zvalid = is_undef(z) || (is_vector(z) && len(z)==3)
     )
-    cp == 0 || cp==[0,0,0]? mirror(n, p=p) :
+    assert(xvalid,"Input x must be a length 3 vector")
+    assert(yvalid,"Input y must be a length 3 vector")
+    assert(zvalid,"Input z must be a length 3 vector")
     let(
-        cp = is_finite(cp)? n * cp :
-            is_vector(cp)? assert(len(cp) == len(n)) cp :
-            assert(is_finite(cp) || is_vector(cp)),
-        mat = move(cp) * mirror(n) * move(-cp)
-    ) is_undef(p)? mat : apply(mat, p);
+        x = is_undef(x)? undef : unit(x,RIGHT),
+        y = is_undef(y)? undef : unit(y,BACK),
+        z = is_undef(z)? undef : unit(z,UP),
+        map = is_undef(x)? [cross(y,z), y, z] :
+            is_undef(y)? [x, cross(z,x), z] :
+            is_undef(z)? [x, y, cross(x,y)] :
+            [x, y, z]
+    )
+    reverse? (
+        let(
+            ocheck = (
+                approx(map[0]*map[1],0) &&
+                approx(map[0]*map[2],0) &&
+                approx(map[1]*map[2],0)
+            )
+        )
+        assert(ocheck, "Inputs must be orthogonal when reverse==true")
+        [for (r=map) [for (c=r) c, 0], [0,0,0,1]]
+    ) : [for (r=transpose(map)) [for (c=r) c, 0], [0,0,0,1]];
 
 
-// Function&Module: xzflip()
-//
-// Usage: As Module
-//   xzflip([cp]) ...
-// Usage: As Function
-//   pt = xzflip([cp], p);
-// Usage: Get Affine Matrix
-//   pt = xzflip([cp]);
-//
-// Topics: Affine, Matrices, Transforms, Reflection, Mirroring
-// See Also: mirror(), xflip(), yflip(), zflip(), xyflip(), yzflip(), affine2d_mirror(), affine3d_mirror() 
-//
-// Description:
-//   Mirrors/reflects across the origin [0,0,0], along the reflection plane where X=Y.  If `cp` is given, the reflection plane passes through that point
-//   * Called as the built-in module, mirrors all children across the line/plane.
-//   * Called as a function with a point in the `p` argument, returns the point mirrored across the line/plane.
-//   * Called as a function with a list of points in the `p` argument, returns the list of points, with each one mirrored across the line/plane.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the mirrored patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the mirrored VNF.
-//   * Called as a function without a `p` argument, returns the affine3d 4x4 mirror matrix.
-//
-// Arguments:
-//   p = If given, the point, path, patch, or VNF to mirror.  Function use only.
-//   cp = The centerpoint of the plane of reflection, given either as a point, or as a scalar distance away from the origin.
-//
-// Example:
-//   left(10) frame_ref();
-//   right(10) xzflip() frame_ref();
-//
-// Example:
-//   xzflip(cp=-15) frame_ref();
-//
-// Example:
-//   xzflip(cp=[10,10,10]) frame_ref();
-//
-// Example: Called as Function
-//   mat = xzflip();
-//   multmatrix(mat) frame_ref();
-module xzflip(p, cp=0) {
-    assert(is_undef(p), "Module form `xzflip()` does not accept p= argument.");
-    mat = xzflip(cp=cp);
-    multmatrix(mat) children();
+module frame_map(x,y,z,p,reverse=false)
+{
+   assert(is_undef(p), "Module form `frame_map()` does not accept p= argument.");
+   multmatrix(frame_map(x,y,z,reverse=reverse))
+       children();
 }
-
-function xzflip(p, cp=0) =
-    assert(is_finite(cp) || is_vector(cp))
-    let( n = unit([-1,0,1]) )
-    cp == 0 || cp==[0,0,0]? mirror(n, p=p) :
-    let(
-        cp = is_finite(cp)? n * cp :
-            is_vector(cp,3)? cp :
-            assert(is_finite(cp) || is_vector(cp,3)),
-        mat = move(cp) * mirror(n) * move(-cp)
-    ) is_undef(p)? mat : apply(mat, p);
-
-
-// Function&Module: yzflip()
-//
-// Usage: As Module
-//   yzflip([x=]) ...
-// Usage: As Function
-//   pt = yzflip(p, [x=]);
-// Usage: Get Affine Matrix
-//   pt = yzflip([x=]);
-//
-// Topics: Affine, Matrices, Transforms, Reflection, Mirroring
-// See Also: mirror(), xflip(), yflip(), zflip(), xyflip(), xzflip(), affine2d_mirror(), affine3d_mirror() 
-//
-// Description:
-//   Mirrors/reflects across the origin [0,0,0], along the reflection plane where X=Y.  If `cp` is given, the reflection plane passes through that point
-//   * Called as the built-in module, mirrors all children across the line/plane.
-//   * Called as a function with a point in the `p` argument, returns the point mirrored across the line/plane.
-//   * Called as a function with a list of points in the `p` argument, returns the list of points, with each one mirrored across the line/plane.
-//   * Called as a function with a [bezier patch](beziers.scad) in the `p` argument, returns the mirrored patch.
-//   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the mirrored VNF.
-//   * Called as a function without a `p` argument, returns the affine3d 4x4 mirror matrix.
-//
-// Arguments:
-//   p = If given, the point, path, patch, or VNF to mirror.  Function use only.
-//   cp = The centerpoint of the plane of reflection, given either as a point, or as a scalar distance away from the origin.
-//
-// Example:
-//   left(10) frame_ref();
-//   right(10) yzflip() frame_ref();
-//
-// Example:
-//   yzflip(cp=-15) frame_ref();
-//
-// Example:
-//   yzflip(cp=[10,10,10]) frame_ref();
-//
-// Example: Called as Function
-//   mat = yzflip();
-//   multmatrix(mat) frame_ref();
-module yzflip(p, cp=0) {
-    assert(is_undef(p), "Module form `yzflip()` does not accept p= argument.");
-    mat = yzflip(cp=cp);
-    multmatrix(mat) children();
-}
-
-function yzflip(p, cp=0) =
-    assert(is_finite(cp) || is_vector(cp))
-    let( n = unit([0,-1,1]) )
-    cp == 0 || cp==[0,0,0]? mirror(n, p=p) :
-    let(
-        cp = is_finite(cp)? n * cp :
-            is_vector(cp,3)? cp :
-            assert(is_finite(cp) || is_vector(cp,3)),
-        mat = move(cp) * mirror(n) * move(-cp)
-    ) is_undef(p)? mat : apply(mat, p);
-
-
-
-//////////////////////////////////////////////////////////////////////
-// Section: Skewing
-//////////////////////////////////////////////////////////////////////
 
 
 // Function&Module: skew()
