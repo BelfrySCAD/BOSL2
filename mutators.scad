@@ -1049,7 +1049,7 @@ module rainbow(list, stride=1)
 {
     ll = len(list);
     huestep = 360 / ll;
-    hues = [for (i=[0:1:ll-1]) posmod(i*huestep+i*360/stride,360)];
+    hues = shuffle([for (i=[0:1:ll-1]) posmod(i*huestep+i*360/stride,360)]);
     for($idx=idx(list)) {
         $item = list[$idx];
         HSV(h=hues[$idx]) children();

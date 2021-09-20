@@ -1,6 +1,10 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: shapes3d.scad
-//   Common useful shapes and structured objects.
+//   Some standard modules for making 3d shapes with attachment support, and function forms
+//   that produce a VNF.  Also included are shortcuts cylinders in each orientation and extended versions of
+//   the standard modules that provide roundovers and chamfers.  The sphereoid() module provides
+//   several different ways to make a sphere, and the text modules let you write text on a path
+//   so you can place it on a curved object.  
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
@@ -1396,6 +1400,61 @@ module tube(
 
 
 
+// Module: pie_slice()
+//
+// Description:
+//   Creates a pie slice shape.
+//
+// Usage: Typical
+//   pie_slice(l|h, r, ang, [center]);
+//   pie_slice(l|h, d=, ang=, ...);
+//   pie_slice(l|h, r1=|d1=, r2=|d2=, ang=, ...);
+// Usage: Attaching Children
+//   pie_slice(l|h, r, ang, ...) [attachments];
+//
+// Arguments:
+//   h / l = height of pie slice.
+//   r = radius of pie slice.
+//   ang = pie slice angle in degrees.
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
+//   ---
+//   r1 = bottom radius of pie slice.
+//   r2 = top radius of pie slice.
+//   d = diameter of pie slice.
+//   d1 = bottom diameter of pie slice.
+//   d2 = top diameter of pie slice.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+//
+// Example: Cylindrical Pie Slice
+//   pie_slice(ang=45, l=20, r=30);
+// Example: Conical Pie Slice
+//   pie_slice(ang=60, l=20, d1=50, d2=70);
+module pie_slice(
+    h, r, ang=30, center,
+    r1, r2, d, d1, d2, l,
+    anchor, spin=0, orient=UP
+) {
+    l = first_defined([l, h, 1]);
+    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
+    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
+    maxd = max(r1,r2)+0.1;
+    anchor = get_anchor(anchor, center, BOT, BOT);
+    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
+        difference() {
+            cyl(r1=r1, r2=r2, h=l);
+            if (ang<180) rotate(ang) back(maxd/2) cube([2*maxd, maxd, l+0.1], center=true);
+            difference() {
+                fwd(maxd/2) cube([2*maxd, maxd, l+0.2], center=true);
+                if (ang>180) rotate(ang-180) back(maxd/2) cube([2*maxd, maxd, l+0.1], center=true);
+            }
+        }
+        children();
+    }
+}
+
+
 
 // Section: Other Round Objects
 
@@ -2204,59 +2263,6 @@ module nil() union(){}
 module noop(spin=0, orient=UP) attachable(CENTER,spin,orient, d=0.01) {nil(); children();}
 
 
-// Module: pie_slice()
-//
-// Description:
-//   Creates a pie slice shape.
-//
-// Usage: Typical
-//   pie_slice(l|h, r, ang, [center]);
-//   pie_slice(l|h, d=, ang=, ...);
-//   pie_slice(l|h, r1=|d1=, r2=|d2=, ang=, ...);
-// Usage: Attaching Children
-//   pie_slice(l|h, r, ang, ...) [attachments];
-//
-// Arguments:
-//   h / l = height of pie slice.
-//   r = radius of pie slice.
-//   ang = pie slice angle in degrees.
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
-//   ---
-//   r1 = bottom radius of pie slice.
-//   r2 = top radius of pie slice.
-//   d = diameter of pie slice.
-//   d1 = bottom diameter of pie slice.
-//   d2 = top diameter of pie slice.
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-//
-// Example: Cylindrical Pie Slice
-//   pie_slice(ang=45, l=20, r=30);
-// Example: Conical Pie Slice
-//   pie_slice(ang=60, l=20, d1=50, d2=70);
-module pie_slice(
-    h, r, ang=30, center,
-    r1, r2, d, d1, d2, l,
-    anchor, spin=0, orient=UP
-) {
-    l = first_defined([l, h, 1]);
-    r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=10);
-    r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=10);
-    maxd = max(r1,r2)+0.1;
-    anchor = get_anchor(anchor, center, BOT, BOT);
-    attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
-        difference() {
-            cyl(r1=r1, r2=r2, h=l);
-            if (ang<180) rotate(ang) back(maxd/2) cube([2*maxd, maxd, l+0.1], center=true);
-            difference() {
-                fwd(maxd/2) cube([2*maxd, maxd, l+0.2], center=true);
-                if (ang>180) rotate(ang-180) back(maxd/2) cube([2*maxd, maxd, l+0.1], center=true);
-            }
-        }
-        children();
-    }
-}
 
 
 // Module: interior_fillet()

@@ -832,8 +832,13 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
     caps = is_def(caps) ? caps :
            closed ? false : true,
     capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
-    fullcaps = is_bool(caps) ? [caps,caps] : caps
+    fullcaps = is_bool(caps) ? [caps,caps] : caps,
+    normalOK = is_undef(normal) || (method!="natural" && is_vector(normal,3))
+                                || (method=="manual" && same_shape(normal,path))
   )
+  assert(normalOK,  method=="natural" ? "Cannot specify normal with the \"natural\" method"
+                  : method=="incremental" ? "Normal with \"incremental\" method must be a 3-vector"
+                  : str("Incompatible normal given.  Must be a 3-vector or a list of ",len(path)," 3-vectors"))
   assert(capsOK, "caps must be boolean or a list of two booleans")
   assert(!closed || !caps, "Cannot make closed shape with caps")
   assert(is_undef(normal) || (is_vector(normal) && len(normal)==3) || (is_path(normal) && len(normal)==len(path) && len(normal[0])==3), "Invalid normal specified")

@@ -50,7 +50,7 @@ function ident(n) = [
 // Arguments:
 //   x = The value to test for being an affine matrix.
 //   dim = The number of dimensions the given affine is required to be for.  Generally 2 for 2D or 3 for 3D.  If given as a list of integers, allows any of the given dimensions.  Default: `[2,3]`
-// Examples:
+// Example:
 //   bool = is_affine(affine2d_scale([2,3]));  // Returns true
 //   bool = is_affine(affine3d_scale([2,3,4]));  // Returns true
 //   bool = is_affine(affine3d_scale([2,3,4]),2);  // Returns false
@@ -74,7 +74,7 @@ function is_affine(x,dim=[2,3]) =
 //   for a simple scaling of z.  Note that an input which is only a zscale returns false.
 // Arguments:
 //   t = The transformation matrix to check.
-// Examples:
+// Example:
 //   b = is_2d_transform(zrot(45));  // Returns: true
 //   b = is_2d_transform(yrot(45));  // Returns: false
 //   b = is_2d_transform(xrot(45));  // Returns: false

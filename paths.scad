@@ -109,17 +109,18 @@ function _path_select(path, s1, u1, s2, u2, closed=false) =
 //   path_merge_collinear(path, [eps])
 // Arguments:
 //   path = A list of path points of any dimension.
+//   closed = treat as closed polygon.  Default: false
 //   eps = Largest positional variance allowed.  Default: `EPSILON` (1-e9)
-function path_merge_collinear(path, eps=EPSILON) =
+function path_merge_collinear(path, closed=false, eps=EPSILON) =
     assert( is_path(path), "Invalid path." )
     assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "Invalid tolerance." )    
     len(path)<=2 ? path :
     let(
         indices = [
             0,
-            for (i=[1:1:len(path)-2]) 
-                if (!is_collinear(path[i-1], path[i], path[i+1], eps=eps)) i, 
-            len(path)-1 
+            for (i=[1:1:len(path)-(closed?1:2)]) 
+                if (!is_collinear(path[i-1], path[i], select(path,i+1), eps=eps)) i, 
+            if (!closed) len(path)-1 
         ]
     ) [for (i=indices) path[i]];
 
@@ -156,6 +157,27 @@ function path_segment_lengths(path, closed=false) =
     ]; 
 
 
+// Function: path_length_fractions()
+// Usage:
+//   fracs = path_length_fractions(path, [closed]);
+// Description:
+//    Returns the distance fraction of each point in the path along the path, so the first
+//    point is zero and the final point is 1.  If the path is closed the length of the output
+//    will have one extra point because of the final connecting segment that connects the last
+//    point of the path to the first point.
+function path_length_fractions(path, closed=false) =
+    assert(is_path(path))
+    assert(is_bool(closed))
+    let(
+        lengths = [
+            0,
+            for (i=[0:1:len(path)-(closed?1:2)])
+                norm(select(path,i+1)-path[i])
+        ],
+        partial_len = cumsum(lengths),
+        total_len = last(partial_len)
+    ) partial_len / total_len;
+
 
 // Function: path_closest_point()
 // Usage:
@@ -180,6 +202,8 @@ function path_closest_point(path, pt) =
         min_seg = min_index(dists)
     ) [min_seg, pts[min_seg]];
 
+
+// Section: Geometric Properties of Paths
 
 // Function: path_tangents()
 // Usage:
@@ -574,7 +598,7 @@ function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
     ];
 
 
-function _tag_self_crossing_subpaths(path, closed=true, eps=EPSILON) =
+function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
     let(
         subpaths = split_path_at_self_crossings(
             path, closed=closed, eps=eps
@@ -586,8 +610,8 @@ function _tag_self_crossing_subpaths(path, closed=true, eps=EPSILON) =
             n = line_normal(seg) / 2048,
             p1 = mp + n,
             p2 = mp - n,
-            p1in = point_in_polygon(p1, path) >= 0,
-            p2in = point_in_polygon(p2, path) >= 0,
+            p1in = point_in_polygon(p1, path, nonzero=nonzero) >= 0,
+            p2in = point_in_polygon(p2, path, nonzero=nonzero) >= 0,
             tag = (p1in && p2in)? "I" : "O"
         ) [tag, subpath]
     ];
@@ -595,7 +619,7 @@ function _tag_self_crossing_subpaths(path, closed=true, eps=EPSILON) =
 
 // Function: decompose_path()
 // Usage:
-//   splitpaths = decompose_path(path, [closed], [eps]);
+//   splitpaths = decompose_path(path, [nonzero], [closed], [eps]);
 // Description:
 //   Given a possibly self-crossing path, decompose it into non-crossing paths that are on the perimeter
 //   of the areas bounded by that path.
@@ -609,10 +633,10 @@ function _tag_self_crossing_subpaths(path, closed=true, eps=EPSILON) =
 //   ];
 //   splitpaths = decompose_path(path, closed=true);
 //   rainbow(splitpaths) stroke($item, closed=true, width=3);
-function decompose_path(path, closed=true, eps=EPSILON) =
+function decompose_path(path, nonzero, closed=true, eps=EPSILON) =
     let(
         path = cleanup_path(path, eps=eps),
-        tagged = _tag_self_crossing_subpaths(path, closed=closed, eps=eps),
+        tagged = _tag_self_crossing_subpaths(path, nonzero=nonzero, closed=closed, eps=eps),
         kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
         outregion = _assemble_path_fragments(kept, eps=eps)
     ) outregion;
@@ -867,6 +891,7 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 
 // Function: path_cut()
 // Topics: Paths
+// See Also: split_path_at_self_crossings()
 // Usage:
 //    path_list = path_cut(path, cutdist, [closed=]);
 // Description:
@@ -955,6 +980,8 @@ function _sum_preserving_round(data, index=0) =
         index+1
     );
 
+
+// Section: Changing sampling of paths
 
 // Function: subdivide_path()
 // Usage:
@@ -1051,27 +1078,6 @@ function subdivide_path(path, N, refine, closed=true, exact=true, method="length
         closed? [] : [last(path)]
     );
 
-
-// Function: path_length_fractions()
-// Usage:
-//   fracs = path_length_fractions(path, [closed]);
-// Description:
-//    Returns the distance fraction of each point in the path along the path, so the first
-//    point is zero and the final point is 1.  If the path is closed the length of the output
-//    will have one extra point because of the final connecting segment that connects the last
-//    point of the path to the first point.
-function path_length_fractions(path, closed=false) =
-    assert(is_path(path))
-    assert(is_bool(closed))
-    let(
-        lengths = [
-            0,
-            for (i=[0:1:len(path)-(closed?1:2)])
-                norm(select(path,i+1)-path[i])
-        ],
-        partial_len = cumsum(lengths),
-        total_len = last(partial_len)
-    ) partial_len / total_len;
 
 
 // Function: resample_path()

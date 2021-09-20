@@ -489,7 +489,7 @@ function _shift_segment(segment, d) =
 // Extend to segments to their intersection point.  First check if the segments already have a point in common,
 // which can happen if two colinear segments are input to the path variant of `offset()`
 function _segment_extension(s1,s2) =
-    norm(s1[1]-s2[0])<1e-6 ? s1[1] : line_intersection(s1,s2);
+    norm(s1[1]-s2[0])<1e-6 ? s1[1] : line_intersection(s1,s2,LINE,LINE);
 
 
 function _makefaces(direction, startind, good, pointcount, closed) =
@@ -745,7 +745,11 @@ function offset(
         quality = max(0,round(quality)),
         flip_dir = closed && !is_polygon_clockwise(path)? -1 : 1,
         d = flip_dir * (is_def(r) ? r : delta),
-        shiftsegs = [for(i=[0:len(path)-1]) _shift_segment(select(path,i,i+1), d)],
+//        shiftsegs = [for(i=[0:len(path)-1]) _shift_segment(select(path,i,i+1), d)],
+        shiftsegs = [for(i=[0:len(path)-2]) _shift_segment([path[i],path[i+1]], d),
+                     if (closed) _shift_segment([last(path),path[0]],d)
+                     else [path[0],path[1]]  // dummy segment, not used
+                    ],
         // good segments are ones where no point on the segment is less than distance d from any point on the path
         good = check_valid ? _good_segments(path, abs(d), shiftsegs, closed, quality) : repeat(true,len(shiftsegs)),
         goodsegs = bselect(shiftsegs, good),

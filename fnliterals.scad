@@ -141,12 +141,10 @@ function reduce(func, list, init=0) =
 //   list = The input list.
 //   init = The starting value for the accumulator.  Default: 0
 // See Also: map(), filter(), reduce(), while(), for_n()
-// Examples: Reimplement cumsum()
-//   echo(accumulate(function (a,b) a+b, [3,4,5],0));
-//   // ECHO: [3,7,12]
-// Examples: Reimplement cumprod()
-//   echo(accumulate(f_mul(),[3,4,5],1));
-//   // ECHO: [3,12,60,360]
+// Example: Reimplement cumsum()
+//   echo(accumulate(function (a,b) a+b, [3,4,5],0));  // ECHO: [3,7,12]
+// Example: Reimplement cumprod()
+//   echo(accumulate(f_mul(),[3,4,5],1)); // ECHO: [3,12,60,360]
 function accumulate(func, list, init=0) =
     assert(is_function(func))
     assert(is_list(list))
@@ -313,7 +311,7 @@ function binsearch(key, list, idx, cmp=f_cmp()) =
 // Arguments:
 //   x = The value to get the simple hash value  of.
 // See Also: hashmap()
-// Examples:
+// Example:
 //   x = simple_hash("Foobar");
 //   x = simple_hash([[10,20],[-5,3]]);
 function simple_hash(x) =
