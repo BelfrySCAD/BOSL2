@@ -203,6 +203,64 @@ function path_closest_point(path, pt) =
     ) [min_seg, pts[min_seg]];
 
 
+
+// Function: path_self_intersections()
+// Usage:
+//   isects = path_self_intersections(path, [eps]);
+// Description:
+//   Locates all self intersections of the given path.  Returns a list of intersections, where
+//   each intersection is a list like [POINT, SEGNUM1, PROPORTION1, SEGNUM2, PROPORTION2] where
+//   POINT is the coordinates of the intersection point, SEGNUMs are the integer indices of the
+//   intersecting segments along the path, and the PROPORTIONS are the 0.0 to 1.0 proportions
+//   of how far along those segments they intersect at.  A proportion of 0.0 indicates the start
+//   of the segment, and a proportion of 1.0 indicates the end of the segment.
+// Arguments:
+//   path = The path to find self intersections of.
+//   closed = If true, treat path like a closed polygon.  Default: true
+//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+// Example(2D):
+//   path = [
+//       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
+//   ];
+//   isects = path_self_intersections(path, closed=true);
+//   // isects == [[[-33.3333, 0], 0, 0.666667, 4, 0.333333], [[33.3333, 0], 1, 0.333333, 3, 0.666667]]
+//   stroke(path, closed=true, width=1);
+//   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
+function path_self_intersections(path, closed=true, eps=EPSILON) =
+    let(
+        path = cleanup_path(path, eps=eps),
+        plen = len(path)
+    ) [
+        for (i = [0:1:plen-(closed?2:3)], j=[i+2:1:plen-(closed?1:2)]) let(
+            a1 = path[i],
+            a2 = path[(i+1)%plen],
+            b1 = path[j],
+            b2 = path[(j+1)%plen],
+            isect =
+                (max(a1.x, a2.x) < min(b1.x, b2.x))? undef :
+                (min(a1.x, a2.x) > max(b1.x, b2.x))? undef :
+                (max(a1.y, a2.y) < min(b1.y, b2.y))? undef :
+                (min(a1.y, a2.y) > max(b1.y, b2.y))? undef :
+                let(
+                    c = a1-a2,
+                    d = b1-b2,
+                    denom = (c.x*d.y)-(c.y*d.x)
+                ) abs(denom)<eps? undef :
+                let(
+                    e = a1-b1,
+                    t = ((e.x*d.y)-(e.y*d.x)) / denom,
+                    u = ((e.x*c.y)-(e.y*c.x)) / denom
+                ) [a1+t*(a2-a1), t, u]
+        ) if (
+            (!closed || i!=0 || j!=plen-1) &&
+            isect != undef &&
+            isect[1]>=-eps && isect[1]<=1+eps &&
+            isect[2]>=-eps && isect[2]<=1+eps
+        ) [isect[0], i, isect[1], j, isect[2]]
+    ];
+
+
+
 // Section: Geometric Properties of Paths
 
 // Function: path_tangents()
@@ -309,6 +367,8 @@ function path_torsion(path, closed=false) =
         ) crossterm * d3[i] / sqr(norm(crossterm))
     ];
 
+
+// Section: Modifying paths
 
 // Function: path_chamfer_and_rounding()
 // Usage:
@@ -498,278 +558,194 @@ function path_add_jitter(path, dist=1/512, closed=true) =
 
 
 
-// Function: path_self_intersections()
-// Usage:
-//   isects = path_self_intersections(path, [eps]);
-// Description:
-//   Locates all self intersections of the given path.  Returns a list of intersections, where
-//   each intersection is a list like [POINT, SEGNUM1, PROPORTION1, SEGNUM2, PROPORTION2] where
-//   POINT is the coordinates of the intersection point, SEGNUMs are the integer indices of the
-//   intersecting segments along the path, and the PROPORTIONS are the 0.0 to 1.0 proportions
-//   of how far along those segments they intersect at.  A proportion of 0.0 indicates the start
-//   of the segment, and a proportion of 1.0 indicates the end of the segment.
-// Arguments:
-//   path = The path to find self intersections of.
-//   closed = If true, treat path like a closed polygon.  Default: true
-//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-// Example(2D):
-//   path = [
-//       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
-//   ];
-//   isects = path_self_intersections(path, closed=true);
-//   // isects == [[[-33.3333, 0], 0, 0.666667, 4, 0.333333], [[33.3333, 0], 1, 0.333333, 3, 0.666667]]
-//   stroke(path, closed=true, width=1);
-//   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
-function path_self_intersections(path, closed=true, eps=EPSILON) =
-    let(
-        path = cleanup_path(path, eps=eps),
-        plen = len(path)
-    ) [
-        for (i = [0:1:plen-(closed?2:3)], j=[i+2:1:plen-(closed?1:2)]) let(
-            a1 = path[i],
-            a2 = path[(i+1)%plen],
-            b1 = path[j],
-            b2 = path[(j+1)%plen],
-            isect =
-                (max(a1.x, a2.x) < min(b1.x, b2.x))? undef :
-                (min(a1.x, a2.x) > max(b1.x, b2.x))? undef :
-                (max(a1.y, a2.y) < min(b1.y, b2.y))? undef :
-                (min(a1.y, a2.y) > max(b1.y, b2.y))? undef :
-                let(
-                    c = a1-a2,
-                    d = b1-b2,
-                    denom = (c.x*d.y)-(c.y*d.x)
-                ) abs(denom)<eps? undef :
-                let(
-                    e = a1-b1,
-                    t = ((e.x*d.y)-(e.y*d.x)) / denom,
-                    u = ((e.x*c.y)-(e.y*c.x)) / denom
-                ) [a1+t*(a2-a1), t, u]
-        ) if (
-            (!closed || i!=0 || j!=plen-1) &&
-            isect != undef &&
-            isect[1]>=-eps && isect[1]<=1+eps &&
-            isect[2]>=-eps && isect[2]<=1+eps
-        ) [isect[0], i, isect[1], j, isect[2]]
-    ];
+
+// Section: Resampling: changing the number of points in a path
 
 
-// Function: split_path_at_self_crossings()
-// Usage:
-//   paths = split_path_at_self_crossings(path, [closed], [eps]);
-// Description:
-//   Splits a path into sub-paths wherever the original path crosses itself.
-//   Splits may occur mid-segment, so new vertices will be created at the intersection points.
-// Arguments:
-//   path = The path to split up.
-//   closed = If true, treat path as a closed polygon.  Default: true
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-// Example(2D):
-//   path = [ [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100] ];
-//   paths = split_path_at_self_crossings(path);
-//   rainbow(paths) stroke($item, closed=false, width=2);
-function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
+// Input `data` is a list that sums to an integer. 
+// Returns rounded version of input data so that every 
+// entry is rounded to an integer and the sum is the same as
+// that of the input.  Works by rounding an entry in the list
+// and passing the rounding error forward to the next entry.
+// This will generally distribute the error in a uniform manner. 
+function _sum_preserving_round(data, index=0) =
+    index == len(data)-1 ? list_set(data, len(data)-1, round(data[len(data)-1])) :
     let(
-        path = cleanup_path(path, eps=eps),
-        isects = deduplicate(
-            eps=eps,
-            concat(
-                [[0, 0]],
-                sort([
-                    for (
-                        a = path_self_intersections(path, closed=closed, eps=eps),
-                        ss = [ [a[1],a[2]], [a[3],a[4]] ]
-                    ) if (ss[0] != undef) ss
-                ]),
-                [[len(path)-(closed?1:2), 1]]
-            )
-        )
-    ) [
-        for (p = pair(isects))
+        newval = round(data[index]),
+        error = newval - data[index]
+    ) _sum_preserving_round(
+        list_set(data, [index,index+1], [newval, data[index+1]-error]),
+        index+1
+    );
+
+
+// Section: Changing sampling of paths
+
+// Function: subdivide_path()
+// Usage:
+//   newpath = subdivide_path(path, [N|refine], method);
+// Description:
+//   Takes a path as input (closed or open) and subdivides the path to produce a more
+//   finely sampled path.  The new points can be distributed proportional to length
+//   (`method="length"`) or they can be divided up evenly among all the path segments
+//   (`method="segment"`).  If the extra points don't fit evenly on the path then the
+//   algorithm attempts to distribute them uniformly.  The `exact` option requires that
+//   the final length is exactly as requested.  If you set it to `false` then the
+//   algorithm will favor uniformity and the output path may have a different number of
+//   points due to rounding error.
+//   .
+//   With the `"segment"` method you can also specify a vector of lengths.  This vector, 
+//   `N` specfies the desired point count on each segment: with vector input, `subdivide_path`
+//   attempts to place `N[i]-1` points on segment `i`.  The reason for the -1 is to avoid
+//   double counting the endpoints, which are shared by pairs of segments, so that for
+//   a closed polygon the total number of points will be sum(N).  Note that with an open
+//   path there is an extra point at the end, so the number of points will be sum(N)+1. 
+// Arguments:
+//   path = path to subdivide
+//   N = scalar total number of points desired or with `method="segment"` can be a vector requesting `N[i]-1` points on segment i.
+//   refine = number of points to add each segment.
+//   closed = set to false if the path is open.  Default: True
+//   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  Default: True
+//   method = One of `"length"` or `"segment"`.  If `"length"`, adds vertices evenly along the total path length.  If `"segment"`, adds points evenly among the segments.  Default: `"length"`
+// Example(2D):
+//   mypath = subdivide_path(square([2,2],center=true), 12);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D):
+//   mypath = subdivide_path(square([8,2],center=true), 12);
+//   move_copies(mypath)circle(r=.2,$fn=32);
+// Example(2D):
+//   mypath = subdivide_path(square([8,2],center=true), 12, method="segment");
+//   move_copies(mypath)circle(r=.2,$fn=32);
+// Example(2D):
+//   mypath = subdivide_path(square([2,2],center=true), 17, closed=false);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): Specifying different numbers of points on each segment
+//   mypath = subdivide_path(hexagon(side=2), [2,3,4,5,6,7], method="segment");
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): Requested point total is 14 but 15 points output due to extra end point
+//   mypath = subdivide_path(pentagon(side=2), [3,4,3,4], method="segment", closed=false);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): Since 17 is not divisible by 5, a completely uniform distribution is not possible. 
+//   mypath = subdivide_path(pentagon(side=2), 17);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): With `exact=false` a uniform distribution, but only 15 points
+//   mypath = subdivide_path(pentagon(side=2), 17, exact=false);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): With `exact=false` you can also get extra points, here 20 instead of requested 18
+//   mypath = subdivide_path(pentagon(side=2), 18, exact=false);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(FlatSpin,VPD=15,VPT=[0,0,1.5]): Three-dimensional paths also work
+//   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
+//   move_copies(mypath)sphere(r=.1,$fn=32);
+function subdivide_path(path, N, refine, closed=true, exact=true, method="length") =
+    assert(is_path(path))
+    assert(method=="length" || method=="segment")
+    assert(num_defined([N,refine]),"Must give exactly one of N and refine")
+    let(
+        N = !is_undef(N)? N :
+            !is_undef(refine)? len(path) * refine :
+            undef
+    )
+    assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
+    let(
+        count = len(path) - (closed?0:1), 
+        add_guess = method=="segment"? (
+                is_list(N)? (
+                    assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
+                    add_scalar(N,-1)
+                ) : repeat((N-len(path)) / count, count)
+            ) : // method=="length"
+            assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
             let(
-                s1 = p[0][0],
-                u1 = p[0][1],
-                s2 = p[1][0],
-                u2 = p[1][1],
-                section = _path_select(path, s1, u1, s2, u2, closed=closed),
-                outpath = deduplicate(eps=eps, section)
+                path_lens = concat(
+                    [ for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i]) ],
+                    closed? [norm(path[len(path)-1]-path[0])] : []
+                ),
+                add_density = (N - len(path)) / sum(path_lens)
             )
-            outpath
-    ];
-
-
-function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
-    let(
-        subpaths = split_path_at_self_crossings(
-            path, closed=closed, eps=eps
-        )
-    ) [
-        for (subpath = subpaths) let(
-            seg = select(subpath,0,1),
-            mp = mean(seg),
-            n = line_normal(seg) / 2048,
-            p1 = mp + n,
-            p2 = mp - n,
-            p1in = point_in_polygon(p1, path, nonzero=nonzero) >= 0,
-            p2in = point_in_polygon(p2, path, nonzero=nonzero) >= 0,
-            tag = (p1in && p2in)? "I" : "O"
-        ) [tag, subpath]
-    ];
-
-
-// Function: decompose_path()
-// Usage:
-//   splitpaths = decompose_path(path, [nonzero], [closed], [eps]);
-// Description:
-//   Given a possibly self-crossing path, decompose it into non-crossing paths that are on the perimeter
-//   of the areas bounded by that path.
-// Arguments:
-//   path = The path to split up.
-//   closed = If true, treat path like a closed polygon.  Default: true
-//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-// Example(2D):
-//   path = [
-//       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
-//   ];
-//   splitpaths = decompose_path(path, closed=true);
-//   rainbow(splitpaths) stroke($item, closed=true, width=3);
-function decompose_path(path, nonzero, closed=true, eps=EPSILON) =
-    let(
-        path = cleanup_path(path, eps=eps),
-        tagged = _tag_self_crossing_subpaths(path, nonzero=nonzero, closed=closed, eps=eps),
-        kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
-        outregion = _assemble_path_fragments(kept, eps=eps)
-    ) outregion;
-
-
-function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
-    !fragments? [undef, []] :
-    let(
-        delta = seg[1] - seg[0],
-        segang = atan2(delta.y,delta.x),
-        frags = [
-            for (i = idx(fragments)) let(
-                fragment = fragments[i],
-                fwdmatch = approx(seg[1], fragment[0], eps=eps),
-                bakmatch =  approx(seg[1], last(fragment), eps=eps)
-            ) [
-                fwdmatch,
-                bakmatch,
-                bakmatch? reverse(fragment) : fragment
+            path_lens * add_density,
+        add = exact? _sum_preserving_round(add_guess) :
+            [for (val=add_guess) round(val)]
+    ) concat(
+        [
+            for (i=[0:1:count]) each [
+                for(j=[0:1:add[i]])
+                lerp(path[i],select(path,i+1), j/(add[i]+1))
             ]
         ],
-        angs = [
-            for (frag = frags)
-                (frag[0] || frag[1])? let(
-                    delta2 = frag[2][1] - frag[2][0],
-                    segang2 = atan2(delta2.y, delta2.x)
-                ) modang(segang2 - segang) : (
-                    rightmost? 999 : -999
-                )
-        ],
-        fi = rightmost? min_index(angs) : max_index(angs)
-    ) abs(angs[fi]) > 360? [undef, fragments] : let(
-        remainder = [for (i=idx(fragments)) if (i!=fi) fragments[i]],
-        frag = frags[fi],
-        foundfrag = frag[2]
-    ) [foundfrag, remainder];
-
-
-/// Internal Function: _assemble_a_path_from_fragments()
-/// Usage:
-///   _assemble_a_path_from_fragments(subpaths);
-/// Description:
-///   Given a list of paths, assembles them together into one complete closed polygon path, and
-///   remainder fragments.  Returns [PATH, FRAGMENTS] where FRAGMENTS is the list of remaining
-///   unused path fragments.
-/// Arguments:
-///   fragments = List of paths to be assembled into complete polygons.
-///   rightmost = If true, assemble paths using rightmost turns. Leftmost if false.
-///   startfrag = The fragment to start with.  Default: 0
-///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, eps=EPSILON) =
-    len(fragments)==0? _finished :
-    let(
-        path = fragments[startfrag],
-        newfrags = [for (i=idx(fragments)) if (i!=startfrag) fragments[i]]
-    ) is_closed_path(path, eps=eps)? (
-        // starting fragment is already closed
-        [path, newfrags]
-    ) : let(
-        // Find rightmost/leftmost continuation fragment
-        seg = select(path,-2,-1),
-        extrema = _extreme_angle_fragment(seg=seg, fragments=newfrags, rightmost=rightmost, eps=eps),
-        foundfrag = extrema[0],
-        remainder = extrema[1]
-    ) is_undef(foundfrag)? (
-        // No remaining fragments connect!  INCOMPLETE PATH!
-        // Treat it as complete.
-        [path, remainder]
-    ) : is_closed_path(foundfrag, eps=eps)? (
-        // Found fragment is already closed
-        [foundfrag, concat([path], remainder)]
-    ) : let(
-        fragend = last(foundfrag),
-        hits = [for (i = idx(path,e=-2)) if(approx(path[i],fragend,eps=eps)) i]
-    ) hits? (
-        let(
-            // Found fragment intersects with initial path
-            hitidx = last(hits),
-            newpath = list_head(path,hitidx),
-            newfrags = concat(len(newpath)>1? [newpath] : [], remainder),
-            outpath = concat(slice(path,hitidx,-2), foundfrag)
-        )
-        [outpath, newfrags]
-    ) : let(
-        // Path still incomplete.  Continue building it.
-        newpath = concat(path, list_tail(foundfrag)),
-        newfrags = concat([newpath], remainder)
-    )
-    _assemble_a_path_from_fragments(
-        fragments=newfrags,
-        rightmost=rightmost,
-        eps=eps
+        closed? [] : [last(path)]
     );
 
 
-/// Internal Function: _assemble_path_fragments()
-/// Usage:
-///   _assemble_path_fragments(subpaths);
-/// Description:
-///   Given a list of paths, assembles them together into complete closed polygon paths if it can.
-/// Arguments:
-///   fragments = List of paths to be assembled into complete polygons.
-///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-function _assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
-    len(fragments)==0? _finished :
-    let(
-        minxidx = min_index([
-            for (frag=fragments) min(subindex(frag,0))
-        ]),
-        result_l = _assemble_a_path_from_fragments(
-            fragments=fragments,
-            startfrag=minxidx,
-            rightmost=false,
-            eps=eps
-        ),
-        result_r = _assemble_a_path_from_fragments(
-            fragments=fragments,
-            startfrag=minxidx,
-            rightmost=true,
-            eps=eps
-        ),
-        l_area = abs(polygon_area(result_l[0])),
-        r_area = abs(polygon_area(result_r[0])),
-        result = l_area < r_area? result_l : result_r,
-        newpath = cleanup_path(result[0]),
-        remainder = result[1],
-        finished = concat(_finished, [newpath])
-    ) _assemble_path_fragments(
-        fragments=remainder,
-        eps=eps,
-        _finished=finished
-    );
 
+// Function: subdivide_long_segments()
+// Topics: Paths, Path Subdivision
+// See Also: subdivide_path(), subdivide_and_slice(), path_add_jitter(), jittered_poly()
+// Usage:
+//   spath = subdivide_long_segments(path, maxlen, [closed=]);
+// Description:
+//   Evenly subdivides long `path` segments until they are all shorter than `maxlen`.
+// Arguments:
+//   path = The path to subdivide.
+//   maxlen = The maximum allowed path segment length.
+//   ---
+//   closed = If true, treat path like a closed polygon.  Default: true
+// Example:
+//   path = pentagon(d=100);
+//   spath = subdivide_long_segments(path, 10, closed=true);
+//   stroke(path);
+//   color("lightgreen") move_copies(path) circle(d=5,$fn=12);
+//   color("blue") move_copies(spath) circle(d=3,$fn=12);
+function subdivide_long_segments(path, maxlen, closed=false) =
+    assert(is_path(path))
+    assert(is_finite(maxlen))
+    assert(is_bool(closed))
+    [
+        for (p=pair(path,closed)) let(
+            steps = ceil(norm(p[1]-p[0])/maxlen)
+        ) each lerpn(p[0], p[1], steps, false),
+        if (!closed) last(path)
+    ];
+
+
+
+// Function: resample_path()
+// Usage:
+//   newpath = resample_path(path, N|spacing, [closed]);
+// Description:
+//   Compute a uniform resampling of the input path.  If you specify `N` then the output path will have N
+//   points spaced uniformly (by linear interpolation along the input path segments).  The only points of the
+//   input path that are guaranteed to appear in the output path are the starting and ending points.
+//   If you specify `spacing` then the length you give will be rounded to the nearest spacing that gives
+//   a uniform sampling of the path and the resulting uniformly sampled path is returned.
+//   Note that because this function operates on a discrete input path the quality of the output depends on
+//   the sampling of the input.  If you want very accurate output, use a lot of points for the input.
+// Arguments:
+//   path = path to resample
+//   N = Number of points in output
+//   spacing = Approximate spacing desired
+//   closed = set to true if path is closed.  Default: false
+function resample_path(path, N, spacing, closed=false) =
+   assert(is_path(path))
+   assert(num_defined([N,spacing])==1,"Must define exactly one of N and spacing")
+   assert(is_bool(closed))
+   let(
+       length = path_length(path,closed),
+       // In the open path case decrease N by 1 so that we don't try to get
+       // path_cut to return the endpoint (which might fail due to rounding)
+       // Add last point later
+       N = is_def(N) ? N-(closed?0:1) : round(length/spacing),
+       distlist = lerpn(0,length,N,false), 
+       cuts = _path_cut_points(path, distlist, closed=closed)
+   )
+   [ each subindex(cuts,0),
+     if (!closed) last(path)     // Then add last point here
+   ];
+
+
+
+
+// Section: Breaking paths up into subpaths
 
 
 /// Internal Function: _path_cut_points()
@@ -964,154 +940,238 @@ function _cut_to_seg_u_form(pathcut, path, closed) =
 
 
 
-// Input `data` is a list that sums to an integer. 
-// Returns rounded version of input data so that every 
-// entry is rounded to an integer and the sum is the same as
-// that of the input.  Works by rounding an entry in the list
-// and passing the rounding error forward to the next entry.
-// This will generally distribute the error in a uniform manner. 
-function _sum_preserving_round(data, index=0) =
-    index == len(data)-1 ? list_set(data, len(data)-1, round(data[len(data)-1])) :
-    let(
-        newval = round(data[index]),
-        error = newval - data[index]
-    ) _sum_preserving_round(
-        list_set(data, [index,index+1], [newval, data[index+1]-error]),
-        index+1
-    );
-
-
-// Section: Changing sampling of paths
-
-// Function: subdivide_path()
+// Function: split_path_at_self_crossings()
 // Usage:
-//   newpath = subdivide_path(path, [N|refine], method);
+//   paths = split_path_at_self_crossings(path, [closed], [eps]);
 // Description:
-//   Takes a path as input (closed or open) and subdivides the path to produce a more
-//   finely sampled path.  The new points can be distributed proportional to length
-//   (`method="length"`) or they can be divided up evenly among all the path segments
-//   (`method="segment"`).  If the extra points don't fit evenly on the path then the
-//   algorithm attempts to distribute them uniformly.  The `exact` option requires that
-//   the final length is exactly as requested.  If you set it to `false` then the
-//   algorithm will favor uniformity and the output path may have a different number of
-//   points due to rounding error.
-//   .
-//   With the `"segment"` method you can also specify a vector of lengths.  This vector, 
-//   `N` specfies the desired point count on each segment: with vector input, `subdivide_path`
-//   attempts to place `N[i]-1` points on segment `i`.  The reason for the -1 is to avoid
-//   double counting the endpoints, which are shared by pairs of segments, so that for
-//   a closed polygon the total number of points will be sum(N).  Note that with an open
-//   path there is an extra point at the end, so the number of points will be sum(N)+1. 
+//   Splits a path into sub-paths wherever the original path crosses itself.
+//   Splits may occur mid-segment, so new vertices will be created at the intersection points.
 // Arguments:
-//   path = path to subdivide
-//   N = scalar total number of points desired or with `method="segment"` can be a vector requesting `N[i]-1` points on segment i.
-//   refine = number of points to add each segment.
-//   closed = set to false if the path is open.  Default: True
-//   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  Default: True
-//   method = One of `"length"` or `"segment"`.  If `"length"`, adds vertices evenly along the total path length.  If `"segment"`, adds points evenly among the segments.  Default: `"length"`
+//   path = The path to split up.
+//   closed = If true, treat path as a closed polygon.  Default: true
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 // Example(2D):
-//   mypath = subdivide_path(square([2,2],center=true), 12);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D):
-//   mypath = subdivide_path(square([8,2],center=true), 12);
-//   move_copies(mypath)circle(r=.2,$fn=32);
-// Example(2D):
-//   mypath = subdivide_path(square([8,2],center=true), 12, method="segment");
-//   move_copies(mypath)circle(r=.2,$fn=32);
-// Example(2D):
-//   mypath = subdivide_path(square([2,2],center=true), 17, closed=false);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): Specifying different numbers of points on each segment
-//   mypath = subdivide_path(hexagon(side=2), [2,3,4,5,6,7], method="segment");
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): Requested point total is 14 but 15 points output due to extra end point
-//   mypath = subdivide_path(pentagon(side=2), [3,4,3,4], method="segment", closed=false);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): Since 17 is not divisible by 5, a completely uniform distribution is not possible. 
-//   mypath = subdivide_path(pentagon(side=2), 17);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): With `exact=false` a uniform distribution, but only 15 points
-//   mypath = subdivide_path(pentagon(side=2), 17, exact=false);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): With `exact=false` you can also get extra points, here 20 instead of requested 18
-//   mypath = subdivide_path(pentagon(side=2), 18, exact=false);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(FlatSpin,VPD=15,VPT=[0,0,1.5]): Three-dimensional paths also work
-//   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
-//   move_copies(mypath)sphere(r=.1,$fn=32);
-function subdivide_path(path, N, refine, closed=true, exact=true, method="length") =
-    assert(is_path(path))
-    assert(method=="length" || method=="segment")
-    assert(num_defined([N,refine]),"Must give exactly one of N and refine")
+//   path = [ [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100] ];
+//   paths = split_path_at_self_crossings(path);
+//   rainbow(paths) stroke($item, closed=false, width=2);
+function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
     let(
-        N = !is_undef(N)? N :
-            !is_undef(refine)? len(path) * refine :
-            undef
-    )
-    assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
-    let(
-        count = len(path) - (closed?0:1), 
-        add_guess = method=="segment"? (
-                is_list(N)? (
-                    assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
-                    add_scalar(N,-1)
-                ) : repeat((N-len(path)) / count, count)
-            ) : // method=="length"
-            assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
-            let(
-                path_lens = concat(
-                    [ for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i]) ],
-                    closed? [norm(path[len(path)-1]-path[0])] : []
-                ),
-                add_density = (N - len(path)) / sum(path_lens)
+        path = cleanup_path(path, eps=eps),
+        isects = deduplicate(
+            eps=eps,
+            concat(
+                [[0, 0]],
+                sort([
+                    for (
+                        a = path_self_intersections(path, closed=closed, eps=eps),
+                        ss = [ [a[1],a[2]], [a[3],a[4]] ]
+                    ) if (ss[0] != undef) ss
+                ]),
+                [[len(path)-(closed?1:2), 1]]
             )
-            path_lens * add_density,
-        add = exact? _sum_preserving_round(add_guess) :
-            [for (val=add_guess) round(val)]
-    ) concat(
-        [
-            for (i=[0:1:count]) each [
-                for(j=[0:1:add[i]])
-                lerp(path[i],select(path,i+1), j/(add[i]+1))
+        )
+    ) [
+        for (p = pair(isects))
+            let(
+                s1 = p[0][0],
+                u1 = p[0][1],
+                s2 = p[1][0],
+                u2 = p[1][1],
+                section = _path_select(path, s1, u1, s2, u2, closed=closed),
+                outpath = deduplicate(eps=eps, section)
+            )
+            outpath
+    ];
+
+
+function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
+    let(
+        subpaths = split_path_at_self_crossings(
+            path, closed=true, eps=eps
+        )
+    ) [
+        for (subpath = subpaths) let(
+            seg = select(subpath,0,1),
+            mp = mean(seg),
+            n = line_normal(seg) / 2048,
+            p1 = mp + n,
+            p2 = mp - n,
+            p1in = point_in_polygon(p1, path, nonzero=nonzero) >= 0,
+            p2in = point_in_polygon(p2, path, nonzero=nonzero) >= 0,
+            tag = (p1in && p2in)? "I" : "O"
+        ) [tag, subpath]
+    ];
+
+
+// Function: polygon_parts()
+// Usage:
+//   splitpaths = polygon_parts(path, [nonzero], [eps]);
+// Description:
+//   Given a possibly self-intersecting polygon, constructs a representation of the original polygon as a list of
+//   non-intersecting simple polygons.  If nonzero is set to true then it uses the nonzero method for defining polygon membership, which
+//   means it will produce the outer perimeter. 
+// Arguments:
+//   path = The path to split up.
+//   nonzero = If true use the nonzero method for checking if a point is in a polygon.  Otherwise use the even-odd method.  Default: false
+//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+// Example(2D):  This cross-crossing polygon breaks up into its 3 components (regardless of the value of nonzero).
+//   path = [
+//       [-100,100], [0,-50], [100,100],
+//       [100,-100], [0,50], [-100,-100]
+//   ];
+//   splitpaths = polygon_parts(path);
+//   rainbow(splitpaths) stroke($item, closed=true, width=3);
+// Example(2D): With nonzero=false you get even-odd mode which matches OpenSCAD, so the pentagram breaks apart into its five points.
+//   pentagram = turtle(["move",100,"left",144], repeat=4);
+//   left(100)polygon(pentagram);
+//   rainbow(polygon_parts(pentagram,nonzero=false))
+//     stroke($item,closed=true);
+// Example(2D): With nonzero=true you get only the outer perimeter.  You can use this to create the polygon using the nonzero method, which is not supported by OpenSCAD.
+//   pentagram = turtle(["move",100,"left",144], repeat=4);
+//   outside = polygon_parts(pentagram,nonzero=true);
+//   left(100)region(outside);
+//   rainbow(outside)
+//     stroke($item,closed=true);
+function polygon_parts(path, nonzero=false, closed=true, eps=EPSILON) =
+    let(
+        path = cleanup_path(path, eps=eps),
+        tagged = _tag_self_crossing_subpaths(path, nonzero=nonzero, closed=closed, eps=eps),
+        kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
+        outregion = _assemble_path_fragments(kept, eps=eps)
+    ) outregion;
+
+
+function _extreme_angle_fragment(seg, fragments, rightmost=true, eps=EPSILON) =
+    !fragments? [undef, []] :
+    let(
+        delta = seg[1] - seg[0],
+        segang = atan2(delta.y,delta.x),
+        frags = [
+            for (i = idx(fragments)) let(
+                fragment = fragments[i],
+                fwdmatch = approx(seg[1], fragment[0], eps=eps),
+                bakmatch =  approx(seg[1], last(fragment), eps=eps)
+            ) [
+                fwdmatch,
+                bakmatch,
+                bakmatch? reverse(fragment) : fragment
             ]
         ],
-        closed? [] : [last(path)]
+        angs = [
+            for (frag = frags)
+                (frag[0] || frag[1])? let(
+                    delta2 = frag[2][1] - frag[2][0],
+                    segang2 = atan2(delta2.y, delta2.x)
+                ) modang(segang2 - segang) : (
+                    rightmost? 999 : -999
+                )
+        ],
+        fi = rightmost? min_index(angs) : max_index(angs)
+    ) abs(angs[fi]) > 360? [undef, fragments] : let(
+        remainder = [for (i=idx(fragments)) if (i!=fi) fragments[i]],
+        frag = frags[fi],
+        foundfrag = frag[2]
+    ) [foundfrag, remainder];
+
+
+/// Internal Function: _assemble_a_path_from_fragments()
+/// Usage:
+///   _assemble_a_path_from_fragments(subpaths);
+/// Description:
+///   Given a list of paths, assembles them together into one complete closed polygon path, and
+///   remainder fragments.  Returns [PATH, FRAGMENTS] where FRAGMENTS is the list of remaining
+///   unused path fragments.
+/// Arguments:
+///   fragments = List of paths to be assembled into complete polygons.
+///   rightmost = If true, assemble paths using rightmost turns. Leftmost if false.
+///   startfrag = The fragment to start with.  Default: 0
+///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0, eps=EPSILON) =
+    len(fragments)==0? _finished :
+    let(
+        path = fragments[startfrag],
+        newfrags = [for (i=idx(fragments)) if (i!=startfrag) fragments[i]]
+    ) is_closed_path(path, eps=eps)? (
+        // starting fragment is already closed
+        [path, newfrags]
+    ) : let(
+        // Find rightmost/leftmost continuation fragment
+        seg = select(path,-2,-1),
+        extrema = _extreme_angle_fragment(seg=seg, fragments=newfrags, rightmost=rightmost, eps=eps),
+        foundfrag = extrema[0],
+        remainder = extrema[1]
+    ) is_undef(foundfrag)? (
+        // No remaining fragments connect!  INCOMPLETE PATH!
+        // Treat it as complete.
+        [path, remainder]
+    ) : is_closed_path(foundfrag, eps=eps)? (
+        // Found fragment is already closed
+        [foundfrag, concat([path], remainder)]
+    ) : let(
+        fragend = last(foundfrag),
+        hits = [for (i = idx(path,e=-2)) if(approx(path[i],fragend,eps=eps)) i]
+    ) hits? (
+        let(
+            // Found fragment intersects with initial path
+            hitidx = last(hits),
+            newpath = list_head(path,hitidx),
+            newfrags = concat(len(newpath)>1? [newpath] : [], remainder),
+            outpath = concat(slice(path,hitidx,-2), foundfrag)
+        )
+        [outpath, newfrags]
+    ) : let(
+        // Path still incomplete.  Continue building it.
+        newpath = concat(path, list_tail(foundfrag)),
+        newfrags = concat([newpath], remainder)
+    )
+    _assemble_a_path_from_fragments(
+        fragments=newfrags,
+        rightmost=rightmost,
+        eps=eps
+    );
+
+
+/// Internal Function: _assemble_path_fragments()
+/// Usage:
+///   _assemble_path_fragments(subpaths);
+/// Description:
+///   Given a list of paths, assembles them together into complete closed polygon paths if it can.
+/// Arguments:
+///   fragments = List of paths to be assembled into complete polygons.
+///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+function _assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
+    len(fragments)==0? _finished :
+    let(
+        minxidx = min_index([
+            for (frag=fragments) min(subindex(frag,0))
+        ]),
+        result_l = _assemble_a_path_from_fragments(
+            fragments=fragments,
+            startfrag=minxidx,
+            rightmost=false,
+            eps=eps
+        ),
+        result_r = _assemble_a_path_from_fragments(
+            fragments=fragments,
+            startfrag=minxidx,
+            rightmost=true,
+            eps=eps
+        ),
+        l_area = abs(polygon_area(result_l[0])),
+        r_area = abs(polygon_area(result_r[0])),
+        result = l_area < r_area? result_l : result_r,
+        newpath = cleanup_path(result[0]),
+        remainder = result[1],
+        finished = concat(_finished, [newpath])
+    ) _assemble_path_fragments(
+        fragments=remainder,
+        eps=eps,
+        _finished=finished
     );
 
 
 
-// Function: resample_path()
-// Usage:
-//   newpath = resample_path(path, N|spacing, [closed]);
-// Description:
-//   Compute a uniform resampling of the input path.  If you specify `N` then the output path will have N
-//   points spaced uniformly (by linear interpolation along the input path segments).  The only points of the
-//   input path that are guaranteed to appear in the output path are the starting and ending points.
-//   If you specify `spacing` then the length you give will be rounded to the nearest spacing that gives
-//   a uniform sampling of the path and the resulting uniformly sampled path is returned.
-//   Note that because this function operates on a discrete input path the quality of the output depends on
-//   the sampling of the input.  If you want very accurate output, use a lot of points for the input.
-// Arguments:
-//   path = path to resample
-//   N = Number of points in output
-//   spacing = Approximate spacing desired
-//   closed = set to true if path is closed.  Default: false
-function resample_path(path, N, spacing, closed=false) =
-   assert(is_path(path))
-   assert(num_defined([N,spacing])==1,"Must define exactly one of N and spacing")
-   assert(is_bool(closed))
-   let(
-       length = path_length(path,closed),
-       // In the open path case decrease N by 1 so that we don't try to get
-       // path_cut to return the endpoint (which might fail due to rounding)
-       // Add last point later
-       N = is_def(N) ? N-(closed?0:1) : round(length/spacing),
-       distlist = lerpn(0,length,N,false), 
-       cuts = _path_cut_points(path, distlist, closed=closed)
-   )
-   [ each subindex(cuts,0),
-     if (!closed) last(path)     // Then add last point here
-   ];
+
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

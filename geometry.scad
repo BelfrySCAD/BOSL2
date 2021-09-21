@@ -1476,7 +1476,7 @@ function polygon_normal(poly) =
 //     color("red")back(28/(2/3))text("Even-Odd", size=5/(2/3), halign="center");
 //   }
 //   right(40){
-//      dp = decompose_path(path,closed=true);
+//      dp = polygon_parts(path,closed=true);
 //      region(dp);
 //      color("red"){stroke(path,width=1,closed=true);
 //                   back(28/(2/3))text("Nonzero", size=5/(2/3), halign="center");

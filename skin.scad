@@ -1163,37 +1163,6 @@ function subdivide_and_slice(profiles, slices, numpoints, method="length", close
   
 
 
-// Function: subdivide_long_segments()
-// Topics: Paths, Path Subdivision
-// See Also: subdivide_path(), subdivide_and_slice(), path_add_jitter(), jittered_poly()
-// Usage:
-//   spath = subdivide_long_segments(path, maxlen, [closed=]);
-// Description:
-//   Evenly subdivides long `path` segments until they are all shorter than `maxlen`.
-// Arguments:
-//   path = The path to subdivide.
-//   maxlen = The maximum allowed path segment length.
-//   ---
-//   closed = If true, treat path like a closed polygon.  Default: true
-// Example:
-//   path = pentagon(d=100);
-//   spath = subdivide_long_segments(path, 10, closed=true);
-//   stroke(path);
-//   color("lightgreen") move_copies(path) circle(d=5,$fn=12);
-//   color("blue") move_copies(spath) circle(d=3,$fn=12);
-function subdivide_long_segments(path, maxlen, closed=false) =
-    assert(is_path(path))
-    assert(is_finite(maxlen))
-    assert(is_bool(closed))
-    [
-        for (p=pair(path,closed)) let(
-            steps = ceil(norm(p[1]-p[0])/maxlen)
-        ) each lerpn(p[0], p[1], steps, false),
-        if (!closed) last(path)
-    ];
-
-
-
 // Function: slice_profiles()
 // Topics: Paths, Path Subdivision
 // Usage:
