@@ -810,9 +810,45 @@ module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, 
 
 
 
+/// Internal Function: _path_add_jitter()
+/// Topics: Paths
+/// See Also: jittered_poly(), subdivide_long_segments()
+/// Usage:
+///   jpath = _path_add_jitter(path, [dist], [closed=]);
+/// Description:
+///   Adds tiny jitter offsets to collinear points in the given path so that they
+///   are no longer collinear.  This is useful for preserving subdivision on long
+///   straight segments, when making geometry with `polygon()`, for use with
+///   `linear_exrtrude()` with a `twist()`.
+/// Arguments:
+///   path = The path to add jitter to.
+///   dist = The amount to jitter points by.  Default: 1/512 (0.00195)
+///   ---
+///   closed = If true, treat path like a closed polygon.  Default: true
+/// Example(3D):
+///   d = 100; h = 75; quadsize = 5;
+///   path = pentagon(d=d);
+///   spath = subdivide_long_segments(path, quadsize, closed=true);
+///   jpath = _path_add_jitter(spath, closed=true);
+///   linear_extrude(height=h, twist=72, slices=h/quadsize)
+///      polygon(jpath);
+function _path_add_jitter(path, dist=1/512, closed=true) =
+    assert(is_path(path))
+    assert(is_finite(dist))
+    assert(is_bool(closed))
+    [
+        path[0],
+        for (i=idx(path,s=1,e=closed?-1:-2)) let(
+            n = line_normal([path[i-1],path[i]])
+        ) path[i] + n * (is_collinear(select(path,i-1,i+1))? (dist * ((i%2)*2-1)) : 0),
+        if (!closed) last(path)
+    ];
+
+
+
 // Module: jittered_poly()
 // Topics: Extrusions
-// See Also: path_add_jitter(), subdivide_long_segments()
+// See Also: _path_add_jitter(), subdivide_long_segments()
 // Usage:
 //   jittered_poly(path, [dist]);
 // Description:
@@ -829,7 +865,7 @@ module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, 
 //   linear_extrude(height=h, twist=72, slices=h/quadsize)
 //      jittered_poly(spath);
 module jittered_poly(path, dist=1/512) {
-    polygon(path_add_jitter(path, dist, closed=true));
+    polygon(_path_add_jitter(path, dist, closed=true));
 }
 
 

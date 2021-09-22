@@ -29,31 +29,17 @@ function is_region(x) = is_list(x) && is_path(x.x);
 function close_region(region, eps=EPSILON) = [for (path=region) close_path(path, eps=eps)];
 
 
-// Module: region()
+// Function: cleanup_region()
 // Usage:
-//   region(r);
+//   cleanup_region(region);
 // Description:
-//   Creates 2D polygons for the given region.  The region given is a list of closed 2D paths.
-//   Each path will be effectively exclusive-ORed from all other paths in the region, so if a
-//   path is inside another path, it will be effectively subtracted from it.
-// Example(2D):
-//   region([circle(d=50), square(25,center=true)]);
-// Example(2D):
-//   rgn = concat(
-//       [for (d=[50:-10:10]) circle(d=d-5)],
-//       [square([60,10], center=true)]
-//   );
-//   region(rgn);
-module region(r)
-{
-    points = flatten(r);
-    paths = [
-        for (i=[0:1:len(r)-1]) let(
-            start = default(sum([for (j=[0:1:i-1]) len(r[j])]),0)
-        ) [for (k=[0:1:len(r[i])-1]) start+k]
-    ];
-    polygon(points=points, paths=paths);
-}
+//   For all paths in the given region, if the last point coincides with the first point, removes the last point.
+// Arguments:
+//   region = The region to clean up.  Given as a list of polygon paths.
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+function cleanup_region(region, eps=EPSILON) =
+    [for (path=region) cleanup_path(path, eps=eps)];
+
 
 
 // Function: check_and_fix_path()
@@ -91,16 +77,34 @@ function check_and_fix_path(path, valid_dim=undef, closed=false, name="path") =
     closed && approx(path[0], last(path))? list_head(path) : path;
 
 
-// Function: cleanup_region()
+
+
+// Module: region()
 // Usage:
-//   cleanup_region(region);
+//   region(r);
 // Description:
-//   For all paths in the given region, if the last point coincides with the first point, removes the last point.
-// Arguments:
-//   region = The region to clean up.  Given as a list of polygon paths.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function cleanup_region(region, eps=EPSILON) =
-    [for (path=region) cleanup_path(path, eps=eps)];
+//   Creates 2D polygons for the given region.  The region given is a list of closed 2D paths.
+//   Each path will be effectively exclusive-ORed from all other paths in the region, so if a
+//   path is inside another path, it will be effectively subtracted from it.
+// Example(2D):
+//   region([circle(d=50), square(25,center=true)]);
+// Example(2D):
+//   rgn = concat(
+//       [for (d=[50:-10:10]) circle(d=d-5)],
+//       [square([60,10], center=true)]
+//   );
+//   region(rgn);
+module region(r)
+{
+    points = flatten(r);
+    paths = [
+        for (i=[0:1:len(r)-1]) let(
+            start = default(sum([for (j=[0:1:i-1]) len(r[j])]),0)
+        ) [for (k=[0:1:len(r[i])-1]) start+k]
+    ];
+    polygon(points=points, paths=paths);
+}
+
 
 
 // Function: point_in_region()
@@ -119,6 +123,7 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
     (_i >= len(region))? ((_cnt%2==1)? 1 : -1) : let(
         pip = point_in_polygon(point, region[_i], eps=eps)
     ) pip==0? 0 : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
+
 
 
 // Function: polygons_equal()
@@ -151,23 +156,23 @@ function __polygons_equal(poly1, poly2, eps, st) =
     max([for(d=poly1-select(poly2,st,st-1)) d*d])<eps*eps;
 
 
-// Function: poly_in_polygons()
+// Function: is_polygon_in_list()
 // Topics: Polygons, Comparators
 // See Also: polygons_equal(), regions_equal()
 // Usage:
-//   bool = poly_in_polygons(poly, polys);
+//   bool = is_polygon_in_list(poly, polys);
 // Description:
 //   Returns true if one of the polygons in `polys` is equivalent to the polygon `poly`.
 // Arguments:
 //   poly = The polygon to search for.
 //   polys = The list of polygons to look for the polygon in.
-function poly_in_polygons(poly, polys) =
-    __poly_in_polygons(poly, polys, 0);
+function is_polygon_in_list(poly, polys) =
+    __is_polygon_in_list(poly, polys, 0);
 
-function __poly_in_polygons(poly, polys, i) =
+function __is_polygon_in_list(poly, polys, i) =
     i >= len(polys)? false :
     polygons_equal(poly, polys[i])? true :
-    __poly_in_polygons(poly, polys, i+1);
+    __is_polygon_in_list(poly, polys, i+1);
 
 
 // Function: regions_equal()
@@ -187,21 +192,21 @@ function regions_equal(region1, region2) =
 
 function __regions_equal(region1, region2, i) =
     i >= len(region1)? true :
-    !poly_in_polygons(region1[i], region2)? false :
+    !is_polygon_in_list(region1[i], region2)? false :
     __regions_equal(region1, region2, i+1);
 
 
-// Function: region_path_crossings()
-// Usage:
-//   region_path_crossings(path, region);
-// Description:
-//   Returns a sorted list of [SEGMENT, U] that describe where a given path is crossed by a second path.
-// Arguments:
-//   path = The path to find crossings on.
-//   region = Region to test for crossings of.
-//   closed = If true, treat path as a closed polygon.  Default: true
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function region_path_crossings(path, region, closed=true, eps=EPSILON) = sort([
+/// Internal Function: _region_path_crossings()
+/// Usage:
+///   _region_path_crossings(path, region);
+/// Description:
+///   Returns a sorted list of [SEGMENT, U] that describe where a given path is crossed by a second path.
+/// Arguments:
+///   path = The path to find crossings on.
+///   region = Region to test for crossings of.
+///   closed = If true, treat path as a closed polygon.  Default: true
+///   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+function _region_path_crossings(path, region, closed=true, eps=EPSILON) = sort([
     let(
         segs = pair(closed? close_path(path) : cleanup_path(path))
     ) for (
@@ -240,7 +245,7 @@ function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) 
     let(
         path = deduplicate(path, eps=eps),
         region = [for (path=region) deduplicate(path, eps=eps)],
-        xings = region_path_crossings(path, region, closed=closed, eps=eps),
+        xings = _region_path_crossings(path, region, closed=closed, eps=eps),
         crossings = deduplicate(
             concat([[0,0]], xings, [[len(path)-1,1]]),
             eps=eps

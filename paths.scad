@@ -6,7 +6,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Section: Functions
+// Section: Utility Functions
 
 
 // Function: is_path()
@@ -72,7 +72,7 @@ function cleanup_path(path, eps=EPSILON) =
     is_closed_path(path,eps=eps)? [for (i=[0:1:len(path)-2]) path[i]] : path;
 
 
-/// internal Function: _path_select()
+/// Internal Function: _path_select()
 /// Usage:
 ///   _path_select(path,s1,u1,s2,u2,[closed]):
 /// Description:
@@ -124,6 +124,8 @@ function path_merge_collinear(path, closed=false, eps=EPSILON) =
         ]
     ) [for (i=indices) path[i]];
 
+
+// Section: Path length calculation
 
 
 // Function: path_length()
@@ -179,54 +181,30 @@ function path_length_fractions(path, closed=false) =
     ) partial_len / total_len;
 
 
-// Function: path_closest_point()
-// Usage:
-//   path_closest_point(path, pt);
-// Description:
-//   Finds the closest path segment, and point on that segment to the given point.
-//   Returns `[SEGNUM, POINT]`
-// Arguments:
-//   path = The path to find the closest point on.
-//   pt = the point to find the closest point to.
-// Example(2D):
-//   path = circle(d=100,$fn=6);
-//   pt = [20,10];
-//   closest = path_closest_point(path, pt);
-//   stroke(path, closed=true);
-//   color("blue") translate(pt) circle(d=3, $fn=12);
-//   color("red") translate(closest[1]) circle(d=3, $fn=12);
-function path_closest_point(path, pt) =
-    let(
-        pts = [for (seg=idx(path)) line_closest_point(select(path,seg,seg+1),pt,SEGMENT)],
-        dists = [for (p=pts) norm(p-pt)],
-        min_seg = min_index(dists)
-    ) [min_seg, pts[min_seg]];
 
-
-
-// Function: path_self_intersections()
-// Usage:
-//   isects = path_self_intersections(path, [eps]);
-// Description:
-//   Locates all self intersections of the given path.  Returns a list of intersections, where
-//   each intersection is a list like [POINT, SEGNUM1, PROPORTION1, SEGNUM2, PROPORTION2] where
-//   POINT is the coordinates of the intersection point, SEGNUMs are the integer indices of the
-//   intersecting segments along the path, and the PROPORTIONS are the 0.0 to 1.0 proportions
-//   of how far along those segments they intersect at.  A proportion of 0.0 indicates the start
-//   of the segment, and a proportion of 1.0 indicates the end of the segment.
-// Arguments:
-//   path = The path to find self intersections of.
-//   closed = If true, treat path like a closed polygon.  Default: true
-//   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-// Example(2D):
-//   path = [
-//       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
-//   ];
-//   isects = path_self_intersections(path, closed=true);
-//   // isects == [[[-33.3333, 0], 0, 0.666667, 4, 0.333333], [[33.3333, 0], 1, 0.333333, 3, 0.666667]]
-//   stroke(path, closed=true, width=1);
-//   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
-function path_self_intersections(path, closed=true, eps=EPSILON) =
+/// Internal Function: _path_self_intersections()
+/// Usage:
+///   isects = _path_self_intersections(path, [closed], [eps]);
+/// Description:
+///   Locates all self intersections of the given path.  Returns a list of intersections, where
+///   each intersection is a list like [POINT, SEGNUM1, PROPORTION1, SEGNUM2, PROPORTION2] where
+///   POINT is the coordinates of the intersection point, SEGNUMs are the integer indices of the
+///   intersecting segments along the path, and the PROPORTIONS are the 0.0 to 1.0 proportions
+///   of how far along those segments they intersect at.  A proportion of 0.0 indicates the start
+///   of the segment, and a proportion of 1.0 indicates the end of the segment.
+/// Arguments:
+///   path = The path to find self intersections of.
+///   closed = If true, treat path like a closed polygon.  Default: true
+///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
+/// Example(2D):
+///   path = [
+///       [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100]
+///   ];
+///   isects = _path_self_intersections(path, closed=true);
+///   // isects == [[[-33.3333, 0], 0, 0.666667, 4, 0.333333], [[33.3333, 0], 1, 0.333333, 3, 0.666667]]
+///   stroke(path, closed=true, width=1);
+///   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
+function _path_self_intersections(path, closed=true, eps=EPSILON) =
     let(
         path = cleanup_path(path, eps=eps),
         plen = len(path)
@@ -261,7 +239,230 @@ function path_self_intersections(path, closed=true, eps=EPSILON) =
 
 
 
-// Section: Geometric Properties of Paths
+// Section: Resampling: changing the number of points in a path
+
+
+// Input `data` is a list that sums to an integer. 
+// Returns rounded version of input data so that every 
+// entry is rounded to an integer and the sum is the same as
+// that of the input.  Works by rounding an entry in the list
+// and passing the rounding error forward to the next entry.
+// This will generally distribute the error in a uniform manner. 
+function _sum_preserving_round(data, index=0) =
+    index == len(data)-1 ? list_set(data, len(data)-1, round(data[len(data)-1])) :
+    let(
+        newval = round(data[index]),
+        error = newval - data[index]
+    ) _sum_preserving_round(
+        list_set(data, [index,index+1], [newval, data[index+1]-error]),
+        index+1
+    );
+
+
+// Function: subdivide_path()
+// Usage:
+//   newpath = subdivide_path(path, [N|refine], method);
+// Description:
+//   Takes a path as input (closed or open) and subdivides the path to produce a more
+//   finely sampled path.  The new points can be distributed proportional to length
+//   (`method="length"`) or they can be divided up evenly among all the path segments
+//   (`method="segment"`).  If the extra points don't fit evenly on the path then the
+//   algorithm attempts to distribute them uniformly.  The `exact` option requires that
+//   the final length is exactly as requested.  If you set it to `false` then the
+//   algorithm will favor uniformity and the output path may have a different number of
+//   points due to rounding error.
+//   .
+//   With the `"segment"` method you can also specify a vector of lengths.  This vector, 
+//   `N` specfies the desired point count on each segment: with vector input, `subdivide_path`
+//   attempts to place `N[i]-1` points on segment `i`.  The reason for the -1 is to avoid
+//   double counting the endpoints, which are shared by pairs of segments, so that for
+//   a closed polygon the total number of points will be sum(N).  Note that with an open
+//   path there is an extra point at the end, so the number of points will be sum(N)+1. 
+// Arguments:
+//   path = path to subdivide
+//   N = scalar total number of points desired or with `method="segment"` can be a vector requesting `N[i]-1` points on segment i.
+//   refine = number of points to add each segment.
+//   closed = set to false if the path is open.  Default: True
+//   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  Default: True
+//   method = One of `"length"` or `"segment"`.  If `"length"`, adds vertices evenly along the total path length.  If `"segment"`, adds points evenly among the segments.  Default: `"length"`
+// Example(2D):
+//   mypath = subdivide_path(square([2,2],center=true), 12);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D):
+//   mypath = subdivide_path(square([8,2],center=true), 12);
+//   move_copies(mypath)circle(r=.2,$fn=32);
+// Example(2D):
+//   mypath = subdivide_path(square([8,2],center=true), 12, method="segment");
+//   move_copies(mypath)circle(r=.2,$fn=32);
+// Example(2D):
+//   mypath = subdivide_path(square([2,2],center=true), 17, closed=false);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): Specifying different numbers of points on each segment
+//   mypath = subdivide_path(hexagon(side=2), [2,3,4,5,6,7], method="segment");
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): Requested point total is 14 but 15 points output due to extra end point
+//   mypath = subdivide_path(pentagon(side=2), [3,4,3,4], method="segment", closed=false);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): Since 17 is not divisible by 5, a completely uniform distribution is not possible. 
+//   mypath = subdivide_path(pentagon(side=2), 17);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): With `exact=false` a uniform distribution, but only 15 points
+//   mypath = subdivide_path(pentagon(side=2), 17, exact=false);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(2D): With `exact=false` you can also get extra points, here 20 instead of requested 18
+//   mypath = subdivide_path(pentagon(side=2), 18, exact=false);
+//   move_copies(mypath)circle(r=.1,$fn=32);
+// Example(FlatSpin,VPD=15,VPT=[0,0,1.5]): Three-dimensional paths also work
+//   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
+//   move_copies(mypath)sphere(r=.1,$fn=32);
+function subdivide_path(path, N, refine, closed=true, exact=true, method="length") =
+    assert(is_path(path))
+    assert(method=="length" || method=="segment")
+    assert(num_defined([N,refine]),"Must give exactly one of N and refine")
+    let(
+        N = !is_undef(N)? N :
+            !is_undef(refine)? len(path) * refine :
+            undef
+    )
+    assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
+    let(
+        count = len(path) - (closed?0:1), 
+        add_guess = method=="segment"? (
+                is_list(N)? (
+                    assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
+                    add_scalar(N,-1)
+                ) : repeat((N-len(path)) / count, count)
+            ) : // method=="length"
+            assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
+            let(
+                path_lens = concat(
+                    [ for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i]) ],
+                    closed? [norm(path[len(path)-1]-path[0])] : []
+                ),
+                add_density = (N - len(path)) / sum(path_lens)
+            )
+            path_lens * add_density,
+        add = exact? _sum_preserving_round(add_guess) :
+            [for (val=add_guess) round(val)]
+    ) concat(
+        [
+            for (i=[0:1:count]) each [
+                for(j=[0:1:add[i]])
+                lerp(path[i],select(path,i+1), j/(add[i]+1))
+            ]
+        ],
+        closed? [] : [last(path)]
+    );
+
+
+
+// Function: subdivide_long_segments()
+// Topics: Paths, Path Subdivision
+// See Also: subdivide_path(), subdivide_and_slice(), path_add_jitter(), jittered_poly()
+// Usage:
+//   spath = subdivide_long_segments(path, maxlen, [closed=]);
+// Description:
+//   Evenly subdivides long `path` segments until they are all shorter than `maxlen`.
+// Arguments:
+//   path = The path to subdivide.
+//   maxlen = The maximum allowed path segment length.
+//   ---
+//   closed = If true, treat path like a closed polygon.  Default: true
+// Example:
+//   path = pentagon(d=100);
+//   spath = subdivide_long_segments(path, 10, closed=true);
+//   stroke(path);
+//   color("lightgreen") move_copies(path) circle(d=5,$fn=12);
+//   color("blue") move_copies(spath) circle(d=3,$fn=12);
+function subdivide_long_segments(path, maxlen, closed=false) =
+    assert(is_path(path))
+    assert(is_finite(maxlen))
+    assert(is_bool(closed))
+    [
+        for (p=pair(path,closed)) let(
+            steps = ceil(norm(p[1]-p[0])/maxlen)
+        ) each lerpn(p[0], p[1], steps, false),
+        if (!closed) last(path)
+    ];
+
+
+
+// Function: resample_path()
+// Usage:
+//   newpath = resample_path(path, N|spacing, [closed]);
+// Description:
+//   Compute a uniform resampling of the input path.  If you specify `N` then the output path will have N
+//   points spaced uniformly (by linear interpolation along the input path segments).  The only points of the
+//   input path that are guaranteed to appear in the output path are the starting and ending points.
+//   If you specify `spacing` then the length you give will be rounded to the nearest spacing that gives
+//   a uniform sampling of the path and the resulting uniformly sampled path is returned.
+//   Note that because this function operates on a discrete input path the quality of the output depends on
+//   the sampling of the input.  If you want very accurate output, use a lot of points for the input.
+// Arguments:
+//   path = path to resample
+//   N = Number of points in output
+//   spacing = Approximate spacing desired
+//   closed = set to true if path is closed.  Default: false
+function resample_path(path, N, spacing, closed=false) =
+   assert(is_path(path))
+   assert(num_defined([N,spacing])==1,"Must define exactly one of N and spacing")
+   assert(is_bool(closed))
+   let(
+       length = path_length(path,closed),
+       // In the open path case decrease N by 1 so that we don't try to get
+       // path_cut to return the endpoint (which might fail due to rounding)
+       // Add last point later
+       N = is_def(N) ? N-(closed?0:1) : round(length/spacing),
+       distlist = lerpn(0,length,N,false), 
+       cuts = _path_cut_points(path, distlist, closed=closed)
+   )
+   [ each subindex(cuts,0),
+     if (!closed) last(path)     // Then add last point here
+   ];
+
+
+
+
+
+// Section: Path Geometry
+
+// Function: is_path_simple()
+// Usage:
+//   bool = is_path_simple(path, [closed], [eps]);
+// Description:
+//   Returns true if the path is simple, meaning that it has no self-intersections.
+//   If closed is set to true then treat the path as a polygon.
+// Arguments:
+//   path = path to check
+//   closed = set to true to treat path as a polygon.  Default: false
+//   eps = Epsilon error value used for determine if points coincide.  Default: `EPSILON` (1e-9)
+function is_path_simple(path, closed=false, eps=EPSILON) =
+    _path_self_intersections(path,closed=closed,eps=eps) == [];
+
+
+// Function: path_closest_point()
+// Usage:
+//   path_closest_point(path, pt);
+// Description:
+//   Finds the closest path segment, and point on that segment to the given point.
+//   Returns `[SEGNUM, POINT]`
+// Arguments:
+//   path = The path to find the closest point on.
+//   pt = the point to find the closest point to.
+// Example(2D):
+//   path = circle(d=100,$fn=6);
+//   pt = [20,10];q
+//   closest = path_closest_point(path, pt);
+//   stroke(path, closed=true);
+//   color("blue") translate(pt) circle(d=3, $fn=12);
+//   color("red") translate(closest[1]) circle(d=3, $fn=12);
+function path_closest_point(path, pt) =
+    let(
+        pts = [for (seg=idx(path)) line_closest_point(select(path,seg,seg+1),pt,SEGMENT)],
+        dists = [for (p=pts) norm(p-pt)],
+        min_seg = min_index(dists)
+    ) [min_seg, pts[min_seg]];
+
 
 // Function: path_tangents()
 // Usage:
@@ -522,228 +723,6 @@ function _corner_roundover_path(p1, p2, p3, r, d) =
 
 
 
-// Function: path_add_jitter()
-// Topics: Paths
-// See Also: jittered_poly(), subdivide_long_segments()
-// Usage:
-//   jpath = path_add_jitter(path, [dist], [closed=]);
-// Description:
-//   Adds tiny jitter offsets to collinear points in the given path so that they
-//   are no longer collinear.  This is useful for preserving subdivision on long
-//   straight segments, when making geometry with `polygon()`, for use with
-//   `linear_exrtrude()` with a `twist()`.
-// Arguments:
-//   path = The path to add jitter to.
-//   dist = The amount to jitter points by.  Default: 1/512 (0.00195)
-//   ---
-//   closed = If true, treat path like a closed polygon.  Default: true
-// Example(3D):
-//   d = 100; h = 75; quadsize = 5;
-//   path = pentagon(d=d);
-//   spath = subdivide_long_segments(path, quadsize, closed=true);
-//   jpath = path_add_jitter(spath, closed=true);
-//   linear_extrude(height=h, twist=72, slices=h/quadsize)
-//      polygon(jpath);
-function path_add_jitter(path, dist=1/512, closed=true) =
-    assert(is_path(path))
-    assert(is_finite(dist))
-    assert(is_bool(closed))
-    [
-        path[0],
-        for (i=idx(path,s=1,e=closed?-1:-2)) let(
-            n = line_normal([path[i-1],path[i]])
-        ) path[i] + n * (is_collinear(select(path,i-1,i+1))? (dist * ((i%2)*2-1)) : 0),
-        if (!closed) last(path)
-    ];
-
-
-
-
-// Section: Resampling: changing the number of points in a path
-
-
-// Input `data` is a list that sums to an integer. 
-// Returns rounded version of input data so that every 
-// entry is rounded to an integer and the sum is the same as
-// that of the input.  Works by rounding an entry in the list
-// and passing the rounding error forward to the next entry.
-// This will generally distribute the error in a uniform manner. 
-function _sum_preserving_round(data, index=0) =
-    index == len(data)-1 ? list_set(data, len(data)-1, round(data[len(data)-1])) :
-    let(
-        newval = round(data[index]),
-        error = newval - data[index]
-    ) _sum_preserving_round(
-        list_set(data, [index,index+1], [newval, data[index+1]-error]),
-        index+1
-    );
-
-
-// Section: Changing sampling of paths
-
-// Function: subdivide_path()
-// Usage:
-//   newpath = subdivide_path(path, [N|refine], method);
-// Description:
-//   Takes a path as input (closed or open) and subdivides the path to produce a more
-//   finely sampled path.  The new points can be distributed proportional to length
-//   (`method="length"`) or they can be divided up evenly among all the path segments
-//   (`method="segment"`).  If the extra points don't fit evenly on the path then the
-//   algorithm attempts to distribute them uniformly.  The `exact` option requires that
-//   the final length is exactly as requested.  If you set it to `false` then the
-//   algorithm will favor uniformity and the output path may have a different number of
-//   points due to rounding error.
-//   .
-//   With the `"segment"` method you can also specify a vector of lengths.  This vector, 
-//   `N` specfies the desired point count on each segment: with vector input, `subdivide_path`
-//   attempts to place `N[i]-1` points on segment `i`.  The reason for the -1 is to avoid
-//   double counting the endpoints, which are shared by pairs of segments, so that for
-//   a closed polygon the total number of points will be sum(N).  Note that with an open
-//   path there is an extra point at the end, so the number of points will be sum(N)+1. 
-// Arguments:
-//   path = path to subdivide
-//   N = scalar total number of points desired or with `method="segment"` can be a vector requesting `N[i]-1` points on segment i.
-//   refine = number of points to add each segment.
-//   closed = set to false if the path is open.  Default: True
-//   exact = if true return exactly the requested number of points, possibly sacrificing uniformity.  If false, return uniform point sample that may not match the number of points requested.  Default: True
-//   method = One of `"length"` or `"segment"`.  If `"length"`, adds vertices evenly along the total path length.  If `"segment"`, adds points evenly among the segments.  Default: `"length"`
-// Example(2D):
-//   mypath = subdivide_path(square([2,2],center=true), 12);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D):
-//   mypath = subdivide_path(square([8,2],center=true), 12);
-//   move_copies(mypath)circle(r=.2,$fn=32);
-// Example(2D):
-//   mypath = subdivide_path(square([8,2],center=true), 12, method="segment");
-//   move_copies(mypath)circle(r=.2,$fn=32);
-// Example(2D):
-//   mypath = subdivide_path(square([2,2],center=true), 17, closed=false);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): Specifying different numbers of points on each segment
-//   mypath = subdivide_path(hexagon(side=2), [2,3,4,5,6,7], method="segment");
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): Requested point total is 14 but 15 points output due to extra end point
-//   mypath = subdivide_path(pentagon(side=2), [3,4,3,4], method="segment", closed=false);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): Since 17 is not divisible by 5, a completely uniform distribution is not possible. 
-//   mypath = subdivide_path(pentagon(side=2), 17);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): With `exact=false` a uniform distribution, but only 15 points
-//   mypath = subdivide_path(pentagon(side=2), 17, exact=false);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(2D): With `exact=false` you can also get extra points, here 20 instead of requested 18
-//   mypath = subdivide_path(pentagon(side=2), 18, exact=false);
-//   move_copies(mypath)circle(r=.1,$fn=32);
-// Example(FlatSpin,VPD=15,VPT=[0,0,1.5]): Three-dimensional paths also work
-//   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
-//   move_copies(mypath)sphere(r=.1,$fn=32);
-function subdivide_path(path, N, refine, closed=true, exact=true, method="length") =
-    assert(is_path(path))
-    assert(method=="length" || method=="segment")
-    assert(num_defined([N,refine]),"Must give exactly one of N and refine")
-    let(
-        N = !is_undef(N)? N :
-            !is_undef(refine)? len(path) * refine :
-            undef
-    )
-    assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
-    let(
-        count = len(path) - (closed?0:1), 
-        add_guess = method=="segment"? (
-                is_list(N)? (
-                    assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
-                    add_scalar(N,-1)
-                ) : repeat((N-len(path)) / count, count)
-            ) : // method=="length"
-            assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
-            let(
-                path_lens = concat(
-                    [ for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i]) ],
-                    closed? [norm(path[len(path)-1]-path[0])] : []
-                ),
-                add_density = (N - len(path)) / sum(path_lens)
-            )
-            path_lens * add_density,
-        add = exact? _sum_preserving_round(add_guess) :
-            [for (val=add_guess) round(val)]
-    ) concat(
-        [
-            for (i=[0:1:count]) each [
-                for(j=[0:1:add[i]])
-                lerp(path[i],select(path,i+1), j/(add[i]+1))
-            ]
-        ],
-        closed? [] : [last(path)]
-    );
-
-
-
-// Function: subdivide_long_segments()
-// Topics: Paths, Path Subdivision
-// See Also: subdivide_path(), subdivide_and_slice(), path_add_jitter(), jittered_poly()
-// Usage:
-//   spath = subdivide_long_segments(path, maxlen, [closed=]);
-// Description:
-//   Evenly subdivides long `path` segments until they are all shorter than `maxlen`.
-// Arguments:
-//   path = The path to subdivide.
-//   maxlen = The maximum allowed path segment length.
-//   ---
-//   closed = If true, treat path like a closed polygon.  Default: true
-// Example:
-//   path = pentagon(d=100);
-//   spath = subdivide_long_segments(path, 10, closed=true);
-//   stroke(path);
-//   color("lightgreen") move_copies(path) circle(d=5,$fn=12);
-//   color("blue") move_copies(spath) circle(d=3,$fn=12);
-function subdivide_long_segments(path, maxlen, closed=false) =
-    assert(is_path(path))
-    assert(is_finite(maxlen))
-    assert(is_bool(closed))
-    [
-        for (p=pair(path,closed)) let(
-            steps = ceil(norm(p[1]-p[0])/maxlen)
-        ) each lerpn(p[0], p[1], steps, false),
-        if (!closed) last(path)
-    ];
-
-
-
-// Function: resample_path()
-// Usage:
-//   newpath = resample_path(path, N|spacing, [closed]);
-// Description:
-//   Compute a uniform resampling of the input path.  If you specify `N` then the output path will have N
-//   points spaced uniformly (by linear interpolation along the input path segments).  The only points of the
-//   input path that are guaranteed to appear in the output path are the starting and ending points.
-//   If you specify `spacing` then the length you give will be rounded to the nearest spacing that gives
-//   a uniform sampling of the path and the resulting uniformly sampled path is returned.
-//   Note that because this function operates on a discrete input path the quality of the output depends on
-//   the sampling of the input.  If you want very accurate output, use a lot of points for the input.
-// Arguments:
-//   path = path to resample
-//   N = Number of points in output
-//   spacing = Approximate spacing desired
-//   closed = set to true if path is closed.  Default: false
-function resample_path(path, N, spacing, closed=false) =
-   assert(is_path(path))
-   assert(num_defined([N,spacing])==1,"Must define exactly one of N and spacing")
-   assert(is_bool(closed))
-   let(
-       length = path_length(path,closed),
-       // In the open path case decrease N by 1 so that we don't try to get
-       // path_cut to return the endpoint (which might fail due to rounding)
-       // Add last point later
-       N = is_def(N) ? N-(closed?0:1) : round(length/spacing),
-       distlist = lerpn(0,length,N,false), 
-       cuts = _path_cut_points(path, distlist, closed=closed)
-   )
-   [ each subindex(cuts,0),
-     if (!closed) last(path)     // Then add last point here
-   ];
-
-
-
 
 // Section: Breaking paths up into subpaths
 
@@ -963,7 +942,7 @@ function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
                 [[0, 0]],
                 sort([
                     for (
-                        a = path_self_intersections(path, closed=closed, eps=eps),
+                        a = _path_self_intersections(path, closed=closed, eps=eps),
                         ss = [ [a[1],a[2]], [a[3],a[4]] ]
                     ) if (ss[0] != undef) ss
                 ]),
