@@ -451,7 +451,7 @@ function is_path_simple(path, closed=false, eps=EPSILON) =
 //   pt = the point to find the closest point to.
 // Example(2D):
 //   path = circle(d=100,$fn=6);
-//   pt = [20,10];q
+//   pt = [20,10];
 //   closest = path_closest_point(path, pt);
 //   stroke(path, closed=true);
 //   color("blue") translate(pt) circle(d=3, $fn=12);
