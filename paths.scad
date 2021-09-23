@@ -358,7 +358,7 @@ function subdivide_path(path, N, refine, closed=true, exact=true, method="length
 
 // Function: subdivide_long_segments()
 // Topics: Paths, Path Subdivision
-// See Also: subdivide_path(), subdivide_and_slice(), path_add_jitter(), jittered_poly()
+// See Also: subdivide_path(), subdivide_and_slice(), jittered_poly()
 // Usage:
 //   spath = subdivide_long_segments(path, maxlen, [closed=]);
 // Description:
