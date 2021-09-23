@@ -848,7 +848,7 @@ function _path_add_jitter(path, dist=1/512, closed=true) =
 
 // Module: jittered_poly()
 // Topics: Extrusions
-// See Also: _path_add_jitter(), subdivide_long_segments()
+// See Also: subdivide_long_segments()
 // Usage:
 //   jittered_poly(path, [dist]);
 // Description:
