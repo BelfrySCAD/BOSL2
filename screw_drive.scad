@@ -10,45 +10,45 @@
 // Section: Phillips Drive
 
 // Module: phillips_mask()
-// Description: Creates a mask for creating a Phillips drive recess given the Phillips size. 
+// Description:
+//   Creates a mask for creating a Phillips drive recess given the Phillips size.  Each mask can
+//   be lowered to different depths to create different sizes of recess.  
 // Arguments:
 //   size = The size of the bit as a number or string.  "#0", "#1", "#2", "#3", or "#4"
-//   shaft = The diameter of the drive bit's shaft.
-//   l = The length of the drive bit.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
 //   xdistribute(10) {
-//      phillips_mask(size="#1", l=20);
-//      phillips_mask(size="#2", l=20);
-//      phillips_mask(size=3, l=20);
-//      phillips_mask(size=4, l=20); 
+//      phillips_mask(size="#1");
+//      phillips_mask(size="#2");
+//      phillips_mask(size=3);
+//      phillips_mask(size=4);
 //   }
 
 // Specs for phillips recess here:
 //   https://www.fasteners.eu/tech-info/ISO/4757/
 
-module phillips_mask(size="#2", shaft, l=20, $fn=36, anchor=BOTTOM, spin=0, orient=UP) {
+_phillips_shaft = [3,4.5,6,8,10];
+_ph_bot_angle = 28.0;
+_ph_side_angle = 26.5;
+
+module phillips_mask(size="#2", $fn=36, anchor=BOTTOM, spin=0, orient=UP) {
     assert(in_list(size,["#0","#1","#2","#3","#4",0,1,2,3,4]));
     num = is_num(size) ? size : ord(size[1]) - ord("0");
-    defshaft = [3,4.5,6,8,10][num];
-    shaft = first_defined([defshaft,shaft,defshaft]);
-    
+    shaft = _phillips_shaft[num];
     b =     [0.61, 0.97, 1.47, 2.41, 3.48][num];
     e =     [0.31, 0.435, 0.815, 2.005, 2.415][num];
-//    e =     [0.31, 0.435, 0.815, 2.1505, 2.415][num];    
     g =     [0.81, 1.27, 2.29, 3.81, 5.08][num];
     //f =     [0.33, 0.53, 0.70, 0.82, 1.23][num];
     //r =     [0.30, 0.50, 0.60, 0.80, 1.00][num];
     alpha = [ 136,  138,  140,  146,  153][num];
     beta  = [7.00, 7.00, 5.75, 5.75, 7.00][num];
     gamma = 92.0;
-    ang1 = 28.0;
-    ang2 = 26.5;
-    h1 = adj_ang_to_opp(g/2, ang1);   // height of the small conical tip
-    h2 = adj_ang_to_opp((shaft-g)/2, 90-ang2);   // height of larger cone
-    h3 = adj_ang_to_opp(b/2, ang1);   // height where cutout starts
+    h1 = adj_ang_to_opp(g/2, _ph_bot_angle);   // height of the small conical tip
+    h2 = adj_ang_to_opp((shaft-g)/2, 90-_ph_side_angle);   // height of larger cone
+    l = h1+h2;
+    h3 = adj_ang_to_opp(b/2, _ph_bot_angle);   // height where cutout starts
     p0 = [0,0];
     p1 = [adj_ang_to_opp(e/2, 90-alpha/2), -e/2];
     p2 = p1 + [adj_ang_to_opp((shaft-e)/2, 90-gamma/2),-(shaft-e)/2];
@@ -56,12 +56,13 @@ module phillips_mask(size="#2", shaft, l=20, $fn=36, anchor=BOTTOM, spin=0, orie
         down(l/2) {
             difference() {
                 rotate_extrude()
-                    polygon([[0,0],[g/2,h1],[shaft/2,h1+h2],[shaft/2,l],[0,l]]);
+                    polygon([[0,0],[g/2,h1],[shaft/2,l],[0,l]]);
                 zrot(45)
                 zrot_copies(n=4, r=b/2) {                   
                     up(h3) {
-                        yrot(beta) { 
-                            linear_extrude(height=(h1+h2)*20, convexity=4, center=false) {
+                        yrot(beta) {
+                            down(1)
+                            linear_extrude(height=l+2, convexity=4, center=false) {
                                 path = [p0, p1, p2, [p2.x,-p2.y], [p1.x,-p1.y]];
                                 polygon(path);
                             }
@@ -91,21 +92,21 @@ function phillips_depth(size, d) =
         num = is_num(size) ? size : ord(size[1]) - ord("0"),
         shaft = [3,4.5,6,8,10][num],
         g =     [0.81, 1.27, 2.29, 3.81, 5.08][num],
-        ang1 = 28.0,
-        ang2 = 26.5,
-        h1 = adj_ang_to_opp(g/2, ang1),   // height of the small conical tip
-        h2 = adj_ang_to_opp((shaft-g)/2, 90-ang2)   // height of larger cone
+        _ph_bot_angle = 28.0,
+        _ph_side_angle = 26.5,
+        h1 = adj_ang_to_opp(g/2, _ph_bot_angle),   // height of the small conical tip
+        h2 = adj_ang_to_opp((shaft-g)/2, 90-_ph_side_angle)   // height of larger cone
     )
-    d>shaft ? undef :
-    d<g ? undef :
-    (d-g) / 2 / tan(ang2) + h1;
+    d>=shaft || d<g ? undef :
+    (d-g) / 2 / tan(_ph_side_angle) + h1;
 
 
 // Function: phillips_diam()
 // Usage:
 //   diam = phillips_diam(size, depth);
 // Description:
-//   Returns the diameter at the top of the Phillips recess when constructed at the specified depth.
+//   Returns the diameter at the top of the Phillips recess when constructed at the specified depth,
+//   or undef if that depth is not valid.  
 // Arguments:
 //   size = size as number or text string like "#2"
 //   depth = depth of recess to find the diameter of
@@ -113,18 +114,13 @@ function phillips_diam(size, depth) =
     assert(in_list(size,["#0","#1","#2","#3","#4",0,1,2,3,4]))
     let(
         num = is_num(size) ? size : ord(size[1]) - ord("0"),
-        shaft = [3,4.5,6,8,10][num],
-        ang1 = 28.0,
-        ang2 = 26.5,
+        shaft = _phillips_shaft[num],
         g =     [0.81, 1.27, 2.29, 3.81, 5.08][num],
-        h1 = adj_ang_to_opp(g/2, ang1),   // height of the small conical tip
-        h2 = adj_ang_to_opp((shaft-g)/2, 90-ang2)   // height of larger cone
+        h1 = adj_ang_to_opp(g/2, _ph_bot_angle),   // height of the small conical tip
+        h2 = adj_ang_to_opp((shaft-g)/2, 90-_ph_side_angle)   // height of larger cone
     )
-    depth<h1 ? undef :
-    depth>h1+h2 ? shaft : 
-    2 * tan(ang2)*(depth-h1) + g;
-
-
+    depth<h1 || depth>= h1+h2 ? undef :
+    2 * tan(_ph_side_angle)*(depth-h1) + g;
 
 
 

@@ -1421,7 +1421,7 @@ http://files.engineering.com/getfile.aspx?folder=76fb0d5e-1fff-4c49-87a5-0597947
 // How do you insert a threaded hole into a model?
 // Default nut thickness
 //
-// JIS: 
+//    JIS 
 //https://www.garagejournal.com/forum/media/jis-b-4633-vs-iso-8764-1-din-5260-ph.84492/
 
 //square:
