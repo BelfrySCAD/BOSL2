@@ -113,7 +113,7 @@ function point_line_distance(pt, line, bounded=false) =
                            
 // Function: segment_distance()
 // Usage:
-//   dist = segment_distance(seg1, seg2);
+//   dist = segment_distance(seg1, seg2, [eps]);
 // Topics: Geometry, Segments, Distance
 // See Also: convex_collision(), convex_distance()
 // Description:
@@ -121,12 +121,13 @@ function point_line_distance(pt, line, bounded=false) =
 // Arguments:
 //   seg1 = The list of two points representing the first line segment to check the distance of.
 //   seg2 = The list of two points representing the second line segment to check the distance of.
+//   eps = tolerance for point comparisons
 // Example:
 //   dist = segment_distance([[-14,3], [-15,9]], [[-10,0], [10,0]]);  // Returns: 5
 //   dist2 = segment_distance([[-5,5], [5,-5]], [[-10,3], [10,-3]]);  // Returns: 0
-function segment_distance(seg1, seg2) =
+function segment_distance(seg1, seg2,eps=EPSILON) =
     assert( is_matrix(concat(seg1,seg2),4), "Inputs should be two valid segments." )
-    convex_distance(seg1,seg2);
+    convex_distance(seg1,seg2,eps);
 
 
 // Function: line_normal()
@@ -1476,7 +1477,7 @@ function polygon_normal(poly) =
 //     color("red")back(28/(2/3))text("Even-Odd", size=5/(2/3), halign="center");
 //   }
 //   right(40){
-//      dp = decompose_path(path,closed=true);
+//      dp = polygon_parts(path,closed=true);
 //      region(dp);
 //      color("red"){stroke(path,width=1,closed=true);
 //                   back(28/(2/3))text("Nonzero", size=5/(2/3), halign="center");

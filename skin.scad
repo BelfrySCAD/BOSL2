@@ -832,8 +832,13 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
     caps = is_def(caps) ? caps :
            closed ? false : true,
     capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
-    fullcaps = is_bool(caps) ? [caps,caps] : caps
+    fullcaps = is_bool(caps) ? [caps,caps] : caps,
+    normalOK = is_undef(normal) || (method!="natural" && is_vector(normal,3))
+                                || (method=="manual" && same_shape(normal,path))
   )
+  assert(normalOK,  method=="natural" ? "Cannot specify normal with the \"natural\" method"
+                  : method=="incremental" ? "Normal with \"incremental\" method must be a 3-vector"
+                  : str("Incompatible normal given.  Must be a 3-vector or a list of ",len(path)," 3-vectors"))
   assert(capsOK, "caps must be boolean or a list of two booleans")
   assert(!closed || !caps, "Cannot make closed shape with caps")
   assert(is_undef(normal) || (is_vector(normal) && len(normal)==3) || (is_path(normal) && len(normal)==len(path) && len(normal[0])==3), "Invalid normal specified")
@@ -1156,37 +1161,6 @@ function subdivide_and_slice(profiles, slices, numpoints, method="length", close
   let(fixpoly = [for(poly=profiles) subdivide_path(poly, numpoints,method=method)])
   slice_profiles(fixpoly, slices, closed);
   
-
-
-// Function: subdivide_long_segments()
-// Topics: Paths, Path Subdivision
-// See Also: subdivide_path(), subdivide_and_slice(), path_add_jitter(), jittered_poly()
-// Usage:
-//   spath = subdivide_long_segments(path, maxlen, [closed=]);
-// Description:
-//   Evenly subdivides long `path` segments until they are all shorter than `maxlen`.
-// Arguments:
-//   path = The path to subdivide.
-//   maxlen = The maximum allowed path segment length.
-//   ---
-//   closed = If true, treat path like a closed polygon.  Default: true
-// Example:
-//   path = pentagon(d=100);
-//   spath = subdivide_long_segments(path, 10, closed=true);
-//   stroke(path);
-//   color("lightgreen") move_copies(path) circle(d=5,$fn=12);
-//   color("blue") move_copies(spath) circle(d=3,$fn=12);
-function subdivide_long_segments(path, maxlen, closed=false) =
-    assert(is_path(path))
-    assert(is_finite(maxlen))
-    assert(is_bool(closed))
-    [
-        for (p=pair(path,closed)) let(
-            steps = ceil(norm(p[1]-p[0])/maxlen)
-        ) each lerpn(p[0], p[1], steps, false),
-        if (!closed) last(path)
-    ];
-
 
 
 // Function: slice_profiles()

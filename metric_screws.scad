@@ -8,8 +8,7 @@
 
 
 include <threading.scad>
-include <phillips_drive.scad>
-include <torx_drive.scad>
+include <screw_drive.scad>
 
 
 // Section: Functions
@@ -607,13 +606,13 @@ module metric_bolt(
                 // Phillips drive hole
                 if (headtype != "socket" && phillips != undef) {
                     down(headtype != "hex"? H/6 : 0) {
-                        phillips_drive(size=phillips, shaft=D);
+                        phillips_mask(size=phillips); //, shaft=D);
                     }
                 }
 
                 // Torx drive hole
                 if (headtype != "socket" && torx != undef) {
-                    up(1) torx_drive(size=torx, l=H+0.1, center=false);
+                    up(1) torx_mask(size=torx, l=H+0.1, center=false);
                 }
             }
         }

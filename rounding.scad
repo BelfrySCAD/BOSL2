@@ -1931,8 +1931,8 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
                                  top_patch[i][4][4]
                              ]
              ],
-     top_intersections = path_self_intersections(faces[0]),
-     bot_intersections = path_self_intersections(faces[1]),
+     top_simple = is_path_simple(faces[0],closed=true),
+     bot_simple = is_path_simple(faces[1],closed=true),
      // verify vertical edges
      verify_vert =
        [for(i=[0:N-1],j=[0:4])
@@ -1949,9 +1949,9 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
          )
          if (!is_collinear(hline_top) || !is_collinear(hline_bot)) [i,j]]
     )
-    assert(debug || top_intersections==[],
+    assert(debug || top_simple,
           "Roundovers interfere with each other on top face: either input is self intersecting or top joint length is too large")
-    assert(debug || bot_intersections==[],
+    assert(debug || bot_simple,
           "Roundovers interfere with each other on bottom face: either input is self intersecting or top joint length is too large")
     assert(debug || (verify_vert==[] && verify_horiz==[]), "Curvature continuity failed")
     let(

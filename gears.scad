@@ -37,7 +37,7 @@
 // Arguments:
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   mod = The metric module/modulus of the gear.
-// Examples:
+// Example:
 //   circp = circular_pitch(pitch=5);
 //   circp = circular_pitch(mod=2);
 function circular_pitch(pitch=5, mod) =
@@ -54,7 +54,7 @@ function circular_pitch(pitch=5, mod) =
 // Arguments:
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   mod = The metric module/modulus of the gear.
-// Examples:
+// Example:
 //   dp = diametral_pitch(pitch=5);
 //   dp = diametral_pitch(mod=2);
 function diametral_pitch(pitch=5, mod) =
@@ -96,7 +96,7 @@ function module_value(pitch=5) = pitch / PI;
 // Arguments:
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   mod = The metric module/modulus of the gear.
-// Examples:
+// Example:
 //   ad = adendum(pitch=5);
 //   ad = adendum(mod=2);
 // Example(2D):
@@ -123,7 +123,7 @@ function adendum(pitch=5, mod) =
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   clearance = If given, sets the clearance between meshing teeth.
 //   mod = The metric module/modulus of the gear.
-// Examples:
+// Example:
 //   ddn = dedendum(pitch=5);
 //   ddn = dedendum(mod=2);
 // Example(2D):
@@ -152,7 +152,7 @@ function dedendum(pitch=5, clearance, mod) =
 //   pitch = The circular pitch, or distance between teeth around the pitch circle, in mm.
 //   teeth = The number of teeth on the gear.
 //   mod = The metric module/modulus of the gear.
-// Examples:
+// Example:
 //   pr = pitch_radius(pitch=5, teeth=11);
 //   pr = pitch_radius(mod=2, teeth=20);
 // Example(2D):
@@ -177,7 +177,7 @@ function pitch_radius(pitch=5, teeth=11, mod) =
 //   clearance = If given, sets the clearance between meshing teeth.
 //   interior = If true, calculate for an interior gear.
 //   mod = The metric module/modulus of the gear.
-// Examples:
+// Example:
 //   or = outer_radius(pitch=5, teeth=20);
 //   or = outer_radius(mod=2, teeth=16);
 // Example(2D):
@@ -203,7 +203,7 @@ function outer_radius(pitch=5, teeth=11, clearance, interior=false, mod) =
 //   clearance = If given, sets the clearance between meshing teeth.
 //   interior = If true, calculate for an interior gear.
 //   mod = The metric module/modulus of the gear.
-// Examples:
+// Example:
 //   rr = root_radius(pitch=5, teeth=11);
 //   rr = root_radius(mod=2, teeth=16);
 // Example(2D):
@@ -228,7 +228,7 @@ function root_radius(pitch=5, teeth=11, clearance, interior=false, mod) =
 //   teeth = The number of teeth on the gear.
 //   pressure_angle = Pressure angle in degrees.  Controls how straight or bulged the tooth sides are.
 //   mod = The metric module/modulus of the gear.
-// Examples:
+// Example:
 //   br = base_radius(pitch=5, teeth=20, pressure_angle=20);
 //   br = base_radius(mod=2, teeth=18, pressure_angle=20);
 // Example(2D):
@@ -253,7 +253,7 @@ function base_radius(pitch=5, teeth=11, pressure_angle=28, mod) =
 //   teeth = Number of teeth that this gear has.
 //   mate_teeth = Number of teeth that the matching gear has.
 //   drive_angle = Angle between the drive shafts of each gear.  Default: 90º.
-// Examples:
+// Example:
 //   ang = bevel_pitch_angle(teeth=18, mate_teeth=30);
 // Example(2D):
 //   t1 = 13; t2 = 19; pitch=5;
@@ -287,7 +287,7 @@ function bevel_pitch_angle(teeth, mate_teeth, drive_angle=90) =
 //   crowning = The amount to oversize the virtual hobbing cutter used to make the teeth, to add a slight crowning to the teeth to make them fir the work easier.  Default: 1
 //   clearance = Clearance gap at the bottom of the inter-tooth valleys.
 //   mod = The metric module/modulus of the gear.
-// Examples:
+// Example:
 //   thick = worm_gear_thickness(pitch=5, teeth=36, worm_diam=30);
 //   thick = worm_gear_thickness(mod=2, teeth=28, worm_diam=25);
 // Example(2D):

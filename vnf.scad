@@ -9,9 +9,8 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Creating Polyhedrons with VNF Structures
+// Section: Creating Polyhedrons with VNF Structures
 
-// Section: VNF Testing and Access
 //   VNF stands for "Vertices'N'Faces".  VNF structures are 2-item lists, `[VERTICES,FACES]` where the
 //   first item is a list of vertex points, and the second is a list of face indices into the vertex
 //   list.  Each VNF is self contained, with face indices referring only to its own vertex list.
@@ -20,8 +19,6 @@
 
 EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 
-
-// Section: Constructing VNFs
 
 // Function: vnf_vertex_array()
 // Usage:
@@ -207,12 +204,12 @@ function vnf_vertex_array(
 //   points = List of point lists for each row
 //   row_wrap = If true then add faces connecting the first row and last row.  These rows must differ by at most 2 in length.
 //   reverse = Set this to reverse the direction of the faces
-// Examples:  Each row has one more point than the preceeding one.
+// Example:  Each row has one more point than the preceeding one.
 //   pts = [for(y=[1:1:10]) [for(x=[0:y-1]) [x,y,y]]];
 //   vnf = vnf_tri_array(pts);
 //   vnf_wireframe(vnf,d=.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
-// Examples:  Each row has one more point than the preceeding one.
+// Example:  Each row has one more point than the preceeding one.
 //   pts = [for(y=[0:2:10]) [for(x=[-y/2:y/2]) [x,y,y]]];
 //   vnf = vnf_tri_array(pts);
 //   vnf_wireframe(vnf,d=.1);
@@ -277,58 +274,6 @@ function vnf_tri_array(points, row_wrap=false, reverse=false, vnf=EMPTY_VNF) =
     vnf_merge(cleanup=true, [vnf, [flatten(points), faces]]);
 
 
-// Function: vnf_add_face()
-// Usage:
-//   vnf_add_face(vnf, pts);
-// Description:
-//   Given a VNF structure and a list of face vertex points, adds the face to the VNF structure.
-//   Returns the modified VNF structure `[VERTICES, FACES]`.  It is up to the caller to make
-//   sure that the points are in the correct order to make the face normal point outwards.
-// Arguments:
-//   vnf = The VNF structure to add a face to.
-//   pts = The vertex points for the face.
-function vnf_add_face(vnf=EMPTY_VNF, pts) =
-    assert(is_vnf(vnf))
-    assert(is_path(pts))
-    let(
-        res = set_union(vnf[0], pts, get_indices=true),
-        face = deduplicate(res[0], closed=true)
-    ) [
-        res[1],
-        concat(vnf[1], len(face)>2? [face] : [])
-    ];
-
-
-// Function: vnf_add_faces()
-// Usage:
-//   vnf_add_faces(vnf, faces);
-// Description:
-//   Given a VNF structure and a list of faces, where each face is given as a list of vertex points,
-//   adds the faces to the VNF structure.  Returns the modified VNF structure `[VERTICES, FACES]`.
-//   It is up to the caller to make sure that the points are in the correct order to make the face
-//   normals point outwards.
-// Arguments:
-//   vnf = The VNF structure to add a face to.
-//   faces = The list of faces, where each face is given as a list of vertex points.
-function vnf_add_faces(vnf=EMPTY_VNF, faces) =
-    assert(is_vnf(vnf))
-    assert(is_list(faces))
-    let(
-        res = set_union(vnf[0], flatten(faces), get_indices=true),
-        idxs = res[0],
-        nverts = res[1],
-        offs = cumsum([0, for (face=faces) len(face)]),
-        ifaces = [
-            for (i=idx(faces)) [
-                for (j=idx(faces[i]))
-                idxs[offs[i]+j]
-            ]
-        ]
-    ) [
-        nverts,
-        concat(vnf[1],ifaces)
-    ];
-
 
 // Function: vnf_merge()
 // Usage:
@@ -379,6 +324,64 @@ function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
             ]
     ) 
     [nverts, nfaces];
+
+
+
+// Function: vnf_add_face()
+// Usage:
+//   vnf_add_face(vnf, pts);
+// Description:
+//   Given a VNF structure and a list of face vertex points, adds the face to the VNF structure.
+//   Returns the modified VNF structure `[VERTICES, FACES]`.  It is up to the caller to make
+//   sure that the points are in the correct order to make the face normal point outwards.
+// Arguments:
+//   vnf = The VNF structure to add a face to.
+//   pts = The vertex points for the face.
+function vnf_add_face(vnf=EMPTY_VNF, pts) =
+    assert(is_vnf(vnf))
+    assert(is_path(pts))
+    let(
+        res = set_union(vnf[0], pts, get_indices=true),
+        face = deduplicate(res[0], closed=true)
+    ) [
+        res[1],
+        concat(vnf[1], len(face)>2? [face] : [])
+    ];
+
+
+
+// Function: vnf_add_faces()
+// Usage:
+//   vnf_add_faces(vnf, faces);
+// Description:
+//   Given a VNF structure and a list of faces, where each face is given as a list of vertex points,
+//   adds the faces to the VNF structure.  Returns the modified VNF structure `[VERTICES, FACES]`.
+//   It is up to the caller to make sure that the points are in the correct order to make the face
+//   normals point outwards.
+// Arguments:
+//   vnf = The VNF structure to add a face to.
+//   faces = The list of faces, where each face is given as a list of vertex points.
+function vnf_add_faces(vnf=EMPTY_VNF, faces) =
+    assert(is_vnf(vnf))
+    assert(is_list(faces))
+    let(
+        res = set_union(vnf[0], flatten(faces), get_indices=true),
+        idxs = res[0],
+        nverts = res[1],
+        offs = cumsum([0, for (face=faces) len(face)]),
+        ifaces = [
+            for (i=idx(faces)) [
+                for (j=idx(faces[i]))
+                idxs[offs[i]+j]
+            ]
+        ]
+    ) [
+        nverts,
+        concat(vnf[1],ifaces)
+    ];
+
+
+// Section: VNF Testing and Access
 
 
 // Function: is_vnf()
