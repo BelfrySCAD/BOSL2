@@ -8,8 +8,8 @@
 
 include <structs.scad>
 include <threading.scad>
-include <phillips_drive.scad>
-include <torx_drive.scad>
+include <screw_drive.scad>
+
 
 // Section: Generic Screw Creation
 
@@ -1037,8 +1037,8 @@ module _driver(spec)
                echo(drive_size=drive_size);
     up(head_top-drive_depth){
       // recess should be positioned with its bottom center at (0,0) and the correct recess depth given above
-      if (drive=="phillips") phillips_drive(size=str("#",drive_size), shaft=diameter,anchor=BOTTOM);
-      if (drive=="torx") torx_drive(size=drive_size, l=drive_depth+1, center=false);
+      if (drive=="phillips") phillips_mask(drive_size,anchor=BOTTOM);
+      if (drive=="torx") torx_mask(size=drive_size, l=drive_depth+1, center=false);
       if (drive=="hex") linear_extrude(height=drive_depth+1) hexagon(id=drive_size);
       if (drive=="slot") cuboid([2*struct_val(spec,"head_size"), drive_width, drive_depth+1],anchor=BOTTOM);
     }
@@ -1415,9 +1415,21 @@ http://files.engineering.com/getfile.aspx?folder=76fb0d5e-1fff-4c49-87a5-0597947
 //
 // Torx drive depth for UTS and ISO (at least missing for "flat small", which means you can't select torx for this head type)
 // Handle generic phillips (e.g. ph2) or remove it?
+
+// https://www.fasteners.eu/tech-info/ISO/7721-2/
 //
 // How do you insert a threaded hole into a model?
 // Default nut thickness
 //
+// JIS: 
+//https://www.garagejournal.com/forum/media/jis-b-4633-vs-iso-8764-1-din-5260-ph.84492/
+
+//square:
+//https://www.aspenfasteners.com/content/pdf/square_drive_specification.pdf
+//http://www.globalfastener.com/standards/index.php?narr58=149
+//https://patents.google.com/patent/US1003657
+
+// thread standards:
+// https://www.gewinde-normen.de/en/index.html
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
