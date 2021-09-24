@@ -206,22 +206,18 @@ function __regions_equal(region1, region2, i) =
 ///   region = Region to test for crossings of.
 ///   closed = If true, treat path as a closed polygon.  Default: true
 ///   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function _region_path_crossings(path, region, closed=true, eps=EPSILON) = sort([
+function _region_path_crossings(path, region, closed=true, eps=EPSILON) =
     let(
         segs = pair(closed? close_path(path) : cleanup_path(path))
-    ) for (
-        si = idx(segs),
-        p = close_region(region),
-        s2 = pair(p)
-    ) let (
-        isect = _general_line_intersection(segs[si], s2, eps=eps)
-    ) if (
-        !is_undef(isect[0]) &&
-        isect[1] >= 0-eps && isect[1] < 1+eps &&
-        isect[2] >= 0-eps && isect[2] < 1+eps
     )
-    [si, isect[1]]
-]);
+    sort([for (si = idx(segs), p = close_region(region), s2 = pair(p))
+            let (
+                 isect = _general_line_intersection(segs[si], s2, eps=eps)
+            )
+            if (!is_undef(isect[0]) && isect[1] >= 0-eps && isect[1] < 1+eps
+                                    && isect[2] >= 0-eps && isect[2] < 1+eps )
+                [si, isect[1]]
+         ]);
 
 
 // Function: split_path_at_region_crossings()
@@ -768,8 +764,7 @@ function offset(
         // Note if !closed the last corner doesn't matter, so exclude it
         parallelcheck =
             (len(sharpcorners)==2 && !closed) ||
-            all_defined(closed? sharpcorners : select(sharpcorners, 1,-2)),
-        f=echo(sharpcorners=sharpcorners)
+            all_defined(closed? sharpcorners : select(sharpcorners, 1,-2))
     )
     assert(parallelcheck, "Path contains sequential parallel segments (either 180 deg turn or 0 deg turn")
     let(

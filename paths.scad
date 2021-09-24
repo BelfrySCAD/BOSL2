@@ -186,12 +186,15 @@ function path_length_fractions(path, closed=false) =
 /// Usage:
 ///   isects = _path_self_intersections(path, [closed], [eps]);
 /// Description:
-///   Locates all self intersections of the given path.  Returns a list of intersections, where
+///   Locates all self intersection points of the given path.  Returns a list of intersections, where
 ///   each intersection is a list like [POINT, SEGNUM1, PROPORTION1, SEGNUM2, PROPORTION2] where
 ///   POINT is the coordinates of the intersection point, SEGNUMs are the integer indices of the
 ///   intersecting segments along the path, and the PROPORTIONS are the 0.0 to 1.0 proportions
 ///   of how far along those segments they intersect at.  A proportion of 0.0 indicates the start
 ///   of the segment, and a proportion of 1.0 indicates the end of the segment.
+///   .
+///   Note that this function does not return self-intersecting segments, only the points
+///   where non-parallel segments intersect.  
 /// Arguments:
 ///   path = The path to find self intersections of.
 ///   closed = If true, treat path like a closed polygon.  Default: true
@@ -527,8 +530,7 @@ function path_normals(path, tangents, closed=false) =
                  : select(path,i-1,i+1)
         )
         dim == 2 ? [tangents[i].y,-tangents[i].x]
-                 : let( fff=i==10?echo(pts=pts, tangent=tangents[10],cp=cross(pts[1]-pts[0], pts[2]-pts[0])):0,
-                        v=cross(cross(pts[1]-pts[0], pts[2]-pts[0]),tangents[i]))
+                 : let( v=cross(cross(pts[1]-pts[0], pts[2]-pts[0]),tangents[i]))
                    assert(norm(v)>EPSILON, "3D path contains collinear points")
                    unit(v)
     ];
@@ -959,7 +961,7 @@ function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
                 section = _path_select(path, s1, u1, s2, u2, closed=closed),
                 outpath = deduplicate(eps=eps, section)
             )
-            outpath
+            if (len(outpath)>1) outpath
     ];
 
 
@@ -1011,6 +1013,36 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 //   left(100)region(outside);
 //   rainbow(outside)
 //     stroke($item,closed=true);
+// Example: 
+//   N=12;
+//   ang=360/N;
+//   sr=10;
+//   path = turtle(["angle", 90+ang/2,
+//                  "move", sr, "left",
+//                  "move", 2*sr*sin(ang/2), "left",
+//                  "repeat", 4,
+//                     ["move", 2*sr, "left",
+//                      "move", 2*sr*sin(ang/2), "left"],
+//                  "move", sr]);
+//   stroke(path, width=.3);
+//   right(20)rainbow(polygon_parts(path)) polygon($item);
+// Example: overlapping path segments disappear
+//   path = [[0,0], [10,0], [10,10], [0,10],[0,20], [20,10],[10,10], [0,10],[0,0]];
+//   stroke(path,width=0.3);
+//   right(22)stroke(polygon_parts(path)[0], width=0.3, closed=true);
+// Example: Path segments disappear outside as well
+//   path = turtle(["repeat", 3, ["move", 17, "left", "move", 10, "left", "move", 7, "left", "move", 10, "left"]]);
+//   back(2)stroke(path,width=.3);
+//   fwd(12)rainbow(polygon_parts(path)) polygon($item);
+// Example:  This shape has six components
+//   path = turtle(["repeat", 3, ["move", 15, "left", "move", 7, "left", "move", 10, "left", "move", 17, "left"]]);
+//   polygon(path);
+//   right(22)rainbow(polygon_parts(path)) polygon($item);
+// Example: when the loops of the shape overlap then nonzero gives a different result than the even-odd method.
+//   path = turtle(["repeat", 3, ["move", 15, "left", "move", 7, "left", "move", 10, "left", "move", 10, "left"]]);
+//   polygon(path);
+//   right(27)rainbow(polygon_parts(path)) polygon($item);
+//   move([16,-14])rainbow(polygon_parts(path,nonzero=true)) polygon($item);
 function polygon_parts(path, nonzero=false, closed=true, eps=EPSILON) =
     let(
         path = cleanup_path(path, eps=eps),
@@ -1115,6 +1147,7 @@ function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0,
 ///   _assemble_path_fragments(subpaths);
 /// Description:
 ///   Given a list of paths, assembles them together into complete closed polygon paths if it can.
+///   Polygons with area < eps will be discarded and not returned.  
 /// Arguments:
 ///   fragments = List of paths to be assembled into complete polygons.
 ///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
@@ -1141,15 +1174,12 @@ function _assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
         result = l_area < r_area? result_l : result_r,
         newpath = cleanup_path(result[0]),
         remainder = result[1],
-        finished = concat(_finished, [newpath])
+        finished = min(l_area,r_area)<eps ? _finished : concat(_finished, [newpath])
     ) _assemble_path_fragments(
         fragments=remainder,
         eps=eps,
         _finished=finished
     );
-
-
-
 
 
 
