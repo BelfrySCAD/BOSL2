@@ -34,12 +34,6 @@ function is_point_on_line(point, line, bounded=false, eps=EPSILON) =
 //_dist2line works for any dimension
 function _dist2line(d,n) = norm(d-(d * n) * n);
 
-// Internal non-exposed function.
-function _point_above_below_segment(point, edge) =
-    let( edge = edge - [point, point] )
-    edge[0].y <= 0
-      ? (edge[1].y >  0 && cross(edge[0], edge[1]-edge[0]) > 0) ?  1 : 0
-      : (edge[1].y <= 0 && cross(edge[0], edge[1]-edge[0]) < 0) ? -1 : 0;
 
 //Internal
 function _valid_line(line,dim,eps=EPSILON) =
@@ -762,7 +756,7 @@ function polygon_line_intersection(poly, line, bounded=false, nonzero=false, eps
     len(poly[0])==2 ?  // planar case
        let( 
             linevec = unit(line[1] - line[0]),
-            bound = 100*max(flatten(pointlist_bounds(poly))),
+            bound = 100*max(v_abs(flatten(pointlist_bounds(poly)))),
             boundedline = [line[0] + (bounded[0]? 0 : -bound) * linevec,
                            line[1] + (bounded[1]? 0 :  bound) * linevec],
             parts = split_path_at_region_crossings(boundedline, [poly], closed=false),
@@ -1520,6 +1514,15 @@ function polygon_normal(poly) =
 //     color(point_in_polygon(p,path,nonzero=false)==1 ? "green" : "red")
 //     move(p)circle(r=1, $fn=12);
 //   }
+
+// Internal function for point_in_polygon
+
+function _point_above_below_segment(point, edge) =
+    let( edge = edge - [point, point] )
+    edge[0].y <= 0
+      ? (edge[1].y >  0 && cross(edge[0], edge[1]-edge[0]) > 0) ?  1 : 0
+      : (edge[1].y <= 0 && cross(edge[0], edge[1]-edge[0]) < 0) ? -1 : 0;
+
 function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
     // Original algorithms from http://geomalgorithms.com/a03-_inclusion.html
     assert( is_vector(point,2) && is_path(poly,dim=2) && len(poly)>2,
