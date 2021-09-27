@@ -1471,7 +1471,7 @@ function polygon_normal(poly) =
 //     color("red")back(28/(2/3))text("Even-Odd", size=5/(2/3), halign="center");
 //   }
 //   right(40){
-//      dp = polygon_parts(path,closed=true);
+//      dp = polygon_parts(path,nonzero=true);
 //      region(dp);
 //      color("red"){stroke(path,width=1,closed=true);
 //                   back(28/(2/3))text("Nonzero", size=5/(2/3), halign="center");
@@ -1482,7 +1482,7 @@ function polygon_normal(poly) =
 //   poly = The list of 2D points forming the perimeter of the polygon.
 //   nonzero = The rule to use: true for "Nonzero" rule and false for "Even-Odd". Default: false (Even-Odd)
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-// Example(2D): With nonzero set to true, we get this result. Green dots are inside the polygon and red are outside:
+// Example(2D): With nonzero set to false (the default), we get this result. Green dots are inside the polygon and red are outside:
 //   a=20*2/3;
 //   b=30*2/3;
 //   ofs = 17*2/3;
@@ -1496,9 +1496,9 @@ function polygon_normal(poly) =
 //   pts = [[0,0],[10,0],[0,20]];
 //   for(p=pts){
 //     color(point_in_polygon(p,path)==1 ? "green" : "red")
-//     move(p)circle(r=1, $fn=12);
+//     move(p)circle(r=1.5, $fn=12);
 //   }
-// Example(2D): With nonzero set to false, one dot changes color:
+// Example(2D): With nonzero set to true, one dot changes color:
 //   a=20*2/3;
 //   b=30*2/3;
 //   ofs = 17*2/3;
@@ -1511,8 +1511,8 @@ function polygon_normal(poly) =
 //   stroke(path,closed=true);
 //   pts = [[0,0],[10,0],[0,20]];
 //   for(p=pts){
-//     color(point_in_polygon(p,path,nonzero=false)==1 ? "green" : "red")
-//     move(p)circle(r=1, $fn=12);
+//     color(point_in_polygon(p,path,nonzero=true)==1 ? "green" : "red")
+//     move(p)circle(r=1.5, $fn=12);
 //   }
 
 // Internal function for point_in_polygon
