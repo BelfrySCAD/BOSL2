@@ -402,7 +402,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
     legal_methods = ["direct","reindex","distance","fast_distance","tangent"],
     caps = is_def(caps) ? caps :
            closed ? false : true,
-    capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
+    capsOK = is_bool(caps) || is_bool_list(caps,2),
     fullcaps = is_bool(caps) ? [caps,caps] : caps,
     refine = is_list(refine) ? refine : repeat(refine, len(profiles)),
     slices = is_list(slices) ? slices : repeat(slices, profcount),
@@ -831,7 +831,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
     path = path3d(path),
     caps = is_def(caps) ? caps :
            closed ? false : true,
-    capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
+    capsOK = is_bool(caps) || is_bool_list(caps,2),
     fullcaps = is_bool(caps) ? [caps,caps] : caps,
     normalOK = is_undef(normal) || (method!="natural" && is_vector(normal,3))
                                 || (method=="manual" && same_shape(normal,path))
@@ -966,7 +966,7 @@ function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edg
    let(
         caps = is_def(caps) ? caps
              : closed ? false : true,
-        capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
+        capsOK = is_bool(caps) || is_bool_list(caps,2),
         fullcaps = is_bool(caps) ? [caps,caps] : caps,
         shape = check_and_fix_path(shape,valid_dim=2,closed=true,name="shape")
    )
@@ -1095,7 +1095,7 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge") =
     let(
         caps = is_def(caps) ? caps :
             closed ? false : true,
-        capsOK = is_bool(caps) || (is_list(caps) && len(caps)==2 && is_bool(caps[0]) && is_bool(caps[1])),
+        capsOK = is_bool(caps) || is_bool_list(caps,2),
         fullcaps = is_bool(caps) ? [caps,caps] : caps
     )
     assert(len(transforms), "transformation must be length 2 or more")
