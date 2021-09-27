@@ -109,7 +109,7 @@ module region(r)
 
 // Function: point_in_region()
 // Usage:
-//   point_in_region(point, region);
+//   check = point_in_region(point, region);
 // Description:
 //   Tests if a point is inside, outside, or on the border of a region.
 //   Returns -1 if the point is outside the region.
@@ -124,6 +124,37 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
         pip = point_in_polygon(point, region[_i], eps=eps)
     ) pip==0? 0 : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
 
+
+
+// Function: is_region_simple()
+// Usage:
+//   bool = is_region_simple(region, [eps]);
+// Description:
+//   Returns true if the region is entirely non-self-intersecting, meaning that it is
+//   formed from a list of simple polygons that do not intersect each other.
+// Arguments:
+//   region = region to check
+//   eps = tolerance for geometric omparisons.  Default: `EPSILON` = 1e-9
+function is_region_simple(region, eps=EPSILON) =
+   [for(p=region) if (!is_path_simple(p)) 1] == []
+   &&
+   [for(i=[0:1:len(region)-2]) if (_path_region_intersections(region[i],[for(j=[i+1:1:len(region)-1]) region[j]]) != []) 1] ==[];
+
+
+
+function approx_sign(x) = approx(x,0) ? 0 : sign(x);
+
+
+function do_segments_intersect(s1,s2) =
+     let(
+          a1=cross(s1[1]-s1[0], s2[0]-s1[1]),
+          a2=cross(s1[1]-s1[0], s2[1]-s1[1]),
+          a3=cross(s2[1]-s2[0], s1[0]-s2[1]),
+          a4=cross(s2[1]-s2[0], s1[1]-s2[1])
+     )
+     approx_sign(a1)!=approx_sign(a2) && approx_sign(a3)!=approx_sign(a4);
+
+// Note: parallel intersecting lines seem to have all the a's equal approx to zero
 
 
 // Function: polygons_equal()
@@ -196,28 +227,49 @@ function __regions_equal(region1, region2, i) =
     __regions_equal(region1, region2, i+1);
 
 
-/// Internal Function: _region_path_crossings()
+/// Internal Function: _path_region_intersections()
 /// Usage:
-///   _region_path_crossings(path, region);
+///   _path_region_intersections(path, region);
 /// Description:
-///   Returns a sorted list of [SEGMENT, U] that describe where a given path is crossed by a second path.
+///   Returns a sorted list of [SEGMENT, U] that describe where a given path intersects the region
+//    in a single point.  (Note that intersections of collinear segments, where the intersection is another segment, are
+//    ignored.)
 /// Arguments:
 ///   path = The path to find crossings on.
 ///   region = Region to test for crossings of.
 ///   closed = If true, treat path as a closed polygon.  Default: true
 ///   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function _region_path_crossings(path, region, closed=true, eps=EPSILON) =
+function _path_region_intersections(path, region, closed=true, eps=EPSILON) =
     let(
         segs = pair(closed? close_path(path) : cleanup_path(path))
     )
-    sort([for (si = idx(segs), p = close_region(region), s2 = pair(p))
-            let (
-                 isect = _general_line_intersection(segs[si], s2, eps=eps)
-            )
-            if (!is_undef(isect[0]) && isect[1] >= 0-eps && isect[1] < 1+eps
-                                    && isect[2] >= 0-eps && isect[2] < 1+eps )
-                [si, isect[1]]
-         ]);
+    sort(
+         [for(si = idx(segs))
+              let(
+                  a1 = segs[si][0],
+                  a2 = segs[si][1],
+                  maxax = max(a1.x,a2.x),
+                  minax = min(a1.x,a2.x),
+                  maxay = max(a1.y,a2.y),
+                  minay = min(a1.y,a2.y)
+              )
+              for(p=close_region(region), s2=pair(p))
+                  let(
+                      b1 = s2[0],
+                      b2 = s2[1],
+                      isect =
+                              maxax < b1.x && maxax < b2.x  ||
+                              minax > b1.x && minax > b2.x  ||
+                              maxay < b1.y && maxay < b2.y  ||
+                              minay > b1.y && minay > b2.y
+                            ? undef
+                            : _general_line_intersection([a1,a2],[b1,b2],eps)
+                  )
+                  if (isect && isect[1]>=-eps && isect[1]<=1+eps
+                            && isect[2]>=-eps && isect[2]<=1+eps)
+                      [si,isect[1]]
+         ]
+    );
 
 
 // Function: split_path_at_region_crossings()
@@ -241,7 +293,7 @@ function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) 
     let(
         path = deduplicate(path, eps=eps),
         region = [for (path=region) deduplicate(path, eps=eps)],
-        xings = _region_path_crossings(path, region, closed=closed, eps=eps),
+        xings = _path_region_intersections(path, region, closed=closed, eps=eps),
         crossings = deduplicate(
             concat([[0,0]], xings, [[len(path)-1,1]]),
             eps=eps
@@ -254,7 +306,7 @@ function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) 
                 )
         ]
     )
-    subpaths;
+    [for(s=subpaths) if (len(s)>1) s];
 
 
 // Function: split_nested_region()
@@ -986,7 +1038,7 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 //       circle(d=40);
 //   }
 function exclusive_or(regions=[],b=undef,c=undef,eps=EPSILON) =
-    b!=undef? exclusive_or(concat([regions],[b],c==undef?[]:[c]),eps=eps) :
+    b!=undef? exclusive_or([regions, b, if(is_def(c)) c],eps=eps) :
     len(regions)<=1? regions[0] :
     exclusive_or(
         let(regions=[for (r=regions) is_path(r)? [r] : r])
