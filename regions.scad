@@ -78,6 +78,16 @@ function check_and_fix_path(path, valid_dim=undef, closed=false, name="path") =
 
 
 
+// Function: sanitize_region()
+// Usage:
+//   r_fixed = sanitize_region(r);
+// Description:
+//   Takes a malformed input region that contains self-intersecting polygons or polygons
+//   that cross each other and converts it into a properly defined region without
+//   these defects.
+function sanitize_region(r) = exclusive_or([for(poly=r) each polygon_parts(poly)]);
+
+
 
 // Module: region()
 // Usage:
@@ -154,7 +164,7 @@ function do_segments_intersect(s1,s2) =
      )
      approx_sign(a1)!=approx_sign(a2) && approx_sign(a3)!=approx_sign(a4);
 
-// Note: parallel intersecting lines seem to have all the a's equal approx to zero
+// note that parallel intersecting lines seem to have all the a's equal approx to zero
 
 
 // Function: polygons_equal()
