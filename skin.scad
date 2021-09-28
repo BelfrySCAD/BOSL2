@@ -910,8 +910,8 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
                  : let( rshape = is_path(shape) ? [path3d(shape)]
                                                 : [for(s=shape) path3d(s)]
                    )
-                   regions_equal(apply(transform_list[0], rshape),
-                                 apply(transform_list[L], rshape)),
+                   are_regions_equal(apply(transform_list[0], rshape),
+                                     apply(transform_list[L], rshape)),
       dummy = ends_match ? 0 : echo("WARNING: ***** The points do not match when closing the model *****")
     )
     transforms ? transform_list : sweep(is_path(shape)?clockwise_polygon(shape):shape, transform_list, closed=false, caps=fullcaps,style=style);

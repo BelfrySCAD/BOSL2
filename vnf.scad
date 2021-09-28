@@ -10,13 +10,15 @@
 
 
 // Section: Creating Polyhedrons with VNF Structures
-
 //   VNF stands for "Vertices'N'Faces".  VNF structures are 2-item lists, `[VERTICES,FACES]` where the
 //   first item is a list of vertex points, and the second is a list of face indices into the vertex
 //   list.  Each VNF is self contained, with face indices referring only to its own vertex list.
 //   You can construct a `polyhedron()` in parts by describing each part in a self-contained VNF, then
 //   merge the various VNFs to get the completed polyhedron vertex list and faces.
 
+// Constant: EMPTY_VNF
+// Description:
+//   The empty VNF data structure.  Equal to `[[],[]]`.  
 EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 
 

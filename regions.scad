@@ -170,74 +170,9 @@ function is_region_simple(region, eps=EPSILON) =
    ] ==[];
 
 
-
-function approx_sign(x) = approx(x,0) ? 0 : sign(x);
-
-
-function do_segments_intersect(s1,s2) =
-     let(
-          a1=cross(s1[1]-s1[0], s2[0]-s1[1]),
-          a2=cross(s1[1]-s1[0], s2[1]-s1[1]),
-          a3=cross(s2[1]-s2[0], s1[0]-s2[1]),
-          a4=cross(s2[1]-s2[0], s1[1]-s2[1])
-     )
-     approx_sign(a1)!=approx_sign(a2) && approx_sign(a3)!=approx_sign(a4);
-
-// note that parallel intersecting lines seem to have all the a's equal approx to zero
-
-
-// Function: polygons_equal()
+// Function: are_regions_equal()
 // Usage:
-//    b = polygons_equal(poly1, poly2, [eps])
-// Description:
-//    Returns true if poly1 and poly2 are the same polongs
-//    within given epsilon tolerance.
-// Arguments:
-//    poly1 = first polygon
-//    poly2 = second polygon
-//    eps = tolerance for comparison
-// Example(NORENDER):
-//    polygons_equal(pentagon(r=4),
-//                   rot(360/5, p=pentagon(r=4))); // returns true
-//    polygons_equal(pentagon(r=4),
-//                   rot(90, p=pentagon(r=4)));    // returns false
-function polygons_equal(poly1, poly2, eps=EPSILON) =
-    let(
-        poly1 = cleanup_path(poly1),
-        poly2 = cleanup_path(poly2),
-        l1 = len(poly1),
-        l2 = len(poly2)
-    ) l1 != l2 ? false :
-    let( maybes = find_first_match(poly1[0], poly2, eps=eps, all=true) )
-    maybes == []? false :
-    [for (i=maybes) if (__polygons_equal(poly1, poly2, eps, i)) 1] != [];
-
-function __polygons_equal(poly1, poly2, eps, st) =
-    max([for(d=poly1-select(poly2,st,st-1)) d*d])<eps*eps;
-
-
-// Function: is_polygon_in_list()
-// Topics: Polygons, Comparators
-// See Also: polygons_equal(), regions_equal()
-// Usage:
-//   bool = is_polygon_in_list(poly, polys);
-// Description:
-//   Returns true if one of the polygons in `polys` is equivalent to the polygon `poly`.
-// Arguments:
-//   poly = The polygon to search for.
-//   polys = The list of polygons to look for the polygon in.
-function is_polygon_in_list(poly, polys) =
-    __is_polygon_in_list(poly, polys, 0);
-
-function __is_polygon_in_list(poly, polys, i) =
-    i >= len(polys)? false :
-    polygons_equal(poly, polys[i])? true :
-    __is_polygon_in_list(poly, polys, i+1);
-
-
-// Function: regions_equal()
-// Usage:
-//    b = regions_equal(region1, region2, [eps])
+//    b = are_regions_equal(region1, region2, [eps])
 // Description:
 //    Returns true if the components of region1 and region2 are the same polygons (in any order)
 //    within given epsilon tolerance.
@@ -245,15 +180,15 @@ function __is_polygon_in_list(poly, polys, i) =
 //    region1 = first region
 //    region2 = second region
 //    eps = tolerance for comparison
-function regions_equal(region1, region2) =
+function are_regions_equal(region1, region2) =
     assert(is_region(region1) && is_region(region2))
     len(region1) != len(region2)? false :
-    __regions_equal(region1, region2, 0);
+    __are_regions_equal(region1, region2, 0);
 
-function __regions_equal(region1, region2, i) =
+function __are_regions_equal(region1, region2, i) =
     i >= len(region1)? true :
     !is_polygon_in_list(region1[i], region2)? false :
-    __regions_equal(region1, region2, i+1);
+    __are_regions_equal(region1, region2, i+1);
 
 
 /// Internal Function: _path_region_intersections()
