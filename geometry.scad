@@ -158,7 +158,12 @@ function line_normal(p1,p2) =
 // the intersection lies on the segment.  Otherwise it lies somewhere on
 // the extension of the segment.  If lines are parallel or coincident then
 // it returns undef.
+
+// This kludge of calling path2d is because vnf_bend passed 3d input.  FIXME!
+
 function _general_line_intersection(s1,s2,eps=EPSILON) =
+    len(s1[0])==3 ? _general_line_intersection(path2d(s1), path2d(s2),eps)
+    :
     let(
         denominator = cross(s1[0]-s1[1],s2[0]-s2[1])
     )
