@@ -485,6 +485,8 @@ function resample_path(path, N, spacing, closed=false) =
 //   bool = is_path_simple(path, [closed], [eps]);
 // Description:
 //   Returns true if the path is simple, meaning that it has no self-intersections.
+//   Repeated points are not considered self-intersections: a path with such points can
+//   still be simple.  
 //   If closed is set to true then treat the path as a polygon.
 // Arguments:
 //   path = path to check
@@ -497,7 +499,7 @@ function is_path_simple(path, closed=false, eps=EPSILON) =
              normv1 = norm(v1),
              normv2 = norm(v2)
              )
-         if (/*approx(normv1,0) || approx(normv2,0) ||*/ approx(v1*v2/normv1/normv2,-1)) 1]  == [] 
+         if (approx(v1*v2/normv1/normv2,-1)) 1]  == [] 
     &&
     _path_self_intersections(path,closed=closed,eps=eps) == [];
 
