@@ -125,6 +125,56 @@ function path_merge_collinear(path, closed=false, eps=EPSILON) =
     ) [for (i=indices) path[i]];
 
 
+// Function: are_polygons_equal()
+// Usage:
+//    b = are_polygons_equal(poly1, poly2, [eps])
+// Description:
+//    Returns true if poly1 and poly2 are the same polongs
+//    within given epsilon tolerance.
+// Arguments:
+//    poly1 = first polygon
+//    poly2 = second polygon
+//    eps = tolerance for comparison
+// Example(NORENDER):
+//    are_polygons_equal(pentagon(r=4),
+//                   rot(360/5, p=pentagon(r=4))); // returns true
+//    are_polygons_equal(pentagon(r=4),
+//                   rot(90, p=pentagon(r=4)));    // returns false
+function are_polygons_equal(poly1, poly2, eps=EPSILON) =
+    let(
+        poly1 = cleanup_path(poly1),
+        poly2 = cleanup_path(poly2),
+        l1 = len(poly1),
+        l2 = len(poly2)
+    ) l1 != l2 ? false :
+    let( maybes = find_first_match(poly1[0], poly2, eps=eps, all=true) )
+    maybes == []? false :
+    [for (i=maybes) if (_are_polygons_equal(poly1, poly2, eps, i)) 1] != [];
+
+function _are_polygons_equal(poly1, poly2, eps, st) =
+    max([for(d=poly1-select(poly2,st,st-1)) d*d])<eps*eps;
+
+
+// Function: is_polygon_in_list()
+// Topics: Polygons, Comparators
+// See Also: are_polygons_equal(), are_regions_equal()
+// Usage:
+//   bool = is_polygon_in_list(poly, polys);
+// Description:
+//   Returns true if one of the polygons in `polys` is equivalent to the polygon `poly`.
+// Arguments:
+//   poly = The polygon to search for.
+//   polys = The list of polygons to look for the polygon in.
+function is_polygon_in_list(poly, polys) =
+    __is_polygon_in_list(poly, polys, 0);
+
+function __is_polygon_in_list(poly, polys, i) =
+    i >= len(polys)? false :
+    are_polygons_equal(poly, polys[i])? true :
+    __is_polygon_in_list(poly, polys, i+1);
+
+
+
 // Section: Path length calculation
 
 
@@ -211,33 +261,34 @@ function _path_self_intersections(path, closed=true, eps=EPSILON) =
     let(
         path = cleanup_path(path, eps=eps),
         plen = len(path)
-    ) [
-        for (i = [0:1:plen-(closed?2:3)], j=[i+2:1:plen-(closed?1:2)]) let(
-            a1 = path[i],
-            a2 = path[(i+1)%plen],
-            b1 = path[j],
-            b2 = path[(j+1)%plen],
-            isect =
-                (max(a1.x, a2.x) < min(b1.x, b2.x))? undef :
-                (min(a1.x, a2.x) > max(b1.x, b2.x))? undef :
-                (max(a1.y, a2.y) < min(b1.y, b2.y))? undef :
-                (min(a1.y, a2.y) > max(b1.y, b2.y))? undef :
+    )
+    [
+        for (i = [0:1:plen-(closed?2:3)])
+            let(
+                a1 = path[i],
+                a2 = path[(i+1)%plen],
+                maxax = max(a1.x,a2.x),
+                minax = min(a1.x,a2.x),
+                maxay = max(a1.y,a2.y),
+                minay = min(a1.y,a2.y)
+            )
+            for(j=[i+2:1:plen-(closed?1:2)])
                 let(
-                    c = a1-a2,
-                    d = b1-b2,
-                    denom = (c.x*d.y)-(c.y*d.x)
-                ) abs(denom)<eps? undef :
-                let(
-                    e = a1-b1,
-                    t = ((e.x*d.y)-(e.y*d.x)) / denom,
-                    u = ((e.x*c.y)-(e.y*c.x)) / denom
-                ) [a1+t*(a2-a1), t, u]
-        ) if (
-            (!closed || i!=0 || j!=plen-1) &&
-            isect != undef &&
-            isect[1]>=-eps && isect[1]<=1+eps &&
-            isect[2]>=-eps && isect[2]<=1+eps
-        ) [isect[0], i, isect[1], j, isect[2]]
+                    b1 = path[j],
+                    b2 = path[(j+1)%plen],
+                    isect =
+                            maxax < b1.x && maxax < b2.x  ||
+                            minax > b1.x && minax > b2.x  ||
+                            maxay < b1.y && maxay < b2.y  ||
+                            minay > b1.y && minay > b2.y
+                          ? undef
+                          : _general_line_intersection([a1,a2],[b1,b2])
+                )
+                if ((!closed || i!=0 || j!=plen-1)
+                        && isect != undef
+                        && isect[1]>=-eps && isect[1]<=1+eps 
+                        && isect[2]>=-eps && isect[2]<=1+eps)
+                    [isect[0], i, isect[1], j, isect[2]]
     ];
 
 
@@ -434,12 +485,22 @@ function resample_path(path, N, spacing, closed=false) =
 //   bool = is_path_simple(path, [closed], [eps]);
 // Description:
 //   Returns true if the path is simple, meaning that it has no self-intersections.
+//   Repeated points are not considered self-intersections: a path with such points can
+//   still be simple.  
 //   If closed is set to true then treat the path as a polygon.
 // Arguments:
 //   path = path to check
 //   closed = set to true to treat path as a polygon.  Default: false
 //   eps = Epsilon error value used for determine if points coincide.  Default: `EPSILON` (1e-9)
 function is_path_simple(path, closed=false, eps=EPSILON) =
+    [for(i=[0:1:len(path)-(closed?2:3)])
+         let(v1=path[i+1]-path[i],
+             v2=select(path,i+2)-path[i+1],
+             normv1 = norm(v1),
+             normv2 = norm(v2)
+             )
+         if (approx(v1*v2/normv1/normv2,-1)) 1]  == [] 
+    &&
     _path_self_intersections(path,closed=closed,eps=eps) == [];
 
 
@@ -1043,10 +1104,10 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 //   polygon(path);
 //   right(27)rainbow(polygon_parts(path)) polygon($item);
 //   move([16,-14])rainbow(polygon_parts(path,nonzero=true)) polygon($item);
-function polygon_parts(path, nonzero=false, closed=true, eps=EPSILON) =
+function polygon_parts(path, nonzero=false, eps=EPSILON) =
     let(
         path = cleanup_path(path, eps=eps),
-        tagged = _tag_self_crossing_subpaths(path, nonzero=nonzero, closed=closed, eps=eps),
+        tagged = _tag_self_crossing_subpaths(path, nonzero=nonzero, closed=true, eps=eps),
         kept = [for (sub = tagged) if(sub[0] == "O") sub[1]],
         outregion = _assemble_path_fragments(kept, eps=eps)
     ) outregion;

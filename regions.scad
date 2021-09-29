@@ -1,6 +1,10 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: regions.scad
-//   Regions and 2D boolean geometry
+//   This file provides 2D boolean geometry operations on paths, where you can
+//   compute the intersection or union of the shape defined by point lists, producing
+//   a new point list.  Of course, boolean operations may produce shapes with multiple
+//   components.  To handle that, we use "regions" which are defined by sets of
+//   multiple paths.  
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
@@ -11,6 +15,16 @@
 
 
 // Section: Regions
+//   A region is a list of non-crossing simple polygons.  Simple polygons are those without self intersections,
+//   and the polygons of a region can touch at corners, but their segments should not
+//   cross each other.  The actual geometry of the region is defined by XORing together
+//   all of the polygons on the list.  This may sound obscure, but it simply means that nested
+//   boundaries make rings in the obvious fashion, and non-nested shapes simply union together.
+//   Checking that the polygons on a list are simple and non-crossing can be a time consuming test,
+//   so it is not done automatically.  It is your responsibility to ensure that your regions are
+//   compliant.  You can construct regions by making a list of polygons, or by using
+//   boolean function operations such as union() or difference().  And if you must you
+//   can clean up an ill-formed region using sanitize_region().  
 
 
 // Function: is_region()
@@ -78,6 +92,16 @@ function check_and_fix_path(path, valid_dim=undef, closed=false, name="path") =
 
 
 
+// Function: sanitize_region()
+// Usage:
+//   r_fixed = sanitize_region(r);
+// Description:
+//   Takes a malformed input region that contains self-intersecting polygons or polygons
+//   that cross each other and converts it into a properly defined region without
+//   these defects.
+function sanitize_region(r) = exclusive_or([for(poly=r) each polygon_parts(poly)]);
+
+
 
 // Module: region()
 // Usage:
@@ -109,7 +133,7 @@ module region(r)
 
 // Function: point_in_region()
 // Usage:
-//   point_in_region(point, region);
+//   check = point_in_region(point, region);
 // Description:
 //   Tests if a point is inside, outside, or on the border of a region.
 //   Returns -1 if the point is outside the region.
@@ -120,64 +144,35 @@ module region(r)
 //   region = The region to test against.  Given as a list of polygon paths.
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
 function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
-    (_i >= len(region))? ((_cnt%2==1)? 1 : -1) : let(
-        pip = point_in_polygon(point, region[_i], eps=eps)
-    ) pip==0? 0 : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
+    _i >= len(region) ? ((_cnt%2==1)? 1 : -1)
+   : let(
+           pip = point_in_polygon(point, region[_i], eps=eps)
+     )
+     pip==0? 0
+   : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
 
 
 
-// Function: polygons_equal()
+// Function: is_region_simple()
 // Usage:
-//    b = polygons_equal(poly1, poly2, [eps])
+//   bool = is_region_simple(region, [eps]);
 // Description:
-//    Returns true if poly1 and poly2 are the same polongs
-//    within given epsilon tolerance.
+//   Returns true if the region is entirely non-self-intersecting, meaning that it is
+//   formed from a list of simple polygons that do not intersect each other.
 // Arguments:
-//    poly1 = first polygon
-//    poly2 = second polygon
-//    eps = tolerance for comparison
-// Example(NORENDER):
-//    polygons_equal(pentagon(r=4),
-//                   rot(360/5, p=pentagon(r=4))); // returns true
-//    polygons_equal(pentagon(r=4),
-//                   rot(90, p=pentagon(r=4)));    // returns false
-function polygons_equal(poly1, poly2, eps=EPSILON) =
-    let(
-        poly1 = cleanup_path(poly1),
-        poly2 = cleanup_path(poly2),
-        l1 = len(poly1),
-        l2 = len(poly2)
-    ) l1 != l2 ? false :
-    let( maybes = find_first_match(poly1[0], poly2, eps=eps, all=true) )
-    maybes == []? false :
-    [for (i=maybes) if (__polygons_equal(poly1, poly2, eps, i)) 1] != [];
-
-function __polygons_equal(poly1, poly2, eps, st) =
-    max([for(d=poly1-select(poly2,st,st-1)) d*d])<eps*eps;
+//   region = region to check
+//   eps = tolerance for geometric omparisons.  Default: `EPSILON` = 1e-9
+function is_region_simple(region, eps=EPSILON) =
+   [for(p=region) if (!is_path_simple(p,closed=true,eps)) 1] == []
+   &&
+   [for(i=[0:1:len(region)-2])
+       if (_path_region_intersections(region[i], list_tail(region,i+1), eps=eps) != []) 1
+   ] ==[];
 
 
-// Function: is_polygon_in_list()
-// Topics: Polygons, Comparators
-// See Also: polygons_equal(), regions_equal()
+// Function: are_regions_equal()
 // Usage:
-//   bool = is_polygon_in_list(poly, polys);
-// Description:
-//   Returns true if one of the polygons in `polys` is equivalent to the polygon `poly`.
-// Arguments:
-//   poly = The polygon to search for.
-//   polys = The list of polygons to look for the polygon in.
-function is_polygon_in_list(poly, polys) =
-    __is_polygon_in_list(poly, polys, 0);
-
-function __is_polygon_in_list(poly, polys, i) =
-    i >= len(polys)? false :
-    polygons_equal(poly, polys[i])? true :
-    __is_polygon_in_list(poly, polys, i+1);
-
-
-// Function: regions_equal()
-// Usage:
-//    b = regions_equal(region1, region2, [eps])
+//    b = are_regions_equal(region1, region2, [eps])
 // Description:
 //    Returns true if the components of region1 and region2 are the same polygons (in any order)
 //    within given epsilon tolerance.
@@ -185,39 +180,63 @@ function __is_polygon_in_list(poly, polys, i) =
 //    region1 = first region
 //    region2 = second region
 //    eps = tolerance for comparison
-function regions_equal(region1, region2) =
+function are_regions_equal(region1, region2) =
     assert(is_region(region1) && is_region(region2))
     len(region1) != len(region2)? false :
-    __regions_equal(region1, region2, 0);
+    __are_regions_equal(region1, region2, 0);
 
-function __regions_equal(region1, region2, i) =
+function __are_regions_equal(region1, region2, i) =
     i >= len(region1)? true :
     !is_polygon_in_list(region1[i], region2)? false :
-    __regions_equal(region1, region2, i+1);
+    __are_regions_equal(region1, region2, i+1);
 
 
-/// Internal Function: _region_path_crossings()
+/// Internal Function: _path_region_intersections()
 /// Usage:
-///   _region_path_crossings(path, region);
+///   _path_region_intersections(path, region, [closed], [eps]);
 /// Description:
-///   Returns a sorted list of [SEGMENT, U] that describe where a given path is crossed by a second path.
+///   Returns a sorted list of [SEGMENT, U] that describe where a given path intersects the region
+//    in a single point.  (Note that intersections of collinear segments, where the intersection is another segment, are
+//    ignored.)
 /// Arguments:
 ///   path = The path to find crossings on.
 ///   region = Region to test for crossings of.
 ///   closed = If true, treat path as a closed polygon.  Default: true
 ///   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function _region_path_crossings(path, region, closed=true, eps=EPSILON) =
+function _path_region_intersections(path, region, closed=true, eps=EPSILON) =
     let(
-        segs = pair(closed? close_path(path) : cleanup_path(path))
+        pathclosed = closed && !is_closed_path(path),
+        pathlen = len(path),
+        regionsegs = [for(poly=region) each pair(poly, is_closed_path(poly)?false:true)]
     )
-    sort([for (si = idx(segs), p = close_region(region), s2 = pair(p))
-            let (
-                 isect = _general_line_intersection(segs[si], s2, eps=eps)
-            )
-            if (!is_undef(isect[0]) && isect[1] >= 0-eps && isect[1] < 1+eps
-                                    && isect[2] >= 0-eps && isect[2] < 1+eps )
-                [si, isect[1]]
-         ]);
+    sort(
+         [for(si = [0:1:len(path)-(pathclosed?1:2)])
+              let(
+                  a1 = path[si],
+                  a2 = path[(si+1)%pathlen],
+                  maxax = max(a1.x,a2.x),
+                  minax = min(a1.x,a2.x),
+                  maxay = max(a1.y,a2.y),
+                  minay = min(a1.y,a2.y)
+              )
+              for(rseg=regionsegs)
+                  let(
+                      b1 = rseg[0],
+                      b2 = rseg[1],
+                      isect =
+                              maxax < b1.x && maxax < b2.x  ||
+                              minax > b1.x && minax > b2.x  ||
+                              maxay < b1.y && maxay < b2.y  ||
+                              minay > b1.y && minay > b2.y
+                            ? undef
+                            : _general_line_intersection([a1,a2],rseg,eps)
+                  )
+                  if (isect && isect[1]>=-eps && isect[1]<=1+eps
+                            && isect[2]>=-eps && isect[2]<=1+eps)
+                      [si,isect[1]]
+         ]
+    );
+
 
 
 // Function: split_path_at_region_crossings()
@@ -241,7 +260,7 @@ function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) 
     let(
         path = deduplicate(path, eps=eps),
         region = [for (path=region) deduplicate(path, eps=eps)],
-        xings = _region_path_crossings(path, region, closed=closed, eps=eps),
+        xings = _path_region_intersections(path, region, closed=closed, eps=eps),
         crossings = deduplicate(
             concat([[0,0]], xings, [[len(path)-1,1]]),
             eps=eps
@@ -254,7 +273,7 @@ function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) 
                 )
         ]
     )
-    subpaths;
+    [for(s=subpaths) if (len(s)>1) s];
 
 
 // Function: split_nested_region()
@@ -831,23 +850,32 @@ function offset(
             )
     ) return_faces? [edges,faces] : edges;
 
-
+/// Internal Function: _tag_subpaths()
+/// splits the polygon (path) into subpaths by region crossing and then tags each subpath:
+///    "O" - the subpath is outside the region
+///    "I" - the subpath is inside the region's interior
+///    "S" - the subpath is on the region's border and the polygon and region are on the same side of the subpath
+///    "U" - the subpath is on the region's border and the polygon and region meet at the subpath (from opposite sides)
+/// The return has the form of a list with entries [TAG, SUBPATH]
 function _tag_subpaths(path, region, eps=EPSILON) =
     let(
         subpaths = split_path_at_region_crossings(path, region, eps=eps),
         tagged = [
-            for (sub = subpaths) let(
-                subpath = deduplicate(sub)
-            ) if (len(sub)>1) let(
-                midpt = lerp(subpath[0], subpath[1], 0.5),
-                rel = point_in_region(midpt,region,eps=eps)
-            ) rel<0? ["O", subpath] : rel>0? ["I", subpath] : let(
-                vec = unit(subpath[1]-subpath[0]),
-                perp = rot(90, planar=true, p=vec),
-                sidept = midpt + perp*0.01,
-                rel1 = point_in_polygon(sidept,path,eps=eps)>0,
-                rel2 = point_in_region(sidept,region,eps=eps)>0
-            ) rel1==rel2? ["S", subpath] : ["U", subpath]
+            for (subpath = subpaths)
+                let(
+                    midpt = mean([subpath[0], subpath[1]]),
+                    rel = point_in_region(midpt,region,eps=eps)
+                )
+                rel<0? ["O", subpath]
+              : rel>0? ["I", subpath]
+              : let(
+                    vec = unit(subpath[1]-subpath[0]),
+                    perp = rot(90, planar=true, p=vec),
+                    sidept = midpt + perp*0.01,
+                    rel1 = point_in_polygon(sidept,path,eps=eps)>0,
+                    rel2 = point_in_region(sidept,region,eps=eps)>0
+                 )
+                 rel1==rel2? ["S", subpath] : ["U", subpath]
         ]
     ) tagged;
 
@@ -858,16 +886,14 @@ function _tag_region_subpaths(region1, region2, eps=EPSILON) =
 
 function _tagged_region(region1,region2,keep1,keep2,eps=EPSILON) =
     let(
-        region1 = close_region(region1, eps=eps),
-        region2 = close_region(region2, eps=eps),
         tagged1 = _tag_region_subpaths(region1, region2, eps=eps),
         tagged2 = _tag_region_subpaths(region2, region1, eps=eps),
-        tagged = concat(
-            [for (tagpath = tagged1) if (in_list(tagpath[0], keep1)) tagpath[1]],
-            [for (tagpath = tagged2) if (in_list(tagpath[0], keep2)) tagpath[1]]
-        ),
-        outregion = _assemble_path_fragments(tagged, eps=eps)
-    ) outregion;
+        tagged = [
+                  for (tagpath = tagged1) if (in_list(tagpath[0], keep1)) tagpath[1],
+                  for (tagpath = tagged2) if (in_list(tagpath[0], keep2)) tagpath[1]
+                 ]
+    )
+    _assemble_path_fragments(tagged, eps=eps);
 
 
 
@@ -986,7 +1012,7 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 //       circle(d=40);
 //   }
 function exclusive_or(regions=[],b=undef,c=undef,eps=EPSILON) =
-    b!=undef? exclusive_or(concat([regions],[b],c==undef?[]:[c]),eps=eps) :
+    b!=undef? exclusive_or([regions, b, if(is_def(c)) c],eps=eps) :
     len(regions)<=1? regions[0] :
     exclusive_or(
         let(regions=[for (r=regions) is_path(r)? [r] : r])
