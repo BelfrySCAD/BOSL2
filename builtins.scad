@@ -17,7 +17,7 @@ module _text(t,size,font,halign,valign,spacing,direction,language,script)
         halign=halign, valign=valign,
         spacing=spacing, direction=direction,
         language=language, script=script
-    ;)
+    );
 
 module _cube(size,center) cube(size,center=center);
 

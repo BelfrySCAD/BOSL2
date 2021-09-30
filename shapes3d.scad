@@ -9,6 +9,8 @@
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
+use <builtins.scad>
+
 
 // Section: Cuboids, Prismoids and Pyramids
 
@@ -52,11 +54,7 @@ module cube(size=1, center, anchor, spin=0, orient=UP)
     anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
     size = scalar_vec3(size);
     attachable(anchor,spin,orient, size=size) {
-        if (size.z > 0) {
-            linear_extrude(height=size.z, center=true, convexity=2) {
-                square([size.x,size.y], center=true);
-            }
-        }
+        _cube(size, center=true);
         children();
     }
 }
@@ -935,23 +933,8 @@ module cylinder(h, r1, r2, center, l, r, d, d1, d2, anchor, spin=0, orient=UP)
     r1 = get_radius(r1=r1, r=r, d1=d1, d=d, dflt=1);
     r2 = get_radius(r1=r2, r=r, d1=d2, d=d, dflt=1);
     l = first_defined([h, l, 1]);
-    sides = segs(max(r1,r2));
     attachable(anchor,spin,orient, r1=r1, r2=r2, l=l) {
-        if (r1 > r2) {
-            if (l > 0) {
-                linear_extrude(height=l, center=true, convexity=2, scale=r2/r1) {
-                    circle(r=r1);
-                }
-            }
-        } else {
-            zflip() {
-                if (l > 0) {
-                    linear_extrude(height=l, center=true, convexity=2, scale=r1/r2) {
-                        circle(r=r2);
-                    }
-                }
-            }
-        }
+        _cylinder(h=l, r1=r1, r2=r2, center=true);
         children();
     }
 }
@@ -1506,8 +1489,20 @@ module pie_slice(
 // Example: Called as Function
 //   vnf = sphere(d=100, style="icosa");
 //   vnf_polyhedron(vnf);
-module sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP)
-    spheroid(r=r, d=d, circum=circum, style=style, anchor=anchor, spin=spin, orient=orient) children();
+module sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP) {
+    r = get_radius(r=r, d=d, dflt=1);
+    if (!circum && style=="orig") {
+        attachable(anchor,spin,orient, r=r) {
+            _sphere(r=r);
+            children();
+        }
+    } else {
+        spheroid(
+            r=r, circum=circum, style=style,
+            anchor=anchor, spin=spin, orient=orient
+        ) children();
+    }
+}
 
 
 function sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP) =
