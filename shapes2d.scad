@@ -61,7 +61,7 @@ function square(size=1, center, anchor, spin=0) =
 module square(size=1, center, anchor, spin) {
     anchor = get_anchor(anchor, center, [-1,-1], [-1,-1]);
     size = is_num(size)? [size,size] : point2d(size);
-    attachable(anchor,spin, size=size, two_d=true) {
+    attachable(anchor,spin, two_d=true, size=size) {
         _square(size, center=true);
         children();
     }
@@ -206,7 +206,7 @@ function circle(r, d, anchor=CENTER, spin=0) =
 
 module circle(r, d, anchor=CENTER, spin=0) {
     r = get_radius(r=r, d=d, dflt=1);
-    attachable(anchor,spin, r=r) {
+    attachable(anchor,spin, two_d=true, r=r) {
         _circle(r=r);
         children();
     }

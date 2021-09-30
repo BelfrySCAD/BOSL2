@@ -13,17 +13,21 @@ shapes, and makes them attachables.
 Anchoring allows you to align a side, edge, or corner of an object with the origin as it is
 created.  This is done by passing a vector into the `anchor=` argument.  For roughly cubical
 or prismoidal shapes, that vector points in the general direction of the side, edge, or
-corner that will be aligned to.  Each vector component should be -1, 0, or 1:
+corner that will be aligned to.  For example, a vector of [1,0,-1] refers to the lower-right
+edge of the shape.  Each vector component should be -1, 0, or 1:
 
-```openscad
+```openscad-3D
+// Anchor at upper-front-left corner
 cube([40,30,50], anchor=[-1,-1,1]);
 ```
 
-```openscad
+```openscad-3D
+// Anchor at upper-right edge
 cube([40,30,50], anchor=[1,0,1]);
 ```
 
-```openscad
+```openscad-3D
+// Anchor at bottom face
 cube([40,30,50], anchor=[0,0,-1]);
 ```
 
@@ -40,72 +44,85 @@ Constant | Direction | Value
 `TOP`/`UP` | Z+      | `[ 0, 0, 1]` (3D only.)
 `CENTER`/`CTR` | Centered | `[ 0, 0, 0]`
 
-```openscad
+```openscad-3D
 cube([40,30,50], anchor=BACK+TOP);
 ```
 
-```openscad
+```openscad-3D
 cube([40,30,50], anchor=FRONT);
 ```
+
+---
 
 Cylindrical attachables can be anchored similarly, except that only the Z vector component is
 required to be -1, 0, or 1.  This allows anchoring to arbitrary edges around the cylinder or
 cone:
 
-```openscad
+```openscad-3D
 cylinder(r1=25, r2=15, h=60, anchor=TOP+LEFT);
 ```
 
-```openscad
+```openscad-3D
 cylinder(r1=25, r2=15, h=60, anchor=BOTTOM+FRONT);
 ```
 
-```openscad
+```openscad-3D
 cylinder(r1=25, r2=15, h=60, anchor=UP+spherical_to_xyz(1,30,90));
 ```
+
+---
 
 Spherical shapes can use fully proportional anchoring vectors, letting you anchor to any point
 on the surface of the sphere, just by pointing a vector at it:
 
-```openscad
+```openscad-3D
 sphere(r=50, anchor=TOP);
 ```
 
-```openscad
+```openscad-3D
 sphere(r=50, anchor=TOP+FRONT);
 ```
 
-```openscad
+```openscad-3D
 sphere(r=50, anchor=spherical_to_xyz(1,-30,60));
 ```
+
+---
 
 Some attachable shapes may provide specific named anchors for shape-specific anchoring.  These
 will be given as strings and will be specific to that type of attachable:
 
-```openscad
+```openscad-3D
 teardrop(d=100, l=20, anchor="cap");
 ```
+
+---
 
 Some shapes, for backwards compatability reasons, can take a `center=` argument.  This just
 overrides the `anchor=` argument.  A `center=true` argument is the same as `anchor=CENTER`.
 A `center=false` argument can mean `anchor=[-1,-1,-1]` for a cube, or `anchor=BOTTOM` for a
 cylinder.
 
-Many 2D shapes provided by BOSL2 are also anchorable.  Due to technical limitations of OpenSCAD,
-however, `square()` and `circle()` are *not*.  BOSL2 provides `rect()` and `oval()` as attachable
-and anchorable equivalents.  You can only anchor on the XY plane, of course, but you can use the
-same `FRONT`, `BACK`, `LEFT`, `RIGHT`, and `CENTER` anchor constants.
+---
+
+Many 2D shapes provided by BOSL2 are also anchorable.  Even the built-in `square()` and `circle()`
+modules have been overridden to enable attachability and anchoring.  The `anchor=` options for 2D
+shapes can accept 3D vectors, but only the X and Y components will be used:
 
 ```openscad-2D
-rect([40,30], anchor=BACK+LEFT);
+square([40,30], anchor=BACK+LEFT);
 ```
 
 ```openscad-2D
-oval(d=50, anchor=FRONT);
+circle(d=50, anchor=BACK);
 ```
 
 ```openscad-2D
-hexagon(d=50, anchor=BACK);
+hexagon(d=50, anchor=LEFT);
+```
+
+```openscad-2D
+oval(d=[50,30], anchor=FRONT);
 ```
 
 
@@ -113,22 +130,21 @@ hexagon(d=50, anchor=BACK);
 Attachable shapes also can be spun in place as you create them.  You can do this by passing in
 the angle to spin by into the `spin=` argument:
 
-```openscad
+```openscad-3D
 cube([20,20,40], center=true, spin=45);
 ```
 
 You can even spin around each of the three axes in one pass, by giving 3 angles to `spin=` as a
 vector, like [Xang,Yang,Zang]:
 
-```openscad
+```openscad-3D
 cube([20,20,40], center=true, spin=[10,20,30]);
 ```
 
-You can also apply spin to 2D shapes from BOSL2.  Again, you should use `rect()` and `oval()`
-instead of `square()` and `circle()`:
+You can also apply spin to 2D shapes from BOSL2, though only by scalar angle:
 
 ```openscad-2D
-rect([40,30], spin=30);
+square([40,30], spin=30);
 ```
 
 ```openscad-2D
@@ -141,7 +157,7 @@ Another way to specify a rotation for an attachable shape, is to pass a 3D vecto
 `orient=` argument.  This lets you specify what direction to tilt the top of the shape towards.
 For example, you can make a cone that is tilted up and to the right like this:
 
-```openscad
+```openscad-3D
 cylinder(h=100, r1=50, r2=20, orient=UP+RIGHT);
 ```
 
@@ -152,39 +168,39 @@ You can *not* use `orient=` with 2D shapes.
 When giving `anchor=`, `spin=`, and `orient=`, they are applied anchoring first, spin second,
 then orient last.  For example, here's a cube:
 
-```openscad
+```openscad-3D
 cube([20,20,50]);
 ```
 
 You can center it with an `anchor=CENTER` argument:
 
-```openscad
+```openscad-3D
 cube([20,20,50], anchor=CENTER);
 ```
 
 Add a 45 degree spin:
 
-```openscad
+```openscad-3D
 cube([20,20,50], anchor=CENTER, spin=45);
 ```
 
 Now tilt the top up and forward:
 
-```openscad
+```openscad-3D
 cube([20,20,50], anchor=CENTER, spin=45, orient=UP+FWD);
 ```
 
 Something that may confuse new users is that adding spin to a cylinder may seem nonsensical.
 However, since spin is applied *after* anchoring, it can actually have a significant effect:
 
-```openscad
+```openscad-3D
 cylinder(d=50, l=40, anchor=FWD, spin=-30);
 ```
 
 For 2D shapes, you can mix `anchor=` with `spin=`, but not with `orient=`.
 
 ```openscad-2D
-rect([40,30], anchor=BACK+LEFT, spin=30);
+square([40,30], anchor=BACK+LEFT, spin=30);
 ```
 
 
@@ -193,7 +209,7 @@ The reason attachables are called that, is because they can be attached to each 
 You can do that by making one attachable shape be a child of another attachable shape.
 By default, the child of an attachable is attached to the center of the parent shape.
 
-```openscad
+```openscad-3D
 cube(50,center=true)
     cylinder(d1=50,d2=20,l=50);
 ```
@@ -202,7 +218,7 @@ To attach to a different place on the parent, you can use the `attach()` module.
 this will attach the bottom of the child to the given position on the parent.  The orientation
 of the child will be overridden to point outwards from the center of the parent, more or less:
 
-```openscad
+```openscad-3D
 cube(50,center=true)
     attach(TOP) cylinder(d1=50,d2=20,l=20);
 ```
@@ -210,7 +226,7 @@ cube(50,center=true)
 If you give `attach()` a second anchor argument, it attaches that anchor on the child to the
 first anchor on the parent:
 
-```openscad
+```openscad-3D
 cube(50,center=true)
     attach(TOP,TOP) cylinder(d1=50,d2=20,l=20);
 ```
@@ -220,13 +236,13 @@ it's useful to have the child overlap the parent by insetting a bit.  You can do
 `overlap=` argument to `attach()`.  A positive value will inset the child into the parent, and
 a negative value will outset out from the parent:
 
-```openscad
+```openscad-3D
 cube(50,center=true)
     attach(TOP,overlap=10)
         cylinder(d=20,l=20);
 ```
 
-```openscad
+```openscad-3D
 cube(50,center=true)
     attach(TOP,overlap=-20)
         cylinder(d=20,l=20);
@@ -235,14 +251,14 @@ cube(50,center=true)
 If you want to position the child at the parent's anchorpoint, without re-orienting, you can
 use the `position()` module:
 
-```openscad
+```openscad-3D
 cube(50,center=true)
     position(RIGHT) cylinder(d1=50,d2=20,l=20);
 ```
 
 You can attach or position more than one child at a time by enclosing them all in braces:
 
-```openscad
+```openscad-3D
 cube(50, center=true) {
     attach(TOP) cylinder(d1=50,d2=20,l=20);
     position(RIGHT) cylinder(d1=50,d2=20,l=20);
@@ -252,29 +268,27 @@ cube(50, center=true) {
 If you want to attach the same shape to multiple places on the same parent, you can pass the
 desired anchors as a list to the `attach()` or `position()` modules:
 
-```openscad
+```openscad-3D
 cube(50, center=true)
     attach([RIGHT,FRONT],TOP) cylinder(d1=50,d2=20,l=20);
 ```
 
-```openscad
+```openscad-3D
 cube(50, center=true)
     position([TOP,RIGHT,FRONT]) cylinder(d1=50,d2=20,l=20);
 ```
 
 ## Attaching 2D Children
-You can use attachments in 2D as well, but only in the XY plane.  Also, the built-in `square()`
-and `circle()` 2D modules do not support attachments.  Instead, you should use the `rect()` and
-`oval()` modules:
+You can use attachments in 2D as well, but only in the XY plane:
 
 ```openscad-2D
-rect(50,center=true)
+square(50,center=true)
     attach(RIGHT,FRONT)
         trapezoid(w1=30,w2=0,h=30);
 ```
 
 ```openscad-2D
-oval(d=50)
+circle(d=50)
     attach(BACK,FRONT,overlap=5)
         trapezoid(w1=30,w2=0,h=30);
 ```
@@ -283,7 +297,7 @@ oval(d=50)
 One way that is useful to show the position and orientation of an anchorpoint is by attaching
 an anchor arrow to that anchor.
 
-```openscad
+```openscad-3D
 cube(40, center=true)
     attach(LEFT+TOP)
         anchor_arrow();
@@ -291,7 +305,7 @@ cube(40, center=true)
 
 For large objects, you can change the size of the arrow with the `s=` argument.
 
-```openscad
+```openscad-3D
 sphere(d=100)
     attach(LEFT+TOP)
         anchor_arrow(s=30);
@@ -299,24 +313,24 @@ sphere(d=100)
 
 To show all the standard cardinal anchorpoints, you can use the `show_anchors()` module.
 
-```openscad
+```openscad-3D
 cube(40, center=true)
     show_anchors();
 ```
 
-```openscad
+```openscad-3D
 cylinder(h=40, d=40, center=true)
     show_anchors();
 ```
 
-```openscad
+```openscad-3D
 sphere(d=40)
     show_anchors();
 ```
 
 For large objects, you can again change the size of the arrows with the `s=` argument.
 
-```openscad
+```openscad-3D
 cylinder(h=100, d=100, center=true)
     show_anchors(s=30);
 ```
@@ -336,7 +350,7 @@ tag.
 For example, to difference away a child cylinder from the middle of a parent cube, you can
 do this:
 
-```openscad
+```openscad-3D
 diff("hole")
 cube(100, center=true)
     cylinder(h=101, d=50, center=true, $tags="hole");
@@ -346,7 +360,7 @@ If you give both the `neg=` and `pos=` arguments to `diff()`, then the shapes ma
 given to `neg=` will be differenced away from the shapes marked with tags given to `pos=`.
 Everything else will be unioned to the result.
 
-```openscad
+```openscad-3D
 diff("hole", "post")
 cube(100, center=true)
     attach([RIGHT,TOP]) {
@@ -357,7 +371,7 @@ cube(100, center=true)
 
 The `keep=` argument takes tags for shapes that you want to keep in the output.
 
-```openscad
+```openscad-3D
 diff("dish", keep="antenna")
 cube(100, center=true)
     attach([FRONT,TOP], overlap=33) {
@@ -368,7 +382,7 @@ cube(100, center=true)
 
 If you need to mark multiple children with a tag, you can use the `tags()` module.
 
-```openscad
+```openscad-3D
 diff("hole")
 cube(100, center=true)
     attach([FRONT,TOP], overlap=20)
@@ -381,22 +395,22 @@ cube(100, center=true)
 The parent object can be differenced away from other shapes.  Tags are inherited by children,
 though, so you will need to set the tags of the children as well as the parent.
 
-```openscad
+```openscad-3D
 diff("hole")
 cube([20,11,45], center=true, $tags="hole")
     cube([40,10,90], center=true, $tags="body");
 ```
 
-Tags (and therefore tag-based operations like `diff()`) only work correctly with attachable children.
-However, a number of built-in modules for making shapes are *not* attachable.  Some notable
-non-attachable modules are `circle()`, `square()`, `text()`, `linear_extrude()`, `rotate_extrude()`,
-`polygon()`, `polyhedron()`, `import()`, `surface()`, `union()`, `difference()`, `intersection()`,
-`offset()`, `hull()`, and `minkowski()`.
+Tags (and therefore tag-based operations like `diff()`) only work correctly with attachable
+children.  However, a number of built-in modules for making shapes are *not* attachable.
+Some notable non-attachable modules are `text()`, `linear_extrude()`, `rotate_extrude()`,
+`polygon()`, `polyhedron()`, `import()`, `surface()`, `union()`, `difference()`,
+`intersection()`, `offset()`, `hull()`, and `minkowski()`.
 
 To allow you to use tags-based operations with non-attachable shapes, you can wrap them with the
 `tags()` module to specify their tags.  For example:
 
-```openscad
+```openscad-3D
 diff("hole")
 cuboid(50)
   attach(TOP)
@@ -412,7 +426,7 @@ To perform an intersection of attachables, you can use the `intersect()` module.
 argument to `a=`, the parent and all children *not* tagged with that will be intersected by
 everything that *is* tagged with it.
 
-```openscad
+```openscad-3D
 intersect("bounds")
 cube(100, center=true)
     cylinder(h=100, d1=120, d2=95, center=true, $fn=72, $tags="bounds");
@@ -421,7 +435,7 @@ cube(100, center=true)
 If given both the `a=` and `b=` arguments, then shapes marked with tags given to `a=` will be
 intersected with shapes marked with tags given to `b=`, then unioned with all other shapes.
 
-```openscad
+```openscad-3D
 intersect("pole", "cap")
 cube(100, center=true)
     attach([TOP,RIGHT]) {
@@ -433,7 +447,7 @@ cube(100, center=true)
 If the `keep=` argument is given, anything marked with tags passed to it will be unioned with
 the result of the union:
 
-```openscad
+```openscad-3D
 intersect("bounds", keep="pole")
 cube(100, center=true) {
     cylinder(h=100, d1=120, d2=95, center=true, $fn=72, $tags="bounds");
@@ -445,7 +459,7 @@ cube(100, center=true) {
 You can use the `hulling()` module to hull shapes marked with a given tag together, before
 unioning the result with every other shape.
 
-```openscad
+```openscad-3D
 hulling("hull")
 cube(50, center=true, $tags="hull") {
     cyl(h=100, d=20);
@@ -465,7 +479,7 @@ and move it such that the BACK, RIGHT (X+,Y+) side of the shape will be aligned 
 edges.  The shape will be tagged as a "mask" so that you can use `diff("mask")`.  For example,
 here's a shape for rounding an edge:
 
-```openscad
+```openscad-3D
 module round_edge(l,r) difference() {
     translate([-1,-1,-l/2])
         cube([r+1,r+1,l]);
@@ -477,7 +491,7 @@ round_edge(l=30, r=19);
 
 You can use that mask to round various edges of a cube:
 
-```openscad
+```openscad-3D
 module round_edge(l,r) difference() {
     translate([-1,-1,-l/2])
         cube([r+1,r+1,l]);
@@ -497,7 +511,7 @@ BACK RIGHT TOP (X+,Y+,Z+) side of the shape will be aligned with the given corne
 will be tagged as a "mask" so that you can use `diff("mask")`.  For example, here's a shape for
 rounding a corner:
 
-```openscad
+```openscad-3D
 module round_corner(r) difference() {
     translate(-[1,1,1])
         cube(r+1);
@@ -509,7 +523,7 @@ round_corner(r=10);
 
 You can use that mask to round various corners of a cube:
 
-```openscad
+```openscad-3D
 module round_corner(r) difference() {
     translate(-[1,1,1])
         cube(r+1);
@@ -525,7 +539,7 @@ cube([50,60,70],center=true)
 ### Mix and Match Masks
 You can use `edge_mask()` and `corner_mask()` together as well:
 
-```openscad
+```openscad-3D
 module round_corner(r) difference() {
     translate(-[1,1,1])
         cube(r+1);
@@ -566,7 +580,7 @@ mask2d_roundover(10);
 
 Using that mask profile, you can mask the edges of a cube like:
 
-```openscad
+```openscad-3D
 diff("mask")
 cube([50,60,70],center=true)
    edge_profile("ALL")
@@ -576,7 +590,7 @@ cube([50,60,70],center=true)
 ### `corner_profile()`
 You can use the same profile to make a rounded corner mask as well:
 
-```openscad
+```openscad-3D
 diff("mask")
 cube([50,60,70],center=true)
    corner_profile("ALL", r=10)
@@ -587,7 +601,7 @@ cube([50,60,70],center=true)
 As a simple shortcut to apply a profile mask to all edges and corners of a face, you can use the
 `face_profile()` module:
 
-```openscad
+```openscad-3D
 diff("mask")
 cube([50,60,70],center=true)
    face_profile(TOP, r=10)
@@ -599,7 +613,7 @@ cube([50,60,70],center=true)
 Usually, when coloring a shape with the `color()` module, the parent color overrides the colors of
 all children.  This is often not what you want:
 
-```openscad
+```openscad-3D
 $fn = 24;
 color("red") spheroid(d=3) {
     attach(CENTER,BOT) color("white") cyl(h=10, d=1) {
@@ -611,7 +625,7 @@ color("red") spheroid(d=3) {
 If you use the `recolor()` module, however, the child's color overrides the color of the parent.
 This is probably easier to understand by example:
 
-```openscad
+```openscad-3D
 $fn = 24;
 recolor("red") spheroid(d=3) {
     attach(CENTER,BOT) recolor("white") cyl(h=10, d=1) {
@@ -634,7 +648,7 @@ arguments of `attachable()`.
 In the most basic form, where the shape is fully cuboid, with top and bottom of the same size,
 and directly over one another, you can just use `size=`.
 
-```openscad
+```openscad-3D
 module cubic_barbell(s=100, anchor=CENTER, spin=0, orient=UP) {
     attachable(anchor,spin,orient, size=[s*3,s,s]) {
         union() {
@@ -651,7 +665,7 @@ When the shape is prismoidal, where the top is a different size from the bottom,
 the `size2=` argument as well. While `size=` takes all three axes sizes, the `size2=` argument
 only takes the [X,Y] sizes of the top of the shape.
 
-```openscad
+```openscad-3D
 module prismoidal(size=[100,100,100], scale=0.5, anchor=CENTER, spin=0, orient=UP) {
     attachable(anchor,spin,orient, size=size, size2=[size.x, size.y]*scale) {
         hull() {
@@ -672,7 +686,7 @@ When the top of the prismoid can be shifted away from directly above the bottom,
 the `shift=` argument.  The `shift=` argument takes an [X,Y] vector of the offset of the center
 of the top from the XY center of the bottom of the shape.
 
-```openscad
+```openscad-3D
 module prismoidal(size=[100,100,100], scale=0.5, shift=[0,0], anchor=CENTER, spin=0, orient=UP) {
     attachable(anchor,spin,orient, size=size, size2=[size.x, size.y]*scale, shift=shift) {
         hull() {
@@ -693,7 +707,7 @@ In the case that the prismoid is not oriented vertically, (ie, where the `shift=
 arguments should refer to a plane other than XY) you can use the `axis=` argument.  This lets
 you make prismoids naturally oriented forwards/backwards or sideways.
 
-```openscad
+```openscad-3D
 module yprismoidal(
     size=[100,100,100], scale=0.5, shift=[0,0],
     anchor=CENTER, spin=0, orient=UP
@@ -721,7 +735,7 @@ yprismoidal([100,60,30], scale=1.5, shift=[20,20]) show_anchors(20);
 ### Cylindrical Attachables
 To make a cylindrical shape attachable, you use the `l`, and `r`/`d`, args of `attachable()`.
 
-```openscad
+```openscad-3D
 module twistar(l,r,d, anchor=CENTER, spin=0, orient=UP) {
     r = get_radius(r=r,d=d,dflt=1);
     attachable(anchor,spin,orient, r=r, l=l) {
@@ -736,7 +750,7 @@ twistar(l=100, r=40) show_anchors(20);
 If the cylinder is elipsoidal in shape, you can pass the inequal X/Y sizes as a 2-item vector
 to the `r=` or `d=` argument.
 
-```openscad
+```openscad-3D
 module ovalstar(l,rx,ry, anchor=CENTER, spin=0, orient=UP) {
     attachable(anchor,spin,orient, r=[rx,ry], l=l) {
         linear_extrude(height=l, center=true, convexity=4)
@@ -750,7 +764,7 @@ ovalstar(l=100, rx=50, ry=30) show_anchors(20);
 
 For cylindrical shapes that arent oriented vertically, use the `axis=` argument.
 
-```openscad
+```openscad-3D
 module ytwistar(l,r,d, anchor=CENTER, spin=0, orient=UP) {
     r = get_radius(r=r,d=d,dflt=1);
     attachable(anchor,spin,orient, r=r, l=l, axis=BACK) {
@@ -767,7 +781,7 @@ ytwistar(l=100, r=40) show_anchors(20);
 To make a conical shape attachable, you use the `l`, `r1`/`d1`, and `r2`/`d2`, args of
 `attachable()`.
 
-```openscad
+```openscad-3D
 module twistar(l, r,r1,r2, d,d1,d2, anchor=CENTER, spin=0, orient=UP) {
     r1 = get_radius(r1=r1,r=r,d1=d1,d=d,dflt=1);
     r2 = get_radius(r1=r2,r=r,d1=d2,d=d,dflt=1);
@@ -780,10 +794,10 @@ module twistar(l, r,r1,r2, d,d1,d2, anchor=CENTER, spin=0, orient=UP) {
 twistar(l=100, r1=40, r2=20) show_anchors(20);
 ```
 
-If the cone is elipsoidal in shape, you can pass the inequal X/Y sizes as a 2-item vectors
+If the cone is ellipsoidal in shape, you can pass the inequal X/Y sizes as a 2-item vectors
 to the `r1=`/`r2=` or `d1=`/`d2=` arguments.
 
-```openscad
+```openscad-3D
 module ovalish(l,rx1,ry1,rx2,ry2, anchor=CENTER, spin=0, orient=UP) {
     attachable(anchor,spin,orient, r1=[rx1,ry1], r2=[rx2,ry2], l=l) {
         hull() {
@@ -800,9 +814,10 @@ module ovalish(l,rx1,ry1,rx2,ry2, anchor=CENTER, spin=0, orient=UP) {
 ovalish(l=100, rx1=50, ry1=30, rx2=30, ry2=50) show_anchors(20);
 ```
 
-For conical shapes that are not oriented vertically, use the `axis=` argument.
+For conical shapes that are not oriented vertically, use the `axis=` argument to indicate the
+direction of the primary shape axis:
 
-```openscad
+```openscad-3D
 module ytwistar(l, r,r1,r2, d,d1,d2, anchor=CENTER, spin=0, orient=UP) {
     r1 = get_radius(r1=r1,r=r,d1=d1,d=d,dflt=1);
     r2 = get_radius(r1=r2,r=r,d1=d2,d=d,dflt=1);
@@ -819,7 +834,7 @@ ytwistar(l=100, r1=40, r2=20) show_anchors(20);
 ### Spherical Attachables
 To make a spherical shape attachable, you use the `r`/`d` args of `attachable()`.
 
-```openscad
+```openscad-3D
 module spikeball(r, d, anchor=CENTER, spin=0, orient=UP) {
     r = get_radius(r=r,d=d,dflt=1);
     attachable(anchor,spin,orient, r=r*1.1) {
@@ -835,7 +850,7 @@ spikeball(r=50) show_anchors(20);
 
 If the shape is more of an ovoid, you can pass a 3-item vector of sizes to `r=` or `d=`.
 
-```openscad
+```openscad-3D
 module spikeball(r, d, scale, anchor=CENTER, spin=0, orient=UP) {
     r = get_radius(r=r,d=d,dflt=1);
     attachable(anchor,spin,orient, r=r*1.1*scale) {
@@ -929,8 +944,8 @@ aren't on the perimeter of the shape.  This is what named string anchors are for
 the `teardrop()` shape uses a cylindrical geometry for it's vector anchors, but it also provides
 a named anchor "cap" that is at the tip of the hat of the teardrop shape.
 
-Named anchors are passed as an array of `anchorpt()`s to the `anchors=` argument of `attachable()`.
-The `anchorpt()` call takes a name string, a positional point, an orientation vector, and a spin.
+Named anchors are passed as an array of `named_anchor()`s to the `anchors=` argument of `attachable()`.
+The `named_anchor()` call takes a name string, a positional point, an orientation vector, and a spin.
 The name is the name of the anchor.  The positional point is where the anchorpoint is at.  The
 orientation vector is the direction that a child attached at that anchorpoint should be oriented.
 The spin is the number of degrees that an attached child should be rotated counter-clockwise around
@@ -939,10 +954,10 @@ the orientation vector.  Spin is optional, and defaults to 0.
 To make a simple attachable shape similar to a `teardrop()` that provides a "cap" anchor, you may
 define it like this:
 
-```openscad
+```openscad-3D
 module raindrop(r, thick, anchor=CENTER, spin=0, orient=UP) {
     anchors = [
-        anchorpt("cap", [0,r/sin(45),0], BACK, 0)
+        named_anchor("cap", [0,r/sin(45),0], BACK, 0)
     ];
     attachable(anchor,spin,orient, r=r, l=thick, anchors=anchors) {
         linear_extrude(height=thick, center=true) {
@@ -960,9 +975,9 @@ If you want multiple named anchors, just add them to the list of anchors:
 ```openscad-FlatSpin,VPD=150
 module raindrop(r, thick, anchor=CENTER, spin=0, orient=UP) {
     anchors = [
-        anchorpt("captop", [0,r/sin(45), thick/2], BACK+UP,   0),
-        anchorpt("cap",    [0,r/sin(45), 0      ], BACK,      0),
-        anchorpt("capbot", [0,r/sin(45),-thick/2], BACK+DOWN, 0)
+        named_anchor("captop", [0,r/sin(45), thick/2], BACK+UP,   0),
+        named_anchor("cap",    [0,r/sin(45), 0      ], BACK,      0),
+        named_anchor("capbot", [0,r/sin(45),-thick/2], BACK+DOWN, 0)
     ];
     attachable(anchor,spin,orient, r=r, l=thick, anchors=anchors) {
         linear_extrude(height=thick, center=true) {
