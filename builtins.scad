@@ -17,13 +17,13 @@ module _text(t,size,font,halign,valign,spacing,direction,language,script)
         halign=halign, valign=valign,
         spacing=spacing, direction=direction,
         language=language, script=script
-    ;)
+    );
 
 module _cube(size,center) cube(size,center=center);
 
 module _cylinder(h,r1,r2,center,r,d,d1,d2) cylinder(h,r=r,d=d,r1=r1,r2=r2,d1=d1,d2=d2,center=center);
 
-module _sphere(r,center,d) sphere(r=r,d=d,center=center);
+module _sphere(r,d) sphere(r=r,d=d);
 
 
 

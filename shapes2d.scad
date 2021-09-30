@@ -14,15 +14,19 @@
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
+use <BOSL2/builtins.scad>
+
 
 // Section: 2D Primitives
 
 // Function&Module: square()
 // Topics: Shapes (2D), Path Generators (2D)
-// Usage: As a Built-in Module
-//   square(size, [center]);
+// Usage: As a Module
+//   square(size, [center], ...);
+// Usage: With Attachments
+//   square(size, [center], ...) { attachables }
 // Usage: As a Function
-//   path = square(size, [center]);
+//   path = square(size, [center], ...);
 // See Also: rect()
 // Description:
 //   When called as the builtin module, creates a 2D square or rectangle of the given size.
@@ -31,8 +35,8 @@
 //   size = The size of the square to create.  If given as a scalar, both X and Y will be the same size.
 //   center = If given and true, overrides `anchor` to be `CENTER`.  If given and false, overrides `anchor` to be `FRONT+LEFT`.
 //   ---
-//   anchor = (Function only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = (Function only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D):
 //   square(40);
 // Example(2D): Centered
@@ -52,6 +56,16 @@ function square(size=1, center, anchor, spin=0) =
             [ size.x, size.y]
         ] / 2
     ) reorient(anchor,spin, two_d=true, size=size, p=path);
+
+
+module square(size=1, center, anchor, spin) {
+    anchor = get_anchor(anchor, center, [-1,-1], [-1,-1]);
+    size = is_num(size)? [size,size] : point2d(size);
+    attachable(anchor,spin, size=size, two_d=true) {
+        _square(size, center=true);
+        children();
+    }
+}
 
 
 
@@ -161,8 +175,10 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
 
 // Function&Module: circle()
 // Topics: Shapes (2D), Path Generators (2D)
-// Usage: As a Built-in Module
+// Usage: As a Module
 //   circle(r|d=, ...);
+// Usage: With Attachments
+//   circle(r|d=, ...) { attachables }
 // Usage: As a Function
 //   path = circle(r|d=, ...);
 // See Also: oval()
@@ -173,8 +189,8 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
 //   r = The radius of the circle to create.
 //   d = The diameter of the circle to create.
 //   ---
-//   anchor = (Function only) Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = (Function only) Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D): By Radius
 //   circle(r=25);
 // Example(2D): By Diameter
@@ -188,12 +204,23 @@ function circle(r, d, anchor=CENTER, spin=0) =
         path = [for (i=[0:1:sides-1]) let(a=360-i*360/sides) r*[cos(a),sin(a)]]
     ) reorient(anchor,spin, two_d=true, r=r, p=path);
 
+module circle(r, d, anchor=CENTER, spin=0) {
+    r = get_radius(r=r, d=d, dflt=1);
+    attachable(anchor,spin, r=r) {
+        _circle(r=r);
+        children();
+    }
+}
 
 
 
 // Function&Module: oval()
-// Usage:
-//   oval(r|d=, [realign=], [circum=])
+// Usage: As a Module
+//   oval(r|d=, [realign=], [circum=], ...);
+// Usage: With Attachments
+//   oval(r|d=, [realign=], [circum=], ...) { attachables }
+// Usage: As a Function
+//   path = oval(r|d=, [realign=], [circum=], ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle()
 // Description:
