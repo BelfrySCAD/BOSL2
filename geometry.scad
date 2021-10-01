@@ -1865,6 +1865,54 @@ function align_polygon(reference, poly, angles, cp) =
     ) alignments[best][0];
 
 
+// Function: are_polygons_equal()
+// Usage:
+//    b = are_polygons_equal(poly1, poly2, [eps])
+// Description:
+//    Returns true if poly1 and poly2 are the same polongs
+//    within given epsilon tolerance.
+// Arguments:
+//    poly1 = first polygon
+//    poly2 = second polygon
+//    eps = tolerance for comparison
+// Example(NORENDER):
+//    are_polygons_equal(pentagon(r=4),
+//                   rot(360/5, p=pentagon(r=4))); // returns true
+//    are_polygons_equal(pentagon(r=4),
+//                   rot(90, p=pentagon(r=4)));    // returns false
+function are_polygons_equal(poly1, poly2, eps=EPSILON) =
+    let(
+        poly1 = cleanup_path(poly1),
+        poly2 = cleanup_path(poly2),
+        l1 = len(poly1),
+        l2 = len(poly2)
+    ) l1 != l2 ? false :
+    let( maybes = find_first_match(poly1[0], poly2, eps=eps, all=true) )
+    maybes == []? false :
+    [for (i=maybes) if (_are_polygons_equal(poly1, poly2, eps, i)) 1] != [];
+
+function _are_polygons_equal(poly1, poly2, eps, st) =
+    max([for(d=poly1-select(poly2,st,st-1)) d*d])<eps*eps;
+
+
+// Function: is_polygon_in_list()
+// Topics: Polygons, Comparators
+// See Also: are_polygons_equal(), are_regions_equal()
+// Usage:
+//   bool = is_polygon_in_list(poly, polys);
+// Description:
+//   Returns true if one of the polygons in `polys` is equivalent to the polygon `poly`.
+// Arguments:
+//   poly = The polygon to search for.
+//   polys = The list of polygons to look for the polygon in.
+function is_polygon_in_list(poly, polys) =
+    __is_polygon_in_list(poly, polys, 0);
+
+function __is_polygon_in_list(poly, polys, i) =
+    i >= len(polys)? false :
+    are_polygons_equal(poly, polys[i])? true :
+    __is_polygon_in_list(poly, polys, i+1);
+
 
 
 // Section: Convex Sets

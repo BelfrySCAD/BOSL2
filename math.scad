@@ -496,6 +496,33 @@ function rand_int(minval, maxval, N, seed=undef) =
     [for(entry = rvect) floor(entry)];
 
 
+// Function: random_points()
+// Usage:
+//    points = random_points(n, dim, scale, [seed]);
+// See Also: random_polygon(), gaussian_random_points(), spherical_random_points()
+// Topics: Random, Points
+// Description:
+//    Generate `n` uniform random points of dimension `dim` with data ranging from -scale to +scale.  
+//    The `scale` may be a number, in which case the random data lies in a cube,
+//    or a vector with dimension `dim`, in which case each dimension has its own scale.  
+// Arguments:
+//    n = number of points to generate. 
+//    dim = dimension of the points. Default: 2
+//    scale = the scale of the point coordinates. Default: 1
+//    seed = an optional seed for the random generation.
+function random_points(n, dim=2, scale=1, seed) =
+    assert( is_int(n) && n>=0, "The number of points should be a non-negative integer.")
+    assert( is_int(dim) && dim>=1, "The point dimensions should be an integer greater than 1.")
+    assert( is_finite(scale) || is_vector(scale,dim), "The scale should be a number or a vector with length equal to d.")
+    let( 
+        rnds =   is_undef(seed) 
+                ? rands(-1,1,n*dim)
+                : rands(-1,1,n*dim, seed) )
+    is_num(scale) 
+    ? scale*[for(i=[0:1:n-1]) [for(j=[0:dim-1]) rnds[i*dim+j] ] ]
+    : [for(i=[0:1:n-1]) [for(j=[0:dim-1]) scale[j]*rnds[i*dim+j] ] ];
+
+
 // Function: gaussian_rands()
 // Usage:
 //   arr = gaussian_rands(mean, stddev, [N], [seed]);
@@ -510,6 +537,56 @@ function gaussian_rands(mean, stddev, N=1, seed=undef) =
     assert( is_finite(mean+stddev+N) && (is_undef(seed) || is_finite(seed) ), "Input must be finite numbers.")
     let(nums = is_undef(seed)? rands(0,1,N*2) : rands(0,1,N*2,seed))
     [for (i = count(N,0,2)) mean + stddev*sqrt(-2*ln(nums[i]))*cos(360*nums[i+1])];
+
+
+// Function: gaussian_random_points()
+// Usage:
+//    points = gaussian_random_points(n, dim, mean, stddev, [seed]);
+// See Also: random_polygon(), random_points(), spherical_random_points()
+// Topics: Random, Points
+// Description:
+//    Generate `n` random points of dimension `dim` with coordinates absolute value less than `scale`.
+//    The gaussian distribution of all the coordinates of the points will have a mean `mean` and 
+//    standard deviation `stddev` 
+// Arguments:
+//    n = number of points to generate. 
+//    dim = dimension of the points. Default: 2
+//    mean = the gaussian mean of the point coordinates. Default: 0
+//    stddev = the gaussian standard deviation of the point coordinates. Default: 0
+//    seed = an optional seed for the random generation.
+function gaussian_random_points(n, dim=2, mean=0, stddev=1, seed) =
+    assert( is_int(n) && n>=0, "The number of points should be a non-negative integer.")
+    assert( is_int(dim) && dim>=1, "The point dimensions should be an integer greater than 1.")
+    let( rnds = gaussian_rands(mean, stddev, n*dim, seed=seed) )
+    [for(i=[0:1:n-1]) [for(j=[0:dim-1]) rnds[i*dim+j] ] ];
+
+
+// Function: spherical_random_points()
+// Usage:
+//    points = spherical_random_points(n, radius, [seed]);
+// See Also: random_polygon(), random_points(), gaussian_random_points()
+// Topics: Random, Points
+// Description:
+//    Generate `n` 3D uniformly distributed random points lying on a sphere centered at the origin with radius equal to `radius`.
+// Arguments:
+//    n = number of points to generate. 
+//    radius = the sphere radius. Default: 1
+//    seed = an optional seed for the random generation.
+
+// See https://mathworld.wolfram.com/SpherePointPicking.html
+function spherical_random_points(n, radius=1, seed) =
+    assert( is_int(n) && n>=1, "The number of points should be an integer greater than zero.")
+    assert( is_num(radius) && radius>0, "The radius should be a non-negative number.")
+    let( theta = is_undef(seed) 
+                ? rands(0,360,n)
+                : rands(0,360,n, seed),
+         cosphi = rands(-1,1,n))
+    [for(i=[0:1:n-1]) let(
+                          sin_phi=sqrt(1-cosphi[i]*cosphi[i])
+                      )
+                      radius*[sin_phi*cos(theta[i]),sin_phi*sin(theta[i]), cosphi[i]]];
+
+
 
 
 // Function: log_rands()

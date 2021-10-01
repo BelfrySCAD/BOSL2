@@ -249,7 +249,7 @@ function rot_decode(M,long=false) =
 // Usage:
 //   B = rot_inverse(A)
 // Description:
-//   Inverts a 2d or 3d rotation matrix.  The matrix can be a rotation around any center,
+//   Inverts a 2d (3x3) or 3d (4x4) rotation matrix.  The matrix can be a rotation around any center,
 //   so it may include a translation.
 function rot_inverse(T) =
     assert(is_matrix(T,square=true),"Matrix must be square")

@@ -35,26 +35,6 @@
 function is_region(x) = is_list(x) && is_path(x.x);
 
 
-// Function: close_region()
-// Usage:
-//   close_region(region);
-// Description:
-//   Closes all paths within a given region.
-function close_region(region, eps=EPSILON) = [for (path=region) close_path(path, eps=eps)];
-
-
-// Function: cleanup_region()
-// Usage:
-//   cleanup_region(region);
-// Description:
-//   For all paths in the given region, if the last point coincides with the first point, removes the last point.
-// Arguments:
-//   region = The region to clean up.  Given as a list of polygon paths.
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function cleanup_region(region, eps=EPSILON) =
-    [for (path=region) cleanup_path(path, eps=eps)];
-
-
 
 // Function: check_and_fix_path()
 // Usage:
@@ -329,7 +309,24 @@ function _join_paths_at_vertices(path1,path2,seg1,seg2) =
     ) cleanup_path(deduplicate([each path1, each path2]));
 
 
-function _cleave_simple_region(region) =
+function new_join_paths_at_vertices(path1,path2,v1,v2) =
+    let(
+        repeat_start = !approx(path1[v1],path2[v2]),
+        path1 = clockwise_polygon(polygon_shift(path1,v1)),
+        path2 = ccw_polygon(polygon_shift(path2,v2))
+    )
+    [
+        each path1,
+        if (repeat_start) path1[0],
+        each path2,
+        if (repeat_start) path2[0],
+    ];                      
+
+        
+// Given a region that is connected and has its outer border in region[0],
+// produces a polygon with the same points that has overlapping connected paths
+// to join internal holes to the outer border.  
+function _cleave_connected_region(region) =
     len(region)==0? [] :
     len(region)<=1? clockwise_polygon(region[0]) :
     let(
@@ -338,7 +335,36 @@ function _cleave_simple_region(region) =
             _path_path_closest_vertices(region[0],region[i])
         ],
         idxi = min_index(subindex(dists,0)),
-        newoline = _join_paths_at_vertices(
+        outline = _join_paths_at_vertices(
+            region[0], region[idxi+1],
+            dists[idxi][1], dists[idxi][2]
+        )
+    )
+    len(region)==2? clockwise_polygon(outline) :   // We joined 2 regions, so we're done
+    let(
+        newregion = [
+            outline,
+            for (i=idx(region))
+                if (i>0 && i!=idxi+1)
+                    region[i]
+        ]
+    )
+    assert(len(newregion)<len(region))
+    _cleave_connected_region(newregion);
+
+
+
+
+function new_cleave_connected_region(region) =
+    len(region)==0? [] :
+    len(region)<=1? clockwise_polygon(region[0]) :
+    let(
+        dists = [
+            for (i=[1:1:len(region)-1])
+            _path_path_closest_vertices(region[0],region[i])
+        ],
+        idxi = min_index(subindex(dists,0)),
+        newoline = new_join_paths_at_vertices(
             region[0], region[idxi+1],
             dists[idxi][1], dists[idxi][2]
         )
@@ -352,8 +378,8 @@ function _cleave_simple_region(region) =
         ]
     )
     assert(len(orgn)<len(region))
-    _cleave_simple_region(orgn);
-
+    new_cleave_connected_region(orgn);
+        
 
 // Function: region_faces()
 // Usage:
@@ -372,7 +398,7 @@ function region_faces(region, transform, reverse=false, vnf=EMPTY_VNF) =
         vnfs = [
             if (vnf != EMPTY_VNF) vnf,
             for (rgn = regions) let(
-                cleaved = path3d(_cleave_simple_region(rgn)),
+                cleaved = path3d(_cleave_connected_region(rgn)),
                 face = is_undef(transform)? cleaved : apply(transform,cleaved),
                 faceidxs = reverse? [for (i=[len(face)-1:-1:0]) i] : [for (i=[0:1:len(face)-1]) i]
             ) [face, [faceidxs]]
