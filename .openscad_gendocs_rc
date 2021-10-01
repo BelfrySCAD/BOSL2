@@ -1,5 +1,6 @@
 DocsDirectory: BOSL2.wiki/
 IgnoreFiles:
+  affine.scad
   foo.scad
   std.scad
   bosl1compat.scad

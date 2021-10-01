@@ -1759,5 +1759,181 @@ function _attachment_is_shown(tags) =
     ) shown && !hidden;
 
 
+// Section: Visualizing Anchors
+
+/// Internal Function: _standard_anchors()
+/// Usage:
+///   anchs = _standard_anchors([two_d]);
+/// Description:
+///   Return the vectors for all standard anchors.
+/// Arguments:
+///   two_d = If true, returns only the anchors where the Z component is 0.  Default: false
+function _standard_anchors(two_d=false) = [
+    for (
+        zv = [
+            if (!two_d) TOP,
+            CENTER,
+            if (!two_d) BOTTOM
+        ],
+        yv = [FRONT, CENTER, BACK],
+        xv = [LEFT, CENTER, RIGHT]
+    ) xv+yv+zv
+];
+
+
+
+// Module: show_anchors()
+// Usage:
+//   ... show_anchors([s], [std=], [custom=]);
+// Description:
+//   Show all standard anchors for the parent object.
+// Arguments:
+//   s = Length of anchor arrows.
+//   ---
+//   std = If true (default), show standard anchors.
+//   custom = If true (default), show custom anchors.
+// Example(FlatSpin,VPD=333):
+//   cube(50, center=true) show_anchors();
+module show_anchors(s=10, std=true, custom=true) {
+    check = assert($parent_geom != undef) 1;
+    two_d = _attach_geom_2d($parent_geom);
+    if (std) {
+        for (anchor=_standard_anchors(two_d=two_d)) {
+            if(two_d) {
+                attach(anchor) anchor_arrow2d(s);
+            } else {
+                attach(anchor) anchor_arrow(s);
+            }
+        }
+    }
+    if (custom) {
+        for (anchor=last($parent_geom)) {
+            attach(anchor[0]) {
+                if(two_d) {
+                    anchor_arrow2d(s, color="cyan");
+                } else {
+                    anchor_arrow(s, color="cyan");
+                }
+                color("black")
+                noop($tags="anchor-arrow") {
+                    xrot(two_d? 0 : 90) {
+                        back(s/3) {
+                            yrot_copies(n=2)
+                            up(s/30) {
+                                linear_extrude(height=0.01, convexity=12, center=true) {
+                                    text(text=anchor[0], size=s/4, halign="center", valign="center");
+                                }
+                            }
+                        }
+                    }
+                }
+                color([1, 1, 1, 0.4])
+                noop($tags="anchor-arrow") {
+                    xrot(two_d? 0 : 90) {
+                        back(s/3) {
+                            zcopies(s/21) cube([s/4.5*len(anchor[0]), s/3, 0.01], center=true);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    children();
+}
+
+
+
+// Module: anchor_arrow()
+// Usage:
+//   anchor_arrow([s], [color], [flag]);
+// Description:
+//   Show an anchor orientation arrow.  By default, tagged with the name "anchor-arrow".
+// Arguments:
+//   s = Length of the arrows.  Default: `10`
+//   color = Color of the arrow.  Default: `[0.333, 0.333, 1]`
+//   flag = If true, draw the orientation flag on the arrowhead.  Default: true
+// Example:
+//   anchor_arrow(s=20);
+module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow") {
+    $fn=12;
+    recolor("gray") spheroid(d=s/6) {
+        attach(CENTER,BOT) recolor(color) cyl(h=s*2/3, d=s/15) {
+            attach(TOP,BOT) cyl(h=s/3, d1=s/5, d2=0) {
+                if(flag) {
+                    position(BOT)
+                        recolor([1,0.5,0.5])
+                            cuboid([s/100, s/6, s/4], anchor=FRONT+BOT);
+                }
+                children();
+            }
+        }
+    }
+}
+
+
+
+// Module: anchor_arrow2d()
+// Usage:
+//   anchor_arrow2d([s], [color], [flag]);
+// Description:
+//   Show an anchor orientation arrow.
+// Arguments:
+//   s = Length of the arrows.
+//   color = Color of the arrow.
+// Example:
+//   anchor_arrow2d(s=20);
+module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tags="anchor-arrow") {
+    noop() color(color) stroke([[0,0],[0,s]], width=s/10, endcap1="butt", endcap2="arrow2");
+}
+
+
+
+
+
+
+// Module: expose_anchors()
+// Usage:
+//   expose_anchors(opacity) {child1() show_anchors(); child2() show_anchors(); ...}
+// Description:
+//   Used in combination with show_anchors() to display an object in transparent gray with its anchors in solid color.
+//   Children will appear transparent and any anchor arrows drawn with will appear in solid color.  
+// Arguments:
+//   opacity = The opacity of the children.  0.0 is invisible, 1.0 is opaque.  Default: 0.2
+// Example(FlatSpin,VPD=333):
+//   expose_anchors() cube(50, center=true) show_anchors();
+module expose_anchors(opacity=0.2) {
+    show("anchor-arrow")
+        children();
+    hide("anchor-arrow")
+        color(is_undef($color)? [0,0,0] :
+              is_string($color)? $color :
+                                 point3d($color), opacity)
+            children();
+}
+
+
+
+
+// Module: frame_ref()
+// Usage:
+//   frame_ref(s, opacity);
+// Description:
+//   Displays X,Y,Z axis arrows in red, green, and blue respectively.
+// Arguments:
+//   s = Length of the arrows.
+//   opacity = The opacity of the arrows.  0.0 is invisible, 1.0 is opaque.  Default: 1.0
+// Examples:
+//   frame_ref(25);
+//   frame_ref(30, opacity=0.5);
+module frame_ref(s=15, opacity=1) {
+    cube(0.01, center=true) {
+        attach([1,0,0]) anchor_arrow(s=s, flag=false, color=[1.0, 0.3, 0.3, opacity]);
+        attach([0,1,0]) anchor_arrow(s=s, flag=false, color=[0.3, 1.0, 0.3, opacity]);
+        attach([0,0,1]) anchor_arrow(s=s, flag=false, color=[0.3, 0.3, 1.0, opacity]);
+        children();
+    }
+}
+
+
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

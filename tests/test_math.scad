@@ -372,18 +372,6 @@ module test_gaussian_rands() {
 test_gaussian_rands();
 
 
-module test_log_rands() {
-    nums1 = log_rands(0,100,10,1000,seed=2189);
-    nums2 = log_rands(0,100,10,1000,seed=2310);
-    nums3 = log_rands(0,100,10,1000,seed=2189);
-    assert_equal(len(nums1), 1000);
-    assert_equal(len(nums2), 1000);
-    assert_equal(len(nums3), 1000);
-    assert_equal(nums1, nums3);
-    assert(nums1!=nums2);
-}
-test_log_rands();
-
 
 module test_segs() {
     assert_equal(segs(50,$fn=8), 8);

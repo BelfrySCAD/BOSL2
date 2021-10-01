@@ -588,29 +588,31 @@ function spherical_random_points(n, radius=1, seed) =
 
 
 
-
-// Function: log_rands()
+// Function: random_polygon()
 // Usage:
-//   num = log_rands(minval, maxval, factor, [N], [seed]);
+//    points = random_polygon(n, size, [seed]);
+// See Also: random_points(), gaussian_random_points(), spherical_random_points()
+// Topics: Random, Polygon
 // Description:
-//   Returns a single random number, with a logarithmic distribution.
+//    Generate the `n` vertices of a random counter-clockwise simple 2d polygon 
+//    inside a circle centered at the origin with radius `size`.
 // Arguments:
-//   minval = Minimum value to return.
-//   maxval = Maximum value to return.  `minval` <= X < `maxval`.
-//   factor = Log factor to use.  Values of X are returned `factor` times more often than X+1.
-//   N = Number of random numbers to return.  Default: 1
-//   seed = If given, sets the random number seed.
-function log_rands(minval, maxval, factor, N=1, seed=undef) =
-    assert( is_finite(minval+maxval+N) 
-            && (is_undef(seed) || is_finite(seed) )
-            && factor>0, 
-            "Input must be finite numbers. `factor` should be greater than zero.")
-    assert(maxval >= minval, "maxval cannot be smaller than minval")
-    let(
-        minv = 1-1/pow(factor,minval),
-        maxv = 1-1/pow(factor,maxval),
-        nums = is_undef(seed)? rands(minv, maxv, N) : rands(minv, maxv, N, seed)
-    ) [for (num=nums) -ln(1-num)/ln(factor)];
+//    n = number of vertices of the polygon. Default: 3
+//    size = the radius of a circle centered at the origin containing the polygon. Default: 1
+//    seed = an optional seed for the random generation.
+function random_polygon(n=3,size=1, seed) =
+    assert( is_int(n) && n>2, "Improper number of polygon vertices.")
+    assert( is_num(size) && size>0, "Improper size.")
+    let( 
+        seed = is_undef(seed) ? rands(0,1,1)[0] : seed,
+        cumm = cumsum(rands(0.1,10,n+1,seed)),
+        angs = 360*cumm/cumm[n-1],
+        rads = rands(.01,size,n,seed+cumm[0])
+      )
+    [for(i=count(n)) rads[i]*[cos(angs[i]), sin(angs[i])] ];
+
+
+
 
 
 
@@ -895,6 +897,38 @@ function convolve(p,q) =
 
 
 // Section: Matrix math
+
+// Function: ident()
+// Usage:
+//   mat = ident(n);
+// Topics: Affine, Matrices
+// Description:
+//   Create an `n` by `n` square identity matrix.
+// Arguments:
+//   n = The size of the identity matrix square, `n` by `n`.
+// Example:
+//   mat = ident(3);
+//   // Returns:
+//   //   [
+//   //     [1, 0, 0],
+//   //     [0, 1, 0],
+//   //     [0, 0, 1]
+//   //   ]
+// Example:
+//   mat = ident(4);
+//   // Returns:
+//   //   [
+//   //     [1, 0, 0, 0],
+//   //     [0, 1, 0, 0],
+//   //     [0, 0, 1, 0],
+//   //     [0, 0, 0, 1]
+//   //   ]
+function ident(n) = [
+    for (i = [0:1:n-1]) [
+        for (j = [0:1:n-1]) (i==j)? 1 : 0
+    ]
+];
+
 
 // Function: linear_solve()
 // Usage:
