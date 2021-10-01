@@ -973,6 +973,26 @@ function matrix_inverse(A) =
     linear_solve(A,ident(len(A)));
 
 
+// Function: rot_inverse()
+// Usage:
+//   B = rot_inverse(A)
+// Description:
+//   Inverts a 2d (3x3) or 3d (4x4) rotation matrix.  The matrix can be a rotation around any center,
+//   so it may include a translation.  
+function rot_inverse(T) =
+    assert(is_matrix(T,square=true),"Matrix must be square")
+    let( n = len(T))
+    assert(n==3 || n==4, "Matrix must be 3x3 or 4x4")
+    let(
+        rotpart =  [for(i=[0:n-2]) [for(j=[0:n-2]) T[j][i]]],
+        transpart = [for(row=[0:n-2]) T[row][n-1]]
+    )
+    assert(approx(determinant(T),1),"Matrix is not a rotation")
+    concat(hstack(rotpart, -rotpart*transpart),[[for(i=[2:n]) 0, 1]]);
+
+
+
+
 // Function: null_space()
 // Usage:
 //   x = null_space(A)
