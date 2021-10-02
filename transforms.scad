@@ -33,7 +33,7 @@
 //   mat = move([x=], [y=], [z=]);
 //
 // Topics: Affine, Matrices, Transforms, Translation
-// See Also: left(), right(), fwd(), back(), down(), up(), spherical_to_xyz(), altaz_to_xyz(), cylindrical_to_xyz(), polar_to_xy(), affine2d_translate(), affine3d_translate()
+// See Also: left(), right(), fwd(), back(), down(), up(), spherical_to_xyz(), altaz_to_xyz(), cylindrical_to_xyz(), polar_to_xy() 
 //
 // Description:
 //   Translates position by the given amount.
@@ -116,7 +116,7 @@ function translate(v=[0,0,0], p=undef) = move(v=v, p=p);
 //   mat = left(x);
 //
 // Topics: Affine, Matrices, Transforms, Translation
-// See Also: move(), right(), fwd(), back(), down(), up(), affine2d_translate(), affine3d_translate()
+// See Also: move(), right(), fwd(), back(), down(), up()
 //
 // Description:
 //   If called as a module, moves/translates all children left (in the X- direction) by the given amount.
@@ -154,7 +154,7 @@ function left(x=0, p) = move([-x,0,0],p=p);
 //   mat = right(x);
 //
 // Topics: Affine, Matrices, Transforms, Translation
-// See Also: move(), left(), fwd(), back(), down(), up(), affine2d_translate(), affine3d_translate()
+// See Also: move(), left(), fwd(), back(), down(), up()
 //
 // Description:
 //   If called as a module, moves/translates all children right (in the X+ direction) by the given amount.
@@ -192,7 +192,7 @@ function right(x=0, p) = move([x,0,0],p=p);
 //   mat = fwd(y);
 //
 // Topics: Affine, Matrices, Transforms, Translation
-// See Also: move(), left(), right(), back(), down(), up(), affine2d_translate(), affine3d_translate()
+// See Also: move(), left(), right(), back(), down(), up()
 //
 // Description:
 //   If called as a module, moves/translates all children forward (in the Y- direction) by the given amount.
@@ -230,7 +230,7 @@ function fwd(y=0, p) = move([0,-y,0],p=p);
 //   mat = back(y);
 //
 // Topics: Affine, Matrices, Transforms, Translation
-// See Also: move(), left(), right(), fwd(), down(), up(), affine2d_translate(), affine3d_translate()
+// See Also: move(), left(), right(), fwd(), down(), up()
 //
 // Description:
 //   If called as a module, moves/translates all children back (in the Y+ direction) by the given amount.
@@ -268,7 +268,7 @@ function back(y=0,p) = move([0,y,0],p=p);
 //   mat = down(z);
 //
 // Topics: Affine, Matrices, Transforms, Translation
-// See Also: move(), left(), right(), fwd(), back(), up(), affine2d_translate(), affine3d_translate()
+// See Also: move(), left(), right(), fwd(), back(), up()
 //
 // Description:
 //   If called as a module, moves/translates all children down (in the Z- direction) by the given amount.
@@ -305,7 +305,7 @@ function down(z=0, p) = move([0,0,-z],p=p);
 //   mat = up(z);
 //
 // Topics: Affine, Matrices, Transforms, Translation
-// See Also: move(), left(), right(), fwd(), back(), down(), affine2d_translate(), affine3d_translate()
+// See Also: move(), left(), right(), fwd(), back(), down()
 //
 // Description:
 //   If called as a module, moves/translates all children up (in the Z+ direction) by the given amount.
@@ -357,7 +357,7 @@ function up(z=0, p) = move([0,0,z],p=p);
 //   M = rot(from=, to=, [a=], [reverse=], [planar=]);
 //
 // Topics: Affine, Matrices, Transforms, Rotation
-// See Also: xrot(), yrot(), zrot(), affine2d_zrot(), affine3d_xrot(), affine3d_yrot(), affine3d_zrot(), affine3d_rot_by_axis(), affine3d_rot_from_to()
+// See Also: xrot(), yrot(), zrot()
 //
 // Description:
 //   This is a shorthand version of the built-in `rotate()`, and operates similarly, with a few additional capabilities.
@@ -475,7 +475,7 @@ function rot(a=0, v, cp, from, to, reverse=false, planar=false, p, _m) =
 //   mat = xrot(a, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), yrot(), zrot(), affine2d_zrot(), affine3d_xrot(), affine3d_yrot(), affine3d_zrot() 
+// See Also: rot(), yrot(), zrot()
 //
 // Description:
 //   Rotates around the X axis by the given number of degrees.  If `cp` is given, rotations are performed around that centerpoint.
@@ -521,7 +521,7 @@ function xrot(a=0, p, cp) = rot([a,0,0], cp=cp, p=p);
 //   mat = yrot(a, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), xrot(), zrot(), affine2d_zrot(), affine3d_xrot(), affine3d_yrot(), affine3d_zrot() 
+// See Also: rot(), xrot(), zrot()
 //
 // Description:
 //   Rotates around the Y axis by the given number of degrees.  If `cp` is given, rotations are performed around that centerpoint.
@@ -567,7 +567,7 @@ function yrot(a=0, p, cp) = rot([0,a,0], cp=cp, p=p);
 //   mat = zrot(a, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), xrot(), yrot(), affine2d_zrot(), affine3d_xrot(), affine3d_yrot(), affine3d_zrot() 
+// See Also: rot(), xrot(), yrot()
 //
 // Description:
 //   Rotates around the Z axis by the given number of degrees.  If `cp` is given, rotations are performed around that centerpoint.
@@ -618,7 +618,7 @@ function zrot(a=0, p, cp) = rot(a, cp=cp, p=p);
 // Usage: Get Scaling Matrix
 //   mat = scale(v, [cp=]);
 // Topics: Affine, Matrices, Transforms, Scaling
-// See Also: xscale(), yscale(), zscale(), affine2d_scale(), affine3d_scale() 
+// See Also: xscale(), yscale(), zscale()
 // Description:
 //   Scales by the [X,Y,Z] scaling factors given in `v`.  If `v` is given as a scalar number, all axes are scaled uniformly by that amount.
 //   * Called as the built-in module, scales all children.
@@ -685,7 +685,7 @@ function scale(v=1, p, cp=[0,0,0]) =
 //   mat = xscale(x, [cp=], [planar=]);
 //
 // Topics: Affine, Matrices, Transforms, Scaling
-// See Also: scale(), yscale(), zscale(), affine2d_scale(), affine3d_scale() 
+// See Also: scale(), yscale(), zscale()
 //
 // Description:
 //   Scales along the X axis by the scaling factor `x`.
@@ -743,7 +743,7 @@ function xscale(x=1, p, cp=0, planar=false) =
 //   mat = yscale(y, [cp=], [planar=]);
 //
 // Topics: Affine, Matrices, Transforms, Scaling
-// See Also: scale(), xscale(), zscale(), affine2d_scale(), affine3d_scale() 
+// See Also: scale(), xscale(), zscale()
 //
 // Description:
 //   Scales along the Y axis by the scaling factor `y`.
@@ -801,7 +801,7 @@ function yscale(y=1, p, cp=0, planar=false) =
 //   mat = zscale(z, [cp=]);
 //
 // Topics: Affine, Matrices, Transforms, Scaling
-// See Also: scale(), xscale(), yscale(), affine2d_scale(), affine3d_scale() 
+// See Also: scale(), xscale(), yscale()
 //
 // Description:
 //   Scales along the Z axis by the scaling factor `z`.
@@ -856,7 +856,7 @@ function zscale(z=1, p, cp=0) =
 // Usage: Get Reflection/Mirror Matrix
 //   mat = mirror(v);
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
-// See Also: xflip(), yflip(), zflip(), affine2d_mirror(), affine3d_mirror() 
+// See Also: xflip(), yflip(), zflip()
 // Description:
 //   Mirrors/reflects across the plane or line whose normal vector is given in `v`.
 //   * Called as the built-in module, mirrors all children across the line/plane.
@@ -930,7 +930,7 @@ function mirror(v, p) =
 //   pt = xflip([x], [planar=]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
-// See Also: mirror(), yflip(), zflip(), affine2d_mirror(), affine3d_mirror() 
+// See Also: mirror(), yflip(), zflip()
 //
 // Description:
 //   Mirrors/reflects across the origin [0,0,0], along the X axis.  If `x` is given, reflects across [x,0,0] instead.
@@ -990,7 +990,7 @@ function xflip(p, x=0, planar=false) =
 //   pt = yflip([y], [planar=]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
-// See Also: mirror(), xflip(), zflip(), affine2d_mirror(), affine3d_mirror() 
+// See Also: mirror(), xflip(), zflip()
 //
 // Description:
 //   Mirrors/reflects across the origin [0,0,0], along the Y axis.  If `y` is given, reflects across [0,y,0] instead.
@@ -1050,7 +1050,7 @@ function yflip(p, y=0, planar=false) =
 //   pt = zflip([z]);
 //
 // Topics: Affine, Matrices, Transforms, Reflection, Mirroring
-// See Also: mirror(), xflip(), yflip(), affine2d_mirror(), affine3d_mirror() 
+// See Also: mirror(), xflip(), yflip()
 //
 // Description:
 //   Mirrors/reflects across the origin [0,0,0], along the Z axis.  If `z` is given, reflects across [0,0,z] instead.
@@ -1103,7 +1103,7 @@ function zflip(p, z=0) =
 //   map = frame_map(x=VECTOR1, z=VECTOR2, [reverse=]);
 //   map = frame_map(y=VECTOR1, z=VECTOR2, [reverse=]);
 // Topics: Affine, Matrices, Transforms, Rotation
-// See Also: rot(), xrot(), yrot(), zrot(), affine2d_zrot()
+// See Also: rot(), xrot(), yrot(), zrot()
 // Description:
 //   Maps one coordinate frame to another.  You must specify two or
 //   three of `x`, `y`, and `z`.  The specified axes are mapped to the vectors you supplied, so if you
@@ -1179,7 +1179,6 @@ module frame_map(x,y,z,p,reverse=false)
 // Usage: Get Affine Matrix
 //   mat = skew([sxy=], [sxz=], [syx=], [syz=], [szx=], [szy=], [planar=]);
 // Topics: Affine, Matrices, Transforms, Skewing
-// See Also: affine2d_skew(), affine3d_skew(), affine3d_skew_xy(), affine3d_skew_xz(), affine3d_skew_yz() 
 //
 // Description:
 //   Skews geometry by the given skew factors.
