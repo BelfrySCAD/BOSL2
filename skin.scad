@@ -395,6 +395,9 @@ module skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=
 function skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, style="min_edge") =
   assert(is_def(slices),"The slices argument must be specified.")
   assert(is_list(profiles) && len(profiles)>1, "Must provide at least two profiles")
+  let(
+       profiles = [for(p=profiles) if (is_region(p) && len(p)==1) p[0] else p]
+  )
   let( bad = [for(i=idx(profiles)) if (!(is_path(profiles[i]) && len(profiles[i])>2)) i])
   assert(len(bad)==0, str("Profiles ",bad," are not a paths or have length less than 3"))
   let(
