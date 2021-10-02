@@ -360,14 +360,25 @@ test_rand_int();
 
 
 module test_gaussian_rands() {
-    nums1 = gaussian_rands(0,10,1000,seed=2132);
-    nums2 = gaussian_rands(0,10,1000,seed=2130);
-    nums3 = gaussian_rands(0,10,1000,seed=2132);
+    nums1 = gaussian_rands(1000,0,10,seed=2132);
+    nums2 = gaussian_rands(1000,0,10,seed=2130);
+    nums3 = gaussian_rands(1000,0,10,seed=2132);
     assert_equal(len(nums1), 1000);
     assert_equal(len(nums2), 1000);
     assert_equal(len(nums3), 1000);
     assert_equal(nums1, nums3);
     assert(nums1!=nums2);
+
+    R = [[4,2],[2,17]];
+    data = gaussian_rands(100000,[0,0],R,seed=49);
+    assert(approx(mean(data), [0,0], eps=1e-2));
+    assert(approx(transpose(data)*data/len(data), R, eps=2e-2));
+    
+    R2 = [[4,2,-1],[2,17,4],[-1,4,11]];
+    data3 = gaussian_rands(100000,[1,2,3],R2,seed=97);
+    assert(approx(mean(data3),[1,2,3], eps=1e-2));
+    cdata = move(-mean(data3),data3);    
+    assert(approx(transpose(cdata)*cdata/len(cdata),R2,eps=.1));
 }
 test_gaussian_rands();
 

@@ -688,32 +688,49 @@ module arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false)
 
 
 // Function: helix()
-// Description:
-//   Returns a 3D helical path.
 // Usage:
-//   helix(turns, h, n, r|d, [cp], [scale]);
+//   helix([l|h], [turns], [angle], r|r1|r2, d|d1|d2)
+// Description:
+//   Returns a 3D helical path on a cone, including the degerate case of flat spirals.
+//   You can specify start and end radii.  You can give the length, the helix angle, or the number of turns: two
+//   of these three parameters define the helix.  For a flat helix you must give length 0 and a turn count.
+//   Helix will be right handed if turns is positive and left handed if it is negative.
+//   The angle is calculateld based on the radius at the base of the helix.
 // Arguments:
-//   h = Height of spiral.
-//   turns = Number of turns in spiral.
-//   n = Number of spiral sides.
-//   r = Radius of spiral.
-//   d = Radius of spiral.
-//   cp = Centerpoint of spiral. Default: `[0,0]`
-//   scale = [X,Y] scaling factors for each axis.  Default: `[1,1]`
+//   h|l = Height/length of helix, zero for a flat spiral
+//   ---
+//   turns = Number of turns in helix, positive for right handed
+//   angle = helix angle
+//   r = Radius of helix
+//   r1 = Radius of bottom of helix
+//   r2 = Radius of top of helix
+//   d = Diameter of helix
+//   d1 = Diameter of bottom of helix
+//   d2 = Diameter of top of helix
 // Example(3D):
-//   trace_path(helix(turns=2.5, h=100, n=24, r=50), N=1, showpts=true);
-function helix(turns=3, h=100, n=12, r, d, cp=[0,0], scale=[1,1]) = let(
-        rr=get_radius(r=r, d=d, dflt=100),
-        cnt=floor(turns*n),
-        dz=h/cnt
-    ) [
-        for (i=[0:1:cnt]) [
-            rr * cos(i*360/n) * scale.x + cp.x,
-            rr * sin(i*360/n) * scale.y + cp.y,
-            i*dz
-        ]
-    ];
+//   trace_path(helix(turns=2.5, h=100, r=50), N=1, showpts=true);
+// Example(3D):  Helix that turns the other way
+//   trace_path(helix(turns=-2.5, h=100, r=50), N=1, showpts=true);
+// Example(3D): Flat helix (note points are still 3d)
+//   stroke(helix(h=0,r1=50,r2=25,l=0, turns=4));
+function helix(l,h,turns,angle, r, r1, r2, d, d1, d2)=
+    let(
+        r1=get_radius(r=r,r1=r1,d=d,d1=d1,dflt=1),
+        r2=get_radius(r=r,r1=r2,d=d,d1=d2,dflt=1),
+        length = first_defined([l,h])
+    )
+    assert(num_defined([length,turns,angle])==2,"Must define exactly two of l/h, turns, and angle")
+    assert(is_undef(angle) || length!=0, "Cannot give length 0 with an angle")
+    let(
+        // length advances dz for each turn
+        dz = is_def(angle) && length!=0 ? 2*PI*r1*tan(angle) : length/abs(turns),
 
+        maxtheta = is_def(turns) ? 360*turns : 360*length/dz,
+        N = segs(max(r1,r2))
+    )
+    [for(theta=lerpn(0,maxtheta, max(3,ceil(abs(maxtheta)*N/360))))
+       let(R=lerp(r1,r2,theta/maxtheta))
+       [R*cos(theta), R*sin(theta), abs(theta)/360 * dz]];
 
 
 function _normal_segment(p1,p2) =

@@ -498,83 +498,75 @@ function rand_int(minval, maxval, N, seed=undef) =
 
 // Function: random_points()
 // Usage:
-//    points = random_points(n, dim, scale, [seed]);
+//    points = random_points([N], [dim], [scale], [seed]);
 // See Also: random_polygon(), gaussian_random_points(), spherical_random_points()
 // Topics: Random, Points
 // Description:
-//    Generate `n` uniform random points of dimension `dim` with data ranging from -scale to +scale.  
+//    Generate `N` uniform random points of dimension `dim` with data ranging from -scale to +scale.  
 //    The `scale` may be a number, in which case the random data lies in a cube,
 //    or a vector with dimension `dim`, in which case each dimension has its own scale.  
 // Arguments:
-//    n = number of points to generate. 
+//    N = number of points to generate. Default: 1
 //    dim = dimension of the points. Default: 2
 //    scale = the scale of the point coordinates. Default: 1
 //    seed = an optional seed for the random generation.
-function random_points(n, dim=2, scale=1, seed) =
-    assert( is_int(n) && n>=0, "The number of points should be a non-negative integer.")
+function random_points(N, dim=2, scale=1, seed) =
+    assert( is_int(N) && N>=0, "The number of points should be a non-negative integer.")
     assert( is_int(dim) && dim>=1, "The point dimensions should be an integer greater than 1.")
     assert( is_finite(scale) || is_vector(scale,dim), "The scale should be a number or a vector with length equal to d.")
     let( 
         rnds =   is_undef(seed) 
-                ? rands(-1,1,n*dim)
-                : rands(-1,1,n*dim, seed) )
+                ? rands(-1,1,N*dim)
+                : rands(-1,1,N*dim, seed) )
     is_num(scale) 
-    ? scale*[for(i=[0:1:n-1]) [for(j=[0:dim-1]) rnds[i*dim+j] ] ]
-    : [for(i=[0:1:n-1]) [for(j=[0:dim-1]) scale[j]*rnds[i*dim+j] ] ];
+    ? scale*[for(i=[0:1:N-1]) [for(j=[0:dim-1]) rnds[i*dim+j] ] ]
+    : [for(i=[0:1:N-1]) [for(j=[0:dim-1]) scale[j]*rnds[i*dim+j] ] ];
 
 
 // Function: gaussian_rands()
 // Usage:
-//   arr = gaussian_rands(mean, stddev, [N], [seed]);
+//   arr = gaussian_rands([N],[mean], [cov], [seed]);
 // Description:
-//   Returns a random number with a gaussian/normal distribution.
+//   Returns a random number or vector with a Gaussian/normal distribution.
 // Arguments:
-//   mean = The average random number returned.
-//   stddev = The standard deviation of the numbers to be returned.
-//   N = Number of random numbers to return.  Default: 1
+//   N = the number of points to return.  Default: 1
+//   mean = The average of the random value (a number or vector).  Default: 0
+//   cov = covariance matrix of the random numbers, or variance in the 1D case. Default: 1
 //   seed = If given, sets the random number seed.
-function gaussian_rands(mean, stddev, N=1, seed=undef) =
-    assert( is_finite(mean+stddev+N) && (is_undef(seed) || is_finite(seed) ), "Input must be finite numbers.")
-    let(nums = is_undef(seed)? rands(0,1,N*2) : rands(0,1,N*2,seed))
-    [for (i = count(N,0,2)) mean + stddev*sqrt(-2*ln(nums[i]))*cos(360*nums[i+1])];
-
-
-// Function: gaussian_random_points()
-// Usage:
-//    points = gaussian_random_points(n, dim, mean, stddev, [seed]);
-// See Also: random_polygon(), random_points(), spherical_random_points()
-// Topics: Random, Points
-// Description:
-//    Generate `n` random points of dimension `dim` with coordinates absolute value less than `scale`.
-//    The gaussian distribution of all the coordinates of the points will have a mean `mean` and 
-//    standard deviation `stddev` 
-// Arguments:
-//    n = number of points to generate. 
-//    dim = dimension of the points. Default: 2
-//    mean = the gaussian mean of the point coordinates. Default: 0
-//    stddev = the gaussian standard deviation of the point coordinates. Default: 0
-//    seed = an optional seed for the random generation.
-function gaussian_random_points(n, dim=2, mean=0, stddev=1, seed) =
-    assert( is_int(n) && n>=0, "The number of points should be a non-negative integer.")
-    assert( is_int(dim) && dim>=1, "The point dimensions should be an integer greater than 1.")
-    let( rnds = gaussian_rands(mean, stddev, n*dim, seed=seed) )
-    [for(i=[0:1:n-1]) [for(j=[0:dim-1]) rnds[i*dim+j] ] ];
+function gaussian_rands(N=1, mean=0, cov=1, seed=undef) =
+    assert(is_num(mean) || is_vector(mean))
+    let(
+        dim = is_num(mean) ? 1 : len(mean)
+    )
+    assert((dim==1 && is_num(cov)) || is_matrix(cov,dim,dim),"mean and covariance matrix not compatible")
+    assert(is_undef(seed) || is_finite(seed))
+    let(
+         nums = is_undef(seed)? rands(0,1,dim*N*2) : rands(0,1,dim*N*2,seed),
+         rdata = [for (i = count(dim*N,0,2)) sqrt(-2*ln(nums[i]))*cos(360*nums[i+1])]
+    )
+    dim==1 ? add_scalar(sqrt(cov)*rdata,mean) :
+    assert(is_matrix_symmetric(cov),"Supplied covariance matrix is not symmetric")
+    let(
+        L = cholesky(cov)
+    )
+    assert(is_def(L), "Supplied covariance matrix is not positive definite")
+    move(mean,array_group(rdata,dim)*transpose(L));
 
 
 // Function: spherical_random_points()
 // Usage:
-//    points = spherical_random_points(n, radius, [seed]);
+//    points = spherical_random_points([N], [radius], [seed]);
 // See Also: random_polygon(), random_points(), gaussian_random_points()
 // Topics: Random, Points
 // Description:
 //    Generate `n` 3D uniformly distributed random points lying on a sphere centered at the origin with radius equal to `radius`.
 // Arguments:
-//    n = number of points to generate. 
+//    n = number of points to generate. Default: 1
 //    radius = the sphere radius. Default: 1
 //    seed = an optional seed for the random generation.
 
 // See https://mathworld.wolfram.com/SpherePointPicking.html
-function spherical_random_points(n, radius=1, seed) =
+function spherical_random_points(N=1, radius=1, seed) =
     assert( is_int(n) && n>=1, "The number of points should be an integer greater than zero.")
     assert( is_num(radius) && radius>0, "The radius should be a non-negative number.")
     let( theta = is_undef(seed) 
@@ -1088,6 +1080,40 @@ function _back_substitute(R, b, x=[]) =
             : (b[ind]-list_tail(R[ind],ind+1) * x)/R[ind][ind]
       )
       _back_substitute(R, b, concat([newvalue],x));
+
+
+
+// Function: cholesky()
+// Usage:
+//   L = cholesky(A);
+// Description:
+//   Compute the cholesky factor, L, of the symmetric positive definite matrix A.
+//   The matrix L is lower triangular and L * transpose(L) = A.  If the A is
+//   not symmetric then an error is displayed.  If the matrix is symmetric but
+//   not positive definite then undef is returned.  
+function cholesky(A) =
+  assert(is_matrix(A,square=true),"A must be a square matrix")
+  assert(is_matrix_symmetric(A),"Cholesky factorization requires a symmetric matrix")
+  _cholesky(A,ident(len(A)), len(A));
+
+function _cholesky(A,L,n) = 
+    A[0][0]<0 ? undef :     // Matrix not positive definite
+    len(A) == 1 ? submatrix_set(L,[[sqrt(A[0][0])]], n-1,n-1):
+    let(
+        i = n+1-len(A)
+    )
+    let(
+        sqrtAii = sqrt(A[0][0]),
+        Lnext = [for(j=[0:n-1])
+                  [for(k=[0:n-1])
+                      j<i-1 || k<i-1 ?  (j==k ? 1 : 0)
+                     : j==i-1 && k==i-1 ? sqrtAii
+                     : j==i-1 ? 0
+                     : k==i-1 ? A[j-(i-1)][0]/sqrtAii
+                     : j==k ? 1 : 0]],
+        Anext = submatrix(A,[1:n-1], [1:n-1]) - outer_product(list_tail(A[0]), list_tail(A[0]))/A[0][0]
+    )
+    _cholesky(Anext,L*Lnext,n);
 
 
 // Function: det2()
