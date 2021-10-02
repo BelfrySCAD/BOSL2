@@ -499,7 +499,7 @@ function rand_int(minval, maxval, N, seed=undef) =
 // Function: random_points()
 // Usage:
 //    points = random_points([N], [dim], [scale], [seed]);
-// See Also: random_polygon(), gaussian_random_points(), spherical_random_points()
+// See Also: random_polygon(), spherical_random_points()
 // Topics: Random, Points
 // Description:
 //    Generate `N` uniform random points of dimension `dim` with data ranging from -scale to +scale.  
@@ -556,7 +556,7 @@ function gaussian_rands(N=1, mean=0, cov=1, seed=undef) =
 // Function: spherical_random_points()
 // Usage:
 //    points = spherical_random_points([N], [radius], [seed]);
-// See Also: random_polygon(), random_points(), gaussian_random_points()
+// See Also: random_polygon(), random_points()
 // Topics: Random, Points
 // Description:
 //    Generate `n` 3D uniformly distributed random points lying on a sphere centered at the origin with radius equal to `radius`.
@@ -583,7 +583,7 @@ function spherical_random_points(N=1, radius=1, seed) =
 // Function: random_polygon()
 // Usage:
 //    points = random_polygon(n, size, [seed]);
-// See Also: random_points(), gaussian_random_points(), spherical_random_points()
+// See Also: random_points(), spherical_random_points()
 // Topics: Random, Polygon
 // Description:
 //    Generate the `n` vertices of a random counter-clockwise simple 2d polygon 
