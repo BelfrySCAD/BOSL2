@@ -5,7 +5,6 @@ IgnoreFiles:
   std.scad
   bosl1compat.scad
   builtins.scad
-  version.scad
   tmp_*.scad
 PrioritizeFiles:
   constants.scad
