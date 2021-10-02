@@ -2112,6 +2112,7 @@ function _cut_interp(pathcut, path, data) =
 //   font = font to use
 //   ---
 //   lettersize = scalar or array giving size of letters
+//   center = center text on the path instead of starting at the first point.  Default: false
 //   offset = distance to shift letters "up" (towards the reader).  Not allowed for 2D path.  Default: 0
 //   normal = direction or list of directions pointing towards the reader of the text.  Not allowed for 2D path.
 //   top = direction or list of directions pointing toward the top of the text
@@ -2173,7 +2174,7 @@ function _cut_interp(pathcut, path, data) =
 //   path =  zrot(-120,p=concat(arc(100, r=25, angle=[0,90]), back(50,p=arc(100, r=25, angle=[268, 180]))));
 //   color("red")stroke(path,width=.2);
 //   path_text(path, "A shorter example",  size=5, lettersize=5/1.2, font="Courier");
-module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, textmetrics=false)
+module path_text(path, text, font, size, thickness, lettersize, offset=0, reverse=false, normal, top, center=false, textmetrics=false)
 {
   dummy2=assert(is_path(path,[2,3]),"Must supply a 2d or 3d path")
          assert(num_defined([normal,top])<=1, "Cannot define both \"normal\" and \"top\"");
@@ -2200,9 +2201,12 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
         : textmetrics ? [for(letter=text) let(t=textmetrics(letter, font=font, size=size)) t.advance[0]]
         : assert(false, "textmetrics disabled: Must specify letter size");
 
-  dummy1 = assert(sum(lsize)<=path_length(path),"Path is too short for the text");
+  textlength = sum(lsize);
+  dummy1 = assert(textlength<=path_length(path),"Path is too short for the text");
+
+  start = center ? (path_length(path) - textlength)/2 : 0;
    
-  pts = _path_cut_points(path, add_scalar([0, each cumsum(lsize)],lsize[0]/2), direction=true);
+  pts = _path_cut_points(path, add_scalar([0, each cumsum(lsize)],start+lsize[0]/2), direction=true);
 
   usernorm = is_def(normal);
   usetop = is_def(top);
