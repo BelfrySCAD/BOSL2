@@ -545,10 +545,12 @@ function gaussian_rands(N=1, mean=0, cov=1, seed=undef) =
          rdata = [for (i = count(dim*N,0,2)) sqrt(-2*ln(nums[i]))*cos(360*nums[i+1])]
     )
     dim==1 ? add_scalar(sqrt(cov)*rdata,mean) :
+    assert(is_matrix_symmetric(cov),"Supplied covariance matrix is not symmetric")
     let(
         L = cholesky(cov)
     )
-    array_group(rdata,dim)*transpose(L);
+    assert(is_def(L), "Supplied covariance matrix is not positive definite")
+    move(mean,array_group(rdata,dim)*transpose(L));
 
 
 // Function: spherical_random_points()
@@ -1092,14 +1094,13 @@ function _back_substitute(R, b, x=[]) =
 function cholesky(A) =
   assert(is_matrix(A,square=true),"A must be a square matrix")
   assert(is_matrix_symmetric(A),"Cholesky factorization requires a symmetric matrix")
-  echo(A=A,len=len(A))
   _cholesky(A,ident(len(A)), len(A));
 
-function _cholesky(A,L,n) = let(ffee=echo(insideA=A,L,n))
+function _cholesky(A,L,n) = 
     A[0][0]<0 ? undef :     // Matrix not positive definite
     len(A) == 1 ? submatrix_set(L,[[sqrt(A[0][0])]], n-1,n-1):
     let(
-        i = n+1-len(A),ff=echo(i=i,lenA=len(A))
+        i = n+1-len(A)
     )
     let(
         sqrtAii = sqrt(A[0][0]),
