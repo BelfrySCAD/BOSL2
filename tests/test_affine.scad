@@ -31,25 +31,6 @@ module test_is_2d_transform() {
 test_is_2d_transform();
 
 
-module test_is_affine() {
-    assert(is_affine(affine2d_scale([2,3])));
-    assert(is_affine(affine3d_scale([2,3,4])));
-    assert(!is_affine(affine3d_scale([2,3,4]),2));
-    assert(is_affine(affine2d_scale([2,3]),2));
-    assert(is_affine(affine3d_scale([2,3,4]),3));
-    assert(!is_affine(affine2d_scale([2,3]),3));
-}
-test_is_affine();
-
-
-module test_affine2d_to_3d() {
-    assert(affine2d_to_3d(affine2d_identity()) == affine3d_identity());
-    assert(affine2d_to_3d(affine2d_translate([30,40])) == affine3d_translate([30,40,0]));
-    assert(affine2d_to_3d(affine2d_scale([3,4])) == affine3d_scale([3,4,1]));
-    assert(affine2d_to_3d(affine2d_zrot(30)) == affine3d_zrot(30));
-}
-test_affine2d_to_3d();
-
 
 // 2D
 

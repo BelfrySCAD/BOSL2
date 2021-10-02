@@ -2452,4 +2452,100 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
     ) reorient(anchor,spin,orient, vnf=vnf, p=vnf);
 
 
+
+// Module: ruler()
+// Usage:
+//   ruler(length, width, [thickness=], [depth=], [labels=], [pipscale=], [maxscale=], [colors=], [alpha=], [unit=], [inch=]);
+// Description:
+//   Creates a ruler for checking dimensions of the model
+// Arguments:
+//   length = length of the ruler.  Default 100
+//   width = width of the ruler.  Default: size of the largest unit division
+//   ---
+//   thickness = thickness of the ruler. Default: 1
+//   depth = the depth of mark subdivisions. Default: 3
+//   labels = draw numeric labels for depths where labels are larger than 1.  Default: false
+//   pipscale = width scale of the pips relative to the next size up.  Default: 1/3
+//   maxscale = log10 of the maximum width divisions to display.  Default: based on input length
+//   colors = colors to use for the ruler, a list of two values.  Default: `["black","white"]`
+//   alpha = transparency value.  Default: 1.0
+//   unit = unit to mark.  Scales the ruler marks to a different length.  Default: 1
+//   inch = set to true for a ruler scaled to inches (assuming base dimension is mm).  Default: false
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `LEFT+BACK+TOP`
+//   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
+// Examples(2D,Big):
+//   ruler(100,depth=3);
+//   ruler(100,depth=3,labels=true);
+//   ruler(27);
+//   ruler(27,maxscale=0);
+//   ruler(100,pipscale=3/4,depth=2);
+//   ruler(100,width=2,depth=2);
+// Example(2D,Big):  Metric vs Imperial
+//   ruler(12,width=50,inch=true,labels=true,maxscale=0);
+//   fwd(50)ruler(300,width=50,labels=true);
+module ruler(length=100, width, thickness=1, depth=3, labels=false, pipscale=1/3, maxscale,
+             colors=["black","white"], alpha=1.0, unit=1, inch=false, anchor=LEFT+BACK+TOP, spin=0, orient=UP)
+{
+    inchfactor = 25.4;
+    assert(depth<=5, "Cannot render scales smaller than depth=5");
+    assert(len(colors)==2, "colors must contain a list of exactly two colors.");
+    length = inch ? inchfactor * length : length;
+    unit = inch ? inchfactor*unit : unit;
+    maxscale = is_def(maxscale)? maxscale : floor(log(length/unit-EPSILON));
+    scales = unit * [for(logsize = [maxscale:-1:maxscale-depth+1]) pow(10,logsize)];
+    widthfactor = (1-pipscale) / (1-pow(pipscale,depth));
+    width = default(width, scales[0]);
+    widths = width * widthfactor * [for(logsize = [0:-1:-depth+1]) pow(pipscale,-logsize)];
+    offsets = concat([0],cumsum(widths));
+    attachable(anchor,spin,orient, size=[length,width,thickness]) {
+        translate([-length/2, -width/2, 0]) 
+        for(i=[0:1:len(scales)-1]) {
+            count = ceil(length/scales[i]);
+            fontsize = 0.5*min(widths[i], scales[i]/ceil(log(count*scales[i]/unit)));
+            back(offsets[i]) {
+                xcopies(scales[i], n=count, sp=[0,0,0]) union() {
+                    actlen = ($idx<count-1) || approx(length%scales[i],0) ? scales[i] : length % scales[i];
+                    color(colors[$idx%2], alpha=alpha) {
+                        w = i>0 ? quantup(widths[i],1/1024) : widths[i];    // What is the i>0 test supposed to do here? 
+                        cube([quantup(actlen,1/1024),quantup(w,1/1024),thickness], anchor=FRONT+LEFT);
+                    }
+                    mark =
+                        i == 0 && $idx % 10 == 0 && $idx != 0 ? 0 :
+                        i == 0 && $idx % 10 == 9 && $idx != count-1 ? 1 :
+                        $idx % 10 == 4 ? 1 :
+                        $idx % 10 == 5 ? 0 : -1;
+                    flip = 1-mark*2;
+                    if (mark >= 0) {
+                        marklength = min(widths[i]/2, scales[i]*2);
+                        markwidth = marklength*0.4;
+                        translate([mark*scales[i], widths[i], 0]) {
+                            color(colors[1-$idx%2], alpha=alpha) {
+                                linear_extrude(height=thickness+scales[i]/100, convexity=2, center=true) {
+                                    polygon(scale([flip*markwidth, marklength],p=[[0,0], [1, -1], [0,-0.9]]));
+                                }
+                            }
+                        }
+                    }
+                    if (labels && scales[i]/unit+EPSILON >= 1) {
+                        color(colors[($idx+1)%2], alpha=alpha) {
+                            linear_extrude(height=thickness+scales[i]/100, convexity=2, center=true) {
+                                back(scales[i]*.02) {
+                                    text(text=str( $idx * scales[i] / unit), size=fontsize, halign="left", valign="baseline");
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+        children();
+    }
+}
+
+
+
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

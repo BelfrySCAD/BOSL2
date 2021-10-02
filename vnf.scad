@@ -928,6 +928,150 @@ function _split_polygons_at_each_y(polys, ys, _i=0) =
 
 // Section: Debugging VNFs
 
+// Section: Debugging Polyhedrons
+
+
+// Module: debug_vertices()
+// Usage:
+//   debug_vertices(vertices, [size], [disabled=]);
+// Description:
+//   Draws all the vertices in an array, at their 3D position, numbered by their
+//   position in the vertex array.  Also draws any children of this module with
+//   transparency.
+// Arguments:
+//   vertices = Array of point vertices.
+//   size = The size of the text used to label the vertices.  Default: 1
+//   ---
+//   disabled = If true, don't draw numbers, and draw children without transparency.  Default = false.
+// Example:
+//   verts = [for (z=[-10,10], y=[-10,10], x=[-10,10]) [x,y,z]];
+//   faces = [[0,1,2], [1,3,2], [0,4,5], [0,5,1], [1,5,7], [1,7,3], [3,7,6], [3,6,2], [2,6,4], [2,4,0], [4,6,7], [4,7,5]];
+//   debug_vertices(vertices=verts, size=2) {
+//       polyhedron(points=verts, faces=faces);
+//   }
+module debug_vertices(vertices, size=1, disabled=false) {
+    if (!disabled) {
+        color("blue") {
+            dups = vector_search(vertices, EPSILON, vertices);
+            for (ind = dups){
+                numstr = str_join([for(i=ind) str(i)],",");
+                v = vertices[ind[0]];
+                translate(v) {
+                    up(size/8) zrot($vpr[2]) xrot(90) {
+                        linear_extrude(height=size/10, center=true, convexity=10) {
+                            text(text=numstr, size=size, halign="center");
+                        }
+                    }
+                    sphere(size/10);
+                }
+            }
+        }
+    }
+    if ($children > 0) {
+        if (!disabled) {
+            color([0.2, 1.0, 0, 0.5]) children();
+        } else {
+            children();
+        }
+    }
+}
+
+
+
+// Module: debug_faces()
+// Usage:
+//   debug_faces(vertices, faces, [size=], [disabled=]);
+// Description:
+//   Draws all the vertices at their 3D position, numbered in blue by their
+//   position in the vertex array.  Each face will have their face number drawn
+//   in red, aligned with the center of face.  All children of this module are drawn
+//   with transparency.
+// Arguments:
+//   vertices = Array of point vertices.
+//   faces = Array of faces by vertex numbers.
+//   ---
+//   size = The size of the text used to label the faces and vertices.  Default: 1
+//   disabled = If true, don't draw numbers, and draw children without transparency.  Default: false.
+// Example(EdgesMed):
+//   verts = [for (z=[-10,10], y=[-10,10], x=[-10,10]) [x,y,z]];
+//   faces = [[0,1,2], [1,3,2], [0,4,5], [0,5,1], [1,5,7], [1,7,3], [3,7,6], [3,6,2], [2,6,4], [2,4,0], [4,6,7], [4,7,5]];
+//   debug_faces(vertices=verts, faces=faces, size=2) {
+//       polyhedron(points=verts, faces=faces);
+//   }
+module debug_faces(vertices, faces, size=1, disabled=false) {
+    if (!disabled) {
+        vlen = len(vertices);
+        color("red") {
+            for (i = [0:1:len(faces)-1]) {
+                face = faces[i];
+                if (face[0] < 0 || face[1] < 0 || face[2] < 0 || face[0] >= vlen || face[1] >= vlen || face[2] >= vlen) {
+                    echo("BAD FACE: ", vlen=vlen, face=face);
+                } else {
+                    verts = select(vertices,face);
+                    c = mean(verts);
+                    v0 = verts[0];
+                    v1 = verts[1];
+                    v2 = verts[2];
+                    dv0 = unit(v1 - v0);
+                    dv1 = unit(v2 - v0);
+                    nrm0 = cross(dv0, dv1);
+                    nrm1 = UP;
+                    axis = vector_axis(nrm0, nrm1);
+                    ang = vector_angle(nrm0, nrm1);
+                    theta = atan2(nrm0[1], nrm0[0]);
+                    translate(c) {
+                        rotate(a=180-ang, v=axis) {
+                            zrot(theta-90)
+                            linear_extrude(height=size/10, center=true, convexity=10) {
+                                union() {
+                                    text(text=str(i), size=size, halign="center");
+                                    text(text=str("_"), size=size, halign="center");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    debug_vertices(vertices, size=size, disabled=disabled) {
+        children();
+    }
+    if (!disabled) {
+        echo(faces=faces);
+    }
+}
+
+
+
+// Module: debug_vnf()
+// Usage:
+//   debug_vnf(vnfs, [convexity=], [txtsize=], [disabled=]);
+// Description:
+//   A drop-in module to replace `vnf_polyhedron()` and help debug vertices and faces.
+//   Draws all the vertices at their 3D position, numbered in blue by their
+//   position in the vertex array.  Each face will have its face number drawn
+//   in red, aligned with the center of face.  All given faces are drawn with
+//   transparency. All children of this module are drawn with transparency.
+//   Works best with Thrown-Together preview mode, to see reversed faces.
+// Arguments:
+//   vnf = vnf to display
+//   ---
+//   convexity = The max number of walls a ray can pass through the given polygon paths.
+//   txtsize = The size of the text used to label the faces and vertices.
+//   disabled = If true, act exactly like `polyhedron()`.  Default = false.
+// Example(EdgesMed):
+//   verts = [for (z=[-10,10], a=[0:120:359.9]) [10*cos(a),10*sin(a),z]];
+//   faces = [[0,1,2], [5,4,3], [0,3,4], [0,4,1], [1,4,5], [1,5,2], [2,5,3], [2,3,0]];
+//   debug_vnf([verts,faces], txtsize=2);
+module debug_vnf(vnf, convexity=6, txtsize=1, disabled=false) {
+    debug_faces(vertices=vnf[0], faces=vnf[1], size=txtsize, disabled=disabled) {
+        vnf_polyhedron(vnf, convexity=convexity);
+    }
+}
+
+
+
 // Function&Module: vnf_validate()
 // Usage: As Function
 //   fails = vnf_validate(vnf);

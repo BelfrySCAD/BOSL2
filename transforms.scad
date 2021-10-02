@@ -1260,4 +1260,84 @@ function skew(p, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0, planar=false) =
     [for (l=p) skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy, planar=planar, p=l)];
 
 
+// Section: Applying transformation matrices to 
+
+
+/// Internal Function: is_2d_transform()
+/// Usage:
+///   x = is_2d_transform(t);
+/// Topics: Affine, Matrices, Transforms, Type Checking
+/// See Also: is_affine(), is_matrix()
+/// Description:
+///   Checks if the input is a 3D transform that does not act on the z coordinate, except possibly
+///   for a simple scaling of z.  Note that an input which is only a zscale returns false.
+/// Arguments:
+///   t = The transformation matrix to check.
+/// Example:
+///   b = is_2d_transform(zrot(45));  // Returns: true
+///   b = is_2d_transform(yrot(45));  // Returns: false
+///   b = is_2d_transform(xrot(45));  // Returns: false
+///   b = is_2d_transform(move([10,20,0]));  // Returns: true
+///   b = is_2d_transform(move([10,20,30]));  // Returns: false
+///   b = is_2d_transform(scale([2,3,4]));  // Returns: true
+function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][2]!=1 so scale() works
+  t[2][0]==0 && t[2][1]==0 && t[2][3]==0 && t[0][2] == 0 && t[1][2]==0 &&
+  (t[2][2]==1 || !(t[0][0]==1 && t[0][1]==0 && t[1][0]==0 && t[1][1]==1));   // But rule out zscale()
+
+
+
+// Function: apply()
+// Usage:
+//   pts = apply(transform, points);
+// Topics: Affine, Matrices, Transforms
+// Description:
+//   Applies the specified transformation matrix to a point, pointlist, bezier patch or VNF.
+//   Both inputs can be 2D or 3D, and it is also allowed to supply 3D transformations with 2D
+//   data as long as the the only action on the z coordinate is a simple scaling.
+//   .
+//   If you construct your own matrices you can also use a transform that acts like a projection
+//   with fewer rows to produce lower dimensional output.  
+// Arguments:
+//   transform = The 2D or 3D transformation matrix to apply to the point/points.
+//   points = The point, pointlist, bezier patch, or VNF to apply the transformation to.
+// Example(3D):
+//   path1 = path3d(circle(r=40));
+//   tmat = xrot(45);
+//   path2 = apply(tmat, path1);
+//   #stroke(path1,closed=true);
+//   stroke(path2,closed=true);
+// Example(2D):
+//   path1 = circle(r=40);
+//   tmat = translate([10,5]);
+//   path2 = apply(tmat, path1);
+//   #stroke(path1,closed=true);
+//   stroke(path2,closed=true);
+// Example(2D):
+//   path1 = circle(r=40);
+//   tmat = rot(30) * back(15) * scale([1.5,0.5,1]);
+//   path2 = apply(tmat, path1);
+//   #stroke(path1,closed=true);
+//   stroke(path2,closed=true);
+function apply(transform,points) =
+    points==[] ? [] :
+    is_vector(points)
+      ? /* Point */ apply(transform, [points])[0] :
+    is_list(points) && len(points)==2 && is_path(points[0],3) && is_list(points[1]) && is_vector(points[1][0])
+      ? /* VNF */ [apply(transform, points[0]), points[1]] :
+    is_list(points) && is_list(points[0]) && is_vector(points[0][0])
+      ? /* BezPatch */ [for (x=points) apply(transform,x)] :
+    let(
+        tdim = len(transform[0])-1,
+        datadim = len(points[0]),
+        outdim = min(datadim,len(transform)),
+        matrix = [for(i=[0:1:tdim]) [for(j=[0:1:outdim-1]) transform[j][i]]]
+    )
+    tdim==datadim && (datadim==3 || datadim==2) ? [for(p=points) concat(p,1)] * matrix
+  : tdim == 3 && datadim == 2 ?
+        assert(is_2d_transform(transform), str("Transforms is 3d but points are 2d"))
+        [for(p=points) concat(p,[0,1])]*matrix 
+  : assert(false, str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
+
+
+
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

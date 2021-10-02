@@ -445,12 +445,14 @@ module stroke(
 // Topics: Paths, Drawing Tools
 // See Also: stroke(), path_cut()
 // Description:
-//   Given a path and a dash pattern, creates a dashed line that follows that
-//   path with the given dash pattern.
+//   Given a path (or region) and a dash pattern, creates a dashed line that follows that
+//   path or region boundary with the given dash pattern.
 //   - When called as a function, returns a list of dash sub-paths.
 //   - When called as a module, draws all those subpaths using `stroke()`.
+//   When called as a module the dash pattern is multiplied by the line width.  When called as
+//   a function the dash pattern applies as you specify it.  
 // Arguments:
-//   path = The path to subdivide into dashes.
+//   path = The path or region to subdivide into dashes.
 //   dashpat = A list of alternating dash lengths and space lengths for the dash pattern.  This will be scaled by the width of the line.
 //   ---
 //   width = The width of the dashed line to draw.  Module only.  Default: 1
@@ -466,6 +468,7 @@ module stroke(
 //   path = [for (a=[-180:5:180]) [a/3, 20*cos(3*a), 20*sin(3*a)]];
 //   dashed_stroke(path, [3,2], width=1);
 function dashed_stroke(path, dashpat=[3,3], closed=false) =
+    is_region(path) ? [for(p=path) each dashed_stroke(p,dashpat,closed=true)] : 
     let(
         path = closed? close_path(path) : path,
         dashpat = len(dashpat)%2==0? dashpat : concat(dashpat,[0]),
@@ -488,6 +491,55 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
     segs = dashed_stroke(path, dashpat=dashpat*width, closed=closed);
     for (seg = segs)
         stroke(seg, width=width, endcaps=false);
+}
+
+
+
+// Module: trace_path()
+// Usage:
+//   trace_path(path, [closed=], [showpts=], [N=], [size=], [color=]);
+// Description:
+//   Renders lines between each point of a path.
+//   Can also optionally show the individual vertex points.
+// Arguments:
+//   path = The list of points in the path.
+//   ---
+//   closed = If true, draw the segment from the last vertex to the first.  Default: false
+//   showpts = If true, draw vertices and control points.
+//   N = Mark the first and every Nth vertex after in a different color and shape.
+//   size = Diameter of the lines drawn.
+//   color = Color to draw the lines (but not vertices) in.
+// Example(FlatSpin,VPD=44.4):
+//   path = [for (a=[0:30:210]) 10*[cos(a), sin(a), sin(a)]];
+//   trace_path(path, showpts=true, size=0.5, color="lightgreen");
+module trace_path(path, closed=false, showpts=false, N=1, size=1, color="yellow") {
+    assert(is_path(path),"Invalid path argument");
+    sides = segs(size/2);
+    path = closed? close_path(path) : path;
+    if (showpts) {
+        for (i = [0:1:len(path)-1]) {
+            translate(path[i]) {
+                if (i % N == 0) {
+                    color("blue") sphere(d=size*2.5, $fn=8);
+                } else {
+                    color("red") {
+                        cylinder(d=size/2, h=size*3, center=true, $fn=8);
+                        xrot(90) cylinder(d=size/2, h=size*3, center=true, $fn=8);
+                        yrot(90) cylinder(d=size/2, h=size*3, center=true, $fn=8);
+                    }
+                }
+            }
+        }
+    }
+    if (N!=3) {
+        color(color) stroke(path3d(path), width=size, $fn=8);
+    } else {
+        for (i = [0:1:len(path)-2]) {
+            if (N != 3 || (i % N) != 1) {
+                color(color) extrude_from_to(path[i], path[i+1]) circle(d=size, $fn=sides);
+            }
+        }
+    }
 }
 
 

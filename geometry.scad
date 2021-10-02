@@ -1865,6 +1865,54 @@ function align_polygon(reference, poly, angles, cp) =
     ) alignments[best][0];
 
 
+// Function: are_polygons_equal()
+// Usage:
+//    b = are_polygons_equal(poly1, poly2, [eps])
+// Description:
+//    Returns true if poly1 and poly2 are the same polongs
+//    within given epsilon tolerance.
+// Arguments:
+//    poly1 = first polygon
+//    poly2 = second polygon
+//    eps = tolerance for comparison
+// Example(NORENDER):
+//    are_polygons_equal(pentagon(r=4),
+//                   rot(360/5, p=pentagon(r=4))); // returns true
+//    are_polygons_equal(pentagon(r=4),
+//                   rot(90, p=pentagon(r=4)));    // returns false
+function are_polygons_equal(poly1, poly2, eps=EPSILON) =
+    let(
+        poly1 = cleanup_path(poly1),
+        poly2 = cleanup_path(poly2),
+        l1 = len(poly1),
+        l2 = len(poly2)
+    ) l1 != l2 ? false :
+    let( maybes = find_first_match(poly1[0], poly2, eps=eps, all=true) )
+    maybes == []? false :
+    [for (i=maybes) if (_are_polygons_equal(poly1, poly2, eps, i)) 1] != [];
+
+function _are_polygons_equal(poly1, poly2, eps, st) =
+    max([for(d=poly1-select(poly2,st,st-1)) d*d])<eps*eps;
+
+
+// Function: is_polygon_in_list()
+// Topics: Polygons, Comparators
+// See Also: are_polygons_equal(), are_regions_equal()
+// Usage:
+//   bool = is_polygon_in_list(poly, polys);
+// Description:
+//   Returns true if one of the polygons in `polys` is equivalent to the polygon `poly`.
+// Arguments:
+//   poly = The polygon to search for.
+//   polys = The list of polygons to look for the polygon in.
+function is_polygon_in_list(poly, polys) =
+    __is_polygon_in_list(poly, polys, 0);
+
+function __is_polygon_in_list(poly, polys, i) =
+    i >= len(polys)? false :
+    are_polygons_equal(poly, polys[i])? true :
+    __is_polygon_in_list(poly, polys, i+1);
+
 
 
 // Section: Convex Sets
@@ -2110,6 +2158,67 @@ function _tri_normal(tri) = cross(tri[1]-tri[0],tri[2]-tri[0]);
 function _support_diff(p1,p2,d) =
     let( p1d = p1*d, p2d = p2*d )
     p1[search(max(p1d),p1d,1)[0]] - p2[search(min(p2d),p2d,1)[0]];
+
+
+// Section: Rotation Decoding
+
+// Function: rot_decode()
+// Usage:
+//   info = rot_decode(rotation,[long]); // Returns: [angle,axis,cp,translation]
+// Topics: Affine, Matrices, Transforms
+// Description:
+//   Given an input 3D rigid transformation operator (one composed of just rotations and translations) represented
+//   as a 4x4 matrix, compute the rotation and translation parameters of the operator.  Returns a list of the
+//   four parameters, the angle, in the interval [0,180], the rotation axis as a unit vector, a centerpoint for
+//   the rotation, and a translation.  If you set `parms = rot_decode(rotation)` then the transformation can be
+//   reconstructed from parms as `move(parms[3]) * rot(a=parms[0],v=parms[1],cp=parms[2])`.  This decomposition
+//   makes it possible to perform interpolation.  If you construct a transformation using `rot` the decoding
+//   may flip the axis (if you gave an angle outside of [0,180]).  The returned axis will be a unit vector, and
+//   the centerpoint lies on the plane through the origin that is perpendicular to the axis.  It may be different
+//   than the centerpoint you used to construct the transformation.
+//   .
+//   If you set `long` to true then return the reversed rotation, with the angle in [180,360].
+// Arguments:
+//   rotation = rigid transformation to decode
+//   long = if true return the "long way" around, with the angle in [180,360].  Default: false
+// Example:
+//   info = rot_decode(rot(45));
+//   // Returns: [45, [0,0,1], [0,0,0], [0,0,0]]
+// Example:
+//   info = rot_decode(rot(a=37, v=[1,2,3], cp=[4,3,-7])));
+//   // Returns: [37, [0.26, 0.53, 0.80], [4.8, 4.6, -4.6], [0,0,0]]
+// Example:
+//   info = rot_decode(left(12)*xrot(-33));
+//   // Returns: [33, [-1,0,0], [0,0,0], [-12,0,0]]
+// Example:
+//   info = rot_decode(translate([3,4,5]));
+//   // Returns: [0, [0,0,1], [0,0,0], [3,4,5]]
+function rot_decode(M,long=false) =
+    assert(is_matrix(M,4,4) && approx(M[3],[0,0,0,1]), "Input matrix must be a 4x4 matrix representing a 3d transformation")
+    let(R = submatrix(M,[0:2],[0:2]))
+    assert(approx(det3(R),1) && approx(norm_fro(R * transpose(R)-ident(3)),0),"Input matrix is not a rotation")
+    let(
+        translation = [for(row=[0:2]) M[row][3]],   // translation vector
+        largest  = max_index([R[0][0], R[1][1], R[2][2]]),
+        axis_matrix = R + transpose(R) - (matrix_trace(R)-1)*ident(3),   // Each row is on the rotational axis
+            // Construct quaternion q = c * [x sin(theta/2), y sin(theta/2), z sin(theta/2), cos(theta/2)]
+        q_im = axis_matrix[largest],
+        q_re = R[(largest+2)%3][(largest+1)%3] - R[(largest+1)%3][(largest+2)%3],
+        c_sin = norm(q_im),              // c * sin(theta/2) for some c
+        c_cos = abs(q_re)                // c * cos(theta/2)
+    )
+    approx(c_sin,0) ? [0,[0,0,1],[0,0,0],translation] :
+    let(
+        angle = 2*atan2(c_sin, c_cos),    // This is supposed to be more accurate than acos or asin
+        axis  = (q_re>=0 ? 1:-1)*q_im/c_sin,
+        tproj = translation - (translation*axis)*axis,    // Translation perpendicular to axis determines centerpoint
+        cp    = (tproj + cross(axis,tproj)*c_cos/c_sin)/2
+    )
+    [long ? 360-angle:angle,
+     long? -axis : axis,
+     cp,
+     (translation*axis)*axis];
+
 
 
 
