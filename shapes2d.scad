@@ -14,7 +14,7 @@
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
-use <BOSL2/builtins.scad>
+use <builtins.scad>
 
 
 // Section: 2D Primitives
