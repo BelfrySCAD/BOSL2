@@ -302,14 +302,8 @@ function _path_path_closest_vertices(path1,path2) =
         i2 = dists[i1][0]
     ) [dists[i1][1], i1, i2];
 
-function _join_paths_at_vertices(path1,path2,seg1,seg2) =
-    let(
-        path1 = close_path(clockwise_polygon(polygon_shift(path1, seg1))),
-        path2 = close_path(ccw_polygon(polygon_shift(path2, seg2)))
-    ) cleanup_path(deduplicate([each path1, each path2]));
 
-
-function new_join_paths_at_vertices(path1,path2,v1,v2) =
+function _join_paths_at_vertices(path1,path2,v1,v2) =
     let(
         repeat_start = !approx(path1[v1],path2[v2]),
         path1 = clockwise_polygon(polygon_shift(path1,v1)),
@@ -325,7 +319,7 @@ function new_join_paths_at_vertices(path1,path2,v1,v2) =
         
 // Given a region that is connected and has its outer border in region[0],
 // produces a polygon with the same points that has overlapping connected paths
-// to join internal holes to the outer border.  
+// to join internal holes to the outer border.  Output is a single path.  
 function _cleave_connected_region(region) =
     len(region)==0? [] :
     len(region)<=1? clockwise_polygon(region[0]) :
@@ -335,36 +329,7 @@ function _cleave_connected_region(region) =
             _path_path_closest_vertices(region[0],region[i])
         ],
         idxi = min_index(subindex(dists,0)),
-        outline = _join_paths_at_vertices(
-            region[0], region[idxi+1],
-            dists[idxi][1], dists[idxi][2]
-        )
-    )
-    len(region)==2? clockwise_polygon(outline) :   // We joined 2 regions, so we're done
-    let(
-        newregion = [
-            outline,
-            for (i=idx(region))
-                if (i>0 && i!=idxi+1)
-                    region[i]
-        ]
-    )
-    assert(len(newregion)<len(region))
-    _cleave_connected_region(newregion);
-
-
-
-
-function new_cleave_connected_region(region) =
-    len(region)==0? [] :
-    len(region)<=1? clockwise_polygon(region[0]) :
-    let(
-        dists = [
-            for (i=[1:1:len(region)-1])
-            _path_path_closest_vertices(region[0],region[i])
-        ],
-        idxi = min_index(subindex(dists,0)),
-        newoline = new_join_paths_at_vertices(
+        newoline = _join_paths_at_vertices(
             region[0], region[idxi+1],
             dists[idxi][1], dists[idxi][2]
         )
@@ -378,8 +343,9 @@ function new_cleave_connected_region(region) =
         ]
     )
     assert(len(orgn)<len(region))
-    new_cleave_connected_region(orgn);
-        
+    _cleave_connected_region(orgn);
+
+
 
 // Function: region_faces()
 // Usage:
