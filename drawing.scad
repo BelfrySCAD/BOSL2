@@ -132,7 +132,7 @@
 //   path = [for (i=[0:15:360]) [(i-180)/3,20*cos(2*i)]];
 //   stroke(path, width=2, dots=true, color="lightgreen", dots_color="red", $fn=18);
 function stroke(
-    path, width=1, closed=false,
+    path, width=1, closed,
     endcaps,       endcap1,        endcap2,        joints,       dots,
     endcap_width,  endcap_width1,  endcap_width2,  joint_width,  dots_width,
     endcap_length, endcap_length1, endcap_length2, joint_length, dots_length,
@@ -143,7 +143,7 @@ function stroke(
     convexity=10, hull=true
 ) = no_function("stroke");
 module stroke(
-    path, width=1, closed=false,
+    path, width=1, closed,
     endcaps,       endcap1,        endcap2,        joints,       dots,
     endcap_width,  endcap_width1,  endcap_width2,  joint_width,  dots_width,
     endcap_length, endcap_length1, endcap_length2, joint_length, dots_length,
@@ -200,16 +200,8 @@ module stroke(
         assert(false, str("Invalid endcap: ",cap))
     ) * linewidth;
 
+    closed = default(closed, is_region(path));
     assert(is_bool(closed));
-    assert(is_list(path));
-    if (len(path) > 1) {
-        assert(is_path(path,[2,3]), "The path argument must be a list of 2D or 3D points.");
-    }
-    path = deduplicate( closed? close_path(path) : path );
-
-    assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
-    width = is_num(width)? [for (x=path) width] : width;
-    assert(all([for (w=width) w>0]));
 
     dots = dots==true? "dot" : dots;
 
@@ -247,175 +239,196 @@ module stroke(
 
     endcap_angle1 = first_defined([endcap_angle1, endcap_angle, dots_angle]);
     endcap_angle2 = first_defined([endcap_angle2, endcap_angle, dots_angle]);
+    joint_angle = first_defined([joint_angle, dots_angle]);
     assert(is_undef(endcap_angle1)||is_num(endcap_angle1));
     assert(is_undef(endcap_angle2)||is_num(endcap_angle2));
     assert(is_undef(joint_angle)||is_num(joint_angle));
-
-    endcap_shape1 = _shape_path(endcap1, width[0], endcap_width1, endcap_length1, endcap_extent1);
-    endcap_shape2 = _shape_path(endcap2, last(width), endcap_width2, endcap_length2, endcap_extent2);
 
     endcap_color1 = first_defined([endcap_color1, endcap_color, dots_color, color]);
     endcap_color2 = first_defined([endcap_color2, endcap_color, dots_color, color]);
     joint_color = first_defined([joint_color, dots_color, color]);
 
-    trim1 = width[0] * first_defined([
-        trim1, trim,
-        (endcap1=="arrow")? endcap_length1-0.01 :
-        (endcap1=="arrow2")? endcap_length1*3/4 :
-        0
-    ]);
-    assert(is_num(trim1));
-
-    trim2 = last(width) * first_defined([
-        trim2, trim,
-        (endcap2=="arrow")? endcap_length2-0.01 :
-        (endcap2=="arrow2")? endcap_length2*3/4 :
-        0
-    ]);
-    assert(is_num(trim2));
-
-
-    if (len(path) == 1) {
-        if (len(path[0]) == 2) {
-            translate(path[0]) circle(d=width[0]);
-        } else {
-            translate(path[0]) sphere(d=width[0]);
+    paths = is_region(path)? path : [path];
+    for (path = paths) {
+        assert(is_list(path));
+        if (len(path) > 1) {
+            assert(is_path(path,[2,3]), "The path argument must be a list of 2D or 3D points, or a region.");
         }
-    } else {
-        pathcut = _path_cut_points(path, [trim1, path_length(path)-trim2], closed=false);
-        pathcut_su = _cut_to_seg_u_form(pathcut,path);
-        path2 = _path_cut_getpaths(path, pathcut, closed=false)[1];
-        widths = _path_select(width, pathcut_su[0][0], pathcut_su[0][1], pathcut_su[1][0], pathcut_su[1][1]);
-        start_vec = path[0] - path[1];
-        end_vec = last(path) - select(path,-2);
+        path = deduplicate( closed? close_path(path) : path );
 
-        if (len(path[0]) == 2) {
-            // Straight segments
-            setcolor(color) {
-                for (i = idx(path2,e=-2)) {
-                    seg = select(path2,i,i+1);
-                    delt = seg[1] - seg[0];
-                    translate(seg[0]) {
-                        rot(from=BACK,to=delt) {
-                            trapezoid(w1=widths[i], w2=widths[i+1], h=norm(delt), anchor=FRONT);
+        assert(is_num(width) || (is_vector(width) && len(width)==len(path)));
+        width = is_num(width)? [for (x=path) width] : width;
+        assert(all([for (w=width) w>0]));
+
+        endcap_shape1 = _shape_path(endcap1, width[0], endcap_width1, endcap_length1, endcap_extent1);
+        endcap_shape2 = _shape_path(endcap2, last(width), endcap_width2, endcap_length2, endcap_extent2);
+
+        trim1 = width[0] * first_defined([
+            trim1, trim,
+            (endcap1=="arrow")? endcap_length1-0.01 :
+            (endcap1=="arrow2")? endcap_length1*3/4 :
+            0
+        ]);
+        assert(is_num(trim1));
+
+        trim2 = last(width) * first_defined([
+            trim2, trim,
+            (endcap2=="arrow")? endcap_length2-0.01 :
+            (endcap2=="arrow2")? endcap_length2*3/4 :
+            0
+        ]);
+        assert(is_num(trim2));
+
+
+        if (len(path) == 1) {
+            if (len(path[0]) == 2) {
+                translate(path[0]) circle(d=width[0]);
+            } else {
+                translate(path[0]) sphere(d=width[0]);
+            }
+        } else {
+            pathcut = _path_cut_points(path, [trim1, path_length(path)-trim2], closed=false);
+            pathcut_su = _cut_to_seg_u_form(pathcut,path);
+            path2 = _path_cut_getpaths(path, pathcut, closed=false)[1];
+            widths = _path_select(width, pathcut_su[0][0], pathcut_su[0][1], pathcut_su[1][0], pathcut_su[1][1]);
+            start_vec = path[0] - path[1];
+            end_vec = last(path) - select(path,-2);
+
+            if (len(path[0]) == 2) {
+                // Straight segments
+                setcolor(color) {
+                    for (i = idx(path2,e=-2)) {
+                        seg = select(path2,i,i+1);
+                        delt = seg[1] - seg[0];
+                        translate(seg[0]) {
+                            rot(from=BACK,to=delt) {
+                                trapezoid(w1=widths[i], w2=widths[i+1], h=norm(delt), anchor=FRONT);
+                            }
                         }
                     }
                 }
-            }
 
-            // Joints
-            setcolor(joint_color) {
-                for (i = [1:1:len(path2)-2]) {
-                    $fn = quantup(segs(widths[i]/2),4);
-                    translate(path2[i]) {
-                        if (joints != undef) {
-                            joint_shape = _shape_path(
-                                joints, width[i],
-                                joint_width,
-                                joint_length,
-                                joint_extent
-                            );
-                            v1 = unit(path2[i] - path2[i-1]);
-                            v2 = unit(path2[i+1] - path2[i]);
-                            vec = unit((v1+v2)/2);
-                            mat = is_undef(joint_angle)
-                              ? rot(from=BACK,to=v1)
-                              : zrot(joint_angle);
-                            multmatrix(mat) polygon(joint_shape);
-                        } else if (hull) {
-                            hull() {
+                // Joints
+                setcolor(joint_color) {
+                    for (i = [1:1:len(path2)-2]) {
+                        $fn = quantup(segs(widths[i]/2),4);
+                        translate(path2[i]) {
+                            if (joints != undef) {
+                                joint_shape = _shape_path(
+                                    joints, width[i],
+                                    joint_width,
+                                    joint_length,
+                                    joint_extent
+                                );
+                                v1 = unit(path2[i] - path2[i-1]);
+                                v2 = unit(path2[i+1] - path2[i]);
+                                vec = unit((v1+v2)/2);
+                                mat = is_undef(joint_angle)
+                                  ? rot(from=BACK,to=v1)
+                                  : zrot(joint_angle);
+                                multmatrix(mat) polygon(joint_shape);
+                            } else if (hull) {
+                                hull() {
+                                    rot(from=BACK, to=path2[i]-path2[i-1])
+                                        circle(d=widths[i]);
+                                    rot(from=BACK, to=path2[i+1]-path2[i])
+                                        circle(d=widths[i]);
+                                }
+                            } else {
                                 rot(from=BACK, to=path2[i]-path2[i-1])
                                     circle(d=widths[i]);
                                 rot(from=BACK, to=path2[i+1]-path2[i])
                                     circle(d=widths[i]);
                             }
-                        } else {
-                            rot(from=BACK, to=path2[i]-path2[i-1])
-                                circle(d=widths[i]);
-                            rot(from=BACK, to=path2[i+1]-path2[i])
-                                circle(d=widths[i]);
                         }
                     }
                 }
-            }
 
-            // Endcap1
-            setcolor(endcap_color1) {
-                translate(path[0]) {
-                    mat = is_undef(endcap_angle1)? rot(from=BACK,to=start_vec) :
-                        zrot(endcap_angle1);
-                    multmatrix(mat) polygon(endcap_shape1);
+                // Endcap1
+                setcolor(endcap_color1) {
+                    translate(path[0]) {
+                        mat = is_undef(endcap_angle1)? rot(from=BACK,to=start_vec) :
+                            zrot(endcap_angle1);
+                        multmatrix(mat) polygon(endcap_shape1);
+                    }
                 }
-            }
 
-            // Endcap2
-            setcolor(endcap_color2) {
-                translate(last(path)) {
-                    mat = is_undef(endcap_angle2)? rot(from=BACK,to=end_vec) :
-                        zrot(endcap_angle2);
-                    multmatrix(mat) polygon(endcap_shape2);
+                // Endcap2
+                setcolor(endcap_color2) {
+                    translate(last(path)) {
+                        mat = is_undef(endcap_angle2)? rot(from=BACK,to=end_vec) :
+                            zrot(endcap_angle2);
+                        multmatrix(mat) polygon(endcap_shape2);
+                    }
                 }
-            }
-        } else {
-            quatsums = q_cumulative([
-                for (i = idx(path2,e=-2)) let(
-                    vec1 = i==0? UP : unit(path2[i]-path2[i-1], UP),
-                    vec2 = unit(path2[i+1]-path2[i], UP),
-                    axis = vector_axis(vec1,vec2),
-                    ang = vector_angle(vec1,vec2)
-                ) quat(axis,ang)
-            ]);
-            rotmats = [for (q=quatsums) q_matrix4(q)];
-            sides = [
-                for (i = idx(path2,e=-2))
-                quantup(segs(max(widths[i],widths[i+1])/2),4)
-            ];
+            } else {
+                quatsums = q_cumulative([
+                    for (i = idx(path2,e=-2)) let(
+                        vec1 = i==0? UP : unit(path2[i]-path2[i-1], UP),
+                        vec2 = unit(path2[i+1]-path2[i], UP),
+                        axis = vector_axis(vec1,vec2),
+                        ang = vector_angle(vec1,vec2)
+                    ) quat(axis,ang)
+                ]);
+                rotmats = [for (q=quatsums) q_matrix4(q)];
+                sides = [
+                    for (i = idx(path2,e=-2))
+                    quantup(segs(max(widths[i],widths[i+1])/2),4)
+                ];
 
-            // Straight segments
-            setcolor(color) {
-                for (i = idx(path2,e=-2)) {
-                    dist = norm(path2[i+1] - path2[i]);
-                    w1 = widths[i]/2;
-                    w2 = widths[i+1]/2;
-                    $fn = sides[i];
-                    translate(path2[i]) {
-                        multmatrix(rotmats[i]) {
-                            cylinder(r1=w1, r2=w2, h=dist, center=false);
+                // Straight segments
+                setcolor(color) {
+                    for (i = idx(path2,e=-2)) {
+                        dist = norm(path2[i+1] - path2[i]);
+                        w1 = widths[i]/2;
+                        w2 = widths[i+1]/2;
+                        $fn = sides[i];
+                        translate(path2[i]) {
+                            multmatrix(rotmats[i]) {
+                                cylinder(r1=w1, r2=w2, h=dist, center=false);
+                            }
                         }
                     }
                 }
-            }
 
-            // Joints
-            setcolor(joint_color) {
-                for (i = [1:1:len(path2)-2]) {
-                    $fn = sides[i];
-                    translate(path2[i]) {
-                        if (joints != undef) {
-                            joint_shape = _shape_path(
-                                joints, width[i],
-                                joint_width,
-                                joint_length,
-                                joint_extent
-                            );
-                            multmatrix(rotmats[i] * xrot(180)) {
-                                $fn = sides[i];
-                                if (is_undef(joint_angle)) {
-                                    rotate_extrude(convexity=convexity) {
-                                        right_half(planar=true) {
-                                            polygon(joint_shape);
+                // Joints
+                setcolor(joint_color) {
+                    for (i = [1:1:len(path2)-2]) {
+                        $fn = sides[i];
+                        translate(path2[i]) {
+                            if (joints != undef) {
+                                joint_shape = _shape_path(
+                                    joints, width[i],
+                                    joint_width,
+                                    joint_length,
+                                    joint_extent
+                                );
+                                multmatrix(rotmats[i] * xrot(180)) {
+                                    $fn = sides[i];
+                                    if (is_undef(joint_angle)) {
+                                        rotate_extrude(convexity=convexity) {
+                                            right_half(planar=true) {
+                                                polygon(joint_shape);
+                                            }
                                         }
-                                    }
-                                } else {
-                                    rotate([90,0,joint_angle]) {
-                                        linear_extrude(height=max(widths[i],0.001), center=true, convexity=convexity) {
-                                            polygon(joint_shape);
+                                    } else {
+                                        rotate([90,0,joint_angle]) {
+                                            linear_extrude(height=max(widths[i],0.001), center=true, convexity=convexity) {
+                                                polygon(joint_shape);
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        } else if (hull) {
-                            hull(){
+                            } else if (hull) {
+                                hull(){
+                                    multmatrix(rotmats[i]) {
+                                        sphere(d=widths[i],style="aligned");
+                                    }
+                                    multmatrix(rotmats[i-1]) {
+                                        sphere(d=widths[i],style="aligned");
+                                    }
+                                }
+                            } else {
                                 multmatrix(rotmats[i]) {
                                     sphere(d=widths[i],style="aligned");
                                 }
@@ -423,55 +436,48 @@ module stroke(
                                     sphere(d=widths[i],style="aligned");
                                 }
                             }
-                        } else {
-                            multmatrix(rotmats[i]) {
-                                sphere(d=widths[i],style="aligned");
-                            }
-                            multmatrix(rotmats[i-1]) {
-                                sphere(d=widths[i],style="aligned");
-                            }
                         }
                     }
                 }
-            }
 
-            // Endcap1
-            setcolor(endcap_color1) {
-                translate(path[0]) {
-                    multmatrix(rotmats[0] * xrot(180)) {
-                        $fn = sides[0];
-                        if (is_undef(endcap_angle1)) {
-                            rotate_extrude(convexity=convexity) {
-                                right_half(planar=true) {
-                                    polygon(endcap_shape1);
+                // Endcap1
+                setcolor(endcap_color1) {
+                    translate(path[0]) {
+                        multmatrix(rotmats[0] * xrot(180)) {
+                            $fn = sides[0];
+                            if (is_undef(endcap_angle1)) {
+                                rotate_extrude(convexity=convexity) {
+                                    right_half(planar=true) {
+                                        polygon(endcap_shape1);
+                                    }
                                 }
-                            }
-                        } else {
-                            rotate([90,0,endcap_angle1]) {
-                                linear_extrude(height=max(widths[0],0.001), center=true, convexity=convexity) {
-                                    polygon(endcap_shape1);
+                            } else {
+                                rotate([90,0,endcap_angle1]) {
+                                    linear_extrude(height=max(widths[0],0.001), center=true, convexity=convexity) {
+                                        polygon(endcap_shape1);
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            // Endcap2
-            setcolor(endcap_color2) {
-                translate(last(path)) {
-                    multmatrix(last(rotmats)) {
-                        $fn = last(sides);
-                        if (is_undef(endcap_angle2)) {
-                            rotate_extrude(convexity=convexity) {
-                                right_half(planar=true) {
-                                    polygon(endcap_shape2);
+                // Endcap2
+                setcolor(endcap_color2) {
+                    translate(last(path)) {
+                        multmatrix(last(rotmats)) {
+                            $fn = last(sides);
+                            if (is_undef(endcap_angle2)) {
+                                rotate_extrude(convexity=convexity) {
+                                    right_half(planar=true) {
+                                        polygon(endcap_shape2);
+                                    }
                                 }
-                            }
-                        } else {
-                            rotate([90,0,endcap_angle2]) {
-                                linear_extrude(height=max(last(widths),0.001), center=true, convexity=convexity) {
-                                    polygon(endcap_shape2);
+                            } else {
+                                rotate([90,0,endcap_angle2]) {
+                                    linear_extrude(height=max(last(widths),0.001), center=true, convexity=convexity) {
+                                        polygon(endcap_shape2);
+                                    }
                                 }
                             }
                         }
