@@ -34,27 +34,13 @@ module test_vnf_faces() {
 test_vnf_faces();
 
 
-module test_vnf_add_face() {
+module test_vnf_from_polygons() {
     verts = [[-1,-1,-1],[1,-1,-1],[0,1,-1],[0,0,1]];
-    faces = [[0,1,2],[0,3,1],[1,3,2],[2,3,0]];
-    vnf1 = vnf_add_face(pts=select(verts,faces[0]));
-    vnf2 = vnf_add_face(vnf1, pts=select(verts,faces[1]));
-    vnf3 = vnf_add_face(vnf2, pts=select(verts,faces[2]));
-    vnf4 = vnf_add_face(vnf3, pts=select(verts,faces[3]));
-    assert(vnf1 == [select(verts,0,2),select(faces,[0])]);
-    assert(vnf2 == [verts,select(faces,[0:1])]);
-    assert(vnf3 == [verts,select(faces,[0:2])]);
-    assert(vnf4 == [verts,faces]);
+    faces = [[0,1,2],[0,1,3,2],[2,3,0]];
+    assert(vnf_merge(cleanup=true,
+                     [vnf_from_polygons([for (face=faces) select(verts,face)])]) == [verts,faces]);
 }
-test_vnf_add_face();
-
-
-module test_vnf_add_faces() {
-    verts = [[-1,-1,-1],[1,-1,-1],[0,1,-1],[0,0,1]];
-    faces = [[0,1,2],[0,3,1],[1,3,2],[2,3,0]];
-    assert(vnf_add_faces(faces=[for (face=faces) select(verts,face)]) == [verts,faces]);
-}
-test_vnf_add_faces();
+test_vnf_from_polygons();
 
 
 module test_vnf_centroid() {
@@ -85,8 +71,8 @@ test_vnf_area();
 
 
 module test_vnf_merge() {
-    vnf1 = vnf_add_face(pts=[[-1,-1,-1],[1,-1,-1],[0,1,-1]]);
-    vnf2 = vnf_add_face(pts=[[1,1,1],[-1,1,1],[0,1,-1]]);
+    vnf1 = vnf_from_polygons([[[-1,-1,-1],[1,-1,-1],[0,1,-1]]]);
+    vnf2 = vnf_from_polygons([[[1,1,1],[-1,1,1],[0,1,-1]]]);
     assert(vnf_merge([vnf1,vnf2]) == [[[-1,-1,-1],[1,-1,-1],[0,1,-1],[1,1,1],[-1,1,1],[0,1,-1]],[[0,1,2],[3,4,5]]]);
 }
 test_vnf_merge();

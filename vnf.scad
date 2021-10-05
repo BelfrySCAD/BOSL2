@@ -339,7 +339,7 @@ function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
 // Arguments:
 //   polygons = The list of 3d polygons to turn into a VNF
 function vnf_from_polygons(polygons) =
-   assert(is_list(polygons))
+   assert(is_list(polygons) && is_path(polygons[0]),"Input should be a list of polygons")
    let(
        offs = cumsum([0, for(p=polygons) len(p)]),
        faces = [for(i=idx(polygons))
