@@ -19,7 +19,10 @@
 //   stroke(path, [width], [closed], [endcap1], [endcap2], [endcap_width1], [endcap_width2], [endcap_length1], [endcap_length2], [endcap_extent1], [endcap_extent2], [trim1], [trim2]);
 // Topics: Paths (2D), Paths (3D), Drawing Tools
 // Description:
-//   Draws a 2D or 3D path with a given line width.  Endcaps can be specified for each end individually.
+//   Draws a 2D or 3D path with a given line width.  Joints and each endcap can be replaced with
+//   various marker shapes, and can be assigned different colors.  If passed a region instead of
+//   a path, draws each path in the region as a closed polygon by default. If `closed=false` is
+//   given with a region, each subpath is drawn as an un-closed line path.
 // Figure(Med,NoAxes,2D,VPR=[0,0,0],VPD=250): Endcap Types
 //   cap_pairs = [
 //       ["butt",  "chisel" ],
@@ -128,9 +131,20 @@
 //       color="lightgreen", joint_color="red", endcap_color="blue",
 //       joint_width=2.0, endcap_width2=3, $fn=18
 //   );
-// Example: Simplified Plotting
+// Example(2D): Simplified Plotting
 //   path = [for (i=[0:15:360]) [(i-180)/3,20*cos(2*i)]];
 //   stroke(path, width=2, dots=true, color="lightgreen", dots_color="red", $fn=18);
+// Example(2D): Drawing a Region
+//   rgn = [square(100,center=true), circle(d=60,$fn=18)];
+//   stroke(rgn, width=2);
+// Example(2D): Drawing a List of Lines
+//   paths = [
+//       for (y=[-60:60:60]) [
+//           for (a=[-180:15:180])
+//           [a, 2*y+60*sin(a+y)]
+//       ]
+//   ];
+//   stroke(paths, closed=false, width=5);
 function stroke(
     path, width=1, closed,
     endcaps,       endcap1,        endcap2,        joints,       dots,
