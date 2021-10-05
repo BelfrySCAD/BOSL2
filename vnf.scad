@@ -328,59 +328,26 @@ function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
     [nverts, nfaces];
 
 
-
-// Function: vnf_add_face()
+// Function: vnf_from_polygons()
 // Usage:
-//   vnf_add_face(vnf, pts);
+//   vnf = vnf_from_polygons(polygons);
 // Description:
-//   Given a VNF structure and a list of face vertex points, adds the face to the VNF structure.
-//   Returns the modified VNF structure `[VERTICES, FACES]`.  It is up to the caller to make
-//   sure that the points are in the correct order to make the face normal point outwards.
-// Arguments:
-//   vnf = The VNF structure to add a face to.
-//   pts = The vertex points for the face.
-function vnf_add_face(vnf=EMPTY_VNF, pts) =
-    assert(is_vnf(vnf))
-    assert(is_path(pts))
-    let(
-        res = set_union(vnf[0], pts, get_indices=true),
-        face = deduplicate(res[0], closed=true)
-    ) [
-        res[1],
-        concat(vnf[1], len(face)>2? [face] : [])
-    ];
-
-
-
-// Function: vnf_add_faces()
-// Usage:
-//   vnf_add_faces(vnf, faces);
-// Description:
-//   Given a VNF structure and a list of faces, where each face is given as a list of vertex points,
-//   adds the faces to the VNF structure.  Returns the modified VNF structure `[VERTICES, FACES]`.
+//   Given a list of 3d polygons, produces a VNF containing those polygons.  
 //   It is up to the caller to make sure that the points are in the correct order to make the face
-//   normals point outwards.
+//   normals point outwards.  No checking for duplicate vertices is done.  If you want to
+//   remove duplicate vertices use vnf_merge with the cleanup option.  
 // Arguments:
-//   vnf = The VNF structure to add a face to.
-//   faces = The list of faces, where each face is given as a list of vertex points.
-function vnf_add_faces(vnf=EMPTY_VNF, faces) =
-    assert(is_vnf(vnf))
-    assert(is_list(faces))
-    let(
-        res = set_union(vnf[0], flatten(faces), get_indices=true),
-        idxs = res[0],
-        nverts = res[1],
-        offs = cumsum([0, for (face=faces) len(face)]),
-        ifaces = [
-            for (i=idx(faces)) [
-                for (j=idx(faces[i]))
-                idxs[offs[i]+j]
-            ]
-        ]
-    ) [
-        nverts,
-        concat(vnf[1],ifaces)
-    ];
+//   polygons = The list of 3d polygons to turn into a VNF
+function vnf_from_polygons(polygons) =
+   assert(is_list(polygons))
+   let(
+       offs = cumsum([0, for(p=polygons) len(p)]),
+       faces = [for(i=idx(polygons))
+                  [for (j=idx(polygons[i])) offs[i]+j]
+               ]
+   )
+   [flatten(polygons), faces];
+
 
 
 // Section: VNF Testing and Access
@@ -702,7 +669,7 @@ function vnf_slice(vnf,dir,cuts) =
        faces = [for(face=vnf[1]) select(vert,face)],
        poly_list = _slice_3dpolygons(faces, dir, cuts)
   )
-  vnf_add_faces(faces=poly_list);
+  vnf_merge([vnf_from_polygons(poly_list)], cleanup=true); 
 
 
 function _split_polygon_at_x(poly, x) =
@@ -886,48 +853,9 @@ function _triangulate_planar_convex_polygons(polys) =
 //   vnf = apply(fwd(5)*yrot(30),cube([100,2,5],center=true));
 //   bent = vnf_bend(vnf, axis="Z");
 //   vnf_polyhedron(bent);
-function old_vnf_bend(vnf,r,d,axis="Z") =
-    let(
-        chk_axis = assert(in_list(axis,["X","Y","Z"])),
-        vnf = vnf_triangulate(vnf),
-        verts = vnf[0],
-        bounds = pointlist_bounds(verts),
-        bmin = bounds[0],
-        bmax = bounds[1],
-        dflt = axis=="Z"?
-            max(abs(bmax.y), abs(bmin.y)) :
-            max(abs(bmax.z), abs(bmin.z)),
-        r = get_radius(r=r,d=d,dflt=dflt),
-        extent = axis=="X" ? [bmin.y, bmax.y] : [bmin.x, bmax.x]
-    )
-    let(
-        span_chk = axis=="Z"?
-            assert(bmin.y > 0 || bmax.y < 0, "Entire shape MUST be completely in front of or behind y=0.") :
-            assert(bmin.z > 0 || bmax.z < 0, "Entire shape MUST be completely above or below z=0."),
-        steps = ceil(segs(r) * (extent[1]-extent[0])/(2*PI*r)),
-        step = (extent[1]-extent[0]) / steps,
-        bend_at = [for(i = [1:1:steps-1]) i*step+extent[0]],
-        facepolys = [for (face=vnf[1]) select(verts,face)],
-        slicedir = axis=="X"? "Y" : "X",   // slice in y dir for X axis case, and x dir otherwise
-        splits = _slice_3dpolygons(facepolys, slicedir, bend_at),
-        newtris = _triangulate_planar_convex_polygons(splits),
-        bent_faces = [
-            for (tri = newtris) [
-                for (p = tri) let(
-                    a = axis=="X"? 180*p.y/(r*PI) * sign(bmax.z) :
-                        axis=="Y"? 180*p.x/(r*PI) * sign(bmax.z) :
-                        180*p.x/(r*PI) * sign(bmax.y)
-                )
-                axis=="X"? [p.x, p.z*sin(a), p.z*cos(a)] :
-                axis=="Y"? [p.z*sin(a), p.y, p.z*cos(a)] :
-                [p.y*sin(a), p.y*cos(a), p.z]
-            ]
-        ]
-    ) vnf_add_faces(faces=bent_faces);
 function vnf_bend(vnf,r,d,axis="Z") =
     let(
         chk_axis = assert(in_list(axis,["X","Y","Z"])),
-        //vnf = vnf_triangulate(vnf),
         verts = vnf[0],
         bounds = pointlist_bounds(verts),
         bmin = bounds[0],
@@ -954,7 +882,6 @@ function vnf_bend(vnf,r,d,axis="Z") =
                        axis=="Y"? [p.z*sin(a), p.y, p.z*cos(a)] :
                        [p.y*sin(a), p.y*cos(a), p.z]]
                          
-//   ) vnf_triangulate([new_vert,sliced[1]]);
    ) [new_vert,sliced[1]];
 
 
@@ -1134,7 +1061,7 @@ module vnf_debug(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   c = [-50, 50, 50];
 //   d = [ 50, 50, 60];
 //   e = [ 50,-50, 50];
-//   vnf = vnf_add_faces(faces=[
+//   vnf = vnf_from_polygons([
 //       [a, b, e], [a, c, b], [a, d, c], [a, e, d], [b, c, d, e]
 //   ]);
 //   vnf_validate(vnf);
@@ -1146,26 +1073,26 @@ module vnf_debug(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //       path3d(square(100,center=true),0),
 //       path3d(square(100,center=true),100),
 //   ], slices=0, caps=false);
-//   vnf = vnf_add_faces(vnf=vnf1, faces=[
+//   vnf = vnf_merge([vnf1, vnf_from_polygons([
 //       [[-50,-50,  0], [ 50, 50,  0], [-50, 50,  0]],
 //       [[-50,-50,  0], [ 50,-50,  0], [ 50, 50,  0]],
 //       [[-50,-50,100], [-50, 50,100], [ 50, 50,100]],
 //       [[-50,-50,100], [ 50,-50,100], [ 50, 50,100]],
-//   ]);
+//   ])]);
 //   vnf_validate(vnf);
 // Example: T_JUNCTION Errors; Vertex is Mid-Edge on Another Face.
 //   vnf1 = skin([
 //       path3d(square(100,center=true),0),
 //       path3d(square(100,center=true),100),
 //   ], slices=0, caps=false);
-//   vnf = vnf_add_faces(vnf=vnf1, faces=[
+//   vnf = vnf_merge([vnf1, vnf_from_polygons([
 //       [[-50,-50,0], [50,50,0], [-50,50,0]],
 //       [[-50,-50,0], [50,-50,0], [50,50,0]],
 //       [[-50,-50,100], [-50,50,100], [0,50,100]],
 //       [[-50,-50,100], [0,50,100], [0,-50,100]],
 //       [[0,-50,100], [0,50,100], [50,50,100]],
 //       [[0,-50,100], [50,50,100], [50,-50,100]],
-//   ]);
+//   ])]);
 //   vnf_validate(vnf);
 // Example: FACE_ISECT Errors; Faces Intersect
 //   vnf = vnf_merge([
