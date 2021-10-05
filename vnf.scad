@@ -709,9 +709,11 @@ function _triangulate_planar_convex_polygons(polys) =
 // Usage:
 //   bentvnf = vnf_bend(vnf,r,d,[axis]);
 // Description:
-//   Given a VNF that is entirely above, or entirely below the Z=0 plane, bends the VNF around the
-//   Y axis, splitting up faces as necessary.  Returns the bent VNF.  Will error out if the VNF
-//   straddles the Z=0 plane, or if the bent VNF would wrap more than completely around.  The 1:1
+//   Bend a VNF around the X, Y or Z axis, splitting up faces as necessary.  Returns the bent
+//   VNF.  For bending around the Z axis the input VNF must not cross the Y=0 plane.  For bending
+//   around the X or Y axes the VNF must not cross the Z=0 plane.  Note that if you wrap a VNF all the way around
+//   it may intersect itself, which produces an invalid polyhedron.  It is your responsibility to
+//   avoid this situation.  The 1:1
 //   radius is where the curved length of the bent VNF matches the length of the original VNF.  If the
 //   `r` or `d` arguments are given, then they will specify the 1:1 radius or diameter.  If they are
 //   not given, then the 1:1 radius will be defined by the distance of the furthest vertex in the
@@ -776,6 +778,11 @@ function _triangulate_planar_convex_polygons(polys) =
 //   #vnf_polyhedron(vnf1);
 //   bent1 = vnf_bend(vnf1, axis="Z");
 //   vnf_polyhedron([bent1]);
+// Example(3D): Bending more than once around the cylinder
+//   $fn=32;
+//   vnf = apply(fwd(5)*yrot(30),cube([100,2,5],center=true));
+//   bent = vnf_bend(vnf, axis="Z");
+//   vnf_polyhedron(bent);
 function vnf_bend(vnf,r,d,axis="Z") =
     let(
         chk_axis = assert(in_list(axis,["X","Y","Z"])),
@@ -788,24 +795,18 @@ function vnf_bend(vnf,r,d,axis="Z") =
             max(abs(bmax.y), abs(bmin.y)) :
             max(abs(bmax.z), abs(bmin.z)),
         r = get_radius(r=r,d=d,dflt=dflt),
-        width = axis=="X"? (bmax.y-bmin.y) : (bmax.x - bmin.x)
+        extent = axis=="X" ? [bmin.y, bmax.y] : [bmin.x, bmax.x]
     )
-    assert(width <= 2*PI*r, "Shape would wrap more than completely around the cylinder.")
     let(
         span_chk = axis=="Z"?
             assert(bmin.y > 0 || bmax.y < 0, "Entire shape MUST be completely in front of or behind y=0.") :
             assert(bmin.z > 0 || bmax.z < 0, "Entire shape MUST be completely above or below z=0."),
-        min_ang = 180 * bmin.x / (PI * r),
-        max_ang = 180 * bmax.x / (PI * r),
-        ang_span = max_ang-min_ang,
-        steps = ceil(segs(r) * ang_span/360),
-        step = width / steps,
-        bend_at = axis=="X"? [for(i = [1:1:steps-1]) i*step+bmin.y] :
-            [for(i = [1:1:steps-1]) i*step+bmin.x],
+        steps = ceil(segs(r) * (extent[1]-extent[0])/(2*PI*r)),
+        step = (extent[1]-extent[0]) / steps,
+        bend_at = [for(i = [1:1:steps-1]) i*step+extent[0]],
         facepolys = [for (face=vnf[1]) select(verts,face)],
-        splits = axis=="X"?
-            _split_polygons_at_each_y(facepolys, bend_at) :
-            _split_polygons_at_each_x(facepolys, bend_at),
+        slicedir = axis=="X"? "Y" : "X",   // slice in y dir for X axis case, and x dir otherwise
+        splits = _slice_3dpolygons(facepolys, slicedir, bend_at),
         newtris = _triangulate_planar_convex_polygons(splits),
         bent_faces = [
             for (tri = newtris) [
@@ -820,7 +821,6 @@ function vnf_bend(vnf,r,d,axis="Z") =
             ]
         ]
     ) vnf_add_faces(faces=bent_faces);
-
 
 
 function _split_polygon_at_x(poly, x) =
@@ -838,8 +838,7 @@ function _split_polygon_at_x(poly, x) =
                     u = (x - p[0].x) / (p[1].x - p[0].x)
                 ) [
                     x,  // Important for later exact match tests
-                    u*(p[1].y-p[0].y)+p[0].y,
-                    u*(p[1].z-p[0].z)+p[0].z,
+                    u*(p[1].y-p[0].y)+p[0].y
                 ]
             ]
         ],
@@ -853,88 +852,62 @@ function _split_polygon_at_x(poly, x) =
     ) out;
 
 
-function _split_polygon_at_y(poly, y) =
-    let(
-        ys = subindex(poly,1)
-    ) (min(ys) >= y || max(ys) <= y)? [poly] :
-    let(
-        poly2 = [
-            for (p = pair(poly,true)) each [
-                p[0],
-                if(
-                    (p[0].y < y && p[1].y > y) ||
-                    (p[1].y < y && p[0].y > y)
-                ) let(
-                    u = (y - p[0].y) / (p[1].y - p[0].y)
-                ) [
-                    u*(p[1].x-p[0].x)+p[0].x,
-                    y,  // Important for later exact match tests
-                    u*(p[1].z-p[0].z)+p[0].z,
-                ]
-            ]
-        ],
-        out1 = [for (p = poly2) if(p.y <= y) p],
-        out2 = [for (p = poly2) if(p.y >= y) p],
-        out3 = [
-            if (len(out1)>=3) each split_path_at_self_crossings(out1),
-            if (len(out2)>=3) each split_path_at_self_crossings(out2),
-        ],
-        out = [for (p=out3) if (len(p) > 2) cleanup_path(p)]
-    ) out;
-
-
-
-/// Function: _split_polygons_at_each_x()
-// Usage:
-//   splitpolys = split_polygons_at_each_x(polys, xs);
-/// Topics: Geometry, Polygons, Intersections
-// Description:
-//   Given a list of 3D polygons, splits all of them wherever they cross any X value given in `xs`.
-// Arguments:
-//   polys = A list of 3D polygons to split.
-//   xs = A list of scalar X values to split at.
-function _split_polygons_at_each_x(polys, xs, _i=0) =
-    assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
-    assert( is_vector(xs), "The split value list should contain only numbers." )
+function _split_2dpolygons_at_each_x(polys, xs, _i=0) =
     _i>=len(xs)? polys :
-    _split_polygons_at_each_x(
+    _split_2dpolygons_at_each_x(
         [
             for (poly = polys)
             each _split_polygon_at_x(poly, xs[_i])
         ], xs, _i=_i+1
     );
 
-
-///Internal Function: _split_polygons_at_each_y()
-// Usage:
-//   splitpolys = _split_polygons_at_each_y(polys, ys);
+/// Function: _slice_3dpolygons()
+/// Usage:
+///   splitpolys = _slice_3dpolygons(polys, dir, cuts);
 /// Topics: Geometry, Polygons, Intersections
-// Description:
-//   Given a list of 3D polygons, splits all of them wherever they cross any Y value given in `ys`.
-// Arguments:
-//   polys = A list of 3D polygons to split.
-//   ys = A list of scalar Y values to split at.
-function _split_polygons_at_each_y(polys, ys, _i=0) =
+/// Description:
+///   Given a list of 3D polygons, a choice of X, Y, or Z, and a cut list, `cuts`, splits all of the polygons where they cross
+///   X/Y/Z at any value given in cuts.  
+/// Arguments:
+///   polys = A list of 3D polygons to split.
+///   dir_ind = slice direction, 0=X, 1=Y, or 2=Z
+///   cuts = A list of scalar values for locating the cuts
+function _slice_3dpolygons(polys, dir, cuts) =
     assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
-    assert( is_vector(ys), "The split value list should contain only numbers." )
-    _i>=len(ys)? polys :
-    _split_polygons_at_each_y(
-        [
-            for (poly = polys)
-            each _split_polygon_at_y(poly, ys[_i])
-        ], ys, _i=_i+1
-    );
+    assert( is_vector(cuts), "The split list must be a vector.")
+    assert( in_list(dir, ["X", "Y", "Z"]))
+    let(
+        I = ident(3),
+        dir_ind = ord(dir)-ord("X")
+    )
+    flatten([for (poly = polys)
+        let(
+            plane = plane_from_polygon(poly),
+            normal = point3d(plane),
+            pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
+        )
+        approx(pnormal,[0,0,0]) ? [poly] :
+        let (
+            pind = max_index(v_abs(pnormal)),  // project along this direction
+            otherind = 3-pind-dir_ind,         // keep dir_ind and this direction
+            keep = [I[dir_ind], I[otherind]],  // dir ind becomes the x dir
+            poly2d = poly*transpose(keep),     // project to 2d, putting selected direction in the X position
+            poly_list = [for(p=_split_2dpolygons_at_each_x([poly2d], cuts))
+                            let(
+                                a = p*keep,    // unproject, but pind dimension data is missing
+                                ofs = outer_product((repeat(plane[3], len(a))-a*normal)/plane[pind],I[pind])
+                             )
+                             a+ofs]    // ofs computes the missing pind dimension data and adds it back in
+        )
+        poly_list
+    ]);
 
-
-
-// Section: Debugging VNFs
 
 // Section: Debugging Polyhedrons
 
-
 // Module: _show_vertices()
 // Usage:
-//   _show_vertices(vertices, [size], [disabled=]);
+//   _show_vertices(vertices, [size])
 // Description:
 //   Draws all the vertices in an array, at their 3D position, numbered by their
 //   position in the vertex array.  Also draws any children of this module with
@@ -942,8 +915,6 @@ function _split_polygons_at_each_y(polys, ys, _i=0) =
 // Arguments:
 //   vertices = Array of point vertices.
 //   size = The size of the text used to label the vertices.  Default: 1
-//   ---
-//   disabled = If true, don't draw numbers, and draw children without transparency.  Default = false.
 // Example:
 //   verts = [for (z=[-10,10], y=[-10,10], x=[-10,10]) [x,y,z]];
 //   faces = [[0,1,2], [1,3,2], [0,4,5], [0,5,1], [1,5,7], [1,7,3], [3,7,6], [3,6,2], [2,6,4], [2,4,0], [4,6,7], [4,7,5]];
@@ -971,7 +942,7 @@ module _show_vertices(vertices, size=1) {
 
 /// Module: _show_faces()
 /// Usage:
-///   _show_faces(vertices, faces, [size=], [disabled=]);
+///   _show_faces(vertices, faces, [size=]);
 /// Description:
 ///   Draws all the vertices at their 3D position, numbered in blue by their
 ///   position in the vertex array.  Each face will have their face number drawn
@@ -980,9 +951,7 @@ module _show_vertices(vertices, size=1) {
 /// Arguments:
 ///   vertices = Array of point vertices.
 ///   faces = Array of faces by vertex numbers.
-///   ---
 ///   size = The size of the text used to label the faces and vertices.  Default: 1
-///   disabled = If true, don't draw numbers, and draw children without transparency.  Default: false.
 /// Example(EdgesMed):
 ///   verts = [for (z=[-10,10], y=[-10,10], x=[-10,10]) [x,y,z]];
 ///   faces = [[0,1,2], [1,3,2], [0,4,5], [0,5,1], [1,5,7], [1,7,3], [3,7,6], [3,6,2], [2,6,4], [2,4,0], [4,6,7], [4,7,5]];
@@ -1029,7 +998,7 @@ module _show_faces(vertices, faces, size=1) {
 
 // Module: vnf_debug()
 // Usage:
-//   vnf_debug(vnfs, [faces=], [vertices=], [convexity=], [txtsize=]);
+//   vnf_debug(vnfs, [faces], [vertices], [opacity], [size], [convexity]);
 // Description:
 //   A drop-in module to replace `vnf_polyhedron()` to help debug vertices and faces.
 //   Draws all the vertices at their 3D position, numbered in blue by their
@@ -1037,7 +1006,7 @@ module _show_faces(vertices, faces, size=1) {
 //   in red, aligned with the center of face.  All given faces are drawn with
 //   transparency. All children of this module are drawn with transparency.
 //   Works best with Thrown-Together preview mode, to see reversed faces.
-//   You can set opacity to 0 if you want to disable the display of the polyhedron faces.  
+//   You can set opacity to 0 if you want to supress the display of the polyhedron faces.  
 //   .
 //   The vertex numbers are shown rotated to face you.  As you rotate your polyhedron you
 //   can rerun the preview to display them oriented for viewing from a different viewpoint.
@@ -1050,12 +1019,11 @@ module _show_faces(vertices, faces, size=1) {
 //   opacity = Opacity of the polyhedron faces.  Default: 0.5
 //   convexity = The max number of walls a ray can pass through the given polygon paths.
 //   size = The size of the text used to label the faces and vertices.  Default: 1
-//   disabled = If true, act exactly like `polyhedron()`.  Default = false.
 // Example(EdgesMed):
 //   verts = [for (z=[-10,10], a=[0:120:359.9]) [10*cos(a),10*sin(a),z]];
 //   faces = [[0,1,2], [5,4,3], [0,3,4], [0,4,1], [1,4,5], [1,5,2], [2,5,3], [2,3,0]];
-//   vnf_debug([verts,faces], txtsize=2);
-module vnf_debug(vnf, convexity=6, size=1, faces=true, vertices=true, opacity=0.5) {
+//   vnf_debug([verts,faces], size=2);
+module vnf_debug(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=6 ) {
     no_children($children);
     if (faces)
       _show_faces(vertices=vnf[0], faces=vnf[1], size=size);
