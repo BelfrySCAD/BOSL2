@@ -41,6 +41,19 @@
 // Examples(Med):
 //   threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
+// Example: Diamond threading where both left-handed and right-handed nuts travel (in the same direction) on the threaded rod:
+//   $slop = 0.075;
+//   d = 3/8*INCH;
+//   pitch = 1/16*INCH;
+//   starts=3;
+//   xdistribute(19){
+//       intersection(){
+//         threaded_rod(l=40, pitch=pitch, d=d,starts=starts,anchor=BOTTOM);
+//         threaded_rod(l=40, pitch=pitch, d=d, left_handed=true,starts=starts,anchor=BOTTOM);
+//       }
+//       threaded_nut(od=4.5/8*INCH,id=d,h=3/8*INCH,pitch=pitch,starts=starts,anchor=BOTTOM);
+//       threaded_nut(od=4.5/8*INCH,id=d,h=3/8*INCH,pitch=pitch,starts=starts,left_handed=true,anchor=BOTTOM);
+//   }
 module threaded_rod(
     d, l, pitch,
     left_handed=false,
