@@ -683,6 +683,109 @@ function _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount, newfaces=
  
 
 
+// Function: vnf_slice()
+// Usage:
+//   sliced = vnf_slice(vnf, dir, cuts);
+// Description:
+//   Slice the faces of a VNF along a specified axis direction at a given list
+//   of cut points.  You can use this to refine the faces of a VNF before applying
+//   a nonlinear transformation to its vertex set.
+// Example:
+//   include <BOSL2-fork/polyhedra.scad>
+//   vnf = regular_polyhedron_info("vnf", "dodecahedron", side=12);
+//   vnf_polyhedron(vnf);
+//   sliced = vnf_slice(vnf, "X", [-6,-1,10]);
+//   color("red")vnf_wireframe(sliced,width=.3);
+function vnf_slice(vnf,dir,cuts) =
+  let(
+       vert = vnf[0],
+       faces = [for(face=vnf[1]) select(vert,face)],
+       poly_list = _slice_3dpolygons(faces, dir, cuts)
+  )
+  vnf_add_faces(faces=poly_list);
+
+
+function _split_polygon_at_x(poly, x) =
+    let(
+        xs = subindex(poly,0)
+    ) (min(xs) >= x || max(xs) <= x)? [poly] :
+    let(
+        poly2 = [
+            for (p = pair(poly,true)) each [
+                p[0],
+                if(
+                    (p[0].x < x && p[1].x > x) ||
+                    (p[1].x < x && p[0].x > x)
+                ) let(
+                    u = (x - p[0].x) / (p[1].x - p[0].x)
+                ) [
+                    x,  // Important for later exact match tests
+                    u*(p[1].y-p[0].y)+p[0].y
+                ]
+            ]
+        ],
+        out1 = [for (p = poly2) if(p.x <= x) p],
+        out2 = [for (p = poly2) if(p.x >= x) p],
+        out3 = [
+            if (len(out1)>=3) each split_path_at_self_crossings(out1),
+            if (len(out2)>=3) each split_path_at_self_crossings(out2),
+        ],
+        out = [for (p=out3) if (len(p) > 2) cleanup_path(p)]
+    ) out;
+
+
+function _split_2dpolygons_at_each_x(polys, xs, _i=0) =
+    _i>=len(xs)? polys :
+    _split_2dpolygons_at_each_x(
+        [
+            for (poly = polys)
+            each _split_polygon_at_x(poly, xs[_i])
+        ], xs, _i=_i+1
+    );
+
+/// Function: _slice_3dpolygons()
+/// Usage:
+///   splitpolys = _slice_3dpolygons(polys, dir, cuts);
+/// Topics: Geometry, Polygons, Intersections
+/// Description:
+///   Given a list of 3D polygons, a choice of X, Y, or Z, and a cut list, `cuts`, splits all of the polygons where they cross
+///   X/Y/Z at any value given in cuts.  
+/// Arguments:
+///   polys = A list of 3D polygons to split.
+///   dir_ind = slice direction, 0=X, 1=Y, or 2=Z
+///   cuts = A list of scalar values for locating the cuts
+function _slice_3dpolygons(polys, dir, cuts) =
+    assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
+    assert( is_vector(cuts), "The split list must be a vector.")
+    assert( in_list(dir, ["X", "Y", "Z"]))
+    let(
+        I = ident(3),
+        dir_ind = ord(dir)-ord("X")
+    )
+    flatten([for (poly = polys)
+        let(
+            plane = plane_from_polygon(poly),
+            normal = point3d(plane),
+            pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
+        )
+        approx(pnormal,[0,0,0]) ? [poly] :
+        let (
+            pind = max_index(v_abs(pnormal)),  // project along this direction
+            otherind = 3-pind-dir_ind,         // keep dir_ind and this direction
+            keep = [I[dir_ind], I[otherind]],  // dir ind becomes the x dir
+            poly2d = poly*transpose(keep),     // project to 2d, putting selected direction in the X position
+            poly_list = [for(p=_split_2dpolygons_at_each_x([poly2d], cuts))
+                            let(
+                                a = p*keep,    // unproject, but pind dimension data is missing
+                                ofs = outer_product((repeat(plane[3], len(a))-a*normal)/plane[pind],I[pind])
+                             )
+                             a+ofs]    // ofs computes the missing pind dimension data and adds it back in
+        )
+        poly_list
+    ]);
+
+
+
 function _triangulate_planar_convex_polygons(polys) =
     polys==[]? [] :
     let(
@@ -783,7 +886,7 @@ function _triangulate_planar_convex_polygons(polys) =
 //   vnf = apply(fwd(5)*yrot(30),cube([100,2,5],center=true));
 //   bent = vnf_bend(vnf, axis="Z");
 //   vnf_polyhedron(bent);
-function vnf_bend(vnf,r,d,axis="Z") =
+function old_vnf_bend(vnf,r,d,axis="Z") =
     let(
         chk_axis = assert(in_list(axis,["X","Y","Z"])),
         vnf = vnf_triangulate(vnf),
@@ -821,86 +924,40 @@ function vnf_bend(vnf,r,d,axis="Z") =
             ]
         ]
     ) vnf_add_faces(faces=bent_faces);
-
-
-function _split_polygon_at_x(poly, x) =
+function vnf_bend(vnf,r,d,axis="Z") =
     let(
-        xs = subindex(poly,0)
-    ) (min(xs) >= x || max(xs) <= x)? [poly] :
-    let(
-        poly2 = [
-            for (p = pair(poly,true)) each [
-                p[0],
-                if(
-                    (p[0].x < x && p[1].x > x) ||
-                    (p[1].x < x && p[0].x > x)
-                ) let(
-                    u = (x - p[0].x) / (p[1].x - p[0].x)
-                ) [
-                    x,  // Important for later exact match tests
-                    u*(p[1].y-p[0].y)+p[0].y
-                ]
-            ]
-        ],
-        out1 = [for (p = poly2) if(p.x <= x) p],
-        out2 = [for (p = poly2) if(p.x >= x) p],
-        out3 = [
-            if (len(out1)>=3) each split_path_at_self_crossings(out1),
-            if (len(out2)>=3) each split_path_at_self_crossings(out2),
-        ],
-        out = [for (p=out3) if (len(p) > 2) cleanup_path(p)]
-    ) out;
-
-
-function _split_2dpolygons_at_each_x(polys, xs, _i=0) =
-    _i>=len(xs)? polys :
-    _split_2dpolygons_at_each_x(
-        [
-            for (poly = polys)
-            each _split_polygon_at_x(poly, xs[_i])
-        ], xs, _i=_i+1
-    );
-
-/// Function: _slice_3dpolygons()
-/// Usage:
-///   splitpolys = _slice_3dpolygons(polys, dir, cuts);
-/// Topics: Geometry, Polygons, Intersections
-/// Description:
-///   Given a list of 3D polygons, a choice of X, Y, or Z, and a cut list, `cuts`, splits all of the polygons where they cross
-///   X/Y/Z at any value given in cuts.  
-/// Arguments:
-///   polys = A list of 3D polygons to split.
-///   dir_ind = slice direction, 0=X, 1=Y, or 2=Z
-///   cuts = A list of scalar values for locating the cuts
-function _slice_3dpolygons(polys, dir, cuts) =
-    assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
-    assert( is_vector(cuts), "The split list must be a vector.")
-    assert( in_list(dir, ["X", "Y", "Z"]))
-    let(
-        I = ident(3),
-        dir_ind = ord(dir)-ord("X")
+        chk_axis = assert(in_list(axis,["X","Y","Z"])),
+        //vnf = vnf_triangulate(vnf),
+        verts = vnf[0],
+        bounds = pointlist_bounds(verts),
+        bmin = bounds[0],
+        bmax = bounds[1],
+        dflt = axis=="Z"?
+            max(abs(bmax.y), abs(bmin.y)) :
+            max(abs(bmax.z), abs(bmin.z)),
+        r = get_radius(r=r,d=d,dflt=dflt),
+        extent = axis=="X" ? [bmin.y, bmax.y] : [bmin.x, bmax.x]
     )
-    flatten([for (poly = polys)
-        let(
-            plane = plane_from_polygon(poly),
-            normal = point3d(plane),
-            pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
-        )
-        approx(pnormal,[0,0,0]) ? [poly] :
-        let (
-            pind = max_index(v_abs(pnormal)),  // project along this direction
-            otherind = 3-pind-dir_ind,         // keep dir_ind and this direction
-            keep = [I[dir_ind], I[otherind]],  // dir ind becomes the x dir
-            poly2d = poly*transpose(keep),     // project to 2d, putting selected direction in the X position
-            poly_list = [for(p=_split_2dpolygons_at_each_x([poly2d], cuts))
-                            let(
-                                a = p*keep,    // unproject, but pind dimension data is missing
-                                ofs = outer_product((repeat(plane[3], len(a))-a*normal)/plane[pind],I[pind])
-                             )
-                             a+ofs]    // ofs computes the missing pind dimension data and adds it back in
-        )
-        poly_list
-    ]);
+    let(
+        span_chk = axis=="Z"?
+            assert(bmin.y > 0 || bmax.y < 0, "Entire shape MUST be completely in front of or behind y=0.") :
+            assert(bmin.z > 0 || bmax.z < 0, "Entire shape MUST be completely above or below z=0."),
+        steps = ceil(segs(r) * (extent[1]-extent[0])/(2*PI*r)),
+        step = (extent[1]-extent[0]) / steps,
+        bend_at = [for(i = [1:1:steps-1]) i*step+extent[0]],
+        slicedir = axis=="X"? "Y" : "X",   // slice in y dir for X axis case, and x dir otherwise
+        sliced = vnf_slice(vnf, slicedir, bend_at),
+        coord = axis=="X" ? [0,sign(bmax.z),0] : axis=="Y" ? [sign(bmax.z),0,0] : [sign(bmax.y),0,0],
+        new_vert = [for(p=sliced[0])
+                       let(a=coord*p*180/(PI*r))
+                       axis=="X"? [p.x, p.z*sin(a), p.z*cos(a)] :
+                       axis=="Y"? [p.z*sin(a), p.y, p.z*cos(a)] :
+                       [p.y*sin(a), p.y*cos(a), p.z]]
+                         
+//   ) vnf_triangulate([new_vert,sliced[1]]);
+   ) [new_vert,sliced[1]];
+
+
 
 
 // Section: Debugging Polyhedrons
