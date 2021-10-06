@@ -646,14 +646,14 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 //   bounded = If false, the line is considered unbounded.  If true, it is treated as a bounded line segment.  If given as `[true, false]` or `[false, true]`, the boundedness of the points are specified individually, allowing the line to be treated as a half-bounded ray.  Default: false (unbounded)
 //   nonzero = set to true to use the nonzero rule for determining it points are in a polygon.  See point_in_polygon.  Default: false.
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-// Example: The line intersects the 3d hexagon in a single point. 
+// Example(3D): The line intersects the 3d hexagon in a single point. 
 //   hex = zrot(140,p=rot([-45,40,20],p=path3d(hexagon(r=15))));
 //   line = [[5,0,-13],[-3,-5,13]];
 //   isect = polygon_line_intersection(hex,line);
 //   stroke(hex,closed=true);
 //   stroke(line);
-//   color("red")move(isect)sphere(r=1);
-// Example: In 2D things are more complicated.  The output is a list of intersection parts, in the simplest case a single segment.
+//   color("red")move(isect)sphere(r=1,$fn=12);
+// Example(2D): In 2D things are more complicated.  The output is a list of intersection parts, in the simplest case a single segment.
 //   hex = hexagon(r=15);
 //   line = [[-20,10],[25,-7]];
 //   isect = polygon_line_intersection(hex,line);
@@ -665,7 +665,7 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 //          move(part[0]) sphere(r=1);
 //        else
 //          stroke(part);
-// Example: In 2D things are more complicated.  Here the line is treated as a ray. 
+// Example(2D): Here the line is treated as a ray. 
 //   hex = hexagon(r=15);
 //   line = [[0,0],[25,-7]];
 //   isect = polygon_line_intersection(hex,line,RAY);
@@ -677,7 +677,7 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 //          move(part[0]) circle(r=1,$fn=12);
 //        else
 //          stroke(part);
-// Example: Here the intersection is a single point, which is returned as a single point "path" on the path list.
+// Example(2D): Here the intersection is a single point, which is returned as a single point "path" on the path list.
 //   hex = hexagon(r=15);
 //   line = [[15,-10],[15,13]];
 //   isect = polygon_line_intersection(hex,line,RAY);
@@ -689,7 +689,7 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 //          move(part[0]) circle(r=1,$fn=12);
 //        else
 //          stroke(part);
-// Example: Another way to get a single segment
+// Example(2D): Another way to get a single segment
 //   hex = hexagon(r=15);
 //   line = rot(30,p=[[15,-10],[15,25]],cp=[15,0]);
 //   isect = polygon_line_intersection(hex,line,RAY);
@@ -701,7 +701,7 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 //          move(part[0]) circle(r=1,$fn=12);
 //        else
 //          stroke(part);
-// Example: Single segment again
+// Example(2D): Single segment again
 //   star = star(r=15,n=8,step=2);
 //   line = [[20,-5],[-5,20]];
 //   isect = polygon_line_intersection(star,line,RAY);
@@ -713,7 +713,7 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 //          move(part[0]) circle(r=1,$fn=12);
 //        else
 //          stroke(part);
-// Example: Solution is two points
+// Example(2D): Solution is two points
 //   star = star(r=15,n=8,step=3);
 //   line = rot(22.5,p=[[15,-10],[15,20]],cp=[15,0]);
 //   isect = polygon_line_intersection(star,line,SEGMENT);
@@ -725,7 +725,7 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 //          move(part[0]) circle(r=1,$fn=12);
 //        else
 //          stroke(part);
-// Example: Solution is list of three segments
+// Example(2D): Solution is list of three segments
 //   star = star(r=25,ir=9,n=8);
 //   line = [[-25,12],[25,12]];
 //   isect = polygon_line_intersection(star,line);
@@ -737,7 +737,7 @@ function plane_line_intersection(plane, line, bounded=false, eps=EPSILON) =
 //          move(part[0]) circle(r=1,$fn=12);
 //        else
 //          stroke(part);
-// Example: Solution is a mixture of segments and points
+// Example(2D): Solution is a mixture of segments and points
 //   star = star(r=25,ir=9,n=7);
 //   line = [left(10,p=star[8]), right(50,p=star[8])];
 //   isect = polygon_line_intersection(star,line);
@@ -1591,22 +1591,17 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   poly = Array of vertices for the polygon.
 //   ind = A list indexing the vertices of the polygon in `poly`.
 //   eps = A maximum tolerance in geometrical tests. Default: EPSILON
-// Example:
+// Example(2D):
 //   poly = star(id=10, od=15,n=11);
 //   tris =  polygon_triangulate(poly);
-//   polygon(poly);
-//   up(1)
-//   color("blue");
-//   for(tri=tris) trace_path(select(poly,tri), size=.1, closed=true);
-//
-// Example: 
-//   include<BOSL2/polyhedra.scad>
+//   for(tri=tris) stroke(select(poly,tri), width=.1, closed=true);
+// Example(3D): 
+//   include <BOSL2/polyhedra.scad>
 //   vnf = regular_polyhedron_info(name="dodecahedron",side=5,info="vnf");
 //   %vnf_polyhedron(vnf);
 //   vnf_tri = [vnf[0], [for(face=vnf[1]) each polygon_triangulate(vnf[0], face) ] ];
 //   color("blue")
-//   vnf_wireframe(vnf_tri, d=.15);
-
+//   vnf_wireframe(vnf_tri, width=.15);
 function polygon_triangulate(poly, ind, eps=EPSILON) =
     assert(is_path(poly), "Polygon `poly` should be a list of 2d or 3d points")
     assert(is_undef(ind) 
