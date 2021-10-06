@@ -206,35 +206,35 @@ function vnf_vertex_array(
 //   points = List of point lists for each row
 //   row_wrap = If true then add faces connecting the first row and last row.  These rows must differ by at most 2 in length.
 //   reverse = Set this to reverse the direction of the faces
-// Example:  Each row has one more point than the preceeding one.
+// Example(3D): Each row has one more point than the preceeding one.
 //   pts = [for(y=[1:1:10]) [for(x=[0:y-1]) [x,y,y]]];
 //   vnf = vnf_tri_array(pts);
-//   vnf_wireframe(vnf,d=.1);
+//   vnf_wireframe(vnf,width=0.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
-// Example:  Each row has one more point than the preceeding one.
+// Example(3D): Each row has one more point than the preceeding one.
 //   pts = [for(y=[0:2:10]) [for(x=[-y/2:y/2]) [x,y,y]]];
 //   vnf = vnf_tri_array(pts);
-//   vnf_wireframe(vnf,d=.1);
+//   vnf_wireframe(vnf,width=0.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
-// Example: Chaining two VNFs to construct a cone with one point length change between rows.
+// Example(3D): Chaining two VNFs to construct a cone with one point length change between rows.
 //   pts1 = [for(z=[0:10]) path3d(arc(3+z,r=z/2+1, angle=[0,180]),10-z)];
 //   pts2 = [for(z=[0:10]) path3d(arc(3+z,r=z/2+1, angle=[180,360]),10-z)];
 //   vnf = vnf_tri_array(pts1,
 //                       vnf=vnf_tri_array(pts2));
-//   color("green")vnf_wireframe(vnf,d=.1);
+//   color("green")vnf_wireframe(vnf,width=0.1);
 //   vnf_polyhedron(vnf);
-// Example: Cone with length change two between rows
+// Example(3D): Cone with length change two between rows
 //   pts1 = [for(z=[0:1:10]) path3d(arc(3+2*z,r=z/2+1, angle=[0,180]),10-z)];
 //   pts2 = [for(z=[0:1:10]) path3d(arc(3+2*z,r=z/2+1, angle=[180,360]),10-z)];
 //   vnf = vnf_tri_array(pts1,
 //                       vnf=vnf_tri_array(pts2));
-//   color("green")vnf_wireframe(vnf,d=.1);
+//   color("green")vnf_wireframe(vnf,width=0.1);
 //   vnf_polyhedron(vnf);
-// Example: Point count can change irregularly
+// Example(3D): Point count can change irregularly
 //   lens = [10,9,7,5,6,8,8,10];
 //   pts = [for(y=idx(lens)) lerpn([-lens[y],y,y],[lens[y],y,y],lens[y])];
 //   vnf = vnf_tri_array(pts);
-//   vnf_wireframe(vnf,d=.1);
+//   vnf_wireframe(vnf,width=0.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
 function vnf_tri_array(points, row_wrap=false, reverse=false, vnf=EMPTY_VNF) = 
    let(
@@ -422,234 +422,6 @@ function vnf_triangulate(vnf) =
 
 
 
-// Section: Turning a VNF into geometry
-
-
-// Module: vnf_polyhedron()
-// Usage:
-//   vnf_polyhedron(vnf);
-//   vnf_polyhedron([VNF, VNF, VNF, ...]);
-// Description:
-//   Given a VNF structure, or a list of VNF structures, creates a polyhedron from them.
-// Arguments:
-//   vnf = A VNF structure, or list of VNF structures.
-//   convexity = Max number of times a line could intersect a wall of the shape.
-//   extent = If true, calculate anchors by extents, rather than intersection.  Default: true.
-//   cp = Centerpoint of VNF to use for anchoring when `extent` is false.  Default: `[0, 0, 0]`
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"origin"`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin", spin=0, orient=UP) {
-    vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf;
-    cp = is_def(cp) ? cp : vnf_centroid(vnf);
-    attachable(anchor,spin,orient, vnf=vnf, extent=extent, cp=cp) {
-        polyhedron(vnf[0], vnf[1], convexity=convexity);
-        children();
-    }
-}
-
-
-// Module: vnf_wireframe()
-// Usage:
-//   vnf_wireframe(vnf, <r|d>);
-// Description:
-//   Given a VNF, creates a wire frame ball-and-stick model of the polyhedron with a cylinder for
-//   each edge and a sphere at each vertex.  The width parameter specifies the width of the sticks
-//   that form the wire frame. 
-// Arguments:
-//   vnf = A vnf structure
-//   width = width of the cylinders forming the wire frame.  Default: 1
-// Example:
-//   $fn=32;
-//   ball = sphere(r=20, $fn=6);
-//   vnf_wireframe(ball,width=1);
-// Example:
-//   include <BOSL2/polyhedra.scad>
-//   $fn=32;
-//   cube_oct = regular_polyhedron_info("vnf", name="cuboctahedron", or=20);
-//   vnf_wireframe(cube_oct);
-// Example: The spheres at the vertex are imperfect at aligning with the cylinders, so especially at low $fn things look prety ugly.  This is normal.
-//   include <BOSL2/polyhedra.scad>
-//   $fn=8;
-//   octahedron = regular_polyhedron_info("vnf", name="octahedron", or=20);
-//   vnf_wireframe(octahedron,width=5);
-module vnf_wireframe(vnf, width=1)
-{
-  vertex = vnf[0];
-  edges = unique([for (face=vnf[1], i=idx(face))
-                    sort([face[i], select(face,i+1)])
-                 ]);
-  for (e=edges) extrude_from_to(vertex[e[0]],vertex[e[1]]) circle(d=width);
-  move_copies(vertex) sphere(d=width);
-}
-
-
-// Section: Operations on VNFs
-
-// Function: vnf_volume()
-// Usage:
-//   vol = vnf_volume(vnf);
-// Description:
-//   Returns the volume enclosed by the given manifold VNF.   The VNF must describe a valid polyhedron with consistent face direction and
-//   no holes; otherwise the results are undefined.  Returns a positive volume if face direction is clockwise and a negative volume
-//   if face direction is counter-clockwise.
-
-// Divide the polyhedron into tetrahedra with the origin as one vertex and sum up the signed volume.
-function vnf_volume(vnf) =
-    let(verts = vnf[0])
-    sum([
-         for(face=vnf[1], j=[1:1:len(face)-2])
-             cross(verts[face[j+1]], verts[face[j]]) * verts[face[0]]
-    ])/6;
-
-
-// Function: vnf_area()
-// Usage:
-//   area = vnf_area(vnf);
-// Description:
-//   Returns the surface area in any VNF by adding up the area of all its faces.  The VNF need not be a manifold.  
-function vnf_area(vnf) =
-    let(verts=vnf[0])
-    sum([for(face=vnf[1]) polygon_area(select(verts,face))]);
-
-
-// Function: vnf_centroid()
-// Usage:
-//   vol = vnf_centroid(vnf);
-// Description:
-//   Returns the centroid of the given manifold VNF.  The VNF must describe a valid polyhedron with consistent face direction and
-//   no holes; otherwise the results are undefined.
-
-// Divide the solid up into tetrahedra with the origin as one vertex.  
-// The centroid of a tetrahedron is the average of its vertices.
-// The centroid of the total is the volume weighted average.
-function vnf_centroid(vnf) =
-    assert(is_vnf(vnf) && len(vnf[0])!=0 ) 
-    let(
-        verts = vnf[0],
-        pos = sum([
-            for(face=vnf[1], j=[1:1:len(face)-2]) let(
-                v0  = verts[face[0]],
-                v1  = verts[face[j]],
-                v2  = verts[face[j+1]],
-                vol = cross(v2,v1)*v0
-            )
-            [ vol, (v0+v1+v2)*vol ]
-        ])
-    )
-    assert(!approx(pos[0],0, EPSILON), "The vnf has self-intersections.")
-    pos[1]/pos[0]/4;
-
-
-// Function: vnf_halfspace()
-// Usage:
-//   newvnf = vnf_halfspace(plane, vnf, [closed]);
-// Description:
-//   Returns the intersection of the vnf with a half space.  The half space is defined by
-//   plane = [A,B,C,D], taking the side where the normal [A,B,C] points: Ax+By+Cz≥D.
-//   If closed is set to false then the cut face is not included in the vnf.  This could
-//   allow further extension of the vnf by merging with other vnfs.  
-// Arguments:
-//   plane = plane defining the boundary of the half space
-//   vnf = vnf to cut
-//   closed = if false do not return include cut face(s).  Default: true
-// Example:
-//   vnf = cube(10,center=true);
-//   cutvnf = vnf_halfspace([-1,1,-1,0], vnf);
-//   vnf_polyhedron(cutvnf);
-// Example:  Cut face has 2 components
-//   vnf = path_sweep(circle(r=4, $fn=16),
-//                    circle(r=20, $fn=64),closed=true);
-//   cutvnf = vnf_halfspace([-1,1,-4,0], vnf);
-//   vnf_polyhedron(cutvnf);
-// Example: Cut face is not simply connected
-//   vnf = path_sweep(circle(r=4, $fn=16),
-//                    circle(r=20, $fn=64),closed=true);
-//   cutvnf = vnf_halfspace([0,0.7,-4,0], vnf);
-//   vnf_polyhedron(cutvnf);
-// Example: Cut object has multiple components
-//   function knot(a,b,t) =   // rolling knot 
-//        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
-//          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
-//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
-//   a = 0.8; b = sqrt (1 - a * a); 
-//   ksteps = 400;
-//   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
-//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
-//   knot=path_sweep(ushape, knot_path, closed=true, method="incremental");
-//   cut_knot = vnf_halfspace([1,0,0,0], knot);
-//   vnf_polyhedron(cut_knot);
-function vnf_halfspace(plane, vnf, closed=true) =
-    let(
-         inside = [for(x=vnf[0]) plane*[each x,-1] >= 0 ? 1 : 0],
-         vertexmap = [0,each cumsum(inside)],
-         faces_edges_vertices = _vnfcut(plane, vnf[0],vertexmap,inside, vnf[1], last(vertexmap)),
-         newvert = concat(bselect(vnf[0],inside), faces_edges_vertices[2])
-    )
-    closed==false ? [newvert, faces_edges_vertices[0]] :
-    let(
-        allpaths = _assemble_paths(newvert, faces_edges_vertices[1]),
-        newpaths = [for(p=allpaths) if (len(p)>=3) p
-                                    else assert(approx(p[0],p[1]),"Orphan edge found when assembling cut edges.")
-           ]
-    )
-    len(newpaths)<=1 ? [newvert, concat(faces_edges_vertices[0], newpaths)] 
-    :
-      let(
-           faceregion = project_plane(plane, newpaths),
-           facevnf = region_faces(faceregion,reverse=true)
-      )
-      vnf_merge([[newvert, faces_edges_vertices[0]], lift_plane(plane, facevnf)]);
-
-
-function _assemble_paths(vertices, edges, paths=[],i=0) =
-     i==len(edges) ? paths :
-     norm(vertices[edges[i][0]]-vertices[edges[i][1]])<EPSILON ? echo(degen=i)_assemble_paths(vertices,edges,paths,i+1) :
-     let(    // Find paths that connects on left side and right side of the edges (if one exists)
-         left = [for(j=idx(paths)) if (approx(vertices[last(paths[j])],vertices[edges[i][0]])) j],
-         right = [for(j=idx(paths)) if (approx(vertices[edges[i][1]],vertices[paths[j][0]])) j]
-     )
-     assert(len(left)<=1 && len(right)<=1)
-     let(              
-          keep_path = list_remove(paths,concat(left,right)),
-          update_path = left==[] && right==[] ? edges[i] 
-                      : left==[] ? concat([edges[i][0]],paths[right[0]])
-                      : right==[] ? concat(paths[left[0]],[edges[i][1]])
-                      : left != right ? concat(paths[left[0]], paths[right[0]])
-                      : paths[left[0]]
-     )
-     _assemble_paths(vertices, edges, concat(keep_path, [update_path]), i+1);
-
-
-function _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount, newfaces=[], newedges=[], newvertices=[], i=0) =
-   i==len(faces) ? [newfaces, newedges, newvertices] :
-   let(
-        pts_inside = select(inside,faces[i])
-   )
-   all(pts_inside) ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount,
-                             concat(newfaces, [select(vertexmap,faces[i])]), newedges, newvertices, i+1):
-   !any(pts_inside) ? _vnfcut(plane, vertices, vertexmap,inside, faces, vertcount, newfaces, newedges, newvertices, i+1):
-   let(
-        first = search([[1,0]],pair(pts_inside,wrap=true),0)[0],
-        second = search([[0,1]],pair(pts_inside,wrap=true),0)[0]
-   )
-   assert(len(first)==1 && len(second)==1, "Found concave face in VNF.  Run vnf_triangulate first to ensure convex faces.")
-   let(
-        newface = [each select(vertexmap,select(faces[i],second[0]+1,first[0])),vertcount, vertcount+1],
-        newvert = [plane_line_intersection(plane, select(vertices,select(faces[i],first[0],first[0]+1)),eps=0),
-                   plane_line_intersection(plane, select(vertices,select(faces[i],second[0],second[0]+1)),eps=0)]
-   )
-   true //!approx(newvert[0],newvert[1])
-       ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount+2,
-                 concat(newfaces, [newface]), concat(newedges,[[vertcount+1,vertcount]]),concat(newvertices,newvert),i+1)
-   :len(newface)>3
-       ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount+1,
-                 concat(newfaces, [list_head(newface)]), newedges,concat(newvertices,[newvert[0]]),i+1)
-   :
-   _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount,newfaces, newedges, newvert, i+1);
- 
-
-
 // Function: vnf_slice()
 // Usage:
 //   sliced = vnf_slice(vnf, dir, cuts);
@@ -657,7 +429,7 @@ function _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount, newfaces=
 //   Slice the faces of a VNF along a specified axis direction at a given list
 //   of cut points.  You can use this to refine the faces of a VNF before applying
 //   a nonlinear transformation to its vertex set.
-// Example:
+// Example(3D):
 //   include <BOSL2-fork/polyhedra.scad>
 //   vnf = regular_polyhedron_info("vnf", "dodecahedron", side=12);
 //   vnf_polyhedron(vnf);
@@ -753,6 +525,240 @@ function _slice_3dpolygons(polys, dir, cuts) =
 
 
 
+
+
+// Section: Turning a VNF into geometry
+
+
+// Module: vnf_polyhedron()
+// Usage:
+//   vnf_polyhedron(vnf);
+//   vnf_polyhedron([VNF, VNF, VNF, ...]);
+// Description:
+//   Given a VNF structure, or a list of VNF structures, creates a polyhedron from them.
+// Arguments:
+//   vnf = A VNF structure, or list of VNF structures.
+//   convexity = Max number of times a line could intersect a wall of the shape.
+//   extent = If true, calculate anchors by extents, rather than intersection.  Default: true.
+//   cp = Centerpoint of VNF to use for anchoring when `extent` is false.  Default: `[0, 0, 0]`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"origin"`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin", spin=0, orient=UP) {
+    vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf;
+    cp = is_def(cp) ? cp : vnf_centroid(vnf);
+    attachable(anchor,spin,orient, vnf=vnf, extent=extent, cp=cp) {
+        polyhedron(vnf[0], vnf[1], convexity=convexity);
+        children();
+    }
+}
+
+
+// Module: vnf_wireframe()
+// Usage:
+//   vnf_wireframe(vnf, <r|d>);
+// Description:
+//   Given a VNF, creates a wire frame ball-and-stick model of the polyhedron with a cylinder for
+//   each edge and a sphere at each vertex.  The width parameter specifies the width of the sticks
+//   that form the wire frame. 
+// Arguments:
+//   vnf = A vnf structure
+//   width = width of the cylinders forming the wire frame.  Default: 1
+// Example:
+//   $fn=32;
+//   ball = sphere(r=20, $fn=6);
+//   vnf_wireframe(ball,width=1);
+// Example:
+//   include <BOSL2/polyhedra.scad>
+//   $fn=32;
+//   cube_oct = regular_polyhedron_info("vnf",
+//                      name="cuboctahedron", or=20);
+//   vnf_wireframe(cube_oct);
+// Example: The spheres at the vertex are imperfect at aligning with the cylinders, so especially at low $fn things look prety ugly.  This is normal.
+//   include <BOSL2/polyhedra.scad>
+//   $fn=8;
+//   octahedron = regular_polyhedron_info("vnf",
+//                         name="octahedron", or=20);
+//   vnf_wireframe(octahedron,width=5);
+module vnf_wireframe(vnf, width=1)
+{
+  vertex = vnf[0];
+  edges = unique([for (face=vnf[1], i=idx(face))
+                    sort([face[i], select(face,i+1)])
+                 ]);
+  for (e=edges) extrude_from_to(vertex[e[0]],vertex[e[1]]) circle(d=width);
+  move_copies(vertex) sphere(d=width);
+}
+
+
+// Section: Operations on VNFs
+
+// Function: vnf_volume()
+// Usage:
+//   vol = vnf_volume(vnf);
+// Description:
+//   Returns the volume enclosed by the given manifold VNF.   The VNF must describe a valid polyhedron with consistent face direction and
+//   no holes; otherwise the results are undefined.  Returns a positive volume if face direction is clockwise and a negative volume
+//   if face direction is counter-clockwise.
+
+// Divide the polyhedron into tetrahedra with the origin as one vertex and sum up the signed volume.
+function vnf_volume(vnf) =
+    let(verts = vnf[0])
+    sum([
+         for(face=vnf[1], j=[1:1:len(face)-2])
+             cross(verts[face[j+1]], verts[face[j]]) * verts[face[0]]
+    ])/6;
+
+
+// Function: vnf_area()
+// Usage:
+//   area = vnf_area(vnf);
+// Description:
+//   Returns the surface area in any VNF by adding up the area of all its faces.  The VNF need not be a manifold.  
+function vnf_area(vnf) =
+    let(verts=vnf[0])
+    sum([for(face=vnf[1]) polygon_area(select(verts,face))]);
+
+
+// Function: vnf_centroid()
+// Usage:
+//   vol = vnf_centroid(vnf);
+// Description:
+//   Returns the centroid of the given manifold VNF.  The VNF must describe a valid polyhedron with consistent face direction and
+//   no holes; otherwise the results are undefined.
+
+// Divide the solid up into tetrahedra with the origin as one vertex.  
+// The centroid of a tetrahedron is the average of its vertices.
+// The centroid of the total is the volume weighted average.
+function vnf_centroid(vnf) =
+    assert(is_vnf(vnf) && len(vnf[0])!=0 ) 
+    let(
+        verts = vnf[0],
+        pos = sum([
+            for(face=vnf[1], j=[1:1:len(face)-2]) let(
+                v0  = verts[face[0]],
+                v1  = verts[face[j]],
+                v2  = verts[face[j+1]],
+                vol = cross(v2,v1)*v0
+            )
+            [ vol, (v0+v1+v2)*vol ]
+        ])
+    )
+    assert(!approx(pos[0],0, EPSILON), "The vnf has self-intersections.")
+    pos[1]/pos[0]/4;
+
+
+// Function: vnf_halfspace()
+// Usage:
+//   newvnf = vnf_halfspace(plane, vnf, [closed]);
+// Description:
+//   Returns the intersection of the vnf with a half space.  The half space is defined by
+//   plane = [A,B,C,D], taking the side where the normal [A,B,C] points: Ax+By+Cz≥D.
+//   If closed is set to false then the cut face is not included in the vnf.  This could
+//   allow further extension of the vnf by merging with other vnfs.  
+// Arguments:
+//   plane = plane defining the boundary of the half space
+//   vnf = vnf to cut
+//   closed = if false do not return include cut face(s).  Default: true
+// Example(3D):
+//   vnf = cube(10,center=true);
+//   cutvnf = vnf_halfspace([-1,1,-1,0], vnf);
+//   vnf_polyhedron(cutvnf);
+// Example(3D):  Cut face has 2 components
+//   vnf = path_sweep(circle(r=4, $fn=16),
+//                    circle(r=20, $fn=64),closed=true);
+//   cutvnf = vnf_halfspace([-1,1,-4,0], vnf);
+//   vnf_polyhedron(cutvnf);
+// Example(3D): Cut face is not simply connected
+//   vnf = path_sweep(circle(r=4, $fn=16),
+//                    circle(r=20, $fn=64),closed=true);
+//   cutvnf = vnf_halfspace([0,0.7,-4,0], vnf);
+//   vnf_polyhedron(cutvnf);
+// Example(3D): Cut object has multiple components
+//   function knot(a,b,t) =   // rolling knot 
+//        [ a * cos (3 * t) / (1 - b* sin (2 *t)), 
+//          a * sin( 3 * t) / (1 - b* sin (2 *t)), 
+//        1.8 * b * cos (2 * t) /(1 - b* sin (2 *t))]; 
+//   a = 0.8; b = sqrt (1 - a * a); 
+//   ksteps = 400;
+//   knot_path = [for (i=[0:ksteps-1]) 50 * knot(a,b,(i/ksteps)*360)];
+//   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
+//   knot=path_sweep(ushape, knot_path, closed=true, method="incremental");
+//   cut_knot = vnf_halfspace([1,0,0,0], knot);
+//   vnf_polyhedron(cut_knot);
+function vnf_halfspace(plane, vnf, closed=true) =
+    let(
+         inside = [for(x=vnf[0]) plane*[each x,-1] >= 0 ? 1 : 0],
+         vertexmap = [0,each cumsum(inside)],
+         faces_edges_vertices = _vnfcut(plane, vnf[0],vertexmap,inside, vnf[1], last(vertexmap)),
+         newvert = concat(bselect(vnf[0],inside), faces_edges_vertices[2])
+    )
+    closed==false ? [newvert, faces_edges_vertices[0]] :
+    let(
+        allpaths = _assemble_paths(newvert, faces_edges_vertices[1]),
+        newpaths = [for(p=allpaths) if (len(p)>=3) p
+                                    else assert(approx(p[0],p[1]),"Orphan edge found when assembling cut edges.")
+           ]
+    )
+    len(newpaths)<=1 ? [newvert, concat(faces_edges_vertices[0], newpaths)] 
+    :
+      let(
+           M = project_plane(plane),
+           faceregion = [for(path=newpaths) path2d(project_plane(plane, select(newvert,path)))],
+           facevnf = region_faces(faceregion,transform=rot_inverse(M),reverse=true)
+      )
+      vnf_merge([[newvert, faces_edges_vertices[0]], facevnf]);
+
+
+function _assemble_paths(vertices, edges, paths=[],i=0) =
+     i==len(edges) ? paths :
+     norm(vertices[edges[i][0]]-vertices[edges[i][1]])<EPSILON ? _assemble_paths(vertices,edges,paths,i+1) :
+     let(    // Find paths that connects on left side and right side of the edges (if one exists)
+         left = [for(j=idx(paths)) if (approx(vertices[last(paths[j])],vertices[edges[i][0]])) j],
+         right = [for(j=idx(paths)) if (approx(vertices[edges[i][1]],vertices[paths[j][0]])) j]
+     )
+     assert(len(left)<=1 && len(right)<=1)
+     let(              
+          keep_path = list_remove(paths,concat(left,right)),
+          update_path = left==[] && right==[] ? edges[i] 
+                      : left==[] ? concat([edges[i][0]],paths[right[0]])
+                      : right==[] ?  concat(paths[left[0]],[edges[i][1]])
+                      : left != right ? concat(paths[left[0]], paths[right[0]])
+                      : paths[left[0]]
+     )
+     _assemble_paths(vertices, edges, concat(keep_path, [update_path]), i+1);
+
+
+function _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount, newfaces=[], newedges=[], newvertices=[], i=0) =
+   i==len(faces) ? [newfaces, newedges, newvertices] :
+   let(
+        pts_inside = select(inside,faces[i])
+   )
+   all(pts_inside) ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount,
+                             concat(newfaces, [select(vertexmap,faces[i])]), newedges, newvertices, i+1):
+   !any(pts_inside) ? _vnfcut(plane, vertices, vertexmap,inside, faces, vertcount, newfaces, newedges, newvertices, i+1):
+   let(
+        first = search([[1,0]],pair(pts_inside,wrap=true),0)[0],
+        second = search([[0,1]],pair(pts_inside,wrap=true),0)[0]
+   )
+   assert(len(first)==1 && len(second)==1, "Found concave face in VNF.  Run vnf_triangulate first to ensure convex faces.")
+   let(
+        newface = [each select(vertexmap,select(faces[i],second[0]+1,first[0])),vertcount, vertcount+1],
+        newvert = [plane_line_intersection(plane, select(vertices,select(faces[i],first[0],first[0]+1)),eps=0),
+                   plane_line_intersection(plane, select(vertices,select(faces[i],second[0],second[0]+1)),eps=0)]
+   )
+   true //!approx(newvert[0],newvert[1])
+       ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount+2,
+                 concat(newfaces, [newface]), concat(newedges,[[vertcount+1,vertcount]]),concat(newvertices,newvert),i+1)
+   :len(newface)>3
+       ? _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount+1,
+                 concat(newfaces, [list_head(newface)]), newedges,concat(newvertices,[newvert[0]]),i+1)
+   :
+   _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount,newfaces, newedges, newvert, i+1);
+ 
+
+
+
 function _triangulate_planar_convex_polygons(polys) =
     polys==[]? [] :
     let(
@@ -809,7 +815,8 @@ function _triangulate_planar_convex_polygons(polys) =
 //   bent2 = vnf_bend(vnf2, axis="Y");
 //   vnf_polyhedron([bent1,bent2]);
 // Example(3D):
-//   rgn = union(rect([100,20],center=true), rect([20,100],center=true));
+//   rgn = union(rect([100,20],center=true),
+//               rect([20,100],center=true));
 //   vnf0 = linear_sweep(zrot(45,p=rgn), height=10);
 //   vnf1 = up(50, p=vnf0);
 //   vnf2 = down(50, p=vnf0);
@@ -889,22 +896,22 @@ function vnf_bend(vnf,r,d,axis="Z") =
 
 // Section: Debugging Polyhedrons
 
-// Module: _show_vertices()
-// Usage:
-//   _show_vertices(vertices, [size])
-// Description:
-//   Draws all the vertices in an array, at their 3D position, numbered by their
-//   position in the vertex array.  Also draws any children of this module with
-//   transparency.
-// Arguments:
-//   vertices = Array of point vertices.
-//   size = The size of the text used to label the vertices.  Default: 1
-// Example:
-//   verts = [for (z=[-10,10], y=[-10,10], x=[-10,10]) [x,y,z]];
-//   faces = [[0,1,2], [1,3,2], [0,4,5], [0,5,1], [1,5,7], [1,7,3], [3,7,6], [3,6,2], [2,6,4], [2,4,0], [4,6,7], [4,7,5]];
-//   _show_vertices(vertices=verts, size=2) {
-//       polyhedron(points=verts, faces=faces);
-//   }
+/// Internal Module: _show_vertices()
+/// Usage:
+///   _show_vertices(vertices, [size])
+/// Description:
+///   Draws all the vertices in an array, at their 3D position, numbered by their
+///   position in the vertex array.  Also draws any children of this module with
+///   transparency.
+/// Arguments:
+///   vertices = Array of point vertices.
+///   size = The size of the text used to label the vertices.  Default: 1
+/// Example:
+///   verts = [for (z=[-10,10], y=[-10,10], x=[-10,10]) [x,y,z]];
+///   faces = [[0,1,2], [1,3,2], [0,4,5], [0,5,1], [1,5,7], [1,7,3], [3,7,6], [3,6,2], [2,6,4], [2,4,0], [4,6,7], [4,7,5]];
+///   _show_vertices(vertices=verts, size=2) {
+///       polyhedron(points=verts, faces=faces);
+///   }
 module _show_vertices(vertices, size=1) {
     color("blue") {
         dups = vector_search(vertices, EPSILON, vertices);
@@ -924,7 +931,7 @@ module _show_vertices(vertices, size=1) {
 }
 
 
-/// Module: _show_faces()
+/// Internal Module: _show_faces()
 /// Usage:
 ///   _show_faces(vertices, faces, [size=]);
 /// Description:
