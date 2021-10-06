@@ -430,7 +430,7 @@ function vnf_triangulate(vnf) =
 //   of cut points.  You can use this to refine the faces of a VNF before applying
 //   a nonlinear transformation to its vertex set.
 // Example(3D):
-//   include <BOSL2-fork/polyhedra.scad>
+//   include <BOSL2/polyhedra.scad>
 //   vnf = regular_polyhedron_info("vnf", "dodecahedron", side=12);
 //   vnf_polyhedron(vnf);
 //   sliced = vnf_slice(vnf, "X", [-6,-1,10]);
@@ -704,7 +704,7 @@ function vnf_halfspace(plane, vnf, closed=true) =
     :
       let(
            M = project_plane(plane),
-           faceregion = [for(path=newpaths) path2d(project_plane(plane, select(newvert,path)))],
+           faceregion = [for(path=newpaths) path2d(apply(M,select(newvert,path)))],
            facevnf = region_faces(faceregion,transform=rot_inverse(M),reverse=true)
       )
       vnf_merge([[newvert, faces_edges_vertices[0]], facevnf]);
@@ -890,8 +890,6 @@ function vnf_bend(vnf,r,d,axis="Z") =
                        [p.y*sin(a), p.y*cos(a), p.z]]
                          
    ) [new_vert,sliced[1]];
-
-
 
 
 // Section: Debugging Polyhedrons
