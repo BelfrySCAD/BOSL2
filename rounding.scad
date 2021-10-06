@@ -1931,8 +1931,8 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
                                  top_patch[i][4][4]
                              ]
              ],
-     top_simple = is_path_simple(faces[0],closed=true),
-     bot_simple = is_path_simple(faces[1],closed=true),
+     top_simple = is_path_simple(project_plane(faces[0],faces[0]),closed=true),
+     bot_simple = is_path_simple(project_plane(faces[1],faces[1]),closed=true),
      // verify vertical edges
      verify_vert =
        [for(i=[0:N-1],j=[0:4])
@@ -1958,8 +1958,8 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
         vnf = vnf_merge([ each subindex(top_samples,0),
                           each subindex(bot_samples,0),
                           for(pts=edge_points) vnf_vertex_array(pts),
-                          debug ? vnf_add_faces(EMPTY_VNF,faces) 
-                                : vnf_triangulate(vnf_add_faces(EMPTY_VNF,faces))
+                          debug ? vnf_from_polygons(faces) 
+                                : vnf_triangulate(vnf_from_polygons(faces))
                        ])
     )
     debug ? [concat(top_patch, bot_patch), vnf] : vnf;

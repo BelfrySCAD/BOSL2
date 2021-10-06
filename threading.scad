@@ -23,7 +23,8 @@
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   bevel1 = if true bevel the bottom end.
-//   bevel2 = if true bevel the top end. 
+//   bevel2 = if true bevel the top end.
+//   starts = The number of lead starts.  Default: 1
 //   internal = If true, make this a mask for making internal threads.
 //   d1 = Bottom outside diameter of threads.
 //   d2 = Top outside diameter of threads.
@@ -40,10 +41,23 @@
 // Examples(Med):
 //   threaded_rod(d=10, l=20, pitch=1.25, left_handed=true, $fa=1, $fs=1);
 //   threaded_rod(d=25, l=20, pitch=2, $fa=1, $fs=1);
+// Example: Diamond threading where both left-handed and right-handed nuts travel (in the same direction) on the threaded rod:
+//   $slop = 0.075;
+//   d = 3/8*INCH;
+//   pitch = 1/16*INCH;
+//   starts=3;
+//   xdistribute(19){
+//       intersection(){
+//         threaded_rod(l=40, pitch=pitch, d=d,starts=starts,anchor=BOTTOM);
+//         threaded_rod(l=40, pitch=pitch, d=d, left_handed=true,starts=starts,anchor=BOTTOM);
+//       }
+//       threaded_nut(od=4.5/8*INCH,id=d,h=3/8*INCH,pitch=pitch,starts=starts,anchor=BOTTOM);
+//       threaded_nut(od=4.5/8*INCH,id=d,h=3/8*INCH,pitch=pitch,starts=starts,left_handed=true,anchor=BOTTOM);
+//   }
 module threaded_rod(
     d, l, pitch,
     left_handed=false,
-    bevel,bevel1,bevel2,
+    bevel,bevel1,bevel2,starts=1,
     internal=false,
     d1, d2,
     higbee, higbee1, higbee2,
@@ -82,7 +96,7 @@ module threaded_rod(
     generic_threaded_rod(
         d=basic ? d : d[2], d1=d1, d2=d2, l=l,
         pitch=pitch,
-        profile=profile,
+        profile=profile,starts=starts,
         left_handed=left_handed,
         bevel=bevel,bevel1=bevel1,bevel2=bevel2,
         internal=internal,
@@ -106,6 +120,7 @@ module threaded_rod(
 //   h = height/thickness of nut.
 //   pitch = Length between threads.
 //   ---
+//   starts = The number of lead starts.  Default: 1
 //   left_handed = if true, create left-handed threads.  Default = false
 //   bevel = if true, bevel the thread ends.  Default: false
 //   bevel1 = if true bevel the bottom end.
@@ -119,7 +134,7 @@ module threaded_rod(
 //   threaded_nut(od=16, id=8, h=8, pitch=1.25, left_handed=true, bevel=true, $slop=0.1, $fa=1, $fs=1);
 module threaded_nut(
     od, id, h,
-    pitch, left_handed=false, bevel, bevel1, bevel2, 
+    pitch, starts=1, left_handed=false, bevel, bevel1, bevel2, 
     anchor, spin, orient
 ) {
     depth = pitch * cos(30) * 5/8;
@@ -134,7 +149,7 @@ module threaded_nut(
     generic_threaded_nut(
         od=od, id=id, h=h,
         pitch=pitch,
-        profile=profile,
+        profile=profile,starts=starts,
         left_handed=left_handed,
         bevel=bevel,bevel1=bevel1,bevel2=bevel2,
         anchor=anchor, spin=spin,

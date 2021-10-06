@@ -210,36 +210,31 @@ function path_length_fractions(path, closed=false) =
 ///   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
 function _path_self_intersections(path, closed=true, eps=EPSILON) =
     let(
-        path = cleanup_path(path, eps=eps),
+        path = closed ? close_path(path,eps=eps) : path,
         plen = len(path)
     )
-    [
-        for (i = [0:1:plen-(closed?2:3)])
-            let(
-                a1 = path[i],
-                a2 = path[(i+1)%plen],
-                maxax = max(a1.x,a2.x),
-                minax = min(a1.x,a2.x),
-                maxay = max(a1.y,a2.y),
-                minay = min(a1.y,a2.y)
-            )
-            for(j=[i+2:1:plen-(closed?1:2)])
+    [ for (i = [0:1:plen-3]) let(
+          a1 = path[i],
+          a2 = path[i+1],
+                // The sign of signals is positive if the segment is one one side of
+                // the line defined by [a1,a2] and negative on the other side.  
+          seg_normal = unit([-(a2-a1).y, (a2-a1).x]),
+          signals = [for(j=[i+2:1:plen-(i==0 && closed? 2: 1)]) path[j]-a1 ]*seg_normal 
+        )
+        for(j=[i+2:1:plen-(i==0 && closed? 3: 2)])
+            // The signals test requires the two signals to have different signs,
+            // otherwise b1 and b2 are on the same side of the line defined by [a1,a2]
+            // and hence intersection is impossible
+            if( signals[j-i-2]*signals[j-i-1] <= 0 )
                 let(
                     b1 = path[j],
-                    b2 = path[(j+1)%plen],
-                    isect =
-                            maxax < b1.x && maxax < b2.x  ||
-                            minax > b1.x && minax > b2.x  ||
-                            maxay < b1.y && maxay < b2.y  ||
-                            minay > b1.y && minay > b2.y
-                          ? undef
-                          : _general_line_intersection([a1,a2],[b1,b2])
+                    b2 = path[j+1]
                 )
-                if ((!closed || i!=0 || j!=plen-1)
-                        && isect != undef
-                        && isect[1]>=-eps && isect[1]<=1+eps 
-                        && isect[2]>=-eps && isect[2]<=1+eps)
-                    [isect[0], i, isect[1], j, isect[2]]
+                // This test checks that a1 and a2 are on opposite sides of the
+                // line defined by [b1,b2].  
+                if( cross(b2-b1, a1-b1)*cross(b2-b1, a2-b1) <= 0 )
+                    let(isect =  _general_line_intersection([a1,a2],[b1,b2],eps=eps))
+                    if (isect) [isect[0], i, isect[1], j, isect[2]]
     ];
 
 
@@ -266,7 +261,7 @@ function _sum_preserving_round(data, index=0) =
 
 // Function: subdivide_path()
 // Usage:
-//   newpath = subdivide_path(path, [N|refine], method);
+//   newpath = subdivide_path(path, [N|refine], method, [closed], [exact]);
 // Description:
 //   Takes a path as input (closed or open) and subdivides the path to produce a more
 //   finely sampled path.  The new points can be distributed proportional to length

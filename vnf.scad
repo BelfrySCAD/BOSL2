@@ -328,59 +328,26 @@ function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
     [nverts, nfaces];
 
 
-
-// Function: vnf_add_face()
+// Function: vnf_from_polygons()
 // Usage:
-//   vnf_add_face(vnf, pts);
+//   vnf = vnf_from_polygons(polygons);
 // Description:
-//   Given a VNF structure and a list of face vertex points, adds the face to the VNF structure.
-//   Returns the modified VNF structure `[VERTICES, FACES]`.  It is up to the caller to make
-//   sure that the points are in the correct order to make the face normal point outwards.
-// Arguments:
-//   vnf = The VNF structure to add a face to.
-//   pts = The vertex points for the face.
-function vnf_add_face(vnf=EMPTY_VNF, pts) =
-    assert(is_vnf(vnf))
-    assert(is_path(pts))
-    let(
-        res = set_union(vnf[0], pts, get_indices=true),
-        face = deduplicate(res[0], closed=true)
-    ) [
-        res[1],
-        concat(vnf[1], len(face)>2? [face] : [])
-    ];
-
-
-
-// Function: vnf_add_faces()
-// Usage:
-//   vnf_add_faces(vnf, faces);
-// Description:
-//   Given a VNF structure and a list of faces, where each face is given as a list of vertex points,
-//   adds the faces to the VNF structure.  Returns the modified VNF structure `[VERTICES, FACES]`.
+//   Given a list of 3d polygons, produces a VNF containing those polygons.  
 //   It is up to the caller to make sure that the points are in the correct order to make the face
-//   normals point outwards.
+//   normals point outwards.  No checking for duplicate vertices is done.  If you want to
+//   remove duplicate vertices use vnf_merge with the cleanup option.  
 // Arguments:
-//   vnf = The VNF structure to add a face to.
-//   faces = The list of faces, where each face is given as a list of vertex points.
-function vnf_add_faces(vnf=EMPTY_VNF, faces) =
-    assert(is_vnf(vnf))
-    assert(is_list(faces))
-    let(
-        res = set_union(vnf[0], flatten(faces), get_indices=true),
-        idxs = res[0],
-        nverts = res[1],
-        offs = cumsum([0, for (face=faces) len(face)]),
-        ifaces = [
-            for (i=idx(faces)) [
-                for (j=idx(faces[i]))
-                idxs[offs[i]+j]
-            ]
-        ]
-    ) [
-        nverts,
-        concat(vnf[1],ifaces)
-    ];
+//   polygons = The list of 3d polygons to turn into a VNF
+function vnf_from_polygons(polygons) =
+   assert(is_list(polygons) && is_path(polygons[0]),"Input should be a list of polygons")
+   let(
+       offs = cumsum([0, for(p=polygons) len(p)]),
+       faces = [for(i=idx(polygons))
+                  [for (j=idx(polygons[i])) offs[i]+j]
+               ]
+   )
+   [flatten(polygons), faces];
+
 
 
 // Section: VNF Testing and Access
@@ -486,33 +453,34 @@ module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin"
 // Usage:
 //   vnf_wireframe(vnf, <r|d>);
 // Description:
-//   Given a VNF, creates a wire frame ball-and-stick model of the polyhedron with a cylinder for each edge and a sphere at each vertex.
+//   Given a VNF, creates a wire frame ball-and-stick model of the polyhedron with a cylinder for
+//   each edge and a sphere at each vertex.  The width parameter specifies the width of the sticks
+//   that form the wire frame. 
 // Arguments:
 //   vnf = A vnf structure
-//   r|d = radius or diameter of the cylinders forming the wire frame.  Default: r=1
+//   width = width of the cylinders forming the wire frame.  Default: 1
 // Example:
 //   $fn=32;
 //   ball = sphere(r=20, $fn=6);
-//   vnf_wireframe(ball,d=1);
+//   vnf_wireframe(ball,width=1);
 // Example:
-//  include<BOSL2/polyhedra.scad>
-//  $fn=32;
-//  cube_oct = regular_polyhedron_info("vnf", name="cuboctahedron", or=20);
-//  vnf_wireframe(cube_oct);
+//   include <BOSL2/polyhedra.scad>
+//   $fn=32;
+//   cube_oct = regular_polyhedron_info("vnf", name="cuboctahedron", or=20);
+//   vnf_wireframe(cube_oct);
 // Example: The spheres at the vertex are imperfect at aligning with the cylinders, so especially at low $fn things look prety ugly.  This is normal.
-//  include<BOSL2/polyhedra.scad>
-//  $fn=8;
-//  octahedron = regular_polyhedron_info("vnf", name="octahedron", or=20);
-//  vnf_wireframe(octahedron,r=5);
-module vnf_wireframe(vnf, r, d)
+//   include <BOSL2/polyhedra.scad>
+//   $fn=8;
+//   octahedron = regular_polyhedron_info("vnf", name="octahedron", or=20);
+//   vnf_wireframe(octahedron,width=5);
+module vnf_wireframe(vnf, width=1)
 {
-  r = get_radius(r=r,d=d,dflt=1);
   vertex = vnf[0];
   edges = unique([for (face=vnf[1], i=idx(face))
                     sort([face[i], select(face,i+1)])
                  ]);
-  for (e=edges) extrude_from_to(vertex[e[0]],vertex[e[1]]) circle(r=r);
-  move_copies(vertex) sphere(r=r);
+  for (e=edges) extrude_from_to(vertex[e[0]],vertex[e[1]]) circle(d=width);
+  move_copies(vertex) sphere(d=width);
 }
 
 
@@ -682,6 +650,109 @@ function _vnfcut(plane, vertices, vertexmap, inside, faces, vertcount, newfaces=
  
 
 
+// Function: vnf_slice()
+// Usage:
+//   sliced = vnf_slice(vnf, dir, cuts);
+// Description:
+//   Slice the faces of a VNF along a specified axis direction at a given list
+//   of cut points.  You can use this to refine the faces of a VNF before applying
+//   a nonlinear transformation to its vertex set.
+// Example:
+//   include <BOSL2-fork/polyhedra.scad>
+//   vnf = regular_polyhedron_info("vnf", "dodecahedron", side=12);
+//   vnf_polyhedron(vnf);
+//   sliced = vnf_slice(vnf, "X", [-6,-1,10]);
+//   color("red")vnf_wireframe(sliced,width=.3);
+function vnf_slice(vnf,dir,cuts) =
+  let(
+       vert = vnf[0],
+       faces = [for(face=vnf[1]) select(vert,face)],
+       poly_list = _slice_3dpolygons(faces, dir, cuts)
+  )
+  vnf_merge([vnf_from_polygons(poly_list)], cleanup=true); 
+
+
+function _split_polygon_at_x(poly, x) =
+    let(
+        xs = subindex(poly,0)
+    ) (min(xs) >= x || max(xs) <= x)? [poly] :
+    let(
+        poly2 = [
+            for (p = pair(poly,true)) each [
+                p[0],
+                if(
+                    (p[0].x < x && p[1].x > x) ||
+                    (p[1].x < x && p[0].x > x)
+                ) let(
+                    u = (x - p[0].x) / (p[1].x - p[0].x)
+                ) [
+                    x,  // Important for later exact match tests
+                    u*(p[1].y-p[0].y)+p[0].y
+                ]
+            ]
+        ],
+        out1 = [for (p = poly2) if(p.x <= x) p],
+        out2 = [for (p = poly2) if(p.x >= x) p],
+        out3 = [
+            if (len(out1)>=3) each split_path_at_self_crossings(out1),
+            if (len(out2)>=3) each split_path_at_self_crossings(out2),
+        ],
+        out = [for (p=out3) if (len(p) > 2) cleanup_path(p)]
+    ) out;
+
+
+function _split_2dpolygons_at_each_x(polys, xs, _i=0) =
+    _i>=len(xs)? polys :
+    _split_2dpolygons_at_each_x(
+        [
+            for (poly = polys)
+            each _split_polygon_at_x(poly, xs[_i])
+        ], xs, _i=_i+1
+    );
+
+/// Function: _slice_3dpolygons()
+/// Usage:
+///   splitpolys = _slice_3dpolygons(polys, dir, cuts);
+/// Topics: Geometry, Polygons, Intersections
+/// Description:
+///   Given a list of 3D polygons, a choice of X, Y, or Z, and a cut list, `cuts`, splits all of the polygons where they cross
+///   X/Y/Z at any value given in cuts.  
+/// Arguments:
+///   polys = A list of 3D polygons to split.
+///   dir_ind = slice direction, 0=X, 1=Y, or 2=Z
+///   cuts = A list of scalar values for locating the cuts
+function _slice_3dpolygons(polys, dir, cuts) =
+    assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
+    assert( is_vector(cuts), "The split list must be a vector.")
+    assert( in_list(dir, ["X", "Y", "Z"]))
+    let(
+        I = ident(3),
+        dir_ind = ord(dir)-ord("X")
+    )
+    flatten([for (poly = polys)
+        let(
+            plane = plane_from_polygon(poly),
+            normal = point3d(plane),
+            pnormal = normal - (normal*I[dir_ind])*I[dir_ind]
+        )
+        approx(pnormal,[0,0,0]) ? [poly] :
+        let (
+            pind = max_index(v_abs(pnormal)),  // project along this direction
+            otherind = 3-pind-dir_ind,         // keep dir_ind and this direction
+            keep = [I[dir_ind], I[otherind]],  // dir ind becomes the x dir
+            poly2d = poly*transpose(keep),     // project to 2d, putting selected direction in the X position
+            poly_list = [for(p=_split_2dpolygons_at_each_x([poly2d], cuts))
+                            let(
+                                a = p*keep,    // unproject, but pind dimension data is missing
+                                ofs = outer_product((repeat(plane[3], len(a))-a*normal)/plane[pind],I[pind])
+                             )
+                             a+ofs]    // ofs computes the missing pind dimension data and adds it back in
+        )
+        poly_list
+    ]);
+
+
+
 function _triangulate_planar_convex_polygons(polys) =
     polys==[]? [] :
     let(
@@ -708,9 +779,11 @@ function _triangulate_planar_convex_polygons(polys) =
 // Usage:
 //   bentvnf = vnf_bend(vnf,r,d,[axis]);
 // Description:
-//   Given a VNF that is entirely above, or entirely below the Z=0 plane, bends the VNF around the
-//   Y axis, splitting up faces as necessary.  Returns the bent VNF.  Will error out if the VNF
-//   straddles the Z=0 plane, or if the bent VNF would wrap more than completely around.  The 1:1
+//   Bend a VNF around the X, Y or Z axis, splitting up faces as necessary.  Returns the bent
+//   VNF.  For bending around the Z axis the input VNF must not cross the Y=0 plane.  For bending
+//   around the X or Y axes the VNF must not cross the Z=0 plane.  Note that if you wrap a VNF all the way around
+//   it may intersect itself, which produces an invalid polyhedron.  It is your responsibility to
+//   avoid this situation.  The 1:1
 //   radius is where the curved length of the bent VNF matches the length of the original VNF.  If the
 //   `r` or `d` arguments are given, then they will specify the 1:1 radius or diameter.  If they are
 //   not given, then the 1:1 radius will be defined by the distance of the furthest vertex in the
@@ -775,10 +848,14 @@ function _triangulate_planar_convex_polygons(polys) =
 //   #vnf_polyhedron(vnf1);
 //   bent1 = vnf_bend(vnf1, axis="Z");
 //   vnf_polyhedron([bent1]);
+// Example(3D): Bending more than once around the cylinder
+//   $fn=32;
+//   vnf = apply(fwd(5)*yrot(30),cube([100,2,5],center=true));
+//   bent = vnf_bend(vnf, axis="Z");
+//   vnf_polyhedron(bent);
 function vnf_bend(vnf,r,d,axis="Z") =
     let(
         chk_axis = assert(in_list(axis,["X","Y","Z"])),
-        vnf = vnf_triangulate(vnf),
         verts = vnf[0],
         bounds = pointlist_bounds(verts),
         bmin = bounds[0],
@@ -787,153 +864,34 @@ function vnf_bend(vnf,r,d,axis="Z") =
             max(abs(bmax.y), abs(bmin.y)) :
             max(abs(bmax.z), abs(bmin.z)),
         r = get_radius(r=r,d=d,dflt=dflt),
-        width = axis=="X"? (bmax.y-bmin.y) : (bmax.x - bmin.x)
+        extent = axis=="X" ? [bmin.y, bmax.y] : [bmin.x, bmax.x]
     )
-    assert(width <= 2*PI*r, "Shape would wrap more than completely around the cylinder.")
     let(
         span_chk = axis=="Z"?
             assert(bmin.y > 0 || bmax.y < 0, "Entire shape MUST be completely in front of or behind y=0.") :
             assert(bmin.z > 0 || bmax.z < 0, "Entire shape MUST be completely above or below z=0."),
-        min_ang = 180 * bmin.x / (PI * r),
-        max_ang = 180 * bmax.x / (PI * r),
-        ang_span = max_ang-min_ang,
-        steps = ceil(segs(r) * ang_span/360),
-        step = width / steps,
-        bend_at = axis=="X"? [for(i = [1:1:steps-1]) i*step+bmin.y] :
-            [for(i = [1:1:steps-1]) i*step+bmin.x],
-        facepolys = [for (face=vnf[1]) select(verts,face)],
-        splits = axis=="X"?
-            _split_polygons_at_each_y(facepolys, bend_at) :
-            _split_polygons_at_each_x(facepolys, bend_at),
-        newtris = _triangulate_planar_convex_polygons(splits),
-        bent_faces = [
-            for (tri = newtris) [
-                for (p = tri) let(
-                    a = axis=="X"? 180*p.y/(r*PI) * sign(bmax.z) :
-                        axis=="Y"? 180*p.x/(r*PI) * sign(bmax.z) :
-                        180*p.x/(r*PI) * sign(bmax.y)
-                )
-                axis=="X"? [p.x, p.z*sin(a), p.z*cos(a)] :
-                axis=="Y"? [p.z*sin(a), p.y, p.z*cos(a)] :
-                [p.y*sin(a), p.y*cos(a), p.z]
-            ]
-        ]
-    ) vnf_add_faces(faces=bent_faces);
+        steps = ceil(segs(r) * (extent[1]-extent[0])/(2*PI*r)),
+        step = (extent[1]-extent[0]) / steps,
+        bend_at = [for(i = [1:1:steps-1]) i*step+extent[0]],
+        slicedir = axis=="X"? "Y" : "X",   // slice in y dir for X axis case, and x dir otherwise
+        sliced = vnf_slice(vnf, slicedir, bend_at),
+        coord = axis=="X" ? [0,sign(bmax.z),0] : axis=="Y" ? [sign(bmax.z),0,0] : [sign(bmax.y),0,0],
+        new_vert = [for(p=sliced[0])
+                       let(a=coord*p*180/(PI*r))
+                       axis=="X"? [p.x, p.z*sin(a), p.z*cos(a)] :
+                       axis=="Y"? [p.z*sin(a), p.y, p.z*cos(a)] :
+                       [p.y*sin(a), p.y*cos(a), p.z]]
+                         
+   ) [new_vert,sliced[1]];
 
 
 
-function _split_polygon_at_x(poly, x) =
-    let(
-        xs = subindex(poly,0)
-    ) (min(xs) >= x || max(xs) <= x)? [poly] :
-    let(
-        poly2 = [
-            for (p = pair(poly,true)) each [
-                p[0],
-                if(
-                    (p[0].x < x && p[1].x > x) ||
-                    (p[1].x < x && p[0].x > x)
-                ) let(
-                    u = (x - p[0].x) / (p[1].x - p[0].x)
-                ) [
-                    x,  // Important for later exact match tests
-                    u*(p[1].y-p[0].y)+p[0].y,
-                    u*(p[1].z-p[0].z)+p[0].z,
-                ]
-            ]
-        ],
-        out1 = [for (p = poly2) if(p.x <= x) p],
-        out2 = [for (p = poly2) if(p.x >= x) p],
-        out3 = [
-            if (len(out1)>=3) each split_path_at_self_crossings(out1),
-            if (len(out2)>=3) each split_path_at_self_crossings(out2),
-        ],
-        out = [for (p=out3) if (len(p) > 2) cleanup_path(p)]
-    ) out;
-
-
-function _split_polygon_at_y(poly, y) =
-    let(
-        ys = subindex(poly,1)
-    ) (min(ys) >= y || max(ys) <= y)? [poly] :
-    let(
-        poly2 = [
-            for (p = pair(poly,true)) each [
-                p[0],
-                if(
-                    (p[0].y < y && p[1].y > y) ||
-                    (p[1].y < y && p[0].y > y)
-                ) let(
-                    u = (y - p[0].y) / (p[1].y - p[0].y)
-                ) [
-                    u*(p[1].x-p[0].x)+p[0].x,
-                    y,  // Important for later exact match tests
-                    u*(p[1].z-p[0].z)+p[0].z,
-                ]
-            ]
-        ],
-        out1 = [for (p = poly2) if(p.y <= y) p],
-        out2 = [for (p = poly2) if(p.y >= y) p],
-        out3 = [
-            if (len(out1)>=3) each split_path_at_self_crossings(out1),
-            if (len(out2)>=3) each split_path_at_self_crossings(out2),
-        ],
-        out = [for (p=out3) if (len(p) > 2) cleanup_path(p)]
-    ) out;
-
-
-
-/// Function: _split_polygons_at_each_x()
-// Usage:
-//   splitpolys = split_polygons_at_each_x(polys, xs);
-/// Topics: Geometry, Polygons, Intersections
-// Description:
-//   Given a list of 3D polygons, splits all of them wherever they cross any X value given in `xs`.
-// Arguments:
-//   polys = A list of 3D polygons to split.
-//   xs = A list of scalar X values to split at.
-function _split_polygons_at_each_x(polys, xs, _i=0) =
-    assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
-    assert( is_vector(xs), "The split value list should contain only numbers." )
-    _i>=len(xs)? polys :
-    _split_polygons_at_each_x(
-        [
-            for (poly = polys)
-            each _split_polygon_at_x(poly, xs[_i])
-        ], xs, _i=_i+1
-    );
-
-
-///Internal Function: _split_polygons_at_each_y()
-// Usage:
-//   splitpolys = _split_polygons_at_each_y(polys, ys);
-/// Topics: Geometry, Polygons, Intersections
-// Description:
-//   Given a list of 3D polygons, splits all of them wherever they cross any Y value given in `ys`.
-// Arguments:
-//   polys = A list of 3D polygons to split.
-//   ys = A list of scalar Y values to split at.
-function _split_polygons_at_each_y(polys, ys, _i=0) =
-    assert( [for (poly=polys) if (!is_path(poly,3)) 1] == [], "Expects list of 3D paths.")
-    assert( is_vector(ys), "The split value list should contain only numbers." )
-    _i>=len(ys)? polys :
-    _split_polygons_at_each_y(
-        [
-            for (poly = polys)
-            each _split_polygon_at_y(poly, ys[_i])
-        ], ys, _i=_i+1
-    );
-
-
-
-// Section: Debugging VNFs
 
 // Section: Debugging Polyhedrons
 
-
-// Module: debug_vertices()
+// Module: _show_vertices()
 // Usage:
-//   debug_vertices(vertices, [size], [disabled=]);
+//   _show_vertices(vertices, [size])
 // Description:
 //   Draws all the vertices in an array, at their 3D position, numbered by their
 //   position in the vertex array.  Also draws any children of this module with
@@ -941,92 +899,76 @@ function _split_polygons_at_each_y(polys, ys, _i=0) =
 // Arguments:
 //   vertices = Array of point vertices.
 //   size = The size of the text used to label the vertices.  Default: 1
-//   ---
-//   disabled = If true, don't draw numbers, and draw children without transparency.  Default = false.
 // Example:
 //   verts = [for (z=[-10,10], y=[-10,10], x=[-10,10]) [x,y,z]];
 //   faces = [[0,1,2], [1,3,2], [0,4,5], [0,5,1], [1,5,7], [1,7,3], [3,7,6], [3,6,2], [2,6,4], [2,4,0], [4,6,7], [4,7,5]];
-//   debug_vertices(vertices=verts, size=2) {
+//   _show_vertices(vertices=verts, size=2) {
 //       polyhedron(points=verts, faces=faces);
 //   }
-module debug_vertices(vertices, size=1, disabled=false) {
-    if (!disabled) {
-        color("blue") {
-            dups = vector_search(vertices, EPSILON, vertices);
-            for (ind = dups){
-                numstr = str_join([for(i=ind) str(i)],",");
-                v = vertices[ind[0]];
-                translate(v) {
-                    up(size/8) zrot($vpr[2]) xrot(90) {
-                        linear_extrude(height=size/10, center=true, convexity=10) {
-                            text(text=numstr, size=size, halign="center");
-                        }
-                    }
-                    sphere(size/10);
+module _show_vertices(vertices, size=1) {
+    color("blue") {
+        dups = vector_search(vertices, EPSILON, vertices);
+        for (ind = dups){
+            numstr = str_join([for(i=ind) str(i)],",");
+            v = vertices[ind[0]];
+            translate(v) {
+                rot($vpr) back(size/8){
+                   linear_extrude(height=size/10, center=true, convexity=10) {
+                      text(text=numstr, size=size, halign="center");
+                   }
                 }
+                sphere(size/10);
             }
-        }
-    }
-    if ($children > 0) {
-        if (!disabled) {
-            color([0.2, 1.0, 0, 0.5]) children();
-        } else {
-            children();
         }
     }
 }
 
 
-
-// Module: debug_faces()
-// Usage:
-//   debug_faces(vertices, faces, [size=], [disabled=]);
-// Description:
-//   Draws all the vertices at their 3D position, numbered in blue by their
-//   position in the vertex array.  Each face will have their face number drawn
-//   in red, aligned with the center of face.  All children of this module are drawn
-//   with transparency.
-// Arguments:
-//   vertices = Array of point vertices.
-//   faces = Array of faces by vertex numbers.
-//   ---
-//   size = The size of the text used to label the faces and vertices.  Default: 1
-//   disabled = If true, don't draw numbers, and draw children without transparency.  Default: false.
-// Example(EdgesMed):
-//   verts = [for (z=[-10,10], y=[-10,10], x=[-10,10]) [x,y,z]];
-//   faces = [[0,1,2], [1,3,2], [0,4,5], [0,5,1], [1,5,7], [1,7,3], [3,7,6], [3,6,2], [2,6,4], [2,4,0], [4,6,7], [4,7,5]];
-//   debug_faces(vertices=verts, faces=faces, size=2) {
-//       polyhedron(points=verts, faces=faces);
-//   }
-module debug_faces(vertices, faces, size=1, disabled=false) {
-    if (!disabled) {
-        vlen = len(vertices);
-        color("red") {
-            for (i = [0:1:len(faces)-1]) {
-                face = faces[i];
-                if (face[0] < 0 || face[1] < 0 || face[2] < 0 || face[0] >= vlen || face[1] >= vlen || face[2] >= vlen) {
-                    echo("BAD FACE: ", vlen=vlen, face=face);
-                } else {
-                    verts = select(vertices,face);
-                    c = mean(verts);
-                    v0 = verts[0];
-                    v1 = verts[1];
-                    v2 = verts[2];
-                    dv0 = unit(v1 - v0);
-                    dv1 = unit(v2 - v0);
-                    nrm0 = cross(dv0, dv1);
-                    nrm1 = UP;
-                    axis = vector_axis(nrm0, nrm1);
-                    ang = vector_angle(nrm0, nrm1);
-                    theta = atan2(nrm0[1], nrm0[0]);
-                    translate(c) {
-                        rotate(a=180-ang, v=axis) {
-                            zrot(theta-90)
-                            linear_extrude(height=size/10, center=true, convexity=10) {
-                                union() {
-                                    text(text=str(i), size=size, halign="center");
-                                    text(text=str("_"), size=size, halign="center");
-                                }
+/// Module: _show_faces()
+/// Usage:
+///   _show_faces(vertices, faces, [size=]);
+/// Description:
+///   Draws all the vertices at their 3D position, numbered in blue by their
+///   position in the vertex array.  Each face will have their face number drawn
+///   in red, aligned with the center of face.  All children of this module are drawn
+///   with transparency.
+/// Arguments:
+///   vertices = Array of point vertices.
+///   faces = Array of faces by vertex numbers.
+///   size = The size of the text used to label the faces and vertices.  Default: 1
+/// Example(EdgesMed):
+///   verts = [for (z=[-10,10], y=[-10,10], x=[-10,10]) [x,y,z]];
+///   faces = [[0,1,2], [1,3,2], [0,4,5], [0,5,1], [1,5,7], [1,7,3], [3,7,6], [3,6,2], [2,6,4], [2,4,0], [4,6,7], [4,7,5]];
+///   _show_faces(vertices=verts, faces=faces, size=2) {
+///       polyhedron(points=verts, faces=faces);
+///   }
+module _show_faces(vertices, faces, size=1) {
+    vlen = len(vertices);
+    color("red") {
+        for (i = [0:1:len(faces)-1]) {
+            face = faces[i];
+            if (face[0] < 0 || face[1] < 0 || face[2] < 0 || face[0] >= vlen || face[1] >= vlen || face[2] >= vlen) {
+                echo("BAD FACE: ", vlen=vlen, face=face);
+            } else {
+                verts = select(vertices,face);
+                c = mean(verts);
+                v0 = verts[0];
+                v1 = verts[1];
+                v2 = verts[2];
+                dv0 = unit(v1 - v0);
+                dv1 = unit(v2 - v0);
+                nrm0 = cross(dv0, dv1);
+                nrm1 = UP;
+                axis = vector_axis(nrm0, nrm1);
+                ang = vector_angle(nrm0, nrm1);
+                theta = atan2(nrm0[1], nrm0[0]);
+                translate(c) {
+                    rotate(a=180-ang, v=axis) {
+                        zrot(theta-90)
+                        linear_extrude(height=size/10, center=true, convexity=10) {
+                            union() {
+                                text(text=str(i), size=size, halign="center");
+                                text(text=str("_"), size=size, halign="center");
                             }
                         }
                     }
@@ -1034,42 +976,46 @@ module debug_faces(vertices, faces, size=1, disabled=false) {
             }
         }
     }
-    debug_vertices(vertices, size=size, disabled=disabled) {
-        children();
-    }
-    if (!disabled) {
-        echo(faces=faces);
-    }
 }
 
 
 
-// Module: debug_vnf()
+// Module: vnf_debug()
 // Usage:
-//   debug_vnf(vnfs, [convexity=], [txtsize=], [disabled=]);
+//   vnf_debug(vnfs, [faces], [vertices], [opacity], [size], [convexity]);
 // Description:
-//   A drop-in module to replace `vnf_polyhedron()` and help debug vertices and faces.
+//   A drop-in module to replace `vnf_polyhedron()` to help debug vertices and faces.
 //   Draws all the vertices at their 3D position, numbered in blue by their
 //   position in the vertex array.  Each face will have its face number drawn
 //   in red, aligned with the center of face.  All given faces are drawn with
 //   transparency. All children of this module are drawn with transparency.
 //   Works best with Thrown-Together preview mode, to see reversed faces.
+//   You can set opacity to 0 if you want to supress the display of the polyhedron faces.  
+//   .
+//   The vertex numbers are shown rotated to face you.  As you rotate your polyhedron you
+//   can rerun the preview to display them oriented for viewing from a different viewpoint.
+// Topics: Polyhedra, Debugging
 // Arguments:
 //   vnf = vnf to display
 //   ---
+//   faces = if true display face numbers.  Default: true
+//   vertices = if true display vertex numbers.  Default: true
+//   opacity = Opacity of the polyhedron faces.  Default: 0.5
 //   convexity = The max number of walls a ray can pass through the given polygon paths.
-//   txtsize = The size of the text used to label the faces and vertices.
-//   disabled = If true, act exactly like `polyhedron()`.  Default = false.
+//   size = The size of the text used to label the faces and vertices.  Default: 1
 // Example(EdgesMed):
 //   verts = [for (z=[-10,10], a=[0:120:359.9]) [10*cos(a),10*sin(a),z]];
 //   faces = [[0,1,2], [5,4,3], [0,3,4], [0,4,1], [1,4,5], [1,5,2], [2,5,3], [2,3,0]];
-//   debug_vnf([verts,faces], txtsize=2);
-module debug_vnf(vnf, convexity=6, txtsize=1, disabled=false) {
-    debug_faces(vertices=vnf[0], faces=vnf[1], size=txtsize, disabled=disabled) {
-        vnf_polyhedron(vnf, convexity=convexity);
-    }
+//   vnf_debug([verts,faces], size=2);
+module vnf_debug(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=6 ) {
+    no_children($children);
+    if (faces)
+      _show_faces(vertices=vnf[0], faces=vnf[1], size=size);
+    if (vertices)
+      _show_vertices(vertices=vnf[0], size=size);
+    color([0.2, 1.0, 0, opacity])
+       vnf_polyhedron(vnf,convexity=convexity);
 }
-
 
 
 // Function&Module: vnf_validate()
@@ -1115,7 +1061,7 @@ module debug_vnf(vnf, convexity=6, txtsize=1, disabled=false) {
 //   c = [-50, 50, 50];
 //   d = [ 50, 50, 60];
 //   e = [ 50,-50, 50];
-//   vnf = vnf_add_faces(faces=[
+//   vnf = vnf_from_polygons([
 //       [a, b, e], [a, c, b], [a, d, c], [a, e, d], [b, c, d, e]
 //   ]);
 //   vnf_validate(vnf);
@@ -1127,26 +1073,26 @@ module debug_vnf(vnf, convexity=6, txtsize=1, disabled=false) {
 //       path3d(square(100,center=true),0),
 //       path3d(square(100,center=true),100),
 //   ], slices=0, caps=false);
-//   vnf = vnf_add_faces(vnf=vnf1, faces=[
+//   vnf = vnf_merge([vnf1, vnf_from_polygons([
 //       [[-50,-50,  0], [ 50, 50,  0], [-50, 50,  0]],
 //       [[-50,-50,  0], [ 50,-50,  0], [ 50, 50,  0]],
 //       [[-50,-50,100], [-50, 50,100], [ 50, 50,100]],
 //       [[-50,-50,100], [ 50,-50,100], [ 50, 50,100]],
-//   ]);
+//   ])]);
 //   vnf_validate(vnf);
 // Example: T_JUNCTION Errors; Vertex is Mid-Edge on Another Face.
 //   vnf1 = skin([
 //       path3d(square(100,center=true),0),
 //       path3d(square(100,center=true),100),
 //   ], slices=0, caps=false);
-//   vnf = vnf_add_faces(vnf=vnf1, faces=[
+//   vnf = vnf_merge([vnf1, vnf_from_polygons([
 //       [[-50,-50,0], [50,50,0], [-50,50,0]],
 //       [[-50,-50,0], [50,-50,0], [50,50,0]],
 //       [[-50,-50,100], [-50,50,100], [0,50,100]],
 //       [[-50,-50,100], [0,50,100], [0,-50,100]],
 //       [[0,-50,100], [0,50,100], [50,50,100]],
 //       [[0,-50,100], [50,50,100], [50,-50,100]],
-//   ]);
+//   ])]);
 //   vnf_validate(vnf);
 // Example: FACE_ISECT Errors; Faces Intersect
 //   vnf = vnf_merge([
