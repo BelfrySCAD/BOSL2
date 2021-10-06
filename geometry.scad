@@ -944,17 +944,17 @@ function are_points_on_plane(points, plane, eps=EPSILON) =
 
 
 /// Internal Function: is_point_above_plane()
-// Usage:
-//   test = _is_point_above_plane(plane, point);
+/// Usage:
+///   test = _is_point_above_plane(plane, point);
 /// Topics: Geometry, Planes
 // Description:
-//   Given a plane as [A,B,C,D] where the cartesian equation for that plane
-//   is Ax+By+Cz=D, determines if the given 3D point is on the side of that
-//   plane that the normal points towards.  The normal of the plane is the
-//   same as [A,B,C].
-// Arguments:
-//   plane = The [A,B,C,D] coefficients for the first plane equation `Ax+By+Cz=D`.
-//   point = The 3D point to test.
+///   Given a plane as [A,B,C,D] where the cartesian equation for that plane
+///   is Ax+By+Cz=D, determines if the given 3D point is on the side of that
+///   plane that the normal points towards.  The normal of the plane is the
+///   same as [A,B,C].
+/// Arguments:
+///   plane = The [A,B,C,D] coefficients for the first plane equation `Ax+By+Cz=D`.
+///   point = The 3D point to test.
 function _is_point_above_plane(plane, point) =
     point_plane_distance(plane, point) > EPSILON;
 
@@ -1598,7 +1598,7 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 // Example(3D): 
 //   include <BOSL2/polyhedra.scad>
 //   vnf = regular_polyhedron_info(name="dodecahedron",side=5,info="vnf");
-//   %vnf_polyhedron(vnf);
+//   vnf_polyhedron(vnf);
 //   vnf_tri = [vnf[0], [for(face=vnf[1]) each polygon_triangulate(vnf[0], face) ] ];
 //   color("blue")
 //   vnf_wireframe(vnf_tri, width=.15);
