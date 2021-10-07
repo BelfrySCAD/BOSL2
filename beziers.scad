@@ -977,7 +977,7 @@ module trace_bezier(bez, width=1, N=3) {
     stroke(bezier_path(bez, N=N), width=width, color="cyan");
     color("green")
       if (N!=3) 
-           stroke(path3d(path), width=width);
+           stroke(bez, width=width);
       else 
            for(i=[1:3:len(bez)]) stroke(select(bez,max(0,i-2), min(len(bez)-1,i)), width=width);
     twodim = len(bez[0])==2;
