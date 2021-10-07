@@ -211,7 +211,7 @@ function path_length_fractions(path, closed=false) =
 ///   // isects == [[[-33.3333, 0], 0, 0.666667, 4, 0.333333], [[33.3333, 0], 1, 0.333333, 3, 0.666667]]
 ///   stroke(path, closed=true, width=1);
 ///   for (isect=isects) translate(isect[0]) color("blue") sphere(d=10);
-function _path_self_intersections5(path, closed=true, eps=EPSILON) =
+function _path_self_intersections(path, closed=true, eps=EPSILON) =
     let(
         path = closed ? close_path(path,eps=eps) : path,
         plen = len(path)

@@ -265,7 +265,7 @@ function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) 
 //   components intersect each other.
 // Example(2D,NoAxes):
 //   R = [for(i=[1:7]) square(i,center=true)];
-//   region_list = split_nested_region(R);
+//   region_list = region_parts(R);
 //   rainbow(region_list) region($item);
 // Example(2D,NoAxes):
 //   R = [back(7,square(3,center=true)),
@@ -273,7 +273,7 @@ function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) 
 //        left(5,square(8,center=true)),
 //        for(i=[4:2:8])
 //          right(5,square(i,center=true))];
-//   region_list = split_nested_region(R);
+//   region_list = region_parts(R);
 //   rainbow(region_list) region($item);
 function region_parts(region) =
     let(

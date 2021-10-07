@@ -977,15 +977,12 @@ module trace_bezier(bez, width=1, N=3) {
     stroke(bezier_path(bez, N=N), width=width, color="cyan");
     color("green")
       if (N!=3) 
-           stroke(path3d(path), width=size);
+           stroke(path3d(path), width=width);
       else 
            for(i=[1:3:len(bez)]) stroke(select(bez,max(0,i-2), min(len(bez)-1,i)), width=width);
     twodim = len(bez[0])==2;
-    move_copies(bez)
-      if ($idx % N ==0)
-        color("blue") if (twodim) circle(d=width*2.5); else sphere(d=width*2.5);
-      else
-        color("red")
+    color("red") move_copies(bez)
+      if ($idx % N !=0)
           if (twodim){
             rect([width/2, width*3],center=true);
             rect([width*3, width/2],center=true);
@@ -994,6 +991,11 @@ module trace_bezier(bez, width=1, N=3) {
            xcyl(d=width/2, h=width*3);
            ycyl(d=width/2, h=width*3);
         }
+    color("blue") move_copies(bez)
+      if ($idx % N ==0)
+        if (twodim) circle(d=width*2.25); else sphere(d=width*2.25);
+    if (twodim) color("red") move_copies(bez)
+      if ($idx % N !=0) circle(d=width/2);
 }
 
 

@@ -1105,7 +1105,7 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge") =
     assert(capsOK, "caps must be boolean or a list of two booleans")
     assert(!closed || !caps, "Cannot make closed shape with caps")
     is_region(shape)? let(
-        regions = split_nested_region(shape),
+        regions = region_parts(shape),
         rtrans = reverse(transforms),
         vnfs = [
             for (rgn=regions) each [
