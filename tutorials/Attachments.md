@@ -5,8 +5,8 @@
 ## Attachables
 BOSL2 introduces the concept of attachables.  Attachables are shapes that can be anchored,
 spun, oriented, and attached to other attachables.  The most basic attachable shapes are the
-`cube()`, `cylinder()`, and `sphere()`.  BOSL2 overrides the built-in definitions for these
-shapes, and makes them attachables.
+`cube()`, `cylinder()`, `sphere()`, `square()`, and `circle()`.  BOSL2 overrides the built-in
+definitions for these shapes, and makes them attachable.
 
 
 ## Anchoring
@@ -44,6 +44,10 @@ Constant | Direction | Value
 `TOP`/`UP` | Z+      | `[ 0, 0, 1]` (3D only.)
 `CENTER`/`CTR` | Centered | `[ 0, 0, 0]`
 
+If you want a vector pointing towards the bottom-left edge, just add the `BOTTOM` and `LEFT` vector
+constants together like `BOTTOM + LEFT`.  Ths will result in a vector of `[-1,0,-1]`.  You can pass
+that to the `anchor=` argument for a clearly understandable anchoring:
+
 ```openscad-3D
 cube([40,30,50], anchor=BACK+TOP);
 ```
@@ -54,9 +58,11 @@ cube([40,30,50], anchor=FRONT);
 
 ---
 
-Cylindrical attachables can be anchored similarly, except that only the Z vector component is
-required to be -1, 0, or 1.  This allows anchoring to arbitrary edges around the cylinder or
-cone:
+For cylindrical type attachables, the Z component of the vector will be -1, 0, or 1, referring
+to the bottom rim, the middle side, or the top rim of the cylindrical or conical shape.
+The X and Y components can be any value, pointing towards the circular perimeter of the cone.  
+These combined let you point at any place on the bottom or top rims, or at an arbitrary
+side wall:
 
 ```openscad-3D
 cylinder(r1=25, r2=15, h=60, anchor=TOP+LEFT);
@@ -72,8 +78,8 @@ cylinder(r1=25, r2=15, h=60, anchor=UP+spherical_to_xyz(1,30,90));
 
 ---
 
-Spherical shapes can use fully proportional anchoring vectors, letting you anchor to any point
-on the surface of the sphere, just by pointing a vector at it:
+For Spherical type attachables, you can pass a vector that points at any arbitrary place on
+the surface of the sphere:
 
 ```openscad-3D
 sphere(r=50, anchor=TOP);
@@ -90,7 +96,8 @@ sphere(r=50, anchor=spherical_to_xyz(1,-30,60));
 ---
 
 Some attachable shapes may provide specific named anchors for shape-specific anchoring.  These
-will be given as strings and will be specific to that type of attachable:
+will be given as strings and will be specific to that type of attachable.  For example, the
+`teardrop()` attachable has a named anchor called "cap":
 
 ```openscad-3D
 teardrop(d=100, l=20, anchor="cap");
@@ -101,7 +108,15 @@ teardrop(d=100, l=20, anchor="cap");
 Some shapes, for backwards compatability reasons, can take a `center=` argument.  This just
 overrides the `anchor=` argument.  A `center=true` argument is the same as `anchor=CENTER`.
 A `center=false` argument can mean `anchor=[-1,-1,-1]` for a cube, or `anchor=BOTTOM` for a
-cylinder.
+cylinder, to make them behave just like the builtin versions:
+
+```openscad-3D
+cube([50,40,30],center=true);
+```
+
+```openscad-3D
+cube([50,40,30],center=false);
+```
 
 ---
 
@@ -127,15 +142,18 @@ oval(d=[50,30], anchor=FRONT);
 
 
 ## Spin
-Attachable shapes also can be spun in place as you create them.  You can do this by passing in
-the angle to spin by into the `spin=` argument:
+Attachable shapes also can be spun in place as you create them.  You can do this by passing the
+spin angle (in degrees) into the `spin=` argument.  A positive number will result in a counter-
+clockwise spin around the Z axis (as seen from above), and a negative number will make a clockwise
+spin:
 
 ```openscad-3D
 cube([20,20,40], center=true, spin=45);
 ```
 
-You can even spin around each of the three axes in one pass, by giving 3 angles to `spin=` as a
-vector, like [Xang,Yang,Zang]:
+You can even spin around each of the three axes in one pass, by giving 3 angles (in degrees) to
+`spin=` as a vector, like [Xang,Yang,Zang].  Similarly to `rotate()`, the axes will be spun in
+the order given, X-axis spin, then Y-axis, then Z-axis:
 
 ```openscad-3D
 cube([20,20,40], center=true, spin=[10,20,30]);
