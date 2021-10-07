@@ -202,16 +202,17 @@ function vnf_vertex_array(
 // Description:
 //   Produces a vnf from an array of points where each row length can differ from the adjacent rows by up to 2 in length.  This enables
 //   the construction of triangular VNF patches.  The resulting VNF can be wrapped along the rows by setting `row_wrap` to true.
+//   You cannot wrap columns: if you need to do that you'll need to combine two VNF arrays that share edges.  
 // Arguments:
 //   points = List of point lists for each row
 //   row_wrap = If true then add faces connecting the first row and last row.  These rows must differ by at most 2 in length.
 //   reverse = Set this to reverse the direction of the faces
-// Example(3D): Each row has one more point than the preceeding one.
+// Example(3D,NoAxes): Each row has one more point than the preceeding one.
 //   pts = [for(y=[1:1:10]) [for(x=[0:y-1]) [x,y,y]]];
 //   vnf = vnf_tri_array(pts);
 //   vnf_wireframe(vnf,width=0.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
-// Example(3D): Each row has one more point than the preceeding one.
+// Example(3D,NoAxes): Each row has two more points than the preceeding one.
 //   pts = [for(y=[0:2:10]) [for(x=[-y/2:y/2]) [x,y,y]]];
 //   vnf = vnf_tri_array(pts);
 //   vnf_wireframe(vnf,width=0.1);
@@ -230,7 +231,7 @@ function vnf_vertex_array(
 //                       vnf=vnf_tri_array(pts2));
 //   color("green")vnf_wireframe(vnf,width=0.1);
 //   vnf_polyhedron(vnf);
-// Example(3D): Point count can change irregularly
+// Example(3D,NoAxes): Point count can change irregularly
 //   lens = [10,9,7,5,6,8,8,10];
 //   pts = [for(y=idx(lens)) lerpn([-lens[y],y,y],[lens[y],y,y],lens[y])];
 //   vnf = vnf_tri_array(pts);
@@ -283,9 +284,8 @@ function vnf_tri_array(points, row_wrap=false, reverse=false, vnf=EMPTY_VNF) =
 // Description:
 //   Given a list of VNF structures, merges them all into a single VNF structure.
 //   When cleanup=true, it consolidates all duplicate vertices with a tolerance `eps`,
-//   drops unreferenced vertices and any final face with less than 3 vertices. 
-//   Unreferenced vertices of the input VNFs that doesn't duplicate any other vertex 
-//   are not dropped.
+//   and eliminates any faces with fewer than 3 vertices.  
+//   (Unreferenced vertices of the input VNFs are not dropped.)
 // Arguments:
 //   vnfs - a list of the VNFs to merge in one VNF.
 //   cleanup - when true, consolidates the duplicate vertices of the merge. Default: false

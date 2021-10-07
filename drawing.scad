@@ -561,54 +561,6 @@ module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
 
 
 
-// Module: trace_path()
-// Usage:
-//   trace_path(path, [closed=], [showpts=], [N=], [size=], [color=]);
-// Description:
-//   Renders lines between each point of a path.
-//   Can also optionally show the individual vertex points.
-// Arguments:
-//   path = The list of points in the path.
-//   ---
-//   closed = If true, draw the segment from the last vertex to the first.  Default: false
-//   showpts = If true, draw vertices and control points.
-//   N = Mark the first and every Nth vertex after in a different color and shape.
-//   size = Diameter of the lines drawn.
-//   color = Color to draw the lines (but not vertices) in.
-// Example(FlatSpin,VPD=44.4):
-//   path = [for (a=[0:30:210]) 10*[cos(a), sin(a), sin(a)]];
-//   trace_path(path, showpts=true, size=0.5, color="lightgreen");
-module trace_path(path, closed=false, showpts=false, N=1, size=1, color="yellow") {
-    assert(is_path(path),"Invalid path argument");
-    sides = segs(size/2);
-    path = closed? close_path(path) : path;
-    if (showpts) {
-        for (i = [0:1:len(path)-1]) {
-            translate(path[i]) {
-                if (i % N == 0) {
-                    color("blue") sphere(d=size*2.5, $fn=8);
-                } else {
-                    color("red") {
-                        cylinder(d=size/2, h=size*3, center=true, $fn=8);
-                        xrot(90) cylinder(d=size/2, h=size*3, center=true, $fn=8);
-                        yrot(90) cylinder(d=size/2, h=size*3, center=true, $fn=8);
-                    }
-                }
-            }
-        }
-    }
-    if (N!=3) {
-        color(color) stroke(path3d(path), width=size, $fn=8);
-    } else {
-        for (i = [0:1:len(path)-2]) {
-            if (N != 3 || (i % N) != 1) {
-                color(color) extrude_from_to(path[i], path[i+1]) circle(d=size, $fn=sides);
-            }
-        }
-    }
-}
-
-
 // Section: Computing paths
 
 // Function&Module: arc()
@@ -661,7 +613,7 @@ module trace_path(path, closed=false, showpts=false, N=1, size=1, color="yellow"
 //   stroke(closed=true, path);
 // Example(FlatSpin,VPD=175):
 //   path = arc(points=[[0,30,0],[0,0,30],[30,0,0]]);
-//   trace_path(path, showpts=true, color="cyan");
+//   stroke(path, dots=true, dots_color="blue");
 function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, long=false, cw=false, ccw=false, endpoint=true) =
     assert(is_bool(endpoint))
     !endpoint ? assert(!wedge, "endpoint cannot be false if wedge is true")
@@ -774,9 +726,9 @@ module arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false)
 //   d1 = Diameter of bottom of helix
 //   d2 = Diameter of top of helix
 // Example(3D):
-//   trace_path(helix(turns=2.5, h=100, r=50), N=1, showpts=true);
+//   stroke(helix(turns=2.5, h=100, r=50), dots=true, dots_color="blue");
 // Example(3D):  Helix that turns the other way
-//   trace_path(helix(turns=-2.5, h=100, r=50), N=1, showpts=true);
+//   stroke(helix(turns=-2.5, h=100, r=50), dots=true, dots_color="blue");
 // Example(3D): Flat helix (note points are still 3d)
 //   stroke(helix(h=0,r1=50,r2=25,l=0, turns=4));
 function helix(l,h,turns,angle, r, r1, r2, d, d1, d2)=

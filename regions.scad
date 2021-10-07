@@ -113,7 +113,7 @@ module region(r)
 
 // Function: point_in_region()
 // Usage:
-//   check = point_in_region(point, region);
+//   check = point_in_region(point, region, [eps]);
 // Description:
 //   Tests if a point is inside, outside, or on the border of a region.
 //   Returns -1 if the point is outside the region.
@@ -256,14 +256,26 @@ function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON) 
     [for(s=subpaths) if (len(s)>1) s];
 
 
-// Function: split_nested_region()
+// Function: region_parts()
 // Usage:
-//   rgns = split_nested_region(region);
+//   rgns = region_parts(region);
 // Description:
-//   Separates the distinct (possibly nested) positive subregions of a larger compound region.
-//   Returns a list of regions, such that each returned region has exactly one positive outline
-//   and zero or more void outlines.
-function split_nested_region(region) =
+//   Divides a region into a list of connected regions.  Each connected region has exactly one outside boundary
+//   and zero or more outlines defining internal holes.  Note that behavior is undefined on invalid regions whose
+//   components intersect each other.
+// Example(2D,NoAxes):
+//   R = [for(i=[1:7]) square(i,center=true)];
+//   region_list = split_nested_region(R);
+//   rainbow(region_list) region($item);
+// Example(2D,NoAxes):
+//   R = [back(7,square(3,center=true)),
+//        square([20,10],center=true),
+//        left(5,square(8,center=true)),
+//        for(i=[4:2:8])
+//          right(5,square(i,center=true))];
+//   region_list = split_nested_region(R);
+//   rainbow(region_list) region($item);
+function region_parts(region) =
     let(
         paths = sort(idx=0, [
             for(i = idx(region)) let(
@@ -360,7 +372,7 @@ function _cleave_connected_region(region) =
 //   vnf = If given, the faces are added to this VNF.  Default: `EMPTY_VNF`
 function region_faces(region, transform, reverse=false, vnf=EMPTY_VNF) =
     let (
-        regions = split_nested_region(region),
+        regions = region_parts(region),
         vnfs = [
             if (vnf != EMPTY_VNF) vnf,
             for (rgn = regions) let(
@@ -434,12 +446,13 @@ module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, 
 }
 
 
-function linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", anchor_isect=false, anchor, spin=0, orient=UP) =
+function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
+                      maxseg, style="default", anchor_isect=false, anchor, spin=0, orient=UP) =
     let(
         anchor = get_anchor(anchor,center,BOT,BOT),
         region = is_path(region)? [region] : region,
         cp = mean(pointlist_bounds(flatten(region))),
-        regions = split_nested_region(region),
+        regions = region_parts(region),
         slices = default(slices, floor(twist/5+1)),
         step = twist/slices,
         hstep = height/slices,
@@ -939,7 +952,8 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   color("green") region(difference(shape1,shape2));
 function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
     b!=undef? difference(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
-    len(regions)<=1? regions[0] :
+    len(regions)==0? [] : 
+    len(regions)==1? regions[0] :
     difference(
         let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
         concat(
@@ -968,16 +982,17 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(intersection(shape1,shape2));
 function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
-    b!=undef? intersection(concat([regions],[b],c==undef?[]:[c]),eps=eps) :
-    len(regions)<=1? regions[0] :
-    intersection(
-        let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
-        concat(
-            [_tagged_region(regions[0],regions[1],["I","S"],["I"],eps=eps)],
-            [for (i=[2:1:len(regions)-1]) regions[i]]
-        ),
-        eps=eps
-    );
+     b!=undef? intersection(concat([regions],[b],c==undef?[]:[c]),eps=eps)
+   : len(regions)==0 ? []
+   : len(regions)==1? regions[0]
+   : let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
+         intersection([
+                       _tagged_region(regions[0],regions[1],["I","S"],["I"],eps=eps),
+                       for (i=[2:1:len(regions)-1]) regions[i]
+                      ],
+                      eps=eps
+         );
+
 
 
 // Function&Module: exclusive_or()
@@ -989,16 +1004,17 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 // Description:
 //   When called as a function and given a list of regions, where each region is a list of closed
 //   2D paths, returns the boolean exclusive_or of all given regions.  Result is a single region.
-//   When called as a module, performs a boolean exclusive-or of up to 10 children.
+//   When called as a module, performs a boolean exclusive-or of up to 10 children.  Note that the
+//   xor operator tends to produce shapes that meet at corners, which do not render in CGAL.  
 // Arguments:
 //   regions = List of regions to exclusive_or.  Each region is a list of closed paths.
-// Example(2D): As Function
+// Example(2D): As Function.  A linear_sweep of this shape fails to render in CGAL.  
 //   shape1 = move([-8,-8,0], p=circle(d=50));
 //   shape2 = move([ 8, 8,0], p=circle(d=50));
 //   for (shape = [shape1,shape2])
 //       color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(exclusive_or(shape1,shape2));
-// Example(2D): As Module
+// Example(2D): As Module.  A linear_extrude() of the resulting geometry fails to render in CGAL.  
 //   exclusive_or() {
 //       square(40,center=false);
 //       circle(d=40);

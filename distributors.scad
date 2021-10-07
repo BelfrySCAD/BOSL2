@@ -109,7 +109,7 @@ module move_copies(a=[[0,0,0]])
 //       cube(size=[1,3,1],center=true);
 //       cube(size=[3,1,1],center=true);
 //   }
-// Example(2D):
+// Example(2D): The functional form of line_of() returns a list of points.
 //   pts = line_of([10,5],n=5);
 //   move_copies(pts) circle(d=2);
 module line_of(spacing, n, l, p1, p2)
