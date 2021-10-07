@@ -168,6 +168,9 @@ function path_segment_lengths(path, closed=false) =
 //    point is zero and the final point is 1.  If the path is closed the length of the output
 //    will have one extra point because of the final connecting segment that connects the last
 //    point of the path to the first point.
+// Arguments:
+//    path = path to operate on
+//    closed = set to true if path is closed.  Default: false
 function path_length_fractions(path, closed=false) =
     assert(is_path(path))
     assert(is_bool(closed))
@@ -215,26 +218,32 @@ function _path_self_intersections(path, closed=true, eps=EPSILON) =
     )
     [ for (i = [0:1:plen-3]) let(
           a1 = path[i],
-          a2 = path[i+1],
-                // The sign of signals is positive if the segment is one one side of
-                // the line defined by [a1,a2] and negative on the other side.  
-          seg_normal = unit([-(a2-a1).y, (a2-a1).x]),
-          signals = [for(j=[i+2:1:plen-(i==0 && closed? 2: 1)]) path[j]-a1 ]*seg_normal 
+          a2 = path[i+1], 
+          seg_normal = unit([-(a2-a1).y, (a2-a1).x],[0,0]),
+          vals = path*seg_normal,
+          ref  = a1*seg_normal,
+            // The value of vals[j]-ref is positive if vertex j is one one side of the
+            // line [a1,a2] and negative on the other side. Only a segment with opposite
+            // signs at its two vertices can have an intersection with segment
+            // [a1,a2]. The variable signals is zero when abs(vals[j]-ref) is less than
+            // eps and the sign of vals[j]-ref otherwise.  
+          signals = [for(j=[i+2:1:plen-(i==0 && closed? 2: 1)]) vals[j]-ref >  eps ? 1
+                                                              : vals[j]-ref < -eps ? -1
+                                                              : 0] 
         )
+        if(max(signals)>=0 && min(signals)<=0 ) // some remaining edge intersects line [a1,a2]
         for(j=[i+2:1:plen-(i==0 && closed? 3: 2)])
-            // The signals test requires the two signals to have different signs,
-            // otherwise b1 and b2 are on the same side of the line defined by [a1,a2]
-            // and hence intersection is impossible
-            if( signals[j-i-2]*signals[j-i-1] <= 0 )
-                let(
-                    b1 = path[j],
-                    b2 = path[j+1]
-                )
-                // This test checks that a1 and a2 are on opposite sides of the
-                // line defined by [b1,b2].  
-                if( cross(b2-b1, a1-b1)*cross(b2-b1, a2-b1) <= 0 )
-                    let(isect =  _general_line_intersection([a1,a2],[b1,b2],eps=eps))
-                    if (isect) [isect[0], i, isect[1], j, isect[2]]
+            if( signals[j-i-2]*signals[j-i-1]<=0 ) let( // segm [b1,b2] intersects line [a1,a2]
+                b1 = path[j],
+                b2 = path[j+1],
+                isect = _general_line_intersection([a1,a2],[b1,b2],eps=eps) 
+            )
+            if (isect 
+                && isect[1]> (i==0 && !closed? -eps: 0) 
+                && isect[1]<= 1+eps
+                && isect[2]> 0 
+                && isect[2]<= 1+eps)
+                [isect[0], i, isect[1], j, isect[2]]
     ];
 
 
@@ -368,7 +377,7 @@ function subdivide_path(path, N, refine, closed=true, exact=true, method="length
 //   maxlen = The maximum allowed path segment length.
 //   ---
 //   closed = If true, treat path like a closed polygon.  Default: true
-// Example:
+// Example(2D):
 //   path = pentagon(d=100);
 //   spath = subdivide_long_segments(path, 10, closed=true);
 //   stroke(path);
@@ -487,14 +496,14 @@ function path_closest_point(path, pt) =
 //   path = path to find the tagent vectors for
 //   closed = set to true of the path is closed.  Default: false
 //   uniform = set to false to correct for non-uniform sampling.  Default: true
-// Example(3D): A shape with non-uniform sampling gives distorted derivatives that may be undesirable
+// Example(3D): A shape with non-uniform sampling gives distorted derivatives that may be undesirable.  Note that derivatives tilt towards the long edges of the rectangle.  
 //   rect = square([10,3]);
 //   tangents = path_tangents(rect,closed=true);
 //   stroke(rect,closed=true, width=0.1);
 //   color("purple")
 //       for(i=[0:len(tangents)-1])
 //           stroke([rect[i]-tangents[i], rect[i]+tangents[i]],width=.1, endcap2="arrow2");
-// Example(3D): A shape with non-uniform sampling gives distorted derivatives that may be undesirable
+// Example(3D): Setting uniform to false corrects the distorted derivatives for this example:
 //   rect = square([10,3]);
 //   tangents = path_tangents(rect,closed=true,uniform=false);
 //   stroke(rect,closed=true, width=0.1);
@@ -1020,7 +1029,7 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 //   left(100)region(outside);
 //   rainbow(outside)
 //     stroke($item,closed=true);
-// Example: 
+// Example(2D): 
 //   N=12;
 //   ang=360/N;
 //   sr=10;
@@ -1033,19 +1042,19 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 //                  "move", sr]);
 //   stroke(path, width=.3);
 //   right(20)rainbow(polygon_parts(path)) polygon($item);
-// Example: overlapping path segments disappear
+// Example(2D): overlapping path segments disappear
 //   path = [[0,0], [10,0], [10,10], [0,10],[0,20], [20,10],[10,10], [0,10],[0,0]];
 //   stroke(path,width=0.3);
 //   right(22)stroke(polygon_parts(path)[0], width=0.3, closed=true);
-// Example: Path segments disappear outside as well
+// Example(2D): Path segments disappear outside as well
 //   path = turtle(["repeat", 3, ["move", 17, "left", "move", 10, "left", "move", 7, "left", "move", 10, "left"]]);
 //   back(2)stroke(path,width=.3);
 //   fwd(12)rainbow(polygon_parts(path)) polygon($item);
-// Example:  This shape has six components
+// Example(2D):  This shape has six components
 //   path = turtle(["repeat", 3, ["move", 15, "left", "move", 7, "left", "move", 10, "left", "move", 17, "left"]]);
 //   polygon(path);
 //   right(22)rainbow(polygon_parts(path)) polygon($item);
-// Example: when the loops of the shape overlap then nonzero gives a different result than the even-odd method.
+// Example(2D): when the loops of the shape overlap then nonzero gives a different result than the even-odd method.
 //   path = turtle(["repeat", 3, ["move", 15, "left", "move", 7, "left", "move", 10, "left", "move", 10, "left"]]);
 //   polygon(path);
 //   right(27)rainbow(polygon_parts(path)) polygon($item);

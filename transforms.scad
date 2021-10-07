@@ -9,6 +9,10 @@
 //   of the shortcuts can return a matrix representing the operation
 //   the shortcut performs. The rotation and scaling shortcuts accept
 //   an optional centerpoint for the rotation or scaling operation.
+//   .
+//   Almost all of the transformation functions take a point, a point
+//   list, bezier patch, or VNF as a second positional argument to
+//   operate on.  The exceptions are rot(), frame_map() and skew().  
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
@@ -378,6 +382,7 @@ function up(z=0, p) = move([0,0,z],p=p);
 //   * Called as a function with a [VNF structure](vnf.scad) in the `p` argument, returns the rotated VNF.
 //   * Called as a function without a `p` argument, and `planar` is true, returns the affine2d rotational matrix.  The angle `a` must be a scalar. 
 //   * Called as a function without a `p` argument, and `planar` is false, returns the affine3d rotational matrix.
+//   Note that unlike almost all the other transformations, the `p` argument must be given as a named argument.  
 //
 // Arguments:
 //   a = Scalar angle or vector of XYZ rotation angles to rotate by, in degrees.  If `planar` is true or if `p` holds 2d data, or if you use the `from` and `to` arguments then `a` must be a scalar.  Default: `0`
@@ -824,8 +829,8 @@ function yscale(y=1, p, cp=0, planar=false) =
 //
 // Example: Scaling Points
 //   path = xrot(90,p=path3d(circle(d=50,$fn=12)));
-//   #trace_path(path);
-//   trace_path(zscale(2,p=path));
+//   #stroke(path,closed=true);
+//   stroke(zscale(2,path),closed=true);
 module zscale(z=1, p, cp=0) {
     assert(is_undef(p), "Module form `zscale()` does not accept p= argument.");
     cp = is_num(cp)? [0,0,cp] : cp;
@@ -1119,15 +1124,23 @@ function zflip(p, z=0) =
 //   x = Destination 3D vector for x axis.
 //   y = Destination 3D vector for y axis.
 //   z = Destination 3D vector for z axis.
+//   p = If given, the point, path, patch, or VNF to operate on.  Function use only.
 //   reverse = reverse direction of the map for orthogonal inputs.  Default: false
 // Example:  Remap axes after linear extrusion
 //   frame_map(x=[0,1,0], y=[0,0,1]) linear_extrude(height=10) square(3);
 // Example: This map is just a rotation around the z axis
-//   mat = frame_map(x=[1,1,0], y=[-1,1,0]); 
+//   mat = frame_map(x=[1,1,0], y=[-1,1,0]);
+//   multmatrix(mat) frame_ref();
 // Example:  This map is not a rotation because x and y aren't orthogonal
-//   mat = frame_map(x=[1,0,0], y=[1,1,0]); 
-// Example:  This sends [1,1,0] to [0,1,1] and [-1,1,0] to [0,-1,1]
+//   frame_map(x=[1,0,0], y=[1,1,0]) cube(10);
+// Example:  This sends [1,1,0] to [0,1,1] and [-1,1,0] to [0,-1,1].  (Original directions shown in light shade, final directions shown dark.)
 //   mat = frame_map(x=[0,1,1], y=[0,-1,1]) * frame_map(x=[1,1,0], y=[-1,1,0],reverse=true);
+//   color("purple",alpha=.2) stroke([[0,0,0],10*[1,1,0]]);
+//   color("green",alpha=.2)  stroke([[0,0,0],10*[-1,1,0]]);
+//   multmatrix(mat) {
+//      color("purple") stroke([[0,0,0],10*[1,1,0]]);
+//      color("green") stroke([[0,0,0],10*[-1,1,0]]);
+//   }       
 function frame_map(x,y,z, p, reverse=false) =
     is_def(p)
     ? apply(frame_map(x,y,z,reverse=reverse), p)
@@ -1223,7 +1236,7 @@ module frame_map(x,y,z,p,reverse=false)
 //   color("blue") move_copies(pts) circle(d=3, $fn=8);
 // Example(FlatSpin,VPD=175): Calling as a 3D Function
 //   pts = skew(p=path3d(square(40,center=true)), szx=0.5, szy=0.3);
-//   trace_path(close_path(pts), showpts=true);
+//   stroke(pts,closed=true,dots=true,dots_color="blue");
 module skew(p, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0)
 {
     assert(is_undef(p), "Module form `skew()` does not accept p= argument.")

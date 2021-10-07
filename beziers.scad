@@ -573,9 +573,9 @@ function bezier_line_intersection(curve, line) =
 //   p0 = [40, 0];
 //   p1 = [0, 0];
 //   p2 = [30, 30];
-//   trace_path([p0,p1,p2], showpts=true, size=0.5, color="green");
+//   stroke([p0,p1,p2], dots=true, color="green", dots_color="blue", width=0.5);
 //   fbez = fillet3pts(p0,p1,p2, 10);
-//   trace_bezier(slice(fbez, 1, -2), size=1);
+//   trace_bezier(slice(fbez, 1, -2));
 function fillet3pts(p0, p1, p2, r, d, maxerr=0.1, w=0.5, dw=0.25) = let(
         r = get_radius(r=r,d=d),
         v0 = unit(p0-p1),
@@ -708,8 +708,7 @@ function bezier_path_length(path, N=3, max_deflect=0.001) =
 //       [60,25], [70,0], [80,-25],
 //       [80,-50], [50,-50]
 //   ];
-//   trace_path(bez, size=1, N=3, showpts=true);
-//   trace_path(bezier_path(bez, N=3), size=3);
+//   trace_bezier(bez, N=3, width=2);
 function bezier_path(bezier, splinesteps=16, N=3, endpoint=true) =
     assert(is_path(bezier))
     assert(is_int(N))
@@ -822,8 +821,8 @@ function path_to_bezier(path, closed=false, tangents, uniform=false, size, relsi
 // Example(2D):
 //   pline = [[40,0], [0,0], [35,35], [0,70], [-10,60], [-5,55], [0,60]];
 //   bez = fillet_path(pline, 10);
-//   trace_path(pline, showpts=true, size=0.5, color="green");
-//   trace_bezier(bez, size=1);
+//   stroke(pline, dots=true, width=0.5, color="green", dots_color="blue");
+//   trace_bezier(bez);
 function fillet_path(pts, fillet, maxerr=0.1) = concat(
     [pts[0], pts[0]],
     (len(pts) < 3)? [] : [
@@ -851,11 +850,11 @@ function fillet_path(pts, fillet, maxerr=0.1) = concat(
 // Example(2D):
 //   bez = [[50,30], [40,10], [10,50], [0,30], [-10, 10], [-30,10], [-50,20]];
 //   closed = bezier_close_to_axis(bez);
-//   trace_bezier(closed, size=1);
+//   trace_bezier(closed);
 // Example(2D):
 //   bez = [[30,50], [10,40], [50,10], [30,0], [10, -10], [10,-30], [20,-50]];
 //   closed = bezier_close_to_axis(bez, axis="Y");
-//   trace_bezier(closed, size=1);
+//   trace_bezier(closed);
 function bezier_close_to_axis(bezier, axis="X", N=3) =
     assert(is_path(bezier,2), "bezier_close_to_axis() can only work on 2D bezier paths.")
     assert(is_int(N))
@@ -892,11 +891,11 @@ function bezier_close_to_axis(bezier, axis="X", N=3) =
 // Example(2D):
 //   bez = [[50,30], [40,10], [10,50], [0,30], [-10, 10], [-30,10], [-50,20]];
 //   closed = bezier_offset([0,-5], bez);
-//   trace_bezier(closed, size=1);
+//   trace_bezier(closed);
 // Example(2D):
 //   bez = [[30,50], [10,40], [50,10], [30,0], [10, -10], [10,-30], [20,-50]];
 //   closed = bezier_offset([-5,0], bez);
-//   trace_bezier(closed, size=1);
+//   trace_bezier(closed);
 function bezier_offset(offset, bezier, N=3) =
     assert(is_vector(offset,2))
     assert(is_path(bezier,2), "bezier_offset() can only work on 2D bezier paths.")
@@ -936,7 +935,7 @@ function bezier_offset(offset, bezier, N=3) =
 //       [80,-50], [50,-50], [30,-50],
 //       [5,-30], [0,0]
 //   ];
-//   trace_bezier(bez, N=3, size=3);
+//   trace_bezier(bez, N=3, width=3);
 //   linear_extrude(height=0.1) bezier_polygon(bez, N=3);
 module bezier_polygon(bezier, splinesteps=16, N=3) {
     assert(is_path(bezier,2), "bezier_polygon() can only work on 2D bezier paths.");
@@ -969,15 +968,35 @@ module bezier_polygon(bezier, splinesteps=16, N=3) {
 //       [ 14,  -5],  [ 15,   0],  [16,   5],
 //       [  5,  10],  [  0,  10]
 //   ];
-//   trace_bezier(bez, N=3, size=0.5);
-module trace_bezier(bez, size=1, N=3) {
+//   trace_bezier(bez, N=3, width=0.5);
+module trace_bezier(bez, width=1, N=3) { 
     assert(is_path(bez));
     assert(is_int(N));
     assert(len(bez)%N == 1, str("A degree ",N," bezier path shound have a multiple of ",N," points in it, plus 1."));
-    trace_path(bez, N=N, showpts=true, size=size, color="green");
-    trace_path(bezier_path(bez, N=N), size=size, color="cyan");
+    $fn=8;
+    stroke(bezier_path(bez, N=N), width=width, color="cyan");
+    color("green")
+      if (N!=3) 
+           stroke(bez, width=width);
+      else 
+           for(i=[1:3:len(bez)]) stroke(select(bez,max(0,i-2), min(len(bez)-1,i)), width=width);
+    twodim = len(bez[0])==2;
+    color("red") move_copies(bez)
+      if ($idx % N !=0)
+          if (twodim){
+            rect([width/2, width*3],center=true);
+            rect([width*3, width/2],center=true);
+          } else {
+           zcyl(d=width/2, h=width*3);
+           xcyl(d=width/2, h=width*3);
+           ycyl(d=width/2, h=width*3);
+        }
+    color("blue") move_copies(bez)
+      if ($idx % N ==0)
+        if (twodim) circle(d=width*2.25); else sphere(d=width*2.25);
+    if (twodim) color("red") move_copies(bez)
+      if ($idx % N !=0) circle(d=width/2);
 }
-
 
 
 // Section: Patch Functions
