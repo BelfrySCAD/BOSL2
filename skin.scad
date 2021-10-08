@@ -276,12 +276,12 @@
 // Example(FlatSpin,VPD=32,VPT=[1.2,4.3,2]): Another "distance" example:
 //   off = [0,2]; 
 //   shape = turtle(["right",45,"move", "left",45,"move", "left",45, "move", "jump", [.5+sqrt(2)/2,8]]);
-//   rshape = rot(180,cp=centroid(shape)+off, p=shape);
+//   rshape = rot(180,cp=polygon_centroid(shape)+off, p=shape);
 //   skin([shape,rshape],z=[0,4], method="distance",slices=10,refine=15);
 // Example(FlatSpin,VPD=32,VPT=[1.2,4.3,2]): Slightly shifting the profile changes the optimal linkage
 //   off = [0,1]; 
 //   shape = turtle(["right",45,"move", "left",45,"move", "left",45, "move", "jump", [.5+sqrt(2)/2,8]]);
-//   rshape = rot(180,cp=centroid(shape)+off, p=shape);
+//   rshape = rot(180,cp=polygon_centroid(shape)+off, p=shape);
 //   skin([shape,rshape],z=[0,4], method="distance",slices=10,refine=15);
 // Example(FlatSpin,VPD=444,VPT=[0,0,50]): This optimal solution doesn't look terrible:
 //   prof1 = path3d([[-50,-50], [-50,50], [50,50], [25,25], [50,0], [25,-25], [50,-50]]);
@@ -1589,7 +1589,7 @@ function _skin_tangent_match(poly1, poly2) =
         swap = len(poly1)>len(poly2),
         big = swap ? poly1 : poly2,
         small = swap ? poly2 : poly1,
-        curve_offset = centroid(small)-centroid(big),
+        curve_offset = polygon_centroid(small)-polygon_centroid(big),
         cutpts = [for(i=[0:len(small)-1]) _find_one_tangent(big, select(small,i,i+1),curve_offset=curve_offset)],
         shift = last(cutpts)+1,
         newbig = polygon_shift(big, shift),

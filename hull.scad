@@ -98,7 +98,7 @@ function _is_cw(a,b,c,all) =
 // Example(2D):
 //   pts = [[-10,-10], [0,10], [10,10], [12,-10]];
 //   path = hull2d_path(pts);
-//   move_copies(pts) color("red") sphere(1);
+//   move_copies(pts) color("red") circle(1,$fn=12);
 //   polygon(points=pts, paths=[path]);
 //
 // Code based on this method:
