@@ -1696,7 +1696,7 @@ function _is_cw2(a,b,c,eps=EPSILON) = cross(a-c,b-c)<eps*norm(a-c)*norm(b-c);
 
 // For algorithm see 2.07 here: http://www.faqs.org/faqs/graphics/algorithms-faq/
 function is_polygon_clockwise(poly) =
-let(    poly=deduplicate(poly))
+let(  
     assert(is_path(poly,dim=2), "Input should be a 2d path")
     let(
         minx = min(poly*[1,0]),
