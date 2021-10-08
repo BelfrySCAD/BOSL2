@@ -183,7 +183,7 @@ function __are_regions_equal(region1, region2, i) =
 ///   region = Region to test for crossings of.
 ///   closed = If true, treat path as a closed polygon.  Default: true
 ///   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function _path_region_intersections(path, region, closed=true, eps=EPSILON) =
+function old_path_region_intersections(path, region, closed=true, eps=EPSILON) =
     let(
         pathclosed = closed && !is_closed_path(path),
         pathlen = len(path),
@@ -217,6 +217,48 @@ function _path_region_intersections(path, region, closed=true, eps=EPSILON) =
          ]
     );
 
+
+// find the intersection points of a path and the polygons of a
+// region; only crossing intersections are caught, no collinear
+// intersection is returned.
+function _path_region_intersections(path, region, closed=true, eps=EPSILON) =
+    let( path = closed ? close_path(path,eps=eps) : path )
+    _sort_vectors(
+         [for(si = [0:1:len(path)-2]) let(
+            a1 = path[si],
+            a2 = path[si+1],
+            nrm = norm(a1-a2)
+          )
+          if( nrm>eps ) let( // ignore zero-length path edges
+            seg_normal = [-(a2-a1).y, (a2-a1).x]/nrm,
+            ref = a1*seg_normal
+          )
+          // `signs[j]` is the sign of the signed distance from
+          // poly vertex j to the line [a1,a2] where near zero
+          // distances are snapped to zero;  poly edges 
+          //  with equal signs at its vertices cannot intersect
+          // the path edge [a1,a2] or they are collinear and 
+          // further tests can be discarded.
+          for(poly=region) let(
+              poly  = close_path(poly),
+              signs = [for(v=poly*seg_normal) v-ref> eps ? 1 : v-ref<-eps ? -1 : 0]
+          ) 
+          if(max(signs)>=0 && min(signs)<=0 ) // some edge edge intersects line [a1,a2]
+          for(j=[0:1:len(poly)-2]) 
+          if( signs[j]!=signs[j+1] ) let( // exclude non-crossing and collinear segments
+              b1 = poly[j],
+              b2 = poly[j+1],
+              isect = _general_line_intersection([a1,a2],[b1,b2],eps=eps) 
+          )
+          if (  isect 
+//                && isect[1]> (si==0 && !closed? -eps: 0)  
+                && isect[1]>= -eps 
+                && isect[1]<= 1+eps 
+//                && isect[2]>  0 
+                && isect[2]>= -eps
+                && isect[2]<= 1+eps )
+              [si,isect[1]]
+    ]);
 
 
 // Function: split_path_at_region_crossings()

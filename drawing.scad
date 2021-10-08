@@ -103,7 +103,7 @@
 //   stroke(path, width=3, joints="diamond", endcaps="arrow2", endcap_angle=0, endcap_width=5, joint_angle=0, joint_width=5);
 // Example(2D): Joints and Endcaps
 //   path = [for (a=[0:30:360]) [a-180, 60*sin(a)]];
-//   stroke(path, width=3, joints="dot", endcaps="arrow2", joint_angle=0);
+//   stroke(path, width=8, joints="dot", endcaps="arrow2");
 // Example(2D): Custom Endcap Shapes
 //   path = [[0,100], [100,100], [200,0], [100,-100], [100,0]];
 //   arrow = [[0,0], [2,-3], [0.5,-2.3], [2,-4], [0.5,-3.5], [-0.5,-3.5], [-2,-4], [-0.5,-2.3], [-2,-3]];
@@ -852,13 +852,13 @@ function _normal_segment(p1,p2) =
 //   stroke(path,width=.2);
 // Example(2DMed): pentagonal spiral
 //   path = turtle(["move","left",360/5,"addlength",1],repeat=50);
-//   stroke(path,width=.2);
+//   stroke(path,width=.7);
 // Example(2DMed): yet another spiral, without using `repeat`
 //   path = turtle(concat(["angle",71],flatten(repeat(["move","left","addlength",1],50))));
-//   stroke(path,width=.2);
+//   stroke(path,width=.7);
 // Example(2DMed): The previous spiral grows linearly and eventually intersects itself.  This one grows geometrically and does not.
 //   path = turtle(["move","left",71,"scale",1.05],repeat=50);
-//   stroke(path,width=.05);
+//   stroke(path,width=.15);
 // Example(2D): Koch Snowflake
 //   function koch_unit(depth) =
 //       depth==0 ? ["move"] :

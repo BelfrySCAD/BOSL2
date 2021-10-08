@@ -239,9 +239,11 @@ function _path_self_intersections(path, closed=true, eps=EPSILON) =
                 isect = _general_line_intersection([a1,a2],[b1,b2],eps=eps) 
             )
             if (isect 
-                && isect[1]> (i==0 && !closed? -eps: 0) 
+//                && isect[1]> (i==0 && !closed? -eps: 0)  // Apparently too strict
+                && isect[1]>=-eps
                 && isect[1]<= 1+eps
-                && isect[2]> 0 
+//                && isect[2]> 0
+                && isect[2]>= -eps 
                 && isect[2]<= 1+eps)
                 [isect[0], i, isect[1], j, isect[2]]
     ];
@@ -380,9 +382,9 @@ function subdivide_path(path, N, refine, closed=true, exact=true, method="length
 // Example(2D):
 //   path = pentagon(d=100);
 //   spath = subdivide_long_segments(path, 10, closed=true);
-//   stroke(path);
-//   color("lightgreen") move_copies(path) circle(d=5,$fn=12);
-//   color("blue") move_copies(spath) circle(d=3,$fn=12);
+//   stroke(path,width=2,closed=true);
+//   color("red") move_copies(path) circle(d=9,$fn=12);
+//   color("blue") move_copies(spath) circle(d=5,$fn=12);
 function subdivide_long_segments(path, maxlen, closed=false) =
     assert(is_path(path))
     assert(is_finite(maxlen))
@@ -496,20 +498,20 @@ function path_closest_point(path, pt) =
 //   path = path to find the tagent vectors for
 //   closed = set to true of the path is closed.  Default: false
 //   uniform = set to false to correct for non-uniform sampling.  Default: true
-// Example(3D): A shape with non-uniform sampling gives distorted derivatives that may be undesirable.  Note that derivatives tilt towards the long edges of the rectangle.  
+// Example(2D): A shape with non-uniform sampling gives distorted derivatives that may be undesirable.  Note that derivatives tilt towards the long edges of the rectangle.  
 //   rect = square([10,3]);
 //   tangents = path_tangents(rect,closed=true);
-//   stroke(rect,closed=true, width=0.1);
+//   stroke(rect,closed=true, width=0.25);
 //   color("purple")
 //       for(i=[0:len(tangents)-1])
-//           stroke([rect[i]-tangents[i], rect[i]+tangents[i]],width=.1, endcap2="arrow2");
-// Example(3D): Setting uniform to false corrects the distorted derivatives for this example:
+//           stroke([rect[i]-tangents[i], rect[i]+tangents[i]],width=.25, endcap2="arrow2");
+// Example(2D): Setting uniform to false corrects the distorted derivatives for this example:
 //   rect = square([10,3]);
 //   tangents = path_tangents(rect,closed=true,uniform=false);
-//   stroke(rect,closed=true, width=0.1);
+//   stroke(rect,closed=true, width=0.25);
 //   color("purple")
 //       for(i=[0:len(tangents)-1])
-//           stroke([rect[i]-tangents[i], rect[i]+tangents[i]],width=.1, endcap2="arrow2");
+//           stroke([rect[i]-tangents[i], rect[i]+tangents[i]],width=.25, endcap2="arrow2");
 function path_tangents(path, closed=false, uniform=true) =
     assert(is_path(path))
     !uniform ? [for(t=deriv(path,closed=closed, h=path_segment_lengths(path,closed))) unit(t)]
@@ -881,10 +883,10 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 //   path = The original path to split.
 //   cutdist = Distance or list of distances where path is cut
 //   closed = If true, treat the path as a closed polygon.
-// Example(2D):
+// Example(2D,NoAxes):
 //   path = circle(d=100);
 //   segs = path_cut(path, [50, 200], closed=true);
-//   rainbow(segs) stroke($item);
+//   rainbow(segs) stroke($item, endcaps="butt", width=3);
 function path_cut(path,cutdist,closed) =
   is_num(cutdist) ? path_cut(path,[cutdist],closed) :
   assert(is_vector(cutdist))
@@ -947,10 +949,10 @@ function _cut_to_seg_u_form(pathcut, path, closed) =
 //   path = The path to split up.
 //   closed = If true, treat path as a closed polygon.  Default: true
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-// Example(2D):
+// Example(2D,NoAxes):
 //   path = [ [-100,100], [0,-50], [100,100], [100,-100], [0,50], [-100,-100] ];
 //   paths = split_path_at_self_crossings(path);
-//   rainbow(paths) stroke($item, closed=false, width=2);
+//   rainbow(paths) stroke($item, closed=false, width=3);
 function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
     let(
         path = cleanup_path(path, eps=eps),
@@ -1011,25 +1013,25 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 //   path = The path to split up.
 //   nonzero = If true use the nonzero method for checking if a point is in a polygon.  Otherwise use the even-odd method.  Default: false
 //   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
-// Example(2D):  This cross-crossing polygon breaks up into its 3 components (regardless of the value of nonzero).
+// Example(2D,NoAxes):  This cross-crossing polygon breaks up into its 3 components (regardless of the value of nonzero).
 //   path = [
 //       [-100,100], [0,-50], [100,100],
 //       [100,-100], [0,50], [-100,-100]
 //   ];
 //   splitpaths = polygon_parts(path);
 //   rainbow(splitpaths) stroke($item, closed=true, width=3);
-// Example(2D): With nonzero=false you get even-odd mode which matches OpenSCAD, so the pentagram breaks apart into its five points.
+// Example(2D,NoAxes): With nonzero=false you get even-odd mode which matches OpenSCAD, so the pentagram breaks apart into its five points.
 //   pentagram = turtle(["move",100,"left",144], repeat=4);
 //   left(100)polygon(pentagram);
 //   rainbow(polygon_parts(pentagram,nonzero=false))
-//     stroke($item,closed=true);
-// Example(2D): With nonzero=true you get only the outer perimeter.  You can use this to create the polygon using the nonzero method, which is not supported by OpenSCAD.
+//     stroke($item,closed=true,width=2.5);
+// Example(2D,NoAxes): With nonzero=true you get only the outer perimeter.  You can use this to create the polygon using the nonzero method, which is not supported by OpenSCAD.
 //   pentagram = turtle(["move",100,"left",144], repeat=4);
 //   outside = polygon_parts(pentagram,nonzero=true);
 //   left(100)region(outside);
 //   rainbow(outside)
-//     stroke($item,closed=true);
-// Example(2D): 
+//     stroke($item,closed=true,width=2.5);
+// Example(2D,NoAxes): 
 //   N=12;
 //   ang=360/N;
 //   sr=10;
@@ -1042,19 +1044,19 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 //                  "move", sr]);
 //   stroke(path, width=.3);
 //   right(20)rainbow(polygon_parts(path)) polygon($item);
-// Example(2D): overlapping path segments disappear
+// Example(2D,NoAxes): overlapping path segments disappear
 //   path = [[0,0], [10,0], [10,10], [0,10],[0,20], [20,10],[10,10], [0,10],[0,0]];
 //   stroke(path,width=0.3);
 //   right(22)stroke(polygon_parts(path)[0], width=0.3, closed=true);
-// Example(2D): Path segments disappear outside as well
+// Example(2D,NoAxes): Path segments disappear outside as well
 //   path = turtle(["repeat", 3, ["move", 17, "left", "move", 10, "left", "move", 7, "left", "move", 10, "left"]]);
-//   back(2)stroke(path,width=.3);
-//   fwd(12)rainbow(polygon_parts(path)) polygon($item);
-// Example(2D):  This shape has six components
+//   back(2)stroke(path,width=.5);
+//   fwd(12)rainbow(polygon_parts(path)) stroke($item, closed=true, width=0.5);
+// Example(2D,NoAxes):  This shape has six components
 //   path = turtle(["repeat", 3, ["move", 15, "left", "move", 7, "left", "move", 10, "left", "move", 17, "left"]]);
 //   polygon(path);
 //   right(22)rainbow(polygon_parts(path)) polygon($item);
-// Example(2D): when the loops of the shape overlap then nonzero gives a different result than the even-odd method.
+// Example(2D,NoAxes): When the loops of the shape overlap then nonzero gives a different result than the even-odd method.
 //   path = turtle(["repeat", 3, ["move", 15, "left", "move", 7, "left", "move", 10, "left", "move", 10, "left"]]);
 //   polygon(path);
 //   right(27)rainbow(polygon_parts(path)) polygon($item);
