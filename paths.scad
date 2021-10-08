@@ -242,7 +242,8 @@ function _path_self_intersections(path, closed=true, eps=EPSILON) =
 //                && isect[1]> (i==0 && !closed? -eps: 0)  // Apparently too strict
                 && isect[1]>=-eps
                 && isect[1]<= 1+eps
-                && isect[2]> 0 
+//                && isect[2]> 0
+                && isect[2]>= -eps 
                 && isect[2]<= 1+eps)
                 [isect[0], i, isect[1], j, isect[2]]
     ];

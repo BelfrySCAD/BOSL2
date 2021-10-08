@@ -1373,7 +1373,7 @@ function polygon_area(poly, signed=false) =
         signed ? total : abs(total)
       : let( plane = plane_from_polygon(poly) )
         is_undef(plane) ? undef :
-        let( f=echo(plane=plane),
+        let( 
             n = plane_normal(plane),  
             total = 
                 -sum([ for(i=[1:1:len(poly)-2])
@@ -1400,7 +1400,7 @@ function polygon_centroid(poly, eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let(
         n = len(poly[0])==2 ? 1 :
-            let( plane = plane_from_points(poly, fast=false) ,dd=echo(p=plane))
+            let( plane = plane_from_points(poly, fast=false))
             assert(!is_undef(plane), "The polygon must be planar." )
             plane_normal(plane),
         v0 = poly[0] ,

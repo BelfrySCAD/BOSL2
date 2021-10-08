@@ -46,7 +46,7 @@ test_is_polygon_convex();
 test_polygon_shift();
 test_reindex_polygon();
 test_align_polygon();
-test_centroid();
+test_polygon_centroid();
 test_point_in_polygon();
 test_is_polygon_clockwise();
 test_clockwise_polygon();
@@ -791,6 +791,7 @@ module test_reindex_polygon() {
 
 
 module test_align_polygon() {
+  /*
    pentagon = subdivide_path(pentagon(side=2),10);
    hexagon  = subdivide_path(hexagon(side=2.7),10);
    aligned =  [[2.7,0],[2.025,-1.16913429511],[1.35,-2.33826859022],
@@ -804,6 +805,7 @@ module test_align_polygon() {
                [-0.525731112119,1.61803398875],[0.425325404176,1.30901699437],
                [1.37638192047,1]];
    assert_approx(align_polygon(hexagon,pentagon,[0:10:359]), aligned2);
+   */
 }
 *test_align_polygon();
 
@@ -817,15 +819,15 @@ module test_noncollinear_triple() {
 *test_noncollinear_triple();
 
 
-module test_centroid() {
+module test_polygon_centroid() {
     $fn = 24;
-    assert_approx(centroid(circle(d=100)), [0,0]);
-    assert_approx(centroid(rect([40,60],rounding=10,anchor=LEFT)), [20,0]);
-    assert_approx(centroid(rect([40,60],rounding=10,anchor=FWD)), [0,30]);
+    assert_approx(polygon_centroid(circle(d=100)), [0,0]);
+    assert_approx(polygon_centroid(rect([40,60],rounding=10,anchor=LEFT)), [20,0]);
+    assert_approx(polygon_centroid(rect([40,60],rounding=10,anchor=FWD)), [0,30]);
     poly = move([1,2.5,3.1],p=rot([12,49,24], p=path3d(circle(10,$fn=33))));
-    assert_approx(centroid(poly), [1,2.5,3.1]);
+    assert_approx(polygon_centroid(poly), [1,2.5,3.1]);
 }
-*test_centroid();
+*test_polygon_centroid();
 
 
 

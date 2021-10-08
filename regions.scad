@@ -251,9 +251,11 @@ function _path_region_intersections(path, region, closed=true, eps=EPSILON) =
               isect = _general_line_intersection([a1,a2],[b1,b2],eps=eps) 
           )
           if (  isect 
-                && isect[1]> (si==0 && !closed? -eps: 0)  
+//                && isect[1]> (si==0 && !closed? -eps: 0)  
+                && isect[1]>= -eps 
                 && isect[1]<= 1+eps 
-                && isect[2]>  0 
+//                && isect[2]>  0 
+                && isect[2]>= -eps
                 && isect[2]<= 1+eps )
               [si,isect[1]]
     ]);
