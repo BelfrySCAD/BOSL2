@@ -1533,6 +1533,13 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
     assert( is_vector(point,2) && is_path(poly,dim=2) && len(poly)>2,
             "The point and polygon should be in 2D. The polygon should have more that 2 points." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
+    // Check bounding box
+    let(
+        box = pointlist_bounds(poly)
+    )
+    point.x<box[0].x-eps || point.x>box[1].x+eps
+        || point.y<box[0].y-eps || point.y>box[1].y+eps  ? -1
+    :
     // Does the point lie on any edges?  If so return 0.
     let(
         on_brd = [
