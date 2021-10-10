@@ -1037,6 +1037,8 @@ module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
 //   list = The list of items to iterate through.
 //   stride = Consecutive colors stride around the color wheel divided into this many parts.
 //   maxhues = max number of hues to use (to prevent lots of indistinguishable hues)
+//   shuffle = if true then shuffle the hues in a random order.  Default: false
+//   seed = seed to use for shuffle
 // Side Effects:
 //   Sets the color to progressive values along the ROYGBIV spectrum for each item.
 //   Sets `$idx` to the index of the current item in `list` that we want to show.
@@ -1046,14 +1048,13 @@ module HSV(h,s=1,v=1,a=1) color(HSV(h,s,v),a) children();
 // Example(2D):
 //   rgn = [circle(d=45,$fn=3), circle(d=75,$fn=4), circle(d=50)];
 //   rainbow(rgn) stroke($item, closed=true);
-module rainbow(list, stride=1, maxhues)
+module rainbow(list, stride=1, maxhues, shuffle=false, seed)
 {
     ll = len(list);
     maxhues = first_defined([maxhues,ll]);
     huestep = 360 / maxhues;
-    hues = [for (i=[0:1:ll-1]) posmod(i*huestep+i*360/stride,360)];
-    echo(hues=hues);
-    s = [for (i=[0:1:ll-1]) [.5,.7,1][posmod(i,3)]];
+    huelist = [for (i=[0:1:ll-1]) posmod(i*huestep+i*360/stride,360)];
+    hues = shuffle ? shuffle(huelist, seed=seed) : huelist;
     for($idx=idx(list)) {
         $item = list[$idx];
         HSV(h=hues[$idx]) children();

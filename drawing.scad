@@ -167,6 +167,7 @@ module stroke(
     trim, trim1, trim2,
     convexity=10, hull=true
 ) {
+    no_children($children);
     module setcolor(clr) {
         if (clr==undef) {
             children();
