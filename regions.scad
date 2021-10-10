@@ -983,11 +983,15 @@ function offset(
 ///    "S" - the subpath is on the region's border and the polygon and region are on the same side of the subpath
 ///    "U" - the subpath is on the region's border and the polygon and region meet at the subpath (from opposite sides)
 /// The return has the form of a list with entries [TAG, SUBPATH]
-function _tag_subpaths(region1, region2, eps=EPSILON, SUtags=true) =
+function _tag_subpaths(region1, region2, keep, eps=EPSILON) = 
     // We have to compute common vertices between paths in the region because
     // they can be places where the path must be cut, even though they aren't
     // found my the split_path function.  
     let(
+        keepS = search("S",keep)!=[],
+        keepU = search("U",keep)!=[],        
+        keepoutside = search("O",keep) !=[],
+        keepinside = search("I",keep) !=[],
         points = flatten(region1),
         tree =  len(points)>0 ? vector_search_tree(points): undef
     )
@@ -1000,31 +1004,26 @@ function _tag_subpaths(region1, region2, eps=EPSILON, SUtags=true) =
         for (subpath = subpaths)
             let(
                 midpt = mean([subpath[0], subpath[1]]),
-                rel = point_in_region(midpt,region2,eps=eps)
+                rel = point_in_region(midpt,region2,eps=eps),
+                keepthis = rel<0 ? keepoutside
+                         : rel>0 ? keepinside
+                         : !(keepS || keepU) ? false
+                         : let(
+                               sidept = midpt + 0.01*line_normal(subpath[0],subpath[1]),
+                               rel1 = point_in_region(sidept,region1,eps=eps)>0,
+                               rel2 = point_in_region(sidept,region2,eps=eps)>0
+                           )
+                           rel1==rel2 ? keepS : keepU
             )
-            if(rel<0) ["O", subpath]
-            else if (rel>0) ["I", subpath]
-            else if (SUtags)
-                let(
-                    sidept = midpt + 0.01*line_normal(subpath[0],subpath[1]),
-                    rel1 = point_in_region(sidept,region1,eps=eps)>0,
-                    rel2 = point_in_region(sidept,region2,eps=eps)>0
-                 )
-                 rel1==rel2? ["S", subpath] : ["U", subpath]
+            if (keepthis) subpath
     ];
 
 
-function _tagged_region(region1,region2,keep1,keep2,SUtags1=true, eps=EPSILON) =
-    let(
-        tagged1 = _tag_subpaths(region1, region2, eps=eps, SUtags=SUtags1),
-        tagged2 = _tag_subpaths(region2, region1, eps=eps, SUtags=false),
-        tagged = [
-                  for (tagpath = tagged1) if (in_list(tagpath[0], keep1)) tagpath[1],
-                  for (tagpath = tagged2) if (in_list(tagpath[0], keep2)) tagpath[1]
-                 ]
-    )
-    _assemble_path_fragments(tagged, eps=eps);
 
+function _tagged_region(region1,region2,keep1,keep2,eps=EPSILON) =
+    _assemble_path_fragments(concat(_tag_subpaths(region1, region2, keep1, eps=eps),
+                                    _tag_subpaths(region2, region1, keep2, eps=eps)),
+                             eps=eps);
 
 
 // Function&Module: union()
@@ -1050,7 +1049,7 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
     len(regions)==1? regions[0] :
     let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
     union([
-           _tagged_region(regions[0],regions[1],["O","S"],["O"], eps=eps),
+           _tagged_region(regions[0],regions[1],"OS", "O", eps=eps),
             for (i=[2:1:len(regions)-1]) regions[i]
           ],
           eps=eps
@@ -1082,7 +1081,7 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
     regions[0]==[] ? [] : 
     let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
     difference([
-                _tagged_region(regions[0],regions[1],["O","U"],["I"], eps=eps),
+                _tagged_region(regions[0],regions[1],"OU", "I", eps=eps),
                 for (i=[2:1:len(regions)-1]) regions[i]
                ],
                eps=eps
@@ -1113,7 +1112,7 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
    : regions[0]==[] || regions[1]==[] ? []   
    : let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
          intersection([
-                       _tagged_region(regions[0],regions[1],["I","S"],["I"],eps=eps),
+                       _tagged_region(regions[0],regions[1],"IS","I",eps=eps),
                        for (i=[2:1:len(regions)-1]) regions[i]
                       ],
                       eps=eps
@@ -1151,7 +1150,7 @@ function exclusive_or(regions=[],b=undef,c=undef,eps=EPSILON) =
     len(regions)==1? regions[0] :
     let(regions=[for (r=regions) is_path(r)? [r] : r])
     exclusive_or([
-                  _tagged_region(regions[0],regions[1],["I","O"],["I","O"],eps=eps,SUtags1=false),
+                  _tagged_region(regions[0],regions[1],"IO","IO",eps=eps),
                   for (i=[2:1:len(regions)-1]) regions[i]
                  ],
                  eps=eps

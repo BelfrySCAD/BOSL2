@@ -17,6 +17,7 @@ module test_union() {
   R1 = [square(10,center=true), square(9,center=true)];
   R2 = [square(9,center=true)];
   assert(are_regions_equal(union(R1,R2), [square(10,center=true)]));
+  assert(are_regions_equal(union(R2,R1), [square(10,center=true)]));  
 }
 test_union();
 
