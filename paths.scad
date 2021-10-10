@@ -1170,7 +1170,7 @@ function _assemble_a_path_from_fragments(fragments, rightmost=true, startfrag=0,
 ///   fragments = List of paths to be assembled into complete polygons.
 ///   eps = The epsilon error value to determine whether two points coincide.  Default: `EPSILON` (1e-9)
 function _assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
-    len(fragments)==0? _finished :
+   len(fragments)==0? _finished :
     let(
         minxidx = min_index([
             for (frag=fragments) min(subindex(frag,0))
