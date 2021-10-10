@@ -715,9 +715,7 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 
 function _offset_region(region, r, delta, chamfer, check_valid, quality,closed,return_faces,firstface_index,flip_faces) =
     let(
-//dg=        echo(region=region),
          reglist = [for(R=region_parts(region)) is_path(R) ? [R] : R],
-//fdsa=         echo(reglist),
          ofsregs = [for(R=reglist)
              [for(i=idx(R)) offset(R[i], r=u_mul(i>0?-1:1,r), delta=u_mul(i>0?-1:1,delta), chamfer=chamfer, check_valid=check_valid,
                                     quality=quality,closed=true)]]
@@ -993,8 +991,9 @@ function _tag_subpaths(region1, region2, eps=EPSILON, SUtags=true) =
         points = flatten(region1),
         tree =  len(points)>0 ? vector_search_tree(points): undef
     )
-    [for(path=region1)
+    [for(p=region1)
         let(
+            path = deduplicate(p),
             self_int = is_undef(tree)?[]:[for(i=idx(path)) if (len(vector_search(path[i], eps, tree))>1) [i,0]],
             subpaths = split_path_at_region_crossings(path, region2, eps=eps, extra=self_int)
         )
@@ -1108,7 +1107,6 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(intersection(shape1,shape2));
 function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
-//    echo(regions=regions)
      b!=undef? intersection(concat([regions],[b],c==undef?[]:[c]),eps=eps)
    : len(regions)==0 ? []
    : len(regions)==1? regions[0]
