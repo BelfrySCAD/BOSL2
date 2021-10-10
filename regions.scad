@@ -1014,10 +1014,10 @@ function _tag_subpaths(region1, region2, eps=EPSILON, SUtags=true) =
     ];
 
 
-function _tagged_region(region1,region2,keep1,keep2,eps=EPSILON) =
+function _tagged_region(region1,region2,keep1,keep2,SUtags1=true, eps=EPSILON) =
     let(
-        tagged1 = _tag_subpaths(region1, region2, eps=eps),
-        tagged2 = _tag_subpaths(region2, region1, eps=eps),
+        tagged1 = _tag_subpaths(region1, region2, eps=eps, SUtags=SUtags1),
+        tagged2 = _tag_subpaths(region2, region1, eps=eps, SUtags=false),
         tagged = [
                   for (tagpath = tagged1) if (in_list(tagpath[0], keep1)) tagpath[1],
                   for (tagpath = tagged2) if (in_list(tagpath[0], keep2)) tagpath[1]
@@ -1151,7 +1151,7 @@ function exclusive_or(regions=[],b=undef,c=undef,eps=EPSILON) =
     len(regions)==1? regions[0] :
     let(regions=[for (r=regions) is_path(r)? [r] : r])
     exclusive_or([
-                  _tagged_region(regions[0],regions[1],["I","O"],["I","O"],eps=eps),
+                  _tagged_region(regions[0],regions[1],["I","O"],["I","O"],eps=eps,SUtags1=false),
                   for (i=[2:1:len(regions)-1]) regions[i]
                  ],
                  eps=eps
