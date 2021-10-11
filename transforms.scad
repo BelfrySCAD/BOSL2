@@ -96,16 +96,11 @@ module move(v=[0,0,0], p, x=0, y=0, z=0) {
 }
 
 function move(v=[0,0,0], p, x=0, y=0, z=0) =
-    is_undef(p)? (
-        len(v)==2? affine2d_translate(v+[x,y]) :
-        affine3d_translate(point3d(v)+[x,y,z])
-    ) : (
-        assert(is_list(p))
-        let(v=point3d(v)+[x,y,z])
-        is_num(p.x)? p+v :
-        is_vnf(p)? [move(v=v,p=p.x), p.y] :
-        [for (l=p) is_vector(l)? l+v : move(v=v, p=l)]
-    );
+    let(
+        m = len(v)==2? affine2d_translate(v+[x,y]) :
+            affine3d_translate(point3d(v)+[x,y,z])
+    )
+    is_undef(p)? m : apply(m, p);
 
 function translate(v=[0,0,0], p=undef) = move(v=v, p=p);
 
@@ -426,46 +421,36 @@ function rot(a=0, v, cp, from, to, reverse=false, planar=false, p, _m) =
     assert(is_finite(a) || is_vector(a), "'a' must be a finite scalar or a vector.")
     assert(is_bool(reverse))
     assert(is_bool(planar))
-    is_undef(p)? (
-        planar? let(
-            check = assert(is_num(a)),
-            cp = is_undef(cp)? cp : point2d(cp),
-            m1 = is_undef(from)? affine2d_zrot(a) :
-                assert(a==0, "'from' and 'to' cannot be used with 'a' when 'planar' is true.")
-                assert(approx(point3d(from).z, 0), "'from' must be a 2D vector when 'planar' is true.")
-                assert(approx(point3d(to).z, 0), "'to' must be a 2D vector when 'planar' is true.")
-                affine2d_zrot(
-                    v_theta(to) -
-                    v_theta(from)
-                ),
-            m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
-            m3 = reverse? matrix_inverse(m2) : m2
-        ) m3 : let(
-            from = is_undef(from)? undef : point3d(from),
-            to = is_undef(to)? undef : point3d(to),
-            cp = is_undef(cp)? undef : point3d(cp),
-            m1 = !is_undef(from)? (
-                    assert(is_num(a))
-                    affine3d_rot_from_to(from,to) * affine3d_rot_by_axis(from,a)
-                ) :
-                !is_undef(v)? assert(is_num(a)) affine3d_rot_by_axis(v,a) :
-                is_num(a)? affine3d_zrot(a) :
-                affine3d_zrot(a.z) * affine3d_yrot(a.y) * affine3d_xrot(a.x),
-            m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
-            m3 = reverse? matrix_inverse(m2) : m2
-        ) m3
-    ) : (
-        assert(is_list(p))
-        let(
-            m = !is_undef(_m)? _m :
-                rot(a=a, v=v, cp=cp, from=from, to=to, reverse=reverse, planar=planar),
-            res = p==[]? [] :
-                is_vector(p)? apply(m, p) :
-                is_vnf(p)? [apply(m, p[0]), p[1]] :
-                is_list(p[0])? [for (pp=p) rot(p=pp, _m=m)] :
-                assert(false, "The p argument for rot() is not a point, path, patch, matrix, or VNF.")
-        ) res
-    );
+    let(
+        m = planar? let(
+                check = assert(is_num(a)),
+                cp = is_undef(cp)? cp : point2d(cp),
+                m1 = is_undef(from)? affine2d_zrot(a) :
+                    assert(a==0, "'from' and 'to' cannot be used with 'a' when 'planar' is true.")
+                    assert(approx(point3d(from).z, 0), "'from' must be a 2D vector when 'planar' is true.")
+                    assert(approx(point3d(to).z, 0), "'to' must be a 2D vector when 'planar' is true.")
+                    affine2d_zrot(
+                        v_theta(to) -
+                        v_theta(from)
+                    ),
+                m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
+                m3 = reverse? matrix_inverse(m2) : m2
+            ) m3 : let(
+                from = is_undef(from)? undef : point3d(from),
+                to = is_undef(to)? undef : point3d(to),
+                cp = is_undef(cp)? undef : point3d(cp),
+                m1 = !is_undef(from)? (
+                        assert(is_num(a))
+                        affine3d_rot_from_to(from,to) * affine3d_rot_by_axis(from,a)
+                    ) :
+                    !is_undef(v)? assert(is_num(a)) affine3d_rot_by_axis(v,a) :
+                    is_num(a)? affine3d_zrot(a) :
+                    affine3d_zrot(a.z) * affine3d_yrot(a.y) * affine3d_xrot(a.x),
+                m2 = is_undef(cp)? m1 : (move(cp) * m1 * move(-cp)),
+                m3 = reverse? matrix_inverse(m2) : m2
+            ) m3
+    )
+    is_undef(p)? m : apply(m, p);
 
 
 
@@ -652,31 +637,23 @@ function scale(v=1, p, cp=[0,0,0]) =
     assert(is_num(v) || is_vector(v))
     assert(is_undef(p) || is_list(p))
     assert(is_vector(cp))
-    let( v = is_num(v)? [v,v,v] : v )
-    is_undef(p)? (
-        len(v)==2? (
-            cp==[0,0,0] || cp == [0,0] ? affine2d_scale(v) : (
-                affine2d_translate(point2d(cp)) *
-                affine2d_scale(v) *
-                affine2d_translate(point2d(-cp))
+    let(
+        v = is_num(v)? [v,v,v] : v,
+        m = len(v)==2? (
+                cp==[0,0,0] || cp == [0,0] ? affine2d_scale(v) : (
+                    affine2d_translate(point2d(cp)) *
+                    affine2d_scale(v) *
+                    affine2d_translate(point2d(-cp))
+                )
+            ) : (
+                cp==[0,0,0] ? affine3d_scale(v) : (
+                    affine3d_translate(point3d(cp)) *
+                    affine3d_scale(v) *
+                    affine3d_translate(point3d(-cp))
+                )
             )
-        ) : (
-            cp==[0,0,0] ? affine3d_scale(v) : (
-                affine3d_translate(point3d(cp)) *
-                affine3d_scale(v) *
-                affine3d_translate(point3d(-cp))
-            )
-        )
-    ) : (
-        assert(is_list(p))
-        let( mat = scale(v=v, cp=cp) )
-        is_vector(p)? apply(mat, p) :
-        is_vnf(p)? let(inv=product([for (x=v) x<0? -1 : 1])) [
-            apply(mat, p[0]),
-            inv>=0? p[1] : [for (l=p[1]) reverse(l)]
-        ] :
-        apply(mat, p)
-    );
+    )
+    is_undef(p)? m : apply(m, p) ;
 
 
 // Function&Module: xscale()
@@ -919,10 +896,7 @@ function mirror(v, p) =
     assert(is_vector(v))
     assert(is_undef(p) || is_list(p))
     let(m = len(v)==2? affine2d_mirror(v) : affine3d_mirror(v))
-    is_undef(p)? m :
-    is_num(p.x)? apply(m,p) :
-    is_vnf(p)? [mirror(v=v,p=p[0]), [for (face=p[1]) reverse(face)]] :
-    [for (l=p) is_vector(l)? apply(m,l) : mirror(v=v, p=l)];
+    is_undef(p)? m : apply(m,p);
 
 
 // Function&Module: xflip()
@@ -981,8 +955,9 @@ function xflip(p, x=0, planar=false) =
     x == 0 ? mirror(n,p=p) :
     let(
         cp = x * n,
-        mat = move(cp) * mirror(n) * move(-cp)
-    ) is_undef(p)? mat : apply(mat, p);
+        m = move(cp) * mirror(n) * move(-cp)
+    )
+    is_undef(p)? m : apply(m, p);
 
 
 // Function&Module: yflip()
@@ -1041,8 +1016,9 @@ function yflip(p, y=0, planar=false) =
     y == 0 ? mirror(n,p=p) :
     let(
         cp = y * n,
-        mat = move(cp) * mirror(n) * move(-cp)
-    ) is_undef(p)? mat : apply(mat, p);
+        m = move(cp) * mirror(n) * move(-cp)
+    )
+    is_undef(p)? m : apply(m, p);
 
 
 // Function&Module: zflip()
@@ -1090,7 +1066,8 @@ function zflip(p, z=0) =
     assert(is_finite(z))
     assert(is_undef(p) || is_list(p))
     z==0? mirror([0,0,1],p=p) :
-    move([0,0,z],p=mirror([0,0,1],p=move([0,0,-z],p=p)));
+    let(m = up(z) * mirror(UP) * down(z))
+    p==undef? m : apply(m, p);
 
 
 //////////////////////////////////////////////////////////////////////
@@ -1261,15 +1238,7 @@ function skew(p, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0, planar=false) =
             [  0,   0, 1]
         ] : affine3d_skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy)
     )
-    is_undef(p)? m :
-    assert(is_list(p))
-    is_num(p.x)? (
-        planar?
-            point2d(m*concat(point2d(p),[1])) :
-            point3d(m*concat(point3d(p),[1]))
-    ) :
-    is_vnf(p)? [skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy, planar=planar, p=p.x), p.y] :
-    [for (l=p) skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy, planar=planar, p=l)];
+    is_undef(p)? m : apply(m, p);
 
 
 // Section: Applying transformation matrices to 
@@ -1331,24 +1300,42 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 //   #stroke(path1,closed=true);
 //   stroke(path2,closed=true);
 function apply(transform,points) =
-    points==[] ? [] :
-    is_vector(points)
-      ? /* Point */ apply(transform, [points])[0] :
-    is_list(points) && len(points)==2 && is_path(points[0],3) && is_list(points[1]) && is_vector(points[1][0])
-      ? /* VNF */ [apply(transform, points[0]), points[1]] :
-    is_list(points) && is_list(points[0]) && is_vector(points[0][0])
-      ? /* BezPatch */ [for (x=points) apply(transform,x)] :
+    points==[] ? []
+  : is_vector(points) ? _apply(transform, [points])[0]     // point
+  : is_vnf(points) ?                                      // vnf
+        let(
+            newvnf = [_apply(transform, points[0]), points[1]],
+            reverse = (len(transform)==len(transform[0])) && determinant(transform)<0
+        )
+        reverse ? vnf_reverse_faces(newvnf) : newvnf
+  : is_list(points) && is_list(points[0]) && is_vector(points[0][0])    // bezier patch
+        ? [for (x=points) _apply(transform,x)]
+  : _apply(transform,points);
+
+
+function _apply(transform,points) =
+    assert(is_matrix(transform),"Invalid transformation matrix")
+    assert(is_matrix(points),"Invalid points list")
     let(
         tdim = len(transform[0])-1,
         datadim = len(points[0]),
         outdim = min(datadim,len(transform)),
         matrix = [for(i=[0:1:tdim]) [for(j=[0:1:outdim-1]) transform[j][i]]]
     )
-    tdim==datadim && (datadim==3 || datadim==2) ? [for(p=points) concat(p,1)] * matrix
-  : tdim == 3 && datadim == 2 ?
-        assert(is_2d_transform(transform), str("Transforms is 3d but points are 2d"))
-        [for(p=points) concat(p,[0,1])]*matrix 
-  : assert(false, str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
+    tdim==datadim && (datadim==3 || datadim==2)
+      ? [for(p=points) concat(p,1)] * matrix
+      : tdim == 3 && datadim == 2 ?
+            assert(is_2d_transform(transform), str("Transforms is 3d but points are 2d"))
+            [for(p=points) concat(p,[0,1])]*matrix
+      : tdim == 2 && datadim == 3 ?
+           let(
+                matrix3d =[[ matrix[0][0], matrix[0][1], 0],
+                           [ matrix[1][0], matrix[1][1], 0],
+                           [            0,            0, 1],
+                           [ matrix[2][0], matrix[2][1], 0]]
+           )
+           [for(p=points) concat(p,1)] * matrix3d
+      : assert(false, str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
 
 
 
