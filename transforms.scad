@@ -1301,35 +1301,41 @@ function is_2d_transform(t) =    // z-parameters are zero, except we allow t[2][
 //   stroke(path2,closed=true);
 function apply(transform,points) =
     points==[] ? []
-  : is_vector(points) ? apply(transform, [points])[0]     // point
+  : is_vector(points) ? _apply(transform, [points])[0]     // point
   : is_vnf(points) ?                                      // vnf
         let(
-            newvnf = [apply(transform, points[0]), points[1]],
+            newvnf = [_apply(transform, points[0]), points[1]],
             reverse = (len(transform)==len(transform[0])) && determinant(transform)<0
         )
         reverse ? vnf_reverse_faces(newvnf) : newvnf
   : is_list(points) && is_list(points[0]) && is_vector(points[0][0])    // bezier patch
-        ? [for (x=points) apply(transform,x)]
-  : assert(is_matrix(transform),"Invalid transformation matrix")        // Assuming point list
+        ? [for (x=points) _apply(transform,x)]
+  : _apply(transform,points);
+
+
+function _apply(transform,points) =
+    assert(is_matrix(transform),"Invalid transformation matrix")
+    assert(is_matrix(points),"Invalid points list")
     let(
         tdim = len(transform[0])-1,
         datadim = len(points[0]),
         outdim = min(datadim,len(transform)),
         matrix = [for(i=[0:1:tdim]) [for(j=[0:1:outdim-1]) transform[j][i]]]
-      )
-    tdim==datadim && (datadim==3 || datadim==2) ? [for(p=points) concat(p,1)] * matrix
-  : tdim == 3 && datadim == 2 ?
-        assert(is_2d_transform(transform), str("Transforms is 3d but points are 2d"))
-        [for(p=points) concat(p,[0,1])]*matrix
-  : tdim == 2 && datadim == 3 ?
-       let(
-            matrix3d =[[ matrix[0][0], matrix[0][1], 0],
-                       [ matrix[1][0], matrix[1][1], 0],
-                       [            0,            0, 1],
-                       [ matrix[2][0], matrix[2][1], 0]]
-       )
-       [for(p=points) concat(p,1)] * matrix3d
-  : assert(false, str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
+    )
+    tdim==datadim && (datadim==3 || datadim==2)
+      ? [for(p=points) concat(p,1)] * matrix
+      : tdim == 3 && datadim == 2 ?
+            assert(is_2d_transform(transform), str("Transforms is 3d but points are 2d"))
+            [for(p=points) concat(p,[0,1])]*matrix
+      : tdim == 2 && datadim == 3 ?
+           let(
+                matrix3d =[[ matrix[0][0], matrix[0][1], 0],
+                           [ matrix[1][0], matrix[1][1], 0],
+                           [            0,            0, 1],
+                           [ matrix[2][0], matrix[2][1], 0]]
+           )
+           [for(p=points) concat(p,1)] * matrix3d
+      : assert(false, str("Unsupported combination: transform with dimension ",tdim,", data of dimension ",datadim));
 
 
 
