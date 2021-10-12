@@ -171,8 +171,8 @@ function pointlist_bounds(pts) =
 //   v5 = unit([0,0,0],[1,2,3]);    // Returns: [1,2,3]
 //   v6 = unit([0,0,0]);    // Asserts an error.
 function unit(v, error=[[["ASSERT"]]]) =
-    assert(is_vector(v), str("Expected a vector.  Got: ",v))
-    norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON,"Tried to normalize a zero vector") : error) :
+    assert(is_vector(v), "Invalid vector")
+    norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON,"Cannot normalize a zero vector") : error) :
     v/norm(v);
 
 
@@ -313,8 +313,10 @@ function furthest_point(pt, points) =
 //   When `target` is a large list of points, a search tree is constructed to 
 //   speed up the search with an order around O(log n) per query point. 
 //   For small point lists, a direct search is done dispensing a tree construction. 
-//   Alternatively, `target` may be a search tree built with `vector_tree_search()`.
+//   Alternatively, `target` may be a search tree built with `vector_search_tree()`.
 //   In that case, that tree is parsed looking for matches.
+//   An empty list of query points will return a empty output list.
+//   An empty list of target points will return a output list with an empty list for each query point.
 // Arguments:
 //   query = list of points to find matches for.
 //   r = the search radius.
@@ -351,6 +353,8 @@ function furthest_point(pt, points) =
 //       color("red") move_copies(select(points, search_2[i])) circle(r=.08);
 //   }
 function vector_search(query, r, target) =
+    query==[] ? [] :
+    is_list(query) && target==[] ? is_vector(query) ? [] : [for(q=query) [] ] :
     assert( is_finite(r) && r>=0, 
             "The query radius should be a positive number." )
     let(
@@ -365,13 +369,12 @@ function vector_search(query, r, target) =
             "The target should be a list of points or a search tree compatible with the query." )
     let( 
         dim    = tgpts ? len(target[0]) : len(target[0][0]),
-        simple = is_vector(query, dim),
-        mult   = !simple && is_matrix(query,undef,dim)
-    )
-    assert( simple || mult, 
+        simple = is_vector(query, dim)
+        )
+    assert( simple || is_matrix(query,undef,dim), 
             "The query points should be a list of points compatible with the target point list.")
     tgpts 
-    ?   len(target)<200
+    ?   len(target)<=400
         ?   simple ? [for(i=idx(target)) if(norm(target[i]-query)<r) i ] :
             [for(q=query) [for(i=idx(target)) if(norm(target[i]-q)<r) i ] ]
         :   let( tree = _bt_tree(target, count(len(target)), leafsize=25) )
@@ -382,7 +385,7 @@ function vector_search(query, r, target) =
 
 
 //Ball tree search
-function _bt_search(query, r, points, tree) = //echo(tree)
+function _bt_search(query, r, points, tree) = 
     assert( is_list(tree) 
             && (   ( len(tree)==1 && is_list(tree[0]) )
                 || ( len(tree)==4 && is_num(tree[0]) && is_num(tree[1]) ) ), 
@@ -413,25 +416,32 @@ function _bt_search(query, r, points, tree) = //echo(tree)
 //    for high data dimensions.  This data structure is useful when you will be
 //    performing many searches of the same data, so that the cost of constructing 
 //    the tree is justified. (See https://en.wikipedia.org/wiki/Ball_tree)
+//    For a small lists of points, the search with a tree may be more expensive
+//    than direct comparisons. The argument `treemin` sets the minimum length of 
+//    point set for which a tree search will be done by `vector_search`.
+//    For an empty list of points it returns an empty list.
 // Arguments:
 //    points = list of points to store in the search tree.
 //    leafsize = the size of the tree leaves. Default: 25
+//    treemin = the minimum size of the point list for which a tree search is done. Default: 400
 // Example: A set of four queries to find points within 1 unit of the query.  The circles show the search region and all have radius 1.  
 //   $fn=32;
 //   k = 2000;
-//   points = array_group(rands(0,10,k*2,seed=13333),2);
+//   points = random_points(k, scale=10, dim=2,seed=13333);
 //   queries = [for(i=[3,7],j=[3,7]) [i,j]];
 //   search_tree = vector_search_tree(points);
-//   search_ind = vector_tree_search(search_tree, queries, 1);
+//   search_ind = vector_search(queries,1,search_tree);
 //   move_copies(points) circle(r=.08);
 //   for(i=idx(queries)){
 //       color("blue") stroke(move(queries[i],circle(r=1)), closed=true, width=.08);
-//       color("red")  move_copies(select(points, search_ind[i])) circle(r=.08); }
+//       color("red")  move_copies(select(points, search_ind[i])) circle(r=.08);
 //   }
-function vector_search_tree(points, leafsize=25) =
+function vector_search_tree(points, leafsize=25, treemin=400) =
+    points==[] ? [] :
     assert( is_matrix(points), "The input list entries should be points." )
     assert( is_int(leafsize) && leafsize>=1,
             "The tree leaf size should be an integer greater than zero.")
+    len(points)<treemin ? points :
     [ points, _bt_tree(points, count(len(points)), leafsize) ];
 
 
