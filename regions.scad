@@ -156,7 +156,7 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
 //   formed from a list of simple polygons that do not intersect each other.
 // Arguments:
 //   region = region to check
-//   eps = tolerance for geometric omparisons.  Default: `EPSILON` = 1e-9
+//   eps = tolerance for geometric comparisons.  Default: `EPSILON` = 1e-9
 function is_region_simple(region, eps=EPSILON) =
    [for(p=region) if (!is_path_simple(p,closed=true,eps)) 1] == []
    &&
@@ -286,7 +286,7 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
 //   closed1 = if false then treat region1 as list of open paths.  Default: true
 //   closed2 = if false then treat region2 as list of open paths.  Default: true
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-// Example: 
+// Example(2D): 
 //   path = square(50,center=false);
 //   region = [circle(d=80), circle(d=40)];
 //   paths = split_region_at_region_crossings(path, region);
@@ -706,64 +706,73 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   return_faces = return face list.  Default: False.
 //   firstface_index = starting index for face list.  Default: 0.
 //   flip_faces = flip face direction.  Default: false
-// Example(2D):
+// Example(2D,NoAxes):
 //   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, delta=10, closed=true));
-// Example(2D):
+//   #stroke(closed=true, star, width=3);
+//   stroke(closed=true, width=3, offset(star, delta=10, closed=true));
+// Example(2D,NoAxes):
 //   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, delta=10, chamfer=true, closed=true));
-// Example(2D):
+//   #stroke(closed=true, star, width=3);
+//   stroke(closed=true, width=3,
+//          offset(star, delta=10, chamfer=true, closed=true));
+// Example(2D,NoAxes):
 //   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, r=10, closed=true));
-// Example(2D):
-//   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, delta=-10, closed=true));
-// Example(2D):
-//   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, delta=-10, chamfer=true, closed=true));
-// Example(2D):
-//   star = star(5, r=100, ir=30);
-//   #stroke(closed=true, star);
-//   stroke(closed=true, offset(star, r=-10, closed=true, $fn=20));
-// Example(2D):  This case needs `quality=2` for success
+//   #stroke(closed=true, star, width=3);
+//   stroke(closed=true, width=3,
+//          offset(star, r=10, closed=true));
+// Example(2D,NoAxes):
+//   star = star(7, r=120, ir=50);
+//   #stroke(closed=true, width=3, star);
+//   stroke(closed=true, width=3,
+//          offset(star, delta=-15, closed=true));
+// Example(2D,NoAxes):
+//   star = star(7, r=120, ir=50);
+//   #stroke(closed=true, width=3, star);
+//   stroke(closed=true, width=3,
+//          offset(star, delta=-15, chamfer=true, closed=true));
+// Example(2D,NoAxes):
+//   star = star(7, r=120, ir=50);
+//   #stroke(closed=true, width=3, star);
+//   stroke(closed=true, width=3,
+//          offset(star, r=-15, closed=true, $fn=20));
+// Example(2D,NoAxes):  This case needs `quality=2` for success
 //   test = [[0,0],[10,0],[10,7],[0,7], [-1,-3]];
 //   polygon(offset(test,r=-1.9, closed=true, quality=2));
 //   //polygon(offset(test,r=-1.9, closed=true, quality=1));  // Fails with erroneous 180 deg path error
 //   %down(.1)polygon(test);
-// Example(2D): This case fails if `check_valid=true` when delta is large enough because segments are too close to the opposite side of the curve.  
+// Example(2D,NoAxes): This case fails if `check_valid=true` when delta is large enough because segments are too close to the opposite side of the curve.  
 //   star = star(5, r=22, ir=13);
-//   stroke(star,width=.2,closed=true);                                                           
+//   stroke(star,width=.3,closed=true);                                                           
 //   color("green")
-//     stroke(offset(star, delta=-9, closed=true),width=.2,closed=true); // Works with check_valid=true (the default)
+//     stroke(offset(star, delta=-9, closed=true),width=.3,closed=true); // Works with check_valid=true (the default)
 //   color("red")
 //     stroke(offset(star, delta=-10, closed=true, check_valid=false),   // Fails if check_valid=true 
-//            width=.2,closed=true); 
+//            width=.3,closed=true); 
 // Example(2D): But if you use rounding with offset then you need `check_valid=true` when `r` is big enough.  It works without the validity check as long as the offset shape retains a some of the straight edges at the star tip, but once the shape shrinks smaller than that, it fails.  There is no simple way to get a correct result for the case with `r=10`, because as in the previous example, it will fail if you turn on validity checks.  
 //   star = star(5, r=22, ir=13);
 //   color("green")
 //     stroke(offset(star, r=-8, closed=true,check_valid=false), width=.1, closed=true);
 //   color("red")
 //     stroke(offset(star, r=-10, closed=true,check_valid=false), width=.1, closed=true);
-// Example(2D): The extra triangles in this example show that the validity check cannot be skipped
+// Example(2D,NoAxes): The extra triangles in this example show that the validity check cannot be skipped
 //   ellipse = scale([20,4], p=circle(r=1,$fn=64));
 //   stroke(ellipse, closed=true, width=0.3);
-//   stroke(offset(ellipse, r=-3, check_valid=false, closed=true), width=0.3, closed=true);
-// Example(2D): The triangles are removed by the validity check
+//   stroke(offset(ellipse, r=-3, check_valid=false, closed=true),
+//          width=0.3, closed=true);
+// Example(2D,NoAxes): The triangles are removed by the validity check
 //   ellipse = scale([20,4], p=circle(r=1,$fn=64));
 //   stroke(ellipse, closed=true, width=0.3);
-//   stroke(offset(ellipse, r=-3, check_valid=true, closed=true), width=0.3, closed=true);
+//   stroke(offset(ellipse, r=-3, check_valid=true, closed=true),
+//          width=0.3, closed=true);
 // Example(2D): Open path.  The path moves from left to right and the positive offset shifts to the left of the initial red path.
 //   sinpath = 2*[for(theta=[-180:5:180]) [theta/4,45*sin(theta)]];
-//   #stroke(sinpath);
-//   stroke(offset(sinpath, r=17.5));
-// Example(2D): Region
-//   rgn = difference(circle(d=100), union(square([20,40], center=true), square([40,20], center=true)));
-//   #linear_extrude(height=1.1) for (p=rgn) stroke(closed=true, width=0.5, p);
+//   #stroke(sinpath, width=2);
+//   stroke(offset(sinpath, r=17.5),width=2);
+// Example(2D,NoAxes): Region
+//   rgn = difference(circle(d=100),
+//                    union(square([20,40], center=true),
+//                          square([40,20], center=true)));
+//   #linear_extrude(height=1.1) stroke(rgn, width=1);
 //   region(offset(rgn, r=-5));
 function offset(
     path, r=undef, delta=undef, chamfer=false,
@@ -936,8 +945,8 @@ function _filter_region_parts(region1, region2, keep1, keep2, eps=EPSILON) =
 // Example(2D):
 //   shape1 = move([-8,-8,0], p=circle(d=50));
 //   shape2 = move([ 8, 8,0], p=circle(d=50));
-//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(union(shape1,shape2));
+//   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 function union(regions=[],b=undef,c=undef,eps=EPSILON) =
     b!=undef? union(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
     len(regions)==0? [] :
