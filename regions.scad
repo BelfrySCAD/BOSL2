@@ -148,7 +148,6 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
    : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
 
 
-
 // Function: is_region_simple()
 // Usage:
 //   bool = is_region_simple(region, [eps]);
@@ -159,13 +158,11 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
 //   region = region to check
 //   eps = tolerance for geometric omparisons.  Default: `EPSILON` = 1e-9
 function is_region_simple(region, eps=EPSILON) =
-   [for(p=region) if (!is_path_simple(p,closed=true,eps)) 1] == [];
-
-/*   &&
+   [for(p=region) if (!is_path_simple(p,closed=true,eps)) 1] == []
+   &&
    [for(i=[0:1:len(region)-2])
        if (_path_region_intersections(region[i], list_tail(region,i+1), eps=eps) != []) 1
    ] ==[];
-*/
 
 function _clockwise_region(r) = [for(p=r) clockwise_polygon(p)];
 
@@ -196,100 +193,20 @@ function __are_regions_equal(region1, region2, i) =
     __are_regions_equal(region1, region2, i+1);
 
 
-/// Internal Function: _path_region_intersections()
+/// Internal Function: _region_region_intersections()
 /// Usage:
-///   _path_region_intersections(path, region, [closed], [eps]);
+///    risect = _region_region_intersections(region1, region2, [closed1], [closed2], [eps]
 /// Description:
-///   Returns a sorted list of [SEGMENT, U] that describe where a given path intersects the region
-//    in a single point.  (Note that intersections of collinear segments, where the intersection is another segment, are
-//    ignored.)
-/// Arguments:
-///   path = The path to find crossings on.
-///   region = Region to test for crossings of.
-///   closed = If true, treat path as a closed polygon.  Default: true
-///   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function old_path_region_intersections(path, region, closed=true, eps=EPSILON) =
-    let(
-        pathclosed = closed && !is_closed_path(path),
-        pathlen = len(path),
-        regionsegs = [for(poly=region) each pair(poly, is_closed_path(poly)?false:true)]
-    )
-    sort(
-         [for(si = [0:1:len(path)-(pathclosed?1:2)])
-              let(
-                  a1 = path[si],
-                  a2 = path[(si+1)%pathlen],
-                  maxax = max(a1.x,a2.x),
-                  minax = min(a1.x,a2.x),
-                  maxay = max(a1.y,a2.y),
-                  minay = min(a1.y,a2.y)
-              )
-              for(rseg=regionsegs)
-                  let(
-                      b1 = rseg[0],
-                      b2 = rseg[1],
-                      isect =
-                              maxax < b1.x && maxax < b2.x  ||
-                              minax > b1.x && minax > b2.x  ||
-                              maxay < b1.y && maxay < b2.y  ||
-                              minay > b1.y && minay > b2.y
-                            ? undef
-                            : _general_line_intersection([a1,a2],rseg,eps)
-                  )
-                  if (isect && isect[1]>=-eps && isect[1]<=1+eps
-                            && isect[2]>=-eps && isect[2]<=1+eps)
-                      [si,isect[1]]
-         ]
-    );
-
-
-// find the intersection points of a path and the polygons of a
-// region; only crossing intersections are caught, no collinear
-// intersection is returned.
-function _path_region_intersections(path, region, closed=true, eps=EPSILON, extra=[]) =
-    let( path = closed ? close_path(path,eps=eps) : path )
-    _sort_vectors(
-         [ each extra,
-           for(si = [0:1:len(path)-2]) let(
-            a1 = path[si],
-            a2 = path[si+1],
-            nrm = norm(a1-a2)
-          )
-          if( nrm>eps ) let( // ignore zero-length path edges
-            seg_normal = [-(a2-a1).y, (a2-a1).x]/nrm,
-            ref = a1*seg_normal
-          )
-          // `signs[j]` is the sign of the signed distance from
-          // poly vertex j to the line [a1,a2] where near zero
-          // distances are snapped to zero;  poly edges 
-          //  with equal signs at its vertices cannot intersect
-          // the path edge [a1,a2] or they are collinear and 
-          // further tests can be discarded.
-          for(poly=region) let(
-              poly  = close_path(poly),
-              signs = [for(v=poly*seg_normal) v-ref> eps ? 1 : v-ref<-eps ? -1 : 0]
-          ) 
-          if(max(signs)>=0 && min(signs)<=0 ) // some edge edge intersects line [a1,a2]
-          for(j=[0:1:len(poly)-2]) 
-          if( signs[j]!=signs[j+1] ) let( // exclude non-crossing and collinear segments
-              b1 = poly[j],
-              b2 = poly[j+1],
-              isect = _general_line_intersection([a1,a2],[b1,b2],eps=eps) 
-          )
-          if (  isect 
-//                && isect[1]> (si==0 && !closed? -eps: 0)  
-                && isect[1]>= -eps 
-                && isect[1]<= 1+eps 
-//                && isect[2]>  0 
-                && isect[2]>= -eps
-                && isect[2]<= 1+eps )
-              [si,isect[1]]
-    ]);
-
-
-
-// Returns a list [reg1,reg2] such that reg1[i] is a list of intersection points for path i
-// in region1 having the form [seg, u].  
+///    Returns a pair of sorted lists such that risect[0] is a list of intersection
+///    points for every path in region1, and similarly risect[1] is a list of intersection
+///    points for the paths in region2.  For each path the intersection list is
+///    a sorted list of the form [SEGMENT, U].  You can specify that the paths in either
+///    region be regarded as open paths if desired.  Default is to treat them as
+///    regions and hence the paths as closed polygons.
+///    .
+///    Included as intersection points are points where region1 touches itself at a vertex or
+///    region2 touches itself at a vertex.  (The paths are assumed to have no self crossings.
+///    Self crossings of the paths in the regions are not returned.)
 function _region_region_intersections(region1, region2, closed1=true,closed2=true, eps=EPSILON) =
    let(
        intersections =   [
@@ -353,9 +270,36 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
        [for(i=[0:1]) [for(j=counts[i]) _sort_vectors(select(risect[i],pathind[i][j]))]];
          
 
-
+// Function: split_region_at_region_crossings()
+// Usage:
+//   split_region = split_region_at_region_crossings(region1, region2, [closed1], [closed2], [eps])
+// Description:
+//   Splits region1 at the places where polygons in region1 touches each other at corners and at locations
+//   where region1 intersections region2.  Split region2 similarly with respect to region1.
+//   The return is a pair of results of the form [split1, split2] where split1=[frags1,frags2,...]
+//   and frags1 is a list of path pieces (in order) from the first path of the region.
+//   You can pass a single path in for either region, but the output will be a singleton list, as ify
+//   you passed in a singleton region.
+// Arguments:
+//   region1 = first region
+//   region2 = second region
+//   closed1 = if false then treat region1 as list of open paths.  Default: true
+//   closed2 = if false then treat region2 as list of open paths.  Default: true
+//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
+// Example: 
+//   path = square(50,center=false);
+//   region = [circle(d=80), circle(d=40)];
+//   paths = split_region_at_region_crossings(path, region);
+//   color("#aaa") region(region);
+//   rainbow(paths[0][0]) stroke($item, width=2);
+//   right(110){
+//     color("#aaa") region([path]);
+//     rainbow(flatten(paths[1])) stroke($item, width=2);
+//   }
 function split_region_at_region_crossings(region1, region2, closed1=true, closed2=true, eps=EPSILON) = 
     let(
+        region1=force_region(region1),
+        region2=force_region(region2),
         xings = _region_region_intersections(region1, region2, closed1, closed2, eps),
         regions = [region1,region2],
         closed = [closed1,closed2]
@@ -382,51 +326,13 @@ function split_region_at_region_crossings(region1, region2, closed1=true, closed
                 
                 
 
-
-// Function: split_path_at_region_crossings()
-// Usage:
-//   paths = split_path_at_region_crossings(path, region, [eps]);
-// Description:
-//   Splits a path into sub-paths wherever the path crosses the perimeter of a region.
-//   Splits may occur mid-segment, so new vertices will be created at the intersection points.
-// Arguments:
-//   path = The path to split up.
-//   region = The region to check for perimeter crossings of.
-//   closed = If true, treat path as a closed polygon.  Default: true
-//   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-// Example(2D):
-//   path = square(50,center=false);
-//   region = [circle(d=80), circle(d=40)];
-//   paths = split_path_at_region_crossings(path, region);
-//   color("#aaa") region(region);
-//   rainbow(paths) stroke($item, closed=false, width=2);
-function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON, extra=[]) =
-    let(
-        path = deduplicate(path, eps=eps),
-        region = [for (path=region) deduplicate(path, eps=eps)],
-        xings = _path_region_intersections(path, region, closed=closed, eps=eps, extra=extra),
-        crossings = deduplicate(
-            concat([[0,0]], xings, [[len(path)-1,1]]),
-            eps=eps
-        ),
-        subpaths = [
-            for (p = pair(crossings))
-                deduplicate(
-                    _path_select(path, p[0][0], p[0][1], p[1][0], p[1][1], closed=closed),
-                    eps=eps
-                )
-        ]
-    )
-    [for(s=subpaths) if (len(s)>1) s];
-
-
 // Function: region_parts()
 // Usage:
 //   rgns = region_parts(region);
 // Description:
-//   Divides a region into a list of connected regions.  Each connected region has exactly one outside boundary
-//   and zero or more outlines defining internal holes.  Note that behavior is undefined on invalid regions whose
-//   components intersect each other.
+//   Divides a region into a list of connected regions.  Each connected region has exactly one clockwise outside boundary
+//   and zero or more counter-clockwise outlines defining internal holes.  Note that behavior is undefined on invalid regions whose
+//   components cross each other.
 // Example(2D,NoAxes):
 //   R = [for(i=[1:7]) square(i,center=true)];
 //   region_list = region_parts(R);
@@ -439,70 +345,9 @@ function split_path_at_region_crossings(path, region, closed=true, eps=EPSILON, 
 //          right(5,square(i,center=true))];
 //   region_list = region_parts(R);
 //   rainbow(region_list) region($item);
-
-
-function old_region_parts(region) =
-    let(
-        paths = sort(idx=0,
-           [
-            for(i = idx(region))
-              let(
-                pt = mean([region[i][0],region[i][1]]),
-                cnt = sum([for (j = idx(region))
-                              if (i!=j && point_in_polygon(pt, region[j]) >=0) 1])
-              )
-              [cnt, region[i]]
-        ]),
-        
-        outs = [
-            for (candout = paths)
-               let(
-                  lev = candout[0],
-                  parent = candout[1]
-               )
-               if (lev % 2 == 0)
-                  [
-                    clockwise_polygon(parent),
-                    for (path = paths)
-                        if (
-                            path[0] == lev+1
-                            && point_in_polygon(
-                                                lerp(path[1][0], path[1][1], 0.5)
-                                                ,parent
-                                               ) >= 0
-                        )
-                        ccw_polygon(path[1])
-                  ]
-        ]
-    )
-    outs;
-
-
-function inside(region, ins=[]) =
-  let(
-      i = len(ins)
-  )
-  i==len(region) ? ins
-  :
-  let(
-      pt=mean([region[i][0],region[i][1]])
-  )
-  i==0 ? inside(region,
-                       [[0,
-                         for(j=[1:1:len(region)-1]) point_in_polygon(pt,region[j])>=0 ? 1 : 0]])
-  : let(
-        prev = [for(j=[0:i-1]) point_in_polygon(pt,region[j])>=0 ? 1 : 0],
-        check = sum(bselect(ins,prev),repeat(0,len(region))),
-        next = [for(j=[i+1:1:len(region)-1]) check[j]>0 ? 1 : point_in_polygon(pt,region[j])>=0 ? 1 : 0]
-    )
-    inside(region, [
-                    each ins,
-                    [each prev, 0, each next]
-                   ]);
-
-
 function region_parts(region) =
    let(
+       region = force_region(region),
        inside = [for(i=idx(region))
                     let(pt = mean([region[i][0], region[i][1]]))
                     [for(j=idx(region))  i==j ? 0
@@ -824,52 +669,6 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
     ]);
 
 
-function _offset_region(region, r, delta, chamfer, check_valid, quality,closed,return_faces,firstface_index,flip_faces) =
-    let(
-         reglist = [for(R=region_parts(region)) force_region(R)],
-         ofsregs = [for(R=reglist)
-             difference([for(i=idx(R)) offset(R[i], r=u_mul(i>0?-1:1,r), delta=u_mul(i>0?-1:1,delta),
-                                   chamfer=chamfer, check_valid=check_valid, quality=quality,closed=true)])]
-    )
-    union(ofsregs);
-
-
-function d_offset_region(
-    paths, r, delta, chamfer, closed,
-    check_valid, quality,
-    return_faces, firstface_index,
-    flip_faces, _acc=[], _i=0
-) =
-    _i>=len(paths)? _acc :
-    _offset_region(
-        paths, _i=_i+1,
-        _acc = (paths[_i].x % 2 == 0)? (
-            union(_acc, [
-                offset(
-                    paths[_i].y,
-                    r=r, delta=delta, chamfer=chamfer, closed=closed,
-                    check_valid=check_valid, quality=quality,
-                    return_faces=return_faces, firstface_index=firstface_index,
-                    flip_faces=flip_faces
-                )
-            ])
-        ) : (
-            difference(_acc, [
-                offset(
-                    paths[_i].y,
-                    r=u_mul(-1,r), delta=u_mul(-1,delta), chamfer=chamfer, closed=closed,
-                    check_valid=check_valid, quality=quality,
-                    return_faces=return_faces, firstface_index=firstface_index,
-                    flip_faces=flip_faces
-                )
-            ])
-        ),
-        r=r, delta=delta, chamfer=chamfer, closed=closed,
-        check_valid=check_valid, quality=quality,
-        return_faces=return_faces, firstface_index=firstface_index, flip_faces=flip_faces
-    );
-
-
 // Function: offset()
 // Usage:
 //   offsetpath = offset(path, [r|delta], [chamfer], [closed], [check_valid], [quality])
@@ -972,30 +771,14 @@ function offset(
     quality=1, return_faces=false, firstface_index=0,
     flip_faces=false
 ) = 
-    is_region(path)? _offset_region(path,r=r,delta=delta,chamfer=chamfer,quality=quality,check_valid=check_valid)
-  
-/*
-        (
+    is_region(path)?
         assert(!return_faces, "return_faces not supported for regions.")
         let(
-            path = [for (p=path) clockwise_polygon(p)],
-            rgn = exclusive_or([for (p = path) [p]]),
-            pathlist = sort(idx=0,[
-                for (i=[0:1:len(rgn)-1]) [
-                    sum(concat([0],[
-                        for (j=[0:1:len(rgn)-1]) if (i!=j)
-                            point_in_polygon(rgn[i][0],rgn[j])>=0? 1 : 0
-                    ])),
-                    rgn[i]
-                ]
-            ])
-        ) _offset_region(
-            pathlist, r=r, delta=delta, chamfer=chamfer, closed=true,
-            check_valid=check_valid, quality=quality,
-            return_faces=return_faces, firstface_index=firstface_index,
-            flip_faces=flip_faces
+            ofsregs = [for(R=region_parts(path))
+                difference([for(i=idx(R)) offset(R[i], r=u_mul(i>0?-1:1,r), delta=u_mul(i>0?-1:1,delta),
+                                      chamfer=chamfer, check_valid=check_valid, quality=quality,closed=true)])]
         )
-    )*/
+        union(ofsregs)
     : let(rcount = num_defined([r,delta]))
     assert(rcount==1,"Must define exactly one of 'delta' and 'r'")
     let(
@@ -1088,52 +871,21 @@ function offset(
             )
     ) return_faces? [edges,faces] : edges;
 
-/// Internal Function: _tag_subpaths()
-/// splits the polygon (path) into subpaths by region crossing and then tags each subpath:
-///    "O" - the subpath is outside the region
-///    "I" - the subpath is inside the region's interior
-///    "S" - the subpath is on the region's border and the polygon and region are on the same side of the subpath
-///    "U" - the subpath is on the region's border and the polygon and region meet at the subpath (from opposite sides)
-/// The return has the form of a list with entries [TAG, SUBPATH]
-function _tag_subpaths(region1, region2, keep, eps=EPSILON) = 
-    // We have to compute common vertices between paths in the region because
-    // they can be places where the path must be cut, even though they aren't
-    // found my the split_path function.  
-    let(
-        keepS = search("S",keep)!=[],
-        keepU = search("U",keep)!=[],        
-        keepoutside = search("O",keep) !=[],
-        keepinside = search("I",keep) !=[],
-        points = flatten(region1),
-        tree =  len(points)>0 ? vector_search_tree(points): undef
-    )
-    [for(p=region1)
-        let(
-            path = deduplicate(p),
-            self_int = is_undef(tree)?[]:[for(i=idx(path)) if (len(vector_search(path[i], eps, tree))>1) [i,0]],
-            subpaths = split_path_at_region_crossings(path, region2, eps=eps, extra=self_int)
-        )
-        for (subpath = subpaths)
-            let(
-                midpt = mean([subpath[0], subpath[1]]),
-                rel = point_in_region(midpt,region2,eps=eps),
-                keepthis = rel<0 ? keepoutside
-                         : rel>0 ? keepinside
-                         : !(keepS || keepU) ? false
-                         : let(
-                               sidept = midpt + 0.01*line_normal(subpath[0],subpath[1]),
-                               rel1 = point_in_region(sidept,region1,eps=eps)>0,
-                               rel2 = point_in_region(sidept,region2,eps=eps)>0
-                           )
-                           rel1==rel2 ? keepS : keepU
-            )
-            if (keepthis) subpath
-    ];
 
 
-
-
-function _keep_some_region_parts(region1, region2, keep1, keep2, eps=EPSILON) = 
+/// Internal Function: _filter_region_parts()
+///
+/// splits region1 into subpaths where either it touches itself or crosses region2.  Classifies all of the
+/// subpaths as described below and keeps the ones listed in keep1.  A similar process is performed for region2.
+/// All of the kept subpaths are assembled into polygons and returned as a lst.
+/// .
+/// The four types of subpath from the region are defined relative to the second region:
+///    "O" - the subpath is outside the second region
+///    "I" - the subpath is in the second region's interior
+///    "S" - the subpath is on the 2nd region's border and the two regions interiors are on the same side of the subpath
+///    "U" - the subpath is on the 2nd region's border and the two regions meet at the subpath from opposite sides
+/// You specify which type of subpaths to keep with a string of the desired types such as "OS".  
+function _filter_region_parts(region1, region2, keep1, keep2, eps=EPSILON) = 
     // We have to compute common vertices between paths in the region because
     // they can be places where the path must be cut, even though they aren't
     // found my the split_path function.  
@@ -1192,8 +944,8 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
     len(regions)==1? regions[0] :
     let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
     union([
-           _keep_some_region_parts(regions[0],regions[1],"OS", "O", eps=eps),           
-            for (i=[2:1:len(regions)-1]) regions[i]
+           _filter_region_parts(regions[0],regions[1],"OS", "O", eps=eps),           
+           for (i=[2:1:len(regions)-1]) regions[i]
           ],
           eps=eps
     );
@@ -1224,7 +976,7 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
     regions[0]==[] ? [] : 
     let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
     difference([
-                _keep_some_region_parts(regions[0],regions[1],"OU", "I", eps=eps),                
+                _filter_region_parts(regions[0],regions[1],"OU", "I", eps=eps),                
                 for (i=[2:1:len(regions)-1]) regions[i]
                ],
                eps=eps
@@ -1255,7 +1007,7 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
    : regions[0]==[] || regions[1]==[] ? []   
    : let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
          intersection([
-                       _keep_some_region_parts(regions[0],regions[1],"IS","I",eps=eps),                       
+                       _filter_region_parts(regions[0],regions[1],"IS","I",eps=eps),                       
                        for (i=[2:1:len(regions)-1]) regions[i]
                       ],
                       eps=eps
@@ -1293,7 +1045,7 @@ function exclusive_or(regions=[],b=undef,c=undef,eps=EPSILON) =
     len(regions)==1? regions[0] :
     let(regions=[for (r=regions) is_path(r)? [r] : r])
     exclusive_or([
-                  _keep_some_region_parts(regions[0],regions[1],"IO","IO",eps=eps),                  
+                  _filter_region_parts(regions[0],regions[1],"IO","IO",eps=eps),                  
                   for (i=[2:1:len(regions)-1]) regions[i]
                  ],
                  eps=eps

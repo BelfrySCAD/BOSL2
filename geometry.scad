@@ -26,6 +26,23 @@
 //   bounded = boolean or list of two booleans defining endpoint conditions for the line. If false treat the line as an unbounded line.  If true treat it as a segment.  If [true,false] treat as a ray, based at the first endpoint.  Default: false
 //   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
 function is_point_on_line(point, line, bounded=false, eps=EPSILON) =
+    assert(is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
+    assert(is_vector(point), "Point must be a vector")
+    assert(_valid_line(line, len(point),eps),"Given line is not valid")
+    _is_point_on_line(point, line, bounded,eps);
+
+function _is_point_on_line(point, line, bounded=false, eps=EPSILON) =
+    let( 
+        v1 = (line[1]-line[0]),
+        v0 = (point-line[0]),
+        t  = v0*v1/(v1*v1),
+        bounded = force_list(bounded,2)
+    ) 
+    abs(cross(v0,v1))<eps*norm(v1) 
+    && (!bounded[0] || t>=-eps) 
+    && (!bounded[1] || t<1+eps) ;
+
+function xis_point_on_line(point, line, bounded=false, eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     point_line_distance(point, line, bounded)<eps;
 
@@ -763,7 +780,7 @@ function polygon_line_intersection(poly, line, bounded=false, nonzero=false, eps
             bound = 100*max(v_abs(flatten(pointlist_bounds(poly)))),
             boundedline = [line[0] + (bounded[0]? 0 : -bound) * linevec,
                            line[1] + (bounded[1]? 0 :  bound) * linevec],
-            parts = split_path_at_region_crossings(boundedline, [poly], closed=false),
+            parts = split_region_at_region_crossings(boundedline, [poly], closed1=false)[0][0],
             inside = [
                       if(point_in_polygon(parts[0][0], poly, nonzero=nonzero, eps=eps) == 0)
                          [parts[0][0]],   // Add starting point if it is on the polygon
@@ -1546,7 +1563,7 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
             for (i = [0:1:len(poly)-1])
             let( seg = select(poly,i,i+1) )
             if (!approx(seg[0],seg[1],eps) )
-            is_point_on_line(point, seg, SEGMENT, eps=eps)? 1:0
+            _is_point_on_line(point, seg, SEGMENT, eps=eps)? 1:0
         ]
     )
     sum(on_brd) > 0? 0 :
