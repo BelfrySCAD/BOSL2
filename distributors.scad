@@ -272,7 +272,7 @@ module zcopies(spacing, n, l, sp)
 // Module: grid2d()
 //
 // Description:
-//   Makes a square or hexagonal grid of copies of children.
+//   Makes a square or hexagonal grid of copies of children, with an optional masking polygon or region.  
 //
 // Usage:
 //   grid2d(spacing, size, [stagger], [scale], [inside]) ...
@@ -287,6 +287,7 @@ module zcopies(spacing, n, l, sp)
 //   n = How many columns and rows of copies to make.  Can be given as `[COLS,ROWS]`, or just as a scalar that specifies both.  If staggered, count both staggered and unstaggered columns and rows.  Default: 2 (3 if staggered)
 //   stagger = If true, make a staggered (hexagonal) grid.  If false, make square grid.  If `"alt"`, makes alternate staggered pattern.  Default: false
 //   inside = If given a list of polygon points, or a region, only creates copies whose center would be inside the polygon or region.  Polygon can be concave and/or self crossing.
+//   nonzero = If inside is set to a polygon with self-crossings then use the nonzero method for deciding if points are in the polygon.  Default: false
 //
 // Side Effects:
 //   `$pos` is set to the relative centerpoint of each child copy, and can be used to modify each child individually.
@@ -323,7 +324,7 @@ module zcopies(spacing, n, l, sp)
 //           zrot(180/6)
 //               cylinder(h=20, d=10/cos(180/6)+0.01, $fn=6);
 //   }
-module grid2d(spacing, n, size, stagger=false, inside=undef)
+module grid2d(spacing, n, size, stagger=false, inside=undef, nonzero=false)
 {
     assert(in_list(stagger, [false, true, "alt"]));
     bounds = is_undef(inside)? undef :
@@ -357,8 +358,8 @@ module grid2d(spacing, n, size, stagger=false, inside=undef)
                 pos = v_mul([col,row],spacing) - offset;
                 if (
                     is_undef(inside) ||
-                    (is_path(inside) && point_in_polygon(pos, inside)>=0) ||
-                    (is_region(inside) && point_in_region(pos, inside)>=0)
+                    (is_path(inside) && point_in_polygon(pos, inside, nonzero=nonzero)>=0) ||
+                    (is_region(inside) && point_in_region(pos, inside, nonzero=nonzero)>=0)
                 ) {
                     $col = col;
                     $row = row;
