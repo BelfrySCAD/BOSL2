@@ -93,7 +93,8 @@ function check_and_fix_path(path, valid_dim=undef, closed=false, name="path") =
 // Examples:
 //   
 function sanitize_region(r,nonzero=false,eps=EPSILON) =
-     assert(is_region(r))
+     let(r=force_region(r))
+     assert(is_region(r), "Input is not a region")
      exclusive_or(
                   [for(poly=r) each polygon_parts(poly,nonzero,eps)],
                   eps=eps);
@@ -117,7 +118,8 @@ function sanitize_region(r,nonzero=false,eps=EPSILON) =
 module region(r)
 {
     no_children($children);
-    r = is_path(r) ? [r] : r;
+    r = force_region(r);
+    dummy=assert(is_region(r), "Input is not a region");
     points = flatten(r);
     lengths = [for(path=r) len(path)];
     starts = [0,each cumsum(lengths)];
@@ -158,10 +160,12 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
 //   region = region to check
 //   eps = tolerance for geometric comparisons.  Default: `EPSILON` = 1e-9
 function is_region_simple(region, eps=EPSILON) =
+   let(region=force_region(region))
+   assert(is_region(region), "Input is not a region")
    [for(p=region) if (!is_path_simple(p,closed=true,eps)) 1] == []
    &&
    [for(i=[0:1:len(region)-2])
-       if (_path_region_intersections(region[i], list_tail(region,i+1), eps=eps) != []) 1
+       if (_region_region_intersections([region[i]], list_tail(region,i+1), eps=eps)[0][0] != []) 1
    ] ==[];
 
 function _clockwise_region(r) = [for(p=r) clockwise_polygon(p)];
@@ -181,7 +185,7 @@ function are_regions_equal(region1, region2, either_winding=false) =
         region1=force_region(region1),
         region2=force_region(region2)
     )
-    assert(is_region(region1) && is_region(region2))
+    assert(is_region(region1) && is_region(region2), "One of the inputs is not a region")
     len(region1) != len(region2)? false :
     __are_regions_equal(either_winding?_clockwise_region(region1):region1,
                         either_winding?_clockwise_region(region2):region2,
@@ -299,7 +303,10 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
 function split_region_at_region_crossings(region1, region2, closed1=true, closed2=true, eps=EPSILON) = 
     let(
         region1=force_region(region1),
-        region2=force_region(region2),
+        region2=force_region(region2)
+    )
+    assert(is_region(region1) && is_region(region2),"One of the inputs is not a region")
+    let(
         xings = _region_region_intersections(region1, region2, closed1, closed2, eps),
         regions = [region1,region2],
         closed = [closed1,closed2]
@@ -347,7 +354,10 @@ function split_region_at_region_crossings(region1, region2, closed1=true, closed
 //   rainbow(region_list) region($item);
 function region_parts(region) =
    let(
-       region = force_region(region),
+       region = force_region(region)
+   )
+   assert(is_region(region), "Input is not a region")
+   let(
        inside = [for(i=idx(region))
                     let(pt = mean([region[i][0], region[i][1]]))
                     [for(j=idx(region))  i==j ? 0
@@ -436,7 +446,7 @@ function _cleave_connected_region(region) =
 //   vnf = If given, the faces are added to this VNF.  Default: `EMPTY_VNF`
 function region_faces(region, transform, reverse=false, vnf=EMPTY_VNF) =
     let (
-        regions = region_parts(region),
+        regions = region_parts(force_region(region)),
         vnfs = [
             if (vnf != EMPTY_VNF) vnf,
             for (rgn = regions) let(
@@ -494,7 +504,8 @@ function region_faces(region, transform, reverse=false, vnf=EMPTY_VNF) =
 //   orgn = difference(mrgn,rgn3);
 //   linear_sweep(orgn,height=20,convexity=16) show_anchors();
 module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity, anchor_isect=false, anchor, spin=0, orient=UP) {
-    region = is_path(region)? [region] : region;
+    region = force_region(region);
+    dummy=assert(is_region(region),"Input is not a region");
     cp = mean(pointlist_bounds(flatten(region)));
     anchor = get_anchor(anchor, center, "origin", "origin");
     vnf = linear_sweep(
@@ -513,10 +524,13 @@ module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, 
 function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
                       maxseg, style="default", anchor_isect=false, anchor, spin=0, orient=UP) =
     let(
+        region = force_region(region)
+    )
+    assert(is_region(region), "Input is not a region")
+    let(
         anchor = get_anchor(anchor,center,BOT,BOT),
-        region = is_path(region)? [region] : region,
-        cp = mean(pointlist_bounds(flatten(region))),
         regions = region_parts(region),
+        cp = mean(pointlist_bounds(flatten(region))),
         slices = default(slices, floor(twist/5+1)),
         step = twist/slices,
         hstep = height/slices,
@@ -788,8 +802,10 @@ function offset(
                                       chamfer=chamfer, check_valid=check_valid, quality=quality,closed=true)])]
         )
         union(ofsregs)
-    : let(rcount = num_defined([r,delta]))
+    :
+    let(rcount = num_defined([r,delta]))
     assert(rcount==1,"Must define exactly one of 'delta' and 'r'")
+    assert(is_path(path), "Input must be a path or region")
     let(
         chamfer = is_def(r) ? false : chamfer,
         quality = max(0,round(quality)),
