@@ -178,7 +178,7 @@ test_vector_search();
 module test_vector_search_tree(){
     points1 = [ [0,1,2], [1,2,3], [2,3,4] ];
     tree1 = vector_search_tree(points1);
-    assert(tree1 == [ points1, [[0,1,2]] ]);
+    assert(tree1 == points1);
     points2 = [for(i=[0:9], j=[0:9], k=[1:5]) [i,j,k] ];
     tree2 = vector_search_tree(points2);
     assert(tree2[0]==points2);
