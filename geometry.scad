@@ -494,11 +494,13 @@ function _covariance_evec_eval(points) =
 // Usage:
 //   plane = plane_from_points(points, [fast], [eps]);
 // Topics: Geometry, Planes, Points
+// See Also: plane_from_polygon
 // Description:
 //   Given a list of 3 or more coplanar 3D points, returns the coefficients of the normalized cartesian equation of a plane,
 //   that is [A,B,C,D] where Ax+By+Cz=D is the equation of the plane and norm([A,B,C])=1.
 //   If `fast` is false and the points in the list are collinear or not coplanar, then `undef` is returned.
 //   If `fast` is true, the polygon coplanarity check is skipped and a best fitting plane is returned.
+//   It differs from `plane_from_polygon` as the plane normal is independent of the point order. It is faster, though.
 // Arguments:
 //   points = The list of points to find the plane of.
 //   fast = If true, don't verify the point coplanarity.  Default: false
@@ -529,6 +531,7 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
 // Usage:
 //   plane = plane_from_polygon(points, [fast], [eps]);
 // Topics: Geometry, Planes, Polygons
+// See Also: plane_from_points
 // Description:
 //   Given a 3D planar polygon, returns the normalized cartesian equation of its plane.
 //   Returns [A,B,C,D] where Ax+By+Cz=D is the equation of the plane where norm([A,B,C])=1.
@@ -936,10 +939,10 @@ function point_plane_distance(plane, point) =
 // the maximum distance from points to the plane
 function _pointlist_greatest_distance(points,plane) =
     let(
-        normal = point3d(plane),
+        normal = [plane[0],plane[1],plane[2]],
         pt_nrm = points*normal
     )
-    abs(max( max(pt_nrm) - plane[3], -min(pt_nrm) + plane[3])) / norm(normal);
+    max( max(pt_nrm) - plane[3], -min(pt_nrm) + plane[3]) / norm(normal);
 
 
 // Function: are_points_on_plane()
@@ -1355,7 +1358,7 @@ function noncollinear_triple(points,error=true,eps=EPSILON) =
         pb = points[b],
         nrm = norm(pa-pb)
     )
-    nrm <= eps*max(norm(pa),norm(pb)) ?
+    nrm <= eps ?
         assert(!error, "Cannot find three noncollinear points in pointlist.") [] :
     let(
         n = (pb-pa)/nrm,
@@ -1659,7 +1662,7 @@ function polygon_triangulate(poly, ind, eps=EPSILON) =
 
 // requires ccw 2d polygons
 // returns ccw triangles
-function _triangulate(poly, ind, eps=EPSILON, tris=[]) =
+function _old_triangulate(poly, ind, eps=EPSILON, tris=[]) =
     len(ind)==3 ? concat(tris,[ind]) :
     let( ear = _get_ear(poly,ind,eps) )
     assert( ear!=undef, 
@@ -1671,7 +1674,7 @@ function _triangulate(poly, ind, eps=EPSILON, tris=[]) =
     _triangulate(poly, indr, eps, concat(tris,[ear_tri]));
 
 // search a valid ear from the remaining polygon
-function _get_ear(poly, ind, eps, _i=0) =
+function _old_get_ear(poly, ind, eps, _i=0) =
     _i>=len(ind) ? undef : // poly has no ears
     let( // the _i-th ear candidate
         p0 = poly[ind[_i]],
@@ -1702,6 +1705,67 @@ function _get_ear(poly, ind, eps, _i=0) =
     atleft==[] ? _i : // no point inside -> an ear
     // check the next ear candidate
     _get_ear(poly, ind, eps, _i=_i+1);
+    
+function _triangulate(poly, ind, eps=EPSILON, tris=[]) =
+    len(ind)==3 
+    ?   _is_degenerate(select(poly,ind),eps)  
+        ?   tris // last 3 pts perform a degenerate triangle, ignore it
+        :   concat(tris,[ind]) // otherwise, include it
+    :   let( ear = _get_ear(poly,ind,eps) )
+        assert( ear!=undef, 
+                "The polygon has self-intersections or its vertices are collinear or non coplanar.") 
+        ear<0  // degenerate ear
+        ?   let( indr = select(ind,-ear+1, -ear-1) ) // discard it
+            _triangulate(poly, indr, eps, tris) 
+        :   let(
+                ear_tri = select(ind,ear,ear+2),
+                indr    = select(ind,ear+2, ear) // indices of the remaining points
+            )
+            _triangulate(poly, indr, eps, concat(tris,[ear_tri]));
+
+
+// a returned ear will be:
+// 1. a CCW triangle without points inside except possibly at its vertices
+// 2. or a degenerate triangle where two vertices are coincident
+// the returned ear is specified by the index of `ind` of its first vertex
+function _get_ear(poly, ind, eps, _i=0) =
+    _i>=len(ind) ? undef : // poly has no ears
+    let( // the _i-th ear candidate
+        p0 = poly[ind[_i]],
+        p1 = poly[ind[(_i+1)%len(ind)]],
+        p2 = poly[ind[(_i+2)%len(ind)]]
+    )
+    // if it is a degenerate triangle, return it (codified)
+    _is_degenerate([p0,p1,p2],eps)  ? -(_i+1) : 
+    // if it is not a convex vertex, try the next one
+    _is_cw2(p0,p1,p2,eps) ? _get_ear(poly,ind,eps, _i=_i+1) : 
+    let( // vertex p1 is convex
+         // check if the triangle contains any other point
+         // except possibly its own vertices
+        to_tst = select(ind,_i+3, _i-1),
+        pt2tst = select(poly,to_tst),     // points other than p0, p1 and p2
+        q      = [(p0-p2).y, (p2-p0).x],  // orthogonal to ray [p0,p2] pointing right
+        q0     = q*p0,
+        r      = [(p2-p1).y, (p1-p2).x],  // orthogonal to ray [p2,p1] pointing right
+        r0     = r*p2,
+        s      = [(p1-p0).y, (p0-p1).x],  // orthogonal to ray [p1,p0] pointing right
+        s0     = s*p1,
+        inside = [for(p=pt2tst) 
+                      if( p*q<=q0 && p*r<=r0 && p*s<=s0 ) // p is in the triangle
+                      if(    norm(p-p0)>eps  // and doesn't coincide with
+                          && norm(p-p1)>eps  // any of its vertices
+                          && norm(p-p2)>eps ) 
+                          p ]                       
+    )
+    inside==[] ? _i : // no point inside -> an ear
+    // check the next ear candidate
+    _get_ear(poly, ind, eps, _i=_i+1);
+
+
+// true for some specific kinds of degeneracy
+function _is_degenerate(tri,eps) =
+       norm(tri[0]-tri[1])<eps || norm(tri[1]-tri[2])<eps || norm(tri[2]-tri[0])<eps ;
+
 
 function _is_cw2(a,b,c,eps=EPSILON) = cross(a-c,b-c)<eps*norm(a-c)*norm(b-c);
 
@@ -1903,6 +1967,8 @@ function old_align_polygon(reference, poly, angles, cp) =
         ],
         best = min_index(subindex(alignments,1))
     ) alignments[best][0];
+    
+    
 function align_polygon(reference, poly, angles, cp) =
     assert(is_path(reference,dim=2) && is_path(poly,dim=2),
            "Invalid polygon(s). " )
@@ -1985,11 +2051,11 @@ function __is_polygon_in_list(poly, polys, i) =
 // Topics: Geometry, Convexity, Test
 // Description:
 //   Returns true if the given 2D or 3D polygon is convex.
-//   The result is meaningless if the polygon is not simple (self-intersecting) or non coplanar.
-//   If the points are collinear an error is generated.
+//   The result is meaningless if the polygon is not simple (self-crossing) or non coplanar.
+//   If the points are collinear or not coplanar an error may be generated.
 // Arguments:
 //   poly = Polygon to check.
-//   eps = Tolerance for the collinearity test. Default: EPSILON.
+//   eps = Tolerance for the collinearity and coplanarity tests. Default: EPSILON.
 // Example:
 //   test1 = is_polygon_convex(circle(d=50));                                 // Returns: true
 //   test2 = is_polygon_convex(rot([50,120,30], p=path3d(circle(1,$fn=50)))); // Returns: true
@@ -2004,13 +2070,24 @@ function is_polygon_convex(poly,eps=EPSILON) =
     assert( lp>=3 , "A polygon must have at least 3 points" )
     let( crosses = [for(i=[0:1:lp-1]) cross(poly[(i+1)%lp]-poly[i], poly[(i+2)%lp]-poly[(i+1)%lp]) ] )
     len(p0)==2
-      ? assert( !approx(sqrt(max(max(crosses),-min(crosses))),eps), "The points are collinear" )
-        min(crosses) >=0 || max(crosses)<=0
-      : let( prod = crosses*sum(crosses),
-             minc = min(prod),
-             maxc = max(prod) )
-        assert( !approx(sqrt(max(maxc,-minc)),eps), "The points are collinear" )
-        minc>=0 || maxc<=0;
+      ? let( size = max([for(p=poly) norm(p-p0)]), tol=pow(size,2)*eps )
+        assert( size>eps, "The polygon is self-crossing or its points are collinear" )
+        min(crosses) >=-tol || max(crosses)<=tol
+      : let( ip = noncollinear_triple(poly,error=false,eps=eps) )
+        assert( ip!=[], "The points are collinear")
+        let( 
+            crx   = cross(poly[ip[1]]-poly[ip[0]],poly[ip[2]]-poly[ip[1]]),
+            nrm   = crx/norm(crx),
+            plane = concat(nrm, nrm*poly[0]), 
+            prod  = crosses*nrm,
+            size  = norm(poly[ip[1]]-poly[ip[0]]),
+            tol   = pow(size,2)*eps
+        )
+        assert(_pointlist_greatest_distance(poly,plane) < size*eps, "The polygon points are not coplanar")
+        let(
+            minc = min(prod),
+            maxc = max(prod) ) 
+        minc>=-tol || maxc<=tol;
 
 
 // Function: convex_distance()
