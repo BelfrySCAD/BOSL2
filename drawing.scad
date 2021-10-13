@@ -337,7 +337,6 @@ module stroke(
                                 );
                                 v1 = unit(path2[i] - path2[i-1]);
                                 v2 = unit(path2[i+1] - path2[i]);
-                                vec = unit((v1+v2)/2);
                                 mat = is_undef(joint_angle)
                                   ? rot(from=BACK,to=v1)
                                   : zrot(joint_angle);
