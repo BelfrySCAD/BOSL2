@@ -494,7 +494,7 @@ function _covariance_evec_eval(points) =
 // Usage:
 //   plane = plane_from_points(points, [fast], [eps]);
 // Topics: Geometry, Planes, Points
-// See Also: plane_from_polygon
+// See Also: plane_from_polygon()
 // Description:
 //   Given a list of 3 or more coplanar 3D points, returns the coefficients of the normalized cartesian equation of a plane,
 //   that is [A,B,C,D] where Ax+By+Cz=D is the equation of the plane and norm([A,B,C])=1.
@@ -531,7 +531,7 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
 // Usage:
 //   plane = plane_from_polygon(points, [fast], [eps]);
 // Topics: Geometry, Planes, Polygons
-// See Also: plane_from_points
+// See Also: plane_from_points()
 // Description:
 //   Given a 3D planar polygon, returns the normalized cartesian equation of its plane.
 //   Returns [A,B,C,D] where Ax+By+Cz=D is the equation of the plane where norm([A,B,C])=1.
