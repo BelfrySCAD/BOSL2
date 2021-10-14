@@ -1680,7 +1680,7 @@ function polygon_triangulate(poly, ind, eps=EPSILON) =
             let( 
                 ind = deduplicate_indexed(poly, ind, eps) 
             )
-            assert(len(ind)>=3 , "The polygon vertices are collinear.") 
+            len(ind)<3 ? [] :
             let(
                 pts = select(poly,ind),
                 nrm = polygon_normal(pts)
