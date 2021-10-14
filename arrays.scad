@@ -90,7 +90,7 @@ function select(list, start, end) =
       : end==undef
           ? is_num(start)
               ? list[ (start%l+l)%l ]
-              : assert( is_list(start) || is_range(start), "Invalid start parameter")
+              : assert( is_vector(start) || is_range(start), "Invalid start parameter")
                 [for (i=start) list[ (i%l+l)%l ] ]
           : assert(is_finite(start), "When `end` is given, `start` parameter should be a number.")
             assert(is_finite(end), "Invalid end parameter.")

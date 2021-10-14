@@ -689,17 +689,12 @@ function _sum(v,_total,_i=0) = _i>=len(v) ? _total : _sum(v,_total+v[_i], _i+1);
 //   cumsum([[1,2,3], [3,4,5], [5,6,7]]);  // returns [[1,2,3], [4,6,8], [9,12,15]]
 function cumsum(v) =
     assert(is_consistent(v), "The input is not consistent." )
-    _cumsum(v,_i=0,_acc=[]);
+    len(v)<=1 ? v :
+    _cumsum(v,_i=1,_acc=[v[0]]);
 
 function _cumsum(v,_i=0,_acc=[]) =
-    _i==len(v) ? _acc :
-    _cumsum(
-        v, _i+1,
-        concat(
-            _acc,
-            [_i==0 ? v[_i] : last(_acc) + v[_i]]
-        )
-    );
+   _i>=len(v) ? _acc :
+    _cumsum( v, _i+1, [ each _acc, _acc[len(_acc)-1] + v[_i] ] );
 
 
 // Function: sum_of_sines()
