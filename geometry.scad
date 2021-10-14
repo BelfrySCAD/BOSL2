@@ -1674,9 +1674,9 @@ function polygon_triangulate(poly, ind, eps=EPSILON) =
           ? // represents the polygon projection on its plane as a 2d polygon 
             let( 
                 ind = deduplicate_indexed(poly, ind, eps)
-						)
-						len(ind)<3 ? [] :
-						let(
+            )
+            len(ind)<3 ? [] :
+            let(
                 pts = select(poly,ind),
                 nrm = polygon_normal(pts)
             )
