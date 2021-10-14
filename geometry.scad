@@ -488,7 +488,7 @@ function _covariance_evec_eval(points) =
           evals = _eigenvals_symm_3(M), // eigenvalues in decreasing order
           evec  = _eigenvec_symm_3(M,evals,i=2) )
     [pm, evec, evals[0] ];
-
+    
 
 // Function: plane_from_points()
 // Usage:
@@ -1616,12 +1616,13 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   simple polygons with the same winding. These polygons may have "touching" vertices 
 //   (two vertices having the same coordinates, but distinct adjacencies) and "contact" edges 
 //   (edges whose vertex pairs have the same pairwise coordinates but are in reversed order) but has 
-//   no self-crossing. See examples bellow. If all polygon edges are contact edges, returns an empty list. 
+//   no self-crossing. See examples bellow. If all polygon edges are contact edges, 
+//   it returns an empty list for 2d polygons and issues an error for 3d polygons. 
 //   .
 //   Self-crossing polygons have no consistent winding and usually produce an error but 
 //   when an error is not issued the outputs are not correct triangulations. The function
 //   can work for 3d non-planar polygons if they are close enough to planar but may otherwise 
-//   issue an error for this case.
+//   issue an error for this case. 
 // Arguments:
 //   poly = Array of vertices for the polygon.
 //   ind = A list indexing the vertices of the polygon in `poly`.
@@ -1630,18 +1631,21 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   poly = star(id=10, od=15,n=11);
 //   tris =  polygon_triangulate(poly);
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
+//   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
 //   color("black")   up(3) vnf_debug([poly,[]],faces=false,size=1);
 // Example(2D,NoAxes): a polygon with a hole and one "contact" edge
 //   poly = [ [-10,0], [10,0], [0,10], [-10,0], [-4,4], [4,4], [0,2], [-4,4] ];
 //   tris =  polygon_triangulate(poly);
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
+//   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
 //   color("black")   up(3) vnf_debug([poly,[]],faces=false,size=1);
 // Example(2D,NoAxes): a polygon with "touching" vertices and no holes
 //   poly = [ [0,0], [5,5], [-5,5], [0,0], [-5,-5], [5,-5] ];
 //   tris =  polygon_triangulate(poly);
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
+//   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
 //   color("black")   up(3) vnf_debug([poly,[]],faces=false,size=1);
 // Example(2D,NoAxes): a polygon with "contact" edges and no holes
@@ -1649,6 +1653,7 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //            [7,7], [7,3], [3,3] ];
 //   tris =  polygon_triangulate(poly); // see from the top
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
+//   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
 //   color("black")   up(3) vnf_debug([poly,[]],faces=false,size=1);
 // Example(3D): 
@@ -1666,21 +1671,20 @@ function polygon_triangulate(poly, ind, eps=EPSILON) =
     let( ind = is_undef(ind) ? count(len(poly)) : ind )
     len(ind) == 3 
       ? _is_degenerate([poly[ind[0]], poly[ind[1]], poly[ind[2]]], eps) ? [] :
-        // no zero area
+        // non zero area
         assert( norm(scalar_vec3(cross(poly[ind[1]]-poly[ind[0]], poly[ind[2]]-poly[ind[0]]))) > 2*eps,
                 "The polygon vertices are collinear.") 
         [ind]
       : len(poly[ind[0]]) == 3 
           ? // represents the polygon projection on its plane as a 2d polygon 
             let( 
-                ind = deduplicate_indexed(poly, ind, eps)
+                ind = deduplicate_indexed(poly, ind, eps) 
             )
-            len(ind)<3 ? [] :
+            assert(len(ind)>=3 , "The polygon vertices are collinear.") 
             let(
                 pts = select(poly,ind),
                 nrm = polygon_normal(pts)
             )
-            // here, instead of an error, it might return [] or undef
             assert( nrm!=undef, 
                     "The polygon has self-intersections or its vertices are collinear or non coplanar.") 
             let(
