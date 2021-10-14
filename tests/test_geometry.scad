@@ -48,6 +48,7 @@ test_reindex_polygon();
 test_align_polygon();
 test_polygon_centroid();
 test_point_in_polygon();
+test_polygon_triangulate();
 test_is_polygon_clockwise();
 test_clockwise_polygon();
 test_ccw_polygon();
@@ -77,6 +78,21 @@ function info_str(list,i=0,string=chr(10)) =
     ? str(string)
     : info_str(list,i+1,str(string,str(list[i][0],_valstr(list[i][1]),chr(10))));
 
+
+module test_polygon_triangulate() {
+		poly0 = [ [0,0,1], [10,0,2], [10,10,0] ];
+		poly1 = [ [-10,0,-10], [10,0,10], [0,10,0], [-10,0,-10], [-4,4,-4], [4,4,4], [0,2,0], [-4,4,-4] ];
+		poly2 = [ [0,0], [5,5], [-5,5], [0,0], [-5,-5], [5,-5] ];
+		poly3 = [ [0,0], [10,0], [10,10], [10,13], [10,10], [0,10], [0,0], [3,3], [7,3], [7,7], [7,3], [3,3] ];
+		tris0 = sort(polygon_triangulate(poly0));
+		assert(approx(tris0, [[0, 1, 2]]));
+		tris1 = (polygon_triangulate(poly1));
+		assert(approx(tris1,( [[2, 3, 4], [6, 7, 0], [2, 4, 5], [6, 0, 1], [1, 2, 5], [5, 6, 1]])));
+		tris2 = (polygon_triangulate(poly2));
+		assert(approx(tris2,([[0, 1, 2], [3, 4, 5]])));
+		tris3 = (polygon_triangulate(poly3));
+		assert(approx(tris3,( [[5, 6, 7], [7, 8, 9], [10, 11, 0], [5, 7, 9], [10, 0, 1], [4, 5, 9], [9, 10, 1], [1, 4, 9]])));
+}
 
 module test__normalize_plane(){
     plane = rands(-5,5,4,seed=333)+[10,0,0,0];
