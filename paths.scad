@@ -441,7 +441,7 @@ function resample_path(path, N, spacing, closed=false) =
 // Usage:
 //   bool = is_path_simple(path, [closed], [eps]);
 // Description:
-//   Returns true if the path is simple, meaning that it has no self-intersections.
+//   Returns true if the given 2D path is simple, meaning that it has no self-intersections.
 //   Repeated points are not considered self-intersections: a path with such points can
 //   still be simple.  
 //   If closed is set to true then treat the path as a polygon.
@@ -450,6 +450,7 @@ function resample_path(path, N, spacing, closed=false) =
 //   closed = set to true to treat path as a polygon.  Default: false
 //   eps = Epsilon error value used for determine if points coincide.  Default: `EPSILON` (1e-9)
 function is_path_simple(path, closed=false, eps=EPSILON) =
+    assert(is_path(path, 2),"Must give a 2D path")
     [for(i=[0:1:len(path)-(closed?2:3)])
          let(v1=path[i+1]-path[i],
              v2=select(path,i+2)-path[i+1],

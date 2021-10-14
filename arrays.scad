@@ -424,8 +424,9 @@ function repeat(val, n, i=0) =
 //   list = count(n, [s], [step], [reverse]);
 // Description:
 //   Creates a list of `n` numbers, starting at `s`, incrementing by `step` each time.
+//   You can also pass a list for n and then the length of the input list is used.  
 // Arguments:
-//   n = The length of the list of numbers to create.
+//   n = The length of the list of numbers to create, or a list to match the length of
 //   s = The starting value of the list of numbers.
 //   step = The amount to increment successive numbers in the list.
 //   reverse = Reverse the list.  Default: false.
@@ -435,7 +436,8 @@ function repeat(val, n, i=0) =
 //   nl3 = count(4,3,2);  // Returns: [3,5,7,9]
 //   nl4 = count(5,reverse=true);    // Returns: [4,3,2,1,0]
 //   nl5 = count(5,3,reverse=true);  // Returns: [7,6,5,4,3]
-function count(n,s=0,step=1,reverse=false) = reverse? [for (i=[n-1:-1:0]) s+i*step]
+function count(n,s=0,step=1,reverse=false) = let(n=is_list(n) ? len(n) : n)
+                                             reverse? [for (i=[n-1:-1:0]) s+i*step]
                                                     : [for (i=[0:1:n-1]) s+i*step];
 
 

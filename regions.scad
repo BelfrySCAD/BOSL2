@@ -688,10 +688,11 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   offsetpath = offset(path, [r|delta], [chamfer], [closed], [check_valid], [quality])
 //   path_faces = offset(path, return_faces=true, [r|delta], [chamfer], [closed], [check_valid], [quality], [firstface_index], [flip_faces])
 // Description:
-//   Takes an input path and returns a path offset by the specified amount.  As with the built-in
+//   Takes a 2D input path and returns a path offset by the specified amount.  As with the built-in
 //   offset() module, you can use `r` to specify rounded offset and `delta` to specify offset with
 //   corners.  If you used `delta` you can set `chamfer` to true to get chamfers.
-//   Positive offsets shift the path to the left (relative to the direction of the path).
+//   Positive offsets shift the path to the left (relative to the direction of the path).  Note
+//   that the path must not include any 180 degree turns, where the path reverses direction.  
 //   .
 //   When offsets shrink the path, segments cross and become invalid.  By default `offset()` checks
 //   for this situation.  To test validity the code checks that segments have distance larger than (r
@@ -831,7 +832,7 @@ function offset(
             (len(sharpcorners)==2 && !closed) ||
             all_defined(closed? sharpcorners : select(sharpcorners, 1,-2))
     )
-    assert(parallelcheck, "Path contains sequential parallel segments (either 180 deg turn or 0 deg turn")
+    assert(parallelcheck, "Path contains a segment that reverses direction (180 deg turn)")
     let(
         // This is a boolean array that indicates whether a corner is an outside or inside corner
         // For outside corners, the newcorner is an extension (angle 0), for inside corners, it turns backward
