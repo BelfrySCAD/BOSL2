@@ -1673,9 +1673,11 @@ function polygon_triangulate(poly, ind, eps=EPSILON) =
       : len(poly[ind[0]]) == 3 
           ? // represents the polygon projection on its plane as a 2d polygon 
             let( 
+                ind = deduplicate_indexed(poly, ind, eps),
                 pts = select(poly,ind),
                 nrm = polygon_normal(pts)
-            )
+             )
+            len(ind)<3 ? [] :
             // here, instead of an error, it might return [] or undef
             assert( nrm!=undef, 
                     "The polygon has self-intersections or its vertices are collinear or non coplanar.") 
