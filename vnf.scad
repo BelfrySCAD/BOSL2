@@ -496,34 +496,33 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
     [[for (pt = vnf[0]) quant(pt,q)], vnf[1]];
 
 
-// Function: vnf_drop_extra_points()
+// Function: vnf_drop_unused_points()
 // Usage:
-//   clean_vnf=vnf_drop_extra_points(vnf);
+//   clean_vnf=vnf_drop_unused_points(vnf);
 // Description:
 //   Remove all unreferenced vertices from a VNF.  Note that in most
 //   cases unreferenced vertices cause no harm, and this function may
-//   be slow on large VNFs.  
-function vnf_drop_extra_points(vnf) =
+//   be slow on large VNFs.
+function vnf_drop_unused_points(vnf) =
     let(
         flat = flatten(vnf[1]),
-        ind  = len(vnf[0])<800 
-                ?   [for(si = search(count(len(vnf[0])), flat,1) ) si!=[] ? 1: 0]
-                :  _indicator_sort(flat,0,len(vnf[0])),
+        ind  = _link_indicator(flat,0,len(vnf[0])-1),
         verts = [for(i=idx(vnf[0])) if(ind[i]==1) vnf[0][i] ], 
         map   = cumsum(ind) 
     )
     [ verts, [for(face=vnf[1]) [for(v=face) map[v]-1 ] ] ];
 
-
-function _indicator_sort(l,imin,imax) =
-    len(l) == 0 ? [for(i=[imin:1:imax]) 0 ] :
-    let( pivot   = floor((imax+imin)/2),
-         lesser  = [ for(li=l) if( li< pivot) li ],
-         greater = [ for(li=l) if( li> pivot) li ] )
-    concat( _indicator_sort(lesser ,imin,pivot-1), 
+function _link_indicator(l,imin,imax) =
+    len(l) == 0  ? repeat(imax-imin+1,0) :
+    imax-imin<100 || len(l)<400 ? [for(si=search(list([imin:1:imax]),l,1)) si!=[] ? 1: 0 ] : 
+    let( 
+        pivot   = floor((imax+imin)/2),
+        lesser  = [ for(li=l) if( li< pivot) li ],
+        greater = [ for(li=l) if( li> pivot) li ] 
+    )
+    concat( _link_indicator(lesser ,imin,pivot-1), 
             search(pivot,l,1) ? 1 : 0 ,
-            _indicator_sort(greater,pivot+1,imax) ) ;
-
+            _link_indicator(greater,pivot+1,imax) ) ;
 
 // Function: vnf_triangulate()
 // Usage:
