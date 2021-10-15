@@ -496,14 +496,14 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
     [[for (pt = vnf[0]) quant(pt,q)], vnf[1]];
 
 
-// Function: vnf_clean_unrefs()
+// Function: vnf_drop_extra_points()
 // Usage:
-//   clean_vnf=vnf_clean_unrefs(vnf);
+//   clean_vnf=vnf_drop_extra_points(vnf);
 // Description:
 //   Remove all unreferenced vertices from a VNF.  Note that in most
 //   cases unreferenced vertices cause no harm, and this function may
 //   be slow on large VNFs.  
-function vnf_clean_unrefs(vnf) =
+function vnf_drop_extra_points(vnf) =
     let(
         flat = flatten(vnf[1]),
         ind  = len(vnf[0])<800 
