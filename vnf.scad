@@ -350,6 +350,95 @@ function vnf_from_polygons(polygons) =
 
 
 
+
+function _path_path_closest_vertices(path1,path2) =
+    let(
+        dists = [for (i=idx(path1)) let(j=closest_point(path1[i],path2)) [j,norm(path2[j]-path1[i])]],
+        i1 = min_index(subindex(dists,1)),
+        i2 = dists[i1][0]
+    ) [dists[i1][1], i1, i2];
+
+
+function _join_paths_at_vertices(path1,path2,v1,v2) =
+    let(
+        repeat_start = !approx(path1[v1],path2[v2]),
+        path1 = clockwise_polygon(polygon_shift(path1,v1)),
+        path2 = ccw_polygon(polygon_shift(path2,v2))
+    )
+    [
+        each path1,
+        if (repeat_start) path1[0],
+        each path2,
+        if (repeat_start) path2[0],
+    ];                      
+
+        
+// Given a region that is connected and has its outer border in region[0],
+// produces a polygon with the same points that has overlapping connected paths
+// to join internal holes to the outer border.  Output is a single path.  
+function _cleave_connected_region(region) =
+    len(region)==0? [] :
+    len(region)<=1? clockwise_polygon(region[0]) :
+    let(
+        dists = [
+            for (i=[1:1:len(region)-1])
+            _path_path_closest_vertices(region[0],region[i])
+        ],
+        idxi = min_index(subindex(dists,0)),
+        newoline = _join_paths_at_vertices(
+            region[0], region[idxi+1],
+            dists[idxi][1], dists[idxi][2]
+        )
+    ) len(region)==2? clockwise_polygon(newoline) :
+    let(
+        orgn = [
+            newoline,
+            for (i=idx(region))
+                if (i>0 && i!=idxi+1)
+                    region[i]
+        ]
+    )
+    assert(len(orgn)<len(region))
+    _cleave_connected_region(orgn);
+
+
+
+// Function: vnf_from_region()
+// Usage:
+//   vnf = vnf_from_region(region, [transform], [reverse], [vnf]);
+// Description:
+//   Given a (two-dimensional) region, applies the given transformation matrix to it and makes a triangulated VNF of
+//   faces for that region, reversed if desired. 
+// Arguments:
+//   region = The region to conver to a vnf.
+//   transform = If given, a transformation matrix to apply to the faces generated from the region.  Default: No transformation applied.
+//   reverse = If true, reverse the normals of the faces generated from the region.  An untransformed region will have face normals pointing `UP`.  Default: false
+//   vnf = If given, the faces are added to this VNF.  Default: `EMPTY_VNF`
+// Example(3D):
+//   region = [square([20,10],center=true),
+//             right(5,square(4,center=true)),
+//             left(5,square(6,center=true))];
+//   vnf = vnf_from_region(region);
+//   color("gray")down(.125)
+//        linear_extrude(height=.125)region(region);
+//   vnf_wireframe(vnf,width=.25);
+function vnf_from_region(region, transform, reverse=false, vnf=EMPTY_VNF) =
+    let (
+        regions = region_parts(force_region(region)),
+        vnfs = [
+            if (vnf != EMPTY_VNF) vnf,
+            for (rgn = regions) let(
+                cleaved = path3d(_cleave_connected_region(rgn)),
+                face = is_undef(transform)? cleaved : apply(transform,cleaved),
+                faceidxs = reverse? [for (i=[len(face)-1:-1:0]) i] : [for (i=[0:1:len(face)-1]) i]
+            ) [face, [faceidxs]]
+        ],
+        outvnf = vnf_merge(vnfs)
+    )
+    vnf_triangulate(outvnf);
+
+
+
 // Section: VNF Testing and Access
 
 
@@ -407,14 +496,48 @@ function vnf_quantize(vnf,q=pow(2,-12)) =
     [[for (pt = vnf[0]) quant(pt,q)], vnf[1]];
 
 
+// Function: vnf_clean_unrefs()
+// Usage:
+//   clean_vnf=vnf_clean_unrefs(vnf);
+// Description:
+//   Remove all unreferenced vertices from a VNF.  Note that in most
+//   cases unreferenced vertices cause no harm, and this function may
+//   be slow on large VNFs.  
+function vnf_clean_unrefs(vnf) =
+    let(
+        flat = flatten(vnf[1]),
+        ind  = len(vnf[0])<800 
+                ?   [for(si = search(count(len(vnf[0])), flat,1) ) si!=[] ? 1: 0]
+                :  _indicator_sort(flat,0,len(vnf[0])),
+        verts = [for(i=idx(vnf[0])) if(ind[i]==1) vnf[0][i] ], 
+        map   = cumsum(ind) 
+    )
+    [ verts, [for(face=vnf[1]) [for(v=face) map[v]-1 ] ] ];
+
+
+function _indicator_sort(l,imin,imax) =
+    len(l) == 0 ? [for(i=[imin:1:imax]) 0 ] :
+    let( pivot   = floor((imax+imin)/2),
+         lesser  = [ for(li=l) if( li< pivot) li ],
+         greater = [ for(li=l) if( li> pivot) li ] )
+    concat( _indicator_sort(lesser ,imin,pivot-1), 
+            search(pivot,l,1) ? 1 : 0 ,
+            _indicator_sort(greater,pivot+1,imax) ) ;
+
+
 // Function: vnf_triangulate()
 // Usage:
 //   vnf2 = vnf_triangulate(vnf);
 // Description:
-//   Triangulates faces in the VNF that have more than 3 vertices.  
+//   Triangulates faces in the VNF that have more than 3 vertices.
+// Example:
+//   include <BOSL2/polyhedra.scad>
+//   vnf = zrot(33,regular_polyhedron_info("vnf", "dodecahedron", side=12));
+//   vnf_polyhedron(vnf);
+//   triangulated = vnf_triangulate(vnf);
+//   color("red")vnf_wireframe(triangulated,width=.3);
 function vnf_triangulate(vnf) =
     let(
-        vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf,
         verts = vnf[0],
         faces = [for (face=vnf[1]) each len(face)==3 ? [face] : 
                                          polygon_triangulate(verts, face)]
@@ -709,7 +832,7 @@ function vnf_halfspace(plane, vnf, closed=true) =
       let(
            M = project_plane(plane),
            faceregion = [for(path=newpaths) path2d(apply(M,select(newvert,path)))],
-           facevnf = region_faces(faceregion,transform=rot_inverse(M),reverse=true)
+           facevnf = vnf_from_region(faceregion,transform=rot_inverse(M),reverse=true)
       )
       vnf_merge([[newvert, faces_edges_vertices[0]], facevnf]);
 

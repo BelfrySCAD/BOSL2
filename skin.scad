@@ -1111,8 +1111,8 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge") =
             for (rgn=regions) each [
                 for (path=rgn)
                     sweep(path, transforms, closed=closed, caps=false),
-                if (fullcaps[0]) region_faces(rgn, transform=transforms[0], reverse=true),
-                if (fullcaps[1]) region_faces(rgn, transform=last(transforms)),
+                if (fullcaps[0]) vnf_from_region(rgn, transform=transforms[0], reverse=true),
+                if (fullcaps[1]) vnf_from_region(rgn, transform=last(transforms)),
             ],
         ],
         vnf = vnf_merge(vnfs)

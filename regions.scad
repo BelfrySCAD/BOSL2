@@ -381,82 +381,6 @@ function region_parts(region) =
 
 // Section: Region Extrusion and VNFs
 
-function _path_path_closest_vertices(path1,path2) =
-    let(
-        dists = [for (i=idx(path1)) let(j=closest_point(path1[i],path2)) [j,norm(path2[j]-path1[i])]],
-        i1 = min_index(subindex(dists,1)),
-        i2 = dists[i1][0]
-    ) [dists[i1][1], i1, i2];
-
-
-function _join_paths_at_vertices(path1,path2,v1,v2) =
-    let(
-        repeat_start = !approx(path1[v1],path2[v2]),
-        path1 = clockwise_polygon(polygon_shift(path1,v1)),
-        path2 = ccw_polygon(polygon_shift(path2,v2))
-    )
-    [
-        each path1,
-        if (repeat_start) path1[0],
-        each path2,
-        if (repeat_start) path2[0],
-    ];                      
-
-        
-// Given a region that is connected and has its outer border in region[0],
-// produces a polygon with the same points that has overlapping connected paths
-// to join internal holes to the outer border.  Output is a single path.  
-function _cleave_connected_region(region) =
-    len(region)==0? [] :
-    len(region)<=1? clockwise_polygon(region[0]) :
-    let(
-        dists = [
-            for (i=[1:1:len(region)-1])
-            _path_path_closest_vertices(region[0],region[i])
-        ],
-        idxi = min_index(subindex(dists,0)),
-        newoline = _join_paths_at_vertices(
-            region[0], region[idxi+1],
-            dists[idxi][1], dists[idxi][2]
-        )
-    ) len(region)==2? clockwise_polygon(newoline) :
-    let(
-        orgn = [
-            newoline,
-            for (i=idx(region))
-                if (i>0 && i!=idxi+1)
-                    region[i]
-        ]
-    )
-    assert(len(orgn)<len(region))
-    _cleave_connected_region(orgn);
-
-
-
-// Function: region_faces()
-// Usage:
-//   vnf = region_faces(region, [transform], [reverse], [vnf]);
-// Description:
-//   Given a region, applies the given transformation matrix to it and makes a VNF of
-//   faces for that region, reversed if necessary.
-// Arguments:
-//   region = The region to make faces for.
-//   transform = If given, a transformation matrix to apply to the faces generated from the region.  Default: No transformation applied.
-//   reverse = If true, reverse the normals of the faces generated from the region.  An untransformed region will have face normals pointing `UP`.  Default: false
-//   vnf = If given, the faces are added to this VNF.  Default: `EMPTY_VNF`
-function region_faces(region, transform, reverse=false, vnf=EMPTY_VNF) =
-    let (
-        regions = region_parts(force_region(region)),
-        vnfs = [
-            if (vnf != EMPTY_VNF) vnf,
-            for (rgn = regions) let(
-                cleaved = path3d(_cleave_connected_region(rgn)),
-                face = is_undef(transform)? cleaved : apply(transform,cleaved),
-                faceidxs = reverse? [for (i=[len(face)-1:-1:0]) i] : [for (i=[0:1:len(face)-1]) i]
-            ) [face, [faceidxs]]
-        ],
-        outvnf = vnf_merge(vnfs)
-    ) outvnf;
 
 
 // Function&Module: linear_sweep()
@@ -564,8 +488,8 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
                     ) scale([sc,sc,1], p=rot(ang, p=path3d(path,h)))
                 ]
             ) vnf_vertex_array(verts, caps=false, col_wrap=true, style=style),
-            for (rgn = regions) region_faces(rgn, move([0,0,-height/2]), reverse=true),
-            for (rgn = trgns) region_faces(rgn, move([0,0, height/2]), reverse=false)
+            for (rgn = regions) vnf_from_region(rgn, down(height/2), reverse=true),
+            for (rgn = trgns) vnf_from_region(rgn, up(height/2), reverse=false)
         ])
     ) reorient(anchor,spin,orient, cp=cp, vnf=vnf, extent=!anchor_isect, p=vnf);
 
