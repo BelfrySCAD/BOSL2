@@ -255,14 +255,16 @@
 //   skin([regular_ngon(n=4, r=4), regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10);
 // Example(FlatSpin,VPD=35): Connecting square to shifted pentagon using "direct" method.
 //   skin([regular_ngon(n=4, r=4), right(4,p=regular_ngon(n=5,r=5))], z=[0,4], refine=10, slices=10);
-// Example(FlatSpin,VPD=35): To improve the look, you can actually rotate the polygons for a more symmetric pattern of lines.   You have to resample yourself before calling `align_polygon` and you should choose a length that is a multiple of both polygon lengths.
-//   sq = subdivide_path(regular_ngon(n=4, r=4),40);
-//   pent = subdivide_path(regular_ngon(n=5,r=5),40);
-//   skin([sq, align_polygon(sq,pent,[0:1:360/5])], z=[0,4], slices=10);
-// Example(FlatSpin,VPD=35): For the shifted pentagon we can also align, making sure to pass an appropriate centerpoint to `align_polygon`.
-//   sq = subdivide_path(regular_ngon(n=4, r=4),40);
-//   pent = right(4,p=subdivide_path(regular_ngon(n=5,r=5),40));
-//   skin([sq, align_polygon(sq,pent,[0:1:360/5],cp=[4,0])], z=[0,4], refine=10, slices=10);
+// Example(FlatSpin,VPD=185): In this example reindexing does not fix the orientation of the triangle because it happens in 3d within skin(), so we have to reverse the triangle manually
+//   ellipse = yscale(3,circle(r=10, $fn=32));
+//   tri = move([-50/3,-9],[[0,0], [50,0], [0,27]]);
+//   skin([ellipse, reverse(tri)], z=[0,20], slices=20, method="reindex");
+// Example(FlatSpin,VPD=185): You can get a nicer transition by rotating the polygons for better alignment.  You have to resample yourself before calling `align_polygon`. The orientation is fixed so we do not need to reverse.  
+//   ellipse = yscale(3,circle(r=10, $fn=32));
+//   tri = move([-50/3,-9],
+//              subdivide_path([[0,0], [50,0], [0,27]], 32));
+//   aligned = align_polygon(ellipse,tri, [0:5:180]);
+//   skin([ellipse, aligned], z=[0,20], slices=20);
 // Example(FlatSpin,VPD=35): The "distance" method is a completely different approach.
 //   skin([regular_ngon(n=4, r=4), regular_ngon(n=5,r=5)], z=[0,4], refine=10, slices=10, method="distance");
 // Example(FlatSpin,VPD=35,VPT=[0,0,4]): Connecting pentagon to heptagon inserts two triangular faces on each side
