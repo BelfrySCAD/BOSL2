@@ -1888,26 +1888,7 @@ function polygon_shift(poly, i) =
 //   move_copies(concat(circ,pent)) circle(r=.1,$fn=32);
 //   color("red") move_copies([pent[0],circ[0]]) circle(r=.1,$fn=32);
 //   color("blue") translate(reindexed[0])circle(r=.1,$fn=32);
-function old_reindex_polygon(reference, poly, return_error=false) =
-    assert(is_path(reference) && is_path(poly,dim=len(reference[0])),
-           "Invalid polygon(s) or incompatible dimensions. " )
-    assert(len(reference)==len(poly), "The polygons must have the same length.")
-    let(
-        dim = len(reference[0]),
-        N = len(reference),
-        fixpoly = dim != 2? poly :
-                  is_polygon_clockwise(reference)
-                  ? clockwise_polygon(poly)
-                  : ccw_polygon(poly),
-        I   = [for(i=reference) 1],
-        val = [ for(k=[0:N-1])
-                    [for(i=[0:N-1])
-                      (reference[i]*poly[(i+k)%N]) ] ]*I,
-        optimal_poly = polygon_shift(fixpoly, max_index(val))
-    )
-    return_error? [optimal_poly, min(poly*(I*poly)-2*val)] :
-    optimal_poly;
-function reindex_polygon(reference, poly, return_error=false) =
+    function reindex_polygon(reference, poly, return_error=false) =
     assert(is_path(reference) && is_path(poly,dim=len(reference[0])),
            "Invalid polygon(s) or incompatible dimensions. " )
     assert(len(reference)==len(poly), "The polygons must have the same length.")
@@ -1929,68 +1910,70 @@ function reindex_polygon(reference, poly, return_error=false) =
     optimal_poly;
 
 
-
 // Function: align_polygon()
 // Usage:
-//   newpoly = align_polygon(reference, poly, angles, [cp]);
+//   newpoly = align_polygon(reference, poly, [angles], [cp], [tran], [return_ind]);
 // Topics: Geometry, Polygons
 // Description:
-//   Tries the list or range of angles to find a rotation of the specified 2D polygon that best aligns
-//   with the reference 2D polygon.  For each angle, the polygon is reindexed, which is a costly operation
-//   so if run time is a problem, use a smaller sampling of angles.  Returns the rotated and reindexed
-//   polygon.
+//   Find the best alignment of a specified 2D polygon with a reference 2D polygon over a set of
+//   transformations.  You can specify a list or range of angles and a centerpoint or you can
+//   give a list of arbitrary 2d transformation matrices.  For each transformation or angle, the polygon is
+//   reindexed, which is a costly operation so if run time is a problem, use a smaller sampling of angles or
+//   transformations.  By default returns the rotated and reindexed polygon.  You can also request that
+//   the best angle or the index into the transformation list be returned.  When you specify an angle
 // Arguments:
 //   reference = reference polygon
 //   poly = polygon to rotate into alignment with the reference
 //   angles = list or range of angles to test
 //   cp = centerpoint for rotations
-// Example(2D): The original hexagon in yellow is not well aligned with the pentagon.  Turning it so the faces line up gives an optimal alignment, shown in red.
-//   $fn=32;
-//   pentagon = subdivide_path(pentagon(side=2),60);
-//   hexagon = subdivide_path(hexagon(side=2.7),60);
-//   color("red") move_copies(scale(1.4,p=align_polygon(pentagon,hexagon,[0:10:359]))) circle(r=.1);
-//   move_copies(concat(pentagon,hexagon))circle(r=.1);
-function old_align_polygon(reference, poly, angles, cp) =
+//   ---
+//   tran = list of 2D transformation matrices to optimize over
+//   return_ind = if true, return the best angle (if you specified angles) or the index into tran otherwise of best alignment
+// Example(2D): Rotating the poorly aligned light gray triangle by 105 degrees produces the best alignment, shown in blue:
+//   ellipse = yscale(3,circle(r=10, $fn=32));
+//   tri = move([-50/3,-9],
+//              subdivide_path([[0,0], [50,0], [0,27]], 32));
+//   aligned = align_polygon(ellipse,tri, [0:5:180]);
+//   color("white")stroke(tri,width=.5,closed=true);
+//   stroke(ellipse, width=.5, closed=true);
+//   color("blue")stroke(aligned,width=.5,closed=true);
+// Example(2D,NoAxes): Translating a triangle (light gray) to the best alignment (blue)
+//   ellipse = yscale(2,circle(r=10, $fn=32));
+//   tri = subdivide_path([[0,0], [27,0], [-7,50]], 32);
+//   T = [for(x=[-10:0], y=[-30:-15]) move([x,y])];
+//   aligned = align_polygon(ellipse,tri, trans=T);
+//   color("white")stroke(tri,width=.5,closed=true);
+//   stroke(ellipse, width=.5, closed=true);
+//   color("blue")stroke(aligned,width=.5,closed=true);
+function align_polygon(reference, poly, angles, cp, trans, return_ind=false) =
+    assert(is_undef(trans) || (is_undef(angles) && is_undef(cp)), "Cannot give both angles/cp and trans as input")
+    let(
+        trans = is_def(trans) ? trans :
+            assert( (is_vector(angles) && len(angles)>0) || valid_range(angles),
+                "The `angle` parameter must be a range or a non void list of numbers.")
+            [for(angle=angles) zrot(angle,cp=cp)]
+    )
     assert(is_path(reference,dim=2) && is_path(poly,dim=2),
            "Invalid polygon(s). " )
     assert(len(reference)==len(poly), "The polygons must have the same length.")
-    assert( (is_vector(angles) && len(angles)>0) || valid_range(angles),
-            "The `angle` parameter must be a range or a non void list of numbers.")
     let(     // alignments is a vector of entries of the form: [polygon, error]
         alignments = [
-            for(angle=angles)
-            reindex_polygon(
-                reference,
-                zrot(angle,p=poly,cp=cp),
-                return_error=true
-            )
-        ],
-        best = min_index(subindex(alignments,1))
-    ) alignments[best][0];
-    
-    
-function align_polygon(reference, poly, angles, cp) =
-    assert(is_path(reference,dim=2) && is_path(poly,dim=2),
-           "Invalid polygon(s). " )
-    assert(len(reference)==len(poly), "The polygons must have the same length.")
-    assert( (is_vector(angles) && len(angles)>0) || valid_range(angles),
-            "The `angle` parameter must be a range or a non void list of numbers.")
-    let(     // alignments is a vector of entries of the form: [polygon, error]
-        alignments = [
-            for(angle=angles)
-            reindex_polygon(
-                reference,
-                zrot(angle,p=poly,cp=cp),
-                return_error=true
-            )
+            for(T=trans)
+              reindex_polygon(
+                  reference,
+                  apply(T,poly),
+                  return_error=true
+              )
         ],
         scores = subindex(alignments,1),
         minscore = min(scores),
         minind = [for(i=idx(scores)) if (scores[i]<minscore+EPSILON) i],
-        f=echo(best_angles = select(list(angles), minind)),
+        dummy = is_def(angles) ? echo(best_angles = select(list(angles), minind)):0,
         best = minind[0]
-    ) alignments[best][0];
-
+    )
+    return_ind ? (is_def(angles) ? list(angles)[best] : best)
+    : alignments[best][0];
+    
 
 // Function: are_polygons_equal()
 // Usage:

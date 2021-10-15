@@ -287,9 +287,9 @@ function vnf_tri_array(points, row_wrap=false, reverse=false, vnf=EMPTY_VNF) =
 //   and eliminates any faces with fewer than 3 vertices.  
 //   (Unreferenced vertices of the input VNFs are not dropped.)
 // Arguments:
-//   vnfs - a list of the VNFs to merge in one VNF.
-//   cleanup - when true, consolidates the duplicate vertices of the merge. Default: false
-//   eps - the tolerance in finding duplicates when cleanup=true. Default: EPSILON
+//   vnfs = a list of the VNFs to merge in one VNF.
+//   cleanup = when true, consolidates the duplicate vertices of the merge. Default: false
+//   eps = the tolerance in finding duplicates when cleanup=true. Default: EPSILON
 function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
     is_vnf(vnfs) ? vnf_merge([vnfs], cleanup, eps) :
     assert( is_vnf_list(vnfs) , "Improper vnf or vnf list")  
