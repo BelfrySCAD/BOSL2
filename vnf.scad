@@ -587,7 +587,9 @@ module vnf_wireframe(vnf, width=1)
                     sort([face[i], select(face,i+1)])
                  ]);
   for (e=edges) extrude_from_to(vertex[e[0]],vertex[e[1]]) circle(d=width);
-  move_copies(vertex) sphere(d=width);
+  // Identify vertices actually used and draw them
+  vertused = search(count(len(vertex)), flatten(edges), 1);
+  for(i=idx(vertex)) if(vertused[i]!=[]) move(vertex[i]) sphere(d=width); 
 }
 
 
@@ -687,6 +689,8 @@ function vnf_centroid(vnf) =
 //   cut_knot = vnf_halfspace([1,0,0,0], knot);
 //   vnf_polyhedron(cut_knot);
 function vnf_halfspace(plane, vnf, closed=true) =
+    assert(_valid_plane(plane), "Invalid plane")
+    assert(is_vnf(vnf), "Invalid vnf")
     let(
          inside = [for(x=vnf[0]) plane*[each x,-1] >= 0 ? 1 : 0],
          vertexmap = [0,each cumsum(inside)],

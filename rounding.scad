@@ -1954,7 +1954,7 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
     assert(debug || bot_simple,
           "Roundovers interfere with each other on bottom face: either input is self intersecting or top joint length is too large")
     assert(debug || (verify_vert==[] && verify_horiz==[]), "Curvature continuity failed")
-    let(
+    let( 
         vnf = vnf_merge([ each subindex(top_samples,0),
                           each subindex(bot_samples,0),
                           for(pts=edge_points) vnf_vertex_array(pts),
