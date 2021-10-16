@@ -994,7 +994,7 @@ module test_linear_solve(){
                                                          -8.378819388897780e-01,
                                                           2.330507118860985e-01,
                                                           8.511278195488737e-01]);
-  assert_approx(linear_solve(subindex(M,[0:2]), [2,4,4,4]),
+  assert_approx(linear_solve(columns(M,[0:2]), [2,4,4,4]),
                  [-2.457142857142859e-01,
                    5.200000000000000e-01,
                    7.428571428571396e-02]);

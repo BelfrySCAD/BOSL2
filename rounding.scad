@@ -1270,7 +1270,7 @@ module convex_offset_extrude(
         // The entry r[i] is [radius,z] for a given layer
         r = move([0,bottom_height],p=concat(
                           reverse(offsets_bot), [[0,0], [0,middle]], move([0,middle], p=offsets_top)));
-        delta = [for(val=deltas(subindex(r,0))) sign(val)];
+        delta = [for(val=deltas(columns(r,0))) sign(val)];
         below=[-thickness,0];
         above=[0,thickness];
            // layers is a list of pairs of the relative positions for each layer, e.g. [0,thickness]
@@ -1937,8 +1937,8 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
      verify_vert =
        [for(i=[0:N-1],j=[0:4])
          let(
-               vline = concat(select(subindex(top_patch[i],j),2,4),
-                              select(subindex(bot_patch[i],j),2,4))
+               vline = concat(select(columns(top_patch[i],j),2,4),
+                              select(columns(bot_patch[i],j),2,4))
              )
          if (!is_collinear(vline)) [i,j]],
      //verify horiz edges
@@ -1955,8 +1955,8 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
           "Roundovers interfere with each other on bottom face: either input is self intersecting or top joint length is too large")
     assert(debug || (verify_vert==[] && verify_horiz==[]), "Curvature continuity failed")
     let( 
-        vnf = vnf_merge([ each subindex(top_samples,0),
-                          each subindex(bot_samples,0),
+        vnf = vnf_merge([ each columns(top_samples,0),
+                          each columns(bot_samples,0),
                           for(pts=edge_points) vnf_vertex_array(pts),
                           debug ? vnf_from_polygons(faces) 
                                 : vnf_triangulate(vnf_from_polygons(faces))
@@ -2114,7 +2114,7 @@ function _circle_mask(r) =
 //           ]),
 //           radius = [0,0,each repeat(slotradius,4),0,0], closed=false
 //       )
-//   ) apply(left(max(subindex(slot,0))/2)*fwd(min(subindex(slot,1))), slot);
+//   ) apply(left(max(columns(slot,0))/2)*fwd(min(columns(slot,1))), slot);
 //   stroke(slot(15,29,7));
 // Example: A cylindrical container with rounded edges and a rounded finger slot.
 //   function slot(slotwidth, slotheight, slotradius) = let(
@@ -2138,7 +2138,7 @@ function _circle_mask(r) =
 //           ]),
 //           radius = [0,0,each repeat(slotradius,4),0,0], closed=false
 //       )
-//   ) apply(left(max(subindex(slot,0))/2)*fwd(min(subindex(slot,1))), slot);
+//   ) apply(left(max(columns(slot,0))/2)*fwd(min(columns(slot,1))), slot);
 //   diam = 80;
 //   wall = 4;
 //   height = 40;
@@ -2162,12 +2162,12 @@ module bent_cutout_mask(r, thickness, path, radius, convexity=10)
   path = clockwise_polygon(path);
   curvepoints = arc(d=thickness, angle = [-180,0]);
   profiles = [for(pt=curvepoints) _cyl_hole(r+pt.x,apply(xscale((r+pt.x)/r), offset(path,delta=thickness/2+pt.y,check_valid=false,closed=true)))];
-  pathx = subindex(path,0);
+  pathx = columns(path,0);
   minangle = (min(pathx)-thickness/2)*360/(2*PI*r);
   maxangle = (max(pathx)+thickness/2)*360/(2*PI*r);
   mindist = (r+thickness/2)/cos((maxangle-minangle)/2);
   assert(maxangle-minangle<180,"Cutout angle span is too large.  Must be smaller than 180.");
-  zmean = mean(subindex(path,1));
+  zmean = mean(columns(path,1));
   innerzero = repeat([0,0,zmean], len(path));
   outerpt = repeat( [1.5*mindist*cos((maxangle+minangle)/2),1.5*mindist*sin((maxangle+minangle)/2),zmean], len(path));
   vnf_polyhedron(vnf_vertex_array([innerzero, each profiles, outerpt],col_wrap=true),convexity=convexity);

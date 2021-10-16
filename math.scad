@@ -994,7 +994,7 @@ function null_space(A,eps=1e-12) =
         zrow = [for(i=idx(R)) if (all_zero(R[i],eps)) i]
     )
     len(zrow)==0 ? [] :
-    transpose(subindex(Q_R[0],zrow));
+    transpose(columns(Q_R[0],zrow));
 
 
 // Function: qr_factor()

@@ -363,7 +363,7 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
                     )
                     each arc(N=steps, cp=p, r=rounding, start=a+180/n, angle=-360/n)
                 ],
-                maxx_idx = max_index(subindex(path2,0)),
+                maxx_idx = max_index(columns(path2,0)),
                 path3 = polygon_shift(path2,maxx_idx)
             ) path3
         ),
@@ -961,7 +961,7 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
                 [-cap_w,cap_h]
             ], closed=true
         ),
-        maxx_idx = max_index(subindex(path,0)),
+        maxx_idx = max_index(columns(path,0)),
         path2 = polygon_shift(path,maxx_idx)
     ) reorient(anchor,spin, two_d=true, path=path2, p=path2);
 
@@ -1016,7 +1016,7 @@ function glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) =
             [for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep+180) r  * [cos(a),sin(a)] + cp1],
             tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep)      r2 * [cos(a),sin(a)] + cp2]
         ),
-        maxx_idx = max_index(subindex(path,0)),
+        maxx_idx = max_index(columns(path,0)),
         path2 = reverse_polygon(polygon_shift(path,maxx_idx))
     ) reorient(anchor,spin, two_d=true, path=path2, extent=true, p=path2);
 
