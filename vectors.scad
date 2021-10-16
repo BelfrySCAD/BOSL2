@@ -263,9 +263,48 @@ function vector_axis(v1,v2=undef,v3=undef) =
 
 
 
+// Function: min_index()
+// Usage:
+//   idx = min_index(vals);
+//   idxlist = min_index(vals, all=true);
+// Topics: List Handling
+// See Also: max_index(), list_increasing(), list_decreasing()
+// Description:
+//   Returns the index of the first occurrence of the minimum value in the given list. 
+//   If `all` is true then returns a list of all indices where the minimum value occurs.
+// Arguments:
+//   vals = vector of values
+//   all = set to true to return indices of all occurences of the minimum.  Default: false
+// Example:
+//   a = min_index([5,3,9,6,2,7,8,2,1]); // Returns: 8
+//   b = min_index([5,3,9,6,2,7,8,2,7],all=true); // Returns: [4,7]
+function min_index(vals, all=false) =
+    assert( is_vector(vals) && len(vals)>0 , "Invalid or empty list of numbers.")
+    all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
+
+
+// Function: max_index()
+// Usage:
+//   idx = max_index(vals);
+//   idxlist = max_index(vals, all=true);
+// Topics: List Handling
+// See Also: min_index(), list_increasing(), list_decreasing()
+// Description:
+//   Returns the index of the first occurrence of the maximum value in the given list. 
+//   If `all` is true then returns a list of all indices where the maximum value occurs.
+// Arguments:
+//   vals = vector of values
+//   all = set to true to return indices of all occurences of the maximum.  Default: false
+// Example:
+//   max_index([5,3,9,6,2,7,8,9,1]); // Returns: 2
+//   max_index([5,3,9,6,2,7,8,9,1],all=true); // Returns: [2,7]
+function max_index(vals, all=false) =
+    assert( is_vector(vals) && len(vals)>0 , "Invalid or empty list of numbers.")
+    all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
+
+
 
 // Section: Vector Searching
-
 
 
 // Function: closest_point()
