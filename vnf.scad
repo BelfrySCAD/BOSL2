@@ -354,7 +354,7 @@ function vnf_from_polygons(polygons) =
 function _path_path_closest_vertices(path1,path2) =
     let(
         dists = [for (i=idx(path1)) let(j=closest_point(path1[i],path2)) [j,norm(path2[j]-path1[i])]],
-        i1 = min_index(subindex(dists,1)),
+        i1 = min_index(columns(dists,1)),
         i2 = dists[i1][0]
     ) [dists[i1][1], i1, i2];
 
@@ -384,7 +384,7 @@ function _cleave_connected_region(region) =
             for (i=[1:1:len(region)-1])
             _path_path_closest_vertices(region[0],region[i])
         ],
-        idxi = min_index(subindex(dists,0)),
+        idxi = min_index(columns(dists,0)),
         newoline = _join_paths_at_vertices(
             region[0], region[idxi+1],
             dists[idxi][1], dists[idxi][2]
@@ -479,7 +479,7 @@ function vnf_faces(vnf) = vnf[1];
 // Usage:
 //   rvnf = vnf_reverse_faces(vnf);
 // Description:
-//   Reverses the facing of all the faces in the given VNF.
+//   Reverses the orientation of all the faces in the given VNF.
 function vnf_reverse_faces(vnf) =
     [vnf[0], [for (face=vnf[1]) reverse(face)]];
 
@@ -568,7 +568,7 @@ function vnf_slice(vnf,dir,cuts) =
 
 function _split_polygon_at_x(poly, x) =
     let(
-        xs = subindex(poly,0)
+        xs = columns(poly,0)
     ) (min(xs) >= x || max(xs) <= x)? [poly] :
     let(
         poly2 = [

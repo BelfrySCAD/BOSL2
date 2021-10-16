@@ -1043,9 +1043,9 @@ function bezier_patch_points(patch, u, v) =
     assert(is_num(u) || !is_undef(u[0]))
     assert(is_num(v) || !is_undef(v[0]))
     let(
-        vbezes = [for (i = idx(patch[0])) bezier_points(subindex(patch,i), is_num(u)? [u] : u)]
+        vbezes = [for (i = idx(patch[0])) bezier_points(columns(patch,i), is_num(u)? [u] : u)]
     )
-    [for (i = idx(vbezes[0])) bezier_points(subindex(vbezes,i), is_num(v)? [v] : v)];
+    [for (i = idx(vbezes[0])) bezier_points(columns(vbezes,i), is_num(v)? [v] : v)];
 
 
 // Function: bezier_triangle_point()
@@ -1357,7 +1357,7 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false, return_ed
     all(row_degen) && all(col_degen) ?  // fully degenerate case
         [EMPTY_VNF, repeat([patch[0][0]],4)] :
     all(row_degen) ?                         // degenerate to a line (top to bottom)
-        let(pts = bezier_points(subindex(patch,0), samplepts))
+        let(pts = bezier_points(columns(patch,0), samplepts))
         [EMPTY_VNF, [pts,pts,[pts[0]],[last(pts)]]] :
     all(col_degen) ?                         // degenerate to a line (left to right)
         let(pts = bezier_points(patch[0], samplepts))
@@ -1366,7 +1366,7 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false, return_ed
        let(pts = bezier_patch_points(patch, samplepts, samplepts))
        [
         vnf_vertex_array(pts, reverse=!reverse),
-        [subindex(pts,0), subindex(pts,len(pts)-1), pts[0], last(pts)]
+        [columns(pts,0), columns(pts,len(pts)-1), pts[0], last(pts)]
        ] :
     top_degen && bot_degen ?
        let(
@@ -1375,17 +1375,17 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false, return_ed
                         if (splinesteps%2==0) splinesteps+1,
                         each reverse(list([3:2:splinesteps]))
                        ],
-            bpatch = [for(i=[0:1:len(patch[0])-1]) bezier_points(subindex(patch,i), samplepts)],
+            bpatch = [for(i=[0:1:len(patch[0])-1]) bezier_points(columns(patch,i), samplepts)],
             pts = [
                   [bpatch[0][0]],
-                  for(j=[0:splinesteps-2]) bezier_points(subindex(bpatch,j+1), lerpn(0,1,rowcount[j])),
+                  for(j=[0:splinesteps-2]) bezier_points(columns(bpatch,j+1), lerpn(0,1,rowcount[j])),
                   [last(bpatch[0])]
                   ],
             vnf = vnf_tri_array(pts, reverse=!reverse)
          ) [
             vnf,
             [
-             subindex(pts,0),
+             columns(pts,0),
              [for(row=pts) last(row)],
              pts[0],
              last(pts),
@@ -1404,16 +1404,16 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false, return_ed
            full_degen = len(patch)>=4 && all(select(row_degen,1,ceil(len(patch)/2-1))),
            rowmax = full_degen ? count(splinesteps+1) :
                                  [for(j=[0:splinesteps]) j<=splinesteps/2 ? 2*j : splinesteps],
-           bpatch = [for(i=[0:1:len(patch[0])-1]) bezier_points(subindex(patch,i), samplepts)],
+           bpatch = [for(i=[0:1:len(patch[0])-1]) bezier_points(columns(patch,i), samplepts)],
            pts = [
                   [bpatch[0][0]],
-                  for(j=[1:splinesteps]) bezier_points(subindex(bpatch,j), lerpn(0,1,rowmax[j]+1))
+                  for(j=[1:splinesteps]) bezier_points(columns(bpatch,j), lerpn(0,1,rowmax[j]+1))
                  ],
            vnf = vnf_tri_array(pts, reverse=!reverse)
         ) [
             vnf,
             [
-             subindex(pts,0),
+             columns(pts,0),
              [for(row=pts) last(row)],
              pts[0],
              last(pts),

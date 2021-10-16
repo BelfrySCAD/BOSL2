@@ -1121,7 +1121,7 @@ module sp_neck(diam,type,wall,id,style="L",bead=false, anchor, spin, orient)
 
     isect400 = [for(seg=pair(beadpts)) let(segisect = line_intersection([[T/2,0],[T/2,1]] , seg, LINE, SEGMENT)) if (is_def(segisect)) segisect.y];
 
-    extra_bot = type==400 && bead ? -min(subindex(beadpts,1))+max(isect400) : 0;
+    extra_bot = type==400 && bead ? -min(columns(beadpts,1))+max(isect400) : 0;
     bead_shift = type==400 ? H+max(isect400) : entry[5]+W/2;  // entry[5] is L
     
     attachable(anchor,spin,orient,r=bead ? beadmax : T/2, l=H+extra_bot){

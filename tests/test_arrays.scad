@@ -433,14 +433,14 @@ module test_add_scalar() {
 test_add_scalar();
 
 
-module test_subindex() {
+module test_columns() {
     v = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
-    assert(subindex(v,2) == [3, 7, 11, 15]);
-    assert(subindex(v,[2]) == [[3], [7], [11], [15]]);
-    assert(subindex(v,[2,1]) == [[3, 2], [7, 6], [11, 10], [15, 14]]);
-    assert(subindex(v,[1:3]) == [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]);
+    assert(columns(v,2) == [3, 7, 11, 15]);
+    assert(columns(v,[2]) == [[3], [7], [11], [15]]);
+    assert(columns(v,[2,1]) == [[3, 2], [7, 6], [11, 10], [15, 14]]);
+    assert(columns(v,[1:3]) == [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]);
 }
-test_subindex();
+test_columns();
 
 
 // Need decision about behavior for out of bounds ranges, empty ranges
@@ -532,7 +532,7 @@ module test_hstack() {
     a = hstack(v1,v2);   
     b = hstack(v1,v2,v3);
     c = hstack([M,v1,M]);
-    d = hstack(subindex(M,0), subindex(M,[1, 2]));
+    d = hstack(columns(M,0), columns(M,[1, 2]));
     assert_equal(a,[[2, 5], [3, 6], [4, 7]]);
     assert_equal(b,[[2, 5, 8], [3, 6, 9], [4, 7, 10]]);
     assert_equal(c,[[1, 0, 0, 2, 1, 0, 0], [0, 1, 0, 3, 0, 1, 0], [0, 0, 1, 4, 0, 0, 1]]);

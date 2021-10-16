@@ -985,7 +985,7 @@ function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edg
                      [for(pt = profile)
                         let( 
                             ofs = offset(path, delta=-flip*pt.x, return_faces=true,closed=closed, quality=quality),
-                            map = subindex(_ofs_vmap(ofs,closed=closed),1)
+                            map = columns(_ofs_vmap(ofs,closed=closed),1)
                         ) 
                         select(path3d(ofs[0],pt.y),map)
                       ]

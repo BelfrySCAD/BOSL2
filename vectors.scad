@@ -504,8 +504,8 @@ function vector_nearest(query, k, target) =
             "More results are requested than the number of points.")
     tgpts
     ?   let( tree = _bt_tree(target, count(len(target))) )
-        subindex(_bt_nearest( query, k, target,  tree),0)
-    :   subindex(_bt_nearest( query, k, target[0], target[1]),0);
+        columns(_bt_nearest( query, k, target,  tree),0)
+    :   columns(_bt_nearest( query, k, target[0], target[1]),0);
 
 
 //Ball tree nearest

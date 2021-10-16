@@ -1594,9 +1594,9 @@ function _find_anchor(anchor, geom) =
             hits = [
                 for (face = faces) let(
                     verts = select(rpts, face),
-                    xs = subindex(verts,0),
-                    ys = subindex(verts,1),
-                    zs = subindex(verts,2)
+                    xs = columns(verts,0),
+                    ys = columns(verts,1),
+                    zs = columns(verts,2)
                 ) if (
                     max(xs) >= -eps &&
                     max(ys) >= -eps &&
@@ -1615,7 +1615,7 @@ function _find_anchor(anchor, geom) =
         )
         assert(len(hits)>0, "Anchor vector does not intersect with the shape.  Attachment failed.")
         let(
-            furthest = max_index(subindex(hits,0)),
+            furthest = max_index(columns(hits,0)),
             dist = hits[furthest][0],
             pos = hits[furthest][2],
             hitnorms = [for (hit = hits) if (approx(hit[0],dist,eps=eps)) hit[1]],
@@ -1640,7 +1640,7 @@ function _find_anchor(anchor, geom) =
         ) vnf==EMPTY_VNF? [anchor, [0,0,0], unit(anchor), 0] :
         let(
             rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), vnf[0]),
-            maxx = max(subindex(rpts,0)),
+            maxx = max(columns(rpts,0)),
             idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
             mm = pointlist_bounds(select(rpts,idxs)),
             avgy = (mm[0].y+mm[1].y)/2,
@@ -1681,7 +1681,7 @@ function _find_anchor(anchor, geom) =
                 )
                 if(!is_undef(isect) && !approx(isect,t[0])) [norm(isect), isect, n2]
             ],
-            maxidx = max_index(subindex(isects,0)),
+            maxidx = max_index(columns(isects,0)),
             isect = isects[maxidx],
             pos = point2d(cp) + isect[1],
             vec = unit(isect[2],[0,1])
@@ -1691,7 +1691,7 @@ function _find_anchor(anchor, geom) =
             path = geom[1],
             anchor = point2d(anchor),
             rpath = rot(from=anchor, to=RIGHT, p=move(point2d(-cp), p=path)),
-            maxx = max(subindex(rpath,0)),
+            maxx = max(columns(rpath,0)),
             idxs = [for (i = idx(rpath)) if (approx(rpath[i].x, maxx)) i],
             miny = min([for (i=idxs) rpath[i].y]),
             maxy = max([for (i=idxs) rpath[i].y]),
@@ -1717,7 +1717,7 @@ function _find_anchor(anchor, geom) =
                 if(!is_undef(isect) && !approx(isect,t[0]))
                 [norm(isect), isect, n2]
             ],
-            maxidx = max_index(subindex(isects,0)),
+            maxidx = max_index(columns(isects,0)),
             isect = isects[maxidx],
             pos = point3d(cp) + point3d(isect[1]) + unit([0,0,anchor.z],CENTER)*l/2,
             xyvec = unit(isect[2],[0,1]),
@@ -1730,7 +1730,7 @@ function _find_anchor(anchor, geom) =
             anchor = point3d(anchor),
             xyanch = point2d(anchor),
             rpath = rot(from=xyanch, to=RIGHT, p=move(point2d(-cp), p=path)),
-            maxx = max(subindex(rpath,0)),
+            maxx = max(columns(rpath,0)),
             idxs = [for (i = idx(rpath)) if (approx(rpath[i].x, maxx)) i],
             ys = [for (i=idxs) rpath[i].y],
             avgy = (min(ys)+max(ys))/2,

@@ -70,7 +70,7 @@ function _same_type(a,b, depth) =
 //   list = The list to get the portion of.
 //   start = Either the index of the first item or an index range or a list of indices.
 //   end = The index of the last item when `start` is a number. When `start` is a list or a range, `end` should not be given.
-// See Also: slice(), subindex(), last()
+// See Also: slice(), columns(), last()
 // Example:
 //   l = [3,4,5,6,7,8,9];
 //   a = select(l, 5, 6);   // Returns [8,9]
@@ -111,7 +111,7 @@ function select(list, start, end) =
 //   list = The list to get the slice of.
 //   s = The index of the first item to return.
 //   e = The index of the last item to return.
-// See Also: select(), subindex(), last()
+// See Also: select(), columns(), last()
 // Example:
 //   a = slice([3,4,5,6,7,8,9], 3, 5);   // Returns [6,7,8]
 //   b = slice([3,4,5,6,7,8,9], 2, -1);  // Returns [5,6,7,8,9]
@@ -136,7 +136,7 @@ function slice(list,s=0,e=-1) =
 // Usage:
 //   item = last(list);
 // Topics: List Handling
-// See Also: select(), slice(), subindex()
+// See Also: select(), slice(), columns()
 // Description:
 //   Returns the last element of a list, or undef if empty.
 // Arguments:
@@ -272,7 +272,7 @@ function add_scalar(v,s) =
 // Arguments:
 //   val = The simple value to search for.
 //   list = The list to search.
-//   idx = If given, searches the given subindex for matches for `val`.
+//   idx = If given, searches the given columns for matches for `val`.
 // Example:
 //   a = in_list("bar", ["foo", "bar", "baz"]);  // Returns true.
 //   b = in_list("bee", ["foo", "bar", "baz"]);  // Returns false.
@@ -1293,7 +1293,7 @@ function idx(list, s=0, e=-1, step=1) =
 //   Something like: `[[0,l[0]], [1,l[1]], [2,l[2]], ...]`
 // Arguments:
 //   l = List to enumerate.
-//   idx = If given, enumerates just the given subindex items of `l`.
+//   idx = If given, enumerates just the given columns items of `l`.
 // Example:
 //   enumerate(["a","b","c"]);  // Returns: [[0,"a"], [1,"b"], [2,"c"]]
 //   enumerate([[88,"a"],[76,"b"],[21,"c"]], idx=1);  // Returns: [[0,"a"], [1,"b"], [2,"c"]]
@@ -1562,9 +1562,9 @@ function set_intersection(a, b) =
 
 // Section: Array Manipulation
 
-// Function: subindex()
+// Function: columns()
 // Usage:
-//   list = subindex(M, idx);
+//   list = columns(M, idx);
 // Topics: Array Handling, List Handling
 // See Also: select(), slice()
 // Description:
@@ -1577,13 +1577,13 @@ function set_intersection(a, b) =
 //   idx = The index, list of indices, or range of indices to fetch.
 // Example:
 //   M = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
-//   a = subindex(M,2);      // Returns [3, 7, 11, 15]
-//   b = subindex(M,[2]);    // Returns [[3], [7], [11], [15]]
-//   c = subindex(M,[2,1]);  // Returns [[3, 2], [7, 6], [11, 10], [15, 14]]
-//   d = subindex(M,[1:3]);  // Returns [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]
+//   a = columns(M,2);      // Returns [3, 7, 11, 15]
+//   b = columns(M,[2]);    // Returns [[3], [7], [11], [15]]
+//   c = columns(M,[2,1]);  // Returns [[3, 2], [7, 6], [11, 10], [15, 14]]
+//   d = columns(M,[1:3]);  // Returns [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]
 //   N = [ [1,2], [3], [4,5], [6,7,8] ];
-//   e = subindex(N,[0,1]);  // Returns [ [1,2], [3,undef], [4,5], [6,7] ]
-function subindex(M, idx) =
+//   e = columns(N,[0,1]);  // Returns [ [1,2], [3,undef], [4,5], [6,7] ]
+function columns(M, idx) =
     assert( is_list(M), "The input is not a list." )
     assert( !is_undef(idx) && _valid_idx(idx,0,1/0), "Invalid index input." ) 
     is_finite(idx)
@@ -1595,7 +1595,7 @@ function subindex(M, idx) =
 // Usage:
 //   mat = submatrix(M, idx1, idx2);
 // Topics: Matrices, Array Handling
-// See Also: subindex(), block_matrix(), submatrix_set()
+// See Also: columns(), block_matrix(), submatrix_set()
 // Description:
 //   The input must be a list of lists (a matrix or 2d array).  Returns a submatrix by selecting the rows listed in idx1 and columns listed in idx2.
 // Arguments:
@@ -1628,10 +1628,10 @@ function submatrix(M,idx1,idx2) =
 //   A = hstack(M1, M2, M3)
 //   A = hstack([M1, M2, M3, ...])
 // Topics: Matrices, Array Handling
-// See Also: subindex(), submatrix(), block_matrix()
+// See Also: columns(), submatrix(), block_matrix()
 // Description:
 //   Constructs a matrix by horizontally "stacking" together compatible matrices or vectors.  Vectors are treated as columsn in the stack.
-//   This command is the inverse of subindex.  Note: strings given in vectors are broken apart into lists of characters.  Strings given
+//   This command is the inverse of columns.  Note: strings given in vectors are broken apart into lists of characters.  Strings given
 //   in matrices are preserved as strings.  If you need to combine vectors of strings use array_group as shown below to convert the
 //   vector into a column matrix.  Also note that vertical stacking can be done directly with concat.  
 // Arguments:
@@ -1650,7 +1650,7 @@ function submatrix(M,idx1,idx2) =
 //   c = hstack([M,v1,M]);  // Returns [[1, 0, 0, 2, 1, 0, 0],
 //                          //          [0, 1, 0, 3, 0, 1, 0],
 //                          //          [0, 0, 1, 4, 0, 0, 1]]
-//   d = hstack(subindex(M,0), subindex(M,[1 2]));  // Returns M
+//   d = hstack(columns(M,0), columns(M,[1 2]));  // Returns M
 //   strvec = ["one","two"];
 //   strmat = [["three","four"], ["five","six"]];
 //   e = hstack(strvec,strvec); // Returns [["o", "n", "e", "o", "n", "e"],
@@ -1680,7 +1680,7 @@ function hstack(M1, M2, M3) =
 // Usage:
 //    bmat = block_matrix([[M11, M12,...],[M21, M22,...], ... ]);
 // Topics: Matrices, Array Handling
-// See Also: subindex(), submatrix()
+// See Also: columns(), submatrix()
 // Description:
 //    Create a block matrix by supplying a matrix of matrices, which will
 //    be combined into one unified matrix.  Every matrix in one row
@@ -1724,7 +1724,7 @@ function block_matrix(M) =
 // Usage:
 //   mat = diagonal_matrix(diag, [offdiag]);
 // Topics: Matrices, Array Handling
-// See Also: subindex(), submatrix()
+// See Also: columns(), submatrix()
 // Description:
 //   Creates a square matrix with the items in the list `diag` on
 //   its diagonal.  The off diagonal entries are set to offdiag,
@@ -1741,7 +1741,7 @@ function diagonal_matrix(diag, offdiag=0) =
 // Usage:
 //   mat = submatrix_set(M, A, [m], [n]);
 // Topics: Matrices, Array Handling
-// See Also: subindex(), submatrix()
+// See Also: columns(), submatrix()
 // Description:
 //   Sets a submatrix of M equal to the matrix A.  By default the top left corner of M is set to A, but
 //   you can specify offset coordinates m and n.  If A (as adjusted by m and n) extends beyond the bounds
@@ -1772,7 +1772,7 @@ function submatrix_set(M,A,m=0,n=0) =
 //   Takes a flat array of values, and groups items in sets of `cnt` length.
 //   The opposite of this is `flatten()`.
 // Topics: Matrices, Array Handling
-// See Also: subindex(), submatrix(), hstack(), flatten(), full_flatten()
+// See Also: columns(), submatrix(), hstack(), flatten(), full_flatten()
 // Arguments:
 //   v = The list of items to group.
 //   cnt = The number of items to put in each grouping.  Default:2
@@ -1829,7 +1829,7 @@ function group_data(groups, values) =
 // Usage:
 //   list = flatten(l);
 // Topics: Matrices, Array Handling
-// See Also: subindex(), submatrix(), hstack(), full_flatten()
+// See Also: columns(), submatrix(), hstack(), full_flatten()
 // Description:
 //   Takes a list of lists and flattens it by one level.
 // Arguments:
@@ -1845,7 +1845,7 @@ function flatten(l) =
 // Usage:
 //   list = full_flatten(l);
 // Topics: Matrices, Array Handling
-// See Also: subindex(), submatrix(), hstack(), flatten()
+// See Also: columns(), submatrix(), hstack(), flatten()
 // Description: 
 //   Collects in a list all elements recursively found in any level of the given list.
 //   The output list is ordered in depth first order.
