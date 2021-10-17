@@ -91,34 +91,52 @@ module test_in_list() {
 test_in_list();
 
 
-module test_min_index() {
-    assert(min_index([5,3,9,6,2,7,8,2,1])==8);
-    assert(min_index([5,3,9,6,2,7,8,2,7],all=true)==[4,7]);
+module test_is_increasing() {
+    assert(is_increasing([1,2,3,4]) == true);
+    assert(is_increasing([1,2,2,2]) == true);
+    assert(is_increasing([1,3,2,4]) == false);
+    assert(is_increasing([4,3,2,1]) == false);
+    assert(is_increasing([1,2,3,4],strict=true) == true);
+    assert(is_increasing([1,2,2,2],strict=true) == false);
+    assert(is_increasing([1,3,2,4],strict=true) == false);
+    assert(is_increasing([4,3,2,1],strict=true) == false);
+    assert(is_increasing(["AB","BC","DF"]) == true);
+    assert(is_increasing(["AB","DC","CF"]) == false);    
+    assert(is_increasing([[1,2],[1,4],[2,3],[2,2]])==false);
+    assert(is_increasing([[1,2],[1,4],[2,3],[2,3]])==true);
+    assert(is_increasing([[1,2],[1,4],[2,3],[2,3]],strict=true)==false);
+    assert(is_increasing("ABCFZ")==true);
+    assert(is_increasing("ZYWRA")==false);    
 }
-test_min_index();
+test_is_increasing();
 
 
-module test_max_index() {
-    assert(max_index([5,3,9,6,2,7,8,9,1])==2);
-    assert(max_index([5,3,9,6,2,7,8,9,7],all=true)==[2,7]);
+module test_is_decreasing() {
+    assert(is_decreasing([1,2,3,4]) == false);
+    assert(is_decreasing([4,2,3,1]) == false);
+    assert(is_decreasing([4,2,2,1]) == true);
+    assert(is_decreasing([4,3,2,1]) == true);
+    assert(is_decreasing([1,2,3,4],strict=true) == false);
+    assert(is_decreasing([4,2,3,1],strict=true) == false);
+    assert(is_decreasing([4,2,2,1],strict=true) == false);
+    assert(is_decreasing([4,3,2,1],strict=true) == true);
+    assert(is_decreasing(reverse(["AB","BC","DF"])) == true);
+    assert(is_decreasing(reverse(["AB","DC","CF"])) == false);    
+    assert(is_decreasing(reverse([[1,2],[1,4],[2,3],[2,2]]))==false);
+    assert(is_decreasing(reverse([[1,2],[1,4],[2,3],[2,3]]))==true);
+    assert(is_decreasing(reverse([[1,2],[1,4],[2,3],[2,3]]),strict=true)==false);
+    assert(is_decreasing("ABCFZ")==false);
+    assert(is_decreasing("ZYWRA")==true);    
 }
-test_max_index();
+test_is_decreasing();
 
 
-module test_list_increasing() {
-    assert(list_increasing([1,2,3,4]) == true);
-    assert(list_increasing([1,3,2,4]) == false);
-    assert(list_increasing([4,3,2,1]) == false);
+module test_find_approx() {
+    assert(find_approx(1, [2,3,1.05,4,1,2,.99], eps=.1)==2);
+    assert(find_approx(1, [2,3,1.05,4,1,2,.99], all=true, eps=.1)==[2,4,6]);
 }
-test_list_increasing();
-
-
-module test_list_decreasing() {
-    assert(list_decreasing([1,2,3,4]) == false);
-    assert(list_decreasing([4,2,3,1]) == false);
-    assert(list_decreasing([4,3,2,1]) == true);
-}
-test_list_decreasing();
+test_find_approx();
+    
 
 
 // Section: Basic List Generation
@@ -244,16 +262,16 @@ module test_list_bset() {
 test_list_bset();
 
 
-module test_list_shortest() {
-    assert(list_shortest(["foobar", "bazquxx", "abcd"]) == 4);
+module test_min_length() {
+    assert(min_length(["foobar", "bazquxx", "abcd"]) == 4);
 }
-test_list_shortest();
+test_min_length();
 
 
-module test_list_longest() {
-    assert(list_longest(["foobar", "bazquxx", "abcd"]) == 7);
+module test_max_length() {
+    assert(max_length(["foobar", "bazquxx", "abcd"]) == 7);
 }
-test_list_longest();
+test_max_length();
 
 
 module test_list_pad() {

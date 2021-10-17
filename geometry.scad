@@ -1987,7 +1987,7 @@ function are_polygons_equal(poly1, poly2, eps=EPSILON) =
         l1 = len(poly1),
         l2 = len(poly2)
     ) l1 != l2 ? false :
-    let( maybes = find_first_match(poly1[0], poly2, eps=eps, all=true) )
+    let( maybes = find_approx(poly1[0], poly2, eps=eps, all=true) )
     maybes == []? false :
     [for (i=maybes) if (_are_polygons_equal(poly1, poly2, eps, i)) 1] != [];
 

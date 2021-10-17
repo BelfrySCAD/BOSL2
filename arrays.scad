@@ -53,36 +53,34 @@ function _same_type(a,b, depth) =
           && []==[for(i=idx(a)) if( ! _same_type(a[i],b[i],depth-1) ) 0] ); 
   
 
-
-
-// Function: list_shortest()
+// Function: min_length()
 // Usage:
-//   llen = list_shortest(array);
+//   llen = min_length(array);
 // Topics: List Handling
-// See Also: list_longest()
+// See Also: max_length()
 // Description:
 //   Returns the length of the shortest sublist in a list of lists.
 // Arguments:
 //   array = A list of lists.
 // Example:
-//   slen = list_shortest([[3,4,5],[6,7,8,9]]);  // Returns: 3
-function list_shortest(array) =
+//   slen = min_length([[3,4,5],[6,7,8,9]]);  // Returns: 3
+function min_length(array) =
     assert(is_list(array), "Invalid input." )
     min([for (v = array) len(v)]);
 
 
-// Function: list_longest()
+// Function: max_length()
 // Usage:
-//   llen = list_longest(array);
+//   llen = max_length(array);
 // Topics: List Handling
-// See Also: list_shortest()
+// See Also: min_length()
 // Description:
 //   Returns the length of the longest sublist in a list of lists.
 // Arguments:
 //   array = A list of lists.
 // Example:
-//   llen = list_longest([[3,4,5],[6,7,8,9]]);  // Returns: 4
-function list_longest(array) =
+//   llen = max_length([[3,4,5],[6,7,8,9]]);  // Returns: 4
+function max_length(array) =
     assert(is_list(array), "Invalid input." )
     max([for (v = array) len(v)]);
 
@@ -111,71 +109,6 @@ function in_list(val,list,idx) =
     : val==list[s][idx];
 
 
-// Function: find_first_match()
-// Topics: List Handling
-// See Also: in_list()
-// Usage:
-//   idx = find_first_match(val, list, [start=], [eps=]);
-//   indices = find_first_match(val, list, all=true, [start=], [eps=]);
-// Description:
-//   Finds the first item in `list` that matches `val`, returning the index.
-// Arguments:
-//   val = The value to search for.  If given a function literal of signature `function (x)`, uses that function to check list items.  Returns true for a match.
-//   list = The list to search through.
-//   ---
-//   start = The index to start searching from.
-//   all = If true, returns a list of all matching item indices.
-//   eps = The maximum allowed floating point rounding error for numeric comparisons.
-function find_first_match(val, list, start=0, all=false, eps=EPSILON) =
-    all? [
-        for (i=[start:1:len(list)-1])
-        if (
-            (!is_func(val) && approx(val, list[i], eps=eps)) ||
-            (is_func(val) && val(list[i]))
-        ) i
-    ] :
-    __find_first_match(val, list, eps=eps, i=start);
-
-function __find_first_match(val, list, eps, i=0) =
-    i >= len(list)? undef :
-    (
-        (!is_func(val) && approx(val, list[i], eps=eps)) ||
-        (is_func(val) && val(list[i]))
-    )? i : __find_first_match(val, list, eps=eps, i=i+1);
-
-
-// Function: list_increasing()
-// Usage:
-//    bool = list_increasing(list);
-// Topics: List Handling
-// See Also: max_index(), min_index(), list_decreasing()
-// Description:
-//   Returns true if the list is (non-strictly) increasing
-// Example:
-//   a = list_increasing([1,2,3,4]);  // Returns: true
-//   b = list_increasing([1,3,2,4]);  // Returns: false
-//   c = list_increasing([4,3,2,1]);  // Returns: false
-function list_increasing(list) =
-    assert(is_list(list)||is_string(list))
-    len([for (p=pair(list)) if(p.x>p.y) true])==0;
-
-
-// Function: list_decreasing()
-// Usage:
-//   bool = list_decreasing(list);
-// Topics: List Handling
-// See Also: max_index(), min_index(), list_increasing()
-// Description:
-//   Returns true if the list is (non-strictly) decreasing
-// Example:
-//   a = list_decreasing([1,2,3,4]);  // Returns: false
-//   b = list_decreasing([4,2,3,1]);  // Returns: false
-//   c = list_decreasing([4,3,2,1]);  // Returns: true
-function list_decreasing(list) =
-    assert(is_list(list)||is_string(list))
-    len([for (p=pair(list)) if(p.x<p.y) true])==0;
-
-
 // Function: add_scalar()
 // Usage:  
 //   v = add_scalar(v, s);
@@ -193,6 +126,110 @@ function add_scalar(v,s) =
     is_finite(s) ? [for (x=v) is_list(x)? add_scalar(x,s) : is_finite(x) ? x+s: x] : v;
 
 
+
+// Section: Operations using approx()
+
+
+// Function: deduplicate()
+// Usage:
+//   list = deduplicate(list, [close], [eps]);
+// Topics: List Handling
+// See Also: deduplicate_indexed()
+// Description:
+//   Removes consecutive duplicate items in a list.
+//   When `eps` is zero, the comparison between consecutive items is exact.
+//   Otherwise, when all list items and subitems are numbers, the comparison is within the tolerance `eps`.
+//   This is different from `unique()` in that the list is *not* sorted.
+// Arguments:
+//   list = The list to deduplicate.
+//   closed = If true, drops trailing items if they match the first list item.
+//   eps = The maximum tolerance between items.
+// Example:
+//   a = deduplicate([8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3,8]
+//   b = deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3]
+//   c = deduplicate("Hello");  // Returns: "Helo"
+//   d = deduplicate([[3,4],[7,2],[7,1.99],[1,4]],eps=0.1);  // Returns: [[3,4],[7,2],[1,4]]
+//   e = deduplicate([[7,undef],[7,undef],[1,4],[1,4+1e-12]],eps=0);    // Returns: [[7,undef],[1,4],[1,4+1e-12]]
+function deduplicate(list, closed=false, eps=EPSILON) =
+    assert(is_list(list)||is_string(list))
+    let(
+        l = len(list),
+        end = l-(closed?0:1)
+    )
+    is_string(list) ? str_join([for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]]) :
+    eps==0 ? [for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]] :
+    [for (i=[0:1:l-1]) if (i==end || !approx(list[i], list[(i+1)%l], eps)) list[i]];
+
+
+// Function: deduplicate_indexed()
+// Usage:
+//   new_idxs = deduplicate_indexed(list, indices, [closed], [eps]);
+// Topics: List Handling
+// See Also: deduplicate()
+// Description:
+//   Given a list, and indices into it, removes consecutive indices that
+//   index to the same values in the list.
+// Arguments:
+//   list = The list that the indices index into.
+//   indices = The list of indices to deduplicate.
+//   closed = If true, drops trailing indices if what they index matches what the first index indexes.
+//   eps = The maximum difference to allow between numbers or vectors.
+// Example:
+//   a = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1]);  // Returns: [1,4,3,2,0,1]
+//   b = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1], closed=true);  // Returns: [1,4,3,2,0]
+//   c = deduplicate_indexed([[7,undef],[7,undef],[1,4],[1,4],[1,4+1e-12]],eps=0);    // Returns: [0,2,4]
+function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
+    assert(is_list(list)||is_string(list), "Improper list or string.")
+    indices==[]? [] :
+    assert(is_vector(indices), "Indices must be a list of numbers.")
+    let(
+        ll = len(list),
+        l = len(indices),
+        end = l-(closed?0:1)
+    ) [
+        for (i = [0:1:l-1]) let(
+           idx1 = indices[i],
+           idx2 = indices[(i+1)%l],
+           a = assert(idx1>=0,"Bad index.")
+               assert(idx1<len(list),"Bad index in indices.")
+               list[idx1],
+           b = assert(idx2>=0,"Bad index.")
+               assert(idx2<len(list),"Bad index in indices.")
+               list[idx2],
+           eq = (a == b)? true :
+                (a*0 != b*0) || (eps==0)? false :
+                is_num(a) || is_vector(a) ? approx(a, b, eps=eps) 
+                : false
+        ) 
+        if (i==end || !eq) indices[i]
+    ];
+
+
+
+// Function: find_approx()
+// Topics: List Handling
+// See Also: in_list()
+// Usage:
+//   idx = find_approx(val, list, [start=], [eps=]);
+//   indices = find_approx(val, list, all=true, [start=], [eps=]);
+// Description:
+//   Finds the first item in `list` that matches `val`, returning the index.
+// Arguments:
+//   val = The value to search for.  If given a function literal of signature `function (x)`, uses that function to check list items.  Returns true for a match.
+//   list = The list to search through.
+//   ---
+//   start = The index to start searching from.
+//   all = If true, returns a list of all matching item indices.
+//   eps = The maximum allowed floating point rounding error for numeric comparisons.
+function find_approx(val, list, start=0, all=false, eps=EPSILON) =
+    all ? [for (i=[start:1:len(list)-1]) if (approx(val, list[i], eps=eps)) i]
+        :  __find_approx(val, list, eps=eps, i=start);
+
+function __find_approx(val, list, eps, i=0) =
+    i >= len(list)? undef :
+    approx(val, list[i], eps=eps)
+          ? i
+          : __find_approx(val, list, eps=eps, i=i+1);
 
 
 // Section: List Indexing
@@ -373,49 +410,6 @@ function bselect(array,index) =
 // Section: List Construction
 
 
-// Function: list()
-// Topics: List Handling, Type Conversion
-// Usage:
-//   list = list(l)
-// Description:
-//   Expands a range into a full list.  If given a list, returns it verbatim.
-//   If given a string, explodes it into a list of single letters.
-// Arguments:
-//   l = The value to expand.
-// See Also: scalar_vec3(), force_list()
-// Example:
-//   l1 = list([3:2:9]);  // Returns: [3,5,7,9]
-//   l2 = list([3,4,5]);  // Returns: [3,4,5]
-//   l3 = list("Foo");    // Returns: ["F","o","o"]
-//   l4 = list(23);       // Returns: [23]
-function list(l) = is_list(l)? l : [for (x=l) x];
-
-
-// Function: force_list()
-// Usage:
-//   list = force_list(value, [n], [fill]);
-// Topics: List Handling
-// See Also: scalar_vec3()
-// Description:
-//   Coerces non-list values into a list.  Makes it easy to treat a scalar input
-//   consistently as a singleton list, as well as list inputs.
-//   - If `value` is a list, then that list is returned verbatim.
-//   - If `value` is not a list, and `fill` is not given, then a list of `n` copies of `value` will be returned.
-//   - If `value` is not a list, and `fill` is given, then a list `n` items long will be returned where `value` will be the first item, and the rest will contain the value of `fill`.
-// Arguments:
-//   value = The value or list to coerce into a list.
-//   n = The number of items in the coerced list.  Default: 1
-//   fill = The value to pad the coerced list with, after the firt value.  Default: undef (pad with copies of `value`)
-// Example:
-//   x = force_list([3,4,5]);  // Returns: [3,4,5]
-//   y = force_list(5);  // Returns: [5]
-//   z = force_list(7, n=3);  // Returns: [7,7,7]
-//   w = force_list(4, n=3, fill=1);  // Returns: [4,1,1]
-function force_list(value, n=1, fill) =
-    is_list(value) ? value :
-    is_undef(fill)? [for (i=[1:1:n]) value] : [value, for (i=[2:1:n]) fill];
-
-
 // Function: repeat()
 // Usage:
 //   list = repeat(val, n);
@@ -493,6 +487,52 @@ function list_bset(indexset, valuelist, dflt=0) =
 
 
 
+// Function: list()
+// Topics: List Handling, Type Conversion
+// Usage:
+//   list = list(l)
+// Description:
+//   Expands a range into a full list.  If given a list, returns it verbatim.
+//   If given a string, explodes it into a list of single letters.
+// Arguments:
+//   l = The value to expand.
+// See Also: scalar_vec3(), force_list()
+// Example:
+//   l1 = list([3:2:9]);  // Returns: [3,5,7,9]
+//   l2 = list([3,4,5]);  // Returns: [3,4,5]
+//   l3 = list("Foo");    // Returns: ["F","o","o"]
+//   l4 = list(23);       // Returns: [23]
+function list(l) = is_list(l)? l : [for (x=l) x];
+
+
+// Function: force_list()
+// Usage:
+//   list = force_list(value, [n], [fill]);
+// Topics: List Handling
+// See Also: scalar_vec3()
+// Description:
+//   Coerces non-list values into a list.  Makes it easy to treat a scalar input
+//   consistently as a singleton list, as well as list inputs.
+//   - If `value` is a list, then that list is returned verbatim.
+//   - If `value` is not a list, and `fill` is not given, then a list of `n` copies of `value` will be returned.
+//   - If `value` is not a list, and `fill` is given, then a list `n` items long will be returned where `value` will be the first item, and the rest will contain the value of `fill`.
+// Arguments:
+//   value = The value or list to coerce into a list.
+//   n = The number of items in the coerced list.  Default: 1
+//   fill = The value to pad the coerced list with, after the firt value.  Default: undef (pad with copies of `value`)
+// Example:
+//   x = force_list([3,4,5]);  // Returns: [3,4,5]
+//   y = force_list(5);  // Returns: [5]
+//   z = force_list(7, n=3);  // Returns: [7,7,7]
+//   w = force_list(4, n=3, fill=1);  // Returns: [4,1,1]
+function force_list(value, n=1, fill) =
+    is_list(value) ? value :
+    is_undef(fill)? [for (i=[1:1:n]) value] : [value, for (i=[2:1:n]) fill];
+
+
+
+
+
 
 // Section: List Modification
 
@@ -548,80 +588,39 @@ function list_rotate(list,n=1) =
     )
     is_string(list)? str_join(elems) : elems;
 
+    
 
-// Function: deduplicate()
+// Function: shuffle()
 // Usage:
-//   list = deduplicate(list, [close], [eps]);
+//   shuffled = shuffle(list, [seed]);
 // Topics: List Handling
-// See Also: deduplicate_indexed()
+// See Also: sort(), sortidx(), unique(), unique_count()
 // Description:
-//   Removes consecutive duplicate items in a list.
-//   When `eps` is zero, the comparison between consecutive items is exact.
-//   Otherwise, when all list items and subitems are numbers, the comparison is within the tolerance `eps`.
-//   This is different from `unique()` in that the list is *not* sorted.
+//   Shuffles the input list into random order.
+//   If given a string, shuffles the characters within the string.
+//   If you give a numeric seed value then the permutation
+//   will be repeatable.
 // Arguments:
-//   list = The list to deduplicate.
-//   closed = If true, drops trailing items if they match the first list item.
-//   eps = The maximum tolerance between items.
+//   list = The list to shuffle.
+//   seed = Optional random number seed for the shuffling.
 // Example:
-//   a = deduplicate([8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3,8]
-//   b = deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]);  // Returns: [8,3,4,8,2,3]
-//   c = deduplicate("Hello");  // Returns: "Helo"
-//   d = deduplicate([[3,4],[7,2],[7,1.99],[1,4]],eps=0.1);  // Returns: [[3,4],[7,2],[1,4]]
-//   e = deduplicate([[7,undef],[7,undef],[1,4],[1,4+1e-12]],eps=0);    // Returns: [[7,undef],[1,4],[1,4+1e-12]]
-function deduplicate(list, closed=false, eps=EPSILON) =
-    assert(is_list(list)||is_string(list))
+//   //        Spades   Hearts    Diamonds  Clubs
+//   suits = ["\u2660", "\u2661", "\u2662", "\u2663"];
+//   ranks = [2,3,4,5,6,7,8,9,10,"J","Q","K","A"];
+//   cards = [for (suit=suits, rank=ranks) str(rank,suit)];
+//   deck = shuffle(cards);
+function shuffle(list,seed) =
+    assert(is_list(list)||is_string(list), "Invalid input." )
+    is_string(list)? str_join(shuffle([for (x = list) x],seed=seed)) :
+    len(list)<=1 ? list :
     let(
-        l = len(list),
-        end = l-(closed?0:1)
-    )
-    is_string(list) ? str_join([for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]]) :
-    eps==0 ? [for (i=[0:1:l-1]) if (i==end || list[i] != list[(i+1)%l]) list[i]] :
-    [for (i=[0:1:l-1]) if (i==end || !approx(list[i], list[(i+1)%l], eps)) list[i]];
+        rval = is_num(seed) ? rands(0,1,len(list),seed_value=seed)
+                            : rands(0,1,len(list)),
+        left  = [for (i=[0:len(list)-1]) if (rval[i]< 0.5) list[i]],
+        right = [for (i=[0:len(list)-1]) if (rval[i]>=0.5) list[i]]
+    ) 
+    concat(shuffle(left), shuffle(right));
 
-
-// Function: deduplicate_indexed()
-// Usage:
-//   new_idxs = deduplicate_indexed(list, indices, [closed], [eps]);
-// Topics: List Handling
-// See Also: deduplicate()
-// Description:
-//   Given a list, and indices into it, removes consecutive indices that
-//   index to the same values in the list.
-// Arguments:
-//   list = The list that the indices index into.
-//   indices = The list of indices to deduplicate.
-//   closed = If true, drops trailing indices if what they index matches what the first index indexes.
-//   eps = The maximum difference to allow between numbers or vectors.
-// Example:
-//   a = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1]);  // Returns: [1,4,3,2,0,1]
-//   b = deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1], closed=true);  // Returns: [1,4,3,2,0]
-//   c = deduplicate_indexed([[7,undef],[7,undef],[1,4],[1,4],[1,4+1e-12]],eps=0);    // Returns: [0,2,4]
-function deduplicate_indexed(list, indices, closed=false, eps=EPSILON) =
-    assert(is_list(list)||is_string(list), "Improper list or string.")
-    indices==[]? [] :
-    assert(is_vector(indices), "Indices must be a list of numbers.")
-    let(
-        ll = len(list),
-        l = len(indices),
-        end = l-(closed?0:1)
-    ) [
-        for (i = [0:1:l-1]) let(
-           idx1 = indices[i],
-           idx2 = indices[(i+1)%l],
-           a = assert(idx1>=0,"Bad index.")
-               assert(idx1<len(list),"Bad index in indices.")
-               list[idx1],
-           b = assert(idx2>=0,"Bad index.")
-               assert(idx2<len(list),"Bad index in indices.")
-               list[idx2],
-           eq = (a == b)? true :
-                (a*0 != b*0) || (eps==0)? false :
-                is_num(a) || is_vector(a) ? approx(a, b, eps=eps) 
-                : false
-        ) 
-        if (i==end || !eq) indices[i]
-    ];
 
 
 // Function: repeat_entries()
@@ -875,7 +874,7 @@ function list_fit(array, length, fill) =
               : list_pad(array,length,fill);
 
 
-// Section: List Shuffling and Sorting
+// Section: Sorting
 
 
 // returns true for valid index specifications idx in the interval [imin, imax) 
@@ -892,38 +891,6 @@ function _valid_idx(idx,imin,imax) =
     || ( is_range(idx) 
          && ( is_undef(imin) || (idx[1]>0 && idx[0]>=imin ) || (idx[1]<0 && idx[0]<=imax ) )
          && ( is_undef(imax) || (idx[1]>0 && idx[2]<=imax ) || (idx[1]<0 && idx[2]>=imin ) ) );
-    
-
-// Function: shuffle()
-// Usage:
-//   shuffled = shuffle(list, [seed]);
-// Topics: List Handling
-// See Also: sort(), sortidx(), unique(), unique_count()
-// Description:
-//   Shuffles the input list into random order.
-//   If given a string, shuffles the characters within the string.
-//   If you give a numeric seed value then the permutation
-//   will be repeatable.
-// Arguments:
-//   list = The list to shuffle.
-//   seed = Optional random number seed for the shuffling.
-// Example:
-//   //        Spades   Hearts    Diamonds  Clubs
-//   suits = ["\u2660", "\u2661", "\u2662", "\u2663"];
-//   ranks = [2,3,4,5,6,7,8,9,10,"J","Q","K","A"];
-//   cards = [for (suit=suits, rank=ranks) str(rank,suit)];
-//   deck = shuffle(cards);
-function shuffle(list,seed) =
-    assert(is_list(list)||is_string(list), "Invalid input." )
-    is_string(list)? str_join(shuffle([for (x = list) x],seed=seed)) :
-    len(list)<=1 ? list :
-    let(
-        rval = is_num(seed) ? rands(0,1,len(list),seed_value=seed)
-                            : rands(0,1,len(list)),
-        left  = [for (i=[0:len(list)-1]) if (rval[i]< 0.5) list[i]],
-        right = [for (i=[0:len(list)-1]) if (rval[i]>=0.5) list[i]]
-    ) 
-    concat(shuffle(left), shuffle(right));
 
 // idx should be an index of the arrays l[i]
 function _group_sort_by_index(l,idx) =
@@ -1132,34 +1099,54 @@ function sortidx(list, idx=undef) =
             [for(li=lsort) li[0] ]
         :   _sort_general(list,idx,indexed=true)
     : _sort_general(list,idx,indexed=true);
-        
 
-// Function: group_sort()
+
+
+// Function: is_increasing()
 // Usage:
-//   ulist = group_sort(list);
+//    bool = is_increasing(list);
 // Topics: List Handling
-// See Also: shuffle(), sort(), sortidx(), unique(), unique_count()
+// See Also: max_index(), min_index(), is_decreasing()
 // Description:
-//   Given a list of values, returns the sorted list with all repeated items grouped in a list.
-//   When the list entries are themselves lists, the sorting may be done based on the `idx` entry
-//   of those entries, that should be numbers. 
-//   The result is always a list of lists. 
+//   Returns true if the list is (non-strictly) increasing, or strictly increasing if strict is set to true.
+//   The list can be a list of any items that OpenSCAD can compare, or it can be a string which will be
+//   evaluated character by character.
 // Arguments:
-//   list = The list to sort.
-//   idx = If given, do the comparison based just on the specified index. Default: zero.
+//   list = list (or string) to check
+//   strict = set to true to test that list is strictly increasing
 // Example:
-//   sorted = group_sort([5,2,8,3,1,3,8,7,5]);  // Returns: [[1],[2],[3,3],[5,5],[7],[8,8]]
-//   sorted2 = group_sort([[5,"a"],[2,"b"], [5,"c"], [3,"d"], [2,"e"] ], idx=0);  // Returns: [[[2,"b"],[2,"e"]], [[5,"a"],[5,"c"]], [[3,"d"]] ]
-function group_sort(list, idx) = 
-    assert(is_list(list), "Input should be a list." )
-    assert(is_undef(idx) || (is_finite(idx) && idx>=0) , "Invalid index." )
-    len(list)<=1 ? [list] :
-    is_vector(list)? _group_sort(list) :
-    let( idx = is_undef(idx) ? 0 : idx )
-    assert( [for(entry=list) if(!is_list(entry) || len(entry)<idx || !is_num(entry[idx]) ) 1]==[],
-        "Some entry of the list is a list shorter than `idx` or the indexed entry of it is not a number.")
-    _group_sort_by_index(list,idx);
-        
+//   a = is_increasing([1,2,3,4]);  // Returns: true
+//   b = is_increasing([1,3,2,4]);  // Returns: false
+//   c = is_increasing([1,3,3,4]);  // Returns: true
+//   d = is_increasing([1,3,3,4],strict=true);  // Returns: false
+//   e = is_increasing([4,3,2,1]);  // Returns: false
+function is_increasing(list,strict=false) =
+    assert(is_list(list)||is_string(list))
+    strict ? len([for (p=pair(list)) if(p.x>=p.y) true])==0
+           : len([for (p=pair(list)) if(p.x>p.y) true])==0;
+
+
+// Function: is_decreasing()
+// Usage:
+//   bool = is_decreasing(list);
+// Topics: List Handling
+// See Also: max_index(), min_index(), is_increasing()
+// Description:
+//   Returns true if the list is (non-strictly) decreasing, or strictly decreasing if strict is set to true.
+//   The list can be a list of any items that OpenSCAD can compare, or it can be a string which will be
+//   evaluated character by character.  
+// Arguments:
+//   list = list (or string) to check
+//   strict = set to true to test that list is strictly decreasing
+// Example:
+//   a = is_decreasing([1,2,3,4]);  // Returns: false
+//   b = is_decreasing([4,2,3,1]);  // Returns: false
+//   c = is_decreasing([4,3,2,1]);  // Returns: true
+function is_decreasing(list,strict=false) =
+    assert(is_list(list)||is_string(list))
+    strict ? len([for (p=pair(list)) if(p.x<=p.y) true])==0
+           : len([for (p=pair(list)) if(p.x<p.y) true])==0;
+
 
 // Function: unique()
 // Usage:
@@ -1226,6 +1213,35 @@ function unique_count(list) =
             ind = [0, for(i=[1:1:len(list)-1]) if (list[i]!=list[i-1]) i] 
         )
         [ select(list,ind), deltas( concat(ind,[len(list)]) ) ];
+
+
+
+// Function: group_sort()
+// Usage:
+//   ulist = group_sort(list);
+// Topics: List Handling
+// See Also: shuffle(), sort(), sortidx(), unique(), unique_count()
+// Description:
+//   Given a list of values, returns the sorted list with all repeated items grouped in a list.
+//   When the list entries are themselves lists, the sorting may be done based on the `idx` entry
+//   of those entries, that should be numbers. 
+//   The result is always a list of lists. 
+// Arguments:
+//   list = The list to sort.
+//   idx = If given, do the comparison based just on the specified index. Default: zero.
+// Example:
+//   sorted = group_sort([5,2,8,3,1,3,8,7,5]);  // Returns: [[1],[2],[3,3],[5,5],[7],[8,8]]
+//   sorted2 = group_sort([[5,"a"],[2,"b"], [5,"c"], [3,"d"], [2,"e"] ], idx=0);  // Returns: [[[2,"b"],[2,"e"]], [[5,"a"],[5,"c"]], [[3,"d"]] ]
+function group_sort(list, idx) = 
+    assert(is_list(list), "Input should be a list." )
+    assert(is_undef(idx) || (is_finite(idx) && idx>=0) , "Invalid index." )
+    len(list)<=1 ? [list] :
+    is_vector(list)? _group_sort(list) :
+    let( idx = is_undef(idx) ? 0 : idx )
+    assert( [for(entry=list) if(!is_list(entry) || len(entry)<idx || !is_num(entry[idx]) ) 1]==[],
+        "Some entry of the list is a list shorter than `idx` or the indexed entry of it is not a number.")
+    _group_sort_by_index(list,idx);
+        
 
 
 // Function: group_data()
@@ -1439,7 +1455,7 @@ function permutations(l,n=2) =
 // See Also: zip_long()
 // Description:
 //   Zips together two or more lists into a single list.  For example, if you have two
-//   lists [3,4,5], and [8,7,6], and zip them together, you get [[3,8],[4,7],[5,6]].
+//   lists [3,4,5], and [8,7,6], and zip them together, you get [ [3,8],[4,7],[5,6] ].
 //   The list returned will be as long as the shortest list passed to zip().
 // Arguments:
 //   a = The first list, or a list of lists if b and c are not given.
@@ -1453,7 +1469,7 @@ function permutations(l,n=2) =
 //   // ECHO: [7,3]
 function zip(a,b,c) =
     b!=undef? zip([a,b,if (c!=undef) c]) :
-    let(n = list_shortest(a))
+    let(n = min_length(a))
     [for (i=[0:1:n-1]) [for (x=a) x[i]]];
 
 
@@ -1466,7 +1482,7 @@ function zip(a,b,c) =
 // See Also: zip()
 // Description:
 //   Zips together two or more lists into a single list.  For example, if you have two
-//   lists [3,4,5], and [8,7,6], and zip them together, you get [[3,8],[4,7],[5,6]].
+//   lists [3,4,5], and [8,7,6], and zip them together, you get [ [3,8],[4,7],[5,6] ].
 //   The list returned will be as long as the longest list passed to zip_long(), with
 //   shorter lists padded by the value in `fill`.
 // Arguments:
@@ -1483,7 +1499,7 @@ function zip(a,b,c) =
 //   // ECHO: [6,88]]
 function zip_long(a,b,c,fill) =
     b!=undef? zip_long([a,b,if (c!=undef) c],fill=fill) :
-    let(n = list_longest(a))
+    let(n = max_length(a))
     [for (i=[0:1:n-1]) [for (x=a) i<len(x)? x[i] : fill]];
 
 
@@ -1680,8 +1696,8 @@ function hstack(M1, M2, M3) =
     (M2!=undef)? hstack([M1,M2]) :
     assert(all([for(v=M1) is_list(v)]), "One of the inputs to hstack is not a list")
     let(
-        minlen = list_shortest(M1),
-        maxlen = list_longest(M1)
+        minlen = min_length(M1),
+        maxlen = max_length(M1)
     )
     assert(minlen==maxlen, "Input vectors to hstack must have the same length")
     [for(row=[0:1:minlen-1])

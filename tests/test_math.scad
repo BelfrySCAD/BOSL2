@@ -1223,7 +1223,7 @@ module test_qr_factor() {
        is_ut(qr[1])
     && approx(qr[0]*transpose(qr[0]), ident(len(qr[0])))
     && approx(qr[0]*qr[1]*transpose(qr[2]),M)
-    && list_decreasing([for(i=[0:1:min(len(qr[1]),len(qr[1][0]))-1]) abs(qr[1][i][i])]);
+    && is_decreasing([for(i=[0:1:min(len(qr[1]),len(qr[1][0]))-1]) abs(qr[1][i][i])]);
 
   
   M = [[1,2,9,4,5],
