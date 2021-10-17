@@ -198,7 +198,7 @@ function vnf_vertex_array(
 // Description:
 //   Produces a vnf from an array of points where each row length can differ from the adjacent rows by up to 2 in length.  This enables
 //   the construction of triangular VNF patches.  The resulting VNF can be wrapped along the rows by setting `row_wrap` to true.
-//   You cannot wrap columns: if you need to do that you'll need to combine two VNF arrays that share edges.  Degenerate faces
+//   You cannot wrap columns: if you need to do that you'll need to merge two VNF arrays that share edges.  Degenerate faces
 //   are not included in the output, but if this results in unused vertices they will still appear in the output.  
 // Arguments:
 //   points = List of point lists for each row
@@ -214,18 +214,18 @@ function vnf_vertex_array(
 //   vnf = vnf_tri_array(pts);
 //   vnf_wireframe(vnf,width=0.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
-// Example(3D): Chaining two VNFs to construct a cone with one point length change between rows.
+// Example(3D): Merging two VNFs to construct a cone with one point length change between rows.
 //   pts1 = [for(z=[0:10]) path3d(arc(3+z,r=z/2+1, angle=[0,180]),10-z)];
 //   pts2 = [for(z=[0:10]) path3d(arc(3+z,r=z/2+1, angle=[180,360]),10-z)];
-//   vnf = vnf_tri_array(pts1,
-//                       vnf=vnf_tri_array(pts2));
+//   vnf = vnf_merge([vnf_tri_array(pts1),
+//                     vnf_tri_array(pts2)]);
 //   color("green")vnf_wireframe(vnf,width=0.1);
 //   vnf_polyhedron(vnf);
 // Example(3D): Cone with length change two between rows
 //   pts1 = [for(z=[0:1:10]) path3d(arc(3+2*z,r=z/2+1, angle=[0,180]),10-z)];
 //   pts2 = [for(z=[0:1:10]) path3d(arc(3+2*z,r=z/2+1, angle=[180,360]),10-z)];
-//   vnf = vnf_tri_array(pts1,
-//                       vnf=vnf_tri_array(pts2));
+//   vnf = vnf_merge([vnf_tri_array(pts1),
+//                    vnf_tri_array(pts2)]);
 //   color("green")vnf_wireframe(vnf,width=0.1);
 //   vnf_polyhedron(vnf);
 // Example(3D,NoAxes): Point count can change irregularly
