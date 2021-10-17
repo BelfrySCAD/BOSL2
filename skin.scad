@@ -413,7 +413,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
     slices = is_list(slices) ? slices : repeat(slices, profcount),
     refineOK = [for(i=idx(refine)) if (refine[i]<=0 || !is_integer(refine[i])) i],
     slicesOK = [for(i=idx(slices)) if (!is_integer(slices[i]) || slices[i]<0) i],
-    maxsize = list_longest(profiles),
+    maxsize = max_length(profiles),
     methodok = is_list(method) || in_list(method, legal_methods),
     methodlistok = is_list(method) ? [for(i=idx(method)) if (!in_list(method[i], legal_methods)) i] : [],
     method = is_string(method) ? repeat(method, profcount) : method,
@@ -1156,7 +1156,7 @@ module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=
 //   closed = the first and last profile are connected.  Default: false
 function subdivide_and_slice(profiles, slices, numpoints, method="length", closed=false) =
   let(
-    maxsize = list_longest(profiles),
+    maxsize = max_length(profiles),
     numpoints = is_undef(numpoints) ? maxsize :
                 numpoints == "lcm" ? lcmlist([for(p=profiles) len(p)]) :
                 is_num(numpoints) ? round(numpoints) : undef

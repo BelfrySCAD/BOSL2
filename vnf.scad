@@ -407,7 +407,7 @@ function _cleave_connected_region(region) =
 // Usage:
 //   vnf = vnf_from_region(region, [transform], [reverse], [vnf]);
 // Description:
-//   Given a (two-dimensional) region, applies the given transformation matrix to it and makes a triangulated VNF of
+//   Given a (two-dimensional) region, applies the given transformation matrix to it and makes a (three-dimensional) triangulated VNF of
 //   faces for that region, reversed if desired. 
 // Arguments:
 //   region = The region to conver to a vnf.
@@ -529,7 +529,9 @@ function _link_indicator(l,imin,imax) =
 //   vnf2 = vnf_triangulate(vnf);
 // Description:
 //   Triangulates faces in the VNF that have more than 3 vertices.
-// Example:
+// Arguments:
+//   vnf = vnf to triangulate
+// Example(3D):
 //   include <BOSL2/polyhedra.scad>
 //   vnf = zrot(33,regular_polyhedron_info("vnf", "dodecahedron", side=12));
 //   vnf_polyhedron(vnf);
@@ -549,8 +551,12 @@ function vnf_triangulate(vnf) =
 //   sliced = vnf_slice(vnf, dir, cuts);
 // Description:
 //   Slice the faces of a VNF along a specified axis direction at a given list
-//   of cut points.  You can use this to refine the faces of a VNF before applying
+//   of cut points.  The cut points can appear in any order.  You can use this to refine the faces of a VNF before applying
 //   a nonlinear transformation to its vertex set.
+// Arguments:
+//   vnf = vnf to slice
+//   dir = normal direction to the slices, either "X", "Y" or "Z"
+//   cuts = X, Y or Z values where cuts occur
 // Example(3D):
 //   include <BOSL2/polyhedra.scad>
 //   vnf = regular_polyhedron_info("vnf", "dodecahedron", side=12);

@@ -787,7 +787,7 @@ function _path_cut_points(path, dists, closed=false, direction=false) =
     assert(long_enough,len(path)<2 ? "Two points needed to define a path" : "Closed path must include three points")
     is_num(dists) ? _path_cut_points(path, [dists],closed, direction)[0] :
     assert(is_vector(dists))
-    assert(list_increasing(dists), "Cut distances must be an increasing list")
+    assert(is_increasing(dists), "Cut distances must be an increasing list")
     let(cuts = _path_cut_points_recurse(path,dists,closed))
     !direction
        ? cuts
