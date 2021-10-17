@@ -48,7 +48,7 @@ function map(func, list) =
 // Topics: Function Literals, Looping, Filters
 // Usage:
 //   lst = filter(func, list);
-//   lst = filter(function (x) x+1, list);
+//   lst = filter(function (x) x>1, list);
 // Description:
 //   Returns all items in `list` that the function `func` returns true for.
 //   In pseudo-code, this is effectively:
@@ -235,35 +235,72 @@ function for_n(n,init,func) =
     a(init, n[0]);
 
 
+// Function: find_all()
+// Topics: Function Literals, Looping, Filters
+// Usage:
+//   indices = find_all(func, list);
+//   indices = find_all(function (x) x>1, list);
+// Description:
+//   Returns the indices of all items in `list` that the function `func` returns true for.
+//   In pseudo-code, this is effectively:
+//   ```
+//   function find_all(func,list):
+//       out = [];
+//       foreach item in list:
+//           if func(item) is true:
+//               append item index to out;
+//       return out;
+//   ```
+// Arguments:
+//   func = The function of signature `function (x)` to evaluate for each item in `list`.
+//   list = The input list.
+// See Also: find_all(), map(), reduce(), accumulate(), while(), for_n()
+// Example:
+//   func = function(x) x>5;
+//   echo(find_all(func, [3,4,5,6,7]));
+//   // ECHO: [3,4]
+function find_all(func, list) =
+    assert(is_function(func))
+    assert(is_list(list))
+    [for (indexnum=idx(list)) if (func(list[indexnum])) indexnum];
+
+
 // Function: find_first()
 // Topics: Function Literals, Searching
 // Usage:
-//   idx = find_first(val, list, [start=], [func=]);
+//   idx = find_first(func, list, [start=]);
 // Description:
-//   Finds the first item in `list` which, when compared against `val` using the function literal
-//   `func` gets a true result.  By default, `func` just calls `approx()`.  The signature of the
-//   function literal in `func` is `function (val,x)`, and it is expected to return true when the
-//   two values compare as matching.  It should return false otherwise.
-//   If you need to find *all* matching items in the list, you should probably use {{filter()}} instead.
-// See Also: map(), filter(), reduce(), accumulate(), while(), for_n(), binsearch()
+//   Finds the first item in `list`, after index `start`,  which the function literal in `func` will return true for.
+//   The signature of the function literal in `func` is `function (x)`, and it is expected to return true when the
+//   value compares as matching.  It should return false otherwise.  If you need to find *all* matching items in the
+//   list, you should use {{find_all()}} instead.
+// See Also: find_all(), map(), filter(), reduce(), accumulate(), while(), for_n(), binsearch()
 // Arguments:
-//   val = The value to look for.
+//   func = The function literal to use to check each item in `list`.  Expects the signature `function (x)`, and a boolean return value.
 //   list = The list to search.
 //   ---
 //   start = The first item to check.
-//   func = The function literal to use to compare `val` against the items in `list`.  Expects the signature `function (a,b)`, and a boolean return value.  Default: `f_approx()`
-function find_first(val, list, start=0, func=f_approx()) =
+// Example:
+//   data = [8,5,3,7,4,2,9];
+//   echo(find_first(f_lte(4), data));
+//   // ECHO: 2
+// Example:
+//   data = [8,5,3,7,4,2,9];
+//   echo(find_first(f_lte(4), data, start=3));
+//   // ECHO: 4
+function find_first(func, list, start=0) =
+    assert(is_function(func))
     assert(is_list(list))
     assert(is_finite(start))
-    assert(is_function(func))
     let(
-        l = len(list),
-        a = function(i)
-            i >= l? undef :
-            func(val, list[i])? i :
-            a(i+1)
+        listlen = len(list),
+        _find_first = function(indexnum) (
+            indexnum >= listlen? undef :
+            func(list[indexnum])? indexnum :
+            _find_first(indexnum+1)
+        )
     )
-    a(start);
+    _find_first(start);
 
 
 // Function: binsearch()
@@ -287,7 +324,7 @@ function find_first(val, list, start=0, func=f_approx()) =
 //   idx = binsearch(44, items, cmp=function(a,b) a-b);
 // Example:
 //   items = [for (i=[32:126]) [chr(i), i]];
-//   idx = binsearch("G"", items, idx=0);
+//   idx = binsearch("G", items, idx=0);
 function binsearch(key, list, idx, cmp=f_cmp()) =
     let(
         a = function(s,e)
@@ -417,17 +454,17 @@ function hashmap(hashsize=127,items,table) =
 //   f_str = f_1arg(function(a) str(a));
 //   fn_str = f_str();   // = function(a) str(a);
 //   fn_str3 = f_str(3); // = function() str(3);
-function f_1arg(func) =
+function f_1arg(target_func) =
     function(a)
-        a==undef? function(x) func(x) :
-        function() func(a);
+        a==undef? function(x) target_func(x) :
+        function() target_func(a);
 
 
 // Function: f_2arg()
 // Topics: Function Literals, Function Literal Factories
 // See Also: f_1arg(), f_3arg()
 // Usage:
-//   fn = f_2arg(func);
+//   fn = f_2arg(target_func);
 // Description:
 //   Takes a function literal that accepts two arguments, and returns a function
 //   literal factory that can be used to pre-fill out one or both of those arguments
@@ -439,22 +476,44 @@ function f_1arg(func) =
 //   fn_3lt = f_lt(a=3);  // = function(b) 3<b;
 //   fn_lt3 = f_lt(b=3);  // = function(a) a<3;
 //   fn_3lt4 = f_lt(3,4); // = function() 3<4;
-function f_2arg(func) =
+function f_2arg(target_func) =
     function(a,b)
-        a==undef && b==undef? function(x,y) func(x,y) :
-        a==undef? function(x) func(x,b) :
-        b==undef? function(x) func(a,x) :
-        function() func(a,b);
+        a==undef && b==undef? function(x,y) target_func(x,y) :
+        a==undef? function(x) target_func(x,b) :
+        b==undef? function(x) target_func(a,x) :
+        function() target_func(a,b);
+
+
+// Function: f_2arg_simple()
+// Topics: Function Literals, Function Literal Factories
+// See Also: f_1arg(), f_3arg()
+// Usage:
+//   fn = f_2arg_simple(target_func);
+// Description:
+//   Takes a function literal that accepts two arguments, and returns a function
+//   literal factory that can be used to pre-fill out one or both of those arguments
+//   with a constant.  When given a single argument, fills out the segond function
+//   argument with a constant.
+// Example:
+//   f_lt = f_2arg_simple(function(a,b) a<b);
+//   fn_lt = f_lt();       // = function(a,b) a<b;
+//   fn_lt3 = f_lt(3);     // = function(a) a<3;
+//   fn_3lt4 = f_lt(3,4);  // = function() 3<4;
+function f_2arg_simple(target_func) =
+    function(a,b)
+        a==undef && b==undef? function(x,y) target_func(x,y) :
+        b==undef? function(x) target_func(a,x) :
+        function() target_func(a,b);
 
 
 // Function: f_3arg()
 // Topics: Function Literals, Function Literal Factories
 // See Also: f_1arg(), f_2arg()
 // Usage:
-//   fn = f_3arg(func);
+//   fn = f_3arg(target_func);
 // Description:
-//   Takes a function literal that accepts two arguments, and returns a function
-//   literal factory that can be used to pre-fill out one or both of those arguments
+//   Takes a function literal that accepts three arguments, and returns a function
+//   literal factory that can be used to pre-fill out some or all of those arguments
 //   with a constant.
 // Example:
 //   p1 = [10,4]; p2 = [3,7];
@@ -463,16 +522,16 @@ function f_2arg(func) =
 //   fn_va2 = f_lt(c=p1);  // = function(a,b) vector_angle(a,b,p1);
 //   fn_va3 = f_lt(a=p2);  // = function(a,c) vector_angle(a,p2,c);
 //   fn_va4 = f_lt(a=p1,c=p2); // = function() vector_angle(p1,b,p2);
-function f_3arg(func) =
+function f_3arg(target_func) =
     function(a,b,c)
-        a==undef && b==undef && c==undef? function(x,y,z) func(x,y,z) :
-        a==undef && b==undef? function(x,y) func(x,y,c) :
-        a==undef && c==undef? function(x,y) func(x,b,y) :
-        b==undef && c==undef? function(x,y) func(a,x,y) :
-        a==undef? function(x) func(x,b,c) :
-        b==undef? function(x) func(a,x,c) :
-        c==undef? function(x) func(a,b,x) :
-        function() func(a,b,c);
+        a==undef && b==undef && c==undef? function(x,y,z) target_func(x,y,z) :
+        a==undef && b==undef? function(x,y) target_func(x,y,c) :
+        a==undef && c==undef? function(x,y) target_func(x,b,y) :
+        b==undef && c==undef? function(x,y) target_func(a,x,y) :
+        a==undef? function(x) target_func(x,b,c) :
+        b==undef? function(x) target_func(a,x,c) :
+        c==undef? function(x) target_func(a,b,x) :
+        function() target_func(a,b,c);
 
 
 // Function: ival()
@@ -482,13 +541,13 @@ function f_3arg(func) =
 //   Wraps a single-argument function literal so that it can take two arguments,
 //   passing the first argument along to the wrapped function.
 // Arguments:
-//   func = The function of signature (x) to wrap.
+//   target_func = The function of signature (x) to wrap.
 // FunctionLiteral Args:
 //   a = The argument that will be passed through.
 //   b = The argumen that will be discarded.
 // Example:
 //   x = while(0, ival(f_lt(5)), xval(fngen_add(1)));
-function ival(func) = function(a,b) func(a);
+function ival(target_func) = function(a,b) func(a);
 
 
 // Function: xval()
@@ -498,13 +557,13 @@ function ival(func) = function(a,b) func(a);
 //   Wraps a single-argument function literal so that it can take two arguments,
 //   passing the first argument along to the wrapped function.
 // Arguments:
-//   func = The function of signature (x) to wrap.
+//   target_func = The function of signature (x) to wrap.
 // FunctionLiteral Args:
 //   a = The argument that will be passed through.
 //   b = The argumen that will be discarded.
 // Example:
 //   x = while(0, ival(f_lt(5)), xval(fngen_add(1)));
-function xval(func) = function(a,b) func(b);
+function xval(target_func) = function(a,b) func(b);
 
 
 
@@ -515,179 +574,137 @@ function xval(func) = function(a,b) func(b);
 // Function: f_cmp()
 // Usage:
 //   fn = f_cmp();
-//   fn = f_cmp(a=);
-//   fn = f_cmp(b=);
-//   fn = f_cmp(a=,b=);
+//   fn = f_cmp(b);
+//   fn = f_cmp(a,b);
 // Description:
-//   A factory that generates function literals based on `a > b`, where either
-//   or both of the `a` or `b` arguments can be replaced with constants.
-// Arguments:
-//   a = If given, replaces the first argument.
-//   b = If given, replaces the second argument.
+//   A factory that generates function literals that compare `a` and `b`, where one or
+//   both arguments can be replaced with constants.  If `a` and `b` are equal, the function
+//   literal will return 0.  If a<b then -1 is returned.  If a>b then 1 is returned.
 // Example:
-//   fn_cmp = f_cmp();     // = function(a,b) a==b?0: a>b?1: -1;
+//   fn_cmp = f_cmp();       // = function(a,b) a==b?0: a>b?1: -1;
 //   fn_cmp3 = f_cmp(3);     // = function(a) a==3?0: a>3?1: -1;
-//   fn_3cmp = f_cmp(a=3);     // = function(b) 3==b?0: 3>b?1: -1;
-//   fn_3cmp4 = f_cmp(a=3,b=4);  // = function() 3==4?0: 3>4?1: -1;
-function f_cmp(a,b) = f_2arg(function (a,b) a==b?0: a>b?1: -1)(a,b);
+//   fn_3cmp4 = f_cmp(3,4);  // = function() 3==4?0: 3>4?1: -1;
+function f_cmp(a,b) = f_2arg_simple(function (a,b) a==b?0: a>b?1: -1)(a,b);
 
 
 // Function: f_gt()
 // Usage:
 //   fn = f_gt();
-//   fn = f_gt(a=);
-//   fn = f_gt(b=);
-//   fn = f_gt(a=,b=);
+//   fn = f_gt(b);
+//   fn = f_gt(a,b);
 // Description:
-//   A factory that generates function literals based on `a > b`, where either
-//   or both of the `a` or `b` arguments can be replaced with constants.
-// Arguments:
-//   a = If given, replaces the first argument.
-//   b = If given, replaces the second argument.
+//   A factory that generates function literals based on `a > b`, where one
+//   or both of the arguments can be replaced with constants.
 // Example:
-//   fn_gt = f_gt();     // = function(a,b) a>b;
+//   fn_gt = f_gt();       // = function(a,b) a>b;
 //   fn_gt3 = f_gt(3);     // = function(a) a>3;
-//   fn_3gt = f_gt(a=3);     // = function(b) 3>b;
-//   fn_3gt4 = f_gt(a=3,b=4);  // = function() 3>4;
-function f_gt(a,b) = f_2arg(function (a,b) a>b)(a,b);
+//   fn_3gt4 = f_gt(3,4);  // = function() 3>4;
+function f_gt(a,b) = f_2arg_simple(function (a,b) a>b)(a,b);
 
 
 // Function: f_lt()
 // Usage:
 //   fn = f_lt();
-//   fn = f_lt(a=);
-//   fn = f_lt(b=);
-//   fn = f_lt(a=,b=);
+//   fn = f_lt(b);
+//   fn = f_lt(a,b);
 // Description:
-//   A factory that generates function literals based on `a < b`, where either
-//   or both of the `a` or `b` arguments can be replaced with constants.
-// Arguments:
-//   a = If given, replaces the first argument.
-//   b = If given, replaces the second argument.
+//   A factory that generates function literals based on `a < b`, where one
+//   or both of the arguments can be replaced with constants.
 // Example:
-//   fn_lt = f_lt();     // = function(a,b) a<b;
+//   fn_lt = f_lt();       // = function(a,b) a<b;
 //   fn_lt3 = f_lt(3);     // = function(a) a<3;
-//   fn_3lt = f_lt(a=3);     // = function(b) 3<b;
-//   fn_3lt4 = f_lt(a=3,b=4);  // = function() 3<4;
-function f_lt(a,b) = f_2arg(function (a,b) a<b)(a,b);
+//   fn_3lt4 = f_lt(3,4);  // = function() 3<4;
+function f_lt(a,b) = f_2arg_simple(function (a,b) a<b)(a,b);
 
 
 // Function: f_gte()
 // Usage:
 //   fn = f_gte();
-//   fn = f_gte(a=);
-//   fn = f_gte(b=);
-//   fn = f_gte(a=,b=);
+//   fn = f_gte(b);
+//   fn = f_gte(a,b);
 // Description:
-//   A factory that generates function literals based on `a >= b`, where either
-//   or both of the `a` or `b` arguments can be replaced with constants.
-// Arguments:
-//   a = If given, replaces the first argument.
-//   b = If given, replaces the second argument.
+//   A factory that generates function literals based on `a >= b`, where one
+//   or both of the arguments can be replaced with constants.
 // Example:
-//   fn_gte = f_gte();     // = function(a,b) a>=b;
+//   fn_gte = f_gte();       // = function(a,b) a>=b;
 //   fn_gte3 = f_gte(3);     // = function(a) a>=3;
-//   fn_3gte = f_gte(a=3);     // = function(b) 3>=b;
-//   fn_3gte4 = f_gte(a=3,b=4);  // = function() 3>=4;
-function f_gte(a,b) = f_2arg(function (a,b) a>=b)(a,b);
+//   fn_3gte4 = f_gte(3,4);  // = function() 3>=4;
+function f_gte(a,b) = f_2arg_simple(function (a,b) a>=b)(a,b);
 
 
 // Function: f_lte()
 // Usage:
 //   fn = f_lte();
-//   fn = f_lte(a=);
-//   fn = f_lte(b=);
-//   fn = f_lte(a=,b=);
+//   fn = f_lte(b);
+//   fn = f_lte(a,b);
 // Description:
-//   A factory that generates function literals based on `a <= b`, where either
-//   or both of the `a` or `b` arguments can be replaced with constants.
-// Arguments:
-//   a = If given, replaces the first argument.
-//   b = If given, replaces the second argument.
+//   A factory that generates function literals based on `a <= b`, where
+//   one or both arguments can be replaced with constants.
 // Example:
-//   fn_lte = f_lte();     // = function(a,b) a<=b;
+//   fn_lte = f_lte();       // = function(a,b) a<=b;
 //   fn_lte3 = f_lte(3);     // = function(a) a<=3;
-//   fn_3lte = f_lte(a=3);     // = function(b) 3<=b;
-//   fn_3lte4 = f_lte(a=3,b=4);  // = function() 3<=4;
-function f_lte(a,b) = f_2arg(function (a,b) a<=b)(a,b);
+//   fn_3lte4 = f_lte(3,4);  // = function() 3<=4;
+function f_lte(a,b) = f_2arg_simple(function (a,b) a<=b)(a,b);
 
 
 // Function: f_eq()
 // Usage:
 //   fn = f_eq();
-//   fn = f_eq(a=);
-//   fn = f_eq(b=);
-//   fn = f_eq(a=,b=);
+//   fn = f_eq(b);
+//   fn = f_eq(a,b);
 // Description:
-//   A factory that generates function literals based on `a == b`, where either
-//   or both of the `a` or `b` arguments can be replaced with constants.
-// Arguments:
-//   a = If given, replaces the first argument.
-//   b = If given, replaces the second argument.
+//   A factory that generates function literals based on `a == b`, where
+//   one or both arguments can be replaced with constants.
 // Example:
 //   fn_eq = f_eq();       // = function(a,b) a==b;
-//   fn_eq3 = f_eq(3);       // = function(a) a==3;
-//   fn_3eq4 = f_eq(a=3,b=4);  // = function() 3==4;
-function f_eq(a,b) = f_2arg(function (a,b) a==b)(a,b);
+//   fn_eq3 = f_eq(3);     // = function(a) a==3;
+//   fn_3eq4 = f_eq(3,4);  // = function() 3==4;
+function f_eq(a,b) = f_2arg_simple(function (a,b) a==b)(a,b);
 
 
 // Function: f_neq()
 // Usage:
 //   fn = f_neq();
-//   fn = f_neq(a=);
-//   fn = f_neq(b=);
-//   fn = f_neq(a=,b=);
+//   fn = f_neq(b);
+//   fn = f_neq(a,b);
 // Description:
-//   A factory that generates function literals based on `a != b`, where either
-//   or both of the `a` or `b` arguments can be replaced with constants.
-// Arguments:
-//   a = If given, replaces the first argument.
-//   b = If given, replaces the second argument.
+//   A factory that generates function literals based on `a != b`, where
+//   one or both arguments can be replaced with constants.
 // Example:
 //   fn_neq = f_neq();       // = function(a,b) a!=b;
-//   fn_neq3 = f_neq(3);       // = function(a) a!=3;
-//   fn_3neq4 = f_neq(a=3,b=4);  // = function() 3!=4;
-function f_neq(a,b) = f_2arg(function (a,b) a!=b)(a,b);
+//   fn_neq3 = f_neq(3);     // = function(a) a!=3;
+//   fn_3neq4 = f_neq(3,4);  // = function() 3!=4;
+function f_neq(a,b) = f_2arg_simple(function (a,b) a!=b)(a,b);
 
 
 // Function: f_approx()
 // Usage:
 //   fn = f_approx();
-//   fn = f_approx(a=);
-//   fn = f_approx(b=);
-//   fn = f_approx(a=,b=);
+//   fn = f_approx(b);
+//   fn = f_approx(a,b);
 // Description:
 //   A factory that generates function literals based on `approx(a,b)`, where
-//   either or both of the `a` or `b` arguments can be replaced with constants.
-// Arguments:
-//   a = If given, replaces the first argument.
-//   b = If given, replaces the second argument.
+//   one or both arguments can be replaced with constants.
 // Example:
-//   fn_approx = f_approx();     // = function(a,b) approx(a,b);
+//   fn_approx = f_approx();       // = function(a,b) approx(a,b);
 //   fn_approx3 = f_approx(3);     // = function(a) approx(a,3);
-//   fn_3approx = f_approx(a=3);     // = function(b) approx(3,b);
-//   fn_3approx4 = f_approx(a=3,b=4);  // = function() approx(3,4);
-function f_approx(a,b) = f_2arg(function (a,b) approx(a,b))(a,b);
+//   fn_3approx4 = f_approx(3,4);  // = function() approx(3,4);
+function f_approx(a,b) = f_2arg_simple(function (a,b) approx(a,b))(a,b);
 
 
 // Function: f_napprox()
 // Usage:
 //   fn = f_napprox();
-//   fn = f_napprox(a=);
-//   fn = f_napprox(b=);
-//   fn = f_napprox(a=,b=);
+//   fn = f_napprox(b);
+//   fn = f_napprox(a,b);
 // Description:
-//   A factory that generates function literals based on `napprox(a,b)`, where
-//   either or both of the `a` or `b` arguments can be replaced with constants.
-// Arguments:
-//   a = If given, replaces the first argument.
-//   b = If given, replaces the second argument.
+//   A factory that generates function literals based on `!approx(a,b)`, where
+//   one or both arguments can be replaced with constants.
 // Example:
-//   fn_napprox = f_napprox();     // = function(a,b) napprox(a,b);
+//   fn_napprox = f_napprox();       // = function(a,b) napprox(a,b);
 //   fn_napprox3 = f_napprox(3);     // = function(a) napprox(a,3);
-//   fn_3napprox = f_napprox(a=3);     // = function(b) napprox(3,b);
-//   fn_3napprox4 = f_napprox(a=3,b=4);  // = function() napprox(3,4);
-function f_napprox(a,b) = f_2arg(function (a,b) !approx(a,b))(a,b);
+//   fn_3napprox4 = f_napprox(3,4);  // = function() napprox(3,4);
+function f_napprox(a,b) = f_2arg_simple(function (a,b) !approx(a,b))(a,b);
 
 
 
