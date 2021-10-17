@@ -502,7 +502,7 @@ function f_2arg(target_func) =
 function f_2arg_simple(target_func) =
     function(a,b)
         a==undef && b==undef? function(x,y) target_func(x,y) :
-        b==undef? function(x) target_func(a,x) :
+        b==undef? function(x) target_func(x,a) :
         function() target_func(a,b);
 
 
@@ -547,7 +547,7 @@ function f_3arg(target_func) =
 //   b = The argumen that will be discarded.
 // Example:
 //   x = while(0, ival(f_lt(5)), xval(fngen_add(1)));
-function ival(target_func) = function(a,b) func(a);
+function ival(target_func) = function(a,b) target_func(a);
 
 
 // Function: xval()
@@ -563,7 +563,7 @@ function ival(target_func) = function(a,b) func(a);
 //   b = The argumen that will be discarded.
 // Example:
 //   x = while(0, ival(f_lt(5)), xval(fngen_add(1)));
-function xval(target_func) = function(a,b) func(b);
+function xval(target_func) = function(a,b) target_func(b);
 
 
 
