@@ -1124,7 +1124,7 @@ function is_patch(x) =
 
 // Function: bezier_patch()
 // Usage:
-//   vnf = bezier_patch(patch, [splinesteps], [vnf=], [style=]);
+//   vnf = bezier_patch(patch, [splinesteps], [style=]);
 // Topics: Bezier Patches
 // See Also: bezier_points(), bezier_curve(), bezier_path(), bezier_patch_points(), bezier_triangle_point()
 // Description:
@@ -1137,7 +1137,6 @@ function is_patch(x) =
 //   patch = The rectangular or triangular array of endpoints and control points for this bezier patch.
 //   splinesteps = Number of steps to divide each bezier segment into.  For rectangular patches you can specify [XSTEPS,YSTEPS].  Default: 16
 //   ---
-//   vnf = Vertices'n'Faces [VNF structure](vnf.scad) to add new vertices and faces to.  Default: empty VNF
 //   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".
 // Example(3D):
 //   patch = [
@@ -1223,7 +1222,7 @@ function is_patch(x) =
 //       )
 //   ];
 //   vnf_polyhedron(concat(edges,corners,faces));
-function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF, style="default") =
+function bezier_patch(patch, splinesteps=16, style="default") =
     assert(is_num(splinesteps) || is_vector(splinesteps,2))
     assert(all_positive(splinesteps))
     is_tripatch(patch)? _bezier_triangle(patch, splinesteps=splinesteps, vnf=vnf) :
@@ -1238,7 +1237,7 @@ function bezier_patch(patch, splinesteps=16, vnf=EMPTY_VNF, style="default") =
             1-step/splinesteps.y
         ],
         pts = bezier_patch_points(patch, uvals, vvals),
-        vnf = vnf_vertex_array(pts, style=style, vnf=vnf, reverse=false)
+        vnf = vnf_vertex_array(pts, style=style, reverse=false)
     ) vnf;
 
 
@@ -1507,7 +1506,7 @@ function patch_reverse(patch) =
 
 // Function: bezier_surface()
 // Usage:
-//   vnf = bezier_surface(patches, [splinesteps], [vnf=], [style=]);
+//   vnf = bezier_surface(patches, [splinesteps], [style]);
 // Topics: Bezier Patches
 // See Also: bezier_patch_points(), bezier_patch_flat()
 // Description:
@@ -1520,8 +1519,6 @@ function patch_reverse(patch) =
 // Arguments:
 //   patches = A list of triangular and/or rectangular bezier patches.
 //   splinesteps = Number of steps to divide each bezier segment into.  Default: 16
-//   ---
-//   vnf = Vertices'n'Faces [VNF structure](vnf.scad) to add new vertices and faces to.  Default: empty VNF
 //   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", and "quincunx".
 // Example(3D):
 //   patch1 = [
@@ -1538,13 +1535,8 @@ function patch_reverse(patch) =
 //   ];
 //   vnf = bezier_surface(patches=[patch1, patch2], splinesteps=16);
 //   polyhedron(points=vnf[0], faces=vnf[1]);
-function bezier_surface(patches=[], splinesteps=16, vnf=EMPTY_VNF, style="default", i=0) =
-    let(
-        vnf = (i >= len(patches))? vnf :
-            bezier_patch(patches[i], splinesteps=splinesteps, vnf=vnf, style=style)
-    ) (i >= len(patches))? vnf :
-    bezier_surface(patches=patches, splinesteps=splinesteps, vnf=vnf, style=style, i=i+1);
-
+function bezier_surface(patches=[], splinesteps=16, style="default") =
+    vnf_merge([for(patch=patches) bezier_patch(patch, splinesteps=splinesteps, style=style)]);
 
 
 // Module: trace_bezier_patches()
