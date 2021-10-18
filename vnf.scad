@@ -16,17 +16,17 @@
 //   You can construct a `polyhedron()` in parts by describing each part in a self-contained VNF, then
 //   merge the various VNFs to get the completed polyhedron vertex list and faces.
 
-// Constant: EMPTY_VNF
-// Description:
-//   The empty VNF data structure.  Equal to `[[],[]]`.  
+/// Constant: EMPTY_VNF
+/// Description:
+///   The empty VNF data structure.  Equal to `[[],[]]`.  
 EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 
 
 // Function: vnf_vertex_array()
 // Usage:
-//   vnf = vnf_vertex_array(points, [caps], [cap1], [cap2], [style], [reverse], [col_wrap], [row_wrap], [vnf]);
+//   vnf = vnf_vertex_array(points, [caps], [cap1], [cap2], [style], [reverse], [col_wrap], [row_wrap]);
 // Description:
-//   Creates a VNF structure from a vertex list, by dividing the vertices into columns and rows,
+//   Creates a VNF structure from a rectangular vertex list, by dividing the vertices into columns and rows,
 //   adding faces to tile the surface.  You can optionally have faces added to wrap the last column
 //   back to the first column, or wrap the last row to the first.  Endcaps can be added to either
 //   the first and/or last rows.  The style parameter determines how the quadrilaterals are divided into
@@ -34,17 +34,18 @@ EMPTY_VNF = [[],[]];  // The standard empty VNF with no vertices or faces.
 //   is the uniform subdivision in the other (alternate) direction.  The "min_edge" style picks the shorter edge to
 //   subdivide for each quadrilateral, so the division may not be uniform across the shape.  The "quincunx" style
 //   adds a vertex in the center of each quadrilateral and creates four triangles, and the "convex" and "concave" styles
-//   chooses the locally convex/concave subdivision.  
+//   chooses the locally convex/concave subdivision.  Degenerate faces
+//   are not included in the output, but if this results in unused vertices they will still appear in the output.  
 // Arguments:
 //   points = A list of vertices to divide into columns and rows.
+//   ---
 //   caps = If true, add endcap faces to the first AND last rows.
 //   cap1 = If true, add an endcap face to the first row.
 //   cap2 = If true, add an endcap face to the last row.
 //   col_wrap = If true, add faces to connect the last column to the first.
 //   row_wrap = If true, add faces to connect the last row to the first.
 //   reverse = If true, reverse all face normals.
-//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "min_edge", "quincunx","convex" and "concave".
-//   vnf = If given, add all the vertices and faces to this existing VNF structure.
+//   style = The style of subdividing the quads into faces.  Valid options are "default", "alt", "min_edge", "quincunx", "convex" and "concave".
 // Example(3D):
 //   vnf = vnf_vertex_array(
 //       points=[
@@ -104,12 +105,12 @@ function vnf_vertex_array(
     col_wrap=false,
     row_wrap=false,
     reverse=false,
-    style="default",
-    vnf=EMPTY_VNF
+    style="default"
 ) = 
     assert(!(any([caps,cap1,cap2]) && !col_wrap), "col_wrap must be true if caps are requested")
     assert(!(any([caps,cap1,cap2]) && row_wrap), "Cannot combine caps with row_wrap")
     assert(in_list(style,["default","alt","quincunx", "convex","concave", "min_edge"]))
+    assert(is_matrix(points[0], n=3),"Point array has the wrong shape or points are not 3d")
     assert(is_consistent(points), "Non-rectangular or invalid point array")
     let(
         pts = flatten(points),
@@ -117,7 +118,7 @@ function vnf_vertex_array(
         rows = len(points),
         cols = len(points[0])
     )
-    rows<=1 || cols<=1 ? vnf :
+    rows<=1 || cols<=1 ? EMPTY_VNF :
     let(
         cap1 = first_defined([cap1,caps,false]),
         cap2 = first_defined([cap2,caps,false]),
@@ -134,66 +135,61 @@ function vnf_vertex_array(
                        i4 = ((r+0)%rows)*cols + ((c+1)%cols)
                    )
                    mean([pts[i1], pts[i2], pts[i3], pts[i4]])
+        ],
+        allfaces = [
+            if (cap1) count(cols,reverse=!reverse),
+            if (cap2) count(cols,(rows-1)*cols, reverse=reverse),
+            for (r = [0:1:rowcnt-1], c=[0:1:colcnt-1])
+               each
+               let(
+                   i1 = ((r+0)%rows)*cols + ((c+0)%cols),
+                   i2 = ((r+1)%rows)*cols + ((c+0)%cols),
+                   i3 = ((r+1)%rows)*cols + ((c+1)%cols),
+                   i4 = ((r+0)%rows)*cols + ((c+1)%cols),
+                   faces =
+                        style=="quincunx"? 
+                          let(i5 = pcnt + r*colcnt + c)
+                          [[i1,i5,i2],[i2,i5,i3],[i3,i5,i4],[i4,i5,i1]]
+                      : style=="alt"? 
+                          [[i1,i4,i2],[i2,i4,i3]]
+                      : style=="min_edge"?
+                          let(
+                               d42=norm(pts[i4]-pts[i2]),
+                               d13=norm(pts[i1]-pts[i3]),
+                               shortedge = d42<=d13 ? [[i1,i4,i2],[i2,i4,i3]]
+                                                    : [[i1,i3,i2],[i1,i4,i3]]
+                          )
+                          shortedge
+                      : style=="convex"?  
+                          let(   // Find normal for 3 of the points.  Is the other point above or below?
+                              n = (reverse?-1:1)*cross(pts[i2]-pts[i1],pts[i3]-pts[i1]),
+                              convexfaces = n==0 ? [[i1,i4,i3]]
+                                          : n*pts[i4] > n*pts[i1] ? [[i1,i4,i2],[i2,i4,i3]]
+                                                                  : [[i1,i3,i2],[i1,i4,i3]]
+                          )
+                          convexfaces
+                      : style=="concave"?  
+                          let(   // Find normal for 3 of the points.  Is the other point above or below?
+                              n = (reverse?-1:1)*cross(pts[i2]-pts[i1],pts[i3]-pts[i1]),
+                              concavefaces = n==0 ? [[i1,i4,i3]]
+                                          : n*pts[i4] <= n*pts[i1] ? [[i1,i4,i2],[i2,i4,i3]]
+                                                                  : [[i1,i3,i2],[i1,i4,i3]]
+                          )
+                          concavefaces
+                      : [[i1,i3,i2],[i1,i4,i3]],
+                   // remove degenerate faces 
+                   culled_faces= [for(face=faces)
+                       if (norm(verts[face[0]]-verts[face[1]])>EPSILON &&
+                           norm(verts[face[1]]-verts[face[2]])>EPSILON && 
+                           norm(verts[face[2]]-verts[face[0]])>EPSILON) 
+                           face
+                   ],
+                   rfaces = reverse? [for (face=culled_faces) reverse(face)] : culled_faces
+               )
+               rfaces,
         ]
     )
-    vnf_merge(cleanup=false, [
-        vnf,
-        [
-              verts,
-              [
-               for (r = [0:1:rowcnt-1], c=[0:1:colcnt-1])
-                 each
-                   let(
-                       i1 = ((r+0)%rows)*cols + ((c+0)%cols),
-                       i2 = ((r+1)%rows)*cols + ((c+0)%cols),
-                       i3 = ((r+1)%rows)*cols + ((c+1)%cols),
-                       i4 = ((r+0)%rows)*cols + ((c+1)%cols),
-                       faces =
-                            style=="quincunx"? 
-                              let(i5 = pcnt + r*colcnt + c)
-                              [[i1,i5,i2],[i2,i5,i3],[i3,i5,i4],[i4,i5,i1]]
-                          : style=="alt"? 
-                              [[i1,i4,i2],[i2,i4,i3]]
-                          : style=="min_edge"?
-                              let(
-                                   d42=norm(pts[i4]-pts[i2]),
-                                   d13=norm(pts[i1]-pts[i3]),
-                                   shortedge = d42<=d13 ? [[i1,i4,i2],[i2,i4,i3]]
-                                                        : [[i1,i3,i2],[i1,i4,i3]]
-                              )
-                              shortedge
-                          : style=="convex"?  
-                              let(   // Find normal for 3 of the points.  Is the other point above or below?
-                                  n = (reverse?-1:1)*cross(pts[i2]-pts[i1],pts[i3]-pts[i1]),
-                                  convexfaces = n==0 ? [[i1,i4,i3]]
-                                              : n*pts[i4] > n*pts[i1] ? [[i1,i4,i2],[i2,i4,i3]]
-                                                                      : [[i1,i3,i2],[i1,i4,i3]]
-                              )
-                              convexfaces
-                          : style=="concave"?  
-                              let(   // Find normal for 3 of the points.  Is the other point above or below?
-                                  n = (reverse?-1:1)*cross(pts[i2]-pts[i1],pts[i3]-pts[i1]),
-                                  concavefaces = n==0 ? [[i1,i4,i3]]
-                                              : n*pts[i4] <= n*pts[i1] ? [[i1,i4,i2],[i2,i4,i3]]
-                                                                      : [[i1,i3,i2],[i1,i4,i3]]
-                              )
-                              concavefaces
-                          : [[i1,i3,i2],[i1,i4,i3]],
-                       // remove degenerate faces 
-                       culled_faces= [for(face=faces)
-                           if (norm(verts[face[0]]-verts[face[1]])>EPSILON &&
-                               norm(verts[face[1]]-verts[face[2]])>EPSILON && 
-                               norm(verts[face[2]]-verts[face[0]])>EPSILON) 
-                               face
-                       ],
-                       rfaces = reverse? [for (face=culled_faces) reverse(face)] : culled_faces
-                   )
-                   rfaces,
-                if (cap1) count(cols,reverse=!reverse),
-                if (cap2) count(cols,(rows-1)*cols, reverse=reverse)
-              ] 
-        ]
-    ]);
+    [verts,allfaces];
 
 
 // Function: vnf_tri_array()
@@ -202,7 +198,8 @@ function vnf_vertex_array(
 // Description:
 //   Produces a vnf from an array of points where each row length can differ from the adjacent rows by up to 2 in length.  This enables
 //   the construction of triangular VNF patches.  The resulting VNF can be wrapped along the rows by setting `row_wrap` to true.
-//   You cannot wrap columns: if you need to do that you'll need to combine two VNF arrays that share edges.  
+//   You cannot wrap columns: if you need to do that you'll need to merge two VNF arrays that share edges.  Degenerate faces
+//   are not included in the output, but if this results in unused vertices they will still appear in the output.  
 // Arguments:
 //   points = List of point lists for each row
 //   row_wrap = If true then add faces connecting the first row and last row.  These rows must differ by at most 2 in length.
@@ -217,18 +214,18 @@ function vnf_vertex_array(
 //   vnf = vnf_tri_array(pts);
 //   vnf_wireframe(vnf,width=0.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
-// Example(3D): Chaining two VNFs to construct a cone with one point length change between rows.
+// Example(3D): Merging two VNFs to construct a cone with one point length change between rows.
 //   pts1 = [for(z=[0:10]) path3d(arc(3+z,r=z/2+1, angle=[0,180]),10-z)];
 //   pts2 = [for(z=[0:10]) path3d(arc(3+z,r=z/2+1, angle=[180,360]),10-z)];
-//   vnf = vnf_tri_array(pts1,
-//                       vnf=vnf_tri_array(pts2));
+//   vnf = vnf_merge([vnf_tri_array(pts1),
+//                     vnf_tri_array(pts2)]);
 //   color("green")vnf_wireframe(vnf,width=0.1);
 //   vnf_polyhedron(vnf);
 // Example(3D): Cone with length change two between rows
 //   pts1 = [for(z=[0:1:10]) path3d(arc(3+2*z,r=z/2+1, angle=[0,180]),10-z)];
 //   pts2 = [for(z=[0:1:10]) path3d(arc(3+2*z,r=z/2+1, angle=[180,360]),10-z)];
-//   vnf = vnf_tri_array(pts1,
-//                       vnf=vnf_tri_array(pts2));
+//   vnf = vnf_merge([vnf_tri_array(pts1),
+//                    vnf_tri_array(pts2)]);
 //   color("green")vnf_wireframe(vnf,width=0.1);
 //   vnf_polyhedron(vnf);
 // Example(3D,NoAxes): Point count can change irregularly
@@ -237,8 +234,8 @@ function vnf_vertex_array(
 //   vnf = vnf_tri_array(pts);
 //   vnf_wireframe(vnf,width=0.1);
 //   color("red")move_copies(flatten(pts)) sphere(r=.15,$fn=9);
-function vnf_tri_array(points, row_wrap=false, reverse=false, vnf=EMPTY_VNF) = 
-   let(
+function vnf_tri_array(points, row_wrap=false, reverse=false) = 
+    let(
        lens = [for(row=points) len(row)],
        rowstarts = [0,each cumsum(lens)],
        faces =
@@ -273,8 +270,17 @@ function vnf_tri_array(points, row_wrap=false, reverse=false, vnf=EMPTY_VNF) =
                for(j=[count:1:select(lens,i+1)]) reverse ? [ j+nextrow-1, j+rowstart+1, j+rowstart]: [ j+nextrow-1, j+rowstart, j+rowstart+1],
               ] :
             assert(false,str("Unsupported row length difference of ",delta, " between row ",i," and ",(i+1)%len(points)))
-        ])
-    vnf_merge(cleanup=true, [vnf, [flatten(points), faces]]);
+          ],
+       verts = flatten(points),
+       culled_faces=
+           [for(face=faces)
+               if (norm(verts[face[0]]-verts[face[1]])>EPSILON &&
+                   norm(verts[face[1]]-verts[face[2]])>EPSILON && 
+                   norm(verts[face[2]]-verts[face[0]])>EPSILON) 
+                   face
+           ]
+    )
+    [flatten(points), culled_faces];
 
 
 
@@ -292,7 +298,9 @@ function vnf_tri_array(points, row_wrap=false, reverse=false, vnf=EMPTY_VNF) =
 //   eps = the tolerance in finding duplicates when cleanup=true. Default: EPSILON
 function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
     is_vnf(vnfs) ? vnf_merge([vnfs], cleanup, eps) :
-    assert( is_vnf_list(vnfs) , "Improper vnf or vnf list")  
+    assert( is_vnf_list(vnfs) , "Improper vnf or vnf list")
+    len(vnfs)==1 ? (cleanup ? _vnf_cleanup(vnfs[0][0],vnfs[0][1],eps) : vnfs[0])
+    :
     let (
         offs  = cumsum([ 0, for (vnf = vnfs) len(vnf[0]) ]),
         verts = [for (vnf=vnfs) each vnf[0]],
@@ -307,7 +315,11 @@ function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
                             offs[i] + j ]
             ]
     )
-    ! cleanup ? [verts, faces] :
+    cleanup? _vnf_cleanup(verts,faces,eps) : [verts,faces];
+
+
+
+function _vnf_cleanup(verts,faces,eps) = 
     let(
         dedup  = vector_search(verts,eps,verts),                 // collect vertex duplicates
         map    = [for(i=idx(verts)) min(dedup[i]) ],             // remap duplic vertices
@@ -405,7 +417,7 @@ function _cleave_connected_region(region) =
 
 // Function: vnf_from_region()
 // Usage:
-//   vnf = vnf_from_region(region, [transform], [reverse], [vnf]);
+//   vnf = vnf_from_region(region, [transform], [reverse]);
 // Description:
 //   Given a (two-dimensional) region, applies the given transformation matrix to it and makes a (three-dimensional) triangulated VNF of
 //   faces for that region, reversed if desired. 
@@ -413,7 +425,6 @@ function _cleave_connected_region(region) =
 //   region = The region to conver to a vnf.
 //   transform = If given, a transformation matrix to apply to the faces generated from the region.  Default: No transformation applied.
 //   reverse = If true, reverse the normals of the faces generated from the region.  An untransformed region will have face normals pointing `UP`.  Default: false
-//   vnf = If given, the faces are added to this VNF.  Default: `EMPTY_VNF`
 // Example(3D):
 //   region = [square([20,10],center=true),
 //             right(5,square(4,center=true)),
@@ -422,11 +433,10 @@ function _cleave_connected_region(region) =
 //   color("gray")down(.125)
 //        linear_extrude(height=.125)region(region);
 //   vnf_wireframe(vnf,width=.25);
-function vnf_from_region(region, transform, reverse=false, vnf=EMPTY_VNF) =
+function vnf_from_region(region, transform, reverse=false) =
     let (
         regions = region_parts(force_region(region)),
         vnfs = [
-            if (vnf != EMPTY_VNF) vnf,
             for (rgn = regions) let(
                 cleaved = path3d(_cleave_connected_region(rgn)),
                 face = is_undef(transform)? cleaved : apply(transform,cleaved),
@@ -684,11 +694,11 @@ module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin"
 
 // Module: vnf_wireframe()
 // Usage:
-//   vnf_wireframe(vnf, <r|d>);
+//   vnf_wireframe(vnf, [width]);
 // Description:
 //   Given a VNF, creates a wire frame ball-and-stick model of the polyhedron with a cylinder for
 //   each edge and a sphere at each vertex.  The width parameter specifies the width of the sticks
-//   that form the wire frame. 
+//   that form the wire frame and the diameter of the balls.  
 // Arguments:
 //   vnf = A vnf structure
 //   width = width of the cylinders forming the wire frame.  Default: 1
@@ -930,6 +940,7 @@ function _triangulate_planar_convex_polygons(polys) =
 // Arguments:
 //   vnf = The original VNF to bend.
 //   r = If given, the radius where the size of the original shape is the same as in the original.
+//   ---
 //   d = If given, the diameter where the size of the original shape is the same as in the original.
 //   axis = The axis to wrap around.  "X", "Y", or "Z".  Default: "Z"
 // Example(3D):
