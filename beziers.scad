@@ -1157,7 +1157,7 @@ function is_patch(x) =
 //   ];
 //   vnf = bezier_patch(tri, splinesteps=16);
 //   vnf_polyhedron(vnf);
-// Example(3D,FlatSpin,VPD=444): Chaining Patches
+// Example(3D,FlatSpin,VPD=444): Merging multiple patches
 //   patch = [
 //       // u=0,v=0                                u=1,v=0
 //       [[0,  0,0], [33,  0,  0], [67,  0,  0], [100,  0,0]],
@@ -1166,13 +1166,15 @@ function is_patch(x) =
 //       [[0,100,0], [33,100,  0], [67,100,  0], [100,100,0]],
 //       // u=0,v=1                                u=1,v=1
 //   ];
-//   vnf1 = bezier_patch(translate(p=patch,[-50,-50,50]));
-//   vnf2 = bezier_patch(vnf=vnf1, rot(a=[90,0,0],p=translate(p=patch,[-50,-50,50])));
-//   vnf3 = bezier_patch(vnf=vnf2, rot(a=[-90,0,0],p=translate(p=patch,[-50,-50,50])));
-//   vnf4 = bezier_patch(vnf=vnf3, rot(a=[180,0,0],p=translate(p=patch,[-50,-50,50])));
-//   vnf5 = bezier_patch(vnf=vnf4, rot(a=[0,90,0],p=translate(p=patch,[-50,-50,50])));
-//   vnf6 = bezier_patch(vnf=vnf5, rot(a=[0,-90,0],p=translate(p=patch,[-50,-50,50])));
-//   vnf_polyhedron(vnf6);
+//   tpatch = translate([-50,-50,50], patch);
+//   vnf = vnf_merge([
+//                     bezier_patch(tpatch),
+//                     bezier_patch(xrot(90, tpatch)),
+//                     bezier_patch(xrot(-90, tpatch)),
+//                     bezier_patch(xrot(180, tpatch)),
+//                     bezier_patch(yrot(90, tpatch)),
+//                     bezier_patch(yrot(-90, tpatch))]);
+//   vnf_polyhedron(vnf);
 // Example(3D): Connecting Patches with Asymmetric Splinesteps
 //   steps = 8;
 //   edge_patch = [
@@ -1225,7 +1227,7 @@ function is_patch(x) =
 function bezier_patch(patch, splinesteps=16, style="default") =
     assert(is_num(splinesteps) || is_vector(splinesteps,2))
     assert(all_positive(splinesteps))
-    is_tripatch(patch)? _bezier_triangle(patch, splinesteps=splinesteps, vnf=vnf) :
+    is_tripatch(patch)? _bezier_triangle(patch, splinesteps=splinesteps) :
     let(
         splinesteps = is_list(splinesteps) ? splinesteps : [splinesteps,splinesteps],
         uvals = [
@@ -1430,7 +1432,7 @@ function bezier_patch_degenerate(patch, splinesteps=16, reverse=false, return_ed
 function _tri_count(n) = (n*(1+n))/2;
 
 
-function _bezier_triangle(tri, splinesteps=16, vnf=EMPTY_VNF) =
+function _bezier_triangle(tri, splinesteps=16) =
     assert(is_num(splinesteps))
     let(
         pts = [
@@ -1455,7 +1457,7 @@ function _bezier_triangle(tri, splinesteps=16, vnf=EMPTY_VNF) =
                 )
             )  for (face=allfaces) face
         ]
-    ) vnf_merge([vnf,[pts, faces]]);
+    ) [pts, faces];
 
 
 
