@@ -827,27 +827,21 @@ function mean(v) =
     sum(v)/len(v);
 
 
-// Function: ninther()
-// Usage:
-//    med = ninther(v)
-// Description:
-//    Finds a value in the input list of numbers `v` that is the median of  a 
-//    sample of 9 entries of `v`.
-//    It is a much faster approximation of the true median computation.
-// Arguments:
-//    v = an array of numbers
-function ninther(v) = 
-    let( l=len(v) )
-    l<=4 ? l<=2 ? v[0] : _med3(v[0], v[1], v[2]) : 
-    l==5 ? _med3(v[0], _med3(v[1], v[2], v[3]), v[4]) :
-    _med3(_med3(v[0],v[floor(l/6)],v[floor(l/3)]),
-          _med3(v[floor(l/3)],v[floor(l/2)],v[floor(2*l/3)]),
-          _med3(v[floor(2*l/3)],v[floor((5*l/3 -1)/2)],v[l-1]) );
 
-// the median of a triple
-function _med3(a,b,c) =
-    a < c ? a < b ? min(b,c) : min(a,c) :
-    b < c ? min(a,c) : min(a,b);
+// Function: median()
+// Usage:
+//   middle = median(v)
+// Description:
+//   Returns the median of the given vector.  
+function median(v) =
+    assert(is_vector(v), "Input to median must be a vector")
+    len(v)%2 ? max( list_smallest(v, ceil(len(v)/2)) ) :
+    let( lowest = list_smallest(v, len(v)/2 + 1),
+         max  = max(lowest),
+         imax = search(max,lowest,1),
+         max2 = max([for(i=idx(lowest)) if(i!=imax[0]) lowest[i] ])
+    )
+    (max+max2)/2;
 
 
 // Function: convolve()
