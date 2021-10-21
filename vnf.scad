@@ -457,9 +457,6 @@ function vnf_from_region(region, transform, reverse=false) =
 //   bool = is_vnf(x);
 // Description:
 //   Returns true if the given value looks like a VNF structure.
-function is_vnf(x) = is_list(x) && len(x)==2 && is_list(x[0]) && is_list(x[1])
-    && is_vector(x[0][0],3) && is_vector(x[1][0]);
-
 function is_vnf(x) =
     is_list(x) &&
     len(x)==2 &&
