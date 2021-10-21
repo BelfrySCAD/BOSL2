@@ -494,7 +494,7 @@ function _bt_tree(points, ind, leafsize=25) =
         pmc    = mean(projc), 
         pivot  = min_index([for(p=projc) abs(p-pmc)]),
         radius = max([for(i=ind) norm(points[ind[pivot]]-points[i]) ]),
-        median = ninther(projc),
+        median = median(projc),
         Lind   = [for(i=idx(ind)) if(projc[i]<=median && i!=pivot) ind[i] ],
         Rind   = [for(i=idx(ind)) if(projc[i] >median && i!=pivot) ind[i] ]
       )

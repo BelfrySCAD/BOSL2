@@ -43,18 +43,6 @@ module test_vnf_from_polygons() {
 test_vnf_from_polygons();
 
 
-module test_vnf_centroid() {
-    assert_approx(vnf_centroid(cube(100, center=false)), [50,50,50]);
-    assert_approx(vnf_centroid(cube(100, center=true)), [0,0,0]);
-    assert_approx(vnf_centroid(cube(100, anchor=ALLPOS)), [-50,-50,-50]);
-    assert_approx(vnf_centroid(cube(100, anchor=BOT)), [0,0,50]);
-    assert_approx(vnf_centroid(cube(100, anchor=TOP)), [0,0,-50]);
-    assert_approx(vnf_centroid(sphere(d=100, anchor=CENTER, $fn=36)), [0,0,0]);
-    assert_approx(vnf_centroid(sphere(d=100, anchor=BOT, $fn=36)), [0,0,50]);
-    ellipse = xscale(2, p=circle($fn=24, r=3));
-    assert_approx(vnf_centroid(path_sweep(pentagon(r=1), path3d(ellipse), closed=true)),[0,0,0]);}
-test_vnf_centroid();
-
 
 module test_vnf_volume() {
     assert_approx(vnf_volume(cube(100, center=false)), 1000000);

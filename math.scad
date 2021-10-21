@@ -827,27 +827,21 @@ function mean(v) =
     sum(v)/len(v);
 
 
-// Function: ninther()
-// Usage:
-//    med = ninther(v)
-// Description:
-//    Finds a value in the input list of numbers `v` that is the median of  a 
-//    sample of 9 entries of `v`.
-//    It is a much faster approximation of the true median computation.
-// Arguments:
-//    v = an array of numbers
-function ninther(v) = 
-    let( l=len(v) )
-    l<=4 ? l<=2 ? v[0] : _med3(v[0], v[1], v[2]) : 
-    l==5 ? _med3(v[0], _med3(v[1], v[2], v[3]), v[4]) :
-    _med3(_med3(v[0],v[floor(l/6)],v[floor(l/3)]),
-          _med3(v[floor(l/3)],v[floor(l/2)],v[floor(2*l/3)]),
-          _med3(v[floor(2*l/3)],v[floor((5*l/3 -1)/2)],v[l-1]) );
 
-// the median of a triple
-function _med3(a,b,c) =
-    a < c ? a < b ? min(b,c) : min(a,c) :
-    b < c ? min(a,c) : min(a,b);
+// Function: median()
+// Usage:
+//   middle = median(v)
+// Description:
+//   Returns the median of the given vector.  
+function median(v) =
+    assert(is_vector(v), "Input to median must be a vector")
+    len(v)%2 ? max( list_smallest(v, ceil(len(v)/2)) ) :
+    let( lowest = list_smallest(v, len(v)/2 + 1),
+         max  = max(lowest),
+         imax = search(max,lowest,1),
+         max2 = max([for(i=idx(lowest)) if(i!=imax[0]) lowest[i] ])
+    )
+    (max+max2)/2;
 
 
 // Function: convolve()
@@ -953,7 +947,7 @@ function linear_solve(A,b,pivot=true) =
 // Description:
 //    Compute the matrix inverse of the square matrix `A`.  If `A` is singular, returns `undef`.
 //    Note that if you just want to solve a linear system of equations you should NOT use this function.
-//    Instead use [[`linear_solve()`|linear_solve]], or use [[`qr_factor()`|qr_factor]].  The computation
+//    Instead use {{linear_solve()}}, or use {{qr_factor()}}.  The computation
 //    will be faster and more accurate.  
 function matrix_inverse(A) =
     assert(is_matrix(A) && len(A)==len(A[0]),"Input to matrix_inverse() must be a square matrix")
@@ -1002,7 +996,7 @@ function null_space(A,eps=1e-12) =
 //   qr = qr_factor(A,[pivot]);
 // Description:
 //   Calculates the QR factorization of the input matrix A and returns it as the list [Q,R,P].  This factorization can be
-//   used to solve linear systems of equations.  The factorization is A = Q*R*transpose(P).  If pivot is false (the default)
+//   used to solve linear systems of equations.  The factorization is `A = Q*R*transpose(P)`.  If pivot is false (the default)
 //   then P is the identity matrix and A = Q*R.  If pivot is true then column pivoting results in an R matrix where the diagonal
 //   is non-decreasing.  The use of pivoting is supposed to increase accuracy for poorly conditioned problems, and is necessary
 //   for rank estimation or computation of the null space, but it may be slower.  
@@ -1083,7 +1077,7 @@ function _back_substitute(R, b, x=[]) =
 //   L = cholesky(A);
 // Description:
 //   Compute the cholesky factor, L, of the symmetric positive definite matrix A.
-//   The matrix L is lower triangular and L * transpose(L) = A.  If the A is
+//   The matrix L is lower triangular and `L * transpose(L) = A`.  If the A is
 //   not symmetric then an error is displayed.  If the matrix is symmetric but
 //   not positive definite then undef is returned.  
 function cholesky(A) =

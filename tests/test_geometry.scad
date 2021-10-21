@@ -46,7 +46,7 @@ test_is_polygon_convex();
 test_polygon_shift();
 test_reindex_polygon();
 test_align_polygon();
-test_polygon_centroid();
+test_centroid();
 test_point_in_polygon();
 test_polygon_triangulate();
 test_is_polygon_clockwise();
@@ -835,15 +835,31 @@ module test_noncollinear_triple() {
 *test_noncollinear_triple();
 
 
-module test_polygon_centroid() {
+module test_centroid() {
+    // polygons
     $fn = 24;
-    assert_approx(polygon_centroid(circle(d=100)), [0,0]);
-    assert_approx(polygon_centroid(rect([40,60],rounding=10,anchor=LEFT)), [20,0]);
-    assert_approx(polygon_centroid(rect([40,60],rounding=10,anchor=FWD)), [0,30]);
+    assert_approx(centroid(circle(d=100)), [0,0]);
+    assert_approx(centroid(rect([40,60],rounding=10,anchor=LEFT)), [20,0]);
+    assert_approx(centroid(rect([40,60],rounding=10,anchor=FWD)), [0,30]);
     poly = move([1,2.5,3.1],p=rot([12,49,24], p=path3d(circle(10,$fn=33))));
-    assert_approx(polygon_centroid(poly), [1,2.5,3.1]);
+    assert_approx(centroid(poly), [1,2.5,3.1]);
+
+    // regions
+    R = [square(10), move([5,4],circle(r=3,$fn=32)),  right(15,square(7)), move([18,3],circle(r=2,$fn=5))];
+    assert_approx(centroid(R), [9.82836532809, 4.76313546433]);
+
+    // VNFs
+    assert_approx(centroid(cube(100, center=false)), [50,50,50]);
+    assert_approx(centroid(cube(100, center=true)), [0,0,0]);
+    assert_approx(centroid(cube(100, anchor=ALLPOS)), [-50,-50,-50]);
+    assert_approx(centroid(cube(100, anchor=BOT)), [0,0,50]);
+    assert_approx(centroid(cube(100, anchor=TOP)), [0,0,-50]);
+    assert_approx(centroid(sphere(d=100, anchor=CENTER, $fn=36)), [0,0,0]);
+    assert_approx(centroid(sphere(d=100, anchor=BOT, $fn=36)), [0,0,50]);
+    ellipse = xscale(2, p=circle($fn=24, r=3));
+    assert_approx(centroid(path_sweep(pentagon(r=1), path3d(ellipse), closed=true)),[0,0,0]);
 }
-*test_polygon_centroid();
+*test_centroid();
 
 
 

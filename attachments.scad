@@ -1117,7 +1117,7 @@ function reorient(
     two_d=false,
     axis=UP,
     p=undef
-) =
+) = 
     assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
     assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
     assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient))
@@ -1269,7 +1269,7 @@ function _attach_geom(
     axis=UP
 ) =
     assert(is_bool(extent))
-    assert(is_vector(cp))
+    assert(is_vector(cp) || is_string(cp))
     assert(is_vector(offset))
     assert(is_list(anchors))
     assert(is_bool(two_d))
@@ -1496,6 +1496,21 @@ function _attach_transform(anchor, spin, orient, geom, p) =
     apply(m, p);
 
 
+function _get_cp(geom) =
+    let(cp=select(geom,-3))
+    is_vector(cp) ? cp
+  : let(
+        type = in_list(geom[0],["vnf_extent","vnf_isect"]) ? "vnf"
+             : in_list(geom[0],["path_extent","path_isect"]) ? "path"
+             : "other"
+    )
+    assert(type!="other", "Invalid cp value")
+    cp=="centroid" ? centroid(geom[1])
+  : let(points = type=="vnf"?geom[1][0]:geom[1])
+    cp=="mean" ? mean(points)
+  : cp=="box" ? mean(pointlist_bounds(points))
+  : assert(false,"Invalid cp specification");
+
 
 /// Internal Function: _find_anchor()
 // Usage:
@@ -1511,19 +1526,19 @@ function _attach_transform(anchor, spin, orient, geom, p) =
 //   anchor = Vector or named anchor string.
 //   geom = The geometry description of the shape.
 function _find_anchor(anchor, geom) =
-    let(
-        cp = select(geom,-3),
+    let( 
+        cp = _get_cp(geom),
         offset_raw = select(geom,-2),
         offset = [for (i=[0:2]) anchor[i]==0? 0 : offset_raw[i]],  // prevents bad centering.
         anchors = last(geom),
         type = geom[0]
     )
-    is_string(anchor)? (
-        anchor=="origin"? [anchor, CENTER, UP, 0] :
-        let(found = search([anchor], anchors, num_returns_per_match=1)[0])
-        assert(found!=[], str("Unknown anchor: ",anchor))
-        anchors[found]
-    ) :
+    is_string(anchor)? (  
+          anchor=="origin"? [anchor, CENTER, UP, 0]
+        : let(found = search([anchor], anchors, num_returns_per_match=1)[0])
+          assert(found!=[], str("Unknown anchor: ",anchor))
+          anchors[found]
+    ) : 
     assert(is_vector(anchor),str("anchor=",anchor))
     let(anchor = point3d(anchor))
     anchor==CENTER? [anchor, cp, UP, 0] :
@@ -1590,27 +1605,25 @@ function _find_anchor(anchor, geom) =
             eps = 1/2048,
             points = vnf[0],
             faces = vnf[1],
-            rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), points),
+            rpts = apply(rot(from=anchor, to=RIGHT) * move(-cp), points),
             hits = [
-                for (face = faces) let(
-                    verts = select(rpts, face),
-                    xs = columns(verts,0),
-                    ys = columns(verts,1),
-                    zs = columns(verts,2)
-                ) if (
-                    max(xs) >= -eps &&
-                    max(ys) >= -eps &&
-                    max(zs) >= -eps &&
-                    min(ys) <=  eps &&
-                    min(zs) <=  eps
-                ) let(
-                    poly = select(points, face),
-                    pt = polygon_line_intersection(poly, [cp,cp+anchor], bounded=[true,false], eps=eps)
-                ) if (!is_undef(pt)) let(
-                    plane = plane_from_polygon(poly),
-                    n = unit(plane_normal(plane))
-                )
-                [norm(pt-cp), n, pt]
+                for (face = faces)
+                    let(
+                        verts = select(rpts, face),
+                        ys = columns(verts,1),
+                        zs = columns(verts,2)
+                    )
+                    if (max(ys) >= -eps && max(zs) >= -eps &&
+                        min(ys) <=  eps &&  min(zs) <=  eps)
+                        let(
+                            poly = select(points, face),
+                            isect = polygon_line_intersection(poly, [cp,cp+anchor], eps=eps),
+                            ptlist = is_undef(isect) ? [] :
+                                     is_vector(isect) ? [isect]
+                                                      : flatten(isect),   // parallel to a face
+                            n = len(ptlist)>0 ? polygon_normal(poly) : undef
+                        )
+                        for(pt=ptlist) [anchor * (pt-cp), n, pt]
             ]
         )
         assert(len(hits)>0, "Anchor vector does not intersect with the shape.  Attachment failed.")
@@ -1619,17 +1632,17 @@ function _find_anchor(anchor, geom) =
             dist = hits[furthest][0],
             pos = hits[furthest][2],
             hitnorms = [for (hit = hits) if (approx(hit[0],dist,eps=eps)) hit[1]],
-            unorms = len(hitnorms) > 7
-              ? unique([for (nn = hitnorms) quant(nn,1e-9)])
-              : [
-                    for (i = idx(hitnorms)) let(
-                        nn = hitnorms[i],
-                        isdup = [
-                            for (j = [i+1:1:len(hitnorms)-1])
-                            if (approx(nn, hitnorms[j])) 1
-                        ] != []
-                    ) if (!isdup) nn
-                ],
+            unorms = [
+                      for (i = idx(hitnorms))
+                          let(
+                              thisnorm = hitnorms[i],
+                              isdup = [
+                                       for (j = [i+1:1:len(hitnorms)-1])
+                                           if (approx(thisnorm, hitnorms[j])) 1
+                                      ] != []
+                          )
+                          if (!isdup) thisnorm
+                     ],
             n = unit(sum(unorms)),
             oang = approx(point2d(n), [0,0])? 0 : atan2(n.y, n.x) + 90
         )

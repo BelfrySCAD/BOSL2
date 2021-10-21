@@ -93,8 +93,8 @@ function _is_cw(a,b,c,all) =
 //   Returns a path as a list of indices into `points`. 
 //   When all==true, returns extra points that are on edges of the hull.
 // Arguments:
-//   points - list of 2d points to get the hull of.
-//   all - when true, includes all points on the edges of the convex hull. Default: false.
+//   points = list of 2d points to get the hull of.
+//   all = when true, includes all points on the edges of the convex hull. Default: false.
 // Example(2D):
 //   pts = [[-10,-10], [0,10], [10,10], [12,-10]];
 //   path = hull2d_path(pts);

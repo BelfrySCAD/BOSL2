@@ -546,7 +546,7 @@ function plane_from_points(points, fast=false, eps=EPSILON) =
 //   xyzpath = rot(45, v=[0,1,0], p=path3d(star(n=5,step=2,d=100), 70));
 //   plane = plane_from_polygon(xyzpath);
 //   #stroke(xyzpath,closed=true,width=3);
-//   cp = polygon_centroid(xyzpath);
+//   cp = centroid(xyzpath);
 //   move(cp) rot(from=UP,to=plane_normal(plane)) anchor_arrow(45);
 function plane_from_polygon(poly, fast=false, eps=EPSILON) =
     assert( is_path(poly,dim=3), "Invalid polygon." )
@@ -897,7 +897,7 @@ function plane_line_angle(plane, line) =
 //   proj = plane_closest_point(plane,points);
 //   color("red") move_copies(points) sphere(d=4,$fn=12);
 //   color("blue") move_copies(proj) sphere(d=4,$fn=12);
-//   move(polygon_centroid(proj)) {
+//   move(centroid(proj)) {
 //       rot(from=UP,to=plane_normal(plane)) {
 //           anchor_arrow(50);
 //           %cube([120,150,0.1],center=true);
@@ -1403,21 +1403,60 @@ function polygon_area(poly, signed=false) =
         signed ? total : abs(total);
 
 
-// Function: polygon_centroid()
+// Function: centroid()
 // Usage:
-//   cpt = polygon_centroid(poly);
+//   c = centroid(object, [eps]);
 // Topics: Geometry, Polygons, Centroid
 // Description:
 //   Given a simple 2D polygon, returns the 2D coordinates of the polygon's centroid.
 //   Given a simple 3D planar polygon, returns the 3D coordinates of the polygon's centroid.
-//   Collinear points produce an error.  The results are meaningless for self-intersecting
-//   polygons or an error is produced.
+//   If you provide a non-planar or collinear polygon you will get an error.  For self-intersecting
+//   polygons you may get an error or you may get meaningless results.
+//   .
+//   If object is a manifold VNF then returns the 3d centroid of the polyhedron.  The VNF must
+//   describe a valid polyhedron with consistent face direction and no holes in the mesh; otherwise
+//   the results are undefined.
 // Arguments:
-//   poly = Points of the polygon from which the centroid is calculated.
-//   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
-function polygon_centroid(poly, eps=EPSILON) =
+//   object = object to compute the centroid of
+//   eps = epsilon value for identifying degenerate cases
+function centroid(object,eps=EPSILON) =
+    assert(is_finite(eps) && (eps>=0), "The tolerance should a non-negative value." )
+    is_vnf(object) ? _vnf_centroid(object,eps)
+  : is_path(object,[2,3]) ? _polygon_centroid(object,eps)
+  : is_region(object) ? (len(object)==1 ? _polygon_centroid(object[0],eps) : _region_centroid(object,eps))
+  : assert(false, "Input must be a VNF, a region, or a 2D or 3D polygon");
+
+
+/// Internal Function: _region_centroid()
+/// Compute centroid of region
+function _region_centroid(region,eps=EPSILON) =
+   let(
+       region=force_region(region),
+       parts = region_parts(region),
+       // Rely on region_parts returning all outside polygons clockwise
+       // and inside (hole) polygons counterclockwise, so areas have reversed sign
+       cent_area = [for(R=parts, p=R)
+                       let(A=polygon_area(p,signed=true))
+                       [A*_polygon_centroid(p),A]],
+       total = sum(cent_area)
+   )
+   total[0]/total[1];
+
+
+/// Function: _polygon_centroid()
+/// Usage:
+///   cpt = _polygon_centroid(poly);
+/// Topics: Geometry, Polygons, Centroid
+/// Description:
+///   Given a simple 2D polygon, returns the 2D coordinates of the polygon's centroid.
+///   Given a simple 3D planar polygon, returns the 3D coordinates of the polygon's centroid.
+///   Collinear points produce an error.  The results are meaningless for self-intersecting
+///   polygons or an error is produced.
+/// Arguments:
+///   poly = Points of the polygon from which the centroid is calculated.
+///   eps = Tolerance in geometric comparisons.  Default: `EPSILON` (1e-9)
+function _polygon_centroid(poly, eps=EPSILON) =
     assert( is_path(poly,dim=[2,3]), "The input must be a 2D or 3D polygon." )
-    assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let(
         n = len(poly[0])==2 ? 1 :
             let( plane = plane_from_points(poly, fast=false))
@@ -1633,21 +1672,21 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
 //   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
-//   color("black")   up(3) vnf_debug([poly,[]],faces=false,size=1);
+//   color("black")   up(3) vnf_debug([path3d(poly),[]],faces=false,size=1);
 // Example(2D,NoAxes): a polygon with a hole and one "contact" edge
 //   poly = [ [-10,0], [10,0], [0,10], [-10,0], [-4,4], [4,4], [0,2], [-4,4] ];
 //   tris =  polygon_triangulate(poly);
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
 //   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
-//   color("black")   up(3) vnf_debug([poly,[]],faces=false,size=1);
+//   color("black")   up(3) vnf_debug([path3d(poly),[]],faces=false,size=1);
 // Example(2D,NoAxes): a polygon with "touching" vertices and no holes
 //   poly = [ [0,0], [5,5], [-5,5], [0,0], [-5,-5], [5,-5] ];
 //   tris =  polygon_triangulate(poly);
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
 //   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
-//   color("black")   up(3) vnf_debug([poly,[]],faces=false,size=1);
+//   color("black")   up(3) vnf_debug([path3d(poly),[]],faces=false,size=1);
 // Example(2D,NoAxes): a polygon with "contact" edges and no holes
 //   poly = [ [0,0], [10,0], [10,10], [0,10], [0,0], [3,3], [7,3], 
 //            [7,7], [7,3], [3,3] ];
@@ -1655,7 +1694,7 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
 //   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
-//   color("black")   up(3) vnf_debug([poly,[]],faces=false,size=1);
+//   color("black")   up(3) vnf_debug([path3d(poly),[]],faces=false,size=1);
 // Example(3D): 
 //   include <BOSL2/polyhedra.scad>
 //   vnf = regular_polyhedron_info(name="dodecahedron",side=5,info="vnf");

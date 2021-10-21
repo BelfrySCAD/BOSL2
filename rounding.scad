@@ -1041,7 +1041,7 @@ module offset_sweep(path, height,
                        quality=quality, check_valid=true, extra=extra, cut=cut, chamfer_width=chamfer_width,
                        chamfer_height=chamfer_height, joint=joint, k=k, angle=angle);
   
-    attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
+    attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : centroid(vnf))
     {
         vnf_polyhedron(vnf,convexity=convexity);
         children();
@@ -1818,7 +1818,7 @@ module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot
   result = rounded_prism(bottom=bottom, top=top, joint_bot=joint_bot, joint_top=joint_top, joint_sides=joint_sides,
                          k_bot=k_bot, k_top=k_top, k_sides=k_sides, k=k, splinesteps=splinesteps, h=h, length=length, height=height, l=l,debug=debug);
   vnf = debug ? result[1] : result;
-  attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : vnf_centroid(vnf))
+  attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : centroid(vnf))
   {
     if (debug){
         vnf_polyhedron(vnf, convexity=convexity);

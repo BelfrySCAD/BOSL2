@@ -390,20 +390,25 @@ function region_parts(region) =
 //   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or path.
 //   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
 //   of the given 2D region or path.  The benefit of using this, over using `linear_extrude region(rgn)` is
-//   that you can use `anchor`, `spin`, `orient` and attachments with it.  Also, you can make more refined
+//   that it supports `anchor`, `spin`, `orient` and attachments.  You can also make more refined
 //   twisted extrusions by using `maxseg` to subsample flat faces.
+//   Note that the center option centers vertically using the named anchor "zcenter" whereas
+//   `anchor=CENTER` centers the entire shape relative to
+//   the shape's centroid, or other centerpoint you specify.  The centerpoint can be "centroid", "mean", "box" or
+//   a custom point location.  
 // Arguments:
 //   region = The 2D [Region](regions.scad) or path that is to be extruded.
 //   height = The height to extrude the region.  Default: 1
-//   center = If true, the created polyhedron will be vertically centered.  If false, it will be extruded upwards from the origin.  Default: `false`
+//   center = If true, the created polyhedron will be vertically centered.  If false, it will be extruded upwards from the XY plane.  Default: `false`
 //   slices = The number of slices to divide the shape into along the Z axis, to allow refinement of detail, especially when working with a twist.  Default: `twist/5`
 //   maxseg = If given, then any long segments of the region will be subdivided to be shorter than this length.  This can refine twisting flat faces a lot.  Default: `undef` (no subsampling)
 //   twist = The number of degrees to rotate the shape clockwise around the Z axis, as it rises from bottom to top.  Default: 0
 //   scale = The amount to scale the shape, from bottom to top.  Default: 1
 //   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
 //   convexity = Max number of surfaces any single ray could pass through.  Module use only.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"origin"`
 //   anchor_isect = If true, anchoring it performed by finding where the anchor vector intersects the swept shape.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example: Extruding a Compound Region.
@@ -427,18 +432,18 @@ function region_parts(region) =
 //   mrgn = union(rgn1,rgn2);
 //   orgn = difference(mrgn,rgn3);
 //   linear_sweep(orgn,height=20,convexity=16) show_anchors();
-module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity, anchor_isect=false, anchor, spin=0, orient=UP) {
+module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity, anchor_isect=false, anchor, spin=0, orient=UP, cp="centroid", anchor="origin") {
     region = force_region(region);
     dummy=assert(is_region(region),"Input is not a region");
-    cp = mean(pointlist_bounds(flatten(region)));
-    anchor = get_anchor(anchor, center, "origin", "origin");
+    anchor = center ? "zcenter" : anchor;
+    anchors = [named_anchor("zcenter", [0,0,height/2], UP)];
     vnf = linear_sweep(
         region, height=height,
         twist=twist, scale=scale,
         slices=slices, maxseg=maxseg,
         style=style
     );
-    attachable(anchor,spin,orient, cp=cp, vnf=vnf, extent=!anchor_isect) {
+    attachable(anchor,spin,orient, cp=cp, vnf=vnf, extent=!anchor_isect, anchors=anchors) {
         vnf_polyhedron(vnf, convexity=convexity);
         children();
     }
@@ -446,15 +451,15 @@ module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, 
 
 
 function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
-                      maxseg, style="default", anchor_isect=false, anchor, spin=0, orient=UP) =
+                      maxseg, style="default", cp="centroid", anchor_isect=false, anchor, spin=0, orient=UP) =
     let(
         region = force_region(region)
     )
     assert(is_region(region), "Input is not a region")
     let(
-        anchor = get_anchor(anchor,center,BOT,BOT),
+        anchor = center ? "zcenter" : anchor,
+        anchors = [named_anchor("zcenter", [0,0,height/2], UP)],
         regions = region_parts(region),
-        cp = mean(pointlist_bounds(flatten(region))),
         slices = default(slices, floor(twist/5+1)),
         step = twist/slices,
         hstep = height/slices,
@@ -484,14 +489,14 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
                     for (i=[0:1:slices]) let(
                         sc = lerp(1, scale, i/slices),
                         ang = i * step,
-                        h = i * hstep - height/2
+                        h = i * hstep //- height/2
                     ) scale([sc,sc,1], p=rot(ang, p=path3d(path,h)))
                 ]
             ) vnf_vertex_array(verts, caps=false, col_wrap=true, style=style),
-            for (rgn = regions) vnf_from_region(rgn, down(height/2), reverse=true),
-            for (rgn = trgns) vnf_from_region(rgn, up(height/2), reverse=false)
+            for (rgn = regions) vnf_from_region(rgn, ident(4), reverse=true),
+            for (rgn = trgns) vnf_from_region(rgn, up(height), reverse=false)
         ])
-    ) reorient(anchor,spin,orient, cp=cp, vnf=vnf, extent=!anchor_isect, p=vnf);
+    ) reorient(anchor,spin,orient, cp=cp, vnf=vnf, extent=!anchor_isect, p=vnf, anchors=anchors);
 
 
 

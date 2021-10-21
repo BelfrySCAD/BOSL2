@@ -78,7 +78,7 @@ module test_exclusive_or() {
   assert(are_regions_equal(exclusive_or(R9,R8),[[[-5, -5], [-13, -5], [-13, 5], [-5, 5], [-5, 3], [-3, 3], [-3, -3], [-5, -3]], [[-3, -5], [-5, -5], [-5, -13], [5, -13], [5, -5], [3, -5], [3, -3], [-3, -3]], [[-5, 5], [-3, 5], [-3, 3], [3, 3], [3, 5], [5, 5], [5, 13], [-5, 13]], [[3, -3], [3, 3], [5, 3], [5, 5], [13, 5], [13, -5], [5, -5], [5, -3]]],either_winding=true));  
 
   p = turtle(["move",100,"left",144], repeat=4);
-  p2 = move(-polygon_centroid(p),p);
+  p2 = move(-centroid(p),p);
   p3 = polygon_parts(p2);
   p4 = exclusive_or(p3,square(51,center=true));
 
