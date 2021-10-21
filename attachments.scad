@@ -1535,7 +1535,7 @@ function _find_anchor(anchor, geom) =
     )
     is_string(anchor)? (  
           anchor=="origin"? [anchor, CENTER, UP, 0]
-        : let(ff=echo(ss=anchors),found = search([anchor], anchors, num_returns_per_match=1)[0])
+        : let(found = search([anchor], anchors, num_returns_per_match=1)[0])
           assert(found!=[], str("Unknown anchor: ",anchor))
           anchors[found]
     ) : 
