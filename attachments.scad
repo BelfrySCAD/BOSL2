@@ -1117,7 +1117,7 @@ function reorient(
     two_d=false,
     axis=UP,
     p=undef
-) =
+) = 
     assert(is_undef(anchor) || is_vector(anchor) || is_string(anchor), str("Got: ",anchor))
     assert(is_undef(spin)   || is_vector(spin,3) || is_num(spin), str("Got: ",spin))
     assert(is_undef(orient) || is_vector(orient,3), str("Got: ",orient))
@@ -1526,19 +1526,19 @@ function _get_cp(geom) =
 //   anchor = Vector or named anchor string.
 //   geom = The geometry description of the shape.
 function _find_anchor(anchor, geom) =
-    let(
+    let( 
         cp = _get_cp(geom),
         offset_raw = select(geom,-2),
         offset = [for (i=[0:2]) anchor[i]==0? 0 : offset_raw[i]],  // prevents bad centering.
         anchors = last(geom),
         type = geom[0]
     )
-    is_string(anchor)? (
+    is_string(anchor)? (  
           anchor=="origin"? [anchor, CENTER, UP, 0]
-        : let(found = search([anchor], anchors, num_returns_per_match=1)[0])
+        : let(ff=echo(ss=anchors),found = search([anchor], anchors, num_returns_per_match=1)[0])
           assert(found!=[], str("Unknown anchor: ",anchor))
           anchors[found]
-    ) :
+    ) : 
     assert(is_vector(anchor),str("anchor=",anchor))
     let(anchor = point3d(anchor))
     anchor==CENTER? [anchor, cp, UP, 0] :
