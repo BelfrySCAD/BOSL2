@@ -958,7 +958,7 @@ function linear_solve(A,b,pivot=true) =
 // Description:
 //    Compute the matrix inverse of the square matrix `A`.  If `A` is singular, returns `undef`.
 //    Note that if you just want to solve a linear system of equations you should NOT use this function.
-//    Instead use [[`linear_solve()`|linear_solve]], or use [[`qr_factor()`|qr_factor]].  The computation
+//    Instead use {{linear_solve()}}, or use {{qr_factor}}.  The computation
 //    will be faster and more accurate.  
 function matrix_inverse(A) =
     assert(is_matrix(A) && len(A)==len(A[0]),"Input to matrix_inverse() must be a square matrix")
@@ -1007,7 +1007,7 @@ function null_space(A,eps=1e-12) =
 //   qr = qr_factor(A,[pivot]);
 // Description:
 //   Calculates the QR factorization of the input matrix A and returns it as the list [Q,R,P].  This factorization can be
-//   used to solve linear systems of equations.  The factorization is A = Q*R*transpose(P).  If pivot is false (the default)
+//   used to solve linear systems of equations.  The factorization is `A = Q*R*transpose(P)`.  If pivot is false (the default)
 //   then P is the identity matrix and A = Q*R.  If pivot is true then column pivoting results in an R matrix where the diagonal
 //   is non-decreasing.  The use of pivoting is supposed to increase accuracy for poorly conditioned problems, and is necessary
 //   for rank estimation or computation of the null space, but it may be slower.  
@@ -1088,7 +1088,7 @@ function _back_substitute(R, b, x=[]) =
 //   L = cholesky(A);
 // Description:
 //   Compute the cholesky factor, L, of the symmetric positive definite matrix A.
-//   The matrix L is lower triangular and L * transpose(L) = A.  If the A is
+//   The matrix L is lower triangular and `L * transpose(L) = A`.  If the A is
 //   not symmetric then an error is displayed.  If the matrix is symmetric but
 //   not positive definite then undef is returned.  
 function cholesky(A) =

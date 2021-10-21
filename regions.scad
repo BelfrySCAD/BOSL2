@@ -390,7 +390,9 @@ function region_parts(region) =
 //   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or path.
 //   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
 //   of the given 2D region or path.  The benefit of using this, over using `linear_extrude region(rgn)` is
-//   that you can use `anchor`, `spin`, `orient` and attachments with it.  Also, you can make more refined
+//   that you can use `anchor`, `spin`, `orient` and attachments with it.  You can set `cp` to "mean", "centroid"
+//   or "box" to get different centerpoint computations, or you can give a custom vector centerpoint.
+//   Also, you can make more refined
 //   twisted extrusions by using `maxseg` to subsample flat faces.
 // Arguments:
 //   region = The 2D [Region](regions.scad) or path that is to be extruded.
@@ -402,8 +404,9 @@ function region_parts(region) =
 //   scale = The amount to scale the shape, from bottom to top.  Default: 1
 //   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
 //   convexity = Max number of surfaces any single ray could pass through.  Module use only.
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"origin"`
 //   anchor_isect = If true, anchoring it performed by finding where the anchor vector intersects the swept shape.  Default: false
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Default: "centroid"
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example: Extruding a Compound Region.
@@ -427,10 +430,9 @@ function region_parts(region) =
 //   mrgn = union(rgn1,rgn2);
 //   orgn = difference(mrgn,rgn3);
 //   linear_sweep(orgn,height=20,convexity=16) show_anchors();
-module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity, anchor_isect=false, anchor, spin=0, orient=UP) {
+module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity, anchor_isect=false, anchor, spin=0, orient=UP, cp="centroid") {
     region = force_region(region);
     dummy=assert(is_region(region),"Input is not a region");
-    cp = mean(pointlist_bounds(flatten(region)));
     anchor = get_anchor(anchor, center, "origin", "origin");
     vnf = linear_sweep(
         region, height=height,
@@ -446,15 +448,15 @@ module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, 
 
 
 function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
-                      maxseg, style="default", anchor_isect=false, anchor, spin=0, orient=UP) =
+                      maxseg, style="default", cp="centroid", anchor_isect=false, anchor, spin=0, orient=UP) =
     let(
         region = force_region(region)
     )
     assert(is_region(region), "Input is not a region")
     let(
-        anchor = get_anchor(anchor,center,BOT,BOT),
+        anchor = get_anchor(anchor,center,"origin","origin"),
         regions = region_parts(region),
-        cp = mean(pointlist_bounds(flatten(region))),
+//        cp = mean(pointlist_bounds(flatten(region))),
         slices = default(slices, floor(twist/5+1)),
         step = twist/slices,
         hstep = height/slices,

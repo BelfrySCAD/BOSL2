@@ -457,12 +457,15 @@ function vnf_from_region(region, transform, reverse=false) =
 //   bool = is_vnf(x);
 // Description:
 //   Returns true if the given value looks like a VNF structure.
+function is_vnf(x) = is_list(x) && len(x)==2 && is_list(x[0]) && is_list(x[1])
+    && is_vector(x[0][0],3) && is_vector(x[1][0]);
+
 function is_vnf(x) =
     is_list(x) &&
     len(x)==2 &&
     is_list(x[0]) &&
     is_list(x[1]) &&
-    (x[0]==[] || (len(x[0])>=3 && is_vector(x[0][0]))) &&
+    (x[0]==[] || (len(x[0])>=3 && is_vector(x[0][0],3))) &&
     (x[1]==[] || is_vector(x[1][0]));
 
 
@@ -684,7 +687,7 @@ function _slice_3dpolygons(polys, dir, cuts) =
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin", spin=0, orient=UP) {
     vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf;
-    cp = is_def(cp) ? cp : vnf_centroid(vnf);
+    cp = is_def(cp) ? cp : centroid(vnf);
     attachable(anchor,spin,orient, vnf=vnf, extent=extent, cp=cp) {
         polyhedron(vnf[0], vnf[1], convexity=convexity);
         children();
@@ -760,17 +763,17 @@ function vnf_area(vnf) =
     sum([for(face=vnf[1]) polygon_area(select(verts,face))]);
 
 
-// Function: vnf_centroid()
-// Usage:
-//   vol = vnf_centroid(vnf);
-// Description:
-//   Returns the centroid of the given manifold VNF.  The VNF must describe a valid polyhedron with consistent face direction and
-//   no holes; otherwise the results are undefined.
+/// Function: _vnf_centroid()
+/// Usage:
+///   vol = _vnf_centroid(vnf);
+/// Description:
+///   Returns the centroid of the given manifold VNF.  The VNF must describe a valid polyhedron with consistent face direction and
+///   no holes; otherwise the results are undefined.
 
-// Divide the solid up into tetrahedra with the origin as one vertex.  
-// The centroid of a tetrahedron is the average of its vertices.
-// The centroid of the total is the volume weighted average.
-function vnf_centroid(vnf) =
+/// Divide the solid up into tetrahedra with the origin as one vertex.  
+/// The centroid of a tetrahedron is the average of its vertices.
+/// The centroid of the total is the volume weighted average.
+function _vnf_centroid(vnf,eps=EPSILON) =
     assert(is_vnf(vnf) && len(vnf[0])!=0 ) 
     let(
         verts = vnf[0],
@@ -784,7 +787,7 @@ function vnf_centroid(vnf) =
             [ vol, (v0+v1+v2)*vol ]
         ])
     )
-    assert(!approx(pos[0],0, EPSILON), "The vnf has self-intersections.")
+    assert(!approx(pos[0],0, eps), "The vnf has self-intersections.")
     pos[1]/pos[0]/4;
 
 
