@@ -83,23 +83,23 @@ test_for_n();
 
 
 module test_find_first() {
-    l = [7,3,9,1,6,1,3,2];
+    l = [7,3,8,1,6,1,3,2,9];
     lt  = function (val,x) val <  x;
     lte = function (val,x) val <= x;
     gt  = function (val,x) val >  x;
     gte = function (val,x) val >= x;
-    assert_equal(find_first(1,l), 3);
-    assert_equal(find_first(1,l,start=4), 5);
-    assert_equal(find_first(6,l), 4);
-    assert_equal(find_first(3,l,func=gt ), 3);
-    assert_equal(find_first(3,l,func=gte), 1);
-    assert_equal(find_first(3,l,func=lt ), 0);
-    assert_equal(find_first(7,l,func=lt ), 2);
-    assert_equal(find_first(7,l,func=lte), 0);
-    assert_equal(find_first(7,l,start=1,func=gte), 1);
-    assert_equal(find_first(7,l,start=3,func=gte), 3);
+    assert_equal(find_first(f_eq(1),l), 3);
+    assert_equal(find_first(f_eq(1),l,start=4), 5);
+    assert_equal(find_first(f_eq(6),l), 4);
+    assert_equal(find_first(f_gt(8),l), 8);
+    assert_equal(find_first(f_gte(8),l), 2);
+    assert_equal(find_first(f_lt(3),l), 3);
+    assert_equal(find_first(f_lt(7),l), 1);
+    assert_equal(find_first(f_lte(8),l), 0);
+    assert_equal(find_first(f_gte(8),l,start=1), 2);
+    assert_equal(find_first(f_gte(8),l,start=3), 8);
 }
-//test_find_first();
+test_find_first();
 
 
 module test_binsearch() {
@@ -127,8 +127,8 @@ test_simple_hash();
 
 
 module test_f_1arg() {
-    assert_equal(str(f_1arg(function (x) x)), "function(a) ((a == undef) ? function(x) func(x) : function() func(a))");
-    assert_equal(str(f_1arg(function (x) x)(3)), "function() func(a)");
+    assert_equal(str(f_1arg(function (x) x)), "function(a) ((a == undef) ? function(x) target_func(x) : function() target_func(a))");
+    assert_equal(str(f_1arg(function (x) x)(3)), "function() target_func(a)");
     assert_equal(f_1arg(function (x) x)()(4), 4);
     assert_equal(f_1arg(function (x) x)(3)(), 3);
 }
@@ -136,11 +136,11 @@ test_f_1arg();
 
 
 module test_f_2arg() {
-    assert_equal(str(f_2arg(function (a,b) a+b)), "function(a, b) (((a == undef) && (b == undef)) ? function(x, y) func(x, y) : ((a == undef) ? function(x) func(x, b) : ((b == undef) ? function(x) func(a, x) : function() func(a, b))))");
-    assert_equal(str(f_2arg(function (a,b) a+b)(3)), "function(x) func(a, x)");
-    assert_equal(str(f_2arg(function (a,b) a+b)(a=3)), "function(x) func(a, x)");
-    assert_equal(str(f_2arg(function (a,b) a+b)(b=3)), "function(x) func(x, b)");
-    assert_equal(str(f_2arg(function (a,b) a+b)(3,4)), "function() func(a, b)");
+    assert_equal(str(f_2arg(function (a,b) a+b)), "function(a, b) (((a == undef) && (b == undef)) ? function(x, y) target_func(x, y) : ((a == undef) ? function(x) target_func(x, b) : ((b == undef) ? function(x) target_func(a, x) : function() target_func(a, b))))");
+    assert_equal(str(f_2arg(function (a,b) a+b)(3)), "function(x) target_func(a, x)");
+    assert_equal(str(f_2arg(function (a,b) a+b)(a=3)), "function(x) target_func(a, x)");
+    assert_equal(str(f_2arg(function (a,b) a+b)(b=3)), "function(x) target_func(x, b)");
+    assert_equal(str(f_2arg(function (a,b) a+b)(3,4)), "function() target_func(a, b)");
     assert_equal(f_2arg(function (a,b) a+b)()(4,2), 6);
     assert_equal(f_2arg(function (a,b) a+b)(3)(7), 10);
     assert_equal(f_2arg(function (a,b) a+b)(a=2)(7), 9);
@@ -150,10 +150,10 @@ test_f_2arg();
 
 
 module test_f_3arg() {
-    assert_equal(str(f_3arg(function (a,b,c) a+b+c)), "function(a, b, c) ((((a == undef) && (b == undef)) && (c == undef)) ? function(x, y, z) func(x, y, z) : (((a == undef) && (b == undef)) ? function(x, y) func(x, y, c) : (((a == undef) && (c == undef)) ? function(x, y) func(x, b, y) : (((b == undef) && (c == undef)) ? function(x, y) func(a, x, y) : ((a == undef) ? function(x) func(x, b, c) : ((b == undef) ? function(x) func(a, x, c) : ((c == undef) ? function(x) func(a, b, x) : function() func(a, b, c))))))))");
-    assert_equal(str(f_3arg(function (a,b,c) a+b+c)(3)), "function(x, y) func(a, x, y)");
-    assert_equal(str(f_3arg(function (a,b,c) a+b+c)(3,4)), "function(x) func(a, b, x)");
-    assert_equal(str(f_3arg(function (a,b,c) a+b+c)(3,4,1)), "function() func(a, b, c)");
+    assert_equal(str(f_3arg(function (a,b,c) a+b+c)), "function(a, b, c) ((((a == undef) && (b == undef)) && (c == undef)) ? function(x, y, z) target_func(x, y, z) : (((a == undef) && (b == undef)) ? function(x, y) target_func(x, y, c) : (((a == undef) && (c == undef)) ? function(x, y) target_func(x, b, y) : (((b == undef) && (c == undef)) ? function(x, y) target_func(a, x, y) : ((a == undef) ? function(x) target_func(x, b, c) : ((b == undef) ? function(x) target_func(a, x, c) : ((c == undef) ? function(x) target_func(a, b, x) : function() target_func(a, b, c))))))))");
+    assert_equal(str(f_3arg(function (a,b,c) a+b+c)(3)), "function(x, y) target_func(a, x, y)");
+    assert_equal(str(f_3arg(function (a,b,c) a+b+c)(3,4)), "function(x) target_func(a, b, x)");
+    assert_equal(str(f_3arg(function (a,b,c) a+b+c)(3,4,1)), "function() target_func(a, b, c)");
     assert_equal(f_3arg(function (a,b,c) a+b+c)()(4,2,1), 7);
     assert_equal(f_3arg(function (a,b,c) a+b+c)(3)(7,3), 13);
     assert_equal(f_3arg(function (a,b,c) a+b+c)(a=2)(7,1), 10);
@@ -165,22 +165,22 @@ test_f_3arg();
 
 
 module test_ival() {
-    assert_equal(str(ival(function (a) a)), "function(a, b) func(a)");
+    assert_equal(str(ival(function (a) a)), "function(a, b) target_func(a)");
     assert_equal(ival(function (a) a)(3,5), 3);
 }
 test_ival();
 
 
 module test_xval() {
-    assert_equal(str(xval(function (a) a)), "function(a, b) func(b)");
+    assert_equal(str(xval(function (a) a)), "function(a, b) target_func(b)");
     assert_equal(xval(function (a) a)(3,5), 5);
 }
 test_xval();
 
 
 module _test_fn1arg(dafunc,tests) {
-    assert_equal(str(dafunc()),    "function(x) func(x)");
-    assert_equal(str(dafunc(3)),   "function() func(a)");
+    assert_equal(str(dafunc()),    "function(x) target_func(x)");
+    assert_equal(str(dafunc(3)),   "function() target_func(a)");
     for (test = tests) {
         a = test[0];
         r = test[1];
@@ -191,11 +191,11 @@ module _test_fn1arg(dafunc,tests) {
 
 
 module _test_fn2arg(dafunc,tests) {
-    assert_equal(str(dafunc()),    "function(x, y) func(x, y)");
-    assert_equal(str(dafunc(3)),   "function(x) func(a, x)");
-    assert_equal(str(dafunc(a=3)), "function(x) func(a, x)");
-    assert_equal(str(dafunc(b=3)), "function(x) func(x, b)");
-    assert_equal(str(dafunc(3,4)), "function() func(a, b)");
+    assert_equal(str(dafunc()),    "function(x, y) target_func(x, y)");
+    assert_equal(str(dafunc(3)),   "function(x) target_func(a, x)");
+    assert_equal(str(dafunc(a=3)), "function(x) target_func(a, x)");
+    assert_equal(str(dafunc(b=3)), "function(x) target_func(x, b)");
+    assert_equal(str(dafunc(3,4)), "function() target_func(a, b)");
     for (test = tests) {
         a = test[0];
         b = test[1];
@@ -210,17 +210,33 @@ module _test_fn2arg(dafunc,tests) {
 }
 
 
+module _test_fn2arg_simple(dafunc,tests) {
+    assert_equal(str(dafunc()),    "function(x, y) target_func(x, y)");
+    assert_equal(str(dafunc(3)), "function(x) target_func(x, a)");
+    assert_equal(str(dafunc(3,4)), "function() target_func(a, b)");
+    for (test = tests) {
+        a = test[0];
+        b = test[1];
+        r = test[2];
+        assert_equal(dafunc(a=a,b=b)(), r);
+        assert_equal(dafunc(a,b)(), r);
+        assert_equal(dafunc(b)(a), r);
+        assert_equal(dafunc()(a,b), r);
+    }
+}
+
+
 module _test_fn3arg(dafunc,tests) {
-    assert_equal(str(dafunc()),    "function(x, y, z) func(x, y, z)");
-    assert_equal(str(dafunc(3)),   "function(x, y) func(a, x, y)");
-    assert_equal(str(dafunc(a=3)), "function(x, y) func(a, x, y)");
-    assert_equal(str(dafunc(b=3)), "function(x, y) func(x, b, y)");
-    assert_equal(str(dafunc(c=3)), "function(x, y) func(x, y, c)");
-    assert_equal(str(dafunc(3,4)), "function(x) func(a, b, x)");
-    assert_equal(str(dafunc(a=3,b=4)), "function(x) func(a, b, x)");
-    assert_equal(str(dafunc(a=3,c=4)), "function(x) func(a, x, c)");
-    assert_equal(str(dafunc(b=3,c=4)), "function(x) func(x, b, c)");
-    assert_equal(str(dafunc(3,4,5)), "function() func(a, b, c)");
+    assert_equal(str(dafunc()),    "function(x, y, z) target_func(x, y, z)");
+    assert_equal(str(dafunc(3)),   "function(x, y) target_func(a, x, y)");
+    assert_equal(str(dafunc(a=3)), "function(x, y) target_func(a, x, y)");
+    assert_equal(str(dafunc(b=3)), "function(x, y) target_func(x, b, y)");
+    assert_equal(str(dafunc(c=3)), "function(x, y) target_func(x, y, c)");
+    assert_equal(str(dafunc(3,4)), "function(x) target_func(a, b, x)");
+    assert_equal(str(dafunc(a=3,b=4)), "function(x) target_func(a, b, x)");
+    assert_equal(str(dafunc(a=3,c=4)), "function(x) target_func(a, x, c)");
+    assert_equal(str(dafunc(b=3,c=4)), "function(x) target_func(x, b, c)");
+    assert_equal(str(dafunc(3,4,5)), "function() target_func(a, b, c)");
     for (test = tests) {
         a = test[0];
         b = test[1];
@@ -241,7 +257,7 @@ module _test_fn3arg(dafunc,tests) {
 
 
 module test_f_cmp() {
-    _test_fn2arg(
+    _test_fn2arg_simple(
         function (a,b) f_cmp(a,b),
         [[4,3,1],[3,3,0],[3,4,-1]]
     );
@@ -250,7 +266,7 @@ test_f_cmp();
 
 
 module test_f_gt() {
-    _test_fn2arg(
+    _test_fn2arg_simple(
         function (a,b) f_gt(a,b),
         [[4,3,true],[3,3,false],[3,4,false]]
     );
@@ -259,7 +275,7 @@ test_f_gt();
 
 
 module test_f_gte() {
-    _test_fn2arg(
+    _test_fn2arg_simple(
         function (a,b) f_gte(a,b),
         [[4,3,true],[3,3,true],[3,4,false]]
     );
@@ -268,7 +284,7 @@ test_f_gte();
 
 
 module test_f_lt() {
-    _test_fn2arg(
+    _test_fn2arg_simple(
         function (a,b) f_lt(a,b),
         [[4,3,false],[3,3,false],[3,4,true]]
     );
@@ -277,7 +293,7 @@ test_f_lt();
 
 
 module test_f_lte() {
-    _test_fn2arg(
+    _test_fn2arg_simple(
         function (a,b) f_lte(a,b),
         [[4,3,false],[3,3,true],[3,4,true]]
     );
@@ -286,7 +302,7 @@ test_f_lte();
 
 
 module test_f_eq() {
-    _test_fn2arg(
+    _test_fn2arg_simple(
         function (a,b) f_eq(a,b),
         [[4,3,false],[3,3,true],[3,4,false]]
     );
@@ -295,7 +311,7 @@ test_f_eq();
 
 
 module test_f_neq() {
-    _test_fn2arg(
+    _test_fn2arg_simple(
         function (a,b) f_neq(a,b),
         [[4,3,true],[3,3,false],[3,4,true]]
     );
@@ -304,7 +320,7 @@ test_f_neq();
 
 
 module test_f_approx() {
-    _test_fn2arg(
+    _test_fn2arg_simple(
         function (a,b) f_approx(a,b),
         [[4,3,false],[3,3,true],[3,4,false],[1/3,0.33333333333333333333333333,true]]
     );
@@ -313,7 +329,7 @@ test_f_approx();
 
 
 module test_f_napprox() {
-    _test_fn2arg(
+    _test_fn2arg_simple(
         function (a,b) f_napprox(a,b),
         [[4,3,true],[3,3,false],[3,4,true],[1/3,0.33333333333333333333333333,false]]
     );
