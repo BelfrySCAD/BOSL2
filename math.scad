@@ -947,7 +947,7 @@ function linear_solve(A,b,pivot=true) =
 // Description:
 //    Compute the matrix inverse of the square matrix `A`.  If `A` is singular, returns `undef`.
 //    Note that if you just want to solve a linear system of equations you should NOT use this function.
-//    Instead use {{linear_solve()}}, or use {{qr_factor}}.  The computation
+//    Instead use {{linear_solve()}}, or use {{qr_factor()}}.  The computation
 //    will be faster and more accurate.  
 function matrix_inverse(A) =
     assert(is_matrix(A) && len(A)==len(A[0]),"Input to matrix_inverse() must be a square matrix")
