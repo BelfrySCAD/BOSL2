@@ -1249,7 +1249,8 @@ function group_sort(list, idx) =
 //   small = list_smallest(list, k)
 // Description:
 //   Returns a set of the k smallest items in list in arbitrary order.  The items must be
-//   mutually comparable with native OpenSCAD comparison operations.
+//   mutually comparable with native OpenSCAD comparison operations.  You will get "undefined operation"
+//   errors if you provide invalid input. 
 // Arguments:
 //   list = list to process
 //   k = number of items to return
