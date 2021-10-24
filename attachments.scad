@@ -1649,10 +1649,8 @@ function _find_anchor(anchor, geom) =
             rpts = apply(rot(from=anchor, to=RIGHT) * move(point3d(-cp)), vnf[0]),
             maxx = max(columns(rpts,0)),
             idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
-            mm = pointlist_bounds(select(rpts,idxs)),
-            avgy = (mm[0].y+mm[1].y)/2,
-            avgz = (mm[0].z+mm[1].z)/2,
-            mpt = approx(point2d(anchor),[0,0])? [maxx,0,0] : [maxx, avgy, avgz],
+            avep = sum(select(rpts,idxs))/len(idxs),
+            mpt = approx(point2d(anchor),[0,0])? [maxx,0,0] : avep,
             pos = point3d(cp) + rot(from=RIGHT, to=anchor, p=mpt)
         ) [anchor, pos, anchor, oang]
     ) : type == "rect"? ( //size, size2, shift

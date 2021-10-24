@@ -641,6 +641,44 @@ function prismoid(
     ) reorient(anchor,spin,orient, size=[s1.x,s1.y,h], size2=s2, shift=shift, p=vnf);
 
 
+// Function&Module: octahedron()
+// Usage: As Module
+//   octahedron(size, ...);
+// Usage: With Attachments
+//   octahedron(size, ...) { attachments }
+// Usage: As Function
+//   vnf = octahedron(size, ...);
+// Description:
+//   When called as a module, creates an octahedron with axis-aligned points.
+//   When called as a function, creates a [[VNF|vnf.scad]] of an octahedron with axis-aligned points.
+// Arguments:
+//   size = Width of the octahedron, tip to tip.
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Example:
+//   octahedron(size=40);
+// Example: Anchors
+//   octahedron(size=40) show_anchors();
+module octahedron(size=1, anchor=CENTER, spin=0, orient=UP) {
+    vnf = octahedron(size=size);
+    attachable(anchor,spin,orient, vnf=vnf, extent=true) {
+        vnf_polyhedron(vnf, convexity=2);
+        children();
+    }
+}
+
+function octahedron(size=1, anchor=CENTER, spin=0, orient=UP) =
+    let(
+        s = size / 2,
+        vnf = [
+            [ [0,0,s], [s,0,0], [0,s,0], [-s,0,0], [0,-s,0], [0,0,-s] ],
+            [ [0,2,1], [0,3,2], [0,4,3], [0,1,4], [5,1,2], [5,2,3], [5,3,4], [5,4,1] ]
+        ]
+    ) reorient(anchor,spin,orient, vnf=vnf, extent=true, p=vnf);
+
+
 // Module: rect_tube()
 // Usage: Typical Rectangular Tubes
 //   rect_tube(h, size, isize, [center], [shift]);
