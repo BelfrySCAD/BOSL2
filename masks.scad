@@ -70,17 +70,11 @@ module chamfer_edge_mask(l=1, chamfer=1, excess=0.1, anchor=CENTER, spin=0, orie
 //       corner_mask(TOP+FWD+RIGHT)
 //           chamfer_corner_mask(chamfer=20);
 //   }
+// Example: Anchors
+//   chamfer_corner_mask(chamfer=20)
+//       show_anchors();
 module chamfer_corner_mask(chamfer=1, anchor=CENTER, spin=0, orient=UP) {
-    pts = 2 * chamfer * [
-        [0,0,1], [1,0,0], [0,1,0], [-1,0,0], [0,-1,0], [0,0,-1]
-    ];
-    faces = [
-        [0,2,1], [0,3,2], [0,4,3], [0,1,4], [5,1,2], [5,2,3], [5,3,4], [5,4,1]
-    ];
-    attachable(anchor,spin,orient, size=[4,4,4]*chamfer) {
-        polyhedron(pts, faces, convexity=2);
-        children();
-    }
+    octahedron(chamfer*4, anchor=anchor, spin=spin, orient=orient) children();
 }
 
 
