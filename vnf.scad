@@ -1255,7 +1255,7 @@ module vnf_debug(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   ], slices=0, caps=false);
 //   vnf_validate(vnf,size=2);
 function vnf_validate(vnf, show_warns=true, check_isects=false) =
-    assert(is_path(vnf[0]))
+    assert(is_vnf(vnf), "Invalid VNF")
     let(
         vnf = vnf_merge(vnf, cleanup=true),
         varr = vnf[0],
