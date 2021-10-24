@@ -23,6 +23,9 @@
 //////////////////////////////////////////////////////////////////////
 
 
+_NO_ARG = [true,[123232345],false];
+
+
 // Function&Module: move()
 // Aliases: translate()
 //
@@ -95,14 +98,14 @@ module move(v=[0,0,0], p, x=0, y=0, z=0) {
     translate(point3d(v)+[x,y,z]) children();
 }
 
-function move(v=[0,0,0], p, x=0, y=0, z=0) =
+function move(v=[0,0,0], p=_NO_ARG, x=0, y=0, z=0) =
     let(
         m = len(v)==2? affine2d_translate(v+[x,y]) :
             affine3d_translate(point3d(v)+[x,y,z])
     )
-    is_undef(p)? m : apply(m, p);
+    p==_NO_ARG ? m : apply(m, p);
 
-function translate(v=[0,0,0], p=undef) = move(v=v, p=p);
+function translate(v=[0,0,0], p=_NO_ARG) = move(v=v, p=p);
 
 
 // Function&Module: left()
@@ -140,7 +143,7 @@ module left(x=0, p) {
     translate([-x,0,0]) children();
 }
 
-function left(x=0, p) = move([-x,0,0],p=p);
+function left(x=0, p=_NO_ARG) = move([-x,0,0],p=p);
 
 
 // Function&Module: right()
@@ -178,7 +181,7 @@ module right(x=0, p) {
     translate([x,0,0]) children();
 }
 
-function right(x=0, p) = move([x,0,0],p=p);
+function right(x=0, p=_NO_ARG) = move([x,0,0],p=p);
 
 
 // Function&Module: fwd()
@@ -216,7 +219,7 @@ module fwd(y=0, p) {
     translate([0,-y,0]) children();
 }
 
-function fwd(y=0, p) = move([0,-y,0],p=p);
+function fwd(y=0, p=_NO_ARG) = move([0,-y,0],p=p);
 
 
 // Function&Module: back()
@@ -254,7 +257,7 @@ module back(y=0, p) {
     translate([0,y,0]) children();
 }
 
-function back(y=0,p) = move([0,y,0],p=p);
+function back(y=0,p=_NO_ARG) = move([0,y,0],p=p);
 
 
 // Function&Module: down()
@@ -291,7 +294,7 @@ module down(z=0, p) {
     translate([0,0,-z]) children();
 }
 
-function down(z=0, p) = move([0,0,-z],p=p);
+function down(z=0, p=_NO_ARG) = move([0,0,-z],p=p);
 
 
 // Function&Module: up()
@@ -328,7 +331,7 @@ module up(z=0, p) {
     translate([0,0,z]) children();
 }
 
-function up(z=0, p) = move([0,0,z],p=p);
+function up(z=0, p=_NO_ARG) = move([0,0,z],p=p);
 
 
 
@@ -412,7 +415,7 @@ module rot(a=0, v, cp, from, to, reverse=false)
     multmatrix(m) children();
 }
 
-function rot(a=0, v, cp, from, to, reverse=false, planar=false, p, _m) =
+function rot(a=0, v, cp, from, to, reverse=false, planar=false, p=_NO_ARG, _m) =
     assert(is_undef(from)==is_undef(to), "from and to must be specified together.")
     assert(is_undef(from) || is_vector(from, zero=false), "'from' must be a non-zero vector.")
     assert(is_undef(to) || is_vector(to, zero=false), "'to' must be a non-zero vector.")
@@ -450,7 +453,7 @@ function rot(a=0, v, cp, from, to, reverse=false, planar=false, p, _m) =
                 m3 = reverse? matrix_inverse(m2) : m2
             ) m3
     )
-    is_undef(p)? m : apply(m, p);
+    p==_NO_ARG ? m : apply(m, p);
 
 
 
@@ -498,7 +501,7 @@ module xrot(a=0, p, cp)
     }
 }
 
-function xrot(a=0, p, cp) = rot([a,0,0], cp=cp, p=p);
+function xrot(a=0, p=_NO_ARG, cp) = rot([a,0,0], cp=cp, p=p);
 
 
 // Function&Module: yrot()
@@ -544,7 +547,7 @@ module yrot(a=0, p, cp)
     }
 }
 
-function yrot(a=0, p, cp) = rot([0,a,0], cp=cp, p=p);
+function yrot(a=0, p=_NO_ARG, cp) = rot([0,a,0], cp=cp, p=p);
 
 
 // Function&Module: zrot()
@@ -590,7 +593,7 @@ module zrot(a=0, p, cp)
     }
 }
 
-function zrot(a=0, p, cp) = rot(a, cp=cp, p=p);
+function zrot(a=0, p=_NO_ARG, cp) = rot(a, cp=cp, p=p);
 
 
 
@@ -633,9 +636,9 @@ function zrot(a=0, p, cp) = rot(a, cp=cp, p=p);
 //   path = circle(d=50,$fn=12);
 //   #stroke(path,closed=true);
 //   stroke(scale([1.5,3],p=path),closed=true);
-function scale(v=1, p, cp=[0,0,0]) =
-    assert(is_num(v) || is_vector(v))
-    assert(is_undef(p) || is_list(p))
+function scale(v=1, p=_NO_ARG, cp=[0,0,0]) =
+    assert(is_num(v) || is_vector(v),"Invalid scale")
+    assert(p==_NO_ARG || is_list(p),"Invalid point list")
     assert(is_vector(cp))
     let(
         v = is_num(v)? [v,v,v] : v,
@@ -653,7 +656,7 @@ function scale(v=1, p, cp=[0,0,0]) =
                 )
             )
     )
-    is_undef(p)? m : apply(m, p) ;
+    p==_NO_ARG? m : apply(m, p) ;
 
 
 // Function&Module: xscale()
@@ -704,9 +707,9 @@ module xscale(x=1, p, cp=0, planar) {
     }
 }
 
-function xscale(x=1, p, cp=0, planar=false) =
+function xscale(x=1, p=_NO_ARG, cp=0, planar=false) =
     assert(is_finite(x))
-    assert(is_undef(p) || is_list(p))
+    assert(p==_NO_ARG || is_list(p))
     assert(is_finite(cp) || is_vector(cp))
     assert(is_bool(planar))
     let( cp = is_num(cp)? [cp,0,0] : cp )
@@ -762,9 +765,9 @@ module yscale(y=1, p, cp=0, planar) {
     }
 }
 
-function yscale(y=1, p, cp=0, planar=false) =
+function yscale(y=1, p=_NO_ARG, cp=0, planar=false) =
     assert(is_finite(y))
-    assert(is_undef(p) || is_list(p))
+    assert(p==_NO_ARG || is_list(p))
     assert(is_finite(cp) || is_vector(cp))
     assert(is_bool(planar))
     let( cp = is_num(cp)? [0,cp,0] : cp )
@@ -818,7 +821,7 @@ module zscale(z=1, p, cp=0) {
     }
 }
 
-function zscale(z=1, p, cp=0) =
+function zscale(z=1, p=_NO_ARG, cp=0) =
     assert(is_finite(z))
     assert(is_undef(p) || is_list(p))
     assert(is_finite(cp) || is_vector(cp))
@@ -892,11 +895,11 @@ function zscale(z=1, p, cp=0) =
 //   color("red") stroke([[0,0],10*n],endcap2="arrow2");
 //   #stroke(path,closed=true);
 //   stroke(mirror(n, p=path),closed=true);
-function mirror(v, p) =
+function mirror(v, p=_NO_ARG) =
     assert(is_vector(v))
-    assert(is_undef(p) || is_list(p))
+    assert(p==_NO_ARG || is_list(p),"Invalid pointlist")
     let(m = len(v)==2? affine2d_mirror(v) : affine3d_mirror(v))
-    is_undef(p)? m : apply(m,p);
+    p==_NO_ARG? m : apply(m,p);
 
 
 // Function&Module: xflip()
@@ -944,10 +947,10 @@ module xflip(p, x=0, planar) {
             translate([-x,0,0]) children();
 }
 
-function xflip(p, x=0, planar=false) =
+function xflip(p=_NO_ARG, x=0, planar=false) =
     assert(is_finite(x))
     assert(is_bool(planar))
-    assert(is_undef(p) || is_list(p))
+    assert(p==_NO_ARG || is_list(p),"Invalid point list")
     let(
         v = RIGHT,
         n = planar? point2d(v) : v
@@ -957,7 +960,7 @@ function xflip(p, x=0, planar=false) =
         cp = x * n,
         m = move(cp) * mirror(n) * move(-cp)
     )
-    is_undef(p)? m : apply(m, p);
+    p==_NO_ARG? m : apply(m, p);
 
 
 // Function&Module: yflip()
@@ -1005,10 +1008,10 @@ module yflip(p, y=0, planar) {
             translate([0,-y,0]) children();
 }
 
-function yflip(p, y=0, planar=false) =
+function yflip(p=_NO_ARG, y=0, planar=false) =
     assert(is_finite(y))
     assert(is_bool(planar))
-    assert(is_undef(p) || is_list(p))
+    assert(p==_NO_ARG || is_list(p),"Invalid point list")
     let(
         v = BACK,
         n = planar? point2d(v) : v
@@ -1018,7 +1021,7 @@ function yflip(p, y=0, planar=false) =
         cp = y * n,
         m = move(cp) * mirror(n) * move(-cp)
     )
-    is_undef(p)? m : apply(m, p);
+    p==_NO_ARG? m : apply(m, p);
 
 
 // Function&Module: zflip()
@@ -1062,12 +1065,12 @@ module zflip(p, z=0) {
             translate([0,0,-z]) children();
 }
 
-function zflip(p, z=0) =
+function zflip(p=_NO_ARG, z=0) =
     assert(is_finite(z))
-    assert(is_undef(p) || is_list(p))
+    assert(p==_NO_ARG || is_list(p),"Invalid point list")
     z==0? mirror([0,0,1],p=p) :
     let(m = up(z) * mirror(UP) * down(z))
-    p==undef? m : apply(m, p);
+    p==_NO_ARG? m : apply(m, p);
 
 
 //////////////////////////////////////////////////////////////////////
@@ -1118,8 +1121,8 @@ function zflip(p, z=0) =
 //      color("purple") stroke([[0,0,0],10*[1,1,0]]);
 //      color("green") stroke([[0,0,0],10*[-1,1,0]]);
 //   }       
-function frame_map(x,y,z, p, reverse=false) =
-    is_def(p)
+function frame_map(x,y,z, p=_NO_ARG, reverse=false) =
+    p != _NO_ARG
     ? apply(frame_map(x,y,z,reverse=reverse), p)
     :
     assert(num_defined([x,y,z])>=2, "Must define at least two inputs")
@@ -1222,7 +1225,7 @@ module skew(p, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0)
     ) children();
 }
 
-function skew(p, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0, planar=false) =
+function skew(p=_NO_ARG, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0, planar=false) =
     assert(is_finite(sxy))
     assert(is_finite(sxz))
     assert(is_finite(syx))
@@ -1238,7 +1241,7 @@ function skew(p, sxy=0, sxz=0, syx=0, syz=0, szx=0, szy=0, planar=false) =
             [  0,   0, 1]
         ] : affine3d_skew(sxy=sxy, sxz=sxz, syx=syx, syz=syz, szx=szx, szy=szy)
     )
-    is_undef(p)? m : apply(m, p);
+    p==_NO_ARG? m : apply(m, p);
 
 
 // Section: Applying transformation matrices to 
