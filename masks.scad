@@ -9,9 +9,9 @@
 // Section: Chamfer Masks
 
 
-// Module: chamfer_mask()
+// Module: chamfer_edge_mask()
 // Usage:
-//   chamfer_mask(l, chamfer, [excess]);
+//   chamfer_edge_mask(l, chamfer, [excess]);
 // Description:
 //   Creates a shape that can be used to chamfer a 90 degree edge.
 //   Difference it from the object to be chamfered.  The center of
@@ -24,15 +24,61 @@
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
-//   chamfer_mask(l=50, chamfer=10);
+//   chamfer_edge_mask(l=50, chamfer=10);
 // Example:
 //   difference() {
 //       cube(50, anchor=BOTTOM+FRONT);
-//       #chamfer_mask(l=50, chamfer=10, orient=RIGHT);
+//       #chamfer_edge_mask(l=50, chamfer=10, orient=RIGHT);
 //   }
-module chamfer_mask(l=1, chamfer=1, excess=0.1, anchor=CENTER, spin=0, orient=UP) {
+// Example: Masking by Attachment
+//   diff("mask")
+//   cube(50, center=true) {
+//       edge_mask(TOP+RIGHT)
+//           #chamfer_edge_mask(l=50, chamfer=10);
+//   }
+module chamfer_edge_mask(l=1, chamfer=1, excess=0.1, anchor=CENTER, spin=0, orient=UP) {
     attachable(anchor,spin,orient, size=[chamfer*2, chamfer*2, l]) {
         cylinder(r=chamfer, h=l+excess, center=true, $fn=4);
+        children();
+    }
+}
+
+
+// Module: chamfer_corner_mask()
+// Usage:
+//   chamfer_corner_mask(chamfer);
+// Description:
+//   Creates a shape that can be used to chamfer a 90 degree corner.
+//   Difference it from the object to be chamfered.  The center of
+//   the mask object should align exactly with the corner to be chamfered.
+// Arguments:
+//   chamfer = Size of chamfer.
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Example:
+//   chamfer_corner_mask(chamfer=10);
+// Example:
+//   difference() {
+//       cuboid(50, chamfer=10, trimcorners=false);
+//       move(25*[1,-1,1]) #chamfer_corner_mask(chamfer=10);
+//   }
+// Example: Masking by Attachment
+//   diff("mask")
+//   cuboid(100, chamfer=20, trimcorners=false) {
+//       corner_mask(TOP+FWD+RIGHT)
+//           chamfer_corner_mask(chamfer=20);
+//   }
+module chamfer_corner_mask(chamfer=1, anchor=CENTER, spin=0, orient=UP) {
+    pts = 2 * chamfer * [
+        [0,0,1], [1,0,0], [0,1,0], [-1,0,0], [0,-1,0], [0,0,-1]
+    ];
+    faces = [
+        [0,2,1], [0,3,2], [0,4,3], [0,1,4], [5,1,2], [5,2,3], [5,3,4], [5,4,1]
+    ];
+    attachable(anchor,spin,orient, size=[4,4,4]*chamfer) {
+        polyhedron(pts, faces, convexity=2);
         children();
     }
 }
@@ -65,6 +111,7 @@ module chamfer_mask(l=1, chamfer=1, excess=0.1, anchor=CENTER, spin=0, orient=UP
 //       cylinder(r=50, h=100, center=true);
 //       up(50) chamfer_cylinder_mask(r=50, chamfer=10);
 //   }
+// Example: Masking by Attachment
 module chamfer_cylinder_mask(r, d, chamfer=0.25, ang=45, from_end=false, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
@@ -102,8 +149,8 @@ module chamfer_cylinder_mask(r, d, chamfer=0.25, ang=45, from_end=false, anchor=
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-// Example:
-//   rounding_edge_mask(l=100, r1=25, r2=10);
+// Example(VPD=200,VPR=[55,0,120]):
+//   rounding_edge_mask(l=50, r1=10, r2=25);
 // Example:
 //   difference() {
 //       cube(size=100, center=false);
@@ -111,8 +158,8 @@ module chamfer_cylinder_mask(r, d, chamfer=0.25, ang=45, from_end=false, anchor=
 //   }
 // Example: Varying Rounding Radius
 //   difference() {
-//       cube(size=100, center=false);
-//       #rounding_edge_mask(l=100, r1=25, r2=10, orient=UP, anchor=BOTTOM);
+//       cube(size=50, center=false);
+//       #rounding_edge_mask(l=50, r1=25, r2=10, orient=UP, anchor=BOTTOM);
 //   }
 // Example: Masking by Attachment
 //   diff("mask")
@@ -227,12 +274,12 @@ module rounding_corner_mask(r, d, style="octa", excess=0.1, anchor=CENTER, spin=
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 // Example:
 //   difference() {
-//       pie_slice(ang=70, h=50, d=100);
+//       pie_slice(ang=70, h=50, d=100, center=true);
 //       #rounding_angled_edge_mask(h=51, r=20.0, ang=70, $fn=32);
 //   }
 // Example: Varying Rounding Radius
 //   difference() {
-//       pie_slice(ang=70, h=50, d=100);
+//       pie_slice(ang=70, h=50, d=100, center=true);
 //       #rounding_angled_edge_mask(h=51, r1=10, r2=25, ang=70, $fn=32);
 //   }
 module rounding_angled_edge_mask(h=1.0, r, r1, r2, d, d1, d2, ang=90, anchor=CENTER, spin=0, orient=UP)
@@ -370,6 +417,8 @@ module rounding_cylinder_mask(r, rounding=0.25, d)
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Example:
+//   rounding_hole_mask(r=40, rounding=20, $fa=2, $fs=2);
 // Example(Med):
 //   difference() {
 //     cube([150,150,100], center=true);
@@ -382,8 +431,6 @@ module rounding_cylinder_mask(r, rounding=0.25, d)
 //     cylinder(r=50, h=100.1, center=true);
 //     up(50) rounding_hole_mask(r=50, rounding=10);
 //   }
-// Example:
-//   rounding_hole_mask(r=40, rounding=20, $fa=2, $fs=2);
 module rounding_hole_mask(r, rounding=0.25, excess=0.1, d, anchor=CENTER, spin=0, orient=UP)
 {
     r = get_radius(r=r, d=d, dflt=1);
@@ -400,6 +447,42 @@ module rounding_hole_mask(r, rounding=0.25, excess=0.1, d, anchor=CENTER, spin=0
 
 
 // Section: Teardrop Masking
+
+// Module: teardrop_edge_mask()
+// Usage:
+//   teardrop_edge_mask(r|d, [angle], [excess]);
+// Description:
+//   Makes an apropriate 3D corner rounding mask that keeps within `angle` degrees of vertical.
+// Arguments:
+//   r = Radius of the mask rounding.
+//   d = Diameter of the mask rounding.
+//   angle = Maximum angle from vertical. Default: 45
+//   excess = Excess mask size.  Default: 0.1
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
+// Example(VPD=50,VPR=[55,0,120]):
+//   teardrop_edge_mask(l=20, r=10, angle=40);
+// Example(VPD=300,VPR=[75,0,25]):
+//   diff("mask")
+//   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
+//       edge_mask(BOT)
+//           teardrop_edge_mask(l=max($parent_size)+1, r=10, angle=40);
+//       corner_mask(BOT)
+//           teardrop_corner_mask(r=10, angle=40);
+//   }
+module teardrop_edge_mask(l, r, angle, excess=0.1, d, anchor=CENTER, spin=0, orient=UP) {
+    assert(is_num(l));
+    assert(is_num(angle));
+    assert(is_num(excess));
+    assert(angle>0 && angle<90);
+    r = get_radius(r=r, d=d, dflt=1);
+    difference() {
+        translate(-[1,1,0]*excess) cube([r+excess,r+excess,l], anchor=FWD+LEFT);
+        translate([r,r,0]) teardrop(r=r, l=l+1, cap_h=r, ang=angle, orient=FWD);
+    }
+}
+
 
 // Module: teardrop_corner_mask()
 // Usage:
@@ -432,40 +515,6 @@ module teardrop_corner_mask(r, angle, excess=0.1, d, anchor=CENTER, spin=0, orie
     difference() {
         translate(-[1,1,1]*excess) cube(r+excess, center=false);
         translate([1,1,1]*r) onion(r=r, ang=angle, orient=DOWN);
-    }
-}
-
-
-// Module: teardrop_edge_mask()
-// Usage:
-//   teardrop_edge_mask(r|d, [angle], [excess]);
-// Description:
-//   Makes an apropriate 3D corner rounding mask that keeps within `angle` degrees of vertical.
-// Arguments:
-//   r = Radius of the mask rounding.
-//   d = Diameter of the mask rounding.
-//   angle = Maximum angle from vertical. Default: 45
-//   excess = Excess mask size.  Default: 0.1
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-// Example(VPD=50,VPR=[55,0,120]):
-//   teardrop_edge_mask(l=20, r=10, angle=40);
-// Example(VPD=300,VPR=[75,0,25]):
-//   diff("mask")
-//   cuboid([50,60,70],rounding=10,edges="Z",anchor=CENTER) {
-//       edge_mask(BOT)
-//           #teardrop_edge_mask(l=71, r=10, angle=40);
-//   }
-module teardrop_edge_mask(l, r, angle, excess=0.1, d, anchor=CENTER, spin=0, orient=UP) {
-    assert(is_num(l));
-    assert(is_num(angle));
-    assert(is_num(excess));
-    assert(angle>0 && angle<90);
-    r = get_radius(r=r, d=d, dflt=1);
-    difference() {
-        translate(-[1,1,0]*excess) cube([r+excess,r+excess,l], anchor=FWD+LEFT);
-        translate([r,r,0]) teardrop(r=r, l=l+1, cap_h=r, ang=angle, orient=FWD);
     }
 }
 
