@@ -197,7 +197,7 @@ module cubetruss_clip(extents=1, size, strut, clipthick, anchor=CENTER, spin=0, 
                             back(strut) {
                                 difference() {
                                     xrot(90) prismoid([clipthick, clipheight], [clipthick, clipheight-cliplen*2], h=cliplen);
-                                    right(clipthick/2) chamfer_mask_z(l=clipheight+0.1, chamfer=clipthick);
+                                    right(clipthick/2) chamfer_mask(l=clipheight+0.1, chamfer=clipthick);
                                 }
                             }
                         }
@@ -213,11 +213,11 @@ module cubetruss_clip(extents=1, size, strut, clipthick, anchor=CENTER, spin=0, 
                 }
                 fwd(strut*1.6) {
                     left(clipsize) {
-                        yscale(1.5) chamfer_mask_z(l=size+1, chamfer=clipsize+clipthick/3);
+                        yscale(1.5) chamfer_mask(l=size+1, chamfer=clipsize+clipthick/3);
                     }
                 }
                 zcopies(clipheight-strut) cube([clipthick*3, cliplen*2, strut], center=true);
-                zcopies(clipheight-2*strut) right(clipthick) chamfer_mask_y(l=cliplen*2, chamfer=clipthick);
+                zcopies(clipheight-2*strut) right(clipthick) chamfer_mask(l=cliplen*2, chamfer=clipthick, orient=BACK);
             }
         }
         children();
@@ -284,7 +284,7 @@ module cubetruss_foot(w=1, size, strut, clipthick, anchor=CENTER, spin=0, orient
                         // Bevel to fit.
                         up(clipthick+strut) {
                             ycopies(size-2*strut-4*$slop) {
-                                chamfer_mask_x(l=size-strut, chamfer=strut*2/3);
+                                chamfer_mask(l=size-strut, chamfer=strut*2/3, orient=RIGHT);
                             }
                         }
 

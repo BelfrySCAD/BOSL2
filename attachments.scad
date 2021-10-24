@@ -354,14 +354,8 @@ module show(tags="")
 // Example: Masking
 //   diff("mask")
 //   cube([80,90,100], center=true) {
-//       let(p = $parent_size*1.01, $tags="mask") {
-//           position([for (y=[-1,1],z=[-1,1]) [0,y,z]])
-//               rounding_mask_x(l=p.x, r=25);
-//           position([for (x=[-1,1],z=[-1,1]) [x,0,z]])
-//               rounding_mask_y(l=p.y, r=20);
-//           position([for (x=[-1,1],y=[-1,1]) [x,y,0]])
-//               rounding_mask_z(l=p.z, r=25);
-//       }
+//       edge_mask(FWD)
+//           rounding_edge_mask(l=max($parent_size)*1.01, r=25);
 //   }
 // Example: Working with Non-Attachables Like rotate_extrude()
 //   back_half()
@@ -529,7 +523,7 @@ module hulling(a)
 //   diff("mask")
 //   cube([50,60,70],center=true)
 //       edge_mask([TOP,"Z"],except=[BACK,TOP+LEFT])
-//           rounding_mask_z(l=71,r=10);
+//           rounding_edge_mask(l=71,r=10);
 module edge_mask(edges=EDGES_ALL, except=[]) {
     assert($parent_geom != undef, "No object to attach to!");
     edges = edges(edges, except=except);

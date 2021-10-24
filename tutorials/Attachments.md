@@ -955,6 +955,13 @@ module stellate_cube(s=100, anchor=CENTER, spin=0, orient=UP) {
 stellate_cube() show_anchors(50);
 ```
 
+```openscad-3D
+$fn=32;
+R = difference(circle(10), right(2, circle(9)));
+linear_sweep(R,height=10,anchor_isect=true)
+    attach(RIGHT) anchor_arrow();
+```
+
 
 ## Making Named Anchors
 While vector anchors are often useful, sometimes there are logically extra attachment points that
