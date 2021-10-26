@@ -753,6 +753,8 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   attachable(anchor, spin, two_d=true, r=|d=, ...) {...}
 // Usage: 2D Path/Polygon Geometry
 //   attachable(anchor, spin, two_d=true, path=, [extent=], ...) {...}
+// Usage: 2D Region Geometry
+//   attachable(anchor, spin, two_d=true, region=, [extent=], ...) {...}
 // Usage: Cubical/Prismoidal Geometry
 //   attachable(anchor, spin, [orient], size=, [size2=], [shift=], ...) {...}
 // Usage: Cylindrical Geometry
@@ -763,6 +765,8 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   attachable(anchor, spin, [orient], r=|d=, ...) {...}
 // Usage: Extruded Path/Polygon Geometry
 //   attachable(anchor, spin, path=, l=|h=, [extent=], ...) {...}
+// Usage: Extruded Region Geometry
+//   attachable(anchor, spin, region=, l=|h=, [extent=], ...) {...}
 // Usage: VNF Geometry
 //   attachable(anchor, spin, [orient], vnf=, [extent=], ...) {...}
 //
@@ -815,6 +819,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
 //   l/h = Length of the cylindrical, conical, or extruded path volume along axis.
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   path = The path to generate a polygon from.
+//   region = The region to generate a shape from.
 //   extent = If true, calculate anchors by extents, rather than intersection, for VNFs and paths.  Default: true.
 //   cp = If given, specifies the centerpoint of the volume.  Default: `[0,0,0]`
 //   offset = If given, offsets the perimeter of the volume around the centerpoint.
@@ -953,7 +958,7 @@ module attachable(
     anchor, spin, orient,
     size, size2, shift,
     r,r1,r2, d,d1,d2, l,h,
-    vnf, path,
+    vnf, path, region,
     extent=true,
     cp=[0,0,0],
     offset=[0,0,0],
@@ -969,11 +974,14 @@ module attachable(
     anchor = default(anchor, CENTER);
     spin =   default(spin,   0);
     orient = default(orient, UP);
+    region = !is_undef(region)? region :
+        !is_undef(path)? [path] :
+        undef;
     geom = _attach_geom(
         size=size, size2=size2, shift=shift,
         r=r, r1=r1, r2=r2, h=h,
         d=d, d1=d1, d2=d2, l=l,
-        vnf=vnf, path=path, extent=extent,
+        vnf=vnf, region=region, extent=extent,
         cp=cp, offset=offset, anchors=anchors,
         two_d=two_d, axis=axis
     );
@@ -1029,6 +1037,9 @@ function named_anchor(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient
 // Usage: 2D Path/Polygon Geometry
 //   mat = reorient(anchor, spin, [orient], two_d=true, path=, [extent=], ...);
 //   pts = reorient(anchor, spin, [orient], two_d=true, path=, [extent=], p=, ...);
+// Usage: 2D Region/Polygon Geometry
+//   mat = reorient(anchor, spin, [orient], two_d=true, region=, [extent=], ...);
+//   pts = reorient(anchor, spin, [orient], two_d=true, region=, [extent=], p=, ...);
 // Usage: Cubical/Prismoidal Geometry
 //   mat = reorient(anchor, spin, [orient], size=, [size2=], [shift=], ...);
 //   pts = reorient(anchor, spin, [orient], size=, [size2=], [shift=], p=, ...);
@@ -1044,6 +1055,9 @@ function named_anchor(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient
 // Usage: Extruded Path/Polygon Geometry
 //   mat = reorient(anchor, spin, [orient], path=, l=|h=, [extent=], ...);
 //   pts = reorient(anchor, spin, [orient], path=, l=|h=, [extent=], p=, ...);
+// Usage: Extruded Region Geometry
+//   mat = reorient(anchor, spin, [orient], region=, l=|h=, [extent=], ...);
+//   pts = reorient(anchor, spin, [orient], region=, l=|h=, [extent=], p=, ...);
 // Usage: VNF Geometry
 //   mat = reorient(anchor, spin, [orient], vnf, [extent], ...);
 //   pts = reorient(anchor, spin, [orient], vnf, [extent], p=, ...);
@@ -1092,6 +1106,7 @@ function named_anchor(name, pos=[0,0,0], orient=UP, spin=0) = [name, pos, orient
 //   l/h = Length of the cylindrical, conical, or extruded path volume along axis.
 //   vnf = The [VNF](vnf.scad) of the volume.
 //   path = The path to generate a polygon from.
+//   region = The region to generate a shape from.
 //   extent = If true, calculate anchors by extents, rather than intersection.  Default: false.
 //   cp = If given, specifies the centerpoint of the volume.  Default: `[0,0,0]`
 //   offset = If given, offsets the perimeter of the volume around the centerpoint.
@@ -1103,7 +1118,7 @@ function reorient(
     anchor, spin, orient,
     size, size2, shift,
     r,r1,r2, d,d1,d2, l,h,
-    vnf, path,
+    vnf, path, region,
     extent=true,
     offset=[0,0,0],
     cp=[0,0,0],
@@ -1118,14 +1133,17 @@ function reorient(
     let(
         anchor = default(anchor, CENTER),
         spin =   default(spin,   0),
-        orient = default(orient, UP)
+        orient = default(orient, UP),
+        region = !is_undef(region)? region :
+            !is_undef(path)? [path] :
+            undef
     )
     (anchor==CENTER && spin==0 && orient==UP && p!=undef)? p : let(
         geom = _attach_geom(
             size=size, size2=size2, shift=shift,
             r=r, r1=r1, r2=r2, h=h,
             d=d, d1=d1, d2=d2, l=l,
-            vnf=vnf, path=path, extent=extent,
+            vnf=vnf, region=region, extent=extent,
             cp=cp, offset=offset, anchors=anchors,
             two_d=two_d, axis=axis
         ),
@@ -1145,8 +1163,8 @@ function reorient(
 //   geom = _attach_geom(two_d=true, size=, [size2=], [shift=], ...);
 // Usage: Circle/Oval Geometry
 //   geom = _attach_geom(two_d=true, r=|d=, ...);
-// Usage: 2D Path/Polygon Geometry
-//   geom = _attach_geom(two_d=true, path=, [extent=], ...);
+// Usage: 2D Path/Polygon/Region Geometry
+//   geom = _attach_geom(two_d=true, region=, [extent=], ...);
 // Usage: Cubical/Prismoidal Geometry
 //   geom = _attach_geom(size=, [size2=], [shift=], ...);
 // Usage: Cylindrical Geometry
@@ -1155,8 +1173,8 @@ function reorient(
 //   geom = _attach_geom(r1|d1=, r2=|d2=, l=, [axis=], ...);
 // Usage: Spheroid/Ovoid Geometry
 //   geom = _attach_geom(r=|d=, ...);
-// Usage: Extruded 2D Path/Polygon Geometry
-//   geom = _attach_geom(path=, l=|h=, [extent=], ...);
+// Usage: Extruded 2D Path/Polygon/Region Geometry
+//   geom = _attach_geom(region=, l=|h=, [extent=], ...);
 // Usage: VNF Geometry
 //   geom = _attach_geom(vnf=, [extent=], ...);
 //
@@ -1178,9 +1196,9 @@ function reorient(
 //   r2 = Radius of the top of the conical volume.  Can be a scalar, or a list of sizes per axis.
 //   d1 = Diameter of the bottom of the conical volume.  Can be a scalar, a list of sizes per axis.
 //   d2 = Diameter of the top of the conical volume.  Can be a scalar, a list of sizes per axis.
-//   l/h = Length of the cylindrical, conical or extruded path volume along axis.
+//   l/h = Length of the cylindrical, conical or extruded region volume along axis.
 //   vnf = The [VNF](vnf.scad) of the volume.
-//   path = The path to generate a polygon from.
+//   region = The region to generate a shape from.
 //   extent = If true, calculate anchors by extents, rather than intersection.  Default: true.
 //   cp = If given, specifies the centerpoint of the volume.  Default: `[0,0,0]`
 //   offset = If given, offsets the perimeter of the volume around the centerpoint.
@@ -1239,22 +1257,22 @@ function reorient(
 // Example(NORENDER): 2D Oval Shape
 //   geom = _attach_geom(two_d=true, r=[r_x, r_y]);
 //
-// Example(NORENDER): Arbitrary 2D Polygon Shape, Anchored by Extents
-//   geom = _attach_geom(two_d=true, path=path);
+// Example(NORENDER): Arbitrary 2D Region Shape, Anchored by Extents
+//   geom = _attach_geom(two_d=true, region=region);
 //
-// Example(NORENDER): Arbitrary 2D Polygon Shape, Anchored by Intersection
-//   geom = _attach_geom(two_d=true, path=path, extent=false);
+// Example(NORENDER): Arbitrary 2D Region Shape, Anchored by Intersection
+//   geom = _attach_geom(two_d=true, region=region, extent=false);
 //
-// Example(NORENDER): Extruded Polygon Shape, Anchored by Extents
-//   geom = _attach_geom(path=path, l=height);
+// Example(NORENDER): Extruded Region, Anchored by Extents
+//   geom = _attach_geom(region=region, l=height);
 //
-// Example(NORENDER): Extruded Polygon Shape, Anchored by Intersection
-//   geom = _attach_geom(path=path, l=length, extent=false);
+// Example(NORENDER): Extruded Region, Anchored by Intersection
+//   geom = _attach_geom(region=region, l=length, extent=false);
 //
 function _attach_geom(
     size, size2, shift,
     r,r1,r2, d,d1,d2, l,h,
-    vnf, path,
+    vnf, region,
     extent=true,
     cp=[0,0,0],
     offset=[0,0,0],
@@ -1293,18 +1311,18 @@ function _attach_geom(
         assert(two_d == false)
         extent? ["vnf_extent", vnf, cp, offset, anchors] :
         ["vnf_isect", vnf, cp, offset, anchors]
-    ) : !is_undef(path)? (
-        assert(is_path(path),2)
+    ) : !is_undef(region)? (
+        assert(is_region(region),2)
         let( l = default(l, h) )
         two_d==true
           ? assert(is_undef(l))
             extent==true
-              ? ["path_extent", path, cp, offset, anchors]
-              : ["path_isect",  path, cp, offset, anchors]
+              ? ["rgn_extent", region, cp, offset, anchors]
+              : ["rgn_isect",  region, cp, offset, anchors]
           : assert(is_finite(l))
             extent==true
-              ? ["xpath_extent", path, l, cp, offset, anchors]
-              : ["xpath_isect",  path, l, cp, offset, anchors]
+              ? ["xrgn_extent", region, l, cp, offset, anchors]
+              : ["xrgn_isect",  region, l, cp, offset, anchors]
     ) :
     let(
         r1 = get_radius(r1=r1,d1=d1,r=r,d=d,dflt=undef)
@@ -1345,7 +1363,7 @@ function _attach_geom(
 function _attach_geom_2d(geom) =
     let( type = geom[0] )
     type == "rect" || type == "circle" ||
-    type == "path_isect" || type == "path_extent";
+    type == "rgn_isect" || type == "rgn_extent";
 
 
 /// Internal Function: _attach_geom_size()
@@ -1390,9 +1408,9 @@ function _attach_geom_size(geom) =
             mm = pointlist_bounds(geom[1][0]),
             delt = mm[1]-mm[0]
         ) delt
-    ) : type == "xpath_isect" || type == "xpath_extent"? ( //path, l
+    ) : type == "xrgn_isect" || type == "xrgn_extent"? ( //path, l
         let(
-            mm = pointlist_bounds(geom[1]),
+            mm = pointlist_bounds(flatten(geom[1])),
             delt = mm[1]-mm[0]
         ) [delt.x, delt.y, geom[2]]
     ) : type == "rect"? ( //size, size2
@@ -1403,9 +1421,9 @@ function _attach_geom_size(geom) =
     ) : type == "circle"? ( //r
         let( r=geom[1] )
         is_num(r)? [2,2]*r : v_mul([2,2],point2d(r))
-    ) : type == "path_isect" || type == "path_extent"? ( //path
+    ) : type == "rgn_isect" || type == "rgn_extent"? ( //path
         let(
-            mm = pointlist_bounds(geom[1]),
+            mm = pointlist_bounds(flatten(geom[1])),
             delt = mm[1]-mm[0]
         ) [delt.x, delt.y]
     ) :
@@ -1495,7 +1513,7 @@ function _get_cp(geom) =
     is_vector(cp) ? cp
   : let(
         type = in_list(geom[0],["vnf_extent","vnf_isect"]) ? "vnf"
-             : in_list(geom[0],["path_extent","path_isect"]) ? "path"
+             : in_list(geom[0],["rgn_extent","rgn_isect"]) ? "path"
              : "other"
     )
     assert(type!="other", "Invalid cp value")
@@ -1548,17 +1566,17 @@ function _find_anchor(anchor, geom) =
             shift=point2d(geom[3]), axis=point3d(geom[4]),
             anch = rot(from=axis, to=UP, p=anchor),
             h = size.z,
-            u = (anch.z+1)/2,
+            u = (anch.z+1)/2,  // u is one of 0, 0.5, or 1
             axy = point2d(anch),
             bot = point3d(v_mul(point2d(size)/2,axy),-h/2),
             top = point3d(v_mul(point2d(size2)/2,axy)+shift,h/2),
             pos = point3d(cp) + lerp(bot,top,u) + offset,
-            sidevec = unit(rot(from=UP, to=top-bot, p=point3d(axy)),UP),
-            vvec = anch==CENTER? UP : unit([0,0,anch.z],UP),
-            vec = anch==CENTER? UP :
-                approx(axy,[0,0])? unit(anch,UP) :
-                approx(anch.z,0)? sidevec :
-                unit((sidevec+vvec)/2,UP),
+            vecs = [
+                if (anchor.x!=0) unit(rot(from=UP, to=unit([(top-bot).x,0,h]), p=[axy.x,0,0]), UP),
+                if (anchor.y!=0) unit(rot(from=UP, to=unit([0,(top-bot).y,h]), p=[0,axy.y,0]), UP),
+                if (anchor.z!=0) anch==CENTER? UP : unit([0,0,anch.z],UP)
+            ],
+            vec = unit(sum(vecs) / len(vecs)),
             pos2 = rot(from=UP, to=axis, p=pos),
             vec2 = rot(from=UP, to=axis, p=vec)
         ) [anchor, pos2, vec2, oang]
@@ -1656,11 +1674,22 @@ function _find_anchor(anchor, geom) =
     ) : type == "rect"? ( //size, size2, shift
         let(
             size=geom[1], size2=geom[2], shift=geom[3],
-            u = (anchor.y+1)/2,
+            u = (anchor.y+1)/2,  // 0<=u<=1
             frpt = [size.x/2*anchor.x, -size.y/2],
             bkpt = [size2/2*anchor.x+shift,  size.y/2],
-            pos = point2d(cp) + lerp(frpt, bkpt, u) + offset,
-            vec = unit(rot(from=BACK, to=bkpt-frpt, p=anchor),[0,1])
+            pos = point2d(cp) + lerp(frpt, bkpt, u) + point2d(offset),
+            svec = point3d(line_normal(bkpt,frpt)*anchor.x),
+            vec = anchor.y < 0? (
+                    anchor.x == 0? FWD :
+                    size.x == 0? unit(-[shift,size.y], FWD) :
+                    unit((point3d(svec) + FWD) / 2, FWD)
+                ) :
+                anchor.y == 0? ( anchor.x == 0? BACK : svec ) :
+                (  // anchor.y > 0
+                    anchor.x == 0? BACK :
+                    size2 == 0? unit([shift,size.y], BACK) :
+                    unit((point3d(svec) + BACK) / 2, BACK)
+                )
         ) [anchor, pos, vec, 0]
     ) : type == "circle"? ( //r
         let(
@@ -1670,12 +1699,13 @@ function _find_anchor(anchor, geom) =
             pos = point2d(cp) + v_mul(r,anchor) + point2d(offset),
             vec = unit(v_mul(r,anchor),[0,1])
         ) [anchor, pos, vec, 0]
-    ) : type == "path_isect"? ( //path
+    ) : type == "rgn_isect"? ( //region
         let(
-            path = move(-point2d(cp), p=geom[1]),
+            rgn_raw = move(-point2d(cp), p=geom[1]),
+            rgn = is_region(rgn_raw)? rgn_raw : [rgn_raw],
             anchor = point2d(anchor),
             isects = [
-                for (t=triplet(path,true)) let(
+                for (path=rgn, t=triplet(path,true)) let(
                     seg1 = [t[0],t[1]],
                     seg2 = [t[1],t[2]],
                     isect = line_intersection([[0,0],anchor], seg1,RAY,SEGMENT),
@@ -1691,26 +1721,31 @@ function _find_anchor(anchor, geom) =
             pos = point2d(cp) + isect[1],
             vec = unit(isect[2],[0,1])
         ) [anchor, pos, vec, 0]
-    ) : type == "path_extent"? ( //path
+    ) : type == "rgn_extent"? ( //region
         let(
-            path = geom[1],
+            rgn_raw = geom[1],
+            rgn = is_region(rgn_raw)? rgn_raw : [rgn_raw],
             anchor = point2d(anchor),
-            rpath = rot(from=anchor, to=RIGHT, p=move(point2d(-cp), p=path)),
-            maxx = max(columns(rpath,0)),
-            idxs = [for (i = idx(rpath)) if (approx(rpath[i].x, maxx)) i],
-            miny = min([for (i=idxs) rpath[i].y]),
-            maxy = max([for (i=idxs) rpath[i].y]),
-            avgy = (miny+maxy)/2,
-            pos = point2d(cp) + rot(from=RIGHT, to=anchor, p=[maxx,avgy])
+            m = rot(from=anchor, to=RIGHT) * move(-[cp.x, cp.y, 0]),
+            rpts = apply(m, flatten(rgn)),
+            maxx = max(columns(rpts,0)),
+            idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
+            miny = min([for (i=idxs) rpts[i].y]),
+            maxy = max([for (i=idxs) rpts[i].y]),
+            midy = (miny+maxy)/2,
+            pos = point2d(cp) + rot(from=RIGHT, to=anchor, p=[maxx,midy])
         ) [anchor, pos, anchor, 0]
-    ) : type == "xpath_isect"? ( //path
+    ) : type == "xrgn_isect"? ( //region
         let(
-            path = move(-point2d(cp), p=geom[1]),
+            rgn_raw = move(-point2d(cp), p=geom[1]),
             l = geom[2],
+            rgn = is_region(rgn_raw)? rgn_raw : [rgn_raw],
             anchor = point3d(anchor),
-            xyanch = point2d(anchor),
+            xyanch = point2d(anchor)
+        ) approx(xyanch,[0,0])? [anchor, [0,0,anchor.z*l/2], unit(anchor,UP), 0] :
+        let(
             isects = [
-                for (t=triplet(path,true)) let(
+                for (path=rgn, t=triplet(path,true)) let(
                     seg1 = [t[0],t[1]],
                     seg2 = [t[1],t[2]],
                     isect = line_intersection([[0,0],xyanch], seg1, RAY, SEGMENT),
@@ -1726,22 +1761,30 @@ function _find_anchor(anchor, geom) =
             isect = isects[maxidx],
             pos = point3d(cp) + point3d(isect[1]) + unit([0,0,anchor.z],CENTER)*l/2,
             xyvec = unit(isect[2],[0,1]),
-            vec = unit((point3d(xyvec)+UP)/2,UP),
+            vec = unit((point3d(xyvec)+UP*anchor.z)/2,UP),
             oang = approx(xyvec, [0,0])? 0 : atan2(xyvec.y, xyvec.x) + 90
         ) [anchor, pos, vec, oang]
-    ) : type == "xpath_extent"? ( //path
+    ) : type == "xrgn_extent"? ( //region
         let(
-            path = geom[1], l = geom[2],
+            rgn_raw = geom[1], l = geom[2],
+            rgn = is_region(rgn_raw)? rgn_raw : [rgn_raw],
             anchor = point3d(anchor),
             xyanch = point2d(anchor),
-            rpath = rot(from=xyanch, to=RIGHT, p=move(point2d(-cp), p=path)),
-            maxx = max(columns(rpath,0)),
-            idxs = [for (i = idx(rpath)) if (approx(rpath[i].x, maxx)) i],
-            ys = [for (i=idxs) rpath[i].y],
-            avgy = (min(ys)+max(ys))/2,
-            xypos = point2d(cp) + rot(from=RIGHT, to=xyanch, p=[maxx,avgy]),
+            m = (
+                approx(xyanch,[0,0])? [[1,0,0],[0,1,0],[0,0,1]] :
+                rot(from=xyanch, to=RIGHT, planar=true)
+            ) * move(-[cp.x, cp.y]),
+            rpts = apply(m, flatten(rgn)),
+            maxx = max(columns(rpts,0)),
+            idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
+            ys = [for (i=idxs) rpts[i].y],
+            midy = (min(ys)+max(ys))/2,
+            xypos = point2d(cp) + (
+                approx(xyanch,[0,0])? [0,0] :
+                rot(from=RIGHT, to=xyanch, p=[maxx,midy])
+            ),
             pos = point3d(xypos) + unit([0,0,anchor.z],CENTER)*l/2,
-            vec = unit((point3d(xyanch)+UP)/2,UP)
+            vec = unit((point3d(xyanch)+UP*anchor.z)/2,UP)
         ) [anchor, pos, vec, oang]
     ) :
     assert(false, "Unknown attachment geometry type.");

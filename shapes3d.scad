@@ -872,13 +872,18 @@ function rect_tube(
 ) = no_function("rect_tube");
 
 
-// Module: right_triangle()
+// Function&Module: wedge()
 //
-// Usage:
-//   right_triangle(size, [center]);
+// Usage: As Module
+//   wedge(size, [center], ...);
+// Usage: With Attachments
+//   wedge(size, [center], ...) { attachments }
+// Usage: As Function
+//   vnf = wedge(size, [center], ...);
 //
 // Description:
-//   Creates a 3D right triangular prism with the hypotenuse in the X+Y+ quadrant.
+//   When called as a modulem creates a 3D triangular wedge with the hypotenuse in the X+Z+ quadrant.
+//   When called as a function creates a VNF for a 3D triangular wedge with the hypotenuse in the X+Z+ quadrant.
 //
 // Arguments:
 //   size = [width, thickness, height]
@@ -889,28 +894,40 @@ function rect_tube(
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //
 // Example: Centered
-//   right_triangle([60, 40, 10], center=true);
+//   wedge([20, 40, 15], center=true);
 // Example: *Non*-Centered
-//   right_triangle([60, 40, 10]);
+//   wedge([20, 40, 15]);
 // Example: Standard Connectors
-//   right_triangle([60, 40, 15]) show_anchors();
-module right_triangle(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
+//   wedge([20, 40, 15]) show_anchors();
+module wedge(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
 {
     size = scalar_vec3(size);
     anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
-    attachable(anchor,spin,orient, size=size) {
+    vnf = wedge(size, center=true);
+    attachable(anchor,spin,orient, size=size, size2=[size.x,0], shift=[0,-size.y/2]) {
         if (size.z > 0) {
-            linear_extrude(height=size.z, convexity=2, center=true) {
-                polygon([[-size.x/2,-size.y/2], [-size.x/2,size.y/2], [size.x/2,-size.y/2]]);
-            }
+            vnf_polyhedron(vnf);
         }
         children();
     }
 }
 
 
-function right_triangle(size=[1,1,1], center, anchor, spin=0, orient=UP) =
-    no_function("right_triangle");
+function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
+    let(
+        size = scalar_vec3(size),
+        anchor = get_anchor(anchor, center, ALLNEG, ALLNEG),
+        pts = [
+            [ 1,1,-1], [ 1,-1,-1], [ 1,-1,1],
+            [-1,1,-1], [-1,-1,-1], [-1,-1,1],
+        ],
+        faces = [
+            [0,1,2], [3,5,4], [0,3,1], [1,3,4],
+            [1,4,2], [2,4,5], [2,5,3], [0,2,3],
+        ],
+        vnf = [scale(size/2,p=pts), faces]
+    )
+    reorient(anchor,spin,orient, size=size, size2=[size.x,0], shift=[0,-size.y/2], p=vnf);
 
 
 // Section: Cylinders
@@ -1529,7 +1546,7 @@ module pie_slice(
 //   vnf_polyhedron(vnf);
 module sphere(r, d, circum=false, style="orig", anchor=CENTER, spin=0, orient=UP) {
     r = get_radius(r=r, d=d, dflt=1);
-    if (!circum && style=="orig") {
+    if (!circum && style=="orig" && is_num(r)) {
         attachable(anchor,spin,orient, r=r) {
             _sphere(r=r);
             children();
