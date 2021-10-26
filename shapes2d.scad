@@ -602,6 +602,50 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
     regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, align_tip=align_tip, align_side=align_side, anchor=anchor, spin=spin) children();
 
 
+// Function&Module right_triangle()
+// Usage: As Module
+//   right_triangle(size, [center], ...);
+// Usage: With Attachments
+//   right_triangle(size, [center], ...) { attachments }
+// Usage: As Function
+//   path = right_triangle(size, [center], ...);
+// Description:
+//   Creates a right triangle with the Hypotenuse in the X+Y+ quadrant.
+// Arguments:
+//   size = The width and length of the right triangle, given as a scalar or an XY vector.
+//   center = If true, forces `anchor=CENTER`.  If false, forces `anchor=[-1,-1]`.  Default: undef (use `anchor=`)
+//   ---
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
+//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+// Example:
+//   right_triangle([40,30]);
+// Example: With `center=true`
+//   right_triangle([40,30], center=true);
+// Example: Anchors
+//   right_triangle([40,30])
+//       show_anchors();
+function right_triangle(size=[1,1], center, anchor, spin=0) =
+    let(
+        size = is_num(size)? [size,size] : size,
+        anchor = get_anchor(anchor, center, [-1,-1], [-1,-1])
+    )
+    assert(is_vector(size,2))
+    let(
+        path = [ [size.x/2,-size.y/2], [-size.x/2,-size.y/2], [-size.x/2,size.y/2] ]
+    ) reorient(anchor,spin, two_d=true, size=[size.x,size.y], size2=0, shift=-size.x/2, p=path);
+
+module right_triangle(size=[1,1], center, anchor, spin=0) {
+    size = is_num(size)? [size,size] : size;
+    anchor = get_anchor(anchor, center, [-1,-1], [-1,-1]);
+    assert(is_vector(size,2));
+    path = right_triangle(size, center=true);
+    attachable(anchor,spin, two_d=true, size=[size.x,size.y], size2=0, shift=-size.x/2) {
+        polygon(path);
+        children();
+    }
+}
+
+
 // Function&Module: trapezoid()
 // Usage: As Module
 //   trapezoid(h, w1, w2, [shift=], [rounding=], [chamfer=], ...);
