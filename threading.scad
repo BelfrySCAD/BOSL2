@@ -926,8 +926,8 @@ module generic_threaded_rod(
     assert(higang1 < twist/2);
     assert(higang2 < twist/2);
     prof3d = path3d(profile);
-    pdepth = -min(columns(profile,1));
-    pmax = pitch * max(columns(profile,1));
+    pdepth = -min(column(profile,1));
+    pmax = pitch * max(column(profile,1));
     rmax = max(_r1,_r2)+pmax;
     depth = pdepth * pitch;
     dummy1 = assert(_r1>depth && _r2>depth, "Screw profile deeper than rod radius");
@@ -1087,7 +1087,7 @@ module generic_threaded_nut(
     bevel1 = first_defined([bevel1,bevel,false]);
     bevel2 = first_defined([bevel2,bevel,false]);
     dummy1 = assert(is_num(pitch) && pitch>0);
-    depth = -pitch*min(columns(profile,1));
+    depth = -pitch*min(column(profile,1));
     attachable(anchor,spin,orient, size=[od/cos(30),od,h]) {
         difference() {
             cyl(d=od/cos(30), h=h, center=true, $fn=6,chamfer1=bevel1?depth:undef,chamfer2=bevel2?depth:undef);

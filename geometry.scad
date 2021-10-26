@@ -1994,7 +1994,7 @@ function align_polygon(reference, poly, angles, cp, trans, return_ind=false) =
                   return_error=true
               )
         ],
-        scores = columns(alignments,1),
+        scores = column(alignments,1),
         minscore = min(scores),
         minind = [for(i=idx(scores)) if (scores[i]<minscore+EPSILON) i],
         dummy = is_def(angles) ? echo(best_angles = select(list(angles), minind)):0,

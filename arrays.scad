@@ -5,7 +5,6 @@
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
-
 // Terminology:
 //   **List** = An ordered collection of zero or more items.  ie: `["a", "b", "c"]`
 //   **Vector** = A list of numbers. ie: `[4, 5, 6]`
@@ -251,7 +250,7 @@ function __find_approx(val, list, eps, i=0) =
 //   list = The list to get the portion of.
 //   start = Either the index of the first item or an index range or a list of indices.
 //   end = The index of the last item when `start` is a number. When `start` is a list or a range, `end` should not be given.
-// See Also: slice(), columns(), last()
+// See Also: slice(), column(), last()
 // Example:
 //   l = [3,4,5,6,7,8,9];
 //   a = select(l, 5, 6);   // Returns [8,9]
@@ -292,7 +291,7 @@ function select(list, start, end) =
 //   list = The list to get the slice of.
 //   s = The index of the first item to return.
 //   e = The index of the last item to return.
-// See Also: select(), columns(), last()
+// See Also: select(), column(), last()
 // Example:
 //   a = slice([3,4,5,6,7,8,9], 3, 5);   // Returns [6,7,8]
 //   b = slice([3,4,5,6,7,8,9], 2, -1);  // Returns [5,6,7,8,9]
@@ -317,7 +316,7 @@ function slice(list,s=0,e=-1) =
 // Usage:
 //   item = last(list);
 // Topics: List Handling
-// See Also: select(), slice(), columns()
+// See Also: select(), slice(), column()
 // Description:
 //   Returns the last element of a list, or undef if empty.
 // Arguments:
@@ -1471,63 +1470,6 @@ function permutations(l,n=2) =
       : [for (i=idx(l), p=permutations([for (j=idx(l)) if (i!=j) l[j]], n=n-1)) concat([l[i]], p)];
 
 
-// Function: zip()
-// Usage:
-//   pairs = zip(a,b);
-//   triples = zip(a,b,c);
-//   quads = zip([LIST1,LIST2,LIST3,LIST4]);
-// Topics: List Handling, Iteration
-// See Also: zip_long()
-// Description:
-//   Zips together two or more lists into a single list.  For example, if you have two
-//   lists [3,4,5], and [8,7,6], and zip them together, you get [ [3,8],[4,7],[5,6] ].
-//   The list returned will be as long as the shortest list passed to zip().
-// Arguments:
-//   a = The first list, or a list of lists if b and c are not given.
-//   b = The second list, if given.
-//   c = The third list, if given.
-// Example:
-//   a = [9,8,7,6]; b = [1,2,3];
-//   for (p=zip(a,b)) echo(p);
-//   // ECHO: [9,1]
-//   // ECHO: [8,2]
-//   // ECHO: [7,3]
-function zip(a,b,c) =
-    b!=undef? zip([a,b,if (c!=undef) c]) :
-    let(n = min_length(a))
-    [for (i=[0:1:n-1]) [for (x=a) x[i]]];
-
-
-// Function: zip_long()
-// Usage:
-//   pairs = zip_long(a,b);
-//   triples = zip_long(a,b,c);
-//   quads = zip_long([LIST1,LIST2,LIST3,LIST4]);
-// Topics: List Handling, Iteration
-// See Also: zip()
-// Description:
-//   Zips together two or more lists into a single list.  For example, if you have two
-//   lists [3,4,5], and [8,7,6], and zip them together, you get [ [3,8],[4,7],[5,6] ].
-//   The list returned will be as long as the longest list passed to zip_long(), with
-//   shorter lists padded by the value in `fill`.
-// Arguments:
-//   a = The first list, or a list of lists if b and c are not given.
-//   b = The second list, if given.
-//   c = The third list, if given.
-//   fill = The value to pad shorter lists with.  Default: undef
-// Example:
-//   a = [9,8,7,6]; b = [1,2,3];
-//   for (p=zip_long(a,b,fill=88)) echo(p);
-//   // ECHO: [9,1]
-//   // ECHO: [8,2]
-//   // ECHO: [7,3]
-//   // ECHO: [6,88]]
-function zip_long(a,b,c,fill) =
-    b!=undef? zip_long([a,b,if (c!=undef) c],fill=fill) :
-    let(n = max_length(a))
-    [for (i=[0:1:n-1]) [for (x=a) i<len(x)? x[i] : fill]];
-
-
 
 // Section: Set Manipulation
 
@@ -1616,209 +1558,7 @@ function set_intersection(a, b) =
 
 
 
-// Section: Array Manipulation
-
-// Function: columns()
-// Usage:
-//   list = columns(M, idx);
-// Topics: Array Handling, List Handling
-// See Also: select(), slice()
-// Description:
-//   Extracts the entries listed in idx from each entry in M.  For a matrix this means
-//   selecting a specified set of columns.  If idx is a number the return is a vector, 
-//   otherwise it is a list of lists (the submatrix).  
-//   This function will return `undef` at all entry positions indexed by idx not found in the input list M.
-// Arguments:
-//   M = The given list of lists.
-//   idx = The index, list of indices, or range of indices to fetch.
-// Example:
-//   M = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
-//   a = columns(M,2);      // Returns [3, 7, 11, 15]
-//   b = columns(M,[2]);    // Returns [[3], [7], [11], [15]]
-//   c = columns(M,[2,1]);  // Returns [[3, 2], [7, 6], [11, 10], [15, 14]]
-//   d = columns(M,[1:3]);  // Returns [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]
-//   N = [ [1,2], [3], [4,5], [6,7,8] ];
-//   e = columns(N,[0,1]);  // Returns [ [1,2], [3,undef], [4,5], [6,7] ]
-function columns(M, idx) =
-    assert( is_list(M), "The input is not a list." )
-    assert( !is_undef(idx) && _valid_idx(idx,0,1/0), "Invalid index input." ) 
-    is_finite(idx)
-      ? [for(row=M) row[idx]]
-      : [for(row=M) [for(i=idx) row[i]]];
-
-
-// Function: submatrix()
-// Usage:
-//   mat = submatrix(M, idx1, idx2);
-// Topics: Matrices, Array Handling
-// See Also: columns(), block_matrix(), submatrix_set()
-// Description:
-//   The input must be a list of lists (a matrix or 2d array).  Returns a submatrix by selecting the rows listed in idx1 and columns listed in idx2.
-// Arguments:
-//   M = Given list of lists
-//   idx1 = rows index list or range
-//   idx2 = column index list or range
-// Example:
-//   M = [[ 1, 2, 3, 4, 5],
-//        [ 6, 7, 8, 9,10],
-//        [11,12,13,14,15],
-//        [16,17,18,19,20],
-//        [21,22,23,24,25]];
-//   submatrix(M,[1:2],[3:4]);  // Returns [[9, 10], [14, 15]]
-//   submatrix(M,[1], [3,4]));  // Returns [[9,10]]
-//   submatrix(M,1, [3,4]));  // Returns [[9,10]]
-//   submatrix(M,1,3));  // Returns [[9]]
-//   submatrix(M, [3,4],1); // Returns  [[17],[22]]);
-//   submatrix(M, [1,3],[2,4]); // Returns [[8,10],[18,20]]);
-//   A = [[true,    17, "test"],
-//        [[4,2],   91, false],
-//        [6,    [3,4], undef]];
-//   submatrix(A,[0,2],[1,2]);   // Returns [[17, "test"], [[3, 4], undef]]
-function submatrix(M,idx1,idx2) =
-    [for(i=idx1) [for(j=idx2) M[i][j] ] ];
-
-
-// Function: hstack()
-// Usage: 
-//   A = hstack(M1, M2)
-//   A = hstack(M1, M2, M3)
-//   A = hstack([M1, M2, M3, ...])
-// Topics: Matrices, Array Handling
-// See Also: columns(), submatrix(), block_matrix()
-// Description:
-//   Constructs a matrix by horizontally "stacking" together compatible matrices or vectors.  Vectors are treated as columsn in the stack.
-//   This command is the inverse of `columns`.  Note: strings given in vectors are broken apart into lists of characters.  Strings given
-//   in matrices are preserved as strings.  If you need to combine vectors of strings use array_group as shown below to convert the
-//   vector into a column matrix.  Also note that vertical stacking can be done directly with concat.  
-// Arguments:
-//   M1 = If given with other arguments, the first matrix (or vector) to stack.  If given alone, a list of matrices/vectors to stack. 
-//   M2 = Second matrix/vector to stack
-//   M3 = Third matrix/vector to stack.
-// Example:
-//   M = ident(3);
-//   v1 = [2,3,4];
-//   v2 = [5,6,7];
-//   v3 = [8,9,10];
-//   a = hstack(v1,v2);     // Returns [[2, 5], [3, 6], [4, 7]]
-//   b = hstack(v1,v2,v3);  // Returns [[2, 5,  8],
-//                          //          [3, 6,  9],
-//                          //          [4, 7, 10]]
-//   c = hstack([M,v1,M]);  // Returns [[1, 0, 0, 2, 1, 0, 0],
-//                          //          [0, 1, 0, 3, 0, 1, 0],
-//                          //          [0, 0, 1, 4, 0, 0, 1]]
-//   d = hstack(columns(M,0), columns(M,[1 2]));  // Returns M
-//   strvec = ["one","two"];
-//   strmat = [["three","four"], ["five","six"]];
-//   e = hstack(strvec,strvec); // Returns [["o", "n", "e", "o", "n", "e"],
-//                              //          ["t", "w", "o", "t", "w", "o"]]
-//   f = hstack(array_group(strvec,1), array_group(strvec,1));
-//                              // Returns [["one", "one"],
-//                              //          ["two", "two"]]
-//   g = hstack(strmat,strmat); //  Returns: [["three", "four", "three", "four"],
-//                              //            [ "five",  "six",  "five",  "six"]]
-function hstack(M1, M2, M3) =
-    (M3!=undef)? hstack([M1,M2,M3]) : 
-    (M2!=undef)? hstack([M1,M2]) :
-    assert(all([for(v=M1) is_list(v)]), "One of the inputs to hstack is not a list")
-    let(
-        minlen = min_length(M1),
-        maxlen = max_length(M1)
-    )
-    assert(minlen==maxlen, "Input vectors to hstack must have the same length")
-    [for(row=[0:1:minlen-1])
-        [for(matrix=M1)
-           each matrix[row]
-        ]
-    ];
-
-
-// Function: block_matrix()
-// Usage:
-//    bmat = block_matrix([[M11, M12,...],[M21, M22,...], ... ]);
-// Topics: Matrices, Array Handling
-// See Also: columns(), submatrix()
-// Description:
-//    Create a block matrix by supplying a matrix of matrices, which will
-//    be combined into one unified matrix.  Every matrix in one row
-//    must have the same height, and the combined width of the matrices
-//    in each row must be equal. Strings will stay strings. 
-// Example:
-//  A = [[1,2],
-//       [3,4]];
-//  B = ident(2);
-//  C = block_matrix([[A,B],[B,A],[A,B]]);
-//      // Returns:
-//      //        [[1, 2, 1, 0],
-//      //         [3, 4, 0, 1],
-//      //         [1, 0, 1, 2],
-//      //         [0, 1, 3, 4],
-//      //         [1, 2, 1, 0],
-//      //         [3, 4, 0, 1]]);
-//  D = block_matrix([[A,B], ident(4)]);
-//      // Returns:
-//      //        [[1, 2, 1, 0],
-//      //         [3, 4, 0, 1],
-//      //         [1, 0, 0, 0],
-//      //         [0, 1, 0, 0],
-//      //         [0, 0, 1, 0],
-//      //         [0, 0, 0, 1]]);
-//  E = [["one", "two"], [3,4]];
-//  F = block_matrix([[E,E]]);
-//      // Returns:
-//      //        [["one", "two", "one", "two"],
-//      //         [    3,     4,     3,     4]]
-function block_matrix(M) =
-    let(
-        bigM = [for(bigrow = M) each hstack(bigrow)],
-        len0 = len(bigM[0]),
-        badrows = [for(row=bigM) if (len(row)!=len0) 1]
-    )
-    assert(badrows==[], "Inconsistent or invalid input")
-    bigM;
-
-// Function: diagonal_matrix()
-// Usage:
-//   mat = diagonal_matrix(diag, [offdiag]);
-// Topics: Matrices, Array Handling
-// See Also: columns(), submatrix()
-// Description:
-//   Creates a square matrix with the items in the list `diag` on
-//   its diagonal.  The off diagonal entries are set to offdiag,
-//   which is zero by default. 
-// Arguments:
-//   diag = A list of items to put in the diagnal cells of the matrix.
-//   offdiag = Value to put in non-diagonal matrix cells.
-function diagonal_matrix(diag, offdiag=0) =
-  assert(is_list(diag) && len(diag)>0)
-  [for(i=[0:1:len(diag)-1]) [for(j=[0:len(diag)-1]) i==j?diag[i] : offdiag]];
-
-
-// Function: submatrix_set()
-// Usage:
-//   mat = submatrix_set(M, A, [m], [n]);
-// Topics: Matrices, Array Handling
-// See Also: columns(), submatrix()
-// Description:
-//   Sets a submatrix of M equal to the matrix A.  By default the top left corner of M is set to A, but
-//   you can specify offset coordinates m and n.  If A (as adjusted by m and n) extends beyond the bounds
-//   of M then the extra entries are ignored.  You can pass in A=[[]], a null matrix, and M will be
-//   returned unchanged.  Note that the input M need not be rectangular in shape.  
-// Arguments:
-//   M = Original matrix.
-//   A = Sub-matrix of parts to set.
-//   m = Row number of upper-left corner to place A at.
-//   n = Column number of upper-left corner to place A at.
-function submatrix_set(M,A,m=0,n=0) =
-    assert(is_list(M))
-    assert(is_list(A))
-    assert(is_int(m))
-    assert(is_int(n))
-    let( badrows = [for(i=idx(A)) if (!is_list(A[i])) i])
-    assert(badrows==[], str("Input submatrix malformed rows: ",badrows))
-    [for(i=[0:1:len(M)-1])
-        assert(is_list(M[i]), str("Row ",i," of input matrix is not a list"))
-        [for(j=[0:1:len(M[i])-1]) 
-            i>=m && i <len(A)+m && j>=n && j<len(A[0])+n ? A[i-m][j-n] : M[i][j]]];
+// Section: Changing list structure
 
 
 // Function: array_group()
@@ -1828,7 +1568,7 @@ function submatrix_set(M,A,m=0,n=0) =
 //   Takes a flat array of values, and groups items in sets of `cnt` length.
 //   The opposite of this is `flatten()`.
 // Topics: Matrices, Array Handling
-// See Also: columns(), submatrix(), hstack(), flatten(), full_flatten()
+// See Also: column(), submatrix(), hstack(), flatten(), full_flatten()
 // Arguments:
 //   v = The list of items to group.
 //   cnt = The number of items to put in each grouping.  Default:2
@@ -1847,7 +1587,7 @@ function array_group(v, cnt=2, dflt=0) =
 // Usage:
 //   list = flatten(l);
 // Topics: Matrices, Array Handling
-// See Also: columns(), submatrix(), hstack(), full_flatten()
+// See Also: column(), submatrix(), hstack(), full_flatten()
 // Description:
 //   Takes a list of lists and flattens it by one level.
 // Arguments:
@@ -1863,7 +1603,7 @@ function flatten(l) =
 // Usage:
 //   list = full_flatten(l);
 // Topics: Matrices, Array Handling
-// See Also: columns(), submatrix(), hstack(), flatten()
+// See Also: column(), submatrix(), hstack(), flatten()
 // Description: 
 //   Collects in a list all elements recursively found in any level of the given list.
 //   The output list is ordered in depth first order.
@@ -1925,110 +1665,63 @@ function array_dim(v, depth=undef) =
         :  let( dimlist = _array_dim_recurse(v))
            (depth > len(dimlist))? 0 : dimlist[depth-1] ;
            
-           
 
-
-// Function: transpose()
+// Function: zip()
 // Usage:
-//    arr = transpose(arr, [reverse]);
-// Topics: Matrices, Array Handling
-// See Also: submatrix(), block_matrix(), hstack(), flatten()
+//   pairs = zip(a,b);
+//   triples = zip(a,b,c);
+//   quads = zip([LIST1,LIST2,LIST3,LIST4]);
+// Topics: List Handling, Iteration
+// See Also: zip_long()
 // Description:
-//    Returns the transpose of the given input array.  The input should be a list of lists that are
-//    all the same length.  If you give a vector then transpose returns it unchanged.  
-//    When reverse=true, the transpose is done across to the secondary diagonal.  (See example below.)
-//    By default, reverse=false.
-// Example:
-//   arr = [
-//       ["a", "b", "c"],
-//       ["d", "e", "f"],
-//       ["g", "h", "i"]
-//   ];
-//   t = transpose(arr);
-//   // Returns:
-//   // [
-//   //     ["a", "d", "g"],
-//   //     ["b", "e", "h"],
-//   //     ["c", "f", "i"],
-//   // ]
-// Example:
-//   arr = [
-//       ["a", "b", "c"],
-//       ["d", "e", "f"]
-//   ];
-//   t = transpose(arr);
-//   // Returns:
-//   // [
-//   //     ["a", "d"],
-//   //     ["b", "e"],
-//   //     ["c", "f"],
-//   // ]
-// Example:
-//   arr = [
-//       ["a", "b", "c"],
-//       ["d", "e", "f"],
-//       ["g", "h", "i"]
-//   ];
-//   t = transpose(arr, reverse=true);
-//   // Returns:
-//   // [
-//   //  ["i", "f", "c"],
-//   //  ["h", "e", "b"],
-//   //  ["g", "d", "a"]
-//   // ]
-// Example: Transpose on a list of numbers returns the list unchanged
-//   transpose([3,4,5]);  // Returns: [3,4,5]
-function transpose(arr, reverse=false) =
-    assert( is_list(arr) && len(arr)>0, "Input to transpose must be a nonempty list.")
-    is_list(arr[0])
-    ?   let( len0 = len(arr[0]) )
-        assert([for(a=arr) if(!is_list(a) || len(a)!=len0) 1 ]==[], "Input to transpose has inconsistent row lengths." )
-        reverse
-        ? [for (i=[0:1:len0-1]) 
-              [ for (j=[0:1:len(arr)-1]) arr[len(arr)-1-j][len0-1-i] ] ] 
-        : [for (i=[0:1:len0-1]) 
-              [ for (j=[0:1:len(arr)-1]) arr[j][i] ] ] 
-    :  assert( is_vector(arr), "Input to transpose must be a vector or list of lists.")
-           arr;
-
-
-// Section: Matrices
-
-// Function: is_matrix_symmetric()
-// Usage:
-//   b = is_matrix_symmetric(A, [eps])
-// Description:
-//   Returns true if the input matrix is symmetric, meaning it equals its transpose.
-//   Matrix should have numerical entries.
+//   Zips together two or more lists into a single list.  For example, if you have two
+//   lists [3,4,5], and [8,7,6], and zip them together, you get [ [3,8],[4,7],[5,6] ].
+//   The list returned will be as long as the shortest list passed to zip().
 // Arguments:
-//   A = matrix to test
-//   eps = epsilon for comparing equality.  Default: 1e-12
-function is_matrix_symmetric(A,eps=1e-12) =
-    approx(A,transpose(A), eps);
+//   a = The first list, or a list of lists if b and c are not given.
+//   b = The second list, if given.
+//   c = The third list, if given.
+// Example:
+//   a = [9,8,7,6]; b = [1,2,3];
+//   for (p=zip(a,b)) echo(p);
+//   // ECHO: [9,1]
+//   // ECHO: [8,2]
+//   // ECHO: [7,3]
+function zip(a,b,c) =
+    b!=undef? zip([a,b,if (c!=undef) c]) :
+    let(n = min_length(a))
+    [for (i=[0:1:n-1]) [for (x=a) x[i]]];
 
 
-// Function&Module: echo_matrix()
+// Function: zip_long()
 // Usage:
-//    echo_matrix(M, [description=], [sig=], [eps=]);
-//    dummy = echo_matrix(M, [description=], [sig=], [eps=]),
+//   pairs = zip_long(a,b);
+//   triples = zip_long(a,b,c);
+//   quads = zip_long([LIST1,LIST2,LIST3,LIST4]);
+// Topics: List Handling, Iteration
+// See Also: zip()
 // Description:
-//    Display a numerical matrix in a readable columnar format with `sig` significant
-//    digits.  Values smaller than eps display as zero.  If you give a description
-//    it is displayed at the top.  
-function echo_matrix(M,description,sig=4,eps=1e-9) =
-  let(
-      horiz_line = chr(8213),
-      matstr = matrix_strings(M,sig=sig,eps=eps),
-      separator = str_join(repeat(horiz_line,10)),
-      dummy=echo(str(separator,"  ",is_def(description) ? description : ""))
-            [for(row=matstr) echo(row)]
-  )
-  echo(separator);
+//   Zips together two or more lists into a single list.  For example, if you have two
+//   lists [3,4,5], and [8,7,6], and zip them together, you get [ [3,8],[4,7],[5,6] ].
+//   The list returned will be as long as the longest list passed to zip_long(), with
+//   shorter lists padded by the value in `fill`.
+// Arguments:
+//   a = The first list, or a list of lists if b and c are not given.
+//   b = The second list, if given.
+//   c = The third list, if given.
+//   fill = The value to pad shorter lists with.  Default: undef
+// Example:
+//   a = [9,8,7,6]; b = [1,2,3];
+//   for (p=zip_long(a,b,fill=88)) echo(p);
+//   // ECHO: [9,1]
+//   // ECHO: [8,2]
+//   // ECHO: [7,3]
+//   // ECHO: [6,88]]
+function zip_long(a,b,c,fill) =
+    b!=undef? zip_long([a,b,if (c!=undef) c],fill=fill) :
+    let(n = max_length(a))
+    [for (i=[0:1:n-1]) [for (x=a) i<len(x)? x[i] : fill]];
 
-module echo_matrix(M,description,sig=4,eps=1e-9)
-{
-  dummy = echo_matrix(M,description,sig,eps);
-}
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

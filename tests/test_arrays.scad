@@ -451,36 +451,6 @@ module test_add_scalar() {
 test_add_scalar();
 
 
-module test_columns() {
-    v = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]];
-    assert(columns(v,2) == [3, 7, 11, 15]);
-    assert(columns(v,[2]) == [[3], [7], [11], [15]]);
-    assert(columns(v,[2,1]) == [[3, 2], [7, 6], [11, 10], [15, 14]]);
-    assert(columns(v,[1:3]) == [[2, 3, 4], [6, 7, 8], [10, 11, 12], [14, 15, 16]]);
-}
-test_columns();
-
-
-// Need decision about behavior for out of bounds ranges, empty ranges
-module test_submatrix(){
-  M = [[1,2,3,4,5],
-       [6,7,8,9,10],
-       [11,12,13,14,15],
-       [16,17,18,19,20],
-       [21,22,23,24,25]];
-  assert_equal(submatrix(M,[1:2], [3:4]), [[9,10],[14,15]]);
-  assert_equal(submatrix(M,[1], [3,4]), [[9,10]]);
-  assert_equal(submatrix(M,1, [3,4]), [[9,10]]);
-  assert_equal(submatrix(M, [3,4],1), [[17],[22]]);
-  assert_equal(submatrix(M, [1,3],[2,4]), [[8,10],[18,20]]);
-  assert_equal(submatrix(M, 1,3), [[9]]);
-  A = [[true,    17, "test"],
-     [[4,2],   91, false],
-     [6,    [3,4], undef]];
-  assert_equal(submatrix(A,[0,2],[1,2]),[[17, "test"], [[3, 4], undef]]);
-}
-test_submatrix();
-
 
 module test_force_list() {
     assert_equal(force_list([3,4,5]), [3,4,5]);
@@ -535,67 +505,8 @@ module test_zip() {
     v3 = [8,9,10,11];
     assert(zip(v1,v3) == [[1,8],[2,9],[3,10],[4,11]]);
     assert(zip([v1,v3]) == [[1,8],[2,9],[3,10],[4,11]]);
-    assert(zip([v1,v2],fit="short") == [[1,5],[2,6],[3,7]]);
-    assert(zip([v1,v2],fit="long") == [[1,5],[2,6],[3,7],[4,undef]]);
-    assert(zip([v1,v2],fit="long", fill=0) == [[1,5],[2,6],[3,7],[4,0]]);
-    assert(zip([v1,v2,v3],fit="long") == [[1,5,8],[2,6,9],[3,7,10],[4,undef,11]]);
 }
-//test_zip();
-
-module test_hstack() {
-    M = ident(3);
-    v1 = [2,3,4];
-    v2 = [5,6,7];
-    v3 = [8,9,10];
-    a = hstack(v1,v2);   
-    b = hstack(v1,v2,v3);
-    c = hstack([M,v1,M]);
-    d = hstack(columns(M,0), columns(M,[1, 2]));
-    assert_equal(a,[[2, 5], [3, 6], [4, 7]]);
-    assert_equal(b,[[2, 5, 8], [3, 6, 9], [4, 7, 10]]);
-    assert_equal(c,[[1, 0, 0, 2, 1, 0, 0], [0, 1, 0, 3, 0, 1, 0], [0, 0, 1, 4, 0, 0, 1]]);
-    assert_equal(d,M);
-    strmat = [["three","four"], ["five","six"]];
-    assert_equal(hstack(strmat,strmat), [["three", "four", "three", "four"], ["five", "six", "five", "six"]]);
-    strvec = ["one","two"];
-    assert_equal(hstack(strvec,strmat),[["o", "n", "e", "three", "four"], ["t", "w", "o", "five", "six"]]);
-}
-test_hstack();
-
-
-module test_block_matrix() {
-    A = [[1,2],[3,4]];
-    B = ident(2);
-    assert_equal(block_matrix([[A,B],[B,A],[A,B]]), [[1,2,1,0],[3,4,0,1],[1,0,1,2],[0,1,3,4],[1,2,1,0],[3,4,0,1]]);
-    assert_equal(block_matrix([[A,B],ident(4)]), [[1,2,1,0],[3,4,0,1],[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]);
-    text = [["aa","bb"],["cc","dd"]];
-    assert_equal(block_matrix([[text,B]]), [["aa","bb",1,0],["cc","dd",0,1]]);
-}
-test_block_matrix();
-
-
-module test_diagonal_matrix() {
-    assert_equal(diagonal_matrix([1,2,3]), [[1,0,0],[0,2,0],[0,0,3]]);
-    assert_equal(diagonal_matrix([1,"c",2]), [[1,0,0],[0,"c",0],[0,0,2]]);
-    assert_equal(diagonal_matrix([1,"c",2],"X"), [[1,"X","X"],["X","c","X"],["X","X",2]]);
-    assert_equal(diagonal_matrix([[1,1],[2,2],[3,3]], [0,0]), [[ [1,1],[0,0],[0,0]], [[0,0],[2,2],[0,0]], [[0,0],[0,0],[3,3]]]);
-}
-test_diagonal_matrix();
-
-module test_submatrix_set() {
-    test = [[1,2,3,4,5],[6,7,8,9,10],[11,12,13,14,15], [16,17,18,19,20]];
-    ragged = [[1,2,3,4,5],[6,7,8,9,10],[11,12], [16,17]];
-    assert_equal(submatrix_set(test,[[9,8],[7,6]]), [[9,8,3,4,5],[7,6,8,9,10],[11,12,13,14,15], [16,17,18,19,20]]);
-    assert_equal(submatrix_set(test,[[9,7],[8,6]],1),[[1,2,3,4,5],[9,7,8,9,10],[8,6,13,14,15], [16,17,18,19,20]]);
-    assert_equal(submatrix_set(test,[[9,8],[7,6]],n=1), [[1,9,8,4,5],[6,7,6,9,10],[11,12,13,14,15], [16,17,18,19,20]]);
-    assert_equal(submatrix_set(test,[[9,8],[7,6]],1,2), [[1,2,3,4,5],[6,7,9,8,10],[11,12,7,6,15], [16,17,18,19,20]]);
-    assert_equal(submatrix_set(test,[[9,8],[7,6]],-1,-1), [[6,2,3,4,5],[6,7,8,9,10],[11,12,13,14,15], [16,17,18,19,20]]);
-    assert_equal(submatrix_set(test,[[9,8],[7,6]],n=4), [[1,2,3,4,9],[6,7,8,9,7],[11,12,13,14,15], [16,17,18,19,20]]);
-    assert_equal(submatrix_set(test,[[9,8],[7,6]],7,7), [[1,2,3,4,5],[6,7,8,9,10],[11,12,13,14,15], [16,17,18,19,20]]);
-    assert_equal(submatrix_set(ragged, [["a","b"],["c","d"]], 1, 1), [[1,2,3,4,5],[6,"a","b",9,10],[11,"c"], [16,17]]);
-    assert_equal(submatrix_set(test, [[]]), test);
-}
-test_submatrix_set();
+test_zip();
 
 
 module test_array_group() {
@@ -643,15 +554,6 @@ module test_array_dim() {
     assert(array_dim([[],[1]]) == [2,undef]);
 }
 test_array_dim();
-
-
-module test_transpose() {
-    assert(transpose([[1,2,3],[4,5,6],[7,8,9]]) == [[1,4,7],[2,5,8],[3,6,9]]);
-    assert(transpose([[1,2,3],[4,5,6]]) == [[1,4],[2,5],[3,6]]);
-    assert(transpose([[1,2,3],[4,5,6]],reverse=true) == [[6,3], [5,2], [4,1]]);
-    assert(transpose([3,4,5]) == [3,4,5]);
-}
-test_transpose();
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

@@ -427,7 +427,7 @@ function resample_path(path, N, spacing, closed=false) =
        distlist = lerpn(0,length,N,false), 
        cuts = _path_cut_points(path, distlist, closed=closed)
    )
-   [ each columns(cuts,0),
+   [ each column(cuts,0),
      if (!closed) last(path)     // Then add last point here
    ];
 
@@ -1174,7 +1174,7 @@ function _assemble_path_fragments(fragments, eps=EPSILON, _finished=[]) =
    len(fragments)==0? _finished :
     let(
         minxidx = min_index([
-            for (frag=fragments) min(columns(frag,0))
+            for (frag=fragments) min(column(frag,0))
         ]),
         result_l = _assemble_a_path_from_fragments(
             fragments=fragments,
