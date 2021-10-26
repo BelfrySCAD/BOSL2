@@ -267,7 +267,7 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
          cornerpts = [for(i=[0:1])
                          [for(k=vector_search(points[i],eps,points[i]))
                              each if (len(k)>1) select(ptind[i],k)]],
-         risect = [for(i=[0:1]) concat(columns(intersections,i), cornerpts[i])],
+         risect = [for(i=[0:1]) concat(column(intersections,i), cornerpts[i])],
          counts = [count(len(region1)), count(len(region2))],
          pathind = [for(i=[0:1]) search(counts[i], risect[i], 0)]
        )

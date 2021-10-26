@@ -2266,7 +2266,7 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
   usernorm = is_def(normal);
   usetop = is_def(top);
   
-  normpts = is_undef(normal) ? (reverse?1:-1)*columns(pts,3) : _cut_interp(pts,path, normal);
+  normpts = is_undef(normal) ? (reverse?1:-1)*column(pts,3) : _cut_interp(pts,path, normal);
   toppts = is_undef(top) ? undef : _cut_interp(pts,path,top);
   for(i=idx(text))
       let( tangent = pts[i][2] )

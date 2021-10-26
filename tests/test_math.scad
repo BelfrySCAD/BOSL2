@@ -595,13 +595,13 @@ module test_mean() {
 }
 test_mean();
 
-/*
+
 module test_median() {
-    assert_equal(median([2,3,7]), 4.5);
-    assert_equal(median([[1,2,3], [3,4,5], [8,9,10]]), [4.5,5.5,6.5]);
+    assert_equal(median([2,3,7]), 3);
+    assert_equal(median([2,4,5,8]), 4.5);
 }
 test_median();
-*/
+
 
 
 module test_convolve() {
@@ -617,40 +617,6 @@ module test_convolve() {
 test_convolve();
 
 
-
-module test_matrix_inverse() {
-    assert_approx(matrix_inverse(rot([20,30,40])), [[0.663413948169,0.556670399226,-0.5,0],[-0.47302145844,0.829769465589,0.296198132726,0],[0.579769465589,0.0400087565481,0.813797681349,0],[0,0,0,1]]);
-}
-test_matrix_inverse();
-
-
-module test_det2() {
-    assert_equal(det2([[6,-2], [1,8]]), 50);
-    assert_equal(det2([[4,7], [3,2]]), -13);
-    assert_equal(det2([[4,3], [3,4]]), 7);
-}
-test_det2();
-
-
-module test_det3() {
-    M = [ [6,4,-2], [1,-2,8], [1,5,7] ];
-    assert_equal(det3(M), -334);
-}
-test_det3();
-
-
-module test_determinant() {
-    M = [ [6,4,-2,9], [1,-2,8,3], [1,5,7,6], [4,2,5,1] ];
-    assert_equal(determinant(M), 2267);
-}
-test_determinant();
-
-
-module test_matrix_trace() {
-    M = [ [6,4,-2,9], [1,-2,8,3], [1,5,7,6], [4,2,5,1] ];
-    assert_equal(matrix_trace(M), 6-2+7+1);
-}
-test_matrix_trace();
 
 
 // Logic
@@ -975,40 +941,6 @@ test_back_substitute();
 
 
 
-module test_norm_fro(){
-  assert_approx(norm_fro([[2,3,4],[4,5,6]]), 10.29563014098700);
-
-} test_norm_fro();  
-
-
-module test_linear_solve(){
-  M = [[-2,-5,-1,3],
-       [3,7,6,2],
-       [6,5,-1,-6],
-       [-7,1,2,3]];
-  assert_approx(linear_solve(M, [-3,43,-11,13]), [1,2,3,4]);
-  assert_approx(linear_solve(M, [[-5,8],[18,-61],[4,7],[-1,-12]]), [[1,-2],[1,-3],[1,-4],[1,-5]]);
-  assert_approx(linear_solve([[2]],[4]), [2]);
-  assert_approx(linear_solve([[2]],[[4,8]]), [[2, 4]]);
-  assert_approx(linear_solve(select(M,0,2), [2,4,4]), [   2.254871220604705e+00,
-                                                         -8.378819388897780e-01,
-                                                          2.330507118860985e-01,
-                                                          8.511278195488737e-01]);
-  assert_approx(linear_solve(columns(M,[0:2]), [2,4,4,4]),
-                 [-2.457142857142859e-01,
-                   5.200000000000000e-01,
-                   7.428571428571396e-02]);
-  assert_approx(linear_solve([[1,2,3,4]], [2]), [0.066666666666666, 0.13333333333, 0.2, 0.266666666666]);
-  assert_approx(linear_solve([[1],[2],[3],[4]], [4,3,2,1]), [2/3]);
-  rd = [[-2,-5,-1,3],
-        [3,7,6,2],
-        [3,7,6,2],
-        [-7,1,2,3]];
-  assert_equal(linear_solve(rd,[1,2,3,4]),[]);
-  assert_equal(linear_solve(select(rd,0,2), [2,4,4]), []);
-  assert_equal(linear_solve(transpose(select(rd,0,2)), [2,4,3,4]), []);
-}
-test_linear_solve();
 
 
 module test_cumprod(){
@@ -1185,85 +1117,6 @@ module test_quadratic_roots(){
 }
 test_quadratic_roots();
 
-
-module test_null_space(){
-    assert_equal(null_space([[3,2,1],[3,6,3],[3,9,-3]]),[]);
-
-    function nullcheck(A,dim) =
-      let(v=null_space(A))
-        len(v)==dim && all_zero(A*transpose(v),eps=1e-12);
-    
-   A = [[-1, 2, -5, 2],[-3,-1,3,-3],[5,0,5,0],[3,-4,11,-4]];
-   assert(nullcheck(A,1));
-
-   B = [
-        [  4,    1,    8,    6,   -2,    3],
-        [ 10,    5,   10,   10,    0,    5],
-        [  8,    1,    8,    8,   -6,    1],
-        [ -8,   -8,    6,   -1,   -8,   -1],
-        [  2,    2,    0,    1,    2,    1],
-        [  2,   -3,   10,    6,   -8,    1],
-       ];
-   assert(nullcheck(B,3));
-}
-test_null_space();
-
-module test_qr_factor() {
-  // Check that R is upper triangular
-  function is_ut(R) =
-     let(bad = [for(i=[1:1:len(R)-1], j=[0:min(i-1, len(R[0])-1)]) if (!approx(R[i][j],0)) 1])
-     bad == [];
-
-  // Test the R is upper trianglar, Q is orthogonal and qr=M
-  function qrok(qr,M) =
-     is_ut(qr[1]) && approx(qr[0]*transpose(qr[0]), ident(len(qr[0]))) && approx(qr[0]*qr[1],M) && qr[2]==ident(len(qr[2]));
-
-  // Test the R is upper trianglar, Q is orthogonal, R diagonal non-increasing and qrp=M
-  function qrokpiv(qr,M) =
-       is_ut(qr[1])
-    && approx(qr[0]*transpose(qr[0]), ident(len(qr[0])))
-    && approx(qr[0]*qr[1]*transpose(qr[2]),M)
-    && is_decreasing([for(i=[0:1:min(len(qr[1]),len(qr[1][0]))-1]) abs(qr[1][i][i])]);
-
-  
-  M = [[1,2,9,4,5],
-       [6,7,8,19,10],
-       [11,12,13,14,15],
-       [1,17,18,19,20],
-       [21,22,10,24,25]];
-  
-  assert(qrok(qr_factor(M),M));
-  assert(qrok(qr_factor(select(M,0,3)),select(M,0,3)));
-  assert(qrok(qr_factor(transpose(select(M,0,3))),transpose(select(M,0,3))));
-
-  A = [[1,2,9,4,5],
-       [6,7,8,19,10],
-       [0,0,0,0,0],
-       [1,17,18,19,20],
-       [21,22,10,24,25]];
-  assert(qrok(qr_factor(A),A));
-
-  B = [[1,2,0,4,5],
-       [6,7,0,19,10],
-       [0,0,0,0,0],
-       [1,17,0,19,20],
-       [21,22,0,24,25]];
-
-  assert(qrok(qr_factor(B),B));
-  assert(qrok(qr_factor([[7]]), [[7]]));
-  assert(qrok(qr_factor([[1,2,3]]), [[1,2,3]]));
-  assert(qrok(qr_factor([[1],[2],[3]]), [[1],[2],[3]]));
-
-
-  assert(qrokpiv(qr_factor(M,pivot=true),M));
-  assert(qrokpiv(qr_factor(select(M,0,3),pivot=true),select(M,0,3)));
-  assert(qrokpiv(qr_factor(transpose(select(M,0,3)),pivot=true),transpose(select(M,0,3))));
-  assert(qrokpiv(qr_factor(B,pivot=true),B));
-  assert(qrokpiv(qr_factor([[7]],pivot=true), [[7]]));
-  assert(qrokpiv(qr_factor([[1,2,3]],pivot=true), [[1,2,3]]));
-  assert(qrokpiv(qr_factor([[1],[2],[3]],pivot=true), [[1],[2],[3]]));
-}
-test_qr_factor();
 
 
 module test_poly_mult(){
