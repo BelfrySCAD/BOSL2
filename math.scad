@@ -549,7 +549,7 @@ function gaussian_rands(N=1, mean=0, cov=1, seed=undef) =
         L = cholesky(cov)
     )
     assert(is_def(L), "Supplied covariance matrix is not positive definite")
-    move(mean,array_group(rdata,dim)*transpose(L));
+    move(mean,list_to_matrix(rdata,dim)*transpose(L));
 
 
 // Function: spherical_random_points()
