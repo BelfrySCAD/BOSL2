@@ -20,7 +20,8 @@ include <drawing.scad>
 include <masks.scad>
 include <paths.scad>
 include <edges.scad>
-include <arrays.scad>
+include <lists.scad>
+include <comparisons.scad>
 include <math.scad>
 include <linalg.scad>
 include <trigonometry.scad>
