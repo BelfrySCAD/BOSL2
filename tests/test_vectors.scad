@@ -184,7 +184,7 @@ module test_vector_search_tree(){
     assert(tree2[0]==points2);
     ind = vector_search([5,5,1],1,tree2);
     assert(ind== [225, 270, 275, 276, 280, 325]);
-    rpts = array_group(rands(0,10,50*3,seed=seed),3);
+    rpts = list_to_matrix(rands(0,10,50*3,seed=seed),3);
     rtree = vector_search_tree(rpts);
     radius = 3;
     found0 = vector_search([0,0,0],radius,rpts);
@@ -199,7 +199,7 @@ module test_vector_nearest(){
     points = [for(i=[0:9], j=[0:9], k=[1:5]) [i,j,k] ];
     ind1 = vector_nearest([5,5,1], 4, points);
     assert(ind1==[275, 225, 270, 276]);
-    pts = array_group(rands(0,10,50*3,seed=seed),3);
+    pts = list_to_matrix(rands(0,10,50*3,seed=seed),3);
     tree = vector_search_tree(pts);
     nearest = vector_nearest([0,0,0], 4, tree);
     closest = select(sortidx([for(p=pts) norm(p)]), [0:3]);

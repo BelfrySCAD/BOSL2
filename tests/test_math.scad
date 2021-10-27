@@ -775,36 +775,6 @@ module test_c_norm(){
 }
 test_c_norm();
 
-module test_back_substitute(){
-   R = [[12,4,3,2],
-        [0,2,-4,2],
-        [0,0,4,5],
-        [0,0,0,15]];
-   assert_approx(back_substitute(R, [1,2,3,3]), [-0.675, 1.8, 0.5, 0.2]);
-   assert_approx(back_substitute(R, [6, 3, 3.5, 37], transpose=true), [0.5, 0.5, 1, 2]);
-   assert_approx(back_substitute(R, [[38,101],[-6,-16], [31, 71], [45, 105]]), [[1, 4],[2,3],[4,9],[3,7]]);
-   assert_approx(back_substitute(R, [[12,48],[8,22],[11,36],[71,164]],transpose=true), [[1, 4],[2,3],[4,9],[3,7]]);
-   assert_approx(back_substitute([[2]], [4]), [2]);
-   sing1 =[[0,4,3,2],
-         [0,3,-4,2],
-         [0,0,4,5],
-         [0,0,0,15]];
-   sing2 =[[12,4,3,2],
-         [0,0,-4,2],
-         [0,0,4,5],
-         [0,0,0,15]];
-   sing3 = [[12,4,3,2],
-        [0,2,-4,2],
-        [0,0,4,5],
-        [0,0,0,0]];
-   assert_approx(back_substitute(sing1, [1,2,3,4]), []);
-   assert_approx(back_substitute(sing2, [1,2,3,4]), []);
-   assert_approx(back_substitute(sing3, [1,2,3,4]), []);
-}
-test_back_substitute();
-
-
-
 
 
 module test_cumprod(){
@@ -827,14 +797,6 @@ module test_cumprod(){
 }
 test_cumprod();
                          
-
-
-module test_outer_product(){
-  assert_equal(outer_product([1,2,3],[4,5,6]), [[4,5,6],[8,10,12],[12,15,18]]);
-  assert_equal(outer_product([1,2],[4,5,6]), [[4,5,6],[8,10,12]]);
-  assert_equal(outer_product([9],[7]), [[63]]);
-}
-test_outer_product();
 
 
 module test_deriv(){
