@@ -363,7 +363,7 @@ function furthest_point(pt, points) =
 // Example: A set of four queries to find points within 1 unit of the query.  The circles show the search region and all have radius 1.  
 //   $fn=32;
 //   k = 2000;
-//   points = array_group(rands(0,10,k*2,seed=13333),2);
+//   points = list_to_matrix(rands(0,10,k*2,seed=13333),2);
 //   queries = [for(i=[3,7],j=[3,7]) [i,j]];
 //   search_ind = vector_search(queries, points, 1);
 //   move_copies(points) circle(r=.08);
@@ -374,7 +374,7 @@ function furthest_point(pt, points) =
 // Example: when a series of search with different radius are needed, its is faster to pre-compute the tree
 //   $fn=32;
 //   k = 2000;
-//   points = array_group(rands(0,10,k*2),2,seed=13333);
+//   points = list_to_matrix(rands(0,10,k*2),2,seed=13333);
 //   queries1 = [for(i=[3,7]) [i,i]];
 //   queries2 = [for(i=[3,7]) [10-i,i]];
 //   r1 = 1;
@@ -517,7 +517,7 @@ function _bt_tree(points, ind, leafsize=25) =
 // Example:  Four queries to find the 15 nearest points.  The circles show the radius defined by the most distant query result.  Note they are different for each query.  
 //    $fn=32;
 //    k = 1000;
-//    points = array_group(rands(0,10,k*2,seed=13333),2);
+//    points = list_to_matrix(rands(0,10,k*2,seed=13333),2);
 //    tree = vector_search_tree(points);
 //    queries = [for(i=[3,7],j=[3,7]) [i,j]];
 //    search_ind = [for(q=queries) vector_nearest(q, 15, tree)];

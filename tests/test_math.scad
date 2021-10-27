@@ -109,128 +109,6 @@ module test_is_matrix() {
 test_is_matrix();
 
 
-module test_all_zero() {
-    assert(all_zero(0));
-    assert(all_zero([0,0,0]));
-    assert(all_zero([[0,0,0],[0,0]]));
-    assert(all_zero([EPSILON/2,EPSILON/2,EPSILON/2]));
-    assert(!all_zero(1e-3));
-    assert(!all_zero([0,0,1e-3]));
-    assert(!all_zero([EPSILON*10,0,0]));
-    assert(!all_zero([0,EPSILON*10,0]));
-    assert(!all_zero([0,0,EPSILON*10]));
-    assert(!all_zero(true));
-    assert(!all_zero(false));
-    assert(!all_zero(INF));
-    assert(!all_zero(-INF));
-    assert(!all_zero(NAN));
-    assert(!all_zero("foo"));
-    assert(!all_zero([]));
-    assert(!all_zero([0:1:2]));
-}
-test_all_zero();
-
-
-module test_all_nonzero() {
-    assert(!all_nonzero(0));
-    assert(!all_nonzero([0,0,0]));
-    assert(!all_nonzero([[0,0,0],[0,0]]));
-    assert(!all_nonzero([EPSILON/2,EPSILON/2,EPSILON/2]));
-    assert(all_nonzero(1e-3));
-    assert(!all_nonzero([0,0,1e-3]));
-    assert(!all_nonzero([EPSILON*10,0,0]));
-    assert(!all_nonzero([0,EPSILON*10,0]));
-    assert(!all_nonzero([0,0,EPSILON*10]));
-    assert(all_nonzero([1e-3,1e-3,1e-3]));
-    assert(all_nonzero([EPSILON*10,EPSILON*10,EPSILON*10]));
-    assert(!all_nonzero(true));
-    assert(!all_nonzero(false));
-    assert(!all_nonzero(INF));
-    assert(!all_nonzero(-INF));
-    assert(!all_nonzero(NAN));
-    assert(!all_nonzero("foo"));
-    assert(!all_nonzero([]));
-    assert(!all_nonzero([0:1:2]));
-}
-test_all_nonzero();
-
-
-module test_all_positive() {
-    assert(!all_positive(-2));
-    assert(!all_positive(0));
-    assert(all_positive(2));
-    assert(!all_positive([0,0,0]));
-    assert(!all_positive([0,1,2]));
-    assert(all_positive([3,1,2]));
-    assert(!all_positive([3,-1,2]));
-    assert(!all_positive([]));
-    assert(!all_positive(true));
-    assert(!all_positive(false));
-    assert(!all_positive("foo"));
-    assert(!all_positive([0:1:2]));
-}
-test_all_positive();
-
-
-module test_all_negative() {
-    assert(all_negative(-2));
-    assert(!all_negative(0));
-    assert(!all_negative(2));
-    assert(!all_negative([0,0,0]));
-    assert(!all_negative([0,1,2]));
-    assert(!all_negative([3,1,2]));
-    assert(!all_negative([3,-1,2]));
-    assert(all_negative([-3,-1,-2]));
-    assert(!all_negative([-3,1,-2]));
-    assert(all_negative([[-5,-7],[-3,-1,-2]]));
-    assert(!all_negative([[-5,-7],[-3,1,-2]]));
-    assert(!all_negative([]));
-    assert(!all_negative(true));
-    assert(!all_negative(false));
-    assert(!all_negative("foo"));
-    assert(!all_negative([0:1:2]));
-}
-test_all_negative();
-
-
-module test_all_nonpositive() {
-    assert(all_nonpositive(-2));
-    assert(all_nonpositive(0));
-    assert(!all_nonpositive(2));
-    assert(all_nonpositive([0,0,0]));
-    assert(!all_nonpositive([0,1,2]));
-    assert(all_nonpositive([0,-1,-2]));
-    assert(!all_nonpositive([3,1,2]));
-    assert(!all_nonpositive([3,-1,2]));
-    assert(!all_nonpositive([]));
-    assert(!all_nonpositive(true));
-    assert(!all_nonpositive(false));
-    assert(!all_nonpositive("foo"));
-    assert(!all_nonpositive([0:1:2]));
-}
-test_all_nonpositive();
-
-
-module test_all_nonnegative() {
-    assert(!all_nonnegative(-2));
-    assert(all_nonnegative(0));
-    assert(all_nonnegative(2));
-    assert(all_nonnegative([0,0,0]));
-    assert(all_nonnegative([0,1,2]));
-    assert(all_nonnegative([3,1,2]));
-    assert(!all_nonnegative([3,-1,2]));
-    assert(!all_nonnegative([-3,-1,-2]));
-    assert(!all_nonnegative([[-5,-7],[-3,-1,-2]]));
-    assert(!all_nonnegative([[-5,-7],[-3,1,-2]]));
-    assert(!all_nonnegative([[5,7],[3,-1,2]]));
-    assert(all_nonnegative([[5,7],[3,1,2]]));
-    assert(!all_nonnegative([]));
-    assert(!all_nonnegative(true));
-    assert(!all_nonnegative(false));
-    assert(!all_nonnegative("foo"));
-    assert(!all_nonnegative([0:1:2]));
-}
-test_all_nonnegative();
 
 
 module test_all_integer() {
@@ -253,20 +131,6 @@ module test_all_integer() {
 test_all_integer();
 
 
-module test_approx() {
-    assert_equal(approx(PI, 3.141592653589793236), true);
-    assert_equal(approx(PI, 3.1415926), false);
-    assert_equal(approx(PI, 3.1415926, eps=1e-6), true);
-    assert_equal(approx(-PI, -3.141592653589793236), true);
-    assert_equal(approx(-PI, -3.1415926), false);
-    assert_equal(approx(-PI, -3.1415926, eps=1e-6), true);
-    assert_equal(approx(1/3, 0.3333333333), true);
-    assert_equal(approx(-1/3, -0.3333333333), true);
-    assert_equal(approx(10*[cos(30),sin(30)], 10*[sqrt(3)/2, 1/2]), true);
-    assert_equal(approx([1,[1,undef]], [1+1e-12,[1,true]]), false);
-    assert_equal(approx([1,[1,undef]], [1+1e-12,[1,undef]]), true);
-}
-test_approx();
 
 
 module test_min_index() {
@@ -911,36 +775,6 @@ module test_c_norm(){
 }
 test_c_norm();
 
-module test_back_substitute(){
-   R = [[12,4,3,2],
-        [0,2,-4,2],
-        [0,0,4,5],
-        [0,0,0,15]];
-   assert_approx(back_substitute(R, [1,2,3,3]), [-0.675, 1.8, 0.5, 0.2]);
-   assert_approx(back_substitute(R, [6, 3, 3.5, 37], transpose=true), [0.5, 0.5, 1, 2]);
-   assert_approx(back_substitute(R, [[38,101],[-6,-16], [31, 71], [45, 105]]), [[1, 4],[2,3],[4,9],[3,7]]);
-   assert_approx(back_substitute(R, [[12,48],[8,22],[11,36],[71,164]],transpose=true), [[1, 4],[2,3],[4,9],[3,7]]);
-   assert_approx(back_substitute([[2]], [4]), [2]);
-   sing1 =[[0,4,3,2],
-         [0,3,-4,2],
-         [0,0,4,5],
-         [0,0,0,15]];
-   sing2 =[[12,4,3,2],
-         [0,0,-4,2],
-         [0,0,4,5],
-         [0,0,0,15]];
-   sing3 = [[12,4,3,2],
-        [0,2,-4,2],
-        [0,0,4,5],
-        [0,0,0,0]];
-   assert_approx(back_substitute(sing1, [1,2,3,4]), []);
-   assert_approx(back_substitute(sing2, [1,2,3,4]), []);
-   assert_approx(back_substitute(sing3, [1,2,3,4]), []);
-}
-test_back_substitute();
-
-
-
 
 
 module test_cumprod(){
@@ -963,14 +797,6 @@ module test_cumprod(){
 }
 test_cumprod();
                          
-
-
-module test_outer_product(){
-  assert_equal(outer_product([1,2,3],[4,5,6]), [[4,5,6],[8,10,12],[12,15,18]]);
-  assert_equal(outer_product([1,2],[4,5,6]), [[4,5,6],[8,10,12]]);
-  assert_equal(outer_product([9],[7]), [[63]]);
-}
-test_outer_product();
 
 
 module test_deriv(){

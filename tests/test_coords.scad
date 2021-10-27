@@ -111,7 +111,7 @@ module test_lift_plane() {
     assert_approx(project_plane([[1,1,1],[3,1,3],[1,1,4]]),[[-1/sqrt(2),1/sqrt(2),0,0],[0,0,1,-1],[1/sqrt(2),1/sqrt(2),0,-sqrt(2)],[0,0,0,1]]);
 
     N=30;
-    data2 = array_group(rands(0,10,3*N,seed=77),3);
+    data2 = list_to_matrix(rands(0,10,3*N,seed=77),3);
     data3 = [for (d=data2) [d.x,d.y,d.x*3+d.y*5+2]];
     planept = select(data3,0,N-4);
     testpt = select(data3, N-3,-1);

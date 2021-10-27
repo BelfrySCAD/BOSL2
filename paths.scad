@@ -795,7 +795,7 @@ function _path_cut_points(path, dists, closed=false, direction=false) =
              dir = _path_cuts_dir(path, cuts, closed),
              normals = _path_cuts_normals(path, cuts, dir, closed)
          )
-         hstack(cuts, array_group(dir,1), array_group(normals,1));
+         hstack(cuts, list_to_matrix(dir,1), list_to_matrix(normals,1));
 
 // Main recursive path cut function
 function _path_cut_points_recurse(path, dists, closed=false, pind=0, dtotal=0, dind=0, result=[]) =

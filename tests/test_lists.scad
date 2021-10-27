@@ -91,52 +91,6 @@ module test_in_list() {
 test_in_list();
 
 
-module test_is_increasing() {
-    assert(is_increasing([1,2,3,4]) == true);
-    assert(is_increasing([1,2,2,2]) == true);
-    assert(is_increasing([1,3,2,4]) == false);
-    assert(is_increasing([4,3,2,1]) == false);
-    assert(is_increasing([1,2,3,4],strict=true) == true);
-    assert(is_increasing([1,2,2,2],strict=true) == false);
-    assert(is_increasing([1,3,2,4],strict=true) == false);
-    assert(is_increasing([4,3,2,1],strict=true) == false);
-    assert(is_increasing(["AB","BC","DF"]) == true);
-    assert(is_increasing(["AB","DC","CF"]) == false);    
-    assert(is_increasing([[1,2],[1,4],[2,3],[2,2]])==false);
-    assert(is_increasing([[1,2],[1,4],[2,3],[2,3]])==true);
-    assert(is_increasing([[1,2],[1,4],[2,3],[2,3]],strict=true)==false);
-    assert(is_increasing("ABCFZ")==true);
-    assert(is_increasing("ZYWRA")==false);    
-}
-test_is_increasing();
-
-
-module test_is_decreasing() {
-    assert(is_decreasing([1,2,3,4]) == false);
-    assert(is_decreasing([4,2,3,1]) == false);
-    assert(is_decreasing([4,2,2,1]) == true);
-    assert(is_decreasing([4,3,2,1]) == true);
-    assert(is_decreasing([1,2,3,4],strict=true) == false);
-    assert(is_decreasing([4,2,3,1],strict=true) == false);
-    assert(is_decreasing([4,2,2,1],strict=true) == false);
-    assert(is_decreasing([4,3,2,1],strict=true) == true);
-    assert(is_decreasing(reverse(["AB","BC","DF"])) == true);
-    assert(is_decreasing(reverse(["AB","DC","CF"])) == false);    
-    assert(is_decreasing(reverse([[1,2],[1,4],[2,3],[2,2]]))==false);
-    assert(is_decreasing(reverse([[1,2],[1,4],[2,3],[2,3]]))==true);
-    assert(is_decreasing(reverse([[1,2],[1,4],[2,3],[2,3]]),strict=true)==false);
-    assert(is_decreasing("ABCFZ")==false);
-    assert(is_decreasing("ZYWRA")==true);    
-}
-test_is_decreasing();
-
-
-module test_find_approx() {
-    assert(find_approx(1, [2,3,1.05,4,1,2,.99], eps=.1)==2);
-    assert(find_approx(1, [2,3,1.05,4,1,2,.99], all=true, eps=.1)==[2,4,6]);
-}
-test_find_approx();
-    
 
 
 // Section: Basic List Generation
@@ -182,23 +136,6 @@ module test_list_rotate() {
 }
 test_list_rotate();
 
-
-module test_deduplicate() {
-    assert_equal(deduplicate([8,3,4,4,4,8,2,3,3,8,8]), [8,3,4,8,2,3,8]);
-    assert_equal(deduplicate(closed=true, [8,3,4,4,4,8,2,3,3,8,8]), [8,3,4,8,2,3]);
-    assert_equal(deduplicate("Hello"), "Helo");
-    assert_equal(deduplicate([[3,4],[7,1.99],[7,2],[1,4]],eps=0.1), [[3,4],[7,2],[1,4]]);
-    assert_equal(deduplicate([], closed=true), []);
-    assert_equal(deduplicate([[1,[1,[undef]]],[1,[1,[undef]]],[1,[2]],[1,[2,[0]]]]), [[1, [1,[undef]]],[1,[2]],[1,[2,[0]]]]);
-}
-test_deduplicate();
-
-
-module test_deduplicate_indexed() {
-    assert(deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1]) == [1,4,1,2,0,1]);
-    assert(deduplicate_indexed([8,6,4,6,3], [1,4,3,1,2,2,0,1], closed=true) == [1,4,1,2,0]);
-}
-test_deduplicate_indexed();
 
 
 module test_list_set() {
@@ -332,82 +269,6 @@ module test_shuffle() {
 test_shuffle();
 
 
-module test_sort() {
-    assert(sort([7,3,9,4,3,1,8]) == [1,3,3,4,7,8,9]);
-    assert(sort([[4,0],[7],[3,9],20,[4],[3,1],[8]]) == [20,[3,1],[3,9],[4],[4,0],[7],[8]]);
-    assert(sort([[4,0],[7],[3,9],20,[4],[3,1],[8]],idx=1) == [[7],20,[4],[8],[4,0],[3,1],[3,9]]);
-    assert(sort([[8,6],[3,1],[9,2],[4,3],[3,4],[1,5],[8,0]]) == [[1,5],[3,1],[3,4],[4,3],[8,0],[8,6],[9,2]]);
-    assert(sort([[8,0],[3,1],[9,2],[4,3],[3,4],[1,5],[8,6]],idx=1) == [[8,0],[3,1],[9,2],[4,3],[3,4],[1,5],[8,6]]);
-    assert(sort(["cat", "oat", "sat", "bat", "vat", "rat", "pat", "mat", "fat", "hat", "eat"]) 
-           == ["bat", "cat", "eat", "fat", "hat", "mat", "oat", "pat", "rat", "sat", "vat"]);
-    assert(sort(enumerate([[2,3,4],[1,2,3],[2,4,3]]),idx=1)==[[1,[1,2,3]], [0,[2,3,4]], [2,[2,4,3]]]);
-    assert(sort([0,"1",[1,0],2,"a",[1]])== [0,2,"1","a",[1],[1,0]]);
-    assert(sort([["oat",0], ["cat",1], ["bat",3], ["bat",2], ["fat",3]])==  [["bat",2],["bat",3],["cat",1],["fat",3],["oat",0]]);
-}
-test_sort();
-
-
-module test_sortidx() {
-    lst1 = ["da","bax","eaw","cav"];
-    assert(sortidx(lst1) == [1,3,0,2]);
-    lst5 = [3,5,1,7];
-    assert(sortidx(lst5) == [2,0,1,3]);
-    lst2 = [
-        ["foo", 88, [0,0,1], false],
-        ["bar", 90, [0,1,0], true],
-        ["baz", 89, [1,0,0], false],
-        ["qux", 23, [1,1,1], true]
-    ];
-    assert(sortidx(lst2, idx=1) == [3,0,2,1]);
-    assert(sortidx(lst2, idx=0) == [1,2,0,3]);
-    assert(sortidx(lst2, idx=[1,3]) == [3,0,2,1]);
-    lst3 = [[-4,0,0],[0,0,-4],[0,-4,0],[-4,0,0],[0,-4,0],[0,0,4],
-            [0,0,-4],[0,4,0],[4,0,0],[0,0,4],[0,4,0],[4,0,0]];
-    assert(sortidx(lst3)==[0,3,2,4,1,6,5,9,7,10,8,11]);
-    assert(sortidx([[4,0],[7],[3,9],20,[4],[3,1],[8]]) == [3,5,2,4,0,1,6]);
-    assert(sortidx([[4,0],[7],[3,9],20,[4],[3,1],[8]],idx=1) ==  [1,3,4,6,0,5,2]);
-    lst4=[0,"1",[1,0],2,"a",[1]];
-    assert(sortidx(lst4)== [0,3,1,4,5,2]);
-    assert(sortidx(["cat","oat","sat","bat","vat","rat","pat","mat","fat","hat","eat"]) 
-             == [3,0,10,8,9,7,1,6,5,2,4]);
-    assert(sortidx([["oat",0], ["cat",1], ["bat",3], ["bat",2], ["fat",3]])==  [3,2,1,4,0]);
-    assert(sortidx(["Belfry", "OpenScad", "Library", "Documentation"])==[0,3,2,1]);
-    assert(sortidx(["x",1,[],0,"abc",true])==[5,3,1,4,0,2]);
-}
-test_sortidx();
-
-module test_group_sort() {
-    assert_equal(group_sort([]), [[]]);
-    assert_equal(group_sort([8]), [[8]]);
-    assert_equal(group_sort([7,3,9,4,3,1,8]), [[1], [3, 3], [4], [7], [8], [9]]);
-    assert_equal(group_sort([[5,"a"],[2,"b"], [5,"c"], [3,"d"], [2,"e"] ], idx=0), [[[2, "b"], [2, "e"]], [[3, "d"]], [[5, "a"], [5, "c"]]]);
-    assert_equal(group_sort([["a",5],["b",6], ["c",1], ["d",2], ["e",6] ], idx=1), [[["c", 1]], [["d", 2]], [["a", 5]], [["b", 6], ["e", 6]]] );
-}
-test_group_sort();
-
-
-module test_unique() {
-    assert_equal(unique([]), []);
-    assert_equal(unique([8]), [8]);
-    assert_equal(unique([7,3,9,4,3,1,8]), [1,3,4,7,8,9]);
-    assert_equal(unique(["A","B","R","A","C","A","D","A","B","R","A"]), ["A", "B", "C", "D", "R"]);
-}
-test_unique();
-
-
-module test_unique_count() {
-    assert_equal(
-        unique_count([3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,3,2,3,6]),
-        [[1,2,3,4,5,6,7,8,9],[2,2,4,1,3,2,1,1,3]]
-    );
-    assert_equal(
-        unique_count(["A","B","R","A","C","A","D","A","B","R","A"]),
-        [["A","B","C","D","R"],[5,2,1,1,2]]
-    );
-}
-test_unique_count();
-
-
 
 // Sets
 
@@ -509,13 +370,13 @@ module test_zip() {
 test_zip();
 
 
-module test_array_group() {
+module test_list_to_matrix() {
     v = [1,2,3,4,5,6];
-    assert(array_group(v,2) == [[1,2], [3,4], [5,6]]);
-    assert(array_group(v,3) == [[1,2,3], [4,5,6]]);
-    assert(array_group(v,4,0) == [[1,2,3,4], [5,6,0,0]]);
+    assert(list_to_matrix(v,2) == [[1,2], [3,4], [5,6]]);
+    assert(list_to_matrix(v,3) == [[1,2,3], [4,5,6]]);
+    assert(list_to_matrix(v,4,0) == [[1,2,3,4], [5,6,0,0]]);
 }
-test_array_group();
+test_list_to_matrix();
 
 
 module test_group_data() {
