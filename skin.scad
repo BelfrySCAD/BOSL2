@@ -436,7 +436,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
   assert(capsOK, "caps must be boolean or a list of two booleans")
   assert(!closed || !caps, "Cannot make closed shape with caps")
   let(
-    profile_dim=array_dim(profiles,2),
+    profile_dim=list_shape(profiles,2),
     profiles_zcheck = (profile_dim != 2) || (profile_dim==2 && is_list(z) && len(z)==len(profiles)), 
     profiles_ok = (profile_dim==2 && is_list(z) && len(z)==len(profiles)) || profile_dim==3
   )

@@ -650,7 +650,7 @@ function sort(list, idx=undef) =
     is_string(list)? str_join(sort([for (x = list) x],idx)) :
     !is_list(list) || len(list)<=1 ? list :
     is_homogeneous(list,1)
-    ?   let(size = array_dim(list[0]))
+    ?   let(size = list_shape(list[0]))
         size==0 ?         _sort_scalars(list)
         : len(size)!=1 ?  _sort_general(list,idx)  
         : is_undef(idx) ? _sort_vectors(list)
@@ -692,7 +692,7 @@ function sortidx(list, idx=undef) =
     !is_list(list) || len(list)<=1 ? list :
     is_homogeneous(list,1)
     ?   let( 
-            size = array_dim(list[0]),
+            size = list_shape(list[0]),
             aug  = ! (size==0 || len(size)==1) ? 0 // for general sorting
                    : [for(i=[0:len(list)-1]) concat(i,list[i])], // for scalar or vector sorting
             lidx = size==0? [1] :                                // scalar sorting

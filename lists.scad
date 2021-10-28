@@ -84,6 +84,59 @@ function max_length(array) =
 
 
 
+
+// Internal.  Not exposed.
+function _list_shape_recurse(v) =
+    !is_list(v[0])
+    ?   len( [for(entry=v) if(!is_list(entry)) 0] ) == 0 ? [] : [undef]
+    :   let(
+          firstlen = is_list(v[0]) ? len(v[0]): undef,
+          first = len( [for(entry = v) if(! is_list(entry) || (len(entry) != firstlen)) 0  ]   ) == 0 ? firstlen : undef,
+          leveldown = flatten(v)
+        ) 
+        is_list(leveldown[0])
+        ?  concat([first],_list_shape_recurse(leveldown))
+        : [first];
+
+function _list_shape_recurse(v) =
+    let( alen = [for(vi=v) is_list(vi) ? len(vi): -1] )
+    v==[] || max(alen)==-1 ? [] :
+    let( add = max(alen)!=min(alen) ? undef : alen[0] ) 
+    concat( add, _list_shape_recurse(flatten(v)));
+
+
+// Function: list_shape()
+// Usage:
+//   dims = list_shape(v, [depth]);
+// Topics: Matrices, Array Handling
+// Description:
+//   Returns the size of a multi-dimensional array, a list of the lengths at each depth.
+//   If the returned value has `dims[i] = j` then it means the ith index ranges of j items.
+//   The return `dims[0]` is equal to the length of v.  Then `dims[1]` is equal to the
+//   length of the lists in v, and in general, `dims[i]` is equal to the length of the items
+//   nested to depth i in the list v.  If the length of items at that depth is inconsistent, then
+//   `undef` is returned.  If no items exist at that depth then `0` is returned.  Note that
+//   for simple vectors or matrices it is faster to compute `len(v)` and `len(v[0])`.  
+// Arguments:
+//   v = list to get shape of
+//   depth = depth to compute the size of.  If not given, returns a list of sizes at all depths. 
+// Example:
+//   a = list_shape([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]]);     // Returns [2,2,3]
+//   b = list_shape([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 0);  // Returns 2
+//   c = list_shape([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 2);  // Returns 3
+//   d = list_shape([[[1,2,3],[4,5,6]],[[7,8,9]]]);                // Returns [2,undef,3]
+function list_shape(v, depth=undef) =
+    assert( is_undef(depth) || ( is_finite(depth) && depth>=0 ), "Invalid depth.")
+    ! is_list(v) ? 0 :
+    (depth == undef)
+    ?   concat([len(v)], _list_shape_recurse(v))
+    :   (depth == 0)
+        ?  len(v)
+        :  let( dimlist = _list_shape_recurse(v))
+           (depth > len(dimlist))? 0 : dimlist[depth-1] ;
+
+
+
 // Function: in_list()
 // Usage:
 //   bool = in_list(val, list, [idx]);
@@ -641,31 +694,44 @@ function list_insert(list, indices, values) =
 
 // Function: list_remove()
 // Usage:
-//   list = list_remove(list, indices);
+//   list = list_remove(list, ind);
 // Topics: List Handling
 // See Also: list_set(), list_insert(), list_remove_values()
 // Description:
-//   Remove all items from `list` whose indexes are in `indices`.
+//   If `ind` is a number remove `list[ind]` from the list.  If `ind` is a list of indices
+//   remove from the list the item all items whose indices appear in `ind`.  If you give
+//   indices that are not in the list they are ignored.  
 // Arguments:
 //   list = The list to remove items from.
-//   indices = The list of indexes of items to remove.
+//   ind = index or list of indices of items to remove. 
 // Example:
-//   a = list_insert([3,6,9,12],1);      // Returns: [3,9,12]
-//   b = list_insert([3,6,9,12],[1,3]);  // Returns: [3,9]
-function list_remove(list, indices) =
-    assert(is_list(list))
-    is_finite(indices) ?
-        [
-            for (i=[0:1:min(indices, len(list)-1)-1]) list[i],
-            for (i=[min(indices, len(list)-1)+1:1:len(list)-1]) list[i]
-        ]
-    :   indices==[] ? list
-    :   assert( is_vector(indices), "Invalid list `indices`." )
+//   a = list_remove([3,6,9,12],1);      // Returns: [3,9,12]
+//   b = list_remove([3,6,9,12],[1,3]);  // Returns: [3,9]
+//   c = list_remove([3,6],3);           // Returns: [3,6]
+function list_remove(list, ind) =
+    assert(is_list(list), "Invalid list in list_remove")
+    is_finite(ind) ?
+        (
+         (ind<0 || ind>=len(list)) ? list
+         :                                        
+            [
+              for (i=[0:1:ind-1]) list[i],
+              for (i=[ind+1:1:len(list)-1]) list[i]
+            ]
+        )
+    :   ind==[] ? list
+    :   assert( is_vector(ind), "Invalid index list in list_remove")
+        let(sres = search(count(list),ind,1))
         [
             for(i=[0:len(list)-1])
-            if ( []==search(i,indices,1) )
-            list[i]
-        ]; 
+                if (sres[i] == []) 
+                    list[i]
+        ];
+
+// This method is faster for long lists with few values to remove
+//     let(   rem = list_set([], indices, repeat(1,len(indices)), minlen=len(list)))
+//     [for(i=idx(list)) if (rem[i]==0) list[i]];
+
 
 
 // Function: list_remove_values()
@@ -931,54 +997,6 @@ function permutations(l,n=2) =
 // Section: Changing list structure
 
 
-// Internal.  Not exposed.
-function _array_dim_recurse(v) =
-    !is_list(v[0])
-    ?   len( [for(entry=v) if(!is_list(entry)) 0] ) == 0 ? [] : [undef]
-    :   let(
-          firstlen = is_list(v[0]) ? len(v[0]): undef,
-          first = len( [for(entry = v) if(! is_list(entry) || (len(entry) != firstlen)) 0  ]   ) == 0 ? firstlen : undef,
-          leveldown = flatten(v)
-        ) 
-        is_list(leveldown[0])
-        ?  concat([first],_array_dim_recurse(leveldown))
-        : [first];
-
-function _array_dim_recurse(v) =
-    let( alen = [for(vi=v) is_list(vi) ? len(vi): -1] )
-    v==[] || max(alen)==-1 ? [] :
-    let( add = max(alen)!=min(alen) ? undef : alen[0] ) 
-    concat( add, _array_dim_recurse(flatten(v)));
-
-
-// Function: array_dim()
-// Usage:
-//   dims = array_dim(v, [depth]);
-// Topics: Matrices, Array Handling
-// Description:
-//   Returns the size of a multi-dimensional array.  Returns a list of dimension lengths.  The length
-//   of `v` is the dimension `0`.  The length of the items in `v` is dimension `1`.  The length of the
-//   items in the items in `v` is dimension `2`, etc.  For each dimension, if the length of items at
-//   that depth is inconsistent, `undef` will be returned.  If no items of that dimension depth exist,
-//   `0` is returned.  Otherwise, the consistent length of items in that dimensional depth is
-//   returned.
-// Arguments:
-//   v = Array to get dimensions of.
-//   depth = Dimension to get size of.  If not given, returns a list of dimension lengths.
-// Example:
-//   a = array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]]);     // Returns [2,2,3]
-//   b = array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 0);  // Returns 2
-//   c = array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 2);  // Returns 3
-//   d = array_dim([[[1,2,3],[4,5,6]],[[7,8,9]]]);                // Returns [2,undef,3]
-function array_dim(v, depth=undef) =
-    assert( is_undef(depth) || ( is_finite(depth) && depth>=0 ), "Invalid depth.")
-    ! is_list(v) ? 0 :
-    (depth == undef)
-    ?   concat([len(v)], _array_dim_recurse(v))
-    :   (depth == 0)
-        ?  len(v)
-        :  let( dimlist = _array_dim_recurse(v))
-           (depth > len(dimlist))? 0 : dimlist[depth-1] ;
            
 
 // Function: list_to_matrix()

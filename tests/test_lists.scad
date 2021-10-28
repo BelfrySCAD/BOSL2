@@ -156,9 +156,14 @@ test_list_set();
 
 module test_list_remove() {
     assert(list_remove([3,6,9,12],1) == [3,9,12]);
+    assert(list_remove([3,6,9,12],[1]) == [3,9,12]);
     assert(list_remove([3,6,9,12],[1,3]) == [3,9]);
     assert(list_remove([3,6,9],[]) == [3,6,9]);
     assert(list_remove([],[]) == []);
+    assert(list_remove([1,2,3], -1)==[1,2,3]);
+    assert(list_remove([1,2,3], 3)==[1,2,3]);    
+    assert(list_remove([1,2,3], [-1,3])==[1,2,3]);    
+    assert(list_remove([1,2,3], [-1,1,3])==[1,3]);    
 }
 test_list_remove();
 
@@ -402,19 +407,19 @@ module test_full_flatten() {
 test_full_flatten();
 
 
-module test_array_dim() {
-    assert(array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]]) == [2,2,3]);
-    assert(array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 0) == 2);
-    assert(array_dim([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 2) == 3);
-    assert(array_dim([[[1,2,3],[4,5,6]],[[7,8,9]]]) == [2,undef,3]);
-    assert(array_dim([1,2,3,4,5,6,7,8,9]) == [9]);
-    assert(array_dim([[1],[2],[3],[4],[5],[6],[7],[8],[9]]) == [9,1]);
-    assert(array_dim([]) == [0]);
-    assert(array_dim([[]]) == [1,0]);
-    assert(array_dim([[],[]]) == [2,0]);
-    assert(array_dim([[],[1]]) == [2,undef]);
+module test_list_shape() {
+    assert(list_shape([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]]) == [2,2,3]);
+    assert(list_shape([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 0) == 2);
+    assert(list_shape([[[1,2,3],[4,5,6]],[[7,8,9],[10,11,12]]], 2) == 3);
+    assert(list_shape([[[1,2,3],[4,5,6]],[[7,8,9]]]) == [2,undef,3]);
+    assert(list_shape([1,2,3,4,5,6,7,8,9]) == [9]);
+    assert(list_shape([[1],[2],[3],[4],[5],[6],[7],[8],[9]]) == [9,1]);
+    assert(list_shape([]) == [0]);
+    assert(list_shape([[]]) == [1,0]);
+    assert(list_shape([[],[]]) == [2,0]);
+    assert(list_shape([[],[1]]) == [2,undef]);
 }
-test_array_dim();
+test_list_shape();
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
