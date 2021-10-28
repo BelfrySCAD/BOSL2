@@ -14,24 +14,27 @@ for filename in os.listdir("."):
                     if funcname.startswith("_"):
                         continue
                     if funcname in funcs:
-                        print("WARNING!!! Function {} re-defined at {}:{}".format(funcname, filename, linenum));
+                        print("WARNING!!! Function {} re-defined at {}:{}".format(funcname, filename, linenum+1));
                         print("           Previously defined at {}:{}".format(*funcs[funcname]));
                     else:
-                        funcs[funcname] = (filename, linenum)
+                        funcs[funcname] = (filename, linenum+1)
 
-covered = []
+covered = {}
 uncovered = funcs.copy()
 for filename in os.listdir("tests"):
     if filename.startswith("test_") and filename.endswith(".scad"):
         filepath = os.path.join("tests",filename)
         with open(filepath, "r") as f:
-            for line in f.readlines():
+            for linenum,line in enumerate(f.readlines()):
                 if line.startswith("module "):
                     testmodule = line[7:].strip().split("(")[0].strip()
                     if testmodule.startswith("test_"):
                         funcname = testmodule.split("_",1)[1]
                         if funcname in uncovered:
-                            covered.append(funcname)
+                            if filename != "test_" + uncovered[funcname][0]:
+                                print("WARNING!!! Function {} defined at {}:{}".format(funcname, *uncovered[funcname]));
+                                print("           but tested at {}:{}".format(filename, linenum+1));
+                            covered[funcname] = (filename,linenum+1)
                             del uncovered[funcname]
 
 uncovered_by_file = {}
