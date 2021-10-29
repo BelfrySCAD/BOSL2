@@ -45,6 +45,39 @@ function is_path(list, dim=[2,3], fast=false) =
         && len(list[0])>0
         && (is_undef(dim) || in_list(len(list[0]), force_list(dim)));
 
+// Function: is_path_region()
+// Usage:
+//   bool = is_path_region(path, [name])
+// Description:
+//   If `path` is a region with one component then return true.  If path is a region with more components
+//   then display an error message about the parameter `name` requiring a path or a single component region.  If the input
+//   is not a region then return false.  This function helps accept singleton regions in functions that
+//   operate on a path. 
+// Arguments:
+//   path = input to process
+//   name = name of parameter to use in error message.  Default: "path"
+function is_path_region(path, name="path") = 
+     !is_region(path)? false
+    :assert(len(path)==1,str("Parameter \"",name,"\" must be a path or singleton region, but is a multicomponent region"))
+     true;
+
+// Function: force_path()
+// Usage:
+//   outpath = force_path(path, [name])
+// Description:
+//   If `path` is a region with one component then return that component as a path.  If path is a region with more components
+//   then display an error message about the parameter `name` requiring a path or a single component region.  If the input
+//   is not a region then return the input without any checks.  This function helps accept singleton regions in functions that
+//   operate on a path. 
+// Arguments:
+//   path = input to process
+//   name = name of parameter to use in error message.  Default: "path"
+function force_path(path, name="path") =
+   is_region(path) ?
+       assert(len(path)==1, str("Parameter \"",name,"\" must be a path or singleton region, but is a multicomponent region"))
+       path[0]
+   : path;
+
 
 // Function: is_closed_path()
 // Usage:
@@ -102,6 +135,7 @@ function _path_select(path, s1, u1, s2, u2, closed=false) =
     ) pathout;
 
 
+
 // Function: path_merge_collinear()
 // Description:
 //   Takes a path and removes unnecessary sequential collinear points.
@@ -111,8 +145,11 @@ function _path_select(path, s1, u1, s2, u2, closed=false) =
 //   path = A list of path points of any dimension.
 //   closed = treat as closed polygon.  Default: false
 //   eps = Largest positional variance allowed.  Default: `EPSILON` (1-e9)
-function path_merge_collinear(path, closed=false, eps=EPSILON) =
-    assert( is_path(path), "Invalid path." )
+function path_merge_collinear(path, closed, eps=EPSILON) =
+    is_path_region(path) ? path_merge_collinear(path[0], default(closed,true), eps) :
+    let(closed=default(closed,false))
+    assert(is_bool(closed))
+    assert( is_path(path), "Invalid path in path_merge_collinear." )
     assert( is_undef(eps) || (is_finite(eps) && (eps>=0) ), "Invalid tolerance." )    
     len(path)<=2 ? path :
     let(
@@ -140,7 +177,11 @@ function path_merge_collinear(path, closed=false, eps=EPSILON) =
 // Example:
 //   path = [[0,0], [5,35], [60,-25], [80,0]];
 //   echo(path_length(path));
-function path_length(path,closed=false) =
+function path_length(path,closed) =
+    is_path_region(path) ? path_length(path[0], default(closed,true)) :
+    assert(is_path(path), "Invalid path in path_length")
+    let(closed=default(closed,false))
+    assert(is_bool(closed))
     len(path)<2? 0 :
     sum([for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i])])+(closed?norm(path[len(path)-1]-path[0]):0);
 
@@ -153,7 +194,11 @@ function path_length(path,closed=false) =
 // Arguments:
 //   path = path to measure
 //   closed = true if the path is closed.  Default: false
-function path_segment_lengths(path, closed=false) =
+function path_segment_lengths(path, closed) =
+    is_path_region(path) ? path_segment_lengths(path[0], default(closed,true)) :
+    let(closed=default(closed,false))
+    assert(is_path(path),"Invalid path in path_segment_lengths.")
+    assert(is_bool(closed))
     [
         for (i=[0:1:len(path)-2]) norm(path[i+1]-path[i]),
         if (closed) norm(path[0]-last(path))
@@ -171,7 +216,9 @@ function path_segment_lengths(path, closed=false) =
 // Arguments:
 //    path = path to operate on
 //    closed = set to true if path is closed.  Default: false
-function path_length_fractions(path, closed=false) =
+function path_length_fractions(path, closed) =
+    is_path_region(path) ? path_length_fractions(path[0], default(closed,true)):
+    let(closed=default(closed, false))
     assert(is_path(path))
     assert(is_bool(closed))
     let(
@@ -327,6 +374,7 @@ function _sum_preserving_round(data, index=0) =
 //   mypath = subdivide_path([[0,0,0],[2,0,1],[2,3,2]], 12);
 //   move_copies(mypath)sphere(r=.1,$fn=32);
 function subdivide_path(path, N, refine, closed=true, exact=true, method="length") =
+    let(path = force_path(path))
     assert(is_path(path))
     assert(method=="length" || method=="segment")
     assert(num_defined([N,refine]),"Must give exactly one of N and refine")
@@ -385,7 +433,8 @@ function subdivide_path(path, N, refine, closed=true, exact=true, method="length
 //   stroke(path,width=2,closed=true);
 //   color("red") move_copies(path) circle(d=9,$fn=12);
 //   color("blue") move_copies(spath) circle(d=5,$fn=12);
-function subdivide_long_segments(path, maxlen, closed=false) =
+function subdivide_long_segments(path, maxlen, closed=true) =
+    let(path=force_path(path))
     assert(is_path(path))
     assert(is_finite(maxlen))
     assert(is_bool(closed))
@@ -413,8 +462,9 @@ function subdivide_long_segments(path, maxlen, closed=false) =
 //   path = path to resample
 //   N = Number of points in output
 //   spacing = Approximate spacing desired
-//   closed = set to true if path is closed.  Default: false
-function resample_path(path, N, spacing, closed=false) =
+//   closed = set to true if path is closed.  Default: true
+function resample_path(path, N, spacing, closed=true) =
+   let(path = force_path(path))
    assert(is_path(path))
    assert(num_defined([N,spacing])==1,"Must define exactly one of N and spacing")
    assert(is_bool(closed))
@@ -432,9 +482,6 @@ function resample_path(path, N, spacing, closed=false) =
    ];
 
 
-
-
-
 // Section: Path Geometry
 
 // Function: is_path_simple()
@@ -449,8 +496,11 @@ function resample_path(path, N, spacing, closed=false) =
 //   path = path to check
 //   closed = set to true to treat path as a polygon.  Default: false
 //   eps = Epsilon error value used for determine if points coincide.  Default: `EPSILON` (1e-9)
-function is_path_simple(path, closed=false, eps=EPSILON) =
+function is_path_simple(path, closed, eps=EPSILON) =
+    is_path_region(path) ? is_path_simple(path[0], default(closed,true), eps) :
+    let(closed=default(closed,false))
     assert(is_path(path, 2),"Must give a 2D path")
+    assert(is_bool(closed))
     [for(i=[0:1:len(path)-(closed?2:3)])
          let(v1=path[i+1]-path[i],
              v2=select(path,i+2)-path[i+1],
@@ -471,6 +521,7 @@ function is_path_simple(path, closed=false, eps=EPSILON) =
 // Arguments:
 //   path = The path to find the closest point on.
 //   pt = the point to find the closest point to.
+//   closed = 
 // Example(2D):
 //   path = circle(d=100,$fn=6);
 //   pt = [20,10];
@@ -478,9 +529,13 @@ function is_path_simple(path, closed=false, eps=EPSILON) =
 //   stroke(path, closed=true);
 //   color("blue") translate(pt) circle(d=3, $fn=12);
 //   color("red") translate(closest[1]) circle(d=3, $fn=12);
-function path_closest_point(path, pt) =
+function path_closest_point(path, pt, closed=true) =
+    let(path = force_path(path))
+    assert(is_path(path,[2,3]), "Must give 2D or 3D path.")
+    assert(is_vector(pt, len(path[0])), "Input pt must be a compatible vector")
+    assert(is_bool(closed))
     let(
-        pts = [for (seg=idx(path)) line_closest_point(select(path,seg,seg+1),pt,SEGMENT)],
+        pts = [for (seg=[0:1:len(path)-(closed?1:2)]) line_closest_point(select(path,seg,seg+1),pt,SEGMENT)],
         dists = [for (p=pts) norm(p-pt)],
         min_seg = min_index(dists)
     ) [min_seg, pts[min_seg]];
@@ -513,7 +568,10 @@ function path_closest_point(path, pt) =
 //   color("purple")
 //       for(i=[0:len(tangents)-1])
 //           stroke([rect[i]-tangents[i], rect[i]+tangents[i]],width=.25, endcap2="arrow2");
-function path_tangents(path, closed=false, uniform=true) =
+function path_tangents(path, closed, uniform=true) =
+    is_path_region(path) ? path_tangents(path[0], default(closed,true), uniform) :
+    let(closed=default(closed,false))
+    assert(is_bool(closed))
     assert(is_path(path))
     !uniform ? [for(t=deriv(path,closed=closed, h=path_segment_lengths(path,closed))) unit(t)]
              : [for(t=deriv(path,closed=closed)) unit(t)];
@@ -533,7 +591,13 @@ function path_tangents(path, closed=false, uniform=true) =
 //   normal is not uniquely defined.  In this case the function issues an error.
 //   For 2d paths the plane is always defined so the normal fails to exist only
 //   when the derivative is zero (in the case of repeated points).
-function path_normals(path, tangents, closed=false) =
+// Arguments:
+//   path = path to compute the normals to
+//   tangents = path tangents optionally supplied
+//   closed = if true path is treated as a polygon.  Default: false
+function path_normals(path, tangents, closed) =
+    is_path_region(path) ? path_normals(path[0], tangents, default(closed,true)) :
+    let(closed=default(closed,false))
     assert(is_path(path,[2,3]))
     assert(is_bool(closed))
     let(
@@ -560,7 +624,11 @@ function path_normals(path, tangents, closed=false) =
 //   curvs = path_curvature(path, [closed]);
 // Description:
 //   Numerically estimate the curvature of the path (in any dimension). 
-function path_curvature(path, closed=false) =
+function path_curvature(path, closed) =
+    is_path_region(path) ? path_curvature(path[0], default(closed,true)) :
+    let(closed=default(closed,false))
+    assert(is_bool(closed))
+    assert(is_path(path))
     let( 
         d1 = deriv(path, closed=closed),
         d2 = deriv2(path, closed=closed)
@@ -579,6 +647,8 @@ function path_curvature(path, closed=false) =
 // Description:
 //   Numerically estimate the torsion of a 3d path.  
 function path_torsion(path, closed=false) =
+    assert(is_path(path,3), "Input path must be a 3d path")
+    assert(is_bool(closed))
     let(
         d1 = deriv(path,closed=closed),
         d2 = deriv2(path,closed=closed),
@@ -883,13 +953,16 @@ function _path_cuts_dir(path, cuts, closed=false, eps=1e-2) =
 // Arguments:
 //   path = The original path to split.
 //   cutdist = Distance or list of distances where path is cut
-//   closed = If true, treat the path as a closed polygon.
+//   closed = If true, treat the path as a closed polygon.  Default: false
 // Example(2D,NoAxes):
 //   path = circle(d=100);
 //   segs = path_cut(path, [50, 200], closed=true);
 //   rainbow(segs) stroke($item, endcaps="butt", width=3);
 function path_cut(path,cutdist,closed) =
   is_num(cutdist) ? path_cut(path,[cutdist],closed) :
+  is_path_region(path) ? path_cut(path[0], cutdist, default(closed,true)):
+  let(closed=default(closed,false))
+  assert(is_bool(closed))
   assert(is_vector(cutdist))
   assert(last(cutdist)<path_length(path,closed=closed),"Cut distances must be smaller than the path length")
   assert(cutdist[0]>0, "Cut distances must be strictly positive")
@@ -955,6 +1028,9 @@ function _cut_to_seg_u_form(pathcut, path, closed) =
 //   paths = split_path_at_self_crossings(path);
 //   rainbow(paths) stroke($item, closed=false, width=3);
 function split_path_at_self_crossings(path, closed=true, eps=EPSILON) =
+    let(path = force_path(path))
+    assert(is_path(path,2), "Must give a 2D path")
+    assert(is_bool(closed))
     let(
         path = cleanup_path(path, eps=eps),
         isects = deduplicate(
@@ -1063,6 +1139,9 @@ function _tag_self_crossing_subpaths(path, nonzero, closed=true, eps=EPSILON) =
 //   right(27)rainbow(polygon_parts(path)) polygon($item);
 //   move([16,-14])rainbow(polygon_parts(path,nonzero=true)) polygon($item);
 function polygon_parts(path, nonzero=false, eps=EPSILON) =
+    let(path = force_path(path))
+    assert(is_path(path,2), "Must give 2D path")
+    assert(is_bool(nonzero))    
     let(
         path = cleanup_path(path, eps=eps),
         tagged = _tag_self_crossing_subpaths(path, nonzero=nonzero, closed=true, eps=eps),

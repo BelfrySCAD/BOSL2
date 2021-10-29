@@ -43,42 +43,6 @@ function is_region(x) = is_list(x) && is_path(x.x);
 function force_region(path) = is_path(path) ? [path] : path;
 
 
-// Function: check_and_fix_path()
-// Usage:
-//   check_and_fix_path(path, [valid_dim], [closed], [name])
-// Description:
-//   Checks that the input is a path.  If it is a region with one component, converts it to a path.
-//   Note that arbitrary paths must have at least two points, but closed paths need at least 3 points.  
-//   valid_dim specfies the allowed dimension of the points in the path.
-//   If the path is closed, removes duplicate endpoint if present.
-// Arguments:
-//   path = path to process
-//   valid_dim = list of allowed dimensions for the points in the path, e.g. [2,3] to require 2 or 3 dimensional input.  If left undefined do not perform this check.  Default: undef
-//   closed = set to true if the path is closed, which enables a check for endpoint duplication
-//   name = parameter name to use for reporting errors.  Default: "path"
-function check_and_fix_path(path, valid_dim=undef, closed=false, name="path") =
-    let(
-        path =
-          is_region(path)? 
-               assert(len(path)==1,str("Region ",name," supplied as path does not have exactly one component"))
-               path[0]
-          :
-               assert(is_path(path), str("Input ",name," is not a path"))
-               path
-    )
-    assert(len(path)>(closed?2:1),closed?str("Closed path ",name," must have at least 3 points")
-                                        :str("Path ",name," must have at least 2 points"))
-    let(valid=is_undef(valid_dim) || in_list(len(path[0]),force_list(valid_dim)))
-    assert(
-        valid, str(
-            "Input ",name," must has dimension ", len(path[0])," but dimension must be ",
-            is_list(valid_dim) ? str("one of ",valid_dim) : valid_dim
-        )
-    )
-    closed && approx(path[0], last(path))? list_head(path) : path;
-
-
-
 // Function: sanitize_region()
 // Usage:
 //   r_fixed = sanitize_region(r, [nonzero], [eps]);
@@ -148,6 +112,20 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
      )
      pip==0? 0
    : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
+
+
+// Function: region_area()
+// Usage:
+//   area=region_area(region);
+// Description:
+//   Computes the area of the specified valid region. (If the region is invalid and has self intersections
+//   the result is meaningless.)
+function region_area(region) =
+  assert(is_region(region), "Input must be a region")
+  let(
+      parts = region_parts(region)
+  )
+  -sum([for(R=parts, poly=R) polygon_area(poly,signed=true)]);
 
 
 // Function: is_region_simple()

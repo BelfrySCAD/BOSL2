@@ -227,9 +227,7 @@ function round_corners(path, method="circle", radius, cut, joint, k, closed=true
     let(
         default_k = 0.5,
         size=one_defined([radius, cut, joint], "radius,cut,joint"),
-        path = is_region(path)?
-                   assert(len(path)==1, "Region supplied as path does not have exactly one component")
-                   path[0] : path,
+        path = force_path(path), 
         size_ok = is_num(size) || len(size)==len(path) || (!closed && len(size)==len(path)-2),
         k_ok = is_undef(k) || (method=="smooth" && (is_num(k) || len(k)==len(path) || (!closed && len(k)==len(path)-2))),
         measure = is_def(radius) ? "radius" :
@@ -611,6 +609,7 @@ module path_join(paths,joint=0,k=0.5,relocate=true,closed=false) { no_module();}
 function path_join(paths,joint=0,k=0.5,relocate=true,closed=false)=
   assert(is_list(paths),"Input paths must be a list of paths")
   let(
+      paths = [for(i=idx(paths)) force_path(paths[i],str("paths[",i,"]"))],
       badpath = [for(j=idx(paths)) if (!is_path(paths[j])) j]
   )
   assert(badpath==[], str("Entries in paths are not valid paths: ",badpath))
@@ -963,7 +962,10 @@ function offset_sweep(
                    ["k", k],
                    ["points", []],
         ],
-        path = check_and_fix_path(path, [2], closed=true),
+        path = force_path(path)
+    )
+    assert(is_path(path,2), "Input path must be a 2D path")
+    let(
         clockwise = is_polygon_clockwise(path),
         dummy1 = _struct_valid(top,"offset_sweep","top"),
         dummy2 = _struct_valid(bottom,"offset_sweep","bottom"),
@@ -1456,6 +1458,7 @@ function _remove_undefined_vals(list) =
 //   right(12)
 //     offset_stroke(path, width=1, closed=true);
 function offset_stroke(path, width=1, rounded=true, start="flat", end="flat", check_valid=true, quality=1, chamfer=false, closed=false) =
+        let(path = force_path(path))
         assert(is_path(path,2),"path is not a 2d path")
         let(closedok = !closed || (is_undef(start) && is_undef(end)))
         assert(closedok, "Parameters `start` and `end` not allowed with closed path")
@@ -1832,7 +1835,11 @@ module rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot
 
 function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_bot, k_top, k_sides, k=0.5, splinesteps=16,
                        h, length, l, height, debug=false) =
-   assert(is_path(bottom) && len(bottom)>=3)
+   let(
+       bottom = force_path(bottom,"bottom"),
+       top = force_path(top,"top")
+   )
+   assert(is_path(bottom,[2,3]) && len(bottom)>=3, "bottom must be a 2D or 3D path")
    assert(is_num(k) && k>=0 && k<=1, "Curvature parameter k must be in interval [0,1]")
    let(
      N=len(bottom),
@@ -2155,21 +2162,22 @@ module bent_cutout_mask(r, thickness, path, radius, convexity=10)
 {
   no_children($children);
   r = get_radius(r1=r, r2=radius);
-  dummy=assert(is_def(r) && r>0,"Radius of the cylinder to bend around must be positive");
-  assert(is_path(path,2),"Input path must be a 2d path");
+  dummy1=assert(is_def(r) && r>0,"Radius of the cylinder to bend around must be positive");
+  path2 = force_path(path);
+  dummy2=assert(is_path(path2,2),"Input path must be a 2D path");
   assert(r-thickness>0, "Thickness too large for radius");
   assert(thickness>0, "Thickness must be positive");
-  path = clockwise_polygon(path);
+  fixpath = clockwise_polygon(path2);
   curvepoints = arc(d=thickness, angle = [-180,0]);
-  profiles = [for(pt=curvepoints) _cyl_hole(r+pt.x,apply(xscale((r+pt.x)/r), offset(path,delta=thickness/2+pt.y,check_valid=false,closed=true)))];
-  pathx = column(path,0);
+  profiles = [for(pt=curvepoints) _cyl_hole(r+pt.x,apply(xscale((r+pt.x)/r), offset(fixpath,delta=thickness/2+pt.y,check_valid=false,closed=true)))];
+  pathx = column(fixpath,0);
   minangle = (min(pathx)-thickness/2)*360/(2*PI*r);
   maxangle = (max(pathx)+thickness/2)*360/(2*PI*r);
   mindist = (r+thickness/2)/cos((maxangle-minangle)/2);
   assert(maxangle-minangle<180,"Cutout angle span is too large.  Must be smaller than 180.");
-  zmean = mean(column(path,1));
-  innerzero = repeat([0,0,zmean], len(path));
-  outerpt = repeat( [1.5*mindist*cos((maxangle+minangle)/2),1.5*mindist*sin((maxangle+minangle)/2),zmean], len(path));
+  zmean = mean(column(fixpath,1));
+  innerzero = repeat([0,0,zmean], len(fixpath));
+  outerpt = repeat( [1.5*mindist*cos((maxangle+minangle)/2),1.5*mindist*sin((maxangle+minangle)/2),zmean], len(fixpath));
   vnf_polyhedron(vnf_vertex_array([innerzero, each profiles, outerpt],col_wrap=true),convexity=convexity);
 }
 
