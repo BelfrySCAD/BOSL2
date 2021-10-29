@@ -152,7 +152,7 @@ function list_shape(v, depth=undef) =
 //   b = in_list("bee", ["foo", "bar", "baz"]);  // Returns false.
 //   c = in_list("bar", [[2,"foo"], [4,"bar"], [3,"baz"]], idx=1);  // Returns true.
 
-// Note: a huge complication occurs because OpenSCAD's search() finds
+// Note that a huge complication occurs because OpenSCAD's search() finds
 // index i as a hits if the val equals list[i] but also if val equals list[i][0].
 // This means every hit needs to be checked to see if it's actually a hit,
 // and if the first hit is a mismatch we have to keep searching.
