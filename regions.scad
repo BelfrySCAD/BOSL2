@@ -840,40 +840,51 @@ function offset(
 ///    "S" - the subpath is on the 2nd region's border and the two regions interiors are on the same side of the subpath
 ///    "U" - the subpath is on the 2nd region's border and the two regions meet at the subpath from opposite sides
 /// You specify which type of subpaths to keep with a string of the desired types such as "OS".  
-function _filter_region_parts(region1, region2, keep1, keep2, eps=EPSILON) = 
+function _filter_region_parts(region1, region2, keep, eps=EPSILON) = 
     // We have to compute common vertices between paths in the region because
     // they can be places where the path must be cut, even though they aren't
     // found my the split_path function.  
     let(
-        keep = [keep1,keep2],
         subpaths = split_region_at_region_crossings(region1,region2,eps=eps),
-        regions=[region1,region2]
+        regions=[force_region(region1),
+                 force_region(region2)]
     )        
     _assemble_path_fragments(
-    [for(i=[0:1])
-      let(
-          keepS = search("S",keep[i])!=[],
-          keepU = search("U",keep[i])!=[],        
-          keepoutside = search("O",keep[i]) !=[],
-          keepinside = search("I",keep[i]) !=[],
-          all_subpaths = flatten(subpaths[i])
-      )
-      for (subpath = all_subpaths)
-          let(
-                midpt = mean([subpath[0], subpath[1]]),
-                rel = point_in_region(midpt,regions[1-i],eps=eps),
-                keepthis = rel<0 ? keepoutside
-                         : rel>0 ? keepinside
-                         : !(keepS || keepU) ? false
-                         : let(
-                               sidept = midpt + 0.01*line_normal(subpath[0],subpath[1]),
-                               rel1 = point_in_region(sidept,region1,eps=eps)>0,
-                               rel2 = point_in_region(sidept,region2,eps=eps)>0
-                           )
-                           rel1==rel2 ? keepS : keepU
-            )
-            if (keepthis) subpath
-    ]);
+        [for(i=[0:1])
+           let(
+               keepS = search("S",keep[i])!=[],
+               keepU = search("U",keep[i])!=[],        
+               keepoutside = search("O",keep[i]) !=[],
+               keepinside = search("I",keep[i]) !=[],
+               all_subpaths = flatten(subpaths[i])
+           )
+           for (subpath = all_subpaths)
+               let(
+                   midpt = mean([subpath[0], subpath[1]]),
+                   rel = point_in_region(midpt,regions[1-i],eps=eps),
+                   keepthis = rel<0 ? keepoutside
+                            : rel>0 ? keepinside
+                            : !(keepS || keepU) ? false
+                            : let(
+                                  sidept = midpt + 0.01*line_normal(subpath[0],subpath[1]),
+                                  rel1 = point_in_region(sidept,regions[0],eps=eps)>0,
+                                  rel2 = point_in_region(sidept,regions[1],eps=eps)>0
+                              )
+                              rel1==rel2 ? keepS : keepU
+               )
+               if (keepthis) subpath
+        ]
+    );
+
+
+function _list_three(a,b,c) =
+   is_undef(b) ? a : 
+   [
+     a,
+     if (is_def(b)) b,
+     if (is_def(c)) c
+   ];
+
 
 
 // Function&Module: union()
@@ -894,12 +905,12 @@ function _filter_region_parts(region1, region2, keep1, keep2, eps=EPSILON) =
 //   color("green") region(union(shape1,shape2));
 //   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 function union(regions=[],b=undef,c=undef,eps=EPSILON) =
-    b!=undef? union(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
+    let(regions=_list_three(regions,b,c))
     len(regions)==0? [] :
     len(regions)==1? regions[0] :
-    let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
+    let(regions=[for (r=regions) is_path(r)? [r] : r])
     union([
-           _filter_region_parts(regions[0],regions[1],"OS", "O", eps=eps),           
+           _filter_region_parts(regions[0],regions[1],["OS", "O"], eps=eps),           
            for (i=[2:1:len(regions)-1]) regions[i]
           ],
           eps=eps
@@ -925,17 +936,17 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(difference(shape1,shape2));
 function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
-    b!=undef? difference(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
-    len(regions)==0? [] : 
-    len(regions)==1? regions[0] :
-    regions[0]==[] ? [] : 
-    let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
-    difference([
-                _filter_region_parts(regions[0],regions[1],"OU", "I", eps=eps),                
-                for (i=[2:1:len(regions)-1]) regions[i]
-               ],
-               eps=eps
-    );
+     let(regions = _list_three(regions,b,c))
+     len(regions)==0? []
+   : len(regions)==1? regions[0]
+   : regions[0]==[] ? []
+   : let(regions=[for (r=regions) is_path(r)? [r] : r])
+     difference([
+                 _filter_region_parts(regions[0],regions[1],["OU", "I"], eps=eps),                
+                 for (i=[2:1:len(regions)-1]) regions[i]
+                ],
+                eps=eps
+     );
 
 
 // Function&Module: intersection()
@@ -956,17 +967,16 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(intersection(shape1,shape2));
 function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
-     b!=undef? intersection(concat([regions],[b],c==undef?[]:[c]),eps=eps)
-   : len(regions)==0 ? []
+     let(regions = _list_three(regions,b,c))
+     len(regions)==0 ? []
    : len(regions)==1? regions[0]
    : regions[0]==[] || regions[1]==[] ? []   
-   : let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
-         intersection([
-                       _filter_region_parts(regions[0],regions[1],"IS","I",eps=eps),                       
-                       for (i=[2:1:len(regions)-1]) regions[i]
-                      ],
-                      eps=eps
-         );
+   : intersection([
+                   _filter_region_parts(regions[0],regions[1],["IS","I"],eps=eps),                       
+                   for (i=[2:1:len(regions)-1]) regions[i]
+                  ],
+                  eps=eps
+     );
 
 
 
@@ -995,16 +1005,17 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 //       circle(d=40);
 //   }
 function exclusive_or(regions=[],b=undef,c=undef,eps=EPSILON) =
-    b!=undef? exclusive_or([regions, b, if(is_def(c)) c],eps=eps) :
-    len(regions)==0? [] :
-    len(regions)==1? regions[0] :
-    let(regions=[for (r=regions) is_path(r)? [r] : r])
-    exclusive_or([
-                  _filter_region_parts(regions[0],regions[1],"IO","IO",eps=eps),                  
-                  for (i=[2:1:len(regions)-1]) regions[i]
-                 ],
-                 eps=eps
-    );
+     let(regions = _list_three(regions,b,c))
+     len(regions)==0? []
+   : len(regions)==1? regions[0]
+   : regions[0]==[] ? exclusive_or(list_tail(regions))
+   : regions[1]==[] ? exclusive_or(list_remove(regions,1))
+   : exclusive_or([
+                   _filter_region_parts(regions[0],regions[1],["IO","IO"],eps=eps),                  
+                   for (i=[2:1:len(regions)-1]) regions[i]
+                  ],
+                  eps=eps
+     );
 
 
 module exclusive_or() {

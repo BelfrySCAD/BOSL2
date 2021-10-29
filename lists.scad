@@ -151,13 +151,25 @@ function list_shape(v, depth=undef) =
 //   a = in_list("bar", ["foo", "bar", "baz"]);  // Returns true.
 //   b = in_list("bee", ["foo", "bar", "baz"]);  // Returns false.
 //   c = in_list("bar", [[2,"foo"], [4,"bar"], [3,"baz"]], idx=1);  // Returns true.
+
+// Note: a huge complication occurs because OpenSCAD's search() finds
+// index i as a hits if the val equals list[i] but also if val equals list[i][0].
+// This means every hit needs to be checked to see if it's actually a hit,
+// and if the first hit is a mismatch we have to keep searching.
+// We assume that the normal case doesn't have mixed data, and try first
+// with just one hit, but if this finds a mismatch then we try again
+// with all hits, which could be slow for long lists.  
 function in_list(val,list,idx) = 
-    assert( is_list(list) && (is_undef(idx) || is_finite(idx)),
-            "Invalid input." )
-    let( s = search([val], list, num_returns_per_match=1, index_col_num=idx)[0] )
-    s==[] || s==[[]] ? false
-    : is_undef(idx) ? val==list[s] 
-    : val==list[s][idx];
+    assert(is_list(list),"Input is not a list")
+    assert(is_undef(idx) || is_finite(idx), "Invalid idx value.")
+    let( firsthit = search([val], list, num_returns_per_match=1, index_col_num=idx)[0] )
+    firsthit==[] ? false
+    : is_undef(idx) && val==list[firsthit] ? true
+    : is_def(idx) && val==list[firsthit][idx] ? true
+    // first hit was found but didn't match, so try again with all hits
+    : let ( allhits = search([val], list, 0, idx)[0])
+      is_undef(idx) ? [for(hit=allhits) if (list[hit]==val) 1] != []
+    : [for(hit=allhits) if (list[hit][idx]==val) 1] != [];
 
 
 // Function: add_scalar()
@@ -723,7 +735,7 @@ function list_remove(list, ind) =
     :   assert( is_vector(ind), "Invalid index list in list_remove")
         let(sres = search(count(list),ind,1))
         [
-            for(i=[0:len(list)-1])
+            for(i=idx(list))
                 if (sres[i] == []) 
                     list[i]
         ];
@@ -741,13 +753,22 @@ function list_remove(list, ind) =
 // Topics: List Handling
 // See Also: list_set(), list_insert(), list_remove()
 // Description:
-//   Removes the first, or all instances of the given `values` from the `list`.
-//   Returns the modified list.
+//   Removes the first, or all instances of the given value or list of values from the list.
+//   If you specify `all=false` and list a value twice then the first two instances will be removed.  
+//   Note that if you want to remove a list value such as `[3,4]` then you must give it as
+//   a singleton list, or it will be interpreted as a list of two scalars to remove.  
 // Arguments:
 //   list = The list to modify.
-//   values = The values to remove from the list.
+//   values = The value or list of values to remove from the list.
 //   all = If true, remove all instances of the value `value` from the list `list`.  If false, remove only the first.  Default: false
 // Example:
+//   test = [3,4,[5,6],7,5,[5,6],4,[6,5],7,[4,4]];
+//   a=list_remove_values(test,4); // Returns: [3, [5, 6], 7, 5, [5, 6], 4, [6, 5], 7, [4, 4]]
+//   b=list_remove_values(test,[4,4]); // Returns: [3, [5, 6], 7, 5, [5, 6], [6, 5], 7, [4, 4]]
+//   c=list_remove_values(test,[4,7]); // Returns: [3, [5, 6], 5, [5, 6], 4, [6, 5], 7, [4, 4]]
+//   d=list_remove_values(test,[5,6]); // Returns: [3, 4, [5, 6], 7, [5, 6], 4, [6, 5], 7, [4, 4]]
+//   e=list_remove_values(test,[[5,6]]); // Returns: [3,4,7,5,[5,6],4,[6,5],7,[4,4]]
+//   f=list_remove_values(test,[[5,6]],all=true); // Returns: [3,4,7,5,4,[6,5],7,[4,4]]
 //   animals = ["bat", "cat", "rat", "dog", "bat", "rat"];
 //   animals2 = list_remove_values(animals, "rat");   // Returns: ["bat","cat","dog","bat","rat"]
 //   nonflying = list_remove_values(animals, "bat", all=true);  // Returns: ["cat","rat","dog","rat"]
@@ -755,13 +776,39 @@ function list_remove(list, ind) =
 //   domestic = list_remove_values(animals, ["bat","rat"], all=true);  // Returns: ["cat","dog"]
 //   animals4 = list_remove_values(animals, ["tucan","rat"], all=true);  // Returns: ["bat","cat","dog","bat"]
 function list_remove_values(list,values=[],all=false) =
-    assert(is_list(list))
     !is_list(values)? list_remove_values(list, values=[values], all=all) :
-    let(
-        idxs = all? flatten(search(values,list,0)) : search(values,list,1),
-        uidxs = unique(idxs)
-    ) list_remove(list,uidxs);
-
+    assert(is_list(list), "Invalid list")
+    len(values)==0 ? list :
+    len(values)==1 ?
+      (
+        !all ?
+           (
+               let(firsthit = search(values,list,1)[0])
+               firsthit==[] ? list
+             : list[firsthit]==values[0] ? list_remove(list,firsthit)
+             : let(allhits = search(values,list,0)[0],
+                   allind = [for(i=allhits) if (list[i]==values[0]) i]
+               )
+               allind==[] ? list : list_remove(list,min(allind))
+           )
+        :
+           (
+             let(allhits = search(values,list,0)[0],
+                 allind = [for(i=allhits) if (list[i]==values[0]) i]
+             )
+             allind==[] ? list : list_remove(list,allind)
+           )
+     )
+    :!all ? list_remove_values(list_remove_values(list, values[0],all=all), list_tail(values),all=all)
+    :    
+    [
+      for(i=idx(list))
+        let(hit=search([list[i]],values,0)[0])
+          if (hit==[]) list[i]
+          else
+            let(check = [for(j=hit) if (values[j]==list[i]) 1])
+            if (check==[]) list[i]
+    ];
 
 
 // Section: List Length Manipulation

@@ -174,6 +174,23 @@ module test_list_remove_values() {
     assert(list_remove_values(animals, ["bat","rat"]) == ["cat","dog","bat","rat"]);
     assert(list_remove_values(animals, ["bat","rat"], all=true) == ["cat","dog"]);
     assert(list_remove_values(animals, ["tucan","rat"], all=true) == ["bat","cat","dog","bat"]);
+
+    test = [3,4,[5,6],7,5,[5,6],4,[6,5],7,[4,4]];
+    assert_equal(list_remove_values(test,4), [3, [5, 6], 7, 5, [5, 6], 4, [6, 5], 7, [4, 4]]);
+    assert_equal(list_remove_values(test,[4,4]), [3, [5, 6], 7, 5, [5, 6], [6, 5], 7, [4, 4]]);
+    assert_equal(list_remove_values(test,[4,7]), [3, [5, 6], 5, [5, 6], 4, [6, 5], 7, [4, 4]]);
+    assert_equal(list_remove_values(test,[5,6]), [3, 4, [5, 6], 7, [5, 6], 4, [6, 5], 7, [4, 4]]);
+    assert_equal(list_remove_values(test,[[5,6]]), [3,4,7,5,[5,6],4,[6,5],7,[4,4]]);
+    assert_equal(list_remove_values(test,[[5,6]],all=true), [3,4,7,5,4,[6,5],7,[4,4]]);    
+    assert_equal(list_remove_values(test,4,all=true),  [3, [5, 6], 7, 5, [5, 6], [6, 5],7, [4, 4]]);
+    assert_equal(list_remove_values(test,[4,7],all=true), [3, [5, 6], 5, [5, 6], [6, 5], [4, 4]]);
+    assert_equal(list_remove_values(test,[]),test);
+    assert_equal(list_remove_values(test,[],all=true),test);
+    assert_equal(list_remove_values(test,99), test);
+    assert_equal(list_remove_values(test,99,all=true), test);
+    assert_equal(list_remove_values(test,[99,100],all=true), test);
+    assert_equal(list_remove_values(test,[99,100]), test);            
+  
 }
 test_list_remove_values();
 
