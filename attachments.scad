@@ -1561,6 +1561,8 @@ function _find_anchor(anchor, geom) =
         )
     )
     type == "cuboid"? ( //size, size2, shift
+        let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
+        assert(all_comps_good, "All components of an anchor for a cuboid/prismoid must be -1, 0, or 1")
         let(
             size=geom[1], size2=geom[2],
             shift=point2d(geom[3]), axis=point3d(geom[4]),
@@ -1581,6 +1583,7 @@ function _find_anchor(anchor, geom) =
             vec2 = rot(from=UP, to=axis, p=vec)
         ) [anchor, pos2, vec2, oang]
     ) : type == "cyl"? ( //r1, r2, l, shift
+        assert(anchor.z == sign(anchor.z), "The Z component of an anchor for a cylinder/cone must be -1, 0, or 1")
         let(
             rr1=geom[1], rr2=geom[2], l=geom[3],
             shift=point2d(geom[4]), axis=point3d(geom[5]),
@@ -1672,6 +1675,9 @@ function _find_anchor(anchor, geom) =
             pos = point3d(cp) + rot(from=RIGHT, to=anchor, p=mpt)
         ) [anchor, pos, anchor, oang]
     ) : type == "rect"? ( //size, size2, shift
+        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
+        let(all_comps_good = [for (c=anchor) if (c!=sign(c)) 1]==[])
+        assert(all_comps_good, "All components of an anchor for a rectangle/trapezoid must be -1, 0, or 1")
         let(
             size=geom[1], size2=geom[2], shift=geom[3],
             u = (anchor.y+1)/2,  // 0<=u<=1
@@ -1692,6 +1698,7 @@ function _find_anchor(anchor, geom) =
                 )
         ) [anchor, pos, vec, 0]
     ) : type == "circle"? ( //r
+        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(
             rr = geom[1],
             r = is_num(rr)? [rr,rr] : point2d(rr),
@@ -1700,6 +1707,7 @@ function _find_anchor(anchor, geom) =
             vec = unit(v_mul(r,anchor),[0,1])
         ) [anchor, pos, vec, 0]
     ) : type == "rgn_isect"? ( //region
+        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(
             rgn_raw = move(-point2d(cp), p=geom[1]),
             rgn = is_region(rgn_raw)? rgn_raw : [rgn_raw],
@@ -1722,6 +1730,7 @@ function _find_anchor(anchor, geom) =
             vec = unit(isect[2],[0,1])
         ) [anchor, pos, vec, 0]
     ) : type == "rgn_extent"? ( //region
+        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(
             rgn_raw = geom[1],
             rgn = is_region(rgn_raw)? rgn_raw : [rgn_raw],
@@ -1736,6 +1745,7 @@ function _find_anchor(anchor, geom) =
             pos = point2d(cp) + rot(from=RIGHT, to=anchor, p=[maxx,midy])
         ) [anchor, pos, anchor, 0]
     ) : type == "xrgn_isect"? ( //region
+        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(
             rgn_raw = move(-point2d(cp), p=geom[1]),
             l = geom[2],
@@ -1765,6 +1775,7 @@ function _find_anchor(anchor, geom) =
             oang = approx(xyvec, [0,0])? 0 : atan2(xyvec.y, xyvec.x) + 90
         ) [anchor, pos, vec, oang]
     ) : type == "xrgn_extent"? ( //region
+        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(
             rgn_raw = geom[1], l = geom[2],
             rgn = is_region(rgn_raw)? rgn_raw : [rgn_raw],
