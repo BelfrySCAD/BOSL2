@@ -3,7 +3,9 @@
 //   A `path` is a list of points of the same dimensions, usually 2D or 3D, that can
 //   be connected together to form a sequence of line segments or a polygon.
 //   The functions in this file work on paths and also 1-regions, which are regions
-//   that include exactly one path.  Capabilities include computing length of paths, computing
+//   that include exactly one path.  When you pass a 1-region to a function, the default
+//   value for `closed` is always `true` because regions represent polygons.  
+//   Capabilities include computing length of paths, computing
 //   path tangents and normals, resampling of paths, and cutting paths up into smaller paths.  
 // Includes:
 //   include <BOSL2/std.scad>
