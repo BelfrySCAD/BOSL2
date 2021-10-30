@@ -1860,6 +1860,7 @@ function ccw_polygon(poly) =
 // Arguments:
 //   poly = The list of the path points for the perimeter of the polygon.
 function reverse_polygon(poly) =
+    let(poly=force_path(poly,"poly"))
     assert(is_path(poly), "Input should be a polygon")
     [ poly[0], for(i=[len(poly)-1:-1:1]) poly[i] ];
 
@@ -1878,6 +1879,7 @@ function reverse_polygon(poly) =
 // Example:
 //   polygon_shift([[3,4], [8,2], [0,2], [-4,0]], 2);   // Returns [[0,2], [-4,0], [3,4], [8,2]]
 function polygon_shift(poly, i) =
+    let(poly=force_path(poly,"poly"))
     assert(is_path(poly), "Invalid polygon." )
     list_rotate(cleanup_path(poly), i);
 
@@ -1895,7 +1897,7 @@ function polygon_shift(poly, i) =
 //   makes the total sum over all pairs as small as possible.  Returns the reindexed polygon.  Note
 //   that the geometry of the polygon is not changed by this operation, just the labeling of its
 //   vertices.  If the input polygon is 2d and is oriented opposite the reference then its point order is
-//   flipped.
+//   reversed.
 // Arguments:
 //   reference = reference polygon path
 //   poly = input polygon to reindex
@@ -1913,7 +1915,9 @@ function polygon_shift(poly, i) =
 //   move_copies(concat(circ,pent)) circle(r=.1,$fn=32);
 //   color("red") move_copies([pent[0],circ[0]]) circle(r=.1,$fn=32);
 //   color("blue") translate(reindexed[0])circle(r=.1,$fn=32);
-    function reindex_polygon(reference, poly, return_error=false) =
+function reindex_polygon(reference, poly, return_error=false) =
+    let(reference=force_path(reference,"reference"),
+        poly=force_path(poly,"poly"))
     assert(is_path(reference) && is_path(poly,dim=len(reference[0])),
            "Invalid polygon(s) or incompatible dimensions. " )
     assert(len(reference)==len(poly), "The polygons must have the same length.")
@@ -1971,6 +1975,8 @@ function polygon_shift(poly, i) =
 //   stroke(ellipse, width=.5, closed=true);
 //   color("blue")stroke(aligned,width=.5,closed=true);
 function align_polygon(reference, poly, angles, cp, trans, return_ind=false) =
+    let(reference=force_path(reference,"reference"),
+        poly=force_path(poly,"poly"))
     assert(is_undef(trans) || (is_undef(angles) && is_undef(cp)), "Cannot give both angles/cp and trans as input")
     let(
         trans = is_def(trans) ? trans :
@@ -1978,8 +1984,8 @@ function align_polygon(reference, poly, angles, cp, trans, return_ind=false) =
                 "The `angle` parameter must be a range or a non void list of numbers.")
             [for(angle=angles) zrot(angle,cp=cp)]
     )
-    assert(is_path(reference,dim=2) && is_path(poly,dim=2),
-           "Invalid polygon(s). " )
+    assert(is_path(reference,dim=2), "reference must be a 2D polygon")
+    assert(is_path(poly,dim=2), "poly must be a 2D polygon")
     assert(len(reference)==len(poly), "The polygons must have the same length.")
     let(     // alignments is a vector of entries of the form: [polygon, error]
         alignments = [

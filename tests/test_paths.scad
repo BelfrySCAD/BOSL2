@@ -39,6 +39,7 @@ test_cleanup_path();
 module test_path_merge_collinear() {
     path = [[-20,-20], [-10,-20], [0,-10], [10,0], [20,10], [20,20], [15,30]];
     assert(path_merge_collinear(path) == [[-20,-20], [-10,-20], [20,10], [20,20], [15,30]]);
+    assert(path_merge_collinear([path]) == [[-20,-20], [-10,-20], [20,10], [20,20], [15,30]]);    
 }
 test_path_merge_collinear();
 

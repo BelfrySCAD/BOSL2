@@ -436,7 +436,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
   assert(capsOK, "caps must be boolean or a list of two booleans")
   assert(!closed || !caps, "Cannot make closed shape with caps")
   let(
-    profile_dim=array_dim(profiles,2),
+    profile_dim=list_shape(profiles,2),
     profiles_zcheck = (profile_dim != 2) || (profile_dim==2 && is_list(z) && len(z)==len(profiles)), 
     profiles_ok = (profile_dim==2 && is_list(z) && len(z)==len(profiles)) || profile_dim==3
   )
@@ -829,8 +829,8 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
   assert(!closed || twist % (360/symmetry)==0, str("For a closed sweep, twist must be a multiple of 360/symmetry = ",360/symmetry))
   assert(closed || symmetry==1, "symmetry must be 1 when closed is false")
   assert(is_integer(symmetry) && symmetry>0, "symmetry must be a positive integer")
-//  let(shape = check_and_fix_path(shape,valid_dim=2,closed=true,name="shape"))
-  assert(is_path(path), "input path is not a path")
+  let(path = force_path(path))
+  assert(is_path(path,[2,3]), "input path is not a 2D or 3D path")
   assert(!closed || !approx(path[0],last(path)), "Closed path includes start point at the end")
   let(
     path = path3d(path),
@@ -973,8 +973,11 @@ function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edg
              : closed ? false : true,
         capsOK = is_bool(caps) || is_bool_list(caps,2),
         fullcaps = is_bool(caps) ? [caps,caps] : caps,
-        shape = check_and_fix_path(shape,valid_dim=2,closed=true,name="shape")
+        shape = force_path(shape,"shape"),
+        path = force_path(path)
    )
+   assert(is_path(shape,2), "shape must be a 2D path")
+   assert(is_path(path,2), "path must be a 2D path")
    assert(capsOK, "caps must be boolean or a list of two booleans")
    assert(!closed || !caps, "Cannot make closed shape with caps")
    let(
@@ -1221,6 +1224,7 @@ function _smooth(data,len,closed=false,angle=false) =
                    sum(window)+pad*(len-len(window))] / len
    )
    result;
+
 
 // Function: rot_resample()
 // Usage:

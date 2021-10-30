@@ -43,42 +43,6 @@ function is_region(x) = is_list(x) && is_path(x.x);
 function force_region(path) = is_path(path) ? [path] : path;
 
 
-// Function: check_and_fix_path()
-// Usage:
-//   check_and_fix_path(path, [valid_dim], [closed], [name])
-// Description:
-//   Checks that the input is a path.  If it is a region with one component, converts it to a path.
-//   Note that arbitrary paths must have at least two points, but closed paths need at least 3 points.  
-//   valid_dim specfies the allowed dimension of the points in the path.
-//   If the path is closed, removes duplicate endpoint if present.
-// Arguments:
-//   path = path to process
-//   valid_dim = list of allowed dimensions for the points in the path, e.g. [2,3] to require 2 or 3 dimensional input.  If left undefined do not perform this check.  Default: undef
-//   closed = set to true if the path is closed, which enables a check for endpoint duplication
-//   name = parameter name to use for reporting errors.  Default: "path"
-function check_and_fix_path(path, valid_dim=undef, closed=false, name="path") =
-    let(
-        path =
-          is_region(path)? 
-               assert(len(path)==1,str("Region ",name," supplied as path does not have exactly one component"))
-               path[0]
-          :
-               assert(is_path(path), str("Input ",name," is not a path"))
-               path
-    )
-    assert(len(path)>(closed?2:1),closed?str("Closed path ",name," must have at least 3 points")
-                                        :str("Path ",name," must have at least 2 points"))
-    let(valid=is_undef(valid_dim) || in_list(len(path[0]),force_list(valid_dim)))
-    assert(
-        valid, str(
-            "Input ",name," must has dimension ", len(path[0])," but dimension must be ",
-            is_list(valid_dim) ? str("one of ",valid_dim) : valid_dim
-        )
-    )
-    closed && approx(path[0], last(path))? list_head(path) : path;
-
-
-
 // Function: sanitize_region()
 // Usage:
 //   r_fixed = sanitize_region(r, [nonzero], [eps]);
@@ -148,6 +112,20 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
      )
      pip==0? 0
    : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
+
+
+// Function: region_area()
+// Usage:
+//   area=region_area(region);
+// Description:
+//   Computes the area of the specified valid region. (If the region is invalid and has self intersections
+//   the result is meaningless.)
+function region_area(region) =
+  assert(is_region(region), "Input must be a region")
+  let(
+      parts = region_parts(region)
+  )
+  -sum([for(R=parts, poly=R) polygon_area(poly,signed=true)]);
 
 
 // Function: is_region_simple()
@@ -840,40 +818,51 @@ function offset(
 ///    "S" - the subpath is on the 2nd region's border and the two regions interiors are on the same side of the subpath
 ///    "U" - the subpath is on the 2nd region's border and the two regions meet at the subpath from opposite sides
 /// You specify which type of subpaths to keep with a string of the desired types such as "OS".  
-function _filter_region_parts(region1, region2, keep1, keep2, eps=EPSILON) = 
+function _filter_region_parts(region1, region2, keep, eps=EPSILON) = 
     // We have to compute common vertices between paths in the region because
     // they can be places where the path must be cut, even though they aren't
     // found my the split_path function.  
     let(
-        keep = [keep1,keep2],
         subpaths = split_region_at_region_crossings(region1,region2,eps=eps),
-        regions=[region1,region2]
+        regions=[force_region(region1),
+                 force_region(region2)]
     )        
     _assemble_path_fragments(
-    [for(i=[0:1])
-      let(
-          keepS = search("S",keep[i])!=[],
-          keepU = search("U",keep[i])!=[],        
-          keepoutside = search("O",keep[i]) !=[],
-          keepinside = search("I",keep[i]) !=[],
-          all_subpaths = flatten(subpaths[i])
-      )
-      for (subpath = all_subpaths)
-          let(
-                midpt = mean([subpath[0], subpath[1]]),
-                rel = point_in_region(midpt,regions[1-i],eps=eps),
-                keepthis = rel<0 ? keepoutside
-                         : rel>0 ? keepinside
-                         : !(keepS || keepU) ? false
-                         : let(
-                               sidept = midpt + 0.01*line_normal(subpath[0],subpath[1]),
-                               rel1 = point_in_region(sidept,region1,eps=eps)>0,
-                               rel2 = point_in_region(sidept,region2,eps=eps)>0
-                           )
-                           rel1==rel2 ? keepS : keepU
-            )
-            if (keepthis) subpath
-    ]);
+        [for(i=[0:1])
+           let(
+               keepS = search("S",keep[i])!=[],
+               keepU = search("U",keep[i])!=[],        
+               keepoutside = search("O",keep[i]) !=[],
+               keepinside = search("I",keep[i]) !=[],
+               all_subpaths = flatten(subpaths[i])
+           )
+           for (subpath = all_subpaths)
+               let(
+                   midpt = mean([subpath[0], subpath[1]]),
+                   rel = point_in_region(midpt,regions[1-i],eps=eps),
+                   keepthis = rel<0 ? keepoutside
+                            : rel>0 ? keepinside
+                            : !(keepS || keepU) ? false
+                            : let(
+                                  sidept = midpt + 0.01*line_normal(subpath[0],subpath[1]),
+                                  rel1 = point_in_region(sidept,regions[0],eps=eps)>0,
+                                  rel2 = point_in_region(sidept,regions[1],eps=eps)>0
+                              )
+                              rel1==rel2 ? keepS : keepU
+               )
+               if (keepthis) subpath
+        ]
+    );
+
+
+function _list_three(a,b,c) =
+   is_undef(b) ? a : 
+   [
+     a,
+     if (is_def(b)) b,
+     if (is_def(c)) c
+   ];
+
 
 
 // Function&Module: union()
@@ -894,12 +883,12 @@ function _filter_region_parts(region1, region2, keep1, keep2, eps=EPSILON) =
 //   color("green") region(union(shape1,shape2));
 //   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 function union(regions=[],b=undef,c=undef,eps=EPSILON) =
-    b!=undef? union(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
+    let(regions=_list_three(regions,b,c))
     len(regions)==0? [] :
     len(regions)==1? regions[0] :
-    let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
+    let(regions=[for (r=regions) is_path(r)? [r] : r])
     union([
-           _filter_region_parts(regions[0],regions[1],"OS", "O", eps=eps),           
+           _filter_region_parts(regions[0],regions[1],["OS", "O"], eps=eps),           
            for (i=[2:1:len(regions)-1]) regions[i]
           ],
           eps=eps
@@ -925,17 +914,17 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(difference(shape1,shape2));
 function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
-    b!=undef? difference(concat([regions],[b],c==undef?[]:[c]), eps=eps) :
-    len(regions)==0? [] : 
-    len(regions)==1? regions[0] :
-    regions[0]==[] ? [] : 
-    let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
-    difference([
-                _filter_region_parts(regions[0],regions[1],"OU", "I", eps=eps),                
-                for (i=[2:1:len(regions)-1]) regions[i]
-               ],
-               eps=eps
-    );
+     let(regions = _list_three(regions,b,c))
+     len(regions)==0? []
+   : len(regions)==1? regions[0]
+   : regions[0]==[] ? []
+   : let(regions=[for (r=regions) is_path(r)? [r] : r])
+     difference([
+                 _filter_region_parts(regions[0],regions[1],["OU", "I"], eps=eps),                
+                 for (i=[2:1:len(regions)-1]) regions[i]
+                ],
+                eps=eps
+     );
 
 
 // Function&Module: intersection()
@@ -956,17 +945,16 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   for (shape = [shape1,shape2]) color("red") stroke(shape, width=0.5, closed=true);
 //   color("green") region(intersection(shape1,shape2));
 function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
-     b!=undef? intersection(concat([regions],[b],c==undef?[]:[c]),eps=eps)
-   : len(regions)==0 ? []
+     let(regions = _list_three(regions,b,c))
+     len(regions)==0 ? []
    : len(regions)==1? regions[0]
    : regions[0]==[] || regions[1]==[] ? []   
-   : let(regions=[for (r=regions) quant(is_path(r)? [r] : r, 1/65536)])
-         intersection([
-                       _filter_region_parts(regions[0],regions[1],"IS","I",eps=eps),                       
-                       for (i=[2:1:len(regions)-1]) regions[i]
-                      ],
-                      eps=eps
-         );
+   : intersection([
+                   _filter_region_parts(regions[0],regions[1],["IS","I"],eps=eps),                       
+                   for (i=[2:1:len(regions)-1]) regions[i]
+                  ],
+                  eps=eps
+     );
 
 
 
@@ -995,16 +983,17 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 //       circle(d=40);
 //   }
 function exclusive_or(regions=[],b=undef,c=undef,eps=EPSILON) =
-    b!=undef? exclusive_or([regions, b, if(is_def(c)) c],eps=eps) :
-    len(regions)==0? [] :
-    len(regions)==1? regions[0] :
-    let(regions=[for (r=regions) is_path(r)? [r] : r])
-    exclusive_or([
-                  _filter_region_parts(regions[0],regions[1],"IO","IO",eps=eps),                  
-                  for (i=[2:1:len(regions)-1]) regions[i]
-                 ],
-                 eps=eps
-    );
+     let(regions = _list_three(regions,b,c))
+     len(regions)==0? []
+   : len(regions)==1? regions[0]
+   : regions[0]==[] ? exclusive_or(list_tail(regions))
+   : regions[1]==[] ? exclusive_or(list_remove(regions,1))
+   : exclusive_or([
+                   _filter_region_parts(regions[0],regions[1],["IO","IO"],eps=eps),                  
+                   for (i=[2:1:len(regions)-1]) regions[i]
+                  ],
+                  eps=eps
+     );
 
 
 module exclusive_or() {
