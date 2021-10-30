@@ -145,7 +145,7 @@ test_deduplicate_indexed();
 module test_all_zero() {
     assert(all_zero(0));
     assert(all_zero([0,0,0]));
-    assert(all_zero([[0,0,0],[0,0]]));
+    assert(!all_zero([[0,0,0],[0,0]]));
     assert(all_zero([EPSILON/2,EPSILON/2,EPSILON/2]));
     assert(!all_zero(1e-3));
     assert(!all_zero([0,0,1e-3]));
@@ -215,7 +215,7 @@ module test_all_negative() {
     assert(!all_negative([3,-1,2]));
     assert(all_negative([-3,-1,-2]));
     assert(!all_negative([-3,1,-2]));
-    assert(all_negative([[-5,-7],[-3,-1,-2]]));
+    assert(!all_negative([[-5,-7],[-3,-1,-2]]));
     assert(!all_negative([[-5,-7],[-3,1,-2]]));
     assert(!all_negative([]));
     assert(!all_negative(true));
@@ -256,7 +256,7 @@ module test_all_nonnegative() {
     assert(!all_nonnegative([[-5,-7],[-3,-1,-2]]));
     assert(!all_nonnegative([[-5,-7],[-3,1,-2]]));
     assert(!all_nonnegative([[5,7],[3,-1,2]]));
-    assert(all_nonnegative([[5,7],[3,1,2]]));
+    assert(!all_nonnegative([[5,7],[3,1,2]]));
     assert(!all_nonnegative([]));
     assert(!all_nonnegative(true));
     assert(!all_nonnegative(false));

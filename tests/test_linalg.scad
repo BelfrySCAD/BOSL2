@@ -136,7 +136,7 @@ module test_null_space(){
 
     function nullcheck(A,dim) =
       let(v=null_space(A))
-        len(v)==dim && all_zero(A*transpose(v),eps=1e-12);
+        len(v)==dim && all_zero(flatten(A*transpose(v)),eps=1e-12);
     
    A = [[-1, 2, -5, 2],[-3,-1,3,-3],[5,0,5,0],[3,-4,11,-4]];
    assert(nullcheck(A,1));
