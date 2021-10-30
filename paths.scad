@@ -523,8 +523,8 @@ function is_path_simple(path, closed, eps=EPSILON) =
 //   Finds the closest path segment, and point on that segment to the given point.
 //   Returns `[SEGNUM, POINT]`
 // Arguments:
-//   path = The path to find the closest point on.
-//   pt = the point to find the closest point to.
+//   path = path of any dimension or a 1-region
+//   pt = the point to find the closest point to
 //   closed = 
 // Example(2D):
 //   path = circle(d=100,$fn=6);
@@ -535,7 +535,7 @@ function is_path_simple(path, closed, eps=EPSILON) =
 //   color("red") translate(closest[1]) circle(d=3, $fn=12);
 function path_closest_point(path, pt, closed=true) =
     let(path = force_path(path))
-    assert(is_path(path,[2,3]), "Must give 2D or 3D path.")
+    assert(is_path(path), "Input must be a path")
     assert(is_vector(pt, len(path[0])), "Input pt must be a compatible vector")
     assert(is_bool(closed))
     let(

@@ -253,8 +253,8 @@ function line_intersection(line1, line2, bounded1, bounded2, bounded, eps=EPSILO
 //   pt = line_closest_point(line, pt, [bounded]);
 // Topics: Geometry, Lines, Distance
 // Description:
-//   Returns the point on the given 2D or 3D line, segment or ray that is closest to the given point `pt`.
-//   The inputs `line` and `pt` args should either both be 2D or both 3D.  The parameter bounded indicates
+//   Returns the point on the given line, segment or ray that is closest to the given point `pt`.
+//   The inputs `line` and `pt` args should be of the same dimension.  The parameter bounded indicates
 //   whether the points of `line` should be treated as endpoints. 
 // Arguments:
 //   line = A list of two points that are on the unbounded line.
