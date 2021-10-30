@@ -65,6 +65,7 @@ function is_1region(path, name="path") =
     :assert(len(path)==1,str("Parameter \"",name,"\" must be a path or singleton region, but is a multicomponent region"))
      true;
 
+
 // Function: force_path()
 // Usage:
 //   outpath = force_path(path, [name])
