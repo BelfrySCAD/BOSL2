@@ -477,7 +477,9 @@ module chain_hull()
 // Usage:
 //   path_extrude2d(path, [caps], [closed]) {...}
 // Description:
-//   Extrudes 2D children along the given 2D path, with optional rounded endcaps that work only if the children are symmetric across the y axis.  
+//   Extrudes 2D children along the given 2D path, with optional rounded endcaps.  This module works properly in general only if the given
+//   children are symmetric across the Y axis.  It works by constructing flat sections corresponding to each segment of the path and
+//   inserting rounded joints at each corner.  
 // Arguments:
 //   path = The 2D path to extrude the geometry along.
 //   caps = If true, caps each end of the path with a `rotate_extrude()`d copy of the children.  This may interact oddly when given asymmetric profile children.  Default: false
@@ -502,40 +504,30 @@ module chain_hull()
 //   path_extrude2d(path, caps=false)
 //       trapezoid(w1=10, w2=1, h=5, anchor=BACK);
 module path_extrude2d(path, caps=false, closed=false) {
-    assert(caps==false || closed==false
+    assert(caps==false || closed==false, "Cannot have caps on a closed extrusion");
     thin = 0.01;
     path = deduplicate(path);
-    for (p=pair(path,wrap=closed)) {
-        delt = p[1]-p[0];
-        translate(p[0]) {
-            frame_map(y=point3d(delt),z=UP){
-                minkowski() {
-                    cube([thin,norm(delt),thin], anchor=FRONT);
-                    rotate([90,0,0]) linear_extrude(height=thin,center=true) children();
-                }
-            }
-        }
-    }
+    for (p=pair(path,wrap=closed)) 
+        extrude_from_to(p[0],p[1]) xflip()rot(-90)children();
     for (t=triplet(path,wrap=closed)) {
-        ang = v_theta(t[2]-t[1]) - v_theta(t[1]-t[0]);
+        ang = 180-vector_angle(t);
+        rightside = _point_left_of_line2d(t[2],[t[0],t[1]])>0;
         delt = point3d(t[2] - t[1]);
+        if (ang>0)
         translate(t[1]) {
-            minkowski() {
-                cube(thin,center=true);
-                if (ang >= 0) {
-                    rotate(90-ang)
-                        frame_map(x=-delt, z=UP)                      
-                            rotate_extrude(angle=ang+0.01)
-                                right_half(planar=true) children();
-                } else {
-                     rotate(-90)
-                        frame_map(x=delt, z=UP)
-                            rotate_extrude(angle=-ang+0.01)
-                                left_half(planar=true) children();
-                }
-                
+            if (rightside){ //ang >= 0) {
+                rotate(90-ang)
+                    frame_map(x=-delt, z=UP)                      
+                        rotate_extrude(angle=ang)
+                            right_half(planar=true) children();
+            } else {
+                 rotate(-(90-ang))
+                    frame_map(x=delt, z=UP)
+                        rotate_extrude(angle=-ang)
+                            left_half(planar=true) children();
             }
         }
+                
     }
     if (caps) {
         move_copies([path[0],last(path)])
