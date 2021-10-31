@@ -478,7 +478,7 @@ module chain_hull()
 //   path_extrude2d(path, [caps], [closed]) {...}
 // Description:
 //   Extrudes 2D children along the given 2D path, with optional rounded endcaps.  This module works properly in general only if the given
-//   children are symmetric across the Y axis.  It works by constructing flat sections corresponding to each segment of the path and
+//   children are convex and symmetric across the Y axis.  It works by constructing flat sections corresponding to each segment of the path and
 //   inserting rounded joints at each corner.  
 // Arguments:
 //   path = The 2D path to extrude the geometry along.
@@ -510,23 +510,17 @@ module path_extrude2d(path, caps=false, closed=false) {
     for (p=pair(path,wrap=closed)) 
         extrude_from_to(p[0],p[1]) xflip()rot(-90)children();
     for (t=triplet(path,wrap=closed)) {
-        ang = 180-vector_angle(t);
-        rightside = _point_left_of_line2d(t[2],[t[0],t[1]])>0;
+        ang = -(180-vector_angle(t)) * sign(_point_left_of_line2d(t[2],[t[0],t[1]]));
         delt = point3d(t[2] - t[1]);
-        if (ang>0)
-        translate(t[1]) {
-            if (rightside){ //ang >= 0) {
-                rotate(90-ang)
-                    frame_map(x=-delt, z=UP)                      
-                        rotate_extrude(angle=ang)
+        if (ang!=0)
+            translate(t[1]) {
+                frame_map(y=delt, z=UP)                      
+                    rotate_extrude(angle=ang)
+                        if (ang<0)
                             right_half(planar=true) children();
-            } else {
-                 rotate(-(90-ang))
-                    frame_map(x=delt, z=UP)
-                        rotate_extrude(angle=-ang)
-                            left_half(planar=true) children();
+                        else
+                            left_half(planar=true) children();                          
             }
-        }
                 
     }
     if (caps) {
