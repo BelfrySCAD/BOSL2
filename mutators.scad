@@ -504,8 +504,8 @@ module chain_hull()
 //   path_extrude2d(path, caps=false)
 //       trapezoid(w1=10, w2=1, h=5, anchor=BACK);
 module path_extrude2d(path, caps=false, closed=false) {
+    extra_ang = 0.1; // Extra angle for overlap of joints
     assert(caps==false || closed==false, "Cannot have caps on a closed extrusion");
-    thin = 0.01;
     path = deduplicate(path);
     for (p=pair(path,wrap=closed)) 
         extrude_from_to(p[0],p[1]) xflip()rot(-90)children();
@@ -514,16 +514,17 @@ module path_extrude2d(path, caps=false, closed=false) {
         delt = point3d(t[2] - t[1]);
         if (ang!=0)
             translate(t[1]) {
-                frame_map(y=delt, z=UP)                      
-                    rotate_extrude(angle=ang)
-                        if (ang<0)
-                            right_half(planar=true) children();
-                        else
-                            left_half(planar=true) children();                          
+                frame_map(y=delt, z=UP)
+                    rotate(-sign(ang)*extra_ang/2)
+                        rotate_extrude(angle=ang+sign(ang)*extra_ang)
+                            if (ang<0)
+                                right_half(planar=true) children();
+                            else
+                                left_half(planar=true) children();                          
             }
                 
     }
-    if (caps) {
+    if (false && caps) {
         move_copies([path[0],last(path)])
             rotate_extrude()
                 right_half(planar=true) children();

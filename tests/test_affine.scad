@@ -1,37 +1,6 @@
 include <../std.scad>
 
 
-module test_ident() {
-    assert(ident(3) == [[1,0,0],[0,1,0],[0,0,1]]);
-    assert(ident(4) == [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]);
-}
-test_ident();
-
-
-module test_is_2d_transform() {
-    assert(!is_2d_transform(affine2d_identity()));
-    assert(!is_2d_transform(affine2d_translate([5,8])));
-    assert(!is_2d_transform(affine2d_scale([3,4])));
-    assert(!is_2d_transform(affine2d_zrot(30)));
-    assert(!is_2d_transform(affine2d_mirror([-1,1])));
-    assert(!is_2d_transform(affine2d_skew(30,15)));
-
-    assert(is_2d_transform(affine3d_identity()));
-    assert(is_2d_transform(affine3d_translate([30,40,0])));
-    assert(!is_2d_transform(affine3d_translate([30,40,50])));
-    assert(is_2d_transform(affine3d_scale([3,4,1])));
-    assert(!is_2d_transform(affine3d_xrot(30)));
-    assert(!is_2d_transform(affine3d_yrot(30)));
-    assert(is_2d_transform(affine3d_zrot(30)));
-    assert(is_2d_transform(affine3d_skew(sxy=2)));
-    assert(is_2d_transform(affine3d_skew(syx=2)));
-    assert(!is_2d_transform(affine3d_skew(szx=2)));
-    assert(!is_2d_transform(affine3d_skew(szy=2)));
-}
-test_is_2d_transform();
-
-
-
 // 2D
 
 module test_affine2d_identity() {
@@ -196,65 +165,6 @@ test_affine3d_skew_yz();
 
 
 ////////////////////////////
-
-module test_apply() {
-    assert(approx(apply(affine3d_xrot(90),2*UP),2*FRONT));
-    assert(approx(apply(affine3d_yrot(90),2*UP),2*RIGHT));
-    assert(approx(apply(affine3d_zrot(90),2*UP),2*UP));
-    assert(approx(apply(affine3d_zrot(90),2*RIGHT),2*BACK));
-    assert(approx(apply(affine3d_zrot(90),2*BACK+2*RIGHT),2*BACK+2*LEFT));
-    assert(approx(apply(affine3d_xrot(135),2*BACK+2*UP),2*sqrt(2)*FWD));
-    assert(approx(apply(affine3d_yrot(135),2*RIGHT+2*UP),2*sqrt(2)*DOWN));
-    assert(approx(apply(affine3d_zrot(45),2*BACK+2*RIGHT),2*sqrt(2)*BACK));
-
-    module check_path_apply(mat,path)
-        assert_approx(apply(mat,path),path3d([for (p=path) mat*concat(p,1)]));
-
-    check_path_apply(xrot(45), path3d(rect(100,center=true)));
-    check_path_apply(yrot(45), path3d(rect(100,center=true)));
-    check_path_apply(zrot(45), path3d(rect(100,center=true)));
-    check_path_apply(rot([20,30,40])*scale([0.9,1.1,1])*move([10,20,30]), path3d(rect(100,center=true)));
-
-    module check_patch_apply(mat,patch)
-        assert_approx(apply(mat,patch), [for (path=patch) path3d([for (p=path) mat*concat(p,1)])]);
-
-    flat = [for (x=[-50:25:50]) [for (y=[-50:25:50]) [x,y,0]]];
-    check_patch_apply(xrot(45), flat);
-    check_patch_apply(yrot(45), flat);
-    check_patch_apply(zrot(45), flat);
-    check_patch_apply(rot([20,30,40])*scale([0.9,1.1,1])*move([10,20,30]), flat);
-}
-test_apply();
-
-
-module test_rot_decode() {
-   Tlist = [
-             rot(37),
-             xrot(49),
-             yrot(88),
-             rot(37,v=[1,3,3]),
-             rot(41,v=[2,-3,4]),
-             rot(180),
-             xrot(180),
-             yrot(180),
-             rot(180, v=[3,2,-5], cp=[3,5,18]),
-             rot(0.1, v=[1,2,3]),
-             rot(-47,v=[3,4,5],cp=[9,3,4]),
-             rot(197,v=[13,4,5],cp=[9,-3,4]),
-             move([3,4,5]),
-             move([3,4,5]) * rot(a=56, v=[5,3,-3], cp=[2,3,4]),
-             ident(4)
-           ];
-    errlist = [for(T = Tlist)
-                  let(
-                       parm = rot_decode(T),
-                       restore = move(parm[3])*rot(a=parm[0],v=parm[1],cp=parm[2])
-                  )
-                  norm_fro(restore-T)];
-    assert(max(errlist)<1e-13);
-}
-test_rot_decode();
-
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

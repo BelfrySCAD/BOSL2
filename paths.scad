@@ -290,10 +290,8 @@ function _path_self_intersections(path, closed=true, eps=EPSILON) =
                 isect = _general_line_intersection([a1,a2],[b1,b2],eps=eps) 
             )
             if (isect 
-//                && isect[1]> (i==0 && !closed? -eps: 0)  // Apparently too strict
                 && isect[1]>=-eps
                 && isect[1]<= 1+eps
-//                && isect[2]> 0
                 && isect[2]>= -eps 
                 && isect[2]<= 1+eps)
                 [isect[0], i, isect[1], j, isect[2]]
@@ -390,32 +388,28 @@ function subdivide_path(path, N, refine, closed=true, exact=true, method="length
     assert((is_num(N) && N>0) || is_vector(N),"Parameter N to subdivide_path must be postive number or vector")
     let(
         count = len(path) - (closed?0:1), 
-        add_guess = method=="segment"? (
-                is_list(N)? (
-                    assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
-                    add_scalar(N,-1)
-                ) : repeat((N-len(path)) / count, count)
-            ) : // method=="length"
-            assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
-            let(
-                path_lens = concat(
-                    [ for (i = [0:1:len(path)-2]) norm(path[i+1]-path[i]) ],
-                    closed? [norm(path[len(path)-1]-path[0])] : []
-                ),
-                add_density = (N - len(path)) / sum(path_lens)
-            )
-            path_lens * add_density,
-        add = exact? _sum_preserving_round(add_guess) :
-            [for (val=add_guess) round(val)]
-    ) concat(
-        [
-            for (i=[0:1:count]) each [
-                for(j=[0:1:add[i]])
-                lerp(path[i],select(path,i+1), j/(add[i]+1))
-            ]
-        ],
-        closed? [] : [last(path)]
-    );
+        add_guess = method=="segment"?
+                       (
+                          is_list(N)
+                          ? assert(len(N)==count,"Vector parameter N to subdivide_path has the wrong length")
+                            add_scalar(N,-1)
+                          : repeat((N-len(path)) / count, count)
+                       )
+                  : // method=="length"
+                    assert(is_num(N),"Parameter N to subdivide path must be a number when method=\"length\"")
+                    let(
+                        path_lens = path_segment_lengths(path,closed),
+                        add_density = (N - len(path)) / sum(path_lens)
+                    )
+                    path_lens * add_density,
+        add = exact? _sum_preserving_round(add_guess)
+                   : [for (val=add_guess) round(val)]
+    )
+    [
+        for (i=[0:1:count-1]) 
+           each lerpn(path[i],select(path,i+1), 1+add[i],endpoint=false),
+        if (!closed) last(path)
+    ];
 
 
 
@@ -465,8 +459,31 @@ function subdivide_long_segments(path, maxlen, closed=true) =
 // Arguments:
 //   path = path in any dimension or a 1-region
 //   N = Number of points in output
+//   ---
 //   spacing = Approximate spacing desired
 //   closed = set to true if path is closed.  Default: true
+// Example(2D):  Subsampling lots of points from a smooth curve
+//   path = xscale(2,circle($fn=250, r=10));
+//   sampled = resample_path(path, 16);
+//   stroke(path);
+//   color("red")move_copies(sampled) circle($fn=16);
+// Example(2D): Specified spacing is rounded to make a uniform sampling
+//   path = xscale(2,circle($fn=250, r=10));
+//   sampled = resample_path(path, spacing=17);
+//   stroke(path);
+//   color("red")move_copies(sampled) circle($fn=16);
+// Example(2D): Notice that the corners are excluded
+//   path = square(20);
+//   sampled = resample_path(path, spacing=6);
+//   stroke(path,closed=true);
+//   color("red")move_copies(sampled) circle($fn=16);
+// Example(2D): Closed set to false
+//   path = square(20);
+//   sampled = resample_path(path, spacing=6,closed=false);
+//   stroke(path);
+//   color("red")move_copies(sampled) circle($fn=16);
+
+
 function resample_path(path, N, spacing, closed=true) =
    let(path = force_path(path))
    assert(is_path(path))

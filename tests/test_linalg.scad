@@ -1,5 +1,51 @@
 include <../std.scad>
 
+
+module test_is_matrix() {
+    assert(is_matrix([[2,3,4],[5,6,7],[8,9,10]]));
+    assert(is_matrix([[2,3],[5,6],[8,9]],3,2));
+    assert(is_matrix([[2,3],[5,6],[8,9]],m=3,n=2));
+    assert(is_matrix([[2,3,4],[5,6,7]],m=2,n=3));
+    assert(is_matrix([[2,3,4],[5,6,7]],2,3));
+    assert(is_matrix([[2,3,4],[5,6,7]],m=2));
+    assert(is_matrix([[2,3,4],[5,6,7]],2));
+    assert(is_matrix([[2,3,4],[5,6,7]],n=3));
+    assert(!is_matrix([[2,3,4],[5,6,7]],m=4));
+    assert(!is_matrix([[2,3,4],[5,6,7]],n=5));
+    assert(!is_matrix([[2,3],[5,6],[8,9]],m=2,n=3));
+    assert(!is_matrix([[2,3,4],[5,6,7]],m=3,n=2));
+    assert(!is_matrix([ [2,[3,4]],
+                        [4,[5,6]]]));
+    assert(!is_matrix([[3,4],[undef,3]]));
+    assert(!is_matrix([[3,4],[3,"foo"]]));
+    assert(!is_matrix([[3,4],[3,3,2]]));
+    assert(!is_matrix([ [3,4],6]));
+    assert(!is_matrix(undef));
+    assert(!is_matrix(NAN));
+    assert(!is_matrix(INF));
+    assert(!is_matrix(-5));
+    assert(!is_matrix(0));
+    assert(!is_matrix(5));
+    assert(!is_matrix(""));
+    assert(!is_matrix("foo"));
+    assert(!is_matrix([3,4,5]));
+    assert(!is_matrix([]));
+}
+test_is_matrix();
+
+
+
+
+module test_ident() {
+    assert(ident(3) == [[1,0,0],[0,1,0],[0,0,1]]);
+    assert(ident(4) == [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]);
+}
+test_ident();
+
+
+
+
+
 module test_qr_factor() {
   // Check that R is upper triangular
   function is_ut(R) =
