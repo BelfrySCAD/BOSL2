@@ -475,12 +475,13 @@ module chain_hull()
 
 // Module: path_extrude2d()
 // Usage:
-//   path_extrude2d(path, [caps]) {...}
+//   path_extrude2d(path, [caps], [closed]) {...}
 // Description:
-//   Extrudes 2D children along the given 2D path, with optional rounded endcaps.
+//   Extrudes 2D children along the given 2D path, with optional rounded endcaps that work only if the children are symmetric across the y axis.  
 // Arguments:
 //   path = The 2D path to extrude the geometry along.
-//   caps = If true, caps each end of the path with a `rotate_extrude()`d copy of the children.  This may interact oddly when given asymmetric profile children.
+//   caps = If true, caps each end of the path with a `rotate_extrude()`d copy of the children.  This may interact oddly when given asymmetric profile children.  Default: false
+//   closed = If true, connect the starting point of the path to the ending point.  Default: false
 // Example:
 //   path = [
 //       each right(50, p=arc(d=100,angle=[90,180])),
@@ -491,7 +492,7 @@ module chain_hull()
 //       fwd(6) square([10,5],center=true);
 //   }
 // Example:
-//   path_extrude2d(arc(d=100,angle=[180,270]))
+//   path_extrude2d(arc(d=100,angle=[180,270]),caps=true)
 //       trapezoid(w1=10, w2=5, h=10, anchor=BACK);
 // Example:
 //   include <BOSL2/beziers.scad>
@@ -500,13 +501,14 @@ module chain_hull()
 //   ]);
 //   path_extrude2d(path, caps=false)
 //       trapezoid(w1=10, w2=1, h=5, anchor=BACK);
-module path_extrude2d(path, caps=true) {
+module path_extrude2d(path, caps=false, closed=false) {
+    assert(caps==false || closed==false
     thin = 0.01;
     path = deduplicate(path);
-    for (p=pair(path)) {
+    for (p=pair(path,wrap=closed)) {
         delt = p[1]-p[0];
         translate(p[0]) {
-            rot(from=BACK,to=delt) {
+            frame_map(y=point3d(delt),z=UP){
                 minkowski() {
                     cube([thin,norm(delt),thin], anchor=FRONT);
                     rotate([90,0,0]) linear_extrude(height=thin,center=true) children();
@@ -514,23 +516,24 @@ module path_extrude2d(path, caps=true) {
             }
         }
     }
-    for (t=triplet(path)) {
+    for (t=triplet(path,wrap=closed)) {
         ang = v_theta(t[2]-t[1]) - v_theta(t[1]-t[0]);
-        delt = t[2] - t[1];
+        delt = point3d(t[2] - t[1]);
         translate(t[1]) {
             minkowski() {
                 cube(thin,center=true);
                 if (ang >= 0) {
                     rotate(90-ang)
-                        rot(from=LEFT,to=delt)
+                        frame_map(x=-delt, z=UP)                      
                             rotate_extrude(angle=ang+0.01)
                                 right_half(planar=true) children();
                 } else {
-                    rotate(-90)
-                        rot(from=RIGHT,to=delt)
+                     rotate(-90)
+                        frame_map(x=delt, z=UP)
                             rotate_extrude(angle=-ang+0.01)
                                 left_half(planar=true) children();
                 }
+                
             }
         }
     }
