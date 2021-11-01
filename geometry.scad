@@ -1583,6 +1583,7 @@ function _point_above_below_segment(point, edge) =
       ? (edge[1].y >  0 && cross(edge[0], edge[1]-edge[0]) > 0) ?  1 : 0
       : (edge[1].y <= 0 && cross(edge[0], edge[1]-edge[0]) < 0) ? -1 : 0;
 
+
 function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
     // Original algorithms from http://geomalgorithms.com/a03-_inclusion.html
     assert( is_vector(point,2) && is_path(poly,dim=2) && len(poly)>2,
@@ -1597,39 +1598,44 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
     :
     // Does the point lie on any edges?  If so return 0.
     let(
-        on_brd = [
-            for (i = [0:1:len(poly)-1])
-            let( seg = select(poly,i,i+1) )
-            if (!approx(seg[0],seg[1],eps) )
-            _is_point_on_line(point, seg, SEGMENT, eps=eps)? 1:0
-        ]
+        segs = pair(poly,true),
+        on_border = [for (seg=segs)
+                       if (norm(seg[0]-seg[1])>eps && _is_point_on_line(point, seg, SEGMENT, eps=eps)) 1]
     )
-    sum(on_brd) > 0? 0 :
-    nonzero
-      ?  // Compute winding number and return 1 for interior, -1 for exterior
-        let(
-            windchk = [
-                for(i=[0:1:len(poly)-1])
-                let( seg=select(poly,i,i+1) )
-                if (!approx(seg[0],seg[1],eps=eps))
-                _point_above_below_segment(point, seg)
+    on_border != [] ? 0 :
+    nonzero    // Compute winding number and return 1 for interior, -1 for exterior
+      ? let(
+            winding = [
+                       for(seg=segs)
+                         let(
+                             p0=seg[0]-point,
+                             p1=seg[1]-point
+                         )
+                         if (norm(p0-p1)>eps)
+                             p0.y <=0
+                                ? p1.y > 0 && cross(p0,p1-p0)>0 ? 1 : 0
+                                : p1.y <=0 && cross(p0,p1-p0)<0 ? -1: 0
             ]
-        ) sum(windchk) != 0 ? 1 : -1
+        )
+        sum(winding) != 0 ? 1 : -1
       : // or compute the crossings with the ray [point, point+[1,0]]
         let(
-            n  = len(poly),
             cross = [
-                for(i=[0:n-1])
-                let(
-                    p0 = poly[i]-point,
-                    p1 = poly[(i+1)%n]-point
-                )
-                if (
-                    ( (p1.y>eps && p0.y<=eps) || (p1.y<=eps && p0.y>eps) )
-                    &&  -eps < p0.x - p0.y *(p1.x - p0.x)/(p1.y - p0.y)
-                ) 1
+                     for(seg=segs)
+                       let(
+                           p0 = seg[0]-point,
+                           p1 = seg[1]-point
+                       )
+                       if (
+                           ( (p1.y>eps && p0.y<=eps) || (p1.y<=eps && p0.y>eps) )
+                           &&  -eps < p0.x - p0.y *(p1.x - p0.x)/(p1.y - p0.y)
+                       )
+                       1
             ]
-        ) 2*(len(cross)%2)-1;
+        )
+        2*(len(cross)%2)-1;
+
+
 
 
 // Function: polygon_triangulate()
