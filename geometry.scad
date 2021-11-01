@@ -1839,7 +1839,7 @@ function is_polygon_clockwise(poly) =
 //   poly = The list of 2D path points for the perimeter of the polygon.
 function clockwise_polygon(poly) =
     assert(is_path(poly,dim=2), "Input should be a 2d polygon")
-    polygon_area(poly, signed=true)<0 ? poly : reverse_polygon(poly);
+    is_polygon_clockwise(poly) ? poly : reverse_polygon(poly);
 
 
 // Function: ccw_polygon()
@@ -1853,7 +1853,7 @@ function clockwise_polygon(poly) =
 //   poly = The list of 2D path points for the perimeter of the polygon.
 function ccw_polygon(poly) =
     assert(is_path(poly,dim=2), "Input should be a 2d polygon")
-    polygon_area(poly, signed=true)<0 ? reverse_polygon(poly) : poly;
+    is_polygon_clockwise(poly) ? reverse_polygon(poly) : poly;
 
 
 // Function: reverse_polygon()

@@ -524,7 +524,7 @@ module path_extrude2d(path, caps=false, closed=false) {
             }
                 
     }
-    if (false && caps) {
+    if (caps) {
         move_copies([path[0],last(path)])
             rotate_extrude()
                 right_half(planar=true) children();

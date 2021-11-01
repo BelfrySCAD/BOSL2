@@ -228,12 +228,12 @@ function path_length_fractions(path, closed) =
     let(
         lengths = [
             0,
-            for (i=[0:1:len(path)-(closed?1:2)])
-                norm(select(path,i+1)-path[i])
+            each path_segment_lengths(path,closed)
         ],
         partial_len = cumsum(lengths),
         total_len = last(partial_len)
-    ) partial_len / total_len;
+    )
+    partial_len / total_len;
 
 
 
@@ -556,7 +556,7 @@ function path_closest_point(path, pt, closed=true) =
     assert(is_vector(pt, len(path[0])), "Input pt must be a compatible vector")
     assert(is_bool(closed))
     let(
-        pts = [for (seg=[0:1:len(path)-(closed?1:2)]) line_closest_point(select(path,seg,seg+1),pt,SEGMENT)],
+        pts = [for (seg=pair(path,closed)) line_closest_point(seg,pt,SEGMENT)],
         dists = [for (p=pts) norm(p-pt)],
         min_seg = min_index(dists)
     ) [min_seg, pts[min_seg]];
