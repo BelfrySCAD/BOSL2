@@ -3,8 +3,7 @@
 //   This file provides 2D boolean geometry operations on paths, where you can
 //   compute the intersection or union of the shape defined by point lists, producing
 //   a new point list.  Of course, boolean operations may produce shapes with multiple
-//   components.  To handle that, we use "regions" which are defined by sets of
-//   multiple paths.  
+//   components.  To handle that, we use "regions" which are defined as lists of paths.  
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
@@ -23,7 +22,8 @@
 //   Checking that the polygons on a list are simple and non-crossing can be a time consuming test,
 //   so it is not done automatically.  It is your responsibility to ensure that your regions are
 //   compliant.  You can construct regions by making a list of polygons, or by using
-//   boolean function operations such as union() or difference().  And if you must you
+//   boolean function operations such as union() or difference(), which all except paths, as
+//   well as regions, as their inputs.  And if you must you
 //   can clean up an ill-formed region using sanitize_region().  
 
 

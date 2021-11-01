@@ -358,10 +358,9 @@ test_pair();
 module test_triplet() {
     assert(triplet([3,4,5,6,7]) == [[3,4,5], [4,5,6], [5,6,7]]);
     assert(triplet("ABCDE") == [["A","B","C"], ["B","C","D"], ["C","D","E"]]);
-    assert(triplet([3,4,5,6],true) == [[3,4,5], [4,5,6], [5,6,3], [6,3,4]]);
-    assert(triplet("ABCD",true) == [["A","B","C"], ["B","C","D"], ["C","D","A"], ["D","A","B"]]);
-    assert(triplet([3,4,5,6],wrap=true) == [[3,4,5], [4,5,6], [5,6,3], [6,3,4]]);
-    assert(triplet("ABCD",wrap=true) == [["A","B","C"], ["B","C","D"], ["C","D","A"], ["D","A","B"]]);
+    assert(triplet([3,4,5,6],true) == [[6,3,4],[3,4,5], [4,5,6], [5,6,3]]);
+    assert(triplet("ABCD",true) == [["D","A","B"],["A","B","C"], ["B","C","D"], ["C","D","A"]]);
+    assert(triplet("ABCD",wrap=true) == [["D","A","B"],["A","B","C"], ["B","C","D"], ["C","D","A"]]);
 }
 test_triplet();
 
@@ -399,15 +398,6 @@ module test_list_to_matrix() {
     assert(list_to_matrix(v,4,0) == [[1,2,3,4], [5,6,0,0]]);
 }
 test_list_to_matrix();
-
-
-module test_group_data() {
-    assert_equal(group_data([1,2,0], ["A","B","C"]), [["C"],["A"],["B"]]);
-    assert_equal(group_data([1,3,0], ["A","B","C"]), [["C"],["A"],[],["B"]]);
-    assert_equal(group_data([5,3,1], ["A","B","C"]), [[],["C"],[],["B"],[],["A"]]);
-    assert_equal(group_data([1,3,1], ["A","B","C"]), [[],["A","C"],[],["B"]]);
-}
-test_group_data();
 
 
 module test_flatten() {

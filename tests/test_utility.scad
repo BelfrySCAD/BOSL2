@@ -76,6 +76,15 @@ module test_is_def() {
 test_is_def();
 
 
+module test_segs() {
+    assert_equal(segs(50,$fn=8), 8);
+    assert_equal(segs(50,$fa=2,$fs=2), 158);
+}
+test_segs();
+
+
+
+
 module test_is_str() {
     assert(!is_str(undef));
     assert(!is_str(true));

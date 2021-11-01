@@ -6,7 +6,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Section: Comparing lists to zero
+// Section: List comparison operations
 
 // Function: approx()
 // Usage:
@@ -34,7 +34,7 @@ function approx(a,b,eps=EPSILON) =
 //   x = all_zero(x, [eps]);
 // Description:
 //   Returns true if the finite number passed to it is approximately zero, to within `eps`.
-//   If passed a list, recursively checks if all items in the list are approximately zero.
+//   If passed a list returns true if all its entries are approximately zero. 
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
@@ -45,17 +45,16 @@ function approx(a,b,eps=EPSILON) =
 //   c = all_zero([0,0,0]);  // Returns: true.
 //   d = all_zero([0,0,1e-3]);  // Returns: false.
 function all_zero(x, eps=EPSILON) =
-    is_finite(x)? approx(x,eps) :
-    is_list(x)? (x != [] && [for (xx=x) if(!all_zero(xx,eps=eps)) 1] == []) :
-    false;
+    is_finite(x)? abs(x)<eps :
+    is_vector(x) && [for (xx=x) if(abs(xx)>eps) 1] == [];
 
 
 // Function: all_nonzero()
 // Usage:
 //   test = all_nonzero(x, [eps]);
 // Description:
-//   Returns true if the finite number passed to it is not almost zero, to within `eps`.
-//   If passed a list, recursively checks if all items in the list are not almost zero.
+//   Returns true if the finite number passed to it is different from zero by `eps`.
+//   If passed a list returns true if all the entries of the list are different from zero by `eps`.  
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
@@ -67,20 +66,20 @@ function all_zero(x, eps=EPSILON) =
 //   d = all_nonzero([0,0,1e-3]);  // Returns: false.
 //   e = all_nonzero([1e-3,1e-3,1e-3]);  // Returns: true.
 function all_nonzero(x, eps=EPSILON) =
-    is_finite(x)? !approx(x,eps) :
-    is_list(x)? (x != [] && [for (xx=x) if(!all_nonzero(xx,eps=eps)) 1] == []) :
-    false;
+    is_finite(x)? abs(x)>eps :
+    is_vector(x) && [for (xx=x) if(abs(xx)<eps) 1] == [];
 
 
 // Function: all_positive()
 // Usage:
-//   test = all_positive(x);
+//   test = all_positive(x,[eps]);
 // Description:
 //   Returns true if the finite number passed to it is greater than zero.
-//   If passed a list, recursively checks if all items in the list are positive.
+//   If passed a list returns true if all the entries are positive. 
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
+//   eps = Tolerance. Default: 0
 // Example:
 //   a = all_positive(-2);  // Returns: false.
 //   b = all_positive(0);  // Returns: false.
@@ -89,21 +88,21 @@ function all_nonzero(x, eps=EPSILON) =
 //   e = all_positive([0,1,2]);  // Returns: false.
 //   f = all_positive([3,1,2]);  // Returns: true.
 //   g = all_positive([3,-1,2]);  // Returns: false.
-function all_positive(x) =
-    is_num(x)? x>0 :
-    is_list(x)? (x != [] && [for (xx=x) if(!all_positive(xx)) 1] == []) :
-    false;
+function all_positive(x,eps=0) =
+    is_num(x)? x>eps :
+    is_vector(x) && [for (xx=x) if(xx<=0) 1] == [];
 
 
 // Function: all_negative()
 // Usage:
-//   test = all_negative(x);
+//   test = all_negative(x, [eps]);
 // Description:
 //   Returns true if the finite number passed to it is less than zero.
 //   If passed a list, recursively checks if all items in the list are negative.
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
+//   eps = tolerance.  Default: 0
 // Example:
 //   a = all_negative(-2);  // Returns: true.
 //   b = all_negative(0);  // Returns: false.
@@ -113,21 +112,21 @@ function all_positive(x) =
 //   f = all_negative([3,1,2]);  // Returns: false.
 //   g = all_negative([3,-1,2]);  // Returns: false.
 //   h = all_negative([-3,-1,-2]);  // Returns: true.
-function all_negative(x) =
-    is_num(x)? x<0 :
-    is_list(x)? (x != [] && [for (xx=x) if(!all_negative(xx)) 1] == []) :
-    false;
+function all_negative(x, eps=0) =
+    is_num(x)? x<-eps :
+    is_vector(x) && [for (xx=x) if(xx>=-eps) 1] == [];
 
 
 // Function: all_nonpositive()
 // Usage:
-//   all_nonpositive(x);
+//   all_nonpositive(x, [eps]);
 // Description:
 //   Returns true if the finite number passed to it is less than or equal to zero.
 //   If passed a list, recursively checks if all items in the list are nonpositive.
-//   Otherwise, returns false.
+//   Otherwise, returns false. 
 // Arguments:
 //   x = The value to check.
+//   eps = tolerance.  Default: 0
 // Example:
 //   a = all_nonpositive(-2);  // Returns: true.
 //   b = all_nonpositive(0);  // Returns: true.
@@ -137,21 +136,21 @@ function all_negative(x) =
 //   f = all_nonpositive([3,1,2]);  // Returns: false.
 //   g = all_nonpositive([3,-1,2]);  // Returns: false.
 //   h = all_nonpositive([-3,-1,-2]);  // Returns: true.
-function all_nonpositive(x) =
-    is_num(x)? x<=0 :
-    is_list(x)? (x != [] && [for (xx=x) if(!all_nonpositive(xx)) 1] == []) :
-    false;
+function all_nonpositive(x,eps=0) =
+    is_num(x)? x<=eps :
+    is_vector(x) && [for (xx=x) if(xx>eps) 1] == []; 
 
 
 // Function: all_nonnegative()
 // Usage:
-//   all_nonnegative(x);
+//   all_nonnegative(x, [eps]);
 // Description:
 //   Returns true if the finite number passed to it is greater than or equal to zero.
 //   If passed a list, recursively checks if all items in the list are nonnegative.
 //   Otherwise, returns false.
 // Arguments:
 //   x = The value to check.
+//   eps = tolerance.  Default: 0
 // Example:
 //   a = all_nonnegative(-2);  // Returns: false.
 //   b = all_nonnegative(0);  // Returns: true.
@@ -162,10 +161,9 @@ function all_nonpositive(x) =
 //   g = all_nonnegative([3,1,2]);  // Returns: true.
 //   h = all_nonnegative([3,-1,2]);  // Returns: false.
 //   i = all_nonnegative([-3,-1,-2]);  // Returns: false.
-function all_nonnegative(x) =
-    is_num(x)? x>=0 :
-    is_list(x)? (x != [] && [for (xx=x) if(!all_nonnegative(xx)) 1] == []) :
-    false;
+function all_nonnegative(x,eps=0) =
+    is_num(x)? x>=-eps :
+    is_vector(x) && [for (xx=x) if(xx<-eps) 1] == [];
 
 
 // Function: all_equal()
@@ -279,30 +277,6 @@ function compare_lists(a, b) =
     )
     cmps==[]? (len(a)-len(b)) : cmps[0];
 
-
-// Function: list_smallest()
-// Usage:
-//   small = list_smallest(list, k)
-// Description:
-//   Returns a set of the k smallest items in list in arbitrary order.  The items must be
-//   mutually comparable with native OpenSCAD comparison operations.  You will get "undefined operation"
-//   errors if you provide invalid input. 
-// Arguments:
-//   list = list to process
-//   k = number of items to return
-function list_smallest(list, k) =
-    assert(is_list(list))
-    assert(is_finite(k) && k>=0, "k must be nonnegative")
-    let( 
-        v       = list[rand_int(0,len(list)-1,1)[0]],
-        smaller = [for(li=list) if(li<v) li ],
-        equal   = [for(li=list) if(li==v) li ]
-    )
-    len(smaller)   == k ? smaller :
-    len(smaller)<k && len(smaller)+len(equal) >= k ? [ each smaller, for(i=[1:k-len(smaller)]) v ] :
-    len(smaller)   >  k ? list_smallest(smaller, k) :
-    let( bigger  = [for(li=list) if(li>v) li ] )
-    concat(smaller, equal, list_smallest(bigger, k-len(smaller) -len(equal)));
 
 
 
@@ -779,4 +753,28 @@ function group_data(groups, values) =
         ]
     ];
 
+
+// Function: list_smallest()
+// Usage:
+//   small = list_smallest(list, k)
+// Description:
+//   Returns a set of the k smallest items in list in arbitrary order.  The items must be
+//   mutually comparable with native OpenSCAD comparison operations.  You will get "undefined operation"
+//   errors if you provide invalid input. 
+// Arguments:
+//   list = list to process
+//   k = number of items to return
+function list_smallest(list, k) =
+    assert(is_list(list))
+    assert(is_finite(k) && k>=0, "k must be nonnegative")
+    let( 
+        v       = list[rand_int(0,len(list)-1,1)[0]],
+        smaller = [for(li=list) if(li<v) li ],
+        equal   = [for(li=list) if(li==v) li ]
+    )
+    len(smaller)   == k ? smaller :
+    len(smaller)<k && len(smaller)+len(equal) >= k ? [ each smaller, for(i=[1:k-len(smaller)]) v ] :
+    len(smaller)   >  k ? list_smallest(smaller, k) :
+    let( bigger  = [for(li=list) if(li>v) li ] )
+    concat(smaller, equal, list_smallest(bigger, k-len(smaller) -len(equal)));
 

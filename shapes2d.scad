@@ -602,7 +602,7 @@ module octagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
     regular_ngon(n=8, r=r, d=d, or=or, od=od, ir=ir, id=id, side=side, rounding=rounding, realign=realign, align_tip=align_tip, align_side=align_side, anchor=anchor, spin=spin) children();
 
 
-// Function&Module right_triangle()
+// Function&Module: right_triangle()
 // Usage: As Module
 //   right_triangle(size, [center], ...);
 // Usage: With Attachments

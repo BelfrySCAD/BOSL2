@@ -192,7 +192,7 @@ function lerp(a,b,u) =
 //   l = lerpn(0,1,6);         // Returns: [0, 0.2, 0.4, 0.6, 0.8, 1]
 //   l = lerpn(0,1,5,false);   // Returns: [0, 0.2, 0.4, 0.6, 0.8]
 function lerpn(a,b,n,endpoint=true) =
-    assert(same_shape(a,b), "Bad or inconsistent inputs to lerp")
+    assert(same_shape(a,b), "Bad or inconsistent inputs to lerpn")
     assert(is_int(n))
     assert(is_bool(endpoint))
     let( d = n - (endpoint? 1 : 0) )

@@ -310,8 +310,8 @@ function line_intersection(line1, line2, bounded1, bounded2, bounded, eps=EPSILO
 //   pt = line_closest_point(line, pt, [bounded]);
 // Topics: Geometry, Lines, Distance
 // Description:
-//   Returns the point on the given 2D or 3D line, segment or ray that is closest to the given point `pt`.
-//   The inputs `line` and `pt` args should either both be 2D or both 3D.  The parameter bounded indicates
+//   Returns the point on the given line, segment or ray that is closest to the given point `pt`.
+//   The inputs `line` and `pt` args should be of the same dimension.  The parameter bounded indicates
 //   whether the points of `line` should be treated as endpoints. 
 // Arguments:
 //   line = A list of two points that are on the unbounded line.
@@ -1640,6 +1640,7 @@ function _point_above_below_segment(point, edge) =
       ? (edge[1].y >  0 && cross(edge[0], edge[1]-edge[0]) > 0) ?  1 : 0
       : (edge[1].y <= 0 && cross(edge[0], edge[1]-edge[0]) < 0) ? -1 : 0;
 
+
 function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
     // Original algorithms from http://geomalgorithms.com/a03-_inclusion.html
     assert( is_vector(point,2) && is_path(poly,dim=2) && len(poly)>2,
@@ -1654,39 +1655,44 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
     :
     // Does the point lie on any edges?  If so return 0.
     let(
-        on_brd = [
-            for (i = [0:1:len(poly)-1])
-            let( seg = select(poly,i,i+1) )
-            if (!approx(seg[0],seg[1],eps) )
-            _is_point_on_line(point, seg, SEGMENT, eps=eps)? 1:0
-        ]
+        segs = pair(poly,true),
+        on_border = [for (seg=segs)
+                       if (norm(seg[0]-seg[1])>eps && _is_point_on_line(point, seg, SEGMENT, eps=eps)) 1]
     )
-    sum(on_brd) > 0? 0 :
-    nonzero
-      ?  // Compute winding number and return 1 for interior, -1 for exterior
-        let(
-            windchk = [
-                for(i=[0:1:len(poly)-1])
-                let( seg=select(poly,i,i+1) )
-                if (!approx(seg[0],seg[1],eps=eps))
-                _point_above_below_segment(point, seg)
+    on_border != [] ? 0 :
+    nonzero    // Compute winding number and return 1 for interior, -1 for exterior
+      ? let(
+            winding = [
+                       for(seg=segs)
+                         let(
+                             p0=seg[0]-point,
+                             p1=seg[1]-point
+                         )
+                         if (norm(p0-p1)>eps)
+                             p0.y <=0
+                                ? p1.y > 0 && cross(p0,p1-p0)>0 ? 1 : 0
+                                : p1.y <=0 && cross(p0,p1-p0)<0 ? -1: 0
             ]
-        ) sum(windchk) != 0 ? 1 : -1
+        )
+        sum(winding) != 0 ? 1 : -1
       : // or compute the crossings with the ray [point, point+[1,0]]
         let(
-            n  = len(poly),
             cross = [
-                for(i=[0:n-1])
-                let(
-                    p0 = poly[i]-point,
-                    p1 = poly[(i+1)%n]-point
-                )
-                if (
-                    ( (p1.y>eps && p0.y<=eps) || (p1.y<=eps && p0.y>eps) )
-                    &&  -eps < p0.x - p0.y *(p1.x - p0.x)/(p1.y - p0.y)
-                ) 1
+                     for(seg=segs)
+                       let(
+                           p0 = seg[0]-point,
+                           p1 = seg[1]-point
+                       )
+                       if (
+                           ( (p1.y>eps && p0.y<=eps) || (p1.y<=eps && p0.y>eps) )
+                           &&  -eps < p0.x - p0.y *(p1.x - p0.x)/(p1.y - p0.y)
+                       )
+                       1
             ]
-        ) 2*(len(cross)%2)-1;
+        )
+        2*(len(cross)%2)-1;
+
+
 
 
 // Function: polygon_triangulate()
@@ -1912,7 +1918,7 @@ function is_polygon_clockwise(poly) =
 //   poly = The list of 2D path points for the perimeter of the polygon.
 function clockwise_polygon(poly) =
     assert(is_path(poly,dim=2), "Input should be a 2d polygon")
-    polygon_area(poly, signed=true)<0 ? poly : reverse_polygon(poly);
+    is_polygon_clockwise(poly) ? poly : reverse_polygon(poly);
 
 
 // Function: ccw_polygon()
@@ -1926,7 +1932,7 @@ function clockwise_polygon(poly) =
 //   poly = The list of 2D path points for the perimeter of the polygon.
 function ccw_polygon(poly) =
     assert(is_path(poly,dim=2), "Input should be a 2d polygon")
-    polygon_area(poly, signed=true)<0 ? reverse_polygon(poly) : poly;
+    is_polygon_clockwise(poly) ? reverse_polygon(poly) : poly;
 
 
 // Function: reverse_polygon()
