@@ -104,15 +104,16 @@ function _tri_class(tri, eps=EPSILON) =
 ///   class = _pt_in_tri(point, tri);
 /// Topics: Geometry, Points, Triangles
 /// Description:
-///   Return  1 if point is inside the triangle interion.
-///   Return =0 if point is on the triangle border.
-///   Return -1 if point is outside the triangle.
+///   For CW triangles `tri` :
+///   return  1 if point is inside the triangle interior.
+///   return =0 if point is on the triangle border.
+///   return -1 if point is outside the triangle.
 /// Arguments:
 ///   point = The point to check position of.
 ///   tri  =  A list of the three 2d vertices of a triangle.
 ///   eps = Tolerance in the geometrical tests.
 function _pt_in_tri(point, tri, eps=EPSILON) = 
-    min(   _tri_class([tri[0],tri[1],point],eps), 
+    min(  _tri_class([tri[0],tri[1],point],eps), 
           _tri_class([tri[1],tri[2],point],eps), 
           _tri_class([tri[2],tri[0],point],eps) );
         
@@ -1695,7 +1696,7 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 // Description:
 //   Given a simple polygon in 2D or 3D, triangulates it and returns a list 
 //   of triples indexing into the polygon vertices. When the optional argument `ind` is 
-//   given, it is used as an index list into `poly` to define the polygon. In that case, 
+//   given, it is used as an index list into `poly` to define the polygon vertices. In that case, 
 //   `poly` may have a length greater than `ind`. When `ind` is undefined, all points in `poly` 
 //   are considered as vertices of the polygon.
 //   .
@@ -1704,47 +1705,50 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   vector with the same direction of the polygon normal.
 //   .
 //   The function produce correct triangulations for some non-twisted non-simple polygons. 
-//   A polygon is non-twisted iff it is simple or there is a partition of it in
+//   A polygon is non-twisted iff it is simple or it has a partition in
 //   simple polygons with the same winding such that the intersection of any two partitions is
-//   made of full edges of both partitions. These polygons may have "touching" vertices 
+//   made of full edges and/or vertices of both partitions. These polygons may have "touching" vertices 
 //   (two vertices having the same coordinates, but distinct adjacencies) and "contact" edges 
 //   (edges whose vertex pairs have the same pairwise coordinates but are in reversed order) but has 
 //   no self-crossing. See examples bellow. If all polygon edges are contact edges (polygons with 
-//   zero area), it returns an empty list for 2d polygons and issues an error for 3d polygons. 
+//   zero area), it returns an empty list for 2d polygons and reports an error for 3d polygons. 
+//   Triangulation errors are reported either by an assert error (when `error=true`) or by returning 
+//   `undef` (when `error=false`). Invalid arguments always produce an assert error.
 //   .
-//   Twisted polygons have no consistent winding and when input to this function usually produce 
-//   an error but when an error is not issued the outputs are not correct triangulations. The function
+//   Twisted polygons have no consistent winding and when input to this function usually reports 
+//   an error but when an error is not reported the outputs are not correct triangulations. The function
 //   can work for 3d non-planar polygons if they are close enough to planar but may otherwise 
-//   issue an error for this case. 
+//   report an error for this case. 
 // Arguments:
 //   poly = Array of the polygon vertices.
 //   ind = A list indexing the vertices of the polygon in `poly`.
+//   error = If false, reports triangulation errors returning `undef` otherwise report them by an assert error. Default: true
 //   eps = A maximum tolerance in geometrical tests. Default: EPSILON
-// Example(2D,NoAxes):
+// Example(2D,NoAxes): a simple polygon; see from above
 //   poly = star(id=10, od=15,n=11);
 //   tris =  polygon_triangulate(poly);
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
 //   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
 //   color("black")   up(3) vnf_debug([path3d(poly),[]],faces=false,size=1);
-// Example(2D,NoAxes): a polygon with a hole and one "contact" edge
+// Example(2D,NoAxes): a polygon with a hole and one "contact" edge; see from above
 //   poly = [ [-10,0], [10,0], [0,10], [-10,0], [-4,4], [4,4], [0,2], [-4,4] ];
 //   tris =  polygon_triangulate(poly);
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
 //   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
 //   color("black")   up(3) vnf_debug([path3d(poly),[]],faces=false,size=1);
-// Example(2D,NoAxes): a polygon with "touching" vertices and no holes
+// Example(2D,NoAxes): a polygon with "touching" vertices and no holes; see from above
 //   poly = [ [0,0], [5,5], [-5,5], [0,0], [-5,-5], [5,-5] ];
 //   tris =  polygon_triangulate(poly);
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
 //   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
 //   color("black")   up(3) vnf_debug([path3d(poly),[]],faces=false,size=1);
-// Example(2D,NoAxes): a polygon with "contact" edges and no holes
+// Example(2D,NoAxes): a polygon with "contact" edges and no holes; see from above
 //   poly = [ [0,0], [10,0], [10,10], [0,10], [0,0], [3,3], [7,3], 
 //            [7,7], [7,3], [3,3] ];
-//   tris =  polygon_triangulate(poly); // see from above
+//   tris =  polygon_triangulate(poly);
 //   color("lightblue") for(tri=tris) polygon(select(poly,tri));
 //   color("blue")    up(1) for(tri=tris) { stroke(select(poly,tri),.15,closed=true); }
 //   color("magenta") up(2) stroke(poly,.25,closed=true); 
@@ -1756,18 +1760,18 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   vnf_tri = [vnf[0], [for(face=vnf[1]) each polygon_triangulate(vnf[0], face) ] ];
 //   color("blue")
 //   vnf_wireframe(vnf_tri, width=.15);
-function polygon_triangulate(poly, ind, eps=EPSILON) =
+function polygon_triangulate(poly, ind, error=true, eps=EPSILON) =
     assert(is_path(poly) && len(poly)>=3, "Polygon `poly` should be a list of at least three 2d or 3d points")
-    assert(is_undef(ind) 
-           || (is_vector(ind) && min(ind)>=0 && max(ind)<len(poly) ),
+    assert(is_undef(ind) || (is_vector(ind) && min(ind)>=0 && max(ind)<len(poly) ),
            "Improper or out of bounds list of indices")
-    (! is_undef(ind) ) && len(ind) == 0 ? [] :
     let( ind = is_undef(ind) ? count(len(poly)) : ind )
+    len(ind) <=2 ? [] :
     len(ind) == 3 
       ? _degenerate_tri([poly[ind[0]], poly[ind[1]], poly[ind[2]]], eps) ? [] : 
         // non zero area
-        assert( norm(scalar_vec3(cross(poly[ind[1]]-poly[ind[0]], poly[ind[2]]-poly[ind[0]]))) > 2*eps,
-                "The polygon vertices are collinear.") 
+        let( degen = norm(scalar_vec3(cross(poly[ind[1]]-poly[ind[0]], poly[ind[2]]-poly[ind[0]]))) < 2*eps )
+        assert( ! error || ! degen, "The polygon vertices are collinear.") 
+        degen ? undef :
         [ind]
       : len(poly[ind[0]]) == 3 
           ? // find a representation of the polygon as a 2d polygon by projecting it on its own plane
@@ -1779,44 +1783,47 @@ function polygon_triangulate(poly, ind, eps=EPSILON) =
                 pts = select(poly,ind),
                 nrm = -polygon_normal(pts)
             )
-            assert( nrm!=undef, 
+            assert( ! error || (nrm != undef), 
                     "The polygon has self-intersections or zero area or its vertices are collinear or non coplanar.") 
+            nrm == undef ? undef :
             let(
                 imax  = max_index([for(p=pts) norm(p-pts[0]) ]),
                 v1    = unit( pts[imax] - pts[0] ),
                 v2    = cross(v1,nrm),
                 prpts = pts*transpose([v1,v2]) // the 2d projection of pts on the polygon plane
             )
-            [for(tri=_triangulate(prpts, count(len(ind)), eps)) select(ind,tri) ]
+            let( tris = _triangulate(prpts, count(len(ind)), error, eps) )
+            tris == undef ? undef :
+            [for(tri=tris) select(ind,tri) ]
           : is_polygon_clockwise(select(poly, ind)) 
-              ? _triangulate( poly, ind,  eps )
-              : [for(tri=_triangulate( poly, reverse(ind), eps )) reverse(tri) ];
+              ? _triangulate( poly, ind, error, eps )
+              : let( tris = _triangulate( poly, reverse(ind), error, eps ) )
+                tris == undef ? undef :
+                [for(tri=tris) reverse(tri) ];
 
 
 // poly is supposed to be a 2d cw polygon
 // implements a modified version of ear cut method for non-twisted polygons
 // the polygons accepted by this function are (tecnically) the ones whose interior
-// is homeomoph to the interior of a simple polygon
-function _triangulate(poly, ind,  eps=EPSILON, tris=[]) =
+// is homeomoph to the interior of a circle
+function _triangulate(poly, ind,  error, eps=EPSILON, tris=[]) =
+//echo(eps=eps)
     len(ind)==3 
     ?   _degenerate_tri(select(poly,ind),eps) 
         ?   tris // if last 3 pts perform a degenerate triangle, ignore it
         :   concat(tris,[ind]) // otherwise, include it
     :   let( ear = _get_ear(poly,ind,eps) )
-/*
-let( x= [if(is_undef(ear)) echo(ind=ind) 0] ) 
-is_undef(ear) ? tris :
-*/
-        assert( ear!=undef, 
+        assert( ! error || (ear != undef), 
             "The polygon has twists or all its vertices are collinear or non coplanar.") 
+        ear == undef ? undef :
         is_list(ear) // is it a degenerate ear ?
         ?   len(ind) <= 4 ? tris :
-            _triangulate(poly, select(ind,ear[0]+3, ear[0]),  eps, tris) // discard it
+            _triangulate(poly, select(ind,ear[0]+3, ear[0]), error, eps, tris) // discard it
         :   let(
                 ear_tri = select(ind,ear,ear+2),
                 indr    = select(ind,ear+2, ear) //  indices of the remaining path
             )
-            _triangulate(poly, indr,  eps, concat(tris,[ear_tri]));
+            _triangulate(poly, indr, error, eps, concat(tris,[ear_tri]));
 
 
 // a returned ear will be:
@@ -1825,6 +1832,7 @@ is_undef(ear) ? tris :
 // 2. or a degenerate triangle where two vertices are coincident
 // the returned ear is specified by the index of `ind` of its first vertex
 function _get_ear(poly, ind,  eps, _i=0) =
+//let( x = ! is_num(eps) ? echo(ind=ind,eps=eps) 0:0 )
     let( lind = len(ind) )
     lind==3 ? 0 :
     let( // the _i-th ear candidate
@@ -1841,9 +1849,7 @@ function _get_ear(poly, ind,  eps, _i=0) =
     // otherwise check the next ear candidate 
     _i<lind-1 ?  _get_ear(poly, ind,  eps, _i=_i+1) :
     // poly has no ears, look for wiskers
-    let( 
-        wiskers = [for(j=idx(ind)) if(norm(poly[ind[j]]-poly[ind[(j+2)%lind]])<eps) j ]
-    )
+    let( wiskers = [for(j=idx(ind)) if(norm(poly[ind[j]]-poly[ind[(j+2)%lind]])<eps) j ] )
     wiskers==[] ? undef : [wiskers[0]];
     
     
@@ -1867,8 +1873,8 @@ function _none_inside(idxs,poly,p0,p1,p2,eps,i=0) =
             _tri_class([p2,p0,vert],eps)>=0  )
           // or it is equal to p1 and some of its adjacent edges cross the open segment (p0,p2)
           ||  ( norm(vert-p1) < eps 
-                && (   _is_at_left(p0,[prev_vert,p1],eps) 
-                    && _is_at_left(p2,[p1,next_vert],eps) ) 
+                && _is_at_left(p0,[prev_vert,p1],eps) && _is_at_left(p2,[p1,prev_vert],eps) 
+                && _is_at_left(p2,[p1,next_vert],eps) && _is_at_left(p0,[next_vert,p1],eps) 
               ) 
         )
     ?   false
