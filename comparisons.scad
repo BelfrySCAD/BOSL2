@@ -290,12 +290,12 @@ function compare_lists(a, b) =
 //   idx = find_approx(val, list, [start=], [eps=]);
 //   indices = find_approx(val, list, all=true, [start=], [eps=]);
 // Description:
-//   Finds the first item in `list` that matches `val`, returning the index.
+//   Finds the first item in `list` that matches `val`, returning the index.  Returns `undef` if there is no match.
 // Arguments:
 //   val = The value to search for.  If given a function literal of signature `function (x)`, uses that function to check list items.  Returns true for a match.
 //   list = The list to search through.
 //   ---
-//   start = The index to start searching from.
+//   start = The index to start searching from.  Default: 0
 //   all = If true, returns a list of all matching item indices.
 //   eps = The maximum allowed floating point rounding error for numeric comparisons.
 function find_approx(val, list, start=0, all=false, eps=EPSILON) =
