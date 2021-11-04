@@ -1698,7 +1698,7 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 
 // Function: polygon_triangulate()
 // Usage:
-//   triangles = polygon_triangulate(poly, [ind], [eps])
+//   triangles = polygon_triangulate(poly, [ind], [error], [eps])
 // Description:
 //   Given a simple polygon in 2D or 3D, triangulates it and returns a list 
 //   of triples indexing into the polygon vertices. When the optional argument `ind` is 
@@ -1728,6 +1728,7 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 // Arguments:
 //   poly = Array of the polygon vertices.
 //   ind = A list indexing the vertices of the polygon in `poly`.
+//   error = If false, returns `undef` when the polygon cannot be triangulated; otherwise, issues an assert error. Default: true.
 //   eps = A maximum tolerance in geometrical tests. Default: EPSILON
 // Example(2D,NoAxes): a simple polygon; see from above
 //   poly = star(id=10, od=15,n=11);
@@ -1767,7 +1768,7 @@ function point_in_polygon(point, poly, nonzero=false, eps=EPSILON) =
 //   vnf_wireframe(vnf_tri, width=.15);
 function polygon_triangulate(poly, ind, error=true, eps=EPSILON) =
     assert(is_path(poly) && len(poly)>=3, "Polygon `poly` should be a list of at least three 2d or 3d points")
-   assert(is_undef(ind) || (is_vector(ind) && min(ind)>=0 && max(ind)<len(poly) ),
+    assert(is_undef(ind) || (is_vector(ind) && min(ind)>=0 && max(ind)<len(poly) ),
            "Improper or out of bounds list of indices")
     let( ind = is_undef(ind) ? count(len(poly)) : ind )
     len(ind) <=2 ? [] :

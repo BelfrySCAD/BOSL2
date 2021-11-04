@@ -384,34 +384,6 @@ function _join_paths_at_vertices(path1,path2,v1,v2) =
     ];                      
 
         
-// Given a region that is connected and has its outer border in region[0],
-// produces a polygon with the same points that has overlapping connected paths
-// to join internal holes to the outer border.  Output is a single path.  
-function _old_cleave_connected_region(region) =
-    len(region)==0? [] :
-    len(region)<=1? clockwise_polygon(region[0]) :
-    let(
-        dists = [
-            for (i=[1:1:len(region)-1])
-            _path_path_closest_vertices(region[0],region[i])
-        ],
-        idxi = min_index(column(dists,0)),
-        newoline = _join_paths_at_vertices(
-            region[0], region[idxi+1],
-            dists[idxi][1], dists[idxi][2]
-        )
-    ) len(region)==2? clockwise_polygon(newoline) :
-    let(
-        orgn = [
-            newoline,
-            for (i=idx(region))
-                if (i>0 && i!=idxi+1)
-                    region[i]
-        ]
-    )
-    assert(len(orgn)<len(region))
-    _old_cleave_connected_region(orgn);
-
 /// Internal Function: _cleave_connected_region(region, eps)
 /// Description:
 ///   Given a region that is connected and has its outer border in region[0],
