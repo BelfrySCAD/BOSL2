@@ -620,7 +620,7 @@ function _split_2dpolygons_at_each_x(polys, xs, _i=0) =
         ], xs, _i=_i+1
     );
 
-/// Function: _slice_3dpolygons()
+/// Internal Function: _slice_3dpolygons()
 /// Usage:
 ///   splitpolys = _slice_3dpolygons(polys, dir, cuts);
 /// Topics: Geometry, Polygons, Intersections
@@ -760,7 +760,7 @@ function vnf_area(vnf) =
     sum([for(face=vnf[1]) polygon_area(select(verts,face))]);
 
 
-/// Function: _vnf_centroid()
+/// Internal Function: _vnf_centroid()
 /// Usage:
 ///   vol = _vnf_centroid(vnf);
 /// Description:

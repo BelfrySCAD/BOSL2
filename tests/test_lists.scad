@@ -351,6 +351,12 @@ module test_pair() {
     assert(pair("ABCD",true) == [["A","B"], ["B","C"], ["C","D"], ["D","A"]]);
     assert(pair([3,4,5,6],wrap=true) == [[3,4], [4,5], [5,6], [6,3]]);
     assert(pair("ABCD",wrap=true) == [["A","B"], ["B","C"], ["C","D"], ["D","A"]]);
+    assert_equal(pair([],wrap=true),[]);
+    assert_equal(pair([],wrap=false),[]);
+    assert_equal(pair([1],wrap=true),[]);
+    assert_equal(pair([1],wrap=false),[]);
+    assert_equal(pair([1,2],wrap=false),[[1,2]]);
+    assert_equal(pair([1,2],wrap=true),[[1,2],[2,1]]);
 }
 test_pair();
 
@@ -361,6 +367,14 @@ module test_triplet() {
     assert(triplet([3,4,5,6],true) == [[6,3,4],[3,4,5], [4,5,6], [5,6,3]]);
     assert(triplet("ABCD",true) == [["D","A","B"],["A","B","C"], ["B","C","D"], ["C","D","A"]]);
     assert(triplet("ABCD",wrap=true) == [["D","A","B"],["A","B","C"], ["B","C","D"], ["C","D","A"]]);
+    assert_equal(triplet([],wrap=true),[]);
+    assert_equal(triplet([],wrap=false),[]);    
+    assert_equal(triplet([1],wrap=true),[]);
+    assert_equal(triplet([1],wrap=false),[]);    
+    assert_equal(triplet([1,2],wrap=true),[]);
+    assert_equal(triplet([1,2],wrap=false),[]);    
+    assert_equal(triplet([1,2,3],wrap=true),[[3,1,2],[1,2,3],[2,3,1]]);
+    assert_equal(triplet([1,2,3],wrap=false),[[1,2,3]]);    
 }
 test_triplet();
 

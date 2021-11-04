@@ -427,6 +427,7 @@ function _turtle3d_state_valid(state) =
         && is_num(state[3])
         && is_num(state[4]);
 
+module turtle3d(commands, state=RIGHT, transforms=false, full_state=false, repeat=1) {no_module();}
 function turtle3d(commands, state=RIGHT, transforms=false, full_state=false, repeat=1) =
   assert(is_bool(transforms))
   let(
