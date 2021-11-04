@@ -955,11 +955,13 @@ function enumerate(l,idx=undef) =
 function pair(list, wrap=false) =
     assert(is_list(list)||is_string(list), "Invalid input." )
     assert(is_bool(wrap))
-    let(
-        ll = len(list)
-    ) wrap
-      ? [for (i=[0:1:ll-1]) [list[i], list[(i+1) % ll]]]
-      : [for (i=[0:1:ll-2]) [list[i], list[i+1]]];
+    let( L = len(list)-1)
+    L<1 ? [] :
+    [
+      for (i=[0:1:L-1]) [list[i], list[i+1]],
+      if(wrap) [list[L], list[0]]
+    ];
+
 
 
 // Function: triplet()
@@ -993,6 +995,7 @@ function triplet(list, wrap=false) =
     assert(is_list(list)||is_string(list), "Invalid input." )
     assert(is_bool(wrap))
     let(L=len(list))
+    L<3 ? [] :
     [
       if(wrap) [list[L-1], list[0], list[1]],
       for (i=[0:1:L-3]) [list[i],list[i+1],list[i+2]],

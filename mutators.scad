@@ -530,6 +530,57 @@ module path_extrude2d(path, caps=false, closed=false) {
                 right_half(planar=true) children();
     }
 }
+module new_path_extrude2d(path, caps=false, closed=false) {
+    extra_ang = 0.1; // Extra angle for overlap of joints
+    assert(caps==false || closed==false, "Cannot have caps on a closed extrusion");
+    path = deduplicate(path);
+
+
+    for (i=[0:1:len(path)-(closed?1:2)]){
+//    for (i=[0:1:1]){
+        difference(){
+          extrude_from_to(path[i],select(path,i+1)) xflip()rot(-90)children();
+#          for(t = [select(path,i-1,i+1)]){ //, select(path,i,i+2)]){
+             ang = -(180-vector_angle(t)) * sign(_point_left_of_line2d(t[2],[t[0],t[1]]));
+             echo(ang=ang);
+             delt = point3d(t[2] - t[1]);
+             if (ang!=0)
+               translate(t[1]) {
+                  frame_map(y=delt, z=UP)
+                     rotate(-sign(ang)*extra_ang/2)
+                        rotate_extrude(angle=ang+sign(ang)*extra_ang)
+                            if (ang<0)
+                                left_half(planar=true) children();
+                            else
+                                right_half(planar=true) children();                          
+            }
+             }
+          }
+                
+    }
+
+    for (t=triplet(path,wrap=closed)) {
+        ang = -(180-vector_angle(t)) * sign(_point_left_of_line2d(t[2],[t[0],t[1]]));
+        echo(oang=ang);
+        delt = point3d(t[2] - t[1]);
+        if (ang!=0)
+            translate(t[1]) {
+                frame_map(y=delt, z=UP)
+                    rotate(-sign(ang)*extra_ang/2)
+                        rotate_extrude(angle=ang+sign(ang)*extra_ang)
+                            if (ang<0)
+                                right_half(planar=true) children();
+                            else
+                                left_half(planar=true) children();                          
+            }
+                
+    }
+    if (caps) {
+        move_copies([path[0],last(path)])
+            rotate_extrude()
+                right_half(planar=true) children();
+    }
+}
 
 
 // Module: cylindrical_extrude()

@@ -1496,7 +1496,7 @@ function _region_centroid(region,eps=EPSILON) =
    total[0]/total[1];
 
 
-/// Function: _polygon_centroid()
+/// Internal Function: _polygon_centroid()
 /// Usage:
 ///   cpt = _polygon_centroid(poly);
 /// Topics: Geometry, Polygons, Centroid
