@@ -279,7 +279,7 @@ function _path_self_intersections(path, closed=true, eps=EPSILON) =
             // [a1,a2]. The variable signals is zero when abs(vals[j]-ref) is less than
             // eps and the sign of vals[j]-ref otherwise.  
           signals = [for(j=[i+2:1:plen-(i==0 && closed? 2: 1)]) 
-												abs(vals[j]-ref) <  eps ? 0 : sign(vals[j]-ref) ] 
+                        abs(vals[j]-ref) <  eps ? 0 : sign(vals[j]-ref) ] 
         )
         if(max(signals)>=0 && min(signals)<=0 ) // some remaining edge intersects line [a1,a2]
         for(j=[i+2:1:plen-(i==0 && closed? 3: 2)])
