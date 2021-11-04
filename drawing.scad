@@ -554,6 +554,7 @@ function dashed_stroke(path, dashpat=[3,3], closed=false) =
 
 
 module dashed_stroke(path, dashpat=[3,3], width=1, closed=false) {
+    no_children($children);
     segs = dashed_stroke(path, dashpat=dashpat*width, closed=closed);
     for (seg = segs)
         stroke(seg, width=width, endcaps=false);
@@ -731,6 +732,7 @@ module arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false)
 //   stroke(helix(turns=-2.5, h=100, r=50), dots=true, dots_color="blue");
 // Example(3D): Flat helix (note points are still 3d)
 //   stroke(helix(h=0,r1=50,r2=25,l=0, turns=4));
+module helix(l,h,turns,angle, r, r1, r2, d, d1, d2) {no_module();}
 function helix(l,h,turns,angle, r, r1, r2, d, d1, d2)=
     let(
         r1=get_radius(r=r,r1=r1,d=d,d1=d1,dflt=1),

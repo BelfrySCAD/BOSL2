@@ -955,11 +955,13 @@ function enumerate(l,idx=undef) =
 function pair(list, wrap=false) =
     assert(is_list(list)||is_string(list), "Invalid input." )
     assert(is_bool(wrap))
-    let(
-        ll = len(list)
-    ) wrap
-      ? [for (i=[0:1:ll-1]) [list[i], list[(i+1) % ll]]]
-      : [for (i=[0:1:ll-2]) [list[i], list[i+1]]];
+    let( L = len(list)-1)
+    L<1 ? [] :
+    [
+      for (i=[0:1:L-1]) [list[i], list[i+1]],
+      if(wrap) [list[L], list[0]]
+    ];
+
 
 
 // Function: triplet()
@@ -970,9 +972,17 @@ function pair(list, wrap=false) =
 // See Also: idx(), enumerate(), pair(), combinations(), permutations()
 // Description:
 //   Takes a list, and returns a list of adjacent triplets from it, optionally wrapping back to the front.
+//   If you set `wrap` to true then the first triplet is the one centered on the first list element, so it includes
+//   the last element and the first two elements.  If the list has fewer than three elements then the empty list is returned.
+// Arguments:
+//   list = list to produce triplets from
+//   wrap = if true, wrap triplets around the list.  Default: false
 // Example:
-//   l = ["A","B","C","D","E"];
-//   echo([for (p=triplet(l)) str(p.z,p.y,p.x)]);  // Outputs: ["CBA", "DCB", "EDC"]
+//   list = [0,1,2,3,4];
+//   a = triplet(list);               // Returns [[0,1,2],[1,2,3],[2,3,4]]
+//   b = triplet(list,wrap=true);     // Returns [[4,0,1],[0,1,2],[1,2,3],[2,3,4],[3,4,0]]
+//   letters = ["A","B","C","D","E"];
+//   [for (p=triplet(letters)) str(p.z,p.y,p.x)];     // Returns: ["CBA", "DCB", "EDC"]
 // Example(2D):
 //   path = [for (i=[0:24]) polar_to_xy(i*2, i*360/12)];
 //   for (t = triplet(path)) {
@@ -984,11 +994,14 @@ function pair(list, wrap=false) =
 function triplet(list, wrap=false) =
     assert(is_list(list)||is_string(list), "Invalid input." )
     assert(is_bool(wrap))
-    let(
-        ll = len(list)
-    ) wrap
-      ? [for (i=[0:1:ll-1]) [ list[i], list[(i+1)%ll], list[(i+2)%ll] ]]
-      : [for (i=[0:1:ll-3]) [ list[i], list[i+1],      list[i+2]      ]];
+    let(L=len(list))
+    L<3 ? [] :
+    [
+      if(wrap) [list[L-1], list[0], list[1]],
+      for (i=[0:1:L-3]) [list[i],list[i+1],list[i+2]],
+      if(wrap) [list[L-2], list[L-1], list[0]]
+    ];             
+                 
 
 
 // Function: combinations()

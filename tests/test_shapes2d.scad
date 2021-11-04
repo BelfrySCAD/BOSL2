@@ -216,11 +216,4 @@ module test_mask2d_ogee() {
 test_mask2d_ogee();
 
 
-module test_dashed_stroke() {
-    segs = dashed_stroke([[0,0],[10,0]], dashpat=[3,2], closed=false);
-    assert_equal(segs,[[[0,0],[3,0]], [[5,0],[8,0]]]);
-}
-test_dashed_stroke();
-
-
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
