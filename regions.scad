@@ -216,9 +216,9 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
                        for(p2=idx(region2))
                            let(
                                poly  = closed2?close_path(region2[p2]):region2[p2],
-                               signs = [for(v=poly*seg_normal) abs(v-ref) < eps ? 0 : sign(v-ref) ]
+                               signs = [for(v=poly*seg_normal) v-ref> eps ? 1 : v-ref<-eps ? -1 : 0]
                            ) 
-                           if(max(signs)>=0 && min(signs)<=0) // some edge intersects line [a1,a2]
+                           if(max(signs)>=0 && min(signs)<=0) // some edge edge intersects line [a1,a2]
                                for(j=[0:1:len(poly)-2]) 
                                    if(signs[j]!=signs[j+1])
                                         let( // exclude non-crossing and collinear segments
@@ -260,7 +260,7 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
 //   where region1 intersections region2.  Split region2 similarly with respect to region1.
 //   The return is a pair of results of the form [split1, split2] where split1=[frags1,frags2,...]
 //   and frags1 is a list of path pieces (in order) from the first path of the region.
-//   You can pass a single path in for either region, but the output will be a singleton list, as if
+//   You can pass a single path in for either region, but the output will be a singleton list, as ify
 //   you passed in a singleton region.
 // Arguments:
 //   region1 = first region

@@ -230,15 +230,14 @@ function select(list, start, end) =
       : end==undef
           ? is_num(start)
               ? list[ (start%l+l)%l ]
-              : assert( start==[] || is_vector(start) || is_range(start), "Invalid start parameter")
+              : assert( is_list(start) || is_range(start), "Invalid start parameter")
                 [for (i=start) list[ (i%l+l)%l ] ]
           : assert(is_finite(start), "When `end` is given, `start` parameter should be a number.")
             assert(is_finite(end), "Invalid end parameter.")
             let( s = (start%l+l)%l, e = (end%l+l)%l )
             (s <= e)
-             ? [ for (i = [s:1:e])   list[i] ]
-             : [ for (i = [s:1:l-1]) list[i], 
-                 for (i = [0:1:e])   list[i] ] ;
+              ? [for (i = [s:1:e]) list[i]]
+              : concat([for (i = [s:1:l-1]) list[i]], [for (i = [0:1:e]) list[i]]) ;
 
 
 // Function: slice()
@@ -953,7 +952,7 @@ function enumerate(l,idx=undef) =
 // Example:
 //   l = ["A","B","C","D"];
 //   echo([for (p=pair(l)) str(p.y,p.x)]);  // Outputs: ["BA", "CB", "DC"]
-function _old_pair(list, wrap=false) =
+function pair(list, wrap=false) =
     assert(is_list(list)||is_string(list), "Invalid input." )
     assert(is_bool(wrap))
     let(
@@ -962,12 +961,6 @@ function _old_pair(list, wrap=false) =
       ? [for (i=[0:1:ll-1]) [list[i], list[(i+1) % ll]]]
       : [for (i=[0:1:ll-2]) [list[i], list[i+1]]];
 
-function pair(list, wrap=false) =
-    assert(is_list(list)||is_string(list), "Invalid input." )
-    assert(is_bool(wrap))
-    let( ll = len(list)-1 )  
-    [for (i=[0:1:ll-1]) [list[i], list[i+1]], if(wrap) [list[ll], list[0]] ];
-      
 
 // Function: triplet()
 // Usage:
@@ -988,7 +981,7 @@ function pair(list, wrap=false) =
 //       translate(b) rot(from=FWD,to=v) anchor_arrow2d();
 //   }
 //   stroke(path);
-function _old_triplet(list, wrap=false) =
+function triplet(list, wrap=false) =
     assert(is_list(list)||is_string(list), "Invalid input." )
     assert(is_bool(wrap))
     let(
@@ -996,14 +989,6 @@ function _old_triplet(list, wrap=false) =
     ) wrap
       ? [for (i=[0:1:ll-1]) [ list[i], list[(i+1)%ll], list[(i+2)%ll] ]]
       : [for (i=[0:1:ll-3]) [ list[i], list[i+1],      list[i+2]      ]];
-
-
-function triplet(list, wrap=false) =
-    assert(is_list(list)||is_string(list), "Invalid input." )
-    assert(is_bool(wrap))
-    let( ll = len(list) )
-    [ for (i=[0:1:ll-3]) [ list[i], list[i+1], list[i+2] ],
-      each if(wrap) [ [ list[ll-2], list[ll-1], list[0] ], [ list[ll-1], list[0],    list[1] ] ] ];
 
 
 // Function: combinations()
