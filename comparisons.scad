@@ -12,7 +12,8 @@
 // Usage:
 //   test = approx(a, b, [eps])
 // Description:
-//   Compares two numbers or vectors, and returns true if they are closer than `eps` to each other.
+//   Compares two numbers, vectors, or matrices.  Returns true if they are closer than `eps` to each other.
+//   Results are undefined if `a` and `b` are of different types, or if vectors or matrices contain non-numbers.
 // Arguments:
 //   a = First value.
 //   b = Second value.
@@ -21,12 +22,16 @@
 //   test1 = approx(-0.3333333333,-1/3);  // Returns: true
 //   test2 = approx(0.3333333333,1/3);    // Returns: true
 //   test3 = approx(0.3333,1/3);          // Returns: false
-//   test4 = approx(0.3333,1/3,eps=1e-3);  // Returns: true
+//   test4 = approx(0.3333,1/3,eps=1e-3); // Returns: true
 //   test5 = approx(PI,3.1415926536);     // Returns: true
+//   test6 = approx([0,0,sin(45)],[0,0,sqrt(2)/2]);  // Returns: true
 function approx(a,b,eps=EPSILON) = 
-    (a==b && is_bool(a) == is_bool(b)) ||
-    (is_num(a) && is_num(b) && abs(a-b) <= eps) ||
-    (is_list(a) && is_list(b) && len(a) == len(b) && [] == [for (i=idx(a)) if (!approx(a[i],b[i],eps=eps)) 1]);
+    a == b? is_bool(a) == is_bool(b) :
+    is_num(a) && is_num(b)? abs(a-b) <= eps :
+    is_list(a) && is_list(b) && len(a) == len(b)? (
+        is_num(a.x) && is_num(b.x)? norm(a-b) <= eps :
+        [] == [for (i=idx(a)) if (!approx(a[i],b[i],eps=eps)) 1]
+    ) : false;
 
 
 // Function: all_zero()
