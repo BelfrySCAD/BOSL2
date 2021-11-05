@@ -1311,7 +1311,7 @@ module _rod(spec, length, tolerance, orient=UP, spin=0, anchor=CENTER)
 //   range (variability) of the thread heights.  Smaller  numbers give tigher tolerances.  It must be a value from
 //   4-8, so an allowed (loose) tolerance is "7G".  The default ISO tolerance is "6H".
 //   .
-//   The $slop parameter determines extra gaps left to account for printing overextrusion.  It defaults to 0.2.
+//   The $slop parameter determines extra gaps left to account for printing overextrusion.  It defaults to 0.
 // Arguments:
 //   name = screw specification, e.g. "M5x1" or "#8-32"
 //   diameter = outside diameter of nut (flat to flat dimension)
@@ -1322,7 +1322,7 @@ module _rod(spec, length, tolerance, orient=UP, spin=0, anchor=CENTER)
 //   spec = screw specification from `screw_info()`.  If you specify this you can omit all the preceeding parameters.
 //   details = toggle some details in rendering.  Default: false
 //   tolerance = nut tolerance.  Determines actual nut thread geometry based on nominal sizing.  Default is "2B" for UTS and "6H" for ISO.
-//   $slop = extra space left to account for printing over-extrusion.  Default: 0.2
+//   $slop = extra space left to account for printing over-extrusion.  Default: 0
 // Example: A metric and UTS nut
 //   inch=25.4;
 //   nut("3/8", 5/8*inch, 1/4*inch);
