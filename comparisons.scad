@@ -29,8 +29,14 @@ function approx(a,b,eps=EPSILON) =
     a == b? is_bool(a) == is_bool(b) :
     is_num(a) && is_num(b)? abs(a-b) <= eps :
     is_list(a) && is_list(b) && len(a) == len(b)? (
-        is_num(a.x) && is_num(b.x)? norm(a-b) <= eps :
-        [] == [for (i=idx(a)) if (!approx(a[i],b[i],eps=eps)) 1]
+        [] == [
+            for (i=idx(a))
+            let(aa=a[i], bb=b[i])
+            if(
+                is_num(aa) && is_num(bb)? abs(aa-bb) > eps :
+                !approx(aa,bb,eps=eps)
+            ) 1
+        ]
     ) : false;
 
 
@@ -783,3 +789,4 @@ function list_smallest(list, k) =
     let( bigger  = [for(li=list) if(li>v) li ] )
     concat(smaller, equal, list_smallest(bigger, k-len(smaller) -len(equal)));
 
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
