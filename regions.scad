@@ -252,10 +252,11 @@ function is_region_simple(region, eps=EPSILON) =
 // Examples(2D,NoAxes):  Alternatively with the nonzero option you can get the perimeter:
 //   pentagram = turtle(["move",100,"left",144], repeat=4);
 //   region = make_region(pentagram,nonzero=true);
-//   stroke(region, width=1,closed=true);
+//   rainbow(region)stroke($item, width=1,closed=true);
 // Example(2D,NoAxes):  To crossing squares become two L-shaped components
 //   region = make_region([square(10), move([5,5],square(8))]);
 //   rainbow(region)stroke($item, width=.3,closed=true);
+
 function make_region(polys,nonzero=false,eps=EPSILON) =
      let(polys=force_region(polys))
      assert(is_region(polys), "Input is not a region")
@@ -320,16 +321,17 @@ module region(r)
 //   point = The point to test.
 //   region = The region to test against, as a list of polygon paths.
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-// Example(2D,NoAxes):
+// Example(2D,NoAxes):  Green points are in the region, red ones are outside
 //   region = [for(i=[2:8]) hexagon(r=i)];
-//   for(x=[-4:4],y=[-4:4]) color(point_in_region
+//   region(region);
+//   for(x=[-4.5:4.5],y=[-4.5:4.5]) color(point_in_region([x,y],region)==1?"green":"red") move([x,y])circle(r=.1,$fn=12);
 function point_in_region(point, region, eps=EPSILON) =
     let(region=force_region(region))
     assert(is_region(region), "Region given to point_in_region is not a region")
     assert(is_vector(point,2), "Point must be a 2D point in point_in_region")
     _point_in_region(point, region, eps);
 
-function pointin_region(point, region, eps=EPSILON, i=0, cnt=0) =
+function _point_in_region(point, region, eps=EPSILON, i=0, cnt=0) =
       i >= len(region) ? ((cnt%2==1)? 1 : -1)
     : let(
           pip = point_in_polygon(point, region[i], eps=eps)
@@ -1205,7 +1207,7 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 function exclusive_or(regions=[],b=undef,c=undef,eps=EPSILON) =
      let(regions = _list_three(regions,b,c))
      len(regions)==0? []
-   : len(regions)==1? regions[0]
+   : len(regions)==1? force_region(regions[0])
    : regions[0]==[] ? exclusive_or(list_tail(regions))
    : regions[1]==[] ? exclusive_or(list_remove(regions,1))
    : exclusive_or([
