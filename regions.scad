@@ -1,9 +1,11 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: regions.scad
-//   This file provides 2D boolean geometry operations on paths, where you can
-//   compute the intersection or union of the shape defined by point lists, producing
-//   a new point list.  Of course, boolean operations may produce shapes with multiple
-//   components.  To handle that, we use "regions" which are defined as lists of paths.  
+//   This file provides 2D boolean set operations on polygons, where you can
+//   compute, for example, the intersection or union of the shape defined by point lists, producing
+//   a new point list.  Of course, such operations may produce shapes with multiple
+//   components.  To handle that, we use "regions" which are defined by lists of polygons.
+//   In addition to set operations, you can calculate offsets, determine whether a point is in a
+//   region and you can decompose a region into parts.  
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
@@ -16,30 +18,32 @@
 // Section: Regions
 //   A region is a list of polygons meeting these conditions:
 //   .
-//   - Every polygon on the list is simpel, meaning it does not intersect itself
+//   - Every polygon on the list is simple, meaning it does not intersect itself
 //   - Two polygons on the list do not cross each other
 //   - A vertex of one polygon never meets the edge of another one except at a vertex
 //   .
 //   Note that this means vertex-vertex touching between two polygons is acceptable
 //   to define a region.  Note, however, that regions with vertex-vertex contact usually
-//   cannot be rendered with CGAL.
+//   cannot be rendered with CGAL.  See {{is_valid_region()}} for examples of valid regions and
+//   lists of polygons that are not regions.  Note that {{is_region_simple()}} will identify
+//   regions with no polygon intersections at all, which should render successfully witih CGAL.  
 //   .
 //   The actual geometry of the region is defined by XORing together
-//   all of the polygons on the list.  This may sound obscure, but it simply means that nested
+//   all of the polygons in the list.  This may sound obscure, but it simply means that nested
 //   boundaries make rings in the obvious fashion, and non-nested shapes simply union together.
-//   Checking that a list of paths is a valid region, meaning that it satisfies all of the conditions
+//   Checking that a list of polygons is a valid region, meaning that it satisfies all of the conditions
 //   above, can be a time consuming test, so it is not done automatically.  It is your responsibility to ensure that your regions are
-//   compliant.  You can construct regions by making a list of polygons, or by using
-//   boolean function operations such as union() or difference(), which all acccept paths, as
+//   compliant.  You can construct regions by making a suitable list of polygons, or by using
+//   set operation function such as union() or difference(), which all acccept polygons, as
 //   well as regions, as their inputs.  And if you must you can clean up an ill-formed region using make_region(),
-//   which will break up self-intersecting paths and paths that cross each other.  
+//   which will break up self-intersecting polygons and polygons that cross each other.  
 
 
 // Function: is_region()
 // Usage:
 //   is_region(x);
 // Description:
-//   Returns true if the given item looks like a region.  A region is a list of non-crossing simple paths.  This test just checks
+//   Returns true if the given item looks like a region.  A region is a list of non-crossing simple polygons.  This test just checks
 //   that the argument is a list whose first entry is a path.  
 function is_region(x) = is_list(x) && is_path(x.x);
 
@@ -48,16 +52,16 @@ function is_region(x) = is_list(x) && is_path(x.x);
 // Usage:
 //   bool = is_valid_region(region, [eps]);
 // Description:
-//   Returns true if the input is a valid region, meaning that it is a list of simple paths whose segments do not cross each other.
+//   Returns true if the input is a valid region, meaning that it is a list of simple polygons whose segments do not cross each other.
 //   This test can be time consuming with regions that contain many points.
-//   It differs from `is_region()` which simply checks that the object appears to be a list of paths
-//   because it searches all the region paths for any self-intersections or intersections with each other.  
-//   Will also return true if given a single simple path.  Use {{make_region()}} to convert sets of self-intersecting polygons into
+//   It differs from `is_region()` which simply checks that the object is a list whose first entry is a path
+//   because it searches all the list polygons for any self-intersections or intersections with each other.  
+//   Will also return true if given a single simple polygon.  Use {{make_region()}} to convert sets of self-intersecting polygons into
 //   a region.  
 // Arguments:
 //   region = region to check
 //   eps = tolerance for geometric comparisons.  Default: `EPSILON` = 1e-9
-// Example(2D,NoAxes):  In all of the examples each path in the region appears in a different color.  Two non-intersecting squares make a valid region.
+// Example(2D,NoAxes):  In all of the examples each polygon in the region appears in a different color.  Two non-intersecting squares make a valid region.
 //   region = [square(10), right(11,square(8))];
 //   rainbow(region)stroke($item, width=.2,closed=true);
 //   back(11)text(is_valid_region(region) ? "region" : "non-region", size=2);
@@ -73,33 +77,33 @@ function is_region(x) = is_list(x) && is_path(x.x);
 //   object = [square(10), move([8,8], square(8))];
 //   rainbow(object)stroke($item, width=.2,closed=true);
 //   back(17)text(is_valid_region(object) ? "region" : "non-region", size=2);
-// Example(2D,NoAxes):  Not a region due to a self-intersecting (non-simple) hourglass path 
+// Example(2D,NoAxes): A union is one way to fix the above example and get a region.  (Note that union is run here on two simple polygons, which are valid regions themselves and hence acceptable inputs to union.
+//   region = union([square(10), move([8,8], square(8))]);
+//   rainbow(region)stroke($item, width=.25,closed=true);
+//   back(12)text(is_valid_region(region) ? "region" : "non-region", size=2);
+// Example(2D,NoAxes):  Not a region due to a self-intersecting (non-simple) hourglass polygon
 //   object = [move([-2,-2],square(14)), [[0,0],[10,0],[0,10],[10,10]]];
 //   rainbow(object)stroke($item, width=.2,closed=true);
 //   move([-1.5,13])text(is_valid_region(object) ? "region" : "non-region", size=2);
 // Example(2D,NoAxes):  Breaking hourglass in half fixes it.  Now it's a region:
 //   region = [move([-2,-2],square(14)), [[0,0],[10,0],[5,5]], [[5,5],[0,10],[10,10]]];
 //   rainbow(region)stroke($item, width=.2,closed=true);
-// Example(2D,NoAxes):  A single path corner touches an edge, so not a region:
+// Example(2D,NoAxes):  A single polygon corner touches an edge, so not a region:
 //   object = [[[-10,0], [-10,10], [20,10], [20,-20], [-10,-20],
 //              [-10,-10], [0,0], [10,-10], [10,0]]];
 //   rainbow(object)stroke($item, width=.3,closed=true);
 //   move([-4,12])text(is_valid_region(object) ? "region" : "non-region", size=3);
-// Example(2D,NoAxes):  Corners touch in the same path, so the path is not simple and the object is not a region.
+// Example(2D,NoAxes):  Corners touch in the same polygon, so the polygon is not simple and the object is not a region.
 //   object = [[[0,0],[10,0],[10,10],[-10,10],[-10,0],[0,0],[-5,5],[5,5]]];
 //   rainbow(object)stroke($item, width=.3,closed=true);
 //   move([-10,12])text(is_valid_region(object) ? "region" : "non-region", size=3);
-// Example(2D,NoAxes):  The shape above as a valid region with two paths:
+// Example(2D,NoAxes):  The shape above as a valid region with two polygons:
 //   region = [  [[0,0],[10,0],[10,10],[-10,10],[-10,0]],
 //               [[0,0],[5,5],[-5,5]]  ];
 //   rainbow(region)stroke($item, width=.3,closed=true);
 //   move([-5.5,12])text(is_valid_region(region) ? "region" : "non-region", size=3);
 // Example(2D,NoAxes):  As with the "broken" hourglass, Touching at corners is OK.  This is a region.
 //   region = [square(10), move([10,10], square(8))];
-//   rainbow(region)stroke($item, width=.25,closed=true);
-//   back(12)text(is_valid_region(region) ? "region" : "non-region", size=2);
-// Example(2D,NoAxes): A union is one way to fix the above example and get a region.  (Note that union is run here on two simple paths, which are valid regions themselves and hence acceptable inputs to union.
-//   region = union([square(10), move([8,8], square(8))]);
 //   rainbow(region)stroke($item, width=.25,closed=true);
 //   back(12)text(is_valid_region(region) ? "region" : "non-region", size=2);
 // Example(2D,NoAxes): These two squares share part of an edge, hence not a region
@@ -121,11 +125,11 @@ function is_region(x) = is_list(x) && is_path(x.x);
 //   object = [square(10), [[10,0],[0,10],[8,13],[13,8]]];
 //   rainbow(object)stroke($item, width=.2,closed=true);
 //   back(14)text(is_valid_region(object) ? "region" : "non-region", size=2);
-// Example(2D,NoAxes): One path touches another in the middle of an edge
+// Example(2D,NoAxes): One polygon touches another in the middle of an edge
 //   object = [square(10), [[10,5],[15,0],[15,10]]];
 //   rainbow(object)stroke($item, width=.2,closed=true);
 //   back(11)text(is_valid_region(object) ? "region" : "non-region", size=2);
-// Example(2D,NoAxes): The path touches the side, but the side has a vertex at the contact point so this is a region
+// Example(2D,NoAxes): The polygon touches the side, but the side has a vertex at the contact point so this is a region
 //   poly1 = [ each square(30,center=true), [15,0]];
 //   poly2 = right(10,circle(5,$fn=4));
 //   poly3 = left(0,circle(5,$fn=4));
@@ -134,7 +138,7 @@ function is_region(x) = is_list(x) && is_path(x.x);
 //   rainbow(region)stroke($item, width=.25,closed=true);
 //   move([-5,16.5])text(is_valid_region(region) ? "region" : "non-region", size=3);
 //   color("black")move_copies(region[0]) circle(r=.4);
-// Example(2D,NoAxes): The path touches the side, but not at a vertex so this is not a region
+// Example(2D,NoAxes): The polygon touches the side, but not at a vertex so this is not a region
 //   poly1 = fwd(4,[ each square(30,center=true), [15,0]]);
 //   poly2 = right(10,circle(5,$fn=4));
 //   poly3 = left(0,circle(5,$fn=4));
@@ -143,13 +147,13 @@ function is_region(x) = is_list(x) && is_path(x.x);
 //   rainbow(object)stroke($item, width=.25,closed=true);
 //   move([-9,12.5])text(is_valid_region(object) ? "region" : "non-region", size=3);
 //   color("black")move_copies(object[0]) circle(r=.4);
-// Example(2D,NoAxes): The inner path touches the middle of the edges, so not a region
+// Example(2D,NoAxes): The inner polygon touches the middle of the edges, so not a region
 //   poly1 = square(20,center=true);
 //   poly2 = circle(10,$fn=8);
 //   object=[poly1,poly2];
 //   rainbow(object)stroke($item, width=.25,closed=true);
 //   move([-10,11.4])text(is_valid_region(object) ? "region" : "non-region", size=3);
-// Example(2D,NoAxes): The above shape made into a region using difference():
+// Example(2D,NoAxes): The above shape made into a region using {{difference()}} now has four components that touch at corners
 //   poly1 = square(20,center=true);
 //   poly2 = circle(10,$fn=8);
 //   region = difference(poly1,poly2);
@@ -212,7 +216,15 @@ function _polygon_crosses_region(region, poly, eps=EPSILON) =
 // Arguments:
 //   region = region to check
 //   eps = tolerance for geometric comparisons.  Default: `EPSILON` = 1e-9
-function is_simple_region(region, eps=EPSILON) =
+// Example(2D,NoAxes):  Corner contact means it's not simple
+//   region = [move([-2,-2],square(14)), [[0,0],[10,0],[5,5]], [[5,5],[0,10],[10,10]]];
+//   rainbow(region)stroke($item, width=.2,closed=true);
+//   move([-1,13])text(is_region_simple(region) ? "simple" : "not-simple", size=2);
+// Example(2D,NoAxes):  Moving apart the triangles makes it simple:
+//   region = [move([-2,-2],square(14)), [[0,0],[10,0],[5,4.5]], [[5,5.5],[0,10],[10,10]]];
+//   rainbow(region)stroke($item, width=.2,closed=true);
+//   move([1,13])text(is_region_simple(region) ? "simple" : "not-simple", size=2);
+function is_region_simple(region, eps=EPSILON) =
    let(region=force_region(region))
    assert(is_region(region), "Input is not a region")
    [for(p=region) if (!is_path_simple(p,closed=true,eps=eps)) 1] == []
@@ -224,32 +236,41 @@ function is_simple_region(region, eps=EPSILON) =
   
 // Function: make_region()
 // Usage:
-//   r_fixed = make_region(r, [nonzero], [eps]);
+//   region = make_region(polys, [nonzero], [eps]);
 // Description:
-//   Takes a malformed input region that contains self-intersecting polygons or polygons
-//   that cross each other and converts it into a properly defined region without
+//   Takes a list of polygons that may intersect themselves or cross each other 
+//   and converts it into a properly defined region without
 //   these defects.
 // Arguments:
-//   r = region to sanitize
+//   polys = list of polygons to use
 //   nonzero = set to true to use nonzero rule for polygon membership.  Default: false
 //   eps = Epsilon for geometric comparisons.  Default: `EPSILON` (1e-9)
-// Examples:
-//   
-function make_region(r,nonzero=false,eps=EPSILON) =
-     let(r=force_region(r))
-     assert(is_region(r), "Input is not a region")
+// Example(2D,NoAxes):  The pentagram is self-intersecting, so it is not a region.  Here it becomes five triangles:
+//   pentagram = turtle(["move",100,"left",144], repeat=4);
+//   region = make_region(pentagram);
+//   rainbow(region)stroke($item, width=1,closed=true);
+// Examples(2D,NoAxes):  Alternatively with the nonzero option you can get the perimeter:
+//   pentagram = turtle(["move",100,"left",144], repeat=4);
+//   region = make_region(pentagram,nonzero=true);
+//   stroke(region, width=1,closed=true);
+// Example(2D,NoAxes):  To crossing squares become two L-shaped components
+//   region = make_region([square(10), move([5,5],square(8))]);
+//   rainbow(region)stroke($item, width=.3,closed=true);
+function make_region(polys,nonzero=false,eps=EPSILON) =
+     let(polys=force_region(polys))
+     assert(is_region(polys), "Input is not a region")
      exclusive_or(
-                  [for(poly=r) each polygon_parts(poly,nonzero,eps)],
+                  [for(poly=polys) each polygon_parts(poly,nonzero,eps)],
                   eps=eps);
-
-
 
 // Function: force_region()
 // Usage:
-//   region = force_region(path)
+//   region = force_region(poly)
 // Description:
-//   If the input is a path then return it as a region.  Otherwise return it unaltered.
-function force_region(path) = is_path(path) ? [path] : path;
+//   If the input is a polygon then return it as a region.  Otherwise return it unaltered.
+// Arguments:
+//   poly = polygon to turn into a region
+function force_region(poly) = is_path(poly) ? [poly] : poly;
 
 
 // Section: Turning a region into geometry
@@ -258,12 +279,14 @@ function force_region(path) = is_path(path) ? [path] : path;
 // Usage:
 //   region(r);
 // Description:
-//   Creates 2D polygons for the given region.  The region given is a list of closed 2D paths.
-//   Each path will be effectively exclusive-ORed from all other paths in the region, so if a
-//   path is inside another path, it will be effectively subtracted from it.
-// Example(2D):
+//   Creates the 2D polygons described by the given region or list of polygons.  This module works on
+//   arbitrary lists of polygons that cross each other and hence do not define a valid region.  The
+//   displayed result is the exclusive-or of the polygons listed in the input. 
+// Arguments:
+//   r = region to create as geometry
+// Example(2D): Displaying a region
 //   region([circle(d=50), square(25,center=true)]);
-// Example(2D):
+// Example(2D): Displaying a list of polygons that intersect each other, which is not a region
 //   rgn = concat(
 //       [for (d=[50:-10:10]) circle(d=d-5)],
 //       [square([60,10], center=true)]
@@ -283,27 +306,36 @@ module region(r)
 
 
 
-// Section: Gometrical calculations with region
+// Section: Gometrical calculations with regions
 
 // Function: point_in_region()
 // Usage:
 //   check = point_in_region(point, region, [eps]);
 // Description:
-//   Tests if a point is inside, outside, or on the border of a region.
+//   Tests if a point is inside, outside, or on the border of a region.  
 //   Returns -1 if the point is outside the region.
 //   Returns 0 if the point is on the boundary.
 //   Returns 1 if the point lies inside the region.
 // Arguments:
 //   point = The point to test.
-//   region = The region to test against.  Given as a list of polygon paths.
+//   region = The region to test against, as a list of polygon paths.
 //   eps = Acceptable variance.  Default: `EPSILON` (1e-9)
-function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
-    _i >= len(region) ? ((_cnt%2==1)? 1 : -1)
-   : let(
-           pip = point_in_polygon(point, region[_i], eps=eps)
-     )
-     pip==0? 0
-   : point_in_region(point, region, eps=eps, _i=_i+1, _cnt = _cnt + (pip>0? 1 : 0));
+// Example(2D,NoAxes):
+//   region = [for(i=[2:8]) hexagon(r=i)];
+//   for(x=[-4:4],y=[-4:4]) color(point_in_region
+function point_in_region(point, region, eps=EPSILON) =
+    let(region=force_region(region))
+    assert(is_region(region), "Region given to point_in_region is not a region")
+    assert(is_vector(point,2), "Point must be a 2D point in point_in_region")
+    _point_in_region(point, region, eps);
+
+function pointin_region(point, region, eps=EPSILON, i=0, cnt=0) =
+      i >= len(region) ? ((cnt%2==1)? 1 : -1)
+    : let(
+          pip = point_in_polygon(point, region[i], eps=eps)
+      )
+      pip == 0 ? 0
+   : _point_in_region(point, region, eps=eps, i=i+1, cnt = cnt + (pip>0? 1 : 0));
 
 
 // Function: region_area()
@@ -312,6 +344,10 @@ function point_in_region(point, region, eps=EPSILON, _i=0, _cnt=0) =
 // Description:
 //   Computes the area of the specified valid region. (If the region is invalid and has self intersections
 //   the result is meaningless.)
+// Arguments:
+//   region = region whose area to compute
+// Examples:
+//   area = region_area([square(10), right(20,square(8))]);  // Returns 164
 function region_area(region) =
   assert(is_region(region), "Input must be a region")
   let(
@@ -437,9 +473,13 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
 //   Splits region1 at the places where polygons in region1 touches each other at corners and at locations
 //   where region1 intersections region2.  Split region2 similarly with respect to region1.
 //   The return is a pair of results of the form [split1, split2] where split1=[frags1,frags2,...]
-//   and frags1 is a list of path pieces (in order) from the first path of the region.
-//   You can pass a single path in for either region, but the output will be a singleton list, as ify
-//   you passed in a singleton region.
+//   and frags1 is a list of paths that when placed end to end (in the given order), give the first polygon of region1.
+//   Each path in the list is either entirely inside or entirely outside region2.  
+//   Then frags2 is the decomposition of the second polygon into path pieces, and so on.  Finally split2 is
+//   the same list, but for the polygons in region2.  
+//   You can pass a single polygon in for either region, but the output will be a singleton list, as if
+//   you passed in a singleton region.  If you set the closed parameters to false then the region components
+//   will be treated as open paths instead of polygons.  
 // Arguments:
 //   region1 = first region
 //   region2 = second region
@@ -543,9 +583,9 @@ function region_parts(region) =
 // Usage:
 //   linear_sweep(region, height, [center], [slices], [twist], [scale], [style], [convexity]);
 // Description:
-//   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or path.
+//   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or polygon.
 //   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
-//   of the given 2D region or path.  The benefit of using this, over using `linear_extrude region(rgn)` is
+//   of the given 2D region or polygon.  The benefit of using this, over using `linear_extrude region(rgn)` is
 //   that it supports `anchor`, `spin`, `orient` and attachments.  You can also make more refined
 //   twisted extrusions by using `maxseg` to subsample flat faces.
 //   Note that the center option centers vertically using the named anchor "zcenter" whereas
@@ -553,7 +593,7 @@ function region_parts(region) =
 //   the shape's centroid, or other centerpoint you specify.  The centerpoint can be "centroid", "mean", "box" or
 //   a custom point location.  
 // Arguments:
-//   region = The 2D [Region](regions.scad) or path that is to be extruded.
+//   region = The 2D [Region](regions.scad) or polygon that is to be extruded.
 //   height = The height to extrude the region.  Default: 1
 //   center = If true, the created polyhedron will be vertically centered.  If false, it will be extruded upwards from the XY plane.  Default: `false`
 //   slices = The number of slices to divide the shape into along the Z axis, to allow refinement of detail, especially when working with a twist.  Default: `twist/5`
@@ -656,7 +696,7 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
 
 
 
-// Section: Offsets and Boolean 2D Geometry
+// Section: Offset and 2D Boolean Set Operations
 
 
 function _offset_chamfer(center, points, delta) =
@@ -773,10 +813,11 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   offsetpath = offset(path, [r|delta], [chamfer], [closed], [check_valid], [quality])
 //   path_faces = offset(path, return_faces=true, [r|delta], [chamfer], [closed], [check_valid], [quality], [firstface_index], [flip_faces])
 // Description:
-//   Takes a 2D input path and returns a path offset by the specified amount.  As with the built-in
+//   Takes a 2D input path, polygon or region and returns a path offset by the specified amount.  As with the built-in
 //   offset() module, you can use `r` to specify rounded offset and `delta` to specify offset with
 //   corners.  If you used `delta` you can set `chamfer` to true to get chamfers.
-//   Positive offsets shift the path to the left (relative to the direction of the path).  Note
+//   For paths and polygons positive offsets make the polygons larger.  For paths, 
+//   positive offsets shift the path to the left, relative to the direction of the path.  Note
 //   that the path must not include any 180 degree turns, where the path reverses direction.  
 //   .
 //   When offsets shrink the path, segments cross and become invalid.  By default `offset()` checks
@@ -800,7 +841,7 @@ function _point_dist(path,pathseg_unit,pathseg_len,pt) =
 //   r = offset radius.  Distance to offset.  Will round over corners.
 //   delta = offset distance.  Distance to offset with pointed corners.
 //   chamfer = chamfer corners when you specify `delta`.  Default: false
-//   closed = path is a closed curve. Default: False.
+//   closed = if true path is treate as a polygon. Default: False.
 //   check_valid = perform segment validity check.  Default: True.
 //   quality = validity check quality parameter, a small integer.  Default: 1.
 //   return_faces = return face list.  Default: False.
@@ -1050,11 +1091,11 @@ function _list_three(a,b,c) =
 //   region = union(REGION1,REGION2);
 //   region = union(REGION1,REGION2,REGION3);
 // Description:
-//   When called as a function and given a list of regions, where each region is a list of closed
-//   2D paths, returns the boolean union of all given regions.  Result is a single region.
-//   When called as the built-in module, makes the boolean union of the given children.
+//   When called as a function and given a list of regions or 2D polygons,
+//   returns the union of all given regions and polygons.  Result is a single region.
+//   When called as the built-in module, makes the union of the given children.
 // Arguments:
-//   regions = List of regions to union.  Each region is a list of closed paths.
+//   regions = List of regions to union.
 // Example(2D):
 //   shape1 = move([-8,-8,0], p=circle(d=50));
 //   shape2 = move([ 8, 8,0], p=circle(d=50));
@@ -1080,12 +1121,12 @@ function union(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   region = difference(REGION1,REGION2);
 //   region = difference(REGION1,REGION2,REGION3);
 // Description:
-//   When called as a function, and given a list of regions, where each region is a list of closed
-//   2D paths, takes the first region and differences away all other regions from it.  The resulting
+//   When called as a function, and given a list of regions or 2D polygons, 
+//   takes the first region or polygon and differences away all other regions/polygons from it.  The resulting
 //   region is returned.
-//   When called as the built-in module, makes the boolean difference of the given children.
+//   When called as the built-in module, makes the set difference of the given children.
 // Arguments:
-//   regions = List of regions to difference.  Each region is a list of closed paths.
+//   regions = List of regions or polygons to difference.
 // Example(2D):
 //   shape1 = move([-8,-8,0], p=circle(d=50));
 //   shape2 = move([ 8, 8,0], p=circle(d=50));
@@ -1112,11 +1153,11 @@ function difference(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   region = intersection(REGION1,REGION2);
 //   region = intersection(REGION1,REGION2,REGION3);
 // Description:
-//   When called as a function, and given a list of regions, where each region is a list of closed
-//   2D paths, returns the boolean intersection of all given regions.  Result is a single region.
-//   When called as the built-in module, makes the boolean intersection of all the given children.
+//   When called as a function, and given a list of regions or polygons returns the
+//   intersection of all given regions.  Result is a single region.
+//   When called as the built-in module, makes the intersection of all the given children.
 // Arguments:
-//   regions = List of regions to intersection.  Each region is a list of closed paths.
+//   regions = List of regions to intersect.
 // Example(2D):
 //   shape1 = move([-8,-8,0], p=circle(d=50));
 //   shape2 = move([ 8, 8,0], p=circle(d=50));
@@ -1143,12 +1184,13 @@ function intersection(regions=[],b=undef,c=undef,eps=EPSILON) =
 //   region = exclusive_or(REGION1,REGION2);
 //   region = exclusive_or(REGION1,REGION2,REGION3);
 // Description:
-//   When called as a function and given a list of regions, where each region is a list of closed
-//   2D paths, returns the boolean exclusive_or of all given regions.  Result is a single region.
-//   When called as a module, performs a boolean exclusive-or of up to 10 children.  Note that the
-//   xor operator tends to produce shapes that meet at corners, which do not render in CGAL.  
+//   When called as a function and given a list of regions or 2D polygons, 
+//   returns the exclusive_or of all given regions.  Result is a single region.
+//   When called as a module, performs a boolean exclusive-or of up to 10 children.  Note that when
+//   the input regions cross each other the exclusive-or operator will produce shapes that
+//   meet at corners (non-simple regions), which do not render in CGAL.  
 // Arguments:
-//   regions = List of regions to exclusive_or.  Each region is a list of closed paths.
+//   regions = List of regions or polygons to exclusive_or
 // Example(2D): As Function.  A linear_sweep of this shape fails to render in CGAL.  
 //   shape1 = move([-8,-8,0], p=circle(d=50));
 //   shape2 = move([ 8, 8,0], p=circle(d=50));
