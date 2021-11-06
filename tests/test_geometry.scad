@@ -85,14 +85,14 @@ module test_polygon_triangulate() {
 		poly1 = [ [-10,0,-10], [10,0,10], [0,10,0], [-10,0,-10], [-4,4,-4], [4,4,4], [0,2,0], [-4,4,-4] ];
 		poly2 = [ [0,0], [5,5], [-5,5], [0,0], [-5,-5], [5,-5] ];
 		poly3 = [ [0,0], [10,0], [10,10], [10,13], [10,10], [0,10], [0,0], [3,3], [7,3], [7,7], [7,3], [3,3] ];
-		tris0 = sort(polygon_triangulate(poly0));
+		tris0 = (polygon_triangulate(poly0));
 		assert(approx(tris0, [[0, 1, 2]]));
 		tris1 = (polygon_triangulate(poly1));
-		assert(approx(tris1,( [[2, 3, 4], [6, 7, 0], [2, 4, 5], [6, 0, 1], [1, 2, 5], [5, 6, 1]])));
+		assert(approx(tris1,(  [[2, 3, 4], [6, 7, 0], [2, 4, 5], [6, 0, 1], [1, 2, 5], [5, 6, 1]])));
 		tris2 = (polygon_triangulate(poly2));
-		assert(approx(tris2,([[0, 1, 2], [3, 4, 5]])));
+		assert(approx(tris2,( [[3, 4, 5], [1, 2, 3]])));
 		tris3 = (polygon_triangulate(poly3));
-		assert(approx(tris3,( [[5, 6, 7], [7, 8, 9], [10, 11, 0], [5, 7, 9], [10, 0, 1], [4, 5, 9], [9, 10, 1], [1, 4, 9]])));
+		assert(approx(tris3,( [[5, 6, 7], [11, 0, 1], [5, 7, 8], [10, 11, 1], [5, 8, 9], [10, 1, 2], [4, 5, 9], [9, 10, 2]])));
 }
 
 module test__normalize_plane(){

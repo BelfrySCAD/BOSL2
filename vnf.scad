@@ -318,14 +318,13 @@ function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
     cleanup? _vnf_cleanup(verts,faces,eps) : [verts,faces];
 
 
-
 function _vnf_cleanup(verts,faces,eps) = 
     let(
         dedup  = vector_search(verts,eps,verts),                 // collect vertex duplicates
         map    = [for(i=idx(verts)) min(dedup[i]) ],             // remap duplic vertices
         offset = cumsum([for(i=idx(verts)) map[i]==i ? 0 : 1 ]), // remaping face vertex offsets 
         map2   = list(idx(verts))-offset,                        // map old vertex indices to new indices
-        nverts = [for(i=idx(verts)) if(map[i]==i) verts[i] ],    // eliminates all unreferenced vertices
+        nverts = [for(i=idx(verts)) if(map[i]==i) verts[i] ],    // this doesn't eliminate unreferenced vertices
         nfaces = 
             [ for(face=faces) 
                 let(
@@ -385,34 +384,123 @@ function _join_paths_at_vertices(path1,path2,v1,v2) =
     ];                      
 
         
-// Given a region that is connected and has its outer border in region[0],
-// produces a polygon with the same points that has overlapping connected paths
-// to join internal holes to the outer border.  Output is a single path.  
-function _cleave_connected_region(region) =
-    len(region)==0? [] :
-    len(region)<=1? clockwise_polygon(region[0]) :
-    let(
-        dists = [
-            for (i=[1:1:len(region)-1])
-            _path_path_closest_vertices(region[0],region[i])
-        ],
-        idxi = min_index(column(dists,0)),
-        newoline = _join_paths_at_vertices(
-            region[0], region[idxi+1],
-            dists[idxi][1], dists[idxi][2]
-        )
-    ) len(region)==2? clockwise_polygon(newoline) :
-    let(
-        orgn = [
-            newoline,
-            for (i=idx(region))
-                if (i>0 && i!=idxi+1)
-                    region[i]
-        ]
-    )
-    assert(len(orgn)<len(region))
-    _cleave_connected_region(orgn);
+/// Internal Function: _cleave_connected_region(region, eps)
+/// Description:
+///   Given a region that is connected and has its outer border in region[0],
+///   produces a overlapping connected path to join internal holes to  
+///   the outer border without adding points. Output is a single non-simple polygon. 
+/// Requirements:
+///   It expects that all region paths be simple closed paths, with region[0] CW and 
+///   the other paths CCW and encircled by region[0]. The input region paths are also 
+///   supposed to be disjoint except for common vertices and common edges but with 
+///   no crossings. It may return `undef` if these conditions are not met.
+///   This function implements an extension of the algorithm discussed in:  
+///   https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
+function _cleave_connected_region(region, eps=EPSILON) =
+    len(region)==1 ? region[0] :
+    let( 
+        outer   = deduplicate(region[0]),             // 
+        holes   = [for(i=[1:1:len(region)-1])         // deduplication possibly unneeded
+                      deduplicate( region[i] ) ],     //
+        extridx = [for(li=holes) max_index(column(li,0)) ],
+        // the right extreme vertex for each hole sorted by decreasing x values
+        extremes = sort( [for(i=idx(holes)) [ i, extridx[i], -holes[i][extridx[i]].x] ], idx=2 )
+    ) 
+    _polyHoles(outer, holes, extremes, eps, 0);
 
+
+// connect the hole paths one at a time to the outer path.
+// 'extremes' is the list of the right extreme vertex of each hole sorted by decreasing abscissas
+// see: _cleave_connected_region(region, eps)
+function _polyHoles(outer, holes, extremes, eps=EPSILON, n=0) =
+    let( 
+        extr = extremes[n],    // 
+        hole = holes[extr[0]], // hole path to bridge to the outer path
+        ipt  = extr[1],        // index of the hole point with maximum abscissa
+        brdg = _bridge(hole[ipt], outer, eps)  // the index of a point in outer to bridge hole[ipt] to
+    )
+    brdg == undef ? undef :
+    let(
+        l  = len(outer),
+        lh = len(hole),
+        // the new outer polygon bridging the hole to the old outer
+        npoly =
+            approx(outer[brdg], hole[ipt], eps) 
+            ?   [ for(i=[brdg:  1: brdg+l])   outer[i%l] ,
+                  for(i=[ipt+1: 1: ipt+lh-1]) hole[i%lh] ]
+            :   [ for(i=[brdg:  1: brdg+l])   outer[i%l] ,
+                  for(i=[ipt:   1: ipt+lh])   hole[i%lh] ]
+    )
+    n==len(holes)-1 ?  npoly : 
+    _polyHoles(npoly, holes, extremes, eps, n+1);          
+          
+// find a point in outer to be connected to pt in the interior of outer 
+// by a segment that not cross or touch any non adjacente edge of outer.
+// return the index of a vertex in the outer path where the bridge should end
+// see _polyHoles(outer, holes, extremes, eps)
+function _bridge(pt, outer,eps) =
+    // find the intersection of a ray from pt to the right 
+    // with the boundary of the outer cycle
+    let(  
+        l    = len(outer),
+        crxs = 
+            let( edges = pair(outer,wrap=true) )
+            [for( i = idx(edges) )
+                let( edge = edges[i] )
+                // consider just descending outer edges at right of pt crossing ordinate pt.y
+                if(    (edge[0].y >  pt.y+eps) 
+                    && (edge[1].y <= pt.y) 
+                    && _is_at_left(pt, [edge[1], edge[0]], eps) ) 
+                    [ i,
+                      // the point of edge with ordinate pt.y
+                      abs(pt.y-edge[1].y)<eps ? edge[1] :
+                      let( u = (pt-edge[1]).y / (edge[0]-edge[1]).y )
+                      (1-u)*edge[1] + u*edge[0]
+                    ]
+             ]
+    )
+    crxs == [] ? undef :
+    let( 
+        // the intersection point of the nearest edge to pt with minimum slope
+        minX    = min([for(p=crxs) p[1].x]),
+        crxcand = [for(crx=crxs) if(crx[1].x < minX+eps) crx ], // nearest edges
+        nearest = min_index([for(crx=crxcand) 
+                                (outer[crx[0]].x - pt.x) / (outer[crx[0]].y - pt.y) ]), // minimum slope
+        proj    = crxcand[nearest],
+        vert0   = outer[proj[0]],    // the two vertices of the nearest crossing edge
+        vert1   = outer[(proj[0]+1)%l],
+        isect   = proj[1]            // the intersection point
+    )
+    norm(pt-vert1) < eps ? (proj[0]+1)%l : // if pt touches an outer vertex, return its index
+    // as vert0.y > pt.y then pt!=vert0 
+    norm(pt-isect) < eps ? undef :         // if pt touches the middle of an outer edge -> error
+    let( 
+        // the edge [vert0, vert1] necessarily satisfies vert0.y > vert1.y
+        // indices of candidates to an outer bridge point
+        cand  = 
+            (vert0.x > pt.x) 
+            ?   [ proj[0], 
+                  // select reflex vertices inside of the triangle [pt, vert0, isect]
+                  for(i=idx(outer)) 
+                      if( _tri_class(select(outer,i-1,i+1),eps) <= 0 
+                          && _pt_in_tri(outer[i], [pt, vert0, isect], eps)>=0 )
+                        i 
+                ]
+            :   [ (proj[0]+1)%l,
+                  // select reflex vertices inside of the triangle [pt, isect, vert1] 
+                  for(i=idx(outer)) 
+                      if( _tri_class(select(outer,i-1,i+1),eps) <= 0 
+                          &&  _pt_in_tri(outer[i], [pt, isect, vert1], eps)>=0 )
+                        i 
+                ],
+        // choose the candidate outer[i] such that the line [pt, outer[i]] has minimum slope
+        // among those with minimum slope choose the nearest to pt
+        slopes  = [for(i=cand) 1-abs(outer[i].x-pt.x)/norm(outer[i]-pt) ],
+        min_slp = min(slopes),
+        cand2   = [for(i=idx(cand)) if(slopes[i]<=min_slp+eps) cand[i] ],
+        nearest = min_index([for(i=cand2) norm(pt-outer[i]) ]) 
+    )
+    cand2[nearest];
 
 
 // Function: vnf_from_region()
@@ -436,13 +524,15 @@ function _cleave_connected_region(region) =
 function vnf_from_region(region, transform, reverse=false) =
     let (
         regions = region_parts(force_region(region)),
-        vnfs = [
-            for (rgn = regions) let(
-                cleaved = path3d(_cleave_connected_region(rgn)),
-                face = is_undef(transform)? cleaved : apply(transform,cleaved),
-                faceidxs = reverse? [for (i=[len(face)-1:-1:0]) i] : [for (i=[0:1:len(face)-1]) i]
-            ) [face, [faceidxs]]
-        ],
+        vnfs =
+            [ for (rgn = regions) 
+                let( cleaved = path3d(_cleave_connected_region(rgn)) ) 
+                assert( cleaved, "The region is invalid")
+                let(
+                    face = is_undef(transform)? cleaved : apply(transform,cleaved),
+                    faceidxs = reverse? [for (i=[len(face)-1:-1:0]) i] : [for (i=[0:1:len(face)-1]) i]
+                ) [face, [faceidxs]]
+            ],
         outvnf = vnf_merge(vnfs)
     )
     vnf_triangulate(outvnf);
@@ -550,9 +640,13 @@ function _link_indicator(l,imin,imax) =
 function vnf_triangulate(vnf) =
     let(
         verts = vnf[0],
-        faces = [for (face=vnf[1]) each len(face)==3 ? [face] : 
-                                         polygon_triangulate(verts, face)]
-    ) [verts, faces]; 
+        faces = [for (face=vnf[1]) 
+                    each (len(face)==3 ? [face] : 
+                    let( tris = polygon_triangulate(verts, face) )
+                    assert( tris!=undef, "Some `vnf` face cannot be triangulated.")
+                    tris ) ]
+    ) 
+    [verts, faces]; 
 
 
 

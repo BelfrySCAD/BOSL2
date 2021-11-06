@@ -230,14 +230,15 @@ function select(list, start, end) =
       : end==undef
           ? is_num(start)
               ? list[ (start%l+l)%l ]
-              : assert( is_list(start) || is_range(start), "Invalid start parameter")
+              : assert( start==[] || is_vector(start) || is_range(start), "Invalid start parameter")
                 [for (i=start) list[ (i%l+l)%l ] ]
           : assert(is_finite(start), "When `end` is given, `start` parameter should be a number.")
             assert(is_finite(end), "Invalid end parameter.")
             let( s = (start%l+l)%l, e = (end%l+l)%l )
             (s <= e)
-              ? [for (i = [s:1:e]) list[i]]
-              : concat([for (i = [s:1:l-1]) list[i]], [for (i = [0:1:e]) list[i]]) ;
+              ? [ for (i = [s:1:e])   list[i] ]
+              : [ for (i = [s:1:l-1]) list[i], 
+                  for (i = [0:1:e])   list[i] ] ;
 
 
 // Function: slice()

@@ -429,9 +429,9 @@ function _region_region_intersections(region1, region2, closed1=true,closed2=tru
                        for(p2=idx(region2))
                            let(
                                poly  = closed2?close_path(region2[p2]):region2[p2],
-                               signs = [for(v=poly*seg_normal) v-ref> eps ? 1 : v-ref<-eps ? -1 : 0]
+                               signs = [for(v=poly*seg_normal) abs(v-ref) < eps ? 0 : sign(v-ref) ]
                            ) 
-                           if(max(signs)>=0 && min(signs)<=0) // some edge edge intersects line [a1,a2]
+                           if(max(signs)>=0 && min(signs)<=0) // some edge intersects line [a1,a2]
                                for(j=[0:1:len(poly)-2]) 
                                    if(signs[j]!=signs[j+1])
                                         let( // exclude non-crossing and collinear segments
