@@ -521,13 +521,15 @@ function is_path_simple(path, closed, eps=EPSILON) =
     let(closed=default(closed,false))
     assert(is_path(path, 2),"Must give a 2D path")
     assert(is_bool(closed))
+    // check for path reversals
     [for(i=[0:1:len(path)-(closed?2:3)])
          let(v1=path[i+1]-path[i],
              v2=select(path,i+2)-path[i+1],
              normv1 = norm(v1),
              normv2 = norm(v2)
              )
-         if (approx(v1*v2/normv1/normv2,-1)) 1]  == [] 
+         if (approx(v1*v2/normv1/normv2,-1)) 1
+    ]  == [] 
     &&
     _path_self_intersections(path,closed=closed,eps=eps) == [];
 
