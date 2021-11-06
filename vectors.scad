@@ -491,12 +491,11 @@ function _bt_tree(points, ind, leafsize=25) =
         bounds = pointlist_bounds(select(points,ind)),
         coord  = max_index(bounds[1]-bounds[0]), 
         projc  = [for(i=ind) points[i][coord] ],
-        pmc    = mean(projc), 
-        pivot  = min_index([for(p=projc) abs(p-pmc)]),
+        meanpr = mean(projc), 
+        pivot  = min_index([for(p=projc) abs(p-meanpr)]),
         radius = max([for(i=ind) norm(points[ind[pivot]]-points[i]) ]),
-        median = median(projc),
-        Lind   = [for(i=idx(ind)) if(projc[i]<=median && i!=pivot) ind[i] ],
-        Rind   = [for(i=idx(ind)) if(projc[i] >median && i!=pivot) ind[i] ]
+        Lind   = [for(i=idx(ind)) if(projc[i]<=meanpr && i!=pivot) ind[i] ],
+        Rind   = [for(i=idx(ind)) if(projc[i] >meanpr && i!=pivot) ind[i] ]
       )
     [ ind[pivot], radius, _bt_tree(points, Lind, leafsize), _bt_tree(points, Rind, leafsize) ];
 

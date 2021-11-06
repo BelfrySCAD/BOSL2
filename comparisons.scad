@@ -12,7 +12,8 @@
 // Usage:
 //   test = approx(a, b, [eps])
 // Description:
-//   Compares two numbers or vectors, and returns true if they are closer than `eps` to each other.
+//   Compares two numbers, vectors, or matrices.  Returns true if they are closer than `eps` to each other.
+//   Results are undefined if `a` and `b` are of different types, or if vectors or matrices contain non-numbers.
 // Arguments:
 //   a = First value.
 //   b = Second value.
@@ -21,12 +22,22 @@
 //   test1 = approx(-0.3333333333,-1/3);  // Returns: true
 //   test2 = approx(0.3333333333,1/3);    // Returns: true
 //   test3 = approx(0.3333,1/3);          // Returns: false
-//   test4 = approx(0.3333,1/3,eps=1e-3);  // Returns: true
+//   test4 = approx(0.3333,1/3,eps=1e-3); // Returns: true
 //   test5 = approx(PI,3.1415926536);     // Returns: true
+//   test6 = approx([0,0,sin(45)],[0,0,sqrt(2)/2]);  // Returns: true
 function approx(a,b,eps=EPSILON) = 
-    (a==b && is_bool(a) == is_bool(b)) ||
-    (is_num(a) && is_num(b) && abs(a-b) <= eps) ||
-    (is_list(a) && is_list(b) && len(a) == len(b) && [] == [for (i=idx(a)) if (!approx(a[i],b[i],eps=eps)) 1]);
+    a == b? is_bool(a) == is_bool(b) :
+    is_num(a) && is_num(b)? abs(a-b) <= eps :
+    is_list(a) && is_list(b) && len(a) == len(b)? (
+        [] == [
+            for (i=idx(a))
+            let(aa=a[i], bb=b[i])
+            if(
+                is_num(aa) && is_num(bb)? abs(aa-bb) > eps :
+                !approx(aa,bb,eps=eps)
+            ) 1
+        ]
+    ) : false;
 
 
 // Function: all_zero()
@@ -290,12 +301,12 @@ function compare_lists(a, b) =
 //   idx = find_approx(val, list, [start=], [eps=]);
 //   indices = find_approx(val, list, all=true, [start=], [eps=]);
 // Description:
-//   Finds the first item in `list` that matches `val`, returning the index.
+//   Finds the first item in `list` that matches `val`, returning the index.  Returns `undef` if there is no match.
 // Arguments:
 //   val = The value to search for.  If given a function literal of signature `function (x)`, uses that function to check list items.  Returns true for a match.
 //   list = The list to search through.
 //   ---
-//   start = The index to start searching from.
+//   start = The index to start searching from.  Default: 0
 //   all = If true, returns a list of all matching item indices.
 //   eps = The maximum allowed floating point rounding error for numeric comparisons.
 function find_approx(val, list, start=0, all=false, eps=EPSILON) =
@@ -778,3 +789,4 @@ function list_smallest(list, k) =
     let( bigger  = [for(li=list) if(li>v) li ] )
     concat(smaller, equal, list_smallest(bigger, k-len(smaller) -len(equal)));
 
+// vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap
