@@ -1001,8 +1001,7 @@ function triplet(list, wrap=false) =
       if(wrap) [list[L-1], list[0], list[1]],
       for (i=[0:1:L-3]) [list[i],list[i+1],list[i+2]],
       if(wrap) [list[L-2], list[L-1], list[0]]
-    ];             
-                 
+    ];
 
 
 // Function: combinations()
