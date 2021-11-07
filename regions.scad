@@ -249,7 +249,7 @@ function is_region_simple(region, eps=EPSILON) =
 //   pentagram = turtle(["move",100,"left",144], repeat=4);
 //   region = make_region(pentagram);
 //   rainbow(region)stroke($item, width=1,closed=true);
-// Examples(2D,NoAxes):  Alternatively with the nonzero option you can get the perimeter:
+// Example(2D,NoAxes):  Alternatively with the nonzero option you can get the perimeter:
 //   pentagram = turtle(["move",100,"left",144], repeat=4);
 //   region = make_region(pentagram,nonzero=true);
 //   rainbow(region)stroke($item, width=1,closed=true);
