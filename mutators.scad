@@ -477,13 +477,16 @@ module chain_hull()
 // Usage:
 //   path_extrude2d(path, [caps], [closed]) {...}
 // Description:
-//   Extrudes 2D children along the given 2D path, with optional rounded endcaps.  This module works properly in general only if the given
-//   children are convex and symmetric across the Y axis.  It works by constructing flat sections corresponding to each segment of the path and
-//   inserting rounded joints at each corner.  
+//   Extrudes 2D children along the given 2D path, with optional rounded endcaps.
+//   It works by constructing straight sections corresponding to each segment of the path and inserting rounded joints at each corner.
+//   If the children are symmetric across the Y axis line then you can set caps=true to produce rounded caps on the ends of the profile.
+//   If you set caps to true for asymmetric children then incorrect caps will be generated.
 // Arguments:
 //   path = The 2D path to extrude the geometry along.
 //   caps = If true, caps each end of the path with a `rotate_extrude()`d copy of the children.  This may interact oddly when given asymmetric profile children.  Default: false
 //   closed = If true, connect the starting point of the path to the ending point.  Default: false
+//   convexity = The max number of times a line could pass though a wall.  Default: 10
+//   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: The length of the diagonal of the path's bounding box.
 // Example:
 //   path = [
 //       each right(50, p=arc(d=100,angle=[90,180])),
@@ -502,13 +505,55 @@ module chain_hull()
 //       [-50,0], [-25,50], [0,0], [50,0]
 //   ]);
 //   path_extrude2d(path, caps=false)
-//       trapezoid(w1=10, w2=1, h=5, anchor=BACK);
-module path_extrude2d(path, caps=false, closed=false) {
+//       trapezoid(w1=10, w2=3, h=5, anchor=BACK);
+// Example: Un-Closed Path
+//   $fn=16;
+//   spath = star(id=15,od=35,n=5);
+//   path_extrude2d(spath, caps=false, closed=false)
+//       move_copies([[-3.5,1.5],[0.0,3.0],[3.5,1.5]])
+//           circle(r=1.5);
+// Example: Complex Endcaps
+//   $fn=16;
+//   spath = star(id=15,od=35,n=5);
+//   path_extrude2d(spath, caps=true, closed=false)
+//       move_copies([[-3.5,1.5],[0.0,3.0],[3.5,1.5]])
+//           circle(r=1.5);
+module path_extrude2d(path, caps=false, closed=false, s, convexity=10) {
     extra_ang = 0.1; // Extra angle for overlap of joints
     assert(caps==false || closed==false, "Cannot have caps on a closed extrusion");
+    assert(is_path(path,2));
     path = deduplicate(path);
-    for (p=pair(path,wrap=closed)) 
-        extrude_from_to(p[0],p[1]) xflip()rot(-90)children();
+    s = s!=undef? s :
+        let(b = pointlist_bounds(path))
+        norm(b[1]-b[0]);
+    assert(is_finite(s));
+    L = len(path);
+    for (i = [0:1:L-(closed?1:2)]) {
+        seg = select(path, i, i+1);
+        segv = seg[1] - seg[0];
+        seglen = norm(segv);
+        translate((seg[0]+seg[1])/2) {
+            rot(from=BACK, to=segv) {
+                difference() {
+                    xrot(90) {
+                        linear_extrude(height=seglen, center=true, convexity=convexity) {
+                            children();
+                        }
+                    }
+                    if (closed || i>0) {
+                        pt = select(path, i-1);
+                        pang = v_theta(rot(from=-segv, to=RIGHT, p=pt - seg[0]));
+                        fwd(seglen/2+0.01) zrot(pang/2) cube(s, anchor=BACK);
+                    }
+                    if (closed || i<L-2) {
+                        pt = select(path, i+2);
+                        pang = v_theta(rot(from=segv, to=RIGHT, p=pt - seg[1]));
+                        back(seglen/2+0.01) zrot(pang/2) cube(s, anchor=FWD);
+                    }
+                }
+            }
+        }
+    }
     for (t=triplet(path,wrap=closed)) {
         ang = -(180-vector_angle(t)) * sign(_point_left_of_line2d(t[2],[t[0],t[1]]));
         delt = point3d(t[2] - t[1]);
@@ -525,60 +570,16 @@ module path_extrude2d(path, caps=false, closed=false) {
                 
     }
     if (caps) {
-        move_copies([path[0],last(path)])
-            rotate_extrude()
-                right_half(planar=true) children();
-    }
-}
-module new_path_extrude2d(path, caps=false, closed=false) {
-    extra_ang = 0.1; // Extra angle for overlap of joints
-    assert(caps==false || closed==false, "Cannot have caps on a closed extrusion");
-    path = deduplicate(path);
-
-
-    for (i=[0:1:len(path)-(closed?1:2)]){
-//    for (i=[0:1:1]){
-        difference(){
-          extrude_from_to(path[i],select(path,i+1)) xflip()rot(-90)children();
-#          for(t = [select(path,i-1,i+1)]){ //, select(path,i,i+2)]){
-             ang = -(180-vector_angle(t)) * sign(_point_left_of_line2d(t[2],[t[0],t[1]]));
-             echo(ang=ang);
-             delt = point3d(t[2] - t[1]);
-             if (ang!=0)
-               translate(t[1]) {
-                  frame_map(y=delt, z=UP)
-                     rotate(-sign(ang)*extra_ang/2)
-                        rotate_extrude(angle=ang+sign(ang)*extra_ang)
-                            if (ang<0)
-                                left_half(planar=true) children();
-                            else
-                                right_half(planar=true) children();                          
-            }
-             }
-          }
-                
-    }
-
-    for (t=triplet(path,wrap=closed)) {
-        ang = -(180-vector_angle(t)) * sign(_point_left_of_line2d(t[2],[t[0],t[1]]));
-        echo(oang=ang);
-        delt = point3d(t[2] - t[1]);
-        if (ang!=0)
-            translate(t[1]) {
-                frame_map(y=delt, z=UP)
-                    rotate(-sign(ang)*extra_ang/2)
-                        rotate_extrude(angle=ang+sign(ang)*extra_ang)
-                            if (ang<0)
-                                right_half(planar=true) children();
-                            else
-                                left_half(planar=true) children();                          
-            }
-                
-    }
-    if (caps) {
-        move_copies([path[0],last(path)])
-            rotate_extrude()
-                right_half(planar=true) children();
+        bseg = select(path,0,1);
+        move(bseg[0])
+            rot(from=BACK, to=bseg[0]-bseg[1])
+                rotate_extrude(angle=180)
+                    right_half(planar=true) children();
+        eseg = select(path,-2,-1);
+        move(eseg[1])
+            rot(from=BACK, to=eseg[1]-eseg[0])
+                rotate_extrude(angle=180)
+                    right_half(planar=true) children();
     }
 }
 
