@@ -11,7 +11,7 @@ module test__is_edge_array() {
     assert(!_is_edge_array("foo"));
     assert(!_is_edge_array(42));
     assert(!_is_edge_array(true));
-    assert(_is_edge_array(edges(["X","Y"])));
+    assert(_is_edge_array(_edges(["X","Y"])));
 }
 test__is_edge_array();
 
@@ -72,26 +72,26 @@ module test__normalize_edges() {
 test__normalize_edges();
 
 
-module test_edges() {
-    assert(edges("X")==[[1,1,1,1],[0,0,0,0],[0,0,0,0]]);
-    assert(edges("Y")==[[0,0,0,0],[1,1,1,1],[0,0,0,0]]);
-    assert(edges("Z")==[[0,0,0,0],[0,0,0,0],[1,1,1,1]]);
-    assert(edges(["X"])==[[1,1,1,1],[0,0,0,0],[0,0,0,0]]);
-    assert(edges(["Y"])==[[0,0,0,0],[1,1,1,1],[0,0,0,0]]);
-    assert(edges(["Z"])==[[0,0,0,0],[0,0,0,0],[1,1,1,1]]);
-    assert(edges(["X","Y"])==[[1,1,1,1],[1,1,1,1],[0,0,0,0]]);
-    assert(edges(["X","Z"])==[[1,1,1,1],[0,0,0,0],[1,1,1,1]]);
-    assert(edges(["Y","Z"])==[[0,0,0,0],[1,1,1,1],[1,1,1,1]]);
-    assert(edges("ALL",except="X")==[[0,0,0,0],[1,1,1,1],[1,1,1,1]]);
-    assert(edges("ALL",except="Y")==[[1,1,1,1],[0,0,0,0],[1,1,1,1]]);
-    assert(edges("ALL",except="Z")==[[1,1,1,1],[1,1,1,1],[0,0,0,0]]);
-    assert(edges(["Y","Z"],except=[FRONT+RIGHT,FRONT+LEFT])==[[0,0,0,0],[1,1,1,1],[0,0,1,1]]);
+module test__edges() {
+    assert(_edges("X")==[[1,1,1,1],[0,0,0,0],[0,0,0,0]]);
+    assert(_edges("Y")==[[0,0,0,0],[1,1,1,1],[0,0,0,0]]);
+    assert(_edges("Z")==[[0,0,0,0],[0,0,0,0],[1,1,1,1]]);
+    assert(_edges(["X"])==[[1,1,1,1],[0,0,0,0],[0,0,0,0]]);
+    assert(_edges(["Y"])==[[0,0,0,0],[1,1,1,1],[0,0,0,0]]);
+    assert(_edges(["Z"])==[[0,0,0,0],[0,0,0,0],[1,1,1,1]]);
+    assert(_edges(["X","Y"])==[[1,1,1,1],[1,1,1,1],[0,0,0,0]]);
+    assert(_edges(["X","Z"])==[[1,1,1,1],[0,0,0,0],[1,1,1,1]]);
+    assert(_edges(["Y","Z"])==[[0,0,0,0],[1,1,1,1],[1,1,1,1]]);
+    assert(_edges("ALL",except="X")==[[0,0,0,0],[1,1,1,1],[1,1,1,1]]);
+    assert(_edges("ALL",except="Y")==[[1,1,1,1],[0,0,0,0],[1,1,1,1]]);
+    assert(_edges("ALL",except="Z")==[[1,1,1,1],[1,1,1,1],[0,0,0,0]]);
+    assert(_edges(["Y","Z"],except=[FRONT+RIGHT,FRONT+LEFT])==[[0,0,0,0],[1,1,1,1],[0,0,1,1]]);
 }
-test_edges();
+test__edges();
 
 
 module test__corner_edge_count() {
-    edges = edges([TOP,FRONT+RIGHT]);
+    edges = _edges([TOP,FRONT+RIGHT]);
     assert(_corner_edge_count(edges,TOP+FRONT+RIGHT) == 3);
     assert(_corner_edge_count(edges,TOP+FRONT+LEFT) == 2);
     assert(_corner_edge_count(edges,BOTTOM+FRONT+RIGHT) == 1);
@@ -101,7 +101,7 @@ test__corner_edge_count();
 
 
 module test__corner_edges() {
-    edges = edges([TOP,FRONT+RIGHT]);
+    edges = _edges([TOP,FRONT+RIGHT]);
     assert_equal(_corner_edges(edges,TOP+FRONT+RIGHT), [1,1,1]);
     assert_equal(_corner_edges(edges,TOP+FRONT+LEFT), [1,1,0]);
     assert_equal(_corner_edges(edges,BOTTOM+FRONT+RIGHT), [0,0,1]);
@@ -110,73 +110,73 @@ module test__corner_edges() {
 test__corner_edges();
 
 
-module test_corners() {
-    assert_equal(corners(BOT + FRONT + LEFT ), [1,0,0,0,0,0,0,0]);
-    assert_equal(corners(BOT + FRONT + RIGHT), [0,1,0,0,0,0,0,0]);
-    assert_equal(corners(BOT + BACK  + LEFT ), [0,0,1,0,0,0,0,0]);
-    assert_equal(corners(BOT + BACK  + RIGHT), [0,0,0,1,0,0,0,0]);
-    assert_equal(corners(TOP + FRONT + LEFT ), [0,0,0,0,1,0,0,0]);
-    assert_equal(corners(TOP + FRONT + RIGHT), [0,0,0,0,0,1,0,0]);
-    assert_equal(corners(TOP + BACK  + LEFT ), [0,0,0,0,0,0,1,0]);
-    assert_equal(corners(TOP + BACK  + RIGHT), [0,0,0,0,0,0,0,1]);
+module test__corners() {
+    assert_equal(_corners(BOT + FRONT + LEFT ), [1,0,0,0,0,0,0,0]);
+    assert_equal(_corners(BOT + FRONT + RIGHT), [0,1,0,0,0,0,0,0]);
+    assert_equal(_corners(BOT + BACK  + LEFT ), [0,0,1,0,0,0,0,0]);
+    assert_equal(_corners(BOT + BACK  + RIGHT), [0,0,0,1,0,0,0,0]);
+    assert_equal(_corners(TOP + FRONT + LEFT ), [0,0,0,0,1,0,0,0]);
+    assert_equal(_corners(TOP + FRONT + RIGHT), [0,0,0,0,0,1,0,0]);
+    assert_equal(_corners(TOP + BACK  + LEFT ), [0,0,0,0,0,0,1,0]);
+    assert_equal(_corners(TOP + BACK  + RIGHT), [0,0,0,0,0,0,0,1]);
 
-    assert_equal(corners(BOT   + FRONT),  [1,1,0,0,0,0,0,0]);
-    assert_equal(corners(BOT   + BACK ),  [0,0,1,1,0,0,0,0]);
-    assert_equal(corners(TOP   + FRONT),  [0,0,0,0,1,1,0,0]);
-    assert_equal(corners(TOP   + BACK ),  [0,0,0,0,0,0,1,1]);
-    assert_equal(corners(BOT   + LEFT ),  [1,0,1,0,0,0,0,0]);
-    assert_equal(corners(BOT   + RIGHT),  [0,1,0,1,0,0,0,0]);
-    assert_equal(corners(TOP   + LEFT ),  [0,0,0,0,1,0,1,0]);
-    assert_equal(corners(TOP   + RIGHT),  [0,0,0,0,0,1,0,1]);
-    assert_equal(corners(FRONT + LEFT ),  [1,0,0,0,1,0,0,0]);
-    assert_equal(corners(FRONT + RIGHT),  [0,1,0,0,0,1,0,0]);
-    assert_equal(corners(BACK  + LEFT ),  [0,0,1,0,0,0,1,0]);
-    assert_equal(corners(BACK  + RIGHT),  [0,0,0,1,0,0,0,1]);
+    assert_equal(_corners(BOT   + FRONT),  [1,1,0,0,0,0,0,0]);
+    assert_equal(_corners(BOT   + BACK ),  [0,0,1,1,0,0,0,0]);
+    assert_equal(_corners(TOP   + FRONT),  [0,0,0,0,1,1,0,0]);
+    assert_equal(_corners(TOP   + BACK ),  [0,0,0,0,0,0,1,1]);
+    assert_equal(_corners(BOT   + LEFT ),  [1,0,1,0,0,0,0,0]);
+    assert_equal(_corners(BOT   + RIGHT),  [0,1,0,1,0,0,0,0]);
+    assert_equal(_corners(TOP   + LEFT ),  [0,0,0,0,1,0,1,0]);
+    assert_equal(_corners(TOP   + RIGHT),  [0,0,0,0,0,1,0,1]);
+    assert_equal(_corners(FRONT + LEFT ),  [1,0,0,0,1,0,0,0]);
+    assert_equal(_corners(FRONT + RIGHT),  [0,1,0,0,0,1,0,0]);
+    assert_equal(_corners(BACK  + LEFT ),  [0,0,1,0,0,0,1,0]);
+    assert_equal(_corners(BACK  + RIGHT),  [0,0,0,1,0,0,0,1]);
 
-    assert_equal(corners(LEFT),   [1,0,1,0,1,0,1,0]);
-    assert_equal(corners(RIGHT),  [0,1,0,1,0,1,0,1]);
-    assert_equal(corners(FRONT),  [1,1,0,0,1,1,0,0]);
-    assert_equal(corners(BACK),   [0,0,1,1,0,0,1,1]);
-    assert_equal(corners(BOT),    [1,1,1,1,0,0,0,0]);
-    assert_equal(corners(TOP),    [0,0,0,0,1,1,1,1]);
+    assert_equal(_corners(LEFT),   [1,0,1,0,1,0,1,0]);
+    assert_equal(_corners(RIGHT),  [0,1,0,1,0,1,0,1]);
+    assert_equal(_corners(FRONT),  [1,1,0,0,1,1,0,0]);
+    assert_equal(_corners(BACK),   [0,0,1,1,0,0,1,1]);
+    assert_equal(_corners(BOT),    [1,1,1,1,0,0,0,0]);
+    assert_equal(_corners(TOP),    [0,0,0,0,1,1,1,1]);
 
-    assert_equal(corners([BOT + FRONT + LEFT ]), [1,0,0,0,0,0,0,0]);
-    assert_equal(corners([BOT + FRONT + RIGHT]), [0,1,0,0,0,0,0,0]);
-    assert_equal(corners([BOT + BACK  + LEFT ]), [0,0,1,0,0,0,0,0]);
-    assert_equal(corners([BOT + BACK  + RIGHT]), [0,0,0,1,0,0,0,0]);
-    assert_equal(corners([TOP + FRONT + LEFT ]), [0,0,0,0,1,0,0,0]);
-    assert_equal(corners([TOP + FRONT + RIGHT]), [0,0,0,0,0,1,0,0]);
-    assert_equal(corners([TOP + BACK  + LEFT ]), [0,0,0,0,0,0,1,0]);
-    assert_equal(corners([TOP + BACK  + RIGHT]), [0,0,0,0,0,0,0,1]);
+    assert_equal(_corners([BOT + FRONT + LEFT ]), [1,0,0,0,0,0,0,0]);
+    assert_equal(_corners([BOT + FRONT + RIGHT]), [0,1,0,0,0,0,0,0]);
+    assert_equal(_corners([BOT + BACK  + LEFT ]), [0,0,1,0,0,0,0,0]);
+    assert_equal(_corners([BOT + BACK  + RIGHT]), [0,0,0,1,0,0,0,0]);
+    assert_equal(_corners([TOP + FRONT + LEFT ]), [0,0,0,0,1,0,0,0]);
+    assert_equal(_corners([TOP + FRONT + RIGHT]), [0,0,0,0,0,1,0,0]);
+    assert_equal(_corners([TOP + BACK  + LEFT ]), [0,0,0,0,0,0,1,0]);
+    assert_equal(_corners([TOP + BACK  + RIGHT]), [0,0,0,0,0,0,0,1]);
 
-    assert_equal(corners([BOT   + FRONT]),  [1,1,0,0,0,0,0,0]);
-    assert_equal(corners([BOT   + BACK ]),  [0,0,1,1,0,0,0,0]);
-    assert_equal(corners([TOP   + FRONT]),  [0,0,0,0,1,1,0,0]);
-    assert_equal(corners([TOP   + BACK ]),  [0,0,0,0,0,0,1,1]);
-    assert_equal(corners([BOT   + LEFT ]),  [1,0,1,0,0,0,0,0]);
-    assert_equal(corners([BOT   + RIGHT]),  [0,1,0,1,0,0,0,0]);
-    assert_equal(corners([TOP   + LEFT ]),  [0,0,0,0,1,0,1,0]);
-    assert_equal(corners([TOP   + RIGHT]),  [0,0,0,0,0,1,0,1]);
-    assert_equal(corners([FRONT + LEFT ]),  [1,0,0,0,1,0,0,0]);
-    assert_equal(corners([FRONT + RIGHT]),  [0,1,0,0,0,1,0,0]);
-    assert_equal(corners([BACK  + LEFT ]),  [0,0,1,0,0,0,1,0]);
-    assert_equal(corners([BACK  + RIGHT]),  [0,0,0,1,0,0,0,1]);
+    assert_equal(_corners([BOT   + FRONT]),  [1,1,0,0,0,0,0,0]);
+    assert_equal(_corners([BOT   + BACK ]),  [0,0,1,1,0,0,0,0]);
+    assert_equal(_corners([TOP   + FRONT]),  [0,0,0,0,1,1,0,0]);
+    assert_equal(_corners([TOP   + BACK ]),  [0,0,0,0,0,0,1,1]);
+    assert_equal(_corners([BOT   + LEFT ]),  [1,0,1,0,0,0,0,0]);
+    assert_equal(_corners([BOT   + RIGHT]),  [0,1,0,1,0,0,0,0]);
+    assert_equal(_corners([TOP   + LEFT ]),  [0,0,0,0,1,0,1,0]);
+    assert_equal(_corners([TOP   + RIGHT]),  [0,0,0,0,0,1,0,1]);
+    assert_equal(_corners([FRONT + LEFT ]),  [1,0,0,0,1,0,0,0]);
+    assert_equal(_corners([FRONT + RIGHT]),  [0,1,0,0,0,1,0,0]);
+    assert_equal(_corners([BACK  + LEFT ]),  [0,0,1,0,0,0,1,0]);
+    assert_equal(_corners([BACK  + RIGHT]),  [0,0,0,1,0,0,0,1]);
 
-    assert_equal(corners([LEFT]),  [1,0,1,0,1,0,1,0]);
-    assert_equal(corners([RIGHT]), [0,1,0,1,0,1,0,1]);
-    assert_equal(corners([FRONT]), [1,1,0,0,1,1,0,0]);
-    assert_equal(corners([BACK]),  [0,0,1,1,0,0,1,1]);
-    assert_equal(corners([BOT]),   [1,1,1,1,0,0,0,0]);
-    assert_equal(corners([TOP]),   [0,0,0,0,1,1,1,1]);
+    assert_equal(_corners([LEFT]),  [1,0,1,0,1,0,1,0]);
+    assert_equal(_corners([RIGHT]), [0,1,0,1,0,1,0,1]);
+    assert_equal(_corners([FRONT]), [1,1,0,0,1,1,0,0]);
+    assert_equal(_corners([BACK]),  [0,0,1,1,0,0,1,1]);
+    assert_equal(_corners([BOT]),   [1,1,1,1,0,0,0,0]);
+    assert_equal(_corners([TOP]),   [0,0,0,0,1,1,1,1]);
 
-    assert_equal(corners([TOP,FRONT+RIGHT]), [0,1,0,0,1,1,1,1]);
+    assert_equal(_corners([TOP,FRONT+RIGHT]), [0,1,0,0,1,1,1,1]);
 }
-test_corners();
+test__corners();
 
 
 module test__is_corner_array() {
-    edges = edges([TOP,FRONT+RIGHT]);
-    corners = corners([TOP,FRONT+RIGHT]);
+    edges = _edges([TOP,FRONT+RIGHT]);
+    corners = _corners([TOP,FRONT+RIGHT]);
     assert(!_is_corner_array(undef));
     assert(!_is_corner_array(true));
     assert(!_is_corner_array(false));
