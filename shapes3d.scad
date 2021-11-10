@@ -106,7 +106,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   chamfer = Size of chamfer, inset from sides.  Default: No chamfering.
 //   rounding = Radius of the edge rounding.  Default: No rounding.
 //   edges = Edges to chamfer/round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
-//   except_edges = Edges to explicitly NOT chamfer/round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
+//   except = Edges to explicitly NOT chamfer/round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
 //   trimcorners = If true, rounds or chamfers corners where three chamfered/rounded edges meet.  Default: `true`
 //   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=ALLNEG`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
@@ -145,25 +145,25 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 // Example: Negative Chamferring
 //   cuboid(
 //       [30,40,50], chamfer=-5,
-//       edges=[TOP,BOT], except_edges=RIGHT,
+//       edges=[TOP,BOT], except=RIGHT,
 //       $fn=24
 //   );
 // Example: Negative Chamferring, Untrimmed Corners
 //   cuboid(
 //       [30,40,50], chamfer=-5,
-//       edges=[TOP,BOT], except_edges=RIGHT,
+//       edges=[TOP,BOT], except=RIGHT,
 //       trimcorners=false, $fn=24
 //   );
 // Example: Negative Rounding
 //   cuboid(
 //       [30,40,50], rounding=-5,
-//       edges=[TOP,BOT], except_edges=RIGHT,
+//       edges=[TOP,BOT], except=RIGHT,
 //       $fn=24
 //   );
 // Example: Negative Rounding, Untrimmed Corners
 //   cuboid(
 //       [30,40,50], rounding=-5,
-//       edges=[TOP,BOT], except_edges=RIGHT,
+//       edges=[TOP,BOT], except=RIGHT,
 //       trimcorners=false, $fn=24
 //   );
 // Example: Standard Connectors
@@ -174,7 +174,8 @@ module cuboid(
     chamfer,
     rounding,
     edges=EDGES_ALL,
-    except_edges=[],
+    except=[],
+    except_edges,
     trimcorners=true,
     anchor=CENTER,
     spin=0,
@@ -226,7 +227,7 @@ module cuboid(
     }
 
     size = scalar_vec3(size);
-    edges = edges(edges, except=except_edges);
+    edges = _edges(edges, except=first_defined([except_edges,except]));
     assert(is_vector(size,3));
     assert(all_positive(size));
     assert(is_undef(chamfer) || is_finite(chamfer));

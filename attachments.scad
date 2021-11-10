@@ -526,7 +526,7 @@ module hulling(a)
 //           rounding_edge_mask(l=71,r=10);
 module edge_mask(edges=EDGES_ALL, except=[]) {
     assert($parent_geom != undef, "No object to attach to!");
-    edges = edges(edges, except=except);
+    edges = _edges(edges, except=except);
     vecs = [
         for (i = [0:3], axis=[0:2])
         if (edges[axis][i]>0)
@@ -645,7 +645,7 @@ module face_profile(faces=[], r, d, convexity=10) {
 //           mask2d_roundover(r=10, inset=2);
 module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
     assert($parent_geom != undef, "No object to attach to!");
-    edges = edges(edges, except=except);
+    edges = _edges(edges, except=except);
     vecs = [
         for (i = [0:3], axis=[0:2])
         if (edges[axis][i]>0)
@@ -705,7 +705,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
     assert($parent_geom != undef, "No object to attach to!");
     r = get_radius(r=r, d=d, dflt=undef);
     assert(is_num(r));
-    corners = corners(corners, except=except);
+    corners = _corners(corners, except=except);
     vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
     for (vec = vecs) {
         vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
