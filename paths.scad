@@ -296,9 +296,7 @@ function _path_self_intersections(path, closed=true, eps=EPSILON) =
                 [isect[0], i, isect[1], j, isect[2]]
     ];
 
-
-
-// Section: Resampling: changing the number of points in a path
+// Section: Resampling---changing the number of points in a path
 
 
 // Input `data` is a list that sums to an integer. 

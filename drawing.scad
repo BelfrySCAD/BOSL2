@@ -699,10 +699,13 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, l
     );
 
 
-module arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false)
+module arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, anchor=CENTER, spin=0)
 {
     path = arc(N=N, r=r, angle=angle, d=d, cp=cp, points=points, width=width, thickness=thickness, start=start, wedge=wedge);
-    polygon(path);
+    attachable(anchor,spin, two_d=true, path=path) {
+        polygon(path);
+        children();
+    }
 }
 
 
@@ -1016,6 +1019,85 @@ function _turtle_command(command, parm, parm2, state, index) =
         ) :
     assert(false,str("Unknown turtle command \"",command,"\" at index",index))
     [];
+
+
+// Section: Debugging polygons
+
+// Module: debug_polygon()
+// Usage:
+//   debug_polygon(points, paths, [vertices=], [edges=], [convexity=], [size=]);
+// Description:
+//   A drop-in replacement for `polygon()` that renders and labels the path points and
+//   edges.  The start of each path is marked with a blue circle and the end with a pink diamond.
+//   You can suppress the display of vertex or edge labeling using the `vertices` and `edges` arguments.
+// Arguments:
+//   points = The array of 2D polygon vertices.
+//   paths = The path connections between the vertices.
+//   ---
+//   vertices = if true display vertex labels and start/end markers.  Default: true
+//   edges = if true display edge labels.  Default: true
+//   convexity = The max number of walls a ray can pass through the given polygon paths.
+//   size = The base size of the line and labels.
+// Example(Big2D):
+//   debug_polygon(
+//       points=concat(
+//           regular_ngon(or=10, n=8),
+//           regular_ngon(or=8, n=8)
+//       ),
+//       paths=[
+//           [for (i=[0:7]) i],
+//           [for (i=[15:-1:8]) i]
+//       ]
+//   );
+module debug_polygon(points, paths, vertices=true, edges=true, convexity=2, size=1)
+{
+    paths = is_undef(paths)? [count(points)] :
+        is_num(paths[0])? [paths] :
+        paths;
+    echo(points=points);
+    echo(paths=paths);
+    linear_extrude(height=0.01, convexity=convexity, center=true) {
+        polygon(points=points, paths=paths, convexity=convexity);
+    }
+    dups = vector_search(points, EPSILON, points);
+    
+    if (vertices) color("red") {
+        for (ind=dups){
+            numstr = str_join([for(i=ind) str(i)],",");
+            up(0.2) {
+                translate(points[ind[0]]) {
+                    linear_extrude(height=0.1, convexity=10, center=true) {
+                        text(text=numstr, size=size, halign="center", valign="center");
+                    }
+                }
+            }
+        }
+    }
+    if (edges)
+    for (j = [0:1:len(paths)-1]) {
+        path = paths[j];
+        if (vertices){
+            translate(points[path[0]]) {
+                color("cyan") up(0.1) cylinder(d=size*1.5, h=0.01, center=false, $fn=12);
+            }
+            translate(points[path[len(path)-1]]) {
+                color("pink") up(0.11) cylinder(d=size*1.5, h=0.01, center=false, $fn=4);
+            }
+        }
+        for (i = [0:1:len(path)-1]) {
+            midpt = (points[path[i]] + points[path[(i+1)%len(path)]])/2;
+            color("blue") {
+                up(0.2) {
+                    translate(midpt) {
+                        linear_extrude(height=0.1, convexity=10, center=true) {
+                            text(text=str(chr(65+j),i), size=size/2, halign="center", valign="center");
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

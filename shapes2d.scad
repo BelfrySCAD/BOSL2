@@ -224,12 +224,14 @@ module circle(r, d, anchor=CENTER, spin=0) {
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle()
 // Description:
-//   When called as a module, creates a 2D polygon that approximates a circle of the given size.
-//   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle of the given size.
+//   When called as a module, creates a 2D polygon that approximates a circle or ellipse of the given size.
+//   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle or ellipse of the given size.
+//   Note that the point list or shape is the same as the one you would get by scaling the output of {{circle()}}, but with this module your
+//   attachments to the oval will 
 // Arguments:
-//   r = Radius of the circle/oval to create.  Can be a scalar, or a list of sizes per axis.
+//   r = Radius of the circle or pair of semiaxes of oval 
 //   ---
-//   d = Diameter of the circle/oval to create.  Can be a scalar, or a list of sizes per axis.
+//   d = Diameter of the circle or a pair giving the full X and Y axis lengths.  
 //   realign = If true, rotates the polygon that approximates the circle/oval by half of one size.
 //   circum = If true, the polygon that approximates the circle will be upsized slightly to circumscribe the theoretical circle.  If false, it inscribes the theoretical circle.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
@@ -246,6 +248,7 @@ module circle(r, d, anchor=CENTER, spin=0) {
 //   path = oval(d=50, anchor=FRONT, spin=45);
 module oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) {
     r = get_radius(r=r, d=d, dflt=1);
+    dummy = assert((is_finite(r) || is_vector(r,2)) && all_positive(r), "Invalid radius or diameter for oval");
     sides = segs(max(r));
     sc = circum? (1 / cos(180/sides)) : 1;
     rx = default(r[0],r) * sc;
@@ -1707,76 +1710,6 @@ function mask2d_ogee(pattern, excess=0.01, anchor=CENTER, spin=0) =
         ],
         path2 = deduplicate(path)
     ) reorient(anchor,spin, two_d=true, path=path2, p=path2);
-
-
-
-// Section: Debugging polygons
-
-// Module: debug_polygon()
-// Usage:
-//   debug_polygon(points, paths, [convexity=], [size=]);
-// Description:
-//   A drop-in replacement for `polygon()` that renders and labels the path points.
-// Arguments:
-//   points = The array of 2D polygon vertices.
-//   paths = The path connections between the vertices.
-//   ---
-//   convexity = The max number of walls a ray can pass through the given polygon paths.
-//   size = The base size of the line and labels.
-// Example(Big2D):
-//   debug_polygon(
-//       points=concat(
-//           regular_ngon(or=10, n=8),
-//           regular_ngon(or=8, n=8)
-//       ),
-//       paths=[
-//           [for (i=[0:7]) i],
-//           [for (i=[15:-1:8]) i]
-//       ]
-//   );
-module debug_polygon(points, paths, convexity=2, size=1)
-{
-    paths = is_undef(paths)? [[for (i=[0:1:len(points)-1]) i]] :
-        is_num(paths[0])? [paths] :
-        paths;
-    echo(points=points);
-    echo(paths=paths);
-    linear_extrude(height=0.01, convexity=convexity, center=true) {
-        polygon(points=points, paths=paths, convexity=convexity);
-    }
-    for (i = [0:1:len(points)-1]) {
-        color("red") {
-            up(0.2) {
-                translate(points[i]) {
-                    linear_extrude(height=0.1, convexity=10, center=true) {
-                        text(text=str(i), size=size, halign="center", valign="center");
-                    }
-                }
-            }
-        }
-    }
-    for (j = [0:1:len(paths)-1]) {
-        path = paths[j];
-        translate(points[path[0]]) {
-            color("cyan") up(0.1) cylinder(d=size*1.5, h=0.01, center=false, $fn=12);
-        }
-        translate(points[path[len(path)-1]]) {
-            color("pink") up(0.11) cylinder(d=size*1.5, h=0.01, center=false, $fn=4);
-        }
-        for (i = [0:1:len(path)-1]) {
-            midpt = (points[path[i]] + points[path[(i+1)%len(path)]])/2;
-            color("blue") {
-                up(0.2) {
-                    translate(midpt) {
-                        linear_extrude(height=0.1, convexity=10, center=true) {
-                            text(text=str(chr(65+j),i), size=size/2, halign="center", valign="center");
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 
 

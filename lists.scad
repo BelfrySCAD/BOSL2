@@ -172,24 +172,6 @@ function in_list(val,list,idx) =
     : [for(hit=allhits) if (list[hit][idx]==val) 1] != [];
 
 
-// Function: add_scalar()
-// Usage:  
-//   v = add_scalar(v, s);
-// Topics: List Handling
-// Description:
-//   Given a list and a scalar, returns the list with the scalar added to each item in it.
-//   If given a list of arrays, recursively adds the scalar to the each array.
-// Arguments:
-//   v = The initial array.
-//   s = A scalar value to add to every item in the array.
-// Example:
-//   a = add_scalar([1,2,3],3);            // Returns: [4,5,6]
-//   b = add_scalar([[1,2,3],[3,4,5]],3);  // Returns: [[4,5,6],[6,7,8]]
-function add_scalar(v,s) = 
-    is_finite(s) ? [for (x=v) is_list(x)? add_scalar(x,s) : is_finite(x) ? x+s: x] : v;
-
-
-
 
 // Section: List Indexing
 
@@ -620,6 +602,25 @@ function repeat_entries(list, N, exact=true) =
     [for(i=[0:length-1]) each repeat(list[i],reps[i])];
 
 
+// Function: list_pad()
+// Usage:
+//   arr = list_pad(array, minlen, [fill]);
+// Topics: List Handling
+// See Also: force_list(), scalar_vec3()
+// Description:
+//   If the list `array` is shorter than `minlen` length, pad it to length with the value given in `fill`.
+// Arguments:
+//   array = A list.
+//   minlen = The minimum length to pad the list to.
+//   fill = The value to pad the list with.  Default: `undef`
+// Example:
+//   list = [3,4,5];
+//   nlist = list_pad(list,5,23);  // Returns: [3,4,5,23,23]
+function list_pad(array, minlen, fill) =
+    assert(is_list(array), "Invalid input." )
+    concat(array,repeat(fill,minlen-len(array)));
+
+
 // Function: list_set()
 // Usage:
 //   list = list_set(list, indices, values, [dflt], [minlen]);
@@ -812,70 +813,6 @@ function list_remove_values(list,values=[],all=false) =
     ];
 
 
-// Section: List Length Manipulation
-
-
-// Function: list_pad()
-// Usage:
-//   arr = list_pad(array, minlen, [fill]);
-// Topics: List Handling
-// See Also: list_trim(), list_fit()
-// Description:
-//   If the list `array` is shorter than `minlen` length, pad it to length with the value given in `fill`.
-// Arguments:
-//   array = A list.
-//   minlen = The minimum length to pad the list to.
-//   fill = The value to pad the list with.  Default: `undef`
-// Example:
-//   list = [3,4,5];
-//   nlist = list_pad(list,5,23);  // Returns: [3,4,5,23,23]
-function list_pad(array, minlen, fill) =
-    assert(is_list(array), "Invalid input." )
-    concat(array,repeat(fill,minlen-len(array)));
-
-
-// Function: list_trim()
-// Usage:
-//   arr = list_trim(array, maxlen);
-// Topics: List Handling
-// See Also: list_pad(), list_fit()
-// Description:
-//   If the list `array` is longer than `maxlen` length, truncates it to be `maxlen` items long.
-// Arguments:
-//   array = A list.
-//   minlen = The minimum length to pad the list to.
-// Example:
-//   list = [3,4,5,6,7,8];
-//   nlist = list_trim(list,4);  // Returns: [3,4,5,6]
-function list_trim(array, maxlen) =
-    assert(is_list(array), "Invalid input." )
-    [for (i=[0:1:min(len(array),maxlen)-1]) array[i]];
-
-
-// Function: list_fit()
-// Usage:
-//   arr = list_fit(array, length, fill);
-// Topics: List Handling
-// See Also: list_pad(), list_trim()
-// Description:
-//   If the list `array` is longer than `length` items long, truncates it to be exactly `length` items long.
-//   If the list `array` is shorter than `length` items long, pad it to length with the value given in `fill`.
-// Arguments:
-//   array = A list.
-//   minlen = The minimum length to pad the list to.
-//   fill = The value to pad the list with.  Default: `undef`
-// Example:
-//   list = [3,4,5,6];
-//   nlist = list_fit(list,3);  // Returns: [3,4,5]
-// Example:
-//   list = [3,4,5,6];
-//   nlist = list_fit(list,6,23);  // Returns: [3,4,5,6,23,23]
-function list_fit(array, length, fill) =
-    assert(is_list(array), "Invalid input." )
-    let(l=len(array)) 
-    l==length ? array : 
-    l> length ? list_trim(array,length) 
-              : list_pad(array,length,fill);
 
 
 // Section: Iteration Helpers
@@ -1057,8 +994,6 @@ function permutations(l,n=2) =
 // Section: Changing list structure
 
 
-           
-
 // Function: list_to_matrix()
 // Usage:
 //   groups = list_to_matrix(v, [cnt], [dflt]);
@@ -1140,36 +1075,6 @@ function zip(a,b,c) =
     b!=undef? zip([a,b,if (c!=undef) c]) :
     let(n = min_length(a))
     [for (i=[0:1:n-1]) [for (x=a) x[i]]];
-
-
-// Function: zip_long()
-// Usage:
-//   pairs = zip_long(a,b);
-//   triples = zip_long(a,b,c);
-//   quads = zip_long([LIST1,LIST2,LIST3,LIST4]);
-// Topics: List Handling, Iteration
-// See Also: zip()
-// Description:
-//   Zips together two or more lists into a single list.  For example, if you have two
-//   lists [3,4,5], and [8,7,6], and zip them together, you get [ [3,8],[4,7],[5,6] ].
-//   The list returned will be as long as the longest list passed to zip_long(), with
-//   shorter lists padded by the value in `fill`.
-// Arguments:
-//   a = The first list, or a list of lists if b and c are not given.
-//   b = The second list, if given.
-//   c = The third list, if given.
-//   fill = The value to pad shorter lists with.  Default: undef
-// Example:
-//   a = [9,8,7,6]; b = [1,2,3];
-//   for (p=zip_long(a,b,fill=88)) echo(p);
-//   // ECHO: [9,1]
-//   // ECHO: [8,2]
-//   // ECHO: [7,3]
-//   // ECHO: [6,88]]
-function zip_long(a,b,c,fill) =
-    b!=undef? zip_long([a,b,if (c!=undef) c],fill=fill) :
-    let(n = max_length(a))
-    [for (i=[0:1:n-1]) [for (x=a) i<len(x)? x[i] : fill]];
 
 
 
