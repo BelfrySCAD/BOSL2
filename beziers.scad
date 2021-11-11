@@ -1170,7 +1170,7 @@ function is_patch(x) =
 //       // u=0,v=1                                u=1,v=1
 //   ];
 //   tpatch = translate([-50,-50,50], patch);
-//   vnf = vnf_merge([
+//   vnf = vnf_join([
 //                     bezier_patch(tpatch),
 //                     bezier_patch(xrot(90, tpatch)),
 //                     bezier_patch(xrot(-90, tpatch)),
@@ -1541,7 +1541,7 @@ function patch_reverse(patch) =
 //   vnf = bezier_surface(patches=[patch1, patch2], splinesteps=16);
 //   polyhedron(points=vnf[0], faces=vnf[1]);
 function bezier_surface(patches=[], splinesteps=16, style="default") =
-    vnf_merge([for(patch=patches) bezier_patch(patch, splinesteps=splinesteps, style=style)]);
+    vnf_join([for(patch=patches) bezier_patch(patch, splinesteps=splinesteps, style=style)]);
 
 
 // Module: trace_bezier_patches()

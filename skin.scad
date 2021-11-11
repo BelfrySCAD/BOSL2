@@ -492,7 +492,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
           )
           subdivide_and_slice(pair,slices[i], nsamples, method=sampling)]
   )
-  vnf_merge(cleanup=false,
+  vnf_join(
       [for(i=idx(full_list))
           vnf_vertex_array(full_list[i], cap1=i==0 && fullcaps[0], cap2=i==len(full_list)-1 && fullcaps[1],
                            col_wrap=true, style=style)]);
@@ -1120,7 +1120,7 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge") =
                 if (fullcaps[1]) vnf_from_region(rgn, transform=last(transforms)),
             ],
         ],
-        vnf = vnf_merge(vnfs)
+        vnf = vnf_join(vnfs)
     ) vnf :
     assert(len(shape)>=3, "shape must be a path of at least 3 non-colinear points")
     vnf_vertex_array([for(i=[0:len(transforms)-(closed?0:1)]) apply(transforms[i%len(transforms)],path3d(shape))],

@@ -217,14 +217,14 @@ function vnf_vertex_array(
 // Example(3D): Merging two VNFs to construct a cone with one point length change between rows.
 //   pts1 = [for(z=[0:10]) path3d(arc(3+z,r=z/2+1, angle=[0,180]),10-z)];
 //   pts2 = [for(z=[0:10]) path3d(arc(3+z,r=z/2+1, angle=[180,360]),10-z)];
-//   vnf = vnf_merge([vnf_tri_array(pts1),
+//   vnf = vnf_join([vnf_tri_array(pts1),
 //                     vnf_tri_array(pts2)]);
 //   color("green")vnf_wireframe(vnf,width=0.1);
 //   vnf_polyhedron(vnf);
 // Example(3D): Cone with length change two between rows
 //   pts1 = [for(z=[0:1:10]) path3d(arc(3+2*z,r=z/2+1, angle=[0,180]),10-z)];
 //   pts2 = [for(z=[0:1:10]) path3d(arc(3+2*z,r=z/2+1, angle=[180,360]),10-z)];
-//   vnf = vnf_merge([vnf_tri_array(pts1),
+//   vnf = vnf_join([vnf_tri_array(pts1),
 //                    vnf_tri_array(pts2)]);
 //   color("green")vnf_wireframe(vnf,width=0.1);
 //   vnf_polyhedron(vnf);
@@ -284,22 +284,20 @@ function vnf_tri_array(points, row_wrap=false, reverse=false) =
 
 
 
-// Function: vnf_merge()
+// Function: vnf_join()
 // Usage:
-//   vnf = vnf_merge([VNF, VNF, VNF, ...], [cleanup],[eps]);
+//   vnf = vnf_join([VNF, VNF, VNF, ...]);
 // Description:
 //   Given a list of VNF structures, merges them all into a single VNF structure.
-//   When cleanup=true, it consolidates all duplicate vertices with a tolerance `eps`,
-//   and eliminates any faces with fewer than 3 vertices.  
-//   (Unreferenced vertices of the input VNFs are not dropped.)
+//   Combines all the points of the input VNFs and labels the faces appropriately.
+//   All the points in the input VNFs will appear in the output, even if they are
+//   duplicates of each other.  It is valid to repeat points in a VNF, but if you
+//   with to remove the duplicates that will occur along joined edges, use {{vnf_merge_points()}}.
 // Arguments:
-//   vnfs = a list of the VNFs to merge in one VNF.
-//   cleanup = when true, consolidates the duplicate vertices of the merge. Default: false
-//   eps = the tolerance in finding duplicates when cleanup=true. Default: EPSILON
-function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
-    is_vnf(vnfs) ? vnf_merge([vnfs], cleanup, eps) :
-    assert( is_vnf_list(vnfs) , "Improper vnf or vnf list")
-    len(vnfs)==1 ? (cleanup ? _vnf_cleanup(vnfs[0][0],vnfs[0][1],eps) : vnfs[0])
+//   vnfs = a list of the VNFs to joint into one VNF.
+function vnf_join(vnfs) = 
+    assert(is_vnf_list(vnfs) , "Input must be a list of VNFs")
+    len(vnfs)==1 ? vnfs[0]
     :
     let (
         offs  = cumsum([ 0, for (vnf = vnfs) len(vnf[0]) ]),
@@ -315,18 +313,30 @@ function vnf_merge(vnfs, cleanup=false, eps=EPSILON) =
                             offs[i] + j ]
             ]
     )
-    cleanup? _vnf_cleanup(verts,faces,eps) : [verts,faces];
+    [verts,faces];
 
 
-function _vnf_cleanup(verts,faces,eps) = 
+
+// Function: vnf_merge_points()
+// Usage:
+//   new_vnf = vnf_merge_points(vnf, [eps]);
+// Description:
+//   Given a VNF, consolidates all duplicate vertices with a tolerance `eps`, relabeling the faces as necessary,
+//   and eliminating any face with fewer than 3 vertices.  Unreferenced vertices of the input VNF are not dropped.
+//   To remove such vertices uses {{vnf_drop_unused_points()}}.  
+// Arguments:
+//   vnf = a VNF to consolidate
+//   eps = the tolerance in finding duplicates. Default: EPSILON
+function vnf_merge_points(vnf,eps=EPSILON) = 
     let(
+        verts = vnf[0], 
         dedup  = vector_search(verts,eps,verts),                 // collect vertex duplicates
         map    = [for(i=idx(verts)) min(dedup[i]) ],             // remap duplic vertices
         offset = cumsum([for(i=idx(verts)) map[i]==i ? 0 : 1 ]), // remaping face vertex offsets 
         map2   = list(idx(verts))-offset,                        // map old vertex indices to new indices
         nverts = [for(i=idx(verts)) if(map[i]==i) verts[i] ],    // this doesn't eliminate unreferenced vertices
         nfaces = 
-            [ for(face=faces) 
+            [ for(face=vnf[1]) 
                 let(
                     nface = [ for(vi=face) map2[map[vi]] ],
                     dface = [for (i=idx(nface)) 
@@ -346,7 +356,7 @@ function _vnf_cleanup(verts,faces,eps) =
 //   Given a list of 3d polygons, produces a VNF containing those polygons.  
 //   It is up to the caller to make sure that the points are in the correct order to make the face
 //   normals point outwards.  No checking for duplicate vertices is done.  If you want to
-//   remove duplicate vertices use vnf_merge with the cleanup option.  
+//   remove duplicate vertices use {{vnf_merge_points()}}.
 // Arguments:
 //   polygons = The list of 3d polygons to turn into a VNF
 function vnf_from_polygons(polygons) =
@@ -533,7 +543,7 @@ function vnf_from_region(region, transform, reverse=false) =
                     faceidxs = reverse? [for (i=[len(face)-1:-1:0]) i] : [for (i=[0:1:len(face)-1]) i]
                 ) [face, [faceidxs]]
             ],
-        outvnf = vnf_merge(vnfs)
+        outvnf = vnf_join(vnfs)
     )
     vnf_triangulate(outvnf);
 
@@ -673,7 +683,7 @@ function vnf_slice(vnf,dir,cuts) =
        faces = [for(face=vnf[1]) select(vert,face)],
        poly_list = _slice_3dpolygons(faces, dir, cuts)
   )
-  vnf_merge([vnf_from_polygons(poly_list)], cleanup=true); 
+  vnf_merge_points(vnf_from_polygons(poly_list));
 
 
 function _split_polygon_at_x(poly, x) =
@@ -777,7 +787,7 @@ function _slice_3dpolygons(polys, dir, cuts) =
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin", spin=0, orient=UP) {
-    vnf = is_vnf_list(vnf)? vnf_merge(vnf) : vnf;
+    vnf = is_vnf_list(vnf)? vnf_join(vnf) : vnf;
     cp = is_def(cp) ? cp : centroid(vnf);
     attachable(anchor,spin,orient, vnf=vnf, extent=extent, cp=cp) {
         polyhedron(vnf[0], vnf[1], convexity=convexity);
@@ -943,7 +953,7 @@ function vnf_halfspace(plane, vnf, closed=true) =
            faceregion = [for(path=newpaths) path2d(apply(M,select(newvert,path)))],
            facevnf = vnf_from_region(faceregion,transform=rot_inverse(M),reverse=true)
       )
-      vnf_merge([[newvert, faces_edges_vertices[0]], facevnf]);
+      vnf_join([[newvert, faces_edges_vertices[0]], facevnf]);
 
 
 function _assemble_paths(vertices, edges, paths=[],i=0) =
@@ -1315,7 +1325,7 @@ module vnf_debug(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //       path3d(square(100,center=true),0),
 //       path3d(square(100,center=true),100),
 //   ], slices=0, caps=false);
-//   vnf = vnf_merge([vnf1, vnf_from_polygons([
+//   vnf = vnf_join([vnf1, vnf_from_polygons([
 //       [[-50,-50,  0], [ 50, 50,  0], [-50, 50,  0]],
 //       [[-50,-50,  0], [ 50,-50,  0], [ 50, 50,  0]],
 //       [[-50,-50,100], [-50, 50,100], [ 50, 50,100]],
@@ -1327,7 +1337,7 @@ module vnf_debug(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //       path3d(square(100,center=true),0),
 //       path3d(square(100,center=true),100),
 //   ], slices=0, caps=false);
-//   vnf = vnf_merge([vnf1, vnf_from_polygons([
+//   vnf = vnf_join([vnf1, vnf_from_polygons([
 //       [[-50,-50,0], [50,50,0], [-50,50,0]],
 //       [[-50,-50,0], [50,-50,0], [50,50,0]],
 //       [[-50,-50,100], [-50,50,100], [0,50,100]],
@@ -1337,7 +1347,7 @@ module vnf_debug(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 //   ])]);
 //   vnf_validate(vnf);
 // Example: FACE_ISECT Errors; Faces Intersect
-//   vnf = vnf_merge([
+//   vnf = vnf_join([
 //       vnf_triangulate(linear_sweep(square(100,center=true), height=100)),
 //       move([75,35,30],p=vnf_triangulate(linear_sweep(square(100,center=true), height=100)))
 //   ]);
@@ -1351,7 +1361,7 @@ module vnf_debug(vnf, faces=true, vertices=true, opacity=0.5, size=1, convexity=
 function vnf_validate(vnf, show_warns=true, check_isects=false) =
     assert(is_vnf(vnf), "Invalid VNF")
     let(
-        vnf = vnf_merge(vnf, cleanup=true),
+        vnf = vnf_merge_points(vnf),
         varr = vnf[0],
         faces = vnf[1],
         lvarr = len(varr),

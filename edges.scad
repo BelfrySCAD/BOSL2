@@ -40,7 +40,7 @@
 //   }
 // Section: Specifying Faces
 //   Modules operating on faces accept a list of faces to describe the faces to operate on.  Each
-//   face is given by a vector that points to that face.  Attachments of cuboid objects also
+//   face is given by a vector that points to that face.  Attachments of cuboid objects onto their faces also
 //   work by choosing an attachment face with a single vector in the same manner.  
 // Figure(3D,Big,NoScales,VPD=275): The six faces of the cube.  Some have faces have more than one name.  
 //   ydistribute(50) {
@@ -57,8 +57,11 @@
 //   }
 // Section: Specifying Edges
 //   Modules operating on edges use two arguments to describe the edge set they will use: The `edges` argument
-//   is a list of edge set descriptors to include in the edge set and the `except` argument is a list of
-//   edge set descriptors to remove from the edge set.  If either argument is just a single edge set
+//   is a list of edge set descriptors to include in the edge set, and the `except` argument is a list of
+//   edge set descriptors to remove from the edge set.
+//   The default value for `edges` is `"ALL"`, the set of all edges.
+//   The default value for `except` is the    empty set, meaning no edges are removed. 
+//   If either argument is just a single edge set
 //   descriptor it can be passed directly rather than in a singleton list.  
 //   Each edge set descriptor must be one of:
 //   - A vector pointing towards an edge, indicating that single edge.
@@ -79,7 +82,8 @@
 //       ```
 //   You can specify edge descriptors directly by giving a vector, or you can use sums of the
 //   named direction vectors described above.  Below we show all of the edge sets you can
-//   describe with sums of the direction vectors.
+//   describe with sums of the direction vectors, and then we show some examples of combining
+//   edge set descriptors.  
 // Figure(3D,Big,VPD=300,NoScales): Vectors pointing toward an edge select that single edge
 //   ydistribute(50) {
 //       xdistribute(30) {
@@ -141,7 +145,7 @@
 //           _show_edges(edges="NONE");
 //       }
 //   }
-// Figure(3D,Big,VPD=310,NoScales):  Next are some examples showing how you can combine edge descriptors to obtain different edge sets.   The default value for `edges` is `"ALL"`, the set of all edges.  The default value for `except` is the    empty set, meaning no edges are removed.  You can specify the top front edge with a numerical vector or by combining the named direction vectors.  If you combine them as a list you get all the edges around the front or top faces.  Adding `except` removes an edge.  
+// Figure(3D,Big,VPD=310,NoScales):  Next are some examples showing how you can combine edge descriptors to obtain different edge sets.    You can specify the top front edge with a numerical vector or by combining the named direction vectors.  If you combine them as a list you get all the edges around the front or top faces.  Adding `except` removes an edge.  
 //   xdistribute(43){
 //     _show_edges(_edges([0,-1,1]),toplabel=["edges=[0,-1,1]"]);
 //     _show_edges(_edges(TOP+FRONT),toplabel=["edges=TOP+FRONT"]);
@@ -165,7 +169,10 @@
 // Section: Specifying Corners
 //   Modules operating on corners use two arguments to describe the corner set they will use: The `corners` argument
 //   is a list of corner set descriptors to include in the corner set, and the `except` argument is a list of
-//   corner set descriptors to remove from the corner set.  If either argument is just a single corner set
+//   corner set descriptors to remove from the corner set.
+//   The default value for `corners` is `"ALL"`, the set of all corners.
+//   The default value for `except` is the   empty set, meaning no corners are removed.  
+//   If either argument is just a single corner set
 //   descriptor it can be passed directly rather than in a singleton list.
 //   Each corner set descriptor must be one of:
 //   - A vector pointing towards a corner, indicating that corner.
@@ -179,7 +186,8 @@
 //       ```
 //   You can specify corner descriptors directly by giving a vector, or you can use sums of the
 //   named direction vectors described above.  Below we show all of the corner sets you can
-//   describe with sums of the direction vectors.
+//   describe with sums of the direction vectors and then we show some examples of combining
+//   corner set descriptors.  
 // Figure(3D,Big,NoScales,VPD=300): Vectors pointing toward a corner select that corner.
 //   ydistribute(55) {
 //       xdistribute(35) {
@@ -234,7 +242,7 @@
 //       _show_corners(corners="ALL");
 //       _show_corners(corners="NONE");
 //   }
-// Figure(3D,Big,NoScales,VPD=300):     Next are some examples showing how you can combine corner descriptors to obtain different corner sets.   The default value for `corners` is `"ALL"`, the set of all corners.  The default value for `except` is the   empty set, meaning no corners are removed.  You can specify corner sets numerically or by adding together named directions.  The third example shows a list of two corner specifications, giving all the corners on the front face or the right face.  
+// Figure(3D,Big,NoScales,VPD=300):     Next are some examples showing how you can combine corner descriptors to obtain different corner sets.   You can specify corner sets numerically or by adding together named directions.  The third example shows a list of two corner specifications, giving all the corners on the front face or the right face.  
 //   xdistribute(52){
 //     _show_corners(_corners([1,-1,-1]),toplabel=["corners=[1,-1,-1]"]);
 //     _show_corners(_corners(BOT+RIGHT+FRONT),toplabel=["corners=BOT+RIGHT+FRONT"]);
@@ -425,6 +433,7 @@ function _normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 /// See Also:  EDGES_NONE, EDGES_ALL
 ///
 function _edges(v, except=[]) =
+    v==[] ? EDGES_NONE :
     (is_string(v) || is_vector(v) || _is_edge_array(v))? _edges([v], except=except) :
     (is_string(except) || is_vector(except) || _is_edge_array(except))? _edges(v, except=[except]) :
     except==[]? _normalize_edges(sum([for (x=v) _edge_set(x)])) :
@@ -559,6 +568,7 @@ function _corner_set(v) =
 ///   from the returned corners array.  If either argument only has a single corner
 ///   set descriptor, you do not have to pass it in a list.
 function _corners(v, except=[]) =
+    v==[] ? CORNERS_NONE :
     (is_string(v) || is_vector(v) || _is_corner_array(v))? _corners([v], except=except) :
     (is_string(except) || is_vector(except) || _is_corner_array(except))? _corners(v, except=[except]) :
     except==[]? _normalize_corners(sum([for (x=v) _corner_set(x)])) :
