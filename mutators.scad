@@ -483,7 +483,7 @@ module chain_hull()
 //   If you set caps to true for asymmetric children then incorrect caps will be generated.
 // Arguments:
 //   path = The 2D path to extrude the geometry along.
-//   caps = If true, caps each end of the path with a `rotate_extrude()`d copy of the children.  This may interact oddly when given asymmetric profile children.  Default: false
+//   caps = If true, caps each end of the path with a rounded copy of the children.  Children must by symmetric across the Y axis, or results are wrong.  Default: false
 //   closed = If true, connect the starting point of the path to the ending point.  Default: false
 //   convexity = The max number of times a line could pass though a wall.  Default: 10
 //   s = Mask size to use.  Use a number larger than twice your object's largest axis.  If you make this too large, it messes with centering your view.  Default: The length of the diagonal of the path's bounding box.

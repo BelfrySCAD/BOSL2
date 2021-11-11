@@ -504,8 +504,9 @@ module hulling(a)
 // Description:
 //   Takes a 3D mask shape, and attaches it to the given edges, with the appropriate orientation to be
 //   `diff()`ed away.  The mask shape should be vertically oriented (Z-aligned) with the back-right
-//   quadrant (X+Y+) shaped to be diffed away from the edge of parent attachable shape.  For a more
-//   step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   quadrant (X+Y+) shaped to be diffed away from the edge of parent attachable shape.
+//   For details on specifying the edges to mask see [Specifying Edges](edges.scad#section-specifying-edges).
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Figure: A Typical Edge Rounding Mask
 //   module roundit(l,r) difference() {
 //       translate([-1,-1,-l/2])
@@ -515,8 +516,8 @@ module hulling(a)
 //   }
 //   roundit(l=30,r=10);
 // Arguments:
-//   edges = Edges to mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
-//   except = Edges to explicitly NOT mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
+//   edges = Edges to mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: All edges.
+//   except = Edges to explicitly NOT mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: No edges.
 // Side Effects:
 //   Sets `$tags = "mask"` for all children.
 // Example:
@@ -526,7 +527,7 @@ module hulling(a)
 //           rounding_edge_mask(l=71,r=10);
 module edge_mask(edges=EDGES_ALL, except=[]) {
     assert($parent_geom != undef, "No object to attach to!");
-    edges = edges(edges, except=except);
+    edges = _edges(edges, except=except);
     vecs = [
         for (i = [0:3], axis=[0:2])
         if (edges[axis][i]>0)
@@ -556,12 +557,13 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 // Topics: Attachments
 // See Also: attachable(), position(), attach(), face_profile(), edge_profile(), edge_mask()
 // Description:
-//   Takes a 3D mask shape, and attaches it to the given corners, with the appropriate orientation to
+//   Takes a 3D mask shape, and attaches it to the specified corners, with the appropriate orientation to
 //   be `diff()`ed away.  The 3D corner mask shape should be designed to mask away the X+Y+Z+ octant.
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   See [Specifying Corners](edges.scad#section-specifying-corners) for information on how to specify corner sets.  
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   corners = Edges to mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: All corners.
-//   except = Edges to explicitly NOT mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: No corners.
+//   corners = Corners to mask.  See [Specifying Corners](edges.scad#section-specifying-corners).  Default: All corners.
+//   except = Corners to explicitly NOT mask.  See [Specifying Corners](edges.scad#section-specifying-corners).  Default: No corners.
 // Side Effects:
 //   Sets `$tags = "mask"` for all children.
 // Example:
@@ -574,7 +576,7 @@ module edge_mask(edges=EDGES_ALL, except=[]) {
 //           }
 module corner_mask(corners=CORNERS_ALL, except=[]) {
     assert($parent_geom != undef, "No object to attach to!");
-    corners = corners(corners, except=except);
+    corners = _corners(corners, except=except);
     vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
     for (vec = vecs) {
         vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
@@ -599,7 +601,8 @@ module corner_mask(corners=CORNERS_ALL, except=[]) {
 // See Also: attachable(), position(), attach(), edge_profile(), corner_profile()
 // Description:
 //   Given a 2D edge profile, extrudes it into a mask for all edges and corners bounding each given face.
-//   For a more step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   See  [Specifying Faces](edges.scad#section-specifying-faces) for information on specifying faces.  
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
 //   faces = Faces to mask edges and corners of.
 //   r = Radius of corner mask.
@@ -630,11 +633,13 @@ module face_profile(faces=[], r, d, convexity=10) {
 // See Also: attachable(), position(), attach(), face_profile(), corner_profile()
 // Description:
 //   Takes a 2D mask shape and attaches it to the selected edges, with the appropriate orientation and
-//   extruded length to be `diff()`ed away, to give the edge a matching profile.  For a more step-by-step
+//   extruded length to be `diff()`ed away, to give the edge a matching profile.
+//   For details on specifying the edges to mask see [Specifying Edges](edges.scad#section-specifying-edges).
+//   For a step-by-step
 //   explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   edges = Edges to mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
-//   except = Edges to explicitly NOT mask.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
+//   edges = Edges to mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: All edges.
+//   except = Edges to explicitly NOT mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: No edges.
 //   convexity = Max number of times a line could intersect the perimeter of the mask shape.  Default: 10
 // Side Effects:
 //   Sets `$tags = "mask"` for all children.
@@ -645,7 +650,7 @@ module face_profile(faces=[], r, d, convexity=10) {
 //           mask2d_roundover(r=10, inset=2);
 module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
     assert($parent_geom != undef, "No object to attach to!");
-    edges = edges(edges, except=except);
+    edges = _edges(edges, except=except);
     vecs = [
         for (i = [0:3], axis=[0:2])
         if (edges[axis][i]>0)
@@ -684,11 +689,12 @@ module edge_profile(edges=EDGES_ALL, except=[], convexity=10) {
 // Description:
 //   Takes a 2D mask shape, rotationally extrudes and converts it into a corner mask, and attaches it
 //   to the selected corners with the appropriate orientation.  Tags it as a "mask" to allow it to be
-//   `diff()`ed away, to give the corner a matching profile.  For a more step-by-step explanation of
-//   attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
+//   `diff()`ed away, to give the corner a matching profile.
+//   See [Specifying Corners](edges.scad#section-specifying-corners) for information on how to specify corner sets.  
+//   For a step-by-step explanation of attachments, see the [[Attachments Tutorial|Tutorial-Attachments]].
 // Arguments:
-//   corners = Edges to mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: All corners.
-//   except = Edges to explicitly NOT mask.  See the docs for [`corners()`](edges.scad#corners) to see acceptable values.  Default: No corners.
+//   corners = Corners to mask.  See [Specifying Corners](edges.scad#section-specifying-corners).  Default: All corners.
+//   except = Corners to explicitly NOT mask.  See [Specifying Corners](edges.scad#section-specifying-corners).  Default: No corners.
 //   ---
 //   r = Radius of corner mask.
 //   d = Diameter of corner mask.
@@ -705,7 +711,7 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
     assert($parent_geom != undef, "No object to attach to!");
     r = get_radius(r=r, d=d, dflt=undef);
     assert(is_num(r));
-    corners = corners(corners, except=except);
+    corners = _corners(corners, except=except);
     vecs = [for (i = [0:7]) if (corners[i]>0) CORNER_OFFSETS[i]];
     for (vec = vecs) {
         vcount = (vec.x?1:0) + (vec.y?1:0) + (vec.z?1:0);
@@ -738,8 +744,6 @@ module corner_profile(corners=CORNERS_ALL, except=[], r, d, convexity=10) {
         }
     }
 }
-
-
 
 
 // Section: Making your objects attachable

@@ -255,7 +255,7 @@ module cubetruss_foot(w=1, size, strut, clipthick, anchor=CENTER, spin=0, orient
         down(clipthick) {
             // Base
             up(clipthick/2) {
-                cuboid([w*(size-strut)+strut+2*clipthick, size-2*strut, clipthick], chamfer=strut, edges=edges("Z"));
+                cuboid([w*(size-strut)+strut+2*clipthick, size-2*strut, clipthick], chamfer=strut, edges="Z");
             }
 
             // Walls
@@ -490,7 +490,7 @@ module cubetruss(extents=6, clips=[], bracing, size, strut, clipthick, anchor=CE
 //   Creates a corner cubetruss with extents jutting out in one or more directions.
 // Arguments:
 //   h = The number of cubes high to make the base and horizontal extents.
-//   extents = The number of cubes to extend beyond the corner.  If given as a vector of cube counts, gives the number of cubes to extend right, back, left, front, and up in order.
+//   extents = The number of cubes to extend beyond the corner.  If given as a vector of cube counts, gives the number of cubes to extend right, back, left, front, and up in order.  If the vector is shorter than length 5 the extra cube counts are taken to be zero.  
 //   size = The length of each side of the cubetruss cubes.  Default: `$cubetruss_size` (usually 30)
 //   strut = The width of the struts on the cubetruss cubes.  Default: `$cubetruss_strut_size` (usually 3)
 //   bracing = If true, adds internal cross-braces.  Default: `$cubetruss_bracing` (usually true)
@@ -511,7 +511,8 @@ module cubetruss_corner(h=1, extents=[1,1,0,0,1], bracing, size, strut, clipthic
     strut = is_undef(strut)? $cubetruss_strut_size : strut;
     bracing = is_undef(bracing)? $cubetruss_bracing : bracing;
     clipthick = is_undef(clipthick)? $cubetruss_clip_thickness : clipthick;
-    exts = is_vector(extents)? list_fit(extents,5,fill=0) : [extents, extents, 0, 0, extents];
+    exts = is_vector(extents)? list_pad(extents,5,fill=0) : [extents, extents, 0, 0, extents];
+    dummy = assert(len(exts)==5, "Input extents must be a scalar or vector with length 5 or less.");
     s = [cubetruss_dist(exts[0]+1+exts[2],1), cubetruss_dist(exts[1]+1+exts[3],1), cubetruss_dist(h+exts[4],1)];
     offset = [cubetruss_dist(exts[0]-exts[2],0), cubetruss_dist(exts[1]-exts[3],0), cubetruss_dist(h+exts[4]-1,0)]/2;
     attachable(anchor,spin,orient, size=s, offset=offset) {

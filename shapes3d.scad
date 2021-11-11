@@ -89,31 +89,32 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   cuboid(size, p1=, ...);
 //   cuboid(p1=, p2=, ...);
 // Usage: Chamfered Cubes
-//   cuboid(size, [chamfer=], [edges=], [except_edges=], [trimcorners=], ...);
+//   cuboid(size, [chamfer=], [edges=], [except=], [trimcorners=], ...);
 // Usage: Rounded Cubes
-//   cuboid(size, [rounding=], [edges=], [except_edges=], [trimcorners=], ...);
+//   cuboid(size, [rounding=], [edges=], [except=], [trimcorners=], ...);
 // Usage: Attaching children
 //   cuboid(size, [anchor=], ...) [attachments];
 //
 // Description:
-//   Creates a cube or cuboid object, with optional chamfering or rounding.
-//   Negative chamfers and roundings can be applied to create external masks,
-//   but only apply to edges around the top or bottom faces.
-//
+//   Creates a cube or cuboid object, with optional chamfering or rounding of edges and corners.
+//   You cannot mix chamfering and rounding: just one edge treatment with the same size applies to all selected edges.  
+//   Negative chamfers and roundings can be applied to create external fillets, but they 
+//   but only apply to edges around the top or bottom faces.  If you specify an edge set other than "ALL"
+//   with such roundings or chamfers then you will get an error.  See
+//   [Specifying Edges](edges.scad#section-specifying-edges) for information on how to specify edge sets.  
 // Arguments:
-//   size = The size of the cube.
+//   size = The size of the cube, a number or length 3 vector.  
 //   ---
 //   chamfer = Size of chamfer, inset from sides.  Default: No chamfering.
 //   rounding = Radius of the edge rounding.  Default: No rounding.
-//   edges = Edges to chamfer/round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
-//   except_edges = Edges to explicitly NOT chamfer/round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
+//   edges = Edges to mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: all edges.
+//   except = Edges to explicitly NOT mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: No edges.
 //   trimcorners = If true, rounds or chamfers corners where three chamfered/rounded edges meet.  Default: `true`
 //   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=ALLNEG`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
-//
 // Example: Simple regular cube.
 //   cuboid(40);
 // Example: Cube with minimum cornerpoint given.
@@ -145,25 +146,25 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 // Example: Negative Chamferring
 //   cuboid(
 //       [30,40,50], chamfer=-5,
-//       edges=[TOP,BOT], except_edges=RIGHT,
+//       edges=[TOP,BOT], except=RIGHT,
 //       $fn=24
 //   );
 // Example: Negative Chamferring, Untrimmed Corners
 //   cuboid(
 //       [30,40,50], chamfer=-5,
-//       edges=[TOP,BOT], except_edges=RIGHT,
+//       edges=[TOP,BOT], except=RIGHT,
 //       trimcorners=false, $fn=24
 //   );
 // Example: Negative Rounding
 //   cuboid(
 //       [30,40,50], rounding=-5,
-//       edges=[TOP,BOT], except_edges=RIGHT,
+//       edges=[TOP,BOT], except=RIGHT,
 //       $fn=24
 //   );
 // Example: Negative Rounding, Untrimmed Corners
 //   cuboid(
 //       [30,40,50], rounding=-5,
-//       edges=[TOP,BOT], except_edges=RIGHT,
+//       edges=[TOP,BOT], except=RIGHT,
 //       trimcorners=false, $fn=24
 //   );
 // Example: Standard Connectors
@@ -174,7 +175,8 @@ module cuboid(
     chamfer,
     rounding,
     edges=EDGES_ALL,
-    except_edges=[],
+    except=[],
+    except_edges,
     trimcorners=true,
     anchor=CENTER,
     spin=0,
@@ -226,11 +228,11 @@ module cuboid(
     }
 
     size = scalar_vec3(size);
-    edges = edges(edges, except=except_edges);
+    edges = _edges(edges, except=first_defined([except_edges,except]));
     assert(is_vector(size,3));
     assert(all_positive(size));
-    assert(is_undef(chamfer) || is_finite(chamfer));
-    assert(is_undef(rounding) || is_finite(rounding));
+    assert(is_undef(chamfer) || is_finite(chamfer),"chamfer must be a finite value");
+    assert(is_undef(rounding) || is_finite(rounding),"rounding must be a finite value");
     assert(is_undef(p1) || is_vector(p1));
     assert(is_undef(p2) || is_vector(p2));
     assert(is_bool(trimcorners));

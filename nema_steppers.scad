@@ -136,7 +136,7 @@ module nema11_stepper(h=24, shaft=5, shaft_len=20, anchor=TOP, spin=0, orient=UP
         union() {
             difference() {
                 color([0.4, 0.4, 0.4]) 
-                    cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=edges("Z"), anchor=TOP);
+                    cuboid(size=[motor_width, motor_width, h], chamfer=2, edges="Z", anchor=TOP);
                 color("silver")
                     xcopies(screw_spacing)
                         ycopies(screw_spacing)
@@ -201,7 +201,7 @@ module nema14_stepper(h=24, shaft=5, shaft_len=24, anchor=TOP, spin=0, orient=UP
         union() {
             difference() {
                 color([0.4, 0.4, 0.4])
-                    cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=edges("Z"), anchor=TOP);
+                    cuboid(size=[motor_width, motor_width, h], chamfer=2, edges="Z", anchor=TOP);
                 color("silver")
                     xcopies(screw_spacing)
                         ycopies(screw_spacing)
@@ -266,7 +266,7 @@ module nema17_stepper(h=34, shaft=5, shaft_len=20, anchor=TOP, spin=0, orient=UP
         union() {
             difference() {
                 color([0.4, 0.4, 0.4])
-                    cuboid([motor_width, motor_width, h], chamfer=2, edges=edges("Z"), anchor=TOP);
+                    cuboid([motor_width, motor_width, h], chamfer=2, edges="Z", anchor=TOP);
                 color("silver")
                     xcopies(screw_spacing)
                         ycopies(screw_spacing)
@@ -351,7 +351,7 @@ module nema23_stepper(h=50, shaft=6.35, shaft_len=25, anchor=TOP, spin=0, orient
         difference() {
             union() {
                 color([0.4, 0.4, 0.4])
-                    cuboid([motor_width, motor_width, h], chamfer=2, edges=edges("Z"), anchor=TOP);
+                    cuboid([motor_width, motor_width, h], chamfer=2, edges="Z", anchor=TOP);
                 color([0.4, 0.4, 0.4])
                     cylinder(h=plinth_height, d=plinth_diam);
                 color("silver")
@@ -418,7 +418,7 @@ module nema34_stepper(h=75, shaft=12.7, shaft_len=32, anchor=TOP, spin=0, orient
         difference() {
             union() {
                 color([0.4, 0.4, 0.4])
-                    cuboid(size=[motor_width, motor_width, h], chamfer=2, edges=edges("Z"), anchor=TOP);
+                    cuboid(size=[motor_width, motor_width, h], chamfer=2, edges="Z", anchor=TOP);
                 color([0.4, 0.4, 0.4])
                     cylinder(h=plinth_height, d=plinth_diam);
                 color("silver")

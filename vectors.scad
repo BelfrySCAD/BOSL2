@@ -6,7 +6,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Section: Vector Manipulation
+// Section: Vector Testing
 
 
 // Function: is_vector()
@@ -42,14 +42,24 @@ function is_vector(v, length, zero, all_nonzero=false, eps=EPSILON) =
     && (!all_nonzero || all_nonzero(v)) ;
 
 
-// Function: v_theta()
-// Usage:
-//   theta = v_theta([X,Y]);
+
+// Section: Scalar operations on vectors
+
+// Function: add_scalar()
+// Usage:  
+//   v_new = add_scalar(v, s);
+// Topics: List Handling
 // Description:
-//   Given a vector, returns the angle in degrees counter-clockwise from X+ on the XY plane.
-function v_theta(v) =
-    assert( is_vector(v,2) || is_vector(v,3) , "Invalid vector")
-    atan2(v.y,v.x);
+//   Given a vector and a scalar, returns the vector with the scalar added to each item in it.
+// Arguments:
+//   v = The initial array.
+//   s = A scalar value to add to every item in the array.
+// Example:
+//   a = add_scalar([1,2,3],3);            // Returns: [4,5,6]
+function add_scalar(v,s) =
+    assert(is_vector(v), "Input v must be a vector")
+    assert(is_finite(s), "Input s must be a finite scalar")
+    [for(entry=v) entry+s];
 
 
 // Function: v_mul()
@@ -132,26 +142,7 @@ function v_lookup(x, v) =
     lerp(lo,hi,u);
 
 
-// Function: pointlist_bounds()
-// Usage:
-//   pt_pair = pointlist_bounds(pts);
-// Topics: Geometry, Bounding Boxes, Bounds
-// Description:
-//   Finds the bounds containing all the points in `pts` which can be a list of points in any dimension.
-//   Returns a list of two items: a list of the minimums and a list of the maximums.  For example, with
-//   3d points `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
-// Arguments:
-//   pts = List of points.
-function pointlist_bounds(pts) =
-    assert(is_path(pts,dim=undef,fast=true) , "Invalid pointlist." )
-    let(
-        select = ident(len(pts[0])),
-        spread = [
-            for(i=[0:len(pts[0])-1])
-            let( spreadi = pts*select[i] )
-            [ min(spreadi), max(spreadi) ]
-        ]
-    ) transpose(spread);
+// Section: Vector Properties
 
 
 // Function: unit()
@@ -174,6 +165,17 @@ function unit(v, error=[[["ASSERT"]]]) =
     assert(is_vector(v), "Invalid vector")
     norm(v)<EPSILON? (error==[[["ASSERT"]]]? assert(norm(v)>=EPSILON,"Cannot normalize a zero vector") : error) :
     v/norm(v);
+
+
+// Function: v_theta()
+// Usage:
+//   theta = v_theta([X,Y]);
+// Description:
+//   Given a vector, returns the angle in degrees counter-clockwise from X+ on the XY plane.
+function v_theta(v) =
+    assert( is_vector(v,2) || is_vector(v,3) , "Invalid vector")
+    atan2(v.y,v.x);
+
 
 
 // Function: vector_angle()
@@ -263,48 +265,31 @@ function vector_axis(v1,v2=undef,v3=undef) =
 
 
 
-// Function: min_index()
-// Usage:
-//   idx = min_index(vals);
-//   idxlist = min_index(vals, all=true);
-// Topics: List Handling
-// See Also: max_index(), is_increasing(), is_decreasing()
-// Description:
-//   Returns the index of the first occurrence of the minimum value in the given list. 
-//   If `all` is true then returns a list of all indices where the minimum value occurs.
-// Arguments:
-//   vals = vector of values
-//   all = set to true to return indices of all occurences of the minimum.  Default: false
-// Example:
-//   a = min_index([5,3,9,6,2,7,8,2,1]); // Returns: 8
-//   b = min_index([5,3,9,6,2,7,8,2,7],all=true); // Returns: [4,7]
-function min_index(vals, all=false) =
-    assert( is_vector(vals) && len(vals)>0 , "Invalid or empty list of numbers.")
-    all ? search(min(vals),vals,0) : search(min(vals), vals)[0];
-
-
-// Function: max_index()
-// Usage:
-//   idx = max_index(vals);
-//   idxlist = max_index(vals, all=true);
-// Topics: List Handling
-// See Also: min_index(), is_increasing(), is_decreasing()
-// Description:
-//   Returns the index of the first occurrence of the maximum value in the given list. 
-//   If `all` is true then returns a list of all indices where the maximum value occurs.
-// Arguments:
-//   vals = vector of values
-//   all = set to true to return indices of all occurences of the maximum.  Default: false
-// Example:
-//   max_index([5,3,9,6,2,7,8,9,1]); // Returns: 2
-//   max_index([5,3,9,6,2,7,8,9,1],all=true); // Returns: [2,7]
-function max_index(vals, all=false) =
-    assert( is_vector(vals) && len(vals)>0 , "Invalid or empty list of numbers.")
-    all ? search(max(vals),vals,0) : search(max(vals), vals)[0];
-
-
 
 // Section: Vector Searching
+
+
+// Function: pointlist_bounds()
+// Usage:
+//   pt_pair = pointlist_bounds(pts);
+// Topics: Geometry, Bounding Boxes, Bounds
+// Description:
+//   Finds the bounds containing all the points in `pts` which can be a list of points in any dimension.
+//   Returns a list of two items: a list of the minimums and a list of the maximums.  For example, with
+//   3d points `[[MINX, MINY, MINZ], [MAXX, MAXY, MAXZ]]`
+// Arguments:
+//   pts = List of points.
+function pointlist_bounds(pts) =
+    assert(is_path(pts,dim=undef,fast=true) , "Invalid pointlist." )
+    let(
+        select = ident(len(pts[0])),
+        spread = [
+            for(i=[0:len(pts[0])-1])
+            let( spreadi = pts*select[i] )
+            [ min(spreadi), max(spreadi) ]
+        ]
+    ) transpose(spread);
+
 
 
 // Function: closest_point()

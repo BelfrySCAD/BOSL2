@@ -391,3 +391,19 @@ module test_compare_lists() {
 }
 test_compare_lists();
 
+
+
+module test_min_index() {
+    assert(min_index([5,3,9,6,2,7,8,2,1])==8);
+    assert(min_index([5,3,9,6,2,7,8,2,7],all=true)==[4,7]);
+}
+test_min_index();
+
+
+module test_max_index() {
+    assert(max_index([5,3,9,6,2,7,8,9,1])==2);
+    assert(max_index([5,3,9,6,2,7,8,9,7],all=true)==[2,7]);
+}
+test_max_index();
+
+

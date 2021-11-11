@@ -5,7 +5,252 @@
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
 
-
+// Section: Specifying Directions
+//   You can use direction vectors to specify anchors for objects or to specify edges, faces, and
+//   corners of cubes.  You can simply specify these direction vectors numerically, but another
+//   option is to use named constants for direction vectors.  These constants define unit vectors
+//   for the six axis directions as shown below.
+// Figure(3D,Big,VPD=7): Named constants for direction vectors.  Some directions have more than one name.  
+//   $fn=12;
+//   stroke([[0,0,0],RIGHT], endcap2="arrow2", width=.05);
+//   right(.05)up(.05)move(RIGHT)atext("RIGHT",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   stroke([[0,0,0],LEFT], endcap2="arrow2", width=.05);
+//   left(.05)up(.05)move(LEFT)atext("LEFT",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   stroke([[0,0,0],FRONT], endcap2="arrow2", width=.05);
+//   left(.1){
+//   up(.1)move(FRONT)atext("FRONT",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   move(FRONT)atext("FWD",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   down(.1)move(FRONT)atext("FORWARD",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   }
+//   stroke([[0,0,0],BACK], endcap2="arrow2", width=.05);
+//   right(.05)
+//   move(BACK)atext("BACK",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   stroke([[0,0,0],DOWN], endcap2="arrow2", width=.05);
+//   right(.1){
+//   up(.1)move(BOT)atext("DOWN",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   move(BOT)atext("BOTTOM",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   down(.1)move(BOT)atext("BOT",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   down(.2)move(BOT)atext("BTM",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   }
+//   stroke([[0,0,0],TOP], endcap2="arrow2", width=.05);
+//   left(.05){
+//   up(.1)move(TOP)atext("TOP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   move(TOP)atext("UP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   }
+// Section: Specifying Faces
+//   Modules operating on faces accept a list of faces to describe the faces to operate on.  Each
+//   face is given by a vector that points to that face.  Attachments of cuboid objects also
+//   work by choosing an attachment face with a single vector in the same manner.  
+// Figure(3D,Big,NoScales,VPD=250): The six faces of the cube.  Some have faces have more than one name.  
+//   ydistribute(50) {
+//      xdistribute(35){
+//        _show_cube_faces([BACK], botlabel=["BACK"]);
+//        _show_cube_faces([UP],botlabel=["TOP","UP"]);
+//        _show_cube_faces([RIGHT],botlabel=["RIGHT"]);  
+//      }
+//      xdistribute(35){
+//        _show_cube_faces([FRONT],toplabel=["FRONT","FWD", "FORWARD"]);
+//        _show_cube_faces([DOWN],toplabel=["BOTTOM","BOT","BTM","DOWN"]);
+//        _show_cube_faces([LEFT],toplabel=["LEFT"]);  
+//      }  
+//   }
+// Section: Specifying Edges
+//   Modules operating on edges use two arguments to describe the edge set they will use: The `edges` argument
+//   is a list of edge set descriptors to include in the edge set and the `except` argument is a list of
+//   edge set descriptors to remove from the edge set.  If either argument is just a single edge set
+//   descriptor it can be passed directly rather than in a singleton list.  
+//   Each edge set descriptor must be one of:
+//   - A vector pointing towards an edge, indicating that single edge.
+//   - A vector pointing towards a face, indicating all edges surrounding that face.
+//   - A vector pointing towards a corner, indicating all edges touching that corner.
+//   - The string `"X"`, indicating all X axis aligned edges.
+//   - The string `"Y"`, indicating all Y axis aligned edges.
+//   - The string `"Z"`, indicating all Z axis aligned edges.
+//   - The string `"ALL"`, indicating all edges.
+//   - The string `"NONE"`, indicating no edges at all.
+//   - A 3x4 array, where each entry corresponds to one of the 12 edges and is set to 1 if that edge is included and 0 if the edge is not.  The edge ordering is:
+//       ```
+//       [
+//           [Y-Z-, Y+Z-, Y-Z+, Y+Z+],
+//           [X-Z-, X+Z-, X-Z+, X+Z+],
+//           [X-Y-, X+Y-, X-Y+, X+Y+]
+//       ]
+//       ```
+//   You can specify edge descriptors directly by giving a vector, or you can use sums of the
+//   named direction vectors described above.  Below we show all of the edge sets you can
+//   describe with sums of the direction vectors.
+// Figure(3D,Big,VPD=300,NoScales): Vectors pointing toward an edge select that single edge
+//   ydistribute(50) {
+//       xdistribute(30) {
+//           _show_edges(edges=BOT+RIGHT);
+//           _show_edges(edges=BOT+BACK);
+//           _show_edges(edges=BOT+LEFT);
+//           _show_edges(edges=BOT+FRONT);
+//       }
+//       xdistribute(30) {
+//           _show_edges(edges=FWD+RIGHT);
+//           _show_edges(edges=BACK+RIGHT);
+//           _show_edges(edges=BACK+LEFT);
+//           _show_edges(edges=FWD+LEFT);
+//       }
+//       xdistribute(30) {
+//           _show_edges(edges=TOP+RIGHT);
+//           _show_edges(edges=TOP+BACK);
+//           _show_edges(edges=TOP+LEFT);
+//           _show_edges(edges=TOP+FRONT);
+//       }
+//   }
+// Figure(3D,Med,VPD=205,NoScales): Vectors pointing toward a face select all edges surrounding that face.
+//   ydistribute(50) {
+//       xdistribute(30) {
+//           _show_edges(edges=LEFT);
+//           _show_edges(edges=FRONT);
+//           _show_edges(edges=RIGHT);
+//       }
+//       xdistribute(30) {
+//           _show_edges(edges=TOP);
+//           _show_edges(edges=BACK);
+//           _show_edges(edges=BOTTOM);
+//       }
+//   }
+// Figure(3D,Big,VPD=300,NoScales): Vectors pointing toward a corner select all edges surrounding that corner.
+//   ydistribute(50) {
+//       xdistribute(30) {
+//           _show_edges(edges=FRONT+LEFT+TOP);
+//           _show_edges(edges=FRONT+RIGHT+TOP);
+//           _show_edges(edges=FRONT+LEFT+BOT);
+//           _show_edges(edges=FRONT+RIGHT+BOT);
+//       }
+//       xdistribute(30) {
+//           _show_edges(edges=TOP+LEFT+BACK);
+//           _show_edges(edges=TOP+RIGHT+BACK);
+//           _show_edges(edges=BOT+LEFT+BACK);
+//           _show_edges(edges=BOT+RIGHT+BACK);
+//       }
+//   }
+// Figure(3D,Med,VPD=205,NoScales): Named Edge Sets
+//   ydistribute(50) {
+//       xdistribute(30) {
+//           _show_edges(edges="X");
+//           _show_edges(edges="Y");
+//           _show_edges(edges="Z");
+//       }
+//       xdistribute(30) {
+//           _show_edges(edges="ALL");
+//           _show_edges(edges="NONE");
+//       }
+//   }
+// Figure(3D,Big,VPD=310,NoScales):  Next are some examples showing how you can combine edge descriptors to obtain different edge sets.   The default value for `edges` is `"ALL"`, the set of all edges.  The default value for `except` is the    empty set, meaning no edges are removed.  You can specify the top front edge with a numerical vector or by combining the named direction vectors.  If you combine them as a list you get all the edges around the front or top faces.  Adding `except` removes an edge.  
+//   xdistribute(43){
+//     _show_edges(_edges([0,-1,1]),toplabel=["edges=[0,-1,1]"]);
+//     _show_edges(_edges(TOP+FRONT),toplabel=["edges=TOP+FRONT"]);
+//     _show_edges(_edges([TOP,FRONT]),toplabel=["edges=[TOP,FRONT]"]);
+//     _show_edges(_edges([TOP,FRONT],TOP+FRONT),toplabel=["edges=[TOP,FRONT]","except=TOP+FRONT"]);      
+//   }
+// Figure(3D,Big,VPD=310,NoScales): Using `except=BACK` removes the four edges surrounding the back face if they are present in the edge set.  In the first example only one edge needs to be removed.  In the second example we remove two of the Z-aligned edges.  The third example removes all four back edges from the default edge set of all edges.  You can explicitly give `edges="ALL"` but it is not necessary, since this is the default.  In the fourth example, the edge set of Y-aligned edges contains no back edges, so the `except` parameter has no effect.  
+//   xdistribute(43){
+//     _show_edges(_edges(BTM,BACK), toplabel=["edges=BTM","except=BACK"]);
+//     _show_edges(_edges("Z",BACK), toplabel=["edges=\"Z\"", "except=BACK"]);
+//     _show_edges(_edges("ALL",BACK), toplabel=["(edges=\"ALL\")", "except=BACK"]);
+//     _show_edges(_edges("Y",BACK), toplabel=["edges=\"Y\"","except=BACK"]);   
+//   }
+// Figure(3D,Big,NoScales,VPD=310): On the left `except` is a list to remove two edges.  In the center we show a corner edge set defined by a numerical vector, and at the right we remove that same corner edge set with named direction vectors.  
+//   xdistribute(52){
+//    _show_edges(_edges("ALL",[FRONT+RIGHT,FRONT+LEFT]),
+//               toplabel=["except=[FRONT+RIGHT,","       FRONT+LEFT]"]);
+//    _show_edges(_edges([1,-1,1]),toplabel=["edges=[1,-1,1]"]);             
+//    _show_edges(_edges([TOP,BOT], TOP+RIGHT+FRONT),toplabel=["edges=[TOP,BOT]","except=TOP+RIGHT+FRONT"]); 
+//   }             
+// Section: Specifying Corners
+//   Modules operating on corners use two arguments to describe the corner set they will use: The `corners` argument
+//   is a list of corner set descriptors to include in the corner set, and the `except` argument is a list of
+//   corner set descriptors to remove from the corner set.  If either argument is just a single corner set
+//   descriptor it can be passed directly rather than in a singleton list.
+//   Each corner set descriptor must be one of:
+//   - A vector pointing towards a corner, indicating that corner.
+//   - A vector pointing towards an edge indicating both corners at the ends of that edge.
+//   - A vector pointing towards a face, indicating all the corners of that face.
+//   - The string `"ALL"`, indicating all corners.
+//   - The string `"NONE"`, indicating no corners at all.
+//   - A length 8 vector where each entry corresponds to a corner and is 1 if the corner is included and 0 if it is excluded.  The corner ordering is
+//       ```
+//       [X-Y-Z-, X+Y-Z-, X-Y+Z-, X+Y+Z-, X-Y-Z+, X+Y-Z+, X-Y+Z+, X+Y+Z+]
+//       ```
+//   You can specify corner descriptors directly by giving a vector, or you can use sums of the
+//   named direction vectors described above.  Below we show all of the corner sets you can
+//   describe with sums of the direction vectors.
+// Figure(3D,Big,NoScales,VPD=300): Vectors pointing toward a corner select that corner.
+//   ydistribute(55) {
+//       xdistribute(35) {
+//           _show_corners(corners=FRONT+LEFT+TOP);
+//           _show_corners(corners=FRONT+RIGHT+TOP);
+//           _show_corners(corners=FRONT+LEFT+BOT);
+//           _show_corners(corners=FRONT+RIGHT+BOT);
+//       }
+//       xdistribute(35) {
+//           _show_corners(corners=TOP+LEFT+BACK);
+//           _show_corners(corners=TOP+RIGHT+BACK);
+//           _show_corners(corners=BOT+LEFT+BACK);
+//           _show_corners(corners=BOT+RIGHT+BACK);
+//       }
+//   }
+// Figure(3D,Big,NoScales,VPD=300): Vectors pointing toward an edge select the corners and the ends of the edge.
+//   ydistribute(55) {
+//       xdistribute(35) {
+//           _show_corners(corners=BOT+RIGHT);
+//           _show_corners(corners=BOT+BACK);
+//           _show_corners(corners=BOT+LEFT);
+//           _show_corners(corners=BOT+FRONT);
+//       }
+//       xdistribute(35) {
+//           _show_corners(corners=FWD+RIGHT);
+//           _show_corners(corners=BACK+RIGHT);
+//           _show_corners(corners=BACK+LEFT);
+//           _show_corners(corners=FWD+LEFT);
+//       }
+//       xdistribute(35) {
+//           _show_corners(corners=TOP+RIGHT);
+//           _show_corners(corners=TOP+BACK);
+//           _show_corners(corners=TOP+LEFT);
+//           _show_corners(corners=TOP+FRONT);
+//       }
+//   }
+// Figure(3D,Med,NoScales,VPD=225): Vectors pointing toward a face select the corners of the face.
+//   ydistribute(55) {
+//       xdistribute(35) {
+//           _show_corners(corners=LEFT);
+//           _show_corners(corners=FRONT);
+//           _show_corners(corners=RIGHT);
+//       }
+//       xdistribute(35) {
+//           _show_corners(corners=TOP);
+//           _show_corners(corners=BACK);
+//           _show_corners(corners=BOTTOM);
+//       }
+//   }
+// Figure(3D,Med,NoScales,VPD=200): Corners by name
+//   xdistribute(35) {
+//       _show_corners(corners="ALL");
+//       _show_corners(corners="NONE");
+//   }
+// Figure(3D,Big,NoScales,VPD=300):     Next are some examples showing how you can combine corner descriptors to obtain different corner sets.   The default value for `corners` is `"ALL"`, the set of all corners.  The default value for `except` is the   empty set, meaning no corners are removed.  You can specify corner sets numerically or by adding together named directions.  The third example shows a list of two corner specifications, giving all the corners on the front face or the right face.  
+//   xdistribute(52){
+//     _show_corners(_corners([1,-1,-1]),toplabel=["corners=[1,-1,-1]"]);
+//     _show_corners(_corners(BOT+RIGHT+FRONT),toplabel=["corners=BOT+RIGHT+FRONT"]);
+//     _show_corners(_corners([FRONT,RIGHT]), toplabel=["corners=[FRONT,RIGHT]"]);
+//   }
+// Figure(3D,Big,NoScales,VPD=300): Corners for one edge, two edges, and all the edges except the two on one edge.  Note that since the default is all edges, you only need to give the except argument in this case:
+//    xdistribute(52){
+//      _show_corners(_corners(FRONT+TOP), toplabel=["corners=FRONT+TOP"]);
+//       _show_corners(_corners([FRONT+TOP,BOT+BACK]), toplabel=["corners=[FRONT+TOP,","        BOT+BACK]"]);
+//       _show_corners(_corners("ALL",FRONT+TOP), toplabel=["(corners=\"ALL\")","except=FRONT+TOP"]);
+//    }
+// Figure(3D,Big,NoScales,VPD=300): The first example shows a single corner removed from the top corners using a numerical vector.  The second one shows removing a set of two corner descriptors from the implied set of all corners.  
+//    xdistribute(58){
+//       _show_corners(_corners(TOP,[1,1,1]), toplabel=["corners=TOP","except=[1,1,1]"]);
+//       _show_corners(_corners("ALL",[FRONT+RIGHT+TOP,FRONT+LEFT+BOT]),
+//                    toplabel=["except=[FRONT+RIGHT+TOP,","       FRONT+LEFT+BOT]"]);
+//    }
 module _edges_text3d(txt,size=3) {
     if (is_list(txt)) {
         for (i=idx(txt)) {
@@ -59,34 +304,32 @@ function _edges_text(edges) =
 
 
 
-// Section: Edge Constants
-
-// Constant: EDGES_NONE
-// Topics: Edges
-// See Also: EDGES_ALL, edges()
-// Description:
-//   The set of no edges.
-// Figure(3D):
-//   show_edges(edges="NONE");
+/// Internal Constant: EDGES_NONE
+/// Topics: Edges
+/// See Also: EDGES_ALL, edges()
+/// Description:
+///   The set of no edges.
+/// Figure(3D):
+///   _show_edges(edges="NONE");
 EDGES_NONE = [[0,0,0,0], [0,0,0,0], [0,0,0,0]];
 
 
-// Constant: EDGES_ALL
-// Topics: Edges
-// See Also: EDGES_NONE, edges()
-// Description:
-//   The set of all edges.
-// Figure(3D):
-//   show_edges(edges="ALL");
+/// Internal Constant: EDGES_ALL
+/// Topics: Edges
+/// See Also: EDGES_NONE, edges()
+/// Description:
+///   The set of all edges.
+/// Figure(3D):
+///   _show_edges(edges="ALL");
 EDGES_ALL = [[1,1,1,1], [1,1,1,1], [1,1,1,1]];
 
 
-// Constant: EDGES_OFFSETS
-// Topics: Edges
-// See Also: EDGES_NONE, EDGES_ALL, edges()
-// Description:
-//   The vectors pointing to the center of each edge of a unit sized cube.
-//   Each item in an edge array will have a corresponding vector in this array.
+/// Internal Constant: EDGES_OFFSETS
+/// Topics: Edges
+/// See Also: EDGES_NONE, EDGES_ALL, edges()
+/// Description:
+///   The vectors pointing to the center of each edge of a unit sized cube.
+///   Each item in an edge array will have a corresponding vector in this array.
 EDGE_OFFSETS = [
     [
         [ 0,-1,-1],
@@ -107,7 +350,6 @@ EDGE_OFFSETS = [
 ];
 
 
-// Section: Edge Helpers
 
 /// Internal Function: _is_edge_array()
 /// Topics: Edges, Type Checking
@@ -164,127 +406,26 @@ function _edge_set(v) =
 function _normalize_edges(v) = [for (ax=v) [for (edge=ax) edge>0? 1 : 0]];
 
 
-// Function: edges()
-// Topics: Edges
-// Usage:
-//   edgs = edges(v);
-//   edgs = edges(v, except);
-//
-// Description:
-//   Takes a list of edge set descriptors, and returns a normalized edges array
-//   that represents all those given edges.  If the `except` argument is given
-//   a list of edge set descriptors, then all those edges will be removed
-//   from the returned edges array.  If either argument only has a single edge
-//   set descriptor, you do not have to pass it in a list.
-//   Each edge set descriptor can be any of:
-//   - A vector pointing towards an edge.
-//   - A vector pointing towards a face, indicating all edges surrounding that face.
-//   - A vector pointing towards a corner, indicating all edges touching that corner.
-//   - The string `"X"`, indicating all X axis aligned edges.
-//   - The string `"Y"`, indicating all Y axis aligned edges.
-//   - The string `"Z"`, indicating all Z axis aligned edges.
-//   - The string `"ALL"`, indicating all edges.
-//   - The string `"NONE"`, indicating no edges at all.
-//   - A raw edges array, where each edge is represented by a 1 or a 0.  The edge ordering is:
-//       ```
-//       [
-//           [Y-Z-, Y+Z-, Y-Z+, Y+Z+],
-//           [X-Z-, X+Z-, X-Z+, X+Z+],
-//           [X-Y-, X+Y-, X-Y+, X+Y+]
-//       ]
-//       ```
-// Figure(3D,Big): Edge Vectors
-//   ydistribute(50) {
-//       xdistribute(30) {
-//           show_edges(edges=BOT+RIGHT);
-//           show_edges(edges=BOT+BACK);
-//           show_edges(edges=BOT+LEFT);
-//           show_edges(edges=BOT+FRONT);
-//       }
-//       xdistribute(30) {
-//           show_edges(edges=FWD+RIGHT);
-//           show_edges(edges=BACK+RIGHT);
-//           show_edges(edges=BACK+LEFT);
-//           show_edges(edges=FWD+LEFT);
-//       }
-//       xdistribute(30) {
-//           show_edges(edges=TOP+RIGHT);
-//           show_edges(edges=TOP+BACK);
-//           show_edges(edges=TOP+LEFT);
-//           show_edges(edges=TOP+FRONT);
-//       }
-//   }
-// Figure(3D,Big): Corner Vector Edge Sets
-//   ydistribute(50) {
-//       xdistribute(30) {
-//           show_edges(edges=FRONT+LEFT+TOP);
-//           show_edges(edges=FRONT+RIGHT+TOP);
-//           show_edges(edges=FRONT+LEFT+BOT);
-//           show_edges(edges=FRONT+RIGHT+BOT);
-//       }
-//       xdistribute(30) {
-//           show_edges(edges=TOP+LEFT+BACK);
-//           show_edges(edges=TOP+RIGHT+BACK);
-//           show_edges(edges=BOT+LEFT+BACK);
-//           show_edges(edges=BOT+RIGHT+BACK);
-//       }
-//   }
-// Figure(3D,Med): Face Vector Edge Sets
-//   ydistribute(50) {
-//       xdistribute(30) {
-//           show_edges(edges=LEFT);
-//           show_edges(edges=FRONT);
-//           show_edges(edges=RIGHT);
-//       }
-//       xdistribute(30) {
-//           show_edges(edges=TOP);
-//           show_edges(edges=BACK);
-//           show_edges(edges=BOTTOM);
-//       }
-//   }
-// Figure(3D,Med): Named Edge Sets
-//   ydistribute(50) {
-//       xdistribute(30) {
-//           show_edges(edges="X");
-//           show_edges(edges="Y");
-//           show_edges(edges="Z");
-//       }
-//       xdistribute(30) {
-//           show_edges(edges="ALL");
-//           show_edges(edges="NONE");
-//       }
-//   }
-//
-// Arguments:
-//   v = The edge set to include.
-//   except = The edge set to specifically exclude, even if they are in `v`.
-//
-// See Also:  EDGES_NONE, EDGES_ALL
-//
-// Example(3D): Just the front-top edge
-//   edg = edges(FRONT+TOP);
-//   show_edges(edges=edg);
-// Example(3D): All edges surrounding either the front or top faces
-//   edg = edges([FRONT,TOP]);
-//   show_edges(edges=edg);
-// Example(3D): All edges around the bottom face, except any that are also on the front
-//   edg = edges(BTM, except=FRONT);
-//   show_edges(edges=edg);
-// Example(3D): All edges except those around the bottom face.
-//   edg = edges("ALL", except=BOTTOM);
-//   show_edges(edges=edg);
-// Example(3D): All Z-aligned edges except those around the back face.
-//   edg = edges("Z", except=BACK);
-//   show_edges(edges=edg);
-// Example(3D): All edges around the bottom or front faces, except the bottom-front edge.
-//   edg = edges([BOTTOM,FRONT], except=BOTTOM+FRONT);
-//   show_edges(edges=edg);
-// Example(3D): All edges, except Z-aligned edges on the front.
-//   edg = edges("ALL", except=edges("Z", except=BACK));
-//   show_edges(edges=edg);
-function edges(v, except=[]) =
-    (is_string(v) || is_vector(v) || _is_edge_array(v))? edges([v], except=except) :
-    (is_string(except) || is_vector(except) || _is_edge_array(except))? edges(v, except=[except]) :
+
+
+/// Internal Function: _edges()
+/// Topics: Edges
+/// Usage:
+///   edgs = _edges(v);
+///   edgs = _edges(v, except);
+///
+/// Description:
+///   Takes a list of edge set descriptors, and returns a normalized edges array
+///   that represents all those given edges.  
+/// Arguments:
+///   v = The edge set to include.
+///   except = The edge set to specifically exclude, even if they are in `v`.
+///
+/// See Also:  EDGES_NONE, EDGES_ALL
+///
+function _edges(v, except=[]) =
+    (is_string(v) || is_vector(v) || _is_edge_array(v))? _edges([v], except=except) :
+    (is_string(except) || is_vector(except) || _is_edge_array(except))? _edges(v, except=[except]) :
     except==[]? _normalize_edges(sum([for (x=v) _edge_set(x)])) :
     _normalize_edges(
         _normalize_edges(sum([for (x=v) _edge_set(x)])) -
@@ -292,22 +433,22 @@ function edges(v, except=[]) =
     );
 
 
-// Module: show_edges()
-// Topics: Edges, Debugging
-// Usage:
-//   show_edges(edges, [size=], [text=], [txtsize=]);
-// Description:
-//   Draws a semi-transparent cube with the given edges highlighted in red.
-// Arguments:
-//   edges = The edges to highlight.
-//   size = The scalar size of the cube.
-//   text = The text to show on the front of the cube.
-//   txtsize = The size of the text.
-// See Also: edges(), EDGES_NONE, EDGES_ALL
-// Example:
-//   show_edges(size=30, edges=["X","Y"]);
-module show_edges(edges="ALL", size=20, text, txtsize=3) {
-    edge_set = edges(edges);
+/// Internal Module: _show_edges()
+/// Topics: Edges, Debugging
+/// Usage:
+///   _show_edges(edges, [size=], [text=], [txtsize=]);
+/// Description:
+///   Draws a semi-transparent cube with the given edges highlighted in red.
+/// Arguments:
+///   edges = The edges to highlight.
+///   size = The scalar size of the cube.
+///   text = The text to show on the front of the cube.
+///   txtsize = The size of the text.
+/// See Also: _edges(), EDGES_NONE, EDGES_ALL
+/// Example:
+///   _show_edges(size=30, edges=["X","Y"]);
+module _show_edges(edges="ALL", size=20, text, txtsize=3,toplabel) {
+    edge_set = _edges(edges);
     text = !is_undef(text) ? text : _edges_text(edges);
     color("red") {
         for (axis=[0:2], i=[0:3]) {
@@ -322,40 +463,40 @@ module show_edges(edges="ALL", size=20, text, txtsize=3) {
     }
     fwd(size/2) _edges_text3d(text, size=txtsize);
     color("yellow",0.7) cuboid(size=size);
+    color("black")
+    if (is_def(toplabel))
+      for(h=idx(toplabel)) up(21+6*h)rot($vpr)atext(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
 }
 
 
 
-// Section: Corner Constants
-//   Constants for working with corners.
 
-
-// Constant: CORNERS_NONE
-// Topics: Corners
-// Description:
-//   The set of no corners.
-// Figure(3D):
-//   show_corners(corners="NONE");
-// See Also: CORNERS_ALL, corners()
+/// Internal Constant: CORNERS_NONE
+/// Topics: Corners
+/// Description:
+///   The set of no corners.
+/// Figure(3D):
+///   _show_corners(corners="NONE");
+/// See Also: CORNERS_ALL, corners()
 CORNERS_NONE = [0,0,0,0,0,0,0,0];  // No corners.
 
 
-// Constant: CORNERS_ALL
-// Topics: Corners
-// Description:
-//   The set of all corners.
-// Figure(3D):
-//   show_corners(corners="ALL");
-// See Also: CORNERS_NONE, corners()
+/// Internal Constant: CORNERS_ALL
+/// Topics: Corners
+/// Description:
+///   The set of all corners.
+/// Figure(3D):
+///   _show_corners(corners="ALL");
+/// See Also: CORNERS_NONE, _corners()
 CORNERS_ALL = [1,1,1,1,1,1,1,1];
 
 
-// Constant: CORNER_OFFSETS
-// Topics: Corners
-// Description:
-//   The vectors pointing to each corner of a unit sized cube.
-//   Each item in a corner array will have a corresponding vector in this array.
-// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+/// Internal Constant: CORNER_OFFSETS
+/// Topics: Corners
+/// Description:
+///   The vectors pointing to each corner of a unit sized cube.
+///   Each item in a corner array will have a corresponding vector in this array.
+/// See Also: CORNERS_NONE, CORNERS_ALL, _corners()
 CORNER_OFFSETS = [
     [-1,-1,-1], [ 1,-1,-1], [-1, 1,-1], [ 1, 1,-1],
     [-1,-1, 1], [ 1,-1, 1], [-1, 1, 1], [ 1, 1, 1]
@@ -363,7 +504,6 @@ CORNER_OFFSETS = [
 
 
 
-// Section: Corner Helpers
 
 /// Internal Function: _is_corner_array()
 /// Topics: Corners, Type Checking
@@ -371,7 +511,7 @@ CORNER_OFFSETS = [
 ///   bool = _is_corner_array(x)
 /// Description:
 ///   Returns true if the given value has the form of a corner array.
-/// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+/// See Also: CORNERS_NONE, CORNERS_ALL, _corners()
 function _is_corner_array(x) = is_vector(x) && len(x)==8 && all([for (xx=x) xx==1||xx==0]);
 
 
@@ -382,7 +522,7 @@ function _is_corner_array(x) = is_vector(x) && len(x)==8 && all([for (xx=x) xx==
 /// Description:
 ///   Normalizes all values in a corner array to be `1`, if it was originally greater than `0`,
 ///   or `0`, if it was originally less than or equal to `0`.
-/// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+/// See Also: CORNERS_NONE, CORNERS_ALL, _corners()
 function _normalize_corners(v) = [for (x=v) x>0? 1 : 0];
 
 
@@ -405,100 +545,20 @@ function _corner_set(v) =
 ];
 
 
-// Function: corners()
-// Topics: Corners
-// Usage:
-//   corns = corners(v);
-//   corns = corners(v, except);
-// Description:
-//   Takes a list of corner set descriptors, and returns a normalized corners array
-//   that represents all those given corners.  If the `except` argument is given
-//   a list of corner set descriptors, then all those corners will be removed
-//   from the returned corners array.  If either argument only has a single corner
-//   set descriptor, you do not have to pass it in a list.
-//   Each corner set descriptor can be any of:
-//   - A vector pointing towards an edge indicating both corners at the ends of that edge.
-//   - A vector pointing towards a face, indicating all the corners of that face.
-//   - A vector pointing towards a corner, indicating just that corner.
-//   - The string `"ALL"`, indicating all corners.
-//   - The string `"NONE"`, indicating no corners at all.
-//   - A raw corners array, where each corner is represented by a 1 or a 0.  The corner ordering is:
-//       ```
-//       [X-Y-Z-, X+Y-Z-, X-Y+Z-, X+Y+Z-, X-Y-Z+, X+Y-Z+, X-Y+Z+, X+Y+Z+]
-//       ```
-// Figure(3D,Big): Corners by Corner Vector
-//   ydistribute(55) {
-//       xdistribute(35) {
-//           show_corners(corners=FRONT+LEFT+TOP);
-//           show_corners(corners=FRONT+RIGHT+TOP);
-//           show_corners(corners=FRONT+LEFT+BOT);
-//           show_corners(corners=FRONT+RIGHT+BOT);
-//       }
-//       xdistribute(35) {
-//           show_corners(corners=TOP+LEFT+BACK);
-//           show_corners(corners=TOP+RIGHT+BACK);
-//           show_corners(corners=BOT+LEFT+BACK);
-//           show_corners(corners=BOT+RIGHT+BACK);
-//       }
-//   }
-// Figure(3D,Big): Corners by Edge Vectors
-//   ydistribute(55) {
-//       xdistribute(35) {
-//           show_corners(corners=BOT+RIGHT);
-//           show_corners(corners=BOT+BACK);
-//           show_corners(corners=BOT+LEFT);
-//           show_corners(corners=BOT+FRONT);
-//       }
-//       xdistribute(35) {
-//           show_corners(corners=FWD+RIGHT);
-//           show_corners(corners=BACK+RIGHT);
-//           show_corners(corners=BACK+LEFT);
-//           show_corners(corners=FWD+LEFT);
-//       }
-//       xdistribute(35) {
-//           show_corners(corners=TOP+RIGHT);
-//           show_corners(corners=TOP+BACK);
-//           show_corners(corners=TOP+LEFT);
-//           show_corners(corners=TOP+FRONT);
-//       }
-//   }
-// Figure(3D,Med): Corners by Face Vectors
-//   ydistribute(55) {
-//       xdistribute(35) {
-//           show_corners(corners=LEFT);
-//           show_corners(corners=FRONT);
-//           show_corners(corners=RIGHT);
-//       }
-//       xdistribute(35) {
-//           show_corners(corners=TOP);
-//           show_corners(corners=BACK);
-//           show_corners(corners=BOTTOM);
-//       }
-//   }
-// Figure(3D,Med): Corners by Name
-//   xdistribute(35) {
-//       show_corners(corners="ALL");
-//       show_corners(corners="NONE");
-//   }
-// See Also: CORNERS_NONE, CORNERS_ALL 
-// Example(3D): Just the front-top-right corner
-//   crn = corners(FRONT+TOP+RIGHT);
-//   show_corners(corners=crn);
-// Example(3D): All corners surrounding either the front or top faces
-//   crn = corners([FRONT,TOP]);
-//   show_corners(corners=crn);
-// Example(3D): All corners around the bottom face, except any that are also on the front
-//   crn = corners(BTM, except=FRONT);
-//   show_corners(corners=crn);
-// Example(3D): All corners except those around the bottom face.
-//   crn = corners("ALL", except=BOTTOM);
-//   show_corners(corners=crn);
-// Example(3D): All corners around the bottom or front faces, except those on the bottom-front edge.
-//   crn = corners([BOTTOM,FRONT], except=BOTTOM+FRONT);
-//   show_corners(corners=crn);
-function corners(v, except=[]) =
-    (is_string(v) || is_vector(v) || _is_corner_array(v))? corners([v], except=except) :
-    (is_string(except) || is_vector(except) || _is_corner_array(except))? corners(v, except=[except]) :
+/// Function: _corners()
+/// Topics: Corners
+/// Usage:
+///   corns = _corners(v);
+///   corns = _corners(v, except);
+/// Description:
+///   Takes a list of corner set descriptors, and returns a normalized corners array
+///   that represents all those given corners.  If the `except` argument is given
+///   a list of corner set descriptors, then all those corners will be removed
+///   from the returned corners array.  If either argument only has a single corner
+///   set descriptor, you do not have to pass it in a list.
+function _corners(v, except=[]) =
+    (is_string(v) || is_vector(v) || _is_corner_array(v))? _corners([v], except=except) :
+    (is_string(except) || is_vector(except) || _is_corner_array(except))? _corners(v, except=[except]) :
     except==[]? _normalize_corners(sum([for (x=v) _corner_set(x)])) :
     let(
         a = _normalize_corners(sum([for (x=v) _corner_set(x)])),
@@ -514,7 +574,7 @@ function corners(v, except=[]) =
 /// Arguments:
 ///   edges = Standard edges array.
 ///   v = Vector pointing to the corner to count edge intersections at.
-/// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+/// See Also: CORNERS_NONE, CORNERS_ALL, _corners()
 function _corner_edges(edges, v) =
     let(u = (v+[1,1,1])/2) [edges[0][u.y+u.z*2], edges[1][u.x+u.z*2], edges[2][u.x+u.y*2]];
 
@@ -526,7 +586,7 @@ function _corner_edges(edges, v) =
 /// Arguments:
 ///   edges = Standard edges array.
 ///   v = Vector pointing to the corner to count edge intersections at.
-/// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+/// See Also: CORNERS_NONE, CORNERS_ALL, _corners()
 function _corner_edge_count(edges, v) =
     let(u = (v+[1,1,1])/2) edges[0][u.y+u.z*2] + edges[1][u.x+u.z*2] + edges[2][u.x+u.y*2];
 
@@ -552,30 +612,46 @@ function _corners_text(corners) =
     [""];
 
 
-// Module: show_corners()
-// Topics: Corners, Debugging
-// Usage:
-//   show_corners(corners, [size=], [text=], [txtsize=]);
-// Description:
-//   Draws a semi-transparent cube with the given corners highlighted in red.
-// Arguments:
-//   corners = The corners to highlight.
-//   size = The scalar size of the cube.
-//   text = If given, overrides the text to be shown on the front of the cube.
-//   txtsize = The size of the text.
-// See Also: CORNERS_NONE, CORNERS_ALL, corners()
-// Example:
-//   show_corners(corners=FWD+RIGHT, size=30);
-module show_corners(corners="ALL", size=20, text, txtsize=3) {
-    corner_set = corners(corners);
+/// Internal Module: _show_corners()
+/// Topics: Corners, Debugging
+/// Usage:
+///   _show_corners(corners, [size=], [text=], [txtsize=]);
+/// Description:
+///   Draws a semi-transparent cube with the given corners highlighted in red.
+/// Arguments:
+///   corners = The corners to highlight.
+///   size = The scalar size of the cube.
+///   text = If given, overrides the text to be shown on the front of the cube.
+///   txtsize = The size of the text.
+/// See Also: CORNERS_NONE, CORNERS_ALL, corners()
+/// Example:
+///   _show_corners(corners=FWD+RIGHT, size=30);
+module _show_corners(corners="ALL", size=20, text, txtsize=3,toplabel) {
+    corner_set = _corners(corners);
     text = !is_undef(text) ? text : _corners_text(corners);
     for (i=[0:7]) if (corner_set[i]>0)
         translate(CORNER_OFFSETS[i]*size/2)
             color("red") sphere(d=2, $fn=16);
     fwd(size/2) _edges_text3d(text, size=txtsize);
     color("yellow",0.7) cuboid(size=size);
+    color("black")
+    if (is_def(toplabel))
+      for(h=idx(toplabel)) up(21+6*h)rot($vpr)atext(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
 }
 
-
+module _show_cube_faces(faces, size=20, toplabel,botlabel) {
+   color("red")
+     for(f=faces){
+          move(f*size/2) rot(from=UP,to=f)
+             cuboid([size,size,.1]);
+     }
+   color("black"){
+   if (is_def(toplabel))
+     for(h=idx(toplabel)) up(21+6*h)rot($vpr)atext(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
+   if (is_def(botlabel))
+     for(h=idx(botlabel)) down(26+6*h)rot($vpr)atext(botlabel[h],size=3.3,h=.1,orient=UP,anchor=FRONT);
+   }
+   color("yellow",0.7) cuboid(size=size);
+}
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

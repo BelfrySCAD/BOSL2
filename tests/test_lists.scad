@@ -241,22 +241,6 @@ module test_list_pad() {
 test_list_pad();
 
 
-module test_list_trim() {
-    assert(list_trim([4,5,6], 5) == [4,5,6]);
-    assert(list_trim([4,5,6,7,8], 5) == [4,5,6,7,8]);
-    assert(list_trim([3,4,5,6,7,8,9], 5) == [3,4,5,6,7]);
-}
-test_list_trim();
-
-
-module test_list_fit() {
-    assert(list_fit([4,5,6], 5, 8) == [4,5,6,8,8]);
-    assert(list_fit([4,5,6,7,8], 5, 8) == [4,5,6,7,8]);
-    assert(list_fit([3,4,5,6,7,8,9], 5, 8) == [3,4,5,6,7]);
-}
-test_list_fit();
-
-
 module test_idx() {
     colors = ["red", "green", "blue", "cyan"];
     assert([for (i=idx(colors)) i] == [0,1,2,3]);
@@ -326,13 +310,6 @@ test_set_intersection();
 
 
 // Arrays
-
-module test_add_scalar() {
-    assert(add_scalar([1,2,3],3) == [4,5,6]);
-    assert(add_scalar([[1,2,3],[3,4,5]],3) == [[4,5,6],[6,7,8]]);
-}
-test_add_scalar();
-
 
 
 module test_force_list() {
