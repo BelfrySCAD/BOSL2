@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // LibFile: edges.scad
-//   Routines to work with edge sets and edge set descriptors.
+//   This file describes how to specify directions, face sets, edge sets and corner sets.
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
@@ -19,9 +19,9 @@
 //   stroke([[0,0,0],FRONT], endcap2="arrow2", width=.05);
 //   color("black")
 //   left(.1){
-//   up(.1)move(FRONT)atext("FRONT",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   up(.12)move(FRONT)atext("FRONT",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   move(FRONT)atext("FWD",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
-//   down(.1)move(FRONT)atext("FORWARD",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   down(.12)move(FRONT)atext("FORWARD",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   }
 //   stroke([[0,0,0],BACK], endcap2="arrow2", width=.05);
 //   right(.05)
@@ -29,14 +29,13 @@
 //   stroke([[0,0,0],DOWN], endcap2="arrow2", width=.05);
 //   color("black")
 //   right(.1){
-//   up(.1)move(BOT)atext("DOWN",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   up(.12)move(BOT)atext("DOWN",size=.1,h=.01,anchor=LEFT,orient=FRONT);
 //   move(BOT)atext("BOTTOM",size=.1,h=.01,anchor=LEFT,orient=FRONT);
-//   down(.1)move(BOT)atext("BOT",size=.1,h=.01,anchor=LEFT,orient=FRONT);
-//   down(.2)move(BOT)atext("BTM",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   down(.12)move(BOT)atext("BOT",size=.1,h=.01,anchor=LEFT,orient=FRONT);
 //   }
 //   stroke([[0,0,0],TOP], endcap2="arrow2", width=.05);
 //   color("black")left(.05){
-//   up(.1)move(TOP)atext("TOP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   up(.12)move(TOP)atext("TOP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   move(TOP)atext("UP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   }
 // Section: Specifying Faces
@@ -52,7 +51,7 @@
 //      }
 //      xdistribute(35){
 //        _show_cube_faces([FRONT],toplabel=["FRONT","FWD", "FORWARD"]);
-//        _show_cube_faces([DOWN],toplabel=["BOTTOM","BOT","BTM","DOWN"]);
+//        _show_cube_faces([DOWN],toplabel=["BOTTOM","BOT","DOWN"]);
 //        _show_cube_faces([LEFT],toplabel=["LEFT"]);  
 //      }  
 //   }
@@ -151,7 +150,7 @@
 //   }
 // Figure(3D,Big,VPD=310,NoScales): Using `except=BACK` removes the four edges surrounding the back face if they are present in the edge set.  In the first example only one edge needs to be removed.  In the second example we remove two of the Z-aligned edges.  The third example removes all four back edges from the default edge set of all edges.  You can explicitly give `edges="ALL"` but it is not necessary, since this is the default.  In the fourth example, the edge set of Y-aligned edges contains no back edges, so the `except` parameter has no effect.  
 //   xdistribute(43){
-//     _show_edges(_edges(BTM,BACK), toplabel=["edges=BTM","except=BACK"]);
+//     _show_edges(_edges(BOT,BACK), toplabel=["edges=BOT","except=BACK"]);
 //     _show_edges(_edges("Z",BACK), toplabel=["edges=\"Z\"", "except=BACK"]);
 //     _show_edges(_edges("ALL",BACK), toplabel=["(edges=\"ALL\")", "except=BACK"]);
 //     _show_edges(_edges("Y",BACK), toplabel=["edges=\"Y\"","except=BACK"]);   
@@ -273,7 +272,7 @@ function _edges_vec_txt(x) = is_string(x)? str("\"", x, "\"") :
     assert(is_string(x) || is_vector(x,3), str(x))
     let(
         lst = concat(
-            x.z>0? ["TOP"]   : x.z<0? ["BTM"]  : [],
+            x.z>0? ["TOP"]   : x.z<0? ["BOT"]  : [],
             x.y>0? ["BACK"]  : x.y<0? ["FWD"]  : [],
             x.x>0? ["RIGHT"] : x.x<0? ["LEFT"] : []
         ),
@@ -468,7 +467,7 @@ module _show_edges(edges="ALL", size=20, text, txtsize=3,toplabel) {
     vpr = [55,0,25];
     color("black")
     if (is_def(toplabel))
-      for(h=idx(toplabel)) up(21+6*h)rot(vpr)atext(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
+      for(h=idx(toplabel)) up(21+6*h)rot(vpr)atext(select(toplabel,-h-1),size=3.3,h=0.1,orient=UP,anchor=FRONT);
 }
 
 
