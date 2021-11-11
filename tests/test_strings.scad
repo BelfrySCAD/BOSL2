@@ -46,15 +46,6 @@ module test_ends_with() {
 test_ends_with();
 
 
-module test_escape_html() {
-    assert(escape_html("ABCDEFGHIJKLMNOPQRSTUVWXYZ") == "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-    assert(escape_html("abcdefghijklmnopqrstuvwxyz") == "abcdefghijklmnopqrstuvwxyz");
-    assert(escape_html("1234567890!@#$%^&*()-=_+") == "1234567890!@#$%^&amp;*()-=_+");
-    assert(escape_html("[]\\{}|;':\",./<>?`~") == "[]\\{}|;':&quot;,./&lt;&gt;?`~");
-}
-test_escape_html();
-
-
 module test_fmt_int() {
     assert(fmt_int(0,6) == "000000");
     assert(fmt_int(3,6) == "000003");

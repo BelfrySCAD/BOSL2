@@ -185,7 +185,8 @@ module cuboid(
     module corner_shape(corner) {
         e = _corner_edges(edges, corner);
         cnt = sum(e);
-        r = first_defined([chamfer, rounding, 0]);
+        r = first_defined([chamfer, rounding]);
+        dummy=assert(is_finite(r) && !approx(r,0));
         c = [min(r,size.x/2), min(r,size.y/2), min(r,size.z/2)];
         c2 = v_mul(corner,c/2);
         $fn = is_finite(chamfer)? 4 : segs(r);
@@ -229,10 +230,13 @@ module cuboid(
 
     size = scalar_vec3(size);
     edges = _edges(edges, except=first_defined([except_edges,except]));
+    chamfer = approx(chamfer,0) ? undef : chamfer;
+    rounding = approx(rounding,0) ? undef : rounding;
     assert(is_vector(size,3));
     assert(all_positive(size));
     assert(is_undef(chamfer) || is_finite(chamfer),"chamfer must be a finite value");
     assert(is_undef(rounding) || is_finite(rounding),"rounding must be a finite value");
+    assert(is_undef(rounding) || is_undef(chamfer), "Cannot specify nonzero value for both chamfer and rounding"); 
     assert(is_undef(p1) || is_vector(p1));
     assert(is_undef(p2) || is_vector(p2));
     assert(is_bool(trimcorners));

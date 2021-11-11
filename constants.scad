@@ -141,7 +141,7 @@ FORWARD = FRONT;
 BACK  = [ 0,  1,  0];
 
 // Constant: BOTTOM
-// Aliases: BOT, BTM, DOWN
+// Aliases: BOT, DOWN
 // Topics: Constants, Vectors
 // See Also: LEFT, RIGHT, FRONT, BACK, UP, CENTER, ALLPOS, ALLNEG
 // Description: Vector pointing down.  [0,0,-1]
@@ -149,7 +149,6 @@ BACK  = [ 0,  1,  0];
 //   cuboid(20, anchor=BOTTOM);
 BOTTOM  = [ 0,  0, -1];
 BOT = BOTTOM;
-BTM = BOTTOM;
 DOWN = BOTTOM;
 
 // Constant: TOP
