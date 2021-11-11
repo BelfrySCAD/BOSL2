@@ -317,38 +317,6 @@ function vnf_join(vnfs) =
 
 
 
-// Function: vnf_merge_points()
-// Usage:
-//   new_vnf = vnf_merge_points(vnf, [eps]);
-// Description:
-//   Given a VNF, consolidates all duplicate vertices with a tolerance `eps`, relabeling the faces as necessary,
-//   and eliminating any face with fewer than 3 vertices.  Unreferenced vertices of the input VNF are not dropped.
-//   To remove such vertices uses {{vnf_drop_unused_points()}}.  
-// Arguments:
-//   vnf = a VNF to consolidate
-//   eps = the tolerance in finding duplicates. Default: EPSILON
-function vnf_merge_points(vnf,eps=EPSILON) = 
-    let(
-        verts = vnf[0], 
-        dedup  = vector_search(verts,eps,verts),                 // collect vertex duplicates
-        map    = [for(i=idx(verts)) min(dedup[i]) ],             // remap duplic vertices
-        offset = cumsum([for(i=idx(verts)) map[i]==i ? 0 : 1 ]), // remaping face vertex offsets 
-        map2   = list(idx(verts))-offset,                        // map old vertex indices to new indices
-        nverts = [for(i=idx(verts)) if(map[i]==i) verts[i] ],    // this doesn't eliminate unreferenced vertices
-        nfaces = 
-            [ for(face=vnf[1]) 
-                let(
-                    nface = [ for(vi=face) map2[map[vi]] ],
-                    dface = [for (i=idx(nface)) 
-                                if( nface[i]!=nface[(i+1)%len(nface)]) 
-                                    nface[i] ] 
-                )
-                if(len(dface) >= 3) dface 
-            ]
-    ) 
-    [nverts, nfaces];
-
-
 // Function: vnf_from_polygons()
 // Usage:
 //   vnf = vnf_from_polygons(polygons);
@@ -604,6 +572,39 @@ function vnf_reverse_faces(vnf) =
 //   q = The quanta to quantize the VNF coordinates to.
 function vnf_quantize(vnf,q=pow(2,-12)) =
     [[for (pt = vnf[0]) quant(pt,q)], vnf[1]];
+
+
+
+// Function: vnf_merge_points()
+// Usage:
+//   new_vnf = vnf_merge_points(vnf, [eps]);
+// Description:
+//   Given a VNF, consolidates all duplicate vertices with a tolerance `eps`, relabeling the faces as necessary,
+//   and eliminating any face with fewer than 3 vertices.  Unreferenced vertices of the input VNF are not dropped.
+//   To remove such vertices uses {{vnf_drop_unused_points()}}.  
+// Arguments:
+//   vnf = a VNF to consolidate
+//   eps = the tolerance in finding duplicates. Default: EPSILON
+function vnf_merge_points(vnf,eps=EPSILON) = 
+    let(
+        verts = vnf[0], 
+        dedup  = vector_search(verts,eps,verts),                 // collect vertex duplicates
+        map    = [for(i=idx(verts)) min(dedup[i]) ],             // remap duplic vertices
+        offset = cumsum([for(i=idx(verts)) map[i]==i ? 0 : 1 ]), // remaping face vertex offsets 
+        map2   = list(idx(verts))-offset,                        // map old vertex indices to new indices
+        nverts = [for(i=idx(verts)) if(map[i]==i) verts[i] ],    // this doesn't eliminate unreferenced vertices
+        nfaces = 
+            [ for(face=vnf[1]) 
+                let(
+                    nface = [ for(vi=face) map2[map[vi]] ],
+                    dface = [for (i=idx(nface)) 
+                                if( nface[i]!=nface[(i+1)%len(nface)]) 
+                                    nface[i] ] 
+                )
+                if(len(dface) >= 3) dface 
+            ]
+    ) 
+    [nverts, nfaces];
 
 
 // Function: vnf_drop_unused_points()
