@@ -6,7 +6,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-// Section: String Operations
+// Section: Extracting Substrings
 
 // Function: substr()
 // Usage:
@@ -47,21 +47,70 @@ function suffix(str,len) =
     len>=len(str)? str : substr(str, len(str)-len,len);
 
 
-// Function: str_join()
+
+
+// Section: Checking character class
+
+// Function: is_lower()
 // Usage:
-//   str_join(list, [sep])
+//   x = is_lower(s);
 // Description:
-//   Returns the concatenation of a list of strings, optionally with a
-//   separator string inserted between each string on the list.
-// Arguments:
-//   list = list of strings to concatenate
-//   sep = separator string to insert.  Default: ""
-// Example:
-//   str_join(["abc","def","ghi"]);        // Returns "abcdefghi"
-//   str_join(["abc","def","ghi"], " + ");  // Returns "abc + def + ghi"
-function str_join(list,sep="",_i=0, _result="") =
-    _i >= len(list)-1 ? (_i==len(list) ? _result : str(_result,list[_i])) :
-    str_join(list,sep,_i+1,str(_result,list[_i],sep));
+//   Returns true if all the characters in the given string are lowercase letters. (a-z)
+function is_lower(s) =
+    assert(is_string(s))
+    s==""? false :
+    len(s)>1? all([for (v=s) is_lower(v)]) :
+    let(v = ord(s[0])) (v>=ord("a") && v<=ord("z"));
+
+
+// Function: is_upper()
+// Usage:
+//   x = is_upper(s);
+// Description:
+//   Returns true if all the characters in the given string are uppercase letters. (A-Z)
+function is_upper(s) =
+    assert(is_string(s))
+    s==""? false :
+    len(s)>1? all([for (v=s) is_upper(v)]) :
+    let(v = ord(s[0])) (v>=ord("A") && v<=ord("Z"));
+
+
+// Function: is_digit()
+// Usage:
+//   x = is_digit(s);
+// Description:
+//   Returns true if all the characters in the given string are digits. (0-9)
+function is_digit(s) =
+    assert(is_string(s))
+    s==""? false :
+    len(s)>1? all([for (v=s) is_digit(v)]) :
+    let(v = ord(s[0])) (v>=ord("0") && v<=ord("9"));
+
+
+// Function: is_hexdigit()
+// Usage:
+//   x = is_hexdigit(s);
+// Description:
+//   Returns true if all the characters in the given string are valid hexadecimal digits. (0-9 or a-f or A-F))
+function is_hexdigit(s) =
+    assert(is_string(s))
+    s==""? false :
+    len(s)>1? all([for (v=s) is_hexdigit(v)]) :
+    let(v = ord(s[0]))
+    (v>=ord("0") && v<=ord("9")) ||
+    (v>=ord("A") && v<=ord("F")) ||
+    (v>=ord("a") && v<=ord("f"));
+
+
+// Function: is_letter()
+// Usage:
+//   x = is_letter(s);
+// Description:
+//   Returns true if all the characters in the given string are standard ASCII letters. (A-Z or a-z)
+function is_letter(s) =
+    assert(is_string(s))
+    s==""? false :
+    all([for (v=s) is_lower(v) || is_upper(v)]);
 
 
 // Function: downcase()
@@ -91,6 +140,10 @@ function downcase(str) =
 function upcase(str) =
     str_join([for(char=str) let(code=ord(char)) code>=97 && code<=122 ? chr(code-32) : char]);
 
+
+
+
+// Section: Converting strings to numbers
 
 // Function: str_int()
 // Usage:
@@ -223,6 +276,282 @@ function str_num(str) =
     let( val = str_frac(str) )
     val == val ? val :
     str_float(str);
+
+
+
+
+// Section: Formatting data
+
+// Function: fmt_int()
+// Usage:
+//   fmt_int(i, [mindigits]);
+// Description:
+//   Formats an integer number into a string.  This can handle larger numbers than `str()`.
+// Arguments:
+//   i = The integer to make a string of.
+//   mindigits = If the number has fewer than this many digits, pad the front with zeros until it does.  Default: 1.
+// Example:
+//   str(123456789012345);  // Returns "1.23457e+14"
+//   fmt_int(123456789012345);  // Returns "123456789012345"
+//   fmt_int(-123456789012345);  // Returns "-123456789012345"
+function fmt_int(i,mindigits=1) =
+    i<0? str("-", fmt_int(-i,mindigits)) :
+    let(i=floor(i), e=floor(log(i)))
+    i==0? str_join([for (j=[0:1:mindigits-1]) "0"]) :
+    str_join(
+        concat(
+            [for (j=[0:1:mindigits-e-2]) "0"],
+            [for (j=[e:-1:0]) str(floor(i/pow(10,j)%10))]
+        )
+    );
+
+
+// Function: fmt_fixed()
+// Usage:
+//   s = fmt_fixed(f, [digits]);
+// Description:
+//   Given a floating point number, formats it into a string with the given number of digits after the decimal point.
+// Arguments:
+//   f = The floating point number to format.
+//   digits = The number of digits after the decimal to show.  Default: 6
+function fmt_fixed(f,digits=6) =
+    assert(is_int(digits))
+    assert(digits>0)
+    is_list(f)? str("[",str_join(sep=", ", [for (g=f) fmt_fixed(g,digits=digits)]),"]") :
+    str(f)=="nan"? "nan" :
+    str(f)=="inf"? "inf" :
+    f<0? str("-",fmt_fixed(-f,digits=digits)) :
+    assert(is_num(f))
+    let(
+        sc = pow(10,digits),
+        scaled = floor(f * sc + 0.5),
+        whole = floor(scaled/sc),
+        part = floor(scaled-(whole*sc))
+    ) str(fmt_int(whole),".",fmt_int(part,digits));
+
+
+// Function: fmt_float()
+// Usage:
+//   fmt_float(f,[sig]);
+// Description:
+//   Formats the given floating point number `f` into a string with `sig` significant digits.
+//   Strips trailing `0`s after the decimal point.  Strips trailing decimal point.
+//   If the number can be represented in `sig` significant digits without a mantissa, it will be.
+//   If given a list of numbers, recursively prints each item in the list, returning a string like `[3,4,5]`
+// Arguments:
+//   f = The floating point number to format.
+//   sig = The number of significant digits to display.  Default: 12
+// Example:
+//   fmt_float(PI,12);  // Returns: "3.14159265359"
+//   fmt_float([PI,-16.75],12);  // Returns: "[3.14159265359, -16.75]"
+function fmt_float(f,sig=12) =
+    assert(is_int(sig))
+    assert(sig>0)
+    is_list(f)? str("[",str_join(sep=", ", [for (g=f) fmt_float(g,sig=sig)]),"]") :
+    f==0? "0" :
+    str(f)=="nan"? "nan" :
+    str(f)=="inf"? "inf" :
+    f<0? str("-",fmt_float(-f,sig=sig)) :
+    assert(is_num(f))
+    let(
+        e = floor(log(f)),
+        mv = sig - e - 1
+    ) mv == 0? fmt_int(floor(f + 0.5)) :
+    (e<-sig/2||mv<0)? str(fmt_float(f*pow(10,-e),sig=sig),"e",e) :
+    let(
+        ff = f + pow(10,-mv)*0.5,
+        whole = floor(ff),
+        part = floor((ff-whole) * pow(10,mv))
+    )
+    str_join([
+        str(whole),
+        str_strip_trailing(
+            str_join([
+                ".",
+                fmt_int(part, mindigits=mv)
+            ]),
+            "0."
+        )
+    ]);
+
+
+// Function: matrix_strings()
+// Usage:
+//   matrix_strings(M, [sig], [eps])
+// Description:
+//   Convert a numerical matrix into a matrix of strings where every column
+//   is the same width so it will display in neat columns when printed.
+//   Values below eps will display as zero.  The matrix can include nans, infs
+//   or undefs and the rows can be different lengths.  
+// Arguments:
+//   M = numerical matrix to convert
+//   sig = significant digits to display.  Default: 4
+//   eps = values smaller than this are shown as zero.  Default: 1e-9
+function matrix_strings(M, sig=4, eps=1e-9) = 
+   let(
+       columngap = 1,
+       figure_dash = chr(8210),
+       space_punc = chr(8200),
+       space_figure = chr(8199),
+       strarr=
+         [for(row=M)
+             [for(entry=row)
+                 let(
+                     text = is_undef(entry) ? "und"
+                          : abs(entry) < eps ? "0"             // Replace hyphens with figure dashes
+                          : str_replace_char(fmt_float(entry, sig),"-",figure_dash),
+                     have_dot = is_def(str_find(text, "."))
+                 )
+                 // If the text lacks a dot we add a space the same width as a dot to
+                 // maintain alignment
+                 str(have_dot ? "" : space_punc, text)
+             ]
+         ],
+       maxwidth = max([for(row=M) len(row)]),
+       // Find maximum length for each column.  Some entries in a column may be missing.  
+       maxlen = [for(i=[0:1:maxwidth-1])
+                    max(
+                         [for(j=idx(M)) i>=len(M[j]) ? 0 : len(strarr[j][i])])
+                ],
+       padded =
+         [for(row=strarr)
+            str_join([for(i=idx(row))
+                            let(
+                                extra = ends_with(row[i],"inf") ? 1 : 0
+                            )
+                            str_pad(row[i],maxlen[i]+extra+(i==0?0:columngap),space_figure,left=true)])]
+    )
+    padded;
+
+
+
+// Function: str_format()
+// Usage:
+//   s = str_format(fmt, vals);
+// Description:
+//   Given a format string and a list of values, inserts the values into the placeholders in the format string and returns it.
+//   Formatting placeholders have the following syntax:
+//   - A leading `{` character to show the start of the placeholder.
+//   - An integer index into the `vals` list to specify which value should be formatted at that place. If not given, the first placeholder will use index `0`, the second will use index `1`, etc.
+//   - An optional `:` separator to indicate that what follows if a formatting specifier.  If not given, no formatting info follows.
+//   - An optional `-` character to indicate that the value should be left justified if the value needs field width padding.  If not given, right justification is used.
+//   - An optional `0` character to indicate that the field should be padded with `0`s.  If not given, spaces will be used for padding.
+//   - An optional integer field width, which the value should be padded to.  If not given, no padding will be performed.
+//   - An optional `.` followed by an integer precision length, for specifying how many digits to display in numeric formats.  If not give, 6 digits is assumed.
+//   - An optional letter to indicate the formatting style to use.  If not given, `s` is assumed, which will do it's generic best to format any data type.
+//   - A trailing `}` character to show the end of the placeholder.
+//   .
+//   Formatting styles, and their effects are as follows:
+//   - `s`: Converts the value to a string with `str()` to display.  This is very generic.
+//   - `i` or `d`: Formats numeric values as integers.
+//   - `f`: Formats numeric values with the precision number of digits after the decimal point.  NaN and Inf are shown as `nan` and `inf`.
+//   - `F`: Formats numeric values with the precision number of digits after the decimal point.  NaN and Inf are shown as `NAN` and `INF`.
+//   - `g`: Formats numeric values with the precision number of total significant digits.  NaN and Inf are shown as `nan` and `inf`.  Mantissas are demarked by `e`.
+//   - `G`: Formats numeric values with the precision number of total significant digits.  NaN and Inf are shown as `NAN` and `INF`.  Mantissas are demarked by `E`.
+//   - `b`: If the value logically evaluates as true, it shows as `true`, otherwise `false`.
+//   - `B`: If the value logically evaluates as true, it shows as `TRUE`, otherwise `FALSE`.
+// Arguments:
+//   fmt = The formatting string, with placeholders to format the values into.
+//   vals = The list of values to format.
+// Example(NORENDER):
+//   str_format("The value of {} is {:.14f}.", ["pi", PI]);  // Returns: "The value of pi is 3.14159265358979."
+//   str_format("The value {1:f} is known as {0}.", ["pi", PI]);  // Returns: "The value 3.141593 is known as pi."
+//   str_format("We use a very small value {1:.6g} as {0}.", ["EPSILON", EPSILON]);  // Returns: "We use a very small value 1e-9 as EPSILON."
+//   str_format("{:-5s}{:i}{:b}", ["foo", 12e3, 5]);  // Returns: "foo  12000true"
+//   str_format("{:-10s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostamus27.440"
+//   str_format("{:-10.9s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostam 27.440"
+function str_format(fmt, vals) =
+    let(
+        parts = str_split(fmt,"{")
+    ) str_join([
+        for(i = idx(parts))
+        let(
+            found_brace = i==0 || [for (c=parts[i]) if(c=="}") c] != [],
+            err = assert(found_brace, "Unbalanced { in format string."),
+            p = i==0? [undef,parts[i]] : str_split(parts[i],"}"),
+            fmta = p[0],
+            raw = p[1]
+        ) each [
+            assert(i<99)
+            is_undef(fmta)? "" : let(
+                fmtb = str_split(fmta,":"),
+                num = is_digit(fmtb[0])? str_int(fmtb[0]) : (i-1),
+                left = fmtb[1][0] == "-",
+                fmtb1 = default(fmtb[1],""),
+                fmtc = left? substr(fmtb1,1) : fmtb1,
+                zero = fmtc[0] == "0",
+                lch = fmtc==""? "" : fmtc[len(fmtc)-1],
+                hastyp = is_letter(lch),
+                typ = hastyp? lch : "s",
+                fmtd = hastyp? substr(fmtc,0,len(fmtc)-1) : fmtc,
+                fmte = str_split((zero? substr(fmtd,1) : fmtd), "."),
+                wid = str_int(fmte[0]),
+                prec = str_int(fmte[1]),
+                val = assert(num>=0&&num<len(vals)) vals[num],
+                unpad = typ=="s"? (
+                        let( sval = str(val) )
+                        is_undef(prec)? sval :
+                        substr(sval, 0, min(len(sval)-1, prec))
+                    ) :
+                    (typ=="d" || typ=="i")? fmt_int(val) :
+                    typ=="b"? (val? "true" : "false") :
+                    typ=="B"? (val? "TRUE" : "FALSE") :
+                    typ=="f"? downcase(fmt_fixed(val,default(prec,6))) :
+                    typ=="F"? upcase(fmt_fixed(val,default(prec,6))) :
+                    typ=="g"? downcase(fmt_float(val,default(prec,6))) :
+                    typ=="G"? upcase(fmt_float(val,default(prec,6))) :
+                    assert(false,str("Unknown format type: ",typ)),
+                padlen = max(0,wid-len(unpad)),
+                padfill = str_join([for (i=[0:1:padlen-1]) zero? "0" : " "]),
+                out = left? str(unpad, padfill) : str(padfill, unpad)
+            )
+            out, raw
+        ]
+    ]);
+    
+
+// Function&Module: echofmt()
+// Usage:
+//   echofmt(fmt,vals);
+// Description:
+//   Formats the given `vals` with the given format string `fmt` using [`str_format()`](#str_format), and echos the resultant string.
+// Arguments:
+//   fmt = The formatting string, with placeholders to format the values into.
+//   vals = The list of values to format.
+// Example(NORENDER):
+//   echofmt("The value of {} is {:.14f}.", ["pi", PI]);  // ECHO: "The value of pi is 3.14159265358979."
+//   echofmt("The value {1:f} is known as {0}.", ["pi", PI]);  // ECHO: "The value 3.141593 is known as pi."
+//   echofmt("We use a very small value {1:.6g} as {0}.", ["EPSILON", EPSILON]);  // ECHO: "We use a ver small value 1e-9 as EPSILON."
+//   echofmt("{:-5s}{:i}{:b}", ["foo", 12e3, 5]);  // ECHO: "foo  12000true"
+//   echofmt("{:-10s}{:.3f}", ["plecostamus",27.43982]);  // ECHO: "plecostamus27.440"
+//   echofmt("{:-10.9s}{:.3f}", ["plecostamus",27.43982]);  // ECHO: "plecostam 27.440"
+function echofmt(fmt, vals) = echo(str_format(fmt,vals));
+module echofmt(fmt, vals) {
+   no_children($children);
+   echo(str_format(fmt,vals));
+}
+
+
+// Section: Uncategorized string functions
+
+
+// Function: str_join()
+// Usage:
+//   str_join(list, [sep])
+// Description:
+//   Returns the concatenation of a list of strings, optionally with a
+//   separator string inserted between each string on the list.
+// Arguments:
+//   list = list of strings to concatenate
+//   sep = separator string to insert.  Default: ""
+// Example:
+//   str_join(["abc","def","ghi"]);        // Returns "abcdefghi"
+//   str_join(["abc","def","ghi"], " + ");  // Returns "abc + def + ghi"
+function str_join(list,sep="",_i=0, _result="") =
+    _i >= len(list)-1 ? (_i==len(list) ? _result : str(_result,list[_i])) :
+    str_join(list,sep,_i+1,str(_result,list[_i],sep));
+
+
 
 
 // Function: str_split()
@@ -425,283 +754,6 @@ function str_strip_trailing(s,c) = substr(s,len=len(s)-_str_count_trailing(s,c))
 function str_strip(s,c) = str_strip_trailing(str_strip_leading(s,c),c);
 
 
-// Function: fmt_int()
-// Usage:
-//   fmt_int(i, [mindigits]);
-// Description:
-//   Formats an integer number into a string.  This can handle larger numbers than `str()`.
-// Arguments:
-//   i = The integer to make a string of.
-//   mindigits = If the number has fewer than this many digits, pad the front with zeros until it does.  Default: 1.
-// Example:
-//   str(123456789012345);  // Returns "1.23457e+14"
-//   fmt_int(123456789012345);  // Returns "123456789012345"
-//   fmt_int(-123456789012345);  // Returns "-123456789012345"
-function fmt_int(i,mindigits=1) =
-    i<0? str("-", fmt_int(-i,mindigits)) :
-    let(i=floor(i), e=floor(log(i)))
-    i==0? str_join([for (j=[0:1:mindigits-1]) "0"]) :
-    str_join(
-        concat(
-            [for (j=[0:1:mindigits-e-2]) "0"],
-            [for (j=[e:-1:0]) str(floor(i/pow(10,j)%10))]
-        )
-    );
-
-
-// Function: fmt_fixed()
-// Usage:
-//   s = fmt_fixed(f, [digits]);
-// Description:
-//   Given a floating point number, formats it into a string with the given number of digits after the decimal point.
-// Arguments:
-//   f = The floating point number to format.
-//   digits = The number of digits after the decimal to show.  Default: 6
-function fmt_fixed(f,digits=6) =
-    assert(is_int(digits))
-    assert(digits>0)
-    is_list(f)? str("[",str_join(sep=", ", [for (g=f) fmt_fixed(g,digits=digits)]),"]") :
-    str(f)=="nan"? "nan" :
-    str(f)=="inf"? "inf" :
-    f<0? str("-",fmt_fixed(-f,digits=digits)) :
-    assert(is_num(f))
-    let(
-        sc = pow(10,digits),
-        scaled = floor(f * sc + 0.5),
-        whole = floor(scaled/sc),
-        part = floor(scaled-(whole*sc))
-    ) str(fmt_int(whole),".",fmt_int(part,digits));
-
-
-// Function: fmt_float()
-// Usage:
-//   fmt_float(f,[sig]);
-// Description:
-//   Formats the given floating point number `f` into a string with `sig` significant digits.
-//   Strips trailing `0`s after the decimal point.  Strips trailing decimal point.
-//   If the number can be represented in `sig` significant digits without a mantissa, it will be.
-//   If given a list of numbers, recursively prints each item in the list, returning a string like `[3,4,5]`
-// Arguments:
-//   f = The floating point number to format.
-//   sig = The number of significant digits to display.  Default: 12
-// Example:
-//   fmt_float(PI,12);  // Returns: "3.14159265359"
-//   fmt_float([PI,-16.75],12);  // Returns: "[3.14159265359, -16.75]"
-function fmt_float(f,sig=12) =
-    assert(is_int(sig))
-    assert(sig>0)
-    is_list(f)? str("[",str_join(sep=", ", [for (g=f) fmt_float(g,sig=sig)]),"]") :
-    f==0? "0" :
-    str(f)=="nan"? "nan" :
-    str(f)=="inf"? "inf" :
-    f<0? str("-",fmt_float(-f,sig=sig)) :
-    assert(is_num(f))
-    let(
-        e = floor(log(f)),
-        mv = sig - e - 1
-    ) mv == 0? fmt_int(floor(f + 0.5)) :
-    (e<-sig/2||mv<0)? str(fmt_float(f*pow(10,-e),sig=sig),"e",e) :
-    let(
-        ff = f + pow(10,-mv)*0.5,
-        whole = floor(ff),
-        part = floor((ff-whole) * pow(10,mv))
-    )
-    str_join([
-        str(whole),
-        str_strip_trailing(
-            str_join([
-                ".",
-                fmt_int(part, mindigits=mv)
-            ]),
-            "0."
-        )
-    ]);
-
-
-// Function: escape_html()
-// Usage:
-//   echo(escape_html(s));
-// Description:
-//   Converts "<", ">", "&", and double-quote chars to their entity encoding so that echoing the strong will show it verbatim.
-function escape_html(s) =
-    str_join([
-        for (c=s) 
-        c=="<"? "&lt;" :
-        c==">"? "&gt;" :
-        c=="&"? "&amp;" :
-        c=="\""? "&quot;" :
-        c
-    ]);
-
-
-// Function: is_lower()
-// Usage:
-//   x = is_lower(s);
-// Description:
-//   Returns true if all the characters in the given string are lowercase letters. (a-z)
-function is_lower(s) =
-    assert(is_string(s))
-    s==""? false :
-    len(s)>1? all([for (v=s) is_lower(v)]) :
-    let(v = ord(s[0])) (v>=ord("a") && v<=ord("z"));
-
-
-// Function: is_upper()
-// Usage:
-//   x = is_upper(s);
-// Description:
-//   Returns true if all the characters in the given string are uppercase letters. (A-Z)
-function is_upper(s) =
-    assert(is_string(s))
-    s==""? false :
-    len(s)>1? all([for (v=s) is_upper(v)]) :
-    let(v = ord(s[0])) (v>=ord("A") && v<=ord("Z"));
-
-
-// Function: is_digit()
-// Usage:
-//   x = is_digit(s);
-// Description:
-//   Returns true if all the characters in the given string are digits. (0-9)
-function is_digit(s) =
-    assert(is_string(s))
-    s==""? false :
-    len(s)>1? all([for (v=s) is_digit(v)]) :
-    let(v = ord(s[0])) (v>=ord("0") && v<=ord("9"));
-
-
-// Function: is_hexdigit()
-// Usage:
-//   x = is_hexdigit(s);
-// Description:
-//   Returns true if all the characters in the given string are valid hexadecimal digits. (0-9 or a-f or A-F))
-function is_hexdigit(s) =
-    assert(is_string(s))
-    s==""? false :
-    len(s)>1? all([for (v=s) is_hexdigit(v)]) :
-    let(v = ord(s[0]))
-    (v>=ord("0") && v<=ord("9")) ||
-    (v>=ord("A") && v<=ord("F")) ||
-    (v>=ord("a") && v<=ord("f"));
-
-
-// Function: is_letter()
-// Usage:
-//   x = is_letter(s);
-// Description:
-//   Returns true if all the characters in the given string are standard ASCII letters. (A-Z or a-z)
-function is_letter(s) =
-    assert(is_string(s))
-    s==""? false :
-    all([for (v=s) is_lower(v) || is_upper(v)]);
-
-
-// Function: str_format()
-// Usage:
-//   s = str_format(fmt, vals);
-// Description:
-//   Given a format string and a list of values, inserts the values into the placeholders in the format string and returns it.
-//   Formatting placeholders have the following syntax:
-//   - A leading `{` character to show the start of the placeholder.
-//   - An integer index into the `vals` list to specify which value should be formatted at that place. If not given, the first placeholder will use index `0`, the second will use index `1`, etc.
-//   - An optional `:` separator to indicate that what follows if a formatting specifier.  If not given, no formatting info follows.
-//   - An optional `-` character to indicate that the value should be left justified if the value needs field width padding.  If not given, right justification is used.
-//   - An optional `0` character to indicate that the field should be padded with `0`s.  If not given, spaces will be used for padding.
-//   - An optional integer field width, which the value should be padded to.  If not given, no padding will be performed.
-//   - An optional `.` followed by an integer precision length, for specifying how many digits to display in numeric formats.  If not give, 6 digits is assumed.
-//   - An optional letter to indicate the formatting style to use.  If not given, `s` is assumed, which will do it's generic best to format any data type.
-//   - A trailing `}` character to show the end of the placeholder.
-//   .
-//   Formatting styles, and their effects are as follows:
-//   - `s`: Converts the value to a string with `str()` to display.  This is very generic.
-//   - `i` or `d`: Formats numeric values as integers.
-//   - `f`: Formats numeric values with the precision number of digits after the decimal point.  NaN and Inf are shown as `nan` and `inf`.
-//   - `F`: Formats numeric values with the precision number of digits after the decimal point.  NaN and Inf are shown as `NAN` and `INF`.
-//   - `g`: Formats numeric values with the precision number of total significant digits.  NaN and Inf are shown as `nan` and `inf`.  Mantissas are demarked by `e`.
-//   - `G`: Formats numeric values with the precision number of total significant digits.  NaN and Inf are shown as `NAN` and `INF`.  Mantissas are demarked by `E`.
-//   - `b`: If the value logically evaluates as true, it shows as `true`, otherwise `false`.
-//   - `B`: If the value logically evaluates as true, it shows as `TRUE`, otherwise `FALSE`.
-// Arguments:
-//   fmt = The formatting string, with placeholders to format the values into.
-//   vals = The list of values to format.
-// Example(NORENDER):
-//   str_format("The value of {} is {:.14f}.", ["pi", PI]);  // Returns: "The value of pi is 3.14159265358979."
-//   str_format("The value {1:f} is known as {0}.", ["pi", PI]);  // Returns: "The value 3.141593 is known as pi."
-//   str_format("We use a very small value {1:.6g} as {0}.", ["EPSILON", EPSILON]);  // Returns: "We use a very small value 1e-9 as EPSILON."
-//   str_format("{:-5s}{:i}{:b}", ["foo", 12e3, 5]);  // Returns: "foo  12000true"
-//   str_format("{:-10s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostamus27.440"
-//   str_format("{:-10.9s}{:.3f}", ["plecostamus",27.43982]);  // Returns: "plecostam 27.440"
-function str_format(fmt, vals) =
-    let(
-        parts = str_split(fmt,"{")
-    ) str_join([
-        for(i = idx(parts))
-        let(
-            found_brace = i==0 || [for (c=parts[i]) if(c=="}") c] != [],
-            err = assert(found_brace, "Unbalanced { in format string."),
-            p = i==0? [undef,parts[i]] : str_split(parts[i],"}"),
-            fmta = p[0],
-            raw = p[1]
-        ) each [
-            assert(i<99)
-            is_undef(fmta)? "" : let(
-                fmtb = str_split(fmta,":"),
-                num = is_digit(fmtb[0])? str_int(fmtb[0]) : (i-1),
-                left = fmtb[1][0] == "-",
-                fmtb1 = default(fmtb[1],""),
-                fmtc = left? substr(fmtb1,1) : fmtb1,
-                zero = fmtc[0] == "0",
-                lch = fmtc==""? "" : fmtc[len(fmtc)-1],
-                hastyp = is_letter(lch),
-                typ = hastyp? lch : "s",
-                fmtd = hastyp? substr(fmtc,0,len(fmtc)-1) : fmtc,
-                fmte = str_split((zero? substr(fmtd,1) : fmtd), "."),
-                wid = str_int(fmte[0]),
-                prec = str_int(fmte[1]),
-                val = assert(num>=0&&num<len(vals)) vals[num],
-                unpad = typ=="s"? (
-                        let( sval = str(val) )
-                        is_undef(prec)? sval :
-                        substr(sval, 0, min(len(sval)-1, prec))
-                    ) :
-                    (typ=="d" || typ=="i")? fmt_int(val) :
-                    typ=="b"? (val? "true" : "false") :
-                    typ=="B"? (val? "TRUE" : "FALSE") :
-                    typ=="f"? downcase(fmt_fixed(val,default(prec,6))) :
-                    typ=="F"? upcase(fmt_fixed(val,default(prec,6))) :
-                    typ=="g"? downcase(fmt_float(val,default(prec,6))) :
-                    typ=="G"? upcase(fmt_float(val,default(prec,6))) :
-                    assert(false,str("Unknown format type: ",typ)),
-                padlen = max(0,wid-len(unpad)),
-                padfill = str_join([for (i=[0:1:padlen-1]) zero? "0" : " "]),
-                out = left? str(unpad, padfill) : str(padfill, unpad)
-            )
-            out, raw
-        ]
-    ]);
-    
-
-// Function&Module: echofmt()
-// Usage:
-//   echofmt(fmt,vals);
-// Description:
-//   Formats the given `vals` with the given format string `fmt` using [`str_format()`](#str_format), and echos the resultant string.
-// Arguments:
-//   fmt = The formatting string, with placeholders to format the values into.
-//   vals = The list of values to format.
-// Example(NORENDER):
-//   echofmt("The value of {} is {:.14f}.", ["pi", PI]);  // ECHO: "The value of pi is 3.14159265358979."
-//   echofmt("The value {1:f} is known as {0}.", ["pi", PI]);  // ECHO: "The value 3.141593 is known as pi."
-//   echofmt("We use a very small value {1:.6g} as {0}.", ["EPSILON", EPSILON]);  // ECHO: "We use a ver small value 1e-9 as EPSILON."
-//   echofmt("{:-5s}{:i}{:b}", ["foo", 12e3, 5]);  // ECHO: "foo  12000true"
-//   echofmt("{:-10s}{:.3f}", ["plecostamus",27.43982]);  // ECHO: "plecostamus27.440"
-//   echofmt("{:-10.9s}{:.3f}", ["plecostamus",27.43982]);  // ECHO: "plecostam 27.440"
-function echofmt(fmt, vals) = echo(str_format(fmt,vals));
-module echofmt(fmt, vals) {
-   no_children($children);
-   echo(str_format(fmt,vals));
-}
-
 
 // Function: str_pad()
 // Usage:
@@ -739,53 +791,6 @@ function str_replace_char(str,char,replace) =
    str_join([for(c=str) c==char ? replace : c]);
 
 
-// Function: matrix_strings()
-// Usage:
-//   matrix_strings(M, [sig], [eps])
-// Description:
-//   Convert a numerical matrix into a matrix of strings where every column
-//   is the same width so it will display in neat columns when printed.
-//   Values below eps will display as zero.  The matrix can include nans, infs
-//   or undefs and the rows can be different lengths.  
-// Arguments:
-//   M = numerical matrix to convert
-//   sig = significant digits to display.  Default: 4
-//   eps = values smaller than this are shown as zero.  Default: 1e-9
-function matrix_strings(M, sig=4, eps=1e-9) = 
-   let(
-       columngap = 1,
-       figure_dash = chr(8210),
-       space_punc = chr(8200),
-       space_figure = chr(8199),
-       strarr=
-         [for(row=M)
-             [for(entry=row)
-                 let(
-                     text = is_undef(entry) ? "und"
-                          : abs(entry) < eps ? "0"             // Replace hyphens with figure dashes
-                          : str_replace_char(fmt_float(entry, sig),"-",figure_dash),
-                     have_dot = is_def(str_find(text, "."))
-                 )
-                 // If the text lacks a dot we add a space the same width as a dot to
-                 // maintain alignment
-                 str(have_dot ? "" : space_punc, text)
-             ]
-         ],
-       maxwidth = max([for(row=M) len(row)]),
-       // Find maximum length for each column.  Some entries in a column may be missing.  
-       maxlen = [for(i=[0:1:maxwidth-1])
-                    max(
-                         [for(j=idx(M)) i>=len(M[j]) ? 0 : len(strarr[j][i])])
-                ],
-       padded =
-         [for(row=strarr)
-            str_join([for(i=idx(row))
-                            let(
-                                extra = ends_with(row[i],"inf") ? 1 : 0
-                            )
-                            str_pad(row[i],maxlen[i]+extra+(i==0?0:columngap),space_figure,left=true)])]
-    )
-    padded;
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

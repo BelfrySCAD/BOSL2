@@ -10,13 +10,14 @@
 //   corners of cubes.  You can simply specify these direction vectors numerically, but another
 //   option is to use named constants for direction vectors.  These constants define unit vectors
 //   for the six axis directions as shown below.
-// Figure(3D,Big,VPD=7): Named constants for direction vectors.  Some directions have more than one name.  
+// Figure(3D,Big,VPD=6): Named constants for direction vectors.  Some directions have more than one name.  
 //   $fn=12;
 //   stroke([[0,0,0],RIGHT], endcap2="arrow2", width=.05);
-//   right(.05)up(.05)move(RIGHT)atext("RIGHT",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   color("black")right(.05)up(.05)move(RIGHT)atext("RIGHT",size=.1,h=.01,anchor=LEFT,orient=FRONT);
 //   stroke([[0,0,0],LEFT], endcap2="arrow2", width=.05);
-//   left(.05)up(.05)move(LEFT)atext("LEFT",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
+//   color("black")left(.05)up(.05)move(LEFT)atext("LEFT",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   stroke([[0,0,0],FRONT], endcap2="arrow2", width=.05);
+//   color("black")
 //   left(.1){
 //   up(.1)move(FRONT)atext("FRONT",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   move(FRONT)atext("FWD",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
@@ -24,8 +25,9 @@
 //   }
 //   stroke([[0,0,0],BACK], endcap2="arrow2", width=.05);
 //   right(.05)
-//   move(BACK)atext("BACK",size=.1,h=.01,anchor=LEFT,orient=FRONT);
+//   color("black")move(BACK)atext("BACK",size=.1,h=.01,anchor=LEFT,orient=FRONT);
 //   stroke([[0,0,0],DOWN], endcap2="arrow2", width=.05);
+//   color("black")
 //   right(.1){
 //   up(.1)move(BOT)atext("DOWN",size=.1,h=.01,anchor=LEFT,orient=FRONT);
 //   move(BOT)atext("BOTTOM",size=.1,h=.01,anchor=LEFT,orient=FRONT);
@@ -33,7 +35,7 @@
 //   down(.2)move(BOT)atext("BTM",size=.1,h=.01,anchor=LEFT,orient=FRONT);
 //   }
 //   stroke([[0,0,0],TOP], endcap2="arrow2", width=.05);
-//   left(.05){
+//   color("black")left(.05){
 //   up(.1)move(TOP)atext("TOP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   move(TOP)atext("UP",size=.1,h=.01,anchor=RIGHT,orient=FRONT);
 //   }
@@ -41,7 +43,7 @@
 //   Modules operating on faces accept a list of faces to describe the faces to operate on.  Each
 //   face is given by a vector that points to that face.  Attachments of cuboid objects also
 //   work by choosing an attachment face with a single vector in the same manner.  
-// Figure(3D,Big,NoScales,VPD=250): The six faces of the cube.  Some have faces have more than one name.  
+// Figure(3D,Big,NoScales,VPD=275): The six faces of the cube.  Some have faces have more than one name.  
 //   ydistribute(50) {
 //      xdistribute(35){
 //        _show_cube_faces([BACK], botlabel=["BACK"]);
@@ -194,7 +196,7 @@
 //           _show_corners(corners=BOT+RIGHT+BACK);
 //       }
 //   }
-// Figure(3D,Big,NoScales,VPD=300): Vectors pointing toward an edge select the corners and the ends of the edge.
+// Figure(3D,Big,NoScales,VPD=340): Vectors pointing toward an edge select the corners and the ends of the edge.
 //   ydistribute(55) {
 //       xdistribute(35) {
 //           _show_corners(corners=BOT+RIGHT);
@@ -245,7 +247,7 @@
 //       _show_corners(_corners([FRONT+TOP,BOT+BACK]), toplabel=["corners=[FRONT+TOP,","        BOT+BACK]"]);
 //       _show_corners(_corners("ALL",FRONT+TOP), toplabel=["(corners=\"ALL\")","except=FRONT+TOP"]);
 //    }
-// Figure(3D,Big,NoScales,VPD=300): The first example shows a single corner removed from the top corners using a numerical vector.  The second one shows removing a set of two corner descriptors from the implied set of all corners.  
+// Figure(3D,Med,NoScales,VPD=240): The first example shows a single corner removed from the top corners using a numerical vector.  The second one shows removing a set of two corner descriptors from the implied set of all corners.  
 //    xdistribute(58){
 //       _show_corners(_corners(TOP,[1,1,1]), toplabel=["corners=TOP","except=[1,1,1]"]);
 //       _show_corners(_corners("ALL",[FRONT+RIGHT+TOP,FRONT+LEFT+BOT]),
@@ -463,9 +465,10 @@ module _show_edges(edges="ALL", size=20, text, txtsize=3,toplabel) {
     }
     fwd(size/2) _edges_text3d(text, size=txtsize);
     color("yellow",0.7) cuboid(size=size);
+    vpr = [55,0,25];
     color("black")
     if (is_def(toplabel))
-      for(h=idx(toplabel)) up(21+6*h)rot($vpr)atext(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
+      for(h=idx(toplabel)) up(21+6*h)rot(vpr)atext(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
 }
 
 
@@ -634,9 +637,10 @@ module _show_corners(corners="ALL", size=20, text, txtsize=3,toplabel) {
             color("red") sphere(d=2, $fn=16);
     fwd(size/2) _edges_text3d(text, size=txtsize);
     color("yellow",0.7) cuboid(size=size);
+    vpr = [55,0,25];
     color("black")
     if (is_def(toplabel))
-      for(h=idx(toplabel)) up(21+6*h)rot($vpr)atext(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
+      for(h=idx(toplabel)) up(21+6*h)rot(vpr)atext(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
 }
 
 module _show_cube_faces(faces, size=20, toplabel,botlabel) {
@@ -645,11 +649,13 @@ module _show_cube_faces(faces, size=20, toplabel,botlabel) {
           move(f*size/2) rot(from=UP,to=f)
              cuboid([size,size,.1]);
      }
+    
+   vpr = [55,0,25];
    color("black"){
    if (is_def(toplabel))
-     for(h=idx(toplabel)) up(21+6*h)rot($vpr)atext(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
+     for(h=idx(toplabel)) up(21+6*h)rot(vpr)atext(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
    if (is_def(botlabel))
-     for(h=idx(botlabel)) down(26+6*h)rot($vpr)atext(botlabel[h],size=3.3,h=.1,orient=UP,anchor=FRONT);
+     for(h=idx(botlabel)) down(26+6*h)rot(vpr)atext(botlabel[h],size=3.3,h=.1,orient=UP,anchor=FRONT);
    }
    color("yellow",0.7) cuboid(size=size);
 }
