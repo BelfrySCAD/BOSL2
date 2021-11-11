@@ -1056,7 +1056,6 @@ function full_flatten(l) =
 //   triples = zip(a,b,c);
 //   quads = zip([LIST1,LIST2,LIST3,LIST4]);
 // Topics: List Handling, Iteration
-// See Also: zip_long()
 // Description:
 //   Zips together two or more lists into a single list.  For example, if you have two
 //   lists [3,4,5], and [8,7,6], and zip them together, you get [ [3,8],[4,7],[5,6] ].
