@@ -89,24 +89,26 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   cuboid(size, p1=, ...);
 //   cuboid(p1=, p2=, ...);
 // Usage: Chamfered Cubes
-//   cuboid(size, [chamfer=], [edges=], [except_edges=], [trimcorners=], ...);
+//   cuboid(size, [chamfer=], [edges=], [except=], [trimcorners=], ...);
 // Usage: Rounded Cubes
-//   cuboid(size, [rounding=], [edges=], [except_edges=], [trimcorners=], ...);
+//   cuboid(size, [rounding=], [edges=], [except=], [trimcorners=], ...);
 // Usage: Attaching children
 //   cuboid(size, [anchor=], ...) [attachments];
 //
 // Description:
-//   Creates a cube or cuboid object, with optional chamfering or rounding.
-//   Negative chamfers and roundings can be applied to create external masks,
-//   but only apply to edges around the top or bottom faces.
+//   Creates a cube or cuboid object, with optional chamfering or rounding of edges and corners.  
+//   Negative chamfers and roundings can be applied to create external fillets, but they 
+//   but only apply to edges around the top or bottom faces.  If you specify an edge set other than "ALL"
+//   with such roundings or chamfers then you will get an error.  See
+//   [Specifying Edges](edges.scad#section-specifying-edges) for information on how to specify edge sets.  
 //
 // Arguments:
 //   size = The size of the cube.
 //   ---
 //   chamfer = Size of chamfer, inset from sides.  Default: No chamfering.
 //   rounding = Radius of the edge rounding.  Default: No rounding.
-//   edges = Edges to chamfer/round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: All edges.
-//   except = Edges to explicitly NOT chamfer/round.  See the docs for [`edges()`](edges.scad#edges) to see acceptable values.  Default: No edges.
+//   edges = Edges to mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: all edges.
+//   except = Edges to explicitly NOT mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: No edges.
 //   trimcorners = If true, rounds or chamfers corners where three chamfered/rounded edges meet.  Default: `true`
 //   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=ALLNEG`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
@@ -230,8 +232,8 @@ module cuboid(
     edges = _edges(edges, except=first_defined([except_edges,except]));
     assert(is_vector(size,3));
     assert(all_positive(size));
-    assert(is_undef(chamfer) || is_finite(chamfer));
-    assert(is_undef(rounding) || is_finite(rounding));
+    assert(is_undef(chamfer) || is_finite(chamfer),"chamfer must be a finite value");
+    assert(is_undef(rounding) || is_finite(rounding),"rounding must be a finite value");
     assert(is_undef(p1) || is_vector(p1));
     assert(is_undef(p2) || is_vector(p2));
     assert(is_bool(trimcorners));
