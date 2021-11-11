@@ -10,7 +10,7 @@
 //   corners of cubes.  You can simply specify these direction vectors numerically, but another
 //   option is to use named constants for direction vectors.  These constants define unit vectors
 //   for the six axis directions as shown below.
-// Figure(3D,Big): Named constants for direction vectors.  Some directions have more than one name.  
+// Figure(3D,Big,VPD=7): Named constants for direction vectors.  Some directions have more than one name.  
 //   $fn=12;
 //   stroke([[0,0,0],RIGHT], endcap2="arrow2", width=.05);
 //   right(.05)up(.05)move(RIGHT)atext("RIGHT",size=.1,h=.01,anchor=LEFT,orient=FRONT);
@@ -41,7 +41,7 @@
 //   Modules operating on faces accept a list of faces to describe the faces to operate on.  Each
 //   face is given by a vector that points to that face.  Attachments of cuboid objects also
 //   work by choosing an attachment face with a single vector in the same manner.  
-// Figure(3D,Big): The six faces of the cube.  Some have faces have more than one name.  
+// Figure(3D,Big,NoScales,VPD=250): The six faces of the cube.  Some have faces have more than one name.  
 //   ydistribute(50) {
 //      xdistribute(35){
 //        _show_cube_faces([BACK], botlabel=["BACK"]);
@@ -79,7 +79,7 @@
 //   You can specify edge descriptors directly by giving a vector, or you can use sums of the
 //   named direction vectors described above.  Below we show all of the edge sets you can
 //   describe with sums of the direction vectors.
-// Figure(3D,Big): Vectors pointing toward an edge select that single edge
+// Figure(3D,Big,VPD=300,NoScales): Vectors pointing toward an edge select that single edge
 //   ydistribute(50) {
 //       xdistribute(30) {
 //           _show_edges(edges=BOT+RIGHT);
@@ -100,7 +100,7 @@
 //           _show_edges(edges=TOP+FRONT);
 //       }
 //   }
-// Figure(3D,Med): Vectors pointing toward a face select all edges surrounding that face.
+// Figure(3D,Med,VPD=205,NoScales): Vectors pointing toward a face select all edges surrounding that face.
 //   ydistribute(50) {
 //       xdistribute(30) {
 //           _show_edges(edges=LEFT);
@@ -113,7 +113,7 @@
 //           _show_edges(edges=BOTTOM);
 //       }
 //   }
-// Figure(3D,Big): Vectors pointing toward a corner select all edges surrounding that corner.
+// Figure(3D,Big,VPD=300,NoScales): Vectors pointing toward a corner select all edges surrounding that corner.
 //   ydistribute(50) {
 //       xdistribute(30) {
 //           _show_edges(edges=FRONT+LEFT+TOP);
@@ -128,7 +128,7 @@
 //           _show_edges(edges=BOT+RIGHT+BACK);
 //       }
 //   }
-// Figure(3D,Med): Named Edge Sets
+// Figure(3D,Med,VPD=205,NoScales): Named Edge Sets
 //   ydistribute(50) {
 //       xdistribute(30) {
 //           _show_edges(edges="X");
@@ -140,24 +140,21 @@
 //           _show_edges(edges="NONE");
 //       }
 //   }
-//   Next are some examples showing how you can combine edge descriptors to obtain different edge sets.
-//   The default value for `edges` is `"ALL"`, the set of all edges.  The default value for `except` is the
-//   empty set, meaning no edges are removed.
-// Figure(3D,Big): You can specify the top front edge with a numerical vector or by combining the named direction vectors.  If you combine them as a list you get all the edges around the front or top faces.  Adding `except` removes an edge.  
+// Figure(3D,Big,VPD=310,NoScales):  Next are some examples showing how you can combine edge descriptors to obtain different edge sets.   The default value for `edges` is `"ALL"`, the set of all edges.  The default value for `except` is the    empty set, meaning no edges are removed.  You can specify the top front edge with a numerical vector or by combining the named direction vectors.  If you combine them as a list you get all the edges around the front or top faces.  Adding `except` removes an edge.  
 //   xdistribute(43){
 //     _show_edges(_edges([0,-1,1]),toplabel=["edges=[0,-1,1]"]);
 //     _show_edges(_edges(TOP+FRONT),toplabel=["edges=TOP+FRONT"]);
 //     _show_edges(_edges([TOP,FRONT]),toplabel=["edges=[TOP,FRONT]"]);
 //     _show_edges(_edges([TOP,FRONT],TOP+FRONT),toplabel=["edges=[TOP,FRONT]","except=TOP+FRONT"]);      
 //   }
-// Figure(3D,Big): Using `except=BACK` removes the four edges surrounding the back face if they are present in the edge set.  In the first example only one edge needs to be removed.  In the second example we remove two of the Z-aligned edges.  The third example removes all four back edges from the default edge set of all edges.  You can explicitly give `edges="ALL"` but it is not necessary, since this is the default.  In the fourth example, the edge set of Y-aligned edges contains no back edges, so the `except` parameter has no effect.  
+// Figure(3D,Big,VPD=310,NoScales): Using `except=BACK` removes the four edges surrounding the back face if they are present in the edge set.  In the first example only one edge needs to be removed.  In the second example we remove two of the Z-aligned edges.  The third example removes all four back edges from the default edge set of all edges.  You can explicitly give `edges="ALL"` but it is not necessary, since this is the default.  In the fourth example, the edge set of Y-aligned edges contains no back edges, so the `except` parameter has no effect.  
 //   xdistribute(43){
 //     _show_edges(_edges(BTM,BACK), toplabel=["edges=BTM","except=BACK"]);
 //     _show_edges(_edges("Z",BACK), toplabel=["edges=\"Z\"", "except=BACK"]);
 //     _show_edges(_edges("ALL",BACK), toplabel=["(edges=\"ALL\")", "except=BACK"]);
 //     _show_edges(_edges("Y",BACK), toplabel=["edges=\"Y\"","except=BACK"]);   
 //   }
-// Figure(3D,Big): On the left `except` is a list to remove two edges.  In the center we show a corner edge set defined by a numerical vector, and at the right we remove that same corner edge set with named direction vectors.  
+// Figure(3D,Big,NoScales,VPD=310): On the left `except` is a list to remove two edges.  In the center we show a corner edge set defined by a numerical vector, and at the right we remove that same corner edge set with named direction vectors.  
 //   xdistribute(52){
 //    _show_edges(_edges("ALL",[FRONT+RIGHT,FRONT+LEFT]),
 //               toplabel=["except=[FRONT+RIGHT,","       FRONT+LEFT]"]);
@@ -182,7 +179,7 @@
 //   You can specify corner descriptors directly by giving a vector, or you can use sums of the
 //   named direction vectors described above.  Below we show all of the corner sets you can
 //   describe with sums of the direction vectors.
-// Figure(3D,Big): Vectors pointing toward a corner select that corner.
+// Figure(3D,Big,NoScales,VPD=300): Vectors pointing toward a corner select that corner.
 //   ydistribute(55) {
 //       xdistribute(35) {
 //           _show_corners(corners=FRONT+LEFT+TOP);
@@ -197,7 +194,7 @@
 //           _show_corners(corners=BOT+RIGHT+BACK);
 //       }
 //   }
-// Figure(3D,Big): Vectors pointing toward an edge select the corners and the ends of the edge.
+// Figure(3D,Big,NoScales,VPD=300): Vectors pointing toward an edge select the corners and the ends of the edge.
 //   ydistribute(55) {
 //       xdistribute(35) {
 //           _show_corners(corners=BOT+RIGHT);
@@ -218,7 +215,7 @@
 //           _show_corners(corners=TOP+FRONT);
 //       }
 //   }
-// Figure(3D,Med): Vectors pointing toward a face select the corners of the face.
+// Figure(3D,Med,NoScales,VPD=225): Vectors pointing toward a face select the corners of the face.
 //   ydistribute(55) {
 //       xdistribute(35) {
 //           _show_corners(corners=LEFT);
@@ -231,35 +228,29 @@
 //           _show_corners(corners=BOTTOM);
 //       }
 //   }
-// Figure(3D,Med): Corners by name
+// Figure(3D,Med,NoScales,VPD=200): Corners by name
 //   xdistribute(35) {
 //       _show_corners(corners="ALL");
 //       _show_corners(corners="NONE");
 //   }
-//   Next are some examples showing how you can combine corner descriptors to obtain different corner sets.
-//   The default value for `corners` is `"ALL"`, the set of all corners.  The default value for `except` is the
-//   empty set, meaning no corners are removed.
-// Figure(3D,Big): You can specify corner sets numerically or by adding together named directions.  The third example shows a list of two corner specifications, giving all the corners on the front face or the right face.  
+// Figure(3D,Big,NoScales,VPD=300):     Next are some examples showing how you can combine corner descriptors to obtain different corner sets.   The default value for `corners` is `"ALL"`, the set of all corners.  The default value for `except` is the   empty set, meaning no corners are removed.  You can specify corner sets numerically or by adding together named directions.  The third example shows a list of two corner specifications, giving all the corners on the front face or the right face.  
 //   xdistribute(52){
 //     _show_corners(_corners([1,-1,-1]),toplabel=["corners=[1,-1,-1]"]);
 //     _show_corners(_corners(BOT+RIGHT+FRONT),toplabel=["corners=BOT+RIGHT+FRONT"]);
 //     _show_corners(_corners([FRONT,RIGHT]), toplabel=["corners=[FRONT,RIGHT]"]);
 //   }
-// Figure(3D,Big): Corners for one edge, two edges, and all the edges except the two on one edge.  Note that since the default is all edges, you only need to give the except argument in this case:
+// Figure(3D,Big,NoScales,VPD=300): Corners for one edge, two edges, and all the edges except the two on one edge.  Note that since the default is all edges, you only need to give the except argument in this case:
 //    xdistribute(52){
 //      _show_corners(_corners(FRONT+TOP), toplabel=["corners=FRONT+TOP"]);
 //       _show_corners(_corners([FRONT+TOP,BOT+BACK]), toplabel=["corners=[FRONT+TOP,","        BOT+BACK]"]);
 //       _show_corners(_corners("ALL",FRONT+TOP), toplabel=["(corners=\"ALL\")","except=FRONT+TOP"]);
 //    }
-// Figure(3D,Big): The first example shows a single corner removed from the top corners using a numerical vector.  The second one shows removing a set of two corner descriptors from the implied set of all corners.  
+// Figure(3D,Big,NoScales,VPD=300): The first example shows a single corner removed from the top corners using a numerical vector.  The second one shows removing a set of two corner descriptors from the implied set of all corners.  
 //    xdistribute(58){
 //       _show_corners(_corners(TOP,[1,1,1]), toplabel=["corners=TOP","except=[1,1,1]"]);
 //       _show_corners(_corners("ALL",[FRONT+RIGHT+TOP,FRONT+LEFT+BOT]),
 //                    toplabel=["except=[FRONT+RIGHT+TOP,","       FRONT+LEFT+BOT]"]);
 //    }
-
-
-
 module _edges_text3d(txt,size=3) {
     if (is_list(txt)) {
         for (i=idx(txt)) {
@@ -658,7 +649,7 @@ module _show_cube_faces(faces, size=20, toplabel,botlabel) {
    if (is_def(toplabel))
      for(h=idx(toplabel)) up(21+6*h)rot($vpr)atext(select(toplabel,-h-1),size=3.3,h=.1,orient=UP,anchor=FRONT);
    if (is_def(botlabel))
-     for(h=idx(botlabel)) down(266*h)rot($vpr)atext(botlabel[h],size=3.3,h=.1,orient=UP,anchor=FRONT);
+     for(h=idx(botlabel)) down(26+6*h)rot($vpr)atext(botlabel[h],size=3.3,h=.1,orient=UP,anchor=FRONT);
    }
    color("yellow",0.7) cuboid(size=size);
 }

@@ -96,14 +96,14 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   cuboid(size, [anchor=], ...) [attachments];
 //
 // Description:
-//   Creates a cube or cuboid object, with optional chamfering or rounding of edges and corners.  
+//   Creates a cube or cuboid object, with optional chamfering or rounding of edges and corners.
+//   You cannot mix chamfering and rounding: just one edge treatment with the same size applies to all selected edges.  
 //   Negative chamfers and roundings can be applied to create external fillets, but they 
 //   but only apply to edges around the top or bottom faces.  If you specify an edge set other than "ALL"
 //   with such roundings or chamfers then you will get an error.  See
 //   [Specifying Edges](edges.scad#section-specifying-edges) for information on how to specify edge sets.  
-//
 // Arguments:
-//   size = The size of the cube.
+//   size = The size of the cube, a number or length 3 vector.  
 //   ---
 //   chamfer = Size of chamfer, inset from sides.  Default: No chamfering.
 //   rounding = Radius of the edge rounding.  Default: No rounding.
@@ -115,7 +115,6 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards.  See [orient](attachments.scad#orient).  Default: `UP`
-//
 // Example: Simple regular cube.
 //   cuboid(40);
 // Example: Cube with minimum cornerpoint given.
