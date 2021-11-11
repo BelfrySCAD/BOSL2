@@ -1952,8 +1952,6 @@ module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tags="anchor-arrow") {
 
 
 
-
-
 // Module: expose_anchors()
 // Usage:
 //   expose_anchors(opacity) {child1() show_anchors(); child2() show_anchors(); ...}

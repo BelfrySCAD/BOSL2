@@ -351,8 +351,8 @@ function _path_path_closest_vertices(path1,path2) =
 function _join_paths_at_vertices(path1,path2,v1,v2) =
     let(
         repeat_start = !approx(path1[v1],path2[v2]),
-        path1 = clockwise_polygon(polygon_shift(path1,v1)),
-        path2 = ccw_polygon(polygon_shift(path2,v2))
+        path1 = clockwise_polygon(list_rotate(path1,v1)),
+        path2 = ccw_polygon(list_rotate(path2,v2))
     )
     [
         each path1,

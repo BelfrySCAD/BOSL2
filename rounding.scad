@@ -1132,7 +1132,7 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
   )
   assert(len(origin_index)==1,"Cannot find origin in the mask")
   let(
-      points = ([for(pt=polygon_shift(mask,origin_index[0])) [xfactor*max(pt.x,0),-max(pt.y,0)]])
+      points = ([for(pt=list_rotate(mask,origin_index[0])) [xfactor*max(pt.x,0),-max(pt.y,0)]])
   )
   os_profile(deduplicate(move(-points[1],p=list_tail(points))), extra,check_valid,quality,offset);
 

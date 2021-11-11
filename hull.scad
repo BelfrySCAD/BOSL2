@@ -166,7 +166,7 @@ function hull3d_faces(points) =
     assert(is_path(points,3),"Invalid input to hull3d_faces")
     len(points) < 3 ? count(len(points))
   : let ( // start with a single non-collinear triangle
-          tri = noncollinear_triple(points, error=false)
+          tri = _noncollinear_triple(points, error=false)
         )
     tri==[] ? _hull_collinear(points)
   : let(

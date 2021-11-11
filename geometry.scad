@@ -153,7 +153,7 @@ function is_collinear(a, b, c, eps=EPSILON) =
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     let( points = is_def(c) ? [a,b,c]: a )
     len(points)<3 ? true :
-    noncollinear_triple(points,error=false,eps=eps) == [];
+    _noncollinear_triple(points,error=false,eps=eps) == [];
 
 
 // Function: point_line_distance()
@@ -429,7 +429,7 @@ function is_coplanar(points, eps=EPSILON) =
     assert( is_path(points,dim=3) , "Input should be a list of 3D points." )
     assert( is_finite(eps) && eps>=0, "The tolerance should be a non-negative value." )
     len(points)<=2 ? false
-      : let( ip = noncollinear_triple(points,error=false,eps=eps) )
+      : let( ip = _noncollinear_triple(points,error=false,eps=eps) )
         ip == [] ? false :
         let( plane  = plane3pt(points[ip[0]],points[ip[1]],points[ip[2]]) )
         _pointlist_greatest_distance(points,plane) < eps;
@@ -850,7 +850,7 @@ function polygon_line_intersection(poly, line, bounded=false, nonzero=false, eps
         )
         (len(inside)==0 ? undef : _merge_segments(inside, [inside[0]], eps))
     : // 3d case
-       let(indices = noncollinear_triple(poly))
+       let(indices = _noncollinear_triple(poly))
        indices==[] ? undef :   // Polygon is collinear
        let(
            plane = plane3pt(poly[indices[0]], poly[indices[1]], poly[indices[2]]),
@@ -1384,25 +1384,22 @@ function circle_circle_tangents(c1,r1,c2,r2,d1,d2) =
 
 
 
-// Section: Pointlists
-
-
-// Function: noncollinear_triple()
-// Usage:
-//   test = noncollinear_triple(points);
-// Topics: Geometry, Noncollinearity
-// Description:
-//   Finds the indices of three non-collinear points from the pointlist `points`.
-//   It selects two well separated points to define a line and chooses the third point
-//   to be the point farthest off the line.  The points do not necessarily having the
-//   same winding direction as the polygon so they cannot be used to determine the
-//   winding direction or the direction of the normal.  
-//   If all points are collinear returns [] when `error=true` or an error otherwise .
-// Arguments:
-//   points = List of input points.
-//   error = Defines the behaviour for collinear input points. When `true`, produces an error, otherwise returns []. Default: `true`.
-//   eps = Tolerance for collinearity test. Default: EPSILON.
-function noncollinear_triple(points,error=true,eps=EPSILON) =
+/// Internal Function: _noncollinear_triple()
+/// Usage:
+///   test = _noncollinear_triple(points);
+/// Topics: Geometry, Noncollinearity
+/// Description:
+///   Finds the indices of three non-collinear points from the pointlist `points`.
+///   It selects two well separated points to define a line and chooses the third point
+///   to be the point farthest off the line.  The points do not necessarily having the
+///   same winding direction as the polygon so they cannot be used to determine the
+///   winding direction or the direction of the normal.  
+///   If all points are collinear returns [] when `error=true` or an error otherwise .
+/// Arguments:
+///   points = List of input points.
+///   error = Defines the behaviour for collinear input points. When `true`, produces an error, otherwise returns []. Default: `true`.
+///   eps = Tolerance for collinearity test. Default: EPSILON.
+function _noncollinear_triple(points,error=true,eps=EPSILON) =
     assert( is_path(points), "Invalid input points." )
     assert( is_finite(eps) && (eps>=0), "The tolerance should be a non-negative value." )
     len(points)<3 ? [] :
@@ -1953,26 +1950,6 @@ function reverse_polygon(poly) =
     [ poly[0], for(i=[len(poly)-1:-1:1]) poly[i] ];
 
 
-
-// Function: polygon_shift()
-// Usage:
-//   newpoly = polygon_shift(poly, i);
-// Topics: Geometry, Polygons
-// Description:
-//   Given a polygon `poly`, rotates the point ordering so that the first point in the polygon path is the one at index `i`.
-//   This is identical to `list_rotate` except that it checks for doubled endpoints and removed them if present.  
-// Arguments:
-//   poly = The list of points in the polygon path.
-//   i = The index of the point to shift to the front of the path.
-// Example:
-//   polygon_shift([[3,4], [8,2], [0,2], [-4,0]], 2);   // Returns [[0,2], [-4,0], [3,4], [8,2]]
-function polygon_shift(poly, i) =
-    let(poly=force_path(poly,"poly"))
-    assert(is_path(poly), "Invalid polygon." )
-    list_rotate(cleanup_path(poly), i);
-
-
-
 // Function: reindex_polygon()
 // Usage:
 //   newpoly = reindex_polygon(reference, poly);
@@ -2021,7 +1998,7 @@ function reindex_polygon(reference, poly, return_error=false) =
                     [for(i=[0:N-1])
                       norm(reference[i]-fixpoly[(i+k)%N]) ] ]*I,
         min_ind = min_index(val),
-        optimal_poly = polygon_shift(fixpoly, min_ind)
+        optimal_poly = list_rotate(fixpoly, min_ind)
     )
     return_error? [optimal_poly, val[min_ind]] :
     optimal_poly;
@@ -2175,7 +2152,7 @@ function is_polygon_convex(poly,eps=EPSILON) =
       ? let( size = max([for(p=poly) norm(p-p0)]), tol=pow(size,2)*eps )
         assert( size>eps, "The polygon is self-crossing or its points are collinear" )
         min(crosses) >=-tol || max(crosses)<=tol
-      : let( ip = noncollinear_triple(poly,error=false,eps=eps) )
+      : let( ip = _noncollinear_triple(poly,error=false,eps=eps) )
         assert( ip!=[], "The points are collinear")
         let( 
             crx   = cross(poly[ip[1]]-poly[ip[0]],poly[ip[2]]-poly[ip[1]]),

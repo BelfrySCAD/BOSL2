@@ -367,7 +367,7 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
                     each arc(N=steps, cp=p, r=rounding, start=a+180/n, angle=-360/n)
                 ],
                 maxx_idx = max_index(column(path2,0)),
-                path3 = polygon_shift(path2,maxx_idx)
+                path3 = list_rotate(path2,maxx_idx)
             ) path3
         ),
         path = apply(mat, path4),
@@ -1009,7 +1009,7 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
             ], closed=true
         ),
         maxx_idx = max_index(column(path,0)),
-        path2 = polygon_shift(path,maxx_idx)
+        path2 = list_rotate(path,maxx_idx)
     ) reorient(anchor,spin, two_d=true, path=path2, p=path2);
 
 
@@ -1051,20 +1051,23 @@ function glued_circles(r, spread=10, tangent=30, d, anchor=CENTER, spin=0) =
         ea1 = 270+tangent,
         lobearc = ea1-sa1,
         lobesegs = ceil(segs(r)*lobearc/360),
-        lobestep = lobearc / lobesegs,
         sa2 = 270-tangent,
         ea2 = 270+tangent,
         subarc = ea2-sa2,
         arcsegs = ceil(segs(r2)*abs(subarc)/360),
-        arcstep = subarc / arcsegs,
-        path = concat(
-            [for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep)     r  * [cos(a),sin(a)] - cp1],
-            tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep+180)  r2 * [cos(a),sin(a)] - cp2],
-            [for (i=[0:1:lobesegs]) let(a=sa1+i*lobestep+180) r  * [cos(a),sin(a)] + cp1],
-            tangent==0? [] : [for (i=[0:1:arcsegs])  let(a=ea2-i*arcstep)      r2 * [cos(a),sin(a)] + cp2]
-        ),
+        // In the tangent zero case the inner curves are missing so we need to complete the two
+        // outer curves.  In the other case the inner curves are present and endpoint=false
+        // prevents point duplication.  
+        path = tangent==0 ?
+                    concat(arc(N=lobesegs+1, r=r, cp=-cp1, angle=[sa1,ea1]),
+                           arc(N=lobesegs+1, r=r, cp=cp1, angle=[sa1+180,ea1+180]))
+                :
+                    concat(arc(N=lobesegs, r=r, cp=-cp1, angle=[sa1,ea1], endpoint=false),
+                           [for(theta=lerpn(ea2+180,ea2-subarc+180,arcsegs,endpoint=false))  r2*[cos(theta),sin(theta)] - cp2],
+                           arc(N=lobesegs, r=r, cp=cp1, angle=[sa1+180,ea1+180], endpoint=false),
+                           [for(theta=lerpn(ea2,ea2-subarc,arcsegs,endpoint=false))  r2*[cos(theta),sin(theta)] + cp2]),
         maxx_idx = max_index(column(path,0)),
-        path2 = reverse_polygon(polygon_shift(path,maxx_idx))
+        path2 = reverse_polygon(list_rotate(path,maxx_idx))
     ) reorient(anchor,spin, two_d=true, path=path2, extent=true, p=path2);
 
 
