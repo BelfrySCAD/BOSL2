@@ -106,7 +106,7 @@ module square(size=1, center, anchor, spin) {
 //   move_copies(path) color("blue") circle(d=2,$fn=8);
 module rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) {
     size = is_num(size)? [size,size] : point2d(size);
-    anchor = get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT);
+    anchor = point2d(get_anchor(anchor, center, FRONT+LEFT, CENTER));
     if (rounding==0 && chamfer==0) {
         attachable(anchor,spin, two_d=true, size=size) {
             square(size, center=true);
@@ -128,7 +128,7 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
     assert(is_num(rounding) || len(rounding)==4)
     let(
         size = is_num(size)? [size,size] : point2d(size),
-        anchor = point2d(get_anchor(anchor, center, FRONT+LEFT, FRONT+LEFT)),
+        anchor = point2d(get_anchor(anchor, center, FRONT+LEFT, CENTER)),
         complex = rounding!=0 || chamfer!=0
     )
     (rounding==0 && chamfer==0)? let(

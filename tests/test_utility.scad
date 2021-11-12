@@ -352,12 +352,12 @@ test_all_defined();
 
 
 module test_get_anchor() {
-    assert_equal(get_anchor(UP,true,ALLNEG,BOT),CENTER);
-    assert_equal(get_anchor(UP,false,ALLNEG,BOT),ALLNEG);
-    assert_equal(get_anchor(UP,undef,ALLNEG,BOT),UP);
-    assert_equal(get_anchor(undef,true,ALLNEG,BOT),CENTER);
-    assert_equal(get_anchor(undef,false,ALLNEG,BOT),ALLNEG);
-    assert_equal(get_anchor(undef,undef,ALLNEG,BOT),BOT);
+    assert_equal(get_anchor(UP,true,-[1,1,1],BOT),CENTER);
+    assert_equal(get_anchor(UP,false,-[1,1,1],BOT),-[1,1,1]);
+    assert_equal(get_anchor(UP,undef,-[1,1,1],BOT),UP);
+    assert_equal(get_anchor(undef,true,-[1,1,1],BOT),CENTER);
+    assert_equal(get_anchor(undef,false,-[1,1,1],BOT),-[1,1,1]);
+    assert_equal(get_anchor(undef,undef,-[1,1,1],BOT),BOT);
 }
 test_get_anchor();
 

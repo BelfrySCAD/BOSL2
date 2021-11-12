@@ -29,7 +29,7 @@ use <builtins.scad>
 //   When called as a function, returns a [VNF](vnf.scad) for a cube.
 // Arguments:
 //   size = The size of the cube.
-//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=ALLNEG`.
+//   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=FRONT+LEFT+BOTTOM`.
 //   ---
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
@@ -51,7 +51,7 @@ use <builtins.scad>
 //   vnf_polyhedron(vnf);
 module cube(size=1, center, anchor, spin=0, orient=UP)
 {
-    anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
+    anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
     size = scalar_vec3(size);
     attachable(anchor,spin,orient, size=size) {
         _cube(size, center=true);
@@ -62,7 +62,7 @@ module cube(size=1, center, anchor, spin=0, orient=UP)
 function cube(size=1, center, anchor, spin=0, orient=UP) =
     let(
         siz = scalar_vec3(size),
-        anchor = get_anchor(anchor, center, ALLNEG, ALLNEG),
+        anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]),
         unscaled = [
             [-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
             [-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1],
@@ -110,7 +110,7 @@ function cube(size=1, center, anchor, spin=0, orient=UP) =
 //   edges = Edges to mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: all edges.
 //   except = Edges to explicitly NOT mask.  See [Specifying Edges](edges.scad#section-specifying-edges).  Default: No edges.
 //   trimcorners = If true, rounds or chamfers corners where three chamfered/rounded edges meet.  Default: `true`
-//   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=ALLNEG`.
+//   p1 = Align the cuboid's corner at `p1`, if given.  Forces `anchor=FRONT+LEFT+BOTTOM`.
 //   p2 = If given with `p1`, defines the cornerpoints of the cuboid.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis.  See [spin](attachments.scad#spin).  Default: `0`
@@ -243,11 +243,11 @@ module cuboid(
     if (!is_undef(p1)) {
         if (!is_undef(p2)) {
             translate(pointlist_bounds([p1,p2])[0]) {
-                cuboid(size=v_abs(p2-p1), chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
+                cuboid(size=v_abs(p2-p1), chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=-[1,1,1]) children();
             }
         } else {
             translate(p1) {
-                cuboid(size=size, chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=ALLNEG) children();
+                cuboid(size=size, chamfer=chamfer, rounding=rounding, edges=edges, trimcorners=trimcorners, anchor=-[1,1,1]) children();
             }
         }
     } else {
@@ -895,7 +895,7 @@ function rect_tube(
 //   size = [width, thickness, height]
 //   center = If given, overrides `anchor`.  A true value sets `anchor=CENTER`, false sets `anchor=UP`.
 //   ---
-//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `ALLNEG`
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `FRONT+LEFT+BOTTOM`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
 //
@@ -908,7 +908,7 @@ function rect_tube(
 module wedge(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
 {
     size = scalar_vec3(size);
-    anchor = get_anchor(anchor, center, ALLNEG, ALLNEG);
+    anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]);
     vnf = wedge(size, center=true);
     attachable(anchor,spin,orient, size=size, size2=[size.x,0], shift=[0,-size.y/2]) {
         if (size.z > 0) {
@@ -922,7 +922,7 @@ module wedge(size=[1, 1, 1], center, anchor, spin=0, orient=UP)
 function wedge(size=[1,1,1], center, anchor, spin=0, orient=UP) =
     let(
         size = scalar_vec3(size),
-        anchor = get_anchor(anchor, center, ALLNEG, ALLNEG),
+        anchor = get_anchor(anchor, center, -[1,1,1], -[1,1,1]),
         pts = [
             [ 1,1,-1], [ 1,-1,-1], [ 1,-1,1],
             [-1,1,-1], [-1,-1,-1], [-1,-1,1],
