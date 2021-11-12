@@ -418,7 +418,7 @@ function all_defined(v,recursive=false) =
 // Arguments:
 //   anchor = The anchor name or vector.
 //   center = If not `undef`, this overrides the value of `anchor`.
-//   uncentered = The value to return if `center` is not `undef` and evaluates as false.  Default: ALLNEG
+//   uncentered = The value to return if `center` is not `undef` and evaluates as false.  Default: BOTTOM
 //   dflt = The default value to return if both `anchor` and `center` are `undef`.  Default: `CENTER`
 // Example:
 //   anchr1 = get_anchor(undef, undef, BOTTOM, TOP);  // Returns: [0, 0, 1] (TOP)

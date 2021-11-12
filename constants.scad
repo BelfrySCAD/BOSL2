@@ -161,14 +161,6 @@ DOWN = BOTTOM;
 TOP = [ 0,  0,  1];
 UP = TOP;
 
-// Constant: ALLNEG
-// Topics: Constants, Vectors
-// See Also: LEFT, RIGHT, FRONT, BACK, UP, DOWN, CENTER
-// Description: Vector pointing left, forwards, and down.  [-1,-1,-1]
-// Example(3D): Usage with `anchor`
-//   cuboid(20, anchor=ALLNEG);
-ALLNEG = [-1, -1, -1];  // Vector pointing X-,Y-,Z-.
-
 // Constant: CENTER
 // Aliases: CTR
 // Topics: Constants, Vectors
