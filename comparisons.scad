@@ -187,7 +187,7 @@ function all_nonnegative(x,eps=0) =
 //   eps = Set to tolerance for approximate equality.  Default: 0
 function all_equal(vec,eps=0) =
    eps==0 ? [for(v=vec) if (v!=vec[0]) v] == []
-          : [for(v=vec) if (!approx(v,vec[0])) v] == [];
+          : [for(v=vec) if (!approx(v,vec[0],eps)) v] == [];
 
 
 

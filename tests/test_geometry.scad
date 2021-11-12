@@ -40,10 +40,9 @@ test_circle_2tangents();
 test_circle_3points();
 test_circle_point_tangents();
 
-test_noncollinear_triple();
+test__noncollinear_triple();
 test_polygon_area();
 test_is_polygon_convex();
-test_polygon_shift();
 test_reindex_polygon();
 test_align_polygon();
 test_centroid();
@@ -787,15 +786,6 @@ module test_is_polygon_convex() {
 *test_is_polygon_convex();
 
 
-module test_polygon_shift() {
-    path = [[1,1],[-1,1],[-1,-1],[1,-1]];
-    assert(polygon_shift(path,1) == [[-1,1],[-1,-1],[1,-1],[1,1]]);
-    assert(polygon_shift(path,2) == [[-1,-1],[1,-1],[1,1],[-1,1]]);
-}
-*test_polygon_shift();
-
-
-
 module test_reindex_polygon() {
    pent = subdivide_path([for(i=[0:4])[sin(72*i),cos(72*i)]],5);
    circ = circle($fn=5,r=2.2);
@@ -827,13 +817,13 @@ module test_align_polygon() {
 *test_align_polygon();
 
 
-module test_noncollinear_triple() {
-    assert(noncollinear_triple([[1,1],[2,2],[3,3],[4,4],[4,5],[5,6]]) == [0,5,3]);
-    assert(noncollinear_triple([[1,1],[2,2],[8,3],[4,4],[4,5],[5,6]]) == [0,2,5]);
+module test__noncollinear_triple() {
+    assert(_noncollinear_triple([[1,1],[2,2],[3,3],[4,4],[4,5],[5,6]]) == [0,5,3]);
+    assert(_noncollinear_triple([[1,1],[2,2],[8,3],[4,4],[4,5],[5,6]]) == [0,2,5]);
     u = unit([5,3]);
-    assert_equal(noncollinear_triple([for(i = [2,3,4,5,7,12,15]) i * u], error=false),[]);
+    assert_equal(_noncollinear_triple([for(i = [2,3,4,5,7,12,15]) i * u], error=false),[]);
 }
-*test_noncollinear_triple();
+*test__noncollinear_triple();
 
 
 module test_centroid() {

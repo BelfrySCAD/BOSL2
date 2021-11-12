@@ -2486,7 +2486,7 @@ function heightfield(data, size=[100,100], bottom=-20, maxz=100, xrange=[-1:0.04
                     ]
                 ]
             ],
-        vnf = vnf_merge([
+        vnf = vnf_join([
             vnf_vertex_array(verts, style=style, reverse=true),
             vnf_vertex_array([
                 verts[0],

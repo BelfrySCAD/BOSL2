@@ -17,7 +17,8 @@ include <attachments.scad>
 include <shapes3d.scad>
 include <shapes2d.scad>
 include <drawing.scad>
-include <masks.scad>
+include <masks3d.scad>
+include <masks2d.scad>
 include <paths.scad>
 include <edges.scad>
 include <lists.scad>

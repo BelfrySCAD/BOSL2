@@ -344,7 +344,7 @@
 //   hex = path3d(hexagon(side=flare*sidelen, align_side=RIGHT, anchor="side0"),height);
 //   pentmate = path3d(pentagon(side=flare*sidelen,align_side=LEFT,anchor="side0"),height);
 //             // Native index would require mapping first and last vertices together, which is not allowed, so shift
-//   hexmate = polygon_shift(  
+//   hexmate = list_rotate(  
 //                           path3d(apply(move(pushvec)*rot(angle),hexagon(side=sidelen,align_side=LEFT,anchor="side0"))),
 //                           -1);
 //   join_vertex = lerp(
@@ -492,7 +492,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
           )
           subdivide_and_slice(pair,slices[i], nsamples, method=sampling)]
   )
-  vnf_merge(cleanup=false,
+  vnf_join(
       [for(i=idx(full_list))
           vnf_vertex_array(full_list[i], cap1=i==0 && fullcaps[0], cap2=i==len(full_list)-1 && fullcaps[1],
                            col_wrap=true, style=style)]);
@@ -1120,7 +1120,7 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge") =
                 if (fullcaps[1]) vnf_from_region(rgn, transform=last(transforms)),
             ],
         ],
-        vnf = vnf_merge(vnfs)
+        vnf = vnf_join(vnfs)
     ) vnf :
     assert(len(shape)>=3, "shape must be a path of at least 3 non-colinear points")
     vnf_vertex_array([for(i=[0:len(transforms)-(closed?0:1)]) apply(transforms[i%len(transforms)],path3d(shape))],
@@ -1540,7 +1540,7 @@ function _skin_distance_match(poly1,poly2) =
               ;
               i<=len(big)
               ;
-              shifted = polygon_shift(big,i),
+              shifted = list_rotate(big,i),
               result =_dp_distance_array(small, shifted, abort_thresh = bestcost),
               bestmap = result[0]<bestcost ? result[1] : bestmap,
               bestpoly = result[0]<bestcost ? shifted : bestpoly,
@@ -1555,8 +1555,8 @@ function _skin_distance_match(poly1,poly2) =
       // These shifts are needed to handle the case when points from both ends of one curve map to a single point on the other
       bigshift =  len(bigmap) - max(max_index(bigmap,all=true))-1,
       smallshift = len(smallmap) - max(max_index(smallmap,all=true))-1,
-      newsmall = polygon_shift(repeat_entries(small,unique_count(smallmap)[1]),smallshift),
-      newbig = polygon_shift(repeat_entries(map_poly[1],unique_count(bigmap)[1]),bigshift)
+      newsmall = list_rotate(repeat_entries(small,unique_count(smallmap)[1]),smallshift),
+      newbig = list_rotate(repeat_entries(map_poly[1],unique_count(bigmap)[1]),bigshift)
       )
       swap ? [newbig, newsmall] : [newsmall,newbig];
 
@@ -1571,8 +1571,8 @@ function _skin_aligned_distance_match(poly1, poly2) =
       map = _dp_extract_map(result[1]),
       shift0 = len(map[0]) - max(max_index(map[0],all=true))-1,
       shift1 = len(map[1]) - max(max_index(map[1],all=true))-1,
-      new0 = polygon_shift(repeat_entries(poly1,unique_count(map[0])[1]),shift0),
-      new1 = polygon_shift(repeat_entries(poly2,unique_count(map[1])[1]),shift1)
+      new0 = list_rotate(repeat_entries(poly1,unique_count(map[0])[1]),shift0),
+      new1 = list_rotate(repeat_entries(poly2,unique_count(map[1])[1]),shift1)
   )
   [new0,new1];
 
@@ -1598,7 +1598,7 @@ function _skin_tangent_match(poly1, poly2) =
         curve_offset = centroid(small)-centroid(big),
         cutpts = [for(i=[0:len(small)-1]) _find_one_tangent(big, select(small,i,i+1),curve_offset=curve_offset)],
         shift = last(cutpts)+1,
-        newbig = polygon_shift(big, shift),
+        newbig = list_rotate(big, shift),
         repeat_counts = [for(i=[0:len(small)-1]) posmod(cutpts[i]-select(cutpts,i-1),len(big))],
         newsmall = repeat_entries(small,repeat_counts)
     )

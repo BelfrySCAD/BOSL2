@@ -37,8 +37,8 @@ test_vnf_faces();
 module test_vnf_from_polygons() {
     verts = [[-1,-1,-1],[1,-1,-1],[0,1,-1],[0,0,1]];
     faces = [[0,1,2],[0,1,3,2],[2,3,0]];
-    assert(vnf_merge(cleanup=true,
-                     [vnf_from_polygons([for (face=faces) select(verts,face)])]) == [verts,faces]);
+    assert(vnf_merge_points(
+                     vnf_from_polygons([for (face=faces) select(verts,face)])) == [verts,faces]);
 }
 test_vnf_from_polygons();
 
@@ -58,12 +58,12 @@ module test_vnf_area(){
 test_vnf_area();
 
 
-module test_vnf_merge() {
+module test_vnf_join() {
     vnf1 = vnf_from_polygons([[[-1,-1,-1],[1,-1,-1],[0,1,-1]]]);
     vnf2 = vnf_from_polygons([[[1,1,1],[-1,1,1],[0,1,-1]]]);
-    assert(vnf_merge([vnf1,vnf2]) == [[[-1,-1,-1],[1,-1,-1],[0,1,-1],[1,1,1],[-1,1,1],[0,1,-1]],[[0,1,2],[3,4,5]]]);
+    assert(vnf_join([vnf1,vnf2]) == [[[-1,-1,-1],[1,-1,-1],[0,1,-1],[1,1,1],[-1,1,1],[0,1,-1]],[[0,1,2],[3,4,5]]]);
 }
-test_vnf_merge();
+test_vnf_join();
 
 
 module test_vnf_triangulate() {

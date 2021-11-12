@@ -674,7 +674,7 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
                 rot(twist, p=scale([scale,scale],p=path))
             ]
         ],
-        vnf = vnf_merge([
+        vnf = vnf_join([
             for (rgn = regions)
             for (pathnum = idx(rgn)) let(
                 p = cleanup_path(rgn[pathnum]),

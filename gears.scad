@@ -980,7 +980,7 @@ function bevel_gear(
                 [gear_pts, ((i+1)%teeth)*face_pts, (i+1)*face_pts-1]
             ]
         ],
-        vnf1 = vnf_merge([
+        vnf1 = vnf_join([
             [
                 [each top_verts, [0,0,top_verts[0].z]],
                 top_faces
@@ -1451,7 +1451,7 @@ function worm_gear(
             ]
         ],
         sides_vnf = vnf_vertex_array(profiles, caps=false, col_wrap=true, style="min_edge"),
-        vnf1 = vnf_merge([
+        vnf1 = vnf_join([
             [
                 [each top_verts, [0,0,top_verts[0].z]],
                 [for (x=top_faces) reverse(x)]

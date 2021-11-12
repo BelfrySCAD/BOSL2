@@ -497,7 +497,7 @@ function reverse(x) =
 // Topics: List Handling
 // See Also: select(), reverse()
 // Description:
-//   Rotates the contents of a list by `n` positions left.
+//   Rotates the contents of a list by `n` positions left, so that list[n] becomes the first entry of the list.
 //   If `n` is negative, then the rotation is `abs(n)` positions to the right.
 //   If `list` is a string, then a string is returned with the characters rotates within the string.
 // Arguments:

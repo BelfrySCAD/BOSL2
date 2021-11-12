@@ -971,7 +971,7 @@ module generic_threaded_rod(
 
     style = higang1>0 || higang2>0 ? "quincunx" : "min_edge";
     
-    thread_vnfs = vnf_merge([
+    thread_vnfs = vnf_join([
         // Main thread faces
         for (i=[0:1:starts-1])
             zrot(i*360/starts, p=vnf_vertex_array(thread_verts, reverse=left_handed, style=style)),

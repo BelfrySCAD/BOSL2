@@ -164,6 +164,16 @@ module test_all_zero() {
 test_all_zero();
 
 
+module test_all_equal() {
+    assert(all_equal([1,1,1,1]));
+    assert(all_equal([[3,4],[3,4],[3,4]]));
+    assert(!all_equal([1,2,1,1]));
+    assert(!all_equal([1,1.001,1,1.001,.999]));
+    assert(all_equal([1,1.001,1,1.001,.999],eps=.01));
+}
+test_all_equal();
+
+
 module test_all_nonzero() {
     assert(!all_nonzero(0));
     assert(!all_nonzero([0,0,0]));

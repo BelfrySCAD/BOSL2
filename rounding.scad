@@ -1132,7 +1132,7 @@ function os_mask(mask, out=false, extra,check_valid, quality, offset) =
   )
   assert(len(origin_index)==1,"Cannot find origin in the mask")
   let(
-      points = ([for(pt=polygon_shift(mask,origin_index[0])) [xfactor*max(pt.x,0),-max(pt.y,0)]])
+      points = ([for(pt=list_rotate(mask,origin_index[0])) [xfactor*max(pt.x,0),-max(pt.y,0)]])
   )
   os_profile(deduplicate(move(-points[1],p=list_tail(points))), extra,check_valid,quality,offset);
 
@@ -1962,7 +1962,7 @@ function rounded_prism(bottom, top, joint_bot=0, joint_top=0, joint_sides=0, k_b
           "Roundovers interfere with each other on bottom face: either input is self intersecting or top joint length is too large")
     assert(debug || (verify_vert==[] && verify_horiz==[]), "Curvature continuity failed")
     let( 
-        vnf = vnf_merge([ each column(top_samples,0),
+        vnf = vnf_join([ each column(top_samples,0),
                           each column(bot_samples,0),
                           for(pts=edge_points) vnf_vertex_array(pts),
                           debug ? vnf_from_polygons(faces) 
