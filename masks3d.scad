@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////
-// LibFile: masks.scad
-//   Masking shapes.
+// LibFile: masks3d.scad
+//   This file defines 3D masks for applying chamfers, roundovers, and teardrop roundovers to straight edges and circular
+//   edges in three dimensions.  
 // Includes:
 //   include <BOSL2/std.scad>
 //////////////////////////////////////////////////////////////////////
