@@ -842,7 +842,7 @@ module test_centroid() {
     // VNFs
     assert_approx(centroid(cube(100, center=false)), [50,50,50]);
     assert_approx(centroid(cube(100, center=true)), [0,0,0]);
-    assert_approx(centroid(cube(100, anchor=ALLPOS)), [-50,-50,-50]);
+    assert_approx(centroid(cube(100, anchor=[1,1,1])), [-50,-50,-50]);
     assert_approx(centroid(cube(100, anchor=BOT)), [0,0,50]);
     assert_approx(centroid(cube(100, anchor=TOP)), [0,0,-50]);
     assert_approx(centroid(sphere(d=100, anchor=CENTER, $fn=36)), [0,0,0]);
