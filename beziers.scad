@@ -1267,7 +1267,7 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //   splinesteps = Number of segments to produce on each side.  Default: 16
 //   reverse = reverse direction of faces.  Default: false
 //   return_edges = if true return the points on the four edges: [left, right, top, bottom].  Default: false
-// Example(3D): This quartic patch is degenerate at one corner, where a row of control points are equal.  Processing this degenerate patch normally produces excess triangles near the degenerate point. 
+// Example(3D,NoAxes): This quartic patch is degenerate at one corner, where a row of control points are equal.  Processing this degenerate patch normally produces excess triangles near the degenerate point. 
 //   splinesteps=8;
 //   patch=[
 //         repeat([-12.5, 12.5, 15],5),
@@ -1278,7 +1278,7 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //         ];
 //   vnf_wireframe((bezier_patch(patch, splinesteps)),width=0.1);
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
-// Example(3D): With bezier_patch_degenerate the degenerate point does not have excess triangles.  The top half of the patch decreases the number of sampled points by 2 for each row.  
+// Example(3D,NoAxes): With bezier_patch_degenerate the degenerate point does not have excess triangles.  The top half of the patch decreases the number of sampled points by 2 for each row.  
 //   splinesteps=8;
 //   patch=[
 //          repeat([-12.5, 12.5, 15],5),
@@ -1289,7 +1289,7 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //         ];
 //   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),width=0.1);
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
-// Example(3D): With splinesteps odd you get one "odd" row where the point count decreases by 1 instead of 2.  You may prefer even values for splinesteps to avoid this. 
+// Example(3D,NoAxes): With splinesteps odd you get one "odd" row where the point count decreases by 1 instead of 2.  You may prefer even values for splinesteps to avoid this. 
 //   splinesteps=7;
 //   patch=[
 //          repeat([-12.5, 12.5, 15],5),
@@ -1300,7 +1300,7 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //         ];
 //   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),width=0.1);
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
-// Example(3D): A more extreme degeneracy occurs when the top half of a patch is degenerate to a line.  (For odd length patches the middle row must be degenerate to trigger this style.)  In this case the number of points in each row decreases by 1 for every row.  It doesn't matter of splinesteps is odd or even. 
+// Example(3D,NoAxes): A more extreme degeneracy occurs when the top half of a patch is degenerate to a line.  (For odd length patches the middle row must be degenerate to trigger this style.)  In this case the number of points in each row decreases by 1 for every row.  It doesn't matter of splinesteps is odd or even. 
 //   splinesteps=8;
 //   patch = [[[10, 0, 0], [10, -10.4, 0], [10, -20.8, 0], [1.876, -14.30, 0], [-6.24, -7.8, 0]],
 //            [[5, 0, 0], [5, -5.2, 0], [5, -10.4, 0], [0.938, -7.15, 0], [-3.12, -3.9, 0]],
@@ -1310,7 +1310,7 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //           ];
 //   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),width=0.1);
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
-// Example(3D): Here is a degenerate cubic patch.
+// Example(3D,NoScales): Here is a degenerate cubic patch.
 //   splinesteps=8;
 //   patch = [ [ [-20,0,0],  [-10,0,0],[0,10,0],[0,20,0] ],
 //             [ [-20,0,10], [-10,0,10],[0,10,10],[0,20,10]],
@@ -1319,7 +1319,7 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //               ];
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
 //   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),width=0.1);
-// Example(3D): A more extreme degenerate cubic patch, where two rows are equal.
+// Example(3D,NoScales): A more extreme degenerate cubic patch, where two rows are equal.
 //   splinesteps=8;
 //   patch = [ [ [-20,0,0], [-10,0,0],[0,10,0],[0,20,0] ],
 //             [ [-20,0,10], [-10,0,10],[0,10,10],[0,20,10] ],
@@ -1328,14 +1328,14 @@ function bezier_patch(patch, splinesteps=16, style="default") =
 //           ];
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
 //   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),width=0.1);
-// Example(3D): Quadratic patch degenerate at the right side:
+// Example(3D,NoScales): Quadratic patch degenerate at the right side:
 //   splinesteps=8;
 //   patch = [[[0, -10, 0],[10, -5, 0],[20, 0, 0]],
 //            [[0, 0, 0],  [10, 0, 0], [20, 0, 0]],
 //            [[0, 0, 10], [10, 0, 5], [20, 0, 0]]];
 //   vnf_wireframe(bezier_patch_degenerate(patch, splinesteps),width=0.1);
 //   color("red")move_copies(flatten(patch)) sphere(r=0.3,$fn=9);
-// Example(3D): Cubic patch degenerate at both ends.  In this case the point count changes by 2 at every row.  
+// Example(3D,NoAxes): Cubic patch degenerate at both ends.  In this case the point count changes by 2 at every row.  
 //   splinesteps=8;
 //   patch = [
 //            repeat([10,-10,0],4),
