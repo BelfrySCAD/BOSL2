@@ -1706,14 +1706,14 @@ function _find_anchor(anchor, geom) =
         let( 
             rr = geom[1],
             r = is_num(rr)? [rr,rr] : point2d(rr),
-            pos = approx(anchor.x,0) ? [sign(anchor.x)*r.x,0]
+            pos = approx(anchor.x,0) ? [0,sign(anchor.y)*r.y]
                       : let(
                              m = anchor.y/anchor.x,
                              px = sign(anchor.x) * sqrt(1/(1/sqr(r.x) + m*m/sqr(r.y)))
                         )
                         [px,m*px],
             anchor = unit(point2d(anchor),[0,0]),
-            vec = [r.y/r.x*pos.x, r.x/r.y*pos.y]
+            vec = unit([r.y/r.x*pos.x, r.x/r.y*pos.y])
         ) [anchor, point2d(cp+offset)+pos, vec, 0]
     ) : type == "rgn_isect"? ( //region
         assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
