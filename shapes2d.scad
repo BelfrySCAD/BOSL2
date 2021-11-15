@@ -179,7 +179,7 @@ function rect(size=1, center, rounding=0, chamfer=0, anchor, spin=0) =
 //   circle(r|d=, ...) { attachables }
 // Usage: As a Function
 //   path = circle(r|d=, ...);
-// See Also: oval()
+// See Also: ellipse()
 // Description:
 //   When called as the builtin module, creates a 2D polygon that approximates a circle of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle of the given size.
@@ -212,41 +212,41 @@ module circle(r, d, anchor=CENTER, spin=0) {
 
 
 
-// Function&Module: oval()
+// Function&Module: ellipse()
 // Usage: As a Module
-//   oval(r|d=, [realign=], [circum=], ...);
+//   ellipse(r|d=, [realign=], [circum=], ...);
 // Usage: With Attachments
-//   oval(r|d=, [realign=], [circum=], ...) { attachables }
+//   ellipse(r|d=, [realign=], [circum=], ...) { attachables }
 // Usage: As a Function
-//   path = oval(r|d=, [realign=], [circum=], ...);
+//   path = ellipse(r|d=, [realign=], [circum=], ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: circle()
 // Description:
 //   When called as a module, creates a 2D polygon that approximates a circle or ellipse of the given size.
 //   When called as a function, returns a 2D list of points (path) for a polygon that approximates a circle or ellipse of the given size.
 //   Note that the point list or shape is the same as the one you would get by scaling the output of {{circle()}}, but with this module your
-//   attachments to the oval will 
+//   attachments to the ellipse will 
 // Arguments:
-//   r = Radius of the circle or pair of semiaxes of oval 
+//   r = Radius of the circle or pair of semiaxes of ellipse 
 //   ---
 //   d = Diameter of the circle or a pair giving the full X and Y axis lengths.  
-//   realign = If true, rotates the polygon that approximates the circle/oval by half of one size.
+//   realign = If true, rotates the polygon that approximates the circle/ellipse by half of one size.
 //   circum = If true, the polygon that approximates the circle will be upsized slightly to circumscribe the theoretical circle.  If false, it inscribes the theoretical circle.  Default: false
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 // Example(2D): By Radius
-//   oval(r=25);
+//   ellipse(r=25);
 // Example(2D): By Diameter
-//   oval(d=50);
+//   ellipse(d=50);
 // Example(2D): Anchoring
-//   oval(d=50, anchor=FRONT);
+//   ellipse(d=50, anchor=FRONT);
 // Example(2D): Spin
-//   oval(d=50, anchor=FRONT, spin=45);
+//   ellipse(d=50, anchor=FRONT, spin=45);
 // Example(NORENDER): Called as Function
-//   path = oval(d=50, anchor=FRONT, spin=45);
-module oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) {
+//   path = ellipse(d=50, anchor=FRONT, spin=45);
+module ellipse(r, d, realign=false, circum=false, anchor=CENTER, spin=0) {
     r = get_radius(r=r, d=d, dflt=1);
-    dummy = assert((is_finite(r) || is_vector(r,2)) && all_positive(r), "Invalid radius or diameter for oval");
+    dummy = assert((is_finite(r) || is_vector(r,2)) && all_positive(r), "Invalid radius or diameter for ellipse");
     sides = segs(max(r));
     sc = circum? (1 / cos(180/sides)) : 1;
     rx = default(r[0],r) * sc;
@@ -270,7 +270,7 @@ module oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) {
 }
 
 
-function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
+function ellipse(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
     let(
         r = get_radius(r=r, d=d, dflt=1),
         sides = segs(max(r)),
@@ -290,7 +290,7 @@ function oval(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
 //   regular_ngon(n, ir=/id=, [realign=]);
 //   regular_ngon(n, side=, [realign=]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), pentagon(), hexagon(), octagon(), oval(), star()
+// See Also: circle(), pentagon(), hexagon(), octagon(), ellipse(), star()
 // Description:
 //   When called as a function, returns a 2D path for a regular N-sided polygon.
 //   When called as a module, creates a 2D regular N-sided polygon.
@@ -353,7 +353,7 @@ function regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false
                 !is_undef(align_side)? rot(from=RIGHT, to=point2d(align_side), planar=true) * rot(180/n, planar=true) :
                 affine2d_identity()
             ),
-        path4 = rounding==0? oval(r=r, $fn=n) : (
+        path4 = rounding==0? ellipse(r=r, $fn=n) : (
             let(
                 steps = floor(segs(r)/n),
                 step = 360/n/steps,
@@ -426,7 +426,7 @@ module regular_ngon(n=6, r, d, or, od, ir, id, side, rounding=0, realign=false, 
 //   pentagon(ir=|id=, [realign=]);
 //   pentagon(side=, [realign=]);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), regular_ngon(), hexagon(), octagon(), oval(), star()
+// See Also: circle(), regular_ngon(), hexagon(), octagon(), ellipse(), star()
 // Description:
 //   When called as a function, returns a 2D path for a regular pentagon.
 //   When called as a module, creates a 2D regular pentagon.
@@ -490,7 +490,7 @@ module pentagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip
 //   path = hexagon(ir=/id=, ...);
 //   path = hexagon(side=, ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), regular_ngon(), pentagon(), octagon(), oval(), star()
+// See Also: circle(), regular_ngon(), pentagon(), octagon(), ellipse(), star()
 // Description:
 //   When called as a function, returns a 2D path for a regular hexagon.
 //   When called as a module, creates a 2D regular hexagon.
@@ -554,7 +554,7 @@ module hexagon(r, d, or, od, ir, id, side, rounding=0, realign=false, align_tip,
 //   path = octagon(ir=/id=, ...);
 //   path = octagon(side=, ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), regular_ngon(), pentagon(), hexagon(), oval(), star()
+// See Also: circle(), regular_ngon(), pentagon(), hexagon(), ellipse(), star()
 // Description:
 //   When called as a function, returns a 2D path for a regular octagon.
 //   When called as a module, creates a 2D regular octagon.
@@ -763,7 +763,7 @@ module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENTER
 //   path = star(n, r/or, ir, [realign=], [align_tip=], [align_pit=], ...);
 //   path = star(n, r/or, step=, ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), oval()
+// See Also: circle(), ellipse()
 // Description:
 //   When called as a function, returns the path needed to create a star polygon with N points.
 //   When called as a module, creates a star polygon with N points.
@@ -1020,7 +1020,7 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
 // Usage: As Function
 //   path = glued_circles(r/d=, [spread=], [tangent=], ...);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), oval()
+// See Also: circle(), ellipse()
 // Description:
 //   When called as a function, returns a 2D path forming a shape of two circles joined by curved waist.
 //   When called as a module, creates a 2D shape of two circles joined by curved waist.
@@ -1090,7 +1090,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 // Usage: As Function
 //   path = supershape(step, [m1=], [m2=], [n1=], [n2=], [n3=], [a=], [b=], <r=/d=>);
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
-// See Also: circle(), oval()
+// See Also: circle(), ellipse()
 // Description:
 //   When called as a function, returns a 2D path for the outline of the [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
 //   When called as a module, creates a 2D [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.

@@ -278,13 +278,16 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 
 // Module: region()
 // Usage:
-//   region(r);
+//   region(r, [anchor], [spin], [cp]) { ... };
 // Description:
 //   Creates the 2D polygons described by the given region or list of polygons.  This module works on
 //   arbitrary lists of polygons that cross each other and hence do not define a valid region.  The
 //   displayed result is the exclusive-or of the polygons listed in the input. 
 // Arguments:
 //   r = region to create as geometry
+//   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"origin"`
+//   spin = Rotate this many degrees after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 2D point.  Default: "centroid"
 // Example(2D): Displaying a region
 //   region([circle(d=50), square(25,center=true)]);
 // Example(2D): Displaying a list of polygons that intersect each other, which is not a region
@@ -293,16 +296,18 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 //       [square([60,10], center=true)]
 //   );
 //   region(rgn);
-module region(r)
+module region(r, anchor="origin", spin=0, cp="centroid")
 {
-    no_children($children);
     r = force_region(r);
     dummy=assert(is_region(r), "Input is not a region");
     points = flatten(r);
     lengths = [for(path=r) len(path)];
     starts = [0,each cumsum(lengths)];
     paths = [for(i=idx(r)) count(s=starts[i], n=lengths[i])];
-    polygon(points=points, paths=paths);
+    attachable(anchor, spin, two_d=true, region=r, extent=false, cp=cp){
+      polygon(points=points, paths=paths);
+      children();
+    }
 }
 
 
@@ -583,7 +588,7 @@ function region_parts(region) =
 
 // Function&Module: linear_sweep()
 // Usage:
-//   linear_sweep(region, height, [center], [slices], [twist], [scale], [style], [convexity]);
+//   linear_sweep(region, height, [center], [slices], [twist], [scale], [style], [convexity]) {attachments};
 // Description:
 //   If called as a module, creates a polyhedron that is the linear extrusion of the given 2D region or polygon.
 //   If called as a function, returns a VNF that can be used to generate a polyhedron of the linear extrusion
@@ -630,7 +635,7 @@ function region_parts(region) =
 //   mrgn = union(rgn1,rgn2);
 //   orgn = difference(mrgn,rgn3);
 //   linear_sweep(orgn,height=20,convexity=16) show_anchors();
-module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity, anchor_isect=false, anchor, spin=0, orient=UP, cp="centroid", anchor="origin") {
+module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity, anchor_isect=false, spin=0, orient=UP, cp="centroid", anchor="origin") {
     region = force_region(region);
     dummy=assert(is_region(region),"Input is not a region");
     anchor = center ? "zcenter" : anchor;

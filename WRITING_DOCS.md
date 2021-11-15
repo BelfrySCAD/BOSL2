@@ -269,45 +269,45 @@ Which outputs Markdown code that renders like:
 The `Function&Module` header is used to document a function which has a related module of the same name.  It should have a Description sub-block.  It is recommended to also have Usage, Arguments, and Example/Examples sub-blocks. You should have Usage blocks for both calling as a function, and calling as a
 module:
 
-    // Function&Module: oval()
+    // Function&Module: ellipse()
     // Topics: 2D Shapes, Geometry
     // Usage: As a Module
-    //   oval(rx,ry);
+    //   ellipse(rx,ry);
     // Usage: As a Function
-    //   path = oval(rx,ry);
+    //   path = ellipse(rx,ry);
     // Description:
-    //   When called as a function, returns the perimeter path of the oval.
-    //   When called as a module, creates a 2D oval shape.
+    //   When called as a function, returns the perimeter path of the ellipse.
+    //   When called as a module, creates a 2D ellipse shape.
     // Arguments:
     //   rx = X axis radius.
     //   ry = Y axis radius.
     // Example(2D): Called as a Function
-    //   path = oval(100,60);
+    //   path = ellipse(100,60);
     //   polygon(path);
     // Example(2D): Called as a Module
-    //   oval(80,60);
-    module oval(rx,ry) {
-        polygon(oval(rx,ry));
+    //   ellipse(80,60);
+    module ellipse(rx,ry) {
+        polygon(ellipse(rx,ry));
     }
-    function oval(rx,ry) =
+    function ellipse(rx,ry) =
         [for (a=[360:-360/$fn:0.0001]) [rx*cos(a),ry*sin(a)];
 
 Which outputs Markdown code that renders like:
 
-> ### Function&Module: oval()
+> ### Function&Module: ellipse()
 > **Topics:** 2D Shapes, Geometry
 >
 > **Usage:** As a Module
 >
-> - oval(rx,ry);
+> - ellipse(rx,ry);
 >
 > **Usage:** As a Function
 >
-> - path = oval(rx,ry);
+> - path = ellipse(rx,ry);
 >
 > **Description:**
-> When called as a function, returns the perimeter path of the oval.
-> When called as a module, creates a 2D oval shape.
+> When called as a function, returns the perimeter path of the ellipse.
+> When called as a module, creates a 2D ellipse shape.
 >
 > **Arguments:**
 > Positional Arg | What it does
@@ -318,7 +318,7 @@ Which outputs Markdown code that renders like:
 > **Example:** Called as a Function
 >
 > ```openscad
-> path = oval(100,60);
+> path = ellipse(100,60);
 > polygon(path);
 > ```
 > GENERATED IMAGE SHOWN HERE
@@ -326,7 +326,7 @@ Which outputs Markdown code that renders like:
 > **Example:** Called as a Module
 >
 > ```openscad
-> oval(80,60);
+> ellipse(80,60);
 > ```
 > GENERATED IMAGE SHOWN HERE
 
@@ -385,18 +385,18 @@ Usage Block
 The Usage block describes the various ways that the current function or module can be called, with the names of the arguments.  By convention, the first few arguments that can be called positionally just have their name shown.  The remaining arguments that should be passed by name, will have the name followed by an `=` (equal sign).  Arguments that are optional in the given Usage context are shown in `<` and `>` angle brackets:
 
     // Usage: As a Module
-    //   oval(rx, ry, <spin=>);
+    //   ellipse(rx, ry, <spin=>);
     // Usage: As a Function
-    //   path = oval(rx, ry, <spin=>);
+    //   path = ellipse(rx, ry, <spin=>);
 
 Which outputs Markdown code that renders like:
 
 > **Usage:** As a Module
-> - oval(rx, ry, <spin=>);
+> - ellipse(rx, ry, <spin=>);
 > 
 > **Usage:** As a Function
 > 
-> - path = oval(rx, ry, <spin=>);
+> - path = ellipse(rx, ry, <spin=>);
 
 
 Description Block

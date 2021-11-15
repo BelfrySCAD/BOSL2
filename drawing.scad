@@ -703,7 +703,7 @@ function arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, l
 module arc(N, r, angle, d, cp, points, width, thickness, start, wedge=false, anchor=CENTER, spin=0)
 {
     path = arc(N=N, r=r, angle=angle, d=d, cp=cp, points=points, width=width, thickness=thickness, start=start, wedge=wedge);
-    attachable(anchor,spin, two_d=true, path=path) {
+    attachable(anchor,spin, two_d=true, path=path, extent=true) {
         polygon(path);
         children();
     }

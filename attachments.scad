@@ -1522,7 +1522,7 @@ function _get_cp(geom) =
     )
     assert(type!="other", "Invalid cp value")
     cp=="centroid" ? centroid(geom[1])
-  : let(points = type=="vnf"?geom[1][0]:geom[1])
+  : let(points = type=="vnf"?geom[1][0]:flatten(force_region(geom[1])))
     cp=="mean" ? mean(points)
   : cp=="box" ? mean(pointlist_bounds(points))
   : assert(false,"Invalid cp specification");
@@ -1703,13 +1703,18 @@ function _find_anchor(anchor, geom) =
         ) [anchor, pos, vec, 0]
     ) : type == "circle"? ( //r
         assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
-        let(
+        let( 
             rr = geom[1],
             r = is_num(rr)? [rr,rr] : point2d(rr),
+            pos = approx(anchor.x,0) ? [0,sign(anchor.y)*r.y]
+                      : let(
+                             m = anchor.y/anchor.x,
+                             px = sign(anchor.x) * sqrt(1/(1/sqr(r.x) + m*m/sqr(r.y)))
+                        )
+                        [px,m*px],
             anchor = unit(point2d(anchor),[0,0]),
-            pos = point2d(cp) + v_mul(r,anchor) + point2d(offset),
-            vec = unit(v_mul(r,anchor),[0,1])
-        ) [anchor, pos, vec, 0]
+            vec = unit([r.y/r.x*pos.x, r.x/r.y*pos.y])
+        ) [anchor, point2d(cp+offset)+pos, vec, 0]
     ) : type == "rgn_isect"? ( //region
         assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(
@@ -1727,7 +1732,10 @@ function _find_anchor(anchor, geom) =
                     n2 = vector_angle(anchor,n)>90? -n : n
                 )
                 if(!is_undef(isect) && !approx(isect,t[0])) [norm(isect), isect, n2]
-            ],
+            ]
+        )
+        assert(len(isects)>0, "Anchor vector does not intersect with the shape.  Attachment failed.")
+        let(
             maxidx = max_index(column(isects,0)),
             isect = isects[maxidx],
             pos = point2d(cp) + isect[1],
@@ -1736,8 +1744,7 @@ function _find_anchor(anchor, geom) =
     ) : type == "rgn_extent"? ( //region
         assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(
-            rgn_raw = geom[1],
-            rgn = is_region(rgn_raw)? rgn_raw : [rgn_raw],
+            rgn = force_region(geom[1]),
             anchor = point2d(anchor),
             m = rot(from=anchor, to=RIGHT) * move(-[cp.x, cp.y, 0]),
             rpts = apply(m, flatten(rgn)),
