@@ -2304,27 +2304,6 @@ module path_text(path, text, font, size, thickness, lettersize, offset=0, revers
 // Section: Miscellaneous
 
 
-// Module: nil()
-//
-// Description:
-//   Useful when you MUST pass a child to a module, but you want it to be nothing.
-module nil() union(){}
-
-
-// Module: noop()
-//
-// Description:
-//   Passes through the children passed to it, with no action at all.  Useful while debugging when
-//   you want to replace a command.  This is an attachable non-object.
-//
-// Arguments:
-//   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
-//   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-module noop(spin=0, orient=UP) attachable(CENTER,spin,orient, d=0.01) {nil(); children();}
-
-
-
-
 // Module: interior_fillet()
 //
 // Description:

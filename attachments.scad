@@ -1885,7 +1885,8 @@ module show_anchors(s=10, std=true, custom=true) {
                     anchor_arrow(s, color="cyan");
                 }
                 color("black")
-                noop($tags="anchor-arrow") {
+//                tags("anchor-arrow")
+                {
                     xrot(two_d? 0 : 90) {
                         back(s/3) {
                             yrot_copies(n=2)
@@ -1897,13 +1898,14 @@ module show_anchors(s=10, std=true, custom=true) {
                         }
                     }
                 }
-                color([1, 1, 1, 0.4])
-                noop($tags="anchor-arrow") {
+                color([1, 1, 1, 1])
+                tags("anchor-arrow")
+                {
                     xrot(two_d? 0 : 90) {
                         back(s/3) {
-                            zcopies(s/21) cube([s/4.5*len(anchor[0]), s/3, 0.01], center=true);
+                             cube([s/4.5*len(anchor[0]), s/3, 0.01], center=true);
                         }
-                    }
+                   }
                 }
             }
         }
@@ -1953,7 +1955,7 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow"
 // Example:
 //   anchor_arrow2d(s=20);
 module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tags="anchor-arrow") {
-    noop() color(color) stroke([[0,0],[0,s]], width=s/10, endcap1="butt", endcap2="arrow2");
+    color(color) stroke([[0,0],[0,s]], width=s/10, endcap1="butt", endcap2="arrow2");
 }
 
 
@@ -1971,7 +1973,7 @@ module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tags="anchor-arrow") {
 //   expose_anchors() cube(50, center=true) show_anchors();
 module expose_anchors(opacity=0.2) {
     show("anchor-arrow")
-        children();
+       children();
     hide("anchor-arrow")
         color(is_undef($color)? [0,0,0] :
               is_string($color)? $color :
