@@ -150,11 +150,11 @@
 //   method = method for connecting profiles, one of "distance", "fast_distance", "tangent", "direct" or "reindex".  Default: "direct".
 //   z = array of height values for each profile if the profiles are 2d
 //   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
-//   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
-//   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
-//   orient = Vector to rotate top towards after spin  (module only)
-//   extent = use extent method for computing anchors. (module only)  Default: false
-//   cp = set centerpoint for anchor computation.  (module only) Default: object centroid
+//   anchor = Translate so anchor point is at the origin.  Default: "origin"
+//   spin = Rotate this many degrees around Z axis after anchor.  Default: 0
+//   orient = Vector to rotate top towards after spin 
+//   atype = Select "hull" or "intersect anchor types. Default: "hull"
+//   cp = set centerpoint for anchor computation.  Default: "centroid"
 //   style = vnf_vertex_array style.  Default: "min_edge"
 // Example:
 //   skin([octagon(4), circle($fn=70,r=2)], z=[0,3], slices=10);
@@ -383,18 +383,17 @@
 //          }
 //      }
 module skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, style="min_edge", convexity=10,
-            anchor="origin",cp,spin=0, orient=UP, extent=false)
+            anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull")
 {   
     vnf = skin(profiles, slices, refine, method, sampling, caps, closed, z, style=style);
-    attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : centroid(vnf))
-    {      
-        vnf_polyhedron(vnf,convexity=convexity);
+    vnf_polyhedron(vnf,convexity=convexity,spin=spin,anchor=anchor,orient=orient,atype=atype,cp=cp)
         children();
-    }
 }        
 
 
-function skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, style="min_edge") =
+function skin(profiles, slices, refine=1, method="direct", sampling, caps, closed=false, z, style="min_edge",
+              anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull") =
+  assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
   assert(is_def(slices),"The slices argument must be specified.")
   assert(is_list(profiles) && len(profiles)>1, "Must provide at least two profiles")
   let(
@@ -490,13 +489,13 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
                                                         ".  Method ",method[i]," requires equal values"))
                refine[i] * len(pair[0])
           )
-          subdivide_and_slice(pair,slices[i], nsamples, method=sampling)]
+          subdivide_and_slice(pair,slices[i], nsamples, method=sampling)],
+      vnf=vnf_join(
+          [for(i=idx(full_list))
+              vnf_vertex_array(full_list[i], cap1=i==0 && fullcaps[0], cap2=i==len(full_list)-1 && fullcaps[1],
+                               col_wrap=true, style=style)])
   )
-  vnf_join(
-      [for(i=idx(full_list))
-          vnf_vertex_array(full_list[i], cap1=i==0 && fullcaps[0], cap2=i==len(full_list)-1 && fullcaps[1],
-                           col_wrap=true, style=style)]);
-
+  reorient(anchor,spin,orient,vnf=vnf,p=vnf,extent=atype=="hull",cp=cp);
 
 
 // Function&Module: path_sweep()
@@ -566,13 +565,12 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   caps = Can be a boolean or vector of two booleans.  Set to false to disable caps at the two ends.  Default: true
 //   style = vnf_vertex_array style.  Default: "min_edge"
 //   transforms = set to true to return transforms instead of a VNF.  These transforms can be manipulated and passed to sweep().  Default: false.
-//   convexity = convexity parameter for polyhedron().  Only accepted by the module version.  Default: 10
-//   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
-//   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
-//   orient = Vector to rotate top towards after spin  (module only)
-//   extent = use extent method for computing anchors. (module only)  Default: false
-//   cp = set centerpoint for anchor computation.  (module only) Default: object centroid
-//
+//   convexity = convexity parameter for polyhedron().  (module only)  Default: 10
+//   anchor = Translate so anchor point is at the origin. Default: "origin"
+//   spin = Rotate this many degrees around Z axis after anchor. Default: 0
+//   orient = Vector to rotate top towards after spin  
+//   atype  = Select "hull" or "intersect" anchor types.  Default: "hull"
+//   cp = set centerpoint for anchor computation.  Default: "centroid"
 // Example(2D): We'll use this shape in several examples
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   polygon(ushape);
@@ -812,20 +810,19 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   }
 module path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
                     symmetry=1, last_normal, tangent, relaxed=false, caps, style="min_edge", convexity=10,
-                    anchor="origin",cp,spin=0, orient=UP, extent=false)
+                    anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull")
 {
     vnf = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
                     symmetry, last_normal, tangent, relaxed, caps, style);
-    attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : centroid(vnf))
-    {      
-        vnf_polyhedron(vnf,convexity=convexity);
+    vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, vnf=vnf, atype=atype, cp=cp)
         children();
-    }
 }        
 
 
 function path_sweep(shape, path, method="incremental", normal, closed=false, twist=0, twist_by_length=true,
-                    symmetry=1, last_normal, tangent, relaxed=false, caps, style="min_edge", transforms=false) = 
+                    symmetry=1, last_normal, tangent, relaxed=false, caps, style="min_edge", transforms=false,
+                    anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull") = 
+  assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
   assert(!closed || twist % (360/symmetry)==0, str("For a closed sweep, twist must be a multiple of 360/symmetry = ",360/symmetry))
   assert(closed || symmetry==1, "symmetry must be 1 when closed is false")
   assert(is_integer(symmetry) && symmetry>0, "symmetry must be a positive integer")
@@ -919,7 +916,9 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
                                      apply(transform_list[L], rshape)),
       dummy = ends_match ? 0 : echo("WARNING: ***** The points do not match when closing the model *****")
     )
-    transforms ? transform_list : sweep(is_path(shape)?clockwise_polygon(shape):shape, transform_list, closed=false, caps=fullcaps,style=style);
+    transforms ? transform_list
+               : sweep(is_path(shape)?clockwise_polygon(shape):shape, transform_list, closed=false, caps=fullcaps,style=style,
+                       anchor=anchor,cp=cp,spin=spin,orient=orient,atype=atype);
 
 
 // Function&Module: path_sweep2d()
@@ -946,11 +945,11 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
 //   style = vnf_vertex_array style.  Default: "min_edge"
 //   ---
 //   convexity = convexity parameter for polyhedron (module only)  Default: 10
-//   anchor = Translate so anchor point is at the origin.  (module only)  Default: "origin"
-//   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
-//   orient = Vector to rotate top towards after spin  (module only)
-//   extent = use extent method for computing anchors. (module only)  Default: false
-//   cp = set centerpoint for anchor computation.  (module only) Default: object centroid
+//   anchor = Translate so anchor point is at the origin.  Default: "origin"
+//   spin = Rotate this many degrees around Z axis after anchor.  Default: 0
+//   orient = Vector to rotate top towards after spin 
+//   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
+//   cp = set centerpoint for anchor computation.  Default: "centroid"
 // Example: Sine wave example with self-intersections at each peak.  This would fail with path_sweep(). 
 //   sinewave = [for(i=[-30:10:360*2+30]) [i/40,3*sin(i)]];
 //   path_sweep2d(circle(r=3,$fn=15), sinewave);
@@ -967,7 +966,8 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
 //   path_sweep2d(circle(r=3.25, $fn=32), select(ellipse,floor(L*.2),ceil(L*.8)),closed=false);
 //   path_sweep2d(circle(r=3.25, $fn=32), select(ellipse,floor(L*.7),ceil(L*.3)),closed=false);
 
-function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edge") =
+function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edge",
+                      anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull") = 
    let(
         caps = is_def(caps) ? caps
              : closed ? false : true,
@@ -992,23 +992,21 @@ function path_sweep2d(shape, path, closed=false, caps, quality=1, style="min_edg
                         ) 
                         select(path3d(ofs[0],pt.y),map)
                       ]
-                  )
+                  ),
+        vnf = vnf_vertex_array([
+                         each proflist,
+                         if (closed) proflist[0]
+                        ],cap1=fullcaps[0],cap2=fullcaps[1],col_wrap=true,style=style)
    )
-   vnf_vertex_array([
-                     each proflist,
-                     if (closed) proflist[0]
-                    ],cap1=fullcaps[0],cap2=fullcaps[1],col_wrap=true,style=style);
+   reorient(anchor,spin,orient,vnf=vnf,p=vnf,extent=atype=="hull",cp=cp);
 
 
 module path_sweep2d(profile, path, closed=false, caps, quality=1, style="min_edge", convexity=10,
-                    anchor="origin", cp, spin=0, orient=UP, extent=false)
+                    anchor="origin", cp="centroid", spin=0, orient=UP, atype="hull")
 {
    vnf = path_sweep2d(profile, path, closed, caps, quality, style);
-   attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : centroid(vnf))
-    {      
-        vnf_polyhedron(vnf,convexity=convexity);
+   vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, vnf=vnf, atype=atype, cp=cp)
         children();
-    }
 }
 
 // Extract vertex mapping from offset face list.  The output of this function
@@ -1071,11 +1069,11 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   style = vnf_vertex_array style.  Default: "min_edge"
 //   ---
 //   convexity = convexity setting for use with polyhedron.  (module only) Default: 10
-//   anchor = Translate so anchor point is at the origin.  (module only) Default: "origin"
-//   spin = Rotate this many degrees around Z axis after anchor.  (module only) Default: 0
+//   anchor = Translate so anchor point is at the origin. Default: "origin"
+//   spin = Rotate this many degrees around Z axis after anchor. Default: 0
 //   orient = Vector to rotate top towards after spin  (module only)
-//   extent = use extent method for computing anchors. (module only)  Default: false
-//   cp = set centerpoint for anchor computation.  (module only) Default: object centroid
+//   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
+//   cp = set centerpoint for anchor computation. Default: "centroid"
 // Example: This is the "sweep-drop" example from list-comprehension-demos.
 //   function drop(t) = 100 * 0.5 * (1 - cos(180 * t)) * sin(180 * t) + 1;
 //   function path(t) = [0, 0, 80 + 80 * cos(180 * t)];
@@ -1097,7 +1095,8 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   inside = [for(i=[24:-1:2]) up(i)*rot(i)*scale(1.2*i/24+1)];
 //   sweep(shape, concat(outside,inside));
 
-function sweep(shape, transforms, closed=false, caps, style="min_edge") =
+function sweep(shape, transforms, closed=false, caps, style="min_edge",
+               anchor="origin", cp="centroid", spin=0, orient=UP, atype="hull") = 
     assert(is_consistent(transforms, ident(4)), "Input transforms must be a list of numeric 4x4 matrices in sweep")
     assert(is_path(shape,2) || is_region(shape), "Input shape must be a 2d path or a region.")
     let(
@@ -1128,15 +1127,13 @@ function sweep(shape, transforms, closed=false, caps, style="min_edge") =
 
 
 module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=10,
-             anchor="origin",cp,spin=0, orient=UP, extent=false)
+             anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull")
 {
     vnf = sweep(shape, transforms, closed, caps, style);
-    attachable(anchor=anchor, spin=spin, orient=orient, vnf=vnf, extent=extent, cp=is_def(cp) ? cp : centroid(vnf))
-    {      
-        vnf_polyhedron(vnf,convexity=convexity);
-        children();
-    }
-}        
+    vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, vnf=vnf, atype=atype, cp=cp)
+         children();
+}    
+         
 
 
 // Section: Functions for resampling and slicing profile lists

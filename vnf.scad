@@ -787,10 +787,11 @@ function _slice_3dpolygons(polys, dir, cuts) =
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"origin"`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
-module vnf_polyhedron(vnf, convexity=2, extent=true, cp=[0,0,0], anchor="origin", spin=0, orient=UP) {
+//   atype = Select "hull" or "intersect" anchor type.  Default: "hull"
+module vnf_polyhedron(vnf, convexity=2, extent=true, cp="centroid", anchor="origin", spin=0, orient=UP, atype="hull") {
     vnf = is_vnf_list(vnf)? vnf_join(vnf) : vnf;
-    cp = is_def(cp) ? cp : centroid(vnf);
-    attachable(anchor,spin,orient, vnf=vnf, extent=extent, cp=cp) {
+    assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
+    attachable(anchor,spin,orient, vnf=vnf, extent=atype=="hull", cp=cp) {
         polyhedron(vnf[0], vnf[1], convexity=convexity);
         children();
     }

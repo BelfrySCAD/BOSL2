@@ -29,6 +29,8 @@ $parent_geom = undef;
 $tags_shown = [];
 $tags_hidden = [];
 
+_ANCHOR_TYPES = ["intersect","hull"];
+
 
 // Section: Anchors, Spin, and Orientation
 //   This library adds the concept of anchoring, spin and orientation to the `cube()`, `cylinder()`
@@ -1885,7 +1887,7 @@ module show_anchors(s=10, std=true, custom=true) {
                     anchor_arrow(s, color="cyan");
                 }
                 color("black")
-//                tags("anchor-arrow")
+                tags("anchor-arrow")
                 {
                     xrot(two_d? 0 : 90) {
                         back(s/3) {
