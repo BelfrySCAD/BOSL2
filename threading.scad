@@ -535,7 +535,6 @@ module npt_threaded_rod(
                 higbee=r1*PI/2
             );
             if (hollow) cylinder(l=l+1, d=size*INCH, center=true);
-            else nil();
         }
         children();
     }

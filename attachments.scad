@@ -29,6 +29,8 @@ $parent_geom = undef;
 $tags_shown = [];
 $tags_hidden = [];
 
+_ANCHOR_TYPES = ["intersect","hull"];
+
 
 // Section: Anchors, Spin, and Orientation
 //   This library adds the concept of anchoring, spin and orientation to the `cube()`, `cylinder()`
@@ -1513,18 +1515,23 @@ function _attach_transform(anchor, spin, orient, geom, p) =
 
 
 function _get_cp(geom) =
+    
     let(cp=select(geom,-3))
     is_vector(cp) ? cp
   : let(
         type = in_list(geom[0],["vnf_extent","vnf_isect"]) ? "vnf"
              : in_list(geom[0],["rgn_extent","rgn_isect"]) ? "path"
+             : in_list(geom[0],["xrgn_extent","xrgn_isect"]) ? "xpath"
              : "other"
     )
     assert(type!="other", "Invalid cp value")
-    cp=="centroid" ? centroid(geom[1])
+    cp=="centroid" ? (
+       type=="vnf" && (len(geom[1][0])==0 || len(geom[1][1])==0) ? [0,0,0] :
+       [each centroid(geom[1]), if (type=="xpath") geom[2]/2]
+    )
   : let(points = type=="vnf"?geom[1][0]:flatten(force_region(geom[1])))
-    cp=="mean" ? mean(points)
-  : cp=="box" ? mean(pointlist_bounds(points))
+    cp=="mean" ? [each mean(points), if (type=="xpath") geom[2]/2]
+  : cp=="box" ?[each  mean(pointlist_bounds(points)), if (type=="xpath") geom[2]/2]
   : assert(false,"Invalid cp specification");
 
 
@@ -1542,20 +1549,22 @@ function _get_cp(geom) =
 //   anchor = Vector or named anchor string.
 //   geom = The geometry description of the shape.
 function _find_anchor(anchor, geom) =
+    is_string(anchor)? (  
+          anchor=="origin"? [anchor, CENTER, UP, 0]
+        : let(
+              anchors = last(geom),
+              found = search([anchor], anchors, num_returns_per_match=1)[0]
+          )
+          assert(found!=[], str("Unknown anchor: ",anchor))
+          anchors[found]
+    ) :
     let( 
         cp = _get_cp(geom),
         offset_raw = select(geom,-2),
         offset = [for (i=[0:2]) anchor[i]==0? 0 : offset_raw[i]],  // prevents bad centering.
-        anchors = last(geom),
         type = geom[0]
     )
-    is_string(anchor)? (  
-          anchor=="origin"? [anchor, CENTER, UP, 0]
-        : let(found = search([anchor], anchors, num_returns_per_match=1)[0])
-          assert(found!=[], str("Unknown anchor: ",anchor))
-          anchors[found]
-    ) : 
-    assert(is_vector(anchor),str("anchor=",anchor))
+    assert(is_vector(anchor),str("Invalid anchor: anchor=",anchor))
     let(anchor = point3d(anchor))
     anchor==CENTER? [anchor, cp, UP, 0] :
     let(
@@ -1718,8 +1727,7 @@ function _find_anchor(anchor, geom) =
     ) : type == "rgn_isect"? ( //region
         assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
         let(
-            rgn_raw = move(-point2d(cp), p=geom[1]),
-            rgn = is_region(rgn_raw)? rgn_raw : [rgn_raw],
+            rgn = force_region(move(-point2d(cp), p=geom[1])),
             anchor = point2d(anchor),
             isects = [
                 for (path=rgn, t=triplet(path,true)) let(
@@ -1746,68 +1754,27 @@ function _find_anchor(anchor, geom) =
         let(
             rgn = force_region(geom[1]),
             anchor = point2d(anchor),
-            m = rot(from=anchor, to=RIGHT) * move(-[cp.x, cp.y, 0]),
-            rpts = apply(m, flatten(rgn)),
+            rpts = rot(from=anchor, to=RIGHT, p=flatten(rgn)),
             maxx = max(column(rpts,0)),
-            idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
-            miny = min([for (i=idxs) rpts[i].y]),
-            maxy = max([for (i=idxs) rpts[i].y]),
-            midy = (miny+maxy)/2,
-            pos = point2d(cp) + rot(from=RIGHT, to=anchor, p=[maxx,midy])
-        ) [anchor, pos, anchor, 0]
-    ) : type == "xrgn_isect"? ( //region
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
-        let(
-            rgn_raw = move(-point2d(cp), p=geom[1]),
-            l = geom[2],
-            rgn = is_region(rgn_raw)? rgn_raw : [rgn_raw],
-            anchor = point3d(anchor),
-            xyanch = point2d(anchor)
-        ) approx(xyanch,[0,0])? [anchor, [0,0,anchor.z*l/2], unit(anchor,UP), 0] :
-        let(
-            isects = [
-                for (path=rgn, t=triplet(path,true)) let(
-                    seg1 = [t[0],t[1]],
-                    seg2 = [t[1],t[2]],
-                    isect = line_intersection([[0,0],xyanch], seg1, RAY, SEGMENT),
-                    n = is_undef(isect)? [0,1] :
-                        !approx(isect, t[1])? line_normal(seg1) :
-                        unit((line_normal(seg1)+line_normal(seg2))/2,[0,1]),
-                    n2 = vector_angle(xyanch,n)>90? -n : n
-                )
-                if(!is_undef(isect) && !approx(isect,t[0]))
-                [norm(isect), isect, n2]
-            ],
-            maxidx = max_index(column(isects,0)),
-            isect = isects[maxidx],
-            pos = point3d(cp) + point3d(isect[1]) + unit([0,0,anchor.z],CENTER)*l/2,
-            xyvec = unit(isect[2],[0,1]),
-            vec = unit((point3d(xyvec)+UP*anchor.z)/2,UP),
-            oang = approx(xyvec, [0,0])? 0 : atan2(xyvec.y, xyvec.x) + 90
-        ) [anchor, pos, vec, oang]
-    ) : type == "xrgn_extent"? ( //region
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
-        let(
-            rgn_raw = geom[1], l = geom[2],
-            rgn = is_region(rgn_raw)? rgn_raw : [rgn_raw],
-            anchor = point3d(anchor),
-            xyanch = point2d(anchor),
-            m = (
-                approx(xyanch,[0,0])? [[1,0,0],[0,1,0],[0,0,1]] :
-                rot(from=xyanch, to=RIGHT, planar=true)
-            ) * move(-[cp.x, cp.y]),
-            rpts = apply(m, flatten(rgn)),
-            maxx = max(column(rpts,0)),
-            idxs = [for (i = idx(rpts)) if (approx(rpts[i].x, maxx)) i],
-            ys = [for (i=idxs) rpts[i].y],
+            ys = [for (pt=rpts) if (approx(pt.x, maxx)) pt.y],            
             midy = (min(ys)+max(ys))/2,
-            xypos = point2d(cp) + (
-                approx(xyanch,[0,0])? [0,0] :
-                rot(from=RIGHT, to=xyanch, p=[maxx,midy])
-            ),
-            pos = point3d(xypos) + unit([0,0,anchor.z],CENTER)*l/2,
-            vec = unit((point3d(xyanch)+UP*anchor.z)/2,UP)
-        ) [anchor, pos, vec, oang]
+            pos = rot(from=RIGHT, to=anchor, p=[maxx,midy])
+        ) [anchor, pos, unit(anchor), 0]
+    ) : type=="xrgn_extent" || type=="xrgn_isect" ? (  // extruded region
+        assert(in_list(anchor.z,[-1,0,1]), "The Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
+        let(
+            anchor_xy = point2d(anchor),
+            L = geom[2]
+        )
+        approx(anchor_xy,[0,0]) ? [anchor, up(anchor.z*L/2,cp), anchor, oang] :
+        let(
+            newgeom = list_set(geom, [0,len(geom)-3], [substr(geom[0],1), point2d(cp)]),
+            result2d = _find_anchor(anchor_xy, newgeom),
+            pos = point3d(result2d[1], cp.z+anchor.z*L/2),
+            vec = unit(point3d(result2d[2], anchor.z),UP),
+            oang = atan2(vec.y,vec.x) + 90
+        )
+        [anchor, pos, vec, oang]
     ) :
     assert(false, "Unknown attachment geometry type.");
 
@@ -1885,7 +1852,8 @@ module show_anchors(s=10, std=true, custom=true) {
                     anchor_arrow(s, color="cyan");
                 }
                 color("black")
-                noop($tags="anchor-arrow") {
+                tags("anchor-arrow")
+                {
                     xrot(two_d? 0 : 90) {
                         back(s/3) {
                             yrot_copies(n=2)
@@ -1897,13 +1865,14 @@ module show_anchors(s=10, std=true, custom=true) {
                         }
                     }
                 }
-                color([1, 1, 1, 0.4])
-                noop($tags="anchor-arrow") {
+                color([1, 1, 1, 1])
+                tags("anchor-arrow")
+                {
                     xrot(two_d? 0 : 90) {
                         back(s/3) {
-                            zcopies(s/21) cube([s/4.5*len(anchor[0]), s/3, 0.01], center=true);
+                             cube([s/4.5*len(anchor[0]), s/3, 0.01], center=true);
                         }
-                    }
+                   }
                 }
             }
         }
@@ -1953,7 +1922,7 @@ module anchor_arrow(s=10, color=[0.333,0.333,1], flag=true, $tags="anchor-arrow"
 // Example:
 //   anchor_arrow2d(s=20);
 module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tags="anchor-arrow") {
-    noop() color(color) stroke([[0,0],[0,s]], width=s/10, endcap1="butt", endcap2="arrow2");
+    color(color) stroke([[0,0],[0,s]], width=s/10, endcap1="butt", endcap2="arrow2");
 }
 
 
@@ -1971,7 +1940,7 @@ module anchor_arrow2d(s=15, color=[0.333,0.333,1], $tags="anchor-arrow") {
 //   expose_anchors() cube(50, center=true) show_anchors();
 module expose_anchors(opacity=0.2) {
     show("anchor-arrow")
-        children();
+       children();
     hide("anchor-arrow")
         color(is_undef($color)? [0,0,0] :
               is_string($color)? $color :

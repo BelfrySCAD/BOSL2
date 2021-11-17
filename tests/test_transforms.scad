@@ -8,7 +8,7 @@ module test_translate() {
         assert_equal(translate(val, p=[1,2,3]), [1,2,3]+val);
     }
     // Verify that module at least doesn't crash.
-    translate([-5,-5,-5]) translate([0,0,0]) translate([5,5,5]) nil();
+    translate([-5,-5,-5]) translate([0,0,0]) translate([5,5,5]) union(){};
 }
 test_translate();
 
@@ -21,8 +21,8 @@ module test_move() {
         assert_equal(move(x=val.x, y=val.y, z=val.z, p=[1,2,3]), [1,2,3]+val);
     }
     // Verify that module at least doesn't crash.
-    move(x=-5) move(y=-5) move(z=-5) move([-5,-5,-5]) nil();
-    move(x=5) move(y=5) move(z=5) move([5,5,5]) nil();
+    move(x=-5) move(y=-5) move(z=-5) move([-5,-5,-5]) union(){};
+    move(x=5) move(y=5) move(z=5) move([5,5,5]) union(){};
 }
 test_move();
 
@@ -35,7 +35,7 @@ module test_left() {
     assert_equal(left(0,p=[1,2,3]),[1,2,3]);
     assert_equal(left(-5,p=[1,2,3]),[6,2,3]);
     // Verify that module at least doesn't crash.
-    left(-5) left(0) left(5) nil();
+    left(-5) left(0) left(5) union(){};
 }
 test_left();
 
@@ -48,7 +48,7 @@ module test_right() {
     assert_equal(right(0,p=[1,2,3]),[1,2,3]);
     assert_equal(right(5,p=[1,2,3]),[6,2,3]);
     // Verify that module at least doesn't crash.
-    right(-5) right(0) right(5) nil();
+    right(-5) right(0) right(5) union(){};
 }
 test_right();
 
@@ -61,7 +61,7 @@ module test_back() {
     assert_equal(back(0,p=[1,2,3]),[1,2,3]);
     assert_equal(back(5,p=[1,2,3]),[1,7,3]);
     // Verify that module at least doesn't crash.
-    back(-5) back(0) back(5) nil();
+    back(-5) back(0) back(5) union(){};
 }
 test_back();
 
@@ -74,7 +74,7 @@ module test_fwd() {
     assert_equal(fwd(0,p=[1,2,3]),[1,2,3]);
     assert_equal(fwd(-5,p=[1,2,3]),[1,7,3]);
     // Verify that module at least doesn't crash.
-    fwd(-5) fwd(0) fwd(5) nil();
+    fwd(-5) fwd(0) fwd(5) union(){};
 }
 test_fwd();
 
@@ -87,7 +87,7 @@ module test_down() {
     assert_equal(down(0,p=[1,2,3]),[1,2,3]);
     assert_equal(down(-5,p=[1,2,3]),[1,2,8]);
     // Verify that module at least doesn't crash.
-    down(-5) down(0) down(5) nil();
+    down(-5) down(0) down(5) union(){};
 }
 test_down();
 
@@ -100,7 +100,7 @@ module test_up() {
     assert_equal(up(0,p=[1,2,3]),[1,2,3]);
     assert_equal(up(5,p=[1,2,3]),[1,2,8]);
     // Verify that module at least doesn't crash.
-    up(-5) up(0) up(5) nil();
+    up(-5) up(0) up(5) union(){};
 }
 test_up();
 
@@ -112,7 +112,7 @@ module test_scale() {
         assert_equal(scale(point2d(val)), [[val.x,0,0],[0,val.y,0],[0,0,1]]);
         assert_equal(scale(val), [[val.x,0,0,0],[0,val.y,0,0],[0,0,val.z,0],[0,0,0,1]]);
         assert_equal(scale(val, p=[1,2,3]), v_mul([1,2,3], val));
-        scale(val) nil();
+        scale(val) union(){};
     }
     assert_equal(scale(3), [[3,0,0,0],[0,3,0,0],[0,0,3,0],[0,0,0,1]]);
     assert_equal(scale(3, p=[1,2,3]), 3*[1,2,3]);
@@ -124,7 +124,7 @@ module test_scale() {
     assert_equal(scale([2,3,4], p=cb), cube([2,3,4]));
     assert_equal(scale([-2,-3,-4], p=cb), [[for (p=cb[0]) v_mul(p,[-2,-3,-4])], [for (f=cb[1]) reverse(f)]]);
     // Verify that module at least doesn't crash.
-    scale(-5) scale(5) nil();
+    scale(-5) scale(5) union(){};
 }
 test_scale();
 
@@ -134,10 +134,10 @@ module test_xscale() {
     for (val=vals) {
         assert_equal(xscale(val), [[val,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]);
         assert_equal(xscale(val, p=[1,2,3]), [val*1,2,3]);
-        xscale(val) nil();
+        xscale(val) union(){};
     }
     // Verify that module at least doesn't crash.
-    xscale(-5) xscale(5) nil();
+    xscale(-5) xscale(5) union(){};
 }
 test_xscale();
 
@@ -147,10 +147,10 @@ module test_yscale() {
     for (val=vals) {
         assert_equal(yscale(val), [[1,0,0,0],[0,val,0,0],[0,0,1,0],[0,0,0,1]]);
         assert_equal(yscale(val, p=[1,2,3]), [1,val*2,3]);
-        yscale(val) nil();
+        yscale(val) union(){};
     }
     // Verify that module at least doesn't crash.
-    yscale(-5) yscale(5) nil();
+    yscale(-5) yscale(5) union(){};
 }
 test_yscale();
 
@@ -160,10 +160,10 @@ module test_zscale() {
     for (val=vals) {
         assert_equal(zscale(val), [[1,0,0,0],[0,1,0,0],[0,0,val,0],[0,0,0,1]]);
         assert_equal(zscale(val, p=[1,2,3]), [1,2,val*3]);
-        zscale(val) nil();
+        zscale(val) union(){};
     }
     // Verify that module at least doesn't crash.
-    zscale(-5) zscale(5) nil();
+    zscale(-5) zscale(5) union(){};
 }
 test_zscale();
 
@@ -184,7 +184,7 @@ module test_mirror() {
         assert_approx(mirror(val), m, str("mirror(",val,")"));
         assert_approx(mirror(val, p=[1,2,3]), apply(m, [1,2,3]), str("mirror(",val,",p=...)"));
         // Verify that module at least doesn't crash.
-        mirror(val) nil();
+        mirror(val) union(){};
     }
 }
 test_mirror();
@@ -194,7 +194,7 @@ module test_xflip() {
     assert_approx(xflip(), [[-1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]);
     assert_approx(xflip(p=[1,2,3]), [-1,2,3]);
     // Verify that module at least doesn't crash.
-    xflip() nil();
+    xflip() union(){};
 }
 test_xflip();
 
@@ -203,7 +203,7 @@ module test_yflip() {
     assert_approx(yflip(), [[1,0,0,0],[0,-1,0,0],[0,0,1,0],[0,0,0,1]]);
     assert_approx(yflip(p=[1,2,3]), [1,-2,3]);
     // Verify that module at least doesn't crash.
-    yflip() nil();
+    yflip() union(){};
 }
 test_yflip();
 
@@ -212,7 +212,7 @@ module test_zflip() {
     assert_approx(zflip(), [[1,0,0,0],[0,1,0,0],[0,0,-1,0],[0,0,0,1]]);
     assert_approx(zflip(p=[1,2,3]), [1,2,-3]);
     // Verify that module at least doesn't crash.
-    zflip() nil();
+    zflip() union(){};
 }
 test_zflip();
 
@@ -341,7 +341,7 @@ module test_xrot() {
         assert_approx(xrot(a, p=path[0]), apply(m, path[0]));
         assert_approx(xrot(a, p=path), apply(m, path));
         // Verify that module at least doesn't crash.
-        xrot(a) nil();
+        xrot(a) union(){};
     }
 }
 test_xrot();
@@ -356,7 +356,7 @@ module test_yrot() {
         assert_approx(yrot(a, p=path[0]), apply(m, path[0]));
         assert_approx(yrot(a, p=path), apply(m, path));
         // Verify that module at least doesn't crash.
-        yrot(a) nil();
+        yrot(a) union(){};
     }
 }
 test_yrot();
@@ -371,7 +371,7 @@ module test_zrot() {
         assert_approx(zrot(a, p=path[0]), apply(m, path[0]));
         assert_approx(zrot(a, p=path), apply(m, path));
         // Verify that module at least doesn't crash.
-        zrot(a) nil();
+        zrot(a) union(){};
     }
 }
 test_zrot();
@@ -390,7 +390,7 @@ module test_skew() {
     assert_approx(skew(sxy=2, sxz=3, syx=4, syz=5, szx=6, szy=7), m);
     assert_approx(skew(sxy=2, sxz=3, syx=4, syz=5, szx=6, szy=7, p=[1,2,3]), apply(m,[1,2,3]));
     // Verify that module at least doesn't crash.
-    skew(undef,2,3,4,5,6,7) nil();
+    skew(undef,2,3,4,5,6,7) union(){};
 }
 test_skew();
 

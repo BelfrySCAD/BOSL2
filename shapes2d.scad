@@ -244,15 +244,20 @@ module circle(r, d, anchor=CENTER, spin=0) {
 //   ellipse(d=50, anchor=FRONT, spin=45);
 // Example(NORENDER): Called as Function
 //   path = ellipse(d=50, anchor=FRONT, spin=45);
-module ellipse(r, d, realign=false, circum=false, anchor=CENTER, spin=0) {
-    r = get_radius(r=r, d=d, dflt=1);
-    dummy = assert((is_finite(r) || is_vector(r,2)) && all_positive(r), "Invalid radius or diameter for ellipse");
+module ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER, spin=0)
+{
+    r = force_list(get_radius(r=r, d=d, dflt=1),2);
+    dummy = assert(is_vector(r,2) && all_positive(r), "Invalid radius or diameter for ellipse");
     sides = segs(max(r));
     sc = circum? (1 / cos(180/sides)) : 1;
-    rx = default(r[0],r) * sc;
-    ry = default(r[1],r) * sc;
+    rx = r.x * sc;
+    ry = r.y * sc;
     attachable(anchor,spin, two_d=true, r=[rx,ry]) {
-        if (rx < ry) {
+        if (uniform) {
+            assert(!circum, "Circum option not allowed when \"uniform\" is true");
+            polygon(ellipse(r,realign=realign, circum=circum, uniform=true));
+        }
+        else if (rx < ry) {
             xscale(rx/ry) {
                 zrot(realign? 180/sides : 0) {
                     circle(r=ry, $fn=sides);
@@ -270,14 +275,42 @@ module ellipse(r, d, realign=false, circum=false, anchor=CENTER, spin=0) {
 }
 
 
-function ellipse(r, d, realign=false, circum=false, anchor=CENTER, spin=0) =
+// Iterative refinement to produce an inscribed polygon
+// in an ellipse whose side lengths are all equal
+function _ellipse_refine(a,b,N, _theta=[]) =
+   len(_theta)==0? _ellipse_refine(a,b,N,lerpn(0,360,N,endpoint=false))
+   :
+   let(
+       pts = [for(t=_theta) [a*cos(t),b*sin(t)]],
+       lenlist= path_segment_lengths(pts,closed=true),
+       meanlen = mean(lenlist),
+       error = lenlist/meanlen
+   )
+   all_equal(error,EPSILON) ? pts
+   :
+   let(
+        dtheta = [each deltas(_theta),
+                  360-last(_theta)],
+        newdtheta = [for(i=idx(dtheta)) dtheta[i]/error[i]],
+        adjusted = [0,each cumsum(list_head(newdtheta / sum(newdtheta) * 360))]
+   )
+   _ellipse_refine(a,b,N,adjusted);
+
+
+
+function ellipse(r, d, realign=false, circum=false, uniform=false, anchor=CENTER, spin=0) =
     let(
-        r = get_radius(r=r, d=d, dflt=1),
-        sides = segs(max(r)),
+        r = force_list(get_radius(r=r, d=d, dflt=1),2),
+        sides = segs(max(r))
+    )
+    uniform ? assert(!circum, "Circum option not allowed when \"uniform\" is true")
+              reorient(anchor,spin,two_d=true,r=[r.x,r.y],p=_ellipse_refine(r.x,r.y,sides))
+    :
+    let(
         offset = realign? 180/sides : 0,
         sc = circum? (1 / cos(180/sides)) : 1,
-        rx = default(r[0],r) * sc,
-        ry = default(r[1],r) * sc,
+        rx = r.x * sc,
+        ry = r.y * sc,
         pts = [for (i=[0:1:sides-1]) let(a=360-offset-i*360/sides) [rx*cos(a), ry*sin(a)]]
     ) reorient(anchor,spin, two_d=true, r=[rx,ry], p=pts);
 
@@ -780,6 +813,7 @@ module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENTER
 //   align_pit = If given as a 2D vector, rotates the whole shape so that the first inner corner is pointed towards that direction.  This occurs before spin.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   atype = Choose "hull" or "intersect" anchor methods.  Default: "hull"
 // Extra Anchors:
 //   "tip0" ... "tip4" = Each tip has an anchor, pointing outwards.
 //   "pit0" ... "pit4" = The inside corner between each tip has an anchor, pointing outwards.
@@ -801,7 +835,8 @@ module trapezoid(h, w1, w2, angle, shift=0, chamfer=0, rounding=0, anchor=CENTER
 //           stroke([[0,0],[0,7]], endcap2="arrow2");
 // Example(2D): Called as Function
 //   stroke(closed=true, star(n=5, r=50, ir=25));
-function star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0, _mat, _anchs) =
+function star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0, atype="hull", _mat, _anchs) =
+    assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")  
     assert(is_undef(align_tip) || is_vector(align_tip))
     assert(is_undef(align_pit) || is_vector(align_pit))
     assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit")
@@ -843,10 +878,11 @@ function star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit
                 named_anchor(str("midpt",i), pos, unit(pos,BACK), 0),
             ]
         ]
-    ) reorient(anchor,spin, two_d=true, path=path, p=path, anchors=anchors);
+    ) reorient(anchor,spin, two_d=true, path=path, p=path, extent=atype=="hull", anchors=anchors);
 
 
-module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0) {
+module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, anchor=CENTER, spin=0, atype="hull") {
+    assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
     assert(is_undef(align_tip) || is_vector(align_tip));
     assert(is_undef(align_pit) || is_vector(align_pit));
     assert(is_undef(align_tip) || is_undef(align_pit), "Can only specify one of align_tip and align_pit");
@@ -874,7 +910,7 @@ module star(n, r, ir, d, or, od, id, step, realign=false, align_tip, align_pit, 
         ]
     ];
     path = star(n=n, r=r, ir=ir, realign=realign, _mat=mat, _anchs=anchors);
-    attachable(anchor,spin, two_d=true, path=path, anchors=anchors) {
+    attachable(anchor,spin, two_d=true, path=path, extent=atype=="hull", anchors=anchors) {
         polygon(path);
         children();
     }
@@ -948,7 +984,7 @@ module jittered_poly(path, dist=1/512) {
 // Function&Module: teardrop2d()
 //
 // Description:
-//   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.
+//   Makes a 2D teardrop shape. Useful for extruding into 3D printable holes.  Uses "intersect" style anchoring.  
 //
 // Usage: As Module
 //   teardrop2d(r/d=, [ang], [cap_h]);
@@ -979,7 +1015,7 @@ module jittered_poly(path, dist=1/512) {
 module teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0)
 {
     path = teardrop2d(r=r, d=d, ang=ang, cap_h=cap_h);
-    attachable(anchor,spin, two_d=true, path=path) {
+    attachable(anchor,spin, two_d=true, path=path, extent=false) {
         polygon(path);
         children();
     }
@@ -1008,7 +1044,7 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
         ),
         maxx_idx = max_index(column(path,0)),
         path2 = list_rotate(path,maxx_idx)
-    ) reorient(anchor,spin, two_d=true, path=path2, p=path2);
+    ) reorient(anchor,spin, two_d=true, path=path2, p=path2, extent=false);
 
 
 
@@ -1023,7 +1059,7 @@ function teardrop2d(r, ang=45, cap_h, d, anchor=CENTER, spin=0) =
 // See Also: circle(), ellipse()
 // Description:
 //   When called as a function, returns a 2D path forming a shape of two circles joined by curved waist.
-//   When called as a module, creates a 2D shape of two circles joined by curved waist.
+//   When called as a module, creates a 2D shape of two circles joined by curved waist.  Uses "hull" style anchoring.  
 // Arguments:
 //   r = The radius of the end circles.
 //   spread = The distance between the centers of the end circles.  Default: 10
@@ -1094,6 +1130,8 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 // Description:
 //   When called as a function, returns a 2D path for the outline of the [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
 //   When called as a module, creates a 2D [Superformula](https://en.wikipedia.org/wiki/Superformula) shape.
+//   Note that the "hull" type anchoring (the default) is more intuitive for concave star-like shapes, but the anchor points do not
+//   necesarily lie on the line of the anchor vector, which can be confusing, especially for simpler, ellipse-like shapes.  
 // Arguments:
 //   step = The angle step size for sampling the superformula shape.  Smaller steps are slower but more accurate.
 //   m1 = The m1 argument for the superformula. Default: 4.
@@ -1108,6 +1146,7 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 //   d = Diameter of the shape.  Scale shape to fit in a circle of diameter d.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `CENTER`
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
+//   atype = Select "hull" or "intersect" style anchoring.  Default: "hull". 
 // Example(2D):
 //   supershape(step=0.5,m1=16,m2=16,n1=0.5,n2=0.5,n3=16,r=50);
 // Example(2D): Called as Function
@@ -1133,8 +1172,10 @@ function _superformula(theta,m1,m2,n1,n2=1,n3=1,a=1,b=1) =
 // Examples:
 //   linear_extrude(height=0.3, scale=0) supershape(step=1, m1=6, n1=0.4, n2=0, n3=6);
 //   linear_extrude(height=5, scale=0) supershape(step=1, b=3, m1=6, n1=3.8, n2=16, n3=10);
-function supershape(step=0.5, m1=4, m2, n1=1, n2, n3, a=1, b, r, d,anchor=CENTER, spin=0) =
+function supershape(step=0.5, m1=4, m2, n1=1, n2, n3, a=1, b, r, d,anchor=CENTER, spin=0, atype="hull") =
+    assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"")
     let(
+
         r = get_radius(r=r, d=d, dflt=undef),
         m2 = is_def(m2) ? m2 : m1,
         n2 = is_def(n2) ? n2 : n1,
@@ -1146,11 +1187,12 @@ function supershape(step=0.5, m1=4, m2, n1=1, n2, n3, a=1, b, r, d,anchor=CENTER
         rads = [for (theta = angs) _superformula(theta=theta,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b)],
         scale = is_def(r) ? r/max(rads) : 1,
         path = [for (i = [steps:-1:1]) let(a=angs[i]) scale*rads[i]*[cos(a), sin(a)]]
-    ) reorient(anchor,spin, two_d=true, path=path, p=path);
+    ) reorient(anchor,spin, two_d=true, path=path, p=path, extent=atype=="hull");
 
-module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0) {
+module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=undef, d=undef, anchor=CENTER, spin=0, atype="hull") {
+    assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
     path = supershape(step=step,m1=m1,m2=m2,n1=n1,n2=n2,n3=n3,a=a,b=b,r=r,d=d);
-    attachable(anchor,spin, two_d=true, path=path) {
+    attachable(anchor,spin,extent=atype=="hull", two_d=true, path=path) {
         polygon(path);
         children();
     }
@@ -1165,7 +1207,7 @@ module supershape(step=0.5,m1=4,m2=undef,n1,n2=undef,n3=undef,a=1,b=undef, r=und
 // Topics: Shapes (2D), Paths (2D), Path Generators, Attachable
 // See Also: regular_ngon(), pentagon(), hexagon(), octagon()
 // Description:
-//   Creates a 2D Reuleaux Polygon; a constant width shape that is not circular.
+//   Creates a 2D Reuleaux Polygon; a constant width shape that is not circular.  Uses "intersect" type anchoring.  
 // Arguments:
 //   N = Number of "sides" to the Reuleaux Polygon.  Must be an odd positive number.  Default: 3
 //   r = Radius of the shape.  Scale shape to fit in a circle of radius r.
@@ -1192,7 +1234,7 @@ module reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) {
             cp = polar_to_xy(r, ca)
         ) named_anchor(str("tip",i), cp, unit(cp,BACK), 0),
     ];
-    attachable(anchor,spin, two_d=true, path=path, anchors=anchors) {
+    attachable(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors) {
         polygon(path);
         children();
     }
@@ -1219,7 +1261,7 @@ function reuleaux_polygon(N=3, r, d, anchor=CENTER, spin=0) =
                 cp = polar_to_xy(r, ca)
             ) named_anchor(str("tip",i), cp, unit(cp,BACK), 0),
         ]
-    ) reorient(anchor,spin, two_d=true, path=path, anchors=anchors, p=path);
+    ) reorient(anchor,spin, two_d=true, path=path, extent=false, anchors=anchors, p=path);
 
 
 // vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap

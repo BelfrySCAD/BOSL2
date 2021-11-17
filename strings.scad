@@ -17,7 +17,7 @@
 // Arguments:
 //   str = string to operate on
 //   pos = starting index of substring, or vector of first and last position.  Default: 0
-//   len = length of substring, or omit it to get the rest of the string.  If len is less than zero the emptry string is returned.  
+//   len = length of substring, or omit it to get the rest of the string.  If len is zero or less then the emptry string is returned.  
 // Example:
 //   substr("abcdefg",3,3);     // Returns "def"
 //   substr("abcdefg",2);       // Returns "cdefg"
