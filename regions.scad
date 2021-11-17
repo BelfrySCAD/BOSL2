@@ -657,7 +657,7 @@ module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, 
 
 
 function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
-                      maxseg, style="default", cp="centroid", anchor_isect=false, anchor, spin=0, orient=UP) =
+                      maxseg, style="default", cp="centroid", atype="hull", anchor, spin=0, orient=UP) =
     let(
         region = force_region(region)
     )
@@ -702,7 +702,7 @@ function linear_sweep(region, height=1, center, twist=0, scale=1, slices,
             for (rgn = regions) vnf_from_region(rgn, ident(4), reverse=true),
             for (rgn = trgns) vnf_from_region(rgn, up(height), reverse=false)
         ])
-    ) reorient(anchor,spin,orient, cp=cp, vnf=vnf, extent=!anchor_isect, p=vnf, anchors=anchors);
+    ) reorient(anchor,spin,orient, cp=cp, vnf=vnf, extent=atype=="hull", p=vnf, anchors=anchors);
 
 
 
