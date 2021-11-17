@@ -1518,15 +1518,20 @@ function _get_cp(geom) =
     let(cp=select(geom,-3))
     is_vector(cp) ? cp
   : let(
+       f=echo(type=geom[0]),
         type = in_list(geom[0],["vnf_extent","vnf_isect"]) ? "vnf"
              : in_list(geom[0],["rgn_extent","rgn_isect"]) ? "path"
+             : in_list(geom[0],["xrgn_extent","xrgn_isect"]) ? "xpath"
              : "other"
     )
     assert(type!="other", "Invalid cp value")
-    cp=="centroid" ? centroid(geom[1])
+    cp=="centroid" ? (
+       type=="vnf" && (len(geom[1][0])==0 || len(geom[1][1])==0) ? [0,0,0] :
+       [each centroid(geom[1]), if (type=="xpath") geom[2]/2]
+    )
   : let(points = type=="vnf"?geom[1][0]:flatten(force_region(geom[1])))
-    cp=="mean" ? mean(points)
-  : cp=="box" ? mean(pointlist_bounds(points))
+    cp=="mean" ? [each mean(points), if (type=="xpath") geom[2]/2]
+  : cp=="box" ?[each  mean(pointlist_bounds(points)), if (type=="xpath") geom[2]/2]
   : assert(false,"Invalid cp specification");
 
 
@@ -1758,7 +1763,7 @@ function _find_anchor(anchor, geom) =
             pos = point2d(cp) + rot(from=RIGHT, to=anchor, p=[maxx,midy])
         ) [anchor, pos, anchor, 0]
     ) : type == "xrgn_isect"? ( //region
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
+        assert(in_list(anchor.z,[-1,0,1]), "The Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
         let(
             rgn_raw = move(-point2d(cp), p=geom[1]),
             l = geom[2],
@@ -1788,10 +1793,10 @@ function _find_anchor(anchor, geom) =
             oang = approx(xyvec, [0,0])? 0 : atan2(xyvec.y, xyvec.x) + 90
         ) [anchor, pos, vec, oang]
     ) : type == "xrgn_extent"? ( //region
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
+        assert(in_list(anchor.z,[-1,0,1]), "The Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
         let(
-            rgn_raw = geom[1], l = geom[2],
-            rgn = is_region(rgn_raw)? rgn_raw : [rgn_raw],
+            rgn = force_region(geom[1]),
+            l = geom[2],
             anchor = point3d(anchor),
             xyanch = point2d(anchor),
             m = (

@@ -877,7 +877,7 @@ function vnf_area(vnf) =
 /// The centroid of a tetrahedron is the average of its vertices.
 /// The centroid of the total is the volume weighted average.
 function _vnf_centroid(vnf,eps=EPSILON) =
-    assert(is_vnf(vnf) && len(vnf[0])!=0 ) 
+    assert(is_vnf(vnf) && len(vnf[0])!=0 && len(vnf[1])!=0,"Invalid or empty VNF given to centroid") 
     let(
         verts = vnf[0],
         pos = sum([
