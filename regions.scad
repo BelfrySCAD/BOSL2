@@ -297,7 +297,7 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 //       [square([60,10], center=true)]
 //   );
 //   region(rgn);
-module region(r, anchor="origin", spin=0, cp="centroid")
+module region(r, anchor="origin", spin=0, cp="centroid", atype="hull")
 {
     assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
     r = force_region(r);

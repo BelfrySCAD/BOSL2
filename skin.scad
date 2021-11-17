@@ -1130,7 +1130,7 @@ module sweep(shape, transforms, closed=false, caps, style="min_edge", convexity=
              anchor="origin",cp="centroid",spin=0, orient=UP, atype="hull")
 {
     vnf = sweep(shape, transforms, closed, caps, style);
-    vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, vnf=vnf, atype=atype, cp=cp)
+    vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
          children();
 }    
          
