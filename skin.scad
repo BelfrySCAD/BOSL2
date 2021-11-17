@@ -814,7 +814,7 @@ module path_sweep(shape, path, method="incremental", normal, closed=false, twist
 {
     vnf = path_sweep(shape, path, method, normal, closed, twist, twist_by_length,
                     symmetry, last_normal, tangent, relaxed, caps, style);
-    vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, vnf=vnf, atype=atype, cp=cp)
+    vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
         children();
 }        
 
@@ -1005,7 +1005,7 @@ module path_sweep2d(profile, path, closed=false, caps, quality=1, style="min_edg
                     anchor="origin", cp="centroid", spin=0, orient=UP, atype="hull")
 {
    vnf = path_sweep2d(profile, path, closed, caps, quality, style);
-   vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, vnf=vnf, atype=atype, cp=cp)
+   vnf_polyhedron(vnf,convexity=convexity,anchor=anchor, spin=spin, orient=orient, atype=atype, cp=cp)
         children();
 }
 
