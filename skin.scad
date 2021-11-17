@@ -16,9 +16,9 @@
 
 // Function&Module: skin()
 // Usage: As module:
-//   skin(profiles, slices, [z=], [refine=], [method=], [sampling=], [caps=], [closed=], [style=], [convexity=], [anchor=],[cp=],[spin=],[orient=],[extent=]) [attachments];
+//   skin(profiles, slices, [z=], [refine=], [method=], [sampling=], [caps=], [closed=], [style=], [convexity=], [anchor=],[cp=],[spin=],[orient=],[atype=]) {attachments};
 // Usage: As function:
-//   vnf = skin(profiles, slices, [z=], [refine=], [method=], [sampling=], [caps=], [closed=], [style=]);
+//   vnf = skin(profiles, slices, [z=], [refine=], [method=], [sampling=], [caps=], [closed=], [style=], [anchor=],[cp=],[spin=],[orient=],[atype=]);
 // Description:
 //   Given a list of two or more path `profiles` in 3d space, produces faces to skin a surface between
 //   the profiles.  Optionally the first and last profiles can have endcaps, or the first and last profiles
@@ -500,9 +500,9 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 
 // Function&Module: path_sweep()
 // Usage: As module
-//   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [relaxed=], [caps=], [style=], [convexity=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [extent=]) [attachments];
-// Usage: As function   
-//   vnf = path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [relaxed=], [caps=], [style=], [convexity=], [transforms=]);
+//   path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [relaxed=], [caps=], [style=], [convexity=], [anchor=], [cp=], [spin=], [orient=], [atype=]) {attachments};
+// Usage: As function
+//   vnf = path_sweep(shape, path, [method], [normal=], [closed=], [twist=], [twist_by_length=], [symmetry=], [last_normal=], [tangent=], [relaxed=], [caps=], [style=], [transforms=], [anchor=], [cp=], [spin=], [orient=], [atype=]) {attachments};
 // Description:
 //   Takes as input a 2D polygon path, and a 2d or 3d path and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF by default or if you set `transforms=true`
@@ -923,9 +923,9 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
 
 // Function&Module: path_sweep2d()
 // Usage: as module
-//   path_sweep2d(shape, path, [closed], [caps], [quality], [style], [convexity=], [anchor=], [spin=], [orient=], [extent=], [cp=]) [attachments];
+//   path_sweep2d(shape, path, [closed], [caps], [quality], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=], [cp=]) {attachments};
 // Usage: as function
-//   vnf = path_sweep2d(shape, path, [closed], [caps], [quality], [style]);
+//   vnf = path_sweep2d(shape, path, [closed], [caps], [quality], [style], [anchor=], [spin=], [orient=], [atype=], [cp=]);
 // Description:
 //   Takes an input 2D polygon (the shape) and a 2d path and constructs a polyhedron by sweeping the shape along the path.
 //   When run as a module returns the polyhedron geometry.  When run as a function returns a VNF.
@@ -1044,9 +1044,9 @@ function _ofs_face_edge(face,firstlen,second=false) =
 
 // Function&Module: sweep()
 // Usage: As Module
-//   sweep(shape, transforms, [closed], [caps], [style], [convexity=], [anchor=], [spin=], [orient=], [extent=]) [attachments];
+//   sweep(shape, transforms, [closed], [caps], [style], [convexity=], [anchor=], [spin=], [orient=], [atype=]) [attachments];
 // Usage: As Function
-//   vnf = sweep(shape, transforms, [closed], [caps], [style]);
+//   vnf = sweep(shape, transforms, [closed], [caps], [style], [anchor=], [spin=], [orient=], [atype=]);
 // Description:
 //   The input `shape` must be a non-self-intersecting 2D polygon or region, and `transforms`
 //   is a list of 4x4 transformation matrices.  The sweep algorithm applies each transformation in sequence

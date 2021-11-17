@@ -288,6 +288,7 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"origin"`
 //   spin = Rotate this many degrees after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 2D point.  Default: "centroid"
+//   atype = Set to "hull" or "intersect to select anchor type.  Default: "hull"
 // Example(2D): Displaying a region
 //   region([circle(d=50), square(25,center=true)]);
 // Example(2D): Displaying a list of polygons that intersect each other, which is not a region
@@ -298,13 +299,14 @@ function force_region(poly) = is_path(poly) ? [poly] : poly;
 //   region(rgn);
 module region(r, anchor="origin", spin=0, cp="centroid")
 {
+    assert(in_list(atype, _ANCHOR_TYPES), "Anchor type must be \"hull\" or \"intersect\"");
     r = force_region(r);
     dummy=assert(is_region(r), "Input is not a region");
     points = flatten(r);
     lengths = [for(path=r) len(path)];
     starts = [0,each cumsum(lengths)];
     paths = [for(i=idx(r)) count(s=starts[i], n=lengths[i])];
-    attachable(anchor, spin, two_d=true, region=r, extent=false, cp=cp){
+    attachable(anchor, spin, two_d=true, region=r, extent=atype=="hull", cp=cp){
       polygon(points=points, paths=paths);
       children();
     }
@@ -646,7 +648,7 @@ module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, 
         slices=slices, maxseg=maxseg,
         style=style
     );
-    attachable(anchor,spin,orient, cp=cp, vnf=vnf, extent=!anchor_isect, anchors=anchors) {
+    attachable(anchor,spin,orient, cp=cp, region=region, h=height, extent=atype=="hull", anchors=anchors) {
         vnf_polyhedron(vnf, convexity=convexity);
         children();
     }
