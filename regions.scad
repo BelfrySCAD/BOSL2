@@ -612,7 +612,7 @@ function region_parts(region) =
 //   style = The style to use when triangulating the surface of the object.  Valid values are `"default"`, `"alt"`, or `"quincunx"`.
 //   convexity = Max number of surfaces any single ray could pass through.  Module use only.
 //   anchor = Translate so anchor point is at origin (0,0,0).  See [anchor](attachments.scad#anchor).  Default: `"origin"`
-//   anchor_isect = If true, anchoring it performed by finding where the anchor vector intersects the swept shape.  Default: false
+//   atype = Set to "hull" or "intersect" to select anchor type.  Default: "hull"
 //   cp = Centerpoint for determining intersection anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   spin = Rotate this many degrees around the Z axis after anchor.  See [spin](attachments.scad#spin).  Default: `0`
 //   orient = Vector to rotate top towards, after spin.  See [orient](attachments.scad#orient).  Default: `UP`
@@ -637,7 +637,8 @@ function region_parts(region) =
 //   mrgn = union(rgn1,rgn2);
 //   orgn = difference(mrgn,rgn3);
 //   linear_sweep(orgn,height=20,convexity=16) show_anchors();
-module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity, anchor_isect=false, spin=0, orient=UP, cp="centroid", anchor="origin", atype="hull") {
+module linear_sweep(region, height=1, center, twist=0, scale=1, slices, maxseg, style="default", convexity,
+                    spin=0, orient=UP, cp="centroid", anchor="origin", atype="hull") {
     region = force_region(region);
     dummy=assert(is_region(region),"Input is not a region");
     anchor = center ? "zcenter" : anchor;

@@ -154,7 +154,7 @@
 //   spin = Rotate this many degrees around Z axis after anchor.  Default: 0
 //   orient = Vector to rotate top towards after spin 
 //   atype = Select "hull" or "intersect anchor types. Default: "hull"
-//   cp = set centerpoint for anchor computation.  Default: "centroid"
+//   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 //   style = vnf_vertex_array style.  Default: "min_edge"
 // Example:
 //   skin([octagon(4), circle($fn=70,r=2)], z=[0,3], slices=10);
@@ -570,7 +570,7 @@ function skin(profiles, slices, refine=1, method="direct", sampling, caps, close
 //   spin = Rotate this many degrees around Z axis after anchor. Default: 0
 //   orient = Vector to rotate top towards after spin  
 //   atype  = Select "hull" or "intersect" anchor types.  Default: "hull"
-//   cp = set centerpoint for anchor computation.  Default: "centroid"
+//   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Example(2D): We'll use this shape in several examples
 //   ushape = [[-10, 0],[-10, 10],[ -7, 10],[ -7, 2],[  7, 2],[  7, 7],[ 10, 7],[ 10, 0]];
 //   polygon(ushape);
@@ -949,7 +949,7 @@ function path_sweep(shape, path, method="incremental", normal, closed=false, twi
 //   spin = Rotate this many degrees around Z axis after anchor.  Default: 0
 //   orient = Vector to rotate top towards after spin 
 //   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
-//   cp = set centerpoint for anchor computation.  Default: "centroid"
+//   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Example: Sine wave example with self-intersections at each peak.  This would fail with path_sweep(). 
 //   sinewave = [for(i=[-30:10:360*2+30]) [i/40,3*sin(i)]];
 //   path_sweep2d(circle(r=3,$fn=15), sinewave);
@@ -1073,7 +1073,7 @@ function _ofs_face_edge(face,firstlen,second=false) =
 //   spin = Rotate this many degrees around Z axis after anchor. Default: 0
 //   orient = Vector to rotate top towards after spin  (module only)
 //   atype = Select "hull" or "intersect" anchor types.  Default: "hull"
-//   cp = set centerpoint for anchor computation. Default: "centroid"
+//   cp = Centerpoint for determining "intersect" anchors or centering the shape.  Determintes the base of the anchor vector.  Can be "centroid", "mean", "box" or a 3D point.  Default: "centroid"
 // Example: This is the "sweep-drop" example from list-comprehension-demos.
 //   function drop(t) = 100 * 0.5 * (1 - cos(180 * t)) * sin(180 * t) + 1;
 //   function path(t) = [0, 0, 80 + 80 * cos(180 * t)];
