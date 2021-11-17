@@ -1756,7 +1756,7 @@ function _find_anchor(anchor, geom) =
             pos = point2d(cp) + rot(from=RIGHT, to=anchor, p=[maxx,midy])
         ) [anchor, pos, anchor, 0]
     ) : type == "xrgn_isect"? ( //region
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
+        assert(in_list(anchor.z,[-1,0,1]), "The Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
         let(
             rgn_raw = move(-point2d(cp), p=geom[1]),
             l = geom[2],
@@ -1786,7 +1786,7 @@ function _find_anchor(anchor, geom) =
             oang = approx(xyvec, [0,0])? 0 : atan2(xyvec.y, xyvec.x) + 90
         ) [anchor, pos, vec, oang]
     ) : type == "xrgn_extent"? ( //region
-        assert(anchor.z==0, "The Z component of an anchor for a 2D shape must be 0.")
+        assert(in_list(anchor.z,[-1,0,1]), "The Z component of an anchor for an extruded 2D shape must be -1, 0, or 1.")
         let(
             rgn_raw = geom[1], l = geom[2],
             rgn = is_region(rgn_raw)? rgn_raw : [rgn_raw],
